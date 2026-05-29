@@ -1,0 +1,76 @@
+# ---- Build output ----
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Ll]og/
+[Ll]ogs/
+
+# ---- .NET / MSBuild ----
+*.user
+*.userosscache
+*.suo
+*.userprefs
+*.dbmdl
+*.dbproj.schemaview
+project.lock.json
+project.fragment.lock.json
+artifacts/
+.msbuild/
+
+# ---- MSIX / packaging output ----
+AppPackages/
+BundleArtifacts/
+*.appx
+*.appxbundle
+*.appxupload
+*.msix
+*.msixbundle
+*.msixupload
+*.cer
+*.pfx
+GeneratedArtifacts/
+_pkginfo.txt
+*.StoreManifest.xml
+
+# ---- Visual Studio / Rider ----
+.vs/
+.idea/
+*.sln.docstates
+*.ide/
+
+# ---- VS Code (keep shared config, ignore local) ----
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# ---- NuGet ----
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+!packages/build/
+
+# ---- Test / coverage ----
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+coverage*.json
+coverage*.xml
+coverage*.info
+*.coverage
+*.coveragexml
+
+# ---- OS noise ----
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ---- Editor swap / temp ----
+*.swp
+*.swo
+*~
+*.tmp
+*.bak
