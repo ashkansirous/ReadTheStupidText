@@ -40,7 +40,7 @@ this plan turns it into ordered, shippable vertical slices.
 
 Ordered as vertical slices — each is end-to-end and independently runnable.
 
-- [ ] **Slice 0 — Project scaffold.** ([#3](https://github.com/ashkansirous/ReadTheStupidText/issues/3)) Create the WinUI 3 packaged (single-project
+- [x] **Slice 0 — Project scaffold.** ([#3](https://github.com/ashkansirous/ReadTheStupidText/issues/3)) Create the WinUI 3 packaged (single-project
       MSIX) app via `dotnet new` / template (version confirmed through
       context7). Add `.gitignore` (VisualStudio + OS noise), `README.md`,
       `CLAUDE.md` (project conventions), and `AGENTS.md` (`@CLAUDE.md`). App
