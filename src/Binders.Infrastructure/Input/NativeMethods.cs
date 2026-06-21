@@ -22,6 +22,14 @@ internal static class NativeMethods
     /// <summary>Virtual-key code for the 'R' key.</summary>
     internal const uint VkR = 0x52;
 
+    // Synthetic-input constants for simulating a Ctrl+C copy via SendInput.
+    internal const uint InputKeyboard = 1;
+    internal const uint KeyEventKeyUp = 0x0002;
+    internal const ushort VkControl = 0x11;
+    internal const ushort VkLeftWin = 0x5B;
+    internal const ushort VkRightWin = 0x5C;
+    internal const ushort VkC = 0x43;
+
     internal delegate nint SubclassProc(
         nint hWnd, uint uMsg, nint wParam, nint lParam, nuint uIdSubclass, nuint dwRefData);
 
@@ -45,4 +53,44 @@ internal static class NativeMethods
 
     [DllImport("comctl32.dll")]
     internal static extern nint DefSubclassProc(nint hWnd, uint uMsg, nint wParam, nint lParam);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    internal static extern uint SendInput(uint nInputs, Input[] pInputs, int cbSize);
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct Input
+    {
+        public uint Type;
+        public InputUnion Data;
+    }
+
+    // The union is sized to the largest member (MouseInput) so the marshalled
+    // struct matches the OS's INPUT size; SendInput rejects a wrong cbSize.
+    [StructLayout(LayoutKind.Explicit)]
+    internal struct InputUnion
+    {
+        [FieldOffset(0)] public MouseInput Mouse;
+        [FieldOffset(0)] public KeyboardInput Keyboard;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct MouseInput
+    {
+        public int Dx;
+        public int Dy;
+        public uint MouseData;
+        public uint Flags;
+        public uint Time;
+        public nuint ExtraInfo;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct KeyboardInput
+    {
+        public ushort VirtualKey;
+        public ushort ScanCode;
+        public uint Flags;
+        public uint Time;
+        public nuint ExtraInfo;
+    }
 }
