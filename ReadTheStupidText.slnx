@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ReadTheStupidText.App/ReadTheStupidText.App.csproj" />
+    <Project Path="src/ReadTheStupidText.Application/ReadTheStupidText.Application.csproj" />
+    <Project Path="src/ReadTheStupidText.Domain/ReadTheStupidText.Domain.csproj" />
+    <Project Path="src/ReadTheStupidText.Infrastructure/ReadTheStupidText.Infrastructure.csproj" />
+  </Folder>
+</Solution>

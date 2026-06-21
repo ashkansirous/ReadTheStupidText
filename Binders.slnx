@@ -1,8 +1,0 @@
-<Solution>
-  <Folder Name="/src/">
-    <Project Path="src/Binders.App/Binders.App.csproj" />
-    <Project Path="src/Binders.Application/Binders.Application.csproj" />
-    <Project Path="src/Binders.Domain/Binders.Domain.csproj" />
-    <Project Path="src/Binders.Infrastructure/Binders.Infrastructure.csproj" />
-  </Folder>
-</Solution>

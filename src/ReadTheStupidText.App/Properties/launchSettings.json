@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "ReadTheStupidText.App (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "ReadTheStupidText.App (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

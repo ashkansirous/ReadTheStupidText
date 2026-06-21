@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Window
+    x:Class="ReadTheStupidText_App.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:tb="using:H.NotifyIcon"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <!--
+        This window is never shown. It exists to host the tray icon and to own
+        the HWND the global hotkey is registered against. The flyout is built in
+        code from the ReadingSpeed enum (see MainWindow.xaml.cs).
+    -->
+    <Grid>
+        <tb:TaskbarIcon
+            x:Name="TrayIcon"
+            ToolTipText="ReadTheStupidText — read aloud"
+            IconSource="ms-appx:///Assets/AppIcon.ico" />
+    </Grid>
+</Window>

@@ -1,17 +1,17 @@
-# Binders
+# ReadTheStupidText
 
 A lightweight Windows 11 tray utility that reads selected or copied text aloud
 at a user-chosen speed (1x / 1.25x / 1.5x / 1.75x / 2x), with a small control
 beside the clock to pause/resume and change speed. Built as a WinUI 3 packaged
 (MSIX) app for distribution through the Microsoft Store.
 
-> Repo name is `ReadTheStupidText`; the product display name is **Binders**.
+> Repo name is `ReadTheStupidText`; the product display name is **ReadTheStupidText**.
 
 ## Status
 
 Early development. See [`plan.md`](plan.md) for the vertical-slice roadmap and
 [`scope.md`](scope.md) for the high-level scope. Work is tracked as GitHub
-issues (one *story* per slice, *tasks* as sub-issues) on the **Binders**
+issues (one *story* per slice, *tasks* as sub-issues) on the **ReadTheStupidText**
 Projects board.
 
 Current slice: **Slice 0 — project scaffold** (app boots to an empty window).
@@ -26,12 +26,12 @@ Current slice: **Slice 0 — project scaffold** (app boots to an empty window).
 ## Project structure
 
 ```
-Binders.slnx
+ReadTheStupidText.slnx
 src/
-  Binders.App/             WinUI 3 single-project MSIX app (UI, DI wiring)
-  Binders.Application/     Use cases / orchestration (net10.0)
-  Binders.Domain/          Entities, value objects, enums — no framework deps (net10.0)
-  Binders.Infrastructure/  TTS, clipboard, UIA, OS integration (net10.0-windows)
+  ReadTheStupidText.App/             WinUI 3 single-project MSIX app (UI, DI wiring)
+  ReadTheStupidText.Application/     Use cases / orchestration (net10.0)
+  ReadTheStupidText.Domain/          Entities, value objects, enums — no framework deps (net10.0)
+  ReadTheStupidText.Infrastructure/  TTS, clipboard, UIA, OS integration (net10.0-windows)
 ```
 
 Dependency direction is one-way: `App → Application → Domain` and
@@ -54,13 +54,13 @@ dotnet new install Microsoft.WindowsAppSDK.WinUI.CSharp.Templates
 
 ```bash
 # Build the app (its project references pull in and build the class libraries)
-dotnet build src/Binders.App/Binders.App.csproj -p:Platform=x64
+dotnet build src/ReadTheStupidText.App/ReadTheStupidText.App.csproj -p:Platform=x64
 
 # Run the app
-dotnet run --project src/Binders.App/Binders.App.csproj -p:Platform=x64
+dotnet run --project src/ReadTheStupidText.App/ReadTheStupidText.App.csproj -p:Platform=x64
 ```
 
-> Build the **app project**, not `Binders.slnx`. The class libraries are
+> Build the **app project**, not `ReadTheStupidText.slnx`. The class libraries are
 > `AnyCPU` while the WinUI app is `x86;x64;ARM64`, so a solution-level
 > `-p:Platform=x64` is rejected as an invalid solution configuration. Building
 > the app project builds the whole dependency graph with correct per-project

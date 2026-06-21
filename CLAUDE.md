@@ -1,11 +1,11 @@
-# CLAUDE.md — Binders
+# CLAUDE.md — ReadTheStupidText
 
 Project-specific guidance for agents working in this repo. This complements
 the user's global instructions (which always apply).
 
 ## What this is
 
-**Binders** is a Windows 11 tray utility that reads selected/copied text aloud
+**ReadTheStupidText** is a Windows 11 tray utility that reads selected/copied text aloud
 at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
 **MSIX** and targeted at the **Microsoft Store**. It is *not* a classic UWP app
 (the sandbox cannot do tray icons, global hotkeys, or cross-app text reads).
@@ -16,7 +16,7 @@ and their GitHub issue numbers. Tick slices off in `plan.md` as they complete.
 ## Stack & conventions
 
 - **.NET 10**, **C#**, **WinUI 3 / Windows App SDK 1.8**.
-- Solution file is `Binders.slnx` (the XML `slnx` format — not `.sln`).
+- Solution file is `ReadTheStupidText.slnx` (the XML `slnx` format — not `.sln`).
 - Always confirm Windows App SDK / WinUI / `H.NotifyIcon` APIs and versions via
   **context7** before writing code against them — versions move fast.
 
@@ -41,12 +41,12 @@ logic.
 ## Build & run
 
 ```bash
-dotnet build src/Binders.App/Binders.App.csproj -p:Platform=x64
-dotnet run   --project src/Binders.App/Binders.App.csproj -p:Platform=x64
+dotnet build src/ReadTheStupidText.App/ReadTheStupidText.App.csproj -p:Platform=x64
+dotnet run   --project src/ReadTheStupidText.App/ReadTheStupidText.App.csproj -p:Platform=x64
 ```
 
 Builds are **per-architecture** — always pass `-p:Platform=x64` (or `arm64`).
-Build the **app project**, not `Binders.slnx`: the class libs are `AnyCPU` and
+Build the **app project**, not `ReadTheStupidText.slnx`: the class libs are `AnyCPU` and
 the app is `x86;x64;ARM64`, so a solution-level `-p:Platform=x64` is an invalid
 solution configuration. The app project builds the whole graph.
 
