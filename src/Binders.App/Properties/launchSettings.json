@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Binders.App (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Binders.App (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

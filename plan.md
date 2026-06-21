@@ -40,30 +40,30 @@ this plan turns it into ordered, shippable vertical slices.
 
 Ordered as vertical slices — each is end-to-end and independently runnable.
 
-- [ ] **Slice 0 — Project scaffold.** Create the WinUI 3 packaged (single-project
+- [x] **Slice 0 — Project scaffold.** ([#3](https://github.com/ashkansirous/ReadTheStupidText/issues/3)) Create the WinUI 3 packaged (single-project
       MSIX) app via `dotnet new` / template (version confirmed through
       context7). Add `.gitignore` (VisualStudio + OS noise), `README.md`,
       `CLAUDE.md` (project conventions), and `AGENTS.md` (`@CLAUDE.md`). App
       boots to an empty window. Establish the layered folder structure
       (`Domain` / `Application` / `Infrastructure` / `App`/UI).
 - [ ] **Slice 1 — Clipboard-read on hotkey at chosen speed (smallest E2E).**
-      Register the global hotkey; on press, read current clipboard text aloud
+      ([#4](https://github.com/ashkansirous/ReadTheStupidText/issues/4)) Register the global hotkey; on press, read current clipboard text aloud
       via `SpeechSynthesis` + `MediaPlayer`. Tray icon present with a flyout
       exposing Play/Pause and the five speed buttons; speed changes apply live
       via `PlaybackRate`. This single slice proves TTS + speed + tray + hotkey.
-- [ ] **Slice 2 — Hotkey copies the current selection.** Extend the hotkey to
+- [ ] **Slice 2 — Hotkey copies the current selection.** ([#5](https://github.com/ashkansirous/ReadTheStupidText/issues/5)) Extend the hotkey to
       simulate copy (send `Ctrl+C`) before reading, so the user can select in
       any app (incl. terminals/CLI/Claude Code) and have it read aloud. Persist
       last-used speed + enabled state to `LocalSettings`.
-- [ ] **Slice 3 — Auto-read on selection (UIA).** Add UI Automation
+- [ ] **Slice 3 — Auto-read on selection (UIA).** ([#6](https://github.com/ashkansirous/ReadTheStupidText/issues/6)) Add UI Automation
       `TextPattern` monitoring so selecting text in supporting apps
       (Notepad, modern apps, most browsers) auto-reads without the hotkey.
       Enable/Disable toggle in the tray menu gates this behavior. Hotkey
       remains the fallback for non-UIA apps.
-- [ ] **Slice 4 — Launch at startup.** Declare and wire a packaged
+- [ ] **Slice 4 — Launch at startup.** ([#7](https://github.com/ashkansirous/ReadTheStupidText/issues/7)) Declare and wire a packaged
       `StartupTask`; app starts minimized to the tray; expose the toggle in
       the tray context menu.
-- [ ] **Slice 5 — Store packaging & CI.** Finalize the MSIX manifest
+- [ ] **Slice 5 — Store packaging & CI.** ([#8](https://github.com/ashkansirous/ReadTheStupidText/issues/8)) Finalize the MSIX manifest
       (identity, capabilities + restricted-capability justification), signing,
       and a GitHub Actions workflow that builds + packages the MSIX artifact.
       Prepare Store submission assets.
