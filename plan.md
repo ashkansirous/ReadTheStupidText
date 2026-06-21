@@ -46,7 +46,7 @@ Ordered as vertical slices — each is end-to-end and independently runnable.
       `CLAUDE.md` (project conventions), and `AGENTS.md` (`@CLAUDE.md`). App
       boots to an empty window. Establish the layered folder structure
       (`Domain` / `Application` / `Infrastructure` / `App`/UI).
-- [ ] **Slice 1 — Clipboard-read on hotkey at chosen speed (smallest E2E).**
+- [x] **Slice 1 — Clipboard-read on hotkey at chosen speed (smallest E2E).**
       ([#4](https://github.com/ashkansirous/ReadTheStupidText/issues/4)) Register the global hotkey; on press, read current clipboard text aloud
       via `SpeechSynthesis` + `MediaPlayer`. Tray icon present with a flyout
       exposing Play/Pause and the five speed buttons; speed changes apply live

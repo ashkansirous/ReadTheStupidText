@@ -1,44 +1,47 @@
-﻿using Windows.ApplicationModel;
-using Windows.ApplicationModel.Activation;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
+using Binders.Application.Input;
+using Binders.Application.Reading;
+using Binders.Infrastructure.Input;
+using Binders.Infrastructure.Reading;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using Microsoft.UI.Xaml.Shapes;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
 
 namespace Binders_App;
 
 /// <summary>
-/// Provides application-specific behavior to supplement the default Application class.
+/// Application entry point. Keeps to provider/DI wiring and window bootstrap;
+/// all read-aloud behaviour lives in the Application/Infrastructure layers.
 /// </summary>
 public partial class App : Application
 {
-    private Window? _window;
-    
-    /// <summary>
-    /// Initializes the singleton application object.  This is the first line of authored code
-    /// executed, and as such is the logical equivalent of main() or WinMain().
-    /// </summary>
+    private MainWindow? _window;
+
     public App()
     {
         InitializeComponent();
+        Services = ConfigureServices();
+    }
+
+    /// <summary>The composition root for the running app.</summary>
+    public IServiceProvider Services { get; }
+
+    private static IServiceProvider ConfigureServices()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<ISpeechReader, SpeechReader>();
+        services.AddSingleton<IClipboardReader, ClipboardReader>();
+        services.AddSingleton<IHotkeyService, GlobalHotkeyService>();
+        services.AddSingleton<ReadAloudService>();
+        return services.BuildServiceProvider();
     }
 
     /// <summary>
-    /// Invoked when the application is launched.
+    /// Creates the tray-hosting window. It is never activated — Binders lives in
+    /// the notification area, not as a visible window.
     /// </summary>
-    /// <param name="args">Details about the launch request and process.</param>
-    protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
+    protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        _window = new MainWindow();
-        _window.Activate();
+        _window = new MainWindow(
+            Services.GetRequiredService<ReadAloudService>(),
+            Services.GetRequiredService<IHotkeyService>());
     }
 }
