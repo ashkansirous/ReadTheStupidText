@@ -1,7 +1,9 @@
 using Binders.Application.Input;
 using Binders.Application.Reading;
+using Binders.Application.Settings;
 using Binders.Infrastructure.Input;
 using Binders.Infrastructure.Reading;
+using Binders.Infrastructure.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 
@@ -30,6 +32,8 @@ public partial class App : Application
         services.AddSingleton<ISpeechReader, SpeechReader>();
         services.AddSingleton<IClipboardReader, ClipboardReader>();
         services.AddSingleton<IHotkeyService, GlobalHotkeyService>();
+        services.AddSingleton<ISelectionCopier, SelectionCopier>();
+        services.AddSingleton<ISettingsStore, LocalSettingsStore>();
         services.AddSingleton<ReadAloudService>();
         return services.BuildServiceProvider();
     }

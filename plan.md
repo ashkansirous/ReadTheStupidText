@@ -51,7 +51,7 @@ Ordered as vertical slices — each is end-to-end and independently runnable.
       via `SpeechSynthesis` + `MediaPlayer`. Tray icon present with a flyout
       exposing Play/Pause and the five speed buttons; speed changes apply live
       via `PlaybackRate`. This single slice proves TTS + speed + tray + hotkey.
-- [ ] **Slice 2 — Hotkey copies the current selection.** ([#5](https://github.com/ashkansirous/ReadTheStupidText/issues/5)) Extend the hotkey to
+- [x] **Slice 2 — Hotkey copies the current selection.** ([#5](https://github.com/ashkansirous/ReadTheStupidText/issues/5)) Extend the hotkey to
       simulate copy (send `Ctrl+C`) before reading, so the user can select in
       any app (incl. terminals/CLI/Claude Code) and have it read aloud. Persist
       last-used speed + enabled state to `LocalSettings`.
