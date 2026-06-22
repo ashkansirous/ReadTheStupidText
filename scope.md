@@ -2,7 +2,7 @@
 
 ## Goals
 
-- Provide a Windows 11 tray app ("Binders") that reads selected or copied text aloud on demand.
+- Provide a Windows 11 tray app ("ReadTheStupidText") that reads selected or copied text aloud on demand.
 - Let the user pick reading speed from 1x, 1.25x, 1.5x, 1.75x, and 2x, applied live.
 - Auto-read text on selection where the app exposes it, with a global-hotkey fallback for apps that don't (terminals, CLI, Claude Code).
 - Give the user a tiny, always-available control beside the clock to pause/resume and change speed.
@@ -36,4 +36,4 @@ A tray app that **reads the current clipboard aloud at a chosen speed on a globa
 - "Auto-read on any selection" has no single universal Windows API; UIA `TextPattern` covers Notepad/modern apps/most browsers but not terminals, the CLI, or Claude Code — hence the hotkey fallback is part of the core design, not optional.
 - `H.NotifyIcon.WinUI` is the one unavoidable third-party dependency, since WinUI 3 has no built-in tray icon.
 - Global input + tray may require a restricted-capability justification during Store certification; design stays within Store rules from day one.
-- Repo stays named `ReadTheStupidText`; product display name is "Binders".
+- Repo stays named `ReadTheStupidText`; product display name is "ReadTheStupidText".

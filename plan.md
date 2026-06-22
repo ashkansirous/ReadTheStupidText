@@ -1,8 +1,8 @@
-# Plan: Binders — Windows 11 read-aloud tray app
+# Plan: ReadTheStupidText — Windows 11 read-aloud tray app
 
 ## Context
 
-The user wants a lightweight Windows 11 utility ("Binders") that reads text
+The user wants a lightweight Windows 11 utility ("ReadTheStupidText") that reads text
 aloud at a user-chosen speed (1x / 1.25x / 1.5x / 1.75x / 2x), with a tiny
 control beside the clock for pause/resume and speed, that auto-reads selected
 text where possible and falls back to a global hotkey for apps that don't
@@ -31,7 +31,7 @@ this plan turns it into ordered, shippable vertical slices.
    `ApplicationData.Current.LocalSettings`; default speed 1x.
 7. **Distribution:** Microsoft Store; design within Store/restricted-capability
    rules from day one.
-8. **Naming:** repo stays `ReadTheStupidText`; product display name "Binders".
+8. **Naming:** repo stays `ReadTheStupidText`; product display name "ReadTheStupidText".
 9. **Toolchain:** before writing any Windows App SDK / WinUI / H.NotifyIcon
    code, confirm current stable versions and APIs via context7
    (`/microsoft/windowsappsdk`, `/microsoft/winui`, `H.NotifyIcon`).
