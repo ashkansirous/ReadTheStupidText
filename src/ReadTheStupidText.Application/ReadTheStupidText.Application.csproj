@@ -6,6 +6,9 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <!-- Match the app's platforms (no AnyCPU) so the solution's config set is
+         uniform across all projects and Visual Studio can load it. -->
+    <Platforms>x86;x64;ARM64</Platforms>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>

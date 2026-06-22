@@ -50,13 +50,14 @@ Building the **app project** is the quickest way to build the whole graph.
 
 The solution (`ReadTheStupidText.slnx`) also builds directly — e.g.
 `dotnet build ReadTheStupidText.slnx -p:Platform=x64` — and opens cleanly in
-Visual Studio. This works because the `.slnx` declares the solution platforms
-explicitly (`x86;x64;ARM64`, no `Any CPU`) and maps each `AnyCPU` class library
-to the active platform; without that mapping VS asks the `x86;x64;ARM64`-only
-app for an `Any CPU` config it doesn't have. Don't reintroduce `Any CPU` as a
-solution platform. Note: `Release` builds currently fail with `NETSDK1102`
-(`PublishTrimmed` without self-contained) — a scaffold default to revisit at
-Store-packaging time (Slice 5); `Debug` is unaffected.
+Visual Studio. **Every project (including the class libraries) declares the
+same `<Platforms>x86;x64;ARM64</Platforms>` — none uses `Any CPU`.** That
+uniform set is what lets VS load the solution: the WinUI app project has no
+`Any CPU` config, so if any library kept the default `Any CPU`, the solution
+would map the app to an `Any CPU` config it doesn't have and VS refuses to
+load. Don't add `Any CPU` to any project. Note: `Release` builds currently
+fail with `NETSDK1102` (`PublishTrimmed` without self-contained) — a scaffold
+default to revisit at Store-packaging time (Slice 5); `Debug` is unaffected.
 
 ## Code quality (project-specific reminders)
 

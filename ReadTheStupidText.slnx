@@ -1,10 +1,10 @@
 <Solution>
   <!--
-    The app project (ReadTheStupidText.App) is x86/x64/ARM64 only, while the
-    class libraries are AnyCPU. Declaring the solution platforms explicitly
-    (no "Any CPU") and mapping each AnyCPU library to the active solution
-    platform keeps Visual Studio from asking the app for an "Any CPU" config
-    it doesn't have.
+    Every project declares the same platforms (x86;x64;ARM64, no Any CPU), so
+    the solution's configuration set is uniform and each solution config maps
+    to an identical, existing project config. Don't reintroduce "Any CPU" on
+    any project — the WinUI app project has no Any CPU config, and a mismatch
+    stops Visual Studio from loading the solution.
   -->
   <Configurations>
     <BuildType Name="Debug" />
@@ -15,14 +15,8 @@
   </Configurations>
   <Folder Name="/src/">
     <Project Path="src/ReadTheStupidText.App/ReadTheStupidText.App.csproj" />
-    <Project Path="src/ReadTheStupidText.Application/ReadTheStupidText.Application.csproj">
-      <Platform Project="Any CPU" />
-    </Project>
-    <Project Path="src/ReadTheStupidText.Domain/ReadTheStupidText.Domain.csproj">
-      <Platform Project="Any CPU" />
-    </Project>
-    <Project Path="src/ReadTheStupidText.Infrastructure/ReadTheStupidText.Infrastructure.csproj">
-      <Platform Project="Any CPU" />
-    </Project>
+    <Project Path="src/ReadTheStupidText.Application/ReadTheStupidText.Application.csproj" />
+    <Project Path="src/ReadTheStupidText.Domain/ReadTheStupidText.Domain.csproj" />
+    <Project Path="src/ReadTheStupidText.Infrastructure/ReadTheStupidText.Infrastructure.csproj" />
   </Folder>
 </Solution>
