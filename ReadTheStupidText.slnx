@@ -1,8 +1,28 @@
 <Solution>
+  <!--
+    The app project (ReadTheStupidText.App) is x86/x64/ARM64 only, while the
+    class libraries are AnyCPU. Declaring the solution platforms explicitly
+    (no "Any CPU") and mapping each AnyCPU library to the active solution
+    platform keeps Visual Studio from asking the app for an "Any CPU" config
+    it doesn't have.
+  -->
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="Release" />
+    <Platform Name="x86" />
+    <Platform Name="x64" />
+    <Platform Name="ARM64" />
+  </Configurations>
   <Folder Name="/src/">
     <Project Path="src/ReadTheStupidText.App/ReadTheStupidText.App.csproj" />
-    <Project Path="src/ReadTheStupidText.Application/ReadTheStupidText.Application.csproj" />
-    <Project Path="src/ReadTheStupidText.Domain/ReadTheStupidText.Domain.csproj" />
-    <Project Path="src/ReadTheStupidText.Infrastructure/ReadTheStupidText.Infrastructure.csproj" />
+    <Project Path="src/ReadTheStupidText.Application/ReadTheStupidText.Application.csproj">
+      <Platform Project="Any CPU" />
+    </Project>
+    <Project Path="src/ReadTheStupidText.Domain/ReadTheStupidText.Domain.csproj">
+      <Platform Project="Any CPU" />
+    </Project>
+    <Project Path="src/ReadTheStupidText.Infrastructure/ReadTheStupidText.Infrastructure.csproj">
+      <Platform Project="Any CPU" />
+    </Project>
   </Folder>
 </Solution>

@@ -46,9 +46,17 @@ dotnet run   --project src/ReadTheStupidText.App/ReadTheStupidText.App.csproj -p
 ```
 
 Builds are **per-architecture** — always pass `-p:Platform=x64` (or `arm64`).
-Build the **app project**, not `ReadTheStupidText.slnx`: the class libs are `AnyCPU` and
-the app is `x86;x64;ARM64`, so a solution-level `-p:Platform=x64` is an invalid
-solution configuration. The app project builds the whole graph.
+Building the **app project** is the quickest way to build the whole graph.
+
+The solution (`ReadTheStupidText.slnx`) also builds directly — e.g.
+`dotnet build ReadTheStupidText.slnx -p:Platform=x64` — and opens cleanly in
+Visual Studio. This works because the `.slnx` declares the solution platforms
+explicitly (`x86;x64;ARM64`, no `Any CPU`) and maps each `AnyCPU` class library
+to the active platform; without that mapping VS asks the `x86;x64;ARM64`-only
+app for an `Any CPU` config it doesn't have. Don't reintroduce `Any CPU` as a
+solution platform. Note: `Release` builds currently fail with `NETSDK1102`
+(`PublishTrimmed` without self-contained) — a scaffold default to revisit at
+Store-packaging time (Slice 5); `Debug` is unaffected.
 
 ## Code quality (project-specific reminders)
 
