@@ -35,6 +35,17 @@ this plan turns it into ordered, shippable vertical slices.
 9. **Toolchain:** before writing any Windows App SDK / WinUI / H.NotifyIcon
    code, confirm current stable versions and APIs via context7
    (`/microsoft/windowsappsdk`, `/microsoft/winui`, `H.NotifyIcon`).
+10. **Voice selection (scope change):** narrator voice is now **in scope** —
+    chosen from installed Windows voices (`SpeechSynthesizer.AllVoices`),
+    surfaced as a tray **Voice** submenu, persisted by `VoiceInformation.Id`,
+    applied to the next read. Voices are an open, machine-dependent set, so
+    they are modelled as a `VoiceInfo` record (not an enum). Voice *tuning*
+    (pitch/volume/SSML) and in-app voice installation stay out of scope.
+11. **Tray flyout root:** the tray-hosting window is never activated, which
+    leaves the flyout without a proper visual root — the cause of the
+    speed-selection defect (radio items don't commit, rate doesn't apply). The
+    fix roots the flyout correctly (activate-then-hide once, or set `XamlRoot`)
+    so all stateful menu items — speed and the new voice submenu — work.
 
 ## Changes
 
@@ -68,14 +79,35 @@ Ordered as vertical slices — each is end-to-end and independently runnable.
       and a GitHub Actions workflow that builds + packages the MSIX artifact.
       Prepare Store submission assets.
 
+Added after the initial plan — **tackled next, before Slice 4 (startup) and
+Slice 5 (store):**
+
+- [ ] **Slice 6 — Fix speed control.** The five speed items don't commit
+      selection or change the rate (defect from Slices 1/3). Give the tray
+      flyout a proper XAML root (activate-then-hide the window once, or set
+      `XamlRoot`) so `RadioMenuFlyoutItem` selection renders and click handlers
+      fire; verify `SetSpeed` drives `MediaPlaybackSession.PlaybackRate` both
+      live (during playback) and on the next read. This is a bug fix — no new
+      layer, just the App/Infrastructure wiring.
+- [ ] **Slice 7 — Narrator voice selection.** Model a `VoiceInfo` record
+      (Id, DisplayName, Language) in Domain; add `IVoiceCatalog` (list
+      installed voices) and `ISpeechReader.SetVoice(id)` in Application, with a
+      WinRT implementation over `SpeechSynthesizer.AllVoices` in Infrastructure.
+      Surface a **Voice** submenu in the tray flyout (radio list, checkmark on
+      the current voice). Extend `ISettingsStore` to persist the chosen voice
+      Id; restore on startup, falling back to the system default if unset or
+      uninstalled. A voice change applies to the next read. Confirm WinRT
+      voice APIs via context7 first.
+
 ## Out of Scope
 
-- Voice picker, multilingual voice selection, or any voice tuning beyond
-  playback rate (deferred to a later settings pass).
+- Voice *tuning* beyond playback rate (pitch, volume, SSML prosody).
+- Installing/downloading new voices or languages from within the app — the
+  picker lists only voices already installed in Windows.
 - Reading from non-UIA apps *without* the hotkey fallback.
 - Non-Store / sideload as a primary distribution channel (MSIX may be
   sideloaded for testing, but Store is the target).
-- A full settings window beyond the tray flyout/context menu.
+- A full settings window — speed and voice live in the tray flyout.
 - Pure UWP packaging.
 
 ## Verification
@@ -95,5 +127,12 @@ Ordered as vertical slices — each is end-to-end and independently runnable.
 - **Slice 5:** CI run produces a signed MSIX; install the MSIX on a clean
   Win11 machine and confirm all of the above; Store certification dry-run
   passes capability checks.
+- **Slice 6:** open the tray flyout, click each speed → the item shows as
+  selected (radio check) and stays selected on reopen; trigger a read → speech
+  plays at that rate; change speed mid-playback → rate changes live.
+- **Slice 7:** the Voice submenu lists the installed Windows voices with the
+  current one checked; pick a different voice → the next read uses it; restart
+  the app → the chosen voice is restored; uninstall that voice → falls back to
+  the system default without error.
 - Manual UI checks driven through the running app; no browser E2E harness
   applies to a native tray app.
