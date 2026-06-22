@@ -33,6 +33,7 @@ public partial class App : Application
         services.AddSingleton<IClipboardReader, ClipboardReader>();
         services.AddSingleton<IHotkeyService, GlobalHotkeyService>();
         services.AddSingleton<ISelectionCopier, SelectionCopier>();
+        services.AddSingleton<ISelectionMonitor, UiaSelectionMonitor>();
         services.AddSingleton<ISettingsStore, LocalSettingsStore>();
         services.AddSingleton<ReadAloudService>();
         return services.BuildServiceProvider();
