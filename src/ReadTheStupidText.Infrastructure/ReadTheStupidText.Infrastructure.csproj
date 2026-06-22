@@ -5,6 +5,13 @@
     <ProjectReference Include="..\ReadTheStupidText.Domain\ReadTheStupidText.Domain.csproj" />
   </ItemGroup>
 
+  <!-- Managed UI Automation client (System.Windows.Automation) lives in the
+       Windows Desktop runtime pack. Only the UIAutomation assemblies are
+       loaded at run time; WPF/WinForms are referenced but not activated. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.WindowsDesktop.App" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>

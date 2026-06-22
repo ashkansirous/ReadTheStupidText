@@ -55,7 +55,7 @@ Ordered as vertical slices — each is end-to-end and independently runnable.
       simulate copy (send `Ctrl+C`) before reading, so the user can select in
       any app (incl. terminals/CLI/Claude Code) and have it read aloud. Persist
       last-used speed + enabled state to `LocalSettings`.
-- [ ] **Slice 3 — Auto-read on selection (UIA).** ([#6](https://github.com/ashkansirous/ReadTheStupidText/issues/6)) Add UI Automation
+- [x] **Slice 3 — Auto-read on selection (UIA).** ([#6](https://github.com/ashkansirous/ReadTheStupidText/issues/6)) Add UI Automation
       `TextPattern` monitoring so selecting text in supporting apps
       (Notepad, modern apps, most browsers) auto-reads without the hotkey.
       Enable/Disable toggle in the tray menu gates this behavior. Hotkey

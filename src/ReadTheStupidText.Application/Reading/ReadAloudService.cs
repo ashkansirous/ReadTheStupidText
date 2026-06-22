@@ -5,9 +5,11 @@ using ReadTheStupidText.Domain.Reading;
 namespace ReadTheStupidText.Application.Reading;
 
 /// <summary>
-/// Coordinates the read-aloud use case: when the global hotkey fires, copy the
-/// focused app's selection and read it aloud; and forward the flyout's play/pause
-/// and speed choices to the speech reader. Speed and enabled state are persisted.
+/// Coordinates the read-aloud use case. Two trigger paths feed the reader: the
+/// global hotkey (always available — copies the focused selection and reads it,
+/// the fallback for non-UIA apps), and the UI Automation selection monitor
+/// (auto-read, gated by <see cref="IsEnabled"/>). Also forwards the flyout's
+/// play/pause and speed choices. Speed and enabled state are persisted.
 /// </summary>
 public sealed class ReadAloudService : IDisposable
 {
@@ -15,6 +17,7 @@ public sealed class ReadAloudService : IDisposable
     private readonly IClipboardReader _clipboard;
     private readonly IHotkeyService _hotkey;
     private readonly ISelectionCopier _selectionCopier;
+    private readonly ISelectionMonitor _selectionMonitor;
     private readonly ISettingsStore _settings;
 
     public ReadAloudService(
@@ -22,26 +25,42 @@ public sealed class ReadAloudService : IDisposable
         IClipboardReader clipboard,
         IHotkeyService hotkey,
         ISelectionCopier selectionCopier,
+        ISelectionMonitor selectionMonitor,
         ISettingsStore settings)
     {
         _reader = reader;
         _clipboard = clipboard;
         _hotkey = hotkey;
         _selectionCopier = selectionCopier;
+        _selectionMonitor = selectionMonitor;
         _settings = settings;
 
         _reader.SetSpeed(_settings.Speed);
         _hotkey.Pressed += OnHotkeyPressed;
+        _selectionMonitor.SelectionChanged += OnSelectionChanged;
+
+        if (_settings.IsEnabled)
+        {
+            _selectionMonitor.Start();
+        }
     }
 
     public PlaybackState State => _reader.State;
 
     public ReadingSpeed Speed => _settings.Speed;
 
+    /// <summary>
+    /// Whether auto-read on selection is on. Persisted, and starts/stops the
+    /// selection monitor. The hotkey works regardless of this flag.
+    /// </summary>
     public bool IsEnabled
     {
         get => _settings.IsEnabled;
-        set => _settings.IsEnabled = value;
+        set
+        {
+            _settings.IsEnabled = value;
+            ApplyAutoRead(value);
+        }
     }
 
     public event EventHandler<PlaybackState>? StateChanged
@@ -61,12 +80,7 @@ public sealed class ReadAloudService : IDisposable
     public async Task ReadClipboardAsync()
     {
         var text = await _clipboard.GetTextAsync();
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return;
-        }
-
-        await _reader.SpeakAsync(text);
+        await SpeakAsync(text);
     }
 
     /// <summary>Pauses if playing, resumes if paused; no-op when idle.</summary>
@@ -88,18 +102,36 @@ public sealed class ReadAloudService : IDisposable
         _reader.SetSpeed(speed);
     }
 
-    private async void OnHotkeyPressed(object? sender, EventArgs e)
+    private void ApplyAutoRead(bool enabled)
     {
-        if (!_settings.IsEnabled)
+        if (enabled)
         {
-            return;
+            _selectionMonitor.Start();
         }
-
-        await ReadSelectionAsync();
+        else
+        {
+            _selectionMonitor.Stop();
+        }
     }
+
+    private async Task SpeakAsync(string? text)
+    {
+        if (!string.IsNullOrWhiteSpace(text))
+        {
+            await _reader.SpeakAsync(text);
+        }
+    }
+
+    // The hotkey is an explicit, manual action — it reads the selection whether
+    // or not auto-read is enabled, so it remains the fallback for non-UIA apps.
+    private async void OnHotkeyPressed(object? sender, EventArgs e) => await ReadSelectionAsync();
+
+    private async void OnSelectionChanged(object? sender, string text) => await SpeakAsync(text);
 
     public void Dispose()
     {
         _hotkey.Pressed -= OnHotkeyPressed;
+        _selectionMonitor.SelectionChanged -= OnSelectionChanged;
+        _selectionMonitor.Stop();
     }
 }

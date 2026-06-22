@@ -17,6 +17,7 @@ public sealed partial class MainWindow : Window
     private const string PlayLabel = "Play";
     private const string PauseLabel = "Pause";
     private const string QuitLabel = "Quit";
+    private const string AutoReadLabel = "Auto-read on selection";
     private const string SpeedGroup = "ReadTheStupidTextSpeed";
 
     private readonly ReadAloudService _readAloud;
@@ -42,6 +43,15 @@ public sealed partial class MainWindow : Window
     private MenuFlyout BuildTrayMenu()
     {
         var flyout = new MenuFlyout();
+
+        var autoRead = new ToggleMenuFlyoutItem
+        {
+            Text = AutoReadLabel,
+            IsChecked = _readAloud.IsEnabled,
+        };
+        autoRead.Click += OnAutoReadToggle;
+        flyout.Items.Add(autoRead);
+        flyout.Items.Add(new MenuFlyoutSeparator());
 
         _playPauseItem = new MenuFlyoutItem { Text = PlayLabel };
         _playPauseItem.Click += OnPlayPauseClick;
@@ -72,6 +82,14 @@ public sealed partial class MainWindow : Window
         };
         item.Click += OnSpeedClick;
         return item;
+    }
+
+    private void OnAutoReadToggle(object sender, RoutedEventArgs e)
+    {
+        if (sender is ToggleMenuFlyoutItem item)
+        {
+            _readAloud.IsEnabled = item.IsChecked;
+        }
     }
 
     private void OnPlayPauseClick(object sender, RoutedEventArgs e) => _readAloud.TogglePlayPause();
