@@ -71,6 +71,12 @@ default to revisit at Store-packaging time (Slice 5); `Debug` is unaffected.
 
 ## Out of scope (v1)
 
-Voice picker / multilingual selection, a full settings window, non-Store
+Voice *tuning* beyond playback rate (pitch/volume/SSML), installing or
+downloading voices from within the app, a full settings window, non-Store
 distribution as the primary channel, and reading from non-UIA apps without the
 hotkey fallback. See `scope.md`.
+
+Note: choosing the narrator voice from **already-installed** Windows voices is
+now **in scope** (tray Voice submenu, persisted by voice Id) — see Slice 7 in
+`plan.md`. Voices are an open, machine-dependent set, so model them as a
+`VoiceInfo` record, not an `enum`.
