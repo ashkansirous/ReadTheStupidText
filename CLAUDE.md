@@ -49,13 +49,14 @@ Builds are **per-architecture** — always pass `-p:Platform=x64` (or `arm64`).
 Building the **app project** is the quickest way to build the whole graph.
 
 The solution (`ReadTheStupidText.slnx`) also builds directly — e.g.
-`dotnet build ReadTheStupidText.slnx -p:Platform=x64` — and opens cleanly in
-Visual Studio. **Every project (including the class libraries) declares the
-same `<Platforms>x86;x64;ARM64</Platforms>` — none uses `Any CPU`.** That
-uniform set is what lets VS load the solution: the WinUI app project has no
-`Any CPU` config, so if any library kept the default `Any CPU`, the solution
-would map the app to an `Any CPU` config it doesn't have and VS refuses to
-load. Don't add `Any CPU` to any project. Note: `Release` builds currently
+`dotnet build ReadTheStupidText.slnx -p:Platform=x64` — and opens in Visual
+Studio. The class libraries are `AnyCPU` and the app is `x86;x64;ARM64`; the
+`.slnx` bridges the gap with explicit `<Configurations>` (platforms only, no
+`Any CPU`) and a per-app `<Platform Solution="Debug|x64" Project="x64" />`
+mapping, plus a `<Deploy Solution="Debug|x64" />` rule so F5 deploys the
+package. Debug through the **(Package)** profile — there is no unpackaged
+profile, because running unpackaged fails with `REGDB_E_CLASSNOTREG` (no
+package identity). Note: `Release` builds currently
 fail with `NETSDK1102` (`PublishTrimmed` without self-contained) — a scaffold
 default to revisit at Store-packaging time (Slice 5); `Debug` is unaffected.
 
