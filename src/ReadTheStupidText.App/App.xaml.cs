@@ -1,9 +1,11 @@
 using ReadTheStupidText.Application.Input;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Application.Startup;
 using ReadTheStupidText.Infrastructure.Input;
 using ReadTheStupidText.Infrastructure.Reading;
 using ReadTheStupidText.Infrastructure.Settings;
+using ReadTheStupidText.Infrastructure.Startup;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 
@@ -35,6 +37,7 @@ public partial class App : Application
         services.AddSingleton<ISelectionCopier, SelectionCopier>();
         services.AddSingleton<ISelectionMonitor, UiaSelectionMonitor>();
         services.AddSingleton<IVoiceCatalog, WinRtVoiceCatalog>();
+        services.AddSingleton<IStartupService, StartupTaskService>();
         services.AddSingleton<ISettingsStore, LocalSettingsStore>();
         services.AddSingleton<ReadAloudService>();
         return services.BuildServiceProvider();
@@ -48,6 +51,7 @@ public partial class App : Application
     {
         _window = new MainWindow(
             Services.GetRequiredService<ReadAloudService>(),
-            Services.GetRequiredService<IHotkeyService>());
+            Services.GetRequiredService<IHotkeyService>(),
+            Services.GetRequiredService<IStartupService>());
     }
 }

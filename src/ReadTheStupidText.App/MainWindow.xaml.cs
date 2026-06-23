@@ -1,5 +1,6 @@
 using ReadTheStupidText.Application.Input;
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Startup;
 using ReadTheStupidText.Domain.Reading;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
@@ -19,6 +20,7 @@ public sealed partial class MainWindow : Window
     private const string PauseLabel = "Pause";
     private const string QuitLabel = "Quit";
     private const string AutoReadLabel = "Auto-read on selection";
+    private const string StartupLabel = "Launch at startup";
     private const string VoiceLabel = "Voice";
 
     private static readonly Uri DarkTrayIconUri = new("ms-appx:///Assets/TrayIconDark.ico");
@@ -26,6 +28,7 @@ public sealed partial class MainWindow : Window
 
     private readonly ReadAloudService _readAloud;
     private readonly IHotkeyService _hotkey;
+    private readonly IStartupService _startup;
     private readonly DispatcherQueue _dispatcher = DispatcherQueue.GetForCurrentThread();
     private readonly Windows.UI.ViewManagement.UISettings _uiSettings = new();
 
@@ -34,22 +37,26 @@ public sealed partial class MainWindow : Window
     // is wired through one of these.
     private readonly RelayCommand _togglePlayPauseCommand;
     private readonly RelayCommand _toggleAutoReadCommand;
+    private readonly RelayCommand _toggleStartupCommand;
     private readonly RelayCommand _setSpeedCommand;
     private readonly RelayCommand _setVoiceCommand;
     private readonly RelayCommand _quitCommand;
 
     private MenuFlyoutItem? _playPauseItem;
     private ToggleMenuFlyoutItem? _autoReadItem;
+    private ToggleMenuFlyoutItem? _startupItem;
     private readonly List<ToggleMenuFlyoutItem> _speedItems = new();
     private readonly List<ToggleMenuFlyoutItem> _voiceItems = new();
 
-    public MainWindow(ReadAloudService readAloud, IHotkeyService hotkey)
+    public MainWindow(ReadAloudService readAloud, IHotkeyService hotkey, IStartupService startup)
     {
         _readAloud = readAloud;
         _hotkey = hotkey;
+        _startup = startup;
 
         _togglePlayPauseCommand = new RelayCommand(_ => _readAloud.TogglePlayPause());
         _toggleAutoReadCommand = new RelayCommand(_ => ToggleAutoRead());
+        _toggleStartupCommand = new RelayCommand(_ => _ = ToggleStartupAsync());
         _setSpeedCommand = new RelayCommand(p => ApplySpeed((ReadingSpeed)p!));
         _setVoiceCommand = new RelayCommand(p => ApplyVoice((string)p!));
         _quitCommand = new RelayCommand(_ => Quit());
@@ -66,6 +73,10 @@ public sealed partial class MainWindow : Window
         // Doing this after creation avoids generating a blank icon while the
         // image is still loading.
         UpdateTrayIconForTheme();
+
+        // The startup-task state is read asynchronously; reflect it on the toggle
+        // once known (well before the user can open the tray menu).
+        _ = RefreshStartupStateAsync();
 
         _readAloud.StateChanged += OnStateChanged;
         _hotkey.Register(WindowNative.GetWindowHandle(this));
@@ -94,6 +105,16 @@ public sealed partial class MainWindow : Window
             Command = _toggleAutoReadCommand,
         };
         flyout.Items.Add(_autoReadItem);
+
+        // IsChecked is corrected by RefreshStartupStateAsync once the OS reports
+        // the real state; starting unchecked avoids a misleading flash.
+        _startupItem = new ToggleMenuFlyoutItem
+        {
+            Text = StartupLabel,
+            IsChecked = false,
+            Command = _toggleStartupCommand,
+        };
+        flyout.Items.Add(_startupItem);
         flyout.Items.Add(new MenuFlyoutSeparator());
 
         _playPauseItem = new MenuFlyoutItem { Text = PlayLabel, Command = _togglePlayPauseCommand };
@@ -171,6 +192,33 @@ public sealed partial class MainWindow : Window
         if (_autoReadItem is not null)
         {
             _autoReadItem.IsChecked = _readAloud.IsEnabled;
+        }
+    }
+
+    private async Task RefreshStartupStateAsync()
+    {
+        bool enabled = await _startup.IsEnabledAsync();
+        _dispatcher.TryEnqueue(() => SetStartupChecked(enabled));
+    }
+
+    private async Task ToggleStartupAsync()
+    {
+        if (_startupItem is null)
+        {
+            return;
+        }
+
+        // Reflect the actual resulting state: enabling can be refused by the user
+        // (disabled in Task Manager) or by policy.
+        bool enabled = await _startup.SetEnabledAsync(!_startupItem.IsChecked);
+        _dispatcher.TryEnqueue(() => SetStartupChecked(enabled));
+    }
+
+    private void SetStartupChecked(bool enabled)
+    {
+        if (_startupItem is not null)
+        {
+            _startupItem.IsChecked = enabled;
         }
     }
 

@@ -6,7 +6,8 @@
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
   xmlns:systemai="http://schemas.microsoft.com/appx/manifest/systemai/windows10"
-  IgnorableNamespaces="uap rescap systemai">
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+  IgnorableNamespaces="uap rescap systemai desktop">
 
   <Identity
     Name="395C498D-832B-4989-8A0D-7BCB81DCB886"
@@ -43,6 +44,17 @@
         <uap:DefaultTile Wide310x150Logo="Assets\App logo and store.png" />
         <uap:SplashScreen Image="Assets\App logo and store.png" />
       </uap:VisualElements>
+      <Extensions>
+        <desktop:Extension
+          Category="windows.startupTask"
+          Executable="ReadTheStupidText.App.exe"
+          EntryPoint="Windows.FullTrustApplication">
+          <desktop:StartupTask
+            TaskId="ReadTheStupidTextStartup"
+            Enabled="false"
+            DisplayName="ReadTheStupidText" />
+        </desktop:Extension>
+      </Extensions>
     </Application>
   </Applications>
 
