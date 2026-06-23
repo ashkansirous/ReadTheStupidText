@@ -41,11 +41,17 @@ this plan turns it into ordered, shippable vertical slices.
     applied to the next read. Voices are an open, machine-dependent set, so
     they are modelled as a `VoiceInfo` record (not an enum). Voice *tuning*
     (pitch/volume/SSML) and in-app voice installation stay out of scope.
-11. **Tray flyout root:** the tray-hosting window is never activated, which
-    leaves the flyout without a proper visual root — the cause of the
-    speed-selection defect (radio items don't commit, rate doesn't apply). The
-    fix roots the flyout correctly (activate-then-hide once, or set `XamlRoot`)
-    so all stateful menu items — speed and the new voice submenu — work.
+11. **Tray menu invocation (speed-defect root cause):** H.NotifyIcon's default
+    `PopupMenu` context-menu mode renders a *native Win32 menu* built from the
+    `MenuFlyout`. It invokes each item's **`Command`** only — the WinUI
+    **`Click`** event never fires — and it renders a checkmark only for
+    `ToggleMenuFlyoutItem`, not `RadioMenuFlyoutItem` (which falls through to the
+    plain item case). That is why selecting a speed did nothing *and* never
+    showed as selected. The fix drives every tray item through an `ICommand` and
+    models the five speeds as mutually-exclusive `ToggleMenuFlyoutItem`s
+    (single-selection managed in code). The same Command pattern applies to the
+    Voice submenu in Slice 7. (The earlier "window never activated / XAML root"
+    theory was wrong — confirmed against the H.NotifyIcon source.)
 
 ## Changes
 
@@ -82,13 +88,15 @@ Ordered as vertical slices — each is end-to-end and independently runnable.
 Added after the initial plan — **tackled next, before Slice 4 (startup) and
 Slice 5 (store):**
 
-- [ ] **Slice 6 — Fix speed control.** The five speed items don't commit
-      selection or change the rate (defect from Slices 1/3). Give the tray
-      flyout a proper XAML root (activate-then-hide the window once, or set
-      `XamlRoot`) so `RadioMenuFlyoutItem` selection renders and click handlers
-      fire; verify `SetSpeed` drives `MediaPlaybackSession.PlaybackRate` both
-      live (during playback) and on the next read. This is a bug fix — no new
-      layer, just the App/Infrastructure wiring.
+- [x] **Slice 6 — Fix speed control.** The five speed items didn't commit
+      selection or change the rate (defect from Slices 1/3). Root cause: in
+      H.NotifyIcon's default `PopupMenu` mode the native menu invokes each
+      item's `Command` (not the WinUI `Click` event) and only `ToggleMenuFlyoutItem`
+      renders a checkmark. Fix: drive all tray items through an `ICommand`
+      (`RelayCommand`) and model the speeds as mutually-exclusive
+      `ToggleMenuFlyoutItem`s with selection managed in code. `SetSpeed` already
+      drives `MediaPlaybackSession.PlaybackRate` live and on the next read
+      (verified in `SpeechReader`). Bug fix — no new layer, just App wiring.
 - [ ] **Slice 7 — Narrator voice selection.** Model a `VoiceInfo` record
       (Id, DisplayName, Language) in Domain; add `IVoiceCatalog` (list
       installed voices) and `ISpeechReader.SetVoice(id)` in Application, with a

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 
 <Package
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
@@ -38,10 +38,10 @@
         DisplayName="ReadTheStupidText"
         Description="ReadTheStupidText — read selected text aloud"
         BackgroundColor="transparent"
-        Square150x150Logo="Assets\Square150x150Logo.png"
-        Square44x44Logo="Assets\Square44x44Logo.png">
-        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
-        <uap:SplashScreen Image="Assets\SplashScreen.png" />
+        Square150x150Logo="Assets\Logotype Glyph.png"
+        Square44x44Logo="Assets\Logotype Glyph.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\App logo and store.png" />
+        <uap:SplashScreen Image="Assets\App logo and store.png" />
       </uap:VisualElements>
     </Application>
   </Applications>
