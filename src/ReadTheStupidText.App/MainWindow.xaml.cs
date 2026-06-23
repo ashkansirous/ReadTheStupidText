@@ -18,18 +18,32 @@ public sealed partial class MainWindow : Window
     private const string PauseLabel = "Pause";
     private const string QuitLabel = "Quit";
     private const string AutoReadLabel = "Auto-read on selection";
-    private const string SpeedGroup = "ReadTheStupidTextSpeed";
 
     private readonly ReadAloudService _readAloud;
     private readonly IHotkeyService _hotkey;
     private readonly DispatcherQueue _dispatcher = DispatcherQueue.GetForCurrentThread();
 
+    // The tray menu runs in H.NotifyIcon's default PopupMenu mode, which only
+    // invokes each item's Command (never the WinUI Click event), so every item
+    // is wired through one of these.
+    private readonly RelayCommand _togglePlayPauseCommand;
+    private readonly RelayCommand _toggleAutoReadCommand;
+    private readonly RelayCommand _setSpeedCommand;
+    private readonly RelayCommand _quitCommand;
+
     private MenuFlyoutItem? _playPauseItem;
+    private ToggleMenuFlyoutItem? _autoReadItem;
+    private readonly List<ToggleMenuFlyoutItem> _speedItems = new();
 
     public MainWindow(ReadAloudService readAloud, IHotkeyService hotkey)
     {
         _readAloud = readAloud;
         _hotkey = hotkey;
+
+        _togglePlayPauseCommand = new RelayCommand(_ => _readAloud.TogglePlayPause());
+        _toggleAutoReadCommand = new RelayCommand(_ => ToggleAutoRead());
+        _setSpeedCommand = new RelayCommand(p => ApplySpeed((ReadingSpeed)p!));
+        _quitCommand = new RelayCommand(_ => Quit());
 
         InitializeComponent();
 
@@ -44,17 +58,16 @@ public sealed partial class MainWindow : Window
     {
         var flyout = new MenuFlyout();
 
-        var autoRead = new ToggleMenuFlyoutItem
+        _autoReadItem = new ToggleMenuFlyoutItem
         {
             Text = AutoReadLabel,
             IsChecked = _readAloud.IsEnabled,
+            Command = _toggleAutoReadCommand,
         };
-        autoRead.Click += OnAutoReadToggle;
-        flyout.Items.Add(autoRead);
+        flyout.Items.Add(_autoReadItem);
         flyout.Items.Add(new MenuFlyoutSeparator());
 
-        _playPauseItem = new MenuFlyoutItem { Text = PlayLabel };
-        _playPauseItem.Click += OnPlayPauseClick;
+        _playPauseItem = new MenuFlyoutItem { Text = PlayLabel, Command = _togglePlayPauseCommand };
         flyout.Items.Add(_playPauseItem);
         flyout.Items.Add(new MenuFlyoutSeparator());
 
@@ -64,45 +77,47 @@ public sealed partial class MainWindow : Window
         }
 
         flyout.Items.Add(new MenuFlyoutSeparator());
-        var quit = new MenuFlyoutItem { Text = QuitLabel };
-        quit.Click += OnQuitClick;
-        flyout.Items.Add(quit);
+        flyout.Items.Add(new MenuFlyoutItem { Text = QuitLabel, Command = _quitCommand });
 
         return flyout;
     }
 
-    private RadioMenuFlyoutItem CreateSpeedItem(ReadingSpeed speed)
+    // Speeds use ToggleMenuFlyoutItem rather than RadioMenuFlyoutItem: the
+    // PopupMenu builder only renders a checkmark for toggle items, and it does
+    // not enforce radio-group exclusivity, so ApplySpeed manages that.
+    private ToggleMenuFlyoutItem CreateSpeedItem(ReadingSpeed speed)
     {
-        var item = new RadioMenuFlyoutItem
+        var item = new ToggleMenuFlyoutItem
         {
             Text = speed.ToDisplayLabel(),
-            GroupName = SpeedGroup,
             Tag = speed,
             IsChecked = speed == _readAloud.Speed,
+            Command = _setSpeedCommand,
+            CommandParameter = speed,
         };
-        item.Click += OnSpeedClick;
+        _speedItems.Add(item);
         return item;
     }
 
-    private void OnAutoReadToggle(object sender, RoutedEventArgs e)
+    private void ToggleAutoRead()
     {
-        if (sender is ToggleMenuFlyoutItem item)
+        _readAloud.IsEnabled = !_readAloud.IsEnabled;
+        if (_autoReadItem is not null)
         {
-            _readAloud.IsEnabled = item.IsChecked;
+            _autoReadItem.IsChecked = _readAloud.IsEnabled;
         }
     }
 
-    private void OnPlayPauseClick(object sender, RoutedEventArgs e) => _readAloud.TogglePlayPause();
-
-    private void OnSpeedClick(object sender, RoutedEventArgs e)
+    private void ApplySpeed(ReadingSpeed speed)
     {
-        if (sender is RadioMenuFlyoutItem { Tag: ReadingSpeed speed })
+        _readAloud.SetSpeed(speed);
+        foreach (ToggleMenuFlyoutItem item in _speedItems)
         {
-            _readAloud.SetSpeed(speed);
+            item.IsChecked = item.Tag is ReadingSpeed s && s == speed;
         }
     }
 
-    private void OnQuitClick(object sender, RoutedEventArgs e)
+    private void Quit()
     {
         _hotkey.Dispose();
         TrayIcon.Dispose();
