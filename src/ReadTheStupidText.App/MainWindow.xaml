@@ -16,7 +16,7 @@
     <Grid>
         <tb:TaskbarIcon
             x:Name="TrayIcon"
-            ToolTipText="ReadTheStupidText — read aloud"
-            IconSource="ms-appx:///Assets/AppIcon.ico" />
+            IconSource="Assets/TrayIconLight.ico"
+            ToolTipText="ReadTheStupidText — read aloud" />
     </Grid>
 </Window>

@@ -25,6 +25,10 @@
     <Content Include="Assets\StoreLogo.png" />
     <Content Include="Assets\AppIcon.ico" />
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
+    <Content Include="Assets\App logo and store.png" />
+    <Content Include="Assets\Logotype Glyph.png" />
+    <Content Include="Assets\TrayIconDark.ico" />
+    <Content Include="Assets\TrayIconLight.ico" />
   </ItemGroup>
 
   <ItemGroup>

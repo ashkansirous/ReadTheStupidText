@@ -4,6 +4,7 @@ using ReadTheStupidText.Domain.Reading;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media.Imaging;
 using WinRT.Interop;
 
 namespace ReadTheStupidText_App;
@@ -20,9 +21,13 @@ public sealed partial class MainWindow : Window
     private const string AutoReadLabel = "Auto-read on selection";
     private const string SpeedGroup = "ReadTheStupidTextSpeed";
 
+    private static readonly Uri DarkTrayIconUri = new("ms-appx:///Assets/TrayIconDark.ico");
+    private static readonly Uri LightTrayIconUri = new("ms-appx:///Assets/TrayIconLight.ico");
+
     private readonly ReadAloudService _readAloud;
     private readonly IHotkeyService _hotkey;
     private readonly DispatcherQueue _dispatcher = DispatcherQueue.GetForCurrentThread();
+    private readonly Windows.UI.ViewManagement.UISettings _uiSettings = new();
 
     private MenuFlyoutItem? _playPauseItem;
 
@@ -33,11 +38,31 @@ public sealed partial class MainWindow : Window
 
         InitializeComponent();
 
+        _uiSettings.ColorValuesChanged += OnColorValuesChanged;
+
         TrayIcon.ContextFlyout = BuildTrayMenu();
         TrayIcon.ForceCreate();
 
+        // ForceCreate renders the light icon declared in XAML first; only then
+        // adapt to the current taskbar theme (and keep it in sync afterwards).
+        // Doing this after creation avoids generating a blank icon while the
+        // image is still loading.
+        UpdateTrayIconForTheme();
+
         _readAloud.StateChanged += OnStateChanged;
         _hotkey.Register(WindowNative.GetWindowHandle(this));
+    }
+
+    private void OnColorValuesChanged(Windows.UI.ViewManagement.UISettings sender, object args)
+    {
+        _dispatcher.TryEnqueue(UpdateTrayIconForTheme);
+    }
+
+    private void UpdateTrayIconForTheme()
+    {
+        var bg = _uiSettings.GetColorValue(Windows.UI.ViewManagement.UIColorType.Background);
+        bool isDark = bg.R < 128;
+        TrayIcon.IconSource = new BitmapImage(isDark ? DarkTrayIconUri : LightTrayIconUri);
     }
 
     private MenuFlyout BuildTrayMenu()
