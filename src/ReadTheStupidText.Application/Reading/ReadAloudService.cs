@@ -18,6 +18,7 @@ public sealed class ReadAloudService : IDisposable
     private readonly IHotkeyService _hotkey;
     private readonly ISelectionCopier _selectionCopier;
     private readonly ISelectionMonitor _selectionMonitor;
+    private readonly IVoiceCatalog _voices;
     private readonly ISettingsStore _settings;
 
     public ReadAloudService(
@@ -26,6 +27,7 @@ public sealed class ReadAloudService : IDisposable
         IHotkeyService hotkey,
         ISelectionCopier selectionCopier,
         ISelectionMonitor selectionMonitor,
+        IVoiceCatalog voices,
         ISettingsStore settings)
     {
         _reader = reader;
@@ -33,9 +35,11 @@ public sealed class ReadAloudService : IDisposable
         _hotkey = hotkey;
         _selectionCopier = selectionCopier;
         _selectionMonitor = selectionMonitor;
+        _voices = voices;
         _settings = settings;
 
         _reader.SetSpeed(_settings.Speed);
+        ApplyPersistedVoice();
         _hotkey.Pressed += OnHotkeyPressed;
         _selectionMonitor.SelectionChanged += OnSelectionChanged;
 
@@ -48,6 +52,27 @@ public sealed class ReadAloudService : IDisposable
     public PlaybackState State => _reader.State;
 
     public ReadingSpeed Speed => _settings.Speed;
+
+    /// <summary>The narrator voices installed on the machine.</summary>
+    public IReadOnlyList<VoiceInfo> InstalledVoices => _voices.InstalledVoices;
+
+    /// <summary>
+    /// The id of the voice currently in effect: the persisted choice if it is
+    /// still installed, otherwise the system default.
+    /// </summary>
+    public string? CurrentVoiceId
+    {
+        get
+        {
+            string? saved = _settings.VoiceId;
+            if (saved is not null && _voices.InstalledVoices.Any(v => v.Id == saved))
+            {
+                return saved;
+            }
+
+            return _voices.DefaultVoice?.Id;
+        }
+    }
 
     /// <summary>
     /// Whether auto-read on selection is on. Persisted, and starts/stops the
@@ -100,6 +125,21 @@ public sealed class ReadAloudService : IDisposable
     {
         _settings.Speed = speed;
         _reader.SetSpeed(speed);
+    }
+
+    /// <summary>Selects and persists the narrator voice; applies to the next read.</summary>
+    public void SetVoice(string voiceId)
+    {
+        _settings.VoiceId = voiceId;
+        _reader.SetVoice(voiceId);
+    }
+
+    private void ApplyPersistedVoice()
+    {
+        if (CurrentVoiceId is { } voiceId)
+        {
+            _reader.SetVoice(voiceId);
+        }
     }
 
     private void ApplyAutoRead(bool enabled)

@@ -23,4 +23,11 @@ public interface ISpeechReader
 
     /// <summary>Applies a new speed live, without restarting playback.</summary>
     void SetSpeed(ReadingSpeed speed);
+
+    /// <summary>
+    /// Selects the narrator voice (by <see cref="VoiceInfo.Id"/>) for the next
+    /// read. A voice cannot be swapped mid-utterance; an unknown id is ignored
+    /// (the current voice is kept).
+    /// </summary>
+    void SetVoice(string voiceId);
 }

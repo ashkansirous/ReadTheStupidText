@@ -97,15 +97,19 @@ Slice 5 (store):**
       `ToggleMenuFlyoutItem`s with selection managed in code. `SetSpeed` already
       drives `MediaPlaybackSession.PlaybackRate` live and on the next read
       (verified in `SpeechReader`). Bug fix — no new layer, just App wiring.
-- [ ] **Slice 7 — Narrator voice selection.** Model a `VoiceInfo` record
-      (Id, DisplayName, Language) in Domain; add `IVoiceCatalog` (list
-      installed voices) and `ISpeechReader.SetVoice(id)` in Application, with a
-      WinRT implementation over `SpeechSynthesizer.AllVoices` in Infrastructure.
-      Surface a **Voice** submenu in the tray flyout (radio list, checkmark on
-      the current voice). Extend `ISettingsStore` to persist the chosen voice
-      Id; restore on startup, falling back to the system default if unset or
-      uninstalled. A voice change applies to the next read. Confirm WinRT
-      voice APIs via context7 first.
+- [x] **Slice 7 — Narrator voice selection.** Modelled a `VoiceInfo` record
+      (Id, DisplayName, Language) in Domain; added `IVoiceCatalog` (installed
+      voices + default) and `ISpeechReader.SetVoice(id)` in Application, with
+      `WinRtVoiceCatalog` over `SpeechSynthesizer.AllVoices` and
+      `SpeechReader.SetVoice` (sets `SpeechSynthesizer.Voice`) in Infrastructure.
+      Tray flyout gains a **Voice** submenu (`MenuFlyoutSubItem` of
+      `ToggleMenuFlyoutItem`s, checkmark on the current voice, Command-driven
+      like the speeds — `RadioMenuFlyoutItem`/`Click` don't work in PopupMenu
+      mode, see Decision 11). `ISettingsStore.VoiceId` persists the choice;
+      `ReadAloudService` restores it on startup and `CurrentVoiceId` falls back
+      to the system default when unset or no longer installed. A voice change
+      applies to the next read (can't swap mid-utterance). WinRT voice APIs
+      confirmed via Microsoft Learn docs first.
 
 ## Out of Scope
 

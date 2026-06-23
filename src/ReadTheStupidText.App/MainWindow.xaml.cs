@@ -19,6 +19,7 @@ public sealed partial class MainWindow : Window
     private const string PauseLabel = "Pause";
     private const string QuitLabel = "Quit";
     private const string AutoReadLabel = "Auto-read on selection";
+    private const string VoiceLabel = "Voice";
 
     private static readonly Uri DarkTrayIconUri = new("ms-appx:///Assets/TrayIconDark.ico");
     private static readonly Uri LightTrayIconUri = new("ms-appx:///Assets/TrayIconLight.ico");
@@ -34,11 +35,13 @@ public sealed partial class MainWindow : Window
     private readonly RelayCommand _togglePlayPauseCommand;
     private readonly RelayCommand _toggleAutoReadCommand;
     private readonly RelayCommand _setSpeedCommand;
+    private readonly RelayCommand _setVoiceCommand;
     private readonly RelayCommand _quitCommand;
 
     private MenuFlyoutItem? _playPauseItem;
     private ToggleMenuFlyoutItem? _autoReadItem;
     private readonly List<ToggleMenuFlyoutItem> _speedItems = new();
+    private readonly List<ToggleMenuFlyoutItem> _voiceItems = new();
 
     public MainWindow(ReadAloudService readAloud, IHotkeyService hotkey)
     {
@@ -48,6 +51,7 @@ public sealed partial class MainWindow : Window
         _togglePlayPauseCommand = new RelayCommand(_ => _readAloud.TogglePlayPause());
         _toggleAutoReadCommand = new RelayCommand(_ => ToggleAutoRead());
         _setSpeedCommand = new RelayCommand(p => ApplySpeed((ReadingSpeed)p!));
+        _setVoiceCommand = new RelayCommand(p => ApplyVoice((string)p!));
         _quitCommand = new RelayCommand(_ => Quit());
 
         InitializeComponent();
@@ -101,10 +105,47 @@ public sealed partial class MainWindow : Window
             flyout.Items.Add(CreateSpeedItem(speed));
         }
 
+        MenuFlyoutSubItem? voiceMenu = BuildVoiceSubmenu();
+        if (voiceMenu is not null)
+        {
+            flyout.Items.Add(new MenuFlyoutSeparator());
+            flyout.Items.Add(voiceMenu);
+        }
+
         flyout.Items.Add(new MenuFlyoutSeparator());
         flyout.Items.Add(new MenuFlyoutItem { Text = QuitLabel, Command = _quitCommand });
 
         return flyout;
+    }
+
+    // The Voice submenu lists the installed Windows voices (an open set), with a
+    // checkmark on the current one. Returns null when no voices are installed so
+    // the menu isn't cluttered with an empty submenu.
+    private MenuFlyoutSubItem? BuildVoiceSubmenu()
+    {
+        IReadOnlyList<VoiceInfo> voices = _readAloud.InstalledVoices;
+        if (voices.Count == 0)
+        {
+            return null;
+        }
+
+        var submenu = new MenuFlyoutSubItem { Text = VoiceLabel };
+        string? currentId = _readAloud.CurrentVoiceId;
+        foreach (VoiceInfo voice in voices)
+        {
+            var item = new ToggleMenuFlyoutItem
+            {
+                Text = voice.DisplayName,
+                Tag = voice.Id,
+                IsChecked = voice.Id == currentId,
+                Command = _setVoiceCommand,
+                CommandParameter = voice.Id,
+            };
+            _voiceItems.Add(item);
+            submenu.Items.Add(item);
+        }
+
+        return submenu;
     }
 
     // Speeds use ToggleMenuFlyoutItem rather than RadioMenuFlyoutItem: the
@@ -139,6 +180,15 @@ public sealed partial class MainWindow : Window
         foreach (ToggleMenuFlyoutItem item in _speedItems)
         {
             item.IsChecked = item.Tag is ReadingSpeed s && s == speed;
+        }
+    }
+
+    private void ApplyVoice(string voiceId)
+    {
+        _readAloud.SetVoice(voiceId);
+        foreach (ToggleMenuFlyoutItem item in _voiceItems)
+        {
+            item.IsChecked = item.Tag is string id && id == voiceId;
         }
     }
 

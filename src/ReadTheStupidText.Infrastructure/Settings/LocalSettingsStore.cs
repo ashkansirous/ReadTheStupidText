@@ -13,6 +13,7 @@ public sealed class LocalSettingsStore : ISettingsStore
 {
     private const string SpeedKey = "ReadingSpeed";
     private const string EnabledKey = "IsEnabled";
+    private const string VoiceKey = "VoiceId";
     private const bool EnabledDefault = true;
 
     private readonly ApplicationDataContainer _settings = ApplicationData.Current.LocalSettings;
@@ -30,5 +31,21 @@ public sealed class LocalSettingsStore : ISettingsStore
     {
         get => _settings.Values[EnabledKey] is bool enabled ? enabled : EnabledDefault;
         set => _settings.Values[EnabledKey] = value;
+    }
+
+    public string? VoiceId
+    {
+        get => _settings.Values[VoiceKey] as string;
+        set
+        {
+            if (value is null)
+            {
+                _settings.Values.Remove(VoiceKey);
+            }
+            else
+            {
+                _settings.Values[VoiceKey] = value;
+            }
+        }
     }
 }

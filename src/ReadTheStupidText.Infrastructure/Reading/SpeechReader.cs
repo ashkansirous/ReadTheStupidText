@@ -47,6 +47,17 @@ public sealed class SpeechReader : ISpeechReader, IDisposable
         _player.PlaybackSession.PlaybackRate = _playbackRate;
     }
 
+    // Applies to the next SynthesizeTextToStreamAsync; a voice cannot be swapped
+    // mid-utterance. An unknown id is ignored so the current voice is kept.
+    public void SetVoice(string voiceId)
+    {
+        VoiceInformation? voice = SpeechSynthesizer.AllVoices.FirstOrDefault(v => v.Id == voiceId);
+        if (voice is not null)
+        {
+            _synthesizer.Voice = voice;
+        }
+    }
+
     private void SwapSource(MediaSource source)
     {
         MediaSource? previous = _currentSource;
