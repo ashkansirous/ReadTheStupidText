@@ -77,9 +77,14 @@ Ordered as vertical slices — each is end-to-end and independently runnable.
       (Notepad, modern apps, most browsers) auto-reads without the hotkey.
       Enable/Disable toggle in the tray menu gates this behavior. Hotkey
       remains the fallback for non-UIA apps.
-- [ ] **Slice 4 — Launch at startup.** ([#7](https://github.com/ashkansirous/ReadTheStupidText/issues/7)) Declare and wire a packaged
-      `StartupTask`; app starts minimized to the tray; expose the toggle in
-      the tray context menu.
+- [x] **Slice 4 — Launch at startup.** ([#7](https://github.com/ashkansirous/ReadTheStupidText/issues/7)) Declared a packaged
+      `windows.startupTask` extension (`desktop:Extension`, `Enabled="false"` so
+      the user opts in) in `Package.appxmanifest`. `IStartupService` (Application)
+      with `StartupTaskService` (Infrastructure) over `Windows.ApplicationModel.StartupTask`
+      (`GetAsync`/`RequestEnableAsync`/`Disable`); the tray gains a **Launch at
+      startup** toggle that reflects the *actual* OS state (enabling can be
+      refused by the user/policy). The app already starts minimized to tray (its
+      window is never shown), so startup launch needs no extra UI handling.
 - [ ] **Slice 5 — Store packaging & CI.** ([#8](https://github.com/ashkansirous/ReadTheStupidText/issues/8)) Finalize the MSIX manifest
       (identity, capabilities + restricted-capability justification), signing,
       and a GitHub Actions workflow that builds + packages the MSIX artifact.
