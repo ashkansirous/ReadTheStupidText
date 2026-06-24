@@ -5,6 +5,16 @@
     <ProjectReference Include="..\ReadTheStupidText.Domain\ReadTheStupidText.Domain.csproj" />
   </ItemGroup>
 
+  <!-- Local neural TTS engine (sherpa-onnx runtime, Apache-2.0) running the
+       Kokoro voice model. The managed package transitively pulls the per-RID
+       native runtimes; only the build RID's DLLs are copied to the app output. -->
+  <ItemGroup>
+    <PackageReference Include="org.k2fsa.sherpa.onnx" Version="1.13.3" />
+    <!-- BZip2 decompression for the Kokoro model bundle (.tar.bz2); .NET has
+         System.Formats.Tar but no bzip2. MIT-licensed. -->
+    <PackageReference Include="SharpZipLib" Version="1.4.2" />
+  </ItemGroup>
+
   <!-- Managed UI Automation client (System.Windows.Automation) lives in the
        Windows Desktop runtime pack. Only the UIAutomation assemblies are
        loaded at run time; WPF/WinForms are referenced but not activated. -->

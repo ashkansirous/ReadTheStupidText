@@ -105,10 +105,22 @@ public sealed partial class MainWindow : Window
         _readAloud.SpeedChanged += OnSpeedChanged;
         _readAloud.VoiceChanged += OnVoiceChanged;
         _readAloud.EnabledChanged += OnEnabledChanged;
+        _readAloud.VoicesChanged += OnVoicesChanged;
         _controlPanel.StartupStateChanged += OnPanelStartupChanged;
 
         _hotkey.Register(WindowNative.GetWindowHandle(this));
     }
+
+    // The neural voices download after launch; the menu is built before they
+    // exist (no Voice submenu), so rebuild it once they're ready.
+    private void OnVoicesChanged(object? sender, EventArgs e) =>
+        _dispatcher.TryEnqueue(() =>
+        {
+            _flyout = BuildTrayMenu();
+            TrayIcon.ContextFlyout = _flyout;
+            UpdateSpeedChecks(_readAloud.Speed);
+            _ = RefreshStartupStateAsync();
+        });
 
     private void OnColorValuesChanged(Windows.UI.ViewManagement.UISettings sender, object args)
     {
@@ -125,6 +137,12 @@ public sealed partial class MainWindow : Window
     private MenuFlyout BuildTrayMenu()
     {
         var flyout = new MenuFlyout();
+
+        // The menu can be rebuilt (e.g. when neural voices arrive); start the
+        // tracked-item lists fresh so they don't accumulate stale entries.
+        _speedItems.Clear();
+        _voiceItems.Clear();
+        _customSpeedItem = null;
 
         _autoReadItem = new ToggleMenuFlyoutItem
         {

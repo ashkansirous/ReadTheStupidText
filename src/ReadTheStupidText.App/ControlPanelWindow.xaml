@@ -8,10 +8,10 @@
     mc:Ignorable="d">
 
     <!--
-        The left-click control panel: a borderless, always-on-top window that
-        light-dismisses on Deactivated (see ControlPanelWindow.xaml.cs). It
-        surfaces every interactive control bound to the existing services; the
-        right-click tray menu remains the home for Quit.
+        The left-click control panel: a borderless, always-on-top window pinned
+        above all windows (see ControlPanelWindow.xaml.cs). It surfaces every
+        interactive control bound to the existing services; the right-click tray
+        menu remains the home for Quit.
     -->
     <Grid x:Name="RootGrid" Padding="16" RowSpacing="14">
         <Grid.RowDefinitions>
@@ -70,7 +70,7 @@
                 ValueChanged="OnSpeedSliderChanged" />
         </StackPanel>
 
-        <!-- Voice -->
+        <!-- Voice (neural). Shows a preparing state until the model downloads. -->
         <StackPanel x:Name="VoiceRow" Grid.Row="3" Spacing="4">
             <TextBlock Text="Voice" VerticalAlignment="Center" />
             <ComboBox
@@ -78,6 +78,11 @@
                 HorizontalAlignment="Stretch"
                 DisplayMemberPath="DisplayName"
                 SelectionChanged="OnVoiceSelectionChanged" />
+            <TextBlock
+                x:Name="VoiceStatus"
+                Text="Preparing neural voice…"
+                Visibility="Collapsed"
+                Style="{ThemeResource CaptionTextBlockStyle}" />
         </StackPanel>
 
         <!-- Auto-read on selection -->

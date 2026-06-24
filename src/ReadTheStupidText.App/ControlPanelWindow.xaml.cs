@@ -63,7 +63,20 @@ public sealed partial class ControlPanelWindow : Window
 
         RootGrid.Loaded += OnRootLoaded;
         _readAloud.StateChanged += OnPlaybackStateChanged;
+
+        // Neural voices arrive after the model downloads; rebuild the picker then.
+        _readAloud.VoicesChanged += OnVoicesChanged;
     }
+
+    private void OnVoicesChanged(object? sender, EventArgs e) =>
+        _dispatcher.TryEnqueue(() =>
+        {
+            LoadVoices();
+            if (AppWindow.IsVisible)
+            {
+                PositionPanel();
+            }
+        });
 
     /// <summary>Opens the panel if hidden, hides it if shown (tray left-click).</summary>
     public void Toggle()
@@ -90,16 +103,23 @@ public sealed partial class ControlPanelWindow : Window
         AppWindow.IsShownInSwitchers = false;
     }
 
+    // Neural voices are the only selectable ones; until the model has downloaded
+    // the list is empty, shown as a "preparing" state rather than a hidden row.
     private void LoadVoices()
     {
         var voices = _readAloud.InstalledVoices;
-        if (voices.Count == 0)
-        {
-            VoiceRow.Visibility = Visibility.Collapsed;
-            return;
-        }
+        bool ready = voices.Count > 0;
 
-        VoiceCombo.ItemsSource = voices;
+        VoiceCombo.Visibility = ready ? Visibility.Visible : Visibility.Collapsed;
+        VoiceStatus.Visibility = ready ? Visibility.Collapsed : Visibility.Visible;
+
+        if (ready)
+        {
+            _refreshing = true;
+            VoiceCombo.ItemsSource = voices;
+            SelectCurrentVoice();
+            _refreshing = false;
+        }
     }
 
     private void ShowPanel()

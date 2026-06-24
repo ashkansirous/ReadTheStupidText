@@ -19,6 +19,7 @@ public sealed class ReadAloudService : IDisposable
     private readonly ISelectionCopier _selectionCopier;
     private readonly ISelectionMonitor _selectionMonitor;
     private readonly IVoiceCatalog _voices;
+    private readonly IVoiceModelService _voiceModel;
     private readonly ISettingsStore _settings;
 
     public ReadAloudService(
@@ -28,6 +29,7 @@ public sealed class ReadAloudService : IDisposable
         ISelectionCopier selectionCopier,
         ISelectionMonitor selectionMonitor,
         IVoiceCatalog voices,
+        IVoiceModelService voiceModel,
         ISettingsStore settings)
     {
         _reader = reader;
@@ -36,6 +38,7 @@ public sealed class ReadAloudService : IDisposable
         _selectionCopier = selectionCopier;
         _selectionMonitor = selectionMonitor;
         _voices = voices;
+        _voiceModel = voiceModel;
         _settings = settings;
 
         _reader.SetSpeed(_settings.Speed);
@@ -43,11 +46,19 @@ public sealed class ReadAloudService : IDisposable
         _hotkey.Pressed += OnHotkeyPressed;
         _selectionMonitor.SelectionChanged += OnSelectionChanged;
 
+        // The neural voice model downloads on first run; re-apply the voice and
+        // tell the UI once it's ready (until then the picker shows "preparing").
+        _voiceModel.ReadyChanged += OnVoiceModelReady;
+        _ = _voiceModel.InitializeAsync();
+
         if (_settings.IsEnabled)
         {
             _selectionMonitor.Start();
         }
     }
+
+    /// <summary>Whether the neural voices have finished downloading and are selectable.</summary>
+    public bool VoicesReady => _voiceModel.IsReady;
 
     public PlaybackState State => _reader.State;
 
@@ -105,6 +116,10 @@ public sealed class ReadAloudService : IDisposable
     /// <summary>Raised after auto-read is toggled on or off.</summary>
     public event EventHandler<bool>? EnabledChanged;
 
+    /// <summary>Raised when the set of selectable voices changes (i.e. the neural
+    /// model finished downloading), so control surfaces can rebuild their pickers.</summary>
+    public event EventHandler? VoicesChanged;
+
     /// <summary>Copies the current selection, then reads it aloud.</summary>
     public async Task ReadSelectionAsync()
     {
@@ -161,6 +176,14 @@ public sealed class ReadAloudService : IDisposable
         {
             _reader.SetVoice(voiceId);
         }
+    }
+
+    // Once the model is ready the catalog has voices, so the persisted (or
+    // default) choice can finally be applied and the UI refreshed.
+    private void OnVoiceModelReady(object? sender, EventArgs e)
+    {
+        ApplyPersistedVoice();
+        VoicesChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void ApplyAutoRead(bool enabled)

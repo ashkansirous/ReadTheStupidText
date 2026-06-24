@@ -33,8 +33,10 @@ Infrastructure  →  Application / Domain
   rate, with `SpeedPresets` exposing the common stops (1/1.25/1.5/1.75/2) for the
   native tray menu. Genuinely closed sets (reading state, etc.) stay `enum`s.
 - **Application** (`net10.0`) — use cases / orchestration, interfaces.
-- **Infrastructure** (`net10.0-windows`) — WinRT TTS (`SpeechSynthesis` +
-  `MediaPlayer`), clipboard, UI Automation, startup task, OS integration.
+- **Infrastructure** (`net10.0-windows`) — speech engines (local neural
+  **Kokoro** via sherpa-onnx, plus a WinRT `SpeechSynthesis` fallback), all
+  played through `MediaPlayer`; the neural model downloads on first run.
+  Clipboard, UI Automation, startup task, OS integration.
 - **App** (`net10.0-windows`, WinUI single-project MSIX) — UI, tray, DI wiring.
 
 Keep `App.xaml.cs` thin: provider/DI wiring and window bootstrap only. Real
@@ -75,16 +77,22 @@ default to revisit at Store-packaging time (Slice 5); `Debug` is unaffected.
 
 ## Out of scope (v1)
 
-Voice *tuning* beyond playback rate (pitch/volume/SSML), installing or
-downloading voices from within the app, a **persistent/dockable** settings
-window (tabs, taskbar presence, hotkey-remap UI), non-Store distribution as the
-primary channel, and reading from non-UIA apps without the hotkey fallback. See
-`scope.md`.
+Voice *tuning* beyond playback rate (pitch/volume/SSML), a **persistent/dockable**
+settings window (tabs, taskbar presence, hotkey-remap UI), non-Store distribution
+as the primary channel, and reading from non-UIA apps without the hotkey
+fallback. See `scope.md`.
 
-Note: choosing the narrator voice from **already-installed** Windows voices is
-now **in scope** (persisted by voice Id) — see Slice 7 in `plan.md`. Voices are
-an open, machine-dependent set, so model them as a `VoiceInfo` record, not an
-`enum`.
+Note: the narrator voice is a **local neural voice** (Slice 9, Decision 14) — the
+**sherpa-onnx** runtime (Apache-2.0) running the **Kokoro** model (Apache-2.0),
+via `org.k2fsa.sherpa.onnx`. The model **downloads on first run** from the
+sherpa-onnx GitHub release into app-local storage (so `internetClient` is
+declared); the picker offers **only** the Kokoro voices (`KokoroVoiceTable`,
+modelled as `VoiceInfo` records). The built-in WinRT `SpeechSynthesis` voice is
+an internal **fallback only**, used while the model downloads — never offered for
+selection. Narrator's "Natural"/neural voices are unreachable by a Store app, so
+we bring our own engine. **Piper is GPL — do not use it**; Kokoro/sherpa-onnx are
+Apache-2.0 and Store-safe. Note the build-time `onnxruntime.dll` dedupe in the
+App `.csproj` (WinML and sherpa both ship one; we keep sherpa's).
 
 Note: a **left-click tray control panel** is now **in scope** (Slice 8, see
 Decision 12 in `plan.md`) — a borderless, always-on-top `AppWindow`, **pinned

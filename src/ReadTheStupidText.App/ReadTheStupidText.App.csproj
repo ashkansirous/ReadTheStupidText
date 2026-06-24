@@ -83,4 +83,20 @@
     <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
     <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
   </PropertyGroup>
+
+  <!--
+    The Windows App SDK pulls Microsoft.Windows.AI.MachineLearning (WinML), which
+    bundles its own onnxruntime.dll. sherpa-onnx ships an onnxruntime.dll matched
+    to its native C-API. Both land at the package root → APPX1101 duplicate
+    payload. We don't use WinML, and sherpa needs its version-matched runtime, so
+    drop the WinML copy before it's copied to output / the MSIX payload.
+  -->
+  <Target Name="RemoveWinMlOnnxRuntimeDuplicate"
+          AfterTargets="GetPackagingOutputs"
+          BeforeTargets="_ComputeAppxPackagePayload">
+    <ItemGroup>
+      <PackagingOutputs Remove="@(PackagingOutputs)"
+        Condition="'%(FileName)%(Extension)' == 'onnxruntime.dll' and $([System.String]::Copy('%(FullPath)').Replace('\','/').ToLowerInvariant().Contains('/microsoft.windows.ai.machinelearning/'))" />
+    </ItemGroup>
+  </Target>
 </Project>

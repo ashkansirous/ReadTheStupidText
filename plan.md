@@ -85,6 +85,26 @@ this plan turns it into ordered, shippable vertical slices.
     value, with a checkmark only when the current rate exactly equals a preset.
     This supersedes the earlier "five speeds are an enum / never doubles"
     convention — speed is no longer a closed set.
+14. **Neural voices via sherpa-onnx + Kokoro (scope change, Slice 9):** the
+    built-in Windows (OneCore) voices sound robotic and the high-quality
+    Narrator **"Natural"/neural** voices are gated to Narrator — unusable by a
+    Store MSIX app through any supported API (confirmed via Microsoft Learn +
+    Microsoft Q&A; the only "unlock" is an unsupported HKLM registry hack a
+    sandboxed MSIX can't do). So the app brings its own **local neural engine**:
+    the **sherpa-onnx** runtime (Apache-2.0, .NET bindings) running the
+    **Kokoro** voice model (Apache-2.0). **Piper was rejected** — it (and its
+    `espeak-ng` phonemizer / the `piper1-gpl` successor) is GPL, incompatible
+    with closed-source Store distribution. The Kokoro model is **downloaded on
+    first run** from the sherpa-onnx GitHub release into app-local storage (small
+    installer; needs internet once), and the picker shows **only** the neural
+    voices. While the model is still downloading (or if offline), reading falls
+    back **silently** to the system WinRT voice so the app is never mute, but the
+    WinRT voices are not user-selectable. sherpa-onnx generates PCM that we wrap
+    as a stream and play through the existing `MediaPlayer`, so the 0.5–2.0×
+    speed slider keeps working. Licensing due-diligence (the bundled
+    `espeak-ng-data` phoneme *data*) to be confirmed before Store submission
+    (Slice 5). Supersedes Decision 10's "voices come from installed Windows
+    voices".
 
 ## Changes
 
@@ -184,16 +204,44 @@ Slice 5 (store):**
       the selection/clipboard when idle (via `PlayPauseOrReadAsync`) instead of
       being a no-op, shared by the tray Play item; and when the active rate isn't
       a preset (e.g. 1.05×) the tray menu surfaces it as a checked item at the
-      top of the speed group. *Known limitation:* the voice list is limited to
-      the WinRT `SpeechSynthesizer.AllVoices` set (Microsoft-signed OneCore
-      voices); Narrator-only "Natural"/neural voices use a separate engine and
-      aren't available to this API.
+      top of the speed group. *Voice quality:* the built-in WinRT
+      `SpeechSynthesizer.AllVoices` voices sounded robotic and Narrator's neural
+      voices are unreachable by a Store app — addressed by Slice 9, which replaces
+      them with a bundled local neural engine.
+- [x] **Slice 9 — Local neural voices (sherpa-onnx + Kokoro).** Replaces the
+      built-in voices with a local neural engine (see Decision 14). Added the
+      **sherpa-onnx** runtime (Apache-2.0) + **Kokoro** model (Apache-2.0) via the
+      `org.k2fsa.sherpa.onnx` NuGet package; Piper was rejected as GPL.
+      `IVoiceModelService` (Application) + `KokoroModelService` (Infrastructure)
+      **download the `kokoro-en-v0_19` model on first run** from the sherpa-onnx
+      GitHub release into app-local storage and unpack it (`SharpZipLib` bzip2 +
+      `System.Formats.Tar`). `KokoroSpeechReader` builds an `OfflineTts` lazily,
+      synthesizes PCM at 1×, wraps it as an in-memory WAV stream, and plays it
+      through the existing `MediaPlayer` so the 0.5–2.0× slider stays live and
+      pitch-corrected. `CompositeSpeechReader` routes to Kokoro once ready and to
+      the WinRT voice until then, so the app is never mute; `NeuralVoiceCatalog`
+      exposes **only** the Kokoro voices (`KokoroVoiceTable`, the fixed v0.19
+      speaker set, default *Michael (US, Male)*), empty until ready — shown in the
+      panel as a "Preparing neural voice…" state and as a missing tray Voice
+      submenu, both rebuilt on `ReadAloudService.VoicesChanged`. A build-time
+      target drops the duplicate `onnxruntime.dll` that WinML
+      (`Microsoft.Windows.AI.MachineLearning`) and sherpa both ship, keeping
+      sherpa's version-matched copy; the unused `systemAIModels` capability was
+      removed and `internetClient` added (for the download). sherpa-onnx C# API,
+      package ids, and licensing confirmed via context7 + NuGet + the project
+      docs before coding. *Unverified at build time (needs a real run):* the
+      model download/unpack against the live release, neural audio output, the
+      native runtime loading under package identity, and that stripping WinML's
+      ORT has no side effects.
 
 ## Out of Scope
 
 - Voice *tuning* beyond playback rate (pitch, volume, SSML prosody).
-- Installing/downloading new voices or languages from within the app — the
-  picker lists only voices already installed in Windows.
+- Selecting from the Windows-installed voices — the picker offers **only** the
+  bundled neural (Kokoro) voices (Slice 9). The app downloads its own neural
+  model on first run; it does not install or expose Windows/Narrator voices for
+  selection (the WinRT voice is only an internal fallback while the model is
+  still downloading).
 - Reading from non-UIA apps *without* the hotkey fallback.
 - Non-Store / sideload as a primary distribution channel (MSIX may be
   sideloaded for testing, but Store is the target).
@@ -238,5 +286,14 @@ Slice 5 (store):**
   state matches the right-click menu (open the menu to confirm both surfaces
   agree); click ✕ or left-click the tray again → the panel hides but the app
   stays in the tray; Quit is reachable only from the right-click menu.
+- **Slice 9:** first run with internet → the panel shows "Preparing neural
+  voice…" and the tray has no Voice submenu while the model downloads; reading
+  during that window still works (WinRT fallback). Once downloaded → the picker
+  lists the Kokoro neural voices (default Michael), the tray Voice submenu
+  appears, and a read uses the selected neural voice and sounds natural; the
+  speed slider still changes the rate live. Restart offline → the model is found
+  locally and is ready immediately; the chosen voice is restored. Confirm the
+  packaged build runs under package identity and that audio plays (the build-time
+  ORT dedupe didn't break the native engine).
 - Manual UI checks driven through the running app; no browser E2E harness
   applies to a native tray app.
