@@ -100,12 +100,12 @@ this plan turns it into ordered, shippable vertical slices.
     GPL (`espeak-ng` / `piper1-gpl`). Supertonic is English-first (31 languages,
     no Chinese baggage), comparable quality, ~half the size, and crucially uses a
     bundled `unicode_indexer` instead of espeak — **so there is no espeak GPL
-    data concern**. The model is **downloaded on first run** from the sherpa-onnx
-    GitHub release into app-local storage (small installer; needs internet once),
-    and the picker shows **only** the neural voices. While the model is still
-    downloading (or if offline), reading falls back **silently** to the system
-    WinRT voice so the app is never mute, but the WinRT voices are not
-    user-selectable. sherpa-onnx generates PCM that we wrap as a stream and play
+    data concern**. The model (~145 MB) is **shipped inside the package** (under
+    `VoiceModel/`, committed to the repo) — no first-run download, no network, so
+    it works fully offline from install and needs no `internetClient` capability.
+    The picker shows **only** the neural voices; a silent WinRT fallback remains
+    only as a safety net should the packaged files ever be missing. sherpa-onnx
+    generates PCM that we wrap as a stream and play
     through the existing `MediaPlayer`, so the 0.5–2.0× speed slider keeps
     working. Supersedes Decision 10's "voices come from installed Windows
     voices".
@@ -218,40 +218,43 @@ Slice 5 (store):**
       via the `org.k2fsa.sherpa.onnx` NuGet package; Kokoro (Chinese-focused,
       no English male voice in the latest) and Piper (GPL) were rejected.
       `IVoiceModelService` (Application) + `SupertonicModelService` (Infrastructure)
-      **download `sherpa-onnx-supertonic-3-tts-int8-2026-05-11` on first run** from
-      the sherpa-onnx GitHub release into app-local storage and unpack it
-      (`SharpZipLib` bzip2 + `System.Formats.Tar`); `VoiceModelPaths` is just the
-      unpacked root dir, `SupertonicFiles` holds the layout. `SupertonicSpeechReader`
-      builds an `OfflineTts` lazily (Supertonic config: duration_predictor /
-      text_encoder / vector_estimator / vocoder + tts.json + unicode_indexer +
-      voice.bin — no espeak, no lexicon), synthesizes PCM at 1×, wraps it as an
-      in-memory WAV stream, and plays it through the existing `MediaPlayer` so the
-      0.5–2.0× slider stays live and pitch-corrected. `CompositeSpeechReader` routes
-      to Supertonic once ready and to the WinRT voice until then, so the app is
-      never mute; `NeuralVoiceCatalog` exposes **only** the Supertonic voices
+      locate `sherpa-onnx-supertonic-3-tts-int8-2026-05-11`, which is **bundled in
+      the package** under `VoiceModel/` (committed to the repo, ~145 MB) and read
+      from `AppContext.BaseDirectory` — so it's ready offline at first launch, no
+      download. `VoiceModelPaths` is just the model root dir, `SupertonicFiles`
+      holds the layout. `SupertonicSpeechReader` builds an `OfflineTts` lazily
+      (Supertonic config: duration_predictor / text_encoder / vector_estimator /
+      vocoder + tts.json + unicode_indexer + voice.bin — no espeak, no lexicon),
+      synthesizes PCM at 1×, wraps it as an in-memory WAV stream, and plays it
+      through the existing `MediaPlayer` so the 0.5–2.0× slider stays live and
+      pitch-corrected. `CompositeSpeechReader` routes to Supertonic (with the WinRT
+      voice as a safety-net fallback only if the bundled files are missing);
+      `NeuralVoiceCatalog` exposes **only** the Supertonic voices
       (`SupertonicVoiceTable`, the fixed 10-style set F1–F5/M1–M5 in sorted sid
-      order, default *Male 1*), empty until ready — shown in the panel as a
-      "Preparing neural voice…" state and as a missing tray Voice submenu, both
-      rebuilt on `ReadAloudService.VoicesChanged`. A build-time target drops the
-      duplicate `onnxruntime.dll` that WinML (`Microsoft.Windows.AI.MachineLearning`)
-      and sherpa both ship, keeping sherpa's version-matched copy; the unused
-      `systemAIModels` capability was removed and `internetClient` added (for the
-      download). sherpa-onnx C# API, model id, voice sid order
-      (`generate_voices_bin.py` uses `sorted(*.json)`), download URL, sizes, and
-      licensing all confirmed via context7 + NuGet + HF + the sherpa docs before
-      coding. *Unverified at build time (needs a real run):* the model
-      download/unpack against the live release, neural audio output, the native
-      runtime loading under package identity, and that stripping WinML's ORT has
-      no side effects.
+      order, default *Male 1*); the panel/menu rebuild on
+      `ReadAloudService.VoicesChanged`. A build-time target drops the duplicate
+      `onnxruntime.dll` that WinML (`Microsoft.Windows.AI.MachineLearning`) and
+      sherpa both ship, keeping sherpa's version-matched copy; the unused
+      `systemAIModels` capability was removed (no `internetClient` is needed since
+      the model ships in the package). sherpa-onnx C# API, model id, voice sid
+      order (`generate_voices_bin.py` uses `sorted(*.json)`), and licensing all
+      confirmed via context7 + NuGet + HF + the sherpa docs before coding.
+      *Auto-read debounce (fix):* UIA fires a `SelectionChanged` per character
+      while the user drag-selects, which previously triggered a burst of
+      overlapping reads (the play/pause state bounced). `ReadAloudService` now
+      debounces selections (500 ms quiet period, superseded reads cancelled via a
+      swapped `CancellationTokenSource`), so a drag collapses into one read.
+      *Unverified at build time (needs a real run):* neural audio output and the
+      native runtime loading under package identity.
 
 ## Out of Scope
 
 - Voice *tuning* beyond playback rate (pitch, volume, SSML prosody).
 - Selecting from the Windows-installed voices — the picker offers **only** the
-  bundled neural (Supertonic) voices (Slice 9). The app downloads its own neural
-  model on first run; it does not install or expose Windows/Narrator voices for
-  selection (the WinRT voice is only an internal fallback while the model is
-  still downloading).
+  bundled neural (Supertonic) voices (Slice 9). The neural model ships in the
+  package; the app does not install or expose Windows/Narrator voices for
+  selection (the WinRT voice is only an internal safety-net fallback if the
+  packaged model files are ever missing).
 - Reading from non-UIA apps *without* the hotkey fallback.
 - Non-Store / sideload as a primary distribution channel (MSIX may be
   sideloaded for testing, but Store is the target).
@@ -296,15 +299,14 @@ Slice 5 (store):**
   state matches the right-click menu (open the menu to confirm both surfaces
   agree); click ✕ or left-click the tray again → the panel hides but the app
   stays in the tray; Quit is reachable only from the right-click menu.
-- **Slice 9:** first run with internet → the panel shows "Preparing neural
-  voice…" and the tray has no Voice submenu while the model downloads; reading
-  during that window still works (WinRT fallback). Once downloaded → the picker
-  lists the Supertonic neural voices (default Male 1; 5 male + 5 female), the
-  tray Voice submenu appears, and a read uses the selected neural voice and
-  sounds natural; the
-  speed slider still changes the rate live. Restart offline → the model is found
-  locally and is ready immediately; the chosen voice is restored. Confirm the
-  packaged build runs under package identity and that audio plays (the build-time
-  ORT dedupe didn't break the native engine).
+- **Slice 9:** on first launch (offline is fine — the model ships in the
+  package) → the picker immediately lists the Supertonic neural voices (default
+  Male 1; 5 male + 5 female) and the tray Voice submenu is present; a read uses
+  the selected neural voice and sounds natural; the speed slider still changes
+  the rate live; pick a different voice → the next read uses it; restart → the
+  chosen voice is restored. **Auto-read debounce:** drag-select a sentence → it
+  is read **once** after the selection settles (no burst of play/pause and no
+  overlapping reads). Confirm the packaged build runs under package identity and
+  that audio plays (the build-time ORT dedupe didn't break the native engine).
 - Manual UI checks driven through the running app; no browser E2E harness
   applies to a native tray app.

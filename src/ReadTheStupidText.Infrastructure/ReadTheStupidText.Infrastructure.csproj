@@ -10,9 +10,6 @@
        native runtimes; only the build RID's DLLs are copied to the app output. -->
   <ItemGroup>
     <PackageReference Include="org.k2fsa.sherpa.onnx" Version="1.13.3" />
-    <!-- BZip2 decompression for the Kokoro model bundle (.tar.bz2); .NET has
-         System.Formats.Tar but no bzip2. MIT-licensed. -->
-    <PackageReference Include="SharpZipLib" Version="1.4.2" />
   </ItemGroup>
 
   <!-- Managed UI Automation client (System.Windows.Automation) lives in the

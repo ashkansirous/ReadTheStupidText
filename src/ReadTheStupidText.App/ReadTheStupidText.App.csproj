@@ -35,6 +35,15 @@
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 
+  <!-- The Supertonic-3 neural voice model is shipped inside the package (no
+       first-run download). Copied next to the app and included in the MSIX
+       payload; SupertonicModelService reads it from AppContext.BaseDirectory. -->
+  <ItemGroup>
+    <Content Include="VoiceModel\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
   <!--
     Defining the "Msix" ProjectCapability here allows the Single-project MSIX Packaging
     Tools extension to be activated for this project even if the Windows App SDK Nuget

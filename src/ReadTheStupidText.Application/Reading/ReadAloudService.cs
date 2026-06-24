@@ -13,6 +13,11 @@ namespace ReadTheStupidText.Application.Reading;
 /// </summary>
 public sealed class ReadAloudService : IDisposable
 {
+    // A text selection fires many UIA change events while the user is dragging
+    // (one per character grown). Wait for the selection to settle this long
+    // before reading, so a drag collapses into a single read instead of a burst.
+    private const int SelectionDebounceMs = 500;
+
     private readonly ISpeechReader _reader;
     private readonly IClipboardReader _clipboard;
     private readonly IHotkeyService _hotkey;
@@ -21,6 +26,9 @@ public sealed class ReadAloudService : IDisposable
     private readonly IVoiceCatalog _voices;
     private readonly IVoiceModelService _voiceModel;
     private readonly ISettingsStore _settings;
+
+    // Cancels a pending debounced read when a newer selection supersedes it.
+    private CancellationTokenSource? _selectionCts;
 
     public ReadAloudService(
         ISpeechReader reader,
@@ -46,8 +54,8 @@ public sealed class ReadAloudService : IDisposable
         _hotkey.Pressed += OnHotkeyPressed;
         _selectionMonitor.SelectionChanged += OnSelectionChanged;
 
-        // The neural voice model downloads on first run; re-apply the voice and
-        // tell the UI once it's ready (until then the picker shows "preparing").
+        // The neural voice model ships in the package; initialize locates it and
+        // marks itself ready, then we apply the voice and refresh the UI.
         _voiceModel.ReadyChanged += OnVoiceModelReady;
         _ = _voiceModel.InitializeAsync();
 
@@ -57,7 +65,7 @@ public sealed class ReadAloudService : IDisposable
         }
     }
 
-    /// <summary>Whether the neural voices have finished downloading and are selectable.</summary>
+    /// <summary>Whether the neural voices are loaded and selectable.</summary>
     public bool VoicesReady => _voiceModel.IsReady;
 
     public PlaybackState State => _reader.State;
@@ -116,8 +124,8 @@ public sealed class ReadAloudService : IDisposable
     /// <summary>Raised after auto-read is toggled on or off.</summary>
     public event EventHandler<bool>? EnabledChanged;
 
-    /// <summary>Raised when the set of selectable voices changes (i.e. the neural
-    /// model finished downloading), so control surfaces can rebuild their pickers.</summary>
+    /// <summary>Raised when the set of selectable voices becomes available (the
+    /// neural model loaded), so control surfaces can rebuild their pickers.</summary>
     public event EventHandler? VoicesChanged;
 
     /// <summary>Copies the current selection, then reads it aloud.</summary>
@@ -210,12 +218,36 @@ public sealed class ReadAloudService : IDisposable
     // or not auto-read is enabled, so it remains the fallback for non-UIA apps.
     private async void OnHotkeyPressed(object? sender, EventArgs e) => await ReadSelectionAsync();
 
-    private async void OnSelectionChanged(object? sender, string text) => await SpeakAsync(text);
+    // Debounced: each new selection cancels the previous pending read, so a
+    // drag-select (many rapid events) results in one read of the final text.
+    private void OnSelectionChanged(object? sender, string text)
+    {
+        var cts = new CancellationTokenSource();
+        CancellationTokenSource? previous = Interlocked.Exchange(ref _selectionCts, cts);
+        previous?.Cancel();
+        previous?.Dispose();
+        _ = ReadAfterDebounceAsync(text, cts.Token);
+    }
+
+    private async Task ReadAfterDebounceAsync(string text, CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(SelectionDebounceMs, token);
+            await SpeakAsync(text);
+        }
+        catch (OperationCanceledException)
+        {
+            // Superseded by a newer selection before the quiet period elapsed.
+        }
+    }
 
     public void Dispose()
     {
         _hotkey.Pressed -= OnHotkeyPressed;
         _selectionMonitor.SelectionChanged -= OnSelectionChanged;
         _selectionMonitor.Stop();
+        _selectionCts?.Cancel();
+        _selectionCts?.Dispose();
     }
 }

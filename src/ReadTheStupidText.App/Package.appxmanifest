@@ -59,7 +59,5 @@
 
   <Capabilities>
     <rescap:Capability Name="runFullTrust" />
-    <!-- Required to download the Kokoro neural voice model on first run. -->
-    <Capability Name="internetClient" />
   </Capabilities>
 </Package>
