@@ -28,10 +28,15 @@ Infrastructure  →  Application / Domain
 ```
 
 - **Domain** (`net10.0`) — entities, value objects, enums. No framework deps.
-  The five speeds are an `enum` (a closed set), never loose strings/doubles.
+  Reading speed is the **`PlaybackRate`** value object — a decimal multiplier
+  (0.5–2.0, snapped to 0.05 steps), *not* an enum: the user picks a continuous
+  rate, with `SpeedPresets` exposing the common stops (1/1.25/1.5/1.75/2) for the
+  native tray menu. Genuinely closed sets (reading state, etc.) stay `enum`s.
 - **Application** (`net10.0`) — use cases / orchestration, interfaces.
-- **Infrastructure** (`net10.0-windows`) — WinRT TTS (`SpeechSynthesis` +
-  `MediaPlayer`), clipboard, UI Automation, startup task, OS integration.
+- **Infrastructure** (`net10.0-windows`) — speech engines (local neural
+  **Supertonic-3** via sherpa-onnx, plus a WinRT `SpeechSynthesis` fallback),
+  all played through `MediaPlayer`; the neural model ships in the package.
+  Clipboard, UI Automation, startup task, OS integration.
 - **App** (`net10.0-windows`, WinUI single-project MSIX) — UI, tray, DI wiring.
 
 Keep `App.xaml.cs` thin: provider/DI wiring and window bootstrap only. Real
@@ -62,8 +67,9 @@ default to revisit at Store-packaging time (Slice 5); `Debug` is unaffected.
 
 ## Code quality (project-specific reminders)
 
-- Closed sets are `enum`s (speed band, reading state, etc.) — stringify only at
-  the UI boundary.
+- Genuinely closed sets (reading state, etc.) are `enum`s — stringify only at
+  the UI boundary. Reading speed is **not** closed: it's the `PlaybackRate`
+  value object (decimal, range/step enforced in the type).
 - No magic strings for settings keys / manifest names — use named constants.
 - The backend/infrastructure returns structured data; the UI composes any
   user-facing copy.
@@ -71,12 +77,35 @@ default to revisit at Store-packaging time (Slice 5); `Debug` is unaffected.
 
 ## Out of scope (v1)
 
-Voice *tuning* beyond playback rate (pitch/volume/SSML), installing or
-downloading voices from within the app, a full settings window, non-Store
-distribution as the primary channel, and reading from non-UIA apps without the
-hotkey fallback. See `scope.md`.
+Voice *tuning* beyond playback rate (pitch/volume/SSML), a **persistent/dockable**
+settings window (tabs, taskbar presence, hotkey-remap UI), non-Store distribution
+as the primary channel, and reading from non-UIA apps without the hotkey
+fallback. See `scope.md`.
 
-Note: choosing the narrator voice from **already-installed** Windows voices is
-now **in scope** (tray Voice submenu, persisted by voice Id) — see Slice 7 in
-`plan.md`. Voices are an open, machine-dependent set, so model them as a
-`VoiceInfo` record, not an `enum`.
+Note: the narrator voice is a **local neural voice** (Slice 9, Decision 14) — the
+**sherpa-onnx** runtime (Apache-2.0) running the **Supertonic-3** model
+(Apache-2.0, `sherpa-onnx-supertonic-3-tts-int8-2026-05-11`), via
+`org.k2fsa.sherpa.onnx`. The model (~145 MB) **ships inside the package** under
+`VoiceModel/` (committed to the repo, read from `AppContext.BaseDirectory`) — no
+download, no network, no `internetClient`; the picker offers **only** the
+Supertonic voices (`SupertonicVoiceTable`, the fixed 10-style F1–F5/M1–M5 set in
+sorted sid order, modelled as `VoiceInfo` records). The built-in WinRT
+`SpeechSynthesis` voice is an internal **safety-net fallback only** (if the
+packaged files are missing) — never offered for selection. Narrator's
+"Natural"/neural voices are unreachable by a Store app, so we bring our own
+engine. **Piper is GPL — do not use it; Kokoro was rejected** (Chinese-focused,
+no English male voice in the latest, ships GPL-adjacent espeak data); Supertonic
+is English-first, Apache-2.0, espeak-free, and Store-safe. Note the build-time
+`onnxruntime.dll` dedupe in the App `.csproj` (WinML and sherpa both ship one; we
+keep sherpa's).
+
+Note: a **left-click tray control panel** is now **in scope** (Slice 8, see
+Decision 12 in `plan.md`) — a borderless, always-on-top `AppWindow`, **pinned
+above all windows** (it stays open until the ✕ or another tray click; it does
+*not* light-dismiss), sized to its content, holding the fine 0.05 speed slider,
+voice picker, play/pause, and the auto-read/startup toggles. It is *not* a
+persistent settings window: it's transient and every control maps to an
+existing service. The
+right-click `MenuFlyout` stays (Quit lives there only). Rich controls (slider,
+`ComboBox`) **cannot** go in H.NotifyIcon's `PopupMenu` — that's why the panel
+is a real window, not a flyout (same native-menu limit as Decision 11).

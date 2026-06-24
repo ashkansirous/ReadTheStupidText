@@ -6,25 +6,24 @@ namespace ReadTheStupidText.Infrastructure.Settings;
 
 /// <summary>
 /// Stores preferences in <see cref="ApplicationData.LocalSettings"/>. The speed
-/// is persisted by enum name so the stored value survives reordering of the
-/// enum; missing or unparseable values fall back to the defaults.
+/// is persisted as its decimal multiplier; a missing value falls back to the
+/// default, and any stored value is re-normalized by <see cref="PlaybackRate"/>.
 /// </summary>
 public sealed class LocalSettingsStore : ISettingsStore
 {
-    private const string SpeedKey = "ReadingSpeed";
+    private const string SpeedKey = "PlaybackRate";
     private const string EnabledKey = "IsEnabled";
     private const string VoiceKey = "VoiceId";
     private const bool EnabledDefault = true;
 
     private readonly ApplicationDataContainer _settings = ApplicationData.Current.LocalSettings;
 
-    public ReadingSpeed Speed
+    public PlaybackRate Speed
     {
-        get => _settings.Values[SpeedKey] is string name
-               && Enum.TryParse(name, out ReadingSpeed speed)
-            ? speed
-            : ReadingSpeedExtensions.Default;
-        set => _settings.Values[SpeedKey] = value.ToString();
+        get => _settings.Values[SpeedKey] is double rate
+            ? new PlaybackRate(rate)
+            : PlaybackRate.Default;
+        set => _settings.Values[SpeedKey] = value.Value;
     }
 
     public bool IsEnabled

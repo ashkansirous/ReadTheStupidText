@@ -31,12 +31,20 @@ public partial class App : Application
     private static IServiceProvider ConfigureServices()
     {
         var services = new ServiceCollection();
-        services.AddSingleton<ISpeechReader, SpeechReader>();
+
+        // Neural (Supertonic) is the primary engine; the WinRT reader is the
+        // fallback used only while the model downloads. CompositeSpeechReader
+        // routes between them, and the catalog exposes the neural voices once ready.
+        services.AddSingleton<IVoiceModelService, SupertonicModelService>();
+        services.AddSingleton<SpeechReader>();
+        services.AddSingleton<SupertonicSpeechReader>();
+        services.AddSingleton<ISpeechReader, CompositeSpeechReader>();
+        services.AddSingleton<IVoiceCatalog, NeuralVoiceCatalog>();
+
         services.AddSingleton<IClipboardReader, ClipboardReader>();
         services.AddSingleton<IHotkeyService, GlobalHotkeyService>();
         services.AddSingleton<ISelectionCopier, SelectionCopier>();
         services.AddSingleton<ISelectionMonitor, UiaSelectionMonitor>();
-        services.AddSingleton<IVoiceCatalog, WinRtVoiceCatalog>();
         services.AddSingleton<IStartupService, StartupTaskService>();
         services.AddSingleton<ISettingsStore, LocalSettingsStore>();
         services.AddSingleton<ReadAloudService>();

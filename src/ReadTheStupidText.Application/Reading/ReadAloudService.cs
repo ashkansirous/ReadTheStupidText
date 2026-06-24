@@ -13,13 +13,22 @@ namespace ReadTheStupidText.Application.Reading;
 /// </summary>
 public sealed class ReadAloudService : IDisposable
 {
+    // A text selection fires many UIA change events while the user is dragging
+    // (one per character grown). Wait for the selection to settle this long
+    // before reading, so a drag collapses into a single read instead of a burst.
+    private const int SelectionDebounceMs = 500;
+
     private readonly ISpeechReader _reader;
     private readonly IClipboardReader _clipboard;
     private readonly IHotkeyService _hotkey;
     private readonly ISelectionCopier _selectionCopier;
     private readonly ISelectionMonitor _selectionMonitor;
     private readonly IVoiceCatalog _voices;
+    private readonly IVoiceModelService _voiceModel;
     private readonly ISettingsStore _settings;
+
+    // Cancels a pending debounced read when a newer selection supersedes it.
+    private CancellationTokenSource? _selectionCts;
 
     public ReadAloudService(
         ISpeechReader reader,
@@ -28,6 +37,7 @@ public sealed class ReadAloudService : IDisposable
         ISelectionCopier selectionCopier,
         ISelectionMonitor selectionMonitor,
         IVoiceCatalog voices,
+        IVoiceModelService voiceModel,
         ISettingsStore settings)
     {
         _reader = reader;
@@ -36,6 +46,7 @@ public sealed class ReadAloudService : IDisposable
         _selectionCopier = selectionCopier;
         _selectionMonitor = selectionMonitor;
         _voices = voices;
+        _voiceModel = voiceModel;
         _settings = settings;
 
         _reader.SetSpeed(_settings.Speed);
@@ -43,15 +54,23 @@ public sealed class ReadAloudService : IDisposable
         _hotkey.Pressed += OnHotkeyPressed;
         _selectionMonitor.SelectionChanged += OnSelectionChanged;
 
+        // The neural voice model ships in the package; initialize locates it and
+        // marks itself ready, then we apply the voice and refresh the UI.
+        _voiceModel.ReadyChanged += OnVoiceModelReady;
+        _ = _voiceModel.InitializeAsync();
+
         if (_settings.IsEnabled)
         {
             _selectionMonitor.Start();
         }
     }
 
+    /// <summary>Whether the neural voices are loaded and selectable.</summary>
+    public bool VoicesReady => _voiceModel.IsReady;
+
     public PlaybackState State => _reader.State;
 
-    public ReadingSpeed Speed => _settings.Speed;
+    public PlaybackRate Speed => _settings.Speed;
 
     /// <summary>The narrator voices installed on the machine.</summary>
     public IReadOnlyList<VoiceInfo> InstalledVoices => _voices.InstalledVoices;
@@ -85,6 +104,7 @@ public sealed class ReadAloudService : IDisposable
         {
             _settings.IsEnabled = value;
             ApplyAutoRead(value);
+            EnabledChanged?.Invoke(this, value);
         }
     }
 
@@ -93,6 +113,20 @@ public sealed class ReadAloudService : IDisposable
         add => _reader.StateChanged += value;
         remove => _reader.StateChanged -= value;
     }
+
+    /// <summary>Raised after the speed changes, so every control surface (tray
+    /// menu, control panel) reflects the new value without polling.</summary>
+    public event EventHandler<PlaybackRate>? SpeedChanged;
+
+    /// <summary>Raised after the narrator voice changes.</summary>
+    public event EventHandler<string>? VoiceChanged;
+
+    /// <summary>Raised after auto-read is toggled on or off.</summary>
+    public event EventHandler<bool>? EnabledChanged;
+
+    /// <summary>Raised when the set of selectable voices becomes available (the
+    /// neural model loaded), so control surfaces can rebuild their pickers.</summary>
+    public event EventHandler? VoicesChanged;
 
     /// <summary>Copies the current selection, then reads it aloud.</summary>
     public async Task ReadSelectionAsync()
@@ -108,23 +142,32 @@ public sealed class ReadAloudService : IDisposable
         await SpeakAsync(text);
     }
 
-    /// <summary>Pauses if playing, resumes if paused; no-op when idle.</summary>
-    public void TogglePlayPause()
+    /// <summary>
+    /// The "Play" action shared by the tray menu and control panel: pauses if
+    /// playing, resumes if paused, and when idle starts a fresh read of the
+    /// current selection (which falls back to the clipboard when nothing is
+    /// selected — see <see cref="ReadSelectionAsync"/>).
+    /// </summary>
+    public Task PlayPauseOrReadAsync()
     {
-        if (_reader.State == PlaybackState.Playing)
+        switch (State)
         {
-            _reader.Pause();
-        }
-        else if (_reader.State == PlaybackState.Paused)
-        {
-            _reader.Resume();
+            case PlaybackState.Playing:
+                _reader.Pause();
+                return Task.CompletedTask;
+            case PlaybackState.Paused:
+                _reader.Resume();
+                return Task.CompletedTask;
+            default:
+                return ReadSelectionAsync();
         }
     }
 
-    public void SetSpeed(ReadingSpeed speed)
+    public void SetSpeed(PlaybackRate speed)
     {
         _settings.Speed = speed;
         _reader.SetSpeed(speed);
+        SpeedChanged?.Invoke(this, speed);
     }
 
     /// <summary>Selects and persists the narrator voice; applies to the next read.</summary>
@@ -132,6 +175,7 @@ public sealed class ReadAloudService : IDisposable
     {
         _settings.VoiceId = voiceId;
         _reader.SetVoice(voiceId);
+        VoiceChanged?.Invoke(this, voiceId);
     }
 
     private void ApplyPersistedVoice()
@@ -140,6 +184,14 @@ public sealed class ReadAloudService : IDisposable
         {
             _reader.SetVoice(voiceId);
         }
+    }
+
+    // Once the model is ready the catalog has voices, so the persisted (or
+    // default) choice can finally be applied and the UI refreshed.
+    private void OnVoiceModelReady(object? sender, EventArgs e)
+    {
+        ApplyPersistedVoice();
+        VoicesChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void ApplyAutoRead(bool enabled)
@@ -166,12 +218,36 @@ public sealed class ReadAloudService : IDisposable
     // or not auto-read is enabled, so it remains the fallback for non-UIA apps.
     private async void OnHotkeyPressed(object? sender, EventArgs e) => await ReadSelectionAsync();
 
-    private async void OnSelectionChanged(object? sender, string text) => await SpeakAsync(text);
+    // Debounced: each new selection cancels the previous pending read, so a
+    // drag-select (many rapid events) results in one read of the final text.
+    private void OnSelectionChanged(object? sender, string text)
+    {
+        var cts = new CancellationTokenSource();
+        CancellationTokenSource? previous = Interlocked.Exchange(ref _selectionCts, cts);
+        previous?.Cancel();
+        previous?.Dispose();
+        _ = ReadAfterDebounceAsync(text, cts.Token);
+    }
+
+    private async Task ReadAfterDebounceAsync(string text, CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(SelectionDebounceMs, token);
+            await SpeakAsync(text);
+        }
+        catch (OperationCanceledException)
+        {
+            // Superseded by a newer selection before the quiet period elapsed.
+        }
+    }
 
     public void Dispose()
     {
         _hotkey.Pressed -= OnHotkeyPressed;
         _selectionMonitor.SelectionChanged -= OnSelectionChanged;
         _selectionMonitor.Stop();
+        _selectionCts?.Cancel();
+        _selectionCts?.Dispose();
     }
 }

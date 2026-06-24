@@ -1,0 +1,2 @@
+src/ReadTheStupidText.App/VoiceModel/*.onnx filter=lfs diff=lfs merge=lfs -text
+src/ReadTheStupidText.App/VoiceModel/*.bin filter=lfs diff=lfs merge=lfs -text

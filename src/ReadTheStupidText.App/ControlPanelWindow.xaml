@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Window
+    x:Class="ReadTheStupidText_App.ControlPanelWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <!--
+        The left-click control panel: a borderless, always-on-top window pinned
+        above all windows (see ControlPanelWindow.xaml.cs). It surfaces every
+        interactive control bound to the existing services; the right-click tray
+        menu remains the home for Quit.
+    -->
+    <Grid x:Name="RootGrid" Padding="16" RowSpacing="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Header: title + close button -->
+        <Grid Grid.Row="0">
+            <TextBlock
+                Text="ReadTheStupidText"
+                VerticalAlignment="Center"
+                Style="{ThemeResource BodyStrongTextBlockStyle}" />
+            <Button
+                x:Name="CloseButton"
+                HorizontalAlignment="Right"
+                Padding="6"
+                Click="OnCloseClick"
+                ToolTipService.ToolTip="Close"
+                Content="&#xE711;"
+                FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                FontSize="12"
+                Background="Transparent"
+                BorderThickness="0" />
+        </Grid>
+
+        <!-- Play / Pause -->
+        <Button
+            x:Name="PlayPauseButton"
+            Grid.Row="1"
+            HorizontalAlignment="Stretch"
+            HorizontalContentAlignment="Center"
+            Click="OnPlayPauseClick"
+            Content="Play" />
+
+        <!-- Speed: YouTube-style slider snapping to the five fixed speeds -->
+        <StackPanel Grid.Row="2" Spacing="2">
+            <Grid>
+                <TextBlock Text="Speed" VerticalAlignment="Center" />
+                <TextBlock
+                    x:Name="SpeedLabel"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Style="{ThemeResource CaptionTextBlockStyle}" />
+            </Grid>
+            <Slider
+                x:Name="SpeedSlider"
+                Minimum="0.5"
+                Maximum="2.0"
+                StepFrequency="0.05"
+                SnapsTo="StepValues"
+                ValueChanged="OnSpeedSliderChanged" />
+        </StackPanel>
+
+        <!-- Voice (neural). Shows a preparing state until the model downloads. -->
+        <StackPanel x:Name="VoiceRow" Grid.Row="3" Spacing="4">
+            <TextBlock Text="Voice" VerticalAlignment="Center" />
+            <ComboBox
+                x:Name="VoiceCombo"
+                HorizontalAlignment="Stretch"
+                DisplayMemberPath="DisplayName"
+                SelectionChanged="OnVoiceSelectionChanged" />
+            <TextBlock
+                x:Name="VoiceStatus"
+                Text="Preparing neural voice…"
+                Visibility="Collapsed"
+                Style="{ThemeResource CaptionTextBlockStyle}" />
+        </StackPanel>
+
+        <!-- Auto-read on selection -->
+        <ToggleSwitch
+            x:Name="AutoReadSwitch"
+            Grid.Row="4"
+            Header="Auto-read on selection"
+            Toggled="OnAutoReadToggled" />
+
+        <!-- Launch at startup -->
+        <ToggleSwitch
+            x:Name="StartupSwitch"
+            Grid.Row="5"
+            Header="Launch at startup"
+            Toggled="OnStartupToggled" />
+    </Grid>
+</Window>
