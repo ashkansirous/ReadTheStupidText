@@ -85,6 +85,7 @@ public sealed class ReadAloudService : IDisposable
         {
             _settings.IsEnabled = value;
             ApplyAutoRead(value);
+            EnabledChanged?.Invoke(this, value);
         }
     }
 
@@ -93,6 +94,16 @@ public sealed class ReadAloudService : IDisposable
         add => _reader.StateChanged += value;
         remove => _reader.StateChanged -= value;
     }
+
+    /// <summary>Raised after the speed changes, so every control surface (tray
+    /// menu, control panel) reflects the new value without polling.</summary>
+    public event EventHandler<ReadingSpeed>? SpeedChanged;
+
+    /// <summary>Raised after the narrator voice changes.</summary>
+    public event EventHandler<string>? VoiceChanged;
+
+    /// <summary>Raised after auto-read is toggled on or off.</summary>
+    public event EventHandler<bool>? EnabledChanged;
 
     /// <summary>Copies the current selection, then reads it aloud.</summary>
     public async Task ReadSelectionAsync()
@@ -125,6 +136,7 @@ public sealed class ReadAloudService : IDisposable
     {
         _settings.Speed = speed;
         _reader.SetSpeed(speed);
+        SpeedChanged?.Invoke(this, speed);
     }
 
     /// <summary>Selects and persists the narrator voice; applies to the next read.</summary>
@@ -132,6 +144,7 @@ public sealed class ReadAloudService : IDisposable
     {
         _settings.VoiceId = voiceId;
         _reader.SetVoice(voiceId);
+        VoiceChanged?.Invoke(this, voiceId);
     }
 
     private void ApplyPersistedVoice()

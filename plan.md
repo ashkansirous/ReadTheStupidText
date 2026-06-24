@@ -52,6 +52,27 @@ this plan turns it into ordered, shippable vertical slices.
     (single-selection managed in code). The same Command pattern applies to the
     Voice submenu in Slice 7. (The earlier "window never activated / XAML root"
     theory was wrong — confirmed against the H.NotifyIcon source.)
+12. **Tray control panel (Slice 8):** left-clicking the tray icon opens a
+    **borderless always-on-top `AppWindow`** (`OverlappedPresenter`,
+    `IsAlwaysOnTop=true`, no system title bar) — not a `Flyout`/`Popup` and not
+    a native `PopupMenu`. Reasons: the rich controls this panel needs (a speed
+    **slider**, a voice **`ComboBox`**) cannot live in H.NotifyIcon's
+    `PopupMenu` (the same native-menu limitation behind Decision 11), and a
+    WinUI `Flyout` has no usable anchor on the zero-size hidden tray window. A
+    real window positions reliably above the taskbar, is naturally topmost
+    ("hovers over all windows"), and **light-dismisses** by closing on its own
+    `Deactivated` event (click-away). It also carries a custom **✕** button at
+    the top. The ✕ and click-away both only **hide** the window — the app keeps
+    running in the tray; **Quit stays in the right-click menu only** (avoids an
+    accidental quit from a light-dismiss surface). A **single** window instance
+    is reused (left-click toggles show/hide), re-reading live state on open. The
+    right-click context menu is **kept unchanged** — left-click → panel,
+    right-click → menu (auto-read, launch at startup, quit). The panel is a
+    View in the App project binding to the existing `ReadAloudService`,
+    `IVoiceCatalog`, and `IStartupService`; no new Application/Infrastructure
+    layers. Auto-read and launch-at-startup appear in **both** the panel and the
+    right-click menu, so both surfaces read/write the same services to stay in
+    sync.
 
 ## Changes
 
@@ -115,6 +136,34 @@ Slice 5 (store):**
       to the system default when unset or no longer installed. A voice change
       applies to the next read (can't swap mid-utterance). WinRT voice APIs
       confirmed via Microsoft Learn docs first.
+- [x] **Slice 8 — Tray control panel window.** Left-clicking the tray icon
+      opens a borderless, always-on-top control panel (see Decision 12) holding
+      every interactive control in one place: a **Play/Pause** toggle bound to
+      `ReadAloudService.StateChanged`, a **YouTube-style speed slider** that
+      snaps to the five `ReadingSpeed` stops (1x / 1.25x / 1.5x / 1.75x / 2x)
+      with the current value shown beside it, a **Voice `ComboBox`** over
+      `IVoiceCatalog.InstalledVoices` (current voice preselected), and
+      **Auto-read** + **Launch at startup** `ToggleSwitch`es. A custom **✕**
+      button sits at the top; the window light-dismisses on `Deactivated`
+      (click-away) and a second left-click toggles it shut — both only hide it,
+      never exit. Positioned bottom-right above the taskbar (work-area- and
+      DPI-aware). New `ControlPanelWindow` (View) + thin view-model in the App
+      project; the existing right-click `MenuFlyout` is left intact (Quit lives
+      there). Confirm H.NotifyIcon `LeftClickCommand` and WinUI 3
+      `AppWindow`/`OverlappedPresenter` (borderless + always-on-top +
+      positioning + `Deactivated`) via context7/Microsoft Learn before coding.
+      *As built:* the panel is a `ControlPanelWindow` with a Mica backdrop, an
+      `OverlappedPresenter` (`SetBorderAndTitleBar(true, false)`, `IsAlwaysOnTop`,
+      non-resizable, hidden from switchers), sized/positioned in device pixels
+      via `GetDpiForWindow` + `DisplayArea.WorkArea`, light-dismissed on
+      `Window.Activated`→`Deactivated`, with a short reopen guard so the tray
+      click that dismissed it doesn't immediately reopen it. Cross-surface sync
+      is event-driven: `ReadAloudService` now raises `SpeedChanged` /
+      `VoiceChanged` / `EnabledChanged`, which `MainWindow` uses to keep the
+      menu's checkmarks current when the change originates in the panel; the
+      panel re-reads live state each time it opens, and raises
+      `StartupStateChanged` so the menu's startup toggle follows. `LeftClickCommand`
+      + `NoLeftClickDelay` open the panel without a double-click wait.
 
 ## Out of Scope
 
@@ -124,7 +173,10 @@ Slice 5 (store):**
 - Reading from non-UIA apps *without* the hotkey fallback.
 - Non-Store / sideload as a primary distribution channel (MSIX may be
   sideloaded for testing, but Store is the target).
-- A full settings window — speed and voice live in the tray flyout.
+- A persistent/dockable settings window with its own taskbar presence, tabs,
+  or hotkey remapping UI. The Slice 8 control panel is a transient,
+  light-dismiss surface — every control still maps to one of the existing
+  services; no new configurable settings are introduced.
 - Pure UWP packaging.
 
 ## Verification
@@ -151,5 +203,13 @@ Slice 5 (store):**
   current one checked; pick a different voice → the next read uses it; restart
   the app → the chosen voice is restored; uninstall that voice → falls back to
   the system default without error.
+- **Slice 8:** left-click the tray icon → the control panel opens above the
+  taskbar, on top of all other windows; drag the speed slider → it snaps to the
+  five stops and the next/active read uses that rate; pick a voice in the
+  `ComboBox` → the next read uses it; toggle Auto-read / Launch at startup →
+  state matches the right-click menu (open the menu to confirm both surfaces
+  agree); click ✕ or click another app → the panel hides but the app stays in
+  the tray; left-click again → it reopens with current state; Quit is reachable
+  only from the right-click menu.
 - Manual UI checks driven through the running app; no browser E2E harness
   applies to a native tray app.

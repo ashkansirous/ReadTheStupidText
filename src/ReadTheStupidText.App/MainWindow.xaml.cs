@@ -40,7 +40,10 @@ public sealed partial class MainWindow : Window
     private readonly RelayCommand _toggleStartupCommand;
     private readonly RelayCommand _setSpeedCommand;
     private readonly RelayCommand _setVoiceCommand;
+    private readonly RelayCommand _toggleControlPanelCommand;
     private readonly RelayCommand _quitCommand;
+
+    private readonly ControlPanelWindow _controlPanel;
 
     private MenuFlyoutItem? _playPauseItem;
     private ToggleMenuFlyoutItem? _autoReadItem;
@@ -54,11 +57,16 @@ public sealed partial class MainWindow : Window
         _hotkey = hotkey;
         _startup = startup;
 
+        // The left-click control panel shares the same services as the tray menu,
+        // so both surfaces read and write the same state.
+        _controlPanel = new ControlPanelWindow(_readAloud, _startup);
+
         _togglePlayPauseCommand = new RelayCommand(_ => _readAloud.TogglePlayPause());
         _toggleAutoReadCommand = new RelayCommand(_ => ToggleAutoRead());
         _toggleStartupCommand = new RelayCommand(_ => _ = ToggleStartupAsync());
         _setSpeedCommand = new RelayCommand(p => ApplySpeed((ReadingSpeed)p!));
         _setVoiceCommand = new RelayCommand(p => ApplyVoice((string)p!));
+        _toggleControlPanelCommand = new RelayCommand(_ => _controlPanel.Toggle());
         _quitCommand = new RelayCommand(_ => Quit());
 
         InitializeComponent();
@@ -66,6 +74,8 @@ public sealed partial class MainWindow : Window
         _uiSettings.ColorValuesChanged += OnColorValuesChanged;
 
         TrayIcon.ContextFlyout = BuildTrayMenu();
+        TrayIcon.LeftClickCommand = _toggleControlPanelCommand;
+        TrayIcon.NoLeftClickDelay = true;
         TrayIcon.ForceCreate();
 
         // ForceCreate renders the light icon declared in XAML first; only then
@@ -79,6 +89,14 @@ public sealed partial class MainWindow : Window
         _ = RefreshStartupStateAsync();
 
         _readAloud.StateChanged += OnStateChanged;
+
+        // Either surface can change these; keep the tray menu's checkmarks in
+        // sync when the change comes from the control panel.
+        _readAloud.SpeedChanged += OnSpeedChanged;
+        _readAloud.VoiceChanged += OnVoiceChanged;
+        _readAloud.EnabledChanged += OnEnabledChanged;
+        _controlPanel.StartupStateChanged += OnPanelStartupChanged;
+
         _hotkey.Register(WindowNative.GetWindowHandle(this));
     }
 
@@ -186,14 +204,9 @@ public sealed partial class MainWindow : Window
         return item;
     }
 
-    private void ToggleAutoRead()
-    {
-        _readAloud.IsEnabled = !_readAloud.IsEnabled;
-        if (_autoReadItem is not null)
-        {
-            _autoReadItem.IsChecked = _readAloud.IsEnabled;
-        }
-    }
+    // The checkmark is updated by OnEnabledChanged, so both this and the control
+    // panel converge on the same state.
+    private void ToggleAutoRead() => _readAloud.IsEnabled = !_readAloud.IsEnabled;
 
     private async Task RefreshStartupStateAsync()
     {
@@ -222,28 +235,51 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private void ApplySpeed(ReadingSpeed speed)
+    // Apply* just drive the service; the corresponding *Changed event updates the
+    // menu checkmarks, so a change made in the control panel is reflected here too.
+    private void ApplySpeed(ReadingSpeed speed) => _readAloud.SetSpeed(speed);
+
+    private void ApplyVoice(string voiceId) => _readAloud.SetVoice(voiceId);
+
+    private void OnSpeedChanged(object? sender, ReadingSpeed speed) =>
+        _dispatcher.TryEnqueue(() => UpdateSpeedChecks(speed));
+
+    private void UpdateSpeedChecks(ReadingSpeed speed)
     {
-        _readAloud.SetSpeed(speed);
         foreach (ToggleMenuFlyoutItem item in _speedItems)
         {
             item.IsChecked = item.Tag is ReadingSpeed s && s == speed;
         }
     }
 
-    private void ApplyVoice(string voiceId)
+    private void OnVoiceChanged(object? sender, string voiceId) =>
+        _dispatcher.TryEnqueue(() => UpdateVoiceChecks(voiceId));
+
+    private void UpdateVoiceChecks(string voiceId)
     {
-        _readAloud.SetVoice(voiceId);
         foreach (ToggleMenuFlyoutItem item in _voiceItems)
         {
             item.IsChecked = item.Tag is string id && id == voiceId;
         }
     }
 
+    private void OnEnabledChanged(object? sender, bool enabled) =>
+        _dispatcher.TryEnqueue(() =>
+        {
+            if (_autoReadItem is not null)
+            {
+                _autoReadItem.IsChecked = enabled;
+            }
+        });
+
+    private void OnPanelStartupChanged(object? sender, bool enabled) =>
+        _dispatcher.TryEnqueue(() => SetStartupChecked(enabled));
+
     private void Quit()
     {
         _hotkey.Dispose();
         TrayIcon.Dispose();
+        _controlPanel.Close();
         Application.Current.Exit();
     }
 

@@ -72,11 +72,21 @@ default to revisit at Store-packaging time (Slice 5); `Debug` is unaffected.
 ## Out of scope (v1)
 
 Voice *tuning* beyond playback rate (pitch/volume/SSML), installing or
-downloading voices from within the app, a full settings window, non-Store
-distribution as the primary channel, and reading from non-UIA apps without the
-hotkey fallback. See `scope.md`.
+downloading voices from within the app, a **persistent/dockable** settings
+window (tabs, taskbar presence, hotkey-remap UI), non-Store distribution as the
+primary channel, and reading from non-UIA apps without the hotkey fallback. See
+`scope.md`.
 
 Note: choosing the narrator voice from **already-installed** Windows voices is
-now **in scope** (tray Voice submenu, persisted by voice Id) — see Slice 7 in
-`plan.md`. Voices are an open, machine-dependent set, so model them as a
-`VoiceInfo` record, not an `enum`.
+now **in scope** (persisted by voice Id) — see Slice 7 in `plan.md`. Voices are
+an open, machine-dependent set, so model them as a `VoiceInfo` record, not an
+`enum`.
+
+Note: a **left-click tray control panel** is now **in scope** (Slice 8, see
+Decision 12 in `plan.md`) — a borderless, always-on-top `AppWindow` that
+light-dismisses on `Deactivated`, holding the speed slider, voice picker,
+play/pause, and the auto-read/startup toggles. It is *not* a persistent settings
+window: it's transient and every control maps to an existing service. The
+right-click `MenuFlyout` stays (Quit lives there only). Rich controls (slider,
+`ComboBox`) **cannot** go in H.NotifyIcon's `PopupMenu` — that's why the panel
+is a real window, not a flyout (same native-menu limit as Decision 11).
