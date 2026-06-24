@@ -9,14 +9,14 @@ using Windows.Storage.Streams;
 namespace ReadTheStupidText.Infrastructure.Reading;
 
 /// <summary>
-/// Speaks text with the local Kokoro neural engine (sherpa-onnx). Synthesis
-/// produces raw PCM, which is wrapped as an in-memory WAV stream and played
-/// through a <see cref="MediaPlayer"/> — the same pipeline as the WinRT reader,
-/// so speed stays live and pitch-corrected via <see cref="MediaPlaybackSession.PlaybackRate"/>
+/// Speaks text with the local Supertonic-3 neural engine (sherpa-onnx). Synthesis
+/// produces raw PCM, wrapped as an in-memory WAV stream and played through a
+/// <see cref="MediaPlayer"/> — the same pipeline as the WinRT reader, so speed
+/// stays live and pitch-corrected via <see cref="MediaPlaybackSession.PlaybackRate"/>
 /// (synthesis runs at 1x; the player applies the rate). The engine is built
 /// lazily on first speak, once the model files are present.
 /// </summary>
-public sealed class KokoroSpeechReader : ISpeechReader, IDisposable
+public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
 {
     private const int SynthesisThreads = 2;
 
@@ -26,10 +26,10 @@ public sealed class KokoroSpeechReader : ISpeechReader, IDisposable
     private OfflineTts? _tts;
     private MediaSource? _currentSource;
     private double _playbackRate = PlaybackRate.Default.Value;
-    private int _speakerId = KokoroVoiceTable.DefaultSpeakerId;
+    private int _speakerId = SupertonicVoiceTable.DefaultSpeakerId;
     private PlaybackState _state = PlaybackState.Idle;
 
-    public KokoroSpeechReader(IVoiceModelService model)
+    public SupertonicSpeechReader(IVoiceModelService model)
     {
         _model = model;
         _player.MediaOpened += OnMediaOpened;
@@ -65,7 +65,7 @@ public sealed class KokoroSpeechReader : ISpeechReader, IDisposable
         _player.PlaybackSession.PlaybackRate = _playbackRate;
     }
 
-    public void SetVoice(string voiceId) => _speakerId = KokoroVoiceTable.SpeakerIdFor(voiceId);
+    public void SetVoice(string voiceId) => _speakerId = SupertonicVoiceTable.SpeakerIdFor(voiceId);
 
     private OfflineTts? EnsureTts()
     {
@@ -79,11 +79,15 @@ public sealed class KokoroSpeechReader : ISpeechReader, IDisposable
             return null;
         }
 
+        string dir = paths.RootDir;
         var config = new OfflineTtsConfig();
-        config.Model.Kokoro.Model = paths.Model;
-        config.Model.Kokoro.Voices = paths.Voices;
-        config.Model.Kokoro.Tokens = paths.Tokens;
-        config.Model.Kokoro.DataDir = paths.DataDir;
+        config.Model.Supertonic.DurationPredictor = Path.Combine(dir, SupertonicFiles.DurationPredictor);
+        config.Model.Supertonic.TextEncoder = Path.Combine(dir, SupertonicFiles.TextEncoder);
+        config.Model.Supertonic.VectorEstimator = Path.Combine(dir, SupertonicFiles.VectorEstimator);
+        config.Model.Supertonic.Vocoder = Path.Combine(dir, SupertonicFiles.Vocoder);
+        config.Model.Supertonic.TtsJson = Path.Combine(dir, SupertonicFiles.TtsJson);
+        config.Model.Supertonic.UnicodeIndexer = Path.Combine(dir, SupertonicFiles.UnicodeIndexer);
+        config.Model.Supertonic.VoiceStyle = Path.Combine(dir, SupertonicFiles.VoiceStyle);
         config.Model.NumThreads = SynthesisThreads;
         config.Model.Provider = "cpu";
         _tts = new OfflineTts(config);

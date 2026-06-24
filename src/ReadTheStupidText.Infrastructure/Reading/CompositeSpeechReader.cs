@@ -12,12 +12,12 @@ namespace ReadTheStupidText.Infrastructure.Reading;
 /// </summary>
 public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
 {
-    private readonly KokoroSpeechReader _neural;
+    private readonly SupertonicSpeechReader _neural;
     private readonly SpeechReader _fallback;
     private readonly IVoiceModelService _model;
     private ISpeechReader _active;
 
-    public CompositeSpeechReader(KokoroSpeechReader neural, SpeechReader fallback, IVoiceModelService model)
+    public CompositeSpeechReader(SupertonicSpeechReader neural, SpeechReader fallback, IVoiceModelService model)
     {
         _neural = neural;
         _fallback = fallback;

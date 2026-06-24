@@ -6,16 +6,28 @@ using Windows.Storage;
 namespace ReadTheStupidText.Infrastructure.Reading;
 
 /// <summary>
-/// Downloads and unpacks the Kokoro neural voice model on first run, into the
-/// app's local storage. The model ships as a <c>.tar.bz2</c> release asset; .NET
-/// supplies the tar reader, SharpZipLib the bzip2 layer. Subsequent launches find
-/// the unpacked files already present and become ready immediately.
+/// Downloads and unpacks the Supertonic-3 neural voice model on first run, into
+/// the app's local storage. The model ships as a <c>.tar.bz2</c> release asset;
+/// .NET supplies the tar reader, SharpZipLib the bzip2 layer. Subsequent launches
+/// find the unpacked files already present and become ready immediately.
 /// </summary>
-public sealed class KokoroModelService : IVoiceModelService
+public sealed class SupertonicModelService : IVoiceModelService
 {
-    private const string ModelName = "kokoro-en-v0_19";
+    private const string ModelName = "sherpa-onnx-supertonic-3-tts-int8-2026-05-11";
     private const string DownloadUrl =
-        "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2";
+        "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-3-tts-int8-2026-05-11.tar.bz2";
+
+    // The files the engine needs; presence of all of them means "ready".
+    private static readonly string[] RequiredFiles =
+    [
+        SupertonicFiles.DurationPredictor,
+        SupertonicFiles.TextEncoder,
+        SupertonicFiles.VectorEstimator,
+        SupertonicFiles.Vocoder,
+        SupertonicFiles.TtsJson,
+        SupertonicFiles.UnicodeIndexer,
+        SupertonicFiles.VoiceStyle,
+    ];
 
     private static readonly HttpClient Http = new();
 
@@ -30,16 +42,16 @@ public sealed class KokoroModelService : IVoiceModelService
         try
         {
             string root = ApplicationData.Current.LocalFolder.Path;
-            VoiceModelPaths paths = PathsUnder(root);
+            string modelDir = Path.Combine(root, ModelName);
 
-            if (!AllFilesPresent(paths))
+            if (!AllFilesPresent(modelDir))
             {
                 await DownloadAndExtractAsync(root, progress);
             }
 
-            if (AllFilesPresent(paths))
+            if (AllFilesPresent(modelDir))
             {
-                MarkReady(paths);
+                MarkReady(new VoiceModelPaths(modelDir));
             }
         }
         catch
@@ -56,18 +68,8 @@ public sealed class KokoroModelService : IVoiceModelService
         ReadyChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    private static VoiceModelPaths PathsUnder(string root)
-    {
-        string dir = Path.Combine(root, ModelName);
-        return new VoiceModelPaths(
-            Model: Path.Combine(dir, "model.onnx"),
-            Voices: Path.Combine(dir, "voices.bin"),
-            Tokens: Path.Combine(dir, "tokens.txt"),
-            DataDir: Path.Combine(dir, "espeak-ng-data"));
-    }
-
-    private static bool AllFilesPresent(VoiceModelPaths p) =>
-        File.Exists(p.Model) && File.Exists(p.Voices) && File.Exists(p.Tokens) && Directory.Exists(p.DataDir);
+    private static bool AllFilesPresent(string modelDir) =>
+        RequiredFiles.All(f => File.Exists(Path.Combine(modelDir, f)));
 
     private static async Task DownloadAndExtractAsync(string root, IProgress<double>? progress)
     {

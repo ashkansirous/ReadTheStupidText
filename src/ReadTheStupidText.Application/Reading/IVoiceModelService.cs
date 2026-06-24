@@ -1,10 +1,11 @@
 namespace ReadTheStupidText.Application.Reading;
 
 /// <summary>
-/// The on-disk locations of the neural voice model's files, once it has been
-/// downloaded and unpacked. Passed to the synthesis engine to construct itself.
+/// The unpacked model's root directory, once it has been downloaded. The
+/// synthesis engine knows its own file layout under this directory; keeping the
+/// contract to a single folder makes it engine-agnostic.
 /// </summary>
-public sealed record VoiceModelPaths(string Model, string Voices, string Tokens, string DataDir);
+public sealed record VoiceModelPaths(string RootDir);
 
 /// <summary>
 /// Owns the local neural voice model: ensures it is present (downloading it on

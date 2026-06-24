@@ -32,12 +32,12 @@ public partial class App : Application
     {
         var services = new ServiceCollection();
 
-        // Neural (Kokoro) is the primary engine; the WinRT reader is the fallback
-        // used only while the model downloads. CompositeSpeechReader routes between
-        // them, and the catalog exposes the neural voices once the model is ready.
-        services.AddSingleton<IVoiceModelService, KokoroModelService>();
+        // Neural (Supertonic) is the primary engine; the WinRT reader is the
+        // fallback used only while the model downloads. CompositeSpeechReader
+        // routes between them, and the catalog exposes the neural voices once ready.
+        services.AddSingleton<IVoiceModelService, SupertonicModelService>();
         services.AddSingleton<SpeechReader>();
-        services.AddSingleton<KokoroSpeechReader>();
+        services.AddSingleton<SupertonicSpeechReader>();
         services.AddSingleton<ISpeechReader, CompositeSpeechReader>();
         services.AddSingleton<IVoiceCatalog, NeuralVoiceCatalog>();
 

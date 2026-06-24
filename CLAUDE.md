@@ -34,8 +34,8 @@ Infrastructure  →  Application / Domain
   native tray menu. Genuinely closed sets (reading state, etc.) stay `enum`s.
 - **Application** (`net10.0`) — use cases / orchestration, interfaces.
 - **Infrastructure** (`net10.0-windows`) — speech engines (local neural
-  **Kokoro** via sherpa-onnx, plus a WinRT `SpeechSynthesis` fallback), all
-  played through `MediaPlayer`; the neural model downloads on first run.
+  **Supertonic-3** via sherpa-onnx, plus a WinRT `SpeechSynthesis` fallback),
+  all played through `MediaPlayer`; the neural model downloads on first run.
   Clipboard, UI Automation, startup task, OS integration.
 - **App** (`net10.0-windows`, WinUI single-project MSIX) — UI, tray, DI wiring.
 
@@ -83,16 +83,20 @@ as the primary channel, and reading from non-UIA apps without the hotkey
 fallback. See `scope.md`.
 
 Note: the narrator voice is a **local neural voice** (Slice 9, Decision 14) — the
-**sherpa-onnx** runtime (Apache-2.0) running the **Kokoro** model (Apache-2.0),
-via `org.k2fsa.sherpa.onnx`. The model **downloads on first run** from the
+**sherpa-onnx** runtime (Apache-2.0) running the **Supertonic-3** model
+(Apache-2.0, `sherpa-onnx-supertonic-3-tts-int8-2026-05-11`), via
+`org.k2fsa.sherpa.onnx`. The model **downloads on first run** from the
 sherpa-onnx GitHub release into app-local storage (so `internetClient` is
-declared); the picker offers **only** the Kokoro voices (`KokoroVoiceTable`,
-modelled as `VoiceInfo` records). The built-in WinRT `SpeechSynthesis` voice is
-an internal **fallback only**, used while the model downloads — never offered for
-selection. Narrator's "Natural"/neural voices are unreachable by a Store app, so
-we bring our own engine. **Piper is GPL — do not use it**; Kokoro/sherpa-onnx are
-Apache-2.0 and Store-safe. Note the build-time `onnxruntime.dll` dedupe in the
-App `.csproj` (WinML and sherpa both ship one; we keep sherpa's).
+declared); the picker offers **only** the Supertonic voices (`SupertonicVoiceTable`,
+the fixed 10-style F1–F5/M1–M5 set in sorted sid order, modelled as `VoiceInfo`
+records). The built-in WinRT `SpeechSynthesis` voice is an internal **fallback
+only**, used while the model downloads — never offered for selection. Narrator's
+"Natural"/neural voices are unreachable by a Store app, so we bring our own
+engine. **Piper is GPL — do not use it; Kokoro was rejected** (Chinese-focused,
+no English male voice in the latest, ships GPL-adjacent espeak data); Supertonic
+is English-first, Apache-2.0, espeak-free, and Store-safe. Note the build-time
+`onnxruntime.dll` dedupe in the App `.csproj` (WinML and sherpa both ship one; we
+keep sherpa's).
 
 Note: a **left-click tray control panel** is now **in scope** (Slice 8, see
 Decision 12 in `plan.md`) — a borderless, always-on-top `AppWindow`, **pinned
