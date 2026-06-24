@@ -39,8 +39,10 @@ public sealed partial class ControlPanelWindow : Window
     private readonly DispatcherQueue _dispatcher = DispatcherQueue.GetForCurrentThread();
 
     // Suppresses control events while the panel is being populated from state,
-    // so refreshing the UI does not echo back as a user change.
-    private bool _refreshing;
+    // so refreshing the UI does not echo back as a user change. Starts true so
+    // the slider's initial coercion to its minimum (0.5) during XAML load isn't
+    // mistaken for a user change and persisted over the real default (1x).
+    private bool _refreshing = true;
 
     // The content's measured height (effective pixels), known after first layout.
     private double? _measuredHeight;
@@ -179,7 +181,7 @@ public sealed partial class ControlPanelWindow : Window
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => Hide();
 
-    private void OnPlayPauseClick(object sender, RoutedEventArgs e) => _readAloud.TogglePlayPause();
+    private void OnPlayPauseClick(object sender, RoutedEventArgs e) => _ = _readAloud.PlayPauseOrReadAsync();
 
     private void OnSpeedSliderChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
     {

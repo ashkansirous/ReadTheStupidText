@@ -178,7 +178,16 @@ Slice 5 (store):**
       originates in the panel; the panel re-reads live state each time it opens,
       and raises `StartupStateChanged` so the menu's startup toggle follows.
       `LeftClickCommand` + `NoLeftClickDelay` open the panel without a
-      double-click wait.
+      double-click wait. *Refinements after testing:* the slider no longer
+      clobbers the persisted default (its initial coercion to the 0.5 minimum is
+      suppressed, so a fresh state opens at 1×); **Play** now starts a read of
+      the selection/clipboard when idle (via `PlayPauseOrReadAsync`) instead of
+      being a no-op, shared by the tray Play item; and when the active rate isn't
+      a preset (e.g. 1.05×) the tray menu surfaces it as a checked item at the
+      top of the speed group. *Known limitation:* the voice list is limited to
+      the WinRT `SpeechSynthesizer.AllVoices` set (Microsoft-signed OneCore
+      voices); Narrator-only "Natural"/neural voices use a separate engine and
+      aren't available to this API.
 
 ## Out of Scope
 

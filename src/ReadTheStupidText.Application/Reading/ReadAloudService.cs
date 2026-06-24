@@ -119,16 +119,24 @@ public sealed class ReadAloudService : IDisposable
         await SpeakAsync(text);
     }
 
-    /// <summary>Pauses if playing, resumes if paused; no-op when idle.</summary>
-    public void TogglePlayPause()
+    /// <summary>
+    /// The "Play" action shared by the tray menu and control panel: pauses if
+    /// playing, resumes if paused, and when idle starts a fresh read of the
+    /// current selection (which falls back to the clipboard when nothing is
+    /// selected — see <see cref="ReadSelectionAsync"/>).
+    /// </summary>
+    public Task PlayPauseOrReadAsync()
     {
-        if (_reader.State == PlaybackState.Playing)
+        switch (State)
         {
-            _reader.Pause();
-        }
-        else if (_reader.State == PlaybackState.Paused)
-        {
-            _reader.Resume();
+            case PlaybackState.Playing:
+                _reader.Pause();
+                return Task.CompletedTask;
+            case PlaybackState.Paused:
+                _reader.Resume();
+                return Task.CompletedTask;
+            default:
+                return ReadSelectionAsync();
         }
     }
 
