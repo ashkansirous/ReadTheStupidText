@@ -51,7 +51,7 @@ public sealed class ReadAloudService : IDisposable
 
     public PlaybackState State => _reader.State;
 
-    public ReadingSpeed Speed => _settings.Speed;
+    public PlaybackRate Speed => _settings.Speed;
 
     /// <summary>The narrator voices installed on the machine.</summary>
     public IReadOnlyList<VoiceInfo> InstalledVoices => _voices.InstalledVoices;
@@ -97,7 +97,7 @@ public sealed class ReadAloudService : IDisposable
 
     /// <summary>Raised after the speed changes, so every control surface (tray
     /// menu, control panel) reflects the new value without polling.</summary>
-    public event EventHandler<ReadingSpeed>? SpeedChanged;
+    public event EventHandler<PlaybackRate>? SpeedChanged;
 
     /// <summary>Raised after the narrator voice changes.</summary>
     public event EventHandler<string>? VoiceChanged;
@@ -132,7 +132,7 @@ public sealed class ReadAloudService : IDisposable
         }
     }
 
-    public void SetSpeed(ReadingSpeed speed)
+    public void SetSpeed(PlaybackRate speed)
     {
         _settings.Speed = speed;
         _reader.SetSpeed(speed);

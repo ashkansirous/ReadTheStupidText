@@ -16,36 +16,34 @@ using WinRT.Interop;
 namespace ReadTheStupidText_App;
 
 /// <summary>
-/// The left-click control panel. A borderless, always-on-top window positioned
-/// above the taskbar that mirrors every read-aloud control in one place. It
-/// light-dismisses on <see cref="Window.Activated"/> losing focus and only ever
-/// hides — the app keeps running in the tray. Every control reads live state on
-/// open and writes through the shared services, so it stays in sync with the
-/// right-click tray menu.
+/// The left-click control panel. A borderless, always-on-top window pinned above
+/// every other window: it stays open until the user closes it (✕) or toggles the
+/// tray icon — it does not dismiss on click-away. The app keeps running in the
+/// tray; Quit lives only in the right-click menu. Every control reads live state
+/// on open and writes through the shared services, so it stays in sync with the
+/// tray menu.
 /// </summary>
 public sealed partial class ControlPanelWindow : Window
 {
     private const string PlayLabel = "Play";
     private const string PauseLabel = "Pause";
 
-    // Logical (effective-pixel) panel size; scaled to device pixels per monitor.
+    // Logical (effective-pixel) panel width and a generous fallback height used
+    // until the content's real height is measured; both scaled to device pixels.
     private const int LogicalWidth = 300;
-    private const int LogicalHeight = 360;
+    private const int FallbackHeight = 460;
     private const int LogicalMargin = 12;
-
-    // Window swallows the tray click that dismissed it; ignore a reopen that
-    // arrives within this window of the hide.
-    private const long ReopenGuardMs = 350;
 
     private readonly ReadAloudService _readAloud;
     private readonly IStartupService _startup;
     private readonly DispatcherQueue _dispatcher = DispatcherQueue.GetForCurrentThread();
-    private readonly ReadingSpeed[] _speeds = Enum.GetValues<ReadingSpeed>();
 
     // Suppresses control events while the panel is being populated from state,
     // so refreshing the UI does not echo back as a user change.
     private bool _refreshing;
-    private long _lastHiddenTick;
+
+    // The content's measured height (effective pixels), known after first layout.
+    private double? _measuredHeight;
 
     /// <summary>Raised after the user changes the startup state from the panel,
     /// so the tray menu's matching toggle can be updated.</summary>
@@ -61,7 +59,7 @@ public sealed partial class ControlPanelWindow : Window
         ConfigurePresenter();
         LoadVoices();
 
-        Activated += OnActivated;
+        RootGrid.Loaded += OnRootLoaded;
         _readAloud.StateChanged += OnPlaybackStateChanged;
     }
 
@@ -71,15 +69,11 @@ public sealed partial class ControlPanelWindow : Window
         if (AppWindow.IsVisible)
         {
             Hide();
-            return;
         }
-
-        if (Environment.TickCount64 - _lastHiddenTick < ReopenGuardMs)
+        else
         {
-            return;
+            ShowPanel();
         }
-
-        ShowPanel();
     }
 
     private void ConfigurePresenter()
@@ -109,32 +103,32 @@ public sealed partial class ControlPanelWindow : Window
     private void ShowPanel()
     {
         RefreshState();
-        PositionAboveTray();
+        PositionPanel();
         AppWindow.Show();
         Activate();
     }
 
-    private void Hide()
-    {
-        _lastHiddenTick = Environment.TickCount64;
-        AppWindow.Hide();
-    }
+    private void Hide() => AppWindow.Hide();
 
-    private void OnActivated(object sender, WindowActivatedEventArgs args)
+    // Once the content has laid out we know its true height; remember it and
+    // re-fit the window so nothing is clipped (the overflow fix).
+    private void OnRootLoaded(object sender, RoutedEventArgs e)
     {
-        if (args.WindowActivationState == WindowActivationState.Deactivated)
+        _measuredHeight = RootGrid.DesiredSize.Height;
+        if (AppWindow.IsVisible)
         {
-            Hide();
+            PositionPanel();
         }
     }
 
     // Places the panel in the bottom-right corner just inside the work area,
-    // scaled to the monitor's DPI (AppWindow works in physical device pixels).
-    private void PositionAboveTray()
+    // sized to its content and scaled to the monitor's DPI (AppWindow works in
+    // physical device pixels).
+    private void PositionPanel()
     {
         double scale = GetDpiForWindow(WindowNative.GetWindowHandle(this)) / 96.0;
         int width = (int)(LogicalWidth * scale);
-        int height = (int)(LogicalHeight * scale);
+        int height = (int)((_measuredHeight ?? FallbackHeight) * scale);
         int margin = (int)(LogicalMargin * scale);
 
         DisplayArea area = DisplayArea.GetFromWindowId(AppWindow.Id, DisplayAreaFallback.Nearest);
@@ -158,11 +152,10 @@ public sealed partial class ControlPanelWindow : Window
         _ = RefreshStartupAsync();
     }
 
-    private void UpdateSpeed(ReadingSpeed speed)
+    private void UpdateSpeed(PlaybackRate rate)
     {
-        int index = Array.IndexOf(_speeds, speed);
-        SpeedSlider.Value = index < 0 ? 0 : index;
-        SpeedLabel.Text = speed.ToDisplayLabel();
+        SpeedSlider.Value = rate.Value;
+        SpeedLabel.Text = rate.ToDisplayLabel();
     }
 
     private void SelectCurrentVoice()
@@ -195,9 +188,9 @@ public sealed partial class ControlPanelWindow : Window
             return;
         }
 
-        ReadingSpeed speed = _speeds[(int)e.NewValue];
-        SpeedLabel.Text = speed.ToDisplayLabel();
-        _readAloud.SetSpeed(speed);
+        var rate = new PlaybackRate(e.NewValue);
+        SpeedLabel.Text = rate.ToDisplayLabel();
+        _readAloud.SetSpeed(rate);
     }
 
     private void OnVoiceSelectionChanged(object sender, SelectionChangedEventArgs e)

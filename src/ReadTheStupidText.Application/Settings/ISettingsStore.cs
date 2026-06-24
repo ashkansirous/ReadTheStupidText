@@ -9,7 +9,7 @@ namespace ReadTheStupidText.Application.Settings;
 /// </summary>
 public interface ISettingsStore
 {
-    ReadingSpeed Speed { get; set; }
+    PlaybackRate Speed { get; set; }
 
     bool IsEnabled { get; set; }
 

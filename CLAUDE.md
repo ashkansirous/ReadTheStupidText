@@ -28,7 +28,10 @@ Infrastructure  →  Application / Domain
 ```
 
 - **Domain** (`net10.0`) — entities, value objects, enums. No framework deps.
-  The five speeds are an `enum` (a closed set), never loose strings/doubles.
+  Reading speed is the **`PlaybackRate`** value object — a decimal multiplier
+  (0.5–2.0, snapped to 0.05 steps), *not* an enum: the user picks a continuous
+  rate, with `SpeedPresets` exposing the common stops (1/1.25/1.5/1.75/2) for the
+  native tray menu. Genuinely closed sets (reading state, etc.) stay `enum`s.
 - **Application** (`net10.0`) — use cases / orchestration, interfaces.
 - **Infrastructure** (`net10.0-windows`) — WinRT TTS (`SpeechSynthesis` +
   `MediaPlayer`), clipboard, UI Automation, startup task, OS integration.
@@ -62,8 +65,9 @@ default to revisit at Store-packaging time (Slice 5); `Debug` is unaffected.
 
 ## Code quality (project-specific reminders)
 
-- Closed sets are `enum`s (speed band, reading state, etc.) — stringify only at
-  the UI boundary.
+- Genuinely closed sets (reading state, etc.) are `enum`s — stringify only at
+  the UI boundary. Reading speed is **not** closed: it's the `PlaybackRate`
+  value object (decimal, range/step enforced in the type).
 - No magic strings for settings keys / manifest names — use named constants.
 - The backend/infrastructure returns structured data; the UI composes any
   user-facing copy.
@@ -83,10 +87,12 @@ an open, machine-dependent set, so model them as a `VoiceInfo` record, not an
 `enum`.
 
 Note: a **left-click tray control panel** is now **in scope** (Slice 8, see
-Decision 12 in `plan.md`) — a borderless, always-on-top `AppWindow` that
-light-dismisses on `Deactivated`, holding the speed slider, voice picker,
-play/pause, and the auto-read/startup toggles. It is *not* a persistent settings
-window: it's transient and every control maps to an existing service. The
+Decision 12 in `plan.md`) — a borderless, always-on-top `AppWindow`, **pinned
+above all windows** (it stays open until the ✕ or another tray click; it does
+*not* light-dismiss), sized to its content, holding the fine 0.05 speed slider,
+voice picker, play/pause, and the auto-read/startup toggles. It is *not* a
+persistent settings window: it's transient and every control maps to an
+existing service. The
 right-click `MenuFlyout` stays (Quit lives there only). Rich controls (slider,
 `ComboBox`) **cannot** go in H.NotifyIcon's `PopupMenu` — that's why the panel
 is a real window, not a flyout (same native-menu limit as Decision 11).

@@ -13,7 +13,7 @@
         surfaces every interactive control bound to the existing services; the
         right-click tray menu remains the home for Quit.
     -->
-    <Grid Padding="16" RowSpacing="14">
+    <Grid x:Name="RootGrid" Padding="16" RowSpacing="14">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -63,12 +63,10 @@
             </Grid>
             <Slider
                 x:Name="SpeedSlider"
-                Minimum="0"
-                Maximum="4"
-                StepFrequency="1"
-                SnapsTo="Ticks"
-                TickFrequency="1"
-                TickPlacement="Outside"
+                Minimum="0.5"
+                Maximum="2.0"
+                StepFrequency="0.05"
+                SnapsTo="StepValues"
                 ValueChanged="OnSpeedSliderChanged" />
         </StackPanel>
 

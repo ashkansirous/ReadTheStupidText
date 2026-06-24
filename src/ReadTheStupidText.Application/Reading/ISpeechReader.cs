@@ -22,7 +22,7 @@ public interface ISpeechReader
     void Resume();
 
     /// <summary>Applies a new speed live, without restarting playback.</summary>
-    void SetSpeed(ReadingSpeed speed);
+    void SetSpeed(PlaybackRate speed);
 
     /// <summary>
     /// Selects the narrator voice (by <see cref="VoiceInfo.Id"/>) for the next

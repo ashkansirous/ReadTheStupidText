@@ -17,7 +17,7 @@ public sealed class SpeechReader : ISpeechReader, IDisposable
     private readonly MediaPlayer _player = new() { AutoPlay = false };
 
     private MediaSource? _currentSource;
-    private double _playbackRate = ReadingSpeedExtensions.Default.ToPlaybackRate();
+    private double _playbackRate = PlaybackRate.Default.Value;
     private PlaybackState _state = PlaybackState.Idle;
 
     public SpeechReader()
@@ -41,9 +41,9 @@ public sealed class SpeechReader : ISpeechReader, IDisposable
 
     public void Resume() => _player.Play();
 
-    public void SetSpeed(ReadingSpeed speed)
+    public void SetSpeed(PlaybackRate speed)
     {
-        _playbackRate = speed.ToPlaybackRate();
+        _playbackRate = speed.Value;
         _player.PlaybackSession.PlaybackRate = _playbackRate;
     }
 

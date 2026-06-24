@@ -64,7 +64,7 @@ public sealed partial class MainWindow : Window
         _togglePlayPauseCommand = new RelayCommand(_ => _readAloud.TogglePlayPause());
         _toggleAutoReadCommand = new RelayCommand(_ => ToggleAutoRead());
         _toggleStartupCommand = new RelayCommand(_ => _ = ToggleStartupAsync());
-        _setSpeedCommand = new RelayCommand(p => ApplySpeed((ReadingSpeed)p!));
+        _setSpeedCommand = new RelayCommand(p => ApplySpeed((PlaybackRate)p!));
         _setVoiceCommand = new RelayCommand(p => ApplyVoice((string)p!));
         _toggleControlPanelCommand = new RelayCommand(_ => _controlPanel.Toggle());
         _quitCommand = new RelayCommand(_ => Quit());
@@ -139,9 +139,9 @@ public sealed partial class MainWindow : Window
         flyout.Items.Add(_playPauseItem);
         flyout.Items.Add(new MenuFlyoutSeparator());
 
-        foreach (ReadingSpeed speed in Enum.GetValues<ReadingSpeed>())
+        foreach (PlaybackRate preset in SpeedPresets.All)
         {
-            flyout.Items.Add(CreateSpeedItem(speed));
+            flyout.Items.Add(CreateSpeedItem(preset));
         }
 
         MenuFlyoutSubItem? voiceMenu = BuildVoiceSubmenu();
@@ -187,18 +187,20 @@ public sealed partial class MainWindow : Window
         return submenu;
     }
 
-    // Speeds use ToggleMenuFlyoutItem rather than RadioMenuFlyoutItem: the
-    // PopupMenu builder only renders a checkmark for toggle items, and it does
-    // not enforce radio-group exclusivity, so ApplySpeed manages that.
-    private ToggleMenuFlyoutItem CreateSpeedItem(ReadingSpeed speed)
+    // The menu offers preset rates only (it's a native menu — no slider); the
+    // fine 0.05 control lives in the panel. ToggleMenuFlyoutItem is used rather
+    // than RadioMenuFlyoutItem because the PopupMenu builder only renders a
+    // checkmark for toggle items and doesn't enforce radio exclusivity, so
+    // UpdateSpeedChecks manages which preset is checked.
+    private ToggleMenuFlyoutItem CreateSpeedItem(PlaybackRate preset)
     {
         var item = new ToggleMenuFlyoutItem
         {
-            Text = speed.ToDisplayLabel(),
-            Tag = speed,
-            IsChecked = speed == _readAloud.Speed,
+            Text = preset.ToDisplayLabel(),
+            Tag = preset,
+            IsChecked = preset == _readAloud.Speed,
             Command = _setSpeedCommand,
-            CommandParameter = speed,
+            CommandParameter = preset,
         };
         _speedItems.Add(item);
         return item;
@@ -237,18 +239,20 @@ public sealed partial class MainWindow : Window
 
     // Apply* just drive the service; the corresponding *Changed event updates the
     // menu checkmarks, so a change made in the control panel is reflected here too.
-    private void ApplySpeed(ReadingSpeed speed) => _readAloud.SetSpeed(speed);
+    private void ApplySpeed(PlaybackRate speed) => _readAloud.SetSpeed(speed);
 
     private void ApplyVoice(string voiceId) => _readAloud.SetVoice(voiceId);
 
-    private void OnSpeedChanged(object? sender, ReadingSpeed speed) =>
+    private void OnSpeedChanged(object? sender, PlaybackRate speed) =>
         _dispatcher.TryEnqueue(() => UpdateSpeedChecks(speed));
 
-    private void UpdateSpeedChecks(ReadingSpeed speed)
+    // A preset is checked only when the current rate exactly matches it; the fine
+    // 0.05 values chosen in the panel leave every preset unchecked, which is fine.
+    private void UpdateSpeedChecks(PlaybackRate speed)
     {
         foreach (ToggleMenuFlyoutItem item in _speedItems)
         {
-            item.IsChecked = item.Tag is ReadingSpeed s && s == speed;
+            item.IsChecked = item.Tag is PlaybackRate s && s == speed;
         }
     }
 
