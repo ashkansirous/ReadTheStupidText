@@ -86,8 +86,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          msix_files=$(find artifacts -name '*.msix')
-          echo "Publishing: $msix_files"
+          # Only the app package per arch — NOT the framework dependency packages
+          # under Dependencies/ (every arch ships a same-named
+          # Microsoft.WindowsAppRuntime.2.msix, which would collide as duplicate
+          # release asset names). The Store/Windows resolves that runtime dependency.
+          msix_files=$(find artifacts -name 'ReadTheStupidText.App_*.msix')
+          echo "Publishing:"; echo "$msix_files"
           gh release create "${{ github.ref_name }}" \
             --repo "${{ github.repository }}" \
             --title "${{ github.ref_name }}" \
