@@ -17,7 +17,8 @@
   a **media-player progress bar**; split auto-read into **two toggles**
   (on-selection / on-copy); run a **deep code-review** pass and fix bugs; finish
   the **Store-submission pipeline** (kept inert until a Partner Center account
-  exists), then tag **v1.0.0**.
+  exists), then cut the **first auto-versioned release** (version follows
+  Conventional Commits, **staying `0.x`** — not forced to `v1.0.0`).
 
 ## Approach
 
@@ -38,7 +39,7 @@
 
 All **feature** slices (0–10) are implemented: the speed-control fix, voice selection, launch-at-startup, the tray control panel (Slice 8), local neural voices (Slice 9 — sherpa-onnx + Supertonic-3, bundled), **Store packaging & CI (Slice 5 — merged; CI builds the MSIX and publishes `v*` tags to GitHub Releases)**, and the **live activity log + auto-read state machine (Slice 10)**.
 
-The **current unit of work is Batch 2 (Slices 11–16)** — release-readiness, smallest-first: **(11)** rename voices to Overlord display names (ids unchanged) → **(12)** split auto-read into two settings/toggles (on-selection + on-copy, both default on) → **(13)** rebuild the control panel to the `design_handoff_tray_panel/` "Media Card" spec in native WinUI Fluent (gradient header, waveform, transport row with a **live progress bar**, Fluent settings list, light/dark), keeping the pinned-topmost window → **(14)** add the MIT `LICENSE` and wire **Conventional-Commits** auto-versioning into `Package.appxmanifest` + tag → **(15)** run `/code-review-in-detail` and fix confirmed bugs → **(16)** finalize the (inert) Store-submission pipeline + signing docs, then tag **v1.0.0**. Each later slice follows the same end-to-end pattern. Signing stays **Store-only** (CI unsigned); Azure Trusted Signing is the documented upgrade.
+The **current unit of work is Batch 2 (Slices 11–16)** — release-readiness, smallest-first: **(11)** rename voices to Overlord display names (ids unchanged) → **(12)** split auto-read into two settings/toggles (on-selection + on-copy, both default on) → **(13)** rebuild the control panel to the `design_handoff_tray_panel/` "Media Card" spec in native WinUI Fluent (gradient header, waveform, transport row with a **live progress bar**, Fluent settings list, light/dark), keeping the pinned-topmost window → **(14)** add the MIT `LICENSE` and wire **Conventional-Commits** auto-versioning into `Package.appxmanifest` + tag → **(15)** run `/code-review-in-detail` and fix confirmed bugs → **(16)** finalize the (inert) Store-submission pipeline + signing docs, then cut the **first auto-versioned release** (a `0.x` tag — not `v1.0.0`). Each later slice follows the same end-to-end pattern. Signing stays **Store-only** (CI unsigned); Azure Trusted Signing is the documented upgrade.
 
 ## Out of Scope
 

@@ -200,7 +200,7 @@ this plan turns it into ordered, shippable vertical slices.
     truth. No heavyweight release bot — a small action/script computes the bump.
 18. **Signing — Microsoft Store re-signing only for now (Batch 2).** The Store
     re-signs the package on publish and is the trusted install channel
-    (SmartScreen trusts Store apps), so v1 keeps shipping **unsigned** from CI
+    (SmartScreen trusts Store apps), so the package keeps shipping **unsigned** from CI
     (`AppxPackageSigningEnabled=false` unchanged). A domain (`sirous.uk`)
     **cannot sign code** — code-signing certificates validate an *identity*, not
     domain control — so it plays no part. **Azure Trusted Signing** (~US$10/mo,
@@ -437,8 +437,10 @@ Slice 5 (store):**
 **Batch 2 — release-readiness (Slices 11–16).** With the feature set complete,
 this batch polishes voices + UI, then makes the project releasable: license,
 automatic versioning, a code-review pass, and the Store-pipeline wiring, ending
-in the first tagged `v1.0.0`. Ordered smallest-first; each is independently
-shippable.
+in the **first auto-versioned release**. The version follows Conventional
+Commits (default patch) and **stays `0.x`** — it is **not** forced to `v1.0.0`;
+the app reaches `1.0.0` only when the user declares it stable. Ordered
+smallest-first; each is independently shippable.
 
 - [ ] **Slice 11 — Overlord voice names.** (Decision 19) Rename the ten
       `DisplayName`s in `SupertonicVoiceTable` to the Overlord mapping (default
@@ -472,13 +474,15 @@ shippable.
       `/code-review-in-detail` over the full app, triage the findings, and fix
       the confirmed real bugs (each non-trivial fix referenced in the PR). The
       generated `summary-code-review.md` / `detailed-code-review.md` are the
-      record. Gates the `v1.0.0` tag.
-- [ ] **Slice 16 — Store-pipeline finalize + signing docs, then `v1.0.0`.**
+      record. Gates the first release tag.
+- [ ] **Slice 16 — Store-pipeline finalize + signing docs, first release.**
       (Decisions 18, and Slice 5's deferred Partner Center work) Verify
       `store-submit.yml` is correct (kept **inert** — no account), refresh
       `STORE.md` with the remaining Partner Center steps and the **Azure Trusted
       Signing** upgrade path, and confirm the Conventional-Commits versioning
-      feeds the release/Store flow. Cut the first release by tagging **`v1.0.0`**.
+      feeds the release/Store flow. Cut the **first auto-versioned release** —
+      the tag is whatever the versioning produces (**stays `0.x`**; **not**
+      `v1.0.0` until the user declares the app stable).
 
 ## Out of Scope
 
@@ -600,7 +604,8 @@ shippable.
   targeted tests pass) and referenced in the PR; the app still builds and runs.
 - **Slice 16:** `STORE.md` lists the remaining Partner Center steps and the
   Azure Trusted Signing upgrade; `store-submit.yml` is valid but inert (no
-  secrets). Tagging **`v1.0.0`** produces the first signed-by-Store-ready GitHub
-  Release with both arch MSIX packages.
+  secrets). Pushing the **first auto-versioned tag** (a `0.x` version — not
+  `v1.0.0`) produces the first Store-ready GitHub Release with both arch MSIX
+  packages.
 - Manual UI checks driven through the running app; no browser E2E harness
   applies to a native tray app.
