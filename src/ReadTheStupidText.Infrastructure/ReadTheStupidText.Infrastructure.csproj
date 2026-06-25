@@ -6,8 +6,8 @@
   </ItemGroup>
 
   <!-- Local neural TTS engine (sherpa-onnx runtime, Apache-2.0) running the
-       Kokoro voice model. The managed package transitively pulls the per-RID
-       native runtimes; only the build RID's DLLs are copied to the app output. -->
+       Supertonic-3 voice model. The managed package transitively pulls the
+       per-RID native runtimes; only the build RID's DLLs are copied to output. -->
   <ItemGroup>
     <PackageReference Include="org.k2fsa.sherpa.onnx" Version="1.13.3" />
   </ItemGroup>

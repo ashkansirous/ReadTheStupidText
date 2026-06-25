@@ -89,8 +89,10 @@
   <PropertyGroup>
     <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
     <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
-    <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
-    <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
+    <!-- Trimming is incompatible with this framework-dependent packaged (MSIX)
+         app: PublishTrimmed requires a self-contained publish, so a Release
+         build failed with NETSDK1102. Packaged WinUI apps aren't trimmed. -->
+    <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
 
   <!--

@@ -61,9 +61,14 @@ Studio. The class libraries are `AnyCPU` and the app is `x86;x64;ARM64`; the
 mapping, plus a `<Deploy Solution="Debug|x64" />` rule so F5 deploys the
 package. Debug through the **(Package)** profile — there is no unpackaged
 profile, because running unpackaged fails with `REGDB_E_CLASSNOTREG` (no
-package identity). Note: `Release` builds currently
-fail with `NETSDK1102` (`PublishTrimmed` without self-contained) — a scaffold
-default to revisit at Store-packaging time (Slice 5); `Debug` is unaffected.
+package identity).
+
+CI/packaging (Slice 5): `.github/workflows/build.yml` packages the single-project
+MSIX (x64 + ARM64, unsigned artifacts — the Store re-signs) and checks out LFS for
+the voice model; see `STORE.md` for capability justification, licenses, and the
+remaining Partner Center steps. `Release` builds cleanly now — trimming is
+disabled (`PublishTrimmed=false`); packaged WinUI apps aren't trimmed, and
+`PublishTrimmed` without self-contained was the old `NETSDK1102` failure.
 
 ## Code quality (project-specific reminders)
 
