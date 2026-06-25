@@ -27,6 +27,38 @@ speed, a left-click tray control panel, launch-at-startup, local **neural voices
 (sherpa-onnx + Supertonic-3, bundled), and CI packaging. Remaining before a Store
 release: Partner Center identity + signing (see [`STORE.md`](STORE.md)).
 
+## Reading from the console & other apps (important)
+
+There are three ways text reaches the reader, and which ones work depends on the
+app you're reading from:
+
+| Trigger | When it fires | Works in |
+| --- | --- | --- |
+| **Auto-read on selection** | You select text (no copy needed) | Apps that expose **UI Automation** text — most browsers (Chrome/Edge), Word, Notepad, many WinUI/WPF apps |
+| **Auto-read on copy** | You copy text (Ctrl+C) while auto-read is on | **Any** app, including the console |
+| **Global hotkey `Ctrl+Win+R`** | You press the hotkey | **Any** app — always available |
+
+**Console / terminal limitation.** The **console** (Windows Terminal, PowerShell,
+`cmd`) and some editors (e.g. Visual Studio's code editor) **do not expose a text
+selection to Windows**, so *selecting* text in them triggers nothing — there is no
+OS signal to react to. This is a Windows limitation, not a bug. To read from the
+console, do one of:
+
+1. **Copy** the text (Ctrl+C, or right-click → Copy) — with auto-read on, the copy
+   is read aloud. **Best for reading Claude Code output in Windows Terminal.**
+2. Enable **"Automatically copy selection to clipboard"** in Windows Terminal
+   (Settings → Interaction, `copyOnSelect`). Then merely *selecting* text copies it,
+   so it's read automatically.
+3. Press the **global hotkey `Ctrl+Win+R`**, which copies the focused selection and
+   reads it regardless of the app.
+
+Notes:
+- Auto-read on copy (and on selection) is gated by the **Auto-read** toggle (tray
+  menu / control panel). With auto-read **on**, *any* copy is read — including text
+  you copied only to paste elsewhere.
+- The **activity log** (right-click tray → *Show activity log*) is the diagnostic:
+  if a read produces no row, the app gave no signal (use copy or the hotkey).
+
 ## Tech stack
 
 - **.NET 10** + **C#**

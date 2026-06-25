@@ -32,12 +32,12 @@ public sealed class ActivityLog : IActivityLog
 
     public event EventHandler<ActivityEntry>? EntryChanged;
 
-    public ActivityEntry Add(ActivitySource source, string text)
+    public ActivityEntry Add(ActivityTrigger trigger, WindowSource? window, string text)
     {
         ActivityEntry entry;
         lock (_gate)
         {
-            entry = new ActivityEntry(++_nextId, DateTimeOffset.Now, source, Truncate(text));
+            entry = new ActivityEntry(++_nextId, DateTimeOffset.Now, trigger, window, Truncate(text));
             _entries.AddLast(entry);
             while (_entries.Count > Capacity)
             {
@@ -49,14 +49,15 @@ public sealed class ActivityLog : IActivityLog
         return entry;
     }
 
-    public void SetState(ActivityEntry entry, ActivityState state)
+    public void SetState(ActivityEntry entry, ActivityState state, ActivityReason reason = ActivityReason.None)
     {
-        if (entry.State == state)
+        if (entry.State == state && entry.Reason == reason)
         {
             return;
         }
 
         entry.State = state;
+        entry.Reason = reason;
         EntryChanged?.Invoke(this, entry);
     }
 

@@ -15,19 +15,42 @@ namespace ReadTheStupidText.Infrastructure.Reading;
 /// stays live and pitch-corrected via <see cref="MediaPlaybackSession.PlaybackRate"/>
 /// (synthesis runs at 1x; the player applies the rate). The engine is built
 /// lazily on first speak, once the model files are present.
+///
+/// Long text is split into chunks (<see cref="SpeechTextChunker"/>) that synthesize
+/// concurrently (up to <see cref="MaxSynthesisConcurrency"/>) but play strictly in
+/// order, so playback starts after the first chunk instead of after the whole text.
 /// </summary>
 public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
 {
     private const int SynthesisThreads = 2;
 
+    // Long text is synthesized as several small chunks generated concurrently (this
+    // many at once) and played strictly in order, so playback can start after the
+    // first chunk instead of waiting for the whole text to synthesize.
+    private const int MaxSynthesisConcurrency = 3;
+
     private readonly IVoiceModelService _model;
     private readonly MediaPlayer _player = new() { AutoPlay = false };
+
+    // Serializes the generation counter / synthesis-cancellation swap, which can be
+    // touched concurrently by an in-flight SpeakAsync, a newer one, and Stop.
+    private readonly object _gate = new();
 
     private OfflineTts? _tts;
     private MediaSource? _currentSource;
     private double _playbackRate = PlaybackRate.Default.Value;
     private int _speakerId = SupertonicVoiceTable.DefaultSpeakerId;
     private PlaybackState _state = PlaybackState.Idle;
+
+    // Completes when the current chunk finishes playing (true) or playback is
+    // stopped/superseded (false), so the ordered playback loop can advance.
+    private TaskCompletionSource<bool>? _chunkEnded;
+
+    // Incremented for every utterance and every Stop. A synthesis only reaches the
+    // player while its generation is still current, so a superseded (slow) synth
+    // can never play after the one that replaced it.
+    private int _generation;
+    private CancellationTokenSource? _synthCts;
 
     public SupertonicSpeechReader(IVoiceModelService model)
     {
@@ -39,6 +62,8 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
 
     public event EventHandler<PlaybackState>? StateChanged;
 
+    public event EventHandler? Completed;
+
     public PlaybackState State => _state;
 
     public async Task SpeakAsync(string text)
@@ -49,15 +74,99 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
             return;
         }
 
-        // Generation is CPU-bound and synchronous; keep it off the UI thread.
-        var audio = await Task.Run(() => tts.Generate(text, 1.0f, _speakerId));
-        IRandomAccessStream stream = await BuildWavStreamAsync(audio.Samples, audio.SampleRate);
+        (int generation, CancellationToken token) = BeginGeneration();
+
+        // Split long text and start synthesizing the chunks concurrently (capped),
+        // each task acquiring a slot from the semaphore. The tasks are kept in order.
+        IReadOnlyList<string> chunks = SpeechTextChunker.Split(text);
+
+        // Not disposed: a superseded read can leave orphaned generation tasks that
+        // still Release(); SemaphoreSlim needs no disposal unless its wait handle is
+        // accessed (it isn't), so letting it be collected avoids that race.
+        var slots = new SemaphoreSlim(MaxSynthesisConcurrency);
+        List<Task<IRandomAccessStream>> generations =
+            chunks.Select(chunk => GenerateChunkAsync(tts, chunk, slots, token)).ToList();
+
+        // Consume in order: await each chunk, then play it to its end before the
+        // next. A superseded read bails as soon as it notices it is no longer current.
+        for (int i = 0; i < generations.Count; i++)
+        {
+            IRandomAccessStream stream;
+            try
+            {
+                stream = await generations[i];
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+
+            if (!IsCurrent(generation))
+            {
+                return;
+            }
+
+            bool endedNaturally = await PlayChunkAsync(stream, token);
+            if (!endedNaturally || !IsCurrent(generation))
+            {
+                return;
+            }
+        }
+
+        if (IsCurrent(generation))
+        {
+            UpdateState(PlaybackState.Idle);
+            Completed?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    // Synthesizes one chunk to a WAV stream, throttled by the shared slot semaphore
+    // so at most MaxSynthesisConcurrency run at once.
+    private async Task<IRandomAccessStream> GenerateChunkAsync(
+        OfflineTts tts, string chunk, SemaphoreSlim slots, CancellationToken token)
+    {
+        await slots.WaitAsync(token);
+        try
+        {
+            OfflineTtsGeneratedAudio audio =
+                await Task.Run(() => tts.Generate(chunk, 1.0f, _speakerId), token);
+            return await BuildWavStreamAsync(audio.Samples, audio.SampleRate);
+        }
+        finally
+        {
+            slots.Release();
+        }
+    }
+
+    // Plays one chunk and awaits its natural end (true) or a stop/supersede (false).
+    private async Task<bool> PlayChunkAsync(IRandomAccessStream stream, CancellationToken token)
+    {
+        var ended = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _chunkEnded = ended;
         SwapSource(MediaSource.CreateFromStream(stream, "audio/wav"));
+        using (token.Register(() => ended.TrySetResult(false)))
+        {
+            return await ended.Task;
+        }
     }
 
     public void Pause() => _player.Pause();
 
     public void Resume() => _player.Play();
+
+    public void Stop()
+    {
+        lock (_gate)
+        {
+            _synthCts?.Cancel();
+            _generation++;
+        }
+
+        _chunkEnded?.TrySetResult(false); // release the playback loop if mid-chunk
+        _player.Pause();
+        ClearSource();
+        UpdateState(PlaybackState.Idle);
+    }
 
     public void SetSpeed(PlaybackRate speed)
     {
@@ -94,11 +203,34 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
         return _tts;
     }
 
+    // Opens a new generation, cancelling the previous synthesis so a superseded
+    // long synth stops wasting CPU and never reaches the player.
+    private (int generation, CancellationToken token) BeginGeneration()
+    {
+        lock (_gate)
+        {
+            _synthCts?.Cancel();
+            _synthCts?.Dispose();
+            _synthCts = new CancellationTokenSource();
+            return (++_generation, _synthCts.Token);
+        }
+    }
+
+    private bool IsCurrent(int generation) => Volatile.Read(ref _generation) == generation;
+
     private void SwapSource(MediaSource source)
     {
         MediaSource? previous = _currentSource;
         _currentSource = source;
         _player.Source = source;
+        previous?.Dispose();
+    }
+
+    private void ClearSource()
+    {
+        _player.Source = null;
+        MediaSource? previous = _currentSource;
+        _currentSource = null;
         previous?.Dispose();
     }
 
@@ -108,7 +240,9 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
         sender.Play();
     }
 
-    private void OnMediaEnded(MediaPlayer sender, object args) => UpdateState(PlaybackState.Idle);
+    // A chunk finished; let the ordered playback loop advance to the next one (or,
+    // for the last chunk, complete). Completion/idle are signalled by SpeakAsync.
+    private void OnMediaEnded(MediaPlayer sender, object args) => _chunkEnded?.TrySetResult(true);
 
     private void OnPlaybackStateChanged(MediaPlaybackSession sender, object args)
     {
@@ -176,6 +310,8 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
 
     public void Dispose()
     {
+        _synthCts?.Cancel();
+        _synthCts?.Dispose();
         _player.Dispose();
         _currentSource?.Dispose();
         _tts?.Dispose();

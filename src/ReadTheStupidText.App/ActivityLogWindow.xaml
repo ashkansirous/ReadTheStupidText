@@ -36,15 +36,19 @@
         <!-- Column headings -->
         <Grid Grid.Row="1" Padding="12,4" ColumnSpacing="12" Background="{ThemeResource LayerFillColorDefaultBrush}">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="64" />
-                <ColumnDefinition Width="72" />
-                <ColumnDefinition Width="88" />
+                <ColumnDefinition Width="56" />
+                <ColumnDefinition Width="68" />
+                <ColumnDefinition Width="112" />
+                <ColumnDefinition Width="92" />
+                <ColumnDefinition Width="160" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <TextBlock Text="Time" Style="{ThemeResource CaptionTextBlockStyle}" />
-            <TextBlock Grid.Column="1" Text="Source" Style="{ThemeResource CaptionTextBlockStyle}" />
+            <TextBlock Grid.Column="1" Text="Trigger" Style="{ThemeResource CaptionTextBlockStyle}" />
             <TextBlock Grid.Column="2" Text="State" Style="{ThemeResource CaptionTextBlockStyle}" />
-            <TextBlock Grid.Column="3" Text="Text" Style="{ThemeResource CaptionTextBlockStyle}" />
+            <TextBlock Grid.Column="3" Text="Reason" Style="{ThemeResource CaptionTextBlockStyle}" />
+            <TextBlock Grid.Column="4" Text="Source" Style="{ThemeResource CaptionTextBlockStyle}" />
+            <TextBlock Grid.Column="5" Text="Text" Style="{ThemeResource CaptionTextBlockStyle}" />
         </Grid>
 
         <ListView
@@ -62,15 +66,28 @@
                 <DataTemplate x:DataType="local:ActivityRowVm">
                     <Grid Padding="12,4" ColumnSpacing="12">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="64" />
-                            <ColumnDefinition Width="72" />
-                            <ColumnDefinition Width="88" />
+                            <ColumnDefinition Width="56" />
+                            <ColumnDefinition Width="68" />
+                            <ColumnDefinition Width="112" />
+                            <ColumnDefinition Width="92" />
+                            <ColumnDefinition Width="160" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="{x:Bind Time}" Style="{ThemeResource CaptionTextBlockStyle}" />
-                        <TextBlock Grid.Column="1" Text="{x:Bind Source}" Style="{ThemeResource CaptionTextBlockStyle}" />
+                        <TextBlock Grid.Column="1" Text="{x:Bind Trigger}" Style="{ThemeResource CaptionTextBlockStyle}" />
                         <TextBlock Grid.Column="2" Text="{x:Bind State, Mode=OneWay}" />
-                        <TextBlock Grid.Column="3" Text="{x:Bind Text}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock
+                            Grid.Column="3"
+                            Text="{x:Bind Reason, Mode=OneWay}"
+                            Style="{ThemeResource CaptionTextBlockStyle}"
+                            TextTrimming="CharacterEllipsis" />
+                        <TextBlock
+                            Grid.Column="4"
+                            Text="{x:Bind Source}"
+                            Style="{ThemeResource CaptionTextBlockStyle}"
+                            TextTrimming="CharacterEllipsis"
+                            ToolTipService.ToolTip="{x:Bind Source}" />
+                        <TextBlock Grid.Column="5" Text="{x:Bind Text}" TextTrimming="CharacterEllipsis" />
                     </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>

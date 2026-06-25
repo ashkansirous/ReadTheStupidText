@@ -11,6 +11,9 @@ internal static class NativeMethods
 {
     internal const uint WmHotkey = 0x0312;
 
+    /// <summary>Posted to a clipboard-format listener window when the clipboard changes.</summary>
+    internal const uint WmClipboardUpdate = 0x031D;
+
     internal const uint ModAlt = 0x0001;
     internal const uint ModControl = 0x0002;
     internal const uint ModShift = 0x0004;
@@ -29,6 +32,9 @@ internal static class NativeMethods
     internal const ushort VkLeftWin = 0x5B;
     internal const ushort VkRightWin = 0x5C;
     internal const ushort VkC = 0x43;
+
+    /// <summary>Clipboard format for null-terminated UTF-16 text (CF_UNICODETEXT).</summary>
+    internal const uint CfUnicodeText = 13;
 
     internal delegate nint SubclassProc(
         nint hWnd, uint uMsg, nint wParam, nint lParam, nuint uIdSubclass, nuint dwRefData);
@@ -56,6 +62,51 @@ internal static class NativeMethods
 
     [DllImport("user32.dll", SetLastError = true)]
     internal static extern uint SendInput(uint nInputs, Input[] pInputs, int cbSize);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool AddClipboardFormatListener(nint hWnd);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool RemoveClipboardFormatListener(nint hWnd);
+
+    // Foreground-window probe — identifies the app/window a read originated from.
+    [DllImport("user32.dll")]
+    internal static extern nint GetForegroundWindow();
+
+    [DllImport("user32.dll", SetLastError = true)]
+    internal static extern uint GetWindowThreadProcessId(nint hWnd, out uint processId);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    internal static extern int GetWindowText(nint hWnd, System.Text.StringBuilder text, int count);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    internal static extern int GetWindowTextLength(nint hWnd);
+
+    // Win32 clipboard read — focus-independent, unlike the WinRT clipboard API,
+    // which matters because this app's window is never activated.
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool OpenClipboard(nint hWndNewOwner);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool CloseClipboard();
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool IsClipboardFormatAvailable(uint format);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    internal static extern nint GetClipboardData(uint uFormat);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    internal static extern nint GlobalLock(nint hMem);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool GlobalUnlock(nint hMem);
 
     [StructLayout(LayoutKind.Sequential)]
     internal struct Input

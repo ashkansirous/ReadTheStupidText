@@ -64,47 +64,77 @@ public sealed class UiaSelectionMonitor : ISelectionMonitor
             return;
         }
 
-        string? text = TryReadSelection(element);
-        if (string.IsNullOrWhiteSpace(text))
+        switch (TryReadSelection(element, out string text))
         {
-            // Deselection: signal once on the transition from a selection to none
-            // so an in-progress read can be interrupted.
-            if (_lastText is not null)
-            {
-                _lastText = null;
-                SelectionCleared?.Invoke(this, EventArgs.Empty);
-            }
+            case SelectionOutcome.Unavailable:
+                // A transient cross-process UIA failure, NOT a deselect. Leave
+                // _lastText alone so a re-fired event mid-selection can't masquerade
+                // as a clear and ignore/interrupt the read the user actually wants.
+                return;
 
-            return;
+            case SelectionOutcome.Empty:
+                // A genuine deselect: signal once on the transition from a selection
+                // to none so an in-progress read can be interrupted.
+                if (_lastText is not null)
+                {
+                    _lastText = null;
+                    SelectionCleared?.Invoke(this, EventArgs.Empty);
+                }
+
+                return;
+
+            default: // SelectionOutcome.HasText
+                if (text == _lastText)
+                {
+                    return;
+                }
+
+                _lastText = text;
+                SelectionChanged?.Invoke(this, text);
+                return;
         }
-
-        if (text == _lastText)
-        {
-            return;
-        }
-
-        _lastText = text;
-        SelectionChanged?.Invoke(this, text);
     }
 
-    private static string? TryReadSelection(AutomationElement element)
+    // Distinguishes a real, empty selection (deselect) from a failed read so the
+    // two are never conflated — a transient failure must not look like a deselect.
+    private static SelectionOutcome TryReadSelection(AutomationElement element, out string text)
     {
+        text = string.Empty;
         try
         {
             if (!element.TryGetCurrentPattern(TextPattern.Pattern, out object pattern))
             {
-                return null;
+                return SelectionOutcome.Unavailable;
             }
 
             TextPatternRange[] ranges = ((TextPattern)pattern).GetSelection();
-            return ranges.Length == 0 ? null : ranges[0].GetText(MaxTextLength);
+            if (ranges.Length == 0)
+            {
+                return SelectionOutcome.Empty;
+            }
+
+            text = ranges[0].GetText(MaxTextLength);
+            return string.IsNullOrWhiteSpace(text) ? SelectionOutcome.Empty : SelectionOutcome.HasText;
         }
         catch (Exception)
         {
             // UI Automation cross-process calls can throw transiently (element
-            // gone, timeout); treat as "nothing to read".
-            return null;
+            // busy, gone, timeout). This is "couldn't read", not "no selection".
+            return SelectionOutcome.Unavailable;
         }
+    }
+
+    // The three distinguishable results of reading an element's text selection.
+    private enum SelectionOutcome
+    {
+        /// <summary>A non-empty selection was read.</summary>
+        HasText,
+
+        /// <summary>The element genuinely has no (or whitespace-only) selection — a deselect.</summary>
+        Empty,
+
+        /// <summary>The element exposes no text pattern, or the read failed transiently.</summary>
+        Unavailable,
     }
 
     public void Dispose() => Stop();

@@ -1,31 +1,72 @@
+using System.Runtime.InteropServices;
 using ReadTheStupidText.Application.Reading;
-using Windows.ApplicationModel.DataTransfer;
+using ReadTheStupidText.Infrastructure.Input;
 
 namespace ReadTheStupidText.Infrastructure.Reading;
 
 /// <summary>
-/// Reads text from the Windows clipboard via the WinRT clipboard API. Must be
-/// called from the UI thread (the hotkey handler already is).
+/// Reads text from the Windows clipboard via the Win32 clipboard API. This is
+/// deliberately not the WinRT clipboard, which Microsoft documents as readable
+/// only while the calling app is focused — this app's tray window is never
+/// activated, so the Win32 path (focus-independent) is the reliable one. The read
+/// runs off the UI thread; <see cref="OpenClipboard"/> can briefly fail while
+/// another process holds the clipboard, so it is retried.
 /// </summary>
 public sealed class ClipboardReader : IClipboardReader
 {
-    public async Task<string?> GetTextAsync()
+    private const int OpenAttempts = 5;
+    private const int RetryDelayMs = 15;
+
+    public Task<string?> GetTextAsync() => Task.Run(ReadUnicodeText);
+
+    private static string? ReadUnicodeText()
     {
-        try
+        for (int attempt = 0; attempt < OpenAttempts; attempt++)
         {
-            DataPackageView content = Clipboard.GetContent();
-            if (!content.Contains(StandardDataFormats.Text))
+            if (NativeMethods.OpenClipboard(0))
             {
-                return null;
+                try
+                {
+                    return ExtractText();
+                }
+                finally
+                {
+                    NativeMethods.CloseClipboard();
+                }
             }
 
-            return await content.GetTextAsync();
+            Thread.Sleep(RetryDelayMs);
         }
-        catch (Exception)
+
+        return null;
+    }
+
+    private static string? ExtractText()
+    {
+        if (!NativeMethods.IsClipboardFormatAvailable(NativeMethods.CfUnicodeText))
         {
-            // The clipboard can be momentarily locked by another process; treat
-            // an unreadable clipboard as "nothing to read" rather than crashing.
             return null;
+        }
+
+        nint handle = NativeMethods.GetClipboardData(NativeMethods.CfUnicodeText);
+        if (handle == 0)
+        {
+            return null;
+        }
+
+        nint pointer = NativeMethods.GlobalLock(handle);
+        if (pointer == 0)
+        {
+            return null;
+        }
+
+        try
+        {
+            return Marshal.PtrToStringUni(pointer);
+        }
+        finally
+        {
+            NativeMethods.GlobalUnlock(handle);
         }
     }
 }
