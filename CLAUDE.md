@@ -10,6 +10,13 @@ at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
 **MSIX** and targeted at the **Microsoft Store**. It is *not* a classic UWP app
 (the sandbox cannot do tray icons, global hotkeys, or cross-app text reads).
 
+> **Naming:** the user-facing **product display name is "Read The Stupid Text"** (with
+> spaces) — shown in the manifest `DisplayName`s, tray tooltip, control-panel header,
+> and window titles. The **repo, package id (`ReadTheStupidText`), namespaces, assembly,
+> and the StartupTask `TaskId`** are internal identifiers and stay `ReadTheStupidText`
+> — do not "rename" those. Store identity (ID `9NGT1BN1H92V`) is wired into
+> `Package.appxmanifest`; see Decision 23 in `plan.md` and `STORE.md`.
+
 Read [`plan.md`](plan.md) before starting work — it defines the vertical slices
 and their GitHub issue numbers. Tick slices off in `plan.md` as they complete.
 

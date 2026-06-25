@@ -8,15 +8,19 @@
   xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
   IgnorableNamespaces="uap rescap desktop">
 
+  <!-- Identity values are the Partner Center "Product identity" values for the
+       reserved app (Store ID 9NGT1BN1H92V) and must match it EXACTLY, or Store
+       submission fails with a name/identity error. See STORE.md. -->
   <Identity
-    Name="395C498D-832B-4989-8A0D-7BCB81DCB886"
-    Publisher="CN=Ashkan Sirous"
-    Version="1.0.0.0" />
+    Name="AshkanSirous.ReadTheStupidText"
+    Publisher="CN=53769961-EF08-4BA5-A1DE-7A51B62A9AA7"
+    Version="0.1.0.0" />
 
   <mp:PhoneIdentity PhoneProductId="395C498D-832B-4989-8A0D-7BCB81DCB886" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
-    <DisplayName>ReadTheStupidText</DisplayName>
+    <!-- DisplayName must match a reserved app name in Partner Center. -->
+    <DisplayName>Read The Stupid Text</DisplayName>
     <PublisherDisplayName>Ashkan Sirous</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -35,8 +39,8 @@
       Executable="$targetnametoken$.exe"
       EntryPoint="$targetentrypoint$">
       <uap:VisualElements
-        DisplayName="ReadTheStupidText"
-        Description="ReadTheStupidText — read selected text aloud"
+        DisplayName="Read The Stupid Text"
+        Description="Read The Stupid Text — read selected text aloud"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Logotype Glyph.png"
         Square44x44Logo="Assets\Logotype Glyph.png">
@@ -51,7 +55,7 @@
           <desktop:StartupTask
             TaskId="ReadTheStupidTextStartup"
             Enabled="false"
-            DisplayName="ReadTheStupidText" />
+            DisplayName="Read The Stupid Text" />
         </desktop:Extension>
       </Extensions>
     </Application>

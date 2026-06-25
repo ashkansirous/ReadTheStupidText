@@ -26,7 +26,7 @@
         <!-- Header: title + close button -->
         <Grid Grid.Row="0">
             <TextBlock
-                Text="ReadTheStupidText"
+                Text="Read The Stupid Text"
                 VerticalAlignment="Center"
                 Style="{ThemeResource BodyStrongTextBlockStyle}" />
             <Button
