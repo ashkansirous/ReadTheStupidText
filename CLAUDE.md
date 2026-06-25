@@ -70,6 +70,23 @@ remaining Partner Center steps. `Release` builds cleanly now — trimming is
 disabled (`PublishTrimmed=false`); packaged WinUI apps aren't trimmed, and
 `PublishTrimmed` without self-contained was the old `NETSDK1102` failure.
 
+## Versioning, license & releases (Batch 2 — Slices 11–16)
+
+- **License is MIT** (Decision 16 in `plan.md`). Anyone may use/extend/sell it
+  provided the copyright notice is kept. Do **not** add GPL/LGPL components (the
+  Supertonic/sherpa stack was chosen to keep this clean — see `STORE.md`).
+- **Every merge to `main` ships a version** via **Conventional Commits**
+  (Decision 17). Write commit/PR titles as `feat:` (→ minor), `fix:`/`chore:`/
+  `refactor:`/`docs:`/etc (→ patch), or `feat!:`/`BREAKING CHANGE:` (→ major);
+  an unconventional message defaults to **patch**. CI derives the next SemVer,
+  writes it into `Package.appxmanifest` `Version` (`x.y.z.0` — the Store needs
+  revision `0`), and pushes a `v<x.y.z>` tag, which `build.yml` turns into a
+  GitHub Release. The **manifest version is the single source of truth**.
+- **Signing:** CI stays **unsigned**; the Microsoft Store re-signs on publish
+  (Decision 18). A domain (e.g. `sirous.uk`) cannot sign code. **Azure Trusted
+  Signing** is the documented upgrade for trusted sideloaded MSIX — see
+  `STORE.md`.
+
 ## Code quality (project-specific reminders)
 
 - Genuinely closed sets (reading state, etc.) are `enum`s — stringify only at
