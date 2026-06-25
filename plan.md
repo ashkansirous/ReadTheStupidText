@@ -179,6 +179,76 @@ this plan turns it into ordered, shippable vertical slices.
        flips to `reading` on the reader's first `Playing` transition. So the log now
        surfaces the synthesis wait as its own state rather than appearing stuck.
 
+16. **License — MIT (Batch 2).** The project ships under the **MIT** license:
+    anyone may use, modify, and redistribute it — including commercially —
+    provided they keep the copyright/permission notice (the "must credit the
+    author" requirement the user asked for). MIT is chosen over **Apache-2.0**
+    (its patent clause is overkill for a tray app) and over **GPL** (copyleft
+    forces derivatives open — the opposite of "anyone can extend, even
+    commercially"). The bundled dependencies are already MIT/Apache-2.0 with no
+    GPL (see `STORE.md`), so MIT at the repo root is compatible. A `LICENSE`
+    file is added and README's "License: TBD" is replaced.
+17. **Versioning — Conventional Commits → automatic release (Batch 2).** Every
+    merge to `main` ships a new version. A CI job derives the next SemVer from
+    the merged commit(s)/PR title — `feat:` → **minor**, `fix:`/`chore:`/
+    `refactor:`/`docs:`/etc → **patch**, `!`/`BREAKING CHANGE:` → **major**,
+    defaulting to **patch** when the message is unconventional — writes it into
+    the MSIX `Package.appxmanifest` `Version` (4-part `x.y.z.0`; the Store
+    requires revision `0`), commits the bump, and pushes a `v<x.y.z>` tag. The
+    existing `build.yml` already publishes a GitHub Release on `v*` tags, so the
+    tag is the only new trigger; the manifest version stays the single source of
+    truth. No heavyweight release bot — a small action/script computes the bump.
+18. **Signing — Microsoft Store re-signing only for now (Batch 2).** The Store
+    re-signs the package on publish and is the trusted install channel
+    (SmartScreen trusts Store apps), so the package keeps shipping **unsigned** from CI
+    (`AppxPackageSigningEnabled=false` unchanged). A domain (`sirous.uk`)
+    **cannot sign code** — code-signing certificates validate an *identity*, not
+    domain control — so it plays no part. **Azure Trusted Signing** (~US$10/mo,
+    Microsoft-run, GitHub-Actions-native, no hardware token) is documented in
+    `STORE.md` as the one-step upgrade *if/when* a trusted **sideloaded**
+    (GitHub-Release) MSIX is wanted; traditional OV/EV certs (cost + hardware
+    token) and self-signed certs (SmartScreen still warns) are rejected. The
+    GitHub-Release MSIX stays labelled "testing/sideload".
+19. **Voice display names → Overlord characters (Batch 2).** The ten Supertonic
+    styles are renamed to *Overlord* characters in `SupertonicVoiceTable` —
+    **only** the `DisplayName` changes; the persisted `supertonic:F1…M5` ids and
+    the sid order are untouched, so saved choices keep resolving. Mapping (sid
+    order F1–F5 then M1–M5): F1 **Albedo**, F2 **Shalltear Bloodfallen**, F3
+    **Yuri Alpha**, F4 **Lupusregina Beta**, F5 **Narberal Gamma**; M1
+    **Momonga**, M2 **Demiurge**, M3 **Cocytus**, M4 **Sebas Tian**, M5
+    **Pandora's Actor**. Default stays M1 = **Momonga** (the protagonist).
+20. **Control panel redesign — "Media Card" (Batch 2, Slice 13).** The
+    left-click control panel is rebuilt to the high-fidelity spec in
+    `design_handoff_tray_panel/` ("Option C — Media Card"): a brand-gradient
+    header (`linear-gradient(135deg,#5B57E8,#3B82F6)`) with the glyph watermark,
+    a `NOW READING` eyebrow + app title, a live 5-bar **waveform** + dynamic
+    status text, a **transport row** (40px play/pause circle + progress bar +
+    speed pill), over a Fluent **settings list** (voice row, the two auto-read
+    toggles, launch-at-startup) and a `Ctrl+Win+R` hotkey footer. Rebuilt with
+    **native WinUI Fluent controls + theme resources** (not the HTML), light/dark
+    following the system theme, acrylic/mica surface, 376 px wide, sized to
+    content. It **keeps the existing pinned-topmost `AppWindow`** behavior
+    (Decision 12) — the design's "dismiss on click-away / Esc" is **not** adopted
+    (pinning was chosen deliberately in Slice 8 testing). The HTML + design
+    tokens are the visual source of truth only, not code to ship.
+21. **Media-player progress (Batch 2, folded into Slice 13).** The transport
+    row's progress bar shows live read-through of the current utterance, driven
+    by `MediaPlayer` position + chunk completion (the reader already
+    chunks/streams, Decision 15). **Seeking is best-effort only** — at most a
+    resync to a chunk boundary — because each chunk is independently synthesized
+    PCM and a true scrub would require re-synthesis (out of scope). When
+    idle/paused the bar is empty and the status reads `Ready`/`Paused`; the
+    waveform animates only while reading.
+22. **Auto-read split into two toggles (Batch 2, Slice 12).** The single
+    "Auto-read" gate becomes two independent settings — **Auto-read on
+    selection** (gates the UIA `ISelectionMonitor`) and **Auto-read on copy**
+    (gates the `IClipboardMonitor`) — surfaced as two `ToggleSwitch`es in **both**
+    the control panel and the right-click menu, persisted as two `ISettingsStore`
+    flags, **both default on** so today's behavior is preserved. The global
+    hotkey is unaffected (always on). `ReadAloudService` checks the relevant flag
+    per path; the old single `IsEnabled` is migrated (an existing `false` maps
+    both new flags off).
+
 ## Changes
 
 Ordered as vertical slices — each is end-to-end and independently runnable.
@@ -364,6 +434,56 @@ Slice 5 (store):**
       nothing, the monitor isn't firing. **Needs a runtime check to confirm the
       root cause** (can't run the UI/UIA here). Logs all read sources, tagged.
 
+**Batch 2 — release-readiness (Slices 11–16).** With the feature set complete,
+this batch polishes voices + UI, then makes the project releasable: license,
+automatic versioning, a code-review pass, and the Store-pipeline wiring, ending
+in the **first auto-versioned release**. The version follows Conventional
+Commits (default patch) and **stays `0.x`** — it is **not** forced to `v1.0.0`;
+the app reaches `1.0.0` only when the user declares it stable. Ordered
+smallest-first; each is independently shippable.
+
+- [ ] **Slice 11 — Overlord voice names.** ([#46](https://github.com/ashkansirous/ReadTheStupidText/issues/46)) (Decision 19) Rename the ten
+      `DisplayName`s in `SupertonicVoiceTable` to the Overlord mapping (default
+      **Momonga** = M1); leave the `supertonic:` ids and sid order untouched.
+      Smallest end-to-end change — the picker/menu show the new names with no
+      engine change.
+- [ ] **Slice 12 — Split auto-read into two toggles.** ([#48](https://github.com/ashkansirous/ReadTheStupidText/issues/48)) (Decision 22) Add
+      `AutoReadOnSelection` + `AutoReadOnCopy` to `ISettingsStore` and its impl
+      (both default on; migrate an old `IsEnabled=false` to both off). Gate the
+      UIA `ISelectionMonitor` and the `IClipboardMonitor` independently in
+      `ReadAloudService`. Surface two `ToggleSwitch`es in the right-click menu
+      **and** the control panel, kept in sync via the existing event pattern.
+- [ ] **Slice 13 — "Media Card" control-panel redesign + media-player
+      progress.** ([#52](https://github.com/ashkansirous/ReadTheStupidText/issues/52)) (Decisions 20, 21) Rebuild `ControlPanelWindow` to the
+      `design_handoff_tray_panel/` spec with native WinUI Fluent controls and
+      light/dark theme resources: gradient header + glyph watermark + eyebrow/
+      title, animated waveform + dynamic status text, transport row (play/pause
+      circle + **live progress bar** + speed pill), Fluent settings list (voice
+      row, the two auto-read toggles, launch-at-startup), hotkey footer. Keep the
+      pinned-topmost `AppWindow` (Decision 12 — no click-away dismiss). Wire the
+      progress bar to `MediaPlayer` position + chunk completion; seek is
+      best-effort (chunk-boundary resync) only.
+- [ ] **Slice 14 — MIT license + Conventional-Commits auto-release.**
+      ([#57](https://github.com/ashkansirous/ReadTheStupidText/issues/57)) (Decisions 16, 17) Add a `LICENSE` file (MIT, attributed to Ashkan Sirous)
+      and replace README's "License: TBD". Add a CI job/workflow that, on merge
+      to `main`, computes the next SemVer from Conventional Commits, writes it
+      into `Package.appxmanifest` `Version` (`x.y.z.0`), commits the bump, and
+      pushes a `v<x.y.z>` tag — which the existing `build.yml` release job turns
+      into a GitHub Release. Document the commit convention in `CLAUDE.md`.
+- [ ] **Slice 15 — Deep code-review pass + fixes.** ([#61](https://github.com/ashkansirous/ReadTheStupidText/issues/61)) (Item 5) Run
+      `/code-review-in-detail` over the full app, triage the findings, and fix
+      the confirmed real bugs (each non-trivial fix referenced in the PR). The
+      generated `summary-code-review.md` / `detailed-code-review.md` are the
+      record. Gates the first release tag.
+- [ ] **Slice 16 — Store-pipeline finalize + signing docs, first release.**
+      ([#64](https://github.com/ashkansirous/ReadTheStupidText/issues/64)) (Decisions 18, and Slice 5's deferred Partner Center work) Verify
+      `store-submit.yml` is correct (kept **inert** — no account), refresh
+      `STORE.md` with the remaining Partner Center steps and the **Azure Trusted
+      Signing** upgrade path, and confirm the Conventional-Commits versioning
+      feeds the release/Store flow. Cut the **first auto-versioned release** —
+      the tag is whatever the versioning produces (**stays `0.x`**; **not**
+      `v1.0.0` until the user declares the app stable).
+
 ## Out of Scope
 
 - Voice *tuning* beyond playback rate (pitch, volume, SSML prosody).
@@ -386,6 +506,20 @@ Slice 5 (store):**
 - Persisting the activity log to disk, exporting it, or log-level configuration
   (Slice 10 is in-memory and live-only).
 - Pure UWP packaging.
+- **(Batch 2)** A purchased OV/EV code-signing certificate and signing the
+  sideload MSIX in this batch — the domain `sirous.uk` cannot sign code; **Azure
+  Trusted Signing** is the documented later upgrade (Decision 18).
+- **(Batch 2)** True audio scrubbing/seek in the progress bar — best-effort
+  chunk-boundary resync only, because synthesis is chunked/streamed
+  (Decision 21).
+- **(Batch 2)** Going live on Partner Center (real identity, secrets, first
+  submission) — `store-submit.yml` stays inert and documented (Decision 18).
+- **(Batch 2)** The design's click-away / Esc dismiss of the control panel — it
+  stays pinned-topmost (Decision 20 keeps Decision 12).
+- **(Batch 2)** Renaming voice **ids** or adding/removing voices — only the
+  `DisplayName`s change (Decision 19).
+- **(Batch 2)** Apache-2.0/GPL licensing or a CLA — the repo is plain MIT
+  (Decision 16).
 
 ## Verification
 
@@ -440,5 +574,38 @@ Slice 5 (store):**
   the app you reported now either shows an entry (and reads) or shows nothing —
   if nothing, the log confirms that app exposes no UIA text (use the hotkey),
   which we verify against Notepad where it must work.
+- **Slice 11:** open the Voice picker (control panel `ComboBox` + tray submenu)
+  → the ten voices read **Momonga / Demiurge / Cocytus / Sebas Tian / Pandora's
+  Actor** and **Albedo / Shalltear Bloodfallen / Yuri Alpha / Lupusregina Beta /
+  Narberal Gamma**, default **Momonga**; a profile that had a saved voice id
+  still resolves to the same style (id unchanged); a read uses the picked voice.
+- **Slice 12:** with both toggles on, selecting in Notepad reads and copying in
+  the console reads. Turn **Auto-read on selection** off → selecting no longer
+  reads but copying still does; turn **Auto-read on copy** off instead →
+  copying no longer reads but selecting does; the hotkey reads in all
+  combinations. The two switches match between the panel and the right-click
+  menu. A profile upgraded from the old single toggle (`IsEnabled=false`) opens
+  with both new toggles off.
+- **Slice 13:** left-click the tray → the panel matches the "Media Card" design
+  (gradient header, glyph watermark, waveform, transport row, settings list,
+  hotkey footer) in both light and dark system themes, ~376 px wide, no clipped
+  content. Start a read → the **progress bar advances** and status text shows the
+  source ("Reading selection from Notepad…"); pause → bar/waveform stop, status
+  shows `Paused`; idle → `Ready`. The panel stays pinned when you click into
+  another app (no click-away dismiss). Speed pill + slider, voice row, the two
+  auto-read toggles, and startup all still drive their services.
+- **Slice 14:** `LICENSE` (MIT) exists and the README License section reflects
+  it. Merge a `feat:` PR → CI bumps the **minor** version in
+  `Package.appxmanifest`, tags `v<x.y.z>`, and a GitHub Release appears with the
+  MSIX assets; a `fix:`/unconventional PR bumps **patch**; a `!`/`BREAKING
+  CHANGE` PR bumps **major**. The manifest version, tag, and release agree.
+- **Slice 15:** `/code-review-in-detail` produces `summary-code-review.md` +
+  `detailed-code-review.md`; confirmed real bugs are fixed (re-review or
+  targeted tests pass) and referenced in the PR; the app still builds and runs.
+- **Slice 16:** `STORE.md` lists the remaining Partner Center steps and the
+  Azure Trusted Signing upgrade; `store-submit.yml` is valid but inert (no
+  secrets). Pushing the **first auto-versioned tag** (a `0.x` version — not
+  `v1.0.0`) produces the first Store-ready GitHub Release with both arch MSIX
+  packages.
 - Manual UI checks driven through the running app; no browser E2E harness
   applies to a native tray app.

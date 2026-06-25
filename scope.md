@@ -10,6 +10,15 @@
 - Give the user two control surfaces from the tray icon: a **left-click control panel** (a small floating window with play/pause, a speed slider, a voice picker, and the auto-read/startup toggles) and a **right-click menu** for the same toggles plus Quit.
 - Run automatically at Windows startup, minimized to the tray.
 - Ship through the Microsoft Store.
+- **(Batch 2 — release-readiness):** ship under an **MIT** license; **auto-release
+  every change** (Conventional Commits → version bump + tag + GitHub Release on
+  merge to `main`); rename the ten neural voices to **Overlord** characters
+  (default Momonga); rebuild the control panel to the **"Media Card"** design with
+  a **media-player progress bar**; split auto-read into **two toggles**
+  (on-selection / on-copy); run a **deep code-review** pass and fix bugs; finish
+  the **Store-submission pipeline** (kept inert until a Partner Center account
+  exists), then cut the **first auto-versioned release** (version follows
+  Conventional Commits, **staying `0.x`** — not forced to `v1.0.0`).
 
 ## Approach
 
@@ -28,7 +37,9 @@
 
 ### Current unit of work
 
-All planned slices are implemented: the speed-control fix, voice selection, launch-at-startup, the tray control panel (Slice 8), local neural voices (Slice 9 — sherpa-onnx + Supertonic-3, bundled), **Store packaging & CI (Slice 5 — merged; CI builds the MSIX and publishes `v*` tags to GitHub Releases)**, and the **live activity log + auto-read state machine (Slice 10)**. Remaining before a Store release is the account-dependent work in `STORE.md` (Partner Center identity, signing, first submission). The auto-read "nothing happens" report is to be root-caused with the new activity log at runtime.
+All **feature** slices (0–10) are implemented: the speed-control fix, voice selection, launch-at-startup, the tray control panel (Slice 8), local neural voices (Slice 9 — sherpa-onnx + Supertonic-3, bundled), **Store packaging & CI (Slice 5 — merged; CI builds the MSIX and publishes `v*` tags to GitHub Releases)**, and the **live activity log + auto-read state machine (Slice 10)**.
+
+The **current unit of work is Batch 2 (Slices 11–16)** — release-readiness, smallest-first: **(11)** rename voices to Overlord display names (ids unchanged) → **(12)** split auto-read into two settings/toggles (on-selection + on-copy, both default on) → **(13)** rebuild the control panel to the `design_handoff_tray_panel/` "Media Card" spec in native WinUI Fluent (gradient header, waveform, transport row with a **live progress bar**, Fluent settings list, light/dark), keeping the pinned-topmost window → **(14)** add the MIT `LICENSE` and wire **Conventional-Commits** auto-versioning into `Package.appxmanifest` + tag → **(15)** run `/code-review-in-detail` and fix confirmed bugs → **(16)** finalize the (inert) Store-submission pipeline + signing docs, then cut the **first auto-versioned release** (a `0.x` tag — not `v1.0.0`). Each later slice follows the same end-to-end pattern. Signing stays **Store-only** (CI unsigned); Azure Trusted Signing is the documented upgrade.
 
 ## Out of Scope
 
@@ -41,6 +52,10 @@ All planned slices are implemented: the speed-control fix, voice selection, laun
 - A **persistent/dockable** settings window with tabs, taskbar presence, or hotkey-remap UI. The control panel is transient and tray-toggled (pinned topmost while open, hidden otherwise); every control maps to an existing service rather than introducing new settings.
 - Persisting, exporting, or configuring the activity log — it is in-memory, capped, live-only, and cleared on restart (a diagnostic surface, not a logging framework).
 - Pure UWP packaging (rejected: the sandbox blocks tray presence, global input, and cross-app text read).
+- **(Batch 2)** A purchased OV/EV code-signing certificate and signing the sideload MSIX now — a domain (`sirous.uk`) can't sign code; Azure Trusted Signing is the documented later path.
+- **(Batch 2)** True audio scrubbing/seek in the progress bar — best-effort chunk-boundary resync only (synthesis is chunked/streamed).
+- **(Batch 2)** Going live on Partner Center (real identity, secrets, first submission) — the pipeline stays inert and documented.
+- **(Batch 2)** Click-away/Esc dismiss of the redesigned control panel — it stays pinned-topmost; and renaming voice **ids** or adding/removing voices — only display names change.
 
 ## Notes
 
