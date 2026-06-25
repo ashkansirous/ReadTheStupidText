@@ -109,6 +109,24 @@ this plan turns it into ordered, shippable vertical slices.
     through the existing `MediaPlayer`, so the 0.5–2.0× speed slider keeps
     working. Supersedes Decision 10's "voices come from installed Windows
     voices".
+15. **Live activity log (Slice 10):** a separate, resizable **log window**
+    (opened from the right-click tray menu, single-instance, normal taskbar
+    window — *not* the pinned control-panel style) shows read activity **live**.
+    A new **`IActivityLog`** (Application) is an in-memory, observable store the
+    read paths write to; the window subscribes and renders. Each intercepted
+    text is **one entry** whose state mutates in place through:
+    **pending** (waiting the 0.5 s debounce) → **reading** → **read**;
+    **ignored** (superseded during the wait, never read); **interrupted**
+    (a new selection or a **deselect** stopped a read in progress); **failed**
+    (synthesis/audio error). Entries carry timestamp, source (auto-read / hotkey
+    / manual Play), and truncated text; the store is a ring buffer (~200, cleared
+    on restart, no disk). Supporting the **deselect→interrupted** rule requires
+    the UIA monitor — which today swallows empty selections — to emit a
+    "selection cleared" signal so the service can stop the reader. The log is
+    also the **diagnostic** for the "selecting text does nothing" bug: no entry
+    on selection ⇒ the app exposes no UIA text (hotkey is the fallback) or
+    auto-read is off; an entry that stalls before `reading` ⇒ a downstream
+    reader issue.
 
 ## Changes
 
@@ -272,6 +290,22 @@ Slice 5 (store):**
       swapped `CancellationTokenSource`), so a drag collapses into one read.
       *Unverified at build time (needs a real run):* neural audio output and the
       native runtime loading under package identity.
+- [ ] **Slice 10 — Live activity log + auto-read fix.** (see Decision 15) Adds a
+      separate, resizable **activity-log window** opened from the right-click tray
+      menu, showing read activity **live**. New `IActivityLog` (Application,
+      in-memory observable ring buffer) + an entry model with the states
+      pending/reading/read/ignored/interrupted/failed; the read paths
+      (`ReadAloudService`, UIA monitor, hotkey, manual Play) write transitions to
+      it and `ActivityLogWindow` (App) renders them. The UIA monitor is extended
+      to emit a **selection-cleared** signal so a deselect (or new selection)
+      **interrupts** an in-progress read and marks the entry `interrupted`; a
+      selection superseded during the 0.5 s debounce is marked `ignored`. The log
+      doubles as the diagnostic for the **"selecting text does nothing"** bug —
+      use it to find the root cause (no UIA text in the tested app / auto-read off
+      / downstream reader issue) and fix it (verify in a known UIA app like
+      Notepad; ensure auto-read is on; confirm the reader path). Logs **all read
+      sources**, tagged. Confirm any new WinUI list/scroll control APIs via
+      context7 first.
 
 ## Out of Scope
 
@@ -288,7 +322,10 @@ Slice 5 (store):**
   or hotkey remapping UI. The Slice 8 control panel is a transient, tray-toggled
   surface (pinned topmost while open, hidden otherwise) — every control still
   maps to one of the existing services; no new configurable settings are
-  introduced.
+  introduced. The Slice 10 activity-log window is a separate diagnostic window
+  (read-only, in-memory, cleared on restart) — not a settings surface.
+- Persisting the activity log to disk, exporting it, or log-level configuration
+  (Slice 10 is in-memory and live-only).
 - Pure UWP packaging.
 
 ## Verification
@@ -334,5 +371,15 @@ Slice 5 (store):**
   is read **once** after the selection settles (no burst of play/pause and no
   overlapping reads). Confirm the packaged build runs under package identity and
   that audio plays (the build-time ORT dedupe didn't break the native engine).
+- **Slice 10:** right-click tray → **Show activity log** opens the log window.
+  Select text in a UIA app (Notepad): an entry appears `pending`, flips to
+  `reading`, then `read`. Quickly select "this is" then "this is a new text":
+  the first row → `ignored`, the second runs `pending`→`reading`→`read`. While a
+  read is playing, select something else or **deselect** → the row → `interrupted`
+  and audio stops. Trigger a synth error (or pull the model) → `failed`. Hotkey
+  and manual Play reads also appear, tagged by source. **Bug:** selecting text in
+  the app you reported now either shows an entry (and reads) or shows nothing —
+  if nothing, the log confirms that app exposes no UIA text (use the hotkey),
+  which we verify against Notepad where it must work.
 - Manual UI checks driven through the running app; no browser E2E harness
   applies to a native tray app.
