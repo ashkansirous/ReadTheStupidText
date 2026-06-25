@@ -1,0 +1,121 @@
+name: version
+
+# On every push to main (i.e. every merged PR), derive the next SemVer from the
+# Conventional-Commit messages introduced by the merge, write it into the MSIX
+# Package.appxmanifest Version (x.y.z.0 — the Store requires revision 0), commit
+# the bump, and push a v<x.y.z> tag. The existing build.yml release job turns the
+# tag into a GitHub Release. The manifest Version is the single source of truth
+# (Decision 17 / Slice 14 in plan.md).
+#
+# Bump rules: feat -> minor, feat!:/BREAKING CHANGE -> major, everything else
+# (fix/chore/refactor/docs/...) and unconventional messages -> patch.
+#
+# Trigger model (why two different tokens are used):
+#   * The bump commit is pushed to main with the default GITHUB_TOKEN, which by
+#     design does NOT re-trigger any workflow — so there is no version.yml loop
+#     and no redundant build.yml CI run on the bump commit.
+#   * The tag is pushed with a PAT (secrets.RELEASE_PAT) precisely so the tag
+#     event DOES trigger build.yml's release job — a GITHUB_TOKEN-pushed tag
+#     cannot trigger another workflow. See STORE.md for the PAT setup.
+
+on:
+  push:
+    branches: [main]
+
+# Serialize bumps so two quick merges can't race on the manifest/tag.
+concurrency:
+  group: version-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    # Belt-and-suspenders: never act on the bot's own bump commit. (The
+    # GITHUB_TOKEN push above already won't re-trigger this workflow.)
+    if: ${{ !startsWith(github.event.head_commit.message, 'chore(release):') }}
+    steps:
+      - name: Checkout (full history + tags for the commit-range scan)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Derive SemVer, write manifest, commit bump, push tag
+        env:
+          MANIFEST: src/ReadTheStupidText.App/Package.appxmanifest
+          RANGE_BEFORE: ${{ github.event.before }}
+          RANGE_AFTER: ${{ github.sha }}
+          RELEASE_PAT: ${{ secrets.RELEASE_PAT }}
+        run: |
+          set -euo pipefail
+
+          # Fail fast — without the PAT we could push the bump commit but never
+          # the tag, leaving main bumped with no release. Check before mutating.
+          if [ -z "${RELEASE_PAT}" ]; then
+            echo "::error::secrets.RELEASE_PAT is not set. Create a fine-grained PAT" \
+                 "with 'contents: write' on this repo and add it as the RELEASE_PAT" \
+                 "secret (see STORE.md)."
+            exit 1
+          fi
+
+          # --- base version from the manifest (the single source of truth) ---
+          current=$(grep -oE 'Version="[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+"[[:space:]]*/>' "$MANIFEST" \
+                    | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')
+          IFS='.' read -r major minor patch _rev <<< "$current"
+          echo "Current manifest version: $current"
+
+          # --- commits introduced by this push (the merged PR) ---
+          zero="0000000000000000000000000000000000000000"
+          if [ "$RANGE_BEFORE" != "$zero" ] \
+             && git rev-parse --quiet --verify "${RANGE_BEFORE}^{commit}" >/dev/null 2>&1; then
+            range="${RANGE_BEFORE}..${RANGE_AFTER}"
+          else
+            # First push / unavailable 'before': scan since the last v* tag.
+            last_tag=$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || echo "")
+            range="${last_tag:+${last_tag}..}${RANGE_AFTER}"
+          fi
+          echo "Scanning commit range: ${range}"
+          messages=$(git log --format='%B' "${range}")
+
+          # --- pick the highest bump: major > minor > patch (default patch) ---
+          bump=patch
+          if grep -qE '^[a-zA-Z]+(\([^)]*\))?!:' <<< "$messages" \
+             || grep -qE 'BREAKING[ -]CHANGE' <<< "$messages"; then
+            bump=major
+          elif grep -qE '^feat(\([^)]*\))?:' <<< "$messages"; then
+            bump=minor
+          fi
+          echo "Bump: $bump"
+
+          case "$bump" in
+            major) major=$((major + 1)); minor=0; patch=0 ;;
+            minor) minor=$((minor + 1)); patch=0 ;;
+            patch) patch=$((patch + 1)) ;;
+          esac
+          next="${major}.${minor}.${patch}"
+          echo "Next version: ${next} (manifest -> ${next}.0)"
+
+          # --- write x.y.z.0 into the Identity Version. The match is anchored to
+          #     the start of the line and the self-closing ' />' so it can never
+          #     touch TargetDeviceFamily's MinVersion/MaxVersionTested. ---
+          sed -i -E "s#^([[:space:]]*)Version=\"[0-9.]+\"([[:space:]]*/>)#\1Version=\"${next}.0\"\2#" "$MANIFEST"
+          if ! grep -qF "Version=\"${next}.0\" />" "$MANIFEST"; then
+            echo "::error::Failed to write Version=\"${next}.0\" into ${MANIFEST}"; exit 1
+          fi
+          grep -nE 'Version=' "$MANIFEST"
+
+          # --- commit the bump on main via GITHUB_TOKEN (no workflow re-trigger).
+          #     NOTE: do NOT add [skip ci] — the tag points at this commit and a
+          #     skip-ci message would also skip the tag-triggered release. ---
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$MANIFEST"
+          git commit -m "chore(release): v${next}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+
+          # --- push the annotated tag with the PAT so build.yml's release fires ---
+          git tag -a "v${next}" -m "v${next}"
+          git push "https://x-access-token:${RELEASE_PAT}@github.com/${GITHUB_REPOSITORY}.git" "v${next}"
+          echo "Pushed tag v${next}"

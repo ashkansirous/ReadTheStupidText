@@ -74,6 +74,33 @@ No GPL/LGPL components ship in the package (Piper and its espeak-ng phonemizer
 were deliberately avoided; Supertonic needs no espeak data). This keeps the
 closed-source Store distribution clean.
 
+## Versioning (Conventional Commits → tag)
+
+`.github/workflows/version.yml` runs on every push to `main` (every merged PR)
+and ships a version automatically (Decision 17 / Slice 14):
+
+1. Reads the current `Package.appxmanifest` `Version` as the base (the manifest
+   is the single source of truth).
+2. Derives the bump from the Conventional-Commit messages introduced by the
+   merge: `feat:` → **minor**, `feat!:`/`BREAKING CHANGE:` → **major**, anything
+   else (`fix`/`chore`/`refactor`/`docs`/…/unconventional) → **patch**.
+3. Writes `x.y.z.0` back into the manifest (the Store requires revision `0`),
+   commits `chore(release): vx.y.z`, and pushes a `vx.y.z` tag.
+
+**Required secret — `RELEASE_PAT`.** The tag is pushed with a Personal Access
+Token, **not** the default `GITHUB_TOKEN`: a tag pushed by `GITHUB_TOKEN` does
+not trigger another workflow, so `build.yml`'s release job (below) would never
+fire. The bump *commit*, by contrast, is pushed with `GITHUB_TOKEN` on purpose —
+that way it does **not** re-trigger `version.yml` (no loop) or `build.yml` (no
+redundant CI build). Create a **fine-grained PAT** scoped to this repo with
+**Contents: Read and write**, and add it as the repo secret `RELEASE_PAT`
+(Settings → Secrets and variables → Actions). A GitHub App installation token
+works too. Without it, `version.yml` fails fast before touching `main`.
+
+> `main`'s branch ruleset only blocks deletion and non-fast-forward, so the bump
+> commit and the tag push need no bypass actor — a normal fast-forward push is
+> allowed.
+
 ## Releases (hosted MSIX)
 
 CI's per-run **workflow artifacts** are only reachable from the Actions run page

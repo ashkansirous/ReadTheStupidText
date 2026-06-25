@@ -85,10 +85,14 @@ disabled (`PublishTrimmed=false`); packaged WinUI apps aren't trimmed, and
 - **Every merge to `main` ships a version** via **Conventional Commits**
   (Decision 17). Write commit/PR titles as `feat:` (→ minor), `fix:`/`chore:`/
   `refactor:`/`docs:`/etc (→ patch), or `feat!:`/`BREAKING CHANGE:` (→ major);
-  an unconventional message defaults to **patch**. CI derives the next SemVer,
-  writes it into `Package.appxmanifest` `Version` (`x.y.z.0` — the Store needs
-  revision `0`), and pushes a `v<x.y.z>` tag, which `build.yml` turns into a
-  GitHub Release. The **manifest version is the single source of truth**.
+  an unconventional message defaults to **patch**. On every push to `main`,
+  `.github/workflows/version.yml` derives the next SemVer (base = the current
+  manifest `Version`), writes it into `Package.appxmanifest` `Version` (`x.y.z.0`
+  — the Store needs revision `0`), commits the bump, and pushes a `v<x.y.z>` tag,
+  which `build.yml` turns into a GitHub Release. The **manifest version is the
+  single source of truth**. The tag is pushed with a **`RELEASE_PAT`** secret
+  (not the default `GITHUB_TOKEN`, which can't trigger `build.yml`); the bump
+  commit is pushed with `GITHUB_TOKEN` so it never loops — see `STORE.md`.
 - **Signing:** CI stays **unsigned**; the Microsoft Store re-signs on publish
   (Decision 18). A domain (e.g. `sirous.uk`) cannot sign code. **Azure Trusted
   Signing** is the documented upgrade for trusted sideloaded MSIX — see
