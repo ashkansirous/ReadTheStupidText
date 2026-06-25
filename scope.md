@@ -6,6 +6,7 @@
 - Let the user pick reading speed as a fine decimal rate (0.5x–2.0x in 0.05 steps) via a YouTube-style slider in the control panel, applied live, with quick presets (1x/1.25x/1.5x/1.75x/2x) in the tray menu.
 - Let the user choose from high-quality **local neural voices** (bundled in the app), since the built-in Windows voices sound robotic and Narrator's neural voices are unreachable by a Store app.
 - Auto-read text on selection where the app exposes it, with a global-hotkey fallback for apps that don't (terminals, CLI, Claude Code).
+- Let the user see, live, what text the app is intercepting and what happens to each read (pending → reading → read, or ignored/interrupted/failed) in an activity-log window — which also doubles as the way to diagnose when a selection isn't read.
 - Give the user two control surfaces from the tray icon: a **left-click control panel** (a small floating window with play/pause, a speed slider, a voice picker, and the auto-read/startup toggles) and a **right-click menu** for the same toggles plus Quit.
 - Run automatically at Windows startup, minimized to the tray.
 - Ship through the Microsoft Store.
@@ -19,13 +20,15 @@
 - **Control surfaces:**
   - **Right-click** opens an `H.NotifyIcon.WinUI` context menu. It runs in the library's default `PopupMenu` mode — a *native* Win32 menu that invokes each item's `Command` (never the WinUI `Click` event) and renders a checkmark only for `ToggleMenuFlyoutItem`. Every item is therefore driven by an `ICommand`, and the five speed presets are `ToggleMenuFlyoutItem`s with selection managed in code. This — not any "visual root" issue — is the fix for the original speed-selection defect. The menu holds the auto-read toggle, launch-at-startup toggle, and Quit.
   - **Left-click** opens a **control panel**: a borderless, always-on-top `AppWindow` (`OverlappedPresenter`, `IsAlwaysOnTop`, no system title bar) positioned above the taskbar and sized to its content. It is **pinned** — it stays on top of every window until the user clicks its ✕ or left-clicks the tray icon again (no light-dismiss); closing only hides it (the app stays in the tray). It holds a play/pause toggle, a YouTube-style speed slider over the full 0.5–2.0 range (0.05 steps), a voice `ComboBox`, and auto-read/startup `ToggleSwitch`es. Rich controls like a slider and combo box can't live in the native `PopupMenu`, so the panel is a real window rather than a flyout.
-- **Selection capture:** UI Automation `TextPattern` selection monitoring as the primary auto-read path, plus a global hotkey (`Ctrl+Win+R`) that simulates copy and reads the clipboard as a fallback for apps without UIA text support.
+  - **Right-click → "Show activity log"** opens the activity-log window (a normal resizable window, distinct from the pinned panel).
+- **Selection capture:** UI Automation `TextPattern` selection monitoring as the primary auto-read path, plus a global hotkey (`Ctrl+Win+R`) that simulates copy and reads the clipboard as a fallback for apps without UIA text support. The monitor debounces growth events (500 ms) and emits a `SelectionCleared` signal on deselect so a deselect (or a new selection) interrupts a read in progress.
+- **Activity log:** read activity flows through an in-memory, observable `IActivityLog` (Application; capped ring buffer, cleared on restart). `ReadAloudService` opens one entry per intercepted text and transitions its state — pending (during the debounce) → reading → read, or ignored (superseded while pending), interrupted (stopped mid-read), failed (synthesis error) — tagged by source (auto-read / hotkey / manual). The `ActivityLogWindow` renders entries live, each row updating in place.
 - **Startup:** packaged `StartupTask` (Windows App SDK), declared in the manifest and user-toggleable, starting minimized to tray.
 - **Persistence:** last-used speed, enabled state, and selected voice Id stored in `ApplicationData.Current.LocalSettings`; default speed is 1x, default voice is the default neural voice.
 
 ### Current unit of work
 
-The speed-control fix, voice selection, launch-at-startup, the tray control panel (Slice 8), and **local neural voices (Slice 9 — sherpa-onnx + Supertonic-3, model bundled in the package)** are done. The remaining slice is **Store packaging & CI** (Slice 5).
+All planned slices are implemented: the speed-control fix, voice selection, launch-at-startup, the tray control panel (Slice 8), local neural voices (Slice 9 — sherpa-onnx + Supertonic-3, bundled), **Store packaging & CI (Slice 5 — merged; CI builds the MSIX and publishes `v*` tags to GitHub Releases)**, and the **live activity log + auto-read state machine (Slice 10)**. Remaining before a Store release is the account-dependent work in `STORE.md` (Partner Center identity, signing, first submission). The auto-read "nothing happens" report is to be root-caused with the new activity log at runtime.
 
 ## Out of Scope
 
@@ -35,6 +38,7 @@ The speed-control fix, voice selection, launch-at-startup, the tray control pane
 - Reading from apps that expose no UIA text *without* using the hotkey fallback.
 - Non-Store / sideload distribution as a primary channel.
 - A **persistent/dockable** settings window with tabs, taskbar presence, or hotkey-remap UI. The control panel is transient and tray-toggled (pinned topmost while open, hidden otherwise); every control maps to an existing service rather than introducing new settings.
+- Persisting, exporting, or configuring the activity log — it is in-memory, capped, live-only, and cleared on restart (a diagnostic surface, not a logging framework).
 - Pure UWP packaging (rejected: the sandbox blocks tray presence, global input, and cross-app text read).
 
 ## Notes
@@ -42,7 +46,7 @@ The speed-control fix, voice selection, launch-at-startup, the tray control pane
 - The selected voice is persisted by id (prefixed `supertonic:`); on startup it falls back to the default neural voice if unset or not present in the model.
 - A voice change takes effect on the next utterance, not the current one. Speed, by contrast, stays live via `MediaPlayer.PlaybackRate` (the neural engine synthesizes at 1× and the player applies the rate).
 - The neural model (`sherpa-onnx-supertonic-3-tts-int8-2026-05-11`, ~145 MB) is bundled in the package and committed to the repo under `VoiceModel/`; no network and no `internetClient` capability. Narrator's "Natural" voices remain unreachable by any third-party Store app — see [[project-natural-voices-unavailable]] — which is why the app brings its own engine.
-- Auto-read debounces UIA selection events (500 ms) so a drag-select triggers one read, not a burst.
+- Auto-read debounces UIA selection events (500 ms) so a drag-select triggers one read, not a burst. A selection superseded during that wait is logged `ignored`; a new selection or a deselect (`SelectionCleared`) that stops a read in progress is logged `interrupted` (and pauses the reader); a synthesis/playback error is `failed`.
 - The speed-selection defect (radio items not committing, rate not applying) was caused by H.NotifyIcon's `PopupMenu` mode invoking only each item's `Command` and ignoring `RadioMenuFlyoutItem` checkmarks — confirmed against the library source. The earlier "tray window never activated / no visual root" theory was wrong. The same Command-driven pattern is reused by the voice submenu.
 - Auto-read and launch-at-startup appear in **both** the control panel and the right-click menu; both surfaces read and write the same services so their state stays in sync.
 - `H.NotifyIcon.WinUI` is the one unavoidable third-party dependency, since WinUI 3 has no built-in tray icon.
