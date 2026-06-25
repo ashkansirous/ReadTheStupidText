@@ -26,7 +26,7 @@ public sealed partial class ActivityLogWindow : Window
     {
         _log = log;
         InitializeComponent();
-        Title = "ReadTheStupidText — Activity log";
+        Title = "Read The Stupid Text — Activity log";
         AppWindow.Resize(new SizeInt32(860, 480));
 
         foreach (ActivityEntry entry in _log.Entries)

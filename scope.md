@@ -68,4 +68,4 @@ The **current unit of work is Batch 2 (Slices 11–16)** — release-readiness, 
 - The speed-selection defect (radio items not committing, rate not applying) was caused by H.NotifyIcon's `PopupMenu` mode invoking only each item's `Command` and ignoring `RadioMenuFlyoutItem` checkmarks — confirmed against the library source. The earlier "tray window never activated / no visual root" theory was wrong. The same Command-driven pattern is reused by the voice submenu.
 - Auto-read and launch-at-startup appear in **both** the control panel and the right-click menu; both surfaces read and write the same services so their state stays in sync.
 - `H.NotifyIcon.WinUI` is the one unavoidable third-party dependency, since WinUI 3 has no built-in tray icon.
-- Repo stays named `ReadTheStupidText`; product display name is "ReadTheStupidText".
+- Repo / package id stays `ReadTheStupidText`; the user-facing **product display name is "Read The Stupid Text"** (Microsoft Store ID `9NGT1BN1H92V`; identity wired into `Package.appxmanifest`).

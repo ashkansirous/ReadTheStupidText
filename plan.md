@@ -248,6 +248,23 @@ this plan turns it into ordered, shippable vertical slices.
     hotkey is unaffected (always on). `ReadAloudService` checks the relevant flag
     per path; the old single `IsEnabled` is migrated (an existing `false` maps
     both new flags off).
+23. **Store identity wired + product display name "Read The Stupid Text" (Batch 2,
+    Slice 16 / Slice 5 #24).** The app is reserved in Partner Center (Store ID
+    `9NGT1BN1H92V`), so the real **Product identity** is wired into
+    `Package.appxmanifest` and must match Partner Center exactly (confirmed via
+    Microsoft Learn): `Identity/Name` = `AshkanSirous.ReadTheStupidText`,
+    `Identity/Publisher` = `CN=53769961-EF08-4BA5-A1DE-7A51B62A9AA7`,
+    `Properties/PublisherDisplayName` = `Ashkan Sirous`. The user-facing **product
+    display name becomes "Read The Stupid Text"** (with spaces) — manifest
+    `DisplayName`/`VisualElements DisplayName`/`Description`/StartupTask
+    `DisplayName`, the tray tooltip, the control-panel header, and the activity-log
+    window title. The **repo, package id (`ReadTheStupidText`), namespaces,
+    assembly, and the StartupTask `TaskId`** stay unchanged (internal identifiers).
+    The manifest `Version` is reset to **`0.1.0.0`** — pre-1.0 (the app isn't
+    "v1" yet); Conventional-Commits versioning (Decision 17) takes it from there.
+    Store **signing stays Store-only** (Decision 18). This wires the deferred
+    Slice 5 manifest-identity task and advances Slice 16; the first Partner Center
+    submission + CI secrets are still manual (see `STORE.md`).
 
 ## Changes
 

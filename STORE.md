@@ -1,9 +1,31 @@
 # Microsoft Store packaging notes
 
-This document covers what's needed to package and submit **ReadTheStupidText** to
-the Microsoft Store. Slice 5 set up the build/packaging pipeline; the account-
-dependent steps (identity, signing, submission) are listed at the end and are
-done in Partner Center when an account is available.
+This document covers what's needed to package and submit **Read The Stupid Text**
+(repo/package id `ReadTheStupidText`) to the Microsoft Store. Slice 5 set up the
+build/packaging pipeline. The app is now **reserved in Partner Center** and its
+real identity is **wired into `Package.appxmanifest`** (see below); what remains
+is the first manual submission and the CI secrets/variable for automated updates.
+
+## App identity (wired into the manifest)
+
+These are the Partner Center **Product identity** values for the reserved app and
+must match it **exactly**, or submission fails with a name/identity error
+(confirmed via Microsoft Learn). They are already set in `Package.appxmanifest`:
+
+| Manifest field | Value |
+| --- | --- |
+| `Package/Identity/Name` | `AshkanSirous.ReadTheStupidText` |
+| `Package/Identity/Publisher` | `CN=53769961-EF08-4BA5-A1DE-7A51B62A9AA7` |
+| `Package/Properties/PublisherDisplayName` | `Ashkan Sirous` |
+| `Package/Properties/DisplayName` | `Read The Stupid Text` (must be a reserved app name) |
+| `Package/Identity/Version` | `0.1.0.0` (pre-1.0 — bumped up by Conventional-Commits versioning, Slice 14) |
+
+Store listing references:
+
+- **Store ID:** `9NGT1BN1H92V`
+- **Listing URL:** https://apps.microsoft.com/detail/9NGT1BN1H92V
+- **Store protocol link:** `ms-windows-store://pdp/?productid=9NGT1BN1H92V`
+- **MSA / Azure AD app id** (for the submission API): `01fff836-f050-475a-8ee4-13cbcfdc7235`
 
 ## Build artifact (CI)
 
@@ -70,14 +92,28 @@ source. So distribution uses **GitHub Releases** instead:
 deploy that downloads a release's MSIX and submits it via the **msstore CLI**
 (`microsoft/microsoft-store-apppublisher`). It is scaffolded but not yet live —
 the Actions-based msstore flow does *updates* to an already-published **free**
-app, not the first submission. To turn it on:
+app, not the first submission. Remaining steps to turn it on:
 
-1. Reserve the app in Partner Center; wire its **Identity Name + Publisher ID**
-   into `Package.appxmanifest` (currently a placeholder GUID + `CN=Ashkan Sirous`).
+1. ~~Reserve the app in Partner Center and wire its **Identity Name + Publisher
+   ID** into `Package.appxmanifest`.~~ **Done** — see *App identity* above.
 2. Do the **first** submission manually in Partner Center (upload the release
-   `.msix` files; the Store signs them) and get it live.
+   `.msix` files for x64 + ARM64; the Store signs them) and get it live.
 3. Add repo **secrets** `AZURE_AD_TENANT_ID`, `AZURE_AD_APPLICATION_CLIENT_ID`,
    `AZURE_AD_APPLICATION_SECRET`, `SELLER_ID`, and a repo **variable**
-   `STORE_PRODUCT_ID`.
+   `STORE_PRODUCT_ID` = `9NGT1BN1H92V`. (The Azure AD app id above is the
+   `AZURE_AD_APPLICATION_CLIENT_ID`; create a client secret for it and find the
+   tenant id + seller id in Partner Center → Account settings.)
 4. From then on, run **store-submit** (Actions → Run workflow, pick the release
    tag) to push updates.
+
+## Signing
+
+CI produces **unsigned** packages and the Microsoft **Store re-signs** on
+publish — the Store is the trusted install channel (SmartScreen trusts Store
+apps), so no certificate is needed for the Store path (Decision 18). A domain
+(e.g. `sirous.uk`) **cannot** sign code — code-signing certificates validate an
+*identity*, not domain control. If trusted **sideloaded** (GitHub-Release) MSIX
+is ever wanted, the documented upgrade is **Azure Trusted Signing** (~US$10/mo,
+Microsoft-run, GitHub-Actions-native, no hardware token); a traditional OV/EV
+cert (cost + hardware token) and self-signed certs (SmartScreen still warns) are
+rejected.
