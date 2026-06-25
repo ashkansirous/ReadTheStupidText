@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Privacy Policy — Read The Stupid Text</title>
+  <meta name="description" content="Privacy policy for Read The Stupid Text. The app collects no data and runs fully offline." />
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      line-height: 1.6; max-width: 760px; margin: 0 auto; padding: 2.5rem 1.25rem 4rem;
+      color: #1a1a2e; background: #fbfbfd;
+    }
+    @media (prefers-color-scheme: dark) {
+      body { color: #e6e6ea; background: #1b1b1f; }
+      a { color: #8db4ff; }
+      .eff { color: #a0a0a8; }
+    }
+    h1 { font-size: 1.9rem; margin-bottom: 0.25rem; }
+    h2 { font-size: 1.2rem; margin-top: 2rem; border-bottom: 1px solid rgba(128,128,128,.25); padding-bottom: .3rem; }
+    .eff { color: #555; font-size: .95rem; margin-top: 0; }
+    .lede { font-size: 1.05rem; }
+    a { color: #3b6fe3; }
+    code { background: rgba(128,128,128,.15); padding: .1em .35em; border-radius: 4px; font-size: .9em; }
+    footer { margin-top: 3rem; font-size: .85rem; color: #888; }
+  </style>
+</head>
+<body>
+  <h1>Privacy Policy — Read The Stupid Text</h1>
+  <p class="eff"><strong>Effective date:</strong> 25 June 2026</p>
+
+  <p class="lede">Read The Stupid Text (&ldquo;the app&rdquo;) is a Windows utility that reads
+  selected or copied text aloud. This policy explains how the app handles your data.</p>
+
+  <h2>The short version</h2>
+  <p><strong>Read The Stupid Text does not collect, store, transmit, or share any personal
+  data.</strong> It has no accounts, no analytics, no telemetry, and makes no network
+  connections. Everything the app does happens <strong>locally on your device</strong>.</p>
+
+  <h2>What the app processes, and where</h2>
+  <ul>
+    <li><strong>Text you select, copy, or send via the hotkey</strong> is read aloud and held
+      only <strong>in memory</strong> for as long as it takes to speak it. It is <strong>not</strong>
+      written to disk, logged permanently, or sent anywhere.</li>
+    <li><strong>Speech synthesis is performed entirely on your device</strong> using a voice
+      model bundled inside the app. No text or audio is sent to any server or third party.</li>
+    <li>The app&rsquo;s <strong>activity log</strong> (an optional diagnostic view) lives only in
+      memory, shows recent read activity, and is <strong>cleared when the app closes</strong>. It is
+      never saved to disk or transmitted.</li>
+    <li><strong>Settings</strong> you choose (reading speed, selected voice, auto-read and startup
+      toggles) are stored <strong>locally</strong> on your device. They never leave your device.</li>
+  </ul>
+
+  <h2>Network use</h2>
+  <p><strong>None.</strong> The app works fully offline. It does not connect to the internet,
+  download anything, or call any web service or API.</p>
+
+  <h2>Permissions</h2>
+  <p>The app declares the <code>runFullTrust</code> capability. This is required so it can place a
+  system-tray icon, register a global hotkey, read selected/copied text from other apps (via UI
+  Automation and the Windows clipboard), and run its on-device text-to-speech engine. This
+  capability is <strong>not</strong> used to collect or transmit any data.</p>
+
+  <h2>Third-party components</h2>
+  <p>The app bundles open-source components (the sherpa-onnx runtime and the Supertonic voice
+  model) that run <strong>locally</strong> and do not transmit data.</p>
+
+  <h2>Children&rsquo;s privacy</h2>
+  <p>The app collects no personal information from anyone, including children.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>If this policy changes, the updated version will be published at this same URL with a new
+  effective date.</p>
+
+  <h2>Contact</h2>
+  <p>Questions about this policy can be raised by opening an issue at
+  <a href="https://github.com/ashkansirous/ReadTheStupidText/issues">the GitHub repository</a>.</p>
+
+  <footer>&copy; 2026 Ashkan Sirous. Read The Stupid Text is open-source under the MIT License.</footer>
+</body>
+</html>
