@@ -1,0 +1,15 @@
+# GitVersion derives the SemVer for each build from git history — git tags are
+# the source of truth, so nothing is committed back into the manifest.
+#
+# Trunk-based (GitHub Flow): short-lived feature branches merge to `main` via PR.
+# `main` produces a stable `x.y.z`, defaulting to a **Patch** bump per release.
+# Override the bump from any commit message since the last tag (highest wins):
+#   +semver: minor   (or "feature")  -> bump the minor
+#   +semver: major   (or "breaking") -> bump the major
+#   +semver: none    (or "skip")     -> no bump
+# (commit-message bumping is enabled by default in this preset.)
+workflow: GitHubFlow/v1
+branches:
+  main:
+    label: null        # null (not '') -> stable versions, no pre-release suffix
+    increment: Patch
