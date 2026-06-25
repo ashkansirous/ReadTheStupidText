@@ -188,16 +188,20 @@ this plan turns it into ordered, shippable vertical slices.
     commercially"). The bundled dependencies are already MIT/Apache-2.0 with no
     GPL (see `STORE.md`), so MIT at the repo root is compatible. A `LICENSE`
     file is added and README's "License: TBD" is replaced.
-17. **Versioning — Conventional Commits → automatic release (Batch 2).** Every
-    merge to `main` ships a new version. A CI job derives the next SemVer from
-    the merged commit(s)/PR title — `feat:` → **minor**, `fix:`/`chore:`/
-    `refactor:`/`docs:`/etc → **patch**, `!`/`BREAKING CHANGE:` → **major**,
-    defaulting to **patch** when the message is unconventional — writes it into
-    the MSIX `Package.appxmanifest` `Version` (4-part `x.y.z.0`; the Store
-    requires revision `0`), commits the bump, and pushes a `v<x.y.z>` tag. The
-    existing `build.yml` already publishes a GitHub Release on `v*` tags, so the
-    tag is the only new trigger; the manifest version stays the single source of
-    truth. No heavyweight release bot — a small action/script computes the bump.
+17. **Versioning — GitVersion → automatic release (Batch 2).** Every merge to
+    `main` ships a new version, derived by **GitVersion** from git history —
+    **git tags are the source of truth** (not the manifest). A single `build.yml`
+    run does version → build → release: GitVersion computes the next SemVer
+    (`main` defaults to a **patch** bump; override per commit with
+    `+semver: minor` / `+semver: major`, highest since the last tag wins), the
+    MSIX is packaged with that version stamped into `Package.appxmanifest`
+    `Version` (4-part `x.y.z.0`; the Store requires revision `0`) **at build
+    time** (never committed), then a `v<x.y.z>` tag + GitHub Release are cut at
+    the merge commit. Because it's one run, a plain `GITHUB_TOKEN` suffices — no
+    PAT, no commit-back, no second workflow to trigger. Config lives in
+    `GitVersion.yml`. (Earlier draft pushed a manifest-bump commit + tag from a
+    separate workflow and needed a PAT to trigger the release; GitVersion removes
+    all of that.)
 18. **Signing — Microsoft Store re-signing only for now (Batch 2).** The Store
     re-signs the package on publish and is the trusted install channel
     (SmartScreen trusts Store apps), so the package keeps shipping **unsigned** from CI

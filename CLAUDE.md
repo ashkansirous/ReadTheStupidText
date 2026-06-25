@@ -82,13 +82,17 @@ disabled (`PublishTrimmed=false`); packaged WinUI apps aren't trimmed, and
 - **License is MIT** (Decision 16 in `plan.md`). Anyone may use/extend/sell it
   provided the copyright notice is kept. Do **not** add GPL/LGPL components (the
   Supertonic/sherpa stack was chosen to keep this clean — see `STORE.md`).
-- **Every merge to `main` ships a version** via **Conventional Commits**
-  (Decision 17). Write commit/PR titles as `feat:` (→ minor), `fix:`/`chore:`/
-  `refactor:`/`docs:`/etc (→ patch), or `feat!:`/`BREAKING CHANGE:` (→ major);
-  an unconventional message defaults to **patch**. CI derives the next SemVer,
-  writes it into `Package.appxmanifest` `Version` (`x.y.z.0` — the Store needs
-  revision `0`), and pushes a `v<x.y.z>` tag, which `build.yml` turns into a
-  GitHub Release. The **manifest version is the single source of truth**.
+- **Every merge to `main` ships a version** (Decision 17), derived by
+  **GitVersion** from git history — **git tags are the source of truth**. The
+  single `build.yml` run does it all: GitVersion computes the next SemVer, the
+  MSIX is packaged with that version stamped into `Package.appxmanifest`
+  `Version` (`x.y.z.0` — the Store needs revision `0`) **at build time** (not
+  committed), then a `v<x.y.z>` tag + GitHub Release are cut at the merge commit.
+  No PAT, no commit-back. **`main` defaults to a patch bump.** To bump higher,
+  put a token in a commit message (highest since the last tag wins): **`+semver:
+  minor`** for a feature, **`+semver: major`** for a breaking change, `+semver:
+  none` to skip. Config: `GitVersion.yml`. So: write a normal commit and add
+  `+semver: minor`/`major` when the change warrants it; otherwise it's a patch.
 - **Signing:** CI stays **unsigned**; the Microsoft Store re-signs on publish
   (Decision 18). A domain (e.g. `sirous.uk`) cannot sign code. **Azure Trusted
   Signing** is the documented upgrade for trusted sideloaded MSIX — see

@@ -1,25 +1,58 @@
 name: build
 
-# Builds and packages the WinUI 3 single-project MSIX app on every push/PR to
-# main. Produces an unsigned MSIX per architecture as a build artifact — the
-# Microsoft Store re-signs on submission, so no signing certificate is needed in
-# CI. (Single-project MSIX can't produce a bundle, so each arch is built
-# separately; see Decision 16 / Slice 5 in plan.md.)
+# One workflow runs the whole release pipeline in a single run — no PAT, no
+# commit-back to main, no second workflow to trigger:
 #
-# On a version tag (v*), the same MSIX packages are published to a GitHub Release
-# so they have stable, README-linkable download URLs and a hosted source for
-# Store deployment (see .github/workflows/store-submit.yml).
+#   1. version  — GitVersion derives the SemVer from git history (git tags are
+#                 the source of truth). main defaults to a Patch bump; override
+#                 per commit with "+semver: minor" / "+semver: major" (see
+#                 GitVersion.yml).
+#   2. build    — packages the WinUI 3 single-project MSIX per architecture with
+#                 that version stamped into the manifest at build time. Unsigned
+#                 (the Microsoft Store re-signs on submission). Single-project
+#                 MSIX can't emit a bundle, so each arch is built separately.
+#   3. release  — only on a push to main: creates the v<x.y.z> tag at the merge
+#                 commit and a GitHub Release with the MSIX assets. Because it's
+#                 the same run, a plain GITHUB_TOKEN is enough (no cross-workflow
+#                 trigger needed). PRs build + upload artifacts only.
+#
+# See Decision 17 / Slice 14 in plan.md and STORE.md.
 
 on:
   push:
     branches: [main]
-    tags: ['v*']
   pull_request:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write   # the release job creates the tag + GitHub Release
+
 jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.gitversion.outputs.majorMinorPatch }}
+      semver: ${{ steps.gitversion.outputs.semVer }}
+    steps:
+      - name: Checkout (full history + tags — GitVersion needs them)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v4.5.0
+        with:
+          versionSpec: '6.x'
+
+      - name: Determine version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v4.5.0
+        with:
+          useConfigFile: true
+
   build:
+    needs: version
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -44,6 +77,23 @@ jobs:
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2
 
+      # Stamp the GitVersion-derived version into the manifest (x.y.z.0 — the
+      # Store requires revision 0). The match is anchored to the start of the
+      # line and the self-closing ' />' so it only touches the Identity Version,
+      # never TargetDeviceFamily's MinVersion/MaxVersionTested. Working copy only
+      # — never committed; git tags remain the source of truth.
+      - name: Stamp manifest version (${{ needs.version.outputs.version }}.0)
+        shell: bash
+        env:
+          MANIFEST: src/ReadTheStupidText.App/Package.appxmanifest
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          sed -i -E "s#^([[:space:]]*)Version=\"[0-9.]+\"([[:space:]]*/>)#\1Version=\"${VERSION}.0\"\2#" "$MANIFEST"
+          if ! grep -qF "Version=\"${VERSION}.0\" />" "$MANIFEST"; then
+            echo "::error::Failed to stamp Version=\"${VERSION}.0\" into ${MANIFEST}"; exit 1
+          fi
+          grep -nE 'Version=' "$MANIFEST"
+
       # RuntimeIdentifier is passed explicitly because the csproj otherwise infers
       # it from RuntimeInformation.ProcessArchitecture, and setup-msbuild puts the
       # 32-bit MSBuild.exe on PATH (reports x86) → NETSDK1032 against Platform=x64.
@@ -67,12 +117,13 @@ jobs:
           path: ${{ github.workspace }}\AppPackages\**\*.msix
           if-no-files-found: error
 
-  # On a version tag, publish the built MSIX packages as GitHub Release assets so
-  # they have stable download URLs (linked from the README) and a hosted source
-  # for the Store-submission workflow. Runs only for tags, after the builds pass.
+  # On a push to main, cut the release: tag v<x.y.z> at the merge commit and
+  # publish the built MSIX packages as GitHub Release assets (stable, README-
+  # linkable URLs and the hosted source for Store submission). Same run, so the
+  # GITHUB_TOKEN-created tag needs no downstream trigger.
   release:
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [version, build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -82,18 +133,21 @@ jobs:
         with:
           path: artifacts
 
-      - name: Publish GitHub Release with MSIX assets
+      - name: Create v${{ needs.version.outputs.version }} tag + GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.version.outputs.version }}
         run: |
           # Only the app package per arch — NOT the framework dependency packages
           # under Dependencies/ (every arch ships a same-named
           # Microsoft.WindowsAppRuntime.2.msix, which would collide as duplicate
           # release asset names). The Store/Windows resolves that runtime dependency.
           msix_files=$(find artifacts -name 'ReadTheStupidText.App_*.msix')
-          echo "Publishing:"; echo "$msix_files"
-          gh release create "${{ github.ref_name }}" \
+          echo "Publishing v${VERSION}:"; echo "$msix_files"
+          # --target pins the tag to this merge commit; gh creates the tag itself.
+          gh release create "v${VERSION}" \
             --repo "${{ github.repository }}" \
-            --title "${{ github.ref_name }}" \
+            --target "${{ github.sha }}" \
+            --title "v${VERSION}" \
             --generate-notes \
             $msix_files

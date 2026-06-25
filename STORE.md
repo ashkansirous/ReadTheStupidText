@@ -18,7 +18,7 @@ must match it **exactly**, or submission fails with a name/identity error
 | `Package/Identity/Publisher` | `CN=53769961-EF08-4BA5-A1DE-7A51B62A9AA7` |
 | `Package/Properties/PublisherDisplayName` | `Ashkan Sirous` |
 | `Package/Properties/DisplayName` | `Read The Stupid Text` (must be a reserved app name) |
-| `Package/Identity/Version` | `0.1.0.0` (pre-1.0 — bumped up by Conventional-Commits versioning, Slice 14) |
+| `Package/Identity/Version` | placeholder in the repo (pre-1.0); CI **stamps** the real `x.y.z.0` from GitVersion at build time — see *Versioning* below |
 
 Store listing references:
 
@@ -39,6 +39,8 @@ for **x64** and **ARM64** and uploads each as an **unsigned** `.msix` artifact.
   Store, or combine them into an `.msixbundle` with the MSIX Bundler action if a
   single upload is preferred.
 - The neural voice model is **Git LFS**-tracked, so checkout uses `lfs: true`.
+- The package `Version` is **stamped at build time** from GitVersion (see
+  *Versioning* below); the committed manifest value is only a placeholder.
 
 Local equivalent:
 
@@ -74,17 +76,38 @@ No GPL/LGPL components ship in the package (Piper and its espeak-ng phonemizer
 were deliberately avoided; Supertonic needs no espeak data). This keeps the
 closed-source Store distribution clean.
 
+## Versioning (GitVersion → tag → release)
+
+Versioning is fully automatic and lives **entirely inside `build.yml`** — one
+workflow run does version → build → release, with no PAT and no commit-back
+(Decision 17 / Slice 14). **Git tags are the source of truth.**
+
+1. The `version` job runs **GitVersion** (`GitVersion.yml`, GitHub Flow preset),
+   which reads git history and computes the next SemVer. `main` defaults to a
+   **Patch** bump over the last `v*` tag.
+2. The `build` job stamps that version (`x.y.z.0` — the Store needs revision `0`)
+   into the manifest **at build time** and packages the MSIX. Nothing is
+   committed back.
+3. On a push to `main`, the `release` job creates the **`v<x.y.z>` tag** at the
+   merge commit and a **GitHub Release** with both `.msix` assets — same run, so
+   a plain `GITHUB_TOKEN` is enough (no second workflow to trigger).
+
+**Choosing the bump.** Default is patch. To bump higher, add a token to a commit
+message since the last tag (highest wins): `+semver: minor` (feature),
+`+semver: major` (breaking), `+semver: none` (skip). Agents: write a normal
+commit and append `+semver: minor`/`major` when the change warrants it.
+
+> `main`'s branch ruleset only blocks deletion and non-fast-forward, so the tag
+> push needs no bypass actor.
+
 ## Releases (hosted MSIX)
 
 CI's per-run **workflow artifacts** are only reachable from the Actions run page
 (login required, expire after retention) — not a stable download or deploy
-source. So distribution uses **GitHub Releases** instead:
-
-- Push a version tag (`git tag v1.0.0 && git push origin v1.0.0`). The `build`
-  workflow then runs the `release` job, which attaches both `.msix` files to a
-  GitHub Release for that tag.
-- The packages get **stable URLs** under `…/releases/latest`, linked from the
-  README, and serve as the hosted source the Store-submission step pulls from.
+source. So distribution uses **GitHub Releases** instead: every push to `main`
+cuts one (see *Versioning* above). The packages get **stable URLs** under
+`…/releases/latest`, linked from the README, and serve as the hosted source the
+Store-submission step pulls from.
 
 ## Deploying to the Store
 
