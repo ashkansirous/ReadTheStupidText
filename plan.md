@@ -159,9 +159,19 @@ Ordered as vertical slices — each is end-to-end and independently runnable.
       secrets, and the `.msixupload` submission flow are deferred to Partner
       Center and documented as the remaining steps in `STORE.md` — no account was
       wired in. MSIX-packaging msbuild args confirmed via Microsoft Learn first.
-      *Unverified here (can't run Actions / no runner):* the workflow's first live
-      run, esp. that `windows-latest` has the 10.0.26100 SDK and that ARM64 R2R
-      cross-gen succeeds.
+      **CI verified green** on PR #41 (run 28160543687) — both arches build and
+      upload; needed one fix: pass `RuntimeIdentifier` explicitly because
+      `setup-msbuild`'s 32-bit MSBuild made the csproj infer `win-x86` →
+      `NETSDK1032`. **Distribution:** on a `v*` tag the `build` workflow's
+      `release` job publishes both `.msix` files to a **GitHub Release** (stable
+      URLs, linked from the README's Download section) — workflow artifacts alone
+      aren't a hosted/linkable source. `store-submit.yml` is a manual
+      (`workflow_dispatch`) deploy that submits a release's MSIX via the **msstore
+      CLI** (`microsoft/microsoft-store-apppublisher`); scaffolded but inert until
+      a Partner Center account + secrets (`AZURE_AD_*`, `SELLER_ID`,
+      `STORE_PRODUCT_ID`) and a first manual Store submission exist (the
+      Actions msstore flow only *updates* a live free app). msstore CLI workflow
+      confirmed via Microsoft Learn first; see `STORE.md`.
 
 Added after the initial plan — **tackled next, before Slice 4 (startup) and
 Slice 5 (store):**

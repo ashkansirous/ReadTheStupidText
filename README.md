@@ -1,11 +1,19 @@
 # ReadTheStupidText
 
 A lightweight Windows 11 tray utility that reads selected or copied text aloud
-at a user-chosen speed (1x / 1.25x / 1.5x / 1.75x / 2x), with a small control
-beside the clock to pause/resume and change speed. Built as a WinUI 3 packaged
-(MSIX) app for distribution through the Microsoft Store.
+at a user-chosen speed (a continuous 0.5×–2.0× slider, plus quick presets), with
+a small control beside the clock to pause/resume and change speed and voice.
+Built as a WinUI 3 packaged (MSIX) app for distribution through the Microsoft Store.
 
 > Repo name is `ReadTheStupidText`; the product display name is **ReadTheStupidText**.
+
+## Download
+
+[![Latest release](https://img.shields.io/github/v/release/ashkansirous/ReadTheStupidText?sort=semver&label=latest%20release)](https://github.com/ashkansirous/ReadTheStupidText/releases/latest)
+
+Grab the MSIX from the **[latest release](https://github.com/ashkansirous/ReadTheStupidText/releases/latest)** — `…-x64.msix` for most PCs, `…-ARM64.msix` for Arm devices. Each release is produced by CI from a `v*` tag.
+
+> These packages are **unsigned** (the Microsoft Store signs on publish). To sideload one before the Store listing exists, a signed build / trusted certificate is required — see [`STORE.md`](STORE.md). Releases appear once the first `v*` tag is pushed.
 
 ## Status
 
