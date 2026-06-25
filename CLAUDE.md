@@ -114,3 +114,13 @@ existing service. The
 right-click `MenuFlyout` stays (Quit lives there only). Rich controls (slider,
 `ComboBox`) **cannot** go in H.NotifyIcon's `PopupMenu` — that's why the panel
 is a real window, not a flyout (same native-menu limit as Decision 11).
+
+Note: read activity flows through **`IActivityLog`** (Application — an in-memory,
+observable ring buffer; `ActivityEntry`/`ActivityState`/`ActivitySource` in
+Domain). `ReadAloudService` opens an entry per intercepted text and transitions
+it (pending→reading→read, or ignored/interrupted/failed); `ActivityLogWindow`
+(a normal resizable window, opened from the right-click tray menu) renders it
+live. The UIA monitor emits **`SelectionCleared`** on deselect so an in-progress
+read is interrupted. The log is the diagnostic for "selection does nothing": no
+entry ⇒ that app exposes no UIA text (hotkey is the fallback). See Slice 10 /
+Decision 15 in `plan.md`.

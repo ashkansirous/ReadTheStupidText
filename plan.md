@@ -290,22 +290,28 @@ Slice 5 (store):**
       swapped `CancellationTokenSource`), so a drag collapses into one read.
       *Unverified at build time (needs a real run):* neural audio output and the
       native runtime loading under package identity.
-- [ ] **Slice 10 — Live activity log + auto-read fix.** (see Decision 15) Adds a
+- [x] **Slice 10 — Live activity log + auto-read fix.** (see Decision 15) Adds a
       separate, resizable **activity-log window** opened from the right-click tray
-      menu, showing read activity **live**. New `IActivityLog` (Application,
-      in-memory observable ring buffer) + an entry model with the states
-      pending/reading/read/ignored/interrupted/failed; the read paths
-      (`ReadAloudService`, UIA monitor, hotkey, manual Play) write transitions to
-      it and `ActivityLogWindow` (App) renders them. The UIA monitor is extended
-      to emit a **selection-cleared** signal so a deselect (or new selection)
-      **interrupts** an in-progress read and marks the entry `interrupted`; a
-      selection superseded during the 0.5 s debounce is marked `ignored`. The log
-      doubles as the diagnostic for the **"selecting text does nothing"** bug —
-      use it to find the root cause (no UIA text in the tested app / auto-read off
-      / downstream reader issue) and fix it (verify in a known UIA app like
-      Notepad; ensure auto-read is on; confirm the reader path). Logs **all read
-      sources**, tagged. Confirm any new WinUI list/scroll control APIs via
-      context7 first.
+      menu ("Show activity log"), showing read activity **live**. New
+      `IActivityLog`/`ActivityLog` (Application, in-memory observable ring buffer,
+      ~200, `EntryAdded`/`EntryChanged`) + Domain `ActivityEntry` /
+      `ActivityState` (pending/reading/read/ignored/interrupted/failed) /
+      `ActivitySource` (auto-read/hotkey/manual). `ReadAloudService` now opens an
+      entry per intercepted text and drives its state: a new selection or deselect
+      **supersedes** the active entry (pending→`ignored`; reading→`interrupted`,
+      pausing the reader), the debounce elapsing flips it to `reading`, the reader
+      returning to `Idle` marks `read`, and a synth/playback exception marks
+      `failed`. The UIA monitor (`ISelectionMonitor`) gained a `SelectionCleared`
+      event (emitted once on the transition to an empty selection) so a deselect
+      interrupts an in-progress read. `ActivityLogWindow` (normal resizable
+      window, single-instance, in switchers) renders rows via `ActivityRowVm`
+      (state updates in place); seeds from existing entries on open. *Diagnostic
+      for the "selecting text does nothing" bug:* the path is sound and builds
+      clean; the log is the lens — if selecting in a UIA app (Notepad) produces an
+      entry that reaches `read`, auto-read works and the originally-tested app
+      simply exposes no UIA text (hotkey is the fallback); if Notepad shows
+      nothing, the monitor isn't firing. **Needs a runtime check to confirm the
+      root cause** (can't run the UI/UIA here). Logs all read sources, tagged.
 
 ## Out of Scope
 
