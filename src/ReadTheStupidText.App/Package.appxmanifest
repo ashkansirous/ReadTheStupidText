@@ -14,7 +14,7 @@
   <Identity
     Name="AshkanSirous.ReadTheStupidText"
     Publisher="CN=53769961-EF08-4BA5-A1DE-7A51B62A9AA7"
-    Version="0.1.0.0" />
+    Version="0.1.1.0" />
 
   <mp:PhoneIdentity PhoneProductId="395C498D-832B-4989-8A0D-7BCB81DCB886" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
