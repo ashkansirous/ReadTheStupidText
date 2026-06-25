@@ -14,7 +14,10 @@ Early development. See [`plan.md`](plan.md) for the vertical-slice roadmap and
 issues (one *story* per slice, *tasks* as sub-issues) on the **ReadTheStupidText**
 Projects board.
 
-Current slice: **Slice 0 — project scaffold** (app boots to an empty window).
+All planned slices are implemented: hotkey/auto-read at a continuous 0.5–2.0×
+speed, a left-click tray control panel, launch-at-startup, local **neural voices**
+(sherpa-onnx + Supertonic-3, bundled), and CI packaging. Remaining before a Store
+release: Partner Center identity + signing (see [`STORE.md`](STORE.md)).
 
 ## Tech stack
 
@@ -65,6 +68,18 @@ dotnet run --project src/ReadTheStupidText.App/ReadTheStupidText.App.csproj -p:P
 > `-p:Platform=x64` is rejected as an invalid solution configuration. Building
 > the app project builds the whole dependency graph with correct per-project
 > platform mapping. Always pass `-p:Platform=x64` (or `arm64`).
+
+The neural voice model is large and stored in **Git LFS**, so install
+[Git LFS](https://git-lfs.com/) (`git lfs install`) before cloning, or run
+`git lfs pull` after clone, so `src/ReadTheStupidText.App/VoiceModel/` holds the
+real model files (not pointers).
+
+## Continuous integration
+
+`.github/workflows/build.yml` packages the MSIX (x64 + ARM64) on every push/PR to
+`main` and uploads each as an unsigned artifact. See [`STORE.md`](STORE.md) for
+packaging, capability justification, third-party licenses, and the Store
+submission steps.
 
 ## License
 

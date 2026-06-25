@@ -142,10 +142,26 @@ Ordered as vertical slices — each is end-to-end and independently runnable.
       startup** toggle that reflects the *actual* OS state (enabling can be
       refused by the user/policy). The app already starts minimized to tray (its
       window is never shown), so startup launch needs no extra UI handling.
-- [ ] **Slice 5 — Store packaging & CI.** ([#8](https://github.com/ashkansirous/ReadTheStupidText/issues/8)) Finalize the MSIX manifest
-      (identity, capabilities + restricted-capability justification), signing,
-      and a GitHub Actions workflow that builds + packages the MSIX artifact.
-      Prepare Store submission assets.
+- [x] **Slice 5 — Store packaging & CI.** ([#8](https://github.com/ashkansirous/ReadTheStupidText/issues/8)) GitHub Actions workflow
+      (`.github/workflows/build.yml`) builds + packages the single-project MSIX
+      on `windows-latest` for **x64 and ARM64** and uploads each as an **unsigned**
+      `.msix` artifact (the Store re-signs on submission, so CI needs no
+      certificate). Checkout uses `lfs: true` for the LFS-tracked voice model;
+      packaging uses `GenerateAppxPackageOnBuild=true` + `AppxBundle=Never`
+      (single-project MSIX can't bundle, so per-arch packages) +
+      `UapAppxPackageBuildMode=SideloadOnly` + `AppxPackageSigningEnabled=false`.
+      Fixed the **`NETSDK1102`** Release error (`PublishTrimmed` requires
+      self-contained — trimming disabled; packaged WinUI apps aren't trimmed) so
+      Release now builds (verified locally, x64, 0/0). `STORE.md` documents the
+      `runFullTrust` restricted-capability justification, the third-party licenses
+      (all MIT/Apache-2.0, no GPL), and the build commands. **CI-only scope (per
+      decision):** real Store identity (reserved Name + Publisher ID), signing
+      secrets, and the `.msixupload` submission flow are deferred to Partner
+      Center and documented as the remaining steps in `STORE.md` — no account was
+      wired in. MSIX-packaging msbuild args confirmed via Microsoft Learn first.
+      *Unverified here (can't run Actions / no runner):* the workflow's first live
+      run, esp. that `windows-latest` has the 10.0.26100 SDK and that ARM64 R2R
+      cross-gen succeeds.
 
 Added after the initial plan — **tackled next, before Slice 4 (startup) and
 Slice 5 (store):**
