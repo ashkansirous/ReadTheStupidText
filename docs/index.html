@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Read The Stupid Text</title>
+  <meta name="description" content="A lightweight Windows tray app that reads selected or copied text aloud with natural neural voices — fully offline." />
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      line-height: 1.6; max-width: 720px; margin: 0 auto; padding: 3rem 1.25rem 4rem;
+      color: #1a1a2e; background: #fbfbfd; text-align: center;
+    }
+    @media (prefers-color-scheme: dark) {
+      body { color: #e6e6ea; background: #1b1b1f; }
+      a.btn { background: #5b8df0; }
+      .sub { color: #a0a0a8; }
+    }
+    .glyph {
+      width: 96px; height: 96px; border-radius: 22px; margin: 0 auto 1.25rem;
+      background: linear-gradient(135deg, #5B57E8, #3B82F6);
+      display: flex; align-items: center; justify-content: center; font-size: 2.6rem;
+    }
+    h1 { font-size: 2rem; margin: .25rem 0; }
+    .sub { color: #555; font-size: 1.1rem; margin-top: 0; }
+    .features { text-align: left; display: inline-block; margin: 1.5rem auto; }
+    .features li { margin: .35rem 0; }
+    a.btn {
+      display: inline-block; margin: 1.5rem .4rem 0; padding: .7rem 1.4rem; border-radius: 10px;
+      background: #3b6fe3; color: #fff; text-decoration: none; font-weight: 600;
+    }
+    a.btn.alt { background: transparent; border: 1px solid rgba(128,128,128,.4); color: inherit; }
+    footer { margin-top: 3rem; font-size: .85rem; color: #888; }
+    footer a { color: inherit; }
+  </style>
+</head>
+<body>
+  <div class="glyph">👓</div>
+  <h1>Read The Stupid Text</h1>
+  <p class="sub">Reads any selected or copied text aloud — in natural neural voices, at the speed you choose. Fully offline.</p>
+
+  <ul class="features">
+    <li>🔊 10 natural, on-device neural voices (no internet)</li>
+    <li>⏩ Smooth 0.5×–2.0× speed, changeable live</li>
+    <li>🖱️ Auto-read on select, on copy, or via global hotkey (Ctrl+Win+R)</li>
+    <li>🪶 Lives quietly in the system tray</li>
+    <li>🔒 No account, no telemetry, no data leaves your PC</li>
+  </ul>
+
+  <div>
+    <a class="btn" href="https://apps.microsoft.com/detail/9NGT1BN1H92V">Get it on the Microsoft Store</a>
+    <a class="btn alt" href="https://github.com/ashkansirous/ReadTheStupidText">View on GitHub</a>
+  </div>
+
+  <footer>
+    &copy; 2026 Ashkan Sirous &middot; MIT License &middot; <a href="privacy.html">Privacy Policy</a>
+  </footer>
+</body>
+</html>
