@@ -23,6 +23,8 @@ public sealed class UiaSelectionMonitor : ISelectionMonitor
 
     public event EventHandler<string>? SelectionChanged;
 
+    public event EventHandler? SelectionCleared;
+
     public bool IsRunning => _running;
 
     public void Start()
@@ -63,7 +65,20 @@ public sealed class UiaSelectionMonitor : ISelectionMonitor
         }
 
         string? text = TryReadSelection(element);
-        if (string.IsNullOrWhiteSpace(text) || text == _lastText)
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            // Deselection: signal once on the transition from a selection to none
+            // so an in-progress read can be interrupted.
+            if (_lastText is not null)
+            {
+                _lastText = null;
+                SelectionCleared?.Invoke(this, EventArgs.Empty);
+            }
+
+            return;
+        }
+
+        if (text == _lastText)
         {
             return;
         }

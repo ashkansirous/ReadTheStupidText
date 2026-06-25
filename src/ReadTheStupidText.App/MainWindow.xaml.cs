@@ -1,3 +1,4 @@
+using ReadTheStupidText.Application.Activity;
 using ReadTheStupidText.Application.Input;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Startup;
@@ -22,6 +23,7 @@ public sealed partial class MainWindow : Window
     private const string AutoReadLabel = "Auto-read on selection";
     private const string StartupLabel = "Launch at startup";
     private const string VoiceLabel = "Voice";
+    private const string ActivityLogLabel = "Show activity log";
 
     private static readonly Uri DarkTrayIconUri = new("ms-appx:///Assets/TrayIconDark.ico");
     private static readonly Uri LightTrayIconUri = new("ms-appx:///Assets/TrayIconLight.ico");
@@ -29,6 +31,7 @@ public sealed partial class MainWindow : Window
     private readonly ReadAloudService _readAloud;
     private readonly IHotkeyService _hotkey;
     private readonly IStartupService _startup;
+    private readonly IActivityLog _activityLog;
     private readonly DispatcherQueue _dispatcher = DispatcherQueue.GetForCurrentThread();
     private readonly Windows.UI.ViewManagement.UISettings _uiSettings = new();
 
@@ -41,9 +44,11 @@ public sealed partial class MainWindow : Window
     private readonly RelayCommand _setSpeedCommand;
     private readonly RelayCommand _setVoiceCommand;
     private readonly RelayCommand _toggleControlPanelCommand;
+    private readonly RelayCommand _showActivityLogCommand;
     private readonly RelayCommand _quitCommand;
 
     private readonly ControlPanelWindow _controlPanel;
+    private ActivityLogWindow? _logWindow;
 
     private MenuFlyout? _flyout;
     private MenuFlyoutItem? _playPauseItem;
@@ -57,11 +62,12 @@ public sealed partial class MainWindow : Window
     private ToggleMenuFlyoutItem? _customSpeedItem;
     private int _speedStartIndex;
 
-    public MainWindow(ReadAloudService readAloud, IHotkeyService hotkey, IStartupService startup)
+    public MainWindow(ReadAloudService readAloud, IHotkeyService hotkey, IStartupService startup, IActivityLog activityLog)
     {
         _readAloud = readAloud;
         _hotkey = hotkey;
         _startup = startup;
+        _activityLog = activityLog;
 
         // The left-click control panel shares the same services as the tray menu,
         // so both surfaces read and write the same state.
@@ -73,6 +79,7 @@ public sealed partial class MainWindow : Window
         _setSpeedCommand = new RelayCommand(p => ApplySpeed((PlaybackRate)p!));
         _setVoiceCommand = new RelayCommand(p => ApplyVoice((string)p!));
         _toggleControlPanelCommand = new RelayCommand(_ => _controlPanel.Toggle());
+        _showActivityLogCommand = new RelayCommand(_ => ShowActivityLog());
         _quitCommand = new RelayCommand(_ => Quit());
 
         InitializeComponent();
@@ -181,9 +188,23 @@ public sealed partial class MainWindow : Window
         }
 
         flyout.Items.Add(new MenuFlyoutSeparator());
+        flyout.Items.Add(new MenuFlyoutItem { Text = ActivityLogLabel, Command = _showActivityLogCommand });
         flyout.Items.Add(new MenuFlyoutItem { Text = QuitLabel, Command = _quitCommand });
 
         return flyout;
+    }
+
+    // Opens (or focuses) the live activity-log window. Single instance; recreated
+    // after the user closes it.
+    private void ShowActivityLog()
+    {
+        if (_logWindow is null)
+        {
+            _logWindow = new ActivityLogWindow(_activityLog);
+            _logWindow.Closed += (_, _) => _logWindow = null;
+        }
+
+        _logWindow.Activate();
     }
 
     // The Voice submenu lists the installed Windows voices (an open set), with a
@@ -347,6 +368,7 @@ public sealed partial class MainWindow : Window
         _hotkey.Dispose();
         TrayIcon.Dispose();
         _controlPanel.Close();
+        _logWindow?.Close();
         Application.Current.Exit();
     }
 

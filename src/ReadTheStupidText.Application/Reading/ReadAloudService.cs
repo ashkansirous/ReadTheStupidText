@@ -1,5 +1,7 @@
+using ReadTheStupidText.Application.Activity;
 using ReadTheStupidText.Application.Input;
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Domain.Activity;
 using ReadTheStupidText.Domain.Reading;
 
 namespace ReadTheStupidText.Application.Reading;
@@ -25,10 +27,15 @@ public sealed class ReadAloudService : IDisposable
     private readonly ISelectionMonitor _selectionMonitor;
     private readonly IVoiceCatalog _voices;
     private readonly IVoiceModelService _voiceModel;
+    private readonly IActivityLog _log;
     private readonly ISettingsStore _settings;
 
     // Cancels a pending debounced read when a newer selection supersedes it.
     private CancellationTokenSource? _selectionCts;
+
+    // The entry currently pending or being read, tracked so a new selection,
+    // deselect, or completion can transition it (ignored/interrupted/read).
+    private ActivityEntry? _activeEntry;
 
     public ReadAloudService(
         ISpeechReader reader,
@@ -38,6 +45,7 @@ public sealed class ReadAloudService : IDisposable
         ISelectionMonitor selectionMonitor,
         IVoiceCatalog voices,
         IVoiceModelService voiceModel,
+        IActivityLog log,
         ISettingsStore settings)
     {
         _reader = reader;
@@ -47,12 +55,15 @@ public sealed class ReadAloudService : IDisposable
         _selectionMonitor = selectionMonitor;
         _voices = voices;
         _voiceModel = voiceModel;
+        _log = log;
         _settings = settings;
 
         _reader.SetSpeed(_settings.Speed);
         ApplyPersistedVoice();
         _hotkey.Pressed += OnHotkeyPressed;
         _selectionMonitor.SelectionChanged += OnSelectionChanged;
+        _selectionMonitor.SelectionCleared += OnSelectionCleared;
+        _reader.StateChanged += OnReaderStateChanged;
 
         // The neural voice model ships in the package; initialize locates it and
         // marks itself ready, then we apply the voice and refresh the UI.
@@ -128,25 +139,10 @@ public sealed class ReadAloudService : IDisposable
     /// neural model loaded), so control surfaces can rebuild their pickers.</summary>
     public event EventHandler? VoicesChanged;
 
-    /// <summary>Copies the current selection, then reads it aloud.</summary>
-    public async Task ReadSelectionAsync()
-    {
-        await _selectionCopier.CopyAsync();
-        await ReadClipboardAsync();
-    }
-
-    /// <summary>Reads whatever text is already on the clipboard aloud.</summary>
-    public async Task ReadClipboardAsync()
-    {
-        var text = await _clipboard.GetTextAsync();
-        await SpeakAsync(text);
-    }
-
     /// <summary>
     /// The "Play" action shared by the tray menu and control panel: pauses if
     /// playing, resumes if paused, and when idle starts a fresh read of the
-    /// current selection (which falls back to the clipboard when nothing is
-    /// selected — see <see cref="ReadSelectionAsync"/>).
+    /// current selection (falling back to the clipboard when nothing is selected).
     /// </summary>
     public Task PlayPauseOrReadAsync()
     {
@@ -159,7 +155,7 @@ public sealed class ReadAloudService : IDisposable
                 _reader.Resume();
                 return Task.CompletedTask;
             default:
-                return ReadSelectionAsync();
+                return ReadCopiedSelectionAsync(ActivitySource.Manual);
         }
     }
 
@@ -206,39 +202,119 @@ public sealed class ReadAloudService : IDisposable
         }
     }
 
-    private async Task SpeakAsync(string? text)
+    // The hotkey copies the focused selection then reads it — the fallback for
+    // non-UIA apps, working whether or not auto-read is enabled.
+    private async void OnHotkeyPressed(object? sender, EventArgs e) =>
+        await ReadCopiedSelectionAsync(ActivitySource.Hotkey);
+
+    // Copies the current selection to the clipboard and reads it (hotkey / manual).
+    private async Task ReadCopiedSelectionAsync(ActivitySource source)
     {
-        if (!string.IsNullOrWhiteSpace(text))
+        await _selectionCopier.CopyAsync();
+        string? text = await _clipboard.GetTextAsync();
+        if (string.IsNullOrWhiteSpace(text))
         {
-            await _reader.SpeakAsync(text);
+            return;
         }
+
+        ActivityEntry entry = StartEntry(source, text);
+        await ReadEntryAsync(entry, text);
     }
 
-    // The hotkey is an explicit, manual action — it reads the selection whether
-    // or not auto-read is enabled, so it remains the fallback for non-UIA apps.
-    private async void OnHotkeyPressed(object? sender, EventArgs e) => await ReadSelectionAsync();
-
-    // Debounced: each new selection cancels the previous pending read, so a
-    // drag-select (many rapid events) results in one read of the final text.
+    // Auto-read: debounced so a drag-select (many events) collapses to one read.
     private void OnSelectionChanged(object? sender, string text)
     {
         var cts = new CancellationTokenSource();
         CancellationTokenSource? previous = Interlocked.Exchange(ref _selectionCts, cts);
         previous?.Cancel();
         previous?.Dispose();
-        _ = ReadAfterDebounceAsync(text, cts.Token);
+
+        ActivityEntry entry = StartEntry(ActivitySource.AutoRead, text);
+        _ = ReadAfterDebounceAsync(entry, text, cts.Token);
     }
 
-    private async Task ReadAfterDebounceAsync(string text, CancellationToken token)
+    private async Task ReadAfterDebounceAsync(ActivityEntry entry, string text, CancellationToken token)
     {
         try
         {
             await Task.Delay(SelectionDebounceMs, token);
-            await SpeakAsync(text);
         }
         catch (OperationCanceledException)
         {
-            // Superseded by a newer selection before the quiet period elapsed.
+            return; // superseded during the wait; already marked ignored/interrupted
+        }
+
+        await ReadEntryAsync(entry, text);
+    }
+
+    // A deselect stops a read in progress (and drops a still-pending one).
+    private void OnSelectionCleared(object? sender, EventArgs e)
+    {
+        _selectionCts?.Cancel();
+        Supersede();
+    }
+
+    // Finalizes the prior active entry (pending → ignored, reading → interrupted
+    // and the reader paused), then opens a new pending entry and makes it active.
+    private ActivityEntry StartEntry(ActivitySource source, string text)
+    {
+        Supersede();
+        ActivityEntry entry = _log.Add(source, text);
+        _activeEntry = entry;
+        return entry;
+    }
+
+    private void Supersede()
+    {
+        ActivityEntry? active = _activeEntry;
+        _activeEntry = null;
+        if (active is null)
+        {
+            return;
+        }
+
+        if (active.State == ActivityState.Pending)
+        {
+            _log.SetState(active, ActivityState.Ignored);
+        }
+        else if (active.State == ActivityState.Reading)
+        {
+            _reader.Pause();
+            _log.SetState(active, ActivityState.Interrupted);
+        }
+    }
+
+    private async Task ReadEntryAsync(ActivityEntry entry, string text)
+    {
+        try
+        {
+            _log.SetState(entry, ActivityState.Reading);
+            await _reader.SpeakAsync(text);
+            // Completion → Read is signalled when the reader returns to Idle
+            // (OnReaderStateChanged); a synthesis/playback error falls below.
+        }
+        catch
+        {
+            _log.SetState(entry, ActivityState.Failed);
+            ClearIfActive(entry);
+        }
+    }
+
+    // Natural end of playback marks the active read as Read.
+    private void OnReaderStateChanged(object? sender, PlaybackState state)
+    {
+        if (state == PlaybackState.Idle && _activeEntry is { State: ActivityState.Reading } entry)
+        {
+            _log.SetState(entry, ActivityState.Read);
+            _activeEntry = null;
+        }
+    }
+
+    private void ClearIfActive(ActivityEntry entry)
+    {
+        if (ReferenceEquals(_activeEntry, entry))
+        {
+            _activeEntry = null;
         }
     }
 
@@ -246,6 +322,8 @@ public sealed class ReadAloudService : IDisposable
     {
         _hotkey.Pressed -= OnHotkeyPressed;
         _selectionMonitor.SelectionChanged -= OnSelectionChanged;
+        _selectionMonitor.SelectionCleared -= OnSelectionCleared;
+        _reader.StateChanged -= OnReaderStateChanged;
         _selectionMonitor.Stop();
         _selectionCts?.Cancel();
         _selectionCts?.Dispose();

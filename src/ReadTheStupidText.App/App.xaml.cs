@@ -1,3 +1,4 @@
+using ReadTheStupidText.Application.Activity;
 using ReadTheStupidText.Application.Input;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
@@ -47,6 +48,7 @@ public partial class App : Application
         services.AddSingleton<ISelectionMonitor, UiaSelectionMonitor>();
         services.AddSingleton<IStartupService, StartupTaskService>();
         services.AddSingleton<ISettingsStore, LocalSettingsStore>();
+        services.AddSingleton<IActivityLog, ActivityLog>();
         services.AddSingleton<ReadAloudService>();
         return services.BuildServiceProvider();
     }
@@ -60,6 +62,7 @@ public partial class App : Application
         _window = new MainWindow(
             Services.GetRequiredService<ReadAloudService>(),
             Services.GetRequiredService<IHotkeyService>(),
-            Services.GetRequiredService<IStartupService>());
+            Services.GetRequiredService<IStartupService>(),
+            Services.GetRequiredService<IActivityLog>());
     }
 }

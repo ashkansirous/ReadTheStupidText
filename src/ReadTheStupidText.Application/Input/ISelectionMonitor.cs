@@ -10,6 +10,10 @@ public interface ISelectionMonitor : IDisposable
     /// <summary>Raised with the selected text when a selection changes.</summary>
     event EventHandler<string>? SelectionChanged;
 
+    /// <summary>Raised when a selection is cleared (deselected), so an in-progress
+    /// read can be interrupted.</summary>
+    event EventHandler? SelectionCleared;
+
     bool IsRunning { get; }
 
     void Start();
