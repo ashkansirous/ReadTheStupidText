@@ -19,7 +19,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [x64, ARM64]
+        include:
+          - platform: x64
+            rid: win-x64
+          - platform: ARM64
+            rid: win-arm64
 
     steps:
       - name: Checkout (with LFS — the neural voice model is LFS-tracked)
@@ -35,12 +39,16 @@ jobs:
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2
 
+      # RuntimeIdentifier is passed explicitly because the csproj otherwise infers
+      # it from RuntimeInformation.ProcessArchitecture, and setup-msbuild puts the
+      # 32-bit MSBuild.exe on PATH (reports x86) → NETSDK1032 against Platform=x64.
       - name: Build and package MSIX (${{ matrix.platform }})
         run: >
           msbuild src/ReadTheStupidText.App/ReadTheStupidText.App.csproj
           /restore
           /p:Configuration=Release
           /p:Platform=${{ matrix.platform }}
+          /p:RuntimeIdentifier=${{ matrix.rid }}
           /p:GenerateAppxPackageOnBuild=true
           /p:AppxPackageDir=${{ github.workspace }}\AppPackages\
           /p:UapAppxPackageBuildMode=SideloadOnly
