@@ -7,27 +7,31 @@ namespace ReadTheStupidText.Infrastructure.Reading;
 /// order sherpa-onnx packs them: the bundle's <c>voice.bin</c> is built from
 /// <c>sorted(*.json)</c>, i.e. F1..F5 then M1..M5, so sids 0–4 are female and
 /// 5–9 male. Voice ids are prefixed so a persisted id can't collide.
+/// Display names are <i>Overlord</i> characters (5 female, 5 male); only the
+/// names are cosmetic — the <see cref="IdPrefix"/>-prefixed ids and sid order
+/// are stable, so a persisted choice survives the rename.
 /// </summary>
 internal static class SupertonicVoiceTable
 {
     public const string IdPrefix = "supertonic:";
 
     // Index == speaker id (sid). Order matches sorted voice-style filenames.
+    // Display names map to Overlord characters (female F1..F5, male M1..M5).
     private static readonly (string Key, string DisplayName)[] Entries =
     [
-        ("F1", "Female 1"),
-        ("F2", "Female 2"),
-        ("F3", "Female 3"),
-        ("F4", "Female 4"),
-        ("F5", "Female 5"),
-        ("M1", "Male 1"),
-        ("M2", "Male 2"),
-        ("M3", "Male 3"),
-        ("M4", "Male 4"),
-        ("M5", "Male 5"),
+        ("F1", "Albedo"),
+        ("F2", "Shalltear Bloodfallen"),
+        ("F3", "Yuri Alpha"),
+        ("F4", "Lupusregina Beta"),
+        ("F5", "Narberal Gamma"),
+        ("M1", "Momonga"),
+        ("M2", "Demiurge"),
+        ("M3", "Cocytus"),
+        ("M4", "Sebas Tian"),
+        ("M5", "Pandora's Actor"),
     ];
 
-    /// <summary>The default voice: the first male style (M1).</summary>
+    /// <summary>The default voice: the first male style (M1, "Momonga").</summary>
     public const string DefaultKey = "M1";
 
     public static IReadOnlyList<VoiceInfo> Voices { get; } =
