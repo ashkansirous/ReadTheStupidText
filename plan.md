@@ -442,19 +442,19 @@ Commits (default patch) and **stays `0.x`** — it is **not** forced to `v1.0.0`
 the app reaches `1.0.0` only when the user declares it stable. Ordered
 smallest-first; each is independently shippable.
 
-- [ ] **Slice 11 — Overlord voice names.** (Decision 19) Rename the ten
+- [ ] **Slice 11 — Overlord voice names.** ([#46](https://github.com/ashkansirous/ReadTheStupidText/issues/46)) (Decision 19) Rename the ten
       `DisplayName`s in `SupertonicVoiceTable` to the Overlord mapping (default
       **Momonga** = M1); leave the `supertonic:` ids and sid order untouched.
       Smallest end-to-end change — the picker/menu show the new names with no
       engine change.
-- [ ] **Slice 12 — Split auto-read into two toggles.** (Decision 22) Add
+- [ ] **Slice 12 — Split auto-read into two toggles.** ([#48](https://github.com/ashkansirous/ReadTheStupidText/issues/48)) (Decision 22) Add
       `AutoReadOnSelection` + `AutoReadOnCopy` to `ISettingsStore` and its impl
       (both default on; migrate an old `IsEnabled=false` to both off). Gate the
       UIA `ISelectionMonitor` and the `IClipboardMonitor` independently in
       `ReadAloudService`. Surface two `ToggleSwitch`es in the right-click menu
       **and** the control panel, kept in sync via the existing event pattern.
 - [ ] **Slice 13 — "Media Card" control-panel redesign + media-player
-      progress.** (Decisions 20, 21) Rebuild `ControlPanelWindow` to the
+      progress.** ([#52](https://github.com/ashkansirous/ReadTheStupidText/issues/52)) (Decisions 20, 21) Rebuild `ControlPanelWindow` to the
       `design_handoff_tray_panel/` spec with native WinUI Fluent controls and
       light/dark theme resources: gradient header + glyph watermark + eyebrow/
       title, animated waveform + dynamic status text, transport row (play/pause
@@ -464,19 +464,19 @@ smallest-first; each is independently shippable.
       progress bar to `MediaPlayer` position + chunk completion; seek is
       best-effort (chunk-boundary resync) only.
 - [ ] **Slice 14 — MIT license + Conventional-Commits auto-release.**
-      (Decisions 16, 17) Add a `LICENSE` file (MIT, attributed to Ashkan Sirous)
+      ([#57](https://github.com/ashkansirous/ReadTheStupidText/issues/57)) (Decisions 16, 17) Add a `LICENSE` file (MIT, attributed to Ashkan Sirous)
       and replace README's "License: TBD". Add a CI job/workflow that, on merge
       to `main`, computes the next SemVer from Conventional Commits, writes it
       into `Package.appxmanifest` `Version` (`x.y.z.0`), commits the bump, and
       pushes a `v<x.y.z>` tag — which the existing `build.yml` release job turns
       into a GitHub Release. Document the commit convention in `CLAUDE.md`.
-- [ ] **Slice 15 — Deep code-review pass + fixes.** (Item 5) Run
+- [ ] **Slice 15 — Deep code-review pass + fixes.** ([#61](https://github.com/ashkansirous/ReadTheStupidText/issues/61)) (Item 5) Run
       `/code-review-in-detail` over the full app, triage the findings, and fix
       the confirmed real bugs (each non-trivial fix referenced in the PR). The
       generated `summary-code-review.md` / `detailed-code-review.md` are the
       record. Gates the first release tag.
 - [ ] **Slice 16 — Store-pipeline finalize + signing docs, first release.**
-      (Decisions 18, and Slice 5's deferred Partner Center work) Verify
+      ([#64](https://github.com/ashkansirous/ReadTheStupidText/issues/64)) (Decisions 18, and Slice 5's deferred Partner Center work) Verify
       `store-submit.yml` is correct (kept **inert** — no account), refresh
       `STORE.md` with the remaining Partner Center steps and the **Azure Trusted
       Signing** upgrade path, and confirm the Conventional-Commits versioning
