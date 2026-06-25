@@ -26,9 +26,13 @@ public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
 
         _neural.StateChanged += (_, state) => Forward(_neural, state);
         _fallback.StateChanged += (_, state) => Forward(_fallback, state);
+        _neural.Completed += (_, _) => ForwardCompleted(_neural);
+        _fallback.Completed += (_, _) => ForwardCompleted(_fallback);
     }
 
     public event EventHandler<PlaybackState>? StateChanged;
+
+    public event EventHandler? Completed;
 
     public PlaybackState State => _active.State;
 
@@ -41,6 +45,8 @@ public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
     public void Pause() => _active.Pause();
 
     public void Resume() => _active.Resume();
+
+    public void Stop() => _active.Stop();
 
     public void SetSpeed(PlaybackRate speed)
     {
@@ -56,6 +62,14 @@ public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
         if (ReferenceEquals(source, _active))
         {
             StateChanged?.Invoke(this, state);
+        }
+    }
+
+    private void ForwardCompleted(ISpeechReader source)
+    {
+        if (ReferenceEquals(source, _active))
+        {
+            Completed?.Invoke(this, EventArgs.Empty);
         }
     }
 

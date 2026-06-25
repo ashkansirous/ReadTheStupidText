@@ -18,9 +18,12 @@ public interface IActivityLog
     /// <summary>Raised when an existing entry's <see cref="ActivityEntry.State"/> changes.</summary>
     event EventHandler<ActivityEntry>? EntryChanged;
 
-    /// <summary>Appends a new entry in the <see cref="ActivityState.Pending"/> state.</summary>
-    ActivityEntry Add(ActivitySource source, string text);
+    /// <summary>Appends a new entry in the <see cref="ActivityState.Pending"/> state,
+    /// tagged with how it was triggered and the window it came from.</summary>
+    ActivityEntry Add(ActivityTrigger trigger, WindowSource? window, string text);
 
-    /// <summary>Transitions an entry to a new state (no-op if unchanged).</summary>
-    void SetState(ActivityEntry entry, ActivityState state);
+    /// <summary>Transitions an entry to a new state and reason (no-op if both
+    /// unchanged). The reason explains a deviation from the read-to-completion
+    /// path and defaults to <see cref="ActivityReason.None"/>.</summary>
+    void SetState(ActivityEntry entry, ActivityState state, ActivityReason reason = ActivityReason.None);
 }

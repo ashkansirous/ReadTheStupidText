@@ -46,6 +46,8 @@ public partial class App : Application
         services.AddSingleton<IHotkeyService, GlobalHotkeyService>();
         services.AddSingleton<ISelectionCopier, SelectionCopier>();
         services.AddSingleton<ISelectionMonitor, UiaSelectionMonitor>();
+        services.AddSingleton<IClipboardMonitor, ClipboardFormatListener>();
+        services.AddSingleton<IForegroundWindow, ForegroundWindowProbe>();
         services.AddSingleton<IStartupService, StartupTaskService>();
         services.AddSingleton<ISettingsStore, LocalSettingsStore>();
         services.AddSingleton<IActivityLog, ActivityLog>();
@@ -62,6 +64,7 @@ public partial class App : Application
         _window = new MainWindow(
             Services.GetRequiredService<ReadAloudService>(),
             Services.GetRequiredService<IHotkeyService>(),
+            Services.GetRequiredService<IClipboardMonitor>(),
             Services.GetRequiredService<IStartupService>(),
             Services.GetRequiredService<IActivityLog>());
     }

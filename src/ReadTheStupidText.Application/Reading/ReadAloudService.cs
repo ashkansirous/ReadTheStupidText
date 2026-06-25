@@ -7,10 +7,13 @@ using ReadTheStupidText.Domain.Reading;
 namespace ReadTheStupidText.Application.Reading;
 
 /// <summary>
-/// Coordinates the read-aloud use case. Two trigger paths feed the reader: the
+/// Coordinates the read-aloud use case. Three trigger paths feed the reader: the
 /// global hotkey (always available — copies the focused selection and reads it,
-/// the fallback for non-UIA apps), and the UI Automation selection monitor
-/// (auto-read, gated by <see cref="IsEnabled"/>). Also forwards the flyout's
+/// the fallback for non-UIA apps), the UI Automation selection monitor (auto-read
+/// on selection), and the clipboard monitor (auto-read on copy — the path for the
+/// console and other apps with no UIA text selection). The two auto-read paths are
+/// gated by <see cref="IsEnabled"/>; <see cref="_lastTriggeredText"/> de-dupes the
+/// same text arriving from more than one path. Also forwards the flyout's
 /// play/pause and speed choices. Speed and enabled state are persisted.
 /// </summary>
 public sealed class ReadAloudService : IDisposable
@@ -25,6 +28,8 @@ public sealed class ReadAloudService : IDisposable
     private readonly IHotkeyService _hotkey;
     private readonly ISelectionCopier _selectionCopier;
     private readonly ISelectionMonitor _selectionMonitor;
+    private readonly IClipboardMonitor _clipboardMonitor;
+    private readonly IForegroundWindow _foreground;
     private readonly IVoiceCatalog _voices;
     private readonly IVoiceModelService _voiceModel;
     private readonly IActivityLog _log;
@@ -37,12 +42,23 @@ public sealed class ReadAloudService : IDisposable
     // deselect, or completion can transition it (ignored/interrupted/read).
     private ActivityEntry? _activeEntry;
 
+    // The text of the most recent read we started, on any path. Used to drop the
+    // clipboard echo of our own hotkey copy (and a copy-on-select duplicate of a
+    // UIA selection) so the same text isn't read twice from two sources.
+    private string? _lastTriggeredText;
+
+    // True only while a hotkey/manual read is synthesizing its own Ctrl+C, so the
+    // clipboard update that copy produces isn't mistaken for a user copy.
+    private bool _copyingForRead;
+
     public ReadAloudService(
         ISpeechReader reader,
         IClipboardReader clipboard,
         IHotkeyService hotkey,
         ISelectionCopier selectionCopier,
         ISelectionMonitor selectionMonitor,
+        IClipboardMonitor clipboardMonitor,
+        IForegroundWindow foreground,
         IVoiceCatalog voices,
         IVoiceModelService voiceModel,
         IActivityLog log,
@@ -53,6 +69,8 @@ public sealed class ReadAloudService : IDisposable
         _hotkey = hotkey;
         _selectionCopier = selectionCopier;
         _selectionMonitor = selectionMonitor;
+        _clipboardMonitor = clipboardMonitor;
+        _foreground = foreground;
         _voices = voices;
         _voiceModel = voiceModel;
         _log = log;
@@ -63,7 +81,9 @@ public sealed class ReadAloudService : IDisposable
         _hotkey.Pressed += OnHotkeyPressed;
         _selectionMonitor.SelectionChanged += OnSelectionChanged;
         _selectionMonitor.SelectionCleared += OnSelectionCleared;
+        _clipboardMonitor.ContentChanged += OnClipboardContentChanged;
         _reader.StateChanged += OnReaderStateChanged;
+        _reader.Completed += OnReaderCompleted;
 
         // The neural voice model ships in the package; initialize locates it and
         // marks itself ready, then we apply the voice and refresh the UI.
@@ -155,7 +175,7 @@ public sealed class ReadAloudService : IDisposable
                 _reader.Resume();
                 return Task.CompletedTask;
             default:
-                return ReadCopiedSelectionAsync(ActivitySource.Manual);
+                return ReadCopiedSelectionAsync(ActivityTrigger.Manual);
         }
     }
 
@@ -205,31 +225,68 @@ public sealed class ReadAloudService : IDisposable
     // The hotkey copies the focused selection then reads it — the fallback for
     // non-UIA apps, working whether or not auto-read is enabled.
     private async void OnHotkeyPressed(object? sender, EventArgs e) =>
-        await ReadCopiedSelectionAsync(ActivitySource.Hotkey);
+        await ReadCopiedSelectionAsync(ActivityTrigger.Hotkey);
 
     // Copies the current selection to the clipboard and reads it (hotkey / manual).
-    private async Task ReadCopiedSelectionAsync(ActivitySource source)
+    // The synthesized Ctrl+C itself changes the clipboard, so the resulting update
+    // is suppressed (see _copyingForRead) to avoid a duplicate clipboard auto-read.
+    private async Task ReadCopiedSelectionAsync(ActivityTrigger trigger)
     {
-        await _selectionCopier.CopyAsync();
-        string? text = await _clipboard.GetTextAsync();
+        string? text;
+        _copyingForRead = true;
+        try
+        {
+            await _selectionCopier.CopyAsync();
+            text = await _clipboard.GetTextAsync();
+        }
+        finally
+        {
+            _copyingForRead = false;
+        }
+
         if (string.IsNullOrWhiteSpace(text))
         {
             return;
         }
 
-        ActivityEntry entry = StartEntry(source, text);
+        ActivityEntry entry = StartEntry(trigger, text);
         await ReadEntryAsync(entry, text);
     }
 
-    // Auto-read: debounced so a drag-select (many events) collapses to one read.
-    private void OnSelectionChanged(object? sender, string text)
+    // Auto-read from a UI Automation selection change.
+    private void OnSelectionChanged(object? sender, string text) =>
+        BeginAutoRead(ActivityTrigger.AutoRead, text);
+
+    // Auto-read from a clipboard copy — the path for the console and other apps
+    // that expose no UIA selection. Skipped while we're copying for a hotkey/manual
+    // read (our own Ctrl+C echo) and when the text repeats one we just triggered
+    // (e.g. a copy-on-select duplicate of a UIA selection).
+    private async void OnClipboardContentChanged(object? sender, EventArgs e)
+    {
+        if (!IsEnabled || _copyingForRead)
+        {
+            return;
+        }
+
+        string? text = await _clipboard.GetTextAsync();
+        if (string.IsNullOrWhiteSpace(text) || text == _lastTriggeredText)
+        {
+            return;
+        }
+
+        BeginAutoRead(ActivityTrigger.Clipboard, text);
+    }
+
+    // Shared auto-read entry point: debounced so a drag-select (many events) or a
+    // multi-message clipboard update collapses into a single read.
+    private void BeginAutoRead(ActivityTrigger trigger, string text)
     {
         var cts = new CancellationTokenSource();
         CancellationTokenSource? previous = Interlocked.Exchange(ref _selectionCts, cts);
         previous?.Cancel();
         previous?.Dispose();
 
-        ActivityEntry entry = StartEntry(ActivitySource.AutoRead, text);
+        ActivityEntry entry = StartEntry(trigger, text);
         _ = ReadAfterDebounceAsync(entry, text, cts.Token);
     }
 
@@ -251,20 +308,22 @@ public sealed class ReadAloudService : IDisposable
     private void OnSelectionCleared(object? sender, EventArgs e)
     {
         _selectionCts?.Cancel();
-        Supersede();
+        Supersede(ActivityReason.Deselected);
     }
 
     // Finalizes the prior active entry (pending → ignored, reading → interrupted
-    // and the reader paused), then opens a new pending entry and makes it active.
-    private ActivityEntry StartEntry(ActivitySource source, string text)
+    // and the reader paused), then opens a new pending entry — tagged with the
+    // foreground window it came from — and makes it active.
+    private ActivityEntry StartEntry(ActivityTrigger trigger, string text)
     {
-        Supersede();
-        ActivityEntry entry = _log.Add(source, text);
+        Supersede(ActivityReason.NewSelection);
+        _lastTriggeredText = text;
+        ActivityEntry entry = _log.Add(trigger, _foreground.Capture(), text);
         _activeEntry = entry;
         return entry;
     }
 
-    private void Supersede()
+    private void Supersede(ActivityReason reason)
     {
         ActivityEntry? active = _activeEntry;
         _activeEntry = null;
@@ -275,12 +334,14 @@ public sealed class ReadAloudService : IDisposable
 
         if (active.State == ActivityState.Pending)
         {
-            _log.SetState(active, ActivityState.Ignored);
+            _log.SetState(active, ActivityState.Ignored, reason);
         }
-        else if (active.State == ActivityState.Reading)
+        else if (active.State is ActivityState.GeneratingAudio or ActivityState.Reading)
         {
-            _reader.Pause();
-            _log.SetState(active, ActivityState.Interrupted);
+            // Stop (not Pause) so the superseded synthesis/playback is cancelled —
+            // otherwise a slow long read could still play after this point.
+            _reader.Stop();
+            _log.SetState(active, ActivityState.Interrupted, reason);
         }
     }
 
@@ -288,22 +349,34 @@ public sealed class ReadAloudService : IDisposable
     {
         try
         {
-            _log.SetState(entry, ActivityState.Reading);
+            // Synthesis runs first (no audio yet) → GeneratingAudio; the reader's
+            // first Playing transition flips it to Reading (OnReaderStateChanged),
+            // natural completion → Read (OnReaderCompleted), errors → catch below.
+            _log.SetState(entry, ActivityState.GeneratingAudio);
             await _reader.SpeakAsync(text);
-            // Completion → Read is signalled when the reader returns to Idle
-            // (OnReaderStateChanged); a synthesis/playback error falls below.
         }
         catch
         {
-            _log.SetState(entry, ActivityState.Failed);
+            _log.SetState(entry, ActivityState.Failed, ActivityReason.Error);
             ClearIfActive(entry);
         }
     }
 
-    // Natural end of playback marks the active read as Read.
+    // The reader starting to play flips the active entry from GeneratingAudio (the
+    // synthesis wait) to Reading. Later Playing transitions (per chunk) are no-ops.
     private void OnReaderStateChanged(object? sender, PlaybackState state)
     {
-        if (state == PlaybackState.Idle && _activeEntry is { State: ActivityState.Reading } entry)
+        if (state == PlaybackState.Playing && _activeEntry is { State: ActivityState.GeneratingAudio } entry)
+        {
+            _log.SetState(entry, ActivityState.Reading);
+        }
+    }
+
+    // Natural end of playback marks the active read as Read. Stop/supersede does
+    // not raise Completed, so an interrupted read is never mis-marked as Read.
+    private void OnReaderCompleted(object? sender, EventArgs e)
+    {
+        if (_activeEntry is { State: ActivityState.GeneratingAudio or ActivityState.Reading } entry)
         {
             _log.SetState(entry, ActivityState.Read);
             _activeEntry = null;
@@ -323,7 +396,9 @@ public sealed class ReadAloudService : IDisposable
         _hotkey.Pressed -= OnHotkeyPressed;
         _selectionMonitor.SelectionChanged -= OnSelectionChanged;
         _selectionMonitor.SelectionCleared -= OnSelectionCleared;
+        _clipboardMonitor.ContentChanged -= OnClipboardContentChanged;
         _reader.StateChanged -= OnReaderStateChanged;
+        _reader.Completed -= OnReaderCompleted;
         _selectionMonitor.Stop();
         _selectionCts?.Cancel();
         _selectionCts?.Dispose();

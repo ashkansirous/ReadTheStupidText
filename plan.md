@@ -128,6 +128,57 @@ this plan turns it into ordered, shippable vertical slices.
     auto-read is off; an entry that stalls before `reading` ⇒ a downstream
     reader issue.
 
+    *Follow-up (post-Slice-10 fixes):*
+    1. **Console / clipboard auto-read.** Reading the console (Windows Terminal /
+       PowerShell — the **primary use case**, e.g. Claude Code's responses) is now
+       supported: a Win32 clipboard-format listener (`IClipboardMonitor` =
+       `ClipboardFormatListener`, `WM_CLIPBOARDUPDATE` on the tray window) auto-reads
+       on **copy**, the only signal a console exposes (no UIA text selection). It's
+       gated by the auto-read toggle and tagged with the new `Clipboard`
+       **`ActivityTrigger`**. `ReadAloudService` de-dupes across the UIA, clipboard,
+       and hotkey paths (`_lastTriggeredText`, plus a `_copyingForRead` guard so the
+       hotkey's own synthesized Ctrl+C echo isn't re-read). Clipboard reads use the
+       **Win32** API (`ClipboardReader` → `OpenClipboard`/`GetClipboardData`), not the
+       WinRT clipboard, which is documented as readable only while focused — and this
+       tray window is never activated. *Console caveat:* a bare **selection** still
+       produces no signal; the user must **copy** (or enable Windows Terminal's
+       `copyOnSelect`, which makes selecting auto-copy → auto-read). The hotkey
+       remains the universal fallback.
+    2. **Reason column.** Each non-pending/non-read entry carries an
+       **`ActivityReason`** (`NewSelection` / `Deselected` / `Error`) surfaced as a
+       **Reason** column so a read that was ignored or interrupted says *why*. The
+       UIA monitor now distinguishes a genuine **empty selection** (deselect →
+       `SelectionCleared`) from a **transient cross-process read failure** (left
+       silent): previously a re-fired `TextSelectionChangedEvent` whose read threw
+       mid-selection looked like a deselect and **falsely ignored/interrupted** the
+       read the user wanted.
+    3. **Source (window) column.** Each entry records the foreground window it came
+       from (`WindowSource` = app + title, via `IForegroundWindow` /
+       `ForegroundWindowProbe` — `GetForegroundWindow` + process name + title), shown
+       as e.g. "Chrome — Inbox - Gmail". The old "Source" column (the trigger) was
+       renamed **Trigger** (`ActivitySource` → **`ActivityTrigger`**).
+    4. **Interrupt actually stops the audio (concurrency fix).** Previously
+       `SpeakAsync` synthesized off-thread then *unconditionally* swapped its audio
+       into the single shared `MediaPlayer`, and supersede only called `Pause()` — so
+       a slow long read finishing late would play *after/over* the short read that
+       replaced it (the "it still had them in a stack" bug; long reads also often
+       seemed to never play). The reader now carries a **generation counter +
+       synthesis `CancellationToken`**: a superseded synthesis is cancelled and can
+       never reach the player. `ISpeechReader` gained **`Stop()`** (supersede now
+       stops instead of pausing) and a **`Completed`** event raised only on natural
+       end — so an entry is marked `read` on genuine completion, never on a
+       stop-induced idle. Applied to both engines via `CompositeSpeechReader`.
+    5. **Chunked, concurrent synthesis (faster long reads).** The neural engine
+       synthesized the whole text in one slow `Generate` call. Now `SpeechTextChunker`
+       splits text over 200 chars on paragraph → sentence → word boundaries; chunks
+       synthesize **concurrently (degree 3, `SemaphoreSlim`)** but play **strictly in
+       order** via an ordered await + per-chunk `MediaEnded` hand-off, so playback
+       starts after the first chunk instead of after the whole text.
+    6. **`GeneratingAudio` activity state.** While a read is synthesizing (nothing
+       playing yet) the entry shows **`GeneratingAudio`** ("Generating audio"); it
+       flips to `reading` on the reader's first `Playing` transition. So the log now
+       surfaces the synthesis wait as its own state rather than appearing stuck.
+
 ## Changes
 
 Ordered as vertical slices — each is end-to-end and independently runnable.
@@ -321,7 +372,9 @@ Slice 5 (store):**
   package; the app does not install or expose Windows/Narrator voices for
   selection (the WinRT voice is only an internal safety-net fallback if the
   packaged model files are ever missing).
-- Reading from non-UIA apps *without* the hotkey fallback.
+- ~~Reading from non-UIA apps *without* the hotkey fallback.~~ **Now in scope**
+  (Slice 10 follow-up): auto-read on **clipboard copy** covers the console / other
+  non-UIA apps, with the hotkey still the always-on fallback.
 - Non-Store / sideload as a primary distribution channel (MSIX may be
   sideloaded for testing, but Store is the target).
 - A persistent/dockable settings window with its own taskbar presence, tabs,

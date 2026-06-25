@@ -15,10 +15,16 @@ public sealed class SpeechReader : ISpeechReader, IDisposable
 {
     private readonly SpeechSynthesizer _synthesizer = new();
     private readonly MediaPlayer _player = new() { AutoPlay = false };
+    private readonly object _gate = new();
 
     private MediaSource? _currentSource;
     private double _playbackRate = PlaybackRate.Default.Value;
     private PlaybackState _state = PlaybackState.Idle;
+
+    // See SupertonicSpeechReader: a generation guard keeps a superseded synthesis
+    // from reaching the shared player after a newer utterance replaced it.
+    private int _generation;
+    private CancellationTokenSource? _synthCts;
 
     public SpeechReader()
     {
@@ -29,17 +35,49 @@ public sealed class SpeechReader : ISpeechReader, IDisposable
 
     public event EventHandler<PlaybackState>? StateChanged;
 
+    public event EventHandler? Completed;
+
     public PlaybackState State => _state;
 
     public async Task SpeakAsync(string text)
     {
-        SpeechSynthesisStream stream = await _synthesizer.SynthesizeTextToStreamAsync(text);
+        (int generation, CancellationToken token) = BeginGeneration();
+
+        SpeechSynthesisStream stream;
+        try
+        {
+            stream = await _synthesizer.SynthesizeTextToStreamAsync(text).AsTask(token);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        if (!IsCurrent(generation))
+        {
+            stream.Dispose();
+            return;
+        }
+
         SwapSource(MediaSource.CreateFromStream(stream, stream.ContentType));
     }
 
     public void Pause() => _player.Pause();
 
     public void Resume() => _player.Play();
+
+    public void Stop()
+    {
+        lock (_gate)
+        {
+            _synthCts?.Cancel();
+            _generation++;
+        }
+
+        _player.Pause();
+        ClearSource();
+        UpdateState(PlaybackState.Idle);
+    }
 
     public void SetSpeed(PlaybackRate speed)
     {
@@ -58,11 +96,32 @@ public sealed class SpeechReader : ISpeechReader, IDisposable
         }
     }
 
+    private (int generation, CancellationToken token) BeginGeneration()
+    {
+        lock (_gate)
+        {
+            _synthCts?.Cancel();
+            _synthCts?.Dispose();
+            _synthCts = new CancellationTokenSource();
+            return (++_generation, _synthCts.Token);
+        }
+    }
+
+    private bool IsCurrent(int generation) => Volatile.Read(ref _generation) == generation;
+
     private void SwapSource(MediaSource source)
     {
         MediaSource? previous = _currentSource;
         _currentSource = source;
         _player.Source = source;
+        previous?.Dispose();
+    }
+
+    private void ClearSource()
+    {
+        _player.Source = null;
+        MediaSource? previous = _currentSource;
+        _currentSource = null;
         previous?.Dispose();
     }
 
@@ -72,7 +131,12 @@ public sealed class SpeechReader : ISpeechReader, IDisposable
         sender.Play();
     }
 
-    private void OnMediaEnded(MediaPlayer sender, object args) => UpdateState(PlaybackState.Idle);
+    // Natural end of playback (not a Stop, which clears the source without ending).
+    private void OnMediaEnded(MediaPlayer sender, object args)
+    {
+        UpdateState(PlaybackState.Idle);
+        Completed?.Invoke(this, EventArgs.Empty);
+    }
 
     private void OnPlaybackStateChanged(MediaPlaybackSession sender, object args)
     {
@@ -97,6 +161,8 @@ public sealed class SpeechReader : ISpeechReader, IDisposable
 
     public void Dispose()
     {
+        _synthCts?.Cancel();
+        _synthCts?.Dispose();
         _player.Dispose();
         _currentSource?.Dispose();
         _synthesizer.Dispose();

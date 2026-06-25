@@ -27,7 +27,7 @@ public sealed partial class ActivityLogWindow : Window
         _log = log;
         InitializeComponent();
         Title = "ReadTheStupidText — Activity log";
-        AppWindow.Resize(new SizeInt32(640, 480));
+        AppWindow.Resize(new SizeInt32(860, 480));
 
         foreach (ActivityEntry entry in _log.Entries)
         {
@@ -49,7 +49,8 @@ public sealed partial class ActivityLogWindow : Window
         {
             if (_byId.TryGetValue(entry.Id, out ActivityRowVm? row))
             {
-                row.State = entry.State.ToString();
+                row.State = ActivityStateText.ForDisplay(entry.State);
+                row.Reason = ActivityReasonText.ForDisplay(entry.Reason);
             }
         });
 
@@ -58,9 +59,11 @@ public sealed partial class ActivityLogWindow : Window
         var row = new ActivityRowVm(
             entry.Id,
             entry.Timestamp.ToString("HH:mm:ss"),
-            entry.Source.ToString(),
+            entry.Trigger.ToString(),
+            WindowSourceText.ForDisplay(entry.Window),
             entry.Text,
-            entry.State.ToString());
+            ActivityStateText.ForDisplay(entry.State),
+            ActivityReasonText.ForDisplay(entry.Reason));
 
         Rows.Add(row);
         _byId[entry.Id] = row;

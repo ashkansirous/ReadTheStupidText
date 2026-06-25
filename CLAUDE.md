@@ -83,9 +83,19 @@ disabled (`PublishTrimmed=false`); packaged WinUI apps aren't trimmed, and
 ## Out of scope (v1)
 
 Voice *tuning* beyond playback rate (pitch/volume/SSML), a **persistent/dockable**
-settings window (tabs, taskbar presence, hotkey-remap UI), non-Store distribution
-as the primary channel, and reading from non-UIA apps without the hotkey
-fallback. See `scope.md`.
+settings window (tabs, taskbar presence, hotkey-remap UI), and non-Store
+distribution as the primary channel. See `scope.md`.
+
+**Console / non-UIA limitation (by design, not a bug).** The console (Windows
+Terminal, PowerShell, `cmd`) and some editors (e.g. Visual Studio's code editor)
+expose **no UI Automation text selection**, so *selecting* text in them raises no
+OS event — there is nothing to auto-read on. Reading from them therefore requires a
+**copy** (auto-read-on-copy via the clipboard listener, gated by the auto-read
+toggle) or the **global hotkey** (`Ctrl+Win+R`, copies then reads). Windows
+Terminal's `copyOnSelect` makes selecting auto-copy, which then triggers auto-read.
+Detecting a bare console *selection* is **out of scope** — Windows provides no API
+for it. When a request asks to "read on selection in the terminal," the answer is
+copy / `copyOnSelect` / hotkey, not a new selection-detection mechanism.
 
 Note: the narrator voice is a **local neural voice** (Slice 9, Decision 14) — the
 **sherpa-onnx** runtime (Apache-2.0) running the **Supertonic-3** model
@@ -116,11 +126,40 @@ right-click `MenuFlyout` stays (Quit lives there only). Rich controls (slider,
 is a real window, not a flyout (same native-menu limit as Decision 11).
 
 Note: read activity flows through **`IActivityLog`** (Application — an in-memory,
-observable ring buffer; `ActivityEntry`/`ActivityState`/`ActivitySource` in
-Domain). `ReadAloudService` opens an entry per intercepted text and transitions
-it (pending→reading→read, or ignored/interrupted/failed); `ActivityLogWindow`
-(a normal resizable window, opened from the right-click tray menu) renders it
-live. The UIA monitor emits **`SelectionCleared`** on deselect so an in-progress
-read is interrupted. The log is the diagnostic for "selection does nothing": no
-entry ⇒ that app exposes no UIA text (hotkey is the fallback). See Slice 10 /
-Decision 15 in `plan.md`.
+observable ring buffer; `ActivityEntry`/`ActivityState`/`ActivityTrigger`/
+`WindowSource` in Domain — plus **`ActivityReason`** for *why* an entry deviated).
+`ReadAloudService` opens an entry per intercepted text and transitions it
+(pending→**generatingAudio**→reading→read, or ignored/interrupted/failed), tagging
+each deviation with an `ActivityReason` (`NewSelection`/`Deselected`/`Error`) shown
+in the log's **Reason** column. `GeneratingAudio` ("Generating audio") covers the
+synthesis wait before any audio plays and flips to `reading` on the reader's first
+`Playing` transition. Each entry also records its **`ActivityTrigger`** (auto-read /
+hotkey / manual / **clipboard**) in the **Trigger** column and the originating
+foreground window (`WindowSource` = app + title, via `IForegroundWindow`) in the
+**Source** column. `ActivityLogWindow` (a normal resizable window, opened from the
+right-click tray menu) renders it live.
+
+**Three auto-read/read paths feed the log:** the **UIA selection monitor**
+(`ISelectionMonitor`, gated by auto-read), the **clipboard monitor**
+(`IClipboardMonitor` = `ClipboardFormatListener`, a Win32 `WM_CLIPBOARDUPDATE`
+listener on the tray window's handle — the path for the **console**/Windows
+Terminal and other apps with no UIA text selection; gated by auto-read), and the
+global **hotkey** (always on). `ReadAloudService` de-dupes across them via
+`_lastTriggeredText` so the hotkey's own copy (clipboard echo) and a
+copy-on-select duplicate of a UIA selection don't read twice. The UIA monitor
+emits **`SelectionCleared`** only on a *genuine* empty selection (deselect) so an
+in-progress read is interrupted — a **transient cross-process read failure** is
+kept distinct (`SelectionOutcome.Unavailable`) and left silent, so a selection
+event re-fired mid-selection no longer falsely ignores/interrupts the read. The
+log is the diagnostic for "selection does nothing": no entry ⇒ no UIA selection
+event *and* nothing copied (with auto-read on, copying in the console now reads;
+the hotkey is the always-available fallback). See Slice 10 / Decision 15 in
+`plan.md`.
+
+The neural reader (`SupertonicSpeechReader`) **chunks** long text
+(`SpeechTextChunker`, paragraph→sentence→word) and synthesizes the chunks
+**concurrently (degree 3)** while playing them **in order**, so a long read starts
+speaking after the first chunk. A superseded/stopped read is torn down via a
+**generation counter + `CancellationToken`** (`ISpeechReader.Stop()`), so stale
+synthesis can never reach the shared `MediaPlayer`; `read` is marked only on the
+reader's **`Completed`** (natural end), never on a stop-induced idle.

@@ -30,6 +30,7 @@ public sealed partial class MainWindow : Window
 
     private readonly ReadAloudService _readAloud;
     private readonly IHotkeyService _hotkey;
+    private readonly IClipboardMonitor _clipboardMonitor;
     private readonly IStartupService _startup;
     private readonly IActivityLog _activityLog;
     private readonly DispatcherQueue _dispatcher = DispatcherQueue.GetForCurrentThread();
@@ -62,10 +63,11 @@ public sealed partial class MainWindow : Window
     private ToggleMenuFlyoutItem? _customSpeedItem;
     private int _speedStartIndex;
 
-    public MainWindow(ReadAloudService readAloud, IHotkeyService hotkey, IStartupService startup, IActivityLog activityLog)
+    public MainWindow(ReadAloudService readAloud, IHotkeyService hotkey, IClipboardMonitor clipboardMonitor, IStartupService startup, IActivityLog activityLog)
     {
         _readAloud = readAloud;
         _hotkey = hotkey;
+        _clipboardMonitor = clipboardMonitor;
         _startup = startup;
         _activityLog = activityLog;
 
@@ -115,7 +117,12 @@ public sealed partial class MainWindow : Window
         _readAloud.VoicesChanged += OnVoicesChanged;
         _controlPanel.StartupStateChanged += OnPanelStartupChanged;
 
-        _hotkey.Register(WindowNative.GetWindowHandle(this));
+        nint handle = WindowNative.GetWindowHandle(this);
+        _hotkey.Register(handle);
+
+        // The clipboard listener shares this never-shown window's handle; it's the
+        // auto-read path for the console and other apps with no UIA selection.
+        _clipboardMonitor.Register(handle);
     }
 
     // The neural voices download after launch; the menu is built before they
@@ -366,6 +373,7 @@ public sealed partial class MainWindow : Window
     private void Quit()
     {
         _hotkey.Dispose();
+        _clipboardMonitor.Dispose();
         TrayIcon.Dispose();
         _controlPanel.Close();
         _logWindow?.Close();

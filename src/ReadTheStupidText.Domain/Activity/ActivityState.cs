@@ -9,7 +9,10 @@ public enum ActivityState
     /// <summary>Captured; waiting out the debounce before it is read.</summary>
     Pending,
 
-    /// <summary>Currently being spoken.</summary>
+    /// <summary>Synthesizing the audio; nothing is playing yet.</summary>
+    GeneratingAudio,
+
+    /// <summary>Currently being spoken (audio is playing).</summary>
     Reading,
 
     /// <summary>Finished being spoken to the end.</summary>
