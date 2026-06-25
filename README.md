@@ -124,6 +124,11 @@ real model files (not pointers).
 packaging, capability justification, third-party licenses, and the Store
 submission steps.
 
+## Privacy
+
+Read The Stupid Text collects **no data** — no accounts, no telemetry, no network
+calls. Everything runs locally and offline. See [`PRIVACY.md`](PRIVACY.md).
+
 ## License
 
 TBD.
