@@ -1,0 +1,56 @@
+name: store-submit
+
+# Submits a released MSIX to the Microsoft Store via the msstore CLI.
+#
+# MANUAL ONLY, and not functional until you set it up — it's the deployment
+# scaffold, intentionally never auto-running. Before it works you need:
+#   1. A Partner Center account with the app reserved and its Identity wired into
+#      Package.appxmanifest (see STORE.md).
+#   2. The app already published and live once in the Store — the Actions-based
+#      msstore flow does *updates* to a live app, not the first submission, and
+#      only for free products (per Microsoft's docs).
+#   3. Repo secrets: AZURE_AD_TENANT_ID, AZURE_AD_APPLICATION_CLIENT_ID,
+#      AZURE_AD_APPLICATION_SECRET, SELLER_ID.
+#   4. Repo variable STORE_PRODUCT_ID (the Store product Id).
+# Until then, running this fails at the reconfigure/publish step — which is fine,
+# it's a deploy button you only press when the above are in place.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to submit (e.g. v1.0.0)'
+        required: true
+
+jobs:
+  submit:
+    runs-on: windows-latest
+    steps:
+      - name: Download the release's MSIX packages
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download "${{ inputs.tag }}" --repo "${{ github.repository }}" --pattern "*.msix" --dir release
+
+      - name: Set up the Microsoft Store CLI
+        uses: microsoft/microsoft-store-apppublisher@v1.1
+
+      - name: Configure Store credentials
+        shell: pwsh
+        run: |
+          msstore reconfigure `
+            --tenantId ${{ secrets.AZURE_AD_TENANT_ID }} `
+            --sellerId ${{ secrets.SELLER_ID }} `
+            --clientId ${{ secrets.AZURE_AD_APPLICATION_CLIENT_ID }} `
+            --clientSecret ${{ secrets.AZURE_AD_APPLICATION_SECRET }}
+
+      - name: Publish to the Store
+        shell: pwsh
+        run: |
+          # NOTE: confirm the exact multi-arch submission shape with the msstore
+          # CLI when the app is live (one submission should carry both the x64 and
+          # ARM64 packages). This publishes the packages found in the release.
+          Get-ChildItem release -Filter *.msix | ForEach-Object {
+            msstore publish $_.FullName -id ${{ vars.STORE_PRODUCT_ID }}
+          }

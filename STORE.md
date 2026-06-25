@@ -52,13 +52,32 @@ No GPL/LGPL components ship in the package (Piper and its espeak-ng phonemizer
 were deliberately avoided; Supertonic needs no espeak data). This keeps the
 closed-source Store distribution clean.
 
-## Remaining Partner Center steps (account-dependent — not in this slice)
+## Releases (hosted MSIX)
 
-1. Reserve the app name in Partner Center and note the assigned **Package/Identity
-   Name** and **Publisher ID**.
-2. Update `Package.appxmanifest` `<Identity Name=... Publisher=...>` and
-   `<PublisherDisplayName>` to match the reservation (currently a placeholder
-   GUID + `CN=Ashkan Sirous`).
-3. Submit the CI `.msix` artifacts (x64 + ARM64) to the Store; it signs them.
-4. Optionally automate submission with the Microsoft Store CLI GitHub Action
-   (needs `AZURE_AD_*` + `SELLER_ID` secrets).
+CI's per-run **workflow artifacts** are only reachable from the Actions run page
+(login required, expire after retention) — not a stable download or deploy
+source. So distribution uses **GitHub Releases** instead:
+
+- Push a version tag (`git tag v1.0.0 && git push origin v1.0.0`). The `build`
+  workflow then runs the `release` job, which attaches both `.msix` files to a
+  GitHub Release for that tag.
+- The packages get **stable URLs** under `…/releases/latest`, linked from the
+  README, and serve as the hosted source the Store-submission step pulls from.
+
+## Deploying to the Store
+
+`/.github/workflows/store-submit.yml` is a **manual** (`workflow_dispatch`)
+deploy that downloads a release's MSIX and submits it via the **msstore CLI**
+(`microsoft/microsoft-store-apppublisher`). It is scaffolded but not yet live —
+the Actions-based msstore flow does *updates* to an already-published **free**
+app, not the first submission. To turn it on:
+
+1. Reserve the app in Partner Center; wire its **Identity Name + Publisher ID**
+   into `Package.appxmanifest` (currently a placeholder GUID + `CN=Ashkan Sirous`).
+2. Do the **first** submission manually in Partner Center (upload the release
+   `.msix` files; the Store signs them) and get it live.
+3. Add repo **secrets** `AZURE_AD_TENANT_ID`, `AZURE_AD_APPLICATION_CLIENT_ID`,
+   `AZURE_AD_APPLICATION_SECRET`, `SELLER_ID`, and a repo **variable**
+   `STORE_PRODUCT_ID`.
+4. From then on, run **store-submit** (Actions → Run workflow, pick the release
+   tag) to push updates.

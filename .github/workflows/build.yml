@@ -5,10 +5,15 @@ name: build
 # Microsoft Store re-signs on submission, so no signing certificate is needed in
 # CI. (Single-project MSIX can't produce a bundle, so each arch is built
 # separately; see Decision 16 / Slice 5 in plan.md.)
+#
+# On a version tag (v*), the same MSIX packages are published to a GitHub Release
+# so they have stable, README-linkable download URLs and a hosted source for
+# Store deployment (see .github/workflows/store-submit.yml).
 
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -61,3 +66,30 @@ jobs:
           name: ReadTheStupidText-msix-${{ matrix.platform }}
           path: ${{ github.workspace }}\AppPackages\**\*.msix
           if-no-files-found: error
+
+  # On a version tag, publish the built MSIX packages as GitHub Release assets so
+  # they have stable download URLs (linked from the README) and a hosted source
+  # for the Store-submission workflow. Runs only for tags, after the builds pass.
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download built MSIX packages
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Publish GitHub Release with MSIX assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          msix_files=$(find artifacts -name '*.msix')
+          echo "Publishing: $msix_files"
+          gh release create "${{ github.ref_name }}" \
+            --repo "${{ github.repository }}" \
+            --title "${{ github.ref_name }}" \
+            --generate-notes \
+            $msix_files
