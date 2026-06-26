@@ -580,20 +580,20 @@ first chunk — plus a way to *measure* the improvement that keeps the "we colle
 nothing" policy literally true. Ordered smallest-first; each is independently
 shippable. (No GitHub issues yet — create via `plan-to-issues` if wanted.)
 
-- [ ] **Slice 17 — Warm the neural engine at startup.** (Decision 24) The biggest
+- [ ] **Slice 17 — Warm the neural engine at startup.** ([#84](https://github.com/ashkansirous/ReadTheStupidText/issues/84)) (Decision 24) The biggest
       single win and the smallest change. After `IVoiceModelService` locates the
       model, eagerly build the `OfflineTts` on a background thread and run one tiny
       throwaway synthesis to warm the ONNX graph, so the first real read no longer
       pays the cold-start cost. Keep the lazy `EnsureTts()` as the fallback if a
       read arrives before warm-up finishes. No UI-thread blocking; idempotent.
-- [ ] **Slice 18 — Adaptive settle delay + smaller first chunk.** (Decision 25)
+- [ ] **Slice 18 — Adaptive settle delay + smaller first chunk.** ([#85](https://github.com/ashkansirous/ReadTheStupidText/issues/85)) (Decision 25)
       Replace `ReadAloudService`'s flat `SelectionDebounceMs = 500` with a short
       (~150 ms) baseline that extends only while events keep arriving (a live
       drag), so click-selects fire fast and drags still collapse to one read. Bias
       `SpeechTextChunker`'s **first** chunk toward a single sentence so audio
       starts sooner; later chunks unchanged. Both shorten per-read
       time-to-first-audio without changing the concurrent-synthesis model.
-- [ ] **Slice 19 — Local-only timing diagnostics.** (Decision 26) Record
+- [ ] **Slice 19 — Local-only timing diagnostics.** ([#86](https://github.com/ashkansirous/ReadTheStupidText/issues/86)) (Decision 26) Record
       time-to-first-audio (entry → first `Playing`) and synthesis duration per read
       into the existing in-memory `IActivityLog`/`ActivityEntry`, and surface them
       as column(s) in `ActivityLogWindow` — nothing transmitted, no third-party, no
