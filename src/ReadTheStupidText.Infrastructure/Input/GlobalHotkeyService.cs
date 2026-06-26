@@ -31,9 +31,23 @@ public sealed class GlobalHotkeyService : IHotkeyService
 
         _windowHandle = windowHandle;
         _subclassProc = HandleMessage;
-        NativeMethods.SetWindowSubclass(_windowHandle, _subclassProc, SubclassId, dwRefData: 0);
+
+        // Without the subclass the WM_HOTKEY message is never observed, so don't
+        // register the hotkey against a window we can't watch — report failure.
+        if (!NativeMethods.SetWindowSubclass(_windowHandle, _subclassProc, SubclassId, dwRefData: 0))
+        {
+            _subclassProc = null;
+            return false;
+        }
+
         _registered = NativeMethods.RegisterHotKey(
             _windowHandle, HotkeyId, Modifiers, NativeMethods.VkR);
+        if (!_registered)
+        {
+            NativeMethods.RemoveWindowSubclass(_windowHandle, _subclassProc, SubclassId);
+            _subclassProc = null;
+        }
+
         return _registered;
     }
 

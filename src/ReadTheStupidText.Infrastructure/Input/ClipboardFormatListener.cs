@@ -33,8 +33,21 @@ public sealed class ClipboardFormatListener : IClipboardMonitor
 
         _windowHandle = windowHandle;
         _subclassProc = HandleMessage;
-        NativeMethods.SetWindowSubclass(_windowHandle, _subclassProc, SubclassId, dwRefData: 0);
+
+        // Without the subclass the WM_CLIPBOARDUPDATE message is never observed,
+        // so don't register the listener against a window we can't watch.
+        if (!NativeMethods.SetWindowSubclass(_windowHandle, _subclassProc, SubclassId, dwRefData: 0))
+        {
+            _subclassProc = null;
+            return;
+        }
+
         _registered = NativeMethods.AddClipboardFormatListener(_windowHandle);
+        if (!_registered)
+        {
+            NativeMethods.RemoveWindowSubclass(_windowHandle, _subclassProc, SubclassId);
+            _subclassProc = null;
+        }
     }
 
     public void Unregister()

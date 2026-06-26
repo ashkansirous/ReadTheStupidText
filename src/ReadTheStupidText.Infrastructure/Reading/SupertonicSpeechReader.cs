@@ -265,7 +265,11 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
     // total. Ignored when nothing is loaded (no chunks / unknown duration).
     private void OnPositionChanged(MediaPlaybackSession sender, object args)
     {
-        if (_chunkCount == 0)
+        // Snapshot once: Stop() can zero _chunkCount on another thread between a
+        // guard and the division, and a superseded read can half-update the pair.
+        int chunkCount = Volatile.Read(ref _chunkCount);
+        int chunkIndex = Volatile.Read(ref _currentChunkIndex);
+        if (chunkCount == 0)
         {
             return;
         }
@@ -273,7 +277,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
         double withinChunk = sender.NaturalDuration > TimeSpan.Zero
             ? sender.Position / sender.NaturalDuration
             : 0;
-        double fraction = (_currentChunkIndex + Math.Clamp(withinChunk, 0, 1)) / _chunkCount;
+        double fraction = (chunkIndex + Math.Clamp(withinChunk, 0, 1)) / chunkCount;
         ProgressChanged?.Invoke(this, Math.Clamp(fraction, 0, 1));
     }
 
@@ -345,6 +349,10 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
     {
         _synthCts?.Cancel();
         _synthCts?.Dispose();
+        _player.MediaOpened -= OnMediaOpened;
+        _player.MediaEnded -= OnMediaEnded;
+        _player.PlaybackSession.PlaybackStateChanged -= OnPlaybackStateChanged;
+        _player.PlaybackSession.PositionChanged -= OnPositionChanged;
         _player.Dispose();
         _currentSource?.Dispose();
         _tts?.Dispose();

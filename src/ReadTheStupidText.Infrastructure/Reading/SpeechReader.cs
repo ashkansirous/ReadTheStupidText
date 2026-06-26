@@ -178,6 +178,10 @@ public sealed class SpeechReader : ISpeechReader, IDisposable
     {
         _synthCts?.Cancel();
         _synthCts?.Dispose();
+        _player.MediaOpened -= OnMediaOpened;
+        _player.MediaEnded -= OnMediaEnded;
+        _player.PlaybackSession.PlaybackStateChanged -= OnPlaybackStateChanged;
+        _player.PlaybackSession.PositionChanged -= OnPositionChanged;
         _player.Dispose();
         _currentSource?.Dispose();
         _synthesizer.Dispose();

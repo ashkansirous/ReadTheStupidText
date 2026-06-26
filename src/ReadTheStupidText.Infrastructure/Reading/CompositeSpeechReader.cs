@@ -4,8 +4,8 @@ using ReadTheStupidText.Domain.Reading;
 namespace ReadTheStupidText.Infrastructure.Reading;
 
 /// <summary>
-/// Routes speech to the local Kokoro neural engine once its model is ready, and
-/// to the built-in WinRT voice until then (or if the model never downloads), so
+/// Routes speech to the local Supertonic-3 neural engine once its model is ready,
+/// and to the built-in WinRT voice until then (or if the model is missing), so
 /// the app is never mute. Speed applies to both engines; voice selection targets
 /// the neural engine (the fallback uses the system default voice). Only one
 /// engine plays at a time; state is surfaced from whichever is active.

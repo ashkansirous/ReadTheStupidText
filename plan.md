@@ -491,7 +491,7 @@ smallest-first; each is independently shippable.
       into `Package.appxmanifest` `Version` (`x.y.z.0`), commits the bump, and
       pushes a `v<x.y.z>` tag — which the existing `build.yml` release job turns
       into a GitHub Release. Document the commit convention in `CLAUDE.md`.
-- [ ] **Slice 15 — Deep code-review pass + fixes.** ([#61](https://github.com/ashkansirous/ReadTheStupidText/issues/61)) (Item 5) Run
+- [x] **Slice 15 — Deep code-review pass + fixes.** ([#61](https://github.com/ashkansirous/ReadTheStupidText/issues/61)) (Item 5) Run
       `/code-review-in-detail` over the full app, triage the findings, and fix
       the confirmed real bugs (each non-trivial fix referenced in the PR). The
       generated `summary-code-review.md` / `detailed-code-review.md` are the
