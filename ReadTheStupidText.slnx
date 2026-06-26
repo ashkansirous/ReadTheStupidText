@@ -20,4 +20,7 @@
     <Project Path="src/ReadTheStupidText.Domain/ReadTheStupidText.Domain.csproj" />
     <Project Path="src/ReadTheStupidText.Infrastructure/ReadTheStupidText.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ReadTheStupidText.Tests/ReadTheStupidText.Tests.csproj" />
+  </Folder>
 </Solution>

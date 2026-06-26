@@ -44,18 +44,15 @@ public sealed class LocalSettingsStore : ISettingsStore
         set => _settings.Values[AutoReadOnCopyKey] = value;
     }
 
+    private bool ReadAutoReadFlag(string key) =>
+        ResolveAutoReadFlag(_settings.Values[key] as bool?, _settings.Values[LegacyEnabledKey] as bool?);
+
     // A new flag takes its own stored value when present; otherwise it inherits
     // the old single toggle (so IsEnabled=false carries forward to both flags off,
-    // IsEnabled=true/unset to on), defaulting on for a fresh install.
-    private bool ReadAutoReadFlag(string key)
-    {
-        if (_settings.Values[key] is bool flag)
-        {
-            return flag;
-        }
-
-        return _settings.Values[LegacyEnabledKey] is bool legacy ? legacy : AutoReadDefault;
-    }
+    // IsEnabled=true/unset to on), defaulting on for a fresh install. Pure and
+    // storage-free so it can be unit-tested without package identity.
+    internal static bool ResolveAutoReadFlag(bool? storedValue, bool? legacyValue) =>
+        storedValue ?? legacyValue ?? AutoReadDefault;
 
     public string? VoiceId
     {

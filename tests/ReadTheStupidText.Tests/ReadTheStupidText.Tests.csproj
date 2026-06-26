@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>ReadTheStupidText.Tests</RootNamespace>
+    <!-- Matches Infrastructure's TFM so it can be referenced; the tests exercise
+         only pure logic and never load the WinRT/native engine. -->
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3.mtp-v2" Version="3.2.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ReadTheStupidText.Domain\ReadTheStupidText.Domain.csproj" />
+    <ProjectReference Include="..\..\src\ReadTheStupidText.Application\ReadTheStupidText.Application.csproj" />
+    <ProjectReference Include="..\..\src\ReadTheStupidText.Infrastructure\ReadTheStupidText.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
