@@ -468,7 +468,7 @@ smallest-first; each is independently shippable.
       **Momonga** = M1); leave the `supertonic:` ids and sid order untouched.
       Smallest end-to-end change — the picker/menu show the new names with no
       engine change.
-- [ ] **Slice 12 — Split auto-read into two toggles.** ([#48](https://github.com/ashkansirous/ReadTheStupidText/issues/48)) (Decision 22) Add
+- [x] **Slice 12 — Split auto-read into two toggles.** ([#48](https://github.com/ashkansirous/ReadTheStupidText/issues/48)) (Decision 22) Add
       `AutoReadOnSelection` + `AutoReadOnCopy` to `ISettingsStore` and its impl
       (both default on; migrate an old `IsEnabled=false` to both off). Gate the
       UIA `ISelectionMonitor` and the `IClipboardMonitor` independently in

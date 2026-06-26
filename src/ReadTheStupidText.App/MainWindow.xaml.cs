@@ -20,7 +20,8 @@ public sealed partial class MainWindow : Window
     private const string PlayLabel = "Play";
     private const string PauseLabel = "Pause";
     private const string QuitLabel = "Quit";
-    private const string AutoReadLabel = "Auto-read on selection";
+    private const string AutoReadSelectionLabel = "Auto-read on selection";
+    private const string AutoReadCopyLabel = "Auto-read on copy";
     private const string StartupLabel = "Launch at startup";
     private const string VoiceLabel = "Voice";
     private const string ActivityLogLabel = "Show activity log";
@@ -40,7 +41,8 @@ public sealed partial class MainWindow : Window
     // invokes each item's Command (never the WinUI Click event), so every item
     // is wired through one of these.
     private readonly RelayCommand _togglePlayPauseCommand;
-    private readonly RelayCommand _toggleAutoReadCommand;
+    private readonly RelayCommand _toggleAutoReadSelectionCommand;
+    private readonly RelayCommand _toggleAutoReadCopyCommand;
     private readonly RelayCommand _toggleStartupCommand;
     private readonly RelayCommand _setSpeedCommand;
     private readonly RelayCommand _setVoiceCommand;
@@ -53,7 +55,8 @@ public sealed partial class MainWindow : Window
 
     private MenuFlyout? _flyout;
     private MenuFlyoutItem? _playPauseItem;
-    private ToggleMenuFlyoutItem? _autoReadItem;
+    private ToggleMenuFlyoutItem? _autoReadSelectionItem;
+    private ToggleMenuFlyoutItem? _autoReadCopyItem;
     private ToggleMenuFlyoutItem? _startupItem;
     private readonly List<ToggleMenuFlyoutItem> _speedItems = new();
     private readonly List<ToggleMenuFlyoutItem> _voiceItems = new();
@@ -76,7 +79,8 @@ public sealed partial class MainWindow : Window
         _controlPanel = new ControlPanelWindow(_readAloud, _startup);
 
         _togglePlayPauseCommand = new RelayCommand(_ => _ = _readAloud.PlayPauseOrReadAsync());
-        _toggleAutoReadCommand = new RelayCommand(_ => ToggleAutoRead());
+        _toggleAutoReadSelectionCommand = new RelayCommand(_ => ToggleAutoReadSelection());
+        _toggleAutoReadCopyCommand = new RelayCommand(_ => ToggleAutoReadCopy());
         _toggleStartupCommand = new RelayCommand(_ => _ = ToggleStartupAsync());
         _setSpeedCommand = new RelayCommand(p => ApplySpeed((PlaybackRate)p!));
         _setVoiceCommand = new RelayCommand(p => ApplyVoice((string)p!));
@@ -113,7 +117,8 @@ public sealed partial class MainWindow : Window
         // sync when the change comes from the control panel.
         _readAloud.SpeedChanged += OnSpeedChanged;
         _readAloud.VoiceChanged += OnVoiceChanged;
-        _readAloud.EnabledChanged += OnEnabledChanged;
+        _readAloud.AutoReadOnSelectionChanged += OnAutoReadOnSelectionChanged;
+        _readAloud.AutoReadOnCopyChanged += OnAutoReadOnCopyChanged;
         _readAloud.VoicesChanged += OnVoicesChanged;
         _controlPanel.StartupStateChanged += OnPanelStartupChanged;
 
@@ -158,13 +163,21 @@ public sealed partial class MainWindow : Window
         _voiceItems.Clear();
         _customSpeedItem = null;
 
-        _autoReadItem = new ToggleMenuFlyoutItem
+        _autoReadSelectionItem = new ToggleMenuFlyoutItem
         {
-            Text = AutoReadLabel,
-            IsChecked = _readAloud.IsEnabled,
-            Command = _toggleAutoReadCommand,
+            Text = AutoReadSelectionLabel,
+            IsChecked = _readAloud.AutoReadOnSelection,
+            Command = _toggleAutoReadSelectionCommand,
         };
-        flyout.Items.Add(_autoReadItem);
+        flyout.Items.Add(_autoReadSelectionItem);
+
+        _autoReadCopyItem = new ToggleMenuFlyoutItem
+        {
+            Text = AutoReadCopyLabel,
+            IsChecked = _readAloud.AutoReadOnCopy,
+            Command = _toggleAutoReadCopyCommand,
+        };
+        flyout.Items.Add(_autoReadCopyItem);
 
         // IsChecked is corrected by RefreshStartupStateAsync once the OS reports
         // the real state; starting unchecked avoids a misleading flash.
@@ -263,9 +276,13 @@ public sealed partial class MainWindow : Window
         return item;
     }
 
-    // The checkmark is updated by OnEnabledChanged, so both this and the control
-    // panel converge on the same state.
-    private void ToggleAutoRead() => _readAloud.IsEnabled = !_readAloud.IsEnabled;
+    // The checkmarks are updated by the *Changed handlers, so both this and the
+    // control panel converge on the same state.
+    private void ToggleAutoReadSelection() =>
+        _readAloud.AutoReadOnSelection = !_readAloud.AutoReadOnSelection;
+
+    private void ToggleAutoReadCopy() =>
+        _readAloud.AutoReadOnCopy = !_readAloud.AutoReadOnCopy;
 
     private async Task RefreshStartupStateAsync()
     {
@@ -358,12 +375,21 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private void OnEnabledChanged(object? sender, bool enabled) =>
+    private void OnAutoReadOnSelectionChanged(object? sender, bool enabled) =>
         _dispatcher.TryEnqueue(() =>
         {
-            if (_autoReadItem is not null)
+            if (_autoReadSelectionItem is not null)
             {
-                _autoReadItem.IsChecked = enabled;
+                _autoReadSelectionItem.IsChecked = enabled;
+            }
+        });
+
+    private void OnAutoReadOnCopyChanged(object? sender, bool enabled) =>
+        _dispatcher.TryEnqueue(() =>
+        {
+            if (_autoReadCopyItem is not null)
+            {
+                _autoReadCopyItem.IsChecked = enabled;
             }
         });
 

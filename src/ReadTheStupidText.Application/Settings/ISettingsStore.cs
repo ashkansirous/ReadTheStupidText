@@ -4,14 +4,25 @@ namespace ReadTheStupidText.Application.Settings;
 
 /// <summary>
 /// Persists the user's preferences across sessions: the last-used reading speed,
-/// whether read-aloud is enabled, and the chosen narrator voice. Backed by
+/// the two independent auto-read gates, and the chosen narrator voice. Backed by
 /// OS-local storage.
 /// </summary>
 public interface ISettingsStore
 {
     PlaybackRate Speed { get; set; }
 
-    bool IsEnabled { get; set; }
+    /// <summary>
+    /// Whether selecting text in a UIA-aware app auto-reads it (gates the
+    /// selection monitor). Defaults on. The global hotkey is unaffected.
+    /// </summary>
+    bool AutoReadOnSelection { get; set; }
+
+    /// <summary>
+    /// Whether copying text auto-reads it (gates the clipboard monitor — the path
+    /// for the console and other apps with no UIA selection). Defaults on. The
+    /// global hotkey is unaffected.
+    /// </summary>
+    bool AutoReadOnCopy { get; set; }
 
     /// <summary>
     /// The chosen narrator voice id, or null to use the system default. Stored
