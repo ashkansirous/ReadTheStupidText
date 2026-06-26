@@ -52,17 +52,27 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
     private int _generation;
     private CancellationTokenSource? _synthCts;
 
+    // Read-through progress is approximated by weighting each chunk equally: the
+    // overall fraction is (completed chunks + position within the current chunk) /
+    // total chunks. Exact per-chunk durations would be more precise but each chunk
+    // is independently synthesized — equal weighting is the best-effort model.
+    private int _chunkCount;
+    private int _currentChunkIndex;
+
     public SupertonicSpeechReader(IVoiceModelService model)
     {
         _model = model;
         _player.MediaOpened += OnMediaOpened;
         _player.MediaEnded += OnMediaEnded;
         _player.PlaybackSession.PlaybackStateChanged += OnPlaybackStateChanged;
+        _player.PlaybackSession.PositionChanged += OnPositionChanged;
     }
 
     public event EventHandler<PlaybackState>? StateChanged;
 
     public event EventHandler? Completed;
+
+    public event EventHandler<double>? ProgressChanged;
 
     public PlaybackState State => _state;
 
@@ -79,6 +89,9 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
         // Split long text and start synthesizing the chunks concurrently (capped),
         // each task acquiring a slot from the semaphore. The tasks are kept in order.
         IReadOnlyList<string> chunks = SpeechTextChunker.Split(text);
+        _chunkCount = chunks.Count;
+        _currentChunkIndex = 0;
+        ProgressChanged?.Invoke(this, 0);
 
         // Not disposed: a superseded read can leave orphaned generation tasks that
         // still Release(); SemaphoreSlim needs no disposal unless its wait handle is
@@ -106,6 +119,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
                 return;
             }
 
+            _currentChunkIndex = i;
             bool endedNaturally = await PlayChunkAsync(stream, token);
             if (!endedNaturally || !IsCurrent(generation))
             {
@@ -165,6 +179,8 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
         _chunkEnded?.TrySetResult(false); // release the playback loop if mid-chunk
         _player.Pause();
         ClearSource();
+        _chunkCount = 0;
+        ProgressChanged?.Invoke(this, 0);
         UpdateState(PlaybackState.Idle);
     }
 
@@ -243,6 +259,23 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
     // A chunk finished; let the ordered playback loop advance to the next one (or,
     // for the last chunk, complete). Completion/idle are signalled by SpeakAsync.
     private void OnMediaEnded(MediaPlayer sender, object args) => _chunkEnded?.TrySetResult(true);
+
+    // Reports best-effort read-through progress as the current chunk plays: the
+    // completed-chunk count plus the fraction through the current chunk, over the
+    // total. Ignored when nothing is loaded (no chunks / unknown duration).
+    private void OnPositionChanged(MediaPlaybackSession sender, object args)
+    {
+        if (_chunkCount == 0)
+        {
+            return;
+        }
+
+        double withinChunk = sender.NaturalDuration > TimeSpan.Zero
+            ? sender.Position / sender.NaturalDuration
+            : 0;
+        double fraction = (_currentChunkIndex + Math.Clamp(withinChunk, 0, 1)) / _chunkCount;
+        ProgressChanged?.Invoke(this, Math.Clamp(fraction, 0, 1));
+    }
 
     private void OnPlaybackStateChanged(MediaPlaybackSession sender, object args)
     {
