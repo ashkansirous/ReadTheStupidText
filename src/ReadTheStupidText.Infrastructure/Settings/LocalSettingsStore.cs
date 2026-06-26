@@ -12,9 +12,15 @@ namespace ReadTheStupidText.Infrastructure.Settings;
 public sealed class LocalSettingsStore : ISettingsStore
 {
     private const string SpeedKey = "PlaybackRate";
-    private const string EnabledKey = "IsEnabled";
+    private const string AutoReadOnSelectionKey = "AutoReadOnSelection";
+    private const string AutoReadOnCopyKey = "AutoReadOnCopy";
+
+    // The pre-Slice-12 single auto-read gate. Read only to migrate older profiles:
+    // an existing IsEnabled=false maps both new flags off (see ReadAutoReadFlag).
+    private const string LegacyEnabledKey = "IsEnabled";
+    private const bool AutoReadDefault = true;
+
     private const string VoiceKey = "VoiceId";
-    private const bool EnabledDefault = true;
 
     private readonly ApplicationDataContainer _settings = ApplicationData.Current.LocalSettings;
 
@@ -26,10 +32,29 @@ public sealed class LocalSettingsStore : ISettingsStore
         set => _settings.Values[SpeedKey] = value.Value;
     }
 
-    public bool IsEnabled
+    public bool AutoReadOnSelection
     {
-        get => _settings.Values[EnabledKey] is bool enabled ? enabled : EnabledDefault;
-        set => _settings.Values[EnabledKey] = value;
+        get => ReadAutoReadFlag(AutoReadOnSelectionKey);
+        set => _settings.Values[AutoReadOnSelectionKey] = value;
+    }
+
+    public bool AutoReadOnCopy
+    {
+        get => ReadAutoReadFlag(AutoReadOnCopyKey);
+        set => _settings.Values[AutoReadOnCopyKey] = value;
+    }
+
+    // A new flag takes its own stored value when present; otherwise it inherits
+    // the old single toggle (so IsEnabled=false carries forward to both flags off,
+    // IsEnabled=true/unset to on), defaulting on for a fresh install.
+    private bool ReadAutoReadFlag(string key)
+    {
+        if (_settings.Values[key] is bool flag)
+        {
+            return flag;
+        }
+
+        return _settings.Values[LegacyEnabledKey] is bool legacy ? legacy : AutoReadDefault;
     }
 
     public string? VoiceId

@@ -168,7 +168,8 @@ public sealed partial class ControlPanelWindow : Window
         SetPlayPauseLabel(_readAloud.State);
         UpdateSpeed(_readAloud.Speed);
         SelectCurrentVoice();
-        AutoReadSwitch.IsOn = _readAloud.IsEnabled;
+        AutoReadSelectionSwitch.IsOn = _readAloud.AutoReadOnSelection;
+        AutoReadCopySwitch.IsOn = _readAloud.AutoReadOnCopy;
         _refreshing = false;
 
         _ = RefreshStartupAsync();
@@ -225,11 +226,19 @@ public sealed partial class ControlPanelWindow : Window
         _readAloud.SetVoice(voice.Id);
     }
 
-    private void OnAutoReadToggled(object sender, RoutedEventArgs e)
+    private void OnAutoReadSelectionToggled(object sender, RoutedEventArgs e)
     {
         if (!_refreshing)
         {
-            _readAloud.IsEnabled = AutoReadSwitch.IsOn;
+            _readAloud.AutoReadOnSelection = AutoReadSelectionSwitch.IsOn;
+        }
+    }
+
+    private void OnAutoReadCopyToggled(object sender, RoutedEventArgs e)
+    {
+        if (!_refreshing)
+        {
+            _readAloud.AutoReadOnCopy = AutoReadCopySwitch.IsOn;
         }
     }
 

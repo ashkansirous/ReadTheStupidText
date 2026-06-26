@@ -118,8 +118,8 @@ distribution as the primary channel. See `scope.md`.
 Terminal, PowerShell, `cmd`) and some editors (e.g. Visual Studio's code editor)
 expose **no UI Automation text selection**, so *selecting* text in them raises no
 OS event — there is nothing to auto-read on. Reading from them therefore requires a
-**copy** (auto-read-on-copy via the clipboard listener, gated by the auto-read
-toggle) or the **global hotkey** (`Ctrl+Win+R`, copies then reads). Windows
+**copy** (auto-read-on-copy via the clipboard listener, gated by the **Auto-read
+on copy** toggle) or the **global hotkey** (`Ctrl+Win+R`, copies then reads). Windows
 Terminal's `copyOnSelect` makes selecting auto-copy, which then triggers auto-read.
 Detecting a bare console *selection* is **out of scope** — Windows provides no API
 for it. When a request asks to "read on selection in the terminal," the answer is
@@ -168,11 +168,15 @@ foreground window (`WindowSource` = app + title, via `IForegroundWindow`) in the
 right-click tray menu) renders it live.
 
 **Three auto-read/read paths feed the log:** the **UIA selection monitor**
-(`ISelectionMonitor`, gated by auto-read), the **clipboard monitor**
-(`IClipboardMonitor` = `ClipboardFormatListener`, a Win32 `WM_CLIPBOARDUPDATE`
-listener on the tray window's handle — the path for the **console**/Windows
-Terminal and other apps with no UIA text selection; gated by auto-read), and the
-global **hotkey** (always on). `ReadAloudService` de-dupes across them via
+(`ISelectionMonitor`, gated by the **Auto-read on selection** toggle), the
+**clipboard monitor** (`IClipboardMonitor` = `ClipboardFormatListener`, a Win32
+`WM_CLIPBOARDUPDATE` listener on the tray window's handle — the path for the
+**console**/Windows Terminal and other apps with no UIA text selection; gated by
+the **Auto-read on copy** toggle), and the global **hotkey** (always on). The two
+auto-read gates are independent `ISettingsStore` flags (`AutoReadOnSelection` /
+`AutoReadOnCopy`, both default on; an old single `IsEnabled=false` migrates to
+both off — Decision 22), each surfaced as a `ToggleSwitch` in the control panel
+and the right-click menu. `ReadAloudService` de-dupes across them via
 `_lastTriggeredText` so the hotkey's own copy (clipboard echo) and a
 copy-on-select duplicate of a UIA selection don't read twice. The UIA monitor
 emits **`SelectionCleared`** only on a *genuine* empty selection (deselect) so an
