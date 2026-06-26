@@ -270,6 +270,63 @@ this plan turns it into ordered, shippable vertical slices.
     Slice 5 manifest-identity task and advances Slice 16; the first Partner Center
     submission + CI secrets are still manual (see `STORE.md`).
 
+24. **Warm the neural engine at startup (Batch 3, Slice 17).** The single biggest
+    contributor to the "selecting does nothing, then suddenly reads" delay is the
+    **cold engine build**: `SupertonicSpeechReader.EnsureTts()` builds the
+    sherpa-onnx `OfflineTts` (loading the ~145 MB model) **lazily on the first
+    `SpeakAsync`**, so the very first read after launch pays the entire model-load
+    cost (seconds) with no audio and no feedback. `IVoiceModelService.InitializeAsync()`
+    today only *locates* the model files; it does not build the engine. Fix: after
+    the model is located, **eagerly build the `OfflineTts` on a background thread**
+    and run **one tiny throwaway synthesis** (a short token, result discarded) to
+    JIT/warm the ONNX graph, so the first *real* read is near-instant. Warm-up runs
+    off the UI thread and is idempotent (the lazy `EnsureTts()` stays as the
+    safety net if warm-up hasn't finished when the first read arrives). Cost is
+    ~145 MB resident while the tray app idles and a few seconds of background CPU
+    at launch — accepted (the app's whole job is reading on demand; a multi-second
+    first-read stall is the worse trade). Warm-at-startup was chosen over
+    warm-on-first-tray-interaction (the first read can bypass the tray via the
+    hotkey) and over keeping it lazy (the status quo being fixed).
+25. **Adaptive settle delay (Batch 3, Slice 18).** The fixed
+    `ReadAloudService.SelectionDebounceMs = 500` adds a flat half-second to **every**
+    auto-read before synthesis even begins. It exists only to collapse a
+    drag-select (one UIA event per character grown) into a single read. Replace the
+    flat 500 ms with an **adaptive settle**: a short baseline (~150 ms) that is
+    **extended only while selection/clipboard events are still actively arriving**
+    (a live drag), so a quick click/double-click select fires almost immediately
+    while a drag still collapses to one read. The existing
+    swapped-`CancellationTokenSource` supersede already makes a late extra read
+    harmless (the newer read cancels the older). Chosen over a flat 150 ms (a fast
+    drag could occasionally double-fire) and over keeping 500 ms (the latency being
+    fixed). The same debounce path serves both the UIA-selection and clipboard-copy
+    triggers. **Folded in:** make the **first chunk smaller** —
+    `SpeechTextChunker` should bias the *first* chunk toward a single sentence (or
+    less) so audio starts after a short first synthesis instead of after a whole
+    first paragraph; later chunks keep the existing ~200-char paragraph→sentence→word
+    splitting. This shortens time-to-first-audio without changing the
+    concurrent-synthesis/ordered-playback model (Decision 15).
+26. **Local-only timing diagnostics — no remote analytics; Aspire is dev-only
+    (Batch 3, Slice 19).** The app's privacy stance is "we collect nothing," so
+    analytics must measure latency **without anything leaving the device**. Decision:
+    record **timing diagnostics in the existing in-memory `IActivityLog`** — at
+    minimum **time-to-first-audio** (entry created → reader's first `Playing`
+    transition) and **synthesis duration** per read — surfaced in the
+    `ActivityLogWindow`. Nothing is transmitted, no third-party SDK, no cost, no
+    privacy-policy change; it stays a live, in-memory, cleared-on-restart ring
+    buffer (consistent with Decision 15 and the existing out-of-scope "no disk
+    persistence/export"). **.NET Aspire was evaluated and rejected as a shipped
+    mechanism** (confirmed via Microsoft Learn): Aspire is an opinionated stack for
+    orchestrating and observing **distributed** apps via a **dev-time** AppHost +
+    dashboard — it has nothing to orchestrate in a single-process WinUI 3 tray app
+    and is not a redistributable runtime you bundle into an MSIX, and it would
+    reintroduce the very telemetry-export/cost concern being avoided. Aspire's
+    underlying tech is plain **OpenTelemetry**; the *optional* dev-only convenience
+    is to instrument the read pipeline with OpenTelemetry `Activity`/`Meter` so a
+    developer can attach a **local Aspire dashboard** (an OTLP viewer run on the dev
+    machine) while tuning — shipping nothing and costing nothing. Remote/opt-in
+    telemetry was rejected (needs a consent UI + policy change + ongoing cost for a
+    local-first Store utility).
+
 ## Changes
 
 Ordered as vertical slices — each is end-to-end and independently runnable.
@@ -514,6 +571,36 @@ smallest-first; each is independently shippable.
       the tag is whatever the versioning produces (**stays `0.x`**; **not**
       `v1.0.0` until the user declares the app stable).
 
+**Batch 3 — read-latency reduction + local diagnostics.** Addresses the user
+report that "from selecting to reading takes a lot, and sometimes it feels like
+it isn't picking up the text, then suddenly reads." Root-caused to three delays
+in the read pipeline (Decisions 24–26): a cold neural-engine build on first
+read, a flat 500 ms settle delay on every read, and a whole-first-paragraph
+first chunk — plus a way to *measure* the improvement that keeps the "we collect
+nothing" policy literally true. Ordered smallest-first; each is independently
+shippable. (No GitHub issues yet — create via `plan-to-issues` if wanted.)
+
+- [ ] **Slice 17 — Warm the neural engine at startup.** (Decision 24) The biggest
+      single win and the smallest change. After `IVoiceModelService` locates the
+      model, eagerly build the `OfflineTts` on a background thread and run one tiny
+      throwaway synthesis to warm the ONNX graph, so the first real read no longer
+      pays the cold-start cost. Keep the lazy `EnsureTts()` as the fallback if a
+      read arrives before warm-up finishes. No UI-thread blocking; idempotent.
+- [ ] **Slice 18 — Adaptive settle delay + smaller first chunk.** (Decision 25)
+      Replace `ReadAloudService`'s flat `SelectionDebounceMs = 500` with a short
+      (~150 ms) baseline that extends only while events keep arriving (a live
+      drag), so click-selects fire fast and drags still collapse to one read. Bias
+      `SpeechTextChunker`'s **first** chunk toward a single sentence so audio
+      starts sooner; later chunks unchanged. Both shorten per-read
+      time-to-first-audio without changing the concurrent-synthesis model.
+- [ ] **Slice 19 — Local-only timing diagnostics.** (Decision 26) Record
+      time-to-first-audio (entry → first `Playing`) and synthesis duration per read
+      into the existing in-memory `IActivityLog`/`ActivityEntry`, and surface them
+      as column(s) in `ActivityLogWindow` — nothing transmitted, no third-party, no
+      policy change. Document the optional dev-only OpenTelemetry + local Aspire
+      dashboard path in `CLAUDE.md`/`STORE.md` (not shipped). Lets the Slice 17/18
+      gains be measured on the user's machine instead of guessed.
+
 ## Out of Scope
 
 - Voice *tuning* beyond playback rate (pitch, volume, SSML prosody).
@@ -637,5 +724,23 @@ smallest-first; each is independently shippable.
   secrets). Pushing the **first auto-versioned tag** (a `0.x` version — not
   `v1.0.0`) produces the first Store-ready GitHub Release with both arch MSIX
   packages.
+- **Slice 17:** launch the app, wait a moment, then immediately select text in a
+  UIA app (or press the hotkey) for the **first** read of the session → speech
+  starts promptly with no multi-second "is it broken?" stall (compare against the
+  pre-warm build, where the first read lagged). Subsequent reads are unaffected.
+  Confirm the UI is responsive during the startup warm-up (no freeze) and that a
+  read fired *before* warm-up completes still works (falls through to lazy
+  `EnsureTts()`), and that audio still plays under package identity.
+- **Slice 18:** a quick click/double-click select reads with only a brief pause
+  (no half-second wait); a slow drag-select of a sentence still reads **once**
+  after the drag settles (no burst). A long multi-paragraph selection starts
+  speaking after a short first synthesis (first sentence), not after the whole
+  first paragraph. The clipboard-copy path behaves the same.
+- **Slice 19:** trigger a read → the activity-log row shows a
+  **time-to-first-audio** (and synthesis-duration) value; values are plausible and
+  drop noticeably after Slice 17's warm-up vs a cold first read. Nothing leaves
+  the device (no network call, no third-party SDK referenced). The optional dev
+  OpenTelemetry/Aspire-dashboard path is documented but not part of the shipped
+  package.
 - Manual UI checks driven through the running app; no browser E2E harness
   applies to a native tray app.
