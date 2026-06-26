@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using ReadTheStupidText.Application.Activity;
 using ReadTheStupidText.Application.Input;
 using ReadTheStupidText.Application.Settings;
@@ -53,6 +54,12 @@ public sealed class ReadAloudService : IDisposable
     // Monotonic timestamp of the last auto-read event, to tell a lone select from an
     // in-progress drag (events arriving within BurstGapMs of each other).
     private long _lastAutoReadTick;
+
+    // Monotonic baselines for the local timing diagnostics (Decision 26): when the
+    // active entry was created (time-to-first-audio) and when its synthesis began
+    // (synthesis duration). Both are read on the first Playing transition.
+    private long _activeReadStartTicks;
+    private long _synthStartTicks;
 
     // The entry currently pending or being read, tracked so a new selection,
     // deselect, or completion can transition it (ignored/interrupted/read).
@@ -386,6 +393,7 @@ public sealed class ReadAloudService : IDisposable
         _lastTriggeredText = text;
         ActivityEntry entry = _log.Add(trigger, _foreground.Capture(), text);
         _activeEntry = entry;
+        _activeReadStartTicks = Stopwatch.GetTimestamp();
         return entry;
     }
 
@@ -418,6 +426,7 @@ public sealed class ReadAloudService : IDisposable
             // Synthesis runs first (no audio yet) → GeneratingAudio; the reader's
             // first Playing transition flips it to Reading (OnReaderStateChanged),
             // natural completion → Read (OnReaderCompleted), errors → catch below.
+            _synthStartTicks = Stopwatch.GetTimestamp();
             _log.SetState(entry, ActivityState.GeneratingAudio);
             await _reader.SpeakAsync(text);
         }
@@ -429,11 +438,17 @@ public sealed class ReadAloudService : IDisposable
     }
 
     // The reader starting to play flips the active entry from GeneratingAudio (the
-    // synthesis wait) to Reading. Later Playing transitions (per chunk) are no-ops.
+    // synthesis wait) to Reading, and records the local timing diagnostics (the
+    // first Playing transition is "first audio"). Later Playing transitions (per
+    // chunk) are no-ops.
     private void OnReaderStateChanged(object? sender, PlaybackState state)
     {
         if (state == PlaybackState.Playing && _activeEntry is { State: ActivityState.GeneratingAudio } entry)
         {
+            _log.RecordTiming(
+                entry,
+                Stopwatch.GetElapsedTime(_activeReadStartTicks),
+                Stopwatch.GetElapsedTime(_synthStartTicks));
             _log.SetState(entry, ActivityState.Reading);
         }
     }

@@ -62,6 +62,21 @@ public class ActivityLogTests
     }
 
     [Fact]
+    public void RecordTiming_sets_the_durations_and_raises_EntryChanged()
+    {
+        var log = new ActivityLog();
+        ActivityEntry entry = AddSample(log);
+        int changes = 0;
+        log.EntryChanged += (_, _) => changes++;
+
+        log.RecordTiming(entry, TimeSpan.FromMilliseconds(420), TimeSpan.FromMilliseconds(180));
+
+        Assert.Equal(TimeSpan.FromMilliseconds(420), entry.TimeToFirstAudio);
+        Assert.Equal(TimeSpan.FromMilliseconds(180), entry.SynthesisDuration);
+        Assert.Equal(1, changes);
+    }
+
+    [Fact]
     public void Entries_are_capped_at_200_dropping_the_oldest()
     {
         var log = new ActivityLog();

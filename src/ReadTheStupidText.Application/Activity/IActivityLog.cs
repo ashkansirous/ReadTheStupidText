@@ -26,4 +26,9 @@ public interface IActivityLog
     /// unchanged). The reason explains a deviation from the read-to-completion
     /// path and defaults to <see cref="ActivityReason.None"/>.</summary>
     void SetState(ActivityEntry entry, ActivityState state, ActivityReason reason = ActivityReason.None);
+
+    /// <summary>Records the local timing diagnostics for an entry when audio first
+    /// plays and raises a change event so the UI refreshes. In-memory only — nothing
+    /// is transmitted (Decision 26).</summary>
+    void RecordTiming(ActivityEntry entry, TimeSpan timeToFirstAudio, TimeSpan synthesisDuration);
 }
