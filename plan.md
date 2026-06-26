@@ -474,7 +474,7 @@ smallest-first; each is independently shippable.
       UIA `ISelectionMonitor` and the `IClipboardMonitor` independently in
       `ReadAloudService`. Surface two `ToggleSwitch`es in the right-click menu
       **and** the control panel, kept in sync via the existing event pattern.
-- [ ] **Slice 13 — "Media Card" control-panel redesign + media-player
+- [x] **Slice 13 — "Media Card" control-panel redesign + media-player
       progress.** ([#52](https://github.com/ashkansirous/ReadTheStupidText/issues/52)) (Decisions 20, 21) Rebuild `ControlPanelWindow` to the
       `design_handoff_tray_panel/` spec with native WinUI Fluent controls and
       light/dark theme resources: gradient header + glyph watermark + eyebrow/

@@ -31,11 +31,14 @@ public sealed class SpeechReader : ISpeechReader, IDisposable
         _player.MediaOpened += OnMediaOpened;
         _player.MediaEnded += OnMediaEnded;
         _player.PlaybackSession.PlaybackStateChanged += OnPlaybackStateChanged;
+        _player.PlaybackSession.PositionChanged += OnPositionChanged;
     }
 
     public event EventHandler<PlaybackState>? StateChanged;
 
     public event EventHandler? Completed;
+
+    public event EventHandler<double>? ProgressChanged;
 
     public PlaybackState State => _state;
 
@@ -76,6 +79,7 @@ public sealed class SpeechReader : ISpeechReader, IDisposable
 
         _player.Pause();
         ClearSource();
+        ProgressChanged?.Invoke(this, 0);
         UpdateState(PlaybackState.Idle);
     }
 
@@ -136,6 +140,17 @@ public sealed class SpeechReader : ISpeechReader, IDisposable
     {
         UpdateState(PlaybackState.Idle);
         Completed?.Invoke(this, EventArgs.Empty);
+    }
+
+    // A single stream, so read-through progress is just position over duration.
+    private void OnPositionChanged(MediaPlaybackSession sender, object args)
+    {
+        if (sender.NaturalDuration <= TimeSpan.Zero)
+        {
+            return;
+        }
+
+        ProgressChanged?.Invoke(this, Math.Clamp(sender.Position / sender.NaturalDuration, 0, 1));
     }
 
     private void OnPlaybackStateChanged(MediaPlaybackSession sender, object args)

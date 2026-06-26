@@ -160,6 +160,21 @@ public sealed class ReadAloudService : IDisposable
         remove => _reader.StateChanged -= value;
     }
 
+    /// <summary>Read-through progress (0..1) of the current utterance, for the
+    /// control panel's progress bar. Best-effort for chunked synthesis.</summary>
+    public event EventHandler<double>? ProgressChanged
+    {
+        add => _reader.ProgressChanged += value;
+        remove => _reader.ProgressChanged -= value;
+    }
+
+    /// <summary>The foreground window the active read came from, or null when no
+    /// read is in progress. The UI composes the status line from this.</summary>
+    public WindowSource? CurrentReadWindow => _activeEntry?.Window;
+
+    /// <summary>How the active read was triggered, or null when idle.</summary>
+    public ActivityTrigger? CurrentReadTrigger => _activeEntry?.Trigger;
+
     /// <summary>Raised after the speed changes, so every control surface (tray
     /// menu, control panel) reflects the new value without polling.</summary>
     public event EventHandler<PlaybackRate>? SpeedChanged;

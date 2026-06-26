@@ -4,39 +4,47 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Startup;
+using ReadTheStupidText.Domain.Activity;
 using ReadTheStupidText.Domain.Reading;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
 using Windows.Graphics;
 using WinRT.Interop;
 
 namespace ReadTheStupidText_App;
 
 /// <summary>
-/// The left-click control panel. A borderless, always-on-top window pinned above
-/// every other window: it stays open until the user closes it (✕) or toggles the
-/// tray icon — it does not dismiss on click-away. The app keeps running in the
-/// tray; Quit lives only in the right-click menu. Every control reads live state
-/// on open and writes through the shared services, so it stays in sync with the
-/// tray menu.
+/// The left-click control panel — the "Media Card" design (Decision 20): a
+/// brand-gradient "now reading" header (waveform + status + transport) over a Fluent
+/// settings list. A borderless, always-on-top window pinned above every other window:
+/// it stays open until the user closes it (✕) or toggles the tray icon — it does not
+/// dismiss on click-away (Decision 12 kept). The app keeps running in the tray; Quit
+/// lives only in the right-click menu. Every control reads live state on open and
+/// writes through the shared services, so it stays in sync with the tray menu.
 /// </summary>
 public sealed partial class ControlPanelWindow : Window
 {
-    private const string PlayLabel = "Play";
-    private const string PauseLabel = "Pause";
+    // Segoe Fluent transport glyphs.
+    private const string PlayGlyph = "";
+    private const string PauseGlyph = "";
+
+    private const string ReadyStatus = "Ready";
+    private const string PausedStatus = "Paused";
 
     // Logical (effective-pixel) panel width and a generous fallback height used
     // until the content's real height is measured; both scaled to device pixels.
-    private const int LogicalWidth = 300;
-    private const int FallbackHeight = 460;
+    private const int LogicalWidth = 376;
+    private const int FallbackHeight = 520;
     private const int LogicalMargin = 12;
 
     private readonly ReadAloudService _readAloud;
     private readonly IStartupService _startup;
     private readonly DispatcherQueue _dispatcher = DispatcherQueue.GetForCurrentThread();
+    private Storyboard? _waveform;
 
     // Suppresses control events while the panel is being populated from state,
     // so refreshing the UI does not echo back as a user change. Starts true so
@@ -58,13 +66,15 @@ public sealed partial class ControlPanelWindow : Window
 
         InitializeComponent();
         SystemBackdrop = new MicaBackdrop();
+        _waveform = (Storyboard)RootGrid.Resources["WaveformStoryboard"];
         ConfigurePresenter();
         LoadVoices();
 
         RootGrid.Loaded += OnRootLoaded;
         _readAloud.StateChanged += OnPlaybackStateChanged;
+        _readAloud.ProgressChanged += OnProgressChanged;
 
-        // Neural voices arrive after the model downloads; rebuild the picker then.
+        // Neural voices arrive after the model loads; rebuild the picker then.
         _readAloud.VoicesChanged += OnVoicesChanged;
     }
 
@@ -103,7 +113,7 @@ public sealed partial class ControlPanelWindow : Window
         AppWindow.IsShownInSwitchers = false;
     }
 
-    // Neural voices are the only selectable ones; until the model has downloaded
+    // Neural voices are the only selectable ones; until the model has loaded
     // the list is empty, shown as a "preparing" state rather than a hidden row.
     private void LoadVoices()
     {
@@ -165,13 +175,13 @@ public sealed partial class ControlPanelWindow : Window
     private void RefreshState()
     {
         _refreshing = true;
-        SetPlayPauseLabel(_readAloud.State);
         UpdateSpeed(_readAloud.Speed);
         SelectCurrentVoice();
         AutoReadSelectionSwitch.IsOn = _readAloud.AutoReadOnSelection;
         AutoReadCopySwitch.IsOn = _readAloud.AutoReadOnCopy;
         _refreshing = false;
 
+        ApplyPlaybackState(_readAloud.State);
         _ = RefreshStartupAsync();
     }
 
@@ -179,6 +189,7 @@ public sealed partial class ControlPanelWindow : Window
     {
         SpeedSlider.Value = rate.Value;
         SpeedLabel.Text = rate.ToDisplayLabel();
+        SpeedPill.Text = rate.ToDisplayLabel();
     }
 
     private void SelectCurrentVoice()
@@ -213,6 +224,7 @@ public sealed partial class ControlPanelWindow : Window
 
         var rate = new PlaybackRate(e.NewValue);
         SpeedLabel.Text = rate.ToDisplayLabel();
+        SpeedPill.Text = rate.ToDisplayLabel();
         _readAloud.SetSpeed(rate);
     }
 
@@ -263,10 +275,76 @@ public sealed partial class ControlPanelWindow : Window
     }
 
     private void OnPlaybackStateChanged(object? sender, PlaybackState state) =>
-        _dispatcher.TryEnqueue(() => SetPlayPauseLabel(state));
+        _dispatcher.TryEnqueue(() => ApplyPlaybackState(state));
 
-    private void SetPlayPauseLabel(PlaybackState state) =>
-        PlayPauseButton.Content = state == PlaybackState.Playing ? PauseLabel : PlayLabel;
+    // Drives every state-dependent header element together: the play/pause glyph,
+    // the dynamic status line, and the waveform animation. Progress is cleared when
+    // idle so the bar reads empty on Ready.
+    private void ApplyPlaybackState(PlaybackState state)
+    {
+        PlayPauseIcon.Glyph = state == PlaybackState.Playing ? PauseGlyph : PlayGlyph;
+        StatusText.Text = DescribeStatus(state);
+        SetWaveformPlaying(state == PlaybackState.Playing);
+        if (state == PlaybackState.Idle)
+        {
+            SetProgress(0);
+        }
+    }
+
+    // The status line is composed here (presentation), from the structured read
+    // source the service exposes: clipboard reads name no window; selection reads
+    // name the foreground app when known.
+    private string DescribeStatus(PlaybackState state)
+    {
+        if (state == PlaybackState.Paused)
+        {
+            return PausedStatus;
+        }
+
+        if (state != PlaybackState.Playing)
+        {
+            return ReadyStatus;
+        }
+
+        if (_readAloud.CurrentReadTrigger == ActivityTrigger.Clipboard)
+        {
+            return "Reading clipboard…";
+        }
+
+        string? app = _readAloud.CurrentReadWindow?.App;
+        return string.IsNullOrWhiteSpace(app)
+            ? "Reading selection…"
+            : $"Reading selection from {app}…";
+    }
+
+    private void SetWaveformPlaying(bool playing)
+    {
+        if (_waveform is null)
+        {
+            return;
+        }
+
+        if (playing)
+        {
+            _waveform.Begin();
+        }
+        else
+        {
+            _waveform.Stop();
+        }
+    }
+
+    private void OnProgressChanged(object? sender, double progress) =>
+        _dispatcher.TryEnqueue(() => SetProgress(progress));
+
+    // The progress bar is two star-weighted columns (fill / rest); the thumb sits
+    // at their boundary. Display-only — seeking is out of scope (Decision 21).
+    private void SetProgress(double progress)
+    {
+        double fill = Math.Clamp(progress, 0, 1);
+        ProgressFillColumn.Width = new GridLength(fill, GridUnitType.Star);
+        ProgressRestColumn.Width = new GridLength(1 - fill, GridUnitType.Star);
+    }
 
     [DllImport("user32.dll")]
     private static extern uint GetDpiForWindow(IntPtr hwnd);

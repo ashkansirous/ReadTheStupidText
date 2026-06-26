@@ -16,6 +16,11 @@ public interface ISpeechReader
     /// (not when it is stopped/superseded), so the caller can mark it complete.</summary>
     event EventHandler? Completed;
 
+    /// <summary>Raised as playback advances with the read-through fraction (0..1) of
+    /// the current utterance. Best-effort for chunked synthesis (each chunk weighted
+    /// equally); resets toward 0 when a new read starts or playback stops.</summary>
+    event EventHandler<double>? ProgressChanged;
+
     PlaybackState State { get; }
 
     /// <summary>

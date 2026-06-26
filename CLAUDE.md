@@ -142,16 +142,28 @@ is English-first, Apache-2.0, espeak-free, and Store-safe. Note the build-time
 `onnxruntime.dll` dedupe in the App `.csproj` (WinML and sherpa both ship one; we
 keep sherpa's).
 
-Note: a **left-click tray control panel** is now **in scope** (Slice 8, see
+Note: a **left-click tray control panel** is **in scope** (Slice 8, see
 Decision 12 in `plan.md`) — a borderless, always-on-top `AppWindow`, **pinned
 above all windows** (it stays open until the ✕ or another tray click; it does
-*not* light-dismiss), sized to its content, holding the fine 0.05 speed slider,
-voice picker, play/pause, and the auto-read/startup toggles. It is *not* a
-persistent settings window: it's transient and every control maps to an
-existing service. The
+*not* light-dismiss), sized to its content. It is *not* a persistent settings
+window: it's transient and every control maps to an existing service. The
 right-click `MenuFlyout` stays (Quit lives there only). Rich controls (slider,
 `ComboBox`) **cannot** go in H.NotifyIcon's `PopupMenu` — that's why the panel
 is a real window, not a flyout (same native-menu limit as Decision 11).
+
+As of **Slice 13 (Decisions 20–21)** the panel is the **"Media Card"** design
+(`design_handoff_tray_panel/`): a brand-gradient header (glyph watermark, `NOW
+READING` eyebrow, title, a live 5-bar **waveform** + dynamic status text, and a
+transport row = 40px play/pause circle + **live progress bar** + speed pill) over
+a Fluent settings list (fine 0.05 speed slider, voice picker, the **two**
+auto-read toggles, launch-at-startup) and a `Ctrl+Win+R` hotkey footer. Built with
+native WinUI Fluent controls + light/dark `ThemeDictionaries` from the design
+tokens (the HTML is the visual source of truth, not shipped code); it **keeps** the
+pinned-topmost behavior (no click-away/Esc dismiss). The progress bar is driven by
+`ISpeechReader.ProgressChanged` (a 0..1 read-through fraction from `MediaPlayer`
+position + chunk index, weighting chunks equally) and is **display-only** — true
+scrubbing/seek is out of scope (Decision 21); the status line is composed in the
+View from `ReadAloudService.CurrentReadWindow`/`CurrentReadTrigger`.
 
 Note: read activity flows through **`IActivityLog`** (Application — an in-memory,
 observable ring buffer; `ActivityEntry`/`ActivityState`/`ActivityTrigger`/
