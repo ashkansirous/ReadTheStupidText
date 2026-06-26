@@ -50,6 +50,19 @@ public class SpeechTextChunkerTests
     }
 
     [Fact]
+    public void First_chunk_of_a_long_read_is_just_the_leading_sentence()
+    {
+        // One paragraph of several sentences, over SingleChunkMax so it splits.
+        string text = "First short sentence. " +
+            string.Concat(Enumerable.Repeat("Then more padding sentence here. ", 8));
+
+        IReadOnlyList<string> chunks = SpeechTextChunker.Split(text);
+
+        Assert.True(chunks.Count > 1, "long text should split");
+        Assert.Equal("First short sentence.", chunks[0]);
+    }
+
+    [Fact]
     public void A_single_oversized_sentence_is_hard_wrapped_on_words()
     {
         string longSentence = string.Concat(Enumerable.Repeat("word ", 80)).Trim(); // ~400 chars, no . ! ?

@@ -586,7 +586,7 @@ shippable. (No GitHub issues yet — create via `plan-to-issues` if wanted.)
       throwaway synthesis to warm the ONNX graph, so the first real read no longer
       pays the cold-start cost. Keep the lazy `EnsureTts()` as the fallback if a
       read arrives before warm-up finishes. No UI-thread blocking; idempotent.
-- [ ] **Slice 18 — Adaptive settle delay + smaller first chunk.** ([#85](https://github.com/ashkansirous/ReadTheStupidText/issues/85)) (Decision 25)
+- [x] **Slice 18 — Adaptive settle delay + smaller first chunk.** ([#85](https://github.com/ashkansirous/ReadTheStupidText/issues/85)) (Decision 25)
       Replace `ReadAloudService`'s flat `SelectionDebounceMs = 500` with a short
       (~150 ms) baseline that extends only while events keep arriving (a live
       drag), so click-selects fire fast and drags still collapse to one read. Bias

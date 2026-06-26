@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -9,6 +10,8 @@ namespace ReadTheStupidText.Infrastructure.Reading;
 /// Text at or under <see cref="SingleChunkMax"/> stays whole; longer text is split
 /// on paragraph boundaries, then on sentences, then — only for a single oversized
 /// sentence — on word boundaries, so no chunk greatly exceeds <see cref="TargetChunkMax"/>.
+/// The very first chunk is biased toward a single sentence so playback starts after
+/// a short first synthesis rather than a whole paragraph (time-to-first-audio).
 /// </summary>
 internal static partial class SpeechTextChunker
 {
@@ -29,7 +32,29 @@ internal static partial class SpeechTextChunker
             AppendParagraph(paragraph, chunks);
         }
 
-        return chunks.Count > 0 ? chunks : new[] { trimmed };
+        if (chunks.Count == 0)
+        {
+            return new[] { trimmed };
+        }
+
+        BiasFirstChunkToOneSentence(chunks);
+        return chunks;
+    }
+
+    // Time-to-first-audio is dominated by the first chunk's synthesis. If that chunk
+    // bundles several sentences, peel its leading sentence into its own chunk so
+    // playback can start after a short synthesis; the remainder becomes the next
+    // chunk. A single-sentence (or word-wrapped) first chunk is left untouched.
+    private static void BiasFirstChunkToOneSentence(List<string> chunks)
+    {
+        List<string> sentences = SplitSentences(chunks[0]).ToList();
+        if (sentences.Count <= 1)
+        {
+            return;
+        }
+
+        chunks[0] = sentences[0];
+        chunks.Insert(1, string.Join(' ', sentences.Skip(1)));
     }
 
     private static IEnumerable<string> SplitParagraphs(string text)
