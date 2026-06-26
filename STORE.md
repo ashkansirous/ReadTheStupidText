@@ -6,6 +6,25 @@ build/packaging pipeline. The app is now **reserved in Partner Center** and its
 real identity is **wired into `Package.appxmanifest`** (see below); what remains
 is the first manual submission and the CI secrets/variable for automated updates.
 
+## Release pipeline status (Slice 16)
+
+Verified end-to-end and **live**:
+
+- ✅ **Versioning → build → release** runs in the single `build.yml` (GitVersion →
+  per-arch MSIX → `v<x.y.z>` tag + GitHub Release). It has cut real releases
+  (`v0.1.0` … `v0.4.0`), staying in `0.x` as intended — **not** forced to `v1.0.0`.
+- ✅ **Tests gate the release** — a `test` job runs the unit suite and blocks
+  `build`/`release` on failure (Slice 15b).
+- ✅ **Store identity** wired into the manifest (Slice 16 / Decision 23) and
+  cross-checked against the reserved Partner Center product (below).
+- ✅ **`store-submit.yml`** is present and valid but **intentionally inert**
+  (`workflow_dispatch` only; fails fast without the secrets below) — it's a
+  deploy button, not an auto-run.
+
+**Manual remainder (needs a human + Partner Center, not code):** the first Store
+submission, then the four secrets + one variable to enable automated updates —
+see *Deploying to the Store* below.
+
 ## App identity (wired into the manifest)
 
 These are the Partner Center **Product identity** values for the reserved app and
