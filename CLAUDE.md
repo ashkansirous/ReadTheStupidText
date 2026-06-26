@@ -77,6 +77,23 @@ remaining Partner Center steps. `Release` builds cleanly now — trimming is
 disabled (`PublishTrimmed=false`); packaged WinUI apps aren't trimmed, and
 `PublishTrimmed` without self-contained was the old `NETSDK1102` failure.
 
+## Tests
+
+Unit tests live in `tests/ReadTheStupidText.Tests` (xUnit v3, `net10.0-windows`),
+covering the **pure** logic only — `PlaybackRate`, `SpeechTextChunker`,
+`SupertonicVoiceTable`, `ActivityLog`, and the `LocalSettingsStore` settings
+migration (via the pure `ResolveAutoReadFlag`; internals are exposed through
+`InternalsVisibleTo`). The WinUI/WinRT/native paths (readers, monitors, windows)
+are **not** unit-tested — they need package identity / a UI host; verify those by
+running the app (VS **(Package)** profile). Run the suite with:
+
+```bash
+dotnet test tests/ReadTheStupidText.Tests/ReadTheStupidText.Tests.csproj
+```
+
+A CI `test` job in `build.yml` runs them on every push/PR and **gates** the
+`build`/`release` jobs, so a failing test blocks the release.
+
 ## Versioning, license & releases (Batch 2 — Slices 11–16)
 
 - **License is MIT** (Decision 16 in `plan.md`). Anyone may use/extend/sell it

@@ -51,8 +51,25 @@ jobs:
         with:
           useConfigFile: true
 
+  # Unit tests for the pure logic (PlaybackRate, SpeechTextChunker, settings
+  # migration, voice table, activity log). Gates the build/release jobs so a
+  # broken release never ships. No LFS needed — the tests don't load the model.
+  test:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Run unit tests
+        run: dotnet test tests/ReadTheStupidText.Tests/ReadTheStupidText.Tests.csproj --configuration Release
+
   build:
-    needs: version
+    needs: [version, test]
     runs-on: windows-latest
     strategy:
       fail-fast: false

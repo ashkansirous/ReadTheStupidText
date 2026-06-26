@@ -5,6 +5,12 @@
     <ProjectReference Include="..\ReadTheStupidText.Domain\ReadTheStupidText.Domain.csproj" />
   </ItemGroup>
 
+  <!-- Expose internal pure logic (SpeechTextChunker, SupertonicVoiceTable, the
+       settings-migration resolver) to the unit-test project. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="ReadTheStupidText.Tests" />
+  </ItemGroup>
+
   <!-- Local neural TTS engine (sherpa-onnx runtime, Apache-2.0) running the
        Supertonic-3 voice model. The managed package transitively pulls the
        per-RID native runtimes; only the build RID's DLLs are copied to output. -->
