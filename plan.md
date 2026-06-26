@@ -593,7 +593,7 @@ shippable. (No GitHub issues yet — create via `plan-to-issues` if wanted.)
       `SpeechTextChunker`'s **first** chunk toward a single sentence so audio
       starts sooner; later chunks unchanged. Both shorten per-read
       time-to-first-audio without changing the concurrent-synthesis model.
-- [ ] **Slice 19 — Local-only timing diagnostics.** ([#86](https://github.com/ashkansirous/ReadTheStupidText/issues/86)) (Decision 26) Record
+- [x] **Slice 19 — Local-only timing diagnostics.** ([#86](https://github.com/ashkansirous/ReadTheStupidText/issues/86)) (Decision 26) Record
       time-to-first-audio (entry → first `Playing`) and synthesis duration per read
       into the existing in-memory `IActivityLog`/`ActivityEntry`, and surface them
       as column(s) in `ActivityLogWindow` — nothing transmitted, no third-party, no

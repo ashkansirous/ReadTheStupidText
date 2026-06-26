@@ -61,6 +61,13 @@ public sealed class ActivityLog : IActivityLog
         EntryChanged?.Invoke(this, entry);
     }
 
+    public void RecordTiming(ActivityEntry entry, TimeSpan timeToFirstAudio, TimeSpan synthesisDuration)
+    {
+        entry.TimeToFirstAudio = timeToFirstAudio;
+        entry.SynthesisDuration = synthesisDuration;
+        EntryChanged?.Invoke(this, entry);
+    }
+
     private static string Truncate(string text) =>
         text.Length <= MaxTextLength ? text : text[..MaxTextLength];
 }

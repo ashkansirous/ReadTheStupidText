@@ -82,6 +82,21 @@ Declared in `Package.appxmanifest`:
 No `internetClient` — the neural voice model ships **inside the package**, so the
 app makes no network calls.
 
+## Privacy & diagnostics
+
+The app **collects and transmits nothing**. The read-latency timing diagnostics
+added in Slice 19 (time-to-first-audio and synthesis duration per read) live only in
+the in-memory activity log — shown in the activity-log window, capped, and cleared on
+every restart. There is no third-party analytics SDK, no network call, and no
+on-disk telemetry, so the Store privacy questionnaire stays "no data collected".
+
+For **dev-time** performance tuning only, the read pipeline may optionally be
+instrumented with **OpenTelemetry** (`Activity`/`Meter`) and observed via a **local
+Aspire dashboard** (an OTLP viewer on the developer's own machine). This is **not
+part of the shipped MSIX** and exports nothing off the device. Full .NET Aspire was
+evaluated and rejected as a shipped mechanism — it orchestrates *distributed* apps at
+dev time and is not a redistributable runtime (Decision 26 in `plan.md`).
+
 ## Third-party components and licenses
 
 | Component | Use | License |

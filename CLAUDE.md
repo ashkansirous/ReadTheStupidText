@@ -243,3 +243,18 @@ but while events keep arriving within `BurstGapMs` (a live drag) each one extend
 the wait to **500 ms**, so a drag still collapses to one read. The
 swapped-`_selectionCts` supersede makes any late extra read harmless. Both auto-read
 paths (UIA selection + clipboard copy) share this debounce in `ReadAloudService`.
+
+**Local-only timing diagnostics (Slice 19, Decision 26).** Each `ActivityEntry`
+carries two nullable diagnostics — **`TimeToFirstAudio`** (entry created → the
+reader's first `Playing` transition) and **`SynthesisDuration`** (GeneratingAudio →
+first `Playing`, the metric Slice 17's warm-up shrinks). `ReadAloudService` measures
+them with monotonic `Stopwatch` timestamps and calls `IActivityLog.RecordTiming` at
+the first-Playing transition; `ActivityLogWindow` shows them as the **First audio**
+and **Synth** columns (`TimingText` formats ms/s, blank until measured). This stays
+**in-memory, cleared on restart, never transmitted** — no third-party SDK, no
+network, no privacy-policy change (consistent with the "we collect nothing" stance).
+For *dev-time* tuning only, you may optionally instrument the read pipeline with
+**OpenTelemetry** `Activity`/`Meter` and attach a **local Aspire dashboard** (an OTLP
+viewer run on the dev machine) — **not shipped** in the MSIX; .NET Aspire was
+rejected as a redistributable mechanism (it orchestrates *distributed* apps at dev
+time and would reintroduce telemetry-export/cost concerns). See `STORE.md`.
