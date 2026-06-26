@@ -21,6 +21,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!-- Header: title + close button -->
@@ -85,17 +86,24 @@
                 Style="{ThemeResource CaptionTextBlockStyle}" />
         </StackPanel>
 
-        <!-- Auto-read on selection -->
+        <!-- Auto-read on selection (UIA) -->
         <ToggleSwitch
-            x:Name="AutoReadSwitch"
+            x:Name="AutoReadSelectionSwitch"
             Grid.Row="4"
             Header="Auto-read on selection"
-            Toggled="OnAutoReadToggled" />
+            Toggled="OnAutoReadSelectionToggled" />
+
+        <!-- Auto-read on copy (console / non-UIA path) -->
+        <ToggleSwitch
+            x:Name="AutoReadCopySwitch"
+            Grid.Row="5"
+            Header="Auto-read on copy"
+            Toggled="OnAutoReadCopyToggled" />
 
         <!-- Launch at startup -->
         <ToggleSwitch
             x:Name="StartupSwitch"
-            Grid.Row="5"
+            Grid.Row="6"
             Header="Launch at startup"
             Toggled="OnStartupToggled" />
     </Grid>

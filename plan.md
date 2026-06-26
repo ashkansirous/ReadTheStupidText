@@ -463,17 +463,25 @@ Commits (default patch) and **stays `0.x`** — it is **not** forced to `v1.0.0`
 the app reaches `1.0.0` only when the user declares it stable. Ordered
 smallest-first; each is independently shippable.
 
-- [ ] **Slice 11 — Overlord voice names.** ([#46](https://github.com/ashkansirous/ReadTheStupidText/issues/46)) (Decision 19) Rename the ten
+- [x] **Slice 11 — Overlord voice names.** ([#46](https://github.com/ashkansirous/ReadTheStupidText/issues/46)) (Decision 19) Rename the ten
       `DisplayName`s in `SupertonicVoiceTable` to the Overlord mapping (default
       **Momonga** = M1); leave the `supertonic:` ids and sid order untouched.
       Smallest end-to-end change — the picker/menu show the new names with no
       engine change.
-- [ ] **Slice 12 — Split auto-read into two toggles.** ([#48](https://github.com/ashkansirous/ReadTheStupidText/issues/48)) (Decision 22) Add
+- [x] **Slice 12 — Split auto-read into two toggles.** ([#48](https://github.com/ashkansirous/ReadTheStupidText/issues/48)) (Decision 22) Add
       `AutoReadOnSelection` + `AutoReadOnCopy` to `ISettingsStore` and its impl
       (both default on; migrate an old `IsEnabled=false` to both off). Gate the
       UIA `ISelectionMonitor` and the `IClipboardMonitor` independently in
       `ReadAloudService`. Surface two `ToggleSwitch`es in the right-click menu
       **and** the control panel, kept in sync via the existing event pattern.
+      *As built:* `LocalSettingsStore` resolves each toggle from its own key,
+      falling back to the legacy `IsEnabled` then `true`, so an upgraded
+      `IsEnabled=false` profile opens with both off. `ReadAloudService` exposes
+      `AutoReadOnSelection`/`AutoReadOnCopy` (with matching `…Changed` events) —
+      the first starts/stops the UIA monitor, the second gates the clipboard
+      handler; the hotkey is unaffected. Two `ToggleMenuFlyoutItem`s and two panel
+      `ToggleSwitch`es drive them, the menu mirroring panel changes via the events
+      and the panel re-reading state on open.
 - [ ] **Slice 13 — "Media Card" control-panel redesign + media-player
       progress.** ([#52](https://github.com/ashkansirous/ReadTheStupidText/issues/52)) (Decisions 20, 21) Rebuild `ControlPanelWindow` to the
       `design_handoff_tray_panel/` spec with native WinUI Fluent controls and
@@ -484,7 +492,7 @@ smallest-first; each is independently shippable.
       pinned-topmost `AppWindow` (Decision 12 — no click-away dismiss). Wire the
       progress bar to `MediaPlayer` position + chunk completion; seek is
       best-effort (chunk-boundary resync) only.
-- [ ] **Slice 14 — MIT license + Conventional-Commits auto-release.**
+- [x] **Slice 14 — MIT license + Conventional-Commits auto-release.**
       ([#57](https://github.com/ashkansirous/ReadTheStupidText/issues/57)) (Decisions 16, 17) Add a `LICENSE` file (MIT, attributed to Ashkan Sirous)
       and replace README's "License: TBD". Add a CI job/workflow that, on merge
       to `main`, computes the next SemVer from Conventional Commits, writes it

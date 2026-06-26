@@ -12,9 +12,10 @@ namespace ReadTheStupidText.Application.Reading;
 /// the fallback for non-UIA apps), the UI Automation selection monitor (auto-read
 /// on selection), and the clipboard monitor (auto-read on copy — the path for the
 /// console and other apps with no UIA text selection). The two auto-read paths are
-/// gated by <see cref="IsEnabled"/>; <see cref="_lastTriggeredText"/> de-dupes the
+/// gated independently by <see cref="AutoReadOnSelection"/> and
+/// <see cref="AutoReadOnCopy"/>; <see cref="_lastTriggeredText"/> de-dupes the
 /// same text arriving from more than one path. Also forwards the flyout's
-/// play/pause and speed choices. Speed and enabled state are persisted.
+/// play/pause and speed choices. Speed and the toggles are persisted.
 /// </summary>
 public sealed class ReadAloudService : IDisposable
 {
@@ -90,7 +91,7 @@ public sealed class ReadAloudService : IDisposable
         _voiceModel.ReadyChanged += OnVoiceModelReady;
         _ = _voiceModel.InitializeAsync();
 
-        if (_settings.IsEnabled)
+        if (_settings.AutoReadOnSelection)
         {
             _selectionMonitor.Start();
         }
@@ -125,17 +126,31 @@ public sealed class ReadAloudService : IDisposable
     }
 
     /// <summary>
-    /// Whether auto-read on selection is on. Persisted, and starts/stops the
-    /// selection monitor. The hotkey works regardless of this flag.
+    /// Whether auto-read on text selection is on. Persisted, and starts/stops the
+    /// UIA selection monitor. The hotkey works regardless of this flag.
     /// </summary>
-    public bool IsEnabled
+    public bool AutoReadOnSelection
     {
-        get => _settings.IsEnabled;
+        get => _settings.AutoReadOnSelection;
         set
         {
-            _settings.IsEnabled = value;
-            ApplyAutoRead(value);
-            EnabledChanged?.Invoke(this, value);
+            _settings.AutoReadOnSelection = value;
+            ApplySelectionMonitor(value);
+            AutoReadOnSelectionChanged?.Invoke(this, value);
+        }
+    }
+
+    /// <summary>
+    /// Whether auto-read on clipboard copy is on. Persisted; gates the clipboard
+    /// monitor path (the console / non-UIA fallback). The hotkey is unaffected.
+    /// </summary>
+    public bool AutoReadOnCopy
+    {
+        get => _settings.AutoReadOnCopy;
+        set
+        {
+            _settings.AutoReadOnCopy = value;
+            AutoReadOnCopyChanged?.Invoke(this, value);
         }
     }
 
@@ -152,8 +167,11 @@ public sealed class ReadAloudService : IDisposable
     /// <summary>Raised after the narrator voice changes.</summary>
     public event EventHandler<string>? VoiceChanged;
 
-    /// <summary>Raised after auto-read is toggled on or off.</summary>
-    public event EventHandler<bool>? EnabledChanged;
+    /// <summary>Raised after auto-read on selection is toggled on or off.</summary>
+    public event EventHandler<bool>? AutoReadOnSelectionChanged;
+
+    /// <summary>Raised after auto-read on copy is toggled on or off.</summary>
+    public event EventHandler<bool>? AutoReadOnCopyChanged;
 
     /// <summary>Raised when the set of selectable voices becomes available (the
     /// neural model loaded), so control surfaces can rebuild their pickers.</summary>
@@ -210,7 +228,7 @@ public sealed class ReadAloudService : IDisposable
         VoicesChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    private void ApplyAutoRead(bool enabled)
+    private void ApplySelectionMonitor(bool enabled)
     {
         if (enabled)
         {
@@ -263,7 +281,7 @@ public sealed class ReadAloudService : IDisposable
     // (e.g. a copy-on-select duplicate of a UIA selection).
     private async void OnClipboardContentChanged(object? sender, EventArgs e)
     {
-        if (!IsEnabled || _copyingForRead)
+        if (!_settings.AutoReadOnCopy || _copyingForRead)
         {
             return;
         }
