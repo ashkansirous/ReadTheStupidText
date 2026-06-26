@@ -220,7 +220,10 @@ the hotkey is the always-available fallback). See Slice 10 / Decision 15 in
 The neural reader (`SupertonicSpeechReader`) **chunks** long text
 (`SpeechTextChunker`, paragraph→sentence→word) and synthesizes the chunks
 **concurrently (degree 3)** while playing them **in order**, so a long read starts
-speaking after the first chunk. A superseded/stopped read is torn down via a
+speaking after the first chunk. The **first** chunk is biased toward a single
+sentence (Slice 18, Decision 25) so time-to-first-audio is a short synthesis, not a
+whole paragraph; later chunks keep the ~200-char paragraph→sentence→word split. A
+superseded/stopped read is torn down via a
 **generation counter + `CancellationToken`** (`ISpeechReader.Stop()`), so stale
 synthesis can never reach the shared `MediaPlayer`; `read` is marked only on the
 reader's **`Completed`** (natural end), never on a stop-induced idle.
@@ -233,3 +236,10 @@ background thread to JIT the ONNX graph. The lazy `EnsureTts()` stays as the
 safety net for a read that arrives before warm-up finishes; the build is
 double-checked under a lock so the eager warm-up and a first read can't each load
 the ~145 MB model. The WinRT fallback's `WarmUpAsync()` is a no-op.
+
+Auto-read uses an **adaptive settle** (Slice 18, Decision 25) rather than a flat
+delay: a lone select (click/double-click) reads after a short **150 ms** baseline,
+but while events keep arriving within `BurstGapMs` (a live drag) each one extends
+the wait to **500 ms**, so a drag still collapses to one read. The
+swapped-`_selectionCts` supersede makes any late extra read harmless. Both auto-read
+paths (UIA selection + clipboard copy) share this debounce in `ReadAloudService`.

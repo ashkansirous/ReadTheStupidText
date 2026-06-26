@@ -19,10 +19,21 @@ namespace ReadTheStupidText.Application.Reading;
 /// </summary>
 public sealed class ReadAloudService : IDisposable
 {
-    // A text selection fires many UIA change events while the user is dragging
-    // (one per character grown). Wait for the selection to settle this long
-    // before reading, so a drag collapses into a single read instead of a burst.
-    private const int SelectionDebounceMs = 500;
+    // Auto-read waits for the selection to settle before reading, so a drag-select
+    // (many UIA events, one per character grown) or a multi-message clipboard update
+    // collapses into one read. The settle is adaptive: a lone event (a click /
+    // double-click select) fires after a short baseline so it feels instant...
+    private const int SettleBaselineMs = 150;
+
+    // ...but once events are actively arriving (a live drag), each one extends the
+    // wait to this longer window, so a brief mid-drag pause can't fire a premature
+    // first read followed by a second. A late extra read is harmless anyway — the
+    // swapped _selectionCts supersede cancels the older one.
+    private const int SettleDraggingMs = 500;
+
+    // Two auto-read events closer together than this mark an active burst (a drag in
+    // progress), switching the settle from the baseline to the dragging window.
+    private const int BurstGapMs = 250;
 
     private readonly ISpeechReader _reader;
     private readonly IClipboardReader _clipboard;
@@ -38,6 +49,10 @@ public sealed class ReadAloudService : IDisposable
 
     // Cancels a pending debounced read when a newer selection supersedes it.
     private CancellationTokenSource? _selectionCts;
+
+    // Monotonic timestamp of the last auto-read event, to tell a lone select from an
+    // in-progress drag (events arriving within BurstGapMs of each other).
+    private long _lastAutoReadTick;
 
     // The entry currently pending or being read, tracked so a new selection,
     // deselect, or completion can transition it (ignored/interrupted/read).
@@ -315,23 +330,37 @@ public sealed class ReadAloudService : IDisposable
     }
 
     // Shared auto-read entry point: debounced so a drag-select (many events) or a
-    // multi-message clipboard update collapses into a single read.
+    // multi-message clipboard update collapses into a single read. A lone event
+    // settles after the short baseline; one arriving mid-burst (a drag) extends the
+    // wait so the read fires only once the selection stops growing.
     private void BeginAutoRead(ActivityTrigger trigger, string text)
     {
+        int settleMs = NextSettleDelayMs();
+
         var cts = new CancellationTokenSource();
         CancellationTokenSource? previous = Interlocked.Exchange(ref _selectionCts, cts);
         previous?.Cancel();
         previous?.Dispose();
 
         ActivityEntry entry = StartEntry(trigger, text);
-        _ = ReadAfterDebounceAsync(entry, text, cts.Token);
+        _ = ReadAfterDebounceAsync(entry, text, settleMs, cts.Token);
     }
 
-    private async Task ReadAfterDebounceAsync(ActivityEntry entry, string text, CancellationToken token)
+    // The baseline for a lone select, or the longer dragging window when this event
+    // follows the previous one closely enough to be part of an active drag.
+    private int NextSettleDelayMs()
+    {
+        long now = Environment.TickCount64;
+        bool dragging = now - _lastAutoReadTick < BurstGapMs;
+        _lastAutoReadTick = now;
+        return dragging ? SettleDraggingMs : SettleBaselineMs;
+    }
+
+    private async Task ReadAfterDebounceAsync(ActivityEntry entry, string text, int settleMs, CancellationToken token)
     {
         try
         {
-            await Task.Delay(SelectionDebounceMs, token);
+            await Task.Delay(settleMs, token);
         }
         catch (OperationCanceledException)
         {
