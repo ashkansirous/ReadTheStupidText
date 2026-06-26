@@ -240,6 +240,10 @@ public sealed class ReadAloudService : IDisposable
     private void OnVoiceModelReady(object? sender, EventArgs e)
     {
         ApplyPersistedVoice();
+
+        // The model is located; eagerly build and warm the neural engine off the UI
+        // thread (after the voice is applied) so the first real read is near-instant.
+        _ = _reader.WarmUpAsync();
         VoicesChanged?.Invoke(this, EventArgs.Empty);
     }
 

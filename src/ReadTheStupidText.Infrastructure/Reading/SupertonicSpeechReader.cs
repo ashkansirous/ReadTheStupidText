@@ -29,12 +29,20 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
     // first chunk instead of waiting for the whole text to synthesize.
     private const int MaxSynthesisConcurrency = 3;
 
+    // A throwaway utterance synthesized once at startup to JIT/warm the ONNX graph;
+    // its audio is discarded, so it never reaches the player.
+    private const string WarmUpText = "Ready.";
+
     private readonly IVoiceModelService _model;
     private readonly MediaPlayer _player = new() { AutoPlay = false };
 
     // Serializes the generation counter / synthesis-cancellation swap, which can be
     // touched concurrently by an in-flight SpeakAsync, a newer one, and Stop.
     private readonly object _gate = new();
+
+    // Serializes the one-time engine build so an eager warm-up and a lazy first read
+    // racing each other build a single OfflineTts (one ~145 MB model load), not two.
+    private readonly object _ttsGate = new();
 
     private OfflineTts? _tts;
     private MediaSource? _currentSource;
@@ -134,6 +142,25 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
         }
     }
 
+    // Builds the engine and runs one discarded synthesis to warm the ONNX graph, off
+    // the UI thread, so the first real read is near-instant. Idempotent and safe to
+    // race the lazy build in SpeakAsync; best-effort, with EnsureTts() as the fallback.
+    public Task WarmUpAsync() => Task.Run(WarmUp);
+
+    private void WarmUp()
+    {
+        try
+        {
+            OfflineTts? tts = EnsureTts();
+            _ = tts?.Generate(WarmUpText, 1.0f, _speakerId);
+        }
+        catch
+        {
+            // Warm-up is best-effort: if it fails, the lazy EnsureTts() in SpeakAsync
+            // remains the safety net and any real error surfaces on the first read.
+        }
+    }
+
     // Synthesizes one chunk to a WAV stream, throttled by the shared slot semaphore
     // so at most MaxSynthesisConcurrency run at once.
     private async Task<IRandomAccessStream> GenerateChunkAsync(
@@ -192,11 +219,15 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
 
     public void SetVoice(string voiceId) => _speakerId = SupertonicVoiceTable.SpeakerIdFor(voiceId);
 
+    // Returns the engine, building it once on first use. Double-checked under _ttsGate
+    // so a warm-up thread and a first read can't each construct one (the build loads
+    // the ~145 MB model). Volatile pairs the lock-free fast path with the locked write.
     private OfflineTts? EnsureTts()
     {
-        if (_tts is not null)
+        OfflineTts? existing = Volatile.Read(ref _tts);
+        if (existing is not null)
         {
-            return _tts;
+            return existing;
         }
 
         if (_model.Paths is not { } paths)
@@ -204,7 +235,23 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
             return null;
         }
 
-        string dir = paths.RootDir;
+        lock (_ttsGate)
+        {
+            if (_tts is not null)
+            {
+                return _tts;
+            }
+
+            OfflineTts built = BuildTts(paths.RootDir);
+            Volatile.Write(ref _tts, built);
+            return built;
+        }
+    }
+
+    // Builds the Supertonic engine from the model files under the given directory
+    // (no espeak/lexicon — Supertonic ships a unicode_indexer + voice.bin).
+    private static OfflineTts BuildTts(string dir)
+    {
         var config = new OfflineTtsConfig();
         config.Model.Supertonic.DurationPredictor = Path.Combine(dir, SupertonicFiles.DurationPredictor);
         config.Model.Supertonic.TextEncoder = Path.Combine(dir, SupertonicFiles.TextEncoder);
@@ -215,8 +262,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
         config.Model.Supertonic.VoiceStyle = Path.Combine(dir, SupertonicFiles.VoiceStyle);
         config.Model.NumThreads = SynthesisThreads;
         config.Model.Provider = "cpu";
-        _tts = new OfflineTts(config);
-        return _tts;
+        return new OfflineTts(config);
     }
 
     // Opens a new generation, cancelling the previous synthesis so a superseded

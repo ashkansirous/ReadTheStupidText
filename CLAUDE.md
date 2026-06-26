@@ -224,3 +224,12 @@ speaking after the first chunk. A superseded/stopped read is torn down via a
 **generation counter + `CancellationToken`** (`ISpeechReader.Stop()`), so stale
 synthesis can never reach the shared `MediaPlayer`; `read` is marked only on the
 reader's **`Completed`** (natural end), never on a stop-induced idle.
+
+To kill the cold-start stall on the **first** read (Slice 17, Decision 24), the
+engine is **warmed at startup**: once `IVoiceModelService` locates the model,
+`ReadAloudService` calls `ISpeechReader.WarmUpAsync()`, which (on the neural
+reader) builds the `OfflineTts` and runs one **discarded** tiny synthesis on a
+background thread to JIT the ONNX graph. The lazy `EnsureTts()` stays as the
+safety net for a read that arrives before warm-up finishes; the build is
+double-checked under a lock so the eager warm-up and a first read can't each load
+the ~145 MB model. The WinRT fallback's `WarmUpAsync()` is a no-op.

@@ -580,7 +580,7 @@ first chunk — plus a way to *measure* the improvement that keeps the "we colle
 nothing" policy literally true. Ordered smallest-first; each is independently
 shippable. (No GitHub issues yet — create via `plan-to-issues` if wanted.)
 
-- [ ] **Slice 17 — Warm the neural engine at startup.** ([#84](https://github.com/ashkansirous/ReadTheStupidText/issues/84)) (Decision 24) The biggest
+- [x] **Slice 17 — Warm the neural engine at startup.** ([#84](https://github.com/ashkansirous/ReadTheStupidText/issues/84)) (Decision 24) The biggest
       single win and the smallest change. After `IVoiceModelService` locates the
       model, eagerly build the `OfflineTts` on a background thread and run one tiny
       throwaway synthesis to warm the ONNX graph, so the first real read no longer
