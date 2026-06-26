@@ -19,6 +19,13 @@
   the **Store-submission pipeline** (kept inert until a Partner Center account
   exists), then cut the **first auto-versioned release** (version follows
   Conventional Commits, **staying `0.x`** — not forced to `v1.0.0`).
+- **(Batch 3 — read-latency + diagnostics):** shorten the delay between selecting/
+  copying text and hearing it — especially the first read of a session, which
+  "feels stuck, then suddenly reads" — by **warming the neural engine at startup**,
+  using an **adaptive settle delay** (and a smaller first chunk) instead of a flat
+  500 ms wait; and add **local-only timing diagnostics** (time-to-first-audio) in
+  the activity log so the improvement can be measured **without anything leaving
+  the device** (the "we collect nothing" policy stays literally true).
 
 ## Approach
 
@@ -37,9 +44,9 @@
 
 ### Current unit of work
 
-All **feature** slices (0–10) are implemented: the speed-control fix, voice selection, launch-at-startup, the tray control panel (Slice 8), local neural voices (Slice 9 — sherpa-onnx + Supertonic-3, bundled), **Store packaging & CI (Slice 5 — merged; CI builds the MSIX and publishes `v*` tags to GitHub Releases)**, and the **live activity log + auto-read state machine (Slice 10)**.
+All **feature** slices (0–10) are implemented: the speed-control fix, voice selection, launch-at-startup, the tray control panel (Slice 8), local neural voices (Slice 9 — sherpa-onnx + Supertonic-3, bundled), **Store packaging & CI (Slice 5 — merged; CI builds the MSIX and publishes `v*` tags to GitHub Releases)**, and the **live activity log + auto-read state machine (Slice 10)**. **Batch 2 (Slices 11–16)** — release-readiness — is largely done (license, Conventional-Commits auto-release, the "Media Card" panel redesign, the two auto-read toggles, the code-review pass + unit tests, and the inert Store pipeline); the one open item is **Slice 11** (Overlord voice display names).
 
-The **current unit of work is Batch 2 (Slices 11–16)** — release-readiness, smallest-first: **(11)** rename voices to Overlord display names (ids unchanged) → **(12)** split auto-read into two settings/toggles (on-selection + on-copy, both default on) → **(13)** rebuild the control panel to the `design_handoff_tray_panel/` "Media Card" spec in native WinUI Fluent (gradient header, waveform, transport row with a **live progress bar**, Fluent settings list, light/dark), keeping the pinned-topmost window → **(14)** add the MIT `LICENSE` and wire **Conventional-Commits** auto-versioning into `Package.appxmanifest` + tag → **(15)** run `/code-review-in-detail` and fix confirmed bugs → **(16)** finalize the (inert) Store-submission pipeline + signing docs, then cut the **first auto-versioned release** (a `0.x` tag — not `v1.0.0`). Each later slice follows the same end-to-end pattern. Signing stays **Store-only** (CI unsigned); Azure Trusted Signing is the documented upgrade.
+The **current unit of work is Batch 3 (Slices 17–19)** — read-latency reduction + local diagnostics, smallest-first. The first vertical slice is **(17)** *warm the neural engine at startup* — the smallest end-to-end change and the biggest win: after `IVoiceModelService` locates the bundled model, eagerly build the sherpa-onnx `OfflineTts` on a background thread and run one tiny throwaway synthesis to warm the ONNX graph, so the first real read no longer pays the cold-start cost (the lazy `EnsureTts()` stays as a fallback). Subsequent slices follow the same end-to-end pattern: **(18)** replace `ReadAloudService`'s flat 500 ms debounce with an **adaptive settle** (~150 ms baseline, extended only during an active drag) and bias `SpeechTextChunker`'s first chunk toward a single sentence so audio starts sooner; **(19)** record **time-to-first-audio** / synthesis duration per read into the existing in-memory `IActivityLog` and surface them in `ActivityLogWindow`. No remote telemetry; **.NET Aspire is rejected as a shipped mechanism** (a dev-time distributed-app orchestrator/dashboard, not redistributable into an MSIX) — kept only as an optional dev-time OpenTelemetry viewer.
 
 ## Out of Scope
 
@@ -56,6 +63,10 @@ The **current unit of work is Batch 2 (Slices 11–16)** — release-readiness, 
 - **(Batch 2)** True audio scrubbing/seek in the progress bar — best-effort chunk-boundary resync only (synthesis is chunked/streamed).
 - **(Batch 2)** Going live on Partner Center (real identity, secrets, first submission) — the pipeline stays inert and documented.
 - **(Batch 2)** Click-away/Esc dismiss of the redesigned control panel — it stays pinned-topmost; and renaming voice **ids** or adding/removing voices — only display names change.
+- **(Batch 3)** Any **remote or opt-in telemetry**, or any diagnostic data leaving the device — measurement is local-only, in-memory, and cleared on restart; no privacy-policy change.
+- **(Batch 3)** Shipping **.NET Aspire** (or any OTLP exporter/collector) in the package — it is at most a dev-time OpenTelemetry dashboard on the developer's machine, never part of the installed app.
+- **(Batch 3)** Persisting or exporting the new timing diagnostics — they live in the same in-memory, live-only activity log as everything else.
+- **(Batch 3)** Reducing latency by changing the **engine or model** (e.g. a smaller/faster voice model) or by precomputing/caching synthesized audio — the work tunes the existing sherpa-onnx + Supertonic pipeline (warm-up, debounce, chunking) only.
 
 ## Notes
 
@@ -69,3 +80,4 @@ The **current unit of work is Batch 2 (Slices 11–16)** — release-readiness, 
 - Auto-read and launch-at-startup appear in **both** the control panel and the right-click menu; both surfaces read and write the same services so their state stays in sync.
 - `H.NotifyIcon.WinUI` is the one unavoidable third-party dependency, since WinUI 3 has no built-in tray icon.
 - Repo / package id stays `ReadTheStupidText`; the user-facing **product display name is "Read The Stupid Text"** (Microsoft Store ID `9NGT1BN1H92V`; identity wired into `Package.appxmanifest`).
+- **(Batch 3)** The first-read delay was root-caused to three pipeline costs: the **cold engine build** (the ~145 MB `OfflineTts` is built lazily on the first `SpeakAsync` — the dominant "feels stuck, then suddenly reads" stall), the **flat 500 ms settle** added to every read, and a **whole-first-paragraph first chunk** before any audio. Slices 17–19 address them in order of impact. The chunked concurrent-synthesis + generation-counter teardown from Batch 1 stays unchanged — Batch 3 only warms, retimes, and measures it.

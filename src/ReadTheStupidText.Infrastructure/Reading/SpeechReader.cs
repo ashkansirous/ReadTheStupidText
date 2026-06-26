@@ -65,6 +65,9 @@ public sealed class SpeechReader : ISpeechReader, IDisposable
         SwapSource(MediaSource.CreateFromStream(stream, stream.ContentType));
     }
 
+    // The WinRT synthesizer has no heavy model to preload, so warm-up is a no-op.
+    public Task WarmUpAsync() => Task.CompletedTask;
+
     public void Pause() => _player.Pause();
 
     public void Resume() => _player.Play();

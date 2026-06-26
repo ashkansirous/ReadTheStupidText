@@ -30,6 +30,15 @@ public interface ISpeechReader
     /// </summary>
     Task SpeakAsync(string text);
 
+    /// <summary>
+    /// Eagerly prepares the synthesis engine (building any heavy model and warming
+    /// its compute graph) so the first real read does not pay the cold-start cost.
+    /// Runs off the UI thread, is idempotent, and is a no-op for engines with
+    /// nothing to preload. A read arriving before warm-up finishes still works —
+    /// it falls through to the same lazy build.
+    /// </summary>
+    Task WarmUpAsync();
+
     void Pause();
 
     void Resume();

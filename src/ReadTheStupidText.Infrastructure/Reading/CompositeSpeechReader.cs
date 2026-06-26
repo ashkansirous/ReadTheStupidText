@@ -46,6 +46,9 @@ public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
         return _active.SpeakAsync(text);
     }
 
+    // Only the neural engine has a heavy model to warm; the WinRT fallback is instant.
+    public Task WarmUpAsync() => _neural.WarmUpAsync();
+
     public void Pause() => _active.Pause();
 
     public void Resume() => _active.Resume();
