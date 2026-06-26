@@ -97,6 +97,14 @@ message since the last tag (highest wins): `+semver: minor` (feature),
 `+semver: major` (breaking), `+semver: none` (skip). Agents: write a normal
 commit and append `+semver: minor`/`major` when the change warrants it.
 
+> ⚠️ **Footgun — never write the literal token in prose.** GitVersion matches
+> `+semver: major`/`minor` **anywhere** in a commit message, including quoted
+> examples. A commit that *documents* the tokens (or quotes them in its body)
+> will trigger that bump. This actually happened: PR #75's body contained
+> `or "+semver: major"`, which forced `0.1.1 → 1.0.0`. When you must mention a
+> token in prose, break it (e.g. `+semver:&#8203;major`, or write "the major
+> token") so the regex can't match.
+
 > `main`'s branch ruleset only blocks deletion and non-fast-forward, so the tag
 > push needs no bypass actor.
 

@@ -138,6 +138,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.version.outputs.version }}
         run: |
+          # Idempotent: if this version was already released (a re-run, a race
+          # between two quick main pushes, or a commit that didn't bump the
+          # version), skip instead of failing the build. GitVersion holds the
+          # version steady until the next tag, so consecutive pushes can resolve
+          # to the same v<x.y.z>; the next change that bumps gets its own release.
+          if gh release view "v${VERSION}" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            echo "::notice::Release v${VERSION} already exists — version did not bump; skipping."
+            exit 0
+          fi
           # Only the app package per arch — NOT the framework dependency packages
           # under Dependencies/ (every arch ships a same-named
           # Microsoft.WindowsAppRuntime.2.msix, which would collide as duplicate
