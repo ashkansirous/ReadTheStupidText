@@ -131,4 +131,6 @@ calls. Everything runs locally and offline. See [`PRIVACY.md`](PRIVACY.md).
 
 ## License
 
-TBD.
+[MIT](LICENSE) © Ashkan Sirous. You may use, modify, and redistribute this
+software — including commercially — provided the copyright and permission
+notice are kept.

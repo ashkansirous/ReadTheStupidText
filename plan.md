@@ -484,7 +484,7 @@ smallest-first; each is independently shippable.
       pinned-topmost `AppWindow` (Decision 12 — no click-away dismiss). Wire the
       progress bar to `MediaPlayer` position + chunk completion; seek is
       best-effort (chunk-boundary resync) only.
-- [ ] **Slice 14 — MIT license + Conventional-Commits auto-release.**
+- [x] **Slice 14 — MIT license + Conventional-Commits auto-release.**
       ([#57](https://github.com/ashkansirous/ReadTheStupidText/issues/57)) (Decisions 16, 17) Add a `LICENSE` file (MIT, attributed to Ashkan Sirous)
       and replace README's "License: TBD". Add a CI job/workflow that, on merge
       to `main`, computes the next SemVer from Conventional Commits, writes it
