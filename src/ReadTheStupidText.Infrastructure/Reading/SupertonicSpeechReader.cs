@@ -78,11 +78,6 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
     private int _chunkCount;
     private int _currentChunkIndex;
 
-    // The chunks of the in-flight read, kept so a mid-read voice change can re-synthesize
-    // the remaining ones (from _currentChunkIndex) in the new voice without replaying
-    // what was already heard (Slice 23, Decision 29).
-    private IReadOnlyList<string>? _currentChunks;
-
     // Latency diagnostics (Decision 30): the activity-log id of the in-flight read and
     // when it began, so the per-chunk timing lines join to its row; _firstAudioPending
     // makes "first audio after N ms" log once, on the first chunk's MediaOpened.
@@ -122,25 +117,28 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
 
         (int generation, CancellationToken token) = BeginGeneration();
 
-        // Split long text into chunks (kept so a mid-read voice change can resume them).
         long splitStart = Stopwatch.GetTimestamp();
         IReadOnlyList<string> chunks = SpeechTextChunker.Split(text);
-        _currentChunks = chunks;
         _systemLog.Debug(
             $"split {text.Length} chars into {chunks.Count} chunk(s) in " +
             $"{Stopwatch.GetElapsedTime(splitStart).TotalMilliseconds:F1} ms " +
             $"(threads {SynthesisThreads}, concurrency {MaxSynthesisConcurrency})",
             activityId);
 
-        await SpeakChunksAsync(tts, chunks, 0, generation, token);
+        await SpeakChunksAsync(tts, chunks, 0, Volatile.Read(ref _speakerId), generation, token);
     }
 
-    // Synthesizes the chunks from startIndex onward (capped concurrency) and plays
-    // them strictly in order. Used for a fresh read (startIndex 0) and, on a mid-read
-    // voice change, to resume the remaining chunks in the new voice (Decision 29) —
-    // chunks before startIndex were already heard and are not re-synthesized.
+    // Synthesizes the chunks from startIndex onward (capped concurrency) with the given
+    // speaker and plays them strictly in order. Used for a fresh read (startIndex 0) and,
+    // on a mid-read voice change, to continue the remaining chunks in the new voice
+    // (Decision 29). The speaker is a parameter, not the mutable field, so a voice change
+    // can't half-apply to chunks already queued — the switch happens cleanly at a chunk
+    // boundary: when the current chunk has finished, this notices _speakerId differs from
+    // the speaker it was started with and restarts at the *next* chunk in the new voice,
+    // so the heard text is neither repeated nor skipped, and earlier chunks are never
+    // re-synthesized.
     private async Task SpeakChunksAsync(
-        OfflineTts tts, IReadOnlyList<string> chunks, int startIndex, int generation, CancellationToken token)
+        OfflineTts tts, IReadOnlyList<string> chunks, int startIndex, int speakerId, int generation, CancellationToken token)
     {
         _chunkCount = chunks.Count;
         _currentChunkIndex = startIndex;
@@ -153,7 +151,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
         var generations = new List<Task<IRandomAccessStream>>();
         for (int index = startIndex; index < chunks.Count; index++)
         {
-            generations.Add(GenerateChunkAsync(tts, chunks[index], index, slots, token));
+            generations.Add(GenerateChunkAsync(tts, chunks[index], index, speakerId, slots, token));
         }
 
         // Consume in order: await each chunk, then play it to its end before the
@@ -175,10 +173,25 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
                 return;
             }
 
-            _currentChunkIndex = startIndex + offset;
+            int index = startIndex + offset;
+            _currentChunkIndex = index;
             bool endedNaturally = await PlayChunkAsync(stream, token);
             if (!endedNaturally || !IsCurrent(generation))
             {
+                return;
+            }
+
+            // The voice was changed during this chunk: it has now finished in the old
+            // voice, so continue the *remaining* chunks in the new one. Cancels the
+            // old-voice synthesis already in flight for upcoming chunks and restarts.
+            int selected = Volatile.Read(ref _speakerId);
+            if (selected != speakerId && index + 1 < chunks.Count)
+            {
+                (int nextGeneration, CancellationToken nextToken) = BeginGeneration();
+                _systemLog.Info(
+                    $"voice changed mid-read; continuing at chunk {index + 2}/{chunks.Count} in the new voice",
+                    _readActivityId);
+                await SpeakChunksAsync(tts, chunks, index + 1, selected, nextGeneration, nextToken);
                 return;
             }
         }
@@ -213,14 +226,14 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
     // so at most MaxSynthesisConcurrency run at once. The generate and wav-encode
     // times are logged per chunk so a slow read is attributable (latency diagnostics).
     private async Task<IRandomAccessStream> GenerateChunkAsync(
-        OfflineTts tts, string chunk, int index, SemaphoreSlim slots, CancellationToken token)
+        OfflineTts tts, string chunk, int index, int speakerId, SemaphoreSlim slots, CancellationToken token)
     {
         await slots.WaitAsync(token);
         try
         {
             long generateStart = Stopwatch.GetTimestamp();
             OfflineTtsGeneratedAudio audio =
-                await Task.Run(() => tts.Generate(chunk, 1.0f, _speakerId), token);
+                await Task.Run(() => tts.Generate(chunk, 1.0f, speakerId), token);
             TimeSpan generate = Stopwatch.GetElapsedTime(generateStart);
 
             long wavStart = Stopwatch.GetTimestamp();
@@ -277,39 +290,13 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
         _player.PlaybackSession.PlaybackRate = _playbackRate;
     }
 
-    // Selects the speaker. If a read is in progress, it continues in the new voice
-    // from the current chunk (Decision 29): the old synthesis/playback is cancelled
-    // (BeginGeneration) and the remaining chunks are re-synthesized with the new
-    // speaker — already-heard chunks are not repeated. While idle it just applies to
-    // the next read. An unchanged selection is a no-op so it can't restart a read.
-    public void SetVoice(string voiceId)
-    {
-        int speakerId = SupertonicVoiceTable.SpeakerIdFor(voiceId);
-        if (speakerId == _speakerId)
-        {
-            return;
-        }
-
-        _speakerId = speakerId;
-
-        if (_currentChunks is not { } chunks || _state is not (PlaybackState.Playing or PlaybackState.Paused))
-        {
-            return;
-        }
-
-        if (EnsureTts() is not { } tts)
-        {
-            return;
-        }
-
-        int resumeIndex = _currentChunkIndex;
-        (int generation, CancellationToken token) = BeginGeneration();
-        _firstAudioPending = false; // mid-read switch: audio is already flowing
-        _systemLog.Info(
-            $"voice changed mid-read; resuming at chunk {resumeIndex + 1}/{chunks.Count} in the new voice",
-            _readActivityId);
-        _ = SpeakChunksAsync(tts, chunks, resumeIndex, generation, token);
-    }
+    // Records the selected speaker. While idle it applies to the next read. During a
+    // read, the playback loop (SpeakChunksAsync) notices the change at the next chunk
+    // boundary and continues the remaining chunks in the new voice (Decision 29): the
+    // current chunk finishes in the old voice, so nothing already heard is repeated and
+    // no unheard text is skipped. Already-played chunks are never re-synthesized.
+    public void SetVoice(string voiceId) =>
+        Volatile.Write(ref _speakerId, SupertonicVoiceTable.SpeakerIdFor(voiceId));
 
     // Returns the engine, building it once on first use. Double-checked under _ttsGate
     // so a warm-up thread and a first read can't each construct one (the build loads

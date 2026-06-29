@@ -716,16 +716,18 @@ text," so it leads; logging (Slice 21) then unblocks the latency analysis (Slice
       remaining chunks with the new speaker from the current `_currentChunkIndex`
       (reuse the generation-counter machinery); already-played audio is not repeated.
       Drive it from `ReadAloudService.SetVoice`.
-      **Built:** the neural reader keeps the in-flight `_currentChunks`; the playback
-      loop was extracted into a shared `SpeakChunksAsync(chunks, startIndex, …)` used
-      both for a fresh read (index 0) and for the mid-read resume. `SetVoice` no-ops on
-      an unchanged speaker, and when a read is Playing/Paused it calls `BeginGeneration`
-      (cancelling the old synthesis via the generation counter + token) then re-runs
-      `SpeakChunksAsync` from `_currentChunkIndex` with the new speaker — chunks before
-      the current index are never re-synthesized, so nothing already heard replays. Idle
-      voice changes stay apply-to-next-read. The native-reader logic isn't unit-tested
-      (no engine without package identity), per the project's test story; runtime check
-      under the (Package) profile remains.
+      **Built:** the playback loop was extracted into a shared `SpeakChunksAsync(chunks,
+      startIndex, speakerId, …)` that takes the **speaker as a parameter** (not the mutable
+      field) so a change can't half-apply to queued chunks. `SetVoice` just records the
+      selection (`_speakerId`); the loop switches **at the next chunk boundary** — when the
+      current chunk finishes it notices `_speakerId` changed and restarts at the *next*
+      chunk in the new voice (`BeginGeneration` cancels in-flight old-voice synthesis). So
+      the current chunk finishes in the old voice: nothing already heard is repeated **and
+      no unheard text is skipped**, and earlier chunks are never re-synthesized. (Reviewed
+      with the user: chosen over resume-at-current-chunk, which replayed the current
+      sentence.) A single-chunk read or a change during the last chunk applies to the next
+      read. The native-reader logic isn't unit-tested (no engine without package identity),
+      per the project's test story; runtime check under the (Package) profile remains.
 - [ ] **Slice 24 — Draggable, position-persisted control panel.** ([#106](https://github.com/ashkansirous/ReadTheStupidText/issues/106)) (Decision 31) Make
       the borderless control panel draggable by its header (pointer-drag → `AppWindow`
       move) and persist the last position in `ISettingsStore` so it reopens in place;

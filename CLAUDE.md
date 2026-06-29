@@ -281,15 +281,17 @@ first-chunk synthesis the user waits on), sized so `threads * concurrency` fits 
 cores without oversubscribing.
 
 **Voice swap continues the current read (Slice 23, Decision 29).** Changing the voice
-actor **mid-read** no longer waits for the next read: the reader keeps the chunk list
-(`_currentChunks`) of the in-flight read, and `SetVoice` — when a read is Playing/Paused
-and the speaker actually changed — cancels the old synthesis/playback via the existing
-generation counter (`BeginGeneration`) and re-runs the shared `SpeakChunksAsync` from
-`_currentChunkIndex` with the new speaker. Already-heard chunks (before the current
-index) are **not** re-synthesized, so nothing replays; the remaining text continues in
-the new voice. While idle (or for an unchanged selection) `SetVoice` is the old
-apply-to-next-read no-op. Driven from `ReadAloudService.SetVoice` (neural-only via
-`CompositeSpeechReader`).
+actor **mid-read** no longer waits for the next read. The playback loop
+(`SpeakChunksAsync`) takes the speaker as a **parameter** (not the mutable field), so a
+change can't half-apply to chunks already queued; the switch happens cleanly at the
+**next chunk boundary**. `SetVoice` just records the selection (`_speakerId`); when the
+current chunk finishes, the loop notices `_speakerId` differs from the speaker it was
+started with and restarts at the **next** chunk in the new voice (`BeginGeneration`
+cancels the old-voice synthesis already in flight for upcoming chunks). So the current
+chunk finishes in the old voice — nothing already heard is **repeated** and no unheard
+text is **skipped** — and earlier chunks are never re-synthesized. A single-chunk read
+(or a change during the last chunk) just applies to the next read. Driven from
+`ReadAloudService.SetVoice` (neural-only via `CompositeSpeechReader`).
 
 To kill the cold-start stall on the **first** read (Slice 17, Decision 24), the
 engine is **warmed at startup**: once `IVoiceModelService` locates the model,
