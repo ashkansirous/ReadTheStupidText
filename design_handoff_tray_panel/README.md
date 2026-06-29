@@ -87,7 +87,12 @@ All header text/icons are white. Contains, in order:
     state = collapsed (slider hidden).
   - **Speed slider (revealed)** — appears as a new row directly under the transport row
     (`margin-top 14px`) only when the speed pill is active: `0.5×` label · white track (4px,
-    57% fill for 1.35×) with an 18px white thumb + 7px accent inner dot · `2×` label.
+    50% fill for 1.25×) with an 18px white thumb + 7px accent inner dot · `2×` label.
+  - **Speed presets (revealed)** — directly below the slider (`margin-top 10px`,
+    `flex; gap:6px`): six equal-width buttons **0.5× · 1× · 1.25× · 1.5× · 1.75× · 2×** that
+    set the rate on tap. Each: `flex:1; height:26px; radius:7px`, 11px/600 white text on a
+    `rgba(255,255,255,0.16)` fill (hover `0.30`). The **current** preset is solid white with
+    blue text (`#2f6ae0`, 700). Slider and presets reflect the same value.
 
 #### 2. Voice row + activity log  — `padding: 6px 8px 8px`
 A single row: `display:flex; align-items:center; gap:12px; padding:10px`.
@@ -103,13 +108,14 @@ A single row: `display:flex; align-items:center; gap:12px; padding:10px`.
   history".
 
 #### 3. Controls — compact icon toggles  — `padding: 0 10px 8px` (under a `CONTROLS` eyebrow)
-Three square icon buttons in a `flex; gap:8px` row, each `flex:1; height:46px; radius:9px`.
+Three near-square icon buttons in a `flex; gap:8px` row, each `flex:1; height:70px; radius:11px`.
 Each toggles an on/off setting and has a hover tooltip. **ON** = `--accent` fill + white icon;
 **OFF** = `--card` fill, 1px `--stroke`, `--text2` icon.
-1. **Auto-read on selection** (ON) — speaker + sound-wave glyph. Tooltip: "Auto-read selection ·
-   on — Reads aloud as you select".
-2. **Auto-read on copy** (ON) — copy/sheets + small sound-wave glyph. Tooltip: "Auto-read on
-   copy · on — Reads aloud when you copy".
+1. **Auto-read on selection** (ON) — **select frame (rounded corner-brackets with tick marks)
+   enclosing a two-wave “))”** sound glyph. Tooltip: "Auto-read selection · on — Reads aloud
+   as you select".
+2. **Auto-read on copy** (ON) — **copy pages (two stacked sheets) enclosing a two-wave “))”**
+   sound glyph. Tooltip: "Auto-read on copy · on — Reads aloud when you copy".
 3. **Launch at startup** (OFF) — **rocket** glyph (deliberately *not* a power/shutdown symbol,
    which the prior build confused it with). Tooltip: "Launch at startup · off — Start with
    Windows, in the tray".
@@ -143,8 +149,9 @@ Fluent slider in sibling options.)
   animates; while paused/idle it stops and text shows `Paused` / `Ready`.
 - **Scrub bar:** reflects progress through the current utterance; dragging seeks (best-effort
   for TTS — may resync at sentence boundaries).
-- **Speed pill / slider:** sets playback rate. Presets 0.5× / 1× / 1.25× / 1.5× / 2×; current
-  value persists across sessions. Changing speed mid-read applies immediately.
+- **Speed pill / slider / presets:** the pill toggles the slider; the slider and the six
+  preset buttons (0.5× / 1× / 1.25× / 1.5× / 1.75× / 2×) both set playback rate and stay in
+  sync. Current value persists across sessions. Changing speed mid-read applies immediately.
 - **Voice row:** opens picker of installed Windows TTS voices; selection persists.
 - **Auto-read selection (toggle):** when ON, selecting text anywhere starts reading it aloud
   automatically. Persists.

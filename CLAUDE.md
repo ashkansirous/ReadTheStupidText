@@ -176,14 +176,23 @@ a compact Fluent body and a `Ctrl+Win+R` hotkey footer. **Compact rev (post-Slic
 13):** the body no longer stacks full-width labelled rows — the **fine 0.05 speed
 slider is hidden in the header** and only revealed when the speed pill (now a
 `ToggleButton` carrying a flipping chevron) is tapped (the panel re-fits its height
-on reveal); the body is a single **voice picker** row (`ComboBox` chip + a 34px
-**activity-log button** that opens `ActivityLogWindow` via the panel's
+on reveal). **Design refresh (post-Slice 13):** revealing the speed control now
+shows the slider **plus a row of six quick-preset chips** (0.5x / 1x / 1.25x / 1.5x
+/ 1.75x / 2x, `SpeedPresetStyle`); tapping a chip drives the slider, and the chip
+matching the current rate is highlighted (solid-white fill + blue text) from code
+(`ApplyPresetVisual`/`UpdatePresetHighlight`) — slider and chips stay in sync. The
+body is a single **voice picker** row (the `ComboBox` now **stretches full width** +
+a 34px **activity-log button** that opens `ActivityLogWindow` via the panel's
 `ActivityLogRequested` event) above a `CONTROLS` row of **three square icon
 toggles** — auto-read on selection, auto-read on copy, launch-at-startup — each a
 styled `ToggleButton` (off = card fill + muted icon, on = accent fill + white icon
-via its `CheckStates`) with a hover tooltip naming the control and its on/off
-state. The launch-at-startup icon is a **rocket** `PathIcon` (Segoe Fluent has no
-rocket glyph, and the design deliberately avoids the power symbol). Built with
+via its `CheckStates`), now **70px tall (radius 11)** with **larger stroked line
+icons**, and a hover tooltip naming the control and its on/off state. The toggle
+icons are **stroked `Path` shapes** (the design's source SVGs: a select-frame and
+stacked sheets, each enclosing a two-wave sound glyph; launch-at-startup is a
+**rocket** — Segoe Fluent has no rocket glyph, and the design deliberately avoids
+the power symbol); their stroke colour is the toggle's icon colour, set in code via
+`ApplyToggleVisual`. Built with
 native WinUI Fluent controls + light/dark `ThemeDictionaries` from the design
 tokens (the HTML is the visual source of truth, not shipped code); it **keeps** the
 pinned-topmost behavior (no click-away/Esc dismiss). The progress bar is driven by
