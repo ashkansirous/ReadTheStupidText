@@ -1,6 +1,8 @@
+using System.Diagnostics;
 using System.Windows.Automation;
 using System.Windows.Automation.Text;
 using ReadTheStupidText.Application.Input;
+using ReadTheStupidText.Application.Logging;
 
 namespace ReadTheStupidText.Infrastructure.Input;
 
@@ -16,10 +18,15 @@ public sealed class UiaSelectionMonitor : ISelectionMonitor
     private const int MaxTextLength = 10_000;
 
     private readonly AutomationEventHandler _handler;
+    private readonly ISystemLog _log;
     private string? _lastText;
     private bool _running;
 
-    public UiaSelectionMonitor() => _handler = OnTextSelectionChanged;
+    public UiaSelectionMonitor(ISystemLog log)
+    {
+        _log = log;
+        _handler = OnTextSelectionChanged;
+    }
 
     public event EventHandler<string>? SelectionChanged;
 
@@ -35,11 +42,22 @@ public sealed class UiaSelectionMonitor : ISelectionMonitor
         }
 
         _running = true;
-        Task.Run(() => Automation.AddAutomationEventHandler(
-            TextPattern.TextSelectionChangedEvent,
-            AutomationElement.RootElement,
-            TreeScope.Subtree,
-            _handler));
+        Task.Run(() =>
+        {
+            try
+            {
+                Automation.AddAutomationEventHandler(
+                    TextPattern.TextSelectionChangedEvent,
+                    AutomationElement.RootElement,
+                    TreeScope.Subtree,
+                    _handler);
+                _log.Info("UIA selection handler registered on root subtree");
+            }
+            catch (Exception ex)
+            {
+                _log.Error("UIA failed to register selection handler", error: ex);
+            }
+        });
     }
 
     public void Stop()
@@ -61,10 +79,14 @@ public sealed class UiaSelectionMonitor : ISelectionMonitor
     {
         if (sender is not AutomationElement element)
         {
+            _log.Debug("UIA event fired but sender was not an AutomationElement");
             return;
         }
 
-        switch (TryReadSelection(element, out string text))
+        SelectionOutcome outcome = TryReadSelection(element, out string text);
+        _log.Debug($"UIA selection event from {DescribeSource(element)} outcome={outcome} len={text.Length}");
+
+        switch (outcome)
         {
             case SelectionOutcome.Unavailable:
                 // A transient cross-process UIA failure, NOT a deselect. Leave
@@ -92,6 +114,22 @@ public sealed class UiaSelectionMonitor : ISelectionMonitor
                 _lastText = text;
                 SelectionChanged?.Invoke(this, text);
                 return;
+        }
+    }
+
+    // Diagnostic only: best-effort process name + control type of the element that
+    // raised the event, so the log shows whether Chrome/Terminal are emitting at all.
+    private static string DescribeSource(AutomationElement element)
+    {
+        try
+        {
+            int pid = element.Current.ProcessId;
+            string process = Process.GetProcessById(pid).ProcessName;
+            return $"{process} (pid {pid}, {element.Current.ControlType.ProgrammaticName})";
+        }
+        catch (Exception ex)
+        {
+            return $"<unknown source: {ex.GetType().Name}>";
         }
     }
 

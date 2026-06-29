@@ -1,5 +1,6 @@
 using ReadTheStupidText.Application.Activity;
 using ReadTheStupidText.Application.Input;
+using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Startup;
 using ReadTheStupidText.Domain.Reading;
@@ -34,6 +35,7 @@ public sealed partial class MainWindow : Window
     private readonly IClipboardMonitor _clipboardMonitor;
     private readonly IStartupService _startup;
     private readonly IActivityLog _activityLog;
+    private readonly ILogFolder _logFolder;
     private readonly DispatcherQueue _dispatcher = DispatcherQueue.GetForCurrentThread();
     private readonly Windows.UI.ViewManagement.UISettings _uiSettings = new();
 
@@ -66,13 +68,14 @@ public sealed partial class MainWindow : Window
     private ToggleMenuFlyoutItem? _customSpeedItem;
     private int _speedStartIndex;
 
-    public MainWindow(ReadAloudService readAloud, IHotkeyService hotkey, IClipboardMonitor clipboardMonitor, IStartupService startup, IActivityLog activityLog)
+    public MainWindow(ReadAloudService readAloud, IHotkeyService hotkey, IClipboardMonitor clipboardMonitor, IStartupService startup, IActivityLog activityLog, ILogFolder logFolder)
     {
         _readAloud = readAloud;
         _hotkey = hotkey;
         _clipboardMonitor = clipboardMonitor;
         _startup = startup;
         _activityLog = activityLog;
+        _logFolder = logFolder;
 
         // The left-click control panel shares the same services as the tray menu,
         // so both surfaces read and write the same state.
@@ -224,7 +227,7 @@ public sealed partial class MainWindow : Window
     {
         if (_logWindow is null)
         {
-            _logWindow = new ActivityLogWindow(_activityLog);
+            _logWindow = new ActivityLogWindow(_activityLog, _logFolder);
             _logWindow.Closed += (_, _) => _logWindow = null;
         }
 

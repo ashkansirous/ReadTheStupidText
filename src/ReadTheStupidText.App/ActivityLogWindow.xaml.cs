@@ -1,12 +1,14 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using ReadTheStupidText.Application.Activity;
+using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Domain.Activity;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Windows.Graphics;
+using Windows.Storage;
 using Windows.UI;
 
 namespace ReadTheStupidText_App;
@@ -22,12 +24,14 @@ public sealed partial class ActivityLogWindow : Window
     private const int MaxRows = 200;
 
     private readonly IActivityLog _log;
+    private readonly ILogFolder _logFolder;
     private readonly DispatcherQueue _dispatcher = DispatcherQueue.GetForCurrentThread();
     private readonly Dictionary<int, ActivityRowVm> _byId = new();
 
-    public ActivityLogWindow(IActivityLog log)
+    public ActivityLogWindow(IActivityLog log, ILogFolder logFolder)
     {
         _log = log;
+        _logFolder = logFolder;
         InitializeComponent();
         Title = "Read The Stupid Text — Activity log";
         AppWindow.Resize(new SizeInt32(980, 480));
@@ -123,6 +127,14 @@ public sealed partial class ActivityLogWindow : Window
     {
         Rows.Clear();
         _byId.Clear();
+    }
+
+    // Opens the on-disk log folder in Explorer so the user can grab the day's
+    // input/system files for a bug report.
+    private async void OnOpenLogsClick(object sender, RoutedEventArgs e)
+    {
+        StorageFolder folder = await StorageFolder.GetFolderFromPathAsync(_logFolder.Path);
+        await Windows.System.Launcher.LaunchFolderAsync(folder);
     }
 
     private void OnClosed(object sender, WindowEventArgs args)

@@ -1,10 +1,12 @@
 using ReadTheStupidText.Application.Activity;
 using ReadTheStupidText.Application.Input;
+using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Sanitizing;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Application.Startup;
 using ReadTheStupidText.Infrastructure.Input;
+using ReadTheStupidText.Infrastructure.Logging;
 using ReadTheStupidText.Infrastructure.Reading;
 using ReadTheStupidText.Infrastructure.Sanitizing;
 using ReadTheStupidText.Infrastructure.Settings;
@@ -53,6 +55,14 @@ public partial class App : Application
         services.AddSingleton<IStartupService, StartupTaskService>();
         services.AddSingleton<ISettingsStore, LocalSettingsStore>();
         services.AddSingleton<ITextSanitizer, TextSanitizer>();
+
+        // Diagnostic logging: shared log folder, the Serilog system log, and the
+        // input-log writer that mirrors the activity log to disk (redacted text).
+        services.AddSingleton<LogPaths>();
+        services.AddSingleton<ILogFolder>(sp => sp.GetRequiredService<LogPaths>());
+        services.AddSingleton<ISystemLog, SerilogSystemLog>();
+        services.AddSingleton<ActivityInputLog>();
+
         services.AddSingleton<IActivityLog, ActivityLog>();
         services.AddSingleton<ReadAloudService>();
         return services.BuildServiceProvider();
@@ -62,13 +72,30 @@ public partial class App : Application
     /// Creates the tray-hosting window. It is never activated — ReadTheStupidText lives in
     /// the notification area, not as a visible window.
     /// </summary>
+    // Seven days of diagnostic logs is plenty to investigate a report; older
+    // day-files are swept on launch so the temp folder stays bounded.
+    private static readonly TimeSpan LogRetention = TimeSpan.FromDays(7);
+
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
+        StartLogging();
+
         _window = new MainWindow(
             Services.GetRequiredService<ReadAloudService>(),
             Services.GetRequiredService<IHotkeyService>(),
             Services.GetRequiredService<IClipboardMonitor>(),
             Services.GetRequiredService<IStartupService>(),
-            Services.GetRequiredService<IActivityLog>());
+            Services.GetRequiredService<IActivityLog>(),
+            Services.GetRequiredService<ILogFolder>());
+    }
+
+    // Sweeps stale logs, opens the system log, and starts the input-log writer
+    // (which subscribes to the activity log) — all before the read pipeline below
+    // resolves, so no early read is missed on disk.
+    private void StartLogging()
+    {
+        Services.GetRequiredService<LogPaths>().PurgeOlderThan(LogRetention);
+        Services.GetRequiredService<ISystemLog>().Info("Read The Stupid Text started");
+        Services.GetRequiredService<ActivityInputLog>();
     }
 }

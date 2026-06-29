@@ -675,15 +675,20 @@ text," so it leads; logging (Slice 21) then unblocks the latency analysis (Slice
       what gets spoken (and, later, logged). Unit-test the rules (pure logic, fits
       the existing test story). End-to-end value: selecting a URL/password reads a
       clean summary instead of gibberish.
-- [ ] **Slice 21 — Daily on-disk logs + open-logs button.** ([#103](https://github.com/ashkansirous/ReadTheStupidText/issues/103)) (Decision 27) Add
-      Serilog (rolling file) for `yyyy-MM-dd-system.log` and a small thread-safe
-      append-writer for `yyyy-MM-dd-input.log` (one TSV row per activity-state
+- [x] **Slice 21 — Daily on-disk logs + open-logs button.** ([#103](https://github.com/ashkansirous/ReadTheStupidText/issues/103)) (Decision 27) Add
+      Serilog (rolling file) for the system log and a small thread-safe
+      append-writer for the input log (one TSV row per activity-state
       transition, id-keyed, **redacted** text from Slice 20), both under the package
       `TemporaryFolder\logs`. Subscribe the input writer to `IActivityLog`
       events; thread the same id through the system log. Add the **open-logs**
       button to the top of `ActivityLogWindow` (`Launcher.LaunchFolderAsync`).
       Delete logs older than 7 days on startup. Promote the existing `Debug.WriteLine`
-      UIA traces to the system log.
+      UIA traces to the system log. **Built:** files are `system-YYYYMMDD.log` /
+      `input-YYYYMMDD.log` (Serilog's rolling sink stamps the day as `YYYYMMDD` and
+      can't prefix it, so both writers use that form for consistency, not the literal
+      `yyyy-MM-dd-…` order). `ISystemLog` (Serilog) + `ILogFolder` in Application;
+      `LogPaths`/`SerilogSystemLog`/`ActivityInputLog`/`InputLogRow` in Infrastructure;
+      `ReadAloudService` logs each id-correlated action + exceptions.
 - [ ] **Slice 22 — Read-latency instrumentation + low-risk tuning.** ([#104](https://github.com/ashkansirous/ReadTheStupidText/issues/104)) (Decision 30)
       Log per-chunk split/generate/wav/first-audio timings into the system log so the
       ~7 s is attributable, then (context7-confirm sherpa threading first) raise
