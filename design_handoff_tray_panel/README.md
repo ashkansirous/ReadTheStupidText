@@ -4,9 +4,16 @@
 This is the left-click control panel for **ReadTheStupidText**, a lightweight Windows 11
 tray utility that reads selected or copied text aloud at a user-chosen speed. Left-clicking
 the tray icon opens a small, borderless, always-on-top flyout docked above the taskbar, near
-the system tray. The panel exposes every runtime control: play/pause, playback speed
-(0.5×–2.0×), voice selection, an "auto-read selection" toggle, a "launch at startup" toggle,
-and a global hotkey hint (`Ctrl+Win+R`).
+the system tray. The panel exposes every runtime control: play/pause, a playback-speed slider
+(0.5×–2.0×, **hidden by default** — see below), voice selection, and three compact toggles —
+"auto-read on selection", "auto-read on copy", and "launch at startup" — plus an **activity
+log** button and a global hotkey hint (`Ctrl+Win+R`).
+
+**Compact rev (this version):** the settings no longer occupy full-width labelled rows. They
+collapse into a single **row of small icon buttons** (auto-read selection · auto-read on copy ·
+launch at startup · activity log), each with a **hover tooltip** naming the control and its
+state. The **speed slider is not shown** until the user taps the speed pill in the header. Both
+changes exist to keep the flyout short — the previous build was unnecessarily tall.
 
 This package documents **Option C, the "Media Card" direction**: a gradient "now reading"
 header (app identity + live status + waveform + transport + speed pill) sitting above a clean,
@@ -74,26 +81,43 @@ All header text/icons are white. Contains, in order:
   - **Progress / scrub bar** — `flex:1`, 4px tall track radius 2px (`rgba(255,255,255,0.30)`),
     filled portion white (50% in mock), with a 16px white circular thumb (shadow
     `0 1px 4px rgba(0,0,0,.3)`). Represents read-through progress; draggable to scrub.
-  - **Speed pill** — text `1.25×` (12px / 700 / white) in a pill `rgba(255,255,255,0.20)`,
-    padding 3px 9px, radius 11px. Reflects current speed; tapping could cycle presets (optional).
+  - **Speed pill** — text `1.35×` (12px / 700 / white) + a small chevron, in a pill
+    `rgba(255,255,255,0.20)`, padding 4px 8px, radius 11px, 1px white-30% border. It is the
+    **toggle for the speed slider**: tapping it reveals/hides the slider; chevron flips. Default
+    state = collapsed (slider hidden).
+  - **Speed slider (revealed)** — appears as a new row directly under the transport row
+    (`margin-top 14px`) only when the speed pill is active: `0.5×` label · white track (4px,
+    57% fill for 1.35×) with an 18px white thumb + 7px accent inner dot · `2×` label.
 
-#### 2. Settings list  — `padding: 6px 8px 8px`
-Three tappable rows, each `display:flex; align-items:center; gap:12px; padding:10px`, separated
-by a 1px hairline inset 10px left/right (`--stroke`). Each row = leading icon tile + two-line
-label + trailing control.
+#### 2. Voice row + activity log  — `padding: 6px 8px 8px`
+A single row: `display:flex; align-items:center; gap:12px; padding:10px`.
+- **Leading icon tile:** 32×32, radius 7px, fill `--card`, 1px `--stroke` border, mic glyph in
+  `--accent2`.
+- Label `Voice` (13px `--text`).
+- **Voice dropdown** (pushed right, `margin-left:auto`): `Cocytus` + chevron-down, in a
+  `--control` fill / `--cborder` 1px / radius 6px chip. Opens the installed-voice picker
+  (`ComboBox` in WinUI).
+- **Activity-log button** (immediately right of the dropdown): 34×34, radius 7px, `--card`
+  fill, 1px `--stroke`, log-lines glyph in `--accent2`. This is an **action, not a toggle** —
+  it opens a separate read-aloud history window. Tooltip: "Activity log — opens the read-aloud
+  history".
 
-- **Leading icon tile:** 32×32, radius 7px, fill `--card`, 1px `--stroke` border, icon in
-  `--accent2`, 15px, 1.7–1.8 stroke.
-- **Row labels:** title 13px `--text`; subtitle 11.5px `--text2`.
+#### 3. Controls — compact icon toggles  — `padding: 0 10px 8px` (under a `CONTROLS` eyebrow)
+Three square icon buttons in a `flex; gap:8px` row, each `flex:1; height:46px; radius:9px`.
+Each toggles an on/off setting and has a hover tooltip. **ON** = `--accent` fill + white icon;
+**OFF** = `--card` fill, 1px `--stroke`, `--text2` icon.
+1. **Auto-read on selection** (ON) — speaker + sound-wave glyph. Tooltip: "Auto-read selection ·
+   on — Reads aloud as you select".
+2. **Auto-read on copy** (ON) — copy/sheets + small sound-wave glyph. Tooltip: "Auto-read on
+   copy · on — Reads aloud when you copy".
+3. **Launch at startup** (OFF) — **rocket** glyph (deliberately *not* a power/shutdown symbol,
+   which the prior build confused it with). Tooltip: "Launch at startup · off — Start with
+   Windows, in the tray".
 
-Rows:
-1. **Voice** — icon: speaker/volume. Subtitle: `Microsoft Aria (Natural) · English (US)`.
-   Trailing: chevron-right (14px, `--text3`). Opens a voice picker (system TTS voices). In WinUI
-   this can be a `ComboBox` or a row that opens a sub-flyout listing installed voices.
-2. **Auto-read selection** — icon: text/selection cursor (the `I`-beam in mock). Subtitle:
-   `Reads aloud as you select`. Trailing: **ToggleSwitch, ON** (accent fill, knob right).
-3. **Launch at startup** — icon: power. Subtitle: `Start with Windows, in the tray`. Trailing:
-   **ToggleSwitch, OFF** (transparent fill, 1.5px `--text2` border, knob left).
+#### Tooltips
+Every icon button (the three toggles + the activity-log button) and the speed pill show a small
+dark tooltip on hover (`#1f2330`, white ~10.5px, radius 6px, soft shadow, little caret) naming
+the control and, for toggles, its current state. In WinUI use `ToolTipService.ToolTip`.
 
 - **Hotkey footer** — `padding: 8px 10px 4px`, space-between. Left: `Hotkey fallback`
   (11px / `--text2`). Right: three kbd chips `Ctrl` `Win` `R` separated by `+` — each chip:
@@ -138,6 +162,7 @@ Persisted user settings (registry / app settings store):
 - `playbackSpeed: number` (default 1.25)
 - `voiceId: string` (default first available natural voice, e.g. Microsoft Aria)
 - `autoReadSelection: boolean` (default true)
+- `autoReadOnCopy: boolean` (default true)
 - `launchAtStartup: boolean` (default false)
 
 Transient runtime state:

@@ -122,6 +122,10 @@ public sealed partial class MainWindow : Window
         _readAloud.VoicesChanged += OnVoicesChanged;
         _controlPanel.StartupStateChanged += OnPanelStartupChanged;
 
+        // The control panel's activity-log button reuses the tray's single-instance
+        // log window, so the host opens it.
+        _controlPanel.ActivityLogRequested += (_, _) => ShowActivityLog();
+
         nint handle = WindowNative.GetWindowHandle(this);
         _hotkey.Register(handle);
 
