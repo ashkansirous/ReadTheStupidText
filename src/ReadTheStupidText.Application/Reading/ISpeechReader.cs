@@ -27,8 +27,11 @@ public interface ISpeechReader
     /// Synthesizes <paramref name="text"/> and begins playback. Starting a new
     /// utterance cancels any in-flight synthesis/playback of a previous one, so a
     /// superseded (e.g. long) read can never play after the one that replaced it.
+    /// The optional <paramref name="activityId"/> is the activity-log entry id this
+    /// read belongs to, stamped onto the engine's per-chunk timing log lines so they
+    /// join back to the same row (latency diagnostics).
     /// </summary>
-    Task SpeakAsync(string text);
+    Task SpeakAsync(string text, int? activityId = null);
 
     /// <summary>
     /// Eagerly prepares the synthesis engine (building any heavy model and warming

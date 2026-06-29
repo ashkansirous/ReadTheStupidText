@@ -454,7 +454,7 @@ public sealed class ReadAloudService : IDisposable
             _synthStartTicks = Stopwatch.GetTimestamp();
             _log.SetState(entry, ActivityState.GeneratingAudio);
             _systemLog.Debug("generating audio", entry.Id);
-            await _reader.SpeakAsync(text);
+            await _reader.SpeakAsync(text, entry.Id);
         }
         catch (Exception ex)
         {

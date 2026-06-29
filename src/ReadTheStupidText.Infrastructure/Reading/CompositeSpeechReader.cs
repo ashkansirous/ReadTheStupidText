@@ -40,10 +40,10 @@ public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
 
     public PlaybackState State => _active.State;
 
-    public Task SpeakAsync(string text)
+    public Task SpeakAsync(string text, int? activityId = null)
     {
         _active = _model.IsReady ? _neural : _fallback;
-        return _active.SpeakAsync(text);
+        return _active.SpeakAsync(text, activityId);
     }
 
     // Only the neural engine has a heavy model to warm; the WinRT fallback is instant.

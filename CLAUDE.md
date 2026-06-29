@@ -257,7 +257,7 @@ the hotkey is the always-available fallback). See Slice 10 / Decision 15 in
 
 The neural reader (`SupertonicSpeechReader`) **chunks** long text
 (`SpeechTextChunker`, paragraph→sentence→word) and synthesizes the chunks
-**concurrently (degree 3)** while playing them **in order**, so a long read starts
+**concurrently** while playing them **in order**, so a long read starts
 speaking after the first chunk. The **first** chunk is biased toward a single
 sentence (Slice 18, Decision 25) so time-to-first-audio is a short synthesis, not a
 whole paragraph; later chunks keep the ~200-char paragraph→sentence→word split. A
@@ -265,6 +265,20 @@ superseded/stopped read is torn down via a
 **generation counter + `CancellationToken`** (`ISpeechReader.Stop()`), so stale
 synthesis can never reach the shared `MediaPlayer`; `read` is marked only on the
 reader's **`Completed`** (natural end), never on a stop-induced idle.
+
+**Latency instrumentation + adaptive threading (Slice 22, Decision 30).** The reader
+takes `ISystemLog` and writes per-read Debug lines so a slow read is attributable:
+`split … into K chunk(s) in X ms (threads T, concurrency C)`, a per-chunk
+`chunk i/K (n chars): generate X ms, wav Y ms`, and a one-shot `first audio after X
+ms` (on the first chunk's `MediaOpened`). Each is stamped with the activity-log
+**id**, threaded in via a new optional `ISpeechReader.SpeakAsync(text, activityId)`
+param (the WinRT fallback ignores it), so the lines join the input log. The sherpa-onnx
+knobs are **adaptive to `Environment.ProcessorCount`** (no longer fixed at threads 2 /
+degree 3): `SynthesisThreads = clamp(cores/2, 2, 4)` (`config.Model.NumThreads`,
+confirmed via context7 `/k2-fsa/sherpa-onnx`) and `MaxSynthesisConcurrency =
+clamp(cores/threads, 2, 4)` — latency-first (more ONNX threads shorten the single
+first-chunk synthesis the user waits on), sized so `threads * concurrency` fits the
+cores without oversubscribing.
 
 To kill the cold-start stall on the **first** read (Slice 17, Decision 24), the
 engine is **warmed at startup**: once `IVoiceModelService` locates the model,
