@@ -15,20 +15,13 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <!-- Ship every packaged visual asset (all tile/logo/splash/store scale and
+       targetsize variants, plus tray/app icons). Superseded and Store-gallery
+       art is kept in the repo-root unused\ folder (outside this project's
+       packaged cone) so it never enters the MSIX payload or the PRI index. -->
   <ItemGroup>
-    <Content Include="Assets\SplashScreen.scale-200.png" />
-    <Content Include="Assets\LockScreenLogo.scale-200.png" />
-    <Content Include="Assets\Square150x150Logo.scale-200.png" />
-    <Content Include="Assets\Square44x44Logo.scale-200.png" />
-    <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
-    <Content Include="Assets\Square44x44Logo.targetsize-48_altform-lightunplated.png" />
-    <Content Include="Assets\StoreLogo.png" />
-    <Content Include="Assets\AppIcon.ico" />
-    <Content Include="Assets\Wide310x150Logo.scale-200.png" />
-    <Content Include="Assets\App logo and store.png" />
-    <Content Include="Assets\Logotype Glyph.png" />
-    <Content Include="Assets\TrayIconDark.ico" />
-    <Content Include="Assets\TrayIconLight.ico" />
+    <Content Include="Assets\*.png" />
+    <Content Include="Assets\*.ico" />
   </ItemGroup>
 
   <ItemGroup>

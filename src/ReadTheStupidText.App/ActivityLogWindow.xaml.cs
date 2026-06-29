@@ -2,9 +2,12 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using ReadTheStupidText.Application.Activity;
 using ReadTheStupidText.Domain.Activity;
+using Microsoft.UI;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Windows.Graphics;
+using Windows.UI;
 
 namespace ReadTheStupidText_App;
 
@@ -28,6 +31,7 @@ public sealed partial class ActivityLogWindow : Window
         InitializeComponent();
         Title = "Read The Stupid Text — Activity log";
         AppWindow.Resize(new SizeInt32(980, 480));
+        ConfigureWindowChrome();
 
         foreach (ActivityEntry entry in _log.Entries)
         {
@@ -40,6 +44,38 @@ public sealed partial class ActivityLogWindow : Window
     }
 
     public ObservableCollection<ActivityRowVm> Rows { get; } = new();
+
+    // Brand the window chrome: the glasses mark in the title bar (replacing the
+    // default placeholder logo) and a brand-coloured caption that flows into the
+    // gradient header below, so the diagnostic window matches the control panel.
+    private void ConfigureWindowChrome()
+    {
+        AppWindow.SetIcon("Assets/AppIcon.ico");
+
+        if (!AppWindowTitleBar.IsCustomizationSupported())
+        {
+            return;
+        }
+
+        Color brand = ColorHelper.FromArgb(255, 0x5B, 0x57, 0xE8);
+        Color brandHover = ColorHelper.FromArgb(255, 0x6E, 0x6A, 0xEE);
+        Color brandPressed = ColorHelper.FromArgb(255, 0x4C, 0x48, 0xD0);
+        Color inactiveText = ColorHelper.FromArgb(0xB3, 0xFF, 0xFF, 0xFF);
+
+        AppWindowTitleBar bar = AppWindow.TitleBar;
+        bar.BackgroundColor = brand;
+        bar.InactiveBackgroundColor = brand;
+        bar.ForegroundColor = Colors.White;
+        bar.InactiveForegroundColor = inactiveText;
+        bar.ButtonBackgroundColor = brand;
+        bar.ButtonInactiveBackgroundColor = brand;
+        bar.ButtonForegroundColor = Colors.White;
+        bar.ButtonInactiveForegroundColor = inactiveText;
+        bar.ButtonHoverBackgroundColor = brandHover;
+        bar.ButtonHoverForegroundColor = Colors.White;
+        bar.ButtonPressedBackgroundColor = brandPressed;
+        bar.ButtonPressedForegroundColor = Colors.White;
+    }
 
     private void OnEntryAdded(object? sender, ActivityEntry entry) =>
         _dispatcher.TryEnqueue(() => AddRow(entry));

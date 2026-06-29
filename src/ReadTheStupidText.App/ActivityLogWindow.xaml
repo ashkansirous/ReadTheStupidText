@@ -20,18 +20,50 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Header -->
-        <Grid Grid.Row="0" Padding="12,10" ColumnSpacing="8">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <TextBlock
-                Text="Activity log"
-                VerticalAlignment="Center"
-                Style="{ThemeResource BodyStrongTextBlockStyle}" />
-            <Button Grid.Column="1" Content="Clear" Click="OnClearClick" />
-        </Grid>
+        <!-- Brand-gradient header — mirrors the control panel's eyebrow + title
+             treatment so the diagnostic window reads as the same product. -->
+        <Border Grid.Row="0" Background="{StaticResource BrandGradient}">
+            <Grid Padding="16,12" ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- The app tile, rounded — the brand mark on the gradient. -->
+                <Border Grid.Column="0" Width="34" Height="34" CornerRadius="8" VerticalAlignment="Center">
+                    <Border.Background>
+                        <ImageBrush ImageSource="ms-appx:///Assets/Square150x150Logo.scale-200.png" Stretch="UniformToFill" />
+                    </Border.Background>
+                </Border>
+
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock
+                        Text="READ THE STUPID TEXT"
+                        FontSize="10"
+                        FontWeight="Bold"
+                        CharacterSpacing="180"
+                        Foreground="{StaticResource HeaderEyebrow}" />
+                    <TextBlock
+                        Text="Activity log"
+                        FontSize="15"
+                        FontWeight="SemiBold"
+                        Margin="0,2,0,0"
+                        Foreground="{StaticResource HeaderText}" />
+                </StackPanel>
+
+                <Button
+                    Grid.Column="2"
+                    Content="Clear"
+                    Click="OnClearClick"
+                    VerticalAlignment="Center"
+                    Padding="14,6"
+                    CornerRadius="6"
+                    Background="{StaticResource HeaderControl}"
+                    BorderThickness="0"
+                    Foreground="{StaticResource HeaderText}" />
+            </Grid>
+        </Border>
 
         <!-- Column headings -->
         <Grid Grid.Row="1" Padding="12,4" ColumnSpacing="12" Background="{ThemeResource LayerFillColorDefaultBrush}">
