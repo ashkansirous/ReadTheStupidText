@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -7,12 +8,14 @@ using ReadTheStupidText.Application.Startup;
 using ReadTheStupidText.Domain.Activity;
 using ReadTheStupidText.Domain.Reading;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Text;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
+using Microsoft.UI.Xaml.Shapes;
 using Windows.Graphics;
 using WinRT.Interop;
 
@@ -47,6 +50,9 @@ public sealed partial class ControlPanelWindow : Window
     private readonly DispatcherQueue _dispatcher = DispatcherQueue.GetForCurrentThread();
     private readonly Brush _onIconBrush = new SolidColorBrush(Microsoft.UI.Colors.White);
     private Storyboard? _waveform;
+
+    // Tolerance for matching the slider's value to a quick-preset chip.
+    private const double PresetMatchTolerance = 0.001;
 
     // Suppresses control events while the panel is being populated from state,
     // so refreshing the UI does not echo back as a user change. Starts true so
@@ -200,6 +206,7 @@ public sealed partial class ControlPanelWindow : Window
     {
         SpeedSlider.Value = rate.Value;
         SpeedPill.Text = rate.ToDisplayLabel();
+        UpdatePresetHighlight(rate);
     }
 
     // The three compact icon toggles carry a hover tooltip naming the control and
@@ -229,12 +236,13 @@ public sealed partial class ControlPanelWindow : Window
     // Off = card fill + hairline border + muted (grey) icon; on = accent fill +
     // white icon. Set explicitly (rather than via visual states) so toggling off
     // reliably returns the icon to grey. Brushes are resolved from the active
-    // theme dictionary so they stay correct in light and dark.
-    private void ApplyToggleVisual(ToggleButton toggle, IconElement icon, bool on)
+    // theme dictionary so they stay correct in light and dark. The icons are now
+    // stroked line glyphs, so the colour drives Stroke rather than Foreground.
+    private void ApplyToggleVisual(ToggleButton toggle, Shape icon, bool on)
     {
         toggle.Background = ThemeBrush(on ? "PanelAccent" : "PanelCard");
         toggle.BorderBrush = ThemeBrush(on ? "PanelAccent" : "PanelStroke");
-        icon.Foreground = on ? _onIconBrush : ThemeBrush("PanelText2");
+        icon.Stroke = on ? _onIconBrush : ThemeBrush("PanelText2");
     }
 
     private void OnActualThemeChanged(FrameworkElement sender, object args)
@@ -285,7 +293,7 @@ public sealed partial class ControlPanelWindow : Window
     private void OnSpeedPillToggled(object sender, RoutedEventArgs e)
     {
         bool expanded = SpeedPillToggle.IsChecked == true;
-        SpeedSliderRow.Visibility = expanded ? Visibility.Visible : Visibility.Collapsed;
+        SpeedRevealPanel.Visibility = expanded ? Visibility.Visible : Visibility.Collapsed;
         SpeedChevronRotate.Angle = expanded ? 180 : 0;
         RefitToContent();
     }
@@ -311,7 +319,41 @@ public sealed partial class ControlPanelWindow : Window
 
         var rate = new PlaybackRate(e.NewValue);
         SpeedPill.Text = rate.ToDisplayLabel();
+        UpdatePresetHighlight(rate);
         _readAloud.SetSpeed(rate);
+    }
+
+    // A quick-preset chip sets the slider, which flows through OnSpeedSliderChanged
+    // to update the pill, the highlight, and the service. Clicking the active chip
+    // is a no-op (the value doesn't change).
+    private void OnSpeedPresetClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: string tag } &&
+            double.TryParse(tag, NumberStyles.Float, CultureInfo.InvariantCulture, out double value))
+        {
+            SpeedSlider.Value = new PlaybackRate(value).Value;
+        }
+    }
+
+    // Highlights the chip whose rate matches the current value; the others revert to
+    // the translucent off look. The active chip is solid white with blue, bold text.
+    private void UpdatePresetHighlight(PlaybackRate rate)
+    {
+        foreach (var child in SpeedPresetRow.Children)
+        {
+            if (child is Button { Tag: string tag } button &&
+                double.TryParse(tag, NumberStyles.Float, CultureInfo.InvariantCulture, out double value))
+            {
+                ApplyPresetVisual(button, Math.Abs(value - rate.Value) < PresetMatchTolerance);
+            }
+        }
+    }
+
+    private void ApplyPresetVisual(Button button, bool active)
+    {
+        button.Background = active ? _onIconBrush : (Brush)RootGrid.Resources["HeaderPresetFill"];
+        button.Foreground = active ? (Brush)RootGrid.Resources["HeaderPresetActiveText"] : (Brush)RootGrid.Resources["HeaderText"];
+        button.FontWeight = active ? FontWeights.Bold : FontWeights.SemiBold;
     }
 
     private void OnVoiceSelectionChanged(object sender, SelectionChangedEventArgs e)

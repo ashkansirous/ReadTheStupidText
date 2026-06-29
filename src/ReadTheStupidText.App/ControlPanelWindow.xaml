@@ -62,6 +62,9 @@
                 <SolidColorBrush x:Key="HeaderControl" Color="#33FFFFFF" />
                 <SolidColorBrush x:Key="HeaderControlBorder" Color="#4DFFFFFF" />
                 <SolidColorBrush x:Key="HeaderTrack" Color="#4DFFFFFF" />
+                <!-- Speed-preset chip fill (≈16% white) + the active chip's blue text. -->
+                <SolidColorBrush x:Key="HeaderPresetFill" Color="#29FFFFFF" />
+                <SolidColorBrush x:Key="HeaderPresetActiveText" Color="#2F6AE0" />
 
                 <!-- The animated 5-bar waveform; runs only while reading. -->
                 <Storyboard x:Key="WaveformStoryboard" RepeatBehavior="Forever" AutoReverse="True">
@@ -127,13 +130,61 @@
                     </Setter>
                 </Style>
 
+                <!-- A speed-preset chip (revealed with the slider). Off = translucent
+                     white fill + white text; the active preset is driven from code to a
+                     solid-white fill + blue text (ApplyPresetVisual), matching the design.
+                     A separate overlay handles hover so it never clobbers the active fill. -->
+                <Style x:Key="SpeedPresetStyle" TargetType="Button">
+                    <Setter Property="Height" Value="26" />
+                    <Setter Property="Padding" Value="0" />
+                    <Setter Property="HorizontalAlignment" Value="Stretch" />
+                    <Setter Property="FontSize" Value="11" />
+                    <Setter Property="FontWeight" Value="SemiBold" />
+                    <Setter Property="Foreground" Value="{StaticResource HeaderText}" />
+                    <Setter Property="Background" Value="{StaticResource HeaderPresetFill}" />
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="Button">
+                                <Grid>
+                                    <Border x:Name="PresetRoot"
+                                            CornerRadius="7"
+                                            Background="{TemplateBinding Background}">
+                                        <ContentPresenter
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Foreground="{TemplateBinding Foreground}"
+                                            FontSize="{TemplateBinding FontSize}"
+                                            FontWeight="{TemplateBinding FontWeight}" />
+                                    </Border>
+                                    <Border x:Name="PresetOverlay" CornerRadius="7" Background="Transparent" />
+                                    <VisualStateManager.VisualStateGroups>
+                                        <VisualStateGroup x:Name="CommonStates">
+                                            <VisualState x:Name="Normal" />
+                                            <VisualState x:Name="PointerOver">
+                                                <VisualState.Setters>
+                                                    <Setter Target="PresetOverlay.Background" Value="#24FFFFFF" />
+                                                </VisualState.Setters>
+                                            </VisualState>
+                                            <VisualState x:Name="Pressed">
+                                                <VisualState.Setters>
+                                                    <Setter Target="PresetOverlay.Background" Value="#3DFFFFFF" />
+                                                </VisualState.Setters>
+                                            </VisualState>
+                                        </VisualStateGroup>
+                                    </VisualStateManager.VisualStateGroups>
+                                </Grid>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+
                 <!-- A compact square icon toggle (Controls row). Off = card fill +
                      hairline + muted icon; on = accent fill + white icon. The
                      background/border/icon brushes are driven in code-behind
                      (ApplyToggleVisual) rather than visual states, so the off state
                      reliably reverts to grey. The template just binds them. -->
                 <Style x:Key="IconToggleStyle" TargetType="ToggleButton">
-                    <Setter Property="Height" Value="46" />
+                    <Setter Property="Height" Value="70" />
                     <Setter Property="Padding" Value="0" />
                     <Setter Property="HorizontalAlignment" Value="Stretch" />
                     <Setter Property="BorderThickness" Value="1" />
@@ -144,7 +195,7 @@
                             <ControlTemplate TargetType="ToggleButton">
                                 <Grid>
                                     <Border x:Name="ToggleRoot"
-                                            CornerRadius="9"
+                                            CornerRadius="11"
                                             BorderThickness="{TemplateBinding BorderThickness}"
                                             Background="{TemplateBinding Background}"
                                             BorderBrush="{TemplateBinding BorderBrush}">
@@ -152,7 +203,7 @@
                                             HorizontalAlignment="Center"
                                             VerticalAlignment="Center" />
                                     </Border>
-                                    <Border x:Name="ToggleOverlay" CornerRadius="9" Background="Transparent" />
+                                    <Border x:Name="ToggleOverlay" CornerRadius="11" Background="Transparent" />
                                     <VisualStateManager.VisualStateGroups>
                                         <VisualStateGroup x:Name="CommonStates">
                                             <VisualState x:Name="Normal" />
@@ -361,39 +412,61 @@
                         </ToggleButton>
                     </Grid>
 
-                    <!-- Revealed speed slider (fine 0.05 control — Decision 13).
-                         Hidden until the speed pill is tapped. -->
-                    <Grid x:Name="SpeedSliderRow" Visibility="Collapsed" Margin="0,12,0,0" ColumnSpacing="10" VerticalAlignment="Center">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="0.5×" FontSize="10.5" VerticalAlignment="Center" Foreground="{StaticResource HeaderEyebrow}" />
-                        <Slider
-                            x:Name="SpeedSlider"
-                            Grid.Column="1"
-                            Minimum="0.5"
-                            Maximum="2.0"
-                            StepFrequency="0.05"
-                            SnapsTo="StepValues"
-                            Margin="0,-2,0,-6"
-                            VerticalAlignment="Center"
-                            ValueChanged="OnSpeedSliderChanged">
-                            <Slider.Resources>
-                                <SolidColorBrush x:Key="SliderTrackValueFill" Color="White" />
-                                <SolidColorBrush x:Key="SliderTrackValueFillPointerOver" Color="White" />
-                                <SolidColorBrush x:Key="SliderTrackValueFillPressed" Color="White" />
-                                <SolidColorBrush x:Key="SliderTrackFill" Color="#4DFFFFFF" />
-                                <SolidColorBrush x:Key="SliderTrackFillPointerOver" Color="#66FFFFFF" />
-                                <SolidColorBrush x:Key="SliderTrackFillPressed" Color="#66FFFFFF" />
-                                <SolidColorBrush x:Key="SliderThumbBackground" Color="White" />
-                                <SolidColorBrush x:Key="SliderThumbBackgroundPointerOver" Color="White" />
-                                <SolidColorBrush x:Key="SliderThumbBackgroundPressed" Color="White" />
-                            </Slider.Resources>
-                        </Slider>
-                        <TextBlock Grid.Column="2" Text="2×" FontSize="10.5" VerticalAlignment="Center" Foreground="{StaticResource HeaderEyebrow}" />
-                    </Grid>
+                    <!-- Revealed speed controls (fine 0.05 slider + quick presets,
+                         Decision 13). Hidden until the speed pill is tapped; the slider
+                         and presets stay in sync and the panel re-fits when revealed. -->
+                    <StackPanel x:Name="SpeedRevealPanel" Visibility="Collapsed">
+                        <Grid Margin="0,12,0,0" ColumnSpacing="10" VerticalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="0.5×" FontSize="10.5" VerticalAlignment="Center" Foreground="{StaticResource HeaderEyebrow}" />
+                            <Slider
+                                x:Name="SpeedSlider"
+                                Grid.Column="1"
+                                Minimum="0.5"
+                                Maximum="2.0"
+                                StepFrequency="0.05"
+                                SnapsTo="StepValues"
+                                Margin="0,-2,0,-6"
+                                VerticalAlignment="Center"
+                                ValueChanged="OnSpeedSliderChanged">
+                                <Slider.Resources>
+                                    <SolidColorBrush x:Key="SliderTrackValueFill" Color="White" />
+                                    <SolidColorBrush x:Key="SliderTrackValueFillPointerOver" Color="White" />
+                                    <SolidColorBrush x:Key="SliderTrackValueFillPressed" Color="White" />
+                                    <SolidColorBrush x:Key="SliderTrackFill" Color="#4DFFFFFF" />
+                                    <SolidColorBrush x:Key="SliderTrackFillPointerOver" Color="#66FFFFFF" />
+                                    <SolidColorBrush x:Key="SliderTrackFillPressed" Color="#66FFFFFF" />
+                                    <SolidColorBrush x:Key="SliderThumbBackground" Color="White" />
+                                    <SolidColorBrush x:Key="SliderThumbBackgroundPointerOver" Color="White" />
+                                    <SolidColorBrush x:Key="SliderThumbBackgroundPressed" Color="White" />
+                                </Slider.Resources>
+                            </Slider>
+                            <TextBlock Grid.Column="2" Text="2×" FontSize="10.5" VerticalAlignment="Center" Foreground="{StaticResource HeaderEyebrow}" />
+                        </Grid>
+
+                        <!-- Quick presets: six equal-width chips that set the rate on tap.
+                             The active one is highlighted from code (ApplyPresetVisual). -->
+                        <Grid x:Name="SpeedPresetRow" Margin="0,10,0,0" ColumnSpacing="6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Style="{StaticResource SpeedPresetStyle}" Tag="0.5" Content="0.5×" Click="OnSpeedPresetClick" />
+                            <Button Grid.Column="1" Style="{StaticResource SpeedPresetStyle}" Tag="1.0" Content="1×" Click="OnSpeedPresetClick" />
+                            <Button Grid.Column="2" Style="{StaticResource SpeedPresetStyle}" Tag="1.25" Content="1.25×" Click="OnSpeedPresetClick" />
+                            <Button Grid.Column="3" Style="{StaticResource SpeedPresetStyle}" Tag="1.5" Content="1.5×" Click="OnSpeedPresetClick" />
+                            <Button Grid.Column="4" Style="{StaticResource SpeedPresetStyle}" Tag="1.75" Content="1.75×" Click="OnSpeedPresetClick" />
+                            <Button Grid.Column="5" Style="{StaticResource SpeedPresetStyle}" Tag="2.0" Content="2×" Click="OnSpeedPresetClick" />
+                        </Grid>
+                    </StackPanel>
                 </StackPanel>
             </Grid>
         </Border>
@@ -413,27 +486,30 @@
                     <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE720;" FontSize="15" Foreground="{ThemeResource PanelAccent2}" />
                 </Border>
                 <TextBlock Grid.Column="1" Text="Voice" FontSize="13" VerticalAlignment="Center" Foreground="{ThemeResource PanelText}" />
-                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                    <ComboBox
-                        x:Name="VoiceCombo"
-                        MinWidth="126"
-                        DisplayMemberPath="DisplayName"
-                        SelectionChanged="OnVoiceSelectionChanged" />
-                    <TextBlock
-                        x:Name="VoiceStatus"
-                        Text="Preparing neural voice…"
-                        Visibility="Collapsed"
-                        FontSize="11.5"
-                        VerticalAlignment="Center"
-                        Foreground="{ThemeResource PanelText2}" />
-                    <Button
-                        x:Name="ActivityLogButton"
-                        Style="{StaticResource LogButtonStyle}"
-                        Click="OnActivityLogClick"
-                        ToolTipService.ToolTip="Activity log — opens the read-aloud history">
-                        <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE81C;" FontSize="16" />
-                    </Button>
-                </StackPanel>
+                <!-- The picker now stretches to fill the row (design: flex:1). The
+                     "preparing" label occupies the same cell until the model loads. -->
+                <ComboBox
+                    x:Name="VoiceCombo"
+                    Grid.Column="2"
+                    HorizontalAlignment="Stretch"
+                    DisplayMemberPath="DisplayName"
+                    SelectionChanged="OnVoiceSelectionChanged" />
+                <TextBlock
+                    x:Name="VoiceStatus"
+                    Grid.Column="2"
+                    Text="Preparing neural voice…"
+                    Visibility="Collapsed"
+                    FontSize="11.5"
+                    VerticalAlignment="Center"
+                    Foreground="{ThemeResource PanelText2}" />
+                <Button
+                    x:Name="ActivityLogButton"
+                    Grid.Column="3"
+                    Style="{StaticResource LogButtonStyle}"
+                    Click="OnActivityLogClick"
+                    ToolTipService.ToolTip="Activity log — opens the read-aloud history">
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE81C;" FontSize="16" />
+                </Button>
             </Grid>
 
             <Border Height="1" Background="{ThemeResource PanelStroke}" Margin="10,2,10,0" />
@@ -447,29 +523,43 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <!-- Auto-read on selection (speaker + sound) -->
+                <!-- Auto-read on selection — a select-frame (rounded corner brackets +
+                     edge tick marks) enclosing a two-wave sound glyph. Stroked line icon
+                     (the design's source SVG, stroke = the toggle's icon colour, set in
+                     code via ApplyToggleVisual). -->
                 <ToggleButton
                     x:Name="AutoReadSelectionToggle"
                     Grid.Column="0"
                     Style="{StaticResource IconToggleStyle}"
                     Checked="OnAutoReadSelectionToggled"
                     Unchecked="OnAutoReadSelectionToggled">
-                    <FontIcon x:Name="SelectionIcon" FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE767;" FontSize="18" />
+                    <Viewbox Width="34" Height="34">
+                        <Path x:Name="SelectionIcon" Width="24" Height="24" Stretch="None"
+                              Stroke="{ThemeResource PanelText2}" StrokeThickness="1.9"
+                              StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                              Data="M4 8V6a2 2 0 0 1 2 -2h2 M16 4h2a2 2 0 0 1 2 2v2 M20 16v2a2 2 0 0 1 -2 2h-2 M8 20H6a2 2 0 0 1 -2 -2v-2 M11 4h2 M11 20h2 M4 11v2 M20 11v2 M10 9.5a4 4 0 0 1 0 5 M13 8.3a6 6 0 0 1 0 7.4" />
+                    </Viewbox>
                 </ToggleButton>
 
-                <!-- Auto-read on copy (copy glyph) -->
+                <!-- Auto-read on copy — two stacked sheets enclosing a two-wave sound
+                     glyph. Stroked line icon, same scheme. -->
                 <ToggleButton
                     x:Name="AutoReadCopyToggle"
                     Grid.Column="1"
                     Style="{StaticResource IconToggleStyle}"
                     Checked="OnAutoReadCopyToggled"
                     Unchecked="OnAutoReadCopyToggled">
-                    <FontIcon x:Name="CopyIcon" FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE8C8;" FontSize="17" />
+                    <Viewbox Width="34" Height="34">
+                        <Path x:Name="CopyIcon" Width="24" Height="24" Stretch="None"
+                              Stroke="{ThemeResource PanelText2}" StrokeThickness="1.9"
+                              StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                              Data="M5 15H4a2 2 0 0 1 -2 -2V4a2 2 0 0 1 2 -2h9a2 2 0 0 1 2 2v1 M10 8H19a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2H10a2 2 0 0 1 -2 -2V10a2 2 0 0 1 2 -2Z M13 12a3 3 0 0 1 0 4.6 M15.5 11a4.6 4.6 0 0 1 0 6.6" />
+                    </Viewbox>
                 </ToggleButton>
 
-                <!-- Launch at startup (rocket — deliberately not a power symbol;
-                     Segoe Fluent has no rocket glyph, so this is a PathIcon that
-                     inherits the toggle's foreground). -->
+                <!-- Launch at startup — a rocket (deliberately not a power symbol;
+                     Segoe Fluent has no rocket glyph, so this is the design's stroked
+                     line rocket as a Path; stroke colour set in code). -->
                 <ToggleButton
                     x:Name="StartupToggle"
                     Grid.Column="2"
@@ -477,7 +567,10 @@
                     Checked="OnStartupToggled"
                     Unchecked="OnStartupToggled">
                     <Viewbox Width="20" Height="20">
-                        <PathIcon x:Name="StartupIcon" Data="F0 M12,2 C9.5,4.5 8,8 8,12 L8,15 L16,15 L16,12 C16,8 14.5,4.5 12,2 Z M12,8 m-2,0 a2,2 0 1 0 4,0 a2,2 0 1 0 -4,0 Z M8,15 L5,19 L8,17 Z M16,15 L19,19 L16,17 Z M10,16 L12,20 L14,16 Z" />
+                        <Path x:Name="StartupIcon" Width="24" Height="24" Stretch="None"
+                              Stroke="{ThemeResource PanelText2}" StrokeThickness="1.7"
+                              StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                              Data="M4.5 16.5 c-1.5 1.26 -2 5 -2 5 s3.74 -0.5 5 -2 c0.71 -0.84 0.7 -2.13 -0.09 -2.91 a2.18 2.18 0 0 0 -2.91 -0.09 z M12 15 l-3 -3 a22 22 0 0 1 2 -3.95 A12.88 12.88 0 0 1 22 2 c0 2.72 -0.78 7.5 -6 11 a22.35 22.35 0 0 1 -4 2 z M9 12 H4 s0.55 -3.03 2 -4 c1.62 -1.08 5 0 5 0 M12 15 v5 s3.03 -0.55 4 -2 c1.08 -1.62 0 -5 0 -5" />
                     </Viewbox>
                 </ToggleButton>
             </Grid>
