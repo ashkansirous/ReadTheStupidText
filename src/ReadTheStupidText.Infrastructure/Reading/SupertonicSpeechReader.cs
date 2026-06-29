@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices.WindowsRuntime;
+using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Domain.Reading;
 using SherpaOnnx;
@@ -22,18 +24,27 @@ namespace ReadTheStupidText.Infrastructure.Reading;
 /// </summary>
 public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
 {
-    private const int SynthesisThreads = 2;
+    // ONNX intra-op threads per synthesis (sherpa-onnx config.Model.NumThreads —
+    // confirmed via context7: "number of threads to run the neural network"; the
+    // Supertonic sample ships num_threads = 2). Scaled to the machine but capped: a
+    // single Generate sees diminishing returns past ~4 threads, and cores must be
+    // left for the concurrent chunks below. Latency-first — the time-to-first-audio
+    // the user feels is one chunk's synthesis, which more threads shorten.
+    private static readonly int SynthesisThreads = Math.Clamp(Environment.ProcessorCount / 2, 2, 4);
 
     // Long text is synthesized as several small chunks generated concurrently (this
     // many at once) and played strictly in order, so playback can start after the
-    // first chunk instead of waiting for the whole text to synthesize.
-    private const int MaxSynthesisConcurrency = 3;
+    // first chunk instead of waiting for the whole text to synthesize. Sized so
+    // SynthesisThreads * concurrency roughly fits the cores without oversubscribing.
+    private static readonly int MaxSynthesisConcurrency =
+        Math.Clamp(Environment.ProcessorCount / SynthesisThreads, 2, 4);
 
     // A throwaway utterance synthesized once at startup to JIT/warm the ONNX graph;
     // its audio is discarded, so it never reaches the player.
     private const string WarmUpText = "Ready.";
 
     private readonly IVoiceModelService _model;
+    private readonly ISystemLog _systemLog;
     private readonly MediaPlayer _player = new() { AutoPlay = false };
 
     // Serializes the generation counter / synthesis-cancellation swap, which can be
@@ -67,9 +78,17 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
     private int _chunkCount;
     private int _currentChunkIndex;
 
-    public SupertonicSpeechReader(IVoiceModelService model)
+    // Latency diagnostics (Decision 30): the activity-log id of the in-flight read and
+    // when it began, so the per-chunk timing lines join to its row; _firstAudioPending
+    // makes "first audio after N ms" log once, on the first chunk's MediaOpened.
+    private int? _readActivityId;
+    private long _readStartTicks;
+    private bool _firstAudioPending;
+
+    public SupertonicSpeechReader(IVoiceModelService model, ISystemLog systemLog)
     {
         _model = model;
+        _systemLog = systemLog;
         _player.MediaOpened += OnMediaOpened;
         _player.MediaEnded += OnMediaEnded;
         _player.PlaybackSession.PlaybackStateChanged += OnPlaybackStateChanged;
@@ -84,7 +103,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
 
     public PlaybackState State => _state;
 
-    public async Task SpeakAsync(string text)
+    public async Task SpeakAsync(string text, int? activityId = null)
     {
         OfflineTts? tts = EnsureTts();
         if (tts is null)
@@ -92,21 +111,31 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
             return;
         }
 
+        _readActivityId = activityId;
+        _readStartTicks = Stopwatch.GetTimestamp();
+        _firstAudioPending = true;
+
         (int generation, CancellationToken token) = BeginGeneration();
 
         // Split long text and start synthesizing the chunks concurrently (capped),
         // each task acquiring a slot from the semaphore. The tasks are kept in order.
+        long splitStart = Stopwatch.GetTimestamp();
         IReadOnlyList<string> chunks = SpeechTextChunker.Split(text);
         _chunkCount = chunks.Count;
         _currentChunkIndex = 0;
         ProgressChanged?.Invoke(this, 0);
+        _systemLog.Debug(
+            $"split {text.Length} chars into {chunks.Count} chunk(s) in " +
+            $"{Stopwatch.GetElapsedTime(splitStart).TotalMilliseconds:F1} ms " +
+            $"(threads {SynthesisThreads}, concurrency {MaxSynthesisConcurrency})",
+            activityId);
 
         // Not disposed: a superseded read can leave orphaned generation tasks that
         // still Release(); SemaphoreSlim needs no disposal unless its wait handle is
         // accessed (it isn't), so letting it be collected avoids that race.
         var slots = new SemaphoreSlim(MaxSynthesisConcurrency);
         List<Task<IRandomAccessStream>> generations =
-            chunks.Select(chunk => GenerateChunkAsync(tts, chunk, slots, token)).ToList();
+            chunks.Select((chunk, index) => GenerateChunkAsync(tts, chunk, index, slots, token)).ToList();
 
         // Consume in order: await each chunk, then play it to its end before the
         // next. A superseded read bails as soon as it notices it is no longer current.
@@ -162,16 +191,28 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
     }
 
     // Synthesizes one chunk to a WAV stream, throttled by the shared slot semaphore
-    // so at most MaxSynthesisConcurrency run at once.
+    // so at most MaxSynthesisConcurrency run at once. The generate and wav-encode
+    // times are logged per chunk so a slow read is attributable (latency diagnostics).
     private async Task<IRandomAccessStream> GenerateChunkAsync(
-        OfflineTts tts, string chunk, SemaphoreSlim slots, CancellationToken token)
+        OfflineTts tts, string chunk, int index, SemaphoreSlim slots, CancellationToken token)
     {
         await slots.WaitAsync(token);
         try
         {
+            long generateStart = Stopwatch.GetTimestamp();
             OfflineTtsGeneratedAudio audio =
                 await Task.Run(() => tts.Generate(chunk, 1.0f, _speakerId), token);
-            return await BuildWavStreamAsync(audio.Samples, audio.SampleRate);
+            TimeSpan generate = Stopwatch.GetElapsedTime(generateStart);
+
+            long wavStart = Stopwatch.GetTimestamp();
+            IRandomAccessStream stream = await BuildWavStreamAsync(audio.Samples, audio.SampleRate);
+            TimeSpan wav = Stopwatch.GetElapsedTime(wavStart);
+
+            _systemLog.Debug(
+                $"chunk {index + 1}/{_chunkCount} ({chunk.Length} chars): generate " +
+                $"{generate.TotalMilliseconds:F0} ms, wav {wav.TotalMilliseconds:F0} ms",
+                _readActivityId);
+            return stream;
         }
         finally
         {
@@ -298,6 +339,16 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
 
     private void OnMediaOpened(MediaPlayer sender, object args)
     {
+        // The first chunk opening is the moment audio is about to start — log the
+        // time-to-first-audio once per read (later chunks open silently).
+        if (_firstAudioPending)
+        {
+            _firstAudioPending = false;
+            _systemLog.Debug(
+                $"first audio after {Stopwatch.GetElapsedTime(_readStartTicks).TotalMilliseconds:F0} ms",
+                _readActivityId);
+        }
+
         sender.PlaybackSession.PlaybackRate = _playbackRate;
         sender.Play();
     }

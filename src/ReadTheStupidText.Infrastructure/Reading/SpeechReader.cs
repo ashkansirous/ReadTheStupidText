@@ -42,7 +42,9 @@ public sealed class SpeechReader : ISpeechReader, IDisposable
 
     public PlaybackState State => _state;
 
-    public async Task SpeakAsync(string text)
+    // activityId is unused here: the WinRT fallback synthesizes in a single call, so
+    // there are no per-chunk timings to correlate (the neural engine logs those).
+    public async Task SpeakAsync(string text, int? activityId = null)
     {
         (int generation, CancellationToken token) = BeginGeneration();
 
