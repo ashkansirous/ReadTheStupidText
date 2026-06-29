@@ -666,7 +666,7 @@ listening value on its own *and* is the prerequisite for "logs store redacted
 text," so it leads; logging (Slice 21) then unblocks the latency analysis (Slice
 22). (No GitHub issues yet — create via `plan-to-issues` if wanted.)
 
-- [x] **Slice 20 — Text sanitizer (redact/simplify noise).** (Decision 28) Add
+- [x] **Slice 20 — Text sanitizer (redact/simplify noise).** ([#102](https://github.com/ashkansirous/ReadTheStupidText/issues/102)) (Decision 28) Add
       `ITextSanitizer` (Application) + a regex rule set in Infrastructure that
       rewrites URLs → `"page on host"`, passwords/tokens → `"a password"`, emails,
       long digit runs, file paths, GUIDs/hashes, and markdown/HTML noise to short
@@ -675,7 +675,7 @@ text," so it leads; logging (Slice 21) then unblocks the latency analysis (Slice
       what gets spoken (and, later, logged). Unit-test the rules (pure logic, fits
       the existing test story). End-to-end value: selecting a URL/password reads a
       clean summary instead of gibberish.
-- [ ] **Slice 21 — Daily on-disk logs + open-logs button.** (Decision 27) Add
+- [ ] **Slice 21 — Daily on-disk logs + open-logs button.** ([#103](https://github.com/ashkansirous/ReadTheStupidText/issues/103)) (Decision 27) Add
       Serilog (rolling file) for `yyyy-MM-dd-system.log` and a small thread-safe
       append-writer for `yyyy-MM-dd-input.log` (one TSV row per activity-state
       transition, id-keyed, **redacted** text from Slice 20), both under the package
@@ -684,17 +684,17 @@ text," so it leads; logging (Slice 21) then unblocks the latency analysis (Slice
       button to the top of `ActivityLogWindow` (`Launcher.LaunchFolderAsync`).
       Delete logs older than 7 days on startup. Promote the existing `Debug.WriteLine`
       UIA traces to the system log.
-- [ ] **Slice 22 — Read-latency instrumentation + low-risk tuning.** (Decision 30)
+- [ ] **Slice 22 — Read-latency instrumentation + low-risk tuning.** ([#104](https://github.com/ashkansirous/ReadTheStupidText/issues/104)) (Decision 30)
       Log per-chunk split/generate/wav/first-audio timings into the system log so the
       ~7 s is attributable, then (context7-confirm sherpa threading first) raise
       `NumThreads`/`MaxSynthesisConcurrency` to fit the machine and tighten first-chunk
       biasing — measured against the new logs. No model/runtime swap this round.
-- [ ] **Slice 23 — Voice swap continues the current read.** (Decision 29) On
+- [ ] **Slice 23 — Voice swap continues the current read.** ([#105](https://github.com/ashkansirous/ReadTheStupidText/issues/105)) (Decision 29) On
       `SetVoice` during an active read, cancel pending synthesis and re-synthesize the
       remaining chunks with the new speaker from the current `_currentChunkIndex`
       (reuse the generation-counter machinery); already-played audio is not repeated.
       Drive it from `ReadAloudService.SetVoice`.
-- [ ] **Slice 24 — Draggable, position-persisted control panel.** (Decision 31) Make
+- [ ] **Slice 24 — Draggable, position-persisted control panel.** ([#106](https://github.com/ashkansirous/ReadTheStupidText/issues/106)) (Decision 31) Make
       the borderless control panel draggable by its header (pointer-drag → `AppWindow`
       move) and persist the last position in `ISettingsStore` so it reopens in place;
       keep pinned-topmost / no light-dismiss.
