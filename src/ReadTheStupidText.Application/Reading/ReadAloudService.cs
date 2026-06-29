@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using ReadTheStupidText.Application.Activity;
 using ReadTheStupidText.Application.Input;
+using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Application.Sanitizing;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Domain.Activity;
@@ -49,6 +50,7 @@ public sealed class ReadAloudService : IDisposable
     private readonly IActivityLog _log;
     private readonly ISettingsStore _settings;
     private readonly ITextSanitizer _sanitizer;
+    private readonly ISystemLog _systemLog;
 
     // Cancels a pending debounced read when a newer selection supersedes it.
     private CancellationTokenSource? _selectionCts;
@@ -88,7 +90,8 @@ public sealed class ReadAloudService : IDisposable
         IVoiceModelService voiceModel,
         IActivityLog log,
         ISettingsStore settings,
-        ITextSanitizer sanitizer)
+        ITextSanitizer sanitizer,
+        ISystemLog systemLog)
     {
         _reader = reader;
         _clipboard = clipboard;
@@ -102,6 +105,7 @@ public sealed class ReadAloudService : IDisposable
         _log = log;
         _settings = settings;
         _sanitizer = sanitizer;
+        _systemLog = systemLog;
 
         _reader.SetSpeed(_settings.Speed);
         ApplyPersistedVoice();
@@ -242,6 +246,7 @@ public sealed class ReadAloudService : IDisposable
     {
         _settings.Speed = speed;
         _reader.SetSpeed(speed);
+        _systemLog.Info($"speed set to {speed.ToDisplayLabel()}");
         SpeedChanged?.Invoke(this, speed);
     }
 
@@ -250,6 +255,7 @@ public sealed class ReadAloudService : IDisposable
     {
         _settings.VoiceId = voiceId;
         _reader.SetVoice(voiceId);
+        _systemLog.Info($"voice set to {voiceId}");
         VoiceChanged?.Invoke(this, voiceId);
     }
 
@@ -345,6 +351,7 @@ public sealed class ReadAloudService : IDisposable
         string clean = _sanitizer.Sanitize(text);
         if (clean == _lastTriggeredText)
         {
+            _systemLog.Debug("clipboard echo of the current read ignored");
             return;
         }
 
@@ -409,6 +416,7 @@ public sealed class ReadAloudService : IDisposable
         ActivityEntry entry = _log.Add(trigger, _foreground.Capture(), text);
         _activeEntry = entry;
         _activeReadStartTicks = Stopwatch.GetTimestamp();
+        _systemLog.Info($"intercepted via {trigger}, {text.Length} chars", entry.Id);
         return entry;
     }
 
@@ -424,6 +432,7 @@ public sealed class ReadAloudService : IDisposable
         if (active.State == ActivityState.Pending)
         {
             _log.SetState(active, ActivityState.Ignored, reason);
+            _systemLog.Debug($"ignored before reading ({reason})", active.Id);
         }
         else if (active.State is ActivityState.GeneratingAudio or ActivityState.Reading)
         {
@@ -431,6 +440,7 @@ public sealed class ReadAloudService : IDisposable
             // otherwise a slow long read could still play after this point.
             _reader.Stop();
             _log.SetState(active, ActivityState.Interrupted, reason);
+            _systemLog.Info($"interrupted ({reason})", active.Id);
         }
     }
 
@@ -443,11 +453,13 @@ public sealed class ReadAloudService : IDisposable
             // natural completion → Read (OnReaderCompleted), errors → catch below.
             _synthStartTicks = Stopwatch.GetTimestamp();
             _log.SetState(entry, ActivityState.GeneratingAudio);
+            _systemLog.Debug("generating audio", entry.Id);
             await _reader.SpeakAsync(text);
         }
-        catch
+        catch (Exception ex)
         {
             _log.SetState(entry, ActivityState.Failed, ActivityReason.Error);
+            _systemLog.Error("read failed during synthesis/playback", entry.Id, ex);
             ClearIfActive(entry);
         }
     }
@@ -460,11 +472,13 @@ public sealed class ReadAloudService : IDisposable
     {
         if (state == PlaybackState.Playing && _activeEntry is { State: ActivityState.GeneratingAudio } entry)
         {
-            _log.RecordTiming(
-                entry,
-                Stopwatch.GetElapsedTime(_activeReadStartTicks),
-                Stopwatch.GetElapsedTime(_synthStartTicks));
+            TimeSpan firstAudio = Stopwatch.GetElapsedTime(_activeReadStartTicks);
+            TimeSpan synth = Stopwatch.GetElapsedTime(_synthStartTicks);
+            _log.RecordTiming(entry, firstAudio, synth);
             _log.SetState(entry, ActivityState.Reading);
+            _systemLog.Info(
+                $"reading; first audio {firstAudio.TotalMilliseconds:F0} ms, synth {synth.TotalMilliseconds:F0} ms",
+                entry.Id);
         }
     }
 
@@ -475,6 +489,7 @@ public sealed class ReadAloudService : IDisposable
         if (_activeEntry is { State: ActivityState.GeneratingAudio or ActivityState.Reading } entry)
         {
             _log.SetState(entry, ActivityState.Read);
+            _systemLog.Info("read complete", entry.Id);
             _activeEntry = null;
         }
     }

@@ -215,6 +215,25 @@ foreground window (`WindowSource` = app + title, via `IForegroundWindow`) in the
 **Source** column. `ActivityLogWindow` (a normal resizable window, opened from the
 right-click tray menu) renders it live.
 
+Note: alongside the in-memory log, the app writes **two daily diagnostic files to
+disk** (Slice 21, Decision 27) under the package **TemporaryFolder** (`logs\`): a
+**system log** (`system-YYYYMMDD.log`) via **Serilog** (rolling file, Info/Debug/
+Warning/Error, fixed levels — not user-configurable) carrying every id-correlated
+action and exception, and an **input log** (`input-YYYYMMDD.log`) — a TSV the
+`ActivityInputLog` writer appends **one row per activity-state transition** to
+(append-only; it never rewrites a row), columns = the Activity-Log grid plus the
+entry **id**, so the two files **join on the id**. Both store **redacted** text only
+(the Slice 20 sanitizer runs first); raw text never touches disk. Serilog's rolling
+sink stamps the day as `YYYYMMDD` and can't prefix it, so the files are
+`system-…`/`input-…` rather than the `yyyy-MM-dd-…` order in Decision 27. The
+abstractions are **`ISystemLog`** + **`ILogFolder`** (Application); `LogPaths`
+(resolves the folder + a **7-day** startup retention sweep), `SerilogSystemLog`,
+`ActivityInputLog` and the pure `InputLogRow` formatter live in Infrastructure.
+`ActivityLogWindow` has an **Open logs** button (`Launcher.LaunchFolderAsync`). The
+former `UiaSelectionMonitor` `Debug.WriteLine` traces now go through `ISystemLog`.
+This is local-only (consistent with the "we collect nothing" stance) — no network,
+no telemetry export.
+
 **Three auto-read/read paths feed the log:** the **UIA selection monitor**
 (`ISelectionMonitor`, gated by the **Auto-read on selection** toggle), the
 **clipboard monitor** (`IClipboardMonitor` = `ClipboardFormatListener`, a Win32
