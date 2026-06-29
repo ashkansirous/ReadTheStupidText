@@ -327,6 +327,65 @@ this plan turns it into ordered, shippable vertical slices.
     telemetry was rejected (needs a consent UI + policy change + ongoing cost for a
     local-first Store utility).
 
+27. **macOS port via Uno Platform; Windows stays WinUI (Batch 4).** Add a macOS
+    head built with **Uno Platform** — its Skia **"AppKit" desktop shell** runs as a
+    native AppKit app from a single .NET build (confirmed via Uno docs). The existing
+    **WinUI 3** Windows app is left **untouched**; the `Domain` and `Application`
+    projects (both already `net10.0`, framework-free) are **reused as-is** by the Mac
+    head. **Native Swift** (best platform fidelity, but rewrites all non-model code)
+    and **.NET MAUI / Mac Catalyst** (an iPad-style runtime, weak fit for a menu-bar
+    utility + deep Accessibility/hotkey work) were rejected. **Mobile (iOS/Android) is
+    not in this batch:** their sandboxes forbid the *ambient cross-app read* that is
+    this product's core — iOS offers only an explicit Share/Action extension, Android
+    only a per-selection `PROCESS_TEXT` tap (or a Play-policy-risky AccessibilityService),
+    and background clipboard polling is blocked on both — so mobile would be a *different*
+    product (share-sheet + camera OCR), tackled later if at all. Estimated **~50–60%**
+    of non-UI code (Domain + Application + sherpa integration) carries over; the
+    platform Infrastructure and UI shell are new.
+28. **Mac read-selection maps onto the existing Application interfaces (Batch 4).**
+    macOS has a direct analog for every Windows capture path, so the Mac Infrastructure
+    implements the **same interfaces**: `ISelectionMonitor` via the **Accessibility API**
+    (`AXObserver` on `kAXSelectedTextChangedNotification` of the focused element) for
+    ambient auto-read-on-selection (the UIA analog); `IClipboardMonitor` via
+    **`NSPasteboard` change-count polling** (macOS allows clipboard polling with **no**
+    privacy prompt — unlike iOS/Android); the global hotkey via **`RegisterEventHotKey`**;
+    `IForegroundWindow` via `NSWorkspace.frontmostApplication`. A **Services menu** item
+    ("Read with Read The Stupid Text") is added as a user-initiated, sandbox-safe path.
+    The Accessibility API requires the user to grant **Accessibility permission**
+    (System Settings → Privacy) — the macOS analog of trusting the app, and the reason
+    the full experience needs notarized direct distribution (Decision 30).
+29. **Mac audio: AVFoundation sink; extract platform-neutral sherpa PCM (Batch 4).**
+    sherpa-onnx ships **macOS native libraries** and its .NET binding produces **PCM**
+    identically on every OS, so synthesis + chunking are portable — only *playback* is
+    Windows-bound (`MediaPlayer` is WinRT). Refactor: extract the platform-neutral
+    **PCM generation + `SpeechTextChunker` orchestration** into a shared speech-core,
+    and implement a Mac **audio sink over AVFoundation** (`AVAudioEngine` /
+    `AVAudioPlayerNode`) behind the existing `ISpeechReader`. `PlaybackRate` is applied
+    as a **pitch-corrected audio rate** on the Mac sink, matching Windows. The same
+    bundled Supertonic model (`VoiceModel/`, already in-repo) is read from the `.app`
+    bundle's resources.
+30. **Distribution: notarized Developer ID `.dmg` first, Mac App Store later (Batch 4).**
+    Mirrors the Windows MSIX-vs-UWP decision: the **Mac App Store sandbox blocks the
+    Accessibility API and global event monitoring**, so the full ambient-reading product
+    ships as a **Developer ID–signed, notarized, stapled `.dmg`** (direct download), built
+    on a **macOS GitHub Actions runner**. A **sandbox-safe Mac App Store** build
+    (Services menu + share + clipboard, **no** ambient capture) is a **later** slice.
+    Prerequisite: an **Apple Developer Program** membership (~US$99/yr) for the Developer
+    ID certificate + notarization (analogous to Batch 2's Partner Center work) — flagged
+    as a manual setup step, not wired into CI until the account exists.
+31. **No camera/OCR on Mac (Batch 4).** Camera-to-speech's killer use (point a phone at
+    a poster) doesn't fit a desktop; image/screenshot OCR (Apple Vision) is deferred.
+    Mac stays focused on selection / clipboard / Services / hotkey reading.
+32. **Repo & project layout: same repo, shared core (Batch 4).** Keep one repo. The
+    reusable libraries (`Domain`, `Application`, and the new platform-neutral
+    **speech-core** from Decision 29) stay shared; add **`Infrastructure.Mac`** (Mac
+    implementations) and **`ReadTheStupidText.Mac`** (the Uno head). The existing Windows
+    `Infrastructure` / `App` projects are unchanged. **Development constraint (flagged):**
+    the Uno macOS (Skia AppKit) head can only be **built / run / debugged on macOS** (or
+    a macOS CI runner) — the C# is authored on Windows, but the Mac head **cannot run on
+    the user's Windows machine**; a Mac (or cloud Mac / CI) is required to exercise
+    Slices M1 onward.
+
 ## Changes
 
 Ordered as vertical slices — each is end-to-end and independently runnable.
@@ -601,6 +660,64 @@ shippable. (No GitHub issues yet — create via `plan-to-issues` if wanted.)
       dashboard path in `CLAUDE.md`/`STORE.md` (not shipped). Lets the Slice 17/18
       gains be measured on the user's machine instead of guessed.
 
+**Batch 4 — macOS port via Uno Platform.** Bring the app to macOS, reusing the
+framework-free `Domain` + `Application` core and the bundled Supertonic neural
+voice, with a new Uno (Skia AppKit) head and a Mac Infrastructure that maps onto
+the existing interfaces (Decisions 27–32). The Windows WinUI app is untouched.
+Ordered smallest-first; **each slice from M1 must be built/run on a Mac or macOS
+CI runner** (Decision 32). No GitHub issues yet — create via `plan-to-issues` if
+wanted.
+
+- [ ] **Slice M0 — Shared-core extraction + Uno macOS skeleton boots.** (Decisions
+      27, 29, 32) Confirm `Domain`/`Application` are framework-free (they are) and
+      extract the platform-neutral sherpa **speech-core** (PCM generation +
+      `SpeechTextChunker` orchestration) out of the Windows `Infrastructure` into a
+      shared library, leaving the WinRT `MediaPlayer` sink behind. Scaffold the
+      **`ReadTheStupidText.Mac`** Uno app (Skia AppKit desktop head) referencing
+      `Domain` + `Application`, and add it to the solution. It boots to an empty
+      window on macOS. *Infrastructure slice (no user surface yet) — the named
+      exception to vertical slicing.* Confirm Uno macOS targeting + `dotnet` SDK
+      flags via context7 before scaffolding.
+- [ ] **Slice M1 — Read clipboard text aloud on Mac (smallest E2E).** (Decision 29)
+      Implement the Mac `ISpeechReader`: build the sherpa `OfflineTts` from the
+      bundled model and play its PCM through an **AVFoundation** sink, with
+      `PlaybackRate` as a pitch-corrected rate. A minimal Mac surface (a window
+      button or menu item) reads the current clipboard aloud. Proves model load +
+      neural audio + speed end-to-end on macOS (mirrors Windows Slice 1).
+- [ ] **Slice M2 — Global hotkey copies the selection + reads.** (Decision 28)
+      Register a global hotkey via `RegisterEventHotKey`; on press, synthesize
+      **Cmd+C** and read the clipboard — the universal fallback for non-Accessibility
+      apps. Surface the Accessibility-permission prompt the synthetic keystroke /
+      capture needs. Mirrors Windows Slice 2.
+- [ ] **Slice M3 — Menu-bar extra + Uno control panel.** (Decisions 27, 28) Add an
+      **`NSStatusItem`** menu-bar item (play/pause, five `SpeedPresets`, voice
+      submenu, Quit) — the macOS analog of the tray — and the Uno **control-panel
+      window** reusing the "Media Card" XAML/tokens where they port. Wire both to the
+      reused `ReadAloudService` / `IVoiceCatalog`. Mirrors Windows Slices 6–8/13.
+- [ ] **Slice M4 — Auto-read on selection via the Accessibility API.** (Decision 28)
+      Implement `ISelectionMonitor` with an `AXObserver` on
+      `kAXSelectedTextChangedNotification` of the focused element, gated by the
+      **Auto-read on selection** toggle; emit `SelectionCleared` on a genuine
+      deselect (same semantics as the UIA monitor). The ambient path. Mirrors Windows
+      Slice 3.
+- [ ] **Slice M5 — Clipboard auto-read + Services menu + activity log.** (Decisions
+      28, 32) Implement `IClipboardMonitor` via `NSPasteboard` change-count polling
+      (gated by **Auto-read on copy**), add a **Services menu** "Read with…" entry,
+      and surface the **reused** `IActivityLog` in a Mac activity-log window. Mirrors
+      Windows Slice 10 + the clipboard follow-up.
+- [ ] **Slice M6 — Launch at login + settings persistence.** (Decision 32) Implement
+      `IStartupService` via **`SMAppService`** (modern login item) and `ISettingsStore`
+      over `NSUserDefaults` (same keys/migration as Windows). Mirrors Windows Slice 4.
+- [ ] **Slice M7 — Notarized `.dmg` packaging & CI.** (Decision 30) GitHub Actions on
+      a **macOS runner** builds the `.app`, **Developer ID**-signs, **notarizes**,
+      staples, and packages a **`.dmg`** published to a GitHub Release. Document the
+      Apple Developer Program prerequisite + secrets in `STORE.md` (kept inert until
+      the account exists, like `store-submit.yml`). Confirm the notarization flow via
+      Microsoft Learn / Apple docs first.
+- [ ] **Slice M8 (later) — Mac App Store sandbox-safe build.** (Decision 30) A reduced
+      sandboxed target (Services menu + share + clipboard, **no** ambient Accessibility
+      capture) for Mac App Store reach. Deferred — only after the notarized build ships.
+
 ## Out of Scope
 
 - Voice *tuning* beyond playback rate (pitch, volume, SSML prosody).
@@ -637,6 +754,19 @@ shippable. (No GitHub issues yet — create via `plan-to-issues` if wanted.)
   `DisplayName`s change (Decision 19).
 - **(Batch 2)** Apache-2.0/GPL licensing or a CLA — the repo is plain MIT
   (Decision 16).
+- **(Batch 4)** iOS and Android — their sandboxes forbid the ambient cross-app
+  read that is the product's core (Decision 27); a mobile share-sheet + camera
+  product is a separate future effort, not this batch.
+- **(Batch 4)** Camera / image / screenshot OCR on Mac — deferred (Decision 31).
+- **(Batch 4)** Rewriting the Windows app or migrating it onto Uno — Windows stays
+  WinUI 3, untouched; only `Domain`/`Application`/speech-core are shared
+  (Decisions 27, 32).
+- **(Batch 4)** Mac App Store (sandboxed) distribution in the first pass — the
+  notarized `.dmg` ships first; the sandbox-safe MAS build is the later Slice M8
+  (Decision 30).
+- **(Batch 4)** Purchasing the Apple Developer Program membership / wiring live
+  notarization secrets — flagged as a manual prerequisite, kept inert in CI until
+  the account exists (Decision 30).
 
 ## Verification
 
@@ -742,5 +872,31 @@ shippable. (No GitHub issues yet — create via `plan-to-issues` if wanted.)
   the device (no network call, no third-party SDK referenced). The optional dev
   OpenTelemetry/Aspire-dashboard path is documented but not part of the shipped
   package.
+- **Slice M0:** the solution builds on Windows (shared-core extraction didn't break
+  the WinUI app — `dotnet build … -p:Platform=x64` still green); on a Mac, the Uno
+  head launches to an empty window. The Windows app behaves exactly as before.
+- **Slice M1:** on macOS, copy text → trigger the read → the **Supertonic neural
+  voice** speaks it through AVFoundation; change speed → rate changes live and
+  pitch-corrected.
+- **Slice M2:** select text in any Mac app → press the hotkey → it is copied and
+  read; the Accessibility permission prompt appears on first use and, once granted,
+  the hotkey works system-wide.
+- **Slice M3:** the menu-bar icon shows play/pause + the five speed presets + a voice
+  submenu + Quit; the Uno control panel opens, matches the Media Card design, and its
+  controls drive the same services as the menu bar (state stays in sync).
+- **Slice M4:** with auto-read-on-selection on, selecting text in a Cocoa app
+  (TextEdit, Safari) reads automatically; deselecting interrupts an in-progress read;
+  the toggle gates it; the hotkey still works where Accessibility text isn't exposed.
+- **Slice M5:** copying in Terminal reads (clipboard path); "Read with…" appears in
+  the **Services** menu and reads the selection; the activity-log window shows entries
+  live with the same states/columns as Windows.
+- **Slice M6:** enable launch-at-login → after logout/login the app is running in the
+  menu bar; speed/voice/toggles persist across restarts.
+- **Slice M7:** the macOS CI job produces a **notarized, stapled `.dmg`**; installing
+  it on a clean Mac (Gatekeeper) opens without warning and all of the above works;
+  `STORE.md` lists the Apple Developer prerequisites.
+- **Slice M8 (later):** a sandboxed Mac App Store build passes App Store validation
+  with Services + share + clipboard reading (no ambient Accessibility), confirming the
+  reduced capability set.
 - Manual UI checks driven through the running app; no browser E2E harness
-  applies to a native tray app.
+  applies to a native tray/menu-bar app.
