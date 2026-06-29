@@ -10,7 +10,17 @@
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
                 <!-- Other merged dictionaries here -->
             </ResourceDictionary.MergedDictionaries>
-            <!-- Other app resources here -->
+
+            <!-- Shared brand resources for the gradient headers (the control panel
+                 defines equivalents inline; these back the activity-log window so
+                 both windows read as the same product). -->
+            <LinearGradientBrush x:Key="BrandGradient" StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#5B57E8" Offset="0" />
+                <GradientStop Color="#3B82F6" Offset="1" />
+            </LinearGradientBrush>
+            <SolidColorBrush x:Key="HeaderText" Color="#EBFFFFFF" />
+            <SolidColorBrush x:Key="HeaderEyebrow" Color="#B3FFFFFF" />
+            <SolidColorBrush x:Key="HeaderControl" Color="#33FFFFFF" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>
