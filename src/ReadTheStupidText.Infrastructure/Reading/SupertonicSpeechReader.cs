@@ -78,6 +78,11 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
     private int _chunkCount;
     private int _currentChunkIndex;
 
+    // The chunks of the in-flight read, kept so a mid-read voice change can re-synthesize
+    // the remaining ones (from _currentChunkIndex) in the new voice without replaying
+    // what was already heard (Slice 23, Decision 29).
+    private IReadOnlyList<string>? _currentChunks;
+
     // Latency diagnostics (Decision 30): the activity-log id of the in-flight read and
     // when it began, so the per-chunk timing lines join to its row; _firstAudioPending
     // makes "first audio after N ms" log once, on the first chunk's MediaOpened.
@@ -117,34 +122,48 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
 
         (int generation, CancellationToken token) = BeginGeneration();
 
-        // Split long text and start synthesizing the chunks concurrently (capped),
-        // each task acquiring a slot from the semaphore. The tasks are kept in order.
+        // Split long text into chunks (kept so a mid-read voice change can resume them).
         long splitStart = Stopwatch.GetTimestamp();
         IReadOnlyList<string> chunks = SpeechTextChunker.Split(text);
-        _chunkCount = chunks.Count;
-        _currentChunkIndex = 0;
-        ProgressChanged?.Invoke(this, 0);
+        _currentChunks = chunks;
         _systemLog.Debug(
             $"split {text.Length} chars into {chunks.Count} chunk(s) in " +
             $"{Stopwatch.GetElapsedTime(splitStart).TotalMilliseconds:F1} ms " +
             $"(threads {SynthesisThreads}, concurrency {MaxSynthesisConcurrency})",
             activityId);
 
+        await SpeakChunksAsync(tts, chunks, 0, generation, token);
+    }
+
+    // Synthesizes the chunks from startIndex onward (capped concurrency) and plays
+    // them strictly in order. Used for a fresh read (startIndex 0) and, on a mid-read
+    // voice change, to resume the remaining chunks in the new voice (Decision 29) —
+    // chunks before startIndex were already heard and are not re-synthesized.
+    private async Task SpeakChunksAsync(
+        OfflineTts tts, IReadOnlyList<string> chunks, int startIndex, int generation, CancellationToken token)
+    {
+        _chunkCount = chunks.Count;
+        _currentChunkIndex = startIndex;
+        ProgressChanged?.Invoke(this, chunks.Count == 0 ? 0 : (double)startIndex / chunks.Count);
+
         // Not disposed: a superseded read can leave orphaned generation tasks that
         // still Release(); SemaphoreSlim needs no disposal unless its wait handle is
         // accessed (it isn't), so letting it be collected avoids that race.
         var slots = new SemaphoreSlim(MaxSynthesisConcurrency);
-        List<Task<IRandomAccessStream>> generations =
-            chunks.Select((chunk, index) => GenerateChunkAsync(tts, chunk, index, slots, token)).ToList();
+        var generations = new List<Task<IRandomAccessStream>>();
+        for (int index = startIndex; index < chunks.Count; index++)
+        {
+            generations.Add(GenerateChunkAsync(tts, chunks[index], index, slots, token));
+        }
 
         // Consume in order: await each chunk, then play it to its end before the
         // next. A superseded read bails as soon as it notices it is no longer current.
-        for (int i = 0; i < generations.Count; i++)
+        for (int offset = 0; offset < generations.Count; offset++)
         {
             IRandomAccessStream stream;
             try
             {
-                stream = await generations[i];
+                stream = await generations[offset];
             }
             catch (OperationCanceledException)
             {
@@ -156,7 +175,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
                 return;
             }
 
-            _currentChunkIndex = i;
+            _currentChunkIndex = startIndex + offset;
             bool endedNaturally = await PlayChunkAsync(stream, token);
             if (!endedNaturally || !IsCurrent(generation))
             {
@@ -258,7 +277,39 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
         _player.PlaybackSession.PlaybackRate = _playbackRate;
     }
 
-    public void SetVoice(string voiceId) => _speakerId = SupertonicVoiceTable.SpeakerIdFor(voiceId);
+    // Selects the speaker. If a read is in progress, it continues in the new voice
+    // from the current chunk (Decision 29): the old synthesis/playback is cancelled
+    // (BeginGeneration) and the remaining chunks are re-synthesized with the new
+    // speaker — already-heard chunks are not repeated. While idle it just applies to
+    // the next read. An unchanged selection is a no-op so it can't restart a read.
+    public void SetVoice(string voiceId)
+    {
+        int speakerId = SupertonicVoiceTable.SpeakerIdFor(voiceId);
+        if (speakerId == _speakerId)
+        {
+            return;
+        }
+
+        _speakerId = speakerId;
+
+        if (_currentChunks is not { } chunks || _state is not (PlaybackState.Playing or PlaybackState.Paused))
+        {
+            return;
+        }
+
+        if (EnsureTts() is not { } tts)
+        {
+            return;
+        }
+
+        int resumeIndex = _currentChunkIndex;
+        (int generation, CancellationToken token) = BeginGeneration();
+        _firstAudioPending = false; // mid-read switch: audio is already flowing
+        _systemLog.Info(
+            $"voice changed mid-read; resuming at chunk {resumeIndex + 1}/{chunks.Count} in the new voice",
+            _readActivityId);
+        _ = SpeakChunksAsync(tts, chunks, resumeIndex, generation, token);
+    }
 
     // Returns the engine, building it once on first use. Double-checked under _ttsGate
     // so a warm-up thread and a first read can't each construct one (the build loads

@@ -711,11 +711,21 @@ text," so it leads; logging (Slice 21) then unblocks the latency analysis (Slice
       latency win and any further biasing-tightening is data-driven and needs a real run
       under the (Package) profile, which can't be measured headlessly. #115 (per-chunk
       logs) and #116 (threading) are done.
-- [ ] **Slice 23 — Voice swap continues the current read.** ([#105](https://github.com/ashkansirous/ReadTheStupidText/issues/105)) (Decision 29) On
+- [x] **Slice 23 — Voice swap continues the current read.** ([#105](https://github.com/ashkansirous/ReadTheStupidText/issues/105)) (Decision 29) On
       `SetVoice` during an active read, cancel pending synthesis and re-synthesize the
       remaining chunks with the new speaker from the current `_currentChunkIndex`
       (reuse the generation-counter machinery); already-played audio is not repeated.
       Drive it from `ReadAloudService.SetVoice`.
+      **Built:** the neural reader keeps the in-flight `_currentChunks`; the playback
+      loop was extracted into a shared `SpeakChunksAsync(chunks, startIndex, …)` used
+      both for a fresh read (index 0) and for the mid-read resume. `SetVoice` no-ops on
+      an unchanged speaker, and when a read is Playing/Paused it calls `BeginGeneration`
+      (cancelling the old synthesis via the generation counter + token) then re-runs
+      `SpeakChunksAsync` from `_currentChunkIndex` with the new speaker — chunks before
+      the current index are never re-synthesized, so nothing already heard replays. Idle
+      voice changes stay apply-to-next-read. The native-reader logic isn't unit-tested
+      (no engine without package identity), per the project's test story; runtime check
+      under the (Package) profile remains.
 - [ ] **Slice 24 — Draggable, position-persisted control panel.** ([#106](https://github.com/ashkansirous/ReadTheStupidText/issues/106)) (Decision 31) Make
       the borderless control panel draggable by its header (pointer-drag → `AppWindow`
       move) and persist the last position in `ISettingsStore` so it reopens in place;
