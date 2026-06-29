@@ -23,6 +23,8 @@ public sealed class LocalSettingsStore : ISettingsStore
 
     private const string VoiceKey = "VoiceId";
     private const string SanitizerKey = "EnabledSanitizers";
+    private const string PanelXKey = "PanelX";
+    private const string PanelYKey = "PanelY";
 
     private readonly ApplicationDataContainer _settings = ApplicationData.Current.LocalSettings;
 
@@ -80,5 +82,27 @@ public sealed class LocalSettingsStore : ISettingsStore
             ? (SanitizerCategory)raw
             : SanitizerCategory.All;
         set => _settings.Values[SanitizerKey] = (int)value;
+    }
+
+    // Stored as two ints (device pixels). Null until the user first drags the panel,
+    // so an untouched profile keeps the default bottom-right placement.
+    public PanelPosition? PanelPosition
+    {
+        get => _settings.Values[PanelXKey] is int x && _settings.Values[PanelYKey] is int y
+            ? new PanelPosition(x, y)
+            : null;
+        set
+        {
+            if (value is { } position)
+            {
+                _settings.Values[PanelXKey] = position.X;
+                _settings.Values[PanelYKey] = position.Y;
+            }
+            else
+            {
+                _settings.Values.Remove(PanelXKey);
+                _settings.Values.Remove(PanelYKey);
+            }
+        }
     }
 }

@@ -2,6 +2,7 @@ using ReadTheStupidText.Application.Activity;
 using ReadTheStupidText.Application.Input;
 using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Application.Startup;
 using ReadTheStupidText.Domain.Reading;
 using Microsoft.UI.Dispatching;
@@ -68,7 +69,7 @@ public sealed partial class MainWindow : Window
     private ToggleMenuFlyoutItem? _customSpeedItem;
     private int _speedStartIndex;
 
-    public MainWindow(ReadAloudService readAloud, IHotkeyService hotkey, IClipboardMonitor clipboardMonitor, IStartupService startup, IActivityLog activityLog, ILogFolder logFolder)
+    public MainWindow(ReadAloudService readAloud, IHotkeyService hotkey, IClipboardMonitor clipboardMonitor, IStartupService startup, IActivityLog activityLog, ILogFolder logFolder, ISettingsStore settings)
     {
         _readAloud = readAloud;
         _hotkey = hotkey;
@@ -78,8 +79,9 @@ public sealed partial class MainWindow : Window
         _logFolder = logFolder;
 
         // The left-click control panel shares the same services as the tray menu,
-        // so both surfaces read and write the same state.
-        _controlPanel = new ControlPanelWindow(_readAloud, _startup);
+        // so both surfaces read and write the same state; the settings store also
+        // persists the panel's dragged position.
+        _controlPanel = new ControlPanelWindow(_readAloud, _startup, settings);
 
         _togglePlayPauseCommand = new RelayCommand(_ => _ = _readAloud.PlayPauseOrReadAsync());
         _toggleAutoReadSelectionCommand = new RelayCommand(_ => ToggleAutoReadSelection());

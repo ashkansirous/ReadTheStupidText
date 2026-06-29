@@ -275,8 +275,14 @@
         </Grid.RowDefinitions>
 
         <!-- ============ Gradient header ============ -->
-        <!-- Border clips the rotated watermark that overflows its bounds. -->
-        <Border Grid.Row="0" Background="{StaticResource BrandGradient}">
+        <!-- Border clips the rotated watermark that overflows its bounds, and is the
+             drag handle for the borderless panel (Slice 24): pressing its empty areas
+             moves the window; child controls handle their own input. -->
+        <Border Grid.Row="0" x:Name="HeaderBorder" Background="{StaticResource BrandGradient}"
+                PointerPressed="OnHeaderPointerPressed"
+                PointerMoved="OnHeaderPointerMoved"
+                PointerReleased="OnHeaderPointerReleased"
+                PointerCaptureLost="OnHeaderPointerCaptureLost">
             <Grid Padding="16,14,16,16">
                 <!-- Glyph watermark, top-right, rotated and faint. -->
                 <Image

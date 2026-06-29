@@ -4,15 +4,18 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Application.Startup;
 using ReadTheStupidText.Domain.Activity;
 using ReadTheStupidText.Domain.Reading;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Input;
 using Microsoft.UI.Text;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Shapes;
@@ -47,9 +50,17 @@ public sealed partial class ControlPanelWindow : Window
 
     private readonly ReadAloudService _readAloud;
     private readonly IStartupService _startup;
+    private readonly ISettingsStore _settings;
     private readonly DispatcherQueue _dispatcher = DispatcherQueue.GetForCurrentThread();
     private readonly Brush _onIconBrush = new SolidColorBrush(Microsoft.UI.Colors.White);
     private Storyboard? _waveform;
+
+    // Header-drag state: the screen cursor and window position captured when the drag
+    // begins, so each move applies the raw cursor delta to the window (screen pixels,
+    // not element-relative coords, which would jitter as the window moves under it).
+    private bool _dragging;
+    private PointInt32 _dragStartCursor;
+    private PointInt32 _dragStartWindow;
 
     // Tolerance for matching the slider's value to a quick-preset chip.
     private const double PresetMatchTolerance = 0.001;
@@ -71,10 +82,11 @@ public sealed partial class ControlPanelWindow : Window
     /// single activity-log window, so it handles opening/focusing it.</summary>
     public event EventHandler? ActivityLogRequested;
 
-    public ControlPanelWindow(ReadAloudService readAloud, IStartupService startup)
+    public ControlPanelWindow(ReadAloudService readAloud, IStartupService startup, ISettingsStore settings)
     {
         _readAloud = readAloud;
         _startup = startup;
+        _settings = settings;
 
         InitializeComponent();
         SystemBackdrop = new MicaBackdrop();
@@ -170,9 +182,10 @@ public sealed partial class ControlPanelWindow : Window
         }
     }
 
-    // Places the panel in the bottom-right corner just inside the work area,
-    // sized to its content and scaled to the monitor's DPI (AppWindow works in
-    // physical device pixels).
+    // Sizes the panel to its content (scaled to the monitor's DPI — AppWindow works
+    // in physical device pixels) and places it: at the user's last-dragged position
+    // if they've moved it (clamped to the work area so it can't end up offscreen),
+    // otherwise pinned in the bottom-right corner just inside the work area.
     private void PositionPanel()
     {
         double scale = GetDpiForWindow(WindowNative.GetWindowHandle(this)) / 96.0;
@@ -180,13 +193,83 @@ public sealed partial class ControlPanelWindow : Window
         int height = (int)((_measuredHeight ?? FallbackHeight) * scale);
         int margin = (int)(LogicalMargin * scale);
 
-        DisplayArea area = DisplayArea.GetFromWindowId(AppWindow.Id, DisplayAreaFallback.Nearest);
-        RectInt32 work = area.WorkArea;
-        int x = work.X + work.Width - width - margin;
-        int y = work.Y + work.Height - height - margin;
-
         AppWindow.Resize(new SizeInt32(width, height));
-        AppWindow.Move(new PointInt32(x, y));
+
+        if (_settings.PanelPosition is { } saved)
+        {
+            RectInt32 savedWork = DisplayArea
+                .GetFromPoint(new PointInt32(saved.X, saved.Y), DisplayAreaFallback.Nearest).WorkArea;
+            AppWindow.Move(ClampToWorkArea(saved.X, saved.Y, width, height, savedWork));
+            return;
+        }
+
+        RectInt32 work = DisplayArea.GetFromWindowId(AppWindow.Id, DisplayAreaFallback.Nearest).WorkArea;
+        AppWindow.Move(new PointInt32(
+            work.X + work.Width - width - margin,
+            work.Y + work.Height - height - margin));
+    }
+
+    // Keeps a point within the work area so a window of the given size stays fully
+    // on-screen (e.g. after the panel grew, or a monitor was removed/rearranged).
+    private static PointInt32 ClampToWorkArea(int x, int y, int width, int height, RectInt32 work)
+    {
+        int maxX = Math.Max(work.X, work.X + work.Width - width);
+        int maxY = Math.Max(work.Y, work.Y + work.Height - height);
+        return new PointInt32(Math.Clamp(x, work.X, maxX), Math.Clamp(y, work.Y, maxY));
+    }
+
+    // Header pointer-drag (Slice 24, Decision 31): drag the borderless panel by its
+    // gradient header. Child controls (buttons, slider, pill) handle their own pointer
+    // input and mark it handled, so a drag only starts on the header's empty areas.
+    private void OnHeaderPointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        if (!e.GetCurrentPoint(HeaderBorder).Properties.IsLeftButtonPressed)
+        {
+            return;
+        }
+
+        GetCursorPos(out POINT cursor);
+        _dragStartCursor = new PointInt32(cursor.X, cursor.Y);
+        _dragStartWindow = AppWindow.Position;
+        _dragging = HeaderBorder.CapturePointer(e.Pointer);
+        e.Handled = _dragging;
+    }
+
+    private void OnHeaderPointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_dragging)
+        {
+            return;
+        }
+
+        GetCursorPos(out POINT cursor);
+        AppWindow.Move(new PointInt32(
+            _dragStartWindow.X + (cursor.X - _dragStartCursor.X),
+            _dragStartWindow.Y + (cursor.Y - _dragStartCursor.Y)));
+        e.Handled = true;
+    }
+
+    private void OnHeaderPointerReleased(object sender, PointerRoutedEventArgs e)
+    {
+        if (_dragging)
+        {
+            HeaderBorder.ReleasePointerCapture(e.Pointer);
+            e.Handled = true;
+        }
+    }
+
+    // Ending the drag — on button release the capture is lost, which fires here.
+    // Persists the final position so the panel reopens where the user left it.
+    private void OnHeaderPointerCaptureLost(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_dragging)
+        {
+            return;
+        }
+
+        _dragging = false;
+        PointInt32 position = AppWindow.Position;
+        _settings.PanelPosition = new PanelPosition(position.X, position.Y);
     }
 
     private void RefreshState()
@@ -487,4 +570,17 @@ public sealed partial class ControlPanelWindow : Window
 
     [DllImport("user32.dll")]
     private static extern uint GetDpiForWindow(IntPtr hwnd);
+
+    // The current cursor position in physical screen pixels — the same space as
+    // AppWindow.Position, so drag deltas apply directly without DPI conversion.
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetCursorPos(out POINT point);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct POINT
+    {
+        public int X;
+        public int Y;
+    }
 }

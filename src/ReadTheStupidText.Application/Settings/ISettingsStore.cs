@@ -38,4 +38,10 @@ public interface ISettingsStore
     /// so the user's choices survive across sessions.
     /// </summary>
     SanitizerCategory EnabledSanitizers { get; set; }
+
+    /// <summary>
+    /// The control panel's last position (device pixels), or null if the user has
+    /// never moved it — in which case it opens at its default bottom-right pin.
+    /// </summary>
+    PanelPosition? PanelPosition { get; set; }
 }
