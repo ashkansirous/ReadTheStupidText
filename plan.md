@@ -326,6 +326,61 @@ this plan turns it into ordered, shippable vertical slices.
     machine) while tuning — shipping nothing and costing nothing. Remote/opt-in
     telemetry was rejected (needs a consent UI + policy change + ongoing cost for a
     local-first Store utility).
+27. **On-disk daily diagnostic logs — two files, redacted, local-only (Batch 4,
+    Slice 21).** To debug field problems (and the Slice 22 latency analysis) the app
+    writes **two files per day** under the package **TemporaryFolder** (`logs\`):
+    `yyyy-MM-dd-input.log` and `yyyy-MM-dd-system.log`. The **input log** is
+    **append-only, one row per activity-log state transition** (it never rewrites a
+    row — a new line is added with the new state), TSV with the Activity-Log columns
+    plus the row **id**: `timestamp  id  trigger  state  reason  source  first-audio-ms
+    synth-ms  redacted-text`. The **system log** is the diagnostic stream (every
+    action, exception, and info/debug detail) written via **Serilog** (rolling file),
+    each line carrying the same **id** so the two files join. The **Activity-Log
+    window gets a top button** that opens the `logs\` folder in Explorer
+    (`Launcher.LaunchFolderAsync`). **Logs store redacted text only** (Decision 28
+    runs first) — consistent with the "we collect nothing / stays local" stance; raw
+    text never touches disk. Retention: files older than **7 days** are deleted on
+    startup. This **supersedes** the Batch-1 "no disk persistence / no log-level
+    config" out-of-scope line for the *file* logs (the in-memory `IActivityLog` is
+    unchanged); levels are fixed (Info/Debug/Warning/Error), not user-configurable.
+28. **Text sanitizer — strip "noise" before reading & logging (Batch 4, Slice 20).**
+    A new **`ITextSanitizer`** (Application; rules in Infrastructure) cleans
+    intercepted text **before** `SpeakAsync` **and** before any logging, replacing
+    each match with a short spoken-friendly summary rather than deleting it. Default
+    categories, each an independently toggleable setting and **all default-on**:
+    **URLs** (`www.google.com/sub/x?q=1` → `"x on google.com"` — last path segment +
+    host), **email addresses** (→ `"an email address"`), **passwords / API keys /
+    high-entropy tokens** (`key=`/`token=`/`password=` + long mixed runs → `"a
+    password"` / `"a secret token"`), **long digit runs** (card / phone / account →
+    `"a card number"` / `"a phone number"`), **file paths** (→ the file name),
+    **GUIDs / hashes / commit SHAs** (→ `"an identifier"`), and **markdown/HTML
+    noise** (`[text](url)` → `text`; strip `**`, backticks, raw tags, emoji, control
+    chars). Pure, regex-driven, unit-testable — the litmus is that no secret is ever
+    spoken or written to disk.
+29. **Voice swap mid-read → continue from current point (Batch 4, Slice 23).** Today
+    `SetVoice` only updates `_speakerId` and applies "to the next read"; changing the
+    voice actor during a read does nothing audible. Decision: on a voice change while
+    a read is active, **keep the already-played chunks, cancel pending synthesis, and
+    re-synthesize the remaining chunks with the new speaker**, resuming at the current
+    chunk index — using `SupertonicSpeechReader`'s existing generation-counter /
+    `_currentChunkIndex` machinery. No repeat of what's already been heard; the voice
+    switches mid-stream. (Restart-from-beginning was rejected — it replays audio the
+    user already heard.)
+30. **Read-latency analysis + low-risk tuning (Batch 4, Slice 22).** The user reports
+    a paragraph can take up to ~7 s. Decision: first **instrument** — log per-chunk
+    **synthesis** and **playback** timings (split, generate, wav-encode, first-audio)
+    into the Slice 21 system log so the 7 s is attributable; then apply **low-risk
+    wins** measured against those logs — raise sherpa-onnx `NumThreads` /
+    `MaxSynthesisConcurrency` to match available cores, tighten first-chunk biasing
+    (Decision 25). **Confirm sherpa-onnx threading knobs via context7 before
+    changing them.** Deep model/runtime/provider changes (GPU/DirectML) stay out of
+    scope this round.
+31. **Draggable, position-persisted control panel (Batch 4, Slice 24).** The
+    borderless "Media Card" panel is fixed in place. Decision: make it draggable by
+    pointer-drag on the header (the panel is a real `AppWindow`, so drag via
+    `AppWindow.Move` from pointer deltas, or a draggable title-bar region), and
+    **persist the last position** in settings so it reopens where the user left it.
+    Keeps the pinned-topmost / no-light-dismiss behavior (Decision 20).
 
 ## Changes
 
@@ -601,6 +656,49 @@ shippable. (No GitHub issues yet — create via `plan-to-issues` if wanted.)
       dashboard path in `CLAUDE.md`/`STORE.md` (not shipped). Lets the Slice 17/18
       gains be measured on the user's machine instead of guessed.
 
+**Batch 4 — diagnostic logs, text sanitizing, and read-control fixes.** Five
+user requests: (1) two daily on-disk log files + an "open logs" button, (2)
+redact/simplify noise (URLs, passwords, …) before reading, (3) a draggable
+control panel, (4) make the new logs explain the ~7 s paragraph latency (plus
+low-risk tuning), and (5) make a mid-read voice change actually take effect.
+Ordered smallest/most-foundational first — the sanitizer (Slice 20) ships
+listening value on its own *and* is the prerequisite for "logs store redacted
+text," so it leads; logging (Slice 21) then unblocks the latency analysis (Slice
+22). (No GitHub issues yet — create via `plan-to-issues` if wanted.)
+
+- [x] **Slice 20 — Text sanitizer (redact/simplify noise).** ([#102](https://github.com/ashkansirous/ReadTheStupidText/issues/102)) (Decision 28) Add
+      `ITextSanitizer` (Application) + a regex rule set in Infrastructure that
+      rewrites URLs → `"page on host"`, passwords/tokens → `"a password"`, emails,
+      long digit runs, file paths, GUIDs/hashes, and markdown/HTML noise to short
+      spoken summaries. Each category an independent **default-on** setting
+      (`ISettingsStore`); wire it into `ReadAloudService` so the sanitized text is
+      what gets spoken (and, later, logged). Unit-test the rules (pure logic, fits
+      the existing test story). End-to-end value: selecting a URL/password reads a
+      clean summary instead of gibberish.
+- [ ] **Slice 21 — Daily on-disk logs + open-logs button.** ([#103](https://github.com/ashkansirous/ReadTheStupidText/issues/103)) (Decision 27) Add
+      Serilog (rolling file) for `yyyy-MM-dd-system.log` and a small thread-safe
+      append-writer for `yyyy-MM-dd-input.log` (one TSV row per activity-state
+      transition, id-keyed, **redacted** text from Slice 20), both under the package
+      `TemporaryFolder\logs`. Subscribe the input writer to `IActivityLog`
+      events; thread the same id through the system log. Add the **open-logs**
+      button to the top of `ActivityLogWindow` (`Launcher.LaunchFolderAsync`).
+      Delete logs older than 7 days on startup. Promote the existing `Debug.WriteLine`
+      UIA traces to the system log.
+- [ ] **Slice 22 — Read-latency instrumentation + low-risk tuning.** ([#104](https://github.com/ashkansirous/ReadTheStupidText/issues/104)) (Decision 30)
+      Log per-chunk split/generate/wav/first-audio timings into the system log so the
+      ~7 s is attributable, then (context7-confirm sherpa threading first) raise
+      `NumThreads`/`MaxSynthesisConcurrency` to fit the machine and tighten first-chunk
+      biasing — measured against the new logs. No model/runtime swap this round.
+- [ ] **Slice 23 — Voice swap continues the current read.** ([#105](https://github.com/ashkansirous/ReadTheStupidText/issues/105)) (Decision 29) On
+      `SetVoice` during an active read, cancel pending synthesis and re-synthesize the
+      remaining chunks with the new speaker from the current `_currentChunkIndex`
+      (reuse the generation-counter machinery); already-played audio is not repeated.
+      Drive it from `ReadAloudService.SetVoice`.
+- [ ] **Slice 24 — Draggable, position-persisted control panel.** ([#106](https://github.com/ashkansirous/ReadTheStupidText/issues/106)) (Decision 31) Make
+      the borderless control panel draggable by its header (pointer-drag → `AppWindow`
+      move) and persist the last position in `ISettingsStore` so it reopens in place;
+      keep pinned-topmost / no light-dismiss.
+
 ## Out of Scope
 
 - Voice *tuning* beyond playback rate (pitch, volume, SSML prosody).
@@ -620,8 +718,11 @@ shippable. (No GitHub issues yet — create via `plan-to-issues` if wanted.)
   maps to one of the existing services; no new configurable settings are
   introduced. The Slice 10 activity-log window is a separate diagnostic window
   (read-only, in-memory, cleared on restart) — not a settings surface.
-- Persisting the activity log to disk, exporting it, or log-level configuration
-  (Slice 10 is in-memory and live-only).
+- ~~Persisting the activity log to disk, exporting it, or log-level configuration
+  (Slice 10 is in-memory and live-only).~~ **Partly superseded (Batch 4, Slice
+  21):** the app now writes **daily diagnostic files** to the package
+  TemporaryFolder. The in-memory `IActivityLog` is still live-only/unpersisted;
+  log **levels remain fixed** (no user-facing level config).
 - Pure UWP packaging.
 - **(Batch 2)** A purchased OV/EV code-signing certificate and signing the
   sideload MSIX in this batch — the domain `sirous.uk` cannot sign code; **Azure
@@ -637,6 +738,19 @@ shippable. (No GitHub issues yet — create via `plan-to-issues` if wanted.)
   `DisplayName`s change (Decision 19).
 - **(Batch 2)** Apache-2.0/GPL licensing or a CLA — the repo is plain MIT
   (Decision 16).
+- **(Batch 4)** Storing **raw** (unredacted) text anywhere on disk — the file logs
+  hold redacted text only (Decision 27/28); raw text stays in memory for the
+  current read.
+- **(Batch 4)** Remote/uploaded logs, log-level UI, or a configurable log
+  location — files are local, fixed-level, in the package TemporaryFolder.
+- **(Batch 4)** Deep latency rework — GPU/DirectML provider, a different TTS
+  model/runtime, or audio caching. Slice 22 is instrumentation + thread/concurrency
+  tuning only (Decision 30).
+- **(Batch 4)** Restart-from-beginning on voice change, or live voice morphing of
+  already-synthesized audio — the swap continues from the current chunk
+  (Decision 29).
+- **(Batch 4)** A full move/resize chrome (min/max buttons, snap layouts) on the
+  control panel — only header-drag + remembered position (Decision 31).
 
 ## Verification
 
@@ -742,5 +856,26 @@ shippable. (No GitHub issues yet — create via `plan-to-issues` if wanted.)
   the device (no network call, no third-party SDK referenced). The optional dev
   OpenTelemetry/Aspire-dashboard path is documented but not part of the shipped
   package.
+- **Slice 20:** `dotnet test` — sanitizer unit tests cover each category
+  (URL→`page on host`, `password=…`→`a password`, email, digit runs, file path,
+  GUID/hash, markdown link/`**`). Run the app: select a URL or a `token=…` string →
+  it reads the clean summary, and the activity-log row text is the redacted form.
+- **Slice 21:** trigger a few reads → `…\TemporaryFolder\logs\<date>-input.log` has
+  **one row per state transition** (pending→generatingAudio→reading→read each a new
+  line) with the id and **redacted** text; `<date>-system.log` has the matching
+  id-keyed diagnostic lines (and any exceptions). The Activity-Log window's new
+  top button opens the `logs` folder in Explorer. Restart with a >7-day-old file
+  present → it's deleted. Confirm **no** raw secret appears in either file.
+- **Slice 22:** read a multi-sentence paragraph → the system log shows per-chunk
+  split/generate/wav/first-audio timings that sum toward the observed latency; after
+  the thread/concurrency tuning, the logged synthesis time per chunk drops on a
+  multi-core machine. context7 query for sherpa-onnx threading is logged before the
+  knob change.
+- **Slice 23:** start a long read, then change the voice actor mid-read → already-
+  spoken audio is **not** repeated; the remaining text continues in the **new**
+  voice. Changing voice while idle still applies to the next read.
+- **Slice 24:** open the control panel, drag it by the header to a new spot → it
+  moves; close and reopen → it reappears in the moved position. It still stays
+  pinned-topmost and does not light-dismiss.
 - Manual UI checks driven through the running app; no browser E2E harness
   applies to a native tray app.

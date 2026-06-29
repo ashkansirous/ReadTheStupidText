@@ -1,4 +1,5 @@
 using ReadTheStupidText.Domain.Reading;
+using ReadTheStupidText.Domain.Sanitizing;
 
 namespace ReadTheStupidText.Application.Settings;
 
@@ -30,4 +31,11 @@ public interface ISettingsStore
     /// to the default when applied.
     /// </summary>
     string? VoiceId { get; set; }
+
+    /// <summary>
+    /// Which text-sanitizer categories run before a read (and before logging).
+    /// A flags value; defaults to <see cref="SanitizerCategory.All"/>. Persisted
+    /// so the user's choices survive across sessions.
+    /// </summary>
+    SanitizerCategory EnabledSanitizers { get; set; }
 }
