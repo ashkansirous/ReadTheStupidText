@@ -1,5 +1,6 @@
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Domain.Reading;
+using ReadTheStupidText.Domain.Sanitizing;
 using Windows.Storage;
 
 namespace ReadTheStupidText.Infrastructure.Settings;
@@ -21,6 +22,7 @@ public sealed class LocalSettingsStore : ISettingsStore
     private const bool AutoReadDefault = true;
 
     private const string VoiceKey = "VoiceId";
+    private const string SanitizerKey = "EnabledSanitizers";
 
     private readonly ApplicationDataContainer _settings = ApplicationData.Current.LocalSettings;
 
@@ -68,5 +70,15 @@ public sealed class LocalSettingsStore : ISettingsStore
                 _settings.Values[VoiceKey] = value;
             }
         }
+    }
+
+    // Stored as the flags' integer so a future category just widens the enum; a
+    // missing value (fresh install or pre-Slice-20 profile) defaults to All on.
+    public SanitizerCategory EnabledSanitizers
+    {
+        get => _settings.Values[SanitizerKey] is int raw
+            ? (SanitizerCategory)raw
+            : SanitizerCategory.All;
+        set => _settings.Values[SanitizerKey] = (int)value;
     }
 }

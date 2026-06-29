@@ -1,10 +1,12 @@
 using ReadTheStupidText.Application.Activity;
 using ReadTheStupidText.Application.Input;
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Sanitizing;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Application.Startup;
 using ReadTheStupidText.Infrastructure.Input;
 using ReadTheStupidText.Infrastructure.Reading;
+using ReadTheStupidText.Infrastructure.Sanitizing;
 using ReadTheStupidText.Infrastructure.Settings;
 using ReadTheStupidText.Infrastructure.Startup;
 using Microsoft.Extensions.DependencyInjection;
@@ -50,6 +52,7 @@ public partial class App : Application
         services.AddSingleton<IForegroundWindow, ForegroundWindowProbe>();
         services.AddSingleton<IStartupService, StartupTaskService>();
         services.AddSingleton<ISettingsStore, LocalSettingsStore>();
+        services.AddSingleton<ITextSanitizer, TextSanitizer>();
         services.AddSingleton<IActivityLog, ActivityLog>();
         services.AddSingleton<ReadAloudService>();
         return services.BuildServiceProvider();

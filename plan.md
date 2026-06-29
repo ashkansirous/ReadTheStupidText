@@ -666,7 +666,7 @@ listening value on its own *and* is the prerequisite for "logs store redacted
 text," so it leads; logging (Slice 21) then unblocks the latency analysis (Slice
 22). (No GitHub issues yet — create via `plan-to-issues` if wanted.)
 
-- [ ] **Slice 20 — Text sanitizer (redact/simplify noise).** (Decision 28) Add
+- [x] **Slice 20 — Text sanitizer (redact/simplify noise).** (Decision 28) Add
       `ITextSanitizer` (Application) + a regex rule set in Infrastructure that
       rewrites URLs → `"page on host"`, passwords/tokens → `"a password"`, emails,
       long digit runs, file paths, GUIDs/hashes, and markdown/HTML noise to short

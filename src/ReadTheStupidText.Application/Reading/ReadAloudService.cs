@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using ReadTheStupidText.Application.Activity;
 using ReadTheStupidText.Application.Input;
+using ReadTheStupidText.Application.Sanitizing;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Domain.Activity;
 using ReadTheStupidText.Domain.Reading;
@@ -47,6 +48,7 @@ public sealed class ReadAloudService : IDisposable
     private readonly IVoiceModelService _voiceModel;
     private readonly IActivityLog _log;
     private readonly ISettingsStore _settings;
+    private readonly ITextSanitizer _sanitizer;
 
     // Cancels a pending debounced read when a newer selection supersedes it.
     private CancellationTokenSource? _selectionCts;
@@ -85,7 +87,8 @@ public sealed class ReadAloudService : IDisposable
         IVoiceCatalog voices,
         IVoiceModelService voiceModel,
         IActivityLog log,
-        ISettingsStore settings)
+        ISettingsStore settings,
+        ITextSanitizer sanitizer)
     {
         _reader = reader;
         _clipboard = clipboard;
@@ -98,6 +101,7 @@ public sealed class ReadAloudService : IDisposable
         _voiceModel = voiceModel;
         _log = log;
         _settings = settings;
+        _sanitizer = sanitizer;
 
         _reader.SetSpeed(_settings.Speed);
         ApplyPersistedVoice();
@@ -308,13 +312,15 @@ public sealed class ReadAloudService : IDisposable
             return;
         }
 
-        ActivityEntry entry = StartEntry(trigger, text);
-        await ReadEntryAsync(entry, text);
+        string clean = _sanitizer.Sanitize(text);
+        ActivityEntry entry = StartEntry(trigger, clean);
+        await ReadEntryAsync(entry, clean);
     }
 
-    // Auto-read from a UI Automation selection change.
+    // Auto-read from a UI Automation selection change. The text is sanitized here
+    // so what gets read, de-duped and logged is always the redacted form.
     private void OnSelectionChanged(object? sender, string text) =>
-        BeginAutoRead(ActivityTrigger.AutoRead, text);
+        BeginAutoRead(ActivityTrigger.AutoRead, _sanitizer.Sanitize(text));
 
     // Auto-read from a clipboard copy — the path for the console and other apps
     // that expose no UIA selection. Skipped while we're copying for a hotkey/manual
@@ -328,12 +334,21 @@ public sealed class ReadAloudService : IDisposable
         }
 
         string? text = await _clipboard.GetTextAsync();
-        if (string.IsNullOrWhiteSpace(text) || text == _lastTriggeredText)
+        if (string.IsNullOrWhiteSpace(text))
         {
             return;
         }
 
-        BeginAutoRead(ActivityTrigger.Clipboard, text);
+        // Sanitize before the dedup check: _lastTriggeredText holds the sanitized
+        // text of the prior read, so a copy-on-select echo of a UIA selection (or
+        // our own hotkey copy) is recognised and dropped.
+        string clean = _sanitizer.Sanitize(text);
+        if (clean == _lastTriggeredText)
+        {
+            return;
+        }
+
+        BeginAutoRead(ActivityTrigger.Clipboard, clean);
     }
 
     // Shared auto-read entry point: debounced so a drag-select (many events) or a
