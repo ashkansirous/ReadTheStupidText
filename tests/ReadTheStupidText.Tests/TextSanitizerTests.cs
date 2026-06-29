@@ -100,5 +100,6 @@ public class TextSanitizerTests
         public bool AutoReadOnCopy { get; set; } = true;
         public string? VoiceId { get; set; }
         public SanitizerCategory EnabledSanitizers { get; set; } = SanitizerCategory.All;
+        public PanelPosition? PanelPosition { get; set; }
     }
 }

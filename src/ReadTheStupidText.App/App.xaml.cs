@@ -86,7 +86,8 @@ public partial class App : Application
             Services.GetRequiredService<IClipboardMonitor>(),
             Services.GetRequiredService<IStartupService>(),
             Services.GetRequiredService<IActivityLog>(),
-            Services.GetRequiredService<ILogFolder>());
+            Services.GetRequiredService<ILogFolder>(),
+            Services.GetRequiredService<ISettingsStore>());
     }
 
     // Sweeps stale logs, opens the system log, and starts the input-log writer

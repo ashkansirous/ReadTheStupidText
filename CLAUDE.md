@@ -201,6 +201,19 @@ position + chunk index, weighting chunks equally) and is **display-only** — tr
 scrubbing/seek is out of scope (Decision 21); the status line is composed in the
 View from `ReadAloudService.CurrentReadWindow`/`CurrentReadTrigger`.
 
+The panel is **draggable by its gradient header** and **remembers where it was left**
+(Slice 24, Decision 31): pointer-press/move/release handlers on `HeaderBorder` move the
+borderless `AppWindow` by the raw screen-cursor delta (`GetCursorPos`, not
+element-relative coords, which would jitter as the window moves), and the final position
+is persisted as `ISettingsStore.PanelPosition` (the new `PanelPosition(X, Y)` record,
+device pixels, two `PanelX`/`PanelY` keys). `PositionPanel` opens the panel at that saved
+spot — **clamped to the work area** (`ClampToWorkArea`, via `DisplayArea.GetFromPoint`) so
+a now-offscreen/rearranged-monitor point is pulled back on-screen — and only falls back to
+the default bottom-right pin when the user has never moved it. Child controls (buttons,
+slider, pill) mark their pointer input handled, so a drag only starts on the header's empty
+areas. It still **keeps** the pinned-topmost / no-light-dismiss behavior — only header-drag
++ remembered position is added, not min/max/resize chrome.
+
 Note: read activity flows through **`IActivityLog`** (Application — an in-memory,
 observable ring buffer; `ActivityEntry`/`ActivityState`/`ActivityTrigger`/
 `WindowSource` in Domain — plus **`ActivityReason`** for *why* an entry deviated).
