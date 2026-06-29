@@ -10,6 +10,7 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
 using Windows.Graphics;
@@ -44,6 +45,7 @@ public sealed partial class ControlPanelWindow : Window
     private readonly ReadAloudService _readAloud;
     private readonly IStartupService _startup;
     private readonly DispatcherQueue _dispatcher = DispatcherQueue.GetForCurrentThread();
+    private readonly Brush _onIconBrush = new SolidColorBrush(Microsoft.UI.Colors.White);
     private Storyboard? _waveform;
 
     // Suppresses control events while the panel is being populated from state,
@@ -59,6 +61,10 @@ public sealed partial class ControlPanelWindow : Window
     /// so the tray menu's matching toggle can be updated.</summary>
     public event EventHandler<bool>? StartupStateChanged;
 
+    /// <summary>Raised when the activity-log button is clicked; the host owns the
+    /// single activity-log window, so it handles opening/focusing it.</summary>
+    public event EventHandler? ActivityLogRequested;
+
     public ControlPanelWindow(ReadAloudService readAloud, IStartupService startup)
     {
         _readAloud = readAloud;
@@ -71,6 +77,11 @@ public sealed partial class ControlPanelWindow : Window
         LoadVoices();
 
         RootGrid.Loaded += OnRootLoaded;
+
+        // The icon toggles' colours are set as local brushes in code, so they don't
+        // follow {ThemeResource} automatically — re-apply them when the theme flips.
+        RootGrid.ActualThemeChanged += OnActualThemeChanged;
+
         _readAloud.StateChanged += OnPlaybackStateChanged;
         _readAloud.ProgressChanged += OnProgressChanged;
 
@@ -177,8 +188,8 @@ public sealed partial class ControlPanelWindow : Window
         _refreshing = true;
         UpdateSpeed(_readAloud.Speed);
         SelectCurrentVoice();
-        AutoReadSelectionSwitch.IsOn = _readAloud.AutoReadOnSelection;
-        AutoReadCopySwitch.IsOn = _readAloud.AutoReadOnCopy;
+        SetSelectionToggle(_readAloud.AutoReadOnSelection);
+        SetCopyToggle(_readAloud.AutoReadOnCopy);
         _refreshing = false;
 
         ApplyPlaybackState(_readAloud.State);
@@ -188,8 +199,57 @@ public sealed partial class ControlPanelWindow : Window
     private void UpdateSpeed(PlaybackRate rate)
     {
         SpeedSlider.Value = rate.Value;
-        SpeedLabel.Text = rate.ToDisplayLabel();
         SpeedPill.Text = rate.ToDisplayLabel();
+    }
+
+    // The three compact icon toggles carry a hover tooltip naming the control and
+    // its current state (the design's "· on" / "· off" tooltips).
+    private void SetSelectionToggle(bool on)
+    {
+        AutoReadSelectionToggle.IsChecked = on;
+        ApplyToggleVisual(AutoReadSelectionToggle, SelectionIcon, on);
+        ToolTipService.SetToolTip(AutoReadSelectionToggle,
+            $"Auto-read selection · {OnOff(on)} — Reads aloud as you select");
+    }
+
+    private void SetCopyToggle(bool on)
+    {
+        AutoReadCopyToggle.IsChecked = on;
+        ApplyToggleVisual(AutoReadCopyToggle, CopyIcon, on);
+        ToolTipService.SetToolTip(AutoReadCopyToggle,
+            $"Auto-read on copy · {OnOff(on)} — Reads aloud when you copy");
+    }
+
+    private void SetStartupToggleTooltip(bool on) =>
+        ToolTipService.SetToolTip(StartupToggle,
+            $"Launch at startup · {OnOff(on)} — Start with Windows, in the tray");
+
+    private static string OnOff(bool on) => on ? "on" : "off";
+
+    // Off = card fill + hairline border + muted (grey) icon; on = accent fill +
+    // white icon. Set explicitly (rather than via visual states) so toggling off
+    // reliably returns the icon to grey. Brushes are resolved from the active
+    // theme dictionary so they stay correct in light and dark.
+    private void ApplyToggleVisual(ToggleButton toggle, IconElement icon, bool on)
+    {
+        toggle.Background = ThemeBrush(on ? "PanelAccent" : "PanelCard");
+        toggle.BorderBrush = ThemeBrush(on ? "PanelAccent" : "PanelStroke");
+        icon.Foreground = on ? _onIconBrush : ThemeBrush("PanelText2");
+    }
+
+    private void OnActualThemeChanged(FrameworkElement sender, object args)
+    {
+        ApplyToggleVisual(AutoReadSelectionToggle, SelectionIcon, AutoReadSelectionToggle.IsChecked == true);
+        ApplyToggleVisual(AutoReadCopyToggle, CopyIcon, AutoReadCopyToggle.IsChecked == true);
+        ApplyToggleVisual(StartupToggle, StartupIcon, StartupToggle.IsChecked == true);
+    }
+
+    // Pulls a panel brush from the active light/dark theme dictionary by key.
+    private Brush ThemeBrush(string key)
+    {
+        string theme = RootGrid.ActualTheme == ElementTheme.Dark ? "Dark" : "Light";
+        var dictionary = (ResourceDictionary)RootGrid.Resources.ThemeDictionaries[theme];
+        return (Brush)dictionary[key];
     }
 
     private void SelectCurrentVoice()
@@ -207,13 +267,40 @@ public sealed partial class ControlPanelWindow : Window
     private void SetStartupSwitch(bool enabled)
     {
         _refreshing = true;
-        StartupSwitch.IsOn = enabled;
+        StartupToggle.IsChecked = enabled;
+        ApplyToggleVisual(StartupToggle, StartupIcon, enabled);
+        SetStartupToggleTooltip(enabled);
         _refreshing = false;
     }
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => Hide();
 
     private void OnPlayPauseClick(object sender, RoutedEventArgs e) => _ = _readAloud.PlayPauseOrReadAsync();
+
+    private void OnActivityLogClick(object sender, RoutedEventArgs e) =>
+        ActivityLogRequested?.Invoke(this, EventArgs.Empty);
+
+    // Reveal/hide the fine speed slider; the chevron flips and the panel re-fits
+    // its height since the content grew or shrank.
+    private void OnSpeedPillToggled(object sender, RoutedEventArgs e)
+    {
+        bool expanded = SpeedPillToggle.IsChecked == true;
+        SpeedSliderRow.Visibility = expanded ? Visibility.Visible : Visibility.Collapsed;
+        SpeedChevronRotate.Angle = expanded ? 180 : 0;
+        RefitToContent();
+    }
+
+    // Re-measures the content (its height changed) and re-fits the window so the
+    // bottom-right pin stays flush against the work area with nothing clipped.
+    private void RefitToContent()
+    {
+        RootGrid.UpdateLayout();
+        _measuredHeight = RootGrid.DesiredSize.Height;
+        if (AppWindow.IsVisible)
+        {
+            PositionPanel();
+        }
+    }
 
     private void OnSpeedSliderChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
     {
@@ -223,7 +310,6 @@ public sealed partial class ControlPanelWindow : Window
         }
 
         var rate = new PlaybackRate(e.NewValue);
-        SpeedLabel.Text = rate.ToDisplayLabel();
         SpeedPill.Text = rate.ToDisplayLabel();
         _readAloud.SetSpeed(rate);
     }
@@ -240,25 +326,36 @@ public sealed partial class ControlPanelWindow : Window
 
     private void OnAutoReadSelectionToggled(object sender, RoutedEventArgs e)
     {
+        bool on = AutoReadSelectionToggle.IsChecked == true;
+        ApplyToggleVisual(AutoReadSelectionToggle, SelectionIcon, on);
+        ToolTipService.SetToolTip(AutoReadSelectionToggle,
+            $"Auto-read selection · {OnOff(on)} — Reads aloud as you select");
         if (!_refreshing)
         {
-            _readAloud.AutoReadOnSelection = AutoReadSelectionSwitch.IsOn;
+            _readAloud.AutoReadOnSelection = on;
         }
     }
 
     private void OnAutoReadCopyToggled(object sender, RoutedEventArgs e)
     {
+        bool on = AutoReadCopyToggle.IsChecked == true;
+        ApplyToggleVisual(AutoReadCopyToggle, CopyIcon, on);
+        ToolTipService.SetToolTip(AutoReadCopyToggle,
+            $"Auto-read on copy · {OnOff(on)} — Reads aloud when you copy");
         if (!_refreshing)
         {
-            _readAloud.AutoReadOnCopy = AutoReadCopySwitch.IsOn;
+            _readAloud.AutoReadOnCopy = on;
         }
     }
 
     private void OnStartupToggled(object sender, RoutedEventArgs e)
     {
+        bool on = StartupToggle.IsChecked == true;
+        ApplyToggleVisual(StartupToggle, StartupIcon, on);
+        SetStartupToggleTooltip(on);
         if (!_refreshing)
         {
-            _ = ApplyStartupAsync(StartupSwitch.IsOn);
+            _ = ApplyStartupAsync(on);
         }
     }
 

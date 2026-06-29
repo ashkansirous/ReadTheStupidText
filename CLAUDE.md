@@ -172,8 +172,18 @@ As of **Slice 13 (Decisions 20–21)** the panel is the **"Media Card"** design
 (`design_handoff_tray_panel/`): a brand-gradient header (glyph watermark, `NOW
 READING` eyebrow, title, a live 5-bar **waveform** + dynamic status text, and a
 transport row = 40px play/pause circle + **live progress bar** + speed pill) over
-a Fluent settings list (fine 0.05 speed slider, voice picker, the **two**
-auto-read toggles, launch-at-startup) and a `Ctrl+Win+R` hotkey footer. Built with
+a compact Fluent body and a `Ctrl+Win+R` hotkey footer. **Compact rev (post-Slice
+13):** the body no longer stacks full-width labelled rows — the **fine 0.05 speed
+slider is hidden in the header** and only revealed when the speed pill (now a
+`ToggleButton` carrying a flipping chevron) is tapped (the panel re-fits its height
+on reveal); the body is a single **voice picker** row (`ComboBox` chip + a 34px
+**activity-log button** that opens `ActivityLogWindow` via the panel's
+`ActivityLogRequested` event) above a `CONTROLS` row of **three square icon
+toggles** — auto-read on selection, auto-read on copy, launch-at-startup — each a
+styled `ToggleButton` (off = card fill + muted icon, on = accent fill + white icon
+via its `CheckStates`) with a hover tooltip naming the control and its on/off
+state. The launch-at-startup icon is a **rocket** `PathIcon` (Segoe Fluent has no
+rocket glyph, and the design deliberately avoids the power symbol). Built with
 native WinUI Fluent controls + light/dark `ThemeDictionaries` from the design
 tokens (the HTML is the visual source of truth, not shipped code); it **keeps** the
 pinned-topmost behavior (no click-away/Esc dismiss). The progress bar is driven by

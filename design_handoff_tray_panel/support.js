@@ -178,7 +178,15 @@
           entry.subs.delete(sub);
         };
       }, []);
-      return h(Root, entry.propOverrides || null);
+      const defaults = React.useMemo(() => {
+        const d = {};
+        for (const k in entry.propsMeta || {}) {
+          const v = entry.propsMeta?.[k]?.default;
+          if (v !== void 0) d[k] = v;
+        }
+        return d;
+      }, [entry.propsMeta]);
+      return h(Root, { ...defaults, ...entry.propOverrides || {} });
     }
     const ReactDOM = getReactDOM();
     if (ReactDOM.createRoot)
@@ -584,8 +592,10 @@
     const exportNameGet = compileAttr(
       el.getAttribute("component") || el.getAttribute("name") || ""
     );
-    const url = el.getAttribute("from") || el.getAttribute("src") || el.getAttribute("import") || "";
-    const kind = /\.(jsx|tsx)(\?|#|$)/i.test(url) ? "jsx" : "js";
+    const fromRaw = el.getAttribute("from") || el.getAttribute("src") || el.getAttribute("import") || "";
+    const urls = fromRaw.trim() ? fromRaw.trim().split(/\s+/) : [];
+    const url = urls.length ? urls[urls.length - 1] : "";
+    const kindOf = (u) => /\.(jsx|tsx)(\?|#|$)/i.test(u) ? "jsx" : "js";
     const tplId = el.getAttribute("data-dc-tpl");
     const styleRaw = el.getAttribute("style");
     el.removeAttribute("style");
@@ -594,8 +604,11 @@
     const { propGetters, hintSize } = collectProps(el, "x-import", host);
     const hasContent = el.children.length > 0 || !!(el.textContent || "").trim();
     const kids = hasContent ? walkChildren(el, host) : [];
-    const urlBindable = url.includes("{{");
-    if (url && !urlBindable) host.loadExternal(kind, url);
+    const urlBindable = fromRaw.includes("{{");
+    if (urls.length && !urlBindable) {
+      let prev;
+      for (const u of urls) prev = host.loadExternal(kindOf(u), u, prev);
+    }
     const evalName = (g, vals) => {
       const v = g(vals);
       const s = v == null ? "" : String(v);
@@ -1025,12 +1038,17 @@
       });
       return babelLoading;
     }
-    function load(kind, url) {
-      if (cache.has(url)) return;
+    const pending = /* @__PURE__ */ new Map();
+    function load(kind, url, after) {
+      const existing = pending.get(url);
+      if (existing) return existing;
       cache.set(url, null);
       console.info("[dc-runtime] x-import: loading", url, "(" + kind + ")");
-      const ready = kind === "jsx" ? ensureBabel() : Promise.resolve();
-      ready.then(() => fetch(url)).then((r) => {
+      const ready = Promise.all([
+        kind === "jsx" ? ensureBabel() : Promise.resolve(),
+        after ?? Promise.resolve()
+      ]);
+      const p = ready.then(() => fetch(url)).then((r) => {
         if (!r.ok) throw new Error("HTTP " + r.status);
         return r.text();
       }).then((src) => {
@@ -1077,6 +1095,8 @@
         );
         onResolved();
       });
+      pending.set(url, p);
+      return p;
     }
     function resolve2(url, name) {
       const entry = cache.get(url);
@@ -1339,7 +1359,7 @@
       component: (name) => factory.getDC(name),
       placeholder: (props) => h(Placeholder, props),
       helmet: (node) => helmet.compile(node),
-      loadExternal: (kind, url) => external.load(kind, url),
+      loadExternal: (kind, url, after) => external.load(kind, url, after),
       resolveExternal: (url, name) => external.resolve(url, name),
       resolveExternalGlobal: (url, name) => external.resolveGlobal(url, name),
       resolveExternalError: (url, name) => external.getError(url, name),
