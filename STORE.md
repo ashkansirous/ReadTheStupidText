@@ -2,9 +2,10 @@
 
 This document covers what's needed to package and submit **Read The Stupid Text**
 (repo/package id `ReadTheStupidText`) to the Microsoft Store. Slice 5 set up the
-build/packaging pipeline. The app is now **reserved in Partner Center** and its
-real identity is **wired into `Package.appxmanifest`** (see below); what remains
-is the first manual submission and the CI secrets/variable for automated updates.
+build/packaging pipeline. The app is **published and live in the Store**
+(product `9NGT1BN1H92V`) and its real identity is **wired into
+`Package.appxmanifest`** (see below). What remains to fully automate updates is
+the four Partner Center secrets (the `STORE_PRODUCT_ID` variable is already set).
 
 ## Release pipeline status (Slice 16)
 
@@ -17,13 +18,17 @@ Verified end-to-end and **live**:
   `build`/`release` on failure (Slice 15b).
 - ✅ **Store identity** wired into the manifest (Slice 16 / Decision 23) and
   cross-checked against the reserved Partner Center product (below).
-- ✅ **`store-submit.yml`** is present and valid but **intentionally inert**
-  (`workflow_dispatch` only; fails fast without the secrets below) — it's a
-  deploy button, not an auto-run.
+- ✅ **First submission done — app is live** at
+  https://apps.microsoft.com/detail/9NGT1BN1H92V.
+- ✅ **`store-submit.yml`** is `workflow_dispatch`-only and submits **one** update
+  carrying both architectures (x64 + ARM64 combined into a single `.msixbundle`).
+  It fails fast until the four Partner Center secrets are set.
+- ✅ **`STORE_PRODUCT_ID` variable** set to `9NGT1BN1H92V` in repo Actions
+  variables.
 
-**Manual remainder (needs a human + Partner Center, not code):** the first Store
-submission, then the four secrets + one variable to enable automated updates —
-see *Deploying to the Store* below.
+**Manual remainder (needs a human + Partner Center, not code):** add the four
+secrets below to enable the automated-update button — see *Deploying to the
+Store*.
 
 ## App identity (wired into the manifest)
 
@@ -54,9 +59,10 @@ for **x64** and **ARM64** and uploads each as an **unsigned** `.msix` artifact.
 - The Microsoft Store **re-signs** packages on submission, so CI needs no signing
   certificate (`AppxPackageSigningEnabled=false`).
 - Single-project MSIX cannot emit a bundle, so each architecture is built and
-  uploaded separately (`AppxBundle=Never`). Submit both `.msix` files to the
-  Store, or combine them into an `.msixbundle` with the MSIX Bundler action if a
-  single upload is preferred.
+  uploaded separately (`AppxBundle=Never`). A Store submission must carry both
+  architectures, so `store-submit.yml` combines the two release `.msix` assets
+  into one `.msixbundle` (`makeappx bundle`) and submits that single bundle (see
+  *Deploying to the Store*).
 - The neural voice model is **Git LFS**-tracked, so checkout uses `lfs: true`.
 - The package `Version` is **stamped at build time** from GitVersion (see
   *Versioning* below); the committed manifest value is only a placeholder.
@@ -81,6 +87,25 @@ Declared in `Package.appxmanifest`:
 
 No `internetClient` — the neural voice model ships **inside the package**, so the
 app makes no network calls.
+
+## Runtime deployment (.NET self-contained)
+
+The shipped (**Release**) MSIX is built **.NET self-contained**
+(`<SelfContained>true</SelfContained>`, scoped to non-Debug in
+`ReadTheStupidText.App.csproj`), so the **.NET 10 runtime is bundled inside the
+package**. The **Windows App SDK** runtime stays framework-dependent
+(`Microsoft.WindowsAppRuntime.2`, auto-installed by the Store) —
+`WindowsAppSDKSelfContained` is deliberately **not** set.
+
+Rationale: a framework-dependent Store MSIX gets only the Windows App SDK runtime
+delivered by the Store; the **.NET runtime is not**, and it is not present on a
+clean Windows 11. The first submission failed Store certification **10.2.4.1
+(Security — Software Dependencies: undisclosed dependency on non-integrated
+software: .NET)**. Bundling .NET removes the external dependency entirely — no
+description disclosure is required and users install nothing. The cost is package
+size (~+50 MB for the runtime; the package is dominated by the ~145 MB voice
+model regardless). The Debug inner loop (`dotnet run` / VS **(Package)** profile)
+stays framework-dependent so it remains fast.
 
 ## Privacy & diagnostics
 
@@ -154,22 +179,35 @@ Store-submission step pulls from.
 ## Deploying to the Store
 
 `/.github/workflows/store-submit.yml` is a **manual** (`workflow_dispatch`)
-deploy that downloads a release's MSIX and submits it via the **msstore CLI**
-(`microsoft/microsoft-store-apppublisher`). It is scaffolded but not yet live —
-the Actions-based msstore flow does *updates* to an already-published **free**
-app, not the first submission. Remaining steps to turn it on:
+deploy that downloads a release's MSIX assets, **combines x64 + ARM64 into one
+`.msixbundle`** (`makeappx bundle`), and submits that single bundle via the
+**msstore CLI** (`microsoft/microsoft-store-apppublisher`). The Actions-based
+msstore flow does *updates* to an already-published **free** app — which this app
+now is. One submission must carry both architectures, so the workflow bundles
+rather than calling `msstore publish` once per `.msix` (which would open
+competing submissions).
+
+Setup status:
 
 1. ~~Reserve the app in Partner Center and wire its **Identity Name + Publisher
    ID** into `Package.appxmanifest`.~~ **Done** — see *App identity* above.
-2. Do the **first** submission manually in Partner Center (upload the release
-   `.msix` files for x64 + ARM64; the Store signs them) and get it live.
-3. Add repo **secrets** `AZURE_AD_TENANT_ID`, `AZURE_AD_APPLICATION_CLIENT_ID`,
-   `AZURE_AD_APPLICATION_SECRET`, `SELLER_ID`, and a repo **variable**
-   `STORE_PRODUCT_ID` = `9NGT1BN1H92V`. (The Azure AD app id above is the
-   `AZURE_AD_APPLICATION_CLIENT_ID`; create a client secret for it and find the
-   tenant id + seller id in Partner Center → Account settings.)
-4. From then on, run **store-submit** (Actions → Run workflow, pick the release
-   tag) to push updates.
+2. ~~Do the **first** submission manually in Partner Center and get it live.~~
+   **Done** — the app is live at https://apps.microsoft.com/detail/9NGT1BN1H92V.
+3. ~~Add repo **variable** `STORE_PRODUCT_ID` = `9NGT1BN1H92V`.~~ **Done.**
+4. **Remaining:** add four repo **secrets** so the credentials step can
+   authenticate. Settings → Secrets and variables → Actions → *New repository
+   secret*, or `gh secret set <NAME>`:
+   - `AZURE_AD_TENANT_ID` — Entra tenant id (Partner Center → Account settings;
+     or entra.microsoft.com → Overview).
+   - `AZURE_AD_APPLICATION_CLIENT_ID` — `01fff836-f050-475a-8ee4-13cbcfdc7235`
+     (the Entra app registration's Application id).
+   - `AZURE_AD_APPLICATION_SECRET` — a **client secret** created for that app
+     registration (Entra → App registrations → your app → Certificates &
+     secrets; copy the value immediately, it's shown once).
+   - `SELLER_ID` — your Partner Center publisher/seller id (Account settings →
+     Identifiers).
+5. From then on, run **store-submit** (Actions → Run workflow, pick the release
+   tag) to push an update.
 
 ## Signing
 

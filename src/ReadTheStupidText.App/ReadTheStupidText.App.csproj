@@ -82,9 +82,19 @@
   <PropertyGroup>
     <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
     <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
-    <!-- Trimming is incompatible with this framework-dependent packaged (MSIX)
-         app: PublishTrimmed requires a self-contained publish, so a Release
-         build failed with NETSDK1102. Packaged WinUI apps aren't trimmed. -->
+    <!-- Bundle the .NET runtime into the shipped (Release) MSIX so the package
+         carries no external .NET dependency. A framework-dependent Store MSIX
+         only gets the Windows App SDK runtime auto-installed by the Store — the
+         .NET runtime is NOT delivered, which failed Store certification 10.2.4.1
+         (undisclosed dependency on non-integrated software: .NET). Publishing
+         .NET self-contained removes the dependency entirely, so no description
+         disclosure is needed and users install nothing. Scoped to non-Debug so
+         the inner dev loop (Debug / `dotnet run`) stays framework-dependent and
+         fast. WindowsAppSDKSelfContained is deliberately left off — the Store
+         still delivers the Windows App SDK framework package. -->
+    <SelfContained Condition="'$(Configuration)' != 'Debug'">true</SelfContained>
+    <!-- Even when self-contained, packaged WinUI apps aren't trimmed
+         (reflection-heavy XAML), so keep trimming off. -->
     <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
 
