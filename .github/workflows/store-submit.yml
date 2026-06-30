@@ -2,18 +2,14 @@ name: store-submit
 
 # Submits a released MSIX to the Microsoft Store via the msstore CLI.
 #
-# MANUAL ONLY, and not functional until you set it up — it's the deployment
-# scaffold, intentionally never auto-running. Before it works you need:
-#   1. A Partner Center account with the app reserved and its Identity wired into
-#      Package.appxmanifest (see STORE.md).
-#   2. The app already published and live once in the Store — the Actions-based
-#      msstore flow does *updates* to a live app, not the first submission, and
-#      only for free products (per Microsoft's docs).
-#   3. Repo secrets: AZURE_AD_TENANT_ID, AZURE_AD_APPLICATION_CLIENT_ID,
-#      AZURE_AD_APPLICATION_SECRET, SELLER_ID.
-#   4. Repo variable STORE_PRODUCT_ID (the Store product Id).
-# Until then, running this fails at the reconfigure/publish step — which is fine,
-# it's a deploy button you only press when the above are in place.
+# MANUAL ONLY (workflow_dispatch). The app is published and live in the Store
+# (product 9NGT1BN1H92V), so the Actions-based msstore flow — which does *updates*
+# to an already-live free product — is now usable. To run it you need, configured
+# once in repo Settings -> Secrets and variables -> Actions (see STORE.md):
+#   - Secrets:  AZURE_AD_TENANT_ID, AZURE_AD_APPLICATION_CLIENT_ID,
+#               AZURE_AD_APPLICATION_SECRET, SELLER_ID
+#   - Variable: STORE_PRODUCT_ID  (already set to 9NGT1BN1H92V)
+# Without the secrets the "Configure Store credentials" step fails fast.
 
 on:
   workflow_dispatch:
@@ -31,7 +27,25 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release download "${{ inputs.tag }}" --repo "${{ github.repository }}" --pattern "*.msix" --dir release
+          New-Item -ItemType Directory -Force packages | Out-Null
+          gh release download "${{ inputs.tag }}" --repo "${{ github.repository }}" --pattern "*.msix" --dir packages
+          $msix = Get-ChildItem packages -Filter *.msix
+          if ($msix.Count -lt 1) { throw "No .msix assets found on release ${{ inputs.tag }}" }
+          Write-Host "Downloaded $($msix.Count) package(s): $($msix.Name -join ', ')"
+
+      - name: Bundle x64 + ARM64 into a single .msixbundle
+        shell: pwsh
+        run: |
+          # Both architectures must ship in ONE submission. Single-project MSIX
+          # builds emit a per-arch .msix (AppxBundle=Never), so combine them into
+          # one .msixbundle here and submit that once — submitting each .msix
+          # separately would open competing submissions.
+          $makeappx = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\makeappx.exe" |
+            Sort-Object FullName -Descending | Select-Object -First 1
+          if (-not $makeappx) { throw "makeappx.exe not found in the Windows SDK on this runner" }
+          New-Item -ItemType Directory -Force out | Out-Null
+          & $makeappx.FullName bundle /d packages /p out\ReadTheStupidText.msixbundle /o
+          if ($LASTEXITCODE -ne 0) { throw "makeappx bundle failed ($LASTEXITCODE)" }
 
       - name: Set up the Microsoft Store CLI
         uses: microsoft/microsoft-store-apppublisher@v1.1
@@ -45,12 +59,8 @@ jobs:
             --clientId ${{ secrets.AZURE_AD_APPLICATION_CLIENT_ID }} `
             --clientSecret ${{ secrets.AZURE_AD_APPLICATION_SECRET }}
 
-      - name: Publish to the Store
+      - name: Publish the update to the Store
         shell: pwsh
         run: |
-          # NOTE: confirm the exact multi-arch submission shape with the msstore
-          # CLI when the app is live (one submission should carry both the x64 and
-          # ARM64 packages). This publishes the packages found in the release.
-          Get-ChildItem release -Filter *.msix | ForEach-Object {
-            msstore publish $_.FullName -id ${{ vars.STORE_PRODUCT_ID }}
-          }
+          # One submission carrying both architectures via the bundle.
+          msstore publish "out\ReadTheStupidText.msixbundle" -id ${{ vars.STORE_PRODUCT_ID }}
