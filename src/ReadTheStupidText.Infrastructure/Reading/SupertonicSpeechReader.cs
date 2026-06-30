@@ -149,9 +149,19 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
         // accessed (it isn't), so letting it be collected avoids that race.
         var slots = new SemaphoreSlim(MaxSynthesisConcurrency);
         var generations = new List<Task<IRandomAccessStream>>();
+        Task? firstChunk = null;
         for (int index = startIndex; index < chunks.Count; index++)
         {
-            generations.Add(GenerateChunkAsync(tts, chunks[index], index, speakerId, slots, token));
+            // The first chunk gates time-to-first-audio, so let it synthesize with the
+            // full thread budget: the remaining chunks wait for it to finish before
+            // they start, instead of stealing CPU from the one chunk the user is
+            // actually waiting on. They still synthesize concurrently among themselves
+            // (in the background, while the first chunk plays).
+            Task<IRandomAccessStream> chunkTask = index == startIndex
+                ? GenerateChunkAsync(tts, chunks[index], index, speakerId, slots, token)
+                : GenerateAfterAsync(firstChunk!, tts, chunks[index], index, speakerId, slots, token);
+            firstChunk ??= chunkTask;
+            generations.Add(chunkTask);
         }
 
         // Consume in order: await each chunk, then play it to its end before the
@@ -220,6 +230,26 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
             // Warm-up is best-effort: if it fails, the lazy EnsureTts() in SpeakAsync
             // remains the safety net and any real error surfaces on the first read.
         }
+    }
+
+    // Defers a chunk's synthesis until the first chunk has finished, so the first chunk
+    // (which gates time-to-first-audio) runs without competing for CPU. The gate's own
+    // success/failure is observed where it is consumed in order; faults/cancellation
+    // here just release this chunk, which then honours the token itself.
+    private async Task<IRandomAccessStream> GenerateAfterAsync(
+        Task gate, OfflineTts tts, string chunk, int index, int speakerId, SemaphoreSlim slots, CancellationToken token)
+    {
+        try
+        {
+            await gate;
+        }
+        catch
+        {
+            // Swallowed: the first chunk's real outcome surfaces on its own await in
+            // the ordered consume loop; GenerateChunkAsync below still respects the token.
+        }
+
+        return await GenerateChunkAsync(tts, chunk, index, speakerId, slots, token);
     }
 
     // Synthesizes one chunk to a WAV stream, throttled by the shared slot semaphore
