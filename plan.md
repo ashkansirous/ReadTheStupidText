@@ -625,6 +625,16 @@ smallest-first; each is independently shippable.
       feeds the release/Store flow. Cut the **first auto-versioned release** —
       the tag is whatever the versioning produces (**stays `0.x`**; **not**
       `v1.0.0` until the user declares the app stable).
+- [x] **Store launch — live + automated-update wiring.** App **published and
+      live** at https://apps.microsoft.com/detail/9NGT1BN1H92V (product
+      `9NGT1BN1H92V`). `store-submit.yml` made functional (downloads a release,
+      combines x64 + ARM64 into one `.msixbundle`, submits via the msstore CLI);
+      `STORE_PRODUCT_ID` repo variable set; the four Azure AD/seller secrets are
+      the only manual remainder (see `STORE.md`). First submission failed Store
+      cert **10.2.4.1** (undisclosed dependency on .NET) — fixed by building the
+      Release MSIX **.NET self-contained** (`SelfContained=true`), bundling the
+      .NET runtime so there's no external dependency. Windows App SDK stays
+      framework-dependent (Store-delivered).
 
 **Batch 3 — read-latency reduction + local diagnostics.** Addresses the user
 report that "from selecting to reading takes a lot, and sometimes it feels like
@@ -776,8 +786,10 @@ text," so it leads; logging (Slice 21) then unblocks the latency analysis (Slice
 - **(Batch 2)** True audio scrubbing/seek in the progress bar — best-effort
   chunk-boundary resync only, because synthesis is chunked/streamed
   (Decision 21).
-- **(Batch 2)** Going live on Partner Center (real identity, secrets, first
-  submission) — `store-submit.yml` stays inert and documented (Decision 18).
+- ~~**(Batch 2)** Going live on Partner Center~~ — **Done.** The app is live in
+  the Store; `store-submit.yml` is functional and the `STORE_PRODUCT_ID` variable
+  is set (only the four Azure AD/seller secrets remain). See the *Store launch*
+  item under Batch 2 and `STORE.md`.
 - **(Batch 2)** The design's click-away / Esc dismiss of the control panel — it
   stays pinned-topmost (Decision 20 keeps Decision 12).
 - **(Batch 2)** Renaming voice **ids** or adding/removing voices — only the

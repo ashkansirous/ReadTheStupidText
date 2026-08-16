@@ -16,7 +16,7 @@ Built as a WinUI 3 packaged (MSIX) app for distribution through the Microsoft St
 
 Grab the MSIX from the **[latest release](https://github.com/ashkansirous/ReadTheStupidText/releases/latest)** — `…-x64.msix` for most PCs, `…-ARM64.msix` for Arm devices. Each release is produced by CI from a `v*` tag.
 
-> These packages are **unsigned** (the Microsoft Store signs on publish). To sideload one before the Store listing is live, a signed build / trusted certificate is required — see [`STORE.md`](STORE.md). Every merge to `main` cuts a new `v*` release automatically.
+> These packages are **unsigned** (the Microsoft Store signs on publish), so the **[Store install](https://apps.microsoft.com/detail/9NGT1BN1H92V)** is the recommended path. To sideload a release `.msix` instead, a trusted certificate is required — see [`STORE.md`](STORE.md). Every merge to `main` cuts a new `v*` release automatically.
 
 ## Status
 
@@ -27,8 +27,10 @@ Projects board.
 
 All planned slices are implemented: hotkey/auto-read at a continuous 0.5–2.0×
 speed, a left-click tray control panel, launch-at-startup, local **neural voices**
-(sherpa-onnx + Supertonic-3, bundled), and CI packaging. Remaining before a Store
-release: Partner Center identity + signing (see [`STORE.md`](STORE.md)).
+(sherpa-onnx + Supertonic-3, bundled), and CI packaging. The app is **published
+and live on the Microsoft Store** ([install it here](https://apps.microsoft.com/detail/9NGT1BN1H92V)).
+The shipped MSIX bundles the .NET runtime (self-contained), so there's nothing to
+install first; see [`STORE.md`](STORE.md) for the Store/deployment details.
 
 ## Reading from the console & other apps (important)
 

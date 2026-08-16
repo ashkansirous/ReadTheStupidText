@@ -73,9 +73,15 @@ package identity).
 CI/packaging (Slice 5): `.github/workflows/build.yml` packages the single-project
 MSIX (x64 + ARM64, unsigned artifacts — the Store re-signs) and checks out LFS for
 the voice model; see `STORE.md` for capability justification, licenses, and the
-remaining Partner Center steps. `Release` builds cleanly now — trimming is
-disabled (`PublishTrimmed=false`); packaged WinUI apps aren't trimmed, and
-`PublishTrimmed` without self-contained was the old `NETSDK1102` failure.
+Store/deployment details. The app is **live in the Store** (`9NGT1BN1H92V`);
+`store-submit.yml` pushes updates (bundles both arches → one `.msixbundle` →
+msstore CLI) once the Partner Center secrets are set. The **Release** MSIX is
+built **.NET self-contained** (`<SelfContained>true</SelfContained>`, non-Debug
+only) so the .NET runtime ships inside the package — this fixed Store cert
+**10.2.4.1** (undisclosed dependency on .NET); the Windows App SDK runtime stays
+framework-dependent (Store-delivered). Debug stays framework-dependent for a fast
+inner loop. Trimming stays off (`PublishTrimmed=false`) — packaged WinUI apps
+aren't trimmed.
 
 ## Tests
 
