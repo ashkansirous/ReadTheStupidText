@@ -193,13 +193,19 @@ now is. One submission must carry both architectures, so the workflow bundles
 rather than calling `msstore publish` once per `.msix` (which would open
 competing submissions).
 
-Two details the workflow gets right and that are easy to get wrong by hand:
+One detail the workflow gets right and that is easy to get wrong by hand:
 `makeappx bundle` is given **`/bv`** (the packages' own `x.y.z.0`, parsed off the
 release asset names) — omit it and makeappx stamps the bundle version from the
-*current date-time*, which matches neither the release nor a predictable ordering;
-and `msstore publish` is given **`-ut 3600`**, because the CLI's default blob-upload
-timeout is 100 s and the bundle is ~500 MB (two self-contained architectures, each
-carrying the ~145 MB voice model plus the bundled .NET runtime).
+*current date-time*, which matches neither the release nor a predictable ordering.
+
+⚠️ **Check option flags against the CLI version the action actually installs**
+(`latest` = **v0.3.9**), not against the docs or the CLI's `main` branch — they
+have drifted. `msstore publish --uploadTimeout/-ut` is documented and present on
+`main` but does **not** exist in v0.3.9, where `publish` accepts only
+`-i/-id/-nc/-f/-prp/-v`; passing it fails the run with *"Unrecognized command or
+argument '-ut'"*. It also isn't needed: v0.3.9 uploads via the Azure Storage SDK
+(`BlobClient.UploadAsync`), which chunks and retries internally, so the ~500 MB
+bundle is not racing one fixed HTTP timeout.
 
 Setup status:
 
