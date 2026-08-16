@@ -77,7 +77,17 @@ jobs:
 
       - name: Configure Store credentials
         shell: pwsh
+        env:
+          SELLER_ID: ${{ secrets.SELLER_ID }}
         run: |
+          # The CLI does Convert.ToInt32 on the seller id, so a non-numeric value
+          # (e.g. the GUID-shaped *Publisher* ID, or a quoted/CN= copy-paste) dies
+          # with a bare "input string was not in a correct format" FormatException
+          # and no hint about which credential is wrong. Check it here instead.
+          # Never echo the value — only its shape.
+          if ($env:SELLER_ID -notmatch '^\d+$') {
+            throw "SELLER_ID must be the numeric Seller ID from Partner Center -> Account settings -> Identifiers (digits only). It is currently $($env:SELLER_ID.Length) char(s) and not all digits — the GUID-shaped 'Publisher ID' is a different field and will not work."
+          }
           msstore reconfigure `
             --tenantId ${{ secrets.AZURE_AD_TENANT_ID }} `
             --sellerId ${{ secrets.SELLER_ID }} `

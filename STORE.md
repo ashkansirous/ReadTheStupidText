@@ -217,8 +217,12 @@ Setup status:
    - `AZURE_AD_APPLICATION_SECRET` — a **client secret** created for that app
      registration (Entra → App registrations → your app → Certificates &
      secrets; copy the value immediately, it's shown once).
-   - `SELLER_ID` — your Partner Center publisher/seller id (Account settings →
-     Identifiers → "Seller ID" / "Publisher ID").
+   - `SELLER_ID` — the **numeric Seller ID** (Account settings → Identifiers →
+     "Seller ID"). ⚠️ **Digits only.** The `msstore` CLI runs `Convert.ToInt32`
+     on this value, so the GUID-shaped **Publisher ID** on the same page — and
+     anything with `CN=`, braces or quotes — fails with an opaque
+     `FormatException: The input string was not in a correct format` that names
+     no credential. The workflow now pre-checks the shape and says so plainly.
 5. From then on, run **store-submit** (Actions → Run workflow, pick the release
    tag) to push an update.
 
