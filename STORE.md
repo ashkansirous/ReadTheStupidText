@@ -25,12 +25,32 @@ Verified end-to-end and **live**:
   It fails fast until the four Partner Center secrets are set.
 - ✅ **`STORE_PRODUCT_ID` variable** set to `9NGT1BN1H92V` in repo Actions
   variables.
+- ✅ **Credentials wired and proven.** The tenant was created from Partner Center
+  (individual account — see below), an Entra app registered and given the
+  **Manager** role, and all four secrets set. `msstore reconfigure` authenticates.
+- ✅ **Automated update proven end-to-end** on **v0.7.7** (run `31974833565`):
+  download both release `.msix` → `makeappx bundle /bv 0.7.7.0` → authenticate →
+  `msstore publish` → *Submission commit success*, status **Certification**. The
+  ~492 MB upload took ~3 s. So the whole chain — GitVersion → per-arch MSIX →
+  GitHub Release → bundle → submit — now runs from one dispatch.
 
-**Manual remainder (needs a human + Partner Center, not code):** this is an
-**individual** Partner Center account, so it has no Microsoft Entra tenant yet —
-create one (free, from Partner Center), register an Entra app, give it the
-**Manager** role, then add the four secrets. Full walkthrough in *Deploying to the
-Store → An individual Partner Center account has no tenant*.
+Deploying an update is therefore just:
+
+```bash
+gh workflow run store-submit -f tag=v<x.y.z>
+```
+
+**One-time Partner Center setup — done, kept because it is the non-obvious part.**
+This is an **individual** Partner Center account, which starts with no Microsoft
+Entra tenant. A tenant was created (free, from Partner Center), an Entra app
+registered and given the **Manager** role, and the four secrets set. Full
+walkthrough in *Deploying to the Store → An individual Partner Center account has
+no tenant* — needed again only if the account or app registration is rebuilt.
+
+⏰ **The client secret expires** (24 months max, and it was created 2026-08-16).
+When it lapses, `store-submit` starts failing at *Configure Store credentials*
+with an auth error. The fix is a new secret in the same app registration and a
+`gh secret set AZURE_AD_APPLICATION_SECRET` — nothing else changes.
 
 ## App identity (wired into the manifest)
 
@@ -206,6 +226,44 @@ have drifted. `msstore publish --uploadTimeout/-ut` is documented and present on
 argument '-ut'"*. It also isn't needed: v0.3.9 uploads via the Azure Storage SDK
 (`BlobClient.UploadAsync`), which chunks and retries internally, so the ~500 MB
 bundle is not racing one fixed HTTP timeout.
+
+### The CLI supersedes old packages by **file extension**
+
+`msstore publish` clones the last published submission and then decides what the
+new package replaces with a single line
+(`IStorePackagedAPIExtensions.cs`, v0.3.9):
+
+```csharp
+var applicationPackage = packages?.FirstOrDefault(p => Path.GetExtension(p.FileName) == file.Extension);
+if (applicationPackage != null) { /* ... */ applicationPackage.FileStatus = FileStatus.PendingDelete; }
+```
+
+The match is on **extension only**. That matters because this repo switched the
+submission from per-arch `.msix` to a single `.msixbundle`: on the **first**
+bundle submission (v0.7.7) nothing matched `.msixbundle`, so the previously
+published `ReadTheStupidText.App_0.5.0.0_{x64,arm64}.msix` packages were **not**
+superseded — the bundle was simply appended next to them, and they would have
+been inherited by every later submission forever. They were deleted by hand in
+Partner Center, once.
+
+From bundle-to-bundle this is **self-correcting**: the previous submission now
+contains a `.msixbundle`, the extensions match, and the old bundle is marked
+`PendingDelete` automatically. So this is a transition artifact, not a standing
+bug — but if the packaging format ever changes again (e.g. to `.msixupload`),
+expect the same stale-package leftover and clear it manually.
+
+⚠️ Leftovers are not cosmetic: the stale 0.5.0.0 packages were the
+**framework-dependent** builds that failed cert **10.2.4.1**, so leaving them in a
+submission re-exposes the reviewer to the exact package that failed before.
+
+### Reading the submission result
+
+A green workflow means **submitted**, not **live** — certification runs on
+Microsoft's side afterwards. The publish step's own output is the thing to read:
+it ends with `Submission commit success!` and lists the packages the submission
+actually contains, which is how the stale-package problem above was spotted.
+Benign noise to expect: `PackageValidationWarning` about `windows.startupTask`
+"not supported on Xbox" — this app is Desktop-only.
 
 Setup status:
 

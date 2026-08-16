@@ -629,12 +629,24 @@ smallest-first; each is independently shippable.
       live** at https://apps.microsoft.com/detail/9NGT1BN1H92V (product
       `9NGT1BN1H92V`). `store-submit.yml` made functional (downloads a release,
       combines x64 + ARM64 into one `.msixbundle`, submits via the msstore CLI);
-      `STORE_PRODUCT_ID` repo variable set; the four Azure AD/seller secrets are
-      the only manual remainder (see `STORE.md`). First submission failed Store
+      `STORE_PRODUCT_ID` repo variable set. First submission failed Store
       cert **10.2.4.1** (undisclosed dependency on .NET) — fixed by building the
       Release MSIX **.NET self-contained** (`SelfContained=true`), bundling the
       .NET runtime so there's no external dependency. Windows App SDK stays
       framework-dependent (Store-delivered).
+      **Automation now complete and proven** (v0.7.7, run `31974833565`): the
+      individual Partner Center account had no Entra tenant, so one was created
+      free from Partner Center, an Entra app registered with the **Manager** role,
+      and all four secrets set. Three real failures were found and fixed on the way
+      — `makeappx bundle` needs **`/bv`** (else the bundle version comes from the
+      current date-time); `msstore publish -ut` **does not exist** in the CLI
+      version the action installs (v0.3.9) despite being documented; and
+      **`SELLER_ID` must be the numeric Seller ID** from *Organization profile →
+      Legal info*, not the GUID Publisher ID on the Identifiers page. Updates now
+      ship with `gh workflow run store-submit -f tag=v<x.y.z>`. One transition
+      artifact, handled manually once: the CLI supersedes packages by **file
+      extension**, so the first `.msixbundle` did not replace the old `.msix`
+      packages — see `STORE.md`.
 
 **Batch 3 — read-latency reduction + local diagnostics.** Addresses the user
 report that "from selecting to reading takes a lot, and sometimes it feels like
