@@ -26,9 +26,11 @@ Verified end-to-end and **live**:
 - ✅ **`STORE_PRODUCT_ID` variable** set to `9NGT1BN1H92V` in repo Actions
   variables.
 
-**Manual remainder (needs a human + Partner Center, not code):** add the four
-secrets below to enable the automated-update button — see *Deploying to the
-Store*.
+**Manual remainder (needs a human + Partner Center, not code):** this is an
+**individual** Partner Center account, so it has no Microsoft Entra tenant yet —
+create one (free, from Partner Center), register an Entra app, give it the
+**Manager** role, then add the four secrets. Full walkthrough in *Deploying to the
+Store → An individual Partner Center account has no tenant*.
 
 ## App identity (wired into the manifest)
 
@@ -49,7 +51,11 @@ Store listing references:
 - **Store ID:** `9NGT1BN1H92V`
 - **Listing URL:** https://apps.microsoft.com/detail/9NGT1BN1H92V
 - **Store protocol link:** `ms-windows-store://pdp/?productid=9NGT1BN1H92V`
-- **MSA / Azure AD app id** (for the submission API): `01fff836-f050-475a-8ee4-13cbcfdc7235`
+- **MSA / Azure AD app id** shown on the product's identity page:
+  `01fff836-f050-475a-8ee4-13cbcfdc7235`. This is the product's own identity value
+  — **not** the submission-API client id. `AZURE_AD_APPLICATION_CLIENT_ID` is the
+  Application (client) id of an Entra **app registration** you create yourself (see
+  *Deploying to the Store*).
 
 ## Build artifact (CI)
 
@@ -187,6 +193,14 @@ now is. One submission must carry both architectures, so the workflow bundles
 rather than calling `msstore publish` once per `.msix` (which would open
 competing submissions).
 
+Two details the workflow gets right and that are easy to get wrong by hand:
+`makeappx bundle` is given **`/bv`** (the packages' own `x.y.z.0`, parsed off the
+release asset names) — omit it and makeappx stamps the bundle version from the
+*current date-time*, which matches neither the release nor a predictable ordering;
+and `msstore publish` is given **`-ut 3600`**, because the CLI's default blob-upload
+timeout is 100 s and the bundle is ~500 MB (two self-contained architectures, each
+carrying the ~145 MB voice model plus the bundled .NET runtime).
+
 Setup status:
 
 1. ~~Reserve the app in Partner Center and wire its **Identity Name + Publisher
@@ -194,20 +208,55 @@ Setup status:
 2. ~~Do the **first** submission manually in Partner Center and get it live.~~
    **Done** — the app is live at https://apps.microsoft.com/detail/9NGT1BN1H92V.
 3. ~~Add repo **variable** `STORE_PRODUCT_ID` = `9NGT1BN1H92V`.~~ **Done.**
-4. **Remaining:** add four repo **secrets** so the credentials step can
-   authenticate. Settings → Secrets and variables → Actions → *New repository
-   secret*, or `gh secret set <NAME>`:
-   - `AZURE_AD_TENANT_ID` — Entra tenant id (Partner Center → Account settings;
-     or entra.microsoft.com → Overview).
-   - `AZURE_AD_APPLICATION_CLIENT_ID` — `01fff836-f050-475a-8ee4-13cbcfdc7235`
-     (the Entra app registration's Application id).
+4. **Remaining:** create a tenant + app registration (below), then add four repo
+   **secrets** so the credentials step can authenticate. Settings → Secrets and
+   variables → Actions → *New repository secret*, or `gh secret set <NAME>`:
+   - `AZURE_AD_TENANT_ID` — Entra tenant id (entra.microsoft.com → Overview).
+   - `AZURE_AD_APPLICATION_CLIENT_ID` — the Entra app registration's
+     Application (client) id.
    - `AZURE_AD_APPLICATION_SECRET` — a **client secret** created for that app
      registration (Entra → App registrations → your app → Certificates &
      secrets; copy the value immediately, it's shown once).
    - `SELLER_ID` — your Partner Center publisher/seller id (Account settings →
-     Identifiers).
+     Identifiers → "Seller ID" / "Publisher ID").
 5. From then on, run **store-submit** (Actions → Run workflow, pick the release
    tag) to push an update.
+
+### An **individual** Partner Center account has no tenant — create one
+
+This account is an **individual** (personal-MSA) Windows developer account, so it
+starts with **no Microsoft Entra tenant attached** — and `msstore reconfigure`
+cannot authenticate without a `tenantId`. This is not a blocker and does **not**
+require converting to a company account: an individual account can attach a tenant
+after the fact, and Partner Center will **create a brand-new Entra tenant for free**
+if you don't already have one.
+
+Do this once, in the browser (nothing here can be scripted from CI):
+
+1. **Create the tenant.** [Partner Center](https://partner.microsoft.com/dashboard)
+   → gear icon → **Account settings** → **Tenants** → **Create Microsoft Entra ID**.
+   Fill in the directory name, initial domain (`<something>.onmicrosoft.com`) and
+   the global-admin user it creates. *(If you already have an Entra tenant — e.g.
+   from a Microsoft 365 subscription — use **Associate Microsoft Entra ID with your
+   Partner Center account** instead and sign in with that tenant's credentials.)*
+2. **Register an app** in that tenant: [entra.microsoft.com](https://entra.microsoft.com)
+   → Identity → Applications → **App registrations** → *New registration*
+   (single-tenant, no redirect URI needed). Copy its **Application (client) ID**.
+3. **Add a client secret**: same app → **Certificates & secrets** → *New client
+   secret*. Copy the **value** immediately — it is shown once. Note the expiry
+   (max 24 months); the workflow starts failing auth the day it lapses.
+4. **Give the app access to submissions.** Back in Partner Center → **Account
+   settings** → **User management** → **Microsoft Entra applications** → add the
+   app registration and assign it the **Manager** role. Skipping this is the usual
+   cause of a 403 from `msstore` even with valid credentials.
+5. **Collect the four values** and set them as the repo secrets in step 4 above:
+   tenant id (Entra → Overview), client id (step 2), client secret (step 3),
+   seller id (Partner Center → Account settings → Identifiers).
+
+Constraints worth knowing before the first dispatch: the Actions/msstore update
+path supports **free products only** (this app is free), and the product must
+already be **published and live** (it is) — the API cannot create an app or make a
+*first* submission.
 
 ## Signing
 
