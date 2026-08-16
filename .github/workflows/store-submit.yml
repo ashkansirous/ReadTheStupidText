@@ -77,7 +77,17 @@ jobs:
 
       - name: Configure Store credentials
         shell: pwsh
+        env:
+          SELLER_ID: ${{ secrets.SELLER_ID }}
         run: |
+          # The CLI does Convert.ToInt32 on the seller id, so a non-numeric value
+          # (e.g. the GUID-shaped *Publisher* ID, or a quoted/CN= copy-paste) dies
+          # with a bare "input string was not in a correct format" FormatException
+          # and no hint about which credential is wrong. Check it here instead.
+          # Never echo the value — only its shape.
+          if ($env:SELLER_ID -notmatch '^\d+$') {
+            throw "SELLER_ID must be the numeric Seller ID from Partner Center -> Account settings -> Identifiers (digits only). It is currently $($env:SELLER_ID.Length) char(s) and not all digits — the GUID-shaped 'Publisher ID' is a different field and will not work."
+          }
           msstore reconfigure `
             --tenantId ${{ secrets.AZURE_AD_TENANT_ID }} `
             --sellerId ${{ secrets.SELLER_ID }} `
@@ -88,8 +98,11 @@ jobs:
         shell: pwsh
         run: |
           # One submission carrying both architectures via the bundle.
-          # -ut raises the blob-upload timeout from the CLI's 100 s default: the
-          # bundle is ~500 MB (two self-contained arches, each carrying the ~145 MB
-          # voice model plus the bundled .NET runtime).
+          # No upload-timeout flag: the CLI's --uploadTimeout/-ut exists only on
+          # its unreleased main branch, not in the version this action installs
+          # (v0.3.9), where `publish` accepts just -i/-id/-nc/-f/-prp/-v. It isn't
+          # needed either — v0.3.9 uploads through the Azure Storage SDK
+          # (BlobClient.UploadAsync), which chunks and retries internally, so the
+          # ~500 MB bundle is not racing a single fixed HTTP timeout.
           msstore publish "out\ReadTheStupidText.msixbundle" `
-            -id ${{ vars.STORE_PRODUCT_ID }} -ut 3600
+            -id ${{ vars.STORE_PRODUCT_ID }}

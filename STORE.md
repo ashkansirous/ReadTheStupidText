@@ -193,13 +193,19 @@ now is. One submission must carry both architectures, so the workflow bundles
 rather than calling `msstore publish` once per `.msix` (which would open
 competing submissions).
 
-Two details the workflow gets right and that are easy to get wrong by hand:
+One detail the workflow gets right and that is easy to get wrong by hand:
 `makeappx bundle` is given **`/bv`** (the packages' own `x.y.z.0`, parsed off the
 release asset names) — omit it and makeappx stamps the bundle version from the
-*current date-time*, which matches neither the release nor a predictable ordering;
-and `msstore publish` is given **`-ut 3600`**, because the CLI's default blob-upload
-timeout is 100 s and the bundle is ~500 MB (two self-contained architectures, each
-carrying the ~145 MB voice model plus the bundled .NET runtime).
+*current date-time*, which matches neither the release nor a predictable ordering.
+
+⚠️ **Check option flags against the CLI version the action actually installs**
+(`latest` = **v0.3.9**), not against the docs or the CLI's `main` branch — they
+have drifted. `msstore publish --uploadTimeout/-ut` is documented and present on
+`main` but does **not** exist in v0.3.9, where `publish` accepts only
+`-i/-id/-nc/-f/-prp/-v`; passing it fails the run with *"Unrecognized command or
+argument '-ut'"*. It also isn't needed: v0.3.9 uploads via the Azure Storage SDK
+(`BlobClient.UploadAsync`), which chunks and retries internally, so the ~500 MB
+bundle is not racing one fixed HTTP timeout.
 
 Setup status:
 
@@ -217,8 +223,12 @@ Setup status:
    - `AZURE_AD_APPLICATION_SECRET` — a **client secret** created for that app
      registration (Entra → App registrations → your app → Certificates &
      secrets; copy the value immediately, it's shown once).
-   - `SELLER_ID` — your Partner Center publisher/seller id (Account settings →
-     Identifiers → "Seller ID" / "Publisher ID").
+   - `SELLER_ID` — the **numeric Seller ID** (Account settings → Identifiers →
+     "Seller ID"). ⚠️ **Digits only.** The `msstore` CLI runs `Convert.ToInt32`
+     on this value, so the GUID-shaped **Publisher ID** on the same page — and
+     anything with `CN=`, braces or quotes — fails with an opaque
+     `FormatException: The input string was not in a correct format` that names
+     no credential. The workflow now pre-checks the shape and says so plainly.
 5. From then on, run **store-submit** (Actions → Run workflow, pick the release
    tag) to push an update.
 
