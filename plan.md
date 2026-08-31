@@ -381,6 +381,42 @@ this plan turns it into ordered, shippable vertical slices.
     `AppWindow.Move` from pointer deltas, or a draggable title-bar region), and
     **persist the last position** in settings so it reopens where the user left it.
     Keeps the pinned-topmost / no-light-dismiss behavior (Decision 20).
+32. **Skip ±10s is chunk-boundary best-effort, not true seek (Batch 5).** Extends
+    Decision 21 rather than replacing it. Skip forward/backward tracks each chunk's
+    real synthesized duration (estimated only until that chunk finishes) and jumps
+    playback to the nearest chunk boundary at/after the requested offset — accurate
+    to within roughly one chunk, not exactly 10.000s. Rejected: sample-accurate seek
+    over a fully buffered audio stream — it would require synthesizing the whole text
+    up front, which defeats the streaming/first-audio-fast design (Decisions 15, 25)
+    and the "starts reading as soon as the first part is ready" requirement for
+    uploaded files.
+33. **Timer format: `mm:ss`, `--:--` while duration is unknown (Batch 5).** Elapsed
+    and total are shown as `elapsed/total`, colon-separated, minutes not zero-padded
+    or capped at two digits (grows past 99 minutes, e.g. `125:33`, rather than
+    wrapping). While the total is still being synthesized, the total side reads
+    `--:--` (not a literal `99:99`) — the more common "unknown duration" convention
+    in media players, and unambiguous since `99:99` isn't a real duration.
+34. **File upload entry point + supersede semantics (Batch 5).** "Upload file" lives
+    both as a button in the control panel and as a "Read file…" item in the
+    right-click tray menu, opening the standard Windows `FileOpenPicker`. Picking a
+    file immediately supersedes any in-progress read (same generation-counter
+    supersede pattern already used across selection/hotkey/clipboard reads) rather
+    than queuing multiple files. Drag-and-drop is deferred (see Out of Scope) —
+    picker-only for v1.
+35. **Document parsers: PdfPig + DocumentFormat.OpenXml, with a soft size cap
+    (Batch 5).** PDF text extraction uses **PdfPig** (Apache-2.0); `.docx` uses
+    **DocumentFormat.OpenXml** (MIT, official Microsoft SDK); `.txt` needs no
+    library. Both fit the project's Apache/MIT-only stance (Decision 16; the
+    Piper/Kokoro GPL rejection in `CLAUDE.md` is the same constraint). Exact current
+    versions are confirmed via context7 before the NuGet refs are added (Decision 9).
+    A soft page/size threshold triggers a warning rather than a silent hang on a huge
+    document — text-layer PDFs only, no OCR.
+36. **Slice order: timer-on-existing-reads before file upload (Batch 5).** The user's
+    own framing led with file upload, but the timer is built and verified against the
+    existing selection/hotkey/clipboard read paths first (Slice 25), since that's the
+    smaller, already-working surface to validate duration tracking against. File
+    upload (Slices 27-29) then reuses the same timer instead of standing up both at
+    once.
 
 ## Changes
 
@@ -767,6 +803,55 @@ text," so it leads; logging (Slice 21) then unblocks the latency analysis (Slice
       kept. UI/native code isn't unit-tested per the project's test story; runtime check
       under the (Package) profile remains.
 
+- [ ] **Slice 25 — Read-through timer (elapsed/total).** (Decision 33, Batch 5) Show
+      `elapsed/total` in the transport row. Track each chunk's real synthesized
+      duration as it completes; once every chunk for the current read has finished,
+      sum them into the total. Before that, the total is unknown.
+      New Application record (e.g. `ReadTiming(TimeSpan Elapsed, TimeSpan? Total)`)
+      exposed via a new `ISpeechReader.TimingChanged` event (parallel to the existing
+      `ProgressChanged`), raised roughly once per second while reading and whenever
+      `Total` changes. A pure formatter renders `mm:ss` / `--:--` (Decision 33). Wire
+      into `ControlPanelWindow`'s transport row next to the existing progress bar, the
+      same way progress is wired today. Unit-test the formatter and the
+      duration-accumulation sequencing against the user's own worked example
+      (`00:00/--:--` → ticks → `00:03/02:23` the instant the last chunk lands).
+- [ ] **Slice 26 — Skip forward / backward (±10s).** (Decision 32, Batch 5)
+      `ISpeechReader.SkipForward()` / `SkipBackward()`: using the per-chunk duration
+      index from Slice 25, compute the chunk whose cumulative start time is nearest
+      at/after `elapsed ± 10s`, tear down current playback via the existing
+      generation-counter mechanism, and resume `MediaPlayer` at that chunk (waiting on
+      it if still synthesizing). Clamp backward at 0; clamp forward at the furthest
+      point reached so far (can't skip into audio not yet synthesized). Two new icon
+      buttons flank the play/pause circle in the transport row, wired to
+      `ReadAloudService.SkipForward/SkipBackward`. Unit-test the pure
+      target-chunk-selection and clamping logic.
+- [ ] **Slice 27 — File upload: plain text (.txt).** (Decision 34/35, Batch 5) New
+      Application interface `IDocumentTextExtractor { bool CanHandle(string
+      extension); Task<string> ExtractTextAsync(string filePath); }`; Infrastructure
+      `PlainTextExtractor` plus a `CompositeDocumentTextExtractor` that routes by
+      extension, mirroring `CompositeSpeechReader`'s composition pattern. New
+      `ActivityTrigger.FileUpload` enum value (Domain) — the Activity Log **Source**
+      column shows the uploaded file's name for these entries. UI: an "Upload file"
+      button in the control panel and a "Read file…" item in the tray right-click
+      menu, both opening a `FileOpenPicker` filtered to `.txt` (filter widens in
+      Slices 28-29); picking a file calls a new `ReadAloudService.ReadFileAsync(path)`
+      that extracts text and feeds the existing read pipeline, superseding any
+      in-progress read (Decision 34). Unit-test the composite extractor's routing and
+      the plain-text extractor.
+- [ ] **Slice 28 — File upload: PDF.** (Decision 35, Batch 5) Add **PdfPig**
+      (Apache-2.0; confirm current version via context7 first, Decision 9) to
+      Infrastructure; `PdfTextExtractor` joins page text in order. Widen the
+      `FileOpenPicker` filter to include `.pdf`. Above a page/size threshold, warn
+      instead of silently truncating or hanging on synthesis (exact threshold decided
+      during implementation) — text-layer PDFs only, no OCR. Unit-test the extractor
+      against a small fixture PDF.
+- [ ] **Slice 29 — File upload: DOCX.** (Decision 35, Batch 5) Add
+      **DocumentFormat.OpenXml** (MIT; confirm current version via context7 first,
+      Decision 9) to Infrastructure; `DocxTextExtractor` walks the document body's
+      paragraphs/runs into plain text. Widen the `FileOpenPicker` filter to include
+      `.docx`; same soft cap as Slice 28. Unit-test the extractor against a small
+      fixture `.docx`.
+
 ## Out of Scope
 
 - Voice *tuning* beyond playback rate (pitch, volume, SSML prosody).
@@ -821,6 +906,17 @@ text," so it leads; logging (Slice 21) then unblocks the latency analysis (Slice
   (Decision 29).
 - **(Batch 4)** A full move/resize chrome (min/max buttons, snap layouts) on the
   control panel — only header-drag + remembered position (Decision 31).
+- **(Batch 5)** True sample-accurate seek — skip stays best-effort to the nearest
+  chunk boundary, not exactly 10.000s (Decision 32, extends Decision 21).
+- **(Batch 5)** Drag-and-drop file upload onto the panel/tray icon — picker-only
+  for v1 (Decision 34).
+- **(Batch 5)** A multi-file queue/playlist — picking a new file supersedes the
+  current read rather than queuing (Decision 34).
+- **(Batch 5)** OCR of scanned/image-only PDFs — text-layer PDFs only
+  (Decision 35).
+- **(Batch 5)** Document formats other than `.txt`/`.pdf`/`.docx` (e.g. `.rtf`,
+  `.epub`, `.odt`).
+- **(Batch 5)** Resuming an uploaded file's read position across app restarts.
 
 ## Verification
 
@@ -947,5 +1043,20 @@ text," so it leads; logging (Slice 21) then unblocks the latency analysis (Slice
 - **Slice 24:** open the control panel, drag it by the header to a new spot → it
   moves; close and reopen → it reappears in the moved position. It still stays
   pinned-topmost and does not light-dismiss.
+- **Slice 25:** trigger any existing read path → timer shows `00:00/--:--`, ticks
+  once per second, then flips to the real total the instant synthesis of every
+  chunk finishes, matching the worked example (`00:00/--:--` → … → `00:03/02:23`).
+  `dotnet test` covers the formatter and the duration-accumulation sequencing.
+- **Slice 26:** during a read, click skip-forward → elapsed jumps ~10s to the
+  nearest chunk boundary and audio resumes there; skip-backward similarly; clamps
+  at 0 and at the furthest synthesized point. `dotnet test` covers the pure
+  target-selection and clamping logic.
+- **Slice 27:** use the panel's Upload button (or the tray "Read file…" item) on a
+  `.txt` file → reading starts almost immediately, supersedes any read in
+  progress, and the Activity Log shows `Trigger=FileUpload` with the file name in
+  **Source**. `dotnet test` covers the composite extractor's routing.
+- **Slice 28:** upload a multi-page PDF → text extracts and reads correctly; an
+  oversized PDF triggers the soft-cap warning instead of hanging.
+- **Slice 29:** upload a `.docx` → text extracts and reads correctly.
 - Manual UI checks driven through the running app; no browser E2E harness
   applies to a native tray app.
