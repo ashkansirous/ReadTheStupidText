@@ -40,13 +40,13 @@
 <!-- ===== TITLE ===== -->
 <div style="position:absolute;left:60px;top:34px;width:980px;font-family:'Segoe UI Variable Display','Segoe UI',system-ui,sans-serif">
   <div style="font-size:12px;font-weight:700;letter-spacing:2px;color:#5B57E8;text-transform:uppercase">Slice 8 · Tray Control Panel</div>
-  <div style="font-size:30px;font-weight:600;color:#1c1c20;margin-top:6px">Option C — Media card (compact)</div>
-  <div style="font-size:14px;color:#4a4a52;margin-top:8px;max-width:820px;line-height:1.5">Speed slider is hidden until you <b>tap the speed pill</b>. The settings (auto-read selection, auto-read on copy, launch at startup) plus a new <b>activity log</b> collapse into one row of small icon buttons — each with a hover tooltip. Hover a button or the speed pill in the preview to see it.</div>
+  <div style="font-size:30px;font-weight:600;color:#1c1c20;margin-top:6px">Windows tray panel + Android app</div>
+  <div style="font-size:14px;color:#4a4a52;margin-top:8px;max-width:880px;line-height:1.5">Windows (Batch 4–5): the header is <b>drag-to-move</b> and remembers its position, the transport gains <b>±10s skip</b> and an <b>elapsed/total timer</b>, and <b>Read a file</b> (.txt/.pdf/.docx) sits beside the activity log. Android (Batch 6) is a different face: a normal foreground app with no tray, no auto-read triggers and no startup toggle — its three input paths are <b>type/paste</b>, <b>camera OCR</b> and <b>file upload</b>.</div>
 </div>
 
 <!-- ============================================================ C · LIGHT (speed collapsed) ============================================================ -->
-<div style="position:absolute;left:60px;top:158px;width:520px;font-family:'Segoe UI Variable Display','Segoe UI',system-ui,sans-serif">
-  <div data-drags-parent="1" style="font-size:13px;font-weight:600;color:#33333a;margin:0 0 10px 4px">C · Media card — Light · speed collapsed (default)</div>
+<div style="position:absolute;left:60px;top:158px;width:520px;font-family:'Segoe UI Variable Display','Segoe UI',system-ui,sans-serif;top:205px">
+  <div data-drags-parent="1" style="font-size:13px;font-weight:600;color:#33333a;margin:0 0 10px 4px">Windows · Light — speed collapsed (default)</div>
   <div data-screen-label="C Media (Light)" style="--panel:rgba(251,251,253,0.86);--text:rgba(0,0,0,0.89);--text2:rgba(0,0,0,0.56);--text3:rgba(0,0,0,0.40);--stroke:rgba(0,0,0,0.08);--card:rgba(255,255,255,0.7);--control:rgba(255,255,255,0.78);--cborder:rgba(0,0,0,0.10);--cborder2:rgba(0,0,0,0.18);--accent:#3B6FE3;--accent2:#2A57C0;--kbd:rgba(0,0,0,0.05);--hover:rgba(0,0,0,0.06);--tb:rgba(236,238,243,0.80);--tbborder:rgba(0,0,0,0.06);--shadow:0 18px 50px rgba(20,30,60,0.30);width:520px;height:560px;border-radius:10px;overflow:hidden;position:relative;box-shadow:0 1px 3px rgba(0,0,0,.10);background:radial-gradient(130% 120% at 78% 8%,#d4e2ff 0%,rgba(212,226,255,0) 46%),radial-gradient(120% 120% at 12% 92%,#ecddff 0%,rgba(236,221,255,0) 52%),linear-gradient(150deg,#b9c6ef 0%,#cdd8f6 55%,#dfe6fb 100%)">
 
     <div style="position:absolute;left:0;right:0;bottom:0;height:48px;background:var(--tb);backdrop-filter:blur(34px) saturate(1.6);-webkit-backdrop-filter:blur(34px) saturate(1.6);border-top:1px solid var(--tbborder);display:flex;align-items:center;justify-content:center;z-index:5">
@@ -65,7 +65,7 @@
 
     <div style="position:absolute;right:16px;bottom:60px;width:376px;border-radius:8px;background:var(--panel);backdrop-filter:blur(50px) saturate(1.8);-webkit-backdrop-filter:blur(50px) saturate(1.8);border:1px solid var(--cborder);box-shadow:var(--shadow);z-index:10">
      <!-- GRADIENT HEADER -->
-     <div style="position:relative;padding:14px 16px 16px;background:linear-gradient(135deg,#5B57E8,#3B82F6);overflow:hidden;border-radius:8px 8px 0 0">
+     <div style="position:relative;padding:14px 16px 16px;background:linear-gradient(135deg,#5B57E8,#3B82F6);overflow:hidden;border-radius:8px 8px 0 0;cursor:grab">
        <img src="assets/glyph.png" style="position:absolute;right:-14px;top:-12px;width:120px;height:120px;filter:brightness(0) invert(1);opacity:.13;transform:rotate(-8deg)">
        <input type="checkbox" class="spchk" id="sp-l">
        <div style="position:relative;display:flex;align-items:flex-start;justify-content:space-between">
@@ -76,9 +76,14 @@
          <div style="display:flex;align-items:flex-end;gap:3px;height:18px"><div style="width:3px;height:9px;background:rgba(255,255,255,.9);border-radius:2px"></div><div style="width:3px;height:15px;background:rgba(255,255,255,.9);border-radius:2px"></div><div style="width:3px;height:7px;background:rgba(255,255,255,.9);border-radius:2px"></div><div style="width:3px;height:18px;background:rgba(255,255,255,.9);border-radius:2px"></div><div style="width:3px;height:11px;background:rgba(255,255,255,.9);border-radius:2px"></div></div>
          <span style="font-size:12.5px;color:rgba(255,255,255,.92)">Reading selection from Notepad…</span>
        </div>
-       <div style="position:relative;display:flex;align-items:center;gap:12px;margin-top:15px">
+       <div style="position:relative;display:flex;align-items:center;gap:9px;margin-top:15px">
+         <div class="qbtn" style="width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 4 12l7 7"/><path d="M19 5l-7 7 7 7"/></svg><span class="qtip"><b>Back 10s</b><br>Nearest chunk boundary</span></div>
          <div style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="16" height="16" viewBox="0 0 16 16"><rect x="3.5" y="2.5" width="3.2" height="11" rx="1" fill="#fff"/><rect x="9.3" y="2.5" width="3.2" height="11" rx="1" fill="#fff"/></svg></div>
-         <div style="position:relative;flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.3)"><div style="position:absolute;left:0;top:0;bottom:0;width:50%;background:#fff;border-radius:2px"></div><div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div></div>
+         <div class="qbtn" style="width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5l7 7-7 7"/><path d="M5 5l7 7-7 7"/></svg><span class="qtip"><b>Forward 10s</b><br>Nearest chunk boundary</span></div>
+         <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:5px">
+           <div style="position:relative;height:4px;border-radius:2px;background:rgba(255,255,255,.3)"><div style="position:absolute;left:0;top:0;bottom:0;width:50%;background:#fff;border-radius:2px"></div><div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div></div>
+           <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px;font-variant-numeric:tabular-nums;color:rgba(255,255,255,.82)"><span>00:03</span><span>--:--</span></div>
+         </div>
          <label for="sp-l" class="pill" style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.2);padding:4px 8px 4px 10px;border-radius:11px;flex-shrink:0;border:1px solid rgba(255,255,255,.3)">1.25×<svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="qtip"><b>Playback speed</b><br>Tap to adjust · 0.5×–2×</span></label>
        </div>
        <!-- revealed speed slider -->
@@ -104,7 +109,7 @@
        <div style="display:flex;align-items:center;gap:12px;padding:10px">
          <div style="width:32px;height:32px;border-radius:7px;background:var(--card);border:1px solid var(--stroke);display:flex;align-items:center;justify-content:center;color:var(--accent2);flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0014 0"/><path d="M12 17v4"/></svg></div>
          <span style="font-size:13px;color:var(--text)">Voice</span>
-         <div style="margin-left:auto;flex:1;display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--control);border:1px solid var(--cborder);border-radius:6px;padding:6px 12px;font-size:12.5px;color:var(--text)"><span>Cocytus</span><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="qbtn" style="width:34px;height:34px;border-radius:7px;background:var(--card);border:1px solid var(--stroke);color:var(--accent2);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h2M9 6h11M4 12h2M9 12h11M4 18h2M9 18h7"/></svg><span class="qtip"><b>Activity log</b><br>Opens the read-aloud history</span></div>
+         <div style="margin-left:auto;flex:1;display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--control);border:1px solid var(--cborder);border-radius:6px;padding:6px 12px;font-size:12.5px;color:var(--text)"><span>Cocytus</span><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="qbtn" style="width:34px;height:34px;border-radius:7px;background:var(--card);border:1px solid var(--stroke);color:var(--accent2);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="M8 8l4-4 4 4"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg><span class="qtip"><b>Read a file</b><br>Opens .txt, .pdf or .docx</span></div><div class="qbtn" style="width:34px;height:34px;border-radius:7px;background:var(--card);border:1px solid var(--stroke);color:var(--accent2);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h2M9 6h11M4 12h2M9 12h11M4 18h2M9 18h7"/></svg><span class="qtip"><b>Activity log</b><br>History, timings, open logs folder</span></div>
        </div>
        <div style="height:1px;background:var(--stroke);margin:2px 10px 0"></div>
 
@@ -136,8 +141,8 @@
 </div>
 
 <!-- ============================================================ C · DARK (speed expanded) ============================================================ -->
-<div style="position:absolute;left:660px;top:158px;width:520px;font-family:'Segoe UI Variable Display','Segoe UI',system-ui,sans-serif">
-  <div data-drags-parent="1" style="font-size:13px;font-weight:600;color:#33333a;margin:0 0 10px 4px">C · Media card — Dark · speed expanded (after tap)</div>
+<div style="position:absolute;left:660px;top:158px;width:520px;font-family:'Segoe UI Variable Display','Segoe UI',system-ui,sans-serif;top:205px">
+  <div data-drags-parent="1" style="font-size:13px;font-weight:600;color:#33333a;margin:0 0 10px 4px">Windows · Dark — speed expanded (after tap)</div>
   <div data-screen-label="C Media (Dark)" style="--panel:rgba(43,43,47,0.84);--text:rgba(255,255,255,0.92);--text2:rgba(255,255,255,0.58);--text3:rgba(255,255,255,0.40);--stroke:rgba(255,255,255,0.08);--card:rgba(255,255,255,0.06);--control:rgba(255,255,255,0.08);--cborder:rgba(255,255,255,0.10);--cborder2:rgba(255,255,255,0.16);--accent:#5B8DF0;--accent2:#9CBEFF;--kbd:rgba(255,255,255,0.08);--hover:rgba(255,255,255,0.08);--tb:rgba(22,22,26,0.82);--tbborder:rgba(255,255,255,0.07);--shadow:0 18px 50px rgba(0,0,0,0.55);width:520px;height:560px;border-radius:10px;overflow:hidden;position:relative;box-shadow:0 1px 3px rgba(0,0,0,.10);background:radial-gradient(130% 120% at 78% 6%,#243456 0%,rgba(36,52,86,0) 46%),radial-gradient(120% 120% at 12% 94%,#2e2350 0%,rgba(46,35,80,0) 52%),linear-gradient(150deg,#0c1226 0%,#121529 55%,#15182c 100%)">
 
     <div style="position:absolute;left:0;right:0;bottom:0;height:48px;background:var(--tb);backdrop-filter:blur(34px) saturate(1.6);-webkit-backdrop-filter:blur(34px) saturate(1.6);border-top:1px solid var(--tbborder);display:flex;align-items:center;justify-content:center;z-index:5">
@@ -156,7 +161,7 @@
 
     <div style="position:absolute;right:16px;bottom:60px;width:376px;border-radius:8px;background:var(--panel);backdrop-filter:blur(50px) saturate(1.8);-webkit-backdrop-filter:blur(50px) saturate(1.8);border:1px solid var(--cborder);box-shadow:var(--shadow);z-index:10">
      <!-- GRADIENT HEADER -->
-     <div style="position:relative;padding:14px 16px 16px;background:linear-gradient(135deg,#5B57E8,#3B82F6);overflow:hidden;border-radius:8px 8px 0 0">
+     <div style="position:relative;padding:14px 16px 16px;background:linear-gradient(135deg,#5B57E8,#3B82F6);overflow:hidden;border-radius:8px 8px 0 0;cursor:grab">
        <img src="assets/glyph.png" style="position:absolute;right:-14px;top:-12px;width:120px;height:120px;filter:brightness(0) invert(1);opacity:.13;transform:rotate(-8deg)">
        <input type="checkbox" class="spchk" id="sp-d" checked>
        <div style="position:relative;display:flex;align-items:flex-start;justify-content:space-between">
@@ -167,9 +172,14 @@
          <div style="display:flex;align-items:flex-end;gap:3px;height:18px"><div style="width:3px;height:9px;background:rgba(255,255,255,.9);border-radius:2px"></div><div style="width:3px;height:15px;background:rgba(255,255,255,.9);border-radius:2px"></div><div style="width:3px;height:7px;background:rgba(255,255,255,.9);border-radius:2px"></div><div style="width:3px;height:18px;background:rgba(255,255,255,.9);border-radius:2px"></div><div style="width:3px;height:11px;background:rgba(255,255,255,.9);border-radius:2px"></div></div>
          <span style="font-size:12.5px;color:rgba(255,255,255,.92)">Reading selection from Notepad…</span>
        </div>
-       <div style="position:relative;display:flex;align-items:center;gap:12px;margin-top:15px">
+       <div style="position:relative;display:flex;align-items:center;gap:9px;margin-top:15px">
+         <div class="qbtn" style="width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 4 12l7 7"/><path d="M19 5l-7 7 7 7"/></svg><span class="qtip"><b>Back 10s</b><br>Nearest chunk boundary</span></div>
          <div style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="16" height="16" viewBox="0 0 16 16"><rect x="3.5" y="2.5" width="3.2" height="11" rx="1" fill="#fff"/><rect x="9.3" y="2.5" width="3.2" height="11" rx="1" fill="#fff"/></svg></div>
-         <div style="position:relative;flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.3)"><div style="position:absolute;left:0;top:0;bottom:0;width:50%;background:#fff;border-radius:2px"></div><div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div></div>
+         <div class="qbtn" style="width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5l7 7-7 7"/><path d="M5 5l7 7-7 7"/></svg><span class="qtip"><b>Forward 10s</b><br>Nearest chunk boundary</span></div>
+         <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:5px">
+           <div style="position:relative;height:4px;border-radius:2px;background:rgba(255,255,255,.3)"><div style="position:absolute;left:0;top:0;bottom:0;width:50%;background:#fff;border-radius:2px"></div><div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div></div>
+           <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px;font-variant-numeric:tabular-nums;color:rgba(255,255,255,.82)"><span>00:03</span><span>--:--</span></div>
+         </div>
          <label for="sp-d" class="pill" style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.28);padding:4px 8px 4px 10px;border-radius:11px;flex-shrink:0;border:1px solid rgba(255,255,255,.45)">1.25×<svg width="9" height="9" viewBox="0 0 12 12" fill="none" style="transform:rotate(180deg)"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="qtip"><b>Playback speed</b><br>Tap to hide · 0.5×–2×</span></label>
        </div>
        <!-- revealed speed slider -->
@@ -195,7 +205,7 @@
        <div style="display:flex;align-items:center;gap:12px;padding:10px">
          <div style="width:32px;height:32px;border-radius:7px;background:var(--card);border:1px solid var(--stroke);display:flex;align-items:center;justify-content:center;color:var(--accent2);flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0014 0"/><path d="M12 17v4"/></svg></div>
          <span style="font-size:13px;color:var(--text)">Voice</span>
-         <div style="margin-left:auto;flex:1;display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--control);border:1px solid var(--cborder);border-radius:6px;padding:6px 12px;font-size:12.5px;color:var(--text)"><span>Cocytus</span><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="qbtn" style="width:34px;height:34px;border-radius:7px;background:var(--card);border:1px solid var(--stroke);color:var(--accent2);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h2M9 6h11M4 12h2M9 12h11M4 18h2M9 18h7"/></svg><span class="qtip"><b>Activity log</b><br>Opens the read-aloud history</span></div>
+         <div style="margin-left:auto;flex:1;display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--control);border:1px solid var(--cborder);border-radius:6px;padding:6px 12px;font-size:12.5px;color:var(--text)"><span>Cocytus</span><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="qbtn" style="width:34px;height:34px;border-radius:7px;background:var(--card);border:1px solid var(--stroke);color:var(--accent2);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="M8 8l4-4 4 4"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg><span class="qtip"><b>Read a file</b><br>Opens .txt, .pdf or .docx</span></div><div class="qbtn" style="width:34px;height:34px;border-radius:7px;background:var(--card);border:1px solid var(--stroke);color:var(--accent2);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h2M9 6h11M4 12h2M9 12h11M4 18h2M9 18h7"/></svg><span class="qtip"><b>Activity log</b><br>History, timings, open logs folder</span></div>
        </div>
        <div style="height:1px;background:var(--stroke);margin:2px 10px 0"></div>
 
@@ -223,6 +233,123 @@
   </div>
 </div>
 
+
+<!-- ============================================================ ANDROID (Batch 6 · MAUI) ============================================================ -->
+<div style="position:absolute;left:60px;top:850px;width:1120px;font-family:'Segoe UI Variable Display','Segoe UI',system-ui,sans-serif">
+  <div style="font-size:12px;font-weight:700;letter-spacing:2px;color:#5B57E8;text-transform:uppercase">Batch 6 · Android (MAUI)</div>
+  <div style="font-size:24px;font-weight:600;color:#1c1c20;margin-top:5px">A different face — foreground app, three input paths</div>
+  <div style="font-size:13.5px;color:#4a4a52;margin-top:7px;max-width:880px;line-height:1.5">No tray, no always-on-top panel, no auto-read triggers and no launch-at-startup — none exist on Android. What carries over: the same Supertonic neural voices, the same 0.5×–2× speed model, and the same chunked transport with ±10s skip and an elapsed/total timer.</div>
+</div>
+
+<!-- Android 1 · Type or paste -->
+<div style="position:absolute;left:60px;top:980px;width:320px;font-family:'Segoe UI Variable Display','Segoe UI',system-ui,sans-serif">
+  <div data-drags-parent="1" style="font-size:13px;font-weight:600;color:#33333a;margin:0 0 10px 4px">Android · Type or paste (home)</div>
+  <div data-screen-label="Android Type" style="width:320px;height:660px;border-radius:26px;overflow:hidden;position:relative;background:#f4f5f9;box-shadow:0 18px 50px rgba(20,30,60,.22);border:1px solid rgba(0,0,0,.10);display:flex;flex-direction:column">
+    <div style="height:30px;background:#5B57E8;display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:#fff;font-size:11px;font-weight:600;flex-shrink:0"><span>9:41</span><div style="display:flex;align-items:center;gap:5px"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M2 22h3v-8H2v8zm5.5 0h3V8h-3v14zM13 22h3V2h-3v20zm5.5 0h3v-6h-3v6z"/></svg><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M12 3C7 3 2.7 5 0 8l12 13L24 8c-2.7-3-7-5-12-5z"/></svg><svg width="14" height="12" viewBox="0 0 26 12" fill="none"><rect x="1" y="1" width="20" height="10" rx="2.5" stroke="#fff" stroke-width="1.4"/><rect x="3" y="3" width="14" height="6" rx="1" fill="#fff"/><rect x="23" y="4" width="2" height="4" rx="1" fill="#fff"/></svg></div></div>
+    <div style="background:linear-gradient(135deg,#5B57E8,#3B82F6);padding:14px 18px 16px;color:#fff;flex-shrink:0;position:relative;overflow:hidden">
+      <img src="assets/glyph.png" style="position:absolute;right:-16px;top:-18px;width:110px;height:110px;filter:brightness(0) invert(1);opacity:.13;transform:rotate(-8deg)">
+      <div style="position:relative;display:flex;align-items:center;justify-content:space-between"><span style="font-size:16px;font-weight:600">Read The Stupid Text</span><div style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0014 0"/><path d="M12 17v4"/></svg></div></div>
+      <div style="position:relative;font-size:11.5px;color:rgba(255,255,255,.78);margin-top:3px">Momonga · 1.25×</div>
+    </div>
+    <div style="flex:1;padding:14px;display:flex;flex-direction:column;gap:12px;min-height:0">
+      <div style="flex:1;min-height:0;background:#fff;border:1px solid rgba(0,0,0,.09);border-radius:14px;padding:14px;font-size:13.5px;line-height:1.55;color:#1f2027;overflow:hidden">Paste anything here and it reads aloud with the same neural voice as the desktop app — no selection monitoring, no clipboard listener, just the text you give it.<span style="display:inline-block;width:1.5px;height:15px;background:#5B57E8;vertical-align:-3px;margin-left:1px"></span></div>
+      <div style="background:#fff;border:1px solid rgba(0,0,0,.09);border-radius:14px;padding:14px 14px 12px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:34px;height:34px;border-radius:50%;background:rgba(91,87,232,.10);display:flex;align-items:center;justify-content:center;color:#4A46D6;flex-shrink:0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 4 12l7 7"/><path d="M19 5l-7 7 7 7"/></svg></div>
+          <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#5B57E8,#3B82F6);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(91,87,232,.38)"><svg width="20" height="20" viewBox="0 0 16 16"><rect x="3.5" y="2.5" width="3.2" height="11" rx="1" fill="#fff"/><rect x="9.3" y="2.5" width="3.2" height="11" rx="1" fill="#fff"/></svg></div>
+          <div style="width:34px;height:34px;border-radius:50%;background:rgba(91,87,232,.10);display:flex;align-items:center;justify-content:center;color:#4A46D6;flex-shrink:0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5l7 7-7 7"/><path d="M5 5l7 7-7 7"/></svg></div>
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
+            <div style="position:relative;height:4px;border-radius:2px;background:rgba(0,0,0,.10)"><div style="position:absolute;left:0;top:0;bottom:0;width:34%;background:#5B57E8;border-radius:2px"></div><div style="position:absolute;left:34%;top:50%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;background:#5B57E8"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:10.5px;font-variant-numeric:tabular-nums;color:rgba(0,0,0,.55)"><span>00:03</span><span>--:--</span></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <div style="flex:1;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:rgba(0,0,0,.6);background:rgba(0,0,0,.05)">0.5×</div>
+          <div style="flex:1;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:rgba(0,0,0,.6);background:rgba(0,0,0,.05)">1×</div>
+          <div style="flex:1;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;background:#5B57E8">1.25×</div>
+          <div style="flex:1;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:rgba(0,0,0,.6);background:rgba(0,0,0,.05)">1.5×</div>
+          <div style="flex:1;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:rgba(0,0,0,.6);background:rgba(0,0,0,.05)">1.75×</div>
+          <div style="flex:1;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:rgba(0,0,0,.6);background:rgba(0,0,0,.05)">2×</div>
+        </div>
+      </div>
+    </div>
+    <div style="flex-shrink:0;background:#fff;border-top:1px solid rgba(0,0,0,.08);display:flex;padding:8px 6px 14px">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:#5B57E8"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5h16v2"/><path d="M12 5v14"/><path d="M9 19h6"/></svg><span style="font-size:10.5px;font-weight:700">Type</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:rgba(0,0,0,.45)"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 012-2h1.5l1.2-2h6.6l1.2 2H20a2 2 0 012 2v9a2 2 0 01-2 2H6a2 2 0 01-2-2V8z"/><circle cx="13" cy="12.5" r="3.6"/></svg><span style="font-size:10.5px;font-weight:600">Camera</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:rgba(0,0,0,.45)"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8l-5-5z"/><path d="M14 3v5h5"/></svg><span style="font-size:10.5px;font-weight:600">File</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Android 2 · Camera OCR -->
+<div style="position:absolute;left:420px;top:980px;width:320px;font-family:'Segoe UI Variable Display','Segoe UI',system-ui,sans-serif">
+  <div data-drags-parent="1" style="font-size:13px;font-weight:600;color:#33333a;margin:0 0 10px 4px">Android · Camera → OCR (single shot)</div>
+  <div data-screen-label="Android Camera" style="width:320px;height:660px;border-radius:26px;overflow:hidden;position:relative;background:#101218;box-shadow:0 18px 50px rgba(20,30,60,.22);border:1px solid rgba(0,0,0,.10);display:flex;flex-direction:column">
+    <div style="height:30px;background:#0b0d12;display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:#fff;font-size:11px;font-weight:600;flex-shrink:0"><span>9:41</span><div style="display:flex;align-items:center;gap:5px"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M2 22h3v-8H2v8zm5.5 0h3V8h-3v14zM13 22h3V2h-3v20zm5.5 0h3v-6h-3v6z"/></svg><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M12 3C7 3 2.7 5 0 8l12 13L24 8c-2.7-3-7-5-12-5z"/></svg><svg width="14" height="12" viewBox="0 0 26 12" fill="none"><rect x="1" y="1" width="20" height="10" rx="2.5" stroke="#fff" stroke-width="1.4"/><rect x="3" y="3" width="14" height="6" rx="1" fill="#fff"/><rect x="23" y="4" width="2" height="4" rx="1" fill="#fff"/></svg></div></div>
+    <div style="flex:1;position:relative;min-height:0;background:linear-gradient(165deg,#2a2f3d 0%,#3a4152 45%,#22262f 100%);display:flex;align-items:center;justify-content:center;overflow:hidden">
+      <div style="position:absolute;left:26px;right:26px;top:78px;bottom:150px;border-radius:10px;background:rgba(246,244,238,.93);padding:20px 18px;display:flex;flex-direction:column;gap:9px;transform:rotate(-1.2deg);box-shadow:0 14px 34px rgba(0,0,0,.42)">
+        <div style="height:9px;width:76%;border-radius:2px;background:rgba(0,0,0,.72)"></div>
+        <div style="height:7px;width:96%;border-radius:2px;background:rgba(0,0,0,.34)"></div>
+        <div style="height:7px;width:90%;border-radius:2px;background:rgba(0,0,0,.34)"></div>
+        <div style="height:7px;width:94%;border-radius:2px;background:rgba(0,0,0,.34)"></div>
+        <div style="height:7px;width:62%;border-radius:2px;background:rgba(0,0,0,.34)"></div>
+        <div style="height:7px;width:88%;border-radius:2px;background:rgba(0,0,0,.28);margin-top:8px"></div>
+        <div style="height:7px;width:81%;border-radius:2px;background:rgba(0,0,0,.28)"></div>
+      </div>
+      <div style="position:absolute;left:18px;right:18px;top:70px;bottom:142px;border:2px solid rgba(91,150,255,.95);border-radius:12px;box-shadow:0 0 0 9999px rgba(8,10,16,.30)"></div>
+      <div style="position:absolute;left:40px;top:96px;padding:2px 7px;border-radius:5px;background:#5B96FF;color:#fff;font-size:10px;font-weight:700;letter-spacing:.4px">TEXT FOUND</div>
+      <div style="position:absolute;left:0;right:0;top:44px;display:flex;justify-content:center"><span style="font-size:11.5px;color:rgba(255,255,255,.85);background:rgba(0,0,0,.45);padding:5px 12px;border-radius:20px">Hold steady over the text</span></div>
+    </div>
+    <div style="flex-shrink:0;background:#0b0d12;padding:16px 18px 22px;display:flex;align-items:center;justify-content:space-between">
+      <div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.10);display:flex;align-items:center;justify-content:center;color:#fff"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="M4 17l5-5 4 4 3-2 4 4"/></svg></div>
+      <div style="width:68px;height:68px;border-radius:50%;border:4px solid rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center"><div style="width:52px;height:52px;border-radius:50%;background:#fff"></div></div>
+      <div style="width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.10);display:flex;align-items:center;justify-content:center;color:#fff"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="3.4"/></svg></div>
+    </div>
+    <div style="flex-shrink:0;background:#fff;padding:12px 16px 16px;display:flex;align-items:center;gap:12px">
+      <div style="flex:1;font-size:11.5px;line-height:1.45;color:rgba(0,0,0,.62)">Capture → ML Kit extracts the text on-device → it reads aloud through the same pipeline.</div>
+      <div style="height:38px;padding:0 16px;border-radius:19px;background:#5B57E8;color:#fff;font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:7px;flex-shrink:0"><svg width="14" height="14" viewBox="0 0 16 16" fill="#fff"><path d="M4 2.5v11l9-5.5-9-5.5z"/></svg>Read</div>
+    </div>
+  </div>
+</div>
+
+<!-- Android 3 · Voice picker -->
+<div style="position:absolute;left:780px;top:980px;width:320px;font-family:'Segoe UI Variable Display','Segoe UI',system-ui,sans-serif">
+  <div data-drags-parent="1" style="font-size:13px;font-weight:600;color:#33333a;margin:0 0 10px 4px">Android · Voice picker (same ten voices)</div>
+  <div data-screen-label="Android Voices" style="width:320px;height:660px;border-radius:26px;overflow:hidden;position:relative;background:#f4f5f9;box-shadow:0 18px 50px rgba(20,30,60,.22);border:1px solid rgba(0,0,0,.10);display:flex;flex-direction:column">
+    <div style="height:30px;background:#5B57E8;display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:#fff;font-size:11px;font-weight:600;flex-shrink:0"><span>9:41</span><div style="display:flex;align-items:center;gap:5px"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M2 22h3v-8H2v8zm5.5 0h3V8h-3v14zM13 22h3V2h-3v20zm5.5 0h3v-6h-3v6z"/></svg><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M12 3C7 3 2.7 5 0 8l12 13L24 8c-2.7-3-7-5-12-5z"/></svg><svg width="14" height="12" viewBox="0 0 26 12" fill="none"><rect x="1" y="1" width="20" height="10" rx="2.5" stroke="#fff" stroke-width="1.4"/><rect x="3" y="3" width="14" height="6" rx="1" fill="#fff"/><rect x="23" y="4" width="2" height="4" rx="1" fill="#fff"/></svg></div></div>
+    <div style="background:linear-gradient(135deg,#5B57E8,#3B82F6);padding:13px 16px 15px;color:#fff;flex-shrink:0;display:flex;align-items:center;gap:12px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+      <div style="display:flex;flex-direction:column"><span style="font-size:15.5px;font-weight:600">Voice</span><span style="font-size:11px;color:rgba(255,255,255,.75)">Bundled offline · no download</span></div>
+    </div>
+    <div style="flex:1;overflow:hidden;padding:12px 14px;display:flex;flex-direction:column;gap:8px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1.2px;color:rgba(0,0,0,.45);padding:2px 4px">MALE</div>
+      <div style="background:#fff;border:1px solid rgba(0,0,0,.09);border-radius:14px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(91,87,232,.07)"><div style="width:26px;height:26px;border-radius:50%;background:#5B57E8;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">M</div><div style="flex:1;display:flex;flex-direction:column"><span style="font-size:13.5px;font-weight:600;color:#1f2027">Momonga</span><span style="font-size:11px;color:rgba(0,0,0,.5)">Default</span></div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B57E8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg></div>
+        <div style="height:1px;background:rgba(0,0,0,.07);margin-left:48px"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px"><div style="width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.06);color:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">D</div><span style="flex:1;font-size:13.5px;color:#1f2027">Demiurge</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,.4)" stroke-width="1.8" stroke-linecap="round"><path d="M6 4l12 8-12 8z" fill="rgba(0,0,0,.4)"/></svg></div>
+        <div style="height:1px;background:rgba(0,0,0,.07);margin-left:48px"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px"><div style="width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.06);color:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">C</div><span style="flex:1;font-size:13.5px;color:#1f2027">Cocytus</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,.4)" stroke-width="1.8" stroke-linecap="round"><path d="M6 4l12 8-12 8z" fill="rgba(0,0,0,.4)"/></svg></div>
+        <div style="height:1px;background:rgba(0,0,0,.07);margin-left:48px"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px"><div style="width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.06);color:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">S</div><span style="flex:1;font-size:13.5px;color:#1f2027">Sebas Tian</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,.4)" stroke-width="1.8" stroke-linecap="round"><path d="M6 4l12 8-12 8z" fill="rgba(0,0,0,.4)"/></svg></div>
+        <div style="height:1px;background:rgba(0,0,0,.07);margin-left:48px"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px"><div style="width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.06);color:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">P</div><span style="flex:1;font-size:13.5px;color:#1f2027">Pandora's Actor</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,.4)" stroke-width="1.8" stroke-linecap="round"><path d="M6 4l12 8-12 8z" fill="rgba(0,0,0,.4)"/></svg></div>
+      </div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:1.2px;color:rgba(0,0,0,.45);padding:6px 4px 2px">FEMALE</div>
+      <div style="background:#fff;border:1px solid rgba(0,0,0,.09);border-radius:14px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px"><div style="width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.06);color:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">A</div><span style="flex:1;font-size:13.5px;color:#1f2027">Albedo</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,.4)" stroke-width="1.8" stroke-linecap="round"><path d="M6 4l12 8-12 8z" fill="rgba(0,0,0,.4)"/></svg></div>
+        <div style="height:1px;background:rgba(0,0,0,.07);margin-left:48px"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px"><div style="width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.06);color:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">S</div><span style="flex:1;font-size:13.5px;color:#1f2027">Shalltear Bloodfallen</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,.4)" stroke-width="1.8" stroke-linecap="round"><path d="M6 4l12 8-12 8z" fill="rgba(0,0,0,.4)"/></svg></div>
+        <div style="height:1px;background:rgba(0,0,0,.07);margin-left:48px"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px"><div style="width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.06);color:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">Y</div><span style="flex:1;font-size:13.5px;color:#1f2027">Yuri Alpha</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,.4)" stroke-width="1.8" stroke-linecap="round"><path d="M6 4l12 8-12 8z" fill="rgba(0,0,0,.4)"/></svg></div>
+        <div style="height:1px;background:rgba(0,0,0,.07);margin-left:48px"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px"><div style="width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.06);color:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">L</div><span style="flex:1;font-size:13.5px;color:#1f2027">Lupusregina Beta</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,.4)" stroke-width="1.8" stroke-linecap="round"><path d="M6 4l12 8-12 8z" fill="rgba(0,0,0,.4)"/></svg></div>
+        <div style="height:1px;background:rgba(0,0,0,.07);margin-left:48px"></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px"><div style="width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.06);color:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">N</div><span style="flex:1;font-size:13.5px;color:#1f2027">Narberal Gamma</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,.4)" stroke-width="1.8" stroke-linecap="round"><path d="M6 4l12 8-12 8z" fill="rgba(0,0,0,.4)"/></svg></div>
+      </div>
+      <div style="font-size:10.5px;color:rgba(0,0,0,.5);padding:2px 4px 0;line-height:1.4">A voice change applies at the next chunk.</div>
+    </div>
+  </div>
+</div>
 </x-dc>
 </body>
 </html>

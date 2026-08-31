@@ -1,19 +1,27 @@
-# Handoff: ReadTheStupidText — Tray Control Panel (Option C, "Media Card")
+# Handoff: ReadTheStupidText — Windows tray panel + Android app
 
 ## Overview
-This is the left-click control panel for **ReadTheStupidText**, a lightweight Windows 11
+**Windows.** This is the left-click control panel for **ReadTheStupidText**, a Windows 11
 tray utility that reads selected or copied text aloud at a user-chosen speed. Left-clicking
 the tray icon opens a small, borderless, always-on-top flyout docked above the taskbar, near
-the system tray. The panel exposes every runtime control: play/pause, a playback-speed slider
-(0.5×–2.0×, **hidden by default** — see below), voice selection, and three compact toggles —
-"auto-read on selection", "auto-read on copy", and "launch at startup" — plus an **activity
-log** button and a global hotkey hint (`Ctrl+Win+R`).
+the system tray. The panel exposes every runtime control: play/pause with **±10s skip** and an
+**elapsed/total timer**, a playback-speed slider (0.5×–2.0×, **hidden by default** — see below)
+with six presets, voice selection, **Read a file** (.txt/.pdf/.docx) and **activity log**
+buttons, three compact toggles — "auto-read on selection", "auto-read on copy", "launch at
+startup" — and a global hotkey hint (`Ctrl+Win+R`). The header is **drag-to-move** and its
+position is remembered (Batch 4, Slice 24).
 
-**Compact rev (this version):** the settings no longer occupy full-width labelled rows. They
-collapse into a single **row of small icon buttons** (auto-read selection · auto-read on copy ·
-launch at startup · activity log), each with a **hover tooltip** naming the control and its
-state. The **speed slider is not shown** until the user taps the speed pill in the header. Both
-changes exist to keep the flyout short — the previous build was unnecessarily tall.
+**Android (Batch 6, MAUI).** A deliberately different face, specified in the same file: a
+normal foreground app — **no tray, no always-on-top panel, no auto-read triggers, no
+launch-at-startup** (none are possible on the platform, Decision 38). Its three input paths
+are **type/paste**, **camera → on-device OCR**, and **file upload**. What carries over: the
+same bundled Supertonic neural voices, the same 0.5–2.0× playback-rate model, and the same
+chunked transport (±10s skip, elapsed/total timer).
+
+**Compact rev:** the Windows settings no longer occupy full-width labelled rows. They
+collapse into a **row of large square icon buttons** (auto-read selection · auto-read on copy ·
+launch at startup), each with a **hover tooltip** naming the control and its state. The
+**speed slider and presets are not shown** until the user taps the speed pill in the header.
 
 This package documents **Option C, the "Media Card" direction**: a gradient "now reading"
 header (app identity + live status + waveform + transport + speed pill) sitting above a clean,
@@ -33,10 +41,12 @@ using native Fluent controls (`ToggleSwitch`, `Slider`, `ComboBox`, `Button`,
 stack, choose the closest-fitting native or framework controls and apply the measurements
 below. Use the HTML purely as the visual + behavioral source of truth.
 
-The HTML opens in a browser; it uses a "canvas" wrapper to show the light and dark frames
-side by side above a mock taskbar. **Only the floating panel (the rounded card anchored
-bottom-right of each frame) is the deliverable.** The desktop wallpaper, taskbar, clock, and
-other tray icons are context only — do not build them.
+The HTML opens in a browser; it uses a "canvas" wrapper. The top row shows the Windows light
+and dark frames side by side above a mock taskbar — **only the floating panel (the rounded
+card anchored bottom-right of each frame) is the Windows deliverable.** The desktop wallpaper,
+taskbar, clock, and other tray icons are context only — do not build them. The bottom row
+shows the three **Android** screens (type/paste home, camera OCR, voice picker); there the
+whole phone frame minus the OS status bar is the deliverable, built as MAUI XAML pages.
 
 ## Fidelity
 **High-fidelity.** Colors, typography, spacing, radii, and shadows are final. Recreate the
@@ -75,13 +85,23 @@ All header text/icons are white. Contains, in order:
   9/15/7/18/11px, white 0.9, `align-items:flex-end`, gap 3px) + status text
   `Reading selection from Notepad…` (12.5px / white 0.92). The status text is dynamic — see
   Interactions. When idle the waveform is static/flat and text reads e.g. `Ready` / `Paused`.
-- **Transport row** (margin-top 15px, `display:flex; align-items:center; gap:12px`):
+- **Transport row** (margin-top 15px, `display:flex; align-items:center; gap:9px`):
+  - **Skip back 10s / Skip forward 10s** — 26×26 circles, `rgba(255,255,255,0.14)` fill, white
+    double-chevron glyph, flanking the play button (back on the left, forward on the right).
+    Tooltips: "Back 10s / Forward 10s — Nearest chunk boundary". Best-effort chunk-boundary
+    jump, **not** sample-accurate seek (Decision 32): clamp backward at 0 and forward at the
+    furthest synthesized point.
   - **Play/Pause button** — 40×40 circle, `rgba(255,255,255,0.20)` fill, white glyph. Shows a
     **pause** glyph (two 3.2-wide bars) while playing, a **play** triangle while paused.
-  - **Progress / scrub bar** — `flex:1`, 4px tall track radius 2px (`rgba(255,255,255,0.30)`),
-    filled portion white (50% in mock), with a 16px white circular thumb (shadow
-    `0 1px 4px rgba(0,0,0,.3)`). Represents read-through progress; draggable to scrub.
-  - **Speed pill** — text `1.35×` (12px / 700 / white) + a small chevron, in a pill
+  - **Progress + timer column** — `flex:1`, `display:flex; flex-direction:column; gap:5px`:
+    - **Progress / scrub bar** — 4px tall track radius 2px (`rgba(255,255,255,0.30)`),
+      filled portion white (50% in mock), 16px white circular thumb (shadow
+      `0 1px 4px rgba(0,0,0,.3)`).
+    - **Elapsed / total timer** — a space-between row under the bar, 10px, tabular numerals,
+      `rgba(255,255,255,0.82)`: elapsed on the left, total on the right. Format `mm:ss`,
+      minutes not zero-padded or capped (`125:33` is valid); the total reads **`--:--`** until
+      every chunk of the current read has been synthesized (Decision 33).
+  - **Speed pill** — text `1.25×` (12px / 700 / white) + a small chevron, in a pill
     `rgba(255,255,255,0.20)`, padding 4px 8px, radius 11px, 1px white-30% border. It is the
     **toggle for the speed slider**: tapping it reveals/hides the slider; chevron flips. Default
     state = collapsed (slider hidden).
@@ -94,18 +114,22 @@ All header text/icons are white. Contains, in order:
     `rgba(255,255,255,0.16)` fill (hover `0.30`). The **current** preset is solid white with
     blue text (`#2f6ae0`, 700). Slider and presets reflect the same value.
 
-#### 2. Voice row + activity log  — `padding: 6px 8px 8px`
+#### 2. Voice row + file & log actions  — `padding: 6px 8px 8px`
 A single row: `display:flex; align-items:center; gap:12px; padding:10px`.
 - **Leading icon tile:** 32×32, radius 7px, fill `--card`, 1px `--stroke` border, mic glyph in
   `--accent2`.
 - Label `Voice` (13px `--text`).
-- **Voice dropdown** (pushed right, `margin-left:auto`): `Cocytus` + chevron-down, in a
-  `--control` fill / `--cborder` 1px / radius 6px chip. Opens the installed-voice picker
-  (`ComboBox` in WinUI).
-- **Activity-log button** (immediately right of the dropdown): 34×34, radius 7px, `--card`
-  fill, 1px `--stroke`, log-lines glyph in `--accent2`. This is an **action, not a toggle** —
-  it opens a separate read-aloud history window. Tooltip: "Activity log — opens the read-aloud
-  history".
+- **Voice dropdown** (`margin-left:auto; flex:1`, so it fills the row): `Cocytus` +
+  chevron-down, in a `--control` fill / `--cborder` 1px / radius 6px chip. Opens the bundled
+  neural-voice picker (`ComboBox` in WinUI).
+- **Read-a-file button** (right of the dropdown): 34×34, radius 7px, `--card` fill, 1px
+  `--stroke`, upload/arrow-out-of-tray glyph in `--accent2`. Opens a `FileOpenPicker` filtered
+  to `.txt` / `.pdf` / `.docx`; picking a file **supersedes** any in-progress read (Decision
+  34). Tooltip: "Read a file — Opens .txt, .pdf or .docx".
+- **Activity-log button** (rightmost): 34×34, same treatment, log-lines glyph. An **action,
+  not a toggle** — opens the separate activity-log window, which also carries the per-read
+  timing diagnostics and its own **open-logs-folder** button (Slice 21). Tooltip: "Activity
+  log — History, timings, open logs folder".
 
 #### 3. Controls — compact icon toggles  — `padding: 0 10px 8px` (under a `CONTROLS` eyebrow)
 Three near-square icon buttons in a `flex; gap:8px` row, each `flex:1; height:70px; radius:11px`.
@@ -143,16 +167,31 @@ Fluent slider in sibling options.)
 ## Interactions & Behavior
 - **Open:** left-click tray icon → panel fades/scales in (Fluent flyout transition, ~150ms,
   ease-out) anchored above the tray.
-- **Close:** X button, click-away (lost focus), or Esc → fade out.
+- **Close:** the ✕ button, or left-clicking the tray icon again. The panel stays
+  **pinned-topmost** — no light-dismiss, no Esc dismiss (Decision 20).
+- **Move:** the gradient header is a **drag handle** (`cursor:grab`) — pointer-drag moves the
+  whole `AppWindow`; the position is persisted and restored, clamped to the work area
+  (Slice 24). Child controls swallow their own pointer input, so a drag only starts on the
+  header's empty areas.
 - **Play/Pause:** toggles speech. Glyph swaps play⇄pause. While playing, status text shows what
   is being read (`Reading selection from Notepad…`, `Reading clipboard…`) and the waveform
   animates; while paused/idle it stops and text shows `Paused` / `Ready`.
 - **Scrub bar:** reflects progress through the current utterance; dragging seeks (best-effort
   for TTS — may resync at sentence boundaries).
+- **Skip ±10s:** jumps to the nearest chunk boundary at/after `elapsed ± 10s` — accurate to
+  roughly one chunk, never sample-accurate. Backward clamps at 0; forward clamps at the
+  furthest synthesized point (can't skip into audio that doesn't exist yet).
+- **Timer:** `elapsed/total` ticks about once a second while reading. The total stays `--:--`
+  until the last chunk of the read finishes synthesizing, then appears at once.
+- **Read a file:** picker → text is extracted (`.txt` plain, `.pdf` via PdfPig, `.docx` via
+  OpenXml) → feeds the normal read pipeline and supersedes the current read. The activity-log
+  Source column shows the file name.
 - **Speed pill / slider / presets:** the pill toggles the slider; the slider and the six
   preset buttons (0.5× / 1× / 1.25× / 1.5× / 1.75× / 2×) both set playback rate and stay in
   sync. Current value persists across sessions. Changing speed mid-read applies immediately.
-- **Voice row:** opens picker of installed Windows TTS voices; selection persists.
+- **Voice row:** opens the picker of bundled Supertonic (Overlord-named) voices; selection
+  persists. A change mid-read applies at the **next chunk** — the current sentence finishes in
+  the old voice, nothing already heard repeats and no unheard text is skipped (Slice 23).
 - **Auto-read selection (toggle):** when ON, selecting text anywhere starts reading it aloud
   automatically. Persists.
 - **Launch at startup (toggle):** when ON, registers the app to start with Windows minimized to
@@ -167,7 +206,8 @@ Fluent slider in sibling options.)
 ## State Management
 Persisted user settings (registry / app settings store):
 - `playbackSpeed: number` (default 1.25)
-- `voiceId: string` (default first available natural voice, e.g. Microsoft Aria)
+- `voiceId: string` (default `Momonga`, the bundled Supertonic default)
+- `panelPosition: {x, y} | null` (device pixels; null → default bottom-right pin)
 - `autoReadSelection: boolean` (default true)
 - `autoReadOnCopy: boolean` (default true)
 - `launchAtStartup: boolean` (default false)
@@ -176,6 +216,7 @@ Transient runtime state:
 - `isPlaying: boolean`
 - `statusText: string` (source being read, e.g. "Reading clipboard…")
 - `progress: number` 0–1 (utterance progress)
+- `timing: { elapsed: TimeSpan, total: TimeSpan? }` (total null until fully synthesized)
 - `panelOpen: boolean`
 
 Triggers: tray left-click → `panelOpen=true`; play/pause button → `isPlaying`; speech engine
@@ -236,6 +277,71 @@ callbacks → `progress`, `statusText`, and auto-set `isPlaying=false` on comple
 - kbd chip radius 4px, padding 2px 6px.
 - Dividers: 1px, inset 10px left/right.
 
+## Android app (Batch 6 · MAUI)
+
+Built as MAUI XAML pages in `src/ReadTheStupidText.Mobile` (`net10.0-android`), reusing
+`Domain` + `Application` unchanged. **Not** a port of the tray panel — a different face for a
+different platform.
+
+**What is deliberately absent** (Decision 38): the auto-read-on-selection and auto-read-on-copy
+toggles, launch-at-startup, the global hotkey, the tray icon, always-on-top/drag behavior, and
+(for this release) any activity-log or on-disk diagnostics screen. None have an Android
+equivalent — do not invent one.
+
+**Shared with Windows:** the ten bundled Supertonic voices and `SupertonicVoiceTable`, the
+`PlaybackRate` 0.5–2.0× model and its six presets, chunked synthesis with ±10s skip and the
+`mm:ss` / `--:--` timer, and the same document extractors for uploads.
+
+### Screen 1 — Type or paste (home)
+- **Status bar** 30px, brand `#5B57E8` (light content).
+- **App bar** — brand gradient, `padding 14px 18px 16px`, glyph watermark at 13% opacity,
+  rotated −8°. Title "Read The Stupid Text" 16px/600; sub-line `Momonga · 1.25×` 11.5px at
+  78% white. Right: a 30px circular mic button → opens the voice picker (Screen 3).
+- **Editor card** — fills available height, white, radius 14px, 1px `rgba(0,0,0,.09)`,
+  padding 14px, text 13.5px / line-height 1.55. This is the paste/type target; a caret shows
+  focus. Empty state: "Paste or type text…".
+- **Transport card** — white, radius 14px. Row: 34px circular skip-back · **52px gradient
+  play/pause** (shadow `0 4px 14px rgba(91,87,232,.38)`) · 34px skip-forward · progress bar
+  (`#5B57E8` fill, 14px thumb) with the `00:03 / --:--` timer beneath.
+- **Speed presets** — a 6-up row of 28px pills inside the same card; active pill solid
+  `#5B57E8` with white 700 text, the rest `rgba(0,0,0,.05)`. No hidden slider on mobile: the
+  presets *are* the speed control (a 0.05-step slider is a poor touch target).
+- **Bottom nav** — white, 1px top divider, three tabs (**Type** · **Camera** · **File**), active
+  tab in `#5B57E8`. These are the app's three input paths; there is nothing else in the nav.
+  All hit targets ≥ 44px.
+
+### Screen 2 — Camera → OCR (single shot)
+- Full-bleed dark viewfinder; a 2px `rgba(91,150,255,.95)` detection frame with a heavy scrim
+  outside it, and a small `TEXT FOUND` chip when ML Kit sees text. Hint pill at the top:
+  "Hold steady over the text".
+- **Capture bar** — `#0b0d12`: 42px gallery button (pick an existing photo), 68px shutter
+  (white ring + solid white core), 42px flash/torch button.
+- **Result bar** — white: one line explaining the flow plus a pill **Read** button
+  (`#5B57E8`, 38px tall). Capture → on-device ML Kit extraction → the text flows into the same
+  `SpeechTextChunker` / `ReadAloudService` pipeline as typed text.
+- v1 is **single-shot only** — no live scanning overlay, no cloud fallback (Decision 40).
+
+### Screen 3 — Voice picker
+- Brand app bar with a back chevron; sub-line "Bundled offline · no download".
+- Two grouped white cards under `MALE` / `FEMALE` eyebrows listing the ten Overlord voices;
+  each row is a 30px initial avatar + name + a **preview play** affordance. The selected row
+  (Momonga, "Default") tints `rgba(91,87,232,.07)` with a `#5B57E8` check and a filled avatar.
+- Footer note: a voice change applies at the next chunk — the current sentence finishes in the
+  old voice.
+
+### Mobile tokens (delta from the Windows set)
+| Token | Value | Use |
+|---|---|---|
+| brand | `#5B57E8` | app bar, active nav/preset, progress fill |
+| gradient | `linear-gradient(135deg,#5B57E8,#3B82F6)` | app bar, play button |
+| page | `#f4f5f9` | page background |
+| surface | `#fff` + 1px `rgba(0,0,0,.09)`, radius 14px | cards |
+| text | `#1f2027` / `rgba(0,0,0,.5)` | primary / secondary |
+| camera chrome | `#0b0d12`, detection `#5B96FF` | capture screen |
+
+Type: the platform font (Roboto). Body 13.5px, labels 11–11.5px, titles 15.5–16px — map to
+MAUI/Material type styles rather than hard pixel values where the platform provides them.
+
 ## Assets
 - `assets/glyph.png` — app glyph (glasses mark); used as the header watermark (recolor white
   via `brightness(0) invert(1)`) and as the tray icon.
@@ -245,8 +351,9 @@ Header/list icons are simple line SVGs (speaker, text-cursor, power, play/pause,
 replace with the codebase's Fluent icon set (Segoe Fluent Icons glyphs).
 
 ## Files
-- `Option C - Media Card.dc.html` — the design reference (light + dark frames). Open in a
-  browser to inspect. Only the floating rounded panel is in scope.
+- `Option C - Media Card.dc.html` — the design reference. Top row: the Windows panel (light +
+  dark frames) — only the floating rounded panel is in scope. Bottom row: the three Android
+  screens.
 - `assets/glyph.png`, `assets/app-tile.png` — brand assets.
 
 For reference, the sibling directions (Option A "Compact stack", Option B "Hero transport")
