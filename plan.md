@@ -417,6 +417,99 @@ this plan turns it into ordered, shippable vertical slices.
     smaller, already-working surface to validate duration tracking against. File
     upload (Slices 27-29) then reuses the same timer instead of standing up both at
     once.
+37. **Cross-platform framework: .NET MAUI, reusing Domain + Application unchanged
+    (Batch 6).** The app expands beyond Windows starting with **Android** (a Google
+    Play developer account is already in hand; iOS/Mac follow later on the same stack
+    once there's an Apple developer account — no timeline set). **.NET MAUI** is
+    chosen over **Uno Platform** (also viable, also reuses Domain/Application, but a
+    smaller ecosystem and no XAML-porting benefit worth the switch) and over
+    **native Kotlin/Swift** (best per-platform fit, but shares zero code — the user
+    explicitly asked to reuse "the libraries and code we used so far on Windows").
+    `Domain` and `Application` (`PlaybackRate`, `SpeechTextChunker`, `ActivityLog`,
+    `ReadAloudService`, the Slice 27 `IDocumentTextExtractor` family, etc.) already
+    target plain `net10.0` with zero WinUI/WinRT/Win32 dependencies, so they are
+    referenced by the new mobile project **as-is** — only new platform
+    implementations are written. `ReadTheStupidText.Infrastructure` and
+    `ReadTheStupidText.App` (WinUI) stay Windows-only and untouched. New project:
+    `src/ReadTheStupidText.Mobile` (MAUI, `net10.0-android` first, `net10.0-ios` /
+    `net10.0-maccatalyst` added later), using MAUI's `Platforms/Android` folder
+    convention for platform-specific implementations rather than a separate
+    class library. Confirm current .NET MAUI / Android target-framework versions via
+    context7 before scaffolding (Decision 9's toolchain rule extends to the mobile
+    stack).
+38. **No auto-read triggers on Android — text entry, file upload, and camera OCR
+    are the only input paths (Batch 6).** The Windows app has three auto-read
+    triggers: UIA text-selection monitoring, a global hotkey, and a clipboard-copy
+    listener (Decisions 3, 15 follow-up). **None of the three exist on Android**:
+    there is no UI-Automation-equivalent cross-app text-selection API (the reason
+    the user already ruled out selection support), Android has no concept of a
+    system-wide keyboard hotkey for a background app, and background clipboard
+    reads are blocked by the OS since Android 10 (only the focused app may read the
+    clipboard) — so a clipboard listener modelled on `IClipboardMonitor` cannot
+    work cross-app either. The mobile app is therefore **not** a background/tray
+    utility like Windows; it is a normal foreground app with three deliberate input
+    paths: **type or paste text** directly in-app (reusing `ReadAloudService`
+    exactly as the hotkey path does today), **upload a file** (Slice 27's
+    `IDocumentTextExtractor` pipeline, reused unchanged), and **take a photo**
+    (Slice 32/40, new). `ISelectionMonitor`, the hotkey service, and
+    `IClipboardMonitor` are Windows-only abstractions and are not implemented on
+    mobile.
+39. **Neural voice ported to Android: sherpa-onnx + Supertonic-3 primary, Android
+    `TextToSpeech` as safety-net fallback only (Batch 6).** Mirrors Decision 14's
+    Windows architecture exactly, for the same reason: consistent voice quality and
+    identity across every platform beats relying on whatever OS voice happens to be
+    installed. sherpa-onnx ships an Android (JNI) binding, so the same
+    Supertonic-3 model (`sherpa-onnx-supertonic-3-tts-int8-2026-05-11`, Apache-2.0,
+    ~145 MB) is bundled with the Android build exactly as it is with the Windows
+    MSIX — no first-run download, no network, same offline/no-telemetry stance.
+    Android's built-in `android.speech.tts.TextToSpeech` is wired only as the
+    silent fallback if the packaged model fails to load, matching the WinRT
+    fallback's role in `CompositeSpeechReader`. Confirm the sherpa-onnx Android
+    binding's current API via context7 before coding. The ~145 MB asset's effect
+    on install size is handled via Android App Bundle **Play Asset Delivery**
+    (install-time asset pack) rather than baking it into the base APK, kept
+    consistent with "ships in the package, no download" while avoiding a
+    universal-APK size penalty on devices that don't need it (deferred to
+    implementation which delivery mode fits best; confirmed via context7 first).
+40. **Camera capture → on-device OCR (Google ML Kit) → existing read pipeline
+    (Batch 6).** The core new mobile capability: point the camera at printed or
+    handwritten text, capture a photo, extract its text, and read it aloud through
+    the same `SpeechTextChunker`/`ReadAloudService` pipeline every other input path
+    already uses — OCR is just a new **text source**, not new reading logic.
+    **Google ML Kit Text Recognition** (on-device) is chosen over **Cloud Vision
+    API** (higher accuracy on hard cases, but costs money per call, needs network,
+    and breaks the "we collect nothing" local-only stance this project has held
+    since Decision 26) and over **Tesseract** (also on-device and free, but
+    generally lower out-of-the-box accuracy and heavier to tune). v1 is
+    **single-shot capture** (take one photo → OCR → read) rather than a live
+    real-time scanning overlay — simpler, and matches how people actually use a
+    document scanner. New Application interface `IImageTextExtractor` (parallel to
+    `IDocumentTextExtractor`) implemented by an ML Kit-backed
+    `MlKitImageTextExtractor` in the mobile project's Android platform folder.
+41. **Settings persistence and app identity on Android (Batch 6).** `ISettingsStore`
+    gets a new Android implementation over MAUI's `Preferences` API (the mobile
+    analogue of `ApplicationData.Current.LocalSettings`) — same interface, same
+    keys where they apply (voice id, playback rate), with the Windows-only keys
+    (`PanelPosition`, `AutoReadOnSelection`, `AutoReadOnCopy`) simply unused on
+    mobile per Decision 38. Product display name stays **"Read The Stupid Text"**
+    (Decision 23) on the Play Store listing; the Android application ID follows the
+    existing internal-identifier convention (`uk.sirous.readthestupidtext` or
+    equivalent — exact value confirmed against the Google Play Console listing
+    during Slice 35, not guessed here).
+42. **Android distribution: Google Play internal testing track, Play App Signing
+    (Batch 6).** Mirrors the Windows Store re-signing trust model (Decision 18): CI
+    builds and signs an Android App Bundle (`.aab`) with an **upload key**, and
+    **Play App Signing** re-signs it with Google's managed release key for actual
+    distribution — no long-lived release-signing secret lives in CI. A new GitHub
+    Actions workflow (parallel to `build.yml`/`store-submit.yml`) builds the AAB and
+    (once Play Console credentials exist) uploads it to the **internal testing**
+    track first — the mobile equivalent of the Windows app's original
+    GitHub-Release "testing/sideload" stage before the first real Store submission.
+    Public production release on Play is a later, explicit step, not automatic on
+    every merge (unlike Windows' Decision 17 auto-versioned release — the same
+    GitVersion-driven SemVer is reused for the version *number*, but publishing to
+    production track stays manual until the mobile app is deliberately declared
+    ready, matching how the Windows Store submission itself was manual).
 
 ## Changes
 
@@ -852,6 +945,57 @@ text," so it leads; logging (Slice 21) then unblocks the latency analysis (Slice
       `.docx`; same soft cap as Slice 28. Unit-test the extractor against a small
       fixture `.docx`.
 
+**Batch 6 — Android app (MAUI): type-to-read, camera OCR, file upload, neural
+voice.** Expands the app beyond Windows, starting with Android (Decisions
+37-42). Domain and Application are reused unchanged; only new platform
+implementations are written. Ordered smallest-first, each independently
+runnable/installable — the same vertical-slice principle as every earlier
+batch. iOS/Mac are deliberately not slices here (Decision 37) — they're future
+batches on the same MAUI codebase once there's an Apple developer account.
+
+- [ ] **Slice 30 — MAUI Android scaffold + type-to-read (smallest E2E).**
+      (Decision 37, 38) Scaffold `src/ReadTheStupidText.Mobile` (MAUI,
+      `net10.0-android`), referencing the existing `ReadTheStupidText.Domain` and
+      `ReadTheStupidText.Application` projects unchanged. One screen: a text box +
+      Play/Pause button + speed control (reusing `PlaybackRate`/`SpeedPresets`) that
+      reads the typed/pasted text aloud. TTS engine for this slice is Android's
+      built-in `TextToSpeech` (the neural voice is ported in Slice 31) via a
+      `ISpeechReader` implementation in `Platforms/Android`. Add the project to
+      `ReadTheStupidText.slnx`. This proves the whole DI/Domain/Application reuse
+      story end-to-end before any mobile-specific complexity (OCR, file parsing,
+      neural voice) is added.
+- [ ] **Slice 31 — Neural voice on Android (sherpa-onnx + Supertonic-3).**
+      (Decision 39) Bundle the same Supertonic-3 model used on Windows via Play
+      Asset Delivery; port `SupertonicSpeechReader`'s synthesis logic to the
+      sherpa-onnx Android binding; `CompositeSpeechReader`-style routing with
+      Android `TextToSpeech` as the safety-net fallback only. Voice picker screen
+      lists the same ten Overlord-named voices (Decision 19,
+      `SupertonicVoiceTable` reused unchanged from Domain). Settings persistence
+      (voice id, playback rate) via a MAUI `Preferences`-backed `ISettingsStore`
+      implementation (Decision 41).
+- [ ] **Slice 32 — Camera capture → OCR → read.** (Decision 40) Add a camera
+      screen (MAUI `MediaPicker`/`CameraView`-equivalent, confirm current API via
+      context7), a capture button, and `MlKitImageTextExtractor` implementing the
+      new `IImageTextExtractor` (Application). A captured photo's extracted text
+      flows through the existing `SpeechTextChunker`/`ReadAloudService` pipeline
+      exactly like typed text. This is the headline new capability the user asked
+      for: "take a picture of the stuff, then read it for them."
+- [ ] **Slice 33 — File upload: .txt/.pdf/.docx (reused).** (Decisions 34, 35,
+      41) Wire a MAUI file/document picker to the *existing*
+      `CompositeDocumentTextExtractor`/`PlainTextExtractor`/`PdfTextExtractor`/
+      `DocxTextExtractor` from Batch 5 (Application interface, Infrastructure
+      implementations — referenced from the mobile project's platform folder or
+      promoted to a portable location if any Windows-only dependency is found
+      during implementation). No new extraction logic; only new platform picker
+      UI.
+- [ ] **Slice 34 — Android CI: build + signed AAB, internal testing track.**
+      (Decision 42) New GitHub Actions workflow builds the MAUI Android project
+      and packages a signed `.aab` (CI-held upload key; Play App Signing re-signs
+      for distribution). Once Play Console credentials exist, upload to the
+      **internal testing** track — mirrors the Windows Store pipeline's original
+      "testing" stage before any public submission. GitVersion continues to supply
+      the SemVer for the Android `versionName`/`versionCode`.
+
 ## Out of Scope
 
 - Voice *tuning* beyond playback rate (pitch, volume, SSML prosody).
@@ -917,6 +1061,26 @@ text," so it leads; logging (Slice 21) then unblocks the latency analysis (Slice
 - **(Batch 5)** Document formats other than `.txt`/`.pdf`/`.docx` (e.g. `.rtf`,
   `.epub`, `.odt`).
 - **(Batch 5)** Resuming an uploaded file's read position across app restarts.
+- **(Batch 6)** iOS and macOS builds — deferred to a later batch on the same
+  MAUI codebase once there's an Apple developer account (Decision 37).
+- **(Batch 6)** Any form of auto-read trigger on Android (text-selection
+  monitoring, a global hotkey, or cross-app clipboard reads) — none are
+  possible on the platform; text entry, file upload, and camera capture are
+  the only input paths (Decision 38).
+- **(Batch 6)** A background/tray-style presence, a floating always-on-top
+  panel, or a draggable/position-persisted window — Android has no tray or
+  always-on-top-window equivalent; the mobile app is a normal foreground app
+  (Decision 38).
+- **(Batch 6)** Live/real-time OCR scanning (a continuous camera overlay) —
+  v1 is single-shot capture only (Decision 40).
+- **(Batch 6)** OCR of handwriting beyond what ML Kit handles out of the box,
+  or any cloud-based OCR fallback for hard cases (Decision 40).
+- **(Batch 6)** A mobile equivalent of the activity-log window or the on-disk
+  diagnostic logs (Decisions 15, 27) — deferred to a later batch; not needed
+  for the first Android release to be usable.
+- **(Batch 6)** Public/production Google Play release — CI publishes to the
+  **internal testing** track only; production release is a later, deliberate
+  step (Decision 42).
 
 ## Verification
 
@@ -1058,5 +1222,22 @@ text," so it leads; logging (Slice 21) then unblocks the latency analysis (Slice
 - **Slice 28:** upload a multi-page PDF → text extracts and reads correctly; an
   oversized PDF triggers the soft-cap warning instead of hanging.
 - **Slice 29:** upload a `.docx` → text extracts and reads correctly.
+- **Slice 30:** install the Android app on a device/emulator, type or paste text,
+  tap Play → it reads aloud at the selected speed via Android's built-in TTS;
+  Pause/Play and the speed control work exactly as their Windows counterparts.
+- **Slice 31:** open the voice picker → the same ten Overlord-named voices appear;
+  pick one → the next read uses it and sounds like the Windows Supertonic voice,
+  not the Android system voice; restart the app → the chosen voice and speed are
+  restored (`Preferences`-backed settings). Force the model to fail to load (test
+  hook) → falls back to Android `TextToSpeech` without crashing.
+- **Slice 32:** tap the camera button, photograph a printed page → the extracted
+  text begins reading aloud shortly after capture, through the same chunked
+  pipeline as every other input path.
+- **Slice 33:** use the file picker to open a `.txt`, `.pdf`, and `.docx` file in
+  turn → each reads correctly, reusing the same extractors verified in Slices
+  27-29.
+- **Slice 34:** a CI run on `main` produces a signed `.aab` artifact; once Play
+  Console credentials are configured, the same run uploads it to the internal
+  testing track and it's installable via the Play Store's internal-testing link.
 - Manual UI checks driven through the running app; no browser E2E harness
-  applies to a native tray app.
+  applies to a native tray app or a MAUI mobile app.
