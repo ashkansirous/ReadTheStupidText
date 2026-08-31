@@ -102,6 +102,7 @@ public sealed partial class ControlPanelWindow : Window
 
         _readAloud.StateChanged += OnPlaybackStateChanged;
         _readAloud.ProgressChanged += OnProgressChanged;
+        _readAloud.TimingChanged += OnTimingChanged;
 
         // Neural voices arrive after the model loads; rebuild the picker then.
         _readAloud.VoicesChanged += OnVoicesChanged;
@@ -510,6 +511,7 @@ public sealed partial class ControlPanelWindow : Window
         if (state == PlaybackState.Idle)
         {
             SetProgress(0);
+            SetTiming(new ReadTiming(TimeSpan.Zero, null));
         }
     }
 
@@ -567,6 +569,11 @@ public sealed partial class ControlPanelWindow : Window
         ProgressFillColumn.Width = new GridLength(fill, GridUnitType.Star);
         ProgressRestColumn.Width = new GridLength(1 - fill, GridUnitType.Star);
     }
+
+    private void OnTimingChanged(object? sender, ReadTiming timing) =>
+        _dispatcher.TryEnqueue(() => SetTiming(timing));
+
+    private void SetTiming(ReadTiming timing) => TimerText.Text = ReadTimingFormatter.Format(timing);
 
     [DllImport("user32.dll")]
     private static extern uint GetDpiForWindow(IntPtr hwnd);

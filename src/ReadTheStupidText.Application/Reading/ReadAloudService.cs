@@ -198,6 +198,14 @@ public sealed class ReadAloudService : IDisposable
         remove => _reader.ProgressChanged -= value;
     }
 
+    /// <summary>Read-through elapsed/total timing of the current utterance, for the
+    /// control panel's timer (Decision 33).</summary>
+    public event EventHandler<ReadTiming>? TimingChanged
+    {
+        add => _reader.TimingChanged += value;
+        remove => _reader.TimingChanged -= value;
+    }
+
     /// <summary>The foreground window the active read came from, or null when no
     /// read is in progress. The UI composes the status line from this.</summary>
     public WindowSource? CurrentReadWindow => _activeEntry?.Window;

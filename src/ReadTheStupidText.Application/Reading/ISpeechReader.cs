@@ -21,6 +21,12 @@ public interface ISpeechReader
     /// equally); resets toward 0 when a new read starts or playback stops.</summary>
     event EventHandler<double>? ProgressChanged;
 
+    /// <summary>Raised roughly once per second while reading, and immediately whenever
+    /// <see cref="ReadTiming.Total"/> changes, with the read-through elapsed/total of
+    /// the current utterance (Decision 33). <see cref="ReadTiming.Total"/> is null
+    /// until every chunk has finished synthesizing.</summary>
+    event EventHandler<ReadTiming>? TimingChanged;
+
     PlaybackState State { get; }
 
     /// <summary>

@@ -418,6 +418,17 @@
                         </ToggleButton>
                     </Grid>
 
+                    <!-- Read-through elapsed/total timer (Decision 33): mm:ss/mm:ss,
+                         with dashes for an unknown total. Sits under the transport
+                         row and updates the same way the progress bar above it does. -->
+                    <TextBlock
+                        x:Name="TimerText"
+                        Text="00:00/--:--"
+                        FontSize="10.5"
+                        Margin="0,4,0,0"
+                        HorizontalAlignment="Right"
+                        Foreground="{StaticResource HeaderEyebrow}" />
+
                     <!-- Revealed speed controls (fine 0.05 slider + quick presets,
                          Decision 13). Hidden until the speed pill is tapped; the slider
                          and presets stay in sync and the panel re-fits when revealed. -->

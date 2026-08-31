@@ -30,6 +30,8 @@ public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
         _fallback.Completed += (_, _) => ForwardCompleted(_fallback);
         _neural.ProgressChanged += (_, p) => ForwardProgress(_neural, p);
         _fallback.ProgressChanged += (_, p) => ForwardProgress(_fallback, p);
+        _neural.TimingChanged += (_, t) => ForwardTiming(_neural, t);
+        _fallback.TimingChanged += (_, t) => ForwardTiming(_fallback, t);
     }
 
     public event EventHandler<PlaybackState>? StateChanged;
@@ -37,6 +39,8 @@ public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
     public event EventHandler? Completed;
 
     public event EventHandler<double>? ProgressChanged;
+
+    public event EventHandler<ReadTiming>? TimingChanged;
 
     public PlaybackState State => _active.State;
 
@@ -85,6 +89,14 @@ public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
         if (ReferenceEquals(source, _active))
         {
             ProgressChanged?.Invoke(this, progress);
+        }
+    }
+
+    private void ForwardTiming(ISpeechReader source, ReadTiming timing)
+    {
+        if (ReferenceEquals(source, _active))
+        {
+            TimingChanged?.Invoke(this, timing);
         }
     }
 
