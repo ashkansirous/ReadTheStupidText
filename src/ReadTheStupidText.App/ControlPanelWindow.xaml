@@ -11,8 +11,8 @@
         The left-click control panel — the "Media Card" design (Decisions 20–21,
         compact rev): a brand-gradient "now reading" header (eyebrow, title, live
         waveform, status, transport row, and a speed pill that reveals a hidden
-        speed slider) over a compact Fluent body — a voice dropdown + activity-log
-        button, then a row of three square icon toggles (auto-read on selection /
+        speed slider) over a compact Fluent body — a voice dropdown + upload-file and
+        activity-log buttons, then a row of three square icon toggles (auto-read on selection /
         on copy / launch at startup). Borderless, always-on-top, pinned (no
         click-away dismiss — see ControlPanelWindow.xaml.cs). Native WinUI controls
         + light/dark theme resources from design_handoff_tray_panel (the HTML is the
@@ -532,6 +532,7 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <Border Grid.Column="0" Width="32" Height="32" CornerRadius="7" Background="{ThemeResource PanelCard}" BorderThickness="1" BorderBrush="{ThemeResource PanelStroke}">
                     <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE720;" FontSize="15" Foreground="{ThemeResource PanelAccent2}" />
@@ -554,8 +555,16 @@
                     VerticalAlignment="Center"
                     Foreground="{ThemeResource PanelText2}" />
                 <Button
-                    x:Name="ActivityLogButton"
+                    x:Name="UploadFileButton"
                     Grid.Column="3"
+                    Style="{StaticResource LogButtonStyle}"
+                    Click="OnUploadFileClick"
+                    ToolTipService.ToolTip="Upload file — reads a .txt file aloud">
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE8E5;" FontSize="16" />
+                </Button>
+                <Button
+                    x:Name="ActivityLogButton"
+                    Grid.Column="4"
                     Style="{StaticResource LogButtonStyle}"
                     Click="OnActivityLogClick"
                     ToolTipService.ToolTip="Activity log — opens the read-aloud history">

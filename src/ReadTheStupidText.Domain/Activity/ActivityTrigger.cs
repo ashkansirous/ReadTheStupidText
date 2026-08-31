@@ -15,4 +15,8 @@ public enum ActivityTrigger
     /// <summary>Auto-read from a clipboard copy — the path for apps with no UI
     /// Automation text selection, such as Windows Terminal / the console.</summary>
     Clipboard,
+
+    /// <summary>A file picked via the control panel's Upload button or the tray's
+    /// "Read file…" item.</summary>
+    FileUpload,
 }

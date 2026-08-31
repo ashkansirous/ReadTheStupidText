@@ -27,8 +27,10 @@ Projects board.
 
 All planned slices are implemented: hotkey/auto-read at a continuous 0.5–2.0×
 speed, a left-click tray control panel, launch-at-startup, local **neural voices**
-(sherpa-onnx + Supertonic-3, bundled), and CI packaging. The app is **published
-and live on the Microsoft Store** ([install it here](https://apps.microsoft.com/detail/9NGT1BN1H92V)).
+(sherpa-onnx + Supertonic-3, bundled), reading an uploaded **.txt file** aloud
+(Upload button / tray "Read file…", more file types landing in later slices),
+and CI packaging. The app is **published and live on the Microsoft Store**
+([install it here](https://apps.microsoft.com/detail/9NGT1BN1H92V)).
 The shipped MSIX bundles the .NET runtime (self-contained), so there's nothing to
 install first; see [`STORE.md`](STORE.md) for the Store/deployment details.
 

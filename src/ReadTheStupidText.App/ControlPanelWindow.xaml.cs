@@ -82,6 +82,10 @@ public sealed partial class ControlPanelWindow : Window
     /// single activity-log window, so it handles opening/focusing it.</summary>
     public event EventHandler? ActivityLogRequested;
 
+    /// <summary>Raised when the Upload button is clicked; the host owns showing
+    /// the file picker (Decision 34).</summary>
+    public event EventHandler? UploadFileRequested;
+
     public ControlPanelWindow(ReadAloudService readAloud, IStartupService startup, ISettingsStore settings)
     {
         _readAloud = readAloud;
@@ -375,6 +379,9 @@ public sealed partial class ControlPanelWindow : Window
 
     private void OnActivityLogClick(object sender, RoutedEventArgs e) =>
         ActivityLogRequested?.Invoke(this, EventArgs.Empty);
+
+    private void OnUploadFileClick(object sender, RoutedEventArgs e) =>
+        UploadFileRequested?.Invoke(this, EventArgs.Empty);
 
     // Reveal/hide the fine speed slider; the chevron flips and the panel re-fits
     // its height since the content grew or shrank.
