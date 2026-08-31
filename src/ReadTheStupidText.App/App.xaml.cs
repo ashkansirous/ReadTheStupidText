@@ -1,4 +1,5 @@
 using ReadTheStupidText.Application.Activity;
+using ReadTheStupidText.Application.Documents;
 using ReadTheStupidText.Application.Input;
 using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Application.Reading;
@@ -55,6 +56,9 @@ public partial class App : Application
         services.AddSingleton<IStartupService, StartupTaskService>();
         services.AddSingleton<ISettingsStore, LocalSettingsStore>();
         services.AddSingleton<ITextSanitizer, TextSanitizer>();
+
+        services.AddSingleton<PlainTextExtractor>();
+        services.AddSingleton<IDocumentTextExtractor, CompositeDocumentTextExtractor>();
 
         // Diagnostic logging: shared log folder, the Serilog system log, and the
         // input-log writer that mirrors the activity log to disk (redacted text).

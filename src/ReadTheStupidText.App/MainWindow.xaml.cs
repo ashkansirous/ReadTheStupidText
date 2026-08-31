@@ -9,6 +9,7 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
+using Windows.Storage.Pickers;
 using WinRT.Interop;
 
 namespace ReadTheStupidText_App;
@@ -27,6 +28,7 @@ public sealed partial class MainWindow : Window
     private const string StartupLabel = "Launch at startup";
     private const string VoiceLabel = "Voice";
     private const string ActivityLogLabel = "Show activity log";
+    private const string UploadFileLabel = "Read file…";
 
     private static readonly Uri DarkTrayIconUri = new("ms-appx:///Assets/TrayIconDark.ico");
     private static readonly Uri LightTrayIconUri = new("ms-appx:///Assets/TrayIconLight.ico");
@@ -51,6 +53,7 @@ public sealed partial class MainWindow : Window
     private readonly RelayCommand _setVoiceCommand;
     private readonly RelayCommand _toggleControlPanelCommand;
     private readonly RelayCommand _showActivityLogCommand;
+    private readonly RelayCommand _uploadFileCommand;
     private readonly RelayCommand _quitCommand;
 
     private readonly ControlPanelWindow _controlPanel;
@@ -91,6 +94,7 @@ public sealed partial class MainWindow : Window
         _setVoiceCommand = new RelayCommand(p => ApplyVoice((string)p!));
         _toggleControlPanelCommand = new RelayCommand(_ => _controlPanel.Toggle());
         _showActivityLogCommand = new RelayCommand(_ => ShowActivityLog());
+        _uploadFileCommand = new RelayCommand(_ => _ = UploadFileAsync());
         _quitCommand = new RelayCommand(_ => Quit());
 
         InitializeComponent();
@@ -130,6 +134,10 @@ public sealed partial class MainWindow : Window
         // The control panel's activity-log button reuses the tray's single-instance
         // log window, so the host opens it.
         _controlPanel.ActivityLogRequested += (_, _) => ShowActivityLog();
+
+        // The control panel's Upload button shares the tray menu's file picker,
+        // so the host owns showing it too.
+        _controlPanel.UploadFileRequested += (_, _) => _ = UploadFileAsync();
 
         nint handle = WindowNative.GetWindowHandle(this);
         _hotkey.Register(handle);
@@ -218,6 +226,7 @@ public sealed partial class MainWindow : Window
 
         flyout.Items.Add(new MenuFlyoutSeparator());
         flyout.Items.Add(new MenuFlyoutItem { Text = ActivityLogLabel, Command = _showActivityLogCommand });
+        flyout.Items.Add(new MenuFlyoutItem { Text = UploadFileLabel, Command = _uploadFileCommand });
         flyout.Items.Add(new MenuFlyoutItem { Text = QuitLabel, Command = _quitCommand });
 
         return flyout;
@@ -234,6 +243,26 @@ public sealed partial class MainWindow : Window
         }
 
         _logWindow.Activate();
+    }
+
+    // Opens the standard file picker (filtered to .txt for now — widens as more
+    // extractors land) and reads the chosen file, superseding any active read
+    // (Decision 34). This hidden window's handle owns the picker like every
+    // other Win32/WinRT surface it already hosts (hotkey, clipboard listener).
+    private async Task UploadFileAsync()
+    {
+        var picker = new FileOpenPicker();
+        InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
+        picker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
+        picker.FileTypeFilter.Add(".txt");
+
+        Windows.Storage.StorageFile? file = await picker.PickSingleFileAsync();
+        if (file is null)
+        {
+            return;
+        }
+
+        await _readAloud.ReadFileAsync(file.Path);
     }
 
     // The Voice submenu lists the installed Windows voices (an open set), with a

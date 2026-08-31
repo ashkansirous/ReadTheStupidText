@@ -973,7 +973,7 @@ text," so it leads; logging (Slice 21) then unblocks the latency analysis (Slice
       finished silently resurrect/replay it; `State` is the field completion always
       updates first, on both engines. UI/native code isn't unit-tested per the
       project's test story; runtime check under the (Package) profile remains.
-- [ ] **Slice 27 — File upload: plain text (.txt).** (Decision 34/35, Batch 5) New
+- [x] **Slice 27 — File upload: plain text (.txt).** (Decision 34/35, Batch 5) New
       Application interface `IDocumentTextExtractor { bool CanHandle(string
       extension); Task<string> ExtractTextAsync(string filePath); }`; Infrastructure
       `PlainTextExtractor` plus a `CompositeDocumentTextExtractor` that routes by

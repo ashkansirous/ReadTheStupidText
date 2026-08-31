@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using ReadTheStupidText.Application.Activity;
+using ReadTheStupidText.Application.Documents;
 using ReadTheStupidText.Application.Input;
 using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Application.Sanitizing;
@@ -10,13 +11,14 @@ using ReadTheStupidText.Domain.Reading;
 namespace ReadTheStupidText.Application.Reading;
 
 /// <summary>
-/// Coordinates the read-aloud use case. Three trigger paths feed the reader: the
+/// Coordinates the read-aloud use case. Four trigger paths feed the reader: the
 /// global hotkey (always available — copies the focused selection and reads it,
 /// the fallback for non-UIA apps), the UI Automation selection monitor (auto-read
-/// on selection), and the clipboard monitor (auto-read on copy — the path for the
-/// console and other apps with no UIA text selection). The two auto-read paths are
-/// gated independently by <see cref="AutoReadOnSelection"/> and
-/// <see cref="AutoReadOnCopy"/>; <see cref="_lastTriggeredText"/> de-dupes the
+/// on selection), the clipboard monitor (auto-read on copy — the path for the
+/// console and other apps with no UIA text selection), and an uploaded file
+/// (<see cref="ReadFileAsync"/> — the Upload button / tray "Read file…" item). The
+/// two auto-read paths are gated independently by <see cref="AutoReadOnSelection"/>
+/// and <see cref="AutoReadOnCopy"/>; <see cref="_lastTriggeredText"/> de-dupes the
 /// same text arriving from more than one path. Also forwards the flyout's
 /// play/pause and speed choices. Speed and enabled state are persisted.
 /// </summary>
@@ -47,6 +49,7 @@ public sealed class ReadAloudService : IDisposable
     private readonly IForegroundWindow _foreground;
     private readonly IVoiceCatalog _voices;
     private readonly IVoiceModelService _voiceModel;
+    private readonly IDocumentTextExtractor _documents;
     private readonly IActivityLog _log;
     private readonly ISettingsStore _settings;
     private readonly ITextSanitizer _sanitizer;
@@ -88,6 +91,7 @@ public sealed class ReadAloudService : IDisposable
         IForegroundWindow foreground,
         IVoiceCatalog voices,
         IVoiceModelService voiceModel,
+        IDocumentTextExtractor documents,
         IActivityLog log,
         ISettingsStore settings,
         ITextSanitizer sanitizer,
@@ -102,6 +106,7 @@ public sealed class ReadAloudService : IDisposable
         _foreground = foreground;
         _voices = voices;
         _voiceModel = voiceModel;
+        _documents = documents;
         _log = log;
         _settings = settings;
         _sanitizer = sanitizer;
@@ -248,6 +253,35 @@ public sealed class ReadAloudService : IDisposable
             default:
                 return ReadCopiedSelectionAsync(ActivityTrigger.Manual);
         }
+    }
+
+    /// <summary>
+    /// Extracts the given file's text and reads it, superseding any in-progress
+    /// read (Decision 34). The file name (not a foreground window) is what shows
+    /// in the activity log's Source column for these entries.
+    /// </summary>
+    public async Task ReadFileAsync(string filePath)
+    {
+        string text;
+        try
+        {
+            text = await _documents.ExtractTextAsync(filePath);
+        }
+        catch (Exception ex)
+        {
+            _systemLog.Error($"failed to extract text from '{Path.GetFileName(filePath)}'", null, ex);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return;
+        }
+
+        string clean = _sanitizer.Sanitize(text);
+        var source = new WindowSource(string.Empty, Path.GetFileName(filePath));
+        ActivityEntry entry = StartEntry(ActivityTrigger.FileUpload, source, clean);
+        await ReadEntryAsync(entry, clean);
     }
 
     /// <summary>Jumps the current read ~10s forward (Decision 32); a no-op while idle.</summary>
@@ -423,11 +457,16 @@ public sealed class ReadAloudService : IDisposable
     // Finalizes the prior active entry (pending → ignored, reading → interrupted
     // and the reader paused), then opens a new pending entry — tagged with the
     // foreground window it came from — and makes it active.
-    private ActivityEntry StartEntry(ActivityTrigger trigger, string text)
+    private ActivityEntry StartEntry(ActivityTrigger trigger, string text) =>
+        StartEntry(trigger, _foreground.Capture(), text);
+
+    // As above, but for a source other than the foreground window (e.g. an
+    // uploaded file's name).
+    private ActivityEntry StartEntry(ActivityTrigger trigger, WindowSource? window, string text)
     {
         Supersede(ActivityReason.NewSelection);
         _lastTriggeredText = text;
-        ActivityEntry entry = _log.Add(trigger, _foreground.Capture(), text);
+        ActivityEntry entry = _log.Add(trigger, window, text);
         _activeEntry = entry;
         _activeReadStartTicks = Stopwatch.GetTimestamp();
         _systemLog.Info($"intercepted via {trigger}, {text.Length} chars", entry.Id);
