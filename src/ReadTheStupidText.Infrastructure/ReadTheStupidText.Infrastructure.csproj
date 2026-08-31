@@ -30,6 +30,11 @@
     <PackageReference Include="PdfPig" Version="0.1.16" />
   </ItemGroup>
 
+  <!-- DOCX text extraction for uploaded files (Slice 29, MIT). -->
+  <ItemGroup>
+    <PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
+  </ItemGroup>
+
   <!-- Managed UI Automation client (System.Windows.Automation) lives in the
        Windows Desktop runtime pack. Only the UIAutomation assemblies are
        loaded at run time; WPF/WinForms are referenced but not activated. -->

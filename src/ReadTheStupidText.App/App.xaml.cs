@@ -60,6 +60,7 @@ public partial class App : Application
 
         services.AddSingleton<PlainTextExtractor>();
         services.AddSingleton<PdfTextExtractor>();
+        services.AddSingleton<DocxTextExtractor>();
         services.AddSingleton<IDocumentTextExtractor, CompositeDocumentTextExtractor>();
 
         // Diagnostic logging: shared log folder, the Serilog system log, and the

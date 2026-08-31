@@ -35,7 +35,7 @@ public class DocumentTextExtractorTests
         string path = await WriteTempFileAsync(".txt", "routed text");
         try
         {
-            var composite = new CompositeDocumentTextExtractor(new PlainTextExtractor(), new PdfTextExtractor());
+            var composite = new CompositeDocumentTextExtractor(new PlainTextExtractor(), new PdfTextExtractor(), new DocxTextExtractor());
             Assert.Equal("routed text", await composite.ExtractTextAsync(path));
         }
         finally
@@ -47,17 +47,18 @@ public class DocumentTextExtractorTests
     [Fact]
     public void Composite_CanHandle_reflects_its_registered_extractors()
     {
-        var composite = new CompositeDocumentTextExtractor(new PlainTextExtractor(), new PdfTextExtractor());
+        var composite = new CompositeDocumentTextExtractor(new PlainTextExtractor(), new PdfTextExtractor(), new DocxTextExtractor());
         Assert.True(composite.CanHandle(".txt"));
         Assert.True(composite.CanHandle(".pdf"));
-        Assert.False(composite.CanHandle(".docx"));
+        Assert.True(composite.CanHandle(".docx"));
+        Assert.False(composite.CanHandle(".rtf"));
     }
 
     [Fact]
     public async Task Composite_throws_for_an_unregistered_extension()
     {
-        var composite = new CompositeDocumentTextExtractor(new PlainTextExtractor(), new PdfTextExtractor());
-        await Assert.ThrowsAsync<NotSupportedException>(() => composite.ExtractTextAsync("report.docx"));
+        var composite = new CompositeDocumentTextExtractor(new PlainTextExtractor(), new PdfTextExtractor(), new DocxTextExtractor());
+        await Assert.ThrowsAsync<NotSupportedException>(() => composite.ExtractTextAsync("report.rtf"));
     }
 
     private static async Task<string> WriteTempFileAsync(string extension, string contents)
