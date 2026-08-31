@@ -6,6 +6,7 @@ using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Sanitizing;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Application.Startup;
+using ReadTheStupidText.Infrastructure.Documents;
 using ReadTheStupidText.Infrastructure.Input;
 using ReadTheStupidText.Infrastructure.Logging;
 using ReadTheStupidText.Infrastructure.Reading;
@@ -58,6 +59,7 @@ public partial class App : Application
         services.AddSingleton<ITextSanitizer, TextSanitizer>();
 
         services.AddSingleton<PlainTextExtractor>();
+        services.AddSingleton<PdfTextExtractor>();
         services.AddSingleton<IDocumentTextExtractor, CompositeDocumentTextExtractor>();
 
         // Diagnostic logging: shared log folder, the Serilog system log, and the

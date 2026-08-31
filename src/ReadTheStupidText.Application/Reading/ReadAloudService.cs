@@ -267,6 +267,13 @@ public sealed class ReadAloudService : IDisposable
         {
             text = await _documents.ExtractTextAsync(filePath);
         }
+        catch (DocumentTooLargeException ex)
+        {
+            _systemLog.Warning(
+                $"'{Path.GetFileName(filePath)}' has {ex.Actual} pages, exceeding the {ex.Limit}-page limit — skipping",
+                null, ex);
+            return;
+        }
         catch (Exception ex)
         {
             _systemLog.Error($"failed to extract text from '{Path.GetFileName(filePath)}'", null, ex);

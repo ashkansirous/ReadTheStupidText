@@ -986,13 +986,27 @@ text," so it leads; logging (Slice 21) then unblocks the latency analysis (Slice
       that extracts text and feeds the existing read pipeline, superseding any
       in-progress read (Decision 34). Unit-test the composite extractor's routing and
       the plain-text extractor.
-- [ ] **Slice 28 — File upload: PDF.** (Decision 35, Batch 5) Add **PdfPig**
-      (Apache-2.0; confirm current version via context7 first, Decision 9) to
-      Infrastructure; `PdfTextExtractor` joins page text in order. Widen the
-      `FileOpenPicker` filter to include `.pdf`. Above a page/size threshold, warn
-      instead of silently truncating or hanging on synthesis (exact threshold decided
-      during implementation) — text-layer PDFs only, no OCR. Unit-test the extractor
-      against a small fixture PDF.
+- [x] **Slice 28 — File upload: PDF.** (Decision 35, Batch 5) Added **PdfPig**
+      0.1.16 (Apache-2.0, version confirmed via context7/NuGet, Decision 9) to
+      Infrastructure; `PdfTextExtractor` joins each page's `page.Text` in order.
+      Widened the `FileOpenPicker` filter to include `.pdf`. Threshold: a soft cap
+      of **200 pages** — above it `PdfTextExtractor` throws a new
+      `DocumentTooLargeException` (Application/Documents, carrying `Actual`/`Limit`)
+      before extracting any text, rather than synthesizing a huge document;
+      `ReadAloudService.ReadFileAsync` catches it ahead of the generic extraction
+      failure and logs it at `Warning` (vs. `Error` for a genuinely corrupt file) —
+      text-layer PDFs only, no OCR (a scanned/image-only PDF just yields empty
+      pages). *Layering fix:* `CompositeDocumentTextExtractor` **and**
+      `PlainTextExtractor` moved from Application to **Infrastructure/Documents**
+      (mirroring `CompositeSpeechReader`/`SpeechReader`/`SupertonicSpeechReader`'s
+      placement, and matching what Slice 27's own plan entry already said —
+      Application landed them there by mistake) — Application must not reference
+      Infrastructure, and `PdfTextExtractor` (depends on the PdfPig package) can
+      only be composed by a class allowed to see both. Unit-tested
+      (`PdfTextExtractorTests`) against a small
+      hand-built fixture PDF (PdfPig is read-only, so the fixture is generated with
+      a minimal hand-rolled PDF writer in the test file) covering routing, page
+      order, and the 200-page cap.
 - [ ] **Slice 29 — File upload: DOCX.** (Decision 35, Batch 5) Add
       **DocumentFormat.OpenXml** (MIT; confirm current version via context7 first,
       Decision 9) to Infrastructure; `DocxTextExtractor` walks the document body's
