@@ -43,8 +43,14 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
     // its audio is discarded, so it never reaches the player.
     private const string WarmUpText = "Ready.";
 
+    // Timing (Decision 33) is raised at most this often while reading — except the
+    // tick that first learns a chunk's real duration, which always raises immediately
+    // so the total appears the instant it's known, not up to a second late.
+    private static readonly TimeSpan TimingRaiseInterval = TimeSpan.FromSeconds(1);
+
     private readonly IVoiceModelService _model;
     private readonly ISystemLog _systemLog;
+    private readonly ReadTimingTracker _timing = new();
     private readonly MediaPlayer _player = new() { AutoPlay = false };
 
     // Serializes the generation counter / synthesis-cancellation swap, which can be
@@ -85,6 +91,9 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
     private long _readStartTicks;
     private bool _firstAudioPending;
 
+    // Last time TimingChanged was raised (Decision 33 throttle).
+    private long _lastTimingRaiseTicks;
+
     public SupertonicSpeechReader(IVoiceModelService model, ISystemLog systemLog)
     {
         _model = model;
@@ -100,6 +109,8 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
     public event EventHandler? Completed;
 
     public event EventHandler<double>? ProgressChanged;
+
+    public event EventHandler<ReadTiming>? TimingChanged;
 
     public PlaybackState State => _state;
 
@@ -124,6 +135,9 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
             $"{Stopwatch.GetElapsedTime(splitStart).TotalMilliseconds:F1} ms " +
             $"(threads {SynthesisThreads}, concurrency {MaxSynthesisConcurrency})",
             activityId);
+
+        _timing.Start(chunks.Count);
+        RaiseTiming(TimeSpan.Zero);
 
         await SpeakChunksAsync(tts, chunks, 0, Volatile.Read(ref _speakerId), generation, token);
     }
@@ -190,6 +204,8 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
             {
                 return;
             }
+
+            _timing.AdvancePastChunk(index);
 
             // The voice was changed during this chunk: it has now finished in the old
             // voice, so continue the *remaining* chunks in the new one. Cancels the
@@ -266,6 +282,8 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
                 await Task.Run(() => tts.Generate(chunk, 1.0f, speakerId), token);
             TimeSpan generate = Stopwatch.GetElapsedTime(generateStart);
 
+            RecordChunkDuration(index, audio);
+
             long wavStart = Stopwatch.GetTimestamp();
             IRandomAccessStream stream = await BuildWavStreamAsync(audio.Samples, audio.SampleRate);
             TimeSpan wav = Stopwatch.GetElapsedTime(wavStart);
@@ -279,6 +297,23 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
         finally
         {
             slots.Release();
+        }
+    }
+
+    // Records a chunk's real duration (known as soon as its audio lands, regardless
+    // of playback) and, the instant that completes the read's total, raises
+    // TimingChanged right away instead of waiting for the next throttled tick.
+    private void RecordChunkDuration(int index, OfflineTtsGeneratedAudio audio)
+    {
+        TimeSpan duration = audio.SampleRate > 0
+            ? TimeSpan.FromSeconds((double)audio.Samples.Length / audio.SampleRate)
+            : TimeSpan.Zero;
+
+        bool totalWasUnknown = _timing.CurrentTiming(TimeSpan.Zero).Total is null;
+        _timing.RecordChunkDuration(index, duration);
+        if (totalWasUnknown && _timing.CurrentTiming(TimeSpan.Zero).Total is not null)
+        {
+            RaiseTiming(_player.PlaybackSession.Position);
         }
     }
 
@@ -311,6 +346,8 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
         ClearSource();
         _chunkCount = 0;
         ProgressChanged?.Invoke(this, 0);
+        _timing.Reset();
+        RaiseTiming(TimeSpan.Zero);
         UpdateState(PlaybackState.Idle);
     }
 
@@ -444,6 +481,17 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
             : 0;
         double fraction = (chunkIndex + Math.Clamp(withinChunk, 0, 1)) / chunkCount;
         ProgressChanged?.Invoke(this, Math.Clamp(fraction, 0, 1));
+
+        if (Stopwatch.GetElapsedTime(_lastTimingRaiseTicks) >= TimingRaiseInterval)
+        {
+            RaiseTiming(sender.Position);
+        }
+    }
+
+    private void RaiseTiming(TimeSpan positionInCurrentChunk)
+    {
+        _lastTimingRaiseTicks = Stopwatch.GetTimestamp();
+        TimingChanged?.Invoke(this, _timing.CurrentTiming(positionInCurrentChunk));
     }
 
     private void OnPlaybackStateChanged(MediaPlaybackSession sender, object args)

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Domain.Reading;
 using Windows.Media.Core;
@@ -13,13 +14,19 @@ namespace ReadTheStupidText.Infrastructure.Reading;
 /// </summary>
 public sealed class SpeechReader : ISpeechReader, IDisposable
 {
+    // Timing (Decision 33) is raised at most this often while reading, to avoid
+    // flooding the UI thread with a tick on every PositionChanged callback.
+    private static readonly TimeSpan TimingRaiseInterval = TimeSpan.FromSeconds(1);
+
     private readonly SpeechSynthesizer _synthesizer = new();
     private readonly MediaPlayer _player = new() { AutoPlay = false };
+    private readonly ReadTimingTracker _timing = new();
     private readonly object _gate = new();
 
     private MediaSource? _currentSource;
     private double _playbackRate = PlaybackRate.Default.Value;
     private PlaybackState _state = PlaybackState.Idle;
+    private long _lastTimingRaiseTicks;
 
     // See SupertonicSpeechReader: a generation guard keeps a superseded synthesis
     // from reaching the shared player after a newer utterance replaced it.
@@ -40,6 +47,8 @@ public sealed class SpeechReader : ISpeechReader, IDisposable
 
     public event EventHandler<double>? ProgressChanged;
 
+    public event EventHandler<ReadTiming>? TimingChanged;
+
     public PlaybackState State => _state;
 
     // activityId is unused here: the WinRT fallback synthesizes in a single call, so
@@ -47,6 +56,12 @@ public sealed class SpeechReader : ISpeechReader, IDisposable
     public async Task SpeakAsync(string text, int? activityId = null)
     {
         (int generation, CancellationToken token) = BeginGeneration();
+
+        // A single stream is this reader's only "chunk". Its real duration isn't
+        // known until MediaPlayer reports NaturalDuration once playback opens
+        // (OnPositionChanged), same as the progress bar already relies on.
+        _timing.Start(chunkCount: 1);
+        TimingChanged?.Invoke(this, _timing.CurrentTiming(TimeSpan.Zero));
 
         SpeechSynthesisStream stream;
         try
@@ -85,6 +100,8 @@ public sealed class SpeechReader : ISpeechReader, IDisposable
         _player.Pause();
         ClearSource();
         ProgressChanged?.Invoke(this, 0);
+        _timing.Reset();
+        TimingChanged?.Invoke(this, _timing.CurrentTiming(TimeSpan.Zero));
         UpdateState(PlaybackState.Idle);
     }
 
@@ -156,6 +173,27 @@ public sealed class SpeechReader : ISpeechReader, IDisposable
         }
 
         ProgressChanged?.Invoke(this, Math.Clamp(sender.Position / sender.NaturalDuration, 0, 1));
+        RaiseTimingIfDue(sender.Position, sender.NaturalDuration);
+    }
+
+    // Records the stream's real duration the first tick NaturalDuration is known
+    // (always raising immediately for that tick, same as the neural reader does the
+    // instant its last chunk lands), then throttles further raises to ~once/sec.
+    private void RaiseTimingIfDue(TimeSpan position, TimeSpan naturalDuration)
+    {
+        bool totalWasUnknown = _timing.CurrentTiming(TimeSpan.Zero).Total is null;
+        if (totalWasUnknown)
+        {
+            _timing.RecordChunkDuration(0, naturalDuration);
+        }
+
+        if (!totalWasUnknown && Stopwatch.GetElapsedTime(_lastTimingRaiseTicks) < TimingRaiseInterval)
+        {
+            return;
+        }
+
+        _lastTimingRaiseTicks = Stopwatch.GetTimestamp();
+        TimingChanged?.Invoke(this, _timing.CurrentTiming(position));
     }
 
     private void OnPlaybackStateChanged(MediaPlaybackSession sender, object args)

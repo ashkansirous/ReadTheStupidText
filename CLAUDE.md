@@ -222,6 +222,20 @@ position + chunk index, weighting chunks equally) and is **display-only** — tr
 scrubbing/seek is out of scope (Decision 21); the status line is composed in the
 View from `ReadAloudService.CurrentReadWindow`/`CurrentReadTrigger`.
 
+**Read-through timer (Slice 25, Decision 33).** A `TimerText` label under the
+transport row shows `elapsed/total` as `mm:ss/mm:ss` (`--:--` while the total is
+unknown), driven by `ISpeechReader.TimingChanged` (a new `ReadTiming(TimeSpan
+Elapsed, TimeSpan? Total)` in `Application.Reading`, formatted by the pure
+`ReadTimingFormatter`). Unlike the progress bar's equal-chunk-weighting estimate,
+elapsed/total use each chunk's *real* synthesized duration, tracked by
+`Infrastructure.Reading.ReadTimingTracker` — a pure state machine (unit-tested
+without the WinRT engine) shared by both `ISpeechReader` implementations. A
+chunk's duration is known the instant its audio is generated, not when it plays,
+so `Total` can appear well before the read reaches it; `TimingChanged` fires
+immediately whenever `Total` newly becomes known (bypassing the ~1s throttle used
+for ordinary ticks) and resets to `00:00/--:--` on the same Idle transition that
+zeroes the progress bar.
+
 The panel is **draggable by its gradient header** and **remembers where it was left**
 (Slice 24, Decision 31): pointer-press/move/release handlers on `HeaderBorder` move the
 borderless `AppWindow` by the raw screen-cursor delta (`GetCursorPos`, not
