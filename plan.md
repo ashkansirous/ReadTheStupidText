@@ -510,6 +510,33 @@ this plan turns it into ordered, shippable vertical slices.
     GitVersion-driven SemVer is reused for the version *number*, but publishing to
     production track stays manual until the mobile app is deliberately declared
     ready, matching how the Windows Store submission itself was manual).
+43. **Android UI design: adapt the existing "Media Card" design rather than design
+    from scratch (Batch 6, not yet implemented).** Imported and reviewed
+    `design_handoff_tray_panel/Option C - Media Card.dc.html` (the same design that
+    was already recreated natively for the Windows control panel — Decisions 20/21,
+    Slice 13) as the visual starting point for the Android screens, so the brand
+    identity stays consistent across platforms rather than inventing a second look.
+    **Carries over as-is:** the brand gradient header (`linear-gradient(135deg,
+    #5B57E8, #3B82F6)`, glyph watermark, `NOW READING` eyebrow + title), the live
+    waveform + status text, the transport row (play/pause circle, progress/scrub
+    bar, speed pill), the tap-to-reveal speed slider + six presets, the voice row +
+    activity-log-style action button, and the full color/typography/spacing token
+    set (light + dark) documented in `design_handoff_tray_panel/README.md` — with
+    the Windows system font (`Segoe UI Variable`) substituted for the platform
+    default (e.g. Roboto/system UI font on Android). **Does not carry over, and
+    needs adaptation when this is actually built:** it is a floating,
+    tray-anchored, dismiss-on-click-away panel on Windows; Android has no tray
+    (Decision 38), so this becomes the **main app screen's content** — sized to the
+    device viewport, not a fixed 376px popup, with no header close button and no
+    click-away/Esc dismiss (it *is* the app). The **Controls row** of three icon
+    toggles (auto-read on selection / on copy / launch at startup) doesn't apply —
+    none of those triggers exist on Android (Decision 38) — and is replaced by the
+    two real Android input actions, **Upload file** and **Take photo**, styled as
+    the same square icon tiles. The `Ctrl+Win+R` hotkey footer is dropped (no
+    global hotkey on Android). Exact recreation (native MAUI controls vs. a
+    Compose-equivalent, precise layout) is decided when the relevant Batch 6 slice
+    is actually implemented — this decision only fixes the design source and the
+    high-level mapping so future implementation doesn't start from a blank page.
 
 ## Changes
 
@@ -1040,7 +1067,11 @@ batches on the same MAUI codebase once there's an Apple developer account.
       `ISpeechReader` implementation in `Platforms/Android`. Add the project to
       `ReadTheStupidText.slnx`. This proves the whole DI/Domain/Application reuse
       story end-to-end before any mobile-specific complexity (OCR, file parsing,
-      neural voice) is added.
+      neural voice) is added. Visual design for this and later screens follows
+      Decision 43 (adapts `design_handoff_tray_panel/Option C - Media Card.dc.html`
+      as the main-screen content, not a popup) — a plain/native-default layout is
+      an acceptable stand-in for this first slice if that's faster to prove the
+      wiring; the branded look lands whenever this slice's UI is actually built.
 - [ ] **Slice 31 — Neural voice on Android (sherpa-onnx + Supertonic-3).**
       (Decision 39) Bundle the same Supertonic-3 model used on Windows via Play
       Asset Delivery; port `SupertonicSpeechReader`'s synthesis logic to the
