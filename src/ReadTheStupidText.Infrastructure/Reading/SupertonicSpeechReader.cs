@@ -48,6 +48,10 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
     // so the total appears the instant it's known, not up to a second late.
     private static readonly TimeSpan TimingRaiseInterval = TimeSpan.FromSeconds(1);
 
+    // Skip amount for SkipForward/SkipBackward (Decision 32); lands on the nearest
+    // reachable chunk boundary rather than an exact 10.000s offset.
+    private static readonly TimeSpan SkipAmount = TimeSpan.FromSeconds(10);
+
     private readonly IVoiceModelService _model;
     private readonly ISystemLog _systemLog;
     private readonly ReadTimingTracker _timing = new();
@@ -83,6 +87,10 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
     // is independently synthesized — equal weighting is the best-effort model.
     private int _chunkCount;
     private int _currentChunkIndex;
+
+    // The current read's chunks, kept so SkipForward/SkipBackward can restart
+    // playback of the same text at a different chunk index.
+    private IReadOnlyList<string> _chunks = [];
 
     // Latency diagnostics (Decision 30): the activity-log id of the in-flight read and
     // when it began, so the per-chunk timing lines join to its row; _firstAudioPending
@@ -130,6 +138,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
 
         long splitStart = Stopwatch.GetTimestamp();
         IReadOnlyList<string> chunks = SpeechTextChunker.Split(text);
+        _chunks = chunks;
         _systemLog.Debug(
             $"split {text.Length} chars into {chunks.Count} chunk(s) in " +
             $"{Stopwatch.GetElapsedTime(splitStart).TotalMilliseconds:F1} ms " +
@@ -140,6 +149,41 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
         RaiseTiming(TimeSpan.Zero);
 
         await SpeakChunksAsync(tts, chunks, 0, Volatile.Read(ref _speakerId), generation, token);
+    }
+
+    public Task SkipForward() => SkipByAsync(SkipAmount);
+
+    public Task SkipBackward() => SkipByAsync(-SkipAmount);
+
+    // Tears down the currently-playing chunk (existing generation-counter mechanism,
+    // same as a mid-read voice change) and restarts the ordered playback loop at the
+    // target chunk found by the tracker (Decision 32). A no-op while idle or once the
+    // engine isn't built yet.
+    private async Task SkipByAsync(TimeSpan delta)
+    {
+        OfflineTts? tts = Volatile.Read(ref _tts);
+
+        // _chunkCount isn't cleared on natural completion (only Stop() does that), so
+        // it alone can't tell a finished read from one in progress — State can.
+        if (tts is null || _state == PlaybackState.Idle)
+        {
+            return;
+        }
+
+        TimeSpan elapsed = _timing.CurrentTiming(_player.PlaybackSession.Position).Elapsed;
+        if (_timing.ComputeSkipTarget(elapsed, delta) is not { } target)
+        {
+            return;
+        }
+
+        (int generation, CancellationToken newToken) = BeginGeneration();
+        _chunkEnded?.TrySetResult(false); // release the ordered loop if mid-chunk
+        _player.Pause();
+        ClearSource();
+        _timing.SeekTo(target);
+        RaiseTiming(TimeSpan.Zero);
+
+        await SpeakChunksAsync(tts, _chunks, target.ChunkIndex, Volatile.Read(ref _speakerId), generation, newToken);
     }
 
     // Synthesizes the chunks from startIndex onward (capped concurrency) with the given

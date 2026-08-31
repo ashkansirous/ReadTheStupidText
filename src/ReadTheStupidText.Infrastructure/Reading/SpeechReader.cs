@@ -18,6 +18,9 @@ public sealed class SpeechReader : ISpeechReader, IDisposable
     // flooding the UI thread with a tick on every PositionChanged callback.
     private static readonly TimeSpan TimingRaiseInterval = TimeSpan.FromSeconds(1);
 
+    // Skip amount for SkipForward/SkipBackward (Decision 32).
+    private static readonly TimeSpan SkipAmount = TimeSpan.FromSeconds(10);
+
     private readonly SpeechSynthesizer _synthesizer = new();
     private readonly MediaPlayer _player = new() { AutoPlay = false };
     private readonly ReadTimingTracker _timing = new();
@@ -120,6 +123,36 @@ public sealed class SpeechReader : ISpeechReader, IDisposable
         {
             _synthesizer.Voice = voice;
         }
+    }
+
+    // A single fully-synthesized stream is trivially seekable, so — unlike the
+    // chunked neural engine — this can seek to an exact position rather than
+    // snapping to a chunk boundary.
+    public Task SkipForward() => Seek(SkipAmount);
+
+    public Task SkipBackward() => Seek(-SkipAmount);
+
+    private Task Seek(TimeSpan delta)
+    {
+        // The source isn't cleared on natural completion (only Stop() does that), so
+        // NaturalDuration alone can't tell a finished read from one in progress —
+        // State can.
+        if (_state == PlaybackState.Idle)
+        {
+            return Task.CompletedTask;
+        }
+
+        MediaPlaybackSession session = _player.PlaybackSession;
+        if (session.NaturalDuration <= TimeSpan.Zero)
+        {
+            return Task.CompletedTask;
+        }
+
+        TimeSpan target = session.Position + delta;
+        session.Position = target < TimeSpan.Zero
+            ? TimeSpan.Zero
+            : target > session.NaturalDuration ? session.NaturalDuration : target;
+        return Task.CompletedTask;
     }
 
     private (int generation, CancellationToken token) BeginGeneration()

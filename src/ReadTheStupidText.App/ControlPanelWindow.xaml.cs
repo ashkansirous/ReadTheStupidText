@@ -369,6 +369,10 @@ public sealed partial class ControlPanelWindow : Window
 
     private void OnPlayPauseClick(object sender, RoutedEventArgs e) => _ = _readAloud.PlayPauseOrReadAsync();
 
+    private void OnSkipBackClick(object sender, RoutedEventArgs e) => _ = _readAloud.SkipBackwardAsync();
+
+    private void OnSkipForwardClick(object sender, RoutedEventArgs e) => _ = _readAloud.SkipForwardAsync();
+
     private void OnActivityLogClick(object sender, RoutedEventArgs e) =>
         ActivityLogRequested?.Invoke(this, EventArgs.Empty);
 

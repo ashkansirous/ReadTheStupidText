@@ -65,4 +65,18 @@ public interface ISpeechReader
     /// (the current voice is kept).
     /// </summary>
     void SetVoice(string voiceId);
+
+    /// <summary>
+    /// Jumps playback ~10s forward (Decision 32) — best-effort, not an exact
+    /// 10.000s seek: implementations may snap to the nearest reachable boundary
+    /// (e.g. a chunk start) instead. Clamped to the furthest point already
+    /// synthesized/known; a no-op while idle.
+    /// </summary>
+    Task SkipForward();
+
+    /// <summary>
+    /// Jumps playback ~10s backward (Decision 32) — best-effort, not an exact
+    /// 10.000s seek. Clamped to zero; a no-op while idle.
+    /// </summary>
+    Task SkipBackward();
 }
