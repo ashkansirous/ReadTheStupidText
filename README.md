@@ -27,8 +27,8 @@ Projects board.
 
 All planned slices are implemented: hotkey/auto-read at a continuous 0.5–2.0×
 speed, a left-click tray control panel, launch-at-startup, local **neural voices**
-(sherpa-onnx + Supertonic-3, bundled), reading an uploaded **.txt file** aloud
-(Upload button / tray "Read file…", more file types landing in later slices),
+(sherpa-onnx + Supertonic-3, bundled), reading an uploaded **.txt or .pdf file**
+aloud (Upload button / tray "Read file…", more file types landing in later slices),
 and CI packaging. The app is **published and live on the Microsoft Store**
 ([install it here](https://apps.microsoft.com/detail/9NGT1BN1H92V)).
 The shipped MSIX bundles the .NET runtime (self-contained), so there's nothing to

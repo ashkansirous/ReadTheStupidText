@@ -25,6 +25,11 @@
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
   </ItemGroup>
 
+  <!-- PDF text extraction for uploaded files (Slice 28, Apache-2.0). -->
+  <ItemGroup>
+    <PackageReference Include="PdfPig" Version="0.1.16" />
+  </ItemGroup>
+
   <!-- Managed UI Automation client (System.Windows.Automation) lives in the
        Windows Desktop runtime pack. Only the UIAutomation assemblies are
        loaded at run time; WPF/WinForms are referenced but not activated. -->
