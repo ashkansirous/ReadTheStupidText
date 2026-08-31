@@ -10,6 +10,16 @@ at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
 **MSIX** and targeted at the **Microsoft Store**. It is *not* a classic UWP app
 (the sandbox cannot do tray icons, global hotkeys, or cross-app text reads).
 
+> **Multi-platform direction (Batch 6, planning):** the app is expanding to
+> **Android first** (via **.NET MAUI**, a Google Play developer account is
+> already in hand), with **iOS/macOS to follow later on the same MAUI stack**.
+> `Domain` and `Application` are already framework-agnostic and are reused
+> **unchanged** by the mobile project — only new platform implementations are
+> written (Android has none of Windows' auto-read triggers; text entry, file
+> upload, and a new **camera → on-device OCR → read** path are the mobile
+> input surfaces instead). See Decisions 37-42 and the Batch 6 slices in
+> `plan.md` for the full rationale.
+
 > **Naming:** the user-facing **product display name is "Read The Stupid Text"** (with
 > spaces) — shown in the manifest `DisplayName`s, tray tooltip, control-panel header,
 > and window titles. The **repo, package id (`ReadTheStupidText`), namespaces, assembly,
@@ -45,6 +55,11 @@ Infrastructure  →  Application / Domain
   all played through `MediaPlayer`; the neural model ships in the package.
   Clipboard, UI Automation, startup task, OS integration.
 - **App** (`net10.0-windows`, WinUI single-project MSIX) — UI, tray, DI wiring.
+- **Mobile** (planned, `src/ReadTheStupidText.Mobile`, .NET MAUI,
+  `net10.0-android` first) — references `Domain`/`Application` unchanged;
+  platform-specific speech/OCR/settings implementations live under its own
+  `Platforms/Android` folder rather than a separate class library. See Batch 6
+  in `plan.md`.
 
 Keep `App.xaml.cs` thin: provider/DI wiring and window bootstrap only. Real
 logic lives in Application/Infrastructure; XAML views stay free of business
