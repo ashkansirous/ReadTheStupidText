@@ -360,17 +360,36 @@
                             Foreground="{StaticResource HeaderText}" />
                     </StackPanel>
 
-                    <!-- Transport row: play/pause + progress + speed pill -->
-                    <Grid Margin="0,15,0,0" ColumnSpacing="12" VerticalAlignment="Center">
+                    <!-- Transport row: skip back/forward flanking play/pause + progress + speed pill -->
+                    <Grid Margin="0,15,0,0" ColumnSpacing="10" VerticalAlignment="Center">
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
+                        <!-- Skip ±10s (Decision 32): best-effort, snaps to the nearest
+                             reachable chunk boundary rather than an exact 10.000s seek. -->
+                        <Button
+                            x:Name="SkipBackButton"
+                            Grid.Column="0"
+                            Width="28"
+                            Height="28"
+                            Padding="0"
+                            CornerRadius="14"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="{StaticResource HeaderText}"
+                            ToolTipService.ToolTip="Skip back 10s"
+                            Click="OnSkipBackClick">
+                            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xEB9E;" FontSize="12" />
+                        </Button>
+
                         <Button
                             x:Name="PlayPauseButton"
-                            Grid.Column="0"
+                            Grid.Column="1"
                             Width="40"
                             Height="40"
                             Padding="0"
@@ -382,10 +401,25 @@
                             <FontIcon x:Name="PlayPauseIcon" FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE768;" FontSize="15" />
                         </Button>
 
+                        <Button
+                            x:Name="SkipForwardButton"
+                            Grid.Column="2"
+                            Width="28"
+                            Height="28"
+                            Padding="0"
+                            CornerRadius="14"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="{StaticResource HeaderText}"
+                            ToolTipService.ToolTip="Skip forward 10s"
+                            Click="OnSkipForwardClick">
+                            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xEB9D;" FontSize="12" />
+                        </Button>
+
                         <!-- Display-only read-through progress (fill columns weighted
                              by progress; thumb sits at the boundary). Seek is
                              best-effort / out of scope — see Decision 21. -->
-                        <Grid Grid.Column="1" Height="16" VerticalAlignment="Center">
+                        <Grid Grid.Column="3" Height="16" VerticalAlignment="Center">
                             <Border Height="4" CornerRadius="2" Background="{StaticResource HeaderTrack}" VerticalAlignment="Center" />
                             <Grid VerticalAlignment="Center" Height="16">
                                 <Grid.ColumnDefinitions>
@@ -402,7 +436,7 @@
                         <!-- Speed pill: tapping it reveals/hides the speed slider below. -->
                         <ToggleButton
                             x:Name="SpeedPillToggle"
-                            Grid.Column="2"
+                            Grid.Column="4"
                             Style="{StaticResource SpeedPillStyle}"
                             Checked="OnSpeedPillToggled"
                             Unchecked="OnSpeedPillToggled"

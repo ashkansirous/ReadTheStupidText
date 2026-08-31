@@ -68,6 +68,10 @@ public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
     // Voice selection is neural-only; the fallback always uses the system default.
     public void SetVoice(string voiceId) => _neural.SetVoice(voiceId);
 
+    public Task SkipForward() => _active.SkipForward();
+
+    public Task SkipBackward() => _active.SkipBackward();
+
     private void Forward(ISpeechReader source, PlaybackState state)
     {
         if (ReferenceEquals(source, _active))

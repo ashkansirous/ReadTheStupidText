@@ -250,6 +250,12 @@ public sealed class ReadAloudService : IDisposable
         }
     }
 
+    /// <summary>Jumps the current read ~10s forward (Decision 32); a no-op while idle.</summary>
+    public Task SkipForwardAsync() => _reader.SkipForward();
+
+    /// <summary>Jumps the current read ~10s backward (Decision 32); a no-op while idle.</summary>
+    public Task SkipBackwardAsync() => _reader.SkipBackward();
+
     public void SetSpeed(PlaybackRate speed)
     {
         _settings.Speed = speed;
