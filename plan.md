@@ -510,6 +510,62 @@ this plan turns it into ordered, shippable vertical slices.
     GitVersion-driven SemVer is reused for the version *number*, but publishing to
     production track stays manual until the mobile app is deliberately declared
     ready, matching how the Windows Store submission itself was manual).
+43. **Android UI design: three concrete screens, specified in the same design
+    project as the Windows panel (Batch 6, not yet implemented).**
+    `design_handoff_tray_panel/Option C - Media Card.dc.html` and its
+    `README.md` were re-imported via the Claude Design MCP (`/design-login`) and
+    now specify the Android UI directly — not just a conceptual adaptation of the
+    Windows "Media Card" panel (superseding the earlier draft of this decision,
+    which guessed at the mapping before the design existed). Both the local
+    `design_handoff_tray_panel/` bundle and this decision were resynced from the
+    live design project (canvas `90615641-f298-4e21-8c50-ca2efbeaaebc`) to match.
+    Brand identity (gradient `linear-gradient(135deg,#5B57E8,#3B82F6)`, glyph
+    watermark, the bundled Supertonic voice set, the `PlaybackRate` model) stays
+    consistent across platforms, but Android is a **genuinely different layout**
+    from the Windows flyout, not a resize of it — full detail in
+    `design_handoff_tray_panel/README.md` under "Android app (Batch 6 · MAUI)";
+    summary:
+    - **Screen 1 — Type or paste (home, Slice 30/31).** Brand-gradient app bar
+      (title + `Momonga · 1.25×` sub-line + a mic button that opens Screen 3) over
+      a full-height editor card (the paste/type target) and a transport card:
+      skip-back-10s / 52px gradient play-pause / skip-forward-10s, a progress bar
+      with the `00:03 / --:--` elapsed/total timer beneath it, and a 6-up row of
+      speed-preset pills (**no hidden slider on mobile** — a 0.05-step slider is a
+      poor touch target, so the presets *are* the speed control, unlike Windows).
+      A white bottom nav with three tabs — **Type · Camera · File** — is the app's
+      only navigation; this **replaces** the Windows "Controls" icon-toggle row
+      entirely (there is no Android equivalent of a settings-row within the
+      screen — the three tabs *are* the three input paths from Decision 38).
+    - **Screen 2 — Camera → OCR (Slice 32).** Full-bleed dark viewfinder with a
+      detection frame + `TEXT FOUND` chip (ML Kit sees text) and a hint pill; a
+      capture bar (gallery / 68px shutter / flash); a result bar with a **Read**
+      button that feeds the extracted text into the same chunked pipeline as
+      typed text. Single-shot only — no live-scan overlay (Decision 40).
+    - **Screen 3 — Voice picker (Slice 31).** Brand app bar with a back chevron;
+      two grouped cards (`MALE`/`FEMALE`) listing the ten Overlord voices with a
+      preview-play affordance per row; the selected voice is checked and tinted.
+      Footer note matches Slice 23's Windows behavior: a change applies at the
+      next chunk, not instantly.
+    - **File tab (Slice 33)** is a nav destination, not yet given its own
+      "Screen N" mock — reuse the same card/list visual language as the other
+      screens when it's built.
+    **Confirmed still shared with Windows** (so Slice 30's transport card is not
+    a cut-down v1 — it includes skip ±10s and the timer from the start, once the
+    underlying Batch 5 Windows work — Decisions 32/33 — lands, since that logic
+    lives in the already-reused `Domain`/`Application`): the ten Supertonic
+    voices, the 0.5–2.0× `PlaybackRate` model and its six presets, and chunked
+    synthesis with ±10s skip and the `mm:ss`/`--:--` timer. **Confirmed absent on
+    Android, including for this first release** (Decision 38, now made explicit
+    in the design doc too): the two auto-read toggles, launch-at-startup, the
+    global hotkey, the tray icon, always-on-top/drag behavior, and — new —
+    **any activity-log or on-disk-diagnostics screen** (deferred; already
+    reflected in this plan's Out of Scope). Mobile-specific tokens (page bg
+    `#f4f5f9`, white 14px-radius cards, `#0b0d12` camera chrome, platform font
+    instead of Segoe UI Variable) are in the README's "Mobile tokens" table.
+    Exact native-control mapping (MAUI XAML controls, precise layout) is still
+    decided when each slice is actually implemented — this decision fixes the
+    design source and the concrete screen contract so that work doesn't start
+    from a blank page.
 
 ## Changes
 
@@ -1031,34 +1087,46 @@ batch. iOS/Mac are deliberately not slices here (Decision 37) — they're future
 batches on the same MAUI codebase once there's an Apple developer account.
 
 - [ ] **Slice 30 — MAUI Android scaffold + type-to-read (smallest E2E).**
-      (Decision 37, 38) Scaffold `src/ReadTheStupidText.Mobile` (MAUI,
-      `net10.0-android`), referencing the existing `ReadTheStupidText.Domain` and
-      `ReadTheStupidText.Application` projects unchanged. One screen: a text box +
-      Play/Pause button + speed control (reusing `PlaybackRate`/`SpeedPresets`) that
-      reads the typed/pasted text aloud. TTS engine for this slice is Android's
-      built-in `TextToSpeech` (the neural voice is ported in Slice 31) via a
-      `ISpeechReader` implementation in `Platforms/Android`. Add the project to
-      `ReadTheStupidText.slnx`. This proves the whole DI/Domain/Application reuse
-      story end-to-end before any mobile-specific complexity (OCR, file parsing,
-      neural voice) is added.
+      (Decision 37, 38, 43 — Screen 1) Scaffold `src/ReadTheStupidText.Mobile`
+      (MAUI, `net10.0-android`), referencing the existing
+      `ReadTheStupidText.Domain` and `ReadTheStupidText.Application` projects
+      unchanged. Builds Screen 1 ("Type or paste"): brand app-bar, editor card,
+      and a transport card (play/pause, skip ±10s, progress bar + elapsed/total
+      timer, six speed presets — no hidden slider on mobile), plus the bottom nav
+      shell (Type · Camera · File tabs, Camera/File as stubs until Slices 32/33).
+      TTS engine for this slice is Android's built-in `TextToSpeech` (the neural
+      voice is ported in Slice 31) via an `ISpeechReader` implementation in
+      `Platforms/Android`. Add the project to `ReadTheStupidText.slnx`. This
+      proves the whole DI/Domain/Application reuse story end-to-end before any
+      mobile-specific complexity (OCR, file parsing, neural voice) is added — a
+      plain/native-default visual treatment is an acceptable stand-in for this
+      first pass if that's faster to prove the wiring; the branded Screen 1 look
+      (Decision 43) lands whenever this slice's UI is actually built.
 - [ ] **Slice 31 — Neural voice on Android (sherpa-onnx + Supertonic-3).**
-      (Decision 39) Bundle the same Supertonic-3 model used on Windows via Play
-      Asset Delivery; port `SupertonicSpeechReader`'s synthesis logic to the
-      sherpa-onnx Android binding; `CompositeSpeechReader`-style routing with
-      Android `TextToSpeech` as the safety-net fallback only. Voice picker screen
-      lists the same ten Overlord-named voices (Decision 19,
-      `SupertonicVoiceTable` reused unchanged from Domain). Settings persistence
-      (voice id, playback rate) via a MAUI `Preferences`-backed `ISettingsStore`
+      (Decision 39, 43 — Screen 3) Bundle the same Supertonic-3 model used on
+      Windows via Play Asset Delivery; port `SupertonicSpeechReader`'s synthesis
+      logic to the sherpa-onnx Android binding; `CompositeSpeechReader`-style
+      routing with Android `TextToSpeech` as the safety-net fallback only. Builds
+      Screen 3 (voice picker): grouped `MALE`/`FEMALE` cards listing the same ten
+      Overlord-named voices (Decision 19, `SupertonicVoiceTable` reused unchanged
+      from Domain) with a preview-play affordance; a change applies at the next
+      chunk, matching Slice 23's Windows behavior. Settings persistence (voice
+      id, playback rate) via a MAUI `Preferences`-backed `ISettingsStore`
       implementation (Decision 41).
-- [ ] **Slice 32 — Camera capture → OCR → read.** (Decision 40) Add a camera
-      screen (MAUI `MediaPicker`/`CameraView`-equivalent, confirm current API via
-      context7), a capture button, and `MlKitImageTextExtractor` implementing the
-      new `IImageTextExtractor` (Application). A captured photo's extracted text
+- [ ] **Slice 32 — Camera capture → OCR → read.** (Decision 40, 43 — Screen 2)
+      Add the camera screen (MAUI `MediaPicker`/`CameraView`-equivalent, confirm
+      current API via context7): dark viewfinder with a detection frame + "TEXT
+      FOUND" chip, a capture bar (gallery / shutter / flash), and a result bar
+      with a **Read** button. `MlKitImageTextExtractor` implements the new
+      `IImageTextExtractor` (Application); a captured photo's extracted text
       flows through the existing `SpeechTextChunker`/`ReadAloudService` pipeline
-      exactly like typed text. This is the headline new capability the user asked
-      for: "take a picture of the stuff, then read it for them."
+      exactly like typed text. Single-shot only, per Decision 40. This is the
+      headline new capability the user asked for: "take a picture of the stuff,
+      then read it for them."
 - [ ] **Slice 33 — File upload: .txt/.pdf/.docx (reused).** (Decisions 34, 35,
-      41) Wire a MAUI file/document picker to the *existing*
+      41, 43) Wire a MAUI file/document picker — reached from the bottom nav's
+      **File** tab (Decision 43; no dedicated screen mock yet, reuse the other
+      screens' card/list visual language) — to the *existing*
       `CompositeDocumentTextExtractor`/`PlainTextExtractor`/`PdfTextExtractor`/
       `DocxTextExtractor` from Batch 5 (Application interface, Infrastructure
       implementations — referenced from the mobile project's platform folder or
