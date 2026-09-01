@@ -142,5 +142,9 @@ jobs:
           # needed either — v0.3.9 uploads through the Azure Storage SDK
           # (BlobClient.UploadAsync), which chunks and retries internally, so the
           # ~500 MB bundle is not racing a single fixed HTTP timeout.
+          #
+          # -v: on an upload failure the CLI's console output is a hardcoded
+          # generic "Error while uploading the application package." with the
+          # real exception only reaching the logger, which -v surfaces.
           msstore publish "out\ReadTheStupidText.msixbundle" `
-            -id ${{ vars.STORE_PRODUCT_ID }}
+            -id ${{ vars.STORE_PRODUCT_ID }} -v
