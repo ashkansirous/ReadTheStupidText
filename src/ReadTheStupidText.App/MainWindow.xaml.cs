@@ -245,10 +245,11 @@ public sealed partial class MainWindow : Window
         _logWindow.Activate();
     }
 
-    // Opens the standard file picker (widens as more extractors land — .txt and
-    // .pdf so far) and reads the chosen file, superseding any active read
-    // (Decision 34). This hidden window's handle owns the picker like every
-    // other Win32/WinRT surface it already hosts (hotkey, clipboard listener).
+    // Opens the standard file picker (widens as more extractors land — .txt,
+    // .pdf, and .docx so far) and reads the chosen file, superseding any
+    // active read (Decision 34). This hidden window's handle owns the picker
+    // like every other Win32/WinRT surface it already hosts (hotkey,
+    // clipboard listener).
     private async Task UploadFileAsync()
     {
         var picker = new FileOpenPicker();
@@ -256,6 +257,7 @@ public sealed partial class MainWindow : Window
         picker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
         picker.FileTypeFilter.Add(".txt");
         picker.FileTypeFilter.Add(".pdf");
+        picker.FileTypeFilter.Add(".docx");
 
         Windows.Storage.StorageFile? file = await picker.PickSingleFileAsync();
         if (file is null)

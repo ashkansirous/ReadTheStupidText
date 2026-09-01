@@ -559,7 +559,7 @@
                     Grid.Column="3"
                     Style="{StaticResource LogButtonStyle}"
                     Click="OnUploadFileClick"
-                    ToolTipService.ToolTip="Upload file — reads a .txt file aloud">
+                    ToolTipService.ToolTip="Upload file — reads a .txt, .pdf, or .docx file aloud">
                     <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE8E5;" FontSize="16" />
                 </Button>
                 <Button

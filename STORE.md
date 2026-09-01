@@ -157,6 +157,7 @@ dev time and is not a redistributable runtime (Decision 26 in `plan.md`).
 | `org.k2fsa.sherpa.onnx` | neural TTS runtime | Apache-2.0 |
 | Supertonic-3 voice model (`VoiceModel/`) | neural voices | Apache-2.0 (see `VoiceModel/LICENSE`) |
 | `PdfPig` | PDF text extraction (file upload) | Apache-2.0 |
+| `DocumentFormat.OpenXml` | DOCX text extraction (file upload) | MIT |
 
 No GPL/LGPL components ship in the package (Piper and its espeak-ng phonemizer
 were deliberately avoided; Supertonic needs no espeak data). This keeps the

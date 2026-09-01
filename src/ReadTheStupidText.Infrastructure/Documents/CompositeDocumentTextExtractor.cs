@@ -6,7 +6,7 @@ namespace ReadTheStupidText.Infrastructure.Documents;
 /// Routes an uploaded file to the extractor for its extension, mirroring
 /// <c>CompositeSpeechReader</c>'s composition pattern: one named member per
 /// supported type rather than a generic registered list, so each new file type
-/// (DOCX) is added explicitly as it's implemented. Lives in Infrastructure
+/// is added explicitly as it's implemented. Lives in Infrastructure
 /// (not Application, where it started in Slice 27) because PdfTextExtractor
 /// depends on the PdfPig package — Application stays framework/library-free.
 /// </summary>
@@ -14,9 +14,9 @@ public sealed class CompositeDocumentTextExtractor : IDocumentTextExtractor
 {
     private readonly IReadOnlyList<IDocumentTextExtractor> _extractors;
 
-    public CompositeDocumentTextExtractor(PlainTextExtractor plainText, PdfTextExtractor pdf)
+    public CompositeDocumentTextExtractor(PlainTextExtractor plainText, PdfTextExtractor pdf, DocxTextExtractor docx)
     {
-        _extractors = [plainText, pdf];
+        _extractors = [plainText, pdf, docx];
     }
 
     public bool CanHandle(string extension) => FindExtractor(extension) is not null;
