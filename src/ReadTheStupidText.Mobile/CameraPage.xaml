@@ -7,9 +7,47 @@
     Shell.NavBarIsVisible="False"
     BackgroundColor="#0b0d12">
 
-    <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8" Padding="24">
-        <Label Text="Camera → OCR" TextColor="White" FontSize="18" FontAttributes="Bold" HorizontalTextAlignment="Center" />
-        <Label Text="Photograph printed text and have it read aloud — coming in Slice 32."
-               TextColor="#B3FFFFFF" FontSize="13" HorizontalTextAlignment="Center" />
-    </VerticalStackLayout>
+    <Grid>
+
+        <!-- Idle: explain the flow and offer the shutter. No embedded live
+             viewfinder (Decision 40's design mock has one; this pass launches
+             the system camera app via MediaPicker instead — a disclosed
+             simplification, same allowance Slice 30 used for its own screen). -->
+        <VerticalStackLayout x:Name="IdleState" VerticalOptions="Center" HorizontalOptions="Center" Spacing="18" Padding="24">
+            <Label Text="&#128247;" FontSize="40" HorizontalTextAlignment="Center" />
+            <Label Text="Photograph printed text" TextColor="White" FontSize="18" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+            <Label Text="Capture a photo and it reads the extracted text aloud through the same pipeline as typed text."
+                   TextColor="#B3FFFFFF" FontSize="13" HorizontalTextAlignment="Center" />
+            <Border WidthRequest="68" HeightRequest="68" Padding="0" StrokeShape="RoundRectangle 34"
+                    Stroke="White" StrokeThickness="3" BackgroundColor="Transparent" HorizontalOptions="Center">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnCaptureTapped" />
+                </Border.GestureRecognizers>
+                <Ellipse WidthRequest="52" HeightRequest="52" Fill="White" HorizontalOptions="Center" VerticalOptions="Center" />
+            </Border>
+        </VerticalStackLayout>
+
+        <!-- Processing: photo captured, ML Kit extracting text. -->
+        <VerticalStackLayout x:Name="ProcessingState" IsVisible="False" VerticalOptions="Center" HorizontalOptions="Center" Spacing="14">
+            <ActivityIndicator IsRunning="True" Color="White" />
+            <Label Text="Reading the photo…" TextColor="White" FontSize="14" />
+        </VerticalStackLayout>
+
+        <!-- Result: extracted text preview + Read / retake. -->
+        <Grid x:Name="ResultState" IsVisible="False" RowDefinitions="*,Auto" Padding="18">
+            <Border Grid.Row="0" Padding="14" StrokeShape="RoundRectangle 14" Stroke="#33FFFFFF"
+                    BackgroundColor="#161922">
+                <ScrollView>
+                    <Label x:Name="ExtractedTextLabel" TextColor="White" FontSize="13.5" LineHeight="1.4" />
+                </ScrollView>
+            </Border>
+            <Grid Grid.Row="1" Margin="0,14,0,0" ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                <Button Grid.Column="0" Text="Retake" Clicked="OnRetakeClicked"
+                        BackgroundColor="#22FFFFFF" TextColor="White" CornerRadius="19" HeightRequest="38" />
+                <Button Grid.Column="1" x:Name="ReadButton" Text="Read" Clicked="OnReadClicked"
+                        BackgroundColor="#5B57E8" TextColor="White" CornerRadius="19" HeightRequest="38" />
+            </Grid>
+        </Grid>
+
+    </Grid>
 </ContentPage>

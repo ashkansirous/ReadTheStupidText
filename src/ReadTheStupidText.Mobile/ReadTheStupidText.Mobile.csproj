@@ -101,6 +101,8 @@
 		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-arm64" Version="1.13.3" ExcludeAssets="all" />
 		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-x64" Version="1.13.3" ExcludeAssets="all" />
 		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-x86" Version="1.13.3" ExcludeAssets="all" />
+		<PackageReference Include="Xamarin.Google.MLKit.TextRecognition" Version="116.0.1.8" />
+		<PackageReference Include="Xamarin.GooglePlayServices.Tasks" Version="118.4.1.2" />
 	</ItemGroup>
 
 	<!-- Only an arm64-v8a native build exists for this package (no android-x64),

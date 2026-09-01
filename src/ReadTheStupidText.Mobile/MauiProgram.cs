@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using ReadTheStupidText.Application.Images;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 
@@ -21,8 +22,10 @@ public static class MauiProgram
 		builder.Services.AddSingleton<IVoiceModelService, MobileVoiceModelService>();
 		builder.Services.AddSingleton<ISettingsStore, MobilePreferencesSettingsStore>();
 		builder.Services.AddSingleton<ISpeechReader>(CreateSpeechReader);
+		builder.Services.AddSingleton<IImageTextExtractor>(CreateImageTextExtractor);
 		builder.Services.AddTransient<TypePage>();
 		builder.Services.AddTransient<VoicePickerPage>();
+		builder.Services.AddTransient<CameraPage>();
 
 #if DEBUG
 		builder.Logging.AddDebug();
@@ -37,6 +40,15 @@ public static class MauiProgram
 		var neural = new AndroidSupertonicSpeechReader(services.GetRequiredService<IVoiceModelService>());
 		var fallback = new AndroidSpeechReader(global::Android.App.Application.Context);
 		return new CompositeSpeechReader(neural, fallback, services.GetRequiredService<IVoiceModelService>());
+#else
+		throw new PlatformNotSupportedException("Only Android is implemented so far (Decision 37).");
+#endif
+	}
+
+	private static IImageTextExtractor CreateImageTextExtractor(IServiceProvider services)
+	{
+#if ANDROID
+		return new MlKitImageTextExtractor(global::Android.App.Application.Context);
 #else
 		throw new PlatformNotSupportedException("Only Android is implemented so far (Decision 37).");
 #endif
