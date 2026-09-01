@@ -4,4 +4,18 @@
 	<!-- No network permissions: reading is fully on-device (built-in TTS now,
 	     bundled neural voice from Slice 31), matching the "we collect nothing"
 	     stance already documented for the Windows app. -->
+
+	<!-- Camera capture → OCR (Slice 32, Decision 40). MediaPicker requests this
+	     permission itself at runtime; it still needs declaring here. -->
+	<uses-permission android:name="android.permission.CAMERA" />
+	<uses-feature android:name="android.hardware.camera" android:required="false" />
+
+	<!-- Android 11+ package-visibility: MediaPicker's capture Intent needs the
+	     system camera app declared reachable, or CapturePhotoAsync throws
+	     FeatureNotSupportedException even when a camera exists. -->
+	<queries>
+		<intent>
+			<action android:name="android.media.action.IMAGE_CAPTURE" />
+		</intent>
+	</queries>
 </manifest>

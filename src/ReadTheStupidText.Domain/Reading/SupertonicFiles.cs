@@ -1,11 +1,11 @@
-namespace ReadTheStupidText.Infrastructure.Reading;
+namespace ReadTheStupidText.Domain.Reading;
 
 /// <summary>
-/// The file names inside the Supertonic-3 model bundle. Shared by the downloader
-/// (to verify presence) and the reader (to construct the engine), so the layout
-/// is defined in exactly one place.
+/// The file names inside the Supertonic-3 model bundle. Shared by every
+/// platform's model locator (to verify presence) and speech reader (to
+/// construct the engine), so the layout is defined in exactly one place.
 /// </summary>
-internal static class SupertonicFiles
+public static class SupertonicFiles
 {
     public const string DurationPredictor = "duration_predictor.int8.onnx";
     public const string TextEncoder = "text_encoder.int8.onnx";

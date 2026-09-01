@@ -4,6 +4,16 @@
     <ProjectReference Include="..\ReadTheStupidText.Domain\ReadTheStupidText.Domain.csproj" />
   </ItemGroup>
 
+  <!-- Expose internal pure logic (SpeechTextChunker) to the unit-test project, to
+       Infrastructure (the Windows neural reader that originally owned this type),
+       and to the Mobile project, which needs it to chunk text for its own neural
+       reader (Slice 31) the same way the Windows one does. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="ReadTheStupidText.Tests" />
+    <InternalsVisibleTo Include="ReadTheStupidText.Infrastructure" />
+    <InternalsVisibleTo Include="ReadTheStupidText.Mobile" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

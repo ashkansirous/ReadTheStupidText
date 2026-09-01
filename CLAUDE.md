@@ -42,6 +42,8 @@ and their GitHub issue numbers. Tick slices off in `plan.md` as they complete.
 ```
 App  →  Application  →  Domain
 Infrastructure  →  Application / Domain
+Mobile  →  Application / Domain / Documents
+Documents  →  Application
 ```
 
 - **Domain** (`net10.0`) — entities, value objects, enums. No framework deps.
@@ -49,7 +51,20 @@ Infrastructure  →  Application / Domain
   (0.5–2.0, snapped to 0.05 steps), *not* an enum: the user picks a continuous
   rate, with `SpeedPresets` exposing the common stops (1/1.25/1.5/1.75/2) for the
   native tray menu. Genuinely closed sets (reading state, etc.) stay `enum`s.
-- **Application** (`net10.0`) — use cases / orchestration, interfaces.
+  Also `SupertonicVoiceTable`/`SupertonicFiles` (Slice 31) — pure voice-catalog
+  data, moved here from Infrastructure so Mobile can reuse it too.
+- **Application** (`net10.0`) — use cases / orchestration, interfaces. Also
+  `SpeechTextChunker`/`ReadTimingTracker` (both `internal`, Slice 31) — pure
+  chunking/timing logic shared by every `ISpeechReader` implementation on
+  every platform (`InternalsVisibleTo` covers `Tests`, `Infrastructure`, and
+  `Mobile`).
+- **Documents** (`net10.0`) — `PlainTextExtractor`/`PdfTextExtractor`/
+  `DocxTextExtractor`/`CompositeDocumentTextExtractor` (Slice 33). A portable
+  library, not Infrastructure or Application: they need PdfPig/
+  DocumentFormat.OpenXml (so not Application, which stays library-free) but
+  have no Windows-only dependency (so not stuck in Infrastructure) — both
+  Infrastructure (Windows) and Mobile (Android) reference this project and
+  share the exact same extractors.
 - **Infrastructure** (`net10.0-windows`) — speech engines (local neural
   **Supertonic-3** via sherpa-onnx, plus a WinRT `SpeechSynthesis` fallback),
   all played through `MediaPlayer`; the neural model ships in the package.
@@ -69,7 +84,22 @@ Infrastructure  →  Application / Domain
   qualified as `Microsoft.Maui.Controls.Application` — the project also
   references a library literally named `ReadTheStupidText.Application`, which
   wins unqualified-name resolution from within the `ReadTheStupidText.Mobile`
-  namespace. See Batch 6 in `plan.md`.
+  namespace. **Gotcha (sherpa-onnx on Android):** a plain
+  `PackageReference Include="org.k2fsa.sherpa.onnx"` silently bundles the
+  **wrong-OS** `.so` (e.g. linux-x64's `libonnxruntime.so`) into
+  `lib/arm64-v8a/` instead of the real Android one — the package's nuspec
+  unconditionally pulls all 8 platform `runtime.*` sub-packages, and
+  .NET-for-Android's native harvesting doesn't discriminate between them
+  (same failure as [microsoft/onnxruntime#29270](https://github.com/microsoft/onnxruntime/issues/29270)).
+  Fix, verified by unzipping the built APK: `ExcludeAssets="all"` on the seven
+  non-Android `runtime.*` packages, `GeneratePathProperty="true"` on the
+  android-arm64 one, then explicit `AndroidNativeLibrary` items
+  (`Abi="arm64-v8a"`) pointing at its extracted `runtimes/android-arm64/native/*.so`
+  — see `ReadTheStupidText.Mobile.csproj`. **Before trusting *any* native
+  Android dependency's packaging, unzip the built `.apk` under
+  `obj/Debug/net10.0-android/android/bin/` and check `lib/<abi>/` yourself** —
+  a clean build with no warnings is not proof the right binary landed. See
+  Batch 6 in `plan.md`.
 
 Keep `App.xaml.cs` thin: provider/DI wiring and window bootstrap only. Real
 logic lives in Application/Infrastructure; XAML views stay free of business

@@ -1143,7 +1143,7 @@ batches on the same MAUI codebase once there's an Apple developer account.
       available in the dev environment this slice was built in (no AVD
       configured, no physical device attached); do that manually before
       relying on this slice.
-- [ ] **Slice 31 — Neural voice on Android (sherpa-onnx + Supertonic-3).**
+- [x] **Slice 31 — Neural voice on Android (sherpa-onnx + Supertonic-3).**
       (Decision 39, 43 — Screen 3) Bundle the same Supertonic-3 model used on
       Windows via Play Asset Delivery; port `SupertonicSpeechReader`'s synthesis
       logic to the sherpa-onnx Android binding; `CompositeSpeechReader`-style
@@ -1154,7 +1154,71 @@ batches on the same MAUI codebase once there's an Apple developer account.
       chunk, matching Slice 23's Windows behavior. Settings persistence (voice
       id, playback rate) via a MAUI `Preferences`-backed `ISettingsStore`
       implementation (Decision 41).
-- [ ] **Slice 32 — Camera capture → OCR → read.** (Decision 40, 43 — Screen 2)
+      **Built:** *Layering fix (same pattern as Slice 28's), enabling this whole
+      slice:* `SupertonicVoiceTable`, `SupertonicFiles`, `ReadTimingTracker`, and
+      `SpeechTextChunker` were misplaced in Infrastructure (net10.0-windows-only,
+      unreachable from Mobile) despite having zero framework dependencies —
+      Domain and Application weren't actually "unchanged," they were made
+      correct so the reuse the plan promises is real. `SupertonicVoiceTable`
+      (now `public`, plus a new `IsFemale(voiceId)` for the MALE/FEMALE
+      grouping, unit-tested) and `SupertonicFiles` moved to
+      `Domain.Reading`; `ReadTimingTracker` and `SpeechTextChunker` moved to
+      `Application.Reading` (both still `internal` — `SpeechTextChunker` needed
+      a new `InternalsVisibleTo` for `ReadTheStupidText.Mobile` alongside the
+      existing `Tests`/now-added-back `Infrastructure` ones). All four now have
+      exactly one implementation shared by both platforms instead of a second
+      copy waiting to drift.
+      *Native packaging (the real blocker):* `org.k2fsa.sherpa.onnx`'s nuspec
+      unconditionally depends on all 8 platform `runtime.*` sub-packages; a
+      plain `PackageReference` on Android silently bundled the **linux-x64**
+      `libonnxruntime.so`/`libsherpa-onnx-c-api.so` into `lib/arm64-v8a/`
+      instead of the real Android ones — same failure as
+      [microsoft/onnxruntime#29270](https://github.com/microsoft/onnxruntime/issues/29270),
+      confirmed by inspecting the built APK, not just trusting the build log.
+      Fix: `ExcludeAssets="all"` on the seven non-Android `runtime.*` packages
+      (kept as pinned-but-inert references) plus `GeneratePathProperty="true"`
+      on `org.k2fsa.sherpa.onnx.runtime.android-arm64`, then two explicit
+      `AndroidNativeLibrary` items (`Abi="arm64-v8a"`) pointing at its
+      `$(Pkgorg_k2fsa_sherpa_onnx_runtime_android-arm64)\runtimes\...\native\*.so`
+      — confirmed by unzipping the built APK a second time. No android-x64
+      native package exists upstream, so the neural engine is unreachable on a
+      plain x86_64 emulator; `CompositeSpeechReader`-style fallback to
+      `AndroidSpeechReader` (Slice 30) covers that by design, the same as a
+      missing/broken model on Windows. `SupportedOSPlatformVersion` bumped
+      21→23 for `MediaPlayer.PlaybackParams` (pitch-preserving speed change) —
+      negligible reach cost.
+      *`AndroidSupertonicSpeechReader`* (`Platforms/Android`) ports the Windows
+      reader's chunking/ordered-playback/generation-counter/mid-read-voice-swap
+      design essentially unchanged (it's the same pure logic, now shared via
+      the layering fix above); only the playback primitive differs —
+      `Android.Media.MediaPlayer` has no in-memory-stream play path, so each
+      synthesized chunk is written to a temp WAV file
+      (`FileSystem.Current.CacheDirectory`) and played via `SetDataSource`,
+      and there's no position-changed event, so progress/timing are driven by
+      a 200ms poll loop instead of a push event. `MobileVoiceModelService`
+      extracts the model (packaged as a `MauiAsset`, referencing the *same*
+      committed `App/VoiceModel/*` files — no second 139 MB copy in the repo)
+      from the package to app-local storage once on first launch, since
+      sherpa-onnx's native loader needs real file paths, not an
+      asset-package stream; this is a **plain-bundle stand-in for the real
+      Play Asset Delivery** — untestable here without a live Play Console
+      listing to deliver from (Slice 34 revisits it once one exists), fine for
+      local sideload testing meanwhile. `VoicePickerPage` (Screen 3, pushed via
+      a registered Shell route from `TypePage`'s mic button) builds its
+      MALE/FEMALE rows in code rather than a `CollectionView` (10 static
+      items); tapping a row selects **and** previews it by speaking its own
+      display name — hearing the voice *is* the preview, so there's no
+      separate preview affordance to wire up (a disclosed simplification of
+      the design mock's separate per-row play icon). `App.xaml.cs` now takes
+      `ISpeechReader`/`ISettingsStore`/`IVoiceModelService` via constructor
+      injection (`UseMauiApp<App>` resolves `App` from the DI container) and
+      applies the persisted speed/voice immediately, then awaits model
+      location + engine warm-up. Verified: `dotnet build` (Mobile alone and
+      the full `.slnx`), the 108-test suite (6 new `IsFemale` cases), and
+      unzipping the built debug APK to confirm both the native libraries and
+      `assets/VoiceModel/*` land where expected. **Not yet verified: running
+      on a device/emulator** — same environment gap as Slice 30.
+- [x] **Slice 32 — Camera capture → OCR → read.** (Decision 40, 43 — Screen 2)
       Add the camera screen (MAUI `MediaPicker`/`CameraView`-equivalent, confirm
       current API via context7): dark viewfinder with a detection frame + "TEXT
       FOUND" chip, a capture bar (gallery / shutter / flash), and a result bar
@@ -1164,7 +1228,49 @@ batches on the same MAUI codebase once there's an Apple developer account.
       exactly like typed text. Single-shot only, per Decision 40. This is the
       headline new capability the user asked for: "take a picture of the stuff,
       then read it for them."
-- [ ] **Slice 33 — File upload: .txt/.pdf/.docx (reused).** (Decisions 34, 35,
+      **Built:** Confirmed via context7 that MAUI has no embedded live-preview
+      camera control (`CameraView` is a Community Toolkit/third-party thing, not
+      MAUI itself) — `MediaPicker.Default.CapturePhotoAsync()` launches the
+      **system** camera app instead, so Screen 2 is a plain-native-default
+      capture flow (idle "take photo" card → processing spinner → extracted-text
+      result card with Retake/Read) rather than the design mock's in-app dark
+      viewfinder/detection-frame/shutter-bar chrome, same disclosed-simplification
+      allowance Slice 30 used for Screen 1's first pass. `IImageTextExtractor`
+      (Application/Images, mirroring `IDocumentTextExtractor`'s shape but with
+      no `CanHandle` — a capture is always an image, nothing to route) is
+      implemented by `MlKitImageTextExtractor` over **Google ML Kit's on-device
+      Latin text recognizer** (`Xamarin.Google.MLKit.TextRecognition`), per
+      Decision 40. Unlike sherpa-onnx's packaging bug, ML Kit's native `.so` and
+      model assets are correctly per-ABI out of the box — confirmed the same
+      way, by unzipping the built APK: `lib/arm64-v8a/` +
+      `lib/x86_64/libmlkit_google_ocr_pipeline.so` (~11 MB each, both real,
+      no wrong-OS collision) and the recognizer's `.tflite`/`.binarypb` model
+      files under `assets/mlkit-google-ocr-models/` — meaning recognition is
+      **fully on-device from first launch, zero network**, stronger than the
+      Play-services-download story originally assumed for Decision 40's "we
+      collect nothing" framing. Awaiting the Java `Task<Text>` from
+      `ITextRecognizer.Process()` needed the `Android.Gms.Extensions` package
+      (`Xamarin.GooglePlayServices.Tasks`) for its `GetAwaiter()`/`AsAsync<T>()`
+      extensions — not obvious from the compiler's first error (a bare
+      "namespace not found"); found by loading the referenced DLL into a scratch
+      console project and enumerating its public strings for the real namespace,
+      the same "trust the built artifact, not the guess" instinct that caught
+      the sherpa-onnx bug. `CameraPage` reads through the exact same
+      `ISpeechReader` **singleton** `TypePage` uses (registered once in
+      `MauiProgram`) — tapping **Read** calls `SpeakAsync` on that shared
+      instance directly, so it is genuinely "the same pipeline," not a
+      look-alike second one; switching to the Type tab mid-read shows the same
+      in-progress read on its transport controls, for free. `CAMERA` permission
+      + a `<queries>` package-visibility entry for `IMAGE_CAPTURE` added to
+      `AndroidManifest.xml`; `Permissions.Camera` itself is requested
+      internally by `MediaPicker`, not requested by app code. Verified:
+      `dotnet build` (Mobile alone and the full `.slnx`, 0 errors), the
+      108-test suite (no regressions — this slice added no new pure logic to
+      test), and unzipping the built debug APK to confirm the OCR native
+      libraries/model assets as above. **Not yet verified: running on a
+      device/emulator** (camera capture doubly so, since most emulators have
+      no usable camera) — same environment gap as Slices 30-31.
+- [x] **Slice 33 — File upload: .txt/.pdf/.docx (reused).** (Decisions 34, 35,
       41, 43) Wire a MAUI file/document picker — reached from the bottom nav's
       **File** tab (Decision 43; no dedicated screen mock yet, reuse the other
       screens' card/list visual language) — to the *existing*
@@ -1174,13 +1280,92 @@ batches on the same MAUI codebase once there's an Apple developer account.
       promoted to a portable location if any Windows-only dependency is found
       during implementation). No new extraction logic; only new platform picker
       UI.
-- [ ] **Slice 34 — Android CI: build + signed AAB, internal testing track.**
+      **Built:** No Windows-only dependency was found — as the plan text
+      anticipated, all four extractors are plain C# over PdfPig/
+      DocumentFormat.OpenXml (both portable managed libraries), stuck in the
+      `net10.0-windows` Infrastructure project only because that's where they
+      happened to land in Batch 5. Rather than duplicating them into Mobile's
+      own platform folder (which would drift from the Windows copy over time —
+      the exact failure the Slice 28/31 layering fixes exist to prevent), they
+      were **promoted to a new portable library**, `ReadTheStupidText.Documents`
+      (`net10.0`, referencing only `Application` + PdfPig/OpenXml), added to
+      the `.slnx`. Infrastructure now references it instead of containing the
+      files directly (its own `PdfPig`/`DocumentFormat.OpenXml`
+      `PackageReference`s moved with them); Mobile references it too — both
+      platforms now share the literal same `CompositeDocumentTextExtractor`
+      instance-shape, not a look-alike. `FilePage` follows the same DI pattern
+      Windows' `App.xaml.cs` already used (register the three concrete
+      extractors + `IDocumentTextExtractor → CompositeDocumentTextExtractor`),
+      and reads through the same shared `ISpeechReader` singleton
+      `TypePage`/`CameraPage` use. `FilePicker.Default.PickAsync` with a custom
+      `FilePickerFileType` (Android MIME types for `.txt`/`.pdf`/`.docx`) —
+      no native-packaging risk here (unlike Slices 31/32) since it just opens
+      the system document picker, no bundled native library or model asset of
+      its own. Verified: `dotnet build` (Mobile alone and the full `.slnx`,
+      0 errors) and the 108-test suite (the three extractor-test files just
+      needed their `using` updated for the new namespace — same tests,
+      unmoved logic, still passing). **Not yet verified: running on a
+      device/emulator** — same environment gap as Slices 30-32.
+- [x] **Slice 34 — Android CI: build + signed AAB, internal testing track.**
       (Decision 42) New GitHub Actions workflow builds the MAUI Android project
       and packages a signed `.aab` (CI-held upload key; Play App Signing re-signs
       for distribution). Once Play Console credentials exist, upload to the
       **internal testing** track — mirrors the Windows Store pipeline's original
       "testing" stage before any public submission. GitVersion continues to supply
       the SemVer for the Android `versionName`/`versionCode`.
+      **Built:** `.github/workflows/android-build.yml`, structured like the
+      sibling Lets-Call-Mom project's own `android.yml` (same problem, same
+      fix, found by reading that repo's actual workflow rather than
+      reinventing it): a `HAS_SIGNING`/`HAS_PLAY_PUBLISHING` pair of env
+      booleans (`secrets.X != ''`, since `secrets` isn't usable directly
+      inside a step `if:`) gate the signed-build and Play-upload steps
+      independently, so the workflow is safe to merge before either secret
+      exists — an always-on unsigned Debug build (`dotnet build -f
+      net10.0-android`) is the real "does this still compile" check, with no
+      secrets required. `version`/`test` jobs mirror `build.yml` exactly
+      (same GitVersion config, same unit-test gate); the Android
+      `versionCode` is derived as `major*10000 + minor*100 + patch` from
+      GitVersion's own numeric outputs (monotonically increasing as long as
+      main only bumps forward, which `GitVersion.yml` already guarantees) —
+      `versionName` is just `majorMinorPatch` passed straight through.
+      Release signing uses `-p:AndroidPackageFormat=aab` +
+      `-p:AndroidKeyStore=True` + `-p:AndroidSigningKeyStore/KeyAlias/
+      KeyPass/StorePass` (confirmed via context7 that `AndroidSigningKeyPass`'s
+      `env:`-prefix indirection is documented as **unsupported once
+      `AndroidPackageFormat=aab`** — passed as plain `-p:` values instead,
+      still never logged since GitHub Actions masks any output matching a
+      registered secret's value); Play upload via `r0adkll/upload-google-play@v1`
+      (same action the sibling project already uses), main-only, gated on
+      both secrets. **Generated the actual CI-held upload keystore** (RSA
+      2048, 10000-day validity, alias `upload`) via `keytool` and stored it
+      through the `manage-secrets` skill — durable copy + registry row in the
+      private `ashkansirous/secrets` store, then pushed as four GitHub Actions
+      repo secrets (`ANDROID_SIGNING_KEYSTORE_BASE64/KEY_ALIAS/KEY_PASSWORD/
+      STORE_PASSWORD`) via `gh secret set`. `PLAY_SERVICE_ACCOUNT_JSON` is
+      **not** set — that credential can only come from the user's own Google
+      Play Console (Setup → API access → service account), the same
+      never-fabricate-a-third-party-credential line `store-submit.yml`'s
+      Azure AD secrets already draw; `HAS_PLAY_PUBLISHING` stays false and
+      the publish step stays a documented no-op until it's added, exactly
+      like `AZURE_AD_TENANT_ID` for the Windows Store pipeline. Also note:
+      Play Console requires the very first release on any track to be
+      uploaded by hand once through its UI regardless — a one-time API
+      limitation this workflow can't route around, same caveat the sibling
+      project's own workflow documents.
+      Verified for real, not just read: ran the exact signing command
+      locally against a throwaway 1-day test keystore
+      (`-p:AndroidKeyStore=True -p:AndroidSigningKeyStore=... -p:
+      AndroidSigningKeyAlias=testkey ...`) — produced
+      `uk.sirous.readthestupidtext-Signed.aab`, then `jarsigner -verify`
+      confirmed "jar verified" signed by the test cert's own DN, proving the
+      MSBuild property wiring is genuinely correct before it ever needed a
+      GitHub Actions run to find out. Also verified: `dotnet build`
+      (full `.slnx`, 0 errors) and the 108-test suite, unaffected by this
+      slice (no application code changed). **Not yet verified: the workflow
+      actually running in GitHub Actions** — needs a push/PR to trigger; not
+      something triggerable from this environment. **Not yet verified:
+      Play Store upload** — blocked on `PLAY_SERVICE_ACCOUNT_JSON`, which only
+      the user can create.
 
 ## Out of Scope
 

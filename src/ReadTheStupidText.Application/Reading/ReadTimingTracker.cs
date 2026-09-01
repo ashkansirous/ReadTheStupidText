@@ -1,6 +1,4 @@
-using ReadTheStupidText.Application.Reading;
-
-namespace ReadTheStupidText.Infrastructure.Reading;
+namespace ReadTheStupidText.Application.Reading;
 
 /// <summary>
 /// Pure state machine for the read-through timer (Decision 33). Elapsed is the sum of

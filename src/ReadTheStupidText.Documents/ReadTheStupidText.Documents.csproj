@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Portable document-extraction library, shared by the Windows Infrastructure
+       project and the Android Mobile project (Slice 33). PlainTextExtractor,
+       PdfTextExtractor, DocxTextExtractor, and CompositeDocumentTextExtractor
+       have no Windows-only dependency — only PdfPig/DocumentFormat.OpenXml,
+       both plain managed libraries — so they were promoted out of the
+       Windows-only Infrastructure project into their own net10.0 library
+       rather than duplicated per platform (the same "no Windows-only
+       dependency found" fallback the plan called out for this slice). -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\ReadTheStupidText.Application\ReadTheStupidText.Application.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!-- PDF text extraction for uploaded files (Slice 28, Apache-2.0). -->
+  <ItemGroup>
+    <PackageReference Include="PdfPig" Version="0.1.16" />
+  </ItemGroup>
+
+  <!-- DOCX text extraction for uploaded files (Slice 29, MIT). -->
+  <ItemGroup>
+    <PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
+  </ItemGroup>
+
+</Project>

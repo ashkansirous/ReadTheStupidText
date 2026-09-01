@@ -7,6 +7,17 @@ build/packaging pipeline. The app is **published and live in the Store**
 `Package.appxmanifest`** (see below). What remains to fully automate updates is
 the four Partner Center secrets (the `STORE_PRODUCT_ID` variable is already set).
 
+> **Google Play (Android/MAUI, Batch 6, Slice 34).** The Android app has its own
+> parallel pipeline, `.github/workflows/android-build.yml`, mirroring this
+> document's trust model (CI-held upload key; Google Play App Signing re-signs
+> for distribution — same shape as this file's [Signing](#signing) section).
+> App id `uk.sirous.readthestupidtext`. The signed `.aab` build already works
+> (`ANDROID_SIGNING_*` secrets are set); the Play Store **upload** step is a
+> documented no-op until `PLAY_SERVICE_ACCOUNT_JSON` is created in Play
+> Console (Setup → API access → service account) — a credential only the
+> account owner can create, the same category as this file's Partner Center
+> secrets below. See `plan.md`'s Slice 34 note for the full rationale.
+
 ## Release pipeline status (Slice 16)
 
 Verified end-to-end and **live**:

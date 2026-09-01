@@ -1,5 +1,5 @@
 using ReadTheStupidText.Application.Documents;
-using ReadTheStupidText.Infrastructure.Documents;
+using ReadTheStupidText.Documents;
 
 namespace ReadTheStupidText.Tests;
 

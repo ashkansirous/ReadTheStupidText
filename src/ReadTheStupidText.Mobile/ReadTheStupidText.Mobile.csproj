@@ -30,7 +30,11 @@
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>
 
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
+		<!-- 23 (Marshmallow, 2015) rather than the MAUI-template default 21 —
+		     MediaPlayer.PlaybackParams (pitch-preserving speed change, Slice 31)
+		     needs API 23+. Negligible reach cost: API 21/22 are a rounding
+		     error of the active-device install base by now. -->
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">23.0</SupportedOSPlatformVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -49,16 +53,72 @@
 
 		<!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+
+		<!-- The Supertonic-3 neural voice model (Decision 14/39) — the exact same
+		     ~139 MB committed under the Windows App project's VoiceModel/, not a
+		     second copy. Packaged as a MauiAsset (Android "assets/"), which
+		     MobileVoiceModelService extracts to app-local storage on first run
+		     since sherpa-onnx's native loader needs real file paths, not a
+		     package-asset stream. This is a plain-bundle stand-in for the real
+		     Play Asset Delivery (Decision 39) — untestable here without a live
+		     Play Console listing to deliver from; revisit when Slice 34 sets one
+		     up. Fine for local sideload testing in the meantime. -->
+		<MauiAsset Include="..\ReadTheStupidText.App\VoiceModel\*" LogicalName="VoiceModel\%(Filename)%(Extension)" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+
+		<!-- org.k2fsa.sherpa.onnx's nuspec unconditionally depends on ALL 8
+		     runtime.* native packages (win/linux/osx/android) regardless of
+		     TFM/RID. On an Android build every one of those .so files lands as
+		     a candidate for the same lib/arm64-v8a/libsherpa-onnx-c-api.so APK
+		     path, and MSBuild silently keeps whichever was processed last —
+		     not necessarily the real Android one (same root cause as
+		     https://github.com/microsoft/onnxruntime/issues/29270, wrong-OS
+		     .so bundled into an Android APK). Neutralizing the seven
+		     non-Android runtime packages below (asset-excluded, so they still
+		     satisfy the version constraint but contribute no files) removes
+		     every conflicting candidate, leaving only the real android-arm64
+		     native library. -->
+		<PackageReference Include="org.k2fsa.sherpa.onnx" Version="1.13.3" />
+
+		<!-- Excluded from every implicit NuGet asset flow (see the comment
+		     above) — its .so files are staged explicitly below via
+		     AndroidNativeLibrary, the documented mechanism for a raw native
+		     library .NET-for-Android's own asset harvesting doesn't discover
+		     on its own (confirmed empirically: with this package as a plain
+		     PackageReference, arm64-v8a's libsherpa-onnx-c-api.so/
+		     libonnxruntime.so never appear anywhere in the build output).
+		     GeneratePathProperty exposes $(Pkgorg_k2fsa_sherpa_onnx_runtime_android-arm64)
+		     pointing at the extracted package content, used below. -->
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.android-arm64" Version="1.13.3" ExcludeAssets="all" GeneratePathProperty="true" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.linux-arm64" Version="1.13.3" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.linux-x64" Version="1.13.3" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.osx-arm64" Version="1.13.3" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.osx-x64" Version="1.13.3" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-arm64" Version="1.13.3" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-x64" Version="1.13.3" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-x86" Version="1.13.3" ExcludeAssets="all" />
+		<PackageReference Include="Xamarin.Google.MLKit.TextRecognition" Version="116.0.1.8" />
+		<PackageReference Include="Xamarin.GooglePlayServices.Tasks" Version="118.4.1.2" />
+	</ItemGroup>
+
+	<!-- Only an arm64-v8a native build exists for this package (no android-x64),
+	     so the neural engine is unavailable on an x86_64 emulator — by design,
+	     CompositeSpeechReader-style routing falls back to Android TextToSpeech
+	     (Slice 30) when the neural engine fails to load, matching how the
+	     Windows fallback behaves for a missing/broken model (Decision 14). -->
+	<ItemGroup Condition="'$(Pkgorg_k2fsa_sherpa_onnx_runtime_android-arm64)' != ''">
+		<AndroidNativeLibrary Include="$(Pkgorg_k2fsa_sherpa_onnx_runtime_android-arm64)\runtimes\android-arm64\native\libsherpa-onnx-c-api.so" Abi="arm64-v8a" />
+		<AndroidNativeLibrary Include="$(Pkgorg_k2fsa_sherpa_onnx_runtime_android-arm64)\runtimes\android-arm64\native\libonnxruntime.so" Abi="arm64-v8a" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\ReadTheStupidText.Domain\ReadTheStupidText.Domain.csproj" />
 		<ProjectReference Include="..\ReadTheStupidText.Application\ReadTheStupidText.Application.csproj" />
+		<ProjectReference Include="..\ReadTheStupidText.Documents\ReadTheStupidText.Documents.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -1,0 +1,167 @@
+name: android-build
+
+# Builds the MAUI Android project (Batch 6) in parallel to build.yml/
+# store-submit.yml, mirroring the same trust model (Decision 18/42): CI signs
+# with an upload key, Google Play App Signing re-signs with its own managed
+# key for actual distribution, so no release-signing secret ever leaves CI.
+#
+#   1. version — same GitVersion derivation as build.yml (git tags are the
+#                source of truth); the Android versionCode is derived from
+#                the numeric major/minor/patch so it only ever increases.
+#   2. test    — same unit-test gate as build.yml; gates the build job.
+#   3. build   — always produces an unsigned debug build (the actual compile
+#                check — this alone catches "does the Mobile project still
+#                build" regardless of secrets). The signed release .aab step
+#                only runs once ANDROID_SIGNING_KEYSTORE_BASE64 exists
+#                (HAS_SIGNING); the Play internal-testing upload only runs
+#                once PLAY_SERVICE_ACCOUNT_JSON also exists (HAS_PLAY_PUBLISHING)
+#                AND on a push to main — both are no-ops until then, so this
+#                workflow is safe to merge before either secret is set up.
+#                Play Console also requires the very first release on a track
+#                to be uploaded by hand once through the UI — a one-time API
+#                limitation, not something this workflow can route around.
+#
+# See Decision 39/42 and Slice 34 in plan.md.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.gitversion.outputs.majorMinorPatch }}
+      versionCode: ${{ steps.versioncode.outputs.code }}
+    steps:
+      - name: Checkout (full history + tags — GitVersion needs them)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v4.5.0
+        with:
+          versionSpec: '6.x'
+
+      - name: Determine version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v4.5.0
+        with:
+          useConfigFile: true
+
+      # Android versionCode must be a positive, monotonically increasing
+      # integer — a bare "x.y.z" string doesn't qualify. Packing
+      # major*10000 + minor*100 + patch keeps it strictly increasing as long
+      # as the SemVer itself only increases (true here: main only bumps
+      # forward, see GitVersion.yml), without needing a separately tracked
+      # counter.
+      - name: Derive Android versionCode
+        id: versioncode
+        run: |
+          CODE=$(( ${{ steps.gitversion.outputs.major }} * 10000 + ${{ steps.gitversion.outputs.minor }} * 100 + ${{ steps.gitversion.outputs.patch }} ))
+          echo "code=${CODE}" >> "$GITHUB_OUTPUT"
+
+  test:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Run unit tests
+        run: dotnet test tests/ReadTheStupidText.Tests/ReadTheStupidText.Tests.csproj --configuration Release
+
+  build:
+    needs: [version, test]
+    runs-on: ubuntu-latest
+    env:
+      # `secrets` isn't allowed inside a step `if:` condition directly — only
+      # `env:` context can reference it there — so both gates are computed
+      # once here as plain booleans.
+      HAS_SIGNING: ${{ secrets.ANDROID_SIGNING_KEYSTORE_BASE64 != '' }}
+      HAS_PLAY_PUBLISHING: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
+    steps:
+      - name: Checkout (with LFS — the neural voice model is LFS-tracked)
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # maui-android, not bare "android": a fresh CLI-only SDK install (this
+      # runner) needs the MAUI-specific workload pieces on top of the Android
+      # platform workload, which a VS-provisioned dev machine already has
+      # installed alongside "android" — confirmed by the actual CI failure
+      # (NETSDK1147: "workloads must be installed: maui-android") after
+      # "android" alone built fine locally.
+      - name: Install the .NET MAUI Android workload
+        run: dotnet workload install maui-android
+
+      # Always runs, no secrets needed — the actual compile check: does the
+      # Mobile project still build (Domain/Application reuse, the
+      # AndroidNativeLibrary items, the MauiAsset model bundle, all of it).
+      - name: Debug build (unsigned)
+        run: dotnet build src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net10.0-android -c Debug
+
+      - name: Decode upload keystore
+        if: ${{ env.HAS_SIGNING == 'true' }}
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_SIGNING_KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > "${{ runner.temp }}/upload.keystore"
+
+      # AAB — the format Google Play requires for anything beyond direct
+      # sideloading. env: is deliberately NOT used for AndroidSigningKeyPass/
+      # AndroidSigningStorePass here: that indirection is documented as
+      # unsupported once AndroidPackageFormat=aab, so the passwords are
+      # passed as plain -p: MSBuild properties instead (still never echoed —
+      # GitHub Actions masks any step output matching a registered secret
+      # value automatically).
+      - name: Release build (signed .aab)
+        if: ${{ env.HAS_SIGNING == 'true' }}
+        run: >
+          dotnet publish src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj
+          -f net10.0-android
+          -c Release
+          -p:AndroidPackageFormat=aab
+          -p:ApplicationDisplayVersion=${{ needs.version.outputs.version }}
+          -p:ApplicationVersion=${{ needs.version.outputs.versionCode }}
+          -p:AndroidKeyStore=True
+          -p:AndroidSigningKeyStore="${{ runner.temp }}/upload.keystore"
+          -p:AndroidSigningKeyAlias=${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          -p:AndroidSigningKeyPass=${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+          -p:AndroidSigningStorePass=${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+
+      - name: Upload signed .aab artifact
+        if: ${{ env.HAS_SIGNING == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ReadTheStupidText-${{ needs.version.outputs.version }}.aab
+          path: src/ReadTheStupidText.Mobile/bin/Release/net10.0-android/publish/*-Signed.aab
+          if-no-files-found: error
+
+      # main-only, mirroring build.yml's own release job — avoids
+      # versionCode churn on feature branches. A no-op until
+      # PLAY_SERVICE_ACCOUNT_JSON exists AND the very first release has been
+      # uploaded by hand once through the Play Console UI (see the header
+      # comment; a one-time API limitation, not a bug here).
+      - name: Publish to Play Store (internal testing)
+        if: ${{ env.HAS_SIGNING == 'true' && env.HAS_PLAY_PUBLISHING == 'true' && github.ref == 'refs/heads/main' }}
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: uk.sirous.readthestupidtext
+          releaseFiles: src/ReadTheStupidText.Mobile/bin/Release/net10.0-android/publish/*-Signed.aab
+          track: internal
+          status: completed

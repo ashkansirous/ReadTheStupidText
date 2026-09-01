@@ -2,7 +2,7 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using ReadTheStupidText.Application.Documents;
 
-namespace ReadTheStupidText.Infrastructure.Documents;
+namespace ReadTheStupidText.Documents;
 
 /// <summary>Reads a <c>.docx</c> file's paragraph text, in document order, via
 /// the Open XML SDK (MIT). Enforces the same soft page cap as

@@ -3,7 +3,7 @@ using DocumentFormat.OpenXml.ExtendedProperties;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using ReadTheStupidText.Application.Documents;
-using ReadTheStupidText.Infrastructure.Documents;
+using ReadTheStupidText.Documents;
 using DocxProperties = DocumentFormat.OpenXml.ExtendedProperties.Properties;
 
 namespace ReadTheStupidText.Tests;
