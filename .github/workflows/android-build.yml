@@ -99,8 +99,14 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Install the Android workload
-        run: dotnet workload install android
+      # maui-android, not bare "android": a fresh CLI-only SDK install (this
+      # runner) needs the MAUI-specific workload pieces on top of the Android
+      # platform workload, which a VS-provisioned dev machine already has
+      # installed alongside "android" — confirmed by the actual CI failure
+      # (NETSDK1147: "workloads must be installed: maui-android") after
+      # "android" alone built fine locally.
+      - name: Install the .NET MAUI Android workload
+        run: dotnet workload install maui-android
 
       # Always runs, no secrets needed — the actual compile check: does the
       # Mobile project still build (Domain/Application reuse, the
