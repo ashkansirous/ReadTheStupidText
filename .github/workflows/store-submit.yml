@@ -2,10 +2,29 @@ name: store-submit
 
 # Submits a released MSIX to the Microsoft Store via the msstore CLI.
 #
-# MANUAL ONLY (workflow_dispatch). The app is published and live in the Store
-# (product 9NGT1BN1H92V), so the Actions-based msstore flow — which does *updates*
-# to an already-live free product — is now usable. To run it you need, configured
-# once in repo Settings -> Secrets and variables -> Actions (see STORE.md):
+# AUTOMATIC: build.yml calls this as a reusable workflow (workflow_call) from
+# its own `store-submit` job, right after cutting a new release on every push
+# to main (Decision 44) — so every release reaches the Store with no manual
+# step. It runs as a job *inside* build.yml's run rather than this workflow
+# reacting to a `release: published` event, because build.yml creates the
+# release with the default GITHUB_TOKEN, and GitHub never lets a
+# GITHUB_TOKEN-triggered event start ANOTHER workflow run (its recursion
+# guard) — an `on: release:` trigger here would silently never fire. See the
+# comment on build.yml's `store-submit` job.
+#
+# `msstore publish` (see the last step) discards any still-pending draft
+# submission and creates a fresh one from the newest package each time it
+# runs (documented CLI behavior), so a burst of quick releases just
+# collapses to the latest one reaching certification, never an old one
+# racing ahead of a newer version.
+#
+# workflow_dispatch stays available for a manual re-run (e.g. retrying a
+# failed submission) — pass a tag, or omit it to resubmit the latest release.
+#
+# The app is published and live in the Store (product 9NGT1BN1H92V), so the
+# Actions-based msstore flow — which does *updates* to an already-live free
+# product — is usable. It needs, configured once in repo Settings -> Secrets
+# and variables -> Actions (see STORE.md):
 #   - Secrets:  AZURE_AD_TENANT_ID, AZURE_AD_APPLICATION_CLIENT_ID,
 #               AZURE_AD_APPLICATION_SECRET, SELLER_ID
 #   - Variable: STORE_PRODUCT_ID  (already set to 9NGT1BN1H92V)
@@ -17,16 +36,35 @@ name: store-submit
 # one-time tenant + app-registration + Manager-role walkthrough.
 
 on:
+  workflow_call:
+    inputs:
+      tag:
+        description: 'Release tag to submit (e.g. v1.0.0).'
+        required: true
+        type: string
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag to submit (e.g. v1.0.0)'
-        required: true
+        description: 'Release tag to submit (e.g. v1.0.0). Leave blank to submit the latest release.'
+        required: false
 
 jobs:
   submit:
     runs-on: windows-latest
     steps:
+      - name: Resolve the tag to submit
+        id: tag
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          $tag = if ($env:INPUT_TAG) { $env:INPUT_TAG }
+                 else { gh release view --repo "${{ github.repository }}" --json tagName --jq .tagName }
+          if (-not $tag) { throw "Could not resolve a release tag to submit" }
+          Write-Host "Submitting $tag"
+          "tag=$tag" | Out-File -Append $env:GITHUB_OUTPUT
+
       - name: Download the release's MSIX packages
         id: packages
         shell: pwsh
@@ -34,12 +72,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           New-Item -ItemType Directory -Force packages | Out-Null
-          gh release download "${{ inputs.tag }}" --repo "${{ github.repository }}" --pattern "*.msix" --dir packages
+          gh release download "${{ steps.tag.outputs.tag }}" --repo "${{ github.repository }}" --pattern "*.msix" --dir packages
           $msix = Get-ChildItem packages -Filter *.msix
           # A submission must carry BOTH architectures. One missing asset would
           # otherwise silently ship a single-arch bundle and drop ARM64 users.
           if ($msix.Count -ne 2) {
-            throw "Expected 2 .msix assets (x64 + ARM64) on release ${{ inputs.tag }}, found $($msix.Count): $($msix.Name -join ', ')"
+            throw "Expected 2 .msix assets (x64 + ARM64) on release ${{ steps.tag.outputs.tag }}, found $($msix.Count): $($msix.Name -join ', ')"
           }
           # The package version is the source of the *bundle* version below. Take
           # it from the asset names (ReadTheStupidText.App_<x.y.z.0>_<arch>.msix)
@@ -98,11 +136,24 @@ jobs:
         shell: pwsh
         run: |
           # One submission carrying both architectures via the bundle.
-          # No upload-timeout flag: the CLI's --uploadTimeout/-ut exists only on
-          # its unreleased main branch, not in the version this action installs
-          # (v0.3.9), where `publish` accepts just -i/-id/-nc/-f/-prp/-v. It isn't
-          # needed either — v0.3.9 uploads through the Azure Storage SDK
-          # (BlobClient.UploadAsync), which chunks and retries internally, so the
-          # ~500 MB bundle is not racing a single fixed HTTP timeout.
+          #
+          # -uploadTimeout/-ut is REQUIRED (not just available). The action
+          # installs whatever msstore-cli is currently "latest" (no version
+          # pin), so it silently moved from v0.3.9 (no -ut option at all) to
+          # v0.4.x, which added -ut but has a default-value bug: PublishCommand
+          # only returns its intended 100s default from -ut's CustomParser when
+          # the flag is present with an empty value; when -ut is omitted
+          # entirely (as it was here), System.CommandLine binds the option to
+          # `default(long)` = 0, so AzureBlobManager sets
+          # `blobClientOptions.Retry.NetworkTimeout = TimeSpan.Zero` and every
+          # upload attempt fails instantly with "Retry failed after 6 tries...
+          # exceeded the configured timeout of 0:00:00" — confirmed against the
+          # v0.4.1 error with -v below. 300s is comfortably above the ~3s a
+          # ~500 MB bundle actually took to upload when this last worked
+          # (v0.7.7, msstore-cli v0.3.9).
+          #
+          # -v: on an upload failure the CLI's console output is a hardcoded
+          # generic "Error while uploading the application package." with the
+          # real exception only reaching the logger, which -v surfaces.
           msstore publish "out\ReadTheStupidText.msixbundle" `
-            -id ${{ vars.STORE_PRODUCT_ID }}
+            -id ${{ vars.STORE_PRODUCT_ID }} -ut 300 -v

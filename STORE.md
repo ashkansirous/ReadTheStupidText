@@ -31,9 +31,11 @@ Verified end-to-end and **live**:
   cross-checked against the reserved Partner Center product (below).
 - ✅ **First submission done — app is live** at
   https://apps.microsoft.com/detail/9NGT1BN1H92V.
-- ✅ **`store-submit.yml`** is `workflow_dispatch`-only and submits **one** update
-  carrying both architectures (x64 + ARM64 combined into a single `.msixbundle`).
-  It fails fast until the four Partner Center secrets are set.
+- ✅ **`store-submit.yml`** submits **one** update carrying both architectures
+  (x64 + ARM64 combined into a single `.msixbundle`). It fails fast until the
+  four Partner Center secrets are set. Since Decision 44 it runs
+  **automatically** — called from `build.yml`'s `store-submit` job right after
+  every new release — with `workflow_dispatch` kept only for a manual re-run.
 - ✅ **`STORE_PRODUCT_ID` variable** set to `9NGT1BN1H92V` in repo Actions
   variables.
 - ✅ **Credentials wired and proven.** The tenant was created from Partner Center
@@ -45,7 +47,9 @@ Verified end-to-end and **live**:
   ~492 MB upload took ~3 s. So the whole chain — GitVersion → per-arch MSIX →
   GitHub Release → bundle → submit — now runs from one dispatch.
 
-Deploying an update is therefore just:
+Deploying an update now happens automatically on every push to `main` — no
+manual step. To force a manual re-submit (e.g. retrying a transient upload
+failure, or resubmitting an older tag), it's still just:
 
 ```bash
 gh workflow run store-submit -f tag=v<x.y.z>
@@ -217,34 +221,87 @@ Store-submission step pulls from.
 
 ## Deploying to the Store
 
-`/.github/workflows/store-submit.yml` is a **manual** (`workflow_dispatch`)
-deploy that downloads a release's MSIX assets, **combines x64 + ARM64 into one
-`.msixbundle`** (`makeappx bundle`), and submits that single bundle via the
-**msstore CLI** (`microsoft/microsoft-store-apppublisher`). The Actions-based
-msstore flow does *updates* to an already-published **free** app — which this app
-now is. One submission must carry both architectures, so the workflow bundles
-rather than calling `msstore publish` once per `.msix` (which would open
-competing submissions).
+`/.github/workflows/store-submit.yml` downloads a release's MSIX assets,
+**combines x64 + ARM64 into one `.msixbundle`** (`makeappx bundle`), and
+submits that single bundle via the **msstore CLI**
+(`microsoft/microsoft-store-apppublisher`). The Actions-based msstore flow
+does *updates* to an already-published **free** app — which this app now is.
+One submission must carry both architectures, so the workflow bundles rather
+than calling `msstore publish` once per `.msix` (which would open competing
+submissions).
+
+**Automatic since Decision 44.** `build.yml`'s `store-submit` job calls this
+workflow (`workflow_call`) right after cutting each new release, so every
+push to `main` reaches the Store with no manual step — this closed a real gap
+where the workflow was manual-only and simply wasn't re-run for 15 days
+(`v0.7.8` … `v0.14.0` piled up, unshipped). It's called as a job in the *same*
+run rather than via an `on: release: published` trigger on this file, because
+`build.yml` creates the release with the default `GITHUB_TOKEN`, and GitHub's
+recursion guard means a `GITHUB_TOKEN`-authored event never starts another
+workflow run — that trigger would have looked correct and never fired.
+`workflow_dispatch` still works standalone for a manual re-submit (e.g.
+retrying a transient upload failure) — pass a tag, or omit it to resubmit
+whatever is currently the latest release.
+
+Each call creates a **new** Store submission from the given release,
+discarding whatever draft was already pending (see *msstore publish deletes
+the pending draft* below) — so if `main` ships several releases faster than
+Store certification turns around, only the latest one ends up in review; it
+is not "queued update spam."
 
 One detail the workflow gets right and that is easy to get wrong by hand:
 `makeappx bundle` is given **`/bv`** (the packages' own `x.y.z.0`, parsed off the
 release asset names) — omit it and makeappx stamps the bundle version from the
 *current date-time*, which matches neither the release nor a predictable ordering.
 
-⚠️ **Check option flags against the CLI version the action actually installs**
-(`latest` = **v0.3.9**), not against the docs or the CLI's `main` branch — they
-have drifted. `msstore publish --uploadTimeout/-ut` is documented and present on
-`main` but does **not** exist in v0.3.9, where `publish` accepts only
-`-i/-id/-nc/-f/-prp/-v`; passing it fails the run with *"Unrecognized command or
-argument '-ut'"*. It also isn't needed: v0.3.9 uploads via the Azure Storage SDK
-(`BlobClient.UploadAsync`), which chunks and retries internally, so the ~500 MB
-bundle is not racing one fixed HTTP timeout.
+⚠️ **The action installs whatever `msstore-cli` is currently `latest` — no
+version pin.** It moved from v0.3.9 (proven on `v0.7.7`, 2026-08-16) to v0.4.1
+between then and the automation work in Decision 44, silently changing
+`publish`'s available flags and defaults underneath this workflow with no
+action-version bump to signal it.
+
+⚠️ **`-uploadTimeout`/`-ut` is REQUIRED, not optional, on v0.4.x — omitting it
+sets the network timeout to zero.** v0.4.0 added the flag
+(`PublishCommand.cs`), intending a 100s default via its `CustomParser`. But
+that parser only runs when `-ut` is present with an empty value; when the flag
+is **omitted** entirely, `System.CommandLine` binds it to `default(long)` = 0,
+and `AzureBlobManager` sets `blobClientOptions.Retry.NetworkTimeout =
+TimeSpan.Zero` — every upload attempt then fails **instantly**. This is
+exactly what happened submitting `v0.14.0`: three straight failures, each
+dying within ~90s of "Uploading Bundle to Azure blob: 0%" with a generic
+*"Error while uploading the application package."* on-screen (that string is
+hardcoded — `IStorePackagedAPIExtensions.cs` swallows the real exception into
+the logger, only visible via `-v`). The `-v` log showed the actual cause:
+`System.AggregateException: Retry failed after 6 tries... The operation was
+cancelled because it exceeded the configured timeout of 0:00:00.` Fix:
+`store-submit.yml` now always passes `-ut 300` explicitly — comfortably above
+the ~3s a ~500 MB bundle actually took to upload back when v0.3.9 worked.
+
+⚠️ **Check option flags against the CLI version the action actually installs,
+not against the docs or the CLI's `main` branch** — they can and do drift
+independently of what's pinned here. `-i/-id/-nc/-f/-prp/-v/-ut` is current
+for v0.4.x; passing an option that genuinely doesn't exist on the installed
+version fails the run with *"Unrecognized command or argument '‹flag›'"*.
+
+### `msstore publish` deletes the pending draft
+
+Per Microsoft's own docs: *"If the app already has a published submission,
+`msstore publish` deletes the pending draft and creates a new one from the
+last published submission, discarding any metadata changes already staged in
+that draft."* Confirmed in practice: triggering `store-submit` while an
+earlier submission was still mid-review created a **new** submission that
+superseded it rather than erroring or queuing behind it. This is exactly the
+behavior automatic-on-every-release wants — the newest push always wins — but
+it means there is no way to have two releases "in flight" to the Store at
+once; the older one is simply gone, not paused.
 
 ### The CLI supersedes old packages by **file extension**
 
 `msstore publish` clones the last published submission and then decides what the
 new package replaces with a single line
-(`IStorePackagedAPIExtensions.cs`, v0.3.9):
+(`IStorePackagedAPIExtensions.cs` — confirmed still present on the CLI's `main`
+branch as of Decision 44; see the version-pin warning above about not assuming
+this stays true on whatever `latest` installs next):
 
 ```csharp
 var applicationPackage = packages?.FirstOrDefault(p => Path.GetExtension(p.FileName) == file.Extension);
