@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+	<application android:allowBackup="true" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true"></application>
+	<!-- No network permissions: reading is fully on-device (built-in TTS now,
+	     bundled neural voice from Slice 31), matching the "we collect nothing"
+	     stance already documented for the Windows app. -->
+</manifest>
