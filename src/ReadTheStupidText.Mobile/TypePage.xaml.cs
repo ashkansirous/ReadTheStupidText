@@ -1,5 +1,6 @@
 using System.Globalization;
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Domain.Reading;
 
 namespace ReadTheStupidText.Mobile;
@@ -18,16 +19,18 @@ public partial class TypePage : ContentPage
     private static readonly Color UnselectedPresetBackground = Color.FromArgb("#0D000000");
 
     private readonly ISpeechReader _reader;
-    private PlaybackRate _speed = PlaybackRate.Default;
+    private readonly ISettingsStore _settings;
+    private PlaybackRate _speed;
 
-    public TypePage(ISpeechReader reader)
+    public TypePage(ISpeechReader reader, ISettingsStore settings)
     {
         InitializeComponent();
 
         _reader = reader;
+        _settings = settings;
+        _speed = _settings.Speed;
         UpdatePresetHighlight();
         UpdateSubtitle();
-        _ = _reader.WarmUpAsync();
     }
 
     protected override void OnAppearing()
@@ -36,6 +39,11 @@ public partial class TypePage : ContentPage
         _reader.StateChanged += OnReaderStateChanged;
         _reader.ProgressChanged += OnReaderProgressChanged;
         _reader.TimingChanged += OnReaderTimingChanged;
+
+        // Re-read on every appearance (not just construction): the voice picker
+        // (Slice 31) may have changed the persisted voice while this tab was
+        // hidden, and Shell keeps this page instance alive across tab switches.
+        UpdateSubtitle();
     }
 
     private async void OnPlayPauseTapped(object? sender, TappedEventArgs e)
@@ -71,13 +79,14 @@ public partial class TypePage : ContentPage
         }
 
         _speed = new PlaybackRate(value);
+        _settings.Speed = _speed;
         _reader.SetSpeed(_speed);
         UpdatePresetHighlight();
         UpdateSubtitle();
     }
 
     private async void OnVoicePickerTapped(object? sender, TappedEventArgs e) =>
-        await DisplayAlertAsync("Voice picker", "The bundled neural voices arrive in Slice 31.", "OK");
+        await Shell.Current.GoToAsync(AppShell.VoicePickerRoute);
 
     private void OnReaderStateChanged(object? sender, PlaybackState state) =>
         MainThread.BeginInvokeOnMainThread(() =>
@@ -102,7 +111,13 @@ public partial class TypePage : ContentPage
         }
     }
 
-    private void UpdateSubtitle() => SubtitleLabel.Text = _speed.ToDisplayLabel();
+    private void UpdateSubtitle()
+    {
+        string voiceName = SupertonicVoiceTable.Voices
+            .FirstOrDefault(v => v.Id == _settings.VoiceId, SupertonicVoiceTable.Default)
+            .DisplayName;
+        SubtitleLabel.Text = $"{voiceName} · {_speed.ToDisplayLabel()}";
+    }
 
     protected override void OnDisappearing()
     {

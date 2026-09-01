@@ -1,5 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Settings;
 
 namespace ReadTheStupidText.Mobile;
 
@@ -16,8 +18,11 @@ public static class MauiProgram
 				fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
 			});
 
+		builder.Services.AddSingleton<IVoiceModelService, MobileVoiceModelService>();
+		builder.Services.AddSingleton<ISettingsStore, MobilePreferencesSettingsStore>();
 		builder.Services.AddSingleton<ISpeechReader>(CreateSpeechReader);
 		builder.Services.AddTransient<TypePage>();
+		builder.Services.AddTransient<VoicePickerPage>();
 
 #if DEBUG
 		builder.Logging.AddDebug();
@@ -29,7 +34,9 @@ public static class MauiProgram
 	private static ISpeechReader CreateSpeechReader(IServiceProvider services)
 	{
 #if ANDROID
-		return new AndroidSpeechReader(global::Android.App.Application.Context);
+		var neural = new AndroidSupertonicSpeechReader(services.GetRequiredService<IVoiceModelService>());
+		var fallback = new AndroidSpeechReader(global::Android.App.Application.Context);
+		return new CompositeSpeechReader(neural, fallback, services.GetRequiredService<IVoiceModelService>());
 #else
 		throw new PlatformNotSupportedException("Only Android is implemented so far (Decision 37).");
 #endif

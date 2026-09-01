@@ -2,7 +2,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace ReadTheStupidText.Infrastructure.Reading;
+namespace ReadTheStupidText.Application.Reading;
 
 /// <summary>
 /// Splits text for the neural engine so long reads synthesize as several small

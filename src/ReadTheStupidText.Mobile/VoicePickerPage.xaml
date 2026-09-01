@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="ReadTheStupidText.Mobile.VoicePickerPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Voice"
+    Shell.NavBarIsVisible="False">
+
+    <Grid RowDefinitions="Auto,*" BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}">
+
+        <Grid Grid.Row="0" Padding="14,14,18,16" ColumnDefinitions="Auto,*">
+            <Grid.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="{StaticResource BrandStart}" Offset="0.0" />
+                    <GradientStop Color="{StaticResource BrandEnd}" Offset="1.0" />
+                </LinearGradientBrush>
+            </Grid.Background>
+
+            <Border Grid.Column="0" WidthRequest="30" HeightRequest="30" Padding="0"
+                    StrokeShape="RoundRectangle 15" Stroke="Transparent" BackgroundColor="#29FFFFFF">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Border.GestureRecognizers>
+                <Label Text="&#8592;" FontSize="16" TextColor="White" HorizontalOptions="Center" VerticalOptions="Center" />
+            </Border>
+
+            <VerticalStackLayout Grid.Column="1" Spacing="2" Margin="10,0,0,0" VerticalOptions="Center">
+                <Label Text="Choose a voice" TextColor="White" FontSize="16" FontAttributes="Bold" />
+                <Label Text="Bundled offline · no download" TextColor="#C8FFFFFF" FontSize="11.5" />
+            </VerticalStackLayout>
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="14" Spacing="14">
+
+                <Label Text="MALE" FontSize="10.5" FontAttributes="Bold" TextColor="{StaticResource TextSecondaryLight}" />
+                <Border Padding="0" StrokeShape="RoundRectangle 14" Stroke="{StaticResource CardBorder}"
+                        BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}">
+                    <VerticalStackLayout x:Name="MaleVoiceList" />
+                </Border>
+
+                <Label Text="FEMALE" FontSize="10.5" FontAttributes="Bold" TextColor="{StaticResource TextSecondaryLight}" />
+                <Border Padding="0" StrokeShape="RoundRectangle 14" Stroke="{StaticResource CardBorder}"
+                        BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}">
+                    <VerticalStackLayout x:Name="FemaleVoiceList" />
+                </Border>
+
+                <Label Text="Tap a voice to hear and select it. Changing voice mid-read finishes the current sentence in the old voice."
+                       FontSize="11" TextColor="{StaticResource TextSecondaryLight}" Margin="4,4,4,0" />
+            </VerticalStackLayout>
+        </ScrollView>
+
+    </Grid>
+</ContentPage>

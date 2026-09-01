@@ -1,4 +1,4 @@
-using ReadTheStupidText.Infrastructure.Reading;
+using ReadTheStupidText.Domain.Reading;
 
 namespace ReadTheStupidText.Tests;
 
@@ -42,5 +42,23 @@ public class SupertonicVoiceTableTests
     public void Voice_ids_are_prefixed_and_stable_for_persistence()
     {
         Assert.All(SupertonicVoiceTable.Voices, v => Assert.StartsWith("supertonic:", v.Id));
+    }
+
+    [Theory]
+    [InlineData("supertonic:F1", true)]
+    [InlineData("supertonic:F5", true)]
+    [InlineData("supertonic:M1", false)]
+    [InlineData("supertonic:M5", false)]
+    public void IsFemale_matches_the_sid_split(string id, bool expected)
+    {
+        Assert.Equal(expected, SupertonicVoiceTable.IsFemale(id));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("unknown-voice")]
+    public void IsFemale_resolves_unknown_ids_through_the_default_male_voice(string? id)
+    {
+        Assert.False(SupertonicVoiceTable.IsFemale(id));
     }
 }

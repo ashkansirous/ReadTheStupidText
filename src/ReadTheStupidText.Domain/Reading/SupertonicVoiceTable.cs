@@ -1,6 +1,4 @@
-using ReadTheStupidText.Domain.Reading;
-
-namespace ReadTheStupidText.Infrastructure.Reading;
+namespace ReadTheStupidText.Domain.Reading;
 
 /// <summary>
 /// The fixed voice styles shipped in the Supertonic-3 model, in the speaker-id
@@ -11,7 +9,7 @@ namespace ReadTheStupidText.Infrastructure.Reading;
 /// names are cosmetic — the <see cref="IdPrefix"/>-prefixed ids and sid order
 /// are stable, so a persisted choice survives the rename.
 /// </summary>
-internal static class SupertonicVoiceTable
+public static class SupertonicVoiceTable
 {
     public const string IdPrefix = "supertonic:";
 
@@ -54,4 +52,10 @@ internal static class SupertonicVoiceTable
     }
 
     public static int DefaultSpeakerId { get; } = Array.FindIndex(Entries, e => e.Key == DefaultKey);
+
+    /// <summary>Whether the given voice id refers to a female (F1-F5) style — sids
+    /// 0-4. Used to group the Android voice picker into MALE/FEMALE cards
+    /// (Decision 43). An unknown id resolves through <see cref="SpeakerIdFor"/>
+    /// to the default (male) voice.</summary>
+    public static bool IsFemale(string? voiceId) => SpeakerIdFor(voiceId) < 5;
 }

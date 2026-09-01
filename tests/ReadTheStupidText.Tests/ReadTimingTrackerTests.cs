@@ -1,5 +1,4 @@
 using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Infrastructure.Reading;
 
 namespace ReadTheStupidText.Tests;
 
