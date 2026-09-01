@@ -1,6 +1,6 @@
 using ReadTheStupidText.Application.Documents;
 
-namespace ReadTheStupidText.Infrastructure.Documents;
+namespace ReadTheStupidText.Documents;
 
 /// <summary>Reads a <c>.txt</c> file's contents verbatim.</summary>
 public sealed class PlainTextExtractor : IDocumentTextExtractor

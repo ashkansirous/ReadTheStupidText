@@ -1,7 +1,7 @@
 using ReadTheStupidText.Application.Documents;
 using UglyToad.PdfPig;
 
-namespace ReadTheStupidText.Infrastructure.Documents;
+namespace ReadTheStupidText.Documents;
 
 /// <summary>Reads a <c>.pdf</c> file's text-layer contents, page by page in
 /// order, via PdfPig (Apache-2.0). Rejects documents above <see cref="MaxPages"/>

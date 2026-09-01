@@ -6,7 +6,7 @@ using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Sanitizing;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Application.Startup;
-using ReadTheStupidText.Infrastructure.Documents;
+using ReadTheStupidText.Documents;
 using ReadTheStupidText.Infrastructure.Input;
 using ReadTheStupidText.Infrastructure.Logging;
 using ReadTheStupidText.Infrastructure.Reading;

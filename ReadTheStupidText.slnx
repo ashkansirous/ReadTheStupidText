@@ -17,6 +17,7 @@
       <Deploy Solution="Debug|x64" />
     </Project>
     <Project Path="src/ReadTheStupidText.Application/ReadTheStupidText.Application.csproj" />
+    <Project Path="src/ReadTheStupidText.Documents/ReadTheStupidText.Documents.csproj" />
     <Project Path="src/ReadTheStupidText.Domain/ReadTheStupidText.Domain.csproj" />
     <Project Path="src/ReadTheStupidText.Infrastructure/ReadTheStupidText.Infrastructure.csproj" />
     <Project Path="src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj" />

@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ReadTheStupidText.Application\ReadTheStupidText.Application.csproj" />
     <ProjectReference Include="..\ReadTheStupidText.Domain\ReadTheStupidText.Domain.csproj" />
+    <ProjectReference Include="..\ReadTheStupidText.Documents\ReadTheStupidText.Documents.csproj" />
   </ItemGroup>
 
   <!-- Expose internal pure logic (SpeechTextChunker, SupertonicVoiceTable, the
@@ -23,16 +24,6 @@
   <ItemGroup>
     <PackageReference Include="Serilog" Version="4.3.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-  </ItemGroup>
-
-  <!-- PDF text extraction for uploaded files (Slice 28, Apache-2.0). -->
-  <ItemGroup>
-    <PackageReference Include="PdfPig" Version="0.1.16" />
-  </ItemGroup>
-
-  <!-- DOCX text extraction for uploaded files (Slice 29, MIT). -->
-  <ItemGroup>
-    <PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
   </ItemGroup>
 
   <!-- Managed UI Automation client (System.Windows.Automation) lives in the

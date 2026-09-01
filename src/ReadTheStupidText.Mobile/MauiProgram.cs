@@ -1,8 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using ReadTheStupidText.Application.Documents;
 using ReadTheStupidText.Application.Images;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Documents;
 
 namespace ReadTheStupidText.Mobile;
 
@@ -23,9 +25,14 @@ public static class MauiProgram
 		builder.Services.AddSingleton<ISettingsStore, MobilePreferencesSettingsStore>();
 		builder.Services.AddSingleton<ISpeechReader>(CreateSpeechReader);
 		builder.Services.AddSingleton<IImageTextExtractor>(CreateImageTextExtractor);
+		builder.Services.AddSingleton<PlainTextExtractor>();
+		builder.Services.AddSingleton<PdfTextExtractor>();
+		builder.Services.AddSingleton<DocxTextExtractor>();
+		builder.Services.AddSingleton<IDocumentTextExtractor, CompositeDocumentTextExtractor>();
 		builder.Services.AddTransient<TypePage>();
 		builder.Services.AddTransient<VoicePickerPage>();
 		builder.Services.AddTransient<CameraPage>();
+		builder.Services.AddTransient<FilePage>();
 
 #if DEBUG
 		builder.Logging.AddDebug();
