@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="ReadTheStupidText.Mobile.FilePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="File"
+    Shell.NavBarIsVisible="False"
+    BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}">
+
+    <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8" Padding="24">
+        <Label Text="File upload" FontSize="18" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+        <Label Text="Read a .txt, .pdf or .docx file aloud — coming in Slice 33."
+               TextColor="{StaticResource TextSecondaryLight}" FontSize="13" HorizontalTextAlignment="Center" />
+    </VerticalStackLayout>
+</ContentPage>

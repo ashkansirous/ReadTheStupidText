@@ -19,6 +19,7 @@
     <Project Path="src/ReadTheStupidText.Application/ReadTheStupidText.Application.csproj" />
     <Project Path="src/ReadTheStupidText.Domain/ReadTheStupidText.Domain.csproj" />
     <Project Path="src/ReadTheStupidText.Infrastructure/ReadTheStupidText.Infrastructure.csproj" />
+    <Project Path="src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/ReadTheStupidText.Tests/ReadTheStupidText.Tests.csproj" />

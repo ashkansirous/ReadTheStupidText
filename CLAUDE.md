@@ -55,11 +55,21 @@ Infrastructure  →  Application / Domain
   all played through `MediaPlayer`; the neural model ships in the package.
   Clipboard, UI Automation, startup task, OS integration.
 - **App** (`net10.0-windows`, WinUI single-project MSIX) — UI, tray, DI wiring.
-- **Mobile** (planned, `src/ReadTheStupidText.Mobile`, .NET MAUI,
-  `net10.0-android` first) — references `Domain`/`Application` unchanged;
-  platform-specific speech/OCR/settings implementations live under its own
-  `Platforms/Android` folder rather than a separate class library. See Batch 6
-  in `plan.md`.
+- **Mobile** (`src/ReadTheStupidText.Mobile`, .NET MAUI, `net10.0-android`
+  only for now — Decision 37) — references `Domain`/`Application` unchanged;
+  platform-specific implementations live under its own `Platforms/Android`
+  folder rather than a separate class library. It does **not** reuse
+  `ReadAloudService` — that orchestrates Windows-only triggers (hotkey, UIA
+  selection, clipboard) that don't exist on Android (Decision 38) — pages wire
+  `ISpeechReader` + `PlaybackRate`/`SpeedPresets` directly instead. **Gotcha:**
+  files under `Platforms/Android` use namespace `ReadTheStupidText.Mobile`,
+  *not* `...Platforms.Android` — a namespace segment literally named `Android`
+  shadows the top-level `Android.*` binding namespace for unqualified lookups
+  in that file. Similarly, any bare `Application` in Mobile code must be
+  qualified as `Microsoft.Maui.Controls.Application` — the project also
+  references a library literally named `ReadTheStupidText.Application`, which
+  wins unqualified-name resolution from within the `ReadTheStupidText.Mobile`
+  namespace. See Batch 6 in `plan.md`.
 
 Keep `App.xaml.cs` thin: provider/DI wiring and window bootstrap only. Real
 logic lives in Application/Infrastructure; XAML views stay free of business
@@ -84,6 +94,17 @@ mapping, plus a `<Deploy Solution="Debug|x64" />` rule so F5 deploys the
 package. Debug through the **(Package)** profile — there is no unpackaged
 profile, because running unpackaged fails with `REGDB_E_CLASSNOTREG` (no
 package identity).
+
+**Mobile (Android):**
+
+```bash
+dotnet build src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net10.0-android
+```
+
+Deploy to a device/emulator from Visual Studio (the **Mobile** project's Android
+debug target), or `dotnet build -t:Run -f net10.0-android` with a device/emulator
+already running. No AVD ships with this repo — set one up locally (or attach a
+physical device) before relying on a slice that touches the Mobile project.
 
 CI/packaging (Slice 5): `.github/workflows/build.yml` packages the single-project
 MSIX (x64 + ARM64, unsigned artifacts — the Store re-signs) and checks out LFS for
