@@ -566,6 +566,28 @@ this plan turns it into ordered, shippable vertical slices.
     decided when each slice is actually implemented — this decision fixes the
     design source and the concrete screen contract so that work doesn't start
     from a blank page.
+44. **Store submission is now automatic on every release, not manual
+    (`store-submit.yml` bug fix).** Root cause: the workflow was
+    `workflow_dispatch`-only and simply never got re-triggered — it had run
+    exactly 3 times total (all on 2026-08-16, submitting `v0.7.7`), while
+    `main` went on to ship `v0.7.8` … `v0.14.0` (15 days, 7 releases) with
+    nothing reaching the Store. Fix: `build.yml`'s `release` job now has a
+    sibling `store-submit` job that calls `store-submit.yml` as a **reusable
+    workflow** (`workflow_call`) immediately after a new release is cut, only
+    when `release`'s own `released` output says a release actually happened
+    (guards the idempotent-skip path where the version didn't bump). This
+    could **not** be done as an `on: release: types: [published]` trigger on
+    `store-submit.yml` itself — `build.yml` creates the release with the
+    default `GITHUB_TOKEN`, and GitHub's recursion guard means a
+    `GITHUB_TOKEN`-authored event never starts another workflow run, so that
+    trigger would parse fine and simply never fire (a real gotcha, verified
+    against current GitHub Actions docs, not assumed). `workflow_dispatch`
+    stays on `store-submit.yml` for manual re-submits. Also confirmed (from
+    Microsoft's own CLI docs): `msstore publish` deletes any still-pending
+    draft submission and creates a fresh one from the latest package — exactly
+    what automatic-on-every-release wants (newest always wins), but it means
+    two releases can never both be "in flight" to the Store at once. See
+    `STORE.md` → *Deploying to the Store*.
 
 ## Changes
 
