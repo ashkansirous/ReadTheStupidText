@@ -254,14 +254,34 @@ One detail the workflow gets right and that is easy to get wrong by hand:
 release asset names) — omit it and makeappx stamps the bundle version from the
 *current date-time*, which matches neither the release nor a predictable ordering.
 
-⚠️ **Check option flags against the CLI version the action actually installs**
-(`latest` = **v0.3.9**), not against the docs or the CLI's `main` branch — they
-have drifted. `msstore publish --uploadTimeout/-ut` is documented and present on
-`main` but does **not** exist in v0.3.9, where `publish` accepts only
-`-i/-id/-nc/-f/-prp/-v`; passing it fails the run with *"Unrecognized command or
-argument '-ut'"*. It also isn't needed: v0.3.9 uploads via the Azure Storage SDK
-(`BlobClient.UploadAsync`), which chunks and retries internally, so the ~500 MB
-bundle is not racing one fixed HTTP timeout.
+⚠️ **The action installs whatever `msstore-cli` is currently `latest` — no
+version pin.** It moved from v0.3.9 (proven on `v0.7.7`, 2026-08-16) to v0.4.1
+between then and the automation work in Decision 44, silently changing
+`publish`'s available flags and defaults underneath this workflow with no
+action-version bump to signal it.
+
+⚠️ **`-uploadTimeout`/`-ut` is REQUIRED, not optional, on v0.4.x — omitting it
+sets the network timeout to zero.** v0.4.0 added the flag
+(`PublishCommand.cs`), intending a 100s default via its `CustomParser`. But
+that parser only runs when `-ut` is present with an empty value; when the flag
+is **omitted** entirely, `System.CommandLine` binds it to `default(long)` = 0,
+and `AzureBlobManager` sets `blobClientOptions.Retry.NetworkTimeout =
+TimeSpan.Zero` — every upload attempt then fails **instantly**. This is
+exactly what happened submitting `v0.14.0`: three straight failures, each
+dying within ~90s of "Uploading Bundle to Azure blob: 0%" with a generic
+*"Error while uploading the application package."* on-screen (that string is
+hardcoded — `IStorePackagedAPIExtensions.cs` swallows the real exception into
+the logger, only visible via `-v`). The `-v` log showed the actual cause:
+`System.AggregateException: Retry failed after 6 tries... The operation was
+cancelled because it exceeded the configured timeout of 0:00:00.` Fix:
+`store-submit.yml` now always passes `-ut 300` explicitly — comfortably above
+the ~3s a ~500 MB bundle actually took to upload back when v0.3.9 worked.
+
+⚠️ **Check option flags against the CLI version the action actually installs,
+not against the docs or the CLI's `main` branch** — they can and do drift
+independently of what's pinned here. `-i/-id/-nc/-f/-prp/-v/-ut` is current
+for v0.4.x; passing an option that genuinely doesn't exist on the installed
+version fails the run with *"Unrecognized command or argument '‹flag›'"*.
 
 ### `msstore publish` deletes the pending draft
 
@@ -279,7 +299,9 @@ once; the older one is simply gone, not paused.
 
 `msstore publish` clones the last published submission and then decides what the
 new package replaces with a single line
-(`IStorePackagedAPIExtensions.cs`, v0.3.9):
+(`IStorePackagedAPIExtensions.cs` — confirmed still present on the CLI's `main`
+branch as of Decision 44; see the version-pin warning above about not assuming
+this stays true on whatever `latest` installs next):
 
 ```csharp
 var applicationPackage = packages?.FirstOrDefault(p => Path.GetExtension(p.FileName) == file.Extension);

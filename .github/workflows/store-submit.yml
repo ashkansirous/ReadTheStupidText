@@ -136,15 +136,24 @@ jobs:
         shell: pwsh
         run: |
           # One submission carrying both architectures via the bundle.
-          # No upload-timeout flag: the CLI's --uploadTimeout/-ut exists only on
-          # its unreleased main branch, not in the version this action installs
-          # (v0.3.9), where `publish` accepts just -i/-id/-nc/-f/-prp/-v. It isn't
-          # needed either — v0.3.9 uploads through the Azure Storage SDK
-          # (BlobClient.UploadAsync), which chunks and retries internally, so the
-          # ~500 MB bundle is not racing a single fixed HTTP timeout.
+          #
+          # -uploadTimeout/-ut is REQUIRED (not just available). The action
+          # installs whatever msstore-cli is currently "latest" (no version
+          # pin), so it silently moved from v0.3.9 (no -ut option at all) to
+          # v0.4.x, which added -ut but has a default-value bug: PublishCommand
+          # only returns its intended 100s default from -ut's CustomParser when
+          # the flag is present with an empty value; when -ut is omitted
+          # entirely (as it was here), System.CommandLine binds the option to
+          # `default(long)` = 0, so AzureBlobManager sets
+          # `blobClientOptions.Retry.NetworkTimeout = TimeSpan.Zero` and every
+          # upload attempt fails instantly with "Retry failed after 6 tries...
+          # exceeded the configured timeout of 0:00:00" — confirmed against the
+          # v0.4.1 error with -v below. 300s is comfortably above the ~3s a
+          # ~500 MB bundle actually took to upload when this last worked
+          # (v0.7.7, msstore-cli v0.3.9).
           #
           # -v: on an upload failure the CLI's console output is a hardcoded
           # generic "Error while uploading the application package." with the
           # real exception only reaching the logger, which -v surfaces.
           msstore publish "out\ReadTheStupidText.msixbundle" `
-            -id ${{ vars.STORE_PRODUCT_ID }} -v
+            -id ${{ vars.STORE_PRODUCT_ID }} -ut 300 -v
