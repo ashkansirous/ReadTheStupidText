@@ -12,11 +12,15 @@
         the text of the current read with the currently-playing chunk highlighted
         (Decision 46). Closing it (the system ✕) only hides it — playback keeps
         going, and reopening re-syncs to whatever chunk is current, since this
-        window keeps updating from the read events while hidden. Plain scrollable
-        text for this first pass; zoom + real fit-to-box pagination land in Slice 38.
+        window keeps updating from the read events while hidden. Content is
+        paginated to fit the box (Decision 47) — no scroll under normal use, the
+        ScrollViewer is only a safety net for the one case a page can't shrink to
+        fit: a single sentence longer than the box. +/- zoom (Decision 48) live in
+        this toolbar row, not the main control panel.
     -->
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" RowSpacing="0">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
@@ -52,7 +56,26 @@
             </Grid>
         </Border>
 
-        <ScrollViewer x:Name="TextScroller" Grid.Row="1" Padding="24,20" VerticalScrollBarVisibility="Auto">
+        <!-- Toolbar: zoom -/+ and a page indicator. No manual next/prev (Decision 47
+             — v1 auto-follows playback only). -->
+        <Grid Grid.Row="1" Padding="16,8" ColumnSpacing="8" Background="{ThemeResource LayerFillColorDefaultBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Button x:Name="ZoomOutButton" Grid.Column="0" Content="&#xE949;" FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                    Click="OnZoomOutClick" ToolTipService.ToolTip="Smaller text" Padding="8,6" CornerRadius="6" />
+            <Button x:Name="ZoomInButton" Grid.Column="1" Content="&#xE948;" FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                    Click="OnZoomInClick" ToolTipService.ToolTip="Larger text" Padding="8,6" CornerRadius="6" />
+            <TextBlock x:Name="PageIndicator" Grid.Column="3" VerticalAlignment="Center"
+                       Style="{ThemeResource CaptionTextBlockStyle}" />
+        </Grid>
+
+        <ScrollViewer x:Name="TextScroller" Grid.Row="2" Padding="24,20" VerticalScrollBarVisibility="Auto"
+                      SizeChanged="OnTextScrollerSizeChanged">
             <TextBlock
                 x:Name="ReadingText"
                 TextWrapping="Wrap"
@@ -60,5 +83,11 @@
                 LineHeight="27"
                 IsTextSelectionEnabled="True" />
         </ScrollViewer>
+
+        <!-- Off-screen probe used only to measure candidate text at a given font
+             size/width (Decisions 47, 48); never shown, never hit-testable. Shares
+             the "*" content row (not Row 0, which is Auto-height and would be
+             inflated by whatever this is currently measuring). -->
+        <TextBlock x:Name="MeasureProbe" Grid.Row="2" Opacity="0" IsHitTestVisible="False" TextWrapping="Wrap" LineHeight="27" />
     </Grid>
 </Window>

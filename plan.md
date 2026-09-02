@@ -1558,13 +1558,28 @@ highlight/toggle wiring, then zoom + real pagination on top of it.
       The interface addition required a mechanical (no new behavior) touch to
       the Mobile/Android readers to keep them compiling — verified via
       `dotnet build -f net10.0-android`.
-- [ ] **Slice 38 — Reading text box: zoom + fit-to-box pagination.** (Decisions
-      47, 48) Add +/- zoom controls to the text box's own header, enforcing the
-      dynamic 30-word-sentence zoom-in floor and a fixed ~32px ceiling. Replace
-      the Slice 37 scrollable view with the greedy fit-to-box pagination
-      algorithm (own segmentation, independent of `SpeechTextChunker`); the box
-      auto-advances pages to keep the currently-highlighted chunk in view.
-      Unit-test the pure pagination-fill and zoom-floor logic.
+- [x] **Slice 38 — Reading text box: zoom + fit-to-box pagination.** (Decisions
+      47, 48) New pure `TextBoxPaginator.Paginate(text, fits)` (Application) —
+      a greedy, sentence-boundary-respecting fill that takes a caller-supplied
+      `fits` predicate, so its "own segmentation, independent of
+      `SpeechTextChunker`" splitting/greedy-fill logic is fully unit-tested (7
+      cases, incl. the never-drop-or-split-a-sentence and single-oversized-
+      sentence-gets-its-own-page rules) without needing real text measurement;
+      `PageIndexContaining` finds which page a chunk's source position falls
+      in. `ReadingTextBoxWindow` supplies the real `fits` via an off-screen
+      `MeasureProbe` `TextBlock.Measure()` against the box's current
+      (padding-adjusted) width/height — repaginating on text change, zoom, and
+      `ScrollViewer.SizeChanged`, always restoring the currently-playing
+      chunk's page (or page 1) so a zoom/resize never loses the reader's
+      place. Replaced the Slice 37 whole-text scrollable view; the
+      `ScrollViewer` stays only as a safety net for a single sentence too long
+      to fit a page. New toolbar row with +/- zoom buttons (Segoe Fluent
+      glyphs) and a page indicator; zoom-in is clamped to
+      `min(32px, the size at which a fixed 30-word stand-in sentence stops
+      fitting the box)`, zoom-out to a 10px floor — both via the same
+      `MeasureProbe`, no separate Domain value object (this is a
+      single-window WinUI display concern, not a cross-platform one, unlike
+      `PlaybackRate`).
 
 ## Out of Scope
 
