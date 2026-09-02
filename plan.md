@@ -588,6 +588,62 @@ this plan turns it into ordered, shippable vertical slices.
     what automatic-on-every-release wants (newest always wins), but it means
     two releases can never both be "in flight" to the Store at once. See
     `STORE.md` → *Deploying to the Store*.
+45. **Reading text box is a separate floating window, not an expansion of the
+    control panel (Batch 7).** The panel (Decision 12/20) stays its current
+    fixed compact size. A new toggleable window shows the text currently being
+    read; it opens/closes via a **fourth** square icon `ToggleButton` added to
+    the panel's existing `CONTROLS` row, matching the visual pattern of the
+    other three toggles (auto-read-on-selection, auto-read-on-copy,
+    launch-at-startup). Rejected: expanding the panel downward (would make the
+    already-compact Media Card unwieldy) and a docked pop-out glued to the
+    panel (adds positioning complexity for no benefit over a plain independent
+    window, since the panel itself is already freely draggable per Decision 31).
+46. **Highlighting is whole-chunk only, not sentence/word-level (Batch 7).**
+    The text box highlights the entire `SpeechTextChunker` chunk currently
+    playing — no interpolation to a sub-chunk sentence or word position.
+    Simpler, needs no new timing precision, and is what was actually asked
+    for (an earlier sentence-level-interpolation idea was rejected as
+    unneeded complexity).
+47. **Text-box pagination is independent of synthesis chunk boundaries, and
+    auto-follows playback (Batch 7).** A new greedy, sentence-boundary-respecting
+    fill algorithm sizes each "page" to whatever currently fits the box (its own
+    segmentation, separate from `SpeechTextChunker`, which is sized for
+    synthesis latency, not display). The box auto-advances to the page
+    containing the currently-playing chunk; v1 has no manual next/prev page
+    controls — it is a read-along display, not a separate navigable reader.
+48. **Zoom lives in the text-box window itself, with a dynamic minimum instead
+    of a fixed pixel floor (Batch 7).** +/- zoom controls sit in the text box's
+    own header (not on the main control panel). The zoom-in limit is enforced
+    live against the box's current width: zooming stops the moment a 30-word
+    sentence would no longer fit, rather than a fixed minimum font size — this
+    tracks window resizing automatically. A generous fixed pixel ceiling (~32px)
+    caps zoom-out-of-control on the large end, since no equivalent constraint
+    was specified for that direction.
+49. **Audio chunks are always written to a temp WAV file per chunk, for every
+    read (Batch 7).** Supersedes the "no audio caching" exclusion under Batch 4
+    (which only scoped Slice 22's latency work, not a permanent exclusion) — the
+    motivation here is memory footprint on large files, not latency. Every
+    read's chunks land at
+    `…\TemporaryFolder\audio\<activity-id>\chunk-<index>.wav` (a sibling of the
+    existing `logs\` folder, Decision 27) and `MediaPlayer` plays from the file
+    instead of an in-memory buffer. One code path for every read (not a
+    size/duration-gated dual path) — simpler, and the per-chunk disk round-trip
+    is not expected to be perceptible. Cleanup: a read's chunk files are deleted
+    when it reaches a terminal state (read/interrupted/failed) or is superseded
+    (the existing generation-counter teardown already used for synthesis
+    cancellation), plus a startup sweep removes any orphaned `audio\<id>\`
+    folder older than 1 day (mirrors the 7-day `logs\` sweep, Decision 27, at
+    shorter retention since these are pure transient playback buffers, never a
+    diagnostic record).
+50. **One shared chunk map, extended rather than duplicated (Batch 7).** The
+    existing chunk index used by Skip (`SkipTarget`, Decision 32) and the
+    read-through timer (`ReadTimingTracker`, Decision 33) gains two more fields
+    per chunk — its on-disk WAV path (Decision 49) and its source-text character
+    range (for the text box, Decision 46) — instead of introducing a second,
+    parallel index that could drift out of sync with the first.
+51. **The stuck elapsed/total timer is root-caused during implementation, not
+    pre-diagnosed here (Batch 7).** No fix is assumed in this plan; use the
+    systematic-debugging skill when the slice is picked up.
 
 ## Changes
 
@@ -1389,6 +1445,44 @@ batches on the same MAUI codebase once there's an Apple developer account.
       Play Store upload** — blocked on `PLAY_SERVICE_ACCOUNT_JSON`, which only
       the user can create.
 
+**Batch 7 — Read-along text box, disk-backed audio, timer bug fix (Windows).**
+Addresses three user-reported problems: (1) no visual read-along display, (2)
+synthesized audio held fully in memory instead of spilling to disk on large
+files, (3) the elapsed/total read-through timer getting stuck. Ordered
+smallest-first: the standalone bug fix, then the (also standalone) memory
+fix, then the text box in two passes — a minimal window that proves the
+highlight/toggle wiring, then zoom + real pagination on top of it.
+
+- [ ] **Slice 35 — Fix the stuck elapsed/total read-through timer.** (Decision
+      51) Root-cause why `Total` (or the whole timer) stops updating during a
+      read, via the systematic-debugging skill — no fix assumed up front.
+      Regression-test the underlying formatter/accumulation logic
+      (`ReadTimingFormatter`/`ReadTimingTracker`) for whatever the root cause
+      turns out to be.
+- [ ] **Slice 36 — Disk-backed audio chunks.** (Decisions 49, 50) Replace the
+      in-memory per-chunk buffer `SupertonicSpeechReader`/`CompositeSpeechReader`
+      feed to `MediaPlayer` with a temp WAV file per chunk under
+      `…\TemporaryFolder\audio\<activity-id>\`; extend the existing chunk map
+      (Decision 50) with each chunk's file path. Delete a read's folder on
+      terminal state or supersede (reusing the generation-counter teardown) and
+      sweep orphaned folders older than 1 day at startup (mirrors Decision 27's
+      log sweep). Unit-test the pure cleanup/sweep-eligibility logic.
+- [ ] **Slice 37 — Reading text box: window, toggle, whole-chunk highlight.**
+      (Decisions 45, 46, 50) New floating `AppWindow`, opened/closed by a new
+      4th icon `ToggleButton` in the control panel's `CONTROLS` row. Extend the
+      chunk map (Decision 50) with each chunk's source-text character range.
+      While a read plays, the window shows the current chunk's text with it
+      highlighted (plain scrollable text for this first pass — no pagination or
+      zoom yet, those land in Slice 38). Closing the window doesn't stop
+      playback; toggling it back open re-syncs to the current chunk.
+- [ ] **Slice 38 — Reading text box: zoom + fit-to-box pagination.** (Decisions
+      47, 48) Add +/- zoom controls to the text box's own header, enforcing the
+      dynamic 30-word-sentence zoom-in floor and a fixed ~32px ceiling. Replace
+      the Slice 37 scrollable view with the greedy fit-to-box pagination
+      algorithm (own segmentation, independent of `SpeechTextChunker`); the box
+      auto-advances pages to keep the currently-highlighted chunk in view.
+      Unit-test the pure pagination-fill and zoom-floor logic.
+
 ## Out of Scope
 
 - Voice *tuning* beyond playback rate (pitch, volume, SSML prosody).
@@ -1474,6 +1568,14 @@ batches on the same MAUI codebase once there's an Apple developer account.
 - **(Batch 6)** Public/production Google Play release — CI publishes to the
   **internal testing** track only; production release is a later, deliberate
   step (Decision 42).
+- **(Batch 7)** Sentence/word-level highlight precision — the text box
+  highlights the whole playing chunk only (Decision 46).
+- **(Batch 7)** Manual page navigation in the text box — v1 auto-follows
+  playback only, no next/prev controls (Decision 47).
+- **(Batch 7)** A size/duration threshold that keeps small reads in memory —
+  every read is disk-backed uniformly (Decision 49).
+- **(Batch 7)** A mobile equivalent of the reading text box — Windows-only for
+  now, same deferral pattern as the activity log (Decision 38).
 
 ## Verification
 
@@ -1632,5 +1734,21 @@ batches on the same MAUI codebase once there's an Apple developer account.
 - **Slice 34:** a CI run on `main` produces a signed `.aab` artifact; once Play
   Console credentials are configured, the same run uploads it to the internal
   testing track and it's installable via the Play Store's internal-testing link.
+- **Slice 35:** trigger a read that used to leave the timer stuck → `Total`
+  now resolves and the `mm:ss/mm:ss` display keeps ticking for the whole read.
+  `dotnet test` covers the regression case for whatever the root cause was.
+- **Slice 36:** read a large file, watching Task Manager → memory no longer
+  grows unbounded with file size; `…\TemporaryFolder\audio\<id>\` contains a
+  WAV per chunk during the read and is gone after it finishes; skip
+  forward/backward still works unchanged. Restart with a >1-day-old orphaned
+  `audio\` folder present → it's swept on startup.
+- **Slice 37:** toggle the new 4th `CONTROLS` icon on → the text box opens;
+  during a read, it shows the current chunk's text with it highlighted, and
+  updates as playback moves to the next chunk. Close the window → playback is
+  unaffected; reopen it → it re-syncs to whatever chunk is currently playing.
+- **Slice 38:** with the text box open, click +/- → text zooms in/out live;
+  zooming in stops right where a 30-word sentence would no longer fit at the
+  current box width; a long paragraph is shown one fit-to-box page at a time,
+  auto-advancing as playback crosses into the next page's chunk.
 - Manual UI checks driven through the running app; no browser E2E harness
   applies to a native tray app or a MAUI mobile app.
