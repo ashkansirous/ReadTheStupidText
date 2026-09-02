@@ -292,10 +292,39 @@ public sealed class ReadAloudService : IDisposable
     }
 
     /// <summary>Jumps the current read ~10s forward (Decision 32); a no-op while idle.</summary>
-    public Task SkipForwardAsync() => _reader.SkipForward();
+    public Task SkipForwardAsync() => SkipAsync(_reader.SkipForward);
 
     /// <summary>Jumps the current read ~10s backward (Decision 32); a no-op while idle.</summary>
-    public Task SkipBackwardAsync() => _reader.SkipBackward();
+    public Task SkipBackwardAsync() => SkipAsync(_reader.SkipBackward);
+
+    // Drops a skip request that arrives while a previous one hasn't settled yet
+    // (Slice 35). A skip cancels the reader's in-flight chunk synthesis (Decision 32),
+    // but sherpa-onnx's native Generate call can't actually be interrupted once
+    // started, so back-to-back skips don't replace one another — they pile up as
+    // overlapping "zombie" synthesis work competing for the same thread pool, which
+    // starves the read that's actually current and made it look permanently stuck
+    // (reproduced: repeated Skip presses on a long file upload left chunks 8-29
+    // resynthesizing in overlapping bursts for two minutes without the read ever
+    // completing). Serializing skips here — the shared entry point for the panel's
+    // skip buttons — keeps that cascade from starting.
+    private int _skipInFlight;
+
+    private async Task SkipAsync(Func<Task> skip)
+    {
+        if (Interlocked.CompareExchange(ref _skipInFlight, 1, 0) != 0)
+        {
+            return;
+        }
+
+        try
+        {
+            await skip();
+        }
+        finally
+        {
+            Volatile.Write(ref _skipInFlight, 0);
+        }
+    }
 
     public void SetSpeed(PlaybackRate speed)
     {
