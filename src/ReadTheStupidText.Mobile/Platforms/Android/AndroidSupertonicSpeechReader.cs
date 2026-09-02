@@ -57,6 +57,13 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IDisposable
     private int _speakerId = SupertonicVoiceTable.DefaultSpeakerId;
     private PlaybackState _state = PlaybackState.Idle;
 
+    // MediaPlayer.PlaybackParams is only settable once the player has reached
+    // Prepared (or later) — calling it right after Reset() (still Idle, between
+    // chunks) throws IllegalArgumentException. SetSpeed can fire from the UI at
+    // any moment, including that gap, so it must check this rather than assume
+    // _player's native state.
+    private bool _playerReady;
+
     private TaskCompletionSource<bool>? _chunkEnded;
     private CancellationTokenSource? _pollCts;
 
@@ -258,6 +265,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IDisposable
 
         AndroidMedia.MediaPlayer player = EnsurePlayer();
         player.Reset();
+        _playerReady = false;
         DeletePreviousChunkFile();
         _previousChunkFile = _currentChunkFile;
         _currentChunkFile = wavPath;
@@ -275,6 +283,8 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IDisposable
         {
             player.Prepared -= OnPrepared;
         }
+
+        _playerReady = true;
 
         if (!token.IsCancellationRequested)
         {
@@ -316,6 +326,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IDisposable
         _chunkEnded?.TrySetResult(false);
         StopPolling();
         _player?.Reset();
+        _playerReady = false;
         DeletePreviousChunkFile();
         DeleteCurrentChunkFile();
         _chunkCount = 0;
@@ -328,7 +339,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IDisposable
     public void SetSpeed(PlaybackRate speed)
     {
         _playbackRate = speed.Value;
-        if (_player is { } player)
+        if (_playerReady && _player is { } player)
         {
             ApplyPlaybackRate(player);
         }
@@ -571,6 +582,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IDisposable
         _synthCts?.Dispose();
         _player?.Release();
         _player = null;
+        _playerReady = false;
         DeletePreviousChunkFile();
         DeleteCurrentChunkFile();
         _tts?.Dispose();

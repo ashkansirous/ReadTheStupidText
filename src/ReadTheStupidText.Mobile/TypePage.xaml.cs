@@ -107,7 +107,7 @@ public partial class TypePage : ContentPage
                 && new PlaybackRate(value).Value == _speed.Value;
 
             button.BackgroundColor = selected ? SelectedPresetBackground : UnselectedPresetBackground;
-            button.TextColor = selected ? SelectedPresetText : (Color)Resources["TextSecondaryLight"];
+            button.TextColor = selected ? SelectedPresetText : (Color)Microsoft.Maui.Controls.Application.Current!.Resources["TextSecondaryLight"];
         }
     }
 
