@@ -20,6 +20,18 @@ at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
 > input surfaces instead). See Decisions 37-42 and the Batch 6 slices in
 > `plan.md` for the full rationale.
 
+> **Reading text box + disk-backed audio (Batch 7, planning):** a toggleable
+> floating window will show the chunk currently being read (whole-chunk
+> highlight, its own fit-to-box pagination independent of `SpeechTextChunker`,
+> zoom bounded by a live 30-word-sentence floor) — opened via a 4th icon in the
+> control panel's `CONTROLS` row. Synthesized audio moves from an in-memory
+> buffer to a temp WAV file per chunk under `TemporaryFolder\audio\<id>\`
+> (sibling of the existing `logs\` folder), fixing memory growth on large
+> files; the existing chunk map used by Skip (Decision 32) and the read-through
+> timer (Decision 33) is extended with each chunk's file path and source-text
+> range rather than duplicated. See Decisions 45-51 and the Batch 7 slices
+> (35-38) in `plan.md`.
+
 > **Naming:** the user-facing **product display name is "Read The Stupid Text"** (with
 > spaces) — shown in the manifest `DisplayName`s, tray tooltip, control-panel header,
 > and window titles. The **repo, package id (`ReadTheStupidText`), namespaces, assembly,
