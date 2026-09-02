@@ -326,6 +326,15 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
                 await Task.Run(() => tts.Generate(chunk, 1.0f, speakerId), token);
             TimeSpan generate = Stopwatch.GetElapsedTime(generateStart);
 
+            // tts.Generate is a synchronous native call: passing token to Task.Run only
+            // stops it from *starting* once already cancelled, it can't interrupt a
+            // Generate already in flight (Slice 35). So a superseded generation (e.g. a
+            // second Skip press arriving before the first one's target chunk finished
+            // synthesizing) still runs this to completion — check here, before touching
+            // any shared state, so that wasted work can't write a stale chunk duration
+            // into the timing tracker a newer generation is now using.
+            token.ThrowIfCancellationRequested();
+
             RecordChunkDuration(index, audio);
 
             long wavStart = Stopwatch.GetTimestamp();

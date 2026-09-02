@@ -873,7 +873,7 @@ Commits (default patch) and **stays `0.x`** — it is **not** forced to `v1.0.0`
 the app reaches `1.0.0` only when the user declares it stable. Ordered
 smallest-first; each is independently shippable.
 
-- [ ] **Slice 11 — Overlord voice names.** ([#46](https://github.com/ashkansirous/ReadTheStupidText/issues/46)) (Decision 19) Rename the ten
+- [x] **Slice 11 — Overlord voice names.** ([#46](https://github.com/ashkansirous/ReadTheStupidText/issues/46)) (Decision 19) Rename the ten
       `DisplayName`s in `SupertonicVoiceTable` to the Overlord mapping (default
       **Momonga** = M1); leave the `supertonic:` ids and sid order untouched.
       Smallest end-to-end change — the picker/menu show the new names with no
@@ -1488,12 +1488,32 @@ smallest-first: the standalone bug fix, then the (also standalone) memory
 fix, then the text box in two passes — a minimal window that proves the
 highlight/toggle wiring, then zoom + real pagination on top of it.
 
-- [ ] **Slice 35 — Fix the stuck elapsed/total read-through timer.** (Decision
-      51) Root-cause why `Total` (or the whole timer) stops updating during a
-      read, via the systematic-debugging skill — no fix assumed up front.
-      Regression-test the underlying formatter/accumulation logic
-      (`ReadTimingFormatter`/`ReadTimingTracker`) for whatever the root cause
-      turns out to be.
+- [x] **Slice 35 — Fix the stuck elapsed/total read-through timer.** (Decision
+      51) Root-caused from the packaged app's own `system-*.log`/`input-*.log`
+      (Decision 27) left over from a prior session: a file-upload read's chunks
+      8-29 were resynthesized in overlapping bursts for two minutes and the
+      read never reached `Read`. Cause: `SkipForward`/`SkipBackward` cancels
+      the reader's in-flight generation (`BeginGeneration`), but sherpa-onnx's
+      `OfflineTts.Generate` is a synchronous native call — passing a
+      `CancellationToken` to `Task.Run` only stops it from *starting*, it can't
+      interrupt one already running. So a second Skip pressed before the first
+      one's target chunk finished synthesizing didn't replace that work, it
+      left it running as a "zombie" generation that (a) still wrote its chunk's
+      duration into the shared `ReadTimingTracker` after the fact, and (b) kept
+      competing for the same thread pool as the generation that superseded it —
+      starving the *current* read's own synthesis and making the timer (and
+      the read) look permanently stuck. Fix:
+      `SupertonicSpeechReader.GenerateChunkAsync` now calls
+      `token.ThrowIfCancellationRequested()` right after `Generate` returns,
+      before touching `_timing` or building the WAV stream, so a superseded
+      generation's already-sunk synthesis time can no longer corrupt the
+      active read's state; `ReadAloudService.SkipForwardAsync`/
+      `SkipBackwardAsync` also serialize on a single in-flight skip so
+      back-to-back presses can't start the cascade in the first place.
+      `ReadTimingFormatter`/`ReadTimingTracker` themselves had no bug — the
+      108 existing unit tests still pass unchanged; the WinRT/native
+      synthesis path isn't unit-testable (needs package identity), so this
+      needs a live-run confirmation per the project's existing convention.
 - [ ] **Slice 36 — Disk-backed audio chunks.** (Decisions 49, 50) Replace the
       in-memory per-chunk buffer `SupertonicSpeechReader`/`CompositeSpeechReader`
       feed to `MediaPlayer` with a temp WAV file per chunk under
