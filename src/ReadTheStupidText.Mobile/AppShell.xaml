@@ -7,12 +7,11 @@
     Title="Read The Stupid Text"
     FlyoutBehavior="Disabled">
 
-    <!-- The bottom nav is the app's only navigation (Decision 43): Type, Camera,
-         File are the three Android input paths (Decision 38). -->
-    <TabBar>
-        <ShellContent Title="Type" ContentTemplate="{DataTemplate local:TypePage}" Route="Type" />
-        <ShellContent Title="Camera" ContentTemplate="{DataTemplate local:CameraPage}" Route="Camera" />
-        <ShellContent Title="File" ContentTemplate="{DataTemplate local:FilePage}" Route="File" />
-    </TabBar>
+    <!-- Single home screen (design refresh, post-Slice 34): Paste/Scan/File are
+         input actions on ReaderPage itself, not tabs (Decision 38's three
+         Android input paths still apply — they just no longer need separate
+         navigation destinations). Scan and the voice picker are pushed routes,
+         registered in the code-behind. -->
+    <ShellContent Title="Reader" ContentTemplate="{DataTemplate local:ReaderPage}" Route="Reader" />
 
 </Shell>

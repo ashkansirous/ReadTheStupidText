@@ -1,27 +1,24 @@
 using ReadTheStupidText.Application.Images;
-using ReadTheStupidText.Application.Reading;
 
 namespace ReadTheStupidText.Mobile;
 
 /// <summary>
-/// Screen 2 — camera capture → OCR → read (Slice 32, Decision 40, 43). Single-shot:
-/// launches the system camera app via <see cref="MediaPicker"/> (no embedded live
-/// viewfinder in this pass — a disclosed simplification of the design mock, the
-/// same allowance Slice 30 used for Screen 1), extracts the photo's text with
-/// <see cref="IImageTextExtractor"/>, and reads it through the exact same
-/// <see cref="ISpeechReader"/> singleton <c>TypePage</c> uses — OCR is just
-/// another text source feeding the one read pipeline, not new reading logic.
+/// Transient capture screen (Slice 32, Decision 40; design refresh post-Slice 34
+/// — plan.md Decision 43's second resync). Pushed from <see cref="ReaderPage"/>'s
+/// Scan action, never a tab: it captures a photo, extracts its text with
+/// <see cref="IImageTextExtractor"/>, and on "Use text" hands the result back to
+/// the reader by popping itself with a <c>scannedText</c> query parameter — it no
+/// longer speaks the text itself, since there is only ever one player, on the
+/// reader screen.
 /// </summary>
-public partial class CameraPage : ContentPage
+public partial class ScanPage : ContentPage
 {
-    private readonly ISpeechReader _reader;
     private readonly IImageTextExtractor _extractor;
     private string? _extractedText;
 
-    public CameraPage(ISpeechReader reader, IImageTextExtractor extractor)
+    public ScanPage(IImageTextExtractor extractor)
     {
         InitializeComponent();
-        _reader = reader;
         _extractor = extractor;
     }
 
@@ -69,12 +66,17 @@ public partial class CameraPage : ContentPage
 
     private void OnRetakeClicked(object? sender, EventArgs e) => ShowIdle();
 
-    private async void OnReadClicked(object? sender, EventArgs e)
+    private async void OnUseTextClicked(object? sender, EventArgs e)
     {
-        if (!string.IsNullOrWhiteSpace(_extractedText))
+        if (string.IsNullOrWhiteSpace(_extractedText))
         {
-            await _reader.SpeakAsync(_extractedText);
+            return;
         }
+
+        await Shell.Current.GoToAsync("..", new Dictionary<string, object>
+        {
+            [ReaderPage.ScannedTextKey] = _extractedText,
+        });
     }
 
     private void ShowIdle()
@@ -98,7 +100,7 @@ public partial class CameraPage : ContentPage
         ExtractedTextLabel.Text = string.IsNullOrWhiteSpace(text)
             ? "No text found in that photo."
             : text;
-        ReadButton.IsEnabled = !string.IsNullOrWhiteSpace(text);
+        UseTextButton.IsEnabled = !string.IsNullOrWhiteSpace(text);
 
         IdleState.IsVisible = false;
         ProcessingState.IsVisible = false;

@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="ReadTheStupidText.Mobile.ReaderPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Reader"
+    Shell.NavBarIsVisible="False">
+
+    <ContentPage.Resources>
+        <Style x:Key="SpeedPresetStyle" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource ChipBackgroundLight}, Dark={StaticResource ChipBackgroundDark}}" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="CornerRadius" Value="7" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HeightRequest" Value="28" />
+            <Setter Property="BorderWidth" Value="0" />
+        </Style>
+        <Style x:Key="TransportGlyphStyle" TargetType="Label">
+            <Setter Property="HorizontalOptions" Value="Center" />
+            <Setter Property="VerticalOptions" Value="Center" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
+        </Style>
+        <Style x:Key="ActionButtonBorderStyle" TargetType="Border">
+            <Setter Property="HeightRequest" Value="44" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 10" />
+            <Setter Property="Stroke" Value="{StaticResource CardBorder}" />
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}" />
+        </Style>
+        <Style x:Key="ActionButtonLabelStyle" TargetType="Label">
+            <Setter Property="HorizontalOptions" Value="Center" />
+            <Setter Property="VerticalOptions" Value="Center" />
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="FontAttributes" Value="Bold" />
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*" BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}">
+
+        <!-- Brand app bar: title only — the reader has no per-page subtitle anymore
+             (voice + speed now live in the Voice row and speed presets below). -->
+        <Grid Grid.Row="0" Padding="18,14,16,15">
+            <Grid.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="{StaticResource BrandStart}" Offset="0.0" />
+                    <GradientStop Color="{StaticResource BrandEnd}" Offset="1.0" />
+                </LinearGradientBrush>
+            </Grid.Background>
+            <Label Text="Read The Stupid Text" TextColor="White" FontSize="16" FontAttributes="Bold" />
+        </Grid>
+
+        <Grid Grid.Row="1" Padding="14,12,14,10" RowDefinitions="Auto,Auto,*,Auto,Auto" RowSpacing="10">
+
+            <!-- "ADD TEXT" section label -->
+            <Grid Grid.Row="0" ColumnDefinitions="Auto,*" ColumnSpacing="8" VerticalOptions="Center">
+                <Label Grid.Column="0" Text="ADD TEXT" FontSize="10" FontAttributes="Bold"
+                       CharacterSpacing="1" TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
+                <BoxView Grid.Column="1" HeightRequest="1" VerticalOptions="Center"
+                         Color="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource TextSecondaryDark}}" />
+            </Grid>
+
+            <!-- Input actions: Paste / Scan / File all feed the one text box below. -->
+            <Grid Grid.Row="1" ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                <Border Grid.Column="0" Style="{StaticResource ActionButtonBorderStyle}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnPasteTapped" />
+                    </Border.GestureRecognizers>
+                    <Label Text="&#128203; Paste" Style="{StaticResource ActionButtonLabelStyle}" />
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource ActionButtonBorderStyle}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnScanTapped" />
+                    </Border.GestureRecognizers>
+                    <Label Text="&#128247; Scan" Style="{StaticResource ActionButtonLabelStyle}" />
+                </Border>
+                <Border Grid.Column="2" Style="{StaticResource ActionButtonBorderStyle}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnFileTapped" />
+                    </Border.GestureRecognizers>
+                    <Label Text="&#128196; File" Style="{StaticResource ActionButtonLabelStyle}" />
+                </Border>
+            </Grid>
+
+            <!-- Editor card: the one text box every input action fills. -->
+            <Grid Grid.Row="2">
+                <Border Padding="14"
+                        StrokeShape="RoundRectangle 14" Stroke="{StaticResource CardBorder}"
+                        BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}">
+                    <Editor x:Name="TextEditor"
+                            Placeholder="Type or paste here, scan a page, or open a file — everything lands in this one box and plays with the same controls below."
+                            FontSize="13.5" />
+                </Border>
+                <ActivityIndicator x:Name="BusyIndicator" IsRunning="False" IsVisible="False"
+                                    HorizontalOptions="Center" VerticalOptions="Center" />
+            </Grid>
+
+            <!-- Voice row: opens the picker; no hidden action in the app bar. -->
+            <Border Grid.Row="3" Padding="13,0" HeightRequest="46"
+                    StrokeShape="RoundRectangle 14" Stroke="{StaticResource CardBorder}"
+                    BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnVoiceRowTapped" />
+                </Border.GestureRecognizers>
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <Label Grid.Column="0" Text="Voice" FontSize="12.5" VerticalOptions="Center"
+                           TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
+                    <Label Grid.Column="2" x:Name="VoiceNameLabel" FontSize="13" FontAttributes="Bold"
+                           HorizontalOptions="End" VerticalOptions="Center" />
+                </Grid>
+            </Border>
+
+            <!-- Player card: transport + speed presets, applies to whatever is in the text box. -->
+            <Border Grid.Row="4" Padding="14"
+                    StrokeShape="RoundRectangle 14" Stroke="{StaticResource CardBorder}"
+                    BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}">
+                <VerticalStackLayout Spacing="12">
+
+                    <Grid ColumnDefinitions="34,52,34,*" ColumnSpacing="10" VerticalOptions="Center">
+                        <Border Grid.Column="0" WidthRequest="34" HeightRequest="34" Padding="0"
+                                StrokeShape="RoundRectangle 17" Stroke="Transparent"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource ChipBackgroundLight}, Dark={StaticResource ChipBackgroundDark}}">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnSkipBackTapped" />
+                            </Border.GestureRecognizers>
+                            <Label Text="&#8676;10" Style="{StaticResource TransportGlyphStyle}" FontSize="10" />
+                        </Border>
+
+                        <Border Grid.Column="1" WidthRequest="52" HeightRequest="52" Padding="0"
+                                StrokeShape="RoundRectangle 26" Stroke="Transparent">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                    <GradientStop Color="{StaticResource BrandStart}" Offset="0.0" />
+                                    <GradientStop Color="{StaticResource BrandEnd}" Offset="1.0" />
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnPlayPauseTapped" />
+                            </Border.GestureRecognizers>
+                            <Label x:Name="PlayPauseGlyph" Text="&#9654;" TextColor="White" FontSize="20"
+                                   HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+
+                        <Border Grid.Column="2" WidthRequest="34" HeightRequest="34" Padding="0"
+                                StrokeShape="RoundRectangle 17" Stroke="Transparent"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource ChipBackgroundLight}, Dark={StaticResource ChipBackgroundDark}}">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnSkipForwardTapped" />
+                            </Border.GestureRecognizers>
+                            <Label Text="10&#8677;" Style="{StaticResource TransportGlyphStyle}" FontSize="10" />
+                        </Border>
+
+                        <VerticalStackLayout Grid.Column="3" Spacing="4" VerticalOptions="Center">
+                            <ProgressBar x:Name="ReadProgressBar" Progress="0"
+                                         ProgressColor="{StaticResource Primary}" />
+                            <Label x:Name="TimerLabel" Text="00:00/--:--" FontSize="10"
+                                   TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <Grid x:Name="SpeedPresetRow" ColumnDefinitions="*,*,*,*,*,*" ColumnSpacing="6">
+                        <Button Grid.Column="0" Text="0.5×" ClassId="0.5" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedPresetStyle}" />
+                        <Button Grid.Column="1" Text="1×" ClassId="1.0" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedPresetStyle}" />
+                        <Button Grid.Column="2" Text="1.25×" ClassId="1.25" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedPresetStyle}" />
+                        <Button Grid.Column="3" Text="1.5×" ClassId="1.5" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedPresetStyle}" />
+                        <Button Grid.Column="4" Text="1.75×" ClassId="1.75" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedPresetStyle}" />
+                        <Button Grid.Column="5" Text="2×" ClassId="2.0" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedPresetStyle}" />
+                    </Grid>
+
+                </VerticalStackLayout>
+            </Border>
+
+        </Grid>
+    </Grid>
+</ContentPage>

@@ -19,6 +19,9 @@
     <Color x:Key="PageBackgroundDark">#15161C</Color>
     <Color x:Key="CardBorder">#17000000</Color>
     <Color x:Key="TextSecondaryLight">#80000000</Color>
+    <Color x:Key="TextSecondaryDark">#A3FFFFFF</Color>
+    <Color x:Key="ChipBackgroundLight">#0D000000</Color>
+    <Color x:Key="ChipBackgroundDark">#1AFFFFFF</Color>
 
     <Color x:Key="White">White</Color>
     <Color x:Key="Black">Black</Color>
