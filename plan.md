@@ -566,6 +566,41 @@ this plan turns it into ordered, shippable vertical slices.
     decided when each slice is actually implemented — this decision fixes the
     design source and the concrete screen contract so that work doesn't start
     from a blank page.
+
+    **Design refresh (post-Slice 34) — unified Reader screen, resynced from the
+    same live canvas.** The three-tab Type/Camera/File layout above (Screens 1–3
+    plus the File tab) was superseded by a second resync of
+    `Option C - Media Card.dc.html`: Paste, Scan and File are now **input
+    actions, not modes** — each drops text into the **same** editor, and the one
+    voice row + transport card beneath it applies to whatever is in it, rather
+    than each path owning its own screen and its own player. Concretely:
+    - **Reader (home, replaces Screen 1 + the File tab).** Brand app bar with
+      just the title (no sub-line — voice and speed moved into the body). An
+      `ADD TEXT` row of three equal buttons — Paste / Scan / File — sits above
+      the editor card; Paste reads the clipboard directly, File opens the
+      `FilePicker` directly (no more idle/processing/result screen of its own),
+      and Scan pushes the Scan screen. Below the editor: a **Voice row** (name +
+      chevron, opens the picker — replacing the old header mic button) and the
+      same transport + 6-preset speed card as before. No bottom nav — this is
+      the Shell's only `ShellContent`.
+    - **Scan (replaces Screen 2, "Camera → OCR").** Unchanged capture flow, but
+      the result bar's button is now **Use text**, not **Read**: it pops the
+      page and hands the OCR result back to Reader via a `scannedText` query
+      property instead of speaking it directly — there is only ever one player,
+      and it lives on Reader.
+    - **Voice picker (Screen 3)** is unchanged in content, now reached from the
+      Reader's Voice row instead of a header mic button; dark-theme token fixes
+      (secondary text, chip fills) were applied where the picker still used a
+      light-only color, matching the resynced doc's explicit "no control ever
+      goes black-on-black" callout.
+    The local `design_handoff_tray_panel/Option C - Media Card.dc.html` was
+    re-pulled from canvas `90615641-f298-4e21-8c50-ca2efbeaaebc` to match; its
+    `README.md` still describes the three-tab version and was intentionally left
+    alone (per the doc's own precedence rule, "use the HTML purely as the visual
+    + behavioral source of truth" — the README is the stale artifact here, not
+    the code). No slice renumbering: this is a design-refresh note against the
+    already-`[x]`-complete Slices 30–33, the same convention used for the
+    Windows panel's post-Slice-13 redesigns.
 44. **Store submission is now automatic on every release, not manual
     (`store-submit.yml` bug fix).** Root cause: the workflow was
     `workflow_dispatch`-only and simply never got re-triggered — it had run

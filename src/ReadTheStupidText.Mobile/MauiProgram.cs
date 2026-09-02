@@ -29,10 +29,9 @@ public static class MauiProgram
 		builder.Services.AddSingleton<PdfTextExtractor>();
 		builder.Services.AddSingleton<DocxTextExtractor>();
 		builder.Services.AddSingleton<IDocumentTextExtractor, CompositeDocumentTextExtractor>();
-		builder.Services.AddTransient<TypePage>();
+		builder.Services.AddTransient<ReaderPage>();
 		builder.Services.AddTransient<VoicePickerPage>();
-		builder.Services.AddTransient<CameraPage>();
-		builder.Services.AddTransient<FilePage>();
+		builder.Services.AddTransient<ScanPage>();
 
 #if DEBUG
 		builder.Logging.AddDebug();

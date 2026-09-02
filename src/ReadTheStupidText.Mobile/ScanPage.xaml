@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <ContentPage
-    x:Class="ReadTheStupidText.Mobile.CameraPage"
+    x:Class="ReadTheStupidText.Mobile.ScanPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    Title="Camera"
+    Title="Scan"
     Shell.NavBarIsVisible="False"
     BackgroundColor="#0b0d12">
 
@@ -16,7 +16,7 @@
         <VerticalStackLayout x:Name="IdleState" VerticalOptions="Center" HorizontalOptions="Center" Spacing="18" Padding="24">
             <Label Text="&#128247;" FontSize="40" HorizontalTextAlignment="Center" />
             <Label Text="Photograph printed text" TextColor="White" FontSize="18" FontAttributes="Bold" HorizontalTextAlignment="Center" />
-            <Label Text="Capture a photo and it reads the extracted text aloud through the same pipeline as typed text."
+            <Label Text="Capture a photo and its text drops straight into the reader's text box — no separate player lives here."
                    TextColor="#B3FFFFFF" FontSize="13" HorizontalTextAlignment="Center" />
             <Border WidthRequest="68" HeightRequest="68" Padding="0" StrokeShape="RoundRectangle 34"
                     Stroke="White" StrokeThickness="3" BackgroundColor="Transparent" HorizontalOptions="Center">
@@ -33,7 +33,7 @@
             <Label Text="Reading the photo…" TextColor="White" FontSize="14" />
         </VerticalStackLayout>
 
-        <!-- Result: extracted text preview + Read / retake. -->
+        <!-- Result: extracted text preview + Use text / retake. -->
         <Grid x:Name="ResultState" IsVisible="False" RowDefinitions="*,Auto" Padding="18">
             <Border Grid.Row="0" Padding="14" StrokeShape="RoundRectangle 14" Stroke="#33FFFFFF"
                     BackgroundColor="#161922">
@@ -44,7 +44,7 @@
             <Grid Grid.Row="1" Margin="0,14,0,0" ColumnDefinitions="Auto,*" ColumnSpacing="10">
                 <Button Grid.Column="0" Text="Retake" Clicked="OnRetakeClicked"
                         BackgroundColor="#22FFFFFF" TextColor="White" CornerRadius="19" HeightRequest="38" />
-                <Button Grid.Column="1" x:Name="ReadButton" Text="Read" Clicked="OnReadClicked"
+                <Button Grid.Column="1" x:Name="UseTextButton" Text="Use text" Clicked="OnUseTextClicked"
                         BackgroundColor="#5B57E8" TextColor="White" CornerRadius="19" HeightRequest="38" />
             </Grid>
         </Grid>
