@@ -44,6 +44,7 @@ public partial class App : Application
         // routes between them, and the catalog exposes the neural voices once ready.
         services.AddSingleton<IVoiceModelService, SupertonicModelService>();
         services.AddSingleton<SpeechReader>();
+        services.AddSingleton<AudioChunkPaths>();
         services.AddSingleton<SupertonicSpeechReader>();
         services.AddSingleton<ISpeechReader, CompositeSpeechReader>();
         services.AddSingleton<IVoiceCatalog, NeuralVoiceCatalog>();
@@ -83,6 +84,12 @@ public partial class App : Application
     // day-files are swept on launch so the temp folder stays bounded.
     private static readonly TimeSpan LogRetention = TimeSpan.FromDays(7);
 
+    // Audio-chunk folders are pure transient playback buffers, not a diagnostic
+    // record, so they're swept far sooner than logs (Decision 49) — this only
+    // catches one orphaned by a read that never reached a terminal state (e.g. the
+    // app was killed mid-read); a normal read cleans up its own folder when done.
+    private static readonly TimeSpan AudioChunkRetention = TimeSpan.FromDays(1);
+
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
         StartLogging();
@@ -103,6 +110,7 @@ public partial class App : Application
     private void StartLogging()
     {
         Services.GetRequiredService<LogPaths>().PurgeOlderThan(LogRetention);
+        Services.GetRequiredService<AudioChunkPaths>().PurgeOrphaned(AudioChunkRetention);
         Services.GetRequiredService<ISystemLog>().Info("Read The Stupid Text started");
         Services.GetRequiredService<ActivityInputLog>();
     }

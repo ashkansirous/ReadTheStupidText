@@ -1514,14 +1514,23 @@ highlight/toggle wiring, then zoom + real pagination on top of it.
       108 existing unit tests still pass unchanged; the WinRT/native
       synthesis path isn't unit-testable (needs package identity), so this
       needs a live-run confirmation per the project's existing convention.
-- [ ] **Slice 36 — Disk-backed audio chunks.** (Decisions 49, 50) Replace the
-      in-memory per-chunk buffer `SupertonicSpeechReader`/`CompositeSpeechReader`
-      feed to `MediaPlayer` with a temp WAV file per chunk under
-      `…\TemporaryFolder\audio\<activity-id>\`; extend the existing chunk map
-      (Decision 50) with each chunk's file path. Delete a read's folder on
-      terminal state or supersede (reusing the generation-counter teardown) and
-      sweep orphaned folders older than 1 day at startup (mirrors Decision 27's
-      log sweep). Unit-test the pure cleanup/sweep-eligibility logic.
+- [x] **Slice 36 — Disk-backed audio chunks.** (Decisions 49, 50) Replaced the
+      in-memory per-chunk WAV buffer (`InMemoryRandomAccessStream`)
+      `SupertonicSpeechReader` fed to `MediaPlayer` with a temp WAV file per
+      chunk under `…\TemporaryFolder\audio\<activity-id>\chunk-<index>.wav`
+      (new `AudioChunkPaths`, a sibling of `LogPaths`); `MediaPlayer` now plays
+      each chunk via `StorageFile.GetFileFromPathAsync` +
+      `MediaSource.CreateFromStorageFile` instead of a stream. A read's folder
+      is deleted on natural completion or `Stop()` (both already know the
+      read is genuinely done, unlike Skip/mid-read voice-change, which reuse
+      the same activity id and folder); a startup sweep
+      (`AudioChunkPaths.PurgeOrphaned`, 1 day) catches one orphaned by a read
+      that never reached a terminal state. The pure sweep-eligibility rule
+      (`AudioChunkSweep.IsEligible`) is unit-tested (`AudioChunkSweepTests`,
+      4 cases). `CompositeSpeechReader` needed no change — it already just
+      routes to the active engine. Confirmed
+      `Windows.Storage.StorageFile`/`Windows.Media.Core.MediaSource` usage via
+      context7 first (Decision 9).
 - [ ] **Slice 37 — Reading text box: window, toggle, whole-chunk highlight.**
       (Decisions 45, 46, 50) New floating `AppWindow`, opened/closed by a new
       4th icon `ToggleButton` in the control panel's `CONTROLS` row. Extend the
