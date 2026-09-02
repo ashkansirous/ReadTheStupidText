@@ -11,9 +11,10 @@
         The left-click control panel — the "Media Card" design (Decisions 20–21,
         compact rev): a brand-gradient "now reading" header (eyebrow, title, live
         waveform, status, transport row, and a speed pill that reveals a hidden
-        speed slider) over a compact Fluent body — a voice dropdown + upload-file and
-        activity-log buttons, then a row of three square icon toggles (auto-read on selection /
-        on copy / launch at startup). Borderless, always-on-top, pinned (no
+        speed slider) over a compact Fluent body — a voice dropdown, then a labelled
+        Actions row (Read a file / Activity log), then a row of three square icon
+        toggles (auto-read on selection / on copy / launch at startup). Borderless,
+        always-on-top, pinned (no
         click-away dismiss — see ControlPanelWindow.xaml.cs). Native WinUI controls
         + light/dark theme resources from design_handoff_tray_panel (the HTML is the
         visual source of truth). Every control binds to the existing services; Quit
@@ -30,6 +31,8 @@
                         <SolidColorBrush x:Key="PanelStroke" Color="#14000000" />
                         <SolidColorBrush x:Key="PanelCard" Color="#99FFFFFF" />
                         <SolidColorBrush x:Key="PanelCBorder" Color="#1A000000" />
+                        <SolidColorBrush x:Key="PanelCBorder2" Color="#2E000000" />
+                        <SolidColorBrush x:Key="PanelControl" Color="#C7FFFFFF" />
                         <SolidColorBrush x:Key="PanelAccent" Color="#3B6FE3" />
                         <SolidColorBrush x:Key="PanelAccent2" Color="#2A57C0" />
                         <SolidColorBrush x:Key="PanelKbd" Color="#0D000000" />
@@ -42,6 +45,8 @@
                         <SolidColorBrush x:Key="PanelStroke" Color="#14FFFFFF" />
                         <SolidColorBrush x:Key="PanelCard" Color="#0BFFFFFF" />
                         <SolidColorBrush x:Key="PanelCBorder" Color="#1AFFFFFF" />
+                        <SolidColorBrush x:Key="PanelCBorder2" Color="#29FFFFFF" />
+                        <SolidColorBrush x:Key="PanelControl" Color="#14FFFFFF" />
                         <SolidColorBrush x:Key="PanelAccent" Color="#5B8DF0" />
                         <SolidColorBrush x:Key="PanelAccent2" Color="#9CBEFF" />
                         <SolidColorBrush x:Key="PanelKbd" Color="#14FFFFFF" />
@@ -184,7 +189,7 @@
                      (ApplyToggleVisual) rather than visual states, so the off state
                      reliably reverts to grey. The template just binds them. -->
                 <Style x:Key="IconToggleStyle" TargetType="ToggleButton">
-                    <Setter Property="Height" Value="70" />
+                    <Setter Property="Height" Value="52" />
                     <Setter Property="Padding" Value="0" />
                     <Setter Property="HorizontalAlignment" Value="Stretch" />
                     <Setter Property="BorderThickness" Value="1" />
@@ -195,7 +200,7 @@
                             <ControlTemplate TargetType="ToggleButton">
                                 <Grid>
                                     <Border x:Name="ToggleRoot"
-                                            CornerRadius="11"
+                                            CornerRadius="10"
                                             BorderThickness="{TemplateBinding BorderThickness}"
                                             Background="{TemplateBinding Background}"
                                             BorderBrush="{TemplateBinding BorderBrush}">
@@ -203,7 +208,7 @@
                                             HorizontalAlignment="Center"
                                             VerticalAlignment="Center" />
                                     </Border>
-                                    <Border x:Name="ToggleOverlay" CornerRadius="11" Background="Transparent" />
+                                    <Border x:Name="ToggleOverlay" CornerRadius="10" Background="Transparent" />
                                     <VisualStateManager.VisualStateGroups>
                                         <VisualStateGroup x:Name="CommonStates">
                                             <VisualState x:Name="Normal" />
@@ -225,38 +230,41 @@
                     </Setter>
                 </Style>
 
-                <!-- The 34x34 activity-log action button (an action, not a toggle). -->
-                <Style x:Key="LogButtonStyle" TargetType="Button">
-                    <Setter Property="Width" Value="34" />
-                    <Setter Property="Height" Value="34" />
+                <!-- The two labelled Actions-row buttons (Read a file / Activity log —
+                     actions, not toggles). Full-width so they read as buttons rather
+                     than easy-to-miss small icons (design's "2b. Actions row"). -->
+                <Style x:Key="ActionButtonStyle" TargetType="Button">
+                    <Setter Property="Height" Value="38" />
                     <Setter Property="Padding" Value="0" />
-                    <Setter Property="Foreground" Value="{ThemeResource PanelAccent2}" />
+                    <Setter Property="HorizontalAlignment" Value="Stretch" />
+                    <Setter Property="HorizontalContentAlignment" Value="Center" />
+                    <Setter Property="Foreground" Value="{ThemeResource PanelText}" />
                     <Setter Property="Template">
                         <Setter.Value>
                             <ControlTemplate TargetType="Button">
                                 <Grid>
-                                    <Border x:Name="LogRoot"
-                                            CornerRadius="7"
+                                    <Border x:Name="ActionRoot"
+                                            CornerRadius="8"
                                             BorderThickness="1"
-                                            Background="{ThemeResource PanelCard}"
-                                            BorderBrush="{ThemeResource PanelStroke}">
+                                            Background="{ThemeResource PanelControl}"
+                                            BorderBrush="{ThemeResource PanelCBorder2}">
                                         <ContentPresenter
                                             HorizontalAlignment="Center"
                                             VerticalAlignment="Center"
                                             Foreground="{TemplateBinding Foreground}" />
                                     </Border>
-                                    <Border x:Name="LogOverlay" CornerRadius="7" Background="Transparent" />
+                                    <Border x:Name="ActionOverlay" CornerRadius="8" Background="Transparent" />
                                     <VisualStateManager.VisualStateGroups>
                                         <VisualStateGroup x:Name="CommonStates">
                                             <VisualState x:Name="Normal" />
                                             <VisualState x:Name="PointerOver">
                                                 <VisualState.Setters>
-                                                    <Setter Target="LogOverlay.Background" Value="{ThemeResource PanelHoverOverlay}" />
+                                                    <Setter Target="ActionOverlay.Background" Value="{ThemeResource PanelHoverOverlay}" />
                                                 </VisualState.Setters>
                                             </VisualState>
                                             <VisualState x:Name="Pressed">
                                                 <VisualState.Setters>
-                                                    <Setter Target="LogOverlay.Background" Value="{ThemeResource PanelHoverOverlay}" />
+                                                    <Setter Target="ActionOverlay.Background" Value="{ThemeResource PanelHoverOverlay}" />
                                                 </VisualState.Setters>
                                             </VisualState>
                                         </VisualStateGroup>
@@ -524,55 +532,69 @@
 
         <!-- ============ Body ============ -->
         <StackPanel Grid.Row="1" Padding="8,6,8,8">
-            <!-- Voice picker + activity-log button. Voice shows a preparing state
-                 until the neural model loads. -->
+            <!-- Voice picker. Shows a preparing state until the neural model loads.
+                 No leading icon tile (design: a mic glyph here would read as a
+                 tappable button when it isn't one). -->
             <Grid Padding="10" ColumnSpacing="12">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <Border Grid.Column="0" Width="32" Height="32" CornerRadius="7" Background="{ThemeResource PanelCard}" BorderThickness="1" BorderBrush="{ThemeResource PanelStroke}">
-                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE720;" FontSize="15" Foreground="{ThemeResource PanelAccent2}" />
-                </Border>
-                <TextBlock Grid.Column="1" Text="Voice" FontSize="13" VerticalAlignment="Center" Foreground="{ThemeResource PanelText}" />
-                <!-- The picker now stretches to fill the row (design: flex:1). The
-                     "preparing" label occupies the same cell until the model loads. -->
+                <TextBlock Grid.Column="0" Text="Voice" FontSize="13" VerticalAlignment="Center" Foreground="{ThemeResource PanelText}" />
+                <!-- The picker fills the row (design: flex:1). The "preparing" label
+                     occupies the same cell until the model loads. -->
                 <ComboBox
                     x:Name="VoiceCombo"
-                    Grid.Column="2"
+                    Grid.Column="1"
                     HorizontalAlignment="Stretch"
                     DisplayMemberPath="DisplayName"
                     SelectionChanged="OnVoiceSelectionChanged" />
                 <TextBlock
                     x:Name="VoiceStatus"
-                    Grid.Column="2"
+                    Grid.Column="1"
                     Text="Preparing neural voice…"
                     Visibility="Collapsed"
                     FontSize="11.5"
                     VerticalAlignment="Center"
                     Foreground="{ThemeResource PanelText2}" />
-                <Button
-                    x:Name="UploadFileButton"
-                    Grid.Column="3"
-                    Style="{StaticResource LogButtonStyle}"
-                    Click="OnUploadFileClick"
-                    ToolTipService.ToolTip="Upload file — reads a .txt, .pdf, or .docx file aloud">
-                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE8E5;" FontSize="16" />
-                </Button>
-                <Button
-                    x:Name="ActivityLogButton"
-                    Grid.Column="4"
-                    Style="{StaticResource LogButtonStyle}"
-                    Click="OnActivityLogClick"
-                    ToolTipService.ToolTip="Activity log — opens the read-aloud history">
-                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE81C;" FontSize="16" />
-                </Button>
             </Grid>
 
             <Border Height="1" Background="{ThemeResource PanelStroke}" Margin="10,2,10,0" />
+
+            <!-- Actions — labelled buttons on their own row, not small icons (design's
+                 "2b. Actions row" — small icons next to Voice were easy to miss).
+                 Actions, not toggles: never show an on/off state, so they're visually
+                 separated from the Controls row below by hairlines on both sides. -->
+            <Grid Margin="10,9,10,9" ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Button
+                    x:Name="UploadFileButton"
+                    Grid.Column="0"
+                    Style="{StaticResource ActionButtonStyle}"
+                    Click="OnUploadFileClick"
+                    ToolTipService.ToolTip="Read a file — opens .txt, .pdf or .docx">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE8E5;" FontSize="16" Foreground="{ThemeResource PanelAccent2}" />
+                        <TextBlock Text="Read a file" FontSize="12.5" FontWeight="SemiBold" />
+                    </StackPanel>
+                </Button>
+                <Button
+                    x:Name="ActivityLogButton"
+                    Grid.Column="1"
+                    Style="{StaticResource ActionButtonStyle}"
+                    Click="OnActivityLogClick"
+                    ToolTipService.ToolTip="Activity log — history, timings, open logs folder">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE81C;" FontSize="16" Foreground="{ThemeResource PanelAccent2}" />
+                        <TextBlock Text="Activity log" FontSize="12.5" FontWeight="SemiBold" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <Border Height="1" Background="{ThemeResource PanelStroke}" Margin="10,0,10,0" />
 
             <!-- Controls — compact icon toggles -->
             <TextBlock Text="CONTROLS" FontSize="10" FontWeight="Bold" CharacterSpacing="150" Margin="10,9,10,3" Foreground="{ThemeResource PanelText2}" />
@@ -593,7 +615,7 @@
                     Style="{StaticResource IconToggleStyle}"
                     Checked="OnAutoReadSelectionToggled"
                     Unchecked="OnAutoReadSelectionToggled">
-                    <Viewbox Width="34" Height="34">
+                    <Viewbox Width="27" Height="27">
                         <Path x:Name="SelectionIcon" Width="24" Height="24" Stretch="None"
                               Stroke="{ThemeResource PanelText2}" StrokeThickness="1.9"
                               StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
@@ -609,7 +631,7 @@
                     Style="{StaticResource IconToggleStyle}"
                     Checked="OnAutoReadCopyToggled"
                     Unchecked="OnAutoReadCopyToggled">
-                    <Viewbox Width="34" Height="34">
+                    <Viewbox Width="27" Height="27">
                         <Path x:Name="CopyIcon" Width="24" Height="24" Stretch="None"
                               Stroke="{ThemeResource PanelText2}" StrokeThickness="1.9"
                               StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
@@ -626,7 +648,7 @@
                     Style="{StaticResource IconToggleStyle}"
                     Checked="OnStartupToggled"
                     Unchecked="OnStartupToggled">
-                    <Viewbox Width="20" Height="20">
+                    <Viewbox Width="25" Height="25">
                         <Path x:Name="StartupIcon" Width="24" Height="24" Stretch="None"
                               Stroke="{ThemeResource PanelText2}" StrokeThickness="1.7"
                               StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
