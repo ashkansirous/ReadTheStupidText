@@ -48,6 +48,81 @@ internal static partial class SpeechTextChunker
         return chunks;
     }
 
+    /// <summary>One chunk plus the span of the original (untrimmed) text it came
+    /// from (Decision 50), for the reading text box's whole-chunk highlight
+    /// (Decision 46).</summary>
+    public readonly record struct TextChunk(string Text, int SourceStart, int SourceEnd)
+    {
+        public int SourceLength => SourceEnd - SourceStart;
+    }
+
+    /// <summary>
+    /// <see cref="Split"/>, plus each chunk's source range. Split only ever decides
+    /// *where* to break between chunks — it never drops, duplicates, or reorders a
+    /// word — so every chunk is some number of whole words taken, in order, off the
+    /// front of the original text's own word positions. That invariant means the
+    /// mapping can be reconstructed by word count after the fact, without touching
+    /// (and risking) Split's own, already-tuned boundary logic.
+    /// </summary>
+    public static IReadOnlyList<TextChunk> SplitWithRanges(string text)
+    {
+        IReadOnlyList<string> chunks = Split(text);
+        IReadOnlyList<(int Start, int End)> words = LocateWords(text);
+
+        var result = new List<TextChunk>(chunks.Count);
+        int wordIndex = 0;
+        foreach (string chunk in chunks)
+        {
+            int wordCount = CountWords(chunk);
+            if (wordCount == 0)
+            {
+                result.Add(new TextChunk(chunk, 0, 0));
+                continue;
+            }
+
+            int start = words[wordIndex].Start;
+            int end = words[wordIndex + wordCount - 1].End;
+            result.Add(new TextChunk(chunk, start, end));
+            wordIndex += wordCount;
+        }
+
+        return result;
+    }
+
+    // Same whitespace-run tokenization on both sides of the mapping (any run of
+    // non-whitespace, separated by any whitespace) is what makes the word-count
+    // alignment in SplitWithRanges correct: normalizing internal whitespace (as the
+    // sentence/word-joining above does) never changes how many such runs exist, only
+    // the whitespace between them.
+    private static int CountWords(string chunk) =>
+        chunk.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
+
+    private static List<(int Start, int End)> LocateWords(string text)
+    {
+        var words = new List<(int Start, int End)>();
+        int i = 0;
+        while (i < text.Length)
+        {
+            while (i < text.Length && char.IsWhiteSpace(text[i]))
+            {
+                i++;
+            }
+
+            int start = i;
+            while (i < text.Length && !char.IsWhiteSpace(text[i]))
+            {
+                i++;
+            }
+
+            if (i > start)
+            {
+                words.Add((start, i));
+            }
+        }
+
+        return words;
+    }
+
     // Time-to-first-audio is dominated by the first chunk's synthesis, so make that
     // chunk a short head: at most one sentence, and never more than FirstChunkMax
     // characters. A chunk already within the cap is left untouched. This is robust to

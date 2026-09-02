@@ -57,6 +57,7 @@ public sealed partial class MainWindow : Window
     private readonly RelayCommand _quitCommand;
 
     private readonly ControlPanelWindow _controlPanel;
+    private readonly ReadingTextBoxWindow _readingTextBox;
     private ActivityLogWindow? _logWindow;
 
     private MenuFlyout? _flyout;
@@ -85,6 +86,12 @@ public sealed partial class MainWindow : Window
         // so both surfaces read and write the same state; the settings store also
         // persists the panel's dragged position.
         _controlPanel = new ControlPanelWindow(_readAloud, _startup, settings);
+
+        // Created eagerly (not lazily on first toggle), like the control panel:
+        // it needs to keep tracking ReadTextChanged/ChunkChanged from launch so
+        // reopening it later immediately reflects whatever is currently reading
+        // (Decision 45), not just what starts after the first open.
+        _readingTextBox = new ReadingTextBoxWindow(_readAloud);
 
         _togglePlayPauseCommand = new RelayCommand(_ => _ = _readAloud.PlayPauseOrReadAsync());
         _toggleAutoReadSelectionCommand = new RelayCommand(_ => ToggleAutoReadSelection());
@@ -138,6 +145,11 @@ public sealed partial class MainWindow : Window
         // The control panel's Upload button shares the tray menu's file picker,
         // so the host owns showing it too.
         _controlPanel.UploadFileRequested += (_, _) => _ = UploadFileAsync();
+
+        // The control panel's 4th CONTROLS toggle shows/hides the reading text box,
+        // and the text box's own ✕ hides it too — keep the toggle in sync either way.
+        _controlPanel.ReadingTextBoxRequested += (_, _) => _readingTextBox.Toggle();
+        _readingTextBox.ReadingVisibilityChanged += (_, open) => _controlPanel.SetReadingTextBoxOpen(open);
 
         nint handle = WindowNative.GetWindowHandle(this);
         _hotkey.Register(handle);
@@ -443,6 +455,7 @@ public sealed partial class MainWindow : Window
         _clipboardMonitor.Dispose();
         TrayIcon.Dispose();
         _controlPanel.Close();
+        _readingTextBox.Shutdown();
         _logWindow?.Close();
         Application.Current.Exit();
     }

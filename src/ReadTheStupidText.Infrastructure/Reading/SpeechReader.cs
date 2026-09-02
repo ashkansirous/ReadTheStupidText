@@ -52,6 +52,8 @@ public sealed class SpeechReader : ISpeechReader, IDisposable
 
     public event EventHandler<ReadTiming>? TimingChanged;
 
+    public event EventHandler<ReadChunk>? ChunkChanged;
+
     public PlaybackState State => _state;
 
     // activityId is unused here: the WinRT fallback synthesizes in a single call, so
@@ -82,6 +84,7 @@ public sealed class SpeechReader : ISpeechReader, IDisposable
             return;
         }
 
+        ChunkChanged?.Invoke(this, new ReadChunk(0, 1, text, 0, text.Length));
         SwapSource(MediaSource.CreateFromStream(stream, stream.ContentType));
     }
 

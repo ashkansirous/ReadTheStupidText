@@ -89,9 +89,10 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
     private int _chunkCount;
     private int _currentChunkIndex;
 
-    // The current read's chunks, kept so SkipForward/SkipBackward can restart
-    // playback of the same text at a different chunk index.
-    private IReadOnlyList<string> _chunks = [];
+    // The current read's chunks (text + source range), kept so SkipForward/
+    // SkipBackward can restart playback of the same text at a different chunk
+    // index, and so ChunkChanged can report each chunk's source span.
+    private IReadOnlyList<SpeechTextChunker.TextChunk> _chunks = [];
 
     // Latency diagnostics (Decision 30): the activity-log id of the in-flight read and
     // when it began, so the per-chunk timing lines join to its row; _firstAudioPending
@@ -122,6 +123,8 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
 
     public event EventHandler<ReadTiming>? TimingChanged;
 
+    public event EventHandler<ReadChunk>? ChunkChanged;
+
     public PlaybackState State => _state;
 
     public async Task SpeakAsync(string text, int? activityId = null)
@@ -139,7 +142,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
         (int generation, CancellationToken token) = BeginGeneration();
 
         long splitStart = Stopwatch.GetTimestamp();
-        IReadOnlyList<string> chunks = SpeechTextChunker.Split(text);
+        IReadOnlyList<SpeechTextChunker.TextChunk> chunks = SpeechTextChunker.SplitWithRanges(text);
         _chunks = chunks;
         _systemLog.Debug(
             $"split {text.Length} chars into {chunks.Count} chunk(s) in " +
@@ -198,7 +201,8 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
     // so the heard text is neither repeated nor skipped, and earlier chunks are never
     // re-synthesized.
     private async Task SpeakChunksAsync(
-        OfflineTts tts, IReadOnlyList<string> chunks, int startIndex, int speakerId, int generation, CancellationToken token)
+        OfflineTts tts, IReadOnlyList<SpeechTextChunker.TextChunk> chunks, int startIndex, int speakerId,
+        int generation, CancellationToken token)
     {
         _chunkCount = chunks.Count;
         _currentChunkIndex = startIndex;
@@ -218,8 +222,8 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
             // actually waiting on. They still synthesize concurrently among themselves
             // (in the background, while the first chunk plays).
             Task<string> chunkTask = index == startIndex
-                ? GenerateChunkAsync(tts, chunks[index], index, speakerId, slots, token)
-                : GenerateAfterAsync(firstChunk!, tts, chunks[index], index, speakerId, slots, token);
+                ? GenerateChunkAsync(tts, chunks[index].Text, index, speakerId, slots, token)
+                : GenerateAfterAsync(firstChunk!, tts, chunks[index].Text, index, speakerId, slots, token);
             firstChunk ??= chunkTask;
             generations.Add(chunkTask);
         }
@@ -245,6 +249,8 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
 
             int index = startIndex + offset;
             _currentChunkIndex = index;
+            SpeechTextChunker.TextChunk chunk = chunks[index];
+            ChunkChanged?.Invoke(this, new ReadChunk(index, chunks.Count, chunk.Text, chunk.SourceStart, chunk.SourceEnd));
             bool endedNaturally = await PlayChunkAsync(path, token);
             if (!endedNaturally || !IsCurrent(generation))
             {
