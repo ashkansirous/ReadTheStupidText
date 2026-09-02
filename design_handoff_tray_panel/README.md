@@ -116,23 +116,27 @@ All header text/icons are white. Contains, in order:
 
 #### 2. Voice row + file & log actions  — `padding: 6px 8px 8px`
 A single row: `display:flex; align-items:center; gap:12px; padding:10px`.
-- **Leading icon tile:** 32×32, radius 7px, fill `--card`, 1px `--stroke` border, mic glyph in
-  `--accent2`.
-- Label `Voice` (13px `--text`).
+- Label `Voice` (13px `--text`) — no leading icon tile: a mic glyph here reads as a tappable
+  button when it isn't one.
 - **Voice dropdown** (`margin-left:auto; flex:1`, so it fills the row): `Cocytus` +
   chevron-down, in a `--control` fill / `--cborder` 1px / radius 6px chip. Opens the bundled
   neural-voice picker (`ComboBox` in WinUI).
-- **Read-a-file button** (right of the dropdown): 34×34, radius 7px, `--card` fill, 1px
-  `--stroke`, upload/arrow-out-of-tray glyph in `--accent2`. Opens a `FileOpenPicker` filtered
-  to `.txt` / `.pdf` / `.docx`; picking a file **supersedes** any in-progress read (Decision
-  34). Tooltip: "Read a file — Opens .txt, .pdf or .docx".
-- **Activity-log button** (rightmost): 34×34, same treatment, log-lines glyph. An **action,
-  not a toggle** — opens the separate activity-log window, which also carries the per-read
-  timing diagnostics and its own **open-logs-folder** button (Slice 21). Tooltip: "Activity
-  log — History, timings, open logs folder".
+#### 2b. Actions row — `padding: 9px 10px`, own hairlines above and below
+The two window-opening actions are **labelled buttons on their own row**, not small icons —
+they are easy to miss otherwise. Two side-by-side buttons, each `flex:1; height:38px;
+radius:8px`, `--control` fill, 1px `--cborder2`, icon in `--accent2` + 12.5px/600 `--text`
+label, 8px gap:
+- **Read a file** — upload glyph. Opens a `FileOpenPicker` filtered to `.txt` / `.pdf` /
+  `.docx`; picking a file **supersedes** any in-progress read (Decision 34).
+- **Activity log** — log-lines glyph. Opens the separate activity-log window, which also
+  carries the per-read timing diagnostics and its own **open-logs-folder** button (Slice 21).
+
+Both are **actions, not toggles** — they never show an on/off state, which is why they are
+visually separated from the Controls row below.
 
 #### 3. Controls — compact icon toggles  — `padding: 0 10px 8px` (under a `CONTROLS` eyebrow)
-Three near-square icon buttons in a `flex; gap:8px` row, each `flex:1; height:70px; radius:11px`.
+Three icon buttons in a `flex; gap:8px` row, each `flex:1; height:52px; radius:10px` — shorter
+than the actions row is wide, so the labelled actions stay the dominant element.
 Each toggles an on/off setting and has a hover tooltip. **ON** = `--accent` fill + white icon;
 **OFF** = `--card` fill, 1px `--stroke`, `--text2` icon.
 1. **Auto-read on selection** (ON) — **select frame (rounded corner-brackets with tick marks)
