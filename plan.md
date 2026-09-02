@@ -1514,29 +1514,72 @@ highlight/toggle wiring, then zoom + real pagination on top of it.
       108 existing unit tests still pass unchanged; the WinRT/native
       synthesis path isn't unit-testable (needs package identity), so this
       needs a live-run confirmation per the project's existing convention.
-- [ ] **Slice 36 — Disk-backed audio chunks.** (Decisions 49, 50) Replace the
-      in-memory per-chunk buffer `SupertonicSpeechReader`/`CompositeSpeechReader`
-      feed to `MediaPlayer` with a temp WAV file per chunk under
-      `…\TemporaryFolder\audio\<activity-id>\`; extend the existing chunk map
-      (Decision 50) with each chunk's file path. Delete a read's folder on
-      terminal state or supersede (reusing the generation-counter teardown) and
-      sweep orphaned folders older than 1 day at startup (mirrors Decision 27's
-      log sweep). Unit-test the pure cleanup/sweep-eligibility logic.
-- [ ] **Slice 37 — Reading text box: window, toggle, whole-chunk highlight.**
-      (Decisions 45, 46, 50) New floating `AppWindow`, opened/closed by a new
-      4th icon `ToggleButton` in the control panel's `CONTROLS` row. Extend the
-      chunk map (Decision 50) with each chunk's source-text character range.
-      While a read plays, the window shows the current chunk's text with it
-      highlighted (plain scrollable text for this first pass — no pagination or
-      zoom yet, those land in Slice 38). Closing the window doesn't stop
-      playback; toggling it back open re-syncs to the current chunk.
-- [ ] **Slice 38 — Reading text box: zoom + fit-to-box pagination.** (Decisions
-      47, 48) Add +/- zoom controls to the text box's own header, enforcing the
-      dynamic 30-word-sentence zoom-in floor and a fixed ~32px ceiling. Replace
-      the Slice 37 scrollable view with the greedy fit-to-box pagination
-      algorithm (own segmentation, independent of `SpeechTextChunker`); the box
-      auto-advances pages to keep the currently-highlighted chunk in view.
-      Unit-test the pure pagination-fill and zoom-floor logic.
+- [x] **Slice 36 — Disk-backed audio chunks.** (Decisions 49, 50) Replaced the
+      in-memory per-chunk WAV buffer (`InMemoryRandomAccessStream`)
+      `SupertonicSpeechReader` fed to `MediaPlayer` with a temp WAV file per
+      chunk under `…\TemporaryFolder\audio\<activity-id>\chunk-<index>.wav`
+      (new `AudioChunkPaths`, a sibling of `LogPaths`); `MediaPlayer` now plays
+      each chunk via `StorageFile.GetFileFromPathAsync` +
+      `MediaSource.CreateFromStorageFile` instead of a stream. A read's folder
+      is deleted on natural completion or `Stop()` (both already know the
+      read is genuinely done, unlike Skip/mid-read voice-change, which reuse
+      the same activity id and folder); a startup sweep
+      (`AudioChunkPaths.PurgeOrphaned`, 1 day) catches one orphaned by a read
+      that never reached a terminal state. The pure sweep-eligibility rule
+      (`AudioChunkSweep.IsEligible`) is unit-tested (`AudioChunkSweepTests`,
+      4 cases). `CompositeSpeechReader` needed no change — it already just
+      routes to the active engine. Confirmed
+      `Windows.Storage.StorageFile`/`Windows.Media.Core.MediaSource` usage via
+      context7 first (Decision 9).
+- [x] **Slice 37 — Reading text box: window, toggle, whole-chunk highlight.**
+      (Decisions 45, 46, 50) New `ReadingTextBoxWindow` (a normal, resizable,
+      brand-headered `AppWindow`, single instance kept for the app's lifetime),
+      opened/closed by a new 4th icon `ToggleButton` in the control panel's
+      `CONTROLS` row (`ReadingTextBoxRequested` → `MainWindow` → `Toggle()`).
+      Extended the chunk map (Decision 50) via a low-risk, additive
+      `SpeechTextChunker.SplitWithRanges` (new `TextChunk(Text, SourceStart,
+      SourceEnd)`, `Split` itself untouched) — since the splitter only ever
+      decides *where* to break, never dropping/reordering/duplicating a word,
+      each chunk's source range is reconstructed by word-count alignment
+      against the original text rather than threading offsets through the
+      splitting algorithm itself (4 new unit tests). `ISpeechReader` gained
+      `ChunkChanged` (text + source span), raised per chunk by
+      `SupertonicSpeechReader`/once-per-read by the WinRT fallback, forwarded
+      by `CompositeSpeechReader`, and passed through `ReadAloudService`
+      alongside a new `ReadTextChanged` (the full read's text, raised once
+      before synthesis starts) — the text box's two inputs. The window shows
+      the full read text (`TextBlock` + `TextHighlighters`, confirmed via
+      context7) with the current chunk's span highlighted and an approximate
+      scroll-to-chunk (plain scrollable text for this pass — no pagination or
+      zoom yet, those land in Slice 38). The system ✕ hides rather than closes
+      (`AppWindow.Closing` cancelled) so playback keeps going and reopening
+      re-syncs instantly, since the single instance never stopped tracking the
+      read's events while hidden; `Shutdown()` lifts that guard for app quit.
+      The interface addition required a mechanical (no new behavior) touch to
+      the Mobile/Android readers to keep them compiling — verified via
+      `dotnet build -f net10.0-android`.
+- [x] **Slice 38 — Reading text box: zoom + fit-to-box pagination.** (Decisions
+      47, 48) New pure `TextBoxPaginator.Paginate(text, fits)` (Application) —
+      a greedy, sentence-boundary-respecting fill that takes a caller-supplied
+      `fits` predicate, so its "own segmentation, independent of
+      `SpeechTextChunker`" splitting/greedy-fill logic is fully unit-tested (7
+      cases, incl. the never-drop-or-split-a-sentence and single-oversized-
+      sentence-gets-its-own-page rules) without needing real text measurement;
+      `PageIndexContaining` finds which page a chunk's source position falls
+      in. `ReadingTextBoxWindow` supplies the real `fits` via an off-screen
+      `MeasureProbe` `TextBlock.Measure()` against the box's current
+      (padding-adjusted) width/height — repaginating on text change, zoom, and
+      `ScrollViewer.SizeChanged`, always restoring the currently-playing
+      chunk's page (or page 1) so a zoom/resize never loses the reader's
+      place. Replaced the Slice 37 whole-text scrollable view; the
+      `ScrollViewer` stays only as a safety net for a single sentence too long
+      to fit a page. New toolbar row with +/- zoom buttons (Segoe Fluent
+      glyphs) and a page indicator; zoom-in is clamped to
+      `min(32px, the size at which a fixed 30-word stand-in sentence stops
+      fitting the box)`, zoom-out to a 10px floor — both via the same
+      `MeasureProbe`, no separate Domain value object (this is a
+      single-window WinUI display concern, not a cross-platform one, unlike
+      `PlaybackRate`).
 
 ## Out of Scope
 

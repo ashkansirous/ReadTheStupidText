@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Window
+    x:Class="ReadTheStupidText_App.ReadingTextBoxWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <!--
+        A normal, resizable, toggleable window (Slice 37, Decision 45) that shows
+        the text of the current read with the currently-playing chunk highlighted
+        (Decision 46). Closing it (the system ✕) only hides it — playback keeps
+        going, and reopening re-syncs to whatever chunk is current, since this
+        window keeps updating from the read events while hidden. Content is
+        paginated to fit the box (Decision 47) — no scroll under normal use, the
+        ScrollViewer is only a safety net for the one case a page can't shrink to
+        fit: a single sentence longer than the box. +/- zoom (Decision 48) live in
+        this toolbar row, not the main control panel.
+    -->
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" RowSpacing="0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="{StaticResource BrandGradient}">
+            <Grid Padding="16,12" ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Width="34" Height="34" CornerRadius="8" VerticalAlignment="Center">
+                    <Border.Background>
+                        <ImageBrush ImageSource="ms-appx:///Assets/Square150x150Logo.scale-200.png" Stretch="UniformToFill" />
+                    </Border.Background>
+                </Border>
+
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock
+                        Text="READ THE STUPID TEXT"
+                        FontSize="10"
+                        FontWeight="Bold"
+                        CharacterSpacing="180"
+                        Foreground="{StaticResource HeaderEyebrow}" />
+                    <TextBlock
+                        x:Name="StatusText"
+                        Text="Nothing reading yet"
+                        FontSize="15"
+                        FontWeight="SemiBold"
+                        Margin="0,2,0,0"
+                        Foreground="{StaticResource HeaderText}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Toolbar: zoom -/+ and a page indicator. No manual next/prev (Decision 47
+             — v1 auto-follows playback only). -->
+        <Grid Grid.Row="1" Padding="16,8" ColumnSpacing="8" Background="{ThemeResource LayerFillColorDefaultBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Button x:Name="ZoomOutButton" Grid.Column="0" Content="&#xE949;" FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                    Click="OnZoomOutClick" ToolTipService.ToolTip="Smaller text" Padding="8,6" CornerRadius="6" />
+            <Button x:Name="ZoomInButton" Grid.Column="1" Content="&#xE948;" FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                    Click="OnZoomInClick" ToolTipService.ToolTip="Larger text" Padding="8,6" CornerRadius="6" />
+            <TextBlock x:Name="PageIndicator" Grid.Column="3" VerticalAlignment="Center"
+                       Style="{ThemeResource CaptionTextBlockStyle}" />
+        </Grid>
+
+        <ScrollViewer x:Name="TextScroller" Grid.Row="2" Padding="24,20" VerticalScrollBarVisibility="Auto"
+                      SizeChanged="OnTextScrollerSizeChanged">
+            <TextBlock
+                x:Name="ReadingText"
+                TextWrapping="Wrap"
+                FontSize="16"
+                LineHeight="27"
+                IsTextSelectionEnabled="True" />
+        </ScrollViewer>
+
+        <!-- Off-screen probe used only to measure candidate text at a given font
+             size/width (Decisions 47, 48); never shown, never hit-testable. Shares
+             the "*" content row (not Row 0, which is Auto-height and would be
+             inflated by whatever this is currently measuring). -->
+        <TextBlock x:Name="MeasureProbe" Grid.Row="2" Opacity="0" IsHitTestVisible="False" TextWrapping="Wrap" LineHeight="27" />
+    </Grid>
+</Window>

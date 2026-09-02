@@ -86,6 +86,10 @@ public sealed partial class ControlPanelWindow : Window
     /// the file picker (Decision 34).</summary>
     public event EventHandler? UploadFileRequested;
 
+    /// <summary>Raised when the reading-text-box toggle is clicked; the host owns
+    /// the single text box window, so it handles showing/hiding it (Slice 37).</summary>
+    public event EventHandler? ReadingTextBoxRequested;
+
     public ControlPanelWindow(ReadAloudService readAloud, IStartupService startup, ISettingsStore settings)
     {
         _readAloud = readAloud;
@@ -338,6 +342,7 @@ public sealed partial class ControlPanelWindow : Window
         ApplyToggleVisual(AutoReadSelectionToggle, SelectionIcon, AutoReadSelectionToggle.IsChecked == true);
         ApplyToggleVisual(AutoReadCopyToggle, CopyIcon, AutoReadCopyToggle.IsChecked == true);
         ApplyToggleVisual(StartupToggle, StartupIcon, StartupToggle.IsChecked == true);
+        ApplyToggleVisual(ReadingTextBoxToggle, ReadingTextBoxIcon, ReadingTextBoxToggle.IsChecked == true);
     }
 
     // Pulls a panel brush from the active light/dark theme dictionary by key.
@@ -494,6 +499,32 @@ public sealed partial class ControlPanelWindow : Window
         {
             _ = ApplyStartupAsync(on);
         }
+    }
+
+    private void OnReadingTextBoxToggled(object sender, RoutedEventArgs e)
+    {
+        bool on = ReadingTextBoxToggle.IsChecked == true;
+        ApplyToggleVisual(ReadingTextBoxToggle, ReadingTextBoxIcon, on);
+        SetReadingTextBoxToggleTooltip(on);
+        if (!_refreshing)
+        {
+            ReadingTextBoxRequested?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    private void SetReadingTextBoxToggleTooltip(bool on) =>
+        ToolTipService.SetToolTip(ReadingTextBoxToggle,
+            $"Reading text box · {OnOff(on)} — Shows the text being read");
+
+    /// <summary>Reflects the text box window's actual shown/hidden state (it can
+    /// change from its own ✕, not just this toggle), so the two stay in sync.</summary>
+    public void SetReadingTextBoxOpen(bool open)
+    {
+        _refreshing = true;
+        ReadingTextBoxToggle.IsChecked = open;
+        ApplyToggleVisual(ReadingTextBoxToggle, ReadingTextBoxIcon, open);
+        SetReadingTextBoxToggleTooltip(open);
+        _refreshing = false;
     }
 
     // Reflects the actual resulting state (enabling can be refused by the user
