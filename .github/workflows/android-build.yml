@@ -11,15 +11,20 @@ name: android-build
 #   2. test    — same unit-test gate as build.yml; gates the build job.
 #   3. build   — always produces an unsigned debug build (the actual compile
 #                check — this alone catches "does the Mobile project still
-#                build" regardless of secrets). The signed release .aab step
-#                only runs once ANDROID_SIGNING_KEYSTORE_BASE64 exists
-#                (HAS_SIGNING); the Play internal-testing upload only runs
-#                once PLAY_SERVICE_ACCOUNT_JSON also exists (HAS_PLAY_PUBLISHING)
-#                AND on a push to main — both are no-ops until then, so this
-#                workflow is safe to merge before either secret is set up.
-#                Play Console also requires the very first release on a track
-#                to be uploaded by hand once through the UI — a one-time API
-#                limitation, not something this workflow can route around.
+#                build" regardless of secrets). The signed release .aab/.apk
+#                steps only run once ANDROID_SIGNING_KEYSTORE_BASE64 exists
+#                (HAS_SIGNING) — the .aab is what Play Store publishing needs,
+#                the .apk is a separate signed publish of the same build for
+#                anyone who wants to sideload it directly (adb install / tap
+#                to install) instead of going through the Play Store; both are
+#                uploaded as workflow artifacts. The Play internal-testing
+#                upload only runs once PLAY_SERVICE_ACCOUNT_JSON also exists
+#                (HAS_PLAY_PUBLISHING) AND on a push to main — both are no-ops
+#                until then, so this workflow is safe to merge before either
+#                secret is set up. Play Console also requires the very first
+#                release on a track to be uploaded by hand once through the
+#                UI — a one-time API limitation, not something this workflow
+#                can route around.
 #
 # See Decision 39/42 and Slice 34 in plan.md.
 
@@ -149,6 +154,34 @@ jobs:
         with:
           name: ReadTheStupidText-${{ needs.version.outputs.version }}.aab
           path: src/ReadTheStupidText.Mobile/bin/Release/net10.0-android/publish/*-Signed.aab
+          if-no-files-found: error
+
+      # APK — the format for manual sideloading (the .aab above only Google
+      # Play can install; it can't be adb-installed or tapped-to-install on a
+      # device). Same signed publish, just AndroidPackageFormat=apk instead of
+      # aab, so anyone can grab this artifact and install it directly without
+      # going through the Play Store.
+      - name: Release build (signed .apk)
+        if: ${{ env.HAS_SIGNING == 'true' }}
+        run: >
+          dotnet publish src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj
+          -f net10.0-android
+          -c Release
+          -p:AndroidPackageFormat=apk
+          -p:ApplicationDisplayVersion=${{ needs.version.outputs.version }}
+          -p:ApplicationVersion=${{ needs.version.outputs.versionCode }}
+          -p:AndroidKeyStore=True
+          -p:AndroidSigningKeyStore="${{ runner.temp }}/upload.keystore"
+          -p:AndroidSigningKeyAlias=${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          -p:AndroidSigningKeyPass=${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+          -p:AndroidSigningStorePass=${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+
+      - name: Upload signed .apk artifact
+        if: ${{ env.HAS_SIGNING == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ReadTheStupidText-${{ needs.version.outputs.version }}.apk
+          path: src/ReadTheStupidText.Mobile/bin/Release/net10.0-android/publish/*-Signed.apk
           if-no-files-found: error
 
       # main-only, mirroring build.yml's own release job — avoids
