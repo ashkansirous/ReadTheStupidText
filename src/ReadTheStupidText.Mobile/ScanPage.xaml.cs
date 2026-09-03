@@ -7,19 +7,22 @@ namespace ReadTheStupidText.Mobile;
 /// — plan.md Decision 43's second resync). Pushed from <see cref="ReaderPage"/>'s
 /// Scan action, never a tab: it captures a photo, extracts its text with
 /// <see cref="IImageTextExtractor"/>, and on "Use text" hands the result back to
-/// the reader by popping itself with a <c>scannedText</c> query parameter — it no
+/// the reader via <see cref="PendingScanResult"/> before popping itself — it no
 /// longer speaks the text itself, since there is only ever one player, on the
-/// reader screen.
+/// reader screen. See <see cref="PendingScanResult"/>'s remarks for why this
+/// isn't a Shell query parameter.
 /// </summary>
 public partial class ScanPage : ContentPage
 {
     private readonly IImageTextExtractor _extractor;
+    private readonly PendingScanResult _pendingScan;
     private string? _extractedText;
 
-    public ScanPage(IImageTextExtractor extractor)
+    public ScanPage(IImageTextExtractor extractor, PendingScanResult pendingScan)
     {
         InitializeComponent();
         _extractor = extractor;
+        _pendingScan = pendingScan;
     }
 
     private async void OnCaptureTapped(object? sender, TappedEventArgs e)
@@ -73,10 +76,8 @@ public partial class ScanPage : ContentPage
             return;
         }
 
-        await Shell.Current.GoToAsync("..", new Dictionary<string, object>
-        {
-            [ReaderPage.ScannedTextKey] = _extractedText,
-        });
+        _pendingScan.Set(_extractedText);
+        await Shell.Current.GoToAsync("..");
     }
 
     private void ShowIdle()

@@ -12,16 +12,12 @@ namespace ReadTheStupidText.Mobile;
 /// not separate modes: each fills the same <see cref="TextEditor"/>, and the one
 /// voice row + transport card below applies to whatever text is in it. This
 /// replaces the former three-tab Type/Camera/File navigation — Scan is now a
-/// pushed page that hands its OCR result back via the <see cref="ScannedText"/>
-/// query property instead of reading it directly, and File no longer needs its
-/// own screen since there is nothing left for it to show once the text lands in
-/// this box.
+/// pushed page that hands its OCR result back via <see cref="PendingScanResult"/>
+/// instead of reading it directly, and File no longer needs its own screen since
+/// there is nothing left for it to show once the text lands in this box.
 /// </summary>
-[QueryProperty(nameof(ScannedText), ScannedTextKey)]
 public partial class ReaderPage : ContentPage
 {
-    public const string ScannedTextKey = "scannedText";
-
     private static readonly FilePickerFileType SupportedFileTypes = new(new Dictionary<DevicePlatform, IEnumerable<string>>
     {
         { DevicePlatform.Android, ["text/plain", "application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"] },
@@ -30,33 +26,21 @@ public partial class ReaderPage : ContentPage
     private readonly ISpeechReader _reader;
     private readonly ISettingsStore _settings;
     private readonly IDocumentTextExtractor _documentExtractor;
+    private readonly PendingScanResult _pendingScan;
     private PlaybackRate _speed;
+    private string? _lastSpokenText;
 
-    public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor)
+    public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, PendingScanResult pendingScan)
     {
         InitializeComponent();
 
         _reader = reader;
         _settings = settings;
         _documentExtractor = documentExtractor;
+        _pendingScan = pendingScan;
         _speed = _settings.Speed;
         UpdatePresetHighlight();
         UpdateVoiceLabel();
-    }
-
-    /// <summary>
-    /// Receives the OCR result handed back by <see cref="ScanPage"/> when it pops
-    /// itself via <c>GoToAsync("..", ...)</c> — see the type's remarks.
-    /// </summary>
-    public string? ScannedText
-    {
-        set
-        {
-            if (!string.IsNullOrWhiteSpace(value))
-            {
-                TextEditor.Text = value;
-            }
-        }
     }
 
     protected override void OnAppearing()
@@ -69,6 +53,13 @@ public partial class ReaderPage : ContentPage
         // Re-read on every appearance: the voice picker may have changed the
         // persisted voice while this page was off-stack.
         UpdateVoiceLabel();
+
+        // Consumed and cleared in one step: see PendingScanResult's remarks for
+        // why this replaces a Shell query-parameter hand-off.
+        if (_pendingScan.TakeAndClear() is { } scannedText)
+        {
+            TextEditor.Text = scannedText;
+        }
     }
 
     protected override void OnDisappearing()
@@ -137,25 +128,35 @@ public partial class ReaderPage : ContentPage
     private async void OnVoiceRowTapped(object? sender, TappedEventArgs e) =>
         await Shell.Current.GoToAsync(AppShell.VoicePickerRoute);
 
+    // Resuming only makes sense if the text box still holds what's paused —
+    // otherwise a stale paused read would keep playing over edited text with no
+    // way for the user to make it stop (this was the "text sticks" bug: editing
+    // the box while paused never restarted the reader, since Resume() doesn't
+    // look at the text box at all).
     private async void OnPlayPauseTapped(object? sender, TappedEventArgs e)
     {
-        switch (_reader.State)
-        {
-            case PlaybackState.Playing:
-                _reader.Pause();
-                break;
-            case PlaybackState.Paused:
-                _reader.Resume();
-                break;
-            default:
-                string text = TextEditor.Text ?? string.Empty;
-                if (!string.IsNullOrWhiteSpace(text))
-                {
-                    await _reader.SpeakAsync(text);
-                }
+        string text = TextEditor.Text ?? string.Empty;
 
-                break;
+        if (_reader.State == PlaybackState.Playing)
+        {
+            _reader.Pause();
+            return;
         }
+
+        if (_reader.State == PlaybackState.Paused && text == _lastSpokenText)
+        {
+            _reader.Resume();
+            return;
+        }
+
+        _reader.Stop();
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return;
+        }
+
+        _lastSpokenText = text;
+        await _reader.SpeakAsync(text);
     }
 
     private async void OnSkipBackTapped(object? sender, TappedEventArgs e) => await _reader.SkipBackward();
