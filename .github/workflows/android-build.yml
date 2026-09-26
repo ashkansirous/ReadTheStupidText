@@ -87,6 +87,12 @@ jobs:
   build:
     needs: [version, test]
     runs-on: ubuntu-latest
+    # Repo default is read-only (`default_workflow_permissions: read`) — the
+    # artifact-cleanup step below needs actions:write to DELETE old
+    # artifacts via the REST API. contents:read covers checkout.
+    permissions:
+      contents: read
+      actions: write
     env:
       # `secrets` isn't allowed inside a step `if:` condition directly — only
       # `env:` context can reference it there — so both gates are computed
@@ -155,6 +161,14 @@ jobs:
           name: ReadTheStupidText-${{ needs.version.outputs.version }}.aab
           path: src/ReadTheStupidText.Mobile/bin/Release/net10.0-android/publish/*-Signed.aab
           if-no-files-found: error
+          # Each signed .aab/.apk pair here averages ~360MB — several times
+          # the account's entire 500MB free Actions+Packages storage
+          # allowance on its own, so *any* standing retention risks
+          # recurring the 2026-09-26 quota-lock incident (224 artifacts,
+          # 64.65GB, going back weeks with no cap at all) unless builds are
+          # genuinely short-lived. Belt-and-suspenders alongside the
+          # "Clean up old build artifacts" job below.
+          retention-days: 2
 
       # APK — the format for manual sideloading (the .aab above only Google
       # Play can install; it can't be adb-installed or tapped-to-install on a
@@ -183,6 +197,7 @@ jobs:
           name: ReadTheStupidText-${{ needs.version.outputs.version }}.apk
           path: src/ReadTheStupidText.Mobile/bin/Release/net10.0-android/publish/*-Signed.apk
           if-no-files-found: error
+          retention-days: 2
 
       # main-only, mirroring build.yml's own release job — avoids
       # versionCode churn on feature branches. A no-op until
@@ -198,3 +213,24 @@ jobs:
           releaseFiles: src/ReadTheStupidText.Mobile/bin/Release/net10.0-android/publish/*-Signed.aab
           track: internal
           status: completed
+
+      - name: Clean up old build artifacts
+        # Keeps only the single most recent run of this workflow on main,
+        # deleting the rest — 224 uncapped artifacts (64.65GB, averaging
+        # ~576MB/run against a 500MB account-wide quota) went back weeks
+        # with no cleanup at all, exhausting the account's Actions+Packages
+        # storage and blocking every upload in every repo on the account
+        # (found 2026-09-26 while debugging an unrelated repo's broken CI).
+        # KEEP_RUNS=1, not a larger number: even a single run's aab+apk pair
+        # already exceeds the whole 500MB free quota on its own, so keeping
+        # more only guarantees recurrence — retention-days above is the
+        # other half of containing that, this is defense-in-depth for
+        # history beyond it. See the composite action for why this always
+        # keeps this run's own artifacts regardless of a concurrent run
+        # racing it.
+        if: always() && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        uses: ./.github/actions/cleanup-old-artifacts
+        with:
+          workflow-file: android-build.yml
+          keep-runs: 1

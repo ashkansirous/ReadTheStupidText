@@ -1,0 +1,131 @@
+name: Clean up old workflow artifacts
+description: >
+  Keeps only the N most recent completed runs of one workflow on one branch,
+  deleting every other completed run's artifacts. Shared by android-build.yml
+  and build.yml so the deletion logic exists in exactly one place.
+
+inputs:
+  workflow-file:
+    description: 'The calling workflow''s own file name (e.g. build.yml).'
+    required: true
+  keep-runs:
+    description: 'How many of this workflow''s most recent completed runs to keep.'
+    required: false
+    default: '1'
+  branch:
+    description: 'Branch to scope runs to.'
+    required: false
+    default: main
+
+runs:
+  using: composite
+  steps:
+    - name: Delete artifacts from older runs
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        REPO: ${{ github.repository }}
+        WORKFLOW_FILE: ${{ inputs.workflow-file }}
+        KEEP_RUNS: ${{ inputs.keep-runs }}
+        BRANCH: ${{ inputs.branch }}
+        CURRENT_RUN_ID: ${{ github.run_id }}
+      run: |
+        # Runs one `gh api` call, keeping stdout and stderr cleanly separate
+        # (a stray stderr line — e.g. a pagination/rate-limit notice `gh`
+        # can print even on an ultimately-successful call — must never leak
+        # into stdout and get treated as a real id downstream) and reporting
+        # failure explicitly instead of leaving a fetch failure to look
+        # identical to "there was nothing to find" — both found in review.
+        run_gh_json() {
+          local tmp_err out status
+          tmp_err=$(mktemp)
+          out=$(gh api "$@" 2>"$tmp_err")
+          status=$?
+          if [ "$status" -ne 0 ]; then
+            echo "::warning::gh api $* failed: $(cat "$tmp_err")" >&2
+          fi
+          rm -f "$tmp_err"
+          printf '%s' "$out"
+          return "$status"
+        }
+
+        # -X GET is required, not optional: gh api silently switches its
+        # default method from GET to POST the moment any -f/-F field is
+        # passed, and this endpoint 404s on POST.
+        if ! raw_rows=$(run_gh_json -X GET "repos/$REPO/actions/workflows/$WORKFLOW_FILE/runs" --paginate \
+          -f branch="$BRANCH" --jq '.workflow_runs[] | "\(.id)\t\(.status)\t\(.created_at)"'); then
+          echo "::warning::Could not list runs for $WORKFLOW_FILE on $BRANCH — skipping cleanup this pass rather than risk misreading an API failure as \"nothing to clean up\"."
+          exit 0
+        fi
+
+        if [ -z "$raw_rows" ]; then
+          echo "No runs found for $WORKFLOW_FILE on $BRANCH — skipping cleanup."
+          exit 0
+        fi
+
+        mapfile -t run_rows <<< "$raw_rows"
+
+        # Any run with status != "completed" (in_progress, queued) is always
+        # protected, regardless of how it compares to KEEP_RUNS. Protecting
+        # only *this* run (CURRENT_RUN_ID) isn't enough: two pushes to main
+        # close together can run this workflow concurrently, and a still-
+        # building sibling run may have already uploaded some of its matrix
+        # artifacts (e.g. one architecture) while another leg is still
+        # compiling — deleting those out from under it because a *third*,
+        # newer run finished first and ran cleanup first is the exact bug
+        # this guards against, found live in review.
+        #
+        # completed_rows carries created_at alongside id so the top-KEEP_RUNS
+        # selection sorts by an explicit timestamp rather than trusting the
+        # API's returned order to already be newest-first (unverified,
+        # per review) — creation order can diverge from actual completion
+        # order among concurrent runs either way, but at least this sorts by
+        # a real, comparable field instead of an assumption about response
+        # ordering. ISO 8601 timestamps sort correctly as plain strings.
+        all_ids=()
+        completed_rows=()
+        protected_ids=("$CURRENT_RUN_ID")
+        for row in "${run_rows[@]}"; do
+          IFS=$'\t' read -r run_id status created_at <<< "$row"
+          all_ids+=("$run_id")
+          if [ "$status" = "completed" ]; then
+            completed_rows+=("$created_at"$'\t'"$run_id")
+          else
+            protected_ids+=("$run_id")
+          fi
+        done
+
+        # `head` closing the pipe early (once it has KEEP_RUNS lines) can
+        # SIGPIPE the still-writing `sort` before it finishes on a large
+        # enough run history; under this script's default -eo pipefail that
+        # exit code kills the whole cleanup before anything is deleted —
+        # found in review, reproduced at ~3,000-5,000 completed rows for
+        # this pipeline. Draining sort's remaining output after head is done
+        # (instead of letting the closed pipe do it) avoids the SIGPIPE.
+        keep_from_completed=$(printf '%s\n' "${completed_rows[@]}" | sort -r | { head -n "$KEEP_RUNS"; cat >/dev/null; } | cut -f2)
+        keep_ids=$( { printf '%s\n' "$keep_from_completed"; printf '%s\n' "${protected_ids[@]}"; } | sort -u)
+
+        # Per-run artifact listing, not a repo-wide fetch filtered/intersected
+        # in bash: `all_ids` already came scoped to this workflow and branch,
+        # so each run's own artifacts are unambiguously this workflow's — no
+        # risk of a sibling workflow's same-branch artifacts ever entering
+        # the picture. Each listing call goes through the same run_gh_json
+        # helper as above, so one run's listing failure warns and moves on
+        # (next run's cleanup will retry it) instead of aborting the whole
+        # loop under bash's default -eo pipefail — found in review.
+        for run_id in "${all_ids[@]}"; do
+          if grep -qx "$run_id" <<< "$keep_ids"; then
+            continue
+          fi
+
+          if ! artifact_ids=$(run_gh_json "repos/$REPO/actions/runs/$run_id/artifacts" --paginate --jq '.artifacts[].id'); then
+            echo "::warning::Failed to list artifacts for run $run_id — skipping it this pass, next run's cleanup will retry it."
+            continue
+          fi
+
+          [ -n "$artifact_ids" ] || continue
+
+          while read -r artifact_id; do
+            gh api -X DELETE "repos/$REPO/actions/artifacts/$artifact_id" || true
+          done <<< "$artifact_ids"
+        done

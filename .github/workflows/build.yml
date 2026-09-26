@@ -133,6 +133,19 @@ jobs:
           name: ReadTheStupidText-msix-${{ matrix.platform }}
           path: ${{ github.workspace }}\AppPackages\**\*.msix
           if-no-files-found: error
+          # On a push to main this artifact only exists to hand the built
+          # MSIX from this job to `release` below, which republishes it as a
+          # permanent GitHub Release asset within the same run — so it never
+          # needs to outlive that handoff there. On a PR it's the only copy
+          # (no release job runs), but a short life is still enough for a
+          # reviewer to grab it. Each arch's MSIX is ~380MB — several times
+          # the account's entire 500MB free Actions+Packages storage
+          # allowance by itself, so keeping these around at all is what let
+          # 224 uncapped artifacts (64.65GB) go back weeks and exhaust
+          # storage for the whole account, blocking every repo's uploads
+          # (found 2026-09-26). See "Clean up old build artifacts" below for
+          # the same invariant applied to older runs' history.
+          retention-days: 1
 
   # On a push to main, cut the release: tag v<x.y.z> at the merge commit and
   # publish the built MSIX packages as GitHub Release assets (stable, README-
@@ -201,3 +214,50 @@ jobs:
     with:
       tag: v${{ needs.version.outputs.version }}
     secrets: inherit
+
+  # Separate job, not a step tacked onto `build`: `build` is a per-arch
+  # matrix, so a step there would run this twice (and delete-race itself)
+  # per push. `always()` + no dependency on release/store-submit succeeding
+  # so cleanup still runs even if a later job in this same run fails.
+  cleanup-artifacts:
+    needs: [build]
+    if: always() && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # A job's own `permissions:` block replaces every scope, not just the
+    # ones listed — it does NOT fall back to the workflow-level
+    # `contents: write` above (that's for `release`'s tag/Release creation).
+    # Omitting contents:read here left `actions/checkout@v4` below with
+    # contents:none, failing the checkout and skipping every step after it
+    # — including the cleanup step itself — on every run, found in review.
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      # A local composite action (./.github/actions/...) needs the repo on
+      # disk first — this job otherwise has no checkout at all, unlike
+      # `build`/`release` above which get one implicitly from their other
+      # steps.
+      - uses: actions/checkout@v4
+
+      - name: Clean up old build artifacts
+        # Keeps only the single most recent run of this workflow on main,
+        # deleting the rest — 224 uncapped artifacts (64.65GB, averaging
+        # ~576MB/run against a 500MB account-wide quota) went back weeks
+        # with no cleanup at all, exhausting the account's Actions+Packages
+        # storage and blocking every upload in every repo on the account
+        # (found 2026-09-26 while debugging an unrelated repo's broken CI).
+        # KEEP_RUNS=1, not a larger number: even a single run's two MSIX
+        # files already exceed the whole 500MB free quota on their own, so
+        # keeping more only guarantees recurrence. The upload step's own
+        # retention-days: 1 is the other half of containing that (these
+        # artifacts are superseded by a permanent GitHub Release within the
+        # same run on main anyway); this step is defense-in-depth for
+        # history beyond it, and the only cleanup a PR build's artifacts get
+        # (this job is main-scoped; retention-days handles PR branches on
+        # its own). See the composite action for why this always keeps this
+        # run's own artifacts regardless of a concurrent run racing it.
+        continue-on-error: true
+        uses: ./.github/actions/cleanup-old-artifacts
+        with:
+          workflow-file: build.yml
+          keep-runs: 1
