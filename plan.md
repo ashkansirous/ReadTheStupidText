@@ -720,6 +720,11 @@ this plan turns it into ordered, shippable vertical slices.
     - **windows:** `App`, `Infrastructure`, `store-submit.yml`.
     - **android:** `Mobile`.
 
+    On `main`, the diff is taken against the **last published `v*` tag**, not
+    the previous push. A platform change whose run failed, or whose pending
+    run was dropped by the concurrency queue (GitHub keeps only one pending run
+    per group), is therefore still built by the next run.
+
     Windows jobs (build + `store-submit`) run on **core || windows**, and
     Android jobs (build + `play-submit`) on **core || android**. `test` runs
     whenever either platform would build. A docs-only change builds nothing and
@@ -731,7 +736,8 @@ this plan turns it into ordered, shippable vertical slices.
     exist on `main` (only `deletion` + `non_fast_forward` rules), and a job
     skipped by `if:` reports success anyway.
 57. **A release always carries every platform's latest asset (Batch 8).** When
-    only one platform changed, `release-draft` **carries forward** the other
+    only one platform changed (or Android changed but the signing secret is
+    absent, so no fresh `.aab`/`.apk` exists), `release-draft` **carries forward** the other
     platform's assets from the most recent release that has them (a
     `gh release download` + `upload`, Releases API only, so it costs no Actions
     storage). The README's `releases/latest` MSIX link therefore never lands on
@@ -1618,7 +1624,23 @@ Exception to vertical slicing: pure pipeline infrastructure with no app-facing
 surface, so slices are ordered by risk. Windows goes first because it
 already publishes to a Release; Android follows, then path filtering on top.
 
-- [ ] **Slice 39 — Windows: no artifacts, release via draft.** (Decisions 52,
+Implemented in PR #165 (Slices 39-42 together; plan merged in #164). Two review passes (high, then
+medium effort) led to these changes before commit:
+- diff against the last release tag (Decision 56);
+- carry Android assets forward when signing is absent (Decision 57);
+- signed Android builds only when cutting a release, so no discarded signed
+  publishes or secret exposure on PRs;
+- the lookup shared as `.github/scripts/find-release.sh`, with `.sh` forced to
+  LF so the Windows Store job's `bash` can run it;
+- `release-publish` deletes a stale draft instead of publishing it over a newer
+  release;
+- the Android versionCode widened to `major*1000000 + minor*1000 + patch` (the
+  old `*10000 + *100` packing collided at patch 100; every new code exceeds
+  the old `10012`).
+
+Live checks (Verification, below) run on the first `main` pushes after merge.
+
+- [x] **Slice 39 — Windows: no artifacts, release via draft.** (Decisions 52,
       53, 54, 58) In `build.yml`, remove `upload-artifact` from the MSIX matrix
       job. PRs build only. On `main`, add `release-draft` (create/reuse a draft
       `v<x.y.z>` at the merge commit, skipping everything if that version is
@@ -1628,7 +1650,7 @@ already publishes to a Release; Android follows, then path filtering on top.
       `released=true` for `store-submit`. Delete the `cleanup-artifacts` job,
       the `.github/actions/cleanup-old-artifacts/` action and the
       `actions: write` grant.
-- [ ] **Slice 40 — Android into the same pipeline and release.** (Decisions
+- [x] **Slice 40 — Android into the same pipeline and release.** (Decisions
       52, 55) Move the `android-build.yml` build into `build.yml` as
       `build-android` (needs `version`, `test`, `release-draft`), keeping the
       unsigned Debug compile check and the `HAS_SIGNING` gate. On `main` it
@@ -1637,7 +1659,7 @@ already publishes to a Release; Android follows, then path filtering on top.
       `play-submit` job (after publish, `HAS_PLAY_PUBLISHING`-gated) downloads
       the `.aab` from the Release and runs `r0adkll/upload-google-play`
       unchanged. Delete `android-build.yml` and its cleanup step.
-- [ ] **Slice 41 — Path-filtered per-platform builds.** (Decisions 56, 57) Add
+- [x] **Slice 41 — Path-filtered per-platform builds.** (Decisions 56, 57) Add
       the `changes` job with the core/windows/android filters. Gate `test`,
       the Windows build + `store-submit`, and `build-android` + `play-submit`
       on their groups, and make `release-draft`/`release-publish` tolerate a
@@ -1647,7 +1669,7 @@ already publishes to a Release; Android follows, then path filtering on top.
       last release, and harden `store-submit`'s dispatch-mode "latest release"
       lookup to the newest release that has MSIX assets. `workflow_dispatch`
       builds both platforms.
-- [ ] **Slice 42 — Retention safety net.** (Decision 58) Set repo-level
+- [x] **Slice 42 — Retention safety net.** (Decision 58) Set repo-level
       artifact/log retention to 1 day on `ReadTheStupidText` and `Lets-Call-Mom`
       (`gh api -X PUT repos/<repo>/actions/permissions/artifact-and-log-retention
       -F days=1`). This is a settings change and needs no PR. **Retention part

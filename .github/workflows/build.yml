@@ -1,22 +1,30 @@
 name: build
 
-# One workflow runs the whole release pipeline in a single run — no PAT, no
-# commit-back to main, no second workflow to trigger:
+# One workflow builds, releases and submits BOTH platforms (Batch 8, Decisions
+# 52-58 in plan.md). Two hard rules shape it:
 #
-#   1. version  — GitVersion derives the SemVer from git history (git tags are
-#                 the source of truth). main defaults to a Patch bump; override
-#                 per commit with "+semver: minor" / "+semver: major" (see
-#                 GitVersion.yml).
-#   2. build    — packages the WinUI 3 single-project MSIX per architecture with
-#                 that version stamped into the manifest at build time. Unsigned
-#                 (the Microsoft Store re-signs on submission). Single-project
-#                 MSIX can't emit a bundle, so each arch is built separately.
-#   3. release  — only on a push to main: creates the v<x.y.z> tag at the merge
-#                 commit and a GitHub Release with the MSIX assets. Because it's
-#                 the same run, a plain GITHUB_TOKEN is enough (no cross-workflow
-#                 trigger needed). PRs build + upload artifacts only.
+#   * ZERO Actions artifacts. The account's Actions+Packages storage quota is
+#     500 MB, shared by every repo and billed as monthly GB-hours; one run's
+#     MSIX x64 + ARM64 + AAB + APK is ~1 GB. GitHub Release assets don't count
+#     toward that quota, so on main every build output goes straight to a
+#     draft Release, and PRs upload nothing. Don't add actions/upload-artifact
+#     for build outputs.
+#   * Only build what changed. `changes` path-filters the diff: core code
+#     (Domain/Application/Documents/tests/pipeline) builds both platforms,
+#     App/Infrastructure only Windows, Mobile (+ the shared voice model) only
+#     Android. A docs-only change builds nothing and cuts no release.
+#     workflow_dispatch forces both.
 #
-# See Decision 17 / Slice 14 in plan.md and STORE.md.
+# Flow on a push to main:
+#   changes -> version -> test -> release-draft (create/reuse draft v<x.y.z>,
+#   carry forward the untouched platform's assets from its last release)
+#   -> build-windows (matrix) / build-android upload into the draft
+#   -> release-publish (only if every affected build succeeded; the tag is
+#   created here, so a failed run leaves no v* tag)
+#   -> store-submit (Windows changed) / play-submit (Android changed).
+#
+# GitVersion derives the SemVer from git tags (Decision 17): main defaults to a
+# patch bump; "+semver: minor|major|none" in a commit overrides it.
 
 on:
   push:
@@ -26,14 +34,80 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write   # the release job creates the tag + GitHub Release
+  contents: read
+
+# PRs: a new push cancels the old run. main: never cancel an in-progress run
+# (two runs would race on the same draft Release). GitHub keeps only ONE
+# pending run per group and drops older pending ones, which is safe only
+# because `changes` diffs against the last release tag, so the surviving run
+# still sees the dropped run's changes.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read        # checkout (push events diff with git)
+      pull-requests: read   # paths-filter lists PR files via the API
+    outputs:
+      windows: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.core == 'true' || steps.filter.outputs.windows == 'true' }}
+      android: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.core == 'true' || steps.filter.outputs.android == 'true' }}
+    steps:
+      - name: Checkout (with tags)
+        if: github.event_name == 'push'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # On main, diff against the last PUBLISHED release tag, not the previous
+      # push: a platform change whose run failed, or whose pending run was
+      # superseded in the concurrency queue, must still be built next time.
+      - name: Find the last release tag
+        id: base
+        if: github.event_name == 'push'
+        run: |
+          tag=$(git for-each-ref --count=1 --sort=-v:refname --merged HEAD --format='%(refname:short)' 'refs/tags/v*')
+          echo "Diffing against: ${tag:-<none — default branch>}"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+
+      # PRs diff against the PR base (via the API; `base` is ignored there).
+      - name: Classify changed paths
+        id: filter
+        if: github.event_name != 'workflow_dispatch'
+        uses: dorny/paths-filter@v4
+        with:
+          base: ${{ steps.base.outputs.tag }}
+          filters: |
+            core:
+              - 'src/ReadTheStupidText.Domain/**'
+              - 'src/ReadTheStupidText.Application/**'
+              - 'src/ReadTheStupidText.Documents/**'
+              - 'tests/**'
+              - 'global.json'
+              - 'GitVersion.yml'
+              - '*.slnx'
+              - '.gitattributes'
+              - '.github/workflows/build.yml'
+              - '.github/scripts/find-release.sh'
+            windows:
+              - 'src/ReadTheStupidText.App/**'
+              - 'src/ReadTheStupidText.Infrastructure/**'
+              - '.github/workflows/store-submit.yml'
+            android:
+              - 'src/ReadTheStupidText.Mobile/**'
+              - '.github/scripts/stage-android-package.sh'
+              # The Mobile csproj bundles the Windows project's voice model.
+              - 'src/ReadTheStupidText.App/VoiceModel/**'
+
   version:
+    needs: changes
+    if: needs.changes.outputs.windows == 'true' || needs.changes.outputs.android == 'true'
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.gitversion.outputs.majorMinorPatch }}
-      semver: ${{ steps.gitversion.outputs.semVer }}
+      versionCode: ${{ steps.versioncode.outputs.code }}
     steps:
       - name: Checkout (full history + tags — GitVersion needs them)
         uses: actions/checkout@v4
@@ -51,10 +125,20 @@ jobs:
         with:
           useConfigFile: true
 
-  # Unit tests for the pure logic (PlaybackRate, SpeechTextChunker, settings
-  # migration, voice table, activity log). Gates the build/release jobs so a
-  # broken release never ships. No LFS needed — the tests don't load the model.
+      # Android versionCode must be a strictly increasing integer. Three-digit
+      # minor/patch fields (the old 10000/100 packing collided once patch hit
+      # 100); every code this yields exceeds the old scheme's 10012 for 1.0.12.
+      - name: Derive Android versionCode
+        id: versioncode
+        run: |
+          CODE=$(( ${{ steps.gitversion.outputs.major }} * 1000000 + ${{ steps.gitversion.outputs.minor }} * 1000 + ${{ steps.gitversion.outputs.patch }} ))
+          echo "code=${CODE}" >> "$GITHUB_OUTPUT"
+
+  # Pure-logic unit tests (net10.0-windows: they reference Infrastructure).
+  # Gates every build and so every release. No LFS — tests don't load the model.
   test:
+    needs: changes
+    if: needs.changes.outputs.windows == 'true' || needs.changes.outputs.android == 'true'
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -68,9 +152,93 @@ jobs:
       - name: Run unit tests
         run: dotnet test tests/ReadTheStupidText.Tests/ReadTheStupidText.Tests.csproj --configuration Release
 
-  build:
-    needs: [version, test]
+  # main only. Creates (or, on a re-run / after a failed run, reuses and
+  # empties) a DRAFT v<x.y.z> release at this merge commit. Drafts create no
+  # tag, so nothing is visible or tagged until release-publish. Skips the whole
+  # release (proceed=false) if this version is already published — GitVersion
+  # holds the version steady until the next tag, so consecutive pushes can
+  # resolve to the same one.
+  release-draft:
+    needs: [changes, version, test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      proceed: ${{ steps.draft.outputs.proceed }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      TAG: v${{ needs.version.outputs.version }}
+    steps:
+      - name: Create or reuse the draft release
+        id: draft
+        run: |
+          set -euo pipefail
+          state=$(gh release list --repo "$REPO" --limit 100 --json tagName,isDraft \
+            --jq "map(select(.tagName == \"$TAG\")) | if length == 0 then \"missing\" else (.[0].isDraft | tostring) end")
+          case "$state" in
+            false)
+              echo "::notice::Release $TAG is already published — version did not bump; skipping the release."
+              echo "proceed=false" >> "$GITHUB_OUTPUT"
+              exit 0 ;;
+            true)
+              echo "Reusing draft $TAG: retargeting to ${GITHUB_SHA} and clearing stale assets."
+              gh release edit "$TAG" --repo "$REPO" --target "$GITHUB_SHA"
+              gh release view "$TAG" --repo "$REPO" --json assets --jq '.assets[].name' |
+                while read -r asset; do gh release delete-asset "$TAG" "$asset" --repo "$REPO" --yes; done ;;
+            missing)
+              gh release create "$TAG" --repo "$REPO" --draft --target "$GITHUB_SHA" \
+                --title "$TAG" --generate-notes ;;
+          esac
+          echo "proceed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout (release scripts)
+        if: steps.draft.outputs.proceed == 'true'
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+
+      # A release always carries every platform's latest build (Decision 57):
+      # a platform that won't upload fresh assets this run (untouched, or
+      # Android without the signing secret) gets them copied from the newest
+      # published release that has them (Releases API only — no Actions
+      # storage), so releases/latest never lacks the MSIX or the APK.
+      - name: Carry forward assets of platforms not rebuilt
+        if: steps.draft.outputs.proceed == 'true'
+        env:
+          WINDOWS: ${{ needs.changes.outputs.windows }}
+          ANDROID: ${{ needs.changes.outputs.android }}
+          HAS_SIGNING: ${{ secrets.ANDROID_SIGNING_KEYSTORE_BASE64 != '' }}
+        run: |
+          set -euo pipefail
+          carry_forward() {
+            local found source
+            found=$(bash .github/scripts/find-release.sh "$1")
+            if [ -z "$found" ]; then echo "No earlier release has assets matching $1 — nothing to carry."; return 0; fi
+            source=$(head -n 1 <<< "$found")
+            mkdir -p carry && rm -f carry/*
+            tail -n +2 <<< "$found" |
+              while read -r name; do gh release download "$source" --repo "$REPO" --pattern "$name" --dir carry; done
+            echo "Carrying forward from $source:"; ls carry
+            gh release upload "$TAG" carry/* --repo "$REPO" --clobber
+          }
+          if [ "$WINDOWS" != "true" ]; then carry_forward '^ReadTheStupidText\.App_.*\.msix$'; fi
+          if [ "$ANDROID" != "true" ] || [ "$HAS_SIGNING" != "true" ]; then carry_forward '\.(aab|apk)$'; fi
+
+  build-windows:
+    needs: [changes, version, test, release-draft]
+    # !cancelled() + explicit results: release-draft is skipped on PRs, and a
+    # bare `needs` would cascade that skip into this job.
+    if: >-
+      !cancelled()
+      && needs.changes.outputs.windows == 'true'
+      && needs.version.result == 'success'
+      && needs.test.result == 'success'
+      && (needs.release-draft.result == 'success' || needs.release-draft.result == 'skipped')
     runs-on: windows-latest
+    permissions:
+      contents: write   # gh release upload (main only)
     strategy:
       fail-fast: false
       matrix:
@@ -95,10 +263,9 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       # Stamp the GitVersion-derived version into the manifest (x.y.z.0 — the
-      # Store requires revision 0). The match is anchored to the start of the
-      # line and the self-closing ' />' so it only touches the Identity Version,
-      # never TargetDeviceFamily's MinVersion/MaxVersionTested. Working copy only
-      # — never committed; git tags remain the source of truth.
+      # Store requires revision 0). Anchored to line start and the self-closing
+      # ' />' so it only touches the Identity Version, never TargetDeviceFamily's
+      # MinVersion/MaxVersionTested. Working copy only — never committed.
       - name: Stamp manifest version (${{ needs.version.outputs.version }}.0)
         shell: bash
         env:
@@ -111,9 +278,8 @@ jobs:
           fi
           grep -nE 'Version=' "$MANIFEST"
 
-      # RuntimeIdentifier is passed explicitly because the csproj otherwise infers
-      # it from RuntimeInformation.ProcessArchitecture, and setup-msbuild puts the
-      # 32-bit MSBuild.exe on PATH (reports x86) → NETSDK1032 against Platform=x64.
+      # RuntimeIdentifier is explicit because setup-msbuild puts the 32-bit
+      # MSBuild.exe on PATH (reports x86) → NETSDK1032 against Platform=x64.
       - name: Build and package MSIX (${{ matrix.platform }})
         run: >
           msbuild src/ReadTheStupidText.App/ReadTheStupidText.App.csproj
@@ -127,137 +293,208 @@ jobs:
           /p:AppxBundle=Never
           /p:AppxPackageSigningEnabled=false
 
-      - name: Upload MSIX artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ReadTheStupidText-msix-${{ matrix.platform }}
-          path: ${{ github.workspace }}\AppPackages\**\*.msix
-          if-no-files-found: error
-          # On a push to main this artifact only exists to hand the built
-          # MSIX from this job to `release` below, which republishes it as a
-          # permanent GitHub Release asset within the same run — so it never
-          # needs to outlive that handoff there. On a PR it's the only copy
-          # (no release job runs), but a short life is still enough for a
-          # reviewer to grab it. Each arch's MSIX is ~380MB — several times
-          # the account's entire 500MB free Actions+Packages storage
-          # allowance by itself, so keeping these around at all is what let
-          # 224 uncapped artifacts (64.65GB) go back weeks and exhaust
-          # storage for the whole account, blocking every repo's uploads
-          # (found 2026-09-26). See "Clean up old build artifacts" below for
-          # the same invariant applied to older runs' history.
-          retention-days: 1
+      # Only the app package — NOT the Microsoft.WindowsAppRuntime dependency
+      # .msix under Dependencies/ (same name for every arch; the Store/Windows
+      # resolves that runtime itself).
+      - name: Upload MSIX to the draft release
+        if: needs.release-draft.outputs.proceed == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v${{ needs.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          mapfile -t msix < <(find AppPackages -name 'ReadTheStupidText.App_*.msix')
+          if [ "${#msix[@]}" -ne 1 ]; then
+            echo "::error::Expected exactly 1 app .msix, found ${#msix[@]}: ${msix[*]:-none}"; exit 1
+          fi
+          gh release upload "$TAG" "${msix[0]}" --repo "${{ github.repository }}" --clobber
 
-  # On a push to main, cut the release: tag v<x.y.z> at the merge commit and
-  # publish the built MSIX packages as GitHub Release assets (stable, README-
-  # linkable URLs and the hosted source for Store submission). Same run, so the
-  # GITHUB_TOKEN-created tag needs no downstream trigger.
-  release:
-    needs: [version, build]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  # CI signs with an upload key; Google Play App Signing re-signs for
+  # distribution, so no release-signing secret leaves CI (Decisions 18/42).
+  # The unsigned Debug build is the compile check and always runs; the signed
+  # .aab/.apk build only on main when cutting a release and once
+  # ANDROID_SIGNING_KEYSTORE_BASE64 exists.
+  build-android:
+    needs: [changes, version, test, release-draft]
+    if: >-
+      !cancelled()
+      && needs.changes.outputs.android == 'true'
+      && needs.version.result == 'success'
+      && needs.test.result == 'success'
+      && (needs.release-draft.result == 'success' || needs.release-draft.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # gh release upload (main only)
+    env:
+      # `secrets` can't appear in a step `if:` directly — only via `env:`.
+      # Signed builds only when cutting a release: on PRs the output would be
+      # discarded (nothing uploads) and the secrets needlessly exposed.
+      SIGN_RELEASE: ${{ secrets.ANDROID_SIGNING_KEYSTORE_BASE64 != '' && needs.release-draft.outputs.proceed == 'true' }}
+      PUBLISH_DIR: src/ReadTheStupidText.Mobile/bin/Release/net10.0-android/publish
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - name: Checkout (with LFS — the neural voice model is LFS-tracked)
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # maui-android, not bare "android": a CLI-only SDK install needs the
+      # MAUI workload pieces too (NETSDK1147 otherwise).
+      - name: Install the .NET MAUI Android workload
+        run: dotnet workload install maui-android
+
+      - name: Debug build (unsigned)
+        run: dotnet build src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net10.0-android -c Debug
+
+      - name: Decode upload keystore
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_SIGNING_KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > "${{ runner.temp }}/upload.keystore"
+
+      # AAB is what Google Play needs. Passwords go as plain -p: properties:
+      # the env: indirection is unsupported once AndroidPackageFormat=aab
+      # (Actions still masks the secret values in logs).
+      - name: Release build (signed .aab)
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        run: >
+          dotnet publish src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj
+          -f net10.0-android
+          -c Release
+          -p:AndroidPackageFormat=aab
+          -p:ApplicationDisplayVersion=${{ needs.version.outputs.version }}
+          -p:ApplicationVersion=${{ needs.version.outputs.versionCode }}
+          -p:AndroidKeyStore=True
+          -p:AndroidSigningKeyStore="${{ runner.temp }}/upload.keystore"
+          -p:AndroidSigningKeyAlias=${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          -p:AndroidSigningKeyPass=${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+          -p:AndroidSigningStorePass=${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+
+      - name: Stage signed .aab
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        run: bash .github/scripts/stage-android-package.sh aab
+
+      # APK is the sideload format (adb install / tap to install) — same signed
+      # publish, different package format.
+      - name: Release build (signed .apk)
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        run: >
+          dotnet publish src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj
+          -f net10.0-android
+          -c Release
+          -p:AndroidPackageFormat=apk
+          -p:ApplicationDisplayVersion=${{ needs.version.outputs.version }}
+          -p:ApplicationVersion=${{ needs.version.outputs.versionCode }}
+          -p:AndroidKeyStore=True
+          -p:AndroidSigningKeyStore="${{ runner.temp }}/upload.keystore"
+          -p:AndroidSigningKeyAlias=${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          -p:AndroidSigningKeyPass=${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+          -p:AndroidSigningStorePass=${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+
+      - name: Stage signed .apk
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        run: bash .github/scripts/stage-android-package.sh apk
+
+      - name: Upload .aab + .apk to the draft release
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "v${VERSION}" dist/* --repo "${{ github.repository }}" --clobber
+
+  # Publishes the draft (creating the v<x.y.z> tag at the merge commit) only
+  # when every platform this change touched built successfully.
+  release-publish:
+    needs: [changes, version, release-draft, build-windows, build-android]
+    if: >-
+      !cancelled()
+      && needs.release-draft.outputs.proceed == 'true'
+      && (needs.changes.outputs.windows != 'true' || needs.build-windows.result == 'success')
+      && (needs.changes.outputs.android != 'true' || needs.build-android.result == 'success')
     runs-on: ubuntu-latest
     permissions:
       contents: write
     outputs:
-      released: ${{ steps.create_release.outputs.released }}
+      released: ${{ steps.publish.outputs.released }}
     steps:
-      - name: Download built MSIX packages
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-
-      - name: Create v${{ needs.version.outputs.version }} tag + GitHub Release
-        id: create_release
+      - name: Publish v${{ needs.version.outputs.version }}
+        id: publish
         env:
           GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
           VERSION: ${{ needs.version.outputs.version }}
+          WINDOWS: ${{ needs.changes.outputs.windows }}
         run: |
-          # Idempotent: if this version was already released (a re-run, a race
-          # between two quick main pushes, or a commit that didn't bump the
-          # version), skip instead of failing the build. GitVersion holds the
-          # version steady until the next tag, so consecutive pushes can resolve
-          # to the same v<x.y.z>; the next change that bumps gets its own release.
-          # `released` gates the store-submit job below — a skip here must not
-          # trigger a Store submission for a release that wasn't actually cut.
-          if gh release view "v${VERSION}" --repo "${{ github.repository }}" >/dev/null 2>&1; then
-            echo "::notice::Release v${VERSION} already exists — version did not bump; skipping."
+          set -euo pipefail
+          # A re-run of an old failed run must not publish its stale draft over
+          # a newer release (it would become "latest" and hit the Store with a
+          # lower version) — discard it instead.
+          newest=$(gh release list --repo "$REPO" --limit 100 --exclude-drafts --json tagName --jq '.[].tagName' |
+            sed 's/^v//' | sort -V | tail -n 1)
+          if [ -n "$newest" ] && [ "$(printf '%s\n%s\n' "$newest" "$VERSION" | sort -V | tail -n 1)" != "$VERSION" ]; then
+            echo "::warning::v${newest} is already published, newer than v${VERSION} — deleting this stale draft instead of publishing it."
+            gh release delete "v${VERSION}" --repo "$REPO" --yes
             echo "released=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          # Only the app package per arch — NOT the framework dependency packages
-          # under Dependencies/ (every arch ships a same-named
-          # Microsoft.WindowsAppRuntime.2.msix, which would collide as duplicate
-          # release asset names). The Store/Windows resolves that runtime dependency.
-          msix_files=$(find artifacts -name 'ReadTheStupidText.App_*.msix')
-          echo "Publishing v${VERSION}:"; echo "$msix_files"
-          # --target pins the tag to this merge commit; gh creates the tag itself.
-          gh release create "v${VERSION}" \
-            --repo "${{ github.repository }}" \
-            --target "${{ github.sha }}" \
-            --title "v${VERSION}" \
-            --generate-notes \
-            $msix_files
+          names=$(gh release view "v${VERSION}" --repo "$REPO" --json assets --jq '.assets[].name')
+          echo "Assets on v${VERSION}:"; echo "$names"
+          if [ "$WINDOWS" = "true" ]; then
+            built=$(grep -cE "^ReadTheStupidText[.]App_${VERSION//./[.]}[.]0_.*[.]msix$" <<< "$names" || true)
+            if [ "$built" -ne 2 ]; then
+              echo "::error::Expected 2 freshly built MSIX (x64 + ARM64) for ${VERSION}, found ${built}"; exit 1
+            fi
+          fi
+          gh release edit "v${VERSION}" --repo "$REPO" --draft=false --latest
           echo "released=true" >> "$GITHUB_OUTPUT"
 
-  # Submits the just-cut release to the Microsoft Store, automatically, on
-  # every push to main (Decision 44). This runs as a job in THIS run rather
-  # than store-submit.yml reacting to a `release: published` event, because
-  # the release above is created with the default GITHUB_TOKEN — GitHub
-  # never lets a GITHUB_TOKEN-triggered event (e.g. the release it just
-  # created) start ANOTHER workflow run, by design (recursion guard), so a
-  # separate `on: release:` trigger would silently never fire. Calling the
-  # reusable workflow as a job here sidesteps that: it's part of this same
-  # push-triggered run, not a new one.
+  # Microsoft Store submission (Decision 44) — only when Windows was rebuilt.
+  # A job in this run, not an `on: release` trigger: a GITHUB_TOKEN-created
+  # release never starts another workflow run (GitHub's recursion guard).
   store-submit:
-    needs: [version, release]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.release.outputs.released == 'true'
+    needs: [changes, version, release-publish]
+    if: >-
+      !cancelled()
+      && needs.release-publish.outputs.released == 'true'
+      && needs.changes.outputs.windows == 'true'
     uses: ./.github/workflows/store-submit.yml
     with:
       tag: v${{ needs.version.outputs.version }}
     secrets: inherit
 
-  # Separate job, not a step tacked onto `build`: `build` is a per-arch
-  # matrix, so a step there would run this twice (and delete-race itself)
-  # per push. `always()` + no dependency on release/store-submit succeeding
-  # so cleanup still runs even if a later job in this same run fails.
-  cleanup-artifacts:
-    needs: [build]
-    if: always() && github.ref == 'refs/heads/main'
+  # Google Play internal-testing upload — only when Android was rebuilt. A
+  # no-op until both the signing and PLAY_SERVICE_ACCOUNT_JSON secrets exist;
+  # Play Console also needs the very first release on a track uploaded by hand
+  # once (an API limitation).
+  play-submit:
+    needs: [changes, version, release-publish]
+    if: >-
+      !cancelled()
+      && needs.release-publish.outputs.released == 'true'
+      && needs.changes.outputs.android == 'true'
     runs-on: ubuntu-latest
-    # A job's own `permissions:` block replaces every scope, not just the
-    # ones listed — it does NOT fall back to the workflow-level
-    # `contents: write` above (that's for `release`'s tag/Release creation).
-    # Omitting contents:read here left `actions/checkout@v4` below with
-    # contents:none, failing the checkout and skipping every step after it
-    # — including the cleanup step itself — on every run, found in review.
-    permissions:
-      contents: read
-      actions: write
+    env:
+      CAN_PUBLISH: ${{ secrets.ANDROID_SIGNING_KEYSTORE_BASE64 != '' && secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
     steps:
-      # A local composite action (./.github/actions/...) needs the repo on
-      # disk first — this job otherwise has no checkout at all, unlike
-      # `build`/`release` above which get one implicitly from their other
-      # steps.
-      - uses: actions/checkout@v4
+      - name: Download the .aab from the release
+        if: ${{ env.CAN_PUBLISH == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: gh release download "v${VERSION}" --repo "${{ github.repository }}" --pattern "ReadTheStupidText-${VERSION}.aab" --dir play
 
-      - name: Clean up old build artifacts
-        # Keeps only the single most recent run of this workflow on main,
-        # deleting the rest — 224 uncapped artifacts (64.65GB, averaging
-        # ~576MB/run against a 500MB account-wide quota) went back weeks
-        # with no cleanup at all, exhausting the account's Actions+Packages
-        # storage and blocking every upload in every repo on the account
-        # (found 2026-09-26 while debugging an unrelated repo's broken CI).
-        # KEEP_RUNS=1, not a larger number: even a single run's two MSIX
-        # files already exceed the whole 500MB free quota on their own, so
-        # keeping more only guarantees recurrence. The upload step's own
-        # retention-days: 1 is the other half of containing that (these
-        # artifacts are superseded by a permanent GitHub Release within the
-        # same run on main anyway); this step is defense-in-depth for
-        # history beyond it, and the only cleanup a PR build's artifacts get
-        # (this job is main-scoped; retention-days handles PR branches on
-        # its own). See the composite action for why this always keeps this
-        # run's own artifacts regardless of a concurrent run racing it.
-        continue-on-error: true
-        uses: ./.github/actions/cleanup-old-artifacts
+      - name: Publish to Play Store (internal testing)
+        if: ${{ env.CAN_PUBLISH == 'true' }}
+        uses: r0adkll/upload-google-play@v1
         with:
-          workflow-file: build.yml
-          keep-runs: 1
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: uk.sirous.readthestupidtext
+          releaseFiles: play/*.aab
+          track: internal
+          status: completed

@@ -32,18 +32,22 @@ at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
 > range rather than duplicated. See Decisions 45-51 and the Batch 7 slices
 > (35-38) in `plan.md`.
 
-> **CI within the Actions storage quota (Batch 8, planning):** the account's
+> **CI within the Actions storage quota (Batch 8):** the account's
 > Actions+Packages storage is **500 MB, shared across all repos, billed as
 > monthly GB-hours** (deleting artifacts doesn't refund it), and one run's
-> MSIX + AAB/APK is ~1 GB. So CI is moving to **zero `upload-artifact`**. PRs
-> are compile/test checks only, and on `main` build jobs upload straight to a
-> **draft GitHub Release** (Release assets don't count toward the quota), which
-> is published once every affected build succeeds. `android-build.yml` folds
-> into `build.yml`, and a `changes` job **path-filters** per platform
-> (core → both, `App`/`Infrastructure` → Windows, `Mobile` → Android), so an
-> untouched platform is neither built nor submitted. **Don't add
-> `actions/upload-artifact` steps for build outputs.** See Decisions 52-58
-> and Slices 39-42 in `plan.md`.
+> MSIX + AAB/APK is ~1 GB. So CI uses **zero `upload-artifact`**. PRs are
+> compile/test checks only. On `main`, build jobs upload straight to a **draft
+> GitHub Release** (Release assets don't count toward the quota), which
+> `release-publish` publishes (creating the tag) once every affected build
+> succeeds. Android lives in `build.yml` too (`android-build.yml` is gone). A
+> `changes` job (`dorny/paths-filter`) **path-filters** per platform: core
+> (Domain/Application/Documents/tests/pipeline) → both, `App`/`Infrastructure`
+> → Windows, and `Mobile` + `App/VoiceModel` → Android. An untouched platform
+> is neither built nor submitted; its assets are carried forward from its last
+> release. **When adding a project or shared build file, add its path to the
+> right filter group. Don't add `actions/upload-artifact` for build outputs.**
+> Repo artifact retention is 1 day as a safety net. See Decisions 52-58 and
+> Slices 39-42 in `plan.md`.
 
 > **Naming:** the user-facing **product display name is "Read The Stupid Text"** (with
 > spaces) — shown in the manifest `DisplayName`s, tray tooltip, control-panel header,
@@ -162,7 +166,8 @@ already running. No AVD ships with this repo — set one up locally (or attach a
 physical device) before relying on a slice that touches the Mobile project.
 
 CI/packaging (Slice 5): `.github/workflows/build.yml` packages the single-project
-MSIX (x64 + ARM64, unsigned artifacts — the Store re-signs) and checks out LFS for
+MSIX (x64 + ARM64, unsigned — the Store re-signs; uploaded to the Release, never
+as an Actions artifact — Batch 8) and checks out LFS for
 the voice model; see `STORE.md` for capability justification, licenses, and the
 Store/deployment details. The app is **live in the Store** (`9NGT1BN1H92V`);
 `store-submit.yml` pushes updates (bundles both arches → one `.msixbundle` →
@@ -188,15 +193,18 @@ running the app (VS **(Package)** profile). Run the suite with:
 dotnet test tests/ReadTheStupidText.Tests/ReadTheStupidText.Tests.csproj
 ```
 
-A CI `test` job in `build.yml` runs them on every push/PR and **gates** the
-`build`/`release` jobs, so a failing test blocks the release.
+A CI `test` job in `build.yml` runs them on every push/PR that touches app code
+(either platform, per the Batch 8 path filter; docs-only changes skip it) and
+**gates** the build and release jobs, so a failing test blocks the release.
 
 ## Versioning, license & releases (Batch 2 — Slices 11–16)
 
 - **License is MIT** (Decision 16 in `plan.md`). Anyone may use/extend/sell it
   provided the copyright notice is kept. Do **not** add GPL/LGPL components (the
   Supertonic/sherpa stack was chosen to keep this clean — see `STORE.md`).
-- **Every merge to `main` ships a version** (Decision 17), derived by
+- **Every merge to `main` that touches app code ships a version** (Decision 17;
+  docs-only merges cut none, and only the changed platforms are rebuilt and
+  submitted — Batch 8), derived by
   **GitVersion** from git history — **git tags are the source of truth**. The
   single `build.yml` run does it all: GitVersion computes the next SemVer, the
   MSIX is packaged with that version stamped into `Package.appxmanifest`
