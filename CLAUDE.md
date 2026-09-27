@@ -32,6 +32,19 @@ at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
 > range rather than duplicated. See Decisions 45-51 and the Batch 7 slices
 > (35-38) in `plan.md`.
 
+> **CI within the Actions storage quota (Batch 8, planning):** the account's
+> Actions+Packages storage is **500 MB, shared across all repos, billed as
+> monthly GB-hours** (deleting artifacts doesn't refund it), and one run's
+> MSIX + AAB/APK is ~1 GB. So CI is moving to **zero `upload-artifact`**. PRs
+> are compile/test checks only, and on `main` build jobs upload straight to a
+> **draft GitHub Release** (Release assets don't count toward the quota), which
+> is published once every affected build succeeds. `android-build.yml` folds
+> into `build.yml`, and a `changes` job **path-filters** per platform
+> (core → both, `App`/`Infrastructure` → Windows, `Mobile` → Android), so an
+> untouched platform is neither built nor submitted. **Don't add
+> `actions/upload-artifact` steps for build outputs.** See Decisions 52-58
+> and Slices 39-42 in `plan.md`.
+
 > **Naming:** the user-facing **product display name is "Read The Stupid Text"** (with
 > spaces) — shown in the manifest `DisplayName`s, tray tooltip, control-panel header,
 > and window titles. The **repo, package id (`ReadTheStupidText`), namespaces, assembly,
