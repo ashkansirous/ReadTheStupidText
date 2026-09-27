@@ -1624,7 +1624,7 @@ Exception to vertical slicing: pure pipeline infrastructure with no app-facing
 surface, so slices are ordered by risk. Windows goes first because it
 already publishes to a Release; Android follows, then path filtering on top.
 
-Implemented in PR #164 (Slices 39-42 together). Two review passes (high, then
+Implemented in PR #165 (Slices 39-42 together; plan merged in #164). Two review passes (high, then
 medium effort) led to these changes before commit:
 - diff against the last release tag (Decision 56);
 - carry Android assets forward when signing is absent (Decision 57);
