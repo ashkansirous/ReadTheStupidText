@@ -52,18 +52,31 @@ jobs:
   submit:
     runs-on: windows-latest
     steps:
+      - name: Checkout (release scripts)
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+
+      # Without an explicit tag, pick the newest published release whose MSIX
+      # were built FOR that version. Android-only releases carry the previous
+      # Windows build forward (Decision 57), so "latest release" alone could
+      # resubmit an old package.
       - name: Resolve the tag to submit
         id: tag
-        shell: pwsh
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           INPUT_TAG: ${{ inputs.tag }}
         run: |
-          $tag = if ($env:INPUT_TAG) { $env:INPUT_TAG }
-                 else { gh release view --repo "${{ github.repository }}" --json tagName --jq .tagName }
-          if (-not $tag) { throw "Could not resolve a release tag to submit" }
-          Write-Host "Submitting $tag"
-          "tag=$tag" | Out-File -Append $env:GITHUB_OUTPUT
+          set -euo pipefail
+          tag="$INPUT_TAG"
+          if [ -z "$tag" ]; then
+            found=$(bash .github/scripts/find-release.sh '^ReadTheStupidText[.]App_{version}[.]0_.*[.]msix$')
+            tag=$(head -n 1 <<< "$found")
+          fi
+          if [ -z "$tag" ]; then echo "::error::Could not resolve a release tag to submit"; exit 1; fi
+          echo "Submitting $tag"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
       - name: Download the release's MSIX packages
         id: packages
