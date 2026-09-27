@@ -679,6 +679,75 @@ this plan turns it into ordered, shippable vertical slices.
 51. **The stuck elapsed/total timer is root-caused during implementation, not
     pre-diagnosed here (Batch 7).** No fix is assumed in this plan; use the
     systematic-debugging skill when the slice is picked up.
+52. **CI produces zero Actions artifacts (Batch 8).** The account has a
+    **500 MB** Actions+Packages storage quota, shared by every repo and billed
+    as GB-hours across the month (so deleting artifacts stops accrual but never
+    refunds it). One full run uploaded ~1.07 GB (MSIX x64 367 MB + ARM64 359 MB
+    + `.aab` 173 MB + `.apk` 173 MB), twice the whole quota, which is why
+    PR #163's `retention-days` + cleanup action could only soften it. **GitHub
+    Release assets don't count toward that quota**, so build outputs go
+    straight to a Release, and `actions/upload-artifact` is no longer used for
+    build outputs. A workflow with no uploads also keeps running while the
+    account is over quota.
+53. **PR builds are compile-and-test checks only (Batch 8).** PRs build and
+    test every affected platform but upload nothing. Build minutes on standard
+    runners are free for this public repo, so the full check costs no storage.
+    A reviewer who needs an installable build can use `workflow_dispatch` on the
+    branch (which still uploads nothing), or build locally.
+54. **On `main`, jobs hand off through a draft Release, not artifacts
+    (Batch 8).** A `release-draft` job creates (or reuses, on a re-run) a
+    **draft** `v<x.y.z>` release targeting the merge commit. Each build job
+    `gh release upload --clobber`s its own assets into it, and a
+    `release-publish` job flips it to published only once every
+    affected build succeeded. Store/Play submission then read from the
+    published Release. Draft releases create no tag, so a failed run leaves no
+    half-cut `v*` tag behind (GitVersion's source of truth stays clean). Only
+    `ReadTheStupidText.App_*.msix` is uploaded, never the Windows App Runtime
+    dependency packages the old `**\*.msix` glob also picked up.
+55. **One pipeline for both platforms (Batch 8).** `android-build.yml` folds
+    into `build.yml` as a `build-android` job, so one run produces one release
+    carrying the MSIX (x64 + ARM64) **and** the signed `.aab` + `.apk`. This
+    replaces two workflows racing to create or attach to the same tag, and runs
+    the shared `version` and `test` jobs once instead of twice. The Play
+    internal-testing upload moves to a post-publish `play-submit` job that
+    reads the `.aab` from the Release, mirroring `store-submit`.
+56. **Path-filtered per-platform builds (Batch 8).** A `changes` job
+    (`dorny/paths-filter`, confirmed via context7 at implementation) classifies
+    the diff into three groups:
+    - **core:** `Domain`, `Application`, `Documents`, `tests/`, `global.json`,
+      `GitVersion.yml`, `*.slnx`, `Directory.*` files, and the pipeline's own
+      workflow files.
+    - **windows:** `App`, `Infrastructure`, `store-submit.yml`.
+    - **android:** `Mobile`.
+
+    Windows jobs (build + `store-submit`) run on **core || windows**, and
+    Android jobs (build + `play-submit`) on **core || android**. `test` runs
+    whenever either platform would build. A docs-only change builds nothing and
+    cuts no release. `workflow_dispatch` forces both platforms.
+
+    This is a job-level `if:` rather than a workflow-level `paths:` trigger
+    because one run must still coordinate a single release across whichever
+    platforms changed. It is also safe because no required status checks
+    exist on `main` (only `deletion` + `non_fast_forward` rules), and a job
+    skipped by `if:` reports success anyway.
+57. **A release always carries every platform's latest asset (Batch 8).** When
+    only one platform changed, `release-draft` **carries forward** the other
+    platform's assets from the most recent release that has them (a
+    `gh release download` + `upload`, Releases API only, so it costs no Actions
+    storage). The README's `releases/latest` MSIX link therefore never lands on
+    an Android-only release. Carried-forward assets keep their original
+    version in the file name. `store-submit`'s manual-dispatch "latest release"
+    lookup is still hardened to pick the newest release that actually has
+    **built** MSIX for this version, and submission only fires for a platform
+    that was actually rebuilt in this run.
+58. **Default artifact retention drops to 1 day, account-wide safety net
+    (Batch 8).** The repo-level "artifact and log retention" setting goes from
+    90 → 1 day on this repo **and** `Lets-Call-Mom` (which shares the same
+    quota; 68 MB of artifacts there at planning time), so any future stray
+    upload (e.g. the automatic GitHub Pages artifact) is short-lived by default.
+    PR #163's `cleanup-old-artifacts` composite action and its jobs are
+    **deleted**: with nothing uploaded there's nothing to clean, and dropping
+    them also drops the `actions: write` permission they needed.
 
 ## Changes
 
@@ -1538,6 +1607,53 @@ highlight/toggle wiring, then zoom + real pagination on top of it.
       auto-advances pages to keep the currently-highlighted chunk in view.
       Unit-test the pure pagination-fill and zoom-floor logic.
 
+**Batch 8 — CI within the 500 MB Actions storage quota (CI only).** On
+2026-09-26/27 the account's shared Actions+Packages storage quota (500 MB)
+was exhausted: a single CI run uploaded ~1.07 GB of artifacts, and GitHub
+bills storage as monthly GB-hours, so deleting artifacts doesn't reset it.
+PR #163 (retention + cleanup) reduced but couldn't close the gap. This batch
+moves every build output to GitHub Release assets (which don't count toward
+the quota) and stops building or publishing platforms a change didn't touch.
+Exception to vertical slicing: pure pipeline infrastructure with no app-facing
+surface, so slices are ordered by risk. Windows goes first because it
+already publishes to a Release; Android follows, then path filtering on top.
+
+- [ ] **Slice 39 — Windows: no artifacts, release via draft.** (Decisions 52,
+      53, 54, 58) In `build.yml`, remove `upload-artifact` from the MSIX matrix
+      job. PRs build only. On `main`, add `release-draft` (create/reuse a draft
+      `v<x.y.z>` at the merge commit, skipping everything if that version is
+      already *published*, matching today's idempotency). Each matrix leg
+      `gh release upload --clobber`s only `ReadTheStupidText.App_*.msix`, and
+      `release-publish` (needs both legs) publishes it and sets
+      `released=true` for `store-submit`. Delete the `cleanup-artifacts` job,
+      the `.github/actions/cleanup-old-artifacts/` action and the
+      `actions: write` grant.
+- [ ] **Slice 40 — Android into the same pipeline and release.** (Decisions
+      52, 55) Move the `android-build.yml` build into `build.yml` as
+      `build-android` (needs `version`, `test`, `release-draft`), keeping the
+      unsigned Debug compile check and the `HAS_SIGNING` gate. On `main` it
+      uploads the signed `.aab` + `.apk` to the draft, with no
+      `upload-artifact`. `release-publish` also needs `build-android`. A new
+      `play-submit` job (after publish, `HAS_PLAY_PUBLISHING`-gated) downloads
+      the `.aab` from the Release and runs `r0adkll/upload-google-play`
+      unchanged. Delete `android-build.yml` and its cleanup step.
+- [ ] **Slice 41 — Path-filtered per-platform builds.** (Decisions 56, 57) Add
+      the `changes` job with the core/windows/android filters. Gate `test`,
+      the Windows build + `store-submit`, and `build-android` + `play-submit`
+      on their groups, and make `release-draft`/`release-publish` tolerate a
+      skipped platform (`always()` + explicit result checks, not a bare
+      `needs` that a skip would cascade-skip). Cut no release when neither
+      platform changed, carry forward the unchanged platform's assets from its
+      last release, and harden `store-submit`'s dispatch-mode "latest release"
+      lookup to the newest release that has MSIX assets. `workflow_dispatch`
+      builds both platforms.
+- [ ] **Slice 42 — Retention safety net.** (Decision 58) Set repo-level
+      artifact/log retention to 1 day on `ReadTheStupidText` and `Lets-Call-Mom`
+      (`gh api -X PUT repos/<repo>/actions/permissions/artifact-and-log-retention
+      -F days=1`). This is a settings change and needs no PR. Update `CLAUDE.md`'s
+      CI paragraph and `README.md`'s "uploads each as an unsigned artifact" line
+      to describe the Release-only, path-filtered pipeline.
+
 ## Out of Scope
 
 - Voice *tuning* beyond playback rate (pitch, volume, SSML prosody).
@@ -1631,6 +1747,18 @@ highlight/toggle wiring, then zoom + real pagination on top of it.
   every read is disk-backed uniformly (Decision 49).
 - **(Batch 7)** A mobile equivalent of the reading text box — Windows-only for
   now, same deferral pattern as the activity log (Decision 38).
+- **(Batch 8)** Downloadable per-PR builds — PRs are compile/test checks only
+  (Decision 53).
+- **(Batch 8)** A GitHub Actions spending limit / paid storage — a billing
+  choice for the user, not a pipeline change. Not needed once nothing is
+  uploaded.
+- **(Batch 8)** Caching Git LFS objects (the ~145 MB voice model is fetched by
+  every Windows/Android build). LFS **bandwidth** is a separate allowance from
+  Actions storage. Path filtering already cuts how often it's fetched; revisit
+  only if the billing page shows LFS bandwidth running short.
+- **(Batch 8)** Splitting releases into per-platform tags (`win-v*` /
+  `android-v*`). One `v<x.y.z>` per merge stays (Decision 17), with the
+  unchanged platform's assets carried forward (Decision 57).
 
 ## Verification
 
@@ -1805,5 +1933,23 @@ highlight/toggle wiring, then zoom + real pagination on top of it.
   zooming in stops right where a 30-word sentence would no longer fit at the
   current box width; a long paragraph is shown one fit-to-box page at a time,
   auto-advancing as playback crosses into the next page's chunk.
+- **Slice 39:** a PR run builds both MSIX legs and the repo's artifact list
+  gains nothing
+  (`gh api repos/{owner}/{repo}/actions/artifacts --jq .total_count`). A
+  `main` run publishes `v<x.y.z>` with exactly the two
+  `ReadTheStupidText.App_*.msix` assets and `store-submit` still succeeds.
+  A deliberately failed leg leaves only a draft, with no `v*` tag.
+- **Slice 40:** a `main` run's release carries MSIX x64 + ARM64 + `.aab` +
+  `.apk`, still with zero artifacts. `play-submit` uploads to internal testing
+  once the Play secrets exist, and `android-build.yml` is gone.
+- **Slice 41:** a PR touching only `src/ReadTheStupidText.Mobile/**` skips
+  both Windows legs (and `store-submit` on `main`). One touching only
+  `App`/`Infrastructure` skips `build-android`. A `Domain` change builds both,
+  and a docs-only change builds nothing and cuts no release. After an
+  Android-only merge, `releases/latest` still has both MSIX assets (carried
+  forward).
+- **Slice 42:** `gh api repos/<repo>/actions/permissions/artifact-and-log-retention`
+  returns `days: 1` for both repos. After a few days of normal merges, the
+  billing page shows Actions storage near zero.
 - Manual UI checks driven through the running app; no browser E2E harness
   applies to a native tray app or a MAUI mobile app.
