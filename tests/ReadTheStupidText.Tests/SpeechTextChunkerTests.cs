@@ -109,4 +109,60 @@ public class SpeechTextChunkerTests
             $"first chunk should be a short head; got {chunks[0].Length} chars");
         Assert.False(string.IsNullOrWhiteSpace(chunks[0]));
     }
+
+    [Fact]
+    public void SplitWithRanges_source_span_for_a_single_chunk_is_exact()
+    {
+        const string text = "  Hello there.  ";
+
+        IReadOnlyList<SpeechTextChunker.TextChunk> chunks = SpeechTextChunker.SplitWithRanges(text);
+
+        SpeechTextChunker.TextChunk chunk = Assert.Single(chunks);
+        Assert.Equal("Hello there.", chunk.Text);
+        Assert.Equal(text.Substring(chunk.SourceStart, chunk.SourceLength), chunk.Text);
+    }
+
+    [Fact]
+    public void SplitWithRanges_covers_the_source_text_in_order_without_overlap()
+    {
+        string sentence = "This is a moderately long sentence that carries some weight. ";
+        string text = string.Concat(Enumerable.Repeat(sentence, 12));
+
+        IReadOnlyList<SpeechTextChunker.TextChunk> chunks = SpeechTextChunker.SplitWithRanges(text);
+
+        Assert.True(chunks.Count > 1, "long text should split");
+        int previousEnd = 0;
+        foreach (SpeechTextChunker.TextChunk chunk in chunks)
+        {
+            Assert.InRange(chunk.SourceStart, previousEnd, text.Length);
+            Assert.InRange(chunk.SourceEnd, chunk.SourceStart, text.Length);
+            previousEnd = chunk.SourceEnd;
+        }
+    }
+
+    [Fact]
+    public void SplitWithRanges_word_count_matches_between_chunk_text_and_its_source_span()
+    {
+        string text = "First short sentence. " +
+            string.Concat(Enumerable.Repeat("Then more padding sentence here. ", 8));
+
+        IReadOnlyList<SpeechTextChunker.TextChunk> chunks = SpeechTextChunker.SplitWithRanges(text);
+
+        foreach (SpeechTextChunker.TextChunk chunk in chunks)
+        {
+            string sourceSpan = text.Substring(chunk.SourceStart, chunk.SourceLength);
+            int chunkWords = chunk.Text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
+            int sourceWords = sourceSpan.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
+            Assert.Equal(chunkWords, sourceWords);
+        }
+    }
+
+    [Fact]
+    public void SplitWithRanges_of_whitespace_only_text_is_a_degenerate_empty_span()
+    {
+        IReadOnlyList<SpeechTextChunker.TextChunk> chunks = SpeechTextChunker.SplitWithRanges("   \n  ");
+
+        SpeechTextChunker.TextChunk chunk = Assert.Single(chunks);
+        Assert.Equal(0, chunk.SourceLength);
+    }
 }
