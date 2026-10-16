@@ -20,17 +20,19 @@ at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
 > input surfaces instead). See Decisions 37-42 and the Batch 6 slices in
 > `plan.md` for the full rationale.
 
-> **Reading text box + disk-backed audio (Batch 7, planning):** a toggleable
-> floating window will show the chunk currently being read (whole-chunk
+> **Reading text box + disk-backed audio (Batch 7, built):** a toggleable
+> floating window shows the chunk currently being read (whole-chunk
 > highlight, its own fit-to-box pagination independent of `SpeechTextChunker`,
 > zoom bounded by a live 30-word-sentence floor) — opened via a 4th icon in the
-> control panel's `CONTROLS` row. Synthesized audio moves from an in-memory
+> control panel's `CONTROLS` row. Synthesized audio moved from an in-memory
 > buffer to a temp WAV file per chunk under `TemporaryFolder\audio\<id>\`
 > (sibling of the existing `logs\` folder), fixing memory growth on large
 > files; the existing chunk map used by Skip (Decision 32) and the read-through
 > timer (Decision 33) is extended with each chunk's file path and source-text
 > range rather than duplicated. See Decisions 45-51 and the Batch 7 slices
-> (35-38) in `plan.md`.
+> (35-38) in `plan.md`. Slices 36-38 were stacked PRs (#154-#156) that merged
+> into each other instead of `main`; they landed on `main` later — open stacked
+> PRs against `main`, or retarget each one after its base merges.
 
 > **CI within the Actions storage quota (Batch 8, planning):** the account's
 > Actions+Packages storage is **500 MB, shared across all repos, billed as

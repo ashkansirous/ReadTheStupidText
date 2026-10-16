@@ -32,12 +32,15 @@ public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
         _fallback.ProgressChanged += (_, p) => ForwardProgress(_fallback, p);
         _neural.TimingChanged += (_, t) => ForwardTiming(_neural, t);
         _fallback.TimingChanged += (_, t) => ForwardTiming(_fallback, t);
+        _neural.ChunkChanged += (_, c) => ForwardChunk(_neural, c);
+        _fallback.ChunkChanged += (_, c) => ForwardChunk(_fallback, c);
     }
 
     public event EventHandler<PlaybackState>? StateChanged;
     public event EventHandler? Completed;
     public event EventHandler<double>? ProgressChanged;
     public event EventHandler<ReadTiming>? TimingChanged;
+    public event EventHandler<ReadChunk>? ChunkChanged;
 
     public PlaybackState State => _active.State;
 
@@ -98,6 +101,14 @@ public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
         if (ReferenceEquals(source, _active))
         {
             TimingChanged?.Invoke(this, timing);
+        }
+    }
+
+    private void ForwardChunk(ISpeechReader source, ReadChunk chunk)
+    {
+        if (ReferenceEquals(source, _active))
+        {
+            ChunkChanged?.Invoke(this, chunk);
         }
     }
 

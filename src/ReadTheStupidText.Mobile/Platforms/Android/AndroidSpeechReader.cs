@@ -66,6 +66,11 @@ public sealed class AndroidSpeechReader : Java.Lang.Object, ISpeechReader, Andro
     public event EventHandler<double>? ProgressChanged;
     public event EventHandler<ReadTiming>? TimingChanged;
 
+    // No mobile reading text box yet (Batch 7's reading text box is Windows-only) —
+    // raised once per read, for the whole utterance, purely so this engine
+    // satisfies ISpeechReader like the Windows readers do.
+    public event EventHandler<ReadChunk>? ChunkChanged;
+
     public PlaybackState State { get; private set; } = PlaybackState.Idle;
 
     public Task WarmUpAsync()
@@ -85,6 +90,7 @@ public sealed class AndroidSpeechReader : Java.Lang.Object, ISpeechReader, Andro
         await WarmUpAsync();
 
         _text = text;
+        ChunkChanged?.Invoke(this, new ReadChunk(0, 1, text, 0, text.Length));
         SpeakFrom(0);
     }
 

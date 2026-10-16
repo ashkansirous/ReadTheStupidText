@@ -211,6 +211,19 @@ public sealed class ReadAloudService : IDisposable
         remove => _reader.TimingChanged -= value;
     }
 
+    /// <summary>Raised with the full text of a new read, right before synthesis
+    /// starts — the reading text box's source of the text it displays (Slice 37).
+    /// <see cref="ChunkChanged"/>'s source ranges are relative to this same text.</summary>
+    public event EventHandler<string>? ReadTextChanged;
+
+    /// <summary>The chunk currently playing, for the reading text box's whole-chunk
+    /// highlight (Decision 46).</summary>
+    public event EventHandler<ReadChunk>? ChunkChanged
+    {
+        add => _reader.ChunkChanged += value;
+        remove => _reader.ChunkChanged -= value;
+    }
+
     /// <summary>The foreground window the active read came from, or null when no
     /// read is in progress. The UI composes the status line from this.</summary>
     public WindowSource? CurrentReadWindow => _activeEntry?.Window;
@@ -543,6 +556,7 @@ public sealed class ReadAloudService : IDisposable
             _synthStartTicks = Stopwatch.GetTimestamp();
             _log.SetState(entry, ActivityState.GeneratingAudio);
             _systemLog.Debug("generating audio", entry.Id);
+            ReadTextChanged?.Invoke(this, text);
             await _reader.SpeakAsync(text, entry.Id);
         }
         catch (Exception ex)
