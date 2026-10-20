@@ -1,0 +1,39 @@
+name: dinoreader
+
+# Dino Reader's pure Core (Story Reader parser). Slice 70: split out of
+# build.yml's `test-dinoreader`. Standalone: it references no ReadTheStupidText
+# project, so it runs on its own cheap Linux runner and is deliberately NOT in
+# the needs of release-publish or any submit job - a Dino-only push tests but
+# never versions or releases.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/DinoReader.Core/**'
+      - 'tests/DinoReader.Tests/**'
+      - '.github/workflows/dinoreader.yml'
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dinoreader-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Run Dino Reader core tests
+        run: dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj --configuration Release

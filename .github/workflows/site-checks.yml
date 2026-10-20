@@ -1,0 +1,48 @@
+name: site-checks
+
+# Slice 69's checks on the downloads Worker (formerly build.yml's
+# `test-downloads`): typecheck the Worker and its configs, check the site
+# files' line endings, test the Worker. The R2 publisher's tests live in
+# release-scripts.yml with every other .github/scripts test. Runs on every PR
+# (no path filter, as before), by hand, and from release.yml on main as a
+# standalone job that nothing needs, so it can never block a release.
+# Node 24 strips the types of worker/downloads.ts.
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site-checks-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test-downloads:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Typecheck the Worker and its configs
+        run: npm run typecheck
+
+      - name: Check the site files' line endings
+        run: node worker/check-site-eol.mjs
+
+      - name: Test the downloads Worker
+        run: node --test worker/downloads.test.mjs

@@ -2,15 +2,15 @@ name: store-submit
 
 # Submits a released MSIX to the Microsoft Store via the msstore CLI.
 #
-# AUTOMATIC: build.yml calls this as a reusable workflow (workflow_call) from
+# AUTOMATIC: release.yml calls this as a reusable workflow (workflow_call) from
 # its own `store-submit` job, right after cutting a new release on every push
 # to main (Decision 44) — so every release reaches the Store with no manual
-# step. It runs as a job *inside* build.yml's run rather than this workflow
-# reacting to a `release: published` event, because build.yml creates the
+# step. It runs as a job *inside* release.yml's run rather than this workflow
+# reacting to a `release: published` event, because release.yml creates the
 # release with the default GITHUB_TOKEN, and GitHub never lets a
 # GITHUB_TOKEN-triggered event start ANOTHER workflow run (its recursion
 # guard) — an `on: release:` trigger here would silently never fire. See the
-# comment on build.yml's `store-submit` job.
+# comment on release.yml's `store-submit` job.
 #
 # `msstore publish` (see the last step) discards any still-pending draft
 # submission and creates a fresh one from the newest package each time it

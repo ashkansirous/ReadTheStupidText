@@ -1,0 +1,187 @@
+#!/usr/bin/env node
+/**
+ * Decides which targets a push to main builds (Slice 70, replaces build.yml's
+ * `changes` job and its dorny/paths-filter block).
+ *
+ * The mapping is exactly the one Slices 44/48 settled (Decision 69):
+ *   - core (Domain/Application/Documents/tests/solution/pipeline) -> windows + android + ios
+ *   - App / Infrastructure                                        -> windows
+ *   - Mobile/Platforms/Android/**                                 -> android
+ *   - Mobile/Platforms/iOS/**                                     -> ios
+ *   - the rest of Mobile/** (the shared MAUI root)                -> android + ios
+ *   - DinoReader.Core / tests/DinoReader.Tests                    -> dinoreader (tests only, never a release)
+ *   - docs and anything else                                      -> nothing
+ * A major version bump builds every target, and so does a missing base tag.
+ *
+ * Changes are measured from the newest published v<x.y.z> tag merged into HEAD
+ * (not from the push's own `before`): a failed run, or a pending run dropped
+ * by the concurrency queue, is still built next time. Failing safe means
+ * building more, never less.
+ *
+ * Known gap: changes to publish-downloads.mjs or the download-keys don't map to
+ * any target, so they trigger no re-publish. Run release.yml with force_all if
+ * the downloads copy needs refreshing.
+ *
+ * Each platform workflow's own `pull_request.paths` mirrors its rows below;
+ * ship-targets.test.mjs parses the workflows and fails on any drift.
+ */
+
+import { execFileSync } from 'node:child_process';
+import { appendFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+const MOBILE = 'src/ReadTheStupidText.Mobile/';
+const MAJOR_BUMP = 'major';
+const APP_TAG = /^v(\d+)\.(\d+)\.(\d+)$/;
+
+/** Changes that rebuild all three app platforms. */
+export const CORE_PATHS = [
+    'src/ReadTheStupidText.Domain/',
+    'src/ReadTheStupidText.Application/',
+    'src/ReadTheStupidText.Documents/',
+    'tests/ReadTheStupidText.Tests/',
+    'global.json',
+    'GitVersion.yml',
+    '*.slnx',
+    '.gitattributes',
+    '.github/workflows/release.yml',
+    '.github/workflows/tests.yml',
+    '.github/scripts/find-release.sh',
+    '.github/scripts/ship-targets.mjs',
+];
+
+/**
+ * A pattern ending in `/` matches everything under that folder; one with `*`
+ * matches within a single path segment; anything else is an exact file.
+ */
+export const GROUPS = {
+    core: { include: CORE_PATHS },
+    windows: {
+        include: [
+            'src/ReadTheStupidText.App/',
+            'src/ReadTheStupidText.Infrastructure/',
+            '.github/workflows/store-submit.yml',
+            '.github/workflows/windows.yml',
+        ],
+    },
+    android: {
+        include: [
+            `${MOBILE}Platforms/Android/`,
+            '.github/scripts/stage-android-package.sh',
+            '.github/workflows/android.yml',
+        ],
+    },
+    ios: {
+        include: [
+            `${MOBILE}Platforms/iOS/`,
+            '.github/scripts/ios-signing.sh',
+            '.github/scripts/testflight-upload.sh',
+            '.github/workflows/ios.yml',
+        ],
+    },
+    mobileshared: { include: [MOBILE], exclude: [`${MOBILE}Platforms/`] },
+    dinoreader: {
+        include: ['src/DinoReader.Core/', 'tests/DinoReader.Tests/', '.github/workflows/dinoreader.yml'],
+    },
+};
+
+function patternToRegExp(pattern) {
+    const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`^${escaped.replace(/\*/g, '[^/]*')}$`);
+}
+
+export function matchesPattern(file, pattern) {
+    if (pattern.endsWith('/')) return file.startsWith(pattern);
+    if (pattern.includes('*')) return patternToRegExp(pattern).test(file);
+    return file === pattern;
+}
+
+function groupTouched(changedFiles, { include, exclude = [] }) {
+    const hit = (file, patterns) => patterns.some((pattern) => matchesPattern(file, pattern));
+    return changedFiles.some((file) => hit(file, include) && !hit(file, exclude));
+}
+
+function touchedGroups(changedFiles) {
+    return Object.fromEntries(Object.entries(GROUPS).map(([name, group]) => [name, groupTouched(changedFiles, group)]));
+}
+
+/**
+ * `changedFiles` is everything since the last release tag (`null`: unknown,
+ * which builds everything). `bump` is the pending SemVer bump kind.
+ * Returns one boolean per target. Whether anything ships is release.yml's call
+ * (windows || android || signed ios); dinoreader alone never ships.
+ */
+export function shipTargets({ changedFiles, bump, forceAll = false }) {
+    const everything = forceAll || bump === MAJOR_BUMP || changedFiles === null;
+    const g = everything ? null : touchedGroups(changedFiles);
+    const windows = everything || g.core || g.windows;
+    const android = everything || g.core || g.android || g.mobileshared;
+    const ios = everything || g.core || g.ios || g.mobileshared;
+    const dinoreader = everything || g.dinoreader;
+    return { windows, android, ios, dinoreader };
+}
+
+/** The newest strict v<x.y.z> tag in a list (null when none). */
+export function newestAppTag(tags) {
+    const parse = (tag) => APP_TAG.exec(tag)?.slice(1).map(Number);
+    const valid = tags.filter((tag) => parse(tag));
+    valid.sort((a, b) => {
+        const [pa, pb] = [parse(a), parse(b)];
+        return pa[0] - pb[0] || pa[1] - pb[1] || pa[2] - pb[2];
+    });
+    return valid.at(-1) ?? null;
+}
+
+/**
+ * 'major' when the version GitVersion computed has a higher major than the
+ * base tag, else 'other'. No base tag (null) is treated as major: the first
+ * release builds everything.
+ */
+export function bumpKind(baseTag, newVersion) {
+    const base = APP_TAG.exec(baseTag ?? '');
+    if (!base) return MAJOR_BUMP;
+    const next = /^(\d+)\./.exec(newVersion ?? '');
+    return next && Number(next[1]) > Number(base[1]) ? MAJOR_BUMP : 'other';
+}
+
+function git(args) {
+    return execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+}
+
+/** The newest published app tag merged into HEAD (HEAD's own tag included). */
+export function previousReleaseTag() {
+    try {
+        return newestAppTag(git(['tag', '--merged', 'HEAD', '--list', 'v*']).split('\n'));
+    } catch {
+        return null;
+    }
+}
+
+/** Files changed since `base`; `--no-renames` lists both sides of a move. */
+export function changedFilesSince(base) {
+    if (!base) return null;
+    try {
+        const output = git(['diff', '--no-renames', '--name-only', base, 'HEAD']);
+        return output ? output.split('\n') : [];
+    } catch {
+        return null;
+    }
+}
+
+function writeOutputs(targets) {
+    const lines = Object.entries(targets).map(([key, value]) => `${key}=${value}`);
+    console.log(lines.join('\n'));
+    if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `${lines.join('\n')}\n`);
+}
+
+function main() {
+    const base = previousReleaseTag();
+    const changedFiles = changedFilesSince(base);
+    const bump = bumpKind(base, process.env.NEW_VERSION);
+    console.log(base ? `ship-targets: changes since ${base}, bump ${bump}` : 'ship-targets: no earlier tag, building everything.');
+    writeOutputs(shipTargets({ changedFiles, bump, forceAll: process.env.FORCE_ALL === 'true' }));
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+    main();
+}

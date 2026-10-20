@@ -1,0 +1,519 @@
+name: release
+
+# The one workflow that reacts to a push to main (Slice 70; it replaced the
+# monolithic build.yml). Pull requests are covered by each platform workflow's
+# own `pull_request` paths: windows.yml, android.yml, ios.yml, tests.yml,
+# dinoreader.yml, site-checks.yml, release-scripts.yml (which also lints every
+# workflow with actionlint).
+#
+# Manual run: `workflow_dispatch` behaves exactly like a push to main (same
+# version, same release, same submits) and is refused on any other ref. The
+# `force_all` input builds every target regardless of what changed, which is
+# how a full (and, with the secrets set, signed) rebuild + release is triggered
+# by hand.
+#
+# Rules carried over from build.yml (Batch 8, Decisions 52-58):
+#   * ZERO Actions artifacts. The account's Actions+Packages storage quota is
+#     500 MB, shared by every repo and billed as monthly GB-hours; one run's
+#     MSIX x64 + ARM64 + AAB + APK is ~1 GB. GitHub Release assets don't count
+#     toward it, so every build output goes straight to a draft Release.
+#     Don't add actions/upload-artifact for build outputs.
+#   * Only build what changed. The `version` job runs
+#     .github/scripts/ship-targets.mjs after GitVersion (unit-tested by
+#     ship-targets.test.mjs on every PR): core code builds all three app
+#     platforms, App/Infrastructure only Windows, Mobile splits by folder
+#     (Decision 69: Platforms/Android -> Android, Platforms/iOS -> iOS, the rest
+#     of Mobile -> both), DinoReader only runs its tests, docs build nothing.
+#     A major version bump (or force_all) builds everything. Each platform
+#     workflow's `pull_request.paths` mirrors that mapping; the test parses
+#     them and fails on drift.
+#   * iOS (Slice 48, Decision 70): compiles unsigned until the six iOS signing
+#     secrets exist (`release-draft` reports whether they do as `ios_signed`).
+#     With them, a release run signs an App Store .ipa, attaches it to the draft
+#     and `testflight-submit` uploads it after the release publishes. An unsigned
+#     iOS build can't ship, so an iOS-only change with no secrets cuts no
+#     release (release-draft skips it).
+#
+# Flow: version (GitVersion + ship-targets, one full clone) -> test ->
+# release-draft (runs when windows || android || ios; creates/reuses draft
+# v<x.y.z>, carries forward the untouched platform's assets from its last
+# release) -> build-windows / build-android / build-ios (reusable workflows;
+# they upload into the draft) -> release-publish (only if every affected build
+# succeeded; the tag is created here, so a failed run leaves no v* tag) ->
+# store-submit / play-submit / testflight-submit / publish-downloads.
+# `dinoreader` and `site-checks` are standalone: in no job's needs, so an
+# outage there can never block a build or a release.
+#
+# GitVersion derives the SemVer from git tags (Decision 17): main defaults to a
+# patch bump; "+semver: minor|major|none" in a commit overrides it.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      force_all:
+        description: 'Build every target (Windows, Android, iOS, Dino Reader) whatever changed.'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# Never cancel an in-progress run (two runs would race on the same draft
+# Release). GitHub keeps only ONE pending run per group and drops older pending
+# ones, which is safe only because `version` diffs against the last release tag, so
+# the surviving run still sees the dropped run's changes.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # GitVersion, then the ship-targets plan, in one full clone (ship-targets
+  # diffs against the last published release tag, and GitVersion needs the
+  # tags too).
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.gitversion.outputs.majorMinorPatch }}
+      versionCode: ${{ steps.versioncode.outputs.code }}
+      windows: ${{ steps.targets.outputs.windows }}
+      android: ${{ steps.targets.outputs.android }}
+      ios: ${{ steps.targets.outputs.ios }}
+      dinoreader: ${{ steps.targets.outputs.dinoreader }}
+    steps:
+      # workflow_dispatch can be started on any branch; only main may release.
+      - name: Refuse to run off main
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::release.yml only runs on main (this is ${GITHUB_REF})."
+          exit 1
+
+      - name: Checkout (full history + tags — GitVersion and ship-targets need them)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v4.5.0
+        with:
+          versionSpec: '6.x'
+
+      - name: Determine version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v4.5.0
+        with:
+          useConfigFile: true
+
+      # Android versionCode must be a strictly increasing integer. Three-digit
+      # minor/patch fields (the old 10000/100 packing collided once patch hit
+      # 100); every code this yields exceeds the old scheme's 10012 for 1.0.12.
+      - name: Derive Android versionCode
+        id: versioncode
+        run: |
+          CODE=$(( ${{ steps.gitversion.outputs.major }} * 1000000 + ${{ steps.gitversion.outputs.minor }} * 1000 + ${{ steps.gitversion.outputs.patch }} ))
+          echo "code=${CODE}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Which targets this run builds, from the files changed since the last
+      # published release tag and whether the version's major moved.
+      - name: Decide what ships
+        id: targets
+        env:
+          NEW_VERSION: ${{ steps.gitversion.outputs.majorMinorPatch }}
+          FORCE_ALL: ${{ inputs.force_all && 'true' || 'false' }}
+        run: node .github/scripts/ship-targets.mjs
+
+  # Pure-logic unit tests. Gates every Windows/Android build and so every release.
+  test:
+    needs: version
+    if: needs.version.outputs.windows == 'true' || needs.version.outputs.android == 'true'
+    uses: ./.github/workflows/tests.yml
+
+  # Dino Reader's pure Core. Standalone: a Dino-only push tests but never
+  # versions or releases.
+  dinoreader:
+    needs: version
+    if: needs.version.outputs.dinoreader == 'true'
+    uses: ./.github/workflows/dinoreader.yml
+
+  # Standalone, like dinoreader: the downloads Worker's checks are in no job's
+  # needs, so an outage can never block a release. (The release scripts' own
+  # tests run on PRs in release-scripts.yml.)
+  site-checks:
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/site-checks.yml
+
+  # Creates (or, on a re-run / after a failed run, reuses and empties) a DRAFT
+  # v<x.y.z> release at this merge commit. Drafts create no tag, so nothing is
+  # visible or tagged until release-publish. Skips the whole release
+  # (proceed=false) if this version is already published — GitVersion holds the
+  # version steady until the next tag, so consecutive pushes can resolve to the
+  # same one. Skipped outright when no app platform was selected (docs, DinoReader).
+  release-draft:
+    needs: [version, test]
+    # `test` is skipped (not failed) when only iOS changed, so a bare `needs`
+    # would skip this job: !cancelled() plus explicit results instead.
+    if: >-
+      !cancelled()
+      && github.ref == 'refs/heads/main'
+      && needs.version.result == 'success'
+      && (needs.version.outputs.windows == 'true' || needs.version.outputs.android == 'true' || needs.version.outputs.ios == 'true')
+      && (needs.test.result == 'success' || needs.test.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      proceed: ${{ steps.draft.outputs.proceed }}
+      # Whether the six iOS signing secrets are all set (all six, so a
+      # half-configured repo stays unsigned instead of failing). Computed here
+      # from job-level env because `secrets` can't appear in an `if:`.
+      ios_signed: ${{ steps.ios.outputs.signed }}
+    env:
+      HAS_IOS_SIGNING: ${{ secrets.IOS_DIST_CERT_P12_BASE64 != '' && secrets.IOS_DIST_CERT_P12_PASSWORD != '' && secrets.IOS_PROVISIONING_PROFILE_BASE64 != '' && secrets.ASC_API_KEY_P8_BASE64 != '' && secrets.ASC_API_KEY_ID != '' && secrets.ASC_API_ISSUER_ID != '' }}
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      TAG: v${{ needs.version.outputs.version }}
+      WINDOWS: ${{ needs.version.outputs.windows }}
+      ANDROID: ${{ needs.version.outputs.android }}
+      IOS: ${{ needs.version.outputs.ios }}
+    steps:
+      - name: Check the iOS signing secrets
+        id: ios
+        run: echo "signed=${HAS_IOS_SIGNING}" >> "$GITHUB_OUTPUT"
+
+      # An unsigned iOS build can't be shipped, so a change that only touches iOS
+      # while the signing secrets are missing releases nothing: no draft, no tag,
+      # and proceed stays unset so every later release step is skipped.
+      - name: Check that something shippable changed
+        id: shippable
+        run: |
+          if [ "$WINDOWS" = "true" ] || [ "$ANDROID" = "true" ] || { [ "$IOS" = "true" ] && [ "${{ steps.ios.outputs.signed }}" = "true" ]; }; then
+            echo "ship=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Only iOS changed and the iOS signing secrets are not set, so there is nothing to release."
+            echo "ship=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create or reuse the draft release
+        id: draft
+        if: steps.shippable.outputs.ship == 'true'
+        run: |
+          set -euo pipefail
+          state=$(gh release list --repo "$REPO" --limit 100 --json tagName,isDraft \
+            --jq "map(select(.tagName == \"$TAG\")) | if length == 0 then \"missing\" else (.[0].isDraft | tostring) end")
+          case "$state" in
+            false)
+              echo "::notice::Release $TAG is already published — version did not bump; skipping the release."
+              echo "proceed=false" >> "$GITHUB_OUTPUT"
+              exit 0 ;;
+            true)
+              echo "Reusing draft $TAG: retargeting to ${GITHUB_SHA} and clearing stale assets."
+              gh release edit "$TAG" --repo "$REPO" --target "$GITHUB_SHA"
+              gh release view "$TAG" --repo "$REPO" --json assets --jq '.assets[].name' |
+                while read -r asset; do gh release delete-asset "$TAG" "$asset" --repo "$REPO" --yes; done ;;
+            missing)
+              gh release create "$TAG" --repo "$REPO" --draft --target "$GITHUB_SHA" \
+                --title "$TAG" --generate-notes ;;
+          esac
+          echo "proceed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout (release scripts)
+        if: steps.draft.outputs.proceed == 'true'
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+
+      # A release always carries every platform's latest build (Decision 57):
+      # a platform that won't upload fresh assets this run (untouched, or
+      # Android without the signing secret) gets them copied from the newest
+      # published release that has them (Releases API only — no Actions
+      # storage), so releases/latest never lacks the MSIX or the APK.
+      - name: Carry forward assets of platforms not rebuilt
+        if: steps.draft.outputs.proceed == 'true'
+        env:
+          HAS_SIGNING: ${{ secrets.ANDROID_SIGNING_KEYSTORE_BASE64 != '' }}
+          IOS_SIGNED: ${{ steps.ios.outputs.signed }}
+        run: |
+          set -euo pipefail
+          carry_forward() {
+            local found source
+            found=$(bash .github/scripts/find-release.sh "$1")
+            if [ -z "$found" ]; then echo "No earlier release has assets matching $1 — nothing to carry."; return 0; fi
+            source=$(head -n 1 <<< "$found")
+            mkdir -p carry && rm -f carry/*
+            tail -n +2 <<< "$found" |
+              while read -r name; do gh release download "$source" --repo "$REPO" --pattern "$name" --dir carry; done
+            echo "Carrying forward from $source:"; ls carry
+            gh release upload "$TAG" carry/* --repo "$REPO" --clobber
+          }
+          if [ "$WINDOWS" != "true" ]; then carry_forward '^ReadTheStupidText\.App_.*\.msix$'; fi
+          if [ "$ANDROID" != "true" ] || [ "$HAS_SIGNING" != "true" ]; then carry_forward '\.(aab|apk)$'; fi
+          if [ "$IOS" != "true" ] || [ "$IOS_SIGNED" != "true" ]; then carry_forward '\.ipa$'; fi
+
+  build-windows:
+    needs: [version, test, release-draft]
+    # !cancelled() + explicit results: release-draft is skipped when nothing
+    # ships, and a bare `needs` would cascade that skip into this job.
+    if: >-
+      !cancelled()
+      && needs.version.outputs.windows == 'true'
+      && needs.release-draft.outputs.proceed == 'true'
+      && needs.version.result == 'success'
+      && needs.test.result == 'success'
+      && (needs.release-draft.result == 'success' || needs.release-draft.result == 'skipped')
+    permissions:
+      contents: write   # gh release upload
+    uses: ./.github/workflows/windows.yml
+    with:
+      version: ${{ needs.version.outputs.version }}
+      upload: ${{ needs.release-draft.outputs.proceed == 'true' }}
+    secrets: inherit
+
+  # CI signs with an upload key; Google Play App Signing re-signs for
+  # distribution, so no release-signing secret leaves CI (Decisions 18/42).
+  # The unsigned Debug build always runs; the signed .aab/.apk build only when
+  # cutting a release and once ANDROID_SIGNING_KEYSTORE_BASE64 exists.
+  build-android:
+    needs: [version, test, release-draft]
+    if: >-
+      !cancelled()
+      && needs.version.outputs.android == 'true'
+      && needs.release-draft.outputs.proceed == 'true'
+      && needs.version.result == 'success'
+      && needs.test.result == 'success'
+      && (needs.release-draft.result == 'success' || needs.release-draft.result == 'skipped')
+    permissions:
+      contents: write   # gh release upload
+    uses: ./.github/workflows/android.yml
+    with:
+      version: ${{ needs.version.outputs.version }}
+      version_code: ${{ needs.version.outputs.versionCode }}
+      release: ${{ needs.release-draft.outputs.proceed == 'true' }}
+    secrets: inherit
+
+  # iOS (Slice 48, Decision 70). The unsigned simulator compile runs whenever
+  # there is no signed publish to prove the same thing; the signed App Store
+  # .ipa is built only when cutting a release and once all six iOS secrets exist.
+  build-ios:
+    needs: [version, test, release-draft]
+    if: >-
+      !cancelled()
+      && needs.version.outputs.ios == 'true'
+      && needs.version.result == 'success'
+      && (needs.test.result == 'success' || needs.test.result == 'skipped')
+      && (needs.release-draft.result == 'success' || needs.release-draft.result == 'skipped')
+    permissions:
+      contents: write   # gh release upload
+    uses: ./.github/workflows/ios.yml
+    with:
+      version: ${{ needs.version.outputs.version }}
+      sign: ${{ needs.release-draft.outputs.ios_signed == 'true' && needs.release-draft.outputs.proceed == 'true' }}
+    secrets: inherit
+
+  # Publishes the draft (creating the v<x.y.z> tag at the merge commit) only
+  # when every platform this change touched built successfully. iOS counts only
+  # when it was signed: an unsigned compile check gates nothing (it can't ship).
+  release-publish:
+    needs: [version, release-draft, build-windows, build-android, build-ios]
+    if: >-
+      !cancelled()
+      && needs.release-draft.outputs.proceed == 'true'
+      && (needs.version.outputs.windows != 'true' || needs.build-windows.result == 'success')
+      && (needs.version.outputs.android != 'true' || needs.build-android.result == 'success')
+      && (needs.version.outputs.ios != 'true' || (needs.release-draft.outputs.ios_signed != 'true' || needs.build-ios.result == 'success'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      released: ${{ steps.publish.outputs.released }}
+    steps:
+      - name: Publish v${{ needs.version.outputs.version }}
+        id: publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          VERSION: ${{ needs.version.outputs.version }}
+          WINDOWS: ${{ needs.version.outputs.windows }}
+          IOS: ${{ needs.version.outputs.ios }}
+          IOS_SIGNED: ${{ needs.release-draft.outputs.ios_signed }}
+        run: |
+          set -euo pipefail
+          # A re-run of an old failed run must not publish its stale draft over
+          # a newer release (it would become "latest" and hit the Store with a
+          # lower version) — discard it instead. Only app tags (v<x.y.z>) count:
+          # packs-<n> releases must never be compared as app versions.
+          newest=$(gh release list --repo "$REPO" --limit 100 --exclude-drafts --json tagName --jq '.[].tagName' |
+            grep -E '^v[0-9]+[.][0-9]+[.][0-9]+$' | sed 's/^v//' | sort -V | tail -n 1 || true)
+          if [ -n "$newest" ] && [ "$(printf '%s\n%s\n' "$newest" "$VERSION" | sort -V | tail -n 1)" != "$VERSION" ]; then
+            echo "::warning::v${newest} is already published, newer than v${VERSION} — deleting this stale draft instead of publishing it."
+            gh release delete "v${VERSION}" --repo "$REPO" --yes
+            echo "released=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          names=$(gh release view "v${VERSION}" --repo "$REPO" --json assets --jq '.assets[].name')
+          echo "Assets on v${VERSION}:"; echo "$names"
+          if [ "$WINDOWS" = "true" ]; then
+            built=$(grep -cE "^ReadTheStupidText[.]App_${VERSION//./[.]}[.]0_.*[.]msix$" <<< "$names" || true)
+            if [ "$built" -ne 2 ]; then
+              echo "::error::Expected 2 freshly built MSIX (x64 + ARM64) for ${VERSION}, found ${built}"; exit 1
+            fi
+          fi
+          if [ "$IOS" = "true" ] && [ "$IOS_SIGNED" = "true" ]; then
+            if ! grep -qxF "ReadTheStupidText-${VERSION}.ipa" <<< "$names"; then
+              echo "::error::Expected the freshly built ReadTheStupidText-${VERSION}.ipa on the draft"; exit 1
+            fi
+          fi
+          gh release edit "v${VERSION}" --repo "$REPO" --draft=false --latest
+          echo "released=true" >> "$GITHUB_OUTPUT"
+
+  # Slice 69: an extra public copy of the signed APK in R2, which the landing
+  # site serves at /download. Its own job on purpose: it holds no signing
+  # secrets, reads the APK back from the published GitHub Release (the build
+  # store), and nothing needs it, so a bucket or token problem shows up red
+  # here without ever blocking store-submit or play-submit. Without
+  # CLOUDFLARE_API_TOKEN the script logs a skip and exits 0. wrangler (a root
+  # devDependency) is what uploads, hence npm ci.
+  publish-downloads:
+    needs: [version, release-publish]
+    if: >-
+      !cancelled()
+      && needs.release-publish.outputs.released == 'true'
+      && needs.version.outputs.android == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # A release without a signed APK (no keystore secret) has nothing to copy.
+      - name: Download the APK from the release
+        id: apk
+        run: |
+          set -euo pipefail
+          names=$(gh release view "v${VERSION}" --repo "${{ github.repository }}" --json assets --jq '.assets[].name')
+          if ! grep -qxF "ReadTheStupidText-${VERSION}.apk" <<< "$names"; then
+            echo "No ReadTheStupidText-${VERSION}.apk on v${VERSION}; nothing to copy." | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          gh release download "v${VERSION}" --repo "${{ github.repository }}" -p 'ReadTheStupidText-*.apk' --dir dist
+          echo "found=true" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Node
+        if: steps.apk.outputs.found == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install wrangler
+        if: steps.apk.outputs.found == 'true'
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Copy the APK to the downloads bucket (R2)
+        if: steps.apk.outputs.found == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          PLATFORM: android
+          ASSET_PATHS: dist/ReadTheStupidText-${{ needs.version.outputs.version }}.apk
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ]; then
+            echo "Skipped: CLOUDFLARE_API_TOKEN is not set, so v${VERSION} was not copied to the downloads bucket." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          node .github/scripts/publish-downloads.mjs
+          echo "Copied ReadTheStupidText-${VERSION}.apk to the downloads bucket (or it was already there)." >> "$GITHUB_STEP_SUMMARY"
+
+  # Microsoft Store submission (Decision 44) — only when Windows was rebuilt.
+  # A job in this run, not an `on: release` trigger: a GITHUB_TOKEN-created
+  # release never starts another workflow run (GitHub's recursion guard).
+  store-submit:
+    needs: [version, release-publish]
+    if: >-
+      !cancelled()
+      && needs.release-publish.outputs.released == 'true'
+      && needs.version.outputs.windows == 'true'
+    uses: ./.github/workflows/store-submit.yml
+    with:
+      tag: v${{ needs.version.outputs.version }}
+    secrets: inherit
+
+  # Google Play internal-testing upload — only when Android was rebuilt. A
+  # no-op until both the signing and PLAY_SERVICE_ACCOUNT_JSON secrets exist;
+  # Play Console also needs the very first release on a track uploaded by hand
+  # once (an API limitation).
+  play-submit:
+    needs: [version, release-publish]
+    if: >-
+      !cancelled()
+      && needs.release-publish.outputs.released == 'true'
+      && needs.version.outputs.android == 'true'
+    runs-on: ubuntu-latest
+    env:
+      CAN_PUBLISH: ${{ secrets.ANDROID_SIGNING_KEYSTORE_BASE64 != '' && secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
+    steps:
+      - name: Download the .aab from the release
+        if: ${{ env.CAN_PUBLISH == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: gh release download "v${VERSION}" --repo "${{ github.repository }}" --pattern "ReadTheStupidText-${VERSION}.aab" --dir play
+
+      - name: Publish to Play Store (internal testing)
+        if: ${{ env.CAN_PUBLISH == 'true' }}
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: uk.sirous.readthestupidtext
+          releaseFiles: play/*.aab
+          track: internal
+          status: completed
+
+  # TestFlight upload (Decision 70) — only when iOS was rebuilt AND signed. The
+  # .ipa comes from the published release, so a build for a release that never
+  # went out is never uploaded. macOS because altool ships with Xcode. Apple takes
+  # up to ~30 minutes to process a build; this job does not wait for that, and
+  # adding the build to a tester group stays a manual step in App Store Connect.
+  testflight-submit:
+    needs: [version, release-draft, release-publish]
+    if: >-
+      !cancelled()
+      && needs.release-publish.outputs.released == 'true'
+      && needs.version.outputs.ios == 'true'
+      && needs.release-draft.outputs.ios_signed == 'true'
+    runs-on: macos-26
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - name: Checkout (scripts only)
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+
+      - name: Download the .ipa from the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if ! gh release view "v${VERSION}" --repo "${{ github.repository }}" --json assets --jq '.assets[].name' | grep -qxF "ReadTheStupidText-${VERSION}.ipa"; then
+            echo "::error::Release v${VERSION} was published as signed iOS but carries no ReadTheStupidText-${VERSION}.ipa; nothing was sent to TestFlight."; exit 1
+          fi
+          gh release download "v${VERSION}" --repo "${{ github.repository }}" --pattern "ReadTheStupidText-${VERSION}.ipa" --dir testflight
+
+      - name: Upload to TestFlight
+        env:
+          ASC_API_KEY_P8_BASE64: ${{ secrets.ASC_API_KEY_P8_BASE64 }}
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+        run: bash .github/scripts/testflight-upload.sh "testflight/ReadTheStupidText-${VERSION}.ipa"
