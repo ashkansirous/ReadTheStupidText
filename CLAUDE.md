@@ -47,6 +47,20 @@ at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
 > `actions/upload-artifact` steps for build outputs.** See Decisions 52-58
 > and Slices 39-42 in `plan.md`.
 
+> **Language packs, iOS, translation (Batch 9, planning):** once Slices 50/56
+> land, **no platform bundles a voice model** (supersedes Decisions 14 and 39):
+> every voice downloads as a pack after the first-run language choice, from
+> GitHub Releases tagged `packs-*` (separate from the `v<x.y.z>` app releases),
+> and the system voice reads until it arrives. User data (text, images, scans,
+> translations) stays **100% offline**; only packs are downloaded. One **scoped
+> GPL exception**: the Farsi Piper pack carries espeak-ng data (GPL-3.0) inside
+> the downloaded pack only, never in the repo or any package. **iOS** is the
+> same MAUI project (`net10.0-ios`) shipped to TestFlight from CI, with an `ios`
+> path-filter group and the Mobile split rule: `Platforms/Android/**` builds
+> Android, `Platforms/iOS/**` builds iOS, the rest of `Mobile/**` builds both.
+> See Decisions 59-71 and `docs/plan/slices/43-57`. (Other rules above change
+> inside those slices, not before.)
+
 > **Naming:** the user-facing **product display name is "Read The Stupid Text"** (with
 > spaces) — shown in the manifest `DisplayName`s, tray tooltip, control-panel header,
 > and window titles. The **repo, package id (`ReadTheStupidText`), namespaces, assembly,
