@@ -10,46 +10,42 @@ at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
 **MSIX** and targeted at the **Microsoft Store**. It is *not* a classic UWP app
 (the sandbox cannot do tray icons, global hotkeys, or cross-app text reads).
 
-> **Multi-platform direction (Batch 6, planning):** the app is expanding to
-> **Android first** (via **.NET MAUI**, a Google Play developer account is
-> already in hand), with **iOS/macOS to follow later on the same MAUI stack**.
-> `Domain` and `Application` are already framework-agnostic and are reused
-> **unchanged** by the mobile project — only new platform implementations are
-> written (Android has none of Windows' auto-read triggers; text entry, file
-> upload, and a new **camera → on-device OCR → read** path are the mobile
-> input surfaces instead). See Decisions 37-42 (docs/plan/decisions.md) and the Batch 6 slices in
-> `plan.md` for the full rationale.
+> **Multi-platform (Batch 6):** the app is Android-first via **.NET MAUI**, with
+> iOS/macOS later on the same stack. `Domain` and `Application` stay
+> framework-agnostic and are reused **unchanged** by Mobile; only platform
+> implementations are written. Android has none of Windows' auto-read triggers;
+> its inputs are text entry, file upload and camera → on-device OCR → read.
+> (Decisions 37-42 in `docs/plan/decisions.md`; note: docs/plan/notes/claude-md-history.md)
 
-> **Reading text box + disk-backed audio (Batch 7, built):** a toggleable
-> floating window shows the chunk currently being read (whole-chunk
-> highlight, its own fit-to-box pagination independent of `SpeechTextChunker`,
-> zoom bounded by a live 30-word-sentence floor) — opened via a 4th icon in the
-> control panel's `CONTROLS` row. Synthesized audio moved from an in-memory
-> buffer to a temp WAV file per chunk under `TemporaryFolder\audio\<id>\`
-> (sibling of the existing `logs\` folder), fixing memory growth on large
-> files; the existing chunk map used by Skip (Decision 32) and the read-through
-> timer (Decision 33) is extended with each chunk's file path and source-text
-> range rather than duplicated. See Decisions 45-51 (docs/plan/decisions.md) and the Batch 7 slices
-> (35-38) in `plan.md`. Slices 36-38 were stacked PRs (#154-#156) that merged
-> into each other instead of `main`; they landed on `main` later — open stacked
-> PRs against `main`, or retarget each one after its base merges.
+> **Reading text box + disk-backed audio (Batch 7):** a toggleable floating window
+> shows the chunk being read (4th icon in the panel's `CONTROLS` row). Synthesized
+> audio is a temp WAV per chunk under `TemporaryFolder\audio\<id>\`; the chunk
+> map used by Skip (Decision 32) and the read-through timer (Decision 33) carries
+> each chunk's file path and source-text range, so extend it, don't duplicate it.
+> **Stacked PRs:** open them against `main`, or retarget each one after its base
+> merges (PRs #154-#156 once merged into each other instead). (Decisions 45-51;
+> note: docs/plan/notes/claude-md-history.md)
 
-> **CI within the Actions storage quota (Batch 8):** the account's
-> Actions+Packages storage is **500 MB, shared across all repos, billed as
-> monthly GB-hours** (deleting artifacts doesn't refund it), and one run's
-> MSIX + AAB/APK is ~1 GB. So CI uses **zero `upload-artifact`**. PRs are
+> **CI within the Actions storage quota (Batch 8):** the account's storage is
+> 500 MB shared across all repos, so CI uses **zero `upload-artifact`**. PRs are
 > compile/test checks only. On `main`, build jobs upload straight to a **draft
-> GitHub Release** (Release assets don't count toward the quota), which
-> `release-publish` publishes (creating the tag) once every affected build
-> succeeds. Android lives in `build.yml` too (`android-build.yml` is gone). A
-> `changes` job (`dorny/paths-filter`) **path-filters** per platform: core
-> (Domain/Application/Documents/tests/pipeline) → both, `App`/`Infrastructure`
-> → Windows, and `Mobile` + `App/VoiceModel` → Android. An untouched platform
-> is neither built nor submitted; its assets are carried forward from its last
-> release. **When adding a project or shared build file, add its path to the
-> right filter group. Don't add `actions/upload-artifact` for build outputs.**
-> Repo artifact retention is 1 day as a safety net. See Decisions 52-58 (docs/plan/decisions.md) and
-> Slices 39-42 in `plan.md`.
+> GitHub Release**, which `release-publish` publishes (creating the tag) once every
+> affected build succeeds. Android lives in `build.yml` too. A `changes` job
+> (`dorny/paths-filter`) path-filters per platform: core
+> (Domain/Application/Documents/tests/pipeline) -> both, `App`/`Infrastructure` ->
+> Windows, `App/VoiceModel` -> Android. **Mobile splits by folder (Decision 69):**
+> `Mobile/Platforms/Android/**` -> Android only, `Mobile/Platforms/iOS/**` -> iOS
+> only, the rest of `Mobile/**` (shared MAUI root incl. csproj/Resources) -> both.
+> `dorny/paths-filter@v4.0.3` with `predicate-quantifier: some-with-excludes`: keep
+> the pin (the mode needs 4.0.3 or later). `.github/scripts/path-filters.test.mjs`
+> (job `test-filters`) checks the mapping: change it together with the `filters:`
+> block. The `ios` output is computed but unused until Slice 48 adds `build-ios`,
+> so an iOS-only change runs nothing. An untouched platform is neither built nor
+> submitted; its assets are carried forward from its last release. **When adding a
+> project or shared build file, add its path to the right filter group. Don't add
+> `actions/upload-artifact` for build outputs**; repo artifact retention stays at 1 day as a
+> safety net (Slice 42). (Decisions 52-58; Slice 44:
+> docs/plan/slices/44-pipeline-ios-split.md; note: docs/plan/notes/claude-md-history.md)
 
 > **Merging a change to a `core` path ships both apps.** The `core` filter includes
 > `.github/workflows/build.yml`, `*.slnx`, `GitVersion.yml`, `global.json` and
@@ -62,28 +58,23 @@ at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
 > job (ubuntu), never the version, release or store jobs. Keep Dino paths out of
 > the `core` group. (Slice 59: docs/plan/slices/59-dialogue-parser-voice-caster.md)
 
-> **Language packs, iOS, translation (Batch 9, planning):** once Slices 50/56
-> land, **no platform bundles a voice model** (supersedes Decisions 14 and 39):
-> every voice downloads as a pack after the first-run language choice, from
-> GitHub Releases tagged `packs-*` (separate from the `v<x.y.z>` app releases),
-> and the system voice reads until it arrives. User data (text, images, scans,
-> translations) stays **100% offline**; only packs are downloaded. One **scoped
-> GPL exception**: the Farsi Piper pack carries espeak-ng data (GPL-3.0) inside
-> the downloaded pack only, never in the repo or any package. **iOS** is the
-> same MAUI project (`net10.0-ios`) shipped to TestFlight from CI, with an `ios`
-> path-filter group and the Mobile split rule: `Platforms/Android/**` builds
-> Android, `Platforms/iOS/**` builds iOS, the rest of `Mobile/**` builds both.
-> See Decisions 59-71 and `docs/plan/slices/43-57`. (Other rules above change
-> inside those slices, not before.)
+> **Language packs, iOS, translation (Batch 9):** once Slices 50/56 land, **no
+> platform bundles a voice model** (supersedes Decisions 14 and 39): every voice
+> downloads as a pack after the first-run language choice, from GitHub Releases
+> tagged `packs-*` (separate from the `v<x.y.z>` app releases), and the system voice
+> reads until it arrives. User data (text, images, scans, translations) stays **100%
+> offline**; only packs are downloaded. One **scoped GPL exception**: the Farsi
+> Piper pack carries espeak-ng data (GPL-3.0) inside the downloaded pack only, never
+> in the repo or any package. **iOS** is the same MAUI project (`net10.0-ios`)
+> shipped to TestFlight from CI, with the Mobile folder split rule above.
+> (Decisions 59-71, `docs/plan/slices/43-57`; note: docs/plan/notes/claude-md-history.md)
 
-> **Dino Reader (Batch 10, planning):** a second product in this repo, a kids'
-> book reader with a voice per character. It is a second MAUI app,
-> `src/DinoReader.App`, sharing the platform code in
-> `src/ReadTheStupidText.Mobile.Shared` (moved out of the RTST Mobile app) plus
-> Domain/Application/Documents. A pure `src/DinoReader.Core` holds the dialogue
-> segmenter, speaker attributor and voice caster (no framework deps). One shared
-> version (`v<x.y.z>`) covers both products; each has its own path-filter group.
-> See Decisions 72-82 and `docs/plan/slices/58-67`.
+> **Dino Reader (Batch 10):** a second product in this repo, a kids' book reader
+> with a voice per character: a second MAUI app, `src/DinoReader.App`, sharing
+> `src/ReadTheStupidText.Mobile.Shared` plus Domain/Application/Documents. The pure
+> `src/DinoReader.Core` holds the dialogue segmenter, speaker attributor and voice
+> caster (no framework deps). One shared version (`v<x.y.z>`) covers both products;
+> each has its own path-filter group. (Decisions 72-82, `docs/plan/slices/58-67`)
 > Its icons (all platforms, "Book hug" design) live in
 > `docs/design/dino-reader/icons/`: copy from there, never redraw or regenerate them.
 > Its screens are the mock `docs/design/dino-reader/Dino Reader v2.dc.html` (index in
@@ -152,7 +143,11 @@ DinoReader.Core (standalone, no deps)
 - **Mobile** (`src/ReadTheStupidText.Mobile`, .NET MAUI, `net10.0-android`
   only for now — Decision 37) — references `Domain`/`Application` unchanged;
   platform-specific implementations live under its own `Platforms/Android`
-  folder rather than a separate class library. It does **not** reuse
+  folder rather than a separate class library. **Nothing outside `Platforms/`
+  names an Android or iOS type:** engines come from `IPlatformServices` via the
+  required `MauiProgram.RegisterPlatformServices` partial in each `Platforms/<OS>/`
+  (Slice 48 adds `Platforms/iOS`; Slice 44:
+  docs/plan/slices/44-pipeline-ios-split.md). It does **not** reuse
   `ReadAloudService` — that orchestrates Windows-only triggers (hotkey, UIA
   selection, clipboard) that don't exist on Android (Decision 38) — pages wire
   `ISpeechReader` + `PlaybackRate`/`SpeedPresets` directly instead. **Android
@@ -243,6 +238,15 @@ only) so the .NET runtime ships inside the package — this fixed Store cert
 framework-dependent (Store-delivered). Debug stays framework-dependent for a fast
 inner loop. Trimming stays off (`PublishTrimmed=false`) — packaged WinUI apps
 aren't trimmed.
+
+**Landing site.** `readthestupidtext.sirous.uk` is the Cloudflare Worker `readthestupidtext`
+(`wrangler.jsonc`, `worker/index.ts`) serving `site/` (not `docs/`); GitHub Pages is off. Deploy with
+`npm run deploy` (refuses CRLF site files; `npm run typecheck` keeps `wrangler.jsonc` and
+`wrangler.workers-dev.jsonc` in sync) until Workers Builds is connected (watch paths `worker/**`,
+`site/**`, `wrangler*.jsonc`, `package*.json`). A Worker custom domain can't replace an existing DNS
+record: delete it first (wrangler has no DNS scope). Privacy policy edits touch both `PRIVACY.md` and
+`site/privacy.html`. Don't add `docs/CNAME` or a GitHub Actions deploy. See `docs/DEPLOYING.md`.
+(Slice 68: docs/plan/slices/68-landing-site-on-worker.md)
 
 ## Tests
 
