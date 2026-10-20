@@ -85,6 +85,10 @@ this plan turns it into ordered, shippable vertical slices.
 | 65 | Cast screen | planned | — | — | [65-cast-screen.md](docs/plan/slices/65-cast-screen.md) |
 | 66 | Dino Reader languages and translation | planned | — | — | [66-dino-reader-languages-translation.md](docs/plan/slices/66-dino-reader-languages-translation.md) |
 | 67 | Dino Reader on iOS and Windows | planned | — | — | [67-dino-reader-ios-windows.md](docs/plan/slices/67-dino-reader-ios-windows.md) |
+| 68 | Landing site served by a Cloudflare Worker | planned | — | — | [68-landing-site-on-worker.md](docs/plan/slices/68-landing-site-on-worker.md) |
+| 69 | Android APK downloads from R2, with a "latest" link | planned | — | — | [69-apk-downloads-on-r2.md](docs/plan/slices/69-apk-downloads-on-r2.md) |
+| 70 | Split the build pipeline into the Lets-Call-Mom shape | planned | — | — | [70-split-build-pipeline.md](docs/plan/slices/70-split-build-pipeline.md) |
+| 71 | Repo hygiene and the Drive mirror | planned | — | — | [71-repo-hygiene.md](docs/plan/slices/71-repo-hygiene.md) |
 
 Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
 
