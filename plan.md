@@ -748,6 +748,140 @@ this plan turns it into ordered, shippable vertical slices.
     PR #163's `cleanup-old-artifacts` composite action and its jobs are
     **deleted**: with nothing uploaded there's nothing to clean, and dropping
     them also drops the `actions: write` permission they needed.
+59. **Batch 9 order: Android first, iOS in parallel, Windows last (Batch 9).**
+    Two phone scope docs (2026-10-20, *mobile UX / OCR / translation* and *iOS
+    + per-platform pipeline*) are folded into one batch. Android gets the new
+    features first. iOS starts now, in parallel, on the same MAUI project
+    (Decision 37). Windows catches up last. The kids book reader is a separate
+    product (Story Reader, its own repo), not part of this app.
+60. **User data stays 100% offline; downloading packs is allowed (Batch 9).**
+    Text, images, scans and translations never leave the device. The app may
+    now download **voice/OCR language packs**, which is its first network
+    use: Android gets the `INTERNET` permission, Windows the `internetClient`
+    capability, and iOS needs no entitlement. `PRIVACY.md`, `docs/privacy.html`
+    and `STORE.md`'s capability justification say exactly this. Still no
+    telemetry and no cloud TTS/OCR/translation.
+61. **No bundled voice model on any platform; supersedes Decisions 14 and 39
+    (Batch 9).** Every voice, Supertonic-3 included, downloads as a pack after
+    the first-run language choice (Decision 68). The ~145 MB `VoiceModel/`
+    leaves the MSIX, the AAB and the iOS bundle, as does the Mobile
+    `MauiAsset` stand-in for Play Asset Delivery. The first launch needs a
+    network once. Until the pack lands (or when the download fails), reads
+    use the **system voice** (WinRT `SpeechSynthesis` / Android
+    `TextToSpeech` / `AVSpeechSynthesizer`), which is promoted from internal
+    safety net to a real, labelled first-run voice.
+62. **Packs are hosted as GitHub Release assets in this repo (Batch 9).**
+    Packs go under dedicated `packs-<n>` releases, separate from the app's
+    `v<x.y.z>` releases. Release assets don't count toward the Actions
+    storage quota (Decision 52). A `packs-<n>` tag isn't a SemVer `v` tag, so
+    GitVersion ignores it (verify in Slice 50). A `packs.json` manifest lists
+    each pack's id, language, kind (voice/ocr), version, size, sha256 and
+    licence. Clients verify the sha256 before use, and downloads resume and
+    retry. Publishing a pack is a manual `workflow_dispatch` (`packs.yml`),
+    not part of every app build.
+63. **Voices per language (Batch 9).**
+    - **Supertonic-3 multilingual** (Apache-2.0) covers en, fr, es, pt, ru, ja
+      and ar.
+    - **Farsi** uses a **Piper fa_IR** voice through sherpa-onnx.
+    - **Chinese** uses **MeloTTS zh_en** through sherpa-onnx (MIT). Kokoro
+      stays rejected (Slice 9 note).
+    - Which Farsi voice (gyro or amir) is decided in Slice 51 by whichever
+      licence is confirmed redistributable. If neither is, Farsi falls back to
+      the system voice and the gap is written down.
+    - **Scoped GPL exception to the "no GPL" rule (Decision 16):** Piper needs
+      espeak-ng data (GPL-3.0). That data lives **only inside the downloaded
+      Farsi pack**, never in the repo, the MSIX, the AAB or the iOS bundle,
+      and the pack carries the licence text and a source link. `CLAUDE.md`,
+      `STORE.md` and the third-party notices describe the exception. The app
+      itself stays MIT.
+64. **Camera: the system document scanner, text straight into the editor
+    (Batch 9).**
+    - **Android:** ML Kit **Document Scanner** (`Net.Google.MLKit.DocumentScanner`,
+      version confirmed via context7). It opens the camera at once, crops,
+      takes multiple pages, reorders them and imports from the gallery, all
+      with no camera permission.
+    - **iOS:** VisionKit `VNDocumentCameraViewController`.
+    - Pages are OCR'd in order and **appended to the editor**. The
+      `ScanPage` result screen and `PendingScanResult` go away.
+    - The Android scanner needs Google Play services. Without them, the app
+      falls back to the existing `MediaPicker` single-photo path and says why.
+65. **OCR: PaddleOCR PP-OCRv5 (ONNX, Apache-2.0), one model per language, in
+    the language pack (Batch 9).** ML Kit v2 text recognition has no Arabic,
+    Farsi or Cyrillic. PaddleOCR runs on the onnxruntime already shipped with
+    sherpa-onnx, so one engine serves Android, iOS and Windows. ML Kit Latin
+    OCR stays only as the fallback before the OCR pack is downloaded.
+66. **Head start: a sentence-level audio cache (Batch 9).**
+    - **Cache key:** `hash(normalized sentence) + voiceId + language`, sitting
+      on top of the disk-backed chunk files and the shared chunk map
+      (Decisions 49-50).
+    - **First chunk:** the first **two** sentences, raised from Decision 25's
+      one sentence.
+    - **When synthesis starts:** at once after a file or scan lands, and after
+      **1 s idle** while typing. Synthesis then keeps running ahead of
+      playback.
+    - **Edits:** editing sentence 3 or later re-synthesizes only the changed
+      sentences.
+    - **Cancellation:** cache hits respect the generation counter (Decision
+      15/25), so `Stop()` and supersede still win.
+    - **Play button:** shows a loading animation from tap until the first
+      `Playing` transition.
+67. **Translation: on-device only, opt-in, with a visible source dropdown
+    (Batch 9).**
+    - **Android:** ML Kit Translation plus ML Kit Language ID. Auto-detect
+      sets the source dropdown, and the user can always override it.
+    - **iOS:** the ML Kit iOS SDK if a usable .NET binding exists (checked in
+      Slice 55). Otherwise Apple's Translation framework for every language
+      but Farsi, and Farsi translation on iOS is listed as a gap.
+    - **Windows:** **Opus-MT ONNX** models on the shared onnxruntime
+      (recommended; Bergamot is the alternative, decided in Slice 57).
+    - Translation pivots through English and is casual quality, as the
+      reader is told.
+    - A **"Translate to <my language>"** toggle controls it, default off.
+      When on, it applies to **every** read path, Windows auto-read on
+      selection and copy included.
+68. **The first-run language drives UI, voice, OCR and translation target
+    (Batch 9).**
+    - **Languages:** en, fa, fr, es, pt, zh, ar, ru, ja.
+    - **First run:** the user picks a language, which sets the UI language,
+      downloads the matching voice and OCR packs, and becomes the translation
+      target. It's changeable later in settings.
+    - **UI strings:** `.resx` resources, with full RTL layout for fa and ar.
+69. **One shared version; the path filter grows an `ios` group (Batch 9).**
+    - Decisions 17 and 57 stand: one `v<x.y.z>` per merge, and untouched
+      platforms are not rebuilt or resubmitted. Their assets carry forward
+      (per-platform tags rejected again).
+    - **Mobile split:**
+      - `src/ReadTheStupidText.Mobile/Platforms/Android/**` builds Android.
+      - `.../Platforms/iOS/**` builds iOS.
+      - The rest of `Mobile/**` (shared MAUI) builds Android and iOS.
+      - Core builds all three.
+    - For this to be true, Android-bound code outside `Platforms/Android` (for
+      example `CompositeSpeechReader`'s Android constructor arguments) moves
+      behind interfaces first.
+70. **iOS: TestFlight from CI first, App Store by hand later; signing reuses
+    the Lets Call Mom Apple team (Batch 9).**
+    - **App identity:** RTST gets its own App ID `uk.sirous.readthestupidtext`
+      (same as the Android `ApplicationId`), its own distribution profile and
+      its own App Store Connect API key, all stored via the `manage-secrets`
+      store and set as this repo's secrets.
+    - **Borrowed from Lets Call Mom:** the keychain/profile steps and the
+      TestFlight distribute script, adapted from Lets Call Mom's `ios.yml`
+      and `testflight-distribute.mjs`.
+    - **Build:** `dotnet publish -f net10.0-ios` on a macOS runner, not
+      `xcodebuild`.
+    - **Native packaging:** sherpa-onnx's iOS native packaging is checked by
+      unpacking the built `.ipa`, the same lesson as the Android `.so`
+      gotcha.
+71. **Store listings: new search terms and description, in all 9 languages
+    (Batch 9).**
+    - **Search terms (7, each ≤30 chars):** "read aloud", "text to speech",
+      "tts", "read text aloud", "speak selected text", "pdf reader aloud",
+      "natural voices offline".
+    - **Description:** rewritten and drafted in `STORE.md`.
+    - **Languages:** listings are added for all 9 languages on the Microsoft
+      Store and Google Play. No title change for now.
+    - The Partner Center and Play Console edits are a manual step for the
+      user.
 
 ## Changes
 
@@ -1698,6 +1832,38 @@ already publishes to a Release; Android follows, then path filtering on top.
       CI paragraph and `README.md`'s "uploads each as an unsigned artifact" line
       to describe the Release-only, path-filtered pipeline.
 
+**Batch 9 — Mobile UX, OCR, translation, language packs and iOS.** Source:
+the two 2026-10-20 phone scope docs (*mobile UX / OCR / translation* and *iOS +
+per-platform pipeline*), folded into Decisions 59-71. Android gets the new
+features first, iOS follows in parallel on the same MAUI project, and Windows
+catches up last. Slices in this batch live in `docs/plan/slices/` (one file
+each, with Steps, Acceptance and Risks); this section is only the index.
+`plan.md` will be migrated to the index layout by `archive-docs` once PR #165
+(the Batch 8 implementation) merges. Slices 44, 48, 50 and 56 edit the pipeline
+and depend on that PR.
+
+| # | Slice | Status | PR | Story | File |
+| --- | --- | --- | --- | --- | --- |
+| 43 | Store listing refresh (9 languages) | planned | — | — | [43-store-listing-refresh.md](docs/plan/slices/43-store-listing-refresh.md) |
+| 44 | Pipeline: iOS filter group, platform-neutral Mobile root | planned | — | — | [44-pipeline-ios-split.md](docs/plan/slices/44-pipeline-ios-split.md) |
+| 45 | Android: document scanner into the editor | planned | — | — | [45-android-document-scanner.md](docs/plan/slices/45-android-document-scanner.md) |
+| 46 | Play button loading state | planned | — | — | [46-play-loading-state.md](docs/plan/slices/46-play-loading-state.md) |
+| 47 | Head start: sentence-level audio cache | planned | — | — | [47-head-start-sentence-cache.md](docs/plan/slices/47-head-start-sentence-cache.md) |
+| 48 | iOS target and TestFlight from CI | planned | — | — | [48-ios-target-testflight.md](docs/plan/slices/48-ios-target-testflight.md) |
+| 49 | iOS reaches Android parity | planned | — | — | [49-ios-parity.md](docs/plan/slices/49-ios-parity.md) |
+| 50 | Voice packs, first-run language, slimmer app (Android) | planned | — | — | [50-voice-packs-first-run-language.md](docs/plan/slices/50-voice-packs-first-run-language.md) |
+| 51 | Multilingual voices (Supertonic, Piper fa, MeloTTS zh) | planned | — | — | [51-multilingual-voices.md](docs/plan/slices/51-multilingual-voices.md) |
+| 52 | PaddleOCR per language (Android) | planned | — | — | [52-paddleocr-per-language.md](docs/plan/slices/52-paddleocr-per-language.md) |
+| 53 | Android: localized UI and RTL | planned | — | — | [53-localized-ui-rtl.md](docs/plan/slices/53-localized-ui-rtl.md) |
+| 54 | Android: on-device translation | planned | — | — | [54-on-device-translation.md](docs/plan/slices/54-on-device-translation.md) |
+| 55 | iOS gets the Batch 9 features | planned | — | — | [55-ios-batch9-features.md](docs/plan/slices/55-ios-batch9-features.md) |
+| 56 | Windows: packs, first-run language, head start | planned | — | — | [56-windows-packs-language-headstart.md](docs/plan/slices/56-windows-packs-language-headstart.md) |
+| 57 | Windows: localized UI and translation | planned | — | — | [57-windows-localization-translation.md](docs/plan/slices/57-windows-localization-translation.md) |
+
+Suggested order, in parallel lanes: **A** pipeline + iOS (44 -> 48 -> 49 -> 55);
+**B** Android UX (45, 46, 47); **C** packs and languages (50 -> 51 -> 52, 53,
+54); **Windows** last (56 -> 57); **43** any time.
+
 ## Out of Scope
 
 - Voice *tuning* beyond playback rate (pitch, volume, SSML prosody).
@@ -1803,6 +1969,20 @@ already publishes to a Release; Android follows, then path filtering on top.
 - **(Batch 8)** Splitting releases into per-platform tags (`win-v*` /
   `android-v*`). One `v<x.y.z>` per merge stays (Decision 17), with the
   unchanged platform's assets carried forward (Decision 57).
+- **(Batch 9)** Cloud TTS, OCR or translation: everything user-facing stays
+  on the device (Decision 60).
+- **(Batch 9)** A live camera text overlay (point-and-read); scanning is the
+  document scanner only (Decision 64).
+- **(Batch 9)** Handwriting recognition beyond what PaddleOCR gives (Decision 65).
+- **(Batch 9)** The kids book reader: a separate product, "Story Reader", in its
+  own repo (Decision 59).
+- **(Batch 9)** Mac Catalyst / macOS: a later spin-off on the same MAUI stack.
+- **(Batch 9)** App Store public-release automation: CI stops at TestFlight, the
+  App Store submission is by hand (Decision 70).
+- **(Batch 9)** A store title change; only search terms and descriptions change
+  (Decision 71).
+- **(Batch 9)** Per-platform version tags: one `v<x.y.z>` per merge stays
+  (Decision 69).
 
 ## Verification
 
@@ -1995,5 +2175,6 @@ already publishes to a Release; Android follows, then path filtering on top.
 - **Slice 42:** `gh api repos/<repo>/actions/permissions/artifact-and-log-retention`
   returns `days: 1` for both repos. After a few days of normal merges, the
   billing page shows Actions storage near zero.
+- **Batch 9:** see each slice file's Acceptance section.
 - Manual UI checks driven through the running app; no browser E2E harness
   applies to a native tray app or a MAUI mobile app.
