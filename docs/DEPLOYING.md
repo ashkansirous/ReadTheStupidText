@@ -2,12 +2,15 @@
 
 `https://readthestupidtext.sirous.uk/` is a Cloudflare Worker (`readthestupidtext`)
 that serves the static files in `site/` (Slice 68). The Windows and Android apps are
-unaffected: only the landing page and the privacy page live here.
+unaffected: the landing page, the privacy page and the Android APK downloads live here.
 
 | URL | Served from |
 | --- | --- |
 | `/`, `/index.html` | `site/index.html` |
 | `/privacy`, `/privacy.html` | `site/privacy.html` |
+| `/download` | page: newest Android version, "Download for Android", Store link (Slice 69) |
+| `/download/android/latest` | the newest APK, streamed from R2 (Range supported) |
+| `/download/android/<x.y.z>` | that version's APK; 404 if it was never published |
 | anything else | plain 404 |
 
 `/privacy.html` stays a real, non-redirecting URL because the Store listings link it.
@@ -37,9 +40,46 @@ without the custom domain, see below).
 Every response the Worker returns carries `X-Content-Type-Options: nosniff`,
 `Referrer-Policy: strict-origin-when-cross-origin` and `X-Frame-Options: DENY`. The
 Worker runs for the paths in `assets.run_worker_first` (`/`, `/index.html`, `/privacy`,
-`/privacy/`, `/privacy.html`), which are every page that exists. Unlisted paths such as
+`/privacy/`, `/privacy.html`, `/download`, `/download/*`), which are every page that exists. Unlisted paths such as
 `/nope` are answered by the assets layer as a plain 404 without those headers; that does
 not matter because a 404 carries no content.
+
+## The Android downloads bucket (Slice 69)
+
+Every signed release APK is copied to the private R2 bucket `readthestupidtext-downloads`;
+the Worker (`worker/downloads.ts`, binding `DOWNLOADS`) is the only reader and never talks
+to GitHub. Windows stays Store-only (an MSIX needs a trusted certificate to sideload).
+GitHub Releases remain the build store; R2 is an extra public copy.
+
+Layout (`worker/downloads.ts` and `.github/scripts/publish-downloads.mjs` must agree):
+`android/<version>/ReadTheStupidText-<version>.apk` and `manifests/android/<version>.json`
+(`{version, fileName, sizeBytes, publishedAt}`). CI uploads the APK, then the manifest
+last; the Worker offers a version only once its manifest exists, and "latest" is the
+highest manifest version, so re-running an old build never moves the pointer back.
+Nothing prunes old versions.
+
+One-time setup (the order matters: `wrangler deploy` refuses a binding to a bucket that
+does not exist, so create the bucket **before** the deploy that adds the binding):
+
+1. `npx wrangler r2 bucket create readthestupidtext-downloads` (needs `wrangler login`;
+   leave public access off).
+2. Create a Cloudflare API token with **Account > Workers R2 Storage > Edit** (nothing
+   else), store it through the `manage-secrets` skill, and set two GitHub Actions secrets
+   (not Worker secrets): `gh secret set CLOUDFLARE_API_TOKEN` and
+   `gh secret set CLOUDFLARE_ACCOUNT_ID`.
+3. Deploy the Worker (`npm run deploy`, or merge to `main` with Workers Builds connected).
+
+`build.yml`'s `build-android` job runs `.github/scripts/publish-downloads.mjs` on `main`
+only, after the GitHub Release upload and with `continue-on-error`, so a bucket or token
+problem can never block `release-publish` or the Play submission. Without
+`CLOUDFLARE_API_TOKEN` it logs "skipped" and exits 0. A version already in the bucket is
+never overwritten ("already published"). Check a release at `/download` (the new version
+shows within a minute: the Worker caches the bucket listing) and by installing
+`/download/android/latest` on a phone. Tests: `node --test
+.github/scripts/publish-downloads.test.mjs worker/downloads.test.mjs` (the `test-downloads`
+job in `build.yml`, which is in no job's `needs`).
+
+Limits: `wrangler r2 object put` caps an upload at 300 MiB; the APK must stay under that.
 
 ## Two configs
 

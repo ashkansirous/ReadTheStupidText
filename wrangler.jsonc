@@ -22,8 +22,13 @@
     "not_found_handling": "none",
     // "/" and "/privacy" have no file of their own, so the Worker maps them. The
     // two .html paths also go through it so every page gets the security headers.
-    "run_worker_first": ["/", "/index.html", "/privacy", "/privacy/", "/privacy.html"]
+    "run_worker_first": ["/", "/index.html", "/privacy", "/privacy/", "/privacy.html", "/download", "/download/*"]
   },
+
+  // Slice 69: the Android APKs CI uploads (.github/scripts/publish-downloads.mjs),
+  // served by worker/downloads.ts. The bucket must exist before the deploy that
+  // adds this binding: see docs/DEPLOYING.md.
+  "r2_buckets": [{ "binding": "DOWNLOADS", "bucket_name": "readthestupidtext-downloads" }],
 
   "observability": { "enabled": true }
 }

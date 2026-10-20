@@ -146,6 +146,34 @@ jobs:
           npm i --no-save --no-audit --no-fund --prefix "$RUNNER_TEMP/pf" picomatch@2.3.1
           PICOMATCH_DIR="$RUNNER_TEMP/pf" node .github/scripts/path-filters.test.mjs
 
+  # Slice 69: the R2 publish script's and the download Worker's pure logic.
+  # Standalone like test-filters: in no job's needs, so it can never block a
+  # release. Node 24 strips the types of worker/downloads.ts.
+  test-downloads:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Typecheck the Worker and its configs
+        run: npm run typecheck
+
+      - name: Check the site files' line endings
+        run: node worker/check-site-eol.mjs
+
+      - name: Test the downloads publisher and Worker
+        run: node --test .github/scripts/publish-downloads.test.mjs worker/downloads.test.mjs
+
   version:
     needs: changes
     if: needs.changes.outputs.windows == 'true' || needs.changes.outputs.android == 'true'
@@ -520,6 +548,69 @@ jobs:
           fi
           gh release edit "v${VERSION}" --repo "$REPO" --draft=false --latest
           echo "released=true" >> "$GITHUB_OUTPUT"
+
+  # Slice 69: an extra public copy of the signed APK in R2, which the landing
+  # site serves at /download. Its own job on purpose: it holds no signing
+  # secrets, reads the APK back from the published GitHub Release (the build
+  # store), and nothing needs it, so a bucket or token problem shows up red
+  # here without ever blocking store-submit or play-submit. Without
+  # CLOUDFLARE_API_TOKEN the script logs a skip and exits 0. wrangler (a root
+  # devDependency) is what uploads, hence npm ci.
+  publish-downloads:
+    needs: [changes, version, release-publish]
+    if: >-
+      !cancelled()
+      && needs.release-publish.outputs.released == 'true'
+      && needs.changes.outputs.android == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # A release without a signed APK (no keystore secret) has nothing to copy.
+      - name: Download the APK from the release
+        id: apk
+        run: |
+          set -euo pipefail
+          names=$(gh release view "v${VERSION}" --repo "${{ github.repository }}" --json assets --jq '.assets[].name')
+          if ! grep -qxF "ReadTheStupidText-${VERSION}.apk" <<< "$names"; then
+            echo "No ReadTheStupidText-${VERSION}.apk on v${VERSION}; nothing to copy." | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          gh release download "v${VERSION}" --repo "${{ github.repository }}" -p 'ReadTheStupidText-*.apk' --dir dist
+          echo "found=true" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Node
+        if: steps.apk.outputs.found == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install wrangler
+        if: steps.apk.outputs.found == 'true'
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Copy the APK to the downloads bucket (R2)
+        if: steps.apk.outputs.found == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          PLATFORM: android
+          ASSET_PATHS: dist/ReadTheStupidText-${{ needs.version.outputs.version }}.apk
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ]; then
+            echo "Skipped: CLOUDFLARE_API_TOKEN is not set, so v${VERSION} was not copied to the downloads bucket." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          node .github/scripts/publish-downloads.mjs
+          echo "Copied ReadTheStupidText-${VERSION}.apk to the downloads bucket (or it was already there)." >> "$GITHUB_STEP_SUMMARY"
 
   # Microsoft Store submission (Decision 44) — only when Windows was rebuilt.
   # A job in this run, not an `on: release` trigger: a GITHUB_TOKEN-created
