@@ -88,7 +88,7 @@ this plan turns it into ordered, shippable vertical slices.
 | 68 | Landing site served by a Cloudflare Worker | built | #182 | — | [68-landing-site-on-worker.md](docs/plan/slices/68-landing-site-on-worker.md) |
 | 69 | Android APK downloads from R2, with a "latest" link | planned | — | — | [69-apk-downloads-on-r2.md](docs/plan/slices/69-apk-downloads-on-r2.md) |
 | 70 | Split the build pipeline into the Lets-Call-Mom shape | planned | — | — | [70-split-build-pipeline.md](docs/plan/slices/70-split-build-pipeline.md) |
-| 71 | Repo hygiene and the Drive mirror | built | #TBD | — | [71-repo-hygiene.md](docs/plan/slices/71-repo-hygiene.md) |
+| 71 | Repo hygiene and the Drive mirror | built | #184 | — | [71-repo-hygiene.md](docs/plan/slices/71-repo-hygiene.md) |
 
 Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
 
