@@ -588,12 +588,20 @@ jobs:
       # -p:IncludeAndroid=false, which the csproj honours by dropping net10.0-android, so
       # only maui-ios is needed. (A plain -p:TargetFrameworks=net10.0-ios would also flow
       # into the referenced class libraries and break their restore.)
-      # The .NET iOS workload pins the Xcode version it supports; its error says
-      # which one if the runner's default Xcode doesn't match.
-      - name: Install the .NET MAUI iOS workload
+      # The .NET iOS workload pins the Xcode version it supports (e.g. iOS SDK 27.1
+      # needs Xcode 27.1) and the runner's default Xcode can lag behind, so select
+      # the newest Xcode installed on the image. The list is printed so a mismatch
+      # is easy to read in the log.
+      - name: Select the newest Xcode
         run: |
-          dotnet workload install maui-ios
+          set -euo pipefail
+          ls -d /Applications/Xcode*.app
+          newest=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -n 1 || true)
+          if [ -n "$newest" ]; then sudo xcode-select -s "$newest/Contents/Developer"; fi
           xcodebuild -version
+
+      - name: Install the .NET MAUI iOS workload
+        run: dotnet workload install maui-ios
 
       # Simulator build: needs no certificate or profile. Skipped when the signed
       # publish below runs, which compiles the same code.
