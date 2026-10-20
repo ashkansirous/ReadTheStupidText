@@ -578,30 +578,34 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # iOS pins the SDK feature band its workload set needs (see the workload step).
       - name: Set up .NET 10
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.401'
 
       # On macOS the csproj multi-targets android + ios, and restore evaluates every
       # target, so it would demand the Android workload. Both dotnet calls below pass
       # -p:IncludeAndroid=false, which the csproj honours by dropping net10.0-android, so
       # only maui-ios is needed. (A plain -p:TargetFrameworks=net10.0-ios would also flow
       # into the referenced class libraries and break their restore.)
-      # The .NET iOS workload pins the Xcode version it supports (e.g. iOS SDK 27.1
-      # needs Xcode 27.1) and the runner's default Xcode can lag behind, so select
-      # the newest Xcode installed on the image. The list is printed so a mismatch
-      # is easy to read in the log.
-      - name: Select the newest Xcode
+      # Each .NET iOS SDK requires one Xcode version. The latest manifests (iOS SDK
+      # 27.x) need Xcode 27, which macos-26 doesn't have, so the workload is pinned
+      # to workload set 10.0.401 (Microsoft.iOS.Sdk 26.5.10318, needs Xcode 26.6 —
+      # the image's default, selected explicitly). A workload set only works with an
+      # SDK of its feature band, hence dotnet-version 10.0.401 above. Moving to a
+      # newer iOS SDK means bumping both together, and the Xcode when the image has it.
+      - name: Select Xcode 26.6
         run: |
           set -euo pipefail
-          ls -d /Applications/Xcode*.app
-          newest=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -n 1 || true)
-          if [ -n "$newest" ]; then sudo xcode-select -s "$newest/Contents/Developer"; fi
+          sudo xcode-select -s /Applications/Xcode_26.6.app/Contents/Developer
           xcodebuild -version
 
-      - name: Install the .NET MAUI iOS workload
-        run: dotnet workload install maui-ios
+      - name: Install the .NET MAUI iOS workload (pinned)
+        run: |
+          set -euo pipefail
+          dotnet workload install maui-ios --version 10.0.401
+          dotnet workload --version
 
       # Simulator build: needs no certificate or profile. Skipped when the signed
       # publish below runs, which compiles the same code.
