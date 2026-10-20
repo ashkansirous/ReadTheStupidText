@@ -406,7 +406,16 @@
                             BorderThickness="0"
                             Foreground="{StaticResource HeaderText}"
                             Click="OnPlayPauseClick">
-                            <FontIcon x:Name="PlayPauseIcon" FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE768;" FontSize="15" />
+                            <Grid>
+                                <FontIcon x:Name="PlayPauseIcon" FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE768;" FontSize="15" />
+                                <ProgressRing
+                                    x:Name="PlayPauseRing"
+                                    Width="20"
+                                    Height="20"
+                                    IsActive="False"
+                                    Visibility="Collapsed"
+                                    Foreground="{StaticResource HeaderText}" />
+                            </Grid>
                         </Button>
 
                         <Button
