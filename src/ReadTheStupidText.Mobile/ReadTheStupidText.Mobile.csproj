@@ -55,16 +55,10 @@
 		<!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
 
-		<!-- The Supertonic-3 neural voice model (Decision 14/39) — the exact same
-		     ~139 MB committed under the Windows App project's VoiceModel/, not a
-		     second copy. Packaged as a MauiAsset (Android "assets/"), which
-		     MobileVoiceModelService extracts to app-local storage on first run
-		     since sherpa-onnx's native loader needs real file paths, not a
-		     package-asset stream. This is a plain-bundle stand-in for the real
-		     Play Asset Delivery (Decision 39) — untestable here without a live
-		     Play Console listing to deliver from; revisit when Slice 34 sets one
-		     up. Fine for local sideload testing in the meantime. -->
-		<MauiAsset Include="..\ReadTheStupidText.App\VoiceModel\*" LogicalName="VoiceModel\%(Filename)%(Extension)" />
+
+		<!-- No bundled voice model (Slice 50, Decision 61): the Supertonic-3 voice is a
+		     downloaded pack (see docs/voice-packs.md), so the APK/AAB carries no
+		     assets/VoiceModel/. -->
 	</ItemGroup>
 
 	<ItemGroup>

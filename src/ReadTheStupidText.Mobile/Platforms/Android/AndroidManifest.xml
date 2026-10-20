@@ -1,9 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 	<application android:allowBackup="true" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true"></application>
-	<!-- No network permissions: reading is fully on-device (built-in TTS now,
-	     bundled neural voice from Slice 31), matching the "we collect nothing"
-	     stance already documented for the Windows app. -->
+	<!-- Network is used only to download language voice packs (Slice 50, Decision
+	     60); text, images and scans never leave the device. ACCESS_NETWORK_STATE
+	     lets the app tell "offline" from a failed download. -->
+	<uses-permission android:name="android.permission.INTERNET" />
+	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
 	<!-- Camera capture → OCR (Slice 32, Decision 40). MediaPicker requests this
 	     permission itself at runtime; it still needs declaring here. -->

@@ -172,15 +172,17 @@ languages or voice packs (Batch 9 features not yet shipped).
 10,000 chars, up to 7 search terms of <= 30 chars each; Google Play title 30,
 short description 80, full description 4,000.
 
-**Download disclosure (not live).** Once Slice 50 (Android) / Slice 56
-(Windows) ship, the first launch downloads a ~145 MB voice pack (Decisions 60,
-61), and the store policies require the listing and privacy text to say so.
-The ready-to-paste paragraph is the last block of `docs/store-listings/en.md`;
-each translation carries a TODO marker. **Do not paste it before those slices
-ship.** Slice 50/56 must also re-check the listing against what is then true:
-the "works offline" wording (still true for user data, but the app now needs a
-network once) and the "no network" statements in this file's *Capabilities*
-and *Privacy* sections.
+**Download disclosure (Play live as of Slice 50; Microsoft Store waits for Slice 56).**
+Android's first launch downloads a ~145 MB voice pack (Decisions 60, 61), and the
+store policies require the listing and privacy text to say so. As of Slice 50 the
+Google Play note is live: each `docs/store-listings/*.md` carries a "Google Play
+only: download note" section to append to the Play full description (the "Works
+offline" bullet is already reworded for both stores). **Do not add it to the
+Microsoft Store listing until Slice 56 ships** (Windows still bundles the voice).
+Slice 56 must also re-check the listing against what is then true: the "works
+offline" wording (still true for user data, but the app then needs a network once)
+and the "no network" statements in this file's *Capabilities* and *Privacy*
+sections.
 
 **Manual step (user pastes the text):**
 
@@ -216,6 +218,18 @@ added in Slice 19 (time-to-first-audio and synthesis duration per read) live onl
 the in-memory activity log — shown in the activity-log window, capped, and cleared on
 every restart. There is no third-party analytics SDK, no network call, and no
 on-disk telemetry, so the Store privacy questionnaire stays "no data collected".
+
+**Android / Google Play data safety (Slice 50, Decision 60).** The Android app's only
+network use is downloading language voice packs from this repo's GitHub Releases (the
+`packs-<n>` releases, `docs/voice-packs.md`). Nothing about the user, their device or
+their content is sent: the request is an anonymous file download (the host sees an IP
+address, as for any web request, and the app does not log it). So the Play Console data
+safety form stays "no data collected" and "no data shared"; the app declares the
+`INTERNET` and `ACCESS_NETWORK_STATE` permissions to download packs and detect offline.
+Text, images, scans and translations stay on the device. The form needs a **manual update
+in Play Console by the owner** before the first release that ships this: the app is no
+longer fully offline, so answer the "does your app collect or share data" questions as
+above and make sure the privacy policy URL points at the updated `docs/privacy.html`.
 
 For **dev-time** performance tuning only, the read pipeline may optionally be
 instrumented with **OpenTelemetry** (`Activity`/`Meter`) and observed via a **local

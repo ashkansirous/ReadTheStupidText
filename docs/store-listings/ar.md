@@ -26,9 +26,11 @@
 
 - أصوات طبيعية تعمل على جهازك
 - سرعة قراءة من 0.5x إلى 2x
-- تعمل دون إنترنت: لا تغادر نصوصك وملفاتك وما تمسحه ضوئياً جهازك أبداً
+- تعمل دون إنترنت (يحمّل أندرويد الصوت مرة واحدة عند أول تشغيل): لا تغادر نصوصك وملفاتك وما تمسحه ضوئياً جهازك أبداً
 - بدون حساب وبدون أدوات تحليل
 
-## Download disclosure
+## Google Play only: download note (append to the full description)
 
-<!-- TODO (Slice 50/56): translate the English disclosure from en.md and add it here once voice packs ship. Do not publish before then. -->
+عند تشغيل التطبيق لأول مرة على أندرويد، يحمّل حزمة صوت بحجم 145 ميغابايت تقريباً، لذا يحتاج إلى اتصال بالإنترنت مرة واحدة (يُفضَّل Wi-Fi). إلى أن ينتهي التحميل، يقرأ التطبيق بالصوت المدمج في هاتفك. يتم تحميل حزمة الصوت فقط. تبقى نصوصك وملفاتك وما تمسحه ضوئياً على جهازك، وبعد تثبيت الصوت لا يستخدم التطبيق الشبكة.
+
+Microsoft Store: don't add until Slice 56 ships (Windows still includes the voice).

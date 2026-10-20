@@ -24,11 +24,11 @@ On Android, paste or type text, open a .txt, .pdf or .docx file, or scan a page 
 
 - Natural-sounding voices that run on your device
 - Reading speed from 0.5x to 2x
-- Works offline: your text, files and scans never leave your device
+- Works offline (Android downloads its voice once on first launch); your text, files and scans never leave your device
 - No account and no analytics
 
-## Download disclosure: ADD WHEN SLICE 50 (Android) / 56 (Windows) SHIPS
+## Google Play only: download note (append to the full description)
 
-Do not paste this before those slices ship. When it is added, also drop the "never needs a network" impression and re-check the offline wording above.
+The first time you launch the app on Android, it downloads a voice pack of about 145 MB, so it needs an internet connection once (Wi-Fi recommended). Until the download finishes, the app reads with your phone's built-in voice. Only the voice pack is downloaded. Your text, files and scans stay on your device, and once the voice is installed the app does not use the network.
 
-The first time you launch the app, it downloads a voice pack of about 145 MB, so it needs an internet connection once. Until the download finishes, the app reads with your device's built-in voice. Only the voice pack is downloaded. Your text, files and scans stay on your device.
+Microsoft Store: don't add until Slice 56 ships (Windows still includes the voice).
