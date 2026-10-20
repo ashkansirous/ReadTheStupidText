@@ -92,3 +92,9 @@ None.
 - Native-speaker read of the 8 translations.
 - Text pasted into Partner Center (9 languages, description + 7 search terms) and Play Console (short + full description).
 - Download disclosure to be added once Slices 50 and 56 ship; re-check the "works offline" wording then.
+
+#### Applied 2026-10-20
+
+- Google Play: the English short and full description (with the voice-pack download note) were submitted for review. The app is closed testing only, so the eight translations wait until Play production.
+- Microsoft Store: the live listing was already richer and Windows-specific (10 voices, slider, feature list, audience keywords such as dyslexia and proofreading), so it was kept. Only two weak keywords were swapped for `speak selected text` and `pdf reader aloud`. The generic cross-platform description in `docs/store-listings/` is not used there.
+- Play data-safety form: already "no data collected, no data shared", which stays true with voice-pack downloads. No change needed.

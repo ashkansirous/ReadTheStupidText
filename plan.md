@@ -104,12 +104,9 @@ Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](
 
 Built but not verified (details in each slice file):
 
-- Slice 43: native-speaker read of the 8 translations ([slice](docs/plan/slices/43-store-listing-refresh.md)).
-- Slice 43: text pasted into Partner Center (9 languages, description + 7 search terms) and Play Console (short + full description) ([slice](docs/plan/slices/43-store-listing-refresh.md)).
-- Slice 43: download disclosure to be added once Slices 50 and 56 ship; re-check the "works offline" wording then ([slice](docs/plan/slices/43-store-listing-refresh.md)).
+- Slice 43: the 8 translated Play listings are only worth adding when the app goes to Play production (it is closed testing now); get a native read first. The Microsoft Store keeps its existing Windows-specific listing (decided 2026-10-20). ([slice](docs/plan/slices/43-store-listing-refresh.md))
 - Slice 59: attribution quality on a real children's book text (only unit-test fixtures so far); check with the first Slice 60 read ([slice](docs/plan/slices/59-dialogue-parser-voice-caster.md)).
 - Slice 59: Slice 58 still has to add the Dino Reader app build group to `build.yml` ([slice](docs/plan/slices/59-dialogue-parser-voice-caster.md)).
-- Slice 50: Play Console data-safety form updated by hand. ([slice](docs/plan/slices/50-voice-packs-first-run-language.md))
 - Slice 58: decide whether Dino Reader project additions to `ReadTheStupidText.slnx` / `build.yml` should keep re-releasing the RTST apps (today `*.slnx` and `build.yml` are `core`); seen when Slice 59's merge shipped an unchanged RTST release ([slice](docs/plan/slices/58-dino-reader-skeleton.md)).
 - Slice 22: latency win and any further first-chunk biasing still to be measured under the (Package) profile; issue #117 deferred, story #104 open ([slice](docs/plan/slices/22-read-latency-instrumentation-low-risk-tuning.md)).
 
