@@ -904,9 +904,7 @@ this plan turns it into ordered, shippable vertical slices.
     book, with a narrator voice the user picks. It inherits every Read The
     Stupid Text rule: 100% offline for user data, the same voice/OCR packs,
     the 9 languages, translation, licences and pipeline. The source is the
-    phone doc `2026-10-20-story-reader.md` plus a desk refine on 2026-10-20.
-    The working name was "Story Reader"; it was renamed Dino Reader on
-    2026-10-20.
+    phone doc `2026-10-20-dino-reader.md` plus a desk refine on 2026-10-20.
 74. **Speaker attribution is rule-based, per language, on the device (Batch
     10).**
     - **Segments:** quote marks split the text into narration and quoted
@@ -1975,7 +1973,7 @@ Suggested order, in parallel lanes: **A** pipeline + iOS (44 -> 48 -> 49 -> 55);
 reader that gives each character a consistent, distinct voice. It has a gallery
 behind a grown-up gate, a text mode and a picture mode that highlight the
 spoken sentence, and per-character voices chosen by on-device rules. Sources:
-the phone doc `2026-10-20-story-reader.md` and a desk refine on 2026-10-20
+the phone doc `2026-10-20-dino-reader.md` and a desk refine on 2026-10-20
 (Decisions 73-81). Slices live in `docs/plan/slices/` (one file each); this
 section is only the index.
 
@@ -1989,7 +1987,7 @@ section is only the index.
 | 63 | Positioned text extraction, kept page images | planned | — | — | [63-positioned-text-extraction.md](docs/plan/slices/63-positioned-text-extraction.md) |
 | 64 | Picture mode on real pages | planned | — | — | [64-picture-mode-real-pages.md](docs/plan/slices/64-picture-mode-real-pages.md) |
 | 65 | Cast screen | planned | — | — | [65-cast-screen.md](docs/plan/slices/65-cast-screen.md) |
-| 66 | Dino Reader languages and translation | planned | — | — | [66-story-languages-translation.md](docs/plan/slices/66-story-languages-translation.md) |
+| 66 | Dino Reader languages and translation | planned | — | — | [66-dino-reader-languages-translation.md](docs/plan/slices/66-dino-reader-languages-translation.md) |
 | 67 | Dino Reader on iOS and Windows | planned | — | — | [67-dino-reader-ios-windows.md](docs/plan/slices/67-dino-reader-ios-windows.md) |
 
 Suggested order, in lanes: **pure** 59 any time now (no overlap with Batch 9);
