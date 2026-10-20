@@ -7,8 +7,9 @@ build/packaging pipeline. The app is **published and live in the Store**
 `Package.appxmanifest`** (see below). What remains to fully automate updates is
 the four Partner Center secrets (the `STORE_PRODUCT_ID` variable is already set).
 
-> **Google Play (Android/MAUI, Batch 6, Slice 34).** The Android app has its own
-> parallel pipeline, `.github/workflows/android-build.yml`, mirroring this
+> **Google Play (Android/MAUI, Batch 6, Slice 34).** The Android app builds in
+> the same `.github/workflows/build.yml` pipeline (`build-android` +
+> `play-submit` jobs, Batch 8; formerly `android-build.yml`), mirroring this
 > document's trust model (CI-held upload key; Google Play App Signing re-signs
 > for distribution — same shape as this file's [Signing](#signing) section).
 > App id `uk.sirous.readthestupidtext`. The signed `.aab` build already works
@@ -47,8 +48,9 @@ Verified end-to-end and **live**:
   ~492 MB upload took ~3 s. So the whole chain — GitVersion → per-arch MSIX →
   GitHub Release → bundle → submit — now runs from one dispatch.
 
-Deploying an update now happens automatically on every push to `main` — no
-manual step. To force a manual re-submit (e.g. retrying a transient upload
+Deploying an update now happens automatically on every push to `main` that
+changes Windows or shared code (Batch 8 path filter; Android-only or docs-only
+merges don't resubmit to the Store), with no manual step. To force a manual re-submit (e.g. retrying a transient upload
 failure, or resubmitting an older tag), it's still just:
 
 ```bash
@@ -95,7 +97,10 @@ Store listing references:
 ## Build artifact (CI)
 
 `.github/workflows/build.yml` builds the single-project MSIX on `windows-latest`
-for **x64** and **ARM64** and uploads each as an **unsigned** `.msix` artifact.
+for **x64** and **ARM64**. On `main` it uploads each **unsigned** `.msix` directly
+to that merge's draft GitHub Release. PRs build without uploading anything, and
+there are no Actions artifacts at all (Batch 8, Decision 52: the account's
+500 MB Actions storage quota can't hold even one build).
 
 - The Microsoft Store **re-signs** packages on submission, so CI needs no signing
   certificate (`AppxPackageSigningEnabled=false`).
@@ -212,10 +217,13 @@ commit and append `+semver: minor`/`major` when the change warrants it.
 
 ## Releases (hosted MSIX)
 
-CI's per-run **workflow artifacts** are only reachable from the Actions run page
-(login required, expire after retention) — not a stable download or deploy
-source. So distribution uses **GitHub Releases** instead: every push to `main`
-cuts one (see *Versioning* above). The packages get **stable URLs** under
+Distribution uses **GitHub Releases**. They are also CI's only output store,
+because Release assets don't count toward the Actions storage quota. Every push
+to `main` that touches app code cuts one (see *Versioning* above). It is created
+as a **draft**, each platform build uploads into it, and it is published (which
+creates the `v*` tag) only once every affected build succeeded. When a change
+touched only one platform, the other platform's assets are **carried forward**
+from its last release, so `releases/latest` always has the MSIX and the APK. The packages get **stable URLs** under
 `…/releases/latest`, linked from the README, and serve as the hosted source the
 Store-submission step pulls from.
 

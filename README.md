@@ -16,7 +16,7 @@ Built as a WinUI 3 packaged (MSIX) app for distribution through the Microsoft St
 
 Grab the MSIX from the **[latest release](https://github.com/ashkansirous/ReadTheStupidText/releases/latest)** — `…-x64.msix` for most PCs, `…-ARM64.msix` for Arm devices. Each release is produced by CI from a `v*` tag.
 
-> These packages are **unsigned** (the Microsoft Store signs on publish), so the **[Store install](https://apps.microsoft.com/detail/9NGT1BN1H92V)** is the recommended path. To sideload a release `.msix` instead, a trusted certificate is required — see [`STORE.md`](STORE.md). Every merge to `main` cuts a new `v*` release automatically.
+> These packages are **unsigned** (the Microsoft Store signs on publish), so the **[Store install](https://apps.microsoft.com/detail/9NGT1BN1H92V)** is the recommended path. To sideload a release `.msix` instead, a trusted certificate is required — see [`STORE.md`](STORE.md). Every merge to `main` that changes app code cuts a new `v*` release automatically.
 
 ## Status
 
@@ -123,8 +123,14 @@ real model files (not pointers).
 
 ## Continuous integration
 
-`.github/workflows/build.yml` packages the MSIX (x64 + ARM64) on every push/PR to
-`main` and uploads each as an unsigned artifact. See [`STORE.md`](STORE.md) for
+`.github/workflows/build.yml` is the single pipeline for both platforms. It
+**path-filters** each change: shared code (Domain/Application/Documents/tests)
+builds Windows **and** Android, while `App`/`Infrastructure` builds only Windows
+and `Mobile` only Android. Docs-only changes build nothing. PRs are
+compile-and-test checks only. On `main`, the affected builds (unsigned MSIX
+x64 + ARM64, signed Android `.aab` + `.apk`) are uploaded straight to that merge's
+GitHub Release. CI uploads **no Actions artifacts**, to stay inside the
+account's Actions storage quota. See [`STORE.md`](STORE.md) for
 packaging, capability justification, third-party licenses, and the Store
 submission steps.
 
