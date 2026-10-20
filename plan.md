@@ -896,6 +896,98 @@ this plan turns it into ordered, shippable vertical slices.
       both apps reference. That is Story Reader's first slice, planned in
       its own batch.
 
+73. **Story Reader: a kids book reader with a voice per character (Batch 10).**
+    It is the second product in this repo (Decision 72), a MAUI app at
+    `src/StoryReader.App`. The display name is **"Story Reader"** and the app
+    id is `uk.sirous.storyreader`. Instead of one voice, it works out who is
+    speaking and gives each character the same distinct voice for the whole
+    book, with a narrator voice the user picks. It inherits every Read The
+    Stupid Text rule: 100% offline for user data, the same voice/OCR packs,
+    the 9 languages, translation, licences and pipeline. The source is the
+    phone doc `2026-10-20-story-reader.md` plus a desk refine on 2026-10-20.
+74. **Speaker attribution is rule-based, per language, on the device (Batch
+    10).**
+    - **Segments:** quote marks split the text into narration and quoted
+      lines.
+    - **Who speaks:** a quote is attributed by "X said" / "said X", by
+      pronoun tracking, and by alternating speakers in untagged back-and-forth.
+    - **Gender:** comes from pronouns, a names list and titles.
+    - **Language:** attribution runs in the **source** language, and only
+      then is each segment translated.
+    - **Fixes:** a grown-up corrects mistakes in the cast screen. If the
+      rules get common kids' books badly wrong, a small on-device model is
+      the fallback to consider, never a cloud one.
+75. **Voice casting (Ashkan's algorithm, Batch 10).**
+    - The narrator's voice is never reused for a character.
+    - While there are enough voices, no two characters share one.
+    - When characters outnumber voices, an unassigned character gets the
+      gender-matched voice that has spoken the **fewest words so far**,
+      counted per voice. Main characters' voices are never handed out again.
+    - Farsi (Piper, 1-2 voices) will reuse voices heavily, which is a known
+      limit.
+76. **Speech by segments: one read, many voices, real source ranges (Batch
+    10).**
+    - **New call:** `ISpeechReader` gains a segment-based read: a list of
+      `(text, voiceId, sourceStart, sourceEnd)`. Each chunk carries its own
+      speaker into synthesis. Decision 29's chunk-boundary swap already
+      threads the speaker through the playback loop as a parameter.
+    - **Highlight events:** the Android reader raises `ChunkChanged` **per
+      chunk with the real source range**, as Windows already does (Decision
+      50). Today it raises it once, covering the whole text.
+    - **Read The Stupid Text benefits too:** the ranges are what any
+      mobile highlight needs.
+77. **The gallery is a local library behind a grown-up gate (Batch 10).**
+    - **What a story is:** title, cover, language, pages (each page's
+      picture if any, its text and line positions), and its **cast**
+      (character, gender, voice), remembered per book.
+    - **Storage:** stories are stored only on the device, under
+      `AppDataDirectory/stories/<id>/` (`story.json` + page images). There
+      is no sync and no upload.
+    - **Grown-up gate:** adding, removing or editing a story or its cast
+      sits behind **press-and-hold 3 s on a lock button, then a simple sum**.
+      Reading never needs the gate.
+78. **Text comes with its position on the page (Batch 10).**
+    - **New extraction call:** extraction gains a positioned variant that
+      returns lines with bounding boxes in normalized page coordinates. The
+      existing text-only `IImageTextExtractor.ExtractTextAsync` stays for
+      Read The Stupid Text.
+    - **Where positions come from:** ML Kit and PaddleOCR return their line
+      boxes (Slice 52 must keep them, not discard them). PDFs use PdfPig word
+      positions grouped into lines, falling back to OCR when the PDF has no
+      text layer.
+    - **Page images:** scanned page images are **kept**. PDF pages are
+      rendered to images by the platform renderer (Android `PdfRenderer`,
+      iOS PDFKit, `Windows.Data.Pdf`).
+    - **Sources:** stories come from camera scan (multi-page), photo import,
+      PDF, and typed / .txt / .docx text.
+79. **Reading modes: text and picture, always switchable by the child (Batch
+    10).**
+    - **The switch:** a big two-icon switch (📖 / 🖼) in the reading screen's
+      top bar is **always** shown, remembered per story, and defaults to
+      picture mode when the story has pictures.
+    - **Picture mode:** highlights the **sentence / dialogue line** being
+      spoken as boxes over the page picture. A story with no pictures gets
+      **generated book-style pages** (big friendly type on a page
+      background), so picture mode works for every story.
+    - **Highlight unit:** the sentence/line. The engine has no word
+      timestamps, so word-by-word karaoke is out of scope for now.
+80. **Pages follow the reading; the child can wander (Batch 10).** The page
+    turns by itself as the reading reaches it. A child can swipe to another
+    page and tap a sentence to read from there, and pressing play resumes
+    auto-follow.
+81. **Story Reader platforms and order (Batch 10).**
+    - **Platforms:** Android and iOS first, Windows (MAUI WinUI head) last.
+    - **Shared code:** the Android/iOS readers, OCR, scanner and other
+      platform code move from the Read The Stupid Text Mobile app project
+      into a shared MAUI class library, `src/ReadTheStupidText.Mobile.Shared`,
+      that both apps reference.
+    - **Pipeline:** the pipeline gets a `storyreader` path group and the
+      same shared version (Decisions 69, 72). Distribution is Play internal
+      testing and TestFlight, as for Read The Stupid Text.
+    - **Order:** the pure slices (dialogue parser, voice caster) may start
+      alongside Batch 9. The picture-mode slices wait for the scanner and
+      PaddleOCR (Slices 45, 52).
+
 ## Changes
 
 Ordered as vertical slices — each is end-to-end and independently runnable.
@@ -1877,6 +1969,32 @@ Suggested order, in parallel lanes: **A** pipeline + iOS (44 -> 48 -> 49 -> 55);
 **B** Android UX (45, 46, 47); **C** packs and languages (50 -> 51 -> 52, 53,
 54); **Windows** last (56 -> 57); **43** any time.
 
+**Batch 10 — Story Reader.** Story Reader is the second product in this repo (Decision 72): a kids' book
+reader that gives each character a consistent, distinct voice. It has a gallery
+behind a grown-up gate, a text mode and a picture mode that highlight the
+spoken sentence, and per-character voices chosen by on-device rules. Sources:
+the phone doc `2026-10-20-story-reader.md` and a desk refine on 2026-10-20
+(Decisions 73-81). Slices live in `docs/plan/slices/` (one file each); this
+section is only the index.
+
+| # | Slice | Status | PR | Story | File |
+| --- | --- | --- | --- | --- | --- |
+| 58 | Story Reader skeleton: shared Mobile library, new app, pipeline | planned | — | — | [58-story-reader-skeleton.md](docs/plan/slices/58-story-reader-skeleton.md) |
+| 59 | Dialogue parser and voice caster (pure) | planned | — | — | [59-dialogue-parser-voice-caster.md](docs/plan/slices/59-dialogue-parser-voice-caster.md) |
+| 60 | Reading with a voice per character | planned | — | — | [60-per-character-voice-reading.md](docs/plan/slices/60-per-character-voice-reading.md) |
+| 61 | Gallery, stories on device, grown-up gate | planned | — | — | [61-gallery-grownup-gate.md](docs/plan/slices/61-gallery-grownup-gate.md) |
+| 62 | Reading screen: text and picture modes | planned | — | — | [62-reading-screen-modes.md](docs/plan/slices/62-reading-screen-modes.md) |
+| 63 | Positioned text extraction, kept page images | planned | — | — | [63-positioned-text-extraction.md](docs/plan/slices/63-positioned-text-extraction.md) |
+| 64 | Picture mode on real pages | planned | — | — | [64-picture-mode-real-pages.md](docs/plan/slices/64-picture-mode-real-pages.md) |
+| 65 | Cast screen | planned | — | — | [65-cast-screen.md](docs/plan/slices/65-cast-screen.md) |
+| 66 | Story Reader languages and translation | planned | — | — | [66-story-languages-translation.md](docs/plan/slices/66-story-languages-translation.md) |
+| 67 | Story Reader on iOS and Windows | planned | — | — | [67-story-reader-ios-windows.md](docs/plan/slices/67-story-reader-ios-windows.md) |
+
+Suggested order, in lanes: **pure** 59 any time now (no overlap with Batch 9);
+**app** 58 -> 60 -> 61 -> 62 -> 65 (58 needs PR #165 and Slice 44); **pictures**
+63 (after 45 and 52) -> 64; **languages** 66 after Batch 9 lane C (50-54);
+**platforms** 67 after 48/49, Windows last.
+
 ## Out of Scope
 
 - Voice *tuning* beyond playback rate (pitch, volume, SSML prosody).
@@ -1996,6 +2114,12 @@ Suggested order, in parallel lanes: **A** pipeline + iOS (44 -> 48 -> 49 -> 55);
   (Decision 71).
 - **(Batch 9)** Per-platform version tags: one `v<x.y.z>` per merge stays
   (Decision 69).
+- **(Batch 10)** Word-by-word karaoke highlight: the engine has no word timestamps (Decision 79).
+- **(Batch 10)** Cloud or LLM speaker attribution (a small on-device model is the only fallback, Decision 74).
+- **(Batch 10)** Syncing or sharing stories between devices.
+- **(Batch 10)** A story store or marketplace.
+- **(Batch 10)** Illustrations generated by AI.
+- **(Batch 10)** Story Reader on the Windows tray: it is a normal app, no tray or hotkey.
 
 ## Verification
 
@@ -2189,5 +2313,6 @@ Suggested order, in parallel lanes: **A** pipeline + iOS (44 -> 48 -> 49 -> 55);
   returns `days: 1` for both repos. After a few days of normal merges, the
   billing page shows Actions storage near zero.
 - **Batch 9:** see each slice file's Acceptance section.
+- **Batch 10:** see each slice file's Acceptance section.
 - Manual UI checks driven through the running app; no browser E2E harness
   applies to a native tray app or a MAUI mobile app.

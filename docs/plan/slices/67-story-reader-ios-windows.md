@@ -1,0 +1,44 @@
+# Slice 67 — Story Reader on iOS and Windows
+
+*Planned.*
+
+**Batch:** 10
+**Decisions:** 72, 81
+**Depends on:** Slices 48/49 (iOS target, parity) for iOS; Slices 58-62 for the app; Windows last (after 56, 57)
+**Touches:** `src/StoryReader.App/**`, `src/ReadTheStupidText.Mobile.Shared/**`, `src/ReadTheStupidText.Infrastructure/**`, `.github/workflows/build.yml`, `.github/scripts/**`, `STORE.md`, `CLAUDE.md`
+**Story issue:** —
+
+## Goal
+
+Story Reader ships on iOS (TestFlight) and Windows (Store, a separate product from Read The
+Stupid Text) from the same project and the same version.
+
+## Steps
+
+- [ ] **iOS:** add `net10.0-ios` to `StoryReader.App` and finish `Mobile.Shared`'s
+      `Platforms/iOS` (Slices 48/49): VisionKit scanner, PDFKit page renderer
+      (`IPdfPageRenderer`, Slice 63), OCR with boxes, voice engine. A **second App ID
+      `uk.sirous.storyreader`** in the same Apple team plus its TestFlight app record (manual,
+      user; guide step by step); its iOS pipeline job and secrets via `manage-secrets`.
+- [ ] **Windows:** MAUI WinUI head in `StoryReader.App`, packaged as MSIX; segment reading
+      from Slice 60 on the Windows reader; a `Windows.Data.Pdf` renderer for `IPdfPageRenderer`;
+      no tray, no hotkey. A **separate Store listing** (name, id, identity): manual Partner
+      Center reservation by the user, then the identity goes in its manifest; `STORE.md` gets a
+      Story Reader section.
+- [ ] Pipeline: the `storyreader` path group builds the iOS and Windows jobs only when Story
+      Reader or shared paths change; the Windows MSIX is self-contained like RTST's (Store cert
+      10.2.4.1); one shared `v<x.y.z>` tag.
+- [ ] `CLAUDE.md`: platform notes for the Story Reader heads.
+
+## Acceptance
+
+- iOS: the TestFlight build of Story Reader installs; typed and scanned stories read in four
+  voices; picture-mode boxes follow.
+- Windows: the MSIX installs and runs the same flows; Store submission accepted.
+- A change under `src/StoryReader.App/**` rebuilds Story Reader only, on all platforms.
+
+## Risks / notes
+
+- Windows last: it needs Slices 56/57 and the segment read on the Windows reader (Slice 60).
+- A MAUI WinUI head next to the existing WinUI RTST App may clash in the `.slnx` `Platform`
+  mapping; verify the build.

@@ -69,3 +69,4 @@ downloaded.
 - Two onnxruntime native libraries in one APK is the main packaging risk; verify by unzipping the `.apk`.
 - OCR speed on mid-range phones: measure per page; show progress (Slice 45 does).
 - Handwriting is out of scope beyond what PaddleOCR gives (plan Out of Scope).
+- Batch 10 (Slice 63) needs the line boxes kept - the engine returns lines with boxes and the text-only call is derived from them, don't discard the geometry.
