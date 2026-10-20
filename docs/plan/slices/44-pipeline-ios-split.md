@@ -1,10 +1,10 @@
 # Slice 44 — Pipeline: iOS filter group and platform-neutral Mobile root
 
-*Planned.*
+*In progress (wave 2026-10-20b), draft PR.*
 
 **Batch:** 9
 **Decisions:** 69 (also 52-58 stand)
-**Depends on:** **PR #165 (Batch 8 implementation, branch `feat/ci-release-assets`) merging first.** The `changes`, `release-draft` and `release-publish` jobs edited here do not exist on `main` until then.
+**Depends on:** PR #165 (merged 2026-10-20).
 **Touches:** `src/ReadTheStupidText.Mobile/CompositeSpeechReader.cs`, `src/ReadTheStupidText.Mobile/MauiProgram.cs`, `src/ReadTheStupidText.Mobile/Platforms/Android/**`, `src/ReadTheStupidText.Application/Reading/**`, `.github/workflows/build.yml`, `.github/scripts/**`, `CLAUDE.md`
 **Story issue:** —
 
