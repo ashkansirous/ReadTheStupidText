@@ -39,6 +39,7 @@
                     <VerticalStackLayout x:Name="PhoneVoiceList" />
                 </Border>
 
+                <VerticalStackLayout x:Name="NeuralVoiceSections" Spacing="14">
                 <Label Text="MALE" FontSize="10.5" FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
                 <Border Padding="0" StrokeShape="RoundRectangle 14" Stroke="{StaticResource CardBorder}"
                         BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}">
@@ -50,6 +51,7 @@
                         BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}">
                     <VerticalStackLayout x:Name="FemaleVoiceList" />
                 </Border>
+                </VerticalStackLayout>
 
                 <Label Text="Tap a voice to hear and select it. Changing voice mid-read finishes the current sentence in the old voice."
                        FontSize="11" TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" Margin="4,4,4,0" />

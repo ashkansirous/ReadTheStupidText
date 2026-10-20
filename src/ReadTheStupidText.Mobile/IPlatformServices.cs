@@ -12,6 +12,18 @@ namespace ReadTheStupidText.Mobile;
 /// </summary>
 public interface IPlatformServices
 {
+    /// <summary>
+    /// Whether this platform can run the downloaded Supertonic-3 voice pack. When false the
+    /// pack is never fetched and every read uses the built-in OS voice.
+    /// </summary>
+    bool SupportsNeuralVoice { get; }
+
+    /// <summary>
+    /// Whether this platform can read text from a camera image. When false the Reader hides
+    /// the Scan action (iOS until a Vision-based extractor lands).
+    /// </summary>
+    bool SupportsTextScan { get; }
+
     /// <summary>The local Supertonic-3 neural engine for this platform.</summary>
     ISpeechReader CreateNeuralReader();
 

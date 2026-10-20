@@ -18,20 +18,24 @@ name: build
 #     are downloaded packs. A docs-only change builds nothing and cuts no
 #     release. workflow_dispatch forces everything. The filter's mapping is
 #     unit-tested by .github/scripts/path-filters.test.mjs: change both together.
-#   * There is no build-ios job yet: the `ios` output is computed (and tested)
-#     but no job reads it, so an iOS-only change runs nothing beyond `changes`.
-#     Slice 48 wires `ios` into version, test, release-draft, release-publish
-#     and the .ipa carry-forward alongside build-ios.
+#   * iOS (Slice 48, Decision 70): `build-ios` (macOS) compiles unsigned until
+#     the six iOS signing secrets exist (`release-draft` reports whether they do as `ios_signed`).
+#     With them, a release run signs an App Store .ipa, attaches it to the draft
+#     and `testflight-submit` uploads it to App Store Connect after the release
+#     publishes. An unsigned iOS build can't ship, so an iOS-only change with no
+#     secrets cuts no release (release-draft skips it); a signed one gates
+#     release-publish like any other platform.
 #   * `test-filters` dry-runs the path-filter mapping. It is in no job's needs,
 #     so an npm outage can never block a build or a release.
 #
 # Flow on a push to main:
 #   changes -> version -> test -> release-draft (create/reuse draft v<x.y.z>,
 #   carry forward the untouched platform's assets from its last release)
-#   -> build-windows (matrix) / build-android upload into the draft
+# -> build-windows (matrix) / build-android / build-ios upload into the draft
 #   -> release-publish (only if every affected build succeeded; the tag is
 #   created here, so a failed run leaves no v* tag)
-#   -> store-submit (Windows changed) / play-submit (Android changed).
+#   -> store-submit (Windows changed) / play-submit (Android changed) /
+#   testflight-submit (iOS changed and signed).
 #
 # GitVersion derives the SemVer from git tags (Decision 17): main defaults to a
 # patch bump; "+semver: minor|major|none" in a commit overrides it.
@@ -119,6 +123,8 @@ jobs:
               - '.github/scripts/stage-android-package.sh'
             ios:
               - 'src/ReadTheStupidText.Mobile/Platforms/iOS/**'
+              - '.github/scripts/ios-signing.sh'
+              - '.github/scripts/testflight-upload.sh'
             mobileshared:
               - 'src/ReadTheStupidText.Mobile/**'
               - '!src/ReadTheStupidText.Mobile/Platforms/**'
@@ -174,9 +180,17 @@ jobs:
       - name: Test the downloads publisher and Worker
         run: node --test .github/scripts/publish-downloads.test.mjs worker/downloads.test.mjs
 
+  # Windows/Android always need a version (PR builds stamp it too). iOS alone
+  # needs one only to cut a release, which happens on main; the signing secrets
+  # can't be tested in a job `if`, so an unsigned iOS-only push to main still
+  # runs this cheap Linux job and release-draft then declines to ship. A PR that
+  # only touches iOS runs neither `version` nor `test`.
   version:
     needs: changes
-    if: needs.changes.outputs.windows == 'true' || needs.changes.outputs.android == 'true'
+    if: >-
+      needs.changes.outputs.windows == 'true'
+      || needs.changes.outputs.android == 'true'
+      || (needs.changes.outputs.ios == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.gitversion.outputs.majorMinorPatch }}
@@ -254,19 +268,52 @@ jobs:
   # resolve to the same one.
   release-draft:
     needs: [changes, version, test]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # `test` is skipped (not failed) when only iOS changed, so a bare `needs`
+    # would skip this job: !cancelled() plus explicit results instead.
+    if: >-
+      !cancelled()
+      && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      && needs.version.result == 'success'
+      && (needs.test.result == 'success' || needs.test.result == 'skipped')
     runs-on: ubuntu-latest
     permissions:
       contents: write
     outputs:
       proceed: ${{ steps.draft.outputs.proceed }}
+      # Whether the six iOS signing secrets are all set (all six, so a
+      # half-configured repo stays unsigned instead of failing). Computed here
+      # from job-level env because `secrets` can't appear in an `if:`. Empty on
+      # PRs, where this job is skipped, so build-ios compiles unsigned there.
+      ios_signed: ${{ steps.ios.outputs.signed }}
     env:
+      HAS_IOS_SIGNING: ${{ secrets.IOS_DIST_CERT_P12_BASE64 != '' && secrets.IOS_DIST_CERT_P12_PASSWORD != '' && secrets.IOS_PROVISIONING_PROFILE_BASE64 != '' && secrets.ASC_API_KEY_P8_BASE64 != '' && secrets.ASC_API_KEY_ID != '' && secrets.ASC_API_ISSUER_ID != '' }}
       GH_TOKEN: ${{ github.token }}
       REPO: ${{ github.repository }}
       TAG: v${{ needs.version.outputs.version }}
+      WINDOWS: ${{ needs.changes.outputs.windows }}
+      ANDROID: ${{ needs.changes.outputs.android }}
+      IOS: ${{ needs.changes.outputs.ios }}
     steps:
+      - name: Check the iOS signing secrets
+        id: ios
+        run: echo "signed=${HAS_IOS_SIGNING}" >> "$GITHUB_OUTPUT"
+
+      # An unsigned iOS build can't be shipped, so a change that only touches iOS
+      # while the signing secrets are missing releases nothing: no draft, no tag,
+      # and proceed stays unset so every later release step is skipped.
+      - name: Check that something shippable changed
+        id: shippable
+        run: |
+          if [ "$WINDOWS" = "true" ] || [ "$ANDROID" = "true" ] || { [ "$IOS" = "true" ] && [ "${{ steps.ios.outputs.signed }}" = "true" ]; }; then
+            echo "ship=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Only iOS changed and the iOS signing secrets are not set, so there is nothing to release."
+            echo "ship=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Create or reuse the draft release
         id: draft
+        if: steps.shippable.outputs.ship == 'true'
         run: |
           set -euo pipefail
           state=$(gh release list --repo "$REPO" --limit 100 --json tagName,isDraft \
@@ -301,9 +348,8 @@ jobs:
       - name: Carry forward assets of platforms not rebuilt
         if: steps.draft.outputs.proceed == 'true'
         env:
-          WINDOWS: ${{ needs.changes.outputs.windows }}
-          ANDROID: ${{ needs.changes.outputs.android }}
           HAS_SIGNING: ${{ secrets.ANDROID_SIGNING_KEYSTORE_BASE64 != '' }}
+          IOS_SIGNED: ${{ steps.ios.outputs.signed }}
         run: |
           set -euo pipefail
           carry_forward() {
@@ -319,7 +365,7 @@ jobs:
           }
           if [ "$WINDOWS" != "true" ]; then carry_forward '^ReadTheStupidText\.App_.*\.msix$'; fi
           if [ "$ANDROID" != "true" ] || [ "$HAS_SIGNING" != "true" ]; then carry_forward '\.(aab|apk)$'; fi
-          # Slice 48 adds the .ipa carry-forward here, alongside build-ios.
+          if [ "$IOS" != "true" ] || [ "$IOS_SIGNED" != "true" ]; then carry_forward '\.ipa$'; fi
 
   build-windows:
     needs: [changes, version, test, release-draft]
@@ -502,15 +548,144 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "v${VERSION}" dist/* --repo "${{ github.repository }}" --clobber
 
+  # iOS (Slice 48, Decision 70). `dotnet publish`, not xcodebuild. The unsigned
+  # simulator compile runs whenever there is no signed publish to prove the same
+  # thing (macOS minutes cost ~10x Linux). The signed App Store .ipa is built only
+  # when cutting a release and once all six iOS secrets exist; it goes to the
+  # draft release, and testflight-submit uploads it after the publish. Signing
+  # material lives in a temp keychain removed in an `always()` step.
+  build-ios:
+    needs: [changes, version, test, release-draft]
+    if: >-
+      !cancelled()
+      && needs.changes.outputs.ios == 'true'
+      && (needs.version.result == 'success' || needs.version.result == 'skipped')
+      && (needs.test.result == 'success' || needs.test.result == 'skipped')
+      && (needs.release-draft.result == 'success' || needs.release-draft.result == 'skipped')
+    runs-on: macos-26
+    permissions:
+      contents: write   # gh release upload (main only)
+    env:
+      # Signed only when the release is being cut: on PRs, or when the version was
+      # already published, the output would be discarded and the secrets needlessly
+      # exposed.
+      SIGN_RELEASE: ${{ needs.release-draft.outputs.ios_signed == 'true' && needs.release-draft.outputs.proceed == 'true' }}
+      PUBLISH_DIR: src/ReadTheStupidText.Mobile/bin/Release/net10.0-ios/ios-arm64/publish
+      PROJECT: src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      # No LFS: the iOS package carries no voice model (Slice 50).
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # iOS pins the SDK feature band its workload set needs (see the workload step).
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.401'
+
+      # On macOS the csproj multi-targets android + ios, and restore evaluates every
+      # target, so it would demand the Android workload. Both dotnet calls below pass
+      # -p:IncludeAndroid=false, which the csproj honours by dropping net10.0-android, so
+      # only maui-ios is needed. (A plain -p:TargetFrameworks=net10.0-ios would also flow
+      # into the referenced class libraries and break their restore.)
+      # Each .NET iOS SDK requires one Xcode version. The latest manifests (iOS SDK
+      # 27.x) need Xcode 27, which macos-26 doesn't have, so the workload is pinned
+      # to workload set 10.0.401 (Microsoft.iOS.Sdk 26.5.10318, needs Xcode 26.6 —
+      # the image's default, selected explicitly). A workload set only works with an
+      # SDK of its feature band, hence dotnet-version 10.0.401 above. Moving to a
+      # newer iOS SDK means bumping both together, and the Xcode when the image has it.
+      - name: Select Xcode 26.6
+        run: |
+          set -euo pipefail
+          sudo xcode-select -s /Applications/Xcode_26.6.app/Contents/Developer
+          xcodebuild -version
+
+      - name: Install the .NET MAUI iOS workload (pinned)
+        run: |
+          set -euo pipefail
+          dotnet workload install maui-ios --version 10.0.401
+          dotnet workload --version
+
+      # Simulator build: needs no certificate or profile. Skipped when the signed
+      # publish below runs, which compiles the same code.
+      - name: Compile check (unsigned, simulator)
+        if: ${{ env.SIGN_RELEASE != 'true' }}
+        run: >
+          dotnet build "$PROJECT"
+          -f net10.0-ios
+          -p:IncludeAndroid=false
+          -c Release
+          -p:RuntimeIdentifier=iossimulator-arm64
+
+      - name: Install signing certificate and profile
+        id: signing
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        env:
+          IOS_DIST_CERT_P12_BASE64: ${{ secrets.IOS_DIST_CERT_P12_BASE64 }}
+          IOS_DIST_CERT_P12_PASSWORD: ${{ secrets.IOS_DIST_CERT_P12_PASSWORD }}
+          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+        run: bash .github/scripts/ios-signing.sh install
+
+      # CFBundleShortVersionString = the shared GitVersion. CFBundleVersion must
+      # only ever go up per version: a UTC timestamp (yyyymmdd.hhmmss, no leading
+      # zeros), as Lets Call Mom does. Key and profile go in via env so their
+      # spaces and parentheses need no quoting inside the command.
+      - name: Release build (signed .ipa)
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        env:
+          CODESIGN_KEY: ${{ steps.signing.outputs.codesign_key }}
+          CODESIGN_PROVISION: ${{ steps.signing.outputs.codesign_provision }}
+        run: |
+          NOW=$(date -u +%Y%m%d%H%M%S)
+          BUILD="${NOW:0:8}.$((10#${NOW:8:6}))"
+          dotnet publish "$PROJECT" \
+            -f net10.0-ios \
+            -p:IncludeAndroid=false \
+            -c Release \
+            -p:RuntimeIdentifier=ios-arm64 \
+            -p:ArchiveOnBuild=true \
+            -p:CodesignKey="$CODESIGN_KEY" \
+            -p:CodesignProvision="$CODESIGN_PROVISION" \
+            -p:ApplicationDisplayVersion="$VERSION" \
+            -p:ApplicationVersion="$BUILD"
+          echo "Built ${VERSION} (${BUILD})" >> "$GITHUB_STEP_SUMMARY"
+
+      # Decision 70: look inside the package, a clean build proves nothing about
+      # which native binaries landed (the Android .so lesson). Listing only.
+      - name: Stage the .ipa and list its native contents
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        run: |
+          set -euo pipefail
+          found=$(find "$PUBLISH_DIR" -maxdepth 1 -name '*.ipa')
+          if [ "$(printf '%s\n' "$found" | grep -c .)" -ne 1 ]; then
+            echo "::error::Expected exactly 1 .ipa in $PUBLISH_DIR, found: ${found:-none}"; exit 1
+          fi
+          mkdir -p dist
+          cp "$found" "dist/ReadTheStupidText-${VERSION}.ipa"
+          unzip -l "dist/ReadTheStupidText-${VERSION}.ipa" | grep -E 'Frameworks/|[.]dylib|[.]a$' || echo "No Frameworks/ or dylib entries in the .ipa."
+
+      - name: Upload .ipa to the draft release
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "v${VERSION}" "dist/ReadTheStupidText-${VERSION}.ipa" --repo "${{ github.repository }}" --clobber
+
+      - name: Remove signing material
+        if: ${{ always() && env.SIGN_RELEASE == 'true' }}
+        run: bash .github/scripts/ios-signing.sh cleanup || true
+
   # Publishes the draft (creating the v<x.y.z> tag at the merge commit) only
-  # when every platform this change touched built successfully.
+  # when every platform this change touched built successfully. iOS counts only
+  # when it was signed: an unsigned compile check gates nothing (it can't ship).
   release-publish:
-    needs: [changes, version, release-draft, build-windows, build-android]
+    needs: [changes, version, release-draft, build-windows, build-android, build-ios]
     if: >-
       !cancelled()
       && needs.release-draft.outputs.proceed == 'true'
       && (needs.changes.outputs.windows != 'true' || needs.build-windows.result == 'success')
       && (needs.changes.outputs.android != 'true' || needs.build-android.result == 'success')
+      && (needs.changes.outputs.ios != 'true' || (needs.release-draft.outputs.ios_signed != 'true' || needs.build-ios.result == 'success'))
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -524,6 +699,8 @@ jobs:
           REPO: ${{ github.repository }}
           VERSION: ${{ needs.version.outputs.version }}
           WINDOWS: ${{ needs.changes.outputs.windows }}
+          IOS: ${{ needs.changes.outputs.ios }}
+          IOS_SIGNED: ${{ needs.release-draft.outputs.ios_signed }}
         run: |
           set -euo pipefail
           # A re-run of an old failed run must not publish its stale draft over
@@ -544,6 +721,11 @@ jobs:
             built=$(grep -cE "^ReadTheStupidText[.]App_${VERSION//./[.]}[.]0_.*[.]msix$" <<< "$names" || true)
             if [ "$built" -ne 2 ]; then
               echo "::error::Expected 2 freshly built MSIX (x64 + ARM64) for ${VERSION}, found ${built}"; exit 1
+            fi
+          fi
+          if [ "$IOS" = "true" ] && [ "$IOS_SIGNED" = "true" ]; then
+            if ! grep -qxF "ReadTheStupidText-${VERSION}.ipa" <<< "$names"; then
+              echo "::error::Expected the freshly built ReadTheStupidText-${VERSION}.ipa on the draft"; exit 1
             fi
           fi
           gh release edit "v${VERSION}" --repo "$REPO" --draft=false --latest
@@ -656,3 +838,41 @@ jobs:
           releaseFiles: play/*.aab
           track: internal
           status: completed
+
+  # TestFlight upload (Decision 70) — only when iOS was rebuilt AND signed. The
+  # .ipa comes from the published release, so a build for a release that never
+  # went out is never uploaded. macOS because altool ships with Xcode. Apple takes
+  # up to ~30 minutes to process a build; this job does not wait for that, and
+  # adding the build to a tester group stays a manual step in App Store Connect.
+  testflight-submit:
+    needs: [changes, version, release-draft, release-publish]
+    if: >-
+      !cancelled()
+      && needs.release-publish.outputs.released == 'true'
+      && needs.changes.outputs.ios == 'true'
+      && needs.release-draft.outputs.ios_signed == 'true'
+    runs-on: macos-26
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - name: Checkout (scripts only)
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+
+      - name: Download the .ipa from the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if ! gh release view "v${VERSION}" --repo "${{ github.repository }}" --json assets --jq '.assets[].name' | grep -qxF "ReadTheStupidText-${VERSION}.ipa"; then
+            echo "::error::Release v${VERSION} was published as signed iOS but carries no ReadTheStupidText-${VERSION}.ipa; nothing was sent to TestFlight."; exit 1
+          fi
+          gh release download "v${VERSION}" --repo "${{ github.repository }}" --pattern "ReadTheStupidText-${VERSION}.ipa" --dir testflight
+
+      - name: Upload to TestFlight
+        env:
+          ASC_API_KEY_P8_BASE64: ${{ secrets.ASC_API_KEY_P8_BASE64 }}
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+        run: bash .github/scripts/testflight-upload.sh "testflight/ReadTheStupidText-${VERSION}.ipa"

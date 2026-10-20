@@ -34,16 +34,23 @@ public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
             _neural.SetVoice(lastNeural);
         }
 
-        _neural.StateChanged += (_, state) => Forward(_neural, state);
-        _fallback.StateChanged += (_, state) => Forward(_fallback, state);
-        _neural.Completed += (_, _) => ForwardCompleted(_neural);
-        _fallback.Completed += (_, _) => ForwardCompleted(_fallback);
-        _neural.ProgressChanged += (_, p) => ForwardProgress(_neural, p);
-        _fallback.ProgressChanged += (_, p) => ForwardProgress(_fallback, p);
-        _neural.TimingChanged += (_, t) => ForwardTiming(_neural, t);
-        _fallback.TimingChanged += (_, t) => ForwardTiming(_fallback, t);
-        _neural.ChunkChanged += (_, c) => ForwardChunk(_neural, c);
-        _fallback.ChunkChanged += (_, c) => ForwardChunk(_fallback, c);
+        Subscribe(_neural);
+
+        // A platform may hand back one reader for both slots (iOS, until the neural
+        // engine lands): subscribe once, or every event would be forwarded twice.
+        if (!ReferenceEquals(_neural, _fallback))
+        {
+            Subscribe(_fallback);
+        }
+    }
+
+    private void Subscribe(ISpeechReader reader)
+    {
+        reader.StateChanged += (_, state) => Forward(reader, state);
+        reader.Completed += (_, _) => ForwardCompleted(reader);
+        reader.ProgressChanged += (_, p) => ForwardProgress(reader, p);
+        reader.TimingChanged += (_, t) => ForwardTiming(reader, t);
+        reader.ChunkChanged += (_, c) => ForwardChunk(reader, c);
     }
 
     public event EventHandler<PlaybackState>? StateChanged;
@@ -139,6 +146,9 @@ public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
     public void Dispose()
     {
         (_neural as IDisposable)?.Dispose();
-        (_fallback as IDisposable)?.Dispose();
+        if (!ReferenceEquals(_neural, _fallback))
+        {
+            (_fallback as IDisposable)?.Dispose();
+        }
     }
 }

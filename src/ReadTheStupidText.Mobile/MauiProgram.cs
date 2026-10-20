@@ -48,7 +48,7 @@ public static partial class MauiProgram
 	// Each platform's Platforms/<OS>/ folder implements this and registers its
 	// IPlatformServices. The method is required (it has an accessibility modifier), so a target
 	// framework listed in the csproj without a Platforms/<OS> implementation fails to compile
-	// instead of failing at runtime. CI builds iOS only once Slice 48 adds build-ios.
+	// instead of failing at runtime. Platforms/Android and Platforms/iOS each implement it.
 	private static partial void RegisterPlatformServices(IServiceCollection services);
 
 	private static ISpeechReader CreateSpeechReader(IServiceProvider services)

@@ -29,14 +29,16 @@ public sealed class VoicePackInstaller
     private readonly IVoiceModelService _model;
     private readonly ISpeechReader _reader;
     private readonly ISettingsStore _settings;
+    private readonly IPlatformServices _platform;
     private int _running;
 
-    public VoicePackInstaller(IVoicePackService packs, IVoiceModelService model, ISpeechReader reader, ISettingsStore settings)
+    public VoicePackInstaller(IVoicePackService packs, IVoiceModelService model, ISpeechReader reader, ISettingsStore settings, IPlatformServices platform)
     {
         _packs = packs;
         _model = model;
         _reader = reader;
         _settings = settings;
+        _platform = platform;
     }
 
     public PackInstallState State { get; private set; } = PackInstallState.Idle;
@@ -81,6 +83,13 @@ public sealed class VoicePackInstaller
     // Returns the failure state to publish, or null when nothing failed.
     private async Task<PackInstallState?> RunAsync()
     {
+        // A platform with no neural engine never fetches the catalog or the pack; the
+        // phone voice reads, which the Unavailable state already says.
+        if (!_platform.SupportsNeuralVoice)
+        {
+            return PackInstallState.Unavailable;
+        }
+
         if (_packs.GetInstalledPath(PackConstants.SupertonicPackId) is not null)
         {
             await ActivateInstalledAsync();
