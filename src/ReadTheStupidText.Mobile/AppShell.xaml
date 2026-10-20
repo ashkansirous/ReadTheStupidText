@@ -10,8 +10,8 @@
     <!-- Single home screen (design refresh, post-Slice 34): Paste/Scan/File are
          input actions on ReaderPage itself, not tabs (Decision 38's three
          Android input paths still apply — they just no longer need separate
-         navigation destinations). Scan and the voice picker are pushed routes,
-         registered in the code-behind. -->
+         navigation destinations). The voice picker is a pushed route, registered
+         in the code-behind. Scan opens the system document scanner, not a page. -->
     <ShellContent Title="Reader" ContentTemplate="{DataTemplate local:ReaderPage}" Route="Reader" />
 
 </Shell>

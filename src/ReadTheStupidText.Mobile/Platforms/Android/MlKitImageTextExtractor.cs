@@ -21,17 +21,28 @@ public sealed class MlKitImageTextExtractor : IImageTextExtractor
 {
     private readonly Android.Content.Context _context;
 
+    // One recognizer for the process: creating one loads the native model, which is wasteful
+    // per page. ML Kit recognizers are safe to share across calls; the extractor is a singleton,
+    // so it is never disposed.
+    private readonly Lazy<ITextRecognizer> _recognizer = new(
+        () => TextRecognition.GetClient(TextRecognizerOptions.DefaultOptions),
+        LazyThreadSafetyMode.ExecutionAndPublication);
+
     public MlKitImageTextExtractor(Android.Content.Context context) => _context = context;
 
+    /// <param name="imagePath">A plain file path, or a <c>file://</c> / <c>content://</c> uri string.</param>
     public async Task<string> ExtractTextAsync(string imagePath)
     {
-        using ITextRecognizer recognizer =
-            TextRecognition.GetClient(TextRecognizerOptions.DefaultOptions);
-        AndroidNet.Uri uri = AndroidNet.Uri.FromFile(new Java.IO.File(imagePath))
-            ?? throw new InvalidOperationException($"Could not build a content Uri for '{imagePath}'.");
-        InputImage image = InputImage.FromFilePath(_context, uri);
-
-        Java.Lang.Object result = await recognizer.Process(image);
+        InputImage image = InputImage.FromFilePath(_context, ToUri(imagePath));
+        Java.Lang.Object result = await _recognizer.Value.Process(image);
         return ((Text)result).GetText() ?? string.Empty;
+    }
+
+    private static AndroidNet.Uri ToUri(string imagePath)
+    {
+        AndroidNet.Uri? uri = imagePath.Contains("://", StringComparison.Ordinal)
+            ? AndroidNet.Uri.Parse(imagePath)
+            : AndroidNet.Uri.FromFile(new Java.IO.File(imagePath));
+        return uri ?? throw new InvalidOperationException($"Could not build a Uri for '{imagePath}'.");
     }
 }
