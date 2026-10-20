@@ -1,11 +1,11 @@
 # Slice 48 — iOS target and TestFlight from CI
 
-*Planned.*
+*In progress (wave 2026-10-20c), draft PR.*
 
 **Batch:** 9
 **Decisions:** 70, 69, 37
 **Depends on:** Slice 44 (the `ios` filter output and platform-neutral Mobile root), which itself depends on **PR #165** merging.
-**Touches:** `src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj`, `src/ReadTheStupidText.Mobile/Platforms/iOS/**`, `src/ReadTheStupidText.Mobile/MauiProgram.cs`, `.github/workflows/build.yml`, `.github/scripts/**`, `STORE.md`, `CLAUDE.md`
+**Touches:** `src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj`, `src/ReadTheStupidText.Mobile/Platforms/iOS/**`, `src/ReadTheStupidText.Mobile/MauiProgram.cs`, `.github/workflows/build.yml`, `.github/scripts/*ios*`, `.github/scripts/testflight-*`, `.github/scripts/path-filters.test.mjs`, `STORE.md`, `CLAUDE.md`
 **Story issue:** —
 
 ## Goal
