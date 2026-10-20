@@ -11,9 +11,19 @@ name: build
 #     for build outputs.
 #   * Only build what changed. `changes` path-filters the diff: core code
 #     (Domain/Application/Documents/tests/pipeline) builds both platforms,
-#     App/Infrastructure only Windows, Mobile only Android (it no longer
-#     bundles the voice model: Slice 50, voices are downloaded packs). A docs-only change builds nothing and cuts no release.
-#     workflow_dispatch forces both.
+#     App/Infrastructure only Windows, and Mobile splits by folder (Decision
+#     69, Slice 44): Mobile/Platforms/Android/** builds Android only,
+#     Mobile/Platforms/iOS/** iOS only, the rest of Mobile/** (the shared MAUI
+#     root) both. Mobile no longer bundles the voice model: Slice 50, voices
+#     are downloaded packs. A docs-only change builds nothing and cuts no
+#     release. workflow_dispatch forces everything. The filter's mapping is
+#     unit-tested by .github/scripts/path-filters.test.mjs: change both together.
+#   * There is no build-ios job yet: the `ios` output is computed (and tested)
+#     but no job reads it, so an iOS-only change runs nothing beyond `changes`.
+#     Slice 48 wires `ios` into version, test, release-draft, release-publish
+#     and the .ipa carry-forward alongside build-ios.
+#   * `test-filters` dry-runs the path-filter mapping. It is in no job's needs,
+#     so an npm outage can never block a build or a release.
 #
 # Flow on a push to main:
 #   changes -> version -> test -> release-draft (create/reuse draft v<x.y.z>,
@@ -53,7 +63,8 @@ jobs:
       pull-requests: read   # paths-filter lists PR files via the API
     outputs:
       windows: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.core == 'true' || steps.filter.outputs.windows == 'true' }}
-      android: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.core == 'true' || steps.filter.outputs.android == 'true' }}
+      android: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.core == 'true' || steps.filter.outputs.android == 'true' || steps.filter.outputs.mobileshared == 'true' }}
+      ios: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.core == 'true' || steps.filter.outputs.ios == 'true' || steps.filter.outputs.mobileshared == 'true' }}
       dinoreader: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.dinoreader == 'true' }}
     steps:
       - name: Checkout (with tags)
@@ -74,12 +85,16 @@ jobs:
           echo "tag=${tag}" >> "$GITHUB_OUTPUT"
 
       # PRs diff against the PR base (via the API; `base` is ignored there).
+      # some-with-excludes (added in v4.0.3, hence the exact pin): a file matches
+      # when it matches a rule and none of the '!' rules. Only `mobileshared`
+      # uses a '!' rule; every other group behaves as plain "any rule matches".
       - name: Classify changed paths
         id: filter
         if: github.event_name != 'workflow_dispatch'
-        uses: dorny/paths-filter@v4
+        uses: dorny/paths-filter@v4.0.3
         with:
           base: ${{ steps.base.outputs.tag }}
+          predicate-quantifier: some-with-excludes
           filters: |
             core:
               - 'src/ReadTheStupidText.Domain/**'
@@ -100,8 +115,36 @@ jobs:
               - 'src/ReadTheStupidText.Infrastructure/**'
               - '.github/workflows/store-submit.yml'
             android:
-              - 'src/ReadTheStupidText.Mobile/**'
+              - 'src/ReadTheStupidText.Mobile/Platforms/Android/**'
               - '.github/scripts/stage-android-package.sh'
+            ios:
+              - 'src/ReadTheStupidText.Mobile/Platforms/iOS/**'
+            mobileshared:
+              - 'src/ReadTheStupidText.Mobile/**'
+              - '!src/ReadTheStupidText.Mobile/Platforms/**'
+
+  # Dry-runs the `changes` filter mapping (path-filters.test.mjs). Standalone:
+  # in no other job's needs, so a failure or an npm outage blocks no build or
+  # release. picomatch 2.3.1 is what dorny/paths-filter v4.0.3 depends on
+  # (^2.3.1), with its dot:true.
+  test-filters:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Test the path-filter mapping
+        run: |
+          set -euo pipefail
+          npm i --no-save --no-audit --no-fund --prefix "$RUNNER_TEMP/pf" picomatch@2.3.1
+          PICOMATCH_DIR="$RUNNER_TEMP/pf" node .github/scripts/path-filters.test.mjs
 
   version:
     needs: changes
@@ -248,6 +291,7 @@ jobs:
           }
           if [ "$WINDOWS" != "true" ]; then carry_forward '^ReadTheStupidText\.App_.*\.msix$'; fi
           if [ "$ANDROID" != "true" ] || [ "$HAS_SIGNING" != "true" ]; then carry_forward '\.(aab|apk)$'; fi
+          # Slice 48 adds the .ipa carry-forward here, alongside build-ios.
 
   build-windows:
     needs: [changes, version, test, release-draft]

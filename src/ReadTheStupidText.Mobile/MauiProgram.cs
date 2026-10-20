@@ -8,7 +8,7 @@ using ReadTheStupidText.Documents;
 
 namespace ReadTheStupidText.Mobile;
 
-public static class MauiProgram
+public static partial class MauiProgram
 {
 	public static MauiApp CreateMauiApp()
 	{
@@ -21,6 +21,7 @@ public static class MauiProgram
 				fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
 			});
 
+		RegisterPlatformServices(builder.Services);
 		builder.Services.AddSingleton<IVoicePackService, MobileVoicePackService>();
 		builder.Services.AddSingleton<IVoiceModelService, MobileVoiceModelService>();
 		builder.Services.AddSingleton<VoicePackInstaller>();
@@ -44,23 +45,21 @@ public static class MauiProgram
 		return builder.Build();
 	}
 
+	// Each platform's Platforms/<OS>/ folder implements this and registers its
+	// IPlatformServices. The method is required (it has an accessibility modifier), so a target
+	// framework listed in the csproj without a Platforms/<OS> implementation fails to compile
+	// instead of failing at runtime. CI builds iOS only once Slice 48 adds build-ios.
+	private static partial void RegisterPlatformServices(IServiceCollection services);
+
 	private static ISpeechReader CreateSpeechReader(IServiceProvider services)
 	{
-#if ANDROID
-		var neural = new AndroidSupertonicSpeechReader(services.GetRequiredService<IVoiceModelService>());
-		var fallback = new AndroidSpeechReader(global::Android.App.Application.Context);
-		return new CompositeSpeechReader(neural, fallback, services.GetRequiredService<IVoiceModelService>());
-#else
-		throw new PlatformNotSupportedException("Only Android is implemented so far (Decision 37).");
-#endif
+		var platform = services.GetRequiredService<IPlatformServices>();
+		return new CompositeSpeechReader(
+			platform.CreateNeuralReader(),
+			platform.CreateFallbackReader(),
+			services.GetRequiredService<IVoiceModelService>());
 	}
 
-	private static IImageTextExtractor CreateImageTextExtractor(IServiceProvider services)
-	{
-#if ANDROID
-		return new MlKitImageTextExtractor(global::Android.App.Application.Context);
-#else
-		throw new PlatformNotSupportedException("Only Android is implemented so far (Decision 37).");
-#endif
-	}
+	private static IImageTextExtractor CreateImageTextExtractor(IServiceProvider services) =>
+		services.GetRequiredService<IPlatformServices>().CreateImageTextExtractor();
 }

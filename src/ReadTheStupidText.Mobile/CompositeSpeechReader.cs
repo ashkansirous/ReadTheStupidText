@@ -5,21 +5,22 @@ namespace ReadTheStupidText.Mobile;
 
 /// <summary>
 /// Routes speech to the local Supertonic-3 neural engine once its downloaded voice
-/// pack is ready, and to Android's built-in <c>TextToSpeech</c> until then (or if the
-/// pack is missing, or the user picked "Phone voice"), so the app is never mute — same routing shape as Windows'
-/// <c>CompositeSpeechReader</c> (Decision 39), not a shared class since the two
-/// engines it wraps are entirely platform-specific.
+/// pack is ready, and to the platform's built-in engine (Android <c>TextToSpeech</c>)
+/// until then (or if the pack is missing, or the user picked "Phone voice"), so the app
+/// is never mute — same routing shape as Windows' <c>CompositeSpeechReader</c>
+/// (Decision 39). The two engines come from <see cref="IPlatformServices"/>, so this
+/// class names no platform type (Slice 44).
 /// </summary>
 public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
 {
-    private readonly AndroidSupertonicSpeechReader _neural;
-    private readonly AndroidSpeechReader _fallback;
+    private readonly ISpeechReader _neural;
+    private readonly ISpeechReader _fallback;
     private readonly IVoiceModelService _model;
     private ISpeechReader _active;
     private bool _useSystemVoice;
     private const string LastNeuralVoiceKey = "LastNeuralVoiceId";
 
-    public CompositeSpeechReader(AndroidSupertonicSpeechReader neural, AndroidSpeechReader fallback, IVoiceModelService model)
+    public CompositeSpeechReader(ISpeechReader neural, ISpeechReader fallback, IVoiceModelService model)
     {
         _neural = neural;
         _fallback = fallback;
@@ -137,6 +138,7 @@ public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
 
     public void Dispose()
     {
-        _neural.Dispose();
+        (_neural as IDisposable)?.Dispose();
+        (_fallback as IDisposable)?.Dispose();
     }
 }

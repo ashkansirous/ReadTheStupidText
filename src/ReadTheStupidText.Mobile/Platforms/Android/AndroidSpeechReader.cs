@@ -127,6 +127,18 @@ public sealed class AndroidSpeechReader : Java.Lang.Object, ISpeechReader, Andro
         SetState(PlaybackState.Idle);
     }
 
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing && _tts is not null)
+        {
+            _tts.Stop();
+            _tts.Shutdown();
+            _tts = null;
+        }
+
+        base.Dispose(disposing);
+    }
+
     public void SetSpeed(PlaybackRate speed)
     {
         _rate = (float)speed.Value;
