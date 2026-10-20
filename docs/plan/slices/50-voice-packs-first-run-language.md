@@ -128,3 +128,10 @@ install gets much smaller.
 - Next read after install uses the neural voice.
 - Play Console data-safety form updated by hand.
 - Play accepts the minSdk 28 bundle (Decision 82).
+
+#### Verified 2026-10-20
+
+- `packs.yml` run 39424039445 published `packs-1` (`supertonic-3-1.zip`, 123,895,147 bytes, sha256 matches `packs.json`); `releases/latest` stayed `v1.2.1`.
+- Emulator (RTST_Test, API 36, arm64 build): fresh install in airplane mode showed the language page, the offline message with Retry, and read with the phone voice; online, the download resumed from 58 MB after a force-stop and installed; the next read played through the app's own MediaPlayer (neural voice); a zeroed `supertonic-3-1.zip` was rejected and replaced by a clean download, installed files byte-identical to the repo model.
+- Play accepted the API 28 bundle (v1.2.1, run 39421067657).
+- Still open: Play Console data-safety form.

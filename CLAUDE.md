@@ -17,7 +17,7 @@ at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
 > **unchanged** by the mobile project — only new platform implementations are
 > written (Android has none of Windows' auto-read triggers; text entry, file
 > upload, and a new **camera → on-device OCR → read** path are the mobile
-> input surfaces instead). See Decisions 37-42 and the Batch 6 slices in
+> input surfaces instead). See Decisions 37-42 (docs/plan/decisions.md) and the Batch 6 slices in
 > `plan.md` for the full rationale.
 
 > **Reading text box + disk-backed audio (Batch 7, built):** a toggleable
@@ -29,7 +29,7 @@ at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
 > (sibling of the existing `logs\` folder), fixing memory growth on large
 > files; the existing chunk map used by Skip (Decision 32) and the read-through
 > timer (Decision 33) is extended with each chunk's file path and source-text
-> range rather than duplicated. See Decisions 45-51 and the Batch 7 slices
+> range rather than duplicated. See Decisions 45-51 (docs/plan/decisions.md) and the Batch 7 slices
 > (35-38) in `plan.md`. Slices 36-38 were stacked PRs (#154-#156) that merged
 > into each other instead of `main`; they landed on `main` later — open stacked
 > PRs against `main`, or retarget each one after its base merges.
@@ -48,7 +48,7 @@ at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
 > is neither built nor submitted; its assets are carried forward from its last
 > release. **When adding a project or shared build file, add its path to the
 > right filter group. Don't add `actions/upload-artifact` for build outputs.**
-> Repo artifact retention is 1 day as a safety net. See Decisions 52-58 and
+> Repo artifact retention is 1 day as a safety net. See Decisions 52-58 (docs/plan/decisions.md) and
 > Slices 39-42 in `plan.md`.
 
 > **Merging a change to a `core` path ships both apps.** The `core` filter includes
@@ -95,10 +95,10 @@ at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
 > and window titles. The **repo, package id (`ReadTheStupidText`), namespaces, assembly,
 > and the StartupTask `TaskId`** are internal identifiers and stay `ReadTheStupidText`
 > — do not "rename" those. Store identity (ID `9NGT1BN1H92V`) is wired into
-> `Package.appxmanifest`; see Decision 23 in `plan.md` and `STORE.md`.
+> `Package.appxmanifest`; see Decision 23 in `docs/plan/decisions.md` and `STORE.md`.
 
 Read [`plan.md`](plan.md) before starting work — it defines the vertical slices
-and their GitHub issue numbers. Tick slices off in `plan.md` as they complete.
+and their GitHub issue numbers. Tick slices off in `plan.md` as they complete. The numbered **Decisions** live in `docs/plan/decisions.md` ("Decision NN" anywhere in this file refers to it); each slice's full record is under `docs/plan/slices/`.
 
 ## Stack & conventions
 
@@ -270,7 +270,7 @@ A CI `test` job in `build.yml` runs them on every push/PR that touches app code
 
 ## Versioning, license & releases (Batch 2 — Slices 11–16)
 
-- **License is MIT** (Decision 16 in `plan.md`). Anyone may use/extend/sell it
+- **License is MIT** (Decision 16 in `docs/plan/decisions.md`). Anyone may use/extend/sell it
   provided the copyright notice is kept. Do **not** add GPL/LGPL components (the
   Supertonic/sherpa stack was chosen to keep this clean — see `STORE.md`).
 - **Every merge to `main` that touches app code ships a version** (Decision 17;
@@ -336,7 +336,7 @@ is English-first, Apache-2.0, espeak-free, and Store-safe. Note the build-time
 keep sherpa's).
 
 Note: a **left-click tray control panel** is **in scope** (Slice 8, see
-Decision 12 in `plan.md`) — a borderless, always-on-top `AppWindow`, **pinned
+Decision 12 in `docs/plan/decisions.md`) — a borderless, always-on-top `AppWindow`, **pinned
 above all windows** (it stays open until the ✕ or another tray click; it does
 *not* light-dismiss), sized to its content. It is *not* a persistent settings
 window: it's transient and every control maps to an existing service. The
@@ -456,7 +456,7 @@ event re-fired mid-selection no longer falsely ignores/interrupts the read. The
 log is the diagnostic for "selection does nothing": no entry ⇒ no UIA selection
 event *and* nothing copied (with auto-read on, copying in the console now reads;
 the hotkey is the always-available fallback). See Slice 10 / Decision 15 in
-`plan.md`.
+`docs/plan/decisions.md`.
 
 The neural reader (`SupertonicSpeechReader`) **chunks** long text
 (`SpeechTextChunker`, paragraph→sentence→word) and synthesizes the chunks

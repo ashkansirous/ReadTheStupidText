@@ -236,7 +236,7 @@ instrumented with **OpenTelemetry** (`Activity`/`Meter`) and observed via a **lo
 Aspire dashboard** (an OTLP viewer on the developer's own machine). This is **not
 part of the shipped MSIX** and exports nothing off the device. Full .NET Aspire was
 evaluated and rejected as a shipped mechanism — it orchestrates *distributed* apps at
-dev time and is not a redistributable runtime (Decision 26 in `plan.md`).
+dev time and is not a redistributable runtime (Decision 26 in `docs/plan/decisions.md`).
 
 ## Third-party components and licenses
 
