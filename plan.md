@@ -2038,7 +2038,7 @@ Built but not verified (details in each slice file):
 - Slice 50: Corrupted pack rejected and re-downloaded once. ([slice](docs/plan/slices/50-voice-packs-first-run-language.md))
 - Slice 50: Next read after install uses the neural voice. ([slice](docs/plan/slices/50-voice-packs-first-run-language.md))
 - Slice 50: Play Console data-safety form updated by hand. ([slice](docs/plan/slices/50-voice-packs-first-run-language.md))
-- Slice 50: Play accepts the minSdk 24 bundle. ([slice](docs/plan/slices/50-voice-packs-first-run-language.md))
+- Slice 50: Play accepts the minSdk 28 bundle (Decision 82). ([slice](docs/plan/slices/50-voice-packs-first-run-language.md))
 - Slice 58: decide whether Dino Reader project additions to `ReadTheStupidText.slnx` / `build.yml` should keep re-releasing the RTST apps (today `*.slnx` and `build.yml` are `core`); seen when Slice 59's merge shipped an unchanged RTST release ([slice](docs/plan/slices/58-dino-reader-skeleton.md)).
 
 ## Out of Scope
