@@ -5,7 +5,7 @@
 **Batch:** 9
 **Decisions:** 67, 68 (target language), 60
 **Depends on:** Slice 50 (language setting); Slice 51 helps (voice per language) but is not required
-**Touches:** `src/ReadTheStupidText.Application/Translation/**`, `src/ReadTheStupidText.Application/Settings/ISettingsStore.cs`, `src/ReadTheStupidText.Mobile/**` (`ReaderPage.xaml`, `ReaderPage.xaml.cs`, `MauiProgram.cs`, `ReadTheStupidText.Mobile.csproj`, `MobilePreferencesSettingsStore.cs`, `Platforms/Android/**`), `tests/ReadTheStupidText.Tests/**`, `PRIVACY.md`, `docs/privacy.html`, `CLAUDE.md`
+**Touches:** `src/ReadTheStupidText.Application/Translation/**`, `src/ReadTheStupidText.Application/Settings/ISettingsStore.cs`, `src/ReadTheStupidText.Mobile/**` (`ReaderPage.xaml`, `ReaderPage.xaml.cs`, `MauiProgram.cs`, `ReadTheStupidText.Mobile.csproj`, `MobilePreferencesSettingsStore.cs`, `Platforms/Android/**`), `tests/ReadTheStupidText.Tests/**`, `PRIVACY.md`, `site/privacy.html`, `CLAUDE.md`
 **Story issue:** —
 
 ## Goal
@@ -59,7 +59,7 @@ read is the translated text. Everything runs on the phone.
       original text; never block reading.
 - [ ] Tests (`tests/ReadTheStupidText.Tests`): `TranslationFlow` skip rules,
       chunk/rejoin, with fake `ITranslator`/`ILanguageDetector`.
-- [ ] `PRIVACY.md` / `docs/privacy.html`: translation is on-device; ML Kit model
+- [ ] `PRIVACY.md` / `site/privacy.html`: translation is on-device; ML Kit model
       downloads come from Google. `CLAUDE.md`: the Application-level interfaces.
 
 ## Acceptance

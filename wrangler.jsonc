@@ -1,0 +1,29 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "readthestupidtext",
+  "main": "./worker/index.ts",
+  "compatibility_date": "2026-10-01",
+
+  // sirous.uk is already a zone on this account, so Cloudflare creates the DNS
+  // record itself. It replaces the GitHub Pages CNAME. See docs/DEPLOYING.md.
+  "routes": [{ "pattern": "readthestupidtext.sirous.uk", "custom_domain": true }],
+
+  // A custom route makes workers_dev default to false; keep the *.workers.dev
+  // URL live as the documented fallback and as the pre-cut-over check.
+  "workers_dev": true,
+
+  "assets": {
+    "directory": "./site",
+    "binding": "ASSETS",
+    // "none" serves /index.html and /privacy.html exactly as GitHub Pages did
+    // (the Store listing links the .html URL) instead of redirecting them.
+    "html_handling": "none",
+    // Unknown paths are a plain 404, not a single-page-app fallback.
+    "not_found_handling": "none",
+    // "/" and "/privacy" have no file of their own, so the Worker maps them. The
+    // two .html paths also go through it so every page gets the security headers.
+    "run_worker_first": ["/", "/index.html", "/privacy", "/privacy/", "/privacy.html"]
+  },
+
+  "observability": { "enabled": true }
+}

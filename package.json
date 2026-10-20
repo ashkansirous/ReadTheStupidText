@@ -1,0 +1,17 @@
+{
+  "name": "readthestupidtext-site",
+  "private": true,
+  "description": "Cloudflare Worker that serves the Read The Stupid Text landing and privacy pages.",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "node worker/check-site-eol.mjs && wrangler deploy",
+    "typecheck": "node worker/check-configs.mjs && tsc --noEmit",
+    "types": "wrangler types",
+    "deploy:workers-dev": "node worker/check-site-eol.mjs && wrangler deploy --config wrangler.workers-dev.jsonc"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "wrangler": "^4.151.3"
+  }
+}

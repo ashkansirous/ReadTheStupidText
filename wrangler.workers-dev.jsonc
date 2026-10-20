@@ -1,0 +1,19 @@
+{
+  // Same Worker as wrangler.jsonc but with NO custom-domain route. Used only for
+  // the first deploy of the cut-over (docs/DEPLOYING.md): it puts the Worker live
+  // on workers.dev without touching the readthestupidtext.sirous.uk hostname.
+  // Keep the name, main, assets and flags identical to wrangler.jsonc.
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "readthestupidtext",
+  "main": "./worker/index.ts",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": true,
+  "assets": {
+    "directory": "./site",
+    "binding": "ASSETS",
+    "html_handling": "none",
+    "not_found_handling": "none",
+    "run_worker_first": ["/", "/index.html", "/privacy", "/privacy/", "/privacy.html"]
+  },
+  "observability": { "enabled": true }
+}
