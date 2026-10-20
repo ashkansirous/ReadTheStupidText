@@ -73,4 +73,4 @@ play. No intermediate result screen, no camera permission.
   `PRIVACY.md` when Slice 50 edits it.
 - OCR of many pages is slow: run pages sequentially and show progress.
 - Latin-only OCR until Slice 52 lands.
-- Batch 10 (Slice 63) needs the scanned page images kept - don't discard them after OCR when Story Reader asks to keep them.
+- Batch 10 (Slice 63) needs the scanned page images kept - don't discard them after OCR when Dino Reader asks to keep them.

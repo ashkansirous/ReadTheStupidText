@@ -5,7 +5,7 @@
 **Batch:** 10
 **Decisions:** 79, 80
 **Depends on:** Slices 60, 61
-**Touches:** `src/StoryReader.App/**`, `src/ReadTheStupidText.Application/Reading/**`, `src/StoryReader.Core/**`, `tests/StoryReader.Tests/**`, `CLAUDE.md`
+**Touches:** `src/DinoReader.App/**`, `src/ReadTheStupidText.Application/Reading/**`, `src/DinoReader.Core/**`, `tests/DinoReader.Tests/**`, `CLAUDE.md`
 **Story issue:** —
 
 ## Goal

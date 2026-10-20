@@ -1,17 +1,17 @@
-# Slice 66 — Story Reader languages and translation
+# Slice 66 — Dino Reader languages and translation
 
 *Planned.*
 
 **Batch:** 10
 **Decisions:** 74, 81 (also Batch 9 Decisions 63, 67, 68)
 **Depends on:** Slices 50-54 (packs, voices, OCR, localized UI, translation); Slices 59-61
-**Touches:** `src/StoryReader.Core/**`, `src/StoryReader.App/**`, `tests/StoryReader.Tests/**`, `CLAUDE.md`
+**Touches:** `src/DinoReader.Core/**`, `src/DinoReader.App/**`, `tests/DinoReader.Tests/**`, `CLAUDE.md`
 **Story issue:** —
 
 ## Goal
 
 Stories in the other eight languages are attributed correctly in their own language, can be
-translated per segment after attribution, and Story Reader's UI is localized with RTL.
+translated per segment after attribution, and Dino Reader's UI is localized with RTL.
 
 ## Steps
 
@@ -21,7 +21,7 @@ translated per segment after attribution, and Story Reader's UI is localized wit
 - [ ] Attribution runs in the **source** language; only then is each segment translated
       (Slice 54 translator), keeping `CharacterId` and source ranges (ranges refer to the source
       text for highlight; the spoken text is the translation).
-- [ ] Localize Story Reader's UI strings and RTL layout with the Slice 53 approach: gallery,
+- [ ] Localize Dino Reader's UI strings and RTL layout with the Slice 53 approach: gallery,
       reading screen, gate, cast screen all mirror in RTL.
 - [ ] Voice packs per language: the caster sees only the installed pack's voices. Supertonic
       languages have 5+5; Farsi (Piper) has 1-2, so heavy reuse is a **known limit**

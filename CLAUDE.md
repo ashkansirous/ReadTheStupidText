@@ -61,11 +61,11 @@ at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
 > See Decisions 59-71 and `docs/plan/slices/43-57`. (Other rules above change
 > inside those slices, not before.)
 
-> **Story Reader (Batch 10, planning):** a second product in this repo, a kids'
+> **Dino Reader (Batch 10, planning):** a second product in this repo, a kids'
 > book reader with a voice per character. It is a second MAUI app,
-> `src/StoryReader.App`, sharing the platform code in
+> `src/DinoReader.App`, sharing the platform code in
 > `src/ReadTheStupidText.Mobile.Shared` (moved out of the RTST Mobile app) plus
-> Domain/Application/Documents. A pure `src/StoryReader.Core` holds the dialogue
+> Domain/Application/Documents. A pure `src/DinoReader.Core` holds the dialogue
 > segmenter, speaker attributor and voice caster (no framework deps). One shared
 > version (`v<x.y.z>`) covers both products; each has its own path-filter group.
 > See Decisions 72-81 and `docs/plan/slices/58-67`.

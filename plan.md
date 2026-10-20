@@ -753,7 +753,7 @@ this plan turns it into ordered, shippable vertical slices.
     + per-platform pipeline*) are folded into one batch. Android gets the new
     features first. iOS starts now, in parallel, on the same MAUI project
     (Decision 37). Windows catches up last. The kids book reader is a separate
-    product (Story Reader) built in this repo on the shared core, planned in its own batch.
+    product (Dino Reader) built in this repo on the shared core, planned in its own batch.
 60. **User data stays 100% offline; downloading packs is allowed (Batch 9).**
     Text, images, scans and translations never leave the device. The app may
     now download **voice/OCR language packs**, which is its first network
@@ -882,7 +882,7 @@ this plan turns it into ordered, shippable vertical slices.
       Store and Google Play. No title change for now.
     - The Partner Center and Play Console edits are a manual step for the
       user.
-72. **Two products, one repo, one version (Batch 9).** Story Reader is a
+72. **Two products, one repo, one version (Batch 9).** Dino Reader is a
     second app in this repo, a new UI on the shared core (Domain,
     Application, Documents, voice engines, packs, OCR), not a new repo.
     - **One shared version:** a single GitVersion `v<x.y.z>` per merge covers
@@ -893,18 +893,20 @@ this plan turns it into ordered, shippable vertical slices.
       its release assets carry forward. Shared core rebuilds both products.
     - **Shared mobile code:** the Android/iOS readers, OCR and scanner move
       out of the Mobile app project into a shared MAUI class library that
-      both apps reference. That is Story Reader's first slice, planned in
+      both apps reference. That is Dino Reader's first slice, planned in
       its own batch.
 
-73. **Story Reader: a kids book reader with a voice per character (Batch 10).**
+73. **Dino Reader: a kids book reader with a voice per character (Batch 10).**
     It is the second product in this repo (Decision 72), a MAUI app at
-    `src/StoryReader.App`. The display name is **"Story Reader"** and the app
-    id is `uk.sirous.storyreader`. Instead of one voice, it works out who is
+    `src/DinoReader.App`. The display name is **"Dino Reader"** and the app
+    id is `uk.sirous.dinoreader`. Instead of one voice, it works out who is
     speaking and gives each character the same distinct voice for the whole
     book, with a narrator voice the user picks. It inherits every Read The
     Stupid Text rule: 100% offline for user data, the same voice/OCR packs,
     the 9 languages, translation, licences and pipeline. The source is the
     phone doc `2026-10-20-story-reader.md` plus a desk refine on 2026-10-20.
+    The working name was "Story Reader"; it was renamed Dino Reader on
+    2026-10-20.
 74. **Speaker attribution is rule-based, per language, on the device (Batch
     10).**
     - **Segments:** quote marks split the text into narration and quoted
@@ -975,13 +977,13 @@ this plan turns it into ordered, shippable vertical slices.
     turns by itself as the reading reaches it. A child can swipe to another
     page and tap a sentence to read from there, and pressing play resumes
     auto-follow.
-81. **Story Reader platforms and order (Batch 10).**
+81. **Dino Reader platforms and order (Batch 10).**
     - **Platforms:** Android and iOS first, Windows (MAUI WinUI head) last.
     - **Shared code:** the Android/iOS readers, OCR, scanner and other
       platform code move from the Read The Stupid Text Mobile app project
       into a shared MAUI class library, `src/ReadTheStupidText.Mobile.Shared`,
       that both apps reference.
-    - **Pipeline:** the pipeline gets a `storyreader` path group and the
+    - **Pipeline:** the pipeline gets a `dinoreader` path group and the
       same shared version (Decisions 69, 72). Distribution is Play internal
       testing and TestFlight, as for Read The Stupid Text.
     - **Order:** the pure slices (dialogue parser, voice caster) may start
@@ -1969,7 +1971,7 @@ Suggested order, in parallel lanes: **A** pipeline + iOS (44 -> 48 -> 49 -> 55);
 **B** Android UX (45, 46, 47); **C** packs and languages (50 -> 51 -> 52, 53,
 54); **Windows** last (56 -> 57); **43** any time.
 
-**Batch 10 — Story Reader.** Story Reader is the second product in this repo (Decision 72): a kids' book
+**Batch 10 — Dino Reader.** Dino Reader is the second product in this repo (Decision 72): a kids' book
 reader that gives each character a consistent, distinct voice. It has a gallery
 behind a grown-up gate, a text mode and a picture mode that highlight the
 spoken sentence, and per-character voices chosen by on-device rules. Sources:
@@ -1979,7 +1981,7 @@ section is only the index.
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
-| 58 | Story Reader skeleton: shared Mobile library, new app, pipeline | planned | — | — | [58-story-reader-skeleton.md](docs/plan/slices/58-story-reader-skeleton.md) |
+| 58 | Dino Reader skeleton: shared Mobile library, new app, pipeline | planned | — | — | [58-dino-reader-skeleton.md](docs/plan/slices/58-dino-reader-skeleton.md) |
 | 59 | Dialogue parser and voice caster (pure) | planned | — | — | [59-dialogue-parser-voice-caster.md](docs/plan/slices/59-dialogue-parser-voice-caster.md) |
 | 60 | Reading with a voice per character | planned | — | — | [60-per-character-voice-reading.md](docs/plan/slices/60-per-character-voice-reading.md) |
 | 61 | Gallery, stories on device, grown-up gate | planned | — | — | [61-gallery-grownup-gate.md](docs/plan/slices/61-gallery-grownup-gate.md) |
@@ -1987,8 +1989,8 @@ section is only the index.
 | 63 | Positioned text extraction, kept page images | planned | — | — | [63-positioned-text-extraction.md](docs/plan/slices/63-positioned-text-extraction.md) |
 | 64 | Picture mode on real pages | planned | — | — | [64-picture-mode-real-pages.md](docs/plan/slices/64-picture-mode-real-pages.md) |
 | 65 | Cast screen | planned | — | — | [65-cast-screen.md](docs/plan/slices/65-cast-screen.md) |
-| 66 | Story Reader languages and translation | planned | — | — | [66-story-languages-translation.md](docs/plan/slices/66-story-languages-translation.md) |
-| 67 | Story Reader on iOS and Windows | planned | — | — | [67-story-reader-ios-windows.md](docs/plan/slices/67-story-reader-ios-windows.md) |
+| 66 | Dino Reader languages and translation | planned | — | — | [66-story-languages-translation.md](docs/plan/slices/66-story-languages-translation.md) |
+| 67 | Dino Reader on iOS and Windows | planned | — | — | [67-dino-reader-ios-windows.md](docs/plan/slices/67-dino-reader-ios-windows.md) |
 
 Suggested order, in lanes: **pure** 59 any time now (no overlap with Batch 9);
 **app** 58 -> 60 -> 61 -> 62 -> 65 (58 needs PR #165 and Slice 44); **pictures**
@@ -2105,7 +2107,7 @@ Suggested order, in lanes: **pure** 59 any time now (no overlap with Batch 9);
 - **(Batch 9)** A live camera text overlay (point-and-read); scanning is the
   document scanner only (Decision 64).
 - **(Batch 9)** Handwriting recognition beyond what PaddleOCR gives (Decision 65).
-- **(Batch 9)** The kids book reader: a separate product, "Story Reader", built in
+- **(Batch 9)** The kids book reader: a separate product, "Dino Reader", built in
   this repo on the shared core and planned in its own batch, not Batch 9 (Decision 59).
 - **(Batch 9)** Mac Catalyst / macOS: a later spin-off on the same MAUI stack.
 - **(Batch 9)** App Store public-release automation: CI stops at TestFlight, the
@@ -2119,7 +2121,7 @@ Suggested order, in lanes: **pure** 59 any time now (no overlap with Batch 9);
 - **(Batch 10)** Syncing or sharing stories between devices.
 - **(Batch 10)** A story store or marketplace.
 - **(Batch 10)** Illustrations generated by AI.
-- **(Batch 10)** Story Reader on the Windows tray: it is a normal app, no tray or hotkey.
+- **(Batch 10)** Dino Reader on the Windows tray: it is a normal app, no tray or hotkey.
 
 ## Verification
 
