@@ -109,6 +109,7 @@ public sealed partial class ControlPanelWindow : Window
         RootGrid.ActualThemeChanged += OnActualThemeChanged;
 
         _readAloud.StateChanged += OnPlaybackStateChanged;
+        _readAloud.GeneratingChanged += OnGeneratingChanged;
         _readAloud.ProgressChanged += OnProgressChanged;
         _readAloud.TimingChanged += OnTimingChanged;
 
@@ -537,6 +538,22 @@ public sealed partial class ControlPanelWindow : Window
             SetStartupSwitch(enabled);
             StartupStateChanged?.Invoke(this, enabled);
         });
+    }
+
+    private void OnGeneratingChanged(object? sender, bool generating)
+    {
+        // The argument is ignored on purpose: events from different threads can arrive out
+        // of order, so the dispatcher callback re-reads the service's current value.
+        _dispatcher.TryEnqueue(() => SetGenerating(_readAloud.IsGeneratingAudio));
+    }
+
+    // Swaps the play/pause glyph for a spinner while a read is synthesizing its
+    // first audio (Slice 46). The flag lives in ReadAloudService; this only mirrors it.
+    private void SetGenerating(bool generating)
+    {
+        PlayPauseRing.IsActive = generating;
+        PlayPauseRing.Visibility = generating ? Visibility.Visible : Visibility.Collapsed;
+        PlayPauseIcon.Visibility = generating ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private void OnPlaybackStateChanged(object? sender, PlaybackState state) =>
