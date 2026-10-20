@@ -75,11 +75,11 @@ Pages and Cloudflare.
 
 For the coordinator to apply (outside this slice file's remit): the belief that wrangler overrides the DNS record when run non-interactively proved false against Cloudflare's API. DEPLOYING.md must say the GitHub Pages CNAME has to be deleted first (in the Cloudflare dashboard; wrangler has no DNS scope) before the custom-domain deploy, otherwise it fails with error 100117.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-20)
 
 - Landing site (Slice 68): `readthestupidtext.sirous.uk` is the Cloudflare Worker `readthestupidtext` (`wrangler.jsonc`, `worker/index.ts`), static files in `site/` (not `docs/`); GitHub Pages is off. Deploy with `npm run deploy` (refuses CRLF site files; `npm run typecheck` keeps `wrangler.jsonc` and `wrangler.workers-dev.jsonc` in sync) until Workers Builds is connected (build watch paths `worker/**`, `site/**`, `wrangler*.jsonc`, `package*.json`). A Worker custom domain can't replace an existing DNS record: delete it first (wrangler has no DNS scope). Privacy policy edits touch both `PRIVACY.md` and `site/privacy.html`. Don't add `docs/CNAME` or a GitHub Actions deploy. See `docs/DEPLOYING.md`. (Slice 68: docs/plan/slices/68-landing-site-on-worker.md)
 
-#### For README.md
+#### For README.md (lifted 2026-10-20)
 
 The landing page and privacy policy live in `site/` and are served by a Cloudflare Worker; `npm run dev` previews them, `npm run deploy` publishes. See `docs/DEPLOYING.md`.
 

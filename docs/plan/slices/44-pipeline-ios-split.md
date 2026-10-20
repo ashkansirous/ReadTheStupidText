@@ -90,11 +90,11 @@ iOS tweak and vice versa. No user-visible change yet; this unblocks Slice 48.
 
 *Verified:* 174 unit tests, DinoReader tests, Mobile Android and App x64 builds, actionlint (0 issues), filter test pass. On the RTST_Test emulator (arm64 embedded build, pack already installed) the app launches, a read plays through the app's MediaPlayer (neural voice), and with "Phone voice" selected the read is dispatched to Google TTS.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-20)
 
 - Batch 8 CI note: replace "`Mobile` -> Android" with: Mobile splits by folder (Decision 69): `Mobile/Platforms/Android/**` -> Android only, `Mobile/Platforms/iOS/**` -> iOS only, the rest of `Mobile/**` (shared MAUI root incl. csproj/Resources) -> both. `dorny/paths-filter@v4.0.3` with `predicate-quantifier: some-with-excludes` (keep the pin; the mode needs 4.0.3 or later). `.github/scripts/path-filters.test.mjs` (job `test-filters`) checks the mapping; change it together with the `filters:` block. The `ios` output is computed but unused until Slice 48 adds `build-ios`, so an iOS-only change runs nothing. (Slice 44: docs/plan/slices/44-pipeline-ios-split.md)
 - Mobile bullet: nothing outside `Platforms/` names an Android or iOS type; engines come from `IPlatformServices` via a required `MauiProgram.RegisterPlatformServices` partial in each `Platforms/<OS>/`; Slice 48 adds `Platforms/iOS`. (Slice 44: docs/plan/slices/44-pipeline-ios-split.md)
 
-#### Not yet verified
+#### Verified 2026-10-20
 
-- A real Android release built through the new filter (happens on this PR's merge): check build-android and play-submit go green.
+A real Android release through the new filter: v1.2.2's main run 39439588388 built Android through it and play-submit succeeded.

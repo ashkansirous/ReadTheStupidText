@@ -136,6 +136,10 @@ account's Actions storage quota. See [`STORE.md`](STORE.md) for
 packaging, capability justification, third-party licenses, and the Store
 submission steps.
 
+## Landing site
+
+The landing page and privacy policy live in `site/` and are served by a Cloudflare Worker; `npm run dev` previews them, `npm run deploy` publishes. See `docs/DEPLOYING.md`.
+
 ## Privacy
 
 Read The Stupid Text collects **no data** — no accounts, no telemetry. Your text,
