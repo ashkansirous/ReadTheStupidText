@@ -147,8 +147,14 @@
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Tapped="OnPlayPauseTapped" />
                             </Border.GestureRecognizers>
-                            <Label x:Name="PlayPauseGlyph" Text="&#9654;" TextColor="White" FontSize="20"
-                                   HorizontalOptions="Center" VerticalOptions="Center" />
+                            <Grid>
+                                <Label x:Name="PlayPauseGlyph" Text="&#9654;" TextColor="White" FontSize="20"
+                                       HorizontalOptions="Center" VerticalOptions="Center" />
+                                <ActivityIndicator x:Name="PlayLoadingIndicator" Color="White"
+                                                   WidthRequest="24" HeightRequest="24"
+                                                   HorizontalOptions="Center" VerticalOptions="Center"
+                                                   IsRunning="False" IsVisible="False" />
+                            </Grid>
                         </Border>
 
                         <Border Grid.Column="2" WidthRequest="34" HeightRequest="34" Padding="0"

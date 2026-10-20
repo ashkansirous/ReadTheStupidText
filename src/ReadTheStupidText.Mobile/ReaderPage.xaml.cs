@@ -32,6 +32,16 @@ public partial class ReaderPage : ContentPage
     private PlaybackRate _speed;
     private string? _lastSpokenText;
 
+    // Per-read token for the play-button spinner (see SpeakWithLoadingAsync).
+    private int _readSequence;
+    private int _pendingReadId;
+    private string? _pendingReadText;
+    private int _returnedReadId;
+
+    // How long the spinner may outlast a SpeakAsync that returned before playback
+    // started (system TTS returns as soon as the utterance is queued).
+    private static readonly TimeSpan FirstAudioGrace = TimeSpan.FromSeconds(8);
+
     public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, PendingScanResult pendingScan, IVoiceModelService model, VoicePackInstaller installer)
     {
         InitializeComponent();
@@ -60,6 +70,7 @@ public partial class ReaderPage : ContentPage
         // persisted voice while this page was off-stack.
         UpdateVoiceLabel();
         RenderPackStatus();
+        RestorePendingReadSpinner();
 
         // Consumed and cleared in one step: see PendingScanResult's remarks for
         // why this replaces a Shell query-parameter hand-off.
@@ -77,6 +88,10 @@ public partial class ReaderPage : ContentPage
         _reader.TimingChanged -= OnReaderTimingChanged;
         _installer.Changed -= OnInstallerChanged;
         _model.ReadyChanged -= OnInstallerChanged;
+
+        // Hide the spinner but keep the pending-read state: the read may still be
+        // generating, and OnAppearing restores the spinner if so.
+        SetPlayLoading(false);
     }
 
     private async void OnPasteTapped(object? sender, TappedEventArgs e)
@@ -158,14 +173,108 @@ public partial class ReaderPage : ContentPage
             return;
         }
 
+        // A tap while a read of this same text is still generating does nothing;
+        // different text starts a new read (superseding the pending one).
+        if (_pendingReadId != 0 && text == _pendingReadText)
+        {
+            return;
+        }
+
         _reader.Stop();
+        ClearPendingRead();
         if (string.IsNullOrWhiteSpace(text))
         {
             return;
         }
 
         _lastSpokenText = text;
-        await _reader.SpeakAsync(text);
+        await SpeakWithLoadingAsync(text);
+    }
+
+    // Each fresh read gets an incrementing id; the spinner is "pending for id N".
+    // It is cleared when the reader reports Playing (ApplyPlaybackState), or when
+    // SpeakAsync returns/throws while N is still current and nothing is playing
+    // (a Stop mid-generation, a cancelled read, a reader that returned early). A
+    // superseded read's completion never touches the current read's spinner.
+    private async Task SpeakWithLoadingAsync(string text)
+    {
+        int id = ++_readSequence;
+        _pendingReadId = id;
+        _pendingReadText = text;
+        SetPlayLoading(true);
+        try
+        {
+            await _reader.SpeakAsync(text);
+        }
+        catch (Exception)
+        {
+            bool wasCurrent = id == _pendingReadId;
+            ClearPendingReadIfCurrent(id);
+            if (wasCurrent)
+            {
+                await DisplayAlertAsync("Couldn't read that text", "Something went wrong while reading.", "OK");
+            }
+
+            return;
+        }
+
+        await WaitForFirstAudioAsync(id);
+    }
+
+    // SpeakAsync returned while id is still current and nothing is playing yet. Keep
+    // the spinner until Playing (ApplyPlaybackState), an Idle arriving after the
+    // return (also ApplyPlaybackState), or the grace expires. A superseded id never
+    // clears; _pendingReadId stays set so the same-text tap guard holds meanwhile.
+    private async Task WaitForFirstAudioAsync(int id)
+    {
+        if (id != _pendingReadId || _reader.State == PlaybackState.Playing)
+        {
+            ClearPendingReadIfCurrent(id);
+            return;
+        }
+
+        _returnedReadId = id;
+        await Task.Delay(FirstAudioGrace);
+        ClearPendingReadIfCurrent(id);
+    }
+
+    private void ClearPendingReadIfCurrent(int id)
+    {
+        if (id == _pendingReadId && _reader.State != PlaybackState.Playing)
+        {
+            ClearPendingRead();
+        }
+    }
+
+    private void ClearPendingRead()
+    {
+        _pendingReadId = 0;
+        _returnedReadId = 0;
+        _pendingReadText = null;
+        SetPlayLoading(false);
+    }
+
+    private void RestorePendingReadSpinner()
+    {
+        if (_pendingReadId == 0)
+        {
+            return;
+        }
+
+        if (_reader.State == PlaybackState.Playing)
+        {
+            ClearPendingRead();
+            return;
+        }
+
+        SetPlayLoading(true);
+    }
+
+    private void SetPlayLoading(bool loading)
+    {
+        PlayLoadingIndicator.IsRunning = loading;
+        PlayLoadingIndicator.IsVisible = loading;
+        PlayPauseGlyph.IsVisible = !loading;
     }
 
     private async void OnSkipBackTapped(object? sender, TappedEventArgs e) => await _reader.SkipBackward();
@@ -185,9 +294,21 @@ public partial class ReaderPage : ContentPage
         UpdatePresetHighlight();
     }
 
-    private void OnReaderStateChanged(object? sender, PlaybackState state) =>
-        MainThread.BeginInvokeOnMainThread(() =>
-            PlayPauseGlyph.Text = state == PlaybackState.Playing ? "⏸" : "▶");
+    private void OnReaderStateChanged(object? sender, PlaybackState state)
+    {
+        MainThread.BeginInvokeOnMainThread(() => ApplyPlaybackState(state));
+    }
+
+    private void ApplyPlaybackState(PlaybackState state)
+    {
+        PlayPauseGlyph.Text = state == PlaybackState.Playing ? "⏸" : "▶";
+        bool idleAfterReturn = state == PlaybackState.Idle
+            && _pendingReadId != 0 && _pendingReadId == _returnedReadId;
+        if (state == PlaybackState.Playing || idleAfterReturn)
+        {
+            ClearPendingRead();
+        }
+    }
 
     private void OnReaderProgressChanged(object? sender, double progress) =>
         MainThread.BeginInvokeOnMainThread(() => ReadProgressBar.Progress = progress);
