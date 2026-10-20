@@ -754,6 +754,245 @@ this plan turns it into ordered, shippable vertical slices.
     PR #163's `cleanup-old-artifacts` composite action and its jobs are
     **deleted**: with nothing uploaded there's nothing to clean, and dropping
     them also drops the `actions: write` permission they needed.
+59. **Batch 9 order: Android first, iOS in parallel, Windows last (Batch 9).**
+    Two phone scope docs (2026-10-20, *mobile UX / OCR / translation* and *iOS
+    + per-platform pipeline*) are folded into one batch. Android gets the new
+    features first. iOS starts now, in parallel, on the same MAUI project
+    (Decision 37). Windows catches up last. The kids book reader is a separate
+    product (Dino Reader) built in this repo on the shared core, planned in its own batch.
+60. **User data stays 100% offline; downloading packs is allowed (Batch 9).**
+    Text, images, scans and translations never leave the device. The app may
+    now download **voice/OCR language packs**, which is its first network
+    use: Android gets the `INTERNET` permission, Windows the `internetClient`
+    capability, and iOS needs no entitlement. `PRIVACY.md`, `docs/privacy.html`
+    and `STORE.md`'s capability justification say exactly this. Still no
+    telemetry and no cloud TTS/OCR/translation.
+61. **No bundled voice model on any platform; supersedes Decisions 14 and 39
+    (Batch 9).** Every voice, Supertonic-3 included, downloads as a pack after
+    the first-run language choice (Decision 68). The ~145 MB `VoiceModel/`
+    leaves the MSIX, the AAB and the iOS bundle, as does the Mobile
+    `MauiAsset` stand-in for Play Asset Delivery. The first launch needs a
+    network once. Until the pack lands (or when the download fails), reads
+    use the **system voice** (WinRT `SpeechSynthesis` / Android
+    `TextToSpeech` / `AVSpeechSynthesizer`), which is promoted from internal
+    safety net to a real, labelled first-run voice.
+62. **Packs are hosted as GitHub Release assets in this repo (Batch 9).**
+    Packs go under dedicated `packs-<n>` releases, separate from the app's
+    `v<x.y.z>` releases. Release assets don't count toward the Actions
+    storage quota (Decision 52). A `packs-<n>` tag isn't a SemVer `v` tag, so
+    GitVersion ignores it (verify in Slice 50). A `packs.json` manifest lists
+    each pack's id, language, kind (voice/ocr), version, size, sha256 and
+    licence. Clients verify the sha256 before use, and downloads resume and
+    retry. Publishing a pack is a manual `workflow_dispatch` (`packs.yml`),
+    not part of every app build.
+63. **Voices per language (Batch 9).**
+    - **Supertonic-3 multilingual** (Apache-2.0) covers en, fr, es, pt, ru, ja
+      and ar.
+    - **Farsi** uses a **Piper fa_IR** voice through sherpa-onnx.
+    - **Chinese** uses **MeloTTS zh_en** through sherpa-onnx (MIT). Kokoro
+      stays rejected (Slice 9 note).
+    - Which Farsi voice (gyro or amir) is decided in Slice 51 by whichever
+      licence is confirmed redistributable. If neither is, Farsi falls back to
+      the system voice and the gap is written down.
+    - **Scoped GPL exception to the "no GPL" rule (Decision 16):** Piper needs
+      espeak-ng data (GPL-3.0). That data lives **only inside the downloaded
+      Farsi pack**, never in the repo, the MSIX, the AAB or the iOS bundle,
+      and the pack carries the licence text and a source link. `CLAUDE.md`,
+      `STORE.md` and the third-party notices describe the exception. The app
+      itself stays MIT.
+64. **Camera: the system document scanner, text straight into the editor
+    (Batch 9).**
+    - **Android:** ML Kit **Document Scanner** (`Net.Google.MLKit.DocumentScanner`,
+      version confirmed via context7). It opens the camera at once, crops,
+      takes multiple pages, reorders them and imports from the gallery, all
+      with no camera permission.
+    - **iOS:** VisionKit `VNDocumentCameraViewController`.
+    - Pages are OCR'd in order and **appended to the editor**. The
+      `ScanPage` result screen and `PendingScanResult` go away.
+    - The Android scanner needs Google Play services. Without them, the app
+      falls back to the existing `MediaPicker` single-photo path and says why.
+65. **OCR: PaddleOCR PP-OCRv5 (ONNX, Apache-2.0), one model per language, in
+    the language pack (Batch 9).** ML Kit v2 text recognition has no Arabic,
+    Farsi or Cyrillic. PaddleOCR runs on the onnxruntime already shipped with
+    sherpa-onnx, so one engine serves Android, iOS and Windows. ML Kit Latin
+    OCR stays only as the fallback before the OCR pack is downloaded.
+66. **Head start: a sentence-level audio cache (Batch 9).**
+    - **Cache key:** `hash(normalized sentence) + voiceId + language`, sitting
+      on top of the disk-backed chunk files and the shared chunk map
+      (Decisions 49-50).
+    - **First chunk:** the first **two** sentences, raised from Decision 25's
+      one sentence.
+    - **When synthesis starts:** at once after a file or scan lands, and after
+      **1 s idle** while typing. Synthesis then keeps running ahead of
+      playback.
+    - **Edits:** editing sentence 3 or later re-synthesizes only the changed
+      sentences.
+    - **Cancellation:** cache hits respect the generation counter (Decision
+      15/25), so `Stop()` and supersede still win.
+    - **Play button:** shows a loading animation from tap until the first
+      `Playing` transition.
+67. **Translation: on-device only, opt-in, with a visible source dropdown
+    (Batch 9).**
+    - **Android:** ML Kit Translation plus ML Kit Language ID. Auto-detect
+      sets the source dropdown, and the user can always override it.
+    - **iOS:** the ML Kit iOS SDK if a usable .NET binding exists (checked in
+      Slice 55). Otherwise Apple's Translation framework for every language
+      but Farsi, and Farsi translation on iOS is listed as a gap.
+    - **Windows:** **Opus-MT ONNX** models on the shared onnxruntime
+      (recommended; Bergamot is the alternative, decided in Slice 57).
+    - Translation pivots through English and is casual quality, as the
+      reader is told.
+    - A **"Translate to <my language>"** toggle controls it, default off.
+      When on, it applies to **every** read path, Windows auto-read on
+      selection and copy included.
+68. **The first-run language drives UI, voice, OCR and translation target
+    (Batch 9).**
+    - **Languages:** en, fa, fr, es, pt, zh, ar, ru, ja.
+    - **First run:** the user picks a language, which sets the UI language,
+      downloads the matching voice and OCR packs, and becomes the translation
+      target. It's changeable later in settings.
+    - **UI strings:** `.resx` resources, with full RTL layout for fa and ar.
+69. **One shared version; the path filter grows an `ios` group (Batch 9).**
+    - Decisions 17 and 57 stand: one `v<x.y.z>` per merge, and untouched
+      platforms are not rebuilt or resubmitted. Their assets carry forward
+      (per-platform tags rejected again).
+    - **Mobile split:**
+      - `src/ReadTheStupidText.Mobile/Platforms/Android/**` builds Android.
+      - `.../Platforms/iOS/**` builds iOS.
+      - The rest of `Mobile/**` (shared MAUI) builds Android and iOS.
+      - Core builds all three.
+    - For this to be true, Android-bound code outside `Platforms/Android` (for
+      example `CompositeSpeechReader`'s Android constructor arguments) moves
+      behind interfaces first.
+70. **iOS: TestFlight from CI first, App Store by hand later; signing reuses
+    the Lets Call Mom Apple team (Batch 9).**
+    - **App identity:** RTST gets its own App ID `uk.sirous.readthestupidtext`
+      (same as the Android `ApplicationId`), its own distribution profile and
+      its own App Store Connect API key, all stored via the `manage-secrets`
+      store and set as this repo's secrets.
+    - **Borrowed from Lets Call Mom:** the keychain/profile steps and the
+      TestFlight distribute script, adapted from Lets Call Mom's `ios.yml`
+      and `testflight-distribute.mjs`.
+    - **Build:** `dotnet publish -f net10.0-ios` on a macOS runner, not
+      `xcodebuild`.
+    - **Native packaging:** sherpa-onnx's iOS native packaging is checked by
+      unpacking the built `.ipa`, the same lesson as the Android `.so`
+      gotcha.
+71. **Store listings: new search terms and description, in all 9 languages
+    (Batch 9).**
+    - **Search terms (7, each ≤30 chars):** "read aloud", "text to speech",
+      "tts", "read text aloud", "speak selected text", "pdf reader aloud",
+      "natural voices offline".
+    - **Description:** rewritten and drafted in `STORE.md`.
+    - **Languages:** listings are added for all 9 languages on the Microsoft
+      Store and Google Play. No title change for now.
+    - The Partner Center and Play Console edits are a manual step for the
+      user.
+72. **Two products, one repo, one version (Batch 9).** Dino Reader is a
+    second app in this repo, a new UI on the shared core (Domain,
+    Application, Documents, voice engines, packs, OCR), not a new repo.
+    - **One shared version:** a single GitVersion `v<x.y.z>` per merge covers
+      both products, exactly as for platforms (Decisions 17, 57, 69).
+      Per-product tag prefixes are rejected.
+    - **Per-product path groups:** each product gets its own filter group.
+      A product whose code didn't change is not rebuilt or resubmitted, and
+      its release assets carry forward. Shared core rebuilds both products.
+    - **Shared mobile code:** the Android/iOS readers, OCR and scanner move
+      out of the Mobile app project into a shared MAUI class library that
+      both apps reference. That is Dino Reader's first slice, planned in
+      its own batch.
+
+73. **Dino Reader: a kids book reader with a voice per character (Batch 10).**
+    It is the second product in this repo (Decision 72), a MAUI app at
+    `src/DinoReader.App`. The display name is **"Dino Reader"** and the app
+    id is `uk.sirous.dinoreader`. Instead of one voice, it works out who is
+    speaking and gives each character the same distinct voice for the whole
+    book, with a narrator voice the user picks. It inherits every Read The
+    Stupid Text rule: 100% offline for user data, the same voice/OCR packs,
+    the 9 languages, translation, licences and pipeline. The source is the
+    phone doc `2026-10-20-dino-reader.md` plus a desk refine on 2026-10-20.
+74. **Speaker attribution is rule-based, per language, on the device (Batch
+    10).**
+    - **Segments:** quote marks split the text into narration and quoted
+      lines.
+    - **Who speaks:** a quote is attributed by "X said" / "said X", by
+      pronoun tracking, and by alternating speakers in untagged back-and-forth.
+    - **Gender:** comes from pronouns, a names list and titles.
+    - **Language:** attribution runs in the **source** language, and only
+      then is each segment translated.
+    - **Fixes:** a grown-up corrects mistakes in the cast screen. If the
+      rules get common kids' books badly wrong, a small on-device model is
+      the fallback to consider, never a cloud one.
+75. **Voice casting (Ashkan's algorithm, Batch 10).**
+    - The narrator's voice is never reused for a character.
+    - While there are enough voices, no two characters share one.
+    - When characters outnumber voices, an unassigned character gets the
+      gender-matched voice that has spoken the **fewest words so far**,
+      counted per voice. Main characters' voices are never handed out again.
+    - Farsi (Piper, 1-2 voices) will reuse voices heavily, which is a known
+      limit.
+76. **Speech by segments: one read, many voices, real source ranges (Batch
+    10).**
+    - **New call:** `ISpeechReader` gains a segment-based read: a list of
+      `(text, voiceId, sourceStart, sourceEnd)`. Each chunk carries its own
+      speaker into synthesis. Decision 29's chunk-boundary swap already
+      threads the speaker through the playback loop as a parameter.
+    - **Highlight events:** the Android reader raises `ChunkChanged` **per
+      chunk with the real source range**, as Windows already does (Decision
+      50). Today it raises it once, covering the whole text.
+    - **Read The Stupid Text benefits too:** the ranges are what any
+      mobile highlight needs.
+77. **The gallery is a local library behind a grown-up gate (Batch 10).**
+    - **What a story is:** title, cover, language, pages (each page's
+      picture if any, its text and line positions), and its **cast**
+      (character, gender, voice), remembered per book.
+    - **Storage:** stories are stored only on the device, under
+      `AppDataDirectory/stories/<id>/` (`story.json` + page images). There
+      is no sync and no upload.
+    - **Grown-up gate:** adding, removing or editing a story or its cast
+      sits behind **press-and-hold 3 s on a lock button, then a simple sum**.
+      Reading never needs the gate.
+78. **Text comes with its position on the page (Batch 10).**
+    - **New extraction call:** extraction gains a positioned variant that
+      returns lines with bounding boxes in normalized page coordinates. The
+      existing text-only `IImageTextExtractor.ExtractTextAsync` stays for
+      Read The Stupid Text.
+    - **Where positions come from:** ML Kit and PaddleOCR return their line
+      boxes (Slice 52 must keep them, not discard them). PDFs use PdfPig word
+      positions grouped into lines, falling back to OCR when the PDF has no
+      text layer.
+    - **Page images:** scanned page images are **kept**. PDF pages are
+      rendered to images by the platform renderer (Android `PdfRenderer`,
+      iOS PDFKit, `Windows.Data.Pdf`).
+    - **Sources:** stories come from camera scan (multi-page), photo import,
+      PDF, and typed / .txt / .docx text.
+79. **Reading modes: text and picture, always switchable by the child (Batch
+    10).**
+    - **The switch:** a big two-icon switch (📖 / 🖼) in the reading screen's
+      top bar is **always** shown, remembered per story, and defaults to
+      picture mode when the story has pictures.
+    - **Picture mode:** highlights the **sentence / dialogue line** being
+      spoken as boxes over the page picture. A story with no pictures gets
+      **generated book-style pages** (big friendly type on a page
+      background), so picture mode works for every story.
+    - **Highlight unit:** the sentence/line. The engine has no word
+      timestamps, so word-by-word karaoke is out of scope for now.
+80. **Pages follow the reading; the child can wander (Batch 10).** The page
+    turns by itself as the reading reaches it. A child can swipe to another
+    page and tap a sentence to read from there, and pressing play resumes
+    auto-follow.
+81. **Dino Reader platforms and order (Batch 10).**
+    - **Platforms:** Android and iOS first, Windows (MAUI WinUI head) last.
+    - **Shared code:** the Android/iOS readers, OCR, scanner and other
+      platform code move from the Read The Stupid Text Mobile app project
+      into a shared MAUI class library, `src/ReadTheStupidText.Mobile.Shared`,
+      that both apps reference.
+    - **Pipeline:** the pipeline gets a `dinoreader` path group and the
+      same shared version (Decisions 69, 72). Distribution is Play internal
+      testing and TestFlight, as for Read The Stupid Text.
+    - **Order:** the pure slices (dialogue parser, voice caster) may start
+      alongside Batch 9. The picture-mode slices wait for the scanner and
+      PaddleOCR (Slices 45, 52).
 
 ## Changes
 
@@ -1589,29 +1828,72 @@ highlight/toggle wiring, then zoom + real pagination on top of it.
       108 existing unit tests still pass unchanged; the WinRT/native
       synthesis path isn't unit-testable (needs package identity), so this
       needs a live-run confirmation per the project's existing convention.
-- [ ] **Slice 36 — Disk-backed audio chunks.** (Decisions 49, 50) Replace the
-      in-memory per-chunk buffer `SupertonicSpeechReader`/`CompositeSpeechReader`
-      feed to `MediaPlayer` with a temp WAV file per chunk under
-      `…\TemporaryFolder\audio\<activity-id>\`; extend the existing chunk map
-      (Decision 50) with each chunk's file path. Delete a read's folder on
-      terminal state or supersede (reusing the generation-counter teardown) and
-      sweep orphaned folders older than 1 day at startup (mirrors Decision 27's
-      log sweep). Unit-test the pure cleanup/sweep-eligibility logic.
-- [ ] **Slice 37 — Reading text box: window, toggle, whole-chunk highlight.**
-      (Decisions 45, 46, 50) New floating `AppWindow`, opened/closed by a new
-      4th icon `ToggleButton` in the control panel's `CONTROLS` row. Extend the
-      chunk map (Decision 50) with each chunk's source-text character range.
-      While a read plays, the window shows the current chunk's text with it
-      highlighted (plain scrollable text for this first pass — no pagination or
-      zoom yet, those land in Slice 38). Closing the window doesn't stop
-      playback; toggling it back open re-syncs to the current chunk.
-- [ ] **Slice 38 — Reading text box: zoom + fit-to-box pagination.** (Decisions
-      47, 48) Add +/- zoom controls to the text box's own header, enforcing the
-      dynamic 30-word-sentence zoom-in floor and a fixed ~32px ceiling. Replace
-      the Slice 37 scrollable view with the greedy fit-to-box pagination
-      algorithm (own segmentation, independent of `SpeechTextChunker`); the box
-      auto-advances pages to keep the currently-highlighted chunk in view.
-      Unit-test the pure pagination-fill and zoom-floor logic.
+- [x] **Slice 36 — Disk-backed audio chunks.** (Decisions 49, 50) Replaced the
+      in-memory per-chunk WAV buffer (`InMemoryRandomAccessStream`)
+      `SupertonicSpeechReader` fed to `MediaPlayer` with a temp WAV file per
+      chunk under `…\TemporaryFolder\audio\<activity-id>\chunk-<index>.wav`
+      (new `AudioChunkPaths`, a sibling of `LogPaths`); `MediaPlayer` now plays
+      each chunk via `StorageFile.GetFileFromPathAsync` +
+      `MediaSource.CreateFromStorageFile` instead of a stream. A read's folder
+      is deleted on natural completion or `Stop()` (both already know the
+      read is genuinely done, unlike Skip/mid-read voice-change, which reuse
+      the same activity id and folder); a startup sweep
+      (`AudioChunkPaths.PurgeOrphaned`, 1 day) catches one orphaned by a read
+      that never reached a terminal state. The pure sweep-eligibility rule
+      (`AudioChunkSweep.IsEligible`) is unit-tested (`AudioChunkSweepTests`,
+      4 cases). `CompositeSpeechReader` needed no change — it already just
+      routes to the active engine. Confirmed
+      `Windows.Storage.StorageFile`/`Windows.Media.Core.MediaSource` usage via
+      context7 first (Decision 9).
+- [x] **Slice 37 — Reading text box: window, toggle, whole-chunk highlight.**
+      (Decisions 45, 46, 50) New `ReadingTextBoxWindow` (a normal, resizable,
+      brand-headered `AppWindow`, single instance kept for the app's lifetime),
+      opened/closed by a new 4th icon `ToggleButton` in the control panel's
+      `CONTROLS` row (`ReadingTextBoxRequested` → `MainWindow` → `Toggle()`).
+      Extended the chunk map (Decision 50) via a low-risk, additive
+      `SpeechTextChunker.SplitWithRanges` (new `TextChunk(Text, SourceStart,
+      SourceEnd)`, `Split` itself untouched) — since the splitter only ever
+      decides *where* to break, never dropping/reordering/duplicating a word,
+      each chunk's source range is reconstructed by word-count alignment
+      against the original text rather than threading offsets through the
+      splitting algorithm itself (4 new unit tests). `ISpeechReader` gained
+      `ChunkChanged` (text + source span), raised per chunk by
+      `SupertonicSpeechReader`/once-per-read by the WinRT fallback, forwarded
+      by `CompositeSpeechReader`, and passed through `ReadAloudService`
+      alongside a new `ReadTextChanged` (the full read's text, raised once
+      before synthesis starts) — the text box's two inputs. The window shows
+      the full read text (`TextBlock` + `TextHighlighters`, confirmed via
+      context7) with the current chunk's span highlighted and an approximate
+      scroll-to-chunk (plain scrollable text for this pass — no pagination or
+      zoom yet, those land in Slice 38). The system ✕ hides rather than closes
+      (`AppWindow.Closing` cancelled) so playback keeps going and reopening
+      re-syncs instantly, since the single instance never stopped tracking the
+      read's events while hidden; `Shutdown()` lifts that guard for app quit.
+      The interface addition required a mechanical (no new behavior) touch to
+      the Mobile/Android readers to keep them compiling — verified via
+      `dotnet build -f net10.0-android`.
+- [x] **Slice 38 — Reading text box: zoom + fit-to-box pagination.** (Decisions
+      47, 48) New pure `TextBoxPaginator.Paginate(text, fits)` (Application) —
+      a greedy, sentence-boundary-respecting fill that takes a caller-supplied
+      `fits` predicate, so its "own segmentation, independent of
+      `SpeechTextChunker`" splitting/greedy-fill logic is fully unit-tested (7
+      cases, incl. the never-drop-or-split-a-sentence and single-oversized-
+      sentence-gets-its-own-page rules) without needing real text measurement;
+      `PageIndexContaining` finds which page a chunk's source position falls
+      in. `ReadingTextBoxWindow` supplies the real `fits` via an off-screen
+      `MeasureProbe` `TextBlock.Measure()` against the box's current
+      (padding-adjusted) width/height — repaginating on text change, zoom, and
+      `ScrollViewer.SizeChanged`, always restoring the currently-playing
+      chunk's page (or page 1) so a zoom/resize never loses the reader's
+      place. Replaced the Slice 37 whole-text scrollable view; the
+      `ScrollViewer` stays only as a safety net for a single sentence too long
+      to fit a page. New toolbar row with +/- zoom buttons (Segoe Fluent
+      glyphs) and a page indicator; zoom-in is clamped to
+      `min(32px, the size at which a fixed 30-word stand-in sentence stops
+      fitting the box)`, zoom-out to a 10px floor — both via the same
+      `MeasureProbe`, no separate Domain value object (this is a
+      single-window WinUI display concern, not a cross-platform one, unlike
+      `PlaybackRate`).
 
 **Batch 8 — CI within the 500 MB Actions storage quota (CI only).** On
 2026-09-26/27 the account's shared Actions+Packages storage quota (500 MB)
@@ -1676,6 +1958,64 @@ Live checks (Verification, below) run on the first `main` pushes after merge.
       done 2026-09-27** (both repos report `days: 1`); only the docs remain. Update `CLAUDE.md`'s
       CI paragraph and `README.md`'s "uploads each as an unsigned artifact" line
       to describe the Release-only, path-filtered pipeline.
+
+**Batch 9 — Mobile UX, OCR, translation, language packs and iOS.** Source:
+the two 2026-10-20 phone scope docs (*mobile UX / OCR / translation* and *iOS +
+per-platform pipeline*), folded into Decisions 59-71. Android gets the new
+features first, iOS follows in parallel on the same MAUI project, and Windows
+catches up last. Slices in this batch live in `docs/plan/slices/` (one file
+each, with Steps, Acceptance and Risks); this section is only the index.
+`plan.md` will be migrated to the index layout by `archive-docs` once PR #165
+(the Batch 8 implementation) merges. Slices 44, 48, 50 and 56 edit the pipeline
+and depend on that PR.
+
+| # | Slice | Status | PR | Story | File |
+| --- | --- | --- | --- | --- | --- |
+| 43 | Store listing refresh (9 languages) | planned | — | — | [43-store-listing-refresh.md](docs/plan/slices/43-store-listing-refresh.md) |
+| 44 | Pipeline: iOS filter group, platform-neutral Mobile root | planned | — | — | [44-pipeline-ios-split.md](docs/plan/slices/44-pipeline-ios-split.md) |
+| 45 | Android: document scanner into the editor | planned | — | — | [45-android-document-scanner.md](docs/plan/slices/45-android-document-scanner.md) |
+| 46 | Play button loading state | planned | — | — | [46-play-loading-state.md](docs/plan/slices/46-play-loading-state.md) |
+| 47 | Head start: sentence-level audio cache | planned | — | — | [47-head-start-sentence-cache.md](docs/plan/slices/47-head-start-sentence-cache.md) |
+| 48 | iOS target and TestFlight from CI | planned | — | — | [48-ios-target-testflight.md](docs/plan/slices/48-ios-target-testflight.md) |
+| 49 | iOS reaches Android parity | planned | — | — | [49-ios-parity.md](docs/plan/slices/49-ios-parity.md) |
+| 50 | Voice packs, first-run language, slimmer app (Android) | planned | — | — | [50-voice-packs-first-run-language.md](docs/plan/slices/50-voice-packs-first-run-language.md) |
+| 51 | Multilingual voices (Supertonic, Piper fa, MeloTTS zh) | planned | — | — | [51-multilingual-voices.md](docs/plan/slices/51-multilingual-voices.md) |
+| 52 | PaddleOCR per language (Android) | planned | — | — | [52-paddleocr-per-language.md](docs/plan/slices/52-paddleocr-per-language.md) |
+| 53 | Android: localized UI and RTL | planned | — | — | [53-localized-ui-rtl.md](docs/plan/slices/53-localized-ui-rtl.md) |
+| 54 | Android: on-device translation | planned | — | — | [54-on-device-translation.md](docs/plan/slices/54-on-device-translation.md) |
+| 55 | iOS gets the Batch 9 features | planned | — | — | [55-ios-batch9-features.md](docs/plan/slices/55-ios-batch9-features.md) |
+| 56 | Windows: packs, first-run language, head start | planned | — | — | [56-windows-packs-language-headstart.md](docs/plan/slices/56-windows-packs-language-headstart.md) |
+| 57 | Windows: localized UI and translation | planned | — | — | [57-windows-localization-translation.md](docs/plan/slices/57-windows-localization-translation.md) |
+
+Suggested order, in parallel lanes: **A** pipeline + iOS (44 -> 48 -> 49 -> 55);
+**B** Android UX (45, 46, 47); **C** packs and languages (50 -> 51 -> 52, 53,
+54); **Windows** last (56 -> 57); **43** any time.
+
+**Batch 10 — Dino Reader.** Dino Reader is the second product in this repo (Decision 72): a kids' book
+reader that gives each character a consistent, distinct voice. It has a gallery
+behind a grown-up gate, a text mode and a picture mode that highlight the
+spoken sentence, and per-character voices chosen by on-device rules. Sources:
+the phone doc `2026-10-20-dino-reader.md` and a desk refine on 2026-10-20
+(Decisions 73-81). Slices live in `docs/plan/slices/` (one file each); this
+section is only the index.
+
+| # | Slice | Status | PR | Story | File |
+| --- | --- | --- | --- | --- | --- |
+| 58 | Dino Reader skeleton: shared Mobile library, new app, pipeline | planned | — | — | [58-dino-reader-skeleton.md](docs/plan/slices/58-dino-reader-skeleton.md) |
+| 59 | Dialogue parser and voice caster (pure) | planned | — | — | [59-dialogue-parser-voice-caster.md](docs/plan/slices/59-dialogue-parser-voice-caster.md) |
+| 60 | Reading with a voice per character | planned | — | — | [60-per-character-voice-reading.md](docs/plan/slices/60-per-character-voice-reading.md) |
+| 61 | Gallery, stories on device, grown-up gate | planned | — | — | [61-gallery-grownup-gate.md](docs/plan/slices/61-gallery-grownup-gate.md) |
+| 62 | Reading screen: text and picture modes | planned | — | — | [62-reading-screen-modes.md](docs/plan/slices/62-reading-screen-modes.md) |
+| 63 | Positioned text extraction, kept page images | planned | — | — | [63-positioned-text-extraction.md](docs/plan/slices/63-positioned-text-extraction.md) |
+| 64 | Picture mode on real pages | planned | — | — | [64-picture-mode-real-pages.md](docs/plan/slices/64-picture-mode-real-pages.md) |
+| 65 | Cast screen | planned | — | — | [65-cast-screen.md](docs/plan/slices/65-cast-screen.md) |
+| 66 | Dino Reader languages and translation | planned | — | — | [66-dino-reader-languages-translation.md](docs/plan/slices/66-dino-reader-languages-translation.md) |
+| 67 | Dino Reader on iOS and Windows | planned | — | — | [67-dino-reader-ios-windows.md](docs/plan/slices/67-dino-reader-ios-windows.md) |
+
+Suggested order, in lanes: **pure** 59 any time now (no overlap with Batch 9);
+**app** 58 -> 60 -> 61 -> 62 -> 65 (58 needs PR #165 and Slice 44); **pictures**
+63 (after 45 and 52) -> 64; **languages** 66 after Batch 9 lane C (50-54);
+**platforms** 67 after 48/49, Windows last.
 
 ## Out of Scope
 
@@ -1782,6 +2122,26 @@ Live checks (Verification, below) run on the first `main` pushes after merge.
 - **(Batch 8)** Splitting releases into per-platform tags (`win-v*` /
   `android-v*`). One `v<x.y.z>` per merge stays (Decision 17), with the
   unchanged platform's assets carried forward (Decision 57).
+- **(Batch 9)** Cloud TTS, OCR or translation: everything user-facing stays
+  on the device (Decision 60).
+- **(Batch 9)** A live camera text overlay (point-and-read); scanning is the
+  document scanner only (Decision 64).
+- **(Batch 9)** Handwriting recognition beyond what PaddleOCR gives (Decision 65).
+- **(Batch 9)** The kids book reader: a separate product, "Dino Reader", built in
+  this repo on the shared core and planned in its own batch, not Batch 9 (Decision 59).
+- **(Batch 9)** Mac Catalyst / macOS: a later spin-off on the same MAUI stack.
+- **(Batch 9)** App Store public-release automation: CI stops at TestFlight, the
+  App Store submission is by hand (Decision 70).
+- **(Batch 9)** A store title change; only search terms and descriptions change
+  (Decision 71).
+- **(Batch 9)** Per-platform version tags: one `v<x.y.z>` per merge stays
+  (Decision 69).
+- **(Batch 10)** Word-by-word karaoke highlight: the engine has no word timestamps (Decision 79).
+- **(Batch 10)** Cloud or LLM speaker attribution (a small on-device model is the only fallback, Decision 74).
+- **(Batch 10)** Syncing or sharing stories between devices.
+- **(Batch 10)** A story store or marketplace.
+- **(Batch 10)** Illustrations generated by AI.
+- **(Batch 10)** Dino Reader on the Windows tray: it is a normal app, no tray or hotkey.
 
 ## Verification
 
@@ -1974,5 +2334,7 @@ Live checks (Verification, below) run on the first `main` pushes after merge.
 - **Slice 42:** `gh api repos/<repo>/actions/permissions/artifact-and-log-retention`
   returns `days: 1` for both repos. After a few days of normal merges, the
   billing page shows Actions storage near zero.
+- **Batch 9:** see each slice file's Acceptance section.
+- **Batch 10:** see each slice file's Acceptance section.
 - Manual UI checks driven through the running app; no browser E2E harness
   applies to a native tray app or a MAUI mobile app.

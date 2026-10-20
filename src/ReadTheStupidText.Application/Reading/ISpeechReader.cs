@@ -27,6 +27,12 @@ public interface ISpeechReader
     /// until every chunk has finished synthesizing.</summary>
     event EventHandler<ReadTiming>? TimingChanged;
 
+    /// <summary>Raised whenever a new chunk begins playing (Decision 46/50) — the
+    /// reading text box's whole-chunk highlight source. An engine that doesn't
+    /// chunk (the WinRT fallback) raises it once per read, for the whole
+    /// utterance, when playback begins.</summary>
+    event EventHandler<ReadChunk>? ChunkChanged;
+
     PlaybackState State { get; }
 
     /// <summary>

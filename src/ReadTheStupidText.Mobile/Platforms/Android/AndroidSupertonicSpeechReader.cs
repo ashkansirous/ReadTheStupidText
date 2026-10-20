@@ -81,6 +81,11 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IDisposable
     public event EventHandler<double>? ProgressChanged;
     public event EventHandler<ReadTiming>? TimingChanged;
 
+    // No mobile reading text box yet (Batch 7's reading text box is Windows-only,
+    // Decision 38-style deferral) — raised once per read, for the whole text,
+    // purely so this engine satisfies ISpeechReader like the Windows readers do.
+    public event EventHandler<ReadChunk>? ChunkChanged;
+
     public PlaybackState State => _state;
 
     public AndroidSupertonicSpeechReader(IVoiceModelService model) => _model = model;
@@ -99,6 +104,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IDisposable
         _chunks = chunks;
         _timing.Start(chunks.Count);
         RaiseTiming(TimeSpan.Zero);
+        ChunkChanged?.Invoke(this, new ReadChunk(0, chunks.Count, text, 0, text.Length));
 
         await SpeakChunksAsync(tts, chunks, 0, Volatile.Read(ref _speakerId), generation, token);
     }

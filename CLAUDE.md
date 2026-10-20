@@ -20,17 +20,19 @@ at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
 > input surfaces instead). See Decisions 37-42 and the Batch 6 slices in
 > `plan.md` for the full rationale.
 
-> **Reading text box + disk-backed audio (Batch 7, planning):** a toggleable
-> floating window will show the chunk currently being read (whole-chunk
+> **Reading text box + disk-backed audio (Batch 7, built):** a toggleable
+> floating window shows the chunk currently being read (whole-chunk
 > highlight, its own fit-to-box pagination independent of `SpeechTextChunker`,
 > zoom bounded by a live 30-word-sentence floor) — opened via a 4th icon in the
-> control panel's `CONTROLS` row. Synthesized audio moves from an in-memory
+> control panel's `CONTROLS` row. Synthesized audio moved from an in-memory
 > buffer to a temp WAV file per chunk under `TemporaryFolder\audio\<id>\`
 > (sibling of the existing `logs\` folder), fixing memory growth on large
 > files; the existing chunk map used by Skip (Decision 32) and the read-through
 > timer (Decision 33) is extended with each chunk's file path and source-text
 > range rather than duplicated. See Decisions 45-51 and the Batch 7 slices
-> (35-38) in `plan.md`.
+> (35-38) in `plan.md`. Slices 36-38 were stacked PRs (#154-#156) that merged
+> into each other instead of `main`; they landed on `main` later — open stacked
+> PRs against `main`, or retarget each one after its base merges.
 
 > **CI within the Actions storage quota (Batch 8):** the account's
 > Actions+Packages storage is **500 MB, shared across all repos, billed as
@@ -48,6 +50,34 @@ at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
 > right filter group. Don't add `actions/upload-artifact` for build outputs.**
 > Repo artifact retention is 1 day as a safety net. See Decisions 52-58 and
 > Slices 39-42 in `plan.md`.
+
+> **Language packs, iOS, translation (Batch 9, planning):** once Slices 50/56
+> land, **no platform bundles a voice model** (supersedes Decisions 14 and 39):
+> every voice downloads as a pack after the first-run language choice, from
+> GitHub Releases tagged `packs-*` (separate from the `v<x.y.z>` app releases),
+> and the system voice reads until it arrives. User data (text, images, scans,
+> translations) stays **100% offline**; only packs are downloaded. One **scoped
+> GPL exception**: the Farsi Piper pack carries espeak-ng data (GPL-3.0) inside
+> the downloaded pack only, never in the repo or any package. **iOS** is the
+> same MAUI project (`net10.0-ios`) shipped to TestFlight from CI, with an `ios`
+> path-filter group and the Mobile split rule: `Platforms/Android/**` builds
+> Android, `Platforms/iOS/**` builds iOS, the rest of `Mobile/**` builds both.
+> See Decisions 59-71 and `docs/plan/slices/43-57`. (Other rules above change
+> inside those slices, not before.)
+
+> **Dino Reader (Batch 10, planning):** a second product in this repo, a kids'
+> book reader with a voice per character. It is a second MAUI app,
+> `src/DinoReader.App`, sharing the platform code in
+> `src/ReadTheStupidText.Mobile.Shared` (moved out of the RTST Mobile app) plus
+> Domain/Application/Documents. A pure `src/DinoReader.Core` holds the dialogue
+> segmenter, speaker attributor and voice caster (no framework deps). One shared
+> version (`v<x.y.z>`) covers both products; each has its own path-filter group.
+> See Decisions 72-81 and `docs/plan/slices/58-67`.
+> Its icons (all platforms, "Book hug" design) live in
+> `docs/design/dino-reader/icons/`: copy from there, never redraw or regenerate them.
+> Its screens are the mock `docs/design/dino-reader/Dino Reader v2.dc.html` (index in
+> that folder's README): read visual values (colours, sizes, copy, layout) from it,
+> never guess them, and never call `DesignSync` for them.
 
 > **Naming:** the user-facing **product display name is "Read The Stupid Text"** (with
 > spaces) — shown in the manifest `DisplayName`s, tray tooltip, control-panel header,

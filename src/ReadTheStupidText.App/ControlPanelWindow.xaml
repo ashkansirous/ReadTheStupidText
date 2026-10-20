@@ -603,6 +603,7 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
                 <!-- Auto-read on selection — a select-frame (rounded corner brackets +
@@ -653,6 +654,24 @@
                               Stroke="{ThemeResource PanelText2}" StrokeThickness="1.7"
                               StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
                               Data="M4.5 16.5 c-1.5 1.26 -2 5 -2 5 s3.74 -0.5 5 -2 c0.71 -0.84 0.7 -2.13 -0.09 -2.91 a2.18 2.18 0 0 0 -2.91 -0.09 z M12 15 l-3 -3 a22 22 0 0 1 2 -3.95 A12.88 12.88 0 0 1 22 2 c0 2.72 -0.78 7.5 -6 11 a22.35 22.35 0 0 1 -4 2 z M9 12 H4 s0.55 -3.03 2 -4 c1.62 -1.08 5 0 5 0 M12 15 v5 s3.03 -0.55 4 -2 c1.08 -1.62 0 -5 0 -5" />
+                    </Viewbox>
+                </ToggleButton>
+
+                <!-- Reading text box (Slice 37, Decision 45) — a page with lines of
+                     text. Toggles the floating read-along window; unlike the other
+                     three toggles this doesn't persist a setting, it mirrors the
+                     text box window's own shown/hidden state. -->
+                <ToggleButton
+                    x:Name="ReadingTextBoxToggle"
+                    Grid.Column="3"
+                    Style="{StaticResource IconToggleStyle}"
+                    Checked="OnReadingTextBoxToggled"
+                    Unchecked="OnReadingTextBoxToggled">
+                    <Viewbox Width="25" Height="25">
+                        <Path x:Name="ReadingTextBoxIcon" Width="24" Height="24" Stretch="None"
+                              Stroke="{ThemeResource PanelText2}" StrokeThickness="1.7"
+                              StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                              Data="M6 3h9l4 4v13a1 1 0 0 1 -1 1H6a1 1 0 0 1 -1 -1V4a1 1 0 0 1 1 -1Z M14 3v5h5 M8 12h8 M8 16h8 M8 9h3" />
                     </Viewbox>
                 </ToggleButton>
             </Grid>
