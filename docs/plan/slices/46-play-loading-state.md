@@ -1,6 +1,6 @@
 # Slice 46 — Play button loading state
 
-*Planned.*
+*In progress (wave 2026-10-20c), draft PR.*
 
 **Batch:** 9
 **Decisions:** 66 (last bullet)
