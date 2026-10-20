@@ -83,7 +83,7 @@ at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
 > Domain/Application/Documents. A pure `src/DinoReader.Core` holds the dialogue
 > segmenter, speaker attributor and voice caster (no framework deps). One shared
 > version (`v<x.y.z>`) covers both products; each has its own path-filter group.
-> See Decisions 72-81 and `docs/plan/slices/58-67`.
+> See Decisions 72-82 and `docs/plan/slices/58-67`.
 > Its icons (all platforms, "Book hug" design) live in
 > `docs/design/dino-reader/icons/`: copy from there, never redraw or regenerate them.
 > Its screens are the mock `docs/design/dino-reader/Dino Reader v2.dc.html` (index in
@@ -155,7 +155,14 @@ DinoReader.Core (standalone, no deps)
   folder rather than a separate class library. It does **not** reuse
   `ReadAloudService` — that orchestrates Windows-only triggers (hotkey, UIA
   selection, clipboard) that don't exist on Android (Decision 38) — pages wire
-  `ISpeechReader` + `PlaybackRate`/`SpeedPresets` directly instead. **Gotcha:**
+  `ISpeechReader` + `PlaybackRate`/`SpeedPresets` directly instead. **Android
+  minimum is API 28** (`SupportedOSPlatformVersion` 28.0, Decision 82) for
+  every Android app here, Dino Reader included; a new MAUI project starts at
+  the template's 21, so set it. Never lower it (Play automatic protection,
+  enabled on our listing, rejects bundles below 24). Set it only in the
+  csproj, never as a `<uses-sdk>` in `AndroidManifest.xml`. Runtime guards
+  for API 28 or older are dead code; guards for 29+ APIs are still needed.
+  **Gotcha:**
   files under `Platforms/Android` use namespace `ReadTheStupidText.Mobile`,
   *not* `...Platforms.Android` — a namespace segment literally named `Android`
   shadows the top-level `Android.*` binding namespace for unqualified lookups
