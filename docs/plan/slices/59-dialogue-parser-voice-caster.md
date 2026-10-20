@@ -5,19 +5,19 @@
 **Batch:** 10
 **Decisions:** 74, 75
 **Depends on:** none (pure `net10.0`, no UI, no platform code; may start alongside Batch 9)
-**Touches:** `src/StoryReader.Core/**`, `tests/StoryReader.Tests/**`, `ReadTheStupidText.slnx`, `.github/workflows/build.yml`, `CLAUDE.md`
+**Touches:** `src/DinoReader.Core/**`, `tests/DinoReader.Tests/**`, `ReadTheStupidText.slnx`, `.github/workflows/build.yml`, `CLAUDE.md`
 **Story issue:** —
 
 ## Goal
 
 Given story text, produce segments (narration / quoted line), the speaker of each
 quote, a gender per character and a voice per character, all rule-based and on the
-device. This is the novel part of Story Reader; it is proven in unit tests before
+device. This is the novel part of Dino Reader; it is proven in unit tests before
 any UI exists.
 
 ## Steps
 
-- [ ] New `src/StoryReader.Core` (`net10.0`, no framework dependencies). A separate
+- [ ] New `src/DinoReader.Core` (`net10.0`, no framework dependencies). A separate
       library on purpose: Application stays product-neutral for Read The Stupid Text.
       The caster takes plain voice records (id, gender) so it needs no reference to
       Domain's voice types.
@@ -41,11 +41,11 @@ any UI exists.
       characters processed in order of first appearance.
 - [ ] Rule tables sit behind a `LanguageRules` record (English only here) so Slice 66
       adds languages without touching the algorithm.
-- [ ] Tests in a new `tests/StoryReader.Tests` (xUnit v3, `net10.0`, like
-      `tests/ReadTheStupidText.Tests`); `InternalsVisibleTo("StoryReader.Tests")` from
-      `StoryReader.Core` so helpers stay `internal`. Add both projects to
+- [ ] Tests in a new `tests/DinoReader.Tests` (xUnit v3, `net10.0`, like
+      `tests/ReadTheStupidText.Tests`); `InternalsVisibleTo("DinoReader.Tests")` from
+      `DinoReader.Core` so helpers stay `internal`. Add both projects to
       `ReadTheStupidText.slnx` and a `test` step in `build.yml` (path group
-      `storyreader`, once Slice 58 adds it).
+      `dinoreader`, once Slice 58 adds it).
 
 ## Acceptance
 
@@ -54,7 +54,7 @@ any UI exists.
 - Casting with narrator Male2: Peter Male1, Cotton Tail Female1, third quote Peter Male1.
 - A story with more than 8 characters: the fewest-words fallback picks the expected
   voice, main characters' voices are never handed out again, narrator never reused.
-- `dotnet test tests/StoryReader.Tests` green; the library has no package references.
+- `dotnet test tests/DinoReader.Tests` green; the library has no package references.
 
 ## Risks / notes
 

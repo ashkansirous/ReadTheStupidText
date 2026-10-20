@@ -5,7 +5,7 @@
 **Batch:** 10
 **Decisions:** 78
 **Depends on:** Slice 45 (scanner), Slice 52 (PaddleOCR), Slice 58 (shared library)
-**Touches:** `src/ReadTheStupidText.Application/Images/**`, `src/ReadTheStupidText.Documents/**`, `src/ReadTheStupidText.Mobile.Shared/**`, `src/ReadTheStupidText.Mobile/**`, `src/StoryReader.Core/**`, `tests/**`, `CLAUDE.md`
+**Touches:** `src/ReadTheStupidText.Application/Images/**`, `src/ReadTheStupidText.Documents/**`, `src/ReadTheStupidText.Mobile.Shared/**`, `src/ReadTheStupidText.Mobile/**`, `src/DinoReader.Core/**`, `tests/**`, `CLAUDE.md`
 **Story issue:** —
 
 ## Goal
@@ -30,9 +30,9 @@ stays for Read The Stupid Text.
 - [ ] PDF page rendering: Android `PdfRenderer` first, behind `IPdfPageRenderer`. iOS (PDFKit)
       and Windows (`Windows.Data.Pdf`) renderers are noted for Slices 67/49, not built here.
 - [ ] Scanner keeps page images: the old scan flow discards them (`ScanPage.xaml.cs:60-61,78`)
-      and Slice 45 must not either. Story Reader copies the scanner's page images into the
+      and Slice 45 must not either. Dino Reader copies the scanner's page images into the
       story folder; Read The Stupid Text still deletes them.
-- [ ] Pure `RangeToBoxMapper` (StoryReader.Core): from the page's line texts in reading order
+- [ ] Pure `RangeToBoxMapper` (DinoReader.Core): from the page's line texts in reading order
       and a text source range, return the line boxes covering it (whole line boxed even when
       the range is partial). Unit-tested incl. a sentence over two lines and over two pages.
 - [ ] Tests for normalization, line grouping and the mapper.
