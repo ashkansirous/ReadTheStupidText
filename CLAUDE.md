@@ -239,11 +239,27 @@ framework-dependent (Store-delivered). Debug stays framework-dependent for a fas
 inner loop. Trimming stays off (`PublishTrimmed=false`) — packaged WinUI apps
 aren't trimmed.
 
+**Android downloads.** The Worker serves `/download`, `/download/android/latest` and
+`/download/android/<x.y.z>` from the private R2 bucket `readthestupidtext-downloads` (binding
+`DOWNLOADS`; `worker/downloads.ts`). The `publish-downloads` job copies each released APK there
+after `release-publish` (no signing secrets; uses `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID`).
+The key layout lives only in `worker/download-keys.mjs`; an already-published version is skipped and
+the manifest is written last. Windows stays Store-only. A deploy needs the bucket to exist (wrangler
+fails on a missing R2 binding). (Slice 69: docs/plan/slices/69-apk-downloads-on-r2.md)
+
+**Play loading state.** `ReadAloudService.IsGeneratingAudio` is true from `GeneratingAudio` until the
+first `Playing`; `GeneratingChanged` is deduped but not ordered, so handlers re-read it. After
+`SpeakAsync` returns a read gets `FirstAudioGrace` (8 s) to reach `Playing` before being marked
+Failed (the WinRT fallback returns before playback starts), so any new `ISpeechReader` must await the
+whole read or raise `Playing` within that grace. Play does nothing while generating. The control
+panel overlays a `ProgressRing`; Mobile `ReaderPage` tracks a per-read token and overlays an
+`ActivityIndicator`. (Slice 46: docs/plan/slices/46-play-loading-state.md)
+
 **Landing site.** `readthestupidtext.sirous.uk` is the Cloudflare Worker `readthestupidtext`
 (`wrangler.jsonc`, `worker/index.ts`) serving `site/` (not `docs/`); GitHub Pages is off. Deploy with
 `npm run deploy` (refuses CRLF site files; `npm run typecheck` keeps `wrangler.jsonc` and
-`wrangler.workers-dev.jsonc` in sync) until Workers Builds is connected (watch paths `worker/**`,
-`site/**`, `wrangler*.jsonc`, `package*.json`). A Worker custom domain can't replace an existing DNS
+`wrangler.workers-dev.jsonc` in sync) manually when needed. Workers Builds deploys `main` only (preview-branch builds are off); deploy
+command `npm run deploy`, watch paths `worker/*`, `site/*`, `wrangler*.jsonc`, `package*.json`. A Worker custom domain can't replace an existing DNS
 record: delete it first (wrangler has no DNS scope). Privacy policy edits touch both `PRIVACY.md` and
 `site/privacy.html`. Don't add `docs/CNAME` or a GitHub Actions deploy. See `docs/DEPLOYING.md`.
 (Slice 68: docs/plan/slices/68-landing-site-on-worker.md)

@@ -59,16 +59,18 @@ Windows. Users get a stable link that never needs a GitHub account or a release 
 - High review: shared key module, safe Range forwarding, page version taken from the listing, input validation, typecheck in CI, header constants, wrangler bin cached, redundant ref check removed.
 - Medium review: whole-object 200 when R2 omits `range`, robust "not published" detection, upload moved to its own job (no keystore present, visible failure, can't block store submissions), conditional requests, HEAD bodies, honest guarantee wording, error-code constants.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-20)
 
 - Android downloads: the Worker serves `/download`, `/download/android/latest` and `/download/android/<x.y.z>` from the private R2 bucket `readthestupidtext-downloads` (binding `DOWNLOADS`; `worker/downloads.ts`). The `publish-downloads` job copies each released APK there after `release-publish` (needs no signing secrets; uses `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID`). The key layout lives only in `worker/download-keys.mjs`. A version already published is skipped; the manifest is written last. Windows stays Store-only. A deploy needs the bucket to exist (wrangler fails on a missing R2 binding). (Slice 69: docs/plan/slices/69-apk-downloads-on-r2.md)
 
-#### For README.md
+#### For README.md (lifted 2026-10-20)
 
 - Android users can install the latest APK directly from https://readthestupidtext.sirous.uk/download (sideloading must be allowed). Windows is Store-only.
 
 #### Not yet verified
 
-- The first real release upload to R2 and `/download/android/latest` serving it.
-- Installing that APK on a phone or emulator.
-- Workers Builds deploying the Worker with the R2 binding on merge.
+- Real-R2 Range behaviour of `/download/android/latest` (not separately tested).
+
+#### Verified 2026-10-20
+
+- Workers Builds deployed the Worker with the R2 binding on merge (`/download` live); the v1.3.1 release's `publish-downloads` job uploaded the APK; `/download/android/latest` serves it (60,061,178 bytes, `application/vnd.android.package-archive`, attachment filename `ReadTheStupidText-1.3.1.apk`, ETag, Accept-Ranges); downloaded and installed on the RTST_Test emulator (versionName 1.3.1, minSdk 28) and it launches.

@@ -77,11 +77,11 @@ control-panel play/pause circle.
 
 *Verified:* on the RTST_Test emulator (arm64 embedded build) with a neural voice the play button shows the spinner during first-chunk synthesis and switches to pause when audio starts; with the Phone voice it goes straight to pause.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-20)
 
 - Play loading state: `ReadAloudService.IsGeneratingAudio` is true from `GeneratingAudio` until the first `Playing`; `GeneratingChanged` is deduped but not ordered, so handlers re-read `IsGeneratingAudio`. After `SpeakAsync` returns, a read gets `FirstAudioGrace` (8 s) to reach `Playing` before it is marked Failed, because the WinRT fallback reader returns before playback starts. Any new `ISpeechReader` must either await the whole read or raise `Playing` within that grace. Play does nothing while generating. The control panel overlays a `ProgressRing` on the play circle; Mobile `ReaderPage` tracks a per-read token and overlays an `ActivityIndicator` from tap to first `Playing`. (Slice 46: docs/plan/slices/46-play-loading-state.md)
 
-#### For README.md
+#### For README.md (lifted 2026-10-20)
 
 None.
 

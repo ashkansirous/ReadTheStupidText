@@ -85,4 +85,8 @@ The landing page and privacy policy live in `site/` and are served by a Cloudfla
 
 #### Not yet verified
 
-- Workers Builds connected, and a push touching `site/**` redeploys while a `src/**`-only push doesn't.
+(none)
+
+#### Verified 2026-10-20
+
+- Workers Builds connected 2026-10-20 (deploy command `npm run deploy`, watch paths `worker/*`, `site/*`, `wrangler*.jsonc`, `package*.json`); preview-branch builds turned off because `wrangler preview` failed on PR branches; the #187 merge auto-deployed.
