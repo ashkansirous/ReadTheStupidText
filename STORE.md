@@ -8,8 +8,8 @@ build/packaging pipeline. The app is **published and live in the Store**
 the four Partner Center secrets (the `STORE_PRODUCT_ID` variable is already set).
 
 > **Google Play (Android/MAUI, Batch 6, Slice 34).** The Android app builds in
-> the same `.github/workflows/build.yml` pipeline (`build-android` +
-> `play-submit` jobs, Batch 8; formerly `android-build.yml`), mirroring this
+> the same release pipeline (`release.yml` orchestrates; `android.yml` builds the
+> AAB/APK and `release.yml`'s `play-submit` job ships it, Batch 8), mirroring this
 > document's trust model (CI-held upload key; Google Play App Signing re-signs
 > for distribution — same shape as this file's [Signing](#signing) section).
 > App id `uk.sirous.readthestupidtext`. The signed `.aab` build already works
@@ -23,8 +23,8 @@ the four Partner Center secrets (the `STORE_PRODUCT_ID` variable is already set)
 
 Verified end-to-end and **live**:
 
-- ✅ **Versioning → build → release** runs in the single `build.yml` (GitVersion →
-  per-arch MSIX → `v<x.y.z>` tag + GitHub Release). It has cut real releases
+- ✅ **Versioning → build → release** runs in `release.yml` (GitVersion →
+  `windows.yml` per-arch MSIX → `v<x.y.z>` tag + GitHub Release). It has cut real releases
   (`v0.1.0` … `v0.4.0`), staying in `0.x` as intended — **not** forced to `v1.0.0`.
 - ✅ **Tests gate the release** — a `test` job runs the unit suite and blocks
   `build`/`release` on failure (Slice 15b).
@@ -35,7 +35,7 @@ Verified end-to-end and **live**:
 - ✅ **`store-submit.yml`** submits **one** update carrying both architectures
   (x64 + ARM64 combined into a single `.msixbundle`). It fails fast until the
   four Partner Center secrets are set. Since Decision 44 it runs
-  **automatically** — called from `build.yml`'s `store-submit` job right after
+  **automatically** — called from `release.yml`'s `store-submit` job right after
   every new release — with `workflow_dispatch` kept only for a manual re-run.
 - ✅ **`STORE_PRODUCT_ID` variable** set to `9NGT1BN1H92V` in repo Actions
   variables.
@@ -96,7 +96,7 @@ Store listing references:
 
 ## Build artifact (CI)
 
-`.github/workflows/build.yml` builds the single-project MSIX on `windows-latest`
+`.github/workflows/windows.yml` (called by `release.yml`) builds the single-project MSIX on `windows-latest`
 for **x64** and **ARM64**. On `main` it uploads each **unsigned** `.msix` directly
 to that merge's draft GitHub Release. PRs build without uploading anything, and
 there are no Actions artifacts at all (Batch 8, Decision 52: the account's
@@ -255,7 +255,7 @@ closed-source Store distribution clean.
 
 ## Versioning (GitVersion → tag → release)
 
-Versioning is fully automatic and lives **entirely inside `build.yml`** — one
+Versioning is fully automatic and lives **entirely inside `release.yml`** — one
 workflow run does version → build → release, with no PAT and no commit-back
 (Decision 17 / Slice 14). **Git tags are the source of truth.**
 
@@ -308,13 +308,13 @@ One submission must carry both architectures, so the workflow bundles rather
 than calling `msstore publish` once per `.msix` (which would open competing
 submissions).
 
-**Automatic since Decision 44.** `build.yml`'s `store-submit` job calls this
+**Automatic since Decision 44.** `release.yml`'s `store-submit` job calls this
 workflow (`workflow_call`) right after cutting each new release, so every
 push to `main` reaches the Store with no manual step — this closed a real gap
 where the workflow was manual-only and simply wasn't re-run for 15 days
 (`v0.7.8` … `v0.14.0` piled up, unshipped). It's called as a job in the *same*
 run rather than via an `on: release: published` trigger on this file, because
-`build.yml` creates the release with the default `GITHUB_TOKEN`, and GitHub's
+`release.yml` creates the release with the default `GITHUB_TOKEN`, and GitHub's
 recursion guard means a `GITHUB_TOKEN`-authored event never starts another
 workflow run — that trigger would have looked correct and never fired.
 `workflow_dispatch` still works standalone for a manual re-submit (e.g.
@@ -489,7 +489,7 @@ rejected.
 ## iOS / TestFlight (Slice 48, Decision 70)
 
 The iOS app is the same MAUI project (`net10.0-ios`), built on a macOS runner by
-`build.yml`'s `build-ios` job. Every merge that touches iOS (or shared Mobile/core
+`release.yml`'s `build-ios` job (`ios.yml`). Every merge that touches iOS (or shared Mobile/core
 code) lands a build in TestFlight; the App Store release itself stays a manual
 step in App Store Connect. No `actions/upload-artifact`: the signed `.ipa` goes to
 the GitHub Release as `ReadTheStupidText-<version>.ipa`, and `testflight-submit`

@@ -1,0 +1,159 @@
+name: windows
+
+# Windows MSIX build (x64 + ARM64). Slice 70: split out of build.yml's
+# `build-windows`. Three entry points:
+#   * pull_request (own paths): compiles and packages, uploads nothing.
+#   * workflow_dispatch: same, by hand.
+#   * workflow_call from release.yml: the same build, plus `upload` = true when
+#     release-draft has a draft to fill, which sends each MSIX straight to the
+#     draft release. Zero Actions artifacts (Batch 8): don't add
+#     actions/upload-artifact for build outputs.
+# Without a `version` input (PR or manual run) it asks GitVersion itself so the
+# manifest stamp is exercised too.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/ReadTheStupidText.Domain/**'
+      - 'src/ReadTheStupidText.Application/**'
+      - 'src/ReadTheStupidText.Documents/**'
+      - 'tests/ReadTheStupidText.Tests/**'
+      - 'global.json'
+      - 'GitVersion.yml'
+      - '*.slnx'
+      - '.gitattributes'
+      - '.github/workflows/release.yml'
+      - '.github/workflows/tests.yml'
+      - '.github/scripts/find-release.sh'
+      - '.github/scripts/ship-targets.mjs'
+      - 'src/ReadTheStupidText.App/**'
+      - 'src/ReadTheStupidText.Infrastructure/**'
+      - '.github/workflows/store-submit.yml'
+      - '.github/workflows/windows.yml'
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      version:
+        description: 'GitVersion SemVer (x.y.z) to stamp. Empty: compute it here.'
+        required: false
+        type: string
+        default: ''
+      upload:
+        description: 'Upload the MSIX files to the draft release v<version>.'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# A called run shares the caller's concurrency context, so only PR runs get a
+# group that cancels; every other run is keyed by its run id and never collides.
+concurrency:
+  group: windows-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  # Skipped when release.yml passes its version in; `build` then reads the
+  # input directly.
+  version:
+    if: inputs.version == ''
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.gitversion.outputs.majorMinorPatch }}
+    steps:
+      - name: Checkout (full history + tags — GitVersion needs them)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v4.5.0
+        with:
+          versionSpec: '6.x'
+
+      - name: Determine version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v4.5.0
+        with:
+          useConfigFile: true
+
+  build:
+    needs: version
+    # `version` is skipped when the caller supplied one; !cancelled() keeps that
+    # skip from cascading, and a failed `version` still stops the build.
+    if: ${{ !cancelled() && (needs.version.result == 'success' || needs.version.result == 'skipped') }}
+    runs-on: windows-latest
+    permissions:
+      contents: write   # gh release upload (release runs only)
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: x64
+            rid: win-x64
+          - platform: ARM64
+            rid: win-arm64
+
+    steps:
+      - name: Checkout (with LFS — the neural voice model is LFS-tracked)
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v2
+
+      # Stamp the GitVersion-derived version into the manifest (x.y.z.0 — the
+      # Store requires revision 0). Anchored to line start and the self-closing
+      # ' />' so it only touches the Identity Version, never TargetDeviceFamily's
+      # MinVersion/MaxVersionTested. Working copy only — never committed.
+      - name: Stamp manifest version (${{ inputs.version || needs.version.outputs.version }}.0)
+        shell: bash
+        env:
+          MANIFEST: src/ReadTheStupidText.App/Package.appxmanifest
+          VERSION: ${{ inputs.version || needs.version.outputs.version }}
+        run: |
+          sed -i -E "s#^([[:space:]]*)Version=\"[0-9.]+\"([[:space:]]*/>)#\1Version=\"${VERSION}.0\"\2#" "$MANIFEST"
+          if ! grep -qF "Version=\"${VERSION}.0\" />" "$MANIFEST"; then
+            echo "::error::Failed to stamp Version=\"${VERSION}.0\" into ${MANIFEST}"; exit 1
+          fi
+          grep -nE 'Version=' "$MANIFEST"
+
+      # RuntimeIdentifier is explicit because setup-msbuild puts the 32-bit
+      # MSBuild.exe on PATH (reports x86) → NETSDK1032 against Platform=x64.
+      - name: Build and package MSIX (${{ matrix.platform }})
+        run: >
+          msbuild src/ReadTheStupidText.App/ReadTheStupidText.App.csproj
+          /restore
+          /p:Configuration=Release
+          /p:Platform=${{ matrix.platform }}
+          /p:RuntimeIdentifier=${{ matrix.rid }}
+          /p:GenerateAppxPackageOnBuild=true
+          /p:AppxPackageDir=${{ github.workspace }}\AppPackages\
+          /p:UapAppxPackageBuildMode=SideloadOnly
+          /p:AppxBundle=Never
+          /p:AppxPackageSigningEnabled=false
+
+      # Only the app package — NOT the Microsoft.WindowsAppRuntime dependency
+      # .msix under Dependencies/ (same name for every arch; the Store/Windows
+      # resolves that runtime itself).
+      - name: Upload MSIX to the draft release
+        if: inputs.upload == true
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v${{ inputs.version || needs.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          mapfile -t msix < <(find AppPackages -name 'ReadTheStupidText.App_*.msix')
+          if [ "${#msix[@]}" -ne 1 ]; then
+            echo "::error::Expected exactly 1 app .msix, found ${#msix[@]}: ${msix[*]:-none}"; exit 1
+          fi
+          gh release upload "$TAG" "${msix[0]}" --repo "${{ github.repository }}" --clobber

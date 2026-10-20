@@ -1,0 +1,61 @@
+name: release-scripts
+
+# Guards the release pipeline itself. release.yml only runs on main, so
+# without this a PR that breaks a script or a workflow would look green and
+# then stop every release after merge.
+#   * test: every .github/scripts/*.test.mjs (ship-targets decides what a
+#     release builds and its test also checks each platform workflow's PR
+#     paths; publish-downloads copies the APK to R2). Node's own runner, no
+#     dependencies. This workflow is the only place these tests run; release.yml
+#     relies on it having passed on the PR.
+#   * actionlint: lints every workflow (config: .github/actionlint.yaml, which
+#     declares the macos-26 runner label). Any finding fails the PR.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/scripts/**'
+      - '.github/workflows/**'
+      - '.github/actionlint.yaml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-scripts-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Test the release scripts
+        run: node --test .github/scripts/*.test.mjs
+
+  actionlint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # Both the download script and the binary it fetches are pinned to the
+      # same release; bump the two together.
+      - name: Download actionlint 1.7.7
+        run: bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.7/scripts/download-actionlint.bash) 1.7.7
+
+      - name: Lint every workflow
+        run: ./actionlint -color -config-file .github/actionlint.yaml

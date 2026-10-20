@@ -1,0 +1,146 @@
+name: android
+
+# Android build. Slice 70: split out of build.yml's `build-android`. Entry points:
+#   * pull_request (own paths) / workflow_dispatch: the unsigned Debug build as
+#     a compile check. Nothing is signed or uploaded, and no secret is read.
+#   * workflow_call from release.yml with `release` = true (release-draft has a
+#     draft to fill): once ANDROID_SIGNING_KEYSTORE_BASE64 exists, also builds
+#     the signed .aab/.apk and uploads them to the draft release.
+# CI signs with an upload key; Google Play App Signing re-signs for
+# distribution, so no release-signing secret leaves CI (Decisions 18/42).
+# The R2 copy of the APK (Slice 69) runs after the publish, so it is release.yml's
+# `publish-downloads` job, not a job here: the APK must be on the published release.
+# Zero Actions artifacts (Batch 8): don't add actions/upload-artifact for build outputs.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/ReadTheStupidText.Domain/**'
+      - 'src/ReadTheStupidText.Application/**'
+      - 'src/ReadTheStupidText.Documents/**'
+      - 'tests/ReadTheStupidText.Tests/**'
+      - 'global.json'
+      - 'GitVersion.yml'
+      - '*.slnx'
+      - '.gitattributes'
+      - '.github/workflows/release.yml'
+      - '.github/workflows/tests.yml'
+      - '.github/scripts/find-release.sh'
+      - '.github/scripts/ship-targets.mjs'
+      - 'src/ReadTheStupidText.Mobile/**'
+      - '!src/ReadTheStupidText.Mobile/Platforms/**'
+      - 'src/ReadTheStupidText.Mobile/Platforms/Android/**'
+      - '.github/scripts/stage-android-package.sh'
+      - '.github/workflows/android.yml'
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      version:
+        description: 'GitVersion SemVer (x.y.z) for the release build.'
+        required: false
+        type: string
+        default: ''
+      version_code:
+        description: 'Android versionCode (major*1000000 + minor*1000 + patch).'
+        required: false
+        type: string
+        default: ''
+      release:
+        description: 'Cut the signed release build and upload it to the draft v<version>.'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # gh release upload (release runs only)
+    env:
+      # `secrets` can't appear in a step `if:` directly — only via `env:`.
+      # Signed builds only when cutting a release: on PRs the output would be
+      # discarded (nothing uploads) and the secrets needlessly exposed.
+      SIGN_RELEASE: ${{ secrets.ANDROID_SIGNING_KEYSTORE_BASE64 != '' && inputs.release == true }}
+      PUBLISH_DIR: src/ReadTheStupidText.Mobile/bin/Release/net10.0-android/publish
+      VERSION: ${{ inputs.version }}
+    steps:
+      # No LFS: the Android package carries no voice model (Slice 50).
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # maui-android, not bare "android": a CLI-only SDK install needs the
+      # MAUI workload pieces too (NETSDK1147 otherwise).
+      - name: Install the .NET MAUI Android workload
+        run: dotnet workload install maui-android
+
+      - name: Debug build (unsigned)
+        run: dotnet build src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net10.0-android -c Debug
+
+      - name: Decode upload keystore
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_SIGNING_KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > "${{ runner.temp }}/upload.keystore"
+
+      # AAB is what Google Play needs. Passwords go as plain -p: properties:
+      # the env: indirection is unsupported once AndroidPackageFormat=aab
+      # (Actions still masks the secret values in logs).
+      - name: Release build (signed .aab)
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        run: >
+          dotnet publish src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj
+          -f net10.0-android
+          -c Release
+          -p:AndroidPackageFormat=aab
+          -p:ApplicationDisplayVersion=${{ inputs.version }}
+          -p:ApplicationVersion=${{ inputs.version_code }}
+          -p:AndroidKeyStore=True
+          -p:AndroidSigningKeyStore="${{ runner.temp }}/upload.keystore"
+          -p:AndroidSigningKeyAlias=${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          -p:AndroidSigningKeyPass=${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+          -p:AndroidSigningStorePass=${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+
+      - name: Stage signed .aab
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        run: bash .github/scripts/stage-android-package.sh aab
+
+      # APK is the sideload format (adb install / tap to install) — same signed
+      # publish, different package format.
+      - name: Release build (signed .apk)
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        run: >
+          dotnet publish src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj
+          -f net10.0-android
+          -c Release
+          -p:AndroidPackageFormat=apk
+          -p:ApplicationDisplayVersion=${{ inputs.version }}
+          -p:ApplicationVersion=${{ inputs.version_code }}
+          -p:AndroidKeyStore=True
+          -p:AndroidSigningKeyStore="${{ runner.temp }}/upload.keystore"
+          -p:AndroidSigningKeyAlias=${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          -p:AndroidSigningKeyPass=${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+          -p:AndroidSigningStorePass=${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+
+      - name: Stage signed .apk
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        run: bash .github/scripts/stage-android-package.sh apk
+
+      - name: Upload .aab + .apk to the draft release
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "v${VERSION}" dist/* --repo "${{ github.repository }}" --clobber

@@ -9,7 +9,7 @@ name: packs
 # Why this can't disturb app versioning:
 #   * GitVersion.yml sets no tag-prefix, so only [vV]?<semver> tags are versions;
 #     `packs-1` does not parse as one.
-#   * build.yml's base-tag lookup only matches refs/tags/v*.
+#   * release.yml's base-tag lookup (ship-targets.mjs) only matches refs/tags/v*.
 #   * the release is created with --latest=false, so releases/latest stays the app.
 # Details and the pack format: docs/voice-packs.md.
 
@@ -77,7 +77,7 @@ jobs:
             fi
             cp "$src" "out/$PACK_ID/$f"
           done
-          files=$(cd "out/$PACK_ID" && ls -1 | grep -vx 'LICENSE' | jq -R . | jq -s .)
+          files=$(printf '%s\n' "${model_files[@]}" | jq -R . | jq -s .)
           jq -n --arg id "$PACK_ID" --arg language "$PACK_LANGUAGES" --arg version "$PACK_VERSION" --argjson files "$files" \
             '{id: $id, kind: "voice", language: $language, version: $version, engine: "sherpa-onnx", files: $files}' \
             > "out/$PACK_ID/pack.json"

@@ -56,7 +56,7 @@ quota (Decision 52). The app reads the catalog from the **pinned** release named
 until a new app version points at it.
 
 `packs-<n>` cannot disturb app versioning: GitVersion has no `tag-prefix`, so only
-`[vV]?<semver>` tags count; `build.yml` only looks at `refs/tags/v*`; and the release is
+`[vV]?<semver>` tags count; `release.yml` (via `ship-targets.mjs` and `find-release.sh`) only looks at strict `v<x.y.z>` tags; and the release is
 created `--latest=false`, so `releases/latest` stays the app.
 
 ## Publishing

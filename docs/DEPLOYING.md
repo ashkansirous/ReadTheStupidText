@@ -69,15 +69,17 @@ does not exist, so create the bucket **before** the deploy that adds the binding
    `gh secret set CLOUDFLARE_ACCOUNT_ID`.
 3. Deploy the Worker (`npm run deploy`, or merge to `main` with Workers Builds connected).
 
-`build.yml`'s `build-android` job runs `.github/scripts/publish-downloads.mjs` on `main`
-only, after the GitHub Release upload and with `continue-on-error`, so a bucket or token
-problem can never block `release-publish` or the Play submission. Without
+`release.yml`'s `publish-downloads` job runs `.github/scripts/publish-downloads.mjs` after
+`release-publish` has published the GitHub Release (so only on `main`, and only when
+Android was rebuilt). It reads the signed APK back from that published release, so it holds
+no signing secrets, and nothing lists it in `needs`, so a bucket or token problem shows up
+red there without blocking `store-submit`, `play-submit` or `testflight-submit`. Without
 `CLOUDFLARE_API_TOKEN` it logs "skipped" and exits 0. A version already in the bucket is
 never overwritten ("already published"). Check a release at `/download` (the new version
 shows within a minute: the Worker caches the bucket listing) and by installing
-`/download/android/latest` on a phone. Tests: `node --test
-.github/scripts/publish-downloads.test.mjs worker/downloads.test.mjs` (the `test-downloads`
-job in `build.yml`, which is in no job's `needs`).
+`/download/android/latest` on a phone. Tests: `node --test .github/scripts/publish-downloads.test.mjs`
+runs in `release-scripts.yml` (with every other `.github/scripts/*.test.mjs`) and
+`node --test worker/downloads.test.mjs` in `site-checks.yml`; neither is in any job's `needs`.
 
 Limits: `wrangler r2 object put` caps an upload at 300 MiB; the APK must stay under that.
 
