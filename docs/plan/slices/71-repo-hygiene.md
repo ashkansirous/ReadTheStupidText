@@ -1,6 +1,6 @@
 # Slice 71 — Repo hygiene and the Drive mirror
 
-*Built (wave 2026-10-20b), PR #TBD.*
+*Built (wave 2026-10-20b), PR #184.*
 
 **Batch:** 11 (Lets-Call-Mom parity)
 **Depends on:** PR #178 (archive `plan.md` into the index layout) merged
