@@ -73,16 +73,16 @@ behaves exactly as before.
 
 #### Design (Dino Reader v2 mock, shared tokens, added 2026-10-20)
 
-Source: `docs/design/dino-reader/Dino Reader v2.dc.html`, intro at lines 18-20, tokens read from every screen. The mock has 13 frames; this slice owns no screen, only the tokens every later slice reuses. The frames are 360x760 phone mocks (tablet 1000x640), drawn as HTML with a fake status bar ("9:41", "100%") that is not UI. Fonts load from Google Fonts in the mock; the app must **bundle** them (everything stays on the device).
+Source: `docs/design/dino-reader/Dino Reader v2.dc.html`, intro and fonts note at lines 18-21, tokens read from every screen. The mock has 17 frames; this slice owns no screen, only the tokens every later slice reuses. The frames are 360x760 phone mocks (tablet 1000x640), drawn as HTML with a fake status bar ("9:41", "100%") that is not UI. Fonts load from Google Fonts in the mock; the app must **bundle** them (everything stays on the device). The mock's intro says to list the licences in `STORE.md`.
 
-- **Fonts.** UI text `Fredoka` (400/500/600/700). Reading text `Andika` (400/700). Both are OFL. The mock’s Georgia is only a stand-in for a scanned page, not UI. Put the font files in `src/DinoReader.App/Resources/Fonts/` (already inside the Touches glob).
+- **Fonts.** UI text `Fredoka` (400/500/600/700). Reading text `Andika` (400/700). Farsi and Arabic text `Vazirmatn` (the RTL frames set `font-family:'Vazirmatn',system-ui,sans-serif`; weights seen 600/700). All three are SIL OFL 1.1. Chinese and Japanese use the system font (no bundled file). The mock’s Georgia is only a stand-in for a scanned page, not UI. Put the font files in `src/DinoReader.App/Resources/Fonts/` (already inside the Touches glob).
 - **Colours (child).** Page `#FFF6E6`; ink `#2b2540`; muted `#8a8399`; body-muted `#5a5470`; brand `#5B57E8` (pressed/under-edge `#3f3bc4`); brand tint `#ECE7FF`; play coral `#FF7A59` (under-edge `#E2583A`); card `#fff`; inactive dot `#d9d2c4`.
 - **Colours (grown-up screens).** Page `#F3EFE6` (gallery manage mode, add, cast, merge); cards `#fff`; dividers `#efe9dd`; danger `#E5484D`; success tick `#7BE495`.
-- **Bedtime theme** (screen 12, lines 34-35): page `#1E1B2E`; reading card `#2A2640`; text `#F3E9D2`; chrome icons/text `#cfc6e6`; muted `#8e86a8`; accent `#A9A2FF` (under-edge `#7c74d9`); play `#C65A43` (under-edge `#9E4332`, glyph `#FFE9D9`); dots `#4a4463`; highlight fill `rgba(255,214,120,.22)` with inset 2px `#C9A54A`.
+- **Bedtime theme** (screen 12, lines 35-36): page `#1E1B2E`; reading card `#2A2640`; text `#F3E9D2`; chrome icons/text `#cfc6e6`; muted `#8e86a8`; accent `#A9A2FF` (under-edge `#7c74d9`); play `#C65A43` (under-edge `#9E4332`, glyph `#FFE9D9`); dots `#4a4463`; highlight fill `rgba(255,214,120,.22)` with inset 2px `#C9A54A`.
 - **Touch sizes.** Top-bar buttons 44x44, radius 14. Transport: play 104 circle, skip 72 circle (tablet 120 and 80).
 - **App icon** in the gallery header is `icons/ios/AppIcon-1024-light.png` at 40x40, radius 11.
 
-**Open point: Bundled fonts.** The plan names no fonts. The mock uses Fredoka and Andika. **Default:** bundle both (OFL) in `Resources/Fonts`, register in `MauiProgram`, add their licences to `STORE.md`.
+**Settled by the mock: bundled fonts.** The intro (line 21) names Fredoka, Andika and Vazirmatn, all OFL 1.1, bundled in the app with licences listed in `STORE.md` (already in Touches). Register them in `MauiProgram`; CJK falls back to the system font. Pages are never tilted (see Slice 64).
 
 ## Acceptance
 
