@@ -753,7 +753,7 @@ this plan turns it into ordered, shippable vertical slices.
     + per-platform pipeline*) are folded into one batch. Android gets the new
     features first. iOS starts now, in parallel, on the same MAUI project
     (Decision 37). Windows catches up last. The kids book reader is a separate
-    product (Story Reader, its own repo), not part of this app.
+    product (Story Reader) built in this repo on the shared core, planned in its own batch.
 60. **User data stays 100% offline; downloading packs is allowed (Batch 9).**
     Text, images, scans and translations never leave the device. The app may
     now download **voice/OCR language packs**, which is its first network
@@ -1974,8 +1974,8 @@ Suggested order, in parallel lanes: **A** pipeline + iOS (44 -> 48 -> 49 -> 55);
 - **(Batch 9)** A live camera text overlay (point-and-read); scanning is the
   document scanner only (Decision 64).
 - **(Batch 9)** Handwriting recognition beyond what PaddleOCR gives (Decision 65).
-- **(Batch 9)** The kids book reader: a separate product, "Story Reader", in its
-  own repo (Decision 59).
+- **(Batch 9)** The kids book reader: a separate product, "Story Reader", built in
+  this repo on the shared core and planned in its own batch, not Batch 9 (Decision 59).
 - **(Batch 9)** Mac Catalyst / macOS: a later spin-off on the same MAUI stack.
 - **(Batch 9)** App Store public-release automation: CI stops at TestFlight, the
   App Store submission is by hand (Decision 70).
