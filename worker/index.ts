@@ -4,6 +4,8 @@
 // security headers below. `Env` is generated into worker-configuration.d.ts by
 // `npm run types`; rerun it after editing wrangler.jsonc.
 
+import { handleDownload, isDownloadPath } from "./downloads";
+
 const PAGE_FOR_PATH: Readonly<Record<string, string>> = {
   "/": "/index.html",
   "/privacy": "/privacy.html",
@@ -26,6 +28,9 @@ function withSecurityHeaders(response: Response): Response {
 
 async function serveAsset(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
+  if (isDownloadPath(url.pathname)) {
+    return handleDownload(request, env);
+  }
   const page = PAGE_FOR_PATH[url.pathname];
   if (page === undefined) {
     return env.ASSETS.fetch(request);
