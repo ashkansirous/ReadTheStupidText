@@ -26,6 +26,17 @@ with a highlight box over the lines of the sentence being spoken.
       transformed with the image).
 - [ ] Mixed stories: pages without an image get a generated page.
 
+#### Design (Dino Reader v2 mock, screens 2, 13, added 2026-10-20)
+
+Source: `docs/design/dino-reader/Dino Reader v2.dc.html`. Two frames (screen 2 line 27-29; tablet 71-82). The mock agrees with the plan (box over the lines of the spoken sentence, wrapping across lines, a character’s line in her own voice). Bar, pager and transport are in Slice 62 Design; tokens in Slice 58. The striped "scanned illustration" panel stands in for the user’s photo, not UI.
+
+- **Page frame (screen 2).** Card margin 6/14/0, radius 6, fill `#f7f1e3`, shadow `0 6px 18px rgba(43,37,64,.18)` plus inset 1px `rgba(0,0,0,.05)`, padding 18/18/16, rotated -0.4deg.
+- **Highlight on a real page.** Each spoken line gets fill `rgba(255,214,0,.42)`, inset 2px outline `#F5B800`, radius 9, extended 6px sideways. A wrapped sentence shows two stacked boxes.
+- **Tablet (screen 13).** Scanned double-page spread at full height; boxes in the image’s own coordinates "so pinch-zoom and rotation keep them on the text". Controls in a 140px side column (Slice 62).
+- The mode choice is remembered per story.
+
+**Open point: Page tilt.** The mock rotates the page card -0.4deg (decoration). That clashes with drawing the overlay in the image’s own coordinate space. **Default:** no tilt on real photos.
+
 ## Acceptance
 
 - Scan a 3-page picture book: picture mode shows the three photos and the highlight follows

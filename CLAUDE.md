@@ -71,6 +71,9 @@ at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
 > See Decisions 72-81 and `docs/plan/slices/58-67`.
 > Its icons (all platforms, "Book hug" design) live in
 > `docs/design/dino-reader/icons/`: copy from there, never redraw or regenerate them.
+> Its screens are the mock `docs/design/dino-reader/Dino Reader v2.dc.html` (index in
+> that folder's README): read visual values (colours, sizes, copy, layout) from it,
+> never guess them, and never call `DesignSync` for them.
 
 > **Naming:** the user-facing **product display name is "Read The Stupid Text"** (with
 > spaces) — shown in the manifest `DisplayName`s, tray tooltip, control-panel header,

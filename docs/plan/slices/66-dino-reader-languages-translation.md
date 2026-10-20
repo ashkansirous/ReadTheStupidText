@@ -30,6 +30,17 @@ translated per segment after attribution, and Dino Reader's UI is localized with
       Unknown falls back to the cast-screen fix.
 - [ ] Tests per language with a 3-line dialogue sample (attribution + casting).
 
+#### Design (Dino Reader v2 mock, screen 9 language rows, added 2026-10-20)
+
+Source: `docs/design/dino-reader/Dino Reader v2.dc.html`, add-story screen, lines 46-56. The mock draws two language controls and no RTL or per-language frames. Values for the rest of the screen are in Slice 61 Design.
+
+- **Story language row.** White card (radius 18), min height 50, padding 0 14: label "Story language" 14.5; value right-aligned "English · detected" 14.5/600 `#5a5470` plus a 14px chevron. A language list is implied, not drawn.
+- **Translate row.** Label "Translate to my language" 14.5; switch 46x28 radius 14, off `#d9d2c4`, knob 24 white. The on state is not drawn.
+- Note: who speaks is worked out once, at import, in the story’s own language, before any translation (matches the plan).
+
+**Open point: No RTL or per-language frames.** No mirrored screens, no language list, no Farsi voice-reuse note. **Default:** mirror the Slice 61/62/65 frames per the Slice 53 approach.
+**Open point: "detected" tag.** The plan has no language-detection step. **Default:** detect at import and show "· detected" until the grown-up changes it.
+
 ## Acceptance
 
 - A short dialogue in each of the eight languages attributes all quotes; Supertonic

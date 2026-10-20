@@ -31,6 +31,26 @@ the book and are remembered.
 - [ ] Tests (Core): pinning, merge re-attribution, a gender change re-casts without touching
       other pins.
 
+#### Design (Dino Reader v2 mock, screens 10, 11, added 2026-10-20)
+
+Source: `docs/design/dino-reader/Dino Reader v2.dc.html`. Two frames (cast line 56-63, merge sheet 63-69). Mostly agrees with the plan; adds MAIN and EDITED badges, a boy/girl/? toggle and a "keep the name" picker. Tokens in Slice 58 Design.
+
+- **Cast page (screen 10).** Page `#F3EFE6`. Header: back chevron 44x44, title "Who’s speaking" 20/600, subtitle (story title) 12 `#8a8399`. Cards white, radius 18, gap 10.
+- **Narrator row.** Min height 56, padding 0 14. Avatar 34 circle `#2b2540` with a white book icon 18px; "Narrator" 15/600; voice dropdown chip on the right: height 32, padding 0 10, radius 10, fill `#F3EFE6`, 13/600, 12px down-chevron (example "Demiurge").
+- **Character card** (one white card, rows split by 1px `#efe9dd`). Row padding 12/14. Top line: avatar 34 circle with the initial (white 700; colours seen `#4FC060`, `#FF7A9C`, `#FFA94D`), name 15/600 with inline badges, "212 words" 12 `#8a8399`, preview button 36 circle `#ECE7FF` with a `#5B57E8` play triangle 16px. Badges 10.5/600, radius 6, padding 1/6: **MAIN** (`#5B57E8` on `#ECE7FF`), **EDITED** (`#1f7a3a` on `#dff7e4`). Second line, indented 44: gender control "Boy" / "Girl" / "?" (track `#F3EFE6`, radius 9, padding 2; cells height 28, padding 0 8, radius 7, 12/600; selected white with shadow `0 1px 2px rgba(43,37,64,.15)` and ink `#2b2540`, others `#8a8399`) and the voice chip on the right (e.g. "Momonga", "Albedo", "Yuri Alpha").
+- **Unknown speaker row.** Avatar 34 circle `#e6e0d4`, "?" `#5a5470`; "Unknown speaker"; "2 lines · uses the narrator’s voice".
+- **Merge button.** Height 48, radius 24, 2px border `#c9c0f5`, text "Merge two characters" 15/600 `#5B57E8`.
+- **Merge sheet (screen 11).** Scrim `rgba(43,37,64,.5)`, white sheet, top radius 28, padding 22/18/26, gap 12. Title "Merge characters" 20/600; body "Pick the two names that are the same character. Their lines join up under one name and one voice." 13.5 `#5a5470`. List with 1px `#efe9dd` border, radius 16; rows padding 10/14: checkbox 24 radius 7 (checked `#5B57E8` with white tick; unchecked 2px `#cfc7b8`), avatar 30 circle (initial 13), name 15 (600 when selected, row fill `#F4F2FF`), voice 12.5 `#8a8399`. Row "Keep the name" (fill `#F3EFE6`, radius 14, padding 10/14, label 14 `#5a5470`, value "Peter · Momonga" 14.5/600, down-chevron). Primary button "Merge into Peter" height 50, radius 25, `#5B57E8`, white 15.5/600.
+- **Rules in the notes.** Behind the gate. Any edit is **pinned** (EDITED): re-casting never overrides it, and it applies from the next line even mid-read. The narrator’s voice is never given to a character; main characters’ voices are never reused. Unknown-speaker lines use the narrator voice. After a merge: one entry, one voice (the first kept), every line re-attributed, and the fix is remembered with the story.
+
+**Open point: Unknown-speaker rule.** The plan left it open (default narrator voice). The mock settles it: the narrator’s voice. Record it in that step.
+**Open point: MAIN badge.** Slice 59 has main characters (top N by words, default 2) but no UI for them. **Default:** show MAIN on those characters.
+**Open point: Gender "?".** Plan says a gender toggle; the mock has three states. **Default:** Boy / Girl / ?, where ? means unknown.
+**Open point: Keep-the-name picker.** Plan says "keep one name"; the mock’s choices pair name and voice. **Default:** follow the mock.
+**Open point: Cast before save.** The add screen (Slice 61) opens this page via "Check the cast" for an unsaved story. **Default:** same page, in-memory story.
+
+New strings (both locales): "Who’s speaking", "Narrator", "{n} words", "MAIN", "EDITED", "Boy", "Girl", "Unknown speaker", "{n} lines · uses the narrator’s voice", "Merge two characters", "Merge characters", "Pick the two names that are the same character. Their lines join up under one name and one voice.", "Keep the name", "Merge into {name}".
+
 ## Acceptance
 
 - Change Cotton Tail's voice, then read: her lines use the new voice from then on, also after
