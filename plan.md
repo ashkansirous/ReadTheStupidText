@@ -105,13 +105,7 @@ Built but not verified (details in each slice file):
 - Slice 43: download disclosure to be added once Slices 50 and 56 ship; re-check the "works offline" wording then ([slice](docs/plan/slices/43-store-listing-refresh.md)).
 - Slice 59: attribution quality on a real children's book text (only unit-test fixtures so far); check with the first Slice 60 read ([slice](docs/plan/slices/59-dialogue-parser-voice-caster.md)).
 - Slice 59: Slice 58 still has to add the Dino Reader app build group to `build.yml` ([slice](docs/plan/slices/59-dialogue-parser-voice-caster.md)).
-- Slice 50: Run `packs.yml` with release_number=1 pack_version=1; confirm `releases/latest` and `v*` versions are unchanged. ([slice](docs/plan/slices/50-voice-packs-first-run-language.md))
-- Slice 50: Fresh install in airplane mode: language page, phone voice reads, offline message + Retry. ([slice](docs/plan/slices/50-voice-packs-first-run-language.md))
-- Slice 50: Online download with progress; kill mid-way and resume. ([slice](docs/plan/slices/50-voice-packs-first-run-language.md))
-- Slice 50: Corrupted pack rejected and re-downloaded once. ([slice](docs/plan/slices/50-voice-packs-first-run-language.md))
-- Slice 50: Next read after install uses the neural voice. ([slice](docs/plan/slices/50-voice-packs-first-run-language.md))
 - Slice 50: Play Console data-safety form updated by hand. ([slice](docs/plan/slices/50-voice-packs-first-run-language.md))
-- Slice 50: Play accepts the minSdk 28 bundle (Decision 82). ([slice](docs/plan/slices/50-voice-packs-first-run-language.md))
 - Slice 58: decide whether Dino Reader project additions to `ReadTheStupidText.slnx` / `build.yml` should keep re-releasing the RTST apps (today `*.slnx` and `build.yml` are `core`); seen when Slice 59's merge shipped an unchanged RTST release ([slice](docs/plan/slices/58-dino-reader-skeleton.md)).
 - Slice 22: latency win and any further first-chunk biasing still to be measured under the (Package) profile; issue #117 deferred, story #104 open ([slice](docs/plan/slices/22-read-latency-instrumentation-low-risk-tuning.md)).
 
