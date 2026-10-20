@@ -113,7 +113,7 @@ the gender window cut, `Segment.IsClosed`, compacted-name lookup, duplicate voic
 a shared name extractor). The medium pass found 10, 9 fixed; compound-name gender
 tables were skipped (the tables are the design; Slice 66 extends them per language).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-20)
 
 Lift after merge (the index pass marks the block lifted).
 
@@ -132,7 +132,7 @@ Lift after merge (the index pass marks the block lifted).
 - CI: the `dinoreader` path group runs only the `test-dinoreader` job (ubuntu), never
   the version, release or store jobs. Keep Dino paths out of the `core` group.
 
-#### For README.md
+#### For README.md (lifted 2026-10-20)
 
 None.
 
