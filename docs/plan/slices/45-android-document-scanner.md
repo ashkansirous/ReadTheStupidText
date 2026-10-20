@@ -1,6 +1,6 @@
 # Slice 45 — Android: document scanner straight into the editor
 
-*Planned.*
+*In progress (wave 2026-10-20d), draft PR.*
 
 **Batch:** 9
 **Decisions:** 64 (also 40, 43 stand until replaced)
