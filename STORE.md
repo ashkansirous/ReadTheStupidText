@@ -134,6 +134,62 @@ Declared in `Package.appxmanifest`:
 No `internetClient` — the neural voice model ships **inside the package**, so the
 app makes no network calls.
 
+## Store listing (Slice 43, Decision 71)
+
+The listing text is drafted in `docs/store-listings/<lang>.md` for the nine app
+languages (`en`, `fa`, `fr`, `es`, `pt`, `zh`, `ar`, `ru`, `ja`). Each file has
+the same three blocks: 7 search terms, a short description and a long
+description. **The title does not change** (Decision 71): it stays "Read The
+Stupid Text". Everything except `en.md` is **machine-drafted and needs a native
+read before submission**; `fa` and `ar` are plain UTF-8 text (RTL is applied by
+the store, not by markup).
+
+**Search terms (English, Decision 71)** — exactly 7, each <= 30 chars:
+
+| # | Term | Chars |
+| --- | --- | --- |
+| 1 | read aloud | 10 |
+| 2 | text to speech | 14 |
+| 3 | tts | 3 |
+| 4 | read text aloud | 15 |
+| 5 | speak selected text | 19 |
+| 6 | pdf reader aloud | 16 |
+| 7 | natural voices offline | 22 |
+
+**Short description** (Google Play field, <= 80 chars; on the Microsoft Store
+use it as the first line of the description):
+
+> Read any text aloud with natural voices that work offline, at 0.5x to 2x speed.
+
+**Long description** (Microsoft Store <= 10,000 chars, Google Play <= 4,000):
+see `docs/store-listings/en.md`. It only claims what ships today: selected or
+copied text and the `Ctrl+Win+R` hotkey (Windows); pasted text, `.txt`/`.pdf`/
+`.docx` files and camera-scanned pages (Android); on-device natural voices,
+0.5x-2x speed, nothing leaves the device. It does **not** mention translation,
+languages or voice packs (Batch 9 features not yet shipped).
+
+**Limits to re-check when pasting** (they change): Microsoft Store description
+10,000 chars, up to 7 search terms of <= 30 chars each; Google Play title 30,
+short description 80, full description 4,000.
+
+**Download disclosure (not live).** Once Slice 50 (Android) / Slice 56
+(Windows) ship, the first launch downloads a ~145 MB voice pack (Decisions 60,
+61), and the store policies require the listing and privacy text to say so.
+The ready-to-paste paragraph is the last block of `docs/store-listings/en.md`;
+each translation carries a TODO marker. **Do not paste it before those slices
+ship.** Slice 50/56 must also re-check the listing against what is then true:
+the "works offline" wording (still true for user data, but the app now needs a
+network once) and the "no network" statements in this file's *Capabilities*
+and *Privacy* sections.
+
+**Manual step (user pastes the text):**
+
+- Microsoft Store: Partner Center -> Product (Read The Stupid Text) -> Store
+  listings -> Add/manage languages, then fill the description and search terms
+  per language.
+- Google Play: Play Console -> Grow -> Store presence -> Main store listing ->
+  Manage translations, then fill the short and full description per language.
+
 ## Runtime deployment (.NET self-contained)
 
 The shipped (**Release**) MSIX is built **.NET self-contained**

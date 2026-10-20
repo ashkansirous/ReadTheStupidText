@@ -1,0 +1,34 @@
+# Store listing: Arabic (RTL) (`ar`)
+
+> **Machine-drafted, needs a native read before submission.**
+
+## Search terms (Microsoft Store, 7, each <= 30 chars)
+
+1. قراءة بصوت عال
+2. تحويل النص إلى كلام
+3. تي تي إس
+4. قراءة النص بصوت عال
+5. قراءة النص المحدد
+6. قارئ pdf بالصوت
+7. أصوات طبيعية بدون إنترنت
+
+## Short description (Google Play <= 80 chars; Microsoft Store: use as the first line of the description)
+
+اقرأ أي نص بصوت عالٍ بأصوات طبيعية دون إنترنت، بسرعة من 0.5x إلى 2x.
+
+## Long description (Microsoft Store <= 10,000 chars; Google Play <= 4,000)
+
+يقرأ تطبيق Read The Stupid Text أي نص بصوت عالٍ، لتستمع بدلاً من التحديق في الشاشة.
+
+على ويندوز يعمل التطبيق من علبة النظام. حدّد نصاً أو انسخه في أي تطبيق تقريباً ليُقرأ فوراً. اضغط Ctrl+Win+R لقراءة ما نسخته. (لا تُبلغ المحطات الطرفية عن النص المحدد، لذا انسخ النص فيها.)
+
+على أندرويد، الصق نصاً أو اكتبه، أو افتح ملف txt أو pdf أو docx، أو امسح صفحة بالكاميرا، ثم اضغط تشغيل.
+
+- أصوات طبيعية تعمل على جهازك
+- سرعة قراءة من 0.5x إلى 2x
+- تعمل دون إنترنت: لا تغادر نصوصك وملفاتك وما تمسحه ضوئياً جهازك أبداً
+- بدون حساب وبدون أدوات تحليل
+
+## Download disclosure
+
+<!-- TODO (Slice 50/56): translate the English disclosure from en.md and add it here once voice packs ship. Do not publish before then. -->
