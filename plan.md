@@ -753,7 +753,7 @@ this plan turns it into ordered, shippable vertical slices.
     + per-platform pipeline*) are folded into one batch. Android gets the new
     features first. iOS starts now, in parallel, on the same MAUI project
     (Decision 37). Windows catches up last. The kids book reader is a separate
-    product (Story Reader, its own repo), not part of this app.
+    product (Story Reader) built in this repo on the shared core, planned in its own batch.
 60. **User data stays 100% offline; downloading packs is allowed (Batch 9).**
     Text, images, scans and translations never leave the device. The app may
     now download **voice/OCR language packs**, which is its first network
@@ -882,6 +882,19 @@ this plan turns it into ordered, shippable vertical slices.
       Store and Google Play. No title change for now.
     - The Partner Center and Play Console edits are a manual step for the
       user.
+72. **Two products, one repo, one version (Batch 9).** Story Reader is a
+    second app in this repo, a new UI on the shared core (Domain,
+    Application, Documents, voice engines, packs, OCR), not a new repo.
+    - **One shared version:** a single GitVersion `v<x.y.z>` per merge covers
+      both products, exactly as for platforms (Decisions 17, 57, 69).
+      Per-product tag prefixes are rejected.
+    - **Per-product path groups:** each product gets its own filter group.
+      A product whose code didn't change is not rebuilt or resubmitted, and
+      its release assets carry forward. Shared core rebuilds both products.
+    - **Shared mobile code:** the Android/iOS readers, OCR and scanner move
+      out of the Mobile app project into a shared MAUI class library that
+      both apps reference. That is Story Reader's first slice, planned in
+      its own batch.
 
 ## Changes
 
@@ -1974,8 +1987,8 @@ Suggested order, in parallel lanes: **A** pipeline + iOS (44 -> 48 -> 49 -> 55);
 - **(Batch 9)** A live camera text overlay (point-and-read); scanning is the
   document scanner only (Decision 64).
 - **(Batch 9)** Handwriting recognition beyond what PaddleOCR gives (Decision 65).
-- **(Batch 9)** The kids book reader: a separate product, "Story Reader", in its
-  own repo (Decision 59).
+- **(Batch 9)** The kids book reader: a separate product, "Story Reader", built in
+  this repo on the shared core and planned in its own batch, not Batch 9 (Decision 59).
 - **(Batch 9)** Mac Catalyst / macOS: a later spin-off on the same MAUI stack.
 - **(Batch 9)** App Store public-release automation: CI stops at TestFlight, the
   App Store submission is by hand (Decision 70).
