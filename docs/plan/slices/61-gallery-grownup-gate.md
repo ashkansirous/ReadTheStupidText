@@ -5,7 +5,7 @@
 **Batch:** 10
 **Decisions:** 77
 **Depends on:** Slices 58, 59, 60; input paths reuse Slice 45 (scan) and the existing file import
-**Touches:** `src/StoryReader.Core/**`, `src/StoryReader.App/**`, `tests/StoryReader.Tests/**`, `CLAUDE.md`
+**Touches:** `src/DinoReader.Core/**`, `src/DinoReader.App/**`, `tests/DinoReader.Tests/**`, `CLAUDE.md`
 **Story issue:** —
 
 ## Goal
@@ -17,9 +17,9 @@ cast. Reading never needs the gate.
 ## Steps
 
 - [ ] `Story` model (title, cover path, language, created, pages, cast) and `IStoryLibrary`
-      (list, get, add, update, delete) in `StoryReader.Core`. `Cast` = list of (character id,
+      (list, get, add, update, delete) in `DinoReader.Core`. `Cast` = list of (character id,
       name, gender, voice id), serialised with the story.
-- [ ] File-backed `FileStoryLibrary` in `StoryReader.App`: one folder per story
+- [ ] File-backed `FileStoryLibrary` in `DinoReader.App`: one folder per story
       `AppDataDirectory/stories/<id>/` with `story.json` (System.Text.Json, versioned schema)
       and later `page-NN.jpg`. Atomic write (temp file + rename). Mobile persistence is
       Preferences only today (`MobilePreferencesSettingsStore.cs:33-93`), so this is new.

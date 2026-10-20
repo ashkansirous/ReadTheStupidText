@@ -5,12 +5,12 @@
 **Batch:** 10
 **Decisions:** 76
 **Depends on:** Slices 58, 59; Slice 44 (where `CompositeSpeechReader` lives)
-**Touches:** `src/ReadTheStupidText.Application/Reading/**`, `src/ReadTheStupidText.Mobile.Shared/**`, `src/ReadTheStupidText.Infrastructure/Reading/**`, `src/StoryReader.App/**`, `tests/ReadTheStupidText.Tests/**`, `CLAUDE.md`
+**Touches:** `src/ReadTheStupidText.Application/Reading/**`, `src/ReadTheStupidText.Mobile.Shared/**`, `src/ReadTheStupidText.Infrastructure/Reading/**`, `src/DinoReader.App/**`, `tests/ReadTheStupidText.Tests/**`, `CLAUDE.md`
 **Story issue:** —
 
 ## Goal
 
-Story Reader reads the example in four voices: narrator, Peter, Cotton Tail, Peter.
+Dino Reader reads the example in four voices: narrator, Peter, Cotton Tail, Peter.
 On Android `ChunkChanged` fires per chunk with the real source range, as on Windows,
 so any highlight can follow the reading.
 
@@ -18,7 +18,7 @@ so any highlight can follow the reading.
 
 - [ ] `ISpeechReader` (Application/Reading): add `SpeakSegmentsAsync(IReadOnlyList<SpeechSegment>
       segments, string? activityId = null)` with `SpeechSegment(string Text, string VoiceId,
-      int SourceStart, int SourceEnd)`. A neutral type in Application; Story Reader maps
+      int SourceStart, int SourceEnd)`. A neutral type in Application; Dino Reader maps
       its `Segment` + cast onto it.
 - [ ] Android: the chunker in `AndroidSupertonicSpeechReader.cs` returns
       `IReadOnlyList<string>` (line 102); make it return text **with source ranges**, as
@@ -35,7 +35,7 @@ so any highlight can follow the reading.
       The WinRT fallback reader throws `NotSupportedException` explicitly.
 - [ ] Both `CompositeSpeechReader` copies (Mobile.Shared and `Infrastructure/Reading`) forward
       the new call to the neural reader (or Slice 44's single copy).
-- [ ] `StoryReader.App`: the page runs `StorySegmenter` -> `SpeakerAttributor` ->
+- [ ] `DinoReader.App`: the page runs `StorySegmenter` -> `SpeakerAttributor` ->
       `VoiceCaster` (Slice 59) on the typed text, has a narrator picker, then reads. The
       cast lives in memory until Slice 61 persists it.
 - [ ] Unit tests for the pure range bookkeeping (chunk ranges tile the segment, offsets are

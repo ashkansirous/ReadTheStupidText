@@ -5,7 +5,7 @@
 **Batch:** 10
 **Decisions:** 74, 75, 77
 **Depends on:** Slices 59, 60, 61
-**Touches:** `src/StoryReader.App/**`, `src/StoryReader.Core/**`, `tests/StoryReader.Tests/**`, `CLAUDE.md`
+**Touches:** `src/DinoReader.App/**`, `src/DinoReader.Core/**`, `tests/DinoReader.Tests/**`, `CLAUDE.md`
 **Story issue:** —
 
 ## Goal
