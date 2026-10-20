@@ -5,7 +5,7 @@
 **Batch:** 9
 **Decisions:** 61, 62, 66, 68 (also 60, 63)
 **Depends on:** Slices 47, 50, 51 (the head-start cache, the pack service and the multilingual engine selector it reuses). Pipeline edits (LFS removal in `build.yml`) depend on **PR #165** merging.
-**Touches:** `src/ReadTheStupidText.App/**` (`ReadTheStupidText.App.csproj`, `Package.appxmanifest`, `App.xaml.cs`, new first-run window, `ControlPanelWindow.*`), `src/ReadTheStupidText.Infrastructure/**` (`Reading/SupertonicModelService.cs`, `Reading/SupertonicSpeechReader.cs`, `Reading/CompositeSpeechReader.cs`, `Settings/LocalSettingsStore.cs`), `src/ReadTheStupidText.Application/**`, `.github/workflows/build.yml`, `STORE.md`, `PRIVACY.md`, `docs/privacy.html`, `CLAUDE.md`
+**Touches:** `src/ReadTheStupidText.App/**` (`ReadTheStupidText.App.csproj`, `Package.appxmanifest`, `App.xaml.cs`, new first-run window, `ControlPanelWindow.*`), `src/ReadTheStupidText.Infrastructure/**` (`Reading/SupertonicModelService.cs`, `Reading/SupertonicSpeechReader.cs`, `Reading/CompositeSpeechReader.cs`, `Settings/LocalSettingsStore.cs`), `src/ReadTheStupidText.Application/**`, `.github/workflows/build.yml`, `STORE.md`, `PRIVACY.md`, `site/privacy.html`, `CLAUDE.md`
 **Story issue:** —
 
 ## Goal
@@ -28,7 +28,7 @@ starts with the same instant head start as Android.
 - [ ] `Package.appxmanifest` (`<Capabilities>`, lines 73-75: only `runFullTrust`
       today): add `<Capability Name="internetClient" />`. `STORE.md` *Capabilities
       and justification* gets the matching sentence (Decision 60), as do
-      `PRIVACY.md` and `docs/privacy.html`.
+      `PRIVACY.md` and `site/privacy.html`.
 - [ ] **Pack service.** Implement `IVoicePackService` (Slice 50 interface) for
       Windows in Infrastructure, storing under `ApplicationData.Current.LocalFolder`
       `packs\<id>`; same resume/retry/sha256 behaviour. Rewrite

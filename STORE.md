@@ -229,7 +229,7 @@ safety form stays "no data collected" and "no data shared"; the app declares the
 Text, images, scans and translations stay on the device. The form needs a **manual update
 in Play Console by the owner** before the first release that ships this: the app is no
 longer fully offline, so answer the "does your app collect or share data" questions as
-above and make sure the privacy policy URL points at the updated `docs/privacy.html`.
+above and make sure the privacy policy URL points at the updated `site/privacy.html`.
 
 For **dev-time** performance tuning only, the read pipeline may optionally be
 instrumented with **OpenTelemetry** (`Activity`/`Meter`) and observed via a **local
