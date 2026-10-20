@@ -26,11 +26,12 @@ public partial class VoicePickerPage : ContentPage
     private readonly ISettingsStore _settings;
     private readonly Dictionary<string, Border> _rowsByVoiceId = new();
 
-    public VoicePickerPage(ISpeechReader reader, ISettingsStore settings)
+    public VoicePickerPage(ISpeechReader reader, ISettingsStore settings, IPlatformServices platform)
     {
         InitializeComponent();
         _reader = reader;
         _settings = settings;
+        NeuralVoiceSections.IsVisible = platform.SupportsNeuralVoice;
 
         PhoneVoiceList.Children.Add(BuildRow(new VoiceInfo(SystemVoice.Id, PhoneVoiceName, string.Empty)));
 

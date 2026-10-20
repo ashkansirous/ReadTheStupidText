@@ -100,6 +100,9 @@ const M = 'src/ReadTheStupidText.Mobile';
 const CASES = [
     ['Android platform only', [`${M}/Platforms/Android/AndroidSpeechReader.cs`], { windows: false, android: true, ios: false }],
     ['iOS platform only', [`${M}/Platforms/iOS/AppDelegate.cs`], { windows: false, android: false, ios: true }],
+    ['iOS signing script', ['.github/scripts/ios-signing.sh'], { windows: false, android: false, ios: true }],
+    ['TestFlight upload script', ['.github/scripts/testflight-upload.sh'], { windows: false, android: false, ios: true }],
+    ['Android stage script', ['.github/scripts/stage-android-package.sh'], { windows: false, android: true, ios: false }],
     ['shared Mobile code', [`${M}/ReaderPage.xaml.cs`], { windows: false, android: true, ios: true }],
     ['Mobile csproj', [`${M}/ReadTheStupidText.Mobile.csproj`], { windows: false, android: true, ios: true }],
     ['Mobile resource', [`${M}/Resources/Images/a.png`], { windows: false, android: true, ios: true }],

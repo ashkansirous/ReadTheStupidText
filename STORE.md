@@ -485,3 +485,48 @@ is ever wanted, the documented upgrade is **Azure Trusted Signing** (~US$10/mo,
 Microsoft-run, GitHub-Actions-native, no hardware token); a traditional OV/EV
 cert (cost + hardware token) and self-signed certs (SmartScreen still warns) are
 rejected.
+
+## iOS / TestFlight (Slice 48, Decision 70)
+
+The iOS app is the same MAUI project (`net10.0-ios`), built on a macOS runner by
+`build.yml`'s `build-ios` job. Every merge that touches iOS (or shared Mobile/core
+code) lands a build in TestFlight; the App Store release itself stays a manual
+step in App Store Connect. No `actions/upload-artifact`: the signed `.ipa` goes to
+the GitHub Release as `ReadTheStupidText-<version>.ipa`, and `testflight-submit`
+uploads it to App Store Connect with `xcrun altool --upload-app` after the release
+publishes. Apple takes up to ~30 minutes to process a build.
+
+**Identity (Lets Call Mom's Apple team, its own App ID):**
+
+| Item | Value |
+| --- | --- |
+| Bundle ID | `uk.sirous.readthestupidtext` (same as the Android `ApplicationId`) |
+| Team | `J4TBWA5379` (shared with Lets Call Mom) |
+| App Store Connect app | "Read The Stupid Text", SKU `readthestupidtext` |
+| Certificate | the team's Apple Distribution certificate, reused (team-wide) |
+| Profile | an *App Store* distribution profile for the bundle ID (per app) |
+| API key | a new App Store Connect API key, App Manager role (per app) |
+
+**Secrets (all six; any missing and CI builds unsigned and uploads nothing).** Same
+names as Lets Call Mom, stored via `manage-secrets` and set as this repo's Actions
+secrets: `IOS_DIST_CERT_P12_BASE64`, `IOS_DIST_CERT_P12_PASSWORD`,
+`IOS_PROVISIONING_PROFILE_BASE64`, `ASC_API_KEY_P8_BASE64`, `ASC_API_KEY_ID`,
+`ASC_API_ISSUER_ID`.
+
+**One-time manual steps (Apple side):**
+
+1. Developer portal, *Identifiers*: register App ID `uk.sirous.readthestupidtext` (explicit, no extra capabilities).
+2. App Store Connect, *Apps*: create the app record (name, bundle ID, SKU above).
+3. Developer portal, *Profiles*: create an *App Store* distribution profile for that App ID using the team's Apple Distribution certificate; download the `.mobileprovision`.
+4. App Store Connect, *Users and Access, Integrations*: create an API key with the App Manager role; download the `.p8` once, note the key ID and issuer ID.
+5. Export the Apple Distribution certificate from Keychain Access as a `.p12` (with a password), or copy Lets Call Mom's.
+6. Base64-encode the `.p12`, the profile and the `.p8`, save all six values with `manage-secrets`, and set them as repo secrets.
+7. Once a build shows in TestFlight: add it to a tester group in App Store Connect (manual, Decision 70).
+
+**Without the secrets** `build-ios` only compiles for the simulator, nothing is
+signed or uploaded, and a change that touches only iOS cuts no release (an unsigned
+build cannot ship).
+
+**Known gaps (Slice 49):** reading uses `AVSpeechSynthesizer` only (the neural
+voice and its sherpa-onnx native libraries are not linked on iOS yet), and camera
+scan has no OCR on iOS yet. `ITSAppUsesNonExemptEncryption` is `false` (HTTPS only).

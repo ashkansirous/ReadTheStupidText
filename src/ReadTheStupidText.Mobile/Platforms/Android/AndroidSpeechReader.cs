@@ -33,11 +33,6 @@ public sealed class AndroidSpeechReader : Java.Lang.Object, ISpeechReader, Andro
 {
     private const string UtteranceId = "read-the-stupid-text";
 
-    // Android's SetSpeechRate(1.0f) is its "normal" speed, matching PlaybackRate's
-    // own 1.0 default, so the mapping is a direct pass-through. This is a rough
-    // average speaking rate at that setting, used only to size a ~10s skip.
-    private const float CharsPerSecondAtNormalRate = 15f;
-
     private readonly Android.Content.Context _context;
     private AndroidTts? _tts;
     private TaskCompletionSource<bool>? _engineReady;
@@ -161,8 +156,8 @@ public sealed class AndroidSpeechReader : Java.Lang.Object, ISpeechReader, Andro
             return Task.CompletedTask;
         }
 
-        int target = ClampOffset(_lastReportedOffset + SkipChars());
-        SpeakFrom(SnapToWordStart(target));
+        int target = OffsetSkip.ClampOffset(_text, _lastReportedOffset + OffsetSkip.SkipChars(_rate));
+        SpeakFrom(OffsetSkip.SnapToWordStart(_text, target));
         return Task.CompletedTask;
     }
 
@@ -173,8 +168,8 @@ public sealed class AndroidSpeechReader : Java.Lang.Object, ISpeechReader, Andro
             return Task.CompletedTask;
         }
 
-        int target = ClampOffset(_lastReportedOffset - SkipChars());
-        SpeakFrom(SnapToWordStart(target));
+        int target = OffsetSkip.ClampOffset(_text, _lastReportedOffset - OffsetSkip.SkipChars(_rate));
+        SpeakFrom(OffsetSkip.SnapToWordStart(_text, target));
         return Task.CompletedTask;
     }
 
@@ -207,21 +202,6 @@ public sealed class AndroidSpeechReader : Java.Lang.Object, ISpeechReader, Andro
         _tts.Speak(_text[offset..], QueueMode.Flush, parameters, UtteranceId);
         SetState(PlaybackState.Playing);
         RaiseTiming();
-    }
-
-    private int SkipChars() => (int)(CharsPerSecondAtNormalRate * _rate * 10);
-
-    private int ClampOffset(int offset) => Math.Clamp(offset, 0, Math.Max(_text.Length - 1, 0));
-
-    private int SnapToWordStart(int offset)
-    {
-        if (offset <= 0 || offset >= _text.Length)
-        {
-            return offset;
-        }
-
-        int nextSpace = _text.IndexOf(' ', offset);
-        return nextSpace < 0 ? _text.Length : nextSpace + 1;
     }
 
     private void SetState(PlaybackState state)

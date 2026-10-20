@@ -21,6 +21,7 @@ public partial class ReaderPage : ContentPage
     private static readonly FilePickerFileType SupportedFileTypes = new(new Dictionary<DevicePlatform, IEnumerable<string>>
     {
         { DevicePlatform.Android, ["text/plain", "application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"] },
+        { DevicePlatform.iOS, ["public.plain-text", "com.adobe.pdf", "org.openxmlformats.wordprocessingml.document"] },
     });
 
     private readonly ISpeechReader _reader;
@@ -42,9 +43,10 @@ public partial class ReaderPage : ContentPage
     // started (system TTS returns as soon as the utterance is queued).
     private static readonly TimeSpan FirstAudioGrace = TimeSpan.FromSeconds(8);
 
-    public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, PendingScanResult pendingScan, IVoiceModelService model, VoicePackInstaller installer)
+    public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, PendingScanResult pendingScan, IVoiceModelService model, VoicePackInstaller installer, IPlatformServices platform)
     {
         InitializeComponent();
+        ApplyScanAvailability(platform.SupportsTextScan);
 
         _reader = reader;
         _settings = settings;
@@ -101,6 +103,20 @@ public partial class ReaderPage : ContentPage
         {
             TextEditor.Text = text;
         }
+    }
+
+    // A platform with no OCR engine hides Scan; File takes its place so no gap is left.
+    // ScanPage still catches OcrUnavailableException as a safety net.
+    private void ApplyScanAvailability(bool supportsTextScan)
+    {
+        if (supportsTextScan)
+        {
+            return;
+        }
+
+        ScanButton.IsVisible = false;
+        Grid.SetColumn(FileButton, 1);
+        Grid.SetColumnSpan(FileButton, 2);
     }
 
     private async void OnScanTapped(object? sender, TappedEventArgs e) =>

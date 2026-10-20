@@ -60,6 +60,11 @@ public partial class ScanPage : ContentPage
             string text = await _extractor.ExtractTextAsync(photo.FullPath);
             ShowResult(text);
         }
+        catch (OcrUnavailableException)
+        {
+            await DisplayAlertAsync("Scan unavailable", "Reading text from photos isn't available on this device yet.", "OK");
+            ShowIdle();
+        }
         catch (Exception)
         {
             await DisplayAlertAsync("Couldn't read that photo", "Try capturing the text again with better lighting or focus.", "OK");

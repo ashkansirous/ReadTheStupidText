@@ -78,13 +78,13 @@
                     </Border.GestureRecognizers>
                     <Label Text="&#128203; Paste" Style="{StaticResource ActionButtonLabelStyle}" />
                 </Border>
-                <Border Grid.Column="1" Style="{StaticResource ActionButtonBorderStyle}">
+                <Border x:Name="ScanButton" Grid.Column="1" Style="{StaticResource ActionButtonBorderStyle}">
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnScanTapped" />
                     </Border.GestureRecognizers>
                     <Label Text="&#128247; Scan" Style="{StaticResource ActionButtonLabelStyle}" />
                 </Border>
-                <Border Grid.Column="2" Style="{StaticResource ActionButtonBorderStyle}">
+                <Border x:Name="FileButton" Grid.Column="2" Style="{StaticResource ActionButtonBorderStyle}">
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnFileTapped" />
                     </Border.GestureRecognizers>

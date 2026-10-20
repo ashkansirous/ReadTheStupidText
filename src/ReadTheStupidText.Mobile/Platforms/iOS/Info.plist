@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UIDeviceFamily</key>
+	<array>
+		<integer>1</integer>
+		<integer>2</integer>
+	</array>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>arm64</string>
+	</array>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>XSAppIconAssets</key>
+	<string>Assets.xcassets/appicon.appiconset</string>
+
+	<!-- The only encryption is HTTPS to download voice packs, which is exempt; this
+	     answers App Store Connect's export-compliance question so TestFlight builds
+	     are not held at "Missing Compliance". -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+
+	<!-- Camera capture for the scan-to-read path (the iOS OCR itself arrives in Slice 49).
+	     MediaPicker.CapturePhotoAsync crashes the app without this string. -->
+	<key>NSCameraUsageDescription</key>
+	<string>The camera photographs printed text so the app can read it aloud. Photos are processed on the device and never uploaded.</string>
+
+	<!-- MediaPicker reads the photo library when the user picks a photo; the app never
+	     writes to it, but the add-only key is declared too so MAUI's MediaPicker cannot
+	     trip App Store validation. -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>The app reads a photo you choose from your library, only to read the text in it aloud. Photos are processed on the device and never uploaded.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>The app does not save anything to your photo library.</string>
+
+	<!-- MAUI's MediaPicker declares the microphone for video capture. Nothing in this app
+	     records audio or video; the key exists so that path can never crash the app. -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>The app does not record audio. This is only asked if video capture is ever used, which this app does not do.</string>
+</dict>
+</plist>

@@ -1,9 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<!-- Android only for now (Decision 37) — iOS/macOS follow in a later batch
-		     once there's an Apple developer account. -->
-		<TargetFrameworks>net10.0-android</TargetFrameworks>
+		<!-- Android always; iOS only where it can be built (Decision 70, Slice 48). The iOS
+		     target needs a Mac (CI: macos-26), so it is added on macOS, or anywhere with
+		     -p:IncludeIos=true. Windows and Linux builds of this project (the Android CI
+		     job, a Windows developer's `dotnet build -f net10.0-android`) therefore never
+		     restore or evaluate the iOS target. The iOS CI job passes -p:IncludeAndroid=false so
+		     a macOS restore does not need the Android workload (a plain -p:TargetFrameworks=...
+		     would also flow into the referenced class libraries). -->
+		<TargetFrameworks Condition="'$(IncludeAndroid)' != 'false'">net10.0-android</TargetFrameworks>
+		<TargetFrameworks Condition="($([MSBuild]::IsOSPlatform('OSX')) Or '$(IncludeIos)' == 'true') And '$(TargetFrameworks)' == ''">net10.0-ios</TargetFrameworks>
+		<TargetFrameworks Condition="($([MSBuild]::IsOSPlatform('OSX')) Or '$(IncludeIos)' == 'true') And '$(TargetFrameworks)' != '' And !$(TargetFrameworks.Contains('net10.0-ios'))">$(TargetFrameworks);net10.0-ios</TargetFrameworks>
 
 		<OutputType>Exe</OutputType>
 		<RootNamespace>ReadTheStupidText.Mobile</RootNamespace>
@@ -35,6 +42,9 @@
 		     bundles below 24, and 28 still reaches about 95% of active Play
 		     devices. Do not lower it. -->
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">28.0</SupportedOSPlatformVersion>
+
+		<!-- iOS 15 is the MAUI 10 minimum for iOS; it covers every iPhone back to the 6s. -->
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -64,7 +74,13 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+	</ItemGroup>
 
+	<!-- Everything below is Android-only: the sherpa-onnx neural engine and ML Kit OCR.
+	     iOS has neither yet (AVSpeech reads; the OCR is a stub), so no iOS build restores
+	     the sherpa runtime.* packages. Slice 49 adds the iOS native engine and Vision OCR
+	     (Decision 70: verify by unzipping the built .ipa). -->
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
 		<!-- org.k2fsa.sherpa.onnx's nuspec unconditionally depends on ALL 8
 		     runtime.* native packages (win/linux/osx/android) regardless of
 		     TFM/RID. On an Android build every one of those .so files lands as
@@ -105,15 +121,30 @@
 	     CompositeSpeechReader-style routing falls back to Android TextToSpeech
 	     (Slice 30) when the neural engine fails to load, matching how the
 	     Windows fallback behaves for a missing/broken model (Decision 14). -->
-	<ItemGroup Condition="'$(Pkgorg_k2fsa_sherpa_onnx_runtime_android-arm64)' != ''">
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android' And '$(Pkgorg_k2fsa_sherpa_onnx_runtime_android-arm64)' != ''">
 		<AndroidNativeLibrary Include="$(Pkgorg_k2fsa_sherpa_onnx_runtime_android-arm64)\runtimes\android-arm64\native\libsherpa-onnx-c-api.so" Abi="arm64-v8a" />
 		<AndroidNativeLibrary Include="$(Pkgorg_k2fsa_sherpa_onnx_runtime_android-arm64)\runtimes\android-arm64\native\libonnxruntime.so" Abi="arm64-v8a" />
 	</ItemGroup>
+
+	<!-- The privacy manifest App Store Connect requires; the iOS counterpart of the Android
+	     manifest. -->
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+		<BundleResource Include="Platforms\iOS\Resources\PrivacyInfo.xcprivacy" LogicalName="PrivacyInfo.xcprivacy" />
+	</ItemGroup>
+
+	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+		<CodesignEntitlements>Platforms\iOS\Entitlements.plist</CodesignEntitlements>
+	</PropertyGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\ReadTheStupidText.Domain\ReadTheStupidText.Domain.csproj" />
 		<ProjectReference Include="..\ReadTheStupidText.Application\ReadTheStupidText.Application.csproj" />
 		<ProjectReference Include="..\ReadTheStupidText.Documents\ReadTheStupidText.Documents.csproj" />
 	</ItemGroup>
+
+	<!-- Fail early and clearly instead of restoring a project with no target framework. -->
+	<Target Name="EnsureATargetFramework" BeforeTargets="_CheckForUnsupportedTargetFramework;Restore;CollectPackageReferences" Condition="'$(TargetFrameworks)' == '' And '$(TargetFramework)' == ''">
+		<Error Text="ReadTheStupidText.Mobile has no target framework: -p:IncludeAndroid=false removed Android and iOS is only added on macOS or with -p:IncludeIos=true. Pass -p:IncludeIos=true, or drop -p:IncludeAndroid=false." />
+	</Target>
 
 </Project>

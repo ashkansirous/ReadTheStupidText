@@ -11,6 +11,10 @@ public sealed class AndroidPlatformServices : IPlatformServices
 
     public AndroidPlatformServices(IVoiceModelService model) => _model = model;
 
+    public bool SupportsNeuralVoice => true;
+
+    public bool SupportsTextScan => true;
+
     public ISpeechReader CreateNeuralReader() => new AndroidSupertonicSpeechReader(_model);
 
     public ISpeechReader CreateFallbackReader() => new AndroidSpeechReader(global::Android.App.Application.Context);
