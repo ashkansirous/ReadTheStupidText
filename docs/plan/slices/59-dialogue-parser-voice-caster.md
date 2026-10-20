@@ -39,6 +39,10 @@ any UI exists.
       words spoken so far** (running count per voice); main characters' voices (top N
       by words, default 2) are never reused. Deterministic: ties broken by voice order;
       characters processed in order of first appearance.
+      **Few-voice packs** (e.g. Farsi, 1-2 voices; mock screen 15): when the pack has
+      too few non-narrator voices, the main-never-reused rule relaxes and mains may
+      share; the narrator exclusion stays absolute. The cast flags each shared voice
+      (Slice 65).
 - [ ] Rule tables sit behind a `LanguageRules` record (English only here) so Slice 66
       adds languages without touching the algorithm.
 - [ ] Tests in a new `tests/DinoReader.Tests` (xUnit v3, `net10.0`, like
