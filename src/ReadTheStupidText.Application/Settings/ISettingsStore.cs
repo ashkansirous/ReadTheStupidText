@@ -44,4 +44,11 @@ public interface ISettingsStore
     /// never moved it — in which case it opens at its default bottom-right pin.
     /// </summary>
     PanelPosition? PanelPosition { get; set; }
+
+    /// <summary>
+    /// The language code (see <c>AppLanguages</c>) chosen on first run (Slice 50,
+    /// Decision 68), or null until the user has chosen. Drives which voice pack
+    /// downloads.
+    /// </summary>
+    string? Language { get; set; }
 }

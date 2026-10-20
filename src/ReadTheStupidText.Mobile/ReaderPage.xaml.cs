@@ -27,10 +27,12 @@ public partial class ReaderPage : ContentPage
     private readonly ISettingsStore _settings;
     private readonly IDocumentTextExtractor _documentExtractor;
     private readonly PendingScanResult _pendingScan;
+    private readonly IVoiceModelService _model;
+    private readonly VoicePackInstaller _installer;
     private PlaybackRate _speed;
     private string? _lastSpokenText;
 
-    public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, PendingScanResult pendingScan)
+    public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, PendingScanResult pendingScan, IVoiceModelService model, VoicePackInstaller installer)
     {
         InitializeComponent();
 
@@ -38,6 +40,8 @@ public partial class ReaderPage : ContentPage
         _settings = settings;
         _documentExtractor = documentExtractor;
         _pendingScan = pendingScan;
+        _model = model;
+        _installer = installer;
         _speed = _settings.Speed;
         UpdatePresetHighlight();
         UpdateVoiceLabel();
@@ -49,10 +53,13 @@ public partial class ReaderPage : ContentPage
         _reader.StateChanged += OnReaderStateChanged;
         _reader.ProgressChanged += OnReaderProgressChanged;
         _reader.TimingChanged += OnReaderTimingChanged;
+        _installer.Changed += OnInstallerChanged;
+        _model.ReadyChanged += OnInstallerChanged;
 
         // Re-read on every appearance: the voice picker may have changed the
         // persisted voice while this page was off-stack.
         UpdateVoiceLabel();
+        RenderPackStatus();
 
         // Consumed and cleared in one step: see PendingScanResult's remarks for
         // why this replaces a Shell query-parameter hand-off.
@@ -68,6 +75,8 @@ public partial class ReaderPage : ContentPage
         _reader.StateChanged -= OnReaderStateChanged;
         _reader.ProgressChanged -= OnReaderProgressChanged;
         _reader.TimingChanged -= OnReaderTimingChanged;
+        _installer.Changed -= OnInstallerChanged;
+        _model.ReadyChanged -= OnInstallerChanged;
     }
 
     private async void OnPasteTapped(object? sender, TappedEventArgs e)
@@ -203,10 +212,40 @@ public partial class ReaderPage : ContentPage
         }
     }
 
+    // The phone voice reads whenever it is chosen or the neural pack isn't ready yet,
+    // so the label names what will actually speak (Decision 61).
     private void UpdateVoiceLabel()
     {
+        if (_settings.VoiceId == SystemVoice.Id || !_model.IsReady)
+        {
+            VoiceNameLabel.Text = VoicePickerPage.PhoneVoiceName;
+            return;
+        }
+
         VoiceNameLabel.Text = SupertonicVoiceTable.Voices
             .FirstOrDefault(v => v.Id == _settings.VoiceId, SupertonicVoiceTable.Default)
             .DisplayName;
+    }
+
+    private void OnInstallerChanged(object? sender, EventArgs e) =>
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            RenderPackStatus();
+            UpdateVoiceLabel();
+        });
+
+    private void RenderPackStatus()
+    {
+        string? text = PackStatusText.Compose(_installer.State, _installer.Progress);
+        PackStatusLabel.Text = text;
+        PackStatusLabel.IsVisible = text is not null;
+    }
+
+    private void OnPackStatusTapped(object? sender, TappedEventArgs e)
+    {
+        if (_installer.CanRetry)
+        {
+            _ = _installer.StartAsync();
+        }
     }
 }

@@ -26,9 +26,11 @@ Android では、テキストを貼り付けるか入力するか、.txt・.pdf�
 
 - お使いのデバイス上で動作する自然な音声
 - 読み上げ速度は 0.5倍～2倍
-- オフラインで動作：テキスト、ファイル、スキャンはデバイスの外に出ません
+- オフラインで動作（Android では初回起動時に音声を一度だけダウンロード）：テキスト、ファイル、スキャンはデバイスの外に出ません
 - アカウント不要、解析なし
 
-## Download disclosure
+## Google Play only: download note (append to the full description)
 
-<!-- TODO (Slice 50/56): translate the English disclosure from en.md and add it here once voice packs ship. Do not publish before then. -->
+Android で初めてアプリを起動すると、約 145 MB の音声パックをダウンロードするため、インターネット接続が一度だけ必要です（Wi-Fi を推奨）。ダウンロードが完了するまでは、スマートフォン内蔵の音声で読み上げます。ダウンロードされるのは音声パックのみです。テキスト、ファイル、スキャンはデバイス上に残り、音声のインストール後はネットワークを使用しません。
+
+Microsoft Store: don't add until Slice 56 ships (Windows still includes the voice).
