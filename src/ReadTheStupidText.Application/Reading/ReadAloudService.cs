@@ -72,6 +72,24 @@ public sealed class ReadAloudService : IDisposable
     // deselect, or completion can transition it (ignored/interrupted/read).
     private ActivityEntry? _activeEntry;
 
+    // Last value published through GeneratingChanged, so it only fires on a change.
+    // The lock keeps the compare-and-set atomic across threads (UI thread, reader
+    // callbacks, synthesis threads). Event order across threads is NOT guaranteed:
+    // subscribers must re-read IsGeneratingAudio instead of trusting the argument.
+    private readonly object _generatingLock = new();
+    private bool _publishedGenerating;
+
+    /// <summary>How long a reader that returned from SpeakAsync may take to report
+    /// its first Playing before the read is failed. Readers like the WinRT fallback
+    /// return before playback actually starts.</summary>
+    public static readonly TimeSpan DefaultFirstAudioGrace = TimeSpan.FromSeconds(8);
+
+    /// <summary>The first-audio grace window in effect; tests shorten it.</summary>
+    public TimeSpan FirstAudioGrace { get; set; } = DefaultFirstAudioGrace;
+
+    // Cancelled when the active entry plays, ends or is superseded, ending its grace wait.
+    private CancellationTokenSource? _graceCts;
+
     // The text of the most recent read we started, on any path. Used to drop the
     // clipboard echo of our own hotkey copy (and a copy-on-select duplicate of a
     // UIA selection) so the same text isn't read twice from two sources.
@@ -248,6 +266,17 @@ public sealed class ReadAloudService : IDisposable
     /// neural model loaded), so control surfaces can rebuild their pickers.</summary>
     public event EventHandler? VoicesChanged;
 
+    /// <summary>True from the moment a read starts synthesizing until its first
+    /// audio plays (or it is superseded, fails or completes): the "loading" window
+    /// control surfaces show a spinner for. Single source of truth (Slice 46).</summary>
+    public bool IsGeneratingAudio => _activeEntry is { State: ActivityState.GeneratingAudio };
+
+    /// <summary>Raised when <see cref="IsGeneratingAudio"/> changes, with the value
+    /// at the time of the change. May fire on a non-UI thread and events from
+    /// different threads can arrive out of order, so handlers should re-read
+    /// <see cref="IsGeneratingAudio"/> rather than trust the argument.</summary>
+    public event EventHandler<bool>? GeneratingChanged;
+
     /// <summary>
     /// The "Play" action shared by the tray menu and control panel: pauses if
     /// playing, resumes if paused, and when idle starts a fresh read of the
@@ -255,6 +284,13 @@ public sealed class ReadAloudService : IDisposable
     /// </summary>
     public Task PlayPauseOrReadAsync()
     {
+        // While the first audio is being synthesized Play is a no-op: a second tap
+        // must not supersede the read that is about to start.
+        if (IsGeneratingAudio)
+        {
+            return Task.CompletedTask;
+        }
+
         switch (State)
         {
             case PlaybackState.Playing:
@@ -526,6 +562,8 @@ public sealed class ReadAloudService : IDisposable
     {
         ActivityEntry? active = _activeEntry;
         _activeEntry = null;
+        CancelGrace();
+        PublishGenerating();
         if (active is null)
         {
             return;
@@ -555,9 +593,11 @@ public sealed class ReadAloudService : IDisposable
             // natural completion → Read (OnReaderCompleted), errors → catch below.
             _synthStartTicks = Stopwatch.GetTimestamp();
             _log.SetState(entry, ActivityState.GeneratingAudio);
+            PublishGenerating();
             _systemLog.Debug("generating audio", entry.Id);
             ReadTextChanged?.Invoke(this, text);
             await _reader.SpeakAsync(text, entry.Id);
+            await FailIfNeverPlayedAsync(entry);
         }
         catch (Exception ex)
         {
@@ -566,6 +606,42 @@ public sealed class ReadAloudService : IDisposable
             ClearIfActive(entry);
         }
     }
+
+    // SpeakAsync returned but the reader may not have started playing yet (the WinRT
+    // fallback only sets the source; Play and the Playing transition come later on
+    // another thread). Wait up to FirstAudioGrace for it, so a slow-but-working
+    // reader isn't failed, while one that never plays (engine missing, synthesis
+    // produced nothing) can't leave the entry, log and spinner stuck forever.
+    private async Task FailIfNeverPlayedAsync(ActivityEntry entry)
+    {
+        if (!IsAwaitingFirstAudio(entry))
+        {
+            return;
+        }
+
+        var cts = new CancellationTokenSource();
+        Interlocked.Exchange(ref _graceCts, cts)?.Cancel();
+        try
+        {
+            await Task.Delay(FirstAudioGrace, cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        if (IsAwaitingFirstAudio(entry))
+        {
+            _log.SetState(entry, ActivityState.Failed, ActivityReason.Error);
+            _systemLog.Warning("reader never played audio within the grace window", entry.Id);
+            ClearIfActive(entry);
+        }
+    }
+
+    private bool IsAwaitingFirstAudio(ActivityEntry entry) =>
+        ReferenceEquals(_activeEntry, entry) && entry.State == ActivityState.GeneratingAudio;
+
+    private void CancelGrace() => Interlocked.Exchange(ref _graceCts, null)?.Cancel();
 
     // The reader starting to play flips the active entry from GeneratingAudio (the
     // synthesis wait) to Reading, and records the local timing diagnostics (the
@@ -579,6 +655,8 @@ public sealed class ReadAloudService : IDisposable
             TimeSpan synth = Stopwatch.GetElapsedTime(_synthStartTicks);
             _log.RecordTiming(entry, firstAudio, synth);
             _log.SetState(entry, ActivityState.Reading);
+            CancelGrace();
+            PublishGenerating();
             _systemLog.Info(
                 $"reading; first audio {firstAudio.TotalMilliseconds:F0} ms, synth {synth.TotalMilliseconds:F0} ms",
                 entry.Id);
@@ -594,6 +672,8 @@ public sealed class ReadAloudService : IDisposable
             _log.SetState(entry, ActivityState.Read);
             _systemLog.Info("read complete", entry.Id);
             _activeEntry = null;
+            CancelGrace();
+            PublishGenerating();
         }
     }
 
@@ -603,6 +683,27 @@ public sealed class ReadAloudService : IDisposable
         {
             _activeEntry = null;
         }
+
+        PublishGenerating();
+    }
+
+    // Records the flag under a lock and raises the event on a change only. Handlers
+    // must re-read IsGeneratingAudio (see GeneratingChanged).
+    private void PublishGenerating()
+    {
+        bool generating;
+        lock (_generatingLock)
+        {
+            generating = IsGeneratingAudio;
+            if (generating == _publishedGenerating)
+            {
+                return;
+            }
+
+            _publishedGenerating = generating;
+        }
+
+        GeneratingChanged?.Invoke(this, generating);
     }
 
     public void Dispose()
