@@ -993,6 +993,12 @@ this plan turns it into ordered, shippable vertical slices.
     - **Order:** the pure slices (dialogue parser, voice caster) may start
       alongside Batch 9. The picture-mode slices wait for the scanner and
       PaddleOCR (Slices 45, 52).
+82. **Android minimum is API 28 (Android 9, 2018) for every Android app in
+    this repo** (Read The Stupid Text Mobile now; Dino Reader and
+    `Mobile.Shared` when they land). Supersedes Slice 31's 23. Play automatic
+    protection needs at least 24, and 28 reaches about 95% of active devices.
+    The target SDK is not pinned; it follows the .NET Android workload.
+    Background: `docs/plan/notes/2026-10-20-android-min-sdk-28.md`.
 
 ## Changes
 
@@ -1612,8 +1618,8 @@ batches on the same MAUI codebase once there's an Apple developer account.
       plain x86_64 emulator; `CompositeSpeechReader`-style fallback to
       `AndroidSpeechReader` (Slice 30) covers that by design, the same as a
       missing/broken model on Windows. `SupportedOSPlatformVersion` bumped
-      21→23 for `MediaPlayer.PlaybackParams` (pitch-preserving speed change) —
-      negligible reach cost.
+      21→23 for `MediaPlayer.PlaybackParams` (pitch-preserving speed change).
+      Since raised to 28 by Decision 82.
       *`AndroidSupertonicSpeechReader`* (`Platforms/Android`) ports the Windows
       reader's chunking/ordered-playback/generation-counter/mid-read-voice-swap
       design essentially unchanged (it's the same pure logic, now shared via

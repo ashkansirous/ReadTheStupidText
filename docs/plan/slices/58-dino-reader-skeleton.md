@@ -45,7 +45,9 @@ behaves exactly as before.
       csproj line 67) stays in each app project (assets are app-level). Dino
       Reader links the same files until Slice 50 removes bundling.
 - [ ] New `src/DinoReader.App` (MAUI, `net10.0-android`, `ApplicationId`
-      `uk.sirous.dinoreader`, display name "Dino Reader", the real icon (below),
+      `uk.sirous.dinoreader`, display name "Dino Reader", Android
+      `SupportedOSPlatformVersion` 28.0 (Decision 82, not the template's 21),
+      the real icon (below),
       `AppShell` + one page: editor, Play/Stop, `ISpeechReader` with the default
       voice). References the shared library, Domain, Application.
 - [ ] **App icon (Android):** use the ready-made set in

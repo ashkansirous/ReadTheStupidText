@@ -30,11 +30,11 @@
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>
 
-		<!-- 24 (Nougat, 2016), not the MAUI-template default 21: Google Play now rejects
-		     bundles with minSdk < 24 ("Play automatic protection requires a minimum
-		     SDK version of 24"). It also covers MediaPlayer.PlaybackParams
-		     (pitch-preserving speed change, Slice 31), which needs API 23+. -->
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">24.0</SupportedOSPlatformVersion>
+		<!-- 28 (Android 9, 2018) is the product floor for every Android app in
+		     this repo (Decision 82). Google Play's automatic protection rejects
+		     bundles below 24, and 28 still reaches about 95% of active Play
+		     devices. Do not lower it. -->
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">28.0</SupportedOSPlatformVersion>
 	</PropertyGroup>
 
 	<ItemGroup>

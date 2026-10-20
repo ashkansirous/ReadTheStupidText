@@ -94,7 +94,7 @@ install gets much smaller.
 
 ## Changed while building
 
-- Android `minSdk` raised 23 to 24: Play rejected the #165 release ("Play automatic protection requires a minimum SDK version of 24").
+- Android `minSdk` raised 23 to 24: Play rejected the #165 release ("Play automatic protection requires a minimum SDK version of 24"). Later raised to 28 by Decision 82.
 - Touches widened to `.github/scripts/find-release.sh`: `packs-*` tags would have made release-publish delete every future app draft and could misdirect asset carry-forward. Every app-release tag scan (build.yml release-publish, find-release.sh) now filters to `v<x.y.z>` tags only.
 - `packs.yml` copies only the `SupertonicFiles` set plus LICENSE and fails on missing or LFS-pointer files; the release is `packs-<n>` with `--latest=false`.
 - Pack model in `Application/Reading`: `PackKind`, `PackDownloadResult` (Ok / Offline / HashMismatch / InvalidPack / Failed), `PackInfo`/`PackCatalogParser` (comma-separated `language` list; invalid ids or versions skipped via `PackNaming`), `PackManifest`, `PackRetryPolicy` (resume offset, 2/4/8 s backoff capped at 30 s, Offline and InvalidPack not retried, one clean re-download on HashMismatch), `PackErrorClassifier` (Java exception type names, `WebException`, `NetworkAccess.None` map to Offline), `VoicePackSelector`, `AppLanguage` (9 languages), `SystemVoice`, `IVoicePackService`. `ISettingsStore.Language` is stored in Mobile Preferences and the Windows `LocalSettingsStore` (unused on Windows until Slice 56).
@@ -113,7 +113,7 @@ install gets much smaller.
 - Voice packs (`docs/voice-packs.md`): `IVoicePackService` (Application) + `MobileVoicePackService` (Mobile); the pure decisions live in `PackRetryPolicy`/`PackCatalogParser`/`PackManifest`/`PackNaming`/`VoicePackSelector` (unit-tested). The pipeline runs off the UI thread and `VoicePackInstaller` marshals state to the main thread. An installed pack means zero network requests. `InvalidPack` is never retried. Offline detection on Android = `NetworkAccess.None` + Java exception type names. (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
 - Until the pack is Ready, `CompositeSpeechReader` reads with the Android `TextToSpeech` "Phone voice" (`SystemVoice.Id`), also user-selectable. (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
 - `packs-<n>` releases hold packs + `packs.json`, published by the manual `packs.yml` with `--latest=false`; the app pins one in `PackConstants.CatalogUrl`. Every app-release tag scan (`build.yml` release-publish, `.github/scripts/find-release.sh`) must filter to `^v[0-9]+\.[0-9]+\.[0-9]+$`. (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
-- First-run language: `ISettingsStore.Language`; the app shows `LanguagePage` when it is null. Android now declares `INTERNET` + `ACCESS_NETWORK_STATE`, used only for pack downloads; user data stays on the device. Android `minSdk` is 24 (Google Play rejects lower). (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
+- First-run language: `ISettingsStore.Language`; the app shows `LanguagePage` when it is null. Android now declares `INTERNET` + `ACCESS_NETWORK_STATE`, used only for pack downloads; user data stays on the device. Android `minSdk` is 28 (Decision 82; Google Play rejects below 24). (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
 
 #### For README.md
 
@@ -127,4 +127,4 @@ install gets much smaller.
 - Corrupted pack rejected and re-downloaded once.
 - Next read after install uses the neural voice.
 - Play Console data-safety form updated by hand.
-- Play accepts the minSdk 24 bundle.
+- Play accepts the minSdk 28 bundle (Decision 82).
