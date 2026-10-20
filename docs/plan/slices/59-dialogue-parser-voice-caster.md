@@ -1,6 +1,6 @@
 # Slice 59 — Dialogue parser and voice caster (pure library)
 
-*Planned.*
+*In progress (wave 2026-10-20), draft PR.*
 
 **Batch:** 10
 **Decisions:** 74, 75
