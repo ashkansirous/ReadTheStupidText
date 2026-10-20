@@ -63,7 +63,7 @@ this plan turns it into ordered, shippable vertical slices.
 | 43 | Store listing refresh (9 languages) | built | #174 | — | [43-store-listing-refresh.md](docs/plan/slices/43-store-listing-refresh.md) |
 | 44 | Pipeline: iOS filter group, platform-neutral Mobile root | built | #183 | — | [44-pipeline-ios-split.md](docs/plan/slices/44-pipeline-ios-split.md) |
 | 45 | Android: document scanner into the editor | planned | — | — | [45-android-document-scanner.md](docs/plan/slices/45-android-document-scanner.md) |
-| 46 | Play button loading state | planned | — | — | [46-play-loading-state.md](docs/plan/slices/46-play-loading-state.md) |
+| 46 | Play button loading state | built | #185 | — | [46-play-loading-state.md](docs/plan/slices/46-play-loading-state.md) |
 | 47 | Head start: sentence-level audio cache | planned | — | — | [47-head-start-sentence-cache.md](docs/plan/slices/47-head-start-sentence-cache.md) |
 | 48 | iOS target and TestFlight from CI | planned | — | — | [48-ios-target-testflight.md](docs/plan/slices/48-ios-target-testflight.md) |
 | 49 | iOS reaches Android parity | planned | — | — | [49-ios-parity.md](docs/plan/slices/49-ios-parity.md) |
@@ -86,7 +86,7 @@ this plan turns it into ordered, shippable vertical slices.
 | 66 | Dino Reader languages and translation | planned | — | — | [66-dino-reader-languages-translation.md](docs/plan/slices/66-dino-reader-languages-translation.md) |
 | 67 | Dino Reader on iOS and Windows | planned | — | — | [67-dino-reader-ios-windows.md](docs/plan/slices/67-dino-reader-ios-windows.md) |
 | 68 | Landing site served by a Cloudflare Worker | built | #182 | — | [68-landing-site-on-worker.md](docs/plan/slices/68-landing-site-on-worker.md) |
-| 69 | Android APK downloads from R2, with a "latest" link | planned | — | — | [69-apk-downloads-on-r2.md](docs/plan/slices/69-apk-downloads-on-r2.md) |
+| 69 | Android APK downloads from R2, with a "latest" link | built | #187 | — | [69-apk-downloads-on-r2.md](docs/plan/slices/69-apk-downloads-on-r2.md) |
 | 70 | Split the build pipeline into the Lets-Call-Mom shape | planned | — | — | [70-split-build-pipeline.md](docs/plan/slices/70-split-build-pipeline.md) |
 | 71 | Repo hygiene and the Drive mirror | built | #184 | — | [71-repo-hygiene.md](docs/plan/slices/71-repo-hygiene.md) |
 
@@ -109,7 +109,8 @@ Built but not verified (details in each slice file):
 - Slice 59: attribution quality on a real children's book text (only unit-test fixtures so far); check with the first Slice 60 read ([slice](docs/plan/slices/59-dialogue-parser-voice-caster.md)).
 - Slice 59: Slice 58 still has to add the Dino Reader *app* build group to `build.yml` (`test-dinoreader` only runs the DinoReader.Core tests) ([slice](docs/plan/slices/59-dialogue-parser-voice-caster.md)).
 - Slice 58: decide whether Dino Reader project additions to `ReadTheStupidText.slnx` / `build.yml` should keep re-releasing the RTST apps (today `*.slnx` and `build.yml` are `core`); seen when Slice 59's merge shipped an unchanged RTST release ([slice](docs/plan/slices/58-dino-reader-skeleton.md)).
-- Slice 68: Workers Builds connected, and a push touching `site/**` redeploys while a `src/**`-only push doesn't ([slice](docs/plan/slices/68-landing-site-on-worker.md)).
+- Slice 46: the Windows tray panel's progress ring in the running app (auto-read, copy, hotkey; clears on supersede/failure/completion); follow-up: a reader-level generating signal on `ISpeechReader` for Android ([slice](docs/plan/slices/46-play-loading-state.md)).
+- Slice 69: real-R2 Range behaviour of `/download/android/latest` not separately tested ([slice](docs/plan/slices/69-apk-downloads-on-r2.md)).
 - Slice 22: latency win and any further first-chunk biasing still to be measured under the (Package) profile; issue #117 deferred, story #104 open ([slice](docs/plan/slices/22-read-latency-instrumentation-low-risk-tuning.md)).
 
 ## Out of Scope
