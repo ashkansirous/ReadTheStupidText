@@ -71,7 +71,7 @@
             </Grid>
 
             <!-- Input actions: Paste / Scan / File all feed the one text box below. -->
-            <Grid Grid.Row="1" ColumnDefinitions="*,*,*" ColumnSpacing="8">
+            <Grid x:Name="ActionRow" Grid.Row="1" ColumnDefinitions="*,*,*" ColumnSpacing="8">
                 <Border Grid.Column="0" Style="{StaticResource ActionButtonBorderStyle}">
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnPasteTapped" />
