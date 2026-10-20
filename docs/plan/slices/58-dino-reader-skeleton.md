@@ -1,11 +1,11 @@
 # Slice 58 — Dino Reader skeleton: shared Mobile library, new app, pipeline
 
-*Planned.*
+*In progress (wave 2026-10-21), draft PR.*
 
 **Batch:** 10
 **Decisions:** 72, 73, 81
 **Depends on:** PR #165 (Batch 8 CI, still open) for the pipeline steps; Slice 44 (platform-neutral Mobile root) for the move; Slice 48 for the iOS target of the new library
-**Touches:** `src/ReadTheStupidText.Mobile/**`, `src/ReadTheStupidText.Mobile.Shared/**`, `src/DinoReader.App/**`, `ReadTheStupidText.slnx`, `.github/workflows/build.yml`, `.github/scripts/**`, `STORE.md`, `CLAUDE.md`
+**Touches:** `src/ReadTheStupidText.Mobile/**`, `src/ReadTheStupidText.Mobile.Shared/**`, `src/DinoReader.App/**`, `ReadTheStupidText.slnx`, `.github/workflows/**`, `.github/scripts/**`, `tests/**`, `STORE.md`, `CLAUDE.md`
 **Story issue:** —
 
 ## Goal
