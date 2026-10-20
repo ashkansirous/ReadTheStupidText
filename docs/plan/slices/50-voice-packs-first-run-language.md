@@ -1,11 +1,11 @@
 # Slice 50 — Voice packs, first-run language and a slimmer app (Android)
 
-*Planned.*
+*In progress (wave 2026-10-20), draft PR.*
 
 **Batch:** 9
 **Decisions:** 60, 61, 62, 68 (first-run choice only; UI translation is Slice 53)
 **Depends on:** none to start (Android). If it merges before Slice 44, the `android` filter edit below is still correct. Pipeline edits depend on **PR #165** merging.
-**Touches:** `src/ReadTheStupidText.Mobile/**` (csproj, `MobileVoiceModelService.cs`, `MauiProgram.cs`, `App.xaml.cs`, new first-run page, `Platforms/Android/AndroidManifest.xml`), `src/ReadTheStupidText.Application/Reading/**`, `src/ReadTheStupidText.Application/Settings/ISettingsStore.cs`, `src/ReadTheStupidText.Mobile/MobilePreferencesSettingsStore.cs`, `src/ReadTheStupidText.Infrastructure/Settings/**`, `.github/workflows/build.yml`, `.github/workflows/packs.yml`, `PRIVACY.md`, `docs/privacy.html`, `STORE.md`, `CLAUDE.md`
+**Touches:** `docs/voice-packs.md`, `src/ReadTheStupidText.Mobile/**` (csproj, `MobileVoiceModelService.cs`, `MauiProgram.cs`, `App.xaml.cs`, new first-run page, `Platforms/Android/AndroidManifest.xml`), `src/ReadTheStupidText.Application/Reading/**`, `src/ReadTheStupidText.Application/Settings/ISettingsStore.cs`, `src/ReadTheStupidText.Mobile/MobilePreferencesSettingsStore.cs`, `src/ReadTheStupidText.Infrastructure/Settings/**`, `.github/workflows/build.yml`, `.github/workflows/packs.yml`, `PRIVACY.md`, `docs/privacy.html`, `STORE.md`, `CLAUDE.md`
 **Story issue:** —
 
 ## Goal
