@@ -1,10 +1,10 @@
 # Slice 68 — Landing site served by a Cloudflare Worker
 
-*Planned.*
+*In progress (wave 2026-10-20b), draft PR.*
 
 **Batch:** 11 (Lets-Call-Mom parity)
 **Depends on:** —
-**Touches:** `wrangler.jsonc`, `worker/**`, `docs/index.html`, `docs/privacy.html`, `docs/CNAME`, `docs/.nojekyll`, `package.json`, `docs/DEPLOYING.md`, `README.md`, `CLAUDE.md`
+**Touches:** `wrangler.jsonc`, `worker/**`, `site/**`, `package-lock.json`, `tsconfig.json`, `docs/index.html`, `docs/privacy.html`, `docs/CNAME`, `docs/.nojekyll`, `package.json`, `docs/DEPLOYING.md`, `README.md`, `CLAUDE.md`
 **Story issue:** —
 
 ## Goal
