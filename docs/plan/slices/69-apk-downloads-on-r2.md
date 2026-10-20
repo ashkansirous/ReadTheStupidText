@@ -1,6 +1,6 @@
 # Slice 69 — Android APK downloads from R2, with a "latest" link
 
-*Planned.*
+*In progress (wave 2026-10-20c), draft PR.*
 
 **Batch:** 11 (Lets-Call-Mom parity)
 **Depends on:** Slice 68 (the Worker)
