@@ -69,6 +69,8 @@ at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
 > segmenter, speaker attributor and voice caster (no framework deps). One shared
 > version (`v<x.y.z>`) covers both products; each has its own path-filter group.
 > See Decisions 72-81 and `docs/plan/slices/58-67`.
+> Its icons (all platforms, "Book hug" design) live in
+> `docs/design/dino-reader/icons/`: copy from there, never redraw or regenerate them.
 
 > **Naming:** the user-facing **product display name is "Read The Stupid Text"** (with
 > spaces) — shown in the manifest `DisplayName`s, tray tooltip, control-panel header,

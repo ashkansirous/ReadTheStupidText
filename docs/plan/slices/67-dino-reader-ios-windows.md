@@ -20,12 +20,18 @@ Stupid Text) from the same project and the same version.
       (`IPdfPageRenderer`, Slice 63), OCR with boxes, voice engine. A **second App ID
       `uk.sirous.dinoreader`** in the same Apple team plus its TestFlight app record (manual,
       user; guide step by step); its iOS pipeline job and secrets via `manage-secrets`.
+      App icon: `docs/design/dino-reader/icons/ios/` (iOS 18 light/dark/tinted 1024s +
+      `Contents.json`) goes in `Platforms/iOS/Resources/Assets.xcassets/AppIcon.appiconset/`;
+      `legacy/` sizes only if the deployment target is below iOS 18.
 - [ ] **Windows:** MAUI WinUI head in `DinoReader.App`, packaged as MSIX; segment reading
       from Slice 60 on the Windows reader; a `Windows.Data.Pdf` renderer for `IPdfPageRenderer`;
       no tray, no hotkey. A **separate Store listing** (name, id, identity): manual Partner
       Center reservation by the user, then the identity goes in its manifest; `STORE.md` gets a
-      Dino Reader section.
-- [ ] Pipeline: the `dinoreader` path group builds the iOS and Windows jobs only when Story
+      Dino Reader section. Visual assets: `docs/design/dino-reader/icons/windows/`
+      (Square44/71/150/310, Wide310x150, StoreLogo, SplashScreen at all scales) wired
+      into the package manifest. The `tray/` icons in that folder are unused: Dino
+      Reader has no tray (Out of Scope, Batch 10).
+- [ ] Pipeline: the `dinoreader` path group builds the iOS and Windows jobs only when Dino
       Reader or shared paths change; the Windows MSIX is self-contained like RTST's (Store cert
       10.2.4.1); one shared `v<x.y.z>` tag.
 - [ ] `CLAUDE.md`: platform notes for the Dino Reader heads.

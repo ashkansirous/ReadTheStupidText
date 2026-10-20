@@ -42,12 +42,20 @@ behaves exactly as before.
       and check `lib/arm64-v8a/` holds the Android `libonnxruntime.so` and
       `libsherpa-onnx-c-api.so`; repeat for the RTST APK. A clean build is not proof.
 - [ ] The voice-model `MauiAsset` link (`..\ReadTheStupidText.App\VoiceModel\*`,
-      csproj line 67) stays in each app project (assets are app-level). Story
+      csproj line 67) stays in each app project (assets are app-level). Dino
       Reader links the same files until Slice 50 removes bundling.
 - [ ] New `src/DinoReader.App` (MAUI, `net10.0-android`, `ApplicationId`
-      `uk.sirous.dinoreader`, display name "Dino Reader", placeholder icon,
+      `uk.sirous.dinoreader`, display name "Dino Reader", the real icon (below),
       `AppShell` + one page: editor, Play/Stop, `ISpeechReader` with the default
       voice). References the shared library, Domain, Application.
+- [ ] **App icon (Android):** use the ready-made set in
+      `docs/design/dino-reader/icons/android/` ("Book hug" design): copy
+      `mipmap-*/` and `mipmap-anydpi-v26/` into
+      `src/DinoReader.App/Platforms/Android/Resources/` and point the manifest's
+      `android:icon`/`android:roundIcon` at `@mipmap/ic_launcher(_round)` instead
+      of a generated `MauiIcon` (exact MAUI wiring confirmed via context7 at
+      implementation; don't let `MauiIcon` overwrite the adaptive icon).
+      `play-store-512.png` is the Play Console listing icon (manual upload).
 - [ ] `ReadTheStupidText.slnx`: add both new projects (line 23 is the Mobile entry to copy).
 - [ ] **Pipeline** (`build.yml`, after PR #165 merges): new path-filter group
       `dinoreader` = `src/DinoReader.App/**` (+ `src/DinoReader.Core/**` from
