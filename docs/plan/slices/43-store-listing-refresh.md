@@ -79,11 +79,11 @@ system voice until it lands) is a separate "ADD WHEN SLICE 50/56 SHIPS" block in
 - Camera scan is described as shipping (`ScanPage` and `MlKitImageTextExtractor`
   are on `main`).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-20)
 
 None.
 
-#### For README.md
+#### For README.md (lifted 2026-10-20)
 
 None.
 

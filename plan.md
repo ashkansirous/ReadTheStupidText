@@ -1971,7 +1971,7 @@ and depend on that PR.
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
-| 43 | Store listing refresh (9 languages) | planned | — | — | [43-store-listing-refresh.md](docs/plan/slices/43-store-listing-refresh.md) |
+| 43 | Store listing refresh (9 languages) | built | #174 | — | [43-store-listing-refresh.md](docs/plan/slices/43-store-listing-refresh.md) |
 | 44 | Pipeline: iOS filter group, platform-neutral Mobile root | planned | — | — | [44-pipeline-ios-split.md](docs/plan/slices/44-pipeline-ios-split.md) |
 | 45 | Android: document scanner into the editor | planned | — | — | [45-android-document-scanner.md](docs/plan/slices/45-android-document-scanner.md) |
 | 46 | Play button loading state | planned | — | — | [46-play-loading-state.md](docs/plan/slices/46-play-loading-state.md) |
@@ -2016,6 +2016,14 @@ Suggested order, in lanes: **pure** 59 any time now (no overlap with Batch 9);
 **app** 58 -> 60 -> 61 -> 62 -> 65 (58 needs PR #165 and Slice 44); **pictures**
 63 (after 45 and 52) -> 64; **languages** 66 after Batch 9 lane C (50-54);
 **platforms** 67 after 48/49, Windows last.
+
+## Outstanding work
+
+Built but not verified (details in each slice file):
+
+- Slice 43: native-speaker read of the 8 translations ([slice](docs/plan/slices/43-store-listing-refresh.md)).
+- Slice 43: text pasted into Partner Center (9 languages, description + 7 search terms) and Play Console (short + full description) ([slice](docs/plan/slices/43-store-listing-refresh.md)).
+- Slice 43: download disclosure to be added once Slices 50 and 56 ship; re-check the "works offline" wording then ([slice](docs/plan/slices/43-store-listing-refresh.md)).
 
 ## Out of Scope
 
