@@ -882,6 +882,19 @@ this plan turns it into ordered, shippable vertical slices.
       Store and Google Play. No title change for now.
     - The Partner Center and Play Console edits are a manual step for the
       user.
+72. **Two products, one repo, one version (Batch 9).** Story Reader is a
+    second app in this repo, a new UI on the shared core (Domain,
+    Application, Documents, voice engines, packs, OCR), not a new repo.
+    - **One shared version:** a single GitVersion `v<x.y.z>` per merge covers
+      both products, exactly as for platforms (Decisions 17, 57, 69).
+      Per-product tag prefixes are rejected.
+    - **Per-product path groups:** each product gets its own filter group.
+      A product whose code didn't change is not rebuilt or resubmitted, and
+      its release assets carry forward. Shared core rebuilds both products.
+    - **Shared mobile code:** the Android/iOS readers, OCR and scanner move
+      out of the Mobile app project into a shared MAUI class library that
+      both apps reference. That is Story Reader's first slice, planned in
+      its own batch.
 
 ## Changes
 
