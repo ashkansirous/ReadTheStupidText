@@ -18,6 +18,8 @@ Grab the MSIX from the **[latest release](https://github.com/ashkansirous/ReadTh
 
 > These packages are **unsigned** (the Microsoft Store signs on publish), so the **[Store install](https://apps.microsoft.com/detail/9NGT1BN1H92V)** is the recommended path. To sideload a release `.msix` instead, a trusted certificate is required — see [`STORE.md`](STORE.md). Every merge to `main` that changes app code cuts a new `v*` release automatically.
 
+**Android first launch:** the app asks for a language and downloads the ~145 MB voice pack (Wi-Fi advised). The phone's own voice reads until it arrives, and the app works offline afterwards.
+
 ## Status
 
 Early development. See [`plan.md`](plan.md) for the vertical-slice roadmap and
@@ -136,8 +138,10 @@ submission steps.
 
 ## Privacy
 
-Read The Stupid Text collects **no data** — no accounts, no telemetry, no network
-calls. Everything runs locally and offline. See [`PRIVACY.md`](PRIVACY.md).
+Read The Stupid Text collects **no data** — no accounts, no telemetry. Your text,
+files and scans never leave the device. The only network use is the Android app
+downloading its voice pack once; after that it runs fully offline. See
+[`PRIVACY.md`](PRIVACY.md).
 
 ## License
 

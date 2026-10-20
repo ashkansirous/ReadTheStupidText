@@ -107,7 +107,7 @@ install gets much smaller.
 - High pass: 10 findings, all fixed (UI-thread pipeline, verified-zip loss, catalog fetch before the installed check, AndroidMessageHandler offline detection, page leak, blank Resolving state, progress flood, catalog-null to Offline, duplicated activation, one-line methods).
 - Medium pass: 10 findings, 9 fixed. The pack version-update check was skipped and deferred to Slice 51, because an installed pack must make no network request.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-20)
 
 - Mobile no longer bundles the voice model. Supertonic-3 is a downloaded pack `supertonic-3` (~145 MB) under `AppDataDirectory/packs/`; `MobileVoiceModelService` only locates and manifest-checks it. The APK/AAB has no `assets/VoiceModel` (unzip and check). The Windows `VoiceModel/` stays until Slice 56. (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
 - Voice packs (`docs/voice-packs.md`): `IVoicePackService` (Application) + `MobileVoicePackService` (Mobile); the pure decisions live in `PackRetryPolicy`/`PackCatalogParser`/`PackManifest`/`PackNaming`/`VoicePackSelector` (unit-tested). The pipeline runs off the UI thread and `VoicePackInstaller` marshals state to the main thread. An installed pack means zero network requests. `InvalidPack` is never retried. Offline detection on Android = `NetworkAccess.None` + Java exception type names. (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
@@ -115,7 +115,7 @@ install gets much smaller.
 - `packs-<n>` releases hold packs + `packs.json`, published by the manual `packs.yml` with `--latest=false`; the app pins one in `PackConstants.CatalogUrl`. Every app-release tag scan (`build.yml` release-publish, `.github/scripts/find-release.sh`) must filter to `^v[0-9]+\.[0-9]+\.[0-9]+$`. (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
 - First-run language: `ISettingsStore.Language`; the app shows `LanguagePage` when it is null. Android now declares `INTERNET` + `ACCESS_NETWORK_STATE`, used only for pack downloads; user data stays on the device. Android `minSdk` is 24 (Google Play rejects lower). (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
 
-#### For README.md
+#### For README.md (lifted 2026-10-20)
 
 - Android first launch asks for a language and downloads the ~145 MB voice pack (Wi-Fi advised); the phone voice reads until it lands; works offline after that.
 

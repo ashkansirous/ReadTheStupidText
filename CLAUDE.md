@@ -51,6 +51,17 @@ at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
 > Repo artifact retention is 1 day as a safety net. See Decisions 52-58 and
 > Slices 39-42 in `plan.md`.
 
+> **Merging a change to a `core` path ships both apps.** The `core` filter includes
+> `.github/workflows/build.yml`, `*.slnx`, `GitVersion.yml`, `global.json` and
+> `.github/scripts/find-release.sh`, so a PR that edits any of them (even a Dino
+> Reader–only PR adding a project to the solution) builds both platforms, cuts a
+> version and submits to the Microsoft Store and Google Play on merge. Expect that,
+> or batch such edits.
+
+> **Dino CI rule:** the `dinoreader` path group runs only the `test-dinoreader`
+> job (ubuntu), never the version, release or store jobs. Keep Dino paths out of
+> the `core` group. (Slice 59: docs/plan/slices/59-dialogue-parser-voice-caster.md)
+
 > **Language packs, iOS, translation (Batch 9, planning):** once Slices 50/56
 > land, **no platform bundles a voice model** (supersedes Decisions 14 and 39):
 > every voice downloads as a pack after the first-run language choice, from
@@ -103,6 +114,7 @@ App  →  Application  →  Domain
 Infrastructure  →  Application / Domain
 Mobile  →  Application / Domain / Documents
 Documents  →  Application
+DinoReader.Core (standalone, no deps)
 ```
 
 - **Domain** (`net10.0`) — entities, value objects, enums. No framework deps.
@@ -124,6 +136,14 @@ Documents  →  Application
   have no Windows-only dependency (so not stuck in Infrastructure) — both
   Infrastructure (Windows) and Mobile (Android) reference this project and
   share the exact same extractors.
+- **DinoReader.Core** (`net10.0`, `src/DinoReader.Core`) — the pure dialogue library
+  for Dino Reader: `StorySegmenter`, `SpeakerAttributor`, `GenderGuesser`,
+  `VoiceCaster` (Decision 75). No package or project references (not Domain, not
+  Application); voices come in as plain `VoiceOption(id, gender)`. Every language
+  table lives in `LanguageRules` (`LanguageRules.English` today): a new language adds
+  a rules instance and never touches the algorithms. Returns data only, no
+  user-facing copy. Paragraphs are blank-line separated; a single newline is never a
+  sentence or paragraph boundary (wrapped PDF/OCR text). (Slice 59: docs/plan/slices/59-dialogue-parser-voice-caster.md)
 - **Infrastructure** (`net10.0-windows`) — speech engines (local neural
   **Supertonic-3** via sherpa-onnx, plus a WinRT `SpeechSynthesis` fallback),
   all played through `MediaPlayer`; the neural model ships in the package.
@@ -159,6 +179,14 @@ Documents  →  Application
   `obj/Debug/net10.0-android/android/bin/` and check `lib/<abi>/` yourself** —
   a clean build with no warnings is not proof the right binary landed. See
   Batch 6 in `plan.md`.
+
+**Mobile voice packs and first run (Batch 9):**
+
+- Mobile no longer bundles the voice model. Supertonic-3 is a downloaded pack `supertonic-3` (~145 MB) under `AppDataDirectory/packs/`; `MobileVoiceModelService` only locates and manifest-checks it. The APK/AAB has no `assets/VoiceModel` (unzip and check). Windows still bundles `VoiceModel/` until Slice 56. (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
+- Voice packs (`docs/voice-packs.md`): `IVoicePackService` (Application) + `MobileVoicePackService` (Mobile); the pure decisions live in `PackRetryPolicy`/`PackCatalogParser`/`PackManifest`/`PackNaming`/`VoicePackSelector` (unit-tested). The pipeline runs off the UI thread and `VoicePackInstaller` marshals state to the main thread. An installed pack means zero network requests. `InvalidPack` is never retried. Offline detection on Android = `NetworkAccess.None` + Java exception type names. (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
+- Until the pack is Ready, `CompositeSpeechReader` reads with the Android `TextToSpeech` "Phone voice" (`SystemVoice.Id`), also user-selectable. (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
+- `packs-<n>` releases hold packs + `packs.json`, published by the manual `packs.yml` with `--latest=false`; the app pins one in `PackConstants.CatalogUrl`. Every app-release tag scan (`build.yml` release-publish, `.github/scripts/find-release.sh`) must filter to `^v[0-9]+\.[0-9]+\.[0-9]+$`. (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
+- First-run language: `ISettingsStore.Language`; the app shows `LanguagePage` when it is null. Android declares `INTERNET` + `ACCESS_NETWORK_STATE`, used only for pack downloads; user data stays on the device. Android `minSdk` is 24 (Google Play rejects lower). (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
 
 Keep `App.xaml.cs` thin: provider/DI wiring and window bootstrap only. Real
 logic lives in Application/Infrastructure; XAML views stay free of business
@@ -221,6 +249,12 @@ running the app (VS **(Package)** profile). Run the suite with:
 
 ```bash
 dotnet test tests/ReadTheStupidText.Tests/ReadTheStupidText.Tests.csproj
+```
+
+Dino Reader's pure library has its own suite (xUnit v3, plain `net10.0`, runs on any OS):
+
+```bash
+dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj
 ```
 
 A CI `test` job in `build.yml` runs them on every push/PR that touches app code

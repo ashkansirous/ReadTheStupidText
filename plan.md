@@ -1978,7 +1978,7 @@ and depend on that PR.
 | 47 | Head start: sentence-level audio cache | planned | — | — | [47-head-start-sentence-cache.md](docs/plan/slices/47-head-start-sentence-cache.md) |
 | 48 | iOS target and TestFlight from CI | planned | — | — | [48-ios-target-testflight.md](docs/plan/slices/48-ios-target-testflight.md) |
 | 49 | iOS reaches Android parity | planned | — | — | [49-ios-parity.md](docs/plan/slices/49-ios-parity.md) |
-| 50 | Voice packs, first-run language, slimmer app (Android) | planned | — | — | [50-voice-packs-first-run-language.md](docs/plan/slices/50-voice-packs-first-run-language.md) |
+| 50 | Voice packs, first-run language, slimmer app (Android) | built | #173 | — | [50-voice-packs-first-run-language.md](docs/plan/slices/50-voice-packs-first-run-language.md) |
 | 51 | Multilingual voices (Supertonic, Piper fa, MeloTTS zh) | planned | — | — | [51-multilingual-voices.md](docs/plan/slices/51-multilingual-voices.md) |
 | 52 | PaddleOCR per language (Android) | planned | — | — | [52-paddleocr-per-language.md](docs/plan/slices/52-paddleocr-per-language.md) |
 | 53 | Android: localized UI and RTL | planned | — | — | [53-localized-ui-rtl.md](docs/plan/slices/53-localized-ui-rtl.md) |
@@ -2002,7 +2002,7 @@ section is only the index.
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
 | 58 | Dino Reader skeleton: shared Mobile library, new app, pipeline | planned | — | — | [58-dino-reader-skeleton.md](docs/plan/slices/58-dino-reader-skeleton.md) |
-| 59 | Dialogue parser and voice caster (pure) | planned | — | — | [59-dialogue-parser-voice-caster.md](docs/plan/slices/59-dialogue-parser-voice-caster.md) |
+| 59 | Dialogue parser and voice caster (pure) | built | #175 | — | [59-dialogue-parser-voice-caster.md](docs/plan/slices/59-dialogue-parser-voice-caster.md) |
 | 60 | Reading with a voice per character | planned | — | — | [60-per-character-voice-reading.md](docs/plan/slices/60-per-character-voice-reading.md) |
 | 61 | Gallery, stories on device, grown-up gate | planned | — | — | [61-gallery-grownup-gate.md](docs/plan/slices/61-gallery-grownup-gate.md) |
 | 62 | Reading screen: text and picture modes | planned | — | — | [62-reading-screen-modes.md](docs/plan/slices/62-reading-screen-modes.md) |
@@ -2024,6 +2024,16 @@ Built but not verified (details in each slice file):
 - Slice 43: native-speaker read of the 8 translations ([slice](docs/plan/slices/43-store-listing-refresh.md)).
 - Slice 43: text pasted into Partner Center (9 languages, description + 7 search terms) and Play Console (short + full description) ([slice](docs/plan/slices/43-store-listing-refresh.md)).
 - Slice 43: download disclosure to be added once Slices 50 and 56 ship; re-check the "works offline" wording then ([slice](docs/plan/slices/43-store-listing-refresh.md)).
+- Slice 59: attribution quality on a real children's book text (only unit-test fixtures so far); check with the first Slice 60 read ([slice](docs/plan/slices/59-dialogue-parser-voice-caster.md)).
+- Slice 59: Slice 58 still has to add the Dino Reader app build group to `build.yml` ([slice](docs/plan/slices/59-dialogue-parser-voice-caster.md)).
+- Slice 50: Run `packs.yml` with release_number=1 pack_version=1; confirm `releases/latest` and `v*` versions are unchanged. ([slice](docs/plan/slices/50-voice-packs-first-run-language.md))
+- Slice 50: Fresh install in airplane mode: language page, phone voice reads, offline message + Retry. ([slice](docs/plan/slices/50-voice-packs-first-run-language.md))
+- Slice 50: Online download with progress; kill mid-way and resume. ([slice](docs/plan/slices/50-voice-packs-first-run-language.md))
+- Slice 50: Corrupted pack rejected and re-downloaded once. ([slice](docs/plan/slices/50-voice-packs-first-run-language.md))
+- Slice 50: Next read after install uses the neural voice. ([slice](docs/plan/slices/50-voice-packs-first-run-language.md))
+- Slice 50: Play Console data-safety form updated by hand. ([slice](docs/plan/slices/50-voice-packs-first-run-language.md))
+- Slice 50: Play accepts the minSdk 24 bundle. ([slice](docs/plan/slices/50-voice-packs-first-run-language.md))
+- Slice 58: decide whether Dino Reader project additions to `ReadTheStupidText.slnx` / `build.yml` should keep re-releasing the RTST apps (today `*.slnx` and `build.yml` are `core`); seen when Slice 59's merge shipped an unchanged RTST release ([slice](docs/plan/slices/58-dino-reader-skeleton.md)).
 
 ## Out of Scope
 
