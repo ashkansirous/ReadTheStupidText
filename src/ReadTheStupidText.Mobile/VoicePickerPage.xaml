@@ -26,12 +26,18 @@
 
             <VerticalStackLayout Grid.Column="1" Spacing="2" Margin="10,0,0,0" VerticalOptions="Center">
                 <Label Text="Choose a voice" TextColor="White" FontSize="16" FontAttributes="Bold" />
-                <Label Text="Bundled offline · no download" TextColor="#C8FFFFFF" FontSize="11.5" />
+                <Label Text="Natural voices download once · your text stays on the phone" TextColor="#C8FFFFFF" FontSize="11.5" />
             </VerticalStackLayout>
         </Grid>
 
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="14" Spacing="14">
+
+                <Label Text="PHONE" FontSize="10.5" FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
+                <Border Padding="0" StrokeShape="RoundRectangle 14" Stroke="{StaticResource CardBorder}"
+                        BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}">
+                    <VerticalStackLayout x:Name="PhoneVoiceList" />
+                </Border>
 
                 <Label Text="MALE" FontSize="10.5" FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
                 <Border Padding="0" StrokeShape="RoundRectangle 14" Stroke="{StaticResource CardBorder}"

@@ -4,9 +4,9 @@ using ReadTheStupidText.Domain.Reading;
 namespace ReadTheStupidText.Mobile;
 
 /// <summary>
-/// Routes speech to the local Supertonic-3 neural engine once its model is ready,
-/// and to Android's built-in <c>TextToSpeech</c> until then (or if the model is
-/// missing), so the app is never mute — same routing shape as Windows'
+/// Routes speech to the local Supertonic-3 neural engine once its downloaded voice
+/// pack is ready, and to Android's built-in <c>TextToSpeech</c> until then (or if the
+/// pack is missing, or the user picked "Phone voice"), so the app is never mute — same routing shape as Windows'
 /// <c>CompositeSpeechReader</c> (Decision 39), not a shared class since the two
 /// engines it wraps are entirely platform-specific.
 /// </summary>
@@ -16,6 +16,8 @@ public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
     private readonly AndroidSpeechReader _fallback;
     private readonly IVoiceModelService _model;
     private ISpeechReader _active;
+    private bool _useSystemVoice;
+    private const string LastNeuralVoiceKey = "LastNeuralVoiceId";
 
     public CompositeSpeechReader(AndroidSupertonicSpeechReader neural, AndroidSpeechReader fallback, IVoiceModelService model)
     {
@@ -23,6 +25,13 @@ public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
         _fallback = fallback;
         _model = model;
         _active = fallback;
+
+        // The persisted choice may be "Phone voice" at startup; the neural engine still
+        // needs the voice the user last picked for when they switch back (or the default).
+        if (Preferences.Default.Get<string?>(LastNeuralVoiceKey, null) is { } lastNeural)
+        {
+            _neural.SetVoice(lastNeural);
+        }
 
         _neural.StateChanged += (_, state) => Forward(_neural, state);
         _fallback.StateChanged += (_, state) => Forward(_fallback, state);
@@ -46,7 +55,7 @@ public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
 
     public Task SpeakAsync(string text, int? activityId = null)
     {
-        _active = _model.IsReady ? _neural : _fallback;
+        _active = _model.IsReady && !_useSystemVoice ? _neural : _fallback;
         return _active.SpeakAsync(text, activityId);
     }
 
@@ -65,8 +74,22 @@ public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
         _fallback.SetSpeed(speed);
     }
 
-    // Voice selection is neural-only; the fallback always uses the system default.
-    public void SetVoice(string voiceId) => _neural.SetVoice(voiceId);
+    // Neural voices are chosen by id; the labelled "Phone voice" (SystemVoice.Id) routes
+    // reads to the fallback even after the neural pack is installed. The fallback always
+    // uses the system default voice. Routing is decided when a read STARTS (SpeakAsync),
+    // so switching to or from "Phone voice" mid-read applies to the next read only; the
+    // neural-to-neural switch is the one that takes effect at the next chunk boundary
+    // (Slice 23). The last neural voice is remembered separately so choosing "Phone
+    // voice" never forgets it.
+    public void SetVoice(string voiceId)
+    {
+        _useSystemVoice = voiceId == SystemVoice.Id;
+        if (!_useSystemVoice)
+        {
+            _neural.SetVoice(voiceId);
+            Preferences.Default.Set(LastNeuralVoiceKey, voiceId);
+        }
+    }
 
     public Task SkipForward() => _active.SkipForward();
 

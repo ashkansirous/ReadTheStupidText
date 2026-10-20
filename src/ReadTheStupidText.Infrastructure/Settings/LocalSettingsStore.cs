@@ -25,6 +25,7 @@ public sealed class LocalSettingsStore : ISettingsStore
     private const string SanitizerKey = "EnabledSanitizers";
     private const string PanelXKey = "PanelX";
     private const string PanelYKey = "PanelY";
+    private const string LanguageKey = "Language";
 
     private readonly ApplicationDataContainer _settings = ApplicationData.Current.LocalSettings;
 
@@ -70,6 +71,22 @@ public sealed class LocalSettingsStore : ISettingsStore
             else
             {
                 _settings.Values[VoiceKey] = value;
+            }
+        }
+    }
+
+    public string? Language
+    {
+        get => _settings.Values[LanguageKey] as string;
+        set
+        {
+            if (value is null)
+            {
+                _settings.Values.Remove(LanguageKey);
+            }
+            else
+            {
+                _settings.Values[LanguageKey] = value;
             }
         }
     }

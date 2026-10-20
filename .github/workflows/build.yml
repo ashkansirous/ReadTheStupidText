@@ -11,8 +11,8 @@ name: build
 #     for build outputs.
 #   * Only build what changed. `changes` path-filters the diff: core code
 #     (Domain/Application/Documents/tests/pipeline) builds both platforms,
-#     App/Infrastructure only Windows, Mobile (+ the shared voice model) only
-#     Android. A docs-only change builds nothing and cuts no release.
+#     App/Infrastructure only Windows, Mobile only Android (it no longer
+#     bundles the voice model: Slice 50, voices are downloaded packs). A docs-only change builds nothing and cuts no release.
 #     workflow_dispatch forces both.
 #
 # Flow on a push to main:
@@ -98,8 +98,6 @@ jobs:
             android:
               - 'src/ReadTheStupidText.Mobile/**'
               - '.github/scripts/stage-android-package.sh'
-              # The Mobile csproj bundles the Windows project's voice model.
-              - 'src/ReadTheStupidText.App/VoiceModel/**'
 
   version:
     needs: changes
@@ -334,10 +332,9 @@ jobs:
       PUBLISH_DIR: src/ReadTheStupidText.Mobile/bin/Release/net10.0-android/publish
       VERSION: ${{ needs.version.outputs.version }}
     steps:
-      - name: Checkout (with LFS — the neural voice model is LFS-tracked)
+      # No LFS: the Android package carries no voice model (Slice 50).
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          lfs: true
 
       - name: Set up .NET 10
         uses: actions/setup-dotnet@v4
@@ -434,9 +431,10 @@ jobs:
           set -euo pipefail
           # A re-run of an old failed run must not publish its stale draft over
           # a newer release (it would become "latest" and hit the Store with a
-          # lower version) — discard it instead.
+          # lower version) — discard it instead. Only app tags (v<x.y.z>) count:
+          # packs-<n> releases must never be compared as app versions.
           newest=$(gh release list --repo "$REPO" --limit 100 --exclude-drafts --json tagName --jq '.[].tagName' |
-            sed 's/^v//' | sort -V | tail -n 1)
+            grep -E '^v[0-9]+[.][0-9]+[.][0-9]+$' | sed 's/^v//' | sort -V | tail -n 1 || true)
           if [ -n "$newest" ] && [ "$(printf '%s\n%s\n' "$newest" "$VERSION" | sort -V | tail -n 1)" != "$VERSION" ]; then
             echo "::warning::v${newest} is already published, newer than v${VERSION} — deleting this stale draft instead of publishing it."
             gh release delete "v${VERSION}" --repo "$REPO" --yes

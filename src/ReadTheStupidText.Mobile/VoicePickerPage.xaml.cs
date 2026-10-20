@@ -19,6 +19,9 @@ public partial class VoicePickerPage : ContentPage
     private static readonly Color SelectedRowTint = Color.FromArgb("#125B57E8");
     private static readonly Color SelectedCheckColor = Color.FromArgb("#5B57E8");
 
+    /// <summary>Display name of the labelled system voice (Slice 50, Decision 61).</summary>
+    public const string PhoneVoiceName = "Phone voice";
+
     private readonly ISpeechReader _reader;
     private readonly ISettingsStore _settings;
     private readonly Dictionary<string, Border> _rowsByVoiceId = new();
@@ -28,6 +31,8 @@ public partial class VoicePickerPage : ContentPage
         InitializeComponent();
         _reader = reader;
         _settings = settings;
+
+        PhoneVoiceList.Children.Add(BuildRow(new VoiceInfo(SystemVoice.Id, PhoneVoiceName, string.Empty)));
 
         foreach (VoiceInfo voice in SupertonicVoiceTable.Voices.Where(v => !SupertonicVoiceTable.IsFemale(v.Id)))
         {

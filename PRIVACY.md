@@ -42,13 +42,18 @@ that leaves your device. Everything the app does happens **locally**.
 
 ## Network use
 
-**None.** The app does not call any server, download anything after
-installation, or transmit data of any kind. Both the Windows and Android apps
-work fully offline.
+**Language packs only.** The Android app downloads the natural-voice language
+pack for the language you choose on first launch (about 145 MB, so a Wi-Fi
+connection is advisable). The download is a plain file request to this
+project's public GitHub Releases page: no account, no identifier and none of
+your text, images or scans is sent, and the app has no analytics or telemetry.
+Once a pack is installed the app works fully offline and makes no network requests at all (it does not even re-check the catalog). Until it arrives, and if
+you are offline, your phone's own built-in voice reads instead.
 
-The Android app's package declares the standard `INTERNET` permission because
-some bundled system libraries include it by default in their own packaging.
-The app itself makes no use of this permission to send or receive data.
+The Windows app does not use the network.
+
+Your text, images, scans and documents are never transmitted anywhere; reading
+and text recognition happen on the device.
 
 ## Permissions
 
@@ -57,15 +62,18 @@ system-tray icon, register a global hotkey, read selected/copied text from
 other apps (via UI Automation and the Windows clipboard), and run its
 on-device text-to-speech engine. It is not used to collect or transmit data.
 
-**Android** requests the **Camera** permission, used only when you tap the
+**Android** declares the **Internet** and **Network state** permissions, used
+only to download language voice packs and to tell "offline" from a failed
+download (see *Network use*). It also requests the **Camera** permission, used only when you tap the
 scan action, so the app can point your camera at text to read it — nothing is
 captured otherwise. Both platforms use the standard OS file picker to let you
 choose a document to read; the app only opens the file you explicitly select.
 
 ## Third-party components
 
-The app bundles a small set of open-source, on-device components that never
-transmit data:
+The app uses a small set of open-source, on-device components that never
+transmit data (on Android the Supertonic voice model is downloaded as a
+language pack rather than bundled):
 
 - **sherpa-onnx** and the **Supertonic** voice model — the offline neural
   text-to-speech engine, used on both platforms.

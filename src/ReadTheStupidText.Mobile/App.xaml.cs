@@ -6,29 +6,43 @@ namespace ReadTheStupidText.Mobile;
 
 public partial class App : Microsoft.Maui.Controls.Application
 {
+	private readonly IServiceProvider _services;
 	private readonly ISpeechReader _reader;
 	private readonly ISettingsStore _settings;
-	private readonly IVoiceModelService _model;
+	private readonly VoicePackInstaller _installer;
 
-	public App(ISpeechReader reader, ISettingsStore settings, IVoiceModelService model)
+	public App(IServiceProvider services, ISpeechReader reader, ISettingsStore settings, VoicePackInstaller installer)
 	{
 		InitializeComponent();
 
+		_services = services;
 		_reader = reader;
 		_settings = settings;
-		_model = model;
+		_installer = installer;
 		_ = InitializeSpeechAsync();
 	}
 
+	// First run (no language stored yet) opens the language page; afterwards the Reader.
 	protected override Window CreateWindow(IActivationState? activationState)
 	{
-		return new Window(new AppShell());
+		Page root = _settings.Language is null
+			? _services.GetRequiredService<LanguagePage>()
+			: new AppShell();
+		return new Window(root);
 	}
 
-	// Applies the persisted speed/voice immediately (cheap, no model needed),
-	// then locates the neural model (a one-time ~139 MB copy out of the package
-	// on first launch — see MobileVoiceModelService) and warms the engine, so
-	// the first real read pays as little cold-start cost as possible.
+	/// <summary>Leaves the first-run language page for the Reader.</summary>
+	public void ShowMain()
+	{
+		if (Windows.Count > 0)
+		{
+			Windows[0].Page = new AppShell();
+		}
+	}
+
+	// Applies the persisted speed/voice immediately (cheap, no model needed), then
+	// lets the installer resume or finish the voice pack for the chosen language
+	// (Slice 50). Until the neural pack is ready the phone voice reads.
 	private async Task InitializeSpeechAsync()
 	{
 		_reader.SetSpeed(_settings.Speed);
@@ -37,7 +51,6 @@ public partial class App : Microsoft.Maui.Controls.Application
 			_reader.SetVoice(voiceId);
 		}
 
-		await _model.InitializeAsync();
-		await _reader.WarmUpAsync();
+		await _installer.StartAsync();
 	}
 }

@@ -161,6 +161,18 @@ the in-memory activity log — shown in the activity-log window, capped, and cle
 every restart. There is no third-party analytics SDK, no network call, and no
 on-disk telemetry, so the Store privacy questionnaire stays "no data collected".
 
+**Android / Google Play data safety (Slice 50, Decision 60).** The Android app's only
+network use is downloading language voice packs from this repo's GitHub Releases (the
+`packs-<n>` releases, `docs/voice-packs.md`). Nothing about the user, their device or
+their content is sent: the request is an anonymous file download (the host sees an IP
+address, as for any web request, and the app does not log it). So the Play Console data
+safety form stays "no data collected" and "no data shared"; the app declares the
+`INTERNET` and `ACCESS_NETWORK_STATE` permissions to download packs and detect offline.
+Text, images, scans and translations stay on the device. The form needs a **manual update
+in Play Console by the owner** before the first release that ships this: the app is no
+longer fully offline, so answer the "does your app collect or share data" questions as
+above and make sure the privacy policy URL points at the updated `docs/privacy.html`.
+
 For **dev-time** performance tuning only, the read pipeline may optionally be
 instrumented with **OpenTelemetry** (`Activity`/`Meter`) and observed via a **local
 Aspire dashboard** (an OTLP viewer on the developer's own machine). This is **not
