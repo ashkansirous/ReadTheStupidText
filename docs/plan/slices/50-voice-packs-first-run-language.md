@@ -69,8 +69,8 @@ install gets much smaller.
       *Permissions*, 53-64), `docs/privacy.html` (same), and `STORE.md` Play data
       safety notes: the app downloads language packs (no user data sent, no
       telemetry); text, images and scans stay on the device.
-- [ ] Update the listing text from Slice 43 with the first-run download
-      disclosure (about 145 MB, Wi-Fi advised). *Done at merge, after Slice 43 landed; the coordinator does it in the same PR.*
+- [x] Update the listing text from Slice 43 with the first-run download
+      disclosure (about 145 MB, Wi-Fi advised). *Play listing text updated in docs/store-listings/*.md; Microsoft Store waits for Slice 56.*
 - [x] `CLAUDE.md`: replace "model ships in the package" for Mobile, document the
       pack service and the `packs-*` releases. *Lifted by the index pass from the For CLAUDE.md block below.*
 

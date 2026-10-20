@@ -172,15 +172,17 @@ languages or voice packs (Batch 9 features not yet shipped).
 10,000 chars, up to 7 search terms of <= 30 chars each; Google Play title 30,
 short description 80, full description 4,000.
 
-**Download disclosure (not live).** Once Slice 50 (Android) / Slice 56
-(Windows) ship, the first launch downloads a ~145 MB voice pack (Decisions 60,
-61), and the store policies require the listing and privacy text to say so.
-The ready-to-paste paragraph is the last block of `docs/store-listings/en.md`;
-each translation carries a TODO marker. **Do not paste it before those slices
-ship.** Slice 50/56 must also re-check the listing against what is then true:
-the "works offline" wording (still true for user data, but the app now needs a
-network once) and the "no network" statements in this file's *Capabilities*
-and *Privacy* sections.
+**Download disclosure (Play live as of Slice 50; Microsoft Store waits for Slice 56).**
+Android's first launch downloads a ~145 MB voice pack (Decisions 60, 61), and the
+store policies require the listing and privacy text to say so. As of Slice 50 the
+Google Play note is live: each `docs/store-listings/*.md` carries a "Google Play
+only: download note" section to append to the Play full description (the "Works
+offline" bullet is already reworded for both stores). **Do not add it to the
+Microsoft Store listing until Slice 56 ships** (Windows still bundles the voice).
+Slice 56 must also re-check the listing against what is then true: the "works
+offline" wording (still true for user data, but the app then needs a network once)
+and the "no network" statements in this file's *Capabilities* and *Privacy*
+sections.
 
 **Manual step (user pastes the text):**
 

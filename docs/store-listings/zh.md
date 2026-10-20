@@ -26,9 +26,11 @@ Read The Stupid Text 可以把任何文字朗读出来，让你用听代替盯�
 
 - 在你的设备上运行的自然语音
 - 朗读速度 0.5 倍至 2 倍
-- 离线可用：你的文字、文件和扫描内容不会离开设备
+- 离线可用（Android 版首次启动时下载一次语音）：你的文字、文件和扫描内容不会离开设备
 - 无需账号，无数据分析
 
-## Download disclosure
+## Google Play only: download note (append to the full description)
 
-<!-- TODO (Slice 50/56): translate the English disclosure from en.md and add it here once voice packs ship. Do not publish before then. -->
+在 Android 上首次启动应用时，会下载约 145 MB 的语音包，因此需要联网一次（建议使用 Wi-Fi）。下载完成之前，应用会使用手机自带的语音朗读。只会下载语音包。你的文字、文件和扫描内容始终保留在设备上，语音安装完成后，应用不再使用网络。
+
+Microsoft Store: don't add until Slice 56 ships (Windows still includes the voice).
