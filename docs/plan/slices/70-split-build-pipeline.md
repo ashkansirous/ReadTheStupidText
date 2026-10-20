@@ -1,6 +1,6 @@
 # Slice 70 — Split the build pipeline into the Lets-Call-Mom shape
 
-*Planned.*
+*In progress (wave 2026-10-20d), draft PR.*
 
 **Batch:** 11 (Lets-Call-Mom parity)
 **Depends on:** Slice 69 (the publish step moves with the Android workflow)
