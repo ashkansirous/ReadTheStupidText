@@ -1,6 +1,6 @@
 # Slice 43 — Store listing refresh (Microsoft Store + Google Play, 9 languages)
 
-*Planned.*
+*In progress (wave 2026-10-20), draft PR.*
 
 **Batch:** 9
 **Decisions:** 71 (also 60, 61 for the download disclosure)
