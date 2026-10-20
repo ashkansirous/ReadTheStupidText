@@ -1,0 +1,108 @@
+name: packs
+
+# Publishes language packs (Slice 50, Decisions 60-62) as assets of a dedicated
+# `packs-<n>` GitHub release, separate from the app's `v<x.y.z>` releases. Manual
+# only: packs change rarely and must never ride on an app build. Release assets
+# don't count toward the Actions storage quota, and this uploads no Actions
+# artifacts (Decision 52).
+#
+# Why this can't disturb app versioning:
+#   * GitVersion.yml sets no tag-prefix, so only [vV]?<semver> tags are versions;
+#     `packs-1` does not parse as one.
+#   * build.yml's base-tag lookup only matches refs/tags/v*.
+#   * the release is created with --latest=false, so releases/latest stays the app.
+# Details and the pack format: docs/voice-packs.md.
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_number:
+        description: 'Packs release number: publishes the tag packs-<n> (the app pins one in PackConstants.CatalogUrl)'
+        required: true
+        type: string
+      pack_version:
+        description: 'Version stamped into the Supertonic-3 pack (bump when the model files change)'
+        required: true
+        default: '1'
+        type: string
+
+permissions:
+  contents: write   # create the packs-<n> release and upload its assets
+
+env:
+  PACK_ID: supertonic-3
+  PACK_LANGUAGES: 'en,fr,es,pt,ru,ja,ar'
+  PACK_LICENSE: Apache-2.0
+  MODEL_DIR: src/ReadTheStupidText.App/VoiceModel
+
+jobs:
+  publish-packs:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: packs-${{ inputs.release_number }}
+      PACK_VERSION: ${{ inputs.pack_version }}
+    steps:
+      - name: Checkout (with LFS — the voice model is LFS-tracked)
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Refuse a tag that is not packs-<number>
+        run: |
+          if ! [[ "$TAG" =~ ^packs-[0-9]+$ ]]; then
+            echo "::error::Tag '$TAG' must look like packs-<number>"; exit 1
+          fi
+
+      # Layout: <id>/pack.json, <id>/LICENSE and the model files, zipped under a
+      # single top-level folder. pack.json lists every payload file so the app can
+      # verify an install is complete.
+      - name: Build the pack zip
+        run: |
+          set -euo pipefail
+          mkdir -p "out/$PACK_ID"
+          # The required file set — keep in sync with the constants in
+          # src/ReadTheStupidText.Domain/Reading/SupertonicFiles.cs (never `cp *`:
+          # stray files must not ship, and a missing one must fail the job).
+          model_files=(duration_predictor.int8.onnx text_encoder.int8.onnx vector_estimator.int8.onnx vocoder.int8.onnx tts.json unicode_indexer.bin voice.bin)
+          for f in "${model_files[@]}" LICENSE; do
+            src="$MODEL_DIR/$f"
+            if [ ! -f "$src" ]; then echo "::error::Missing required pack file $src"; exit 1; fi
+            # An LFS pointer (checkout without the real objects) is a tiny text file.
+            if head -c 24 "$src" | grep -q '^version https://git-lfs'; then
+              echo "::error::$src is an unresolved Git LFS pointer"; exit 1
+            fi
+            if [ "$f" != LICENSE ] && [ "$(stat -c %s "$src")" -lt 1024 ] && [[ "$f" == *.onnx ]]; then
+              echo "::error::$src is under 1 KB — not a real model file"; exit 1
+            fi
+            cp "$src" "out/$PACK_ID/$f"
+          done
+          files=$(cd "out/$PACK_ID" && ls -1 | grep -vx 'LICENSE' | jq -R . | jq -s .)
+          jq -n --arg id "$PACK_ID" --arg language "$PACK_LANGUAGES" --arg version "$PACK_VERSION" --argjson files "$files" \
+            '{id: $id, kind: "voice", language: $language, version: $version, engine: "sherpa-onnx", files: $files}' \
+            > "out/$PACK_ID/pack.json"
+          (cd out && zip -r -X "$PACK_ID-$PACK_VERSION.zip" "$PACK_ID")
+          ls -l out
+
+      - name: Write packs.json
+        run: |
+          set -euo pipefail
+          zip="out/$PACK_ID-$PACK_VERSION.zip"
+          size=$(stat -c %s "$zip")
+          sha=$(sha256sum "$zip" | cut -d' ' -f1)
+          url="https://github.com/${{ github.repository }}/releases/download/$TAG/$(basename "$zip")"
+          jq -n --arg id "$PACK_ID" --arg language "$PACK_LANGUAGES" --arg version "$PACK_VERSION" \
+                --argjson size "$size" --arg sha "$sha" --arg license "$PACK_LICENSE" --arg url "$url" \
+            '[{id: $id, language: $language, kind: "voice", version: $version, sizeBytes: $size, sha256: $sha, license: $license, url: $url}]' \
+            > out/packs.json
+          cat out/packs.json
+
+      # Not latest: releases/latest must keep pointing at the app release.
+      - name: Publish the packs release
+        run: |
+          set -euo pipefail
+          gh release create "$TAG" "out/$PACK_ID-$PACK_VERSION.zip" out/packs.json \
+            --repo "${{ github.repository }}" \
+            --title "Language packs $TAG" \
+            --notes "Voice/OCR language packs and their packs.json catalog (not an app release). See docs/voice-packs.md." \
+            --latest=false

@@ -26,9 +26,11 @@ En Android, pega o escribe texto, abre un archivo .txt, .pdf o .docx, o escanea 
 
 - Voces naturales que funcionan en tu dispositivo
 - Velocidad de lectura de 0,5x a 2x
-- Funciona sin conexión: tus textos, archivos y escaneos nunca salen del dispositivo
+- Funciona sin conexión (Android descarga su voz una sola vez en el primer inicio): tus textos, archivos y escaneos nunca salen del dispositivo
 - Sin cuenta y sin analíticas
 
-## Download disclosure
+## Google Play only: download note (append to the full description)
 
-<!-- TODO (Slice 50/56): translate the English disclosure from en.md and add it here once voice packs ship. Do not publish before then. -->
+La primera vez que abres la aplicación en Android, descarga un paquete de voz de unos 145 MB, así que necesita conexión a Internet una sola vez (se recomienda Wi-Fi). Hasta que termine la descarga, la aplicación lee con la voz integrada de tu teléfono. Solo se descarga el paquete de voz. Tus textos, archivos y escaneos permanecen en tu dispositivo y, una vez instalada la voz, la aplicación no usa la red.
+
+Microsoft Store: don't add until Slice 56 ships (Windows still includes the voice).

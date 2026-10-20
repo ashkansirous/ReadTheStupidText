@@ -49,7 +49,15 @@
                     <GradientStop Color="{StaticResource BrandEnd}" Offset="1.0" />
                 </LinearGradientBrush>
             </Grid.Background>
-            <Label Text="Read The Stupid Text" TextColor="White" FontSize="16" FontAttributes="Bold" />
+            <VerticalStackLayout Spacing="3">
+                <Label Text="Read The Stupid Text" TextColor="White" FontSize="16" FontAttributes="Bold" />
+                <!-- Voice pack status (Slice 50): shown only while a pack downloads or needs a retry. -->
+                <Label x:Name="PackStatusLabel" TextColor="#C8FFFFFF" FontSize="11.5" IsVisible="False">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnPackStatusTapped" />
+                    </Label.GestureRecognizers>
+                </Label>
+            </VerticalStackLayout>
         </Grid>
 
         <Grid Grid.Row="1" Padding="14,12,14,10" RowDefinitions="Auto,Auto,*,Auto,Auto" RowSpacing="10">

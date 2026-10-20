@@ -21,7 +21,9 @@ public static class MauiProgram
 				fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
 			});
 
+		builder.Services.AddSingleton<IVoicePackService, MobileVoicePackService>();
 		builder.Services.AddSingleton<IVoiceModelService, MobileVoiceModelService>();
+		builder.Services.AddSingleton<VoicePackInstaller>();
 		builder.Services.AddSingleton<ISettingsStore, MobilePreferencesSettingsStore>();
 		builder.Services.AddSingleton<ISpeechReader>(CreateSpeechReader);
 		builder.Services.AddSingleton<IImageTextExtractor>(CreateImageTextExtractor);
@@ -30,6 +32,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<DocxTextExtractor>();
 		builder.Services.AddSingleton<IDocumentTextExtractor, CompositeDocumentTextExtractor>();
 		builder.Services.AddSingleton<PendingScanResult>();
+		builder.Services.AddTransient<LanguagePage>();
 		builder.Services.AddTransient<ReaderPage>();
 		builder.Services.AddTransient<VoicePickerPage>();
 		builder.Services.AddTransient<ScanPage>();

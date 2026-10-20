@@ -101,5 +101,6 @@ public class TextSanitizerTests
         public string? VoiceId { get; set; }
         public SanitizerCategory EnabledSanitizers { get; set; } = SanitizerCategory.All;
         public PanelPosition? PanelPosition { get; set; }
+        public string? Language { get; set; }
     }
 }

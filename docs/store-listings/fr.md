@@ -26,9 +26,11 @@ Sous Android, collez ou saisissez du texte, ouvrez un fichier .txt, .pdf ou .doc
 
 - Des voix naturelles qui fonctionnent sur votre appareil
 - Vitesse de lecture de 0,5x à 2x
-- Fonctionne hors ligne : vos textes, fichiers et scans ne quittent jamais votre appareil
+- Fonctionne hors ligne (Android télécharge sa voix une seule fois au premier lancement) : vos textes, fichiers et scans ne quittent jamais votre appareil
 - Aucun compte, aucune analyse d'usage
 
-## Download disclosure
+## Google Play only: download note (append to the full description)
 
-<!-- TODO (Slice 50/56): translate the English disclosure from en.md and add it here once voice packs ship. Do not publish before then. -->
+Au premier lancement sur Android, l'application télécharge un pack de voix d'environ 145 Mo : une connexion Internet est donc nécessaire une seule fois (Wi-Fi recommandé). Tant que le téléchargement n'est pas terminé, l'application lit avec la voix intégrée de votre téléphone. Seul le pack de voix est téléchargé. Vos textes, fichiers et scans restent sur votre appareil, et une fois la voix installée, l'application n'utilise plus le réseau.
+
+Microsoft Store: don't add until Slice 56 ships (Windows still includes the voice).

@@ -21,6 +21,7 @@ public sealed class MobilePreferencesSettingsStore : ISettingsStore
     private const string SanitizerKey = "EnabledSanitizers";
     private const string PanelXKey = "PanelX";
     private const string PanelYKey = "PanelY";
+    private const string LanguageKey = "Language";
 
     private const bool AutoReadDefault = true;
     private const double NoSpeedStored = -1;
@@ -60,6 +61,22 @@ public sealed class MobilePreferencesSettingsStore : ISettingsStore
             else
             {
                 Preferences.Default.Set(VoiceKey, value);
+            }
+        }
+    }
+
+    public string? Language
+    {
+        get => Preferences.Default.Get(LanguageKey, (string?)null);
+        set
+        {
+            if (value is null)
+            {
+                Preferences.Default.Remove(LanguageKey);
+            }
+            else
+            {
+                Preferences.Default.Set(LanguageKey, value);
             }
         }
     }
