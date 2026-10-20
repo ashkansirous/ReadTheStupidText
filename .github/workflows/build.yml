@@ -54,6 +54,7 @@ jobs:
     outputs:
       windows: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.core == 'true' || steps.filter.outputs.windows == 'true' }}
       android: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.core == 'true' || steps.filter.outputs.android == 'true' }}
+      dinoreader: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.dinoreader == 'true' }}
     steps:
       - name: Checkout (with tags)
         if: github.event_name == 'push'
@@ -84,13 +85,16 @@ jobs:
               - 'src/ReadTheStupidText.Domain/**'
               - 'src/ReadTheStupidText.Application/**'
               - 'src/ReadTheStupidText.Documents/**'
-              - 'tests/**'
+              - 'tests/ReadTheStupidText.Tests/**'
               - 'global.json'
               - 'GitVersion.yml'
               - '*.slnx'
               - '.gitattributes'
               - '.github/workflows/build.yml'
               - '.github/scripts/find-release.sh'
+            dinoreader:
+              - 'src/DinoReader.Core/**'
+              - 'tests/DinoReader.Tests/**'
             windows:
               - 'src/ReadTheStupidText.App/**'
               - 'src/ReadTheStupidText.Infrastructure/**'
@@ -149,6 +153,27 @@ jobs:
 
       - name: Run unit tests
         run: dotnet test tests/ReadTheStupidText.Tests/ReadTheStupidText.Tests.csproj --configuration Release
+
+  # Dino Reader's pure Core (Story Reader parser). Standalone: it references no
+  # ReadTheStupidText project, so it runs on its own cheap Linux runner and is
+  # deliberately NOT in the needs of version/release/build/submit — a Dino-only
+  # push tests but never versions or releases. `changes.outputs.dinoreader`
+  # already includes workflow_dispatch, so a manual run covers it too.
+  test-dinoreader:
+    needs: changes
+    if: needs.changes.outputs.dinoreader == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Run Dino Reader core tests
+        run: dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj --configuration Release
 
   # main only. Creates (or, on a re-run / after a failed run, reuses and
   # empties) a DRAFT v<x.y.z> release at this merge commit. Drafts create no
