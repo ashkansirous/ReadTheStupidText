@@ -56,30 +56,83 @@ references Play reports (Slice 73).
 
 ## Scope
 
-- [ ] Pin `MauiVersion` to the latest stable MAUI 10 (10.0.120 or newer) in one place
+- [x] Pin `MauiVersion` to the latest stable MAUI 10 (10.0.120 or newer) in one place
       for all three projects (a root `Directory.Build.props`, or each csproj).
-- [ ] Add direct `PackageReference`s at latest stable for AndroidX AppCompat, Fragment,
+- [x] Add direct `PackageReference`s at latest stable for AndroidX AppCompat, Fragment,
       Activity, Core and Google Material in the Android projects (`Mobile.Shared` if it
       covers both apps), so MAUI's older transitive versions are lifted. Resolve any
       NU1608/NU1605 downgrade or binding conflicts; if a version clashes with MAUI at
       runtime, back that one package off and say so in this file.
-- [ ] Pin the Android workload in `android.yml` and `dinoreader-android.yml` to a workload
+- [x] Pin the Android workload in `android.yml` and `dinoreader-android.yml` to a workload
       set that has `AndroidR8ObfuscationMode` (Android SDK 36.1.118 or newer), with the
       matching `dotnet-version`, the way `ios.yml` pins its set. Update the local machine
       the same way (`dotnet workload update` / install that set) and note the command in
       `CLAUDE.md` via the `For CLAUDE.md` block.
-- [ ] In a `Condition="'$(Configuration)'=='Release'"` group for both apps:
+- [x] In a `Condition="'$(Configuration)'=='Release'"` group for both apps:
       `AndroidLinkTool=r8`, `AndroidR8ObfuscationMode=private-members`,
       `AndroidCreateProguardMappingFile=True`. Debug stays on D8, unchanged.
-- [ ] Confirm the `.aab` carries `mapping.txt` (Play reads it from the bundle for
+- [x] Confirm the `.aab` carries `mapping.txt` (Play reads it from the bundle for
       de-obfuscated crash traces). The R2/sideload `.apk` needs none.
 - [ ] Keep the iOS build green: MAUI is shared through `Mobile.Shared`. If the pinned
       MAUI needs a newer iOS SDK than workload set `10.0.401` / Xcode 26.6 provides,
       scope the pin to Android or bump `ios.yml` together, and record which.
-- [ ] Keep the sherpa-onnx native packaging fix intact (check `lib/arm64-v8a/` in the
+- [x] Keep the sherpa-onnx native packaging fix intact (check `lib/arm64-v8a/` in the
       built Release `.apk` per `CLAUDE.md`).
-- [ ] Add `proguard.cfg` keep rules only for anything R8 actually strips (found by the
-      smoke test), never pre-emptively.
+- [x] Add keep rules only for anything R8 actually strips (found by the smoke test),
+      never pre-emptively. Built as `src/AndroidProguard.cfg`.
+
+## Built (2026-10-21)
+
+- `Directory.Build.props` pins `MauiVersion` 10.0.120. AndroidX AppCompat 1.8.0, Fragment 1.9.0,
+  Activity 1.13.0.1, Core 1.19.0.1 and Material 1.14.0.6 are direct references in `Mobile.Shared`.
+  Lifting them gives harmless NU1608 warnings (Lifecycle.LiveData.Core 2.11.0.1 vs 2.9.2.x
+  constraints); both apps build and package.
+- Versions: MAUI Controls 10.0.120 (`MauiVersion` in the root `Directory.Build.props`).
+  AppCompat 1.8.0, Fragment 1.9.0 and Material 1.14.0.6 are Android-only refs in
+  `Mobile.Shared`; Activity and Core resolve transitively. Workload set 10.0.402
+  (Android SDK 36.1.118). `android.yml` and `dinoreader-android.yml` use dotnet 10.0.402;
+  `ios.yml` stays on 10.0.401.
+- R8: `src/AndroidRelease.props` (Release + Android only, imported by both apps) sets
+  `AndroidLinkTool=r8`, `AndroidR8ObfuscationMode=private-members` and
+  `RuntimeIdentifiers=android-arm64` (sherpa ships arm64-only natives, so armv7 and
+  x86/x64 devices are excluded). Its target `RequireAndroidSdkForR8` fails a Release
+  build on an Android SDK older than 36.1.118.
+- Keep rules in `src/AndroidProguard.cfg`: `androidx.activity.result.**`,
+  `TextRecognizerOptions`, and public static fields of the androidx, com.google,
+  com.k2fsa, android, kotlin, kotlinx and crc64 classes. Reason: .NET bindings read
+  static fields over JNI by name, and R8 had broken `PickVisualMedia$ImageOnly.INSTANCE`
+  and `TextRecognizerOptions.DEFAULT_OPTIONS`.
+- Obfuscation proxy (renamed / total members in `mapping.txt`): RTST 39.9%, Dino 40.3%.
+  The AAB carries `proguard.map` for Play.
+- Ship targets: `Directory.Build.props` is a core path; `AndroidRelease.props` and
+  `AndroidProguard.cfg` are in the `android` and `dinoapp` path-filter groups.
+- Dino `AddStoryPage`'s swallowed import exceptions now log through `ISystemLog`.
+- Local Release Android builds need `D:\dotnet-10.0.402` (`DOTNET_ROOT`, first on PATH).
+  Delete `obj/Release` and `bin/Release` after editing the `.cfg`.
+- Emulator acceptance of the final R8 Release (RTST_Test, arm64), 2026-10-21: all pass.
+  RTST: launch, play, file picker, Scan cancel, translate. Dino: play, picture mode, PDF
+  import, Photos import with OCR, Scan cancel with the tiles still live, cast screen. No
+  NoSuchField, ClassNotFound or Linkage errors.
+- Not verified here: the iOS build with Controls 10.0.120 (needs macOS CI).
+
+*From review:* two passes, all fixed (7 + 8 findings), plus two R8 runtime bugs found
+and fixed through device tests (the static-field renames above).
+
+#### For CLAUDE.md
+
+In `src/ReadTheStupidText.Mobile/CLAUDE.md`: "Release Android builds are R8-obfuscated
+(`src/AndroidRelease.props`, keep rules in `src/AndroidProguard.cfg`) and need .NET
+SDK/workload set 10.0.402 (Android SDK >= 36.1.118); the build errors otherwise. A
+`NoSuchFieldError` or `LinkageError` in Release only means R8 renamed a member a binding
+reads over JNI: add a keep rule, clean-rebuild (delete obj/bin Release), and smoke-test
+the Release APK on the emulator with `adb install -r --abi arm64-v8a`. Release ships
+arm64-v8a only. (Slice 72: docs/plan/slices/72-android-deps-r8-obfuscation.md)"
+
+#### Not yet verified
+
+- The Play Console "DEX obfuscation" metric after the next release (target >= 25%).
+- The iOS build on MAUI 10.0.120 with workload 10.0.401 (CI).
+- A real-device scan with the GMS document scanner module present.
 
 ## Done when
 
