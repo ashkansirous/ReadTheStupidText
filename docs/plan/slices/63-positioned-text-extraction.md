@@ -161,7 +161,7 @@ Dino scan wiring) and the APK check (done in part 2).
 - A code check confirmed RTST still registers exactly one of each OCR/scanner service, still routes the scanner
   result, and still has translation and the OCR pack installer.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-21)
 
 - The scanner and OCR stack (ML Kit, PaddleOCR runner, document scanner, PDF page renderer, page-image keeper)
   lives in `Mobile.Shared/Platforms/Android` and is registered once in `MobileSharedServices.Android.cs`. Apps

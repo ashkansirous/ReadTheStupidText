@@ -162,7 +162,7 @@ The iOS compile, both Android builds, and 463 + 229 tests pass. Nothing has run 
   need extra required-reason API entries in `PrivacyInfo.xcprivacy`).
 - `NLLanguageRecognizer` output (`zh-Hans` and similar tags are normalised by `TranslationFlow`).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-21)
 
 - The OCR pipeline shared by Android and iOS lives in `Mobile.Shared/Ocr/` behind `IBuiltInTextRecognizer`
   (ML Kit on Android, Vision on iOS). (Slice 55: docs/plan/slices/55-ios-batch9-features.md)
@@ -171,7 +171,7 @@ The iOS compile, both Android builds, and 463 + 229 tests pass. Nothing has run 
 - Translation isn't available on iOS (no .NET binding for Apple's Translation framework), so the
   translate card stays hidden there. (Slice 55: docs/plan/slices/55-ios-batch9-features.md)
 
-#### For README.md
+#### For README.md (lifted 2026-10-21)
 
 iOS now has the natural voices in nine languages, the head start, on-device text recognition per
 language, and localised permission prompts. Translation is Android-only for now.

@@ -24,9 +24,9 @@ Grab the MSIX from the **[latest release](https://github.com/ashkansirous/ReadTh
 
 **Android features (Slices 47-54):** natural voices in nine languages (Supertonic, Piper for Farsi, MeloTTS for Chinese), each downloaded as a pack; reading starts almost instantly for pasted or opened text because the first sentences are prepared while you look at it and heard sentences are cached; the interface is available in nine languages (en, fa, fr, es, pt, zh, ar, ru, ja), right-to-left for Farsi and Arabic; scanned text in Arabic, Farsi, Russian, Chinese and Japanese is recognised on the phone with a downloaded model; and pasted or scanned text can be translated into your language before reading ("Translate to <language>" on the reader). Nothing you read leaves the device.
 
-**iOS:** the iOS app has the neural voice (after the pack download), camera scanning with on-device text recognition, and background audio.
+**iOS:** the iOS app has the neural voice (after the pack download), camera scanning with on-device text recognition, background audio, nine languages of voices, the head start, per-language text recognition and localised permission prompts (translation is Android-only for now).
 
-**Dino Reader (Android, in development):** a kids' story reader that reads each character in their own voice (with a narrator picker); it builds from `src/DinoReader.App`. It has a story gallery and a grown-up area (a hold, then a sum) to add stories by typing, pasting or opening a file, and to edit or delete them; a text mode and a picture mode with a highlight that follows each sentence; and a cast screen to pick the narrator, choose voices, preview them and merge two names that are the same character.
+**Dino Reader (Android, in development):** a kids' story reader that reads each character in their own voice (with a narrator picker); it builds from `src/DinoReader.App`. It has a story gallery and a grown-up area (a hold, then a sum) to add stories by typing, pasting or opening a file, and to edit or delete them; a text mode and a picture mode with a highlight that follows each sentence; and a cast screen to pick the narrator, choose voices, preview them and merge two names that are the same character. It works in nine languages, with right-to-left layout for Farsi and Arabic.
 
 ## Status
 

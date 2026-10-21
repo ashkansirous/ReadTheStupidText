@@ -1,6 +1,6 @@
 # Slice 56 — Windows: packs, first-run language, head start
 
-*In progress (wave 2026-10-21b), draft PR.*
+*Built 2026-10-21 (PR #204); desktop acceptance partly done, rest in Not yet verified.*
 
 **Batch:** 9
 **Decisions:** 61, 62, 66, 68 (also 60, 63)
@@ -131,3 +131,8 @@ Run on the real Windows machine.
 - MSIX size before/after, and no `VoiceModel\` in the unpacked MSIX.
 - The `internetClient` Store certification dry run.
 - The first-audio comparison (faster "first audio" log lines for already-prepared text).
+
+#### For CLAUDE.md (lifted 2026-10-21)
+
+- Windows packs: no voice model in the MSIX, `internetClient` declared, packs in `LocalCacheFolder\packs\<id>`; Windows twins of the Mobile pack services (change both together); `windows.yml` has no LFS.
+- Windows head start: `SupertonicSpeechReader` implements `IHeadStart` with `SentenceAudioCache` in `LocalCacheFolder\sentences`; prepare after an 80 ms stable wait in `BeginAutoRead`; reads owned by `ActiveRead`/`ReadOwnership`.

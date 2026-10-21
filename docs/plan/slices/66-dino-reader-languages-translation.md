@@ -91,13 +91,13 @@ Source: `docs/design/dino-reader/Dino Reader v2.dc.html`, add-story screen (line
 - High pass: 10 findings, 9 fixed. The UI-mirror finding was skipped: the emulator evidence above (RTST Slice 53) shows no double flip.
 - Medium pass: 8 findings, 6 fixed.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-21)
 
 - Dino rules per language live in `RuleSets` (cached per `AppLanguage`); `LanguageRules.For(code)` picks them.
 - Only `ReadingPage` switches the spoken language (`SpokenLanguage`); the cast screen never does.
 - Translation is built but hidden until an `ITranslator` is registered in Dino's DI.
 
-#### For README.md
+#### For README.md (lifted 2026-10-21)
 
 - Dino Reader works in nine languages, with right-to-left layout for Farsi and Arabic.
 
