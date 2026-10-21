@@ -14,7 +14,7 @@ public static class InstalledVoiceCatalog
 {
     public static VoiceModelPaths? Resolve(IEnumerable<InstalledVoicePack> installed, string language)
     {
-        foreach (InstalledVoicePack pack in Serving(installed, language))
+        foreach (InstalledVoicePack pack in PackSelection.Serving(installed, PackKind.Voice, language))
         {
             IReadOnlyList<VoiceInfo> voices = VoicesOf(pack.Manifest, language);
             if (voices.Count > 0)
@@ -25,13 +25,6 @@ public static class InstalledVoiceCatalog
 
         return null;
     }
-
-    private static IEnumerable<InstalledVoicePack> Serving(IEnumerable<InstalledVoicePack> installed, string language) =>
-        installed
-            .Where(p => p.Manifest.Kind == PackKind.Voice)
-            .Where(p => PackCatalogParser.SplitLanguages(p.Manifest.Language).Contains(language, StringComparer.OrdinalIgnoreCase))
-            .OrderBy(p => PackCatalogParser.SplitLanguages(p.Manifest.Language).Count)
-            .ThenBy(p => p.Manifest.Id, StringComparer.Ordinal);
 
     // A pack that lists voices owns them; a Supertonic pack without a list offers the
     // ten styles (Slice 50 packs). Any other pack with no voices is unusable.

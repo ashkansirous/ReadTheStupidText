@@ -10,8 +10,9 @@ public partial class App : Microsoft.Maui.Controls.Application
 	private readonly ISpeechReader _reader;
 	private readonly ISettingsStore _settings;
 	private readonly VoicePackInstaller _installer;
+	private readonly OcrPackInstaller? _ocrPacks;
 
-	public App(IServiceProvider services, ISpeechReader reader, ISettingsStore settings, VoicePackInstaller installer)
+	public App(IServiceProvider services, ISpeechReader reader, ISettingsStore settings, VoicePackInstaller installer, OcrPackInstaller? ocrPacks = null)
 	{
 		InitializeComponent();
 
@@ -19,7 +20,10 @@ public partial class App : Microsoft.Maui.Controls.Application
 		_reader = reader;
 		_settings = settings;
 		_installer = installer;
+		_ocrPacks = ocrPacks;
 		_ = InitializeSpeechAsync();
+		// OCR pack (Slice 52): checked at every start, on its own; it waits for any voice download itself.
+		_ = _ocrPacks?.EnsureForCurrentLanguageAsync();
 	}
 
 	// First run (no language stored yet) opens the language page; afterwards the Reader.
