@@ -1,0 +1,60 @@
+# CLAUDE.md — Windows App (WinUI 3 tray, panel, read orchestration)
+
+Loaded when you work under `src/ReadTheStupidText.App`. Speech engines, voice packs and the
+neural reader are in `src/ReadTheStupidText.Infrastructure/CLAUDE.md`. (This folder's `AGENTS.md` is
+a generic WinUI template and is separate from these rules.)
+
+Keep `App.xaml.cs` thin: provider/DI wiring and window bootstrap only. Real
+logic lives in Application/Infrastructure; XAML views stay free of business
+logic.
+
+> **Reading text box + disk-backed audio (Batch 7):** a toggleable floating window
+> shows the chunk being read (4th icon in the panel's `CONTROLS` row). Synthesized
+> audio is a temp WAV per chunk under `TemporaryFolder\audio\<id>\`; the chunk
+> map used by Skip (Decision 32) and the read-through timer (Decision 33) carries
+> each chunk's file path and source-text range, so extend it, don't duplicate it.
+> (Decisions 45-51; note: docs/plan/notes/claude-md-history.md)
+
+## Release packaging
+
+The **Release** MSIX is
+built **.NET self-contained** (`<SelfContained>true</SelfContained>`, non-Debug
+only) so the .NET runtime ships inside the package — this fixed Store cert
+**10.2.4.1** (undisclosed dependency on .NET); the Windows App SDK runtime stays
+framework-dependent (Store-delivered). Debug stays framework-dependent for a fast
+inner loop. Trimming stays off (`PublishTrimmed=false`) — packaged WinUI apps
+aren't trimmed. Note the build-time `onnxruntime.dll` dedupe in the App `.csproj`
+(`RemoveWinMlOnnxRuntimeDuplicate`: WinML and sherpa both ship one; we keep sherpa's).
+
+## Out of scope (v1)
+
+Voice *tuning* beyond playback rate (pitch/volume/SSML), a **persistent/dockable**
+settings window (tabs, taskbar presence, hotkey-remap UI), and non-Store
+distribution as the primary channel. See `scope.md`.
+
+**Console / non-UIA limitation (by design, not a bug).** The console (Windows
+Terminal, PowerShell, `cmd`) and some editors (e.g. Visual Studio's code editor)
+expose **no UI Automation text selection**, so *selecting* text in them raises no
+OS event — there is nothing to auto-read on. Reading from them therefore requires a
+**copy** (auto-read-on-copy via the clipboard listener, gated by the **Auto-read
+on copy** toggle) or the **global hotkey** (`Ctrl+Win+R`, copies then reads). Windows
+Terminal's `copyOnSelect` makes selecting auto-copy, which then triggers auto-read.
+Detecting a bare console *selection* is **out of scope** — Windows provides no API
+for it. When a request asks to "read on selection in the terminal," the answer is
+copy / `copyOnSelect` / hotkey, not a new selection-detection mechanism.
+
+## Tray, panel, logging and read paths
+
+Tray control panel (Slices 8, 13, 24, 25; docs/plan/slices/08-tray-control-panel-window.md, 13-media-card-control-panel-redesign-media.md, 24-draggable-position-persisted-control-panel.md, 25-read-through-timer.md): a left-click panel, a borderless always-on-top `AppWindow` pinned above all windows (closes only on the X or another tray click, never light-dismisses), sized to its content. It is transient, not a settings window; the right-click `MenuFlyout` stays (Quit lives only there). Rich controls (slider, `ComboBox`) cannot go in H.NotifyIcon's `PopupMenu`, which is why it is a real window. It is the "Media Card" design (`design_handoff_tray_panel/`, the HTML is the visual source of truth): gradient header (waveform, status, play/pause, display-only progress bar from `ISpeechReader.ProgressChanged`, speed pill that reveals the 0.05 slider plus six preset chips kept in sync via `ApplyPresetVisual`/`UpdatePresetHighlight`), a full-width voice `ComboBox` + activity-log button (`ActivityLogRequested`), and three 70px stroked-icon `ToggleButton`s (auto-read selection, auto-read copy, launch at startup; icon colour set in `ApplyToggleVisual`). Seek/scrubbing is out of scope. `TimerText` shows `mm:ss/mm:ss` from `ISpeechReader.TimingChanged` (`ReadTiming`, `ReadTimingFormatter`); elapsed/total use real synthesized chunk durations from `ReadTimingTracker` (pure, shared by both readers); `Total` fires immediately when newly known, and resets on Idle. The header drags the window by raw `GetCursorPos` delta; the position persists as `ISettingsStore.PanelPosition` (`PanelX`/`PanelY`), is clamped to the work area (`ClampToWorkArea`) on open, and defaults to bottom-right. Child controls mark pointer input handled so only empty header areas drag.
+
+**Play loading state.** `ReadAloudService.IsGeneratingAudio` is true from `GeneratingAudio` until the
+first `Playing`; `GeneratingChanged` is deduped but not ordered, so handlers re-read it. After
+`SpeakAsync` returns a read gets `FirstAudioGrace` (8 s) to reach `Playing` before being marked
+Failed (the WinRT fallback returns before playback starts), so any new `ISpeechReader` must await the
+whole read or raise `Playing` within that grace. Play does nothing while generating. The control
+panel overlays a `ProgressRing`; Mobile `ReaderPage` tracks a per-read token and overlays an
+`ActivityIndicator`. (Slice 46: docs/plan/slices/46-play-loading-state.md)
+
+Activity log and diagnostics (Slices 10, 19, 21; docs/plan/slices/10-live-activity-log-auto-read-fix.md, 19-local-only-timing-diagnostics.md, 21-daily-on-disk-logs-open-logs.md): `IActivityLog` (Application, in-memory ring buffer) holds `ActivityEntry` (state pending, generatingAudio, reading, read, ignored, interrupted, failed; `ActivityTrigger`; `ActivityReason` NewSelection/Deselected/Error; `WindowSource` via `IForegroundWindow`), rendered by `ActivityLogWindow`. Two daily files under the package TemporaryFolder `logs\`: `system-YYYYMMDD.log` (Serilog, fixed levels) and `input-YYYYMMDD.log` (TSV, one append-only row per state transition, `ActivityInputLog`/`InputLogRow`). They join on the entry id and hold only redacted text (Slice 20 sanitizer runs first; raw text never touches disk). Abstractions `ISystemLog` + `ILogFolder`; `LogPaths` does a 7-day startup sweep; `ActivityLogWindow` has an Open logs button. `ActivityEntry.TimeToFirstAudio` and `SynthesisDuration` are in-memory only, never transmitted (no SDK, no network, no privacy-policy change). Dev-time OpenTelemetry plus a local Aspire dashboard is optional and never shipped; Aspire was rejected as a redistributable mechanism (see `STORE.md`).
+
+Three read paths (Slices 10, 12; docs/plan/slices/10-live-activity-log-auto-read-fix.md): the UIA selection monitor (`ISelectionMonitor`, toggle Auto-read on selection), the clipboard monitor (`IClipboardMonitor`, `ClipboardFormatListener`/`WM_CLIPBOARDUPDATE`, toggle Auto-read on copy; the path for console and other no-UIA apps) and the always-on hotkey. The two gates are independent `ISettingsStore` flags (`AutoReadOnSelection`/`AutoReadOnCopy`, default on; an old `IsEnabled=false` migrates to both off), shown in the panel and the right-click menu. `ReadAloudService` de-dupes via `_lastTriggeredText` (hotkey clipboard echo, copy-on-select duplicates). The UIA monitor emits `SelectionCleared` only on a genuine empty selection; a transient cross-process failure is `SelectionOutcome.Unavailable` and stays silent. Diagnosing "selection does nothing": no log entry means no UIA event and nothing copied.
