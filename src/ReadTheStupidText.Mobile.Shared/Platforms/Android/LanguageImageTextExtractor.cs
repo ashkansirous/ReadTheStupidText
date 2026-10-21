@@ -34,9 +34,9 @@ public sealed class LanguageImageTextExtractor : IImageTextExtractor, IOcrLineEx
     public async Task<string> ExtractTextAsync(string imagePath)
     {
         string language = CurrentLanguage();
-        if (await TryPaddleAsync(imagePath, language, CancellationToken.None).ConfigureAwait(false) is { } lines)
+        if (await TryPaddleAsync(imagePath, language, CancellationToken.None).ConfigureAwait(false) is { } reading)
         {
-            return new ImageText(lines, OcrSource.PaddleOcr).Text;
+            return new ImageText(reading.Lines, OcrSource.PaddleOcr).Text;
         }
 
         return await _mlKit.ExtractTextAsync(imagePath).ConfigureAwait(false);
@@ -44,13 +44,13 @@ public sealed class LanguageImageTextExtractor : IImageTextExtractor, IOcrLineEx
 
     public async Task<ImageText> ExtractLinesAsync(string imagePath, string language, CancellationToken cancellationToken)
     {
-        if (await TryPaddleAsync(imagePath, language, cancellationToken).ConfigureAwait(false) is { } lines)
+        if (await TryPaddleAsync(imagePath, language, cancellationToken).ConfigureAwait(false) is { } reading)
         {
-            return new ImageText(lines, OcrSource.PaddleOcr);
+            return new ImageText(reading.Lines, OcrSource.PaddleOcr, reading.Width, reading.Height);
         }
 
-        IReadOnlyList<OcrLine> fallback = await _mlKit.ExtractLinesAsync(imagePath).ConfigureAwait(false);
-        return new ImageText(fallback, FallbackSource(language));
+        OcrReading fallback = await _mlKit.ExtractLinesAsync(imagePath).ConfigureAwait(false);
+        return new ImageText(fallback.Lines, FallbackSource(language), fallback.Width, fallback.Height);
     }
 
     public void Dispose()
@@ -65,7 +65,7 @@ public sealed class LanguageImageTextExtractor : IImageTextExtractor, IOcrLineEx
         OcrLanguages.IsLatinScript(language) ? OcrSource.MlKit : OcrSource.MlKitPackPending;
 
     // Null when no pack serves the language, the pack could not run or found no text: the caller falls back.
-    private async Task<IReadOnlyList<OcrLine>?> TryPaddleAsync(string imagePath, string language, CancellationToken cancellationToken)
+    private async Task<OcrReading?> TryPaddleAsync(string imagePath, string language, CancellationToken cancellationToken)
     {
         OcrModelPaths? paths = InstalledOcrCatalog.Resolve(_packs.GetInstalledOcrPacks(), language);
         if (paths is null || paths == _failedToLoad)
@@ -76,8 +76,8 @@ public sealed class LanguageImageTextExtractor : IImageTextExtractor, IOcrLineEx
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            IReadOnlyList<OcrLine> lines = await Task.Run(() => ReadWithEngine(paths, imagePath, cancellationToken), cancellationToken).ConfigureAwait(false);
-            return lines.Count > 0 ? lines : null; // a blank result is worth a second opinion from ML Kit
+            OcrReading reading = await Task.Run(() => ReadWithEngine(paths, imagePath, cancellationToken), cancellationToken).ConfigureAwait(false);
+            return reading.Lines.Count > 0 ? reading : null; // a blank result is worth a second opinion from ML Kit
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -102,7 +102,7 @@ public sealed class LanguageImageTextExtractor : IImageTextExtractor, IOcrLineEx
         }
     }
 
-    private IReadOnlyList<OcrLine> ReadWithEngine(OcrModelPaths paths, string imagePath, CancellationToken cancellationToken)
+    private OcrReading ReadWithEngine(OcrModelPaths paths, string imagePath, CancellationToken cancellationToken)
     {
         if (_engine?.Paths != paths)
         {
