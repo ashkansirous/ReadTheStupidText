@@ -1,6 +1,6 @@
 # Slice 75 — Windows translation engine
 
-*In progress (wave 2026-10-21), draft PR.*
+*Built 2026-10-21 (PR #223, eab34d7); not yet verified.*
 
 **Batch:** 9
 **Decisions:** 67, 68
@@ -106,7 +106,7 @@ Make the hidden translate-before-read toggle on Windows work fully offline. Slic
 *From review:* two passes (10 + 3 findings fixed; the rest belonged to already-merged code). Tests: 653 pass, including
 the real-model end-to-end tests for fr->en and en->pt.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-21)
 
 Into `src/ReadTheStupidText.Infrastructure/CLAUDE.md`:
 
@@ -117,7 +117,7 @@ Into `src/ReadTheStupidText.Infrastructure/CLAUDE.md`:
   toggle stays hidden. `PackConstants.CatalogUrl` is shared by every platform: a new `packs-N` release must re-ship every
   existing pack at the same versions. (Slice 75: docs/plan/slices/75-windows-translation-engine.md)
 
-#### For README.md
+#### For README.md (lifted 2026-10-21)
 
 Windows can translate what it reads into your language, fully offline (fr/es/pt/zh/ar/ru, plus to English from ja).
 

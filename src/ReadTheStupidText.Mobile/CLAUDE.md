@@ -99,3 +99,9 @@ physical device) before relying on a slice that touches the Mobile project.
 - Android sentence audio is cached by `SentenceAudioCache` (`CacheDirectory/sentences`); never play cached clips directly, join them into a temp file. `IHeadStart` prepares the first chunks, skipped while translation is on. Windows keeps `SpeechTextChunker.HeadPolicy.Default` until Slice 56. (Slice 47: docs/plan/slices/47-head-start-sentence-cache.md)
 - iOS neural reading uses sherpa-onnx 1.13.8 + `SherpaOnnxC.xcframework` 1.13.8 (Android pins 1.13.3); bump package and framework (URL and SHA-256 in the Mobile csproj) together. The reader sits behind `IosNeuralReaderFactory` (apps without one, like Dino Reader, keep the system voice); the audio session goes through `IosAudioSession`, never `AVAudioSession` directly. (Slice 49: docs/plan/slices/49-ios-parity.md)
 - Multi-voice reading is `ISpeechReader.SpeakSegmentsAsync` (native only where `SupportsSegments`; else one voice). `ChunkChanged` may fire off the UI thread: marshal. (Slice 60: docs/plan/slices/60-per-character-voice-reading.md)
+
+- Release Android builds are R8-obfuscated (`src/AndroidRelease.props`, keep rules in `src/AndroidProguard.cfg`) and need
+  .NET SDK/workload set 10.0.402 (Android SDK >= 36.1.118); the build errors otherwise. A `NoSuchFieldError` or
+  `LinkageError` in Release only means R8 renamed a member a binding reads over JNI: add a keep rule, clean-rebuild (delete
+  obj/bin Release), and smoke-test the Release APK on the emulator with `adb install -r --abi arm64-v8a`. Release ships
+  arm64-v8a only. (Slice 72: docs/plan/slices/72-android-deps-r8-obfuscation.md)
