@@ -48,6 +48,18 @@
   <data name="Reader_FileUnreadableMessage" xml:space="preserve"><value>文件可能已损坏或格式不受支持。</value></data>
   <data name="Reader_ReadFailedTitle" xml:space="preserve"><value>无法朗读该文本</value></data>
   <data name="Reader_ReadFailedMessage" xml:space="preserve"><value>朗读时出了问题。</value></data>
+  <data name="Translate_ToggleLabel" xml:space="preserve"><value>翻译成{0}</value></data>
+  <data name="Translate_SourceLabel" xml:space="preserve"><value>文本语言</value></data>
+  <data name="Translate_AutoDetect" xml:space="preserve"><value>自动检测</value></data>
+  <data name="Translate_SourcePickerTitle" xml:space="preserve"><value>文本语言</value></data>
+  <data name="Translate_QualityNote" xml:space="preserve"><value>在设备上快速翻译，质量一般。</value></data>
+  <data name="Translate_DownloadingStatus" xml:space="preserve"><value>正在下载翻译模型…</value></data>
+  <data name="Translate_ModelUnavailableTitle" xml:space="preserve"><value>暂时无法翻译</value></data>
+  <data name="Translate_ModelUnavailableMessage" xml:space="preserve"><value>翻译模型尚未在您的手机上，且下载失败。请联网一次以获取。现将朗读原文。</value></data>
+  <data name="Translate_FailedTitle" xml:space="preserve"><value>翻译失败</value></data>
+  <data name="Translate_FailedMessage" xml:space="preserve"><value>无法翻译此文本。现将朗读原文。</value></data>
+  <data name="Translate_UnsupportedNote" xml:space="preserve"><value>{0}暂不支持翻译。</value></data>
+  <data name="Translate_SourceUnsupportedNote" xml:space="preserve"><value>暂不支持从{0}翻译。</value></data>
   <data name="PackStatus_Resolving" xml:space="preserve"><value>正在检查自然语音…</value></data>
   <data name="PackStatus_Downloading" xml:space="preserve"><value>正在下载自然语音… {0}</value></data>
   <data name="PackStatus_Offline" xml:space="preserve"><value>没有网络连接。正在使用手机语音朗读。点按可重试下载语音。</value></data>

@@ -48,6 +48,18 @@
   <data name="Reader_FileUnreadableMessage" xml:space="preserve"><value>Puede que el archivo esté dañado o tenga un formato no compatible.</value></data>
   <data name="Reader_ReadFailedTitle" xml:space="preserve"><value>No se pudo leer ese texto</value></data>
   <data name="Reader_ReadFailedMessage" xml:space="preserve"><value>Algo salió mal durante la lectura.</value></data>
+  <data name="Translate_ToggleLabel" xml:space="preserve"><value>Traducir al {0}</value></data>
+  <data name="Translate_SourceLabel" xml:space="preserve"><value>El texto está en</value></data>
+  <data name="Translate_AutoDetect" xml:space="preserve"><value>Detección automática</value></data>
+  <data name="Translate_SourcePickerTitle" xml:space="preserve"><value>Idioma del texto</value></data>
+  <data name="Translate_QualityNote" xml:space="preserve"><value>Traducción rápida en el dispositivo; la calidad es aproximada.</value></data>
+  <data name="Translate_DownloadingStatus" xml:space="preserve"><value>Descargando el modelo de traducción…</value></data>
+  <data name="Translate_ModelUnavailableTitle" xml:space="preserve"><value>Aún no se puede traducir</value></data>
+  <data name="Translate_ModelUnavailableMessage" xml:space="preserve"><value>El modelo de traducción aún no está en tu teléfono y no se pudo descargar. Conéctate a internet una vez para obtenerlo. Se leerá el texto original.</value></data>
+  <data name="Translate_FailedTitle" xml:space="preserve"><value>Error de traducción</value></data>
+  <data name="Translate_FailedMessage" xml:space="preserve"><value>No se pudo traducir este texto. Se leerá el original.</value></data>
+  <data name="Translate_UnsupportedNote" xml:space="preserve"><value>La traducción no está disponible para {0}.</value></data>
+  <data name="Translate_SourceUnsupportedNote" xml:space="preserve"><value>La traducción desde {0} no está disponible.</value></data>
   <data name="PackStatus_Resolving" xml:space="preserve"><value>Buscando voces naturales…</value></data>
   <data name="PackStatus_Downloading" xml:space="preserve"><value>Descargando voces naturales… {0}</value></data>
   <data name="PackStatus_Offline" xml:space="preserve"><value>Sin conexión. Se lee con la voz del teléfono. Toca para reintentar la descarga de la voz.</value></data>

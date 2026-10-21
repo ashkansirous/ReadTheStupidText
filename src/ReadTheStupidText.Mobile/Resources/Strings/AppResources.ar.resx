@@ -51,6 +51,18 @@
   <data name="Reader_FileUnreadableMessage" xml:space="preserve"><value>قد يكون الملف تالفًا أو بتنسيق غير مدعوم.</value></data>
   <data name="Reader_ReadFailedTitle" xml:space="preserve"><value>تعذّرت قراءة النص</value></data>
   <data name="Reader_ReadFailedMessage" xml:space="preserve"><value>حدث خطأ أثناء القراءة.</value></data>
+  <data name="Translate_ToggleLabel" xml:space="preserve"><value>الترجمة إلى {0}</value></data>
+  <data name="Translate_SourceLabel" xml:space="preserve"><value>لغة النص</value></data>
+  <data name="Translate_AutoDetect" xml:space="preserve"><value>اكتشاف تلقائي</value></data>
+  <data name="Translate_SourcePickerTitle" xml:space="preserve"><value>لغة النص</value></data>
+  <data name="Translate_QualityNote" xml:space="preserve"><value>ترجمة سريعة على الجهاز؛ جودتها عادية.</value></data>
+  <data name="Translate_DownloadingStatus" xml:space="preserve"><value>جارٍ تنزيل نموذج الترجمة…</value></data>
+  <data name="Translate_ModelUnavailableTitle" xml:space="preserve"><value>تعذّرت الترجمة حاليًا</value></data>
+  <data name="Translate_ModelUnavailableMessage" xml:space="preserve"><value>نموذج الترجمة غير موجود على هاتفك بعد وتعذّر تنزيله. اتصل بالإنترنت مرة واحدة للحصول عليه. ستتم قراءة النص الأصلي بدلًا من ذلك.</value></data>
+  <data name="Translate_FailedTitle" xml:space="preserve"><value>فشلت الترجمة</value></data>
+  <data name="Translate_FailedMessage" xml:space="preserve"><value>تعذّرت ترجمة هذا النص. ستتم قراءة الأصل بدلًا من ذلك.</value></data>
+  <data name="Translate_UnsupportedNote" xml:space="preserve"><value>الترجمة غير متاحة للغة {0}.</value></data>
+  <data name="Translate_SourceUnsupportedNote" xml:space="preserve"><value>الترجمة من {0} غير متاحة.</value></data>
   <data name="PackStatus_Resolving" xml:space="preserve"><value>جارٍ البحث عن الأصوات الطبيعية…</value></data>
   <data name="PackStatus_Downloading" xml:space="preserve"><value>جارٍ تنزيل الأصوات الطبيعية… {0}</value></data>
   <data name="PackStatus_Offline" xml:space="preserve"><value>لا يوجد اتصال. تتم القراءة بصوت الهاتف. اضغط لإعادة محاولة تنزيل الصوت.</value></data>

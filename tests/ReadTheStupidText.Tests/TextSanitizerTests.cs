@@ -102,5 +102,7 @@ public class TextSanitizerTests
         public SanitizerCategory EnabledSanitizers { get; set; } = SanitizerCategory.All;
         public PanelPosition? PanelPosition { get; set; }
         public string? Language { get; set; }
+        public bool TranslateEnabled { get; set; }
+        public string? TranslateSourceLanguage { get; set; }
     }
 }

@@ -48,6 +48,18 @@
   <data name="Reader_FileUnreadableMessage" xml:space="preserve"><value>ファイルが破損しているか、対応していない形式の可能性があります。</value></data>
   <data name="Reader_ReadFailedTitle" xml:space="preserve"><value>テキストを読み上げできませんでした</value></data>
   <data name="Reader_ReadFailedMessage" xml:space="preserve"><value>読み上げ中に問題が発生しました。</value></data>
+  <data name="Translate_ToggleLabel" xml:space="preserve"><value>{0}に翻訳</value></data>
+  <data name="Translate_SourceLabel" xml:space="preserve"><value>テキストの言語</value></data>
+  <data name="Translate_AutoDetect" xml:space="preserve"><value>自動検出</value></data>
+  <data name="Translate_SourcePickerTitle" xml:space="preserve"><value>テキストの言語</value></data>
+  <data name="Translate_QualityNote" xml:space="preserve"><value>端末内での簡易翻訳です。品質は参考程度です。</value></data>
+  <data name="Translate_DownloadingStatus" xml:space="preserve"><value>翻訳モデルをダウンロードしています…</value></data>
+  <data name="Translate_ModelUnavailableTitle" xml:space="preserve"><value>まだ翻訳できません</value></data>
+  <data name="Translate_ModelUnavailableMessage" xml:space="preserve"><value>翻訳モデルがまだスマートフォンになく、ダウンロードできませんでした。一度インターネットに接続して取得してください。代わりに元のテキストを読み上げます。</value></data>
+  <data name="Translate_FailedTitle" xml:space="preserve"><value>翻訳に失敗しました</value></data>
+  <data name="Translate_FailedMessage" xml:space="preserve"><value>このテキストを翻訳できませんでした。代わりに元のテキストを読み上げます。</value></data>
+  <data name="Translate_UnsupportedNote" xml:space="preserve"><value>{0}の翻訳は利用できません。</value></data>
+  <data name="Translate_SourceUnsupportedNote" xml:space="preserve"><value>{0}からの翻訳は利用できません。</value></data>
   <data name="PackStatus_Resolving" xml:space="preserve"><value>自然な音声を確認中…</value></data>
   <data name="PackStatus_Downloading" xml:space="preserve"><value>自然な音声をダウンロード中… {0}</value></data>
   <data name="PackStatus_Offline" xml:space="preserve"><value>接続されていません。スマートフォンの音声で読み上げます。タップして音声のダウンロードを再試行します。</value></data>

@@ -48,6 +48,18 @@
   <data name="Reader_FileUnreadableMessage" xml:space="preserve"><value>Le fichier est peut-être corrompu ou dans un format non pris en charge.</value></data>
   <data name="Reader_ReadFailedTitle" xml:space="preserve"><value>Lecture impossible</value></data>
   <data name="Reader_ReadFailedMessage" xml:space="preserve"><value>Un problème est survenu pendant la lecture.</value></data>
+  <data name="Translate_ToggleLabel" xml:space="preserve"><value>Traduire en {0}</value></data>
+  <data name="Translate_SourceLabel" xml:space="preserve"><value>Le texte est en</value></data>
+  <data name="Translate_AutoDetect" xml:space="preserve"><value>Détection automatique</value></data>
+  <data name="Translate_SourcePickerTitle" xml:space="preserve"><value>Langue du texte</value></data>
+  <data name="Translate_QualityNote" xml:space="preserve"><value>Traduction rapide sur l'appareil ; la qualité reste approximative.</value></data>
+  <data name="Translate_DownloadingStatus" xml:space="preserve"><value>Téléchargement du modèle de traduction…</value></data>
+  <data name="Translate_ModelUnavailableTitle" xml:space="preserve"><value>Traduction impossible pour l'instant</value></data>
+  <data name="Translate_ModelUnavailableMessage" xml:space="preserve"><value>Le modèle de traduction n'est pas encore sur votre téléphone et n'a pas pu être téléchargé. Connectez-vous une fois à Internet pour l'obtenir. Lecture du texte d'origine à la place.</value></data>
+  <data name="Translate_FailedTitle" xml:space="preserve"><value>Échec de la traduction</value></data>
+  <data name="Translate_FailedMessage" xml:space="preserve"><value>Ce texte n'a pas pu être traduit. Lecture de l'original à la place.</value></data>
+  <data name="Translate_UnsupportedNote" xml:space="preserve"><value>La traduction n'est pas disponible pour {0}.</value></data>
+  <data name="Translate_SourceUnsupportedNote" xml:space="preserve"><value>La traduction depuis {0} n'est pas disponible.</value></data>
   <data name="PackStatus_Resolving" xml:space="preserve"><value>Recherche de voix naturelles…</value></data>
   <data name="PackStatus_Downloading" xml:space="preserve"><value>Téléchargement des voix naturelles… {0}</value></data>
   <data name="PackStatus_Offline" xml:space="preserve"><value>Pas de connexion. Lecture avec la voix du téléphone. Touchez pour réessayer le téléchargement de la voix.</value></data>

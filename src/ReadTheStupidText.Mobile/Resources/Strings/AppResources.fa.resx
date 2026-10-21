@@ -51,6 +51,18 @@
   <data name="Reader_FileUnreadableMessage" xml:space="preserve"><value>ممکن است فایل خراب باشد یا قالب آن پشتیبانی نشود.</value></data>
   <data name="Reader_ReadFailedTitle" xml:space="preserve"><value>متن خوانده نشد</value></data>
   <data name="Reader_ReadFailedMessage" xml:space="preserve"><value>هنگام خواندن مشکلی پیش آمد.</value></data>
+  <data name="Translate_ToggleLabel" xml:space="preserve"><value>ترجمه به {0}</value></data>
+  <data name="Translate_SourceLabel" xml:space="preserve"><value>زبان متن</value></data>
+  <data name="Translate_AutoDetect" xml:space="preserve"><value>تشخیص خودکار</value></data>
+  <data name="Translate_SourcePickerTitle" xml:space="preserve"><value>زبان متن</value></data>
+  <data name="Translate_QualityNote" xml:space="preserve"><value>ترجمهٔ سریع روی گوشی؛ کیفیت آن معمولی است.</value></data>
+  <data name="Translate_DownloadingStatus" xml:space="preserve"><value>در حال دانلود مدل ترجمه…</value></data>
+  <data name="Translate_ModelUnavailableTitle" xml:space="preserve"><value>هنوز نمی‌توان ترجمه کرد</value></data>
+  <data name="Translate_ModelUnavailableMessage" xml:space="preserve"><value>مدل ترجمه هنوز روی گوشی شما نیست و دانلود نشد. یک بار به اینترنت وصل شوید تا دریافت شود. فعلاً متن اصلی خوانده می‌شود.</value></data>
+  <data name="Translate_FailedTitle" xml:space="preserve"><value>ترجمه ناموفق بود</value></data>
+  <data name="Translate_FailedMessage" xml:space="preserve"><value>این متن ترجمه نشد. به جای آن متن اصلی خوانده می‌شود.</value></data>
+  <data name="Translate_UnsupportedNote" xml:space="preserve"><value>ترجمه برای {0} در دسترس نیست.</value></data>
+  <data name="Translate_SourceUnsupportedNote" xml:space="preserve"><value>ترجمه از {0} در دسترس نیست.</value></data>
   <data name="PackStatus_Resolving" xml:space="preserve"><value>در حال جست‌وجوی صداهای طبیعی…</value></data>
   <data name="PackStatus_Downloading" xml:space="preserve"><value>در حال دانلود صداهای طبیعی… {0}</value></data>
   <data name="PackStatus_Offline" xml:space="preserve"><value>اتصالی وجود ندارد. با صدای گوشی خوانده می‌شود. برای تلاش دوباره دانلود صدا ضربه بزنید.</value></data>

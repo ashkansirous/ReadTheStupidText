@@ -22,6 +22,8 @@ public sealed class MobilePreferencesSettingsStore : ISettingsStore
     private const string PanelXKey = "PanelX";
     private const string PanelYKey = "PanelY";
     private const string LanguageKey = "Language";
+    private const string TranslateEnabledKey = "TranslateEnabled";
+    private const string TranslateSourceKey = "TranslateSourceLanguage";
 
     private const bool AutoReadDefault = true;
     private const double NoSpeedStored = -1;
@@ -85,6 +87,28 @@ public sealed class MobilePreferencesSettingsStore : ISettingsStore
     {
         get => (SanitizerCategory)Preferences.Default.Get(SanitizerKey, (int)SanitizerCategory.All);
         set => Preferences.Default.Set(SanitizerKey, (int)value);
+    }
+
+    public bool TranslateEnabled
+    {
+        get => Preferences.Default.Get(TranslateEnabledKey, false);
+        set => Preferences.Default.Set(TranslateEnabledKey, value);
+    }
+
+    public string? TranslateSourceLanguage
+    {
+        get => Preferences.Default.Get(TranslateSourceKey, (string?)null);
+        set
+        {
+            if (value is null)
+            {
+                Preferences.Default.Remove(TranslateSourceKey);
+            }
+            else
+            {
+                Preferences.Default.Set(TranslateSourceKey, value);
+            }
+        }
     }
 
     public PanelPosition? PanelPosition
