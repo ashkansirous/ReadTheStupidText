@@ -87,7 +87,6 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     // (Slice 51: engine kind, language, voices). Each read captures one BuiltEngine and uses
     // its Model for everything, so a language or pack change mid-read can't mix models.
     private BuiltEngine? _engine;
-    private BuiltEngine? _activeEngine;
     private bool _disposed;
     private string? _voiceId;
     private readonly ConcurrentDictionary<VoiceEngineKind, string> _voiceByKind = new();
@@ -113,11 +112,11 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     private CancellationTokenSource? _synthCts;
     private CancellationTokenSource? _prepareCts;
 
-    // Reads between their start and their end (changed under _gate): longer than
-    // PlaybackState, which is Idle while the first chunk is still being synthesized. A counter,
-    // not a flag, because a superseded read's end must not clear the read that replaced it.
-    // A head-start prepare never runs while it is above zero.
-    private int _readsInProgress;
+    // The read between its start and its end (changed under _gate): longer than PlaybackState,
+    // which is Idle while the first chunk is still being synthesized. It ends only when its last
+    // owner leaves, so a Skip-continued playback keeps it alive after the original call returns.
+    // A head-start prepare never runs while it is set.
+    private ActiveRead? _activeRead;
 
     // Set when a read starts and cleared at its first audio, which logs the wait.
     private long _readStartTicks;
@@ -148,7 +147,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         {
             lock (_gate)
             {
-                return _readsInProgress > 0;
+                return _activeRead != null;
             }
         }
     }
@@ -195,10 +194,10 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     {
         BuiltEngine engine = AcquireEngine() ?? throw new NeuralEngineUnavailableException();
 
+        ActiveRead? read = null;
         try
         {
-            Volatile.Write(ref _activeEngine, engine);
-            BeginRead();
+            read = BeginRead(engine);
             (int generation, CancellationToken token) = BeginGeneration();
             _readStartTicks = Stopwatch.GetTimestamp();
             Volatile.Write(ref _firstAudioPending, 1);
@@ -211,29 +210,43 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         }
         finally
         {
-            Interlocked.CompareExchange(ref _activeEngine, null, engine);
-            EndRead();
+            if (read is not null)
+            {
+                LeaveRead(read);
+            }
+
             engine.Release();
         }
     }
 
-    // Marks the read in progress and cancels any prepare, atomically with a prepare's own
+    // Makes this the active read and cancels any prepare, atomically with a prepare's own
     // check, so a prepare either finished its start before the read or never starts.
-    private void BeginRead()
+    private ActiveRead BeginRead(BuiltEngine engine)
     {
         lock (_gate)
         {
-            _readsInProgress++;
+            var read = new ActiveRead(engine, new ReadOwnership());
+            _activeRead = read;
             CancelPrepareLocked();
+            return read;
         }
     }
 
-    // Paired with BeginRead: only called for a read that began.
-    private void EndRead()
+    // Paired with BeginRead or a successful TryJoin. The read ends with its last owner, and only
+    // if a newer read hasn't replaced it (or Stop cleared it) meanwhile.
+    private void LeaveRead(ActiveRead read)
     {
+        if (!read.Owners.Leave())
+        {
+            return;
+        }
+
         lock (_gate)
         {
-            _readsInProgress--;
+            if (ReferenceEquals(_activeRead, read))
+            {
+                _activeRead = null;
+            }
         }
     }
 
@@ -243,9 +256,21 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
 
     private async Task SkipByAsync(TimeSpan delta)
     {
-        BuiltEngine? engine = Volatile.Read(ref _activeEngine);
-        if (engine is null || _state == PlaybackState.Idle || !engine.TryAcquire())
+        ActiveRead? read;
+        lock (_gate)
         {
+            read = _activeRead;
+        }
+
+        if (read is null || _state == PlaybackState.Idle || !read.Owners.TryJoin())
+        {
+            return;
+        }
+
+        BuiltEngine engine = read.Engine;
+        if (!engine.TryAcquire())
+        {
+            LeaveRead(read);
             return;
         }
 
@@ -256,6 +281,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         finally
         {
             engine.Release();
+            LeaveRead(read);
         }
     }
 
@@ -648,6 +674,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         {
             _synthCts?.Cancel();
             _generation++;
+            _activeRead = null;
         }
 
         _chunkEnded?.TrySetResult(false);
@@ -920,7 +947,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     {
         lock (_gate)
         {
-            if (_readsInProgress > 0)
+            if (_activeRead != null)
             {
                 return null;
             }
@@ -1138,6 +1165,10 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
             }
         }
     }
+
+    /// <summary>The read in progress: its engine and who still owns it (the original read and
+    /// any Skip that continued its playback).</summary>
+    private sealed record ActiveRead(BuiltEngine Engine, ReadOwnership Owners);
 
     /// <summary>An engine and the model it was built from, never changed after creation.
     /// A language change within one pack shares the <see cref="RefCountedTts"/>.</summary>
