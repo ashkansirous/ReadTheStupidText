@@ -6,9 +6,11 @@ namespace ReadTheStupidText.Mobile;
 
 /// <summary>
 /// Registers everything both MAUI apps share (Slice 58): the voice pack/model services, the
-/// installer, the settings store and the speech reader. OCR is app-specific (only Read The
-/// Stupid Text scans), so that app registers its own IImageTextExtractor. Each app's
-/// <c>MauiProgram</c> calls this once and adds only its own pages and services.
+/// installer, the settings store and the speech reader. On Android it also registers the
+/// scanner and OCR stack (Slice 63): the document scanner, PaddleOCR with the ML Kit fallback
+/// (as <c>IImageTextExtractor</c> and <c>IOcrLineExtractor</c>), the PDF page renderer and the
+/// page image keeper. Each app's <c>MauiProgram</c> calls this once and adds only its own pages
+/// and services.
 /// </summary>
 public static partial class MobileSharedServices
 {

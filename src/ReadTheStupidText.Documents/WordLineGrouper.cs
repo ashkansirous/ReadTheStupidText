@@ -4,13 +4,15 @@ using ReadTheStupidText.Application.Images;
 namespace ReadTheStupidText.Documents;
 
 /// <summary>
-/// Groups a page's words into lines (Slice 63): words whose vertical centre falls inside the
-/// current line's vertical span share the line; each line reads left-to-right, or right-to-left
+/// Groups a page's words into lines (Slice 63): words whose vertical extent overlaps the row's
+/// median word band by at least 40% share the line; each line reads left-to-right, or right-to-left
 /// when most of its letters are in an RTL script. Words are not split by column, so a multi-column
 /// page merges across columns - accepted for single-column books.
 /// </summary>
 public static class WordLineGrouper
 {
+    private const double MinBandOverlap = 0.4;
+
     public static IReadOnlyList<TextLine> Group(
         IReadOnlyList<PositionedWord> words, double pageWidth, double pageHeight)
     {
@@ -26,23 +28,50 @@ public static class WordLineGrouper
     private static List<List<PositionedWord>> GroupRows(IReadOnlyList<PositionedWord> words)
     {
         var rows = new List<List<PositionedWord>>();
-        double rowTop = 0, rowBottom = 0;
         foreach (PositionedWord word in words.Where(w => !string.IsNullOrWhiteSpace(w.Text)).OrderBy(w => w.CenterY))
         {
-            if (rows.Count > 0 && word.CenterY >= rowTop && word.CenterY <= rowBottom)
+            if (rows.Count > 0 && SitsOnRow(rows[^1], word))
             {
                 rows[^1].Add(word);
-                rowTop = Math.Min(rowTop, word.Top);
-                rowBottom = Math.Max(rowBottom, word.Bottom);
                 continue;
             }
 
             rows.Add([word]);
-            rowTop = word.Top;
-            rowBottom = word.Bottom;
         }
 
         return rows;
+    }
+
+    // A word joins the row when its vertical extent overlaps the row's typical word band by at
+    // least MinBandOverlap of the smaller of the two heights, so a superscript, a descender or a
+    // small inline word (all partly outside a strict band) still joins. The band is the median top
+    // and bottom of the row's words; a row of one or two words has no stable median, so its shortest
+    // word stands in for it (a drop cap spanning several lines is the tall one there).
+    private static bool SitsOnRow(List<PositionedWord> row, PositionedWord word)
+    {
+        (double bandTop, double bandBottom) = Band(row);
+        double overlap = Math.Min(word.Bottom, bandBottom) - Math.Max(word.Top, bandTop);
+        double smaller = Math.Min(word.Height, bandBottom - bandTop);
+        return smaller > 0
+            ? overlap >= smaller * MinBandOverlap
+            : word.CenterY >= bandTop && word.CenterY <= bandBottom;
+    }
+
+    private static (double Top, double Bottom) Band(List<PositionedWord> row)
+    {
+        if (row.Count <= 2)
+        {
+            PositionedWord shortest = row.OrderBy(w => w.Height).First();
+            return (shortest.Top, shortest.Bottom);
+        }
+
+        return (LowerMedian(row.Select(w => w.Top)), LowerMedian(row.Select(w => w.Bottom)));
+    }
+
+    private static double LowerMedian(IEnumerable<double> values)
+    {
+        double[] sorted = values.OrderBy(v => v).ToArray();
+        return sorted[(sorted.Length - 1) / 2];
     }
 
     private static TextLine ToLine(List<PositionedWord> row, double pageWidth, double pageHeight)

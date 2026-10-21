@@ -23,10 +23,11 @@ public sealed class PaddleOcrEngine : IDisposable
 
     public OcrModelPaths Paths { get; }
 
-    public IReadOnlyList<OcrLine> Read(string imagePath, CancellationToken cancellationToken)
+    public OcrReading Read(string imagePath, CancellationToken cancellationToken)
     {
         using IOcrPage page = _loader.Open(imagePath, DetectionPreprocessor.MaxSide);
-        return _pipeline.Read(page, cancellationToken);
+        IReadOnlyList<OcrLine> lines = _pipeline.Read(page, cancellationToken);
+        return new OcrReading(lines, page.Detection.Width, page.Detection.Height); // boxes are in detection-image pixels
     }
 
     public void Dispose() => _inference.Dispose();
