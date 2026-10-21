@@ -1,0 +1,23 @@
+using DinoReader.Resources.Strings;
+
+namespace DinoReader;
+
+/// <summary>The reading screen's copy (Slice 62), in the UI language (Slice 66).</summary>
+public static class ReadingText
+{
+	public static string ForGrownUps => AppResources.Gallery_ForGrownUps;
+	public static string TextMode => AppResources.Reading_TextMode;
+	public static string PictureMode => AppResources.Reading_PictureMode;
+	public static string Back => AppResources.Common_Back;
+	public static string Play => AppResources.Reading_Play;
+	public static string Pause => AppResources.Reading_Pause;
+	public static string PreviousSentence => AppResources.Reading_Previous;
+	public static string NextSentence => AppResources.Reading_Next;
+	public static string Loading => AppResources.Reading_Loading;
+	public static string CouldntRead => AppResources.Reading_CouldntRead;
+	public static string ReadFailed => AppResources.Reading_ReadFailed;
+	public static string Ok => AppResources.Common_Ok;
+	public static string LayoutFailed => AppResources.Reading_LayoutFailed;
+
+	public static string ReadingPage(int page) => AppResources.Format(AppResources.Reading_PageN, page);
+}

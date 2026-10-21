@@ -27,14 +27,14 @@ internal static class SentenceBoundaries
         return trimmed;
     }
 
-    private static bool IsSentenceEnd(string text, int i, LanguageRules rules)
+    internal static bool IsSentenceEnd(string text, int i, LanguageRules rules)
     {
         if (!rules.SentenceTerminators.Contains(text[i])) return false;
-        bool atEdge = i + 1 >= text.Length || char.IsWhiteSpace(text[i + 1]);
+        bool atEdge = rules.Script == ScriptStyle.Unspaced || i + 1 >= text.Length || char.IsWhiteSpace(text[i + 1]);
         return atEdge && !(text[i] == '.' && FollowsTitle(text, i, rules));
     }
 
-    private static bool FollowsTitle(string text, int dot, LanguageRules rules)
+    internal static bool FollowsTitle(string text, int dot, LanguageRules rules)
     {
         int start = dot;
         while (start > 0 && char.IsLetter(text[start - 1])) start--;

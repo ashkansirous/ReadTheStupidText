@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Common_Ok" xml:space="preserve"><value>OK</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="PackStatus_Resolving" xml:space="preserve"><value>Procurando vozes naturais…</value></data>
+  <data name="PackStatus_Downloading" xml:space="preserve"><value>Baixando vozes naturais… {0}</value></data>
+  <data name="PackStatus_Offline" xml:space="preserve"><value>Sem conexão. Lendo com a voz do telefone. Toque para tentar baixar a voz novamente.</value></data>
+  <data name="PackStatus_HashMismatch" xml:space="preserve"><value>O download da voz foi corrompido. Lendo com a voz do telefone. Toque para tentar novamente.</value></data>
+  <data name="PackStatus_InvalidPack" xml:space="preserve"><value>O pacote de vozes naturais não pode ser usado. Lendo com a voz do telefone.</value></data>
+  <data name="PackStatus_Failed" xml:space="preserve"><value>Não foi possível baixar as vozes naturais. Lendo com a voz do telefone. Toque para tentar novamente.</value></data>
+  <data name="PackStatus_Unavailable" xml:space="preserve"><value>Uma voz natural para o seu idioma ainda não está disponível. Lendo com a voz do telefone.</value></data>
+  <data name="Common_Back" xml:space="preserve"><value>Voltar</value></data>
+  <data name="Common_Save" xml:space="preserve"><value>Salvar</value></data>
+  <data name="Common_Done" xml:space="preserve"><value>Concluído</value></data>
+  <data name="Common_Delete" xml:space="preserve"><value>Excluir</value></data>
+  <data name="Common_Keep" xml:space="preserve"><value>Manter</value></data>
+  <data name="Common_Edit" xml:space="preserve"><value>Editar</value></data>
+  <data name="Gallery_Title" xml:space="preserve"><value>Minhas histórias</value></data>
+  <data name="Gallery_ForGrownUps" xml:space="preserve"><value>Para adultos</value></data>
+  <data name="Gallery_OpensGateHint" xml:space="preserve"><value>Abre o portão dos adultos</value></data>
+  <data name="Gallery_Cast" xml:space="preserve"><value>Elenco · {0}</value></data>
+  <data name="Gallery_Characters_One" xml:space="preserve"><value>{0} personagem</value></data>
+  <data name="Gallery_Characters_Other" xml:space="preserve"><value>{0} personagens</value></data>
+  <data name="Gallery_PagesSummary" xml:space="preserve"><value>{0} · reordenar, adicionar, remover</value></data>
+  <data name="Gallery_DeleteTitle" xml:space="preserve"><value>Excluir “{0}”?</value></data>
+  <data name="Gallery_PagesRead_One" xml:space="preserve"><value>{0} página lida</value></data>
+  <data name="Gallery_PagesRead_Other" xml:space="preserve"><value>{0} páginas lidas</value></data>
+  <data name="Gallery_CharactersFound_One" xml:space="preserve"><value>{0} personagem encontrado</value></data>
+  <data name="Gallery_CharactersFound_Other" xml:space="preserve"><value>{0} personagens encontrados</value></data>
+  <data name="Delete_Body" xml:space="preserve"><value>As páginas, imagens e vozes dele serão removidas deste telefone.</value></data>
+  <data name="Delete_FailedTitle" xml:space="preserve"><value>Não foi possível excluir a história</value></data>
+  <data name="Delete_FailedBody" xml:space="preserve"><value>Algo ainda está usando os arquivos. Tente novamente em instantes.</value></data>
+  <data name="Manage_Title" xml:space="preserve"><value>Gerenciar histórias</value></data>
+  <data name="Manage_EditStory" xml:space="preserve"><value>Editar história</value></data>
+  <data name="Manage_DeleteStory" xml:space="preserve"><value>Excluir história</value></data>
+  <data name="Manage_WhoIsSpeaking" xml:space="preserve"><value>Quem está falando</value></data>
+  <data name="Gate_HoldBody" xml:space="preserve"><value>Pressione e segure por 3 segundos.</value></data>
+  <data name="Gate_HoldDescription" xml:space="preserve"><value>Pressione e segure por 3 segundos</value></data>
+  <data name="Gate_KeepHolding" xml:space="preserve"><value>Continue segurando…</value></data>
+  <data name="Gate_Continue" xml:space="preserve"><value>Continuar para a pergunta</value></data>
+  <data name="Gate_BackToStory" xml:space="preserve"><value>Voltar para a história</value></data>
+  <data name="Gate_WhatIs" xml:space="preserve"><value>Quanto é</value></data>
+  <data name="Gate_Backspace" xml:space="preserve"><value>Apagar</value></data>
+  <data name="Gate_SumQuestion" xml:space="preserve"><value>Quanto é {0} mais {1}?</value></data>
+  <data name="Story_Add" xml:space="preserve"><value>Adicionar uma história</value></data>
+  <data name="Story_Title" xml:space="preserve"><value>Título</value></data>
+  <data name="Story_Language" xml:space="preserve"><value>Idioma da história</value></data>
+  <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · detectado</value></data>
+  <data name="Story_Translate" xml:space="preserve"><value>Traduzir para o meu idioma</value></data>
+  <data name="Add_Scan" xml:space="preserve"><value>Digitalizar páginas</value></data>
+  <data name="Add_ScanSub" xml:space="preserve"><value>Mantém as imagens das páginas</value></data>
+  <data name="Add_Photos" xml:space="preserve"><value>Fotos</value></data>
+  <data name="Add_PhotosSub" xml:space="preserve"><value>Escolha fotos das páginas</value></data>
+  <data name="Add_File" xml:space="preserve"><value>PDF ou arquivo</value></data>
+  <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>
+  <data name="Cast_UnknownGender" xml:space="preserve"><value>?</value></data>
+  <data name="Add_Type" xml:space="preserve"><value>Digitar ou colar</value></data>
+  <data name="Add_TypeSub" xml:space="preserve"><value>Somente texto</value></data>
+  <data name="Add_Placeholder" xml:space="preserve"><value>Digite ou cole uma história</value></data>
+  <data name="Add_CheckCast" xml:space="preserve"><value>Conferir o elenco</value></data>
+  <data name="Add_Save" xml:space="preserve"><value>Salvar história</value></data>
+  <data name="Add_PickerTitle" xml:space="preserve"><value>Escolha um arquivo .txt, .pdf ou .docx</value></data>
+  <data name="Add_PermissionTitle" xml:space="preserve"><value>Permissão necessária</value></data>
+  <data name="Add_PermissionBody" xml:space="preserve"><value>Conceda acesso aos arquivos para ler um documento.</value></data>
+  <data name="Add_FileTooLargeTitle" xml:space="preserve"><value>Arquivo muito grande</value></data>
+  <data name="Add_FileTooLargeBody" xml:space="preserve"><value>Esse arquivo tem {0} páginas; o limite é {1}.</value></data>
+  <data name="Add_ReadFailedTitle" xml:space="preserve"><value>Não foi possível ler o arquivo</value></data>
+  <data name="Add_ReadFailedBody" xml:space="preserve"><value>O arquivo pode estar corrompido ou em um formato não compatível.</value></data>
+  <data name="Edit_Cover" xml:space="preserve"><value>Capa</value></data>
+  <data name="Edit_CoverFirstPage" xml:space="preserve"><value>Primeira página</value></data>
+  <data name="Edit_CoverColour" xml:space="preserve"><value>Cor</value></data>
+  <data name="Edit_Pages" xml:space="preserve"><value>Páginas</value></data>
+  <data name="Edit_FixText" xml:space="preserve"><value>Corrigir o texto</value></data>
+  <data name="Edit_FixTextValue" xml:space="preserve"><value>Editar o texto reconhecido</value></data>
+  <data name="Pages_Add" xml:space="preserve"><value>Adicionar uma página</value></data>
+  <data name="Pages_MoveUp" xml:space="preserve"><value>Mover página para cima</value></data>
+  <data name="Pages_MoveDown" xml:space="preserve"><value>Mover página para baixo</value></data>
+  <data name="Pages_Remove" xml:space="preserve"><value>Remover página</value></data>
+  <data name="Reading_TextMode" xml:space="preserve"><value>Modo texto</value></data>
+  <data name="Reading_PictureMode" xml:space="preserve"><value>Modo imagem</value></data>
+  <data name="Reading_Play" xml:space="preserve"><value>Reproduzir</value></data>
+  <data name="Reading_Pause" xml:space="preserve"><value>Pausar</value></data>
+  <data name="Reading_Previous" xml:space="preserve"><value>Frase anterior</value></data>
+  <data name="Reading_Next" xml:space="preserve"><value>Próxima frase</value></data>
+  <data name="Reading_Loading" xml:space="preserve"><value>Carregando…</value></data>
+  <data name="Reading_CouldntRead" xml:space="preserve"><value>Não foi possível ler o texto</value></data>
+  <data name="Reading_ReadFailed" xml:space="preserve"><value>Algo deu errado durante a leitura.</value></data>
+  <data name="Reading_LayoutFailed" xml:space="preserve"><value>Não foi possível organizar esta história. Gire a tela ou troque o modo para tentar novamente.</value></data>
+  <data name="Reading_PageN" xml:space="preserve"><value>Lendo a página {0}</value></data>
+  <data name="Cast_Title" xml:space="preserve"><value>Quem está falando</value></data>
+  <data name="Cast_Narrator" xml:space="preserve"><value>Narrador</value></data>
+  <data name="Cast_Main" xml:space="preserve"><value>PRINCIPAL</value></data>
+  <data name="Cast_Edited" xml:space="preserve"><value>EDITADO</value></data>
+  <data name="Cast_SharedVoice" xml:space="preserve"><value>Voz compartilhada</value></data>
+  <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>Falante desconhecido</value></data>
+  <data name="Cast_MergeButton" xml:space="preserve"><value>Mesclar dois personagens</value></data>
+  <data name="Cast_MergeTitle" xml:space="preserve"><value>Mesclar personagens</value></data>
+  <data name="Cast_MergeBody" xml:space="preserve"><value>Escolha os dois nomes que são o mesmo personagem. As falas deles se juntam sob um único nome e uma única voz.</value></data>
+  <data name="Cast_KeepName" xml:space="preserve"><value>Manter o nome</value></data>
+  <data name="Cast_VoiceTitle" xml:space="preserve"><value>Voz</value></data>
+  <data name="Cast_PreviewLine" xml:space="preserve"><value>Olá! É assim que eu soo quando leio a sua história.</value></data>
+  <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>Não foi possível salvar a alteração</value></data>
+  <data name="Cast_SaveFailedBody" xml:space="preserve"><value>O elenco não foi salvo. Tente novamente em instantes.</value></data>
+  <data name="Cast_PreviewFailedBody" xml:space="preserve"><value>Não foi possível reproduzir a voz agora.</value></data>
+  <data name="Cast_LoadFailedTitle" xml:space="preserve"><value>Não foi possível abrir o elenco</value></data>
+  <data name="Cast_LoadFailedBody" xml:space="preserve"><value>Não foi possível determinar o elenco desta história. Tente novamente em instantes.</value></data>
+  <data name="Cast_Boy" xml:space="preserve"><value>Menino</value></data>
+  <data name="Cast_Girl" xml:space="preserve"><value>Menina</value></data>
+  <data name="Cast_Words_One" xml:space="preserve"><value>{0} palavra</value></data>
+  <data name="Cast_Words_Other" xml:space="preserve"><value>{0} palavras</value></data>
+  <data name="Cast_UnknownLines_One" xml:space="preserve"><value>{0} fala</value></data>
+  <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} falas</value></data>
+  <data name="Cast_UsesNarrator" xml:space="preserve"><value>usa a voz do narrador</value></data>
+  <data name="Cast_Hear" xml:space="preserve"><value>Ouvir {0}</value></data>
+  <data name="Cast_NoBoyVoice" xml:space="preserve"><value>Este pacote de vozes não tem voz de menino, então este personagem mantém a voz que tinha.</value></data>
+  <data name="Cast_NoGirlVoice" xml:space="preserve"><value>Este pacote de vozes não tem voz de menina, então este personagem mantém a voz que tinha.</value></data>
+  <data name="Cast_VoiceChanged_One" xml:space="preserve"><value>A voz de {0} foi alterada porque o narrador agora tem a voz que havia sido dada a ele.</value></data>
+  <data name="Cast_VoiceChanged_Other" xml:space="preserve"><value>As vozes de {0} foram alteradas porque o narrador agora tem a voz que havia sido dada a eles.</value></data>
+  <data name="Cast_MergeInto" xml:space="preserve"><value>Mesclar com {0}</value></data>
+  <data name="Cast_SharedNote" xml:space="preserve"><value>Este pacote de vozes tem apenas {0} vozes naturais, então alguns personagens compartilham uma voz. A voz do narrador nunca é dada a um personagem.</value></data>
+</root>

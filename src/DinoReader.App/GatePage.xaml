@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="DinoReader.GatePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:DinoReader"
+    xmlns:res="clr-namespace:DinoReader.Resources.Strings"
+    BackgroundColor="Transparent"
+    NavigationPage.HasNavigationBar="False">
+
+    <!-- Grown-up gate (mock screens 6, 6b, 7): a white bottom sheet over a dimmed page. Step 1 is
+         a 3 second hold (a plain button when a screen reader is on); step 2 is the sum. -->
+    <Grid BackgroundColor="{StaticResource Scrim}">
+        <Border VerticalOptions="End" BackgroundColor="White" StrokeThickness="0" Padding="22,24,22,28">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="28,28,0,0" />
+            </Border.StrokeShape>
+            <VerticalStackLayout Spacing="12" HorizontalOptions="Fill">
+                <HorizontalStackLayout Spacing="6" HorizontalOptions="Center">
+                    <BoxView x:Name="StepBarOne" WidthRequest="26" HeightRequest="5" CornerRadius="3" Color="{StaticResource Brand}" />
+                    <BoxView x:Name="StepBarTwo" WidthRequest="26" HeightRequest="5" CornerRadius="3" Color="#e6e0d4" />
+                </HorizontalStackLayout>
+
+                <VerticalStackLayout x:Name="HoldStep" Spacing="12" HorizontalOptions="Fill">
+                    <Label Text="{x:Static res:AppResources.Gallery_ForGrownUps}" FontSize="22" FontAttributes="Bold" HorizontalTextAlignment="Center"
+                           SemanticProperties.HeadingLevel="Level1" />
+                    <Label x:Name="HoldBody" Text="{x:Static res:AppResources.Gate_HoldBody}" FontSize="14.5" LineHeight="1.4"
+                           TextColor="{StaticResource Body}" HorizontalTextAlignment="Center" MaximumWidthRequest="260" />
+
+                    <Grid x:Name="HoldRingHost" WidthRequest="120" HeightRequest="120" Margin="0,4,0,0" HorizontalOptions="Center">
+                        <Border WidthRequest="86" HeightRequest="86" BackgroundColor="{StaticResource Brand}" StrokeThickness="0"
+                                InputTransparent="True">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="43" />
+                            </Border.StrokeShape>
+                            <local:IconView Kind="Lock" Color="White" Size="20" />
+                        </Border>
+                        <GraphicsView x:Name="HoldRing" WidthRequest="120" HeightRequest="120"
+                                      StartInteraction="OnHoldStart" EndInteraction="OnHoldEnd" CancelInteraction="OnHoldCancel"
+                                      SemanticProperties.Description="{x:Static res:AppResources.Gate_HoldDescription}" />
+                    </Grid>
+                    <Label x:Name="HoldHint" Text="{x:Static res:AppResources.Gate_KeepHolding}" FontSize="13" FontAttributes="Bold" TextColor="{StaticResource Muted}"
+                           HorizontalTextAlignment="Center" Opacity="0" />
+
+                    <Button x:Name="ContinueButton" Text="{x:Static res:AppResources.Gate_Continue}" IsVisible="False" HeightRequest="56"
+                            CornerRadius="28" FontSize="16" BackgroundColor="{StaticResource Brand}" TextColor="White"
+                            Clicked="OnContinueClicked" />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout x:Name="SumStep" Spacing="12" IsVisible="False" HorizontalOptions="Fill">
+                    <Label Text="{x:Static res:AppResources.Gate_WhatIs}" FontSize="15" TextColor="{StaticResource Body}" HorizontalTextAlignment="Center" />
+                    <HorizontalStackLayout x:Name="SumRow" HorizontalOptions="Center" Spacing="8">
+                        <Label x:Name="SumLabel" FontSize="40" FontAttributes="Bold" VerticalOptions="End" />
+                        <VerticalStackLayout VerticalOptions="End">
+                            <Label x:Name="AnswerLabel" FontSize="40" FontAttributes="Bold" TextColor="{StaticResource Brand}"
+                                   MinimumWidthRequest="64" HorizontalTextAlignment="Center" />
+                            <BoxView HeightRequest="4" Color="{StaticResource Brand}" />
+                        </VerticalStackLayout>
+                    </HorizontalStackLayout>
+                    <Grid x:Name="KeyPad" ColumnDefinitions="*,*,*" ColumnSpacing="8" RowSpacing="8" Margin="0,4,0,0" />
+                </VerticalStackLayout>
+
+                <Button x:Name="BackButton" Text="{x:Static res:AppResources.Gate_BackToStory}" HeightRequest="48" CornerRadius="24" FontSize="15"
+                        FontAttributes="Bold" Padding="26,0" HorizontalOptions="Center"
+                        BackgroundColor="{StaticResource Sand}" TextColor="{StaticResource Ink}" Clicked="OnBackClicked" />
+            </VerticalStackLayout>
+        </Border>
+    </Grid>
+</ContentPage>

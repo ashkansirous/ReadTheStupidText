@@ -23,17 +23,30 @@ internal sealed class SpeakerTagParser
     {
         _rules = rules;
         _names = names;
-        var verb = $@"(?:(?i:{string.Join("|", rules.SpeechVerbs.Select(Regex.Escape))}))\b";
-        var adverb = $@"(?:\p{{L}}+{Regex.Escape(rules.AdverbSuffix)})";
-        var pron = $@"\b(?i:{string.Join("|", rules.MaleSubjectPronouns.Concat(rules.FemaleSubjectPronouns).Select(Regex.Escape))})\b";
-        var core = $@"(?:(?<p>{pron})\s+(?:{adverb}\s+)?{verb}"
-            + $@"|(?<n>{names.Pattern})\s+(?:{adverb}\s+)?{verb}"
-            + $@"|{verb}\s+(?<p>{pron})"
-            + $@"|{verb}\s+(?<n>{names.Pattern}))";
-        _after = new Regex($@"^[\s,]*{core}", RegexOptions.CultureInvariant);
-        _before = new Regex($@"{core}(?:\s+{adverb})?[\s,:]*$", RegexOptions.CultureInvariant);
-        _verbAtEnd = new Regex($@"{verb}(?:\s+{adverb})?[\s,:]*$", RegexOptions.CultureInvariant);
-        _pronoun = new Regex(pron, RegexOptions.CultureInvariant);
+        var verb = TagPatterns.Verb(rules);
+        string? pron = TagPatterns.Pronouns(rules);
+        var core = $"(?:{string.Join("|", CoreBranches(rules, names, verb, pron))})";
+        var after = TagPatterns.AdverbAfter(rules);
+        var separators = TagPatterns.TagSeparators;
+        _after = new Regex($@"^[{separators}]*{core}", RegexOptions.CultureInvariant);
+        _before = new Regex($@"{core}{after}[{separators}]*$", RegexOptions.CultureInvariant);
+        _verbAtEnd = new Regex($@"{verb}{after}[{separators}]*$", RegexOptions.CultureInvariant);
+        _pronoun = new Regex(pron ?? "(?!)", RegexOptions.CultureInvariant);
+    }
+
+    // The four tag shapes: "he said", "Peter said", "said he", "said Peter". A language
+    // whose subject pronouns carry no gender (Farsi) has only the two name shapes.
+    private static List<string> CoreBranches(LanguageRules rules, NameExtractor names, string verb, string? pron)
+    {
+        var gap = TagPatterns.SubjectVerbGap(rules);
+        var adverb = TagPatterns.AdverbBefore(rules);
+        var verbGap = TagPatterns.VerbSubjectGap(rules);
+        var branches = new List<string>();
+        if (pron is not null) branches.Add($"{rules.NameLead}(?<p>{pron}){gap}{adverb}{verb}");
+        branches.Add($"{rules.NameLead}(?<n>{names.Pattern}){gap}{adverb}{verb}");
+        if (pron is not null) branches.Add($"{verb}{verbGap}(?<p>{pron})");
+        branches.Add($"{verb}{verbGap}(?<n>{names.Pattern})");
+        return branches;
     }
 
     public SpeakerTag? ParseAfter(string narration, StoryNames story)

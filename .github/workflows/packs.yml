@@ -20,6 +20,10 @@ name: packs
 #                   espeak-ng data, which therefore exists only inside this pack's zip,
 #                   never in the repo, the MSIX, the AAB or the .ipa (Decision 63).
 #   * melo-zh-en    MeloTTS Chinese + English (MIT), same download and pin.
+# Four OCR packs (Slice 52, Decision 65) ride in the same release and the same packs.json:
+#   ocr-latin (en, fr, es, pt), ocr-cyrillic (ru), ocr-arabic (ar, fa), ocr-cjk (zh, ja).
+#   Each is PaddleOCR det + rec ONNX models and a dictionary (Apache-2.0), fetched from a
+#   pinned revision of the monkt/paddleocr-onnx Hugging Face repo and sha256-checked.
 
 on:
   workflow_dispatch:
@@ -43,6 +47,11 @@ on:
         required: true
         default: '1'
         type: string
+      ocr_pack_version:
+        description: 'Version stamped into the four PaddleOCR packs (bump when any model or dictionary changes)'
+        required: true
+        default: '1'
+        type: string
 
 permissions:
   contents: write   # create the packs-<n> release and upload its assets
@@ -61,6 +70,21 @@ env:
   CHINESE_LICENSE: MIT
   CHINESE_URL: https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-melo-tts-zh_en.tar.bz2
   CHINESE_SHA256: e58351ed7149f290a54534538badd4077cdbe6fddc964b24d0bee870415d1514
+  # PaddleOCR ONNX models (Apache-2.0), pinned to one revision of the monkt/paddleocr-onnx repo.
+  # The sha256 values are the Git LFS object ids (the files' sha256) and the dictionaries' hashes.
+  # Keep the ids in sync with the OCR pack ids in the Mobile app's OCR catalog tests.
+  OCR_LICENSE: Apache-2.0
+  OCR_BASE_URL: https://huggingface.co/monkt/paddleocr-onnx/resolve/7b02d0a30a07ba2b92ad1ff5a8941ae2c633de65
+  OCR_DET_PATH: detection/v3/det.onnx
+  OCR_DET_SHA256: ee40e80071ba3a320d4efda75f3e22047a7d049e9bf7bcaaf9daea23fc21b935
+  OCR_LATIN_REC_SHA256: 614ffc2d6d3902d360fad7f1b0dd455ee45e877069d14c4e51a99dc4ef144409
+  OCR_LATIN_DICT_SHA256: 3c0a8a79b612653c25f765271714f71281e4e955962c153e272b7b8c1d2b13ff
+  OCR_CYRILLIC_REC_SHA256: dc6bf0e855247decce214ba6dae5bc135fa0ad725a5918a7fcfb59fad6c9cdee
+  OCR_CYRILLIC_DICT_SHA256: 3e95f1581557162870cacdba5af91a4c6be2890710d395b0c3c7578e7ee5e6eb
+  OCR_ARABIC_REC_SHA256: 7982d371612785238fd99080cff36354deaec84fdc6ff7da9c82af4243fa0c9a
+  OCR_ARABIC_DICT_SHA256: 637c27c88512c22089bef927b34ada08f748dc132ac70facd68d8202384c2726
+  OCR_CJK_REC_SHA256: 26fa4f47060f58e25962b9af6beaee05c8182b90e026c4ecc6db165d9dfdc38a
+  OCR_CJK_DICT_SHA256: d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b
 
 jobs:
   publish-packs:
@@ -71,6 +95,7 @@ jobs:
       SUPERTONIC_VERSION: ${{ inputs.pack_version }}
       PERSIAN_VERSION: ${{ inputs.piper_pack_version }}
       CHINESE_VERSION: ${{ inputs.melo_pack_version }}
+      OCR_VERSION: ${{ inputs.ocr_pack_version }}
     steps:
       - name: Checkout (with LFS — the voice model is LFS-tracked)
         uses: actions/checkout@v4
@@ -197,24 +222,69 @@ jobs:
           (cd out && zip -r -X "$CHINESE_ID-$CHINESE_VERSION.zip" "$CHINESE_ID")
           ls -l out
 
+      # The OCR packs: det.onnx (the shared PP-OCRv3 mobile detector, 2.4 MB) + rec.onnx + dict.txt
+      # per script, each zip standalone so a pack never depends on another being installed.
+      # PP-OCRv5 Latin and Cyrillic (eslav) recognizers, the PP-OCRv3 Arabic one (Arabic, Persian) and
+      # the PP-OCRv5 Chinese one, which also reads Japanese.
+      - name: Build the OCR (PaddleOCR) pack zips
+        run: |
+          set -euo pipefail
+          mkdir -p ocr-src
+          fetch() {
+            local path="$1" sha="$2" dest="$3"
+            curl -fsSL --retry 3 -o "$dest" "$OCR_BASE_URL/$path"
+            echo "$sha  $dest" | sha256sum -c -
+          }
+          fetch "$OCR_DET_PATH" "$OCR_DET_SHA256" ocr-src/det.onnx
+          build_ocr() {
+            local id="$1" languages="$2" folder="$3" rec_sha="$4" dict_sha="$5"
+            local dest="out/$id"
+            mkdir -p "$dest"
+            cp ocr-src/det.onnx "$dest/det.onnx"
+            fetch "languages/$folder/rec.onnx" "$rec_sha" "$dest/rec.onnx"
+            fetch "languages/$folder/dict.txt" "$dict_sha" "$dest/dict.txt"
+            cat > "$dest/LICENSE" <<LICENSE_TEXT
+          PaddleOCR text detection and recognition models ($id)
+            Copyright PaddlePaddle Authors. Licensed under the Apache License, Version 2.0
+            (https://www.apache.org/licenses/LICENSE-2.0). The models are distributed as is.
+            Upstream: https://github.com/PaddlePaddle/PaddleOCR
+            ONNX conversion: https://huggingface.co/monkt/paddleocr-onnx (Apache-2.0)
+            Pinned files: $OCR_BASE_URL
+          LICENSE_TEXT
+            files=$(cd "$dest" && find . -type f ! -path ./pack.json -printf '%P\n' | sort | jq -R . | jq -s .)
+            jq -n --arg id "$id" --arg language "$languages" --arg version "$OCR_VERSION" --argjson files "$files" \
+              '{id: $id, kind: "ocr", language: $language, version: $version, engine: "onnxruntime", files: $files}' \
+              > "$dest/pack.json"
+            (cd out && zip -r -X "$id-$OCR_VERSION.zip" "$id")
+          }
+          build_ocr ocr-latin "en,fr,es,pt" latin "$OCR_LATIN_REC_SHA256" "$OCR_LATIN_DICT_SHA256"
+          build_ocr ocr-cyrillic ru eslav "$OCR_CYRILLIC_REC_SHA256" "$OCR_CYRILLIC_DICT_SHA256"
+          build_ocr ocr-arabic "ar,fa" arabic "$OCR_ARABIC_REC_SHA256" "$OCR_ARABIC_DICT_SHA256"
+          build_ocr ocr-cjk "zh,ja" chinese "$OCR_CJK_REC_SHA256" "$OCR_CJK_DICT_SHA256"
+          ls -l out
+
       - name: Write packs.json
         run: |
           set -euo pipefail
           entry() {
-            local id="$1" language="$2" version="$3" license="$4"
+            local id="$1" language="$2" version="$3" license="$4" kind="${5:-voice}"
             local zip="out/$id-$version.zip"
             local size sha url
             size=$(stat -c %s "$zip")
             sha=$(sha256sum "$zip" | cut -d' ' -f1)
             url="https://github.com/${{ github.repository }}/releases/download/$TAG/$(basename "$zip")"
-            jq -n --arg id "$id" --arg language "$language" --arg version "$version" \
+            jq -n --arg id "$id" --arg language "$language" --arg kind "$kind" --arg version "$version" \
                   --argjson size "$size" --arg sha "$sha" --arg license "$license" --arg url "$url" \
-              '{id: $id, language: $language, kind: "voice", version: $version, sizeBytes: $size, sha256: $sha, license: $license, url: $url}'
+              '{id: $id, language: $language, kind: $kind, version: $version, sizeBytes: $size, sha256: $sha, license: $license, url: $url}'
           }
           {
             entry "$SUPERTONIC_ID" "$SUPERTONIC_LANGUAGES" "$SUPERTONIC_VERSION" "$SUPERTONIC_LICENSE"
             entry "$PERSIAN_ID" fa "$PERSIAN_VERSION" "$PERSIAN_LICENSE"
             entry "$CHINESE_ID" zh "$CHINESE_VERSION" "$CHINESE_LICENSE"
+            entry ocr-latin "en,fr,es,pt" "$OCR_VERSION" "$OCR_LICENSE" ocr
+            entry ocr-cyrillic ru "$OCR_VERSION" "$OCR_LICENSE" ocr
+            entry ocr-arabic "ar,fa" "$OCR_VERSION" "$OCR_LICENSE" ocr
+            entry ocr-cjk "zh,ja" "$OCR_VERSION" "$OCR_LICENSE" ocr
           } | jq -s . > out/packs.json
           cat out/packs.json
 
@@ -226,6 +296,10 @@ jobs:
             "out/$SUPERTONIC_ID-$SUPERTONIC_VERSION.zip" \
             "out/$PERSIAN_ID-$PERSIAN_VERSION.zip" \
             "out/$CHINESE_ID-$CHINESE_VERSION.zip" \
+            "out/ocr-latin-$OCR_VERSION.zip" \
+            "out/ocr-cyrillic-$OCR_VERSION.zip" \
+            "out/ocr-arabic-$OCR_VERSION.zip" \
+            "out/ocr-cjk-$OCR_VERSION.zip" \
             out/packs.json \
             --repo "${{ github.repository }}" \
             --title "Language packs $TAG" \

@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Extensions.DependencyInjection;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
@@ -10,16 +11,22 @@ public partial class App : Microsoft.Maui.Controls.Application
 	private readonly ISpeechReader _reader;
 	private readonly ISettingsStore _settings;
 	private readonly VoicePackInstaller _installer;
+	private readonly OcrPackInstaller? _ocrPacks;
 
-	public App(IServiceProvider services, ISpeechReader reader, ISettingsStore settings, VoicePackInstaller installer)
+	public App(IServiceProvider services, ISpeechReader reader, ISettingsStore settings, VoicePackInstaller installer, OcrPackInstaller? ocrPacks = null)
 	{
+		// Before InitializeComponent: pages read their strings while they are inflated.
+		UiCulture.Apply(UiCulture.Resolve(settings.Language, CultureInfo.CurrentUICulture));
 		InitializeComponent();
 
 		_services = services;
 		_reader = reader;
 		_settings = settings;
 		_installer = installer;
+		_ocrPacks = ocrPacks;
 		_ = InitializeSpeechAsync();
+		// OCR pack (Slice 52): checked at every start, on its own; it waits for any voice download itself.
+		_ = _ocrPacks?.EnsureForCurrentLanguageAsync();
 	}
 
 	// First run (no language stored yet) opens the language page; afterwards the Reader.
@@ -31,7 +38,7 @@ public partial class App : Microsoft.Maui.Controls.Application
 		return new Window(root);
 	}
 
-	/// <summary>Leaves the first-run language page for the Reader.</summary>
+	/// <summary>Rebuilds the root in the current language: leaves the first-run page, or re-applies a language change.</summary>
 	public void ShowMain()
 	{
 		if (Windows.Count > 0)

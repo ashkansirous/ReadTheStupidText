@@ -125,6 +125,8 @@ public class PackVoiceModelServiceTests
         public string? GetInstalledPath(string packId) => null;
 
         public IReadOnlyList<InstalledVoicePack> GetInstalledVoicePacks() => Installed;
+        public IReadOnlyList<InstalledVoicePack> GetInstalledOcrPacks() => [];
+        public Task<PackCatalogResult> GetCatalogCachedAsync(TimeSpan maxAge, CancellationToken cancellationToken) => GetCatalogAsync(cancellationToken);
 
         public Task<PackDownloadResult> DownloadAsync(string packId, IProgress<double>? progress, CancellationToken cancellationToken) =>
             Task.FromResult(PackDownloadResult.Failed);
@@ -149,6 +151,8 @@ public class PackVoiceModelServiceTests
         public PlaybackRate Speed { get; set; } = PlaybackRate.Default;
         public bool AutoReadOnSelection { get; set; }
         public bool AutoReadOnCopy { get; set; }
+        public bool TranslateEnabled { get; set; }
+        public string? TranslateSourceLanguage { get; set; }
         public string? VoiceId { get; set; }
         public SanitizerCategory EnabledSanitizers { get; set; }
         public PanelPosition? PanelPosition { get; set; }

@@ -2,6 +2,7 @@ using Microsoft.Maui.Controls.Shapes;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Domain.Reading;
+using ReadTheStupidText.Mobile.Resources.Strings;
 
 namespace ReadTheStupidText.Mobile;
 
@@ -19,8 +20,8 @@ public partial class VoicePickerPage : ContentPage
     private static readonly Color SelectedRowTint = Color.FromArgb("#125B57E8");
     private static readonly Color SelectedCheckColor = Color.FromArgb("#5B57E8");
 
-    /// <summary>Display name of the labelled system voice (Slice 50, Decision 61).</summary>
-    public const string PhoneVoiceName = "Phone voice";
+    /// <summary>Display name of the labelled system voice (Slice 50, Decision 61), in the current language.</summary>
+    public static string PhoneVoiceName => AppResources.VoicePicker_PhoneVoiceName;
 
     private readonly ISpeechReader _reader;
     private readonly ISettingsStore _settings;
@@ -37,6 +38,10 @@ public partial class VoicePickerPage : ContentPage
         VoicePackInstaller installer)
     {
         InitializeComponent();
+        FlowDirection = UiFlowDirection.ForCurrentCulture();
+        BackGlyph.Text = AppResources.Common_BackGlyph;
+        HeaderGrid.Padding = UiFlowDirection.Mirror(HeaderGrid.Padding);
+        TitleStack.Margin = UiFlowDirection.Mirror(TitleStack.Margin);
         _reader = reader;
         _settings = settings;
         _platform = platform;
@@ -97,8 +102,8 @@ public partial class VoicePickerPage : ContentPage
     private void AddFallbackReason()
     {
         string reason = _platform.SupportsNeuralVoice
-            ? PackStatusText.Compose(_installer.State, _installer.Progress) ?? VoiceFallbackText.PackNotInstalled
-            : VoiceFallbackText.NoNeuralEngine;
+            ? PackStatusText.Compose(_installer.State, _installer.Progress) ?? AppResources.VoicePicker_ReasonPackNotInstalled
+            : AppResources.VoicePicker_ReasonNoNeuralEngine;
         PhoneVoiceList.Children.Add(new Label
         {
             Text = reason,
@@ -120,12 +125,20 @@ public partial class VoicePickerPage : ContentPage
             return;
         }
 
-        EngineHeading.Text = VoiceEngineNames.Heading(paths.Kind);
+        EngineHeading.Text = EngineHeadingText(paths.Kind);
         foreach (VoiceInfo voice in paths.AvailableVoices)
         {
             EngineVoiceList.Children.Add(BuildRow(voice));
         }
     }
+
+    private static string EngineHeadingText(VoiceEngineKind kind) => kind switch
+    {
+        VoiceEngineKind.Supertonic => AppResources.VoicePicker_EngineSupertonic,
+        VoiceEngineKind.Vits => AppResources.VoicePicker_EnginePiper,
+        VoiceEngineKind.Melo => AppResources.VoicePicker_EngineMelo,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown voice engine."),
+    };
 
     private void AddSupertonicVoices(IReadOnlyList<VoiceInfo> voices)
     {

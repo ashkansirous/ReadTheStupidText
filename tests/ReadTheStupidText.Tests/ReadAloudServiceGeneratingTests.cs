@@ -334,6 +334,8 @@ public class ReadAloudServiceGeneratingTests
         public SanitizerCategory EnabledSanitizers { get; set; }
         public PanelPosition? PanelPosition { get; set; }
         public string? Language { get; set; }
+        public bool TranslateEnabled { get; set; }
+        public string? TranslateSourceLanguage { get; set; }
     }
 
     private sealed class FakeSanitizer : ITextSanitizer

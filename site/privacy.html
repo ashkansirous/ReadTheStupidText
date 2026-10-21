@@ -31,8 +31,8 @@
   <p class="eff"><strong>Effective date:</strong> 3 September 2026</p>
 
   <p class="lede">Read The Stupid Text (&ldquo;the app&rdquo;) reads text aloud. It ships as a
-  Windows tray utility and an Android app. This policy explains how the app handles your data on
-  <strong>both</strong> platforms.</p>
+  Windows tray utility, an Android app and an iPhone app. This policy explains how the app handles your data on
+  <strong>all</strong> platforms.</p>
 
   <h2>The short version</h2>
   <p><strong>Read The Stupid Text does not collect, store, transmit, or share any personal
@@ -47,16 +47,21 @@
     <li><strong>Uploaded files</strong> (<code>.txt</code>, <code>.pdf</code>, <code>.docx</code>)
       are opened and parsed locally to extract their text. The file itself is never transmitted or
       copied anywhere by the app.</li>
-    <li><strong>Camera scans</strong> (Android): a photo you take is read by Google&rsquo;s
-      on-device ML Kit text recognition, which runs entirely on your phone. The photo is processed
+    <li><strong>Camera scans</strong> (Android and iPhone): a photo you take is read by on-device
+      text recognition (Google&rsquo;s ML Kit on Android, Apple&rsquo;s Vision framework on iPhone), which runs entirely on your phone. The photo is processed
       to extract text and is not uploaded, saved permanently, or shared &mdash; it exists only to
       be read aloud.</li>
+    <li><strong>Translation</strong> (Android, off by default): when you turn on &ldquo;Translate to my
+      language&rdquo;, the app identifies the language of your text with Google&rsquo;s on-device ML Kit
+      language identification and translates it with ML Kit&rsquo;s on-device translation, then reads
+      the result. Both run entirely on your phone; your text is never sent to Google or anyone else.
+      The translation is casual quality.</li>
     <li><strong>Speech synthesis is performed entirely on your device</strong>, using a neural
       voice model that the app downloads once as a language pack. No text or audio is sent to any
-      server or third party, on either platform.</li>
+      server or third party, on any platform.</li>
     <li>The app&rsquo;s <strong>activity log</strong> (an optional diagnostic view) lives in
       memory, shows recent read activity, and is <strong>cleared when the app closes</strong>.</li>
-    <li><strong>Cached audio of read sentences (Android and Windows):</strong> to start reading sooner,
+    <li><strong>Cached audio of read sentences (Android, iPhone and Windows):</strong> to start reading sooner,
       the app keeps the audio it generated for sentences it has read on your device only, in the
       app&rsquo;s private storage, capped at 100 MB. It is removed when you clear the app&rsquo;s
       cache or storage (on Windows, when you uninstall the app), and it is never sent anywhere.</li>
@@ -72,13 +77,19 @@
   </ul>
 
   <h2>Network use</h2>
-  <p><strong>Language packs only.</strong> The Android and Windows apps download the natural-voice
+  <p><strong>Language packs only.</strong> The Android, iPhone and Windows apps download the natural-voice
   language pack for the language you choose on first launch (about 145&nbsp;MB, so a Wi-Fi connection is
-  advisable). The download is a plain file request to this project&rsquo;s public GitHub Releases
+  advisable). The Android and iPhone apps also download the text-recognition pack for that language (up to about 85&nbsp;MB, depending on the language). The download is a plain file request to this project&rsquo;s public GitHub Releases
   page: no account, no identifier and none of your text, images or scans is sent, and the app has
   no analytics or telemetry. Once a pack is installed the app works fully offline and makes no network requests at all (it does not even re-check the catalog). Until it
   arrives, and if you are offline, your device&rsquo;s own built-in voice reads instead (the Windows
-  voice on Windows, the phone&rsquo;s voice on Android).</p>
+  voice on Windows, the phone&rsquo;s voice on Android and iPhone).</p>
+  <p><strong>Translation models (Android).</strong> The first time you translate to or from a language,
+  Google&rsquo;s ML Kit downloads that language&rsquo;s translation model (about 30&nbsp;MB each; English is
+  used as a go-between for most pairs) from Google&rsquo;s servers, using ML Kit&rsquo;s own on-device model
+  download (it may use Google Play services). This is a request for a model file, not for your text:
+  none of your text, images or scans is sent. Once a model is on the phone, translating works offline.
+  If a model cannot be downloaded the app reads the original text.</p>
   <p>Your text, images, scans and documents are never transmitted anywhere; reading and text
   recognition happen on the device.</p>
 
@@ -94,17 +105,21 @@
   &ldquo;offline&rdquo; from a failed download (see <em>Network use</em>). It also requests the
   <strong>Camera</strong> permission, used only when you
   tap the scan action, so the app can point your camera at text to read it &mdash; nothing is
-  captured otherwise. Both platforms use the standard OS file picker to let you choose a document
+  captured otherwise. All platforms use the standard OS file picker to let you choose a document
   to read; the app only opens the file you explicitly select.</p>
 
   <h2>Third-party components</h2>
-  <p>The app uses a small set of open-source, on-device components that never transmit data (the Supertonic voice model is downloaded as a language pack on both platforms rather than bundled):</p>
+  <p>The app uses a small set of open-source, on-device components that never transmit data (the Supertonic voice model is downloaded as a language pack on all platforms rather than bundled):</p>
   <ul>
     <li><strong>sherpa-onnx</strong> and the <strong>Supertonic</strong> voice model &mdash; the
-      offline neural text-to-speech engine, used on both platforms.</li>
+      offline neural text-to-speech engine, used on all platforms.</li>
     <li><strong>Google ML Kit Text Recognition</strong> (Android only) &mdash; the on-device model
       used to read text out of a scanned photo. It runs locally; nothing is sent to Google or
       anyone else.</li>
+    <li><strong>Google ML Kit Language Identification and Translation</strong> (Android only) &mdash; the
+      on-device models used to detect the language of your text and translate it. They run locally;
+      nothing you type, paste or scan is sent to Google or anyone else. Only the translation model
+      files are downloaded (see <em>Network use</em>).</li>
   </ul>
 
   <h2>Children&rsquo;s privacy</h2>

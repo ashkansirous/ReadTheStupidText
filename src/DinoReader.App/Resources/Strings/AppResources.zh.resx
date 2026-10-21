@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Common_Ok" xml:space="preserve"><value>确定</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="PackStatus_Resolving" xml:space="preserve"><value>正在检查自然语音…</value></data>
+  <data name="PackStatus_Downloading" xml:space="preserve"><value>正在下载自然语音… {0}</value></data>
+  <data name="PackStatus_Offline" xml:space="preserve"><value>没有网络连接。正在使用手机语音朗读。点按可重试下载语音。</value></data>
+  <data name="PackStatus_HashMismatch" xml:space="preserve"><value>语音下载已损坏。正在使用手机语音朗读。点按可重试。</value></data>
+  <data name="PackStatus_InvalidPack" xml:space="preserve"><value>自然语音包无法使用。正在使用手机语音朗读。</value></data>
+  <data name="PackStatus_Failed" xml:space="preserve"><value>无法下载自然语音。正在使用手机语音朗读。点按可重试。</value></data>
+  <data name="PackStatus_Unavailable" xml:space="preserve"><value>您的语言暂无自然语音。正在使用手机语音朗读。</value></data>
+  <data name="Common_Back" xml:space="preserve"><value>返回</value></data>
+  <data name="Common_Save" xml:space="preserve"><value>保存</value></data>
+  <data name="Common_Done" xml:space="preserve"><value>完成</value></data>
+  <data name="Common_Delete" xml:space="preserve"><value>删除</value></data>
+  <data name="Common_Keep" xml:space="preserve"><value>保留</value></data>
+  <data name="Common_Edit" xml:space="preserve"><value>编辑</value></data>
+  <data name="Gallery_Title" xml:space="preserve"><value>我的故事</value></data>
+  <data name="Gallery_ForGrownUps" xml:space="preserve"><value>家长专区</value></data>
+  <data name="Gallery_OpensGateHint" xml:space="preserve"><value>打开家长验证</value></data>
+  <data name="Gallery_Cast" xml:space="preserve"><value>角色 · {0}</value></data>
+  <data name="Gallery_Characters_One" xml:space="preserve"><value>{0} 个角色</value></data>
+  <data name="Gallery_Characters_Other" xml:space="preserve"><value>{0} 个角色</value></data>
+  <data name="Gallery_PagesSummary" xml:space="preserve"><value>{0} · 排序、添加、删除</value></data>
+  <data name="Gallery_DeleteTitle" xml:space="preserve"><value>删除“{0}”？</value></data>
+  <data name="Gallery_PagesRead_One" xml:space="preserve"><value>已读取 {0} 页</value></data>
+  <data name="Gallery_PagesRead_Other" xml:space="preserve"><value>已读取 {0} 页</value></data>
+  <data name="Gallery_CharactersFound_One" xml:space="preserve"><value>找到 {0} 个角色</value></data>
+  <data name="Gallery_CharactersFound_Other" xml:space="preserve"><value>找到 {0} 个角色</value></data>
+  <data name="Delete_Body" xml:space="preserve"><value>它的页面、图片和声音将从这部手机中删除。</value></data>
+  <data name="Delete_FailedTitle" xml:space="preserve"><value>无法删除这个故事</value></data>
+  <data name="Delete_FailedBody" xml:space="preserve"><value>文件仍在使用中，请稍后再试。</value></data>
+  <data name="Manage_Title" xml:space="preserve"><value>管理故事</value></data>
+  <data name="Manage_EditStory" xml:space="preserve"><value>编辑故事</value></data>
+  <data name="Manage_DeleteStory" xml:space="preserve"><value>删除故事</value></data>
+  <data name="Manage_WhoIsSpeaking" xml:space="preserve"><value>谁在说话</value></data>
+  <data name="Gate_HoldBody" xml:space="preserve"><value>请按住 3 秒。</value></data>
+  <data name="Gate_HoldDescription" xml:space="preserve"><value>请按住 3 秒</value></data>
+  <data name="Gate_KeepHolding" xml:space="preserve"><value>继续按住…</value></data>
+  <data name="Gate_Continue" xml:space="preserve"><value>继续答题</value></data>
+  <data name="Gate_BackToStory" xml:space="preserve"><value>返回故事</value></data>
+  <data name="Gate_WhatIs" xml:space="preserve"><value>计算</value></data>
+  <data name="Gate_Backspace" xml:space="preserve"><value>删除</value></data>
+  <data name="Gate_SumQuestion" xml:space="preserve"><value>{0} 加 {1} 等于多少？</value></data>
+  <data name="Story_Add" xml:space="preserve"><value>添加故事</value></data>
+  <data name="Story_Title" xml:space="preserve"><value>标题</value></data>
+  <data name="Story_Language" xml:space="preserve"><value>故事语言</value></data>
+  <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · 已识别</value></data>
+  <data name="Story_Translate" xml:space="preserve"><value>翻译成我的语言</value></data>
+  <data name="Add_Scan" xml:space="preserve"><value>扫描页面</value></data>
+  <data name="Add_ScanSub" xml:space="preserve"><value>保留页面图片</value></data>
+  <data name="Add_Photos" xml:space="preserve"><value>照片</value></data>
+  <data name="Add_PhotosSub" xml:space="preserve"><value>选择页面照片</value></data>
+  <data name="Add_File" xml:space="preserve"><value>PDF 或文件</value></data>
+  <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>
+  <data name="Cast_UnknownGender" xml:space="preserve"><value>?</value></data>
+  <data name="Add_Type" xml:space="preserve"><value>输入或粘贴</value></data>
+  <data name="Add_TypeSub" xml:space="preserve"><value>仅文字</value></data>
+  <data name="Add_Placeholder" xml:space="preserve"><value>输入或粘贴一个故事</value></data>
+  <data name="Add_CheckCast" xml:space="preserve"><value>查看角色</value></data>
+  <data name="Add_Save" xml:space="preserve"><value>保存故事</value></data>
+  <data name="Add_PickerTitle" xml:space="preserve"><value>选择 .txt、.pdf 或 .docx 文件</value></data>
+  <data name="Add_PermissionTitle" xml:space="preserve"><value>需要权限</value></data>
+  <data name="Add_PermissionBody" xml:space="preserve"><value>请允许访问文件以读取文档。</value></data>
+  <data name="Add_FileTooLargeTitle" xml:space="preserve"><value>文件太大</value></data>
+  <data name="Add_FileTooLargeBody" xml:space="preserve"><value>该文件有 {0} 页，上限为 {1} 页。</value></data>
+  <data name="Add_ReadFailedTitle" xml:space="preserve"><value>无法读取该文件</value></data>
+  <data name="Add_ReadFailedBody" xml:space="preserve"><value>文件可能已损坏或格式不受支持。</value></data>
+  <data name="Edit_Cover" xml:space="preserve"><value>封面</value></data>
+  <data name="Edit_CoverFirstPage" xml:space="preserve"><value>第一页</value></data>
+  <data name="Edit_CoverColour" xml:space="preserve"><value>颜色</value></data>
+  <data name="Edit_Pages" xml:space="preserve"><value>页面</value></data>
+  <data name="Edit_FixText" xml:space="preserve"><value>修正文字</value></data>
+  <data name="Edit_FixTextValue" xml:space="preserve"><value>编辑识别出的文字</value></data>
+  <data name="Pages_Add" xml:space="preserve"><value>添加页面</value></data>
+  <data name="Pages_MoveUp" xml:space="preserve"><value>上移页面</value></data>
+  <data name="Pages_MoveDown" xml:space="preserve"><value>下移页面</value></data>
+  <data name="Pages_Remove" xml:space="preserve"><value>删除页面</value></data>
+  <data name="Reading_TextMode" xml:space="preserve"><value>文字模式</value></data>
+  <data name="Reading_PictureMode" xml:space="preserve"><value>图片模式</value></data>
+  <data name="Reading_Play" xml:space="preserve"><value>播放</value></data>
+  <data name="Reading_Pause" xml:space="preserve"><value>暂停</value></data>
+  <data name="Reading_Previous" xml:space="preserve"><value>上一句</value></data>
+  <data name="Reading_Next" xml:space="preserve"><value>下一句</value></data>
+  <data name="Reading_Loading" xml:space="preserve"><value>加载中…</value></data>
+  <data name="Reading_CouldntRead" xml:space="preserve"><value>无法朗读这段文字</value></data>
+  <data name="Reading_ReadFailed" xml:space="preserve"><value>朗读时出了点问题。</value></data>
+  <data name="Reading_LayoutFailed" xml:space="preserve"><value>无法排版这个故事。请旋转屏幕或切换模式后重试。</value></data>
+  <data name="Reading_PageN" xml:space="preserve"><value>正在读第 {0} 页</value></data>
+  <data name="Cast_Title" xml:space="preserve"><value>谁在说话</value></data>
+  <data name="Cast_Narrator" xml:space="preserve"><value>旁白</value></data>
+  <data name="Cast_Main" xml:space="preserve"><value>主角</value></data>
+  <data name="Cast_Edited" xml:space="preserve"><value>已编辑</value></data>
+  <data name="Cast_SharedVoice" xml:space="preserve"><value>共用声音</value></data>
+  <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>未知说话者</value></data>
+  <data name="Cast_MergeButton" xml:space="preserve"><value>合并两个角色</value></data>
+  <data name="Cast_MergeTitle" xml:space="preserve"><value>合并角色</value></data>
+  <data name="Cast_MergeBody" xml:space="preserve"><value>选出指同一个角色的两个名字。他们的台词会合并到一个名字和一种声音下。</value></data>
+  <data name="Cast_KeepName" xml:space="preserve"><value>保留名字</value></data>
+  <data name="Cast_VoiceTitle" xml:space="preserve"><value>声音</value></data>
+  <data name="Cast_PreviewLine" xml:space="preserve"><value>你好！这就是我朗读你的故事时的声音。</value></data>
+  <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>无法保存这项更改</value></data>
+  <data name="Cast_SaveFailedBody" xml:space="preserve"><value>角色未保存。请稍后再试。</value></data>
+  <data name="Cast_PreviewFailedBody" xml:space="preserve"><value>暂时无法播放这个声音。</value></data>
+  <data name="Cast_LoadFailedTitle" xml:space="preserve"><value>无法打开角色列表</value></data>
+  <data name="Cast_LoadFailedBody" xml:space="preserve"><value>无法确定这个故事的角色。请稍后再试。</value></data>
+  <data name="Cast_Boy" xml:space="preserve"><value>男孩</value></data>
+  <data name="Cast_Girl" xml:space="preserve"><value>女孩</value></data>
+  <data name="Cast_Words_One" xml:space="preserve"><value>{0} 个词</value></data>
+  <data name="Cast_Words_Other" xml:space="preserve"><value>{0} 个词</value></data>
+  <data name="Cast_UnknownLines_One" xml:space="preserve"><value>{0} 句台词</value></data>
+  <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} 句台词</value></data>
+  <data name="Cast_UsesNarrator" xml:space="preserve"><value>使用旁白的声音</value></data>
+  <data name="Cast_Hear" xml:space="preserve"><value>听 {0} 的声音</value></data>
+  <data name="Cast_NoBoyVoice" xml:space="preserve"><value>这个语音包没有男孩的声音，所以这个角色保留原来的声音。</value></data>
+  <data name="Cast_NoGirlVoice" xml:space="preserve"><value>这个语音包没有女孩的声音，所以这个角色保留原来的声音。</value></data>
+  <data name="Cast_VoiceChanged_One" xml:space="preserve"><value>{0} 的声音已更换，因为旁白现在使用了原本分配给该角色的声音。</value></data>
+  <data name="Cast_VoiceChanged_Other" xml:space="preserve"><value>{0} 的声音已更换，因为旁白现在使用了原本分配给他们的声音。</value></data>
+  <data name="Cast_MergeInto" xml:space="preserve"><value>合并到 {0}</value></data>
+  <data name="Cast_SharedNote" xml:space="preserve"><value>这个语音包只有 {0} 个自然声音，所以有些角色会共用声音。旁白的声音不会分给任何角色。</value></data>
+</root>

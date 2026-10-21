@@ -9,6 +9,15 @@ public static class PackVersions
 {
     private const char Separator = '.';
 
+    /// <summary>
+    /// Whether a catalog pack should be downloaded: nothing installed serves the language yet, or the
+    /// installed copy is the same pack and the catalog lists a newer version of it.
+    /// </summary>
+    public static bool ShouldInstall(PackInfo pack, InstalledVoicePack? installed) =>
+        installed is null || (installed.Manifest.Id == pack.Id && IsNewer(pack.Version, installed.Manifest.Version));
+
+    public static bool IsNewer(string candidate, string installed) => Compare(candidate, installed) > 0;
+
     /// <summary>Negative when <paramref name="a"/> is older than <paramref name="b"/>, zero when equal, positive when newer.</summary>
     public static int Compare(string a, string b)
     {
@@ -25,8 +34,6 @@ public static class PackVersions
 
         return 0;
     }
-
-    public static bool IsNewer(string candidate, string installed) => Compare(candidate, installed) > 0;
 
     private static int CompareSegment(string a, string b)
     {

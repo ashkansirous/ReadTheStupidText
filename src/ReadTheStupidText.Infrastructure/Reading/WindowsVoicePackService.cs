@@ -31,6 +31,7 @@ public sealed class WindowsVoicePackService : IVoicePackService
     private readonly TimeSpan _stallTimeout;
     private readonly Func<int, TimeSpan> _backoff;
     private IReadOnlyList<PackInfo>? _catalog;
+    private DateTime _catalogFetchedUtc;
 
     public WindowsVoicePackService(
         string packsRoot, HttpClient http, Func<bool> isNetworkAvailable,
@@ -52,6 +53,7 @@ public sealed class WindowsVoicePackService : IVoicePackService
             timeout.CancelAfter(CatalogTimeout);
             string json = await _http.GetStringAsync(_catalogUrl, timeout.Token).ConfigureAwait(false);
             _catalog = PackCatalogParser.Parse(json);
+            _catalogFetchedUtc = DateTime.UtcNow;
             return new PackCatalogResult(PackDownloadResult.Ok, _catalog);
         }
         catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
@@ -60,17 +62,29 @@ public sealed class WindowsVoicePackService : IVoicePackService
         }
     }
 
+    public Task<PackCatalogResult> GetCatalogCachedAsync(TimeSpan maxAge, CancellationToken cancellationToken)
+    {
+        IReadOnlyList<PackInfo>? cached = _catalog;
+        bool fresh = cached is not null && DateTime.UtcNow - _catalogFetchedUtc <= maxAge;
+        return fresh ? Task.FromResult(new PackCatalogResult(PackDownloadResult.Ok, cached!)) : GetCatalogAsync(cancellationToken);
+    }
+
     public string? GetInstalledPath(string packId) => LoadInstalled(packId)?.Folder;
 
     // Every complete pack folder under the packs root. Scratch (.extracting) folders and anything
     // that is not a valid pack id are skipped, as is a folder whose manifest names another pack.
-    public IReadOnlyList<InstalledVoicePack> GetInstalledVoicePacks() =>
+    public IReadOnlyList<InstalledVoicePack> GetInstalledVoicePacks() => InstalledPacks(PackKind.Voice);
+
+    // OCR packs (Slice 52) are installed, validated and listed exactly like voice packs.
+    public IReadOnlyList<InstalledVoicePack> GetInstalledOcrPacks() => InstalledPacks(PackKind.Ocr);
+
+    private IReadOnlyList<InstalledVoicePack> InstalledPacks(PackKind kind) =>
         Directory.EnumerateDirectories(PacksRoot())
             .Select(folder => Path.GetFileName(folder))
             .Where(PackNaming.IsValidId)
             .Select(LoadInstalled)
             .OfType<InstalledVoicePack>()
-            .Where(p => p.Manifest.Kind == PackKind.Voice)
+            .Where(p => p.Manifest.Kind == kind)
             .ToList();
 
     private InstalledVoicePack? LoadInstalled(string packId)

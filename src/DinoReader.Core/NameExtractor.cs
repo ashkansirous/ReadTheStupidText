@@ -16,8 +16,7 @@ internal sealed class NameExtractor
     public NameExtractor(LanguageRules rules)
     {
         _rules = rules;
-        var abbreviations = string.Join("|", rules.TitleAbbreviations.Select(Regex.Escape));
-        Pattern = $@"\b(?:(?i:{abbreviations})\.[ \t]+)?\p{{Lu}}\p{{L}}*(?:[ \t]+\p{{Lu}}\p{{L}}*)*";
+        Pattern = BuildPattern(rules);
         _run = new Regex(Pattern, RegexOptions.CultureInvariant);
         _tagged = BuildTaggedPattern(rules, Pattern);
     }
@@ -25,11 +24,47 @@ internal sealed class NameExtractor
     /// <summary>Regex source for one raw name run, for embedding in larger patterns.</summary>
     public string Pattern { get; }
 
+    private static string BuildPattern(LanguageRules rules) => rules.Script switch
+    {
+        ScriptStyle.Unspaced => UnspacedPattern(rules),
+        ScriptStyle.CaselessSpaced => CaselessPattern(rules),
+        _ => CasedPattern(rules),
+    };
+
+    private static string CasedPattern(LanguageRules rules)
+    {
+        const string run = @"\p{Lu}\p{L}*(?:[ \t]+\p{Lu}\p{L}*)*";
+        if (rules.TitleAbbreviations.Count == 0) return $@"\b{run}";
+        var abbreviations = string.Join("|", rules.TitleAbbreviations.Select(Regex.Escape));
+        return $@"\b(?:(?i:{abbreviations})\.[ \t]+)?{run}";
+    }
+
+    // Farsi and Arabic have no capitals: any word can be a name, so a name only counts when the
+    // name list or a speech tag vouches for it. A title may lead ("Mr Rabbit") unless a verb follows it.
+    private static string CaselessPattern(LanguageRules rules)
+    {
+        const string word = @"[\p{L}‌]+";
+        var titles = TagPatterns.Alternation(rules.MaleTitles.Concat(rules.FemaleTitles));
+        if (titles.Length == 0) return $@"\b{word}";
+        return $@"\b(?:(?:{titles})[ \t]+(?!{TagPatterns.Verb(rules)}))?{word}";
+    }
+
+    // Chinese and Japanese: the name and title lists, plus the language's own name shape.
+    private static string UnspacedPattern(LanguageRules rules)
+    {
+        var listed = TagPatterns.Alternation(rules.MaleNames.Concat(rules.FemaleNames)
+            .Concat(rules.MaleTitles).Concat(rules.FemaleTitles));
+        var parts = new[] { listed, rules.ExtraNamePattern }.Where(p => p.Length > 0).ToList();
+        return parts.Count == 0 ? "(?!)" : $"(?:{string.Join("|", parts)})";
+    }
+
     private static Regex BuildTaggedPattern(LanguageRules rules, string name)
     {
-        var verb = $@"(?:(?i:{string.Join("|", rules.SpeechVerbs.Select(Regex.Escape))}))\b";
-        var adverb = $@"(?:\p{{L}}+{Regex.Escape(rules.AdverbSuffix)})";
-        return new Regex($@"(?:{verb}\s+(?<n>{name})|(?<n>{name})\s+(?:{adverb}\s+)?{verb})",
+        var verb = TagPatterns.Verb(rules);
+        var gap = TagPatterns.SubjectVerbGap(rules);
+        var named = $"(?<n>{name})";
+        return new Regex(
+            $"(?:{verb}{TagPatterns.VerbSubjectGap(rules)}{named}|{rules.NameLead}{named}{gap}{TagPatterns.AdverbBefore(rules)}{verb})",
             RegexOptions.CultureInvariant);
     }
 
@@ -57,7 +92,7 @@ internal sealed class NameExtractor
         {
             var (name, stripped) = Trim(m.Value);
             if (name is null) continue;
-            bool initial = stripped == 0 && StartsSentence(story, m.Index);
+            bool initial = IsInitial(story, m.Index, stripped);
             if (!initial) known.Add(name.ToLowerInvariant());
             candidates.Add(new NameMatch(name, m.Index, m.Index + m.Length));
         }
@@ -65,8 +100,16 @@ internal sealed class NameExtractor
         var accepted = candidates
             .Where(c => c.Name.Contains(' ') || known.Contains(c.Name.ToLowerInvariant()))
             .ToList();
-        return new StoryNames(story, accepted, known);
+        return new StoryNames(story, accepted, known, TagPatterns.Boundary(_rules));
     }
+
+    // Without capitals every word looks like a name, so a caseless run only counts through the name tables or a speech tag.
+    private bool IsInitial(string story, int index, int stripped) => _rules.Script switch
+    {
+        ScriptStyle.CaselessSpaced => true,
+        ScriptStyle.Cased => stripped == 0 && StartsSentence(story, index),
+        _ => false,
+    };
 
     private HashSet<string> TableWords() =>
         _rules.MaleNames.Concat(_rules.FemaleNames).Concat(_rules.MaleTitles).Concat(_rules.FemaleTitles)

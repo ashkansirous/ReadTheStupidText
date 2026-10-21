@@ -41,7 +41,7 @@ at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
 > every platform workflow's `pull_request.paths` matches it, so change them together.
 > `release-scripts.yml` runs all script tests and actionlint (`.github/actionlint.yaml`)
 > on PRs touching `.github/**`. An untouched platform is neither built nor submitted;
-> its assets are carried forward. When adding a project or shared build file, add its
+> its assets are carried forward. The iOS PR check builds Debug (simulator); only main does the signed Release (PR #206). When adding a project or shared build file, add its
 > path to `ship-targets.mjs`. Never add `actions/upload-artifact` for build outputs.
 > (Decisions 52-58, 69; Slice 44: docs/plan/slices/44-pipeline-ios-split.md;
 > Slice 70: docs/plan/slices/70-split-build-pipeline.md)
@@ -58,7 +58,7 @@ at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
 > (Microsoft.iOS.Sdk 26.5.10318) + Xcode 26.6, because `macos-26` has no Xcode 27.
 > Bump all three together. (Slice 48: docs/plan/slices/48-ios-target-testflight.md)
 
-> **iOS target (Slice 48, lifted 2026-10-21):** `Platforms/iOS` implements `IPlatformServices` with one `AvSpeechReader` for both slots (sherpa-onnx for iOS is Slice 49); `SupportsNeuralVoice`/`SupportsTextScan` are false, so the pack download, Supertonic list and Scan are hidden. `net10.0-ios` is in the Mobile csproj only on macOS or with `-p:IncludeIos=true` (`-p:IncludeAndroid=false` for iOS-only); compile-check on Windows with `dotnet restore -p:IncludeIos=true` then `dotnet build -f net10.0-ios -p:IncludeIos=true --no-restore`. `ios.yml` compiles unsigned on PRs; on main with the six iOS secrets it signs (`.github/scripts/ios-signing.sh`, identity by SHA-1), attaches the `.ipa` to the draft and `testflight-submit` uploads it after `release-publish`. Signing scripts must run on macOS bash 3.2. (Slice 48: docs/plan/slices/48-ios-target-testflight.md; detail: docs/plan/notes/claude-md-history.md)
+> **iOS target (Slice 48, lifted 2026-10-21):** `Platforms/iOS` implements `IPlatformServices` (neural reading and Scan: see the iOS rules under Mobile voice packs). `net10.0-ios` is in the Mobile csproj only on macOS or with `-p:IncludeIos=true` (`-p:IncludeAndroid=false` for iOS-only); compile-check on Windows with `dotnet restore -p:IncludeIos=true` then `dotnet build -f net10.0-ios -p:IncludeIos=true --no-restore`. `ios.yml` compiles unsigned on PRs; on main with the six iOS secrets it signs (`.github/scripts/ios-signing.sh`, identity by SHA-1), attaches the `.ipa` to the draft and `testflight-submit` uploads it after `release-publish`. Signing scripts must run on macOS bash 3.2. (Slice 48: docs/plan/slices/48-ios-target-testflight.md)
 
 > **Scan (Slice 45, lifted 2026-10-21):** Scan (Decision 64) uses the ML Kit Document Scanner (Android only, via `IDocumentScanner` registered only in `Platforms/Android`); `ReaderPage` OCRs the pages in order and appends them via `ScannedText.AppendPages`. Without Play services it falls back to one `MediaPicker` photo, which is why the `CAMERA` + `IMAGE_CAPTURE` `<queries>` stay in the manifest. No `ScanPage`, no Shell hand-off. The csproj pins `AndroidX.Fragment.Ktx` 1.9.0 (the scanner's 1.8.8.1 collides with Fragment 1.9.0 in D8) and `Xamarin.GooglePlayServices.Tasks` must stay >= 118.4.1.3. A real scan needs a device signed in to Google. (Slice 45: docs/plan/slices/45-android-document-scanner.md; detail: docs/plan/notes/claude-md-history.md)
 
@@ -66,16 +66,16 @@ at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
 > job (ubuntu), never the version, release or store jobs. Keep Dino paths out of
 > the core paths in `ship-targets.mjs`. (Slice 59: docs/plan/slices/59-dialogue-parser-voice-caster.md)
 
-> **Language packs, iOS, translation (Batch 9):** once Slices 50/56 land, **no
-> platform bundles a voice model** (supersedes Decisions 14 and 39): every voice
-> downloads as a pack after the first-run language choice, from GitHub Releases
-> tagged `packs-*` (separate from the `v<x.y.z>` app releases), and the system voice
-> reads until it arrives. User data (text, images, scans, translations) stays **100%
-> offline**; only packs are downloaded. One **scoped GPL exception**: the Farsi
-> Piper pack carries espeak-ng data (GPL-3.0) inside the downloaded pack only, never
-> in the repo or any package. **iOS** is the same MAUI project (`net10.0-ios`)
-> shipped to TestFlight from CI, with the Mobile folder split rule above.
-> (Decisions 59-71, `docs/plan/slices/43-57`; note: docs/plan/notes/claude-md-history.md)
+> **Language packs, iOS, translation (Batch 9):** on **Android and iOS no voice model is
+> bundled** (Slice 50; supersedes Decisions 14 and 39 there): every voice downloads as a
+> pack after the first-run language choice, from GitHub Releases tagged `packs-*`, and
+> the system voice reads until it arrives. **Windows still bundles the model until
+> Slice 56 lands** (see the Windows narrator notes). User data (text, images, scans,
+> translations) stays **100% offline**; only packs and ML Kit models are downloaded.
+> One **scoped GPL exception**: espeak-ng data (GPL-3.0) lives only inside the downloaded
+> `piper-fa` pack, never in the repo or any package. **iOS** is the same MAUI project
+> (`net10.0-ios`) shipped to TestFlight from CI. (Decisions 59-71,
+> `docs/plan/slices/43-57`; note: docs/plan/notes/claude-md-history.md)
 
 > **Dino Reader (Batch 10):** a second product in this repo, a kids' book reader
 > with a voice per character: a second MAUI app, `src/DinoReader.App`, sharing
@@ -148,7 +148,8 @@ DinoReader.Core (standalone, no deps)
   sentence or paragraph boundary (wrapped PDF/OCR text). (Slice 59: docs/plan/slices/59-dialogue-parser-voice-caster.md)
 - **Infrastructure** (`net10.0-windows`) — speech engines (local neural
   **Supertonic-3** via sherpa-onnx, plus a WinRT `SpeechSynthesis` fallback),
-  all played through `MediaPlayer`; the neural model ships in the package.
+  all played through `MediaPlayer`; on Windows the neural model ships in the package
+  (Android/iOS download packs instead, Slice 50; Windows follows in Slice 56).
   Clipboard, UI Automation, startup task, OS integration.
 - **App** (`net10.0-windows`, WinUI single-project MSIX) — UI, tray, DI wiring.
 - **Mobile** (`src/ReadTheStupidText.Mobile`, .NET MAUI, Decision 37) — the RTST
@@ -191,11 +192,24 @@ DinoReader.Core (standalone, no deps)
 
 **Mobile voice packs and first run (Batch 9):**
 
-- Mobile no longer bundles the voice model. Supertonic-3 is a downloaded pack `supertonic-3` (~145 MB) under `AppDataDirectory/packs/`; `MobileVoiceModelService` only locates and manifest-checks it. The APK/AAB has no `assets/VoiceModel` (unzip and check). Windows still bundles `VoiceModel/` until Slice 56. (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
+- Mobile (Android and iOS) no longer bundles the voice model. Supertonic-3 is a downloaded pack `supertonic-3` (~145 MB) under `AppDataDirectory/packs/`; `MobileVoiceModelService` only locates and manifest-checks it. The APK/AAB has no `assets/VoiceModel` (unzip and check). Windows still bundles `VoiceModel/` until Slice 56. (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
 - Voice packs (`docs/voice-packs.md`): `IVoicePackService` (Application) + `MobileVoicePackService` (Mobile); the pure decisions live in `PackRetryPolicy`/`PackCatalogParser`/`PackManifest`/`PackNaming`/`VoicePackSelector` (unit-tested). The pipeline runs off the UI thread and `VoicePackInstaller` marshals state to the main thread. An installed pack means zero network requests. `InvalidPack` is never retried. Offline detection on Android = `NetworkAccess.None` + Java exception type names. (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
 - Until the pack is Ready, `CompositeSpeechReader` reads with the Android `TextToSpeech` "Phone voice" (`SystemVoice.Id`), also user-selectable. (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
 - `packs-<n>` releases hold packs + `packs.json`, published by the manual `packs.yml` with `--latest=false`; the app pins one in `PackConstants.CatalogUrl`. Every app-release tag scan (`release.yml` release-publish, `.github/scripts/find-release.sh`) must filter to `^v[0-9]+\.[0-9]+\.[0-9]+$`. (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
 - First-run language: `ISettingsStore.Language`; the app shows `LanguagePage` when it is null. Android declares `INTERNET` + `ACCESS_NETWORK_STATE`, used only for pack downloads; user data stays on the device. Android `minSdk` is 28 (Decision 82; see the API 28 rule above). (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
+
+**Mobile rules from the Batch 9/10 slices (lifted 2026-10-21):**
+
+- Voices are per-language packs; `InstalledVoiceCatalog` resolves the one serving `ISettingsStore.Language` (Supertonic en/fr/es/pt/ru/ja/ar, `piper-fa` fa, `melo-zh-en` zh). sherpa-onnx config types are structs: pass them by `ref` to helpers that fill them, or paths drop silently. `AndroidSupertonicSpeechReader` engines are `RefCountedTts`, captured per read. (Slice 51: docs/plan/slices/51-multilingual-voices.md)
+- OCR on Android: PaddleOCR `kind: ocr` packs per language, ML Kit Latin as fallback; the pure pipeline is `Application/Images/Ocr`. `Microsoft.ML.OnnxRuntime.Managed` stays version-matched with sherpa's bundled `libonnxruntime.so` (both 1.24.3); bump together, never add a native onnxruntime package. (Slice 52: docs/plan/slices/52-paddleocr-per-language.md)
+- UI strings live in `Mobile/Resources/Strings/AppResources*.resx` via the typed `AppResources`, never literals. A new key goes in the neutral file, all eight language files and `AppResources.cs` (`LocalizedUiTests` enforces it). `UiCulture.Apply` sets the culture; RTL pages set `FlowDirection`, paddings use `UiFlowDirection.Mirror`. (Slice 53: docs/plan/slices/53-localized-ui-rtl.md)
+- Translation: `Application/Translation` (`TranslationFlow`, pure) with ML Kit in `Platforms/Android`. The translated text is read; the editor and resume identity keep the original. Text never leaves the device. (Slice 54: docs/plan/slices/54-on-device-translation.md)
+- Android sentence audio is cached by `SentenceAudioCache` (`CacheDirectory/sentences`); never play cached clips directly, join them into a temp file. `IHeadStart` prepares the first chunks, skipped while translation is on. Windows keeps `SpeechTextChunker.HeadPolicy.Default` until Slice 56. (Slice 47: docs/plan/slices/47-head-start-sentence-cache.md)
+- iOS neural reading uses sherpa-onnx 1.13.8 + `SherpaOnnxC.xcframework` 1.13.8 (Android pins 1.13.3); bump package and framework (URL and SHA-256 in the Mobile csproj) together. The reader sits behind `IosNeuralReaderFactory` (apps without one, like Dino Reader, keep the system voice); the audio session goes through `IosAudioSession`, never `AVAudioSession` directly. (Slice 49: docs/plan/slices/49-ios-parity.md)
+- Multi-voice reading is `ISpeechReader.SpeakSegmentsAsync` (native only where `SupportsSegments`; else one voice). `ChunkChanged` may fire off the UI thread: marshal. (Slice 60: docs/plan/slices/60-per-character-voice-reading.md)
+- Dino Reader: stories are `AppDataDirectory/stories/<guid>/story.json` via `FileStoryLibrary`, images only through `TryResolveFile`; grown-up pages implement `IGrownUpPage`, and app-launched activities are wrapped in `ExternalActivityGuard`; tokens come from `DinoTokens`. (Slice 61: docs/plan/slices/61-gallery-grownup-gate.md)
+- Dino Reader reading: `StorySentences` and `SegmentSentenceSplitter` map `ChunkChanged` 1:1 to sentences; `FlowPager`/`PageComposer` (`DinoReader.Core`) paginate off the UI thread; story text ignores the font scale. (Slice 62: docs/plan/slices/62-reading-screen-modes.md)
+- Dino Reader cast: edits go only through `CastEditor` and pin voices via `CastMember.Edited`; merges live in `Story.Merges`, applied each read by `CastMerges` in `StoryVoicing`, never in stored text; an unknown speaker gets the narrator voice (`VoiceCaster.VoiceForLine`). (Slice 65: docs/plan/slices/65-cast-screen.md)
 
 Keep `App.xaml.cs` thin: provider/DI wiring and window bootstrap only. Real
 logic lives in Application/Infrastructure; XAML views stay free of business
@@ -345,7 +359,7 @@ Detecting a bare console *selection* is **out of scope** — Windows provides no
 for it. When a request asks to "read on selection in the terminal," the answer is
 copy / `copyOnSelect` / hotkey, not a new selection-detection mechanism.
 
-Note: the narrator voice is a **local neural voice** (Slice 9, Decision 14) — the
+Note (Windows; Android/iOS use downloaded packs): the narrator voice is a **local neural voice** (Slice 9, Decision 14) — the
 **sherpa-onnx** runtime (Apache-2.0) running the **Supertonic-3** model
 (Apache-2.0, `sherpa-onnx-supertonic-3-tts-int8-2026-05-11`), via
 `org.k2fsa.sherpa.onnx`. The model (~145 MB) **ships inside the package** under

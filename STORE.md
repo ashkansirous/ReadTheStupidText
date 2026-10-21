@@ -259,6 +259,9 @@ dev time and is not a redistributable runtime (Decision 26 in `docs/plan/decisio
 | Piper `fa_IR` "amir" voice (downloaded Persian pack `piper-fa`, not in the package) | Persian neural voice | CC0 1.0 voice data (model card: [rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices/tree/main/fa/fa_IR/amir/medium)); finetuned from the Piper US-English "lessac" voice |
 | espeak-ng data (inside the downloaded Persian pack only) | phonemizer data the Piper voice needs | GPL-3.0-or-later; corresponding source: <https://github.com/espeak-ng/espeak-ng> |
 | MeloTTS `zh_en` (downloaded Chinese pack `melo-zh-en`, not in the package) | Chinese + English neural voice | MIT (MyShell.ai; see the `LICENSE` inside the pack) |
+| PaddleOCR PP-OCR detection and recognition models (downloaded OCR packs `ocr-latin`, `ocr-cyrillic`, `ocr-arabic`, `ocr-cjk`, not in the package; ONNX conversion by [monkt/paddleocr-onnx](https://huggingface.co/monkt/paddleocr-onnx)) | on-device text recognition for scans (Android and iOS) | Apache-2.0 (PaddlePaddle Authors; see the `LICENSE` inside each pack) |
+| `Microsoft.ML.OnnxRuntime.Managed` | C# binding to the onnxruntime library sherpa-onnx already bundles (Android) | MIT |
+| `Microsoft.ML.OnnxRuntime` (iOS only) | the same binding plus its own static onnxruntime for PaddleOCR; sherpa-onnx's iOS framework does not export one | MIT |
 | `PdfPig` | PDF text extraction (file upload) | Apache-2.0 |
 | `DocumentFormat.OpenXml` | DOCX text extraction (file upload) | MIT |
 | Fredoka, Andika, Vazirmatn fonts (Dino Reader only, bundled in `src/DinoReader.App/Resources/Fonts/`) | Dino Reader UI, reading and Farsi/Arabic text | SIL OFL 1.1 (texts in `src/DinoReader.App/Licenses/`) |
@@ -554,6 +557,18 @@ secrets: `IOS_DIST_CERT_P12_BASE64`, `IOS_DIST_CERT_P12_PASSWORD`,
 signed or uploaded, and a change that touches only iOS cuts no release (an unsigned
 build cannot ship).
 
-**Known gaps (Slice 49):** reading uses `AVSpeechSynthesizer` only (the neural
-voice and its sherpa-onnx native libraries are not linked on iOS yet), and camera
-scan has no OCR on iOS yet. `ITSAppUsesNonExemptEncryption` is `false` (HTTPS only).
+**Batch 9 features on iOS (Slice 55).** The neural voice (sherpa-onnx 1.13.8, Supertonic, Piper
+and Melo packs with the sentence head start), language and OCR packs, PaddleOCR with Apple
+Vision as the fallback, the nine localized UI languages (right-to-left for Farsi and Arabic) and
+localized camera and photo permission prompts (`InfoPlist.strings`) are on iOS. Packs download over
+plain HTTPS from GitHub Releases, so no App Transport Security exception and no entitlement is
+needed (Decision 60); the packs folder is excluded from iCloud backup.
+`ITSAppUsesNonExemptEncryption` is `false` (HTTPS only).
+
+**Known gap, translation (Slice 55).** The iPhone app has no "Translate to my language" yet
+(the card is hidden). Apple's Translation framework (iOS 18+) is Swift-only with no .NET binding
+and needs a SwiftUI view to download a language, and it has no Farsi; ML Kit's iOS translator has
+no .NET binding we could verify without a Mac. The decision: ship iOS without translation and
+revisit with a small Swift wrapper (Apple's framework, gated to iOS 18, Farsi hidden) or a
+verified ML Kit binding. Language identification (`NLLanguageRecognizer`) is already in place.
+The store listing for iOS must not mention translation until then.

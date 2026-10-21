@@ -1,45 +1,55 @@
-using ReadTheStupidText.Infrastructure.Reading;
+using ReadTheStupidText.Application.Reading;
 
 namespace ReadTheStupidText.Tests;
 
 public class ReadOwnershipTests
 {
     [Fact]
-    public void The_original_owner_leaving_alone_ends_the_read()
+    public void Original_owner_leaving_alone_is_the_last()
     {
-        var read = new ReadOwnership();
+        var owners = new ReadOwnership();
 
-        Assert.True(read.Leave());
+        Assert.True(owners.Leave());
     }
 
     [Fact]
-    public void A_skip_that_joined_keeps_the_read_alive_after_the_original_owner_leaves()
+    public void Joined_owner_keeps_the_read_alive_after_the_original_leaves()
     {
-        var read = new ReadOwnership();
-        Assert.True(read.TryJoin());
+        var owners = new ReadOwnership();
 
-        Assert.False(read.Leave()); // the original SpeakAsync returns
-        Assert.True(read.Leave());  // the skip's playback ends: the last owner ends the read
+        Assert.True(owners.TryJoin());
+        Assert.False(owners.Leave());
+        Assert.True(owners.Leave());
+    }
+
+    [Fact]
+    public void Second_skip_can_join_after_the_first_skip_while_original_has_left()
+    {
+        var owners = new ReadOwnership();
+        owners.TryJoin();
+        owners.Leave();
+
+        Assert.True(owners.TryJoin());
     }
 
     [Fact]
     public void Repeated_skips_hand_the_read_over_without_it_ever_ending()
     {
-        var read = new ReadOwnership();
-        Assert.True(read.TryJoin());   // first skip joins, then supersedes the original
-        Assert.False(read.Leave());    // original returns
-        Assert.True(read.TryJoin());   // second skip joins before it supersedes the first
-        Assert.False(read.Leave());    // first skip's playback is released
+        var owners = new ReadOwnership();
+        Assert.True(owners.TryJoin());
+        Assert.False(owners.Leave());
+        Assert.True(owners.TryJoin());
+        Assert.False(owners.Leave());
 
-        Assert.True(read.Leave());     // second skip finishes: only now is the read over
+        Assert.True(owners.Leave());
     }
 
     [Fact]
-    public void A_finished_read_cannot_be_joined()
+    public void Join_fails_once_the_last_owner_has_left()
     {
-        var read = new ReadOwnership();
-        read.Leave();
+        var owners = new ReadOwnership();
+        owners.Leave();
 
-        Assert.False(read.TryJoin());
+        Assert.False(owners.TryJoin());
     }
 }
