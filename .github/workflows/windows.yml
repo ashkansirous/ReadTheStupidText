@@ -97,10 +97,9 @@ jobs:
             rid: win-arm64
 
     steps:
-      - name: Checkout (with LFS — the neural voice model is LFS-tracked)
+      # No LFS: the MSIX carries no voice model (Slice 56); voices download as packs at runtime.
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          lfs: true
 
       - name: Set up .NET 10
         uses: actions/setup-dotnet@v4

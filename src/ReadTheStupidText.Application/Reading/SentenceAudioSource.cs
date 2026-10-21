@@ -45,6 +45,12 @@ internal sealed class SentenceAudioSource
         return wav;
     }
 
+    /// <summary>Indexes the cache's folder now instead of on first use.</summary>
+    public void LoadIndex() => _cache.LoadIndex();
+
+    /// <summary>Whether the clip is in the cache (by index only; the file is not read).</summary>
+    public bool IsCached(SentenceCacheKey key) => _cache.Contains(key.Id);
+
     /// <summary>Forgets a cached clip that proved unusable (it would not join with its
     /// neighbours), so the next request for it synthesizes afresh.</summary>
     public void Invalidate(SentenceCacheKey key)

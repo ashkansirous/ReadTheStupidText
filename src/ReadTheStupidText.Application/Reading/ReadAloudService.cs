@@ -40,6 +40,12 @@ public sealed class ReadAloudService : IDisposable
     // progress), switching the settle from the baseline to the dragging window.
     private const int BurstGapMs = 250;
 
+    // The head-start prepare begins only once the selection has been stable this long: shorter than
+    // SettleBaselineMs, so a lone click-select still has its opening sentences in the cache before
+    // the read starts, and shorter than BurstGapMs, so every event of a drag-select restarts the
+    // wait and only the final text is synthesized.
+    private const int HeadStartStableMs = 80;
+
     private readonly ISpeechReader _reader;
     private readonly IClipboardReader _clipboard;
     private readonly IHotkeyService _hotkey;
@@ -54,9 +60,13 @@ public sealed class ReadAloudService : IDisposable
     private readonly ISettingsStore _settings;
     private readonly ITextSanitizer _sanitizer;
     private readonly ISystemLog _systemLog;
+    private readonly IHeadStart? _headStart;
 
     // Cancels a pending debounced read when a newer selection supersedes it.
     private CancellationTokenSource? _selectionCts;
+
+    // Cancels a head-start prepare still waiting for the selection to stabilize.
+    private CancellationTokenSource? _prepareCts;
 
     // Monotonic timestamp of the last auto-read event, to tell a lone select from an
     // in-progress drag (events arriving within BurstGapMs of each other).
@@ -113,7 +123,8 @@ public sealed class ReadAloudService : IDisposable
         IActivityLog log,
         ISettingsStore settings,
         ITextSanitizer sanitizer,
-        ISystemLog systemLog)
+        ISystemLog systemLog,
+        IHeadStart? headStart = null)
     {
         _reader = reader;
         _clipboard = clipboard;
@@ -129,6 +140,7 @@ public sealed class ReadAloudService : IDisposable
         _settings = settings;
         _sanitizer = sanitizer;
         _systemLog = systemLog;
+        _headStart = headStart;
 
         _reader.SetSpeed(_settings.Speed);
         ApplyPersistedVoice();
@@ -139,8 +151,8 @@ public sealed class ReadAloudService : IDisposable
         _reader.StateChanged += OnReaderStateChanged;
         _reader.Completed += OnReaderCompleted;
 
-        // The neural voice model ships in the package; initialize locates it and
-        // marks itself ready, then we apply the voice and refresh the UI.
+        // The neural voice model is a downloaded pack (Slice 56); initialize locates an
+        // installed one and marks itself ready, then we apply the voice and refresh the UI.
         _voiceModel.ReadyChanged += OnVoiceModelReady;
         _ = _voiceModel.InitializeAsync();
 
@@ -505,7 +517,48 @@ public sealed class ReadAloudService : IDisposable
         previous?.Dispose();
 
         ActivityEntry entry = StartEntry(trigger, text);
+        PrepareHeadStart(text);
         _ = ReadAfterDebounceAsync(entry, text, settleMs, cts.Token);
+    }
+
+    // Slice 56: the opening sentences are synthesized into the cache while the settle delay runs, so the
+    // read that follows starts almost at once. The prepare waits HeadStartStableMs after the latest
+    // event, so a drag-select (events a few ms apart) restarts it each time and only the text the drag
+    // ends on is synthesized; text superseded inside that wait is never handed to the engine. Best
+    // effort: a failed prepare never affects the read.
+    private void PrepareHeadStart(string text)
+    {
+        if (_headStart is null)
+        {
+            return;
+        }
+
+        var cts = new CancellationTokenSource();
+        CancelPendingPrepare(Interlocked.Exchange(ref _prepareCts, cts));
+        _ = PrepareWhenStableAsync(_headStart, text, cts.Token);
+    }
+
+    private async Task PrepareWhenStableAsync(IHeadStart headStart, string text, CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(HeadStartStableMs, token);
+            await headStart.PrepareAsync(text);
+        }
+        catch (OperationCanceledException)
+        {
+            // Superseded while waiting: nothing was started.
+        }
+        catch (Exception ex)
+        {
+            _systemLog.Warning("head start failed", null, ex);
+        }
+    }
+
+    private static void CancelPendingPrepare(CancellationTokenSource? pending)
+    {
+        pending?.Cancel();
+        pending?.Dispose();
     }
 
     // The baseline for a lone select, or the longer dragging window when this event
@@ -536,6 +589,8 @@ public sealed class ReadAloudService : IDisposable
     private void OnSelectionCleared(object? sender, EventArgs e)
     {
         _selectionCts?.Cancel();
+        CancelPendingPrepare(Interlocked.Exchange(ref _prepareCts, null));
+        _headStart?.CancelPrepare();
         Supersede(ActivityReason.Deselected);
     }
 
@@ -717,5 +772,6 @@ public sealed class ReadAloudService : IDisposable
         _selectionMonitor.Stop();
         _selectionCts?.Cancel();
         _selectionCts?.Dispose();
+        CancelPendingPrepare(Interlocked.Exchange(ref _prepareCts, null));
     }
 }

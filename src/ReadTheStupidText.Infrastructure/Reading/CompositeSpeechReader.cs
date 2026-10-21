@@ -4,18 +4,20 @@ using ReadTheStupidText.Domain.Reading;
 namespace ReadTheStupidText.Infrastructure.Reading;
 
 /// <summary>
-/// Routes speech to the local Supertonic-3 neural engine once its model is ready,
-/// and to the built-in WinRT voice until then (or if the model is missing), so
-/// the app is never mute. Speed applies to both engines; voice selection targets
-/// the neural engine (the fallback uses the system default voice). Only one
-/// engine plays at a time; state is surfaced from whichever is active.
+/// Routes speech to the local neural engine once a voice pack serving the user's language is ready,
+/// and to the built-in WinRT "Windows voice" until then, or when the user picked it (Slice 56,
+/// Decision 61), so the app is never mute. Speed applies to both engines; neural voice selection
+/// targets the neural engine, while the Windows voice id routes reads to the fallback. Only one engine
+/// plays at a time; state is surfaced from whichever is active. Also forwards the head start (Slice 47)
+/// when the neural engine would be the one to read.
 /// </summary>
-public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
+public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IDisposable
 {
     private readonly SupertonicSpeechReader _neural;
     private readonly SpeechReader _fallback;
     private readonly IVoiceModelService _model;
     private ISpeechReader _active;
+    private bool _useSystemVoice;
 
     public CompositeSpeechReader(SupertonicSpeechReader neural, SpeechReader fallback, IVoiceModelService model)
     {
@@ -48,11 +50,27 @@ public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
 
     public PlaybackState State => _active.State;
 
-    public Task SpeakAsync(string text, int? activityId = null)
+    public async Task SpeakAsync(string text, int? activityId = null)
     {
-        _active = _model.IsReady ? _neural : _fallback;
-        return _active.SpeakAsync(text, activityId);
+        if (UseNeural)
+        {
+            _active = _neural;
+            try
+            {
+                await _neural.SpeakAsync(text, activityId);
+                return;
+            }
+            catch (NeuralEngineUnavailableException)
+            {
+                // The model went away after the readiness check: read with the Windows voice.
+            }
+        }
+
+        _active = _fallback;
+        await _fallback.SpeakAsync(text, activityId);
     }
+
+    private bool UseNeural => _model.IsReady && !_useSystemVoice;
 
     public bool SupportsSegments => false;
 
@@ -77,8 +95,26 @@ public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
         _fallback.SetSpeed(speed);
     }
 
-    // Voice selection is neural-only; the fallback always uses the system default.
-    public void SetVoice(string voiceId) => _neural.SetVoice(voiceId);
+    // Neural voices are chosen by id; the labelled "Windows voice" (SystemVoice.Id) routes reads to the
+    // fallback even after a pack is installed. Routing is decided when a read STARTS, so switching to or
+    // from the Windows voice mid-read applies to the next read only. The fallback always uses the system
+    // default voice.
+    public void SetVoice(string voiceId)
+    {
+        _useSystemVoice = voiceId == SystemVoice.Id;
+        if (!_useSystemVoice)
+        {
+            _neural.SetVoice(voiceId);
+        }
+    }
+
+    // Slice 47/56: only the neural engine has audio worth preparing, and only when it would be the one
+    // to read; otherwise there is nothing to do.
+    public Task PrepareAsync(string text) => UseNeural ? _neural.PrepareAsync(text) : Task.CompletedTask;
+
+    public bool ReadInProgress => _neural.ReadInProgress;
+
+    public void CancelPrepare() => _neural.CancelPrepare();
 
     public Task SkipForward() => _active.SkipForward();
 

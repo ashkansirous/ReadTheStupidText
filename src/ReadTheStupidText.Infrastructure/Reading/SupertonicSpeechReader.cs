@@ -1,8 +1,8 @@
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Domain.Reading;
-using SherpaOnnx;
 using Windows.Media.Core;
 using Windows.Media.Playback;
 using Windows.Storage;
@@ -10,98 +10,101 @@ using Windows.Storage;
 namespace ReadTheStupidText.Infrastructure.Reading;
 
 /// <summary>
-/// Speaks text with the local Supertonic-3 neural engine (sherpa-onnx). Synthesis
-/// produces raw PCM, written to a temp WAV file per chunk (Decision 49) and played
-/// through a <see cref="MediaPlayer"/> — the same pipeline as the WinRT reader, so
-/// speed stays live and pitch-corrected via
-/// <see cref="MediaPlaybackSession.PlaybackRate"/> (synthesis runs at 1x; the
-/// player applies the rate). The engine is built lazily on first speak, once the
-/// model files are present.
+/// Speaks text with the local neural engine (sherpa-onnx) for the voice pack that serves the user's
+/// language: Supertonic-3, Piper or MeloTTS (Slice 56 / Slice 51). Synthesis produces PCM per sentence,
+/// stored in a persistent sentence cache (Slice 47); each chunk's sentences are joined into a WAV that is
+/// written to a temp file per chunk (Decision 49) and played through a <see cref="MediaPlayer"/>, so speed
+/// stays live and pitch-corrected via <see cref="MediaPlaybackSession.PlaybackRate"/> (synthesis runs at
+/// 1x). The engine is built lazily from <see cref="IVoiceModelService.Paths"/>, and rebuilt when the pack
+/// or engine family changes.
 ///
-/// Long text is split into chunks (<see cref="SpeechTextChunker"/>) that synthesize
-/// concurrently (up to <see cref="MaxSynthesisConcurrency"/>) but play strictly in
-/// order, so playback starts after the first chunk instead of after the whole text.
+/// Long text is split into chunks (<see cref="SpeechTextChunker"/>) that synthesize concurrently (up to
+/// <see cref="MaxSynthesisConcurrency"/>) but play strictly in order. As an <see cref="IHeadStart"/> it
+/// can also prepare the opening sentences of a text before Play, so the read starts almost at once.
 /// </summary>
-public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
+public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposable
 {
-    // ONNX intra-op threads per synthesis (sherpa-onnx config.Model.NumThreads —
-    // confirmed via context7: "number of threads to run the neural network"; the
-    // Supertonic sample ships num_threads = 2). Scaled to the machine but capped: a
-    // single Generate sees diminishing returns past ~4 threads, and cores must be
-    // left for the concurrent chunks below. Latency-first — the time-to-first-audio
-    // the user feels is one chunk's synthesis, which more threads shorten.
+    // ONNX intra-op threads per synthesis (sherpa-onnx config.Model.NumThreads), scaled to the machine
+    // but capped: a single Generate sees diminishing returns past ~4 threads, and cores must be left for
+    // the concurrent chunks. Latency-first - the time-to-first-audio the user feels is one chunk's synthesis.
     private static readonly int SynthesisThreads = Math.Clamp(Environment.ProcessorCount / 2, 2, 4);
 
-    // Long text is synthesized as several small chunks generated concurrently (this
-    // many at once) and played strictly in order, so playback can start after the
-    // first chunk instead of waiting for the whole text to synthesize. Sized so
-    // SynthesisThreads * concurrency roughly fits the cores without oversubscribing.
+    // Sentences synthesize this many at a time (the pool is shared with head-start prepares), sized so
+    // SynthesisThreads * concurrency roughly fits the cores.
     private static readonly int MaxSynthesisConcurrency =
         Math.Clamp(Environment.ProcessorCount / SynthesisThreads, 2, 4);
 
-    // A throwaway utterance synthesized once at startup to JIT/warm the ONNX graph;
-    // its audio is discarded, so it never reaches the player.
+    // A throwaway utterance synthesized once to warm the ONNX graph; its audio is discarded.
     private const string WarmUpText = "Ready.";
 
-    // Timing (Decision 33) is raised at most this often while reading — except the
-    // tick that first learns a chunk's real duration, which always raises immediately
-    // so the total appears the instant it's known, not up to a second late.
+    // A two-sentence head is only cheap when its audio is already cached (Slice 56): a read uses it
+    // only then (decided at read start), otherwise the one-sentence default keeps first audio short.
+    // A head-start prepare always plans with it, so what it caches is exactly what such a read wants.
+    private static readonly SpeechTextChunker.HeadPolicy CachedHead = SpeechTextChunker.HeadPolicy.Cached;
+
+    // A head start prepares the opening of the text only: this many chunks, and only this much text is
+    // even chunked, so a large document costs nothing.
+    private const int PrepareMaxChunks = 4;
+    private const int PrepareMaxChars = 2000;
+
+    // Timing (Decision 33) is raised at most this often while reading, except when a total is learned.
     private static readonly TimeSpan TimingRaiseInterval = TimeSpan.FromSeconds(1);
 
-    // Skip amount for SkipForward/SkipBackward (Decision 32); lands on the nearest
-    // reachable chunk boundary rather than an exact 10.000s offset.
+    // Skip amount for SkipForward/SkipBackward (Decision 32); lands on the nearest chunk boundary.
     private static readonly TimeSpan SkipAmount = TimeSpan.FromSeconds(10);
 
     private readonly IVoiceModelService _model;
     private readonly ISystemLog _systemLog;
     private readonly AudioChunkPaths _audioPaths;
+    private readonly NeuralSentenceSource _sentences;
     private readonly ReadTimingTracker _timing = new();
     private readonly MediaPlayer _player = new() { AutoPlay = false };
 
-    // Serializes the generation counter / synthesis-cancellation swap, which can be
-    // touched concurrently by an in-flight SpeakAsync, a newer one, and Stop.
+    // Serializes the generation counter / synthesis-cancellation swap and the read/prepare bookkeeping.
     private readonly object _gate = new();
 
-    // Serializes the one-time engine build so an eager warm-up and a lazy first read
-    // racing each other build a single OfflineTts (one ~145 MB model load), not two.
+    // Serializes engine builds so a warm-up and a first read racing each other build one model.
     private readonly object _ttsGate = new();
 
-    private OfflineTts? _tts;
+    // The model (folder, engine kind, pack version) whose engine build last failed; reads skip straight
+    // to the Windows voice until the installed model changes.
+    private string? _failedModelKey;
+
+    // The engine plus the model it was built from, swapped as one object under _ttsGate. Each read
+    // captures one BuiltEngine and uses its Model for everything.
+    private BuiltEngine? _engine;
+
+    // The read now playing, with the engine it plays on and how many call stacks (the original
+    // SpeakAsync, then each Skip that continued it) still own it. Replaced by the next read and cleared
+    // by Stop, both under _gate; a superseded read's late cleanup compares the reference and does nothing.
+    private ActiveRead? _activeRead;
+    private bool _disposed;
+    private string? _voiceId;
+    private readonly ConcurrentDictionary<VoiceEngineKind, string> _voiceByKind = new();
     private MediaSource? _currentSource;
     private double _playbackRate = PlaybackRate.Default.Value;
-    private int _speakerId = SupertonicVoiceTable.DefaultSpeakerId;
     private PlaybackState _state = PlaybackState.Idle;
 
-    // Completes when the current chunk finishes playing (true) or playback is
-    // stopped/superseded (false), so the ordered playback loop can advance.
+    // Completes when the current chunk finishes playing (true) or playback is stopped/superseded (false).
     private TaskCompletionSource<bool>? _chunkEnded;
 
-    // Incremented for every utterance and every Stop. A synthesis only reaches the
-    // player while its generation is still current, so a superseded (slow) synth
-    // can never play after the one that replaced it.
+    // Incremented for every utterance and every Stop, so a superseded synthesis never reaches the player.
     private int _generation;
     private CancellationTokenSource? _synthCts;
+    private CancellationTokenSource? _prepareCts;
 
-    // Read-through progress is approximated by weighting each chunk equally: the
-    // overall fraction is (completed chunks + position within the current chunk) /
-    // total chunks. Exact per-chunk durations would be more precise but each chunk
-    // is independently synthesized — equal weighting is the best-effort model.
+    // Read-through progress weights each chunk equally: (completed chunks + position in the current) / total.
     private int _chunkCount;
     private int _currentChunkIndex;
 
-    // The current read's chunks (text + source range), kept so SkipForward/
-    // SkipBackward can restart playback of the same text at a different chunk
-    // index, and so ChunkChanged can report each chunk's source span.
-    private IReadOnlyList<SpeechTextChunker.TextChunk> _chunks = [];
+    // The current read's chunks (text + source range), kept so Skip can restart at a different chunk.
+    private IReadOnlyList<SpeechChunkPlan> _chunks = [];
 
-    // Latency diagnostics (Decision 30): the activity-log id of the in-flight read and
-    // when it began, so the per-chunk timing lines join to its row; _firstAudioPending
-    // makes "first audio after N ms" log once, on the first chunk's MediaOpened.
+    // Latency diagnostics (Decision 30): the activity-log id of the in-flight read and when it began.
     private int? _readActivityId;
     private long _readStartTicks;
     private bool _firstAudioPending;
 
-    // Last time TimingChanged was raised (Decision 33 throttle).
     private long _lastTimingRaiseTicks;
 
     public SupertonicSpeechReader(IVoiceModelService model, ISystemLog systemLog, AudioChunkPaths audioPaths)
@@ -109,6 +112,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
         _model = model;
         _systemLog = systemLog;
         _audioPaths = audioPaths;
+        _sentences = new NeuralSentenceSource(audioPaths.SentenceFolder, systemLog, MaxSynthesisConcurrency);
         _player.MediaOpened += OnMediaOpened;
         _player.MediaEnded += OnMediaEnded;
         _player.PlaybackSession.PlaybackStateChanged += OnPlaybackStateChanged;
@@ -127,54 +131,145 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
 
     public PlaybackState State => _state;
 
+    public bool ReadInProgress
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return _activeRead is not null;
+            }
+        }
+    }
+
     public async Task SpeakAsync(string text, int? activityId = null)
     {
-        OfflineTts? tts = EnsureTts();
-        if (tts is null)
+        BuiltEngine engine = AcquireEngine() ?? throw new NeuralEngineUnavailableException();
+        ActiveRead read = BeginRead(engine);
+        try
         {
-            return;
+            (int generation, CancellationToken token) = BeginGeneration();
+            string? voiceId = Volatile.Read(ref _voiceId);
+            SpeechTextChunker.HeadPolicy head = await ChooseHeadPolicyAsync(engine, text, voiceId);
+            if (!IsCurrent(generation))
+            {
+                return; // stopped or superseded while the cache was consulted
+            }
+
+            _readActivityId = activityId;
+            _readStartTicks = Stopwatch.GetTimestamp();
+            _firstAudioPending = true;
+
+            IReadOnlyList<SpeechChunkPlan> chunks = PlanChunks(text, head, activityId);
+            _chunks = chunks;
+            _timing.Start(chunks.Count);
+            RaiseTiming(TimeSpan.Zero);
+
+            await SpeakChunksAsync(engine, chunks, 0, voiceId, generation, token);
         }
+        finally
+        {
+            LeaveRead(read);
+            engine.Release();
+        }
+    }
 
-        _readActivityId = activityId;
-        _readStartTicks = Stopwatch.GetTimestamp();
-        _firstAudioPending = true;
+    // The two-sentence head only when its audio is already in the cache (a prepare, or an earlier read,
+    // put it there); a cold head would make the listener wait for two syntheses. Off the caller's thread,
+    // because the first look at the cache indexes its folder.
+    private Task<SpeechTextChunker.HeadPolicy> ChooseHeadPolicyAsync(BuiltEngine engine, string text, string? voiceId) =>
+        Task.Run(() =>
+        {
+            IReadOnlyList<SpeechChunkPlan> plan = SpeechChunkPlanner.ForText(text, CachedHead);
+            bool cached = plan.Count > 0
+                && _sentences.AreCached(engine, SentenceUnits.Split(plan[0].Text), ResolveVoice(engine, voiceId));
+            return cached ? CachedHead : SpeechTextChunker.HeadPolicy.Default;
+        });
 
-        (int generation, CancellationToken token) = BeginGeneration();
-
+    private IReadOnlyList<SpeechChunkPlan> PlanChunks(string text, SpeechTextChunker.HeadPolicy head, int? activityId)
+    {
         long splitStart = Stopwatch.GetTimestamp();
-        IReadOnlyList<SpeechTextChunker.TextChunk> chunks = SpeechTextChunker.SplitWithRanges(text);
-        _chunks = chunks;
+        IReadOnlyList<SpeechChunkPlan> chunks = SpeechChunkPlanner.ForText(text, head);
         _systemLog.Debug(
             $"split {text.Length} chars into {chunks.Count} chunk(s) in " +
             $"{Stopwatch.GetElapsedTime(splitStart).TotalMilliseconds:F1} ms " +
             $"(threads {SynthesisThreads}, concurrency {MaxSynthesisConcurrency})",
             activityId);
+        return chunks;
+    }
 
-        _timing.Start(chunks.Count);
-        RaiseTiming(TimeSpan.Zero);
+    // Makes this the current read and cancels any prepare, atomically with a prepare's own check, so a
+    // prepare either finished its start before the read or never starts. Replacing the previous read
+    // here is what lets a prepare for the next text run while an old read's native synthesis winds down.
+    private ActiveRead BeginRead(BuiltEngine engine)
+    {
+        var read = new ActiveRead(engine, new ReadOwnership());
+        lock (_gate)
+        {
+            _activeRead = read;
+            CancelPrepareLocked();
+        }
 
-        await SpeakChunksAsync(tts, chunks, 0, Volatile.Read(ref _speakerId), generation, token);
+        return read;
+    }
+
+    // One owner (the original SpeakAsync, or a Skip that continued the read) is done. The last one out
+    // ends the read, unless Stop or a newer read already replaced it.
+    private void LeaveRead(ActiveRead read)
+    {
+        if (!read.Owners.Leave())
+        {
+            return;
+        }
+
+        lock (_gate)
+        {
+            if (ReferenceEquals(_activeRead, read))
+            {
+                _activeRead = null;
+            }
+        }
     }
 
     public Task SkipForward() => SkipByAsync(SkipAmount);
 
     public Task SkipBackward() => SkipByAsync(-SkipAmount);
 
-    // Tears down the currently-playing chunk (existing generation-counter mechanism,
-    // same as a mid-read voice change) and restarts the ordered playback loop at the
-    // target chunk found by the tracker (Decision 32). A no-op while idle or once the
-    // engine isn't built yet.
     private async Task SkipByAsync(TimeSpan delta)
     {
-        OfflineTts? tts = Volatile.Read(ref _tts);
+        ActiveRead? read = Volatile.Read(ref _activeRead);
 
-        // _chunkCount isn't cleared on natural completion (only Stop() does that), so
-        // it alone can't tell a finished read from one in progress — State can.
-        if (tts is null || _state == PlaybackState.Idle)
+        // _chunkCount isn't cleared on natural completion (only Stop() does that), so it alone
+        // can't tell a finished read from one in progress - State can.
+        if (read is null || _state == PlaybackState.Idle || !read.Owners.TryJoin())
         {
             return;
         }
 
+        try
+        {
+            if (read.Engine.TryAcquire())
+            {
+                try
+                {
+                    await SkipOnEngineAsync(read.Engine, delta);
+                }
+                finally
+                {
+                    read.Engine.Release();
+                }
+            }
+        }
+        finally
+        {
+            LeaveRead(read);
+        }
+    }
+
+    // Tears down the playing chunk (generation counter, as for a mid-read voice change) and restarts the
+    // ordered playback loop at the target chunk found by the tracker (Decision 32).
+    private async Task SkipOnEngineAsync(BuiltEngine engine, TimeSpan delta)
+    {
         TimeSpan elapsed = _timing.CurrentTiming(_player.PlaybackSession.Position).Elapsed;
         if (_timing.ComputeSkipTarget(elapsed, delta) is not { } target)
         {
@@ -188,88 +283,32 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
         _timing.SeekTo(target);
         RaiseTiming(TimeSpan.Zero);
 
-        await SpeakChunksAsync(tts, _chunks, target.ChunkIndex, Volatile.Read(ref _speakerId), generation, newToken);
+        await SpeakChunksAsync(engine, _chunks, target.ChunkIndex, Volatile.Read(ref _voiceId), generation, newToken);
     }
 
-    // Synthesizes the chunks from startIndex onward (capped concurrency) with the given
-    // speaker and plays them strictly in order. Used for a fresh read (startIndex 0) and,
-    // on a mid-read voice change, to continue the remaining chunks in the new voice
-    // (Decision 29). The speaker is a parameter, not the mutable field, so a voice change
-    // can't half-apply to chunks already queued — the switch happens cleanly at a chunk
-    // boundary: when the current chunk has finished, this notices _speakerId differs from
-    // the speaker it was started with and restarts at the *next* chunk in the new voice,
-    // so the heard text is neither repeated nor skipped, and earlier chunks are never
-    // re-synthesized.
+    // Synthesizes the chunks from startIndex onward (capped concurrency) with the given voice and plays
+    // them strictly in order. The voice is a parameter, not the mutable field, so a change can't
+    // half-apply to chunks already queued: the switch happens cleanly at the next chunk boundary
+    // (Decision 29), so heard text is neither repeated nor skipped.
     private async Task SpeakChunksAsync(
-        OfflineTts tts, IReadOnlyList<SpeechTextChunker.TextChunk> chunks, int startIndex, int speakerId,
+        BuiltEngine engine, IReadOnlyList<SpeechChunkPlan> chunks, int startIndex, string? voiceId,
         int generation, CancellationToken token)
     {
         _chunkCount = chunks.Count;
         _currentChunkIndex = startIndex;
         ProgressChanged?.Invoke(this, chunks.Count == 0 ? 0 : (double)startIndex / chunks.Count);
 
-        // Not disposed: a superseded read can leave orphaned generation tasks that
-        // still Release(); SemaphoreSlim needs no disposal unless its wait handle is
-        // accessed (it isn't), so letting it be collected avoids that race.
-        var slots = new SemaphoreSlim(MaxSynthesisConcurrency);
-        var generations = new List<Task<string>>();
-        Task? firstChunk = null;
-        for (int index = startIndex; index < chunks.Count; index++)
-        {
-            // The first chunk gates time-to-first-audio, so let it synthesize with the
-            // full thread budget: the remaining chunks wait for it to finish before
-            // they start, instead of stealing CPU from the one chunk the user is
-            // actually waiting on. They still synthesize concurrently among themselves
-            // (in the background, while the first chunk plays).
-            Task<string> chunkTask = index == startIndex
-                ? GenerateChunkAsync(tts, chunks[index].Text, index, speakerId, slots, token)
-                : GenerateAfterAsync(firstChunk!, tts, chunks[index].Text, index, speakerId, slots, token);
-            firstChunk ??= chunkTask;
-            generations.Add(chunkTask);
-        }
-
-        // Consume in order: await each chunk, then play it to its end before the
-        // next. A superseded read bails as soon as it notices it is no longer current.
+        List<Task<string>> generations = StartGenerations(engine, chunks, startIndex, voiceId, token);
         for (int offset = 0; offset < generations.Count; offset++)
         {
-            string path;
-            try
-            {
-                path = await generations[offset];
-            }
-            catch (OperationCanceledException)
-            {
-                return;
-            }
-
-            if (!IsCurrent(generation))
-            {
-                return;
-            }
-
             int index = startIndex + offset;
-            _currentChunkIndex = index;
-            SpeechTextChunker.TextChunk chunk = chunks[index];
-            ChunkChanged?.Invoke(this, new ReadChunk(index, chunks.Count, chunk.Text, chunk.SourceStart, chunk.SourceEnd));
-            bool endedNaturally = await PlayChunkAsync(path, token);
-            if (!endedNaturally || !IsCurrent(generation))
+            if (!await PlayGeneratedChunkAsync(generations[offset], chunks, index, generation, token))
             {
                 return;
             }
 
-            _timing.AdvancePastChunk(index);
-
-            // The voice was changed during this chunk: it has now finished in the old
-            // voice, so continue the *remaining* chunks in the new one. Cancels the
-            // old-voice synthesis already in flight for upcoming chunks and restarts.
-            int selected = Volatile.Read(ref _speakerId);
-            if (selected != speakerId && index + 1 < chunks.Count)
+            if (await RestartForVoiceSwapAsync(engine, chunks, index, voiceId))
             {
-                (int nextGeneration, CancellationToken nextToken) = BeginGeneration();
-                _systemLog.Info(
-                    $"voice changed mid-read; continuing at chunk {index + 2}/{chunks.Count} in the new voice",
-                    _readActivityId);
-                await SpeakChunksAsync(tts, chunks, index + 1, selected, nextGeneration, nextToken);
                 return;
             }
         }
@@ -282,31 +321,128 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
         }
     }
 
-    // Builds the engine and runs one discarded synthesis to warm the ONNX graph, off
-    // the UI thread, so the first real read is near-instant. Idempotent and safe to
-    // race the lazy build in SpeakAsync; best-effort, with EnsureTts() as the fallback.
+    // Kicks off synthesis of every remaining chunk; the first runs straight away and the rest wait for
+    // it, so the chunk the listener waits on is never starved of CPU.
+    private List<Task<string>> StartGenerations(
+        BuiltEngine engine, IReadOnlyList<SpeechChunkPlan> chunks, int startIndex, string? voiceId,
+        CancellationToken token)
+    {
+        VoiceInfo voice = ResolveVoice(engine, voiceId);
+        var generations = new List<Task<string>>();
+        Task<string>? firstChunk = null;
+        for (int index = startIndex; index < chunks.Count; index++)
+        {
+            Task<string> chunkTask = index == startIndex
+                ? GenerateChunkAsync(engine, chunks[index].Text, index, voice, token)
+                : GenerateAfterAsync(firstChunk!, engine, chunks[index].Text, index, voice, token);
+            firstChunk ??= chunkTask;
+            generations.Add(chunkTask);
+        }
+
+        return generations;
+    }
+
+    // Waits for one chunk's audio and plays it. False when the read was cancelled, stopped or
+    // superseded, so the caller stops consuming chunks.
+    private async Task<bool> PlayGeneratedChunkAsync(
+        Task<string> generated, IReadOnlyList<SpeechChunkPlan> chunks, int index, int generation,
+        CancellationToken token)
+    {
+        string path;
+        try
+        {
+            path = await generated;
+        }
+        catch (OperationCanceledException)
+        {
+            return false;
+        }
+
+        if (!IsCurrent(generation))
+        {
+            return false;
+        }
+
+        _currentChunkIndex = index;
+        SpeechChunkPlan chunk = chunks[index];
+        ChunkChanged?.Invoke(this, new ReadChunk(index, chunks.Count, chunk.Text, chunk.SourceStart, chunk.SourceEnd));
+        bool endedNaturally = await PlayChunkAsync(path, token);
+        if (!endedNaturally || !IsCurrent(generation))
+        {
+            return false;
+        }
+
+        _timing.AdvancePastChunk(index);
+        return true;
+    }
+
+    // When the selected voice changed during the chunk just played, continue the remaining chunks in
+    // the new voice (cancelling the old-voice synthesis already in flight). Voices are compared by id
+    // within the read's own model, so a language or pack change never restarts a read. True when it
+    // restarted (the restarted loop finishes the read, so the caller returns).
+    private async Task<bool> RestartForVoiceSwapAsync(
+        BuiltEngine engine, IReadOnlyList<SpeechChunkPlan> chunks, int index, string? voiceId)
+    {
+        string? selected = Volatile.Read(ref _voiceId);
+        bool sameVoice = ResolveVoice(engine, selected).Id == ResolveVoice(engine, voiceId).Id;
+        if (sameVoice || index + 1 >= chunks.Count)
+        {
+            return false;
+        }
+
+        (int nextGeneration, CancellationToken nextToken) = BeginGeneration();
+        _systemLog.Info(
+            $"voice changed mid-read; continuing at chunk {index + 2}/{chunks.Count} in the new voice",
+            _readActivityId);
+        await SpeakChunksAsync(engine, chunks, index + 1, selected, nextGeneration, nextToken);
+        return true;
+    }
+
+    // The selected voice if the read's model offers it, else the voice last picked for this engine
+    // family, else the model's default: a Piper pick for another language never displaces the
+    // Supertonic choice.
+    private VoiceInfo ResolveVoice(BuiltEngine engine, params string?[] ids)
+    {
+        _voiceByKind.TryGetValue(engine.Model.Kind, out string? remembered);
+        string?[] candidates = [.. ids, Volatile.Read(ref _voiceId), remembered];
+        return VoiceChoices.Resolve(engine.Model, candidates);
+    }
+
+    // Builds the engine and runs one discarded synthesis to warm the ONNX graph, off the UI thread, so
+    // the first real read is near-instant. Idempotent; best-effort, with AcquireEngine in SpeakAsync as
+    // the fallback. Called again whenever a pack becomes ready (ReadAloudService.OnVoiceModelReady).
     public Task WarmUpAsync() => Task.Run(WarmUp);
 
     private void WarmUp()
     {
         try
         {
-            OfflineTts? tts = EnsureTts();
-            _ = tts?.Generate(WarmUpText, 1.0f, _speakerId);
+            _sentences.LoadIndex(); // so the first read never indexes the cache folder on its own thread
+            if (AcquireEngine() is not { } engine)
+            {
+                return;
+            }
+
+            try
+            {
+                SherpaEngineFactory.Generate(engine, WarmUpText, ResolveVoice(engine).SpeakerId).Dispose();
+            }
+            finally
+            {
+                engine.Release();
+            }
         }
         catch
         {
-            // Warm-up is best-effort: if it fails, the lazy EnsureTts() in SpeakAsync
-            // remains the safety net and any real error surfaces on the first read.
+            // Best-effort: any real error surfaces on the first read.
         }
     }
 
-    // Defers a chunk's synthesis until the first chunk has finished, so the first chunk
-    // (which gates time-to-first-audio) runs without competing for CPU. The gate's own
-    // success/failure is observed where it is consumed in order; faults/cancellation
-    // here just release this chunk, which then honours the token itself.
+    // Defers a chunk's synthesis until the first chunk has finished, so the first chunk (which gates
+    // time-to-first-audio) runs without competing for CPU. The gate's own outcome surfaces where it is
+    // consumed in order; faults here just release this chunk, which then honours the token itself.
     private async Task<string> GenerateAfterAsync(
-        Task gate, OfflineTts tts, string chunk, int index, int speakerId, SemaphoreSlim slots, CancellationToken token)
+        Task gate, BuiltEngine engine, string chunk, int index, VoiceInfo voice, CancellationToken token)
     {
         try
         {
@@ -314,64 +450,38 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
         }
         catch
         {
-            // Swallowed: the first chunk's real outcome surfaces on its own await in
-            // the ordered consume loop; GenerateChunkAsync below still respects the token.
+            // Swallowed: the first chunk's real outcome surfaces on its own await.
         }
 
-        return await GenerateChunkAsync(tts, chunk, index, speakerId, slots, token);
+        return await GenerateChunkAsync(engine, chunk, index, voice, token);
     }
 
-    // Synthesizes one chunk to a temp WAV file (Decision 49), throttled by the shared
-    // slot semaphore so at most MaxSynthesisConcurrency run at once. The generate and
-    // wav-encode times are logged per chunk so a slow read is attributable.
+    // Builds one chunk's WAV from its cached or synthesized sentences and writes it to the read's temp
+    // chunk file (Decision 49). tts.Generate is a synchronous native call that cannot be interrupted, so
+    // the token is checked again before any shared state or file is touched: a superseded generation
+    // must not record a stale duration or write a stale chunk file (Slice 35).
     private async Task<string> GenerateChunkAsync(
-        OfflineTts tts, string chunk, int index, int speakerId, SemaphoreSlim slots, CancellationToken token)
+        BuiltEngine engine, string chunk, int index, VoiceInfo voice, CancellationToken token)
     {
-        await slots.WaitAsync(token);
-        try
-        {
-            long generateStart = Stopwatch.GetTimestamp();
-            OfflineTtsGeneratedAudio audio =
-                await Task.Run(() => tts.Generate(chunk, 1.0f, speakerId), token);
-            TimeSpan generate = Stopwatch.GetElapsedTime(generateStart);
+        int? activityId = _readActivityId;
+        long started = Stopwatch.GetTimestamp();
+        byte[] wav = await _sentences.JoinChunkAsync(engine, chunk, voice, activityId, token);
+        token.ThrowIfCancellationRequested();
 
-            // tts.Generate is a synchronous native call: passing token to Task.Run only
-            // stops it from *starting* once already cancelled, it can't interrupt a
-            // Generate already in flight (Slice 35). So a superseded generation (e.g. a
-            // second Skip press arriving before the first one's target chunk finished
-            // synthesizing) still runs this to completion — check here, before touching
-            // any shared state, so that wasted work can't write a stale chunk duration
-            // (or a stale chunk file, under a newer read's activity id) after the fact.
-            token.ThrowIfCancellationRequested();
-
-            RecordChunkDuration(index, audio);
-
-            string path = _audioPaths.ChunkPath(_readActivityId ?? 0, index);
-            long wavStart = Stopwatch.GetTimestamp();
-            await WriteWavFileAsync(path, audio.Samples, audio.SampleRate);
-            TimeSpan wav = Stopwatch.GetElapsedTime(wavStart);
-
-            _systemLog.Debug(
-                $"chunk {index + 1}/{_chunkCount} ({chunk.Length} chars): generate " +
-                $"{generate.TotalMilliseconds:F0} ms, wav {wav.TotalMilliseconds:F0} ms",
-                _readActivityId);
-            return path;
-        }
-        finally
-        {
-            slots.Release();
-        }
+        RecordChunkDuration(index, WavFile.TryGetDuration(wav) ?? TimeSpan.Zero);
+        string path = _audioPaths.ChunkPath(activityId ?? 0, index);
+        await File.WriteAllBytesAsync(path, wav, token);
+        _systemLog.Debug(
+            $"chunk {index + 1}/{_chunkCount} ({chunk.Length} chars) ready in " +
+            $"{Stopwatch.GetElapsedTime(started).TotalMilliseconds:F0} ms",
+            activityId);
+        return path;
     }
 
-    // Records a chunk's real duration (known as soon as its audio lands, regardless
-    // of playback) and, the instant that completes the read's total, raises
-    // TimingChanged right away instead of waiting for the next throttled tick.
-    private void RecordChunkDuration(int index, OfflineTtsGeneratedAudio audio)
+    // Records a chunk's real duration (known as soon as its audio lands) and, the instant that
+    // completes the read's total, raises TimingChanged right away instead of on the next throttled tick.
+    private void RecordChunkDuration(int index, TimeSpan duration)
     {
-        TimeSpan duration = audio.SampleRate > 0
-            ? TimeSpan.FromSeconds((double)audio.Samples.Length / audio.SampleRate)
-            : TimeSpan.Zero;
-
         bool totalWasUnknown = _timing.CurrentTiming(TimeSpan.Zero).Total is null;
         _timing.RecordChunkDuration(index, duration);
         if (totalWasUnknown && _timing.CurrentTiming(TimeSpan.Zero).Total is not null)
@@ -380,8 +490,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
         }
     }
 
-    // Plays one chunk from its temp WAV file (Decision 49) and awaits its natural
-    // end (true) or a stop/supersede (false).
+    // Plays one chunk from its temp WAV file and awaits its natural end (true) or a stop/supersede (false).
     private async Task<bool> PlayChunkAsync(string path, CancellationToken token)
     {
         var ended = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -404,6 +513,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
         {
             _synthCts?.Cancel();
             _generation++;
+            _activeRead = null; // no read in progress from this moment, whatever the old one is still unwinding
         }
 
         _chunkEnded?.TrySetResult(false); // release the playback loop if mid-chunk
@@ -417,10 +527,9 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
         DeleteReadFiles();
     }
 
-    // Deletes the read's chunk folder once it's genuinely done — natural completion
-    // or Stop() (Decision 49). Not called from SkipByAsync or the mid-read voice-change
-    // continuation: both keep the same activity id and restart the *same* read, so
-    // their already-written chunk files stay put until the read actually ends.
+    // Deletes the read's temp chunk folder once it's genuinely done - natural completion or Stop()
+    // (Decision 49). Not called from Skip or the voice-change continuation, which restart the same read.
+    // Only play files live there: the sentence cache is a separate folder and is never touched.
     private void DeleteReadFiles()
     {
         if (_readActivityId is { } id)
@@ -435,25 +544,61 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
         _player.PlaybackSession.PlaybackRate = _playbackRate;
     }
 
-    // Records the selected speaker. While idle it applies to the next read. During a
-    // read, the playback loop (SpeakChunksAsync) notices the change at the next chunk
-    // boundary and continues the remaining chunks in the new voice (Decision 29): the
-    // current chunk finishes in the old voice, so nothing already heard is repeated and
-    // no unheard text is skipped. Already-played chunks are never re-synthesized.
-    public void SetVoice(string voiceId) =>
-        Volatile.Write(ref _speakerId, SupertonicVoiceTable.SpeakerIdFor(voiceId));
-
-    // Returns the engine, building it once on first use. Double-checked under _ttsGate
-    // so a warm-up thread and a first read can't each construct one (the build loads
-    // the ~145 MB model). Volatile pairs the lock-free fast path with the locked write.
-    private OfflineTts? EnsureTts()
+    // Records the selected voice. While idle it applies to the next read; during a read the loop notices
+    // at the next chunk boundary (Decision 29).
+    public void SetVoice(string voiceId)
     {
-        OfflineTts? existing = Volatile.Read(ref _tts);
-        if (existing is not null)
+        if (VoiceChoices.KindOf(voiceId) is { } kind)
         {
-            return existing;
+            _voiceByKind[kind] = voiceId;
         }
 
+        Volatile.Write(ref _voiceId, voiceId);
+    }
+
+    // Returns the engine for the language's current model with a reference taken for the caller, who
+    // must Release() it. A different pack or engine kind rebuilds the OfflineTts; the same pack under
+    // another language reuses it with the new model. The superseded OfflineTts is disposed once the
+    // last read or generation holding it lets go.
+    private BuiltEngine? AcquireEngine()
+    {
+        if (_model.Paths is { } paths && ModelKey(paths) == Volatile.Read(ref _failedModelKey))
+        {
+            // This exact model already failed to load: don't retry the multi-hundred-MB build on every
+            // read. A different pack folder, engine or version clears the block.
+            throw new NeuralEngineUnavailableException();
+        }
+
+        try
+        {
+            return AcquireEngineCore();
+        }
+        catch (Exception ex) when (ex is not NeuralEngineUnavailableException)
+        {
+            if (_model.Paths is { } failed)
+            {
+                Volatile.Write(ref _failedModelKey, ModelKey(failed));
+            }
+
+            // A pack that is "ready" but cannot be loaded (files gone, native failure): the composite
+            // reads with the Windows voice, and the model re-checks the installed packs.
+            _systemLog.Warning("the neural engine could not be built", null, ex);
+            RefreshModelInBackground();
+            throw new NeuralEngineUnavailableException(ex);
+        }
+    }
+
+    private static string ModelKey(VoiceModelPaths paths) => $"{paths.RootDir}|{paths.Kind}|{paths.PackVersion}";
+
+    private void RefreshModelInBackground() =>
+        _ = _model.InitializeAsync().ContinueWith(
+            t => _systemLog.Warning("voice model refresh failed", null, t.Exception),
+            CancellationToken.None,
+            TaskContinuationOptions.OnlyOnFaulted,
+            TaskScheduler.Default);
+
+    private BuiltEngine? AcquireEngineCore()
+    {
         if (_model.Paths is not { } paths)
         {
             return null;
@@ -461,36 +606,144 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
 
         lock (_ttsGate)
         {
-            if (_tts is not null)
+            if (_disposed)
             {
-                return _tts;
+                return null;
             }
 
-            OfflineTts built = BuildTts(paths.RootDir);
-            Volatile.Write(ref _tts, built);
-            return built;
+            if (_engine is null || _engine.Model != paths)
+            {
+                _engine = SwapEngine(_engine, paths);
+            }
+
+            return TryAcquireCurrent(paths);
         }
     }
 
-    // Builds the Supertonic engine from the model files under the given directory
-    // (no espeak/lexicon — Supertonic ships a unicode_indexer + voice.bin).
-    private static OfflineTts BuildTts(string dir)
+    // Takes the caller's reference on the current engine. A refused reference means the engine was
+    // already disposed, so it is rebuilt once; if that is refused too the read is not ready.
+    // Called under _ttsGate.
+    private BuiltEngine? TryAcquireCurrent(VoiceModelPaths paths)
     {
-        var config = new OfflineTtsConfig();
-        config.Model.Supertonic.DurationPredictor = Path.Combine(dir, SupertonicFiles.DurationPredictor);
-        config.Model.Supertonic.TextEncoder = Path.Combine(dir, SupertonicFiles.TextEncoder);
-        config.Model.Supertonic.VectorEstimator = Path.Combine(dir, SupertonicFiles.VectorEstimator);
-        config.Model.Supertonic.Vocoder = Path.Combine(dir, SupertonicFiles.Vocoder);
-        config.Model.Supertonic.TtsJson = Path.Combine(dir, SupertonicFiles.TtsJson);
-        config.Model.Supertonic.UnicodeIndexer = Path.Combine(dir, SupertonicFiles.UnicodeIndexer);
-        config.Model.Supertonic.VoiceStyle = Path.Combine(dir, SupertonicFiles.VoiceStyle);
-        config.Model.NumThreads = SynthesisThreads;
-        config.Model.Provider = "cpu";
-        return new OfflineTts(config);
+        if (_engine!.TryAcquire())
+        {
+            return _engine;
+        }
+
+        _engine = SwapEngine(null, paths);
+        return _engine.TryAcquire() ? _engine : null;
     }
 
-    // Opens a new generation, cancelling the previous synthesis so a superseded
-    // long synth stops wasting CPU and never reaches the player.
+    private static BuiltEngine SwapEngine(BuiltEngine? current, VoiceModelPaths paths)
+    {
+        if (current is { Tts.IsAlive: true } && current.Model.RootDir == paths.RootDir && current.Model.Kind == paths.Kind)
+        {
+            return new BuiltEngine(current.Tts, paths);
+        }
+
+        var fresh = new BuiltEngine(new RefCountedTts(SherpaEngineFactory.Build(paths, SynthesisThreads)), paths);
+        current?.Release();
+        return fresh;
+    }
+
+    // Head start (Slice 47/56): synthesizes the sentences of the text's first chunks into the cache in
+    // the voice that would read them now, without playing. A newer prepare, the start of a read,
+    // CancelPrepare and Dispose all cancel it; audio already cached stays.
+    public Task PrepareAsync(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return Task.CompletedTask;
+        }
+
+        // The token is taken here, synchronously and in call order, so a later call always supersedes an
+        // earlier one and CancelPrepare reaches a prepare still queued on the pool.
+        return BeginPrepare() is { } token
+            ? Task.Run(() => PrepareOffCallerAsync(text, token))
+            : Task.CompletedTask;
+    }
+
+    // Runs on the thread pool, so acquiring the engine (which may build the model), planning the chunks
+    // and indexing the cache never block the thread that asked.
+    private async Task PrepareOffCallerAsync(string text, CancellationToken token)
+    {
+        if (token.IsCancellationRequested)
+        {
+            return;
+        }
+
+        BuiltEngine? engine = null;
+        try
+        {
+            engine = AcquireEngine();
+            if (engine is null)
+            {
+                return;
+            }
+
+            token.ThrowIfCancellationRequested();
+            await PrepareChunksAsync(engine, text, token);
+        }
+        catch (OperationCanceledException)
+        {
+            // Superseded or cancelled: nothing to clean up.
+        }
+        catch (Exception ex)
+        {
+            _systemLog.Warning("head start failed", null, ex);
+        }
+        finally
+        {
+            engine?.Release();
+        }
+    }
+
+    private async Task PrepareChunksAsync(BuiltEngine engine, string text, CancellationToken token)
+    {
+        VoiceInfo voice = ResolveVoice(engine, Volatile.Read(ref _voiceId));
+        string prefix = text.Length > PrepareMaxChars ? text[..PrepareMaxChars] : text;
+        IEnumerable<string> sentences = SpeechChunkPlanner.ForText(prefix, CachedHead)
+            .Take(PrepareMaxChunks)
+            .SelectMany(chunk => SentenceUnits.Split(chunk.Text));
+
+        await _sentences.PrepareAsync(engine, sentences, voice, token);
+    }
+
+    public void CancelPrepare()
+    {
+        lock (_gate)
+        {
+            CancelPrepareLocked();
+        }
+    }
+
+    // Called under _gate.
+    private void CancelPrepareLocked()
+    {
+        _prepareCts?.Cancel();
+        _prepareCts?.Dispose();
+        _prepareCts = null;
+    }
+
+    // A newer prepare supersedes the one in flight; null when a read is in progress, which must never
+    // share the engine with a prepare. Checked under the same lock that BeginRead takes.
+    private CancellationToken? BeginPrepare()
+    {
+        lock (_gate)
+        {
+            if (_activeRead is not null)
+            {
+                return null;
+            }
+
+            CancelPrepareLocked();
+            _prepareCts = new CancellationTokenSource();
+            return _prepareCts.Token;
+        }
+    }
+
+    // Opens a new generation, cancelling the previous synthesis so a superseded long synth stops wasting
+    // CPU and never reaches the player.
     private (int generation, CancellationToken token) BeginGeneration()
     {
         lock (_gate)
@@ -522,8 +775,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
 
     private void OnMediaOpened(MediaPlayer sender, object args)
     {
-        // The first chunk opening is the moment audio is about to start — log the
-        // time-to-first-audio once per read (later chunks open silently).
+        // The first chunk opening is the moment audio is about to start - log time-to-first-audio once.
         if (_firstAudioPending)
         {
             _firstAudioPending = false;
@@ -536,17 +788,13 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
         sender.Play();
     }
 
-    // A chunk finished; let the ordered playback loop advance to the next one (or,
-    // for the last chunk, complete). Completion/idle are signalled by SpeakAsync.
+    // A chunk finished; let the ordered playback loop advance to the next one (or complete).
     private void OnMediaEnded(MediaPlayer sender, object args) => _chunkEnded?.TrySetResult(true);
 
-    // Reports best-effort read-through progress as the current chunk plays: the
-    // completed-chunk count plus the fraction through the current chunk, over the
-    // total. Ignored when nothing is loaded (no chunks / unknown duration).
+    // Reports best-effort read-through progress as the current chunk plays. Ignored when nothing is loaded.
     private void OnPositionChanged(MediaPlaybackSession sender, object args)
     {
-        // Snapshot once: Stop() can zero _chunkCount on another thread between a
-        // guard and the division, and a superseded read can half-update the pair.
+        // Snapshot once: Stop() can zero _chunkCount on another thread between a guard and the division.
         int chunkCount = Volatile.Read(ref _chunkCount);
         int chunkIndex = Volatile.Read(ref _currentChunkIndex);
         if (chunkCount == 0)
@@ -593,14 +841,9 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
         StateChanged?.Invoke(this, next);
     }
 
-    private static async Task WriteWavFileAsync(string path, float[] samples, int sampleRate)
-    {
-        byte[] wav = WavFile.Encode(samples, sampleRate);
-        await File.WriteAllBytesAsync(path, wav);
-    }
-
     public void Dispose()
     {
+        CancelPrepare();
         _synthCts?.Cancel();
         _synthCts?.Dispose();
         _player.MediaOpened -= OnMediaOpened;
@@ -609,6 +852,11 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
         _player.PlaybackSession.PositionChanged -= OnPositionChanged;
         _player.Dispose();
         _currentSource?.Dispose();
-        _tts?.Dispose();
+        lock (_ttsGate)
+        {
+            _disposed = true;
+            _engine?.Release();
+            _engine = null;
+        }
     }
 }

@@ -94,7 +94,16 @@ internal sealed class SentenceAudioCache
         evicted.ForEach(_store.Delete);
     }
 
-    private bool Contains(string id)
+    /// <summary>Indexes what a previous run left on disk, so the first lookup doesn't.</summary>
+    public void LoadIndex()
+    {
+        lock (_gate)
+        {
+            EnsureLoaded();
+        }
+    }
+
+    public bool Contains(string id)
     {
         lock (_gate)
         {

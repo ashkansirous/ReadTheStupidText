@@ -13,6 +13,7 @@ public sealed class AudioChunkPaths
 {
     private const string AudioSubfolder = "audio";
     private const string ChunkFileTemplate = "chunk-{0}.wav";
+    private const string SentenceSubfolder = "sentences";
 
     public AudioChunkPaths()
     {
@@ -21,6 +22,13 @@ public sealed class AudioChunkPaths
     }
 
     public string Root { get; }
+
+    /// <summary>
+    /// The persistent sentence-audio cache (Slice 56): under the package's LocalCacheFolder, which is
+    /// not backed up and not swept by <see cref="PurgeOrphaned"/>. A read's play file is joined from
+    /// these clips and lives under <see cref="Root"/>; a cached clip is never played or deleted by a read.
+    /// </summary>
+    public string SentenceFolder => Path.Combine(ApplicationData.Current.LocalCacheFolder.Path, SentenceSubfolder);
 
     /// <summary>The on-disk path for one chunk of a read, creating the read's
     /// folder on first use.</summary>

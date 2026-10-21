@@ -1,3 +1,4 @@
+using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Domain.Reading;
 using ReadTheStupidText.Domain.Sanitizing;
@@ -10,7 +11,7 @@ namespace ReadTheStupidText.Infrastructure.Settings;
 /// is persisted as its decimal multiplier; a missing value falls back to the
 /// default, and any stored value is re-normalized by <see cref="PlaybackRate"/>.
 /// </summary>
-public sealed class LocalSettingsStore : ISettingsStore
+public sealed class LocalSettingsStore : ISettingsStore, ILanguageChangeNotifier
 {
     private const string SpeedKey = "PlaybackRate";
     private const string AutoReadOnSelectionKey = "AutoReadOnSelection";
@@ -77,11 +78,14 @@ public sealed class LocalSettingsStore : ISettingsStore
         }
     }
 
+    public event EventHandler? LanguageChanged;
+
     public string? Language
     {
         get => _settings.Values[LanguageKey] as string;
         set
         {
+            string? previous = Language;
             if (value is null)
             {
                 _settings.Values.Remove(LanguageKey);
@@ -89,6 +93,11 @@ public sealed class LocalSettingsStore : ISettingsStore
             else
             {
                 _settings.Values[LanguageKey] = value;
+            }
+
+            if (previous != value)
+            {
+                LanguageChanged?.Invoke(this, EventArgs.Empty);
             }
         }
     }

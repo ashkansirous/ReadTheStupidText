@@ -1,8 +1,9 @@
 namespace ReadTheStupidText.Application.Reading;
 
 /// <summary>
-/// The labelled "Phone voice" entry in the voice picker (Decision 61): reads with
-/// the OS voice even after the neural pack is installed. Stored as the voice id.
+/// The id of the picker entry that reads with the operating system's own voice even after a
+/// neural pack is installed (Decision 61). Its user-facing label is platform-specific and lives
+/// with each platform's voice picker. Stored as the voice id.
 /// </summary>
 public static class SystemVoice
 {

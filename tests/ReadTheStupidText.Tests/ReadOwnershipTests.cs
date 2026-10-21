@@ -33,6 +33,18 @@ public class ReadOwnershipTests
     }
 
     [Fact]
+    public void Repeated_skips_hand_the_read_over_without_it_ever_ending()
+    {
+        var owners = new ReadOwnership();
+        Assert.True(owners.TryJoin());
+        Assert.False(owners.Leave());
+        Assert.True(owners.TryJoin());
+        Assert.False(owners.Leave());
+
+        Assert.True(owners.Leave());
+    }
+
+    [Fact]
     public void Join_fails_once_the_last_owner_has_left()
     {
         var owners = new ReadOwnership();

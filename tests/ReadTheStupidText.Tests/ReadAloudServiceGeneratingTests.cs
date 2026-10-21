@@ -117,6 +117,91 @@ public class ReadAloudServiceGeneratingTests
         await read;
     }
 
+    [Fact]
+    public async Task Auto_read_prepares_the_head_start_before_the_settle_delay_ends()
+    {
+        var spoken = new TaskCompletionSource();
+        var harness = new Harness { Speak = (_, _) => { spoken.TrySetResult(); return Task.CompletedTask; } };
+        harness.Service.FirstAudioGrace = TimeSpan.FromMilliseconds(10);
+
+        harness.Monitor.RaiseChanged("Some selected text.");
+
+        await harness.HeadStart.FirstPrepare.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        Assert.False(spoken.Task.IsCompleted); // the read waits for its settle; the prepare did not
+        Assert.Equal(["Some selected text."], harness.HeadStart.Prepared);
+        await spoken.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task A_drag_burst_prepares_only_the_text_the_selection_settles_on()
+    {
+        var spoken = new TaskCompletionSource();
+        var harness = new Harness { Speak = (_, _) => { spoken.TrySetResult(); return Task.CompletedTask; } };
+        harness.Service.FirstAudioGrace = TimeSpan.FromMilliseconds(10);
+
+        harness.Monitor.RaiseChanged("Some");
+        harness.Monitor.RaiseChanged("Some selected");
+        harness.Monitor.RaiseChanged("Some selected text.");
+
+        await spoken.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        Assert.Equal(["Some selected text."], harness.HeadStart.Prepared);
+    }
+
+    [Fact]
+    public async Task Deselect_before_the_selection_is_stable_prepares_nothing()
+    {
+        var harness = new Harness();
+
+        harness.Monitor.RaiseChanged("Some selected text.");
+        harness.Monitor.RaiseCleared();
+        await Task.Delay(300, TestContext.Current.CancellationToken);
+
+        Assert.Empty(harness.HeadStart.Prepared);
+    }
+
+    [Fact]
+    public void Deselect_cancels_the_head_start_prepare()
+    {
+        var harness = new Harness();
+
+        harness.Monitor.RaiseCleared();
+
+        Assert.Equal(1, harness.HeadStart.Cancels);
+    }
+
+    [Fact]
+    public async Task A_failing_head_start_never_affects_the_read()
+    {
+        var spoken = new TaskCompletionSource();
+        var harness = new Harness { Speak = (_, _) => { spoken.TrySetResult(); return Task.CompletedTask; } };
+        harness.Service.FirstAudioGrace = TimeSpan.FromMilliseconds(10);
+        harness.HeadStart.Fail = true;
+
+        harness.Monitor.RaiseChanged("Some selected text.");
+
+        await spoken.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+    }
+
+    private sealed class FakeHeadStart : IHeadStart
+    {
+        private readonly TaskCompletionSource _firstPrepare = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public List<string> Prepared { get; } = [];
+        public Task FirstPrepare => _firstPrepare.Task;
+        public int Cancels { get; private set; }
+        public bool Fail { get; set; }
+        public bool ReadInProgress => false;
+
+        public Task PrepareAsync(string text)
+        {
+            Prepared.Add(text);
+            _firstPrepare.TrySetResult();
+            return Fail ? Task.FromException(new InvalidOperationException("boom")) : Task.CompletedTask;
+        }
+
+        public void CancelPrepare() => Cancels++;
+    }
+
     private sealed class Harness
     {
         public Func<string, int?, Task> Speak { get; set; } = (_, _) => Task.CompletedTask;
@@ -131,13 +216,15 @@ public class ReadAloudServiceGeneratingTests
 
         public FakeSelectionMonitor Monitor { get; } = new();
 
+        public FakeHeadStart HeadStart { get; } = new();
+
         public Harness()
         {
             Reader = new FakeReader(this);
             Service = new ReadAloudService(
                 Reader, Clipboard, new FakeHotkey(), new FakeCopier(), Monitor,
                 new FakeClipboardMonitor(), new FakeForeground(), new FakeVoices(), new FakeModel(),
-                new FakeDocuments(), Log, new FakeSettings(), new FakeSanitizer(), new FakeSystemLog());
+                new FakeDocuments(), Log, new FakeSettings(), new FakeSanitizer(), new FakeSystemLog(), HeadStart);
         }
     }
 
@@ -194,8 +281,9 @@ public class ReadAloudServiceGeneratingTests
 
     private sealed class FakeSelectionMonitor : ISelectionMonitor
     {
-        public event EventHandler<string>? SelectionChanged { add { } remove { } }
+        public event EventHandler<string>? SelectionChanged;
         public event EventHandler? SelectionCleared;
+        public void RaiseChanged(string text) => SelectionChanged?.Invoke(this, text);
         public void RaiseCleared() => SelectionCleared?.Invoke(this, EventArgs.Empty);
         public bool IsRunning => false;
         public void Start() { }
