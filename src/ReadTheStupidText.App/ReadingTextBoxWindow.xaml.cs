@@ -1,4 +1,5 @@
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Translation;
 using ReadTheStupidText.Domain.Reading;
 using Microsoft.UI;
 using Microsoft.UI.Dispatching;
@@ -22,7 +23,6 @@ namespace ReadTheStupidText_App;
 /// </summary>
 public sealed partial class ReadingTextBoxWindow : Window
 {
-    private const string NothingReadingStatus = "Nothing reading yet";
 
     // Matches the ScrollViewer's XAML Padding — subtracted to get the width/height
     // actually available to the text (both the real content and the measure probe).
@@ -46,6 +46,16 @@ public sealed partial class ReadingTextBoxWindow : Window
     };
 
     private string _fullText = string.Empty;
+
+    // Slice 57: the box shows the text actually spoken. When that is a translation it says so; the
+    // flag travels with the text (ReadText), so it can never leak from one read to the next.
+    private bool _showingTranslation;
+
+    // Identity of the read whose text is on screen, and of the latest read announced (Volatile: set on the
+    // event thread). A chunk is only applied to the read it was raised for, so a late chunk of an earlier
+    // read can't pick up the new read's "(translated)" suffix or highlight.
+    private object _announcedRead = new();
+    private object? _displayedRead;
     private IReadOnlyList<TextPage> _pages = [];
     private int _currentPageIndex = -1;
     private ReadChunk? _lastChunk;
@@ -60,7 +70,9 @@ public sealed partial class ReadingTextBoxWindow : Window
     {
         _readAloud = readAloud;
         InitializeComponent();
-        Title = "Read The Stupid Text — Reading";
+        RootGrid.FlowDirection = UiStrings.CurrentFlowDirection;
+        Title = $"{ProductInfo.Name} — {UiStrings.Get("Window_Reading")}";
+        StatusText.Text = UiStrings.Get("Reading_Nothing");
         AppWindow.Resize(new SizeInt32(640, 520));
         ConfigureWindowChrome();
         ReadingText.TextHighlighters.Add(_highlighter);
@@ -158,23 +170,38 @@ public sealed partial class ReadingTextBoxWindow : Window
         bar.ButtonPressedForegroundColor = Colors.White;
     }
 
-    private void OnReadTextChanged(object? sender, string text) =>
+    private void OnReadTextChanged(object? sender, ReadText read)
+    {
+        object token = new();
+        Volatile.Write(ref _announcedRead, token);
         _dispatcher.TryEnqueue(() =>
         {
-            _fullText = text;
+            _displayedRead = token;
+            _showingTranslation = read.Translated;
+            _fullText = read.Text;
             _lastChunk = null;
             Repaginate();
         });
+    }
 
-    private void OnChunkChanged(object? sender, ReadChunk chunk) =>
-        _dispatcher.TryEnqueue(() => ApplyHighlight(chunk));
+    private void OnChunkChanged(object? sender, ReadChunk chunk)
+    {
+        object token = Volatile.Read(ref _announcedRead);
+        _dispatcher.TryEnqueue(() =>
+        {
+            if (ReferenceEquals(token, _displayedRead))
+            {
+                ApplyHighlight(chunk);
+            }
+        });
+    }
 
     private void OnPlaybackStateChanged(object? sender, PlaybackState state) =>
         _dispatcher.TryEnqueue(() =>
         {
             if (state == PlaybackState.Idle)
             {
-                StatusText.Text = NothingReadingStatus;
+                StatusText.Text = UiStrings.Get("Reading_Nothing");
             }
         });
 
@@ -240,7 +267,7 @@ public sealed partial class ReadingTextBoxWindow : Window
             return; // stale event, or not paginated yet
         }
 
-        StatusText.Text = $"Reading — chunk {chunk.Index + 1} of {chunk.ChunkCount}";
+        StatusText.Text = ChunkStatus(chunk);
 
         int pageIndex = TextBoxPaginator.PageIndexContaining(_pages, chunk.SourceStart);
         if (pageIndex != _currentPageIndex)
@@ -273,8 +300,16 @@ public sealed partial class ReadingTextBoxWindow : Window
         UpdatePageIndicator();
     }
 
+    private string ChunkStatus(ReadChunk chunk)
+    {
+        string status = UiStrings.Format("Reading_Chunk", chunk.Index + 1, chunk.ChunkCount);
+        return _showingTranslation ? $"{status} {UiStrings.Get("Reading_Translated")}" : status;
+    }
+
     private void UpdatePageIndicator() =>
-        PageIndicator.Text = _pages.Count == 0 ? string.Empty : $"Page {_currentPageIndex + 1} of {_pages.Count}";
+        PageIndicator.Text = _pages.Count == 0
+            ? string.Empty
+            : UiStrings.Format("Reading_Page", _currentPageIndex + 1, _pages.Count);
 
     private bool Fits(string candidate) => MeasureFits(candidate, _fontSize);
 

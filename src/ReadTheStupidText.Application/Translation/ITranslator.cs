@@ -6,6 +6,12 @@ namespace ReadTheStupidText.Application.Translation;
 /// </summary>
 public interface ITranslator
 {
+    /// <summary>
+    /// Whether this engine can translate at all in this build. When false the UI hides every translate
+    /// control and reads are never translated.
+    /// </summary>
+    bool IsAvailable => true;
+
     /// <summary>Lower-case primary language codes (for example "fa") the engine can translate from and to.</summary>
     IReadOnlyList<string> SupportedLanguages { get; }
 

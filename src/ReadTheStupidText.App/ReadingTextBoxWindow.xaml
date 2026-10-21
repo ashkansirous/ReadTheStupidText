@@ -18,7 +18,7 @@
         fit: a single sentence longer than the box. +/- zoom (Decision 48) live in
         this toolbar row, not the main control panel.
     -->
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" RowSpacing="0">
+    <Grid x:Name="RootGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" RowSpacing="0">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -47,7 +47,6 @@
                         Foreground="{StaticResource HeaderEyebrow}" />
                     <TextBlock
                         x:Name="StatusText"
-                        Text="Nothing reading yet"
                         FontSize="15"
                         FontWeight="SemiBold"
                         Margin="0,2,0,0"
@@ -67,9 +66,9 @@
             </Grid.ColumnDefinitions>
 
             <Button x:Name="ZoomOutButton" Grid.Column="0" Content="&#xE949;" FontFamily="{ThemeResource SymbolThemeFontFamily}"
-                    Click="OnZoomOutClick" ToolTipService.ToolTip="Smaller text" Padding="8,6" CornerRadius="6" />
+                    Click="OnZoomOutClick" x:Uid="ReadingZoomOut" Padding="8,6" CornerRadius="6" />
             <Button x:Name="ZoomInButton" Grid.Column="1" Content="&#xE948;" FontFamily="{ThemeResource SymbolThemeFontFamily}"
-                    Click="OnZoomInClick" ToolTipService.ToolTip="Larger text" Padding="8,6" CornerRadius="6" />
+                    Click="OnZoomInClick" x:Uid="ReadingZoomIn" Padding="8,6" CornerRadius="6" />
             <TextBlock x:Name="PageIndicator" Grid.Column="3" VerticalAlignment="Center"
                        Style="{ThemeResource CaptionTextBlockStyle}" />
         </Grid>

@@ -39,9 +39,6 @@ public sealed partial class ControlPanelWindow : Window
     private const string PlayGlyph = "";
     private const string PauseGlyph = "";
 
-    private const string ReadyStatus = "Ready";
-    private const string PausedStatus = "Paused";
-
     // Logical (effective-pixel) panel width and a generous fallback height used
     // until the content's real height is measured; both scaled to device pixels.
     private const int LogicalWidth = 376;
@@ -99,10 +96,13 @@ public sealed partial class ControlPanelWindow : Window
         _settings = settings;
 
         InitializeComponent();
+        Title = ProductInfo.Name;
+        RootGrid.FlowDirection = UiStrings.CurrentFlowDirection;
         SystemBackdrop = new MicaBackdrop();
         _waveform = (Storyboard)RootGrid.Resources["WaveformStoryboard"];
         ConfigurePresenter();
         LoadVoices();
+        InitLanguageAndTranslation();
 
         RootGrid.Loaded += OnRootLoaded;
 
@@ -164,6 +164,9 @@ public sealed partial class ControlPanelWindow : Window
 
     // The picker lists the pack's natural voices plus the "Windows voice". Until a pack is ready the
     // Windows voice is the only entry, so the row shows the download status instead (Slice 56).
+    /// <summary>One picker entry: the voice and the (localized) name shown for it.</summary>
+    public sealed record VoiceChoice(VoiceInfo Voice, string Name);
+
     private void LoadVoices()
     {
         bool ready = _readAloud.VoicesReady;
@@ -175,7 +178,7 @@ public sealed partial class ControlPanelWindow : Window
         if (ready)
         {
             _refreshing = true;
-            VoiceCombo.ItemsSource = _readAloud.InstalledVoices;
+            VoiceCombo.ItemsSource = _readAloud.InstalledVoices.Select(v => new VoiceChoice(v, PackSetupText.VoiceName(v))).ToList();
             SelectCurrentVoice();
             _refreshing = false;
         }
@@ -299,6 +302,7 @@ public sealed partial class ControlPanelWindow : Window
         SelectCurrentVoice();
         SetSelectionToggle(_readAloud.AutoReadOnSelection);
         SetCopyToggle(_readAloud.AutoReadOnCopy);
+        RefreshLanguageAndTranslation();
         _refreshing = false;
 
         ApplyPlaybackState(_readAloud.State);
@@ -319,7 +323,7 @@ public sealed partial class ControlPanelWindow : Window
         AutoReadSelectionToggle.IsChecked = on;
         ApplyToggleVisual(AutoReadSelectionToggle, SelectionIcon, on);
         ToolTipService.SetToolTip(AutoReadSelectionToggle,
-            $"Auto-read selection · {OnOff(on)} — Reads aloud as you select");
+            UiStrings.Format("Tip_AutoReadSelection", OnOff(on)));
     }
 
     private void SetCopyToggle(bool on)
@@ -327,14 +331,14 @@ public sealed partial class ControlPanelWindow : Window
         AutoReadCopyToggle.IsChecked = on;
         ApplyToggleVisual(AutoReadCopyToggle, CopyIcon, on);
         ToolTipService.SetToolTip(AutoReadCopyToggle,
-            $"Auto-read on copy · {OnOff(on)} — Reads aloud when you copy");
+            UiStrings.Format("Tip_AutoReadCopy", OnOff(on)));
     }
 
     private void SetStartupToggleTooltip(bool on) =>
         ToolTipService.SetToolTip(StartupToggle,
-            $"Launch at startup · {OnOff(on)} — Start with Windows, in the tray");
+            UiStrings.Format("Tip_Startup", OnOff(on)));
 
-    private static string OnOff(bool on) => on ? "on" : "off";
+    private static string OnOff(bool on) => UiStrings.Get(on ? "Toggle_On" : "Toggle_Off");
 
     // Off = card fill + hairline border + muted (grey) icon; on = accent fill +
     // white icon. Set explicitly (rather than via visual states) so toggling off
@@ -367,7 +371,7 @@ public sealed partial class ControlPanelWindow : Window
     private void SelectCurrentVoice()
     {
         string? currentId = _readAloud.CurrentVoiceId;
-        VoiceCombo.SelectedItem = _readAloud.InstalledVoices.FirstOrDefault(v => v.Id == currentId);
+        VoiceCombo.SelectedItem = (VoiceCombo.ItemsSource as IEnumerable<VoiceChoice>)?.FirstOrDefault(c => c.Voice.Id == currentId);
     }
 
     private async Task RefreshStartupAsync()
@@ -469,12 +473,12 @@ public sealed partial class ControlPanelWindow : Window
 
     private void OnVoiceSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_refreshing || VoiceCombo.SelectedItem is not VoiceInfo voice)
+        if (_refreshing || VoiceCombo.SelectedItem is not VoiceChoice choice)
         {
             return;
         }
 
-        _readAloud.SetVoice(voice.Id);
+        _readAloud.SetVoice(choice.Voice.Id);
     }
 
     private void OnAutoReadSelectionToggled(object sender, RoutedEventArgs e)
@@ -482,7 +486,7 @@ public sealed partial class ControlPanelWindow : Window
         bool on = AutoReadSelectionToggle.IsChecked == true;
         ApplyToggleVisual(AutoReadSelectionToggle, SelectionIcon, on);
         ToolTipService.SetToolTip(AutoReadSelectionToggle,
-            $"Auto-read selection · {OnOff(on)} — Reads aloud as you select");
+            UiStrings.Format("Tip_AutoReadSelection", OnOff(on)));
         if (!_refreshing)
         {
             _readAloud.AutoReadOnSelection = on;
@@ -494,7 +498,7 @@ public sealed partial class ControlPanelWindow : Window
         bool on = AutoReadCopyToggle.IsChecked == true;
         ApplyToggleVisual(AutoReadCopyToggle, CopyIcon, on);
         ToolTipService.SetToolTip(AutoReadCopyToggle,
-            $"Auto-read on copy · {OnOff(on)} — Reads aloud when you copy");
+            UiStrings.Format("Tip_AutoReadCopy", OnOff(on)));
         if (!_refreshing)
         {
             _readAloud.AutoReadOnCopy = on;
@@ -525,7 +529,7 @@ public sealed partial class ControlPanelWindow : Window
 
     private void SetReadingTextBoxToggleTooltip(bool on) =>
         ToolTipService.SetToolTip(ReadingTextBoxToggle,
-            $"Reading text box · {OnOff(on)} — Shows the text being read");
+            UiStrings.Format("Tip_ReadingTextBox", OnOff(on)));
 
     /// <summary>Reflects the text box window's actual shown/hidden state (it can
     /// change from its own ✕, not just this toggle), so the two stay in sync.</summary>
@@ -591,23 +595,23 @@ public sealed partial class ControlPanelWindow : Window
     {
         if (state == PlaybackState.Paused)
         {
-            return PausedStatus;
+            return UiStrings.Get("Status_Paused");
         }
 
         if (state != PlaybackState.Playing)
         {
-            return ReadyStatus;
+            return UiStrings.Get("Status_Ready");
         }
 
         if (_readAloud.CurrentReadTrigger == ActivityTrigger.Clipboard)
         {
-            return "Reading clipboard…";
+            return UiStrings.Get("Status_ReadingClipboard");
         }
 
         string? app = _readAloud.CurrentReadWindow?.App;
         return string.IsNullOrWhiteSpace(app)
-            ? "Reading selection…"
-            : $"Reading selection from {app}…";
+            ? UiStrings.Get("Status_ReadingSelection")
+            : UiStrings.Format("Status_ReadingSelectionFrom", app);
     }
 
     private void SetWaveformPlaying(bool playing)

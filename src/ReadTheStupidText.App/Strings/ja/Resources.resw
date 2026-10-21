@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="ActivityTitle.Text" xml:space="preserve">
+    <value>アクティビティログ</value>
+  </data>
+  <data name="ActivityOpenLogs.Content" xml:space="preserve">
+    <value>ログを開く</value>
+  </data>
+  <data name="ActivityOpenLogs.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>日別ログファイルのフォルダーを開く</value>
+  </data>
+  <data name="ActivityClear.Content" xml:space="preserve">
+    <value>クリア</value>
+  </data>
+  <data name="ColTime.Text" xml:space="preserve">
+    <value>時刻</value>
+  </data>
+  <data name="ColTrigger.Text" xml:space="preserve">
+    <value>トリガー</value>
+  </data>
+  <data name="ColState.Text" xml:space="preserve">
+    <value>状態</value>
+  </data>
+  <data name="ColReason.Text" xml:space="preserve">
+    <value>理由</value>
+  </data>
+  <data name="ColFirstAudio.Text" xml:space="preserve">
+    <value>最初の音声</value>
+  </data>
+  <data name="ColSynth.Text" xml:space="preserve">
+    <value>合成</value>
+  </data>
+  <data name="ColSource.Text" xml:space="preserve">
+    <value>ソース</value>
+  </data>
+  <data name="ColText.Text" xml:space="preserve">
+    <value>テキスト</value>
+  </data>
+  <data name="PanelEyebrow.Text" xml:space="preserve">
+    <value>読み上げ中</value>
+  </data>
+  <data name="CloseButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>閉じる</value>
+  </data>
+  <data name="SkipBackButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>10秒戻る</value>
+  </data>
+  <data name="SkipForwardButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>10秒進む</value>
+  </data>
+  <data name="SpeedPillToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>再生速度 — タップして調整 · 0.5×–2×</value>
+  </data>
+  <data name="VoiceLabel.Text" xml:space="preserve">
+    <value>音声</value>
+  </data>
+  <data name="LanguageLabel.Text" xml:space="preserve">
+    <value>言語</value>
+  </data>
+  <data name="UploadFileButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>ファイルを読み上げ — .txt、.pdf、.docx を開きます</value>
+  </data>
+  <data name="UploadFileLabel.Text" xml:space="preserve">
+    <value>ファイルを読む</value>
+  </data>
+  <data name="ActivityLogButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>アクティビティログ — 履歴、所要時間、ログフォルダーを開く</value>
+  </data>
+  <data name="ActivityLogLabel.Text" xml:space="preserve">
+    <value>アクティビティログ</value>
+  </data>
+  <data name="ControlsLabel.Text" xml:space="preserve">
+    <value>コントロール</value>
+  </data>
+  <data name="HotkeyLabel.Text" xml:space="preserve">
+    <value>代替ショートカット</value>
+  </data>
+  <data name="TranslateSourceLabel.Text" xml:space="preserve">
+    <value>テキストの言語</value>
+  </data>
+  <data name="ReadingZoomOut.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>文字を小さく</value>
+  </data>
+  <data name="ReadingZoomIn.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>文字を大きく</value>
+  </data>
+  <data name="LanguageChooseTitle.Text" xml:space="preserve">
+    <value>言語を選択</value>
+  </data>
+  <data name="LanguageRetry.Content" xml:space="preserve">
+    <value>再試行</value>
+  </data>
+  <data name="LanguageClose.Content" xml:space="preserve">
+    <value>閉じる</value>
+  </data>
+  <data name="Status_Ready" xml:space="preserve">
+    <value>準備完了</value>
+  </data>
+  <data name="Status_Paused" xml:space="preserve">
+    <value>一時停止中</value>
+  </data>
+  <data name="Status_ReadingClipboard" xml:space="preserve">
+    <value>クリップボードを読み上げ中…</value>
+  </data>
+  <data name="Status_ReadingSelection" xml:space="preserve">
+    <value>選択範囲を読み上げ中…</value>
+  </data>
+  <data name="Status_ReadingSelectionFrom" xml:space="preserve">
+    <value>{0} の選択範囲を読み上げ中…</value>
+  </data>
+  <data name="Toggle_On" xml:space="preserve">
+    <value>オン</value>
+  </data>
+  <data name="Toggle_Off" xml:space="preserve">
+    <value>オフ</value>
+  </data>
+  <data name="Tip_AutoReadSelection" xml:space="preserve">
+    <value>選択を自動で読み上げ · {0} — 選択すると読み上げます</value>
+  </data>
+  <data name="Tip_AutoReadCopy" xml:space="preserve">
+    <value>コピー時に自動で読み上げ · {0} — コピーすると読み上げます</value>
+  </data>
+  <data name="Tip_Startup" xml:space="preserve">
+    <value>起動時に開始 · {0} — Windows と一緒にトレイで起動します</value>
+  </data>
+  <data name="Tip_ReadingTextBox" xml:space="preserve">
+    <value>読み上げテキストボックス · {0} — 読み上げ中のテキストを表示します</value>
+  </data>
+  <data name="Tip_Translate" xml:space="preserve">
+    <value>自分の言語に翻訳 · {0} — 読み上げる内容をあなたの言語に翻訳します</value>
+  </data>
+  <data name="Menu_Play" xml:space="preserve">
+    <value>再生</value>
+  </data>
+  <data name="Menu_Pause" xml:space="preserve">
+    <value>一時停止</value>
+  </data>
+  <data name="Menu_Quit" xml:space="preserve">
+    <value>終了</value>
+  </data>
+  <data name="Menu_AutoReadSelection" xml:space="preserve">
+    <value>選択時に自動で読み上げ</value>
+  </data>
+  <data name="Menu_AutoReadCopy" xml:space="preserve">
+    <value>コピー時に自動で読み上げ</value>
+  </data>
+  <data name="Menu_Startup" xml:space="preserve">
+    <value>起動時に開始</value>
+  </data>
+  <data name="Menu_Voice" xml:space="preserve">
+    <value>音声</value>
+  </data>
+  <data name="Menu_ActivityLog" xml:space="preserve">
+    <value>アクティビティログを表示</value>
+  </data>
+  <data name="Menu_ReadFile" xml:space="preserve">
+    <value>ファイルを読む…</value>
+  </data>
+  <data name="Menu_VoiceLanguage" xml:space="preserve">
+    <value>音声の言語…</value>
+  </data>
+  <data name="Menu_Translate" xml:space="preserve">
+    <value>自分の言語に翻訳</value>
+  </data>
+  <data name="Tray_Tooltip" xml:space="preserve">
+    <value>{0} — 読み上げ</value>
+  </data>
+  <data name="Pack_WindowsVoice" xml:space="preserve">
+    <value>Windows の音声</value>
+  </data>
+  <data name="Restart_Failed" xml:space="preserve">
+    <value>言語は次回アプリを起動したときに適用されます。</value>
+  </data>
+  <data name="StatusText.Text" xml:space="preserve">
+    <value>準備完了</value>
+  </data>
+  <data name="Window_Language" xml:space="preserve">
+    <value>言語</value>
+  </data>
+  <data name="Window_ActivityLog" xml:space="preserve">
+    <value>アクティビティログ</value>
+  </data>
+  <data name="Window_Reading" xml:space="preserve">
+    <value>読み上げ</value>
+  </data>
+  <data name="Reading_Nothing" xml:space="preserve">
+    <value>まだ何も読み上げていません</value>
+  </data>
+  <data name="Reading_Chunk" xml:space="preserve">
+    <value>読み上げ中 — {0}/{1} 区間</value>
+  </data>
+  <data name="Reading_Translated" xml:space="preserve">
+    <value>（翻訳済み）</value>
+  </data>
+  <data name="Reading_Page" xml:space="preserve">
+    <value>{0}/{1} ページ</value>
+  </data>
+  <data name="State_Pending" xml:space="preserve">
+    <value>待機中</value>
+  </data>
+  <data name="State_GeneratingAudio" xml:space="preserve">
+    <value>音声を生成中</value>
+  </data>
+  <data name="State_Reading" xml:space="preserve">
+    <value>読み上げ中</value>
+  </data>
+  <data name="State_Read" xml:space="preserve">
+    <value>読み上げ済み</value>
+  </data>
+  <data name="State_Ignored" xml:space="preserve">
+    <value>無視</value>
+  </data>
+  <data name="State_Interrupted" xml:space="preserve">
+    <value>中断</value>
+  </data>
+  <data name="State_Failed" xml:space="preserve">
+    <value>失敗</value>
+  </data>
+  <data name="Reason_NewSelection" xml:space="preserve">
+    <value>新しい選択</value>
+  </data>
+  <data name="Reason_Deselected" xml:space="preserve">
+    <value>選択解除</value>
+  </data>
+  <data name="Reason_Error" xml:space="preserve">
+    <value>エラー</value>
+  </data>
+  <data name="Trigger_AutoRead" xml:space="preserve">
+    <value>自動読み上げ</value>
+  </data>
+  <data name="Trigger_Hotkey" xml:space="preserve">
+    <value>ショートカット</value>
+  </data>
+  <data name="Trigger_Manual" xml:space="preserve">
+    <value>手動</value>
+  </data>
+  <data name="Trigger_Clipboard" xml:space="preserve">
+    <value>クリップボード</value>
+  </data>
+  <data name="Trigger_FileUpload" xml:space="preserve">
+    <value>ファイル</value>
+  </data>
+  <data name="Pack_Intro" xml:space="preserve">
+    <value>お使いの言語の自然な音声を一度だけダウンロードします（約145 MB、Wi-Fi推奨）。届くまでは {0} が読み上げます。テキストがこのデバイスの外に出ることはありません。</value>
+  </data>
+  <data name="Pack_Resolving" xml:space="preserve">
+    <value>お使いの言語の音声を探しています...</value>
+  </data>
+  <data name="Pack_Downloading" xml:space="preserve">
+    <value>自然な音声をダウンロード中... {0}%</value>
+  </data>
+  <data name="Pack_Ready" xml:space="preserve">
+    <value>自然な音声の準備ができました。</value>
+  </data>
+  <data name="Pack_Unavailable" xml:space="preserve">
+    <value>この言語の自然な音声はまだありません。{0} が読み上げます。</value>
+  </data>
+  <data name="Pack_Offline" xml:space="preserve">
+    <value>オフラインです。{0} が読み上げ、オンラインに戻るとダウンロードを開始します。</value>
+  </data>
+  <data name="Pack_HashMismatch" xml:space="preserve">
+    <value>ダウンロードが破損しました。再試行してもう一度取得してください。</value>
+  </data>
+  <data name="Pack_InvalidPack" xml:space="preserve">
+    <value>この音声パックは使用できません。{0} が読み上げます。</value>
+  </data>
+  <data name="Pack_Failed" xml:space="preserve">
+    <value>ダウンロードに失敗しました。再試行してください。</value>
+  </data>
+  <data name="Translate_AutoDetect" xml:space="preserve">
+    <value>自動検出</value>
+  </data>
+  <data name="Translate_Note_Default" xml:space="preserve">
+    <value>このデバイス上の機械翻訳です。品質はさまざまです。</value>
+  </data>
+  <data name="Translate_Note_Translated" xml:space="preserve">
+    <value>{0} から翻訳しました。</value>
+  </data>
+  <data name="Translate_Note_ModelMissing" xml:space="preserve">
+    <value>翻訳パックがまだインストールされていないため、原文を読み上げました。</value>
+  </data>
+  <data name="Translate_Note_TimedOut" xml:space="preserve">
+    <value>翻訳に時間がかかりすぎたため、原文を読み上げました。</value>
+  </data>
+  <data name="Translate_Note_Failed" xml:space="preserve">
+    <value>翻訳に失敗したため、原文を読み上げました。</value>
+  </data>
+  <data name="Translate_Note_SourceUnknown" xml:space="preserve">
+    <value>テキストの言語を判別できなかったため、原文を読み上げました。上で選択してください。</value>
+  </data>
+  <data name="Translate_Note_PairUnsupported" xml:space="preserve">
+    <value>{0} からの翻訳はまだ利用できないため、原文を読み上げました。</value>
+  </data>
+</root>
