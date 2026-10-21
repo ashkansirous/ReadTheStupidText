@@ -283,6 +283,18 @@
   <data name="Translate_Note_ModelMissing" xml:space="preserve">
     <value>Пакет перевода ещё не установлен, поэтому прочитан оригинал.</value>
   </data>
+  <data name="Translate_Note_PackDownloading" xml:space="preserve">
+    <value>Загружается пакет перевода ({0}); на этот раз прочитан оригинал.</value>
+  </data>
+  <data name="Translate_Note_PackProgress" xml:space="preserve">
+    <value>Загрузка пакета перевода: {0}%</value>
+  </data>
+  <data name="Translate_Note_PackReady" xml:space="preserve">
+    <value>Пакет перевода готов.</value>
+  </data>
+  <data name="Translate_Note_PackFailed" xml:space="preserve">
+    <value>Не удалось загрузить пакет перевода. Проверьте подключение, затем выключите и снова включите перевод, чтобы повторить.</value>
+  </data>
   <data name="Translate_Note_TimedOut" xml:space="preserve">
     <value>Перевод занял слишком много времени, поэтому прочитан оригинал.</value>
   </data>

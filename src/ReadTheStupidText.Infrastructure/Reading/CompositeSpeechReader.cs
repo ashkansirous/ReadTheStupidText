@@ -18,6 +18,7 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IDisposab
     private readonly IVoiceModelService _model;
     private ISpeechReader _active;
     private bool _useSystemVoice;
+    private volatile bool _streamUnavailable;
 
     public CompositeSpeechReader(SupertonicSpeechReader neural, SpeechReader fallback, IVoiceModelService model)
     {
@@ -71,6 +72,30 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IDisposab
     }
 
     private bool UseNeural => _model.IsReady && !_useSystemVoice;
+
+    // Slice 75: only the neural engine reads text that arrives in blocks; the Windows voice falls back to
+    // translating the whole text first. Once the neural engine failed to start a streamed read it reports
+    // false, so the service speaks the whole text through the Windows voice instead.
+    public bool SupportsStreaming => UseNeural && !_streamUnavailable;
+
+    public async Task SpeakStreamAsync(string firstText, int? activityId = null)
+    {
+        _active = _neural;
+        try
+        {
+            await _neural.SpeakStreamAsync(firstText, activityId);
+        }
+        catch (NeuralEngineUnavailableException ex)
+        {
+            _streamUnavailable = true;
+            _active = _fallback;
+            throw new StreamingUnavailableException(ex);
+        }
+    }
+
+    public void AppendText(string text, int? activityId = null) => _neural.AppendText(text, activityId);
+
+    public void CompleteStream(int? activityId = null) => _neural.CompleteStream(activityId);
 
     public bool SupportsSegments => false;
 

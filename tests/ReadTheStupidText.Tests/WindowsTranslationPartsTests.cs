@@ -32,6 +32,23 @@ public class WindowsTranslationPartsTests
     }
 
     [Theory]
+    [InlineData("Це довге українське речення про погоду, їжу та ґанок.")]
+    [InlineData("Ово је дуга српска реченица о времену у ћошку.")]
+    [InlineData("یہ موسم کے بارے میں ایک لمبا اردو جملہ ہے جو ٹھیک ہے۔")]
+    public void Detector_is_unsure_for_cyrillic_and_arabic_script_languages_it_cannot_name(string text)
+    {
+        Assert.Null(ScriptLanguageDetector.Detect(text));
+    }
+
+    [Fact]
+    public void Arabic_script_with_farsi_only_letters_is_farsi()
+    {
+        DetectedLanguage? detected = ScriptLanguageDetector.Detect("پدر و مادر گفتند که چای را بیاور");
+
+        Assert.Equal("fa", TranslationFlow.SourceFromDetection(detected));
+    }
+
+    [Theory]
     [InlineData("fr", "en", new[] { "translation-fr-en" })]
     [InlineData("en", "fa", new[] { "translation-en-fa" })]
     [InlineData("fr", "fa", new[] { "translation-fr-en", "translation-en-fa" })]
@@ -50,18 +67,24 @@ public class WindowsTranslationPartsTests
         try
         {
             var translator = new PackTranslator(() => root);
-            Directory.CreateDirectory(Path.Combine(root, "translation-fr-en"));
+            InstallSpec(root, "translation-fr-en");
 
-            Assert.False(await translator.IsModelReadyAsync("fr", "fa"));
+            Assert.False(await translator.IsModelReadyAsync("fr", "ru"));
             Assert.True(await translator.IsModelReadyAsync("fr", "en"));
 
-            Directory.CreateDirectory(Path.Combine(root, "translation-en-fa"));
-            Assert.True(await translator.IsModelReadyAsync("fr", "fa"));
+            InstallSpec(root, "translation-en-ru");
+            Assert.True(await translator.IsModelReadyAsync("fr", "ru"));
         }
         finally
         {
             Directory.Delete(root, true);
         }
+    }
+
+    private static void InstallSpec(string root, string packId)
+    {
+        Directory.CreateDirectory(Path.Combine(root, packId));
+        File.WriteAllText(Path.Combine(root, packId, TranslationPackFiles.Spec), "{}");
     }
 
     [Fact]
@@ -82,11 +105,11 @@ public class WindowsTranslationPartsTests
     }
 
     [Fact]
-    public void Pack_translator_supports_the_nine_app_languages()
+    public void Pack_translator_supports_eight_languages_and_no_persian()
     {
         var translator = new PackTranslator(() => string.Empty);
 
-        Assert.Equal(9, translator.SupportedLanguages.Count);
-        Assert.Contains("fa", translator.SupportedLanguages);
+        Assert.Equal(8, translator.SupportedLanguages.Count);
+        Assert.DoesNotContain("fa", translator.SupportedLanguages);
     }
 }

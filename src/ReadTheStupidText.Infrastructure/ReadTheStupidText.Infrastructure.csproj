@@ -19,6 +19,15 @@
     <PackageReference Include="org.k2fsa.sherpa.onnx" Version="1.13.3" />
   </ItemGroup>
 
+  <!-- Offline translation (Slice 75): Opus-MT (Marian) ONNX models run on onnxruntime. Only the
+       MANAGED binding here: the native onnxruntime.dll is the one sherpa-onnx ships (1.24.4, checked on the built onnxruntime.dll), so the
+       version must match the bundled native one, as in Mobile.Shared. Bump both together.
+       Microsoft.ML.Tokenizers (MIT) reads the pack's SentencePiece model. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.24.4" />
+    <PackageReference Include="Microsoft.ML.Tokenizers" Version="2.0.1" />
+  </ItemGroup>
+
   <!-- Diagnostic logging: Serilog rolling-file sink for the per-day system log.
        The structured input log is hand-written (see ActivityInputLog). -->
   <ItemGroup>
