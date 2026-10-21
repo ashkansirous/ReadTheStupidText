@@ -21,6 +21,7 @@ public sealed class PagesPage : ContentPage, IGrownUpPage
 	{
 		_draft = draft;
 		NavigationPage.SetHasNavigationBar(this, false);
+		SafeAreaEdges = new SafeAreaEdges(SafeAreaRegions.Container);
 		BackgroundColor = DinoTokens.Get(DinoTokens.Sand);
 		Content = new Grid
 		{

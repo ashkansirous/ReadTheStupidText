@@ -20,6 +20,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		}
 
 		_services = services;
+		PageAppearing += (_, page) => SystemBarIcons.ForPage(page);
 		_ = startup.RunAsync();
 	}
 

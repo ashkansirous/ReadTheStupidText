@@ -40,6 +40,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 			(row, gender) => _busy.RunAsync(() => SetGenderAsync(row, gender)),
 			row => _busy.RunAsync(() => PickVoiceAsync(row)));
 		NavigationPage.SetHasNavigationBar(this, false);
+		SafeAreaEdges = new SafeAreaEdges(SafeAreaRegions.Container);
 		BackgroundColor = DinoTokens.Get(DinoTokens.Sand);
 		_sheet.ChooseKeep = labels => ChooseIndexAsync(CastText.KeepName, labels);
 		_sheet.Confirmed += (keep, drop) => _busy.RunAsync(() => ApplyAsync(edit => CastEditor.Merge(edit, keep, drop)));

@@ -6,7 +6,8 @@
     xmlns:local="clr-namespace:DinoReader"
     xmlns:res="clr-namespace:DinoReader.Resources.Strings"
     BackgroundColor="{StaticResource Cream}"
-    NavigationPage.HasNavigationBar="False">
+    NavigationPage.HasNavigationBar="False"
+    SafeAreaEdges="Container">
 
     <!-- Reading screen (mock screens 3, 4, 5 and 12): back, grown-up lock and the text / picture
          switch on the top bar, the story title on its own row, the page card, page dots and the

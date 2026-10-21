@@ -27,6 +27,7 @@ public partial class ReadingPage : ContentPage
 	private Story? _story;
 	private IReadOnlyList<SentenceSpan> _sentences = [];
 	private ReadingTheme _theme = ReadingTheme.For(false);
+	private bool _visible;
 	private bool _stoppedDuringGate;
 
 	public ReadingPage(ReadingSession session, IStoryLibrary library, GrownUpGate gate, IServiceProvider services,
@@ -75,6 +76,7 @@ public partial class ReadingPage : ContentPage
 	protected override void OnAppearing()
 	{
 		base.OnAppearing();
+		_visible = true;
 		Unsubscribe();
 		_session.Attach();
 		_installer.Changed += OnInstallerChanged;
@@ -94,6 +96,7 @@ public partial class ReadingPage : ContentPage
 	protected override void OnDisappearing()
 	{
 		base.OnDisappearing();
+		_visible = false;
 		Dispatcher.Dispatch(() =>
 		{
 			if (!Navigation.NavigationStack.Contains(this))
@@ -127,6 +130,11 @@ public partial class ReadingPage : ContentPage
 	private void ApplyTheme()
 	{
 		BackgroundColor = _theme.Page;
+		if (_visible)
+		{
+			SystemBarIcons.ForPage(this);
+		}
+
 		TitleLabel.TextColor = _theme.Ink;
 		BackIcon.Color = _theme.BackIcon;
 		LockButton.BackgroundColor = _theme.ControlFill;

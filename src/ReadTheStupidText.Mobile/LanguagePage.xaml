@@ -2,12 +2,13 @@
 <ContentPage
     x:Class="ReadTheStupidText.Mobile.LanguagePage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    SafeAreaEdges="None">
     <!-- Texts are set in code (ApplyTexts) so the page re-localizes the moment a language row is picked. -->
 
-    <Grid RowDefinitions="Auto,*,Auto" BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}">
+    <Grid RowDefinitions="Auto,*,Auto" SafeAreaEdges="None" BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}">
 
-        <Grid x:Name="HeaderGrid" Grid.Row="0" Padding="18,22,16,18">
+        <Grid x:Name="HeaderGrid" Grid.Row="0" Padding="18,22,16,18" SafeAreaEdges="Container">
             <Grid.Background>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                     <GradientStop Color="{StaticResource BrandStart}" Offset="0.0" />
@@ -20,7 +21,7 @@
             </VerticalStackLayout>
         </Grid>
 
-        <ScrollView Grid.Row="1">
+        <ScrollView Grid.Row="1" SafeAreaEdges="Container">
             <VerticalStackLayout Padding="14" Spacing="14">
                 <Border Padding="0" StrokeShape="RoundRectangle 14" Stroke="{StaticResource CardBorder}"
                         BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}">
@@ -36,6 +37,8 @@
             </VerticalStackLayout>
         </ScrollView>
 
-        <Button Grid.Row="2" x:Name="ContinueButton" Margin="14" IsEnabled="False" Clicked="OnContinueClicked" />
+        <Grid Grid.Row="2" SafeAreaEdges="Container">
+            <Button x:Name="ContinueButton" Margin="14" IsEnabled="False" Clicked="OnContinueClicked" />
+        </Grid>
     </Grid>
 </ContentPage>

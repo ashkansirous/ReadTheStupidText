@@ -18,6 +18,7 @@ public sealed class PageTextPage : ContentPage, IGrownUpPage
 		_draft = draft;
 		_index = index;
 		NavigationPage.SetHasNavigationBar(this, false);
+		SafeAreaEdges = new SafeAreaEdges(SafeAreaRegions.Container | SafeAreaRegions.SoftInput);
 		BackgroundColor = DinoTokens.Get(DinoTokens.Sand);
 		_editor = new Editor
 		{

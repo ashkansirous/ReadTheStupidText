@@ -5,7 +5,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:res="clr-namespace:ReadTheStupidText.Mobile.Resources.Strings"
     Title="{x:Static res:AppResources.Common_Voice}"
-    Shell.NavBarIsVisible="False">
+    Shell.NavBarIsVisible="False"
+    SafeAreaEdges="None">
 
     <ContentPage.Resources>
         <Style x:Key="VoiceSectionHeading" TargetType="Label">
@@ -21,9 +22,9 @@
         </Style>
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="Auto,*" BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}">
+    <Grid RowDefinitions="Auto,*" SafeAreaEdges="None" BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}">
 
-        <Grid x:Name="HeaderGrid" Grid.Row="0" Padding="14,14,18,16" ColumnDefinitions="Auto,*">
+        <Grid x:Name="HeaderGrid" Grid.Row="0" Padding="14,14,18,16" SafeAreaEdges="Container" ColumnDefinitions="Auto,*">
             <Grid.Background>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                     <GradientStop Color="{StaticResource BrandStart}" Offset="0.0" />
@@ -45,7 +46,7 @@
             </VerticalStackLayout>
         </Grid>
 
-        <ScrollView Grid.Row="1">
+        <ScrollView Grid.Row="1" SafeAreaEdges="Container">
             <VerticalStackLayout Padding="14" Spacing="14">
 
                 <Label Text="{x:Static res:AppResources.VoicePicker_SectionPhone}" Style="{StaticResource VoiceSectionHeading}" />
