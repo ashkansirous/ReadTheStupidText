@@ -54,7 +54,7 @@ public class PdfTextExtractorTests
     // Hand-builds a minimal, valid single/multi-page PDF (one Helvetica Tj per
     // page, a correct byte-offset xref table) — PdfPig is read-only, so there is
     // no library to author a fixture with instead.
-    private static string BuildFixturePdf(params string[] pagesText)
+    internal static string BuildFixturePdf(params string[] pagesText)
     {
         const int FontObj = 3;
         const int FirstPageObj = 4;
