@@ -1,0 +1,146 @@
+using System.Globalization;
+using System.Resources;
+using System.Runtime.CompilerServices;
+
+namespace DinoReader.Resources.Strings;
+
+/// <summary>
+/// Typed access to the UI strings in AppResources*.resx (Slice 66, Decision 74), the same pattern as Read The
+/// Stupid Text (Slice 53). Each property's name is its resource key, so a typo is a compile error. Add a key to
+/// the neutral resx, to every language file, and here. Pages never hold string literals. The strings are
+/// machine-drafted and wait for a native-speaker read before release.
+/// </summary>
+public static class AppResources
+{
+	private static readonly ResourceManager Manager = new(typeof(AppResources));
+
+	/// <summary>The string for <paramref name="key"/> in the current UI culture, falling back to English.</summary>
+	public static string Get([CallerMemberName] string key = "") => For(key, CultureInfo.CurrentUICulture);
+
+	/// <summary>The string for <paramref name="key"/> in <paramref name="culture"/> (a story's language, say), falling back to English.</summary>
+	public static string For(string key, CultureInfo culture) => Manager.GetString(key, culture) ?? key;
+
+	/// <summary>Formats <paramref name="template"/> with <paramref name="args"/> in the current UI culture.</summary>
+	public static string Format(string template, params object[] args) =>
+		string.Format(CultureInfo.CurrentUICulture, template, args);
+
+	public static string App_Name => Get();
+	public static string Add_FileSub => Get();
+	public static string Cast_UnknownGender => Get();
+	public static string Common_Ok => Get();
+	public static string Common_Cancel => Get();
+	public static string PackStatus_Resolving => Get();
+	public static string PackStatus_Downloading => Get();
+	public static string PackStatus_Offline => Get();
+	public static string PackStatus_HashMismatch => Get();
+	public static string PackStatus_InvalidPack => Get();
+	public static string PackStatus_Failed => Get();
+	public static string PackStatus_Unavailable => Get();
+	public static string Common_Back => Get();
+	public static string Common_Save => Get();
+	public static string Common_Done => Get();
+	public static string Common_Delete => Get();
+	public static string Common_Keep => Get();
+	public static string Common_Edit => Get();
+	public static string Gallery_Title => Get();
+	public static string Gallery_ForGrownUps => Get();
+	public static string Gallery_OpensGateHint => Get();
+	public static string Gallery_Cast => Get();
+	public static string Gallery_Characters_One => Get();
+	public static string Gallery_Characters_Other => Get();
+	public static string Gallery_PagesSummary => Get();
+	public static string Gallery_DeleteTitle => Get();
+	public static string Gallery_PagesRead_One => Get();
+	public static string Gallery_PagesRead_Other => Get();
+	public static string Gallery_CharactersFound_One => Get();
+	public static string Gallery_CharactersFound_Other => Get();
+	public static string Delete_Body => Get();
+	public static string Delete_FailedTitle => Get();
+	public static string Delete_FailedBody => Get();
+	public static string Manage_Title => Get();
+	public static string Manage_EditStory => Get();
+	public static string Manage_DeleteStory => Get();
+	public static string Manage_WhoIsSpeaking => Get();
+	public static string Gate_HoldBody => Get();
+	public static string Gate_HoldDescription => Get();
+	public static string Gate_KeepHolding => Get();
+	public static string Gate_Continue => Get();
+	public static string Gate_BackToStory => Get();
+	public static string Gate_WhatIs => Get();
+	public static string Gate_Backspace => Get();
+	public static string Gate_SumQuestion => Get();
+	public static string Story_Add => Get();
+	public static string Story_Title => Get();
+	public static string Story_Language => Get();
+	public static string Story_LanguageDetected => Get();
+	public static string Story_Translate => Get();
+	public static string Add_Scan => Get();
+	public static string Add_ScanSub => Get();
+	public static string Add_Photos => Get();
+	public static string Add_PhotosSub => Get();
+	public static string Add_File => Get();
+	public static string Add_Type => Get();
+	public static string Add_TypeSub => Get();
+	public static string Add_Placeholder => Get();
+	public static string Add_CheckCast => Get();
+	public static string Add_Save => Get();
+	public static string Add_PickerTitle => Get();
+	public static string Add_PermissionTitle => Get();
+	public static string Add_PermissionBody => Get();
+	public static string Add_FileTooLargeTitle => Get();
+	public static string Add_FileTooLargeBody => Get();
+	public static string Add_ReadFailedTitle => Get();
+	public static string Add_ReadFailedBody => Get();
+	public static string Edit_Cover => Get();
+	public static string Edit_CoverFirstPage => Get();
+	public static string Edit_CoverColour => Get();
+	public static string Edit_Pages => Get();
+	public static string Edit_FixText => Get();
+	public static string Edit_FixTextValue => Get();
+	public static string Pages_Add => Get();
+	public static string Pages_MoveUp => Get();
+	public static string Pages_MoveDown => Get();
+	public static string Pages_Remove => Get();
+	public static string Reading_TextMode => Get();
+	public static string Reading_PictureMode => Get();
+	public static string Reading_Play => Get();
+	public static string Reading_Pause => Get();
+	public static string Reading_Previous => Get();
+	public static string Reading_Next => Get();
+	public static string Reading_Loading => Get();
+	public static string Reading_CouldntRead => Get();
+	public static string Reading_ReadFailed => Get();
+	public static string Reading_LayoutFailed => Get();
+	public static string Reading_PageN => Get();
+	public static string Cast_Title => Get();
+	public static string Cast_Narrator => Get();
+	public static string Cast_Main => Get();
+	public static string Cast_Edited => Get();
+	public static string Cast_SharedVoice => Get();
+	public static string Cast_UnknownSpeaker => Get();
+	public static string Cast_MergeButton => Get();
+	public static string Cast_MergeTitle => Get();
+	public static string Cast_MergeBody => Get();
+	public static string Cast_KeepName => Get();
+	public static string Cast_VoiceTitle => Get();
+	public static string Cast_PreviewLine => Get();
+	public static string Cast_SaveFailedTitle => Get();
+	public static string Cast_SaveFailedBody => Get();
+	public static string Cast_PreviewFailedBody => Get();
+	public static string Cast_LoadFailedTitle => Get();
+	public static string Cast_LoadFailedBody => Get();
+	public static string Cast_Boy => Get();
+	public static string Cast_Girl => Get();
+	public static string Cast_Words_One => Get();
+	public static string Cast_Words_Other => Get();
+	public static string Cast_UnknownLines_One => Get();
+	public static string Cast_UnknownLines_Other => Get();
+	public static string Cast_UsesNarrator => Get();
+	public static string Cast_Hear => Get();
+	public static string Cast_NoBoyVoice => Get();
+	public static string Cast_NoGirlVoice => Get();
+	public static string Cast_VoiceChanged_One => Get();
+	public static string Cast_VoiceChanged_Other => Get();
+	public static string Cast_MergeInto => Get();
+	public static string Cast_SharedNote => Get();
+}

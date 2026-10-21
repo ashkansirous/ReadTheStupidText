@@ -16,6 +16,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 {
 	private readonly StoryVoicing _voicing;
 	private readonly ISpeechReader _reader;
+	private readonly SpokenLanguage _spoken;
 	private readonly BusyGuard _busy = new();
 	private readonly VerticalStackLayout _body = new() { Padding = new Thickness(14, 0, 14, 14), Spacing = 10 };
 	private readonly Label _subtitle = new() { FontSize = 12, TextColor = DinoTokens.Get(DinoTokens.Muted) };
@@ -29,10 +30,11 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	private bool _previewing;
 	private bool _previewHeard;
 
-	public CastPage(StoryVoicing voicing, ISpeechReader reader)
+	public CastPage(StoryVoicing voicing, ISpeechReader reader, SpokenLanguage spoken)
 	{
 		_voicing = voicing;
 		_reader = reader;
+		_spoken = spoken;
 		_actions = new CastRowActions(
 			row => _busy.RunAsync(() => PreviewAsync(row)),
 			(row, gender) => _busy.RunAsync(() => SetGenderAsync(row, gender)),
@@ -50,7 +52,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		_story = story;
 		_persist = persist;
 		_subtitle.Text = story.Title;
-		_root.FlowDirection = DinoFonts.IsRightToLeft(story.Language) ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
+		_root.FlowDirection = UiFlow.ForCurrentCulture();
 	}
 
 	protected override async void OnAppearing()
@@ -125,7 +127,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		SemanticProperties.SetHeadingLevel(title, SemanticHeadingLevel.Level1);
 		var header = new Grid
 		{
-			Padding = new Thickness(6, 8, 14, 8),
+			Padding = UiFlow.Mirror(new Thickness(6, 8, 14, 8)),
 			ColumnSpacing = 6,
 			ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star)],
 		};
@@ -161,7 +163,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 
 	private CastSheet Sheet() => _resolved is null || _story is null
 		? new CastSheet([], 0, false, 0)
-		: CastSheet.Build(_resolved, _story.Cast, _voicing.CharacterVoiceCount(_story.NarratorVoiceId));
+		: CastSheet.Build(_resolved, _story.Cast, _voicing.CharacterVoiceCount(_story.Language, _story.NarratorVoiceId));
 
 	private void Render()
 	{
@@ -261,8 +263,8 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 
 		AttributionResult resolved = _resolved!;
 		string narrator = _story!.NarratorVoiceId;
-		await ApplyAsync(edit => CastEditor.SetGender(edit, resolved.Characters, _voicing.Voices, narrator, row.Member.CharacterId, gender));
-		if (!CastEditor.HasVoiceOfGender(_voicing.Voices, narrator, gender))
+		await ApplyAsync(edit => CastEditor.SetGender(edit, resolved.Characters, _voicing.VoicesFor(_story!.Language), narrator, row.Member.CharacterId, gender));
+		if (!CastEditor.HasVoiceOfGender(_voicing.VoicesFor(_story!.Language), narrator, gender))
 		{
 			await DisplayAlertAsync(CastText.Title, CastText.NoVoiceOfGender(gender), CastText.Ok);
 		}
@@ -271,7 +273,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	private async Task PickVoiceAsync(CastRow row)
 	{
 		string narrator = _story!.NarratorVoiceId;
-		VoiceOption? voice = await ChooseVoiceAsync(CastEditor.VoiceChoices(_voicing.Voices, narrator, row.Member.Gender));
+		VoiceOption? voice = await ChooseVoiceAsync(CastEditor.VoiceChoices(_voicing.VoicesFor(_story.Language), narrator, row.Member.Gender));
 		if (voice is not null && voice.Id != row.Member.VoiceId)
 		{
 			await ApplyAsync(edit => CastEditor.SetVoice(edit, row.Member.CharacterId, voice.Id, narrator));
@@ -280,7 +282,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 
 	private async Task ChangeNarratorAsync()
 	{
-		VoiceOption? voice = await ChooseVoiceAsync(_voicing.Voices);
+		VoiceOption? voice = await ChooseVoiceAsync(_voicing.VoicesFor(_story!.Language));
 		if (voice is null || voice.Id == _story!.NarratorVoiceId)
 		{
 			return;
@@ -309,7 +311,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	{
 		try
 		{
-			return await _voicing.CastAsync(story.Text, narratorVoiceId, story.Cast, story.Merges);
+			return await _voicing.CastAsync(story.Language, story.Text, narratorVoiceId, story.Cast, story.Merges);
 		}
 		catch (Exception ex)
 		{
@@ -335,7 +337,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	private async Task PreviewAsync(CastRow row)
 	{
 		StopPreview();
-		string line = CastText.PreviewLine; // English only until Slice 66 adds the story-language lines
+		string line = CastText.PreviewLineFor(_voicing.PreviewLanguage(_story!.Language, _spoken.Current));
 		var segment = new VoicedSegment(line, row.Member.VoiceId, 0, line.Length, 0);
 		try
 		{

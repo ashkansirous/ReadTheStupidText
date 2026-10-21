@@ -57,6 +57,9 @@
         <Color x:Key="MergeBorder">#c9c0f5</Color>
         <Color x:Key="SheetScrim">#802b2540</Color>
 
+        <!-- Language rows (mock screens 9, 8b): the off track of the translate switch. -->
+        <Color x:Key="SwitchOff">#d9d2c4</Color>
+
         <Style TargetType="Label">
             <Setter Property="FontFamily" Value="Fredoka" />
             <Setter Property="TextColor" Value="{StaticResource Ink}" />

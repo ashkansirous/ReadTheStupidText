@@ -30,7 +30,7 @@ internal static class SentenceBoundaries
     internal static bool IsSentenceEnd(string text, int i, LanguageRules rules)
     {
         if (!rules.SentenceTerminators.Contains(text[i])) return false;
-        bool atEdge = i + 1 >= text.Length || char.IsWhiteSpace(text[i + 1]);
+        bool atEdge = rules.Script == ScriptStyle.Unspaced || i + 1 >= text.Length || char.IsWhiteSpace(text[i + 1]);
         return atEdge && !(text[i] == '.' && FollowsTitle(text, i, rules));
     }
 

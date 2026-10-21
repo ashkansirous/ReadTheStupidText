@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="App_Name" xml:space="preserve"><value>Dino Reader</value></data>
+  <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>
+  <data name="Cast_UnknownGender" xml:space="preserve"><value>?</value></data>
+  <data name="Common_Ok" xml:space="preserve"><value>OK</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="PackStatus_Resolving" xml:space="preserve"><value>Checking for natural voices…</value></data>
+  <data name="PackStatus_Downloading" xml:space="preserve"><value>Downloading natural voices… {0}</value></data>
+  <data name="PackStatus_Offline" xml:space="preserve"><value>No connection. Reading with the phone voice. Tap to retry the voice download.</value></data>
+  <data name="PackStatus_HashMismatch" xml:space="preserve"><value>The voice download was corrupted. Reading with the phone voice. Tap to retry.</value></data>
+  <data name="PackStatus_InvalidPack" xml:space="preserve"><value>The natural voices pack is unusable. Reading with the phone voice.</value></data>
+  <data name="PackStatus_Failed" xml:space="preserve"><value>Couldn't download natural voices. Reading with the phone voice. Tap to retry.</value></data>
+  <data name="PackStatus_Unavailable" xml:space="preserve"><value>A natural voice for your language isn't available yet. Reading with the phone voice.</value></data>
+  <data name="Common_Back" xml:space="preserve"><value>Back</value></data>
+  <data name="Common_Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Common_Done" xml:space="preserve"><value>Done</value></data>
+  <data name="Common_Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Common_Keep" xml:space="preserve"><value>Keep</value></data>
+  <data name="Common_Edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="Gallery_Title" xml:space="preserve"><value>My stories</value></data>
+  <data name="Gallery_ForGrownUps" xml:space="preserve"><value>For grown-ups</value></data>
+  <data name="Gallery_OpensGateHint" xml:space="preserve"><value>Opens the grown-up gate</value></data>
+  <data name="Gallery_Cast" xml:space="preserve"><value>Cast · {0}</value></data>
+  <data name="Gallery_Characters_One" xml:space="preserve"><value>{0} character</value></data>
+  <data name="Gallery_Characters_Other" xml:space="preserve"><value>{0} characters</value></data>
+  <data name="Gallery_PagesSummary" xml:space="preserve"><value>{0} · reorder, add, remove</value></data>
+  <data name="Gallery_DeleteTitle" xml:space="preserve"><value>Delete “{0}”?</value></data>
+  <data name="Gallery_PagesRead_One" xml:space="preserve"><value>{0} page read</value></data>
+  <data name="Gallery_PagesRead_Other" xml:space="preserve"><value>{0} pages read</value></data>
+  <data name="Gallery_CharactersFound_One" xml:space="preserve"><value>{0} character found</value></data>
+  <data name="Gallery_CharactersFound_Other" xml:space="preserve"><value>{0} characters found</value></data>
+  <data name="Delete_Body" xml:space="preserve"><value>Its pages, pictures and voices are removed from this phone.</value></data>
+  <data name="Delete_FailedTitle" xml:space="preserve"><value>Couldn't delete that story</value></data>
+  <data name="Delete_FailedBody" xml:space="preserve"><value>Something is still using its files. Try again in a moment.</value></data>
+  <data name="Manage_Title" xml:space="preserve"><value>Manage stories</value></data>
+  <data name="Manage_EditStory" xml:space="preserve"><value>Edit story</value></data>
+  <data name="Manage_DeleteStory" xml:space="preserve"><value>Delete story</value></data>
+  <data name="Manage_WhoIsSpeaking" xml:space="preserve"><value>Who is speaking</value></data>
+  <data name="Gate_HoldBody" xml:space="preserve"><value>Press and hold for 3 seconds.</value></data>
+  <data name="Gate_HoldDescription" xml:space="preserve"><value>Press and hold for 3 seconds</value></data>
+  <data name="Gate_KeepHolding" xml:space="preserve"><value>Keep holding…</value></data>
+  <data name="Gate_Continue" xml:space="preserve"><value>Continue to the question</value></data>
+  <data name="Gate_BackToStory" xml:space="preserve"><value>Back to the story</value></data>
+  <data name="Gate_WhatIs" xml:space="preserve"><value>What is</value></data>
+  <data name="Gate_Backspace" xml:space="preserve"><value>Delete</value></data>
+  <data name="Gate_SumQuestion" xml:space="preserve"><value>What is {0} plus {1}?</value></data>
+  <data name="Story_Add" xml:space="preserve"><value>Add a story</value></data>
+  <data name="Story_Title" xml:space="preserve"><value>Title</value></data>
+  <data name="Story_Language" xml:space="preserve"><value>Story language</value></data>
+  <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · detected</value></data>
+  <data name="Story_Translate" xml:space="preserve"><value>Translate to my language</value></data>
+  <data name="Add_Scan" xml:space="preserve"><value>Scan pages</value></data>
+  <data name="Add_ScanSub" xml:space="preserve"><value>Keeps the page pictures</value></data>
+  <data name="Add_Photos" xml:space="preserve"><value>Photos</value></data>
+  <data name="Add_PhotosSub" xml:space="preserve"><value>Pick page photos</value></data>
+  <data name="Add_File" xml:space="preserve"><value>PDF or file</value></data>
+  <data name="Add_Type" xml:space="preserve"><value>Type or paste</value></data>
+  <data name="Add_TypeSub" xml:space="preserve"><value>Text only</value></data>
+  <data name="Add_Placeholder" xml:space="preserve"><value>Type or paste a story</value></data>
+  <data name="Add_CheckCast" xml:space="preserve"><value>Check the cast</value></data>
+  <data name="Add_Save" xml:space="preserve"><value>Save story</value></data>
+  <data name="Add_PickerTitle" xml:space="preserve"><value>Choose a .txt, .pdf or .docx file</value></data>
+  <data name="Add_PermissionTitle" xml:space="preserve"><value>Permission needed</value></data>
+  <data name="Add_PermissionBody" xml:space="preserve"><value>Grant file access to read a document.</value></data>
+  <data name="Add_FileTooLargeTitle" xml:space="preserve"><value>File too large</value></data>
+  <data name="Add_FileTooLargeBody" xml:space="preserve"><value>That file has {0} pages; the limit is {1}.</value></data>
+  <data name="Add_ReadFailedTitle" xml:space="preserve"><value>Couldn't read that file</value></data>
+  <data name="Add_ReadFailedBody" xml:space="preserve"><value>The file may be corrupted or in an unsupported format.</value></data>
+  <data name="Edit_Cover" xml:space="preserve"><value>Cover</value></data>
+  <data name="Edit_CoverFirstPage" xml:space="preserve"><value>First page</value></data>
+  <data name="Edit_CoverColour" xml:space="preserve"><value>Colour</value></data>
+  <data name="Edit_Pages" xml:space="preserve"><value>Pages</value></data>
+  <data name="Edit_FixText" xml:space="preserve"><value>Fix the text</value></data>
+  <data name="Edit_FixTextValue" xml:space="preserve"><value>Edit OCR text</value></data>
+  <data name="Pages_Add" xml:space="preserve"><value>Add a page</value></data>
+  <data name="Pages_MoveUp" xml:space="preserve"><value>Move page up</value></data>
+  <data name="Pages_MoveDown" xml:space="preserve"><value>Move page down</value></data>
+  <data name="Pages_Remove" xml:space="preserve"><value>Remove page</value></data>
+  <data name="Reading_TextMode" xml:space="preserve"><value>Text mode</value></data>
+  <data name="Reading_PictureMode" xml:space="preserve"><value>Picture mode</value></data>
+  <data name="Reading_Play" xml:space="preserve"><value>Play</value></data>
+  <data name="Reading_Pause" xml:space="preserve"><value>Pause</value></data>
+  <data name="Reading_Previous" xml:space="preserve"><value>Previous sentence</value></data>
+  <data name="Reading_Next" xml:space="preserve"><value>Next sentence</value></data>
+  <data name="Reading_Loading" xml:space="preserve"><value>Loading…</value></data>
+  <data name="Reading_CouldntRead" xml:space="preserve"><value>Couldn't read that text</value></data>
+  <data name="Reading_ReadFailed" xml:space="preserve"><value>Something went wrong while reading.</value></data>
+  <data name="Reading_LayoutFailed" xml:space="preserve"><value>Couldn't lay out this story. Turn the screen or switch the mode to try again.</value></data>
+  <data name="Reading_PageN" xml:space="preserve"><value>Reading page {0}</value></data>
+  <data name="Cast_Title" xml:space="preserve"><value>Who’s speaking</value></data>
+  <data name="Cast_Narrator" xml:space="preserve"><value>Narrator</value></data>
+  <data name="Cast_Main" xml:space="preserve"><value>MAIN</value></data>
+  <data name="Cast_Edited" xml:space="preserve"><value>EDITED</value></data>
+  <data name="Cast_SharedVoice" xml:space="preserve"><value>Shared voice</value></data>
+  <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>Unknown speaker</value></data>
+  <data name="Cast_MergeButton" xml:space="preserve"><value>Merge two characters</value></data>
+  <data name="Cast_MergeTitle" xml:space="preserve"><value>Merge characters</value></data>
+  <data name="Cast_MergeBody" xml:space="preserve"><value>Pick the two names that are the same character. Their lines join up under one name and one voice.</value></data>
+  <data name="Cast_KeepName" xml:space="preserve"><value>Keep the name</value></data>
+  <data name="Cast_VoiceTitle" xml:space="preserve"><value>Voice</value></data>
+  <data name="Cast_PreviewLine" xml:space="preserve"><value>Hello! This is how I sound when I read your story.</value></data>
+  <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>Couldn’t save that change</value></data>
+  <data name="Cast_SaveFailedBody" xml:space="preserve"><value>The cast was not saved. Try again in a moment.</value></data>
+  <data name="Cast_PreviewFailedBody" xml:space="preserve"><value>The voice could not be played right now.</value></data>
+  <data name="Cast_LoadFailedTitle" xml:space="preserve"><value>Couldn’t open the cast</value></data>
+  <data name="Cast_LoadFailedBody" xml:space="preserve"><value>The cast could not be worked out for this story. Try again in a moment.</value></data>
+  <data name="Cast_Boy" xml:space="preserve"><value>Boy</value></data>
+  <data name="Cast_Girl" xml:space="preserve"><value>Girl</value></data>
+  <data name="Cast_Words_One" xml:space="preserve"><value>{0} word</value></data>
+  <data name="Cast_Words_Other" xml:space="preserve"><value>{0} words</value></data>
+  <data name="Cast_UnknownLines_One" xml:space="preserve"><value>{0} line</value></data>
+  <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} lines</value></data>
+  <data name="Cast_UsesNarrator" xml:space="preserve"><value>uses the narrator’s voice</value></data>
+  <data name="Cast_Hear" xml:space="preserve"><value>Hear {0}</value></data>
+  <data name="Cast_NoBoyVoice" xml:space="preserve"><value>This voice pack has no boy voice, so this character keeps the voice they had.</value></data>
+  <data name="Cast_NoGirlVoice" xml:space="preserve"><value>This voice pack has no girl voice, so this character keeps the voice they had.</value></data>
+  <data name="Cast_VoiceChanged_One" xml:space="preserve"><value>{0}’s voice was changed because the narrator now has the voice they were given.</value></data>
+  <data name="Cast_VoiceChanged_Other" xml:space="preserve"><value>{0} had their voices changed because the narrator now has the voice they were given.</value></data>
+  <data name="Cast_MergeInto" xml:space="preserve"><value>Merge into {0}</value></data>
+  <data name="Cast_SharedNote" xml:space="preserve"><value>This voice pack only has {0} natural voices, so some characters share a voice. The narrator’s voice is never given to a character.</value></data>
+</root>

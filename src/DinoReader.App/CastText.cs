@@ -1,66 +1,91 @@
+using System.Collections.Concurrent;
 using DinoReader.Core;
+using DinoReader.Resources.Strings;
 using ReadTheStupidText.Domain.Reading;
 
 namespace DinoReader;
 
-/// <summary>The cast screen's copy (Slice 65 new strings, English until Slice 66 adds the other languages).</summary>
+/// <summary>The cast screen's copy (Slice 65), in the UI language (Slice 66).</summary>
 public static class CastText
 {
-	public const string Title = "Who’s speaking";
-	public const string Narrator = "Narrator";
-	public const string Main = "MAIN";
-	public const string Edited = "EDITED";
-	public const string SharedVoice = "Shared voice";
-	public const string UnknownSpeaker = "Unknown speaker";
-	public const string MergeButton = "Merge two characters";
-	public const string MergeTitle = "Merge characters";
-	public const string MergeBody = "Pick the two names that are the same character. Their lines join up under one name and one voice.";
-	public const string KeepName = "Keep the name";
-	public const string VoiceTitle = "Voice";
-	public const string Cancel = "Cancel";
-	public const string PreviewLine = "Hello! This is how I sound when I read your story.";
-	public const string SaveFailedTitle = "Couldn’t save that change";
-	public const string SaveFailedBody = "The cast was not saved. Try again in a moment.";
-	public const string PreviewFailedBody = "The voice could not be played right now.";
-	public const string Ok = "OK";
-	public const string Back = "Back";
-	public const string LoadFailedTitle = "Couldn’t open the cast";
-	public const string LoadFailedBody = "The cast could not be worked out for this story. Try again in a moment.";
-
-	private const string BoyLabel = "Boy";
-	private const string GirlLabel = "Girl";
-	private const string UnknownGenderLabel = "?";
 	private const string NameAndVoiceSeparator = " · ";
+	private const string NameSeparator = ", ";
+	private const int Singular = 1;
 
-	public static string Words(int count) => count == 1 ? "1 word" : $"{count} words";
+	// Display names of the voices in the packs seen so far (a Piper pack names its own voices).
+	private static readonly ConcurrentDictionary<string, string> PackVoiceNames = new();
+
+	public static string Title => AppResources.Cast_Title;
+	public static string Narrator => AppResources.Cast_Narrator;
+	public static string Main => AppResources.Cast_Main;
+	public static string Edited => AppResources.Cast_Edited;
+	public static string SharedVoice => AppResources.Cast_SharedVoice;
+	public static string UnknownSpeaker => AppResources.Cast_UnknownSpeaker;
+	public static string MergeButton => AppResources.Cast_MergeButton;
+	public static string MergeTitle => AppResources.Cast_MergeTitle;
+	public static string MergeBody => AppResources.Cast_MergeBody;
+	public static string KeepName => AppResources.Cast_KeepName;
+	public static string VoiceTitle => AppResources.Cast_VoiceTitle;
+	public static string Cancel => AppResources.Common_Cancel;
+	public static string SaveFailedTitle => AppResources.Cast_SaveFailedTitle;
+	public static string SaveFailedBody => AppResources.Cast_SaveFailedBody;
+	public static string PreviewFailedBody => AppResources.Cast_PreviewFailedBody;
+	public static string Ok => AppResources.Common_Ok;
+	public static string Back => AppResources.Common_Back;
+	public static string LoadFailedTitle => AppResources.Cast_LoadFailedTitle;
+	public static string LoadFailedBody => AppResources.Cast_LoadFailedBody;
+
+	/// <summary>The sample line a voice speaks, in the language the voice speaks now (the cast screen never switches the spoken language).</summary>
+	public static string PreviewLineFor(string storyLanguage) =>
+		AppResources.For(nameof(AppResources.Cast_PreviewLine), System.Globalization.CultureInfo.GetCultureInfo(UiLanguage.Resolve(storyLanguage)));
+
+	public static string Words(int count) =>
+		AppResources.Format(count == Singular ? AppResources.Cast_Words_One : AppResources.Cast_Words_Other, count);
 
 	public static string UnknownLines(int count) =>
-		(count == 1 ? "1 line" : $"{count} lines") + NameAndVoiceSeparator + "uses the narrator’s voice";
+		AppResources.Format(count == Singular ? AppResources.Cast_UnknownLines_One : AppResources.Cast_UnknownLines_Other, count)
+		+ NameAndVoiceSeparator + AppResources.Cast_UsesNarrator;
 
-	public static string HearName(string name) => "Hear " + name;
+	public static string HearName(string name) => AppResources.Format(AppResources.Cast_Hear, name);
 
 	public static string NoVoiceOfGender(Gender gender) =>
-		$"This voice pack has no {GenderLabel(gender).ToLowerInvariant()} voice, so this character keeps the voice they had.";
+		gender == Gender.Male ? AppResources.Cast_NoBoyVoice : AppResources.Cast_NoGirlVoice;
 
 	public static string VoiceChanged(IReadOnlyList<string> names) =>
-		(names.Count == 1 ? $"{names[0]}’s voice was changed" : $"{string.Join(", ", names)} had their voices changed")
-		+ " because the narrator now has the voice they were given.";
+		names.Count == Singular
+			? AppResources.Format(AppResources.Cast_VoiceChanged_One, names[0])
+			: AppResources.Format(AppResources.Cast_VoiceChanged_Other, string.Join(NameSeparator, names));
 
-	public static string MergeInto(string name) => $"Merge into {name}";
+	public static string MergeInto(string name) => AppResources.Format(AppResources.Cast_MergeInto, name);
 
 	public static string NameAndVoice(string name, string voiceId) => name + NameAndVoiceSeparator + VoiceName(voiceId);
 
-	public static string SharedNote(int voices) =>
-		$"This voice pack only has {voices} natural voices, so some characters share a voice. The narrator’s voice is never given to a character.";
+	public static string SharedNote(int voices) => AppResources.Format(AppResources.Cast_SharedNote, voices);
 
 	public static string GenderLabel(Gender gender) => gender switch
 	{
-		Gender.Male => BoyLabel,
-		Gender.Female => GirlLabel,
-		_ => UnknownGenderLabel,
+		Gender.Male => AppResources.Cast_Boy,
+		Gender.Female => AppResources.Cast_Girl,
+		_ => AppResources.Cast_UnknownGender,
 	};
 
-	/// <summary>The voice's display name, or its id when the pack no longer lists it.</summary>
-	public static string VoiceName(string voiceId) =>
-		SupertonicVoiceTable.Voices.FirstOrDefault(v => v.Id == voiceId)?.DisplayName ?? voiceId;
+	/// <summary>Remembers the display names of a pack's voices so the cast screen can show them.</summary>
+	public static void RememberVoices(IEnumerable<VoiceInfo> voices)
+	{
+		foreach (VoiceInfo voice in voices)
+		{
+			PackVoiceNames[voice.Id] = voice.DisplayName;
+		}
+	}
+
+	/// <summary>The voice's display name, or its id when no pack seen so far lists it.</summary>
+	public static string VoiceName(string voiceId)
+	{
+		if (PackVoiceNames.TryGetValue(voiceId, out string? known))
+		{
+			return known;
+		}
+
+		return SupertonicVoiceTable.Voices.FirstOrDefault(v => v.Id == voiceId)?.DisplayName ?? voiceId;
+	}
 }
