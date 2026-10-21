@@ -81,6 +81,7 @@
 	     flow through a project reference (see AndroidSherpaPackaging.props). Android-only: the
 	     packages referenced below are the translation ones (this app's translation flow). -->
 	<Import Project="..\AndroidSherpaPackaging.props" />
+	<Import Project="..\AndroidRelease.props" />
 
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
 		<!-- The document scanner, ML Kit text recognition and the onnxruntime binding moved to

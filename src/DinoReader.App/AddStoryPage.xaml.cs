@@ -4,6 +4,7 @@ using DinoReader.Resources.Strings;
 using Microsoft.Extensions.DependencyInjection;
 using ReadTheStupidText.Application.Documents;
 using ReadTheStupidText.Application.Images;
+using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Documents;
 using ReadTheStupidText.Mobile;
 using ReadTheStupidText.Domain.Reading;
@@ -224,10 +225,17 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 			StoryImport.DeleteSources(read.Except(withText));
 			ShowImported(withText, null, null, null);
 		}
-		catch (Exception)
+		catch (Exception ex)
 		{
+			LogReadFailure(ex);
 			await ShowReadFailedAsync();
 		}
+	}
+
+	// Exception only, never the picked text: a swallowed failure must still leave a trace in logcat.
+	private void LogReadFailure(Exception error)
+	{
+		(_services.GetService<ISystemLog>() ?? new AndroidSystemLog()).Error("picture import failed", null, error);
 	}
 
 	// A PDF keeps its page pictures; they are rendered when the story is saved, so a pick that is never saved costs nothing.

@@ -26,9 +26,9 @@ Loaded when you edit workflows or scripts. Complements the root `CLAUDE.md`.
 
 > **Merging a change to a core path ships every app.** The core paths in
 > `ship-targets.mjs` include `.github/workflows/release.yml`, `tests.yml`,
-> `.github/scripts/find-release.sh`, `ship-targets.mjs`, `*.slnx`, `GitVersion.yml` and
-> `global.json`, so a PR that edits any of them (even a Dino Reader-only PR adding a
-> project to the solution) builds all platforms, cuts a version and submits to the
+> `.github/scripts/find-release.sh`, `ship-targets.mjs`, `*.slnx`, `GitVersion.yml`,
+> `global.json` and `Directory.Build.props`, so a PR that edits any of them (even a Dino
+> Reader-only PR adding a project to the solution) builds all platforms, cuts a version and submits to the
 > Microsoft Store, Google Play and TestFlight on merge. Expect that, or batch such
 > edits. (Slice 70: docs/plan/slices/70-split-build-pipeline.md)
 
@@ -39,6 +39,15 @@ Loaded when you edit workflows or scripts. Complements the root `CLAUDE.md`.
 > **iOS toolchain pin:** `ios.yml` pins dotnet 10.0.401 + workload set 10.0.401
 > (Microsoft.iOS.Sdk 26.5.10318) + Xcode 26.6, because `macos-26` has no Xcode 27.
 > Bump all three together. (Slice 48: docs/plan/slices/48-ios-target-testflight.md)
+
+> **Android toolchain pin (Slice 72):** `android.yml` and `dinoreader-android.yml` pin dotnet 10.0.402 + workload set
+> 10.0.402 (Android SDK 36.1.118, the first with R8 obfuscation). `src/AndroidRelease.props` (an `AndroidR8ObfuscationMode`
+> setting plus an Error target) fails any Release Android build on an older SDK, so these two files and the props'
+> `36.1.118` check move together; no other workflow builds Android Release. `src/AndroidProguard.cfg` holds the R8 keep rules
+> (MAUI Essentials reaches `ActivityResultContracts` through JNI, and R8 stripped `PickVisualMedia$ImageOnly.INSTANCE`).
+> `AndroidRelease.props` and `AndroidProguard.cfg` are in the android and
+> dinoapp path groups, so editing either ships both Android apps.
+> After editing `AndroidProguard.cfg`, delete `obj/Release` and `bin/Release` before rebuilding: stale generated manifest keep rules otherwise survive.
 
 > **iOS signing (Slice 48, lifted 2026-10-21):** `ios.yml` compiles unsigned on PRs; on main with the six iOS secrets it signs (`.github/scripts/ios-signing.sh`, identity by SHA-1), attaches the `.ipa` to the draft and `testflight-submit` uploads it after `release-publish`. Signing scripts must run on macOS bash 3.2. (Slice 48: docs/plan/slices/48-ios-target-testflight.md)
 

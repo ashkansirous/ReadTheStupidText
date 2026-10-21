@@ -91,6 +91,7 @@
 
 	<!-- ExcludeAssets does not flow through a project reference (see AndroidSherpaPackaging.props). -->
 	<Import Project="..\AndroidSherpaPackaging.props" />
+	<Import Project="..\AndroidRelease.props" />
 
 	<!-- iOS neural voice and OCR native packaging (Slice 67): the sherpa-onnx framework fetch and
 	     onnxruntime, imported like the Android one above. -->

@@ -1,0 +1,10 @@
+<Project>
+
+	<!-- One MAUI version for every MAUI project (RTST Mobile, Dino Reader, Mobile.Shared). It was
+	     previously undefined, so MAUI came from whatever workload the machine happened to have.
+	     Slice 72. Bump here only. -->
+	<PropertyGroup>
+		<MauiVersion>10.0.120</MauiVersion>
+	</PropertyGroup>
+
+</Project>

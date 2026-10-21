@@ -63,6 +63,12 @@
 		     resolves Fragment 1.9.0 (which already contains the ktx classes): D8 fails with
 		     duplicate classes. Pin the matching Ktx build. -->
 		<PackageReference Include="Xamarin.AndroidX.Fragment.Ktx" Version="1.9.0" />
+
+		<!-- Slice 72: lift MAUI's older transitive AndroidX/Material versions to the latest stable for
+		     both Android apps (they reach the apps through this project reference). -->
+		<PackageReference Include="Xamarin.AndroidX.AppCompat" Version="1.8.0" />
+		<PackageReference Include="Xamarin.AndroidX.Fragment" Version="1.9.0" />
+		<PackageReference Include="Xamarin.Google.Android.Material" Version="1.14.0.6" />
 	</ItemGroup>
 
 	<!-- Slice 52/55: PaddleOCR on onnxruntime (Ocr/). Only the MANAGED binding here: on Android
