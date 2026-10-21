@@ -75,7 +75,7 @@ this plan turns it into ordered, shippable vertical slices.
 | 55 | iOS gets the Batch 9 features | planned | — | — | [55-ios-batch9-features.md](docs/plan/slices/55-ios-batch9-features.md) |
 | 56 | Windows: packs, first-run language, head start | planned | — | — | [56-windows-packs-language-headstart.md](docs/plan/slices/56-windows-packs-language-headstart.md) |
 | 57 | Windows: localized UI and translation | planned | — | — | [57-windows-localization-translation.md](docs/plan/slices/57-windows-localization-translation.md) |
-| 58 | Dino Reader skeleton: shared Mobile library, new app, pipeline | planned | — | — | [58-dino-reader-skeleton.md](docs/plan/slices/58-dino-reader-skeleton.md) |
+| 58 | Dino Reader skeleton: shared Mobile library, new app, pipeline | built | #191 | — | [58-dino-reader-skeleton.md](docs/plan/slices/58-dino-reader-skeleton.md) |
 | 59 | Dialogue parser and voice caster (pure) | built | #175 | — | [59-dialogue-parser-voice-caster.md](docs/plan/slices/59-dialogue-parser-voice-caster.md) |
 | 60 | Reading with a voice per character | planned | — | — | [60-per-character-voice-reading.md](docs/plan/slices/60-per-character-voice-reading.md) |
 | 61 | Gallery, stories on device, grown-up gate | planned | — | — | [61-gallery-grownup-gate.md](docs/plan/slices/61-gallery-grownup-gate.md) |
@@ -107,8 +107,10 @@ Built but not verified (details in each slice file):
 
 - Slice 43: the 8 translated Play listings are only worth adding when the app goes to Play production (it is closed testing now); get a native read first. The Microsoft Store keeps its existing Windows-specific listing (decided 2026-10-20). ([slice](docs/plan/slices/43-store-listing-refresh.md))
 - Slice 59: attribution quality on a real children's book text (only unit-test fixtures so far); check with the first Slice 60 read ([slice](docs/plan/slices/59-dialogue-parser-voice-caster.md)).
-- Slice 59: Slice 58 still has to add the Dino Reader *app* build group to the pipeline (`ship-targets.mjs` + a Dino Reader Android workflow called from `release.yml`; `dinoreader.yml` only runs the DinoReader.Core tests) ([slice](docs/plan/slices/59-dialogue-parser-voice-caster.md)).
 - Slice 58: decide whether Dino Reader project additions to `ReadTheStupidText.slnx` / the workflows should keep re-releasing the RTST apps (today `*.slnx` and `release.yml` are core paths in `ship-targets.mjs`); seen when Slice 59's merge shipped an unchanged RTST release ([slice](docs/plan/slices/58-dino-reader-skeleton.md)).
+- Slice 58: Play Console app creation and the first manual internal-track upload for `uk.sirous.dinoreader` ([slice](docs/plan/slices/58-dino-reader-skeleton.md)).
+- Slice 58: the Dino upload key and Play service-account secrets (`DINOREADER_*`) generated and stored ([slice](docs/plan/slices/58-dino-reader-skeleton.md)).
+- Slice 58: a signed Dino release cut by CI ([slice](docs/plan/slices/58-dino-reader-skeleton.md)).
 - Slice 46: the Windows tray panel's progress ring in the running app (auto-read, copy, hotkey; clears on supersede/failure/completion); follow-up: a reader-level generating signal on `ISpeechReader` for Android ([slice](docs/plan/slices/46-play-loading-state.md)).
 - Slice 69: real-R2 Range behaviour of `/download/android/latest` not separately tested ([slice](docs/plan/slices/69-apk-downloads-on-r2.md)).
 - Slice 22: latency win and any further first-chunk biasing still to be measured under the (Package) profile; issue #117 deferred, story #104 open ([slice](docs/plan/slices/22-read-latency-instrumentation-low-risk-tuning.md)).
