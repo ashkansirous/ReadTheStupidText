@@ -5,8 +5,13 @@
   "compatibility_date": "2026-10-01",
 
   // sirous.uk is already a zone on this account, so Cloudflare creates the DNS
-  // record itself. It replaces the GitHub Pages CNAME. See docs/DEPLOYING.md.
-  "routes": [{ "pattern": "readthestupidtext.sirous.uk", "custom_domain": true }],
+  // record itself. The first replaced the GitHub Pages CNAME; the second is the
+  // Dino Reader site (Slice 74), served by the same Worker and chosen by Host.
+  // See docs/DEPLOYING.md.
+  "routes": [
+    { "pattern": "readthestupidtext.sirous.uk", "custom_domain": true },
+    { "pattern": "dinoreader.sirous.uk", "custom_domain": true }
+  ],
 
   // A custom route makes workers_dev default to false; keep the *.workers.dev
   // URL live as the documented fallback and as the pre-cut-over check.
@@ -22,7 +27,11 @@
     "not_found_handling": "none",
     // "/" and "/privacy" have no file of their own, so the Worker maps them. The
     // two .html paths also go through it so every page gets the security headers.
-    "run_worker_first": ["/", "/index.html", "/privacy", "/privacy/", "/privacy.html", "/download", "/download/*"]
+    "run_worker_first": [
+      "/", "/index.html", "/privacy", "/privacy/", "/privacy.html", "/download", "/download/android", "/download/*",
+      // The Dino Reader site on *.workers.dev, under /dino/ (worker/downloads.ts resolveSite).
+      "/dino", "/dino/", "/dino/index.html", "/dino/privacy", "/dino/privacy/", "/dino/privacy.html", "/dino/download", "/dino/download/android", "/dino/download/*"
+    ]
   },
 
   // Slice 69: the Android APKs CI uploads (.github/scripts/publish-downloads.mjs),

@@ -20,7 +20,11 @@
  * Because the manifest is written last, a run that dies halfway leaves a
  * stray APK that nothing links to, and the next run simply redoes it.
  *
+ * Dino Reader (Slice 74) uses the same bucket under a `dinoreader/` key prefix
+ * (`PRODUCT=dinoreader`; see worker/download-keys.mjs).
+ *
  * Env: PLATFORM (android), VERSION, ASSET_PATHS (one path per line: the APK),
+ * PRODUCT (optional: readthestupidtext, the default, or dinoreader),
  * CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID. Without CLOUDFLARE_API_TOKEN it
  * logs that it skipped and exits 0: unconfigured must never look like a broken
  * build. With it set, a failed upload fails the step.
@@ -33,9 +37,9 @@ import { mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 
-import { apkFileName, apkKey, manifestKey } from '../../worker/download-keys.mjs';
+import { Product, apkFileName, apkKey, manifestKey } from '../../worker/download-keys.mjs';
 
-export { apkKey, manifestKey };
+export { Product, apkKey, manifestKey };
 
 export const BUCKET_NAME = 'readthestupidtext-downloads';
 const APK_CONTENT_TYPE = 'application/vnd.android.package-archive';
@@ -49,8 +53,8 @@ const INSTALLER_NAME = {
 };
 
 /** Pure: the manifest body the Worker reads. */
-export function buildManifest({ version, sizeBytes, publishedAt }) {
-    return JSON.stringify({ version, fileName: INSTALLER_NAME[Platform.Android](version), sizeBytes, publishedAt });
+export function buildManifest({ version, sizeBytes, publishedAt, product = Product.ReadTheStupidText }) {
+    return JSON.stringify({ version, fileName: INSTALLER_NAME[Platform.Android](version, product), sizeBytes, publishedAt });
 }
 
 /**
@@ -59,22 +63,23 @@ export function buildManifest({ version, sizeBytes, publishedAt }) {
  * file). Throws on a name that is not this build's or a missing APK: half a
  * build is never published.
  */
-export function assertAssets({ platform, version, paths }) {
+export function assertAssets({ platform, version, paths, product = Product.ReadTheStupidText }) {
     if (!INSTALLER_NAME[platform]) throw new Error(`Unknown PLATFORM "${platform}".`);
+    if (!Object.values(Product).includes(product)) throw new Error(`Unknown PRODUCT "${product}".`);
     if (!VERSION_PATTERN.test(version ?? '')) throw new Error(`VERSION "${version}" is not x.y.z.`);
     for (const path of paths) {
-        if (basename(path) !== INSTALLER_NAME[platform](version)) {
-            throw new Error(`${basename(path)} is not a ${platform} ${version} download (${INSTALLER_NAME[platform](version)}).`);
+        if (basename(path) !== INSTALLER_NAME[platform](version, product)) {
+            throw new Error(`${basename(path)} is not a ${platform} ${version} download (${INSTALLER_NAME[platform](version, product)}).`);
         }
     }
     if (paths.length !== 1) throw new Error(`Expected exactly one ${platform} APK among the assets (ASSET_PATHS), found ${paths.length}.`);
 }
 
-export function planUploads({ platform, version, paths, sizeBytes, publishedAt }) {
-    assertAssets({ platform, version, paths });
+export function planUploads({ platform, version, paths, sizeBytes, publishedAt, product = Product.ReadTheStupidText }) {
+    assertAssets({ platform, version, paths, product });
     return [
-        { path: paths[0], key: apkKey(version), contentType: APK_CONTENT_TYPE },
-        { body: buildManifest({ version, sizeBytes, publishedAt }), key: manifestKey(version), contentType: JSON_CONTENT_TYPE },
+        { path: paths[0], key: apkKey(version, product), contentType: APK_CONTENT_TYPE },
+        { body: buildManifest({ version, sizeBytes, publishedAt, product }), key: manifestKey(version, product), contentType: JSON_CONTENT_TYPE },
     ];
 }
 
@@ -175,7 +180,7 @@ function main() {
         throw new Error('CLOUDFLARE_ACCOUNT_ID is required when CLOUDFLARE_API_TOKEN is set.');
     }
     const paths = assetPathsFromEnv(process.env);
-    const build = { platform: process.env.PLATFORM, version: process.env.VERSION };
+    const build = { platform: process.env.PLATFORM, version: process.env.VERSION, product: process.env.PRODUCT || Product.ReadTheStupidText };
     assertAssets({ ...build, paths });
     const uploads = planUploads({
         ...build,
