@@ -1,6 +1,6 @@
 # Slice 67 — Dino Reader on iOS and Windows
 
-*In progress (wave 2026-10-21), draft PR.*
+*Built 2026-10-21 (PR #221, 9db8100); not yet verified.*
 
 **Batch:** 10
 **Decisions:** 72, 81
@@ -67,7 +67,7 @@ Stupid Text) from the same project and the same version.
 
 *Desktop acceptance:* BLOCKED on 2026-10-21 because the Windows session was locked. Only launch was verified (My stories and the grown-up gate visible).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-21)
 
 Into `src/DinoReader.App/CLAUDE.md`, and one line for the root:
 

@@ -112,6 +112,15 @@
 		<ProjectReference Include="..\DinoReader.Core\DinoReader.Core.csproj" />
 	</ItemGroup>
 
+	<!-- Windows: MAUI's resizetizer adds the fonts to the MSIX payload and publish\ only. Win2D (WindowsTextMeasurer)
+	     loads them from the registered layout (the build output folder), so copy them there too. -->
+	<Target Name="DinoFontsToLayout" AfterTargets="_CollectMauiFontItems" Condition="'$(_ResizetizerIsWindowsAppSdk)' == 'True'">
+		<ItemGroup>
+			<ContentWithTargetPath Update="@(_MauiFontCopied)" CopyToOutputDirectory="PreserveNewest" TargetPath="%(Filename)%(Extension)" DinoFont="true" />
+		</ItemGroup>
+		<Warning Condition="'@(_MauiFontCopied)' != '' And '@(ContentWithTargetPath->HasMetadata('DinoFont'))' == ''" Text="DinoFontsToLayout matched no font item: the fonts will not be in the Windows layout and text measuring falls back to a default font." />
+	</Target>
+
 	<!-- Fail early and clearly instead of restoring a project with no target framework. -->
 	<Target Name="EnsureATargetFramework" BeforeTargets="_CheckForUnsupportedTargetFramework;Restore;CollectPackageReferences" Condition="'$(TargetFrameworks)' == '' And '$(TargetFramework)' == ''">
 		<Error Text="DinoReader.App has no target framework: -p:IncludeAndroid=false removed Android and iOS is only added on macOS or with -p:IncludeIos=true. Pass -p:IncludeIos=true, or drop -p:IncludeAndroid=false." />

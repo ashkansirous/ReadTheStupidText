@@ -14,9 +14,9 @@
     "html_handling": "none",
     "not_found_handling": "none",
     "run_worker_first": [
-      "/", "/index.html", "/privacy", "/privacy/", "/privacy.html", "/download", "/download/android", "/download/*",
+      "/", "/index.html", "/privacy", "/privacy/", "/privacy.html", "/download", "/download/*",
       // The Dino Reader site on *.workers.dev, under /dino/ (worker/downloads.ts resolveSite).
-      "/dino", "/dino/", "/dino/index.html", "/dino/privacy", "/dino/privacy/", "/dino/privacy.html", "/dino/download", "/dino/download/android", "/dino/download/*"
+      "/dino", "/dino/", "/dino/index.html", "/dino/privacy", "/dino/privacy/", "/dino/privacy.html", "/dino/download", "/dino/download/*"
     ]
   },
   "r2_buckets": [{ "binding": "DOWNLOADS", "bucket_name": "readthestupidtext-downloads" }],

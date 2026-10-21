@@ -3,33 +3,10 @@
 import { readFileSync } from "node:fs";
 import { isDeepStrictEqual } from "node:util";
 import { DINO_PATH_PREFIX, Host } from "./download-keys.mjs";
+import { redundantPaths, runFirst, stripJsonc } from "./jsonc-run-first.mjs";
 
 const MAIN = new URL("../wrangler.jsonc", import.meta.url);
 const DEV = new URL("../wrangler.workers-dev.jsonc", import.meta.url);
-
-// Removes // and /* */ comments and trailing commas, leaving string contents alone.
-function stripJsonc(text) {
-  let out = "";
-  let i = 0;
-  while (i < text.length) {
-    const c = text[i];
-    const next = text[i + 1];
-    if (c === '"') {
-      const start = i++;
-      while (i < text.length && text[i] !== '"') i += text[i] === "\\" ? 2 : 1;
-      out += text.slice(start, ++i);
-    } else if (c === "/" && next === "/") {
-      while (i < text.length && text[i] !== "\n") i++;
-    } else if (c === "/" && next === "*") {
-      const end = text.indexOf("*/", i + 2);
-      i = end === -1 ? text.length : end + 2;
-    } else {
-      out += c;
-      i++;
-    }
-  }
-  return out.replace(/,(\s*[}\]])/g, "$1");
-}
 
 function load(url) {
   return JSON.parse(stripJsonc(readFileSync(url, "utf8")));
@@ -44,7 +21,6 @@ delete main.routes;
 // both configs must let the Worker run first for every root page mirrored under
 // the /dino/ prefix (workers.dev): each non-/dino run_worker_first entry needs
 // its /dino twin ("/" gives "/dino" and "/dino/").
-const runFirst = (config) => config.assets?.run_worker_first ?? [];
 const isDinoPath = (path) => path === DINO_PATH_PREFIX || path.startsWith(`${DINO_PATH_PREFIX}/`);
 const dinoTwins = (path) => (path === "/" ? [DINO_PATH_PREFIX, `${DINO_PATH_PREFIX}/`] : [`${DINO_PATH_PREFIX}${path}`]);
 const expectedDinoPaths = runFirst(main).filter((path) => !isDinoPath(path)).flatMap(dinoTwins);
@@ -53,6 +29,14 @@ const hasDinoDomain = routes.some((route) => route.pattern === Host.DinoReader &
 if (!hasDinoDomain || lacksDinoPaths(main).length > 0 || lacksDinoPaths(dev).length > 0) {
   console.error(`Both configs need ${expectedDinoPaths.join(", ")} in assets.run_worker_first, and wrangler.jsonc needs the ${Host.DinoReader} custom domain.`);
   process.exit(1);
+}
+
+for (const [name, config] of [["wrangler.jsonc", main], ["wrangler.workers-dev.jsonc", dev]]) {
+  const redundant = redundantPaths(config);
+  if (redundant.length > 0) {
+    console.error(`${name} has redundant assets.run_worker_first entries (already covered by a glob): ${redundant.join(", ")}`);
+    process.exit(1);
+  }
 }
 
 if (!isDeepStrictEqual(main, dev)) {
