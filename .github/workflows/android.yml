@@ -135,7 +135,7 @@ jobs:
 
       - name: Check the native libraries in the signed .aab
         if: ${{ env.SIGN_RELEASE == 'true' }}
-        run: bash .github/scripts/check-android-natives.sh dist/ReadTheStupidText-${VERSION}.aab
+        run: bash .github/scripts/check-android-natives.sh "dist/ReadTheStupidText-${VERSION}.aab"
 
       # APK is the sideload format (adb install / tap to install) — same signed
       # publish, different package format.
@@ -160,7 +160,7 @@ jobs:
 
       - name: Check the native libraries in the signed .apk
         if: ${{ env.SIGN_RELEASE == 'true' }}
-        run: bash .github/scripts/check-android-natives.sh dist/ReadTheStupidText-${VERSION}.apk
+        run: bash .github/scripts/check-android-natives.sh "dist/ReadTheStupidText-${VERSION}.apk"
 
       - name: Upload .aab + .apk to the draft release
         if: ${{ env.SIGN_RELEASE == 'true' }}
