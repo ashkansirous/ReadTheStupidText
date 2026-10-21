@@ -183,9 +183,15 @@
 		<!-- Slice 55: the permission prompts (camera, photo library) in the nine app languages.
 		     Each language has a folder named like ar.lproj, as iOS expects; Info.plist stays the
 		     English fallback. -->
-		<InfoPlistLanguage Include="ar;en;es;fa;fr;ja;pt;ru;zh-Hans" />
-		<BundleResource Include="Platforms\iOS\Resources\%(InfoPlistLanguage.Identity).lproj\InfoPlist.strings"
-		                LogicalName="%(InfoPlistLanguage.Identity).lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\ar.lproj\InfoPlist.strings" LogicalName="ar.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\en.lproj\InfoPlist.strings" LogicalName="en.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\es.lproj\InfoPlist.strings" LogicalName="es.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\fa.lproj\InfoPlist.strings" LogicalName="fa.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\fr.lproj\InfoPlist.strings" LogicalName="fr.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\ja.lproj\InfoPlist.strings" LogicalName="ja.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\pt.lproj\InfoPlist.strings" LogicalName="pt.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\ru.lproj\InfoPlist.strings" LogicalName="ru.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\zh-Hans.lproj\InfoPlist.strings" LogicalName="zh-Hans.lproj/InfoPlist.strings" />
 	</ItemGroup>
 
 	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
