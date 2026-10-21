@@ -23,7 +23,8 @@ public sealed record Story(
     IReadOnlyList<CastMember> Cast,
     CoverStyle CoverStyle,
     int CoverColourIndex,
-    string NarratorVoiceId)
+    string NarratorVoiceId,
+    ReadingMode? PreferredMode = null)
 {
     public const string PageSeparator = "\n\n";
 
@@ -33,6 +34,13 @@ public sealed record Story(
     /// <summary>The first page's image file when the cover is "First page" and that page has one; else null (a colour cover).</summary>
     public string? CoverImageFile =>
         CoverStyle == CoverStyle.FirstPage ? Pages.FirstOrDefault()?.ImageFile : null;
+
+    /// <summary>Whether any page carries a picture (a scanned or photographed page).</summary>
+    public bool HasPictures => Pages.Any(p => p.ImageFile is not null);
+
+    /// <summary>The mode the reading screen opens in: the child's saved choice, else pictures when
+    /// the story has them, else text.</summary>
+    public ReadingMode Mode => PreferredMode ?? (HasPictures ? ReadingMode.Picture : ReadingMode.Text);
 
     public static string JoinPages(IEnumerable<StoryPage> pages) =>
         string.Join(PageSeparator, pages.Select(p => p.Text));

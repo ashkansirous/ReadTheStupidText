@@ -47,6 +47,7 @@ public static class StoryJson
         CoverStyle = s.CoverStyle,
         CoverColourIndex = s.CoverColourIndex,
         NarratorVoiceId = s.NarratorVoiceId,
+        PreferredMode = s.PreferredMode is { } mode ? JsonSerializer.SerializeToElement(mode.ToString()) : null,
         Pages = s.Pages.Select(p => new PageFile { Text = p.Text, ImageFile = p.ImageFile }).ToList(),
         Cast = s.Cast.Select(c => new CastFile
         {
@@ -66,7 +67,22 @@ public static class StoryJson
             f.Id, f.Title, f.Language, f.Created,
             f.Pages.Select(p => new StoryPage(p.Text, p.ImageFile)).ToList(),
             f.Cast.Select(c => new CastMember(c.CharacterId, c.Name, c.Gender, c.VoiceId)).ToList(),
-            f.CoverStyle, f.CoverColourIndex, f.NarratorVoiceId);
+            f.CoverStyle, f.CoverColourIndex, f.NarratorVoiceId, ParseMode(f.PreferredMode));
+    }
+
+    // A reading mode this app does not know (a newer version, a hand edit, a number) must not make
+    // the whole story unreadable: it reads as "no choice" and the default applies.
+    private static ReadingMode? ParseMode(JsonElement? value)
+    {
+        if (value is not { ValueKind: JsonValueKind.String } element)
+        {
+            return null;
+        }
+
+        bool known = Enum.TryParse(element.GetString(), ignoreCase: true, out ReadingMode mode)
+            && Enum.IsDefined(mode)
+            && !int.TryParse(element.GetString(), out _);
+        return known ? mode : null;
     }
 
     // JSON null overwrites the property defaults, so a hand-edited or corrupt file can still
@@ -93,6 +109,7 @@ public static class StoryJson
         public CoverStyle CoverStyle { get; set; } = CoverStyle.Colour;
         public int CoverColourIndex { get; set; }
         public string NarratorVoiceId { get; set; } = string.Empty;
+        public JsonElement? PreferredMode { get; set; }
         public List<PageFile> Pages { get; set; } = [];
         public List<CastFile> Cast { get; set; } = [];
     }

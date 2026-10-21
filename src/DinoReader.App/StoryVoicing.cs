@@ -22,8 +22,9 @@ public sealed class StoryVoicing
 	private readonly VoiceCaster _caster = new();
 
 	// One immutable snapshot, swapped atomically: attributing a long story is the costly part, and
-	// a second read of the same text (or a narrator change) does not need it again.
-	private sealed record Cache(string Text, AttributionResult Attribution);
+	// a second read of the same text (or a narrator change) does not need it again. The sentences are
+	// only built when a read asks for them (the cast screen never does).
+	private sealed record Cache(string Text, AttributionResult Attribution, Lazy<IReadOnlyList<SentenceSpan>> Sentences);
 
 	private volatile Cache? _cache;
 
@@ -31,51 +32,57 @@ public sealed class StoryVoicing
 	/// <see cref="Voice"/> on a worker thread: segmenting and attributing a long story is CPU work
 	/// that must not block the UI.
 	/// </summary>
-	public Task<IReadOnlyList<VoicedSegment>> VoiceAsync(Story story, string narratorVoiceId) =>
-		Task.Run(() => Voice(story, narratorVoiceId));
+	public Task<IReadOnlyList<VoicedSegment>> VoiceAsync(Story story, string narratorVoiceId, int fromPosition = 0) =>
+		Task.Run(() => Voice(story, narratorVoiceId, fromPosition));
 
 	/// <summary>The cast for <paramref name="text"/>, keeping any voice <paramref name="stored"/> already gives a character.</summary>
 	public Task<IReadOnlyList<CastMember>> CastAsync(string text, string narratorVoiceId, IReadOnlyList<CastMember> stored) =>
 		Task.Run(() => CastFor(text, narratorVoiceId, stored));
 
-	/// <summary>The voiced segments of the story, read by <paramref name="narratorVoiceId"/> and the story's cast.</summary>
-	public IReadOnlyList<VoicedSegment> Voice(Story story, string narratorVoiceId)
+	/// <summary>The voiced segments of the story from <paramref name="fromPosition"/> on (a story index: a tapped
+	/// or skipped-to sentence), read by <paramref name="narratorVoiceId"/> and the story's cast.</summary>
+	public IReadOnlyList<VoicedSegment> Voice(Story story, string narratorVoiceId, int fromPosition = 0)
 	{
 		string text = story.Text;
-		AttributionResult attribution = Attribute(text);
-		VoiceCast cast = Cast(attribution, narratorVoiceId, story.Cast);
-		return attribution.Segments.Select(s => ToVoicedSegment(s, text, cast)).ToList();
+		Cache cache = Analyse(text);
+		VoiceCast cast = Cast(cache.Attribution, narratorVoiceId, story.Cast);
+		IReadOnlyList<Segment> segments = SegmentSlicer.From(cache.Attribution.Segments, text, fromPosition);
+
+		// One piece per sentence, so the reader raises a chunk per sentence and the highlight steps with it.
+		return SegmentSentenceSplitter.Split(segments, text, cache.Sentences.Value)
+			.Select(p => ToVoicedSegment(p, cast)).ToList();
 	}
 
 	public IReadOnlyList<CastMember> CastFor(string text, string narratorVoiceId, IReadOnlyList<CastMember> stored)
 	{
-		AttributionResult attribution = Attribute(text);
+		AttributionResult attribution = Analyse(text).Attribution;
 		return StoryCast.ToMembers(attribution.Characters, Cast(attribution, narratorVoiceId, stored));
 	}
 
 	private VoiceCast Cast(AttributionResult attribution, string narratorVoiceId, IReadOnlyList<CastMember> stored) =>
 		_caster.Cast(attribution.Characters, VoiceOptions, narratorVoiceId, StoryCast.Pinned(stored));
 
-	private AttributionResult Attribute(string text)
+	private Cache Analyse(string text)
 	{
 		Cache? cached = _cache;
 		if (cached is not null && cached.Text == text)
 		{
-			return cached.Attribution;
+			return cached;
 		}
 
 		AttributionResult attribution = _attributor.Attribute(text, _segmenter.Split(text));
-		_cache = new Cache(text, attribution);
-		return attribution;
+		var fresh = new Cache(text, attribution, new Lazy<IReadOnlyList<SentenceSpan>>(() => StorySentences.Build(text, LanguageRules.English)));
+		_cache = fresh;
+		return fresh;
 	}
 
 	// Narration, and a quote nobody could be attributed to, are read by the narrator.
-	private static VoicedSegment ToVoicedSegment(Segment segment, string story, VoiceCast cast)
+	private static VoicedSegment ToVoicedSegment(SplitSegment piece, VoiceCast cast)
 	{
+		Segment segment = piece.Segment;
 		string voiceId = segment.CharacterId is { } id
 			? cast.VoiceFor(id) ?? cast.NarratorVoiceId
 			: cast.NarratorVoiceId;
-		return new VoicedSegment(segment.Text, voiceId, segment.SourceStart, segment.SourceEnd,
-			SegmentTextLocator.TextStart(story, segment));
+		return new VoicedSegment(segment.Text, voiceId, segment.SourceStart, segment.SourceEnd, piece.TextStart);
 	}
 }
