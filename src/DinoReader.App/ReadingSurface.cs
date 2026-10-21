@@ -4,8 +4,13 @@ using Microsoft.Maui.Controls.Shapes;
 
 namespace DinoReader;
 
+/// <summary>The story's pages with their pictures and recognised lines, and how a picture's file name becomes a path
+/// (Slice 64). Picture mode draws the real pages from it; null for a story without pictures.</summary>
+public sealed record ScanSource(IReadOnlyList<StoryPage> Pages, Func<string?, string?> ResolveImage);
+
 /// <summary>What the surface shows: the story text, its sentences and the font its language is set in.</summary>
-public sealed record ReadingContent(string Text, IReadOnlyList<SentenceSpan> Sentences, string Font, bool RightToLeft);
+public sealed record ReadingContent(string Text, IReadOnlyList<SentenceSpan> Sentences, string Font, bool RightToLeft,
+	ScanSource? Scans = null);
 
 /// <summary>
 /// The page card of the reading screen: one page at a time in picture or text mode, the spoken
@@ -266,9 +271,15 @@ public sealed class ReadingSurface : Border
 	private IPageRenderer CreateRenderer(ReadingContent content, ReadingTheme theme)
 	{
 		AndroidTextMeasurer measurer = MeasurerFor(content.Font);
-		return _mode == ReadingMode.Picture
-			? new PicturePages(content.Text, content.Sentences, measurer, content.Font, theme)
-			: new TextPages(content.Text, content.Sentences, measurer, content.Font, theme, content.RightToLeft);
+		if (_mode != ReadingMode.Picture)
+		{
+			return new TextPages(content.Text, content.Sentences, measurer, content.Font, theme, content.RightToLeft);
+		}
+
+		return content.Scans is { } scans
+			? new ScanPages(content.Text, scans.Pages, content.Sentences, scans.ResolveImage, measurer, content.Font, theme,
+				e => OnTapped(this, e), e => OnSwiped(this, e))
+			: new PicturePages(content.Text, content.Sentences, measurer, content.Font, theme);
 	}
 
 	// One measurer per font and size, kept while the surface lives and let go with it.
@@ -327,6 +338,11 @@ public sealed class ReadingSurface : Border
 	// Swipe left turns to the next page in a left-to-right layout; the direction mirrors for right-to-left.
 	private void OnSwiped(object? sender, SwipedEventArgs e)
 	{
+		if (_renderer?.IsZoomed == true)
+		{
+			return;
+		}
+
 		bool toNext = (e.Direction == SwipeDirection.Left) != (FlowDirection == FlowDirection.RightToLeft);
 		int target = Math.Clamp(_page + (toNext ? 1 : -1), 0, Math.Max(0, PageCount - 1));
 		if (_renderer is null || target == _page)

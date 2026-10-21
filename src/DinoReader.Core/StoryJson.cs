@@ -15,6 +15,9 @@ public static class StoryJson
 {
     public const int CurrentVersion = 1;
 
+    // How far a stored line box may overshoot the page edge and still be pulled back onto it (rounding only).
+    private const double BoxRoundingTolerance = 0.001;
+
     private static readonly JsonSerializerOptions Options = new()
     {
         WriteIndented = true,
@@ -48,7 +51,7 @@ public static class StoryJson
         CoverColourIndex = s.CoverColourIndex,
         NarratorVoiceId = s.NarratorVoiceId,
         PreferredMode = s.PreferredMode is { } mode ? JsonSerializer.SerializeToElement(mode.ToString()) : null,
-        Pages = s.Pages.Select(p => new PageFile { Text = p.Text, ImageFile = p.ImageFile }).ToList(),
+        Pages = s.Pages.Select(p => new PageFile { Text = p.Text, ImageFile = p.ImageFile, Lines = ToLineFiles(p.Lines) }).ToList(),
         Cast = s.Cast.Select(c => new CastFile
         {
             CharacterId = c.CharacterId, Name = c.Name, Gender = c.Gender, VoiceId = c.VoiceId, Edited = c.Edited,
@@ -67,9 +70,49 @@ public static class StoryJson
         RequireFields(f);
         return new Story(
             f.Id, f.Title, f.Language, f.Created,
-            f.Pages.Select(p => new StoryPage(p.Text, p.ImageFile)).ToList(),
+            f.Pages.Select(p => new StoryPage(p.Text, p.ImageFile, FromLineFiles(p.Lines))).ToList(),
             f.Cast.Select(c => new CastMember(c.CharacterId, c.Name, c.Gender, c.VoiceId, c.Edited)).ToList(),
             f.CoverStyle, f.CoverColourIndex, f.NarratorVoiceId, ParseMode(f.PreferredMode), CleanMerges(f.Merges), f.Translate);
+    }
+
+    private static List<LineFile>? ToLineFiles(IReadOnlyList<PageLine>? lines) =>
+        lines is null || lines.Count == 0
+            ? null
+            : lines.Select(l => new LineFile
+            {
+                Text = l.Text, X = l.Box.X, Y = l.Box.Y, Width = l.Box.Width, Height = l.Box.Height,
+            }).ToList();
+
+    // A hand-edited or damaged line (no text, a box truly off the page) is dropped, not the whole story and not
+    // the page's picture; a box that overshoots the page edge by rounding only is clamped onto it.
+    private static List<PageLine>? FromLineFiles(List<LineFile>? lines)
+    {
+        var kept = new List<PageLine>();
+        foreach (LineFile? l in lines ?? [])
+        {
+            if (l is { Text: not null } && ClampToPage(l) is { } box)
+            {
+                kept.Add(new PageLine(l.Text, box));
+            }
+        }
+
+        return kept.Count > 0 ? kept : null;
+    }
+
+    private static NormalizedRect? ClampToPage(LineFile l)
+    {
+        bool sane = l.Width > 0 && l.Height > 0 && l.X >= -BoxRoundingTolerance && l.Y >= -BoxRoundingTolerance
+            && l.X + l.Width <= 1 + BoxRoundingTolerance && l.Y + l.Height <= 1 + BoxRoundingTolerance;
+        if (!sane)
+        {
+            return null;
+        }
+
+        double x = Math.Max(0, l.X);
+        double y = Math.Max(0, l.Y);
+        double width = Math.Min(l.Width, 1 - x);
+        double height = Math.Min(l.Height, 1 - y);
+        return width > 0 && height > 0 ? new NormalizedRect(x, y, width, height) : null;
     }
 
     // A reading mode this app does not know (a newer version, a hand edit, a number) must not make
@@ -126,6 +169,7 @@ public static class StoryJson
     {
         public string Text { get; set; } = string.Empty;
         public string? ImageFile { get; set; }
+        public List<LineFile>? Lines { get; set; }
     }
 
     private sealed class CastFile
@@ -135,5 +179,14 @@ public static class StoryJson
         public Gender Gender { get; set; }
         public string VoiceId { get; set; } = string.Empty;
         public bool Edited { get; set; }
+    }
+
+    private sealed class LineFile
+    {
+        public string Text { get; set; } = string.Empty;
+        public double X { get; set; }
+        public double Y { get; set; }
+        public double Width { get; set; }
+        public double Height { get; set; }
     }
 }

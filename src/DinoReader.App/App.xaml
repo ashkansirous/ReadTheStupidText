@@ -23,6 +23,7 @@
         <Color x:Key="SentenceFill">#FFE27A</Color>
         <Color x:Key="BoxFill">#6BFFD600</Color>
         <Color x:Key="BoxStroke">#F5B800</Color>
+        <Color x:Key="ScanCard">#f7f1e3</Color>
         <Color x:Key="DotIdle">#d9d2c4</Color>
         <Color x:Key="BrandEdge">#3f3bc4</Color>
         <Color x:Key="CoralEdge">#E2583A</Color>

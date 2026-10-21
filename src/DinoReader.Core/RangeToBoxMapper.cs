@@ -16,10 +16,18 @@ public static class RangeToBoxMapper
     /// cursor) stays in place, otherwise a bounded forward search resyncs past an extra heading or a misread line.
     /// </summary>
     public static IReadOnlyList<LineRef> Map(
-        string story, IReadOnlyList<IReadOnlyList<string>> pageLines, int start, int end)
+        string story, IReadOnlyList<IReadOnlyList<string>> pageLines, int start, int end) =>
+        Locate(story, pageLines).Where(l => l.Start < end && l.End > start).Select(l => l.Ref).ToList();
+
+    /// <summary>
+    /// Where every line that is in the story sits in it, in reading order, matched with the same rules
+    /// as <see cref="Map"/>; a line that is not in the story is left out. Slice 64 locates once and then
+    /// answers every sentence from the result.
+    /// </summary>
+    public static IReadOnlyList<LocatedLine> Locate(string story, IReadOnlyList<IReadOnlyList<string>> pageLines)
     {
         List<(LineRef Ref, string Text)> lines = Flatten(pageLines);
-        var hits = new List<LineRef>();
+        var located = new List<LocatedLine>();
         int cursor = 0;
         for (int i = 0; i < lines.Count; i++)
         {
@@ -30,13 +38,10 @@ public static class RangeToBoxMapper
             }
 
             cursor = matchEnd;
-            if (at < end && cursor > start)
-            {
-                hits.Add(lines[i].Ref);
-            }
+            located.Add(new LocatedLine(lines[i].Ref, at, matchEnd));
         }
 
-        return hits;
+        return located;
     }
 
     private static List<(LineRef Ref, string Text)> Flatten(IReadOnlyList<IReadOnlyList<string>> pageLines)
@@ -99,7 +104,8 @@ public static class RangeToBoxMapper
     }
 
     // Where the line sits in the story when it starts at the cursor (past whitespace), else (-1, -1).
-    // A line ending in a hyphen also matches a story that joined the word without the hyphen.
+    // Runs of whitespace (spaces, line breaks) match each other, so a line matches a story that joined its
+    // words differently. A line ending in a hyphen also matches a story that joined the word without the hyphen.
     private static (int At, int End) Match(string story, int cursor, string text)
     {
         if (text.Length == 0)
@@ -108,21 +114,54 @@ public static class RangeToBoxMapper
         }
 
         int at = SkipWhitespace(story, cursor);
-        if (string.CompareOrdinal(story, at, text, 0, text.Length) == 0)
+        int end = MatchEnd(story, at, text, text.Length);
+        if (end >= 0)
         {
-            return (at, at + text.Length);
+            return (at, end);
         }
 
         int unhyphenated = text.Length - 1;
-        return unhyphenated > 0 && IsHyphen(text[^1]) && string.CompareOrdinal(story, at, text, 0, unhyphenated) == 0
-            ? (at, at + unhyphenated)
-            : (-1, -1);
+        end = unhyphenated > 0 && IsHyphen(text[^1]) ? MatchEnd(story, at, text, unhyphenated) : -1;
+        return end >= 0 ? (at, end) : (-1, -1);
     }
 
-    private static int SkipWhitespace(string story, int from)
+    // The story index just past the first <length> chars of the text when they match the story from <at>, else -1.
+    private static int MatchEnd(string story, int at, string text, int length)
+    {
+        int s = at;
+        int t = 0;
+        while (t < length)
+        {
+            if (char.IsWhiteSpace(text[t]))
+            {
+                if (s >= story.Length || !char.IsWhiteSpace(story[s]))
+                {
+                    return -1;
+                }
+
+                t = SkipWhitespace(text, t, length);
+                s = SkipWhitespace(story, s, story.Length);
+                continue;
+            }
+
+            if (s >= story.Length || story[s] != text[t])
+            {
+                return -1;
+            }
+
+            s++;
+            t++;
+        }
+
+        return s;
+    }
+
+    private static int SkipWhitespace(string story, int from) => SkipWhitespace(story, from, story.Length);
+
+    private static int SkipWhitespace(string story, int from, int limit)
     {
         int at = from;
-        while (at < story.Length && char.IsWhiteSpace(story[at]))
+        while (at < limit && char.IsWhiteSpace(story[at]))
         {
             at++;
         }
