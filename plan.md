@@ -74,14 +74,14 @@ this plan turns it into ordered, shippable vertical slices.
 | 54 | Android: on-device translation | built | #199 | — | [54-on-device-translation.md](docs/plan/slices/54-on-device-translation.md) |
 | 55 | iOS gets the Batch 9 features | built | #207 | — | [55-ios-batch9-features.md](docs/plan/slices/55-ios-batch9-features.md) |
 | 56 | Windows: packs, first-run language, head start | built | #204 | — | [56-windows-packs-language-headstart.md](docs/plan/slices/56-windows-packs-language-headstart.md) |
-| 57 | Windows: localized UI and translation | planned | — | — | [57-windows-localization-translation.md](docs/plan/slices/57-windows-localization-translation.md) |
+| 57 | Windows: localized UI and translation | built | #217 | — | [57-windows-localization-translation.md](docs/plan/slices/57-windows-localization-translation.md) |
 | 58 | Dino Reader skeleton: shared Mobile library, new app, pipeline | built | #191 | — | [58-dino-reader-skeleton.md](docs/plan/slices/58-dino-reader-skeleton.md) |
 | 59 | Dialogue parser and voice caster (pure) | built | #175 | — | [59-dialogue-parser-voice-caster.md](docs/plan/slices/59-dialogue-parser-voice-caster.md) |
 | 60 | Reading with a voice per character | built | #193 | — | [60-per-character-voice-reading.md](docs/plan/slices/60-per-character-voice-reading.md) |
 | 61 | Gallery, stories on device, grown-up gate | built | #198 | — | [61-gallery-grownup-gate.md](docs/plan/slices/61-gallery-grownup-gate.md) |
 | 62 | Reading screen: text and picture modes | built | #200 | — | [62-reading-screen-modes.md](docs/plan/slices/62-reading-screen-modes.md) |
 | 63 | Positioned text extraction, kept page images | built | #205 | — | [63-positioned-text-extraction.md](docs/plan/slices/63-positioned-text-extraction.md) |
-| 64 | Picture mode on real pages | planned | — | — | [64-picture-mode-real-pages.md](docs/plan/slices/64-picture-mode-real-pages.md) |
+| 64 | Picture mode on real pages | built | #218 | — | [64-picture-mode-real-pages.md](docs/plan/slices/64-picture-mode-real-pages.md) |
 | 65 | Cast screen | built | #202 | — | [65-cast-screen.md](docs/plan/slices/65-cast-screen.md) |
 | 66 | Dino Reader languages and translation | built | #208 | — | [66-dino-reader-languages-translation.md](docs/plan/slices/66-dino-reader-languages-translation.md) |
 | 67 | Dino Reader on iOS and Windows | planned | — | — | [67-dino-reader-ios-windows.md](docs/plan/slices/67-dino-reader-ios-windows.md) |
@@ -91,7 +91,8 @@ this plan turns it into ordered, shippable vertical slices.
 | 71 | Repo hygiene and the Drive mirror | built | #184 | — | [71-repo-hygiene.md](docs/plan/slices/71-repo-hygiene.md) |
 | 72 | Android dependencies to latest, R8 shrinking and obfuscation | planned | — | — | [72-android-deps-r8-obfuscation.md](docs/plan/slices/72-android-deps-r8-obfuscation.md) |
 | 73 | Edge-to-edge on Android 15+: safe areas on every screen | planned | — | — | [73-edge-to-edge-safe-areas.md](docs/plan/slices/73-edge-to-edge-safe-areas.md) |
-| 74 | Dino Reader site: landing, privacy and downloads on dinoreader.sirous.uk | planned | — | — | [74-dino-reader-site.md](docs/plan/slices/74-dino-reader-site.md) |
+| 74 | Dino Reader site: landing, privacy and downloads on dinoreader.sirous.uk | built | #219 | — | [74-dino-reader-site.md](docs/plan/slices/74-dino-reader-site.md) |
+| 75 | Windows translation engine | planned | — | — | [75-windows-translation-engine.md](docs/plan/slices/75-windows-translation-engine.md) |
 
 Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
 
@@ -134,6 +135,9 @@ Built but not verified (details in each slice file):
 - Slice 56: system voice then neural handover on a real first run (download too fast to see; no log line names the engine); offline first launch; kill and resume mid-download; MSIX size and no `VoiceModel\`; the `internetClient` Store certification dry run; first-audio comparison for prepared text; follow-ups: pack/engine log lines, deduplicate with `Mobile.Shared` ([slice](docs/plan/slices/56-windows-packs-language-headstart.md)).
 - Slice 63: draw boxes over a scanned page, an EXIF-rotated photo and PDFs with and without a text layer (ML Kit and PaddleOCR); RTL line order on a real Arabic/Farsi page; the RTST scan flow unchanged on a Google-signed-in device; follow-up: wire Dino's Scan, Photos and PDF import to the shared services ([slice](docs/plan/slices/63-positioned-text-extraction.md)).
 - Slice 66: Farsi/Arabic UI mirroring and Russian/Chinese stories on a device; a native read of the 116 UI strings; follow-up: register the ML Kit translator for Dino ([slice](docs/plan/slices/66-dino-reader-languages-translation.md)).
+- Slice 57: native-speaker review of the 9 machine-translated resw files; the Store listing showing the 9 languages after the next submission ([slice](docs/plan/slices/57-windows-localization-translation.md)).
+- Slice 64: a real camera scan of a picture book on a device; an Arabic or Farsi scan highlighting the right lines; the denied-permission alert on Photos; whether the 1.1 zoom snap threshold feels right on a phone ([slice](docs/plan/slices/64-picture-mode-real-pages.md)).
+- Slice 74: after the deploy, `https://dinoreader.sirous.uk` and `/privacy` load with the security headers; `/download/android` serves the Dino APK once a Dino release publishes; paste the privacy URL into Play Console's Dino Reader field; Play Families may want an email contact instead of the GitHub issues link ([slice](docs/plan/slices/74-dino-reader-site.md)).
 
 ## Out of Scope
 

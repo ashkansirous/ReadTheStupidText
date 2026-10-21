@@ -1,6 +1,6 @@
 # Slice 57 — Windows: localized UI and on-device translation
 
-*In progress (wave 2026-10-21), draft PR.*
+*Built 2026-10-21 (PR #217, merge 03a3cd1); not yet verified, see below.*
 
 **Batch:** 9
 **Decisions:** 67, 68
@@ -109,13 +109,13 @@ whatever gets read, including auto-read on selection and copy and the hotkey.
 - **Desktop acceptance, 2026-10-21 (dev package), all 7 passed:** English, French and Farsi switch with a restart; Farsi is RTL while the transport row stays LTR; auto-read on copy works; no WRN/ERR in the system log. Observed: the native tray menu does not mirror in RTL (an H.NotifyIcon/Win32 limitation; the text is localized). `TimerText` moves to the left in RTL.
 - **Left undone:** everything marked "-> Slice 75" (research, packs, inference engine, translate-first-sentences-first; `PackTranslator.TranslateAsync` always raises `TranslationModelUnavailableException`); a dedicated `ActivityReason` for the translation step (Domain is outside Touches; it is a system-log line `translated xx -> yy`); `STORE.md`, `PRIVACY.md` (no model ships yet) and root `CLAUDE.md`.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-21)
 
 Target: `src/ReadTheStupidText.App/CLAUDE.md`.
 
 - Every user-visible string lives in `Strings/<tag>/Resources.resw` for all 9 languages (`x:Uid` in XAML, `UiStrings.Get/Format` in code); the resw coverage tests fail on a missing key. Never hard-code UI copy. A language change restarts the app (`x:Uid` applies once per window). RTL only for fa/ar via `UiLanguageTag`; keep the transport row LTR. Translation UI stays hidden while `ITranslator.IsAvailable` is false (Slice 75 adds the engine). (Slice 57: docs/plan/slices/57-windows-localization-translation.md)
 
-#### For README.md
+#### For README.md (lifted 2026-10-21)
 
 - The Windows app's UI is available in 9 languages.
 
