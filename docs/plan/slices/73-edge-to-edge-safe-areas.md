@@ -1,6 +1,6 @@
 # Slice 73 — Edge-to-edge on Android 15+: safe areas on every screen
 
-*Planned.*
+*In progress (wave 2026-10-21), draft PR.*
 
 **Batch:** 12 (Play Console health)
 **Depends on:** Slice 72 (the MAUI update changes safe-area behaviour, so check screens on the new version)
