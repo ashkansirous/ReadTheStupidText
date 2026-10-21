@@ -54,6 +54,14 @@ public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
         return _active.SpeakAsync(text, activityId);
     }
 
+    public bool SupportsSegments => false;
+
+    // Neither Windows engine reads per-voice segments (Slice 60: Dino Reader is Android
+    // only). Fault without touching _active, so a read already in progress keeps its
+    // routing for Pause/Stop.
+    public Task SpeakSegmentsAsync(IReadOnlyList<VoicedSegment> segments, int? activityId = null) =>
+        Task.FromException(new NotSupportedException("The Windows readers do not read segments in separate voices."));
+
     // Only the neural engine has a heavy model to warm; the WinRT fallback is instant.
     public Task WarmUpAsync() => _neural.WarmUpAsync();
 

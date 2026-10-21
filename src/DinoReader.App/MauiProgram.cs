@@ -21,6 +21,7 @@ public static class MauiProgram
 
 		builder.AddMobileSharedServices();
 		builder.Services.AddSingleton<SpeechStartup>();
+		builder.Services.AddSingleton<StoryVoicing>();
 		builder.Services.AddTransient<MainPage>();
 
 #if DEBUG

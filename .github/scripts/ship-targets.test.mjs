@@ -41,10 +41,10 @@ const CASES = [
     ['Infrastructure only', ['src/ReadTheStupidText.Infrastructure/X.cs'], { windows: true }],
     ['store-submit workflow', ['.github/workflows/store-submit.yml'], { windows: true }],
     ['docs only', ['CLAUDE.md', 'docs/plan/decisions.md', 'plan.md'], {}],
-    ['DinoReader only', ['src/DinoReader.Core/Parser.cs'], { dinoreader: true }],
+    ['DinoReader only', ['src/DinoReader.Core/Parser.cs'], { dinoreader: true, dinoapp: true }],
     ['DinoReader tests only', ['tests/DinoReader.Tests/ParserTests.cs'], { dinoreader: true }],
     ['Android + iOS platform files', [`${M}/Platforms/Android/a.cs`, `${M}/Platforms/iOS/b.cs`], { android: true, ios: true }],
-    ['Windows + DinoReader', ['src/ReadTheStupidText.App/a.cs', 'src/DinoReader.Core/b.cs'], { windows: true, dinoreader: true }],
+    ['Windows + DinoReader', ['src/ReadTheStupidText.App/a.cs', 'src/DinoReader.Core/b.cs'], { windows: true, dinoreader: true, dinoapp: true }],
     // Slice 58: the shared MAUI library and the Dino Reader app.
     ['Dino Reader app only', ['src/DinoReader.App/MainPage.xaml.cs'], { dinoapp: true }],
     ['Dino Reader app csproj', ['src/DinoReader.App/DinoReader.App.csproj'], { dinoapp: true }],
@@ -82,9 +82,9 @@ test('an iOS-only change reports ios and nothing else (release.yml declines to s
     assert.deepEqual(targetsOf([`${M}/Platforms/iOS/Info.plist`]), { ...NONE, ios: true });
 });
 
-test('DinoReader.Core alone builds no app platform and not the Dino Reader app', () => {
+test('DinoReader.Core builds the Dino Reader app (Slice 60) but no RTST platform', () => {
     const t = targetsOf(['src/DinoReader.Core/a.cs']);
-    assert.deepEqual([t.windows, t.android, t.ios, t.dinoapp], [false, false, false, false]);
+    assert.deepEqual([t.windows, t.android, t.ios, t.dinoapp], [false, false, false, true]);
 });
 
 test('a Dino Reader app change builds nothing else (Windows, RTST Android, iOS)', () => {

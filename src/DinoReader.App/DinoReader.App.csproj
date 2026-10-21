@@ -48,6 +48,7 @@
 		<ProjectReference Include="..\ReadTheStupidText.Domain\ReadTheStupidText.Domain.csproj" />
 		<ProjectReference Include="..\ReadTheStupidText.Application\ReadTheStupidText.Application.csproj" />
 		<ProjectReference Include="..\ReadTheStupidText.Mobile.Shared\ReadTheStupidText.Mobile.Shared.csproj" />
+		<ProjectReference Include="..\DinoReader.Core\DinoReader.Core.csproj" />
 	</ItemGroup>
 
 </Project>
