@@ -10,22 +10,30 @@ namespace ReadTheStupidText.Application.Reading;
 /// Text at or under <see cref="SingleChunkMax"/> stays whole; longer text is split
 /// on paragraph boundaries, then on sentences, then — only for a single oversized
 /// sentence — on word boundaries, so no chunk greatly exceeds <see cref="TargetChunkMax"/>.
-/// The very first chunk is biased to a short head (<see cref="FirstChunkMax"/>) so
-/// playback starts after a short first synthesis rather than a whole paragraph
-/// (time-to-first-audio).
+/// The very first chunk is biased to a short head (a <see cref="HeadPolicy"/>: by default one
+/// sentence and at most 120 characters) so playback starts after a short first synthesis
+/// rather than a whole paragraph (time-to-first-audio).
 /// </summary>
 internal static partial class SpeechTextChunker
 {
     private const int SingleChunkMax = 200;
     private const int TargetChunkMax = 240;
 
-    // The first chunk to play is what the user waits on (time-to-first-audio), so cap
-    // it well below the target: a short head synthesizes fast. Kept large enough to
-    // still land on a natural boundary (usually a whole sentence) rather than sounding
-    // clipped.
-    private const int FirstChunkMax = 120;
+    /// <summary>How long the first chunk may be: at most <see cref="MaxSentences"/> sentences
+    /// and <see cref="MaxChars"/> characters. The first chunk is what the listener waits on, so
+    /// the default stays short; a reader that has the sentence cache (Slice 47) is prepared
+    /// ahead and passes <see cref="Cached"/>.</summary>
+    public readonly record struct HeadPolicy(int MaxSentences, int MaxChars)
+    {
+        /// <summary>One sentence, at most 120 characters (the reader without a cache).</summary>
+        public static HeadPolicy Default { get; } = new(1, 120);
 
-    public static IReadOnlyList<string> Split(string text, bool biasFirstChunk = true)
+        /// <summary>Two sentences, at most 200 characters: the head is split back into
+        /// sentences for the cache, which is prepared ahead.</summary>
+        public static HeadPolicy Cached { get; } = new(2, 200);
+    }
+
+    public static IReadOnlyList<string> Split(string text, bool biasFirstChunk = true, HeadPolicy? head = null)
     {
         string trimmed = text.Trim();
         if (trimmed.Length <= SingleChunkMax)
@@ -46,7 +54,7 @@ internal static partial class SpeechTextChunker
 
         if (biasFirstChunk)
         {
-            BiasFirstChunkToShortHead(chunks);
+            BiasFirstChunkToShortHead(chunks, head ?? HeadPolicy.Default);
         }
 
         return chunks;
@@ -68,9 +76,10 @@ internal static partial class SpeechTextChunker
     /// mapping can be reconstructed by word count after the fact, without touching
     /// (and risking) Split's own, already-tuned boundary logic.
     /// </summary>
-    public static IReadOnlyList<TextChunk> SplitWithRanges(string text, bool biasFirstChunk = true)
+    public static IReadOnlyList<TextChunk> SplitWithRanges(
+        string text, bool biasFirstChunk = true, HeadPolicy? head = null)
     {
-        IReadOnlyList<string> chunks = Split(text, biasFirstChunk);
+        IReadOnlyList<string> chunks = Split(text, biasFirstChunk, head);
         var result = new List<TextChunk>(chunks.Count);
         int cursor = 0;
         foreach (string chunk in chunks)
@@ -120,19 +129,18 @@ internal static partial class SpeechTextChunker
     }
 
     // Time-to-first-audio is dominated by the first chunk's synthesis, so make that
-    // chunk a short head: at most one sentence, and never more than FirstChunkMax
-    // characters. A chunk already within the cap is left untouched. This is robust to
+    // chunk a short head: at most the policy's sentences, and never more than its character
+    // cap. A chunk already within the cap is left untouched. This is robust to
     // punctuation-sparse text (e.g. a copied log line) where the leading "sentence"
-    // runs past the target with no early ".!?" boundary — peeling only a *whole*
-    // sentence would leave a ~240-char first chunk and a slow first synthesis.
-    private static void BiasFirstChunkToShortHead(List<string> chunks)
+    // runs past the cap with no early ".!?" boundary: it is word-wrapped instead.
+    private static void BiasFirstChunkToShortHead(List<string> chunks, HeadPolicy policy)
     {
-        if (chunks[0].Length <= FirstChunkMax)
+        if (chunks[0].Length <= policy.MaxChars)
         {
             return;
         }
 
-        (string head, string remainder) = SplitLeadingHead(chunks[0]);
+        (string head, string remainder) = SplitLeadingHead(chunks[0], policy);
         if (remainder.Length == 0)
         {
             return; // nothing to peel (e.g. a single token longer than the cap)
@@ -142,29 +150,50 @@ internal static partial class SpeechTextChunker
         chunks.Insert(1, remainder);
     }
 
-    // Splits a short leading head off the front: the leading sentence when it fits the
-    // cap, otherwise a word-wrapped head of at most FirstChunkMax chars. The remainder
-    // stays within TargetChunkMax (the source chunk already was), so it is one chunk.
-    private static (string head, string remainder) SplitLeadingHead(string text)
+    // Splits a short leading head off the front: as many leading sentences as fit the cap
+    // (up to the policy's count), otherwise a word-wrapped head of at most MaxChars chars.
+    // The remainder stays within TargetChunkMax (the source chunk already was), so it is
+    // one chunk.
+    private static (string head, string remainder) SplitLeadingHead(string text, HeadPolicy policy)
     {
         List<string> sentences = SplitSentences(text).ToList();
-        if (sentences.Count > 1 && sentences[0].Length <= FirstChunkMax)
+        int take = CountHeadSentences(sentences, policy);
+        if (take == 0 || take == sentences.Count)
         {
-            return (sentences[0], string.Join(' ', sentences.Skip(1)));
+            return PeelWordHead(text, policy.MaxChars);
         }
 
-        return PeelWordHead(text);
+        return (string.Join(' ', sentences.Take(take)), string.Join(' ', sentences.Skip(take)));
     }
 
-    // Peels a leading head of at most FirstChunkMax chars on a word boundary, returning
+    private static int CountHeadSentences(List<string> sentences, HeadPolicy policy)
+    {
+        int take = 0;
+        int length = 0;
+        while (take < Math.Min(policy.MaxSentences, sentences.Count))
+        {
+            int next = length + (take > 0 ? 1 : 0) + sentences[take].Length;
+            if (next > policy.MaxChars)
+            {
+                break;
+            }
+
+            length = next;
+            take++;
+        }
+
+        return take;
+    }
+
+    // Peels a leading head of at most maxChars on a word boundary, returning
     // (head, remainder). A lone token longer than the cap becomes the whole head.
-    private static (string head, string remainder) PeelWordHead(string text)
+    private static (string head, string remainder) PeelWordHead(string text, int maxChars)
     {
         var head = new StringBuilder();
         var rest = new StringBuilder();
-        foreach (string word in text.Split(' ', StringSplitOptions.RemoveEmptyEntries).SelectMany(w => BreakLongWord(w, FirstChunkMax)))
+        foreach (string word in text.Split(' ', StringSplitOptions.RemoveEmptyEntries).SelectMany(w => BreakLongWord(w, maxChars)))
         {
-            bool headFull = head.Length > 0 && head.Length + 1 + word.Length > FirstChunkMax;
+            bool headFull = head.Length > 0 && head.Length + 1 + word.Length > maxChars;
             Append(rest.Length > 0 || headFull ? rest : head, word);
         }
 

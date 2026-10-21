@@ -67,6 +67,50 @@ public class SpeechTextChunkerTests
     }
 
     [Fact]
+    public void Default_head_is_one_sentence_even_when_two_would_fit_the_cached_cap()
+    {
+        string text = "One short sentence. Two short sentence. " +
+            string.Concat(Enumerable.Repeat("Then more padding sentence here. ", 8));
+
+        Assert.Equal("One short sentence.", SpeechTextChunker.Split(text)[0]);
+    }
+
+    [Fact]
+    public void Cached_head_is_the_first_two_sentences()
+    {
+        string text = "One short sentence. Two short sentence. Three short sentence. " +
+            string.Concat(Enumerable.Repeat("Then more padding sentence here. ", 8));
+
+        IReadOnlyList<string> chunks = SpeechTextChunker.Split(text, head: SpeechTextChunker.HeadPolicy.Cached);
+
+        Assert.Equal("One short sentence. Two short sentence.", chunks[0]);
+        Assert.StartsWith("Three short sentence.", chunks[1]);
+    }
+
+    [Fact]
+    public void Cached_head_is_one_sentence_when_two_would_pass_its_cap()
+    {
+        string first = string.Concat(Enumerable.Repeat("alpha ", 22)).Trim() + "."; // ~131 chars
+        string second = string.Concat(Enumerable.Repeat("beta ", 20)).Trim() + "."; // ~100 chars
+        string text = $"{first} {second} " + string.Concat(Enumerable.Repeat("Then more padding sentence here. ", 8));
+
+        IReadOnlyList<string> chunks = SpeechTextChunker.Split(text, head: SpeechTextChunker.HeadPolicy.Cached);
+
+        Assert.Equal(first, chunks[0]);
+    }
+
+    [Fact]
+    public void A_first_chunk_already_within_the_head_cap_is_left_untouched()
+    {
+        string first = "One short sentence. Two short sentence."; // 2 sentences, under 120
+        string text = first + "\n\n" + string.Concat(Enumerable.Repeat("Then more padding sentence here. ", 6));
+
+        IReadOnlyList<string> chunks = SpeechTextChunker.Split(text);
+
+        Assert.Equal(first, chunks[0]);
+    }
+
+    [Fact]
     public void A_single_oversized_sentence_is_hard_wrapped_on_words()
     {
         string longSentence = string.Concat(Enumerable.Repeat("word ", 80)).Trim(); // ~400 chars, no . ! ?

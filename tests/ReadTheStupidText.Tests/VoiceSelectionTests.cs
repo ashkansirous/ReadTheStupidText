@@ -44,6 +44,12 @@ public class VoiceSelectionTests
     }
 
     [Fact]
+    public void Resolved_model_carries_the_installed_pack_version()
+    {
+        Assert.Equal("1", InstalledVoiceCatalog.Resolve([Supertonic()], "en")!.PackVersion);
+    }
+
+    [Fact]
     public void Language_codes_match_case_insensitively()
     {
         Assert.NotNull(InstalledVoiceCatalog.Resolve([Piper()], "FA"));

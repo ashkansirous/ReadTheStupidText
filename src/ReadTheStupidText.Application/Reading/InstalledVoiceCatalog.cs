@@ -19,7 +19,7 @@ public static class InstalledVoiceCatalog
             IReadOnlyList<VoiceInfo> voices = VoicesOf(pack.Manifest, language);
             if (voices.Count > 0)
             {
-                return new VoiceModelPaths(pack.Folder, pack.Manifest.Model, language, voices);
+                return new VoiceModelPaths(pack.Folder, pack.Manifest.Model, language, voices, pack.Manifest.Version);
             }
         }
 

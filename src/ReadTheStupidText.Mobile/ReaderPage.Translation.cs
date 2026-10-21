@@ -138,7 +138,8 @@ public partial class ReaderPage
         SelectSource(null);
     }
 
-    // Paste, file import and scan replace the text for good, so the old text's language pick goes too.
+    // Paste, file import and scan replace the text for good, so the old text's language pick goes too,
+    // and the head start prepares at once (the TextChanged this raises must not also schedule a debounced one).
     private void ReplaceEditorText(string text)
     {
         if (_detector is not null)
@@ -146,7 +147,17 @@ public partial class ReaderPage
             ResetSource();
         }
 
-        TextEditor.Text = text;
+        _settingEditorText = true;
+        try
+        {
+            TextEditor.Text = text;
+        }
+        finally
+        {
+            _settingEditorText = false;
+        }
+
+        StartHeadStart(TimeSpan.Zero);
     }
 
     private void ScheduleDetection(string text)
@@ -208,6 +219,7 @@ public partial class ReaderPage
     {
         _settings.TranslateEnabled = e.Value;
         _lastSpokenText = null;
+        StartHeadStart(TimeSpan.Zero);
     }
 
     /// <summary>

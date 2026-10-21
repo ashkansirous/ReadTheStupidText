@@ -37,6 +37,7 @@ public partial class ReaderPage : ContentPage
     private readonly IDocumentScanner? _scanner;
     private readonly IVoiceModelService _model;
     private readonly VoicePackInstaller _installer;
+    private readonly IHeadStart _headStart;
     private readonly EditorDraft _draft;
     private PlaybackRate _speed;
     private string? _lastSpokenText;
@@ -63,7 +64,7 @@ public partial class ReaderPage : ContentPage
     // started (system TTS returns as soon as the utterance is queued).
     private static readonly TimeSpan FirstAudioGrace = TimeSpan.FromSeconds(8);
 
-    public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, IImageTextExtractor imageExtractor, IVoiceModelService model, VoicePackInstaller installer, IPlatformServices platform, EditorDraft draft, IDocumentScanner? scanner = null, ILanguageDetector? detector = null, ITranslator? translator = null)
+    public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, IImageTextExtractor imageExtractor, IVoiceModelService model, VoicePackInstaller installer, IPlatformServices platform, EditorDraft draft, IHeadStart headStart, IDocumentScanner? scanner = null, ILanguageDetector? detector = null, ITranslator? translator = null)
     {
         InitializeComponent();
         FlowDirection = UiFlowDirection.ForCurrentCulture();
@@ -75,6 +76,7 @@ public partial class ReaderPage : ContentPage
         _documentExtractor = documentExtractor;
         _imageExtractor = imageExtractor;
         _scanner = scanner;
+        _headStart = headStart;
         _model = model;
         _installer = installer;
         _draft = draft;
@@ -84,6 +86,7 @@ public partial class ReaderPage : ContentPage
         UpdateVoiceLabel();
         LanguageNameLabel.Text = LanguageChoices.NativeName(CurrentLanguage());
         InitTranslation(detector, translator);
+        InitHeadStart();
     }
 
     protected override void OnAppearing()
@@ -98,6 +101,7 @@ public partial class ReaderPage : ContentPage
         // Re-read on every appearance: the voice picker may have changed the
         // persisted voice while this page was off-stack.
         UpdateVoiceLabel();
+        RestartHeadStartIfKeyChanged();
         RenderPackStatus();
         RestorePendingReadSpinner();
         PrepareScannerOnce();
@@ -490,6 +494,7 @@ public partial class ReaderPage : ContentPage
             return;
         }
 
+        CancelHeadStart();
         _reader.Stop();
         CancelTranslationRead();
         ClearPendingRead();
@@ -681,6 +686,7 @@ public partial class ReaderPage : ContentPage
         {
             RenderPackStatus();
             UpdateVoiceLabel();
+            RestartHeadStartIfKeyChanged();
         });
 
     private void RenderPackStatus()
@@ -696,5 +702,89 @@ public partial class ReaderPage : ContentPage
         {
             _ = _installer.StartAsync();
         }
+    }
+
+    // ---- Head start (Slice 47): synthesize the opening sentences before Play is tapped. ----
+
+    // Typing waits this long after the last keystroke; a paste, file or scan prepares at once.
+    private static readonly TimeSpan HeadStartTypingDelay = TimeSpan.FromSeconds(1);
+
+    private CancellationTokenSource? _headStartCts;
+    private string? _headStartKey;
+    private bool _settingEditorText;
+
+    private void InitHeadStart()
+    {
+        _headStartKey = CurrentHeadStartKey();
+        TextEditor.TextChanged += OnEditorTextChangedForHeadStart;
+    }
+
+    private void OnEditorTextChangedForHeadStart(object? sender, TextChangedEventArgs e)
+    {
+        if (!_settingEditorText)
+        {
+            StartHeadStart(HeadStartTypingDelay);
+        }
+    }
+
+    // Everything the sentence cache key holds besides the text: a change to any of them makes
+    // every cached sentence a miss, so the head start prepares again.
+    private string CurrentHeadStartKey()
+    {
+        VoiceModelPaths? paths = _model.Paths;
+        return string.Join('|', _settings.VoiceId, paths?.Kind, paths?.Language, paths?.RootDir, paths?.PackVersion);
+    }
+
+    private void RestartHeadStartIfKeyChanged()
+    {
+        if (CurrentHeadStartKey() != _headStartKey)
+        {
+            StartHeadStart(TimeSpan.Zero);
+        }
+    }
+
+    private void StartHeadStart(TimeSpan delay)
+    {
+        CancelHeadStart();
+        _headStartKey = CurrentHeadStartKey();
+        var cts = new CancellationTokenSource();
+        _headStartCts = cts;
+        _ = PrepareHeadStartAsync(TextEditor.Text ?? string.Empty, delay, cts.Token);
+    }
+
+    private async Task PrepareHeadStartAsync(string text, TimeSpan delay, CancellationToken token)
+    {
+        try
+        {
+            if (delay > TimeSpan.Zero)
+            {
+                await Task.Delay(delay, token);
+            }
+
+            if (!string.IsNullOrWhiteSpace(text) && !_headStart.ReadInProgress && !TranslationActive())
+            {
+                await Task.Run(() => _headStart.PrepareAsync(text), token);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Superseded by a newer edit, or Play was tapped.
+        }
+        catch (Exception)
+        {
+            // A head start is an optimization: failing to prepare never reaches the user.
+        }
+    }
+
+    // With translate on, the read speaks the translated text, so preparing the source would cache
+    // the wrong sentences: skip the head start until the toggle goes off.
+    private bool TranslationActive() => _translator is not null && _settings.TranslateEnabled;
+
+    private void CancelHeadStart()
+    {
+        _headStartCts?.Cancel();
+        _headStartCts?.Dispose();
+        _headStartCts = null;
+        _headStart.CancelPrepare();
     }
 }
