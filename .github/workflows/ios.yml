@@ -105,14 +105,17 @@ jobs:
           dotnet workload --version
 
       # Simulator build: needs no certificate or profile. Skipped when the signed
-      # publish below runs, which compiles the same code.
+      # publish below runs, which compiles the same code in Release. Debug on
+      # purpose: a Release simulator build runs the full trim/AOT pipeline (~59
+      # min per PR); Debug proves the code compiles in a few minutes, and every
+      # main build still does the full signed Release compile.
       - name: Compile check (unsigned, simulator)
         if: ${{ env.SIGN_RELEASE != 'true' }}
         run: >
           dotnet build "$PROJECT"
           -f net10.0-ios
           -p:IncludeAndroid=false
-          -c Release
+          -c Debug
           -p:RuntimeIdentifier=iossimulator-arm64
 
       - name: Install signing certificate and profile
