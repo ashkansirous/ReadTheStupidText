@@ -3,4 +3,66 @@
     x:Class="DinoReader.DinoApp"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+    <Application.Resources>
+        <!-- Dino Reader v2 mock tokens (child and grown-up screens). -->
+        <Color x:Key="Cream">#FFF6E6</Color>
+        <Color x:Key="Sand">#F3EFE6</Color>
+        <Color x:Key="Ink">#2b2540</Color>
+        <Color x:Key="Body">#5a5470</Color>
+        <Color x:Key="Muted">#8a8399</Color>
+        <Color x:Key="Brand">#5B57E8</Color>
+        <Color x:Key="BrandTint">#ECE7FF</Color>
+        <Color x:Key="Danger">#E5484D</Color>
+        <Color x:Key="Coral">#FF7A59</Color>
+        <Color x:Key="Hairline">#efe9dd</Color>
+        <Color x:Key="Scrim">#8C2b2540</Color>
+        <Color x:Key="ControlFill">#122b2540</Color>
+
+        <!-- Reading screens (mock screens 3, 4, 5): generated pages, highlights, pager and transport. -->
+        <Color x:Key="ReadDim">#b3abc2</Color>
+        <Color x:Key="SentenceFill">#FFE27A</Color>
+        <Color x:Key="BoxFill">#6BFFD600</Color>
+        <Color x:Key="BoxStroke">#F5B800</Color>
+        <Color x:Key="DotIdle">#d9d2c4</Color>
+        <Color x:Key="BrandEdge">#3f3bc4</Color>
+        <Color x:Key="CoralEdge">#E2583A</Color>
+        <Color x:Key="CoralHalo">#38FF7A59</Color>
+
+        <!-- Bedtime colours (mock screen 12), used when the phone is in dark mode. -->
+        <Color x:Key="NightPage">#1E1B2E</Color>
+        <Color x:Key="NightCard">#2A2640</Color>
+        <Color x:Key="NightInk">#F3E9D2</Color>
+        <Color x:Key="NightSoft">#cfc6e6</Color>
+        <Color x:Key="NightMuted">#8e86a8</Color>
+        <Color x:Key="NightFill">#14FFFFFF</Color>
+        <Color x:Key="NightBrand">#A9A2FF</Color>
+        <Color x:Key="NightBrandEdge">#7c74d9</Color>
+        <Color x:Key="NightBoxFill">#38FFD678</Color>
+        <Color x:Key="NightBoxStroke">#C9A54A</Color>
+        <Color x:Key="NightDot">#4a4463</Color>
+        <Color x:Key="NightCoral">#C65A43</Color>
+        <Color x:Key="NightCoralEdge">#9E4332</Color>
+        <Color x:Key="NightCoralGlyph">#FFE9D9</Color>
+        <Color x:Key="NightCoralHalo">#38C65A43</Color>
+
+        <!-- Cast screen (mock screens 10, 11, 15). -->
+        <Color x:Key="AvatarGrey">#e6e0d4</Color>
+        <Color x:Key="EditedInk">#1f7a3a</Color>
+        <Color x:Key="EditedFill">#dff7e4</Color>
+        <Color x:Key="NoteFill">#FFF1D6</Color>
+        <Color x:Key="NoteInk">#6B4200</Color>
+        <Color x:Key="SharedInk">#9A5B00</Color>
+        <Color x:Key="SelectedRow">#F4F2FF</Color>
+        <Color x:Key="CheckEmpty">#cfc7b8</Color>
+        <Color x:Key="MergeBorder">#c9c0f5</Color>
+        <Color x:Key="SheetScrim">#802b2540</Color>
+
+        <Style TargetType="Label">
+            <Setter Property="FontFamily" Value="Fredoka" />
+            <Setter Property="TextColor" Value="{StaticResource Ink}" />
+        </Style>
+        <Style TargetType="Button">
+            <Setter Property="FontFamily" Value="Fredoka" />
+        </Style>
+    </Application.Resources>
 </Application>

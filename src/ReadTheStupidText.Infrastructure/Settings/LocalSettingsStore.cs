@@ -26,6 +26,8 @@ public sealed class LocalSettingsStore : ISettingsStore
     private const string PanelXKey = "PanelX";
     private const string PanelYKey = "PanelY";
     private const string LanguageKey = "Language";
+    private const string TranslateEnabledKey = "TranslateEnabled";
+    private const string TranslateSourceKey = "TranslateSourceLanguage";
 
     private readonly ApplicationDataContainer _settings = ApplicationData.Current.LocalSettings;
 
@@ -87,6 +89,28 @@ public sealed class LocalSettingsStore : ISettingsStore
             else
             {
                 _settings.Values[LanguageKey] = value;
+            }
+        }
+    }
+
+    public bool TranslateEnabled
+    {
+        get => _settings.Values[TranslateEnabledKey] as bool? ?? false;
+        set => _settings.Values[TranslateEnabledKey] = value;
+    }
+
+    public string? TranslateSourceLanguage
+    {
+        get => _settings.Values[TranslateSourceKey] as string;
+        set
+        {
+            if (value is null)
+            {
+                _settings.Values.Remove(TranslateSourceKey);
+            }
+            else
+            {
+                _settings.Values[TranslateSourceKey] = value;
             }
         }
     }

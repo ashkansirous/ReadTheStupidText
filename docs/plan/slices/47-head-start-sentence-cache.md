@@ -182,3 +182,7 @@ progress was 0.
 - Head-start benefit on a real phone, not the emulator.
 - Cache behaviour at the 100 MB cap.
 - Slice 56 wires the same cache on Windows.
+
+## Translation interaction (merge with Slice 54)
+
+With the translate toggle on, the read speaks the translated text, so preparing the source text would cache the wrong sentences. The head start therefore skips preparing while translation is active (`TranslationActive()` in `ReaderPage.xaml.cs`: a translator exists and `TranslateEnabled`). Flipping the toggle restarts the prepare, so turning it off prepares the source text at once and turning it on cancels any prepare in flight. Paste, scan and file import share one helper, `ReplaceEditorText` (clear the translation source override, set the text, start the prepare).

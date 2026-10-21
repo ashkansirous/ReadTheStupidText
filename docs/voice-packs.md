@@ -28,7 +28,7 @@ supertonic-3/
 | `kind` | `voice` or `ocr` |
 | `language` | comma-separated language codes the pack serves (`en,fr,es,pt,ru,ja,ar`) |
 | `version` | pack version string |
-| `engine` | the synthesis/recognition engine (`sherpa-onnx`) |
+| `engine` | the synthesis/recognition engine (`sherpa-onnx`; `onnxruntime` for `kind: ocr`, Slice 52) |
 | `files` | every payload file the app must find after extraction (`pack.json` excluded) |
 | `model` | optional (Slice 51): the engine family, Piper/VITS or MeloTTS. Absent means Supertonic |
 | `voices` | optional (Slice 51): the voices the pack offers. Supertonic lists none (its ten styles are `SupertonicVoiceTable`); Piper and Melo list theirs |
@@ -49,7 +49,30 @@ Entries with an unknown `kind` are ignored, so a newer catalog still works with 
 app. Language-to-pack choice is `VoicePackSelector` (a language with no pack, today Persian
 and Chinese until `packs-2` is published and pinned, reads with the phone voice and the app
 says so). The installed pack serving the current language is resolved by
-`InstalledVoiceCatalog` (Slice 51).
+`InstalledVoiceCatalog` (Slice 51). Choice among packs of one kind uses the shared
+`PackSelection`, parameterised by kind, with an id tie-break (Slice 52).
+
+### OCR packs (`kind: ocr`, Slice 52)
+
+PaddleOCR models for scanned text, one standalone pack per script, each carrying the shared
+detector plus its recognizer and dictionary. Source: `monkt/paddleocr-onnx` (Apache-2.0),
+sha256-pinned in `packs.yml`.
+
+| pack | languages | recognizer |
+| --- | --- | --- |
+| `ocr-latin` | en, fr, es, pt | PP-OCRv5 Latin |
+| `ocr-cyrillic` | ru | PP-OCRv5 eslav |
+| `ocr-arabic` | ar, fa | PP-OCRv3 Arabic |
+| `ocr-cjk` | zh, ja | PP-OCRv5 Chinese server (84 MB) |
+
+When no OCR pack serves the language, or a pack is broken or returns nothing, the app falls
+back to ML Kit Latin. Installed by `OcrPackInstaller`.
+
+**Version upgrades.** All four OCR packs share one `ocr_pack_version` workflow input. At every
+app start and on a language change, `OcrPackInstaller` (via `PackVersions`) compares the
+installed pack with the catalogue: a newer catalogue version is downloaded, and the old pack
+is kept until the new one verifies, so a failed upgrade never leaves the language without OCR.
+The voice installer does not yet check for newer voice-pack versions at start-up.
 
 ## Hosting
 
@@ -66,9 +89,11 @@ created `--latest=false`, so `releases/latest` stays the app.
 ## Publishing
 
 Manual: run the **packs** workflow (`.github/workflows/packs.yml`, `workflow_dispatch`) with
-the release number and the three pack versions (`pack_version` for Supertonic,
-`piper_pack_version`, `melo_pack_version`). One run builds three packs into the one
-`packs-<n>` release, computes each sha256 and size, and publishes the zips with `packs.json`:
+the release number and the pack versions (`pack_version` for Supertonic,
+`piper_pack_version`, `melo_pack_version`, and `ocr_pack_version` for the four OCR packs,
+Slice 52). One run builds the packs into the one
+`packs-<n>` release, computes each sha256 and size, and publishes the zips with `packs.json`.
+The voice packs:
 
 | pack | languages | engine | licence |
 | --- | --- | --- | --- |

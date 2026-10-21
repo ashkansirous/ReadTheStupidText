@@ -1,5 +1,6 @@
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Mobile.Resources.Strings;
 
 namespace ReadTheStupidText.Mobile;
 
@@ -13,20 +14,7 @@ public partial class LanguagePage : ContentPage
 {
     private static readonly Color SelectedRowTint = Color.FromArgb("#125B57E8");
 
-    // Endonyms: each language is named in itself so a user can find theirs.
-    private static readonly (AppLanguage Language, string NativeName)[] Choices =
-    [
-        (AppLanguage.English, "English"),
-        (AppLanguage.Persian, "فارسی"),
-        (AppLanguage.French, "Français"),
-        (AppLanguage.Spanish, "Español"),
-        (AppLanguage.Portuguese, "Português"),
-        (AppLanguage.Chinese, "中文"),
-        (AppLanguage.Arabic, "العربية"),
-        (AppLanguage.Russian, "Русский"),
-        (AppLanguage.Japanese, "日本語"),
-    ];
-
+    private readonly Thickness _headerPadding; // as designed in XAML (left-to-right)
     private readonly ISettingsStore _settings;
     private readonly VoicePackInstaller _installer;
     private readonly Dictionary<AppLanguage, Border> _rows = new();
@@ -36,13 +24,16 @@ public partial class LanguagePage : ContentPage
     public LanguagePage(ISettingsStore settings, VoicePackInstaller installer)
     {
         InitializeComponent();
+        _headerPadding = HeaderGrid.Padding;
         _settings = settings;
         _installer = installer;
 
-        foreach ((AppLanguage language, string name) in Choices)
+        foreach ((AppLanguage language, string name) in LanguageChoices.All)
         {
             LanguageList.Children.Add(BuildRow(language, name));
         }
+
+        ApplyTexts();
     }
 
     protected override void OnAppearing()
@@ -81,6 +72,8 @@ public partial class LanguagePage : ContentPage
         }
 
         _selected = language;
+        UiCulture.Apply(UiCulture.Resolve(AppLanguages.Code(language), System.Globalization.CultureInfo.CurrentUICulture));
+        ApplyTexts();
         ContinueButton.IsEnabled = true;
         foreach ((AppLanguage candidate, Border row) in _rows)
         {
@@ -96,7 +89,7 @@ public partial class LanguagePage : ContentPage
             _settings.Language = AppLanguages.Code(language);
             ShowProgress();
             _ = _installer.StartAsync();
-            ContinueButton.Text = "Start reading";
+            ApplyTexts();
             return;
         }
 
@@ -104,6 +97,23 @@ public partial class LanguagePage : ContentPage
         {
             _installer.Changed -= OnInstallerChanged; // before the root page is swapped out
             ((App)Microsoft.Maui.Controls.Application.Current!).ShowMain();
+        }
+    }
+
+    // The first-run page speaks the device language until a row is picked, then the picked one
+    // (strings, direction and Continue/Start label), so the choice shows before leaving the page.
+    private void ApplyTexts()
+    {
+        FlowDirection = UiFlowDirection.ForCurrentCulture();
+        HeaderGrid.Padding = UiFlowDirection.Mirror(_headerPadding);
+        Title = AppResources.Common_Language;
+        AppNameLabel.Text = AppResources.App_Name;
+        IntroLabel.Text = AppResources.Language_Intro;
+        RetryButton.Text = AppResources.Language_Retry;
+        ContinueButton.Text = _started ? AppResources.Language_StartReading : AppResources.Language_Continue;
+        if (_started)
+        {
+            RenderStatus();
         }
     }
 
@@ -126,7 +136,7 @@ public partial class LanguagePage : ContentPage
     private void RenderStatus()
     {
         DownloadProgressBar.Progress = _installer.Progress;
-        StatusLabel.Text = PackStatusText.Compose(_installer.State, _installer.Progress) ?? string.Empty;
+        StatusLabel.Text = LocalizedPackStatus.Compose(_installer.State, _installer.Progress) ?? string.Empty;
         DownloadProgressBar.IsVisible = _installer.State == PackInstallState.Downloading;
         RetryButton.IsVisible = _installer.CanRetry;
     }

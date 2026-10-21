@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using ReadTheStupidText.Application.Images;
+using ReadTheStupidText.Application.Translation;
 
 namespace ReadTheStupidText.Mobile;
 
@@ -7,7 +8,15 @@ public static partial class MauiProgram
 {
     private static partial void RegisterAppPlatformServices(IServiceCollection services)
     {
-        services.AddSingleton<IImageTextExtractor>(_ => new MlKitImageTextExtractor(global::Android.App.Application.Context));
+        // Slice 52: PaddleOCR from the language's OCR pack, with ML Kit Latin as the fallback.
+        services.AddSingleton(_ => new MlKitImageTextExtractor(global::Android.App.Application.Context));
+        services.AddSingleton<IPixelImageLoader>(_ => new AndroidPixelImageLoader(global::Android.App.Application.Context));
+        services.AddSingleton<LanguageImageTextExtractor>();
+        services.AddSingleton<IImageTextExtractor>(sp => sp.GetRequiredService<LanguageImageTextExtractor>());
+        services.AddSingleton<IOcrLineExtractor>(sp => sp.GetRequiredService<LanguageImageTextExtractor>());
+        services.AddSingleton<OcrPackInstaller>();
         services.AddSingleton<IDocumentScanner, AndroidDocumentScanner>();
+        services.AddSingleton<ILanguageDetector, MlKitLanguageDetector>();
+        services.AddSingleton<ITranslator, MlKitTranslator>();
     }
 }

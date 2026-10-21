@@ -38,6 +38,23 @@ public sealed class MlKitImageTextExtractor : IImageTextExtractor
         return ((Text)result).GetText() ?? string.Empty;
     }
 
+    /// <summary>The recognized lines with their boxes, for the fallback path of Slice 52 (geometry kept for Slice 63).</summary>
+    public async Task<IReadOnlyList<OcrLine>> ExtractLinesAsync(string imagePath)
+    {
+        InputImage image = InputImage.FromFilePath(_context, ToUri(imagePath));
+        Java.Lang.Object result = await _recognizer.Value.Process(image);
+        return ((Text)result).TextBlocks
+            .SelectMany(block => block.Lines)
+            .Select(ToLine)
+            .ToList();
+    }
+
+    private static OcrLine ToLine(Text.Line line)
+    {
+        Android.Graphics.Rect? box = line.BoundingBox;
+        return new OcrLine(line.Text ?? string.Empty, box is null ? default : new OcrBox(box.Left, box.Top, box.Right, box.Bottom));
+    }
+
     private static AndroidNet.Uri ToUri(string imagePath)
     {
         AndroidNet.Uri? uri = imagePath.Contains("://", StringComparison.Ordinal)

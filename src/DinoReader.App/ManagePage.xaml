@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="DinoReader.ManagePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:DinoReader"
+    BackgroundColor="{StaticResource Sand}"
+    NavigationPage.HasNavigationBar="False">
+
+    <!-- Grown-up mode of the gallery (mock screen 8): add, edit and delete stories. Reached only
+         through the gate. -->
+    <ContentPage.Resources>
+        <DataTemplate x:Key="AddTemplate">
+            <Border BackgroundColor="White" Stroke="#c9c0f5" StrokeThickness="3" StrokeDashArray="3,3"
+                    SizeChanged="OnAddTileSizeChanged" SemanticProperties.Description="Add a story">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16" />
+                </Border.StrokeShape>
+                <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="6">
+                    <local:IconView Kind="Plus" Color="{StaticResource Brand}" Size="28" StrokeWidth="2.6" />
+                    <Label Text="Add a story" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Brand}" />
+                </VerticalStackLayout>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnAddTapped" />
+                </Border.GestureRecognizers>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="StoryTemplate" x:DataType="local:StoryTile">
+            <VerticalStackLayout Spacing="7">
+                <Grid>
+                    <local:StoryCover />
+                    <Border HorizontalOptions="End" VerticalOptions="Start" Margin="0,6,6,0" WidthRequest="32" HeightRequest="32"
+                            BackgroundColor="{StaticResource Danger}" StrokeThickness="0"
+                            SemanticProperties.Description="Delete story">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="16" />
+                        </Border.StrokeShape>
+                        <Border.Shadow>
+                            <Shadow Brush="Black" Opacity="0.2" Offset="0,2" Radius="3" />
+                        </Border.Shadow>
+                        <local:IconView Kind="Trash" Color="White" Size="16" StrokeWidth="2.4" />
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnDeleteTapped" />
+                        </Border.GestureRecognizers>
+                    </Border>
+                </Grid>
+                <Label Text="{Binding Title}" FontSize="13.5" FontAttributes="Bold" LineHeight="1.25" />
+                <HorizontalStackLayout Spacing="6">
+                    <Border BackgroundColor="{StaticResource BrandTint}" StrokeThickness="0" Padding="9,4"
+                            SemanticProperties.Description="Edit story">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
+                        <Label Text="Edit" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource Brand}" />
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnEditTapped" />
+                        </Border.GestureRecognizers>
+                    </Border>
+                    <Border BackgroundColor="{StaticResource BrandTint}" StrokeThickness="0" Padding="9,4"
+                            SemanticProperties.Description="Who is speaking">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
+                        <Label Text="{Binding CastLabel}" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource Brand}" />
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnCastTapped" />
+                        </Border.GestureRecognizers>
+                    </Border>
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+        </DataTemplate>
+
+        <local:ManageTemplateSelector x:Key="Selector" AddTemplate="{StaticResource AddTemplate}"
+                                      StoryTemplate="{StaticResource StoryTemplate}" />
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*">
+        <Grid ColumnDefinitions="*,Auto" Padding="16,14,16,12">
+            <Label Text="Manage stories" FontSize="20" FontAttributes="Bold" VerticalOptions="Center"
+                   SemanticProperties.HeadingLevel="Level1" />
+            <Button Grid.Column="1" Text="Done" HeightRequest="38" CornerRadius="19" Padding="14,0" FontSize="13.5"
+                    BackgroundColor="{StaticResource Brand}" TextColor="White" Clicked="OnDoneClicked" />
+        </Grid>
+
+        <CollectionView Grid.Row="1" x:Name="StoryList" SelectionMode="None" Margin="14,0"
+                        ItemTemplate="{StaticResource Selector}">
+            <CollectionView.ItemsLayout>
+                <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="12" VerticalItemSpacing="14" />
+            </CollectionView.ItemsLayout>
+        </CollectionView>
+    </Grid>
+</ContentPage>

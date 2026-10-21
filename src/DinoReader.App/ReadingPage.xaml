@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="DinoReader.ReadingPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:DinoReader"
+    BackgroundColor="{StaticResource Cream}"
+    NavigationPage.HasNavigationBar="False">
+
+    <!-- Reading screen (mock screens 3, 4, 5 and 12): back, grown-up lock and the text / picture
+         switch on the top bar, the story title on its own row, the page card, page dots and the
+         transport row. Colours are applied from ReadingTheme (daytime or bedtime). -->
+    <Grid RowDefinitions="Auto,*,Auto,Auto,Auto">
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="2"
+              Padding="8,8,12,4">
+            <Border x:Name="BackButton" WidthRequest="44" HeightRequest="44" BackgroundColor="Transparent" StrokeThickness="0"
+                    SemanticProperties.Description="Back">
+                <local:IconView x:Name="BackIcon" Kind="Back" Color="{StaticResource Ink}" Size="22" StrokeWidth="2.6" />
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Border.GestureRecognizers>
+            </Border>
+            <Border x:Name="LockButton" Grid.Column="2" WidthRequest="40" HeightRequest="40" StrokeThickness="0"
+                    VerticalOptions="Center" SemanticProperties.Description="For grown-ups"
+                    SemanticProperties.Hint="Opens the grown-up gate">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12" />
+                </Border.StrokeShape>
+                <local:IconView x:Name="LockIcon" Kind="Lock" Color="{StaticResource Muted}" Size="18" />
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnLockTapped" />
+                </Border.GestureRecognizers>
+            </Border>
+            <local:ModeSwitch x:Name="Modes" Grid.Column="3" VerticalOptions="Center" ModeChanged="OnModeChanged" />
+            <Label x:Name="TitleLabel" Grid.Row="1" Grid.ColumnSpan="4" Padding="8,0" FontSize="20" FontAttributes="Bold"
+                   LineHeight="1.25" SemanticProperties.HeadingLevel="Level1" />
+        </Grid>
+
+        <Grid Grid.Row="1" Margin="14,6,14,0">
+            <local:ReadingSurface x:Name="Surface" PageSwiped="OnPageSwiped" SentenceTapped="OnSentenceTapped"
+                                  LaidOut="OnLaidOut" />
+            <Border x:Name="WanderPill" IsVisible="False" HorizontalOptions="Center" VerticalOptions="Start" Margin="0,18,0,0"
+                    Padding="14,8" StrokeThickness="0" InputTransparent="True">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="20" />
+                </Border.StrokeShape>
+                <!-- Mock shadow 0 6px 16px rgba(43,37,64,.3). -->
+                <Border.Shadow>
+                    <Shadow Brush="#2b2540" Offset="0,6" Radius="16" Opacity="0.3" />
+                </Border.Shadow>
+                <HorizontalStackLayout Spacing="7">
+                    <!-- The mock's marker (a 16-unit box holding a triangle about 11 tall): the glyph is
+                         drawn at 11 inside a 16 slot so it is not blown up to the box. -->
+                    <local:IconView x:Name="PillIcon" Kind="Play" Filled="True" Size="11" Margin="2.5,0"
+                                    Color="{StaticResource SentenceFill}" VerticalOptions="Center" />
+                    <Label x:Name="PillLabel" FontSize="13.5" FontAttributes="Bold" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+            </Border>
+        </Grid>
+
+        <Label Grid.Row="2" x:Name="StatusLabel" FontSize="14" TextColor="{StaticResource Body}" IsVisible="False"
+               HorizontalOptions="Center" Margin="14,8,14,0">
+            <Label.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnPackStatusTapped" />
+            </Label.GestureRecognizers>
+        </Label>
+
+        <local:PagerDots x:Name="Dots" Grid.Row="3" />
+        <local:TransportRow x:Name="Transport" Grid.Row="4" PreviousTapped="OnPreviousTapped" PlayTapped="OnPlayTapped"
+                            NextTapped="OnNextTapped" />
+    </Grid>
+</ContentPage>

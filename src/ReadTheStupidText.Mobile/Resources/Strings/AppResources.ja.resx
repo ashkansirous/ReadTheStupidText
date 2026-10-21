@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Shell_ReaderTitle" xml:space="preserve"><value>リーダー</value></data>
+  <data name="Common_Ok" xml:space="preserve"><value>OK</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>キャンセル</value></data>
+  <data name="Common_Voice" xml:space="preserve"><value>音声</value></data>
+  <data name="Common_Language" xml:space="preserve"><value>言語</value></data>
+  <data name="Reader_AddTextSection" xml:space="preserve"><value>テキストを追加</value></data>
+  <data name="Reader_PasteButton" xml:space="preserve"><value>📋 貼り付け</value></data>
+  <data name="Reader_ScanButton" xml:space="preserve"><value>📷 スキャン</value></data>
+  <data name="Reader_FileButton" xml:space="preserve"><value>📄 ファイル</value></data>
+  <data name="Reader_EditorPlaceholder" xml:space="preserve"><value>ここに入力・貼り付けるか、ページをスキャン、またはファイルを開きます。すべてこの1つのボックスに入り、下の同じコントロールで再生されます。</value></data>
+  <data name="Reader_PasteFailedTitle" xml:space="preserve"><value>貼り付けできませんでした</value></data>
+  <data name="Reader_PasteFailedMessage" xml:space="preserve"><value>クリップボードを読み取れませんでした。もう一度テキストをコピーしてください。</value></data>
+  <data name="Reader_ScanFailedTitle" xml:space="preserve"><value>スキャンできませんでした</value></data>
+  <data name="Reader_ScanFailedMessage" xml:space="preserve"><value>スキャン中に問題が発生しました。もう一度お試しください。</value></data>
+  <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>スキャナーを起動できませんでした</value></data>
+  <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>スキャナーを起動できませんでした。もう一度お試しください。</value></data>
+  <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>スキャナーを準備中です</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Google Play 開発者サービスがドキュメントスキャナーをまだ準備しています。しばらくしてからもう一度お試しください。</value></data>
+  <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>スキャナーを利用できません</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>ドキュメントスキャナーには Google Play 開発者サービスが必要です。代わりに写真を1枚撮影してください。</value></data>
+  <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>カメラへのアクセスが必要です</value></data>
+  <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>テキストを撮影するには、設定でカメラへのアクセスを許可してください。</value></data>
+  <data name="Reader_NoCameraTitle" xml:space="preserve"><value>カメラがありません</value></data>
+  <data name="Reader_NoCameraMessage" xml:space="preserve"><value>テキストの撮影にはカメラが必要ですが、このデバイスでは利用できません。</value></data>
+  <data name="Reader_ScanUnavailableTitle" xml:space="preserve"><value>スキャンを利用できません</value></data>
+  <data name="Reader_ScanUnavailableMessage" xml:space="preserve"><value>写真からのテキスト読み取りは、このデバイスではまだ利用できません。</value></data>
+  <data name="Reader_ScanUnreadableTitle" xml:space="preserve"><value>スキャンを読み取れませんでした</value></data>
+  <data name="Reader_ScanUnreadableMessage" xml:space="preserve"><value>照明やピントを調整して、もう一度スキャンしてください。</value></data>
+  <data name="Reader_NoTextFoundTitle" xml:space="preserve"><value>テキストが見つかりません</value></data>
+  <data name="Reader_NoTextFoundMessage" xml:space="preserve"><value>照明やピントを調整して、もう一度スキャンしてください。</value></data>
+  <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>一部のページをスキップしました</value></data>
+  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>{0} ページ目を読み取れませんでした。残りは追加されました。</value></data>
+  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>{0} ページ目を読み取れませんでした。残りは追加されました。</value></data>
+  <data name="Reader_ScanProgressPage" xml:space="preserve"><value>{1} ページ中 {0} ページ目を読み取り中</value></data>
+  <data name="Reader_ScanProgressSingle" xml:space="preserve"><value>ページを読み取り中</value></data>
+  <data name="Reader_FilePickerTitle" xml:space="preserve"><value>.txt、.pdf、.docx のファイルを選択</value></data>
+  <data name="Reader_FilePermissionTitle" xml:space="preserve"><value>権限が必要です</value></data>
+  <data name="Reader_FilePermissionMessage" xml:space="preserve"><value>ドキュメントを読み取るには、ファイルへのアクセスを許可してください。</value></data>
+  <data name="Reader_FileTooLargeTitle" xml:space="preserve"><value>ファイルが大きすぎます</value></data>
+  <data name="Reader_FileTooLargeMessage" xml:space="preserve"><value>このファイルは {0} ページあり、上限は {1} ページです。</value></data>
+  <data name="Reader_FileUnreadableTitle" xml:space="preserve"><value>ファイルを読み取れませんでした</value></data>
+  <data name="Reader_FileUnreadableMessage" xml:space="preserve"><value>ファイルが破損しているか、対応していない形式の可能性があります。</value></data>
+  <data name="Reader_ReadFailedTitle" xml:space="preserve"><value>テキストを読み上げできませんでした</value></data>
+  <data name="Reader_ReadFailedMessage" xml:space="preserve"><value>読み上げ中に問題が発生しました。</value></data>
+  <data name="Translate_ToggleLabel" xml:space="preserve"><value>{0}に翻訳</value></data>
+  <data name="Translate_SourceLabel" xml:space="preserve"><value>テキストの言語</value></data>
+  <data name="Translate_AutoDetect" xml:space="preserve"><value>自動検出</value></data>
+  <data name="Translate_SourcePickerTitle" xml:space="preserve"><value>テキストの言語</value></data>
+  <data name="Translate_QualityNote" xml:space="preserve"><value>端末内での簡易翻訳です。品質は参考程度です。</value></data>
+  <data name="Translate_DownloadingStatus" xml:space="preserve"><value>翻訳モデルをダウンロードしています…</value></data>
+  <data name="Translate_ModelUnavailableTitle" xml:space="preserve"><value>まだ翻訳できません</value></data>
+  <data name="Translate_ModelUnavailableMessage" xml:space="preserve"><value>翻訳モデルがまだスマートフォンになく、ダウンロードできませんでした。一度インターネットに接続して取得してください。代わりに元のテキストを読み上げます。</value></data>
+  <data name="Translate_FailedTitle" xml:space="preserve"><value>翻訳に失敗しました</value></data>
+  <data name="Translate_FailedMessage" xml:space="preserve"><value>このテキストを翻訳できませんでした。代わりに元のテキストを読み上げます。</value></data>
+  <data name="Translate_UnsupportedNote" xml:space="preserve"><value>{0}の翻訳は利用できません。</value></data>
+  <data name="Translate_SourceUnsupportedNote" xml:space="preserve"><value>{0}からの翻訳は利用できません。</value></data>
+  <data name="PackStatus_Resolving" xml:space="preserve"><value>自然な音声を確認中…</value></data>
+  <data name="PackStatus_Downloading" xml:space="preserve"><value>自然な音声をダウンロード中… {0}</value></data>
+  <data name="PackStatus_Offline" xml:space="preserve"><value>接続されていません。スマートフォンの音声で読み上げます。タップして音声のダウンロードを再試行します。</value></data>
+  <data name="PackStatus_HashMismatch" xml:space="preserve"><value>音声のダウンロードが破損しました。スマートフォンの音声で読み上げます。タップして再試行します。</value></data>
+  <data name="PackStatus_InvalidPack" xml:space="preserve"><value>自然な音声パックを使用できません。スマートフォンの音声で読み上げます。</value></data>
+  <data name="PackStatus_Failed" xml:space="preserve"><value>自然な音声をダウンロードできませんでした。スマートフォンの音声で読み上げます。タップして再試行します。</value></data>
+  <data name="PackStatus_Unavailable" xml:space="preserve"><value>お使いの言語の自然な音声はまだ利用できません。スマートフォンの音声で読み上げます。</value></data>
+  <data name="VoicePicker_Heading" xml:space="preserve"><value>音声を選択</value></data>
+  <data name="VoicePicker_Subtitle" xml:space="preserve"><value>自然な音声は一度だけダウンロードされます · テキストはスマートフォンから出ません</value></data>
+  <data name="VoicePicker_SectionPhone" xml:space="preserve"><value>スマートフォン</value></data>
+  <data name="VoicePicker_SectionMale" xml:space="preserve"><value>男性</value></data>
+  <data name="VoicePicker_SectionFemale" xml:space="preserve"><value>女性</value></data>
+  <data name="VoicePicker_Hint" xml:space="preserve"><value>音声をタップすると試聴して選択できます。読み上げ中に音声を変更しても、現在の文は元の音声で最後まで読まれます。</value></data>
+  <data name="VoicePicker_PhoneVoiceName" xml:space="preserve"><value>スマートフォンの音声</value></data>
+  <data name="VoicePicker_EngineSupertonic" xml:space="preserve"><value>SUPERTONIC</value></data>
+  <data name="VoicePicker_EnginePiper" xml:space="preserve"><value>PIPER</value></data>
+  <data name="VoicePicker_EngineMelo" xml:space="preserve"><value>MELOTTS</value></data>
+  <data name="VoicePicker_ReasonPackNotInstalled" xml:space="preserve"><value>お使いの言語の自然な音声はまだインストールされていないため、スマートフォンの音声で読み上げます。</value></data>
+  <data name="VoicePicker_ReasonNoNeuralEngine" xml:space="preserve"><value>このデバイスでは自然な音声はまだ利用できないため、スマートフォンの音声で読み上げます。</value></data>
+  <data name="Language_Intro" xml:space="preserve"><value>言語を選択してください。その言語の自然な音声をダウンロードします。届くまでは、スマートフォン本来の音声で読み上げます。</value></data>
+  <data name="Language_Retry" xml:space="preserve"><value>ダウンロードを再試行</value></data>
+  <data name="Language_Continue" xml:space="preserve"><value>続ける</value></data>
+  <data name="Language_StartReading" xml:space="preserve"><value>読み上げを始める</value></data>
+</root>
