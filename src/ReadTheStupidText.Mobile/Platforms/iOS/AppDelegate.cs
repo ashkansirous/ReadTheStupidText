@@ -8,4 +8,11 @@ namespace ReadTheStupidText.Mobile;
 public class AppDelegate : MauiUIApplicationDelegate
 {
 	protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
+
+	// The explicit startup step: marks the packs folder as excluded from backups before any download.
+	public override bool FinishedLaunching(UIKit.UIApplication application, NSDictionary? launchOptions)
+	{
+		IosPackStorage.ExcludePacksFromBackup();
+		return base.FinishedLaunching(application, launchOptions);
+	}
 }

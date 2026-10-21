@@ -1,0 +1,4 @@
+"NSCameraUsageDescription" = "La cámara fotografía texto impreso para que la aplicación pueda leerlo en voz alta. Las fotos se procesan en el dispositivo y nunca se suben.";
+"NSPhotoLibraryUsageDescription" = "La aplicación lee una foto que eliges de tu fototeca, solo para leer en voz alta el texto que contiene. Las fotos se procesan en el dispositivo y nunca se suben.";
+"NSPhotoLibraryAddUsageDescription" = "La aplicación no guarda nada en tu fototeca.";
+"NSMicrophoneUsageDescription" = "La aplicación no graba audio. Solo se solicita si alguna vez se usa la grabación de vídeo, algo que esta aplicación no hace.";

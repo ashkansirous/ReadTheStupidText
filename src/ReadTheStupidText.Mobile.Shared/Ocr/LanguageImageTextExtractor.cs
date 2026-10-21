@@ -6,16 +6,18 @@ using ReadTheStupidText.Application.Settings;
 namespace ReadTheStupidText.Mobile;
 
 /// <summary>
-/// The Android image reader (Slice 52, Decision 65): the installed OCR pack for the language reads
-/// the image with PaddleOCR; with no pack, or if the pack fails to load, ML Kit Latin reads it.
-/// ML Kit has no Arabic, Persian or Cyrillic, so for those languages the fallback is flagged
-/// <see cref="OcrSource.MlKitPackPending"/> and the page can say the pack is still downloading.
+/// The image reader on Android and iOS (Slice 52, Decision 65; shared in Slice 55): the installed OCR
+/// pack for the language reads the image with PaddleOCR; with no pack, or if the pack fails to load,
+/// the platform's built-in recognizer reads it (ML Kit Latin on Android, Apple Vision on iOS). For a
+/// language the built-in recognizer does not cover, the fallback is flagged
+/// <see cref="OcrSource.MlKitPackPending"/> (the value means "built-in recognizer, pack still
+/// pending", whichever OS provides it) and the page can say the pack is still downloading.
 /// <see cref="IImageTextExtractor"/> is the text-only view the Reader page calls; the line boxes
 /// stay available through <see cref="IOcrLineExtractor"/> for Slice 63.
 /// </summary>
 public sealed class LanguageImageTextExtractor : IImageTextExtractor, IOcrLineExtractor, IDisposable
 {
-    private readonly MlKitImageTextExtractor _mlKit;
+    private readonly IBuiltInTextRecognizer _builtIn;
     private readonly IVoicePackService _packs;
     private readonly ISettingsStore _settings;
     private readonly IPixelImageLoader _loader;
@@ -23,9 +25,9 @@ public sealed class LanguageImageTextExtractor : IImageTextExtractor, IOcrLineEx
     private PaddleOcrEngine? _engine;
     private OcrModelPaths? _failedToLoad; // a pack that threw while loading: skipped until its folder or version changes
 
-    public LanguageImageTextExtractor(MlKitImageTextExtractor mlKit, IVoicePackService packs, ISettingsStore settings, IPixelImageLoader loader)
+    public LanguageImageTextExtractor(IBuiltInTextRecognizer builtIn, IVoicePackService packs, ISettingsStore settings, IPixelImageLoader loader)
     {
-        _mlKit = mlKit;
+        _builtIn = builtIn;
         _packs = packs;
         _settings = settings;
         _loader = loader;
@@ -39,7 +41,7 @@ public sealed class LanguageImageTextExtractor : IImageTextExtractor, IOcrLineEx
             return new ImageText(reading.Lines, OcrSource.PaddleOcr).Text;
         }
 
-        return await _mlKit.ExtractTextAsync(imagePath).ConfigureAwait(false);
+        return await _builtIn.ExtractTextAsync(imagePath).ConfigureAwait(false);
     }
 
     public async Task<ImageText> ExtractLinesAsync(string imagePath, string language, CancellationToken cancellationToken)
@@ -49,20 +51,30 @@ public sealed class LanguageImageTextExtractor : IImageTextExtractor, IOcrLineEx
             return new ImageText(reading.Lines, OcrSource.PaddleOcr, reading.Width, reading.Height);
         }
 
-        OcrReading fallback = await _mlKit.ExtractLinesAsync(imagePath).ConfigureAwait(false);
+        OcrReading fallback = await _builtIn.ExtractLinesAsync(imagePath).ConfigureAwait(false);
         return new ImageText(fallback.Lines, FallbackSource(language), fallback.Width, fallback.Height);
     }
 
     public void Dispose()
     {
-        _engine?.Dispose();
-        _gate.Dispose();
+        // Wait for an in-flight read so the engine is never disposed under it.
+        _gate.Wait();
+        try
+        {
+            _engine?.Dispose();
+            _engine = null;
+        }
+        finally
+        {
+            _gate.Release();
+            _gate.Dispose();
+        }
     }
 
     private string CurrentLanguage() => _settings.Language ?? AppLanguages.Code(AppLanguage.English);
 
-    private static OcrSource FallbackSource(string language) =>
-        OcrLanguages.IsLatinScript(language) ? OcrSource.MlKit : OcrSource.MlKitPackPending;
+    private OcrSource FallbackSource(string language) =>
+        _builtIn.Covers(language) ? OcrSource.MlKit : OcrSource.MlKitPackPending;
 
     // Null when no pack serves the language, the pack could not run or found no text: the caller falls back.
     private async Task<OcrReading?> TryPaddleAsync(string imagePath, string language, CancellationToken cancellationToken)
@@ -77,11 +89,11 @@ public sealed class LanguageImageTextExtractor : IImageTextExtractor, IOcrLineEx
         try
         {
             OcrReading reading = await Task.Run(() => ReadWithEngine(paths, imagePath, cancellationToken), cancellationToken).ConfigureAwait(false);
-            return reading.Lines.Count > 0 ? reading : null; // a blank result is worth a second opinion from ML Kit
+            return reading.Lines.Count > 0 ? reading : null; // a blank result is worth a second opinion from the built-in recognizer
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            System.Diagnostics.Debug.WriteLine($"PaddleOCR pack '{paths.Folder}' failed, using ML Kit: {ex}");
+            System.Diagnostics.Debug.WriteLine($"PaddleOCR pack '{paths.Folder}' failed, using the built-in recognizer: {ex}");
             MarkFailedWhenStructural(paths, ex);
             return null;
         }
@@ -120,9 +132,9 @@ public sealed class LanguageImageTextExtractor : IImageTextExtractor, IOcrLineEx
         {
             return new PaddleOcrEngine(paths, _loader);
         }
-        catch
+        catch (Exception ex)
         {
-            _failedToLoad = paths;
+            MarkFailedWhenStructural(paths, ex);
             throw;
         }
     }

@@ -1,0 +1,4 @@
+"NSCameraUsageDescription" = "相机用于拍摄印刷文字，以便应用将其朗读出来。照片只在设备上处理，绝不会上传。";
+"NSPhotoLibraryUsageDescription" = "应用会读取你从相册中选择的照片，仅用于朗读其中的文字。照片只在设备上处理，绝不会上传。";
+"NSPhotoLibraryAddUsageDescription" = "应用不会向你的相册保存任何内容。";
+"NSMicrophoneUsageDescription" = "应用不会录制音频。仅在使用视频拍摄时才会请求此权限，而本应用不使用视频拍摄。";

@@ -2,58 +2,86 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using AVFoundation;
 using Foundation;
+using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Domain.Reading;
-using SherpaOnnx;
 
 namespace ReadTheStupidText.Mobile;
 
 /// <summary>
-/// Speaks text with the local Supertonic-3 neural engine on iOS (Slice 49), the iOS
-/// counterpart of <c>AndroidSupertonicSpeechReader</c>: the same sherpa-onnx synthesis,
-/// <see cref="SpeechTextChunker"/> chunking, ordered playback, chunk-boundary voice swap and
-/// skip logic, with <see cref="AVAudioPlayer"/> as the playback primitive.
+/// Speaks text with the local neural engine on iOS (Slices 49 and 55), the iOS counterpart of
+/// <c>AndroidSupertonicSpeechReader</c>: the same sherpa-onnx synthesis (Supertonic, Piper and
+/// Melo packs), <see cref="SpeechTextChunker"/> chunking, sentence cache and head start, ordered
+/// playback, chunk-boundary voice swap and skip logic, with <see cref="AVAudioPlayer"/> as the
+/// playback primitive.
 /// </summary>
 /// <remarks>
-/// Each synthesized chunk is written to a temp WAV file and played by a fresh
-/// <see cref="AVAudioPlayer"/> (rate-adjustable, pitch-preserving). Read-through progress
-/// and timing come from a short poll loop that samples the player's position on the main
-/// thread. The logic is deliberately a copy of the Android reader rather than a shared base
-/// class: Slice 60 is editing the Android reader and the shared reading code in parallel, so
-/// extracting a base now would conflict; folding the two together is a follow-up once both
-/// have landed. Player calls happen on the main thread (AVFoundation delivers its callbacks
-/// there).
+/// Each chunk is joined from its cached or synthesized sentences, written to a temp WAV file and
+/// played by a fresh <see cref="AVAudioPlayer"/> (rate-adjustable, pitch-preserving). Read-through
+/// progress and timing come from a short poll loop that samples the player's position on the main
+/// thread. The logic is deliberately a copy of the Android reader rather than a shared base class
+/// (see Slice 49): folding the two together is a follow-up now that both have landed. Player calls
+/// happen on the main thread (AVFoundation delivers its callbacks there). The playback half is in
+/// <c>IosSupertonicSpeechReader.Playback.cs</c>, the head start in <c>...HeadStart.cs</c>.
 /// </remarks>
-public sealed class IosSupertonicSpeechReader : ISpeechReader, IDisposable
+public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposable
 {
-    private static readonly int SynthesisThreads = Math.Clamp(Environment.ProcessorCount / 2, 2, 4);
-
-    private static readonly int MaxSynthesisConcurrency =
-        Math.Clamp(Environment.ProcessorCount / SynthesisThreads, 2, 4);
+    private static readonly int MaxSynthesisConcurrency = IosTtsEngine.MaxSynthesisConcurrency;
 
     private const string WarmUpText = "Ready.";
+
+    // Slice 47: sentence audio is cached under CacheDirectory/sentences, keyed by sentence + voice
+    // + engine + language (SentenceCacheKey). A chunk is played from a temp file joined out of its
+    // cached sentences, so a cached file is never opened by the player or deleted by playback.
+    private const string SentenceFolderName = "sentences";
+    private const string ChunkFilePrefix = "read-chunk-";
+    private const string ChunkFileExtension = ".wav";
+    private const string ChunkFilePattern = ChunkFilePrefix + "*" + ChunkFileExtension;
+
+    // The cache makes a two-sentence head cheap (prepared ahead); the shared chunker's default
+    // stays one short sentence for a reader without a cache.
+    private static readonly SpeechTextChunker.HeadPolicy HeadPolicy = SpeechTextChunker.HeadPolicy.Cached;
+
+    // Silence between the sentences of one chunk (each was synthesized on its own).
+    private static readonly TimeSpan SentenceGap = TimeSpan.FromMilliseconds(150);
 
     private static readonly TimeSpan TimingRaiseInterval = TimeSpan.FromSeconds(1);
     private static readonly TimeSpan SkipAmount = TimeSpan.FromSeconds(10);
     private static readonly TimeSpan PollInterval = TimeSpan.FromMilliseconds(200);
 
     private readonly IVoiceModelService _model;
+    private readonly ISystemLog _log;
+    private readonly SentenceAudioSource _sentences;
     private readonly ReadTimingTracker _timing = new();
     private readonly NSObject _interruptionObserver;
+
+    // One engine-level pool of native synthesis slots shared by reads and head-start prepares,
+    // so their combined concurrency never exceeds MaxSynthesisConcurrency.
+    private readonly SemaphoreSlim _slots = new(MaxSynthesisConcurrency);
 
     private readonly object _gate = new();
     private readonly object _ttsGate = new();
 
-    private OfflineTts? _tts;
+    // The engine plus the model it was built from, swapped as one object under _ttsGate
+    // (Slice 51: engine kind, language, voices). Each read captures one engine and uses its Model
+    // for everything, so a language or pack change mid-read can't mix models.
+    private IosBuiltEngine? _engine;
+    private bool _disposed;
+    private string? _voiceId;
+    private readonly ConcurrentDictionary<VoiceEngineKind, string> _voiceByKind = new();
+    private int _warmedUp;
+
     private AVAudioPlayer? _player;
     private string? _currentChunkFile;
     private string? _previousChunkFile;
 
     private double _playbackRate = PlaybackRate.Default.Value;
-    private int _speakerId = SupertonicVoiceTable.DefaultSpeakerId;
     private PlaybackState _state = PlaybackState.Idle;
     private bool _pausedByInterruption;
     private bool _playerFinished;
+
+    // A chunk whose player started while the reader was paused: announced when Resume plays it.
+    private ReadChunk? _unannouncedChunk;
 
     private TaskCompletionSource<bool>? _chunkEnded;
     private CancellationTokenSource? _pollCts;
@@ -66,10 +94,21 @@ public sealed class IosSupertonicSpeechReader : ISpeechReader, IDisposable
 
     private int _generation;
     private CancellationTokenSource? _synthCts;
+    private CancellationTokenSource? _prepareCts;
+
+    // The read between its start and its end (changed under _gate): longer than PlaybackState,
+    // which is Idle while the first chunk is still being synthesized. It ends only when its last
+    // owner leaves, so a Skip-continued playback keeps it alive after the original call returns.
+    // A head-start prepare never runs while it is set.
+    private ActiveRead? _activeRead;
+
+    // Set when a read starts and cleared at its first audio, which logs the wait.
+    private long _readStartTicks;
+    private int _firstAudioPending;
 
     private int _chunkCount;
     private int _currentChunkIndex;
-    private IReadOnlyList<string> _chunks = [];
+    private IReadOnlyList<SpeechChunkPlan> _chunks = [];
 
     private long _lastTimingRaiseTicks;
 
@@ -77,35 +116,125 @@ public sealed class IosSupertonicSpeechReader : ISpeechReader, IDisposable
     public event EventHandler? Completed;
     public event EventHandler<double>? ProgressChanged;
     public event EventHandler<ReadTiming>? TimingChanged;
+
+    // Raised once each chunk has started playing, with its real source range (Slice 60).
     public event EventHandler<ReadChunk>? ChunkChanged;
 
     public PlaybackState State => _state;
 
-    public IosSupertonicSpeechReader(IVoiceModelService model)
+    public bool SupportsSegments => true;
+
+    public bool ReadInProgress
     {
-        _model = model;
-        _interruptionObserver = IosAudioSession.ObserveInterruptions(OnInterruptionBegan, OnInterruptionEnded);
+        get
+        {
+            lock (_gate)
+            {
+                return _activeRead != null;
+            }
+        }
     }
 
-    public async Task SpeakAsync(string text, int? activityId = null)
+    public IosSupertonicSpeechReader(IVoiceModelService model, ISystemLog? log = null)
     {
-        OfflineTts? tts = EnsureTts();
-        if (tts is null)
+        _model = model;
+        _log = log ?? new IosSystemLog();
+        string cacheRoot = FileSystem.Current.CacheDirectory;
+        _sentences = new SentenceAudioSource(
+            new SentenceAudioCache(new FileSentenceStore(Path.Combine(cacheRoot, SentenceFolderName))), _log);
+        PurgeOrphanedChunkFiles(cacheRoot);
+        _interruptionObserver = IosAudioSession.ObserveInterruptions(OnInterruptionBegan, OnInterruptionEnded);
+        _model.ReadyChanged += OnModelReadyChanged;
+    }
+
+    // A killed app leaves its playing chunk's temp file behind; none is in use at startup.
+    private static void PurgeOrphanedChunkFiles(string cacheRoot)
+    {
+        foreach (string orphan in Directory.EnumerateFiles(cacheRoot, ChunkFilePattern))
+        {
+            TryDelete(orphan);
+        }
+    }
+
+    // On a cold start the model is only resolved after a background scan, so a warm-up asked for
+    // before that found nothing to warm: warm once, the first time the model reports ready.
+    private void OnModelReadyChanged(object? sender, EventArgs e)
+    {
+        if (_model.IsReady && Volatile.Read(ref _warmedUp) == 0)
+        {
+            _ = WarmUpAsync();
+        }
+    }
+
+    public Task SpeakAsync(string text, int? activityId = null) =>
+        StartReadAsync(SpeechChunkPlanner.ForText(text, HeadPolicy));
+
+    // Slice 60: each segment is chunked on its own and each chunk is synthesized in its
+    // segment's voice, so a character keeps one voice for the whole read.
+    public Task SpeakSegmentsAsync(IReadOnlyList<VoicedSegment> segments, int? activityId = null) =>
+        StartReadAsync(SpeechChunkPlanner.ForSegments(segments, HeadPolicy));
+
+    private async Task StartReadAsync(IReadOnlyList<SpeechChunkPlan> chunks)
+    {
+        IosBuiltEngine engine = AcquireEngine() ?? throw new NeuralEngineUnavailableException();
+
+        ActiveRead? read = null;
+        try
+        {
+            read = BeginRead(engine);
+
+            // Once per read (and again after an interruption ends), not once per chunk.
+            await MainThread.InvokeOnMainThreadAsync(() => IosAudioSession.Activate(this));
+            (int generation, CancellationToken token) = BeginGeneration();
+            _readStartTicks = Stopwatch.GetTimestamp();
+            Volatile.Write(ref _firstAudioPending, 1);
+
+            _chunks = chunks;
+            _timing.Start(chunks.Count);
+            RaiseTiming(TimeSpan.Zero);
+
+            await SpeakChunksAsync(engine, chunks, 0, Volatile.Read(ref _voiceId), generation, token);
+        }
+        finally
+        {
+            if (read is not null)
+            {
+                LeaveRead(read);
+            }
+
+            engine.Release();
+        }
+    }
+
+    // Makes this the active read and cancels any prepare, atomically with a prepare's own check,
+    // so a prepare either finished its start before the read or never starts.
+    private ActiveRead BeginRead(IosBuiltEngine engine)
+    {
+        lock (_gate)
+        {
+            var read = new ActiveRead(engine, new ReadOwnership());
+            _activeRead = read;
+            CancelPrepareLocked();
+            return read;
+        }
+    }
+
+    // Paired with BeginRead or a successful TryJoin. The read ends with its last owner, and only
+    // if a newer read hasn't replaced it (or Stop cleared it) meanwhile.
+    private void LeaveRead(ActiveRead read)
+    {
+        if (!read.Owners.Leave())
         {
             return;
         }
 
-        // Once per read (and again after an interruption ends), not once per chunk.
-        await MainThread.InvokeOnMainThreadAsync(() => IosAudioSession.Activate(this));
-        (int generation, CancellationToken token) = BeginGeneration();
-
-        IReadOnlyList<string> chunks = SpeechTextChunker.Split(text);
-        _chunks = chunks;
-        _timing.Start(chunks.Count);
-        RaiseTiming(TimeSpan.Zero);
-        ChunkChanged?.Invoke(this, new ReadChunk(0, chunks.Count, text, 0, text.Length));
-
-        await SpeakChunksAsync(tts, chunks, 0, Volatile.Read(ref _speakerId), generation, token);
+        lock (_gate)
+        {
+            if (ReferenceEquals(_activeRead, read))
+            {
+                _activeRead = null;
+            }
+        }
     }
 
     public Task SkipForward() => SkipByAsync(SkipAmount);
@@ -114,12 +243,37 @@ public sealed class IosSupertonicSpeechReader : ISpeechReader, IDisposable
 
     private async Task SkipByAsync(TimeSpan delta)
     {
-        OfflineTts? tts = Volatile.Read(ref _tts);
-        if (tts is null || _state == PlaybackState.Idle)
+        ActiveRead? read;
+        lock (_gate)
+        {
+            read = _activeRead;
+        }
+
+        if (read is null || _state == PlaybackState.Idle || !read.Owners.TryJoin())
         {
             return;
         }
 
+        IosBuiltEngine engine = read.Engine;
+        if (!engine.TryAcquire())
+        {
+            LeaveRead(read);
+            return;
+        }
+
+        try
+        {
+            await SkipOnEngineAsync(engine, delta);
+        }
+        finally
+        {
+            engine.Release();
+            LeaveRead(read);
+        }
+    }
+
+    private async Task SkipOnEngineAsync(IosBuiltEngine engine, TimeSpan delta)
+    {
         TimeSpan elapsed = _timing.CurrentTiming(CurrentChunkPosition()).Elapsed;
         if (_timing.ComputeSkipTarget(elapsed, delta) is not { } target)
         {
@@ -132,67 +286,36 @@ public sealed class IosSupertonicSpeechReader : ISpeechReader, IDisposable
         _timing.SeekTo(target);
         RaiseTiming(TimeSpan.Zero);
 
-        await SpeakChunksAsync(tts, _chunks, target.ChunkIndex, Volatile.Read(ref _speakerId), generation, newToken);
+        await SpeakChunksAsync(engine, _chunks, target.ChunkIndex, Volatile.Read(ref _voiceId), generation, newToken);
     }
 
-    // Same ordered-consume design as the Windows reader — see that file for the
-    // full rationale. Speaker is a parameter (not the mutable field) so a
-    // mid-read voice change can't half-apply to already-queued chunks.
+    // Same ordered-consume design as the Windows and Android readers. The voice is a parameter
+    // (not the mutable field) so a mid-read voice change can't half-apply to already-queued
+    // chunks. The chunk files of this generation are deleted when it ends, however it ends.
     private async Task SpeakChunksAsync(
-        OfflineTts tts, IReadOnlyList<string> chunks, int startIndex, int speakerId, int generation, CancellationToken token)
+        IosBuiltEngine engine, IReadOnlyList<SpeechChunkPlan> chunks, int startIndex, string? voiceId, int generation,
+        CancellationToken token)
     {
         _chunkCount = chunks.Count;
         _currentChunkIndex = startIndex;
         ProgressChanged?.Invoke(this, chunks.Count == 0 ? 0 : (double)startIndex / chunks.Count);
 
-        var slots = new SemaphoreSlim(MaxSynthesisConcurrency);
-        var generations = new List<Task<string>>();
         var files = new ConcurrentQueue<string>();
-        Task<string>? firstChunk = null;
-        for (int index = startIndex; index < chunks.Count; index++)
-        {
-            Task<string> chunkTask = index == startIndex
-                ? GenerateChunkAsync(tts, chunks[index], index, speakerId, slots, files, token)
-                : GenerateAfterAsync(firstChunk!, tts, chunks[index], index, speakerId, slots, files, token);
-            firstChunk ??= chunkTask;
-            generations.Add(chunkTask);
-        }
-
+        List<Task<string>> generations = StartGenerations(engine, chunks, startIndex, voiceId, files, token);
+        bool drained = false;
         try
         {
             for (int offset = 0; offset < generations.Count; offset++)
             {
-                string wavPath;
-                try
-                {
-                    wavPath = await generations[offset];
-                }
-                catch (OperationCanceledException)
-                {
-                    return;
-                }
-
-                if (!IsCurrent(generation))
-                {
-                    return;
-                }
-
                 int index = startIndex + offset;
-                _currentChunkIndex = index;
-                bool endedNaturally = await PlayChunkAsync(wavPath, token);
-                if (!endedNaturally || !IsCurrent(generation))
+                if (!await PlayGeneratedChunkAsync(generations[offset], chunks, index, generation, token))
                 {
                     return;
                 }
 
-                _timing.AdvancePastChunk(index);
-
-                int selected = Volatile.Read(ref _speakerId);
-                if (selected != speakerId && index + 1 < chunks.Count)
+                if (await RestartForVoiceSwapAsync(engine, chunks, index, voiceId, generations, files))
                 {
-                    (int nextGeneration, CancellationToken nextToken) = BeginGeneration();
-                    _ = DrainAsync(generations, files);
-                    await SpeakChunksAsync(tts, chunks, index + 1, selected, nextGeneration, nextToken);
+                    drained = true; // the restart drained this generation before it ran on
                     return;
                 }
             }
@@ -204,12 +327,17 @@ public sealed class IosSupertonicSpeechReader : ISpeechReader, IDisposable
         }
         finally
         {
-            _ = DrainAsync(generations, files);
+            if (!drained)
+            {
+                _ = DrainAsync(generations, files);
+            }
         }
     }
 
-    // Natural end of a read, as AvSpeechReader.Finish does: stop polling, free the player,
-    // delete the last chunk file and hand the audio session back, all before Completed.
+    // Natural end of a read, as AvSpeechReader.Finish does: stop polling, free the player, delete
+    // the last chunk file and hand the audio session back, then leave the same state Stop() does
+    // (progress and timer back at zero, so a stale player never feeds the next read's timer), all
+    // before Completed.
     private async Task FinishAsync(int generation)
     {
         StopPolling();
@@ -221,11 +349,112 @@ public sealed class IosSupertonicSpeechReader : ISpeechReader, IDisposable
             IosAudioSession.Deactivate(this);
         });
 
-        if (IsCurrent(generation))
+        if (!IsCurrent(generation))
         {
-            UpdateState(PlaybackState.Idle);
-            Completed?.Invoke(this, EventArgs.Empty);
+            return;
         }
+
+        ResetProgress();
+        UpdateState(PlaybackState.Idle);
+        Completed?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void ResetProgress()
+    {
+        _chunkCount = 0;
+        Volatile.Write(ref _positionTicks, 0);
+        Volatile.Write(ref _durationTicks, 0);
+        ProgressChanged?.Invoke(this, 0);
+        _timing.Reset();
+        RaiseTiming(TimeSpan.Zero);
+    }
+
+    // Kicks off synthesis of every remaining chunk; the first runs straight away and the rest
+    // wait for it, so the chunk the listener waits on is never starved.
+    private List<Task<string>> StartGenerations(
+        IosBuiltEngine engine, IReadOnlyList<SpeechChunkPlan> chunks, int startIndex, string? voiceId,
+        ConcurrentQueue<string> files, CancellationToken token)
+    {
+        var generations = new List<Task<string>>();
+        Task<string>? firstChunk = null;
+        for (int index = startIndex; index < chunks.Count; index++)
+        {
+            VoiceInfo voice = ResolveVoice(engine, chunks[index].VoiceId, voiceId);
+            Task<string> chunkTask = index == startIndex
+                ? GenerateChunkAsync(engine, chunks[index].Text, index, voice, files, token)
+                : GenerateAfterAsync(firstChunk!, engine, chunks[index].Text, index, voice, files, token);
+            firstChunk ??= chunkTask;
+            generations.Add(chunkTask);
+        }
+
+        return generations;
+    }
+
+    // Waits for one chunk's audio and plays it. False when the read was cancelled, stopped or
+    // superseded, so the caller stops consuming chunks.
+    private async Task<bool> PlayGeneratedChunkAsync(
+        Task<string> generated, IReadOnlyList<SpeechChunkPlan> chunks, int index, int generation,
+        CancellationToken token)
+    {
+        string wavPath;
+        try
+        {
+            wavPath = await generated;
+        }
+        catch (OperationCanceledException)
+        {
+            return false;
+        }
+
+        if (!IsCurrent(generation))
+        {
+            return false;
+        }
+
+        _currentChunkIndex = index;
+        SpeechChunkPlan chunk = chunks[index];
+        var readChunk = new ReadChunk(index, chunks.Count, chunk.Text, chunk.SourceStart, chunk.SourceEnd);
+        bool endedNaturally = await PlayChunkAsync(wavPath, readChunk, token);
+        if (!endedNaturally || !IsCurrent(generation))
+        {
+            return false;
+        }
+
+        _timing.AdvancePastChunk(index);
+        return true;
+    }
+
+    // A chunk with its own voice (a segment read) never follows the narrator picker; a plain read
+    // restarts at the next chunk when the selected voice changed mid-read. Voices are compared by
+    // id within the read's own model, so a language or pack change never restarts a read. True
+    // when it restarted (the restarted loop finishes the read, so the caller returns). The superseded
+    // generation's chunk files are drained before the restarted loop runs, not after it: the
+    // restarted loop plays the rest of the read, and the old files would sit on disk until then.
+    private async Task<bool> RestartForVoiceSwapAsync(
+        IosBuiltEngine engine, IReadOnlyList<SpeechChunkPlan> chunks, int index, string? voiceId,
+        List<Task<string>> generations, ConcurrentQueue<string> files)
+    {
+        string? selected = Volatile.Read(ref _voiceId);
+        bool sameVoice = ResolveVoice(engine, selected).Id == ResolveVoice(engine, voiceId).Id;
+        if (sameVoice || index + 1 >= chunks.Count || chunks[index + 1].VoiceId is not null)
+        {
+            return false;
+        }
+
+        (int nextGeneration, CancellationToken nextToken) = BeginGeneration(); // cancels the old synthesis
+        _ = DrainAsync(generations, files);
+        await SpeakChunksAsync(engine, chunks, index + 1, selected, nextGeneration, nextToken);
+        return true;
+    }
+
+    // The first of the given ids the read's model offers (a chunk's own voice, then the selected
+    // one), then the voice last picked for this engine family, then the model's default: a Piper
+    // pick for another language never displaces the Supertonic choice.
+    private VoiceInfo ResolveVoice(IosBuiltEngine engine, params string?[] ids)
+    {
+        _voiceByKind.TryGetValue(engine.Model.Kind, out string? remembered);
+        string?[] candidates = [.. ids, Volatile.Read(ref _voiceId), remembered];
+        return VoiceChoices.Resolve(engine.Model, candidates);
     }
 
     public Task WarmUpAsync() => Task.Run(WarmUp);
@@ -234,231 +463,37 @@ public sealed class IosSupertonicSpeechReader : ISpeechReader, IDisposable
     {
         try
         {
-            OfflineTts? tts = EnsureTts();
-            _ = tts?.Generate(WarmUpText, 1.0f, _speakerId);
-        }
-        catch
-        {
-            // Best-effort: EnsureTts() in SpeakAsync remains the safety net.
-        }
-    }
-
-    private async Task<string> GenerateAfterAsync(
-        Task gate, OfflineTts tts, string chunk, int index, int speakerId, SemaphoreSlim slots,
-        ConcurrentQueue<string> files, CancellationToken token)
-    {
-        try
-        {
-            await gate;
-        }
-        catch
-        {
-            // Swallowed: the first chunk's real outcome surfaces on its own await.
-        }
-
-        return await GenerateChunkAsync(tts, chunk, index, speakerId, slots, files, token);
-    }
-
-    // Checks the token before each synthesis starts and again before the file is written, so
-    // a stopped, skipped or superseded read neither keeps synthesizing queued chunks nor leaves
-    // a WAV behind. Every file written is recorded in `files` so the generation's drain can
-    // delete it.
-    private async Task<string> GenerateChunkAsync(
-        OfflineTts tts, string chunk, int index, int speakerId, SemaphoreSlim slots,
-        ConcurrentQueue<string> files, CancellationToken token)
-    {
-        await slots.WaitAsync(token);
-        try
-        {
-            token.ThrowIfCancellationRequested();
-            OfflineTtsGeneratedAudio audio = await Task.Run(() => tts.Generate(chunk, 1.0f, speakerId), token);
-            token.ThrowIfCancellationRequested();
-            RecordChunkDuration(index, audio);
-            string path = await WriteWavFileAsync(audio.Samples, audio.SampleRate);
-            files.Enqueue(path);
-            return path;
-        }
-        finally
-        {
-            slots.Release();
-        }
-    }
-
-    // Runs once a generation is over (finished, stopped, skipped or superseded). Waits for
-    // its synthesis tasks, swallowing every outcome so none goes unobserved, then deletes
-    // every chunk file the generation wrote. Deleting a file that is still playing is safe
-    // (the open handle stays valid) and the player is released by whoever ended the read.
-    private static async Task DrainAsync(List<Task<string>> generations, ConcurrentQueue<string> files)
-    {
-        foreach (Task<string> generation in generations)
-        {
-            try
+            IosBuiltEngine? engine = AcquireEngine();
+            if (engine is null)
             {
-                await generation;
-            }
-            catch
-            {
-                // Cancelled or failed: a real failure already surfaced on the consumer's await.
-            }
-        }
-
-        foreach (string path in files)
-        {
-            TryDelete(path);
-        }
-    }
-
-    private void RecordChunkDuration(int index, OfflineTtsGeneratedAudio audio)
-    {
-        TimeSpan duration = audio.SampleRate > 0
-            ? TimeSpan.FromSeconds((double)audio.Samples.Length / audio.SampleRate)
-            : TimeSpan.Zero;
-
-        bool totalWasUnknown = _timing.CurrentTiming(TimeSpan.Zero).Total is null;
-        _timing.RecordChunkDuration(index, duration);
-        if (totalWasUnknown && _timing.CurrentTiming(TimeSpan.Zero).Total is not null)
-        {
-            RaiseTiming(CurrentChunkPosition());
-        }
-    }
-
-    // Plays one chunk's WAV file and awaits its natural end (true) or a stop/supersede
-    // (false). The previous chunk's temp file is deleted once this one has taken over the
-    // player (it's no longer open by then).
-    private async Task<bool> PlayChunkAsync(string wavPath, CancellationToken token)
-    {
-        var ended = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        _chunkEnded = ended;
-
-        await MainThread.InvokeOnMainThreadAsync(() => StartPlayer(wavPath, ended, token));
-
-        using (token.Register(() => ended.TrySetResult(false)))
-        {
-            return await ended.Task;
-        }
-    }
-
-    // Runs on the main thread. Replaces the previous chunk's player, then starts this chunk.
-    // A chunk that cannot be decoded is skipped (treated as ended) rather than stalling the read.
-    private void StartPlayer(string wavPath, TaskCompletionSource<bool> ended, CancellationToken token)
-    {
-        ReleasePlayer();
-        DeletePreviousChunkFile();
-        _previousChunkFile = _currentChunkFile;
-        _currentChunkFile = wavPath;
-        if (token.IsCancellationRequested)
-        {
-            return;
-        }
-
-        using var url = NSUrl.FromFilename(wavPath);
-        AVAudioPlayer? player = AVAudioPlayer.FromUrl(url, out NSError? error);
-        if (player is null || error is not null)
-        {
-            ended.TrySetResult(true);
-            return;
-        }
-
-        player.EnableRate = true;
-        player.Rate = (float)_playbackRate;
-        player.FinishedPlaying += (_, _) =>
-        {
-            if (ReferenceEquals(_player, player))
-            {
-                _playerFinished = true;
-            }
-
-            ended.TrySetResult(true);
-        };
-        player.PrepareToPlay();
-        _player = player;
-        _playerFinished = false;
-        Volatile.Write(ref _positionTicks, 0);
-        Volatile.Write(ref _durationTicks, TimeSpan.FromSeconds(player.Duration).Ticks);
-
-        // Paused (by the user or an interruption) between chunks: the next chunk is prepared
-        // but stays silent, and the interruption flag is kept; Resume plays it.
-        if (_state != PlaybackState.Paused)
-        {
-            if (!player.Play())
-            {
-                ReleasePlayer();
-                ended.TrySetResult(true);
                 return;
             }
 
-            _pausedByInterruption = false;
-            UpdateState(PlaybackState.Playing);
+            try
+            {
+                Volatile.Write(ref _warmedUp, 1);
+                int speaker = ResolveVoice(engine).SpeakerId;
+                IosTtsEngine.Generate(engine, WarmUpText, speaker).Dispose();
+            }
+            finally
+            {
+                engine.Release();
+            }
         }
-
-        StartPolling(token);
-    }
-
-    public void Pause() => MainThread.BeginInvokeOnMainThread(PauseNow);
-
-    // Main thread only.
-    private void PauseNow()
-    {
-        if (_state != PlaybackState.Playing)
+        catch
         {
-            return;
-        }
-
-        _player?.Pause();
-        UpdateState(PlaybackState.Paused);
-    }
-
-    public void Resume() => MainThread.BeginInvokeOnMainThread(ResumeNow);
-
-    // Main thread only. A player that refuses to play leaves the state Paused. If the paused
-    // chunk had already finished, replaying it would repeat audio: just flip the state, and the
-    // next StartPlayer (state no longer Paused) plays the next chunk.
-    private void ResumeNow()
-    {
-        if (_state != PlaybackState.Paused)
-        {
-            return;
-        }
-
-        if (_playerFinished || _player is null)
-        {
-            _pausedByInterruption = false;
-            UpdateState(PlaybackState.Playing);
-            return;
-        }
-
-        if (_player.Play())
-        {
-            _pausedByInterruption = false;
-            UpdateState(PlaybackState.Playing);
+            // Best-effort: AcquireEngine() in StartReadAsync remains the safety net.
         }
     }
 
-    public void Stop()
+    public void SetVoice(string voiceId)
     {
-        lock (_gate)
+        if (VoiceChoices.KindOf(voiceId) is { } kind)
         {
-            _synthCts?.Cancel();
-            _generation++;
+            _voiceByKind[kind] = voiceId;
         }
 
-        _pausedByInterruption = false;
-        _chunkEnded?.TrySetResult(false);
-        StopPolling();
-        MainThread.BeginInvokeOnMainThread(() =>
-        {
-            ReleasePlayer();
-            DeletePreviousChunkFile();
-            DeleteCurrentChunkFile();
-            IosAudioSession.Deactivate(this);
-        });
-        _chunkCount = 0;
-        Volatile.Write(ref _positionTicks, 0);
-        Volatile.Write(ref _durationTicks, 0);
-        ProgressChanged?.Invoke(this, 0);
-        _timing.Reset();
-        RaiseTiming(TimeSpan.Zero);
-        UpdateState(PlaybackState.Idle);
+        Volatile.Write(ref _voiceId, voiceId);
     }
 
     public void SetSpeed(PlaybackRate speed)
@@ -473,68 +508,27 @@ public sealed class IosSupertonicSpeechReader : ISpeechReader, IDisposable
         });
     }
 
-    public void SetVoice(string voiceId) =>
-        Volatile.Write(ref _speakerId, SupertonicVoiceTable.SpeakerIdFor(voiceId));
-
-    // The audio session reports a call, an alarm or Siri taking the audio: pause, and carry on
-    // when the system says it is fine to (a call ending). A pause the user made is never undone.
-    private void OnInterruptionBegan()
+    public void Stop()
     {
-        if (_state == PlaybackState.Playing)
+        lock (_gate)
         {
-            PauseNow();
-            _pausedByInterruption = _state == PlaybackState.Paused;
-        }
-    }
-
-    private void OnInterruptionEnded(bool shouldResume)
-    {
-        if (_pausedByInterruption && shouldResume && _state == PlaybackState.Paused && IosAudioSession.Activate(this))
-        {
-            ResumeNow();
-        }
-    }
-
-    private OfflineTts? EnsureTts()
-    {
-        OfflineTts? existing = Volatile.Read(ref _tts);
-        if (existing is not null)
-        {
-            return existing;
+            _synthCts?.Cancel();
+            _generation++;
+            _activeRead = null;
         }
 
-        if (_model.Paths is not { } paths)
+        _pausedByInterruption = false;
+        _chunkEnded?.TrySetResult(false);
+        StopPolling();
+        MainThread.BeginInvokeOnMainThread(() =>
         {
-            return null;
-        }
-
-        lock (_ttsGate)
-        {
-            if (_tts is not null)
-            {
-                return _tts;
-            }
-
-            IosSherpaLibrary.EnsureResolver();
-            OfflineTts built = BuildTts(paths.RootDir);
-            Volatile.Write(ref _tts, built);
-            return built;
-        }
-    }
-
-    private static OfflineTts BuildTts(string dir)
-    {
-        var config = new OfflineTtsConfig();
-        config.Model.Supertonic.DurationPredictor = Path.Combine(dir, SupertonicFiles.DurationPredictor);
-        config.Model.Supertonic.TextEncoder = Path.Combine(dir, SupertonicFiles.TextEncoder);
-        config.Model.Supertonic.VectorEstimator = Path.Combine(dir, SupertonicFiles.VectorEstimator);
-        config.Model.Supertonic.Vocoder = Path.Combine(dir, SupertonicFiles.Vocoder);
-        config.Model.Supertonic.TtsJson = Path.Combine(dir, SupertonicFiles.TtsJson);
-        config.Model.Supertonic.UnicodeIndexer = Path.Combine(dir, SupertonicFiles.UnicodeIndexer);
-        config.Model.Supertonic.VoiceStyle = Path.Combine(dir, SupertonicFiles.VoiceStyle);
-        config.Model.NumThreads = SynthesisThreads;
-        config.Model.Provider = "cpu";
-        return new OfflineTts(config);
+            ReleasePlayer();
+            DeletePreviousChunkFile();
+            DeleteCurrentChunkFile();
+            IosAudioSession.Deactivate(this);
+        });
+        ResetProgress();
+        UpdateState(PlaybackState.Idle);
     }
 
     private (int generation, CancellationToken token) BeginGeneration()
@@ -549,83 +543,6 @@ public sealed class IosSupertonicSpeechReader : ISpeechReader, IDisposable
     }
 
     private bool IsCurrent(int generation) => Volatile.Read(ref _generation) == generation;
-
-    // Main thread only. Stops and frees the current chunk's player.
-    private void ReleasePlayer()
-    {
-        if (_player is { } player)
-        {
-            player.Stop();
-            player.Dispose();
-            _player = null;
-            _playerFinished = false;
-        }
-    }
-
-    private void StartPolling(CancellationToken stopToken)
-    {
-        StopPolling();
-        var cts = CancellationTokenSource.CreateLinkedTokenSource(stopToken);
-        _pollCts = cts;
-        _ = PollLoopAsync(cts.Token);
-    }
-
-    private void StopPolling()
-    {
-        _pollCts?.Cancel();
-        _pollCts?.Dispose();
-        _pollCts = null;
-    }
-
-    private async Task PollLoopAsync(CancellationToken token)
-    {
-        try
-        {
-            while (!token.IsCancellationRequested)
-            {
-                await Task.Delay(PollInterval, token);
-                await MainThread.InvokeOnMainThreadAsync(SamplePosition);
-                ReportProgress();
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            // Expected on stop/skip/supersede.
-        }
-    }
-
-    // Main thread only: the one place the native player's position is read.
-    private void SamplePosition()
-    {
-        if (_player is { } player)
-        {
-            Volatile.Write(ref _positionTicks, TimeSpan.FromSeconds(player.CurrentTime).Ticks);
-            Volatile.Write(ref _durationTicks, TimeSpan.FromSeconds(player.Duration).Ticks);
-        }
-    }
-
-    private void ReportProgress()
-    {
-        int chunkCount = Volatile.Read(ref _chunkCount);
-        int chunkIndex = Volatile.Read(ref _currentChunkIndex);
-        if (chunkCount == 0)
-        {
-            return;
-        }
-
-        long duration = Volatile.Read(ref _durationTicks);
-        double withinChunk = duration > 0 ? (double)Volatile.Read(ref _positionTicks) / duration : 0;
-        double fraction = (chunkIndex + Math.Clamp(withinChunk, 0, 1)) / chunkCount;
-        ProgressChanged?.Invoke(this, Math.Clamp(fraction, 0, 1));
-
-        if (Stopwatch.GetElapsedTime(_lastTimingRaiseTicks) >= TimingRaiseInterval)
-        {
-            RaiseTiming(CurrentChunkPosition());
-        }
-    }
-
-    private TimeSpan CurrentChunkPosition() =>
-        Volatile.Read(ref _durationTicks) > 0 ? TimeSpan.FromTicks(Volatile.Read(ref _positionTicks)) : TimeSpan.Zero;
 
     private void RaiseTiming(TimeSpan positionInCurrentChunk)
     {
@@ -644,88 +561,26 @@ public sealed class IosSupertonicSpeechReader : ISpeechReader, IDisposable
         StateChanged?.Invoke(this, next);
     }
 
-    private static async Task<string> WriteWavFileAsync(float[] samples, int sampleRate)
-    {
-        byte[] wav = EncodeWav(samples, sampleRate);
-        string path = Path.Combine(FileSystem.Current.CacheDirectory, $"read-chunk-{Guid.NewGuid():N}.wav");
-        await File.WriteAllBytesAsync(path, wav);
-        return path;
-    }
-
-    // Encodes mono float samples as a 16-bit PCM WAV (RIFF) byte buffer —
-    // identical to the Windows reader's encoder (pure C#, no WinRT types).
-    private static byte[] EncodeWav(float[] samples, int sampleRate)
-    {
-        const int bitsPerSample = 16;
-        const short channels = 1;
-        int dataBytes = samples.Length * sizeof(short);
-        int blockAlign = channels * bitsPerSample / 8;
-
-        using var memory = new MemoryStream(44 + dataBytes);
-        using var writer = new BinaryWriter(memory);
-
-        writer.Write("RIFF"u8.ToArray());
-        writer.Write(36 + dataBytes);
-        writer.Write("WAVE"u8.ToArray());
-        writer.Write("fmt "u8.ToArray());
-        writer.Write(16);
-        writer.Write((short)1); // PCM
-        writer.Write(channels);
-        writer.Write(sampleRate);
-        writer.Write(sampleRate * blockAlign);
-        writer.Write((short)blockAlign);
-        writer.Write((short)bitsPerSample);
-        writer.Write("data"u8.ToArray());
-        writer.Write(dataBytes);
-
-        foreach (float sample in samples)
-        {
-            writer.Write((short)(Math.Clamp(sample, -1f, 1f) * short.MaxValue));
-        }
-
-        writer.Flush();
-        return memory.ToArray();
-    }
-
-    private void DeletePreviousChunkFile()
-    {
-        if (_previousChunkFile is { } path)
-        {
-            TryDelete(path);
-            _previousChunkFile = null;
-        }
-    }
-
-    private void DeleteCurrentChunkFile()
-    {
-        if (_currentChunkFile is { } path)
-        {
-            TryDelete(path);
-            _currentChunkFile = null;
-        }
-    }
-
-    private static void TryDelete(string path)
-    {
-        try
-        {
-            File.Delete(path);
-        }
-        catch (IOException)
-        {
-            // Best-effort cleanup; the cache directory is reclaimed by the OS regardless.
-        }
-    }
-
     public void Dispose()
     {
+        _model.ReadyChanged -= OnModelReadyChanged;
         _interruptionObserver.Dispose();
         StopPolling();
+        CancelPrepare();
         _synthCts?.Cancel();
         _synthCts?.Dispose();
         ReleasePlayer();
         DeletePreviousChunkFile();
         DeleteCurrentChunkFile();
-        _tts?.Dispose();
+        lock (_ttsGate)
+        {
+            _disposed = true;
+            _engine?.Release();
+            _engine = null;
+        }
     }
+
+    /// <summary>The read in progress: its engine and who still owns it (the original read and
+    /// any Skip that continued its playback).</summary>
+    private sealed record ActiveRead(IosBuiltEngine Engine, ReadOwnership Owners);
 }

@@ -1,0 +1,4 @@
+"NSCameraUsageDescription" = "カメラは印刷された文字を撮影し、アプリが音声で読み上げられるようにします。写真はデバイス上で処理され、アップロードされることはありません。";
+"NSPhotoLibraryUsageDescription" = "アプリはライブラリから選んだ写真を、その中の文字を音声で読み上げるためだけに読み込みます。写真はデバイス上で処理され、アップロードされることはありません。";
+"NSPhotoLibraryAddUsageDescription" = "このアプリは写真ライブラリに何も保存しません。";
+"NSMicrophoneUsageDescription" = "このアプリは音声を録音しません。ビデオ撮影が使われた場合にのみ確認されますが、このアプリでは使用しません。";

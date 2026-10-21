@@ -405,7 +405,8 @@ public sealed class MobileVoicePackService : IVoicePackService
         DeleteDirectoryIfExists(aside);
     }
 
-    private static string PacksRoot()
+    /// <summary>The folder every pack lives in (created if needed); also read by the iOS backup exclusion.</summary>
+    internal static string PacksRoot()
     {
         string root = Path.Combine(FileSystem.Current.AppDataDirectory, PacksFolder);
         Directory.CreateDirectory(root);

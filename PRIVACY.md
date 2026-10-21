@@ -3,8 +3,8 @@
 **Effective date:** 3 September 2026
 
 Read The Stupid Text ("the app") reads text aloud. It ships as a Windows tray
-utility and an Android app. This policy explains how the app handles your data
-on **both** platforms.
+utility, an Android app and an iPhone app. This policy explains how the app
+handles your data on **all** platforms.
 
 ## The short version
 
@@ -20,22 +20,25 @@ that leaves your device. Everything the app does happens **locally**.
 - **Uploaded files** (`.txt`, `.pdf`, `.docx`) are opened and parsed locally to
   extract their text. The file itself is never transmitted or copied anywhere
   by the app.
-- **Camera scans** (Android): a photo you take is read by Google's on-device
-  ML Kit text recognition, which runs entirely on your phone. The photo is
-  processed to extract text and is not uploaded, saved permanently, or shared
-  — it exists only to be read aloud.
-- **Translation** (Android, off by default): when you turn on "Translate to my
+- **Camera scans** (Android and iPhone): a photo you take is read by on-device
+  text recognition, which runs entirely on your phone: a downloaded language
+  recognition pack, or Google's ML Kit on Android and Apple's Vision framework
+  on iPhone while that pack is not installed. The photo is processed to extract
+  text and is not uploaded, saved permanently, or shared — it exists only to be
+  read aloud.
+- **Translation** (Android only for now, off by default): when you turn on "Translate to my
   language", the app identifies the language of your text with Google's
   on-device ML Kit language identification and translates it with ML Kit's
   on-device translation, then reads the result. Both run entirely on your
   phone; your text is never sent to Google or anyone else. The translation is
   casual quality.
 - **Speech synthesis is performed entirely on your device**, using a neural
-  voice model bundled inside the app. No text or audio is sent to any server
-  or third party, on either platform.
+  voice model (bundled in the Windows app, downloaded as a language pack on
+  Android and iPhone). No text or audio is sent to any server or third party,
+  on any platform.
 - The app's **activity log** (an optional diagnostic view) lives in memory,
   shows recent read activity, and is cleared when the app closes.
-- **Android — cached audio of read sentences:** to start reading sooner, the app keeps the
+- **Android and iPhone — cached audio of read sentences:** to start reading sooner, the app keeps the
   audio it generated for sentences it has read on your device only, in the app's private
   storage, capped at 100 MB. It is removed when you clear the app's cache or storage, and it is
   never sent anywhere.
@@ -52,9 +55,10 @@ that leaves your device. Everything the app does happens **locally**.
 
 ## Network use
 
-**Language packs only.** The Android app downloads the natural-voice language
-pack for the language you choose on first launch (about 145 MB, so a Wi-Fi
-connection is advisable). The download is a plain file request to this
+**Language packs only.** The Android and iPhone apps download the natural-voice
+language pack for the language you choose on first launch (about 145 MB, so a
+Wi-Fi connection is advisable), and the text-recognition pack for that language
+(up to about 85 MB, depending on the language). The download is a plain file request to this
 project's public GitHub Releases page: no account, no identifier and none of
 your text, images or scans is sent, and the app has no analytics or telemetry.
 Once a pack is installed the app works fully offline and makes no network requests at all (it does not even re-check the catalog). Until it arrives, and if
@@ -84,8 +88,16 @@ on-device text-to-speech engine. It is not used to collect or transmit data.
 only to download language voice packs and to tell "offline" from a failed
 download (see *Network use*). It also requests the **Camera** permission, used only when you tap the
 scan action, so the app can point your camera at text to read it — nothing is
-captured otherwise. Both platforms use the standard OS file picker to let you
-choose a document to read; the app only opens the file you explicitly select.
+captured otherwise.
+
+**iPhone** needs no network permission beyond the standard HTTPS access every app has
+(used for the same pack downloads). It asks for **Camera** access when you tap the scan
+action, and for **Photo library** access only when you choose a photo to read (the app never
+writes to your library). Downloaded language packs are marked as excluded from iCloud and
+device backups.
+
+All platforms use the standard OS file picker to let you choose a document to read;
+the app only opens the file you explicitly select.
 
 ## Third-party components
 
@@ -99,9 +111,13 @@ language pack rather than bundled):
   voice) — more offline voices, each downloaded once as a language pack when you
   choose that language. They run entirely on the phone; the only network use is
   the one-time download of the pack, and your text is never sent anywhere.
-- **Google ML Kit Text Recognition** (Android only) — the on-device model used
-  to read text out of a scanned photo. It runs locally; nothing is sent to
-  Google or anyone else.
+- **Google ML Kit Text Recognition** (Android only) and **Apple Vision** (iPhone) —
+  the on-device models used to read text out of a scanned photo while a language's
+  recognition pack is not installed. They run locally; nothing is sent to Google,
+  Apple or anyone else.
+- **PaddleOCR** text-recognition models and **ONNX Runtime** (Android and iPhone) —
+  downloaded once per language as a recognition pack, run locally, and nothing you
+  scan is sent anywhere.
 
 - **Google ML Kit Language Identification and Translation** (Android only) —
   the on-device models used to detect the language of your text and translate

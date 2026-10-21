@@ -18,6 +18,7 @@ public static partial class MobileSharedServices
 	private static void RegisterScanAndOcr(IServiceCollection services)
 	{
 		services.AddSingleton(_ => new MlKitImageTextExtractor(global::Android.App.Application.Context));
+		services.AddSingleton<IBuiltInTextRecognizer>(sp => sp.GetRequiredService<MlKitImageTextExtractor>());
 		services.AddSingleton<IPixelImageLoader>(_ => new AndroidPixelImageLoader(global::Android.App.Application.Context));
 		services.AddSingleton<LanguageImageTextExtractor>();
 		services.AddSingleton<IImageTextExtractor>(sp => sp.GetRequiredService<LanguageImageTextExtractor>());
