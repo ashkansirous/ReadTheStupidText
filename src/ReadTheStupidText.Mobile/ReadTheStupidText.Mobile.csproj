@@ -134,6 +134,12 @@
 	     share symbols. Bump this together with the Android pin. -->
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
 		<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.24.3" />
+		<!-- The managed binding P/Invokes RegisterCustomOps, and iOS links every P/Invoke statically,
+		     so the symbol must exist or the link fails ("Undefined symbols: _RegisterCustomOps").
+		     This Microsoft package is the documented stand-in: it ships only a dummy of that symbol,
+		     no custom ops (MIT, onnxruntime-extensions).
+		     https://github.com/microsoft/onnxruntime/issues/24628 -->
+		<PackageReference Include="Microsoft.ML.OnnxRuntime.Extensions.Dummy" Version="0.13.0" />
 	</ItemGroup>
 
 	<!-- The shared SherpaOnnxC.framework with onnxruntime linked in (one dynamic framework,
