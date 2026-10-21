@@ -20,3 +20,20 @@
   the device (no network call, no third-party SDK referenced). The optional dev
   OpenTelemetry/Aspire-dashboard path is documented but not part of the shipped
   package.
+
+## Notes moved from CLAUDE.md (2026-10-21)
+
+**Local-only timing diagnostics (Slice 19, Decision 26).** Each `ActivityEntry`
+carries two nullable diagnostics — **`TimeToFirstAudio`** (entry created → the
+reader's first `Playing` transition) and **`SynthesisDuration`** (GeneratingAudio →
+first `Playing`, the metric Slice 17's warm-up shrinks). `ReadAloudService` measures
+them with monotonic `Stopwatch` timestamps and calls `IActivityLog.RecordTiming` at
+the first-Playing transition; `ActivityLogWindow` shows them as the **First audio**
+and **Synth** columns (`TimingText` formats ms/s, blank until measured). This stays
+**in-memory, cleared on restart, never transmitted** — no third-party SDK, no
+network, no privacy-policy change (consistent with the "we collect nothing" stance).
+For *dev-time* tuning only, you may optionally instrument the read pipeline with
+**OpenTelemetry** `Activity`/`Meter` and attach a **local Aspire dashboard** (an OTLP
+viewer run on the dev machine) — **not shipped** in the MSIX; .NET Aspire was
+rejected as a redistributable mechanism (it orchestrates *distributed* apps at dev
+time and would reintroduce telemetry-export/cost concerns). See `STORE.md`.

@@ -20,3 +20,15 @@
   Confirm the UI is responsive during the startup warm-up (no freeze) and that a
   read fired *before* warm-up completes still works (falls through to lazy
   `EnsureTts()`), and that audio still plays under package identity.
+
+## Notes moved from CLAUDE.md (2026-10-21)
+
+To kill the cold-start stall on the **first** read (Slice 17, Decision 24), the
+engine is **warmed at startup**: once `IVoiceModelService` locates the model,
+`ReadAloudService` calls `ISpeechReader.WarmUpAsync()`, which (on the neural
+reader) builds the `OfflineTts` and runs one **discarded** tiny synthesis on a
+background thread to JIT the ONNX graph. The lazy `EnsureTts()` stays as the
+safety net for a read that arrives before warm-up finishes; the build is
+double-checked under a lock so the eager warm-up and a first read can't each load
+the ~145 MB model. The WinRT fallback's `WarmUpAsync()` is a no-op.
+

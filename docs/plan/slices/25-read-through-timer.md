@@ -48,3 +48,20 @@
   once per second, then flips to the real total the instant synthesis of every
   chunk finishes, matching the worked example (`00:00/--:--` → … → `00:03/02:23`).
   `dotnet test` covers the formatter and the duration-accumulation sequencing.
+
+## Notes moved from CLAUDE.md (2026-10-21)
+
+**Read-through timer (Slice 25, Decision 33).** A `TimerText` label under the
+transport row shows `elapsed/total` as `mm:ss/mm:ss` (`--:--` while the total is
+unknown), driven by `ISpeechReader.TimingChanged` (a new `ReadTiming(TimeSpan
+Elapsed, TimeSpan? Total)` in `Application.Reading`, formatted by the pure
+`ReadTimingFormatter`). Unlike the progress bar's equal-chunk-weighting estimate,
+elapsed/total use each chunk's *real* synthesized duration, tracked by
+`Infrastructure.Reading.ReadTimingTracker` — a pure state machine (unit-tested
+without the WinRT engine) shared by both `ISpeechReader` implementations. A
+chunk's duration is known the instant its audio is generated, not when it plays,
+so `Total` can appear well before the read reaches it; `TimingChanged` fires
+immediately whenever `Total` newly becomes known (bypassing the ~1s throttle used
+for ordinary ticks) and resets to `00:00/--:--` on the same Idle transition that
+zeroes the progress bar.
+
