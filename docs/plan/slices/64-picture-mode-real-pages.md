@@ -1,6 +1,6 @@
 # Slice 64 — Picture mode on real pages
 
-*In progress (wave 2026-10-21), draft PR.*
+*Built 2026-10-21 (PR #218, merge 53cc881); not yet verified, see below.*
 
 **Batch:** 10
 **Decisions:** 78, 79
@@ -64,11 +64,11 @@ Source: `docs/design/dino-reader/Dino Reader v2.dc.html`. Two frames (screen 2 l
 
 *Not done:* RTL step (no Arabic/Farsi scan to test), card shadow (shared card has no shadow support), tablet double-page layout (Slice 62 chrome), and the `PageTextPage` edit flow doesn't carry pictures. Editing imported text saves a text-only story.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-21)
 
 In `src/DinoReader.App/CLAUDE.md`: Picture mode on real pages: `ScanLayout` (Core) maps sentences to line boxes; `ScanPages`/`ZoomablePage` (App) render them. Boxes are in the picture's own 0..1 coordinates, so zoom and EXIF rotation keep them on the text. Gestures go on the untransformed outer view; only the inner layout is scaled. Imports keep pictures only while the text is unedited; temp files live in a per-import folder and must be deleted on every exit path. (Slice 64: docs/plan/slices/64-picture-mode-real-pages.md)
 
-#### For README.md
+#### For README.md (lifted 2026-10-21)
 
 Dino Reader shows the real scanned or PDF pages in picture mode, with the spoken sentence highlighted.
 

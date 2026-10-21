@@ -26,7 +26,7 @@ Grab the MSIX from the **[latest release](https://github.com/ashkansirous/ReadTh
 
 **iOS:** the iOS app has the neural voice (after the pack download), camera scanning with on-device text recognition, background audio, nine languages of voices, the head start, per-language text recognition and localised permission prompts (translation is Android-only for now).
 
-**Dino Reader (Android, in development):** a kids' story reader that reads each character in their own voice (with a narrator picker); it builds from `src/DinoReader.App`. It has a story gallery and a grown-up area (a hold, then a sum) to add stories by typing, pasting or opening a file, and to edit or delete them; a text mode and a picture mode with a highlight that follows each sentence; and a cast screen to pick the narrator, choose voices, preview them and merge two names that are the same character. It works in nine languages, with right-to-left layout for Farsi and Arabic.
+**Dino Reader (Android, in development):** a kids' story reader that reads each character in their own voice (with a narrator picker); it builds from `src/DinoReader.App`. It has a story gallery and a grown-up area (a hold, then a sum) to add stories by typing, pasting or opening a file, and to edit or delete them; a text mode and a picture mode with a highlight that follows each sentence (on scanned or PDF stories it shows the real pages); and a cast screen to pick the narrator, choose voices, preview them and merge two names that are the same character. It works in nine languages, with right-to-left layout for Farsi and Arabic.
 
 ## Status
 
@@ -42,7 +42,7 @@ aloud (Upload button / tray "Read file…", more file types landing in later sli
 and CI packaging. The app is **published and live on the Microsoft Store**
 ([install it here](https://apps.microsoft.com/detail/9NGT1BN1H92V)).
 The shipped MSIX bundles the .NET runtime (self-contained), so there's nothing to
-install first; see [`STORE.md`](STORE.md) for the Store/deployment details.
+install first; see [`STORE.md`](STORE.md) for the Store/deployment details. The Windows app's UI is available in 9 languages.
 
 ## Reading from the console & other apps (important)
 
@@ -149,7 +149,7 @@ submission steps.
 
 ## Landing site
 
-The landing page and privacy policy live in `site/` and are served by a Cloudflare Worker; `npm run dev` previews them, `npm run deploy` publishes. See `docs/DEPLOYING.md`.
+The landing page and privacy policy live in `site/` and are served by a Cloudflare Worker; `npm run dev` previews them, `npm run deploy` publishes. The Dino Reader site is `https://dinoreader.sirous.uk` (privacy page: `https://dinoreader.sirous.uk/privacy`). See `docs/DEPLOYING.md`.
 
 ## Privacy
 
