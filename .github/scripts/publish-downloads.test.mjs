@@ -127,3 +127,16 @@ test('checks the assets before anything is read from disk, with a clear message'
     assert.throws(() => assertAssets({ ...BUILD, paths: ['notes.txt'] }), /is not a android 1\.4\.0 download/);
     assert.doesNotThrow(() => assertAssets({ ...BUILD, paths: [`dist/${APK}`] }));
 });
+
+test('Dino Reader uploads go under the dinoreader/ prefix with its own file name', () => {
+    const plan = planUploads({ ...BUILD, product: 'dinoreader', paths: ['dist/DinoReader-1.4.0.apk'] });
+    assert.deepEqual(plan.map((upload) => upload.key), ['dinoreader/android/1.4.0/DinoReader-1.4.0.apk', 'dinoreader/manifests/android/1.4.0.json']);
+    assert.equal(JSON.parse(plan[1].body).fileName, 'DinoReader-1.4.0.apk');
+    assert.equal(publishedMarkerKey(plan), 'dinoreader/manifests/android/1.4.0.json');
+});
+
+test('each product refuses the other products APK and an unknown product', () => {
+    assert.throws(() => planUploads({ ...BUILD, product: 'dinoreader', paths: [APK] }), /is not a android 1\.4\.0 download/);
+    assert.throws(() => planUploads({ ...BUILD, paths: ['DinoReader-1.4.0.apk'] }), /is not a android 1\.4\.0 download/);
+    assert.throws(() => planUploads({ ...BUILD, product: 'nope', paths: [APK] }), /Unknown PRODUCT/);
+});

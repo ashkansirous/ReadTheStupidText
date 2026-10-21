@@ -5,6 +5,7 @@ using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Sanitizing;
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Application.Translation;
 using ReadTheStupidText.Domain.Activity;
 using ReadTheStupidText.Domain.Reading;
 using ReadTheStupidText.Domain.Sanitizing;
@@ -48,6 +49,107 @@ public class ReadAloudServiceGeneratingTests
 
         Assert.Equal(ActivityState.Reading, Assert.Single(harness.Log.Entries).State);
         Assert.False(harness.Service.IsGeneratingAudio);
+    }
+
+    [Fact]
+    public async Task Translation_on_speaks_the_translation_and_shows_it_in_the_reading_box()
+    {
+        var spoken = new List<string>();
+        var shown = new List<string>();
+        var harness = new Harness(settings => TranslationTestKit.Translator(settings, "bonjour", "fr"))
+        {
+            Speak = (text, _) => { spoken.Add(text); return Task.CompletedTask; },
+        };
+        harness.Settings.Language = "en";
+        harness.Settings.TranslateEnabled = true;
+        harness.Service.FirstAudioGrace = TimeSpan.FromMilliseconds(20);
+        ReadTranslationResult? finished = null;
+        harness.Service.TranslationFinished += (_, result) => finished = result;
+        harness.Service.ReadTextChanged += (_, read) => shown.Add(read.Text);
+
+        await harness.Service.ReadFileAsync("a.txt");
+
+        Assert.Equal(new[] { "bonjour" }, spoken);
+        Assert.Equal(new[] { "bonjour" }, shown);
+        Assert.Equal(TranslationOutcome.Translated, finished?.Outcome);
+    }
+
+    [Fact]
+    public async Task Translation_is_inert_while_the_engine_is_unavailable()
+    {
+        var spoken = new List<string>();
+        var harness = new Harness(settings => TranslationTestKit.Translator(settings, "bonjour", "fr", available: false))
+        {
+            Speak = (text, _) => { spoken.Add(text); return Task.CompletedTask; },
+        };
+        harness.Settings.Language = "en";
+        harness.Settings.TranslateEnabled = true;
+        harness.Service.FirstAudioGrace = TimeSpan.FromMilliseconds(20);
+
+        await harness.Service.ReadFileAsync("a.txt");
+
+        Assert.False(harness.Service.CanTranslate);
+        Assert.False(harness.Service.TranslateEnabled);
+        Assert.Equal(new[] { "some text to read" }, spoken);
+    }
+
+    [Fact]
+    public async Task Translation_off_speaks_the_original()
+    {
+        var spoken = new List<string>();
+        var harness = new Harness(settings => TranslationTestKit.Translator(settings, "bonjour", "fr"))
+        {
+            Speak = (text, _) => { spoken.Add(text); return Task.CompletedTask; },
+        };
+        harness.Settings.Language = "en";
+        harness.Service.FirstAudioGrace = TimeSpan.FromMilliseconds(20);
+
+        await harness.Service.ReadFileAsync("a.txt");
+
+        Assert.Single(spoken);
+        Assert.NotEqual("bonjour", spoken[0]);
+    }
+
+    [Fact]
+    public async Task A_read_superseded_while_translating_never_speaks()
+    {
+        var gate = new TaskCompletionSource<string>();
+        var spoken = new List<string>();
+        var harness = new Harness(settings => TranslationTestKit.Translator(settings, gate.Task, "fr"))
+        {
+            Speak = (text, _) => { spoken.Add(text); return Task.CompletedTask; },
+        };
+        harness.Settings.Language = "en";
+        harness.Settings.TranslateEnabled = true;
+
+        Task read = harness.Service.ReadFileAsync("a.txt");
+        harness.Monitor.RaiseCleared();
+        gate.SetResult("late translation");
+        await read;
+
+        Assert.Empty(spoken);
+        Assert.Equal(ActivityState.Interrupted, Assert.Single(harness.Log.Entries).State);
+    }
+
+    [Fact]
+    public async Task A_missing_translation_pack_reads_the_original_and_says_why()
+    {
+        var spoken = new List<string>();
+        var harness = new Harness(settings => TranslationTestKit.Translator(settings, "x", "fr", modelReady: false))
+        {
+            Speak = (text, _) => { spoken.Add(text); return Task.CompletedTask; },
+        };
+        harness.Settings.Language = "en";
+        harness.Settings.TranslateEnabled = true;
+        harness.Service.FirstAudioGrace = TimeSpan.FromMilliseconds(20);
+        ReadTranslationResult? finished = null;
+        harness.Service.TranslationFinished += (_, result) => finished = result;
+
+        await harness.Service.ReadFileAsync("a.txt");
+
+        Assert.Single(spoken);
+        Assert.NotEqual("x", spoken[0]);
+        Assert.Equal(TranslationOutcome.ModelMissing, finished?.Outcome);
     }
 
     [Fact]
@@ -218,13 +320,15 @@ public class ReadAloudServiceGeneratingTests
 
         public FakeHeadStart HeadStart { get; } = new();
 
-        public Harness()
+        public TestSettings Settings { get; } = new();
+
+        public Harness(Func<TestSettings, ReadTranslator>? translation = null)
         {
             Reader = new FakeReader(this);
             Service = new ReadAloudService(
                 Reader, Clipboard, new FakeHotkey(), new FakeCopier(), Monitor,
                 new FakeClipboardMonitor(), new FakeForeground(), new FakeVoices(), new FakeModel(),
-                new FakeDocuments(), Log, new FakeSettings(), new FakeSanitizer(), new FakeSystemLog(), HeadStart);
+                new FakeDocuments(), Log, Settings, new FakeSanitizer(), new SilentLog(), HeadStart, translation?.Invoke(Settings));
         }
     }
 
@@ -325,29 +429,8 @@ public class ReadAloudServiceGeneratingTests
         public Task<string> ExtractTextAsync(string filePath) => Task.FromResult("some text to read");
     }
 
-    private sealed class FakeSettings : ISettingsStore
-    {
-        public PlaybackRate Speed { get; set; } = PlaybackRate.Default;
-        public bool AutoReadOnSelection { get; set; }
-        public bool AutoReadOnCopy { get; set; }
-        public string? VoiceId { get; set; }
-        public SanitizerCategory EnabledSanitizers { get; set; }
-        public PanelPosition? PanelPosition { get; set; }
-        public string? Language { get; set; }
-        public bool TranslateEnabled { get; set; }
-        public string? TranslateSourceLanguage { get; set; }
-    }
-
     private sealed class FakeSanitizer : ITextSanitizer
     {
         public string Sanitize(string text) => text;
-    }
-
-    private sealed class FakeSystemLog : ISystemLog
-    {
-        public void Info(string message, int? activityId = null) { }
-        public void Debug(string message, int? activityId = null) { }
-        public void Warning(string message, int? activityId = null, Exception? error = null) { }
-        public void Error(string message, int? activityId = null, Exception? error = null) { }
     }
 }

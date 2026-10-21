@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="ActivityTitle.Text" xml:space="preserve">
+    <value>گزارش فعالیت</value>
+  </data>
+  <data name="ActivityOpenLogs.Content" xml:space="preserve">
+    <value>باز کردن گزارش‌ها</value>
+  </data>
+  <data name="ActivityOpenLogs.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>باز کردن پوشه فایل‌های گزارش روزانه</value>
+  </data>
+  <data name="ActivityClear.Content" xml:space="preserve">
+    <value>پاک کردن</value>
+  </data>
+  <data name="ColTime.Text" xml:space="preserve">
+    <value>زمان</value>
+  </data>
+  <data name="ColTrigger.Text" xml:space="preserve">
+    <value>محرک</value>
+  </data>
+  <data name="ColState.Text" xml:space="preserve">
+    <value>وضعیت</value>
+  </data>
+  <data name="ColReason.Text" xml:space="preserve">
+    <value>دلیل</value>
+  </data>
+  <data name="ColFirstAudio.Text" xml:space="preserve">
+    <value>اولین صدا</value>
+  </data>
+  <data name="ColSynth.Text" xml:space="preserve">
+    <value>تولید</value>
+  </data>
+  <data name="ColSource.Text" xml:space="preserve">
+    <value>منبع</value>
+  </data>
+  <data name="ColText.Text" xml:space="preserve">
+    <value>متن</value>
+  </data>
+  <data name="PanelEyebrow.Text" xml:space="preserve">
+    <value>در حال خواندن</value>
+  </data>
+  <data name="CloseButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>بستن</value>
+  </data>
+  <data name="SkipBackButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>۱۰ ثانیه عقب</value>
+  </data>
+  <data name="SkipForwardButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>۱۰ ثانیه جلو</value>
+  </data>
+  <data name="SpeedPillToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>سرعت پخش — برای تنظیم ضربه بزنید · 0.5×–2×</value>
+  </data>
+  <data name="VoiceLabel.Text" xml:space="preserve">
+    <value>صدا</value>
+  </data>
+  <data name="LanguageLabel.Text" xml:space="preserve">
+    <value>زبان</value>
+  </data>
+  <data name="UploadFileButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>خواندن یک فایل — .txt، .pdf یا .docx را باز می‌کند</value>
+  </data>
+  <data name="UploadFileLabel.Text" xml:space="preserve">
+    <value>خواندن فایل</value>
+  </data>
+  <data name="ActivityLogButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>گزارش فعالیت — تاریخچه، زمان‌بندی‌ها، باز کردن پوشه گزارش‌ها</value>
+  </data>
+  <data name="ActivityLogLabel.Text" xml:space="preserve">
+    <value>گزارش فعالیت</value>
+  </data>
+  <data name="ControlsLabel.Text" xml:space="preserve">
+    <value>کنترل‌ها</value>
+  </data>
+  <data name="HotkeyLabel.Text" xml:space="preserve">
+    <value>میان‌بر جایگزین</value>
+  </data>
+  <data name="TranslateSourceLabel.Text" xml:space="preserve">
+    <value>زبان متن</value>
+  </data>
+  <data name="ReadingZoomOut.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>متن کوچک‌تر</value>
+  </data>
+  <data name="ReadingZoomIn.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>متن بزرگ‌تر</value>
+  </data>
+  <data name="LanguageChooseTitle.Text" xml:space="preserve">
+    <value>زبان خود را انتخاب کنید</value>
+  </data>
+  <data name="LanguageRetry.Content" xml:space="preserve">
+    <value>تلاش دوباره</value>
+  </data>
+  <data name="LanguageClose.Content" xml:space="preserve">
+    <value>بستن</value>
+  </data>
+  <data name="Status_Ready" xml:space="preserve">
+    <value>آماده</value>
+  </data>
+  <data name="Status_Paused" xml:space="preserve">
+    <value>مکث</value>
+  </data>
+  <data name="Status_ReadingClipboard" xml:space="preserve">
+    <value>خواندن کلیپ‌بورد…</value>
+  </data>
+  <data name="Status_ReadingSelection" xml:space="preserve">
+    <value>خواندن متن انتخاب‌شده…</value>
+  </data>
+  <data name="Status_ReadingSelectionFrom" xml:space="preserve">
+    <value>خواندن متن انتخاب‌شده از {0}…</value>
+  </data>
+  <data name="Toggle_On" xml:space="preserve">
+    <value>روشن</value>
+  </data>
+  <data name="Toggle_Off" xml:space="preserve">
+    <value>خاموش</value>
+  </data>
+  <data name="Tip_AutoReadSelection" xml:space="preserve">
+    <value>خواندن خودکار انتخاب · {0} — هنگام انتخاب متن آن را بلند می‌خواند</value>
+  </data>
+  <data name="Tip_AutoReadCopy" xml:space="preserve">
+    <value>خواندن خودکار هنگام کپی · {0} — هنگام کپی کردن متن آن را بلند می‌خواند</value>
+  </data>
+  <data name="Tip_Startup" xml:space="preserve">
+    <value>اجرا هنگام راه‌اندازی · {0} — همراه ویندوز در سینی سیستم شروع می‌شود</value>
+  </data>
+  <data name="Tip_ReadingTextBox" xml:space="preserve">
+    <value>کادر متن خوانده‌شده · {0} — متنی را که خوانده می‌شود نشان می‌دهد</value>
+  </data>
+  <data name="Tip_Translate" xml:space="preserve">
+    <value>ترجمه به زبان من · {0} — آنچه خوانده می‌شود را به زبان شما ترجمه می‌کند</value>
+  </data>
+  <data name="Menu_Play" xml:space="preserve">
+    <value>پخش</value>
+  </data>
+  <data name="Menu_Pause" xml:space="preserve">
+    <value>مکث</value>
+  </data>
+  <data name="Menu_Quit" xml:space="preserve">
+    <value>خروج</value>
+  </data>
+  <data name="Menu_AutoReadSelection" xml:space="preserve">
+    <value>خواندن خودکار هنگام انتخاب</value>
+  </data>
+  <data name="Menu_AutoReadCopy" xml:space="preserve">
+    <value>خواندن خودکار هنگام کپی</value>
+  </data>
+  <data name="Menu_Startup" xml:space="preserve">
+    <value>اجرا هنگام راه‌اندازی</value>
+  </data>
+  <data name="Menu_Voice" xml:space="preserve">
+    <value>صدا</value>
+  </data>
+  <data name="Menu_ActivityLog" xml:space="preserve">
+    <value>نمایش گزارش فعالیت</value>
+  </data>
+  <data name="Menu_ReadFile" xml:space="preserve">
+    <value>خواندن فایل…</value>
+  </data>
+  <data name="Menu_VoiceLanguage" xml:space="preserve">
+    <value>زبان صدا…</value>
+  </data>
+  <data name="Menu_Translate" xml:space="preserve">
+    <value>ترجمه به زبان من</value>
+  </data>
+  <data name="Tray_Tooltip" xml:space="preserve">
+    <value>{0} — خواندن با صدای بلند</value>
+  </data>
+  <data name="Pack_WindowsVoice" xml:space="preserve">
+    <value>صدای ویندوز</value>
+  </data>
+  <data name="Restart_Failed" xml:space="preserve">
+    <value>زبان در راه‌اندازی بعدی برنامه اعمال می‌شود.</value>
+  </data>
+  <data name="StatusText.Text" xml:space="preserve">
+    <value>آماده</value>
+  </data>
+  <data name="Window_Language" xml:space="preserve">
+    <value>زبان</value>
+  </data>
+  <data name="Window_ActivityLog" xml:space="preserve">
+    <value>گزارش فعالیت</value>
+  </data>
+  <data name="Window_Reading" xml:space="preserve">
+    <value>خواندن</value>
+  </data>
+  <data name="Reading_Nothing" xml:space="preserve">
+    <value>هنوز چیزی خوانده نمی‌شود</value>
+  </data>
+  <data name="Reading_Chunk" xml:space="preserve">
+    <value>خواندن — بخش {0} از {1}</value>
+  </data>
+  <data name="Reading_Translated" xml:space="preserve">
+    <value>(ترجمه‌شده)</value>
+  </data>
+  <data name="Reading_Page" xml:space="preserve">
+    <value>صفحه {0} از {1}</value>
+  </data>
+  <data name="State_Pending" xml:space="preserve">
+    <value>در انتظار</value>
+  </data>
+  <data name="State_GeneratingAudio" xml:space="preserve">
+    <value>تولید صدا</value>
+  </data>
+  <data name="State_Reading" xml:space="preserve">
+    <value>در حال خواندن</value>
+  </data>
+  <data name="State_Read" xml:space="preserve">
+    <value>خوانده شد</value>
+  </data>
+  <data name="State_Ignored" xml:space="preserve">
+    <value>نادیده گرفته شد</value>
+  </data>
+  <data name="State_Interrupted" xml:space="preserve">
+    <value>قطع شد</value>
+  </data>
+  <data name="State_Failed" xml:space="preserve">
+    <value>ناموفق</value>
+  </data>
+  <data name="Reason_NewSelection" xml:space="preserve">
+    <value>انتخاب جدید</value>
+  </data>
+  <data name="Reason_Deselected" xml:space="preserve">
+    <value>انتخاب لغو شد</value>
+  </data>
+  <data name="Reason_Error" xml:space="preserve">
+    <value>خطا</value>
+  </data>
+  <data name="Trigger_AutoRead" xml:space="preserve">
+    <value>خواندن خودکار</value>
+  </data>
+  <data name="Trigger_Hotkey" xml:space="preserve">
+    <value>میان‌بر</value>
+  </data>
+  <data name="Trigger_Manual" xml:space="preserve">
+    <value>دستی</value>
+  </data>
+  <data name="Trigger_Clipboard" xml:space="preserve">
+    <value>کلیپ‌بورد</value>
+  </data>
+  <data name="Trigger_FileUpload" xml:space="preserve">
+    <value>فایل</value>
+  </data>
+  <data name="Pack_Intro" xml:space="preserve">
+    <value>صدای طبیعی زبان شما یک‌بار دانلود می‌شود (حدود ۱۴۵ مگابایت، استفاده از Wi-Fi توصیه می‌شود). تا رسیدن آن، {0} می‌خواند. متن شما هرگز از این دستگاه خارج نمی‌شود.</value>
+  </data>
+  <data name="Pack_Resolving" xml:space="preserve">
+    <value>در حال جستجوی صدای زبان شما...</value>
+  </data>
+  <data name="Pack_Downloading" xml:space="preserve">
+    <value>در حال دانلود صدای طبیعی... {0}%</value>
+  </data>
+  <data name="Pack_Ready" xml:space="preserve">
+    <value>صدای طبیعی آماده است.</value>
+  </data>
+  <data name="Pack_Unavailable" xml:space="preserve">
+    <value>هنوز صدای طبیعی برای این زبان وجود ندارد. {0} می‌خواند.</value>
+  </data>
+  <data name="Pack_Offline" xml:space="preserve">
+    <value>شما آفلاین هستید. {0} می‌خواند و دانلود با بازگشت اینترنت شروع می‌شود.</value>
+  </data>
+  <data name="Pack_HashMismatch" xml:space="preserve">
+    <value>دانلود آسیب دیده بود. برای دریافت دوباره، تلاش مجدد را بزنید.</value>
+  </data>
+  <data name="Pack_InvalidPack" xml:space="preserve">
+    <value>این بسته صدا قابل استفاده نیست. {0} می‌خواند.</value>
+  </data>
+  <data name="Pack_Failed" xml:space="preserve">
+    <value>دانلود ناموفق بود. برای تلاش دوباره، تلاش مجدد را بزنید.</value>
+  </data>
+  <data name="Translate_AutoDetect" xml:space="preserve">
+    <value>تشخیص خودکار</value>
+  </data>
+  <data name="Translate_Note_Default" xml:space="preserve">
+    <value>ترجمه ماشینی، روی همین دستگاه. کیفیت متفاوت است.</value>
+  </data>
+  <data name="Translate_Note_Translated" xml:space="preserve">
+    <value>ترجمه از {0}.</value>
+  </data>
+  <data name="Translate_Note_ModelMissing" xml:space="preserve">
+    <value>بسته ترجمه هنوز نصب نشده است، بنابراین متن اصلی خوانده شد.</value>
+  </data>
+  <data name="Translate_Note_TimedOut" xml:space="preserve">
+    <value>ترجمه زمان زیادی برد، بنابراین متن اصلی خوانده شد.</value>
+  </data>
+  <data name="Translate_Note_Failed" xml:space="preserve">
+    <value>ترجمه ناموفق بود، بنابراین متن اصلی خوانده شد.</value>
+  </data>
+  <data name="Translate_Note_SourceUnknown" xml:space="preserve">
+    <value>زبان متن تشخیص داده نشد، بنابراین متن اصلی خوانده شد. آن را در بالا انتخاب کنید.</value>
+  </data>
+  <data name="Translate_Note_PairUnsupported" xml:space="preserve">
+    <value>ترجمه از {0} هنوز در دسترس نیست، بنابراین متن اصلی خوانده شد.</value>
+  </data>
+</root>

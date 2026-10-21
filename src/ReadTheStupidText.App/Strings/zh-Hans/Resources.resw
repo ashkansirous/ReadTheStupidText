@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="ActivityTitle.Text" xml:space="preserve">
+    <value>活动日志</value>
+  </data>
+  <data name="ActivityOpenLogs.Content" xml:space="preserve">
+    <value>打开日志</value>
+  </data>
+  <data name="ActivityOpenLogs.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>打开每日日志文件夹</value>
+  </data>
+  <data name="ActivityClear.Content" xml:space="preserve">
+    <value>清除</value>
+  </data>
+  <data name="ColTime.Text" xml:space="preserve">
+    <value>时间</value>
+  </data>
+  <data name="ColTrigger.Text" xml:space="preserve">
+    <value>触发方式</value>
+  </data>
+  <data name="ColState.Text" xml:space="preserve">
+    <value>状态</value>
+  </data>
+  <data name="ColReason.Text" xml:space="preserve">
+    <value>原因</value>
+  </data>
+  <data name="ColFirstAudio.Text" xml:space="preserve">
+    <value>首次发声</value>
+  </data>
+  <data name="ColSynth.Text" xml:space="preserve">
+    <value>合成</value>
+  </data>
+  <data name="ColSource.Text" xml:space="preserve">
+    <value>来源</value>
+  </data>
+  <data name="ColText.Text" xml:space="preserve">
+    <value>文本</value>
+  </data>
+  <data name="PanelEyebrow.Text" xml:space="preserve">
+    <value>正在朗读</value>
+  </data>
+  <data name="CloseButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>关闭</value>
+  </data>
+  <data name="SkipBackButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>后退 10 秒</value>
+  </data>
+  <data name="SkipForwardButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>快进 10 秒</value>
+  </data>
+  <data name="SpeedPillToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>播放速度 — 点按调整 · 0.5×–2×</value>
+  </data>
+  <data name="VoiceLabel.Text" xml:space="preserve">
+    <value>语音</value>
+  </data>
+  <data name="LanguageLabel.Text" xml:space="preserve">
+    <value>语言</value>
+  </data>
+  <data name="UploadFileButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>朗读文件 — 可打开 .txt、.pdf 或 .docx</value>
+  </data>
+  <data name="UploadFileLabel.Text" xml:space="preserve">
+    <value>朗读文件</value>
+  </data>
+  <data name="ActivityLogButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>活动日志 — 历史记录、耗时、打开日志文件夹</value>
+  </data>
+  <data name="ActivityLogLabel.Text" xml:space="preserve">
+    <value>活动日志</value>
+  </data>
+  <data name="ControlsLabel.Text" xml:space="preserve">
+    <value>控制</value>
+  </data>
+  <data name="HotkeyLabel.Text" xml:space="preserve">
+    <value>备用快捷键</value>
+  </data>
+  <data name="TranslateSourceLabel.Text" xml:space="preserve">
+    <value>文本语言</value>
+  </data>
+  <data name="ReadingZoomOut.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>缩小文字</value>
+  </data>
+  <data name="ReadingZoomIn.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>放大文字</value>
+  </data>
+  <data name="LanguageChooseTitle.Text" xml:space="preserve">
+    <value>选择你的语言</value>
+  </data>
+  <data name="LanguageRetry.Content" xml:space="preserve">
+    <value>重试</value>
+  </data>
+  <data name="LanguageClose.Content" xml:space="preserve">
+    <value>关闭</value>
+  </data>
+  <data name="Status_Ready" xml:space="preserve">
+    <value>就绪</value>
+  </data>
+  <data name="Status_Paused" xml:space="preserve">
+    <value>已暂停</value>
+  </data>
+  <data name="Status_ReadingClipboard" xml:space="preserve">
+    <value>正在朗读剪贴板…</value>
+  </data>
+  <data name="Status_ReadingSelection" xml:space="preserve">
+    <value>正在朗读所选内容…</value>
+  </data>
+  <data name="Status_ReadingSelectionFrom" xml:space="preserve">
+    <value>正在朗读来自 {0} 的所选内容…</value>
+  </data>
+  <data name="Toggle_On" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="Toggle_Off" xml:space="preserve">
+    <value>关</value>
+  </data>
+  <data name="Tip_AutoReadSelection" xml:space="preserve">
+    <value>自动朗读所选内容 · {0} — 选中文字时自动朗读</value>
+  </data>
+  <data name="Tip_AutoReadCopy" xml:space="preserve">
+    <value>复制时自动朗读 · {0} — 复制文字时自动朗读</value>
+  </data>
+  <data name="Tip_Startup" xml:space="preserve">
+    <value>开机启动 · {0} — 随 Windows 启动，驻留托盘</value>
+  </data>
+  <data name="Tip_ReadingTextBox" xml:space="preserve">
+    <value>朗读文本框 · {0} — 显示正在朗读的文字</value>
+  </data>
+  <data name="Tip_Translate" xml:space="preserve">
+    <value>翻译成我的语言 · {0} — 将朗读内容翻译成你的语言</value>
+  </data>
+  <data name="Menu_Play" xml:space="preserve">
+    <value>播放</value>
+  </data>
+  <data name="Menu_Pause" xml:space="preserve">
+    <value>暂停</value>
+  </data>
+  <data name="Menu_Quit" xml:space="preserve">
+    <value>退出</value>
+  </data>
+  <data name="Menu_AutoReadSelection" xml:space="preserve">
+    <value>选择时自动朗读</value>
+  </data>
+  <data name="Menu_AutoReadCopy" xml:space="preserve">
+    <value>复制时自动朗读</value>
+  </data>
+  <data name="Menu_Startup" xml:space="preserve">
+    <value>开机启动</value>
+  </data>
+  <data name="Menu_Voice" xml:space="preserve">
+    <value>语音</value>
+  </data>
+  <data name="Menu_ActivityLog" xml:space="preserve">
+    <value>显示活动日志</value>
+  </data>
+  <data name="Menu_ReadFile" xml:space="preserve">
+    <value>朗读文件…</value>
+  </data>
+  <data name="Menu_VoiceLanguage" xml:space="preserve">
+    <value>语音语言…</value>
+  </data>
+  <data name="Menu_Translate" xml:space="preserve">
+    <value>翻译成我的语言</value>
+  </data>
+  <data name="Tray_Tooltip" xml:space="preserve">
+    <value>{0} — 朗读</value>
+  </data>
+  <data name="Pack_WindowsVoice" xml:space="preserve">
+    <value>Windows 语音</value>
+  </data>
+  <data name="Restart_Failed" xml:space="preserve">
+    <value>语言将在下次启动应用时生效。</value>
+  </data>
+  <data name="StatusText.Text" xml:space="preserve">
+    <value>就绪</value>
+  </data>
+  <data name="Window_Language" xml:space="preserve">
+    <value>语言</value>
+  </data>
+  <data name="Window_ActivityLog" xml:space="preserve">
+    <value>活动日志</value>
+  </data>
+  <data name="Window_Reading" xml:space="preserve">
+    <value>朗读</value>
+  </data>
+  <data name="Reading_Nothing" xml:space="preserve">
+    <value>尚未朗读任何内容</value>
+  </data>
+  <data name="Reading_Chunk" xml:space="preserve">
+    <value>正在朗读 — 第 {0} 段，共 {1} 段</value>
+  </data>
+  <data name="Reading_Translated" xml:space="preserve">
+    <value>（已翻译）</value>
+  </data>
+  <data name="Reading_Page" xml:space="preserve">
+    <value>第 {0} 页，共 {1} 页</value>
+  </data>
+  <data name="State_Pending" xml:space="preserve">
+    <value>等待中</value>
+  </data>
+  <data name="State_GeneratingAudio" xml:space="preserve">
+    <value>正在生成音频</value>
+  </data>
+  <data name="State_Reading" xml:space="preserve">
+    <value>朗读中</value>
+  </data>
+  <data name="State_Read" xml:space="preserve">
+    <value>已朗读</value>
+  </data>
+  <data name="State_Ignored" xml:space="preserve">
+    <value>已忽略</value>
+  </data>
+  <data name="State_Interrupted" xml:space="preserve">
+    <value>已中断</value>
+  </data>
+  <data name="State_Failed" xml:space="preserve">
+    <value>失败</value>
+  </data>
+  <data name="Reason_NewSelection" xml:space="preserve">
+    <value>新的选择</value>
+  </data>
+  <data name="Reason_Deselected" xml:space="preserve">
+    <value>已取消选择</value>
+  </data>
+  <data name="Reason_Error" xml:space="preserve">
+    <value>错误</value>
+  </data>
+  <data name="Trigger_AutoRead" xml:space="preserve">
+    <value>自动朗读</value>
+  </data>
+  <data name="Trigger_Hotkey" xml:space="preserve">
+    <value>快捷键</value>
+  </data>
+  <data name="Trigger_Manual" xml:space="preserve">
+    <value>手动</value>
+  </data>
+  <data name="Trigger_Clipboard" xml:space="preserve">
+    <value>剪贴板</value>
+  </data>
+  <data name="Trigger_FileUpload" xml:space="preserve">
+    <value>文件</value>
+  </data>
+  <data name="Pack_Intro" xml:space="preserve">
+    <value>你所选语言的自然语音只需下载一次（约 145 MB，建议使用 Wi-Fi）。下载完成前由 {0} 朗读。你的文字绝不会离开此设备。</value>
+  </data>
+  <data name="Pack_Resolving" xml:space="preserve">
+    <value>正在查找你所选语言的语音...</value>
+  </data>
+  <data name="Pack_Downloading" xml:space="preserve">
+    <value>正在下载自然语音... {0}%</value>
+  </data>
+  <data name="Pack_Ready" xml:space="preserve">
+    <value>自然语音已就绪。</value>
+  </data>
+  <data name="Pack_Unavailable" xml:space="preserve">
+    <value>此语言暂无自然语音，由 {0} 朗读。</value>
+  </data>
+  <data name="Pack_Offline" xml:space="preserve">
+    <value>你当前处于离线状态。由 {0} 朗读，恢复联网后开始下载。</value>
+  </data>
+  <data name="Pack_HashMismatch" xml:space="preserve">
+    <value>下载的文件已损坏。请重试以重新获取。</value>
+  </data>
+  <data name="Pack_InvalidPack" xml:space="preserve">
+    <value>此语音包无法使用，由 {0} 朗读。</value>
+  </data>
+  <data name="Pack_Failed" xml:space="preserve">
+    <value>下载失败。请重试。</value>
+  </data>
+  <data name="Translate_AutoDetect" xml:space="preserve">
+    <value>自动检测</value>
+  </data>
+  <data name="Translate_Note_Default" xml:space="preserve">
+    <value>在此设备上进行机器翻译，质量可能有所不同。</value>
+  </data>
+  <data name="Translate_Note_Translated" xml:space="preserve">
+    <value>已从 {0} 翻译。</value>
+  </data>
+  <data name="Translate_Note_ModelMissing" xml:space="preserve">
+    <value>翻译包尚未安装，已朗读原文。</value>
+  </data>
+  <data name="Translate_Note_TimedOut" xml:space="preserve">
+    <value>翻译耗时过长，已朗读原文。</value>
+  </data>
+  <data name="Translate_Note_Failed" xml:space="preserve">
+    <value>翻译失败，已朗读原文。</value>
+  </data>
+  <data name="Translate_Note_SourceUnknown" xml:space="preserve">
+    <value>无法识别文本语言，已朗读原文。请在上方选择。</value>
+  </data>
+  <data name="Translate_Note_PairUnsupported" xml:space="preserve">
+    <value>暂不支持从 {0} 翻译，已朗读原文。</value>
+  </data>
+</root>

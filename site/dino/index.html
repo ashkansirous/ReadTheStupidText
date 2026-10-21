@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dino Reader</title>
+  <meta name="description" content="Dino Reader is a book reader for kids aged 3 to 8: a different voice for every character, and a highlight on every page. No ads, no accounts, works offline." />
+  <link rel="icon" type="image/png" href="/dino/icon.png" />
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #F3EFE6; --ink: #2b2540; --soft: #5a5470; --muted: #8a8399;
+      --card: #FFF6E6; --line: #d9d2c4; --brand: #5B57E8; --brand-ink: #ffffff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1d1a2b; --ink: #f1edff; --soft: #c2bcd8; --muted: #9a94b2;
+        --card: #28243a; --line: #3a3450; --brand: #8a86f2; --brand-ink: #1d1a2b;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--ink);
+      /* No webfont is loaded (no third-party request on a kids' site): Fredoka and Andika apply only if installed, else the rounded system fallback. */
+      font-family: "Fredoka", "Andika", "Segoe UI Rounded", "Arial Rounded MT Bold", system-ui, -apple-system, sans-serif;
+      line-height: 1.6; text-align: center; padding: 3rem 1.25rem 4rem;
+    }
+    main { max-width: 720px; margin: 0 auto; }
+    .icon { width: 128px; height: 128px; border-radius: 28px; box-shadow: 0 6px 18px rgba(43, 37, 64, .18); }
+    .eyebrow { font-size: .8rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--brand); margin: 1.25rem 0 0; }
+    h1 { font-size: 2.4rem; line-height: 1.15; margin: .25rem 0 .5rem; }
+    .lede { font-size: 1.15rem; color: var(--soft); margin: 0 auto; max-width: 34rem; }
+    .features { list-style: none; padding: 0; margin: 2rem auto; display: grid; gap: .75rem; text-align: left; }
+    .features li { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: .85rem 1.1rem; }
+    .features strong { display: block; }
+    .features span { color: var(--soft); font-size: .95rem; }
+    .btn {
+      display: inline-block; margin: .4rem; padding: .8rem 1.6rem; border-radius: 999px;
+      background: var(--brand); color: var(--brand-ink); text-decoration: none; font-weight: 600; font-size: 1.05rem;
+    }
+    .btn:hover { filter: brightness(1.08); }
+    .note { font-size: .9rem; color: var(--muted); max-width: 34rem; margin: 1rem auto 0; }
+    footer { margin-top: 3rem; font-size: .85rem; color: var(--muted); }
+    footer a { color: inherit; }
+  </style>
+</head>
+<body>
+  <main>
+    <img class="icon" src="/dino/icon.png" width="128" height="128" alt="Dino Reader: a dinosaur hugging a book" />
+    <p class="eyebrow">For ages 3&ndash;8</p>
+    <h1>Dino Reader</h1>
+    <p class="lede">A book reader where every character has their own voice. Scan a page or open a story, and Dino reads it aloud, highlighting each sentence as it goes.</p>
+
+    <ul class="features">
+      <li><strong>A voice for every character</strong><span>Dino works out who is speaking and keeps each character&rsquo;s voice for the whole book. A grown-up picks the narrator.</span></li>
+      <li><strong>A highlight on every page</strong><span>Follow along with the spoken sentence, in the real scanned page or in a clean text view.</span></li>
+      <li><strong>Private by design</strong><span>No accounts, no ads, no tracking. Stories and photos never leave the device, and reading works offline.</span></li>
+    </ul>
+
+    <div>
+      <!-- Add the "Get it on Google Play" link here once the app is public (Slice 74). -->
+      <a class="btn" href="download/android">Download for Android</a>
+    </div>
+    <p class="note">Android only for now. Android will ask you to allow installs from your browser the first time.</p>
+
+    <footer>
+      &copy; 2026 Ashkan Sirous &middot; <a href="privacy">Privacy Policy</a>
+    </footer>
+  </main>
+</body>
+</html>

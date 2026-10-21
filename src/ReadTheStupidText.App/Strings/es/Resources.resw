@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="ActivityTitle.Text" xml:space="preserve">
+    <value>Registro de actividad</value>
+  </data>
+  <data name="ActivityOpenLogs.Content" xml:space="preserve">
+    <value>Abrir registros</value>
+  </data>
+  <data name="ActivityOpenLogs.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Abrir la carpeta de archivos de registro diarios</value>
+  </data>
+  <data name="ActivityClear.Content" xml:space="preserve">
+    <value>Borrar</value>
+  </data>
+  <data name="ColTime.Text" xml:space="preserve">
+    <value>Hora</value>
+  </data>
+  <data name="ColTrigger.Text" xml:space="preserve">
+    <value>Activador</value>
+  </data>
+  <data name="ColState.Text" xml:space="preserve">
+    <value>Estado</value>
+  </data>
+  <data name="ColReason.Text" xml:space="preserve">
+    <value>Motivo</value>
+  </data>
+  <data name="ColFirstAudio.Text" xml:space="preserve">
+    <value>Primer audio</value>
+  </data>
+  <data name="ColSynth.Text" xml:space="preserve">
+    <value>Síntesis</value>
+  </data>
+  <data name="ColSource.Text" xml:space="preserve">
+    <value>Fuente</value>
+  </data>
+  <data name="ColText.Text" xml:space="preserve">
+    <value>Texto</value>
+  </data>
+  <data name="PanelEyebrow.Text" xml:space="preserve">
+    <value>LEYENDO AHORA</value>
+  </data>
+  <data name="CloseButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Cerrar</value>
+  </data>
+  <data name="SkipBackButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Retroceder 10 s</value>
+  </data>
+  <data name="SkipForwardButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Avanzar 10 s</value>
+  </data>
+  <data name="SpeedPillToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Velocidad de reproducción — toca para ajustar · 0,5×–2×</value>
+  </data>
+  <data name="VoiceLabel.Text" xml:space="preserve">
+    <value>Voz</value>
+  </data>
+  <data name="LanguageLabel.Text" xml:space="preserve">
+    <value>Idioma</value>
+  </data>
+  <data name="UploadFileButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Leer un archivo — abre .txt, .pdf o .docx</value>
+  </data>
+  <data name="UploadFileLabel.Text" xml:space="preserve">
+    <value>Leer un archivo</value>
+  </data>
+  <data name="ActivityLogButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Registro de actividad — historial, tiempos, abrir carpeta de registros</value>
+  </data>
+  <data name="ActivityLogLabel.Text" xml:space="preserve">
+    <value>Registro de actividad</value>
+  </data>
+  <data name="ControlsLabel.Text" xml:space="preserve">
+    <value>CONTROLES</value>
+  </data>
+  <data name="HotkeyLabel.Text" xml:space="preserve">
+    <value>Atajo alternativo</value>
+  </data>
+  <data name="TranslateSourceLabel.Text" xml:space="preserve">
+    <value>Idioma del texto</value>
+  </data>
+  <data name="ReadingZoomOut.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Texto más pequeño</value>
+  </data>
+  <data name="ReadingZoomIn.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Texto más grande</value>
+  </data>
+  <data name="LanguageChooseTitle.Text" xml:space="preserve">
+    <value>Elige tu idioma</value>
+  </data>
+  <data name="LanguageRetry.Content" xml:space="preserve">
+    <value>Reintentar</value>
+  </data>
+  <data name="LanguageClose.Content" xml:space="preserve">
+    <value>Cerrar</value>
+  </data>
+  <data name="Status_Ready" xml:space="preserve">
+    <value>Listo</value>
+  </data>
+  <data name="Status_Paused" xml:space="preserve">
+    <value>En pausa</value>
+  </data>
+  <data name="Status_ReadingClipboard" xml:space="preserve">
+    <value>Leyendo el portapapeles…</value>
+  </data>
+  <data name="Status_ReadingSelection" xml:space="preserve">
+    <value>Leyendo la selección…</value>
+  </data>
+  <data name="Status_ReadingSelectionFrom" xml:space="preserve">
+    <value>Leyendo la selección de {0}…</value>
+  </data>
+  <data name="Toggle_On" xml:space="preserve">
+    <value>activado</value>
+  </data>
+  <data name="Toggle_Off" xml:space="preserve">
+    <value>desactivado</value>
+  </data>
+  <data name="Tip_AutoReadSelection" xml:space="preserve">
+    <value>Lectura automática de la selección · {0} — Lee en voz alta mientras seleccionas</value>
+  </data>
+  <data name="Tip_AutoReadCopy" xml:space="preserve">
+    <value>Lectura automática al copiar · {0} — Lee en voz alta al copiar</value>
+  </data>
+  <data name="Tip_Startup" xml:space="preserve">
+    <value>Iniciar con el sistema · {0} — Se inicia con Windows, en la bandeja</value>
+  </data>
+  <data name="Tip_ReadingTextBox" xml:space="preserve">
+    <value>Cuadro de texto de lectura · {0} — Muestra el texto que se lee</value>
+  </data>
+  <data name="Tip_Translate" xml:space="preserve">
+    <value>Traducir a mi idioma · {0} — Traduce lo que se lee a tu idioma</value>
+  </data>
+  <data name="Menu_Play" xml:space="preserve">
+    <value>Reproducir</value>
+  </data>
+  <data name="Menu_Pause" xml:space="preserve">
+    <value>Pausa</value>
+  </data>
+  <data name="Menu_Quit" xml:space="preserve">
+    <value>Salir</value>
+  </data>
+  <data name="Menu_AutoReadSelection" xml:space="preserve">
+    <value>Lectura automática al seleccionar</value>
+  </data>
+  <data name="Menu_AutoReadCopy" xml:space="preserve">
+    <value>Lectura automática al copiar</value>
+  </data>
+  <data name="Menu_Startup" xml:space="preserve">
+    <value>Iniciar con el sistema</value>
+  </data>
+  <data name="Menu_Voice" xml:space="preserve">
+    <value>Voz</value>
+  </data>
+  <data name="Menu_ActivityLog" xml:space="preserve">
+    <value>Mostrar registro de actividad</value>
+  </data>
+  <data name="Menu_ReadFile" xml:space="preserve">
+    <value>Leer archivo…</value>
+  </data>
+  <data name="Menu_VoiceLanguage" xml:space="preserve">
+    <value>Idioma de la voz…</value>
+  </data>
+  <data name="Menu_Translate" xml:space="preserve">
+    <value>Traducir a mi idioma</value>
+  </data>
+  <data name="Tray_Tooltip" xml:space="preserve">
+    <value>{0} — lectura en voz alta</value>
+  </data>
+  <data name="Pack_WindowsVoice" xml:space="preserve">
+    <value>voz de Windows</value>
+  </data>
+  <data name="Restart_Failed" xml:space="preserve">
+    <value>El idioma se aplicará la próxima vez que se inicie la aplicación.</value>
+  </data>
+  <data name="StatusText.Text" xml:space="preserve">
+    <value>Listo</value>
+  </data>
+  <data name="Window_Language" xml:space="preserve">
+    <value>Idioma</value>
+  </data>
+  <data name="Window_ActivityLog" xml:space="preserve">
+    <value>Registro de actividad</value>
+  </data>
+  <data name="Window_Reading" xml:space="preserve">
+    <value>Lectura</value>
+  </data>
+  <data name="Reading_Nothing" xml:space="preserve">
+    <value>Aún no se lee nada</value>
+  </data>
+  <data name="Reading_Chunk" xml:space="preserve">
+    <value>Leyendo — fragmento {0} de {1}</value>
+  </data>
+  <data name="Reading_Translated" xml:space="preserve">
+    <value>(traducido)</value>
+  </data>
+  <data name="Reading_Page" xml:space="preserve">
+    <value>Página {0} de {1}</value>
+  </data>
+  <data name="State_Pending" xml:space="preserve">
+    <value>Pendiente</value>
+  </data>
+  <data name="State_GeneratingAudio" xml:space="preserve">
+    <value>Generando audio</value>
+  </data>
+  <data name="State_Reading" xml:space="preserve">
+    <value>Leyendo</value>
+  </data>
+  <data name="State_Read" xml:space="preserve">
+    <value>Leído</value>
+  </data>
+  <data name="State_Ignored" xml:space="preserve">
+    <value>Ignorado</value>
+  </data>
+  <data name="State_Interrupted" xml:space="preserve">
+    <value>Interrumpido</value>
+  </data>
+  <data name="State_Failed" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="Reason_NewSelection" xml:space="preserve">
+    <value>Nueva selección</value>
+  </data>
+  <data name="Reason_Deselected" xml:space="preserve">
+    <value>Deseleccionado</value>
+  </data>
+  <data name="Reason_Error" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="Trigger_AutoRead" xml:space="preserve">
+    <value>Lectura automática</value>
+  </data>
+  <data name="Trigger_Hotkey" xml:space="preserve">
+    <value>Atajo</value>
+  </data>
+  <data name="Trigger_Manual" xml:space="preserve">
+    <value>Manual</value>
+  </data>
+  <data name="Trigger_Clipboard" xml:space="preserve">
+    <value>Portapapeles</value>
+  </data>
+  <data name="Trigger_FileUpload" xml:space="preserve">
+    <value>Archivo</value>
+  </data>
+  <data name="Pack_Intro" xml:space="preserve">
+    <value>La voz natural de tu idioma se descarga una sola vez (unos 145 MB, se recomienda Wi-Fi). Mientras llega, lee {0}. Tu texto nunca sale de este dispositivo.</value>
+  </data>
+  <data name="Pack_Resolving" xml:space="preserve">
+    <value>Buscando la voz para tu idioma...</value>
+  </data>
+  <data name="Pack_Downloading" xml:space="preserve">
+    <value>Descargando la voz natural... {0} %</value>
+  </data>
+  <data name="Pack_Ready" xml:space="preserve">
+    <value>Voz natural lista.</value>
+  </data>
+  <data name="Pack_Unavailable" xml:space="preserve">
+    <value>Aún no hay voz natural para este idioma. Lee {0}.</value>
+  </data>
+  <data name="Pack_Offline" xml:space="preserve">
+    <value>Sin conexión. Lee {0} y la descarga empieza al volver a conectarte.</value>
+  </data>
+  <data name="Pack_HashMismatch" xml:space="preserve">
+    <value>La descarga se dañó. Reintenta para obtenerla de nuevo.</value>
+  </data>
+  <data name="Pack_InvalidPack" xml:space="preserve">
+    <value>Este paquete de voz no se puede usar. Lee {0}.</value>
+  </data>
+  <data name="Pack_Failed" xml:space="preserve">
+    <value>La descarga falló. Reintenta.</value>
+  </data>
+  <data name="Translate_AutoDetect" xml:space="preserve">
+    <value>Detección automática</value>
+  </data>
+  <data name="Translate_Note_Default" xml:space="preserve">
+    <value>Traducción automática en este dispositivo. La calidad varía.</value>
+  </data>
+  <data name="Translate_Note_Translated" xml:space="preserve">
+    <value>Traducido del {0}.</value>
+  </data>
+  <data name="Translate_Note_ModelMissing" xml:space="preserve">
+    <value>El paquete de traducción aún no está instalado, así que se leyó el original.</value>
+  </data>
+  <data name="Translate_Note_TimedOut" xml:space="preserve">
+    <value>La traducción tardó demasiado, así que se leyó el original.</value>
+  </data>
+  <data name="Translate_Note_Failed" xml:space="preserve">
+    <value>La traducción falló, así que se leyó el original.</value>
+  </data>
+  <data name="Translate_Note_SourceUnknown" xml:space="preserve">
+    <value>No se reconoció el idioma del texto, así que se leyó el original. Elígelo arriba.</value>
+  </data>
+  <data name="Translate_Note_PairUnsupported" xml:space="preserve">
+    <value>La traducción desde {0} aún no está disponible, así que se leyó el original.</value>
+  </data>
+</root>

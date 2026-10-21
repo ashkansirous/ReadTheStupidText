@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="ActivityTitle.Text" xml:space="preserve">
+    <value>Журнал активности</value>
+  </data>
+  <data name="ActivityOpenLogs.Content" xml:space="preserve">
+    <value>Открыть журналы</value>
+  </data>
+  <data name="ActivityOpenLogs.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Открыть папку с ежедневными файлами журнала</value>
+  </data>
+  <data name="ActivityClear.Content" xml:space="preserve">
+    <value>Очистить</value>
+  </data>
+  <data name="ColTime.Text" xml:space="preserve">
+    <value>Время</value>
+  </data>
+  <data name="ColTrigger.Text" xml:space="preserve">
+    <value>Запуск</value>
+  </data>
+  <data name="ColState.Text" xml:space="preserve">
+    <value>Состояние</value>
+  </data>
+  <data name="ColReason.Text" xml:space="preserve">
+    <value>Причина</value>
+  </data>
+  <data name="ColFirstAudio.Text" xml:space="preserve">
+    <value>Первый звук</value>
+  </data>
+  <data name="ColSynth.Text" xml:space="preserve">
+    <value>Синтез</value>
+  </data>
+  <data name="ColSource.Text" xml:space="preserve">
+    <value>Источник</value>
+  </data>
+  <data name="ColText.Text" xml:space="preserve">
+    <value>Текст</value>
+  </data>
+  <data name="PanelEyebrow.Text" xml:space="preserve">
+    <value>СЕЙЧАС ЧИТАЕТСЯ</value>
+  </data>
+  <data name="CloseButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Закрыть</value>
+  </data>
+  <data name="SkipBackButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Назад на 10 с</value>
+  </data>
+  <data name="SkipForwardButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Вперёд на 10 с</value>
+  </data>
+  <data name="SpeedPillToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Скорость воспроизведения — нажмите, чтобы изменить · 0,5×–2×</value>
+  </data>
+  <data name="VoiceLabel.Text" xml:space="preserve">
+    <value>Голос</value>
+  </data>
+  <data name="LanguageLabel.Text" xml:space="preserve">
+    <value>Язык</value>
+  </data>
+  <data name="UploadFileButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Прочитать файл — открывает .txt, .pdf или .docx</value>
+  </data>
+  <data name="UploadFileLabel.Text" xml:space="preserve">
+    <value>Прочитать файл</value>
+  </data>
+  <data name="ActivityLogButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Журнал активности — история, время, открыть папку журналов</value>
+  </data>
+  <data name="ActivityLogLabel.Text" xml:space="preserve">
+    <value>Журнал активности</value>
+  </data>
+  <data name="ControlsLabel.Text" xml:space="preserve">
+    <value>УПРАВЛЕНИЕ</value>
+  </data>
+  <data name="HotkeyLabel.Text" xml:space="preserve">
+    <value>Резервное сочетание клавиш</value>
+  </data>
+  <data name="TranslateSourceLabel.Text" xml:space="preserve">
+    <value>Язык текста</value>
+  </data>
+  <data name="ReadingZoomOut.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Мельче текст</value>
+  </data>
+  <data name="ReadingZoomIn.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Крупнее текст</value>
+  </data>
+  <data name="LanguageChooseTitle.Text" xml:space="preserve">
+    <value>Выберите язык</value>
+  </data>
+  <data name="LanguageRetry.Content" xml:space="preserve">
+    <value>Повторить</value>
+  </data>
+  <data name="LanguageClose.Content" xml:space="preserve">
+    <value>Закрыть</value>
+  </data>
+  <data name="Status_Ready" xml:space="preserve">
+    <value>Готово</value>
+  </data>
+  <data name="Status_Paused" xml:space="preserve">
+    <value>Пауза</value>
+  </data>
+  <data name="Status_ReadingClipboard" xml:space="preserve">
+    <value>Чтение буфера обмена…</value>
+  </data>
+  <data name="Status_ReadingSelection" xml:space="preserve">
+    <value>Чтение выделенного…</value>
+  </data>
+  <data name="Status_ReadingSelectionFrom" xml:space="preserve">
+    <value>Чтение выделенного из {0}…</value>
+  </data>
+  <data name="Toggle_On" xml:space="preserve">
+    <value>вкл.</value>
+  </data>
+  <data name="Toggle_Off" xml:space="preserve">
+    <value>выкл.</value>
+  </data>
+  <data name="Tip_AutoReadSelection" xml:space="preserve">
+    <value>Автоозвучивание выделения · {0} — читает вслух при выделении</value>
+  </data>
+  <data name="Tip_AutoReadCopy" xml:space="preserve">
+    <value>Автоозвучивание при копировании · {0} — читает вслух при копировании</value>
+  </data>
+  <data name="Tip_Startup" xml:space="preserve">
+    <value>Запуск при старте · {0} — запускается вместе с Windows, в трее</value>
+  </data>
+  <data name="Tip_ReadingTextBox" xml:space="preserve">
+    <value>Окно читаемого текста · {0} — показывает читаемый текст</value>
+  </data>
+  <data name="Tip_Translate" xml:space="preserve">
+    <value>Переводить на мой язык · {0} — переводит читаемое на ваш язык</value>
+  </data>
+  <data name="Menu_Play" xml:space="preserve">
+    <value>Воспроизвести</value>
+  </data>
+  <data name="Menu_Pause" xml:space="preserve">
+    <value>Пауза</value>
+  </data>
+  <data name="Menu_Quit" xml:space="preserve">
+    <value>Выход</value>
+  </data>
+  <data name="Menu_AutoReadSelection" xml:space="preserve">
+    <value>Автоозвучивание при выделении</value>
+  </data>
+  <data name="Menu_AutoReadCopy" xml:space="preserve">
+    <value>Автоозвучивание при копировании</value>
+  </data>
+  <data name="Menu_Startup" xml:space="preserve">
+    <value>Запуск при старте</value>
+  </data>
+  <data name="Menu_Voice" xml:space="preserve">
+    <value>Голос</value>
+  </data>
+  <data name="Menu_ActivityLog" xml:space="preserve">
+    <value>Показать журнал активности</value>
+  </data>
+  <data name="Menu_ReadFile" xml:space="preserve">
+    <value>Прочитать файл…</value>
+  </data>
+  <data name="Menu_VoiceLanguage" xml:space="preserve">
+    <value>Язык голоса…</value>
+  </data>
+  <data name="Menu_Translate" xml:space="preserve">
+    <value>Переводить на мой язык</value>
+  </data>
+  <data name="Tray_Tooltip" xml:space="preserve">
+    <value>{0} — чтение вслух</value>
+  </data>
+  <data name="Pack_WindowsVoice" xml:space="preserve">
+    <value>голос Windows</value>
+  </data>
+  <data name="Restart_Failed" xml:space="preserve">
+    <value>Язык будет применён при следующем запуске приложения.</value>
+  </data>
+  <data name="StatusText.Text" xml:space="preserve">
+    <value>Готово</value>
+  </data>
+  <data name="Window_Language" xml:space="preserve">
+    <value>Язык</value>
+  </data>
+  <data name="Window_ActivityLog" xml:space="preserve">
+    <value>Журнал активности</value>
+  </data>
+  <data name="Window_Reading" xml:space="preserve">
+    <value>Чтение</value>
+  </data>
+  <data name="Reading_Nothing" xml:space="preserve">
+    <value>Пока ничего не читается</value>
+  </data>
+  <data name="Reading_Chunk" xml:space="preserve">
+    <value>Чтение — фрагмент {0} из {1}</value>
+  </data>
+  <data name="Reading_Translated" xml:space="preserve">
+    <value>(переведено)</value>
+  </data>
+  <data name="Reading_Page" xml:space="preserve">
+    <value>Страница {0} из {1}</value>
+  </data>
+  <data name="State_Pending" xml:space="preserve">
+    <value>Ожидание</value>
+  </data>
+  <data name="State_GeneratingAudio" xml:space="preserve">
+    <value>Создание звука</value>
+  </data>
+  <data name="State_Reading" xml:space="preserve">
+    <value>Чтение</value>
+  </data>
+  <data name="State_Read" xml:space="preserve">
+    <value>Прочитано</value>
+  </data>
+  <data name="State_Ignored" xml:space="preserve">
+    <value>Пропущено</value>
+  </data>
+  <data name="State_Interrupted" xml:space="preserve">
+    <value>Прервано</value>
+  </data>
+  <data name="State_Failed" xml:space="preserve">
+    <value>Ошибка</value>
+  </data>
+  <data name="Reason_NewSelection" xml:space="preserve">
+    <value>Новое выделение</value>
+  </data>
+  <data name="Reason_Deselected" xml:space="preserve">
+    <value>Выделение снято</value>
+  </data>
+  <data name="Reason_Error" xml:space="preserve">
+    <value>Ошибка</value>
+  </data>
+  <data name="Trigger_AutoRead" xml:space="preserve">
+    <value>Автоозвучивание</value>
+  </data>
+  <data name="Trigger_Hotkey" xml:space="preserve">
+    <value>Сочетание клавиш</value>
+  </data>
+  <data name="Trigger_Manual" xml:space="preserve">
+    <value>Вручную</value>
+  </data>
+  <data name="Trigger_Clipboard" xml:space="preserve">
+    <value>Буфер обмена</value>
+  </data>
+  <data name="Trigger_FileUpload" xml:space="preserve">
+    <value>Файл</value>
+  </data>
+  <data name="Pack_Intro" xml:space="preserve">
+    <value>Естественный голос для вашего языка скачивается один раз (около 145 МБ, лучше по Wi-Fi). Пока он не загрузится, читает {0}. Ваш текст никогда не покидает это устройство.</value>
+  </data>
+  <data name="Pack_Resolving" xml:space="preserve">
+    <value>Поиск голоса для вашего языка...</value>
+  </data>
+  <data name="Pack_Downloading" xml:space="preserve">
+    <value>Загрузка естественного голоса... {0}%</value>
+  </data>
+  <data name="Pack_Ready" xml:space="preserve">
+    <value>Естественный голос готов.</value>
+  </data>
+  <data name="Pack_Unavailable" xml:space="preserve">
+    <value>Для этого языка пока нет естественного голоса. Читает {0}.</value>
+  </data>
+  <data name="Pack_Offline" xml:space="preserve">
+    <value>Нет подключения к сети. Читает {0}, загрузка начнётся при появлении сети.</value>
+  </data>
+  <data name="Pack_HashMismatch" xml:space="preserve">
+    <value>Загрузка повреждена. Повторите, чтобы скачать снова.</value>
+  </data>
+  <data name="Pack_InvalidPack" xml:space="preserve">
+    <value>Этот голосовой пакет нельзя использовать. Читает {0}.</value>
+  </data>
+  <data name="Pack_Failed" xml:space="preserve">
+    <value>Не удалось скачать. Повторите попытку.</value>
+  </data>
+  <data name="Translate_AutoDetect" xml:space="preserve">
+    <value>Автоопределение</value>
+  </data>
+  <data name="Translate_Note_Default" xml:space="preserve">
+    <value>Машинный перевод на этом устройстве. Качество может различаться.</value>
+  </data>
+  <data name="Translate_Note_Translated" xml:space="preserve">
+    <value>Переведено с языка {0}.</value>
+  </data>
+  <data name="Translate_Note_ModelMissing" xml:space="preserve">
+    <value>Пакет перевода ещё не установлен, поэтому прочитан оригинал.</value>
+  </data>
+  <data name="Translate_Note_TimedOut" xml:space="preserve">
+    <value>Перевод занял слишком много времени, поэтому прочитан оригинал.</value>
+  </data>
+  <data name="Translate_Note_Failed" xml:space="preserve">
+    <value>Не удалось перевести, поэтому прочитан оригинал.</value>
+  </data>
+  <data name="Translate_Note_SourceUnknown" xml:space="preserve">
+    <value>Не удалось определить язык текста, поэтому прочитан оригинал. Выберите его выше.</value>
+  </data>
+  <data name="Translate_Note_PairUnsupported" xml:space="preserve">
+    <value>Перевод с языка {0} пока недоступен, поэтому прочитан оригинал.</value>
+  </data>
+</root>

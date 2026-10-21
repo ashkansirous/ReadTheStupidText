@@ -33,7 +33,8 @@ public sealed partial class ActivityLogWindow : Window
         _log = log;
         _logFolder = logFolder;
         InitializeComponent();
-        Title = "Read The Stupid Text — Activity log";
+        RootGrid.FlowDirection = UiStrings.CurrentFlowDirection;
+        Title = $"{ProductInfo.Name} — {UiStrings.Get("Window_ActivityLog")}";
         AppWindow.Resize(new SizeInt32(980, 480));
         ConfigureWindowChrome();
 
@@ -101,7 +102,7 @@ public sealed partial class ActivityLogWindow : Window
         var row = new ActivityRowVm(
             entry.Id,
             entry.Timestamp.ToString("HH:mm:ss"),
-            entry.Trigger.ToString(),
+            ActivityTriggerText.ForDisplay(entry.Trigger),
             WindowSourceText.ForDisplay(entry.Window),
             entry.Text,
             ActivityStateText.ForDisplay(entry.State),

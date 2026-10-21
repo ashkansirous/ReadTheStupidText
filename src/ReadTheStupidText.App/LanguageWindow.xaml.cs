@@ -15,33 +15,26 @@ namespace ReadTheStupidText_App;
 /// </summary>
 public sealed partial class LanguageWindow : Window
 {
-    private static readonly LanguageChoice[] Choices =
-    [
-        new(AppLanguage.English, "English"),
-        new(AppLanguage.Persian, "فارسی"),
-        new(AppLanguage.French, "Français"),
-        new(AppLanguage.Spanish, "Español"),
-        new(AppLanguage.Portuguese, "Português"),
-        new(AppLanguage.Chinese, "中文"),
-        new(AppLanguage.Arabic, "العربية"),
-        new(AppLanguage.Russian, "Русский"),
-        new(AppLanguage.Japanese, "日本語"),
-    ];
-
     private readonly ISettingsStore _settings;
     private readonly VoicePackSetup _setup;
     private readonly ISystemLog _log;
+    private readonly Action _restart;
     private readonly DispatcherQueue _dispatcher = DispatcherQueue.GetForCurrentThread();
     private bool _populating;
     private bool _closed;
+    private bool _languageChanged;
+    private readonly string? _initialLanguage;
 
-    public LanguageWindow(ISettingsStore settings, VoicePackSetup setup, ISystemLog log)
+    public LanguageWindow(ISettingsStore settings, VoicePackSetup setup, ISystemLog log, Action restart)
     {
         _settings = settings;
         _setup = setup;
+        _initialLanguage = settings.Language;
         _log = log;
+        _restart = restart;
         InitializeComponent();
-        Title = "Read The Stupid Text - Language";
+        RootGrid.FlowDirection = UiStrings.CurrentFlowDirection;
+        Title = $"{ProductInfo.Name} — {UiStrings.Get("Window_Language")}";
         AppWindow.Resize(new SizeInt32(460, 640));
         AppWindow.SetIcon("Assets/AppIcon.ico");
 
@@ -55,9 +48,9 @@ public sealed partial class LanguageWindow : Window
     private void PopulateChoices()
     {
         _populating = true;
-        LanguageList.ItemsSource = Choices;
+        LanguageList.ItemsSource = LanguageChoices.All;
         bool known = AppLanguages.TryParse(_settings.Language, out AppLanguage current);
-        LanguageList.SelectedItem = known ? Choices.First(c => c.Language == current) : null;
+        LanguageList.SelectedItem = known ? LanguageChoices.All.First(c => c.Language == current) : null;
         _populating = false;
     }
 
@@ -69,6 +62,10 @@ public sealed partial class LanguageWindow : Window
         }
 
         _settings.Language = AppLanguages.Code(choice.Language);
+        UiStrings.ApplyLanguage(_settings.Language);
+        // Restart only when the language differs from the one the window opened with (picking it back is a no-op).
+        _languageChanged = !string.Equals(_settings.Language, _initialLanguage, StringComparison.OrdinalIgnoreCase);
+        IntroText.Text = PackSetupText.Intro;
         StartSetup();
     }
 
@@ -76,6 +73,10 @@ public sealed partial class LanguageWindow : Window
     {
         _closed = true;
         _setup.Changed -= OnSetupChanged;
+        if (_languageChanged)
+        {
+            _restart(); // the other windows were built in the old language; the settings are already stored
+        }
     }
 
     private void OnRetryClick(object sender, RoutedEventArgs e) => StartSetup();
@@ -128,6 +129,4 @@ public sealed partial class LanguageWindow : Window
         RetryButton.Visibility = _setup.CanRetry ? Visibility.Visible : Visibility.Collapsed;
         LanguageList.IsEnabled = state is not (PackSetupState.Resolving or PackSetupState.Downloading);
     }
-
-    public sealed record LanguageChoice(AppLanguage Language, string NativeName);
 }

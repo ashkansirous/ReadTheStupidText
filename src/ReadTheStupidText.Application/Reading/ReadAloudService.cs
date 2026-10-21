@@ -5,6 +5,7 @@ using ReadTheStupidText.Application.Input;
 using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Application.Sanitizing;
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Application.Translation;
 using ReadTheStupidText.Domain.Activity;
 using ReadTheStupidText.Domain.Reading;
 
@@ -61,6 +62,10 @@ public sealed class ReadAloudService : IDisposable
     private readonly ITextSanitizer _sanitizer;
     private readonly ISystemLog _systemLog;
     private readonly IHeadStart? _headStart;
+    private readonly ReadTranslator? _translation;
+
+    // Cancels the translation of the read being prepared when it is superseded (Slice 57).
+    private CancellationTokenSource? _translationCts;
 
     // Cancels a pending debounced read when a newer selection supersedes it.
     private CancellationTokenSource? _selectionCts;
@@ -124,7 +129,8 @@ public sealed class ReadAloudService : IDisposable
         ISettingsStore settings,
         ITextSanitizer sanitizer,
         ISystemLog systemLog,
-        IHeadStart? headStart = null)
+        IHeadStart? headStart = null,
+        ReadTranslator? translation = null)
     {
         _reader = reader;
         _clipboard = clipboard;
@@ -141,6 +147,7 @@ public sealed class ReadAloudService : IDisposable
         _sanitizer = sanitizer;
         _systemLog = systemLog;
         _headStart = headStart;
+        _translation = translation;
 
         _reader.SetSpeed(_settings.Speed);
         ApplyPersistedVoice();
@@ -244,7 +251,33 @@ public sealed class ReadAloudService : IDisposable
     /// <summary>Raised with the full text of a new read, right before synthesis
     /// starts — the reading text box's source of the text it displays (Slice 37).
     /// <see cref="ChunkChanged"/>'s source ranges are relative to this same text.</summary>
-    public event EventHandler<string>? ReadTextChanged;
+    public event EventHandler<ReadText>? ReadTextChanged;
+
+    /// <summary>Raised before <see cref="ReadTextChanged"/> when a read attempted translation
+    /// (translated, or fell back to the original with a reason), so the UI can say which (Slice 57).</summary>
+    public event EventHandler<ReadTranslationResult>? TranslationFinished;
+
+    /// <summary>Whether this service can translate reads at all (an engine is wired in and available).</summary>
+    public bool CanTranslate => _translation?.IsAvailable == true;
+
+    /// <summary>Whether reads are translated into the chosen language; persisted (Slice 57).</summary>
+    public bool TranslateEnabled
+    {
+        get => CanTranslate && _settings.TranslateEnabled;
+        set
+        {
+            if (!CanTranslate || value == TranslateEnabled)
+            {
+                return;
+            }
+
+            _settings.TranslateEnabled = value;
+            TranslateEnabledChanged?.Invoke(this, value);
+        }
+    }
+
+    /// <summary>Raised after the translate toggle changes.</summary>
+    public event EventHandler<bool>? TranslateEnabledChanged;
 
     /// <summary>The chunk currently playing, for the reading text box's whole-chunk
     /// highlight (Decision 46).</summary>
@@ -617,6 +650,7 @@ public sealed class ReadAloudService : IDisposable
     {
         ActivityEntry? active = _activeEntry;
         _activeEntry = null;
+        CancelPendingPrepare(Interlocked.Exchange(ref _translationCts, null));
         CancelGrace();
         PublishGenerating();
         if (active is null)
@@ -650,8 +684,16 @@ public sealed class ReadAloudService : IDisposable
             _log.SetState(entry, ActivityState.GeneratingAudio);
             PublishGenerating();
             _systemLog.Debug("generating audio", entry.Id);
-            ReadTextChanged?.Invoke(this, text);
-            await _reader.SpeakAsync(text, entry.Id);
+            ReadText spoken = await TextToSpeakAsync(entry, text);
+            if (!ReferenceEquals(_activeEntry, entry))
+            {
+                PublishGenerating(); // the superseding read (or a stop) may have left the flag stale
+                return; // superseded while translating: Supersede already finalized the entry
+            }
+
+            DropHeadStartIfTranslated(spoken);
+            ReadTextChanged?.Invoke(this, spoken);
+            await _reader.SpeakAsync(spoken.Text, entry.Id);
             await FailIfNeverPlayedAsync(entry);
         }
         catch (Exception ex)
@@ -660,6 +702,54 @@ public sealed class ReadAloudService : IDisposable
             _systemLog.Error("read failed during synthesis/playback", entry.Id, ex);
             ClearIfActive(entry);
         }
+    }
+
+    // Slice 57: every read path funnels through ReadEntryAsync, so translation happens here, once, before
+    // the reader sees the text. The reading text box and the chunk source ranges then refer to the text
+    // actually spoken. A timeout, a missing pack or a failure reads the original (see ReadTranslator).
+    private async Task<ReadText> TextToSpeakAsync(ActivityEntry entry, string text)
+    {
+        if (_translation is null || !TranslateEnabled)
+        {
+            return new ReadText(text, false);
+        }
+
+        var cts = new CancellationTokenSource();
+        CancelPendingPrepare(Interlocked.Exchange(ref _translationCts, cts));
+        try
+        {
+            ReadTranslationResult result = await _translation.PrepareAsync(text, entry.Id, cts.Token);
+            if (!cts.IsCancellationRequested && result.IsNotable)
+            {
+                TranslationFinished?.Invoke(this, result);
+            }
+
+            return new ReadText(result.Text, result.Outcome == TranslationOutcome.Translated);
+        }
+        catch (OperationCanceledException) when (cts.IsCancellationRequested)
+        {
+            return new ReadText(text, false); // superseded: the caller sees the entry is no longer active
+        }
+        finally
+        {
+            if (Interlocked.CompareExchange(ref _translationCts, null, cts) == cts)
+            {
+                cts.Dispose(); // still ours: nobody superseded it, so nobody else will dispose it
+            }
+        }
+    }
+
+    // The head start was prepared for the original text; once the read is translated it is not what
+    // is spoken, so the engine stops spending effort on it.
+    private void DropHeadStartIfTranslated(ReadText spoken)
+    {
+        if (!spoken.Translated)
+        {
+            return;
+        }
+
+        CancelPendingPrepare(Interlocked.Exchange(ref _prepareCts, null));
+        _headStart?.CancelPrepare();
     }
 
     // SpeakAsync returned but the reader may not have started playing yet (the WinRT
@@ -772,6 +862,7 @@ public sealed class ReadAloudService : IDisposable
         _selectionMonitor.Stop();
         _selectionCts?.Cancel();
         _selectionCts?.Dispose();
+        CancelPendingPrepare(Interlocked.Exchange(ref _translationCts, null));
         CancelPendingPrepare(Interlocked.Exchange(ref _prepareCts, null));
     }
 }
