@@ -258,10 +258,13 @@ public sealed class ReadingSurface : Border
 		}
 		catch (Exception ex)
 		{
-			Debug.WriteLine($"Dino Reader could not lay the story out: {ex}");
+			LogLayoutFailure(ex);
 			return false;
 		}
 	}
+
+	private static void LogLayoutFailure(Exception ex) =>
+		DinoLog.Error(IPlatformApplication.Current?.Services, "Dino Reader could not lay the story out", ex);
 
 	private void Adopt(IPageRenderer renderer, Size card)
 	{
