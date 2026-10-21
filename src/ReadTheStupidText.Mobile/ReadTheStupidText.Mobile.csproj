@@ -183,7 +183,9 @@
 		<!-- Slice 55: the permission prompts (camera, photo library) in the nine app languages.
 		     Each language has a folder named like ar.lproj, as iOS expects; Info.plist stays the
 		     English fallback. -->
-		<BundleResource Include="Platforms\iOS\Resources\**\InfoPlist.strings" LogicalName="%(RecursiveDir)InfoPlist.strings" />
+		<InfoPlistLanguage Include="ar;en;es;fa;fr;ja;pt;ru;zh-Hans" />
+		<BundleResource Include="Platforms\iOS\Resources\%(InfoPlistLanguage.Identity).lproj\InfoPlist.strings"
+		                LogicalName="%(InfoPlistLanguage.Identity).lproj/InfoPlist.strings" />
 	</ItemGroup>
 
 	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">

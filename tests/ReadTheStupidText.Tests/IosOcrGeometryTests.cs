@@ -7,28 +7,6 @@ namespace ReadTheStupidText.Tests;
 public class IosOcrGeometryTests
 {
     [Fact]
-    public void FitWithin_LeavesASmallImageAlone()
-    {
-        Assert.Equal((800, 600), ImageResizer.FitWithin(800, 600, 960));
-    }
-
-    [Fact]
-    public void FitWithin_ScalesTheLongestSideDownToTheLimit()
-    {
-        Assert.Equal((960, 720), ImageResizer.FitWithin(4000, 3000, 960));
-        Assert.Equal((720, 960), ImageResizer.FitWithin(3000, 4000, 960));
-    }
-
-    [Fact]
-    public void FitWithin_NeverReturnsAZeroSide()
-    {
-        (int width, int height) = ImageResizer.FitWithin(10000, 1, 960);
-
-        Assert.Equal(960, width);
-        Assert.Equal(1, height);
-    }
-
-    [Fact]
     public void FromNormalizedBottomLeft_FlipsTheVerticalAxis()
     {
         // A line in the top tenth of a 1000 x 2000 page: Vision reports y from the bottom.

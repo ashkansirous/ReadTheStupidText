@@ -57,8 +57,18 @@ public sealed class LanguageImageTextExtractor : IImageTextExtractor, IOcrLineEx
 
     public void Dispose()
     {
-        _engine?.Dispose();
-        _gate.Dispose();
+        // Wait for an in-flight read so the engine is never disposed under it.
+        _gate.Wait();
+        try
+        {
+            _engine?.Dispose();
+            _engine = null;
+        }
+        finally
+        {
+            _gate.Release();
+            _gate.Dispose();
+        }
     }
 
     private string CurrentLanguage() => _settings.Language ?? AppLanguages.Code(AppLanguage.English);
@@ -122,9 +132,9 @@ public sealed class LanguageImageTextExtractor : IImageTextExtractor, IOcrLineEx
         {
             return new PaddleOcrEngine(paths, _loader);
         }
-        catch
+        catch (Exception ex)
         {
-            _failedToLoad = paths;
+            MarkFailedWhenStructural(paths, ex);
             throw;
         }
     }

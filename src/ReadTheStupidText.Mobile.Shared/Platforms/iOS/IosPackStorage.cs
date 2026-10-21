@@ -8,7 +8,7 @@ namespace ReadTheStupidText.Mobile;
 /// recreate. Marking a folder excluded covers everything below it, so the flag is set once on the
 /// packs folder (<see cref="MobileVoicePackService.PacksRoot"/>) before the first download creates a pack inside it.
 /// </summary>
-internal static class IosPackStorage
+public static class IosPackStorage
 {
     /// <summary>Creates the packs folder if needed and marks it as excluded from backups. Best effort.</summary>
     public static void ExcludePacksFromBackup()
@@ -23,7 +23,7 @@ internal static class IosPackStorage
                 System.Diagnostics.Debug.WriteLine($"Could not exclude the packs folder from backup: {error.LocalizedDescription}");
             }
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Could not prepare the packs folder: {ex.Message}");
         }

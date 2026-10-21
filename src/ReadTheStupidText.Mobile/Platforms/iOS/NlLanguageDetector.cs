@@ -37,7 +37,14 @@ public sealed class NlLanguageDetector : ILanguageDetector
             return null;
         }
 
-        return new DetectedLanguage(dominant.GetConstant().ToString(), ConfidenceOf(recognizer, dominant));
+        return new DetectedLanguage(PrimarySubtag(dominant.GetConstant().ToString()), ConfidenceOf(recognizer, dominant));
+    }
+
+    // "zh-Hans" -> "zh", "pt-BR" -> "pt": the same primary-subtag form Android reports.
+    private static string PrimarySubtag(string tag)
+    {
+        int dash = tag.IndexOfAny(['-', '_']);
+        return dash > 0 ? tag[..dash] : tag;
     }
 
     // The framework reports the dominant language without its probability; the top hypothesis is that language.

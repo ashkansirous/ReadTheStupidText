@@ -62,12 +62,36 @@ public sealed partial class IosSupertonicSpeechReader
     private async Task PrepareChunksAsync(IosBuiltEngine engine, string text, CancellationToken token)
     {
         VoiceInfo voice = ResolveVoice(engine, Volatile.Read(ref _voiceId));
-        string prefix = text.Length > PrepareMaxChars ? text[..PrepareMaxChars] : text;
+        string prefix = TrimToSentenceBoundary(text);
         IEnumerable<string> sentences = SpeechChunkPlanner.ForText(prefix, HeadPolicy)
             .Take(PrepareMaxChunks)
             .SelectMany(chunk => SentenceUnits.Split(chunk.Text));
 
         await Task.WhenAll(sentences.Select(s => GetSentenceAsync(engine, s, voice, token)));
+    }
+
+    // The first PrepareMaxChars characters, cut back to the last sentence end so a sentence is never
+    // synthesized half-way (it would be cached under a key no read ever asks for). With no boundary
+    // in the prefix the prefix is kept whole.
+    private static string TrimToSentenceBoundary(string text)
+    {
+        if (text.Length <= PrepareMaxChars)
+        {
+            return text;
+        }
+
+        string prefix = text[..PrepareMaxChars];
+        for (int i = prefix.Length - 1; i > 0; i--)
+        {
+            bool wide = prefix[i] is '。' or '！' or '？';
+            bool terminator = wide || prefix[i] is '.' or '!' or '?' or '؟';
+            if (prefix[i] == (char)10 || (terminator && (wide || char.IsWhiteSpace(text[i + 1]))))
+            {
+                return prefix[..(i + 1)];
+            }
+        }
+
+        return prefix;
     }
 
     public void CancelPrepare()

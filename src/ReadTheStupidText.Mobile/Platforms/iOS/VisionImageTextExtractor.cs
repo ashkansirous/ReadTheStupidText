@@ -15,8 +15,9 @@ namespace ReadTheStupidText.Mobile;
 /// </summary>
 public sealed class VisionImageTextExtractor : IBuiltInTextRecognizer
 {
-    // Vision's accurate recognizer reads Latin, Japanese, Chinese and Russian (Cyrillic) well on the
-    // iOS versions the app supports, so only Arabic and Persian wait for a pack.
+    // Japanese, Chinese and Russian (Cyrillic) are read only on iOS 16+, where the request detects the
+    // language itself (see Recognize). iOS 15 reads Latin, so those languages wait for a pack there.
+    // Arabic and Persian always wait for a pack.
     private static readonly HashSet<string> NonLatinCovered = new(StringComparer.OrdinalIgnoreCase) { "ja", "zh", "ru" };
 
     // EXIF orientations 5 to 8 are the ones that rotate the stored image a quarter turn.
@@ -26,7 +27,8 @@ public sealed class VisionImageTextExtractor : IBuiltInTextRecognizer
     public async Task<string> ExtractTextAsync(string imagePath) =>
         new ImageText((await ExtractLinesAsync(imagePath)).Lines, OcrSource.MlKit).Text;
 
-    public bool Covers(string language) => OcrLanguages.IsLatinScript(language) || NonLatinCovered.Contains(language);
+    public bool Covers(string language) =>
+        OcrLanguages.IsLatinScript(language) || (OperatingSystem.IsIOSVersionAtLeast(16) && NonLatinCovered.Contains(language));
 
     /// <summary>The recognised lines in reading order, with their boxes in the upright image's pixels and that frame's size.</summary>
     public Task<OcrReading> ExtractLinesAsync(string imagePath) => Task.Run(() => Recognize(imagePath));

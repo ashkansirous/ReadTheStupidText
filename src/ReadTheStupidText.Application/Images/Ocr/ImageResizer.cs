@@ -21,22 +21,6 @@ public static class ImageResizer
         return new PixelImage(width, height, output);
     }
 
-    /// <summary>
-    /// The size of an image scaled down, keeping its aspect ratio, so its longest side is at or
-    /// below <paramref name="maxSide"/>; a smaller image keeps its size. Never below one pixel.
-    /// </summary>
-    public static (int Width, int Height) FitWithin(int width, int height, int maxSide)
-    {
-        int longest = Math.Max(width, height);
-        if (longest <= maxSide)
-        {
-            return (width, height);
-        }
-
-        double scale = (double)maxSide / longest;
-        return (Math.Max(1, (int)Math.Round(width * scale)), Math.Max(1, (int)Math.Round(height * scale)));
-    }
-
     /// <summary>Copies the region, clamped to the image; null when nothing is left of it.</summary>
     public static PixelImage? Crop(PixelImage source, OcrBox box)
     {
