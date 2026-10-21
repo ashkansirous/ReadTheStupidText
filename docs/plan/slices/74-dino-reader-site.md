@@ -1,6 +1,6 @@
 # Slice 74 — Dino Reader site: landing, privacy and downloads on dinoreader.sirous.uk
 
-*In progress (wave 2026-10-21), draft PR.*
+*Built 2026-10-21 (PR #219, merge d5b56ad); not yet verified, see below.*
 
 **Batch:** 10 (Dino Reader)
 **Depends on:** Slice 68 (the landing Worker), Slice 69 (APK downloads from R2)
@@ -114,7 +114,7 @@ The `publish-downloads` and Worker changes are tooling: patch, no marker.
 
 *Checks:* `npm run typecheck`, 110/110 node tests, `check-site-eol`.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-21)
 
 Root, Landing site paragraph: "The Worker serves two hosts: `readthestupidtext.sirous.uk`
 -> `site/`, `dinoreader.sirous.uk` -> `site/dino/` (workers.dev: `/dino/` prefix). Host
@@ -122,7 +122,7 @@ routing is in `worker/downloads.ts` (`resolveSite`); every `run_worker_first` pa
 `/dino` twin (`check-configs` enforces). Keep the Dino site free of third-party requests
 (kids' app). (Slice 74: docs/plan/slices/74-dino-reader-site.md)"
 
-#### For README.md
+#### For README.md (lifted 2026-10-21)
 
 The Dino Reader site URL `https://dinoreader.sirous.uk` and its privacy page
 (`https://dinoreader.sirous.uk/privacy`).

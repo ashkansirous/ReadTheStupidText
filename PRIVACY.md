@@ -32,6 +32,8 @@ that leaves your device. Everything the app does happens **locally**.
   on-device translation, then reads the result. Both run entirely on your
   phone; your text is never sent to Google or anyone else. The translation is
   casual quality.
+  On **Windows** (off by default) translation runs on your PC with offline Opus-MT models from
+  downloaded translation packs (Persian is not covered); your text is never sent anywhere.
 - **Speech synthesis is performed entirely on your device**, using a neural
   voice model that the app downloads once as a language pack. No text or audio is
   sent to any server or third party, on any platform.
@@ -63,6 +65,12 @@ your text, images or scans is sent, and the app has no analytics or telemetry.
 Once a pack is installed the app works fully offline and makes no network requests at all (it does not even re-check the catalog). Until it arrives, and if
 you are offline, your device's own built-in voice reads instead (the Windows voice on
 Windows, the phone's voice on Android and iPhone).
+
+**Translation packs (Windows).** If you turn on translation, the app downloads one translation
+pack per language direction (about 110 MB each; English is the go-between, so a pair such as
+French to Russian needs two) from the same public GitHub Releases page, as a plain file request
+that carries none of your text. Once installed, translating works fully offline. If a pack is
+missing the app reads the original text.
 
 **Translation models (Android).** The first time you translate to or from a
 language, Google's ML Kit downloads that language's translation model (about

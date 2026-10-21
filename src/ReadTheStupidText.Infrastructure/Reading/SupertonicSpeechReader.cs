@@ -98,7 +98,12 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
     private int _currentChunkIndex;
 
     // The current read's chunks (text + source range), kept so Skip can restart at a different chunk.
-    private IReadOnlyList<SpeechChunkPlan> _chunks = [];
+    private ChunkFeed _feed = new([], 0, complete: true);
+
+    // The activity id of the open streamed read (Slice 75), so a late append for a read that has been
+    // superseded can never land in the next one. Null when no streamed read is open.
+    private int? _streamActivityId;
+    private bool _streamOpen;
 
     // Latency diagnostics (Decision 30): the activity-log id of the in-flight read and when it began.
     private int? _readActivityId;
@@ -142,7 +147,47 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
         }
     }
 
-    public async Task SpeakAsync(string text, int? activityId = null)
+    public bool SupportsStreaming => true;
+
+    public Task SpeakAsync(string text, int? activityId = null) => SpeakCoreAsync(text, activityId, open: false);
+
+    // Slice 75: a read that grows. The first block is planned like any read; AppendText adds the rest
+    // while it plays, and CompleteStream lets it finish.
+    public Task SpeakStreamAsync(string firstText, int? activityId = null) => SpeakCoreAsync(firstText, activityId, open: true);
+
+    public void AppendText(string text, int? activityId = null)
+    {
+        ChunkFeed feed = _feed;
+        if (!IsOpenStreamOf(activityId))
+        {
+            return;
+        }
+
+        // The timing grows under the feed's lock, before the playback loop can see (and record a duration
+        // for) a new chunk, so RecordChunkDuration never indexes past the timing's chunk list.
+        feed.Append(text, count =>
+        {
+            _timing.Extend(count);
+            _chunkCount = count;
+        });
+    }
+
+    public void CompleteStream(int? activityId = null)
+    {
+        if (!IsOpenStreamOf(activityId))
+        {
+            return;
+        }
+
+        _streamOpen = false;
+        _feed.Complete();
+        _timing.SetOpen(false);
+        RaiseTiming(_player.PlaybackSession.Position);
+    }
+
+    private bool IsOpenStreamOf(int? activityId) => _streamOpen && _streamActivityId == activityId;
+
+    private async Task SpeakCoreAsync(string text, int? activityId, bool open)
     {
         BuiltEngine engine = AcquireEngine() ?? throw new NeuralEngineUnavailableException();
         ActiveRead read = BeginRead(engine);
@@ -161,11 +206,15 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
             _firstAudioPending = true;
 
             IReadOnlyList<SpeechChunkPlan> chunks = PlanChunks(text, head, activityId);
-            _chunks = chunks;
+            var feed = new ChunkFeed(chunks, text.Length, complete: !open);
+            _feed = feed;
+            _streamActivityId = activityId;
+            _streamOpen = open;
             _timing.Start(chunks.Count);
+            _timing.SetOpen(open);
             RaiseTiming(TimeSpan.Zero);
 
-            await SpeakChunksAsync(engine, chunks, 0, voiceId, generation, token);
+            await SpeakChunksAsync(engine, feed, 0, voiceId, generation, token);
         }
         finally
         {
@@ -283,7 +332,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
         _timing.SeekTo(target);
         RaiseTiming(TimeSpan.Zero);
 
-        await SpeakChunksAsync(engine, _chunks, target.ChunkIndex, Volatile.Read(ref _voiceId), generation, newToken);
+        await SpeakChunksAsync(engine, _feed, target.ChunkIndex, Volatile.Read(ref _voiceId), generation, newToken);
     }
 
     // Synthesizes the chunks from startIndex onward (capped concurrency) with the given voice and plays
@@ -291,26 +340,37 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
     // half-apply to chunks already queued: the switch happens cleanly at the next chunk boundary
     // (Decision 29), so heard text is neither repeated nor skipped.
     private async Task SpeakChunksAsync(
-        BuiltEngine engine, IReadOnlyList<SpeechChunkPlan> chunks, int startIndex, string? voiceId,
+        BuiltEngine engine, ChunkFeed feed, int startIndex, string? voiceId,
         int generation, CancellationToken token)
     {
-        _chunkCount = chunks.Count;
+        _chunkCount = feed.Count;
         _currentChunkIndex = startIndex;
-        ProgressChanged?.Invoke(this, chunks.Count == 0 ? 0 : (double)startIndex / chunks.Count);
+        ProgressChanged?.Invoke(this, feed.Count == 0 ? 0 : (double)startIndex / feed.Count);
 
-        List<Task<string>> generations = StartGenerations(engine, chunks, startIndex, voiceId, token);
-        for (int offset = 0; offset < generations.Count; offset++)
+        var run = new GenerationRun(this, engine, feed, startIndex, ResolveVoice(engine, voiceId), token);
+        _ = run.PumpAsync();
+        for (int index = startIndex; ; index++)
         {
-            int index = startIndex + offset;
-            if (!await PlayGeneratedChunkAsync(generations[offset], chunks, index, generation, token))
+            if (!await WaitForChunkAsync(feed, index, token))
+            {
+                break;
+            }
+
+            run.StartPending();
+            if (!await PlayGeneratedChunkAsync(run.TaskAt(index), feed, index, generation, token))
             {
                 return;
             }
 
-            if (await RestartForVoiceSwapAsync(engine, chunks, index, voiceId))
+            if (await RestartForVoiceSwapAsync(engine, feed, index, voiceId))
             {
                 return;
             }
+        }
+
+        if (token.IsCancellationRequested)
+        {
+            return; // stopped while waiting for more text
         }
 
         if (IsCurrent(generation))
@@ -321,31 +381,92 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
         }
     }
 
-    // Kicks off synthesis of every remaining chunk; the first runs straight away and the rest wait for
-    // it, so the chunk the listener waits on is never starved of CPU.
-    private List<Task<string>> StartGenerations(
-        BuiltEngine engine, IReadOnlyList<SpeechChunkPlan> chunks, int startIndex, string? voiceId,
-        CancellationToken token)
+    // True when the chunk at index exists (or arrives); false when the read has no more text or was stopped.
+    private static async Task<bool> WaitForChunkAsync(ChunkFeed feed, int index, CancellationToken token)
     {
-        VoiceInfo voice = ResolveVoice(engine, voiceId);
-        var generations = new List<Task<string>>();
-        Task<string>? firstChunk = null;
-        for (int index = startIndex; index < chunks.Count; index++)
+        try
         {
-            Task<string> chunkTask = index == startIndex
-                ? GenerateChunkAsync(engine, chunks[index].Text, index, voice, token)
-                : GenerateAfterAsync(firstChunk!, engine, chunks[index].Text, index, voice, token);
-            firstChunk ??= chunkTask;
-            generations.Add(chunkTask);
+            while (feed.Count <= index)
+            {
+                if (feed.IsComplete)
+                {
+                    return false;
+                }
+
+                await feed.WaitForMoreAsync(index, token);
+            }
+
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            return false;
+        }
+    }
+
+    // Starts synthesis of every chunk of the feed as it appears: the first runs straight away and the rest
+    // wait for it, so the chunk the listener waits on is never starved of CPU. A streamed read's appended
+    // chunks start the moment they arrive (the pump), not when the previous chunk has finished playing.
+    private sealed class GenerationRun(
+        SupertonicSpeechReader owner, BuiltEngine engine, ChunkFeed feed, int startIndex, VoiceInfo voice, CancellationToken token)
+    {
+        private readonly object _gate = new();
+        private readonly List<Task<string>> _tasks = [];
+
+        public void StartPending()
+        {
+            lock (_gate)
+            {
+                for (int index = startIndex + _tasks.Count; index < feed.Count; index++)
+                {
+                    string text = feed[index].Text;
+                    _tasks.Add(_tasks.Count == 0
+                        ? owner.GenerateChunkAsync(engine, text, index, voice, token)
+                        : owner.GenerateAfterAsync(_tasks[0], engine, text, index, voice, token));
+                }
+            }
         }
 
-        return generations;
+        public Task<string> TaskAt(int index)
+        {
+            lock (_gate)
+            {
+                return _tasks[index - startIndex];
+            }
+        }
+
+        public async Task PumpAsync()
+        {
+            try
+            {
+                while (true)
+                {
+                    StartPending();
+                    int started;
+                    lock (_gate)
+                    {
+                        started = startIndex + _tasks.Count;
+                    }
+
+                    if (feed.IsComplete && started >= feed.Count)
+                    {
+                        return;
+                    }
+
+                    await feed.WaitForMoreAsync(started, token);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // Stopped or superseded: the pump has nothing left to start.
+            }
+        }
     }
 
     // Waits for one chunk's audio and plays it. False when the read was cancelled, stopped or
     // superseded, so the caller stops consuming chunks.
     private async Task<bool> PlayGeneratedChunkAsync(
-        Task<string> generated, IReadOnlyList<SpeechChunkPlan> chunks, int index, int generation,
+        Task<string> generated, ChunkFeed feed, int index, int generation,
         CancellationToken token)
     {
         string path;
@@ -364,8 +485,8 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
         }
 
         _currentChunkIndex = index;
-        SpeechChunkPlan chunk = chunks[index];
-        ChunkChanged?.Invoke(this, new ReadChunk(index, chunks.Count, chunk.Text, chunk.SourceStart, chunk.SourceEnd));
+        SpeechChunkPlan chunk = feed[index];
+        ChunkChanged?.Invoke(this, new ReadChunk(index, feed.Count, chunk.Text, chunk.SourceStart, chunk.SourceEnd));
         bool endedNaturally = await PlayChunkAsync(path, token);
         if (!endedNaturally || !IsCurrent(generation))
         {
@@ -381,20 +502,21 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
     // within the read's own model, so a language or pack change never restarts a read. True when it
     // restarted (the restarted loop finishes the read, so the caller returns).
     private async Task<bool> RestartForVoiceSwapAsync(
-        BuiltEngine engine, IReadOnlyList<SpeechChunkPlan> chunks, int index, string? voiceId)
+        BuiltEngine engine, ChunkFeed feed, int index, string? voiceId)
     {
         string? selected = Volatile.Read(ref _voiceId);
         bool sameVoice = ResolveVoice(engine, selected).Id == ResolveVoice(engine, voiceId).Id;
-        if (sameVoice || index + 1 >= chunks.Count)
+        bool lastChunk = index + 1 >= feed.Count && feed.IsComplete;
+        if (sameVoice || lastChunk)
         {
             return false;
         }
 
         (int nextGeneration, CancellationToken nextToken) = BeginGeneration();
         _systemLog.Info(
-            $"voice changed mid-read; continuing at chunk {index + 2}/{chunks.Count} in the new voice",
+            $"voice changed mid-read; continuing at chunk {index + 2}/{feed.Count} in the new voice",
             _readActivityId);
-        await SpeakChunksAsync(engine, chunks, index + 1, selected, nextGeneration, nextToken);
+        await SpeakChunksAsync(engine, feed, index + 1, selected, nextGeneration, nextToken);
         return true;
     }
 
@@ -514,6 +636,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
             _synthCts?.Cancel();
             _generation++;
             _activeRead = null; // no read in progress from this moment, whatever the old one is still unwinding
+            _streamOpen = false; // a streamed read cannot grow once stopped
         }
 
         _chunkEnded?.TrySetResult(false); // release the playback loop if mid-chunk

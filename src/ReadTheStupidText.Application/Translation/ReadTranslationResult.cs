@@ -21,6 +21,9 @@ public enum TranslationOutcome
     /// <summary>The translation pack is not installed (or could not be fetched).</summary>
     ModelMissing,
 
+    /// <summary>The pack this pair needs was not installed, so its download was started and the original is read this time.</summary>
+    PackDownloading,
+
     /// <summary>The translation did not finish within its time budget.</summary>
     TimedOut,
 

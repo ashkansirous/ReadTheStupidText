@@ -23,7 +23,7 @@ namespace ReadTheStupidText.Application.Reading;
 /// same text arriving from more than one path. Also forwards the flyout's
 /// play/pause and speed choices. Speed and enabled state are persisted.
 /// </summary>
-public sealed class ReadAloudService : IDisposable
+public sealed partial class ReadAloudService : IDisposable
 {
     // Auto-read waits for the selection to settle before reading, so a drag-select
     // (many UIA events, one per character grown) or a multi-message clipboard update
@@ -272,6 +272,11 @@ public sealed class ReadAloudService : IDisposable
             }
 
             _settings.TranslateEnabled = value;
+            if (value)
+            {
+                _translation?.StartTargetPackDownload();
+            }
+
             TranslateEnabledChanged?.Invoke(this, value);
         }
     }
@@ -588,6 +593,20 @@ public sealed class ReadAloudService : IDisposable
         }
     }
 
+    // The translation token is still in use by its owner (TextToSpeakAsync), which disposes it; cancelling
+    // a source the owner has just disposed is harmless.
+    private static void CancelWithoutDispose(CancellationTokenSource? pending)
+    {
+        try
+        {
+            pending?.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // the owner finished first
+        }
+    }
+
     private static void CancelPendingPrepare(CancellationTokenSource? pending)
     {
         pending?.Cancel();
@@ -650,7 +669,7 @@ public sealed class ReadAloudService : IDisposable
     {
         ActivityEntry? active = _activeEntry;
         _activeEntry = null;
-        CancelPendingPrepare(Interlocked.Exchange(ref _translationCts, null));
+        CancelWithoutDispose(Interlocked.Exchange(ref _translationCts, null));
         CancelGrace();
         PublishGenerating();
         if (active is null)
@@ -684,6 +703,11 @@ public sealed class ReadAloudService : IDisposable
             _log.SetState(entry, ActivityState.GeneratingAudio);
             PublishGenerating();
             _systemLog.Debug("generating audio", entry.Id);
+            if (await TryStreamReadAsync(entry, text))
+            {
+                return;
+            }
+
             ReadText spoken = await TextToSpeakAsync(entry, text);
             if (!ReferenceEquals(_activeEntry, entry))
             {
@@ -715,7 +739,7 @@ public sealed class ReadAloudService : IDisposable
         }
 
         var cts = new CancellationTokenSource();
-        CancelPendingPrepare(Interlocked.Exchange(ref _translationCts, cts));
+        CancelWithoutDispose(Interlocked.Exchange(ref _translationCts, cts));
         try
         {
             ReadTranslationResult result = await _translation.PrepareAsync(text, entry.Id, cts.Token);
@@ -732,10 +756,8 @@ public sealed class ReadAloudService : IDisposable
         }
         finally
         {
-            if (Interlocked.CompareExchange(ref _translationCts, null, cts) == cts)
-            {
-                cts.Dispose(); // still ours: nobody superseded it, so nobody else will dispose it
-            }
+            Interlocked.CompareExchange(ref _translationCts, null, cts);
+            cts.Dispose(); // the owner always disposes: a supersede only cancels, so the token is never used disposed
         }
     }
 
@@ -862,7 +884,7 @@ public sealed class ReadAloudService : IDisposable
         _selectionMonitor.Stop();
         _selectionCts?.Cancel();
         _selectionCts?.Dispose();
-        CancelPendingPrepare(Interlocked.Exchange(ref _translationCts, null));
+        CancelWithoutDispose(Interlocked.Exchange(ref _translationCts, null));
         CancelPendingPrepare(Interlocked.Exchange(ref _prepareCts, null));
     }
 }

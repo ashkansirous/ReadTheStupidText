@@ -132,6 +132,21 @@ public class ReadAloudServiceGeneratingTests
     }
 
     [Fact]
+    public async Task A_read_superseded_mid_translation_is_dropped_quietly_not_failed()
+    {
+        var never = new TaskCompletionSource<string>();
+        var harness = new Harness(settings => TranslationTestKit.Translator(settings, never.Task, "fr"));
+        harness.Settings.Language = "en";
+        harness.Settings.TranslateEnabled = true;
+
+        Task read = harness.Service.ReadFileAsync("a.txt");
+        harness.Monitor.RaiseCleared();
+        await read.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        Assert.Equal(ActivityState.Interrupted, Assert.Single(harness.Log.Entries).State);
+    }
+
+    [Fact]
     public async Task A_missing_translation_pack_reads_the_original_and_says_why()
     {
         var spoken = new List<string>();
@@ -284,6 +299,280 @@ public class ReadAloudServiceGeneratingTests
         await spoken.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
     }
 
+    private const string LongText = "One is first. Two is second. Three is third. Four is fourth. Five is fifth.";
+
+    [Fact]
+    public async Task A_streamed_translation_speaks_the_first_block_then_appends_the_rest_in_order()
+    {
+        var harness = StreamingHarness(new ScriptedTranslator(), out ScriptedTranslator _);
+        harness.Reader.Streaming = true;
+        harness.DocumentText = LongText;
+        harness.Service.FirstAudioGrace = TimeSpan.FromMilliseconds(20);
+        ReadTranslationResult? finished = null;
+        harness.Service.TranslationFinished += (_, result) => finished = result;
+        var shown = new List<string>();
+        harness.Service.ReadTextChanged += (_, read) => shown.Add(read.Text);
+
+        await harness.Service.ReadFileAsync("a.txt");
+
+        Assert.Empty(harness.Reader.Spoken);
+        Assert.Equal(["<One is first. Two is second.>"], harness.Reader.Streamed);
+        Assert.Equal(["<Three is third. Four is fourth. Five is fifth.>"], harness.Reader.Appended);
+        Assert.Equal(1, harness.Reader.Completes);
+        Assert.Equal(TranslationOutcome.Translated, finished?.Outcome);
+        Assert.Equal("<One is first. Two is second.> <Three is third. Four is fourth. Five is fifth.>", shown[^1]);
+    }
+
+    [Fact]
+    public async Task A_streamed_read_starts_before_the_rest_is_translated()
+    {
+        var gate = new TaskCompletionSource<string>();
+        var translator = new ScriptedTranslator { BlockGates = { [1] = gate } };
+        var harness = StreamingHarness(translator, out _);
+        harness.Reader.Streaming = true;
+        harness.DocumentText = LongText;
+        harness.Service.FirstAudioGrace = TimeSpan.FromMilliseconds(20);
+
+        Task read = harness.Service.ReadFileAsync("a.txt");
+        await harness.Reader.FirstStream.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        Assert.Equal(["<One is first. Two is second.>"], harness.Reader.Streamed);
+        Assert.Empty(harness.Reader.Appended);
+        Assert.Equal(0, harness.Reader.Completes);
+
+        gate.SetResult("<rest>");
+        await read;
+        Assert.Equal(["<rest>"], harness.Reader.Appended);
+        Assert.Equal(1, harness.Reader.Completes);
+    }
+
+    [Fact]
+    public async Task A_block_that_fails_reads_the_rest_in_the_original()
+    {
+        var translator = new ScriptedTranslator { FailFromBlock = 1 };
+        var harness = StreamingHarness(translator, out _);
+        harness.Reader.Streaming = true;
+        harness.DocumentText = LongText;
+        harness.Service.FirstAudioGrace = TimeSpan.FromMilliseconds(20);
+        ReadTranslationResult? finished = null;
+        harness.Service.TranslationFinished += (_, result) => finished = result;
+
+        await harness.Service.ReadFileAsync("a.txt");
+
+        Assert.Equal(["<One is first. Two is second.>"], harness.Reader.Streamed);
+        Assert.Equal(["Three is third. Four is fourth. Five is fifth."], harness.Reader.Appended);
+        Assert.Equal(1, harness.Reader.Completes);
+        Assert.Equal(TranslationOutcome.Failed, finished?.Outcome);
+    }
+
+    [Fact]
+    public async Task A_streamed_read_that_faults_stops_translating_the_rest()
+    {
+        var gate = new TaskCompletionSource<string>();
+        var translator = new ScriptedTranslator { BlockGates = { [1] = gate } };
+        var harness = StreamingHarness(translator, out _);
+        harness.Reader.Streaming = true;
+        harness.Reader.StreamFault = new InvalidOperationException("device lost");
+        harness.DocumentText = LongText;
+        harness.Service.FirstAudioGrace = TimeSpan.FromMilliseconds(20);
+
+        await harness.Service.ReadFileAsync("a.txt").WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        Assert.True(translator.SawCancellation, "the in-flight block translation was not cancelled");
+        Assert.Empty(harness.Reader.Appended);
+    }
+
+    [Fact]
+    public async Task A_reader_that_cannot_start_a_stream_gets_the_whole_translated_text_instead()
+    {
+        var harness = StreamingHarness(new ScriptedTranslator(), out _);
+        harness.Reader.Streaming = true;
+        harness.Reader.StreamFault = new StreamingUnavailableException();
+        harness.Reader.StreamingOffAfterFault = true;
+        harness.DocumentText = LongText;
+        harness.Service.FirstAudioGrace = TimeSpan.FromMilliseconds(20);
+
+        await harness.Service.ReadFileAsync("a.txt").WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        Assert.Equal(["<One is first. Two is second. Three is third. Four is fourth. Five is fifth.>"], harness.Reader.Spoken);
+    }
+
+    [Fact]
+    public async Task The_first_streamed_block_is_marked_untranslated_when_it_failed_to_translate()
+    {
+        var translator = new ScriptedTranslator { FailFromBlock = 0 };
+        var harness = StreamingHarness(translator, out _);
+        harness.Reader.Streaming = true;
+        harness.DocumentText = LongText;
+        harness.Service.FirstAudioGrace = TimeSpan.FromMilliseconds(20);
+        var shown = new List<ReadText>();
+        harness.Service.ReadTextChanged += (_, read) => shown.Add(read);
+
+        await harness.Service.ReadFileAsync("a.txt");
+
+        Assert.False(shown[0].Translated);
+        Assert.Equal("One is first. Two is second.", shown[0].Text);
+    }
+
+    [Fact]
+    public async Task A_reader_that_cannot_stream_gets_the_whole_translated_text()
+    {
+        var harness = StreamingHarness(new ScriptedTranslator(), out _);
+        harness.DocumentText = LongText;
+        harness.Service.FirstAudioGrace = TimeSpan.FromMilliseconds(20);
+
+        await harness.Service.ReadFileAsync("a.txt");
+
+        Assert.Single(harness.Reader.Spoken);
+        Assert.Empty(harness.Reader.Streamed);
+    }
+
+    [Fact]
+    public async Task A_single_block_text_is_not_streamed()
+    {
+        var harness = StreamingHarness(new ScriptedTranslator(), out _);
+        harness.Reader.Streaming = true;
+        harness.Service.FirstAudioGrace = TimeSpan.FromMilliseconds(20);
+
+        await harness.Service.ReadFileAsync("a.txt");
+
+        Assert.Empty(harness.Reader.Streamed);
+        Assert.Single(harness.Reader.Spoken);
+    }
+
+    [Fact]
+    public async Task A_streamed_read_superseded_while_translating_stops_appending()
+    {
+        var gate = new TaskCompletionSource<string>();
+        var translator = new ScriptedTranslator { BlockGates = { [1] = gate } };
+        var harness = StreamingHarness(translator, out _);
+        harness.Reader.Streaming = true;
+        harness.DocumentText = LongText;
+        harness.Service.FirstAudioGrace = TimeSpan.FromMilliseconds(20);
+
+        Task read = harness.Service.ReadFileAsync("a.txt");
+        await harness.Reader.FirstStream.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        harness.Monitor.RaiseCleared();
+        gate.SetResult("<late>");
+        await read;
+
+        Assert.Empty(harness.Reader.Appended);
+    }
+
+    [Fact]
+    public async Task A_missing_pack_for_a_streamed_read_reads_the_original_and_starts_the_download()
+    {
+        var packs = new RecordingPackService();
+        var translator = new ScriptedTranslator { ModelReady = false };
+        var harness = StreamingHarness(translator, out _, new TranslationPackInstaller(packs, translator, new SilentLog()));
+        harness.Reader.Streaming = true;
+        harness.DocumentText = LongText;
+        harness.Service.FirstAudioGrace = TimeSpan.FromMilliseconds(20);
+        ReadTranslationResult? finished = null;
+        harness.Service.TranslationFinished += (_, result) => finished = result;
+
+        await harness.Service.ReadFileAsync("a.txt");
+        await packs.Downloaded.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        Assert.Equal([LongText], harness.Reader.Spoken);
+        Assert.Equal(TranslationOutcome.PackDownloading, finished?.Outcome);
+        Assert.Equal(["translation-fr-en"], packs.Requested);
+    }
+
+    [Fact]
+    public void Turning_translation_on_downloads_the_users_language_pack()
+    {
+        var packs = new RecordingPackService();
+        var translator = new ScriptedTranslator { ModelReady = false };
+        var harness = StreamingHarness(translator, out _, new TranslationPackInstaller(packs, translator, new SilentLog()));
+        harness.Settings.Language = "ru";
+        harness.Settings.TranslateEnabled = false;
+
+        harness.Service.TranslateEnabled = true;
+        packs.Downloaded.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        Assert.Equal(["translation-en-ru"], packs.Requested);
+    }
+
+    private static Harness StreamingHarness(ScriptedTranslator translator, out ScriptedTranslator used, TranslationPackInstaller? installer = null)
+    {
+        used = translator;
+        var harness = new Harness(settings => new ReadTranslator(translator, new FakeDetector("fr"), settings, new SilentLog(), installer));
+        harness.Settings.Language = "en";
+        harness.Settings.TranslateEnabled = true;
+        return harness;
+    }
+
+    /// <summary>Translates "x" to "&lt;x&gt;", per block, with optional gates and failures by block number.</summary>
+    private sealed class ScriptedTranslator : ITranslator
+    {
+        private int _calls;
+
+        public Dictionary<int, TaskCompletionSource<string>> BlockGates { get; } = new();
+
+        public int? FailFromBlock { get; set; }
+
+        public bool ModelReady { get; set; } = true;
+
+        public bool SawCancellation { get; private set; }
+
+        public IReadOnlyList<string> SupportedLanguages => ["en", "fr", "ru"];
+
+        public IReadOnlyList<string> RequiredPackIds(string source, string target) => [$"translation-{source}-{target}"];
+
+        public Task<bool> IsModelReadyAsync(string source, string target) => Task.FromResult(ModelReady);
+
+        public async Task<string> TranslateAsync(string text, string source, string target, CancellationToken cancellationToken)
+        {
+            int block = Interlocked.Increment(ref _calls) - 1;
+            if (FailFromBlock is { } from && block >= from)
+            {
+                throw new InvalidOperationException("boom");
+            }
+
+            if (BlockGates.TryGetValue(block, out TaskCompletionSource<string>? gate))
+            {
+                try
+                {
+                    return await gate.Task.WaitAsync(cancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    SawCancellation = true;
+                    throw;
+                }
+            }
+
+            return $"<{text}>";
+        }
+    }
+
+    private sealed class RecordingPackService : IVoicePackService
+    {
+        private readonly TaskCompletionSource _downloaded = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public List<string> Requested { get; } = [];
+
+        public Task Downloaded => _downloaded.Task;
+
+        public Task<PackCatalogResult> GetCatalogAsync(CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task<PackCatalogResult> GetCatalogCachedAsync(TimeSpan maxAge, CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public string? GetInstalledPath(string packId) => null;
+
+        public IReadOnlyList<InstalledVoicePack> GetInstalledVoicePacks() => [];
+
+        public IReadOnlyList<InstalledVoicePack> GetInstalledOcrPacks() => [];
+
+        public Task<PackDownloadResult> DownloadAsync(string packId, IProgress<double>? progress, CancellationToken cancellationToken)
+        {
+            Requested.Add(packId);
+            _downloaded.TrySetResult();
+            return Task.FromResult(PackDownloadResult.Ok);
+        }
+    }
+
     private sealed class FakeHeadStart : IHeadStart
     {
         private readonly TaskCompletionSource _firstPrepare = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -322,13 +611,15 @@ public class ReadAloudServiceGeneratingTests
 
         public TestSettings Settings { get; } = new();
 
+        public string DocumentText { get; set; } = "some text to read";
+
         public Harness(Func<TestSettings, ReadTranslator>? translation = null)
         {
             Reader = new FakeReader(this);
             Service = new ReadAloudService(
                 Reader, Clipboard, new FakeHotkey(), new FakeCopier(), Monitor,
                 new FakeClipboardMonitor(), new FakeForeground(), new FakeVoices(), new FakeModel(),
-                new FakeDocuments(), Log, Settings, new FakeSanitizer(), new SilentLog(), HeadStart, translation?.Invoke(Settings));
+                new FakeDocuments(this), Log, Settings, new FakeSanitizer(), new SilentLog(), HeadStart, translation?.Invoke(Settings));
         }
     }
 
@@ -348,7 +639,41 @@ public class ReadAloudServiceGeneratingTests
             StateChanged?.Invoke(this, state);
         }
 
-        public Task SpeakAsync(string text, int? activityId = null) => harness.Speak(text, activityId);
+        private readonly TaskCompletionSource _firstStream = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private TaskCompletionSource _streamEnded = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public bool Streaming { get; set; }
+        public Exception? StreamFault { get; set; }
+        public bool StreamingOffAfterFault { get; set; }
+        public List<string> Spoken { get; } = [];
+        public List<string> Streamed { get; } = [];
+        public List<string> Appended { get; } = [];
+        public int Completes { get; private set; }
+        public Task FirstStream => _firstStream.Task;
+
+        public bool SupportsStreaming => Streaming && !(StreamingOffAfterFault && Streamed.Count > 0);
+
+        public Task SpeakAsync(string text, int? activityId = null)
+        {
+            Spoken.Add(text);
+            return harness.Speak(text, activityId);
+        }
+
+        // A streamed read ends only when the service completes the stream, as the real reader does.
+        public Task SpeakStreamAsync(string firstText, int? activityId = null)
+        {
+            Streamed.Add(firstText);
+            _firstStream.TrySetResult();
+            return StreamFault is { } fault ? Task.FromException(fault) : _streamEnded.Task;
+        }
+
+        public void AppendText(string text, int? activityId = null) => Appended.Add(text);
+
+        public void CompleteStream(int? activityId = null)
+        {
+            Completes++;
+            _streamEnded.TrySetResult();
+        }
         public Task WarmUpAsync() => Task.CompletedTask;
         public void Pause() { }
         public void Resume() { }
@@ -423,10 +748,10 @@ public class ReadAloudServiceGeneratingTests
         public Task InitializeAsync(IProgress<double>? progress = null) => Task.CompletedTask;
     }
 
-    private sealed class FakeDocuments : IDocumentTextExtractor
+    private sealed class FakeDocuments(Harness harness) : IDocumentTextExtractor
     {
         public bool CanHandle(string extension) => true;
-        public Task<string> ExtractTextAsync(string filePath) => Task.FromResult("some text to read");
+        public Task<string> ExtractTextAsync(string filePath) => Task.FromResult(harness.DocumentText);
     }
 
     private sealed class FakeSanitizer : ITextSanitizer

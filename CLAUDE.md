@@ -116,7 +116,8 @@ Mobile (Android): `dotnet build src/ReadTheStupidText.Mobile/ReadTheStupidText.M
 command `npm run deploy`, watch paths `worker/*`, `site/*`, `wrangler*.jsonc`, `package*.json`. A Worker custom domain can't replace an existing DNS
 record: delete it first (wrangler has no DNS scope). Privacy policy edits touch both `PRIVACY.md` and
 `site/privacy.html`. Don't add `docs/CNAME` or a GitHub Actions deploy. See `docs/DEPLOYING.md`.
-(Slice 68: docs/plan/slices/68-landing-site-on-worker.md)
+The Worker also serves `dinoreader.sirous.uk` -> `site/dino/` (workers.dev: `/dino/` prefix); host routing is in `worker/downloads.ts` (`resolveSite`), every `run_worker_first` path needs its `/dino` twin (`check-configs` enforces), and the Dino site makes no third-party requests (kids' app).
+(Slice 68: docs/plan/slices/68-landing-site-on-worker.md; Slice 74: docs/plan/slices/74-dino-reader-site.md)
 
 ## Tests
 

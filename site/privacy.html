@@ -55,7 +55,9 @@
       language&rdquo;, the app identifies the language of your text with Google&rsquo;s on-device ML Kit
       language identification and translates it with ML Kit&rsquo;s on-device translation, then reads
       the result. Both run entirely on your phone; your text is never sent to Google or anyone else.
-      The translation is casual quality.</li>
+      The translation is casual quality. On Windows (off by default) translation runs on your PC with
+      offline Opus-MT models from downloaded translation packs (Persian is not covered); your text is
+      never sent anywhere.</li>
     <li><strong>Speech synthesis is performed entirely on your device</strong>, using a neural
       voice model that the app downloads once as a language pack. No text or audio is sent to any
       server or third party, on any platform.</li>
@@ -84,6 +86,11 @@
   no analytics or telemetry. Once a pack is installed the app works fully offline and makes no network requests at all (it does not even re-check the catalog). Until it
   arrives, and if you are offline, your device&rsquo;s own built-in voice reads instead (the Windows
   voice on Windows, the phone&rsquo;s voice on Android and iPhone).</p>
+  <p><strong>Translation packs (Windows).</strong> If you turn on translation, the app downloads one
+  translation pack per language direction (about 110&nbsp;MB each; English is the go-between, so a pair
+  such as French to Russian needs two) from the same public GitHub Releases page, as a plain file
+  request that carries none of your text. Once installed, translating works fully offline. If a pack
+  is missing the app reads the original text.</p>
   <p><strong>Translation models (Android).</strong> The first time you translate to or from a language,
   Google&rsquo;s ML Kit downloads that language&rsquo;s translation model (about 30&nbsp;MB each; English is
   used as a go-between for most pairs) from Google&rsquo;s servers, using ML Kit&rsquo;s own on-device model

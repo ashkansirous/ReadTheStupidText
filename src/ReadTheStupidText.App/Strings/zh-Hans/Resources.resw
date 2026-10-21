@@ -283,6 +283,18 @@
   <data name="Translate_Note_ModelMissing" xml:space="preserve">
     <value>翻译包尚未安装，已朗读原文。</value>
   </data>
+  <data name="Translate_Note_PackDownloading" xml:space="preserve">
+    <value>正在下载{0}翻译包；这次朗读的是原文。</value>
+  </data>
+  <data name="Translate_Note_PackProgress" xml:space="preserve">
+    <value>正在下载翻译包：{0}%</value>
+  </data>
+  <data name="Translate_Note_PackReady" xml:space="preserve">
+    <value>翻译包已就绪。</value>
+  </data>
+  <data name="Translate_Note_PackFailed" xml:space="preserve">
+    <value>无法下载翻译包。请检查网络连接，然后关闭并重新开启翻译以重试。</value>
+  </data>
   <data name="Translate_Note_TimedOut" xml:space="preserve">
     <value>翻译耗时过长，已朗读原文。</value>
   </data>

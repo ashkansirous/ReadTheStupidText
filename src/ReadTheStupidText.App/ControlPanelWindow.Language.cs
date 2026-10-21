@@ -32,6 +32,7 @@ public sealed partial class ControlPanelWindow
         }
 
         _readAloud.TranslationFinished += OnTranslationFinished;
+        _readAloud.TranslationPackProgress += OnTranslationPackProgress;
         _readAloud.TranslateEnabledChanged += OnTranslateEnabledChanged;
         Closed += OnLanguagePartClosed;
     }
@@ -39,8 +40,13 @@ public sealed partial class ControlPanelWindow
     private void OnLanguagePartClosed(object sender, WindowEventArgs args)
     {
         _readAloud.TranslationFinished -= OnTranslationFinished;
+        _readAloud.TranslationPackProgress -= OnTranslationPackProgress;
         _readAloud.TranslateEnabledChanged -= OnTranslateEnabledChanged;
     }
+
+    // Slice 75: the pack download runs on a background thread, so the note is set on the dispatcher.
+    private void OnTranslationPackProgress(object? sender, TranslationPackProgress progress) =>
+        _dispatcher.TryEnqueue(() => TranslateNote.Text = TranslationNoteText.For(progress));
 
     // A tray toggle changed the setting: mirror it here without echoing back into the service.
     private void OnTranslateEnabledChanged(object? sender, bool enabled) =>

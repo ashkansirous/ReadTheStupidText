@@ -13,6 +13,7 @@ public sealed class ReadTimingTracker
     private readonly object _gate = new();
     private TimeSpan?[] _chunkDurations = [];
     private TimeSpan _elapsedBeforeCurrentChunk;
+    private bool _open;
 
     /// <summary>Begins tracking a fresh read of <paramref name="chunkCount"/> chunks,
     /// none of whose durations are known yet.</summary>
@@ -22,6 +23,29 @@ public sealed class ReadTimingTracker
         {
             _chunkDurations = new TimeSpan?[chunkCount];
             _elapsedBeforeCurrentChunk = TimeSpan.Zero;
+            _open = false;
+        }
+    }
+
+    /// <summary>Grows the read to <paramref name="chunkCount"/> chunks when more text is appended to it
+    /// (Slice 75); the new chunks' durations are unknown, and existing ones are kept.</summary>
+    public void Extend(int chunkCount)
+    {
+        lock (_gate)
+        {
+            if (chunkCount > _chunkDurations.Length)
+            {
+                Array.Resize(ref _chunkDurations, chunkCount);
+            }
+        }
+    }
+
+    /// <summary>While a read can still grow its total is unknown, whatever the known chunks sum to.</summary>
+    public void SetOpen(bool open)
+    {
+        lock (_gate)
+        {
+            _open = open;
         }
     }
 
@@ -155,7 +179,7 @@ public sealed class ReadTimingTracker
     // Caller holds _gate.
     private TimeSpan? ComputeTotal()
     {
-        if (_chunkDurations.Length == 0)
+        if (_chunkDurations.Length == 0 || _open)
         {
             return null;
         }

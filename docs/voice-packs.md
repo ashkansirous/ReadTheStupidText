@@ -25,10 +25,10 @@ supertonic-3/
 | key | meaning |
 | --- | --- |
 | `id` | the pack id, equal to the folder name and the catalog id |
-| `kind` | `voice` or `ocr` |
+| `kind` | `voice`, `ocr` or `translation` |
 | `language` | comma-separated language codes the pack serves (`en,fr,es,pt,ru,ja,ar`) |
 | `version` | pack version string |
-| `engine` | the synthesis/recognition engine (`sherpa-onnx`; `onnxruntime` for `kind: ocr`, Slice 52) |
+| `engine` | the synthesis/recognition engine (`sherpa-onnx`; `onnxruntime` for `kind: ocr`, Slice 52, and `kind: translation`, Slice 75) |
 | `files` | every payload file the app must find after extraction (`pack.json` excluded) |
 | `model` | optional (Slice 51): the engine family, Piper/VITS or MeloTTS. Absent means Supertonic |
 | `voices` | optional (Slice 51): the voices the pack offers. Supertonic lists none (its ten styles are `SupertonicVoiceTable`); Piper and Melo list theirs |
@@ -46,9 +46,8 @@ An array of:
 ```
 
 Entries with an unknown `kind` are ignored, so a newer catalog still works with an older
-app. Language-to-pack choice is `VoicePackSelector` (a language with no pack, today Persian
-and Chinese until `packs-2` is published and pinned, reads with the phone voice and the app
-says so). The installed pack serving the current language is resolved by
+app. Language-to-pack choice is `VoicePackSelector` (a language with no pack reads with the
+phone voice and the app says so). The installed pack serving the current language is resolved by
 `InstalledVoiceCatalog` (Slice 51). Choice among packs of one kind uses the shared
 `PackSelection`, parameterised by kind, with an id tie-break (Slice 52).
 
@@ -74,13 +73,41 @@ installed pack with the catalogue: a newer catalogue version is downloaded, and 
 is kept until the new one verifies, so a failed upgrade never leaves the language without OCR.
 The voice installer does not yet check for newer voice-pack versions at start-up.
 
+### Translation packs (`kind: translation`, Slice 75)
+
+Opus-MT (Marian) models for offline translate-before-read on Windows, one standalone pack per
+direction with English at one end, so a pair such as French to Russian pivots through two packs
+(`translation-fr-en` then `translation-en-ru`). The catalogue `language` is `<from>-<to>`.
+Source: the pre-converted int8 ONNX in the `Xenova/opus-mt-*` Hugging Face repos, pinned to one
+revision and sha256-checked in `packs.yml`; licence CC-BY-4.0 (Helsinki-NLP / OPUS-MT, with the
+notice in each pack's `LICENSE`). Each pack holds `encoder.onnx`, the merged `decoder.onnx` (key/value
+cache), `source.spm`, `vocab.json` and `translation.json` (the decoding ids and, for a multi-target
+model, the leading `>>xx<<` token). Installed ids are `translation-<from>-<to>`.
+
+| pack | model | size (zip) |
+| --- | --- | --- |
+| `translation-fr-en`, `translation-en-fr` | `opus-mt-fr-en`, `opus-mt-en-fr` | about 107 MB |
+| `translation-es-en`, `translation-en-es` | `opus-mt-es-en`, `opus-mt-en-es` | about 113 MB |
+| `translation-zh-en`, `translation-en-zh` | `opus-mt-zh-en`, `opus-mt-en-zh` (`>>cmn_Hans<<`) | about 113 MB |
+| `translation-ar-en`, `translation-en-ar` | `opus-mt-ar-en`, `opus-mt-en-ar` (`>>ara<<`) | about 110 MB |
+| `translation-ru-en`, `translation-en-ru` | `opus-mt-ru-en`, `opus-mt-en-ru` | about 110 MB |
+| `translation-pt-en`, `translation-en-pt` | `opus-mt-ROMANCE-en`, `opus-mt-en-ROMANCE` (`>>pt<<`) | about 113 MB |
+| `translation-ja-en` | `opus-mt-ja-en` | about 108 MB |
+
+No pack exists for Persian (either way) or English to Japanese: no usable Opus-MT model (Slice 75
+research). Installed by `TranslationPackInstaller` through the pack service; the translate toggle
+fetches the user's `en` to language pack, and a read whose source needs another leg downloads it in
+the background while the original is read.
+
 ## Hosting
 
 Packs are assets of a dedicated GitHub release tagged `packs-<n>`, separate from the app's
 `v<x.y.z>` releases (Decision 62). Release assets don't count toward the Actions storage
 quota (Decision 52). The app reads the catalog from the **pinned** release named in
-`PackConstants.CatalogUrl` (currently `packs-1`), so publishing `packs-2` changes nothing
-until a new app version points at it.
+`PackConstants.CatalogUrl` (currently `packs-3`), so publishing `packs-4` changes nothing
+until a new app version points at it. Every `packs-<n>` release carries every pack (voice, OCR and
+translation), because the app pins one catalogue: a run with a pack missing would leave the app
+pointing at a catalogue without it.
 
 `packs-<n>` cannot disturb app versioning: GitVersion has no `tag-prefix`, so only
 `[vV]?<semver>` tags count; `release.yml` (via `ship-targets.mjs` and `find-release.sh`) only looks at strict `v<x.y.z>` tags; and the release is
@@ -91,7 +118,7 @@ created `--latest=false`, so `releases/latest` stays the app.
 Manual: run the **packs** workflow (`.github/workflows/packs.yml`, `workflow_dispatch`) with
 the release number and the pack versions (`pack_version` for Supertonic,
 `piper_pack_version`, `melo_pack_version`, and `ocr_pack_version` for the four OCR packs,
-Slice 52). One run builds the packs into the one
+Slice 52, and `translation_pack_version` for the thirteen translation packs, Slice 75). One run builds the packs into the one
 `packs-<n>` release, computes each sha256 and size, and publishes the zips with `packs.json`.
 The voice packs:
 
