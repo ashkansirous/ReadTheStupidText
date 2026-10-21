@@ -1,6 +1,6 @@
 # Slice 74 — Dino Reader site: landing, privacy and downloads on dinoreader.sirous.uk
 
-*Planned.*
+*In progress (wave 2026-10-21), draft PR.*
 
 **Batch:** 10 (Dino Reader)
 **Depends on:** Slice 68 (the landing Worker), Slice 69 (APK downloads from R2)
