@@ -1,6 +1,6 @@
 # Slice 56 — Windows: packs, first-run language, head start
 
-*Planned.*
+*In progress (wave 2026-10-21b), draft PR.*
 
 **Batch:** 9
 **Decisions:** 61, 62, 66, 68 (also 60, 63)
