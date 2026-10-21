@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using DinoReader.Core;
+using Microsoft.Extensions.DependencyInjection;
 using ReadTheStupidText.Application.Documents;
 using ReadTheStupidText.Domain.Reading;
 
@@ -24,18 +25,21 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 	private readonly StoryVoicing _voicing;
 	private readonly IDocumentTextExtractor _documents;
 	private readonly ExternalActivityGuard _external;
+	private readonly IServiceProvider _services;
 	private readonly BusyGuard _busy = new();
 	private string _narratorVoiceId = SupertonicVoiceTable.Default.Id;
 	private IReadOnlyList<CastMember> _cast = [];
+	private IReadOnlyDictionary<string, string> _merges = Story.NoMerges;
 	private CancellationTokenSource? _analysis;
 
-	public AddStoryPage(IStoryLibrary library, StoryVoicing voicing, IDocumentTextExtractor documents, ExternalActivityGuard external)
+	public AddStoryPage(IStoryLibrary library, StoryVoicing voicing, IDocumentTextExtractor documents, ExternalActivityGuard external, IServiceProvider services)
 	{
 		InitializeComponent();
 		_library = library;
 		_voicing = voicing;
 		_documents = documents;
 		_external = external;
+		_services = services;
 		AddSourceTile(IconKind.Camera, "Scan pages", "Keeps the page pictures", 0, 0, null);
 		AddSourceTile(IconKind.Photos, "Photos", "Pick page photos", 1, 0, null);
 		AddSourceTile(IconKind.File, "PDF or file", ".pdf · .docx · .txt", 0, 1, OnFileTapped);
@@ -176,13 +180,14 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 
 	private async Task AnalyseAsync(string text, CancellationToken token)
 	{
+		token.ThrowIfCancellationRequested();
 		if (string.IsNullOrWhiteSpace(text))
 		{
 			ResultCard.IsVisible = false;
 			return;
 		}
 
-		IReadOnlyList<CastMember> cast = await _voicing.CastAsync(text, _narratorVoiceId, []);
+		IReadOnlyList<CastMember> cast = await _voicing.CastAsync(text, _narratorVoiceId, _cast, _merges);
 		token.ThrowIfCancellationRequested();
 		_cast = cast;
 		ShowResult(cast);
@@ -220,15 +225,49 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 			return;
 		}
 
-		string title = string.IsNullOrWhiteSpace(TitleEntry.Text) ? StoryTitles.FromText(text) : TitleEntry.Text.Trim();
+		string title = TitleOrDefault(text);
 		int existing = (await _library.ListAsync()).Count;
 		var story = new Story(StoryIds.New(), title, DefaultLanguage, DateTimeOffset.UtcNow,
-			[new StoryPage(text)], await CastNowAsync(text), CoverStyle.Colour, existing, _narratorVoiceId);
+			[new StoryPage(text)], await CastNowAsync(text), CoverStyle.Colour, existing, _narratorVoiceId, null, _merges);
 		await _library.AddAsync(story);
 		await Navigation.PopAsync();
 	}
 
 	// The cast shown on the result card is for the text as it was when typing paused; recast if it moved on.
 	private async Task<IReadOnlyList<CastMember>> CastNowAsync(string text) =>
-		await _voicing.CastAsync(text, _narratorVoiceId, _cast);
+		await _voicing.CastAsync(text, _narratorVoiceId, _cast, _merges);
+
+	private async void OnCheckCastClicked(object? sender, EventArgs e) => await _busy.RunAsync(OpenCastAsync);
+
+	// The cast page works on the story as typed so far, in memory: nothing is saved until Save story.
+	private async Task OpenCastAsync()
+	{
+		string text = TextEditor.Text ?? string.Empty;
+		if (string.IsNullOrWhiteSpace(text))
+		{
+			return;
+		}
+
+		// A pending debounced analysis would land after the cast page's edits and overwrite them.
+		_analysis?.Cancel();
+		_cast = await CastNowAsync(text);
+		// The id here is provisional (the cast page only edits it in memory); Save story mints a fresh one per attempt.
+		var story = new Story(StoryIds.New(), TitleOrDefault(text), DefaultLanguage, DateTimeOffset.UtcNow,
+			[new StoryPage(text)], _cast, CoverStyle.Colour, 0, _narratorVoiceId, null, _merges);
+		var page = _services.GetRequiredService<CastPage>();
+		page.Load(story, KeepCast);
+		await Navigation.PushAsync(page);
+	}
+
+	private Task KeepCast(Story story)
+	{
+		_cast = story.Cast;
+		_merges = story.Merges;
+		_narratorVoiceId = story.NarratorVoiceId;
+		ShowResult(_cast);
+		return Task.CompletedTask;
+	}
+
+	private string TitleOrDefault(string text) =>
+		string.IsNullOrWhiteSpace(TitleEntry.Text) ? StoryTitles.FromText(text) : TitleEntry.Text.Trim();
 }

@@ -51,8 +51,9 @@ public static class StoryJson
         Pages = s.Pages.Select(p => new PageFile { Text = p.Text, ImageFile = p.ImageFile }).ToList(),
         Cast = s.Cast.Select(c => new CastFile
         {
-            CharacterId = c.CharacterId, Name = c.Name, Gender = c.Gender, VoiceId = c.VoiceId,
+            CharacterId = c.CharacterId, Name = c.Name, Gender = c.Gender, VoiceId = c.VoiceId, Edited = c.Edited,
         }).ToList(),
+        Merges = s.Merges.Count == 0 ? null : s.Merges.ToDictionary(m => m.Key, m => m.Value),
     };
 
     private static Story FromFile(StoryFile f)
@@ -66,8 +67,8 @@ public static class StoryJson
         return new Story(
             f.Id, f.Title, f.Language, f.Created,
             f.Pages.Select(p => new StoryPage(p.Text, p.ImageFile)).ToList(),
-            f.Cast.Select(c => new CastMember(c.CharacterId, c.Name, c.Gender, c.VoiceId)).ToList(),
-            f.CoverStyle, f.CoverColourIndex, f.NarratorVoiceId, ParseMode(f.PreferredMode));
+            f.Cast.Select(c => new CastMember(c.CharacterId, c.Name, c.Gender, c.VoiceId, c.Edited)).ToList(),
+            f.CoverStyle, f.CoverColourIndex, f.NarratorVoiceId, ParseMode(f.PreferredMode), CleanMerges(f.Merges));
     }
 
     // A reading mode this app does not know (a newer version, a hand edit, a number) must not make
@@ -84,6 +85,10 @@ public static class StoryJson
             && !int.TryParse(element.GetString(), out _);
         return known ? mode : null;
     }
+
+    // A merge entry with a null or empty side (a hand edit) is dropped rather than failing the whole story.
+    private static Dictionary<string, string>? CleanMerges(Dictionary<string, string>? merges) =>
+        merges?.Where(m => !string.IsNullOrEmpty(m.Key) && !string.IsNullOrEmpty(m.Value)).ToDictionary(m => m.Key, m => m.Value);
 
     // JSON null overwrites the property defaults, so a hand-edited or corrupt file can still
     // carry nulls; refuse it as a format error rather than failing later with a NullReference.
@@ -112,6 +117,7 @@ public static class StoryJson
         public JsonElement? PreferredMode { get; set; }
         public List<PageFile> Pages { get; set; } = [];
         public List<CastFile> Cast { get; set; } = [];
+        public Dictionary<string, string>? Merges { get; set; }
     }
 
     private sealed class PageFile
@@ -126,5 +132,6 @@ public static class StoryJson
         public string Name { get; set; } = string.Empty;
         public Gender Gender { get; set; }
         public string VoiceId { get; set; } = string.Empty;
+        public bool Edited { get; set; }
     }
 }

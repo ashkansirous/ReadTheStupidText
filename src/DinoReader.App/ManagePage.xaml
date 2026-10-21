@@ -57,12 +57,15 @@
                             <TapGestureRecognizer Tapped="OnEditTapped" />
                         </Border.GestureRecognizers>
                     </Border>
-                    <!-- The cast screen is Slice 65; until then the pill only shows the count. -->
-                    <Border BackgroundColor="{StaticResource BrandTint}" StrokeThickness="0" Padding="9,4">
+                    <Border BackgroundColor="{StaticResource BrandTint}" StrokeThickness="0" Padding="9,4"
+                            SemanticProperties.Description="Who is speaking">
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="8" />
                         </Border.StrokeShape>
                         <Label Text="{Binding CastLabel}" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource Brand}" />
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnCastTapped" />
+                        </Border.GestureRecognizers>
                     </Border>
                 </HorizontalStackLayout>
             </VerticalStackLayout>

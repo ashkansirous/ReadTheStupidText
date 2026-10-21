@@ -8,7 +8,7 @@
     NavigationPage.HasNavigationBar="False">
 
     <!-- Edit a story (mock screen 8b), behind the gate. Language and translation rows belong to
-         Slice 66 and the cast screen to Slice 65; until then those rows only show their value. -->
+         Slice 66; until then those rows only show their value. -->
     <Grid RowDefinitions="Auto,*,Auto">
         <Grid ColumnDefinitions="Auto,*,Auto" Padding="8,10,16,10">
             <Border WidthRequest="44" HeightRequest="44" BackgroundColor="Transparent" StrokeThickness="0"

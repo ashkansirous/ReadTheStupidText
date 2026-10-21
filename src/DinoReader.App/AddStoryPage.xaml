@@ -53,8 +53,12 @@
                     <Label x:Name="SummaryLabel" FontSize="14.5" FontAttributes="Bold" TextColor="White" VerticalOptions="Center" />
                 </HorizontalStackLayout>
                 <FlexLayout x:Name="NameChips" Wrap="Wrap" />
-                <Button Text="Save story" HeightRequest="44" CornerRadius="22" FontSize="14" BackgroundColor="{StaticResource Coral}"
-                        TextColor="White" Clicked="OnSaveClicked" />
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                    <Button Text="Check the cast" HeightRequest="44" CornerRadius="22" FontSize="14" BackgroundColor="#24FFFFFF"
+                            TextColor="White" Clicked="OnCheckCastClicked" />
+                    <Button Grid.Column="1" Text="Save story" HeightRequest="44" CornerRadius="22" FontSize="14"
+                            BackgroundColor="{StaticResource Coral}" TextColor="White" Clicked="OnSaveClicked" />
+                </Grid>
             </VerticalStackLayout>
         </Border>
     </Grid>

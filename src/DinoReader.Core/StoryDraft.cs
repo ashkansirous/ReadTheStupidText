@@ -11,7 +11,25 @@ public sealed class StoryDraft(Story original)
 
 	public CoverStyle CoverStyle { get; set; } = original.CoverStyle;
 
+	/// <summary>The cast, merges and narrator as the cast screen last left them (Slice 65); written with Save.</summary>
+	public IReadOnlyList<CastMember> Cast { get; set; } = original.Cast;
+
+	public IReadOnlyDictionary<string, string> Merges { get; set; } = original.Merges;
+
+	public string NarratorVoiceId { get; set; } = original.NarratorVoiceId;
+
 	public List<StoryPage> Pages { get; } = [.. original.Pages];
+
+	/// <summary>The story as the draft stands: the original with every edit made so far.</summary>
+	public Story Current => Original with
+	{
+		Title = Title,
+		CoverStyle = CoverStyle,
+		Pages = Pages.ToList(),
+		Cast = Cast,
+		CharacterMerges = Merges,
+		NarratorVoiceId = NarratorVoiceId,
+	};
 
 	public bool HasPageImages => Pages.Any(p => p.ImageFile is not null);
 
