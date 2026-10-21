@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Shell_ReaderTitle" xml:space="preserve"><value>خواننده</value></data>
+  <data name="Common_Ok" xml:space="preserve"><value>تأیید</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>لغو</value></data>
+  <data name="Common_Voice" xml:space="preserve"><value>صدا</value></data>
+  <data name="Common_Language" xml:space="preserve"><value>زبان</value></data>
+  <data name="Common_BackGlyph" xml:space="preserve"><value>→</value></data>
+  <data name="Reader_AddTextSection" xml:space="preserve"><value>افزودن متن</value></data>
+  <data name="Reader_PasteButton" xml:space="preserve"><value>📋 جای‌گذاری</value></data>
+  <data name="Reader_ScanButton" xml:space="preserve"><value>📷 اسکن</value></data>
+  <data name="Reader_FileButton" xml:space="preserve"><value>📄 فایل</value></data>
+  <data name="Reader_EditorPlaceholder" xml:space="preserve"><value>اینجا تایپ یا جای‌گذاری کنید، یک صفحه را اسکن کنید یا فایلی را باز کنید — همه‌چیز در همین کادر قرار می‌گیرد و با همان کنترل‌های پایین پخش می‌شود.</value></data>
+  <data name="Reader_SkipBackGlyph" xml:space="preserve"><value>⇥10</value></data>
+  <data name="Reader_SkipForwardGlyph" xml:space="preserve"><value>10⇤</value></data>
+  <data name="Reader_PasteFailedTitle" xml:space="preserve"><value>جای‌گذاری نشد</value></data>
+  <data name="Reader_PasteFailedMessage" xml:space="preserve"><value>کلیپ‌بورد خوانده نشد. دوباره متن را کپی کنید.</value></data>
+  <data name="Reader_ScanFailedTitle" xml:space="preserve"><value>اسکن انجام نشد</value></data>
+  <data name="Reader_ScanFailedMessage" xml:space="preserve"><value>هنگام اسکن مشکلی پیش آمد. لطفاً دوباره تلاش کنید.</value></data>
+  <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>اسکنر راه‌اندازی نشد</value></data>
+  <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>اسکنر راه‌اندازی نشد — دوباره تلاش کنید.</value></data>
+  <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>اسکنر در حال آماده‌سازی است</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>خدمات Google Play هنوز اسکنر سند را آماده می‌کند. چند لحظه دیگر دوباره تلاش کنید.</value></data>
+  <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>اسکنر در دسترس نیست</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>اسکنر سند به خدمات Google Play نیاز دارد. به‌جای آن یک عکس بگیرید.</value></data>
+  <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>دسترسی به دوربین لازم است</value></data>
+  <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>برای عکس گرفتن از متن، در تنظیمات اجازهٔ دسترسی به دوربین را بدهید.</value></data>
+  <data name="Reader_NoCameraTitle" xml:space="preserve"><value>دوربین موجود نیست</value></data>
+  <data name="Reader_NoCameraMessage" xml:space="preserve"><value>برای عکس گرفتن از متن به دوربین نیاز است و این دستگاه دوربینی در دسترس ندارد.</value></data>
+  <data name="Reader_ScanUnavailableTitle" xml:space="preserve"><value>اسکن در دسترس نیست</value></data>
+  <data name="Reader_ScanUnavailableMessage" xml:space="preserve"><value>خواندن متن از عکس هنوز روی این دستگاه در دسترس نیست.</value></data>
+  <data name="Reader_ScanUnreadableTitle" xml:space="preserve"><value>این اسکن خوانده نشد</value></data>
+  <data name="Reader_ScanUnreadableMessage" xml:space="preserve"><value>با نور یا فوکوس بهتر دوباره متن را اسکن کنید.</value></data>
+  <data name="Reader_NoTextFoundTitle" xml:space="preserve"><value>متنی پیدا نشد</value></data>
+  <data name="Reader_NoTextFoundMessage" xml:space="preserve"><value>با نور یا فوکوس بهتر دوباره اسکن کنید.</value></data>
+  <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>برخی صفحه‌ها رد شد</value></data>
+  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>صفحهٔ {0} خوانده نشد — بقیه اضافه شد.</value></data>
+  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>صفحه‌های {0} خوانده نشد — بقیه اضافه شد.</value></data>
+  <data name="Reader_ScanProgressPage" xml:space="preserve"><value>در حال خواندن صفحهٔ {0} از {1}</value></data>
+  <data name="Reader_ScanProgressSingle" xml:space="preserve"><value>در حال خواندن صفحه</value></data>
+  <data name="Reader_FilePickerTitle" xml:space="preserve"><value>یک فایل txt، pdf یا docx انتخاب کنید</value></data>
+  <data name="Reader_FilePermissionTitle" xml:space="preserve"><value>اجازه لازم است</value></data>
+  <data name="Reader_FilePermissionMessage" xml:space="preserve"><value>برای خواندن سند، دسترسی به فایل را بدهید.</value></data>
+  <data name="Reader_FileTooLargeTitle" xml:space="preserve"><value>فایل بیش از حد بزرگ است</value></data>
+  <data name="Reader_FileTooLargeMessage" xml:space="preserve"><value>این فایل {0} صفحه دارد؛ حد مجاز {1} است.</value></data>
+  <data name="Reader_FileUnreadableTitle" xml:space="preserve"><value>فایل خوانده نشد</value></data>
+  <data name="Reader_FileUnreadableMessage" xml:space="preserve"><value>ممکن است فایل خراب باشد یا قالب آن پشتیبانی نشود.</value></data>
+  <data name="Reader_ReadFailedTitle" xml:space="preserve"><value>متن خوانده نشد</value></data>
+  <data name="Reader_ReadFailedMessage" xml:space="preserve"><value>هنگام خواندن مشکلی پیش آمد.</value></data>
+  <data name="PackStatus_Resolving" xml:space="preserve"><value>در حال جست‌وجوی صداهای طبیعی…</value></data>
+  <data name="PackStatus_Downloading" xml:space="preserve"><value>در حال دانلود صداهای طبیعی… {0}</value></data>
+  <data name="PackStatus_Offline" xml:space="preserve"><value>اتصالی وجود ندارد. با صدای گوشی خوانده می‌شود. برای تلاش دوباره دانلود صدا ضربه بزنید.</value></data>
+  <data name="PackStatus_HashMismatch" xml:space="preserve"><value>دانلود صدا خراب شد. با صدای گوشی خوانده می‌شود. برای تلاش دوباره ضربه بزنید.</value></data>
+  <data name="PackStatus_InvalidPack" xml:space="preserve"><value>بستهٔ صداهای طبیعی قابل استفاده نیست. با صدای گوشی خوانده می‌شود.</value></data>
+  <data name="PackStatus_Failed" xml:space="preserve"><value>صداهای طبیعی دانلود نشد. با صدای گوشی خوانده می‌شود. برای تلاش دوباره ضربه بزنید.</value></data>
+  <data name="PackStatus_Unavailable" xml:space="preserve"><value>صدای طبیعی برای زبان شما هنوز در دسترس نیست. با صدای گوشی خوانده می‌شود.</value></data>
+  <data name="VoicePicker_Heading" xml:space="preserve"><value>یک صدا انتخاب کنید</value></data>
+  <data name="VoicePicker_Subtitle" xml:space="preserve"><value>صداهای طبیعی فقط یک بار دانلود می‌شوند · متن شما روی گوشی می‌ماند</value></data>
+  <data name="VoicePicker_SectionPhone" xml:space="preserve"><value>گوشی</value></data>
+  <data name="VoicePicker_SectionMale" xml:space="preserve"><value>مرد</value></data>
+  <data name="VoicePicker_SectionFemale" xml:space="preserve"><value>زن</value></data>
+  <data name="VoicePicker_Hint" xml:space="preserve"><value>برای شنیدن و انتخاب یک صدا روی آن ضربه بزنید. تغییر صدا در میانهٔ خواندن، جملهٔ جاری را با صدای قبلی تمام می‌کند.</value></data>
+  <data name="VoicePicker_PhoneVoiceName" xml:space="preserve"><value>صدای گوشی</value></data>
+  <data name="Language_Intro" xml:space="preserve"><value>زبان خود را انتخاب کنید. یک صدای طبیعی برای آن دانلود می‌کنیم؛ تا رسیدن آن، صدای خود گوشی می‌خواند.</value></data>
+  <data name="Language_Retry" xml:space="preserve"><value>تلاش دوباره دانلود</value></data>
+  <data name="Language_Continue" xml:space="preserve"><value>ادامه</value></data>
+  <data name="Language_StartReading" xml:space="preserve"><value>شروع خواندن</value></data>
+</root>
