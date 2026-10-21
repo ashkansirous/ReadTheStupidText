@@ -15,6 +15,10 @@ logic.
 > each chunk's file path and source-text range, so extend it, don't duplicate it.
 > (Decisions 45-51; note: docs/plan/notes/claude-md-history.md)
 
+## Localization and translation (Slice 57)
+
+UI copy is in `Strings/<tag>/Resources.resw` (en-US, fa, fr, es, pt, zh-Hans, ar, ru, ja; tags from `UiLanguageTag`, listed in `Package.appxmanifest`). XAML uses `x:Uid` (`Uid.Property` keys; attached properties as `Uid.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip`), code uses `UiStrings.Get/Format`; never hard-code a UI string. A new key goes into all nine files (the resource-coverage tests fail otherwise). `UiStrings.ApplyLanguage` runs in `App()` before any window; `x:Uid` text is applied once per window, so the panel's language picker restarts the app (`AppInstance.Restart`). fa and ar set `FlowDirection=RightToLeft` on each window's `RootGrid`; the panel's transport row stays left-to-right. Translation runs in `ReadAloudService.ReadEntryAsync` through `ReadTranslator` (time budget, falls back to the original with a `TranslationOutcome`); the engine is `PackTranslator`, which has no inference engine yet. (Slice 57: docs/plan/slices/57-windows-localization-translation.md)
+
 ## Release packaging
 
 The **Release** MSIX is

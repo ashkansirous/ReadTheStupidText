@@ -6,6 +6,7 @@ using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Application.Startup;
 using ReadTheStupidText.Domain.Reading;
 using Microsoft.UI.Dispatching;
+using Microsoft.Windows.AppLifecycle;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
@@ -20,16 +21,16 @@ namespace ReadTheStupidText_App;
 /// </summary>
 public sealed partial class MainWindow : Window
 {
-    private const string PlayLabel = "Play";
-    private const string PauseLabel = "Pause";
-    private const string QuitLabel = "Quit";
-    private const string AutoReadSelectionLabel = "Auto-read on selection";
-    private const string AutoReadCopyLabel = "Auto-read on copy";
-    private const string StartupLabel = "Launch at startup";
-    private const string VoiceLabel = "Voice";
-    private const string ActivityLogLabel = "Show activity log";
-    private const string UploadFileLabel = "Read file…";
-    private const string LanguageLabel = "Voice language…";
+    private static string PlayLabel => UiStrings.Get("Menu_Play");
+    private static string PauseLabel => UiStrings.Get("Menu_Pause");
+    private static string QuitLabel => UiStrings.Get("Menu_Quit");
+    private static string AutoReadSelectionLabel => UiStrings.Get("Menu_AutoReadSelection");
+    private static string AutoReadCopyLabel => UiStrings.Get("Menu_AutoReadCopy");
+    private static string StartupLabel => UiStrings.Get("Menu_Startup");
+    private static string VoiceLabel => UiStrings.Get("Menu_Voice");
+    private static string ActivityLogLabel => UiStrings.Get("Menu_ActivityLog");
+    private static string UploadFileLabel => UiStrings.Get("Menu_ReadFile");
+    private static string LanguageLabel => UiStrings.Get("Menu_VoiceLanguage");
 
     private static readonly Uri DarkTrayIconUri = new("ms-appx:///Assets/TrayIconDark.ico");
     private static readonly Uri LightTrayIconUri = new("ms-appx:///Assets/TrayIconLight.ico");
@@ -59,6 +60,7 @@ public sealed partial class MainWindow : Window
     private readonly RelayCommand _showActivityLogCommand;
     private readonly RelayCommand _uploadFileCommand;
     private readonly RelayCommand _showLanguageCommand;
+    private readonly RelayCommand _toggleTranslateCommand;
     private readonly RelayCommand _quitCommand;
 
     private readonly ControlPanelWindow _controlPanel;
@@ -71,6 +73,7 @@ public sealed partial class MainWindow : Window
     private ToggleMenuFlyoutItem? _autoReadSelectionItem;
     private ToggleMenuFlyoutItem? _autoReadCopyItem;
     private ToggleMenuFlyoutItem? _startupItem;
+    private ToggleMenuFlyoutItem? _translateItem;
     private readonly List<ToggleMenuFlyoutItem> _speedItems = new();
     private readonly List<ToggleMenuFlyoutItem> _voiceItems = new();
 
@@ -112,12 +115,15 @@ public sealed partial class MainWindow : Window
         _showActivityLogCommand = new RelayCommand(_ => ShowActivityLog());
         _uploadFileCommand = new RelayCommand(_ => _ = UploadFileAsync());
         _showLanguageCommand = new RelayCommand(_ => ShowLanguageWindow());
+        _toggleTranslateCommand = new RelayCommand(_ => _readAloud.TranslateEnabled = !_readAloud.TranslateEnabled);
         _quitCommand = new RelayCommand(_ => Quit());
 
         InitializeComponent();
+        Title = ProductInfo.Name;
 
         _uiSettings.ColorValuesChanged += OnColorValuesChanged;
 
+        TrayIcon.ToolTipText = UiStrings.Format("Tray_Tooltip", ProductInfo.Name);
         _flyout = BuildTrayMenu();
         TrayIcon.ContextFlyout = _flyout;
         TrayIcon.LeftClickCommand = _toggleControlPanelCommand;
@@ -147,6 +153,8 @@ public sealed partial class MainWindow : Window
         _readAloud.AutoReadOnCopyChanged += OnAutoReadOnCopyChanged;
         _readAloud.VoicesChanged += OnVoicesChanged;
         _controlPanel.StartupStateChanged += OnPanelStartupChanged;
+        _readAloud.TranslateEnabledChanged += OnTranslateEnabledChanged;
+        _controlPanel.RestartRequested += (_, _) => RestartApp();
 
         // The control panel's activity-log button reuses the tray's single-instance
         // log window, so the host opens it.
@@ -227,6 +235,18 @@ public sealed partial class MainWindow : Window
             Command = _toggleStartupCommand,
         };
         flyout.Items.Add(_startupItem);
+
+        if (_readAloud.CanTranslate)
+        {
+            _translateItem = new ToggleMenuFlyoutItem
+            {
+                Text = UiStrings.Get("Menu_Translate"),
+                IsChecked = _readAloud.TranslateEnabled,
+                Command = _toggleTranslateCommand,
+            };
+            flyout.Items.Add(_translateItem);
+        }
+
         flyout.Items.Add(new MenuFlyoutSeparator());
 
         _playPauseItem = new MenuFlyoutItem { Text = PlayLabel, Command = _togglePlayPauseCommand };
@@ -276,7 +296,7 @@ public sealed partial class MainWindow : Window
     {
         if (_languageWindow is null)
         {
-            _languageWindow = new LanguageWindow(_settings, _packSetup, _systemLog);
+            _languageWindow = new LanguageWindow(_settings, _packSetup, _systemLog, RestartApp);
             _languageWindow.Closed += (_, _) => _languageWindow = null;
         }
 
@@ -323,7 +343,7 @@ public sealed partial class MainWindow : Window
         {
             var item = new ToggleMenuFlyoutItem
             {
-                Text = voice.DisplayName,
+                Text = PackSetupText.VoiceName(voice),
                 Tag = voice.Id,
                 IsChecked = voice.Id == currentId,
                 Command = _setVoiceCommand,
@@ -471,6 +491,33 @@ public sealed partial class MainWindow : Window
                 _autoReadCopyItem.IsChecked = enabled;
             }
         });
+
+    private void OnTranslateEnabledChanged(object? sender, bool enabled) =>
+        _dispatcher.TryEnqueue(() =>
+        {
+            if (_translateItem is not null)
+            {
+                _translateItem.IsChecked = enabled;
+            }
+        });
+
+    // A language change is applied to every window by relaunching: x:Uid text is set once per window.
+    // Restart only returns when it did not happen (AppRestartFailureReason): then the language applies at
+    // the next launch, and the user is told so.
+    private void RestartApp()
+    {
+        try
+        {
+            var reason = AppInstance.Restart(string.Empty);
+            _systemLog.Warning($"restart for the language change did not happen ({reason})");
+        }
+        catch (Exception ex)
+        {
+            _systemLog.Warning("restart for the language change failed", null, ex);
+        }
+
+        TrayIcon.ShowNotification(ProductInfo.Name, UiStrings.Get("Restart_Failed"));
+    }
 
     private void OnPanelStartupChanged(object? sender, bool enabled) =>
         _dispatcher.TryEnqueue(() => SetStartupChecked(enabled));

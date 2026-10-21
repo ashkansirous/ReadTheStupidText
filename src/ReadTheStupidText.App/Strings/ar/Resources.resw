@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="ActivityTitle.Text" xml:space="preserve">
+    <value>سجل النشاط</value>
+  </data>
+  <data name="ActivityOpenLogs.Content" xml:space="preserve">
+    <value>فتح السجلات</value>
+  </data>
+  <data name="ActivityOpenLogs.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>فتح مجلد ملفات السجل اليومية</value>
+  </data>
+  <data name="ActivityClear.Content" xml:space="preserve">
+    <value>مسح</value>
+  </data>
+  <data name="ColTime.Text" xml:space="preserve">
+    <value>الوقت</value>
+  </data>
+  <data name="ColTrigger.Text" xml:space="preserve">
+    <value>المُشغِّل</value>
+  </data>
+  <data name="ColState.Text" xml:space="preserve">
+    <value>الحالة</value>
+  </data>
+  <data name="ColReason.Text" xml:space="preserve">
+    <value>السبب</value>
+  </data>
+  <data name="ColFirstAudio.Text" xml:space="preserve">
+    <value>أول صوت</value>
+  </data>
+  <data name="ColSynth.Text" xml:space="preserve">
+    <value>التوليف</value>
+  </data>
+  <data name="ColSource.Text" xml:space="preserve">
+    <value>المصدر</value>
+  </data>
+  <data name="ColText.Text" xml:space="preserve">
+    <value>النص</value>
+  </data>
+  <data name="PanelEyebrow.Text" xml:space="preserve">
+    <value>قيد القراءة الآن</value>
+  </data>
+  <data name="CloseButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>إغلاق</value>
+  </data>
+  <data name="SkipBackButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>رجوع 10 ثوانٍ</value>
+  </data>
+  <data name="SkipForwardButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>تقدم 10 ثوانٍ</value>
+  </data>
+  <data name="SpeedPillToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>سرعة التشغيل — اضغط للتعديل · 0.5×–2×</value>
+  </data>
+  <data name="VoiceLabel.Text" xml:space="preserve">
+    <value>الصوت</value>
+  </data>
+  <data name="LanguageLabel.Text" xml:space="preserve">
+    <value>اللغة</value>
+  </data>
+  <data name="UploadFileButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>قراءة ملف — يفتح .txt أو .pdf أو .docx</value>
+  </data>
+  <data name="UploadFileLabel.Text" xml:space="preserve">
+    <value>قراءة ملف</value>
+  </data>
+  <data name="ActivityLogButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>سجل النشاط — السجل والتوقيتات وفتح مجلد السجلات</value>
+  </data>
+  <data name="ActivityLogLabel.Text" xml:space="preserve">
+    <value>سجل النشاط</value>
+  </data>
+  <data name="ControlsLabel.Text" xml:space="preserve">
+    <value>عناصر التحكم</value>
+  </data>
+  <data name="HotkeyLabel.Text" xml:space="preserve">
+    <value>اختصار بديل</value>
+  </data>
+  <data name="TranslateSourceLabel.Text" xml:space="preserve">
+    <value>لغة النص</value>
+  </data>
+  <data name="ReadingZoomOut.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>نص أصغر</value>
+  </data>
+  <data name="ReadingZoomIn.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>نص أكبر</value>
+  </data>
+  <data name="LanguageChooseTitle.Text" xml:space="preserve">
+    <value>اختر لغتك</value>
+  </data>
+  <data name="LanguageRetry.Content" xml:space="preserve">
+    <value>إعادة المحاولة</value>
+  </data>
+  <data name="LanguageClose.Content" xml:space="preserve">
+    <value>إغلاق</value>
+  </data>
+  <data name="Status_Ready" xml:space="preserve">
+    <value>جاهز</value>
+  </data>
+  <data name="Status_Paused" xml:space="preserve">
+    <value>متوقف مؤقتًا</value>
+  </data>
+  <data name="Status_ReadingClipboard" xml:space="preserve">
+    <value>قراءة الحافظة…</value>
+  </data>
+  <data name="Status_ReadingSelection" xml:space="preserve">
+    <value>قراءة التحديد…</value>
+  </data>
+  <data name="Status_ReadingSelectionFrom" xml:space="preserve">
+    <value>قراءة التحديد من {0}…</value>
+  </data>
+  <data name="Toggle_On" xml:space="preserve">
+    <value>تشغيل</value>
+  </data>
+  <data name="Toggle_Off" xml:space="preserve">
+    <value>إيقاف</value>
+  </data>
+  <data name="Tip_AutoReadSelection" xml:space="preserve">
+    <value>قراءة التحديد تلقائيًا · {0} — يقرأ بصوت عالٍ أثناء التحديد</value>
+  </data>
+  <data name="Tip_AutoReadCopy" xml:space="preserve">
+    <value>قراءة تلقائية عند النسخ · {0} — يقرأ بصوت عالٍ عند النسخ</value>
+  </data>
+  <data name="Tip_Startup" xml:space="preserve">
+    <value>التشغيل عند بدء النظام · {0} — يبدأ مع ويندوز في علبة النظام</value>
+  </data>
+  <data name="Tip_ReadingTextBox" xml:space="preserve">
+    <value>مربع نص القراءة · {0} — يعرض النص المقروء</value>
+  </data>
+  <data name="Tip_Translate" xml:space="preserve">
+    <value>الترجمة إلى لغتي · {0} — يترجم ما يُقرأ إلى لغتك</value>
+  </data>
+  <data name="Menu_Play" xml:space="preserve">
+    <value>تشغيل</value>
+  </data>
+  <data name="Menu_Pause" xml:space="preserve">
+    <value>إيقاف مؤقت</value>
+  </data>
+  <data name="Menu_Quit" xml:space="preserve">
+    <value>إنهاء</value>
+  </data>
+  <data name="Menu_AutoReadSelection" xml:space="preserve">
+    <value>قراءة تلقائية عند التحديد</value>
+  </data>
+  <data name="Menu_AutoReadCopy" xml:space="preserve">
+    <value>قراءة تلقائية عند النسخ</value>
+  </data>
+  <data name="Menu_Startup" xml:space="preserve">
+    <value>التشغيل عند بدء النظام</value>
+  </data>
+  <data name="Menu_Voice" xml:space="preserve">
+    <value>الصوت</value>
+  </data>
+  <data name="Menu_ActivityLog" xml:space="preserve">
+    <value>إظهار سجل النشاط</value>
+  </data>
+  <data name="Menu_ReadFile" xml:space="preserve">
+    <value>قراءة ملف…</value>
+  </data>
+  <data name="Menu_VoiceLanguage" xml:space="preserve">
+    <value>لغة الصوت…</value>
+  </data>
+  <data name="Menu_Translate" xml:space="preserve">
+    <value>الترجمة إلى لغتي</value>
+  </data>
+  <data name="Tray_Tooltip" xml:space="preserve">
+    <value>{0} — قراءة بصوت عالٍ</value>
+  </data>
+  <data name="Pack_WindowsVoice" xml:space="preserve">
+    <value>صوت Windows</value>
+  </data>
+  <data name="Restart_Failed" xml:space="preserve">
+    <value>ستُطبَّق اللغة عند تشغيل التطبيق في المرة القادمة.</value>
+  </data>
+  <data name="StatusText.Text" xml:space="preserve">
+    <value>جاهز</value>
+  </data>
+  <data name="Window_Language" xml:space="preserve">
+    <value>اللغة</value>
+  </data>
+  <data name="Window_ActivityLog" xml:space="preserve">
+    <value>سجل النشاط</value>
+  </data>
+  <data name="Window_Reading" xml:space="preserve">
+    <value>القراءة</value>
+  </data>
+  <data name="Reading_Nothing" xml:space="preserve">
+    <value>لا شيء قيد القراءة بعد</value>
+  </data>
+  <data name="Reading_Chunk" xml:space="preserve">
+    <value>القراءة — الجزء {0} من {1}</value>
+  </data>
+  <data name="Reading_Translated" xml:space="preserve">
+    <value>(مترجم)</value>
+  </data>
+  <data name="Reading_Page" xml:space="preserve">
+    <value>الصفحة {0} من {1}</value>
+  </data>
+  <data name="State_Pending" xml:space="preserve">
+    <value>قيد الانتظار</value>
+  </data>
+  <data name="State_GeneratingAudio" xml:space="preserve">
+    <value>جارٍ توليد الصوت</value>
+  </data>
+  <data name="State_Reading" xml:space="preserve">
+    <value>قيد القراءة</value>
+  </data>
+  <data name="State_Read" xml:space="preserve">
+    <value>تمت القراءة</value>
+  </data>
+  <data name="State_Ignored" xml:space="preserve">
+    <value>تم التجاهل</value>
+  </data>
+  <data name="State_Interrupted" xml:space="preserve">
+    <value>تمت المقاطعة</value>
+  </data>
+  <data name="State_Failed" xml:space="preserve">
+    <value>فشل</value>
+  </data>
+  <data name="Reason_NewSelection" xml:space="preserve">
+    <value>تحديد جديد</value>
+  </data>
+  <data name="Reason_Deselected" xml:space="preserve">
+    <value>أُلغي التحديد</value>
+  </data>
+  <data name="Reason_Error" xml:space="preserve">
+    <value>خطأ</value>
+  </data>
+  <data name="Trigger_AutoRead" xml:space="preserve">
+    <value>قراءة تلقائية</value>
+  </data>
+  <data name="Trigger_Hotkey" xml:space="preserve">
+    <value>اختصار</value>
+  </data>
+  <data name="Trigger_Manual" xml:space="preserve">
+    <value>يدوي</value>
+  </data>
+  <data name="Trigger_Clipboard" xml:space="preserve">
+    <value>الحافظة</value>
+  </data>
+  <data name="Trigger_FileUpload" xml:space="preserve">
+    <value>ملف</value>
+  </data>
+  <data name="Pack_Intro" xml:space="preserve">
+    <value>يتم تنزيل الصوت الطبيعي للغتك مرة واحدة (نحو 145 ميغابايت، يُنصح بشبكة Wi-Fi). يقرأ {0} إلى أن يصل. لا يغادر نصك هذا الجهاز أبدًا.</value>
+  </data>
+  <data name="Pack_Resolving" xml:space="preserve">
+    <value>جارٍ البحث عن صوت للغتك...</value>
+  </data>
+  <data name="Pack_Downloading" xml:space="preserve">
+    <value>جارٍ تنزيل الصوت الطبيعي... {0}%</value>
+  </data>
+  <data name="Pack_Ready" xml:space="preserve">
+    <value>الصوت الطبيعي جاهز.</value>
+  </data>
+  <data name="Pack_Unavailable" xml:space="preserve">
+    <value>لا يوجد صوت طبيعي لهذه اللغة بعد. يقرأ {0}.</value>
+  </data>
+  <data name="Pack_Offline" xml:space="preserve">
+    <value>أنت غير متصل بالإنترنت. يقرأ {0} ويبدأ التنزيل عند عودة الاتصال.</value>
+  </data>
+  <data name="Pack_HashMismatch" xml:space="preserve">
+    <value>تعرّض التنزيل للتلف. أعد المحاولة لجلبه مرة أخرى.</value>
+  </data>
+  <data name="Pack_InvalidPack" xml:space="preserve">
+    <value>لا يمكن استخدام حزمة الصوت هذه. يقرأ {0}.</value>
+  </data>
+  <data name="Pack_Failed" xml:space="preserve">
+    <value>فشل التنزيل. أعد المحاولة.</value>
+  </data>
+  <data name="Translate_AutoDetect" xml:space="preserve">
+    <value>كشف تلقائي</value>
+  </data>
+  <data name="Translate_Note_Default" xml:space="preserve">
+    <value>ترجمة آلية على هذا الجهاز. تختلف الجودة.</value>
+  </data>
+  <data name="Translate_Note_Translated" xml:space="preserve">
+    <value>تُرجم من {0}.</value>
+  </data>
+  <data name="Translate_Note_ModelMissing" xml:space="preserve">
+    <value>حزمة الترجمة غير مثبّتة بعد، لذا قُرئ النص الأصلي.</value>
+  </data>
+  <data name="Translate_Note_TimedOut" xml:space="preserve">
+    <value>استغرقت الترجمة وقتًا طويلًا، لذا قُرئ النص الأصلي.</value>
+  </data>
+  <data name="Translate_Note_Failed" xml:space="preserve">
+    <value>فشلت الترجمة، لذا قُرئ النص الأصلي.</value>
+  </data>
+  <data name="Translate_Note_SourceUnknown" xml:space="preserve">
+    <value>تعذّر تحديد لغة النص، لذا قُرئ النص الأصلي. اخترها أعلاه.</value>
+  </data>
+  <data name="Translate_Note_PairUnsupported" xml:space="preserve">
+    <value>الترجمة من {0} غير متاحة بعد، لذا قُرئ النص الأصلي.</value>
+  </data>
+</root>

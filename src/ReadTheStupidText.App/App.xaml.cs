@@ -6,6 +6,7 @@ using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Sanitizing;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Application.Startup;
+using ReadTheStupidText.Application.Translation;
 using ReadTheStupidText.Documents;
 using ReadTheStupidText.Infrastructure.Input;
 using ReadTheStupidText.Infrastructure.Logging;
@@ -13,6 +14,7 @@ using ReadTheStupidText.Infrastructure.Reading;
 using ReadTheStupidText.Infrastructure.Sanitizing;
 using ReadTheStupidText.Infrastructure.Settings;
 using ReadTheStupidText.Infrastructure.Startup;
+using ReadTheStupidText.Infrastructure.Translation;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net.NetworkInformation;
 using Microsoft.UI.Xaml;
@@ -31,6 +33,9 @@ public partial class App : Application
     {
         InitializeComponent();
         Services = ConfigureServices();
+
+        // The stored language drives the UI resources, so it is applied before any window is built (Slice 57).
+        UiStrings.ApplyLanguage(Services.GetRequiredService<ISettingsStore>().Language);
     }
 
     /// <summary>The composition root for the running app.</summary>
@@ -79,6 +84,11 @@ public partial class App : Application
         services.AddSingleton<ILogFolder>(sp => sp.GetRequiredService<LogPaths>());
         services.AddSingleton<ISystemLog, SerilogSystemLog>();
         services.AddSingleton<ActivityInputLog>();
+
+        // Translate-before-read (Slice 57): packs-backed translator, on-device script detector.
+        services.AddSingleton<ITranslator>(_ => new PackTranslator(PackFolders.PacksRoot));
+        services.AddSingleton<ILanguageDetector, ScriptLanguageDetector>();
+        services.AddSingleton<ReadTranslator>();
 
         services.AddSingleton<IActivityLog, ActivityLog>();
         services.AddSingleton<ReadAloudService>();
@@ -161,7 +171,7 @@ public partial class App : Application
     {
         Services.GetRequiredService<LogPaths>().PurgeOlderThan(LogRetention);
         Services.GetRequiredService<AudioChunkPaths>().PurgeOrphaned(AudioChunkRetention);
-        Services.GetRequiredService<ISystemLog>().Info("Read The Stupid Text started");
+        Services.GetRequiredService<ISystemLog>().Info($"{ProductInfo.Name} started");
         Services.GetRequiredService<ActivityInputLog>();
     }
 }
