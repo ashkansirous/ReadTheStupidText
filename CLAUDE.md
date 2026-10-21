@@ -82,7 +82,10 @@ at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
 > `src/ReadTheStupidText.Mobile.Shared` plus Domain/Application/Documents. The pure
 > `src/DinoReader.Core` holds the dialogue segmenter, speaker attributor and voice
 > caster (no framework deps). One shared version (`v<x.y.z>`) covers both products;
-> each has its own path-filter group. (Decisions 72-82, `docs/plan/slices/58-67`)
+> each has its own path-filter target (`dinoapp` in `ship-targets`, with
+> `dinoreader-android.yml`; assets `DinoReader-<v>.aab`/`.apk`; `DINOREADER_*` secrets,
+> never the RTST ones; without all five a Dino-only change cuts no release).
+> (Decisions 72-82, `docs/plan/slices/58-67`)
 > Its icons (all platforms, "Book hug" design) live in
 > `docs/design/dino-reader/icons/`: copy from there, never redraw or regenerate them.
 > Its screens are the mock `docs/design/dino-reader/Dino Reader v2.dc.html` (index in
@@ -148,10 +151,14 @@ DinoReader.Core (standalone, no deps)
   all played through `MediaPlayer`; the neural model ships in the package.
   Clipboard, UI Automation, startup task, OS integration.
 - **App** (`net10.0-windows`, WinUI single-project MSIX) — UI, tray, DI wiring.
-- **Mobile** (`src/ReadTheStupidText.Mobile`, .NET MAUI, `net10.0-android`
-  only for now — Decision 37) — references `Domain`/`Application` unchanged;
-  platform-specific implementations live under its own `Platforms/Android`
-  folder rather than a separate class library. **Nothing outside `Platforms/`
+- **Mobile** (`src/ReadTheStupidText.Mobile`, .NET MAUI, Decision 37) — the RTST
+  app; references `Domain`/`Application`/`Documents`/`Mobile.Shared`. The shared
+  platform code (engines, voice packs, `IPlatformServices`, per-OS
+  `Platforms/` folders) lives in **`src/ReadTheStupidText.Mobile.Shared`**
+  (namespace still `ReadTheStupidText.Mobile`; `Application` grants it
+  `InternalsVisibleTo`). OCR and the scanner stay RTST-only.
+  **`src/DinoReader.App`** (`net10.0-android`, `uk.sirous.dinoreader`) references
+  `Application`/`Domain`/`Mobile.Shared`. **Nothing outside `Platforms/`
   names an Android or iOS type:** engines come from `IPlatformServices` via the
   required `MauiProgram.RegisterPlatformServices` partial in each `Platforms/<OS>/`
   (`Platforms/iOS` exists since Slice 48; Slice 44:
@@ -163,8 +170,8 @@ DinoReader.Core (standalone, no deps)
   every Android app here, Dino Reader included; a new MAUI project starts at
   the template's 21, so set it. Never lower it (Play automatic protection,
   enabled on our listing, rejects bundles below 24). Set it only in the
-  csproj, never as a `<uses-sdk>` in `AndroidManifest.xml`. Runtime guards
-  for API 28 or older are dead code; guards for 29+ APIs are still needed.
+  csproj, never as a `<uses-sdk>` in `AndroidManifest.xml`. Guards for API 28 or
+  older are dead code; 29+ guards are still needed.
   **Gotcha:**
   files under `Platforms/Android` use namespace `ReadTheStupidText.Mobile`,
   *not* `...Platforms.Android` — a namespace segment literally named `Android`
@@ -173,22 +180,14 @@ DinoReader.Core (standalone, no deps)
   qualified as `Microsoft.Maui.Controls.Application` — the project also
   references a library literally named `ReadTheStupidText.Application`, which
   wins unqualified-name resolution from within the `ReadTheStupidText.Mobile`
-  namespace. **Gotcha (sherpa-onnx on Android):** a plain
-  `PackageReference Include="org.k2fsa.sherpa.onnx"` silently bundles the
-  **wrong-OS** `.so` (e.g. linux-x64's `libonnxruntime.so`) into
-  `lib/arm64-v8a/` instead of the real Android one — the package's nuspec
-  unconditionally pulls all 8 platform `runtime.*` sub-packages, and
-  .NET-for-Android's native harvesting doesn't discriminate between them
-  (same failure as [microsoft/onnxruntime#29270](https://github.com/microsoft/onnxruntime/issues/29270)).
-  Fix, verified by unzipping the built APK: `ExcludeAssets="all"` on the seven
-  non-Android `runtime.*` packages, `GeneratePathProperty="true"` on the
-  android-arm64 one, then explicit `AndroidNativeLibrary` items
-  (`Abi="arm64-v8a"`) pointing at its extracted `runtimes/android-arm64/native/*.so`
-  — see `ReadTheStupidText.Mobile.csproj`. **Before trusting *any* native
-  Android dependency's packaging, unzip the built `.apk` under
-  `obj/Debug/net10.0-android/android/bin/` and check `lib/<abi>/` yourself** —
-  a clean build with no warnings is not proof the right binary landed. See
-  Batch 6 in `plan.md`.
+  namespace. **Gotcha (sherpa-onnx on Android):** a plain `PackageReference` silently
+  bundles wrong-OS `.so` files into `lib/arm64-v8a/`. The fix lives in
+  `src/AndroidSherpaPackaging.props`, which **every** MAUI project linking the engine
+  must import (all three: `Mobile.Shared`, RTST, `DinoReader.App`; `ExcludeAssets`
+  does not flow through `ProjectReference`). The `AndroidNativeLibrary` items are
+  staged only in app projects. `.github/scripts/check-android-natives.sh` checks
+  every AAB/APK in CI; for any *other* native dependency, unzip the built package and
+  check `lib/<abi>/` yourself. (Slice 58: docs/plan/slices/58-dino-reader-skeleton.md)
 
 **Mobile voice packs and first run (Batch 9):**
 

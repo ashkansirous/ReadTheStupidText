@@ -123,13 +123,13 @@ Source: `docs/design/dino-reader/Dino Reader v2.dc.html`, intro and fonts note a
 
 *Verified:* RTST Android and iOS compile, Dino Android compile, slnx, both test suites, 69 script tests, actionlint. Release AAB+APK of both apps contain the real AArch64 `libonnxruntime.so` and `libsherpa-onnx-c-api.so`. Emulator (RTST_Test): Dino Reader launched, downloaded the voice pack and read typed text with the neural voice; RTST after the move went language page, pack, read with the neural voice, and Scan is still shown.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-21)
 
 - Layered structure gets `Mobile.Shared` (shared platform code for both MAUI apps, namespace `ReadTheStupidText.Mobile`, registered with `AddMobileSharedServices`; `Application` grants it `InternalsVisibleTo`) and `DinoReader.App` (`net10.0-android`, `uk.sirous.dinoreader`). Arrows: `Mobile → Application/Domain/Documents/Mobile.Shared`, `DinoReader.App → Application/Domain/Mobile.Shared`. (Slice 58: docs/plan/slices/58-dino-reader-skeleton.md)
 - Native-library gotcha: the sherpa packaging lives in `src/AndroidSherpaPackaging.props` and every project that links the engine must import it (`ExcludeAssets` does not flow through `ProjectReference`). Natives are staged only in app projects. CI's `.github/scripts/check-android-natives.sh` fails a build whose AAB/APK lacks them. OCR stays RTST-only. (Slice 58: docs/plan/slices/58-dino-reader-skeleton.md)
 - Pipeline: the `dinoapp` ship target plus `dinoreader-android.yml`; assets are `DinoReader-<v>.aab`/`.apk`; it uses the `DINOREADER_*` secrets, never the RTST ones; a Dino-only change without all five secrets cuts no release. (Slice 58: docs/plan/slices/58-dino-reader-skeleton.md)
 
-#### For README.md
+#### For README.md (lifted 2026-10-21)
 
 - Dino Reader (Android, in development): a kids' story reader that reads with a voice per character, builds from `src/DinoReader.App`.
 
