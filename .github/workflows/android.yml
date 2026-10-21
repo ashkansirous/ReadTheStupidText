@@ -31,7 +31,12 @@ on:
       - 'src/ReadTheStupidText.Mobile/**'
       - '!src/ReadTheStupidText.Mobile/Platforms/**'
       - 'src/ReadTheStupidText.Mobile/Platforms/Android/**'
+      - 'src/ReadTheStupidText.Mobile.Shared/**'
+      - '!src/ReadTheStupidText.Mobile.Shared/Platforms/**'
+      - 'src/ReadTheStupidText.Mobile.Shared/Platforms/Android/**'
+      - 'src/AndroidSherpaPackaging.props'
       - '.github/scripts/stage-android-package.sh'
+      - '.github/scripts/check-android-natives.sh'
       - '.github/workflows/android.yml'
   workflow_dispatch:
   workflow_call:
@@ -87,7 +92,17 @@ jobs:
         run: dotnet workload install maui-android
 
       - name: Debug build (unsigned)
+        if: ${{ env.SIGN_RELEASE != 'true' }}
         run: dotnet build src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net10.0-android -c Debug
+
+      # The Release packaging path differs from Debug (the sherpa natives once went missing
+      # only in Release), so PR builds also package an unsigned Release .aab and check it.
+      # Skipped when the signed publish below runs: it builds the same code and is checked too.
+      - name: Release package check (unsigned .aab)
+        if: ${{ env.SIGN_RELEASE != 'true' }}
+        run: |
+          dotnet publish src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net10.0-android -c Release -p:AndroidPackageFormat=aab
+          bash .github/scripts/check-android-natives.sh "$PUBLISH_DIR"/uk.sirous.readthestupidtext-Signed.aab
 
       - name: Decode upload keystore
         if: ${{ env.SIGN_RELEASE == 'true' }}
@@ -118,6 +133,10 @@ jobs:
         if: ${{ env.SIGN_RELEASE == 'true' }}
         run: bash .github/scripts/stage-android-package.sh aab
 
+      - name: Check the native libraries in the signed .aab
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        run: bash .github/scripts/check-android-natives.sh dist/ReadTheStupidText-${VERSION}.aab
+
       # APK is the sideload format (adb install / tap to install) — same signed
       # publish, different package format.
       - name: Release build (signed .apk)
@@ -138,6 +157,10 @@ jobs:
       - name: Stage signed .apk
         if: ${{ env.SIGN_RELEASE == 'true' }}
         run: bash .github/scripts/stage-android-package.sh apk
+
+      - name: Check the native libraries in the signed .apk
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        run: bash .github/scripts/check-android-natives.sh dist/ReadTheStupidText-${VERSION}.apk
 
       - name: Upload .aab + .apk to the draft release
         if: ${{ env.SIGN_RELEASE == 'true' }}

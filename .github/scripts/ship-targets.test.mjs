@@ -6,8 +6,11 @@ import { fileURLToPath } from 'node:url';
 import { GROUPS, bumpKind, matchesPattern, newestAppTag, shipTargets } from './ship-targets.mjs';
 
 const M = 'src/ReadTheStupidText.Mobile';
-const NONE = { windows: false, android: false, ios: false, dinoreader: false };
-const ALL3 = { windows: true, android: true, ios: true };
+const S = 'src/ReadTheStupidText.Mobile.Shared';
+const NONE = { windows: false, android: false, ios: false, dinoreader: false, dinoapp: false };
+// Core changes rebuild every app platform, Dino Reader's app included (its tests are separate).
+const ALL3 = { windows: true, android: true, ios: true, dinoapp: true };
+const EVERYTHING = { ...ALL3, dinoreader: true };
 
 function targetsOf(changedFiles, extra = {}) {
     return shipTargets({ changedFiles, bump: 'other', ...extra });
@@ -19,7 +22,8 @@ const CASES = [
     ['iOS platform only', [`${M}/Platforms/iOS/AppDelegate.cs`], { ios: true }],
     ['iOS signing script', ['.github/scripts/ios-signing.sh'], { ios: true }],
     ['TestFlight upload script', ['.github/scripts/testflight-upload.sh'], { ios: true }],
-    ['Android stage script', ['.github/scripts/stage-android-package.sh'], { android: true }],
+    ['Android stage script', ['.github/scripts/stage-android-package.sh'], { android: true, dinoapp: true }],
+    ['Android natives check script', ['.github/scripts/check-android-natives.sh'], { android: true, dinoapp: true }],
     ['shared Mobile code', [`${M}/ReaderPage.xaml.cs`], { android: true, ios: true }],
     ['Mobile csproj', [`${M}/ReadTheStupidText.Mobile.csproj`], { android: true, ios: true }],
     ['Mobile resource', [`${M}/Resources/Images/a.png`], { android: true, ios: true }],
@@ -41,6 +45,18 @@ const CASES = [
     ['DinoReader tests only', ['tests/DinoReader.Tests/ParserTests.cs'], { dinoreader: true }],
     ['Android + iOS platform files', [`${M}/Platforms/Android/a.cs`, `${M}/Platforms/iOS/b.cs`], { android: true, ios: true }],
     ['Windows + DinoReader', ['src/ReadTheStupidText.App/a.cs', 'src/DinoReader.Core/b.cs'], { windows: true, dinoreader: true }],
+    // Slice 58: the shared MAUI library and the Dino Reader app.
+    ['Dino Reader app only', ['src/DinoReader.App/MainPage.xaml.cs'], { dinoapp: true }],
+    ['Dino Reader app csproj', ['src/DinoReader.App/DinoReader.App.csproj'], { dinoapp: true }],
+    ['Dino Reader Android workflow', ['.github/workflows/dinoreader-android.yml'], { dinoapp: true }],
+    ['Mobile.Shared root', [`${S}/CompositeSpeechReader.cs`], { android: true, ios: true, dinoapp: true }],
+    ['Mobile.Shared csproj', [`${S}/ReadTheStupidText.Mobile.Shared.csproj`], { android: true, ios: true, dinoapp: true }],
+    ['Mobile.Shared Android platform', [`${S}/Platforms/Android/AndroidSpeechReader.cs`], { android: true, dinoapp: true }],
+    ['Mobile.Shared iOS platform', [`${S}/Platforms/iOS/AvSpeechReader.cs`], { ios: true }],
+    ['Mobile.Shared unknown platform folder', [`${S}/Platforms/Windows/x.cs`], {}],
+    ['Android sherpa packaging props', ['src/AndroidSherpaPackaging.props'], { android: true, dinoapp: true }],
+    ['RTST Mobile Android platform does not rebuild Dino Reader', [`${M}/Platforms/Android/MainActivity.cs`], { android: true }],
+    ['RTST Mobile root does not rebuild Dino Reader', [`${M}/MauiProgram.cs`], { android: true, ios: true }],
     ['site and worker files', ['worker/downloads.ts', 'site/index.html'], {}],
 ];
 
@@ -51,23 +67,28 @@ for (const [name, files, expected] of CASES) {
 }
 
 test('a major bump builds every target', () => {
-    assert.deepEqual(targetsOf(['docs/x.md'], { bump: 'major' }), { ...ALL3, dinoreader: true });
+    assert.deepEqual(targetsOf(['docs/x.md'], { bump: 'major' }), EVERYTHING);
 });
 
 test('an unknown range (no base tag) builds every target', () => {
-    assert.deepEqual(targetsOf(null), { ...ALL3, dinoreader: true });
+    assert.deepEqual(targetsOf(null), EVERYTHING);
 });
 
 test('forceAll (manual run) builds every target', () => {
-    assert.deepEqual(targetsOf([], { forceAll: true }), { ...ALL3, dinoreader: true });
+    assert.deepEqual(targetsOf([], { forceAll: true }), EVERYTHING);
 });
 
 test('an iOS-only change reports ios and nothing else (release.yml declines to ship it unsigned)', () => {
     assert.deepEqual(targetsOf([`${M}/Platforms/iOS/Info.plist`]), { ...NONE, ios: true });
 });
 
-test('DinoReader alone builds no app platform', () => {
+test('DinoReader.Core alone builds no app platform and not the Dino Reader app', () => {
     const t = targetsOf(['src/DinoReader.Core/a.cs']);
+    assert.deepEqual([t.windows, t.android, t.ios, t.dinoapp], [false, false, false, false]);
+});
+
+test('a Dino Reader app change builds nothing else (Windows, RTST Android, iOS)', () => {
+    const t = targetsOf(['src/DinoReader.App/App.xaml']);
     assert.deepEqual([t.windows, t.android, t.ios], [false, false, false]);
 });
 
@@ -148,10 +169,11 @@ function derivedPaths(groupNames) {
 
 const PR_TARGETS = {
     'windows.yml': ['core', 'windows'],
-    'android.yml': ['core', 'android', 'mobileshared'],
-    'ios.yml': ['core', 'ios', 'mobileshared'],
+    'android.yml': ['core', 'android', 'mobileshared', 'sharedroot'],
+    'ios.yml': ['core', 'ios', 'mobileshared', 'sharedroot'],
+    'dinoreader-android.yml': ['core', 'dinoapp', 'sharedroot'],
     // tests.yml gates both the Windows and Android builds.
-    'tests.yml': ['core', 'windows', 'android', 'mobileshared'],
+    'tests.yml': ['core', 'windows', 'android', 'mobileshared', 'sharedroot'],
     'dinoreader.yml': ['dinoreader'],
 };
 
@@ -166,12 +188,17 @@ for (const [file, groups] of Object.entries(PR_TARGETS)) {
     });
 }
 
-test('a negated path follows the Mobile glob and precedes the Platforms re-includes', () => {
-    for (const file of ['android.yml', 'ios.yml', 'tests.yml']) {
+const MOBILE_ROOTS = ['src/ReadTheStupidText.Mobile', 'src/ReadTheStupidText.Mobile.Shared'];
+
+test('a negated path follows its root glob and precedes the Platforms re-includes', () => {
+    const roots = { 'android.yml': MOBILE_ROOTS, 'ios.yml': MOBILE_ROOTS, 'tests.yml': MOBILE_ROOTS, 'dinoreader-android.yml': [MOBILE_ROOTS[1]] };
+    for (const [file, folders] of Object.entries(roots)) {
         const paths = readPullRequestPaths(file);
-        const excluded = paths.indexOf('!src/ReadTheStupidText.Mobile/Platforms/**');
-        assert.ok(excluded > paths.indexOf('src/ReadTheStupidText.Mobile/**'), `${file}: ! must follow the Mobile glob`);
-        const reincludes = paths.filter((p) => p.startsWith('src/ReadTheStupidText.Mobile/Platforms/') && !p.startsWith('!'));
-        assert.ok(reincludes.every((p) => paths.indexOf(p) > excluded), `${file}: Platforms re-includes must follow the !`);
+        for (const root of folders) {
+            const excluded = paths.indexOf(`!${root}/Platforms/**`);
+            assert.ok(excluded > paths.indexOf(`${root}/**`) && paths.indexOf(`${root}/**`) >= 0, `${file}: ! must follow the ${root} glob`);
+            const reincludes = paths.filter((p) => p.startsWith(`${root}/Platforms/`) && !p.startsWith('!'));
+            assert.ok(reincludes.every((p) => paths.indexOf(p) > excluded), `${file}: ${root} Platforms re-includes must follow the !`);
+        }
     }
 });

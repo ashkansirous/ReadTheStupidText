@@ -12,6 +12,7 @@
     <InternalsVisibleTo Include="ReadTheStupidText.Tests" />
     <InternalsVisibleTo Include="ReadTheStupidText.Infrastructure" />
     <InternalsVisibleTo Include="ReadTheStupidText.Mobile" />
+    <InternalsVisibleTo Include="ReadTheStupidText.Mobile.Shared" />
   </ItemGroup>
 
   <PropertyGroup>
