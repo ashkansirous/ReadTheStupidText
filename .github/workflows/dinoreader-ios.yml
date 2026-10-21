@@ -23,6 +23,7 @@ on:
       - 'tests/ReadTheStupidText.Tests/**'
       - 'global.json'
       - 'GitVersion.yml'
+      - 'Directory.Build.props'
       - '*.slnx'
       - '.gitattributes'
       - '.github/workflows/release.yml'
