@@ -1,5 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+	<Import Project="SherpaIosVersion.props" />
+
 	<!-- The platform code both MAUI apps share (Slice 58, Decision 72): speech readers, OCR,
 	     the voice pack/model services, the settings store and the IPlatformServices seam.
 	     Read The Stupid Text Mobile and Dino Reader reference it. Pages, shells and the
@@ -13,6 +15,13 @@
 		<TargetFrameworks Condition="'$(IncludeAndroid)' != 'false'">net10.0-android</TargetFrameworks>
 		<TargetFrameworks Condition="($([MSBuild]::IsOSPlatform('OSX')) Or '$(IncludeIos)' == 'true') And '$(TargetFrameworks)' == ''">net10.0-ios</TargetFrameworks>
 		<TargetFrameworks Condition="($([MSBuild]::IsOSPlatform('OSX')) Or '$(IncludeIos)' == 'true') And '$(TargetFrameworks)' != '' And !$(TargetFrameworks.Contains('net10.0-ios'))">$(TargetFrameworks);net10.0-ios</TargetFrameworks>
+		<!-- Slice 67: Dino Reader's Windows head. Added on Windows only; -p:IncludeWindows=false drops it. -->
+		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(IncludeWindows)' != 'false' And '$(TargetFrameworks)' == ''">net10.0-windows10.0.19041.0</TargetFrameworks>
+		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(IncludeWindows)' != 'false' And '$(TargetFrameworks)' != '' And !$(TargetFrameworks.Contains('net10.0-windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
+
+		<!-- The Windows CI packages the app with -p:GenerateAppxPackageOnBuild=true, which flows to every
+		     project it builds: this library is never an MSIX, so it keeps its own value (see the
+		     TreatAsLocalProperty on <Project>). -->
 
 		<RootNamespace>ReadTheStupidText.Mobile</RootNamespace>
 		<UseMaui>true</UseMaui>
@@ -23,6 +32,7 @@
 		<!-- Same floors as the apps (Decision 82 for Android). -->
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">28.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -67,7 +77,35 @@
 	     must equal the bundled native one (sherpa-onnx 1.13.3 ships onnxruntime 1.24.3); bump
 	     both together and re-check the unzipped APK (CLAUDE.md native-dependency rule). -->
 	<ItemGroup>
-		<PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.24.3" />
+		<PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.24.3" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) != 'windows'" />
+		<!-- Windows: sherpa-onnx 1.13.3 ships onnxruntime 1.24.4 there; match Infrastructure (Slice 75 bump). -->
+		<PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.24.4" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'" />
+	</ItemGroup>
+
+	<!-- Slice 67: the iOS engine (Platforms/iOS) compiles here against the managed sherpa-onnx
+	     binding, so both apps get one copy. Only the MANAGED package: the native
+	     SherpaOnnxC.xcframework and the full Microsoft.ML.OnnxRuntime (static iOS binary) are
+	     linked by each app project, which is the one that needs them. The version is SherpaIosVersion
+	     (SherpaIosVersion.props), the same one the apps' native framework uses. The
+	     package's nuspec depends on every runtime.* native package; none has an iOS asset. -->
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+		<PackageReference Include="org.k2fsa.sherpa.onnx" Version="$(SherpaIosVersion)" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.android-arm64" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.android-x64" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.linux-arm64" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.linux-x64" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.osx-arm64" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.osx-x64" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-arm64" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-x64" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-x86" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
+	</ItemGroup>
+
+	<!-- Slice 67: on Windows the neural voice and the WinRT fallback voice are Infrastructure's readers
+	     (sherpa-onnx through the Windows MediaPlayer), so the Windows head reads exactly as Read The
+	     Stupid Text does. Infrastructure brings the sherpa-onnx runtime and its native DLLs. -->
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+		<ProjectReference Include="..\ReadTheStupidText.Infrastructure\ReadTheStupidText.Infrastructure.csproj" />
 	</ItemGroup>
 
 	<Import Project="..\AndroidSherpaPackaging.props" />

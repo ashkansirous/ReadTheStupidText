@@ -1,3 +1,4 @@
+#if ANDROID
 using AndroidPaint = Android.Graphics.Paint;
 using AndroidPaintFlags = Android.Graphics.PaintFlags;
 using DinoReader.Core;
@@ -51,3 +52,4 @@ public sealed class AndroidTextMeasurer : ITextMeasurer, IDisposable
 		}
 	}
 }
+#endif

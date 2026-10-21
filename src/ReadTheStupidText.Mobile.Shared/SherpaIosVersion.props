@@ -1,0 +1,12 @@
+<Project>
+
+	<!-- The one place the iOS sherpa-onnx version lives (Slice 67). Imported by IosSherpaPackaging.props
+	     (the native framework fetch and the apps' package references) and by
+	     ReadTheStupidText.Mobile.Shared.csproj (the managed binding it compiles against). The managed
+	     package must match the framework release: the C structs the binding marshals are versioned
+	     with it. Android pins its own version in AndroidSherpaPackaging.props. -->
+	<PropertyGroup>
+		<SherpaIosVersion>1.13.8</SherpaIosVersion>
+	</PropertyGroup>
+
+</Project>

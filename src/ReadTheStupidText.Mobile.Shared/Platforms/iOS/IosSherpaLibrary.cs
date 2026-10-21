@@ -9,7 +9,7 @@ namespace ReadTheStupidText.Mobile;
 /// Tells the managed sherpa-onnx binding where its native library is on iOS (Slice 49). The
 /// binding P/Invokes <c>sherpa-onnx-c-api</c>, a name that exists on Android and desktop but
 /// not on iOS, where the engine ships as the <c>SherpaOnnxC.framework</c> bundle that
-/// <c>NativeReference</c> (see the Mobile csproj) copies into the app's <c>Frameworks</c> folder.
+/// <c>NativeReference</c> (see the app csproj) copies into the app's <c>Frameworks</c> folder.
 /// </summary>
 internal static class IosSherpaLibrary
 {

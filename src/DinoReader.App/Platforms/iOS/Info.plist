@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UIDeviceFamily</key>
+	<array>
+		<integer>1</integer>
+		<integer>2</integer>
+	</array>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>arm64</string>
+	</array>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<!-- A story keeps reading when the screen locks or the app is backgrounded. -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
+	<key>XSAppIconAssets</key>
+	<string>Assets.xcassets/AppIcon.appiconset</string>
+
+	<!-- The only encryption is HTTPS to download voice packs, which is exempt; this answers App
+	     Store Connect's export-compliance question so TestFlight builds are not held at
+	     "Missing Compliance". -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+
+	<!-- Camera for scanning a printed book: the VisionKit document scanner and the MediaPicker
+	     photo path both crash the app without this string. -->
+	<key>NSCameraUsageDescription</key>
+	<string>The camera photographs the pages of a book so the app can read them aloud. Photos are processed on the device and never uploaded.</string>
+
+	<!-- MediaPicker reads the photo library when a grown-up picks pictures of a book; the app
+	     never writes to it, but the add-only key is declared too so MAUI's MediaPicker cannot
+	     trip App Store validation. -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>The app reads pictures you choose from your library, only to read the text in them aloud. Photos are processed on the device and never uploaded.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>The app does not save anything to your photo library.</string>
+
+	<!-- MAUI's MediaPicker declares the microphone for video capture. Nothing here records audio
+	     or video; the key exists so that path can never crash the app. -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>The app does not record audio. This is only asked if video capture is ever used, which this app does not do.</string>
+</dict>
+</plist>

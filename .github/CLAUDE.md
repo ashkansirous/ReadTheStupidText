@@ -69,7 +69,25 @@ msstore CLI) once the Partner Center secrets are set.
 Dino Reader has its own path-filter target (`dinoapp` in `ship-targets`, with
 `dinoreader-android.yml`; assets `DinoReader-<v>.aab`/`.apk`; `DINOREADER_*` secrets,
 never the RTST ones; without all five a Dino-only change cuts no release). One shared
-version (`v<x.y.z>`) covers both products. (Decisions 72-82, `docs/plan/slices/58-67`)
+version (`v<x.y.z>`) covers both products.
+
+Dino Reader on iOS (Slice 67) is the `dinoios` target: `dinoreader-ios.yml` (a twin of `ios.yml`
+for `src/DinoReader.App`, asset `DinoReader-<v>.ipa`) and `testflight-submit-dino` in `release.yml`.
+It reuses the team-wide `ASC_API_*` and `IOS_DIST_CERT_P12_*` secrets and has its own
+`DINOREADER_IOS_PROVISIONING_PROFILE_BASE64` (profile "Dino Reader App Store"); `release-draft`
+reports all six as `dino_ios_signed`, and without them it only compiles unsigned and ships nothing.
+`Mobile.Shared/Platforms/iOS/**` and the Shared root rebuild both `ios` and `dinoios`. The `.ipa`
+carry-forward patterns are per app (`^ReadTheStupidText-...ipa$`, `^DinoReader-...ipa$`). (Decisions 72-82, `docs/plan/slices/58-67`)
+
+Dino Reader on Windows (Slice 67) is the `dinowin` target: `dinoreader-windows.yml` (a twin of `windows.yml`
+for `src/DinoReader.App`; unsigned x64 + ARM64 MSIX from `dotnet publish -f net10.0-windows10.0.19041.0
+-p:IncludeAndroid=false -p:Platform=<arch>`, assets `DinoReader.App_<v>.0_<arch>.msix`) and `store-submit-dino` in
+`release.yml`, which calls the shared `store-submit.yml` (inputs `package`, `product_id`) with the same
+`AZURE_AD_*`/`SELLER_ID` secrets and runs only when the repository variable `DINOREADER_STORE_APP_ID` is set.
+It needs no secrets to build, so any change to `src/DinoReader.App/**`, `DinoReader.Core`, `Mobile.Shared` (root and
+`Platforms/Windows/`) or `Infrastructure` now cuts a release (a Dino-only change did not before). Never pass a global
+`-p:RuntimeIdentifier` to the Dino build: the csproj derives it from `-p:Platform` (a global one makes the package list
+Mobile.Shared's `.pdb` twice, APPX1101). The RTST Store submit matches only `ReadTheStupidText.App_*.msix`.
 
 ## Android downloads
 

@@ -109,6 +109,8 @@ public sealed partial class ControlPanelWindow
         LanguageCombo.IsEnabled = false;
         await StartVoicePackSetupAsync();
         RestartRequested?.Invoke(this, EventArgs.Empty);
+        // Only reached when the restart did not happen: give the picker back.
+        LanguageCombo.IsEnabled = true;
     }
 
     // A failed setup is not fatal here: the startup quiet resume retries it after the restart.

@@ -53,6 +53,7 @@ and their GitHub issue numbers. Tick slices off in `plan.md` as they complete. T
 App  →  Application  →  Domain
 Infrastructure  →  Application / Domain
 Mobile  →  Application / Domain / Documents
+Mobile.Shared (Windows target only)  →  Infrastructure
 Documents  →  Application
 DinoReader.Core (standalone, no deps)
 ```
@@ -84,7 +85,11 @@ DinoReader.Core (standalone, no deps)
   Clipboard, UI Automation, startup task, OS integration.
 - **App** (`net10.0-windows`, WinUI single-project MSIX) — UI, tray, DI wiring.
 - **Mobile** (`src/ReadTheStupidText.Mobile`, .NET MAUI, Decision 37) and **`src/DinoReader.App`** — the
-  MAUI apps, sharing `src/ReadTheStupidText.Mobile.Shared`; see their own files.
+  MAUI apps, sharing `src/ReadTheStupidText.Mobile.Shared`; see their own files. Dino Reader also has a
+  **Windows head** (Slice 67, MSIX, no tray or hotkey): Mobile.Shared's Windows target references
+  `Infrastructure` for the Windows speech engines. Package it with
+  `dotnet publish src/DinoReader.App -f net10.0-windows10.0.19041.0 -c Release -p:IncludeAndroid=false -p:Platform=x64`
+  (never a global `RuntimeIdentifier`; rules in `src/DinoReader.App/CLAUDE.md` and `.github/CLAUDE.md`).
 
 ## Build & run
 
@@ -106,8 +111,11 @@ package. Debug through the **(Package)** profile — there is no unpackaged
 profile, because running unpackaged fails with `REGDB_E_CLASSNOTREG` (no
 package identity).
 
-Mobile (Android): `dotnet build src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net10.0-android`
-(emulator and iOS notes in the Mobile file). CI and packaging: `.github/CLAUDE.md`; Store details: `STORE.md`.
+Mobile (Android): `dotnet build src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net10.0-android`.
+On a Windows host Mobile.Shared also restores its Windows target (needs the `maui-windows` workload);
+where only `maui-android` is installed add `-p:IncludeWindows=false` (CI's Android and iOS jobs run on
+Linux/macOS, which have no Windows target). iOS from Windows: `-p:IncludeIos=true -p:IncludeWindows=false
+-p:IncludeAndroid=false` (emulator and iOS notes in the Mobile file). CI and packaging: `.github/CLAUDE.md`; Store details: `STORE.md`.
 
 **Landing site.** `readthestupidtext.sirous.uk` is the Cloudflare Worker `readthestupidtext`
 (`wrangler.jsonc`, `worker/index.ts`) serving `site/` (not `docs/`); GitHub Pages is off. Deploy with

@@ -3,7 +3,7 @@ name: tests
 # Pure-logic unit tests (net10.0-windows: they reference Infrastructure).
 # Slice 70: split out of build.yml. Runs on its own PRs (when anything that
 # build-windows or build-android compiles changes), by hand, and as the `test`
-# job of release.yml, where it gates every Windows/Android build and so every
+# job of release.yml, where it gates every Windows/Android/Dino Reader Windows build and so every
 # release. No LFS: the tests don't load the voice model.
 
 on:
@@ -33,12 +33,16 @@ on:
       - 'src/ReadTheStupidText.Mobile.Shared/**'
       - '!src/ReadTheStupidText.Mobile.Shared/Platforms/**'
       - 'src/ReadTheStupidText.Mobile.Shared/Platforms/Android/**'
+      - 'src/ReadTheStupidText.Mobile.Shared/Platforms/Windows/**'
+      - 'src/DinoReader.App/**'
+      - 'src/DinoReader.Core/**'
       - 'src/AndroidSherpaPackaging.props'
       - 'src/AndroidRelease.props'
       - 'src/AndroidProguard.cfg'
       - '.github/scripts/stage-android-package.sh'
       - '.github/scripts/check-android-natives.sh'
       - '.github/workflows/android.yml'
+      - '.github/workflows/dinoreader-windows.yml'
       - '!**/*.md'
   workflow_dispatch:
   workflow_call:

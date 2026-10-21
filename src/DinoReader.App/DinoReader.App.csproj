@@ -1,10 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<!-- Dino Reader (Batch 10, Slice 58, Decision 72): a kids' book reader, a second MAUI app in
-	     this repo. Android only for now; iOS follows in Slice 67 (it will add the same
-	     IncludeIos/IncludeAndroid logic as ReadTheStupidText.Mobile.csproj). -->
+	     this repo. Android always; iOS only where it can be built (Slice 67), with the same
+	     IncludeIos/IncludeAndroid logic as ReadTheStupidText.Mobile.csproj: net10.0-ios is added on
+	     macOS or with -p:IncludeIos=true, so Windows and Linux builds never need Xcode, and the
+	     iOS CI job passes -p:IncludeAndroid=false. net10.0-windows10.0.19041.0 (Slice 67) is added on
+	     Windows only (an MSIX; no tray, no hotkey), and -p:IncludeWindows=false drops it. -->
 	<PropertyGroup>
-		<TargetFrameworks>net10.0-android</TargetFrameworks>
+		<TargetFrameworks Condition="'$(IncludeAndroid)' != 'false'">net10.0-android</TargetFrameworks>
+		<TargetFrameworks Condition="($([MSBuild]::IsOSPlatform('OSX')) Or '$(IncludeIos)' == 'true') And '$(TargetFrameworks)' == ''">net10.0-ios</TargetFrameworks>
+		<TargetFrameworks Condition="($([MSBuild]::IsOSPlatform('OSX')) Or '$(IncludeIos)' == 'true') And '$(TargetFrameworks)' != '' And !$(TargetFrameworks.Contains('net10.0-ios'))">$(TargetFrameworks);net10.0-ios</TargetFrameworks>
+		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(IncludeWindows)' != 'false' And '$(TargetFrameworks)' == ''">net10.0-windows10.0.19041.0</TargetFrameworks>
+		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(IncludeWindows)' != 'false' And '$(TargetFrameworks)' != '' And !$(TargetFrameworks.Contains('net10.0-windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
 
 		<OutputType>Exe</OutputType>
 		<RootNamespace>DinoReader</RootNamespace>
@@ -25,7 +32,45 @@
 		<!-- 28 (Android 9, 2018) is the product floor for every Android app in this repo
 		     (Decision 82). Do not lower it. -->
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">28.0</SupportedOSPlatformVersion>
+
+		<!-- iOS 15 is the MAUI 10 minimum for iOS. -->
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
 	</PropertyGroup>
+
+	<!-- Windows (Slice 67): a packaged MSIX like Read The Stupid Text's. The Release package is built .NET
+	     self-contained so the Store sees no undisclosed .NET dependency (certification 10.2.4.1); the Windows
+	     App SDK stays framework-dependent (the Store delivers it). Debug stays framework-dependent. Packaged
+	     apps are not trimmed. Package identity and the tile/splash art are in Platforms\Windows\Package.appxmanifest. -->
+	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+		<SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+		<TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+		<WindowsPackageType>MSIX</WindowsPackageType>
+		<ApplicationManifest>Platforms/Windows/app.manifest</ApplicationManifest>
+		<SelfContained Condition="'$(Configuration)' != 'Debug'">true</SelfContained>
+		<PublishTrimmed>false</PublishTrimmed>
+		<!-- Set here, not on the command line: a global RuntimeIdentifier also flows into Mobile.Shared and
+		     makes the package payload list its .pdb twice (APPX1101). CI passes only -p:Platform. -->
+		<RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' And '$(Platform)' == 'x64'">win-x64</RuntimeIdentifier>
+		<RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' And '$(Platform)' == 'ARM64'">win-arm64</RuntimeIdentifier>
+	</PropertyGroup>
+	<!-- The ready-made "Book hug" tile, store and splash art, copied from docs/design/dino-reader/icons/windows.
+	     Deliberately NO <MauiIcon>: it would generate different art over these. -->
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+		<Content Include="Platforms\Windows\Assets\*.png" Link="Assets\%(Filename)%(Extension)" />
+	</ItemGroup>
+
+	<!-- iOS app icon (Slice 67): the ready-made "Book hug" asset catalog (iOS 18 light/dark/tinted
+	     1024s), copied from docs/design/dino-reader/icons/ios, never regenerated. Deliberately NO
+	     <MauiIcon> for the same reason as Android: it would generate a different icon. The legacy
+	     sizes are unused because the deployment target uses single-size icons. The catalog is picked up
+	     by the SDK's default items and named by XSAppIconAssets in Info.plist, as in Read The Stupid Text. -->
+	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+		<CodesignEntitlements>Platforms\iOS\Entitlements.plist</CodesignEntitlements>
+	</PropertyGroup>
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+		<!-- The privacy manifest App Store Connect requires. -->
+		<BundleResource Include="Platforms\iOS\Resources\PrivacyInfo.xcprivacy" LogicalName="PrivacyInfo.xcprivacy" />
+	</ItemGroup>
 
 	<!-- App icon: deliberately NO <MauiIcon>. MauiIcon generates a mipmap/appicon adaptive icon
 	     and rewrites the manifest's android:icon, which would overwrite the ready-made "Book hug"
@@ -47,6 +92,18 @@
 	<Import Project="..\AndroidSherpaPackaging.props" />
 	<Import Project="..\AndroidRelease.props" />
 
+	<!-- iOS neural voice and OCR native packaging (Slice 67): the sherpa-onnx framework fetch and
+	     onnxruntime, imported like the Android one above. -->
+	<Import Project="..\ReadTheStupidText.Mobile.Shared\IosSherpaPackaging.props" />
+
+	<!-- Same fix as the RTST App: the Windows App SDK pulls WinML, whose onnxruntime.dll collides with
+	     sherpa-onnx's version-matched one at the package root (APPX1101). We use sherpa's. -->
+	<Target Name="RemoveWinMlOnnxRuntimeDuplicate" AfterTargets="GetPackagingOutputs" BeforeTargets="_ComputeAppxPackagePayload" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+		<ItemGroup>
+			<PackagingOutputs Remove="@(PackagingOutputs)" Condition="'%(FileName)%(Extension)' == 'onnxruntime.dll' and $([System.String]::Copy('%(FullPath)').Replace('\','/').ToLowerInvariant().Contains('/microsoft.windows.ai.machinelearning/'))" />
+		</ItemGroup>
+	</Target>
+
 	<ItemGroup>
 		<ProjectReference Include="..\ReadTheStupidText.Domain\ReadTheStupidText.Domain.csproj" />
 		<ProjectReference Include="..\ReadTheStupidText.Application\ReadTheStupidText.Application.csproj" />
@@ -54,5 +111,10 @@
 		<ProjectReference Include="..\ReadTheStupidText.Documents\ReadTheStupidText.Documents.csproj" />
 		<ProjectReference Include="..\DinoReader.Core\DinoReader.Core.csproj" />
 	</ItemGroup>
+
+	<!-- Fail early and clearly instead of restoring a project with no target framework. -->
+	<Target Name="EnsureATargetFramework" BeforeTargets="_CheckForUnsupportedTargetFramework;Restore;CollectPackageReferences" Condition="'$(TargetFrameworks)' == '' And '$(TargetFramework)' == ''">
+		<Error Text="DinoReader.App has no target framework: -p:IncludeAndroid=false removed Android and iOS is only added on macOS or with -p:IncludeIos=true. Pass -p:IncludeIos=true, or drop -p:IncludeAndroid=false." />
+	</Target>
 
 </Project>
