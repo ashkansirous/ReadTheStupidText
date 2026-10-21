@@ -1,5 +1,6 @@
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Domain.Reading;
 
 namespace ReadTheStupidText.Mobile;
 
@@ -96,7 +97,10 @@ public sealed class VoicePackInstaller
             return PackInstallState.Unavailable;
         }
 
-        if (_packs.GetInstalledPath(PackConstants.SupertonicPackId) is not null)
+        // Activates a pack that already serves the language (Slice 51: one pack per
+        // language family, so the Supertonic pack no longer stands for every language).
+        string servedLanguage = _settings.Language ?? SupertonicVoiceTable.EnglishCode;
+        if (InstalledVoiceCatalog.Resolve(_packs.GetInstalledVoicePacks(), servedLanguage) is not null)
         {
             await ActivateInstalledAsync();
             return null;

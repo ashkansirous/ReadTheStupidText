@@ -8,8 +8,8 @@ namespace ReadTheStupidText.Mobile;
 
 /// <summary>
 /// <see cref="ISpeechReader"/> backed by iOS's built-in <see cref="AVSpeechSynthesizer"/>
-/// (Slice 48), the iOS counterpart of <c>AndroidSpeechReader</c>. It is the only engine on
-/// iOS until Slice 49 links the neural one.
+/// (Slice 48), the iOS counterpart of <c>AndroidSpeechReader</c>. It is the system-voice fallback
+/// beside the neural reader (Slice 49).
 /// </summary>
 /// <remarks>
 /// <c>AVSpeechSynthesizer</c> pauses and resumes natively. It cannot seek, so skip re-speaks
@@ -30,6 +30,8 @@ public sealed class AvSpeechReader : ISpeechReader, IDisposable
     private double _speed = 1.0;
     private AVSpeechSynthesisVoice? _voice;
     private long _speakStartTimestamp;
+    private readonly NSObject _interruptionObserver;
+    private bool _pausedByInterruption;
 
     // Bumped by every new read and every Stop, so a Skip that was computed for an earlier
     // read can never restart text the user has since stopped or replaced.
@@ -39,6 +41,7 @@ public sealed class AvSpeechReader : ISpeechReader, IDisposable
     {
         _delegate = new SynthesizerDelegate(this);
         _synthesizer.Delegate = _delegate;
+        _interruptionObserver = IosAudioSession.ObserveInterruptions(OnInterruptionBegan, OnInterruptionEnded);
     }
 
     public event EventHandler<PlaybackState>? StateChanged;
@@ -54,7 +57,7 @@ public sealed class AvSpeechReader : ISpeechReader, IDisposable
 
     public Task SpeakAsync(string text, int? activityId = null)
     {
-        ConfigureAudioSession();
+        IosAudioSession.Activate(this);
         _generation++;
         _text = text;
         ChunkChanged?.Invoke(this, new ReadChunk(0, 1, text, 0, text.Length));
@@ -74,19 +77,21 @@ public sealed class AvSpeechReader : ISpeechReader, IDisposable
     {
         if (State == PlaybackState.Paused && _synthesizer.ContinueSpeaking())
         {
+            _pausedByInterruption = false;
             SetState(PlaybackState.Playing);
         }
     }
 
     public void Stop()
     {
+        _pausedByInterruption = false;
         _generation++;
         _current = null;
         _synthesizer.StopSpeaking(AVSpeechBoundary.Immediate);
         _text = string.Empty;
         _spokenFromOffset = 0;
         _lastReportedOffset = 0;
-        DeactivateAudioSession();
+        IosAudioSession.Deactivate(this);
         SetState(PlaybackState.Idle);
     }
 
@@ -106,8 +111,9 @@ public sealed class AvSpeechReader : ISpeechReader, IDisposable
     {
         _generation++;
         _current = null;
+        _interruptionObserver.Dispose();
         _synthesizer.StopSpeaking(AVSpeechBoundary.Immediate);
-        DeactivateAudioSession();
+        IosAudioSession.Deactivate(this);
         _synthesizer.Delegate = null;
         _synthesizer.Dispose();
     }
@@ -168,21 +174,28 @@ public sealed class AvSpeechReader : ISpeechReader, IDisposable
     private static float ToUtteranceRate(double speed) =>
         Math.Clamp((float)speed * AVSpeechUtterance.DefaultSpeechRate, AVSpeechUtterance.MinimumSpeechRate, AVSpeechUtterance.MaximumSpeechRate);
 
-    // Playback otherwise stays silent when the ringer switch is on; reading aloud must not.
-    private static void ConfigureAudioSession()
+    // A call, an alarm or Siri took the audio: pause, and carry on when the system says it is
+    // fine to. A pause the user made is never undone.
+    private void OnInterruptionBegan()
     {
-        AVAudioSession session = AVAudioSession.SharedInstance();
-        session.SetCategory(AVAudioSession.CategoryPlayback, out _);
-        session.SetActive(true, out _);
+        if (State == PlaybackState.Playing)
+        {
+            Pause();
+            _pausedByInterruption = State == PlaybackState.Paused;
+        }
     }
 
-    // Lets other apps' audio (music) come back once the read is over. Failure is harmless.
-    private static void DeactivateAudioSession() =>
-        AVAudioSession.SharedInstance().SetActive(false, AVAudioSessionSetActiveOptions.NotifyOthersOnDeactivation, out _);
+    private void OnInterruptionEnded(bool shouldResume)
+    {
+        if (_pausedByInterruption && shouldResume && State == PlaybackState.Paused && IosAudioSession.Activate(this))
+        {
+            Resume();
+        }
+    }
 
     private void Finish()
     {
-        DeactivateAudioSession();
+        IosAudioSession.Deactivate(this);
         SetState(PlaybackState.Idle);
         Completed?.Invoke(this, EventArgs.Empty);
     }
@@ -223,6 +236,10 @@ public sealed class AvSpeechReader : ISpeechReader, IDisposable
         }
     }
 
+    // A stopped utterance has finished winding down: a deactivation that failed while it was
+    // still speaking can succeed now.
+    private void OnCancelled() => IosAudioSession.RetryPendingDeactivate();
+
     // Callbacks arrive on the main thread. A cancelled (superseded or stopped) utterance
     // is deliberately not reported as Completed.
     private sealed class SynthesizerDelegate(AvSpeechReader owner) : AVSpeechSynthesizerDelegate
@@ -232,5 +249,8 @@ public sealed class AvSpeechReader : ISpeechReader, IDisposable
 
         public override void DidFinishSpeechUtterance(AVSpeechSynthesizer synthesizer, AVSpeechUtterance utterance) =>
             owner.OnFinished(utterance);
+
+        public override void DidCancelSpeechUtterance(AVSpeechSynthesizer synthesizer, AVSpeechUtterance utterance) =>
+            owner.OnCancelled();
     }
 }

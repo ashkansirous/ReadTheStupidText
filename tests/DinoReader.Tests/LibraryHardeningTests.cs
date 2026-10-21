@@ -49,6 +49,9 @@ public sealed class LibraryHardeningTests : IDisposable
     [Fact]
     public async Task FailedWrite_LeavesNoTempFile()
     {
+        // The failure is injected with an exclusive lock on story.json, which only Windows
+        // enforces; on Linux a rename-over succeeds despite FileShare.None.
+        Assert.SkipUnless(OperatingSystem.IsWindows(), "Needs mandatory file locking (Windows).");
         var library = new FileStoryLibrary(_root);
         Story story = Make(StoryIds.New());
         await library.AddAsync(story);

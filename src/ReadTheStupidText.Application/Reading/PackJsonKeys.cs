@@ -13,4 +13,13 @@ public static class PackJsonKeys
     public const string Url = "url";
     public const string Engine = "engine";
     public const string Files = "files";
+
+    /// <summary>Pack manifest only: the <c>VoiceEngineKind</c> (absent means Supertonic, the Slice 50 packs).</summary>
+    public const string Model = "model";
+
+    /// <summary>Pack manifest only: the voices the pack offers (absent for Supertonic).</summary>
+    public const string Voices = "voices";
+
+    public const string VoiceName = "name";
+    public const string SpeakerId = "sid";
 }

@@ -18,7 +18,9 @@ public static partial class MobileSharedServices
 		builder.Services.AddSingleton<IVoicePackService, MobileVoicePackService>();
 		builder.Services.AddSingleton<IVoiceModelService, MobileVoiceModelService>();
 		builder.Services.AddSingleton<VoicePackInstaller>();
-		builder.Services.AddSingleton<ISettingsStore, MobilePreferencesSettingsStore>();
+		builder.Services.AddSingleton<MobilePreferencesSettingsStore>();
+		builder.Services.AddSingleton<ISettingsStore>(sp => sp.GetRequiredService<MobilePreferencesSettingsStore>());
+		builder.Services.AddSingleton<ILanguageChangeNotifier>(sp => sp.GetRequiredService<MobilePreferencesSettingsStore>());
 		builder.Services.AddSingleton<ISpeechReader>(CreateSpeechReader);
 		return builder;
 	}

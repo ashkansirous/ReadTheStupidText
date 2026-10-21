@@ -71,60 +71,52 @@ internal static partial class SpeechTextChunker
     public static IReadOnlyList<TextChunk> SplitWithRanges(string text, bool biasFirstChunk = true)
     {
         IReadOnlyList<string> chunks = Split(text, biasFirstChunk);
-        IReadOnlyList<(int Start, int End)> words = LocateWords(text);
-
         var result = new List<TextChunk>(chunks.Count);
-        int wordIndex = 0;
+        int cursor = 0;
         foreach (string chunk in chunks)
         {
-            int wordCount = CountWords(chunk);
-            if (wordCount == 0)
-            {
-                result.Add(new TextChunk(chunk, 0, 0));
-                continue;
-            }
-
-            int start = words[wordIndex].Start;
-            int end = words[wordIndex + wordCount - 1].End;
+            (int start, int end) = LocateChunk(text, chunk, cursor);
             result.Add(new TextChunk(chunk, start, end));
-            wordIndex += wordCount;
+            cursor = Math.Max(cursor, end);
         }
 
         return result;
     }
 
-    // Same whitespace-run tokenization on both sides of the mapping (any run of
-    // non-whitespace, separated by any whitespace) is what makes the word-count
-    // alignment in SplitWithRanges correct: normalizing internal whitespace (as the
-    // sentence/word-joining above does) never changes how many such runs exist, only
-    // the whitespace between them.
-    private static int CountWords(string chunk) =>
-        chunk.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
-
-    private static List<(int Start, int End)> LocateWords(string text)
+    // Chunks differ from the source only in whitespace (the joining above normalizes it,
+    // and unspaced CJK text has none to count), so the source range is found by matching
+    // the chunk's non-whitespace characters, in order, from the end of the previous chunk. Each
+    // character is verified, so a chunk that is not a whitespace-only rewrite of the source
+    // fails loudly rather than shifting every later range.
+    private static (int Start, int End) LocateChunk(string text, string chunk, int from)
     {
-        var words = new List<(int Start, int End)>();
-        int i = 0;
-        while (i < text.Length)
+        int i = from;
+        int start = -1;
+        int end = from;
+        foreach (char c in chunk.Where(c => !char.IsWhiteSpace(c)))
         {
             while (i < text.Length && char.IsWhiteSpace(text[i]))
             {
                 i++;
             }
 
-            int start = i;
-            while (i < text.Length && !char.IsWhiteSpace(text[i]))
+            if (i >= text.Length)
             {
-                i++;
+                throw new InvalidOperationException("Chunk text runs past the end of the source.");
             }
 
-            if (i > start)
+            if (text[i] != c)
             {
-                words.Add((start, i));
+                throw new InvalidOperationException(
+                    $"Chunk text diverges from the source at index {i}: expected '{c}', found '{text[i]}'.");
             }
+
+            start = start < 0 ? i : start;
+            i++;
+            end = i;
         }
 
-        return words;
+        return start < 0 ? (0, 0) : (start, end);
     }
 
     // Time-to-first-audio is dominated by the first chunk's synthesis, so make that
@@ -170,7 +162,7 @@ internal static partial class SpeechTextChunker
     {
         var head = new StringBuilder();
         var rest = new StringBuilder();
-        foreach (string word in text.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        foreach (string word in text.Split(' ', StringSplitOptions.RemoveEmptyEntries).SelectMany(w => BreakLongWord(w, FirstChunkMax)))
         {
             bool headFull = head.Length > 0 && head.Length + 1 + word.Length > FirstChunkMax;
             Append(rest.Length > 0 || headFull ? rest : head, word);
@@ -179,7 +171,7 @@ internal static partial class SpeechTextChunker
         return (head.ToString(), rest.ToString());
     }
 
-    private static IEnumerable<string> SplitParagraphs(string text)
+    internal static IEnumerable<string> SplitParagraphs(string text)
     {
         foreach (string block in ParagraphBreak().Split(text))
         {
@@ -224,7 +216,7 @@ internal static partial class SpeechTextChunker
         FlushInto(chunks, current);
     }
 
-    private static IEnumerable<string> SplitSentences(string paragraph)
+    internal static IEnumerable<string> SplitSentences(string paragraph)
     {
         foreach (string part in SentenceBreak().Split(paragraph))
         {
@@ -240,7 +232,7 @@ internal static partial class SpeechTextChunker
     private static IEnumerable<string> HardWrap(string sentence)
     {
         var current = new StringBuilder();
-        foreach (string word in sentence.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        foreach (string word in sentence.Split(' ', StringSplitOptions.RemoveEmptyEntries).SelectMany(w => BreakLongWord(w, TargetChunkMax)))
         {
             if (current.Length > 0 && current.Length + 1 + word.Length > TargetChunkMax)
             {
@@ -255,6 +247,21 @@ internal static partial class SpeechTextChunker
         {
             yield return current.ToString();
         }
+    }
+
+    // A token with no spaces (unspaced Chinese or Japanese text) that is longer than a
+    // chunk is wrapped by character count, never inside a surrogate pair.
+    private static IEnumerable<string> BreakLongWord(string word, int max)
+    {
+        int start = 0;
+        while (word.Length - start > max)
+        {
+            int length = char.IsHighSurrogate(word[start + max - 1]) ? max - 1 : max;
+            yield return word.Substring(start, length);
+            start += length;
+        }
+
+        yield return word.Substring(start);
     }
 
     private static void Append(StringBuilder builder, string text)
@@ -279,6 +286,8 @@ internal static partial class SpeechTextChunker
     [GeneratedRegex(@"\r?\n\s*\r?\n")]
     private static partial Regex ParagraphBreak();
 
-    [GeneratedRegex(@"(?<=[.!?])\s+|\r?\n")]
+    // CJK terminators split without a space, but closing quotes and brackets after one stay
+    // with the sentence they end, and a run of terminators stays together.
+    [GeneratedRegex(@"(?<=[\u3002\uFF01\uFF1F][\u300D\u300F\uFF09\u3011\u3009\u300B\u201D\u2019""')\]]*)(?![\u3002\uFF01\uFF1F\u300D\u300F\uFF09\u3011\u3009\u300B\u201D\u2019""')\]])|(?<=[.!?\u061F\u06D4])\s+|\r?\n")]
     private static partial Regex SentenceBreak();
 }
