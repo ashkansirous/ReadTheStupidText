@@ -25,7 +25,7 @@ internal static partial class SpeechTextChunker
     // clipped.
     private const int FirstChunkMax = 120;
 
-    public static IReadOnlyList<string> Split(string text)
+    public static IReadOnlyList<string> Split(string text, bool biasFirstChunk = true)
     {
         string trimmed = text.Trim();
         if (trimmed.Length <= SingleChunkMax)
@@ -44,7 +44,11 @@ internal static partial class SpeechTextChunker
             return new[] { trimmed };
         }
 
-        BiasFirstChunkToShortHead(chunks);
+        if (biasFirstChunk)
+        {
+            BiasFirstChunkToShortHead(chunks);
+        }
+
         return chunks;
     }
 
@@ -64,9 +68,9 @@ internal static partial class SpeechTextChunker
     /// mapping can be reconstructed by word count after the fact, without touching
     /// (and risking) Split's own, already-tuned boundary logic.
     /// </summary>
-    public static IReadOnlyList<TextChunk> SplitWithRanges(string text)
+    public static IReadOnlyList<TextChunk> SplitWithRanges(string text, bool biasFirstChunk = true)
     {
-        IReadOnlyList<string> chunks = Split(text);
+        IReadOnlyList<string> chunks = Split(text, biasFirstChunk);
         IReadOnlyList<(int Start, int End)> words = LocateWords(text);
 
         var result = new List<TextChunk>(chunks.Count);

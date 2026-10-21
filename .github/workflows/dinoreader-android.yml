@@ -28,6 +28,7 @@ on:
       - '.github/scripts/find-release.sh'
       - '.github/scripts/ship-targets.mjs'
       - 'src/DinoReader.App/**'
+      - 'src/DinoReader.Core/**'
       - 'src/ReadTheStupidText.Mobile.Shared/**'
       - '!src/ReadTheStupidText.Mobile.Shared/Platforms/**'
       - 'src/ReadTheStupidText.Mobile.Shared/Platforms/Android/**'
