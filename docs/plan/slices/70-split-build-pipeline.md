@@ -63,12 +63,12 @@ lives in a unit-tested script, not in YAML path filters.
 
 Verified: actionlint 0 issues on all workflows; 55 script tests pass.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-21)
 
 - CI (Slice 70): `release.yml` is the only workflow on push to main (plus a main-only `workflow_dispatch` with `force_all`): version (GitVersion + versionCode + `.github/scripts/ship-targets.mjs`) -> test (`tests.yml`) -> release-draft -> `windows.yml` / `android.yml` / `ios.yml` (reusable; also run on their own PR paths, never signing or uploading on PRs) -> release-publish -> store-submit, play-submit, testflight-submit, publish-downloads. `ship-targets.mjs` holds the path -> platform mapping (Mobile/Platforms/Android -> Android, Mobile/Platforms/iOS -> iOS, rest of Mobile -> both; core paths incl. `release.yml`, `tests.yml`, `find-release.sh`, `ship-targets.mjs` -> all; major bump -> all); `ship-targets.test.mjs` checks every platform workflow's `pull_request.paths` matches it, so change them together. `release-scripts.yml` runs all script tests and actionlint (`.github/actionlint.yaml`) on PRs touching `.github/**`. Editing a core path ships every app. Never add `upload-artifact`. (Slice 70: docs/plan/slices/70-split-build-pipeline.md)
 - This replaces the Batch 8 CI note's `build.yml`/dorny/test-filters wording, the core-path rule's `build.yml` mention, and the CLAUDE.md lines saying `build.yml` packages the MSIX, runs the test job or does it all.
 
-#### For README.md
+#### For README.md (lifted 2026-10-21)
 
 - Replace "build.yml is the single pipeline..." with one line: `release.yml` runs on push to main and calls a reusable workflow per platform; each platform workflow also runs on its own pull requests.
 
@@ -76,3 +76,7 @@ Verified: actionlint 0 issues on all workflows; 55 script tests pass.
 
 - The first release through `release.yml` (next merge to main): check every job and that Windows/Android/iOS submissions still happen.
 - A PR touching only one platform runs only that platform's workflow.
+
+#### Verified 2026-10-21
+
+- The first release through `release.yml` (run 39513782161, merge of PR #190) succeeded end to end: version, test, dinoreader, site-checks, release-draft, build-windows (x64+ARM64), build-android, build-ios (signed), release-publish, store-submit, play-submit, testflight-submit and publish-downloads; `v1.5.1` published. Only `release` reacted to the push (no double release).
