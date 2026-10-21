@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using ReadTheStupidText.Application.Images;
+using ReadTheStupidText.Application.Translation;
 
 namespace ReadTheStupidText.Mobile;
 
@@ -15,5 +16,7 @@ public static partial class MauiProgram
         services.AddSingleton<IOcrLineExtractor>(sp => sp.GetRequiredService<LanguageImageTextExtractor>());
         services.AddSingleton<OcrPackInstaller>();
         services.AddSingleton<IDocumentScanner, AndroidDocumentScanner>();
+        services.AddSingleton<ILanguageDetector, MlKitLanguageDetector>();
+        services.AddSingleton<ITranslator, MlKitTranslator>();
     }
 }

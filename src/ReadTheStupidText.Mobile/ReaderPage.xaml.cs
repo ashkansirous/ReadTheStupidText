@@ -3,7 +3,9 @@ using ReadTheStupidText.Application.Documents;
 using ReadTheStupidText.Application.Images;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Application.Translation;
 using ReadTheStupidText.Domain.Reading;
+using ReadTheStupidText.Mobile.Resources.Strings;
 
 namespace ReadTheStupidText.Mobile;
 
@@ -36,12 +38,17 @@ public partial class ReaderPage : ContentPage
     private readonly IVoiceModelService _model;
     private readonly VoicePackInstaller _installer;
     private readonly IHeadStart _headStart;
+    private readonly EditorDraft _draft;
     private PlaybackRate _speed;
     private string? _lastSpokenText;
 
     // True while a Paste/Scan/File action is in flight; further input taps are ignored.
     private bool _inputBusy;
     private bool _scannerPrepared;
+
+    // Set when a language change replaces this page: its in-flight scan or file read must not
+    // touch the editor or show alerts on a page nobody sees any more.
+    private bool _retired;
 
     // "Reading page i of N" while OCR runs; shown in the header status line, which
     // RenderPackStatus restores to the pack status once it is cleared.
@@ -57,9 +64,11 @@ public partial class ReaderPage : ContentPage
     // started (system TTS returns as soon as the utterance is queued).
     private static readonly TimeSpan FirstAudioGrace = TimeSpan.FromSeconds(8);
 
-    public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, IImageTextExtractor imageExtractor, IVoiceModelService model, VoicePackInstaller installer, IPlatformServices platform, IHeadStart headStart, IDocumentScanner? scanner = null)
+    public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, IImageTextExtractor imageExtractor, IVoiceModelService model, VoicePackInstaller installer, IPlatformServices platform, EditorDraft draft, IHeadStart headStart, IDocumentScanner? scanner = null, ILanguageDetector? detector = null, ITranslator? translator = null)
     {
         InitializeComponent();
+        FlowDirection = UiFlowDirection.ForCurrentCulture();
+        HeaderGrid.Padding = UiFlowDirection.Mirror(HeaderGrid.Padding);
         ApplyScanAvailability(platform.SupportsTextScan);
 
         _reader = reader;
@@ -70,9 +79,13 @@ public partial class ReaderPage : ContentPage
         _headStart = headStart;
         _model = model;
         _installer = installer;
+        _draft = draft;
+        TextEditor.Text = draft.Take();
         _speed = _settings.Speed;
         UpdatePresetHighlight();
         UpdateVoiceLabel();
+        LanguageNameLabel.Text = LanguageChoices.NativeName(CurrentLanguage());
+        InitTranslation(detector, translator);
         InitHeadStart();
     }
 
@@ -110,16 +123,41 @@ public partial class ReaderPage : ContentPage
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
-        _reader.StateChanged -= OnReaderStateChanged;
-        _reader.ProgressChanged -= OnReaderProgressChanged;
-        _reader.TimingChanged -= OnReaderTimingChanged;
-        _installer.Changed -= OnInstallerChanged;
-        _model.ReadyChanged -= OnInstallerChanged;
+        DetachHandlers();
 
         // Hide the spinner but keep the pending-read state: the read may still be
         // generating, and OnAppearing restores the spinner if so.
         SetPlayLoading(false);
     }
+
+    /// <summary>
+    /// Unsubscribes from the singleton reader, installer and model. Also called before the shell is
+    /// swapped out for a language change, where OnDisappearing is not guaranteed to run.
+    /// </summary>
+    public void DetachHandlers()
+    {
+        _reader.StateChanged -= OnReaderStateChanged;
+        _reader.ProgressChanged -= OnReaderProgressChanged;
+        _reader.TimingChanged -= OnReaderTimingChanged;
+        _installer.Changed -= OnInstallerChanged;
+        _model.ReadyChanged -= OnInstallerChanged;
+    }
+
+    /// <summary>
+    /// Called by a language change before the shell is rebuilt: stops the read, keeps the editor text for
+    /// the new page, detaches from the singletons and retires this page's async work.
+    /// </summary>
+    public void PrepareForRebuild()
+    {
+        _retired = true;
+        CancelTranslation();
+        _reader.Stop();
+        _draft.Store(TextEditor.Text);
+        DetachHandlers();
+    }
+
+    private Task AlertAsync(string title, string message) =>
+        _retired ? Task.CompletedTask : DisplayAlertAsync(title, message, AppResources.Common_Ok, UiFlowDirection.ForCurrentCulture());
 
     private async void OnPasteTapped(object? sender, TappedEventArgs e)
     {
@@ -132,14 +170,14 @@ public partial class ReaderPage : ContentPage
         try
         {
             string? text = await Clipboard.Default.GetTextAsync();
-            if (!string.IsNullOrWhiteSpace(text))
+            if (!_retired && !string.IsNullOrWhiteSpace(text))
             {
-                SetEditorText(text);
+                ReplaceEditorText(text);
             }
         }
         catch (Exception)
         {
-            await DisplayAlertAsync("Couldn't paste", "The clipboard couldn't be read. Try copying the text again.", "OK");
+            await AlertAsync(AppResources.Reader_PasteFailedTitle, AppResources.Reader_PasteFailedMessage);
         }
         finally
         {
@@ -158,6 +196,11 @@ public partial class ReaderPage : ContentPage
 
     private void SetScanProgress(string? text)
     {
+        if (_retired)
+        {
+            return;
+        }
+
         _scanProgressText = text;
         RenderPackStatus();
     }
@@ -190,14 +233,18 @@ public partial class ReaderPage : ContentPage
         try
         {
             IReadOnlyList<string> pages = await ScanPagesAsync();
-            if (pages.Count > 0)
+            if (pages.Count > 0 && _retired)
+            {
+                DeleteImages(pages);
+            }
+            else if (pages.Count > 0)
             {
                 await ScanIntoEditorAsync(pages);
             }
         }
         catch (Exception)
         {
-            await DisplayAlertAsync("Couldn't scan", "Something went wrong while scanning. Please try again.", "OK");
+            await AlertAsync(AppResources.Reader_ScanFailedTitle, AppResources.Reader_ScanFailedMessage);
         }
         finally
         {
@@ -218,12 +265,12 @@ public partial class ReaderPage : ContentPage
         }
         catch (DocumentScannerStartFailedException)
         {
-            await DisplayAlertAsync("Couldn't start the scanner", "Couldn't start the scanner — try again.", "OK");
+            await AlertAsync(AppResources.Reader_ScannerStartFailedTitle, AppResources.Reader_ScannerStartFailedMessage);
             return [];
         }
         catch (DocumentScannerPreparingException)
         {
-            await DisplayAlertAsync("Scanner getting ready", "Google Play services is still preparing the document scanner. Try again in a moment.", "OK");
+            await AlertAsync(AppResources.Reader_ScannerPreparingTitle, AppResources.Reader_ScannerPreparingMessage);
             return [];
         }
         catch (DocumentScannerUnavailableException)
@@ -234,7 +281,7 @@ public partial class ReaderPage : ContentPage
 
     private async Task<IReadOnlyList<string>> ScanUnavailableFallbackAsync()
     {
-        await DisplayAlertAsync("Scanner unavailable", "The document scanner needs Google Play services. Take a single photo instead.", "OK");
+        await AlertAsync(AppResources.Reader_ScannerUnavailableTitle, AppResources.Reader_ScannerUnavailableMessage);
         return await CapturePhotoAsync();
     }
 
@@ -250,14 +297,14 @@ public partial class ReaderPage : ContentPage
         }
         catch (PermissionException)
         {
-            await DisplayAlertAsync("Camera access needed", "Grant camera access in Settings to photograph text.", "OK");
+            await AlertAsync(AppResources.Reader_CameraAccessTitle, AppResources.Reader_CameraAccessMessage);
             return [];
         }
         catch (FeatureNotSupportedException)
         {
         }
 
-        await DisplayAlertAsync("No camera", "Camera access is needed to photograph text, and this device has none available.", "OK");
+        await AlertAsync(AppResources.Reader_NoCameraTitle, AppResources.Reader_NoCameraMessage);
         return [];
     }
 
@@ -270,11 +317,14 @@ public partial class ReaderPage : ContentPage
         try
         {
             IReadOnlyList<string?> texts = await ExtractPagesAsync(pages);
-            await ApplyScanResultAsync(texts);
+            if (!_retired)
+            {
+                await ApplyScanResultAsync(texts);
+            }
         }
         catch (OcrUnavailableException)
         {
-            await DisplayAlertAsync("Scan unavailable", "Reading text from photos isn't available on this device yet.", "OK");
+            await AlertAsync(AppResources.Reader_ScanUnavailableTitle, AppResources.Reader_ScanUnavailableMessage);
         }
         finally
         {
@@ -291,22 +341,22 @@ public partial class ReaderPage : ContentPage
         IReadOnlyList<int> failed = ScannedText.FailedPageNumbers(texts);
         if (failed.Count == texts.Count)
         {
-            await DisplayAlertAsync("Couldn't read that scan", "Try scanning the text again with better lighting or focus.", "OK");
+            await AlertAsync(AppResources.Reader_ScanUnreadableTitle, AppResources.Reader_ScanUnreadableMessage);
             return;
         }
 
         string updated = ScannedText.AppendPages(TextEditor.Text, texts);
         if (updated == (TextEditor.Text ?? string.Empty))
         {
-            await DisplayAlertAsync("No text found", "Try scanning again with better lighting or focus.", "OK");
+            await AlertAsync(AppResources.Reader_NoTextFoundTitle, AppResources.Reader_NoTextFoundMessage);
             return;
         }
 
-        SetEditorText(updated);
+        ReplaceEditorText(updated);
         if (failed.Count > 0)
         {
-            string noun = failed.Count == 1 ? "page" : "pages";
-            await DisplayAlertAsync("Some pages skipped", $"Couldn't read {noun} {ScannedText.FormatPageNumbers(failed)} — the rest was added.", "OK");
+            string template = failed.Count == 1 ? AppResources.Reader_PagesSkippedOneMessage : AppResources.Reader_PagesSkippedManyMessage;
+            await AlertAsync(AppResources.Reader_PagesSkippedTitle, AppResources.Format(template, ScannedText.FormatPageNumbers(failed)));
         }
     }
 
@@ -315,9 +365,9 @@ public partial class ReaderPage : ContentPage
     private async Task<IReadOnlyList<string?>> ExtractPagesAsync(IReadOnlyList<string> pages)
     {
         var texts = new List<string?>();
-        for (int i = 0; i < pages.Count; i++)
+        for (int i = 0; i < pages.Count && !_retired; i++)
         {
-            SetScanProgress(pages.Count > 1 ? $"Reading page {i + 1} of {pages.Count}" : "Reading page");
+            SetScanProgress(pages.Count > 1 ? AppResources.Format(AppResources.Reader_ScanProgressPage, i + 1, pages.Count) : AppResources.Reader_ScanProgressSingle);
             texts.Add(await ExtractPageTextAsync(pages[i]));
         }
 
@@ -373,34 +423,38 @@ public partial class ReaderPage : ContentPage
         {
             file = await FilePicker.Default.PickAsync(new PickOptions
             {
-                PickerTitle = "Choose a .txt, .pdf or .docx file",
+                PickerTitle = AppResources.Reader_FilePickerTitle,
                 FileTypes = SupportedFileTypes,
             });
         }
         catch (PermissionException)
         {
-            await DisplayAlertAsync("Permission needed", "Grant file access to read a document.", "OK");
+            await AlertAsync(AppResources.Reader_FilePermissionTitle, AppResources.Reader_FilePermissionMessage);
             return;
         }
 
-        if (file is null)
+        if (file is null || _retired)
         {
-            return; // user cancelled the picker
+            return; // user cancelled the picker, or the page was replaced meanwhile
         }
 
         BusyIndicator.IsRunning = true;
         BusyIndicator.IsVisible = true;
         try
         {
-            SetEditorText(await _documentExtractor.ExtractTextAsync(file.FullPath));
+            string extracted = await _documentExtractor.ExtractTextAsync(file.FullPath);
+            if (!_retired)
+            {
+                ReplaceEditorText(extracted);
+            }
         }
         catch (DocumentTooLargeException ex)
         {
-            await DisplayAlertAsync("File too large", $"That file has {ex.Actual} pages; the limit is {ex.Limit}.", "OK");
+            await AlertAsync(AppResources.Reader_FileTooLargeTitle, AppResources.Format(AppResources.Reader_FileTooLargeMessage, ex.Actual, ex.Limit));
         }
         catch (Exception)
         {
-            await DisplayAlertAsync("Couldn't read that file", "The file may be corrupted or in an unsupported format.", "OK");
+            await AlertAsync(AppResources.Reader_FileUnreadableTitle, AppResources.Reader_FileUnreadableMessage);
         }
         finally
         {
@@ -442,6 +496,7 @@ public partial class ReaderPage : ContentPage
 
         CancelHeadStart();
         _reader.Stop();
+        CancelTranslationRead();
         ClearPendingRead();
         if (string.IsNullOrWhiteSpace(text))
         {
@@ -465,7 +520,15 @@ public partial class ReaderPage : ContentPage
         SetPlayLoading(true);
         try
         {
-            await _reader.SpeakAsync(text);
+            // The spinner covers the translation too; the reader gets the translation, while
+            // _lastSpokenText and _pendingReadText stay the source text so Resume still matches.
+            string? spoken = await TextToSpeakAsync(text, id);
+            if (spoken is null || _retired || id != _pendingReadId)
+            {
+                return;
+            }
+
+            await _reader.SpeakAsync(spoken);
         }
         catch (Exception)
         {
@@ -473,7 +536,7 @@ public partial class ReaderPage : ContentPage
             ClearPendingReadIfCurrent(id);
             if (wasCurrent)
             {
-                await DisplayAlertAsync("Couldn't read that text", "Something went wrong while reading.", "OK");
+                await AlertAsync(AppResources.Reader_ReadFailedTitle, AppResources.Reader_ReadFailedMessage);
             }
 
             return;
@@ -607,6 +670,17 @@ public partial class ReaderPage : ContentPage
         VoiceNameLabel.Text = (_model.Paths is { } paths ? NeuralVoiceMemory.Resolve(paths, _settings.VoiceId) : SupertonicVoiceTable.Default).DisplayName;
     }
 
+    // The stored language, or what the UI resolved to when none is stored yet.
+    private AppLanguage CurrentLanguage()
+    {
+        string code = UiCulture.Resolve(_settings.Language, System.Globalization.CultureInfo.CurrentUICulture).TwoLetterISOLanguageName;
+        AppLanguages.TryParse(code, out AppLanguage language);
+        return language;
+    }
+
+    private async void OnLanguageRowTapped(object? sender, TappedEventArgs e) =>
+        await LanguageChooser.ChooseAsync(this, _settings);
+
     private void OnInstallerChanged(object? sender, EventArgs e) =>
         MainThread.BeginInvokeOnMainThread(() =>
         {
@@ -617,7 +691,7 @@ public partial class ReaderPage : ContentPage
 
     private void RenderPackStatus()
     {
-        string? text = _scanProgressText ?? PackStatusText.Compose(_installer.State, _installer.Progress);
+        string? text = _scanProgressText ?? LocalizedPackStatus.Compose(_installer.State, _installer.Progress);
         PackStatusLabel.Text = text;
         PackStatusLabel.IsVisible = text is not null;
     }
@@ -642,27 +716,10 @@ public partial class ReaderPage : ContentPage
     private void InitHeadStart()
     {
         _headStartKey = CurrentHeadStartKey();
-        TextEditor.TextChanged += OnEditorTextChanged;
+        TextEditor.TextChanged += OnEditorTextChangedForHeadStart;
     }
 
-    // Paste, file and scan put text in the editor in one go: prepare it immediately, and keep the
-    // TextChanged that the assignment raises from also scheduling a debounced prepare.
-    private void SetEditorText(string text)
-    {
-        _settingEditorText = true;
-        try
-        {
-            TextEditor.Text = text;
-        }
-        finally
-        {
-            _settingEditorText = false;
-        }
-
-        StartHeadStart(TimeSpan.Zero);
-    }
-
-    private void OnEditorTextChanged(object? sender, TextChangedEventArgs e)
+    private void OnEditorTextChangedForHeadStart(object? sender, TextChangedEventArgs e)
     {
         if (!_settingEditorText)
         {
@@ -704,7 +761,7 @@ public partial class ReaderPage : ContentPage
                 await Task.Delay(delay, token);
             }
 
-            if (!string.IsNullOrWhiteSpace(text) && !_headStart.ReadInProgress)
+            if (!string.IsNullOrWhiteSpace(text) && !_headStart.ReadInProgress && !TranslationActive())
             {
                 await Task.Run(() => _headStart.PrepareAsync(text), token);
             }
@@ -718,6 +775,10 @@ public partial class ReaderPage : ContentPage
             // A head start is an optimization: failing to prepare never reaches the user.
         }
     }
+
+    // With translate on, the read speaks the translated text, so preparing the source would cache
+    // the wrong sentences: skip the head start until the toggle goes off.
+    private bool TranslationActive() => _translator is not null && _settings.TranslateEnabled;
 
     private void CancelHeadStart()
     {

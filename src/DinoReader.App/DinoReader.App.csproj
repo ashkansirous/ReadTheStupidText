@@ -34,6 +34,8 @@
 	<ItemGroup>
 		<!-- Fonts (SIL OFL 1.1, licences in Licenses/ and STORE.md): bundled, never fetched at runtime. -->
 		<MauiFont Include="Resources\Fonts\*" />
+		<!-- The gallery's top-bar app icon (copied from docs/design/dino-reader/icons/android/play-store-512.png). -->
+		<MauiImage Include="Resources\Images\dino_icon.png" BaseSize="40,40" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -48,6 +50,7 @@
 		<ProjectReference Include="..\ReadTheStupidText.Domain\ReadTheStupidText.Domain.csproj" />
 		<ProjectReference Include="..\ReadTheStupidText.Application\ReadTheStupidText.Application.csproj" />
 		<ProjectReference Include="..\ReadTheStupidText.Mobile.Shared\ReadTheStupidText.Mobile.Shared.csproj" />
+		<ProjectReference Include="..\ReadTheStupidText.Documents\ReadTheStupidText.Documents.csproj" />
 		<ProjectReference Include="..\DinoReader.Core\DinoReader.Core.csproj" />
 	</ItemGroup>
 

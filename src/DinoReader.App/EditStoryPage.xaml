@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="DinoReader.EditStoryPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:DinoReader"
+    BackgroundColor="{StaticResource Sand}"
+    NavigationPage.HasNavigationBar="False">
+
+    <!-- Edit a story (mock screen 8b), behind the gate. Language and translation rows belong to
+         Slice 66; until then those rows only show their value. -->
+    <Grid RowDefinitions="Auto,*,Auto">
+        <Grid ColumnDefinitions="Auto,*,Auto" Padding="8,10,16,10">
+            <Border WidthRequest="44" HeightRequest="44" BackgroundColor="Transparent" StrokeThickness="0"
+                    SemanticProperties.Description="Back">
+                <local:IconView Kind="Back" Color="{StaticResource Ink}" Size="22" StrokeWidth="2.6" />
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Border.GestureRecognizers>
+            </Border>
+            <Label Grid.Column="1" Text="Edit story" FontSize="20" FontAttributes="Bold" VerticalOptions="Center"
+                   SemanticProperties.HeadingLevel="Level1" />
+            <Button Grid.Column="2" Text="Save" HeightRequest="38" CornerRadius="19" Padding="14,0" FontSize="13.5"
+                    BackgroundColor="{StaticResource Brand}" TextColor="White" Clicked="OnSaveClicked" />
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="14,4,14,14" Spacing="12">
+                <HorizontalStackLayout Spacing="14">
+                    <local:StoryCover x:Name="CoverPreview" WidthRequest="96" />
+                    <VerticalStackLayout Spacing="8" VerticalOptions="Center">
+                        <Label Text="Cover" FontSize="12" TextColor="{StaticResource Muted}" />
+                        <HorizontalStackLayout Spacing="8">
+                            <Border x:Name="FirstPageChip" Padding="10,6" StrokeThickness="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="9" />
+                                </Border.StrokeShape>
+                                <Label x:Name="FirstPageLabel" Text="First page" FontSize="12.5" FontAttributes="Bold" />
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnFirstPageChipTapped" />
+                                </Border.GestureRecognizers>
+                            </Border>
+                            <Border x:Name="ColourChip" Padding="10,6" StrokeThickness="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="9" />
+                                </Border.StrokeShape>
+                                <Label x:Name="ColourLabel" Text="Colour" FontSize="12.5" FontAttributes="Bold" />
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnColourChipTapped" />
+                                </Border.GestureRecognizers>
+                            </Border>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </HorizontalStackLayout>
+
+                <Border BackgroundColor="White" StrokeThickness="0" Padding="14,10">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="18" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout>
+                        <Label Text="Title" FontSize="12" TextColor="{StaticResource Muted}" />
+                        <Entry x:Name="TitleEntry" FontSize="16" FontAttributes="Bold" Margin="-4,0" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border BackgroundColor="White" StrokeThickness="0">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="18" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout x:Name="RowsHost" />
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <Button Grid.Row="2" Text="Delete story" HeightRequest="48" CornerRadius="24" FontSize="15" Margin="14,0,14,14"
+                BackgroundColor="Transparent" BorderColor="#f3c2c4" BorderWidth="2" TextColor="#C9363B"
+                Clicked="OnDeleteClicked" />
+    </Grid>
+</ContentPage>

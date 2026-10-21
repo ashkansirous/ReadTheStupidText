@@ -47,7 +47,17 @@ internal sealed class SentenceAudioSource
 
     /// <summary>Forgets a cached clip that proved unusable (it would not join with its
     /// neighbours), so the next request for it synthesizes afresh.</summary>
-    public void Invalidate(SentenceCacheKey key) => _cache.Invalidate(key);
+    public void Invalidate(SentenceCacheKey key)
+    {
+        _cache.Invalidate(key);
+        // A finished synthesis stays registered until its clean-up continuation runs; drop it
+        // now so the next request cannot join it and get the clip that was just invalidated.
+        if (_inFlight.TryGetValue(key.Id, out Lazy<Task<byte[]>>? shared)
+            && shared.IsValueCreated && shared.Value.IsCompleted)
+        {
+            _inFlight.TryRemove(new KeyValuePair<string, Lazy<Task<byte[]>>>(key.Id, shared));
+        }
+    }
 
     // The cache is an optimization: a full or cleared disk costs a later re-synthesis, never
     // the read in progress.

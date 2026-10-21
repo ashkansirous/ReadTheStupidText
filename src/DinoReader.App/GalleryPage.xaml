@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="DinoReader.GalleryPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:DinoReader"
+    BackgroundColor="{StaticResource Cream}"
+    NavigationPage.HasNavigationBar="False">
+
+    <!-- Home screen (mock screen 1): the child's stories. Reading needs no gate; the lock opens it. -->
+    <Grid RowDefinitions="Auto,*">
+        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Padding="16,10,16,12">
+            <Border WidthRequest="40" HeightRequest="40" StrokeThickness="0">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="11" />
+                </Border.StrokeShape>
+                <Image Source="dino_icon" Aspect="AspectFill" SemanticProperties.Description="Dino Reader" />
+            </Border>
+            <Label Grid.Column="1" Text="My stories" FontSize="22" FontAttributes="Bold" VerticalOptions="Center"
+                   SemanticProperties.HeadingLevel="Level1" />
+            <Border Grid.Column="2" WidthRequest="44" HeightRequest="44" BackgroundColor="{StaticResource ControlFill}"
+                    StrokeThickness="0" SemanticProperties.Description="For grown-ups" SemanticProperties.Hint="Opens the grown-up gate">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="14" />
+                </Border.StrokeShape>
+                <local:IconView Kind="Lock" Color="{StaticResource Muted}" Size="20" />
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnLockTapped" />
+                </Border.GestureRecognizers>
+            </Border>
+        </Grid>
+
+        <CollectionView Grid.Row="1" x:Name="StoryList" SelectionMode="None" Margin="14,0">
+            <CollectionView.ItemsLayout>
+                <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="12" VerticalItemSpacing="12" />
+            </CollectionView.ItemsLayout>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="local:StoryTile">
+                    <VerticalStackLayout Spacing="7">
+                        <local:StoryCover />
+                        <Label Text="{Binding Title}" FontSize="14" FontAttributes="Bold" LineHeight="1.25" />
+                        <VerticalStackLayout.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnStoryTapped" />
+                        </VerticalStackLayout.GestureRecognizers>
+                    </VerticalStackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

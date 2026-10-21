@@ -4,7 +4,8 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:ReadTheStupidText.Mobile"
-    Title="Read The Stupid Text"
+    xmlns:res="clr-namespace:ReadTheStupidText.Mobile.Resources.Strings"
+    Title="{x:Static res:AppResources.App_Name}"
     FlyoutBehavior="Disabled">
 
     <!-- Single home screen (design refresh, post-Slice 34): Paste/Scan/File are
@@ -12,6 +13,6 @@
          Android input paths still apply — they just no longer need separate
          navigation destinations). The voice picker is a pushed route, registered
          in the code-behind. Scan opens the system document scanner, not a page. -->
-    <ShellContent Title="Reader" ContentTemplate="{DataTemplate local:ReaderPage}" Route="Reader" />
+    <ShellContent Title="{x:Static res:AppResources.Shell_ReaderTitle}" ContentTemplate="{DataTemplate local:ReaderPage}" Route="Reader" />
 
 </Shell>
