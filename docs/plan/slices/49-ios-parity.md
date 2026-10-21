@@ -1,6 +1,6 @@
 # Slice 49 — iOS reaches today's Android parity
 
-*Planned.*
+*In progress (wave 2026-10-21b), draft PR.*
 
 **Batch:** 9
 **Decisions:** 64, 65 (Apple Vision stand-in), 37-42
