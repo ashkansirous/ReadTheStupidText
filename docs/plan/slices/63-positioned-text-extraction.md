@@ -1,6 +1,6 @@
 # Slice 63 — Positioned text extraction and kept page images
 
-*Planned.*
+*In progress (wave 2026-10-21b), draft PR.*
 
 **Batch:** 10
 **Decisions:** 78
