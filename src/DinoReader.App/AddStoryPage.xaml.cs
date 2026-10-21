@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using DinoReader.Core;
+using DinoReader.Resources.Strings;
 using Microsoft.Extensions.DependencyInjection;
 using ReadTheStupidText.Application.Documents;
 using ReadTheStupidText.Domain.Reading;
@@ -12,7 +13,6 @@ namespace DinoReader;
 /// </summary>
 public partial class AddStoryPage : ContentPage, IGrownUpPage
 {
-	private const string DefaultLanguage = "en";
 	private const int DebounceMilliseconds = 500;
 
 	private static readonly FilePickerFileType SupportedFileTypes = new(new Dictionary<DevicePlatform, IEnumerable<string>>
@@ -27,23 +27,33 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 	private readonly ExternalActivityGuard _external;
 	private readonly IServiceProvider _services;
 	private readonly BusyGuard _busy = new();
+	private readonly StoryTranslator _translator;
+	private readonly LanguageCard _languageCard;
+	private string _language = StoryTranslator.MyLanguage;
+	private bool _languageDetected;
+	private bool _languageChosen;
 	private string _narratorVoiceId = SupertonicVoiceTable.Default.Id;
 	private IReadOnlyList<CastMember> _cast = [];
 	private IReadOnlyDictionary<string, string> _merges = Story.NoMerges;
 	private CancellationTokenSource? _analysis;
 
-	public AddStoryPage(IStoryLibrary library, StoryVoicing voicing, IDocumentTextExtractor documents, ExternalActivityGuard external, IServiceProvider services)
+	public AddStoryPage(IStoryLibrary library, StoryVoicing voicing, IDocumentTextExtractor documents, ExternalActivityGuard external, IServiceProvider services, StoryTranslator translator)
 	{
 		InitializeComponent();
+		Header.Padding = UiFlow.Mirror(Header.Padding);
+		_translator = translator;
 		_library = library;
 		_voicing = voicing;
 		_documents = documents;
 		_external = external;
 		_services = services;
-		AddSourceTile(IconKind.Camera, "Scan pages", "Keeps the page pictures", 0, 0, null);
-		AddSourceTile(IconKind.Photos, "Photos", "Pick page photos", 1, 0, null);
-		AddSourceTile(IconKind.File, "PDF or file", ".pdf · .docx · .txt", 0, 1, OnFileTapped);
-		AddSourceTile(IconKind.Type, "Type or paste", "Text only", 1, 1, OnTypeTapped);
+		AddSourceTile(IconKind.Camera, AppResources.Add_Scan, AppResources.Add_ScanSub, 0, 0, null);
+		AddSourceTile(IconKind.Photos, AppResources.Add_Photos, AppResources.Add_PhotosSub, 1, 0, null);
+		AddSourceTile(IconKind.File, AppResources.Add_File, AppResources.Add_FileSub, 0, 1, OnFileTapped);
+		AddSourceTile(IconKind.Type, AppResources.Add_Type, AppResources.Add_TypeSub, 1, 1, OnTypeTapped);
+		_languageCard = new LanguageCard(_translator.IsAvailable, () => _busy.RunAsync(ChooseLanguageAsync), _busy);
+		_languageCard.Show(_language, detected: false);
+		LanguageHost.Children.Add(_languageCard);
 	}
 
 	private void AddSourceTile(IconKind icon, string title, string subtitle, int column, int row, EventHandler<TappedEventArgs>? tapped)
@@ -128,13 +138,13 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 			// The picker stops the window; the guard keeps the grown-up pages open meanwhile.
 			return await _external.RunAsync(() => FilePicker.Default.PickAsync(new PickOptions
 			{
-				PickerTitle = "Choose a .txt, .pdf or .docx file",
+				PickerTitle = AppResources.Add_PickerTitle,
 				FileTypes = SupportedFileTypes,
 			}));
 		}
 		catch (PermissionException)
 		{
-			await DisplayAlertAsync("Permission needed", "Grant file access to read a document.", "OK");
+			await DisplayAlertAsync(AppResources.Add_PermissionTitle, AppResources.Add_PermissionBody, AppResources.Common_Ok);
 			return null;
 		}
 	}
@@ -147,11 +157,11 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 		}
 		catch (DocumentTooLargeException ex)
 		{
-			await DisplayAlertAsync("File too large", $"That file has {ex.Actual} pages; the limit is {ex.Limit}.", "OK");
+			await DisplayAlertAsync(AppResources.Add_FileTooLargeTitle, AppResources.Format(AppResources.Add_FileTooLargeBody, ex.Actual, ex.Limit), AppResources.Common_Ok);
 		}
 		catch (Exception)
 		{
-			await DisplayAlertAsync("Couldn't read that file", "The file may be corrupted or in an unsupported format.", "OK");
+			await DisplayAlertAsync(AppResources.Add_ReadFailedTitle, AppResources.Add_ReadFailedBody, AppResources.Common_Ok);
 		}
 
 		return null;
@@ -187,7 +197,8 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 			return;
 		}
 
-		IReadOnlyList<CastMember> cast = await _voicing.CastAsync(text, _narratorVoiceId, _cast, _merges);
+		DetectLanguage(text);
+		IReadOnlyList<CastMember> cast = await _voicing.CastAsync(_language, text, _narratorVoiceId, _cast, _merges);
 		token.ThrowIfCancellationRequested();
 		_cast = cast;
 		ShowResult(cast);
@@ -215,6 +226,48 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 		Content = new Label { Text = name, FontSize = 12.5, TextColor = Colors.White },
 	};
 
+	// The language is guessed from the text until the grown-up picks one; "· detected" shows while the guess stands.
+	private void DetectLanguage(string text)
+	{
+		if (_languageChosen || ScriptLanguageGuesser.Guess(text) is not { } guess || (guess == _language && _languageDetected))
+		{
+			return;
+		}
+
+		_language = guess;
+		_languageDetected = true;
+		UseLanguage();
+	}
+
+	private async Task ChooseLanguageAsync()
+	{
+		if (await LanguageChooser.ChooseAsync(this) is not { } picked)
+		{
+			return;
+		}
+
+		_language = picked;
+		_languageChosen = true;
+		_languageDetected = false;
+		UseLanguage();
+		string text = TextEditor.Text ?? string.Empty;
+		if (!string.IsNullOrWhiteSpace(text))
+		{
+			_cast = await _voicing.CastAsync(_language, text, _narratorVoiceId, _cast, _merges);
+			ShowResult(_cast);
+		}
+	}
+
+	// Shows the language, and moves the narrator to a voice of that language's pack when it has no such voice.
+	private void UseLanguage()
+	{
+		_languageCard.Show(_language, _languageDetected);
+		if (_voicing.VoicesFor(_language).All(v => v.Id != _narratorVoiceId))
+		{
+			_narratorVoiceId = _voicing.NarratorFor(_language);
+		}
+	}
+
 	private async void OnSaveClicked(object? sender, EventArgs e) => await _busy.RunAsync(SaveAsync);
 
 	private async Task SaveAsync()
@@ -227,15 +280,15 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 
 		string title = TitleOrDefault(text);
 		int existing = (await _library.ListAsync()).Count;
-		var story = new Story(StoryIds.New(), title, DefaultLanguage, DateTimeOffset.UtcNow,
-			[new StoryPage(text)], await CastNowAsync(text), CoverStyle.Colour, existing, _narratorVoiceId, null, _merges);
+		var story = new Story(StoryIds.New(), title, _language, DateTimeOffset.UtcNow,
+			[new StoryPage(text)], await CastNowAsync(text), CoverStyle.Colour, existing, _narratorVoiceId, null, _merges, _languageCard.Translate);
 		await _library.AddAsync(story);
 		await Navigation.PopAsync();
 	}
 
 	// The cast shown on the result card is for the text as it was when typing paused; recast if it moved on.
 	private async Task<IReadOnlyList<CastMember>> CastNowAsync(string text) =>
-		await _voicing.CastAsync(text, _narratorVoiceId, _cast, _merges);
+		await _voicing.CastAsync(_language, text, _narratorVoiceId, _cast, _merges);
 
 	private async void OnCheckCastClicked(object? sender, EventArgs e) => await _busy.RunAsync(OpenCastAsync);
 
@@ -252,8 +305,8 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 		_analysis?.Cancel();
 		_cast = await CastNowAsync(text);
 		// The id here is provisional (the cast page only edits it in memory); Save story mints a fresh one per attempt.
-		var story = new Story(StoryIds.New(), TitleOrDefault(text), DefaultLanguage, DateTimeOffset.UtcNow,
-			[new StoryPage(text)], _cast, CoverStyle.Colour, 0, _narratorVoiceId, null, _merges);
+		var story = new Story(StoryIds.New(), TitleOrDefault(text), _language, DateTimeOffset.UtcNow,
+			[new StoryPage(text)], _cast, CoverStyle.Colour, 0, _narratorVoiceId, null, _merges, _languageCard.Translate);
 		var page = _services.GetRequiredService<CastPage>();
 		page.Load(story, KeepCast);
 		await Navigation.PushAsync(page);

@@ -87,12 +87,32 @@ public static class StorySentences
         }
 
         bool closedQuote = end > i + 1;
-        if (!AtEdge(text, end) || (!closedQuote && StopsHere(text, i, rules, quote)))
+        if (!AtEdge(text, end, rules) || (!closedQuote && StopsHere(text, i, rules, quote)))
         {
             return -1;
         }
 
-        return closedQuote && AttributionFollows(text, end, rules) ? -1 : end;
+        bool attribution = (closedQuote && AttributionFollows(text, end, rules)) || DashTagFollows(text, end, rules);
+        return attribution ? -1 : end;
+    }
+
+    // Dash dialogue: `— Hello! — said Peter.` keeps the tag, a lowercase word after the second dash, in the sentence.
+    private static bool DashTagFollows(string text, int end, LanguageRules rules)
+    {
+        int dash = SkipBlanks(text, end);
+        if (dash >= text.Length || !rules.IsDialogueDash(text, dash)) return false;
+        int word = SkipBlanks(text, dash + 1);
+        return word < text.Length && char.IsLower(text[word]);
+    }
+
+    private static int SkipBlanks(string text, int i)
+    {
+        while (i < text.Length && text[i] != '\n' && char.IsWhiteSpace(text[i]))
+        {
+            i++;
+        }
+
+        return i;
     }
 
     // A full stop after a title ("Mr."), or a terminator inside a quote that goes on into its
@@ -100,7 +120,8 @@ public static class StorySentences
     private static bool StopsHere(string text, int i, LanguageRules rules, QuoteState quote) =>
         quote.HoldsTogether || (text[i] == '.' && SentenceBoundaries.FollowsTitle(text, i, rules));
 
-    private static bool AtEdge(string text, int end) => end >= text.Length || char.IsWhiteSpace(text[end]);
+    private static bool AtEdge(string text, int end, LanguageRules rules) =>
+        rules.Script == ScriptStyle.Unspaced || end >= text.Length || char.IsWhiteSpace(text[end]);
 
     // After a closing quote the next words are an attribution when the first word starts lowercase (or
     // in an uncased script), or a speech verb comes within the first three words ("Peter said.").

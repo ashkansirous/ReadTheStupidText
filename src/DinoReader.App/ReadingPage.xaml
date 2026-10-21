@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:DinoReader"
+    xmlns:res="clr-namespace:DinoReader.Resources.Strings"
     BackgroundColor="{StaticResource Cream}"
     NavigationPage.HasNavigationBar="False">
 
@@ -11,18 +12,18 @@
          switch on the top bar, the story title on its own row, the page card, page dots and the
          transport row. Colours are applied from ReadingTheme (daytime or bedtime). -->
     <Grid RowDefinitions="Auto,*,Auto,Auto,Auto">
-        <Grid ColumnDefinitions="Auto,*,Auto,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="2"
+        <Grid x:Name="Header" ColumnDefinitions="Auto,*,Auto,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="2"
               Padding="8,8,12,4">
             <Border x:Name="BackButton" WidthRequest="44" HeightRequest="44" BackgroundColor="Transparent" StrokeThickness="0"
-                    SemanticProperties.Description="Back">
+                    SemanticProperties.Description="{x:Static res:AppResources.Common_Back}">
                 <local:IconView x:Name="BackIcon" Kind="Back" Color="{StaticResource Ink}" Size="22" StrokeWidth="2.6" />
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnBackTapped" />
                 </Border.GestureRecognizers>
             </Border>
             <Border x:Name="LockButton" Grid.Column="2" WidthRequest="40" HeightRequest="40" StrokeThickness="0"
-                    VerticalOptions="Center" SemanticProperties.Description="For grown-ups"
-                    SemanticProperties.Hint="Opens the grown-up gate">
+                    VerticalOptions="Center" SemanticProperties.Description="{x:Static res:AppResources.Gallery_ForGrownUps}"
+                    SemanticProperties.Hint="{x:Static res:AppResources.Gallery_OpensGateHint}">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="12" />
                 </Border.StrokeShape>

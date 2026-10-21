@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:DinoReader"
+    xmlns:res="clr-namespace:DinoReader.Resources.Strings"
     BackgroundColor="{StaticResource Cream}"
     NavigationPage.HasNavigationBar="False">
 
@@ -14,12 +15,12 @@
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="11" />
                 </Border.StrokeShape>
-                <Image Source="dino_icon" Aspect="AspectFill" SemanticProperties.Description="Dino Reader" />
+                <Image Source="dino_icon" Aspect="AspectFill" SemanticProperties.Description="{x:Static res:AppResources.App_Name}" />
             </Border>
-            <Label Grid.Column="1" Text="My stories" FontSize="22" FontAttributes="Bold" VerticalOptions="Center"
+            <Label Grid.Column="1" Text="{x:Static res:AppResources.Gallery_Title}" FontSize="22" FontAttributes="Bold" VerticalOptions="Center"
                    SemanticProperties.HeadingLevel="Level1" />
             <Border Grid.Column="2" WidthRequest="44" HeightRequest="44" BackgroundColor="{StaticResource ControlFill}"
-                    StrokeThickness="0" SemanticProperties.Description="For grown-ups" SemanticProperties.Hint="Opens the grown-up gate">
+                    StrokeThickness="0" SemanticProperties.Description="{x:Static res:AppResources.Gallery_ForGrownUps}" SemanticProperties.Hint="{x:Static res:AppResources.Gallery_OpensGateHint}">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="14" />
                 </Border.StrokeShape>

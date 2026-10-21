@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Common_Ok" xml:space="preserve"><value>حسنًا</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>إلغاء</value></data>
+  <data name="PackStatus_Resolving" xml:space="preserve"><value>جارٍ البحث عن الأصوات الطبيعية…</value></data>
+  <data name="PackStatus_Downloading" xml:space="preserve"><value>جارٍ تنزيل الأصوات الطبيعية… {0}</value></data>
+  <data name="PackStatus_Offline" xml:space="preserve"><value>لا يوجد اتصال. تتم القراءة بصوت الهاتف. اضغط لإعادة محاولة تنزيل الصوت.</value></data>
+  <data name="PackStatus_HashMismatch" xml:space="preserve"><value>تعرّض تنزيل الصوت للتلف. تتم القراءة بصوت الهاتف. اضغط لإعادة المحاولة.</value></data>
+  <data name="PackStatus_InvalidPack" xml:space="preserve"><value>حزمة الأصوات الطبيعية غير صالحة للاستخدام. تتم القراءة بصوت الهاتف.</value></data>
+  <data name="PackStatus_Failed" xml:space="preserve"><value>تعذّر تنزيل الأصوات الطبيعية. تتم القراءة بصوت الهاتف. اضغط لإعادة المحاولة.</value></data>
+  <data name="PackStatus_Unavailable" xml:space="preserve"><value>لا يتوفر صوت طبيعي للغتك بعد. تتم القراءة بصوت الهاتف.</value></data>
+  <data name="Common_Back" xml:space="preserve"><value>رجوع</value></data>
+  <data name="Common_Save" xml:space="preserve"><value>حفظ</value></data>
+  <data name="Common_Done" xml:space="preserve"><value>تم</value></data>
+  <data name="Common_Delete" xml:space="preserve"><value>حذف</value></data>
+  <data name="Common_Keep" xml:space="preserve"><value>إبقاء</value></data>
+  <data name="Common_Edit" xml:space="preserve"><value>تعديل</value></data>
+  <data name="Gallery_Title" xml:space="preserve"><value>قصصي</value></data>
+  <data name="Gallery_ForGrownUps" xml:space="preserve"><value>للكبار</value></data>
+  <data name="Gallery_OpensGateHint" xml:space="preserve"><value>يفتح بوابة الكبار</value></data>
+  <data name="Gallery_Cast" xml:space="preserve"><value>الشخصيات · {0}</value></data>
+  <data name="Gallery_Characters_One" xml:space="preserve"><value>الشخصيات: {0}</value></data>
+  <data name="Gallery_Characters_Other" xml:space="preserve"><value>الشخصيات: {0}</value></data>
+  <data name="Gallery_PagesSummary" xml:space="preserve"><value>{0} · ترتيب وإضافة وحذف</value></data>
+  <data name="Gallery_DeleteTitle" xml:space="preserve"><value>حذف «{0}»؟</value></data>
+  <data name="Gallery_PagesRead_One" xml:space="preserve"><value>تمت قراءة {0} صفحة</value></data>
+  <data name="Gallery_PagesRead_Other" xml:space="preserve"><value>تمت قراءة {0} صفحات</value></data>
+  <data name="Gallery_CharactersFound_One" xml:space="preserve"><value>تم العثور على {0} شخصية</value></data>
+  <data name="Gallery_CharactersFound_Other" xml:space="preserve"><value>تم العثور على {0} شخصيات</value></data>
+  <data name="Delete_Body" xml:space="preserve"><value>ستُحذف صفحاتها وصورها وأصواتها من هذا الهاتف.</value></data>
+  <data name="Delete_FailedTitle" xml:space="preserve"><value>تعذّر حذف هذه القصة</value></data>
+  <data name="Delete_FailedBody" xml:space="preserve"><value>ما زال شيء ما يستخدم ملفاتها. حاول مرة أخرى بعد قليل.</value></data>
+  <data name="Manage_Title" xml:space="preserve"><value>إدارة القصص</value></data>
+  <data name="Manage_EditStory" xml:space="preserve"><value>تعديل القصة</value></data>
+  <data name="Manage_DeleteStory" xml:space="preserve"><value>حذف القصة</value></data>
+  <data name="Manage_WhoIsSpeaking" xml:space="preserve"><value>من يتكلم</value></data>
+  <data name="Gate_HoldBody" xml:space="preserve"><value>اضغط مطولاً لمدة 3 ثوانٍ.</value></data>
+  <data name="Gate_HoldDescription" xml:space="preserve"><value>اضغط مطولاً لمدة 3 ثوانٍ</value></data>
+  <data name="Gate_KeepHolding" xml:space="preserve"><value>واصل الضغط…</value></data>
+  <data name="Gate_Continue" xml:space="preserve"><value>المتابعة إلى السؤال</value></data>
+  <data name="Gate_BackToStory" xml:space="preserve"><value>العودة إلى القصة</value></data>
+  <data name="Gate_WhatIs" xml:space="preserve"><value>ما ناتج</value></data>
+  <data name="Gate_Backspace" xml:space="preserve"><value>مسح</value></data>
+  <data name="Gate_SumQuestion" xml:space="preserve"><value>كم يساوي {0} زائد {1}؟</value></data>
+  <data name="Story_Add" xml:space="preserve"><value>إضافة قصة</value></data>
+  <data name="Story_Title" xml:space="preserve"><value>العنوان</value></data>
+  <data name="Story_Language" xml:space="preserve"><value>لغة القصة</value></data>
+  <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · تم اكتشافها</value></data>
+  <data name="Story_Translate" xml:space="preserve"><value>الترجمة إلى لغتي</value></data>
+  <data name="Add_Scan" xml:space="preserve"><value>مسح الصفحات</value></data>
+  <data name="Add_ScanSub" xml:space="preserve"><value>تحتفظ بصور الصفحات</value></data>
+  <data name="Add_Photos" xml:space="preserve"><value>الصور</value></data>
+  <data name="Add_PhotosSub" xml:space="preserve"><value>اختر صور الصفحات</value></data>
+  <data name="Add_File" xml:space="preserve"><value>ملف PDF أو غيره</value></data>
+  <data name="Add_Type" xml:space="preserve"><value>اكتب أو الصق</value></data>
+  <data name="Add_TypeSub" xml:space="preserve"><value>نص فقط</value></data>
+  <data name="Add_Placeholder" xml:space="preserve"><value>اكتب قصة أو الصقها</value></data>
+  <data name="Add_CheckCast" xml:space="preserve"><value>مراجعة الشخصيات</value></data>
+  <data name="Add_Save" xml:space="preserve"><value>حفظ القصة</value></data>
+  <data name="Add_PickerTitle" xml:space="preserve"><value>اختر ملف ‎.txt أو ‎.pdf أو ‎.docx</value></data>
+  <data name="Add_PermissionTitle" xml:space="preserve"><value>الإذن مطلوب</value></data>
+  <data name="Add_PermissionBody" xml:space="preserve"><value>امنح إذن الوصول إلى الملفات لقراءة مستند.</value></data>
+  <data name="Add_FileTooLargeTitle" xml:space="preserve"><value>الملف كبير جدًا</value></data>
+  <data name="Add_FileTooLargeBody" xml:space="preserve"><value>يحتوي الملف على {0} صفحة، والحد الأقصى {1}.</value></data>
+  <data name="Add_ReadFailedTitle" xml:space="preserve"><value>تعذّرت قراءة الملف</value></data>
+  <data name="Add_ReadFailedBody" xml:space="preserve"><value>قد يكون الملف تالفًا أو بصيغة غير مدعومة.</value></data>
+  <data name="Edit_Cover" xml:space="preserve"><value>الغلاف</value></data>
+  <data name="Edit_CoverFirstPage" xml:space="preserve"><value>الصفحة الأولى</value></data>
+  <data name="Edit_CoverColour" xml:space="preserve"><value>اللون</value></data>
+  <data name="Edit_Pages" xml:space="preserve"><value>الصفحات</value></data>
+  <data name="Edit_FixText" xml:space="preserve"><value>تصحيح النص</value></data>
+  <data name="Edit_FixTextValue" xml:space="preserve"><value>تعديل النص المُتعرَّف عليه</value></data>
+  <data name="Pages_Add" xml:space="preserve"><value>إضافة صفحة</value></data>
+  <data name="Pages_MoveUp" xml:space="preserve"><value>نقل الصفحة لأعلى</value></data>
+  <data name="Pages_MoveDown" xml:space="preserve"><value>نقل الصفحة لأسفل</value></data>
+  <data name="Pages_Remove" xml:space="preserve"><value>إزالة الصفحة</value></data>
+  <data name="Reading_TextMode" xml:space="preserve"><value>وضع النص</value></data>
+  <data name="Reading_PictureMode" xml:space="preserve"><value>وضع الصور</value></data>
+  <data name="Reading_Play" xml:space="preserve"><value>تشغيل</value></data>
+  <data name="Reading_Pause" xml:space="preserve"><value>إيقاف مؤقت</value></data>
+  <data name="Reading_Previous" xml:space="preserve"><value>الجملة السابقة</value></data>
+  <data name="Reading_Next" xml:space="preserve"><value>الجملة التالية</value></data>
+  <data name="Reading_Loading" xml:space="preserve"><value>جارٍ التحميل…</value></data>
+  <data name="Reading_CouldntRead" xml:space="preserve"><value>تعذّرت قراءة النص</value></data>
+  <data name="Reading_ReadFailed" xml:space="preserve"><value>حدث خطأ أثناء القراءة.</value></data>
+  <data name="Reading_LayoutFailed" xml:space="preserve"><value>تعذّر ترتيب هذه القصة. أدر الشاشة أو بدّل الوضع وحاول مجددًا.</value></data>
+  <data name="Reading_PageN" xml:space="preserve"><value>قراءة الصفحة {0}</value></data>
+  <data name="Cast_Title" xml:space="preserve"><value>من يتكلم</value></data>
+  <data name="Cast_Narrator" xml:space="preserve"><value>الراوي</value></data>
+  <data name="Cast_Main" xml:space="preserve"><value>رئيسي</value></data>
+  <data name="Cast_Edited" xml:space="preserve"><value>معدَّل</value></data>
+  <data name="Cast_SharedVoice" xml:space="preserve"><value>صوت مشترك</value></data>
+  <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>متحدث مجهول</value></data>
+  <data name="Cast_MergeButton" xml:space="preserve"><value>دمج شخصيتين</value></data>
+  <data name="Cast_MergeTitle" xml:space="preserve"><value>دمج الشخصيات</value></data>
+  <data name="Cast_MergeBody" xml:space="preserve"><value>اختر الاسمين اللذين يعودان إلى الشخصية نفسها. تُدمَج جملهما تحت اسم واحد وصوت واحد.</value></data>
+  <data name="Cast_KeepName" xml:space="preserve"><value>إبقاء الاسم</value></data>
+  <data name="Cast_VoiceTitle" xml:space="preserve"><value>الصوت</value></data>
+  <data name="Cast_PreviewLine" xml:space="preserve"><value>مرحبًا! هكذا يبدو صوتي حين أقرأ قصتك.</value></data>
+  <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>تعذّر حفظ هذا التغيير</value></data>
+  <data name="Cast_SaveFailedBody" xml:space="preserve"><value>لم تُحفَظ الشخصيات. حاول مرة أخرى بعد قليل.</value></data>
+  <data name="Cast_PreviewFailedBody" xml:space="preserve"><value>تعذّر تشغيل الصوت الآن.</value></data>
+  <data name="Cast_LoadFailedTitle" xml:space="preserve"><value>تعذّر فتح الشخصيات</value></data>
+  <data name="Cast_LoadFailedBody" xml:space="preserve"><value>تعذّر تحديد شخصيات هذه القصة. حاول مرة أخرى بعد قليل.</value></data>
+  <data name="Cast_Boy" xml:space="preserve"><value>ولد</value></data>
+  <data name="Cast_Girl" xml:space="preserve"><value>بنت</value></data>
+  <data name="Cast_Words_One" xml:space="preserve"><value>{0} كلمة</value></data>
+  <data name="Cast_Words_Other" xml:space="preserve"><value>{0} كلمات</value></data>
+  <data name="Cast_UnknownLines_One" xml:space="preserve"><value>{0} سطر</value></data>
+  <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} أسطر</value></data>
+  <data name="Cast_UsesNarrator" xml:space="preserve"><value>تستخدم صوت الراوي</value></data>
+  <data name="Cast_Hear" xml:space="preserve"><value>استمع إلى {0}</value></data>
+  <data name="Cast_NoBoyVoice" xml:space="preserve"><value>لا تحتوي حزمة الأصوات هذه على صوت ولد، لذا تحتفظ هذه الشخصية بصوتها السابق.</value></data>
+  <data name="Cast_NoGirlVoice" xml:space="preserve"><value>لا تحتوي حزمة الأصوات هذه على صوت بنت، لذا تحتفظ هذه الشخصية بصوتها السابق.</value></data>
+  <data name="Cast_VoiceChanged_One" xml:space="preserve"><value>تم تغيير صوت {0} لأن الراوي أصبح يستخدم الصوت الذي مُنح له.</value></data>
+  <data name="Cast_VoiceChanged_Other" xml:space="preserve"><value>تم تغيير أصوات {0} لأن الراوي أصبح يستخدم الصوت الذي مُنح لهم.</value></data>
+  <data name="Cast_MergeInto" xml:space="preserve"><value>دمج في {0}</value></data>
+  <data name="Cast_SharedNote" xml:space="preserve"><value>تحتوي حزمة الأصوات هذه على {0} أصوات طبيعية فقط، لذا تشترك بعض الشخصيات في الصوت. لا يُمنح صوت الراوي لأي شخصية.</value></data>
+</root>

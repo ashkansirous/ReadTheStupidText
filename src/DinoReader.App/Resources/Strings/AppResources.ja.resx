@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Common_Ok" xml:space="preserve"><value>OK</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>キャンセル</value></data>
+  <data name="PackStatus_Resolving" xml:space="preserve"><value>自然な音声を確認中…</value></data>
+  <data name="PackStatus_Downloading" xml:space="preserve"><value>自然な音声をダウンロード中… {0}</value></data>
+  <data name="PackStatus_Offline" xml:space="preserve"><value>接続されていません。スマートフォンの音声で読み上げます。タップして音声のダウンロードを再試行します。</value></data>
+  <data name="PackStatus_HashMismatch" xml:space="preserve"><value>音声のダウンロードが破損しました。スマートフォンの音声で読み上げます。タップして再試行します。</value></data>
+  <data name="PackStatus_InvalidPack" xml:space="preserve"><value>自然な音声パックを使用できません。スマートフォンの音声で読み上げます。</value></data>
+  <data name="PackStatus_Failed" xml:space="preserve"><value>自然な音声をダウンロードできませんでした。スマートフォンの音声で読み上げます。タップして再試行します。</value></data>
+  <data name="PackStatus_Unavailable" xml:space="preserve"><value>お使いの言語の自然な音声はまだ利用できません。スマートフォンの音声で読み上げます。</value></data>
+  <data name="Common_Back" xml:space="preserve"><value>戻る</value></data>
+  <data name="Common_Save" xml:space="preserve"><value>保存</value></data>
+  <data name="Common_Done" xml:space="preserve"><value>完了</value></data>
+  <data name="Common_Delete" xml:space="preserve"><value>削除</value></data>
+  <data name="Common_Keep" xml:space="preserve"><value>残す</value></data>
+  <data name="Common_Edit" xml:space="preserve"><value>編集</value></data>
+  <data name="Gallery_Title" xml:space="preserve"><value>わたしのおはなし</value></data>
+  <data name="Gallery_ForGrownUps" xml:space="preserve"><value>おとな向け</value></data>
+  <data name="Gallery_OpensGateHint" xml:space="preserve"><value>おとな用の入口を開きます</value></data>
+  <data name="Gallery_Cast" xml:space="preserve"><value>配役 · {0}</value></data>
+  <data name="Gallery_Characters_One" xml:space="preserve"><value>登場人物: {0}</value></data>
+  <data name="Gallery_Characters_Other" xml:space="preserve"><value>登場人物: {0}</value></data>
+  <data name="Gallery_PagesSummary" xml:space="preserve"><value>{0} · 並べ替え・追加・削除</value></data>
+  <data name="Gallery_DeleteTitle" xml:space="preserve"><value>「{0}」を削除しますか？</value></data>
+  <data name="Gallery_PagesRead_One" xml:space="preserve"><value>{0} ページ読み取り</value></data>
+  <data name="Gallery_PagesRead_Other" xml:space="preserve"><value>{0} ページ読み取り</value></data>
+  <data name="Gallery_CharactersFound_One" xml:space="preserve"><value>登場人物が {0} 人見つかりました</value></data>
+  <data name="Gallery_CharactersFound_Other" xml:space="preserve"><value>登場人物が {0} 人見つかりました</value></data>
+  <data name="Delete_Body" xml:space="preserve"><value>ページ、写真、声がこのスマホから削除されます。</value></data>
+  <data name="Delete_FailedTitle" xml:space="preserve"><value>おはなしを削除できませんでした</value></data>
+  <data name="Delete_FailedBody" xml:space="preserve"><value>ファイルがまだ使用中です。しばらくしてからもう一度お試しください。</value></data>
+  <data name="Manage_Title" xml:space="preserve"><value>おはなしの管理</value></data>
+  <data name="Manage_EditStory" xml:space="preserve"><value>おはなしを編集</value></data>
+  <data name="Manage_DeleteStory" xml:space="preserve"><value>おはなしを削除</value></data>
+  <data name="Manage_WhoIsSpeaking" xml:space="preserve"><value>だれが話している？</value></data>
+  <data name="Gate_HoldBody" xml:space="preserve"><value>3秒間長押ししてください。</value></data>
+  <data name="Gate_HoldDescription" xml:space="preserve"><value>3秒間長押ししてください</value></data>
+  <data name="Gate_KeepHolding" xml:space="preserve"><value>そのまま押し続けて…</value></data>
+  <data name="Gate_Continue" xml:space="preserve"><value>質問へ進む</value></data>
+  <data name="Gate_BackToStory" xml:space="preserve"><value>おはなしに戻る</value></data>
+  <data name="Gate_WhatIs" xml:space="preserve"><value>計算してね</value></data>
+  <data name="Gate_Backspace" xml:space="preserve"><value>消す</value></data>
+  <data name="Gate_SumQuestion" xml:space="preserve"><value>{0} たす {1} は？</value></data>
+  <data name="Story_Add" xml:space="preserve"><value>おはなしを追加</value></data>
+  <data name="Story_Title" xml:space="preserve"><value>タイトル</value></data>
+  <data name="Story_Language" xml:space="preserve"><value>おはなしの言語</value></data>
+  <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · 自動判定</value></data>
+  <data name="Story_Translate" xml:space="preserve"><value>自分の言語に翻訳</value></data>
+  <data name="Add_Scan" xml:space="preserve"><value>ページをスキャン</value></data>
+  <data name="Add_ScanSub" xml:space="preserve"><value>ページの絵を残します</value></data>
+  <data name="Add_Photos" xml:space="preserve"><value>写真</value></data>
+  <data name="Add_PhotosSub" xml:space="preserve"><value>ページの写真を選ぶ</value></data>
+  <data name="Add_File" xml:space="preserve"><value>PDFまたはファイル</value></data>
+  <data name="Add_Type" xml:space="preserve"><value>入力または貼り付け</value></data>
+  <data name="Add_TypeSub" xml:space="preserve"><value>テキストのみ</value></data>
+  <data name="Add_Placeholder" xml:space="preserve"><value>おはなしを入力または貼り付け</value></data>
+  <data name="Add_CheckCast" xml:space="preserve"><value>配役を確認</value></data>
+  <data name="Add_Save" xml:space="preserve"><value>おはなしを保存</value></data>
+  <data name="Add_PickerTitle" xml:space="preserve"><value>.txt、.pdf、.docx のファイルを選んでください</value></data>
+  <data name="Add_PermissionTitle" xml:space="preserve"><value>許可が必要です</value></data>
+  <data name="Add_PermissionBody" xml:space="preserve"><value>ドキュメントを読むには、ファイルへのアクセスを許可してください。</value></data>
+  <data name="Add_FileTooLargeTitle" xml:space="preserve"><value>ファイルが大きすぎます</value></data>
+  <data name="Add_FileTooLargeBody" xml:space="preserve"><value>このファイルは {0} ページあり、上限は {1} ページです。</value></data>
+  <data name="Add_ReadFailedTitle" xml:space="preserve"><value>ファイルを読み込めませんでした</value></data>
+  <data name="Add_ReadFailedBody" xml:space="preserve"><value>ファイルが壊れているか、対応していない形式の可能性があります。</value></data>
+  <data name="Edit_Cover" xml:space="preserve"><value>表紙</value></data>
+  <data name="Edit_CoverFirstPage" xml:space="preserve"><value>最初のページ</value></data>
+  <data name="Edit_CoverColour" xml:space="preserve"><value>色</value></data>
+  <data name="Edit_Pages" xml:space="preserve"><value>ページ</value></data>
+  <data name="Edit_FixText" xml:space="preserve"><value>文字を直す</value></data>
+  <data name="Edit_FixTextValue" xml:space="preserve"><value>認識した文字を編集</value></data>
+  <data name="Pages_Add" xml:space="preserve"><value>ページを追加</value></data>
+  <data name="Pages_MoveUp" xml:space="preserve"><value>ページを上へ</value></data>
+  <data name="Pages_MoveDown" xml:space="preserve"><value>ページを下へ</value></data>
+  <data name="Pages_Remove" xml:space="preserve"><value>ページを削除</value></data>
+  <data name="Reading_TextMode" xml:space="preserve"><value>文字モード</value></data>
+  <data name="Reading_PictureMode" xml:space="preserve"><value>絵モード</value></data>
+  <data name="Reading_Play" xml:space="preserve"><value>再生</value></data>
+  <data name="Reading_Pause" xml:space="preserve"><value>一時停止</value></data>
+  <data name="Reading_Previous" xml:space="preserve"><value>前の文</value></data>
+  <data name="Reading_Next" xml:space="preserve"><value>次の文</value></data>
+  <data name="Reading_Loading" xml:space="preserve"><value>読み込み中…</value></data>
+  <data name="Reading_CouldntRead" xml:space="preserve"><value>テキストを読めませんでした</value></data>
+  <data name="Reading_ReadFailed" xml:space="preserve"><value>読み上げ中に問題が起きました。</value></data>
+  <data name="Reading_LayoutFailed" xml:space="preserve"><value>このおはなしを表示できませんでした。画面を回すかモードを切り替えて、もう一度お試しください。</value></data>
+  <data name="Reading_PageN" xml:space="preserve"><value>{0} ページを読み上げ中</value></data>
+  <data name="Cast_Title" xml:space="preserve"><value>だれが話している？</value></data>
+  <data name="Cast_Narrator" xml:space="preserve"><value>ナレーター</value></data>
+  <data name="Cast_Main" xml:space="preserve"><value>主役</value></data>
+  <data name="Cast_Edited" xml:space="preserve"><value>編集済み</value></data>
+  <data name="Cast_SharedVoice" xml:space="preserve"><value>共有の声</value></data>
+  <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>不明な話し手</value></data>
+  <data name="Cast_MergeButton" xml:space="preserve"><value>2人の登場人物をまとめる</value></data>
+  <data name="Cast_MergeTitle" xml:space="preserve"><value>登場人物をまとめる</value></data>
+  <data name="Cast_MergeBody" xml:space="preserve"><value>同じ登場人物の名前を2つ選んでください。セリフはひとつの名前とひとつの声にまとまります。</value></data>
+  <data name="Cast_KeepName" xml:space="preserve"><value>名前を残す</value></data>
+  <data name="Cast_VoiceTitle" xml:space="preserve"><value>声</value></data>
+  <data name="Cast_PreviewLine" xml:space="preserve"><value>こんにちは！あなたのおはなしを読むときの声はこんな感じです。</value></data>
+  <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>変更を保存できませんでした</value></data>
+  <data name="Cast_SaveFailedBody" xml:space="preserve"><value>配役は保存されませんでした。しばらくしてからもう一度お試しください。</value></data>
+  <data name="Cast_PreviewFailedBody" xml:space="preserve"><value>今は声を再生できません。</value></data>
+  <data name="Cast_LoadFailedTitle" xml:space="preserve"><value>配役を開けませんでした</value></data>
+  <data name="Cast_LoadFailedBody" xml:space="preserve"><value>このおはなしの配役を調べられませんでした。しばらくしてからもう一度お試しください。</value></data>
+  <data name="Cast_Boy" xml:space="preserve"><value>男の子</value></data>
+  <data name="Cast_Girl" xml:space="preserve"><value>女の子</value></data>
+  <data name="Cast_Words_One" xml:space="preserve"><value>{0} 語</value></data>
+  <data name="Cast_Words_Other" xml:space="preserve"><value>{0} 語</value></data>
+  <data name="Cast_UnknownLines_One" xml:space="preserve"><value>{0} 行</value></data>
+  <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} 行</value></data>
+  <data name="Cast_UsesNarrator" xml:space="preserve"><value>ナレーターの声で読みます</value></data>
+  <data name="Cast_Hear" xml:space="preserve"><value>{0} の声を聞く</value></data>
+  <data name="Cast_NoBoyVoice" xml:space="preserve"><value>この音声パックには男の子の声がないため、このキャラクターは今の声のままです。</value></data>
+  <data name="Cast_NoGirlVoice" xml:space="preserve"><value>この音声パックには女の子の声がないため、このキャラクターは今の声のままです。</value></data>
+  <data name="Cast_VoiceChanged_One" xml:space="preserve"><value>{0} の声を変更しました。ナレーターがその声を使うことになったためです。</value></data>
+  <data name="Cast_VoiceChanged_Other" xml:space="preserve"><value>{0} の声を変更しました。ナレーターがその声を使うことになったためです。</value></data>
+  <data name="Cast_MergeInto" xml:space="preserve"><value>{0} にまとめる</value></data>
+  <data name="Cast_SharedNote" xml:space="preserve"><value>この音声パックには自然な声が {0} 種類しかないため、同じ声を使うキャラクターがいます。ナレーターの声はキャラクターには使われません。</value></data>
+</root>

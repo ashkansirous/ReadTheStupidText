@@ -11,6 +11,13 @@ public sealed class StoryDraft(Story original)
 
 	public CoverStyle CoverStyle { get; set; } = original.CoverStyle;
 
+	/// <summary>The story's language code (Slice 66): changing it recasts the story, because who speaks is worked out in that language.</summary>
+	public string Language { get; set; } = original.Language;
+
+	public bool TranslateToMyLanguage { get; set; } = original.TranslateToMyLanguage;
+
+	public bool LanguageChanged => Language != Original.Language;
+
 	/// <summary>The cast, merges and narrator as the cast screen last left them (Slice 65); written with Save.</summary>
 	public IReadOnlyList<CastMember> Cast { get; set; } = original.Cast;
 
@@ -24,6 +31,8 @@ public sealed class StoryDraft(Story original)
 	public Story Current => Original with
 	{
 		Title = Title,
+		Language = Language,
+		TranslateToMyLanguage = TranslateToMyLanguage,
 		CoverStyle = CoverStyle,
 		Pages = Pages.ToList(),
 		Cast = Cast,

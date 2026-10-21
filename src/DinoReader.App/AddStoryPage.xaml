@@ -4,21 +4,22 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:DinoReader"
+    xmlns:res="clr-namespace:DinoReader.Resources.Strings"
     BackgroundColor="{StaticResource Sand}"
     NavigationPage.HasNavigationBar="False">
 
     <!-- Add a story (mock screen 9). Scan pages and Photos need the camera and on-device text
          recognition, which Dino Reader does not carry yet, so those two tiles are shown dimmed. -->
     <Grid RowDefinitions="Auto,*,Auto">
-        <Grid ColumnDefinitions="Auto,*" Padding="8,10,16,10">
+        <Grid x:Name="Header" ColumnDefinitions="Auto,*" Padding="8,10,16,10">
             <Border WidthRequest="44" HeightRequest="44" BackgroundColor="Transparent" StrokeThickness="0"
-                    SemanticProperties.Description="Back">
+                    SemanticProperties.Description="{x:Static res:AppResources.Common_Back}">
                 <local:IconView Kind="Back" Color="{StaticResource Ink}" Size="22" StrokeWidth="2.6" />
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnBackTapped" />
                 </Border.GestureRecognizers>
             </Border>
-            <Label Grid.Column="1" Text="Add a story" FontSize="20" FontAttributes="Bold" VerticalOptions="Center"
+            <Label Grid.Column="1" Text="{x:Static res:AppResources.Story_Add}" FontSize="20" FontAttributes="Bold" VerticalOptions="Center"
                    SemanticProperties.HeadingLevel="Level1" />
         </Grid>
 
@@ -31,14 +32,16 @@
                         <RoundRectangle CornerRadius="18" />
                     </Border.StrokeShape>
                     <VerticalStackLayout Spacing="8">
-                        <Label Text="Title" FontSize="12" TextColor="{StaticResource Muted}" />
+                        <Label Text="{x:Static res:AppResources.Story_Title}" FontSize="12" TextColor="{StaticResource Muted}" />
                         <Entry x:Name="TitleEntry" FontSize="16" FontAttributes="Bold" />
                         <BoxView HeightRequest="1" Color="{StaticResource Hairline}" />
                         <Editor x:Name="TextEditor" HeightRequest="220" AutoSize="Disabled" FontFamily="Andika" FontSize="18"
-                                Placeholder="Type or paste a story" PlaceholderColor="{StaticResource Muted}"
+                                Placeholder="{x:Static res:AppResources.Add_Placeholder}" PlaceholderColor="{StaticResource Muted}"
                                 TextChanged="OnTextChanged" />
                     </VerticalStackLayout>
                 </Border>
+
+                <VerticalStackLayout x:Name="LanguageHost" />
             </VerticalStackLayout>
         </ScrollView>
 
@@ -54,9 +57,9 @@
                 </HorizontalStackLayout>
                 <FlexLayout x:Name="NameChips" Wrap="Wrap" />
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                    <Button Text="Check the cast" HeightRequest="44" CornerRadius="22" FontSize="14" BackgroundColor="#24FFFFFF"
+                    <Button Text="{x:Static res:AppResources.Add_CheckCast}" HeightRequest="44" CornerRadius="22" FontSize="14" BackgroundColor="#24FFFFFF"
                             TextColor="White" Clicked="OnCheckCastClicked" />
-                    <Button Grid.Column="1" Text="Save story" HeightRequest="44" CornerRadius="22" FontSize="14"
+                    <Button Grid.Column="1" Text="{x:Static res:AppResources.Add_Save}" HeightRequest="44" CornerRadius="22" FontSize="14"
                             BackgroundColor="{StaticResource Coral}" TextColor="White" Clicked="OnSaveClicked" />
                 </Grid>
             </VerticalStackLayout>

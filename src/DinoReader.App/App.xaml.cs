@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using DinoReader.Core;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,7 +13,13 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 
 	public DinoApp(IServiceProvider services, SpeechStartup startup)
 	{
+		UiCulture.Apply(UiCulture.Resolve(CultureInfo.CurrentUICulture));
 		InitializeComponent();
+		if (UiCulture.IsRightToLeft)
+		{
+			DinoFonts.UseForRightToLeftUi(Resources);
+		}
+
 		_services = services;
 		_ = startup.RunAsync();
 	}
@@ -23,6 +30,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		{
 			BarBackgroundColor = DinoTokens.Get(DinoTokens.Cream),
 			BarTextColor = DinoTokens.Get(DinoTokens.Ink),
+			FlowDirection = UiFlow.ForCurrentCulture(),
 		};
 		var window = new Window(navigation);
 		var external = _services.GetRequiredService<ExternalActivityGuard>();

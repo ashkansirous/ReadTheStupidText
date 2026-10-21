@@ -29,7 +29,8 @@ public sealed record Story(
     int CoverColourIndex,
     string NarratorVoiceId,
     ReadingMode? PreferredMode = null,
-    IReadOnlyDictionary<string, string>? CharacterMerges = null)
+    IReadOnlyDictionary<string, string>? CharacterMerges = null,
+    bool TranslateToMyLanguage = false)
 {
     public const string PageSeparator = "\n\n";
 

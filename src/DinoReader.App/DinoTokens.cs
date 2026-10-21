@@ -49,6 +49,7 @@ public static class DinoTokens
 	public const string CheckEmpty = "CheckEmpty";
 	public const string MergeBorder = "MergeBorder";
 	public const string SheetScrim = "SheetScrim";
+	public const string SwitchOff = "SwitchOff";
 
 	public static Color Get(string key) => (Color)Microsoft.Maui.Controls.Application.Current!.Resources[key];
 }
