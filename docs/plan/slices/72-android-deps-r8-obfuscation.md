@@ -1,6 +1,6 @@
 # Slice 72 — Android dependencies to latest, R8 shrinking and obfuscation
 
-*In progress (wave 2026-10-21), draft PR.*
+*Built 2026-10-21 (PR #220, 19fea15); not yet verified.*
 
 **Batch:** 12 (Play Console health)
 **Depends on:** —
@@ -118,7 +118,7 @@ references Play reports (Slice 73).
 *From review:* two passes, all fixed (7 + 8 findings), plus two R8 runtime bugs found
 and fixed through device tests (the static-field renames above).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-21)
 
 In `src/ReadTheStupidText.Mobile/CLAUDE.md`: "Release Android builds are R8-obfuscated
 (`src/AndroidRelease.props`, keep rules in `src/AndroidProguard.cfg`) and need .NET
