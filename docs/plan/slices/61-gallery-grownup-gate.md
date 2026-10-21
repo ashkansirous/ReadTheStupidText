@@ -1,6 +1,6 @@
 # Slice 61 — Gallery, stories on the device, grown-up gate
 
-*Planned.*
+*In progress (wave 2026-10-21b), draft PR.*
 
 **Batch:** 10
 **Decisions:** 77
