@@ -24,28 +24,120 @@ public partial class VoicePickerPage : ContentPage
 
     private readonly ISpeechReader _reader;
     private readonly ISettingsStore _settings;
+    private readonly IPlatformServices _platform;
+    private readonly IVoiceModelService _model;
+    private readonly VoicePackInstaller _installer;
     private readonly Dictionary<string, Border> _rowsByVoiceId = new();
 
-    public VoicePickerPage(ISpeechReader reader, ISettingsStore settings, IPlatformServices platform)
+    public VoicePickerPage(
+        ISpeechReader reader,
+        ISettingsStore settings,
+        IPlatformServices platform,
+        IVoiceModelService model,
+        VoicePackInstaller installer)
     {
         InitializeComponent();
         _reader = reader;
         _settings = settings;
-        NeuralVoiceSections.IsVisible = platform.SupportsNeuralVoice;
+        _platform = platform;
+        _model = model;
+        _installer = installer;
+    }
 
+    // The voices on offer follow the installed packs and the language, which can change while
+    // the page is open (a pack finishing its download), so the page rebuilds on each change
+    // and only listens while it is on screen.
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        _installer.Changed += OnPacksChanged;
+        _model.ReadyChanged += OnPacksChanged;
+        Rebuild();
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        _installer.Changed -= OnPacksChanged;
+        _model.ReadyChanged -= OnPacksChanged;
+    }
+
+    private void OnPacksChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(Rebuild);
+
+    // The voices on offer are the installed pack's for the user's language (Slice 51);
+    // with none, only the phone voice reads and the page says why.
+    private void Rebuild()
+    {
+        _rowsByVoiceId.Clear();
+        PhoneVoiceList.Children.Clear();
+        MaleVoiceList.Children.Clear();
+        FemaleVoiceList.Children.Clear();
+        EngineVoiceList.Children.Clear();
         PhoneVoiceList.Children.Add(BuildRow(new VoiceInfo(SystemVoice.Id, PhoneVoiceName, string.Empty)));
 
-        foreach (VoiceInfo voice in SupertonicVoiceTable.Voices.Where(v => !SupertonicVoiceTable.IsFemale(v.Id)))
+        VoiceModelPaths? paths = _platform.SupportsNeuralVoice ? _model.Paths : null;
+        NeuralVoiceSections.IsVisible = paths is not null;
+        if (paths is null)
+        {
+            AddFallbackReason();
+        }
+        else
+        {
+            AddNeuralVoices(paths);
+        }
+
+        UpdateSelection(SelectedVoiceId(paths));
+    }
+
+    private string SelectedVoiceId(VoiceModelPaths? paths) =>
+        paths is null || _settings.VoiceId == SystemVoice.Id
+            ? SystemVoice.Id
+            : NeuralVoiceMemory.Resolve(paths, _settings.VoiceId).Id;
+
+    private void AddFallbackReason()
+    {
+        string reason = _platform.SupportsNeuralVoice
+            ? PackStatusText.Compose(_installer.State, _installer.Progress) ?? VoiceFallbackText.PackNotInstalled
+            : VoiceFallbackText.NoNeuralEngine;
+        PhoneVoiceList.Children.Add(new Label
+        {
+            Text = reason,
+            FontSize = 11,
+            Margin = new Thickness(12, 0, 12, 10),
+        });
+    }
+
+    // Supertonic keeps its MALE/FEMALE cards (Decision 43); any other engine's voices form
+    // one card headed by the engine's name.
+    private void AddNeuralVoices(VoiceModelPaths paths)
+    {
+        bool supertonic = paths.Kind == VoiceEngineKind.Supertonic;
+        SupertonicSections.IsVisible = supertonic;
+        EngineSection.IsVisible = !supertonic;
+        if (supertonic)
+        {
+            AddSupertonicVoices(paths.AvailableVoices);
+            return;
+        }
+
+        EngineHeading.Text = VoiceEngineNames.Heading(paths.Kind);
+        foreach (VoiceInfo voice in paths.AvailableVoices)
+        {
+            EngineVoiceList.Children.Add(BuildRow(voice));
+        }
+    }
+
+    private void AddSupertonicVoices(IReadOnlyList<VoiceInfo> voices)
+    {
+        foreach (VoiceInfo voice in voices.Where(v => !SupertonicVoiceTable.IsFemale(v.Id)))
         {
             MaleVoiceList.Children.Add(BuildRow(voice));
         }
 
-        foreach (VoiceInfo voice in SupertonicVoiceTable.Voices.Where(v => SupertonicVoiceTable.IsFemale(v.Id)))
+        foreach (VoiceInfo voice in voices.Where(v => SupertonicVoiceTable.IsFemale(v.Id)))
         {
             FemaleVoiceList.Children.Add(BuildRow(voice));
         }
-
-        UpdateSelection(_settings.VoiceId ?? SupertonicVoiceTable.Default.Id);
     }
 
     private Border BuildRow(VoiceInfo voice)

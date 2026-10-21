@@ -32,8 +32,19 @@ public static class SupertonicVoiceTable
     /// <summary>The default voice: the first male style (M1, "Momonga").</summary>
     public const string DefaultKey = "M1";
 
-    public static IReadOnlyList<VoiceInfo> Voices { get; } =
-        Entries.Select(e => new VoiceInfo(IdPrefix + e.Key, e.DisplayName, "en")).ToList();
+    public const string EnglishCode = "en";
+
+    public static IReadOnlyList<VoiceInfo> Voices { get; } = VoicesFor(EnglishCode);
+
+    /// <summary>
+    /// The same ten styles offered for <paramref name="language"/> (Slice 51): Supertonic-3
+    /// speaks every language it serves with any style, the language being a generation
+    /// option. Ids stay language-independent so a persisted choice survives a language change.
+    /// </summary>
+    public static IReadOnlyList<VoiceInfo> VoicesFor(string language) =>
+        Entries
+            .Select((e, sid) => new VoiceInfo(IdPrefix + e.Key, e.DisplayName, language, VoiceEngineKind.Supertonic, sid))
+            .ToList();
 
     public static VoiceInfo Default { get; } = Voices.First(v => v.Id == IdPrefix + DefaultKey);
 

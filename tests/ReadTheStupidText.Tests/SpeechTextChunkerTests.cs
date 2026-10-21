@@ -165,4 +165,88 @@ public class SpeechTextChunkerTests
         SpeechTextChunker.TextChunk chunk = Assert.Single(chunks);
         Assert.Equal(0, chunk.SourceLength);
     }
+
+    // Slice 51: Chinese has no spaces, and its sentences end in fullwidth marks with no
+    // whitespace after them.
+    [Fact]
+    public void Unspaced_chinese_splits_after_fullwidth_sentence_marks()
+    {
+        string sentence = "今天天气很好，我们一起去公园玩耍吧！你觉得怎么样？我觉得非常好。";
+        string text = string.Concat(Enumerable.Repeat(sentence, 8));
+
+        IReadOnlyList<string> chunks = SpeechTextChunker.Split(text);
+
+        Assert.True(chunks.Count > 1);
+        Assert.All(chunks, c => Assert.True(c.Length <= TargetChunkMax));
+        Assert.All(chunks, c => Assert.EndsWith("。", c.Replace("！", "。").Replace("？", "。")));
+        Assert.Equal(text, string.Concat(chunks.Select(c => c.Replace(" ", ""))));
+    }
+
+    [Fact]
+    public void Unspaced_chinese_without_any_punctuation_wraps_by_character_count()
+    {
+        string text = string.Concat(Enumerable.Repeat("我们一起去公园", 100)); // 700 chars, no marks
+
+        IReadOnlyList<string> chunks = SpeechTextChunker.Split(text);
+
+        Assert.True(chunks.Count > 1);
+        Assert.All(chunks, c => Assert.True(c.Length <= TargetChunkMax));
+        Assert.Equal(text, string.Concat(chunks.Select(c => c.Replace(" ", ""))));
+    }
+
+    [Fact]
+    public void Unspaced_chinese_ranges_tile_the_source_in_order()
+    {
+        string text = string.Concat(Enumerable.Repeat("我们一起去公园玩。", 60));
+
+        IReadOnlyList<SpeechTextChunker.TextChunk> chunks = SpeechTextChunker.SplitWithRanges(text);
+
+        Assert.Equal(0, chunks[0].SourceStart);
+        Assert.Equal(text.Length, chunks[^1].SourceEnd);
+        for (int i = 1; i < chunks.Count; i++)
+        {
+            Assert.Equal(chunks[i - 1].SourceEnd, chunks[i].SourceStart);
+        }
+    }
+
+    [Fact]
+    public void Cjk_sentence_split_keeps_closing_quotes_with_the_sentence_they_end()
+    {
+        string[] sentences = SpeechTextChunker.SplitSentences("他说：「走吧！」然后离开。").ToArray();
+
+        Assert.Equal(["他说：「走吧！」", "然后离开。"], sentences);
+    }
+
+    [Fact]
+    public void Cjk_sentence_split_trims_whitespace_before_the_next_piece_and_keeps_terminator_runs()
+    {
+        string[] sentences = SpeechTextChunker.SplitSentences("真的吗？！ 他问（轻声）。 好。").ToArray();
+
+        Assert.Equal(["真的吗？！", "他问（轻声）。", "好。"], sentences);
+    }
+
+    [Theory]
+    [InlineData("English")]
+    [InlineData("Chinese")]
+    [InlineData("Mixed")]
+    public void SplitWithRanges_slices_the_source_back_to_each_chunks_non_whitespace_content(string kind)
+    {
+        string text = kind switch
+        {
+            "English" => string.Concat(Enumerable.Repeat("The quick brown fox jumps over the lazy dog.  ", 30)),
+            "Chinese" => string.Concat(Enumerable.Repeat("他说：「我们一起去公园玩！」然后离开了。", 30)),
+            _ => string.Concat(Enumerable.Repeat("Hello world. 我们一起去公园玩。\n\nNext paragraph here! ", 20)),
+        };
+
+        IReadOnlyList<SpeechTextChunker.TextChunk> chunks = SpeechTextChunker.SplitWithRanges(text);
+
+        Assert.True(chunks.Count > 1);
+        foreach (SpeechTextChunker.TextChunk chunk in chunks)
+        {
+            string slice = text.Substring(chunk.SourceStart, chunk.SourceLength);
+            Assert.Equal(StripWhitespace(chunk.Text), StripWhitespace(slice));
+        }
+    }
+
+    private static string StripWhitespace(string value) => string.Concat(value.Where(c => !char.IsWhiteSpace(c)));
 }

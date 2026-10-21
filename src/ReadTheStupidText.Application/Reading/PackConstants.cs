@@ -13,8 +13,14 @@ public static class PackConstants
 
     public const string ManifestFileName = "pack.json";
 
-    /// <summary>The multilingual Supertonic-3 voice pack, the only one Slice 50 ships.</summary>
+    /// <summary>The multilingual Supertonic-3 voice pack (Slice 50).</summary>
     public const string SupertonicPackId = "supertonic-3";
+
+    /// <summary>The Piper Persian voice pack (Slice 51); carries the GPL espeak-ng data (Decision 63).</summary>
+    public const string PersianPackId = "piper-fa";
+
+    /// <summary>The MeloTTS Chinese + English voice pack (Slice 51).</summary>
+    public const string ChinesePackId = "melo-zh-en";
 
     public const char LanguageSeparator = ',';
 }

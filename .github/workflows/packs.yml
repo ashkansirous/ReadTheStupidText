@@ -1,10 +1,10 @@
 name: packs
 
-# Publishes language packs (Slice 50, Decisions 60-62) as assets of a dedicated
-# `packs-<n>` GitHub release, separate from the app's `v<x.y.z>` releases. Manual
-# only: packs change rarely and must never ride on an app build. Release assets
-# don't count toward the Actions storage quota, and this uploads no Actions
-# artifacts (Decision 52).
+# Publishes language packs (Slice 50, Decisions 60-62; multilingual voices in Slice 51,
+# Decision 63) as assets of a dedicated `packs-<n>` GitHub release, separate from the app's
+# `v<x.y.z>` releases. Manual only: packs change rarely and must never ride on an app
+# build. Release assets don't count toward the Actions storage quota, and this uploads no
+# Actions artifacts (Decision 52).
 #
 # Why this can't disturb app versioning:
 #   * GitVersion.yml sets no tag-prefix, so only [vV]?<semver> tags are versions;
@@ -12,6 +12,14 @@ name: packs
 #   * release.yml's base-tag lookup (ship-targets.mjs) only matches refs/tags/v*.
 #   * the release is created with --latest=false, so releases/latest stays the app.
 # Details and the pack format: docs/voice-packs.md.
+#
+# Three voice packs are built into one release and listed in one packs.json:
+#   * supertonic-3  from the LFS model in the repo (en, fr, es, pt, ru, ja, ar)
+#   * piper-fa      the Piper fa_IR amir voice, downloaded from the sherpa-onnx
+#                   `tts-models` release and sha256-pinned. It carries the GPL-3.0
+#                   espeak-ng data, which therefore exists only inside this pack's zip,
+#                   never in the repo, the MSIX, the AAB or the .ipa (Decision 63).
+#   * melo-zh-en    MeloTTS Chinese + English (MIT), same download and pin.
 
 on:
   workflow_dispatch:
@@ -25,15 +33,34 @@ on:
         required: true
         default: '1'
         type: string
+      piper_pack_version:
+        description: 'Version stamped into the Persian (Piper) pack'
+        required: true
+        default: '1'
+        type: string
+      melo_pack_version:
+        description: 'Version stamped into the Chinese (MeloTTS) pack'
+        required: true
+        default: '1'
+        type: string
 
 permissions:
   contents: write   # create the packs-<n> release and upload its assets
 
 env:
-  PACK_ID: supertonic-3
-  PACK_LANGUAGES: 'en,fr,es,pt,ru,ja,ar'
-  PACK_LICENSE: Apache-2.0
+  SUPERTONIC_ID: supertonic-3
+  SUPERTONIC_LANGUAGES: 'en,fr,es,pt,ru,ja,ar'
+  SUPERTONIC_LICENSE: Apache-2.0
   MODEL_DIR: src/ReadTheStupidText.App/VoiceModel
+  # Keep the ids in sync with src/ReadTheStupidText.Application/Reading/PackConstants.cs.
+  PERSIAN_ID: piper-fa
+  PERSIAN_LICENSE: 'CC0-1.0 (voice data) AND GPL-3.0-or-later (espeak-ng data)'
+  PERSIAN_URL: https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fa_IR-amir-medium-int8.tar.bz2
+  PERSIAN_SHA256: b79dbf0b6b9629a36fd541bfda83817ec12e2697557d87b918638445971eac46
+  CHINESE_ID: melo-zh-en
+  CHINESE_LICENSE: MIT
+  CHINESE_URL: https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-melo-tts-zh_en.tar.bz2
+  CHINESE_SHA256: e58351ed7149f290a54534538badd4077cdbe6fddc964b24d0bee870415d1514
 
 jobs:
   publish-packs:
@@ -41,7 +68,9 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       TAG: packs-${{ inputs.release_number }}
-      PACK_VERSION: ${{ inputs.pack_version }}
+      SUPERTONIC_VERSION: ${{ inputs.pack_version }}
+      PERSIAN_VERSION: ${{ inputs.piper_pack_version }}
+      CHINESE_VERSION: ${{ inputs.melo_pack_version }}
     steps:
       - name: Checkout (with LFS — the voice model is LFS-tracked)
         uses: actions/checkout@v4
@@ -57,10 +86,10 @@ jobs:
       # Layout: <id>/pack.json, <id>/LICENSE and the model files, zipped under a
       # single top-level folder. pack.json lists every payload file so the app can
       # verify an install is complete.
-      - name: Build the pack zip
+      - name: Build the Supertonic pack zip
         run: |
           set -euo pipefail
-          mkdir -p "out/$PACK_ID"
+          mkdir -p "out/$SUPERTONIC_ID"
           # The required file set — keep in sync with the constants in
           # src/ReadTheStupidText.Domain/Reading/SupertonicFiles.cs (never `cp *`:
           # stray files must not ship, and a missing one must fail the job).
@@ -75,33 +104,129 @@ jobs:
             if [ "$f" != LICENSE ] && [ "$(stat -c %s "$src")" -lt 1024 ] && [[ "$f" == *.onnx ]]; then
               echo "::error::$src is under 1 KB — not a real model file"; exit 1
             fi
-            cp "$src" "out/$PACK_ID/$f"
+            cp "$src" "out/$SUPERTONIC_ID/$f"
           done
           files=$(printf '%s\n' "${model_files[@]}" | jq -R . | jq -s .)
-          jq -n --arg id "$PACK_ID" --arg language "$PACK_LANGUAGES" --arg version "$PACK_VERSION" --argjson files "$files" \
-            '{id: $id, kind: "voice", language: $language, version: $version, engine: "sherpa-onnx", files: $files}' \
-            > "out/$PACK_ID/pack.json"
-          (cd out && zip -r -X "$PACK_ID-$PACK_VERSION.zip" "$PACK_ID")
+          # The ten voice styles are the fixed SupertonicVoiceTable, offered for every
+          # language the pack serves, so the manifest lists no voices (model only).
+          jq -n --arg id "$SUPERTONIC_ID" --arg language "$SUPERTONIC_LANGUAGES" --arg version "$SUPERTONIC_VERSION" --argjson files "$files" \
+            '{id: $id, kind: "voice", language: $language, version: $version, engine: "sherpa-onnx", model: "supertonic", files: $files}' \
+            > "out/$SUPERTONIC_ID/pack.json"
+          (cd out && zip -r -X "$SUPERTONIC_ID-$SUPERTONIC_VERSION.zip" "$SUPERTONIC_ID")
+          ls -l out
+
+      # Downloads a sherpa-onnx model archive and refuses it unless its sha256 is the pinned one.
+      - name: Fetch the pinned Piper and MeloTTS models
+        run: |
+          set -euo pipefail
+          fetch() {
+            local url="$1" sha="$2" dir="$3"
+            curl -fsSL --retry 3 -o "$dir.tar.bz2" "$url"
+            echo "$sha  $dir.tar.bz2" | sha256sum -c -
+            mkdir -p "$dir" && tar -xjf "$dir.tar.bz2" -C "$dir" --strip-components=1
+          }
+          mkdir -p src-models
+          fetch "$PERSIAN_URL" "$PERSIAN_SHA256" src-models/piper-fa
+          fetch "$CHINESE_URL" "$CHINESE_SHA256" src-models/melo-zh-en
+
+      # The Persian pack: the Piper amir voice plus the espeak-ng data it phonemizes with.
+      # The espeak-ng data is GPL-3.0; it ships ONLY in this downloaded zip (Decision 63),
+      # with its licence text and the link to its corresponding source.
+      - name: Build the Persian (Piper) pack zip
+        run: |
+          set -euo pipefail
+          src="src-models/piper-fa"
+          dest="out/$PERSIAN_ID"
+          mkdir -p "$dest"
+          copy_required() {
+            if [ ! -e "$src/$1" ]; then echo "::error::Missing $1 in the Piper archive"; exit 1; fi
+            cp -r "$src/$1" "$dest/$2"
+          }
+          copy_required fa_IR-amir-medium.onnx model.onnx
+          copy_required tokens.txt tokens.txt
+          copy_required espeak-ng-data espeak-ng-data
+          if [ "$(stat -c %s "$dest/model.onnx")" -lt 1048576 ]; then echo "::error::model.onnx is not a real model"; exit 1; fi
+          cat > "$dest/LICENSE" <<'LICENSE_TEXT'
+          Persian voice "amir" (Piper, medium)
+            Voice data: CC0 1.0 Universal (public domain dedication), dataset from
+            https://datacula.com/tts-databases . Model card: MODEL_CARD.
+            Model: https://huggingface.co/rhasspy/piper-voices/tree/main/fa/fa_IR/amir/medium
+            Converted for sherpa-onnx by https://github.com/k2-fsa/sherpa-onnx (Apache-2.0).
+
+          espeak-ng data (folder espeak-ng-data): GPL-3.0-or-later
+            Copyright the espeak-ng authors. This data is used only to turn text into
+            phonemes and is distributed in this pack under the GNU General Public License
+            v3 or later (https://www.gnu.org/licenses/gpl-3.0.html). Its corresponding
+            source code is available at https://github.com/espeak-ng/espeak-ng .
+          LICENSE_TEXT
+          if [ -f "$src/MODEL_CARD" ]; then cp "$src/MODEL_CARD" "$dest/MODEL_CARD"; fi
+          printf 'Voice: https://huggingface.co/rhasspy/piper-voices/tree/main/fa/fa_IR/amir/medium\nespeak-ng source: https://github.com/espeak-ng/espeak-ng\nsherpa-onnx model: %s\n' "$PERSIAN_URL" > "$dest/SOURCE"
+          # Every file present except pack.json itself. The optional docs (LICENSE, SOURCE,
+          # MODEL_CARD) are listed only when they exist, so a missing one never marks the pack incomplete.
+          files=$(cd "$dest" && find . -type f ! -path ./pack.json -printf '%P\n' | sort | jq -R . | jq -s .)
+          voices='[{"id": "piper:fa-amir", "name": "Amir", "sid": 0}]'
+          jq -n --arg id "$PERSIAN_ID" --arg version "$PERSIAN_VERSION" --argjson files "$files" --argjson voices "$voices" \
+            '{id: $id, kind: "voice", language: "fa", version: $version, engine: "sherpa-onnx", model: "vits", voices: $voices, files: $files}' \
+            > "$dest/pack.json"
+          (cd out && zip -r -X "$PERSIAN_ID-$PERSIAN_VERSION.zip" "$PERSIAN_ID")
+          ls -l out
+
+      # The Chinese pack: the upstream MeloTTS zh_en folder (file names are what
+      # Domain/Reading/MeloFiles.cs expects), minus the unused int8 stub and README.
+      - name: Build the Chinese (MeloTTS) pack zip
+        run: |
+          set -euo pipefail
+          src="src-models/melo-zh-en"
+          dest="out/$CHINESE_ID"
+          mkdir -p "$dest"
+          for f in model.onnx lexicon.txt tokens.txt date.fst number.fst phone.fst; do
+            if [ ! -f "$src/$f" ]; then echo "::error::Missing $f in the MeloTTS archive"; exit 1; fi
+            cp "$src/$f" "$dest/$f"
+          done
+          if [ ! -d "$src/dict" ]; then echo "::error::Missing dict in the MeloTTS archive"; exit 1; fi
+          cp -r "$src/dict" "$dest/dict"
+          for doc in LICENSE SOURCE MODEL_CARD; do
+            if [ -f "$src/$doc" ]; then cp "$src/$doc" "$dest/$doc"; fi
+          done
+          if [ "$(stat -c %s "$dest/model.onnx")" -lt 1048576 ]; then echo "::error::model.onnx is not a real model"; exit 1; fi
+          files=$(cd "$dest" && find . -type f ! -path ./pack.json -printf '%P\n' | sort | jq -R . | jq -s .)
+          voices='[{"id": "melo:zh", "name": "Mei", "sid": 0}]'
+          jq -n --arg id "$CHINESE_ID" --arg version "$CHINESE_VERSION" --argjson files "$files" --argjson voices "$voices" \
+            '{id: $id, kind: "voice", language: "zh", version: $version, engine: "sherpa-onnx", model: "melo", voices: $voices, files: $files}' \
+            > "$dest/pack.json"
+          (cd out && zip -r -X "$CHINESE_ID-$CHINESE_VERSION.zip" "$CHINESE_ID")
           ls -l out
 
       - name: Write packs.json
         run: |
           set -euo pipefail
-          zip="out/$PACK_ID-$PACK_VERSION.zip"
-          size=$(stat -c %s "$zip")
-          sha=$(sha256sum "$zip" | cut -d' ' -f1)
-          url="https://github.com/${{ github.repository }}/releases/download/$TAG/$(basename "$zip")"
-          jq -n --arg id "$PACK_ID" --arg language "$PACK_LANGUAGES" --arg version "$PACK_VERSION" \
-                --argjson size "$size" --arg sha "$sha" --arg license "$PACK_LICENSE" --arg url "$url" \
-            '[{id: $id, language: $language, kind: "voice", version: $version, sizeBytes: $size, sha256: $sha, license: $license, url: $url}]' \
-            > out/packs.json
+          entry() {
+            local id="$1" language="$2" version="$3" license="$4"
+            local zip="out/$id-$version.zip"
+            local size sha url
+            size=$(stat -c %s "$zip")
+            sha=$(sha256sum "$zip" | cut -d' ' -f1)
+            url="https://github.com/${{ github.repository }}/releases/download/$TAG/$(basename "$zip")"
+            jq -n --arg id "$id" --arg language "$language" --arg version "$version" \
+                  --argjson size "$size" --arg sha "$sha" --arg license "$license" --arg url "$url" \
+              '{id: $id, language: $language, kind: "voice", version: $version, sizeBytes: $size, sha256: $sha, license: $license, url: $url}'
+          }
+          {
+            entry "$SUPERTONIC_ID" "$SUPERTONIC_LANGUAGES" "$SUPERTONIC_VERSION" "$SUPERTONIC_LICENSE"
+            entry "$PERSIAN_ID" fa "$PERSIAN_VERSION" "$PERSIAN_LICENSE"
+            entry "$CHINESE_ID" zh "$CHINESE_VERSION" "$CHINESE_LICENSE"
+          } | jq -s . > out/packs.json
           cat out/packs.json
 
       # Not latest: releases/latest must keep pointing at the app release.
       - name: Publish the packs release
         run: |
           set -euo pipefail
-          gh release create "$TAG" "out/$PACK_ID-$PACK_VERSION.zip" out/packs.json \
+          gh release create "$TAG" \
+            "out/$SUPERTONIC_ID-$SUPERTONIC_VERSION.zip" \
+            "out/$PERSIAN_ID-$PERSIAN_VERSION.zip" \
+            "out/$CHINESE_ID-$CHINESE_VERSION.zip" \
+            out/packs.json \
             --repo "${{ github.repository }}" \
             --title "Language packs $TAG" \
             --notes "Voice/OCR language packs and their packs.json catalog (not an app release). See docs/voice-packs.md." \
