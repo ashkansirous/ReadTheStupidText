@@ -17,4 +17,11 @@ public enum OcrSource
     /// installed yet and the language is not a Latin one, so the text is likely poor. The UI can say the pack is still downloading.
     /// </summary>
     MlKitPackPending,
+
+    /// <summary>
+    /// The platform recognizer read the picture with a different language than the one requested,
+    /// because the OS has no OCR engine for it (Windows without that OCR language installed). No
+    /// pack is coming, so this is a definite result, not <see cref="MlKitPackPending"/>.
+    /// </summary>
+    PlatformFallback,
 }

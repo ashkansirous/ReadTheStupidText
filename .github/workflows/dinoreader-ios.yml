@@ -1,0 +1,179 @@
+name: dinoreader-ios
+
+# Dino Reader iOS build (Slice 67). The twin of ios.yml for the second MAUI app,
+# `src/DinoReader.App` (bundle id uk.sirous.dinoreader, Apple team J4TBWA5379, App Store
+# Connect app 6825053435). `dotnet publish`, not xcodebuild. Entry points:
+#   * pull_request (own paths) / workflow_dispatch: the unsigned simulator compile check.
+#   * workflow_call from release.yml with `sign` = true (release-draft reports that the five
+#     team-wide iOS secrets AND DINOREADER_IOS_PROVISIONING_PROFILE_BASE64 exist): builds the
+#     signed App Store .ipa (profile "Dino Reader App Store") and uploads it to the draft
+#     release as DinoReader-<version>.ipa; release.yml's testflight-submit-dino sends it to
+#     App Store Connect after the publish. With the profile secret empty nothing is signed
+#     and nothing is uploaded.
+# Signing material lives in a temp keychain removed in an `always()` step.
+# Zero Actions artifacts (Batch 8): don't add actions/upload-artifact for build outputs.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/ReadTheStupidText.Domain/**'
+      - 'src/ReadTheStupidText.Application/**'
+      - 'src/ReadTheStupidText.Documents/**'
+      - 'tests/ReadTheStupidText.Tests/**'
+      - 'global.json'
+      - 'GitVersion.yml'
+      - '*.slnx'
+      - '.gitattributes'
+      - '.github/workflows/release.yml'
+      - '.github/workflows/tests.yml'
+      - '.github/scripts/find-release.sh'
+      - '.github/scripts/ship-targets.mjs'
+      - 'src/DinoReader.App/**'
+      - 'src/DinoReader.Core/**'
+      - 'src/ReadTheStupidText.Mobile.Shared/**'
+      - '!src/ReadTheStupidText.Mobile.Shared/Platforms/**'
+      - 'src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/**'
+      - 'src/ReadTheStupidText.Mobile.Shared/IosSherpaPackaging.props'
+      - '.github/scripts/ios-signing.sh'
+      - '.github/scripts/testflight-upload.sh'
+      - '.github/workflows/dinoreader-ios.yml'
+      - '!**/*.md'
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      version:
+        description: 'GitVersion SemVer (x.y.z) for the signed release build.'
+        required: false
+        type: string
+        default: ''
+      sign:
+        description: 'Build the signed .ipa and upload it to the draft v<version>.'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dinoreader-ios-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    runs-on: macos-26
+    permissions:
+      contents: write   # gh release upload (release runs only)
+    env:
+      # Signed only when the release is being cut: on PRs, or when the version was
+      # already published, the output would be discarded and the secrets needlessly
+      # exposed.
+      SIGN_RELEASE: ${{ inputs.sign == true }}
+      PUBLISH_DIR: src/DinoReader.App/bin/Release/net10.0-ios/ios-arm64/publish
+      PROJECT: src/DinoReader.App/DinoReader.App.csproj
+      VERSION: ${{ inputs.version }}
+    steps:
+      # No LFS: the iOS package carries no voice model (Slice 50).
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # iOS pins the SDK feature band its workload set needs (see the workload step).
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.401'
+
+      # On macOS the csproj multi-targets android + ios (Dino Reader included), and restore evaluates every
+      # target, so it would demand the Android workload. Both dotnet calls below pass
+      # -p:IncludeAndroid=false, which the csproj honours by dropping net10.0-android, so
+      # only maui-ios is needed. (A plain -p:TargetFrameworks=net10.0-ios would also flow
+      # into the referenced class libraries and break their restore.)
+      # Each .NET iOS SDK requires one Xcode version. The latest manifests (iOS SDK
+      # 27.x) need Xcode 27, which macos-26 doesn't have, so the workload is pinned
+      # to workload set 10.0.401 (Microsoft.iOS.Sdk 26.5.10318, needs Xcode 26.6 —
+      # the image's default, selected explicitly). A workload set only works with an
+      # SDK of its feature band, hence dotnet-version 10.0.401 above. Moving to a
+      # newer iOS SDK means bumping both together, and the Xcode when the image has it.
+      - name: Select Xcode 26.6
+        run: |
+          set -euo pipefail
+          sudo xcode-select -s /Applications/Xcode_26.6.app/Contents/Developer
+          xcodebuild -version
+
+      - name: Install the .NET MAUI iOS workload (pinned)
+        run: |
+          set -euo pipefail
+          dotnet workload install maui-ios --version 10.0.401
+          dotnet workload --version
+
+      # Simulator build: needs no certificate or profile. Skipped when the signed
+      # publish below runs, which compiles the same code in Release. Debug on
+      # purpose: a Release simulator build runs the full trim/AOT pipeline (~59
+      # min per PR); Debug proves the code compiles in a few minutes, and every
+      # main build still does the full signed Release compile.
+      - name: Compile check (unsigned, simulator)
+        if: ${{ env.SIGN_RELEASE != 'true' }}
+        run: >
+          dotnet build "$PROJECT"
+          -f net10.0-ios
+          -p:IncludeAndroid=false
+          -c Debug
+          -p:RuntimeIdentifier=iossimulator-arm64
+
+      - name: Install signing certificate and profile
+        id: signing
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        env:
+          IOS_DIST_CERT_P12_BASE64: ${{ secrets.IOS_DIST_CERT_P12_BASE64 }}
+          IOS_DIST_CERT_P12_PASSWORD: ${{ secrets.IOS_DIST_CERT_P12_PASSWORD }}
+          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.DINOREADER_IOS_PROVISIONING_PROFILE_BASE64 }}
+        run: bash .github/scripts/ios-signing.sh install
+
+      # CFBundleShortVersionString = the shared GitVersion. CFBundleVersion must
+      # only ever go up per version: a UTC timestamp (yyyymmdd.hhmmss, no leading
+      # zeros), as Lets Call Mom does. Key and profile go in via env so their
+      # spaces and parentheses need no quoting inside the command.
+      - name: Release build (signed .ipa)
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        env:
+          CODESIGN_KEY: ${{ steps.signing.outputs.codesign_key }}
+          CODESIGN_PROVISION: ${{ steps.signing.outputs.codesign_provision }}
+        run: |
+          NOW=$(date -u +%Y%m%d%H%M%S)
+          BUILD="${NOW:0:8}.$((10#${NOW:8:6}))"
+          dotnet publish "$PROJECT" \
+            -f net10.0-ios \
+            -p:IncludeAndroid=false \
+            -c Release \
+            -p:RuntimeIdentifier=ios-arm64 \
+            -p:ArchiveOnBuild=true \
+            -p:CodesignKey="$CODESIGN_KEY" \
+            -p:CodesignProvision="$CODESIGN_PROVISION" \
+            -p:ApplicationDisplayVersion="$VERSION" \
+            -p:ApplicationVersion="$BUILD"
+          echo "Built ${VERSION} (${BUILD})" >> "$GITHUB_STEP_SUMMARY"
+
+      # Decision 70: look inside the package, a clean build proves nothing about
+      # which native binaries landed (the Android .so lesson). Listing only.
+      - name: Stage the .ipa and list its native contents
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        run: |
+          set -euo pipefail
+          found=$(find "$PUBLISH_DIR" -maxdepth 1 -name '*.ipa')
+          if [ "$(printf '%s\n' "$found" | grep -c .)" -ne 1 ]; then
+            echo "::error::Expected exactly 1 .ipa in $PUBLISH_DIR, found: ${found:-none}"; exit 1
+          fi
+          mkdir -p dist
+          cp "$found" "dist/DinoReader-${VERSION}.ipa"
+          unzip -l "dist/DinoReader-${VERSION}.ipa" | grep -E 'Frameworks/|[.]dylib|[.]a$' || echo "No Frameworks/ or dylib entries in the .ipa."
+
+      - name: Upload .ipa to the draft release
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "v${VERSION}" "dist/DinoReader-${VERSION}.ipa" --repo "${{ github.repository }}" --clobber
+
+      - name: Remove signing material
+        if: ${{ always() && env.SIGN_RELEASE == 'true' }}
+        run: bash .github/scripts/ios-signing.sh cleanup || true

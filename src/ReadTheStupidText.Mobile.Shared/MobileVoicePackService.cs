@@ -191,7 +191,7 @@ public sealed class MobileVoicePackService : IVoicePackService
     // Returns null when the verified zip is in place, otherwise the failure.
     private static async Task<PackDownloadResult?> FetchZipAsync(PackInfo pack, string zipPath, IProgress<double>? progress, CancellationToken cancellationToken)
     {
-        if (Connectivity.Current.NetworkAccess == NetworkAccess.None)
+        if (Connectivity.Current.NetworkAccess == Microsoft.Maui.Networking.NetworkAccess.None)
         {
             return PackDownloadResult.Offline;
         }
@@ -230,7 +230,7 @@ public sealed class MobileVoicePackService : IVoicePackService
     // means the OS cannot tell, so the exception itself is the better evidence.
     private static PackDownloadResult ClassifyFailure(Exception exception)
     {
-        if (Connectivity.Current.NetworkAccess == NetworkAccess.None)
+        if (Connectivity.Current.NetworkAccess == Microsoft.Maui.Networking.NetworkAccess.None)
         {
             return PackDownloadResult.Offline;
         }
@@ -408,7 +408,13 @@ public sealed class MobileVoicePackService : IVoicePackService
     /// <summary>The folder every pack lives in (created if needed); also read by the iOS backup exclusion.</summary>
     internal static string PacksRoot()
     {
+#if WINDOWS
+        // Windows (Slice 67): the package's LocalCacheFolder, never the cloud-backed LocalFolder, as the
+        // Read The Stupid Text app keeps its packs (Slice 56).
+        string root = Path.Combine(FileSystem.Current.CacheDirectory, PacksFolder);
+#else
         string root = Path.Combine(FileSystem.Current.AppDataDirectory, PacksFolder);
+#endif
         Directory.CreateDirectory(root);
         return root;
     }

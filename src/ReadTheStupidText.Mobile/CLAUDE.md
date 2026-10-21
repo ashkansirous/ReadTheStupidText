@@ -70,6 +70,9 @@ Loaded when you work under `src/ReadTheStupidText.Mobile`. Shared platform code 
 dotnet build src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj -f net10.0-android
 ```
 
+Mobile.Shared adds a Windows target on every Windows host (Dino Reader's head), which needs the
+`maui-windows` workload. Where only `maui-android` is installed, add `-p:IncludeWindows=false`.
+
 Deploy to a device/emulator from Visual Studio (the **Mobile** project's Android
 debug target), or `dotnet build -t:Run -f net10.0-android` with a device/emulator
 already running. No AVD ships with this repo — set one up locally (or attach a

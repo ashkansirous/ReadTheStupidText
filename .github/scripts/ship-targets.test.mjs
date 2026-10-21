@@ -7,9 +7,9 @@ import { GROUPS, IGNORED_PATTERNS, bumpKind, matchesPattern, newestAppTag, shipT
 
 const M = 'src/ReadTheStupidText.Mobile';
 const S = 'src/ReadTheStupidText.Mobile.Shared';
-const NONE = { windows: false, android: false, ios: false, dinoreader: false, dinoapp: false };
+const NONE = { windows: false, android: false, ios: false, dinoreader: false, dinoapp: false, dinoios: false, dinowin: false };
 // Core changes rebuild every app platform, Dino Reader's app included (its tests are separate).
-const ALL3 = { windows: true, android: true, ios: true, dinoapp: true };
+const ALL3 = { windows: true, android: true, ios: true, dinoapp: true, dinoios: true, dinowin: true };
 const EVERYTHING = { ...ALL3, dinoreader: true };
 
 function targetsOf(changedFiles, extra = {}) {
@@ -20,8 +20,8 @@ function targetsOf(changedFiles, extra = {}) {
 const CASES = [
     ['Android platform only', [`${M}/Platforms/Android/AndroidSpeechReader.cs`], { android: true }],
     ['iOS platform only', [`${M}/Platforms/iOS/AppDelegate.cs`], { ios: true }],
-    ['iOS signing script', ['.github/scripts/ios-signing.sh'], { ios: true }],
-    ['TestFlight upload script', ['.github/scripts/testflight-upload.sh'], { ios: true }],
+    ['iOS signing script', ['.github/scripts/ios-signing.sh'], { ios: true, dinoios: true }],
+    ['TestFlight upload script', ['.github/scripts/testflight-upload.sh'], { ios: true, dinoios: true }],
     ['Android stage script', ['.github/scripts/stage-android-package.sh'], { android: true, dinoapp: true }],
     ['Android natives check script', ['.github/scripts/check-android-natives.sh'], { android: true, dinoapp: true }],
     ['shared Mobile code', [`${M}/ReaderPage.xaml.cs`], { android: true, ios: true }],
@@ -38,25 +38,30 @@ const CASES = [
     ['release workflow (the pipeline itself)', ['.github/workflows/release.yml'], ALL3],
     ['find-release script', ['.github/scripts/find-release.sh'], ALL3],
     ['Windows app only', ['src/ReadTheStupidText.App/App.xaml.cs'], { windows: true }],
-    ['Infrastructure only', ['src/ReadTheStupidText.Infrastructure/X.cs'], { windows: true }],
-    ['store-submit workflow', ['.github/workflows/store-submit.yml'], { windows: true }],
+    ['Infrastructure only', ['src/ReadTheStupidText.Infrastructure/X.cs'], { windows: true, dinowin: true }],
+    ['store-submit workflow', ['.github/workflows/store-submit.yml'], { windows: true, dinowin: true }],
+    ['Dino Reader Windows workflow', ['.github/workflows/dinoreader-windows.yml'], { dinowin: true }],
     ['docs only', ['CLAUDE.md', 'docs/plan/decisions.md', 'plan.md'], {}],
-    ['DinoReader only', ['src/DinoReader.Core/Parser.cs'], { dinoreader: true, dinoapp: true }],
+    ['DinoReader only', ['src/DinoReader.Core/Parser.cs'], { dinoreader: true, dinoapp: true, dinoios: true, dinowin: true }],
     ['DinoReader tests only', ['tests/DinoReader.Tests/ParserTests.cs'], { dinoreader: true }],
     ['Android + iOS platform files', [`${M}/Platforms/Android/a.cs`, `${M}/Platforms/iOS/b.cs`], { android: true, ios: true }],
-    ['Windows + DinoReader', ['src/ReadTheStupidText.App/a.cs', 'src/DinoReader.Core/b.cs'], { windows: true, dinoreader: true, dinoapp: true }],
+    ['Windows + DinoReader', ['src/ReadTheStupidText.App/a.cs', 'src/DinoReader.Core/b.cs'], { windows: true, dinoreader: true, dinoapp: true, dinoios: true, dinowin: true }],
     // Slice 58: the shared MAUI library and the Dino Reader app.
-    ['Dino Reader app only', ['src/DinoReader.App/MainPage.xaml.cs'], { dinoapp: true }],
-    ['Dino Reader app csproj', ['src/DinoReader.App/DinoReader.App.csproj'], { dinoapp: true }],
+    ['Dino Reader app only', ['src/DinoReader.App/MainPage.xaml.cs'], { dinoapp: true, dinoios: true, dinowin: true }],
+    ['Dino Reader app csproj', ['src/DinoReader.App/DinoReader.App.csproj'], { dinoapp: true, dinoios: true, dinowin: true }],
+    ['Dino Reader iOS workflow', ['.github/workflows/dinoreader-ios.yml'], { dinoios: true }],
+    ['iOS sherpa packaging props', [`${S}/IosSherpaPackaging.props`], { android: true, ios: true, dinoapp: true, dinoios: true, dinowin: true }],
     ['Dino Reader Android workflow', ['.github/workflows/dinoreader-android.yml'], { dinoapp: true }],
-    ['Mobile.Shared root', [`${S}/CompositeSpeechReader.cs`], { android: true, ios: true, dinoapp: true }],
-    ['Mobile.Shared csproj', [`${S}/ReadTheStupidText.Mobile.Shared.csproj`], { android: true, ios: true, dinoapp: true }],
+    ['Mobile.Shared root', [`${S}/CompositeSpeechReader.cs`], { android: true, ios: true, dinoapp: true, dinoios: true, dinowin: true }],
+    ['Mobile.Shared csproj', [`${S}/ReadTheStupidText.Mobile.Shared.csproj`], { android: true, ios: true, dinoapp: true, dinoios: true, dinowin: true }],
     ['Mobile.Shared Android platform', [`${S}/Platforms/Android/AndroidSpeechReader.cs`], { android: true, dinoapp: true }],
-    ['Mobile.Shared iOS platform', [`${S}/Platforms/iOS/AvSpeechReader.cs`], { ios: true }],
-    ['Mobile.Shared unknown platform folder', [`${S}/Platforms/Windows/x.cs`], {}],
+    ['Mobile.Shared iOS platform', [`${S}/Platforms/iOS/AvSpeechReader.cs`], { ios: true, dinoios: true }],
+    ['Mobile.Shared Windows platform', [`${S}/Platforms/Windows/WindowsPlatformServices.cs`], { dinowin: true }],
+    ['Mobile.Shared unknown platform folder', [`${S}/Platforms/Tizen/x.cs`], {}],
     ['Android sherpa packaging props', ['src/AndroidSherpaPackaging.props'], { android: true, dinoapp: true }],
     ['RTST Mobile Android platform does not rebuild Dino Reader', [`${M}/Platforms/Android/MainActivity.cs`], { android: true }],
     ['RTST Mobile root does not rebuild Dino Reader', [`${M}/MauiProgram.cs`], { android: true, ios: true }],
+    ['RTST Mobile iOS platform does not rebuild Dino Reader', [`${M}/Platforms/iOS/AppDelegate.cs`], { ios: true }],
     ['site and worker files', ['worker/downloads.ts', 'site/index.html'], {}],
 ];
 
@@ -90,6 +95,11 @@ test('DinoReader.Core builds the Dino Reader app (Slice 60) but no RTST platform
 test('a Dino Reader app change builds nothing else (Windows, RTST Android, iOS)', () => {
     const t = targetsOf(['src/DinoReader.App/App.xaml']);
     assert.deepEqual([t.windows, t.android, t.ios], [false, false, false]);
+});
+
+test('a Dino Reader app change builds Dino Reader on every platform (Slice 67)', () => {
+    const t = targetsOf(['src/DinoReader.App/App.xaml']);
+    assert.deepEqual([t.dinoapp, t.dinoios, t.dinowin], [true, true, true]);
 });
 
 test('Mobile/Platforms/** is excluded from the shared group', () => {
@@ -172,8 +182,10 @@ const PR_TARGETS = {
     'android.yml': ['core', 'android', 'mobileshared', 'sharedroot'],
     'ios.yml': ['core', 'ios', 'mobileshared', 'sharedroot'],
     'dinoreader-android.yml': ['core', 'dinoapp', 'sharedroot'],
+    'dinoreader-ios.yml': ['core', 'dinoios', 'sharedroot'],
+    'dinoreader-windows.yml': ['core', 'dinowin', 'sharedroot'],
     // tests.yml gates both the Windows and Android builds.
-    'tests.yml': ['core', 'windows', 'android', 'mobileshared', 'sharedroot'],
+    'tests.yml': ['core', 'windows', 'android', 'dinowin', 'mobileshared', 'sharedroot'],
     'dinoreader.yml': ['dinoreader'],
 };
 
@@ -192,7 +204,7 @@ for (const [file, groups] of Object.entries(PR_TARGETS)) {
 const MOBILE_ROOTS = ['src/ReadTheStupidText.Mobile', 'src/ReadTheStupidText.Mobile.Shared'];
 
 test('a negated path follows its root glob and precedes the Platforms re-includes', () => {
-    const roots = { 'android.yml': MOBILE_ROOTS, 'ios.yml': MOBILE_ROOTS, 'tests.yml': MOBILE_ROOTS, 'dinoreader-android.yml': [MOBILE_ROOTS[1]] };
+    const roots = { 'android.yml': MOBILE_ROOTS, 'ios.yml': MOBILE_ROOTS, 'tests.yml': MOBILE_ROOTS, 'dinoreader-android.yml': [MOBILE_ROOTS[1]], 'dinoreader-ios.yml': [MOBILE_ROOTS[1]], 'dinoreader-windows.yml': [MOBILE_ROOTS[1]] };
     for (const [file, folders] of Object.entries(roots)) {
         const paths = readPullRequestPaths(file);
         for (const root of folders) {

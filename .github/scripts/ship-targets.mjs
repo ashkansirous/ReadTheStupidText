@@ -10,7 +10,10 @@
  *   - Mobile/Platforms/iOS/**                                     -> ios
  *   - the rest of Mobile/** (the RTST app's MAUI root)            -> android + ios
  *   - Mobile.Shared/Platforms/Android/**                          -> android + dinoapp
- *   - Mobile.Shared/Platforms/iOS/**                              -> ios
+ *   - Mobile.Shared/Platforms/iOS/**                              -> ios + dinoios
+ *   - Mobile.Shared/Platforms/Windows/**                          -> dinowin (Slice 67)
+ *   - Infrastructure/**                                           -> windows + dinowin (Dino Reader on Windows reads with its engines)
+ *   - DinoReader.App/**, DinoReader.Core/**                       -> also dinoios (Slice 67, ships only with its own iOS secrets) and dinowin (unsigned MSIX, needs no secrets)
  *   - the rest of Mobile.Shared/** (platform code both apps use)  -> android + ios + dinoapp
  *   - DinoReader.App/**, DinoReader.Core/**                       -> dinoapp (Slice 58/60; ships only with its own signing secrets)
  *   - DinoReader.Core / tests/DinoReader.Tests                    -> dinoreader (its tests; Core also rebuilds dinoapp)
@@ -95,6 +98,33 @@ export const GROUPS = {
             '.github/workflows/dinoreader-android.yml',
         ],
     },
+    // Dino Reader on iOS (Slice 67): its app and Core, the iOS platform code it shares with RTST,
+    // the iOS native packaging props and the iOS signing/upload scripts. Like dinoapp it ships only
+    // with its own signing secrets.
+    dinoios: {
+        include: [
+            'src/DinoReader.App/',
+            'src/DinoReader.Core/',
+            `${SHARED}Platforms/iOS/`,
+            `${SHARED}IosSherpaPackaging.props`,
+            '.github/scripts/ios-signing.sh',
+            '.github/scripts/testflight-upload.sh',
+            '.github/workflows/dinoreader-ios.yml',
+        ],
+    },
+    // Dino Reader on Windows (Slice 67): its app and Core, its Windows platform code, and
+    // Infrastructure, whose Windows speech engines it reads with. The MSIX is unsigned, so unlike
+    // dinoapp/dinoios it needs no secrets; the Store submission is gated on DINOREADER_STORE_APP_ID.
+    dinowin: {
+        include: [
+            'src/DinoReader.App/',
+            'src/DinoReader.Core/',
+            `${SHARED}Platforms/Windows/`,
+            'src/ReadTheStupidText.Infrastructure/',
+            '.github/workflows/store-submit.yml',
+            '.github/workflows/dinoreader-windows.yml',
+        ],
+    },
     ios: {
         include: [
             `${MOBILE}Platforms/iOS/`,
@@ -138,7 +168,7 @@ function touchedGroups(changedFiles) {
  * `changedFiles` is everything since the last release tag (`null`: unknown,
  * which builds everything). `bump` is the pending SemVer bump kind.
  * Returns one boolean per target. Whether anything ships is release.yml's call
- * (windows || android || signed ios || signed dinoapp); dinoreader alone never ships.
+ * (windows || android || dinowin || signed ios || signed dinoapp || signed dinoios); dinoreader alone never ships.
  */
 export function shipTargets({ changedFiles, bump, forceAll = false }) {
     const everything = forceAll || bump === MAJOR_BUMP || changedFiles === null;
@@ -148,7 +178,9 @@ export function shipTargets({ changedFiles, bump, forceAll = false }) {
     const ios = everything || g.core || g.ios || g.mobileshared || g.sharedroot;
     const dinoreader = everything || g.dinoreader;
     const dinoapp = everything || g.core || g.dinoapp || g.sharedroot;
-    return { windows, android, ios, dinoreader, dinoapp };
+    const dinoios = everything || g.core || g.dinoios || g.sharedroot;
+    const dinowin = everything || g.core || g.dinowin || g.sharedroot;
+    return { windows, android, ios, dinoreader, dinoapp, dinoios, dinowin };
 }
 
 /** The newest strict v<x.y.z> tag in a list (null when none). */

@@ -23,6 +23,7 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 	{
 		{ DevicePlatform.Android, ["text/plain", "application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"] },
 		{ DevicePlatform.iOS, ["public.plain-text", "com.adobe.pdf", "org.openxmlformats.wordprocessingml.document"] },
+		{ DevicePlatform.WinUI, [".txt", ".pdf", ".docx"] },
 	});
 
 	private readonly IStoryLibrary _library;
@@ -57,7 +58,8 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 		_documents = documents;
 		_external = external;
 		_services = services;
-		AddSourceTile(IconKind.Camera, AppResources.Add_Scan, AppResources.Add_ScanSub, 0, 0, OnScanTapped);
+		// Windows has no document scanner (Slice 67): its Scan tile stays, dimmed and inert; Photos reads pictures there.
+		AddSourceTile(IconKind.Camera, AppResources.Add_Scan, AppResources.Add_ScanSub, 0, 0, services.GetService<IDocumentScanner>() is null ? null : OnScanTapped);
 		AddSourceTile(IconKind.Photos, AppResources.Add_Photos, AppResources.Add_PhotosSub, 1, 0, OnPhotosTapped);
 		AddSourceTile(IconKind.File, AppResources.Add_File, AppResources.Add_FileSub, 0, 1, OnFileTapped);
 		AddSourceTile(IconKind.Type, AppResources.Add_Type, AppResources.Add_TypeSub, 1, 1, OnTypeTapped);
@@ -231,6 +233,7 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 	// A PDF keeps its page pictures; they are rendered when the story is saved, so a pick that is never saved costs nothing.
 	private async Task<bool> TryImportPdfAsync(string path)
 	{
+		IReadOnlyList<PositionedPage> moved = [];
 		try
 		{
 			var pdf = _services.GetRequiredService<RenderedPdfTextExtractor>();
@@ -238,14 +241,20 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 			IReadOnlyList<PositionedPage> withText = StoryImport.WithText(pages);
 			StoryImport.DeleteSources(pages.Except(withText));
 			// Own folder at once: the next import renders into the shared folder under the same names.
-			withText = StoryImport.MoveToOwnFolder(withText);
+			withText = moved = StoryImport.MoveToOwnFolder(withText);
 			(string? flowing, IReadOnlyList<string>? pageTexts) = await FlowingTextAsync(path, withText);
 			ShowImported(withText, Path.GetFileNameWithoutExtension(path), flowing, pageTexts);
 			_pdfPath = _imported is null ? null : path;
+			if (_imported is null)
+			{
+				StoryImport.DeleteSources(moved);
+			}
+
 			return _imported is not null;
 		}
 		catch (Exception)
 		{
+			StoryImport.DeleteSources(moved);
 			return false;
 		}
 	}

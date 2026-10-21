@@ -75,6 +75,38 @@ public class TranslationStreamingTests
     }
 
     [Fact]
+    public void Blocks_that_arrive_before_the_feed_exists_are_applied_in_order_and_completion_is_kept()
+    {
+        var pending = new PendingStreamBlocks();
+        pending.Add("Second block.");
+        pending.Add("Third block.");
+        pending.MarkComplete();
+        var feed = new ChunkFeed(SpeechChunkPlanner.ForText("First."), 6, complete: false);
+        var counts = new List<int>();
+
+        pending.DrainInto(feed, counts.Add);
+
+        Assert.Equal(3, feed.Count);
+        Assert.Equal([2, 3], counts);
+        Assert.Equal("Second block.", feed[1].Text);
+        Assert.Equal("Third block.", feed[2].Text);
+        Assert.True(feed.IsComplete);
+    }
+
+    [Fact]
+    public void Draining_without_completion_leaves_the_feed_open()
+    {
+        var pending = new PendingStreamBlocks();
+        pending.Add("More.");
+        var feed = new ChunkFeed([], 0, complete: false);
+
+        pending.DrainInto(feed);
+
+        Assert.Equal(1, feed.Count);
+        Assert.False(feed.IsComplete);
+    }
+
+    [Fact]
     public void A_completed_feed_takes_no_more_text()
     {
         var feed = new ChunkFeed([], 0, complete: false);

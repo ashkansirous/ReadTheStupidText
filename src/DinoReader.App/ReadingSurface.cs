@@ -1,3 +1,10 @@
+#if ANDROID
+using PlatformTextMeasurer = DinoReader.AndroidTextMeasurer;
+#elif IOS
+using PlatformTextMeasurer = DinoReader.IosTextMeasurer;
+#elif WINDOWS
+using PlatformTextMeasurer = DinoReader.WindowsTextMeasurer;
+#endif
 using System.Diagnostics;
 using DinoReader.Core;
 using Microsoft.Maui.Controls.Shapes;
@@ -41,7 +48,7 @@ public sealed class ReadingSurface : Border
 	private bool _composing;
 	private bool _dirty;
 	private IDispatcherTimer? _resizeTimer;
-	private AndroidTextMeasurer? _measurer;
+	private PlatformTextMeasurer? _measurer;
 	private string? _measurerFont;
 	private readonly Label _error = new()
 	{
@@ -270,7 +277,7 @@ public sealed class ReadingSurface : Border
 
 	private IPageRenderer CreateRenderer(ReadingContent content, ReadingTheme theme)
 	{
-		AndroidTextMeasurer measurer = MeasurerFor(content.Font);
+		PlatformTextMeasurer measurer = MeasurerFor(content.Font);
 		if (_mode != ReadingMode.Picture)
 		{
 			return new TextPages(content.Text, content.Sentences, measurer, content.Font, theme, content.RightToLeft);
@@ -283,12 +290,12 @@ public sealed class ReadingSurface : Border
 	}
 
 	// One measurer per font and size, kept while the surface lives and let go with it.
-	private AndroidTextMeasurer MeasurerFor(string font)
+	private PlatformTextMeasurer MeasurerFor(string font)
 	{
 		if (_measurer is null || _measurerFont != font)
 		{
 			_measurer?.Dispose();
-			_measurer = new AndroidTextMeasurer(font, ReadingMetrics.FontSize);
+			_measurer = new PlatformTextMeasurer(font, ReadingMetrics.FontSize);
 			_measurerFont = font;
 		}
 

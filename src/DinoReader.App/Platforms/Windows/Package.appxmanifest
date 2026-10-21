@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap rescap">
+
+  <!-- TODO(Slice 67, user): PLACEHOLDER IDENTITY. Replace Name and Publisher with the Partner Center
+       "Product identity" values once Dino Reader's name is reserved (Package/Identity/Name and
+       Package/Identity/Publisher), and PublisherDisplayName / DisplayName if they differ. They must match
+       the reservation EXACTLY or Store submission fails. Publisher and PublisherDisplayName below are
+       currently Read The Stupid Text's (same developer account). Version is stamped by CI. See STORE.md. -->
+  <Identity
+    Name="AshkanSirous.DinoReader"
+    Publisher="CN=53769961-EF08-4BA5-A1DE-7A51B62A9AA7"
+    Version="1.0.0.0" />
+
+  <mp:PhoneIdentity PhoneProductId="6F3A4D52-5B0C-4E0B-9C57-1F6D0B9E7A11" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+
+  <Properties>
+    <DisplayName>Dino Reader</DisplayName>
+    <PublisherDisplayName>Ashkan Sirous</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.0" />
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="en-US" />
+    <Resource Language="fa" />
+    <Resource Language="fr" />
+    <Resource Language="es" />
+    <Resource Language="pt" />
+    <Resource Language="zh-Hans" />
+    <Resource Language="ar" />
+    <Resource Language="ru" />
+    <Resource Language="ja" />
+  </Resources>
+
+  <Applications>
+    <Application Id="App"
+      Executable="$targetnametoken$.exe"
+      EntryPoint="$targetentrypoint$">
+      <!-- Tile and splash art are the ready-made "Book hug" set copied from docs/design/dino-reader/icons/windows
+           (never regenerated); the background is the icon's gradient start colour. -->
+      <uap:VisualElements
+        DisplayName="Dino Reader"
+        Description="Dino Reader reads stories aloud with a voice for every character"
+        BackgroundColor="#FFD9BF"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile
+          Square71x71Logo="Assets\Square71x71Logo.png"
+          Square310x310Logo="Assets\Square310x310Logo.png"
+          Wide310x150Logo="Assets\Wide310x150Logo.png">
+          <uap:ShowNameOnTiles>
+            <uap:ShowOn Tile="square150x150Logo" />
+            <uap:ShowOn Tile="wide310x150Logo" />
+            <uap:ShowOn Tile="square310x310Logo" />
+          </uap:ShowNameOnTiles>
+        </uap:DefaultTile>
+        <uap:SplashScreen Image="Assets\SplashScreen.png" BackgroundColor="#FFD9BF" />
+      </uap:VisualElements>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <!-- Network is used only to download the language voice pack; story text never leaves the device. -->
+    <Capability Name="internetClient" />
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>

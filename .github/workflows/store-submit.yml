@@ -35,6 +35,11 @@ name: store-submit
 # from Partner Center -> Account settings -> Tenants). See STORE.md for the
 # one-time tenant + app-registration + Manager-role walkthrough.
 
+# Dino Reader (Slice 67) reuses this workflow: release.yml's `store-submit-dino` job passes
+# package = DinoReader.App and product_id = vars.DINOREADER_STORE_APP_ID (and only runs when that
+# variable is set). The same AZURE_AD_* / SELLER_ID secrets serve both listings: they are the
+# developer account's, not the app's.
+
 on:
   workflow_call:
     inputs:
@@ -42,11 +47,32 @@ on:
         description: 'Release tag to submit (e.g. v1.0.0).'
         required: true
         type: string
+      package:
+        description: 'MSIX package name stem: <package>_<x.y.z.0>_<arch>.msix.'
+        required: false
+        type: string
+        default: 'ReadTheStupidText.App'
+      product_id:
+        description: 'Store product (app) id. Empty: the STORE_PRODUCT_ID repository variable.'
+        required: false
+        type: string
+        default: ''
   workflow_dispatch:
     inputs:
       tag:
         description: 'Release tag to submit (e.g. v1.0.0). Leave blank to submit the latest release.'
         required: false
+      package:
+        description: 'MSIX package name stem (ReadTheStupidText.App or DinoReader.App).'
+        required: false
+        default: 'ReadTheStupidText.App'
+      product_id:
+        description: 'Store product id. Empty: the STORE_PRODUCT_ID repository variable (Read The Stupid Text).'
+        required: false
+        default: ''
+
+env:
+  PACKAGE: ${{ inputs.package || 'ReadTheStupidText.App' }}
 
 jobs:
   submit:
@@ -71,7 +97,7 @@ jobs:
           set -euo pipefail
           tag="$INPUT_TAG"
           if [ -z "$tag" ]; then
-            found=$(bash .github/scripts/find-release.sh '^ReadTheStupidText[.]App_{version}[.]0_.*[.]msix$')
+            found=$(bash .github/scripts/find-release.sh "^${PACKAGE//./[.]}_{version}[.]0_.*[.]msix\$")
             tag=$(head -n 1 <<< "$found")
           fi
           if [ -z "$tag" ]; then echo "::error::Could not resolve a release tag to submit"; exit 1; fi
@@ -85,7 +111,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           New-Item -ItemType Directory -Force packages | Out-Null
-          gh release download "${{ steps.tag.outputs.tag }}" --repo "${{ github.repository }}" --pattern "*.msix" --dir packages
+          gh release download "${{ steps.tag.outputs.tag }}" --repo "${{ github.repository }}" --pattern "${env:PACKAGE}_*.msix" --dir packages
           $msix = Get-ChildItem packages -Filter *.msix
           # A submission must carry BOTH architectures. One missing asset would
           # otherwise silently ship a single-arch bundle and drop ARM64 users.
@@ -93,7 +119,7 @@ jobs:
             throw "Expected 2 .msix assets (x64 + ARM64) on release ${{ steps.tag.outputs.tag }}, found $($msix.Count): $($msix.Name -join ', ')"
           }
           # The package version is the source of the *bundle* version below. Take
-          # it from the asset names (ReadTheStupidText.App_<x.y.z.0>_<arch>.msix)
+          # it from the asset names (<package>_<x.y.z.0>_<arch>.msix)
           # rather than the tag, so the bundle can never disagree with what CI
           # actually stamped into the manifests.
           $versions = $msix.Name | ForEach-Object {
@@ -119,7 +145,7 @@ jobs:
           # current date-time (documented behaviour), which neither matches the
           # release nor increases predictably across submissions. Pin it to the
           # packages' own version so the bundle tracks GitVersion.
-          & $makeappx.FullName bundle /d packages /p out\ReadTheStupidText.msixbundle `
+          & $makeappx.FullName bundle /d packages /p "out\$($env:PACKAGE).msixbundle" `
             /bv ${{ steps.packages.outputs.version }} /o
           if ($LASTEXITCODE -ne 0) { throw "makeappx bundle failed ($LASTEXITCODE)" }
 
@@ -168,5 +194,5 @@ jobs:
           # -v: on an upload failure the CLI's console output is a hardcoded
           # generic "Error while uploading the application package." with the
           # real exception only reaching the logger, which -v surfaces.
-          msstore publish "out\ReadTheStupidText.msixbundle" `
-            -id ${{ vars.STORE_PRODUCT_ID }} -ut 300 -v
+          msstore publish "out\$($env:PACKAGE).msixbundle" `
+            -id "${{ inputs.product_id || vars.STORE_PRODUCT_ID }}" -ut 300 -v

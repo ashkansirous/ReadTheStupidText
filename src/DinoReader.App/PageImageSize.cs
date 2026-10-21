@@ -1,5 +1,15 @@
+#if ANDROID
 using AndroidExif = Android.Media.ExifInterface;
 using AndroidGraphics = Android.Graphics;
+#endif
+#if IOS
+using Foundation;
+using ImageIO;
+#endif
+#if WINDOWS
+using Windows.Graphics.Imaging;
+using Windows.Storage;
+#endif
 
 namespace DinoReader;
 
@@ -13,6 +23,7 @@ public static class PageImageSize
 	private const int FirstSidewaysOrientation = 5;
 	private const int LastSidewaysOrientation = 8;
 
+#if ANDROID
 	/// <summary>The upright size in pixels, or null when the file is missing or not a picture.</summary>
 	public static Size? Read(string path)
 	{
@@ -40,4 +51,60 @@ public static class PageImageSize
 		int orientation = exif.GetAttributeInt(AndroidExif.TagOrientation, 1);
 		return orientation is >= FirstSidewaysOrientation and <= LastSidewaysOrientation;
 	}
+#elif IOS
+	/// <summary>The upright size in pixels, or null when the file is missing or not a picture.</summary>
+	public static Size? Read(string path)
+	{
+		try
+		{
+			using var url = NSUrl.FromFilename(path);
+			using CGImageSource? source = CGImageSource.FromUrl(url);
+			var properties = source?.GetProperties(0);
+			int width = properties?.PixelWidth ?? 0;
+			int height = properties?.PixelHeight ?? 0;
+			if (width <= 0 || height <= 0)
+			{
+				return null;
+			}
+
+			int orientation = (int)(properties?.Orientation ?? 0);
+			bool sideways = orientation is >= FirstSidewaysOrientation and <= LastSidewaysOrientation;
+			return sideways ? new Size(height, width) : new Size(width, height);
+		}
+		catch (Exception ex)
+		{
+			System.Diagnostics.Debug.WriteLine($"Dino Reader could not read the size of {path}: {ex.Message}");
+			return null;
+		}
+	}
+#elif WINDOWS
+	/// <summary>The upright size in pixels, or null when the file is missing or not a picture.</summary>
+	public static Size? Read(string path)
+	{
+		try
+		{
+			// Run on the thread pool so waiting on the WinRT call never blocks on the UI thread's context.
+			return Task.Run(() => ReadAsync(path)).GetAwaiter().GetResult();
+		}
+		catch (Exception ex)
+		{
+			System.Diagnostics.Debug.WriteLine($"Dino Reader could not read the size of {path}: {ex.Message}");
+			return null;
+		}
+	}
+
+	// The decoder's oriented size already swaps width and height for a sideways picture.
+	private static async Task<Size?> ReadAsync(string path)
+	{
+		StorageFile file = await StorageFile.GetFileFromPathAsync(path);
+		using var stream = await file.OpenReadAsync();
+		BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
+		return decoder.OrientedPixelWidth > 0 && decoder.OrientedPixelHeight > 0
+			? new Size(decoder.OrientedPixelWidth, decoder.OrientedPixelHeight)
+			: null;
+	}
+#else
+	/// <summary>The upright size in pixels; not available on this platform.</summary>
+	public static Size? Read(string path) => null;
+#endif
 }

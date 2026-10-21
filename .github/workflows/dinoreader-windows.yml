@@ -1,0 +1,157 @@
+name: dinoreader-windows
+
+# Dino Reader Windows MSIX build (x64 + ARM64), Slice 67. The twin of windows.yml for the second
+# MAUI app, `src/DinoReader.App` (a WinUI head: no tray, no hotkey). Entry points:
+#   * pull_request (own paths) / workflow_dispatch: compiles and packages, uploads nothing.
+#   * workflow_call from release.yml: the same build, plus `upload` = true when release-draft has
+#     a draft to fill, which sends each MSIX straight to the draft release as
+#     DinoReader.App_<v>.0_<arch>.msix. Zero Actions artifacts (Batch 8): don't add
+#     actions/upload-artifact for build outputs.
+# The package is unsigned (the Store re-signs) and, in Release, .NET self-contained like Read The
+# Stupid Text's (Store certification 10.2.4.1). No LFS and no voice model: voices download as packs.
+# The Store submission is store-submit.yml (package DinoReader.App) via release.yml, gated on DINOREADER_STORE_APP_ID.
+# Without a `version` input (PR or manual run) it asks GitVersion itself so the manifest stamp is
+# exercised too.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/ReadTheStupidText.Domain/**'
+      - 'src/ReadTheStupidText.Application/**'
+      - 'src/ReadTheStupidText.Documents/**'
+      - 'tests/ReadTheStupidText.Tests/**'
+      - 'global.json'
+      - 'GitVersion.yml'
+      - '*.slnx'
+      - '.gitattributes'
+      - '.github/workflows/release.yml'
+      - '.github/workflows/tests.yml'
+      - '.github/scripts/find-release.sh'
+      - '.github/scripts/ship-targets.mjs'
+      - 'src/DinoReader.App/**'
+      - 'src/DinoReader.Core/**'
+      - 'src/ReadTheStupidText.Mobile.Shared/**'
+      - '!src/ReadTheStupidText.Mobile.Shared/Platforms/**'
+      - 'src/ReadTheStupidText.Mobile.Shared/Platforms/Windows/**'
+      - 'src/ReadTheStupidText.Infrastructure/**'
+      - '.github/workflows/dinoreader-windows.yml'
+      - '.github/workflows/store-submit.yml'
+      - '!**/*.md'
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      version:
+        description: 'GitVersion SemVer (x.y.z) to stamp. Empty: compute it here.'
+        required: false
+        type: string
+        default: ''
+      upload:
+        description: 'Upload the MSIX files to the draft release v<version>.'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# A called run shares the caller's concurrency context, so only PR runs get a
+# group that cancels; every other run is keyed by its run id and never collides.
+concurrency:
+  group: dinoreader-windows-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  # Skipped when release.yml passes its version in; `build` then reads the input directly.
+  version:
+    if: inputs.version == ''
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.gitversion.outputs.majorMinorPatch }}
+    steps:
+      - name: Checkout (full history + tags — GitVersion needs them)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v4.5.0
+        with:
+          versionSpec: '6.x'
+
+      - name: Determine version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v4.5.0
+        with:
+          useConfigFile: true
+
+  build:
+    needs: version
+    # `version` is skipped when the caller supplied one; !cancelled() keeps that
+    # skip from cascading, and a failed `version` still stops the build.
+    if: ${{ !cancelled() && (needs.version.result == 'success' || needs.version.result == 'skipped') }}
+    runs-on: windows-latest
+    permissions:
+      contents: write   # gh release upload (release runs only)
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [x64, ARM64]
+    env:
+      PROJECT: src/DinoReader.App/DinoReader.App.csproj
+      MANIFEST: src/DinoReader.App/Platforms/Windows/Package.appxmanifest
+      VERSION: ${{ inputs.version || needs.version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # A UseMaui project needs the MAUI workload even for its Windows head.
+      - name: Install the .NET MAUI Windows workload
+        run: dotnet workload install maui-windows
+
+      # Stamp the GitVersion-derived version into the manifest (x.y.z.0 — the Store requires
+      # revision 0). Anchored to line start and the self-closing ' />' so it only touches the
+      # Identity Version, never TargetDeviceFamily's MinVersion/MaxVersionTested. Working copy
+      # only — never committed.
+      - name: Stamp manifest version (${{ inputs.version || needs.version.outputs.version }}.0)
+        shell: bash
+        run: |
+          sed -i -E "s#^([[:space:]]*)Version=\"[0-9.]+\"([[:space:]]*/>)#\1Version=\"${VERSION}.0\"\2#" "$MANIFEST"
+          if ! grep -qF "Version=\"${VERSION}.0\" />" "$MANIFEST"; then
+            echo "::error::Failed to stamp Version=\"${VERSION}.0\" into ${MANIFEST}"; exit 1
+          fi
+          grep -nE 'Version=' "$MANIFEST"
+
+      # -p:IncludeAndroid=false drops the csproj's Android target, leaving the Windows head.
+      # The RuntimeIdentifier comes from -p:Platform inside the csproj: a global one would also
+      # flow into Mobile.Shared and list its .pdb twice in the package (APPX1101). The Windows
+      # MSIX is produced by `dotnet publish`; Release is self-contained (see the csproj).
+      - name: Build and package MSIX (${{ matrix.platform }})
+        run: >
+          dotnet publish ${{ env.PROJECT }}
+          -f net10.0-windows10.0.19041.0
+          -c Release
+          -p:IncludeAndroid=false
+          -p:Platform=${{ matrix.platform }}
+          -p:AppxPackageSigningEnabled=false
+
+      # Only the app package — NOT the Microsoft.WindowsAppRuntime dependency .msix under
+      # Dependencies/ (same name for every arch; the Store/Windows resolves that runtime itself).
+      - name: Upload MSIX to the draft release
+        if: inputs.upload == true
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v${{ inputs.version || needs.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          mapfile -t msix < <(find src/DinoReader.App/bin -name 'DinoReader.App_*.msix')
+          if [ "${#msix[@]}" -ne 1 ]; then
+            echo "::error::Expected exactly 1 app .msix, found ${#msix[@]}: ${msix[*]:-none}"; exit 1
+          fi
+          gh release upload "$TAG" "${msix[0]}" --repo "${{ github.repository }}" --clobber

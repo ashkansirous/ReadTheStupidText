@@ -574,3 +574,45 @@ no .NET binding we could verify without a Mac. The decision: ship iOS without tr
 revisit with a small Swift wrapper (Apple's framework, gated to iOS 18, Farsi hidden) or a
 verified ML Kit binding. Language identification (`NLLanguageRecognizer`) is already in place.
 The store listing for iOS must not mention translation until then.
+
+## Dino Reader on Windows (Slice 67)
+
+Dino Reader is a **separate Store product** from Read The Stupid Text: its own listing, its own
+package identity, the same developer account. The package is `src/DinoReader.App` (a MAUI WinUI head,
+`net10.0-windows10.0.19041.0`), built by `dinoreader-windows.yml` from `release.yml`'s `build-dinowin` job
+as an **unsigned** MSIX per architecture (x64, ARM64; the Store re-signs), uploaded to the draft release as
+`DinoReader.App_<x.y.z.0>_<arch>.msix`. Like Read The Stupid Text's, the Release package is built .NET
+**self-contained** (Store certification 10.2.4.1); the Windows App SDK stays framework-dependent. There is no
+tray, no hotkey and no startup task: it is a normal window app.
+
+**Identity (placeholder until the name is reserved).** `Platforms/Windows/Package.appxmanifest` has a
+marked `TODO` next to `Identity`. `Name` is `AshkanSirous.DinoReader`, and `Publisher` and
+`PublisherDisplayName` are Read The Stupid Text's (same account). Replace `Name` and `Publisher` with
+the Partner Center "Product identity" values after reserving "Dino Reader"; they must match exactly or
+submission fails.
+
+**Capabilities (Package.appxmanifest):**
+
+| Capability | Type | Justification |
+| --- | --- | --- |
+| `runFullTrust` | restricted | The standard capability of a packaged WinUI 3 / MAUI desktop app (the MSIX entry point is a full-trust process). Dino Reader uses no Win32 reach beyond that: no tray, no hotkey, no reading of other apps. |
+| `internetClient` | standard | Downloads the voice pack for the language the user chooses (an anonymous HTTPS file download from this project's GitHub Releases, `packs-<n>`). No story text, image or identifier is ever sent; once a pack is installed the app needs no network. Partner Center justification: "Downloads the text-to-speech voice for the language the user chooses." |
+
+File and photo picking go through the system pickers (no `broadFileSystemAccess`, no pictures library
+capability). Pictures are read on the device with `Windows.Media.Ocr`; PDFs are rendered with
+`Windows.Data.Pdf`. Windows has no document scanner, so the Scan tile is shown inert.
+
+**Third-party components and licenses.** Same stack as Read The Stupid Text (see the table above):
+`org.k2fsa.sherpa.onnx` (Apache-2.0) with the downloaded Supertonic-3 pack (Apache-2.0), `PdfPig`
+(Apache-2.0), `DocumentFormat.OpenXml` (MIT), Windows App SDK and .NET MAUI (MIT), and the bundled
+Fredoka, Andika and Vazirmatn fonts (SIL OFL 1.1, texts in `src/DinoReader.App/Licenses/`). No GPL/LGPL
+component ships in the package.
+
+**Store submission.** `store-submit-dino` in `release.yml` calls `store-submit.yml` with
+`package: DinoReader.App` and the product id from the repository variable **`DINOREADER_STORE_APP_ID`**
+(the Store id of the reserved listing). The job runs only when that variable is non-empty, so until the
+listing exists a release builds and publishes the MSIX and skips the submission. It uses the same
+`AZURE_AD_TENANT_ID`, `AZURE_AD_APPLICATION_CLIENT_ID`, `AZURE_AD_APPLICATION_SECRET` and `SELLER_ID`
+secrets as Read The Stupid Text (they belong to the developer account). The very first submission of a
+brand-new listing (age rating, pricing, store listing text) is done once by hand in Partner Center; the
+CLI then pushes updates.

@@ -99,87 +99,10 @@
 		<PackageReference Include="Xamarin.AndroidX.Fragment.Ktx" Version="1.9.0" />
 	</ItemGroup>
 
-	<!-- iOS neural voice (Slice 49): the managed sherpa-onnx binding plus the engine's native
-	     framework. The managed package version must match the framework release (the C structs
-	     the binding marshals are versioned with it), so both say 1.13.8 and are bumped together.
-	     This is deliberately separate from the Android 1.13.3 pin in AndroidSherpaPackaging.props.
-	     The package's nuspec depends on every runtime.* native package; none carries an iOS
-	     asset, so each is asset-excluded to keep a desktop dylib out of the app. -->
-	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
-		<SherpaIosVersion>1.13.8</SherpaIosVersion>
-		<SherpaIosZipSha256>e259a7d3b38ad7dec49bb078252a30bb42ede8355e2bb130cf8c1c78ed131f75</SherpaIosZipSha256>
-		<SherpaIosDir>$(MSBuildProjectDirectory)/obj/sherpa-ios/$(SherpaIosVersion)</SherpaIosDir>
-		<SherpaIosXcframework>$(SherpaIosDir)/SherpaOnnxC.xcframework</SherpaIosXcframework>
-	</PropertyGroup>
-
-	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
-		<PackageReference Include="org.k2fsa.sherpa.onnx" Version="$(SherpaIosVersion)" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.android-arm64" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.android-x64" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.linux-arm64" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.linux-x64" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.osx-arm64" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.osx-x64" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-arm64" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-x64" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-x86" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
-	</ItemGroup>
-
-	<!-- Slice 55: PaddleOCR on iOS. Unlike Android, where the one onnxruntime that sherpa-onnx
-	     already stages serves both engines, the iOS sherpa framework links onnxruntime in
-	     statically without exporting it (no OrtGetApiBase symbol), so OCR brings its own: the full
-	     Microsoft.ML.OnnxRuntime package (managed binding plus the static iOS xcframework, 1.24.3,
-	     the version the Android managed binding is pinned to). Two copies of onnxruntime therefore
-	     live in the app, one inside SherpaOnnxC.framework and one in the executable; they do not
-	     share symbols. Bump this together with the Android pin. -->
-	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
-		<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.24.3" />
-		<!-- The managed binding P/Invokes RegisterCustomOps, and iOS links every P/Invoke statically,
-		     so the symbol must exist or the link fails ("Undefined symbols: _RegisterCustomOps").
-		     This Microsoft package is the documented stand-in: it ships only a dummy of that symbol,
-		     no custom ops (MIT, onnxruntime-extensions).
-		     https://github.com/microsoft/onnxruntime/issues/24628 -->
-		<PackageReference Include="Microsoft.ML.OnnxRuntime.Extensions.Dummy" Version="0.13.0" />
-	</ItemGroup>
-
-	<!-- The shared SherpaOnnxC.framework with onnxruntime linked in (one dynamic framework,
-	     about 30 MB), copied into the app's Frameworks folder and located at run time by
-	     IosSherpaLibrary. It is added as a NativeReference from this target, after the fetch
-	     below has put it on disk, so the item never points at a path that does not exist yet. -->
-	<Target Name="AddSherpaIosFramework" BeforeTargets="BeforeBuild" DependsOnTargets="FetchSherpaIosFramework" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
-		<Error Condition="!Exists('$(SherpaIosXcframework)/Info.plist')" Text="The sherpa-onnx iOS framework is missing at $(SherpaIosXcframework) after the fetch." />
-		<ItemGroup>
-			<NativeReference Include="$(SherpaIosXcframework)">
-				<Kind>Framework</Kind>
-				<SmartLink>False</SmartLink>
-			</NativeReference>
-		</ItemGroup>
-	</Target>
-
-	<!-- The iOS SDK defines its own task named Unzip, so MSBuild's is named in full. -->
-	<!-- Downloads and checks the framework once per checkout (kept under obj/, which is
-	     ignored), so the repo carries no 30 MB binary. A wrong hash, a failed download or a
-	     partial unzip is a hard error and removes the half-written folder, so the next build
-	     starts clean instead of trusting it. -->
-	<Target Name="FetchSherpaIosFramework" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' And !Exists('$(SherpaIosXcframework)/Info.plist')">
-		<PropertyGroup>
-			<_SherpaIosZip>$(SherpaIosDir)/sherpa-onnx-ios-framework.zip</_SherpaIosZip>
-		</PropertyGroup>
-		<RemoveDir Directories="$(SherpaIosDir)" />
-		<DownloadFile SourceUrl="https://github.com/k2-fsa/sherpa-onnx/releases/download/xcframework/sherpa-onnx-v$(SherpaIosVersion)-ios-shared-onnxruntime-static.xcframework.zip" DestinationFolder="$(SherpaIosDir)" DestinationFileName="sherpa-onnx-ios-framework.zip" Retries="3" />
-		<GetFileHash Files="$(_SherpaIosZip)" Algorithm="SHA256">
-			<Output TaskParameter="Hash" PropertyName="_SherpaIosZipHash" />
-		</GetFileHash>
-		<Error Condition="!$([System.String]::Equals('$(_SherpaIosZipHash)', '$(SherpaIosZipSha256)', System.StringComparison.OrdinalIgnoreCase))" Text="The sherpa-onnx iOS framework download has the wrong SHA-256 ($(_SherpaIosZipHash)); expected $(SherpaIosZipSha256)." />
-		<Microsoft.Build.Tasks.Unzip SourceFiles="$(_SherpaIosZip)" DestinationFolder="$(SherpaIosDir)" />
-		<Delete Files="$(_SherpaIosZip)" />
-		<Error Condition="!Exists('$(SherpaIosXcframework)/Info.plist')" Text="The sherpa-onnx iOS framework zip did not contain SherpaOnnxC.xcframework/Info.plist." />
-		<OnError ExecuteTargets="CleanSherpaIosFramework" />
-	</Target>
-
-	<Target Name="CleanSherpaIosFramework">
-		<RemoveDir Directories="$(SherpaIosDir)" />
-	</Target>
+	<!-- iOS neural voice and OCR native packaging (Slice 49, 55, 67): the managed sherpa-onnx binding,
+	     the SherpaOnnxC.xcframework fetch and the full onnxruntime package, shared with Dino Reader.
+	     The engine and OCR code itself lives in ReadTheStupidText.Mobile.Shared. -->
+	<Import Project="..\ReadTheStupidText.Mobile.Shared\IosSherpaPackaging.props" />
 
 	<!-- The privacy manifest App Store Connect requires; the iOS counterpart of the Android
 	     manifest. -->
