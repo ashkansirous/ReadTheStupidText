@@ -14,6 +14,7 @@ using ReadTheStupidText.Infrastructure.Sanitizing;
 using ReadTheStupidText.Infrastructure.Settings;
 using ReadTheStupidText.Infrastructure.Startup;
 using Microsoft.Extensions.DependencyInjection;
+using System.Net.NetworkInformation;
 using Microsoft.UI.Xaml;
 
 namespace ReadTheStupidText_App;
@@ -39,15 +40,24 @@ public partial class App : Application
     {
         var services = new ServiceCollection();
 
-        // Neural (Supertonic) is the primary engine; the WinRT reader is the
-        // fallback used only while the model downloads. CompositeSpeechReader
-        // routes between them, and the catalog exposes the neural voices once ready.
-        services.AddSingleton<IVoiceModelService, SupertonicModelService>();
+        // The neural engine is primary once a downloaded voice pack serves the chosen language (Slice 56);
+        // the WinRT reader is the labelled "Windows voice" that reads until then, or by choice.
+        // CompositeSpeechReader routes between them, and the catalog lists the pack's voices plus
+        // the Windows voice. LocalSettingsStore doubles as the language-change notifier.
+        services.AddSingleton<LocalSettingsStore>();
+        services.AddSingleton<ISettingsStore>(sp => sp.GetRequiredService<LocalSettingsStore>());
+        services.AddSingleton<ILanguageChangeNotifier>(sp => sp.GetRequiredService<LocalSettingsStore>());
+        services.AddSingleton<IVoicePackService>(_ => new WindowsVoicePackService(
+            PackFolders.PacksRoot(), new HttpClient(), NetworkInterface.GetIsNetworkAvailable));
+        services.AddSingleton<IVoiceModelService, PackVoiceModelService>();
+        services.AddSingleton<VoicePackSetup>();
         services.AddSingleton<SpeechReader>();
         services.AddSingleton<AudioChunkPaths>();
         services.AddSingleton<SupertonicSpeechReader>();
-        services.AddSingleton<ISpeechReader, CompositeSpeechReader>();
-        services.AddSingleton<IVoiceCatalog, NeuralVoiceCatalog>();
+        services.AddSingleton<CompositeSpeechReader>();
+        services.AddSingleton<ISpeechReader>(sp => sp.GetRequiredService<CompositeSpeechReader>());
+        services.AddSingleton<IHeadStart>(sp => sp.GetRequiredService<CompositeSpeechReader>());
+        services.AddSingleton<IVoiceCatalog, PackVoiceCatalog>();
 
         services.AddSingleton<IClipboardReader, ClipboardReader>();
         services.AddSingleton<IHotkeyService, GlobalHotkeyService>();
@@ -56,7 +66,6 @@ public partial class App : Application
         services.AddSingleton<IClipboardMonitor, ClipboardFormatListener>();
         services.AddSingleton<IForegroundWindow, ForegroundWindowProbe>();
         services.AddSingleton<IStartupService, StartupTaskService>();
-        services.AddSingleton<ISettingsStore, LocalSettingsStore>();
         services.AddSingleton<ITextSanitizer, TextSanitizer>();
 
         services.AddSingleton<PlainTextExtractor>();
@@ -101,7 +110,48 @@ public partial class App : Application
             Services.GetRequiredService<IStartupService>(),
             Services.GetRequiredService<IActivityLog>(),
             Services.GetRequiredService<ILogFolder>(),
-            Services.GetRequiredService<ISettingsStore>());
+            Services.GetRequiredService<ISettingsStore>(),
+            Services.GetRequiredService<VoicePackSetup>(),
+            Services.GetRequiredService<ISystemLog>());
+        StartVoicePackSetup();
+    }
+
+    // First run (no stored language) asks for one in the language window, which starts the download.
+    // Every later launch resumes quietly: an installed pack is activated with no network request, a
+    // missing one downloads in the background while the Windows voice reads (Slice 56).
+    private void StartVoicePackSetup()
+    {
+        NetworkChange.NetworkAvailabilityChanged += OnNetworkAvailabilityChanged;
+        if (Services.GetRequiredService<ISettingsStore>().Language is null)
+        {
+            _window!.ShowLanguageWindow();
+            return;
+        }
+
+        _ = RunVoicePackSetupAsync();
+    }
+
+    // A launch (or a Retry) that found no network leaves the setup Offline; the download starts by
+    // itself once the network returns. Only an Offline setup restarts: a download in flight, a finished
+    // one or a failure that is not about connectivity is left alone. Raised on a thread-pool thread.
+    private void OnNetworkAvailabilityChanged(object? sender, NetworkAvailabilityEventArgs e)
+    {
+        if (e.IsAvailable && Services.GetRequiredService<VoicePackSetup>().State == PackSetupState.Offline)
+        {
+            _ = RunVoicePackSetupAsync();
+        }
+    }
+
+    private async Task RunVoicePackSetupAsync()
+    {
+        try
+        {
+            await Services.GetRequiredService<VoicePackSetup>().StartAsync();
+        }
+        catch (Exception ex)
+        {
+            Services.GetRequiredService<ISystemLog>().Error("voice pack setup failed", null, ex);
+        }
     }
 
     // Sweeps stale logs, opens the system log, and starts the input-log writer

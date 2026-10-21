@@ -561,7 +561,6 @@
                 <TextBlock
                     x:Name="VoiceStatus"
                     Grid.Column="1"
-                    Text="Preparing neural voice…"
                     Visibility="Collapsed"
                     FontSize="11.5"
                     VerticalAlignment="Center"

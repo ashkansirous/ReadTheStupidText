@@ -130,9 +130,10 @@ Declared in `Package.appxmanifest`:
 | Capability | Type | Justification |
 | --- | --- | --- |
 | `runFullTrust` | restricted | The app is a full-trust packaged desktop app. It needs Win32 reach that the UWP sandbox forbids: a notification-area (tray) icon, a system-wide global hotkey, reading the **selection/clipboard of other apps** (UI Automation `TextPattern` + simulated copy), and a packaged `StartupTask`. None of these are possible without `runFullTrust`. This is the standard capability for WinUI 3 / Windows App SDK desktop apps and is the justification given in Partner Center. |
+| `internetClient` | standard | Added in Slice 56 (Decision 60). The package no longer carries the ~145 MB voice model: after the first-run language choice the app downloads the matching **voice pack** (an anonymous HTTPS file download from this project's public GitHub Releases, `packs-<n>`, see `docs/voice-packs.md`) and checks nothing else on the network. No text, audio, document or identifier is ever sent; once a pack is installed the app makes no network request at all. Partner Center justification: "Downloads the text-to-speech voice for the language the user chooses, on first run." |
 
-No `internetClient` — the neural voice model ships **inside the package**, so the
-app makes no network calls.
+`internetClient` is the only network capability declared (no `privateNetworkClientServer`,
+no `internetClientServer`). Where no network is available the Windows voice keeps reading.
 
 ## Store listing (Slice 43, Decision 71)
 
@@ -172,17 +173,18 @@ languages or voice packs (Batch 9 features not yet shipped).
 10,000 chars, up to 7 search terms of <= 30 chars each; Google Play title 30,
 short description 80, full description 4,000.
 
-**Download disclosure (Play live as of Slice 50; Microsoft Store waits for Slice 56).**
+**Download disclosure (Play live as of Slice 50; Microsoft Store goes live with Slice 56).**
 Android's first launch downloads a ~145 MB voice pack (Decisions 60, 61), and the
 store policies require the listing and privacy text to say so. As of Slice 50 the
 Google Play note is live: each `docs/store-listings/*.md` carries a "Google Play
 only: download note" section to append to the Play full description (the "Works
-offline" bullet is already reworded for both stores). **Do not add it to the
-Microsoft Store listing until Slice 56 ships** (Windows still bundles the voice).
-Slice 56 must also re-check the listing against what is then true: the "works
-offline" wording (still true for user data, but the app then needs a network once)
-and the "no network" statements in this file's *Capabilities* and *Privacy*
-sections.
+offline" bullet is already reworded for both stores). **Slice 56 makes the same
+true on Windows** (the MSIX no longer bundles the voice and declares `internetClient`),
+so paste the same download note into the Microsoft Store description, in the same
+release that ships Slice 56. The "works offline" wording stays true for user data (text
+never leaves the device) but the app needs a network once per language; the "no
+network" statements in this file's *Capabilities* and *Privacy* sections are updated
+accordingly.
 
 **Manual step (user pastes the text):**
 
@@ -207,8 +209,8 @@ clean Windows 11. The first submission failed Store certification **10.2.4.1
 (Security — Software Dependencies: undisclosed dependency on non-integrated
 software: .NET)**. Bundling .NET removes the external dependency entirely — no
 description disclosure is required and users install nothing. The cost is package
-size (~+50 MB for the runtime; the package is dominated by the ~145 MB voice
-model regardless). The Debug inner loop (`dotnet run` / VS **(Package)** profile)
+size (~+50 MB for the runtime). Since Slice 56 the package no longer carries the
+~145 MB voice model (it downloads as a pack), so it is that much smaller. The Debug inner loop (`dotnet run` / VS **(Package)** profile)
 stays framework-dependent so it remains fast.
 
 ## Privacy & diagnostics
@@ -216,8 +218,16 @@ stays framework-dependent so it remains fast.
 The app **collects and transmits nothing**. The read-latency timing diagnostics
 added in Slice 19 (time-to-first-audio and synthesis duration per read) live only in
 the in-memory activity log — shown in the activity-log window, capped, and cleared on
-every restart. There is no third-party analytics SDK, no network call, and no
-on-disk telemetry, so the Store privacy questionnaire stays "no data collected".
+every restart. There is no third-party analytics SDK and no on-disk telemetry. Since
+Slice 56 the only network call on Windows is the voice-pack download (below), so the Store
+privacy questionnaire stays "no data collected".
+
+**Windows / Microsoft Store (Slice 56, Decision 60).** The Windows app's only network use
+is downloading language voice packs from this repo's GitHub Releases, through the
+`internetClient` capability. It is an anonymous file download (the host sees an IP address,
+as for any web request; the app does not log it). Nothing about the user, their device or
+their content is sent. Packs are stored under the package's `LocalCache\packs` folder, and
+cached sentence audio under `LocalCache\sentences` (device only, capped at 100 MB).
 
 **Android / Google Play data safety (Slice 50, Decision 60).** The Android app's only
 network use is downloading language voice packs from this repo's GitHub Releases (the
@@ -264,7 +274,7 @@ data-file use at arm's length), so the Store package itself stays free of GPL
 code. Check this by unzipping the app package: there is no `espeak-ng-data`.
 
 Persian is therefore available only on the platforms that download packs (Android
-now). Where a pack can't be downloaded, Persian reads with the phone's own voice.
+and, since Slice 56, Windows). Where a pack can't be downloaded, Persian reads with the system voice.
 The `amir` voice was chosen over `gyro` because its dataset licence is stated as
 CC0 and `gyro`'s model card only says "See URL"; both are finetuned from the Piper
 "lessac" voice, whose dataset terms are an open question to re-check before a

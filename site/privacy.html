@@ -52,14 +52,14 @@
       to extract text and is not uploaded, saved permanently, or shared &mdash; it exists only to
       be read aloud.</li>
     <li><strong>Speech synthesis is performed entirely on your device</strong>, using a neural
-      voice model bundled inside the app. No text or audio is sent to any server or third party,
-      on either platform.</li>
+      voice model that the app downloads once as a language pack. No text or audio is sent to any
+      server or third party, on either platform.</li>
     <li>The app&rsquo;s <strong>activity log</strong> (an optional diagnostic view) lives in
       memory, shows recent read activity, and is <strong>cleared when the app closes</strong>.</li>
-    <li><strong>Android &mdash; cached audio of read sentences:</strong> to start reading sooner,
+    <li><strong>Cached audio of read sentences (Android and Windows):</strong> to start reading sooner,
       the app keeps the audio it generated for sentences it has read on your device only, in the
       app&rsquo;s private storage, capped at 100 MB. It is removed when you clear the app&rsquo;s
-      cache or storage, and it is never sent anywhere.</li>
+      cache or storage (on Windows, when you uninstall the app), and it is never sent anywhere.</li>
     <li><strong>Settings</strong> you choose (reading speed, selected voice, and platform toggles
       such as auto-read and launch-at-startup) are stored <strong>locally</strong> on your device.
       They never leave it.</li>
@@ -72,21 +72,23 @@
   </ul>
 
   <h2>Network use</h2>
-  <p><strong>Language packs only.</strong> The Android app downloads the natural-voice language
-  pack for the language you choose on first launch (about 145&nbsp;MB, so a Wi-Fi connection is
+  <p><strong>Language packs only.</strong> The Android and Windows apps download the natural-voice
+  language pack for the language you choose on first launch (about 145&nbsp;MB, so a Wi-Fi connection is
   advisable). The download is a plain file request to this project&rsquo;s public GitHub Releases
   page: no account, no identifier and none of your text, images or scans is sent, and the app has
   no analytics or telemetry. Once a pack is installed the app works fully offline and makes no network requests at all (it does not even re-check the catalog). Until it
-  arrives, and if you are offline, your phone&rsquo;s own built-in voice reads instead.</p>
-  <p>The Windows app does not use the network.</p>
+  arrives, and if you are offline, your device&rsquo;s own built-in voice reads instead (the Windows
+  voice on Windows, the phone&rsquo;s voice on Android).</p>
   <p>Your text, images, scans and documents are never transmitted anywhere; reading and text
   recognition happen on the device.</p>
 
   <h2>Permissions</h2>
   <p><strong>Windows</strong> declares the <code>runFullTrust</code> capability, required so it can
   place a system-tray icon, register a global hotkey, read selected/copied text from other apps
-  (via UI Automation and the Windows clipboard), and run its on-device text-to-speech engine. It is
-  not used to collect or transmit data.</p>
+  (via UI Automation and the Windows clipboard), and run its on-device text-to-speech engine. It also
+  declares the standard <strong>Internet</strong> (<code>internetClient</code>) capability, used only to
+  download language voice packs (see <em>Network use</em>). It is not used to collect or transmit
+  data.</p>
   <p><strong>Android</strong> declares the <strong>Internet</strong> and <strong>Network
   state</strong> permissions, used only to download language voice packs and to tell
   &ldquo;offline&rdquo; from a failed download (see <em>Network use</em>). It also requests the
@@ -96,7 +98,7 @@
   to read; the app only opens the file you explicitly select.</p>
 
   <h2>Third-party components</h2>
-  <p>The app uses a small set of open-source, on-device components that never transmit data (on Android the Supertonic voice model is downloaded as a language pack rather than bundled):</p>
+  <p>The app uses a small set of open-source, on-device components that never transmit data (the Supertonic voice model is downloaded as a language pack on both platforms rather than bundled):</p>
   <ul>
     <li><strong>sherpa-onnx</strong> and the <strong>Supertonic</strong> voice model &mdash; the
       offline neural text-to-speech engine, used on both platforms.</li>

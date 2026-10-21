@@ -28,14 +28,10 @@
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 
-  <!-- The Supertonic-3 neural voice model is shipped inside the package (no
-       first-run download). Copied next to the app and included in the MSIX
-       payload; SupertonicModelService reads it from AppContext.BaseDirectory. -->
-  <ItemGroup>
-    <Content Include="VoiceModel\**\*">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
+  <!-- No voice model ships in the package (Slice 56, Decision 61): the first-run language choice downloads
+       a voice pack into the package's LocalCache (Infrastructure WindowsVoicePackService). The model files
+       in VoiceModel\ now only feed the manual packs workflow (.github/workflows/packs.yml), so they are
+       deliberately not Content and never enter the MSIX. -->
 
   <!--
     Defining the "Msix" ProjectCapability here allows the Single-project MSIX Packaging

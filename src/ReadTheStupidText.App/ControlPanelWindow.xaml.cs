@@ -51,6 +51,7 @@ public sealed partial class ControlPanelWindow : Window
     private readonly ReadAloudService _readAloud;
     private readonly IStartupService _startup;
     private readonly ISettingsStore _settings;
+    private readonly VoicePackSetup _packSetup;
     private readonly DispatcherQueue _dispatcher = DispatcherQueue.GetForCurrentThread();
     private readonly Brush _onIconBrush = new SolidColorBrush(Microsoft.UI.Colors.White);
     private Storyboard? _waveform;
@@ -90,8 +91,9 @@ public sealed partial class ControlPanelWindow : Window
     /// the single text box window, so it handles showing/hiding it (Slice 37).</summary>
     public event EventHandler? ReadingTextBoxRequested;
 
-    public ControlPanelWindow(ReadAloudService readAloud, IStartupService startup, ISettingsStore settings)
+    public ControlPanelWindow(ReadAloudService readAloud, IStartupService startup, ISettingsStore settings, VoicePackSetup packSetup)
     {
+        _packSetup = packSetup;
         _readAloud = readAloud;
         _startup = startup;
         _settings = settings;
@@ -115,7 +117,15 @@ public sealed partial class ControlPanelWindow : Window
 
         // Neural voices arrive after the model loads; rebuild the picker then.
         _readAloud.VoicesChanged += OnVoicesChanged;
+        _packSetup.Changed += OnPackSetupChanged;
     }
+
+    // The download's progress shows in the picker's status line while the natural voice is not ready.
+    private void OnPackSetupChanged(object? sender, EventArgs e) =>
+        _dispatcher.TryEnqueue(UpdateVoiceStatus);
+
+    private void UpdateVoiceStatus() =>
+        VoiceStatus.Text = PackSetupText.ForPanel(_packSetup.State, _packSetup.Progress);
 
     private void OnVoicesChanged(object? sender, EventArgs e) =>
         _dispatcher.TryEnqueue(() =>
@@ -152,20 +162,20 @@ public sealed partial class ControlPanelWindow : Window
         AppWindow.IsShownInSwitchers = false;
     }
 
-    // Neural voices are the only selectable ones; until the model has loaded
-    // the list is empty, shown as a "preparing" state rather than a hidden row.
+    // The picker lists the pack's natural voices plus the "Windows voice". Until a pack is ready the
+    // Windows voice is the only entry, so the row shows the download status instead (Slice 56).
     private void LoadVoices()
     {
-        var voices = _readAloud.InstalledVoices;
-        bool ready = voices.Count > 0;
+        bool ready = _readAloud.VoicesReady;
 
         VoiceCombo.Visibility = ready ? Visibility.Visible : Visibility.Collapsed;
         VoiceStatus.Visibility = ready ? Visibility.Collapsed : Visibility.Visible;
+        UpdateVoiceStatus();
 
         if (ready)
         {
             _refreshing = true;
-            VoiceCombo.ItemsSource = voices;
+            VoiceCombo.ItemsSource = _readAloud.InstalledVoices;
             SelectCurrentVoice();
             _refreshing = false;
         }

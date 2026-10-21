@@ -25,14 +25,14 @@ that leaves your device. Everything the app does happens **locally**.
   processed to extract text and is not uploaded, saved permanently, or shared
   — it exists only to be read aloud.
 - **Speech synthesis is performed entirely on your device**, using a neural
-  voice model bundled inside the app. No text or audio is sent to any server
-  or third party, on either platform.
+  voice model that the app downloads once as a language pack. No text or audio is
+  sent to any server or third party, on either platform.
 - The app's **activity log** (an optional diagnostic view) lives in memory,
   shows recent read activity, and is cleared when the app closes.
-- **Android — cached audio of read sentences:** to start reading sooner, the app keeps the
+- **Cached audio of read sentences (Android and Windows):** to start reading sooner, the app keeps the
   audio it generated for sentences it has read on your device only, in the app's private
-  storage, capped at 100 MB. It is removed when you clear the app's cache or storage, and it is
-  never sent anywhere.
+  storage, capped at 100 MB. It is removed when you clear the app's cache or storage (on
+  Windows, when you uninstall the app), and it is never sent anywhere.
 - **Settings** you choose (reading speed, selected voice, and platform toggles
   such as auto-read and launch-at-startup) are stored **locally** on your
   device. They never leave it.
@@ -46,15 +46,14 @@ that leaves your device. Everything the app does happens **locally**.
 
 ## Network use
 
-**Language packs only.** The Android app downloads the natural-voice language
-pack for the language you choose on first launch (about 145 MB, so a Wi-Fi
+**Language packs only.** The Android and Windows apps download the natural-voice
+language pack for the language you choose on first launch (about 145 MB, so a Wi-Fi
 connection is advisable). The download is a plain file request to this
 project's public GitHub Releases page: no account, no identifier and none of
 your text, images or scans is sent, and the app has no analytics or telemetry.
 Once a pack is installed the app works fully offline and makes no network requests at all (it does not even re-check the catalog). Until it arrives, and if
-you are offline, your phone's own built-in voice reads instead.
-
-The Windows app does not use the network.
+you are offline, your device's own built-in voice reads instead (the Windows voice on
+Windows, the phone's voice on Android).
 
 Your text, images, scans and documents are never transmitted anywhere; reading
 and text recognition happen on the device.
@@ -64,7 +63,9 @@ and text recognition happen on the device.
 **Windows** declares the `runFullTrust` capability, required so it can place a
 system-tray icon, register a global hotkey, read selected/copied text from
 other apps (via UI Automation and the Windows clipboard), and run its
-on-device text-to-speech engine. It is not used to collect or transmit data.
+on-device text-to-speech engine. It also declares the standard **Internet** (`internetClient`)
+capability, used only to download language voice packs (see *Network use*). It is not used to
+collect or transmit data.
 
 **Android** declares the **Internet** and **Network state** permissions, used
 only to download language voice packs and to tell "offline" from a failed
@@ -76,14 +77,14 @@ choose a document to read; the app only opens the file you explicitly select.
 ## Third-party components
 
 The app uses a small set of open-source, on-device components that never
-transmit data (on Android the Supertonic voice model is downloaded as a
-language pack rather than bundled):
+transmit data (the Supertonic voice model is downloaded as a
+language pack on both platforms rather than bundled):
 
 - **sherpa-onnx** and the **Supertonic** voice model — the offline neural
   text-to-speech engine, used on both platforms.
 - **Piper** (Persian voice) with **espeak-ng** data, and **MeloTTS** (Chinese
   voice) — more offline voices, each downloaded once as a language pack when you
-  choose that language. They run entirely on the phone; the only network use is
+  choose that language. They run entirely on your device; the only network use is
   the one-time download of the pack, and your text is never sent anywhere.
 - **Google ML Kit Text Recognition** (Android only) — the on-device model used
   to read text out of a scanned photo. It runs locally; nothing is sent to

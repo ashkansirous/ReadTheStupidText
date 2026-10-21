@@ -29,6 +29,7 @@ public sealed partial class MainWindow : Window
     private const string VoiceLabel = "Voice";
     private const string ActivityLogLabel = "Show activity log";
     private const string UploadFileLabel = "Read file…";
+    private const string LanguageLabel = "Voice language…";
 
     private static readonly Uri DarkTrayIconUri = new("ms-appx:///Assets/TrayIconDark.ico");
     private static readonly Uri LightTrayIconUri = new("ms-appx:///Assets/TrayIconLight.ico");
@@ -39,6 +40,9 @@ public sealed partial class MainWindow : Window
     private readonly IStartupService _startup;
     private readonly IActivityLog _activityLog;
     private readonly ILogFolder _logFolder;
+    private readonly ISettingsStore _settings;
+    private readonly VoicePackSetup _packSetup;
+    private readonly ISystemLog _systemLog;
     private readonly DispatcherQueue _dispatcher = DispatcherQueue.GetForCurrentThread();
     private readonly Windows.UI.ViewManagement.UISettings _uiSettings = new();
 
@@ -54,11 +58,13 @@ public sealed partial class MainWindow : Window
     private readonly RelayCommand _toggleControlPanelCommand;
     private readonly RelayCommand _showActivityLogCommand;
     private readonly RelayCommand _uploadFileCommand;
+    private readonly RelayCommand _showLanguageCommand;
     private readonly RelayCommand _quitCommand;
 
     private readonly ControlPanelWindow _controlPanel;
     private readonly ReadingTextBoxWindow _readingTextBox;
     private ActivityLogWindow? _logWindow;
+    private LanguageWindow? _languageWindow;
 
     private MenuFlyout? _flyout;
     private MenuFlyoutItem? _playPauseItem;
@@ -73,7 +79,7 @@ public sealed partial class MainWindow : Window
     private ToggleMenuFlyoutItem? _customSpeedItem;
     private int _speedStartIndex;
 
-    public MainWindow(ReadAloudService readAloud, IHotkeyService hotkey, IClipboardMonitor clipboardMonitor, IStartupService startup, IActivityLog activityLog, ILogFolder logFolder, ISettingsStore settings)
+    public MainWindow(ReadAloudService readAloud, IHotkeyService hotkey, IClipboardMonitor clipboardMonitor, IStartupService startup, IActivityLog activityLog, ILogFolder logFolder, ISettingsStore settings, VoicePackSetup packSetup, ISystemLog systemLog)
     {
         _readAloud = readAloud;
         _hotkey = hotkey;
@@ -81,11 +87,14 @@ public sealed partial class MainWindow : Window
         _startup = startup;
         _activityLog = activityLog;
         _logFolder = logFolder;
+        _settings = settings;
+        _packSetup = packSetup;
+        _systemLog = systemLog;
 
         // The left-click control panel shares the same services as the tray menu,
         // so both surfaces read and write the same state; the settings store also
         // persists the panel's dragged position.
-        _controlPanel = new ControlPanelWindow(_readAloud, _startup, settings);
+        _controlPanel = new ControlPanelWindow(_readAloud, _startup, settings, packSetup);
 
         // Created eagerly (not lazily on first toggle), like the control panel:
         // it needs to keep tracking ReadTextChanged/ChunkChanged from launch so
@@ -102,6 +111,7 @@ public sealed partial class MainWindow : Window
         _toggleControlPanelCommand = new RelayCommand(_ => _controlPanel.Toggle());
         _showActivityLogCommand = new RelayCommand(_ => ShowActivityLog());
         _uploadFileCommand = new RelayCommand(_ => _ = UploadFileAsync());
+        _showLanguageCommand = new RelayCommand(_ => ShowLanguageWindow());
         _quitCommand = new RelayCommand(_ => Quit());
 
         InitializeComponent();
@@ -239,6 +249,7 @@ public sealed partial class MainWindow : Window
         flyout.Items.Add(new MenuFlyoutSeparator());
         flyout.Items.Add(new MenuFlyoutItem { Text = ActivityLogLabel, Command = _showActivityLogCommand });
         flyout.Items.Add(new MenuFlyoutItem { Text = UploadFileLabel, Command = _uploadFileCommand });
+        flyout.Items.Add(new MenuFlyoutItem { Text = LanguageLabel, Command = _showLanguageCommand });
         flyout.Items.Add(new MenuFlyoutItem { Text = QuitLabel, Command = _quitCommand });
 
         return flyout;
@@ -255,6 +266,21 @@ public sealed partial class MainWindow : Window
         }
 
         _logWindow.Activate();
+    }
+
+    /// <summary>
+    /// Opens (or focuses) the language window: the first-run choice, reopened from the tray to change the
+    /// language or retry a failed voice download (Slice 56). Single instance, recreated after it closes.
+    /// </summary>
+    public void ShowLanguageWindow()
+    {
+        if (_languageWindow is null)
+        {
+            _languageWindow = new LanguageWindow(_settings, _packSetup, _systemLog);
+            _languageWindow.Closed += (_, _) => _languageWindow = null;
+        }
+
+        _languageWindow.Activate();
     }
 
     // Opens the standard file picker (widens as more extractors land — .txt,
