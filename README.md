@@ -22,6 +22,8 @@ Grab the MSIX from the **[latest release](https://github.com/ashkansirous/ReadTh
 
 **Android first launch:** the app asks for a language and downloads the ~145 MB voice pack (Wi-Fi advised). The phone's own voice reads until it arrives, and the app works offline afterwards.
 
+**Dino Reader (Android, in development):** a kids' story reader that reads with a voice per character; it builds from `src/DinoReader.App`.
+
 ## Status
 
 Early development. See [`plan.md`](plan.md) for the vertical-slice roadmap and
