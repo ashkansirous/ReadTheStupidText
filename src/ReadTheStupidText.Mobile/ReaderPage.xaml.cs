@@ -3,6 +3,7 @@ using ReadTheStupidText.Application.Documents;
 using ReadTheStupidText.Application.Images;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Application.Translation;
 using ReadTheStupidText.Domain.Reading;
 using ReadTheStupidText.Mobile.Resources.Strings;
 
@@ -62,7 +63,7 @@ public partial class ReaderPage : ContentPage
     // started (system TTS returns as soon as the utterance is queued).
     private static readonly TimeSpan FirstAudioGrace = TimeSpan.FromSeconds(8);
 
-    public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, IImageTextExtractor imageExtractor, IVoiceModelService model, VoicePackInstaller installer, IPlatformServices platform, EditorDraft draft, IDocumentScanner? scanner = null)
+    public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, IImageTextExtractor imageExtractor, IVoiceModelService model, VoicePackInstaller installer, IPlatformServices platform, EditorDraft draft, IDocumentScanner? scanner = null, ILanguageDetector? detector = null, ITranslator? translator = null)
     {
         InitializeComponent();
         FlowDirection = UiFlowDirection.ForCurrentCulture();
@@ -82,6 +83,7 @@ public partial class ReaderPage : ContentPage
         UpdatePresetHighlight();
         UpdateVoiceLabel();
         LanguageNameLabel.Text = LanguageChoices.NativeName(CurrentLanguage());
+        InitTranslation(detector, translator);
     }
 
     protected override void OnAppearing()
@@ -144,6 +146,7 @@ public partial class ReaderPage : ContentPage
     public void PrepareForRebuild()
     {
         _retired = true;
+        CancelTranslation();
         _reader.Stop();
         _draft.Store(TextEditor.Text);
         DetachHandlers();
@@ -165,7 +168,7 @@ public partial class ReaderPage : ContentPage
             string? text = await Clipboard.Default.GetTextAsync();
             if (!_retired && !string.IsNullOrWhiteSpace(text))
             {
-                TextEditor.Text = text;
+                ReplaceEditorText(text);
             }
         }
         catch (Exception)
@@ -345,7 +348,7 @@ public partial class ReaderPage : ContentPage
             return;
         }
 
-        TextEditor.Text = updated;
+        ReplaceEditorText(updated);
         if (failed.Count > 0)
         {
             string template = failed.Count == 1 ? AppResources.Reader_PagesSkippedOneMessage : AppResources.Reader_PagesSkippedManyMessage;
@@ -438,7 +441,7 @@ public partial class ReaderPage : ContentPage
             string extracted = await _documentExtractor.ExtractTextAsync(file.FullPath);
             if (!_retired)
             {
-                TextEditor.Text = extracted;
+                ReplaceEditorText(extracted);
             }
         }
         catch (DocumentTooLargeException ex)
@@ -488,6 +491,7 @@ public partial class ReaderPage : ContentPage
         }
 
         _reader.Stop();
+        CancelTranslationRead();
         ClearPendingRead();
         if (string.IsNullOrWhiteSpace(text))
         {
@@ -511,7 +515,15 @@ public partial class ReaderPage : ContentPage
         SetPlayLoading(true);
         try
         {
-            await _reader.SpeakAsync(text);
+            // The spinner covers the translation too; the reader gets the translation, while
+            // _lastSpokenText and _pendingReadText stay the source text so Resume still matches.
+            string? spoken = await TextToSpeakAsync(text, id);
+            if (spoken is null || _retired || id != _pendingReadId)
+            {
+                return;
+            }
+
+            await _reader.SpeakAsync(spoken);
         }
         catch (Exception)
         {

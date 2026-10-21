@@ -95,16 +95,41 @@
             </Grid>
 
             <!-- Editor card: the one text box every input action fills. -->
-            <Grid Grid.Row="2">
+            <Grid Grid.Row="2" RowDefinitions="*,Auto" RowSpacing="8">
                 <Border Padding="14"
                         StrokeShape="RoundRectangle 14" Stroke="{StaticResource CardBorder}"
                         BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}">
-                    <Editor x:Name="TextEditor"
+                    <Editor x:Name="TextEditor" TextChanged="OnEditorTextChanged"
                             Placeholder="{x:Static res:AppResources.Reader_EditorPlaceholder}"
                             FontSize="13.5" />
                 </Border>
                 <ActivityIndicator x:Name="BusyIndicator" IsRunning="False" IsVisible="False"
                                     HorizontalOptions="Center" VerticalOptions="Center" />
+
+                <!-- Translate card (Slice 54): shown only where the platform has a translator. The toggle's
+                     label names the target language, so it is set in code. -->
+                <Border x:Name="TranslateCard" Grid.Row="1" IsVisible="False" Padding="13,6"
+                        StrokeShape="RoundRectangle 14" Stroke="{StaticResource CardBorder}"
+                        BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}">
+                    <VerticalStackLayout Spacing="2">
+                        <VerticalStackLayout x:Name="TranslateControls" Spacing="2">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Label x:Name="TranslateToggleLabel" FontSize="12.5" VerticalOptions="Center" />
+                                <Switch x:Name="TranslateSwitch" Grid.Column="1" Toggled="OnTranslateToggled" />
+                            </Grid>
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                <Label Text="{x:Static res:AppResources.Translate_SourceLabel}" FontSize="12.5" VerticalOptions="Center"
+                                       TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
+                                <Picker x:Name="SourcePicker" Grid.Column="1" Title="{x:Static res:AppResources.Translate_SourcePickerTitle}"
+                                        FontSize="13" FontAttributes="Bold" HorizontalTextAlignment="End"
+                                        SelectedIndexChanged="OnSourcePickerChanged" />
+                            </Grid>
+                            <Label x:Name="TranslatedTextLabel" IsVisible="False" FontSize="12" MaxLines="4" LineBreakMode="TailTruncation" />
+                        </VerticalStackLayout>
+                        <Label x:Name="TranslateNoteLabel" FontSize="10.5"
+                               TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
+                    </VerticalStackLayout>
+                </Border>
             </Grid>
 
             <!-- Voice row: opens the picker; no hidden action in the app bar. -->

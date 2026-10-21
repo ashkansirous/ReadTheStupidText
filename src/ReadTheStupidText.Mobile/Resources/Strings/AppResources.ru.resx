@@ -48,6 +48,18 @@
   <data name="Reader_FileUnreadableMessage" xml:space="preserve"><value>Файл может быть повреждён или иметь неподдерживаемый формат.</value></data>
   <data name="Reader_ReadFailedTitle" xml:space="preserve"><value>Не удалось прочитать текст</value></data>
   <data name="Reader_ReadFailedMessage" xml:space="preserve"><value>При чтении что-то пошло не так.</value></data>
+  <data name="Translate_ToggleLabel" xml:space="preserve"><value>Перевести на {0}</value></data>
+  <data name="Translate_SourceLabel" xml:space="preserve"><value>Язык текста</value></data>
+  <data name="Translate_AutoDetect" xml:space="preserve"><value>Определять автоматически</value></data>
+  <data name="Translate_SourcePickerTitle" xml:space="preserve"><value>Язык текста</value></data>
+  <data name="Translate_QualityNote" xml:space="preserve"><value>Быстрый перевод на устройстве; качество приблизительное.</value></data>
+  <data name="Translate_DownloadingStatus" xml:space="preserve"><value>Загрузка модели перевода…</value></data>
+  <data name="Translate_ModelUnavailableTitle" xml:space="preserve"><value>Пока нельзя перевести</value></data>
+  <data name="Translate_ModelUnavailableMessage" xml:space="preserve"><value>Модели перевода ещё нет на телефоне, и загрузить её не удалось. Подключитесь к интернету один раз, чтобы получить её. Вместо этого будет прочитан исходный текст.</value></data>
+  <data name="Translate_FailedTitle" xml:space="preserve"><value>Не удалось перевести</value></data>
+  <data name="Translate_FailedMessage" xml:space="preserve"><value>Этот текст не удалось перевести. Вместо этого будет прочитан оригинал.</value></data>
+  <data name="Translate_UnsupportedNote" xml:space="preserve"><value>Перевод для языка {0} недоступен.</value></data>
+  <data name="Translate_SourceUnsupportedNote" xml:space="preserve"><value>Перевод с языка {0} недоступен.</value></data>
   <data name="PackStatus_Resolving" xml:space="preserve"><value>Поиск естественных голосов…</value></data>
   <data name="PackStatus_Downloading" xml:space="preserve"><value>Загрузка естественных голосов… {0}</value></data>
   <data name="PackStatus_Offline" xml:space="preserve"><value>Нет соединения. Читает голос телефона. Нажмите, чтобы повторить загрузку голоса.</value></data>

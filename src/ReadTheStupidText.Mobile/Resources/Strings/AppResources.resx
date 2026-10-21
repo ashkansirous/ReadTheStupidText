@@ -52,6 +52,18 @@
   <data name="Reader_FileUnreadableMessage" xml:space="preserve"><value>The file may be corrupted or in an unsupported format.</value></data>
   <data name="Reader_ReadFailedTitle" xml:space="preserve"><value>Couldn't read that text</value></data>
   <data name="Reader_ReadFailedMessage" xml:space="preserve"><value>Something went wrong while reading.</value></data>
+  <data name="Translate_ToggleLabel" xml:space="preserve"><value>Translate to {0}</value></data>
+  <data name="Translate_SourceLabel" xml:space="preserve"><value>Text is in</value></data>
+  <data name="Translate_AutoDetect" xml:space="preserve"><value>Auto-detect</value></data>
+  <data name="Translate_SourcePickerTitle" xml:space="preserve"><value>Text language</value></data>
+  <data name="Translate_QualityNote" xml:space="preserve"><value>Quick on-device translation; the quality is casual.</value></data>
+  <data name="Translate_DownloadingStatus" xml:space="preserve"><value>Downloading the translation model…</value></data>
+  <data name="Translate_ModelUnavailableTitle" xml:space="preserve"><value>Can't translate yet</value></data>
+  <data name="Translate_ModelUnavailableMessage" xml:space="preserve"><value>The translation model isn't on your phone yet and couldn't be downloaded. Connect to the internet once to get it. Reading the original text instead.</value></data>
+  <data name="Translate_FailedTitle" xml:space="preserve"><value>Translation failed</value></data>
+  <data name="Translate_FailedMessage" xml:space="preserve"><value>This text couldn't be translated. Reading the original instead.</value></data>
+  <data name="Translate_UnsupportedNote" xml:space="preserve"><value>Translation isn't available for {0}.</value></data>
+  <data name="Translate_SourceUnsupportedNote" xml:space="preserve"><value>Translation isn't available from {0}.</value></data>
   <data name="PackStatus_Resolving" xml:space="preserve"><value>Checking for natural voices…</value></data>
   <data name="PackStatus_Downloading" xml:space="preserve"><value>Downloading natural voices… {0}</value></data>
   <data name="PackStatus_Offline" xml:space="preserve"><value>No connection. Reading with the phone voice. Tap to retry the voice download.</value></data>
