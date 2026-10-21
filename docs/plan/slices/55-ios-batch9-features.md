@@ -1,6 +1,6 @@
 # Slice 55 — iOS gets the Batch 9 features
 
-*In progress (wave 2026-10-21b), draft PR.*
+*Built (wave 2026-10-21b), PR #207.*
 
 **Batch:** 9
 **Decisions:** 61-68 (iOS side), 69, 70
@@ -93,7 +93,7 @@ on-device translation and the sentence head start.
   and does not export `OrtGetApiBase`, so OCR cannot reuse it. iOS references the full
   `Microsoft.ML.OnnxRuntime` 1.24.3 (static xcframework, same version as Android's managed pin). Expect
   roughly 30-50 MB more in the app. Checking the unzipped `.ipa` and that both copies load is a TestFlight item.
-- **Shared OCR sources.** `OnnxOcrInference.cs` and `PaddleOcrEngine.cs` are platform-neutral but sit in
+- **Shared OCR sources** (superseded: moved to Mobile.Shared/Ocr/ in the review fixes). `OnnxOcrInference.cs` and `PaddleOcrEngine.cs` are platform-neutral but sit in
   `Platforms/Android`. The Mobile csproj compiles them for iOS from there in the `AddIosOcrSources` target.
   **When Slice 63 moves them to Mobile.Shared, delete that target** or the build breaks on the missing path.
 - **Localization.** `.resx` and `FlowDirection` handling are shared and untouched. Added
@@ -127,8 +127,27 @@ on-device translation and the sentence head start.
   nearly the same sherpa-onnx work (config, generate, voice tables) behind different native bindings;
   fold them into a shared engine in `Mobile.Shared` once both bindings can be verified side by side.
 
+## Key shape
+
+- `Mobile.Shared/Ocr/` holds `LanguageImageTextExtractor`, `IBuiltInTextRecognizer`, `OnnxOcrInference`
+  and `PaddleOcrEngine`, shared by Android (ML Kit) and iOS (Vision; covers ja/zh/ru on iOS 16+).
+- `NlLanguageDetector` returns primary subtags.
+- Pack backup exclusion runs in `AppDelegate.FinishedLaunching`.
+- Translation is NOT shipped on iOS.
+
+## Review notes
+
+- High pass: 10 findings. 9 fixed; the shared TTS engine is a follow-up.
+- Medium pass: 8 findings. 7 fixed; the two onnxruntime copies on iOS are a known decision that needs a
+  device check.
+
+## Verification
+
+The iOS compile, both Android builds, and 463 + 229 tests pass. Nothing has run on a device.
+
 ## Not verified (needs TestFlight / a device)
 
+- A full TestFlight/device pass.
 - iOS only compiles here. Nothing below has run on a device or simulator.
 - Neural read with a Supertonic, a Piper (Farsi) and a Melo (Chinese) pack, including espeak data loading
   and the structs-by-ref configs on sherpa 1.13.8; the head start (second Play of the same text starts at
@@ -142,3 +161,17 @@ on-device translation and the sentence head start.
 - App Store validation of the privacy manifest now that onnxruntime is linked into the executable (it may
   need extra required-reason API entries in `PrivacyInfo.xcprivacy`).
 - `NLLanguageRecognizer` output (`zh-Hans` and similar tags are normalised by `TranslationFlow`).
+
+#### For CLAUDE.md
+
+- The OCR pipeline shared by Android and iOS lives in `Mobile.Shared/Ocr/` behind `IBuiltInTextRecognizer`
+  (ML Kit on Android, Vision on iOS). (Slice 55: docs/plan/slices/55-ios-batch9-features.md)
+- iOS ships its own onnxruntime (`Microsoft.ML.OnnxRuntime`), because sherpa's xcframework links it
+  statically and does not export `OrtGetApiBase`. (Slice 55: docs/plan/slices/55-ios-batch9-features.md)
+- Translation isn't available on iOS (no .NET binding for Apple's Translation framework), so the
+  translate card stays hidden there. (Slice 55: docs/plan/slices/55-ios-batch9-features.md)
+
+#### For README.md
+
+iOS now has the natural voices in nine languages, the head start, on-device text recognition per
+language, and localised permission prompts. Translation is Android-only for now.
