@@ -119,13 +119,13 @@ Compiled for `net10.0-ios` on Windows against the reference assemblies (`dotnet 
 
 The "Audio" decision above describes the first cut of `IosAudioSession`. It is superseded in detail by the final shape: activation and deactivation are owner-aware, and the reader releases the session itself through `FinishAsync`. The sherpa-onnx pin and seam decisions stand as written.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-21)
 
 - iOS neural reading uses sherpa-onnx 1.13.8 with `SherpaOnnxC.xcframework` 1.13.8, which differs from Android's 1.13.3 pin. Bump the managed package and the framework (URL and SHA-256 in `ReadTheStupidText.Mobile.csproj`) together. (Slice 49: docs/plan/slices/49-ios-parity.md)
 - The iOS reader lives in `Mobile/Platforms/iOS`, behind `IosNeuralReaderFactory` in Mobile.Shared. An app without a factory, such as Dino Reader, keeps the system voice on iOS. (Slice 49: docs/plan/slices/49-ios-parity.md)
 - The iOS audio session goes through `IosAudioSession` with an owner. Don't call `AVAudioSession` directly. (Slice 49: docs/plan/slices/49-ios-parity.md)
 
-#### For README.md
+#### For README.md (lifted 2026-10-21)
 
 The iOS app now has the neural voice (after the pack download), camera scanning with on-device text recognition, and background audio.
 
