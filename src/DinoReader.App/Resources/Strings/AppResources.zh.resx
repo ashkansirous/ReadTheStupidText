@@ -56,6 +56,8 @@
   <data name="Add_Photos" xml:space="preserve"><value>照片</value></data>
   <data name="Add_PhotosSub" xml:space="preserve"><value>选择页面照片</value></data>
   <data name="Add_File" xml:space="preserve"><value>PDF 或文件</value></data>
+  <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>
+  <data name="Cast_UnknownGender" xml:space="preserve"><value>?</value></data>
   <data name="Add_Type" xml:space="preserve"><value>输入或粘贴</value></data>
   <data name="Add_TypeSub" xml:space="preserve"><value>仅文字</value></data>
   <data name="Add_Placeholder" xml:space="preserve"><value>输入或粘贴一个故事</value></data>

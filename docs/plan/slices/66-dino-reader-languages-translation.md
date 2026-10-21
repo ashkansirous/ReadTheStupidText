@@ -83,6 +83,8 @@ Source: `docs/design/dino-reader/Dino Reader v2.dc.html`, add-story screen (line
 - The hyphen in `TagPatterns.VerbSubjectGap` is French only ("dit-il"); other languages keep whitespace.
 - `StoryTranslation` links a `CancellationTokenSource` and cancels the remaining pieces on the first fault.
 - Accepted, not changed: `DinoReader.Core` references `ReadTheStupidText.Application` (library-free, for `AppLanguage`); one more finding judged harmless.
+- When translation is skipped (model missing) the story is read in its own language and voices, and the spoken pack goes back to the story's language (`ReadingSession.TranslationSkipped`). Voice remap is done as a set (`VoiceRemap.MapSet`, narrator first, Unknown-gender aware). The cast preview speaks the story's language when its pack is installed, else the current one, and never switches the global language. `StoryVoicing` clears its voice pools when a pack finishes installing. Add-story cancels the in-flight analysis before recasting and clears a stale "detected" label. The UI culture is applied in `MauiProgram` before anything reads it. `Add_FileSub` and `Cast_UnknownGender` are in all eight language files; `App_Name` stays neutral-only (as in RTST).
+- Not done, follow-up: lazy translation (speak the first pieces while the rest translate); no translator is registered yet.
 
 ## Review notes
 

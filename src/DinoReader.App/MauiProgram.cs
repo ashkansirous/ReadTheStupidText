@@ -14,6 +14,8 @@ public static class MauiProgram
 
 	public static MauiApp CreateMauiApp()
 	{
+		// Before anything reads the culture (services, resources, the first page), including the UI thread's own.
+		UiCulture.Apply(UiCulture.Resolve(System.Globalization.CultureInfo.CurrentUICulture));
 		var builder = MauiApp.CreateBuilder();
 		builder
 			.UseMauiApp<DinoApp>()

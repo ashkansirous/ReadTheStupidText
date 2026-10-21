@@ -56,6 +56,8 @@
   <data name="Add_Photos" xml:space="preserve"><value>写真</value></data>
   <data name="Add_PhotosSub" xml:space="preserve"><value>ページの写真を選ぶ</value></data>
   <data name="Add_File" xml:space="preserve"><value>PDFまたはファイル</value></data>
+  <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>
+  <data name="Cast_UnknownGender" xml:space="preserve"><value>?</value></data>
   <data name="Add_Type" xml:space="preserve"><value>入力または貼り付け</value></data>
   <data name="Add_TypeSub" xml:space="preserve"><value>テキストのみ</value></data>
   <data name="Add_Placeholder" xml:space="preserve"><value>おはなしを入力または貼り付け</value></data>

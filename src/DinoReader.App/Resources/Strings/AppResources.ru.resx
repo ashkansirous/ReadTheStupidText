@@ -56,6 +56,8 @@
   <data name="Add_Photos" xml:space="preserve"><value>Фото</value></data>
   <data name="Add_PhotosSub" xml:space="preserve"><value>Выберите фото страниц</value></data>
   <data name="Add_File" xml:space="preserve"><value>PDF или файл</value></data>
+  <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>
+  <data name="Cast_UnknownGender" xml:space="preserve"><value>?</value></data>
   <data name="Add_Type" xml:space="preserve"><value>Ввести или вставить</value></data>
   <data name="Add_TypeSub" xml:space="preserve"><value>Только текст</value></data>
   <data name="Add_Placeholder" xml:space="preserve"><value>Введите или вставьте историю</value></data>

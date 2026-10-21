@@ -13,7 +13,6 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 
 	public DinoApp(IServiceProvider services, SpeechStartup startup)
 	{
-		UiCulture.Apply(UiCulture.Resolve(CultureInfo.CurrentUICulture));
 		InitializeComponent();
 		if (UiCulture.IsRightToLeft)
 		{

@@ -337,7 +337,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	private async Task PreviewAsync(CastRow row)
 	{
 		StopPreview();
-		string line = CastText.PreviewLineFor(_spoken.Current);
+		string line = CastText.PreviewLineFor(_voicing.PreviewLanguage(_story!.Language, _spoken.Current));
 		var segment = new VoicedSegment(line, row.Member.VoiceId, 0, line.Length, 0);
 		try
 		{

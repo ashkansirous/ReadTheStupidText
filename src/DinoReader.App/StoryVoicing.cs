@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using DinoReader.Core;
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Mobile;
 using ReadTheStupidText.Domain.Reading;
 
 namespace DinoReader;
@@ -36,11 +37,13 @@ public sealed class StoryVoicing
 
 	private volatile Cache? _cache;
 
-	public StoryVoicing(IVoicePackService packs, IVoiceModelService model, StoryTranslator translator)
+	public StoryVoicing(IVoicePackService packs, IVoiceModelService model, StoryTranslator translator, VoicePackInstaller installer)
 	{
 		_packs = packs;
 		_translator = translator;
 		model.ReadyChanged += (_, _) => _pools.Clear();
+		// A pack that finishes installing changes which voices a language has; a stale pool would keep fallback ids.
+		installer.Changed += (_, _) => { if (installer.State == PackInstallState.Ready) _pools.Clear(); };
 	}
 
 	/// <summary>
@@ -48,7 +51,7 @@ public sealed class StoryVoicing
 	/// that must not block the UI. The story is translated afterwards when it is set to be (Slice 66).
 	/// </summary>
 	public async Task<IReadOnlyList<VoicedSegment>> VoiceAsync(
-		Story story, string narratorVoiceId, int fromPosition = 0, CancellationToken cancellationToken = default)
+		Story story, string narratorVoiceId, int fromPosition = 0, CancellationToken cancellationToken = default, Action? translationSkipped = null)
 	{
 		Prepared prepared = await Task.Run(() => Prepare(story, narratorVoiceId, fromPosition), cancellationToken);
 		if (!_translator.Applies(story))
@@ -56,9 +59,17 @@ public sealed class StoryVoicing
 			return prepared.Pieces.Select(p => ToVoicedSegment(p, prepared.Cast, null)).ToList();
 		}
 
-		IReadOnlyList<SplitSegment> translated = await _translator.TranslateAsync(story, prepared.Pieces, cancellationToken);
-		Func<string, string> remap = RemapTo(story.Language, _translator.SpokenLanguage(story));
-		return translated.Select(p => ToVoicedSegment(p, prepared.Cast, remap)).ToList();
+		StoryTranslator.Outcome outcome = await _translator.TranslateAsync(story, prepared.Pieces, cancellationToken);
+		if (!outcome.Translated)
+		{
+			// The story is read as written, in its own language and voices, so the spoken pack goes back to its language too.
+			translationSkipped?.Invoke();
+			return prepared.Pieces.Select(p => ToVoicedSegment(p, prepared.Cast, null)).ToList();
+		}
+
+		IReadOnlyList<SplitSegment> translated = outcome.Pieces;
+		IReadOnlyList<VoicedSegment> voiced = translated.Select(p => ToVoicedSegment(p, prepared.Cast, null)).ToList();
+		return Remapped(voiced, story.Language, _translator.SpokenLanguage(story), story.NarratorVoiceId);
 	}
 
 	/// <summary>The cast for <paramref name="text"/>, keeping any voice <paramref name="stored"/> already gives a character.
@@ -70,6 +81,13 @@ public sealed class StoryVoicing
 	/// <summary>The voices a character of a story in <paramref name="language"/> can have (the whole pack; the narrator's is left out by the caller).</summary>
 	public IReadOnlyList<VoiceOption> VoicesFor(string language) =>
 		_pools.GetOrAdd(UiLanguage.Resolve(language), BuildPool);
+
+	/// <summary>The language a voice preview speaks: the story's when its own pack is installed, else the one the voice speaks now. Never switches the voice.</summary>
+	public string PreviewLanguage(string storyLanguage, string current)
+	{
+		string code = UiLanguage.Resolve(storyLanguage);
+		return InstalledVoices(code) is not null ? code : current;
+	}
 
 	/// <summary>The voice a new story in <paramref name="language"/> starts with as its narrator: the default style when the pack has it, else the pack's first voice.</summary>
 	public string NarratorFor(string language)
@@ -167,12 +185,13 @@ public sealed class StoryVoicing
 		return new VoiceOption(voice.Id, gender);
 	}
 
-	// A translated story is spoken in another language, whose pack may not have the voices the cast was given.
-	private Func<string, string> RemapTo(string storyLanguage, string spokenLanguage)
+	// A translated story is spoken in another language, whose pack may not have the voices the cast was given:
+	// the whole set is remapped together (narrator first) so the narrator and the characters stay distinct.
+	private IReadOnlyList<VoicedSegment> Remapped(IReadOnlyList<VoicedSegment> voiced, string storyLanguage, string spokenLanguage, string narratorVoiceId)
 	{
-		IReadOnlyList<VoiceOption> from = VoicesFor(storyLanguage);
-		IReadOnlyList<VoiceOption> to = VoicesFor(spokenLanguage);
-		return voiceId => VoiceRemap.Map(voiceId, from, to);
+		IEnumerable<string> ids = new[] { narratorVoiceId }.Concat(voiced.Select(v => v.VoiceId));
+		var map = VoiceRemap.MapSet(ids, VoicesFor(storyLanguage), VoicesFor(spokenLanguage));
+		return voiced.Select(v => v with { VoiceId = map.GetValueOrDefault(v.VoiceId, v.VoiceId) }).ToList();
 	}
 
 	// Narration, and a quote nobody could be attributed to, are read by the narrator (VoiceForLine).

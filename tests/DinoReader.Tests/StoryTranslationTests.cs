@@ -159,6 +159,32 @@ public class StoryTranslationTests
 
         Assert.True(started < pieces.Count);
     }
+
+    [Fact]
+    public async Task The_first_fault_cancels_the_remaining_pieces()
+    {
+        var pieces = Enumerable.Range(0, 20).Select(i => Piece("p" + i, i * 10, i * 10 + 5)).ToList();
+        int started = 0;
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => StoryTranslation.TranslateAsync(pieces, async (text, token) =>
+        {
+            if (Interlocked.Increment(ref started) == 2) throw new InvalidOperationException("boom");
+            await Task.Delay(20, token);
+            return text;
+        }, CancellationToken.None, maxParallel: 1));
+
+        Assert.True(started < pieces.Count);
+    }
+
+    [Fact]
+    public void A_cast_is_remapped_as_a_set_so_voices_stay_distinct()
+    {
+        IReadOnlyList<VoiceOption> other = [new("p1", Gender.Unknown), new("p2", Gender.Unknown), new("p3", Gender.Unknown)];
+
+        var map = VoiceRemap.MapSet(["m1", "f1", "m2"], Supertonic, other);
+
+        Assert.Equal(3, map.Values.Distinct().Count());
+    }
 }
 
 internal static class StringRepeat

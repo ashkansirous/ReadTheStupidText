@@ -44,6 +44,7 @@ public partial class ReadingPage : ContentPage
 		_session.SentenceChanged += OnSentenceChanged;
 		_session.StateChanged += OnSessionStateChanged;
 		_session.Failed += OnReadFailed;
+		_session.TranslationSkipped += (_, _) => _spoken.Use(_story?.Language ?? UiLanguage.English);
 		ShowPackStatus();
 	}
 

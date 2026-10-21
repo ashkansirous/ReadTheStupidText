@@ -56,6 +56,8 @@
   <data name="Add_Photos" xml:space="preserve"><value>عکس‌ها</value></data>
   <data name="Add_PhotosSub" xml:space="preserve"><value>عکس صفحه‌ها را انتخاب کنید</value></data>
   <data name="Add_File" xml:space="preserve"><value>PDF یا فایل</value></data>
+  <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>
+  <data name="Cast_UnknownGender" xml:space="preserve"><value>?</value></data>
   <data name="Add_Type" xml:space="preserve"><value>تایپ یا چسباندن</value></data>
   <data name="Add_TypeSub" xml:space="preserve"><value>فقط متن</value></data>
   <data name="Add_Placeholder" xml:space="preserve"><value>داستان را تایپ یا جایگذاری کنید</value></data>

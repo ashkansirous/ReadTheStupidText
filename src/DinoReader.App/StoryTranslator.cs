@@ -41,20 +41,24 @@ public sealed class StoryTranslator
 	/// <summary>The language the voice speaks the story in: the grown-up's when translating, the story's own otherwise.</summary>
 	public string SpokenLanguage(Story story) => Applies(story) ? MyLanguage : UiLanguage.Resolve(story.Language);
 
+	/// <summary>The pieces, and whether their text was translated (false when a missing language model left the story as it was).</summary>
+	public sealed record Outcome(IReadOnlyList<SplitSegment> Pieces, bool Translated);
+
 	/// <summary>The pieces with their text translated; a missing language model leaves the story as it was.</summary>
-	public async Task<IReadOnlyList<SplitSegment>> TranslateAsync(
+	public async Task<Outcome> TranslateAsync(
 		Story story, IReadOnlyList<SplitSegment> pieces, CancellationToken cancellationToken)
 	{
 		string source = UiLanguage.Resolve(story.Language);
 		string target = MyLanguage;
 		try
 		{
-			return await StoryTranslation.TranslateAsync(pieces, (text, token) => PieceAsync(text, source, target, token), cancellationToken);
+			var translated = await StoryTranslation.TranslateAsync(pieces, (text, token) => PieceAsync(text, source, target, token), cancellationToken);
+			return new Outcome(translated, true);
 		}
 		catch (TranslationModelUnavailableException ex)
 		{
 			Debug.WriteLine($"Dino Reader translation skipped, language model missing: {ex.Message}");
-			return pieces;
+			return new Outcome(pieces, false);
 		}
 	}
 

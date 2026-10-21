@@ -16,7 +16,11 @@ public static class UiCulture
 	/// Makes <paramref name="culture"/> the UI culture of every thread. Only the process-wide default is set (the per-flow
 	/// <c>CurrentUICulture</c> is undone when an async continuation returns), and number and date formats stay the device's.
 	/// </summary>
-	public static void Apply(CultureInfo culture) => CultureInfo.DefaultThreadCurrentUICulture = culture;
+	public static void Apply(CultureInfo culture)
+	{
+		CultureInfo.DefaultThreadCurrentUICulture = culture;
+		CultureInfo.CurrentUICulture = culture;
+	}
 
 	public static bool IsRightToLeft => UiLanguage.IsRightToLeft(CultureInfo.CurrentUICulture.Name);
 }

@@ -42,6 +42,9 @@ public sealed class ReadingSession
 	// Cancelled when the read is stopped or superseded, so a translation still running for it is abandoned.
 	private CancellationTokenSource? _readCancellation;
 
+	/// <summary>Raised (off the main thread) when a read turns out not to be translated, so the voice should speak the story's own language.</summary>
+	public event EventHandler? TranslationSkipped;
+
 	public ReadingSession(ISpeechReader reader, StoryVoicing voicing)
 	{
 		_reader = reader;
@@ -175,7 +178,8 @@ public sealed class ReadingSession
 	{
 		try
 		{
-			IReadOnlyList<VoicedSegment> segments = await _voicing.VoiceAsync(story, story.NarratorVoiceId, fromPosition, cancellation);
+			IReadOnlyList<VoicedSegment> segments = await _voicing.VoiceAsync(story, story.NarratorVoiceId, fromPosition, cancellation,
+				() => TranslationSkipped?.Invoke(this, EventArgs.Empty));
 			if (id != _pendingReadId)
 			{
 				return false;

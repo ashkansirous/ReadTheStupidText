@@ -229,7 +229,18 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 	// The language is guessed from the text until the grown-up picks one; "· detected" shows while the guess stands.
 	private void DetectLanguage(string text)
 	{
-		if (_languageChosen || ScriptLanguageGuesser.Guess(text) is not { } guess || (guess == _language && _languageDetected))
+		if (_languageChosen)
+		{
+			return;
+		}
+
+		if (ScriptLanguageGuesser.Guess(text) is not { } guess)
+		{
+			ClearDetected();
+			return;
+		}
+
+		if (guess == _language && _languageDetected)
 		{
 			return;
 		}
@@ -237,6 +248,18 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 		_language = guess;
 		_languageDetected = true;
 		UseLanguage();
+	}
+
+	// No guess any more: the language stays as it was, but it no longer claims to be detected.
+	private void ClearDetected()
+	{
+		if (!_languageDetected)
+		{
+			return;
+		}
+
+		_languageDetected = false;
+		_languageCard.Show(_language, detected: false);
 	}
 
 	private async Task ChooseLanguageAsync()
@@ -249,6 +272,7 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 		_language = picked;
 		_languageChosen = true;
 		_languageDetected = false;
+		_analysis?.Cancel();
 		UseLanguage();
 		string text = TextEditor.Text ?? string.Empty;
 		if (!string.IsNullOrWhiteSpace(text))

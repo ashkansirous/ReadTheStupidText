@@ -56,6 +56,8 @@
   <data name="Add_Photos" xml:space="preserve"><value>Fotos</value></data>
   <data name="Add_PhotosSub" xml:space="preserve"><value>Escolha fotos das páginas</value></data>
   <data name="Add_File" xml:space="preserve"><value>PDF ou arquivo</value></data>
+  <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>
+  <data name="Cast_UnknownGender" xml:space="preserve"><value>?</value></data>
   <data name="Add_Type" xml:space="preserve"><value>Digitar ou colar</value></data>
   <data name="Add_TypeSub" xml:space="preserve"><value>Somente texto</value></data>
   <data name="Add_Placeholder" xml:space="preserve"><value>Digite ou cole uma história</value></data>
