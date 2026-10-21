@@ -246,13 +246,29 @@ dev time and is not a redistributable runtime (Decision 26 in `docs/plan/decisio
 | `H.NotifyIcon.WinUI` | tray icon | MIT |
 | `org.k2fsa.sherpa.onnx` | neural TTS runtime | Apache-2.0 |
 | Supertonic-3 voice model (`VoiceModel/`) | neural voices | Apache-2.0 (see `VoiceModel/LICENSE`) |
+| Piper `fa_IR` "amir" voice (downloaded Persian pack `piper-fa`, not in the package) | Persian neural voice | CC0 1.0 voice data (model card: [rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices/tree/main/fa/fa_IR/amir/medium)); finetuned from the Piper US-English "lessac" voice |
+| espeak-ng data (inside the downloaded Persian pack only) | phonemizer data the Piper voice needs | GPL-3.0-or-later; corresponding source: <https://github.com/espeak-ng/espeak-ng> |
+| MeloTTS `zh_en` (downloaded Chinese pack `melo-zh-en`, not in the package) | Chinese + English neural voice | MIT (MyShell.ai; see the `LICENSE` inside the pack) |
 | `PdfPig` | PDF text extraction (file upload) | Apache-2.0 |
 | `DocumentFormat.OpenXml` | DOCX text extraction (file upload) | MIT |
 | Fredoka, Andika, Vazirmatn fonts (Dino Reader only, bundled in `src/DinoReader.App/Resources/Fonts/`) | Dino Reader UI, reading and Farsi/Arabic text | SIL OFL 1.1 (texts in `src/DinoReader.App/Licenses/`) |
 
-No GPL/LGPL components ship in the package (Piper and its espeak-ng phonemizer
-were deliberately avoided; Supertonic needs no espeak data). This keeps the
-closed-source Store distribution clean.
+No GPL/LGPL components ship in the package. There is one deliberate, scoped
+exception (Decision 63): the Persian voice is a Piper voice that needs the
+GPL-3.0 espeak-ng data, and that data exists **only inside the separately
+downloaded `piper-fa` pack** (built by `.github/workflows/packs.yml`, hosted on the
+`packs-<n>` GitHub release, with its licence text and a link to the corresponding
+source in the pack's `LICENSE`). It is never in the repository, the MSIX, the AAB
+or the `.ipa`, and the app only passes its folder path to the engine (a
+data-file use at arm's length), so the Store package itself stays free of GPL
+code. Check this by unzipping the app package: there is no `espeak-ng-data`.
+
+Persian is therefore available only on the platforms that download packs (Android
+now). Where a pack can't be downloaded, Persian reads with the phone's own voice.
+The `amir` voice was chosen over `gyro` because its dataset licence is stated as
+CC0 and `gyro`'s model card only says "See URL"; both are finetuned from the Piper
+"lessac" voice, whose dataset terms are an open question to re-check before a
+wide launch (Slice 51 notes).
 
 ## Versioning (GitVersion → tag → release)
 

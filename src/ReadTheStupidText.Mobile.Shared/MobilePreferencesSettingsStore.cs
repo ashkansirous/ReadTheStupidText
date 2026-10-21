@@ -1,3 +1,4 @@
+using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Domain.Reading;
 using ReadTheStupidText.Domain.Sanitizing;
@@ -12,7 +13,7 @@ namespace ReadTheStupidText.Mobile;
 /// Preferences for a uniform implementation, but nothing on Android ever reads
 /// them (Decision 38 — no auto-read triggers, no panel to reposition).
 /// </summary>
-public sealed class MobilePreferencesSettingsStore : ISettingsStore
+public sealed class MobilePreferencesSettingsStore : ISettingsStore, ILanguageChangeNotifier
 {
     private const string SpeedKey = "PlaybackRate";
     private const string AutoReadOnSelectionKey = "AutoReadOnSelection";
@@ -22,6 +23,8 @@ public sealed class MobilePreferencesSettingsStore : ISettingsStore
     private const string PanelXKey = "PanelX";
     private const string PanelYKey = "PanelY";
     private const string LanguageKey = "Language";
+    private const string TranslateEnabledKey = "TranslateEnabled";
+    private const string TranslateSourceKey = "TranslateSourceLanguage";
 
     private const bool AutoReadDefault = true;
     private const double NoSpeedStored = -1;
@@ -65,11 +68,14 @@ public sealed class MobilePreferencesSettingsStore : ISettingsStore
         }
     }
 
+    public event EventHandler? LanguageChanged;
+
     public string? Language
     {
         get => Preferences.Default.Get(LanguageKey, (string?)null);
         set
         {
+            string? previous = Language;
             if (value is null)
             {
                 Preferences.Default.Remove(LanguageKey);
@@ -78,6 +84,11 @@ public sealed class MobilePreferencesSettingsStore : ISettingsStore
             {
                 Preferences.Default.Set(LanguageKey, value);
             }
+
+            if (previous != value)
+            {
+                LanguageChanged?.Invoke(this, EventArgs.Empty);
+            }
         }
     }
 
@@ -85,6 +96,28 @@ public sealed class MobilePreferencesSettingsStore : ISettingsStore
     {
         get => (SanitizerCategory)Preferences.Default.Get(SanitizerKey, (int)SanitizerCategory.All);
         set => Preferences.Default.Set(SanitizerKey, (int)value);
+    }
+
+    public bool TranslateEnabled
+    {
+        get => Preferences.Default.Get(TranslateEnabledKey, false);
+        set => Preferences.Default.Set(TranslateEnabledKey, value);
+    }
+
+    public string? TranslateSourceLanguage
+    {
+        get => Preferences.Default.Get(TranslateSourceKey, (string?)null);
+        set
+        {
+            if (value is null)
+            {
+                Preferences.Default.Remove(TranslateSourceKey);
+            }
+            else
+            {
+                Preferences.Default.Set(TranslateSourceKey, value);
+            }
+        }
     }
 
     public PanelPosition? PanelPosition
