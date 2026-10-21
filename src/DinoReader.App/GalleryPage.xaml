@@ -37,7 +37,8 @@
             </CollectionView.ItemsLayout>
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="local:StoryTile">
-                    <VerticalStackLayout Spacing="7">
+                    <VerticalStackLayout Spacing="7" MaximumWidthRequest="200" HorizontalOptions="Center">
+                        <!-- Mock tile is 160 wide at 360 (2 columns, 14 padding, 12 gap); capped at 200 so the widest phones still fill their columns and a desktop window does not grow 3/4 tiles to 900 px. -->
                         <local:StoryCover />
                         <Label Text="{Binding Title}" FontSize="14" FontAttributes="Bold" LineHeight="1.25" />
                         <VerticalStackLayout.GestureRecognizers>

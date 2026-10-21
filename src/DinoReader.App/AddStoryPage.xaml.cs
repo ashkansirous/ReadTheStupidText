@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Extensions.DependencyInjection;
@@ -227,23 +226,16 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 		}
 		catch (Exception ex)
 		{
-			LogReadFailure(ex);
+			LogReadFailure("import failed", ex);
 			await ShowReadFailedAsync();
 		}
 	}
 
-	// Exception only, never the picked text: a swallowed failure must still leave a trace in logcat.
-	private void LogReadFailure(Exception error)
-	{
-#if ANDROID
-		ISystemLog log = _services.GetService<ISystemLog>() ?? new AndroidSystemLog();
-#elif IOS
-		ISystemLog log = _services.GetService<ISystemLog>() ?? new IosSystemLog();
-#else
-		ISystemLog log = _services.GetRequiredService<ISystemLog>();
-#endif
-		log.Error("picture import failed", null, error);
-	}
+	// A Windows text box hands its line breaks back as a lone CR; Core only knows LF, so normalise where the text is read.
+	private string EditorText() => LineBreaks.ToLf(TextEditor.Text);
+
+	// Exception only, never the picked text: a swallowed failure must still leave a trace in the system log.
+	private void LogReadFailure(string message, Exception error) => DinoLog.Error(_services, message, error);
 
 	// A PDF keeps its page pictures; they are rendered when the story is saved, so a pick that is never saved costs nothing.
 	private async Task<bool> TryImportPdfAsync(string path)
@@ -267,8 +259,9 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 
 			return _imported is not null;
 		}
-		catch (Exception)
+		catch (Exception ex)
 		{
+			LogReadFailure("import failed", ex);
 			StoryImport.DeleteSources(moved);
 			return false;
 		}
@@ -293,7 +286,7 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException)
 		{
-			Debug.WriteLine($"Dino Reader could not read the PDF text: {ex.Message}");
+			LogReadFailure("could not read the PDF text", ex);
 			return (null, null);
 		}
 	}
@@ -316,7 +309,7 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException)
 		{
-			Debug.WriteLine($"Dino Reader could not render the PDF pages: {ex.Message}");
+			LogReadFailure("could not render the PDF pages", ex);
 			return pages;
 		}
 	}
@@ -401,7 +394,7 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 		try
 		{
 			await Task.Delay(DebounceMilliseconds, analysis.Token);
-			await AnalyseAsync(e.NewTextValue ?? string.Empty, analysis.Token);
+			await AnalyseAsync(EditorText(), analysis.Token);
 		}
 		catch (OperationCanceledException)
 		{
@@ -409,7 +402,7 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 		catch (Exception ex)
 		{
 			// The preview is a convenience: a failed analysis hides the card, it never crashes the app.
-			Debug.WriteLine($"Dino Reader cast preview failed: {ex}");
+			LogReadFailure("cast preview failed", ex);
 			ResultCard.IsVisible = false;
 		}
 	}
@@ -432,7 +425,7 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 
 	// The pages the import read while the text is still the imported one; typed or edited text is one page.
 	private int ImportedPageCount() =>
-		_imported is not null && ImportedText.Unchanged(TextEditor.Text ?? string.Empty, _importedText) ? _imported.Count : 1;
+		_imported is not null && ImportedText.Unchanged(EditorText(), _importedText) ? _imported.Count : 1;
 
 	private void ShowResult(IReadOnlyList<CastMember> cast)
 	{
@@ -504,7 +497,7 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 		_languageDetected = false;
 		_analysis?.Cancel();
 		UseLanguage();
-		string text = TextEditor.Text ?? string.Empty;
+		string text = EditorText();
 		if (!string.IsNullOrWhiteSpace(text))
 		{
 			_cast = await _voicing.CastAsync(_language, text, _narratorVoiceId, _cast, _merges);
@@ -526,7 +519,7 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 
 	private async Task SaveAsync()
 	{
-		string text = TextEditor.Text ?? string.Empty;
+		string text = EditorText();
 		if (string.IsNullOrWhiteSpace(text))
 		{
 			return;
@@ -561,7 +554,7 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 		}
 		catch (Exception ex)
 		{
-			Debug.WriteLine($"Dino Reader could not remove the half-saved story {id}: {ex.Message}");
+			LogReadFailure("could not remove a half-saved story", ex);
 		}
 	}
 
@@ -586,7 +579,7 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 	// The cast page works on the story as typed so far, in memory: nothing is saved until Save story.
 	private async Task OpenCastAsync()
 	{
-		string text = TextEditor.Text ?? string.Empty;
+		string text = EditorText();
 		if (string.IsNullOrWhiteSpace(text))
 		{
 			return;
