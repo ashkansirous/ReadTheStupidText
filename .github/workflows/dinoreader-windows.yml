@@ -151,7 +151,9 @@ jobs:
           TAG: v${{ inputs.version || needs.version.outputs.version }}
         run: |
           set -euo pipefail
-          mapfile -t msix < <(find src/DinoReader.App/bin -name 'DinoReader.App_*.msix')
+          # dotnet publish writes the package to AppPackages/, not bin/; search the
+          # project tree but skip obj/ and the bundled Dependencies/ runtimes.
+          mapfile -t msix < <(find src/DinoReader.App \( -path '*/obj' -o -path '*/Dependencies' \) -prune -o -name 'DinoReader.App_*.msix' -print)
           if [ "${#msix[@]}" -ne 1 ]; then
             echo "::error::Expected exactly 1 app .msix, found ${#msix[@]}: ${msix[*]:-none}"; exit 1
           fi
