@@ -72,7 +72,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IDisposable
 
     private int _chunkCount;
     private int _currentChunkIndex;
-    private IReadOnlyList<string> _chunks = [];
+    private IReadOnlyList<SpeechChunkPlan> _chunks = [];
 
     private long _lastTimingRaiseTicks;
 
@@ -81,16 +81,25 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IDisposable
     public event EventHandler<double>? ProgressChanged;
     public event EventHandler<ReadTiming>? TimingChanged;
 
-    // No mobile reading text box yet (Batch 7's reading text box is Windows-only,
-    // Decision 38-style deferral) — raised once per read, for the whole text,
-    // purely so this engine satisfies ISpeechReader like the Windows readers do.
+    // Raised once each chunk has started playing (after the player starts), with its real source range (Slice 60), as
+    // the Windows reader does.
     public event EventHandler<ReadChunk>? ChunkChanged;
 
     public PlaybackState State => _state;
 
+    public bool SupportsSegments => true;
+
     public AndroidSupertonicSpeechReader(IVoiceModelService model) => _model = model;
 
-    public async Task SpeakAsync(string text, int? activityId = null)
+    public Task SpeakAsync(string text, int? activityId = null) =>
+        StartReadAsync(SpeechChunkPlanner.ForText(text));
+
+    // Slice 60: each segment is chunked on its own and each chunk is synthesized in its
+    // segment's voice, so a character keeps one voice for the whole read.
+    public Task SpeakSegmentsAsync(IReadOnlyList<VoicedSegment> segments, int? activityId = null) =>
+        StartReadAsync(SpeechChunkPlanner.ForSegments(segments));
+
+    private async Task StartReadAsync(IReadOnlyList<SpeechChunkPlan> chunks)
     {
         OfflineTts? tts = EnsureTts();
         if (tts is null)
@@ -100,11 +109,9 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IDisposable
 
         (int generation, CancellationToken token) = BeginGeneration();
 
-        IReadOnlyList<string> chunks = SpeechTextChunker.Split(text);
         _chunks = chunks;
         _timing.Start(chunks.Count);
         RaiseTiming(TimeSpan.Zero);
-        ChunkChanged?.Invoke(this, new ReadChunk(0, chunks.Count, text, 0, text.Length));
 
         await SpeakChunksAsync(tts, chunks, 0, Volatile.Read(ref _speakerId), generation, token);
     }
@@ -140,56 +147,24 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IDisposable
     // full rationale. Speaker is a parameter (not the mutable field) so a
     // mid-read voice change can't half-apply to already-queued chunks.
     private async Task SpeakChunksAsync(
-        OfflineTts tts, IReadOnlyList<string> chunks, int startIndex, int speakerId, int generation, CancellationToken token)
+        OfflineTts tts, IReadOnlyList<SpeechChunkPlan> chunks, int startIndex, int speakerId, int generation,
+        CancellationToken token)
     {
         _chunkCount = chunks.Count;
         _currentChunkIndex = startIndex;
         ProgressChanged?.Invoke(this, chunks.Count == 0 ? 0 : (double)startIndex / chunks.Count);
 
-        var slots = new SemaphoreSlim(MaxSynthesisConcurrency);
-        var generations = new List<Task<string>>();
-        Task<string>? firstChunk = null;
-        for (int index = startIndex; index < chunks.Count; index++)
-        {
-            Task<string> chunkTask = index == startIndex
-                ? GenerateChunkAsync(tts, chunks[index], index, speakerId, slots, token)
-                : GenerateAfterAsync(firstChunk!, tts, chunks[index], index, speakerId, slots, token);
-            firstChunk ??= chunkTask;
-            generations.Add(chunkTask);
-        }
-
+        List<Task<string>> generations = StartGenerations(tts, chunks, startIndex, speakerId, token);
         for (int offset = 0; offset < generations.Count; offset++)
         {
-            string wavPath;
-            try
-            {
-                wavPath = await generations[offset];
-            }
-            catch (OperationCanceledException)
-            {
-                return;
-            }
-
-            if (!IsCurrent(generation))
-            {
-                return;
-            }
-
             int index = startIndex + offset;
-            _currentChunkIndex = index;
-            bool endedNaturally = await PlayChunkAsync(wavPath, token);
-            if (!endedNaturally || !IsCurrent(generation))
+            if (!await PlayGeneratedChunkAsync(generations[offset], chunks, index, generation, token))
             {
                 return;
             }
 
-            _timing.AdvancePastChunk(index);
-
-            int selected = Volatile.Read(ref _speakerId);
-            if (selected != speakerId && index + 1 < chunks.Count)
+            if (await RestartForVoiceSwapAsync(tts, chunks, index, speakerId))
             {
-                (int nextGeneration, CancellationToken nextToken) = BeginGeneration();
-                await SpeakChunksAsync(tts, chunks, index + 1, selected, nextGeneration, nextToken);
                 return;
             }
         }
@@ -200,6 +175,83 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IDisposable
             Completed?.Invoke(this, EventArgs.Empty);
         }
     }
+
+    // Kicks off synthesis of every remaining chunk; the first runs straight away and the
+    // rest wait for it, so the chunk the listener waits on is never starved.
+    private List<Task<string>> StartGenerations(
+        OfflineTts tts, IReadOnlyList<SpeechChunkPlan> chunks, int startIndex, int speakerId,
+        CancellationToken token)
+    {
+        var slots = new SemaphoreSlim(MaxSynthesisConcurrency);
+        var generations = new List<Task<string>>();
+        Task<string>? firstChunk = null;
+        for (int index = startIndex; index < chunks.Count; index++)
+        {
+            int speaker = SpeakerFor(chunks[index], speakerId);
+            Task<string> chunkTask = index == startIndex
+                ? GenerateChunkAsync(tts, chunks[index].Text, index, speaker, slots, token)
+                : GenerateAfterAsync(firstChunk!, tts, chunks[index].Text, index, speaker, slots, token);
+            firstChunk ??= chunkTask;
+            generations.Add(chunkTask);
+        }
+
+        return generations;
+    }
+
+    // Waits for one chunk's audio and plays it. False when the read was cancelled,
+    // stopped or superseded, so the caller stops consuming chunks.
+    private async Task<bool> PlayGeneratedChunkAsync(
+        Task<string> generated, IReadOnlyList<SpeechChunkPlan> chunks, int index, int generation,
+        CancellationToken token)
+    {
+        string wavPath;
+        try
+        {
+            wavPath = await generated;
+        }
+        catch (OperationCanceledException)
+        {
+            return false;
+        }
+
+        if (!IsCurrent(generation))
+        {
+            return false;
+        }
+
+        _currentChunkIndex = index;
+        SpeechChunkPlan chunk = chunks[index];
+        var readChunk = new ReadChunk(index, chunks.Count, chunk.Text, chunk.SourceStart, chunk.SourceEnd);
+        bool endedNaturally = await PlayChunkAsync(wavPath, readChunk, token);
+        if (!endedNaturally || !IsCurrent(generation))
+        {
+            return false;
+        }
+
+        _timing.AdvancePastChunk(index);
+        return true;
+    }
+
+    // A chunk with its own voice (a segment read) never follows the narrator picker; a plain
+    // read restarts at the next chunk when the selected voice changed mid-read. True when it
+    // restarted (the restarted loop finishes the read, so the caller returns).
+    private async Task<bool> RestartForVoiceSwapAsync(
+        OfflineTts tts, IReadOnlyList<SpeechChunkPlan> chunks, int index, int speakerId)
+    {
+        int selected = Volatile.Read(ref _speakerId);
+        if (selected == speakerId || index + 1 >= chunks.Count || chunks[index + 1].VoiceId is not null)
+        {
+            return false;
+        }
+
+        (int nextGeneration, CancellationToken nextToken) = BeginGeneration();
+        await SpeakChunksAsync(tts, chunks, index + 1, selected, nextGeneration, nextToken);
+        return true;
+    }
+
+    // A chunk's own voice (segment reads) wins; a plain read uses the selected speaker.
+    private static int SpeakerFor(SpeechChunkPlan chunk, int selectedSpeakerId) =>
+        chunk.VoiceId is { } voiceId ? SupertonicVoiceTable.SpeakerIdFor(voiceId) : selectedSpeakerId;
 
     public Task WarmUpAsync() => Task.Run(WarmUp);
 
@@ -264,7 +316,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IDisposable
     // Plays one chunk's WAV file and awaits its natural end (true) or a
     // stop/supersede (false). The previous chunk's temp file is deleted once
     // this one has taken over the player (it's no longer open by then).
-    private async Task<bool> PlayChunkAsync(string wavPath, CancellationToken token)
+    private async Task<bool> PlayChunkAsync(string wavPath, ReadChunk readChunk, CancellationToken token)
     {
         var ended = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         _chunkEnded = ended;
@@ -296,6 +348,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IDisposable
         {
             ApplyPlaybackRate(player);
             player.Start();
+            ChunkChanged?.Invoke(this, readChunk);
             UpdateState(PlaybackState.Playing);
             StartPolling(player, token);
         }

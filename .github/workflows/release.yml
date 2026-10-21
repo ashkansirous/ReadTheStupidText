@@ -26,7 +26,7 @@ name: release
 #     of Mobile -> both), Mobile.Shared (Slice 58) rebuilds every app that uses it
 #     (its root: Android + iOS + Dino Reader; Platforms/Android: Android + Dino
 #     Reader; Platforms/iOS: iOS), DinoReader.App only Dino Reader, DinoReader.Core
-#     only runs its tests, docs build nothing.
+#     runs its tests and also builds Dino Reader, docs build nothing.
 #     A major version bump (or force_all) builds everything. Each platform
 #     workflow's `pull_request.paths` mirrors that mapping; the test parses
 #     them and fails on drift.

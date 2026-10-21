@@ -67,6 +67,25 @@ public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
         return _active.SpeakAsync(text, activityId);
     }
 
+    // Always true: a segment read is handled either way (neural, or the joined-text fallback).
+    public bool SupportsSegments => true;
+
+    // Per-voice reading needs a neural engine that supports it and a ready pack. Otherwise
+    // (pack not ready, "Phone voice" picked, or a platform whose neural slot is just the
+    // built-in engine, as on iOS) the built-in engine reads the whole story in its one
+    // voice rather than failing, so a child is never left with silence (Slice 60).
+    public Task SpeakSegmentsAsync(IReadOnlyList<VoicedSegment> segments, int? activityId = null)
+    {
+        if (_model.IsReady && !_useSystemVoice && _neural.SupportsSegments)
+        {
+            _active = _neural;
+            return _neural.SpeakSegmentsAsync(segments, activityId);
+        }
+
+        _active = _fallback;
+        return _fallback.SpeakAsync(VoicedSegment.JoinText(segments), activityId);
+    }
+
     // Only the neural engine has a heavy model to warm; the built-in engine is instant.
     public Task WarmUpAsync() => _neural.WarmUpAsync();
 
