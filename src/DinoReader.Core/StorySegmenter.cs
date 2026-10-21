@@ -6,7 +6,8 @@ namespace DinoReader.Core;
 /// part of the quote. A quote still open at a paragraph break ends there (unclosed), so a
 /// missing close mark cannot swallow the next paragraphs; a paragraph that reopens with a
 /// quote mark starts a new quote that continues the speech. An unclosed quote at the end
-/// of the text runs to the end.
+/// of the text runs to the end. Languages with dash dialogue (Russian, Spanish, Portuguese, French)
+/// also read a line that opens with a dash as a quote (see <see cref="DashDialogue"/>).
 /// </summary>
 public sealed class StorySegmenter(LanguageRules rules)
 {
@@ -17,18 +18,25 @@ public sealed class StorySegmenter(LanguageRules rules)
         int pos = 0;
         while (pos < text.Length)
         {
-            if (!rules.IsOpeningQuote(text[pos]))
+            var quote = QuoteAt(text, pos);
+            if (quote is null)
             {
                 pos++;
                 continue;
             }
             AddNarration(segments, text, narrationStart, pos);
-            var close = FindQuoteEnd(text, pos + 1);
-            segments.Add(BuildQuote(text, pos, close));
-            pos = narrationStart = segments[^1].SourceEnd;
+            segments.Add(quote);
+            pos = narrationStart = quote.SourceEnd;
         }
         AddNarration(segments, text, narrationStart, text.Length);
         return segments;
+    }
+
+    private Segment? QuoteAt(string text, int pos)
+    {
+        if (rules.IsOpeningQuote(text[pos]))
+            return BuildQuote(text, pos, FindQuoteEnd(text, pos + 1));
+        return DashDialogue.Opens(text, pos, rules) ? DashDialogue.Read(text, pos, rules) : null;
     }
 
     private static void AddNarration(List<Segment> segments, string text, int start, int end)
@@ -42,7 +50,7 @@ public sealed class StorySegmenter(LanguageRules rules)
     private static Segment BuildQuote(string text, int open, QuoteEnd close)
     {
         int sourceEnd = close.IsClosed ? close.Index + 1 : close.Index;
-        return new Segment(SegmentKind.Quote, text[(open + 1)..close.Index], open, sourceEnd,
+        return new Segment(SegmentKind.Quote, text[(open + 1)..close.Index].Trim(), open, sourceEnd,
             IsClosed: close.IsClosed);
     }
 
@@ -52,7 +60,7 @@ public sealed class StorySegmenter(LanguageRules rules)
         {
             char c = text[i];
             if (rules.IsClosingQuote(c)) return new QuoteEnd(i, true);
-            if (c == rules.CurlyOpenQuote) return new QuoteEnd(TrimEnd(text, from, i), false);
+            if (rules.IsOpeningNonStraight(c)) return new QuoteEnd(TrimEnd(text, from, i), false);
             if (ParagraphBreak.IsAt(text, i))
                 return new QuoteEnd(TrimEnd(text, from, i), false);
         }

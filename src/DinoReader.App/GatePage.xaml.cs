@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using DinoReader.Core;
+using DinoReader.Resources.Strings;
 
 namespace DinoReader;
 
@@ -28,6 +29,10 @@ public partial class GatePage : ContentPage
 	public GatePage(bool screenReaderOn)
 	{
 		InitializeComponent();
+		FlowDirection = UiFlow.ForCurrentCulture();
+		// The sum and the number pad read left to right in every language.
+		SumRow.FlowDirection = FlowDirection.LeftToRight;
+		KeyPad.FlowDirection = FlowDirection.LeftToRight;
 		HoldRing.Drawable = _ring;
 		_timer = Dispatcher.CreateTimer();
 		_timer.Interval = TickInterval;
@@ -120,14 +125,14 @@ public partial class GatePage : ContentPage
 		bool isOk = key == OkKey;
 		var button = new Button
 		{
-			Text = key,
+			Text = isOk ? AppResources.Common_Ok : key,
 			FontSize = 22,
 			CornerRadius = 14,
 			Padding = 0,
 			BackgroundColor = DinoTokens.Get(isOk ? DinoTokens.Brand : DinoTokens.Sand),
 			TextColor = isOk ? Colors.White : DinoTokens.Get(DinoTokens.Ink),
 		};
-		SemanticProperties.SetDescription(button, key == BackspaceKey ? "Delete" : key);
+		SemanticProperties.SetDescription(button, key == BackspaceKey ? AppResources.Gate_Backspace : isOk ? AppResources.Common_Ok : key);
 		button.Clicked += (_, _) => OnKey(key);
 		return button;
 	}
@@ -171,7 +176,7 @@ public partial class GatePage : ContentPage
 	{
 		SumLabel.Text = $"{_challenge.Left} + {_challenge.Right} =";
 		AnswerLabel.Text = _answer;
-		SemanticProperties.SetDescription(SumLabel, $"What is {_challenge.Left} plus {_challenge.Right}?");
+		SemanticProperties.SetDescription(SumLabel, AppResources.Format(AppResources.Gate_SumQuestion, _challenge.Left, _challenge.Right));
 	}
 
 	/// <summary>Closes the gate as a "no": the app left the foreground, so the gate is needed again.</summary>

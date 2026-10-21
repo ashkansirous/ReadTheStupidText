@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:DinoReader"
+    xmlns:res="clr-namespace:DinoReader.Resources.Strings"
     BackgroundColor="Transparent"
     NavigationPage.HasNavigationBar="False">
 
@@ -21,9 +22,9 @@
                 </HorizontalStackLayout>
 
                 <VerticalStackLayout x:Name="HoldStep" Spacing="12" HorizontalOptions="Fill">
-                    <Label Text="For grown-ups" FontSize="22" FontAttributes="Bold" HorizontalTextAlignment="Center"
+                    <Label Text="{x:Static res:AppResources.Gallery_ForGrownUps}" FontSize="22" FontAttributes="Bold" HorizontalTextAlignment="Center"
                            SemanticProperties.HeadingLevel="Level1" />
-                    <Label x:Name="HoldBody" Text="Press and hold for 3 seconds." FontSize="14.5" LineHeight="1.4"
+                    <Label x:Name="HoldBody" Text="{x:Static res:AppResources.Gate_HoldBody}" FontSize="14.5" LineHeight="1.4"
                            TextColor="{StaticResource Body}" HorizontalTextAlignment="Center" MaximumWidthRequest="260" />
 
                     <Grid x:Name="HoldRingHost" WidthRequest="120" HeightRequest="120" Margin="0,4,0,0" HorizontalOptions="Center">
@@ -36,19 +37,19 @@
                         </Border>
                         <GraphicsView x:Name="HoldRing" WidthRequest="120" HeightRequest="120"
                                       StartInteraction="OnHoldStart" EndInteraction="OnHoldEnd" CancelInteraction="OnHoldCancel"
-                                      SemanticProperties.Description="Press and hold for 3 seconds" />
+                                      SemanticProperties.Description="{x:Static res:AppResources.Gate_HoldDescription}" />
                     </Grid>
-                    <Label x:Name="HoldHint" Text="Keep holding…" FontSize="13" FontAttributes="Bold" TextColor="{StaticResource Muted}"
+                    <Label x:Name="HoldHint" Text="{x:Static res:AppResources.Gate_KeepHolding}" FontSize="13" FontAttributes="Bold" TextColor="{StaticResource Muted}"
                            HorizontalTextAlignment="Center" Opacity="0" />
 
-                    <Button x:Name="ContinueButton" Text="Continue to the question" IsVisible="False" HeightRequest="56"
+                    <Button x:Name="ContinueButton" Text="{x:Static res:AppResources.Gate_Continue}" IsVisible="False" HeightRequest="56"
                             CornerRadius="28" FontSize="16" BackgroundColor="{StaticResource Brand}" TextColor="White"
                             Clicked="OnContinueClicked" />
                 </VerticalStackLayout>
 
                 <VerticalStackLayout x:Name="SumStep" Spacing="12" IsVisible="False" HorizontalOptions="Fill">
-                    <Label Text="What is" FontSize="15" TextColor="{StaticResource Body}" HorizontalTextAlignment="Center" />
-                    <HorizontalStackLayout HorizontalOptions="Center" Spacing="8">
+                    <Label Text="{x:Static res:AppResources.Gate_WhatIs}" FontSize="15" TextColor="{StaticResource Body}" HorizontalTextAlignment="Center" />
+                    <HorizontalStackLayout x:Name="SumRow" HorizontalOptions="Center" Spacing="8">
                         <Label x:Name="SumLabel" FontSize="40" FontAttributes="Bold" VerticalOptions="End" />
                         <VerticalStackLayout VerticalOptions="End">
                             <Label x:Name="AnswerLabel" FontSize="40" FontAttributes="Bold" TextColor="{StaticResource Brand}"
@@ -59,7 +60,7 @@
                     <Grid x:Name="KeyPad" ColumnDefinitions="*,*,*" ColumnSpacing="8" RowSpacing="8" Margin="0,4,0,0" />
                 </VerticalStackLayout>
 
-                <Button x:Name="BackButton" Text="Back to the story" HeightRequest="48" CornerRadius="24" FontSize="15"
+                <Button x:Name="BackButton" Text="{x:Static res:AppResources.Gate_BackToStory}" HeightRequest="48" CornerRadius="24" FontSize="15"
                         FontAttributes="Bold" Padding="26,0" HorizontalOptions="Center"
                         BackgroundColor="{StaticResource Sand}" TextColor="{StaticResource Ink}" Clicked="OnBackClicked" />
             </VerticalStackLayout>

@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:DinoReader"
+    xmlns:res="clr-namespace:DinoReader.Resources.Strings"
     BackgroundColor="{StaticResource Sand}"
     NavigationPage.HasNavigationBar="False">
 
@@ -12,13 +13,13 @@
     <ContentPage.Resources>
         <DataTemplate x:Key="AddTemplate">
             <Border BackgroundColor="White" Stroke="#c9c0f5" StrokeThickness="3" StrokeDashArray="3,3"
-                    SizeChanged="OnAddTileSizeChanged" SemanticProperties.Description="Add a story">
+                    SizeChanged="OnAddTileSizeChanged" SemanticProperties.Description="{x:Static res:AppResources.Story_Add}">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="16" />
                 </Border.StrokeShape>
                 <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="6">
                     <local:IconView Kind="Plus" Color="{StaticResource Brand}" Size="28" StrokeWidth="2.6" />
-                    <Label Text="Add a story" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Brand}" />
+                    <Label Text="{x:Static res:AppResources.Story_Add}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Brand}" />
                 </VerticalStackLayout>
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnAddTapped" />
@@ -30,9 +31,9 @@
             <VerticalStackLayout Spacing="7">
                 <Grid>
                     <local:StoryCover />
-                    <Border HorizontalOptions="End" VerticalOptions="Start" Margin="0,6,6,0" WidthRequest="32" HeightRequest="32"
+                    <Border HorizontalOptions="End" VerticalOptions="Start" Margin="6,6,6,0" WidthRequest="32" HeightRequest="32"
                             BackgroundColor="{StaticResource Danger}" StrokeThickness="0"
-                            SemanticProperties.Description="Delete story">
+                            SemanticProperties.Description="{x:Static res:AppResources.Manage_DeleteStory}">
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="16" />
                         </Border.StrokeShape>
@@ -48,17 +49,17 @@
                 <Label Text="{Binding Title}" FontSize="13.5" FontAttributes="Bold" LineHeight="1.25" />
                 <HorizontalStackLayout Spacing="6">
                     <Border BackgroundColor="{StaticResource BrandTint}" StrokeThickness="0" Padding="9,4"
-                            SemanticProperties.Description="Edit story">
+                            SemanticProperties.Description="{x:Static res:AppResources.Manage_EditStory}">
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="8" />
                         </Border.StrokeShape>
-                        <Label Text="Edit" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource Brand}" />
+                        <Label Text="{x:Static res:AppResources.Common_Edit}" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource Brand}" />
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Tapped="OnEditTapped" />
                         </Border.GestureRecognizers>
                     </Border>
                     <Border BackgroundColor="{StaticResource BrandTint}" StrokeThickness="0" Padding="9,4"
-                            SemanticProperties.Description="Who is speaking">
+                            SemanticProperties.Description="{x:Static res:AppResources.Manage_WhoIsSpeaking}">
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="8" />
                         </Border.StrokeShape>
@@ -77,9 +78,9 @@
 
     <Grid RowDefinitions="Auto,*">
         <Grid ColumnDefinitions="*,Auto" Padding="16,14,16,12">
-            <Label Text="Manage stories" FontSize="20" FontAttributes="Bold" VerticalOptions="Center"
+            <Label Text="{x:Static res:AppResources.Manage_Title}" FontSize="20" FontAttributes="Bold" VerticalOptions="Center"
                    SemanticProperties.HeadingLevel="Level1" />
-            <Button Grid.Column="1" Text="Done" HeightRequest="38" CornerRadius="19" Padding="14,0" FontSize="13.5"
+            <Button Grid.Column="1" Text="{x:Static res:AppResources.Common_Done}" HeightRequest="38" CornerRadius="19" Padding="14,0" FontSize="13.5"
                     BackgroundColor="{StaticResource Brand}" TextColor="White" Clicked="OnDoneClicked" />
         </Grid>
 

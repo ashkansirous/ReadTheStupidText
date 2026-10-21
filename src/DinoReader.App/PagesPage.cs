@@ -1,4 +1,5 @@
 using DinoReader.Core;
+using DinoReader.Resources.Strings;
 using Microsoft.Maui.Controls.Shapes;
 
 namespace DinoReader;
@@ -41,16 +42,16 @@ public sealed class PagesPage : ContentPage, IGrownUpPage
 			WidthRequest = 44, HeightRequest = 44, StrokeThickness = 0, BackgroundColor = Colors.Transparent,
 			Content = new IconView { Kind = IconKind.Back, Color = DinoTokens.Get(DinoTokens.Ink), Size = 22, StrokeWidth = 2.6 },
 		};
-		SemanticProperties.SetDescription(back, "Back");
+		SemanticProperties.SetDescription(back, AppResources.Common_Back);
 		back.GestureRecognizers.Add(Tap(() => Navigation.PopAsync()));
 		var add = new Border
 		{
 			WidthRequest = 44, HeightRequest = 44, StrokeThickness = 0, BackgroundColor = Colors.Transparent,
 			Content = new IconView { Kind = IconKind.Plus, Color = DinoTokens.Get(DinoTokens.Brand), Size = 24, StrokeWidth = 2.6 },
 		};
-		SemanticProperties.SetDescription(add, "Add a page");
+		SemanticProperties.SetDescription(add, AppResources.Pages_Add);
 		add.GestureRecognizers.Add(Tap(() => OpenTextAsync(-1)));
-		var title = new Label { Text = "Pages", FontSize = 20, FontAttributes = FontAttributes.Bold, VerticalOptions = LayoutOptions.Center };
+		var title = new Label { Text = AppResources.Edit_Pages, FontSize = 20, FontAttributes = FontAttributes.Bold, VerticalOptions = LayoutOptions.Center };
 		SemanticProperties.SetHeadingLevel(title, SemanticHeadingLevel.Level1);
 		return new Grid
 		{
@@ -101,9 +102,9 @@ public sealed class PagesPage : ContentPage, IGrownUpPage
 		VerticalOptions = LayoutOptions.Center,
 		Children =
 		{
-			SmallButton("↑", "Move page up", () => Move(index, -1)),
-			SmallButton("↓", "Move page down", () => Move(index, 1)),
-			SmallButton("✕", "Remove page", () => Remove(index)),
+			SmallButton("↑", AppResources.Pages_MoveUp, () => Move(index, -1)),
+			SmallButton("↓", AppResources.Pages_MoveDown, () => Move(index, 1)),
+			SmallButton("✕", AppResources.Pages_Remove, () => Remove(index)),
 		},
 	};
 

@@ -9,6 +9,7 @@ namespace DinoReader.Core;
 public sealed class GenderGuesser
 {
     private const int PronounWindowChars = 100;
+    private const int MinEndingNameLength = 3;
     private readonly LanguageRules _rules;
     private readonly NameExtractor _names;
 
@@ -31,7 +32,17 @@ public sealed class GenderGuesser
         var byTitle = FromTitle(words[0]);
         if (byTitle != Gender.Unknown) return byTitle;
         var byName = FromFirstName(words.SkipWhile(IsTitle).ToArray());
-        return byName != Gender.Unknown ? byName : FromPronouns(name, story);
+        if (byName != Gender.Unknown) return byName;
+        var byCues = FromPronouns(name, story);
+        return byCues != Gender.Unknown ? byCues : FromEnding(words[^1]);
+    }
+
+    // A last resort for languages whose name endings carry gender (Spanish "-a"/"-o", Russian "-а"/"-я").
+    private Gender FromEnding(string word)
+    {
+        if (word.Length < MinEndingNameLength) return Gender.Unknown;
+        if (_rules.FemaleEndings.Any(e => word.EndsWith(e, StringComparison.OrdinalIgnoreCase))) return Gender.Female;
+        return _rules.MaleEndings.Any(e => word.EndsWith(e, StringComparison.OrdinalIgnoreCase)) ? Gender.Male : Gender.Unknown;
     }
 
     private bool IsTitle(string word) =>
@@ -63,15 +74,59 @@ public sealed class GenderGuesser
         int male = 0, female = 0;
         foreach (int end in story.OccurrenceEnds(name))
         {
-            var window = PronounWindow(story, end);
-            foreach (Match w in Regex.Matches(window, @"\p{L}+"))
-            {
-                if (_rules.MalePronouns.Contains(w.Value)) male++;
-                else if (_rules.FemalePronouns.Contains(w.Value)) female++;
-            }
+            var (m, f) = CountCues(PronounWindow(story, end));
+            var (bm, bf) = VerbBefore(story.Text, end - name.Length);
+            male += m + bm;
+            female += f + bf;
         }
         if (male == female) return Gender.Unknown;
         return male > female ? Gender.Male : Gender.Female;
+    }
+
+    // A gendered speech verb right before the name ("сказала Мария", Arabic "قالت مريم"); a terminator or quote in between breaks the link.
+    private (int Male, int Female) VerbBefore(string text, int nameStart)
+    {
+        if (_rules.Script == ScriptStyle.Unspaced) return (0, 0);
+        int end = nameStart;
+        while (end > 0 && char.IsWhiteSpace(text[end - 1])) end--;
+        int start = end;
+        while (start > 0 && char.IsLetter(text[start - 1])) start--;
+        var word = text[start..end];
+        return (_rules.GenderedMaleVerbs.Contains(word) ? 1 : 0, _rules.GenderedFemaleVerbs.Contains(word) ? 1 : 0);
+    }
+
+    // Pronouns and gendered speech verbs (Russian "сказала", Arabic "قالت") in a stretch of text.
+    private (int Male, int Female) CountCues(string window) =>
+        _rules.Script == ScriptStyle.Unspaced ? CountInUnspaced(window) : CountInWords(window);
+
+    private (int Male, int Female) CountInWords(string window)
+    {
+        int male = 0, female = 0;
+        foreach (Match w in Regex.Matches(window, @"[\p{L}‌]+"))
+        {
+            if (_rules.MalePronouns.Contains(w.Value) || _rules.GenderedMaleVerbs.Contains(w.Value)) male++;
+            else if (_rules.FemalePronouns.Contains(w.Value) || _rules.GenderedFemaleVerbs.Contains(w.Value)) female++;
+        }
+        return (male, female);
+    }
+
+    // No spaces: count the female forms first and take them out, so Japanese "彼女" is not also read as "彼".
+    private (int Male, int Female) CountInUnspaced(string window)
+    {
+        int female = TakeOut(ref window, _rules.FemalePronouns);
+        int male = TakeOut(ref window, _rules.MalePronouns);
+        return (male, female);
+    }
+
+    private static int TakeOut(ref string window, IReadOnlySet<string> words)
+    {
+        int count = 0;
+        foreach (var word in words.OrderByDescending(w => w.Length))
+        {
+            count += (window.Length - window.Replace(word, "", StringComparison.Ordinal).Length) / word.Length;
+            window = window.Replace(word, " ", StringComparison.Ordinal);
+        }
+        return count;
     }
 
     private string PronounWindow(StoryNames story, int from)
@@ -79,7 +134,7 @@ public sealed class GenderGuesser
         var text = story.Text;
         int end = Math.Min(text.Length, from + PronounWindowChars);
         for (int i = from; i < end; i++)
-            if (_rules.IsQuote(text[i])) { end = i; break; }
+            if (_rules.IsQuote(text[i]) || _rules.IsDialogueDash(text, i)) { end = i; break; }
         var next = story.FirstFrom(from, end);
         return text[from..(next?.Start ?? end)];
     }

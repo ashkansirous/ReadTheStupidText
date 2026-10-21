@@ -1,4 +1,5 @@
 using DinoReader.Core;
+using DinoReader.Resources.Strings;
 
 namespace DinoReader;
 
@@ -40,19 +41,19 @@ public sealed class PageTextPage : ContentPage, IGrownUpPage
 			WidthRequest = 44, HeightRequest = 44, StrokeThickness = 0, BackgroundColor = Colors.Transparent,
 			Content = new IconView { Kind = IconKind.Back, Color = DinoTokens.Get(DinoTokens.Ink), Size = 22, StrokeWidth = 2.6 },
 		};
-		SemanticProperties.SetDescription(back, "Back");
+		SemanticProperties.SetDescription(back, AppResources.Common_Back);
 		var backTap = new TapGestureRecognizer();
 		backTap.Tapped += async (_, _) => await _busy.RunAsync(() => Navigation.PopAsync());
 		back.GestureRecognizers.Add(backTap);
 		var save = new Button
 		{
-			Text = "Save", HeightRequest = 38, CornerRadius = 19, Padding = new Thickness(14, 0), FontSize = 13.5,
+			Text = AppResources.Common_Save, HeightRequest = 38, CornerRadius = 19, Padding = new Thickness(14, 0), FontSize = 13.5,
 			BackgroundColor = DinoTokens.Get(DinoTokens.Brand), TextColor = Colors.White,
 		};
 		save.Clicked += async (_, _) => await _busy.RunAsync(SaveAsync);
 		return new Grid
 		{
-			Padding = new Thickness(8, 10, 16, 10),
+			Padding = UiFlow.Mirror(new Thickness(8, 10, 16, 10)),
 			ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)],
 			Children = { back, save.Column(2) },
 		};

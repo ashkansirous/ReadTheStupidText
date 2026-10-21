@@ -54,6 +54,7 @@ public static class StoryJson
             CharacterId = c.CharacterId, Name = c.Name, Gender = c.Gender, VoiceId = c.VoiceId, Edited = c.Edited,
         }).ToList(),
         Merges = s.Merges.Count == 0 ? null : s.Merges.ToDictionary(m => m.Key, m => m.Value),
+        Translate = s.TranslateToMyLanguage,
     };
 
     private static Story FromFile(StoryFile f)
@@ -68,7 +69,7 @@ public static class StoryJson
             f.Id, f.Title, f.Language, f.Created,
             f.Pages.Select(p => new StoryPage(p.Text, p.ImageFile)).ToList(),
             f.Cast.Select(c => new CastMember(c.CharacterId, c.Name, c.Gender, c.VoiceId, c.Edited)).ToList(),
-            f.CoverStyle, f.CoverColourIndex, f.NarratorVoiceId, ParseMode(f.PreferredMode), CleanMerges(f.Merges));
+            f.CoverStyle, f.CoverColourIndex, f.NarratorVoiceId, ParseMode(f.PreferredMode), CleanMerges(f.Merges), f.Translate);
     }
 
     // A reading mode this app does not know (a newer version, a hand edit, a number) must not make
@@ -118,6 +119,7 @@ public static class StoryJson
         public List<PageFile> Pages { get; set; } = [];
         public List<CastFile> Cast { get; set; } = [];
         public Dictionary<string, string>? Merges { get; set; }
+        public bool Translate { get; set; }
     }
 
     private sealed class PageFile

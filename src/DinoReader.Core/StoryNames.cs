@@ -8,7 +8,7 @@ namespace DinoReader.Core;
 /// when corroborated (see <see cref="NameExtractor.ForStory"/>); runs of two or more words
 /// are always names.
 /// </summary>
-internal sealed class StoryNames(string text, IReadOnlyList<NameMatch> all, HashSet<string> known)
+internal sealed class StoryNames(string text, IReadOnlyList<NameMatch> all, HashSet<string> known, string edge = @"\b")
 {
     private readonly ConcurrentDictionary<string, IReadOnlyList<int>> _occurrences = new();
 
@@ -37,7 +37,7 @@ internal sealed class StoryNames(string text, IReadOnlyList<NameMatch> all, Hash
         _occurrences.GetOrAdd(name, FindOccurrenceEnds);
 
     private IReadOnlyList<int> FindOccurrenceEnds(string name) =>
-        Regex.Matches(Text, $@"\b{Regex.Escape(name)}\b").Select(m => m.Index + m.Length).ToList();
+        Regex.Matches(Text, $"{edge}{Regex.Escape(name)}{edge}").Select(m => m.Index + m.Length).ToList();
 
     private int LowerBound(int position)
     {

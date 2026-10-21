@@ -1,4 +1,5 @@
 using DinoReader.Core;
+using DinoReader.Resources.Strings;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DinoReader;
@@ -12,15 +13,19 @@ public partial class EditStoryPage : ContentPage, IGrownUpPage
 	private readonly IStoryLibrary _library;
 	private readonly StoryVoicing _voicing;
 	private readonly StoryActions _actions;
+	private readonly StoryTranslator _translator;
 	private readonly IServiceProvider _services;
 	private StoryDraft? _draft;
+	private Label? _languageValue;
 	private Label? _pagesValue;
 	private Label? _castValue;
 	private readonly BusyGuard _busy = new();
 
-	public EditStoryPage(IStoryLibrary library, StoryVoicing voicing, StoryActions actions, IServiceProvider services)
+	public EditStoryPage(IStoryLibrary library, StoryVoicing voicing, StoryActions actions, IServiceProvider services, StoryTranslator translator)
 	{
 		InitializeComponent();
+		Header.Padding = UiFlow.Mirror(Header.Padding);
+		_translator = translator;
 		_library = library;
 		_voicing = voicing;
 		_actions = actions;
@@ -51,53 +56,56 @@ public partial class EditStoryPage : ContentPage, IGrownUpPage
 	private void BuildRows(Story story)
 	{
 		RowsHost.Children.Clear();
-		AddRow("Story language", "English", null);
-		_pagesValue = AddRow("Pages", GalleryText.PagesSummary(story.Pages.Count), OpenPagesAsync);
-		AddRow("Fix the text", "Edit OCR text", OpenPagesAsync);
+		_languageValue = AddRow(AppResources.Story_Language, LanguageNames.NativeName(story.Language), ChooseLanguageAsync);
+		AddTranslateRow(story);
+		_pagesValue = AddRow(AppResources.Edit_Pages, GalleryText.PagesSummary(story.Pages.Count), OpenPagesAsync);
+		AddRow(AppResources.Edit_FixText, AppResources.Edit_FixTextValue, OpenPagesAsync);
 		_castValue = AddRow(CastText.Title, GalleryText.Characters(story.Cast.Count), OpenCastAsync);
+	}
+
+	// The switch only appears when this build has a translator (see StoryTranslator).
+	private void AddTranslateRow(Story story)
+	{
+		if (!_translator.IsAvailable)
+		{
+			return;
+		}
+
+		var toggle = new ToggleSwitch { IsOn = story.TranslateToMyLanguage, VerticalOptions = LayoutOptions.Center };
+		toggle.Toggled += (_, _) => _draft!.TranslateToMyLanguage = toggle.IsOn;
+		RowsHost.Children.Add(SettingsRows.Row(AppResources.Story_Translate, toggle, null, _busy));
+		RowsHost.Children.Add(SettingsRows.Divider());
+	}
+
+	// A new language recasts the story, because who speaks is worked out in the story's own language;
+	// every character keeps the voice they had where the new language's pack has it, and the narrator moves
+	// to that pack's voice when it does not.
+	private async Task ChooseLanguageAsync()
+	{
+		StoryDraft draft = _draft!;
+		if (await LanguageChooser.ChooseAsync(this) is not { } picked || picked == draft.Language)
+		{
+			return;
+		}
+
+		draft.Language = picked;
+		_languageValue!.Text = LanguageNames.NativeName(picked);
+		if (_voicing.VoicesFor(picked).All(v => v.Id != draft.NarratorVoiceId))
+		{
+			draft.NarratorVoiceId = _voicing.NarratorFor(picked);
+		}
+
+		draft.Cast = await _voicing.CastAsync(picked, Story.JoinPages(draft.Pages), draft.NarratorVoiceId, draft.Cast, draft.Merges);
+		_castValue!.Text = GalleryText.Characters(draft.Cast.Count);
 	}
 
 	private Label AddRow(string title, string value, Func<Task>? tapped)
 	{
-		var valueLabel = new Label
-		{
-			Text = value,
-			FontSize = 14.5,
-			FontAttributes = FontAttributes.Bold,
-			TextColor = DinoTokens.Get(DinoTokens.Body),
-			HorizontalTextAlignment = TextAlignment.End,
-			VerticalOptions = LayoutOptions.Center,
-		};
-		var row = new Grid
-		{
-			MinimumHeightRequest = 50,
-			Padding = new Thickness(14, 0),
-			ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Auto)],
-			ColumnSpacing = 8,
-		};
-		row.Add(new Label { Text = title, FontSize = 14.5, VerticalOptions = LayoutOptions.Center }, 0);
-		row.Add(valueLabel, 1);
-		if (tapped is not null)
-		{
-			row.Add(Chevron(), 2);
-			var tap = new TapGestureRecognizer();
-			tap.Tapped += async (_, _) => await _busy.RunAsync(tapped);
-			row.GestureRecognizers.Add(tap);
-		}
-
-		RowsHost.Children.Add(row);
-		RowsHost.Children.Add(new BoxView { HeightRequest = 1, Color = DinoTokens.Get(DinoTokens.Hairline) });
+		Label valueLabel = SettingsRows.ValueLabel(value);
+		RowsHost.Children.Add(SettingsRows.Row(title, valueLabel, tapped, _busy));
+		RowsHost.Children.Add(SettingsRows.Divider());
 		return valueLabel;
 	}
-
-	private static IconView Chevron() => new()
-	{
-		Kind = IconKind.Chevron,
-		Color = DinoTokens.Get(DinoTokens.Muted),
-		Size = 14,
-		StrokeWidth = 1.6,
-		VerticalOptions = LayoutOptions.Center,
-	};
 
 	// The cast page works on the draft as it stands (pages included) and writes its edits back into the
 	// draft, so they are saved, or dropped, together with the rest of this screen's changes.
@@ -108,7 +116,7 @@ public partial class EditStoryPage : ContentPage, IGrownUpPage
 		if (draft.TextChanged)
 		{
 			// The cast page must show the fixed text's characters; stored voices and merges stay as pins.
-			draft.Cast = await _voicing.CastAsync(Story.JoinPages(draft.Pages), draft.NarratorVoiceId, draft.Cast, draft.Merges);
+			draft.Cast = await _voicing.CastAsync(draft.Language, Story.JoinPages(draft.Pages), draft.NarratorVoiceId, draft.Cast, draft.Merges);
 			_castValue!.Text = GalleryText.Characters(draft.Cast.Count);
 		}
 
@@ -166,11 +174,12 @@ public partial class EditStoryPage : ContentPage, IGrownUpPage
 		StoryDraft draft = _draft!;
 		string title = string.IsNullOrWhiteSpace(TitleEntry.Text) ? draft.Original.Title : TitleEntry.Text.Trim();
 		IReadOnlyList<CastMember> cast = draft.TextChanged
-			? await _voicing.CastAsync(Story.JoinPages(draft.Pages), draft.NarratorVoiceId, draft.Cast, draft.Merges)
+			? await _voicing.CastAsync(draft.Language, Story.JoinPages(draft.Pages), draft.NarratorVoiceId, draft.Cast, draft.Merges)
 			: draft.Cast;
 		await _library.UpdateAsync(draft.Original with
 		{
-			Title = title, CoverStyle = draft.CoverStyle, Pages = draft.Pages.ToList(), Cast = cast,
+			Title = title, Language = draft.Language, TranslateToMyLanguage = draft.TranslateToMyLanguage,
+			CoverStyle = draft.CoverStyle, Pages = draft.Pages.ToList(), Cast = cast,
 			CharacterMerges = draft.Merges, NarratorVoiceId = draft.NarratorVoiceId,
 		});
 		await Navigation.PopAsync();

@@ -1,21 +1,23 @@
+using DinoReader.Resources.Strings;
+
 namespace DinoReader;
 
-/// <summary>The reading screen's copy (Slice 62 new strings, English until Slice 66 adds the locales).</summary>
+/// <summary>The reading screen's copy (Slice 62), in the UI language (Slice 66).</summary>
 public static class ReadingText
 {
-	public const string ForGrownUps = "For grown-ups";
-	public const string TextMode = "Text mode";
-	public const string PictureMode = "Picture mode";
-	public const string Back = "Back";
-	public const string Play = "Play";
-	public const string Pause = "Pause";
-	public const string PreviousSentence = "Previous sentence";
-	public const string NextSentence = "Next sentence";
-	public const string Loading = "Loading…";
-	public const string CouldntRead = "Couldn't read that text";
-	public const string ReadFailed = "Something went wrong while reading.";
-	public const string Ok = "OK";
-	public const string LayoutFailed = "Couldn't lay out this story. Turn the screen or switch the mode to try again.";
+	public static string ForGrownUps => AppResources.Gallery_ForGrownUps;
+	public static string TextMode => AppResources.Reading_TextMode;
+	public static string PictureMode => AppResources.Reading_PictureMode;
+	public static string Back => AppResources.Common_Back;
+	public static string Play => AppResources.Reading_Play;
+	public static string Pause => AppResources.Reading_Pause;
+	public static string PreviousSentence => AppResources.Reading_Previous;
+	public static string NextSentence => AppResources.Reading_Next;
+	public static string Loading => AppResources.Reading_Loading;
+	public static string CouldntRead => AppResources.Reading_CouldntRead;
+	public static string ReadFailed => AppResources.Reading_ReadFailed;
+	public static string Ok => AppResources.Common_Ok;
+	public static string LayoutFailed => AppResources.Reading_LayoutFailed;
 
-	public static string ReadingPage(int page) => $"Reading page {page}";
+	public static string ReadingPage(int page) => AppResources.Format(AppResources.Reading_PageN, page);
 }

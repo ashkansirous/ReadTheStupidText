@@ -39,6 +39,12 @@ public sealed class ReadingSession
 	private int _playingReadId;
 	private int _readOrigin;
 
+	// Cancelled when the read is stopped or superseded, so a translation still running for it is abandoned.
+	private CancellationTokenSource? _readCancellation;
+
+	/// <summary>Raised (off the main thread) when a read turns out not to be translated, so the voice should speak the story's own language.</summary>
+	public event EventHandler? TranslationSkipped;
+
 	public ReadingSession(ISpeechReader reader, StoryVoicing voicing)
 	{
 		_reader = reader;
@@ -132,6 +138,7 @@ public sealed class ReadingSession
 
 	public void Stop()
 	{
+		CancelRead();
 		_reader.Stop();
 		_activeReadId = 0;
 		_playingReadId = 0;
@@ -147,6 +154,7 @@ public sealed class ReadingSession
 		}
 
 		_reader.Stop();
+		CancellationToken cancellation = BeginReadCancellation();
 		Finished = false;
 		MoveTo(sentence);
 		int id = ++_readSequence;
@@ -154,23 +162,24 @@ public sealed class ReadingSession
 		_playingReadId = 0;
 		Volatile.Write(ref _activeReadId, id);
 		StateChanged?.Invoke(this, EventArgs.Empty);
-		await SpeakAsync(story, _sentences[sentence].Start, id);
+		await SpeakAsync(story, _sentences[sentence].Start, id, cancellation);
 	}
 
-	private async Task SpeakAsync(Story story, int fromPosition, int id)
+	private async Task SpeakAsync(Story story, int fromPosition, int id, CancellationToken cancellation)
 	{
-		if (await TryStartReadAsync(story, fromPosition, id))
+		if (await TryStartReadAsync(story, fromPosition, id, cancellation))
 		{
 			await WaitForFirstAudioAsync(id);
 		}
 	}
 
 	// A superseded or stopped read never alerts and never touches the current read's loading state.
-	private async Task<bool> TryStartReadAsync(Story story, int fromPosition, int id)
+	private async Task<bool> TryStartReadAsync(Story story, int fromPosition, int id, CancellationToken cancellation)
 	{
 		try
 		{
-			IReadOnlyList<VoicedSegment> segments = await _voicing.VoiceAsync(story, story.NarratorVoiceId, fromPosition);
+			IReadOnlyList<VoicedSegment> segments = await _voicing.VoiceAsync(story, story.NarratorVoiceId, fromPosition, cancellation,
+				() => TranslationSkipped?.Invoke(this, EventArgs.Empty));
 			if (id != _pendingReadId)
 			{
 				return false;
@@ -190,6 +199,20 @@ public sealed class ReadingSession
 			FailRead(id);
 			return false;
 		}
+	}
+
+	private CancellationToken BeginReadCancellation()
+	{
+		CancelRead();
+		_readCancellation = new CancellationTokenSource();
+		return _readCancellation.Token;
+	}
+
+	private void CancelRead()
+	{
+		_readCancellation?.Cancel();
+		_readCancellation?.Dispose();
+		_readCancellation = null;
 	}
 
 	private void FailRead(int id)

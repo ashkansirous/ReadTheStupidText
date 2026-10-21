@@ -3,6 +3,7 @@ using DinoReader.Core;
 using Microsoft.Extensions.DependencyInjection;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Mobile;
+using DinoReader.Resources.Strings;
 
 namespace DinoReader;
 
@@ -20,6 +21,7 @@ public partial class ReadingPage : ContentPage
 	private readonly IServiceProvider _services;
 	private readonly VoicePackInstaller _installer;
 	private readonly IVoiceModelService _model;
+	private readonly SpokenLanguage _spoken;
 	private readonly PageFollower _follower = new();
 	private readonly BusyGuard _busy = new();
 	private Story? _story;
@@ -28,9 +30,11 @@ public partial class ReadingPage : ContentPage
 	private bool _stoppedDuringGate;
 
 	public ReadingPage(ReadingSession session, IStoryLibrary library, GrownUpGate gate, IServiceProvider services,
-		VoicePackInstaller installer, IVoiceModelService model)
+		VoicePackInstaller installer, IVoiceModelService model, SpokenLanguage spoken)
 	{
 		InitializeComponent();
+		Header.Padding = UiFlow.Mirror(Header.Padding);
+		_spoken = spoken;
 		_session = session;
 		_library = library;
 		_gate = gate;
@@ -40,6 +44,7 @@ public partial class ReadingPage : ContentPage
 		_session.SentenceChanged += OnSentenceChanged;
 		_session.StateChanged += OnSessionStateChanged;
 		_session.Failed += OnReadFailed;
+		_session.TranslationSkipped += (_, _) => _spoken.Use(_story?.Language ?? UiLanguage.English);
 		ShowPackStatus();
 	}
 
@@ -48,8 +53,8 @@ public partial class ReadingPage : ContentPage
 	{
 		_story = story;
 		TitleLabel.Text = story.Title;
-		// English rules for every language until Slice 66 adds the Farsi ones (see StorySentences).
-		_sentences = StorySentences.Build(story.Text, LanguageRules.English);
+		_spoken.Use(story);
+		_sentences = StorySentences.Build(story.Text, LanguageRules.For(story.Language));
 		_session.Open(story, _sentences);
 		_theme = CurrentTheme();
 		Modes.Set(story.Mode, _theme);
@@ -390,7 +395,7 @@ public partial class ReadingPage : ContentPage
 	// PackStatusText; tapping the label retries when the installer allows it.
 	private void ShowPackStatus()
 	{
-		string? status = PackStatusText.Compose(_installer.State, _installer.Progress);
+		string? status = LocalizedPackStatus.Compose(_installer.State, _installer.Progress);
 		StatusLabel.Text = status;
 		StatusLabel.IsVisible = status is not null;
 	}

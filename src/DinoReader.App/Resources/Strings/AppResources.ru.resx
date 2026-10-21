@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Common_Ok" xml:space="preserve"><value>ОК</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>Отмена</value></data>
+  <data name="PackStatus_Resolving" xml:space="preserve"><value>Поиск естественных голосов…</value></data>
+  <data name="PackStatus_Downloading" xml:space="preserve"><value>Загрузка естественных голосов… {0}</value></data>
+  <data name="PackStatus_Offline" xml:space="preserve"><value>Нет соединения. Читает голос телефона. Нажмите, чтобы повторить загрузку голоса.</value></data>
+  <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Загрузка голоса повреждена. Читает голос телефона. Нажмите, чтобы повторить.</value></data>
+  <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Пакет естественных голосов непригоден. Читает голос телефона.</value></data>
+  <data name="PackStatus_Failed" xml:space="preserve"><value>Не удалось загрузить естественные голоса. Читает голос телефона. Нажмите, чтобы повторить.</value></data>
+  <data name="PackStatus_Unavailable" xml:space="preserve"><value>Естественный голос для вашего языка пока недоступен. Читает голос телефона.</value></data>
+  <data name="Common_Back" xml:space="preserve"><value>Назад</value></data>
+  <data name="Common_Save" xml:space="preserve"><value>Сохранить</value></data>
+  <data name="Common_Done" xml:space="preserve"><value>Готово</value></data>
+  <data name="Common_Delete" xml:space="preserve"><value>Удалить</value></data>
+  <data name="Common_Keep" xml:space="preserve"><value>Оставить</value></data>
+  <data name="Common_Edit" xml:space="preserve"><value>Изменить</value></data>
+  <data name="Gallery_Title" xml:space="preserve"><value>Мои истории</value></data>
+  <data name="Gallery_ForGrownUps" xml:space="preserve"><value>Для взрослых</value></data>
+  <data name="Gallery_OpensGateHint" xml:space="preserve"><value>Открывает вход для взрослых</value></data>
+  <data name="Gallery_Cast" xml:space="preserve"><value>Роли · {0}</value></data>
+  <data name="Gallery_Characters_One" xml:space="preserve"><value>Персонажей: {0}</value></data>
+  <data name="Gallery_Characters_Other" xml:space="preserve"><value>Персонажей: {0}</value></data>
+  <data name="Gallery_PagesSummary" xml:space="preserve"><value>{0} · порядок, добавить, удалить</value></data>
+  <data name="Gallery_DeleteTitle" xml:space="preserve"><value>Удалить «{0}»?</value></data>
+  <data name="Gallery_PagesRead_One" xml:space="preserve"><value>Прочитано страниц: {0}</value></data>
+  <data name="Gallery_PagesRead_Other" xml:space="preserve"><value>Прочитано страниц: {0}</value></data>
+  <data name="Gallery_CharactersFound_One" xml:space="preserve"><value>Найдено персонажей: {0}</value></data>
+  <data name="Gallery_CharactersFound_Other" xml:space="preserve"><value>Найдено персонажей: {0}</value></data>
+  <data name="Delete_Body" xml:space="preserve"><value>Его страницы, картинки и голоса будут удалены с этого телефона.</value></data>
+  <data name="Delete_FailedTitle" xml:space="preserve"><value>Не удалось удалить историю</value></data>
+  <data name="Delete_FailedBody" xml:space="preserve"><value>Его файлы ещё используются. Попробуйте чуть позже.</value></data>
+  <data name="Manage_Title" xml:space="preserve"><value>Управление историями</value></data>
+  <data name="Manage_EditStory" xml:space="preserve"><value>Изменить историю</value></data>
+  <data name="Manage_DeleteStory" xml:space="preserve"><value>Удалить историю</value></data>
+  <data name="Manage_WhoIsSpeaking" xml:space="preserve"><value>Кто говорит</value></data>
+  <data name="Gate_HoldBody" xml:space="preserve"><value>Нажмите и удерживайте 3 секунды.</value></data>
+  <data name="Gate_HoldDescription" xml:space="preserve"><value>Нажмите и удерживайте 3 секунды</value></data>
+  <data name="Gate_KeepHolding" xml:space="preserve"><value>Продолжайте удерживать…</value></data>
+  <data name="Gate_Continue" xml:space="preserve"><value>Перейти к вопросу</value></data>
+  <data name="Gate_BackToStory" xml:space="preserve"><value>Назад к истории</value></data>
+  <data name="Gate_WhatIs" xml:space="preserve"><value>Сколько будет</value></data>
+  <data name="Gate_Backspace" xml:space="preserve"><value>Стереть</value></data>
+  <data name="Gate_SumQuestion" xml:space="preserve"><value>Сколько будет {0} плюс {1}?</value></data>
+  <data name="Story_Add" xml:space="preserve"><value>Добавить историю</value></data>
+  <data name="Story_Title" xml:space="preserve"><value>Название</value></data>
+  <data name="Story_Language" xml:space="preserve"><value>Язык истории</value></data>
+  <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · определён</value></data>
+  <data name="Story_Translate" xml:space="preserve"><value>Перевести на мой язык</value></data>
+  <data name="Add_Scan" xml:space="preserve"><value>Сканировать страницы</value></data>
+  <data name="Add_ScanSub" xml:space="preserve"><value>Сохраняет картинки страниц</value></data>
+  <data name="Add_Photos" xml:space="preserve"><value>Фото</value></data>
+  <data name="Add_PhotosSub" xml:space="preserve"><value>Выберите фото страниц</value></data>
+  <data name="Add_File" xml:space="preserve"><value>PDF или файл</value></data>
+  <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>
+  <data name="Cast_UnknownGender" xml:space="preserve"><value>?</value></data>
+  <data name="Add_Type" xml:space="preserve"><value>Ввести или вставить</value></data>
+  <data name="Add_TypeSub" xml:space="preserve"><value>Только текст</value></data>
+  <data name="Add_Placeholder" xml:space="preserve"><value>Введите или вставьте историю</value></data>
+  <data name="Add_CheckCast" xml:space="preserve"><value>Проверить роли</value></data>
+  <data name="Add_Save" xml:space="preserve"><value>Сохранить историю</value></data>
+  <data name="Add_PickerTitle" xml:space="preserve"><value>Выберите файл .txt, .pdf или .docx</value></data>
+  <data name="Add_PermissionTitle" xml:space="preserve"><value>Нужно разрешение</value></data>
+  <data name="Add_PermissionBody" xml:space="preserve"><value>Разрешите доступ к файлам, чтобы прочитать документ.</value></data>
+  <data name="Add_FileTooLargeTitle" xml:space="preserve"><value>Файл слишком большой</value></data>
+  <data name="Add_FileTooLargeBody" xml:space="preserve"><value>В этом файле {0} стр.; предел — {1}.</value></data>
+  <data name="Add_ReadFailedTitle" xml:space="preserve"><value>Не удалось прочитать файл</value></data>
+  <data name="Add_ReadFailedBody" xml:space="preserve"><value>Файл может быть повреждён или иметь неподдерживаемый формат.</value></data>
+  <data name="Edit_Cover" xml:space="preserve"><value>Обложка</value></data>
+  <data name="Edit_CoverFirstPage" xml:space="preserve"><value>Первая страница</value></data>
+  <data name="Edit_CoverColour" xml:space="preserve"><value>Цвет</value></data>
+  <data name="Edit_Pages" xml:space="preserve"><value>Страницы</value></data>
+  <data name="Edit_FixText" xml:space="preserve"><value>Исправить текст</value></data>
+  <data name="Edit_FixTextValue" xml:space="preserve"><value>Править распознанный текст</value></data>
+  <data name="Pages_Add" xml:space="preserve"><value>Добавить страницу</value></data>
+  <data name="Pages_MoveUp" xml:space="preserve"><value>Переместить страницу вверх</value></data>
+  <data name="Pages_MoveDown" xml:space="preserve"><value>Переместить страницу вниз</value></data>
+  <data name="Pages_Remove" xml:space="preserve"><value>Удалить страницу</value></data>
+  <data name="Reading_TextMode" xml:space="preserve"><value>Текстовый режим</value></data>
+  <data name="Reading_PictureMode" xml:space="preserve"><value>Режим картинок</value></data>
+  <data name="Reading_Play" xml:space="preserve"><value>Играть</value></data>
+  <data name="Reading_Pause" xml:space="preserve"><value>Пауза</value></data>
+  <data name="Reading_Previous" xml:space="preserve"><value>Предыдущее предложение</value></data>
+  <data name="Reading_Next" xml:space="preserve"><value>Следующее предложение</value></data>
+  <data name="Reading_Loading" xml:space="preserve"><value>Загрузка…</value></data>
+  <data name="Reading_CouldntRead" xml:space="preserve"><value>Не удалось прочитать текст</value></data>
+  <data name="Reading_ReadFailed" xml:space="preserve"><value>При чтении что-то пошло не так.</value></data>
+  <data name="Reading_LayoutFailed" xml:space="preserve"><value>Не удалось разметить эту историю. Поверните экран или смените режим и попробуйте снова.</value></data>
+  <data name="Reading_PageN" xml:space="preserve"><value>Читаем страницу {0}</value></data>
+  <data name="Cast_Title" xml:space="preserve"><value>Кто говорит</value></data>
+  <data name="Cast_Narrator" xml:space="preserve"><value>Рассказчик</value></data>
+  <data name="Cast_Main" xml:space="preserve"><value>ГЛАВНЫЙ</value></data>
+  <data name="Cast_Edited" xml:space="preserve"><value>ИЗМЕНЕНО</value></data>
+  <data name="Cast_SharedVoice" xml:space="preserve"><value>Общий голос</value></data>
+  <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>Неизвестный говорящий</value></data>
+  <data name="Cast_MergeButton" xml:space="preserve"><value>Объединить двух персонажей</value></data>
+  <data name="Cast_MergeTitle" xml:space="preserve"><value>Объединение персонажей</value></data>
+  <data name="Cast_MergeBody" xml:space="preserve"><value>Выберите два имени одного и того же персонажа. Их реплики объединятся под одним именем и одним голосом.</value></data>
+  <data name="Cast_KeepName" xml:space="preserve"><value>Оставить имя</value></data>
+  <data name="Cast_VoiceTitle" xml:space="preserve"><value>Голос</value></data>
+  <data name="Cast_PreviewLine" xml:space="preserve"><value>Привет! Вот так я звучу, когда читаю вашу историю.</value></data>
+  <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>Не удалось сохранить изменение</value></data>
+  <data name="Cast_SaveFailedBody" xml:space="preserve"><value>Роли не сохранены. Попробуйте чуть позже.</value></data>
+  <data name="Cast_PreviewFailedBody" xml:space="preserve"><value>Сейчас не удаётся воспроизвести голос.</value></data>
+  <data name="Cast_LoadFailedTitle" xml:space="preserve"><value>Не удалось открыть роли</value></data>
+  <data name="Cast_LoadFailedBody" xml:space="preserve"><value>Не удалось определить роли для этой истории. Попробуйте чуть позже.</value></data>
+  <data name="Cast_Boy" xml:space="preserve"><value>Мальчик</value></data>
+  <data name="Cast_Girl" xml:space="preserve"><value>Девочка</value></data>
+  <data name="Cast_Words_One" xml:space="preserve"><value>Слов: {0}</value></data>
+  <data name="Cast_Words_Other" xml:space="preserve"><value>Слов: {0}</value></data>
+  <data name="Cast_UnknownLines_One" xml:space="preserve"><value>Реплик: {0}</value></data>
+  <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>Реплик: {0}</value></data>
+  <data name="Cast_UsesNarrator" xml:space="preserve"><value>читает рассказчик</value></data>
+  <data name="Cast_Hear" xml:space="preserve"><value>Послушать: {0}</value></data>
+  <data name="Cast_NoBoyVoice" xml:space="preserve"><value>В этом наборе голосов нет мальчишеского голоса, поэтому у персонажа остаётся прежний голос.</value></data>
+  <data name="Cast_NoGirlVoice" xml:space="preserve"><value>В этом наборе голосов нет девичьего голоса, поэтому у персонажа остаётся прежний голос.</value></data>
+  <data name="Cast_VoiceChanged_One" xml:space="preserve"><value>Голос персонажа {0} изменён, потому что рассказчик теперь использует выданный ему голос.</value></data>
+  <data name="Cast_VoiceChanged_Other" xml:space="preserve"><value>Голоса персонажей {0} изменены, потому что рассказчик теперь использует выданный им голос.</value></data>
+  <data name="Cast_MergeInto" xml:space="preserve"><value>Объединить с {0}</value></data>
+  <data name="Cast_SharedNote" xml:space="preserve"><value>В этом наборе голосов всего {0} естественных голосов, поэтому некоторые персонажи говорят одним голосом. Голос рассказчика персонажам не выдаётся.</value></data>
+</root>
