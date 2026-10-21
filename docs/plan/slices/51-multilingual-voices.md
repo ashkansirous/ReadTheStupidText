@@ -147,7 +147,7 @@ through a Piper voice, Chinese through MeloTTS.
 
 *Emulator results (RTST_Test, 2026-10-21):* with the language stored as `fa` and no Farsi pack, the voice row shows "Phone voice" (the correct fallback). With `en` it shows "Momonga". An English read plays after the fix. The timer bug (elapsed > total) is pre-existing on main and not part of this slice.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-21)
 
 - Voices download as packs per language. The installed pack serving `ISettingsStore.Language` is resolved by `InstalledVoiceCatalog`. Supertonic covers en/fr/es/pt/ru/ja/ar, Piper (`piper-fa`) covers fa, MeloTTS (`melo-zh-en`) covers zh. (Slice 51: docs/plan/slices/51-multilingual-voices.md)
 - sherpa-onnx config types (`OfflineTtsConfig` etc.) are structs: pass them by `ref` to any helper that fills them in, or the paths are silently dropped and the engine is null. (Slice 51: docs/plan/slices/51-multilingual-voices.md)
@@ -155,7 +155,7 @@ through a Piper voice, Chinese through MeloTTS.
 - espeak-ng GPL data exists only inside the downloaded `piper-fa` pack, never in the repo or an app package. (Slice 51: docs/plan/slices/51-multilingual-voices.md)
 - `PackConstants.CatalogUrl` pins the packs release. (Slice 51: docs/plan/slices/51-multilingual-voices.md)
 
-#### For README.md
+#### For README.md (lifted 2026-10-21)
 
 Android reads with natural voices in nine languages: Supertonic for most, Piper for Farsi and MeloTTS for Chinese. Each downloads as a pack for the chosen language.
 

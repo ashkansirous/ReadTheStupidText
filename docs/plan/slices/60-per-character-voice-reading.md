@@ -119,7 +119,7 @@ Supersedes the earlier build decisions above where they differ.
 - Separate bug, not caused by this slice: the timer shows `00:09/00:04` and stays there after the read. It
   reproduces identically on an origin/main build.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-21)
 
 - A segment read (`ISpeechReader.SpeakSegmentsAsync`) is the way to read with several voices. Only readers
   with `SupportsSegments` true do it natively; the Mobile composite falls back to one voice (joined text,
@@ -129,7 +129,7 @@ Supersedes the earlier build decisions above where they differ.
 - Dino Reader's casting lives in `StoryVoicing` (`src/DinoReader.App`) over `DinoReader.Core`.
   (Slice 60: docs/plan/slices/60-per-character-voice-reading.md)
 
-#### For README.md
+#### For README.md (lifted 2026-10-21)
 
 - Dino Reader reads each character in their own voice, with a narrator picker.
 
