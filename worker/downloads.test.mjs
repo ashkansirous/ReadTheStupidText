@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { readFileSync } from "node:fs";
+import { redundantPaths, stripJsonc } from "./jsonc-run-first.mjs";
 import * as publisher from "../.github/scripts/publish-downloads.mjs";
 import {
   DINO_PATH_PREFIX,
@@ -326,13 +327,24 @@ test("only workers.dev and the Dino host serve the /dino prefix; the RTST host h
   assert.ok(!isHiddenDinoPath(Host.DinoReader, "/dino/privacy"));
 });
 
-test("an exact /download/android entry is in run_worker_first so the Worker handles it", () => {
+test("the /download/* globs in run_worker_first cover /download/android (no redundant exact entry)", () => {
   for (const file of ["../wrangler.jsonc", "../wrangler.workers-dev.jsonc"]) {
-    const text = readFileSync(new URL(file, import.meta.url), "utf8").replace(/^\s*\/\/.*$/gm, "");
-    const runFirst = JSON.parse(text.replace(/,(\s*[}\]])/g, "$1")).assets.run_worker_first;
-    assert.ok(runFirst.includes("/download/android"), file);
-    assert.ok(runFirst.includes("/dino/download/android"), file);
+    const config = JSON.parse(stripJsonc(readFileSync(new URL(file, import.meta.url), "utf8")));
+    const runFirst = config.assets.run_worker_first;
+    assert.deepEqual(redundantPaths(config), [], file);
+    assert.ok(runFirst.includes("/download/*"), file);
+    assert.ok(runFirst.includes("/dino/download/*"), file);
+    assert.ok(!runFirst.includes("/download/android"), file);
+    assert.ok(!runFirst.includes("/dino/download/android"), file);
   }
+});
+
+test("redundantPaths flags entries a trailing glob already covers, and passes a clean config", () => {
+  const config = (entries) => ({ assets: { run_worker_first: entries } });
+  assert.deepEqual(redundantPaths(config(["/download/*", "/download/android", "/privacy"])), ["/download/android"]);
+  assert.deepEqual(redundantPaths(config(["/download/*", "/dino/download/*", "/", "/privacy"])), []);
+  assert.deepEqual(redundantPaths(config(["/a/*", "/a/*"])), []);
+  assert.deepEqual(redundantPaths({}), []);
 });
 
 test("a failed listing read is not cached: the next request retries and succeeds", async () => {
