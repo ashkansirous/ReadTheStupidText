@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!-- Dino Reader (Batch 10, Slice 58, Decision 72): a kids' book reader, a second MAUI app in
+	     this repo. Android only for now; iOS follows in Slice 67 (it will add the same
+	     IncludeIos/IncludeAndroid logic as ReadTheStupidText.Mobile.csproj). -->
+	<PropertyGroup>
+		<TargetFrameworks>net10.0-android</TargetFrameworks>
+
+		<OutputType>Exe</OutputType>
+		<RootNamespace>DinoReader</RootNamespace>
+		<UseMaui>true</UseMaui>
+		<SingleProject>true</SingleProject>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<MauiXamlInflator>SourceGen</MauiXamlInflator>
+
+		<ApplicationTitle>Dino Reader</ApplicationTitle>
+
+		<!-- Google Play package name — fixed once published. -->
+		<ApplicationId>uk.sirous.dinoreader</ApplicationId>
+
+		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+		<ApplicationVersion>1</ApplicationVersion>
+
+		<!-- 28 (Android 9, 2018) is the product floor for every Android app in this repo
+		     (Decision 82). Do not lower it. -->
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">28.0</SupportedOSPlatformVersion>
+	</PropertyGroup>
+
+	<!-- App icon: deliberately NO <MauiIcon>. MauiIcon generates a mipmap/appicon adaptive icon
+	     and rewrites the manifest's android:icon, which would overwrite the ready-made "Book hug"
+	     set in Platforms/Android/Resources/mipmap-*. Those folders are picked up as Android
+	     resources by convention and AndroidManifest.xml points at @mipmap/ic_launcher(_round). -->
+	<ItemGroup>
+		<!-- Fonts (SIL OFL 1.1, licences in Licenses/ and STORE.md): bundled, never fetched at runtime. -->
+		<MauiFont Include="Resources\Fonts\*" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+	</ItemGroup>
+
+	<!-- ExcludeAssets does not flow through a project reference (see AndroidSherpaPackaging.props). -->
+	<Import Project="..\AndroidSherpaPackaging.props" />
+
+	<ItemGroup>
+		<ProjectReference Include="..\ReadTheStupidText.Domain\ReadTheStupidText.Domain.csproj" />
+		<ProjectReference Include="..\ReadTheStupidText.Application\ReadTheStupidText.Application.csproj" />
+		<ProjectReference Include="..\ReadTheStupidText.Mobile.Shared\ReadTheStupidText.Mobile.Shared.csproj" />
+	</ItemGroup>
+
+</Project>

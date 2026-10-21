@@ -1,4 +1,3 @@
-using ReadTheStupidText.Application.Images;
 using ReadTheStupidText.Application.Reading;
 
 namespace ReadTheStupidText.Mobile;
@@ -6,7 +5,7 @@ namespace ReadTheStupidText.Mobile;
 /// <summary>
 /// iOS's <see cref="IPlatformServices"/> for the first TestFlight build (Slice 48):
 /// <c>AVSpeechSynthesizer</c> for the fallback reader and, until Slice 49 links
-/// sherpa-onnx for iOS, for the "neural" slot too. The OCR slot is a stub that says so.
+/// sherpa-onnx for iOS, for the "neural" slot too.
 /// </summary>
 public sealed class IOSPlatformServices : IPlatformServices
 {
@@ -25,6 +24,4 @@ public sealed class IOSPlatformServices : IPlatformServices
     public ISpeechReader CreateNeuralReader() => _reader ??= new AvSpeechReader();
 
     public ISpeechReader CreateFallbackReader() => _reader ??= new AvSpeechReader();
-
-    public IImageTextExtractor CreateImageTextExtractor() => new UnavailableImageTextExtractor();
 }

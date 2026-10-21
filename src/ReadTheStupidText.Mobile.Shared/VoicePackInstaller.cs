@@ -80,6 +80,12 @@ public sealed class VoicePackInstaller
         }
     }
 
+    /// <summary>Publishes the terminal Failed state for an error the caller caught outside a run.</summary>
+    public void ReportFailed()
+    {
+        Publish(PackInstallState.Failed);
+    }
+
     // Returns the failure state to publish, or null when nothing failed.
     private async Task<PackInstallState?> RunAsync()
     {

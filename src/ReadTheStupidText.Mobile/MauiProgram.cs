@@ -1,9 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ReadTheStupidText.Application.Documents;
-using ReadTheStupidText.Application.Images;
-using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Documents;
 
 namespace ReadTheStupidText.Mobile;
@@ -21,13 +18,8 @@ public static partial class MauiProgram
 				fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
 			});
 
-		RegisterPlatformServices(builder.Services);
-		builder.Services.AddSingleton<IVoicePackService, MobileVoicePackService>();
-		builder.Services.AddSingleton<IVoiceModelService, MobileVoiceModelService>();
-		builder.Services.AddSingleton<VoicePackInstaller>();
-		builder.Services.AddSingleton<ISettingsStore, MobilePreferencesSettingsStore>();
-		builder.Services.AddSingleton<ISpeechReader>(CreateSpeechReader);
-		builder.Services.AddSingleton<IImageTextExtractor>(CreateImageTextExtractor);
+		builder.AddMobileSharedServices();
+		RegisterAppPlatformServices(builder.Services);
 		builder.Services.AddSingleton<PlainTextExtractor>();
 		builder.Services.AddSingleton<PdfTextExtractor>();
 		builder.Services.AddSingleton<DocxTextExtractor>();
@@ -43,21 +35,8 @@ public static partial class MauiProgram
 		return builder.Build();
 	}
 
-	// Each platform's Platforms/<OS>/ folder implements this and registers its
-	// IPlatformServices. The method is required (it has an accessibility modifier), so a target
-	// framework listed in the csproj without a Platforms/<OS> implementation fails to compile
-	// instead of failing at runtime. Platforms/Android and Platforms/iOS each implement it.
-	private static partial void RegisterPlatformServices(IServiceCollection services);
-
-	private static ISpeechReader CreateSpeechReader(IServiceProvider services)
-	{
-		var platform = services.GetRequiredService<IPlatformServices>();
-		return new CompositeSpeechReader(
-			platform.CreateNeuralReader(),
-			platform.CreateFallbackReader(),
-			services.GetRequiredService<IVoiceModelService>());
-	}
-
-	private static IImageTextExtractor CreateImageTextExtractor(IServiceProvider services) =>
-		services.GetRequiredService<IPlatformServices>().CreateImageTextExtractor();
+	// Each platform's Platforms/<OS>/ folder implements this for the services only this app
+	// needs (the shared engines are registered by MobileSharedServices). The method is required,
+	// so a target framework without a Platforms/<OS> implementation fails to compile.
+	private static partial void RegisterAppPlatformServices(IServiceCollection services);
 }

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="DinoReader.MainPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Dino Reader"
+    BackgroundColor="#FFF6E6">
+
+    <!-- Slice 58 skeleton: one page, type text and read it with the default voice. The real
+         screens (gallery, reading, grown-up area) are Slices 60-67; colours are the mock's
+         child tokens (page #FFF6E6, ink #2b2540, brand #5B57E8, play coral #FF7A59). -->
+    <Grid RowDefinitions="Auto,*,Auto,Auto" Padding="16" RowSpacing="12">
+        <Label Grid.Row="0" Text="Dino Reader" FontFamily="Fredoka" FontSize="28" TextColor="#2b2540" />
+
+        <Border Grid.Row="1" BackgroundColor="White" StrokeThickness="0" Padding="12">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="20" />
+            </Border.StrokeShape>
+            <Editor x:Name="TextEditor"
+                    Placeholder="Type or paste a story"
+                    PlaceholderColor="#8a8399"
+                    TextColor="#2b2540"
+                    FontFamily="Andika"
+                    FontSize="20"
+                    AutoSize="Disabled" />
+        </Border>
+
+        <Label Grid.Row="2" x:Name="StatusLabel" FontFamily="Fredoka" FontSize="14" TextColor="#5a5470" IsVisible="False">
+            <Label.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnPackStatusTapped" />
+            </Label.GestureRecognizers>
+        </Label>
+
+        <Button Grid.Row="3" x:Name="PlayButton" Text="Play" FontFamily="Fredoka" FontSize="22"
+                BackgroundColor="#FF7A59" TextColor="White" CornerRadius="28" HeightRequest="56"
+                Clicked="OnPlayClicked" />
+    </Grid>
+</ContentPage>

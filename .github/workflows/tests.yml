@@ -29,7 +29,12 @@ on:
       - 'src/ReadTheStupidText.Mobile/**'
       - '!src/ReadTheStupidText.Mobile/Platforms/**'
       - 'src/ReadTheStupidText.Mobile/Platforms/Android/**'
+      - 'src/ReadTheStupidText.Mobile.Shared/**'
+      - '!src/ReadTheStupidText.Mobile.Shared/Platforms/**'
+      - 'src/ReadTheStupidText.Mobile.Shared/Platforms/Android/**'
+      - 'src/AndroidSherpaPackaging.props'
       - '.github/scripts/stage-android-package.sh'
+      - '.github/scripts/check-android-natives.sh'
       - '.github/workflows/android.yml'
   workflow_dispatch:
   workflow_call:

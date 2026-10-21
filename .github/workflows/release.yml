@@ -23,7 +23,10 @@ name: release
 #     ship-targets.test.mjs on every PR): core code builds all three app
 #     platforms, App/Infrastructure only Windows, Mobile splits by folder
 #     (Decision 69: Platforms/Android -> Android, Platforms/iOS -> iOS, the rest
-#     of Mobile -> both), DinoReader only runs its tests, docs build nothing.
+#     of Mobile -> both), Mobile.Shared (Slice 58) rebuilds every app that uses it
+#     (its root: Android + iOS + Dino Reader; Platforms/Android: Android + Dino
+#     Reader; Platforms/iOS: iOS), DinoReader.App only Dino Reader, DinoReader.Core
+#     only runs its tests, docs build nothing.
 #     A major version bump (or force_all) builds everything. Each platform
 #     workflow's `pull_request.paths` mirrors that mapping; the test parses
 #     them and fails on drift.
@@ -33,14 +36,22 @@ name: release
 #     and `testflight-submit` uploads it after the release publishes. An unsigned
 #     iOS build can't ship, so an iOS-only change with no secrets cuts no
 #     release (release-draft skips it).
+#   * Dino Reader (Slice 58, Decision 72) is a second Android app sharing this
+#     one version. It compiles unsigned until its OWN four signing secrets exist
+#     (DINOREADER_ANDROID_SIGNING_*; `release-draft` reports whether they do as
+#     `dino_signed`, which also requires DINOREADER_PLAY_SERVICE_ACCOUNT_JSON so a
+#     half-configured repo never publishes a Dino-only GitHub release). With them, a release
+#     run signs a DinoReader-<v>.aab/.apk, attaches both to the draft, and `play-submit-dino`
+#     sends the .aab to its own Play internal track. A Dino-only
+#     change without the signing secrets cuts no release, like an unsigned iOS one.
 #
 # Flow: version (GitVersion + ship-targets, one full clone) -> test ->
-# release-draft (runs when windows || android || ios; creates/reuses draft
+# release-draft (runs when windows || android || ios || dinoapp; creates/reuses draft
 # v<x.y.z>, carries forward the untouched platform's assets from its last
 # release) -> build-windows / build-android / build-ios (reusable workflows;
-# they upload into the draft) -> release-publish (only if every affected build
+# they upload into the draft; build-dinoapp is Dino Reader's) -> release-publish (only if every affected build
 # succeeded; the tag is created here, so a failed run leaves no v* tag) ->
-# store-submit / play-submit / testflight-submit / publish-downloads.
+# store-submit / play-submit / play-submit-dino / testflight-submit / publish-downloads.
 # `dinoreader` and `site-checks` are standalone: in no job's needs, so an
 # outage there can never block a build or a release.
 #
@@ -53,7 +64,7 @@ on:
   workflow_dispatch:
     inputs:
       force_all:
-        description: 'Build every target (Windows, Android, iOS, Dino Reader) whatever changed.'
+        description: 'Build every target (Windows, Android, iOS, Dino Reader app and tests) whatever changed.'
         required: false
         type: boolean
         default: false
@@ -82,6 +93,7 @@ jobs:
       android: ${{ steps.targets.outputs.android }}
       ios: ${{ steps.targets.outputs.ios }}
       dinoreader: ${{ steps.targets.outputs.dinoreader }}
+      dinoapp: ${{ steps.targets.outputs.dinoapp }}
     steps:
       # workflow_dispatch can be started on any branch; only main may release.
       - name: Refuse to run off main
@@ -163,7 +175,7 @@ jobs:
       !cancelled()
       && github.ref == 'refs/heads/main'
       && needs.version.result == 'success'
-      && (needs.version.outputs.windows == 'true' || needs.version.outputs.android == 'true' || needs.version.outputs.ios == 'true')
+      && (needs.version.outputs.windows == 'true' || needs.version.outputs.android == 'true' || needs.version.outputs.ios == 'true' || needs.version.outputs.dinoapp == 'true')
       && (needs.test.result == 'success' || needs.test.result == 'skipped')
     runs-on: ubuntu-latest
     permissions:
@@ -174,29 +186,39 @@ jobs:
       # half-configured repo stays unsigned instead of failing). Computed here
       # from job-level env because `secrets` can't appear in an `if:`.
       ios_signed: ${{ steps.ios.outputs.signed }}
+      # Whether all five Dino Reader secrets are set: the four Android signing ones plus the Play service account (Slice 58).
+      dino_signed: ${{ steps.dino.outputs.signed }}
     env:
       HAS_IOS_SIGNING: ${{ secrets.IOS_DIST_CERT_P12_BASE64 != '' && secrets.IOS_DIST_CERT_P12_PASSWORD != '' && secrets.IOS_PROVISIONING_PROFILE_BASE64 != '' && secrets.ASC_API_KEY_P8_BASE64 != '' && secrets.ASC_API_KEY_ID != '' && secrets.ASC_API_ISSUER_ID != '' }}
+      HAS_DINO_SIGNING: ${{ secrets.DINOREADER_ANDROID_SIGNING_KEYSTORE_BASE64 != '' && secrets.DINOREADER_ANDROID_SIGNING_KEY_ALIAS != '' && secrets.DINOREADER_ANDROID_SIGNING_KEY_PASSWORD != '' && secrets.DINOREADER_ANDROID_SIGNING_STORE_PASSWORD != '' && secrets.DINOREADER_PLAY_SERVICE_ACCOUNT_JSON != '' }}
       GH_TOKEN: ${{ github.token }}
       REPO: ${{ github.repository }}
       TAG: v${{ needs.version.outputs.version }}
       WINDOWS: ${{ needs.version.outputs.windows }}
       ANDROID: ${{ needs.version.outputs.android }}
       IOS: ${{ needs.version.outputs.ios }}
+      DINO: ${{ needs.version.outputs.dinoapp }}
     steps:
       - name: Check the iOS signing secrets
         id: ios
         run: echo "signed=${HAS_IOS_SIGNING}" >> "$GITHUB_OUTPUT"
 
-      # An unsigned iOS build can't be shipped, so a change that only touches iOS
-      # while the signing secrets are missing releases nothing: no draft, no tag,
-      # and proceed stays unset so every later release step is skipped.
+      - name: Check the Dino Reader signing secrets
+        id: dino
+        run: echo "signed=${HAS_DINO_SIGNING}" >> "$GITHUB_OUTPUT"
+
+      # An unsigned iOS or Dino Reader build can't be shipped, so a change that only
+      # touches those while their signing secrets are missing releases nothing: no
+      # draft, no tag, and proceed stays unset so every later release step is skipped.
       - name: Check that something shippable changed
         id: shippable
         run: |
-          if [ "$WINDOWS" = "true" ] || [ "$ANDROID" = "true" ] || { [ "$IOS" = "true" ] && [ "${{ steps.ios.outputs.signed }}" = "true" ]; }; then
+          if [ "$WINDOWS" = "true" ] || [ "$ANDROID" = "true" ] \
+            || { [ "$IOS" = "true" ] && [ "${{ steps.ios.outputs.signed }}" = "true" ]; } \
+            || { [ "$DINO" = "true" ] && [ "${{ steps.dino.outputs.signed }}" = "true" ]; }; then
             echo "ship=true" >> "$GITHUB_OUTPUT"
           else
-            echo "::notice::Only iOS changed and the iOS signing secrets are not set, so there is nothing to release."
+            echo "::notice::Only iOS or Dino Reader changed and their signing secrets are not set, so there is nothing to release."
             echo "ship=false" >> "$GITHUB_OUTPUT"
           fi
 
@@ -239,6 +261,7 @@ jobs:
         env:
           HAS_SIGNING: ${{ secrets.ANDROID_SIGNING_KEYSTORE_BASE64 != '' }}
           IOS_SIGNED: ${{ steps.ios.outputs.signed }}
+          DINO_SIGNED: ${{ steps.dino.outputs.signed }}
         run: |
           set -euo pipefail
           carry_forward() {
@@ -253,7 +276,10 @@ jobs:
             gh release upload "$TAG" carry/* --repo "$REPO" --clobber
           }
           if [ "$WINDOWS" != "true" ]; then carry_forward '^ReadTheStupidText\.App_.*\.msix$'; fi
-          if [ "$ANDROID" != "true" ] || [ "$HAS_SIGNING" != "true" ]; then carry_forward '\.(aab|apk)$'; fi
+          # Each app matches only its own staged name (ReadTheStupidText-<v> / DinoReader-<v>;
+          # see stage-android-package.sh), so the two never mix.
+          if [ "$ANDROID" != "true" ] || [ "$HAS_SIGNING" != "true" ]; then carry_forward '^ReadTheStupidText-.*\.(aab|apk)$'; fi
+          if [ "$DINO" != "true" ] || [ "$DINO_SIGNED" != "true" ]; then carry_forward '^DinoReader-.*\.(aab|apk)$'; fi
           if [ "$IOS" != "true" ] || [ "$IOS_SIGNED" != "true" ]; then carry_forward '\.ipa$'; fi
 
   build-windows:
@@ -316,17 +342,38 @@ jobs:
       sign: ${{ needs.release-draft.outputs.ios_signed == 'true' && needs.release-draft.outputs.proceed == 'true' }}
     secrets: inherit
 
+  # Dino Reader (Slice 58, Decision 72): the second Android app. Same shape as build-ios:
+  # the unsigned compile runs whenever the app (or code it shares) changed; the signed
+  # .aab/.apk is built only when cutting a release and once its four secrets exist.
+  build-dinoapp:
+    needs: [version, test, release-draft]
+    if: >-
+      !cancelled()
+      && needs.version.outputs.dinoapp == 'true'
+      && needs.version.result == 'success'
+      && (needs.test.result == 'success' || needs.test.result == 'skipped')
+      && (needs.release-draft.result == 'success' || needs.release-draft.result == 'skipped')
+    permissions:
+      contents: write   # gh release upload
+    uses: ./.github/workflows/dinoreader-android.yml
+    with:
+      version: ${{ needs.version.outputs.version }}
+      version_code: ${{ needs.version.outputs.versionCode }}
+      release: ${{ needs.release-draft.outputs.dino_signed == 'true' && needs.release-draft.outputs.proceed == 'true' }}
+    secrets: inherit
+
   # Publishes the draft (creating the v<x.y.z> tag at the merge commit) only
-  # when every platform this change touched built successfully. iOS counts only
-  # when it was signed: an unsigned compile check gates nothing (it can't ship).
+  # when every platform this change touched built successfully. iOS and Dino Reader
+  # count only when signed: an unsigned compile check gates nothing (it can't ship).
   release-publish:
-    needs: [version, release-draft, build-windows, build-android, build-ios]
+    needs: [version, release-draft, build-windows, build-android, build-ios, build-dinoapp]
     if: >-
       !cancelled()
       && needs.release-draft.outputs.proceed == 'true'
       && (needs.version.outputs.windows != 'true' || needs.build-windows.result == 'success')
       && (needs.version.outputs.android != 'true' || needs.build-android.result == 'success')
       && (needs.version.outputs.ios != 'true' || (needs.release-draft.outputs.ios_signed != 'true' || needs.build-ios.result == 'success'))
+      && (needs.version.outputs.dinoapp != 'true' || (needs.release-draft.outputs.dino_signed != 'true' || needs.build-dinoapp.result == 'success'))
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -342,6 +389,8 @@ jobs:
           WINDOWS: ${{ needs.version.outputs.windows }}
           IOS: ${{ needs.version.outputs.ios }}
           IOS_SIGNED: ${{ needs.release-draft.outputs.ios_signed }}
+          DINO: ${{ needs.version.outputs.dinoapp }}
+          DINO_SIGNED: ${{ needs.release-draft.outputs.dino_signed }}
         run: |
           set -euo pipefail
           # A re-run of an old failed run must not publish its stale draft over
@@ -368,6 +417,13 @@ jobs:
             if ! grep -qxF "ReadTheStupidText-${VERSION}.ipa" <<< "$names"; then
               echo "::error::Expected the freshly built ReadTheStupidText-${VERSION}.ipa on the draft"; exit 1
             fi
+          fi
+          if [ "$DINO" = "true" ] && [ "$DINO_SIGNED" = "true" ]; then
+            for ext in aab apk; do
+              if ! grep -qxF "DinoReader-${VERSION}.${ext}" <<< "$names"; then
+                echo "::error::Expected the freshly built DinoReader-${VERSION}.${ext} on the draft"; exit 1
+              fi
+            done
           fi
           gh release edit "v${VERSION}" --repo "$REPO" --draft=false --latest
           echo "released=true" >> "$GITHUB_OUTPUT"
@@ -476,6 +532,38 @@ jobs:
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: uk.sirous.readthestupidtext
+          releaseFiles: play/*.aab
+          track: internal
+          status: completed
+
+  # Dino Reader's Google Play internal-testing upload (Slice 58) - only when Dino Reader was
+  # rebuilt, signed, and its OWN service account exists. A no-op until then: the app must first
+  # be created in Play Console (uk.sirous.dinoreader), and its very first release on a track
+  # uploaded by hand once (an API limitation). Never uses the Read The Stupid Text secrets.
+  play-submit-dino:
+    needs: [version, release-draft, release-publish]
+    if: >-
+      !cancelled()
+      && needs.release-publish.outputs.released == 'true'
+      && needs.version.outputs.dinoapp == 'true'
+      && needs.release-draft.outputs.dino_signed == 'true'
+    runs-on: ubuntu-latest
+    env:
+      CAN_PUBLISH: ${{ secrets.DINOREADER_PLAY_SERVICE_ACCOUNT_JSON != '' }}
+    steps:
+      - name: Download the .aab from the release
+        if: ${{ env.CAN_PUBLISH == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: gh release download "v${VERSION}" --repo "${{ github.repository }}" --pattern "DinoReader-${VERSION}.aab" --dir play
+
+      - name: Publish to Play Store (internal testing)
+        if: ${{ env.CAN_PUBLISH == 'true' }}
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.DINOREADER_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: uk.sirous.dinoreader
           releaseFiles: play/*.aab
           track: internal
           status: completed

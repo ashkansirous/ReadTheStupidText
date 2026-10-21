@@ -248,6 +248,7 @@ dev time and is not a redistributable runtime (Decision 26 in `docs/plan/decisio
 | Supertonic-3 voice model (`VoiceModel/`) | neural voices | Apache-2.0 (see `VoiceModel/LICENSE`) |
 | `PdfPig` | PDF text extraction (file upload) | Apache-2.0 |
 | `DocumentFormat.OpenXml` | DOCX text extraction (file upload) | MIT |
+| Fredoka, Andika, Vazirmatn fonts (Dino Reader only, bundled in `src/DinoReader.App/Resources/Fonts/`) | Dino Reader UI, reading and Farsi/Arabic text | SIL OFL 1.1 (texts in `src/DinoReader.App/Licenses/`) |
 
 No GPL/LGPL components ship in the package (Piper and its espeak-ng phonemizer
 were deliberately avoided; Supertonic needs no espeak data). This keeps the

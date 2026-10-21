@@ -1,0 +1,166 @@
+name: dinoreader-android
+
+# Dino Reader Android build (Slice 58, Decision 72). The twin of android.yml for the second
+# MAUI app, `src/DinoReader.App` (id uk.sirous.dinoreader). Entry points:
+#   * pull_request (own paths) / workflow_dispatch: the unsigned Debug build as a compile
+#     check. Nothing is signed or uploaded, and no secret is read.
+#   * workflow_call from release.yml with `release` = true (release-draft has a draft to
+#     fill AND the Dino Reader signing secrets exist): also builds the signed .aab/.apk and
+#     uploads them to the draft release as DinoReader-<version>.aab/.apk.
+# Dino Reader has its OWN upload key and Play service account (DINOREADER_* secrets), never
+# the Read The Stupid Text ones. Zero Actions artifacts (Batch 8): don't add
+# actions/upload-artifact for build outputs.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/ReadTheStupidText.Domain/**'
+      - 'src/ReadTheStupidText.Application/**'
+      - 'src/ReadTheStupidText.Documents/**'
+      - 'tests/ReadTheStupidText.Tests/**'
+      - 'global.json'
+      - 'GitVersion.yml'
+      - '*.slnx'
+      - '.gitattributes'
+      - '.github/workflows/release.yml'
+      - '.github/workflows/tests.yml'
+      - '.github/scripts/find-release.sh'
+      - '.github/scripts/ship-targets.mjs'
+      - 'src/DinoReader.App/**'
+      - 'src/ReadTheStupidText.Mobile.Shared/**'
+      - '!src/ReadTheStupidText.Mobile.Shared/Platforms/**'
+      - 'src/ReadTheStupidText.Mobile.Shared/Platforms/Android/**'
+      - 'src/AndroidSherpaPackaging.props'
+      - '.github/scripts/stage-android-package.sh'
+      - '.github/scripts/check-android-natives.sh'
+      - '.github/workflows/dinoreader-android.yml'
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      version:
+        description: 'GitVersion SemVer (x.y.z) for the release build.'
+        required: false
+        type: string
+        default: ''
+      version_code:
+        description: 'Android versionCode (major*1000000 + minor*1000 + patch).'
+        required: false
+        type: string
+        default: ''
+      release:
+        description: 'Cut the signed release build and upload it to the draft v<version>.'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dinoreader-android-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # gh release upload (release runs only)
+    env:
+      # `secrets` can't appear in a step `if:` directly, only via `env:`. All four signing
+      # secrets must exist (a half-configured repo stays unsigned instead of failing), and
+      # only when cutting a release: on PRs the output would be discarded.
+      SIGN_RELEASE: ${{ secrets.DINOREADER_ANDROID_SIGNING_KEYSTORE_BASE64 != '' && secrets.DINOREADER_ANDROID_SIGNING_KEY_ALIAS != '' && secrets.DINOREADER_ANDROID_SIGNING_KEY_PASSWORD != '' && secrets.DINOREADER_ANDROID_SIGNING_STORE_PASSWORD != '' && inputs.release == true }}
+      PUBLISH_DIR: src/DinoReader.App/bin/Release/net10.0-android/publish
+      PACKAGE_NAME: DinoReader
+      VERSION: ${{ inputs.version }}
+    steps:
+      # No LFS: the package carries no voice model (voice packs download at runtime).
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # maui-android, not bare "android": a CLI-only SDK install needs the
+      # MAUI workload pieces too (NETSDK1147 otherwise).
+      - name: Install the .NET MAUI Android workload
+        run: dotnet workload install maui-android
+
+      - name: Debug build (unsigned)
+        if: ${{ env.SIGN_RELEASE != 'true' }}
+        run: dotnet build src/DinoReader.App/DinoReader.App.csproj -f net10.0-android -c Debug
+
+      # The Release packaging path differs from Debug (the sherpa natives once went missing
+      # only in Release), so PR builds also package an unsigned Release .aab and check it.
+      # Skipped when the signed publish below runs: it builds the same code and is checked too.
+      - name: Release package check (unsigned .aab)
+        if: ${{ env.SIGN_RELEASE != 'true' }}
+        run: |
+          dotnet publish src/DinoReader.App/DinoReader.App.csproj -f net10.0-android -c Release -p:AndroidPackageFormat=aab
+          bash .github/scripts/check-android-natives.sh "$PUBLISH_DIR"/uk.sirous.dinoreader-Signed.aab
+
+      - name: Decode upload keystore
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        env:
+          KEYSTORE_BASE64: ${{ secrets.DINOREADER_ANDROID_SIGNING_KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > "${{ runner.temp }}/dinoreader-upload.keystore"
+
+      # AAB is what Google Play needs. Passwords go as plain -p: properties:
+      # the env: indirection is unsupported once AndroidPackageFormat=aab
+      # (Actions still masks the secret values in logs).
+      - name: Release build (signed .aab)
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        run: >
+          dotnet publish src/DinoReader.App/DinoReader.App.csproj
+          -f net10.0-android
+          -c Release
+          -p:AndroidPackageFormat=aab
+          -p:ApplicationDisplayVersion=${{ inputs.version }}
+          -p:ApplicationVersion=${{ inputs.version_code }}
+          -p:AndroidKeyStore=True
+          -p:AndroidSigningKeyStore="${{ runner.temp }}/dinoreader-upload.keystore"
+          -p:AndroidSigningKeyAlias=${{ secrets.DINOREADER_ANDROID_SIGNING_KEY_ALIAS }}
+          -p:AndroidSigningKeyPass=${{ secrets.DINOREADER_ANDROID_SIGNING_KEY_PASSWORD }}
+          -p:AndroidSigningStorePass=${{ secrets.DINOREADER_ANDROID_SIGNING_STORE_PASSWORD }}
+
+      - name: Stage signed .aab
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        run: bash .github/scripts/stage-android-package.sh aab
+
+      - name: Check the native libraries in the signed .aab
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        run: bash .github/scripts/check-android-natives.sh "dist/DinoReader-${VERSION}.aab"
+
+      # APK is the sideload format (adb install / tap to install).
+      - name: Release build (signed .apk)
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        run: >
+          dotnet publish src/DinoReader.App/DinoReader.App.csproj
+          -f net10.0-android
+          -c Release
+          -p:AndroidPackageFormat=apk
+          -p:ApplicationDisplayVersion=${{ inputs.version }}
+          -p:ApplicationVersion=${{ inputs.version_code }}
+          -p:AndroidKeyStore=True
+          -p:AndroidSigningKeyStore="${{ runner.temp }}/dinoreader-upload.keystore"
+          -p:AndroidSigningKeyAlias=${{ secrets.DINOREADER_ANDROID_SIGNING_KEY_ALIAS }}
+          -p:AndroidSigningKeyPass=${{ secrets.DINOREADER_ANDROID_SIGNING_KEY_PASSWORD }}
+          -p:AndroidSigningStorePass=${{ secrets.DINOREADER_ANDROID_SIGNING_STORE_PASSWORD }}
+
+      - name: Stage signed .apk
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        run: bash .github/scripts/stage-android-package.sh apk
+
+      - name: Check the native libraries in the signed .apk
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        run: bash .github/scripts/check-android-natives.sh "dist/DinoReader-${VERSION}.apk"
+
+      - name: Upload .aab + .apk to the draft release
+        if: ${{ env.SIGN_RELEASE == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "v${VERSION}" dist/* --repo "${{ github.repository }}" --clobber

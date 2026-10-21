@@ -8,7 +8,11 @@
  *   - App / Infrastructure                                        -> windows
  *   - Mobile/Platforms/Android/**                                 -> android
  *   - Mobile/Platforms/iOS/**                                     -> ios
- *   - the rest of Mobile/** (the shared MAUI root)                -> android + ios
+ *   - the rest of Mobile/** (the RTST app's MAUI root)            -> android + ios
+ *   - Mobile.Shared/Platforms/Android/**                          -> android + dinoapp
+ *   - Mobile.Shared/Platforms/iOS/**                              -> ios
+ *   - the rest of Mobile.Shared/** (platform code both apps use)  -> android + ios + dinoapp
+ *   - DinoReader.App/**                                           -> dinoapp (Slice 58; ships only with its own signing secrets)
  *   - DinoReader.Core / tests/DinoReader.Tests                    -> dinoreader (tests only, never a release)
  *   - docs and anything else                                      -> nothing
  * A major version bump builds every target, and so does a missing base tag.
@@ -31,10 +35,11 @@ import { appendFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const MOBILE = 'src/ReadTheStupidText.Mobile/';
+const SHARED = 'src/ReadTheStupidText.Mobile.Shared/';
 const MAJOR_BUMP = 'major';
 const APP_TAG = /^v(\d+)\.(\d+)\.(\d+)$/;
 
-/** Changes that rebuild all three app platforms. */
+/** Changes that rebuild every app platform (Windows, Android, iOS and Dino Reader). */
 export const CORE_PATHS = [
     'src/ReadTheStupidText.Domain/',
     'src/ReadTheStupidText.Application/',
@@ -67,19 +72,35 @@ export const GROUPS = {
     android: {
         include: [
             `${MOBILE}Platforms/Android/`,
+            `${SHARED}Platforms/Android/`,
+            'src/AndroidSherpaPackaging.props',
             '.github/scripts/stage-android-package.sh',
+            '.github/scripts/check-android-natives.sh',
             '.github/workflows/android.yml',
+        ],
+    },
+    dinoapp: {
+        include: [
+            'src/DinoReader.App/',
+            `${SHARED}Platforms/Android/`,
+            'src/AndroidSherpaPackaging.props',
+            '.github/scripts/stage-android-package.sh',
+            '.github/scripts/check-android-natives.sh',
+            '.github/workflows/dinoreader-android.yml',
         ],
     },
     ios: {
         include: [
             `${MOBILE}Platforms/iOS/`,
+            `${SHARED}Platforms/iOS/`,
             '.github/scripts/ios-signing.sh',
             '.github/scripts/testflight-upload.sh',
             '.github/workflows/ios.yml',
         ],
     },
     mobileshared: { include: [MOBILE], exclude: [`${MOBILE}Platforms/`] },
+    // Mobile.Shared's platform-neutral root: used by RTST on both OSes and by Dino Reader.
+    sharedroot: { include: [SHARED], exclude: [`${SHARED}Platforms/`] },
     dinoreader: {
         include: ['src/DinoReader.Core/', 'tests/DinoReader.Tests/', '.github/workflows/dinoreader.yml'],
     },
@@ -109,16 +130,17 @@ function touchedGroups(changedFiles) {
  * `changedFiles` is everything since the last release tag (`null`: unknown,
  * which builds everything). `bump` is the pending SemVer bump kind.
  * Returns one boolean per target. Whether anything ships is release.yml's call
- * (windows || android || signed ios); dinoreader alone never ships.
+ * (windows || android || signed ios || signed dinoapp); dinoreader alone never ships.
  */
 export function shipTargets({ changedFiles, bump, forceAll = false }) {
     const everything = forceAll || bump === MAJOR_BUMP || changedFiles === null;
     const g = everything ? null : touchedGroups(changedFiles);
     const windows = everything || g.core || g.windows;
-    const android = everything || g.core || g.android || g.mobileshared;
-    const ios = everything || g.core || g.ios || g.mobileshared;
+    const android = everything || g.core || g.android || g.mobileshared || g.sharedroot;
+    const ios = everything || g.core || g.ios || g.mobileshared || g.sharedroot;
     const dinoreader = everything || g.dinoreader;
-    return { windows, android, ios, dinoreader };
+    const dinoapp = everything || g.core || g.dinoapp || g.sharedroot;
+    return { windows, android, ios, dinoreader, dinoapp };
 }
 
 /** The newest strict v<x.y.z> tag in a list (null when none). */
