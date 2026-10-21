@@ -1,11 +1,11 @@
 # Slice 53 — Android: localized UI and right-to-left layout
 
-*Planned.*
+*In progress (wave 2026-10-21b), draft PR.*
 
 **Batch:** 9
 **Decisions:** 68
 **Depends on:** Slice 50 (first-run language choice and its `ISettingsStore` property)
-**Touches:** `src/ReadTheStupidText.Mobile/**` (all pages, `Resources/Strings/**`, `App.xaml.cs`, `ReadTheStupidText.Mobile.csproj`, `Platforms/Android/AndroidManifest.xml`), `CLAUDE.md`
+**Touches:** `src/ReadTheStupidText.Mobile/**` (RTST app only: all pages, `Resources/Strings/**`, `App.xaml.cs`, `ReadTheStupidText.Mobile.csproj`, `Platforms/Android/AndroidManifest.xml`), `tests/ReadTheStupidText.Tests/**`, `CLAUDE.md`
 **Story issue:** —
 
 ## Goal
