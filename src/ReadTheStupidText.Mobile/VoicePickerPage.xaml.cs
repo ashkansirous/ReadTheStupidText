@@ -2,6 +2,7 @@ using Microsoft.Maui.Controls.Shapes;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Domain.Reading;
+using ReadTheStupidText.Mobile.Resources.Strings;
 
 namespace ReadTheStupidText.Mobile;
 
@@ -19,8 +20,8 @@ public partial class VoicePickerPage : ContentPage
     private static readonly Color SelectedRowTint = Color.FromArgb("#125B57E8");
     private static readonly Color SelectedCheckColor = Color.FromArgb("#5B57E8");
 
-    /// <summary>Display name of the labelled system voice (Slice 50, Decision 61).</summary>
-    public const string PhoneVoiceName = "Phone voice";
+    /// <summary>Display name of the labelled system voice (Slice 50, Decision 61), in the current language.</summary>
+    public static string PhoneVoiceName => AppResources.VoicePicker_PhoneVoiceName;
 
     private readonly ISpeechReader _reader;
     private readonly ISettingsStore _settings;
@@ -29,6 +30,10 @@ public partial class VoicePickerPage : ContentPage
     public VoicePickerPage(ISpeechReader reader, ISettingsStore settings, IPlatformServices platform)
     {
         InitializeComponent();
+        FlowDirection = UiFlowDirection.ForCurrentCulture();
+        BackGlyph.Text = AppResources.Common_BackGlyph;
+        HeaderGrid.Padding = UiFlowDirection.Mirror(HeaderGrid.Padding);
+        TitleStack.Margin = UiFlowDirection.Mirror(TitleStack.Margin);
         _reader = reader;
         _settings = settings;
         NeuralVoiceSections.IsVisible = platform.SupportsNeuralVoice;

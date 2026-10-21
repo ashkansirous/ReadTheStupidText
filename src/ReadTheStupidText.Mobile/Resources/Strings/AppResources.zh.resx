@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Shell_ReaderTitle" xml:space="preserve"><value>阅读器</value></data>
+  <data name="Common_Ok" xml:space="preserve"><value>确定</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="Common_Voice" xml:space="preserve"><value>语音</value></data>
+  <data name="Common_Language" xml:space="preserve"><value>语言</value></data>
+  <data name="Reader_AddTextSection" xml:space="preserve"><value>添加文本</value></data>
+  <data name="Reader_PasteButton" xml:space="preserve"><value>📋 粘贴</value></data>
+  <data name="Reader_ScanButton" xml:space="preserve"><value>📷 扫描</value></data>
+  <data name="Reader_FileButton" xml:space="preserve"><value>📄 文件</value></data>
+  <data name="Reader_EditorPlaceholder" xml:space="preserve"><value>在此输入或粘贴文字、扫描页面或打开文件——所有内容都会进入这个文本框，并用下方相同的控件播放。</value></data>
+  <data name="Reader_PasteFailedTitle" xml:space="preserve"><value>无法粘贴</value></data>
+  <data name="Reader_PasteFailedMessage" xml:space="preserve"><value>无法读取剪贴板。请重新复制文本。</value></data>
+  <data name="Reader_ScanFailedTitle" xml:space="preserve"><value>无法扫描</value></data>
+  <data name="Reader_ScanFailedMessage" xml:space="preserve"><value>扫描时出了问题，请重试。</value></data>
+  <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>无法启动扫描仪</value></data>
+  <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>无法启动扫描仪——请重试。</value></data>
+  <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>扫描仪正在准备</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Google Play 服务仍在准备文档扫描仪，请稍后再试。</value></data>
+  <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>扫描仪不可用</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>文档扫描仪需要 Google Play 服务。请改为拍摄一张照片。</value></data>
+  <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>需要相机权限</value></data>
+  <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>请在“设置”中授予相机权限以拍摄文字。</value></data>
+  <data name="Reader_NoCameraTitle" xml:space="preserve"><value>没有相机</value></data>
+  <data name="Reader_NoCameraMessage" xml:space="preserve"><value>拍摄文字需要相机，而此设备没有可用的相机。</value></data>
+  <data name="Reader_ScanUnavailableTitle" xml:space="preserve"><value>扫描不可用</value></data>
+  <data name="Reader_ScanUnavailableMessage" xml:space="preserve"><value>此设备暂不支持从照片中读取文字。</value></data>
+  <data name="Reader_ScanUnreadableTitle" xml:space="preserve"><value>无法识别此次扫描</value></data>
+  <data name="Reader_ScanUnreadableMessage" xml:space="preserve"><value>请在光线更好或对焦更清晰的条件下重新扫描文字。</value></data>
+  <data name="Reader_NoTextFoundTitle" xml:space="preserve"><value>未找到文字</value></data>
+  <data name="Reader_NoTextFoundMessage" xml:space="preserve"><value>请在光线更好或对焦更清晰的条件下重新扫描。</value></data>
+  <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>已跳过部分页面</value></data>
+  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>无法读取第 {0} 页——其余内容已添加。</value></data>
+  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>无法读取第 {0} 页——其余内容已添加。</value></data>
+  <data name="Reader_ScanProgressPage" xml:space="preserve"><value>正在读取第 {0}/{1} 页</value></data>
+  <data name="Reader_ScanProgressSingle" xml:space="preserve"><value>正在读取页面</value></data>
+  <data name="Reader_FilePickerTitle" xml:space="preserve"><value>选择 .txt、.pdf 或 .docx 文件</value></data>
+  <data name="Reader_FilePermissionTitle" xml:space="preserve"><value>需要权限</value></data>
+  <data name="Reader_FilePermissionMessage" xml:space="preserve"><value>请授予文件访问权限以读取文档。</value></data>
+  <data name="Reader_FileTooLargeTitle" xml:space="preserve"><value>文件过大</value></data>
+  <data name="Reader_FileTooLargeMessage" xml:space="preserve"><value>该文件有 {0} 页，上限为 {1} 页。</value></data>
+  <data name="Reader_FileUnreadableTitle" xml:space="preserve"><value>无法读取该文件</value></data>
+  <data name="Reader_FileUnreadableMessage" xml:space="preserve"><value>文件可能已损坏或格式不受支持。</value></data>
+  <data name="Reader_ReadFailedTitle" xml:space="preserve"><value>无法朗读该文本</value></data>
+  <data name="Reader_ReadFailedMessage" xml:space="preserve"><value>朗读时出了问题。</value></data>
+  <data name="PackStatus_Resolving" xml:space="preserve"><value>正在检查自然语音…</value></data>
+  <data name="PackStatus_Downloading" xml:space="preserve"><value>正在下载自然语音… {0}</value></data>
+  <data name="PackStatus_Offline" xml:space="preserve"><value>没有网络连接。正在使用手机语音朗读。点按可重试下载语音。</value></data>
+  <data name="PackStatus_HashMismatch" xml:space="preserve"><value>语音下载已损坏。正在使用手机语音朗读。点按可重试。</value></data>
+  <data name="PackStatus_InvalidPack" xml:space="preserve"><value>自然语音包无法使用。正在使用手机语音朗读。</value></data>
+  <data name="PackStatus_Failed" xml:space="preserve"><value>无法下载自然语音。正在使用手机语音朗读。点按可重试。</value></data>
+  <data name="PackStatus_Unavailable" xml:space="preserve"><value>您的语言暂无自然语音。正在使用手机语音朗读。</value></data>
+  <data name="VoicePicker_Heading" xml:space="preserve"><value>选择语音</value></data>
+  <data name="VoicePicker_Subtitle" xml:space="preserve"><value>自然语音只需下载一次 · 您的文字保留在手机上</value></data>
+  <data name="VoicePicker_SectionPhone" xml:space="preserve"><value>手机</value></data>
+  <data name="VoicePicker_SectionMale" xml:space="preserve"><value>男声</value></data>
+  <data name="VoicePicker_SectionFemale" xml:space="preserve"><value>女声</value></data>
+  <data name="VoicePicker_Hint" xml:space="preserve"><value>点按语音即可试听并选择。朗读过程中切换语音时，当前句子仍会用原语音读完。</value></data>
+  <data name="VoicePicker_PhoneVoiceName" xml:space="preserve"><value>手机语音</value></data>
+  <data name="Language_Intro" xml:space="preserve"><value>请选择您的语言。我们会为其下载自然语音；在下载完成前，由手机自带语音朗读。</value></data>
+  <data name="Language_Retry" xml:space="preserve"><value>重试下载</value></data>
+  <data name="Language_Continue" xml:space="preserve"><value>继续</value></data>
+  <data name="Language_StartReading" xml:space="preserve"><value>开始朗读</value></data>
+</root>

@@ -12,8 +12,8 @@
  *   - Mobile.Shared/Platforms/Android/**                          -> android + dinoapp
  *   - Mobile.Shared/Platforms/iOS/**                              -> ios
  *   - the rest of Mobile.Shared/** (platform code both apps use)  -> android + ios + dinoapp
- *   - DinoReader.App/**                                           -> dinoapp (Slice 58; ships only with its own signing secrets)
- *   - DinoReader.Core / tests/DinoReader.Tests                    -> dinoreader (tests only, never a release)
+ *   - DinoReader.App/**, DinoReader.Core/**                       -> dinoapp (Slice 58/60; ships only with its own signing secrets)
+ *   - DinoReader.Core / tests/DinoReader.Tests                    -> dinoreader (its tests; Core also rebuilds dinoapp)
  *   - docs and anything else                                      -> nothing
  * A major version bump builds every target, and so does a missing base tag.
  *
@@ -82,6 +82,7 @@ export const GROUPS = {
     dinoapp: {
         include: [
             'src/DinoReader.App/',
+            'src/DinoReader.Core/',
             `${SHARED}Platforms/Android/`,
             'src/AndroidSherpaPackaging.props',
             '.github/scripts/stage-android-package.sh',
