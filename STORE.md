@@ -585,11 +585,10 @@ as an **unsigned** MSIX per architecture (x64, ARM64; the Store re-signs), uploa
 **self-contained** (Store certification 10.2.4.1); the Windows App SDK stays framework-dependent. There is no
 tray, no hotkey and no startup task: it is a normal window app.
 
-**Identity (placeholder until the name is reserved).** `Platforms/Windows/Package.appxmanifest` has a
-marked `TODO` next to `Identity`. `Name` is `AshkanSirous.DinoReader`, and `Publisher` and
-`PublisherDisplayName` are Read The Stupid Text's (same account). Replace `Name` and `Publisher` with
-the Partner Center "Product identity" values after reserving "Dino Reader"; they must match exactly or
-submission fails.
+**Identity (reserved in Partner Center).** Store ID **`9N9VHRLCZXN5`**, store URL
+https://apps.microsoft.com/detail/9N9VHRLCZXN5. `Platforms/Windows/Package.appxmanifest` matches the
+reservation: `Name` `AshkanSirous.DinoReader`, `Publisher` `CN=53769961-EF08-4BA5-A1DE-7A51B62A9AA7`,
+`PublisherDisplayName` `Ashkan Sirous`. They must keep matching exactly or submission fails.
 
 **Capabilities (Package.appxmanifest):**
 
@@ -615,4 +614,5 @@ listing exists a release builds and publishes the MSIX and skips the submission.
 `AZURE_AD_TENANT_ID`, `AZURE_AD_APPLICATION_CLIENT_ID`, `AZURE_AD_APPLICATION_SECRET` and `SELLER_ID`
 secrets as Read The Stupid Text (they belong to the developer account). The very first submission of a
 brand-new listing (age rating, pricing, store listing text) is done once by hand in Partner Center; the
-CLI then pushes updates.
+CLI then pushes updates. The first submission is manual; after it, set the repository variable
+`DINOREADER_STORE_APP_ID=9N9VHRLCZXN5` to turn on `store-submit-dino`.
