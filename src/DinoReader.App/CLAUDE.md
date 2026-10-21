@@ -28,3 +28,6 @@ are in `src/ReadTheStupidText.Mobile/CLAUDE.md`; its CI target is in `.github/CL
   maui-android, pass `-p:IncludeWindows=false`. Platform code lives once in `Mobile.Shared/Platforms/<OS>`; RTST and Dino
   share it. The Windows package identity is a placeholder until the Partner Center values are filled in (`STORE.md`);
   `store-submit-dino` runs only when `DINOREADER_STORE_APP_ID` is set. (Slice 67: docs/plan/slices/67-dino-reader-ios-windows.md)
+- Same `SafeAreaEdges` pattern as RTST (`None` on page/root, `Container` on header, sheet or body; `Container, SoftInput`
+  on text-entry pages). Bar icon colour comes from `SystemBarIcons`, which picks it from the page background shown,
+  because MAUI follows system night mode but only the reading screen does. (Slice 73: docs/plan/slices/73-edge-to-edge-safe-areas.md)

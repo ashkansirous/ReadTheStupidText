@@ -105,3 +105,6 @@ physical device) before relying on a slice that touches the Mobile project.
   `LinkageError` in Release only means R8 renamed a member a binding reads over JNI: add a keep rule, clean-rebuild (delete
   obj/bin Release), and smoke-test the Release APK on the emulator with `adb install -r --abi arm64-v8a`. Release ships
   arm64-v8a only. (Slice 72: docs/plan/slices/72-android-deps-r8-obfuscation.md)
+- Pages draw edge to edge on Android 15+. Set `SafeAreaEdges="None"` on the page/root and `Container` on the header,
+  sheet or body that must clear the bars; never set status/navigation bar colours in code (deprecated).
+  (Slice 73: docs/plan/slices/73-edge-to-edge-safe-areas.md)

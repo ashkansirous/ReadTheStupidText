@@ -1,6 +1,6 @@
 # Slice 73 — Edge-to-edge on Android 15+: safe areas on every screen
 
-*In progress (wave 2026-10-21), draft PR.*
+*Built 2026-10-21 (PR #224, merged 46e5165); not yet verified, see below.*
 
 **Batch:** 12 (Play Console health)
 **Depends on:** Slice 72 (the MAUI update changes safe-area behaviour, so check screens on the new version)
@@ -98,7 +98,7 @@ day and night, and the Dino add page with the keyboard up.
 *Follow-up seen on the emulator:* after toggling night mode, the Dino gallery and Manage tiles
 re-lay out with odd sizes. It is not known whether this predates the slice.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-21)
 
 - `src/ReadTheStupidText.Mobile/CLAUDE.md`: Pages draw edge to edge on Android 15+. Set
   `SafeAreaEdges="None"` on the page/root and `Container` on the header, sheet or body that must
