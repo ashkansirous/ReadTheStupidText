@@ -1,11 +1,11 @@
 # Slice 67 — Dino Reader on iOS and Windows
 
-*Planned.*
+*In progress (wave 2026-10-21), draft PR.*
 
 **Batch:** 10
 **Decisions:** 72, 81
 **Depends on:** Slices 48/49 (iOS target, parity) for iOS; Slices 58-62 for the app; Windows last (after 56, 57)
-**Touches:** `src/DinoReader.App/**`, `src/ReadTheStupidText.Mobile.Shared/**`, `src/ReadTheStupidText.Infrastructure/**`, `.github/workflows/build.yml`, `.github/scripts/**`, `STORE.md`, `CLAUDE.md`
+**Touches:** `src/DinoReader.App/**`, `ReadTheStupidText.slnx`, `src/ReadTheStupidText.Mobile.Shared/**`, `src/ReadTheStupidText.Infrastructure/**`, `.github/workflows/**` (the Dino iOS and Windows jobs, ship-targets path groups), `.github/scripts/**`, `.github/CLAUDE.md`, `STORE.md`, `CLAUDE.md`
 **Story issue:** —
 
 ## Goal
