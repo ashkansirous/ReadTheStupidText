@@ -6,12 +6,13 @@
     xmlns:local="clr-namespace:DinoReader"
     xmlns:res="clr-namespace:DinoReader.Resources.Strings"
     BackgroundColor="Transparent"
-    NavigationPage.HasNavigationBar="False">
+    NavigationPage.HasNavigationBar="False"
+    SafeAreaEdges="None">
 
     <!-- Grown-up gate (mock screens 6, 6b, 7): a white bottom sheet over a dimmed page. Step 1 is
          a 3 second hold (a plain button when a screen reader is on); step 2 is the sum. -->
-    <Grid BackgroundColor="{StaticResource Scrim}">
-        <Border VerticalOptions="End" BackgroundColor="White" StrokeThickness="0" Padding="22,24,22,28">
+    <Grid BackgroundColor="{StaticResource Scrim}" SafeAreaEdges="None">
+        <Border VerticalOptions="End" BackgroundColor="White" StrokeThickness="0" Padding="22,24,22,28" SafeAreaEdges="Container">
             <Border.StrokeShape>
                 <RoundRectangle CornerRadius="28,28,0,0" />
             </Border.StrokeShape>

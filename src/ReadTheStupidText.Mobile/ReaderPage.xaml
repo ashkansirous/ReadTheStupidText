@@ -5,7 +5,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:res="clr-namespace:ReadTheStupidText.Mobile.Resources.Strings"
     Title="{x:Static res:AppResources.Shell_ReaderTitle}"
-    Shell.NavBarIsVisible="False">
+    Shell.NavBarIsVisible="False"
+    SafeAreaEdges="None">
 
     <ContentPage.Resources>
         <Style x:Key="SpeedPresetStyle" TargetType="Button">
@@ -40,11 +41,11 @@
         </Style>
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="Auto,*" BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}">
+    <Grid RowDefinitions="Auto,*" SafeAreaEdges="None" BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}">
 
         <!-- Brand app bar: title only — the reader has no per-page subtitle anymore
              (voice + speed now live in the Voice row and speed presets below). -->
-        <Grid x:Name="HeaderGrid" Grid.Row="0" Padding="18,14,16,15">
+        <Grid x:Name="HeaderGrid" Grid.Row="0" Padding="18,14,16,15" SafeAreaEdges="Container">
             <Grid.Background>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                     <GradientStop Color="{StaticResource BrandStart}" Offset="0.0" />
@@ -62,7 +63,7 @@
             </VerticalStackLayout>
         </Grid>
 
-        <Grid Grid.Row="1" Padding="14,12,14,10" RowDefinitions="Auto,Auto,*,Auto,Auto,Auto" RowSpacing="10">
+        <Grid Grid.Row="1" Padding="14,12,14,10" SafeAreaEdges="Container" RowDefinitions="Auto,Auto,*,Auto,Auto,Auto" RowSpacing="10">
 
             <!-- "ADD TEXT" section label -->
             <Grid Grid.Row="0" ColumnDefinitions="Auto,*" ColumnSpacing="8" VerticalOptions="Center">

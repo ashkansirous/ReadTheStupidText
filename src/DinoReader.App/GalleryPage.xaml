@@ -6,7 +6,8 @@
     xmlns:local="clr-namespace:DinoReader"
     xmlns:res="clr-namespace:DinoReader.Resources.Strings"
     BackgroundColor="{StaticResource Cream}"
-    NavigationPage.HasNavigationBar="False">
+    NavigationPage.HasNavigationBar="False"
+    SafeAreaEdges="Container">
 
     <!-- Home screen (mock screen 1): the child's stories. Reading needs no gate; the lock opens it. -->
     <Grid RowDefinitions="Auto,*">
