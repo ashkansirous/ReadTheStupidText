@@ -59,7 +59,7 @@ public partial class ReadingPage : ContentPage
 		_theme = CurrentTheme();
 		Modes.Set(story.Mode, _theme);
 		var content = new ReadingContent(story.Text, _sentences, DinoFonts.ReadingFor(story.Language),
-			DinoFonts.IsRightToLeft(story.Language));
+			DinoFonts.IsRightToLeft(story.Language), ScansOf(story));
 		Surface.Show(content, story.Mode, _theme);
 		ApplyTheme();
 		if (_sentences.Count > 0)
@@ -67,6 +67,10 @@ public partial class ReadingPage : ContentPage
 			_session.MoveTo(0);
 		}
 	}
+
+	// A story with pictures draws its real pages in picture mode; one without keeps the generated pages.
+	private ScanSource? ScansOf(Story story) =>
+		story.HasPictures ? new ScanSource(story.Pages, file => _library.TryResolveFile(story.Id, file)) : null;
 
 	protected override void OnAppearing()
 	{

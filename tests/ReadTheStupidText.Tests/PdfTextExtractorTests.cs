@@ -34,6 +34,34 @@ public class PdfTextExtractorTests
     }
 
     [Fact]
+    public async Task ExtractTextAsync_separates_lines_so_sentences_do_not_run_together()
+    {
+        var builder = new UglyToad.PdfPig.Writer.PdfDocumentBuilder();
+        var page = builder.AddPage(300, 300);
+        var font = builder.AddStandard14Font(UglyToad.PdfPig.Fonts.Standard14Fonts.Standard14Font.Helvetica);
+        string[] lines = ["She had visited.", "\"Would you go?\"", "He took the bag.", "And left."];
+        for (int i = 0; i < lines.Length; i++)
+        {
+            page.AddText(lines[i], 12, new UglyToad.PdfPig.Core.PdfPoint(20, 250 - i * 30), font);
+        }
+
+        string path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.pdf");
+        File.WriteAllBytes(path, builder.Build());
+        try
+        {
+            string text = await new PdfTextExtractor().ExtractTextAsync(path);
+            Assert.DoesNotContain("visited.\"Would", text);
+            Assert.DoesNotContain("bag.And", text);
+            Assert.Matches(@"visited\.\s+""Would", text);
+            Assert.Matches(@"bag\.\s+And", text);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
     public async Task ExtractTextAsync_throws_DocumentTooLargeException_above_the_page_cap()
     {
         string[] pages = Enumerable.Range(0, 201).Select(i => $"Page {i}").ToArray();

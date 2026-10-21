@@ -3,6 +3,9 @@ using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Extensions.DependencyInjection;
 using ReadTheStupidText.Application.Documents;
+using ReadTheStupidText.Application.Images;
+using ReadTheStupidText.Documents;
+using ReadTheStupidText.Mobile;
 using ReadTheStupidText.Domain.Reading;
 
 namespace DinoReader;
@@ -14,6 +17,7 @@ namespace DinoReader;
 public partial class AddStoryPage : ContentPage, IGrownUpPage
 {
 	private const int DebounceMilliseconds = 500;
+	private const string PdfExtension = ".pdf";
 
 	private static readonly FilePickerFileType SupportedFileTypes = new(new Dictionary<DevicePlatform, IEnumerable<string>>
 	{
@@ -37,6 +41,12 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 	private IReadOnlyDictionary<string, string> _merges = Story.NoMerges;
 	private CancellationTokenSource? _analysis;
 
+	// Pages of a scan, photo set or PDF, and the text they gave: kept with the story while the text is unedited.
+	private IReadOnlyList<PositionedPage>? _imported;
+	private string _importedText = string.Empty;
+	private string? _pdfPath;
+	private IReadOnlyList<string>? _importedPageTexts;
+
 	public AddStoryPage(IStoryLibrary library, StoryVoicing voicing, IDocumentTextExtractor documents, ExternalActivityGuard external, IServiceProvider services, StoryTranslator translator)
 	{
 		InitializeComponent();
@@ -47,8 +57,8 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 		_documents = documents;
 		_external = external;
 		_services = services;
-		AddSourceTile(IconKind.Camera, AppResources.Add_Scan, AppResources.Add_ScanSub, 0, 0, null);
-		AddSourceTile(IconKind.Photos, AppResources.Add_Photos, AppResources.Add_PhotosSub, 1, 0, null);
+		AddSourceTile(IconKind.Camera, AppResources.Add_Scan, AppResources.Add_ScanSub, 0, 0, OnScanTapped);
+		AddSourceTile(IconKind.Photos, AppResources.Add_Photos, AppResources.Add_PhotosSub, 1, 0, OnPhotosTapped);
 		AddSourceTile(IconKind.File, AppResources.Add_File, AppResources.Add_FileSub, 0, 1, OnFileTapped);
 		AddSourceTile(IconKind.Type, AppResources.Add_Type, AppResources.Add_TypeSub, 1, 1, OnTypeTapped);
 		_languageCard = new LanguageCard(_translator.IsAvailable, () => _busy.RunAsync(ChooseLanguageAsync), _busy);
@@ -103,7 +113,23 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 		};
 	}
 
-	private async void OnBackTapped(object? sender, TappedEventArgs e) => await _busy.RunAsync(() => Navigation.PopAsync());
+	private async void OnBackTapped(object? sender, TappedEventArgs e) => await _busy.RunAsync(LeaveAsync);
+
+	private async Task LeaveAsync()
+	{
+		DiscardImported();
+		await Navigation.PopAsync();
+	}
+
+	// The page is gone for good (popped, system back), not just covered by the cast page: its pictures go too.
+	protected override void OnNavigatedFrom(NavigatedFromEventArgs args)
+	{
+		base.OnNavigatedFrom(args);
+		if (!Navigation.NavigationStack.Contains(this))
+		{
+			DiscardImported();
+		}
+	}
 
 	private void OnTypeTapped(object? sender, TappedEventArgs e)
 	{
@@ -122,6 +148,13 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 			return;
 		}
 
+		// The previous import goes before the new one is extracted: both render into the same shared page folder.
+		DiscardImported();
+		if (file.FileName.EndsWith(PdfExtension, StringComparison.OrdinalIgnoreCase) && await TryImportPdfAsync(file.FullPath))
+		{
+			return;
+		}
+
 		string? text = await ExtractAsync(file.FullPath);
 		if (text is not null)
 		{
@@ -130,6 +163,175 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 			TextCard.IsVisible = true;
 		}
 	}
+
+	private async void OnScanTapped(object? sender, TappedEventArgs e) => await _busy.RunAsync(ScanAsync);
+
+	private async void OnPhotosTapped(object? sender, TappedEventArgs e) => await _busy.RunAsync(PickPhotosAsync);
+
+	private async Task ScanAsync()
+	{
+		if (_services.GetService<IDocumentScanner>() is not { } scanner)
+		{
+			await ShowReadFailedAsync();
+			return;
+		}
+
+		try
+		{
+			await ReadPicturesAsync(await _external.RunAsync(scanner.ScanAsync));
+		}
+		catch (Exception ex) when (ex is DocumentScannerPreparingException or DocumentScannerStartFailedException
+			or DocumentScannerUnavailableException)
+		{
+			await ShowReadFailedAsync();
+		}
+	}
+
+	private async Task PickPhotosAsync()
+	{
+		try
+		{
+			List<FileResult> photos = await _external.RunAsync(() => MediaPicker.Default.PickPhotosAsync());
+			await ReadPicturesAsync(photos.Select(p => p.FullPath).ToList());
+		}
+		catch (Exception ex) when (ex is PermissionException or FeatureNotSupportedException)
+		{
+			await DisplayAlertAsync(AppResources.Add_PermissionTitle, AppResources.Add_PermissionBody, AppResources.Common_Ok);
+		}
+	}
+
+	private async Task ReadPicturesAsync(IReadOnlyList<string> locations)
+	{
+		if (locations.Count == 0)
+		{
+			return;
+		}
+
+		if (Parent is null)
+		{
+			StoryImport.DeleteLocations(locations);
+			return;
+		}
+
+		DiscardImported();
+		try
+		{
+			var ocr = _services.GetRequiredService<OcrPositionedTextExtractor>();
+			IReadOnlyList<PositionedPage> read = await StoryImport.ReadPicturesAsync(ocr, locations);
+			IReadOnlyList<PositionedPage> withText = StoryImport.WithText(read);
+			StoryImport.DeleteSources(read.Except(withText));
+			ShowImported(withText, null, null, null);
+		}
+		catch (Exception)
+		{
+			await ShowReadFailedAsync();
+		}
+	}
+
+	// A PDF keeps its page pictures; they are rendered when the story is saved, so a pick that is never saved costs nothing.
+	private async Task<bool> TryImportPdfAsync(string path)
+	{
+		try
+		{
+			var pdf = _services.GetRequiredService<RenderedPdfTextExtractor>();
+			IReadOnlyList<PositionedPage> pages = await pdf.ExtractPagesAsync(path);
+			IReadOnlyList<PositionedPage> withText = StoryImport.WithText(pages);
+			StoryImport.DeleteSources(pages.Except(withText));
+			// Own folder at once: the next import renders into the shared folder under the same names.
+			withText = StoryImport.MoveToOwnFolder(withText);
+			(string? flowing, IReadOnlyList<string>? pageTexts) = await FlowingTextAsync(path, withText);
+			ShowImported(withText, Path.GetFileNameWithoutExtension(path), flowing, pageTexts);
+			_pdfPath = _imported is null ? null : path;
+			return _imported is not null;
+		}
+		catch (Exception)
+		{
+			return false;
+		}
+	}
+
+	// A text-layer PDF reads as the document's own paragraphs (the normal text path), cut per page by where each page's
+	// lines sit in it; the lines only place the boxes. A PDF with any scanned page, or text that does not match its
+	// lines, reads as the recognised lines instead.
+	private async Task<(string? Text, IReadOnlyList<string>? PageTexts)> FlowingTextAsync(string path, IReadOnlyList<PositionedPage> pages)
+	{
+		if (pages.Count == 0 || pages.Any(p => p.ImagePath is not null))
+		{
+			return (null, null);
+		}
+
+		try
+		{
+			string flowing = await _documents.ExtractTextAsync(path);
+			var lines = pages.Select(p => (IReadOnlyList<string>)p.Lines.Select(l => l.Text).ToList()).ToList();
+			IReadOnlyList<string>? cut = ImportedText.SplitByPages(flowing, lines);
+			return cut is null ? (null, null) : (flowing, cut);
+		}
+		catch (Exception ex) when (ex is not OperationCanceledException)
+		{
+			Debug.WriteLine($"Dino Reader could not read the PDF text: {ex.Message}");
+			return (null, null);
+		}
+	}
+
+	// Renders the pages that have no picture yet (the PDF's text-layer pages); a failure leaves them as text only.
+	private async Task<IReadOnlyList<PositionedPage>> WithPicturesAsync(IReadOnlyList<PositionedPage> pages)
+	{
+		var missing = pages.Where(p => p.ImagePath is null).Select(p => p.Index).ToList();
+		if (_pdfPath is null || missing.Count == 0)
+		{
+			return pages;
+		}
+
+		try
+		{
+			var pdf = _services.GetRequiredService<RenderedPdfTextExtractor>();
+			IReadOnlyDictionary<int, string> images = await pdf.RenderPagesAsync(_pdfPath, missing);
+			return pages.Select(p => p.ImagePath is null && images.TryGetValue(p.Index, out string? image)
+				? p with { ImagePath = image } : p).ToList();
+		}
+		catch (Exception ex) when (ex is not OperationCanceledException)
+		{
+			Debug.WriteLine($"Dino Reader could not render the PDF pages: {ex.Message}");
+			return pages;
+		}
+	}
+
+	// Forgets the import and deletes its temporary pictures (replaced, abandoned or saved).
+	private void DiscardImported()
+	{
+		if (_imported is not null)
+		{
+			StoryImport.DeleteSources(_imported);
+		}
+
+		_imported = null;
+		_pdfPath = null;
+		_importedPageTexts = null;
+	}
+
+	private void ShowImported(IReadOnlyList<PositionedPage> pages, string? title, string? flowingText, IReadOnlyList<string>? pageTexts)
+	{
+		DiscardImported();
+		if (pages.Count == 0)
+		{
+			return;
+		}
+
+		_imported = pages;
+		_importedPageTexts = pageTexts;
+		_importedText = flowingText ?? StoryImport.TextOf(pages);
+		if (title is not null)
+		{
+			TitleEntry.Text = title;
+		}
+
+		TextEditor.Text = _importedText;
+		TextCard.IsVisible = true;
+	}
+
+	private Task ShowReadFailedAsync() =>
+		DisplayAlertAsync(AppResources.Add_ReadFailedTitle, AppResources.Add_ReadFailedBody, AppResources.Common_Ok);
 
 	private async Task<FileResult?> PickFileAsync()
 	{
@@ -204,9 +406,13 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 		ShowResult(cast);
 	}
 
+	// The pages the import read while the text is still the imported one; typed or edited text is one page.
+	private int ImportedPageCount() =>
+		_imported is not null && ImportedText.Unchanged(TextEditor.Text ?? string.Empty, _importedText) ? _imported.Count : 1;
+
 	private void ShowResult(IReadOnlyList<CastMember> cast)
 	{
-		SummaryLabel.Text = GalleryText.ImportSummary(1, cast.Count);
+		SummaryLabel.Text = GalleryText.ImportSummary(ImportedPageCount(), cast.Count);
 		NameChips.Children.Clear();
 		foreach (CastMember member in cast)
 		{
@@ -304,10 +510,47 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 
 		string title = TitleOrDefault(text);
 		int existing = (await _library.ListAsync()).Count;
-		var story = new Story(StoryIds.New(), title, _language, DateTimeOffset.UtcNow,
-			[new StoryPage(text)], await CastNowAsync(text), CoverStyle.Colour, existing, _narratorVoiceId, null, _merges, _languageCard.Translate);
-		await _library.AddAsync(story);
+		string id = StoryIds.New();
+		try
+		{
+			var story = new Story(id, title, _language, DateTimeOffset.UtcNow,
+				await PagesForAsync(id, text), await CastNowAsync(text), CoverStyle.Colour, existing, _narratorVoiceId, null, _merges, _languageCard.Translate);
+			await _library.AddAsync(story);
+		}
+		catch
+		{
+			await TryDeleteStoryAsync(id);
+			DiscardImported();
+			throw;
+		}
+
+		DiscardImported();
 		await Navigation.PopAsync();
+	}
+
+	// Clearing a half-saved story must never hide the error that made the save fail.
+	private async Task TryDeleteStoryAsync(string id)
+	{
+		try
+		{
+			await _library.DeleteAsync(id);
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader could not remove the half-saved story {id}: {ex.Message}");
+		}
+	}
+
+	// Pictures are kept only while the text is the one the import read: an edited text no longer matches the lines.
+	private async Task<IReadOnlyList<StoryPage>> PagesForAsync(string id, string text)
+	{
+		if (_imported is null || !ImportedText.Unchanged(text, _importedText))
+		{
+			return [new StoryPage(text)];
+		}
+
+		_imported = await WithPicturesAsync(_imported);
+		return await _services.GetRequiredService<StoryImport>().KeepAsync(_imported, id, _library, _importedPageTexts);
 	}
 
 	// The cast shown on the result card is for the text as it was when typing paused; recast if it moved on.

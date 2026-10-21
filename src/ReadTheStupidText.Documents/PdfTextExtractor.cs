@@ -1,5 +1,6 @@
 using ReadTheStupidText.Application.Documents;
 using UglyToad.PdfPig;
+using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
 
 namespace ReadTheStupidText.Documents;
 
@@ -26,6 +27,6 @@ public sealed class PdfTextExtractor : IDocumentTextExtractor
 
         return string.Join(
             Environment.NewLine,
-            document.GetPages().Select(page => page.Text));
+            document.GetPages().Select(page => ContentOrderTextExtractor.GetText(page)));
     });
 }

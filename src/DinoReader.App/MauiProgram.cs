@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using DinoReader.Core;
 using ReadTheStupidText.Application.Documents;
+using ReadTheStupidText.Application.Images;
 using ReadTheStupidText.Documents;
 using ReadTheStupidText.Mobile;
 
@@ -11,6 +12,9 @@ public static class MauiProgram
 {
 	// Stories live under AppDataDirectory/stories/<id>/ and never leave the device.
 	private const string StoriesFolder = "stories";
+
+	// Rendered PDF pages wait here (cache) until a story keeps them.
+	private const string PdfPagesFolder = "pdf-pages";
 
 	public static MauiApp CreateMauiApp()
 	{
@@ -52,6 +56,10 @@ public static class MauiProgram
 		services.AddSingleton<PdfTextExtractor>();
 		services.AddSingleton<DocxTextExtractor>();
 		services.AddSingleton<IDocumentTextExtractor, CompositeDocumentTextExtractor>();
+		services.AddSingleton(sp => new RenderedPdfTextExtractor(new PdfPositionedTextExtractor(),
+			sp.GetRequiredService<IPdfPageRenderer>(), sp.GetRequiredService<OcrPositionedTextExtractor>(),
+			Path.Combine(FileSystem.CacheDirectory, PdfPagesFolder)));
+		services.AddSingleton(sp => new StoryImport(sp.GetRequiredService<IPageImageKeeper>()));
 	}
 
 	// Pages are transient: each is opened with an explicit Load(story), never a one-shot

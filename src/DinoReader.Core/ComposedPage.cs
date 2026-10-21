@@ -7,6 +7,11 @@ public sealed record ComposedLine(string Text, int SentenceIndex, int Start, Nor
 /// <summary>A generated book page: its lines, top to bottom, and the sentences they carry.</summary>
 public sealed record ComposedPage(IReadOnlyList<ComposedLine> Lines)
 {
+    /// <summary>The same page with every line's sentence index replaced by <paramref name="real"/>[index]: a page
+    /// composed from part of a story (sentences numbered from 0) takes the numbers they have in the whole story.</summary>
+    public ComposedPage RemapSentences(IReadOnlyList<int> real) =>
+        new(Lines.Select(l => l with { SentenceIndex = real[l.SentenceIndex] }).ToList());
+
     public int FirstSentence => Lines.Count == 0 ? -1 : Lines[0].SentenceIndex;
 
     public int LastSentence => Lines.Count == 0 ? -1 : Lines[^1].SentenceIndex;
