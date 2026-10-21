@@ -90,7 +90,7 @@ this plan turns it into ordered, shippable vertical slices.
 | 70 | Split the build pipeline into the Lets-Call-Mom shape | built | #190 | — | [70-split-build-pipeline.md](docs/plan/slices/70-split-build-pipeline.md) |
 | 71 | Repo hygiene and the Drive mirror | built | #184 | — | [71-repo-hygiene.md](docs/plan/slices/71-repo-hygiene.md) |
 | 72 | Android dependencies to latest, R8 shrinking and obfuscation | built | — | #220 | [72-android-deps-r8-obfuscation.md](docs/plan/slices/72-android-deps-r8-obfuscation.md) |
-| 73 | Edge-to-edge on Android 15+: safe areas on every screen | planned | — | — | [73-edge-to-edge-safe-areas.md](docs/plan/slices/73-edge-to-edge-safe-areas.md) |
+| 73 | Edge-to-edge on Android 15+: safe areas on every screen | built | — | #224 | [73-edge-to-edge-safe-areas.md](docs/plan/slices/73-edge-to-edge-safe-areas.md) |
 | 74 | Dino Reader site: landing, privacy and downloads on dinoreader.sirous.uk | built | #219 | — | [74-dino-reader-site.md](docs/plan/slices/74-dino-reader-site.md) |
 | 75 | Windows translation engine | built | — | #223 | [75-windows-translation-engine.md](docs/plan/slices/75-windows-translation-engine.md) |
 
@@ -141,6 +141,8 @@ Built but not verified (details in each slice file):
 - Slice 75: desktop acceptance of toggle, pack download and streamed translated read (session was locked); `packs-3` contents after the workflow run; Android/iOS still find their packs in `packs-3` ([slice](docs/plan/slices/75-windows-translation-engine.md)).
 - Slice 72: Play Console "DEX obfuscation" metric after the next release (target >= 25%); iOS build on MAUI 10.0.120 / workload 10.0.401 in CI; a real-device scan with the GMS document scanner module ([slice](docs/plan/slices/72-android-deps-r8-obfuscation.md)).
 - Slice 67: TestFlight build installs and reads in four voices with picture-mode boxes; Windows desktop flows (typed story, voices, PDF picture mode, Windows OCR); real Partner Center identity and `DINOREADER_STORE_APP_ID`, then a Store submission ([slice](docs/plan/slices/67-dino-reader-ios-windows.md)).
+- Slice 73: Android 14 (API 34) inset path; landscape on both apps; RTST `LanguagePage` on first run; Dino `PageTextPage` with the keyboard up; Play's deprecated-API warning after the next release; follow-up: Dino gallery/Manage tiles re-lay out oddly after toggling night mode ([slice](docs/plan/slices/73-edge-to-edge-safe-areas.md)).
+- Flaky test `ReadAloudServiceGeneratingTests.Auto_read_prepares_the_head_start_before_the_settle_delay_ends` (timing; failed once in CI on 2026-10-21).
 
 ## Out of Scope
 
