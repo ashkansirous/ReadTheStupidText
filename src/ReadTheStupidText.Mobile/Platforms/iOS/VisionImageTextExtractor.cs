@@ -1,22 +1,31 @@
+using CoreGraphics;
 using Foundation;
+using ImageIO;
 using ReadTheStupidText.Application.Images;
 using Vision;
 
 namespace ReadTheStupidText.Mobile;
 
 /// <summary>
-/// <see cref="IImageTextExtractor"/> over Apple's on-device Vision text recognition
-/// (<see cref="VNRecognizeTextRequest"/>, accurate level), the iOS counterpart of
-/// <c>MlKitImageTextExtractor</c> (Slice 49, Decision 65). It is a stand-in: Slice 55 replaces it
-/// with PaddleOCR for the languages Vision reads poorly (Arabic and Farsi in particular).
-/// Everything runs on the device; the image is never uploaded.
+/// Apple's on-device Vision text recognition (<see cref="VNRecognizeTextRequest"/>, accurate
+/// level), the iOS counterpart of <c>MlKitImageTextExtractor</c> (Slice 49, Decision 65). Since
+/// Slice 55 it is the built-in fallback behind <see cref="IosLanguageImageTextExtractor"/>: used
+/// while a language's PaddleOCR pack is not installed, and when that pack cannot run. Everything
+/// runs on the device; the image is never uploaded.
 /// </summary>
 public sealed class VisionImageTextExtractor : IImageTextExtractor
 {
-    /// <param name="imagePath">A plain file path or a <c>file://</c> uri string.</param>
-    public Task<string> ExtractTextAsync(string imagePath) => Task.Run(() => Recognize(imagePath));
+    // EXIF orientations 5 to 8 are the ones that rotate the stored image a quarter turn.
+    private const int FirstQuarterTurnOrientation = 5;
 
-    private static string Recognize(string imagePath)
+    /// <param name="imagePath">A plain file path or a <c>file://</c> uri string.</param>
+    public async Task<string> ExtractTextAsync(string imagePath) =>
+        new ImageText(await ExtractLinesAsync(imagePath), OcrSource.MlKit).Text;
+
+    /// <summary>The recognised lines in reading order, with their boxes in the upright image's pixels.</summary>
+    public Task<IReadOnlyList<OcrLine>> ExtractLinesAsync(string imagePath) => Task.Run(() => Recognize(imagePath));
+
+    private static IReadOnlyList<OcrLine> Recognize(string imagePath)
     {
         string path = ScannedText.ToLocalPath(imagePath)
             ?? throw new InvalidOperationException($"Not a local image: '{imagePath}'.");
@@ -41,20 +50,37 @@ public sealed class VisionImageTextExtractor : IImageTextExtractor
             throw new InvalidOperationException(error.LocalizedDescription);
         }
 
-        return JoinLines(request.GetResults<VNRecognizedTextObservation>());
+        return ToLines(request.GetResults<VNRecognizedTextObservation>(), UprightSize(url));
     }
 
-    // Vision returns one observation per recognised line, in reading order (top to bottom).
-    private static string JoinLines(VNRecognizedTextObservation[]? observations)
+    // Vision returns one observation per recognised line, in reading order (top to bottom), with
+    // a box normalised to the upright image and measured from its bottom-left corner.
+    private static IReadOnlyList<OcrLine> ToLines(VNRecognizedTextObservation[]? observations, (float Width, float Height) size)
     {
         if (observations is null)
         {
-            return string.Empty;
+            return [];
         }
 
-        IEnumerable<string?> lines = observations
-            .Select(o => o.TopCandidates(1).FirstOrDefault()?.String)
-            .Where(line => !string.IsNullOrWhiteSpace(line));
-        return string.Join('\n', lines);
+        return observations
+            .Select(o => (Text: o.TopCandidates(1).FirstOrDefault()?.String, o.BoundingBox))
+            .Where(o => !string.IsNullOrWhiteSpace(o.Text))
+            .Select(o => new OcrLine(o.Text!, ToBox(o.BoundingBox, size)))
+            .ToList();
+    }
+
+    private static OcrBox ToBox(CGRect normalized, (float Width, float Height) size) =>
+        OcrBox.FromNormalizedBottomLeft(normalized.X, normalized.Y, normalized.Width, normalized.Height, size.Width, size.Height);
+
+    // The image's size after its EXIF orientation: the stored width and height swap for the four
+    // orientations that rotate a quarter turn.
+    private static (float Width, float Height) UprightSize(NSUrl url)
+    {
+        using CGImageSource? source = CGImageSource.FromUrl(url);
+        var properties = source?.GetProperties(0);
+        float width = properties?.PixelWidth ?? 0;
+        float height = properties?.PixelHeight ?? 0;
+        bool swap = (int)(properties?.Orientation ?? 0) >= FirstQuarterTurnOrientation;
+        return swap ? (height, width) : (width, height);
     }
 }

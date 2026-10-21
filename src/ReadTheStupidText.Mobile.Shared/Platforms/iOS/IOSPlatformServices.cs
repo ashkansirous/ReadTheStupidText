@@ -19,6 +19,7 @@ public sealed class IOSPlatformServices : IPlatformServices
     {
         _neuralFactory = neuralFactory;
         _hasTextExtractor = ocr is not null;
+        IosPackStorage.ExcludePacksFromBackup();
     }
 
     // Without a factory the voice pack is never downloaded (VoicePackInstaller checks this)

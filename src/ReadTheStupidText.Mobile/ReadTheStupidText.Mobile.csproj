@@ -139,6 +139,28 @@
 		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-x86" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
 	</ItemGroup>
 
+	<!-- Slice 55: PaddleOCR on iOS. Unlike Android, where the one onnxruntime that sherpa-onnx
+	     already stages serves both engines, the iOS sherpa framework links onnxruntime in
+	     statically without exporting it (no OrtGetApiBase symbol), so OCR brings its own: the full
+	     Microsoft.ML.OnnxRuntime package (managed binding plus the static iOS xcframework, 1.24.3,
+	     the version the Android managed binding is pinned to). Two copies of onnxruntime therefore
+	     live in the app, one inside SherpaOnnxC.framework and one in the executable; they do not
+	     share symbols. Bump this together with the Android pin. -->
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+		<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.24.3" />
+	</ItemGroup>
+
+	<!-- The onnxruntime session wrapper and the pack-driven engine are platform-neutral but live
+	     under Platforms/Android (Slice 52), which the MAUI SDK removes from every other target.
+	     Compiling them for iOS from there keeps one copy; added in a target because the SDK's
+	     Platforms/** removal runs after the project body. When Slice 63 moves them to
+	     Mobile.Shared, delete this target. -->
+	<Target Name="AddIosOcrSources" BeforeTargets="CoreCompile" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+		<ItemGroup>
+			<Compile Include="Platforms\Android\OnnxOcrInference.cs;Platforms\Android\PaddleOcrEngine.cs" />
+		</ItemGroup>
+	</Target>
+
 	<!-- The shared SherpaOnnxC.framework with onnxruntime linked in (one dynamic framework,
 	     about 30 MB), copied into the app's Frameworks folder and located at run time by
 	     IosSherpaLibrary. It is added as a NativeReference from this target, after the fetch
@@ -182,6 +204,11 @@
 	     manifest. -->
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
 		<BundleResource Include="Platforms\iOS\Resources\PrivacyInfo.xcprivacy" LogicalName="PrivacyInfo.xcprivacy" />
+
+		<!-- Slice 55: the permission prompts (camera, photo library) in the nine app languages.
+		     Each language has a folder named like ar.lproj, as iOS expects; Info.plist stays the
+		     English fallback. -->
+		<BundleResource Include="Platforms\iOS\Resources\**\InfoPlist.strings" LogicalName="%(RecursiveDir)InfoPlist.strings" />
 	</ItemGroup>
 
 	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">

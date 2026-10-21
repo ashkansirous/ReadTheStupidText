@@ -2,6 +2,23 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- The app languages (Slice 53); the permission prompts below are translated in
+	     Resources/<language>.lproj/InfoPlist.strings (Slice 55). The strings in this file are the
+	     English fallback. -->
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>ar</string>
+		<string>es</string>
+		<string>fa</string>
+		<string>fr</string>
+		<string>ja</string>
+		<string>pt</string>
+		<string>ru</string>
+		<string>zh-Hans</string>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIDeviceFamily</key>

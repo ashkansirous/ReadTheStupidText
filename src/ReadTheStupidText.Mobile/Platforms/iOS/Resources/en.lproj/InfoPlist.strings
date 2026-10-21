@@ -1,0 +1,4 @@
+"NSCameraUsageDescription" = "The camera photographs printed text so the app can read it aloud. Photos are processed on the device and never uploaded.";
+"NSPhotoLibraryUsageDescription" = "The app reads a photo you choose from your library, only to read the text in it aloud. Photos are processed on the device and never uploaded.";
+"NSPhotoLibraryAddUsageDescription" = "The app does not save anything to your photo library.";
+"NSMicrophoneUsageDescription" = "The app does not record audio. This is only asked if video capture is ever used, which this app does not do.";

@@ -1,0 +1,4 @@
+"NSCameraUsageDescription" = "L'appareil photo photographie du texte imprimé afin que l'app puisse le lire à voix haute. Les photos sont traitées sur l'appareil et ne sont jamais envoyées.";
+"NSPhotoLibraryUsageDescription" = "L'app lit une photo que vous choisissez dans votre photothèque, uniquement pour lire à voix haute le texte qu'elle contient. Les photos sont traitées sur l'appareil et ne sont jamais envoyées.";
+"NSPhotoLibraryAddUsageDescription" = "L'app n'enregistre rien dans votre photothèque.";
+"NSMicrophoneUsageDescription" = "L'app n'enregistre pas le son. Cette autorisation n'est demandée que si la capture vidéo est utilisée, ce que cette app ne fait pas.";
