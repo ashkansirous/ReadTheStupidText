@@ -12,7 +12,7 @@ public class VoicePackTests
             "sizeBytes": 1000, "sha256": "ABC", "license": "Apache-2.0", "url": "https://x/s.zip" },
           { "id": "ocr-fa", "language": "fa", "kind": "ocr", "version": "1",
             "sizeBytes": 10, "sha256": "d", "license": "MIT", "url": "https://x/o.zip" },
-          { "id": "future", "language": "en", "kind": "translation", "version": "1",
+          { "id": "future", "language": "en", "kind": "hologram", "version": "1",
             "sizeBytes": 10, "sha256": "d", "license": "MIT", "url": "https://x/f.zip" }
         ]
         """;

@@ -5,4 +5,5 @@ public enum PackKind
 {
     Voice,
     Ocr,
+    Translation,
 }

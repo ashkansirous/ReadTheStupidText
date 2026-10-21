@@ -20,6 +20,11 @@ name: packs
 #                   espeak-ng data, which therefore exists only inside this pack's zip,
 #                   never in the repo, the MSIX, the AAB or the .ipa (Decision 63).
 #   * melo-zh-en    MeloTTS Chinese + English (MIT), same download and pin.
+# Thirteen translation packs (Slice 75, Decision 67) ride in the same release and packs.json:
+#   one Opus-MT (Marian) leg each, `<source>-<target>` with English at one end, so a pair like
+#   fr -> ru pivots through two packs. Pre-converted int8 ONNX encoder/decoder from the Xenova
+#   Hugging Face repos (CC-BY-4.0 Opus-MT weights by Helsinki-NLP), pinned to one revision and
+#   sha256-checked. Persian (both ways) and English -> Japanese have no usable Opus-MT leg.
 # Four OCR packs (Slice 52, Decision 65) ride in the same release and the same packs.json:
 #   ocr-latin (en, fr, es, pt), ocr-cyrillic (ru), ocr-arabic (ar, fa), ocr-cjk (zh, ja).
 #   Each is PaddleOCR det + rec ONNX models and a dictionary (Apache-2.0), fetched from a
@@ -49,6 +54,12 @@ on:
         type: string
       ocr_pack_version:
         description: 'Version stamped into the four PaddleOCR packs (bump when any model or dictionary changes)'
+        required: true
+        default: '1'
+        type: string
+
+      translation_pack_version:
+        description: 'Version stamped into the thirteen Opus-MT translation packs (bump when any model changes)'
         required: true
         default: '1'
         type: string
@@ -85,6 +96,10 @@ env:
   OCR_ARABIC_DICT_SHA256: 637c27c88512c22089bef927b34ada08f748dc132ac70facd68d8202384c2726
   OCR_CJK_REC_SHA256: 26fa4f47060f58e25962b9af6beaee05c8182b90e026c4ecc6db165d9dfdc38a
   OCR_CJK_DICT_SHA256: d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b
+  # Opus-MT ONNX models (Slice 75). The pack ids and folder layout are read by
+  # src/ReadTheStupidText.Infrastructure/Translation (TranslationPacks, TranslationPackFiles).
+  TRANSLATION_LICENSE: CC-BY-4.0
+  TRANSLATION_PAIRS: 'fr-en en-fr es-en en-es pt-en en-pt zh-en en-zh ar-en en-ar ru-en en-ru ja-en'
 
 jobs:
   publish-packs:
@@ -96,6 +111,7 @@ jobs:
       PERSIAN_VERSION: ${{ inputs.piper_pack_version }}
       CHINESE_VERSION: ${{ inputs.melo_pack_version }}
       OCR_VERSION: ${{ inputs.ocr_pack_version }}
+      TRANSLATION_VERSION: ${{ inputs.translation_pack_version }}
     steps:
       - name: Checkout (with LFS — the voice model is LFS-tracked)
         uses: actions/checkout@v4
@@ -263,6 +279,81 @@ jobs:
           build_ocr ocr-cjk "zh,ja" chinese "$OCR_CJK_REC_SHA256" "$OCR_CJK_DICT_SHA256"
           ls -l out
 
+      # The translation packs: one Opus-MT leg per zip (encoder.onnx, decoder.onnx, source.spm, vocab.json,
+      # translation.json, LICENSE, SOURCE). The table is: pair, Hugging Face repo, pinned revision, then the
+      # sha256 of the int8 encoder, int8 merged decoder (with key/value cache), source.spm, vocab.json, config.json, and the target token a
+      # multi-target model needs (">>xx<<", or "-"). translation.json copies the decoding ids from config.json.
+      - name: Build the translation (Opus-MT) pack zips
+        run: |
+          set -euo pipefail
+          mkdir -p tr-src
+          fetch() {
+            local repo="$1" rev="$2" path="$3" sha="$4" dest="$5"
+            curl -fsSL --retry 3 -o "$dest" "https://huggingface.co/$repo/resolve/$rev/$path"
+            echo "$sha  $dest" | sha256sum -c -
+          }
+          build_translation() {
+            local pair="$1" repo="$2" rev="$3" enc="$4" dec="$5" spm="$6" vocab="$7" cfg="$8" token="$9"
+            local id="translation-$pair" source="${pair%-*}" target="${pair#*-}"
+            local dest="out/$id"
+            mkdir -p "$dest"
+            fetch "$repo" "$rev" onnx/encoder_model_quantized.onnx "$enc" "$dest/encoder.onnx"
+            fetch "$repo" "$rev" onnx/decoder_model_merged_quantized.onnx "$dec" "$dest/decoder.onnx"
+            fetch "$repo" "$rev" source.spm "$spm" "$dest/source.spm"
+            fetch "$repo" "$rev" vocab.json "$vocab" "$dest/vocab.json"
+            fetch "$repo" "$rev" config.json "$cfg" "tr-src/$pair-config.json"
+            if [ "$token" = "-" ]; then token=""; fi
+            jq --arg source "$source" --arg target "$target" --arg token "$token" \
+              '{source: $source, target: $target, targetToken: (if $token == "" then null else $token end),
+                decoderStartTokenId: .decoder_start_token_id, eosTokenId: .eos_token_id,
+                padTokenId: .pad_token_id, maxLength: .max_length}' "tr-src/$pair-config.json" > "$dest/translation.json"
+            cat > "$dest/LICENSE" <<LICENSE_TEXT
+          Opus-MT translation model $source to $target (Marian, int8 ONNX)
+            Model weights and SentencePiece data: Copyright the Helsinki-NLP / OPUS-MT authors,
+            licensed under Creative Commons Attribution 4.0 (CC-BY-4.0,
+            https://creativecommons.org/licenses/by/4.0/). Changes: converted to ONNX and
+            quantised to int8 (Xenova, https://huggingface.co/$repo).
+            Upstream: https://github.com/Helsinki-NLP/Opus-MT
+            Pinned files: https://huggingface.co/$repo/tree/$rev
+          LICENSE_TEXT
+            printf 'Model: https://huggingface.co/%s (revision %s)\n' "$repo" "$rev" > "$dest/SOURCE"
+            if [ "$(stat -c %s "$dest/encoder.onnx")" -lt 1048576 ] || [ "$(stat -c %s "$dest/decoder.onnx")" -lt 1048576 ]; then
+              echo "::error::$id model files are not real models"; exit 1
+            fi
+            files=$(cd "$dest" && find . -type f ! -path ./pack.json -printf '%P\n' | sort | jq -R . | jq -s .)
+            jq -n --arg id "$id" --arg language "$pair" --arg version "$TRANSLATION_VERSION" --argjson files "$files" \
+              '{id: $id, kind: "translation", language: $language, version: $version, engine: "onnxruntime", files: $files}' \
+              > "$dest/pack.json"
+            (cd out && zip -r -X "$id-$TRANSLATION_VERSION.zip" "$id")
+            rm -rf "$dest"
+          }
+          table=$(cat <<'TABLE'
+          fr-en Xenova/opus-mt-fr-en 6b166a182780e118c997879d0ad5be4b53671644 e727cb26ac6bf816394c49671af69c9ae5798868fed1e40849872415dffc1772 73bc7ac8e29c42e6f212ebcc29a2991d3646a04aabb642c0036aa54b40e4e1a9 78d0e717c77053f1c4b856d8661d9cb87c64f083a35418c087b9146300e4f585 f2ba9c69ae20f96b8bd821239a9152be422394f980350b77907cffc183db5f2d 6c2851f154d7b88c7767e4fdcf8a5694a36a456bfa6cbcde1b13fdbade3b56f6 -
+          en-fr Xenova/opus-mt-en-fr 28726206f80896b90035bd99cccd5cc1e151f916 0a81bdba62f53223740a8c6c6f58e716eba8ea1f92dfa569caf27ed5e3b6a0f7 333b244bce16023df04541c8cf9fd60aec9b0569da393c4b831d561897b0bda8 173e9f493a668fe396d599e28d414a201193094e6ffd7a4678e5aab0f6d3d838 f2ba9c69ae20f96b8bd821239a9152be422394f980350b77907cffc183db5f2d b522b73fcc86f77981349c1df2a2e041eed0dbcbea4acf2635019cf21d51ffc0 -
+          es-en Xenova/opus-mt-es-en eadfd7c658a9d8929ac3b8e996b68a68e2c7d480 c01e70f8455efc350831aa2af7ed187b16829241f0018ba07d1ba643a391bc18 4cd91ab30240d295ce907b5100826031838c672005e57e524d711122d75605fa e236ee6d866b635c0142114f8647f39831f9d92534aa2aad75c942f6a78ad0e3 b074b4cca0036ade5a39ea97faabd534e1015482c480fc2cb02c6481983eb163 fab3a7f93185bc5aa7b419f6a1e6e74d98c8f2a506c94493d3019bf46da3478d -
+          en-es Xenova/opus-mt-en-es 4b002a4c7edd54a7ced58877258b87f7efd3f892 03434edd1147e6c49e22066e9dc5888235e99cc35a6711d1c4ea5b06455d5da9 58ee5ddd6e22d1693d8722b90c1486afb93700a4376cf28fd74175052ad530ae 4dd547c24816a335e7b0b2e63376a8f1b3cbfc671eda5ab808dd44fdadaa8791 b074b4cca0036ade5a39ea97faabd534e1015482c480fc2cb02c6481983eb163 499eae1f97eeba63172fc884f92fd727ae803b7ceb79c0f653aa4b011152af2f -
+          zh-en Xenova/opus-mt-zh-en 39d480d52a9ea3065a1f117adfe4dbc55de10e6f 84d5e171b626bc8b6b220d022ac58696e9528c25deeacca62b5cbf4364547a99 c6b7f04ff1ba0fbd1bf6852599b4c0cad6fe512d57cd887f44ef36cf705424cb e27a3a1b539f4959ec72ea60e453f49156289f95d4e6000b29332efc45616203 08a119a1defd522fa047cb5e3bfe3e89633e96caa38ced0dc9cee7ef1021a011 293d318fce41dbf04114eac45037bb88a32d7c4ee21011a75e24a8b98ca45ad1 -
+          en-zh Xenova/opus-mt-en-zh 046f55aec303cdee3e0318604406d4df20f1e8ea d3b7912bf6a9bd27e4c074c2df91d4ff3d5b4bc5f7f6c8d7cc9c805c98fbafee 023be4f841f4c47cd65fffcbaa81c0d99d7f7e0138f7ba0e03fa220a4e688aff 5775ddc9e3ff2fae91554da56468ad35ff56edaba870fea74447bc7234bfdaa8 22c957348eed495ee925afc40a36da3e387c8a34a734c8486967c2dca271613e 4727d1229a04f95bf6f39abf949d8080615433d99d6ebd85f81c09edd247d5fa >>cmn_Hans<<
+          ar-en Xenova/opus-mt-ar-en 09c7556866400dcc53562ba8d7035119e7d9a2c1 d9b0d612acff86cf87634b49bda566d1ef39b312837de549786ea18fecefc708 cdb25ae736afe9d48035b0ea311ab4b25f315810fab7f3c6f6cb0d8d87af35fa 484f7210e5f4466f7e5b99b660717c6ef2a6f90746196daba507795b69dc02a2 87b78c097c331672ca22a522c3ba24c5dc2cdff90495dcb52cf742635439a3a0 451ee0da95b01fe58d78f05c47e9ad89f0a17a4c03dcecb389136a12248ef9aa -
+          en-ar Xenova/opus-mt-en-ar 034a684356c19021a187cda4d7f823298b913921 53c354d87ced44b39085fe8a46a25f09ea4578d442dbce9663f3977228f8a04e c0e553b0c26611780c70417c9b4c1ca7169e9cdb18ba9e649197efb017af9f02 81ac8f4d4ee271f4109eac67560a31f9c2d555463ba5eb95c32c6deee8ae819d 8b74af9e4c1ec122b8d06362db6c38795e10ca2b0156b2110cf08d4716744b76 8135d646cd810090349e8833b7ba593ac3b72d632f8858cb34925bdbcb6a1bea >>ara<<
+          ru-en Xenova/opus-mt-ru-en afe8c6c738ec81b6d033fd8f44f9678a639a7c67 c10df0466540534bb70c4402d539c349b8bfa9968184cad89f51408cf13e7eb7 25e7ff97b201bce64ab9c39749761d657b70b8602bcbc1ce01c67f713e90ffdf 745998e51ba5b058e38b7ac7765c25c43ed5c1c39cc92b27163b9b2e323c9d7c 5cf0d95d930d8d3e783c9e2f46a72f08b43a18060dab4ddefbcb66a733efedcb 60dc7d0906dbe42a1d740cdd7e84ce1534685b81fbe16005a0301adac69086ce -
+          en-ru Xenova/opus-mt-en-ru e050376e960175e8ddc5cff85025dc8436cddd68 97f28d8295d231b7da721ded06fa8c034787df2122cd8f85b904abdc4d15bd53 7efefcd793a5663bc204224a92a123524f3dfe2ffad59e5f73d6734d1b11ad04 16bebef1389a0b8ab452772c4e35b9e605e5713f8ac7baa71ca701394eaa086d 5cf0d95d930d8d3e783c9e2f46a72f08b43a18060dab4ddefbcb66a733efedcb db16bf0ea7bac239273214c3b9ab44577884227371a9a25e0191b7baf8d6f167 -
+          ja-en Xenova/opus-mt-ja-en 1a906cfaaf7c8f4193f67f5885c082aa6dbd9d16 345262b16bcdda1468b0f3380c112b7ce79f731176b4b1d21f6edd5b2ae0d25c b304d0014e4e1575437b6af95467b6cb54405d923732d8359113bd6dbbee93c0 d0b5c3b10b5959f056ff2c86e2f2356129242ff1fc72d3a4a34d6a8c0eee4e57 a1667b43d021e09c76f385101bd473f20b5691a12cdca7dda43e4a8daff20021 d35476f1d3858883feec67e5a63ddc387452a70fda9c8e26db99c71aa2ad6a34 -
+          pt-en Xenova/opus-mt-ROMANCE-en f60feaabe8bb435a5871e7702b25f53a01e770f8 13750ba31ee80c88f6bbb28aa03320674c50394efb95f791d5c4f5c8894232bf 5c0d95a8072a463c747343cf25ac9b4a17e9a90e08131e7efab12691ca13c979 baeab21ec00d0b490382b82499ef0348235c5a8e75de28aec8290adf62b007c4 32c8eeec099b448425a7da4e09ec10acbe424a733780c9bcec2062846f03e706 df1876a346b1852ef4590bc74c6e180eb2ba10193cf2bded24c31876f357d83c -
+          en-pt Xenova/opus-mt-en-ROMANCE 9d2ba69ac80c8e8453c3d9a1e2323a0e7b8ca3cd b4ddfd9338ba3d7c6b9c2d1410ed94fb7e06741226918cef6148031101bbd019 b5f6d442da7fa69f9d500df90373d2fdca4f799c43696b41888353b5c3c8eb13 b1f89e7b05828846baf19109a61029a36838f1c4f3defc218e6aee0ee2787864 d9c3b6b01d3a9c9403befa60fd17e4a50dc4929698e3d6b9c2e7f066a9d1f041 dc4f6f9ffbbf1196ff9e8329e5666fe190aef1b1c6806649d86b962b9bde292c >>pt<<
+          TABLE
+          )
+          # TRANSLATION_PAIRS (env) is the one list: the table must have exactly one row per pair in it.
+          if [ "$(wc -l <<<"$table")" -ne "$(wc -w <<<"$TRANSLATION_PAIRS")" ]; then
+            echo "::error::the translation table and TRANSLATION_PAIRS list different pairs"; exit 1
+          fi
+          for pair in $TRANSLATION_PAIRS; do
+            row=$(grep -E "^$pair " <<<"$table") || { echo "::error::no table row for $pair"; exit 1; }
+            read -r _ repo rev enc dec spm vocab cfg token <<<"$row"
+            build_translation "$pair" "$repo" "$rev" "$enc" "$dec" "$spm" "$vocab" "$cfg" "$token"
+          done
+          ls -l out
+
       - name: Write packs.json
         run: |
           set -euo pipefail
@@ -285,6 +376,9 @@ jobs:
             entry ocr-cyrillic ru "$OCR_VERSION" "$OCR_LICENSE" ocr
             entry ocr-arabic "ar,fa" "$OCR_VERSION" "$OCR_LICENSE" ocr
             entry ocr-cjk "zh,ja" "$OCR_VERSION" "$OCR_LICENSE" ocr
+            for pair in $TRANSLATION_PAIRS; do
+              entry "translation-$pair" "$pair" "$TRANSLATION_VERSION" "$TRANSLATION_LICENSE" translation
+            done
           } | jq -s . > out/packs.json
           cat out/packs.json
 
@@ -292,6 +386,8 @@ jobs:
       - name: Publish the packs release
         run: |
           set -euo pipefail
+          translation_zips=()
+          for pair in $TRANSLATION_PAIRS; do translation_zips+=("out/translation-$pair-$TRANSLATION_VERSION.zip"); done
           gh release create "$TAG" \
             "out/$SUPERTONIC_ID-$SUPERTONIC_VERSION.zip" \
             "out/$PERSIAN_ID-$PERSIAN_VERSION.zip" \
@@ -300,8 +396,9 @@ jobs:
             "out/ocr-cyrillic-$OCR_VERSION.zip" \
             "out/ocr-arabic-$OCR_VERSION.zip" \
             "out/ocr-cjk-$OCR_VERSION.zip" \
+            "${translation_zips[@]}" \
             out/packs.json \
             --repo "${{ github.repository }}" \
             --title "Language packs $TAG" \
-            --notes "Voice/OCR language packs and their packs.json catalog (not an app release). See docs/voice-packs.md." \
+            --notes "Voice, OCR and translation language packs and their packs.json catalog (not an app release). See docs/voice-packs.md." \
             --latest=false

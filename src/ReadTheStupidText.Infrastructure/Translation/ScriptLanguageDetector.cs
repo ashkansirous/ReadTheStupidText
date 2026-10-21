@@ -19,6 +19,16 @@ public sealed class ScriptLanguageDetector : ILanguageDetector
     private const string FarsiLetters = "پچژگکی";
     private const string ArabicLetters = "كيى";
 
+    // Peh, tcheh, jeh and gaf: Farsi (and Urdu) letters that plain Arabic never uses.
+    private const string FarsiMarkerLetters = "پچژگ";
+
+    // Letters of Urdu and its relatives (tteh, ddal, rreh, noon ghunna, ye barree, heh goal, heh doachashmee):
+    // the script is Arabic's but the language is neither Arabic nor Farsi, which this detector can't name.
+    private const string UrduLetters = "ٹڈڑںےہھۂۓ";
+
+    // Cyrillic letters Russian does not use (Ukrainian, Belarusian, Serbian, Macedonian): not Russian.
+    private const string NonRussianCyrillicLetters = "іїєґўђјљњћџ";
+
     private static readonly char[] WordEdges =
         ['.', ',', '!', '?', ';', ':', '"', '\'', '“', '”', '«', '»', '—', '-', '(', ')'];
 
@@ -44,11 +54,22 @@ public sealed class ScriptLanguageDetector : ILanguageDetector
 
         return counts.Dominant switch
         {
-            Script.Cyrillic => Found(AppLanguage.Russian, ScriptConfidence),
-            Script.Arabic => Found(counts.Farsi > counts.ArabicOnly ? AppLanguage.Persian : AppLanguage.Arabic, ScriptConfidence),
+            Script.Cyrillic => counts.NonRussianCyrillic ? null : Found(AppLanguage.Russian, ScriptConfidence),
+            Script.Arabic => DetectArabicScript(counts),
             Script.Cjk => Found(IsJapanese(counts) ? AppLanguage.Japanese : AppLanguage.Chinese, ScriptConfidence),
             _ => GuessLatin(text),
         };
+    }
+
+    private static DetectedLanguage? DetectArabicScript(ScriptCounts counts)
+    {
+        if (counts.Urdu)
+        {
+            return null;
+        }
+
+        bool farsi = counts.FarsiMarker || counts.Farsi > counts.ArabicOnly;
+        return Found(farsi ? AppLanguage.Persian : AppLanguage.Arabic, ScriptConfidence);
     }
 
     private static bool IsJapanese(ScriptCounts counts) =>
@@ -77,6 +98,7 @@ public sealed class ScriptLanguageDetector : ILanguageDetector
     private sealed class ScriptCounts
     {
         public int Latin, Cyrillic, Arabic, Han, Kana, Farsi, ArabicOnly;
+        public bool NonRussianCyrillic, Urdu, FarsiMarker;
 
         public ScriptCounts(string sample)
         {
@@ -113,6 +135,7 @@ public sealed class ScriptLanguageDetector : ILanguageDetector
             if (c is >= 'Ѐ' and <= 'ӿ')
             {
                 Cyrillic++;
+                NonRussianCyrillic |= NonRussianCyrillicLetters.Contains(char.ToLowerInvariant(c));
             }
             else if (c is >= '؀' and <= 'ۿ' or >= 'ݐ' and <= 'ݿ')
             {
@@ -135,6 +158,8 @@ public sealed class ScriptLanguageDetector : ILanguageDetector
         private void AddArabicScript(char c)
         {
             Arabic++;
+            Urdu |= UrduLetters.Contains(c);
+            FarsiMarker |= FarsiMarkerLetters.Contains(c);
             if (FarsiLetters.Contains(c))
             {
                 Farsi++;

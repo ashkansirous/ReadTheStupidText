@@ -283,6 +283,18 @@
   <data name="Translate_Note_ModelMissing" xml:space="preserve">
     <value>بسته ترجمه هنوز نصب نشده است، بنابراین متن اصلی خوانده شد.</value>
   </data>
+  <data name="Translate_Note_PackDownloading" xml:space="preserve">
+    <value>در حال دانلود بستهٔ ترجمهٔ {0}؛ این بار متن اصلی خوانده شد.</value>
+  </data>
+  <data name="Translate_Note_PackProgress" xml:space="preserve">
+    <value>در حال دانلود بستهٔ ترجمه: {0}%</value>
+  </data>
+  <data name="Translate_Note_PackReady" xml:space="preserve">
+    <value>بستهٔ ترجمه آماده است.</value>
+  </data>
+  <data name="Translate_Note_PackFailed" xml:space="preserve">
+    <value>بستهٔ ترجمه دانلود نشد. اتصال خود را بررسی کنید و ترجمه را خاموش و دوباره روشن کنید تا دوباره تلاش شود.</value>
+  </data>
   <data name="Translate_Note_TimedOut" xml:space="preserve">
     <value>ترجمه زمان زیادی برد، بنابراین متن اصلی خوانده شد.</value>
   </data>
