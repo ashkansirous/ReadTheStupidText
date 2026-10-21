@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Shell_ReaderTitle" xml:space="preserve"><value>Читалка</value></data>
+  <data name="Common_Ok" xml:space="preserve"><value>ОК</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>Отмена</value></data>
+  <data name="Common_Voice" xml:space="preserve"><value>Голос</value></data>
+  <data name="Common_Language" xml:space="preserve"><value>Язык</value></data>
+  <data name="Reader_AddTextSection" xml:space="preserve"><value>ДОБАВИТЬ ТЕКСТ</value></data>
+  <data name="Reader_PasteButton" xml:space="preserve"><value>📋 Вставить</value></data>
+  <data name="Reader_ScanButton" xml:space="preserve"><value>📷 Скан</value></data>
+  <data name="Reader_FileButton" xml:space="preserve"><value>📄 Файл</value></data>
+  <data name="Reader_EditorPlaceholder" xml:space="preserve"><value>Введите или вставьте текст, отсканируйте страницу или откройте файл — всё попадёт в это поле и воспроизводится теми же кнопками ниже.</value></data>
+  <data name="Reader_PasteFailedTitle" xml:space="preserve"><value>Не удалось вставить</value></data>
+  <data name="Reader_PasteFailedMessage" xml:space="preserve"><value>Не удалось прочитать буфер обмена. Попробуйте скопировать текст ещё раз.</value></data>
+  <data name="Reader_ScanFailedTitle" xml:space="preserve"><value>Не удалось отсканировать</value></data>
+  <data name="Reader_ScanFailedMessage" xml:space="preserve"><value>При сканировании что-то пошло не так. Повторите попытку.</value></data>
+  <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>Не удалось запустить сканер</value></data>
+  <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>Не удалось запустить сканер — повторите попытку.</value></data>
+  <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>Сканер подготавливается</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Сервисы Google Play ещё готовят сканер документов. Повторите попытку чуть позже.</value></data>
+  <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>Сканер недоступен</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>Сканеру документов нужны сервисы Google Play. Сделайте одно фото.</value></data>
+  <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>Нужен доступ к камере</value></data>
+  <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>Разрешите доступ к камере в настройках, чтобы фотографировать текст.</value></data>
+  <data name="Reader_NoCameraTitle" xml:space="preserve"><value>Нет камеры</value></data>
+  <data name="Reader_NoCameraMessage" xml:space="preserve"><value>Для съёмки текста нужна камера, а на этом устройстве её нет.</value></data>
+  <data name="Reader_ScanUnavailableTitle" xml:space="preserve"><value>Сканирование недоступно</value></data>
+  <data name="Reader_ScanUnavailableMessage" xml:space="preserve"><value>Распознавание текста на фото пока недоступно на этом устройстве.</value></data>
+  <data name="Reader_ScanUnreadableTitle" xml:space="preserve"><value>Не удалось распознать скан</value></data>
+  <data name="Reader_ScanUnreadableMessage" xml:space="preserve"><value>Отсканируйте текст ещё раз при лучшем освещении или фокусе.</value></data>
+  <data name="Reader_NoTextFoundTitle" xml:space="preserve"><value>Текст не найден</value></data>
+  <data name="Reader_NoTextFoundMessage" xml:space="preserve"><value>Отсканируйте ещё раз при лучшем освещении или фокусе.</value></data>
+  <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>Некоторые страницы пропущены</value></data>
+  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>Не удалось прочитать страницу {0} — остальное добавлено.</value></data>
+  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>Не удалось прочитать страницы {0} — остальное добавлено.</value></data>
+  <data name="Reader_ScanProgressPage" xml:space="preserve"><value>Чтение страницы {0} из {1}</value></data>
+  <data name="Reader_ScanProgressSingle" xml:space="preserve"><value>Чтение страницы</value></data>
+  <data name="Reader_FilePickerTitle" xml:space="preserve"><value>Выберите файл .txt, .pdf или .docx</value></data>
+  <data name="Reader_FilePermissionTitle" xml:space="preserve"><value>Нужно разрешение</value></data>
+  <data name="Reader_FilePermissionMessage" xml:space="preserve"><value>Разрешите доступ к файлам, чтобы прочитать документ.</value></data>
+  <data name="Reader_FileTooLargeTitle" xml:space="preserve"><value>Файл слишком большой</value></data>
+  <data name="Reader_FileTooLargeMessage" xml:space="preserve"><value>В этом файле {0} стр.; предел — {1}.</value></data>
+  <data name="Reader_FileUnreadableTitle" xml:space="preserve"><value>Не удалось прочитать файл</value></data>
+  <data name="Reader_FileUnreadableMessage" xml:space="preserve"><value>Файл может быть повреждён или иметь неподдерживаемый формат.</value></data>
+  <data name="Reader_ReadFailedTitle" xml:space="preserve"><value>Не удалось прочитать текст</value></data>
+  <data name="Reader_ReadFailedMessage" xml:space="preserve"><value>При чтении что-то пошло не так.</value></data>
+  <data name="PackStatus_Resolving" xml:space="preserve"><value>Поиск естественных голосов…</value></data>
+  <data name="PackStatus_Downloading" xml:space="preserve"><value>Загрузка естественных голосов… {0}</value></data>
+  <data name="PackStatus_Offline" xml:space="preserve"><value>Нет соединения. Читает голос телефона. Нажмите, чтобы повторить загрузку голоса.</value></data>
+  <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Загрузка голоса повреждена. Читает голос телефона. Нажмите, чтобы повторить.</value></data>
+  <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Пакет естественных голосов непригоден. Читает голос телефона.</value></data>
+  <data name="PackStatus_Failed" xml:space="preserve"><value>Не удалось загрузить естественные голоса. Читает голос телефона. Нажмите, чтобы повторить.</value></data>
+  <data name="PackStatus_Unavailable" xml:space="preserve"><value>Естественный голос для вашего языка пока недоступен. Читает голос телефона.</value></data>
+  <data name="VoicePicker_Heading" xml:space="preserve"><value>Выберите голос</value></data>
+  <data name="VoicePicker_Subtitle" xml:space="preserve"><value>Естественные голоса загружаются один раз · ваш текст остаётся на телефоне</value></data>
+  <data name="VoicePicker_SectionPhone" xml:space="preserve"><value>ТЕЛЕФОН</value></data>
+  <data name="VoicePicker_SectionMale" xml:space="preserve"><value>МУЖСКИЕ</value></data>
+  <data name="VoicePicker_SectionFemale" xml:space="preserve"><value>ЖЕНСКИЕ</value></data>
+  <data name="VoicePicker_Hint" xml:space="preserve"><value>Нажмите на голос, чтобы послушать и выбрать его. При смене голоса во время чтения текущее предложение дочитывается прежним голосом.</value></data>
+  <data name="VoicePicker_PhoneVoiceName" xml:space="preserve"><value>Голос телефона</value></data>
+  <data name="VoicePicker_EngineSupertonic" xml:space="preserve"><value>SUPERTONIC</value></data>
+  <data name="VoicePicker_EnginePiper" xml:space="preserve"><value>PIPER</value></data>
+  <data name="VoicePicker_EngineMelo" xml:space="preserve"><value>MELOTTS</value></data>
+  <data name="VoicePicker_ReasonPackNotInstalled" xml:space="preserve"><value>Естественный голос для вашего языка ещё не установлен, поэтому читает голос телефона.</value></data>
+  <data name="VoicePicker_ReasonNoNeuralEngine" xml:space="preserve"><value>Естественные голоса пока недоступны на этом устройстве, поэтому читает голос телефона.</value></data>
+  <data name="Language_Intro" xml:space="preserve"><value>Выберите язык. Мы загрузим для него естественный голос; пока он не загрузится, читает голос вашего телефона.</value></data>
+  <data name="Language_Retry" xml:space="preserve"><value>Повторить загрузку</value></data>
+  <data name="Language_Continue" xml:space="preserve"><value>Продолжить</value></data>
+  <data name="Language_StartReading" xml:space="preserve"><value>Начать чтение</value></data>
+</root>

@@ -24,6 +24,7 @@ public static partial class MauiProgram
 		builder.Services.AddSingleton<PdfTextExtractor>();
 		builder.Services.AddSingleton<DocxTextExtractor>();
 		builder.Services.AddSingleton<IDocumentTextExtractor, CompositeDocumentTextExtractor>();
+		builder.Services.AddSingleton<EditorDraft>();
 		builder.Services.AddTransient<LanguagePage>();
 		builder.Services.AddTransient<ReaderPage>();
 		builder.Services.AddTransient<VoicePickerPage>();

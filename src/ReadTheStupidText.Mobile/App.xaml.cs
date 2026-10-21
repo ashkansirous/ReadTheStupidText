@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Extensions.DependencyInjection;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
@@ -13,6 +14,8 @@ public partial class App : Microsoft.Maui.Controls.Application
 
 	public App(IServiceProvider services, ISpeechReader reader, ISettingsStore settings, VoicePackInstaller installer)
 	{
+		// Before InitializeComponent: pages read their strings while they are inflated.
+		UiCulture.Apply(UiCulture.Resolve(settings.Language, CultureInfo.CurrentUICulture));
 		InitializeComponent();
 
 		_services = services;
@@ -31,7 +34,7 @@ public partial class App : Microsoft.Maui.Controls.Application
 		return new Window(root);
 	}
 
-	/// <summary>Leaves the first-run language page for the Reader.</summary>
+	/// <summary>Rebuilds the root in the current language: leaves the first-run page, or re-applies a language change.</summary>
 	public void ShowMain()
 	{
 		if (Windows.Count > 0)
