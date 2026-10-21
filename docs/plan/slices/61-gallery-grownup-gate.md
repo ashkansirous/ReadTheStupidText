@@ -122,13 +122,13 @@ New strings (both locales): "My stories", "For grown-ups", "Press and hold for 3
 - Home, then resume, from Manage returns to the gallery.
 - Locking the screen mid-read keeps reading: all 4 chunks played.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-21)
 
 - Dino Reader stories live in `AppDataDirectory/stories/<guid>/story.json`, through `FileStoryLibrary` (`DinoReader.Core`). Resolve image files only via `TryResolveFile`. (Slice 61: docs/plan/slices/61-gallery-grownup-gate.md)
 - Grown-up pages implement `IGrownUpPage` and reset to the gallery on background. Wrap app-launched activities (pickers, camera) in `ExternalActivityGuard`. (Slice 61: docs/plan/slices/61-gallery-grownup-gate.md)
 - Design tokens come from `DinoTokens`, never string keys. (Slice 61: docs/plan/slices/61-gallery-grownup-gate.md)
 
-#### For README.md
+#### For README.md (lifted 2026-10-21)
 
 Dino Reader has a story gallery, and a grown-up area (a hold, then a sum) to add stories by typing, pasting or opening a file, and to edit or delete them.
 

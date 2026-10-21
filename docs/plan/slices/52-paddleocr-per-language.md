@@ -110,12 +110,12 @@ Final shape, as built:
 - APK check: exactly one `libonnxruntime.so` in `lib/arm64-v8a`, and no models in the APK.
 - Emulator smoke test (RTST_Test, 2026-10-21): the app starts with the OCR installer and stays running, no crash, neural voice ready. A real OCR scan cannot be tested until the OCR packs are published.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-21)
 
 - **OCR on Android:** PaddleOCR models download as `kind: ocr` packs per language (ocr-latin, ocr-cyrillic, ocr-arabic, ocr-cjk); ML Kit Latin is the fallback. The pure pipeline lives in `Application/Images/Ocr` and keeps line boxes for Slice 63. (Slice 52: docs/plan/slices/52-paddleocr-per-language.md)
 - **onnxruntime version lock:** `Microsoft.ML.OnnxRuntime.Managed` must stay version-matched with the `libonnxruntime.so` bundled by sherpa-onnx (both 1.24.3). Bump them together, and never add a native onnxruntime package. (Slice 52: docs/plan/slices/52-paddleocr-per-language.md)
 
-#### For README.md
+#### For README.md (lifted 2026-10-21)
 
 - On Android, scanned text in Arabic, Farsi, Russian, Chinese and Japanese is recognised on the phone with a downloaded recognition model, and Latin scripts improve too. Nothing leaves the device.
 

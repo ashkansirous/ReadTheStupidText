@@ -146,13 +146,13 @@ New strings (both locales): "Reading page {n}", "Page {n} of {m}"; the lock need
 - From the implementer's run: text mode in Andika with dim read text; tapping a sentence reads from it; a swipe turns the page and the dots update; the mode is saved to `story.json` and restored after a restart; the lock opens the gate over the story.
 - Startup takes about 5.5 s on the emulator's Debug build, the same as Slice 61, and occasionally trips an ANR focus timeout. Not caused by this slice.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-21)
 
 - Dino Reader highlights by `StorySentences`. Segments are split per sentence by `SegmentSentenceSplitter` before `SpeakSegmentsAsync`, so `ChunkChanged` maps 1:1 to sentences. (Slice 62: docs/plan/slices/62-reading-screen-modes.md)
 - Dino Reader pages are composed by `FlowPager` (text) and `PageComposer` (picture) in `src/DinoReader.Core`, off the UI thread, with page lookup by spoken position. (Slice 62: docs/plan/slices/62-reading-screen-modes.md)
 - Dino Reader story text ignores the system font scale (`FontAutoScalingEnabled` false): page geometry is measured. (Slice 62: docs/plan/slices/62-reading-screen-modes.md)
 
-#### For README.md
+#### For README.md (lifted 2026-10-21)
 
 Dino Reader's reading screen has a text mode and a picture mode. A highlight follows each sentence as it's read, pages turn on their own, a child can swipe ahead and jump back, and tapping a sentence reads from there.
 

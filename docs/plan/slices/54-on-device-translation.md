@@ -164,7 +164,7 @@ roughly the same two libraries per ABI in the arm64 Release.
   English translation was read.
 - The toggle state persisted across a restart.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-21)
 
 - On-device translation lives in `Application/Translation` (`TranslationFlow`, pure). Android implements it with
   ML Kit in `Platforms/Android`, registered in `MauiProgram.Android.cs`. (Slice 54:
@@ -174,7 +174,7 @@ roughly the same two libraries per ABI in the arm64 Release.
 - User text never leaves the device. Only ML Kit model downloads use the network. (Slice 54:
   docs/plan/slices/54-on-device-translation.md)
 
-#### For README.md
+#### For README.md (lifted 2026-10-21)
 
 The Android app can translate pasted or scanned text into your language before reading it, on the phone. Turn on
 "Translate to <language>" on the reader.

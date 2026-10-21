@@ -64,25 +64,25 @@ this plan turns it into ordered, shippable vertical slices.
 | 44 | Pipeline: iOS filter group, platform-neutral Mobile root | built | #183 | — | [44-pipeline-ios-split.md](docs/plan/slices/44-pipeline-ios-split.md) |
 | 45 | Android: document scanner into the editor | built | #189 | — | [45-android-document-scanner.md](docs/plan/slices/45-android-document-scanner.md) |
 | 46 | Play button loading state | built | #185 | — | [46-play-loading-state.md](docs/plan/slices/46-play-loading-state.md) |
-| 47 | Head start: sentence-level audio cache | planned | — | — | [47-head-start-sentence-cache.md](docs/plan/slices/47-head-start-sentence-cache.md) |
+| 47 | Head start: sentence-level audio cache | built | #201 | — | [47-head-start-sentence-cache.md](docs/plan/slices/47-head-start-sentence-cache.md) |
 | 48 | iOS target and TestFlight from CI | built | #186 | — | [48-ios-target-testflight.md](docs/plan/slices/48-ios-target-testflight.md) |
-| 49 | iOS reaches Android parity | planned | — | — | [49-ios-parity.md](docs/plan/slices/49-ios-parity.md) |
+| 49 | iOS reaches Android parity | built | #196 | — | [49-ios-parity.md](docs/plan/slices/49-ios-parity.md) |
 | 50 | Voice packs, first-run language, slimmer app (Android) | built | #173 | — | [50-voice-packs-first-run-language.md](docs/plan/slices/50-voice-packs-first-run-language.md) |
-| 51 | Multilingual voices (Supertonic, Piper fa, MeloTTS zh) | planned | — | — | [51-multilingual-voices.md](docs/plan/slices/51-multilingual-voices.md) |
-| 52 | PaddleOCR per language (Android) | planned | — | — | [52-paddleocr-per-language.md](docs/plan/slices/52-paddleocr-per-language.md) |
-| 53 | Android: localized UI and RTL | planned | — | — | [53-localized-ui-rtl.md](docs/plan/slices/53-localized-ui-rtl.md) |
-| 54 | Android: on-device translation | planned | — | — | [54-on-device-translation.md](docs/plan/slices/54-on-device-translation.md) |
+| 51 | Multilingual voices (Supertonic, Piper fa, MeloTTS zh) | built | #197 | — | [51-multilingual-voices.md](docs/plan/slices/51-multilingual-voices.md) |
+| 52 | PaddleOCR per language (Android) | built | #203 | — | [52-paddleocr-per-language.md](docs/plan/slices/52-paddleocr-per-language.md) |
+| 53 | Android: localized UI and RTL | built | #194 | — | [53-localized-ui-rtl.md](docs/plan/slices/53-localized-ui-rtl.md) |
+| 54 | Android: on-device translation | built | #199 | — | [54-on-device-translation.md](docs/plan/slices/54-on-device-translation.md) |
 | 55 | iOS gets the Batch 9 features | planned | — | — | [55-ios-batch9-features.md](docs/plan/slices/55-ios-batch9-features.md) |
 | 56 | Windows: packs, first-run language, head start | planned | — | — | [56-windows-packs-language-headstart.md](docs/plan/slices/56-windows-packs-language-headstart.md) |
 | 57 | Windows: localized UI and translation | planned | — | — | [57-windows-localization-translation.md](docs/plan/slices/57-windows-localization-translation.md) |
 | 58 | Dino Reader skeleton: shared Mobile library, new app, pipeline | built | #191 | — | [58-dino-reader-skeleton.md](docs/plan/slices/58-dino-reader-skeleton.md) |
 | 59 | Dialogue parser and voice caster (pure) | built | #175 | — | [59-dialogue-parser-voice-caster.md](docs/plan/slices/59-dialogue-parser-voice-caster.md) |
-| 60 | Reading with a voice per character | planned | — | — | [60-per-character-voice-reading.md](docs/plan/slices/60-per-character-voice-reading.md) |
-| 61 | Gallery, stories on device, grown-up gate | planned | — | — | [61-gallery-grownup-gate.md](docs/plan/slices/61-gallery-grownup-gate.md) |
-| 62 | Reading screen: text and picture modes | planned | — | — | [62-reading-screen-modes.md](docs/plan/slices/62-reading-screen-modes.md) |
+| 60 | Reading with a voice per character | built | #193 | — | [60-per-character-voice-reading.md](docs/plan/slices/60-per-character-voice-reading.md) |
+| 61 | Gallery, stories on device, grown-up gate | built | #198 | — | [61-gallery-grownup-gate.md](docs/plan/slices/61-gallery-grownup-gate.md) |
+| 62 | Reading screen: text and picture modes | built | #200 | — | [62-reading-screen-modes.md](docs/plan/slices/62-reading-screen-modes.md) |
 | 63 | Positioned text extraction, kept page images | planned | — | — | [63-positioned-text-extraction.md](docs/plan/slices/63-positioned-text-extraction.md) |
 | 64 | Picture mode on real pages | planned | — | — | [64-picture-mode-real-pages.md](docs/plan/slices/64-picture-mode-real-pages.md) |
-| 65 | Cast screen | planned | — | — | [65-cast-screen.md](docs/plan/slices/65-cast-screen.md) |
+| 65 | Cast screen | built | #202 | — | [65-cast-screen.md](docs/plan/slices/65-cast-screen.md) |
 | 66 | Dino Reader languages and translation | planned | — | — | [66-dino-reader-languages-translation.md](docs/plan/slices/66-dino-reader-languages-translation.md) |
 | 67 | Dino Reader on iOS and Windows | planned | — | — | [67-dino-reader-ios-windows.md](docs/plan/slices/67-dino-reader-ios-windows.md) |
 | 68 | Landing site served by a Cloudflare Worker | built | #182 | — | [68-landing-site-on-worker.md](docs/plan/slices/68-landing-site-on-worker.md) |
@@ -118,6 +118,16 @@ Built but not verified (details in each slice file):
 - Slice 45: the no-Play-services `MediaPicker` fallback on a device without Play services ([slice](docs/plan/slices/45-android-document-scanner.md)).
 - Slice 48: installing from TestFlight on an iPhone and adding testers (manual); the iOS app's runtime behaviour (AVSpeech reading, file picker); no Mac or iPhone here ([slice](docs/plan/slices/48-ios-target-testflight.md)).
 - Slice 70: a PR touching only one platform runs only that platform's workflow ([slice](docs/plan/slices/70-split-build-pipeline.md)).
+- Slice 47: a voice switch (miss, then hit on switching back), head-start benefit and the 100 MB cap on a real phone; Slice 56 wires the cache on Windows. ([slice](docs/plan/slices/47-head-start-sentence-cache.md))
+- Slice 49: a real-device or TestFlight pass (neural voice after the pack, skip, interruptions, lock screen, scanning, Vision OCR, txt/pdf/docx open); the `.ipa` contains a correctly signed `SherpaOnnxC.framework`; App Review acceptance of background audio. ([slice](docs/plan/slices/49-ios-parity.md))
+- Slice 51: run `packs.yml` with `release_number=2` (all three versions `1`), then a one-line PR flipping `PackConstants.CatalogUrl` to `packs-2`; until then Farsi and Chinese read with the phone voice. Then hear fa and zh on a device, judge Arabic/Japanese quality and French-as-French by ear, and re-check the `fa_IR-amir-medium` licence before a wide launch. ([slice](docs/plan/slices/51-multilingual-voices.md))
+- Slice 52: run `packs.yml` with a new release number and `ocr_pack_version=1`, then flip `PackConstants.CatalogUrl`; until then OCR packs are not live. Real scans in ar/fa/ru/zh/ja/fr (accuracy, reading order, RTL numbers, time per page), memory with the 84 MB CJK pack; follow-up: the voice installer does not check for newer voice-pack versions at start-up. ([slice](docs/plan/slices/52-paddleocr-per-language.md))
+- Slice 53: a native-speaker read of the eight translations; Arabic RTL on the emulator (only Farsi walked through); follow-ups: translate neural voice names, fold `LocalizedPackStatus` into `PackStatusText`. ([slice](docs/plan/slices/53-localized-ui-rtl.md))
+- Slice 54: offline translation with a cached model, offline first use (alert, original read), a 5,000-word text, the translate card in RTL, a native-speaker read; follow-up: streaming translation. iOS has no translator registered, so the card stays hidden. ([slice](docs/plan/slices/54-on-device-translation.md))
+- Slice 60: each character's voice and the gaps between voice switches heard on a real device; the pre-existing Android timer bug (`elapsed > total`, not reset on idle) needs its own fix. ([slice](docs/plan/slices/60-per-character-voice-reading.md))
+- Slice 61: scan and Photos import (blocked on a shared scan/OCR project, likely with Slice 63); the TalkBack path of the gate; edit, page reorder and delete on the emulator; strings are English-only until Slice 66. ([slice](docs/plan/slices/61-gallery-grownup-gate.md))
+- Slice 62: the wander pill and Play halo during a read, the gate pass to Manage, the bedtime theme and RTL (waits on Slice 66), long-story pagination on a phone, the tablet layout and "Page n of m"; follow-up: share the read-start grace state machine with RTST. ([slice](docs/plan/slices/62-reading-screen-modes.md))
+- Slice 65: preview audio, the Add-screen "Check the cast" path, opening the cast page from Edit, the narrator-change notice, reading in edited voices after a restart, the shared-voice note, RTL (Slice 66). ([slice](docs/plan/slices/65-cast-screen.md))
 
 ## Out of Scope
 

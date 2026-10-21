@@ -115,11 +115,11 @@ All eight translations (fa, fr, es, pt, zh, ar, ru, ja) are machine-written, as 
 - The voice picker in Farsi is right-to-left, with the back arrow on the right and translated section labels.
 - Switching to Portuguese: labels do not wrap.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-21)
 
 - Mobile UI strings live in `src/ReadTheStupidText.Mobile/Resources/Strings/AppResources*.resx`, accessed through the typed `AppResources` class, never as literals in pages. A new key goes in the neutral file, in all eight language files, and in `AppResources.cs`; `LocalizedUiTests` enforces matching keys and placeholders. Set the culture with `UiCulture.Apply` (it sets the default thread UI culture only). RTL pages set `FlowDirection`, and physical paddings are mirrored with `UiFlowDirection.Mirror`. (Slice 53: docs/plan/slices/53-localized-ui-rtl.md)
 
-#### For README.md
+#### For README.md (lifted 2026-10-21)
 
 - The Android app's interface is available in nine languages (en, fa, fr, es, pt, zh, ar, ru, ja), right-to-left for Farsi and Arabic, and switchable from the Language row.
 
