@@ -3,4 +3,27 @@
     x:Class="DinoReader.DinoApp"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+    <Application.Resources>
+        <!-- Dino Reader v2 mock tokens (child and grown-up screens). -->
+        <Color x:Key="Cream">#FFF6E6</Color>
+        <Color x:Key="Sand">#F3EFE6</Color>
+        <Color x:Key="Ink">#2b2540</Color>
+        <Color x:Key="Body">#5a5470</Color>
+        <Color x:Key="Muted">#8a8399</Color>
+        <Color x:Key="Brand">#5B57E8</Color>
+        <Color x:Key="BrandTint">#ECE7FF</Color>
+        <Color x:Key="Danger">#E5484D</Color>
+        <Color x:Key="Coral">#FF7A59</Color>
+        <Color x:Key="Hairline">#efe9dd</Color>
+        <Color x:Key="Scrim">#8C2b2540</Color>
+        <Color x:Key="ControlFill">#122b2540</Color>
+
+        <Style TargetType="Label">
+            <Setter Property="FontFamily" Value="Fredoka" />
+            <Setter Property="TextColor" Value="{StaticResource Ink}" />
+        </Style>
+        <Style TargetType="Button">
+            <Setter Property="FontFamily" Value="Fredoka" />
+        </Style>
+    </Application.Resources>
 </Application>
