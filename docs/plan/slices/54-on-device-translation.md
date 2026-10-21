@@ -1,6 +1,6 @@
 # Slice 54 — Android: on-device translation
 
-*Planned.*
+*In progress (wave 2026-10-21b), draft PR.*
 
 **Batch:** 9
 **Decisions:** 67, 68 (target language), 60
