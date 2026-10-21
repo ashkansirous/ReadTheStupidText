@@ -20,6 +20,7 @@ public static class DinoTokens
 	public const string SentenceFill = "SentenceFill";
 	public const string BoxFill = "BoxFill";
 	public const string BoxStroke = "BoxStroke";
+	public const string ScanCard = "ScanCard";
 	public const string DotIdle = "DotIdle";
 	public const string BrandEdge = "BrandEdge";
 	public const string CoralEdge = "CoralEdge";

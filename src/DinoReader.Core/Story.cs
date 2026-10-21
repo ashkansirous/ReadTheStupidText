@@ -14,8 +14,12 @@ public enum CoverStyle
 /// </summary>
 public sealed record CastMember(string CharacterId, string Name, Gender Gender, string VoiceId, bool Edited = false);
 
-/// <summary>One page: its text and, for a scanned or photographed page, the image file name inside the story folder.</summary>
-public sealed record StoryPage(string Text, string? ImageFile = null);
+/// <summary>One recognised line of a scanned page: its text and where it sits on the page image (0..1 across its width and height).</summary>
+public sealed record PageLine(string Text, NormalizedRect Box);
+
+/// <summary>One page: its text and, for a scanned or photographed page, the image file name inside the story folder
+/// and the recognised lines with their boxes (Slice 64), which picture mode boxes while a sentence is spoken.</summary>
+public sealed record StoryPage(string Text, string? ImageFile = null, IReadOnlyList<PageLine>? Lines = null);
 
 /// <summary>A story on the device: its pages, its cover choice and the cast worked out at import.</summary>
 public sealed record Story(

@@ -10,6 +10,9 @@ public interface IPageRenderer
 {
 	int PageCount { get; }
 
+	/// <summary>Whether the page shown is zoomed in, so a swipe pans it instead of turning the page.</summary>
+	bool IsZoomed => false;
+
 	double CornerRadius { get; }
 
 	/// <summary>Lays the story out for a card of this size (dp). Call before drawing. Pure geometry with
@@ -56,6 +59,16 @@ public static class ReadingMetrics
 	public const double TextCorner = 26;
 	public const double BoxCorner = 9;
 	public const double BoxStrokeWidth = 2;
+
+	// A real page (mock screen 2): a 6 dp card, the picture inset 18/18/16, each line's box reaching 6 dp
+	// sideways and a touch above and below so it covers the letters of a slightly drifted OCR box.
+	public const double ScanCorner = 6;
+	public const double ScanPaddingX = 18;
+	public const double ScanPaddingTop = 18;
+	public const double ScanPaddingBottom = 16;
+	public const double ScanBoxOutsetX = 6;
+	public const double ScanBoxOutsetY = 2;
+	public const double MaxZoom = 4;
 
 	// Lines are wrapped a little short of the card's text width, so a label that draws a hair wider
 	// than it measured still fits instead of being clipped.

@@ -11,9 +11,9 @@ internal static class ActivityReasonText
 {
     public static string ForDisplay(ActivityReason reason) => reason switch
     {
-        ActivityReason.NewSelection => "New selection",
-        ActivityReason.Deselected => "Deselected",
-        ActivityReason.Error => "Error",
+        ActivityReason.NewSelection => UiStrings.Get("Reason_NewSelection"),
+        ActivityReason.Deselected => UiStrings.Get("Reason_Deselected"),
+        ActivityReason.Error => UiStrings.Get("Reason_Error"),
         _ => string.Empty,
     };
 }

@@ -15,6 +15,10 @@ logic.
 > each chunk's file path and source-text range, so extend it, don't duplicate it.
 > (Decisions 45-51; note: docs/plan/notes/claude-md-history.md)
 
+## Localization and translation (Slice 57)
+
+UI copy is in `Strings/<tag>/Resources.resw` (en-US, fa, fr, es, pt, zh-Hans, ar, ru, ja; tags from `UiLanguageTag`, listed in `Package.appxmanifest`). XAML uses `x:Uid` (`Uid.Property` keys; attached properties as `Uid.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip`), code uses `UiStrings.Get/Format`; never hard-code a UI string. A new key goes into all nine files (the resource-coverage tests fail otherwise). `UiStrings.ApplyLanguage` runs in `App()` before any window; `x:Uid` text is applied once per window, so the panel's language picker restarts the app (`AppInstance.Restart`). fa and ar set `FlowDirection=RightToLeft` on each window's `RootGrid`; the panel's transport row stays left-to-right. Translation runs in `ReadAloudService.ReadEntryAsync` through `ReadTranslator` (time budget, falls back to the original with a `TranslationOutcome`); the engine is `PackTranslator`, which has no inference engine yet. (Slice 57: docs/plan/slices/57-windows-localization-translation.md)
+
 ## Release packaging
 
 The **Release** MSIX is
@@ -54,6 +58,8 @@ Failed (the WinRT fallback returns before playback starts), so any new `ISpeechR
 whole read or raise `Playing` within that grace. Play does nothing while generating. The control
 panel overlays a `ProgressRing`; Mobile `ReaderPage` tracks a per-read token and overlays an
 `ActivityIndicator`. (Slice 46: docs/plan/slices/46-play-loading-state.md)
+
+Localization (Slice 57): every user-visible string lives in `Strings/<tag>/Resources.resw` for all 9 languages (`x:Uid` in XAML, `UiStrings.Get/Format` in code); the resw coverage tests fail on a missing key, so never hard-code UI copy. A language change restarts the app (`x:Uid` applies once per window). RTL only for fa/ar via `UiLanguageTag`; keep the transport row LTR. Translation UI stays hidden while `ITranslator.IsAvailable` is false (Slice 75 adds the engine). (Slice 57: docs/plan/slices/57-windows-localization-translation.md)
 
 Activity log and diagnostics (Slices 10, 19, 21; docs/plan/slices/10-live-activity-log-auto-read-fix.md, 19-local-only-timing-diagnostics.md, 21-daily-on-disk-logs-open-logs.md): `IActivityLog` (Application, in-memory ring buffer) holds `ActivityEntry` (state pending, generatingAudio, reading, read, ignored, interrupted, failed; `ActivityTrigger`; `ActivityReason` NewSelection/Deselected/Error; `WindowSource` via `IForegroundWindow`), rendered by `ActivityLogWindow`. Two daily files under the package TemporaryFolder `logs\`: `system-YYYYMMDD.log` (Serilog, fixed levels) and `input-YYYYMMDD.log` (TSV, one append-only row per state transition, `ActivityInputLog`/`InputLogRow`). They join on the entry id and hold only redacted text (Slice 20 sanitizer runs first; raw text never touches disk). Abstractions `ISystemLog` + `ILogFolder`; `LogPaths` does a 7-day startup sweep; `ActivityLogWindow` has an Open logs button. `ActivityEntry.TimeToFirstAudio` and `SynthesisDuration` are in-memory only, never transmitted (no SDK, no network, no privacy-policy change). Dev-time OpenTelemetry plus a local Aspire dashboard is optional and never shipped; Aspire was rejected as a redistributable mechanism (see `STORE.md`).
 

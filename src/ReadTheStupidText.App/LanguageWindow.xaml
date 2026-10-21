@@ -9,7 +9,7 @@
         voice pack download; progress shows here while the Windows voice keeps reading, and the window
         closes when the natural voice is ready. A normal window, so it can also be reopened from the tray.
     -->
-    <Grid Padding="24" RowSpacing="12">
+    <Grid x:Name="RootGrid" Padding="24" RowSpacing="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -20,7 +20,7 @@
 
         <TextBlock
             Grid.Row="0"
-            Text="Choose your language"
+            x:Uid="LanguageChooseTitle"
             FontSize="20"
             FontWeight="SemiBold" />
         <TextBlock
@@ -41,8 +41,8 @@
         </StackPanel>
 
         <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-            <Button x:Name="RetryButton" Content="Retry" Visibility="Collapsed" Click="OnRetryClick" />
-            <Button Content="Close" Click="OnCloseClick" />
+            <Button x:Name="RetryButton" x:Uid="LanguageRetry" Visibility="Collapsed" Click="OnRetryClick" />
+            <Button x:Uid="LanguageClose" Click="OnCloseClick" />
         </StackPanel>
     </Grid>
 </Window>

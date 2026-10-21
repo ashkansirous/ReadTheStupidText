@@ -311,7 +311,7 @@
                     <Grid>
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock
-                                Text="NOW READING"
+                                x:Uid="PanelEyebrow"
                                 FontSize="10"
                                 FontWeight="Bold"
                                 CharacterSpacing="180"
@@ -335,7 +335,7 @@
                             BorderThickness="0"
                             Foreground="{StaticResource HeaderText}"
                             Click="OnCloseClick"
-                            ToolTipService.ToolTip="Close">
+                            x:Uid="CloseButton">
                             <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE711;" FontSize="11" />
                         </Button>
                     </Grid>
@@ -361,15 +361,16 @@
                         </StackPanel>
                         <TextBlock
                             x:Name="StatusText"
-                            Text="Ready"
+                            x:Uid="StatusText"
                             FontSize="12.5"
                             VerticalAlignment="Center"
                             TextTrimming="CharacterEllipsis"
                             Foreground="{StaticResource HeaderText}" />
                     </StackPanel>
 
-                    <!-- Transport row: skip back/forward flanking play/pause + progress + speed pill -->
-                    <Grid Margin="0,15,0,0" ColumnSpacing="10" VerticalAlignment="Center">
+                    <!-- Transport row: skip back/forward flanking play/pause + progress + speed pill.
+                         Media transport stays left-to-right in right-to-left languages (Slice 57). -->
+                    <Grid Margin="0,15,0,0" ColumnSpacing="10" VerticalAlignment="Center" FlowDirection="LeftToRight">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
@@ -390,7 +391,7 @@
                             Background="Transparent"
                             BorderThickness="0"
                             Foreground="{StaticResource HeaderText}"
-                            ToolTipService.ToolTip="Skip back 10s"
+                            x:Uid="SkipBackButton"
                             Click="OnSkipBackClick">
                             <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xEB9E;" FontSize="12" />
                         </Button>
@@ -428,7 +429,7 @@
                             Background="Transparent"
                             BorderThickness="0"
                             Foreground="{StaticResource HeaderText}"
-                            ToolTipService.ToolTip="Skip forward 10s"
+                            x:Uid="SkipForwardButton"
                             Click="OnSkipForwardClick">
                             <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xEB9D;" FontSize="12" />
                         </Button>
@@ -457,7 +458,7 @@
                             Style="{StaticResource SpeedPillStyle}"
                             Checked="OnSpeedPillToggled"
                             Unchecked="OnSpeedPillToggled"
-                            ToolTipService.ToolTip="Playback speed — tap to adjust · 0.5×–2×">
+                            x:Uid="SpeedPillToggle">
                             <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
                                 <TextBlock x:Name="SpeedPill" Text="1×" FontSize="12" FontWeight="Bold" Foreground="{StaticResource HeaderText}" VerticalAlignment="Center" />
                                 <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE70D;" FontSize="9" Foreground="{StaticResource HeaderText}">
@@ -546,17 +547,17 @@
                  tappable button when it isn't one). -->
             <Grid Padding="10" ColumnSpacing="12">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="76" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="Voice" FontSize="13" VerticalAlignment="Center" Foreground="{ThemeResource PanelText}" />
+                <TextBlock Grid.Column="0" x:Uid="VoiceLabel" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Foreground="{ThemeResource PanelText}" />
                 <!-- The picker fills the row (design: flex:1). The "preparing" label
                      occupies the same cell until the model loads. -->
                 <ComboBox
                     x:Name="VoiceCombo"
                     Grid.Column="1"
                     HorizontalAlignment="Stretch"
-                    DisplayMemberPath="DisplayName"
+                    DisplayMemberPath="Name"
                     SelectionChanged="OnVoiceSelectionChanged" />
                 <TextBlock
                     x:Name="VoiceStatus"
@@ -565,6 +566,22 @@
                     FontSize="11.5"
                     VerticalAlignment="Center"
                     Foreground="{ThemeResource PanelText2}" />
+            </Grid>
+
+            <!-- Language (Slice 57): the UI language and the voice-pack language. Changing it
+                 restarts the app, because x:Uid text is applied once when a window is built. -->
+            <Grid Padding="10,0,10,8" ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="76" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" x:Uid="LanguageLabel" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Foreground="{ThemeResource PanelText}" />
+                <ComboBox
+                    x:Name="LanguageCombo"
+                    Grid.Column="1"
+                    HorizontalAlignment="Stretch"
+                    DisplayMemberPath="NativeName"
+                    SelectionChanged="OnLanguageSelectionChanged" />
             </Grid>
 
             <Border Height="1" Background="{ThemeResource PanelStroke}" Margin="10,2,10,0" />
@@ -583,10 +600,10 @@
                     Grid.Column="0"
                     Style="{StaticResource ActionButtonStyle}"
                     Click="OnUploadFileClick"
-                    ToolTipService.ToolTip="Read a file — opens .txt, .pdf or .docx">
+                    x:Uid="UploadFileButton">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE8E5;" FontSize="16" Foreground="{ThemeResource PanelAccent2}" />
-                        <TextBlock Text="Read a file" FontSize="12.5" FontWeight="SemiBold" />
+                        <TextBlock x:Uid="UploadFileLabel" FontSize="12.5" FontWeight="SemiBold" />
                     </StackPanel>
                 </Button>
                 <Button
@@ -594,10 +611,10 @@
                     Grid.Column="1"
                     Style="{StaticResource ActionButtonStyle}"
                     Click="OnActivityLogClick"
-                    ToolTipService.ToolTip="Activity log — history, timings, open logs folder">
+                    x:Uid="ActivityLogButton">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE81C;" FontSize="16" Foreground="{ThemeResource PanelAccent2}" />
-                        <TextBlock Text="Activity log" FontSize="12.5" FontWeight="SemiBold" />
+                        <TextBlock x:Uid="ActivityLogLabel" FontSize="12.5" FontWeight="SemiBold" />
                     </StackPanel>
                 </Button>
             </Grid>
@@ -605,13 +622,14 @@
             <Border Height="1" Background="{ThemeResource PanelStroke}" Margin="10,0,10,0" />
 
             <!-- Controls — compact icon toggles -->
-            <TextBlock Text="CONTROLS" FontSize="10" FontWeight="Bold" CharacterSpacing="150" Margin="10,9,10,3" Foreground="{ThemeResource PanelText2}" />
+            <TextBlock x:Uid="ControlsLabel" FontSize="10" FontWeight="Bold" CharacterSpacing="150" Margin="10,9,10,3" Foreground="{ThemeResource PanelText2}" />
             <Grid Margin="10,0,10,8" ColumnSpacing="8">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition x:Name="TranslateColumn" Width="*" />
                 </Grid.ColumnDefinitions>
 
                 <!-- Auto-read on selection — a select-frame (rounded corner brackets +
@@ -682,13 +700,47 @@
                               Data="M6 3h9l4 4v13a1 1 0 0 1 -1 1H6a1 1 0 0 1 -1 -1V4a1 1 0 0 1 1 -1Z M14 3v5h5 M8 12h8 M8 16h8 M8 9h3" />
                     </Viewbox>
                 </ToggleButton>
+
+                <!-- Translate to my language (Slice 57) — the "languages" glyph. Persists a
+                     setting; its source picker and note reveal below while it is on. -->
+                <ToggleButton
+                    x:Name="TranslateToggle"
+                    Grid.Column="4"
+                    Style="{StaticResource IconToggleStyle}"
+                    Checked="OnTranslateToggled"
+                    Unchecked="OnTranslateToggled">
+                    <Viewbox Width="25" Height="25">
+                        <Path x:Name="TranslateIcon" Width="24" Height="24" Stretch="None"
+                              Stroke="{ThemeResource PanelText2}" StrokeThickness="1.7"
+                              StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                              Data="M5 8l6 6 M4 14l6-6 2-3 M2 5h12 M7 2h1 M22 22l-5-10-5 10 M14 18h6" />
+                    </Viewbox>
+                </ToggleButton>
             </Grid>
+
+            <!-- Translate source + note (Slice 57): revealed only while the translate toggle is on. -->
+            <StackPanel x:Name="TranslatePanel" Visibility="Collapsed" Margin="10,0,10,8" Spacing="6">
+                <Grid ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="76" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" x:Uid="TranslateSourceLabel" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Foreground="{ThemeResource PanelText}" />
+                    <ComboBox
+                        x:Name="TranslateSourceCombo"
+                        Grid.Column="1"
+                        HorizontalAlignment="Stretch"
+                        DisplayMemberPath="Name"
+                        SelectionChanged="OnTranslateSourceChanged" />
+                </Grid>
+                <TextBlock x:Name="TranslateNote" FontSize="11" TextWrapping="Wrap" Foreground="{ThemeResource PanelText2}" />
+            </StackPanel>
 
             <Border Height="1" Background="{ThemeResource PanelStroke}" Margin="10,0" />
 
             <!-- Hotkey footer -->
             <Grid Padding="10,9,10,4">
-                <TextBlock Text="Hotkey fallback" FontSize="11" Foreground="{ThemeResource PanelText2}" VerticalAlignment="Center" />
+                <TextBlock x:Uid="HotkeyLabel" FontSize="11" Foreground="{ThemeResource PanelText2}" VerticalAlignment="Center" />
                 <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right" VerticalAlignment="Center">
                     <Border Background="{ThemeResource PanelKbd}" BorderBrush="{ThemeResource PanelCBorder}" BorderThickness="1" CornerRadius="4" Padding="6,2">
                         <TextBlock Text="Ctrl" FontSize="11" Foreground="{ThemeResource PanelText}" />

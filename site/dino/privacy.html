@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Privacy Policy &mdash; Dino Reader</title>
+  <meta name="description" content="Privacy policy for Dino Reader, a children&rsquo;s book reader. The app collects no data, has no accounts, ads or analytics, and keeps stories, photos and scans on the device." />
+  <link rel="icon" type="image/png" href="/dino/icon.png" />
+  <style>
+    :root { color-scheme: light dark; --bg: #F3EFE6; --ink: #2b2540; --soft: #5a5470; --muted: #8a8399; --link: #5B57E8; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #1d1a2b; --ink: #f1edff; --soft: #c2bcd8; --muted: #9a94b2; --link: #a9a6ff; }
+    }
+    body {
+      /* No webfont is loaded (no third-party request on a kids' site): Fredoka and Andika apply only if installed, else the rounded system fallback. */
+      font-family: "Fredoka", "Andika", "Segoe UI Rounded", "Arial Rounded MT Bold", system-ui, -apple-system, sans-serif;
+      line-height: 1.6; max-width: 760px; margin: 0 auto; padding: 2.5rem 1.25rem 4rem;
+      color: var(--ink); background: var(--bg);
+    }
+    h1 { font-size: 1.9rem; margin-bottom: 0.25rem; }
+    h2 { font-size: 1.2rem; margin-top: 2rem; border-bottom: 1px solid rgba(128,128,128,.3); padding-bottom: .3rem; }
+    .eff { color: var(--soft); font-size: .95rem; margin-top: 0; }
+    .lede { font-size: 1.05rem; }
+    a { color: var(--link); }
+    footer { margin-top: 3rem; font-size: .85rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <h1>Privacy Policy &mdash; Dino Reader</h1>
+  <p class="eff"><strong>Effective date:</strong> 21 October 2026</p>
+
+  <p class="lede">Dino Reader (&ldquo;the app&rdquo;) is a book reader for children aged 3 to 8. It reads
+  stories aloud with a different voice for each character. This policy explains how the app handles
+  data, for the children who use it and the grown-ups who set it up.</p>
+
+  <h2>The short version</h2>
+  <p><strong>Dino Reader does not collect, store, transmit, or share any personal information.</strong>
+  It has no accounts, no advertising, no analytics, and no third-party components that collect data.
+  Everything the app does happens <strong>on the device</strong>.</p>
+
+  <h2>What the app processes, and where</h2>
+  <ul>
+    <li><strong>Stories you add</strong> (typed or pasted text, files, and photos or scans of book
+      pages) are read and stored on the device only. They are never uploaded.</li>
+    <li><strong>Photos and scans</strong> are turned into text by on-device text recognition. The
+      picture stays on the device, in the app&rsquo;s private storage, and is not sent to anyone.</li>
+    <li><strong>Translation</strong>, where the app offers it, runs on the device with downloaded
+      language models. Your text is never sent to a translation service.</li>
+    <li><strong>Speech</strong> is generated on the device by an offline voice engine. No text or
+      audio is sent to any server.</li>
+    <li><strong>Settings and the story library</strong> (voices chosen for characters, reading
+      progress, display choices) are stored on the device and never leave it.</li>
+    <li>The app contains <strong>no advertising and no in-app purchases</strong>, and it does not
+      link children to other apps or websites.</li>
+  </ul>
+
+  <h2>Network use</h2>
+  <p><strong>Voice and language packs only.</strong> The app downloads voice and language packs
+  (files it needs to speak, recognise and translate text) from this project&rsquo;s public GitHub
+  Releases page. The download is a plain file request: no account, no identifier, and none of the
+  stories, photos or scans is sent. Once a pack is installed the app works offline.</p>
+  <p>Like any web request, the download is seen by the server that hosts the file (GitHub), which
+  may log the device&rsquo;s IP address under its own privacy policy. Dino Reader itself does not
+  receive or keep that information.</p>
+
+  <h2>Permissions</h2>
+  <p>The app declares the <strong>Internet</strong> and <strong>Network state</strong> permissions,
+  used only to download voice and language packs and to tell &ldquo;offline&rdquo; from a failed
+  download. Pages you scan and photos you pick are processed on the device and never leave it.
+  Choosing a file or photo uses the standard Android picker, and the app only opens what you pick.</p>
+
+  <h2>Children&rsquo;s privacy</h2>
+  <p>Dino Reader is designed for children, and it collects no personal information from anyone,
+  including children. It has no accounts, no ads, no social features, no behavioural tracking, and
+  no way for a child to send information to anyone. Settings and the story library sit behind a
+  grown-ups gate. Because nothing is collected, there is nothing for a parent to review, correct or
+  delete beyond the content on their own device, which they can remove by deleting a story or
+  clearing the app&rsquo;s storage.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>If this policy changes, the updated version will be published at this same URL with a new
+  effective date.</p>
+
+  <h2>Contact</h2>
+  <p>Questions about this policy can be raised by opening an issue at
+  <a href="https://github.com/ashkansirous/ReadTheStupidText/issues">the GitHub repository</a>.</p>
+
+  <footer>&copy; 2026 Ashkan Sirous. <a href="./">Dino Reader</a></footer>
+</body>
+</html>

@@ -1,6 +1,6 @@
 # Slice 74 — Dino Reader site: landing, privacy and downloads on dinoreader.sirous.uk
 
-*Planned.*
+*Built 2026-10-21 (PR #219, merge d5b56ad); not yet verified, see below.*
 
 **Batch:** 10 (Dino Reader)
 **Depends on:** Slice 68 (the landing Worker), Slice 69 (APK downloads from R2)
@@ -42,32 +42,32 @@ keeps the products apart but doubles the deploy, the CI checks and the secrets.
 
 ## Scope
 
-- [ ] `wrangler.jsonc`: add `{ "pattern": "dinoreader.sirous.uk", "custom_domain": true }`.
+- [x] `wrangler.jsonc`: add `{ "pattern": "dinoreader.sirous.uk", "custom_domain": true }`.
       `sirous.uk` is already a zone on the account, so Cloudflare creates the DNS record.
       Keep `workers_dev` as the fallback; give it a way to reach the Dino pages (e.g. a
       `/dino/` path prefix on `*.workers.dev` only) so the pre-cut-over check still works.
-- [ ] `worker/index.ts`: pick the site by host (`readthestupidtext.sirous.uk` → `site/`,
+- [x] `worker/index.ts`: pick the site by host (`readthestupidtext.sirous.uk` → `site/`,
       `dinoreader.sirous.uk` → `site/dino/`). The host names are named constants, not
       inline strings. An unknown host gets the Read The Stupid Text site, as today. Same
       security headers on both. Unit-test the host routing beside the existing worker tests.
-- [ ] `site/dino/index.html`: landing page in the Dino Reader design. What it is (a book
+- [x] `site/dino/index.html`: landing page in the Dino Reader design. What it is (a book
       reader for kids, a voice per character), the "Book hug" icon from
       `docs/design/dino-reader/icons/` (copied, never redrawn), a **Get it on Google Play**
       link (only once the app is public, until then the direct download), and the direct
       Android download.
-- [ ] `site/dino/privacy.html`: privacy policy for a children's app. Nothing is collected,
+- [x] `site/dino/privacy.html`: privacy policy for a children's app. Nothing is collected,
       no accounts, no ads, no analytics, no third-party SDKs that collect data. Stories,
       photos and scans stay on the device and are processed offline (OCR, translation,
       speech). The only network use is downloading voice and language packs from GitHub
       Releases, with no personal data sent. Contact address. Effective date. Match the
       tone and structure of `site/privacy.html`.
-- [ ] Downloads: add a Dino Reader key layout to `worker/download-keys.mjs`
+- [x] Downloads: add a Dino Reader key layout to `worker/download-keys.mjs`
       (`dinoreader/android/<version>/DinoReader-<version>.apk` + latest) and serve it at
       `dinoreader.sirous.uk/download/android` (+ `/latest`). Extend
       `publish-downloads.mjs` and its `release.yml` step to upload the Dino APK when the
       `dinoapp` target shipped, carrying the previous one forward otherwise. Same bucket.
-- [ ] `worker/check-configs.mjs` / `check-site-eol.mjs` cover the new files and route.
-- [ ] `docs/DEPLOYING.md`: the second domain, how to check it on `workers.dev` first.
+- [x] `worker/check-configs.mjs` / `check-site-eol.mjs` cover the new files and route.
+- [x] `docs/DEPLOYING.md`: the second domain, how to check it on `workers.dev` first.
 - [ ] After deploy, the user pastes `https://dinoreader.sirous.uk/privacy` into Play
       Console (App content, Privacy policy). Claude checks the live URLs first.
 
@@ -84,3 +84,52 @@ keeps the products apart but doubles the deploy, the CI checks and the secrets.
 
 Docs and site only for the apps, so the app version isn't affected by the site itself.
 The `publish-downloads` and Worker changes are tooling: patch, no marker.
+
+## Built (2026-10-21, not yet deployed)
+
+*Changed while building:*
+
+- One Worker serves both hosts. `resolveSite`, `assetPageFor` and `canonicalRedirect` live
+  in `worker/downloads.ts`, not `worker/index.ts`: node can't import `index.ts` because its
+  import has no extension, so the tests could not reach them there.
+- `dinoreader.sirous.uk` serves `site/dino/` (index, privacy, icon copied from
+  `docs/design/dino-reader/icons/android/mipmap-xxxhdpi/ic_launcher.png`). `workers.dev`
+  serves Dino under `/dino/`. The RTST host returns 404 for `/dino/*`; the Dino host
+  redirects `/dino/*` to its canonical paths. Trailing slashes are normalized and the query
+  string is kept.
+- `/download/android` is the latest-APK alias for every product.
+- Dino R2 keys: `dinoreader/android/<v>/DinoReader-<v>.apk` and
+  `dinoreader/manifests/android/<v>.json`.
+- `release.yml` has a single `publish-downloads` job with a product matrix, gated on
+  `android || dinoapp` shipped.
+- The host names and `DINO_PATH_PREFIX` live in `worker/download-keys.mjs`.
+  `check-configs` requires a `/dino` twin for every `run_worker_first` entry.
+  `check-site-eol` checks text files only and requires the 5 Dino/RTST files.
+- Fonts are Fredoka, then Andika, then system rounded, with no webfont (no third-party
+  request, since it is a kids' app).
+- Privacy contact is the GitHub issues link. The camera claim was dropped: scanned and
+  picked pages are processed on the device.
+
+*From review:* two passes (9 + 5 findings), all fixed.
+
+*Checks:* `npm run typecheck`, 110/110 node tests, `check-site-eol`.
+
+#### For CLAUDE.md (lifted 2026-10-21)
+
+Root, Landing site paragraph: "The Worker serves two hosts: `readthestupidtext.sirous.uk`
+-> `site/`, `dinoreader.sirous.uk` -> `site/dino/` (workers.dev: `/dino/` prefix). Host
+routing is in `worker/downloads.ts` (`resolveSite`); every `run_worker_first` path needs its
+`/dino` twin (`check-configs` enforces). Keep the Dino site free of third-party requests
+(kids' app). (Slice 74: docs/plan/slices/74-dino-reader-site.md)"
+
+#### For README.md (lifted 2026-10-21)
+
+The Dino Reader site URL `https://dinoreader.sirous.uk` and its privacy page
+(`https://dinoreader.sirous.uk/privacy`).
+
+#### Not yet verified
+
+- After the merge deploy, `https://dinoreader.sirous.uk` and `/privacy` load with the security headers.
+- `/download/android` serves the Dino APK once a Dino release publishes.
+- The user pastes `https://dinoreader.sirous.uk/privacy` into Play Console's Dino Reader privacy-policy field.
+- Play Families may want an email contact instead of the GitHub issues link.

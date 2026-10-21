@@ -11,7 +11,13 @@ internal static class ActivityStateText
 {
     public static string ForDisplay(ActivityState state) => state switch
     {
-        ActivityState.GeneratingAudio => "Generating audio",
+        ActivityState.Pending => UiStrings.Get("State_Pending"),
+        ActivityState.GeneratingAudio => UiStrings.Get("State_GeneratingAudio"),
+        ActivityState.Reading => UiStrings.Get("State_Reading"),
+        ActivityState.Read => UiStrings.Get("State_Read"),
+        ActivityState.Ignored => UiStrings.Get("State_Ignored"),
+        ActivityState.Interrupted => UiStrings.Get("State_Interrupted"),
+        ActivityState.Failed => UiStrings.Get("State_Failed"),
         _ => state.ToString(),
     };
 }

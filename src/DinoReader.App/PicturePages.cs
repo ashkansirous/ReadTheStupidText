@@ -1,5 +1,4 @@
 using DinoReader.Core;
-using Microsoft.Maui.Controls.Shapes;
 
 namespace DinoReader;
 
@@ -11,8 +10,6 @@ namespace DinoReader;
 public sealed class PicturePages(string text, IReadOnlyList<SentenceSpan> sentences, ITextMeasurer measurer,
 	string font, ReadingTheme theme) : IPageRenderer
 {
-	private static readonly TimeSpan FadeIn = TimeSpan.FromMilliseconds(160);
-
 	private ReadingTheme _theme = theme;
 	private IReadOnlyList<ComposedPage> _pages = [];
 	private Size _card;
@@ -53,7 +50,7 @@ public sealed class PicturePages(string text, IReadOnlyList<SentenceSpan> senten
 
 		foreach (ComposedLine line in _pages[page].Lines)
 		{
-			layers.Text.Children.Add(BuildLabel(line));
+			layers.Text.Children.Add(PageArt.Label(line, _card, font, _theme));
 		}
 	}
 
@@ -67,7 +64,7 @@ public sealed class PicturePages(string text, IReadOnlyList<SentenceSpan> senten
 
 		foreach (NormalizedRect rect in _pages[page].BoxesOf(sentence))
 		{
-			layers.Boxes.Children.Add(BuildBox(rect));
+			layers.Boxes.Children.Add(PageArt.Box(PageArt.ToRect(rect, _card), _theme));
 		}
 	}
 
@@ -75,33 +72,4 @@ public sealed class PicturePages(string text, IReadOnlyList<SentenceSpan> senten
 		page < 0 || page >= _pages.Count || _card.Width <= 0
 			? -1
 			: _pages[page].SentenceAt(point.X / _card.Width, point.Y / _card.Height);
-
-	private Label BuildLabel(ComposedLine line)
-	{
-		Rect bounds = ToRect(line.TextBounds);
-		Label label = ReadingMetrics.LineLabel(font, bounds.Height, bounds.Width);
-		label.Text = line.Text;
-		label.TextColor = _theme.Ink;
-		AbsoluteLayout.SetLayoutBounds(label, bounds);
-		return label;
-	}
-
-	private Border BuildBox(NormalizedRect rect)
-	{
-		var box = new Border
-		{
-			BackgroundColor = _theme.BoxFill,
-			Stroke = _theme.BoxStroke,
-			StrokeThickness = ReadingMetrics.BoxStrokeWidth,
-			StrokeShape = new RoundRectangle { CornerRadius = ReadingMetrics.BoxCorner },
-			InputTransparent = true,
-			Opacity = 0,
-		};
-		AbsoluteLayout.SetLayoutBounds(box, ToRect(rect));
-		_ = box.FadeToAsync(1, (uint)FadeIn.TotalMilliseconds);
-		return box;
-	}
-
-	private Rect ToRect(NormalizedRect r) =>
-		new(r.X * _card.Width, r.Y * _card.Height, r.Width * _card.Width, r.Height * _card.Height);
 }
