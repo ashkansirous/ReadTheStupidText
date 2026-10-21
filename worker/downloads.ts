@@ -6,13 +6,16 @@
 // enums and parameter properties: worker/downloads.test.mjs runs it under
 // node's type stripping.
 
-import { MANIFEST_PREFIX, MANIFEST_SUFFIX, apkFileName, apkKey, manifestKey } from "./download-keys.mjs";
+import { DINO_PATH_PREFIX, Host, MANIFEST_SUFFIX, Product, apkFileName, apkKey, manifestKey, manifestPrefix } from "./download-keys.mjs";
 
-export { apkFileName, apkKey, manifestKey };
+export { DINO_PATH_PREFIX, Host, Product, apkFileName, apkKey, manifestKey };
 
 export const DOWNLOAD_PATH = "/download";
 export const LATEST_PATH = "/download/android/latest";
 export const VERSION_PATH_PREFIX = "/download/android/";
+// Slice 74: /download/android is the newest APK of whichever product the host serves. Dino Reader
+// also sends /download to its landing page.
+export const ANDROID_PATH = "/download/android";
 
 const APK_CONTENT_TYPE = "application/vnd.android.package-archive";
 const HTML_CONTENT_TYPE = "text/html; charset=utf-8";
@@ -54,9 +57,10 @@ const STORE_URL = "https://apps.microsoft.com/detail/9NGT1BN1H92V";
 const PLAY_URL = "https://play.google.com/apps/testing/uk.sirous.readthestupidtext";
 
 /** The version a manifest key names, or null for any other key. */
-export function versionFromManifestKey(key: string): string | null {
-  if (!key.startsWith(MANIFEST_PREFIX) || !key.endsWith(MANIFEST_SUFFIX)) return null;
-  const version = key.slice(MANIFEST_PREFIX.length, key.length - MANIFEST_SUFFIX.length);
+export function versionFromManifestKey(key: string, product: Product = Product.ReadTheStupidText): string | null {
+  const prefix = manifestPrefix(product);
+  if (!key.startsWith(prefix) || !key.endsWith(MANIFEST_SUFFIX)) return null;
+  const version = key.slice(prefix.length, key.length - MANIFEST_SUFFIX.length);
   return VERSION_PATTERN.test(version) ? version : null;
 }
 
@@ -72,10 +76,10 @@ export function compareVersionsDescending(a: string, b: string): number {
 }
 
 /** The newest version among manifest keys, ignoring keys that are not manifests. */
-export function newestVersion(keys: readonly string[]): string | null {
+export function newestVersion(keys: readonly string[], product: Product = Product.ReadTheStupidText): string | null {
   const versions: string[] = [];
   for (const key of keys) {
-    const version = versionFromManifestKey(key);
+    const version = versionFromManifestKey(key, product);
     if (version !== null) versions.push(version);
   }
   versions.sort(compareVersionsDescending);
@@ -189,13 +193,13 @@ interface CachedListing {
 }
 
 /** Per-isolate listing cache, keyed by bucket object so a test's fake never sees another's. */
-const listings = new WeakMap<R2Bucket, CachedListing>();
+const listings = new WeakMap<R2Bucket, Map<Product, CachedListing>>();
 
-async function listManifestKeys(bucket: R2Bucket): Promise<string[]> {
+async function listManifestKeys(bucket: R2Bucket, product: Product): Promise<string[]> {
   const keys: string[] = [];
   let cursor: string | undefined;
   for (let page = 0; page < MAX_LIST_PAGES; page += 1) {
-    const result = await bucket.list({ prefix: MANIFEST_PREFIX, cursor, limit: LIST_PAGE_SIZE });
+    const result = await bucket.list({ prefix: manifestPrefix(product), cursor, limit: LIST_PAGE_SIZE });
     keys.push(...result.objects.map((object) => object.key));
     if (!result.truncated) break;
     cursor = result.cursor;
@@ -203,22 +207,28 @@ async function listManifestKeys(bucket: R2Bucket): Promise<string[]> {
   return keys;
 }
 
+function storeListing(bucket: R2Bucket, product: Product, keys: readonly string[]): void {
+  const perProduct = listings.get(bucket) ?? new Map<Product, CachedListing>();
+  perProduct.set(product, { at: Date.now(), keys });
+  listings.set(bucket, perProduct);
+}
+
 /** Manifest keys, cached for a minute. Null when the bucket can't be read (never "empty"). */
-async function currentKeys(bucket: R2Bucket): Promise<readonly string[] | null> {
-  const cached = listings.get(bucket);
+async function currentKeys(bucket: R2Bucket, product: Product): Promise<readonly string[] | null> {
+  const cached = listings.get(bucket)?.get(product);
   if (cached && Date.now() - cached.at < LISTING_CACHE_MS) return cached.keys;
   try {
-    const keys = await listManifestKeys(bucket);
-    listings.set(bucket, { at: Date.now(), keys });
+    const keys = await listManifestKeys(bucket, product);
+    storeListing(bucket, product, keys);
     return keys;
   } catch {
     return null;
   }
 }
 
-async function readManifest(bucket: R2Bucket, version: string): Promise<Manifest | null> {
+async function readManifest(bucket: R2Bucket, version: string, product: Product): Promise<Manifest | null> {
   try {
-    const object = await bucket.get(manifestKey(version));
+    const object = await bucket.get(manifestKey(version, product));
     if (!object) return null;
     const parsed: unknown = await object.json();
     const size = (parsed as { sizeBytes?: unknown }).sizeBytes;
@@ -249,12 +259,12 @@ function methodNotAllowed(): Response {
 }
 
 async function downloadPage(request: Request, bucket: R2Bucket): Promise<Response> {
-  const keys = await currentKeys(bucket);
+  const keys = await currentKeys(bucket, Product.ReadTheStupidText);
   if (keys === null) return unavailable();
-  const version = newestVersion(keys);
+  const version = newestVersion(keys, Product.ReadTheStupidText);
   // The version comes from the listing; the manifest only adds the size, so a
   // failed manifest read still shows the version and the button.
-  const manifest = version === null ? null : await readManifest(bucket, version);
+  const manifest = version === null ? null : await readManifest(bucket, version, Product.ReadTheStupidText);
   const html = renderDownloadPage({ version, sizeBytes: manifest?.sizeBytes ?? null });
   return textResponse(request.method === "HEAD" ? "" : html, 200, HTML_CONTENT_TYPE);
 }
@@ -281,10 +291,10 @@ export function singleRangeHeaders(request: Request): Headers | null {
   return new Headers({ [HttpHeader.Range]: header.trim() });
 }
 
-function apkHeaders(version: string, etag: string | null, cacheControl: string): Headers {
+function apkHeaders(version: string, etag: string | null, cacheControl: string, product: Product): Headers {
   const headers = new Headers();
   headers.set(HttpHeader.ContentType, APK_CONTENT_TYPE);
-  headers.set(HttpHeader.ContentDisposition, `attachment; filename="${apkFileName(version)}"`);
+  headers.set(HttpHeader.ContentDisposition, `attachment; filename="${apkFileName(version, product)}"`);
   headers.set(HttpHeader.CacheControl, cacheControl);
   headers.set(HttpHeader.AcceptRanges, "bytes");
   if (etag) headers.set(HttpHeader.ETag, etag);
@@ -293,8 +303,8 @@ function apkHeaders(version: string, etag: string | null, cacheControl: string):
 
 // `ranged` is whether the request asked for a range: local miniflare reports a
 // range on a whole-object read, which must still be a 200.
-function objectResponse(version: string, object: R2ObjectBody, cacheControl: string, ranged: boolean): Response {
-  const headers = apkHeaders(version, object.httpEtag, cacheControl);
+function objectResponse(version: string, object: R2ObjectBody, cacheControl: string, ranged: boolean, product: Product): Response {
+  const headers = apkHeaders(version, object.httpEtag, cacheControl, product);
   const span = ranged ? servedSpan(object.range, object.size) : null;
   if (!span) {
     headers.set(HttpHeader.ContentLength, String(object.size));
@@ -305,14 +315,14 @@ function objectResponse(version: string, object: R2ObjectBody, cacheControl: str
   return new Response(object.body, { status: 206, headers });
 }
 
-function headResponse(version: string, head: R2Object, cacheControl: string): Response {
-  const headers = apkHeaders(version, head.httpEtag, cacheControl);
+function headResponse(version: string, head: R2Object, cacheControl: string, product: Product): Response {
+  const headers = apkHeaders(version, head.httpEtag, cacheControl, product);
   headers.set(HttpHeader.ContentLength, String(head.size));
   return new Response(null, { status: 200, headers });
 }
 
-function notModifiedResponse(version: string, etag: string, cacheControl: string): Response {
-  return new Response(null, { status: 304, headers: apkHeaders(version, etag, cacheControl) });
+function notModifiedResponse(version: string, etag: string, cacheControl: string, product: Product): Response {
+  return new Response(null, { status: 304, headers: apkHeaders(version, etag, cacheControl, product) });
 }
 
 function opaqueTag(tag: string): string {
@@ -338,8 +348,8 @@ function isConditional(request: Request): boolean {
 }
 
 /** A failed ranged get is told apart by the object's size: gone is 404, a range outside it 416, else 502. */
-async function failedReadResponse(bucket: R2Bucket, version: string, rangeHeader: string | null): Promise<Response> {
-  const head = await bucket.head(apkKey(version));
+async function failedReadResponse(bucket: R2Bucket, version: string, rangeHeader: string | null, product: Product): Promise<Response> {
+  const head = await bucket.head(apkKey(version, product));
   if (!head) return notFound();
   if (parseRange(rangeHeader, head.size) === "unsatisfiable") {
     return new Response(null, { status: 416, headers: { [HttpHeader.ContentRange]: `${BYTES_UNSATISFIED_PREFIX}${head.size}` } });
@@ -349,64 +359,178 @@ async function failedReadResponse(bucket: R2Bucket, version: string, rangeHeader
 
 // A ranged get that comes back without `range` is a whole-object read, which
 // objectResponse serves as a 200.
-async function readApk(bucket: R2Bucket, version: string, range: Headers | null): Promise<R2ObjectBody | null | "failed"> {
+async function readApk(bucket: R2Bucket, version: string, range: Headers | null, product: Product): Promise<R2ObjectBody | null | "failed"> {
   try {
-    return await bucket.get(apkKey(version), range ? { range } : undefined);
+    return await bucket.get(apkKey(version, product), range ? { range } : undefined);
   } catch {
     return "failed";
   }
 }
 
 /** Streams one version's APK: a single Range honoured (206), anything else whole; conditional requests get one extra head. */
-async function serveApk(request: Request, bucket: R2Bucket, version: string, cacheControl: string): Promise<Response> {
+async function serveApk(request: Request, bucket: R2Bucket, version: string, cacheControl: string, product: Product): Promise<Response> {
   try {
     const isHead = request.method === "HEAD";
-    const head = isHead || isConditional(request) ? await bucket.head(apkKey(version)) : null;
+    const head = isHead || isConditional(request) ? await bucket.head(apkKey(version, product)) : null;
     if (head === null && (isHead || isConditional(request))) return notFound();
     if (head && ifNoneMatchHits(request.headers.get(HttpHeader.IfNoneMatch), head.httpEtag)) {
-      return notModifiedResponse(version, head.httpEtag, cacheControl);
+      return notModifiedResponse(version, head.httpEtag, cacheControl, product);
     }
-    if (head && isHead) return headResponse(version, head, cacheControl);
+    if (head && isHead) return headResponse(version, head, cacheControl, product);
     const wanted = singleRangeHeaders(request);
     const honoured = head && !ifRangeAllowsRange(request.headers.get(HttpHeader.IfRange), head.httpEtag);
     const range = honoured ? null : wanted;
-    const object = await readApk(bucket, version, range);
-    if (object === "failed") return await failedReadResponse(bucket, version, range?.get(HttpHeader.Range) ?? null);
-    return object ? objectResponse(version, object, cacheControl, range !== null) : notFound();
+    const object = await readApk(bucket, version, range, product);
+    if (object === "failed") return await failedReadResponse(bucket, version, range?.get(HttpHeader.Range) ?? null, product);
+    return object ? objectResponse(version, object, cacheControl, range !== null, product) : notFound();
   } catch {
     return errorResponse(ErrorCode.ApkUnavailable, 502);
   }
 }
 
-async function serveLatest(request: Request, bucket: R2Bucket): Promise<Response> {
-  const keys = await currentKeys(bucket);
+async function serveLatest(request: Request, bucket: R2Bucket, product: Product): Promise<Response> {
+  const keys = await currentKeys(bucket, product);
   if (keys === null) return unavailable();
-  const version = newestVersion(keys);
+  const version = newestVersion(keys, product);
   if (version === null) return notFound();
   // The target changes with every release, so never let a browser or the edge keep it.
-  return serveApk(request, bucket, version, NO_CACHE);
+  return serveApk(request, bucket, version, NO_CACHE, product);
 }
 
 /** True for every path this module answers. */
 export function isDownloadPath(pathname: string): boolean {
-  return pathname === DOWNLOAD_PATH || pathname === `${DOWNLOAD_PATH}/` || pathname.startsWith(VERSION_PATH_PREFIX);
+  return pathname === DOWNLOAD_PATH || pathname === `${DOWNLOAD_PATH}/` || pathname === ANDROID_PATH || pathname.startsWith(VERSION_PATH_PREFIX);
 }
 
-function route(request: Request, env: { DOWNLOADS?: R2Bucket }): Promise<Response> | Response {
+function isLatestPath(pathname: string): boolean {
+  return pathname === LATEST_PATH || pathname === ANDROID_PATH;
+}
+
+function redirectTo(request: Request, path: string): Response {
+  return Response.redirect(new URL(path, request.url).toString(), 302);
+}
+
+function route(request: Request, env: { DOWNLOADS?: R2Bucket }, product: Product, homePath: string): Promise<Response> | Response {
   if (request.method !== "GET" && request.method !== "HEAD") return methodNotAllowed();
   const bucket = env.DOWNLOADS;
   if (!bucket) return unavailable();
   const { pathname } = new URL(request.url);
-  if (pathname === DOWNLOAD_PATH || pathname === `${DOWNLOAD_PATH}/`) return downloadPage(request, bucket);
-  if (pathname === LATEST_PATH) return serveLatest(request, bucket);
+  if (pathname === DOWNLOAD_PATH || pathname === `${DOWNLOAD_PATH}/`) {
+    return product === Product.DinoReader ? redirectTo(request, homePath) : downloadPage(request, bucket);
+  }
+  if (isLatestPath(pathname)) return serveLatest(request, bucket, product);
+  if (!pathname.startsWith(VERSION_PATH_PREFIX)) return notFound();
   const version = pathname.slice(VERSION_PATH_PREFIX.length);
   if (!VERSION_PATTERN.test(version)) return notFound();
-  return serveApk(request, bucket, version, VERSIONED_CACHE);
+  return serveApk(request, bucket, version, VERSIONED_CACHE, product);
 }
 
-/** Routes /download, /download/android/latest and /download/android/<version>. A HEAD error carries no body. */
-export async function handleDownload(request: Request, env: { DOWNLOADS?: R2Bucket }): Promise<Response> {
-  const response = await route(request, env);
+/**
+ * Routes /download, /download/android/latest and /download/android/<version>
+ * and /download/android (the latest APK too). Dino Reader's /download goes to
+ * `homePath`, its landing page (under the workers.dev prefix, not "/").
+ * A HEAD error carries no body.
+ */
+export async function handleDownload(
+  request: Request,
+  env: { DOWNLOADS?: R2Bucket },
+  product: Product = Product.ReadTheStupidText,
+  homePath: string = ROOT_PATH,
+): Promise<Response> {
+  const response = await route(request, env, product, homePath);
   if (request.method !== "HEAD" || response.status < HTTP_ERROR_STATUS) return response;
   return new Response(null, { status: response.status, headers: response.headers });
+}
+
+// ---- Site routing: which product a request is for (used by index.ts) ----
+
+export const WORKERS_DEV_SUFFIX = ".workers.dev";
+const ROOT_PATH = "/";
+
+const PAGE_FOR_PATH: Readonly<Record<string, string>> = {
+  "/": "/index.html",
+  "/index.html": "/index.html",
+  "/privacy": "/privacy.html",
+  "/privacy/": "/privacy.html",
+  "/privacy.html": "/privacy.html",
+};
+
+export interface ResolvedSite {
+  readonly product: Product;
+  /** The request path as the product's site sees it (no `/dino` prefix). */
+  readonly path: string;
+  /** Where the product's landing page lives for this request: "/", or "/dino/" under the workers.dev prefix. */
+  readonly home: string;
+}
+
+function isDinoPrefixed(pathname: string): boolean {
+  return pathname === DINO_PATH_PREFIX || pathname.startsWith(`${DINO_PATH_PREFIX}/`);
+}
+
+/** Picks the site for a request: by host, plus the `/dino/` prefix on workers.dev only. */
+export function resolveSite(hostname: string, pathname: string): ResolvedSite {
+  if (hostname === Host.DinoReader) return { product: Product.DinoReader, path: pathname, home: ROOT_PATH };
+  if (hostname.endsWith(WORKERS_DEV_SUFFIX) && isDinoPrefixed(pathname)) {
+    return { product: Product.DinoReader, path: pathname.slice(DINO_PATH_PREFIX.length) || ROOT_PATH, home: `${DINO_PATH_PREFIX}/` };
+  }
+  return { product: Product.ReadTheStupidText, path: pathname, home: ROOT_PATH };
+}
+
+/** The asset file a page path maps to, or null when the path is not a page. */
+export function assetPageFor(site: ResolvedSite): string | null {
+  const page = PAGE_FOR_PATH[site.path];
+  if (page === undefined) return null;
+  return site.product === Product.DinoReader ? `${DINO_PATH_PREFIX}${page}` : page;
+}
+
+const INDEX_HTML = "/index.html";
+const PRIVACY_PATH = "/privacy";
+const PRIVACY_HTML = "/privacy.html";
+const TRAILING_SLASH = /\/+$/;
+
+function isWorkersDev(hostname: string): boolean {
+  return hostname.endsWith(WORKERS_DEV_SUFFIX) && hostname !== Host.DinoReader;
+}
+
+/**
+ * True for a `/dino` path on a host that must not serve the Dino site under a
+ * prefix: only workers.dev does (the Dino host serves it at its root).
+ */
+export function isHiddenDinoPath(hostname: string, pathname: string): boolean {
+  return hostname !== Host.DinoReader && !isWorkersDev(hostname) && isDinoPrefixed(pathname);
+}
+
+function withoutTrailingSlash(pathname: string): string {
+  const trimmed = pathname.replace(TRAILING_SLASH, "");
+  return trimmed === "" ? ROOT_PATH : trimmed;
+}
+
+/** The Dino host's canonical form of a raw `/dino/...` path, or null when it is not a page. */
+function dinoHostCanonical(pathname: string): string | null {
+  const rest = pathname.slice(DINO_PATH_PREFIX.length);
+  if (rest === "" || rest === ROOT_PATH || rest === INDEX_HTML) return ROOT_PATH;
+  if (rest === PRIVACY_PATH || rest === PRIVACY_HTML || rest === `${PRIVACY_PATH}/`) return PRIVACY_PATH;
+  return null;
+}
+
+function canonicalPath(hostname: string, pathname: string): string | null {
+  if (hostname === Host.DinoReader) {
+    if (isDinoPrefixed(pathname)) return dinoHostCanonical(pathname);
+    return pathname === `${PRIVACY_PATH}/` ? PRIVACY_PATH : null;
+  }
+  if (isWorkersDev(hostname) && pathname === DINO_PATH_PREFIX) return `${DINO_PATH_PREFIX}/`;
+  const trimmed = withoutTrailingSlash(pathname);
+  const isPage = trimmed === PRIVACY_PATH || trimmed === `${DINO_PATH_PREFIX}${PRIVACY_PATH}`;
+  return isPage && trimmed !== pathname ? trimmed : null;
+}
+
+/**
+ * Where a request must be redirected so relative links resolve and each page has
+ * one URL (the query string is kept): bare `/dino` on workers.dev becomes
+ * `/dino/`, `/privacy/` becomes `/privacy` (and its `/dino` twin), and the raw
+ * `/dino/...` pages on the Dino host become `/` and `/privacy`. Null otherwise.
+ */
+export function canonicalRedirect(hostname: string, pathname: string, search = ""): string | null {
+  const target = canonicalPath(hostname, pathname);
+  return target === null ? null : `${target}${search}`;
 }

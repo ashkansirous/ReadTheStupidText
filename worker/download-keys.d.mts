@@ -1,6 +1,11 @@
 export const APK_PREFIX: string;
 export const MANIFEST_PREFIX: string;
 export const MANIFEST_SUFFIX: string;
-export function apkFileName(version: string): string;
-export function apkKey(version: string): string;
-export function manifestKey(version: string): string;
+export const Product: { readonly ReadTheStupidText: "readthestupidtext"; readonly DinoReader: "dinoreader" };
+export type Product = (typeof Product)[keyof typeof Product];
+export function apkFileName(version: string, product?: Product): string;
+export function apkKey(version: string, product?: Product): string;
+export function manifestPrefix(product?: Product): string;
+export function manifestKey(version: string, product?: Product): string;
+export const Host: { readonly ReadTheStupidText: "readthestupidtext.sirous.uk"; readonly DinoReader: "dinoreader.sirous.uk" };
+export const DINO_PATH_PREFIX: "/dino";
