@@ -1,6 +1,6 @@
 # Slice 65 — Cast screen
 
-*Planned.*
+*In progress (wave 2026-10-21b), draft PR.*
 
 **Batch:** 10
 **Decisions:** 74, 75, 77
