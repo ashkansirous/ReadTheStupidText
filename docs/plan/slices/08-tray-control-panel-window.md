@@ -57,3 +57,15 @@
   state matches the right-click menu (open the menu to confirm both surfaces
   agree); click ✕ or left-click the tray again → the panel hides but the app
   stays in the tray; Quit is reachable only from the right-click menu.
+
+## Notes moved from CLAUDE.md (2026-10-21)
+
+Note: a **left-click tray control panel** is **in scope** (Slice 8, see
+Decision 12 in `docs/plan/decisions.md`) — a borderless, always-on-top `AppWindow`, **pinned
+above all windows** (it stays open until the ✕ or another tray click; it does
+*not* light-dismiss), sized to its content. It is *not* a persistent settings
+window: it's transient and every control maps to an existing service. The
+right-click `MenuFlyout` stays (Quit lives there only). Rich controls (slider,
+`ComboBox`) **cannot** go in H.NotifyIcon's `PopupMenu` — that's why the panel
+is a real window, not a flyout (same native-menu limit as Decision 11).
+

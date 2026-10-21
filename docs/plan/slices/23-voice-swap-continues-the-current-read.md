@@ -27,3 +27,19 @@
 - **Slice 23:** start a long read, then change the voice actor mid-read → already-
   spoken audio is **not** repeated; the remaining text continues in the **new**
   voice. Changing voice while idle still applies to the next read.
+
+## Notes moved from CLAUDE.md (2026-10-21)
+
+**Voice swap continues the current read (Slice 23, Decision 29).** Changing the voice
+actor **mid-read** no longer waits for the next read. The playback loop
+(`SpeakChunksAsync`) takes the speaker as a **parameter** (not the mutable field), so a
+change can't half-apply to chunks already queued; the switch happens cleanly at the
+**next chunk boundary**. `SetVoice` just records the selection (`_speakerId`); when the
+current chunk finishes, the loop notices `_speakerId` differs from the speaker it was
+started with and restarts at the **next** chunk in the new voice (`BeginGeneration`
+cancels the old-voice synthesis already in flight for upcoming chunks). So the current
+chunk finishes in the old voice — nothing already heard is **repeated** and no unheard
+text is **skipped** — and earlier chunks are never re-synthesized. A single-chunk read
+(or a change during the last chunk) just applies to the next read. Driven from
+`ReadAloudService.SetVoice` (neural-only via `CompositeSpeechReader`).
+

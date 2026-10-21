@@ -34,3 +34,20 @@
   the thread/concurrency tuning, the logged synthesis time per chunk drops on a
   multi-core machine. context7 query for sherpa-onnx threading is logged before the
   knob change.
+
+## Notes moved from CLAUDE.md (2026-10-21)
+
+**Latency instrumentation + adaptive threading (Slice 22, Decision 30).** The reader
+takes `ISystemLog` and writes per-read Debug lines so a slow read is attributable:
+`split … into K chunk(s) in X ms (threads T, concurrency C)`, a per-chunk
+`chunk i/K (n chars): generate X ms, wav Y ms`, and a one-shot `first audio after X
+ms` (on the first chunk's `MediaOpened`). Each is stamped with the activity-log
+**id**, threaded in via a new optional `ISpeechReader.SpeakAsync(text, activityId)`
+param (the WinRT fallback ignores it), so the lines join the input log. The sherpa-onnx
+knobs are **adaptive to `Environment.ProcessorCount`** (no longer fixed at threads 2 /
+degree 3): `SynthesisThreads = clamp(cores/2, 2, 4)` (`config.Model.NumThreads`,
+confirmed via context7 `/k2-fsa/sherpa-onnx`) and `MaxSynthesisConcurrency =
+clamp(cores/threads, 2, 4)` — latency-first (more ONNX threads shorten the single
+first-chunk synthesis the user waits on), sized so `threads * concurrency` fits the
+cores without oversubscribing.
+
