@@ -166,13 +166,13 @@ progress was 0.
 - Play then logged three cache hits, `chunk 0 (74 chars, 3 sentence(s)) ready in 74 ms` and `first audio after 1040 ms`.
 - After the read ended, the timer showed `00:00/--:--`.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-21)
 
 - Android sentence audio is cached in `CacheDirectory/sentences` by `SentenceAudioCache`, keyed by engine, language, voice, model, pack version and text. Don't play cached clips directly; join them into a temp play file. (Slice 47: docs/plan/slices/47-head-start-sentence-cache.md)
 - The shared chunker's head rule is a `SpeechTextChunker.HeadPolicy`. Windows keeps Default until Slice 56 wires the cache. (Slice 47: docs/plan/slices/47-head-start-sentence-cache.md)
 - `IHeadStart` prepares the first chunks while the user is still on the page. (Slice 47: docs/plan/slices/47-head-start-sentence-cache.md)
 
-#### For README.md
+#### For README.md (lifted 2026-10-21)
 
 - On Android, reading starts almost instantly for text you've just pasted or opened: the first sentences are prepared while you look at it, and sentences already heard are cached.
 

@@ -106,14 +106,14 @@ New strings (both locales): "Who’s speaking", "Narrator", "{n} words", "MAIN",
 - If common books need many fixes this screen becomes the main UX (the kill criterion in
   Decision 74): measure on 5 sample kids' books.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-21)
 
 - Dino Reader's cast edits pin voices via `CastMember.Edited`. (Slice 65: docs/plan/slices/65-cast-screen.md)
 - Merges live in `Story.Merges` and are applied on every read through `CastMerges` (`StoryVoicing`). Never re-attribute in the stored text. (Slice 65: docs/plan/slices/65-cast-screen.md)
 - Change the cast only through `CastEditor`, which keeps the voice rules. (Slice 65: docs/plan/slices/65-cast-screen.md)
 - An unknown speaker uses the narrator's voice (`VoiceCaster.VoiceForLine`). (Slice 65: docs/plan/slices/65-cast-screen.md)
 
-#### For README.md
+#### For README.md (lifted 2026-10-21)
 
 Grown-ups can check and fix who's speaking: pick the narrator, choose each character's voice and gender, hear a preview, and merge two names that are the same character.
 
