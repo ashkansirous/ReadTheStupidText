@@ -1,6 +1,6 @@
 # Slice 55 — iOS gets the Batch 9 features
 
-*Planned.*
+*In progress (wave 2026-10-21b), draft PR.*
 
 **Batch:** 9
 **Decisions:** 61-68 (iOS side), 69, 70
