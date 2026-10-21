@@ -1,6 +1,6 @@
 # Slice 57 — Windows: localized UI and on-device translation
 
-*Planned.*
+*In progress (wave 2026-10-21), draft PR.*
 
 **Batch:** 9
 **Decisions:** 67, 68
