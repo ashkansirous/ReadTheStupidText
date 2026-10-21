@@ -1,6 +1,6 @@
 # Slice 47 — Head start: sentence-level audio cache (Android first)
 
-*Planned.*
+*In progress (wave 2026-10-21b), draft PR.*
 
 **Batch:** 9
 **Decisions:** 66 (builds on 25, 49, 50)
