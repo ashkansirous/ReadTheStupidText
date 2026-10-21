@@ -1,6 +1,6 @@
 # Slice 66 — Dino Reader languages and translation
 
-*Planned.*
+*In progress (wave 2026-10-21b), draft PR.*
 
 **Batch:** 10
 **Decisions:** 74, 81 (also Batch 9 Decisions 63, 67, 68)
