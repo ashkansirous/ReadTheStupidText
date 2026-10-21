@@ -1,6 +1,6 @@
 # Slice 60 — Reading with a voice per character
 
-*Planned.*
+*In progress (wave 2026-10-21b), draft PR.*
 
 **Batch:** 10
 **Decisions:** 76
