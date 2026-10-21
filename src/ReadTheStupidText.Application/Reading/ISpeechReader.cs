@@ -30,7 +30,8 @@ public interface ISpeechReader
     /// <summary>Raised whenever a new chunk begins playing (Decision 46/50) — the
     /// reading text box's whole-chunk highlight source. An engine that doesn't
     /// chunk (the WinRT fallback) raises it once per read, for the whole
-    /// utterance, when playback begins.</summary>
+    /// utterance, when playback begins. May be raised off the UI thread: handlers
+    /// must marshal to it themselves.</summary>
     event EventHandler<ReadChunk>? ChunkChanged;
 
     PlaybackState State { get; }
@@ -44,6 +45,22 @@ public interface ISpeechReader
     /// join back to the same row (latency diagnostics).
     /// </summary>
     Task SpeakAsync(string text, int? activityId = null);
+
+    /// <summary>
+    /// Reads a story as consecutive segments, each in its own voice (Slice 60). Each
+    /// segment is chunked separately and every chunk carries its voice into synthesis;
+    /// <see cref="ChunkChanged"/> reports each chunk's range in the whole story. Same
+    /// supersede/stop rules as <see cref="SpeakAsync"/>. A voice picked with
+    /// <see cref="SetVoice"/> mid-read does not affect a segment read. Engines that cannot
+    /// voice a segment individually (<see cref="SupportsSegments"/> false, the default) return
+    /// a task faulted with <see cref="NotSupportedException"/>.
+    /// </summary>
+    Task SpeakSegmentsAsync(IReadOnlyList<VoicedSegment> segments, int? activityId = null) =>
+        Task.FromException(new NotSupportedException("This speech reader cannot read segments in separate voices."));
+
+    /// <summary>Whether <see cref="SpeakSegmentsAsync"/> reads each segment in its own voice.
+    /// False by default; callers check it to fall back to a single-voice read.</summary>
+    bool SupportsSegments => false;
 
     /// <summary>
     /// Eagerly prepares the synthesis engine (building any heavy model and warming
