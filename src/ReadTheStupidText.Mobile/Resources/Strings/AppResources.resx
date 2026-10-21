@@ -78,6 +78,11 @@
   <data name="VoicePicker_SectionFemale" xml:space="preserve"><value>FEMALE</value></data>
   <data name="VoicePicker_Hint" xml:space="preserve"><value>Tap a voice to hear and select it. Changing voice mid-read finishes the current sentence in the old voice.</value></data>
   <data name="VoicePicker_PhoneVoiceName" xml:space="preserve"><value>Phone voice</value></data>
+  <data name="VoicePicker_EngineSupertonic" xml:space="preserve"><value>SUPERTONIC</value></data>
+  <data name="VoicePicker_EnginePiper" xml:space="preserve"><value>PIPER</value></data>
+  <data name="VoicePicker_EngineMelo" xml:space="preserve"><value>MELOTTS</value></data>
+  <data name="VoicePicker_ReasonPackNotInstalled" xml:space="preserve"><value>The natural voice for your language isn't installed yet, so the phone voice reads.</value></data>
+  <data name="VoicePicker_ReasonNoNeuralEngine" xml:space="preserve"><value>Natural voices aren't available on this device yet, so the phone voice reads.</value></data>
   <data name="Language_Intro" xml:space="preserve"><value>Choose your language. We'll download a natural voice for it; until it arrives, your phone's own voice reads.</value></data>
   <data name="Language_Retry" xml:space="preserve"><value>Retry download</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>Continue</value></data>

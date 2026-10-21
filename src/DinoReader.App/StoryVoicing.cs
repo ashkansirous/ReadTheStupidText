@@ -5,11 +5,11 @@ using ReadTheStupidText.Domain.Reading;
 namespace DinoReader;
 
 /// <summary>
-/// Turns typed story text into voiced segments (Slice 60): segments the text, attributes each
-/// quote to a character, casts a voice per character (never the narrator's) and maps the result
-/// onto the neutral <see cref="VoicedSegment"/> the speech reader takes. The cast is kept in
-/// memory for the same text and narrator, so a second read gives every character the same voice
-/// (Slice 61 persists it).
+/// Turns story text into voiced segments (Slice 60) and works out a story's cast (Slice 61):
+/// segments the text, attributes each quote to a character and casts a voice per character
+/// (never the narrator's). The cast is worked out once, at import, and stored with the story;
+/// reading and recasting reuse the stored voices (<see cref="StoryCast.Pinned"/>) so a character
+/// keeps their voice across restarts, text fixes and narrator changes.
 /// </summary>
 public sealed class StoryVoicing
 {
@@ -21,8 +21,9 @@ public sealed class StoryVoicing
 	private readonly SpeakerAttributor _attributor = new(LanguageRules.English);
 	private readonly VoiceCaster _caster = new();
 
-	// One immutable snapshot, swapped atomically, so a key can never pair with another read's cast.
-	private sealed record Cache(string Text, string NarratorVoiceId, AttributionResult Attribution, VoiceCast Cast);
+	// One immutable snapshot, swapped atomically: attributing a long story is the costly part, and
+	// a second read of the same text (or a narrator change) does not need it again.
+	private sealed record Cache(string Text, AttributionResult Attribution);
 
 	private volatile Cache? _cache;
 
@@ -30,29 +31,42 @@ public sealed class StoryVoicing
 	/// <see cref="Voice"/> on a worker thread: segmenting and attributing a long story is CPU work
 	/// that must not block the UI.
 	/// </summary>
-	public Task<IReadOnlyList<VoicedSegment>> VoiceAsync(string text, string narratorVoiceId) =>
-		Task.Run(() => Voice(text, narratorVoiceId));
+	public Task<IReadOnlyList<VoicedSegment>> VoiceAsync(Story story, string narratorVoiceId) =>
+		Task.Run(() => Voice(story, narratorVoiceId));
 
-	/// <summary>The voiced segments of <paramref name="text"/>, read by <paramref name="narratorVoiceId"/> and the cast.</summary>
-	public IReadOnlyList<VoicedSegment> Voice(string text, string narratorVoiceId)
+	/// <summary>The cast for <paramref name="text"/>, keeping any voice <paramref name="stored"/> already gives a character.</summary>
+	public Task<IReadOnlyList<CastMember>> CastAsync(string text, string narratorVoiceId, IReadOnlyList<CastMember> stored) =>
+		Task.Run(() => CastFor(text, narratorVoiceId, stored));
+
+	/// <summary>The voiced segments of the story, read by <paramref name="narratorVoiceId"/> and the story's cast.</summary>
+	public IReadOnlyList<VoicedSegment> Voice(Story story, string narratorVoiceId)
 	{
-		Cache cache = Resolve(text, narratorVoiceId);
-		return cache.Attribution.Segments.Select(s => ToVoicedSegment(s, text, cache.Cast)).ToList();
+		string text = story.Text;
+		AttributionResult attribution = Attribute(text);
+		VoiceCast cast = Cast(attribution, narratorVoiceId, story.Cast);
+		return attribution.Segments.Select(s => ToVoicedSegment(s, text, cast)).ToList();
 	}
 
-	private Cache Resolve(string text, string narratorVoiceId)
+	public IReadOnlyList<CastMember> CastFor(string text, string narratorVoiceId, IReadOnlyList<CastMember> stored)
+	{
+		AttributionResult attribution = Attribute(text);
+		return StoryCast.ToMembers(attribution.Characters, Cast(attribution, narratorVoiceId, stored));
+	}
+
+	private VoiceCast Cast(AttributionResult attribution, string narratorVoiceId, IReadOnlyList<CastMember> stored) =>
+		_caster.Cast(attribution.Characters, VoiceOptions, narratorVoiceId, StoryCast.Pinned(stored));
+
+	private AttributionResult Attribute(string text)
 	{
 		Cache? cached = _cache;
-		if (cached is not null && cached.Text == text && cached.NarratorVoiceId == narratorVoiceId)
+		if (cached is not null && cached.Text == text)
 		{
-			return cached;
+			return cached.Attribution;
 		}
 
 		AttributionResult attribution = _attributor.Attribute(text, _segmenter.Split(text));
-		VoiceCast cast = _caster.Cast(attribution.Characters, VoiceOptions, narratorVoiceId);
-		var fresh = new Cache(text, narratorVoiceId, attribution, cast);
-		_cache = fresh;
-		return fresh;
+		_cache = new Cache(text, attribution);
+		return attribution;
 	}
 
 	// Narration, and a quote nobody could be attributed to, are read by the narrator.

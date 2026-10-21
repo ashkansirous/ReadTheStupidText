@@ -77,6 +77,11 @@
   <data name="VoicePicker_SectionFemale" xml:space="preserve"><value>زن</value></data>
   <data name="VoicePicker_Hint" xml:space="preserve"><value>برای شنیدن و انتخاب یک صدا روی آن ضربه بزنید. تغییر صدا در میانهٔ خواندن، جملهٔ جاری را با صدای قبلی تمام می‌کند.</value></data>
   <data name="VoicePicker_PhoneVoiceName" xml:space="preserve"><value>صدای گوشی</value></data>
+  <data name="VoicePicker_EngineSupertonic" xml:space="preserve"><value>SUPERTONIC</value></data>
+  <data name="VoicePicker_EnginePiper" xml:space="preserve"><value>PIPER</value></data>
+  <data name="VoicePicker_EngineMelo" xml:space="preserve"><value>MELOTTS</value></data>
+  <data name="VoicePicker_ReasonPackNotInstalled" xml:space="preserve"><value>صدای طبیعی زبان شما هنوز نصب نشده است، بنابراین صدای گوشی می‌خواند.</value></data>
+  <data name="VoicePicker_ReasonNoNeuralEngine" xml:space="preserve"><value>صداهای طبیعی هنوز روی این دستگاه در دسترس نیستند، بنابراین صدای گوشی می‌خواند.</value></data>
   <data name="Language_Intro" xml:space="preserve"><value>زبان خود را انتخاب کنید. یک صدای طبیعی برای آن دانلود می‌کنیم؛ تا رسیدن آن، صدای خود گوشی می‌خواند.</value></data>
   <data name="Language_Retry" xml:space="preserve"><value>تلاش دوباره دانلود</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>ادامه</value></data>

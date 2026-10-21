@@ -1,6 +1,6 @@
 # Slice 61 — Gallery, stories on the device, grown-up gate
 
-*Planned.*
+*Built (wave 2026-10-21b), PR #198.*
 
 **Batch:** 10
 **Decisions:** 77
@@ -16,24 +16,24 @@ cast. Reading never needs the gate.
 
 ## Steps
 
-- [ ] `Story` model (title, cover path, language, created, pages, cast) and `IStoryLibrary`
+- [x] `Story` model (title, cover path, language, created, pages, cast) and `IStoryLibrary`
       (list, get, add, update, delete) in `DinoReader.Core`. `Cast` = list of (character id,
       name, gender, voice id), serialised with the story.
-- [ ] File-backed `FileStoryLibrary` in `DinoReader.App`: one folder per story
+- [x] File-backed `FileStoryLibrary` in `DinoReader.App`: one folder per story
       `AppDataDirectory/stories/<id>/` with `story.json` (System.Text.Json, versioned schema)
       and later `page-NN.jpg`. Atomic write (temp file + rename). Mobile persistence is
       Preferences only today (`MobilePreferencesSettingsStore.cs:33-93`), so this is new.
       Nothing leaves the device.
-- [ ] Gallery page: grid of cover + title; tap opens the reading screen (Slice 62). Cover is
+- [x] Gallery page: grid of cover + title; tap opens the reading screen (Slice 62). Cover is
       the first page image if there is one, else a generated cover (title on a colour).
-- [ ] Add-story flow (gated): type/paste, pick a file (txt/pdf/docx via the existing
+- [ ] Add-story flow (gated; type and file done, scan and photos blocked, see Decisions taken during build): type/paste, pick a file (txt/pdf/docx via the existing
       `CompositeDocumentTextExtractor`), scan (Slice 45 scanner + OCR). The text runs through
       Slice 59 once at import and the resulting cast is stored with the story.
-- [ ] Delete a story (gated) with a confirm; removes the folder.
-- [ ] **Grown-up gate** control: press and hold a lock button 3 s, then a simple sum (two
+- [x] Delete a story (gated) with a confirm; removes the folder.
+- [x] **Grown-up gate** control: press and hold a lock button 3 s, then a simple sum (two
       numbers 6-19, addition, number-pad answer). Pure `GateChallenge` generator/validator in
       Core (seedable RNG), unit-tested. Used by add, delete, edit story and the cast screen.
-- [ ] Tests: sum bounds, validation, a wrong answer re-rolls; `story.json` round trip incl.
+- [x] Tests: sum bounds, validation, a wrong answer re-rolls; `story.json` round trip incl.
       unknown-field tolerance.
 
 #### Design (Dino Reader v2 mock, screens 1, 6, 6b, 7, 8, 8b, 9, refreshed 2026-10-20)
@@ -71,3 +71,70 @@ New strings (both locales): "My stories", "For grown-ups", "Press and hold for 3
 
 - Hold-3-s must work with TalkBack/VoiceOver; decide the accessible alternative at implementation.
 - No sync, no export (Out of Scope).
+
+## Decisions taken during build
+
+- **Scan and Photos are blocked.** The tiles are drawn but disabled. The scanner and ML Kit OCR live in the RTST app (`ReadTheStupidText.Mobile`), so Dino Reader needs them moved into a shared scan/OCR project first. Follow-up, likely with Slice 63, which also brings the page images.
+- **Platform alert for delete.** The delete confirm uses the platform alert (`DisplayAlertAsync`) with the mock's title, body and Keep/Delete labels, not the mock's custom confirm card.
+- **Cast pill shows the count only.** "Cast · n" is display-only until Slice 65 adds the cast page; "Check the cast" and "Who's speaking" do nothing yet.
+- **Narrator changes are not persisted until Slice 62.** The picker on the reading page changes the narrator for that read only; the story's stored `NarratorVoiceId` is untouched.
+- **The gate guards entry once.** It guards entering manage mode (hold, then the sum). Add, edit and delete inside manage mode do not ask again. Leaving the app (window stop) returns to the gallery and closes any open gate, so the next entry needs the gate again. The reset is skipped while the app itself runs an activity (the file picker; the camera later), through `ExternalActivityGuard`.
+- **Screen-reader rule.** The hold step becomes a button only when TalkBack (`IsTouchExplorationEnabled`) or Google Switch Access (an enabled accessibility service whose id starts with exactly `com.google.android.accessibility.switchaccess/`) is on. `AccessibilityManager.IsEnabled` is not used: it is true for any service (password managers, autofill), which would drop the hold step for people who don't need it. Trade-off, deliberate: other assistive services (third-party switch or voice-control apps) keep the hold step, and a child could not tell them apart from a password manager without the weaker check. The sum always stays.
+- **Picker sessions are timed.** While `ExternalActivityGuard` is active a window stop is recorded, not acted on. If the window resumes or the picker returns after more than `AwayTracker.DefaultThreshold` (2 minutes), the app resets to the gallery (gate dismissed, grown-up pages popped, the pick discarded). A quick pick keeps the pages. Home pressed during a pick cannot be told from the picker itself; the time limit covers it. A killed process restarts at the gallery (`CreateWindow` builds a fresh stack).
+- **Story files are untrusted.** `StoryJson` refuses an id that is not a valid story id; the library skips a story whose id differs from its folder name; image file names resolve only through `IStoryLibrary.TryResolveFile` (plain file name inside the story folder, no rooted path, no separators, no `..`). Writes and deletes share one library-wide lock and use a unique temp file per write; delete removes `story.json` first so a half-deleted folder is invisible and can be deleted again.
+- **English only until Slice 66.** All strings are English literals in `GalleryText` and the pages; the language rows are hidden.
+- **`FileStoryLibrary` lives in Core.** Plain System.IO with a temp-file-then-rename write, so it is unit-tested; the app only supplies the root folder.
+- **Cover colour cycle.** A new story gets `CoverColourIndex` equal to the number of stories at save time; `CoverPalette.ColourAt` wraps the four mock colours.
+- **Pages and "Fix the text" share one page list.** Both rows open the same `PagesPage` over the edit draft (reorder, remove, add, tap a page to edit its text); a text change marks the draft changed so Save recasts.
+- **Casting keeps stored voices inside the caster.** `VoiceCaster.Cast` takes the stored voices as pinned: they are taken before anyone else is cast, removed from the free pool and counted as owned, so no new or changed character takes one while another voice is free. A stored voice that is now the narrator's is dropped and that character is cast afresh.
+- **Handlers that push pages are re-entrancy guarded** (`BusyGuard`), and design-token colours are read through `DinoTokens.Get(DinoTokens.X)`.
+
+## As built
+
+*Changed while building:* see Decisions taken during build above. The add-story step stays unticked: type, paste and file are done; Scan and Photos are blocked.
+
+**DinoReader.Core:**
+
+- `Story`, `StoryPage`, `CastMember`, `CoverStyle`.
+- `FileStoryLibrary`: one folder per story, `story.json` written through a unique temp file and renamed, a library-wide lock, the folder name must match the id, `TryResolveFile` confines image names to the folder, and delete tolerates half-deleted folders.
+- Versioned `StoryJson` with null and id validation.
+- `GateChallenge` (sum of two numbers from 6 to 19, rerolled on a wrong answer), `HoldTracker` (3 s), `AwayTracker` (2-minute threshold for a picker session).
+- `VoiceCaster` with pinned voices, used by `StoryCast.Pinned`.
+- `StoryDraft`, `StoryTitles`, `CoverPalette`.
+
+**DinoReader.App:**
+
+- Pages: Gallery; Gate (a transparent modal with a hold ring, then a sum); Manage; AddStory (type/paste and file; scan and photos dimmed); EditStory; Pages; PageText; and `ReadingPage`, a placeholder until Slice 62 that stops only on a real pop.
+- A NavigationPage reset to the gallery on a real background, skipped during app-launched pickers via `ExternalActivityGuard`.
+- `BusyGuard` re-entrancy guards and `DinoTokens` design-token keys.
+- Screen-reader rule: touch exploration or Google Switch Access swaps the hold for a Continue button, and the sum is still required.
+
+*From review:* the high pass reported 10 findings and the medium pass 9; all were fixed. The accessibility trade-off (other assistive services keep the hold step) is kept deliberately and is documented in Decisions taken during build.
+
+*Verified on the emulator (RTST_Test, 2026-10-21):*
+
+- The empty gallery renders.
+- The gate: the sheet appears over a dimmed gallery, a 3 s hold moves to the sum, a wrong answer rerolls the sum, and the right answer opens Manage.
+- A typed two-character story was found as 2 characters and saved.
+- After an app restart the story persists and the `files/stories/<id>` folder exists.
+- The story played as 4 chunks, and back stops it.
+- The file picker opened and was cancelled; the app stays on Add a story.
+- Home, then resume, from Manage returns to the gallery.
+- Locking the screen mid-read keeps reading: all 4 chunks played.
+
+#### For CLAUDE.md
+
+- Dino Reader stories live in `AppDataDirectory/stories/<guid>/story.json`, through `FileStoryLibrary` (`DinoReader.Core`). Resolve image files only via `TryResolveFile`. (Slice 61: docs/plan/slices/61-gallery-grownup-gate.md)
+- Grown-up pages implement `IGrownUpPage` and reset to the gallery on background. Wrap app-launched activities (pickers, camera) in `ExternalActivityGuard`. (Slice 61: docs/plan/slices/61-gallery-grownup-gate.md)
+- Design tokens come from `DinoTokens`, never string keys. (Slice 61: docs/plan/slices/61-gallery-grownup-gate.md)
+
+#### For README.md
+
+Dino Reader has a story gallery, and a grown-up area (a hold, then a sum) to add stories by typing, pasting or opening a file, and to edit or delete them.
+
+#### Not yet verified
+
+- Scan and Photos import: blocked on a shared scan/OCR project (scanner and ML Kit live in the RTST app). A follow-up, likely with Slice 63.
+- The TalkBack path of the gate, on a device.
+- Edit, page reorder and delete walked through on the emulator. Only add, read and gate were.
+- English-only strings until Slice 66.

@@ -74,6 +74,11 @@
   <data name="VoicePicker_SectionFemale" xml:space="preserve"><value>女性</value></data>
   <data name="VoicePicker_Hint" xml:space="preserve"><value>音声をタップすると試聴して選択できます。読み上げ中に音声を変更しても、現在の文は元の音声で最後まで読まれます。</value></data>
   <data name="VoicePicker_PhoneVoiceName" xml:space="preserve"><value>スマートフォンの音声</value></data>
+  <data name="VoicePicker_EngineSupertonic" xml:space="preserve"><value>SUPERTONIC</value></data>
+  <data name="VoicePicker_EnginePiper" xml:space="preserve"><value>PIPER</value></data>
+  <data name="VoicePicker_EngineMelo" xml:space="preserve"><value>MELOTTS</value></data>
+  <data name="VoicePicker_ReasonPackNotInstalled" xml:space="preserve"><value>お使いの言語の自然な音声はまだインストールされていないため、スマートフォンの音声で読み上げます。</value></data>
+  <data name="VoicePicker_ReasonNoNeuralEngine" xml:space="preserve"><value>このデバイスでは自然な音声はまだ利用できないため、スマートフォンの音声で読み上げます。</value></data>
   <data name="Language_Intro" xml:space="preserve"><value>言語を選択してください。その言語の自然な音声をダウンロードします。届くまでは、スマートフォン本来の音声で読み上げます。</value></data>
   <data name="Language_Retry" xml:space="preserve"><value>ダウンロードを再試行</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>続ける</value></data>

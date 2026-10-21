@@ -74,6 +74,11 @@
   <data name="VoicePicker_SectionFemale" xml:space="preserve"><value>女声</value></data>
   <data name="VoicePicker_Hint" xml:space="preserve"><value>点按语音即可试听并选择。朗读过程中切换语音时，当前句子仍会用原语音读完。</value></data>
   <data name="VoicePicker_PhoneVoiceName" xml:space="preserve"><value>手机语音</value></data>
+  <data name="VoicePicker_EngineSupertonic" xml:space="preserve"><value>SUPERTONIC</value></data>
+  <data name="VoicePicker_EnginePiper" xml:space="preserve"><value>PIPER</value></data>
+  <data name="VoicePicker_EngineMelo" xml:space="preserve"><value>MELOTTS</value></data>
+  <data name="VoicePicker_ReasonPackNotInstalled" xml:space="preserve"><value>您所用语言的自然语音尚未安装，因此由手机语音朗读。</value></data>
+  <data name="VoicePicker_ReasonNoNeuralEngine" xml:space="preserve"><value>此设备暂不支持自然语音，因此由手机语音朗读。</value></data>
   <data name="Language_Intro" xml:space="preserve"><value>请选择您的语言。我们会为其下载自然语音；在下载完成前，由手机自带语音朗读。</value></data>
   <data name="Language_Retry" xml:space="preserve"><value>重试下载</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>继续</value></data>

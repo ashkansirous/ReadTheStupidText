@@ -91,6 +91,10 @@ language pack rather than bundled):
 
 - **sherpa-onnx** and the **Supertonic** voice model — the offline neural
   text-to-speech engine, used on both platforms.
+- **Piper** (Persian voice) with **espeak-ng** data, and **MeloTTS** (Chinese
+  voice) — more offline voices, each downloaded once as a language pack when you
+  choose that language. They run entirely on the phone; the only network use is
+  the one-time download of the pack, and your text is never sent anywhere.
 - **Google ML Kit Text Recognition** (Android only) — the on-device model used
   to read text out of a scanned photo. It runs locally; nothing is sent to
   Google or anyone else.

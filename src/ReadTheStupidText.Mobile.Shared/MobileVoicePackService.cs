@@ -47,7 +47,21 @@ public sealed class MobileVoicePackService : IVoicePackService
         }
     }
 
-    public string? GetInstalledPath(string packId)
+    public string? GetInstalledPath(string packId) => LoadInstalled(packId)?.Folder;
+
+    // Every complete pack folder under the packs root. Scratch (.extracting) folders and
+    // anything that is not a valid pack id are skipped, as is a folder whose manifest
+    // names a different pack.
+    public IReadOnlyList<InstalledVoicePack> GetInstalledVoicePacks() =>
+        Directory.EnumerateDirectories(PacksRoot())
+            .Select(folder => Path.GetFileName(folder))
+            .Where(PackNaming.IsValidId)
+            .Select(LoadInstalled)
+            .OfType<InstalledVoicePack>()
+            .Where(p => p.Manifest.Kind == PackKind.Voice)
+            .ToList();
+
+    private static InstalledVoicePack? LoadInstalled(string packId)
     {
         string folder = Path.Combine(PacksRoot(), packId);
         string manifestPath = Path.Combine(folder, PackConstants.ManifestFileName);
@@ -59,11 +73,18 @@ public sealed class MobileVoicePackService : IVoicePackService
         try
         {
             PackManifest manifest = PackManifest.Parse(File.ReadAllText(manifestPath));
-            bool complete = manifest.MissingFiles(f => File.Exists(Path.Combine(folder, f))).Count == 0;
-            return complete ? folder : null;
+            bool complete = manifest.Id == packId
+                && manifest.MissingFiles(f => File.Exists(Path.Combine(folder, f))).Count == 0;
+            return complete ? new InstalledVoicePack(folder, manifest) : null;
         }
         catch (FormatException)
         {
+            return null;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // An unreadable pack is skipped, not fatal: the others stay usable.
+            System.Diagnostics.Debug.WriteLine($"Skipping voice pack '{packId}': {ex.Message}");
             return null;
         }
     }

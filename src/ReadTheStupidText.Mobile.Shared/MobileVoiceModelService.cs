@@ -1,40 +1,156 @@
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Domain.Reading;
 
 namespace ReadTheStupidText.Mobile;
 
 /// <summary>
-/// Locates the Supertonic-3 neural voice model on Android (Slice 50, Decision 61).
-/// The model no longer ships in the package: it arrives as the downloaded
-/// <c>supertonic-3</c> voice pack, which <see cref="IVoicePackService"/> installs
-/// under app-local storage. This service just finds that folder (the pack's manifest
-/// check in <see cref="IVoicePackService.GetInstalledPath"/> is the one completeness
-/// test) and raises <see cref="ReadyChanged"/> so the speech reader switches from the phone voice to the neural one.
+/// Locates the neural voice model for the user's language on Android (Slice 50, Decision 61;
+/// per-language engines in Slice 51, Decision 63). No model ships in the package: each
+/// arrives as a downloaded voice pack that <see cref="IVoicePackService"/> installs under
+/// app-local storage. This service picks the installed pack that serves the stored language
+/// (<see cref="InstalledVoiceCatalog"/>: language -> pack -> engine) and raises
+/// <see cref="ReadyChanged"/> so the speech reader switches from the phone voice to the
+/// neural one. With no installed pack for the language it stays not-ready and the phone voice
+/// reads. The resolved model is cached: scanning the packs touches the file system, so it runs
+/// on a background thread (<see cref="InitializeAsync"/>, or on demand when the stored language
+/// no longer matches the cache) and <see cref="Paths"/> only ever returns the cached value —
+/// null while a refresh is pending, so a read in that gap uses the phone voice (and one that
+/// chose the neural reader just before the model changed falls back to it, see
+/// <see cref="NeuralEngineUnavailableException"/>). A language change starts the scan at once. Every change of
+/// the resolved model (readiness, pack or language) raises <see cref="ReadyChanged"/>.
 /// </summary>
 public sealed class MobileVoiceModelService : IVoiceModelService
 {
     private readonly IVoicePackService _packs;
+    private readonly ISettingsStore _settings;
+    private readonly object _gate = new();
+    private string? _resolvedFor;
+    private VoiceModelPaths? _paths;
+    private int _refreshing;
+    private int _rerunRequested;
 
-    public MobileVoiceModelService(IVoicePackService packs) => _packs = packs;
+    public MobileVoiceModelService(IVoicePackService packs, ISettingsStore settings, ILanguageChangeNotifier languages)
+    {
+        _packs = packs;
+        _settings = settings;
+        languages.LanguageChanged += (_, _) => RefreshInBackground();
+    }
 
-    public bool IsReady { get; private set; }
+    public bool IsReady => Paths is not null;
 
-    public VoiceModelPaths? Paths { get; private set; }
+    public VoiceModelPaths? Paths
+    {
+        get
+        {
+            lock (_gate)
+            {
+                if (_resolvedFor == CurrentLanguage)
+                {
+                    return _paths;
+                }
+            }
+
+            RefreshInBackground();
+            return null;
+        }
+    }
 
     public event EventHandler? ReadyChanged;
 
-    // Safe to call again after a pack finishes downloading; stays not-ready when the
-    // pack is absent or incomplete, and raises ReadyChanged only on the first transition.
-    public Task InitializeAsync(IProgress<double>? progress = null)
+    // Safe to call again after a pack finishes downloading: re-scans the installed packs off
+    // the calling thread and raises ReadyChanged if the resolved model changed.
+    public Task InitializeAsync(IProgress<double>? progress = null) => Task.Run(Refresh);
+
+    // An unset language reads as English: the first-run page always sets one, and Dino
+    // Reader sets English at startup.
+    private string CurrentLanguage => _settings.Language ?? SupertonicVoiceTable.EnglishCode;
+
+    // One refresh at a time. A request that arrives while one runs (a language change) is
+    // never dropped: the running refresh loops until the cache matches the current language.
+    private void RefreshInBackground()
     {
-        string? folder = _packs.GetInstalledPath(PackConstants.SupertonicPackId);
-        if (!IsReady && folder is not null)
+        if (Interlocked.Exchange(ref _refreshing, 1) == 1)
         {
-            Paths = new VoiceModelPaths(folder);
-            IsReady = true;
-            ReadyChanged?.Invoke(this, EventArgs.Empty);
+            Volatile.Write(ref _rerunRequested, 1);
+            return;
         }
 
-        return Task.CompletedTask;
+        _ = Task.Run(RefreshUntilCurrent);
+    }
+
+    private void RefreshUntilCurrent()
+    {
+        try
+        {
+            do
+            {
+                Volatile.Write(ref _rerunRequested, 0);
+                Refresh();
+            }
+            while (!IsCurrent() || Volatile.Read(ref _rerunRequested) == 1);
+        }
+        finally
+        {
+            Volatile.Write(ref _refreshing, 0);
+        }
+
+        // A request between the last check and the flag reset would otherwise be lost.
+        if (!IsCurrent())
+        {
+            RefreshInBackground();
+        }
+    }
+
+    private bool IsCurrent()
+    {
+        lock (_gate)
+        {
+            return _resolvedFor == CurrentLanguage;
+        }
+    }
+
+    private void Refresh()
+    {
+        string language = CurrentLanguage;
+        VoiceModelPaths? resolved = InstalledVoiceCatalog.Resolve(ScanInstalledPacks(), language);
+        bool changed;
+        lock (_gate)
+        {
+            changed = !SameModel(_paths, resolved);
+            _resolvedFor = language;
+            _paths = changed ? resolved : _paths;
+        }
+
+        if (changed)
+        {
+            ReadyChanged?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    private IReadOnlyList<InstalledVoicePack> ScanInstalledPacks()
+    {
+        try
+        {
+            return _packs.GetInstalledVoicePacks();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return [];
+        }
+    }
+
+    // Readiness plus the resolved pack folder, engine, language and voices.
+    private static bool SameModel(VoiceModelPaths? a, VoiceModelPaths? b)
+    {
+        if (a is null || b is null)
+        {
+            return a is null && b is null;
+        }
+
+        return a.RootDir == b.RootDir
+            && a.Kind == b.Kind
+            && a.Language == b.Language
+            && a.AvailableVoices.Select(v => v.Id).SequenceEqual(b.AvailableVoices.Select(v => v.Id));
     }
 }
