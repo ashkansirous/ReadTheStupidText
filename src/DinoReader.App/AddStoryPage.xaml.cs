@@ -235,7 +235,14 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 	// Exception only, never the picked text: a swallowed failure must still leave a trace in logcat.
 	private void LogReadFailure(Exception error)
 	{
-		(_services.GetService<ISystemLog>() ?? new AndroidSystemLog()).Error("picture import failed", null, error);
+#if ANDROID
+		ISystemLog log = _services.GetService<ISystemLog>() ?? new AndroidSystemLog();
+#elif IOS
+		ISystemLog log = _services.GetService<ISystemLog>() ?? new IosSystemLog();
+#else
+		ISystemLog log = _services.GetRequiredService<ISystemLog>();
+#endif
+		log.Error("picture import failed", null, error);
 	}
 
 	// A PDF keeps its page pictures; they are rendered when the story is saved, so a pick that is never saved costs nothing.

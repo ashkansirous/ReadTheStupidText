@@ -65,7 +65,6 @@
 	     sizes are unused because the deployment target uses single-size icons. The catalog is picked up
 	     by the SDK's default items and named by XSAppIconAssets in Info.plist, as in Read The Stupid Text. -->
 	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
-		<AppIcon>AppIcon</AppIcon>
 		<CodesignEntitlements>Platforms\iOS\Entitlements.plist</CodesignEntitlements>
 	</PropertyGroup>
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
