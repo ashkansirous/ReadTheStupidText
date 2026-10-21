@@ -26,37 +26,45 @@ at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
 > merges (PRs #154-#156 once merged into each other instead). (Decisions 45-51;
 > note: docs/plan/notes/claude-md-history.md)
 
-> **CI within the Actions storage quota (Batch 8):** the account's storage is
-> 500 MB shared across all repos, so CI uses **zero `upload-artifact`**. PRs are
-> compile/test checks only. On `main`, build jobs upload straight to a **draft
-> GitHub Release**, which `release-publish` publishes (creating the tag) once every
-> affected build succeeds. Android lives in `build.yml` too. A `changes` job
-> (`dorny/paths-filter`) path-filters per platform: core
-> (Domain/Application/Documents/tests/pipeline) -> both, `App`/`Infrastructure` ->
-> Windows, `App/VoiceModel` -> Android. **Mobile splits by folder (Decision 69):**
-> `Mobile/Platforms/Android/**` -> Android only, `Mobile/Platforms/iOS/**` -> iOS
-> only, the rest of `Mobile/**` (shared MAUI root incl. csproj/Resources) -> both.
-> `dorny/paths-filter@v4.0.3` with `predicate-quantifier: some-with-excludes`: keep
-> the pin (the mode needs 4.0.3 or later). `.github/scripts/path-filters.test.mjs`
-> (job `test-filters`) checks the mapping: change it together with the `filters:`
-> block. The `ios` output is computed but unused until Slice 48 adds `build-ios`,
-> so an iOS-only change runs nothing. An untouched platform is neither built nor
-> submitted; its assets are carried forward from its last release. **When adding a
-> project or shared build file, add its path to the right filter group. Don't add
-> `actions/upload-artifact` for build outputs**; repo artifact retention stays at 1 day as a
-> safety net (Slice 42). (Decisions 52-58; Slice 44:
-> docs/plan/slices/44-pipeline-ios-split.md; note: docs/plan/notes/claude-md-history.md)
+> **CI (Batch 8, Slice 70):** zero `upload-artifact` (the account's storage is 500 MB
+> shared across repos): build jobs upload straight to a **draft GitHub Release**, which
+> `release-publish` publishes once every affected build succeeds; repo artifact
+> retention stays at 1 day as a safety net (Slice 42). `release.yml` is the only
+> workflow on push to `main` (plus a main-only `workflow_dispatch` with `force_all`):
+> version (GitVersion + versionCode + `.github/scripts/ship-targets.mjs`) -> test
+> (`tests.yml`) -> release-draft -> `windows.yml` / `android.yml` / `ios.yml` (reusable;
+> they also run on their own PR paths, never signing or uploading on PRs) ->
+> release-publish -> store-submit, play-submit, testflight-submit, publish-downloads.
+> `ship-targets.mjs` holds the path -> platform mapping (`Mobile/Platforms/Android` ->
+> Android, `Mobile/Platforms/iOS` -> iOS, rest of `Mobile` -> both; `App`/`Infrastructure`
+> -> Windows; core paths -> all; a major bump -> all). `ship-targets.test.mjs` checks
+> every platform workflow's `pull_request.paths` matches it, so change them together.
+> `release-scripts.yml` runs all script tests and actionlint (`.github/actionlint.yaml`)
+> on PRs touching `.github/**`. An untouched platform is neither built nor submitted;
+> its assets are carried forward. When adding a project or shared build file, add its
+> path to `ship-targets.mjs`. Never add `actions/upload-artifact` for build outputs.
+> (Decisions 52-58, 69; Slice 44: docs/plan/slices/44-pipeline-ios-split.md;
+> Slice 70: docs/plan/slices/70-split-build-pipeline.md)
 
-> **Merging a change to a `core` path ships both apps.** The `core` filter includes
-> `.github/workflows/build.yml`, `*.slnx`, `GitVersion.yml`, `global.json` and
-> `.github/scripts/find-release.sh`, so a PR that edits any of them (even a Dino
-> Reader–only PR adding a project to the solution) builds both platforms, cuts a
-> version and submits to the Microsoft Store and Google Play on merge. Expect that,
-> or batch such edits.
+> **Merging a change to a core path ships every app.** The core paths in
+> `ship-targets.mjs` include `.github/workflows/release.yml`, `tests.yml`,
+> `.github/scripts/find-release.sh`, `ship-targets.mjs`, `*.slnx`, `GitVersion.yml` and
+> `global.json`, so a PR that edits any of them (even a Dino Reader-only PR adding a
+> project to the solution) builds all platforms, cuts a version and submits to the
+> Microsoft Store, Google Play and TestFlight on merge. Expect that, or batch such
+> edits. (Slice 70: docs/plan/slices/70-split-build-pipeline.md)
 
-> **Dino CI rule:** the `dinoreader` path group runs only the `test-dinoreader`
+> **iOS toolchain pin:** `ios.yml` pins dotnet 10.0.401 + workload set 10.0.401
+> (Microsoft.iOS.Sdk 26.5.10318) + Xcode 26.6, because `macos-26` has no Xcode 27.
+> Bump all three together. (Slice 48: docs/plan/slices/48-ios-target-testflight.md)
+
+> **iOS target (Slice 48, lifted 2026-10-21):** `Platforms/iOS` implements `IPlatformServices` with one `AvSpeechReader` for both slots (sherpa-onnx for iOS is Slice 49); `SupportsNeuralVoice`/`SupportsTextScan` are false, so the pack download, Supertonic list and Scan are hidden. `net10.0-ios` is in the Mobile csproj only on macOS or with `-p:IncludeIos=true` (`-p:IncludeAndroid=false` for iOS-only); compile-check on Windows with `dotnet restore -p:IncludeIos=true` then `dotnet build -f net10.0-ios -p:IncludeIos=true --no-restore`. `ios.yml` compiles unsigned on PRs; on main with the six iOS secrets it signs (`.github/scripts/ios-signing.sh`, identity by SHA-1), attaches the `.ipa` to the draft and `testflight-submit` uploads it after `release-publish`. Signing scripts must run on macOS bash 3.2. (Slice 48: docs/plan/slices/48-ios-target-testflight.md; detail: docs/plan/notes/claude-md-history.md)
+
+> **Scan (Slice 45, lifted 2026-10-21):** Scan (Decision 64) uses the ML Kit Document Scanner (Android only, via `IDocumentScanner` registered only in `Platforms/Android`); `ReaderPage` OCRs the pages in order and appends them via `ScannedText.AppendPages`. Without Play services it falls back to one `MediaPicker` photo, which is why the `CAMERA` + `IMAGE_CAPTURE` `<queries>` stay in the manifest. No `ScanPage`, no Shell hand-off. The csproj pins `AndroidX.Fragment.Ktx` 1.9.0 (the scanner's 1.8.8.1 collides with Fragment 1.9.0 in D8) and `Xamarin.GooglePlayServices.Tasks` must stay >= 118.4.1.3. A real scan needs a device signed in to Google. (Slice 45: docs/plan/slices/45-android-document-scanner.md; detail: docs/plan/notes/claude-md-history.md)
+
+> **Dino CI rule:** the `dinoreader` paths run only the `test-dinoreader`
 > job (ubuntu), never the version, release or store jobs. Keep Dino paths out of
-> the `core` group. (Slice 59: docs/plan/slices/59-dialogue-parser-voice-caster.md)
+> the core paths in `ship-targets.mjs`. (Slice 59: docs/plan/slices/59-dialogue-parser-voice-caster.md)
 
 > **Language packs, iOS, translation (Batch 9):** once Slices 50/56 land, **no
 > platform bundles a voice model** (supersedes Decisions 14 and 39): every voice
@@ -146,7 +154,7 @@ DinoReader.Core (standalone, no deps)
   folder rather than a separate class library. **Nothing outside `Platforms/`
   names an Android or iOS type:** engines come from `IPlatformServices` via the
   required `MauiProgram.RegisterPlatformServices` partial in each `Platforms/<OS>/`
-  (Slice 48 adds `Platforms/iOS`; Slice 44:
+  (`Platforms/iOS` exists since Slice 48; Slice 44:
   docs/plan/slices/44-pipeline-ios-split.md). It does **not** reuse
   `ReadAloudService` — that orchestrates Windows-only triggers (hotkey, UIA
   selection, clipboard) that don't exist on Android (Decision 38) — pages wire
@@ -187,7 +195,7 @@ DinoReader.Core (standalone, no deps)
 - Mobile no longer bundles the voice model. Supertonic-3 is a downloaded pack `supertonic-3` (~145 MB) under `AppDataDirectory/packs/`; `MobileVoiceModelService` only locates and manifest-checks it. The APK/AAB has no `assets/VoiceModel` (unzip and check). Windows still bundles `VoiceModel/` until Slice 56. (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
 - Voice packs (`docs/voice-packs.md`): `IVoicePackService` (Application) + `MobileVoicePackService` (Mobile); the pure decisions live in `PackRetryPolicy`/`PackCatalogParser`/`PackManifest`/`PackNaming`/`VoicePackSelector` (unit-tested). The pipeline runs off the UI thread and `VoicePackInstaller` marshals state to the main thread. An installed pack means zero network requests. `InvalidPack` is never retried. Offline detection on Android = `NetworkAccess.None` + Java exception type names. (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
 - Until the pack is Ready, `CompositeSpeechReader` reads with the Android `TextToSpeech` "Phone voice" (`SystemVoice.Id`), also user-selectable. (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
-- `packs-<n>` releases hold packs + `packs.json`, published by the manual `packs.yml` with `--latest=false`; the app pins one in `PackConstants.CatalogUrl`. Every app-release tag scan (`build.yml` release-publish, `.github/scripts/find-release.sh`) must filter to `^v[0-9]+\.[0-9]+\.[0-9]+$`. (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
+- `packs-<n>` releases hold packs + `packs.json`, published by the manual `packs.yml` with `--latest=false`; the app pins one in `PackConstants.CatalogUrl`. Every app-release tag scan (`release.yml` release-publish, `.github/scripts/find-release.sh`) must filter to `^v[0-9]+\.[0-9]+\.[0-9]+$`. (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
 - First-run language: `ISettingsStore.Language`; the app shows `LanguagePage` when it is null. Android declares `INTERNET` + `ACCESS_NETWORK_STATE`, used only for pack downloads; user data stays on the device. Android `minSdk` is 28 (Decision 82; see the API 28 rule above). (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
 
 Keep `App.xaml.cs` thin: provider/DI wiring and window bootstrap only. Real
@@ -225,7 +233,7 @@ debug target), or `dotnet build -t:Run -f net10.0-android` with a device/emulato
 already running. No AVD ships with this repo — set one up locally (or attach a
 physical device) before relying on a slice that touches the Mobile project.
 
-CI/packaging (Slice 5): `.github/workflows/build.yml` packages the single-project
+CI/packaging (Slice 5, Slice 70): `.github/workflows/windows.yml` (called by `release.yml`) packages the single-project
 MSIX (x64 + ARM64, unsigned — the Store re-signs; uploaded to the Release, never
 as an Actions artifact — Batch 8) and checks out LFS for
 the voice model; see `STORE.md` for capability justification, licenses, and the
@@ -284,9 +292,9 @@ Dino Reader's pure library has its own suite (xUnit v3, plain `net10.0`, runs on
 dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj
 ```
 
-A CI `test` job in `build.yml` runs them on every push/PR that touches app code
-(either platform, per the Batch 8 path filter; docs-only changes skip it) and
-**gates** the build and release jobs, so a failing test blocks the release.
+The `tests.yml` workflow (called by `release.yml`) runs them on every push/PR that
+touches app code (docs-only changes skip it) and **gates** the build and release jobs,
+so a failing test blocks the release.
 
 ## Versioning, license & releases (Batch 2 — Slices 11–16)
 
@@ -297,7 +305,7 @@ A CI `test` job in `build.yml` runs them on every push/PR that touches app code
   docs-only merges cut none, and only the changed platforms are rebuilt and
   submitted — Batch 8), derived by
   **GitVersion** from git history — **git tags are the source of truth**. The
-  single `build.yml` run does it all: GitVersion computes the next SemVer, the
+  single `release.yml` run does it all: GitVersion computes the next SemVer, the
   MSIX is packaged with that version stamped into `Package.appxmanifest`
   `Version` (`x.y.z.0` — the Store needs revision `0`) **at build time** (not
   committed), then a `v<x.y.z>` tag + GitHub Release are cut at the merge commit.

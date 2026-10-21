@@ -127,13 +127,16 @@ real model files (not pointers).
 
 ## Continuous integration
 
-`.github/workflows/build.yml` is the single pipeline for both platforms. It
-**path-filters** each change: shared code (Domain/Application/Documents/tests)
-builds Windows **and** Android, while `App`/`Infrastructure` builds only Windows
-and `Mobile` only Android. Docs-only changes build nothing. PRs are
-compile-and-test checks only. On `main`, the affected builds (unsigned MSIX
-x64 + ARM64, signed Android `.aab` + `.apk`) are uploaded straight to that merge's
-GitHub Release. CI uploads **no Actions artifacts**, to stay inside the
+`release.yml` runs on every push to `main` and calls a reusable workflow per
+platform (`windows.yml`, `android.yml`, `ios.yml`); each platform workflow also runs
+on its own pull requests. Only the platforms a change touches are built: shared code
+builds all of them, `App`/`Infrastructure` only Windows, and `Mobile` Android and/or
+iOS. Docs-only changes build nothing. PRs are compile-and-test checks only. On
+`main`, the affected builds (unsigned MSIX x64 + ARM64, signed Android `.aab` + `.apk`,
+signed iOS `.ipa` for TestFlight) are uploaded straight to that merge's GitHub
+Release. iOS: Read The Stupid Text ships to TestFlight from CI (testers are added in
+App Store Connect). Android: Scan opens Google's document scanner (multi-page) and
+needs Google Play services. CI uploads **no Actions artifacts**, to stay inside the
 account's Actions storage quota. See [`STORE.md`](STORE.md) for
 packaging, capability justification, third-party licenses, and the Store
 submission steps.

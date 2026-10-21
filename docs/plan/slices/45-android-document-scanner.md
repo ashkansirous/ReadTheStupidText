@@ -91,11 +91,11 @@ Pages are OCR'd in order with one reused ML Kit recognizer, "Reading page i of N
 
 *From review (medium):* partial-failure scans discarded everything (fixed, good pages are kept); the pause/resume abandonment heuristic could drop real results (replaced by stale-request cancel on the next tap); wrapped exceptions; transient null activity; `MainActivity` BOM/CRLF churn; pure logic moved to Application with tests.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-21)
 
 - Scan (Slice 45, Decision 64) opens the ML Kit Document Scanner (Play-services package, Android only, no camera permission) via `IDocumentScanner` (registered only in `Platforms/Android`). Results come through `MainActivity.OnActivityResult`; `ReaderPage` OCRs pages in order (one reused recognizer), appends them via `ScannedText.AppendPages` (Application), deletes the page images, and reports failed pages. First use triggers a Play-services module download (pre-warmed on Reader open). Without Play services: a single `MediaPicker` photo fallback, so `CAMERA` + `IMAGE_CAPTURE` `<queries>` stay in the manifest for that only. No `ScanPage`, no Shell hand-off. Gotchas: the scanner pulls `AndroidX.Fragment.Ktx` 1.8.8.1, which collides with Fragment 1.9.0 in D8, so the csproj pins Fragment.Ktx 1.9.0; `Xamarin.GooglePlayServices.Tasks` must stay >= 118.4.1.3. Testing a real scan needs a device/emulator signed in to Google. (Slice 45: docs/plan/slices/45-android-document-scanner.md)
 
-#### For README.md
+#### For README.md (lifted 2026-10-21)
 
 - Optional, one line: "Android: Scan opens Google's document scanner (multi-page); needs Google Play services."
 

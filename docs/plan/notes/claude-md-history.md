@@ -80,3 +80,9 @@ The batch narratives that used to sit in `CLAUDE.md` as blockquotes, moved verba
 > Its screens are the mock `docs/design/dino-reader/Dino Reader v2.dc.html` (index in
 > that folder's README): read visual values (colours, sizes, copy, layout) from it,
 > never guess them, and never call `DesignSync` for them.
+
+## Slices 45 and 48 detail (lifted 2026-10-21)
+
+Slice 48: the iOS `CFBundleVersion` is a UTC `yyyymmdd.hhmmss` timestamp. App Store Connect setup and the shared signing assets are recorded in the secrets store (`readthestupidtext/`, `dinoreader/`); the ASC API script for bundle ids and profiles lives in the coordinator's scratchpad. An iOS-only change without the secrets cuts no release.
+
+Slice 45: results come through `MainActivity.OnActivityResult`; pages are OCR'd with one reused recognizer, the page images are deleted and failed pages are reported. First use triggers a Play-services module download (pre-warmed on Reader open).

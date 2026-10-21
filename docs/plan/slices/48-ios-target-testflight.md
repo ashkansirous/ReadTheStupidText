@@ -113,17 +113,20 @@ Code:
 
 *Verified (Windows):* Android build, iOS C# compile (with and without `IncludeAndroid=false`), 180 tests, actionlint, filter test. Emulator: Android still reads aloud with the neural voice and Scan still shows after the shared changes.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-21)
 
 - Mobile: `Platforms/iOS` implements `IPlatformServices` with one `AvSpeechReader` for both slots (sherpa-onnx for iOS is Slice 49), `SupportsNeuralVoice`/`SupportsTextScan` false (the pack download, Supertonic voice list and Scan are hidden); `net10.0-ios` is in the csproj only on macOS or with `-p:IncludeIos=true` (`-p:IncludeAndroid=false` for an iOS-only build); compile-check iOS on Windows with `dotnet restore -p:IncludeIos=true` then `dotnet build -f net10.0-ios -p:IncludeIos=true --no-restore`; sherpa/ML Kit refs are Android-only. (Slice 48: docs/plan/slices/48-ios-target-testflight.md)
 - CI: `build-ios` (macos-26) compiles unsigned on PRs; on main with the six iOS secrets it signs (keychain via `.github/scripts/ios-signing.sh`, identity by SHA-1), attaches the `.ipa` to the draft, and `testflight-submit` uploads it with altool after `release-publish`. iOS `CFBundleVersion` is a UTC timestamp. Signing scripts must run on macOS bash 3.2. App Store Connect setup and the shared signing assets are recorded in the secrets store (`readthestupidtext/`, `dinoreader/`); the ASC API script for bundle ids and profiles lives in the coordinator's scratchpad. (Slice 48: docs/plan/slices/48-ios-target-testflight.md)
 
-#### For README.md
+#### For README.md (lifted 2026-10-21)
 
 - iOS: Read The Stupid Text ships to TestFlight from CI (testers added in App Store Connect).
 
+#### Verified 2026-10-21
+
+- The v1.4.0 and v1.5.0 releases signed the .ipa on macos-26 (pinned dotnet 10.0.401 / Xcode 26.6 / workload set 10.0.401), attached it to the release and uploaded it to TestFlight ("UPLOAD SUCCEEDED", delivery UUID beefde0b-...). App Store Connect shows both builds (20261020.205630, 20261020.220730) processed as VALID.
+
 #### Not yet verified
 
-- The first signed `build-ios` and TestFlight upload (happens on this PR's merge).
 - Installing from TestFlight on an iPhone.
 - The iOS app's runtime behaviour (AVSpeech reading, file picker); no Mac or iPhone here.
