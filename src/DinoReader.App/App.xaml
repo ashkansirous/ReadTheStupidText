@@ -45,6 +45,18 @@
         <Color x:Key="NightCoralGlyph">#FFE9D9</Color>
         <Color x:Key="NightCoralHalo">#38C65A43</Color>
 
+        <!-- Cast screen (mock screens 10, 11, 15). -->
+        <Color x:Key="AvatarGrey">#e6e0d4</Color>
+        <Color x:Key="EditedInk">#1f7a3a</Color>
+        <Color x:Key="EditedFill">#dff7e4</Color>
+        <Color x:Key="NoteFill">#FFF1D6</Color>
+        <Color x:Key="NoteInk">#6B4200</Color>
+        <Color x:Key="SharedInk">#9A5B00</Color>
+        <Color x:Key="SelectedRow">#F4F2FF</Color>
+        <Color x:Key="CheckEmpty">#cfc7b8</Color>
+        <Color x:Key="MergeBorder">#c9c0f5</Color>
+        <Color x:Key="SheetScrim">#802b2540</Color>
+
         <Style TargetType="Label">
             <Setter Property="FontFamily" Value="Fredoka" />
             <Setter Property="TextColor" Value="{StaticResource Ink}" />

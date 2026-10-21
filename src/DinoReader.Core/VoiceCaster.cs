@@ -11,6 +11,11 @@ public sealed record VoiceCast(string NarratorVoiceId, IReadOnlyList<VoiceAssign
 {
     public string? VoiceFor(string characterId) =>
         Assignments.FirstOrDefault(a => a.CharacterId == characterId)?.VoiceId;
+
+    /// <summary>The voice that reads a line: the speaker's, and the narrator's for narration, for a quote
+    /// nobody could be attributed to (the unknown-speaker rule, Slice 65) and for a character with no voice.</summary>
+    public string VoiceForLine(string? characterId) =>
+        (characterId is null ? null : VoiceFor(characterId)) ?? NarratorVoiceId;
 }
 
 /// <summary>
@@ -22,8 +27,11 @@ public sealed record VoiceCast(string NarratorVoiceId, IReadOnlyList<VoiceAssign
 /// own voices whatever the order of appearance, then the rest in the given order; ties
 /// break by voice order. Duplicate voice ids are dropped, the first one winning.
 /// </summary>
-public sealed class VoiceCaster(int mainCharacterCount = 2)
+public sealed class VoiceCaster(int mainCharacterCount = VoiceCaster.DefaultMainCount)
 {
+    /// <summary>How many characters, by words spoken, count as main characters.</summary>
+    public const int DefaultMainCount = 2;
+
     public VoiceCast Cast(
         IReadOnlyList<Character> characters,
         IReadOnlyList<VoiceOption> voices,
@@ -31,7 +39,7 @@ public sealed class VoiceCaster(int mainCharacterCount = 2)
         IReadOnlyDictionary<string, string>? pinned = null)
     {
         var pool = voices.Where(v => v.Id != narratorVoiceId).DistinctBy(v => v.Id).ToList();
-        var state = new CastState(pool, MainIds(characters));
+        var state = new CastState(pool, MainIds(characters, mainCharacterCount));
         var picks = new List<(int Order, Character Character, string VoiceId)>();
         var pins = PinnedVoices(characters, pool, pinned);
         foreach (var (character, order) in characters.Select((c, i) => (c, i)).Where(x => pins.ContainsKey(x.c.Id)))
@@ -67,12 +75,13 @@ public sealed class VoiceCaster(int mainCharacterCount = 2)
             .OrderBy(x => isMain(x.Character) ? 0 : 1)
             .ThenBy(x => x.Order);
 
-    private HashSet<string> MainIds(IReadOnlyList<Character> characters) =>
+    /// <summary>The ids of the <paramref name="count"/> characters with the most words (ties: first appearance).</summary>
+    public static HashSet<string> MainIds(IReadOnlyList<Character> characters, int count) =>
         characters
             .Select((c, order) => (Character: c, Order: order))
             .OrderByDescending(x => x.Character.WordCount)
             .ThenBy(x => x.Order)
-            .Take(mainCharacterCount)
+            .Take(count)
             .Select(x => x.Character.Id)
             .ToHashSet();
 

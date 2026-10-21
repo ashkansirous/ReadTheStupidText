@@ -7,8 +7,12 @@ public enum CoverStyle
     Colour,
 }
 
-/// <summary>A character's stored voice: the cast is saved with its story (Slice 61).</summary>
-public sealed record CastMember(string CharacterId, string Name, Gender Gender, string VoiceId);
+/// <summary>
+/// A character's stored voice: the cast is saved with its story (Slice 61). <see cref="Edited"/> is set
+/// once a grown-up changed the character on the cast screen (Slice 65): the stored gender then also
+/// overrides the guessed one, and the EDITED badge shows.
+/// </summary>
+public sealed record CastMember(string CharacterId, string Name, Gender Gender, string VoiceId, bool Edited = false);
 
 /// <summary>One page: its text and, for a scanned or photographed page, the image file name inside the story folder.</summary>
 public sealed record StoryPage(string Text, string? ImageFile = null);
@@ -24,9 +28,17 @@ public sealed record Story(
     CoverStyle CoverStyle,
     int CoverColourIndex,
     string NarratorVoiceId,
-    ReadingMode? PreferredMode = null)
+    ReadingMode? PreferredMode = null,
+    IReadOnlyDictionary<string, string>? CharacterMerges = null)
 {
     public const string PageSeparator = "\n\n";
+
+    /// <summary>The one shared "no merges" map.</summary>
+    public static readonly IReadOnlyDictionary<string, string> NoMerges = new Dictionary<string, string>();
+
+    /// <summary>Characters a grown-up merged (Slice 65): merged-away character id to the id it joined.
+    /// Applied to the attribution every time the story is read, so the fix is remembered with the story.</summary>
+    public IReadOnlyDictionary<string, string> Merges => CharacterMerges ?? NoMerges;
 
     /// <summary>All page texts as one string, a blank line between pages: what the reader speaks.</summary>
     public string Text => JoinPages(Pages);

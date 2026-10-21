@@ -85,6 +85,21 @@ public partial class ManagePage : ContentPage, IGrownUpPage
 		await Navigation.PushAsync(edit);
 	}
 
+	private async void OnCastTapped(object? sender, TappedEventArgs e)
+	{
+		if (TileOf(sender) is { } tile)
+		{
+			await _busy.RunAsync(() => OpenCastAsync(tile.Story));
+		}
+	}
+
+	private async Task OpenCastAsync(Story story)
+	{
+		var cast = _services.GetRequiredService<CastPage>();
+		cast.Load(story, _actions.SaveCastAsync);
+		await Navigation.PushAsync(cast);
+	}
+
 	private async void OnDeleteTapped(object? sender, TappedEventArgs e)
 	{
 		if (TileOf(sender) is { } tile)

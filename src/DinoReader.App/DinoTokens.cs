@@ -39,6 +39,16 @@ public static class DinoTokens
 	public const string NightCoralEdge = "NightCoralEdge";
 	public const string NightCoralGlyph = "NightCoralGlyph";
 	public const string NightCoralHalo = "NightCoralHalo";
+	public const string AvatarGrey = "AvatarGrey";
+	public const string EditedInk = "EditedInk";
+	public const string EditedFill = "EditedFill";
+	public const string NoteFill = "NoteFill";
+	public const string NoteInk = "NoteInk";
+	public const string SharedInk = "SharedInk";
+	public const string SelectedRow = "SelectedRow";
+	public const string CheckEmpty = "CheckEmpty";
+	public const string MergeBorder = "MergeBorder";
+	public const string SheetScrim = "SheetScrim";
 
 	public static Color Get(string key) => (Color)Microsoft.Maui.Controls.Application.Current!.Resources[key];
 }

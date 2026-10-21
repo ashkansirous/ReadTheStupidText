@@ -1,4 +1,5 @@
 using DinoReader.Core;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DinoReader;
 
@@ -11,16 +12,19 @@ public partial class EditStoryPage : ContentPage, IGrownUpPage
 	private readonly IStoryLibrary _library;
 	private readonly StoryVoicing _voicing;
 	private readonly StoryActions _actions;
+	private readonly IServiceProvider _services;
 	private StoryDraft? _draft;
 	private Label? _pagesValue;
+	private Label? _castValue;
 	private readonly BusyGuard _busy = new();
 
-	public EditStoryPage(IStoryLibrary library, StoryVoicing voicing, StoryActions actions)
+	public EditStoryPage(IStoryLibrary library, StoryVoicing voicing, StoryActions actions, IServiceProvider services)
 	{
 		InitializeComponent();
 		_library = library;
 		_voicing = voicing;
 		_actions = actions;
+		_services = services;
 	}
 
 	/// <summary>Opens the page on <paramref name="story"/>. Called once, right after the page is created.</summary>
@@ -35,10 +39,13 @@ public partial class EditStoryPage : ContentPage, IGrownUpPage
 	protected override void OnAppearing()
 	{
 		base.OnAppearing();
-		if (_pagesValue is not null && _draft is not null)
+		if (_draft is null)
 		{
-			_pagesValue.Text = GalleryText.PagesSummary(_draft.Pages.Count);
+			return;
 		}
+
+		_pagesValue!.Text = GalleryText.PagesSummary(_draft.Pages.Count);
+		_castValue!.Text = GalleryText.Characters(_draft.Cast.Count);
 	}
 
 	private void BuildRows(Story story)
@@ -47,7 +54,7 @@ public partial class EditStoryPage : ContentPage, IGrownUpPage
 		AddRow("Story language", "English", null);
 		_pagesValue = AddRow("Pages", GalleryText.PagesSummary(story.Pages.Count), OpenPagesAsync);
 		AddRow("Fix the text", "Edit OCR text", OpenPagesAsync);
-		AddRow("Who’s speaking", GalleryText.Characters(story.Cast.Count), null);
+		_castValue = AddRow(CastText.Title, GalleryText.Characters(story.Cast.Count), OpenCastAsync);
 	}
 
 	private Label AddRow(string title, string value, Func<Task>? tapped)
@@ -92,6 +99,32 @@ public partial class EditStoryPage : ContentPage, IGrownUpPage
 		VerticalOptions = LayoutOptions.Center,
 	};
 
+	// The cast page works on the draft as it stands (pages included) and writes its edits back into the
+	// draft, so they are saved, or dropped, together with the rest of this screen's changes.
+	private async Task OpenCastAsync()
+	{
+		StoryDraft draft = _draft!;
+		draft.Title = string.IsNullOrWhiteSpace(TitleEntry.Text) ? draft.Original.Title : TitleEntry.Text.Trim();
+		if (draft.TextChanged)
+		{
+			// The cast page must show the fixed text's characters; stored voices and merges stay as pins.
+			draft.Cast = await _voicing.CastAsync(Story.JoinPages(draft.Pages), draft.NarratorVoiceId, draft.Cast, draft.Merges);
+			_castValue!.Text = GalleryText.Characters(draft.Cast.Count);
+		}
+
+		var cast = _services.GetRequiredService<CastPage>();
+		cast.Load(draft.Current, story => KeepCast(draft, story));
+		await Navigation.PushAsync(cast);
+	}
+
+	private static Task KeepCast(StoryDraft draft, Story story)
+	{
+		draft.Cast = story.Cast;
+		draft.Merges = story.Merges;
+		draft.NarratorVoiceId = story.NarratorVoiceId;
+		return Task.CompletedTask;
+	}
+
 	private async Task OpenPagesAsync() => await Navigation.PushAsync(new PagesPage(_draft!));
 
 	private void OnFirstPageChipTapped(object? sender, TappedEventArgs e) => SetCover(CoverStyle.FirstPage);
@@ -133,11 +166,12 @@ public partial class EditStoryPage : ContentPage, IGrownUpPage
 		StoryDraft draft = _draft!;
 		string title = string.IsNullOrWhiteSpace(TitleEntry.Text) ? draft.Original.Title : TitleEntry.Text.Trim();
 		IReadOnlyList<CastMember> cast = draft.TextChanged
-			? await _voicing.CastAsync(Story.JoinPages(draft.Pages), draft.Original.NarratorVoiceId, draft.Original.Cast)
-			: draft.Original.Cast;
+			? await _voicing.CastAsync(Story.JoinPages(draft.Pages), draft.NarratorVoiceId, draft.Cast, draft.Merges)
+			: draft.Cast;
 		await _library.UpdateAsync(draft.Original with
 		{
 			Title = title, CoverStyle = draft.CoverStyle, Pages = draft.Pages.ToList(), Cast = cast,
+			CharacterMerges = draft.Merges, NarratorVoiceId = draft.NarratorVoiceId,
 		});
 		await Navigation.PopAsync();
 	}

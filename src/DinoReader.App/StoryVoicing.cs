@@ -35,9 +35,22 @@ public sealed class StoryVoicing
 	public Task<IReadOnlyList<VoicedSegment>> VoiceAsync(Story story, string narratorVoiceId, int fromPosition = 0) =>
 		Task.Run(() => Voice(story, narratorVoiceId, fromPosition));
 
-	/// <summary>The cast for <paramref name="text"/>, keeping any voice <paramref name="stored"/> already gives a character.</summary>
-	public Task<IReadOnlyList<CastMember>> CastAsync(string text, string narratorVoiceId, IReadOnlyList<CastMember> stored) =>
-		Task.Run(() => CastFor(text, narratorVoiceId, stored));
+	/// <summary>The cast for <paramref name="text"/>, keeping any voice <paramref name="stored"/> already gives a character.
+	/// <paramref name="merges"/> are the grown-up's merged characters (Slice 65).</summary>
+	public Task<IReadOnlyList<CastMember>> CastAsync(
+		string text, string narratorVoiceId, IReadOnlyList<CastMember> stored, IReadOnlyDictionary<string, string>? merges = null) =>
+		Task.Run(() => CastFor(text, narratorVoiceId, stored, merges));
+
+	/// <summary>The voices a character can have (the whole pack; the narrator's is left out by the caller).</summary>
+	public IReadOnlyList<VoiceOption> Voices => VoiceOptions;
+
+	/// <summary>How many voices characters can share out once <paramref name="narratorVoiceId"/> is the narrator's.</summary>
+	public int CharacterVoiceCount(string narratorVoiceId) => VoiceOptions.Count(v => v.Id != narratorVoiceId);
+
+	/// <summary>The story's characters and lines as the cast screen shows them: merges applied, an edited
+	/// character's gender in place of the guess. On a worker thread, like <see cref="VoiceAsync"/>.</summary>
+	public Task<AttributionResult> ResolveAsync(Story story) =>
+		Task.Run(() => StoryCast.Resolve(Analyse(story.Text).Attribution, story.Merges, story.Cast));
 
 	/// <summary>The voiced segments of the story from <paramref name="fromPosition"/> on (a story index: a tapped
 	/// or skipped-to sentence), read by <paramref name="narratorVoiceId"/> and the story's cast.</summary>
@@ -45,18 +58,20 @@ public sealed class StoryVoicing
 	{
 		string text = story.Text;
 		Cache cache = Analyse(text);
-		VoiceCast cast = Cast(cache.Attribution, narratorVoiceId, story.Cast);
-		IReadOnlyList<Segment> segments = SegmentSlicer.From(cache.Attribution.Segments, text, fromPosition);
+		AttributionResult resolved = StoryCast.Resolve(cache.Attribution, story.Merges, story.Cast);
+		VoiceCast cast = Cast(resolved, narratorVoiceId, story.Cast);
+		IReadOnlyList<Segment> segments = SegmentSlicer.From(resolved.Segments, text, fromPosition);
 
 		// One piece per sentence, so the reader raises a chunk per sentence and the highlight steps with it.
 		return SegmentSentenceSplitter.Split(segments, text, cache.Sentences.Value)
 			.Select(p => ToVoicedSegment(p, cast)).ToList();
 	}
 
-	public IReadOnlyList<CastMember> CastFor(string text, string narratorVoiceId, IReadOnlyList<CastMember> stored)
+	public IReadOnlyList<CastMember> CastFor(
+		string text, string narratorVoiceId, IReadOnlyList<CastMember> stored, IReadOnlyDictionary<string, string>? merges = null)
 	{
-		AttributionResult attribution = Analyse(text).Attribution;
-		return StoryCast.ToMembers(attribution.Characters, Cast(attribution, narratorVoiceId, stored));
+		AttributionResult resolved = StoryCast.Resolve(Analyse(text).Attribution, merges ?? Story.NoMerges, stored);
+		return StoryCast.ToMembers(resolved.Characters, Cast(resolved, narratorVoiceId, stored), stored);
 	}
 
 	private VoiceCast Cast(AttributionResult attribution, string narratorVoiceId, IReadOnlyList<CastMember> stored) =>
@@ -76,13 +91,11 @@ public sealed class StoryVoicing
 		return fresh;
 	}
 
-	// Narration, and a quote nobody could be attributed to, are read by the narrator.
+	// Narration, and a quote nobody could be attributed to, are read by the narrator (VoiceForLine).
 	private static VoicedSegment ToVoicedSegment(SplitSegment piece, VoiceCast cast)
 	{
 		Segment segment = piece.Segment;
-		string voiceId = segment.CharacterId is { } id
-			? cast.VoiceFor(id) ?? cast.NarratorVoiceId
-			: cast.NarratorVoiceId;
+		string voiceId = cast.VoiceForLine(segment.CharacterId);
 		return new VoicedSegment(segment.Text, voiceId, segment.SourceStart, segment.SourceEnd, piece.TextStart);
 	}
 }
