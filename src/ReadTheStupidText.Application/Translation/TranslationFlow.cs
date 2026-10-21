@@ -29,6 +29,12 @@ public static partial class TranslationFlow
     [GeneratedRegex(@"(?<=[.!?\u061F\u06D4\u3002\uFF01\uFF1F])")]
     private static partial Regex SentenceEnd();
 
+    /// <summary>
+    /// The one sentence splitter (Slice 75): the text cut after each terminator, with the whitespace between
+    /// sentences left on the pieces so they concatenate back to the text. Callers trim and drop blanks as they need.
+    /// </summary>
+    public static string[] SplitSentences(string text) => SentenceEnd().Split(text);
+
     /// <summary>Translate only when the toggle is on, both languages are known and they differ.</summary>
     public static bool ShouldTranslate(bool enabled, string? source, string? target) =>
         enabled
@@ -120,7 +126,7 @@ public static partial class TranslationFlow
         }
 
         var run = new System.Text.StringBuilder();
-        foreach (string sentence in SentenceEnd().Split(paragraph))
+        foreach (string sentence in SplitSentences(paragraph))
         {
             if (run.Length > 0 && run.Length + sentence.Length > MaxPieceLength)
             {

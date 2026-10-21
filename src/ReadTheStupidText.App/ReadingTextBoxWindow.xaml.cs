@@ -172,15 +172,27 @@ public sealed partial class ReadingTextBoxWindow : Window
 
     private void OnReadTextChanged(object? sender, ReadText read)
     {
-        object token = new();
+        // A streamed translation grows the same read (Extends): keep its token, so chunk events of the read
+        // still match, and keep the current chunk and page. Only a new read starts afresh.
+        object token = read.Extends ? Volatile.Read(ref _announcedRead) : new object();
         Volatile.Write(ref _announcedRead, token);
         _dispatcher.TryEnqueue(() =>
         {
+            bool extendsDisplayed = read.Extends && ReferenceEquals(token, _displayedRead);
+            int page = _currentPageIndex;
             _displayedRead = token;
             _showingTranslation = read.Translated;
             _fullText = read.Text;
-            _lastChunk = null;
+            if (!extendsDisplayed)
+            {
+                _lastChunk = null;
+            }
+
             Repaginate();
+            if (extendsDisplayed && _lastChunk is null && page > 0)
+            {
+                ShowPage(page);
+            }
         });
     }
 
@@ -261,10 +273,15 @@ public sealed partial class ReadingTextBoxWindow : Window
 
     private void ApplyHighlight(ReadChunk chunk)
     {
-        _lastChunk = chunk;
-        if (chunk.SourceEnd > _fullText.Length || _pages.Count == 0)
+        if (!chunk.MatchesSource(_fullText))
         {
-            return; // stale event, or not paginated yet
+            return; // a late chunk of an earlier read: its text isn't this read's
+        }
+
+        _lastChunk = chunk;
+        if (_pages.Count == 0)
+        {
+            return; // not paginated yet
         }
 
         StatusText.Text = ChunkStatus(chunk);

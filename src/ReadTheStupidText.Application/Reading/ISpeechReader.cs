@@ -62,6 +62,29 @@ public interface ISpeechReader
     /// False by default; callers check it to fall back to a single-voice read.</summary>
     bool SupportsSegments => false;
 
+    /// <summary>Whether this reader can read text that arrives in blocks (<see cref="SpeakStreamAsync"/>). False by default.</summary>
+    bool SupportsStreaming => false;
+
+    /// <summary>
+    /// Starts a read like <see cref="SpeakAsync"/>, but one that can grow (Slice 75): more text arrives later
+    /// through <see cref="AppendText"/>, and the read ends only after <see cref="CompleteStream"/> and the
+    /// last chunk has played. It is how a translated read starts speaking its first sentences while the rest
+    /// is still being translated. Same supersede/stop rules as <see cref="SpeakAsync"/>. Readers that cannot
+    /// stream (<see cref="SupportsStreaming"/> false) return a faulted task.
+    /// </summary>
+    Task SpeakStreamAsync(string firstText, int? activityId = null) =>
+        Task.FromException(new NotSupportedException("This speech reader cannot read text that arrives in blocks."));
+
+    /// <summary>Adds the next block to the read started by <see cref="SpeakStreamAsync"/>; a no-op when none is open. The activity id names the read, so a late call for a superseded one is ignored.</summary>
+    void AppendText(string text, int? activityId = null)
+    {
+    }
+
+    /// <summary>Says no more text will be appended, so the read can finish after the last chunk.</summary>
+    void CompleteStream(int? activityId = null)
+    {
+    }
+
     /// <summary>
     /// Eagerly prepares the synthesis engine (building any heavy model and warming
     /// its compute graph) so the first real read does not pay the cold-start cost.

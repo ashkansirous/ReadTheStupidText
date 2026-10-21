@@ -86,7 +86,11 @@ public partial class App : Application
         services.AddSingleton<ActivityInputLog>();
 
         // Translate-before-read (Slice 57): packs-backed translator, on-device script detector.
-        services.AddSingleton<ITranslator>(_ => new PackTranslator(PackFolders.PacksRoot));
+        services.AddSingleton<ITranslator>(sp => PackTranslator.WithInstalledLookup(
+            PackFolders.PacksRoot,
+            () => sp.GetRequiredService<ISettingsStore>().Language,
+            sp.GetRequiredService<IVoicePackService>().GetInstalledPath));
+        services.AddSingleton<TranslationPackInstaller>();
         services.AddSingleton<ILanguageDetector, ScriptLanguageDetector>();
         services.AddSingleton<ReadTranslator>();
 
