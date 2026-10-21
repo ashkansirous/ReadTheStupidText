@@ -1,6 +1,6 @@
 # Slice 52 — PaddleOCR per language (Android)
 
-*Planned.*
+*In progress (wave 2026-10-21b), draft PR.*
 
 **Batch:** 9
 **Decisions:** 65 (also 60-62)
