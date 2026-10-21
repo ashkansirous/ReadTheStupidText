@@ -54,10 +54,17 @@ public class PdfTextExtractorTests
     // Hand-builds a minimal, valid single/multi-page PDF (one Helvetica Tj per
     // page, a correct byte-offset xref table) — PdfPig is read-only, so there is
     // no library to author a fixture with instead.
-    private static string BuildFixturePdf(params string[] pagesText)
+    internal static string BuildFixturePdf(params string[] pagesText) => BuildFixturePdfWithBox("0 0 300 300", null, pagesText);
+
+    // As BuildFixturePdf, with the pages' MediaBox (and optional CropBox) given as "llx lly urx ury".
+    // The text sits 50 right and 200 up from the lower-left corner of the visible box.
+    internal static string BuildFixturePdfWithBox(string mediaBox, string? cropBox, params string[] pagesText)
     {
         const int FontObj = 3;
         const int FirstPageObj = 4;
+        string[] box = (cropBox ?? mediaBox).Split(' ');
+        int originX = int.Parse(box[0], System.Globalization.CultureInfo.InvariantCulture);
+        int originY = int.Parse(box[1], System.Globalization.CultureInfo.InvariantCulture);
         var objects = new SortedDictionary<int, byte[]>
         {
             [1] = Encoding.ASCII.GetBytes("<< /Type /Catalog /Pages 2 0 R >>"),
@@ -72,10 +79,10 @@ public class PdfTextExtractorTests
             int pageObj = FirstPageObj + i * 2;
             int contentObj = pageObj + 1;
             objects[pageObj] = Encoding.ASCII.GetBytes(
-                $"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 300] /Resources << /Font << /F1 {FontObj} 0 R >> >> /Contents {contentObj} 0 R >>");
+                $"<< /Type /Page /Parent 2 0 R /MediaBox [{mediaBox}]{(cropBox is null ? string.Empty : $" /CropBox [{cropBox}]")} /Resources << /Font << /F1 {FontObj} 0 R >> >> /Contents {contentObj} 0 R >>");
 
             string escaped = pagesText[i].Replace("\\", "\\\\").Replace("(", "\\(").Replace(")", "\\)");
-            byte[] stream = Encoding.ASCII.GetBytes($"BT /F1 24 Tf 50 200 Td ({escaped}) Tj ET");
+            byte[] stream = Encoding.ASCII.GetBytes($"BT /F1 24 Tf {originX + 50} {originY + 200} Td ({escaped}) Tj ET");
             objects[contentObj] = Encoding.ASCII.GetBytes($"<< /Length {stream.Length} >>\nstream\n")
                 .Concat(stream)
                 .Concat(Encoding.ASCII.GetBytes("\nendstream"))

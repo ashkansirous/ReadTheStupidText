@@ -1,5 +1,4 @@
 using Android.Graphics;
-using AndroidNet = Android.Net;
 using ReadTheStupidText.Application.Images;
 
 namespace ReadTheStupidText.Mobile;
@@ -20,8 +19,8 @@ public sealed class AndroidPixelImageLoader : IPixelImageLoader
 
     public IOcrPage Open(string imagePath, int maxSide)
     {
-        (int width, int height) = ReadBounds(imagePath);
-        int orientation = ExifOrientation(imagePath);
+        (int width, int height) = AndroidImageSource.ReadBounds(_context, imagePath);
+        int orientation = AndroidImageSource.ReadOrientation(_context, imagePath);
         PixelImage detection = LoadDetection(imagePath, SampleSize(Math.Max(width, height), maxSide), orientation);
         (BitmapRegionDecoder? decoder, Stream? stream) = TryOpenRegionDecoder(imagePath);
         return new AndroidOcrPage(detection, decoder, stream, orientation, width, height);
@@ -39,7 +38,7 @@ public sealed class AndroidPixelImageLoader : IPixelImageLoader
                 return (BitmapRegionDecoder.NewInstance(local), null);
             }
 
-            stream = OpenStream(imagePath);
+            stream = AndroidImageSource.Open(_context, imagePath);
             BitmapRegionDecoder? decoder = BitmapRegionDecoder.NewInstance(stream);
             if (decoder is null)
             {
@@ -56,26 +55,6 @@ public sealed class AndroidPixelImageLoader : IPixelImageLoader
         }
     }
 
-    private Stream OpenStream(string imagePath)
-    {
-        string? local = ScannedText.ToLocalPath(imagePath);
-        if (local is not null)
-        {
-            return File.OpenRead(local);
-        }
-
-        AndroidNet.Uri uri = AndroidNet.Uri.Parse(imagePath) ?? throw new InvalidOperationException($"Could not build a Uri for '{imagePath}'.");
-        return _context.ContentResolver?.OpenInputStream(uri) ?? throw new FileNotFoundException(imagePath);
-    }
-
-    private (int Width, int Height) ReadBounds(string imagePath)
-    {
-        var options = new BitmapFactory.Options { InJustDecodeBounds = true };
-        using Stream stream = OpenStream(imagePath);
-        BitmapFactory.DecodeStream(stream, null, options);
-        return (options.OutWidth, options.OutHeight);
-    }
-
     // Both bitmaps are disposed on every path, including a failed rotation.
     private PixelImage LoadDetection(string imagePath, int sampleSize, int orientation)
     {
@@ -88,7 +67,7 @@ public sealed class AndroidPixelImageLoader : IPixelImageLoader
     private Bitmap Decode(string imagePath, int sampleSize)
     {
         var options = new BitmapFactory.Options { InSampleSize = sampleSize, InPreferredConfig = Bitmap.Config.Argb8888! };
-        using Stream stream = OpenStream(imagePath);
+        using Stream stream = AndroidImageSource.Open(_context, imagePath);
         return BitmapFactory.DecodeStream(stream, null, options)
             ?? throw new IOException($"Could not decode the image '{imagePath}'.");
     }
@@ -103,19 +82,5 @@ public sealed class AndroidPixelImageLoader : IPixelImageLoader
         }
 
         return sample;
-    }
-
-    // Only file-backed images carry EXIF we can read here; the document scanner already
-    // writes upright pages.
-    private static int ExifOrientation(string imagePath)
-    {
-        string? local = ScannedText.ToLocalPath(imagePath);
-        if (local is null)
-        {
-            return (int)Android.Media.Orientation.Normal;
-        }
-
-        using var exif = new Android.Media.ExifInterface(local);
-        return exif.GetAttributeInt(Android.Media.ExifInterface.TagOrientation, (int)Android.Media.Orientation.Normal);
     }
 }

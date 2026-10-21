@@ -76,30 +76,16 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
 	</ItemGroup>
 
-	<!-- The engine and ML Kit text recognition live in ReadTheStupidText.Mobile.Shared (Slice 58).
+	<!-- The engine, the scanner and ML Kit text recognition live in ReadTheStupidText.Mobile.Shared (Slice 58, 63).
 	     The sherpa-onnx native packaging is imported here too, because ExcludeAssets does not
 	     flow through a project reference (see AndroidSherpaPackaging.props). Android-only: the
-	     only package referenced below is the document scanner (this app's scan flow). -->
+	     packages referenced below are the translation ones (this app's translation flow). -->
 	<Import Project="..\AndroidSherpaPackaging.props" />
 
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
-		<!-- Slice 45: ML Kit Document Scanner (play-services-mlkit-document-scanner 16.0.0).
-		     Delivered by Google Play services, so it adds no native library or model to
-		     the APK; on a device without Play services the app falls back to one photo. -->
-		<PackageReference Include="Xamarin.GooglePlayServices.MLKit.DocumentScanner" Version="116.0.0.4" />
-
-		<!-- ML Kit text recognition for MlKitImageTextExtractor (Platforms/Android). Only this app
-		     scans, so it is referenced here and not from Mobile.Shared (Dino Reader ships no OCR). -->
-		<PackageReference Include="Xamarin.Google.MLKit.TextRecognition" Version="116.0.1.8" />
-		<PackageReference Include="Xamarin.GooglePlayServices.Tasks" Version="118.4.1.3" />
-
-		<!-- Slice 52: PaddleOCR runs on onnxruntime. Only the MANAGED binding is referenced, never
-		     Microsoft.ML.OnnxRuntime (whose native libonnxruntime.so would collide with the one
-		     sherpa-onnx already stages at lib/arm64-v8a/). The managed assembly P/Invokes
-		     "onnxruntime", which .NET resolves to that bundled libonnxruntime.so, so the version must
-		     equal the bundled native version: sherpa-onnx 1.13.3 ships onnxruntime 1.24.3. Bump both
-		     together and re-check the unzipped APK (CLAUDE.md native-dependency rule). -->
-		<PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.24.3" />
+		<!-- The document scanner, ML Kit text recognition and the onnxruntime binding moved to
+		     Mobile.Shared (Slice 63), so Dino Reader can scan too; they reach this app through the
+		     project reference. -->
 
 		<!-- Slice 54: ML Kit Language Identification (bundled model, so detection works with no
 		     Play services) and Translation (a ~30 MB model per language downloaded by ML Kit on

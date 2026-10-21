@@ -13,7 +13,7 @@ namespace ReadTheStupidText.Mobile;
 /// <see cref="IDocumentScanner"/> over Google's ML Kit Document Scanner (Slice 45, Decision 64).
 /// The scanner is a Play-services module with its own UI (edge detection, crop, multi-page,
 /// reorder, gallery import) and needs no camera permission. Its result comes back through
-/// <see cref="MainActivity.OnActivityResult"/>, which calls <see cref="HandleActivityResult"/>;
+/// the app's MainActivity.OnActivityResult, which calls <see cref="HandleActivityResult"/>;
 /// one scan is pending at a time (a newer one supersedes an older).
 /// </summary>
 public sealed class AndroidDocumentScanner : IDocumentScanner
@@ -68,7 +68,7 @@ public sealed class AndroidDocumentScanner : IDocumentScanner
         }
     }
 
-    internal static void HandleActivityResult(int requestCode, Result resultCode, Intent? data)
+    public static void HandleActivityResult(int requestCode, Result resultCode, Intent? data)
     {
         if (Volatile.Read(ref s_pending) is not { } pending || pending.RequestCode != requestCode)
         {
