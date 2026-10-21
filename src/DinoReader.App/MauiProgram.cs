@@ -59,5 +59,6 @@ public static class MauiProgram
 		services.AddTransient<AddStoryPage>();
 		services.AddTransient<EditStoryPage>();
 		services.AddTransient<ReadingPage>();
+		services.AddTransient<ReadingSession>();
 	}
 }

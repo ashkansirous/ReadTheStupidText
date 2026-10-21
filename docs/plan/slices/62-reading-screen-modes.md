@@ -1,6 +1,6 @@
 # Slice 62 — Reading screen: text and picture modes
 
-*In progress (wave 2026-10-21b), draft PR.*
+*Built (wave 2026-10-21b), PR #200.*
 
 **Batch:** 10
 **Decisions:** 79, 80
@@ -17,24 +17,25 @@ the exact line boxes.
 
 ## Steps
 
-- [ ] Reading screen with a big two-icon switch (📖 / 🖼) always visible in the top bar; the
+- [x] Reading screen with a big two-icon switch (📖 / 🖼) always visible in the top bar; the
       choice is saved per story in `story.json` (Slice 61); default is picture mode when the
       story has pictures, else text.
-- [ ] **Text mode:** the story text paginated by the existing `TextBoxPaginator` (Application,
-      reusable); the sentence / dialogue line being spoken is highlighted from `ChunkChanged`
-      ranges (Slice 60). Highlight rendering is WinUI-only today
-      (`ReadingTextBoxWindow.xaml.cs`), so write a MAUI one (`FormattedString` spans or a
-      `GraphicsView`; decide at implementation).
-- [ ] **Picture mode, generated pages:** a `PageComposer` lays the text onto book-style pages
+- [x] **Text mode:** the story text paginated by `FlowPager` (Core), which fills pages with whole
+      sentences on the same `StorySentences` the highlight uses (the Application `TextBoxPaginator`
+      was not used: its sentence splitter differs). The sentence / dialogue line being spoken is
+      highlighted from `ChunkChanged` ranges (Slice 60). Highlight rendering is WinUI-only today
+      (`ReadingTextBoxWindow.xaml.cs`), so a MAUI one was written (`FormattedString` spans).
+- [x] **Picture mode, generated pages:** a `PageComposer` lays the text onto book-style pages
       (big friendly type, page background, margins) and returns per page the line boxes
       (normalized `Rect`) of each sentence. Pure and unit-tested. The same line-box model is
       what Slices 63/64 fill from real pages.
-- [ ] Highlight = translucent rounded box over the lines of the current sentence, animated
+- [x] Highlight = translucent rounded box over the lines of the current sentence, animated
       between sentences; the sentence is the unit (Decision 79, no word karaoke).
-- [ ] **Auto-follow:** the page turns by itself as reading reaches it (Decision 80). The child
+      *(Changed while building: the box fades in, it does not slide; see Decisions taken during build.)*
+- [x] **Auto-follow:** the page turns by itself as reading reaches it (Decision 80). The child
       can swipe to another page; **tap a sentence** reads from there; pressing play resumes
       auto-follow.
-- [ ] Sentence list comes from the Slice 59 segments split on sentence ends, so a highlight
+- [x] Sentence list comes from the Slice 59 segments split on sentence ends, so a highlight
       never ends mid-sentence.
 
 #### Design (Dino Reader v2 mock, screens 3, 4, 5, 12, 13, added 2026-10-20)
@@ -74,5 +75,92 @@ New strings (both locales): "Reading page {n}", "Page {n} of {m}"; the lock need
 
 ## Risks / notes
 
-- Android only raises one chunk per sentence after Slice 60; before it nothing can follow.
-- Large type means many pages; compose lazily per page.
+- The Android neural reader raises one chunk per planned chunk, not per sentence: a short
+  paragraph is one chunk. So the reading screen cuts each voiced segment at the sentence starts
+  before reading (`SegmentSentenceSplitter`), which gives the planner at least one chunk per
+  sentence and makes `ChunkChanged` step the highlight sentence by sentence. A sentence longer than
+  a chunk gives several chunks, all inside that sentence.
+- The system-voice fallback joins the segments and raises one chunk `(0, length)` for the whole read:
+  that range is not a story position, so it is placed at the read's first sentence and the mark does
+  not follow the fallback voice sentence by sentence.
+- Large type means many pages. Pages are composed for the whole story, on a worker thread, when the
+  card gets a size (lazy per-page composition was not done); a resize waits 150 ms for the card to
+  settle, and a theme change only re-colours.
+
+## Decisions taken during build
+
+- **No `TextBoxPaginator`.** Its sentence splitter differs from the highlight unit, so a highlight could straddle two pages. `FlowPager` (Core) paginates text mode on the same `StorySentences` the highlight uses; `PageComposer` does picture mode. No `Application/Reading` file was touched.
+- **Sentence unit** (`StorySentences`): ends at a terminator plus closing quotes, at a line break, and between two adjacent quotes; a quote stays with its attribution (the mock's "Only if you're quick," said Cotton Tail, and off she ran. is one box). After a closing quote the sentence ends unless an attribution follows: a word starting lowercase (or in an uncased script), or a speech verb within the next three words ("Peter said."). A quote that ends with a comma, or that an attribution follows, is never split inside (`"Go away! I'm busy," said Tom.` is one sentence). The Arabic question mark and the guillemets are understood for every language. Rules are English for every story until Slice 66 adds Farsi ones: in an uncased script an attribution cannot be told from a new sentence, so a quote and the words after it stay in one box (the safe side; "never cut mid-sentence").
+- **Picture mode:** every sentence starts a new line and is kept whole on one page when it fits; text is vertically centred; boxes are full text width plus 6 (as in the mock), one per line. Highlight moves by fade-in, not slide. Pages are composed for the whole story when the card gets a size (cheap with the Android `Paint` measurer), not lazily per page.
+- **Text mode:** per-line labels of word spans; read text dim, the spoken sentence has a square-cornered highlight (a MAUI span cannot round or glow).
+- **Story text ignores the system font scale** (`FontAutoScalingEnabled` false): the page geometry is measured, and scaling would overflow lines.
+- **Narrator picker removed from the reading screen** (the mock has none; the narrator row belongs to Slice 65's cast page). Reads use the story's stored narrator; nothing to persist yet.
+- **Mode saved per story** as `PreferredMode` in `story.json` (null = default: picture if the story has pictures, else text). Version stays 1: an old file reads as null.
+- **Skip buttons** move by one sentence; while nothing plays they only move the mark. Play after a finished read starts from the top; after an idle swipe it starts at the shown page's first sentence; while wandering it jumps back and follows.
+- **Pager dots** are hidden above 12 pages. The wander pill and Play halo show only while a read is active.
+- **Bedtime theme** follows system dark mode only. Bedtime text mode (not drawn in the mock) reuses the card and amber highlight colours.
+- **RTL:** FlowDirection and font follow the story language (fa/ar), and the swipe direction mirrors; text-mode taps are hit-tested from the line's right edge for RTL stories (words in logical order; embedded left-to-right runs are approximate). No RTL story can be added before Slice 66, so it is untested on a device. Tablet layout is not built.
+- **Relayout keeps a wander:** a new size or mode remaps the page shown through the first sentence it held (`PageFollower.Relaid`); only a follower is moved to the reading page. Reading reaching the page a wanderer is looking at makes them a follower again.
+- **Chunk events** are tagged with the active read id when raised and dropped when that read is no longer the active one (not by the reader's state). A finished read is forgotten when the mark moves or the child swipes, so Play starts where they are.
+- **Lock:** a read that is still loading is stopped and restarted from its sentence on "Back to the story"; nothing resumes unless this page is on top and the app stayed in the foreground (the gate closes when the app is stopped).
+- **Story file:** `PreferredMode` is read as a string and an unknown or numeric value reads as "no choice", so a newer or hand-edited file keeps its story.
+- **Title weight:** the mock's 600 cannot be set: Fredoka is a variable font (wght 300-700) and MAUI's `FontAttributes.Bold` selects 700. Left bold.
+- **Follow-up:** the loading grace (first-audio wait) is a copy of the RTST reader page's; sharing it needs the state machine moved into `ReadTheStupidText.Mobile.Shared`.
+- **Lock** on the reading bar pauses the story, opens the gate, resumes on "Back to the story", and on a pass pops to the gallery and opens Manage.
+- **Not done:** the "Page n of m" string (tablet only).
+- Review fixes: text mode splits a sentence longer than a page by line (`FlowPager`), and picture mode starts such a sentence on a fresh page; page lookup is range-aware (`PageOf(sentence, position)`, fed by the chunk's `SourceStart` via `ReadingSession.CurrentPosition`). The surface always debounces size changes, lays out one at a time (newest wins) and keeps the previous renderer, or shows an error, when a layout fails. `Completed` only counts once the active read has played. Skip while paused only moves the mark (the paused read is dropped, so Play starts at the mark). One `AndroidTextMeasurer` per font, disposed with the surface.
+
+## Final shape
+
+**DinoReader.Core**
+
+- `StorySentences`: terminators include the Arabic question mark (؟); quotes include «»; attributions are detected by a lowercase start or a speech verb.
+- `SegmentSentenceSplitter`: voiced segments are cut at sentence starts, so `ChunkChanged` steps per sentence.
+- `SegmentSlicer`: a read can start at a given sentence.
+- `LineWrapper` / `LineCounter`: incremental wrapping, each word measured once.
+- `FlowPager` (text mode) and `PageComposer` (picture mode, normalised line boxes). Both split overlong sentences across pages; page lookup is range-aware through the spoken position.
+- `PageFollower`, with `Relaid` so a wander survives a relayout.
+- `SkipPlanner`.
+- `PreferredMode` in `story.json` (version still 1); unknown values read as null.
+
+**DinoReader.App**
+
+- `ReadingPage`: top bar (back, lock, text/picture switch), page card, pager dots, wander pill with the mock's shadow, prev/play/next.
+- `ReadingSession`: read-id and playing-id guards, the system-voice fallback mapped to the read origin, Stop/start on the gate, resume only in the foreground.
+- `ReadingSurface`: composition on a worker thread, debounced, newest request wins, the old renderer is kept on failure.
+- One cached, disposable `AndroidTextMeasurer` per font.
+- Bedtime theme follows system dark mode; RTL is chosen by primary language subtag.
+- The narrator picker was removed from the reading screen, matching the mock. Reads use the story's stored narrator; the narrator becomes changeable again in Slice 65.
+
+*Changed while building:* see "Decisions taken during build" above. Superseded plan text: the `TextBoxPaginator` reuse and the "animated between sentences" slide (now a fade-in), and the narrator picker on this screen.
+
+*From review:*
+
+- High pass: 16 findings, 14 fixed. Skipped: sharing the grace state machine with RTST (needs `ReadTheStupidText.Mobile.Shared`; follow-up) and one-line methods (repo convention).
+- Medium pass: 10 findings, all fixed.
+
+## Emulator results (RTST_Test, 2026-10-21)
+
+- Seeded two-story gallery. In picture mode "Peter and Cotton Tail" shows the first sentence boxed, with 2 pager dots.
+- Play shows the pause glyph. After about 3 s the box was on sentence 1; after about 9 s on sentence 3 ("Only if you're quick," said Cotton Tail, and off she ran.). The highlight moves per sentence: the core acceptance item passed.
+- From the implementer's run: text mode in Andika with dim read text; tapping a sentence reads from it; a swipe turns the page and the dots update; the mode is saved to `story.json` and restored after a restart; the lock opens the gate over the story.
+- Startup takes about 5.5 s on the emulator's Debug build, the same as Slice 61, and occasionally trips an ANR focus timeout. Not caused by this slice.
+
+#### For CLAUDE.md
+
+- Dino Reader highlights by `StorySentences`. Segments are split per sentence by `SegmentSentenceSplitter` before `SpeakSegmentsAsync`, so `ChunkChanged` maps 1:1 to sentences. (Slice 62: docs/plan/slices/62-reading-screen-modes.md)
+- Dino Reader pages are composed by `FlowPager` (text) and `PageComposer` (picture) in `src/DinoReader.Core`, off the UI thread, with page lookup by spoken position. (Slice 62: docs/plan/slices/62-reading-screen-modes.md)
+- Dino Reader story text ignores the system font scale (`FontAutoScalingEnabled` false): page geometry is measured. (Slice 62: docs/plan/slices/62-reading-screen-modes.md)
+
+#### For README.md
+
+Dino Reader's reading screen has a text mode and a picture mode. A highlight follows each sentence as it's read, pages turn on their own, a child can swipe ahead and jump back, and tapping a sentence reads from there.
+
+#### Not yet verified
+
+- The wander pill and Play halo during an active read.
+- The gate pass leading to Manage from the reading screen.
+- The bedtime theme, and RTL (no fa/ar story can be added until Slice 66).
+- A long story's pagination performance on a real phone.
+- The tablet layout and the "Page n of m" string, not built.
+- Follow-up: share the read-start grace state machine with RTST in `ReadTheStupidText.Mobile.Shared`.
