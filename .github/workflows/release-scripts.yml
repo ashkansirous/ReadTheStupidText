@@ -18,6 +18,7 @@ on:
       - '.github/scripts/**'
       - '.github/workflows/**'
       - '.github/actionlint.yaml'
+      - '!**/*.md'
   workflow_dispatch:
 
 permissions:

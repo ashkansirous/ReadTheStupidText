@@ -14,6 +14,7 @@
  *   - the rest of Mobile.Shared/** (platform code both apps use)  -> android + ios + dinoapp
  *   - DinoReader.App/**, DinoReader.Core/**                       -> dinoapp (Slice 58/60; ships only with its own signing secrets)
  *   - DinoReader.Core / tests/DinoReader.Tests                    -> dinoreader (its tests; Core also rebuilds dinoapp)
+ *   - Markdown anywhere (IGNORED_PATTERNS, case-sensitive like GitHub's `paths`) -> nothing (ignored before matching)
  *   - docs and anything else                                      -> nothing
  * A major version bump builds every target, and so does a missing base tag.
  *
@@ -26,7 +27,8 @@
  * any target, so they trigger no re-publish. Run release.yml with force_all if
  * the downloads copy needs refreshing.
  *
- * Each platform workflow's own `pull_request.paths` mirrors its rows below;
+ * Each platform workflow's own `pull_request.paths` mirrors its rows below (plus a
+ * trailing "not Markdown" negation, the Markdown rule above);
  * ship-targets.test.mjs parses the workflows and fails on any drift.
  */
 
@@ -38,6 +40,9 @@ const MOBILE = 'src/ReadTheStupidText.Mobile/';
 const SHARED = 'src/ReadTheStupidText.Mobile.Shared/';
 const MAJOR_BUMP = 'major';
 const APP_TAG = /^v(\d+)\.(\d+)\.(\d+)$/;
+
+/** Changed files matching any of these never trigger a build (mirrored as trailing `!` entries in each workflow's `paths`). */
+export const IGNORED_PATTERNS = ['**/*.md'];
 
 /** Changes that rebuild every app platform (Windows, Android, iOS and Dino Reader). */
 export const CORE_PATHS = [
@@ -109,7 +114,8 @@ export const GROUPS = {
 
 function patternToRegExp(pattern) {
     const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
-    return new RegExp(`^${escaped.replace(/\*/g, '[^/]*')}$`);
+    const body = escaped.split('**/').map((part) => part.replace(/\*/g, '[^/]*')).join('(?:.*/)?');
+    return new RegExp(`^${body}$`);
 }
 
 export function matchesPattern(file, pattern) {
@@ -124,7 +130,8 @@ function groupTouched(changedFiles, { include, exclude = [] }) {
 }
 
 function touchedGroups(changedFiles) {
-    return Object.fromEntries(Object.entries(GROUPS).map(([name, group]) => [name, groupTouched(changedFiles, group)]));
+    const relevant = changedFiles.filter((file) => !IGNORED_PATTERNS.some((pattern) => matchesPattern(file, pattern)));
+    return Object.fromEntries(Object.entries(GROUPS).map(([name, group]) => [name, groupTouched(relevant, group)]));
 }
 
 /**
