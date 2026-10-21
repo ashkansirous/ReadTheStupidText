@@ -249,6 +249,8 @@ dev time and is not a redistributable runtime (Decision 26 in `docs/plan/decisio
 | Piper `fa_IR` "amir" voice (downloaded Persian pack `piper-fa`, not in the package) | Persian neural voice | CC0 1.0 voice data (model card: [rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices/tree/main/fa/fa_IR/amir/medium)); finetuned from the Piper US-English "lessac" voice |
 | espeak-ng data (inside the downloaded Persian pack only) | phonemizer data the Piper voice needs | GPL-3.0-or-later; corresponding source: <https://github.com/espeak-ng/espeak-ng> |
 | MeloTTS `zh_en` (downloaded Chinese pack `melo-zh-en`, not in the package) | Chinese + English neural voice | MIT (MyShell.ai; see the `LICENSE` inside the pack) |
+| PaddleOCR PP-OCR detection and recognition models (downloaded OCR packs `ocr-latin`, `ocr-cyrillic`, `ocr-arabic`, `ocr-cjk`, not in the package; ONNX conversion by [monkt/paddleocr-onnx](https://huggingface.co/monkt/paddleocr-onnx)) | on-device text recognition for scans (Android) | Apache-2.0 (PaddlePaddle Authors; see the `LICENSE` inside each pack) |
+| `Microsoft.ML.OnnxRuntime.Managed` | C# binding to the onnxruntime library sherpa-onnx already bundles | MIT |
 | `PdfPig` | PDF text extraction (file upload) | Apache-2.0 |
 | `DocumentFormat.OpenXml` | DOCX text extraction (file upload) | MIT |
 | Fredoka, Andika, Vazirmatn fonts (Dino Reader only, bundled in `src/DinoReader.App/Resources/Fonts/`) | Dino Reader UI, reading and Farsi/Arabic text | SIL OFL 1.1 (texts in `src/DinoReader.App/Licenses/`) |

@@ -22,6 +22,7 @@ public sealed class MobileVoicePackService : IVoicePackService
 {
     private const string PacksFolder = "packs";
     private const string ExtractingSuffix = ".extracting";
+    private const string ReplacedSuffix = ".replaced";
     private const int CopyBufferBytes = 81920;
     private const int FileBufferBytes = 81920;
 
@@ -30,6 +31,7 @@ public sealed class MobileVoicePackService : IVoicePackService
     private static readonly HttpClient Http = new();
 
     private IReadOnlyList<PackInfo>? _catalog;
+    private DateTime _catalogFetchedUtc;
 
     public async Task<PackCatalogResult> GetCatalogAsync(CancellationToken cancellationToken)
     {
@@ -39,6 +41,7 @@ public sealed class MobileVoicePackService : IVoicePackService
             timeout.CancelAfter(CatalogTimeout);
             string json = await Http.GetStringAsync(PackConstants.CatalogUrl, timeout.Token).ConfigureAwait(false);
             _catalog = PackCatalogParser.Parse(json);
+            _catalogFetchedUtc = DateTime.UtcNow;
             return new PackCatalogResult(PackDownloadResult.Ok, _catalog);
         }
         catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
@@ -47,18 +50,30 @@ public sealed class MobileVoicePackService : IVoicePackService
         }
     }
 
+    public Task<PackCatalogResult> GetCatalogCachedAsync(TimeSpan maxAge, CancellationToken cancellationToken)
+    {
+        IReadOnlyList<PackInfo>? cached = _catalog;
+        bool fresh = cached is not null && DateTime.UtcNow - _catalogFetchedUtc <= maxAge;
+        return fresh ? Task.FromResult(new PackCatalogResult(PackDownloadResult.Ok, cached!)) : GetCatalogAsync(cancellationToken);
+    }
+
     public string? GetInstalledPath(string packId) => LoadInstalled(packId)?.Folder;
 
     // Every complete pack folder under the packs root. Scratch (.extracting) folders and
     // anything that is not a valid pack id are skipped, as is a folder whose manifest
     // names a different pack.
-    public IReadOnlyList<InstalledVoicePack> GetInstalledVoicePacks() =>
+    public IReadOnlyList<InstalledVoicePack> GetInstalledVoicePacks() => InstalledPacks(PackKind.Voice);
+
+    // OCR packs (Slice 52) are installed, validated and listed exactly like voice packs.
+    public IReadOnlyList<InstalledVoicePack> GetInstalledOcrPacks() => InstalledPacks(PackKind.Ocr);
+
+    private static IReadOnlyList<InstalledVoicePack> InstalledPacks(PackKind kind) =>
         Directory.EnumerateDirectories(PacksRoot())
             .Select(folder => Path.GetFileName(folder))
             .Where(PackNaming.IsValidId)
             .Select(LoadInstalled)
             .OfType<InstalledVoicePack>()
-            .Where(p => p.Manifest.Kind == PackKind.Voice)
+            .Where(p => p.Manifest.Kind == kind)
             .ToList();
 
     private static InstalledVoicePack? LoadInstalled(string packId)
@@ -91,7 +106,7 @@ public sealed class MobileVoicePackService : IVoicePackService
 
     public async Task<PackDownloadResult> DownloadAsync(string packId, IProgress<double>? progress, CancellationToken cancellationToken)
     {
-        if (GetInstalledPath(packId) is not null)
+        if (LoadInstalled(packId) is { } installed && !UpgradeAvailable(installed))
         {
             progress?.Report(1);
             return PackDownloadResult.Ok;
@@ -100,6 +115,12 @@ public sealed class MobileVoicePackService : IVoicePackService
         // Hash, extract and copy are heavy: keep all of it off the UI thread.
         return await Task.Run(() => DownloadOffUiThreadAsync(packId, progress, cancellationToken), cancellationToken).ConfigureAwait(false);
     }
+
+    // An installed pack is re-downloaded only when the catalog we last fetched lists a newer version
+    // of it. The old pack stays in use until the new one has verified and been installed.
+    private bool UpgradeAvailable(InstalledVoicePack installed) =>
+        _catalog?.FirstOrDefault(p => p.Id == installed.Manifest.Id) is { } listed
+        && PackVersions.IsNewer(listed.Version, installed.Manifest.Version);
 
     private async Task<PackDownloadResult> DownloadOffUiThreadAsync(string packId, IProgress<double>? progress, CancellationToken cancellationToken)
     {
@@ -355,14 +376,33 @@ public sealed class MobileVoicePackService : IVoicePackService
         }
     }
 
+    // The verified, validated payload replaces the installed pack by swapping: the old folder is
+    // set aside first and restored if the move fails, so an upgrade never leaves no pack at all.
     private static void MovePayloadIntoPlace(string payload, string target)
     {
-        if (Directory.Exists(target))
+        string aside = target + ReplacedSuffix;
+        DeleteDirectoryIfExists(aside);
+        bool hadOld = Directory.Exists(target);
+        if (hadOld)
         {
-            Directory.Delete(target, recursive: true);
+            Directory.Move(target, aside);
         }
 
-        Directory.Move(payload, target);
+        try
+        {
+            Directory.Move(payload, target);
+        }
+        catch
+        {
+            if (hadOld)
+            {
+                Directory.Move(aside, target);
+            }
+
+            throw;
+        }
+
+        DeleteDirectoryIfExists(aside);
     }
 
     private static string PacksRoot()
