@@ -440,29 +440,49 @@ jobs:
     if: >-
       !cancelled()
       && needs.release-publish.outputs.released == 'true'
-      && needs.version.outputs.android == 'true'
+      && (needs.version.outputs.android == 'true' || needs.version.outputs.dinoapp == 'true')
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    # Slice 74: one matrix leg per product, so a Dino problem never turns the
+    # Read The Stupid Text copy red. A product copies only when it shipped in
+    # this run (`shipped`); a run that did not ship it leaves its previous APK
+    # in the bucket, which the Worker keeps serving as "latest" (highest
+    # manifest version). The job `if` skips the whole matrix when neither shipped (an
+    # empty output counts as not shipped); `if` cannot read `matrix`, so within
+    # it the download step gates each leg: later steps need its `found` output.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - product: readthestupidtext
+            stem: ReadTheStupidText
+            shipped: ${{ needs.version.outputs.android }}
+          - product: dinoreader
+            stem: DinoReader
+            shipped: ${{ needs.version.outputs.dinoapp }}
     env:
       GH_TOKEN: ${{ github.token }}
       VERSION: ${{ needs.version.outputs.version }}
+      STEM: ${{ matrix.stem }}
     steps:
       - name: Checkout
+        if: matrix.shipped == 'true'
         uses: actions/checkout@v4
 
       # A release without a signed APK (no keystore secret) has nothing to copy.
       - name: Download the APK from the release
         id: apk
+        if: matrix.shipped == 'true'
         run: |
           set -euo pipefail
           names=$(gh release view "v${VERSION}" --repo "${{ github.repository }}" --json assets --jq '.assets[].name')
-          if ! grep -qxF "ReadTheStupidText-${VERSION}.apk" <<< "$names"; then
-            echo "No ReadTheStupidText-${VERSION}.apk on v${VERSION}; nothing to copy." | tee -a "$GITHUB_STEP_SUMMARY"
+          if ! grep -qxF "${STEM}-${VERSION}.apk" <<< "$names"; then
+            echo "No ${STEM}-${VERSION}.apk on v${VERSION}; nothing to copy." | tee -a "$GITHUB_STEP_SUMMARY"
             echo "found=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          gh release download "v${VERSION}" --repo "${{ github.repository }}" -p 'ReadTheStupidText-*.apk' --dir dist
+          gh release download "v${VERSION}" --repo "${{ github.repository }}" -p "${STEM}-*.apk" --dir dist
           echo "found=true" >> "$GITHUB_OUTPUT"
 
       - name: Set up Node
@@ -481,15 +501,16 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           PLATFORM: android
-          ASSET_PATHS: dist/ReadTheStupidText-${{ needs.version.outputs.version }}.apk
+          PRODUCT: ${{ matrix.product }}
+          ASSET_PATHS: dist/${{ matrix.stem }}-${{ needs.version.outputs.version }}.apk
         run: |
           set -euo pipefail
           if [ -z "${CLOUDFLARE_API_TOKEN:-}" ]; then
-            echo "Skipped: CLOUDFLARE_API_TOKEN is not set, so v${VERSION} was not copied to the downloads bucket." | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "Skipped: CLOUDFLARE_API_TOKEN is not set, so ${STEM} v${VERSION} was not copied to the downloads bucket." | tee -a "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
           node .github/scripts/publish-downloads.mjs
-          echo "Copied ReadTheStupidText-${VERSION}.apk to the downloads bucket (or it was already there)." >> "$GITHUB_STEP_SUMMARY"
+          echo "Copied ${STEM}-${VERSION}.apk to the downloads bucket (or it was already there)." >> "$GITHUB_STEP_SUMMARY"
 
   # Microsoft Store submission (Decision 44) — only when Windows was rebuilt.
   # A job in this run, not an `on: release` trigger: a GITHUB_TOKEN-created

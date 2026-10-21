@@ -1,16 +1,15 @@
-// Serves the landing site in ./site. Static files are answered by the assets
-// layer without invoking this Worker; only the paths listed in wrangler.jsonc's
-// `assets.run_worker_first` come here, to be mapped onto a file and to get the
-// security headers below. `Env` is generated into worker-configuration.d.ts by
-// `npm run types`; rerun it after editing wrangler.jsonc.
+// Serves the landing sites in ./site: Read The Stupid Text at the root of
+// `site/`, Dino Reader (Slice 74) in `site/dino/`. The Host header picks the
+// site (resolveSite, in downloads.ts so node can test it); an unknown host gets
+// the Read The Stupid Text site. On *.workers.dev (the pre-cut-over check) the
+// Dino site is reached under a `/dino/` prefix.
+// Static files are answered by the assets layer without invoking this Worker;
+// only the paths listed in wrangler.jsonc's `assets.run_worker_first` come
+// here, to be mapped onto a file and to get the security headers below. `Env`
+// is generated into worker-configuration.d.ts by `npm run types`; rerun it
+// after editing wrangler.jsonc.
 
-import { handleDownload, isDownloadPath } from "./downloads";
-
-const PAGE_FOR_PATH: Readonly<Record<string, string>> = {
-  "/": "/index.html",
-  "/privacy": "/privacy.html",
-  "/privacy/": "/privacy.html",
-};
+import { assetPageFor, canonicalRedirect, handleDownload, isDownloadPath, isHiddenDinoPath, resolveSite } from "./downloads";
 
 const SECURITY_HEADERS: Readonly<Record<string, string>> = {
   "X-Content-Type-Options": "nosniff",
@@ -26,17 +25,24 @@ function withSecurityHeaders(response: Response): Response {
   return secured;
 }
 
+function withPath(request: Request, url: URL, pathname: string): Request {
+  if (url.pathname === pathname) return request;
+  const target = new URL(url);
+  target.pathname = pathname;
+  return new Request(target, request);
+}
+
 async function serveAsset(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
-  if (isDownloadPath(url.pathname)) {
-    return handleDownload(request, env);
+  if (isHiddenDinoPath(url.hostname, url.pathname)) return new Response("Not found", { status: 404 });
+  const redirect = canonicalRedirect(url.hostname, url.pathname, url.search);
+  if (redirect !== null) return Response.redirect(new URL(redirect, url).toString(), 302);
+  const site = resolveSite(url.hostname, url.pathname);
+  if (isDownloadPath(site.path)) {
+    return handleDownload(withPath(request, url, site.path), env, site.product, site.home);
   }
-  const page = PAGE_FOR_PATH[url.pathname];
-  if (page === undefined) {
-    return env.ASSETS.fetch(request);
-  }
-  url.pathname = page;
-  return env.ASSETS.fetch(new Request(url, request));
+  const page = assetPageFor(site);
+  return env.ASSETS.fetch(page === null ? request : withPath(request, url, page));
 }
 
 export default {

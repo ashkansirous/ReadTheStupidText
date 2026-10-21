@@ -15,6 +15,40 @@ unaffected: the landing page, the privacy page and the Android APK downloads liv
 
 `/privacy.html` stays a real, non-redirecting URL because the Store listings link it.
 
+## Two hosts, one Worker (Slice 74)
+
+The same Worker also serves `https://dinoreader.sirous.uk/` (a second custom domain in
+`wrangler.jsonc`). The `Host` header picks the site: `dinoreader.sirous.uk` serves
+`site/dino/`, anything else serves the Read The Stupid Text files above. The host names
+are constants (`Host` in `worker/downloads.ts`, routing in `resolveSite`).
+
+| URL on `dinoreader.sirous.uk` | Served from |
+| --- | --- |
+| `/`, `/index.html` | `site/dino/index.html` |
+| `/privacy`, `/privacy.html` | `site/dino/privacy.html` (the Play Console privacy policy URL) |
+| `/download/android`, `/download/android/latest` | the newest Dino Reader APK, from R2 |
+| `/download/android/<x.y.z>` | that version's APK |
+| `/download` | redirects to `/` |
+| `/dino/icon.png` | `site/dino/icon.png` (the "Book hug" icon, copied from `docs/design/dino-reader/icons/android/play-store-512.png`) |
+
+**Check it on `workers.dev` first.** There the Dino site is under a `/dino/` prefix:
+`https://readthestupidtext.<account-subdomain>.workers.dev/dino/`, `/dino/privacy` and
+`/dino/download/android` (only on `*.workers.dev`; on the real hosts the prefix is not
+special). `/dino/download` redirects to `/`, which on `workers.dev` is the Read The Stupid
+Text page. Locally, `npm run dev` and `curl -H "Host: dinoreader.sirous.uk" localhost:8787/`
+shows the Dino pages. Both `wrangler*.jsonc` files list the `/dino/...` paths in
+`assets.run_worker_first`; `npm run typecheck` fails if either lacks them.
+
+**Attaching the domain.** `sirous.uk` is already a zone on the account, so the deploy
+creates the DNS record. If a record named `dinoreader` already exists, Cloudflare refuses
+(error 100117, as in the cut-over below): delete it first. On 2026-10-21 `dinoreader.sirous.uk`
+returned NXDOMAIN from 1.1.1.1 and 8.8.8.8, so there is none to remove. The Workers Builds
+watch paths already cover `worker/**`, `site/**` and `wrangler.jsonc`.
+
+**After the first deploy** the user pastes `https://dinoreader.sirous.uk/privacy` into Play
+Console (Dino Reader, App content, Privacy policy). Fetch `/` and `/privacy` first and check
+the three security headers.
+
 ## How it deploys
 
 Until Workers Builds is connected (step 5 of the cut-over below), the site deploys from
@@ -51,9 +85,14 @@ the Worker (`worker/downloads.ts`, binding `DOWNLOADS`) is the only reader and n
 to GitHub. Windows stays Store-only (an MSIX needs a trusted certificate to sideload).
 GitHub Releases remain the build store; R2 is an extra public copy.
 
-Layout (`worker/downloads.ts` and `.github/scripts/publish-downloads.mjs` must agree):
+Layout (`worker/download-keys.mjs` is the one source; the Worker and
+`.github/scripts/publish-downloads.mjs` both import it):
 `android/<version>/ReadTheStupidText-<version>.apk` and `manifests/android/<version>.json`
-(`{version, fileName, sizeBytes, publishedAt}`). CI uploads the APK, then the manifest
+(`{version, fileName, sizeBytes, publishedAt}`). Dino Reader uses the same bucket under a
+`dinoreader/` prefix: `dinoreader/android/<version>/DinoReader-<version>.apk` and
+`dinoreader/manifests/android/<version>.json`. The Dino leg of the `publish-downloads` matrix in
+`release.yml` uploads it (`PRODUCT=dinoreader`) when the Dino app shipped; a run that did not
+ship it leaves the previous Dino APK in the bucket, which stays "latest". CI uploads the APK, then the manifest
 last; the Worker offers a version only once its manifest exists, and "latest" is the
 highest manifest version, so re-running an old build never moves the pointer back.
 Nothing prunes old versions.
@@ -85,8 +124,8 @@ Limits: `wrangler r2 object put` caps an upload at 300 MiB; the APK must stay un
 
 ## Two configs
 
-- `wrangler.jsonc`: the real config, with the `readthestupidtext.sirous.uk` custom-domain
-  route.
+- `wrangler.jsonc`: the real config, with the `readthestupidtext.sirous.uk` and
+  `dinoreader.sirous.uk` custom-domain routes.
 - `wrangler.workers-dev.jsonc`: the same Worker with **no `routes`**. Deploying it
   (`npm run deploy:workers-dev`) publishes the Worker on `workers.dev` and never touches
   the hostname. Keep the two files identical apart from the route; it exists only for
@@ -144,7 +183,8 @@ deploy attaches the domain, which takes seconds; HTTPS answered within ~10 s.
    (dashboard: Workers & Pages -> `readthestupidtext` -> Settings -> Builds ->
    Disconnect) or first commit and merge the removal of the `routes` entry from
    `wrangler.jsonc` (the config check ignores `routes`, so the two files stay valid).
-1. **Detach the custom domain from the Worker.** Dashboard: Workers & Pages ->
+1. **Detach the custom domain from the Worker.** (Dino Reader's `dinoreader.sirous.uk` is
+   detached the same way, independently.) Dashboard: Workers & Pages ->
    `readthestupidtext` -> Settings -> Domains & Routes -> the `readthestupidtext.sirous.uk`
    custom domain -> Remove. Deleting the `routes` entry and redeploying is **not**
    enough: wrangler warns that previously deployed routes "have not been deleted" and
