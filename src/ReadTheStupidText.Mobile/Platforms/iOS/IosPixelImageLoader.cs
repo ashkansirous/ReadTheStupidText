@@ -7,36 +7,28 @@ namespace ReadTheStupidText.Mobile;
 
 /// <summary>
 /// Opens a scanned page for the OCR engine on iOS (Slice 55). ImageIO decodes the file upright
-/// (its EXIF orientation applied, mirrored ones included) at no more than
-/// <see cref="MaxRecognitionSide"/> pixels on its longest side; the detection image is that picture
-/// drawn down to the requested size and converted to B, G, R bytes. The upright picture itself is
-/// kept for the page, so recognition crops come from more pixels than the detector saw.
+/// (its EXIF orientation applied, mirrored ones included); the detection image is decoded at the
+/// requested size and converted to B, G, R bytes. The sharper picture the recognition crops come
+/// from (<see cref="MaxRecognitionSide"/> pixels at most) is left to <see cref="IosOcrPage"/>, which
+/// decodes it only when a line is found.
 /// </summary>
 public sealed class IosPixelImageLoader : IPixelImageLoader
 {
     // 4096 x 3072 x 4 bytes is about 50 MB once decoded: enough detail for small print on a
     // 12 MP photo without a 48 MP one costing 200 MB.
-    private const int MaxRecognitionSide = 4096;
+    internal const int MaxRecognitionSide = 4096;
 
     public IOcrPage Open(string imagePath, int maxSide)
     {
         string path = ScannedText.ToLocalPath(imagePath)
             ?? throw new IOException($"Not a local image: '{imagePath}'.");
 
-        CGImage original = DecodeUpright(path);
-        try
-        {
-            return new IosOcrPage(DetectionImage(original, maxSide), original);
-        }
-        catch
-        {
-            original.Dispose();
-            throw;
-        }
+        using CGImage detection = DecodeUpright(path, maxSide);
+        return new IosOcrPage(DetectionImage(detection), path);
     }
 
-    // A decode failure is a plain I/O error of this image, not a model fault (see IosLanguageImageTextExtractor).
-    private static CGImage DecodeUpright(string path)
+    // A decode failure is a plain I/O error of this image, not a model fault (see LanguageImageTextExtractor).
+    internal static CGImage DecodeUpright(string path, int maxPixelSize)
     {
         using var url = NSUrl.FromFilename(path);
         using CGImageSource source = CGImageSource.FromUrl(url)
@@ -44,7 +36,7 @@ public sealed class IosPixelImageLoader : IPixelImageLoader
 
         var options = new CGImageThumbnailOptions
         {
-            MaxPixelSize = Math.Min(MaxRecognitionSide, LongestSide(source, path)),
+            MaxPixelSize = Math.Min(maxPixelSize, LongestSide(source, path)),
             CreateThumbnailFromImageAlways = true,
             CreateThumbnailWithTransform = true,
         };
@@ -62,9 +54,6 @@ public sealed class IosPixelImageLoader : IPixelImageLoader
         return longest > 0 ? longest : throw new IOException($"The image '{path}' has no size.");
     }
 
-    private static PixelImage DetectionImage(CGImage original, int maxSide)
-    {
-        (int width, int height) = ImageResizer.FitWithin((int)original.Width, (int)original.Height, maxSide);
-        return CgImagePixels.ToPixelImage(original, width, height);
-    }
+    private static PixelImage DetectionImage(CGImage decoded) =>
+        CgImagePixels.ToPixelImage(decoded, (int)decoded.Width, (int)decoded.Height);
 }

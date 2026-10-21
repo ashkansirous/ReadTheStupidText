@@ -302,6 +302,7 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
 
         var files = new ConcurrentQueue<string>();
         List<Task<string>> generations = StartGenerations(engine, chunks, startIndex, voiceId, files, token);
+        bool drained = false;
         try
         {
             for (int offset = 0; offset < generations.Count; offset++)
@@ -312,8 +313,9 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
                     return;
                 }
 
-                if (await RestartForVoiceSwapAsync(engine, chunks, index, voiceId))
+                if (await RestartForVoiceSwapAsync(engine, chunks, index, voiceId, generations, files))
                 {
+                    drained = true; // the restart drained this generation before it ran on
                     return;
                 }
             }
@@ -325,7 +327,10 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
         }
         finally
         {
-            _ = DrainAsync(generations, files);
+            if (!drained)
+            {
+                _ = DrainAsync(generations, files);
+            }
         }
     }
 
@@ -422,9 +427,12 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
     // A chunk with its own voice (a segment read) never follows the narrator picker; a plain read
     // restarts at the next chunk when the selected voice changed mid-read. Voices are compared by
     // id within the read's own model, so a language or pack change never restarts a read. True
-    // when it restarted (the restarted loop finishes the read, so the caller returns).
+    // when it restarted (the restarted loop finishes the read, so the caller returns). The superseded
+    // generation's chunk files are drained before the restarted loop runs, not after it: the
+    // restarted loop plays the rest of the read, and the old files would sit on disk until then.
     private async Task<bool> RestartForVoiceSwapAsync(
-        IosBuiltEngine engine, IReadOnlyList<SpeechChunkPlan> chunks, int index, string? voiceId)
+        IosBuiltEngine engine, IReadOnlyList<SpeechChunkPlan> chunks, int index, string? voiceId,
+        List<Task<string>> generations, ConcurrentQueue<string> files)
     {
         string? selected = Volatile.Read(ref _voiceId);
         bool sameVoice = ResolveVoice(engine, selected).Id == ResolveVoice(engine, voiceId).Id;
@@ -433,7 +441,8 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
             return false;
         }
 
-        (int nextGeneration, CancellationToken nextToken) = BeginGeneration();
+        (int nextGeneration, CancellationToken nextToken) = BeginGeneration(); // cancels the old synthesis
+        _ = DrainAsync(generations, files);
         await SpeakChunksAsync(engine, chunks, index + 1, selected, nextGeneration, nextToken);
         return true;
     }

@@ -13,12 +13,16 @@ namespace ReadTheStupidText.Mobile;
 /// </summary>
 public sealed class NlLanguageDetector : ILanguageDetector
 {
-    // A language hypothesis list this long is plenty to find the best guess.
-    private const int MaxHypotheses = 3;
+    // Only the top hypothesis is needed, for the confidence of the dominant language.
+    private const int MaxHypotheses = 1;
 
     public Task<DetectedLanguage?> DetectAsync(string text, CancellationToken cancellationToken)
     {
-        cancellationToken.ThrowIfCancellationRequested();
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return Task.FromCanceled<DetectedLanguage?>(cancellationToken);
+        }
+
         return Task.Run(() => Identify(text, cancellationToken), cancellationToken);
     }
 
@@ -26,23 +30,20 @@ public sealed class NlLanguageDetector : ILanguageDetector
     {
         using var recognizer = new NLLanguageRecognizer();
         recognizer.Process(text);
-        NSDictionary<NSString, NSNumber> hypotheses = recognizer.GetNativeLanguageHypotheses(MaxHypotheses);
         cancellationToken.ThrowIfCancellationRequested();
-        return BestGuess(hypotheses);
-    }
-
-    private static DetectedLanguage? BestGuess(NSDictionary<NSString, NSNumber> hypotheses)
-    {
-        DetectedLanguage? best = null;
-        foreach (NSString tag in hypotheses.Keys)
+        NLLanguage dominant = recognizer.DominantLanguage;
+        if (dominant is NLLanguage.Unevaluated or NLLanguage.Undetermined)
         {
-            float confidence = hypotheses[tag]?.FloatValue ?? 0;
-            if (best is null || confidence > best.Confidence)
-            {
-                best = new DetectedLanguage(tag.ToString(), confidence);
-            }
+            return null;
         }
 
-        return best;
+        return new DetectedLanguage(dominant.GetConstant().ToString(), ConfidenceOf(recognizer, dominant));
+    }
+
+    // The framework reports the dominant language without its probability; the top hypothesis is that language.
+    private static float ConfidenceOf(NLLanguageRecognizer recognizer, NLLanguage dominant)
+    {
+        NSDictionary<NSString, NSNumber> hypotheses = recognizer.GetNativeLanguageHypotheses(MaxHypotheses);
+        return hypotheses[dominant.GetConstant()]?.FloatValue ?? 0;
     }
 }

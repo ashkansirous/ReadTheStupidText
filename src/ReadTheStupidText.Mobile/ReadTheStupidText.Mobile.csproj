@@ -136,17 +136,6 @@
 		<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.24.3" />
 	</ItemGroup>
 
-	<!-- The onnxruntime session wrapper and the pack-driven engine are platform-neutral but live
-	     under Platforms/Android (Slice 52), which the MAUI SDK removes from every other target.
-	     Compiling them for iOS from there keeps one copy; added in a target because the SDK's
-	     Platforms/** removal runs after the project body. When Slice 63 moves them to
-	     Mobile.Shared, delete this target. -->
-	<Target Name="AddIosOcrSources" BeforeTargets="CoreCompile" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
-		<ItemGroup>
-			<Compile Include="Platforms\Android\OnnxOcrInference.cs;Platforms\Android\PaddleOcrEngine.cs" />
-		</ItemGroup>
-	</Target>
-
 	<!-- The shared SherpaOnnxC.framework with onnxruntime linked in (one dynamic framework,
 	     about 30 MB), copied into the app's Frameworks folder and located at run time by
 	     IosSherpaLibrary. It is added as a NativeReference from this target, after the fetch

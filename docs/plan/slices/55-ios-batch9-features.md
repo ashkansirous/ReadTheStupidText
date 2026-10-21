@@ -35,7 +35,11 @@ on-device translation and the sentence head start.
 - [x] **Localization and RTL (Slice 53).** The `.resx` files and culture handling
       are in the shared project; check `FlowDirection` mirroring on iOS and add
       localized `InfoPlist.strings` for `NSCameraUsageDescription`.
-- [x] **Translation (Slice 54), research step first.** Check for a usable .NET
+- [ ] **Translation (Slice 54): not shipped on iOS.** Research was done and nothing verifiable was
+      found (Apple's Translation framework is Swift-only with no binding; the only ML Kit binding on NuGet
+      is an unverifiable single-maintainer package; see Decisions below), so there is no `ITranslator` on
+      iOS and the translate card stays hidden. Only the language detector (`NLLanguageRecognizer`) is
+      done. Original step, kept for reference: **research step first.** Check for a usable .NET
       binding of the ML Kit iOS Translation/Language ID SDK (NuGet search, or a
       Swift/ObjC xcframework binding via `NativeReference`). If none: implement
       `ITranslator` on Apple's Translation framework (iOS 18+; confirm via
@@ -112,6 +116,16 @@ on-device translation and the sentence head start.
   translation gap). `CLAUDE.md`, `README.md` and `plan.md` untouched.
 - **Application (additive).** `ImageResizer.FitWithin`, `OcrBox.FromNormalizedBottomLeft` (pure helpers
   the iOS OCR path uses, unit-tested in `IosOcrGeometryTests`) and the `OcrSource` doc comments.
+
+- **Review fixes.** The platform-neutral OCR code (`OnnxOcrInference`, `PaddleOcrEngine` and one
+  `LanguageImageTextExtractor`) now lives in `Mobile.Shared/Ocr/` and compiles for Android and iOS, over a
+  small `IBuiltInTextRecognizer` (`Covers(language)`, `ExtractTextAsync`, `ExtractLinesAsync` returning
+  lines plus the frame size): ML Kit on Android, Vision on iOS. Vision covers Latin, ja, zh and ru, so
+  only ar and fa are flagged `MlKitPackPending` on iOS. The iOS page decodes the detection image at the
+  detector's size and the 4096 px upright image only on the first crop.
+- **Follow-up (not done): one shared TTS engine.** `IosTtsEngine` and the Android engine wrapper do
+  nearly the same sherpa-onnx work (config, generate, voice tables) behind different native bindings;
+  fold them into a shared engine in `Mobile.Shared` once both bindings can be verified side by side.
 
 ## Not verified (needs TestFlight / a device)
 

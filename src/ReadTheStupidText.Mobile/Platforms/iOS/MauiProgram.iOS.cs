@@ -16,10 +16,11 @@ public static partial class MauiProgram
     private static partial void RegisterAppPlatformServices(IServiceCollection services)
     {
         services.AddSingleton<VisionImageTextExtractor>();
+        services.AddSingleton<IBuiltInTextRecognizer>(sp => sp.GetRequiredService<VisionImageTextExtractor>());
         services.AddSingleton<IPixelImageLoader, IosPixelImageLoader>();
-        services.AddSingleton<IosLanguageImageTextExtractor>();
-        services.AddSingleton<IImageTextExtractor>(sp => sp.GetRequiredService<IosLanguageImageTextExtractor>());
-        services.AddSingleton<IOcrLineExtractor>(sp => sp.GetRequiredService<IosLanguageImageTextExtractor>());
+        services.AddSingleton<LanguageImageTextExtractor>();
+        services.AddSingleton<IImageTextExtractor>(sp => sp.GetRequiredService<LanguageImageTextExtractor>());
+        services.AddSingleton<IOcrLineExtractor>(sp => sp.GetRequiredService<LanguageImageTextExtractor>());
         services.AddSingleton<OcrPackInstaller>();
         services.AddSingleton<IDocumentScanner, VisionKitDocumentScanner>();
         services.AddSingleton<ILanguageDetector, NlLanguageDetector>();

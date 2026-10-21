@@ -17,7 +17,7 @@ namespace ReadTheStupidText.Mobile;
 /// network at all; recognition is fully on-device from first launch, the same
 /// as every other engine this app ships.
 /// </summary>
-public sealed class MlKitImageTextExtractor : IImageTextExtractor
+public sealed class MlKitImageTextExtractor : IBuiltInTextRecognizer
 {
     private const int MaxLongEdge = 4096;
 
@@ -31,6 +31,9 @@ public sealed class MlKitImageTextExtractor : IImageTextExtractor
         LazyThreadSafetyMode.ExecutionAndPublication);
 
     public MlKitImageTextExtractor(Android.Content.Context context) => _context = context;
+
+    /// <summary>ML Kit's Latin recognizer reads Latin-script languages only (no Arabic, Persian, Cyrillic, CJK).</summary>
+    public bool Covers(string language) => OcrLanguages.IsLatinScript(language);
 
     /// <param name="imagePath">A plain file path, or a <c>file://</c> / <c>content://</c> uri string.</param>
     public async Task<string> ExtractTextAsync(string imagePath)
