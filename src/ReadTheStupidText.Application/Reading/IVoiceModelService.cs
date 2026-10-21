@@ -1,16 +1,54 @@
+using ReadTheStupidText.Domain.Reading;
+
 namespace ReadTheStupidText.Application.Reading;
 
 /// <summary>
-/// The neural model's root directory. The synthesis engine knows its own file
-/// layout under this directory; keeping the contract to a single folder makes it
-/// engine-agnostic.
+/// The neural model's root directory plus what the engine needs to drive it (Slice 51):
+/// the <see cref="Kind"/> of model, the <see cref="Language"/> it reads, and its
+/// <see cref="Voices"/>. The synthesis engine knows its own file layout under the
+/// directory; the defaults describe the single English Supertonic model Windows ships.
 /// </summary>
-public sealed record VoiceModelPaths(string RootDir);
+public sealed record VoiceModelPaths(
+    string RootDir,
+    VoiceEngineKind Kind = VoiceEngineKind.Supertonic,
+    string Language = SupertonicVoiceTable.EnglishCode,
+    IReadOnlyList<VoiceInfo>? Voices = null)
+{
+    /// <summary>The voices this model offers for <see cref="Language"/>.</summary>
+    public IReadOnlyList<VoiceInfo> AvailableVoices => Voices ?? SupertonicVoiceTable.Voices;
+
+    /// <summary>
+    /// The voice <paramref name="voiceId"/> names, or this model's default voice (the Supertonic
+    /// default for Supertonic, else its first) when the id belongs to another engine or
+    /// language, so a stored choice never leaves the engine without a speaker.
+    /// </summary>
+    public VoiceInfo ResolveVoice(string? voiceId)
+    {
+        VoiceInfo? match = AvailableVoices.FirstOrDefault(v => v.Id == voiceId);
+        if (match is not null)
+        {
+            return match;
+        }
+
+        return DefaultVoice();
+    }
+
+    // The Supertonic default when this is a Supertonic model that still lists it, else the
+    // first listed voice; a model that lists none (a malformed pack) reads as speaker 0
+    // rather than throwing.
+    private VoiceInfo DefaultVoice()
+    {
+        IReadOnlyList<VoiceInfo> voices = AvailableVoices;
+        VoiceInfo? preferred = Kind == VoiceEngineKind.Supertonic
+            ? voices.FirstOrDefault(v => v.SpeakerId == SupertonicVoiceTable.DefaultSpeakerId)
+            : null;
+        return preferred ?? voices.FirstOrDefault() ?? new VoiceInfo(string.Empty, string.Empty, Language, Kind);
+    }
+}
 
 /// <summary>
-/// Locates the local neural voice model (shipped in the package), reports
-/// readiness, and exposes its directory. The synthesis engine stays silent on the
-/// neural path until <see cref="IsReady"/> is true.
+/// Locates the local neural voice model, reports readiness, and exposes its directory.
+/// The synthesis engine stays silent on the neural path until <see cref="IsReady"/> is true.
 /// </summary>
 public interface IVoiceModelService
 {
@@ -20,7 +58,8 @@ public interface IVoiceModelService
     /// <summary>The model directory once <see cref="IsReady"/> is true; otherwise null.</summary>
     VoiceModelPaths? Paths { get; }
 
-    /// <summary>Raised once, on the transition to ready.</summary>
+    /// <summary>Raised whenever readiness or the resolved model changes (a pack finishes
+    /// installing, is removed, or the language moves to another pack).</summary>
     event EventHandler? ReadyChanged;
 
     /// <summary>

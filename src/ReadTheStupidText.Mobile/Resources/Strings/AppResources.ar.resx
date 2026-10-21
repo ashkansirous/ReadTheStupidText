@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Shell_ReaderTitle" xml:space="preserve"><value>القارئ</value></data>
+  <data name="Common_Ok" xml:space="preserve"><value>حسنًا</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>إلغاء</value></data>
+  <data name="Common_Voice" xml:space="preserve"><value>الصوت</value></data>
+  <data name="Common_Language" xml:space="preserve"><value>اللغة</value></data>
+  <data name="Common_BackGlyph" xml:space="preserve"><value>→</value></data>
+  <data name="Reader_AddTextSection" xml:space="preserve"><value>إضافة نص</value></data>
+  <data name="Reader_PasteButton" xml:space="preserve"><value>📋 لصق</value></data>
+  <data name="Reader_ScanButton" xml:space="preserve"><value>📷 مسح</value></data>
+  <data name="Reader_FileButton" xml:space="preserve"><value>📄 ملف</value></data>
+  <data name="Reader_EditorPlaceholder" xml:space="preserve"><value>اكتب أو الصق هنا، أو امسح صفحة ضوئيًا، أو افتح ملفًا — كل شيء يصل إلى هذا المربع الواحد ويُقرأ بأزرار التحكم نفسها أدناه.</value></data>
+  <data name="Reader_SkipBackGlyph" xml:space="preserve"><value>⇥10</value></data>
+  <data name="Reader_SkipForwardGlyph" xml:space="preserve"><value>10⇤</value></data>
+  <data name="Reader_PasteFailedTitle" xml:space="preserve"><value>تعذّر اللصق</value></data>
+  <data name="Reader_PasteFailedMessage" xml:space="preserve"><value>تعذّرت قراءة الحافظة. حاول نسخ النص مرة أخرى.</value></data>
+  <data name="Reader_ScanFailedTitle" xml:space="preserve"><value>تعذّر المسح</value></data>
+  <data name="Reader_ScanFailedMessage" xml:space="preserve"><value>حدث خطأ أثناء المسح. يرجى المحاولة مرة أخرى.</value></data>
+  <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>تعذّر تشغيل الماسح</value></data>
+  <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>تعذّر تشغيل الماسح — حاول مرة أخرى.</value></data>
+  <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>الماسح قيد التجهيز</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>لا تزال خدمات Google Play تجهّز ماسح المستندات. حاول مرة أخرى بعد قليل.</value></data>
+  <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>الماسح غير متاح</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>يحتاج ماسح المستندات إلى خدمات Google Play. التقط صورة واحدة بدلاً من ذلك.</value></data>
+  <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>الوصول إلى الكاميرا مطلوب</value></data>
+  <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>امنح إذن الكاميرا من الإعدادات لتصوير النص.</value></data>
+  <data name="Reader_NoCameraTitle" xml:space="preserve"><value>لا توجد كاميرا</value></data>
+  <data name="Reader_NoCameraMessage" xml:space="preserve"><value>يلزم وجود كاميرا لتصوير النص، ولا تتوفر كاميرا على هذا الجهاز.</value></data>
+  <data name="Reader_ScanUnavailableTitle" xml:space="preserve"><value>المسح غير متاح</value></data>
+  <data name="Reader_ScanUnavailableMessage" xml:space="preserve"><value>قراءة النص من الصور غير متاحة على هذا الجهاز بعد.</value></data>
+  <data name="Reader_ScanUnreadableTitle" xml:space="preserve"><value>تعذّرت قراءة هذا المسح</value></data>
+  <data name="Reader_ScanUnreadableMessage" xml:space="preserve"><value>حاول مسح النص مرة أخرى بإضاءة أو تركيز أفضل.</value></data>
+  <data name="Reader_NoTextFoundTitle" xml:space="preserve"><value>لم يُعثر على نص</value></data>
+  <data name="Reader_NoTextFoundMessage" xml:space="preserve"><value>حاول المسح مرة أخرى بإضاءة أو تركيز أفضل.</value></data>
+  <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>تم تخطي بعض الصفحات</value></data>
+  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>تعذّرت قراءة الصفحة {0} — وأُضيف الباقي.</value></data>
+  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>تعذّرت قراءة الصفحات {0} — وأُضيف الباقي.</value></data>
+  <data name="Reader_ScanProgressPage" xml:space="preserve"><value>جارٍ قراءة الصفحة {0} من {1}</value></data>
+  <data name="Reader_ScanProgressSingle" xml:space="preserve"><value>جارٍ قراءة الصفحة</value></data>
+  <data name="Reader_FilePickerTitle" xml:space="preserve"><value>اختر ملف txt أو pdf أو docx</value></data>
+  <data name="Reader_FilePermissionTitle" xml:space="preserve"><value>الإذن مطلوب</value></data>
+  <data name="Reader_FilePermissionMessage" xml:space="preserve"><value>امنح إذن الوصول إلى الملفات لقراءة مستند.</value></data>
+  <data name="Reader_FileTooLargeTitle" xml:space="preserve"><value>الملف كبير جدًا</value></data>
+  <data name="Reader_FileTooLargeMessage" xml:space="preserve"><value>يحتوي هذا الملف على {0} صفحة؛ والحد الأقصى {1}.</value></data>
+  <data name="Reader_FileUnreadableTitle" xml:space="preserve"><value>تعذّرت قراءة الملف</value></data>
+  <data name="Reader_FileUnreadableMessage" xml:space="preserve"><value>قد يكون الملف تالفًا أو بتنسيق غير مدعوم.</value></data>
+  <data name="Reader_ReadFailedTitle" xml:space="preserve"><value>تعذّرت قراءة النص</value></data>
+  <data name="Reader_ReadFailedMessage" xml:space="preserve"><value>حدث خطأ أثناء القراءة.</value></data>
+  <data name="PackStatus_Resolving" xml:space="preserve"><value>جارٍ البحث عن الأصوات الطبيعية…</value></data>
+  <data name="PackStatus_Downloading" xml:space="preserve"><value>جارٍ تنزيل الأصوات الطبيعية… {0}</value></data>
+  <data name="PackStatus_Offline" xml:space="preserve"><value>لا يوجد اتصال. تتم القراءة بصوت الهاتف. اضغط لإعادة محاولة تنزيل الصوت.</value></data>
+  <data name="PackStatus_HashMismatch" xml:space="preserve"><value>تعرّض تنزيل الصوت للتلف. تتم القراءة بصوت الهاتف. اضغط لإعادة المحاولة.</value></data>
+  <data name="PackStatus_InvalidPack" xml:space="preserve"><value>حزمة الأصوات الطبيعية غير صالحة للاستخدام. تتم القراءة بصوت الهاتف.</value></data>
+  <data name="PackStatus_Failed" xml:space="preserve"><value>تعذّر تنزيل الأصوات الطبيعية. تتم القراءة بصوت الهاتف. اضغط لإعادة المحاولة.</value></data>
+  <data name="PackStatus_Unavailable" xml:space="preserve"><value>لا يتوفر صوت طبيعي للغتك بعد. تتم القراءة بصوت الهاتف.</value></data>
+  <data name="VoicePicker_Heading" xml:space="preserve"><value>اختر صوتًا</value></data>
+  <data name="VoicePicker_Subtitle" xml:space="preserve"><value>تُنزَّل الأصوات الطبيعية مرة واحدة · يبقى نصك على الهاتف</value></data>
+  <data name="VoicePicker_SectionPhone" xml:space="preserve"><value>الهاتف</value></data>
+  <data name="VoicePicker_SectionMale" xml:space="preserve"><value>ذكر</value></data>
+  <data name="VoicePicker_SectionFemale" xml:space="preserve"><value>أنثى</value></data>
+  <data name="VoicePicker_Hint" xml:space="preserve"><value>اضغط على صوت لسماعه واختياره. تغيير الصوت أثناء القراءة يُنهي الجملة الحالية بالصوت القديم.</value></data>
+  <data name="VoicePicker_PhoneVoiceName" xml:space="preserve"><value>صوت الهاتف</value></data>
+  <data name="VoicePicker_EngineSupertonic" xml:space="preserve"><value>SUPERTONIC</value></data>
+  <data name="VoicePicker_EnginePiper" xml:space="preserve"><value>PIPER</value></data>
+  <data name="VoicePicker_EngineMelo" xml:space="preserve"><value>MELOTTS</value></data>
+  <data name="VoicePicker_ReasonPackNotInstalled" xml:space="preserve"><value>الصوت الطبيعي للغتك غير مثبّت بعد، لذلك يقرأ صوت الهاتف.</value></data>
+  <data name="VoicePicker_ReasonNoNeuralEngine" xml:space="preserve"><value>الأصوات الطبيعية غير متاحة على هذا الجهاز بعد، لذلك يقرأ صوت الهاتف.</value></data>
+  <data name="Language_Intro" xml:space="preserve"><value>اختر لغتك. سنُنزّل صوتًا طبيعيًا لها؛ وإلى أن يصل، يقرأ صوت هاتفك.</value></data>
+  <data name="Language_Retry" xml:space="preserve"><value>إعادة محاولة التنزيل</value></data>
+  <data name="Language_Continue" xml:space="preserve"><value>متابعة</value></data>
+  <data name="Language_StartReading" xml:space="preserve"><value>ابدأ القراءة</value></data>
+</root>

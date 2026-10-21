@@ -26,6 +26,11 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<!-- A read keeps going when the screen locks or the app is backgrounded (Slice 49). -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
 	<key>XSAppIconAssets</key>
 	<string>Assets.xcassets/appicon.appiconset</string>
 
@@ -35,8 +40,8 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 
-	<!-- Camera capture for the scan-to-read path (the iOS OCR itself arrives in Slice 49).
-	     MediaPicker.CapturePhotoAsync crashes the app without this string. -->
+	<!-- Camera for the scan-to-read path: the VisionKit document scanner (Slice 49) and the
+	     MediaPicker photo fallback both crash the app without this string. -->
 	<key>NSCameraUsageDescription</key>
 	<string>The camera photographs printed text so the app can read it aloud. Photos are processed on the device and never uploaded.</string>
 

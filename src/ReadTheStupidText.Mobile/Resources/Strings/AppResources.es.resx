@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Shell_ReaderTitle" xml:space="preserve"><value>Lector</value></data>
+  <data name="Common_Ok" xml:space="preserve"><value>Aceptar</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Common_Voice" xml:space="preserve"><value>Voz</value></data>
+  <data name="Common_Language" xml:space="preserve"><value>Idioma</value></data>
+  <data name="Reader_AddTextSection" xml:space="preserve"><value>AÑADIR TEXTO</value></data>
+  <data name="Reader_PasteButton" xml:space="preserve"><value>📋 Pegar</value></data>
+  <data name="Reader_ScanButton" xml:space="preserve"><value>📷 Escanear</value></data>
+  <data name="Reader_FileButton" xml:space="preserve"><value>📄 Archivo</value></data>
+  <data name="Reader_EditorPlaceholder" xml:space="preserve"><value>Escribe o pega aquí, escanea una página o abre un archivo: todo llega a este único cuadro y se reproduce con los mismos controles de abajo.</value></data>
+  <data name="Reader_PasteFailedTitle" xml:space="preserve"><value>No se pudo pegar</value></data>
+  <data name="Reader_PasteFailedMessage" xml:space="preserve"><value>No se pudo leer el portapapeles. Intenta copiar el texto de nuevo.</value></data>
+  <data name="Reader_ScanFailedTitle" xml:space="preserve"><value>No se pudo escanear</value></data>
+  <data name="Reader_ScanFailedMessage" xml:space="preserve"><value>Algo salió mal al escanear. Inténtalo de nuevo.</value></data>
+  <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>No se pudo iniciar el escáner</value></data>
+  <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>No se pudo iniciar el escáner. Inténtalo de nuevo.</value></data>
+  <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>El escáner se está preparando</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Google Play Services aún está preparando el escáner de documentos. Inténtalo de nuevo en un momento.</value></data>
+  <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>Escáner no disponible</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>El escáner de documentos necesita Google Play Services. Haz una sola foto en su lugar.</value></data>
+  <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>Se necesita acceso a la cámara</value></data>
+  <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>Concede acceso a la cámara en Ajustes para fotografiar texto.</value></data>
+  <data name="Reader_NoCameraTitle" xml:space="preserve"><value>Sin cámara</value></data>
+  <data name="Reader_NoCameraMessage" xml:space="preserve"><value>Se necesita una cámara para fotografiar texto y este dispositivo no tiene ninguna disponible.</value></data>
+  <data name="Reader_ScanUnavailableTitle" xml:space="preserve"><value>Escaneo no disponible</value></data>
+  <data name="Reader_ScanUnavailableMessage" xml:space="preserve"><value>La lectura de texto a partir de fotos aún no está disponible en este dispositivo.</value></data>
+  <data name="Reader_ScanUnreadableTitle" xml:space="preserve"><value>No se pudo leer ese escaneo</value></data>
+  <data name="Reader_ScanUnreadableMessage" xml:space="preserve"><value>Vuelve a escanear el texto con mejor iluminación o enfoque.</value></data>
+  <data name="Reader_NoTextFoundTitle" xml:space="preserve"><value>No se encontró texto</value></data>
+  <data name="Reader_NoTextFoundMessage" xml:space="preserve"><value>Vuelve a escanear con mejor iluminación o enfoque.</value></data>
+  <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>Algunas páginas omitidas</value></data>
+  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>No se pudo leer la página {0}; se añadió el resto.</value></data>
+  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>No se pudieron leer las páginas {0}; se añadió el resto.</value></data>
+  <data name="Reader_ScanProgressPage" xml:space="preserve"><value>Leyendo la página {0} de {1}</value></data>
+  <data name="Reader_ScanProgressSingle" xml:space="preserve"><value>Leyendo la página</value></data>
+  <data name="Reader_FilePickerTitle" xml:space="preserve"><value>Elige un archivo .txt, .pdf o .docx</value></data>
+  <data name="Reader_FilePermissionTitle" xml:space="preserve"><value>Se necesita permiso</value></data>
+  <data name="Reader_FilePermissionMessage" xml:space="preserve"><value>Concede acceso a los archivos para leer un documento.</value></data>
+  <data name="Reader_FileTooLargeTitle" xml:space="preserve"><value>Archivo demasiado grande</value></data>
+  <data name="Reader_FileTooLargeMessage" xml:space="preserve"><value>Ese archivo tiene {0} páginas; el límite es {1}.</value></data>
+  <data name="Reader_FileUnreadableTitle" xml:space="preserve"><value>No se pudo leer ese archivo</value></data>
+  <data name="Reader_FileUnreadableMessage" xml:space="preserve"><value>Puede que el archivo esté dañado o tenga un formato no compatible.</value></data>
+  <data name="Reader_ReadFailedTitle" xml:space="preserve"><value>No se pudo leer ese texto</value></data>
+  <data name="Reader_ReadFailedMessage" xml:space="preserve"><value>Algo salió mal durante la lectura.</value></data>
+  <data name="PackStatus_Resolving" xml:space="preserve"><value>Buscando voces naturales…</value></data>
+  <data name="PackStatus_Downloading" xml:space="preserve"><value>Descargando voces naturales… {0}</value></data>
+  <data name="PackStatus_Offline" xml:space="preserve"><value>Sin conexión. Se lee con la voz del teléfono. Toca para reintentar la descarga de la voz.</value></data>
+  <data name="PackStatus_HashMismatch" xml:space="preserve"><value>La descarga de la voz se corrompió. Se lee con la voz del teléfono. Toca para reintentar.</value></data>
+  <data name="PackStatus_InvalidPack" xml:space="preserve"><value>El paquete de voces naturales no se puede usar. Se lee con la voz del teléfono.</value></data>
+  <data name="PackStatus_Failed" xml:space="preserve"><value>No se pudieron descargar las voces naturales. Se lee con la voz del teléfono. Toca para reintentar.</value></data>
+  <data name="PackStatus_Unavailable" xml:space="preserve"><value>Aún no hay una voz natural para tu idioma. Se lee con la voz del teléfono.</value></data>
+  <data name="VoicePicker_Heading" xml:space="preserve"><value>Elige una voz</value></data>
+  <data name="VoicePicker_Subtitle" xml:space="preserve"><value>Las voces naturales se descargan una sola vez · tu texto se queda en el teléfono</value></data>
+  <data name="VoicePicker_SectionPhone" xml:space="preserve"><value>TELÉFONO</value></data>
+  <data name="VoicePicker_SectionMale" xml:space="preserve"><value>MASCULINA</value></data>
+  <data name="VoicePicker_SectionFemale" xml:space="preserve"><value>FEMENINA</value></data>
+  <data name="VoicePicker_Hint" xml:space="preserve"><value>Toca una voz para escucharla y seleccionarla. Si cambias de voz durante la lectura, la frase actual termina con la voz anterior.</value></data>
+  <data name="VoicePicker_PhoneVoiceName" xml:space="preserve"><value>Voz del teléfono</value></data>
+  <data name="VoicePicker_EngineSupertonic" xml:space="preserve"><value>SUPERTONIC</value></data>
+  <data name="VoicePicker_EnginePiper" xml:space="preserve"><value>PIPER</value></data>
+  <data name="VoicePicker_EngineMelo" xml:space="preserve"><value>MELOTTS</value></data>
+  <data name="VoicePicker_ReasonPackNotInstalled" xml:space="preserve"><value>La voz natural de tu idioma aún no está instalada, así que lee la voz del teléfono.</value></data>
+  <data name="VoicePicker_ReasonNoNeuralEngine" xml:space="preserve"><value>Las voces naturales aún no están disponibles en este dispositivo, así que lee la voz del teléfono.</value></data>
+  <data name="Language_Intro" xml:space="preserve"><value>Elige tu idioma. Descargaremos una voz natural para él; hasta que llegue, lee la voz de tu teléfono.</value></data>
+  <data name="Language_Retry" xml:space="preserve"><value>Reintentar descarga</value></data>
+  <data name="Language_Continue" xml:space="preserve"><value>Continuar</value></data>
+  <data name="Language_StartReading" xml:space="preserve"><value>Empezar a leer</value></data>
+</root>
