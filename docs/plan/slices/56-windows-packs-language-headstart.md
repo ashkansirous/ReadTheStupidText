@@ -104,6 +104,7 @@ starts with the same instant head start as Android.
 - **Read ownership (finding 1).** `SupertonicSpeechReader` tracks the active read as `ActiveRead(engine, ReadOwnership)`: the original `SpeakAsync` and every Skip that continues playback are owners, only the last one out ends the read (clears `ReadInProgress`), and Stop clears it at once. This also lets a head-start prepare for the next text run while the old read's native synthesis winds down. The Android reader (Slice 47) still has the Skip bug.
 - **Head policy (finding 4).** The two-sentence head is used only when its sentences are already in the sentence cache at read start; otherwise the one-sentence default. A prepare plans with the two-sentence head so a prepared text qualifies.
 - **Engine build failures (finding 3).** Any failure to build the engine surfaces as `NeuralEngineUnavailableException` (composite falls back to the Windows voice) and triggers a model refresh.
+- **Follow-up from desktop acceptance (2026-10-21).** Log `[INF]` lines in `WindowsVoicePackService` / `VoicePackSetup` for pack download start, finish and failure, and for which engine read. Today no log line names the engine, so the system-to-neural handover can't be confirmed from logs.
 - **Offline first launch (finding 7).** `App` listens to `NetworkChange.NetworkAvailabilityChanged` and re-runs `VoicePackSetup.StartAsync` when the setup is Offline and the network returns.
 
 ## Built (verification)
@@ -111,11 +112,22 @@ starts with the same instant head start as Android.
 - `dotnet build` App x64, Mobile net10.0-android: succeeded. `dotnet test`: 336 passed. `node --test .github/scripts/*.test.mjs`: 69 passed. actionlint: clean.
 - New tests: `WindowsVoicePackServiceTests` (install, Range resume, server ignoring Range, hash mismatch, invalid pack, offline, transient retry, installed pack makes no request), `VoicePackSetupTests`, `PackVoiceModelServiceTests` (model service and `PackVoiceCatalog`), and three head-start cases in `ReadAloudServiceGeneratingTests`.
 
+#### Desktop acceptance (2026-10-21)
+
+Run on the real Windows machine.
+
+- PASS: the language window shows on a true first run (clean package state). The earlier missing window was stale LocalSettings `Language` (gate at `App.xaml.cs:125`, read at `LocalSettingsStore.cs:83`), not a code bug.
+- PASS: picking English downloads supertonic-3 into `LocalCache\packs\supertonic-3` (9 files, about 145 MB) and the window closes.
+- PASS: Persian shows "No natural voice for this language yet. The Windows voice reads."
+- PASS: French closes as Ready with no new download.
+- PASS: restart does not re-show the window or re-download.
+- PASS: the tray item "Voice language..." reopens the window.
+
 #### Not yet verified (needs the real Windows machine, VS **(Package)** profile)
 
-- Fresh install: language window, Windows voice reads at once, pack downloads with progress, next read uses the natural voice without restart.
-- Offline first launch: message, Retry works, Windows voice keeps reading; kill the app or the network mid-download and relaunch to confirm resume.
-- Auto-read after the pack is installed: "first audio" log lines faster for text already prepared (compare cache hit lines).
-- Persian/Chinese: no pack published yet (`packs-1` only has `supertonic-3`), so they report Unavailable and the Windows voice reads.
-- MSIX size before/after, and that the unpacked package has no `VoiceModel\`.
-- Store certification dry run with `internetClient`.
+- The system voice reading before the pack arrives, and the neural voice taking over after (the download finished in about 2 s, too fast to see; no log line names the engine).
+- Offline first launch.
+- Killing mid-download and resuming.
+- MSIX size before/after, and no `VoiceModel\` in the unpacked MSIX.
+- The `internetClient` Store certification dry run.
+- The first-audio comparison (faster "first audio" log lines for already-prepared text).
