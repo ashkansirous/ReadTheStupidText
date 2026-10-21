@@ -51,4 +51,13 @@ public interface ISettingsStore
     /// downloads.
     /// </summary>
     string? Language { get; set; }
+
+    /// <summary>Whether text in another language is translated into <see cref="Language"/> before it is read (Slice 54). Defaults off.</summary>
+    bool TranslateEnabled { get; set; }
+
+    /// <summary>
+    /// The language the user picked as the text's language, overriding detection, or null for auto
+    /// (Slice 54). Cleared whenever the text is cleared.
+    /// </summary>
+    string? TranslateSourceLanguage { get; set; }
 }

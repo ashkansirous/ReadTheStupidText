@@ -2,12 +2,12 @@
 <ContentPage
     x:Class="ReadTheStupidText.Mobile.LanguagePage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    Title="Language">
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+    <!-- Texts are set in code (ApplyTexts) so the page re-localizes the moment a language row is picked. -->
 
     <Grid RowDefinitions="Auto,*,Auto" BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}">
 
-        <Grid Grid.Row="0" Padding="18,22,16,18">
+        <Grid x:Name="HeaderGrid" Grid.Row="0" Padding="18,22,16,18">
             <Grid.Background>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                     <GradientStop Color="{StaticResource BrandStart}" Offset="0.0" />
@@ -15,8 +15,8 @@
                 </LinearGradientBrush>
             </Grid.Background>
             <VerticalStackLayout Spacing="3">
-                <Label Text="Read The Stupid Text" TextColor="White" FontSize="16" FontAttributes="Bold" />
-                <Label Text="Choose your language. We'll download a natural voice for it; until it arrives, your phone's own voice reads." TextColor="#C8FFFFFF" FontSize="12" />
+                <Label x:Name="AppNameLabel" TextColor="White" FontSize="16" FontAttributes="Bold" />
+                <Label x:Name="IntroLabel" TextColor="#C8FFFFFF" FontSize="12" />
             </VerticalStackLayout>
         </Grid>
 
@@ -31,11 +31,11 @@
                     <ProgressBar x:Name="DownloadProgressBar" Progress="0" ProgressColor="{StaticResource Primary}" />
                     <Label x:Name="StatusLabel" FontSize="12"
                            TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
-                    <Button x:Name="RetryButton" Text="Retry download" IsVisible="False" Clicked="OnRetryClicked" />
+                    <Button x:Name="RetryButton" IsVisible="False" Clicked="OnRetryClicked" />
                 </VerticalStackLayout>
             </VerticalStackLayout>
         </ScrollView>
 
-        <Button Grid.Row="2" x:Name="ContinueButton" Margin="14" Text="Continue" IsEnabled="False" Clicked="OnContinueClicked" />
+        <Button Grid.Row="2" x:Name="ContinueButton" Margin="14" IsEnabled="False" Clicked="OnContinueClicked" />
     </Grid>
 </ContentPage>

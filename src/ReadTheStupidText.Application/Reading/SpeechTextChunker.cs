@@ -200,7 +200,7 @@ internal static partial class SpeechTextChunker
         return (head.ToString(), rest.ToString());
     }
 
-    private static IEnumerable<string> SplitParagraphs(string text)
+    internal static IEnumerable<string> SplitParagraphs(string text)
     {
         foreach (string block in ParagraphBreak().Split(text))
         {

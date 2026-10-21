@@ -51,6 +51,11 @@
       on-device ML Kit text recognition, which runs entirely on your phone. The photo is processed
       to extract text and is not uploaded, saved permanently, or shared &mdash; it exists only to
       be read aloud.</li>
+    <li><strong>Translation</strong> (Android, off by default): when you turn on &ldquo;Translate to my
+      language&rdquo;, the app identifies the language of your text with Google&rsquo;s on-device ML Kit
+      language identification and translates it with ML Kit&rsquo;s on-device translation, then reads
+      the result. Both run entirely on your phone; your text is never sent to Google or anyone else.
+      The translation is casual quality.</li>
     <li><strong>Speech synthesis is performed entirely on your device</strong>, using a neural
       voice model bundled inside the app. No text or audio is sent to any server or third party,
       on either platform.</li>
@@ -78,6 +83,12 @@
   page: no account, no identifier and none of your text, images or scans is sent, and the app has
   no analytics or telemetry. Once a pack is installed the app works fully offline and makes no network requests at all (it does not even re-check the catalog). Until it
   arrives, and if you are offline, your phone&rsquo;s own built-in voice reads instead.</p>
+  <p><strong>Translation models (Android).</strong> The first time you translate to or from a language,
+  Google&rsquo;s ML Kit downloads that language&rsquo;s translation model (about 30&nbsp;MB each; English is
+  used as a go-between for most pairs) from Google&rsquo;s servers, using ML Kit&rsquo;s own on-device model
+  download (it may use Google Play services). This is a request for a model file, not for your text:
+  none of your text, images or scans is sent. Once a model is on the phone, translating works offline.
+  If a model cannot be downloaded the app reads the original text.</p>
   <p>The Windows app does not use the network.</p>
   <p>Your text, images, scans and documents are never transmitted anywhere; reading and text
   recognition happen on the device.</p>
@@ -103,6 +114,10 @@
     <li><strong>Google ML Kit Text Recognition</strong> (Android only) &mdash; the on-device model
       used to read text out of a scanned photo. It runs locally; nothing is sent to Google or
       anyone else.</li>
+    <li><strong>Google ML Kit Language Identification and Translation</strong> (Android only) &mdash; the
+      on-device models used to detect the language of your text and translate it. They run locally;
+      nothing you type, paste or scan is sent to Google or anyone else. Only the translation model
+      files are downloaded (see <em>Network use</em>).</li>
   </ul>
 
   <h2>Children&rsquo;s privacy</h2>

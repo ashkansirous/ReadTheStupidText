@@ -27,17 +27,38 @@ public sealed class VoiceCaster(int mainCharacterCount = 2)
     public VoiceCast Cast(
         IReadOnlyList<Character> characters,
         IReadOnlyList<VoiceOption> voices,
-        string narratorVoiceId)
+        string narratorVoiceId,
+        IReadOnlyDictionary<string, string>? pinned = null)
     {
         var pool = voices.Where(v => v.Id != narratorVoiceId).DistinctBy(v => v.Id).ToList();
         var state = new CastState(pool, MainIds(characters));
         var picks = new List<(int Order, Character Character, string VoiceId)>();
-        foreach (var (character, order) in MainsFirst(characters, state.IsMain))
+        var pins = PinnedVoices(characters, pool, pinned);
+        foreach (var (character, order) in characters.Select((c, i) => (c, i)).Where(x => pins.ContainsKey(x.c.Id)))
+        {
+            picks.Add((order, character, state.Take(character, pins[character.Id]).Id));
+        }
+        foreach (var (character, order) in MainsFirst(characters, state.IsMain).Where(x => !pins.ContainsKey(x.Character.Id)))
         {
             var voice = state.Pick(character);
             if (voice is not null) picks.Add((order, character, voice.Id));
         }
         return new VoiceCast(narratorVoiceId, Flag(picks.OrderBy(p => p.Order).ToList()));
+    }
+
+    // Pinned (already stored) voices that are still in the pool. They are taken up front so the
+    // rest of the cast never lands on one while another voice is free.
+    private static Dictionary<string, VoiceOption> PinnedVoices(
+        IReadOnlyList<Character> characters, List<VoiceOption> pool, IReadOnlyDictionary<string, string>? pinned)
+    {
+        var result = new Dictionary<string, VoiceOption>();
+        if (pinned is null) return result;
+        foreach (var character in characters)
+        {
+            var voice = pinned.TryGetValue(character.Id, out var id) ? pool.FirstOrDefault(v => v.Id == id) : null;
+            if (voice is not null) result[character.Id] = voice;
+        }
+        return result;
     }
 
     private static IEnumerable<(Character Character, int Order)> MainsFirst(
@@ -75,7 +96,11 @@ public sealed class VoiceCaster(int mainCharacterCount = 2)
         public VoiceOption? Pick(Character character)
         {
             var voice = PickFree(character.Gender) ?? PickFewestWords(character.Gender);
-            if (voice is null) return null;
+            return voice is null ? null : Take(character, voice);
+        }
+
+        public VoiceOption Take(Character character, VoiceOption voice)
+        {
             _owned.Add(voice.Id);
             _words[voice.Id] += character.WordCount;
             if (mains.Contains(character.Id)) _mainOwned.Add(voice.Id);
