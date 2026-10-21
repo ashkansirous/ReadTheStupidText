@@ -1,6 +1,6 @@
 # Slice 64 — Picture mode on real pages
 
-*Planned.*
+*In progress (wave 2026-10-21), draft PR.*
 
 **Batch:** 10
 **Decisions:** 78, 79
