@@ -45,6 +45,7 @@
 
 	<!-- ExcludeAssets does not flow through a project reference (see AndroidSherpaPackaging.props). -->
 	<Import Project="..\AndroidSherpaPackaging.props" />
+	<Import Project="..\AndroidRelease.props" />
 
 	<ItemGroup>
 		<ProjectReference Include="..\ReadTheStupidText.Domain\ReadTheStupidText.Domain.csproj" />

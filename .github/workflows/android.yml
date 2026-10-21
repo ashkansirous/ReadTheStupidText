@@ -21,6 +21,7 @@ on:
       - 'src/ReadTheStupidText.Documents/**'
       - 'tests/ReadTheStupidText.Tests/**'
       - 'global.json'
+      - 'Directory.Build.props'
       - 'GitVersion.yml'
       - '*.slnx'
       - '.gitattributes'
@@ -35,6 +36,8 @@ on:
       - '!src/ReadTheStupidText.Mobile.Shared/Platforms/**'
       - 'src/ReadTheStupidText.Mobile.Shared/Platforms/Android/**'
       - 'src/AndroidSherpaPackaging.props'
+      - 'src/AndroidRelease.props'
+      - 'src/AndroidProguard.cfg'
       - '.github/scripts/stage-android-package.sh'
       - '.github/scripts/check-android-natives.sh'
       - '.github/workflows/android.yml'
@@ -85,12 +88,15 @@ jobs:
       - name: Set up .NET 10
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.402'
 
+      # Slice 72: workload set 10.0.402 carries Android SDK 36.1.118, the first with
+      # AndroidR8ObfuscationMode (R8 obfuscation). A set only works with an SDK of its
+      # feature band, hence dotnet-version 10.0.402 above (same approach as ios.yml).
       # maui-android, not bare "android": a CLI-only SDK install needs the
       # MAUI workload pieces too (NETSDK1147 otherwise).
       - name: Install the .NET MAUI Android workload
-        run: dotnet workload install maui-android
+        run: dotnet workload install maui-android --version 10.0.402
 
       - name: Debug build (unsigned)
         if: ${{ env.SIGN_RELEASE != 'true' }}

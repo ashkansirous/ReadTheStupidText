@@ -1,0 +1,34 @@
+<Project>
+
+	<!-- Slice 72: the Release Android settings shared by both apps (Read The Stupid Text Mobile and
+	     Dino Reader). Import it from an app csproj only. Android-only, Release-only; Debug stays on D8. -->
+	<PropertyGroup Condition="'$(Configuration)' == 'Release' And $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+		<!-- R8 shrinking and obfuscation. private-members keeps Java class and public/protected member
+		     names and renames the rest; the SDK's own proguard_xamarin.cfg otherwise starts with
+		     -dontobfuscate. The mapping file (AndroidR8 default) goes into the .aab for Play's
+		     de-obfuscated crash traces. Needs Android SDK 36.1.118+ (see .github/CLAUDE.md). -->
+		<AndroidLinkTool>r8</AndroidLinkTool>
+		<AndroidR8ObfuscationMode>private-members</AndroidR8ObfuscationMode>
+
+		<!-- arm64 only: the only sherpa-onnx / onnxruntime natives we ship are arm64-v8a
+		     (AndroidSherpaPackaging.props). With the default RID set the APK also carried an
+		     x86_64 managed AOT library but no x86_64 natives, so an x86_64 device crashed with
+		     DllNotFoundException. Armv7 (32-bit arm) devices are not supported by the engine either. -->
+		<RuntimeIdentifiers>android-arm64</RuntimeIdentifiers>
+	</PropertyGroup>
+
+	<!-- Keep rules for classes the managed side reaches through JNI by name (UTF-8, no BOM). -->
+	<ItemGroup Condition="'$(Configuration)' == 'Release' And $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+		<ProguardConfiguration Include="$(MSBuildThisFileDirectory)AndroidProguard.cfg" />
+	</ItemGroup>
+
+	<!-- Fail loudly instead of silently shipping an unobfuscated build: an older .NET for Android SDK
+	     ignores AndroidR8ObfuscationMode. 10.0.402 is the workload set that carries 36.1.118; install it
+	     with `dotnet workload install maui-android` pinned to workload set 10.0.402 on a 10.0.4xx SDK. -->
+	<Target Name="RequireAndroidSdkForR8" BeforeTargets="PrepareForBuild"
+	        Condition="'$(Configuration)' == 'Release' And $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+		<Error Condition="'$(AndroidNETSdkVersion)' == '' Or $([MSBuild]::VersionLessThan('$(AndroidNETSdkVersion)', '36.1.118'))"
+		       Text="Release Android builds need .NET for Android SDK 36.1.118 or newer for R8 obfuscation (AndroidR8ObfuscationMode), found '$(AndroidNETSdkVersion)'. Install workload set 10.0.402: dotnet workload install maui-android --version 10.0.402 (SDK 10.0.4xx)." />
+	</Target>
+
+</Project>

@@ -20,6 +20,7 @@ on:
       - 'src/ReadTheStupidText.Documents/**'
       - 'tests/ReadTheStupidText.Tests/**'
       - 'global.json'
+      - 'Directory.Build.props'
       - 'GitVersion.yml'
       - '*.slnx'
       - '.gitattributes'
