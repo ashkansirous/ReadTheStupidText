@@ -1,6 +1,6 @@
 # Slice 72 — Android dependencies to latest, R8 shrinking and obfuscation
 
-*Planned.*
+*In progress (wave 2026-10-21), draft PR.*
 
 **Batch:** 12 (Play Console health)
 **Depends on:** —
