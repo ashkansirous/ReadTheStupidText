@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ReadTheStupidText.Application.Documents;
+using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Documents;
 
 namespace ReadTheStupidText.Mobile;
@@ -20,6 +21,7 @@ public static partial class MauiProgram
 
 		builder.AddMobileSharedServices();
 		RegisterAppPlatformServices(builder.Services);
+		builder.Services.AddSingleton<IHeadStart>(sp => sp.GetRequiredService<ISpeechReader>() as IHeadStart ?? new NoHeadStart());
 		builder.Services.AddSingleton<PlainTextExtractor>();
 		builder.Services.AddSingleton<PdfTextExtractor>();
 		builder.Services.AddSingleton<DocxTextExtractor>();

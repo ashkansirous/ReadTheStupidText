@@ -17,12 +17,14 @@ internal readonly record struct SpeechChunkPlan(string Text, string? VoiceId, in
 /// </summary>
 internal static class SpeechChunkPlanner
 {
-    public static IReadOnlyList<SpeechChunkPlan> ForText(string text) =>
-        SpeechTextChunker.SplitWithRanges(text)
+    public static IReadOnlyList<SpeechChunkPlan> ForText(
+        string text, SpeechTextChunker.HeadPolicy? head = null) =>
+        SpeechTextChunker.SplitWithRanges(text, head: head)
             .Select(c => new SpeechChunkPlan(c.Text, null, c.SourceStart, c.SourceEnd))
             .ToList();
 
-    public static IReadOnlyList<SpeechChunkPlan> ForSegments(IReadOnlyList<VoicedSegment> segments)
+    public static IReadOnlyList<SpeechChunkPlan> ForSegments(
+        IReadOnlyList<VoicedSegment> segments, SpeechTextChunker.HeadPolicy? head = null)
     {
         var plan = new List<SpeechChunkPlan>();
         foreach (VoicedSegment segment in segments)
@@ -31,7 +33,7 @@ internal static class SpeechChunkPlanner
             {
                 // Only the first chunk of the whole read is biased to a short head: later
                 // segments are not what the listener waits on.
-                plan.AddRange(ForSegment(segment, biasFirstChunk: plan.Count == 0));
+                plan.AddRange(ForSegment(segment, biasFirstChunk: plan.Count == 0, head));
             }
         }
 
@@ -42,10 +44,11 @@ internal static class SpeechChunkPlanner
     // ends at its end (so a quote's chunks cover its quote marks), and the boundaries in
     // between are the chunker's word positions shifted by where the text begins and clamped to the segment's range, so ranges stay
     // ordered and non-overlapping even when Text is not an exact slice of the source.
-    private static List<SpeechChunkPlan> ForSegment(VoicedSegment segment, bool biasFirstChunk)
+    private static List<SpeechChunkPlan> ForSegment(
+        VoicedSegment segment, bool biasFirstChunk, SpeechTextChunker.HeadPolicy? head)
     {
         IReadOnlyList<SpeechTextChunker.TextChunk> chunks =
-            SpeechTextChunker.SplitWithRanges(segment.Text, biasFirstChunk);
+            SpeechTextChunker.SplitWithRanges(segment.Text, biasFirstChunk, head);
         var result = new List<SpeechChunkPlan>(chunks.Count);
         int cursor = segment.SourceStart;
         for (int i = 0; i < chunks.Count; i++)

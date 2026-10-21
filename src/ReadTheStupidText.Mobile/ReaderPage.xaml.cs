@@ -35,6 +35,7 @@ public partial class ReaderPage : ContentPage
     private readonly IDocumentScanner? _scanner;
     private readonly IVoiceModelService _model;
     private readonly VoicePackInstaller _installer;
+    private readonly IHeadStart _headStart;
     private PlaybackRate _speed;
     private string? _lastSpokenText;
 
@@ -56,7 +57,7 @@ public partial class ReaderPage : ContentPage
     // started (system TTS returns as soon as the utterance is queued).
     private static readonly TimeSpan FirstAudioGrace = TimeSpan.FromSeconds(8);
 
-    public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, IImageTextExtractor imageExtractor, IVoiceModelService model, VoicePackInstaller installer, IPlatformServices platform, IDocumentScanner? scanner = null)
+    public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, IImageTextExtractor imageExtractor, IVoiceModelService model, VoicePackInstaller installer, IPlatformServices platform, IHeadStart headStart, IDocumentScanner? scanner = null)
     {
         InitializeComponent();
         ApplyScanAvailability(platform.SupportsTextScan);
@@ -66,11 +67,13 @@ public partial class ReaderPage : ContentPage
         _documentExtractor = documentExtractor;
         _imageExtractor = imageExtractor;
         _scanner = scanner;
+        _headStart = headStart;
         _model = model;
         _installer = installer;
         _speed = _settings.Speed;
         UpdatePresetHighlight();
         UpdateVoiceLabel();
+        InitHeadStart();
     }
 
     protected override void OnAppearing()
@@ -85,6 +88,7 @@ public partial class ReaderPage : ContentPage
         // Re-read on every appearance: the voice picker may have changed the
         // persisted voice while this page was off-stack.
         UpdateVoiceLabel();
+        RestartHeadStartIfKeyChanged();
         RenderPackStatus();
         RestorePendingReadSpinner();
         PrepareScannerOnce();
@@ -130,7 +134,7 @@ public partial class ReaderPage : ContentPage
             string? text = await Clipboard.Default.GetTextAsync();
             if (!string.IsNullOrWhiteSpace(text))
             {
-                TextEditor.Text = text;
+                SetEditorText(text);
             }
         }
         catch (Exception)
@@ -298,7 +302,7 @@ public partial class ReaderPage : ContentPage
             return;
         }
 
-        TextEditor.Text = updated;
+        SetEditorText(updated);
         if (failed.Count > 0)
         {
             string noun = failed.Count == 1 ? "page" : "pages";
@@ -388,7 +392,7 @@ public partial class ReaderPage : ContentPage
         BusyIndicator.IsVisible = true;
         try
         {
-            TextEditor.Text = await _documentExtractor.ExtractTextAsync(file.FullPath);
+            SetEditorText(await _documentExtractor.ExtractTextAsync(file.FullPath));
         }
         catch (DocumentTooLargeException ex)
         {
@@ -436,6 +440,7 @@ public partial class ReaderPage : ContentPage
             return;
         }
 
+        CancelHeadStart();
         _reader.Stop();
         ClearPendingRead();
         if (string.IsNullOrWhiteSpace(text))
@@ -607,6 +612,7 @@ public partial class ReaderPage : ContentPage
         {
             RenderPackStatus();
             UpdateVoiceLabel();
+            RestartHeadStartIfKeyChanged();
         });
 
     private void RenderPackStatus()
@@ -622,5 +628,102 @@ public partial class ReaderPage : ContentPage
         {
             _ = _installer.StartAsync();
         }
+    }
+
+    // ---- Head start (Slice 47): synthesize the opening sentences before Play is tapped. ----
+
+    // Typing waits this long after the last keystroke; a paste, file or scan prepares at once.
+    private static readonly TimeSpan HeadStartTypingDelay = TimeSpan.FromSeconds(1);
+
+    private CancellationTokenSource? _headStartCts;
+    private string? _headStartKey;
+    private bool _settingEditorText;
+
+    private void InitHeadStart()
+    {
+        _headStartKey = CurrentHeadStartKey();
+        TextEditor.TextChanged += OnEditorTextChanged;
+    }
+
+    // Paste, file and scan put text in the editor in one go: prepare it immediately, and keep the
+    // TextChanged that the assignment raises from also scheduling a debounced prepare.
+    private void SetEditorText(string text)
+    {
+        _settingEditorText = true;
+        try
+        {
+            TextEditor.Text = text;
+        }
+        finally
+        {
+            _settingEditorText = false;
+        }
+
+        StartHeadStart(TimeSpan.Zero);
+    }
+
+    private void OnEditorTextChanged(object? sender, TextChangedEventArgs e)
+    {
+        if (!_settingEditorText)
+        {
+            StartHeadStart(HeadStartTypingDelay);
+        }
+    }
+
+    // Everything the sentence cache key holds besides the text: a change to any of them makes
+    // every cached sentence a miss, so the head start prepares again.
+    private string CurrentHeadStartKey()
+    {
+        VoiceModelPaths? paths = _model.Paths;
+        return string.Join('|', _settings.VoiceId, paths?.Kind, paths?.Language, paths?.RootDir, paths?.PackVersion);
+    }
+
+    private void RestartHeadStartIfKeyChanged()
+    {
+        if (CurrentHeadStartKey() != _headStartKey)
+        {
+            StartHeadStart(TimeSpan.Zero);
+        }
+    }
+
+    private void StartHeadStart(TimeSpan delay)
+    {
+        CancelHeadStart();
+        _headStartKey = CurrentHeadStartKey();
+        var cts = new CancellationTokenSource();
+        _headStartCts = cts;
+        _ = PrepareHeadStartAsync(TextEditor.Text ?? string.Empty, delay, cts.Token);
+    }
+
+    private async Task PrepareHeadStartAsync(string text, TimeSpan delay, CancellationToken token)
+    {
+        try
+        {
+            if (delay > TimeSpan.Zero)
+            {
+                await Task.Delay(delay, token);
+            }
+
+            if (!string.IsNullOrWhiteSpace(text) && !_headStart.ReadInProgress)
+            {
+                await Task.Run(() => _headStart.PrepareAsync(text), token);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Superseded by a newer edit, or Play was tapped.
+        }
+        catch (Exception)
+        {
+            // A head start is an optimization: failing to prepare never reaches the user.
+        }
+    }
+
+    private void CancelHeadStart()
+    {
+        _headStartCts?.Cancel();
+        _headStartCts?.Dispose();
+        _headStartCts = null;
+        _headStart.CancelPrepare();
     }
 }

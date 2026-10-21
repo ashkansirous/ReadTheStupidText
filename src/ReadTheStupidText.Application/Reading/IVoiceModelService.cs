@@ -7,12 +7,15 @@ namespace ReadTheStupidText.Application.Reading;
 /// the <see cref="Kind"/> of model, the <see cref="Language"/> it reads, and its
 /// <see cref="Voices"/>. The synthesis engine knows its own file layout under the
 /// directory; the defaults describe the single English Supertonic model Windows ships.
+/// <see cref="PackVersion"/> is the installed pack's manifest version (empty for a model that
+/// has no pack), so cached audio is not reused after a pack update.
 /// </summary>
 public sealed record VoiceModelPaths(
     string RootDir,
     VoiceEngineKind Kind = VoiceEngineKind.Supertonic,
     string Language = SupertonicVoiceTable.EnglishCode,
-    IReadOnlyList<VoiceInfo>? Voices = null)
+    IReadOnlyList<VoiceInfo>? Voices = null,
+    string PackVersion = "")
 {
     /// <summary>The voices this model offers for <see cref="Language"/>.</summary>
     public IReadOnlyList<VoiceInfo> AvailableVoices => Voices ?? SupertonicVoiceTable.Voices;

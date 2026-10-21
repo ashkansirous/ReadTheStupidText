@@ -56,6 +56,10 @@
       on either platform.</li>
     <li>The app&rsquo;s <strong>activity log</strong> (an optional diagnostic view) lives in
       memory, shows recent read activity, and is <strong>cleared when the app closes</strong>.</li>
+    <li><strong>Android &mdash; cached audio of read sentences:</strong> to start reading sooner,
+      the app keeps the audio it generated for sentences it has read on your device only, in the
+      app&rsquo;s private storage, capped at 100 MB. It is removed when you clear the app&rsquo;s
+      cache or storage, and it is never sent anywhere.</li>
     <li><strong>Settings</strong> you choose (reading speed, selected voice, and platform toggles
       such as auto-read and launch-at-startup) are stored <strong>locally</strong> on your device.
       They never leave it.</li>

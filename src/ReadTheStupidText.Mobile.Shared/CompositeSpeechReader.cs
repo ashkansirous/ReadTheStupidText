@@ -11,7 +11,7 @@ namespace ReadTheStupidText.Mobile;
 /// (Decision 39). The two engines come from <see cref="IPlatformServices"/>, so this
 /// class names no platform type (Slice 44).
 /// </summary>
-public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
+public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IDisposable
 {
     private readonly ISpeechReader _neural;
     private readonly ISpeechReader _fallback;
@@ -141,6 +141,17 @@ public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
             NeuralVoiceMemory.Remember(voiceId);
         }
     }
+
+    // Slice 47: only the neural engine has audio worth preparing, and only when it would be
+    // the one to read (pack ready, "Phone voice" not chosen); otherwise there is nothing to do.
+    public Task PrepareAsync(string text) =>
+        _model.IsReady && !_useSystemVoice && _neural is IHeadStart neural
+            ? neural.PrepareAsync(text)
+            : Task.CompletedTask;
+
+    public bool ReadInProgress => (_neural as IHeadStart)?.ReadInProgress ?? false;
+
+    public void CancelPrepare() => (_neural as IHeadStart)?.CancelPrepare();
 
     public Task SkipForward() => _active.SkipForward();
 

@@ -595,42 +595,8 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IDisposable
 
     private static async Task WriteWavFileAsync(string path, float[] samples, int sampleRate)
     {
-        byte[] wav = EncodeWav(samples, sampleRate);
+        byte[] wav = WavFile.Encode(samples, sampleRate);
         await File.WriteAllBytesAsync(path, wav);
-    }
-
-    // Encodes mono float samples as a 16-bit PCM WAV (RIFF) byte buffer.
-    private static byte[] EncodeWav(float[] samples, int sampleRate)
-    {
-        const int bitsPerSample = 16;
-        const short channels = 1;
-        int dataBytes = samples.Length * sizeof(short);
-        int blockAlign = channels * bitsPerSample / 8;
-
-        using var memory = new MemoryStream(44 + dataBytes);
-        using var writer = new BinaryWriter(memory);
-
-        writer.Write("RIFF"u8.ToArray());
-        writer.Write(36 + dataBytes);
-        writer.Write("WAVE"u8.ToArray());
-        writer.Write("fmt "u8.ToArray());
-        writer.Write(16);
-        writer.Write((short)1); // PCM
-        writer.Write(channels);
-        writer.Write(sampleRate);
-        writer.Write(sampleRate * blockAlign); // byte rate
-        writer.Write((short)blockAlign);
-        writer.Write((short)bitsPerSample);
-        writer.Write("data"u8.ToArray());
-        writer.Write(dataBytes);
-
-        foreach (float sample in samples)
-        {
-            writer.Write((short)(Math.Clamp(sample, -1f, 1f) * short.MaxValue));
-        }
-
-        writer.Flush();
-        return memory.ToArray();
     }
 
     public void Dispose()
