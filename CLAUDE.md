@@ -148,8 +148,8 @@ DinoReader.Core (standalone, no deps)
   sentence or paragraph boundary (wrapped PDF/OCR text). (Slice 59: docs/plan/slices/59-dialogue-parser-voice-caster.md)
 - **Infrastructure** (`net10.0-windows`) — speech engines (local neural
   **Supertonic-3** via sherpa-onnx, plus a WinRT `SpeechSynthesis` fallback),
-  all played through `MediaPlayer`; on Windows the neural model ships in the package
-  (Android/iOS download packs instead, Slice 50; Windows follows in Slice 56).
+  all played through `MediaPlayer`; every platform downloads its voice as a pack
+  (Slice 50; Windows since Slice 56, no model in the MSIX).
   Clipboard, UI Automation, startup task, OS integration.
 - **App** (`net10.0-windows`, WinUI single-project MSIX) — UI, tray, DI wiring.
 - **Mobile** (`src/ReadTheStupidText.Mobile`, .NET MAUI, Decision 37) — the RTST
@@ -210,6 +210,11 @@ DinoReader.Core (standalone, no deps)
 - Dino Reader: stories are `AppDataDirectory/stories/<guid>/story.json` via `FileStoryLibrary`, images only through `TryResolveFile`; grown-up pages implement `IGrownUpPage`, and app-launched activities are wrapped in `ExternalActivityGuard`; tokens come from `DinoTokens`. (Slice 61: docs/plan/slices/61-gallery-grownup-gate.md)
 - Dino Reader reading: `StorySentences` and `SegmentSentenceSplitter` map `ChunkChanged` 1:1 to sentences; `FlowPager`/`PageComposer` (`DinoReader.Core`) paginate off the UI thread; story text ignores the font scale. (Slice 62: docs/plan/slices/62-reading-screen-modes.md)
 - Dino Reader cast: edits go only through `CastEditor` and pin voices via `CastMember.Edited`; merges live in `Story.Merges`, applied each read by `CastMerges` in `StoryVoicing`, never in stored text; an unknown speaker gets the narrator voice (`VoiceCaster.VoiceForLine`). (Slice 65: docs/plan/slices/65-cast-screen.md)
+- Scanner/OCR stack (ML Kit, PaddleOCR, document scanner, PDF renderer, page-image keeper) lives in `Mobile.Shared/Platforms/Android`, registered once in `MobileSharedServices.Android.cs`; apps must not register their own and must forward `OnActivityResult` to `AndroidDocumentScanner.HandleActivityResult`. Positioned text uses `NormalizedRect` (0..1, top-left); `RangeToBoxMapper` maps story ranges to lines. Translation stays in the RTST app. (Slice 63: docs/plan/slices/63-positioned-text-extraction.md)
+- OCR shared by Android and iOS is `Mobile.Shared/Ocr/` behind `IBuiltInTextRecognizer`. iOS ships its own `Microsoft.ML.OnnxRuntime` (sherpa's xcframework links it statically, no `OrtGetApiBase`); no translator on iOS, so the translate card stays hidden. (Slice 55: docs/plan/slices/55-ios-batch9-features.md)
+- Dino languages: rules per language in `RuleSets` (cached per `AppLanguage`, `LanguageRules.For(code)`); only `ReadingPage` switches `SpokenLanguage`, never the cast screen; translation stays hidden until an `ITranslator` is registered in Dino's DI. (Slice 66: docs/plan/slices/66-dino-reader-languages-translation.md)
+- Windows packs (Slice 56): the MSIX holds no voice model and declares `internetClient` (STORE.md, PRIVACY.md and `site/privacy.html` say so). Packs live in `LocalCacheFolder\packs\<id>`, never `LocalFolder` (cloud-backed). `PackVoiceModelService` and `WindowsVoicePackService` are Windows copies of the Mobile ones, `VoicePackSetup` (Application) the MAUI-free twin of `VoicePackInstaller`: change both sides together. `windows.yml` has no LFS; keep `RemoveWinMlOnnxRuntimeDuplicate`. (Slice 56: docs/plan/slices/56-windows-packs-language-headstart.md)
+- Windows head start (Slice 56): `SupertonicSpeechReader` implements `IHeadStart`, backed by `SentenceAudioCache` in `LocalCacheFolder\sentences`; chunks are joined into the per-read play file, so `DeleteRead` and the startup sweep never touch cached clips. `ReadAloudService.BeginAutoRead` prepares after an 80 ms stable wait (`HeadStartStableMs`); hotkey and Play reads do not. Reads are owned by `ActiveRead`/`ReadOwnership`. (Slice 56: docs/plan/slices/56-windows-packs-language-headstart.md)
 
 Keep `App.xaml.cs` thin: provider/DI wiring and window bootstrap only. Real
 logic lives in Application/Infrastructure; XAML views stay free of business
@@ -362,13 +367,12 @@ copy / `copyOnSelect` / hotkey, not a new selection-detection mechanism.
 Note (Windows; Android/iOS use downloaded packs): the narrator voice is a **local neural voice** (Slice 9, Decision 14) — the
 **sherpa-onnx** runtime (Apache-2.0) running the **Supertonic-3** model
 (Apache-2.0, `sherpa-onnx-supertonic-3-tts-int8-2026-05-11`), via
-`org.k2fsa.sherpa.onnx`. The model (~145 MB) **ships inside the package** under
-`VoiceModel/` (committed to the repo, read from `AppContext.BaseDirectory`) — no
-download, no network, no `internetClient`; the picker offers **only** the
-Supertonic voices (`SupertonicVoiceTable`, the fixed 10-style F1–F5/M1–M5 set in
+`org.k2fsa.sherpa.onnx`. The model (~145 MB) is a **downloaded pack** (Slice 56,
+see the Windows rules under Mobile rules below; `VoiceModel/` stays in the repo only as the source for `packs.yml`); the picker offers the pack's
+voices plus a labelled "Windows voice". The Supertonic voices (`SupertonicVoiceTable`, the fixed 10-style F1–F5/M1–M5 set in
 sorted sid order, modelled as `VoiceInfo` records). The built-in WinRT
-`SpeechSynthesis` voice is an internal **safety-net fallback only** (if the
-packaged files are missing) — never offered for selection. Narrator's
+`SpeechSynthesis` voice is the first-run voice until the pack lands and the fallback
+if the pack is missing; it is selectable as "Windows voice" (Slice 56). Narrator's
 "Natural"/neural voices are unreachable by a Store app, so we bring our own
 engine. **Piper is GPL — do not use it; Kokoro was rejected** (Chinese-focused,
 no English male voice in the latest, ships GPL-adjacent espeak data); Supertonic
