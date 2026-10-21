@@ -84,6 +84,11 @@ public static class AppResources
     public static string VoicePicker_SectionFemale => Get();
     public static string VoicePicker_Hint => Get();
     public static string VoicePicker_PhoneVoiceName => Get();
+    public static string VoicePicker_EngineSupertonic => Get();
+    public static string VoicePicker_EnginePiper => Get();
+    public static string VoicePicker_EngineMelo => Get();
+    public static string VoicePicker_ReasonPackNotInstalled => Get();
+    public static string VoicePicker_ReasonNoNeuralEngine => Get();
     public static string Language_Intro => Get();
     public static string Language_Retry => Get();
     public static string Language_Continue => Get();

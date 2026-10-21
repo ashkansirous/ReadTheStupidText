@@ -18,7 +18,6 @@ public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
     private readonly IVoiceModelService _model;
     private ISpeechReader _active;
     private bool _useSystemVoice;
-    private const string LastNeuralVoiceKey = "LastNeuralVoiceId";
 
     public CompositeSpeechReader(ISpeechReader neural, ISpeechReader fallback, IVoiceModelService model)
     {
@@ -29,9 +28,12 @@ public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
 
         // The persisted choice may be "Phone voice" at startup; the neural engine still
         // needs the voice the user last picked for when they switch back (or the default).
-        if (Preferences.Default.Get<string?>(LastNeuralVoiceKey, null) is { } lastNeural)
+        foreach (VoiceEngineKind kind in Enum.GetValues<VoiceEngineKind>())
         {
-            _neural.SetVoice(lastNeural);
+            if (NeuralVoiceMemory.Get(kind) is { } lastNeural)
+            {
+                _neural.SetVoice(lastNeural);
+            }
         }
 
         Subscribe(_neural);
@@ -61,10 +63,24 @@ public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
 
     public PlaybackState State => _active.State;
 
-    public Task SpeakAsync(string text, int? activityId = null)
+    public async Task SpeakAsync(string text, int? activityId = null)
     {
-        _active = _model.IsReady && !_useSystemVoice ? _neural : _fallback;
-        return _active.SpeakAsync(text, activityId);
+        if (_model.IsReady && !_useSystemVoice)
+        {
+            _active = _neural;
+            try
+            {
+                await _neural.SpeakAsync(text, activityId);
+                return;
+            }
+            catch (NeuralEngineUnavailableException)
+            {
+                // The model went away after the readiness check: read with the phone voice.
+            }
+        }
+
+        _active = _fallback;
+        await _fallback.SpeakAsync(text, activityId);
     }
 
     // Always true: a segment read is handled either way (neural, or the joined-text fallback).
@@ -74,16 +90,24 @@ public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
     // (pack not ready, "Phone voice" picked, or a platform whose neural slot is just the
     // built-in engine, as on iOS) the built-in engine reads the whole story in its one
     // voice rather than failing, so a child is never left with silence (Slice 60).
-    public Task SpeakSegmentsAsync(IReadOnlyList<VoicedSegment> segments, int? activityId = null)
+    public async Task SpeakSegmentsAsync(IReadOnlyList<VoicedSegment> segments, int? activityId = null)
     {
         if (_model.IsReady && !_useSystemVoice && _neural.SupportsSegments)
         {
             _active = _neural;
-            return _neural.SpeakSegmentsAsync(segments, activityId);
+            try
+            {
+                await _neural.SpeakSegmentsAsync(segments, activityId);
+                return;
+            }
+            catch (NeuralEngineUnavailableException)
+            {
+                // The model went away after the readiness check: read with the phone voice.
+            }
         }
 
         _active = _fallback;
-        return _fallback.SpeakAsync(VoicedSegment.JoinText(segments), activityId);
+        await _fallback.SpeakAsync(VoicedSegment.JoinText(segments), activityId);
     }
 
     // Only the neural engine has a heavy model to warm; the built-in engine is instant.
@@ -114,7 +138,7 @@ public sealed class CompositeSpeechReader : ISpeechReader, IDisposable
         if (!_useSystemVoice)
         {
             _neural.SetVoice(voiceId);
-            Preferences.Default.Set(LastNeuralVoiceKey, voiceId);
+            NeuralVoiceMemory.Remember(voiceId);
         }
     }
 

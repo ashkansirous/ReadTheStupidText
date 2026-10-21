@@ -650,9 +650,7 @@ public partial class ReaderPage : ContentPage
             return;
         }
 
-        VoiceNameLabel.Text = SupertonicVoiceTable.Voices
-            .FirstOrDefault(v => v.Id == _settings.VoiceId, SupertonicVoiceTable.Default)
-            .DisplayName;
+        VoiceNameLabel.Text = (_model.Paths is { } paths ? NeuralVoiceMemory.Resolve(paths, _settings.VoiceId) : SupertonicVoiceTable.Default).DisplayName;
     }
 
     // The stored language, or what the UI resolved to when none is stored yet.

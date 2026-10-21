@@ -65,6 +65,11 @@
   <data name="VoicePicker_SectionFemale" xml:space="preserve"><value>أنثى</value></data>
   <data name="VoicePicker_Hint" xml:space="preserve"><value>اضغط على صوت لسماعه واختياره. تغيير الصوت أثناء القراءة يُنهي الجملة الحالية بالصوت القديم.</value></data>
   <data name="VoicePicker_PhoneVoiceName" xml:space="preserve"><value>صوت الهاتف</value></data>
+  <data name="VoicePicker_EngineSupertonic" xml:space="preserve"><value>SUPERTONIC</value></data>
+  <data name="VoicePicker_EnginePiper" xml:space="preserve"><value>PIPER</value></data>
+  <data name="VoicePicker_EngineMelo" xml:space="preserve"><value>MELOTTS</value></data>
+  <data name="VoicePicker_ReasonPackNotInstalled" xml:space="preserve"><value>الصوت الطبيعي للغتك غير مثبّت بعد، لذلك يقرأ صوت الهاتف.</value></data>
+  <data name="VoicePicker_ReasonNoNeuralEngine" xml:space="preserve"><value>الأصوات الطبيعية غير متاحة على هذا الجهاز بعد، لذلك يقرأ صوت الهاتف.</value></data>
   <data name="Language_Intro" xml:space="preserve"><value>اختر لغتك. سنُنزّل صوتًا طبيعيًا لها؛ وإلى أن يصل، يقرأ صوت هاتفك.</value></data>
   <data name="Language_Retry" xml:space="preserve"><value>إعادة محاولة التنزيل</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>متابعة</value></data>

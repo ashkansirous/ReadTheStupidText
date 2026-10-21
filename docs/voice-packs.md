@@ -29,7 +29,9 @@ supertonic-3/
 | `language` | comma-separated language codes the pack serves (`en,fr,es,pt,ru,ja,ar`) |
 | `version` | pack version string |
 | `engine` | the synthesis/recognition engine (`sherpa-onnx`) |
-| `files` | every payload file the app must find after extraction (LICENSE excluded) |
+| `files` | every payload file the app must find after extraction (`pack.json` excluded) |
+| `model` | optional (Slice 51): the engine family, Piper/VITS or MeloTTS. Absent means Supertonic |
+| `voices` | optional (Slice 51): the voices the pack offers. Supertonic lists none (its ten styles are `SupertonicVoiceTable`); Piper and Melo list theirs |
 
 The app installs a pack only after the whole file list is present, so a killed or partial
 download can never be mistaken for a working pack.
@@ -45,7 +47,9 @@ An array of:
 
 Entries with an unknown `kind` are ignored, so a newer catalog still works with an older
 app. Language-to-pack choice is `VoicePackSelector` (a language with no pack, today Persian
-and Chinese until Slice 51, reads with the phone voice and the app says so).
+and Chinese until `packs-2` is published and pinned, reads with the phone voice and the app
+says so). The installed pack serving the current language is resolved by
+`InstalledVoiceCatalog` (Slice 51).
 
 ## Hosting
 
@@ -62,10 +66,19 @@ created `--latest=false`, so `releases/latest` stays the app.
 ## Publishing
 
 Manual: run the **packs** workflow (`.github/workflows/packs.yml`, `workflow_dispatch`) with
-the release number and the pack version. It zips `src/ReadTheStupidText.App/VoiceModel/`
-(LFS) into the layout above, computes the sha256 and size, and creates the `packs-<n>`
-release with the zip and `packs.json`. After the first run, confirm that `v*` versions and
-`releases/latest` are unchanged.
+the release number and the three pack versions (`pack_version` for Supertonic,
+`piper_pack_version`, `melo_pack_version`). One run builds three packs into the one
+`packs-<n>` release, computes each sha256 and size, and publishes the zips with `packs.json`:
+
+| pack | languages | engine | licence |
+| --- | --- | --- | --- |
+| `supertonic-3` | en, fr, es, pt, ru, ja, ar | Supertonic (zips `src/ReadTheStupidText.App/VoiceModel/`, LFS) | Apache-2.0 |
+| `piper-fa` | fa | Piper/VITS (`fa_IR-amir-medium`) | espeak-ng data is GPL-3.0, inside this zip only, with its `LICENSE` and `SOURCE` |
+| `melo-zh-en` | zh | MeloTTS | MIT |
+
+The espeak-ng data never enters the repo or an app package. After a run, confirm that `v*`
+versions and `releases/latest` are unchanged, then flip `PackConstants.CatalogUrl` to the new
+release in a one-line PR.
 
 ## Client behaviour (Android, `MobileVoicePackService`)
 

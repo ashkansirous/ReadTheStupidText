@@ -7,6 +7,20 @@
     Title="{x:Static res:AppResources.Common_Voice}"
     Shell.NavBarIsVisible="False">
 
+    <ContentPage.Resources>
+        <Style x:Key="VoiceSectionHeading" TargetType="Label">
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
+        </Style>
+        <Style x:Key="VoiceCard" TargetType="Border">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 14" />
+            <Setter Property="Stroke" Value="{StaticResource CardBorder}" />
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}" />
+        </Style>
+    </ContentPage.Resources>
+
     <Grid RowDefinitions="Auto,*" BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}">
 
         <Grid x:Name="HeaderGrid" Grid.Row="0" Padding="14,14,18,16" ColumnDefinitions="Auto,*">
@@ -34,24 +48,30 @@
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="14" Spacing="14">
 
-                <Label Text="{x:Static res:AppResources.VoicePicker_SectionPhone}" FontSize="10.5" FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
-                <Border Padding="0" StrokeShape="RoundRectangle 14" Stroke="{StaticResource CardBorder}"
-                        BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}">
+                <Label Text="{x:Static res:AppResources.VoicePicker_SectionPhone}" Style="{StaticResource VoiceSectionHeading}" />
+                <Border Style="{StaticResource VoiceCard}">
                     <VerticalStackLayout x:Name="PhoneVoiceList" />
                 </Border>
 
                 <VerticalStackLayout x:Name="NeuralVoiceSections" Spacing="14">
-                <Label Text="{x:Static res:AppResources.VoicePicker_SectionMale}" FontSize="10.5" FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
-                <Border Padding="0" StrokeShape="RoundRectangle 14" Stroke="{StaticResource CardBorder}"
-                        BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}">
-                    <VerticalStackLayout x:Name="MaleVoiceList" />
-                </Border>
+                    <VerticalStackLayout x:Name="SupertonicSections" Spacing="14">
+                        <Label Text="{x:Static res:AppResources.VoicePicker_SectionMale}" Style="{StaticResource VoiceSectionHeading}" />
+                        <Border Style="{StaticResource VoiceCard}">
+                            <VerticalStackLayout x:Name="MaleVoiceList" />
+                        </Border>
 
-                <Label Text="{x:Static res:AppResources.VoicePicker_SectionFemale}" FontSize="10.5" FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
-                <Border Padding="0" StrokeShape="RoundRectangle 14" Stroke="{StaticResource CardBorder}"
-                        BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}">
-                    <VerticalStackLayout x:Name="FemaleVoiceList" />
-                </Border>
+                        <Label Text="{x:Static res:AppResources.VoicePicker_SectionFemale}" Style="{StaticResource VoiceSectionHeading}" />
+                        <Border Style="{StaticResource VoiceCard}">
+                            <VerticalStackLayout x:Name="FemaleVoiceList" />
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout x:Name="EngineSection" Spacing="14" IsVisible="False">
+                        <Label x:Name="EngineHeading" Style="{StaticResource VoiceSectionHeading}" />
+                        <Border Style="{StaticResource VoiceCard}">
+                            <VerticalStackLayout x:Name="EngineVoiceList" />
+                        </Border>
+                    </VerticalStackLayout>
                 </VerticalStackLayout>
 
                 <Label Text="{x:Static res:AppResources.VoicePicker_Hint}"

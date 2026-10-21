@@ -62,6 +62,11 @@
   <data name="VoicePicker_SectionFemale" xml:space="preserve"><value>ЖЕНСКИЕ</value></data>
   <data name="VoicePicker_Hint" xml:space="preserve"><value>Нажмите на голос, чтобы послушать и выбрать его. При смене голоса во время чтения текущее предложение дочитывается прежним голосом.</value></data>
   <data name="VoicePicker_PhoneVoiceName" xml:space="preserve"><value>Голос телефона</value></data>
+  <data name="VoicePicker_EngineSupertonic" xml:space="preserve"><value>SUPERTONIC</value></data>
+  <data name="VoicePicker_EnginePiper" xml:space="preserve"><value>PIPER</value></data>
+  <data name="VoicePicker_EngineMelo" xml:space="preserve"><value>MELOTTS</value></data>
+  <data name="VoicePicker_ReasonPackNotInstalled" xml:space="preserve"><value>Естественный голос для вашего языка ещё не установлен, поэтому читает голос телефона.</value></data>
+  <data name="VoicePicker_ReasonNoNeuralEngine" xml:space="preserve"><value>Естественные голоса пока недоступны на этом устройстве, поэтому читает голос телефона.</value></data>
   <data name="Language_Intro" xml:space="preserve"><value>Выберите язык. Мы загрузим для него естественный голос; пока он не загрузится, читает голос вашего телефона.</value></data>
   <data name="Language_Retry" xml:space="preserve"><value>Повторить загрузку</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>Продолжить</value></data>

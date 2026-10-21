@@ -1,3 +1,4 @@
+using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Domain.Reading;
 using ReadTheStupidText.Domain.Sanitizing;
@@ -12,7 +13,7 @@ namespace ReadTheStupidText.Mobile;
 /// Preferences for a uniform implementation, but nothing on Android ever reads
 /// them (Decision 38 — no auto-read triggers, no panel to reposition).
 /// </summary>
-public sealed class MobilePreferencesSettingsStore : ISettingsStore
+public sealed class MobilePreferencesSettingsStore : ISettingsStore, ILanguageChangeNotifier
 {
     private const string SpeedKey = "PlaybackRate";
     private const string AutoReadOnSelectionKey = "AutoReadOnSelection";
@@ -65,11 +66,14 @@ public sealed class MobilePreferencesSettingsStore : ISettingsStore
         }
     }
 
+    public event EventHandler? LanguageChanged;
+
     public string? Language
     {
         get => Preferences.Default.Get(LanguageKey, (string?)null);
         set
         {
+            string? previous = Language;
             if (value is null)
             {
                 Preferences.Default.Remove(LanguageKey);
@@ -77,6 +81,11 @@ public sealed class MobilePreferencesSettingsStore : ISettingsStore
             else
             {
                 Preferences.Default.Set(LanguageKey, value);
+            }
+
+            if (previous != value)
+            {
+                LanguageChanged?.Invoke(this, EventArgs.Empty);
             }
         }
     }

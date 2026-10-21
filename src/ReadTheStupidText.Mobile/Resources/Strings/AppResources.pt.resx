@@ -62,6 +62,11 @@
   <data name="VoicePicker_SectionFemale" xml:space="preserve"><value>FEMININA</value></data>
   <data name="VoicePicker_Hint" xml:space="preserve"><value>Toque em uma voz para ouvi-la e selecioná-la. Trocar de voz durante a leitura termina a frase atual com a voz anterior.</value></data>
   <data name="VoicePicker_PhoneVoiceName" xml:space="preserve"><value>Voz do telefone</value></data>
+  <data name="VoicePicker_EngineSupertonic" xml:space="preserve"><value>SUPERTONIC</value></data>
+  <data name="VoicePicker_EnginePiper" xml:space="preserve"><value>PIPER</value></data>
+  <data name="VoicePicker_EngineMelo" xml:space="preserve"><value>MELOTTS</value></data>
+  <data name="VoicePicker_ReasonPackNotInstalled" xml:space="preserve"><value>A voz natural do seu idioma ainda não está instalada, então a voz do telefone lê.</value></data>
+  <data name="VoicePicker_ReasonNoNeuralEngine" xml:space="preserve"><value>As vozes naturais ainda não estão disponíveis neste dispositivo, então a voz do telefone lê.</value></data>
   <data name="Language_Intro" xml:space="preserve"><value>Escolha seu idioma. Vamos baixar uma voz natural para ele; até chegar, a voz do seu telefone lê.</value></data>
   <data name="Language_Retry" xml:space="preserve"><value>Tentar baixar novamente</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>Continuar</value></data>
