@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-import { GROUPS, bumpKind, matchesPattern, newestAppTag, shipTargets } from './ship-targets.mjs';
+import { GROUPS, IGNORED_PATTERNS, bumpKind, matchesPattern, newestAppTag, shipTargets } from './ship-targets.mjs';
 
 const M = 'src/ReadTheStupidText.Mobile';
 const S = 'src/ReadTheStupidText.Mobile.Shared';
@@ -183,6 +183,7 @@ for (const [file, groups] of Object.entries(PR_TARGETS)) {
         const own = `.github/workflows/${file}`;
         const expected = derivedPaths(groups);
         expected.add(own); // a workflow always re-runs on its own edits
+        IGNORED_PATTERNS.forEach((pattern) => expected.add(`!${pattern}`));
         assert.equal(new Set(actual).size, actual.length, `${file}: duplicate path entries`);
         assert.deepEqual([...new Set(actual)].sort(), [...expected].sort());
     });
@@ -201,4 +202,35 @@ test('a negated path follows its root glob and precedes the Platforms re-include
             assert.ok(reincludes.every((p) => paths.indexOf(p) > excluded), `${file}: ${root} Platforms re-includes must follow the !`);
         }
     }
+});
+
+test('every pull_request.paths list ends with the Markdown negation', () => {
+    for (const file of [...Object.keys(PR_TARGETS), 'release-scripts.yml']) {
+        const tail = readPullRequestPaths(file).slice(-IGNORED_PATTERNS.length);
+        assert.deepEqual(tail, IGNORED_PATTERNS.map((pattern) => `!${pattern}`), `${file}: ignore negations must be last`);
+    }
+});
+
+test('a Markdown-only change set builds nothing', () => {
+    const files = [
+        'src/ReadTheStupidText.App/a.md',
+        'src/ReadTheStupidText.Infrastructure/a.md',
+        'src/DinoReader.App/a.md',
+        'src/DinoReader.Core/a.md',
+        'tests/DinoReader.Tests/a.md',
+        `${M}/CLAUDE.md`,
+        `${M}/Platforms/Android/a.md`,
+        `${M}/Platforms/iOS/a.md`,
+        `${S}/CLAUDE.md`,
+        'src/ReadTheStupidText.Application/a.md',
+    ];
+    assert.deepEqual(targetsOf(files), NONE);
+});
+
+test('the Markdown ignore is case-sensitive, like GitHub paths globs', () => {
+    assert.deepEqual(targetsOf(['src/ReadTheStupidText.Domain/README.MD']), { ...NONE, ...ALL3 });
+});
+
+test('Markdown mixed with code still builds the code targets', () => {
+    assert.deepEqual(targetsOf([`${M}/CLAUDE.md`, `${M}/Platforms/iOS/AppDelegate.cs`]), { ...NONE, ios: true });
 });

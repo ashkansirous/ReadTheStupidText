@@ -13,6 +13,7 @@ on:
       - 'src/DinoReader.Core/**'
       - 'tests/DinoReader.Tests/**'
       - '.github/workflows/dinoreader.yml'
+      - '!**/*.md'
   workflow_dispatch:
   workflow_call:
 

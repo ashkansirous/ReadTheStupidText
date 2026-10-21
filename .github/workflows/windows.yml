@@ -31,6 +31,7 @@ on:
       - 'src/ReadTheStupidText.Infrastructure/**'
       - '.github/workflows/store-submit.yml'
       - '.github/workflows/windows.yml'
+      - '!**/*.md'
   workflow_dispatch:
   workflow_call:
     inputs:
