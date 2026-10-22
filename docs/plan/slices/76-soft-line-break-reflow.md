@@ -119,7 +119,7 @@ known" becomes "wellknown", `DroppedHyphenBreaks` keeps `LocateChunk` aligned). 
   have a good view, but Carrot wants to get even closer." as one sentence with the highlight
   box covering both lines.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-22)
 
 - `src/DinoReader.Core/CLAUDE.md`: a single newline is a sentence/segment boundary only where `LineReflow` (Application) says it is a real break; never split on bare `
 `. Core does reference Application, so the "no project references" line is wrong. (Slice 76: docs/plan/slices/76-soft-line-break-reflow.md)

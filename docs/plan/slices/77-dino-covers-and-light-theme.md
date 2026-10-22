@@ -89,7 +89,7 @@ system dark mode the platform's default light text lands on the white card.
 
 *Checks:* Dino 369 and RTST 655 tests pass; Dino Android and Windows x64, and RTST Mobile, build. Emulator (RTST_Test, dark mode): typed text readable, page-1 tile after import and after edit, photo cover, colour cover survives restart, live night toggle on the reading screen, cancel keeps the cover: pass.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-22)
 
 In `src/DinoReader.App/CLAUDE.md`:
 
