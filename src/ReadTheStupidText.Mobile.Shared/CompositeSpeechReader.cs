@@ -11,13 +11,14 @@ namespace ReadTheStupidText.Mobile;
 /// (Decision 39). The two engines come from <see cref="IPlatformServices"/>, so this
 /// class names no platform type (Slice 44).
 /// </summary>
-public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingLanguage, IDisposable
+public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingLanguage, IReadScoped, IDisposable
 {
     private readonly ISpeechReader _neural;
     private readonly ISpeechReader _fallback;
     private readonly IVoiceModelService _model;
     private ISpeechReader _active;
     private bool _useSystemVoice;
+    private string? _appReadingLanguage;
 
     public CompositeSpeechReader(ISpeechReader neural, ISpeechReader fallback, IVoiceModelService model)
     {
@@ -65,6 +66,7 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
 
     public async Task SpeakAsync(string text, int? activityId = null)
     {
+        RestoreAppReadingLanguage();
         if (_model.IsReady && !_useSystemVoice)
         {
             _active = _neural;
@@ -81,6 +83,41 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
 
         _active = _fallback;
         await _fallback.SpeakAsync(text, activityId);
+    }
+
+    public bool SupportsModelScope => _neural is IModelScopedReader;
+
+    // Slice 90: a read in the text's own language. The page decided who reads (the phone voice, or the
+    // natural pack for that language); the app-language model and the stored voice choice are untouched,
+    // and the phone voice's language is the app's again at the next unscoped read (the reader may still
+    // need this read's language to resume or skip, so it is not reset mid-read).
+    public async Task SpeakScopedAsync(string text, ReadVoiceScope scope, int? activityId = null)
+    {
+        if (!scope.PhoneVoice && scope.Model is { } model && _neural is IModelScopedReader scoped)
+        {
+            _active = _neural;
+            try
+            {
+                await scoped.SpeakAsync(text, model, activityId);
+                return;
+            }
+            catch (NeuralEngineUnavailableException)
+            {
+                // The model went away after the page resolved it: read with the phone voice.
+            }
+        }
+
+        _active = _fallback;
+        (_fallback as IReadingLanguage)?.SetReadingLanguage(scope.Language);
+        await _fallback.SpeakAsync(text, activityId);
+    }
+
+    private void RestoreAppReadingLanguage()
+    {
+        if (_appReadingLanguage is { } language)
+        {
+            (_fallback as IReadingLanguage)?.SetReadingLanguage(language);
+        }
     }
 
     // Always true: a segment read is handled either way (neural, or the joined-text fallback).
@@ -143,13 +180,24 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
     }
 
     // Slice 82: only the phone voice follows the text's language; a natural pack already is one language.
-    public void SetReadingLanguage(string languageCode) => (_fallback as IReadingLanguage)?.SetReadingLanguage(languageCode);
+    // This is the app language (Slice 90): what every unscoped read and voice preview speaks in. A one-off
+    // read in another language goes through SpeakScopedAsync and never changes it.
+    public void SetReadingLanguage(string languageCode)
+    {
+        _appReadingLanguage = languageCode;
+        (_fallback as IReadingLanguage)?.SetReadingLanguage(languageCode);
+    }
 
     // Slice 47: only the neural engine has audio worth preparing, and only when it would be
     // the one to read (pack ready, "Phone voice" not chosen); otherwise there is nothing to do.
     public Task PrepareAsync(string text) =>
         _model.IsReady && !_useSystemVoice && _neural is IHeadStart neural
             ? neural.PrepareAsync(text)
+            : Task.CompletedTask;
+
+    public Task PrepareAsync(string text, ReadVoiceScope scope) =>
+        !scope.PhoneVoice && scope.Model is { } model && _neural is IModelScopedReader scoped
+            ? scoped.PrepareAsync(text, model)
             : Task.CompletedTask;
 
     public bool ReadInProgress => (_neural as IHeadStart)?.ReadInProgress ?? false;

@@ -32,6 +32,9 @@ public partial class ReaderPage
     // The detector's latest confident guess (a primary language code), or null.
     private string? _detectedSource;
 
+    /// <summary>What the reader is handed, and whether it is a translation (so the voice follows the target).</summary>
+    private sealed record SpokenText(string Text, bool Translated);
+
     private void InitTranslation(ILanguageDetector? detector, ITranslator? translator)
     {
         if (detector is null || translator is null)
@@ -171,6 +174,7 @@ public partial class ReaderPage
     private void OnEditorTextChanged(object? sender, TextChangedEventArgs e)
     {
         TextEditor.FlowDirection = TextFlow.ContentDirection(e.NewTextValue);
+        ScheduleReadingLanguageRefresh();
         if (_detector is null)
         {
             return;
@@ -250,6 +254,7 @@ public partial class ReaderPage
 
             _detectedSource = detected;
             SelectSource(detected);
+            OnReadingLanguageMayHaveChanged();
         }
         catch (OperationCanceledException)
         {
@@ -259,6 +264,7 @@ public partial class ReaderPage
         {
             // A failed detection leaves the source unknown; it never blocks reading.
             _detectedSource = null;
+            OnReadingLanguageMayHaveChanged();
         }
     }
 
@@ -273,6 +279,7 @@ public partial class ReaderPage
         ResetNote();
         int index = SourcePicker.SelectedIndex;
         _settings.TranslateSourceLanguage = index > AutoChoiceIndex ? _sourceChoices[index - 1].Code : null;
+        OnReadingLanguageMayHaveChanged();
         if (index == AutoChoiceIndex && !string.IsNullOrWhiteSpace(TextEditor.Text))
         {
             ScheduleDetection(TextEditor.Text);
@@ -284,6 +291,7 @@ public partial class ReaderPage
         _settings.TranslateEnabled = e.Value;
         _lastSpokenText = null;
         StartHeadStart(TimeSpan.Zero);
+        _ = RefreshVoiceLabelAsync();
     }
 
     /// <summary>
@@ -291,12 +299,12 @@ public partial class ReaderPage
     /// the text itself. Null means the read was superseded while translating. A failure (or an empty
     /// translation) never blocks reading: it is announced and the original is read.
     /// </summary>
-    private async Task<string?> TextToSpeakAsync(string text, int readId)
+    private async Task<SpokenText?> TextToSpeakAsync(string text, int readId)
     {
         CancelTranslationRead();
         if (_translator is null || !_settings.TranslateEnabled || _noVoiceForTarget)
         {
-            return text;
+            return new SpokenText(text, false);
         }
 
         CancellationTokenSource cts = _translateCts = new CancellationTokenSource();
@@ -321,27 +329,32 @@ public partial class ReaderPage
             ClearDownloadingNote(readId);
         }
 
-        return text;
+        return new SpokenText(text, false);
     }
 
-    private async Task<string> TranslateOrOriginalAsync(string text, int readId, CancellationToken token)
+    private async Task<SpokenText> TranslateOrOriginalAsync(string text, int readId, CancellationToken token)
     {
         string? source = await ResolveSourceAsync(text, token);
         if (!TranslationFlow.ShouldTranslate(_settings.TranslateEnabled, source, TargetCode()))
         {
-            return text;
+            return new SpokenText(text, false);
         }
 
-        string translated = await TranslateAsync(text, source!, readId, token);
+        string? translated = await TranslateAsync(text, source!, readId, token);
+        if (translated is null)
+        {
+            return new SpokenText(text, false);
+        }
+
         if (string.IsNullOrWhiteSpace(translated))
         {
             await AlertAsync(AppResources.Translate_FailedTitle, AppResources.Translate_FailedMessage);
-            return text;
+            return new SpokenText(text, false);
         }
 
         TextFlow.ForContent(TranslatedTextLabel, TranslationFlow.Prefix(translated, PreviewLength));
         TranslatedTextLabel.IsVisible = true;
-        return translated;
+        return new SpokenText(translated, true);
     }
 
     // The override, else the last confident detection. If the text changed since (or detection has not
@@ -369,16 +382,18 @@ public partial class ReaderPage
         token.ThrowIfCancellationRequested();
         _detectedSource = detected;
         SelectSource(detected);
+        OnReadingLanguageMayHaveChanged();
         return detected;
     }
 
-    private async Task<string> TranslateAsync(string text, string source, int readId, CancellationToken token)
+    // Null when the pair is unsupported: nothing was translated and the original is read.
+    private async Task<string?> TranslateAsync(string text, string source, int readId, CancellationToken token)
     {
         string target = TargetCode();
         if (!TranslationFlow.IsPairSupported(_translator!.SupportedLanguages.ToArray(), source, target))
         {
             TextFlow.ForUi(TranslateNoteLabel, AppResources.Format(AppResources.Translate_SourceUnsupportedNote, SourceName(source)));
-            return text;
+            return null;
         }
 
         if (!await ModelReadyAsync(source, target))

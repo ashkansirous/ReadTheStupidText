@@ -30,6 +30,8 @@ public sealed class MobileVoicePackService : IVoicePackService
     private static readonly TimeSpan StallTimeout = TimeSpan.FromSeconds(60);
     private static readonly HttpClient Http = new();
 
+    public event EventHandler? InstalledPacksChanged;
+
     private IReadOnlyList<PackInfo>? _catalog;
     private DateTime _catalogFetchedUtc;
 
@@ -133,9 +135,18 @@ public sealed class MobileVoicePackService : IVoicePackService
         }
 
         PackInfo? pack = catalog.Packs.FirstOrDefault(p => p.Id == packId);
-        return pack is null
-            ? PackDownloadResult.Failed
-            : await DownloadWithRetriesAsync(pack, progress, cancellationToken).ConfigureAwait(false);
+        if (pack is null)
+        {
+            return PackDownloadResult.Failed;
+        }
+
+        PackDownloadResult result = await DownloadWithRetriesAsync(pack, progress, cancellationToken).ConfigureAwait(false);
+        if (result == PackDownloadResult.Ok)
+        {
+            InstalledPacksChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        return result;
     }
 
     private static async Task<PackDownloadResult> DownloadWithRetriesAsync(PackInfo pack, IProgress<double>? progress, CancellationToken cancellationToken)

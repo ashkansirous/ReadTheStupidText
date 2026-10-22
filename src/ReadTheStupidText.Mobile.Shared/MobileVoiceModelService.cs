@@ -18,15 +18,19 @@ namespace ReadTheStupidText.Mobile;
 /// null while a refresh is pending, so a read in that gap uses the phone voice (and one that
 /// chose the neural reader just before the model changed falls back to it, see
 /// <see cref="NeuralEngineUnavailableException"/>). A language change starts the scan at once. Every change of
-/// the resolved model (readiness, pack or language) raises <see cref="ReadyChanged"/>.
+/// the resolved model (readiness, pack or language) raises <see cref="ReadyChanged"/>. <see cref="ModelForAsync"/>
+/// (Slice 90) resolves another language's model for one read from the cached scan and returns it, leaving this
+/// service on the app language.
 /// </summary>
-public sealed class MobileVoiceModelService : IVoiceModelService
+public sealed class MobileVoiceModelService : IVoiceModelService, IReadingModelResolver
 {
     private readonly IVoicePackService _packs;
     private readonly ISettingsStore _settings;
     private readonly object _gate = new();
     private string? _resolvedFor;
     private VoiceModelPaths? _paths;
+    private IReadOnlyList<InstalledVoicePack>? _installed;
+    private readonly Dictionary<string, VoiceModelPaths?> _byLanguage = [];
     private int _refreshing;
     private int _rerunRequested;
 
@@ -35,6 +39,9 @@ public sealed class MobileVoiceModelService : IVoiceModelService
         _packs = packs;
         _settings = settings;
         languages.LanguageChanged += (_, _) => RefreshInBackground();
+
+        // Slice 90: an install or replacement drops the per-language cache with the app-language model.
+        packs.InstalledPacksChanged += (_, _) => RefreshInBackground();
     }
 
     public bool IsReady => Paths is not null;
@@ -65,6 +72,43 @@ public sealed class MobileVoiceModelService : IVoiceModelService
     // An unset language reads as English: the first-run page always sets one, and Dino
     // Reader sets English at startup.
     private string CurrentLanguage => _settings.Language ?? SupertonicVoiceTable.EnglishCode;
+
+    // Slice 90: the model for the language of one read, returned to the caller. Nothing shared changes
+    // (Paths, IsReady and ReadyChanged stay on the app language). It resolves against the pack scan the last
+    // refresh cached, so a read costs no disk scan; the first call scans once.
+    public Task<VoiceModelPaths?> ModelForAsync(string language, CancellationToken cancellationToken = default) =>
+        Task.Run(() => ModelFor(VoiceAvailability.Primary(language)), cancellationToken);
+
+    private VoiceModelPaths? ModelFor(string language)
+    {
+        lock (_gate)
+        {
+            if (_installed is { } cached)
+            {
+                return ResolveCached(cached, language);
+            }
+        }
+
+        IReadOnlyList<InstalledVoicePack> scanned = ScanInstalledPacks();
+        lock (_gate)
+        {
+            _installed ??= scanned;
+            return ResolveCached(_installed, language);
+        }
+    }
+
+    // Called under _gate. One instance per language until the next scan, so an engine keyed on the model
+    // is not rebuilt for the same pack.
+    private VoiceModelPaths? ResolveCached(IReadOnlyList<InstalledVoicePack> installed, string language)
+    {
+        if (!_byLanguage.TryGetValue(language, out VoiceModelPaths? model))
+        {
+            model = InstalledVoiceCatalog.Resolve(installed, language);
+            _byLanguage[language] = model;
+        }
+
+        return model;
+    }
 
     // One refresh at a time. A request that arrives while one runs (a language change) is
     // never dropped: the running refresh loops until the cache matches the current language.
@@ -113,10 +157,13 @@ public sealed class MobileVoiceModelService : IVoiceModelService
     private void Refresh()
     {
         string language = CurrentLanguage;
-        VoiceModelPaths? resolved = InstalledVoiceCatalog.Resolve(ScanInstalledPacks(), language);
+        IReadOnlyList<InstalledVoicePack> installed = ScanInstalledPacks();
+        VoiceModelPaths? resolved = InstalledVoiceCatalog.Resolve(installed, language);
         bool changed;
         lock (_gate)
         {
+            _installed = installed;
+            _byLanguage.Clear();
             changed = !SameModel(_paths, resolved);
             _resolvedFor = language;
             _paths = changed ? resolved : _paths;

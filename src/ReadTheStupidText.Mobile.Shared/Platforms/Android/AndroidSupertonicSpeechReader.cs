@@ -26,7 +26,7 @@ namespace ReadTheStupidText.Mobile;
 /// position-changed event, so read-through progress/timing are driven by a
 /// short poll loop while a chunk plays, rather than an event.
 /// </remarks>
-public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposable
+public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, IModelScopedReader, IDisposable
 {
     // Same reasoning as the Windows reader: intra-op ONNX threads per synthesis,
     // scaled to the device but capped so a single Generate doesn't over-claim
@@ -190,9 +190,13 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     public Task SpeakSegmentsAsync(IReadOnlyList<VoicedSegment> segments, int? activityId = null) =>
         StartReadAsync(SpeechChunkPlanner.ForSegments(segments, HeadPolicy));
 
-    private async Task StartReadAsync(IReadOnlyList<SpeechChunkPlan> chunks)
+    // Slice 90: a read in the text's own language names its pack; the app-language model is untouched.
+    public Task SpeakAsync(string text, VoiceModelPaths model, int? activityId = null) =>
+        StartReadAsync(SpeechChunkPlanner.ForText(text, HeadPolicy), model);
+
+    private async Task StartReadAsync(IReadOnlyList<SpeechChunkPlan> chunks, VoiceModelPaths? model = null)
     {
-        BuiltEngine engine = AcquireEngine() ?? throw new NeuralEngineUnavailableException();
+        BuiltEngine engine = AcquireEngine(model) ?? throw new NeuralEngineUnavailableException();
 
         ActiveRead? read = null;
         try
@@ -732,9 +736,9 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     // caller, who must Release() it. A different pack or engine kind rebuilds the OfflineTts;
     // the same pack under another language reuses it with the new model. The superseded
     // OfflineTts is disposed once the last read or generation holding it lets go.
-    private BuiltEngine? AcquireEngine()
+    private BuiltEngine? AcquireEngine(VoiceModelPaths? model = null)
     {
-        if (_model.Paths is not { } paths)
+        if ((model ?? _model.Paths) is not { } paths)
         {
             return null;
         }
@@ -871,7 +875,10 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     // Head start (Slice 47): synthesizes the sentences of the text's first chunks into the
     // cache in the voice that would read them now, without playing. A newer prepare, the start
     // of a read, CancelPrepare and Dispose all cancel it; audio already cached stays.
-    public Task PrepareAsync(string text)
+    public Task PrepareAsync(string text) => PrepareAsync(text, null);
+
+    // Slice 90: the head start for the text's own language prepares with that language's pack.
+    public Task PrepareAsync(string text, VoiceModelPaths? model)
     {
         if (string.IsNullOrWhiteSpace(text))
         {
@@ -881,15 +888,15 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         // The token is taken here, synchronously and in call order, so a later call always
         // supersedes an earlier one and CancelPrepare reaches a prepare still queued on the pool.
         return BeginPrepare() is { } token
-            ? Task.Run(() => PrepareOffCallerAsync(text, token))
+            ? Task.Run(() => PrepareOffCallerAsync(text, model, token))
             : Task.CompletedTask;
     }
 
     // Runs on the thread pool, so acquiring the engine (which may build the model), planning the
     // chunks and indexing the cache never block the UI thread that asked.
-    private async Task PrepareOffCallerAsync(string text, CancellationToken token)
+    private async Task PrepareOffCallerAsync(string text, VoiceModelPaths? model, CancellationToken token)
     {
-        if (token.IsCancellationRequested || AcquireEngine() is not { } engine)
+        if (token.IsCancellationRequested || AcquireEngine(model) is not { } engine)
         {
             return;
         }
