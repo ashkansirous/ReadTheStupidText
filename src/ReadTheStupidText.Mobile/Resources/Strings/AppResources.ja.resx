@@ -39,6 +39,13 @@
   <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>{0} ページ目を読み取れませんでした。読み取れたページでテキストを置き換えました。</value></data>
   <data name="Reader_ScanProgressPage" xml:space="preserve"><value>{1} ページ中 {0} ページ目を読み取り中</value></data>
   <data name="Reader_ScanProgressSingle" xml:space="preserve"><value>ページを読み取り中</value></data>
+  <data name="Reader_PageLanguageTitle" xml:space="preserve"><value>このページは何語ですか？</value></data>
+  <data name="Reader_OcrDownloading" xml:space="preserve"><value>{0}の読み取りデータをダウンロード中… {1}%</value></data>
+  <data name="Reader_OcrDownloadFailedTitle" xml:space="preserve"><value>読み取りデータをダウンロードできませんでした</value></data>
+  <data name="Reader_OcrDownloadFailedMessage" xml:space="preserve"><value>{0}の読み取りデータをダウンロードできませんでした。接続を確認して、もう一度お試しください。</value></data>
+  <data name="Reader_OcrOfflineMessage" xml:space="preserve"><value>このページには読み取りデータのダウンロードが必要です。インターネットに接続して、もう一度お試しください。</value></data>
+  <data name="Reader_OcrFailedMessage" xml:space="preserve"><value>{0}の読み取りデータを準備できませんでした。後でもう一度お試しください。</value></data>
+  <data name="Reader_OcrUnreadableMessage" xml:space="preserve"><value>このページを読み取れませんでした。</value></data>
   <data name="Reader_FilePickerTitle" xml:space="preserve"><value>.txt、.pdf、.docx のファイルを選択</value></data>
   <data name="Reader_FilePermissionTitle" xml:space="preserve"><value>権限が必要です</value></data>
   <data name="Reader_FilePermissionMessage" xml:space="preserve"><value>ドキュメントを読み取るには、ファイルへのアクセスを許可してください。</value></data>

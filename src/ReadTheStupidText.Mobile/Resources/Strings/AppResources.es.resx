@@ -39,6 +39,13 @@
   <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>No se pudieron leer las páginas {0}. Las páginas legibles reemplazaron el texto.</value></data>
   <data name="Reader_ScanProgressPage" xml:space="preserve"><value>Leyendo la página {0} de {1}</value></data>
   <data name="Reader_ScanProgressSingle" xml:space="preserve"><value>Leyendo la página</value></data>
+  <data name="Reader_PageLanguageTitle" xml:space="preserve"><value>¿En qué idioma está esta página?</value></data>
+  <data name="Reader_OcrDownloading" xml:space="preserve"><value>Descargando el lector para {0}… {1} %</value></data>
+  <data name="Reader_OcrDownloadFailedTitle" xml:space="preserve"><value>No se pudo descargar el lector</value></data>
+  <data name="Reader_OcrDownloadFailedMessage" xml:space="preserve"><value>No se pudo descargar el lector para {0}. Revisa tu conexión e inténtalo de nuevo.</value></data>
+  <data name="Reader_OcrOfflineMessage" xml:space="preserve"><value>Esta página necesita descargar un lector. Conéctate a internet e inténtalo de nuevo.</value></data>
+  <data name="Reader_OcrFailedMessage" xml:space="preserve"><value>No se pudo preparar el lector para {0}. Inténtalo de nuevo más tarde.</value></data>
+  <data name="Reader_OcrUnreadableMessage" xml:space="preserve"><value>No se pudo leer esta página.</value></data>
   <data name="Reader_FilePickerTitle" xml:space="preserve"><value>Elige un archivo .txt, .pdf o .docx</value></data>
   <data name="Reader_FilePermissionTitle" xml:space="preserve"><value>Se necesita permiso</value></data>
   <data name="Reader_FilePermissionMessage" xml:space="preserve"><value>Concede acceso a los archivos para leer un documento.</value></data>

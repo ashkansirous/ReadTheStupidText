@@ -107,6 +107,9 @@
                 </Border>
                 <ActivityIndicator x:Name="BusyIndicator" IsRunning="False" IsVisible="False"
                                     HorizontalOptions="Center" VerticalOptions="Center" />
+                <Button x:Name="CancelOcrButton" Text="{x:Static res:AppResources.Common_Cancel}" IsVisible="False"
+                        HorizontalOptions="Center" VerticalOptions="Center" Margin="0,90,0,0"
+                        Clicked="OnCancelOcrDownloadClicked" />
 
                 <!-- Translate card (Slice 54): shown only where the platform has a translator. The toggle's
                      label names the target language, so it is set in code. -->

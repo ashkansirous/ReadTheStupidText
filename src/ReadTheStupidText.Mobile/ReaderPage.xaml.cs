@@ -19,7 +19,7 @@ namespace ReadTheStupidText.Mobile;
 /// longer needs its own screen since there is nothing left for it to show once the
 /// text lands in this box.
 /// </summary>
-public partial class ReaderPage : ContentPage
+public partial class ReaderPage : ContentPage, IScanPackUi
 {
     private static readonly FilePickerFileType SupportedFileTypes = new(new Dictionary<DevicePlatform, IEnumerable<string>>
     {
@@ -31,6 +31,8 @@ public partial class ReaderPage : ContentPage
     private readonly ISettingsStore _settings;
     private readonly IDocumentTextExtractor _documentExtractor;
     private readonly IImageTextExtractor _imageExtractor;
+    private readonly IOcrLineExtractor? _lineExtractor; // keeps which engine read a page (Slice 87)
+    private readonly OcrPackInstaller? _ocrPacks;
     private readonly IDocumentScanner? _scanner;
     private readonly IVoiceModelService _model;
     private readonly VoicePackInstaller _installer;
@@ -52,6 +54,9 @@ public partial class ReaderPage : ContentPage
     // RenderPackStatus restores to the pack status once it is cleared.
     private string? _scanProgressText;
 
+    // Set while a page-language OCR pack downloads; only the Cancel button runs it (Slice 87).
+    private Action? _cancelOcrDownload;
+
     // Per-read token for the play-button spinner (see SpeakWithLoadingAsync).
     private int _readSequence;
     private int _pendingReadId;
@@ -62,7 +67,7 @@ public partial class ReaderPage : ContentPage
     // started (system TTS returns as soon as the utterance is queued).
     private static readonly TimeSpan FirstAudioGrace = TimeSpan.FromSeconds(8);
 
-    public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, IImageTextExtractor imageExtractor, IVoiceModelService model, VoicePackInstaller installer, IPlatformServices platform, EditorDraft draft, IHeadStart headStart, IDocumentScanner? scanner = null, ILanguageDetector? detector = null, ITranslator? translator = null)
+    public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, IImageTextExtractor imageExtractor, IVoiceModelService model, VoicePackInstaller installer, IPlatformServices platform, EditorDraft draft, IHeadStart headStart, IDocumentScanner? scanner = null, ILanguageDetector? detector = null, ITranslator? translator = null, IOcrLineExtractor? lineExtractor = null, OcrPackInstaller? ocrPacks = null)
     {
         InitializeComponent();
         FlowDirection = FlowDirection.LeftToRight;
@@ -72,6 +77,8 @@ public partial class ReaderPage : ContentPage
         _settings = settings;
         _documentExtractor = documentExtractor;
         _imageExtractor = imageExtractor;
+        _lineExtractor = lineExtractor;
+        _ocrPacks = ocrPacks;
         _scanner = scanner;
         _headStart = headStart;
         _model = model;
@@ -328,10 +335,11 @@ public partial class ReaderPage : ContentPage
         BusyIndicator.IsVisible = true;
         try
         {
-            IReadOnlyList<string?> texts = await ExtractPagesAsync(pages);
-            if (!_retired)
+            IReadOnlyList<ScanPageRead> first = await ExtractPagesAsync(pages, AppLanguages.Code(CurrentLanguage()));
+            IReadOnlyList<ScanPageRead>? reads = _ocrPacks is null ? first : await new ScanPackFlow(_ocrPacks, this).ResolveAsync(pages, first, ExtractPagesAsync);
+            if (reads is not null && !_retired)
             {
-                await ApplyScanResultAsync(texts);
+                await ApplyScanResultAsync(reads.Select(r => r.Text).ToList());
             }
         }
         catch (OcrUnavailableException)
@@ -372,25 +380,31 @@ public partial class ReaderPage : ContentPage
         }
     }
 
-    // A null entry marks a page whose OCR threw; OcrUnavailableException is not per-page and
+    // A null text marks a page whose OCR threw; OcrUnavailableException is not per-page and
     // aborts the pass.
-    private async Task<IReadOnlyList<string?>> ExtractPagesAsync(IReadOnlyList<string> pages)
+    private async Task<IReadOnlyList<ScanPageRead>> ExtractPagesAsync(IReadOnlyList<string> pages, string language)
     {
-        var texts = new List<string?>();
+        var reads = new List<ScanPageRead>();
         for (int i = 0; i < pages.Count && !_retired; i++)
         {
             SetScanProgress(pages.Count > 1 ? AppResources.Format(AppResources.Reader_ScanProgressPage, i + 1, pages.Count) : AppResources.Reader_ScanProgressSingle);
-            texts.Add(await ExtractPageTextAsync(pages[i]));
+            reads.Add(await ExtractPageAsync(pages[i], language));
         }
 
-        return texts;
+        return reads;
     }
 
-    private async Task<string?> ExtractPageTextAsync(string page)
+    private async Task<ScanPageRead> ExtractPageAsync(string page, string language)
     {
         try
         {
-            return await _imageExtractor.ExtractTextAsync(page);
+            if (_lineExtractor is null)
+            {
+                return new ScanPageRead(await _imageExtractor.ExtractTextAsync(page), OcrSource.MlKit, ScriptShare.Empty);
+            }
+
+            ImageText image = await _lineExtractor.ExtractLinesAsync(page, language, CancellationToken.None);
+            return new ScanPageRead(ScanReadingText.From(image), image.Source, ScriptDetector.Analyze(image.Lines.Select(l => l.Text)));
         }
         catch (OcrUnavailableException)
         {
@@ -398,9 +412,42 @@ public partial class ReaderPage : ContentPage
         }
         catch (Exception)
         {
-            return null;
+            return new ScanPageRead(null, OcrSource.MlKit, ScriptShare.Empty);
         }
     }
+
+    // Slice 87: the page-language pack flow (ScanPackFlow) talks to the screen through IScanPackUi.
+    bool IScanPackUi.IsRetired => _retired;
+
+    async Task<int> IScanPackUi.PickLanguageAsync(IReadOnlyList<string> names)
+    {
+        string? picked = await DisplayActionSheetAsync(AppResources.Reader_PageLanguageTitle, AppResources.Common_Cancel, null, FlowDirection.LeftToRight, names.ToArray());
+
+        return picked is null ? -1 : names.ToList().IndexOf(picked);
+    }
+
+    // Ticks arrive from the download thread; one that lands after the flow ended (Cancel hidden) is dropped.
+    void IScanPackUi.ShowProgress(string? text) =>
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            if (_cancelOcrDownload is not null)
+            {
+                SetScanProgress(text);
+            }
+        });
+
+    void IScanPackUi.SetCancel(Action? cancel)
+    {
+        _cancelOcrDownload = cancel;
+        CancelOcrButton.IsVisible = cancel is not null;
+    }
+
+    Task<bool> IScanPackUi.AskRetryAsync(string title, string message) =>
+        _retired ? Task.FromResult(false) : DisplayAlertAsync(title, message, AppResources.Language_Retry, AppResources.Common_Cancel, FlowDirection.LeftToRight);
+
+    Task IScanPackUi.NotifyAsync(string title, string message) => AlertAsync(title, message);
+
+    private void OnCancelOcrDownloadClicked(object? sender, EventArgs e) => _cancelOcrDownload?.Invoke();
 
     private static void DeleteImages(IReadOnlyList<string> pages)
     {

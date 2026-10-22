@@ -39,6 +39,13 @@
   <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>无法读取第 {0} 页。可读取的页面已替换原文本。</value></data>
   <data name="Reader_ScanProgressPage" xml:space="preserve"><value>正在读取第 {0}/{1} 页</value></data>
   <data name="Reader_ScanProgressSingle" xml:space="preserve"><value>正在读取页面</value></data>
+  <data name="Reader_PageLanguageTitle" xml:space="preserve"><value>这一页是什么语言？</value></data>
+  <data name="Reader_OcrDownloading" xml:space="preserve"><value>正在下载{0}的识别包… {1}%</value></data>
+  <data name="Reader_OcrDownloadFailedTitle" xml:space="preserve"><value>无法下载识别包</value></data>
+  <data name="Reader_OcrDownloadFailedMessage" xml:space="preserve"><value>无法下载{0}的识别包。请检查网络连接后重试。</value></data>
+  <data name="Reader_OcrOfflineMessage" xml:space="preserve"><value>此页面需要下载识别包。请连接互联网后重试。</value></data>
+  <data name="Reader_OcrFailedMessage" xml:space="preserve"><value>无法准备{0}的识别包。请稍后重试。</value></data>
+  <data name="Reader_OcrUnreadableMessage" xml:space="preserve"><value>无法读取此页面。</value></data>
   <data name="Reader_FilePickerTitle" xml:space="preserve"><value>选择 .txt、.pdf 或 .docx 文件</value></data>
   <data name="Reader_FilePermissionTitle" xml:space="preserve"><value>需要权限</value></data>
   <data name="Reader_FilePermissionMessage" xml:space="preserve"><value>请授予文件访问权限以读取文档。</value></data>
