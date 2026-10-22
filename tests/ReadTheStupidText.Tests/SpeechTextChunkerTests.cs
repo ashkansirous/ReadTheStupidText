@@ -292,5 +292,60 @@ public class SpeechTextChunkerTests
         }
     }
 
+    [Fact]
+    public void A_wrapped_paragraph_is_one_sentence()
+    {
+        string text = "Now they have a good view, but\nCarrot wants to get even closer.";
+
+        IReadOnlyList<string> sentences = SpeechTextChunker.SplitSentences(LineReflow.ReflowText(text)).ToList();
+
+        Assert.Equal(["Now they have a good view, but Carrot wants to get even closer."], sentences);
+    }
+
+    [Fact]
+    public void A_heading_followed_by_a_paragraph_becomes_two_units_with_a_paragraph_break()
+    {
+        string text = "Where to Find Ebooks\nYou can buy ebooks from large stores such as Amazon and Kobo.";
+
+        string reflowed = LineReflow.ReflowText(text);
+
+        Assert.Equal(["Where to Find Ebooks", "You can buy ebooks from large stores such as Amazon and Kobo."],
+            SpeechTextChunker.SplitParagraphs(reflowed));
+    }
+
+    [Fact]
+    public void Chunk_ranges_survive_trailing_blanks_after_a_wrap_hyphen()
+    {
+        string text = "They played foot- \nball in the park every single day of the long summer, and then they went home. " +
+            string.Concat(Enumerable.Repeat("More words follow here to pass the limit. ", 6));
+
+        IReadOnlyList<SpeechTextChunker.TextChunk> chunks = SpeechTextChunker.SplitWithRanges(text);
+
+        Assert.NotEmpty(chunks);
+    }
+
+    [Fact]
+    public void Chunk_ranges_survive_a_dropped_wrap_hyphen()
+    {
+        string text = "They played foot-\nball in the park every single day of the long summer, and then they went home. " +
+            string.Concat(Enumerable.Repeat("More words follow here to pass the limit. ", 6));
+
+        IReadOnlyList<SpeechTextChunker.TextChunk> chunks = SpeechTextChunker.SplitWithRanges(text);
+
+        Assert.Contains("football", chunks[0].Text);
+        Assert.Equal(0, chunks[0].SourceStart);
+    }
+
     private static string StripWhitespace(string value) => string.Concat(value.Where(c => !char.IsWhiteSpace(c)));
+
+    [Fact]
+    public void Chunk_ranges_follow_only_the_hyphens_reflow_dropped()
+    {
+        const string text = "A foot-\nball and a pre-\n123 code, then Anglo-\nSaxon.";
+
+        IReadOnlyList<SpeechTextChunker.TextChunk> chunks = SpeechTextChunker.SplitWithRanges(text);
+
+        Assert.Equal("A football and a pre- 123 code, then Anglo-Saxon.", chunks[0].Text);
+        Assert.Equal(text.Length, chunks[^1].SourceEnd);
+    }
 }

@@ -70,28 +70,35 @@ against the fixtures below.
 
 ## Steps
 
-- [ ] `LineReflow.Reflow(IReadOnlyList<ReflowLine> lines) → IReadOnlyList<ReflowUnit>` in
+*Built 2026-10-22 (wave 2026-10-22), PR #233, not yet verified on a device.*
+
+*Changed while building:* scan paths use the plain-text rule only (`OcrReading.ReflowedText`); the geometry wiring (RTST scan text, Dino per-page `Lines` to `LineBreakMap`) moved to Slice 79 together with review-2 #2 (a geometry heading needs a text-shape check). Fixtures are inline strings in the tests, not files. Bullets stay in unit text. Hyphen rule per spec ("well-
+known" becomes "wellknown", `DroppedHyphenBreaks` keeps `LocateChunk` aligned). Adjacent headings are separate units. A heading inside a quote is ignored by the segmenter but used by sentences (accepted). Mismatched boxes fall back to plain text. `StoryVoicing` builds the `LineBreakMap` once; headings are their own narration segment. Added `LineReflow.ReflowText`, `BreakMap`, `JoinUnits` + `UnitSeparator`.
+
+*From review:* reviews in `<worktrees>/reviews/76-review-{1,2}.md`. Pass 1: fixed 1, 2, 3, 5, 6, 7, 8, 9; 4 partly; 10 went to docs. Pass 2: fixed 1, 3, 4, 5, 6, 7, 8; 2 moved to Slice 79. Tests: RTST 683 pass / 2 skipped, Dino 360 pass; App x64, Mobile and Dino Android build.
+
+- [x] `LineReflow.Reflow(IReadOnlyList<ReflowLine> lines) → IReadOnlyList<ReflowUnit>` in
       `Application/Reading`, where `ReflowLine(string Text, OcrBox? Box)` and
       `ReflowUnit(string Text, UnitKind Kind)` with `UnitKind { Paragraph, Heading, ListItem }`.
       Pure, no I/O. A `LineReflow.FromPlainText(string)` helper splits on `\n` and calls it
       with `Box = null`.
-- [ ] `LineClass` — the classifier (`IsHeading`, `IsListItem`, `IsHyphenWrap`), one method
+- [x] `LineClass` — the classifier (`IsHeading`, `IsListItem`, `IsHyphenWrap`), one method
       each, 3–30 lines, with the constants named.
-- [ ] RTST: `SpeechTextChunker` calls `LineReflow.FromPlainText` before its sentence regex and
+- [x] RTST: `SpeechTextChunker` calls `LineReflow.FromPlainText` before its sentence regex and
       removes the bare `\r?\n` alternative from `SentenceBreak`. Paragraph pause after a
       `Heading` unit; existing `\n\n` paragraph tests still pass.
-- [ ] RTST Windows and Mobile OCR/scan paths: where the scan result is turned into text to
+- [ ] RTST Windows and Mobile OCR/scan paths (moved to Slice 79): where the scan result is turned into text to
       read (RTST Mobile `ScanPages`-equivalent and the Windows OCR read), pass the `OcrLine`
       boxes through `LineReflow.Reflow` so the geometry rule applies. The *stored/displayed*
       text keeps its `\n`s.
-- [ ] Dino: `StorySentences` / `SentenceBoundaries` stop treating `\n` as a sentence end and
+- [x] Dino: `StorySentences` / `SentenceBoundaries` stop treating `\n` as a sentence end and
       take their units from `LineReflow` — with boxes when the page has `Lines` (Slice 63),
       plain otherwise. `StorySegmenter` keeps blank-line paragraphs via `ParagraphBreak`; a
       `Heading` unit becomes its own `Segment` with `SegmentKind.Narration`.
 - [ ] Dino `RangeToBoxMapper`: sentence spans that now cross a `\n` must still map to the
       right `PageLine`s — the mapper already handles multi-line sentences (Slice 64); add a
       test where a sentence spans two OCR lines joined by reflow.
-- [ ] Fixtures in `tests/DinoReader.Tests/LineReflowFixtures/` (text files + expected unit
+- [x] Fixtures in `tests/DinoReader.Tests/LineReflowFixtures/` (text files + expected unit
       lists), shared with the RTST tests via a linked file or a copy: (a) the ebooks
       screenshot text (heading without punctuation + bullets with bold labels and colons,
       plain-text path), (b) the Bright Stadium page as `OcrLine`s with boxes (geometry path;
@@ -99,7 +106,7 @@ against the fixtures below.
       background, but here it must at least not glue onto the story), (c) a hyphen-wrapped
       paragraph, (d) a four-line poem with terminal punctuation (no false joins), (e) a short
       last line of a paragraph (must *not* be read as a heading because it ends in `.`).
-- [ ] `SpeechTextChunkerTests`: a single-`\n` wrapped paragraph becomes one sentence; a
+- [x] `SpeechTextChunkerTests`: a single-`\n` wrapped paragraph becomes one sentence; a
       heading followed by a paragraph becomes two units with a paragraph pause.
 
 ## Verification
@@ -111,3 +118,13 @@ against the fixtures below.
 - Android emulator (`device-test`): the Slice 64 Carrot-and-Hazelnut story reads "Now they
   have a good view, but Carrot wants to get even closer." as one sentence with the highlight
   box covering both lines.
+
+#### For CLAUDE.md
+
+- `src/DinoReader.Core/CLAUDE.md`: a single newline is a sentence/segment boundary only where `LineReflow` (Application) says it is a real break; never split on bare `
+`. Core does reference Application, so the "no project references" line is wrong. (Slice 76: docs/plan/slices/76-soft-line-break-reflow.md)
+- Root `CLAUDE.md`, Application line: `LineReflow` is shared by both apps' read paths (`SpeechTextChunker`, Dino `StorySentences`/`StorySegmenter`). (Slice 76: docs/plan/slices/76-soft-line-break-reflow.md)
+
+#### Not yet verified
+
+- On a device, a pasted hard-wrapped email and a scanned book page read with no pause mid-sentence (RTST Android, RTST Windows, Dino).
