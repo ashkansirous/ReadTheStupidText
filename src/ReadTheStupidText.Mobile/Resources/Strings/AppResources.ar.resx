@@ -9,14 +9,11 @@
   <data name="Common_Cancel" xml:space="preserve"><value>إلغاء</value></data>
   <data name="Common_Voice" xml:space="preserve"><value>الصوت</value></data>
   <data name="Common_Language" xml:space="preserve"><value>اللغة</value></data>
-  <data name="Common_BackGlyph" xml:space="preserve"><value>→</value></data>
   <data name="Reader_AddTextSection" xml:space="preserve"><value>إضافة نص</value></data>
   <data name="Reader_PasteButton" xml:space="preserve"><value>📋 لصق</value></data>
   <data name="Reader_ScanButton" xml:space="preserve"><value>📷 مسح</value></data>
   <data name="Reader_FileButton" xml:space="preserve"><value>📄 ملف</value></data>
   <data name="Reader_EditorPlaceholder" xml:space="preserve"><value>اكتب أو الصق هنا، أو امسح صفحة ضوئيًا، أو افتح ملفًا — كل شيء يصل إلى هذا المربع الواحد ويُقرأ بأزرار التحكم نفسها أدناه.</value></data>
-  <data name="Reader_SkipBackGlyph" xml:space="preserve"><value>⇥10</value></data>
-  <data name="Reader_SkipForwardGlyph" xml:space="preserve"><value>10⇤</value></data>
   <data name="Reader_PasteFailedTitle" xml:space="preserve"><value>تعذّر اللصق</value></data>
   <data name="Reader_PasteFailedMessage" xml:space="preserve"><value>تعذّرت قراءة الحافظة. حاول نسخ النص مرة أخرى.</value></data>
   <data name="Reader_ScanFailedTitle" xml:space="preserve"><value>تعذّر المسح</value></data>

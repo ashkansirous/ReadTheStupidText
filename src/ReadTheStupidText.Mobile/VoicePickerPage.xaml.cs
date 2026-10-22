@@ -43,10 +43,8 @@ public partial class VoicePickerPage : ContentPage
         VoicePackInstaller installer)
     {
         InitializeComponent();
-        FlowDirection = UiFlowDirection.ForCurrentCulture();
-        BackGlyph.Text = AppResources.Common_BackGlyph;
-        HeaderGrid.Padding = UiFlowDirection.Mirror(HeaderGrid.Padding);
-        TitleStack.Margin = UiFlowDirection.Mirror(TitleStack.Margin);
+        FlowDirection = FlowDirection.LeftToRight;
+        BackGlyph.Text = TransportGlyphs.Back;
         _reader = reader;
         _settings = settings;
         _platform = platform;
@@ -117,7 +115,7 @@ public partial class VoicePickerPage : ContentPage
             && _installer.State == PackInstallState.Downloading;
         if (progressOnly)
         {
-            _statusLabel!.Text = StatusText();
+            TextFlow.ForUi(_statusLabel!, StatusText());
             return;
         }
 
@@ -193,12 +191,12 @@ public partial class VoicePickerPage : ContentPage
         }
     }
 
-    private static Label BuildReasonLabel(string text) => new()
+    private static Label BuildReasonLabel(string text)
     {
-        Text = text,
-        FontSize = 11,
-        Margin = new Thickness(12, 0, 12, 10),
-    };
+        var label = new Label { FontSize = 11, Margin = new Thickness(12, 0, 12, 10) };
+        TextFlow.ForUi(label, text);
+        return label;
+    }
 
     private Button BuildRetryButton()
     {
@@ -208,6 +206,7 @@ public partial class VoicePickerPage : ContentPage
             Margin = new Thickness(12, 0, 12, 10),
             HorizontalOptions = LayoutOptions.Start,
         };
+        TextFlow.ForUi(retry);
         retry.Clicked += (_, _) => _ = _installer.StartAsync();
         return retry;
     }
@@ -225,7 +224,7 @@ public partial class VoicePickerPage : ContentPage
             return;
         }
 
-        EngineHeading.Text = EngineHeadingText(paths.Kind);
+        TextFlow.ForUi(EngineHeading, EngineHeadingText(paths.Kind));
         foreach (VoiceInfo voice in paths.AvailableVoices)
         {
             EngineVoiceList.Children.Add(BuildRow(voice));
@@ -284,10 +283,10 @@ public partial class VoicePickerPage : ContentPage
 
         var nameLabel = new Label
         {
-            Text = voice.DisplayName,
             FontSize = 13.5,
             VerticalOptions = LayoutOptions.Center,
         };
+        TextFlow.ForContent(nameLabel, voice.DisplayName);
 
         var row = new Grid
         {

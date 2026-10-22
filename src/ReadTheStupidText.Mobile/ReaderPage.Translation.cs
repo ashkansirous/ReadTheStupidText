@@ -1,3 +1,4 @@
+using System.Globalization;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Translation;
 using ReadTheStupidText.Mobile.Resources.Strings;
@@ -41,8 +42,8 @@ public partial class ReaderPage
         _detector = detector;
         _translator = translator;
         TranslateCard.IsVisible = true;
-        TranslateNoteLabel.Text = AppResources.Translate_QualityNote;
-        TranslateToggleLabel.Text = AppResources.Format(AppResources.Translate_ToggleLabel, LanguageChoices.NativeName(CurrentLanguage()));
+        TextFlow.ForUi(TranslateNoteLabel, AppResources.Translate_QualityNote);
+        TextFlow.ForUi(TranslateToggleLabel, AppResources.Format(AppResources.Translate_ToggleLabel, LanguageChoices.NativeName(CurrentLanguage())));
         if (!translator.SupportedLanguages.Contains(TargetCode(), StringComparer.OrdinalIgnoreCase))
         {
             ShowTargetUnsupported();
@@ -104,7 +105,7 @@ public partial class ReaderPage
     {
         _noVoiceForTarget = true;
         TranslateControls.IsVisible = false;
-        TranslateNoteLabel.Text = AppResources.Format(AppResources.Translate_NoVoiceNote, LanguageChoices.NativeName(CurrentLanguage()));
+        TextFlow.ForUi(TranslateNoteLabel, AppResources.Format(AppResources.Translate_NoVoiceNote, LanguageChoices.NativeName(CurrentLanguage())));
     }
 
     private string TargetCode() => AppLanguages.Code(CurrentLanguage());
@@ -113,7 +114,7 @@ public partial class ReaderPage
     private void ShowTargetUnsupported()
     {
         TranslateControls.IsVisible = false;
-        TranslateNoteLabel.Text = AppResources.Format(AppResources.Translate_UnsupportedNote, LanguageChoices.NativeName(CurrentLanguage()));
+        TextFlow.ForUi(TranslateNoteLabel, AppResources.Format(AppResources.Translate_UnsupportedNote, LanguageChoices.NativeName(CurrentLanguage())));
     }
 
     private void FillSourcePicker()
@@ -165,8 +166,11 @@ public partial class ReaderPage
         return -1;
     }
 
+    // The layout never mirrors (Slice 85); only the editor follows its own text. Empty, it follows the
+    // UI language, so the placeholder sits on the side it reads from.
     private void OnEditorTextChanged(object? sender, TextChangedEventArgs e)
     {
+        TextEditor.FlowDirection = TextFlow.ContentDirection(e.NewTextValue);
         if (_detector is null)
         {
             return;
@@ -335,7 +339,7 @@ public partial class ReaderPage
             return text;
         }
 
-        TranslatedTextLabel.Text = TranslationFlow.Prefix(translated, PreviewLength);
+        TextFlow.ForContent(TranslatedTextLabel, TranslationFlow.Prefix(translated, PreviewLength));
         TranslatedTextLabel.IsVisible = true;
         return translated;
     }
@@ -373,13 +377,13 @@ public partial class ReaderPage
         string target = TargetCode();
         if (!TranslationFlow.IsPairSupported(_translator!.SupportedLanguages.ToArray(), source, target))
         {
-            TranslateNoteLabel.Text = AppResources.Format(AppResources.Translate_SourceUnsupportedNote, SourceName(source));
+            TextFlow.ForUi(TranslateNoteLabel, AppResources.Format(AppResources.Translate_SourceUnsupportedNote, SourceName(source)));
             return text;
         }
 
         if (!await ModelReadyAsync(source, target))
         {
-            TranslateNoteLabel.Text = AppResources.Translate_DownloadingStatus;
+            TextFlow.ForUi(TranslateNoteLabel, AppResources.Translate_DownloadingStatus);
             _downloadNoteReadId = readId;
         }
 
@@ -416,7 +420,7 @@ public partial class ReaderPage
             return;
         }
 
-        TranslateNoteLabel.Text = AppResources.Translate_QualityNote;
+        TextFlow.ForUi(TranslateNoteLabel, AppResources.Translate_QualityNote);
     }
 
     private string SourceName(string code) =>
