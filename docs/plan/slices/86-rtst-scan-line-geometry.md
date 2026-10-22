@@ -1,6 +1,6 @@
 # Slice 86 — RTST scan reads with line geometry
 
-*Planned.*
+*In progress (wave 2026-10-22), draft PR.*
 
 **Batch:** 14
 **Depends on:** Slices 76 and 85 (sequenced after the Mobile chain; all of it touches `ReaderPage.xaml.cs`).
