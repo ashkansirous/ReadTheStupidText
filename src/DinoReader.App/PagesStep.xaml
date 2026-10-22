@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="DinoReader.PagesStep"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:DinoReader"
+    xmlns:res="clr-namespace:DinoReader.Resources.Strings">
+
+    <!-- Step 1 of the wizard (Slice 78): every picked photo, scanned page and PDF page as a thumbnail you can drag into order,
+         rotate, crop, delete or add to. With no pages yet it explains the four ways in. -->
+    <Grid>
+        <ScrollView x:Name="EmptyState">
+            <VerticalStackLayout Padding="14,4,14,14" Spacing="12">
+                <Label Text="{x:Static res:AppResources.Wizard_EmptyBody}" FontSize="14" TextColor="{StaticResource Body}" />
+                <Grid x:Name="SourceGrid" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10" />
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <Grid x:Name="PagesState" RowDefinitions="Auto,*" IsVisible="False">
+            <Border x:Name="AddRow" BackgroundColor="White" StrokeThickness="0" Padding="14,10" Margin="14,0,14,8"
+                    SemanticProperties.Description="{x:Static res:AppResources.Wizard_AddPages}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="18" />
+                </Border.StrokeShape>
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                    <Border WidthRequest="36" HeightRequest="36" BackgroundColor="{StaticResource BrandTint}" StrokeThickness="0">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="10" />
+                        </Border.StrokeShape>
+                        <local:IconView Kind="Plus" Color="{StaticResource Brand}" Size="20" StrokeWidth="2.6" />
+                    </Border>
+                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                        <Label Text="{x:Static res:AppResources.Wizard_AddPages}" FontSize="15" FontAttributes="Bold" />
+                        <Label Text="{x:Static res:AppResources.Wizard_DragHint}" FontSize="11.5" TextColor="{StaticResource Muted}" />
+                    </VerticalStackLayout>
+                </Grid>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnAddTapped" />
+                </Border.GestureRecognizers>
+            </Border>
+
+            <CollectionView x:Name="PageGrid" Grid.Row="1" CanReorderItems="True" ReorderCompleted="OnReordered" Margin="14,0">
+                <CollectionView.ItemsLayout>
+                    <GridItemsLayout x:Name="GridLayout" Orientation="Vertical" Span="3" HorizontalItemSpacing="8" VerticalItemSpacing="8" />
+                </CollectionView.ItemsLayout>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="local:PageTile">
+                        <Border BackgroundColor="White" StrokeThickness="0" SizeChanged="OnTileSizeChanged"
+                                SemanticProperties.Description="{Binding Description}">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12" />
+                            </Border.StrokeShape>
+                            <Grid>
+                                <Image Source="{Binding Picture}" IsVisible="{Binding HasPicture}" Aspect="AspectFill" />
+                                <Label Text="{Binding Preview}" IsVisible="{Binding IsTextOnly}" FontFamily="Andika" FontSize="11"
+                                       TextColor="{StaticResource Body}" MaxLines="8" Margin="8,30,8,8" />
+                                <Border BackgroundColor="#CC2b2540" StrokeThickness="0" HorizontalOptions="Start" VerticalOptions="End"
+                                        Margin="6" Padding="9,3">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="10" />
+                                    </Border.StrokeShape>
+                                    <Label Text="{Binding Number}" FontSize="12" FontAttributes="Bold" TextColor="White" />
+                                </Border>
+                                <Border BackgroundColor="#CCFFFFFF" StrokeThickness="0" HorizontalOptions="End" VerticalOptions="Start"
+                                        WidthRequest="34" HeightRequest="28" Margin="4"
+                                        SemanticProperties.Description="{x:Static res:AppResources.Wizard_PageMenu}">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="10" />
+                                    </Border.StrokeShape>
+                                    <Label Text="•••" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource Ink}"
+                                           HorizontalOptions="Center" VerticalOptions="Center" />
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnMenuTapped" />
+                                    </Border.GestureRecognizers>
+                                </Border>
+                                <Border BackgroundColor="#E6FFE27A" StrokeThickness="0" HorizontalOptions="End" VerticalOptions="End"
+                                        Margin="6" Padding="8,3" IsVisible="{Binding IsBlank}">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="10" />
+                                    </Border.StrokeShape>
+                                    <Label Text="{x:Static res:AppResources.Wizard_NoTextShort}" FontSize="10.5" FontAttributes="Bold" TextColor="{StaticResource Ink}" />
+                                </Border>
+                            </Grid>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnTileTapped" />
+                            </Border.GestureRecognizers>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+    </Grid>
+</ContentView>

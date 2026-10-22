@@ -253,11 +253,4 @@ public class ImportedTextTests
     {
         Assert.Equal("one\ntwo", ImportedText.PageText(["one", "two"]));
     }
-
-    [Fact]
-    public void Text_is_unchanged_despite_line_endings_and_trailing_blanks_but_not_after_an_edit()
-    {
-        Assert.True(ImportedText.Unchanged("a\r\nb\n\n", "a\nb"));
-        Assert.False(ImportedText.Unchanged("a\nB", "a\nb"));
-    }
 }

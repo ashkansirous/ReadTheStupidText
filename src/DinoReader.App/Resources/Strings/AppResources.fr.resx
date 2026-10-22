@@ -75,12 +75,31 @@
   <data name="Edit_CoverColour" xml:space="preserve"><value>Couleur</value></data>
   <data name="Edit_CoverPhoto" xml:space="preserve"><value>Photo</value></data>
   <data name="Edit_Pages" xml:space="preserve"><value>Pages</value></data>
-  <data name="Edit_FixText" xml:space="preserve"><value>Corriger le texte</value></data>
-  <data name="Edit_FixTextValue" xml:space="preserve"><value>Modifier le texte reconnu</value></data>
-  <data name="Pages_Add" xml:space="preserve"><value>Ajouter une page</value></data>
-  <data name="Pages_MoveUp" xml:space="preserve"><value>Monter la page</value></data>
-  <data name="Pages_MoveDown" xml:space="preserve"><value>Descendre la page</value></data>
-  <data name="Pages_Remove" xml:space="preserve"><value>Retirer la page</value></data>
+  <!-- Slice 78: the page-review wizard -->
+  <data name="Wizard_Next" xml:space="preserve"><value>Suivant</value></data>
+  <data name="Wizard_StepText" xml:space="preserve"><value>Texte</value></data>
+  <data name="Wizard_AddPages" xml:space="preserve"><value>Ajouter des pages</value></data>
+  <data name="Wizard_DragHint" xml:space="preserve"><value>Maintenez une page et faites-la glisser pour la déplacer</value></data>
+  <data name="Wizard_EmptyBody" xml:space="preserve"><value>Ajoutez les pages de votre histoire : scannez-les, choisissez des photos, ajoutez un PDF ou un fichier, ou saisissez le texte. Puis mettez les pages dans l’ordre.</value></data>
+  <data name="Wizard_PageN" xml:space="preserve"><value>Page {0}</value></data>
+  <data name="Wizard_PageMenu" xml:space="preserve"><value>Options de la page</value></data>
+  <data name="Wizard_MenuRotate" xml:space="preserve"><value>Pivoter</value></data>
+  <data name="Wizard_MenuCrop" xml:space="preserve"><value>Pivoter ou rogner</value></data>
+  <data name="Wizard_MenuEditText" xml:space="preserve"><value>Modifier le texte</value></data>
+  <data name="Wizard_NoTextShort" xml:space="preserve"><value>Sans texte</value></data>
+  <data name="Wizard_NoText" xml:space="preserve"><value>Aucun texte trouvé sur cette page</value></data>
+  <data name="Wizard_Reading" xml:space="preserve"><value>Lecture de la page {0} sur {1}</value></data>
+  <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>Certaines pages n’ont pas été lues</value></data>
+  <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>{0} pages n’ont pas pu être lues. Elles sont conservées comme images sans texte.</value></data>
+  <data name="Wizard_CoverHint" xml:space="preserve"><value>Choisissez une page, une photo ou une couleur pour la couverture.</value></data>
+  <data name="Wizard_NeedTextTitle" xml:space="preserve"><value>Rien à lire pour l’instant</value></data>
+  <data name="Wizard_NeedTextBody" xml:space="preserve"><value>Ajoutez du texte à au moins une page, puis enregistrez.</value></data>
+  <data name="Wizard_SaveFailedTitle" xml:space="preserve"><value>Impossible d’enregistrer l’histoire</value></data>
+  <data name="Wizard_SaveFailedBody" xml:space="preserve"><value>Rien n’a été modifié. Réessayez dans un instant.</value></data>
+  <data name="Editor_Title" xml:space="preserve"><value>Pivoter et rogner</value></data>
+  <data name="Editor_RotateLeft" xml:space="preserve"><value>Pivoter à gauche</value></data>
+  <data name="Editor_RotateRight" xml:space="preserve"><value>Pivoter à droite</value></data>
+  <data name="Editor_ResetCrop" xml:space="preserve"><value>Réinitialiser le rognage</value></data>
   <data name="Reading_TextMode" xml:space="preserve"><value>Mode texte</value></data>
   <data name="Reading_PictureMode" xml:space="preserve"><value>Mode image</value></data>
   <data name="Reading_Play" xml:space="preserve"><value>Lecture</value></data>

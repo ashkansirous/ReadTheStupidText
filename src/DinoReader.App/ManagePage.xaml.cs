@@ -67,22 +67,22 @@ public partial class ManagePage : ContentPage, IGrownUpPage
 		}
 	}
 
-	private async void OnAddTapped(object? sender, TappedEventArgs e) =>
-		await _busy.RunAsync(() => Navigation.PushAsync(_services.GetRequiredService<AddStoryPage>()));
+	private async void OnAddTapped(object? sender, TappedEventArgs e) => await _busy.RunAsync(() => OpenWizardAsync(null));
 
 	private async void OnEditTapped(object? sender, TappedEventArgs e)
 	{
 		if (TileOf(sender) is { } tile)
 		{
-			await _busy.RunAsync(() => OpenEditAsync(tile.Story));
+			await _busy.RunAsync(() => OpenWizardAsync(tile.Story));
 		}
 	}
 
-	private async Task OpenEditAsync(Story story)
+	// One wizard adds a story (null) or edits one (Slice 78).
+	private async Task OpenWizardAsync(Story? story)
 	{
-		var edit = _services.GetRequiredService<EditStoryPage>();
-		edit.Load(story);
-		await Navigation.PushAsync(edit);
+		var wizard = _services.GetRequiredService<StoryWizardPage>();
+		await wizard.LoadAsync(story);
+		await Navigation.PushAsync(wizard);
 	}
 
 	private async void OnCastTapped(object? sender, TappedEventArgs e)

@@ -6,10 +6,6 @@ public static class ImportedText
     /// <summary>One page's text: its recognised lines, one per row, in reading order.</summary>
     public static string PageText(IEnumerable<string> lines) => string.Join('\n', lines);
 
-    /// <summary>Whether the text in the editor is still what the import produced (line endings and
-    /// trailing blanks aside). Only then do the page pictures still match it and get kept.</summary>
-    public static bool Unchanged(string current, string imported) => Normalize(current) == Normalize(imported);
-
     /// <summary>Splits a document's own flowing text (one string for all pages) into one text per page, by where each
     /// page's recognised lines sit in it. A page's text runs from its first found line to the next page's first found
     /// line (the first page from the start), so the lines only decide the cut points and the text keeps its own
@@ -40,12 +36,4 @@ public static class ImportedText
 
         return pages;
     }
-
-    /// <summary>One text per imported page for text the grown-up edited: <see cref="SplitByPages"/> when the lines can be
-    /// found, otherwise the whole text on the first page. Every page keeps its place (so its picture survives); a page
-    /// whose lines are not found has an empty text.</summary>
-    public static IReadOnlyList<string> TextsForEditedText(string text, IReadOnlyList<IReadOnlyList<string>> pageLines) =>
-        SplitByPages(text, pageLines) ?? pageLines.Select((_, i) => i == 0 ? text : string.Empty).ToList();
-
-    private static string Normalize(string text) => text.Replace("\r\n", "\n").Trim();
 }

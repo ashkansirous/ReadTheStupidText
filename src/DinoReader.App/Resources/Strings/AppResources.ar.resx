@@ -75,12 +75,31 @@
   <data name="Edit_CoverColour" xml:space="preserve"><value>اللون</value></data>
   <data name="Edit_CoverPhoto" xml:space="preserve"><value>صورة</value></data>
   <data name="Edit_Pages" xml:space="preserve"><value>الصفحات</value></data>
-  <data name="Edit_FixText" xml:space="preserve"><value>تصحيح النص</value></data>
-  <data name="Edit_FixTextValue" xml:space="preserve"><value>تعديل النص المُتعرَّف عليه</value></data>
-  <data name="Pages_Add" xml:space="preserve"><value>إضافة صفحة</value></data>
-  <data name="Pages_MoveUp" xml:space="preserve"><value>نقل الصفحة لأعلى</value></data>
-  <data name="Pages_MoveDown" xml:space="preserve"><value>نقل الصفحة لأسفل</value></data>
-  <data name="Pages_Remove" xml:space="preserve"><value>إزالة الصفحة</value></data>
+  <!-- Slice 78: the page-review wizard -->
+  <data name="Wizard_Next" xml:space="preserve"><value>التالي</value></data>
+  <data name="Wizard_StepText" xml:space="preserve"><value>النص</value></data>
+  <data name="Wizard_AddPages" xml:space="preserve"><value>إضافة صفحات</value></data>
+  <data name="Wizard_DragHint" xml:space="preserve"><value>اضغط مطولًا على صفحة واسحبها لتحريكها</value></data>
+  <data name="Wizard_EmptyBody" xml:space="preserve"><value>أضف صفحات قصتك: امسحها ضوئيًا أو اختر صورًا أو أضف ملف PDF أو ملفًا نصيًا، أو اكتب النص. ثم رتّب الصفحات.</value></data>
+  <data name="Wizard_PageN" xml:space="preserve"><value>الصفحة {0}</value></data>
+  <data name="Wizard_PageMenu" xml:space="preserve"><value>خيارات الصفحة</value></data>
+  <data name="Wizard_MenuRotate" xml:space="preserve"><value>تدوير</value></data>
+  <data name="Wizard_MenuCrop" xml:space="preserve"><value>تدوير أو اقتصاص</value></data>
+  <data name="Wizard_MenuEditText" xml:space="preserve"><value>تعديل النص</value></data>
+  <data name="Wizard_NoTextShort" xml:space="preserve"><value>بلا نص</value></data>
+  <data name="Wizard_NoText" xml:space="preserve"><value>لم يُعثر على نص في هذه الصفحة</value></data>
+  <data name="Wizard_Reading" xml:space="preserve"><value>جارٍ قراءة الصفحة {0} من {1}</value></data>
+  <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>تعذّرت قراءة بعض الصفحات</value></data>
+  <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>تعذّرت قراءة {0} من الصفحات. ستبقى كصور بلا نص.</value></data>
+  <data name="Wizard_CoverHint" xml:space="preserve"><value>اختر صفحة أو صورة أو لونًا للغلاف.</value></data>
+  <data name="Wizard_NeedTextTitle" xml:space="preserve"><value>لا يوجد ما يُقرأ بعد</value></data>
+  <data name="Wizard_NeedTextBody" xml:space="preserve"><value>أضف نصًا إلى صفحة واحدة على الأقل ثم احفظ.</value></data>
+  <data name="Wizard_SaveFailedTitle" xml:space="preserve"><value>تعذّر حفظ القصة</value></data>
+  <data name="Wizard_SaveFailedBody" xml:space="preserve"><value>لم يتغيّر شيء. حاول مرة أخرى بعد قليل.</value></data>
+  <data name="Editor_Title" xml:space="preserve"><value>تدوير واقتصاص</value></data>
+  <data name="Editor_RotateLeft" xml:space="preserve"><value>تدوير لليسار</value></data>
+  <data name="Editor_RotateRight" xml:space="preserve"><value>تدوير لليمين</value></data>
+  <data name="Editor_ResetCrop" xml:space="preserve"><value>إعادة الاقتصاص</value></data>
   <data name="Reading_TextMode" xml:space="preserve"><value>وضع النص</value></data>
   <data name="Reading_PictureMode" xml:space="preserve"><value>وضع الصور</value></data>
   <data name="Reading_Play" xml:space="preserve"><value>تشغيل</value></data>
