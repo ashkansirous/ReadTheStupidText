@@ -63,6 +63,10 @@
   <data name="Translate_FailedMessage" xml:space="preserve"><value>این متن ترجمه نشد. به جای آن متن اصلی خوانده می‌شود.</value></data>
   <data name="Translate_UnsupportedNote" xml:space="preserve"><value>ترجمه برای {0} در دسترس نیست.</value></data>
   <data name="Translate_SourceUnsupportedNote" xml:space="preserve"><value>ترجمه از {0} در دسترس نیست.</value></data>
+  <data name="Translate_NoVoiceNote" xml:space="preserve"><value>این گوشی صدایی برای {0} ندارد، پس نمی‌توان آن را بلند خواند.</value></data>
+  <data name="Reader_VoiceUnavailableTitle" xml:space="preserve"><value>خواندن با صدا ممکن نیست</value></data>
+  <data name="Reader_VoiceDownloadingMessage" xml:space="preserve"><value>صدای طبیعی {0} هنوز در حال دانلود است. پس از پایان دوباره امتحان کنید.</value></data>
+  <data name="Reader_NoVoiceMessage" xml:space="preserve"><value>این گوشی صدایی برای {0} ندارد.</value></data>
   <data name="PackStatus_Resolving" xml:space="preserve"><value>در حال جست‌وجوی صداهای طبیعی…</value></data>
   <data name="PackStatus_Downloading" xml:space="preserve"><value>در حال دانلود صداهای طبیعی… {0}</value></data>
   <data name="PackStatus_Offline" xml:space="preserve"><value>اتصالی وجود ندارد. با صدای گوشی خوانده می‌شود. برای تلاش دوباره دانلود صدا ضربه بزنید.</value></data>

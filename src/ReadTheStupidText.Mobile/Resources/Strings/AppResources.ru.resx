@@ -60,6 +60,10 @@
   <data name="Translate_FailedMessage" xml:space="preserve"><value>Этот текст не удалось перевести. Вместо этого будет прочитан оригинал.</value></data>
   <data name="Translate_UnsupportedNote" xml:space="preserve"><value>Перевод для языка {0} недоступен.</value></data>
   <data name="Translate_SourceUnsupportedNote" xml:space="preserve"><value>Перевод с языка {0} недоступен.</value></data>
+  <data name="Translate_NoVoiceNote" xml:space="preserve"><value>На этом телефоне нет голоса для языка {0}, поэтому читать вслух нельзя.</value></data>
+  <data name="Reader_VoiceUnavailableTitle" xml:space="preserve"><value>Невозможно прочитать вслух</value></data>
+  <data name="Reader_VoiceDownloadingMessage" xml:space="preserve"><value>Естественный голос для языка {0} ещё загружается. Повторите попытку после завершения.</value></data>
+  <data name="Reader_NoVoiceMessage" xml:space="preserve"><value>На этом телефоне нет голоса для языка {0}.</value></data>
   <data name="PackStatus_Resolving" xml:space="preserve"><value>Поиск естественных голосов…</value></data>
   <data name="PackStatus_Downloading" xml:space="preserve"><value>Загрузка естественных голосов… {0}</value></data>
   <data name="PackStatus_Offline" xml:space="preserve"><value>Нет соединения. Читает голос телефона. Нажмите, чтобы повторить загрузку голоса.</value></data>

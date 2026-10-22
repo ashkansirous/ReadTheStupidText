@@ -18,7 +18,7 @@ namespace ReadTheStupidText.Mobile;
 /// are ignored (<see cref="_current"/>), because a cancel callback for the old utterance
 /// arrives after the new one has started.
 /// </remarks>
-public sealed class AvSpeechReader : ISpeechReader, IDisposable
+public sealed class AvSpeechReader : ISpeechReader, IReadingLanguage, IDisposable
 {
     private readonly AVSpeechSynthesizer _synthesizer = new();
     private readonly SynthesizerDelegate _delegate;
@@ -29,6 +29,7 @@ public sealed class AvSpeechReader : ISpeechReader, IDisposable
     private int _lastReportedOffset;
     private double _speed = 1.0;
     private AVSpeechSynthesisVoice? _voice;
+    private string? _readingLanguage;
     private long _speakStartTimestamp;
     private readonly NSObject _interruptionObserver;
     private bool _pausedByInterruption;
@@ -103,6 +104,13 @@ public sealed class AvSpeechReader : ISpeechReader, IDisposable
     public void SetVoice(string voiceId) =>
         _voice = voiceId == SystemVoice.Id ? null : AVSpeechSynthesisVoice.FromIdentifier(voiceId);
 
+    // Slice 82: with no voice chosen, the default voice for the text's language reads, not the device's.
+    public void SetReadingLanguage(string languageCode) => _readingLanguage = languageCode;
+
+    /// <summary>The primary language codes of the voices installed on this device.</summary>
+    public static IReadOnlyCollection<string> InstalledLanguages() =>
+        AVSpeechSynthesisVoice.GetSpeechVoices().Select(v => v.Language).Where(l => !string.IsNullOrEmpty(l)).ToArray();
+
     public Task SkipForward() => SkipBy(OffsetSkip.SkipChars(_speed));
 
     public Task SkipBackward() => SkipBy(-OffsetSkip.SkipChars(_speed));
@@ -150,7 +158,7 @@ public sealed class AvSpeechReader : ISpeechReader, IDisposable
         var utterance = new AVSpeechUtterance(_text[offset..])
         {
             Rate = ToUtteranceRate(_speed),
-            Voice = _voice, // null = the system default voice
+            Voice = _voice ?? LanguageVoice(), // null = the system default voice
         };
 
         _current = utterance;
@@ -192,6 +200,37 @@ public sealed class AvSpeechReader : ISpeechReader, IDisposable
             Resume();
         }
     }
+
+    // Only a language other than the device's needs a voice picked; otherwise null keeps the
+    // system default (the user's region and chosen voice). The device language is read from the OS,
+    // not CurrentUICulture, which the app overrides with its own language. Among the installed
+    // voices of the wanted language an exact-locale match wins, then enhanced/premium quality, then
+    // any; no match keeps the default.
+    private AVSpeechSynthesisVoice? LanguageVoice()
+    {
+        if (_readingLanguage is null)
+        {
+            return null;
+        }
+
+        string wanted = VoiceAvailability.Primary(_readingLanguage);
+        if (wanted == DeviceLanguage())
+        {
+            return null;
+        }
+
+        return AVSpeechSynthesisVoice.GetSpeechVoices()
+            .Where(v => VoiceAvailability.Primary(v.Language) == wanted)
+            .OrderByDescending(v => IsExactLocale(v, _readingLanguage))
+            .ThenByDescending(v => (int)v.Quality)
+            .FirstOrDefault();
+    }
+
+    private static string DeviceLanguage() =>
+        VoiceAvailability.Primary(NSLocale.PreferredLanguages.FirstOrDefault() ?? NSLocale.CurrentLocale.LanguageCode ?? string.Empty);
+
+    private static bool IsExactLocale(AVSpeechSynthesisVoice voice, string language) =>
+        string.Equals(voice.Language?.Replace('_', '-'), language.Replace('_', '-'), StringComparison.OrdinalIgnoreCase);
 
     private void Finish()
     {

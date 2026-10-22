@@ -49,8 +49,8 @@
         <ScrollView Grid.Row="1" SafeAreaEdges="Container">
             <VerticalStackLayout Padding="14" Spacing="14">
 
-                <Label Text="{x:Static res:AppResources.VoicePicker_SectionPhone}" Style="{StaticResource VoiceSectionHeading}" />
-                <Border Style="{StaticResource VoiceCard}">
+                <Label x:Name="PhoneSectionHeading" Text="{x:Static res:AppResources.VoicePicker_SectionPhone}" Style="{StaticResource VoiceSectionHeading}" />
+                <Border x:Name="PhoneSectionCard" Style="{StaticResource VoiceCard}">
                     <VerticalStackLayout x:Name="PhoneVoiceList" />
                 </Border>
 

@@ -82,6 +82,10 @@ public static class AppResources
     public static string Translate_FailedMessage => Get();
     public static string Translate_UnsupportedNote => Get();
     public static string Translate_SourceUnsupportedNote => Get();
+    public static string Translate_NoVoiceNote => Get();
+    public static string Reader_VoiceUnavailableTitle => Get();
+    public static string Reader_VoiceDownloadingMessage => Get();
+    public static string Reader_NoVoiceMessage => Get();
     public static string PackStatus_Resolving => Get();
     public static string PackStatus_Downloading => Get();
     public static string PackStatus_Offline => Get();

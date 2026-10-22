@@ -11,7 +11,7 @@ namespace ReadTheStupidText.Mobile;
 /// (Decision 39). The two engines come from <see cref="IPlatformServices"/>, so this
 /// class names no platform type (Slice 44).
 /// </summary>
-public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IDisposable
+public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingLanguage, IDisposable
 {
     private readonly ISpeechReader _neural;
     private readonly ISpeechReader _fallback;
@@ -141,6 +141,9 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IDisposab
             NeuralVoiceMemory.Remember(voiceId);
         }
     }
+
+    // Slice 82: only the phone voice follows the text's language; a natural pack already is one language.
+    public void SetReadingLanguage(string languageCode) => (_fallback as IReadingLanguage)?.SetReadingLanguage(languageCode);
 
     // Slice 47: only the neural engine has audio worth preparing, and only when it would be
     // the one to read (pack ready, "Phone voice" not chosen); otherwise there is nothing to do.

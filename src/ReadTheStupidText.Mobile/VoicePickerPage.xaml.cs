@@ -32,6 +32,9 @@ public partial class VoicePickerPage : ContentPage
     private Label? _statusLabel;
     private PackInstallState _statusState;
 
+    // What the phone voice can read (Slice 82); null until the platform has answered, when the row is still offered.
+    private VoiceAvailability? _voices = PlatformVoiceAvailability.Known;
+
     public VoicePickerPage(
         ISpeechReader reader,
         ISettingsStore settings,
@@ -59,8 +62,41 @@ public partial class VoicePickerPage : ContentPage
         base.OnAppearing();
         _installer.Changed += OnPacksChanged;
         _model.ReadyChanged += OnPacksChanged;
+        _voices = PlatformVoiceAvailability.Known;
+        LeavePhoneVoiceIfItCannotReadTheApp();
         Rebuild();
+        _ = LoadVoicesAsync();
     }
+
+    private async Task LoadVoicesAsync()
+    {
+        bool before = PhoneCanReadAppLanguage();
+        _voices = await PlatformVoiceAvailability.BuildAsync(_platform);
+        if (PhoneCanReadAppLanguage() != before)
+        {
+            LeavePhoneVoiceIfItCannotReadTheApp();
+            Rebuild();
+        }
+    }
+
+    // The explicit, one-off step that moves a stored "Phone voice" choice to the natural voice when
+    // the phone is known (a real answer, never an unknown phone) to have none for the app language.
+    // Rendering never writes settings.
+    private void LeavePhoneVoiceIfItCannotReadTheApp()
+    {
+        VoiceModelPaths? paths = _platform.SupportsNeuralVoice ? _model.Paths : null;
+        bool leave = paths is not null
+            && VoiceRouting.ShouldLeavePhoneVoice(_settings.VoiceId == SystemVoice.Id, true, PhoneCanReadAppLanguage());
+        if (leave)
+        {
+            PhoneVoiceMigration.MoveToNatural(_settings, _reader, paths!);
+        }
+    }
+
+    // The Phone voice row is offered unless the phone is known to have no voice for the app
+    // language; a phone voice that would skip the script is never listed. An unknown phone hides nothing.
+    private bool PhoneCanReadAppLanguage() =>
+        _voices is null || _voices.CanPhoneRead(AppLanguages.Code(AppLanguageSetting.Current(_settings)));
 
     protected override void OnDisappearing()
     {
@@ -85,6 +121,7 @@ public partial class VoicePickerPage : ContentPage
             return;
         }
 
+        LeavePhoneVoiceIfItCannotReadTheApp();
         Rebuild();
     }
 
@@ -101,7 +138,13 @@ public partial class VoicePickerPage : ContentPage
         MaleVoiceList.Children.Clear();
         FemaleVoiceList.Children.Clear();
         EngineVoiceList.Children.Clear();
-        PhoneVoiceList.Children.Add(BuildRow(new VoiceInfo(SystemVoice.Id, PhoneVoiceName, string.Empty)));
+        bool phoneRow = PhoneCanReadAppLanguage();
+        PhoneSectionHeading.IsVisible = phoneRow;
+        PhoneSectionCard.IsVisible = phoneRow;
+        if (phoneRow)
+        {
+            PhoneVoiceList.Children.Add(BuildRow(new VoiceInfo(SystemVoice.Id, PhoneVoiceName, string.Empty)));
+        }
 
         VoiceModelPaths? paths = _platform.SupportsNeuralVoice ? _model.Paths : null;
         NeuralVoiceSections.IsVisible = paths is not null;
@@ -114,13 +157,22 @@ public partial class VoicePickerPage : ContentPage
             AddNeuralVoices(paths);
         }
 
-        UpdateSelection(SelectedVoiceId(paths));
+        UpdateSelection(SelectedVoiceId(paths, phoneRow));
     }
 
-    private string SelectedVoiceId(VoiceModelPaths? paths) =>
-        paths is null || _settings.VoiceId == SystemVoice.Id
+    // Without a Phone voice row the stored "Phone voice" choice selects nothing on the list: the
+    // natural voice that reads instead is highlighted, or none while the pack is missing.
+    private string SelectedVoiceId(VoiceModelPaths? paths, bool phoneRow)
+    {
+        if (paths is null)
+        {
+            return phoneRow ? SystemVoice.Id : string.Empty;
+        }
+
+        return phoneRow && _settings.VoiceId == SystemVoice.Id
             ? SystemVoice.Id
             : NeuralVoiceMemory.Resolve(paths, _settings.VoiceId).Id;
+    }
 
     private void AddFallbackReason()
     {

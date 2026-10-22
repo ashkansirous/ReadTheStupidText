@@ -7,6 +7,7 @@ namespace ReadTheStupidText.Mobile;
 public sealed class AndroidPlatformServices : IPlatformServices
 {
     private readonly IVoiceModelService _model;
+    private AndroidSpeechReader? _systemReader;
 
     public AndroidPlatformServices(IVoiceModelService model) => _model = model;
 
@@ -16,5 +17,13 @@ public sealed class AndroidPlatformServices : IPlatformServices
 
     public ISpeechReader CreateNeuralReader() => new AndroidSupertonicSpeechReader(_model);
 
-    public ISpeechReader CreateFallbackReader() => new AndroidSpeechReader(global::Android.App.Application.Context);
+    public ISpeechReader CreateFallbackReader() => SystemReader();
+
+    public Task<IReadOnlyCollection<string>?> PhoneVoiceLanguagesAsync() => SystemReader().AvailableLanguagesAsync();
+
+    public void InvalidatePhoneVoices() => _systemReader?.ForgetLanguages();
+
+    // One engine for the reader and the language query, so the warmed engine is never lost.
+    private AndroidSpeechReader SystemReader() =>
+        _systemReader ??= new AndroidSpeechReader(global::Android.App.Application.Context);
 }

@@ -64,6 +64,10 @@
   <data name="Translate_FailedMessage" xml:space="preserve"><value>This text couldn't be translated. Reading the original instead.</value></data>
   <data name="Translate_UnsupportedNote" xml:space="preserve"><value>Translation isn't available for {0}.</value></data>
   <data name="Translate_SourceUnsupportedNote" xml:space="preserve"><value>Translation isn't available from {0}.</value></data>
+  <data name="Translate_NoVoiceNote" xml:space="preserve"><value>This phone has no voice for {0}, so it can't be read aloud.</value></data>
+  <data name="Reader_VoiceUnavailableTitle" xml:space="preserve"><value>Can't read this aloud</value></data>
+  <data name="Reader_VoiceDownloadingMessage" xml:space="preserve"><value>The natural {0} voice is still downloading. Try again when it has finished.</value></data>
+  <data name="Reader_NoVoiceMessage" xml:space="preserve"><value>This phone has no voice for {0}.</value></data>
   <data name="PackStatus_Resolving" xml:space="preserve"><value>Checking for natural voices…</value></data>
   <data name="PackStatus_Downloading" xml:space="preserve"><value>Downloading natural voices… {0}</value></data>
   <data name="PackStatus_Offline" xml:space="preserve"><value>No connection. Reading with the phone voice. Tap to retry the voice download.</value></data>

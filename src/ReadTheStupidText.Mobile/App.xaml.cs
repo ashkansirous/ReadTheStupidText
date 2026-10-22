@@ -24,6 +24,7 @@ public partial class App : Microsoft.Maui.Controls.Application
 		_settings = settings;
 		_installer = installer;
 		_ocrPacks = ocrPacks;
+		_installer.Changed += OnInstallerChanged;
 		_ = InitializeSpeechAsync();
 		// OCR pack (Slice 52): checked at every start, on its own; it waits for any voice download itself.
 		_ = _ocrPacks?.EnsureForCurrentLanguageAsync();
@@ -35,7 +36,22 @@ public partial class App : Microsoft.Maui.Controls.Application
 		Page root = _settings.Language is null
 			? _services.GetRequiredService<LanguagePage>()
 			: new AppShell();
-		return new Window(root);
+		var window = new Window(root);
+		window.Resumed += (_, _) => InvalidatePhoneVoices();
+		return window;
+	}
+
+	// Voice data may have been installed in system settings while the app was away.
+	private void InvalidatePhoneVoices() =>
+		PlatformVoiceAvailability.Invalidate(_services.GetRequiredService<IPlatformServices>());
+
+	// A finished pack install changes what can read; ask the phone again.
+	private void OnInstallerChanged(object? sender, EventArgs e)
+	{
+		if (_installer.State == PackInstallState.Ready)
+		{
+			MainThread.BeginInvokeOnMainThread(InvalidatePhoneVoices);
+		}
 	}
 
 	/// <summary>Rebuilds the root in the current language: leaves the first-run page, or re-applies a language change.</summary>

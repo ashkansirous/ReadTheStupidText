@@ -37,6 +37,7 @@ public partial class ReaderPage : ContentPage
     private readonly IDocumentScanner? _scanner;
     private readonly IVoiceModelService _model;
     private readonly VoicePackInstaller _installer;
+    private readonly IPlatformServices _platform;
     private readonly IHeadStart _headStart;
     private readonly EditorDraft _draft;
     private PlaybackRate _speed;
@@ -79,6 +80,7 @@ public partial class ReaderPage : ContentPage
         _headStart = headStart;
         _model = model;
         _installer = installer;
+        _platform = platform;
         _draft = draft;
         TextEditor.Text = draft.Take();
         _speed = _settings.Speed;
@@ -105,6 +107,7 @@ public partial class ReaderPage : ContentPage
         RenderPackStatus();
         RestorePendingReadSpinner();
         PrepareScannerOnce();
+        LoadVoiceAvailability();
     }
 
     // Asks the platform to have the scanner ready (Play-services module download) before the
@@ -528,6 +531,11 @@ public partial class ReaderPage : ContentPage
                 return;
             }
 
+            if (!await EnsureVoiceCanReadAsync(id))
+            {
+                return;
+            }
+
             await _reader.SpeakAsync(spoken);
         }
         catch (Exception)
@@ -543,6 +551,46 @@ public partial class ReaderPage : ContentPage
         }
 
         await WaitForFirstAudioAsync(id);
+    }
+
+    // The phone voice reads the translation target when translating, else the app language (Slice 82,
+    // Decision 89); both are the app language. When the phone
+    // voice would speak and is known to have none for it, say so rather than read only the Latin
+    // fragments: the natural voice is either still downloading or not available.
+    private async Task<bool> EnsureVoiceCanReadAsync(int id)
+    {
+        string language = TargetCode();
+        (_reader as IReadingLanguage)?.SetReadingLanguage(language);
+        VoiceAvailability voices = await PlatformVoiceAvailability.BuildAsync(_platform);
+        LeavePhoneVoiceIfItCannotReadTheApp(voices);
+        bool phoneReads = VoiceRouting.PhoneReads(_settings.VoiceId == SystemVoice.Id, _model.IsReady);
+        bool downloading = _installer.State is PackInstallState.Resolving or PackInstallState.Downloading;
+        VoiceRoute route = VoiceRouting.Route(phoneReads, PhoneCanRead(voices, language), downloading);
+        if (route == VoiceRoute.Read)
+        {
+            return true;
+        }
+
+        ClearPendingReadIfCurrent(id);
+        string message = route == VoiceRoute.Downloading ? AppResources.Reader_VoiceDownloadingMessage : AppResources.Reader_NoVoiceMessage;
+        await AlertAsync(AppResources.Reader_VoiceUnavailableTitle, AppResources.Format(message, LanguageChoices.NativeName(CurrentLanguage())));
+        return false;
+    }
+
+    // Null (unknown) unless the phone was listed and the language is one it was asked about.
+    private static bool? PhoneCanRead(VoiceAvailability voices, string language) =>
+        voices.PhoneKnown ? voices.CanPhoneRead(language) : null;
+
+    // The picker hides the Phone voice row when the phone can't read the app language; a stored
+    // choice of it moves to the natural voice so the reader follows what the picker shows.
+    private void LeavePhoneVoiceIfItCannotReadTheApp(VoiceAvailability voices)
+    {
+        bool leave = VoiceRouting.ShouldLeavePhoneVoice(_settings.VoiceId == SystemVoice.Id, _model.IsReady, PhoneCanRead(voices, TargetCode()));
+        if (leave && _model.Paths is { } paths)
+        {
+            PhoneVoiceMigration.MoveToNatural(_settings, _reader, paths);
+            UpdateVoiceLabel();
+        }
     }
 
     // SpeakAsync returned while id is still current and nothing is playing yet. Keep
@@ -671,12 +719,7 @@ public partial class ReaderPage : ContentPage
     }
 
     // The stored language, or what the UI resolved to when none is stored yet.
-    private AppLanguage CurrentLanguage()
-    {
-        string code = UiCulture.Resolve(_settings.Language, System.Globalization.CultureInfo.CurrentUICulture).TwoLetterISOLanguageName;
-        AppLanguages.TryParse(code, out AppLanguage language);
-        return language;
-    }
+    private AppLanguage CurrentLanguage() => AppLanguageSetting.Current(_settings);
 
     private async void OnLanguageRowTapped(object? sender, TappedEventArgs e) =>
         await LanguageChooser.ChooseAsync(this, _settings);

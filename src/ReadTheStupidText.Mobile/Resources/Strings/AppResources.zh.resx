@@ -60,6 +60,10 @@
   <data name="Translate_FailedMessage" xml:space="preserve"><value>无法翻译此文本。现将朗读原文。</value></data>
   <data name="Translate_UnsupportedNote" xml:space="preserve"><value>{0}暂不支持翻译。</value></data>
   <data name="Translate_SourceUnsupportedNote" xml:space="preserve"><value>暂不支持从{0}翻译。</value></data>
+  <data name="Translate_NoVoiceNote" xml:space="preserve"><value>这部手机没有{0}的语音，因此无法朗读。</value></data>
+  <data name="Reader_VoiceUnavailableTitle" xml:space="preserve"><value>无法朗读</value></data>
+  <data name="Reader_VoiceDownloadingMessage" xml:space="preserve"><value>{0}的自然语音仍在下载。请在下载完成后重试。</value></data>
+  <data name="Reader_NoVoiceMessage" xml:space="preserve"><value>这部手机没有{0}的语音。</value></data>
   <data name="PackStatus_Resolving" xml:space="preserve"><value>正在检查自然语音…</value></data>
   <data name="PackStatus_Downloading" xml:space="preserve"><value>正在下载自然语音… {0}</value></data>
   <data name="PackStatus_Offline" xml:space="preserve"><value>没有网络连接。正在使用手机语音朗读。点按可重试下载语音。</value></data>
