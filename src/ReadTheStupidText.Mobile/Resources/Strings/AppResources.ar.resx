@@ -39,6 +39,13 @@
   <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>تعذّرت قراءة الصفحات {0}. حلّت الصفحات التي أمكن قراءتها محل النص.</value></data>
   <data name="Reader_ScanProgressPage" xml:space="preserve"><value>جارٍ قراءة الصفحة {0} من {1}</value></data>
   <data name="Reader_ScanProgressSingle" xml:space="preserve"><value>جارٍ قراءة الصفحة</value></data>
+  <data name="Reader_PageLanguageTitle" xml:space="preserve"><value>بأي لغة هذه الصفحة؟</value></data>
+  <data name="Reader_OcrDownloading" xml:space="preserve"><value>جارٍ تنزيل قارئ {0}… {1}٪</value></data>
+  <data name="Reader_OcrDownloadFailedTitle" xml:space="preserve"><value>تعذّر تنزيل القارئ</value></data>
+  <data name="Reader_OcrDownloadFailedMessage" xml:space="preserve"><value>تعذّر تنزيل قارئ {0}. تحقق من اتصالك وحاول مرة أخرى.</value></data>
+  <data name="Reader_OcrOfflineMessage" xml:space="preserve"><value>تحتاج هذه الصفحة إلى تنزيل قارئ. اتصل بالإنترنت وحاول مرة أخرى.</value></data>
+  <data name="Reader_OcrFailedMessage" xml:space="preserve"><value>تعذّر إعداد قارئ {0}. حاول مرة أخرى لاحقًا.</value></data>
+  <data name="Reader_OcrUnreadableMessage" xml:space="preserve"><value>تعذّرت قراءة هذه الصفحة.</value></data>
   <data name="Reader_FilePickerTitle" xml:space="preserve"><value>اختر ملف txt أو pdf أو docx</value></data>
   <data name="Reader_FilePermissionTitle" xml:space="preserve"><value>الإذن مطلوب</value></data>
   <data name="Reader_FilePermissionMessage" xml:space="preserve"><value>امنح إذن الوصول إلى الملفات لقراءة مستند.</value></data>

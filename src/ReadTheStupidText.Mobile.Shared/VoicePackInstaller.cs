@@ -68,16 +68,24 @@ public sealed class VoicePackInstaller
     private void OnLanguageChanged()
     {
         CancellationTokenSource? stale = null;
+        bool running;
         lock (_gate)
         {
-            if (_running && !SameLanguage(_runLanguage, CurrentLanguage))
+            running = _running;
+            if (running && !SameLanguage(_runLanguage, CurrentLanguage))
             {
                 stale = _runCancel;
             }
         }
 
         CancelQuietly(stale);
-        _ = Task.Run(StartAsync);
+
+        // A run in flight re-checks the language when it ends (RunUntilSettledAsync), so it serves
+        // the change itself; a second start queued behind it could land after it and run again.
+        if (!running)
+        {
+            _ = Task.Run(StartAsync);
+        }
     }
 
     // The run may have just ended and disposed its source; there is then nothing to cancel.
