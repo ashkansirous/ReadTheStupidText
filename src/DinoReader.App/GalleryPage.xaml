@@ -9,7 +9,46 @@
     NavigationPage.HasNavigationBar="False"
     SafeAreaEdges="Container">
 
-    <!-- Home screen (mock screen 1): the child's stories. Reading needs no gate; the lock opens it. -->
+    <!-- Home screen (mock screen 1): the child's stories. Reading needs no gate; the lock opens grown-up
+         mode (Slice 80), which is this same grid with an edit overlay on each tile and the Add tile first. -->
+    <ContentPage.Resources>
+        <DataTemplate x:Key="StoryTemplate" x:DataType="local:StoryTile">
+            <VerticalStackLayout Spacing="7" HorizontalOptions="Fill">
+                <Grid>
+                    <local:StoryCover>
+                        <local:StoryCover.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnStoryTapped" />
+                        </local:StoryCover.GestureRecognizers>
+                    </local:StoryCover>
+                    <local:TileOverlay EditRequested="OnEditRequested" CastRequested="OnCastRequested" DeleteRequested="OnDeleteRequested" />
+                </Grid>
+                <Label Text="{Binding Title}" FontSize="14" FontAttributes="Bold" LineHeight="1.25">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnStoryTapped" />
+                    </Label.GestureRecognizers>
+                </Label>
+            </VerticalStackLayout>
+        </DataTemplate>
+
+        <DataTemplate x:Key="AddTemplate">
+            <Border HorizontalOptions="Fill" BackgroundColor="White" Stroke="#c9c0f5" StrokeThickness="3" StrokeDashArray="3,3"
+                    SizeChanged="OnAddTileSizeChanged" SemanticProperties.Description="{x:Static res:AppResources.Story_Add}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16" />
+                </Border.StrokeShape>
+                <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="6">
+                    <local:IconView Kind="Plus" Color="{StaticResource Brand}" Size="28" StrokeWidth="2.6" />
+                    <Label Text="{x:Static res:AppResources.Story_Add}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Brand}" />
+                </VerticalStackLayout>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnAddTapped" />
+                </Border.GestureRecognizers>
+            </Border>
+        </DataTemplate>
+
+        <local:GalleryTemplateSelector x:Key="Selector" AddTemplate="{StaticResource AddTemplate}" StoryTemplate="{StaticResource StoryTemplate}" />
+    </ContentPage.Resources>
+
     <Grid RowDefinitions="Auto,*">
         <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Padding="16,10,16,12">
             <Border WidthRequest="40" HeightRequest="40" StrokeThickness="0">
@@ -20,7 +59,7 @@
             </Border>
             <Label Grid.Column="1" Text="{x:Static res:AppResources.Gallery_Title}" FontSize="22" FontAttributes="Bold" VerticalOptions="Center"
                    SemanticProperties.HeadingLevel="Level1" />
-            <Border Grid.Column="2" WidthRequest="44" HeightRequest="44" BackgroundColor="{StaticResource ControlFill}"
+            <Border Grid.Column="2" x:Name="LockButton" WidthRequest="44" HeightRequest="44" BackgroundColor="{StaticResource ControlFill}"
                     StrokeThickness="0" SemanticProperties.Description="{x:Static res:AppResources.Gallery_ForGrownUps}" SemanticProperties.Hint="{x:Static res:AppResources.Gallery_OpensGateHint}">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="14" />
@@ -30,24 +69,14 @@
                     <TapGestureRecognizer Tapped="OnLockTapped" />
                 </Border.GestureRecognizers>
             </Border>
+            <Button Grid.Column="2" x:Name="DoneButton" IsVisible="False" Text="{x:Static res:AppResources.Common_Done}" HeightRequest="44" CornerRadius="22"
+                    Padding="18,0" FontSize="14" BackgroundColor="{StaticResource Brand}" TextColor="White" Clicked="OnDoneClicked" />
         </Grid>
 
-        <CollectionView Grid.Row="1" x:Name="StoryList" SelectionMode="None" Margin="14,0">
+        <CollectionView Grid.Row="1" x:Name="StoryList" SelectionMode="None" Margin="14,0" ItemTemplate="{StaticResource Selector}">
             <CollectionView.ItemsLayout>
                 <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="12" VerticalItemSpacing="12" />
             </CollectionView.ItemsLayout>
-            <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="local:StoryTile">
-                    <VerticalStackLayout Spacing="7" MaximumWidthRequest="200" HorizontalOptions="Center">
-                        <!-- Mock tile is 160 wide at 360 (2 columns, 14 padding, 12 gap); capped at 200 so the widest phones still fill their columns and a desktop window does not grow 3/4 tiles to 900 px. -->
-                        <local:StoryCover />
-                        <Label Text="{Binding Title}" FontSize="14" FontAttributes="Bold" LineHeight="1.25" />
-                        <VerticalStackLayout.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnStoryTapped" />
-                        </VerticalStackLayout.GestureRecognizers>
-                    </VerticalStackLayout>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
         </CollectionView>
     </Grid>
 </ContentPage>

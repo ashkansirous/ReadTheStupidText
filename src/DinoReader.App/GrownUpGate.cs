@@ -1,6 +1,7 @@
 namespace DinoReader;
 
-/// <summary>Marks a page that only a grown-up reaches (manage, add, edit): leaving the app closes them.</summary>
+/// <summary>Marks a page that only a grown-up reaches (add, edit, cast): leaving the app closes them,
+/// and <see cref="DinoApp"/> then drops <see cref="GrownUpMode"/> back to kids' mode.</summary>
 public interface IGrownUpPage
 {
 }

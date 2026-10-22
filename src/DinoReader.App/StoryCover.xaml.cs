@@ -2,7 +2,7 @@ namespace DinoReader;
 
 public partial class StoryCover : ContentView
 {
-	private const double CoverAspect = 4.0 / 3.0;
+	public const double CoverAspect = 4.0 / 3.0;
 
 	public StoryCover()
 	{

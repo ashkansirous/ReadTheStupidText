@@ -22,7 +22,6 @@
   <data name="Gallery_Title" xml:space="preserve"><value>Minhas histórias</value></data>
   <data name="Gallery_ForGrownUps" xml:space="preserve"><value>Para adultos</value></data>
   <data name="Gallery_OpensGateHint" xml:space="preserve"><value>Abre o portão dos adultos</value></data>
-  <data name="Gallery_Cast" xml:space="preserve"><value>Elenco · {0}</value></data>
   <data name="Gallery_Characters_One" xml:space="preserve"><value>{0} personagem</value></data>
   <data name="Gallery_Characters_Other" xml:space="preserve"><value>{0} personagens</value></data>
   <data name="Gallery_PagesSummary" xml:space="preserve"><value>{0} · reordenar, adicionar, remover</value></data>
@@ -34,10 +33,11 @@
   <data name="Delete_Body" xml:space="preserve"><value>As páginas, imagens e vozes dele serão removidas deste telefone.</value></data>
   <data name="Delete_FailedTitle" xml:space="preserve"><value>Não foi possível excluir a história</value></data>
   <data name="Delete_FailedBody" xml:space="preserve"><value>Algo ainda está usando os arquivos. Tente novamente em instantes.</value></data>
-  <data name="Manage_Title" xml:space="preserve"><value>Gerenciar histórias</value></data>
   <data name="Manage_EditStory" xml:space="preserve"><value>Editar história</value></data>
-  <data name="Manage_DeleteStory" xml:space="preserve"><value>Excluir história</value></data>
-  <data name="Manage_WhoIsSpeaking" xml:space="preserve"><value>Quem está falando</value></data>
+  <data name="Gallery_EditStory" xml:space="preserve"><value>Editar {0}</value></data>
+  <data name="Gallery_CastStory" xml:space="preserve"><value>Elenco de {0}</value></data>
+  <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>Excluir {0}</value></data>
+  <data name="Gallery_CastButton" xml:space="preserve"><value>Elenco</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Pressione e segure por 3 segundos.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Pressione e segure por 3 segundos</value></data>
   <data name="Gate_KeepHolding" xml:space="preserve"><value>Continue segurando…</value></data>

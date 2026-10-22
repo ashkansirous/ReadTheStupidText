@@ -22,7 +22,6 @@
   <data name="Gallery_Title" xml:space="preserve"><value>わたしのおはなし</value></data>
   <data name="Gallery_ForGrownUps" xml:space="preserve"><value>おとな向け</value></data>
   <data name="Gallery_OpensGateHint" xml:space="preserve"><value>おとな用の入口を開きます</value></data>
-  <data name="Gallery_Cast" xml:space="preserve"><value>配役 · {0}</value></data>
   <data name="Gallery_Characters_One" xml:space="preserve"><value>登場人物: {0}</value></data>
   <data name="Gallery_Characters_Other" xml:space="preserve"><value>登場人物: {0}</value></data>
   <data name="Gallery_PagesSummary" xml:space="preserve"><value>{0} · 並べ替え・追加・削除</value></data>
@@ -34,10 +33,11 @@
   <data name="Delete_Body" xml:space="preserve"><value>ページ、写真、声がこのスマホから削除されます。</value></data>
   <data name="Delete_FailedTitle" xml:space="preserve"><value>おはなしを削除できませんでした</value></data>
   <data name="Delete_FailedBody" xml:space="preserve"><value>ファイルがまだ使用中です。しばらくしてからもう一度お試しください。</value></data>
-  <data name="Manage_Title" xml:space="preserve"><value>おはなしの管理</value></data>
   <data name="Manage_EditStory" xml:space="preserve"><value>おはなしを編集</value></data>
-  <data name="Manage_DeleteStory" xml:space="preserve"><value>おはなしを削除</value></data>
-  <data name="Manage_WhoIsSpeaking" xml:space="preserve"><value>だれが話している？</value></data>
+  <data name="Gallery_EditStory" xml:space="preserve"><value>{0}を編集</value></data>
+  <data name="Gallery_CastStory" xml:space="preserve"><value>{0}の登場人物</value></data>
+  <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>{0}を削除</value></data>
+  <data name="Gallery_CastButton" xml:space="preserve"><value>登場人物</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>3秒間長押ししてください。</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>3秒間長押ししてください</value></data>
   <data name="Gate_KeepHolding" xml:space="preserve"><value>そのまま押し続けて…</value></data>

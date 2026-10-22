@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="DinoReader.TileOverlay"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:DinoReader"
+    xmlns:res="clr-namespace:DinoReader.Resources.Strings"
+    x:DataType="local:StoryTile"
+    IsVisible="{Binding Mode.IsGrownUp}">
+
+    <!-- Grown-up edit overlay on a gallery cover (Slice 80): a band at the foot with Edit and Cast,
+         and a red trash badge top-right. Every control is at least 44 dp tall and labelled with the title. -->
+    <Grid>
+        <Border VerticalOptions="End" BackgroundColor="#d92b2540" StrokeThickness="0" Padding="6">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="0,0,16,16" />
+            </Border.StrokeShape>
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                <Button Text="{x:Static res:AppResources.Common_Edit}" HeightRequest="44" CornerRadius="12" Padding="4,0" FontSize="13"
+                        FontAttributes="Bold" BackgroundColor="{StaticResource BrandTint}" TextColor="{StaticResource Brand}"
+                        SemanticProperties.Description="{Binding EditHint}" Clicked="OnEditClicked" />
+                <Button Grid.Column="1" Text="{x:Static res:AppResources.Gallery_CastButton}" HeightRequest="44" CornerRadius="12" Padding="4,0"
+                        FontSize="13" FontAttributes="Bold" BackgroundColor="{StaticResource BrandTint}" TextColor="{StaticResource Brand}"
+                        SemanticProperties.Description="{Binding CastHint}" Clicked="OnCastClicked" />
+            </Grid>
+        </Border>
+        <Grid HorizontalOptions="End" VerticalOptions="Start" WidthRequest="44" HeightRequest="44"
+              SemanticProperties.Description="{Binding DeleteHint}">
+            <Border WidthRequest="32" HeightRequest="32" BackgroundColor="{StaticResource Danger}" StrokeThickness="0">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16" />
+                </Border.StrokeShape>
+                <Border.Shadow>
+                    <Shadow Brush="Black" Opacity="0.2" Offset="0,2" Radius="3" />
+                </Border.Shadow>
+                <local:IconView Kind="Trash" Color="White" Size="16" StrokeWidth="2.4" />
+            </Border>
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnDeleteTapped" />
+            </Grid.GestureRecognizers>
+        </Grid>
+    </Grid>
+</ContentView>
