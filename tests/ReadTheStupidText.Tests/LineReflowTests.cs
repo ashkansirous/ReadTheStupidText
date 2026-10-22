@@ -265,4 +265,32 @@ public class LineReflowTests
 
         Assert.Equal([text.IndexOf('\n')], map.DroppedHyphenBreaks.ToArray());
     }
+
+    [Fact]
+    public void Geometry_does_not_make_a_lowercase_or_long_line_a_heading()
+    {
+        var lines = new List<ReflowLine>
+        {
+            Line("and then the rain fell", 0, 40),
+            Line("It was a dark and stormy night, and the rain fell in torrents all night long.", 60, 20),
+            Line("Nobody slept until the sun rose again, and the morning was calm.", 85, 20),
+        };
+
+        Assert.DoesNotContain(LineReflow.Reflow(lines), u => u.Kind == UnitKind.Heading);
+    }
+
+    [Theory]
+    [InlineData(LineClass.MaxHeadingLength, UnitKind.Heading)]
+    [InlineData(LineClass.MaxHeadingLength + 1, UnitKind.Paragraph)]
+    public void A_tall_spaced_line_is_a_heading_only_up_to_the_length_cutoff(int length, UnitKind expected)
+    {
+        var lines = new List<ReflowLine>
+        {
+            Line(new string('A', length), 0, 40),
+            Line("Now they have a good view, but", 80, 20),
+            Line("Carrot wants to get even closer.", 105, 20),
+        };
+
+        Assert.Equal(expected, LineReflow.Reflow(lines)[0].Kind);
+    }
 }

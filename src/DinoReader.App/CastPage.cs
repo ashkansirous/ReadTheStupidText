@@ -312,7 +312,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	{
 		try
 		{
-			return await _voicing.CastAsync(story.Language, story.Text, narratorVoiceId, story.Cast, story.Merges);
+			return await _voicing.CastAsync(story.Language, story.Text, narratorVoiceId, story.Cast, story.Merges, story.BreakMap());
 		}
 		catch (Exception ex)
 		{

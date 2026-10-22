@@ -83,7 +83,8 @@ public sealed class StoryDraft(Story original)
 	private static StoryPage ToStoryPage(PageDraft draft) => new(
 		draft.Text,
 		draft.HasPicture ? DraftImageName(draft.Id) : null,
-		draft.Ocr is { HasText: true } ocr ? ocr.Lines : null);
+		draft.Ocr is { HasText: true } ocr ? ocr.Lines : null,
+		draft.Ocr is { HasText: true } read ? read.Regions : null);
 
 	public void AddPageDraft(PageDraft page) => InsertPageDraft(PageDrafts.Count, page);
 

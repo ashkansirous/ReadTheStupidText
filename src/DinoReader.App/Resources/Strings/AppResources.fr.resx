@@ -96,6 +96,13 @@
   <data name="Wizard_NeedTextBody" xml:space="preserve"><value>Ajoutez du texte à au moins une page, puis enregistrez.</value></data>
   <data name="Wizard_SaveFailedTitle" xml:space="preserve"><value>Impossible d’enregistrer l’histoire</value></data>
   <data name="Wizard_SaveFailedBody" xml:space="preserve"><value>Rien n’a été modifié. Réessayez dans un instant.</value></data>
+  <data name="Regions_Helper" xml:space="preserve"><value>Touchez un cadre pour le lire ou l’ignorer.</value></data>
+  <data name="Regions_ReplaceTitle" xml:space="preserve"><value>Remplacer votre texte modifié par les zones choisies ?</value></data>
+  <data name="Regions_ReplaceBody" xml:space="preserve"><value>Ce que vous avez saisi sur cette page sera perdu.</value></data>
+  <data name="Regions_Replace" xml:space="preserve"><value>Remplacer</value></data>
+  <data name="Regions_Keep" xml:space="preserve"><value>Garder</value></data>
+  <data name="Regions_BoxRead" xml:space="preserve"><value>Zone de texte, lue</value></data>
+  <data name="Regions_BoxLeftOut" xml:space="preserve"><value>Zone de texte, ignorée</value></data>
   <data name="Editor_Title" xml:space="preserve"><value>Pivoter et rogner</value></data>
   <data name="Editor_RotateLeft" xml:space="preserve"><value>Pivoter à gauche</value></data>
   <data name="Editor_RotateRight" xml:space="preserve"><value>Pivoter à droite</value></data>
