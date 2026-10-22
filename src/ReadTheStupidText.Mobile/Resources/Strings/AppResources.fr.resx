@@ -39,6 +39,13 @@
   <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>Impossible de lire les pages {0}. Les pages lisibles ont remplacé le texte.</value></data>
   <data name="Reader_ScanProgressPage" xml:space="preserve"><value>Lecture de la page {0} sur {1}</value></data>
   <data name="Reader_ScanProgressSingle" xml:space="preserve"><value>Lecture de la page</value></data>
+  <data name="Reader_PageLanguageTitle" xml:space="preserve"><value>Dans quelle langue est cette page ?</value></data>
+  <data name="Reader_OcrDownloading" xml:space="preserve"><value>Téléchargement du lecteur pour {0}… {1} %</value></data>
+  <data name="Reader_OcrDownloadFailedTitle" xml:space="preserve"><value>Impossible de télécharger le lecteur</value></data>
+  <data name="Reader_OcrDownloadFailedMessage" xml:space="preserve"><value>Impossible de télécharger le lecteur pour {0}. Vérifiez votre connexion et réessayez.</value></data>
+  <data name="Reader_OcrOfflineMessage" xml:space="preserve"><value>Cette page nécessite le téléchargement d'un lecteur. Connectez-vous à internet et réessayez.</value></data>
+  <data name="Reader_OcrFailedMessage" xml:space="preserve"><value>Impossible de préparer le lecteur pour {0}. Réessayez plus tard.</value></data>
+  <data name="Reader_OcrUnreadableMessage" xml:space="preserve"><value>Cette page n'a pas pu être lue.</value></data>
   <data name="Reader_FilePickerTitle" xml:space="preserve"><value>Choisissez un fichier .txt, .pdf ou .docx</value></data>
   <data name="Reader_FilePermissionTitle" xml:space="preserve"><value>Autorisation requise</value></data>
   <data name="Reader_FilePermissionMessage" xml:space="preserve"><value>Autorisez l'accès aux fichiers pour lire un document.</value></data>

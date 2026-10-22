@@ -58,6 +58,13 @@ public static class AppResources
     public static string Reader_PagesSkippedManyMessage => Get();
     public static string Reader_ScanProgressPage => Get();
     public static string Reader_ScanProgressSingle => Get();
+    public static string Reader_PageLanguageTitle => Get();
+    public static string Reader_OcrDownloading => Get();
+    public static string Reader_OcrDownloadFailedTitle => Get();
+    public static string Reader_OcrDownloadFailedMessage => Get();
+    public static string Reader_OcrOfflineMessage => Get();
+    public static string Reader_OcrFailedMessage => Get();
+    public static string Reader_OcrUnreadableMessage => Get();
     public static string Reader_FilePickerTitle => Get();
     public static string Reader_FilePermissionTitle => Get();
     public static string Reader_FilePermissionMessage => Get();

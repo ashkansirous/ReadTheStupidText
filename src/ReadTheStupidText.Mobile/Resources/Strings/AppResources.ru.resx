@@ -39,6 +39,13 @@
   <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>Не удалось прочитать страницы {0}. Читаемые страницы заменили текст.</value></data>
   <data name="Reader_ScanProgressPage" xml:space="preserve"><value>Чтение страницы {0} из {1}</value></data>
   <data name="Reader_ScanProgressSingle" xml:space="preserve"><value>Чтение страницы</value></data>
+  <data name="Reader_PageLanguageTitle" xml:space="preserve"><value>На каком языке эта страница?</value></data>
+  <data name="Reader_OcrDownloading" xml:space="preserve"><value>Загрузка модуля чтения для {0}… {1}%</value></data>
+  <data name="Reader_OcrDownloadFailedTitle" xml:space="preserve"><value>Не удалось загрузить модуль чтения</value></data>
+  <data name="Reader_OcrDownloadFailedMessage" xml:space="preserve"><value>Не удалось загрузить модуль чтения для {0}. Проверьте подключение и повторите попытку.</value></data>
+  <data name="Reader_OcrOfflineMessage" xml:space="preserve"><value>Для этой страницы нужно загрузить модуль чтения. Подключитесь к интернету и повторите попытку.</value></data>
+  <data name="Reader_OcrFailedMessage" xml:space="preserve"><value>Не удалось подготовить модуль чтения для {0}. Повторите попытку позже.</value></data>
+  <data name="Reader_OcrUnreadableMessage" xml:space="preserve"><value>Не удалось прочитать эту страницу.</value></data>
   <data name="Reader_FilePickerTitle" xml:space="preserve"><value>Выберите файл .txt, .pdf или .docx</value></data>
   <data name="Reader_FilePermissionTitle" xml:space="preserve"><value>Нужно разрешение</value></data>
   <data name="Reader_FilePermissionMessage" xml:space="preserve"><value>Разрешите доступ к файлам, чтобы прочитать документ.</value></data>
