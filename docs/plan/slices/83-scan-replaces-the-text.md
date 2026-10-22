@@ -1,6 +1,6 @@
 # Slice 83 — Scan replaces the text, like Paste and File
 
-*Planned.*
+*In progress (wave 2026-10-22), draft PR.*
 
 **Batch:** 14
 **Decisions:** 90
