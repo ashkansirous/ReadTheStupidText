@@ -1,3 +1,5 @@
+using ReadTheStupidText.Application.Reading;
+
 namespace DinoReader.Core;
 
 /// <summary>
@@ -7,13 +9,21 @@ namespace DinoReader.Core;
 /// missing close mark cannot swallow the next paragraphs; a paragraph that reopens with a
 /// quote mark starts a new quote that continues the speech. An unclosed quote at the end
 /// of the text runs to the end. Languages with dash dialogue (Russian, Spanish, Portuguese, French)
-/// also read a line that opens with a dash as a quote (see <see cref="DashDialogue"/>).
+/// also read a line that opens with a dash as a quote (see <see cref="DashDialogue"/>). A heading line
+/// (see <see cref="LineReflow"/>, Slice 76) is a narration segment of its own.
 /// </summary>
 public sealed class StorySegmenter(LanguageRules rules)
 {
     public IReadOnlyList<Segment> Split(string text)
     {
+        return Split(text, LineReflow.BreakMap(text));
+    }
+
+    /// <summary>As <see cref="Split(string)"/>, with the line breaks decided by the caller so the text is analysed once.</summary>
+    public IReadOnlyList<Segment> Split(string text, LineBreakMap lineBreaks)
+    {
         var segments = new List<Segment>();
+        IReadOnlySet<int> headingBreaks = lineBreaks.HeadingBreaks;
         int narrationStart = 0;
         int pos = 0;
         while (pos < text.Length)
@@ -24,11 +34,11 @@ public sealed class StorySegmenter(LanguageRules rules)
                 pos++;
                 continue;
             }
-            AddNarration(segments, text, narrationStart, pos);
+            AddNarration(segments, text, narrationStart, pos, headingBreaks);
             segments.Add(quote);
             pos = narrationStart = quote.SourceEnd;
         }
-        AddNarration(segments, text, narrationStart, text.Length);
+        AddNarration(segments, text, narrationStart, text.Length, headingBreaks);
         return segments;
     }
 
@@ -39,7 +49,29 @@ public sealed class StorySegmenter(LanguageRules rules)
         return DashDialogue.Opens(text, pos, rules) ? DashDialogue.Read(text, pos, rules) : null;
     }
 
-    private static void AddNarration(List<Segment> segments, string text, int start, int end)
+    // Narration is cut at the line breaks next to a heading, so a heading is a segment of its own.
+    private static void AddNarration(List<Segment> segments, string text, int start, int end, IReadOnlySet<int> headingBreaks)
+    {
+        if (headingBreaks.Count == 0)
+        {
+            AddNarrationPiece(segments, text, start, end);
+            return;
+        }
+
+        int from = start;
+        for (int i = start; i < end; i++)
+        {
+            if (headingBreaks.Contains(i))
+            {
+                AddNarrationPiece(segments, text, from, i);
+                from = i + 1;
+            }
+        }
+
+        AddNarrationPiece(segments, text, from, end);
+    }
+
+    private static void AddNarrationPiece(List<Segment> segments, string text, int start, int end)
     {
         while (start < end && char.IsWhiteSpace(text[start])) start++;
         while (end > start && char.IsWhiteSpace(text[end - 1])) end--;

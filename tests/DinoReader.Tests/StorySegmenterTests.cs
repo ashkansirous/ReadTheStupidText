@@ -81,6 +81,39 @@ public class StorySegmenterTests
     }
 
     [Fact]
+    public void A_heading_line_is_a_narration_segment_of_its_own()
+    {
+        const string text = "Where to Find Ebooks\nYou can buy ebooks from large stores such as Amazon and Kobo.";
+
+        var segments = Segmenter.Split(text);
+
+        Assert.Equal(2, segments.Count);
+        Assert.Equal("Where to Find Ebooks", segments[0].Text);
+        Assert.All(segments, s => Assert.Equal(SegmentKind.Narration, s.Kind));
+    }
+
+    [Fact]
+    public void A_soft_wrapped_line_is_not_a_sentence_end()
+    {
+        const string text = "Now they have a good view, but\nCarrot wants to get even closer.";
+
+        var sentences = StorySentences.Build(text, LanguageRules.English);
+
+        Assert.Single(sentences);
+        Assert.Equal(text.Length, sentences[0].End);
+    }
+
+    [Fact]
+    public void A_list_item_and_a_blank_line_still_end_a_sentence()
+    {
+        const string text = "First thing.\n- Second thing\n\nThird thing";
+
+        var sentences = StorySentences.Build(text, LanguageRules.English);
+
+        Assert.Equal(3, sentences.Count);
+    }
+
+    [Fact]
     public void Empty_text_gives_no_segments() => Assert.Empty(Segmenter.Split(""));
 
     [Fact]

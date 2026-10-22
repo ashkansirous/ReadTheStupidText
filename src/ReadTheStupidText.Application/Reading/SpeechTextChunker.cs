@@ -35,7 +35,7 @@ internal static partial class SpeechTextChunker
 
     public static IReadOnlyList<string> Split(string text, bool biasFirstChunk = true, HeadPolicy? head = null)
     {
-        string trimmed = text.Trim();
+        string trimmed = LineReflow.ReflowText(text).Trim();
         if (trimmed.Length <= SingleChunkMax)
         {
             return new[] { trimmed };
@@ -81,10 +81,11 @@ internal static partial class SpeechTextChunker
     {
         IReadOnlyList<string> chunks = Split(text, biasFirstChunk, head);
         var result = new List<TextChunk>(chunks.Count);
+        IReadOnlySet<int> hyphenDrops = LineReflow.BreakMap(text).DroppedHyphenBreaks;
         int cursor = 0;
         foreach (string chunk in chunks)
         {
-            (int start, int end) = LocateChunk(text, chunk, cursor);
+            (int start, int end) = LocateChunk(text, chunk, cursor, hyphenDrops);
             result.Add(new TextChunk(chunk, start, end));
             cursor = Math.Max(cursor, end);
         }
@@ -97,18 +98,14 @@ internal static partial class SpeechTextChunker
     // the chunk's non-whitespace characters, in order, from the end of the previous chunk. Each
     // character is verified, so a chunk that is not a whitespace-only rewrite of the source
     // fails loudly rather than shifting every later range.
-    private static (int Start, int End) LocateChunk(string text, string chunk, int from)
+    private static (int Start, int End) LocateChunk(string text, string chunk, int from, IReadOnlySet<int> hyphenDrops)
     {
         int i = from;
         int start = -1;
         int end = from;
         foreach (char c in chunk.Where(c => !char.IsWhiteSpace(c)))
         {
-            while (i < text.Length && char.IsWhiteSpace(text[i]))
-            {
-                i++;
-            }
-
+            i = SkipSourceGap(text, i, hyphenDrops);
             if (i >= text.Length)
             {
                 throw new InvalidOperationException("Chunk text runs past the end of the source.");
@@ -126,6 +123,47 @@ internal static partial class SpeechTextChunker
         }
 
         return start < 0 ? (0, 0) : (start, end);
+    }
+
+    // Whitespace between chunk characters is skipped, and so is the hyphen of a hyphen-wrapped word
+    // ("foot-" line break "ball") exactly where LineReflow dropped it from the chunk text (Slice 76).
+    private static int SkipSourceGap(string text, int i, IReadOnlySet<int> hyphenDrops)
+    {
+        i = SkipWhitespace(text, i);
+        int newline = WrappedHyphenNewline(text, i);
+        if (newline < 0 || !hyphenDrops.Contains(newline))
+        {
+            return i;
+        }
+
+        return SkipWhitespace(text, newline);
+    }
+
+    private static int SkipWhitespace(string text, int i)
+    {
+        while (i < text.Length && char.IsWhiteSpace(text[i]))
+        {
+            i++;
+        }
+
+        return i;
+    }
+
+    // The index of the line break after a hyphen at i (and optional trailing blanks), or -1.
+    private static int WrappedHyphenNewline(string text, int i)
+    {
+        if (i >= text.Length || (text[i] != '-' && text[i] != '‐'))
+        {
+            return -1;
+        }
+
+        int k = i + 1;
+        while (k < text.Length && text[k] != '\n' && char.IsWhiteSpace(text[k]))
+        {
+            k++;
+        }
+
+        return k < text.Length ? k : -1;
     }
 
     // Time-to-first-audio is dominated by the first chunk's synthesis, so make that
