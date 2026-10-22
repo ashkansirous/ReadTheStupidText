@@ -16,6 +16,8 @@ public partial class TileOverlay : ContentView
 
 	private void OnEditClicked(object? sender, EventArgs e) => EditRequested?.Invoke(this, e);
 
+	private void OnBackdropTapped(object? sender, TappedEventArgs e) => EditRequested?.Invoke(this, e);
+
 	private void OnCastClicked(object? sender, EventArgs e) => CastRequested?.Invoke(this, e);
 
 	private void OnDeleteTapped(object? sender, TappedEventArgs e) => DeleteRequested?.Invoke(this, e);
