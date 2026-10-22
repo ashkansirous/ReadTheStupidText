@@ -71,7 +71,7 @@ Review 1 #1: with translation off, untranslated text in another language (e.g. E
 
 *Checks:* RTST tests 728 pass / 2 skipped; Mobile and Dino Android and Dino Windows x64 build; iOS compiled only by CI. Emulator (RTST_Test): Farsi hides the Phone row and migrates system to piper:fa-amir; English and Spanish synthesis requests in eng-USA and spa-USA; no 5 s stall; Farsi read in full by Piper after translation: pass.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-22)
 
 - Phone-voice availability goes through `IPlatformServices.PhoneVoiceLanguagesAsync` (null = unknown, empty = none) and the shared `PlatformVoiceAvailability` cache; don't query the TTS engine directly from pages. Reading language is the app language (= translation target). (Slice 82: docs/plan/slices/82-phone-voice-reads-the-texts-language.md)
 - Android `AndroidSpeechReader` must `SetLanguage` before every read and check the result; never rely on `Locale.Default` set at init. (Slice 82: docs/plan/slices/82-phone-voice-reads-the-texts-language.md)
