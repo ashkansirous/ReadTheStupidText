@@ -73,6 +73,7 @@
   <data name="Edit_Cover" xml:space="preserve"><value>Capa</value></data>
   <data name="Edit_CoverFirstPage" xml:space="preserve"><value>Primeira página</value></data>
   <data name="Edit_CoverColour" xml:space="preserve"><value>Cor</value></data>
+  <data name="Edit_CoverPhoto" xml:space="preserve"><value>Foto</value></data>
   <data name="Edit_Pages" xml:space="preserve"><value>Páginas</value></data>
   <data name="Edit_FixText" xml:space="preserve"><value>Corrigir o texto</value></data>
   <data name="Edit_FixTextValue" xml:space="preserve"><value>Editar o texto reconhecido</value></data>

@@ -73,6 +73,7 @@
   <data name="Edit_Cover" xml:space="preserve"><value>جلد</value></data>
   <data name="Edit_CoverFirstPage" xml:space="preserve"><value>صفحهٔ اول</value></data>
   <data name="Edit_CoverColour" xml:space="preserve"><value>رنگ</value></data>
+  <data name="Edit_CoverPhoto" xml:space="preserve"><value>عکس</value></data>
   <data name="Edit_Pages" xml:space="preserve"><value>صفحه‌ها</value></data>
   <data name="Edit_FixText" xml:space="preserve"><value>اصلاح متن</value></data>
   <data name="Edit_FixTextValue" xml:space="preserve"><value>ویرایش متن اسکن‌شده</value></data>

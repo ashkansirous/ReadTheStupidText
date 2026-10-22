@@ -11,6 +11,31 @@ public sealed class StoryDraft(Story original)
 
 	public CoverStyle CoverStyle { get; set; } = original.CoverStyle;
 
+	/// <summary>The cover choices that go with <see cref="CoverStyle"/> Picture (Slice 77): a stored photo, or a page's index.</summary>
+	public string? CoverFile { get; set; } = original.CoverFile;
+
+	public int? CoverPageIndex { get; set; } = original.CoverPageIndex;
+
+	/// <summary>A gallery photo picked as the cover but not saved yet: its temporary file. Copied into the story at Save.</summary>
+	public string? PendingCoverPhoto { get; set; }
+
+	/// <summary>Whether Save must store <see cref="PendingCoverPhoto"/> as the cover.</summary>
+	public bool HasPendingCover => CoverStyle == CoverStyle.Picture && CoverPageIndex is null && PendingCoverPhoto is not null;
+
+	public int CoverColourIndex { get; set; } = original.CoverColourIndex;
+
+	/// <summary>Switches to a flat colour or the first page's picture, dropping the page index and photo that only go with a Picture cover.</summary>
+	public void ChooseCover(CoverStyle style)
+	{
+		CoverStyle = style;
+		if (style != CoverStyle.Picture)
+		{
+			CoverPageIndex = null;
+			CoverFile = null;
+			PendingCoverPhoto = null;
+		}
+	}
+
 	/// <summary>The story's language code (Slice 66): changing it recasts the story, because who speaks is worked out in that language.</summary>
 	public string Language { get; set; } = original.Language;
 
@@ -34,6 +59,9 @@ public sealed class StoryDraft(Story original)
 		Language = Language,
 		TranslateToMyLanguage = TranslateToMyLanguage,
 		CoverStyle = CoverStyle,
+		CoverFile = CoverFile,
+		CoverPageIndex = CoverPageIndex,
+		CoverColourIndex = CoverColourIndex,
 		Pages = Pages.ToList(),
 		Cast = Cast,
 		CharacterMerges = Merges,
@@ -43,6 +71,32 @@ public sealed class StoryDraft(Story original)
 	public bool HasPageImages => Pages.Any(p => p.ImageFile is not null);
 
 	public bool TextChanged => Story.JoinPages(Pages) != Original.Text;
+
+	/// <summary>Removes a page and keeps the page cover pointing at the same picture: the index shifts down for a page
+	/// removed before it; if the cover page itself goes, the cover falls back to the first page's picture.</summary>
+	public void RemoveAt(int index)
+	{
+		if (index < 0 || index >= Pages.Count)
+		{
+			return;
+		}
+
+		Pages.RemoveAt(index);
+		if (CoverStyle != CoverStyle.Picture || CoverPageIndex is not { } cover)
+		{
+			return;
+		}
+
+		if (index < cover)
+		{
+			CoverPageIndex = cover - 1;
+		}
+		else if (index == cover)
+		{
+			CoverPageIndex = null;
+			CoverStyle = CoverStyle.FirstPage;
+		}
+	}
 
 	/// <summary>Moves a page up (-1) or down (+1); does nothing at either end.</summary>
 	public void Move(int index, int direction)
@@ -54,5 +108,9 @@ public sealed class StoryDraft(Story original)
 		}
 
 		(Pages[index], Pages[target]) = (Pages[target], Pages[index]);
+		if (CoverStyle == CoverStyle.Picture && (CoverPageIndex == index || CoverPageIndex == target))
+		{
+			CoverPageIndex = CoverPageIndex == index ? target : index;
+		}
 	}
 }

@@ -131,15 +131,17 @@ public sealed class PagesPage : ContentPage, IGrownUpPage
 	{
 		if (_draft.Pages.Count > 1)
 		{
-			_draft.Pages.RemoveAt(index);
+			_draft.RemoveAt(index);
 			Rebuild();
 		}
 	}
 
 	private async Task OpenTextAsync(int index) => await Navigation.PushAsync(new PageTextPage(_draft, index));
 
+	private const string EmptyPreview = "—";
+
 	private static string Preview(string text) =>
-		text.Length <= PreviewLength ? text : text[..PreviewLength].TrimEnd() + "…";
+		string.IsNullOrWhiteSpace(text) ? EmptyPreview : text.Length <= PreviewLength ? text : text[..PreviewLength].TrimEnd() + "…";
 
 	private TapGestureRecognizer Tap(Func<Task> action)
 	{

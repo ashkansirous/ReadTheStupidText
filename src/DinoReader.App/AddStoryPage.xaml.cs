@@ -423,9 +423,8 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 		ShowResult(cast);
 	}
 
-	// The pages the import read while the text is still the imported one; typed or edited text is one page.
-	private int ImportedPageCount() =>
-		_imported is not null && ImportedText.Unchanged(EditorText(), _importedText) ? _imported.Count : 1;
+	// The pages the import read; their pictures are kept even when the text is edited (typed text is one page).
+	private int ImportedPageCount() => _imported?.Count ?? 1;
 
 	private void ShowResult(IReadOnlyList<CastMember> cast)
 	{
@@ -530,8 +529,9 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 		string id = StoryIds.New();
 		try
 		{
+			IReadOnlyList<StoryPage> pages = await PagesForAsync(id, text);
 			var story = new Story(id, title, _language, DateTimeOffset.UtcNow,
-				await PagesForAsync(id, text), await CastNowAsync(text), CoverStyle.Colour, existing, _narratorVoiceId, null, _merges, _languageCard.Translate);
+				pages, await CastNowAsync(text), DefaultCover(pages), existing, _narratorVoiceId, null, _merges, _languageCard.Translate);
 			await _library.AddAsync(story);
 		}
 		catch
@@ -558,17 +558,28 @@ public partial class AddStoryPage : ContentPage, IGrownUpPage
 		}
 	}
 
-	// Pictures are kept only while the text is the one the import read: an edited text no longer matches the lines.
+	// Pictures are always kept (Slice 77). Edited text is cut back onto the pages by where their recognised lines
+	// still sit in it; a page whose text no longer matches its lines just loses its word boxes, and every picture stays.
 	private async Task<IReadOnlyList<StoryPage>> PagesForAsync(string id, string text)
 	{
-		if (_imported is null || !ImportedText.Unchanged(text, _importedText))
+		if (_imported is null)
 		{
 			return [new StoryPage(text)];
 		}
 
 		_imported = await WithPicturesAsync(_imported);
-		return await _services.GetRequiredService<StoryImport>().KeepAsync(_imported, id, _library, _importedPageTexts);
+		StoryImport import = _services.GetRequiredService<StoryImport>();
+		if (ImportedText.Unchanged(text, _importedText))
+		{
+			return await import.KeepAsync(_imported, id, _library, _importedPageTexts);
+		}
+
+		IReadOnlyList<string> texts = ImportedText.TextsForEditedText(text, _imported.Select(p => (IReadOnlyList<string>)p.Lines.Select(l => l.Text).ToList()).ToList());
+		return await import.KeepAsync(_imported, id, _library, texts);
 	}
+
+	private static CoverStyle DefaultCover(IReadOnlyList<StoryPage> pages) =>
+		pages.Any(p => p.ImageFile is not null) ? CoverStyle.FirstPage : CoverStyle.Colour;
 
 	// The cast shown on the result card is for the text as it was when typing paused; recast if it moved on.
 	private async Task<IReadOnlyList<CastMember>> CastNowAsync(string text) =>

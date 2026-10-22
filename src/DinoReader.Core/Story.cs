@@ -1,10 +1,12 @@
 namespace DinoReader.Core;
 
-/// <summary>Which cover a story shows in the gallery (mock screen 8b: "First page" or "Colour").</summary>
+/// <summary>Which cover a story shows in the gallery (mock screen 8b: "First page" or "Colour"); Picture is a chosen
+/// page (<see cref="Story.CoverPageIndex"/>) or a gallery photo (<see cref="Story.CoverFile"/>), Slice 77.</summary>
 public enum CoverStyle
 {
     FirstPage,
     Colour,
+    Picture,
 }
 
 /// <summary>
@@ -34,9 +36,15 @@ public sealed record Story(
     string NarratorVoiceId,
     ReadingMode? PreferredMode = null,
     IReadOnlyDictionary<string, string>? CharacterMerges = null,
-    bool TranslateToMyLanguage = false)
+    bool TranslateToMyLanguage = false,
+    string? CoverFile = null,
+    int? CoverPageIndex = null)
 {
     public const string PageSeparator = "\n\n";
+
+    /// <summary>A gallery photo chosen as the cover is stored as <c>cover-&lt;short id&gt;.jpg</c> in the story folder.</summary>
+    public const string CoverFilePrefix = "cover";
+    public const string CoverFileExtension = ".jpg";
 
     /// <summary>The one shared "no merges" map.</summary>
     public static readonly IReadOnlyDictionary<string, string> NoMerges = new Dictionary<string, string>();
@@ -48,9 +56,16 @@ public sealed record Story(
     /// <summary>All page texts as one string, a blank line between pages: what the reader speaks.</summary>
     public string Text => JoinPages(Pages);
 
-    /// <summary>The first page's image file when the cover is "First page" and that page has one; else null (a colour cover).</summary>
-    public string? CoverImageFile =>
-        CoverStyle == CoverStyle.FirstPage ? Pages.FirstOrDefault()?.ImageFile : null;
+    /// <summary>The cover's image file name inside the story folder: the first page's picture ("First page"), the chosen
+    /// page's picture or the chosen photo ("Picture"); null for a colour cover or when that picture is missing.</summary>
+    public string? CoverImageFile => CoverStyle switch
+    {
+        CoverStyle.FirstPage => Pages.FirstOrDefault()?.ImageFile,
+        CoverStyle.Picture => CoverPageIndex is { } index
+            ? (index >= 0 && index < Pages.Count ? Pages[index].ImageFile : null)
+            : CoverFile,
+        _ => null,
+    };
 
     /// <summary>Whether any page carries a picture (a scanned or photographed page).</summary>
     public bool HasPictures => Pages.Any(p => p.ImageFile is not null);

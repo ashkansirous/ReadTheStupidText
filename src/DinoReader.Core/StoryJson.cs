@@ -49,6 +49,8 @@ public static class StoryJson
         Created = s.Created,
         CoverStyle = s.CoverStyle,
         CoverColourIndex = s.CoverColourIndex,
+        CoverFile = s.CoverFile,
+        CoverPageIndex = s.CoverPageIndex,
         NarratorVoiceId = s.NarratorVoiceId,
         PreferredMode = s.PreferredMode is { } mode ? JsonSerializer.SerializeToElement(mode.ToString()) : null,
         Pages = s.Pages.Select(p => new PageFile { Text = p.Text, ImageFile = p.ImageFile, Lines = ToLineFiles(p.Lines) }).ToList(),
@@ -72,7 +74,8 @@ public static class StoryJson
             f.Id, f.Title, f.Language, f.Created,
             f.Pages.Select(p => new StoryPage(p.Text, p.ImageFile, FromLineFiles(p.Lines))).ToList(),
             f.Cast.Select(c => new CastMember(c.CharacterId, c.Name, c.Gender, c.VoiceId, c.Edited)).ToList(),
-            f.CoverStyle, f.CoverColourIndex, f.NarratorVoiceId, ParseMode(f.PreferredMode), CleanMerges(f.Merges), f.Translate);
+            f.CoverStyle, f.CoverColourIndex, f.NarratorVoiceId, ParseMode(f.PreferredMode), CleanMerges(f.Merges), f.Translate,
+            f.CoverFile, f.CoverPageIndex);
     }
 
     private static List<LineFile>? ToLineFiles(IReadOnlyList<PageLine>? lines) =>
@@ -157,6 +160,8 @@ public static class StoryJson
         public DateTimeOffset Created { get; set; }
         public CoverStyle CoverStyle { get; set; } = CoverStyle.Colour;
         public int CoverColourIndex { get; set; }
+        public string? CoverFile { get; set; }
+        public int? CoverPageIndex { get; set; }
         public string NarratorVoiceId { get; set; } = string.Empty;
         public JsonElement? PreferredMode { get; set; }
         public List<PageFile> Pages { get; set; } = [];

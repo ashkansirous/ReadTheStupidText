@@ -26,4 +26,12 @@ public interface IStoryLibrary
     /// Every image path read from a story file goes through this.
     /// </summary>
     string? TryResolveFile(string storyId, string? fileName);
+
+    /// <summary>Creates a new file in the story's folder named <c>&lt;prefix&gt;-&lt;short id&gt;&lt;extension&gt;</c>: <paramref name="write"/> fills a temp file
+    /// (given its path) which is then renamed into place, so a failed write leaves nothing behind. Returns the new file name.
+    /// Only cover files (<see cref="Story.CoverFilePrefix"/>, <see cref="Story.CoverFileExtension"/>) are accepted, the same ones <see cref="DeleteFileAsync"/> removes. A fresh name each time means a replaced picture is never served from an image cache (Slice 77).</summary>
+    Task<string> StoreFileAsync(string storyId, string prefix, string extension, Func<string, Task> write);
+
+    /// <summary>Deletes one cover file this library stored; a missing file, an unusable name or any other file does nothing.</summary>
+    Task DeleteFileAsync(string storyId, string fileName);
 }

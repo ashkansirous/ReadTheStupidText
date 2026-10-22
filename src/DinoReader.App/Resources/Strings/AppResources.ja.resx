@@ -73,6 +73,7 @@
   <data name="Edit_Cover" xml:space="preserve"><value>表紙</value></data>
   <data name="Edit_CoverFirstPage" xml:space="preserve"><value>最初のページ</value></data>
   <data name="Edit_CoverColour" xml:space="preserve"><value>色</value></data>
+  <data name="Edit_CoverPhoto" xml:space="preserve"><value>写真</value></data>
   <data name="Edit_Pages" xml:space="preserve"><value>ページ</value></data>
   <data name="Edit_FixText" xml:space="preserve"><value>文字を直す</value></data>
   <data name="Edit_FixTextValue" xml:space="preserve"><value>認識した文字を編集</value></data>

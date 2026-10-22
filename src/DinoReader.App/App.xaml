@@ -65,6 +65,17 @@
             <Setter Property="FontFamily" Value="Fredoka" />
             <Setter Property="TextColor" Value="{StaticResource Ink}" />
         </Style>
+        <!-- Typed text is ink on the white cards whatever the system theme (Slice 77). -->
+        <Style TargetType="Entry">
+            <Setter Property="TextColor" Value="{StaticResource Ink}" />
+            <Setter Property="PlaceholderColor" Value="{StaticResource Muted}" />
+            <Setter Property="BackgroundColor" Value="Transparent" />
+        </Style>
+        <Style TargetType="Editor">
+            <Setter Property="TextColor" Value="{StaticResource Ink}" />
+            <Setter Property="PlaceholderColor" Value="{StaticResource Muted}" />
+            <Setter Property="BackgroundColor" Value="Transparent" />
+        </Style>
         <Style TargetType="Button">
             <Setter Property="FontFamily" Value="Fredoka" />
         </Style>

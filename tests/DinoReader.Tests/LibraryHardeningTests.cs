@@ -19,6 +19,70 @@ public sealed class LibraryHardeningTests : IDisposable
         [new StoryPage("Text.")], [], CoverStyle.Colour, 0, "F1");
 
     [Fact]
+    public async Task OldJsonWithoutCoverFields_StillLoads_AndDeleteRemovesTheCoverPhoto()
+    {
+        var library = new FileStoryLibrary(_root);
+        Story story = Make(StoryIds.New());
+        await library.AddAsync(story);
+        string path = Path.Combine(library.FolderOf(story.Id), "story.json");
+        string json = File.ReadAllText(path);
+        Assert.DoesNotContain("\"CoverFile\": \"", json);
+
+        File.WriteAllText(path, json.Replace("\"CoverFile\": null,", string.Empty).Replace("\"CoverPageIndex\": null,", string.Empty));
+        Story? loaded = await library.GetAsync(story.Id);
+        Assert.NotNull(loaded);
+        Assert.Null(loaded.CoverFile);
+        Assert.Null(loaded.CoverPageIndex);
+
+        File.WriteAllText(Path.Combine(library.FolderOf(story.Id), "cover-abcd1234.jpg"), "x");
+        await library.DeleteAsync(story.Id);
+        Assert.False(Directory.Exists(library.FolderOf(story.Id)));
+    }
+
+    [Fact]
+    public async Task StoreFile_WritesAFreshNamedFile_AndDeleteFileRemovesOnlyThat()
+    {
+        var library = new FileStoryLibrary(_root);
+        Story story = Make(StoryIds.New());
+        await library.AddAsync(story);
+
+        string first = await library.StoreFileAsync(story.Id, Story.CoverFilePrefix, Story.CoverFileExtension, t => File.WriteAllTextAsync(t, "a"));
+        string second = await library.StoreFileAsync(story.Id, Story.CoverFilePrefix, Story.CoverFileExtension, t => File.WriteAllTextAsync(t, "b"));
+
+        Assert.NotEqual(first, second);
+        Assert.StartsWith("cover-", first);
+        Assert.Equal("a", File.ReadAllText(library.TryResolveFile(story.Id, first)!));
+        await library.DeleteFileAsync(story.Id, first);
+        await library.DeleteFileAsync(story.Id, "story.json");
+        await Assert.ThrowsAsync<ArgumentException>(() => library.StoreFileAsync(story.Id, "page", Story.CoverFileExtension, t => File.WriteAllTextAsync(t, "p")));
+        await Assert.ThrowsAsync<ArgumentException>(() => library.StoreFileAsync(story.Id, Story.CoverFilePrefix, ".png", t => File.WriteAllTextAsync(t, "p")));
+        string page = "page-1.jpg";
+        File.WriteAllText(Path.Combine(library.FolderOf(story.Id), page), "p");
+        await library.DeleteFileAsync(story.Id, page);
+        Assert.True(File.Exists(library.TryResolveFile(story.Id, page)!));
+        Assert.False(File.Exists(library.TryResolveFile(story.Id, first)!));
+        Assert.True(File.Exists(library.TryResolveFile(story.Id, second)!));
+        Assert.NotNull(await library.GetAsync(story.Id));
+        Assert.Empty(Directory.GetFiles(library.FolderOf(story.Id), "*.tmp"));
+    }
+
+    [Fact]
+    public async Task StoreFile_WhenTheWriteFails_LeavesNothingBehind()
+    {
+        var library = new FileStoryLibrary(_root);
+        Story story = Make(StoryIds.New());
+        await library.AddAsync(story);
+
+        await Assert.ThrowsAsync<IOException>(() => library.StoreFileAsync(story.Id, Story.CoverFilePrefix, Story.CoverFileExtension, async t =>
+        {
+            await File.WriteAllTextAsync(t, "half");
+            throw new IOException("boom");
+        }));
+
+        Assert.Single(Directory.GetFiles(library.FolderOf(story.Id)));
+    }
+
+    [Fact]
     public async Task ConcurrentSavesOfOneStory_AllSucceed_AndLeaveNoTempFiles()
     {
         var library = new FileStoryLibrary(_root);

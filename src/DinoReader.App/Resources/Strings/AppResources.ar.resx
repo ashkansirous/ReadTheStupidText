@@ -73,6 +73,7 @@
   <data name="Edit_Cover" xml:space="preserve"><value>الغلاف</value></data>
   <data name="Edit_CoverFirstPage" xml:space="preserve"><value>الصفحة الأولى</value></data>
   <data name="Edit_CoverColour" xml:space="preserve"><value>اللون</value></data>
+  <data name="Edit_CoverPhoto" xml:space="preserve"><value>صورة</value></data>
   <data name="Edit_Pages" xml:space="preserve"><value>الصفحات</value></data>
   <data name="Edit_FixText" xml:space="preserve"><value>تصحيح النص</value></data>
   <data name="Edit_FixTextValue" xml:space="preserve"><value>تعديل النص المُتعرَّف عليه</value></data>

@@ -10,9 +10,9 @@ public readonly record struct GeneratedSpan(int Sentence, SentenceSpan Span);
 /// Picture mode on real pages (Slice 64): where each sentence of a story sits on the scanned page
 /// pictures. The recognised lines are matched to the story text once (<see cref="RangeToBoxMapper.Locate"/>);
 /// after that every question (the boxes of a sentence, the sentence under a tap, the page a sentence
-/// is on) is answered from that match. A page counts as <see cref="IsScanned"/> only when it has a
-/// picture and at least one of its lines was found in the story; any other page is drawn as a
-/// generated page, so a story that mixes both, or a scan whose lines cannot be placed, still reads.
+/// is on) is answered from that match. A page counts as <see cref="IsScanned"/> when it has a
+/// picture (Slice 77: also when none of its lines is found any more, e.g. edited text, then it has no boxes);
+/// a page without a picture is drawn as a generated page, so a story that mixes both still reads.
 /// Boxes stay in the page's own coordinates, so they follow the picture at any size, rotation or zoom.
 /// </summary>
 public sealed class ScanLayout
@@ -40,6 +40,12 @@ public sealed class ScanLayout
             (int page, int line) = (located.Ref.Page, located.Ref.Line);
             _lines.Add((page, pages[page].Lines![line].Box, located.Start, located.End));
             _scanned[page] = true;
+        }
+
+        // A page with a picture is drawn from it even when none of its lines is found any more (edited text): picture, no boxes.
+        for (int page = 0; page < pages.Count; page++)
+        {
+            _scanned[page] |= pages[page].ImageFile is not null;
         }
     }
 

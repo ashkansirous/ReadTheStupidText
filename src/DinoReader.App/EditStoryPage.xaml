@@ -29,7 +29,11 @@
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="14,4,14,14" Spacing="12">
                 <HorizontalStackLayout Spacing="14">
-                    <local:StoryCover x:Name="CoverPreview" WidthRequest="96" />
+                    <local:StoryCover x:Name="CoverPreview" WidthRequest="96">
+                        <local:StoryCover.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnCoverTapped" />
+                        </local:StoryCover.GestureRecognizers>
+                    </local:StoryCover>
                     <VerticalStackLayout Spacing="8" VerticalOptions="Center">
                         <Label Text="{x:Static res:AppResources.Edit_Cover}" FontSize="12" TextColor="{StaticResource Muted}" />
                         <HorizontalStackLayout Spacing="8">
@@ -40,6 +44,16 @@
                                 <Label x:Name="FirstPageLabel" Text="{x:Static res:AppResources.Edit_CoverFirstPage}" FontSize="12.5" FontAttributes="Bold" />
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnFirstPageChipTapped" />
+                                </Border.GestureRecognizers>
+                            </Border>
+
+                            <Border x:Name="PhotoChip" Padding="10,6" StrokeThickness="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="9" />
+                                </Border.StrokeShape>
+                                <Label x:Name="PhotoLabel" Text="{x:Static res:AppResources.Edit_CoverPhoto}" FontSize="12.5" FontAttributes="Bold" />
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnPhotoChipTapped" />
                                 </Border.GestureRecognizers>
                             </Border>
                             <Border x:Name="ColourChip" Padding="10,6" StrokeThickness="0">
@@ -54,6 +68,8 @@
                         </HorizontalStackLayout>
                     </VerticalStackLayout>
                 </HorizontalStackLayout>
+
+                <ContentView x:Name="CoverPickerHost" IsVisible="False" />
 
                 <Border BackgroundColor="White" StrokeThickness="0" Padding="14,10">
                     <Border.StrokeShape>

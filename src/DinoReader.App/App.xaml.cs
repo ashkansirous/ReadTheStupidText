@@ -14,6 +14,8 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 	public DinoApp(IServiceProvider services, SpeechStartup startup)
 	{
 		InitializeComponent();
+		// The kids' palette is light; night colours belong to ReadingTheme on the reading screen only.
+		UserAppTheme = AppTheme.Light;
 		if (UiCulture.IsRightToLeft)
 		{
 			DinoFonts.UseForRightToLeftUi(Resources);

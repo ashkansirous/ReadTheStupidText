@@ -10,6 +10,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
 {
     private const string StoryFileName = "story.json";
     private const string TempSuffix = ".tmp";
+    private const int ShortIdLength = 8;
     private static readonly char[] SeparatorChars = ['/', '\\', ':'];
 
     // One lock for the whole library: stories are few and writes are small, so per-id locks
@@ -114,6 +115,69 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
             _gate.Release();
         }
     }
+
+    public async Task<string> StoreFileAsync(string storyId, string prefix, string extension, Func<string, Task> write)
+    {
+        if (prefix != Story.CoverFilePrefix)
+        {
+            throw new ArgumentException("Only cover files can be stored.", nameof(prefix));
+        }
+
+        if (extension != Story.CoverFileExtension)
+        {
+            throw new ArgumentException("Only cover files can be stored.", nameof(extension));
+        }
+
+        string name = $"{prefix}-{Guid.NewGuid().ToString("N")[..ShortIdLength]}{extension}";
+        string target = TryResolveFile(storyId, name) ?? throw new ArgumentException("Not a plain file name.", nameof(storyId));
+        Directory.CreateDirectory(FolderOf(storyId));
+        string temp = $"{target}.{Guid.NewGuid():N}{TempSuffix}";
+        try
+        {
+            // The slow write (decode, rescale, encode) runs outside the library-wide gate; only the move is serialised.
+            await write(temp);
+            await _gate.WaitAsync();
+            try
+            {
+                File.Move(temp, target, overwrite: true);
+            }
+            finally
+            {
+                _gate.Release();
+            }
+        }
+        catch
+        {
+            TryDelete(temp);
+            throw;
+        }
+
+        return name;
+    }
+
+    public async Task DeleteFileAsync(string storyId, string fileName)
+    {
+        string? path = TryResolveFile(storyId, fileName);
+        if (path is null || !IsCoverFileName(fileName))
+        {
+            return;
+        }
+
+        await _gate.WaitAsync();
+        try
+        {
+            TryDelete(path);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    // Only cover photos this library stored are ever deleted; a hand-edited story.json naming a page picture must not remove it.
+    private static bool IsCoverFileName(string fileName) =>
+        fileName.StartsWith(Story.CoverFilePrefix + "-", StringComparison.Ordinal)
+        && fileName.EndsWith(Story.CoverFileExtension, StringComparison.Ordinal);
 
     private string FilePathOf(string id) =>
         StoryIds.IsValid(id)
