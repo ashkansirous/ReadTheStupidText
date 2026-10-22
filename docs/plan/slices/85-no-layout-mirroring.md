@@ -1,6 +1,6 @@
 # Slice 85 — The layout never mirrors; only text flows by its own direction
 
-*Planned.*
+*In progress (wave 2026-10-22), draft PR.*
 
 **Batch:** 14
 **Decisions:** 92
