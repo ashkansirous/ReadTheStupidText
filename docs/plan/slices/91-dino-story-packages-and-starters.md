@@ -22,12 +22,25 @@ comes first.
   packages as-is with no path rewriting (Decision 94).
 - Import gives the story a new GUID, because `FileStoryLibrary.AddAsync` throws on an existing id
   and `TryReadAsync` skips a folder/id mismatch. It refuses a newer `schemaVersion`, any entry
-  path that escapes the story folder (zip-slip), and oversized entries.
+  path that escapes the story folder (zip-slip), and oversized entries. The imported `story.json`
+  records the package's own id as `sourceId`, so the store (Slice 92) can show "Downloaded"; the
+  starters use the same ids as their store copies. Backup restore (Slice 93) is the one exception:
+  it keeps the backed-up id.
 - Starters: The Three Little Pigs, The Gingerbread Man, The Tortoise and the Hare. Public-domain
   text only, a generated colour cover, no copyrighted artwork or names. Installed once on first
   run (a settings flag) and deletable like any other story (Decision 95).
 - "Export story" is developer-only (hidden switch or Debug build), never a kid or parent action.
   This reverses Slice 61's "No sync, no export" for export only.
+
+## Design (Batch 16 mock, screens 18-20, added 2026-10-22)
+
+Source: `docs/design/dino-reader/Dino Reader Batch 16.dc.html`, screens 18, 19 and 20 (lines 81, 100, 134; index in `docs/design/dino-reader/README.md`). The mock agrees with the plan; it adds where the export button sits.
+
+- **Starters on the kids' shelf (screen 20, line 134).** Header "My stories". Three tiles in the 2-column gallery grid, 3:4 covers with 16 px radius: "The Three Little Pigs" (`#FF7A9C`), "The Gingerbread Man", "The Tortoise and the Hare". Generated flat colour covers with the title in 17 px/700 white, no artwork. Installed once; a grown-up can delete them; a deleted starter never returns (Decision 95).
+- **Starters in grown-up mode (screen 19, line 100).** The same three tiles with the Slice 80 overlay: "Edit" and "Cast" buttons (44 px high, 12 px radius) on a `rgba(43,37,64,.55)` strip, red trash badge top-right. The dashed "Add a story" tile comes first.
+- **Export story (screen 19, note at line 129).** A purple share badge, top-left of the tile, the mirror of the red trash badge. Shown only with the developer switch on or in a Debug build. No other export entry point appears in the mock.
+- **Start order.** After first run the starters must already be on the shelf when the grown-up lands in grown-up mode (screen 19), so the install finishes before the "ready" screen's button leads there (Slice 93).
+- New strings: none beyond the starter titles (English text; covers are drawn, not localised). The share badge needs an accessibility label ("Export story") in both locales.
 
 ## Work
 

@@ -12,7 +12,8 @@ are in `src/ReadTheStupidText.Mobile/CLAUDE.md`; its CI target is in `.github/CL
 > (Decisions 72-82, `docs/plan/slices/58-67`)
 > Its icons (all platforms, "Book hug" design) live in
 > `docs/design/dino-reader/icons/`: copy from there, never redraw or regenerate them.
-> Its screens are the mock `docs/design/dino-reader/Dino Reader v2.dc.html` (index in
+> Its screens are the mocks `docs/design/dino-reader/Dino Reader v2.dc.html` and, for the
+> first run, store and backup (Batch 16), `Dino Reader Batch 16.dc.html` (index in
 > that folder's README): read visual values (colours, sizes, copy, layout) from it,
 > never guess them, and never call `DesignSync` for them.
 
