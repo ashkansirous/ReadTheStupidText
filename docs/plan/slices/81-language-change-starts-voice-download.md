@@ -60,7 +60,7 @@ download. `LanguageChooser.Apply` stores the language and rebuilds the shell but
 
 *Checks:* RTST tests 693 pass / 2 skipped; Mobile and Dino Android builds. Emulator (RTST_Test): en to fa lists Piper Amir without a restart; back to en is instant; a change to zh downloads unprompted with progress, then Ready; zh to es to zh mid-download resumes and ends Ready; airplane mode shows offline plus Retry, and Retry works; app launches fine: PASS.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-22)
 
 In `src/ReadTheStupidText.Mobile/CLAUDE.md`: Debug builds installed with `adb` (emulator) need `-p:EmbedAssembliesIntoApk=true -p:RuntimeIdentifier=android-arm64` (plus `-p:IncludeWindows=false`). A plain Debug build uses Fast Deployment and dies on launch with "No assemblies found" after `adb install`. (Slice 81: docs/plan/slices/81-language-change-starts-voice-download.md)
 

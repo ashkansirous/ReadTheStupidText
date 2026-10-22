@@ -96,9 +96,9 @@ this plan turns it into ordered, shippable vertical slices.
 | 76 | Soft line-break reflow and heading detection (both apps) | built | | #233 | [76-soft-line-break-reflow.md](docs/plan/slices/76-soft-line-break-reflow.md) |
 | 77 | Dino Reader: covers that survive edits, cover picker, readable inputs | built | | #234 | [77-dino-covers-and-light-theme.md](docs/plan/slices/77-dino-covers-and-light-theme.md) |
 | 78 | Dino Reader: page-review wizard (pages → cover → text) | built | | #235 | [78-dino-page-review-wizard.md](docs/plan/slices/78-dino-page-review-wizard.md) |
-| 79 | Background text filtering with a manual override | planned | | | [79-background-text-filtering.md](docs/plan/slices/79-background-text-filtering.md) |
-| 80 | Dino Reader: grown-up mode as a gallery overlay | planned | | | [80-grownup-gallery-overlay.md](docs/plan/slices/80-grownup-gallery-overlay.md) |
-| 81 | A language change in Settings downloads that language's voice | planned | | | [81-language-change-starts-voice-download.md](docs/plan/slices/81-language-change-starts-voice-download.md) |
+| 79 | Background text filtering with a manual override | built | | #240 | [79-background-text-filtering.md](docs/plan/slices/79-background-text-filtering.md) |
+| 80 | Dino Reader: grown-up mode as a gallery overlay | built | | #241 | [80-grownup-gallery-overlay.md](docs/plan/slices/80-grownup-gallery-overlay.md) |
+| 81 | A language change in Settings downloads that language's voice | built | | #239 | [81-language-change-starts-voice-download.md](docs/plan/slices/81-language-change-starts-voice-download.md) |
 | 82 | The phone voice reads in the text's language, and is only offered when it can | planned | | | [82-phone-voice-reads-the-texts-language.md](docs/plan/slices/82-phone-voice-reads-the-texts-language.md) |
 | 83 | Scan replaces the text, like Paste and File | planned | | | [83-scan-replaces-the-text.md](docs/plan/slices/83-scan-replaces-the-text.md) |
 | 84 | Scan reads the page in the page's script, whatever the app language | planned | | | [84-ocr-follows-the-page-not-the-app-language.md](docs/plan/slices/84-ocr-follows-the-page-not-the-app-language.md) |
@@ -160,7 +160,10 @@ Built but not verified (details in each slice file):
 - Slice 76: on a device, a pasted hard-wrapped email and a scanned book page read with no pause mid-sentence (RTST Android, RTST Windows, Dino) ([slice](docs/plan/slices/76-soft-line-break-reflow.md)).
 - Slice 77: page-2 cover pick on a multi-page story; a photo cover surviving an app restart; the Windows live theme switch (`UISettings.ColorValuesChanged`) ([slice](docs/plan/slices/77-dino-covers-and-light-theme.md)).
 - Slice 78: scan 2 pages + 1 photo with the ML Kit scanner (needs a Google-signed device); Windows rotate/crop and drag-reorder; iOS on a device; only the changed page re-read; whether the Photos picker should multi-select; no discard confirmation on system back ([slice](docs/plan/slices/78-dino-page-review-wizard.md))
-- Slice 79 takes over Slice 76's Dino geometry wiring (per-page Lines → LineBreakMap) and the geometry heading text-shape check; Slice 86 takes the RTST scan half.
+- Slice 76 follow-up: the Dino half (per-page Lines → LineBreakMap, geometry heading text-shape check) is done in Slice 79; the RTST scan half is Slice 86.
+- Slice 79: a real picture-book scan on a device; Windows overlay taps ([slice](docs/plan/slices/79-background-text-filtering.md)).
+- Slice 80: Windows Dino nested taps and window recreate; TalkBack reading "Edit <title>" and "Delete <title>"; the 10-min `AwayTracker.ExternalActivityCap` timer (no test; lives in `DinoApp`) ([slice](docs/plan/slices/80-grownup-gallery-overlay.md)).
+- Slice 81: header "tap to retry" label (state flashes Resolving then Offline, no code defect found); a reinstalled pack restoring the chosen voice; all of it on a real phone ([slice](docs/plan/slices/81-language-change-starts-voice-download.md)).
 - Flaky test `ReadAloudServiceGeneratingTests.Auto_read_prepares_the_head_start_before_the_settle_delay_ends` (timing; failed once in CI on 2026-10-21).
 
 ## Out of Scope

@@ -100,7 +100,7 @@ Thresholds are named constants, tuned on the fixtures below.
 
 Dino 405 and RTST 697 tests pass; Dino Android, Dino Windows x64 and RTST App x64 build. Emulator (RTST_Test): Bright Stadium sign and page number greyed, paragraph kept; tap toggles live; two paragraphs kept; save and read only included text with correct highlight; Replace/Keep prompt; Back cancels; outlines sit on the glyphs. PASS.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-22)
 
 - `src/DinoReader.App/CLAUDE.md`: page text is composed from included regions only (`StoryPage.Regions`; null = heuristic); a region toggle never silently replaces typed text. (Slice 79: docs/plan/slices/79-background-text-filtering.md)
 - `src/DinoReader.Core/CLAUDE.md`: `Story.BreakMap` uses geometry only when the included lines match the text. (Slice 79: docs/plan/slices/79-background-text-filtering.md)
