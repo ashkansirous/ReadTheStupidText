@@ -60,7 +60,7 @@ Findings: `D:\ReadTheStupidText-worktrees\reviews\83-review-1.md` and `83-review
 - Emulator (RTST_Test): Paste during playback stops it and replaces the text; a cancelled scan keeps the old text.
 - Scan itself is not testable on the emulator (the ML Kit scanner errors in Play services).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-22)
 
 - Scan, Paste and File all replace the editor text; Scan uses `ScannedText.JoinPages`. `ReplaceEditorText` stops playback and pending/translation reads, and the editor is read-only while busy, restored in a `finally` (`ReaderPage.xaml.cs`). Already applied to `src/ReadTheStupidText.Mobile/CLAUDE.md` on this branch. (Slice 83: docs/plan/slices/83-scan-replaces-the-text.md)
 

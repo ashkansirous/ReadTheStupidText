@@ -66,7 +66,7 @@ The user: "The language of the app should not impact the content of the scan."
 
 Should an English-app user scanning a Farsi page be offered the Farsi OCR pack? Today packs download for the app language only, so that page is read only if the Farsi pack is already installed.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-22)
 
 - OCR choice follows the page, never the app language: `LanguageImageTextExtractor` reads with the built-in recognizer first; a mostly-Latin result of at least `OcrPackChoice.MinLatinLetters` letters is final, otherwise the installed non-Latin packs are tried via the pure `OcrPackChoice`, and right-to-left ordering applies only when the winning pack's script is. The language argument is only a hint. (Slice 84: docs/plan/slices/84-ocr-follows-the-page-not-the-app-language.md) Already added to `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md` on the branch.
 

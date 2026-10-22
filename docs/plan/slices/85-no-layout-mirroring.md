@@ -52,7 +52,7 @@ layout and buttons."
 
 *Checks:* RTST tests 798 pass, 2 skipped; Mobile Android build green. Emulator (RTST_Test, Farsi and Arabic): layout not mirrored; Farsi file right-aligned RTL, English left-aligned, flips on content change, caret fine; Farsi/Arabic notes readable and right-aligned; voice picker readable. Static XAML headings stay on the left (acceptable).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-22)
 
 - The Mobile layout never mirrors: pages, shell, action sheets and alerts stay `LeftToRight`; only text views take direction from their content via `TextFlow.ForContent` (first strong character, `TextDirection.Resolve`) or `TextFlow.ForUi` for UI strings. Do not reintroduce a page-level RTL `FlowDirection` or `UiFlowDirection`. Transport glyphs live in `TransportGlyphs.cs`, not resx. (Slice 85: docs/plan/slices/85-no-layout-mirroring.md) Place in `src/ReadTheStupidText.Mobile/CLAUDE.md` (already reconciled on the branch).
 
