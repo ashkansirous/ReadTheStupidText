@@ -49,7 +49,7 @@ public partial class CoverStep : ContentView
 		FirstPageChip.BackgroundColor = selected ? DinoTokens.Get(DinoTokens.BrandTint) : Colors.White;
 		FirstPageLabel.TextColor = selected ? DinoTokens.Get(DinoTokens.Brand) : DinoTokens.Get(DinoTokens.Body);
 		FirstPageChip.Opacity = draft.HasPageImages ? 1 : 0.45;
-		StoryTile tile = StoryTile.From(draft.Current with { Title = string.IsNullOrWhiteSpace(draft.Title) ? TextStep.SuggestTitle(draft) : draft.Title }, _session.Library);
+		StoryTile tile = StoryTile.From(draft.Current with { Title = string.IsNullOrWhiteSpace(draft.Title) ? TextStep.SuggestTitle(draft) : draft.Title }, _session.Library, new GrownUpMode()); // preview only: kids' mode, no overlay
 		CoverPreview.BindingContext = draft.HasPendingCover ? tile with { CoverImagePath = draft.PendingCoverPhoto } : tile;
 	}
 }

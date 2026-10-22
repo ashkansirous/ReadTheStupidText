@@ -22,7 +22,6 @@
   <data name="Gallery_Title" xml:space="preserve"><value>قصصي</value></data>
   <data name="Gallery_ForGrownUps" xml:space="preserve"><value>للكبار</value></data>
   <data name="Gallery_OpensGateHint" xml:space="preserve"><value>يفتح بوابة الكبار</value></data>
-  <data name="Gallery_Cast" xml:space="preserve"><value>الشخصيات · {0}</value></data>
   <data name="Gallery_Characters_One" xml:space="preserve"><value>الشخصيات: {0}</value></data>
   <data name="Gallery_Characters_Other" xml:space="preserve"><value>الشخصيات: {0}</value></data>
   <data name="Gallery_PagesSummary" xml:space="preserve"><value>{0} · ترتيب وإضافة وحذف</value></data>
@@ -34,10 +33,11 @@
   <data name="Delete_Body" xml:space="preserve"><value>ستُحذف صفحاتها وصورها وأصواتها من هذا الهاتف.</value></data>
   <data name="Delete_FailedTitle" xml:space="preserve"><value>تعذّر حذف هذه القصة</value></data>
   <data name="Delete_FailedBody" xml:space="preserve"><value>ما زال شيء ما يستخدم ملفاتها. حاول مرة أخرى بعد قليل.</value></data>
-  <data name="Manage_Title" xml:space="preserve"><value>إدارة القصص</value></data>
   <data name="Manage_EditStory" xml:space="preserve"><value>تعديل القصة</value></data>
-  <data name="Manage_DeleteStory" xml:space="preserve"><value>حذف القصة</value></data>
-  <data name="Manage_WhoIsSpeaking" xml:space="preserve"><value>من يتكلم</value></data>
+  <data name="Gallery_EditStory" xml:space="preserve"><value>تعديل {0}</value></data>
+  <data name="Gallery_CastStory" xml:space="preserve"><value>شخصيات {0}</value></data>
+  <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>حذف {0}</value></data>
+  <data name="Gallery_CastButton" xml:space="preserve"><value>الشخصيات</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>اضغط مطولاً لمدة 3 ثوانٍ.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>اضغط مطولاً لمدة 3 ثوانٍ</value></data>
   <data name="Gate_KeepHolding" xml:space="preserve"><value>واصل الضغط…</value></data>

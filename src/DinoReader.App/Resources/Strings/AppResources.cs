@@ -45,7 +45,6 @@ public static class AppResources
 	public static string Gallery_Title => Get();
 	public static string Gallery_ForGrownUps => Get();
 	public static string Gallery_OpensGateHint => Get();
-	public static string Gallery_Cast => Get();
 	public static string Gallery_Characters_One => Get();
 	public static string Gallery_Characters_Other => Get();
 	public static string Gallery_PagesSummary => Get();
@@ -57,10 +56,11 @@ public static class AppResources
 	public static string Delete_Body => Get();
 	public static string Delete_FailedTitle => Get();
 	public static string Delete_FailedBody => Get();
-	public static string Manage_Title => Get();
 	public static string Manage_EditStory => Get();
-	public static string Manage_DeleteStory => Get();
-	public static string Manage_WhoIsSpeaking => Get();
+	public static string Gallery_EditStory => Get();
+	public static string Gallery_CastStory => Get();
+	public static string Gallery_DeleteStoryLabel => Get();
+	public static string Gallery_CastButton => Get();
 	public static string Gate_HoldBody => Get();
 	public static string Gate_HoldDescription => Get();
 	public static string Gate_KeepHolding => Get();

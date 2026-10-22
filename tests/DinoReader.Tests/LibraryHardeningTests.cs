@@ -223,5 +223,9 @@ public class AwayTrackerTests
     }
 
     [Fact]
+    public void ExternalActivityCap_IsLongerThanThePickerThreshold() =>
+        Assert.True(AwayTracker.ExternalActivityCap > AwayTracker.DefaultThreshold);
+
+    [Fact]
     public void NoStop_NeverResets() => Assert.False(new AwayTracker().ReturnedTooLate(T0));
 }

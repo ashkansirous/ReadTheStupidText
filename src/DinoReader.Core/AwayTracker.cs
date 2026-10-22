@@ -10,6 +10,9 @@ public sealed class AwayTracker
     /// <summary>How long a picker session may last before the grown-up area is closed.</summary>
     public static readonly TimeSpan DefaultThreshold = TimeSpan.FromMinutes(2);
 
+    /// <summary>The longest a window may stay away under the picker deferral; past it the reset happens anyway.</summary>
+    public static readonly TimeSpan ExternalActivityCap = TimeSpan.FromMinutes(10);
+
     private readonly TimeSpan _threshold;
     private DateTimeOffset? _stoppedAt;
 

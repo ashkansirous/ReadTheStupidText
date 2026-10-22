@@ -109,7 +109,7 @@ the rest.
 
 *Checks:* Dino 388 and RTST 686 tests pass; Dino Android and Windows x64 build. iOS is compiled only by the PR's `dinoreader-ios` check. Emulator (RTST_Test): add 3 photos, reorder, rotate, crop, OCR overlay, cover order; edited text survives rotate; edit story, delete a page, save, reads; system back leaves no story: PASS.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-22)
 
 In `src/DinoReader.App/CLAUDE.md`:
 
