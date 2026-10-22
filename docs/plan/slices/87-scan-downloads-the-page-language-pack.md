@@ -65,7 +65,7 @@ need to show that we are downloading the package."
 
 *Checks:* RTST 819 pass / 2 skipped, 12 consecutive clean runs; Mobile and Dino Android builds.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-22)
 
 In `src/ReadTheStupidText.Mobile/CLAUDE.md`: A scan whose page the built-in recognizer can't read (an `OcrSource.MlKitPackPending` result) runs `ScanPackFlow` (the pure decisions are `PageLanguagePrompt` and `PagePackRetry` in Application): it asks which language the page is in (the page's detected script first), downloads that pack via `OcrPackInstaller.EnsureForLanguageAsync` (joins an in-flight download of the same pack) with progress and a Cancel button, then re-reads only the pending pages. Offline, cancel, a capped Retry, or a page still pending afterwards keep the editor text. (Slice 87: docs/plan/slices/87-scan-downloads-the-page-language-pack.md)
 

@@ -104,8 +104,8 @@ this plan turns it into ordered, shippable vertical slices.
 | 84 | Scan reads the page in the page's script, whatever the app language | built | #246 | | [84-ocr-follows-the-page-not-the-app-language.md](docs/plan/slices/84-ocr-follows-the-page-not-the-app-language.md) |
 | 85 | The layout never mirrors; only text flows by its own direction | built | #247 | | [85-no-layout-mirroring.md](docs/plan/slices/85-no-layout-mirroring.md) |
 | 86 | RTST scan reads with line geometry | built | #248 | | [86-rtst-scan-line-geometry.md](docs/plan/slices/86-rtst-scan-line-geometry.md) |
-| 87 | A scan in a script with no reader asks the page's language and downloads it | planned | | | [87-scan-downloads-the-page-language-pack.md](docs/plan/slices/87-scan-downloads-the-page-language-pack.md) |
-| 88 | The Windows desktop layout never mirrors; only text flows by its own direction | planned | | | [88-desktop-no-layout-mirroring.md](docs/plan/slices/88-desktop-no-layout-mirroring.md) |
+| 87 | A scan in a script with no reader asks the page's language and downloads it | built | #253 | | [87-scan-downloads-the-page-language-pack.md](docs/plan/slices/87-scan-downloads-the-page-language-pack.md) |
+| 88 | The Windows desktop layout never mirrors; only text flows by its own direction | built | #254 | | [88-desktop-no-layout-mirroring.md](docs/plan/slices/88-desktop-no-layout-mirroring.md) |
 | 89 | Four Farsi voices in one pack (ganji_adabi by default), Amir dropped | planned | | | [89-four-farsi-voices.md](docs/plan/slices/89-four-farsi-voices.md) |
 
 Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
@@ -172,8 +172,10 @@ Built but not verified (details in each slice file):
 - Slice 81: header "tap to retry" label (state flashes Resolving then Offline, no code defect found); a reinstalled pack restoring the chosen voice; all of it on a real phone ([slice](docs/plan/slices/81-language-change-starts-voice-download.md)).
 - Slice 82: iOS voice selection on a device (CI compile only); Windows does not switch the reading language (by design for now). User decision: with translation off, should untranslated text in another language (English while the app is in Farsi) be read by the voice for its detected language rather than the app language? ([slice](docs/plan/slices/82-phone-voice-reads-the-texts-language.md))
 - Slice 83: one-page, two-page and blank-page scans on a Google-signed-in device; the editor read-only during OCR ([slice](docs/plan/slices/83-scan-replaces-the-text.md)).
-- Slice 84: the Nutkin page with the app in Farsi, a Farsi page, and an English app with a Farsi page, on a Google-signed-in device. User decision: should an English-app user scanning a Farsi page be offered the Farsi OCR pack (packs download for the app language only today)? ([slice](docs/plan/slices/84-ocr-follows-the-page-not-the-app-language.md))
-- Slice 85: Arabic content in the editor and typing Farsi on a real keyboard; the first-run Language page in Farsi/Arabic. User decision: the Windows desktop app still mirrors for fa/ar; plan a follow-up slice? ([slice](docs/plan/slices/85-no-layout-mirroring.md))
+- Slice 84: the Nutkin page with the app in Farsi, a Farsi page, and an English app with a Farsi page, on a Google-signed-in device. Resolved: the Farsi OCR pack is offered and downloaded (Slice 87). ([slice](docs/plan/slices/84-ocr-follows-the-page-not-the-app-language.md))
+- Slice 85: Arabic content in the editor and typing Farsi on a real keyboard; the first-run Language page in Farsi/Arabic. Resolved: the Windows desktop no longer mirrors (Slice 88). ([slice](docs/plan/slices/85-no-layout-mirroring.md))
+- Slice 87: on a Google-signed-in device with the app in English, scan a Farsi page, get asked, pick Farsi, see progress, and the page reads as Farsi; a second Farsi page has no prompt; Cancel keeps the text; airplane mode shows the message with Retry; native-speaker check of the 5 new strings ([slice](docs/plan/slices/87-scan-downloads-the-page-language-pack.md)).
+- Slice 88: paging back on the desktop (it has no back control); the Farsi/Arabic desktop check itself passed ([slice](docs/plan/slices/88-desktop-no-layout-mirroring.md)).
 - Flaky test `ReadAloudServiceGeneratingTests.Auto_read_prepares_the_head_start_before_the_settle_delay_ends` (timing; failed once in CI on 2026-10-21).
 
 ## Out of Scope
