@@ -93,12 +93,19 @@ this plan turns it into ordered, shippable vertical slices.
 | 73 | Edge-to-edge on Android 15+: safe areas on every screen | built | — | #224 | [73-edge-to-edge-safe-areas.md](docs/plan/slices/73-edge-to-edge-safe-areas.md) |
 | 74 | Dino Reader site: landing, privacy and downloads on dinoreader.sirous.uk | built | #219 | — | [74-dino-reader-site.md](docs/plan/slices/74-dino-reader-site.md) |
 | 75 | Windows translation engine | built | — | #223 | [75-windows-translation-engine.md](docs/plan/slices/75-windows-translation-engine.md) |
+| 76 | Soft line-break reflow and heading detection (both apps) | planned | | | [76-soft-line-break-reflow.md](docs/plan/slices/76-soft-line-break-reflow.md) |
+| 77 | Dino Reader: covers that survive edits, cover picker, readable inputs | planned | | | [77-dino-covers-and-light-theme.md](docs/plan/slices/77-dino-covers-and-light-theme.md) |
+| 78 | Dino Reader: page-review wizard (pages → cover → text) | planned | | | [78-dino-page-review-wizard.md](docs/plan/slices/78-dino-page-review-wizard.md) |
+| 79 | Background text filtering with a manual override | planned | | | [79-background-text-filtering.md](docs/plan/slices/79-background-text-filtering.md) |
+| 80 | Dino Reader: grown-up mode as a gallery overlay | planned | | | [80-grownup-gallery-overlay.md](docs/plan/slices/80-grownup-gallery-overlay.md) |
 
 Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
 
+Batch 13 (76-80, planned 2026-10-22): 76 and 77 are independent and go first (Touches do not overlap); 78 after 77; 79 and 80 after 78 (both edit the wizard's files). Decisions 83-87.
+
 ### Notes
 
-- [Decisions 1-82](docs/plan/decisions.md): the full numbered decision list, moved verbatim.
+- [Decisions 1-87](docs/plan/decisions.md): the full numbered decision list, moved verbatim.
 - [2026-10-20 Android minSdk 28](docs/plan/notes/2026-10-20-android-min-sdk-28.md): why the Android floor is 28 (Decision 82).
 - [Batch introductions, Batches 2-8](docs/plan/notes/batch-intros-1-8.md): the framing paragraph that opened each batch (2026-10-20 move).
 - [Batch 9 and 10 indexes](docs/plan/notes/plan-batch-9-10-index.md): the former in-plan tables and lane order.
@@ -146,6 +153,13 @@ Built but not verified (details in each slice file):
 
 ## Out of Scope
 
+- **(Batch 13)** Fuzzy re-mapping of edited story text onto OCR boxes (an edited page reads
+  without highlight boxes, Slice 77); an ML layout model for background text (Slice 79 is
+  size/position heuristics plus a manual override); any RTST UI for region filtering (the
+  classifier is shared, the toggle is Dino-only); UIA font-weight/size as a heading signal
+  on the Windows read path (a follow-up to Slice 76); perspective correction in the in-app
+  page editor (the scanner already does it; Slice 78 is rotate + rectangular crop); iOS
+  device verification of Batch 13 (CI build only).
 - Voice *tuning* beyond playback rate (pitch, volume, SSML prosody).
 - Selecting from the Windows-installed voices — the picker offers **only** the
   bundled neural (Supertonic) voices (Slice 9). The neural model ships in the

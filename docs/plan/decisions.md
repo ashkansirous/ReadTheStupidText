@@ -987,4 +987,42 @@
     protection needs at least 24, and 28 reaches about 95% of active devices.
     The target SDK is not pinned; it follows the .NET Android workload.
     Background: `docs/plan/notes/2026-10-20-android-min-sdk-28.md`.
+83. **A single newline is whitespace, classified at read time (Batch 13).** Both
+    apps split sentences through one pure `LineReflow` in Application: `\n` joins
+    with a space, `-\n` + lower-case rejoins the word, a blank line is a paragraph,
+    and a line is a heading or list item (its own unit, paragraph pause) by a
+    classifier that uses OCR line height and spacing when boxes exist and
+    length/case shape otherwise. Stored text is never rewritten, so existing
+    stories and clipboard reads are fixed with no migration and Dino's
+    per-line boxes stay valid. Chosen over import-time reflow (breaks box
+    mapping, does nothing for RTST) and over "break on every unpunctuated line"
+    (undoes the reflow for ordinary wrapped lines). (Slice 76)
+84. **Dino page images always survive text edits (Batch 13).** Editing a story
+    never deletes `page-N.jpg`; a page whose text no longer matches its OCR lines
+    shows its picture and reads without highlight boxes. Covers are the first
+    page by default, or any page, a gallery photo (`cover.jpg`) or a flat
+    colour. Dino pins `UserAppTheme = Light`; night colours live only in
+    `ReadingTheme`. Fuzzy re-mapping of edited text onto boxes is out of
+    scope. (Slice 77)
+85. **One add/edit wizard with an in-app page review on every platform (Batch
+    13).** Pages (drag to reorder via `CollectionView.CanReorderItems`, rotate by
+    quarter turns, rectangular crop, delete, add) → Cover → Text. OCR runs when
+    Pages is confirmed and re-runs only for changed pages. The transform code is
+    one `ImageTransform` in `Mobile.Shared`; the ML Kit scanner stays the Android
+    capture path only. Replaces `AddStoryPage`, `EditStoryPage` and `PagesPage`.
+    Chosen over ML Kit gallery import (Android-only, no re-edit of saved
+    stories). (Slice 78)
+86. **Background text is dropped by a size/position heuristic with a manual
+    override (Batch 13).** `TextRegions` in Application groups OCR lines into
+    regions, keeps the dominant block and marks regions ≥ 1.5× or ≤ 0.6× its
+    line height, or small and far from it, as background; a page is never
+    emptied. The choice is stored per page; Dino's wizard shows the regions on
+    the page and a tap toggles any of them. RTST gets the classifier, no UI.
+    Chosen over manual-only (every page needs a check) and heuristic-only (a
+    wrong guess is unfixable). (Slice 79)
+87. **Grown-up mode is a state of the kids' gallery, not a page (Batch 13).**
+    After the gate the same tiles (covers + titles) show an edit overlay (Edit,
+    Cast, Delete) and the Add tile; Edit opens the wizard. `ManagePage` is
+    removed. The gate and the leave-the-app reset are unchanged and the mode is
+    never persisted. (Slice 80)
 
