@@ -1,6 +1,6 @@
 # Slice 81 — A language change in Settings downloads that language's voice
 
-*Planned.*
+*In progress (wave 2026-10-22), draft PR.*
 
 **Batch:** 14
 **Decisions:** 88
