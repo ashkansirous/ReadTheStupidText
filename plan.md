@@ -98,14 +98,21 @@ this plan turns it into ordered, shippable vertical slices.
 | 78 | Dino Reader: page-review wizard (pages → cover → text) | planned | | | [78-dino-page-review-wizard.md](docs/plan/slices/78-dino-page-review-wizard.md) |
 | 79 | Background text filtering with a manual override | planned | | | [79-background-text-filtering.md](docs/plan/slices/79-background-text-filtering.md) |
 | 80 | Dino Reader: grown-up mode as a gallery overlay | planned | | | [80-grownup-gallery-overlay.md](docs/plan/slices/80-grownup-gallery-overlay.md) |
+| 81 | A language change in Settings downloads that language's voice | planned | | | [81-language-change-starts-voice-download.md](docs/plan/slices/81-language-change-starts-voice-download.md) |
+| 82 | The phone voice reads in the text's language, and is only offered when it can | planned | | | [82-phone-voice-reads-the-texts-language.md](docs/plan/slices/82-phone-voice-reads-the-texts-language.md) |
+| 83 | Scan replaces the text, like Paste and File | planned | | | [83-scan-replaces-the-text.md](docs/plan/slices/83-scan-replaces-the-text.md) |
+| 84 | Scan reads the page in the page's script, whatever the app language | planned | | | [84-ocr-follows-the-page-not-the-app-language.md](docs/plan/slices/84-ocr-follows-the-page-not-the-app-language.md) |
+| 85 | The layout never mirrors; only text flows by its own direction | planned | | | [85-no-layout-mirroring.md](docs/plan/slices/85-no-layout-mirroring.md) |
 
 Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
 
 Batch 13 (76-80, planned 2026-10-22): 76 and 77 are independent and go first (Touches do not overlap); 78 after 77; 79 and 80 after 78 (both edit the wizard's files). Decisions 83-87.
 
+Batch 14 (81-85, planned 2026-10-22, Android bugs found on a Pixel 10 Pro running 1.16.0): 81 and 83 are independent and go first; 82 after 81; 84 after 83; 85 last (it edits the pages 81 and 82 touch). Decisions 88-92.
+
 ### Notes
 
-- [Decisions 1-87](docs/plan/decisions.md): the full numbered decision list, moved verbatim.
+- [Decisions 1-92](docs/plan/decisions.md): the full numbered decision list, moved verbatim.
 - [2026-10-20 Android minSdk 28](docs/plan/notes/2026-10-20-android-min-sdk-28.md): why the Android floor is 28 (Decision 82).
 - [Batch introductions, Batches 2-8](docs/plan/notes/batch-intros-1-8.md): the framing paragraph that opened each batch (2026-10-20 move).
 - [Batch 9 and 10 indexes](docs/plan/notes/plan-batch-9-10-index.md): the former in-plan tables and lane order.
