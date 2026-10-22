@@ -581,18 +581,19 @@ public partial class ReaderPage : ContentPage, IScanPackUi
         {
             // The spinner covers the translation too; the reader gets the translation, while
             // _lastSpokenText and _pendingReadText stay the source text so Resume still matches.
-            string? spoken = await TextToSpeakAsync(text, id);
-            if (spoken is null || _retired || id != _pendingReadId)
+            SpokenText? spoken = await TextToSpeakAsync(text, id);
+            if (spoken is null || !IsCurrentRead(id))
             {
                 return;
             }
 
-            if (!await EnsureVoiceCanReadAsync(id))
+            VoicePlan plan = await PlanVoiceAsync(ReadingLanguageFor(text, spoken.Translated), atPlay: true);
+            if (!IsCurrentRead(id) || !await AllowReadAsync(id, plan))
             {
                 return;
             }
 
-            await _reader.SpeakAsync(spoken);
+            await SpeakPlannedAsync(spoken.Text, plan);
         }
         catch (Exception)
         {
@@ -609,36 +610,127 @@ public partial class ReaderPage : ContentPage, IScanPackUi
         await WaitForFirstAudioAsync(id);
     }
 
-    // The phone voice reads the translation target when translating, else the app language (Slice 82,
-    // Decision 89); both are the app language. When the phone
-    // voice would speak and is known to have none for it, say so rather than read only the Latin
-    // fragments: the natural voice is either still downloading or not available.
-    private async Task<bool> EnsureVoiceCanReadAsync(int id)
+    private bool IsCurrentRead(int id) => id == _pendingReadId && !_retired;
+
+    // Who reads one read and in which language, decided without touching the stored voice choice or
+    // the app-language model (Slice 90).
+    // Scope is null for the app language: that read takes the ordinary neural path, head start included.
+    private sealed record VoicePlan(string Language, ReadVoiceScope? Scope, VoiceRoute Route, VoiceModelPaths? Pack, bool PhoneReads);
+
+    // The last head-start/label plan: same inputs, same answer, so typing in one language plans once.
+    private sealed record PlanKey(string Language, string VoiceId, string? PackRoot, string? PackVersion, bool ScopedReads, bool Downloading, string AppLanguage);
+
+    private (PlanKey Key, VoicePlan Plan)? _planCache;
+
+    // The app-language baseline first (previews and later reads speak it), then the read: a one-off
+    // language travels in the scope with this read only and is never kept on the reader.
+    private async Task SpeakPlannedAsync(string text, VoicePlan plan)
     {
-        string language = TargetCode();
-        (_reader as IReadingLanguage)?.SetReadingLanguage(language);
+        (_reader as IReadingLanguage)?.SetReadingLanguage(TargetCode());
+        if (plan.Scope is { } scope && _reader is IReadScoped scoped)
+        {
+            await scoped.SpeakScopedAsync(text, scope);
+            return;
+        }
+
+        await _reader.SpeakAsync(text);
+    }
+
+    /// <summary>
+    /// The language a read is spoken in (Slice 90, replacing Slice 82's app-language rule): the
+    /// translation target when translated, else the text's own language: the picker's choice, the translate
+    /// card's detection of this text, else a guess from its script. No detection runs here.
+    /// </summary>
+    private string ReadingLanguageFor(string text, bool translated)
+    {
+        var key = new LanguageKey(text, translated, TargetCode(), _settings.TranslateSourceLanguage, _detectedSource);
+        if (_languageMemo is { } memo && memo.Key == key)
+        {
+            return memo.Language;
+        }
+
+        string language = VoiceRouting.ReadingLanguage(translated, key.Target, key.Choice, key.Detected, text);
+        _languageMemo = (key, language);
+        return language;
+    }
+
+    private sealed record LanguageKey(string Text, bool Translated, string Target, string? Choice, string? Detected);
+
+    private (LanguageKey Key, string Language)? _languageMemo;
+
+    private bool IsAppLanguage(string language) =>
+        string.Equals(VoiceAvailability.Primary(language), VoiceAvailability.Primary(TargetCode()), StringComparison.OrdinalIgnoreCase);
+
+    private async Task<VoiceModelPaths?> ModelForLanguageAsync(string language) =>
+        _model is IReadingModelResolver resolver
+            ? await resolver.ModelForAsync(language)
+            : IsAppLanguage(language) ? _model.Paths : null;
+
+    // A "Phone voice" choice the phone cannot speak in this language gives way to the natural voice for this
+    // read only; the stored choice is migrated separately and only for the app language (the picker's rule).
+    private async Task<VoicePlan> PlanVoiceAsync(string language, bool atPlay)
+    {
+        bool appLanguage = IsAppLanguage(language);
+        bool scopedReads = (_reader as IReadScoped)?.SupportsModelScope ?? false;
+        VoiceModelPaths? pack = appLanguage ? _model.Paths : await ModelForLanguageAsync(language);
+        bool downloading = VoiceRouting.DownloadingFor(
+            _installer.State is PackInstallState.Resolving or PackInstallState.Downloading, TargetCode(), language);
+        var key = new PlanKey(language, _settings.VoiceId, pack?.RootDir, pack?.PackVersion, scopedReads, downloading, TargetCode());
+        if (!atPlay && _planCache is { } cached && cached.Key == key)
+        {
+            return cached.Plan;
+        }
+
+        VoicePlan plan = await BuildPlanAsync(language, appLanguage, pack, scopedReads, downloading, atPlay);
+        _planCache = (key, plan);
+        return plan;
+    }
+
+    private async Task<VoicePlan> BuildPlanAsync(string language, bool appLanguage, VoiceModelPaths? pack, bool scopedReads, bool downloading, bool atPlay)
+    {
         VoiceAvailability voices = await PlatformVoiceAvailability.BuildAsync(_platform);
-        LeavePhoneVoiceIfItCannotReadTheApp(voices);
-        bool phoneReads = VoiceRouting.PhoneReads(_settings.VoiceId == SystemVoice.Id, _model.IsReady);
-        bool downloading = _installer.State is PackInstallState.Resolving or PackInstallState.Downloading;
-        VoiceRoute route = VoiceRouting.Route(phoneReads, PhoneCanRead(voices, language), downloading);
-        if (route == VoiceRoute.Read)
+        if (atPlay && appLanguage)
+        {
+            LeavePhoneVoiceIfItCannotReadTheApp(voices);
+        }
+
+        // Only a voice of this language ever reads it: on a platform that cannot name a pack per read, another
+        // language's pack is not usable and the phone voice (or the block) decides.
+        bool? phoneCan = PhoneCanRead(voices, language);
+        bool packUsable = VoiceRouting.NaturalPackUsable(appLanguage, pack is not null, scopedReads);
+        bool phoneChosen = _settings.VoiceId == SystemVoice.Id && (appLanguage || phoneCan != false);
+        VoiceRoute route = VoiceRouting.Resolve(phoneChosen, packUsable, phoneCan, downloading);
+        bool phoneReads = VoiceRouting.PhoneReads(phoneChosen, packUsable);
+        VoiceModelPaths? usedPack = packUsable ? pack : null;
+        ReadVoiceScope? scope = VoiceRouting.UsesScope(appLanguage) ? new ReadVoiceScope(usedPack, phoneReads, language) : null;
+        return new VoicePlan(language, scope, route, usedPack, phoneReads);
+    }
+
+    // When the phone voice would speak and is known to have none for the language, say so rather than
+    // read only the Latin fragments: the natural voice is either still downloading or not available.
+    private async Task<bool> AllowReadAsync(int id, VoicePlan plan)
+    {
+        if (plan.Route == VoiceRoute.Read)
         {
             return true;
         }
 
         ClearPendingReadIfCurrent(id);
-        string message = route == VoiceRoute.Downloading ? AppResources.Reader_VoiceDownloadingMessage : AppResources.Reader_NoVoiceMessage;
-        await AlertAsync(AppResources.Reader_VoiceUnavailableTitle, AppResources.Format(message, LanguageChoices.NativeName(CurrentLanguage())));
+        string message = plan.Route == VoiceRoute.Downloading ? AppResources.Reader_VoiceDownloadingMessage : AppResources.Reader_NoVoiceMessage;
+        await AlertAsync(AppResources.Reader_VoiceUnavailableTitle, AppResources.Format(message, ReadingLanguageName(plan.Language)));
         return false;
     }
+
+    private string ReadingLanguageName(string language) =>
+        IsAppLanguage(language) ? LanguageChoices.NativeName(CurrentLanguage()) : SourceName(language);
 
     // Null (unknown) unless the phone was listed and the language is one it was asked about.
     private static bool? PhoneCanRead(VoiceAvailability voices, string language) =>
         voices.PhoneKnown ? voices.CanPhoneRead(language) : null;
 
     // The picker hides the Phone voice row when the phone can't read the app language; a stored
-    // choice of it moves to the natural voice so the reader follows what the picker shows.
+    // choice of it moves to the natural voice so the reader follows what the picker shows. A text in
+    // another language never rewrites the stored choice.
     private void LeavePhoneVoiceIfItCannotReadTheApp(VoiceAvailability voices)
     {
         bool leave = VoiceRouting.ShouldLeavePhoneVoice(_settings.VoiceId == SystemVoice.Id, _model.IsReady, PhoneCanRead(voices, TargetCode()));
@@ -761,17 +853,74 @@ public partial class ReaderPage : ContentPage, IScanPackUi
         }
     }
 
-    // The phone voice reads whenever it is chosen or the neural pack isn't ready yet,
-    // so the label names what will actually speak (Decision 61).
+    // The label names the voice that will read next (Decision 61, Slice 90): the app language's voice at
+    // once, then, once the reading language is known, the voice for that language. It only reads; the stored
+    // choice is never changed here.
     private void UpdateVoiceLabel()
     {
-        if (_settings.VoiceId == SystemVoice.Id || !_model.IsReady)
-        {
-            VoiceNameLabel.Text = VoicePickerPage.PhoneVoiceName;
-            return;
-        }
+        VoiceNameLabel.Text = VoiceNameFor(_model.Paths, _settings.VoiceId == SystemVoice.Id || !_model.IsReady);
+        _ = RefreshVoiceLabelAsync();
+    }
 
-        VoiceNameLabel.Text = (_model.Paths is { } paths ? NeuralVoiceMemory.Resolve(paths, _settings.VoiceId) : SupertonicVoiceTable.Default).DisplayName;
+    private string VoiceNameFor(VoiceModelPaths? paths, bool phoneReads) =>
+        phoneReads || paths is null ? VoicePickerPage.PhoneVoiceName : NeuralVoiceMemory.Resolve(paths, _settings.VoiceId).DisplayName;
+
+    private int _labelVersion;
+
+    private async Task RefreshVoiceLabelAsync()
+    {
+        int version = ++_labelVersion;
+        try
+        {
+            VoicePlan plan = await PlanVoiceAsync(CurrentReadingLanguage(), atPlay: false);
+            if (version == _labelVersion && !_retired)
+            {
+                VoiceNameLabel.Text = VoiceNameFor(plan.Pack, plan.PhoneReads);
+            }
+        }
+        catch (Exception)
+        {
+            // The label keeps the app language's voice.
+        }
+    }
+
+    // What the next Play would read in: the text is read untranslated unless translation is on.
+    private string CurrentReadingLanguage() =>
+        ReadingLanguageFor(TextEditor.Text ?? string.Empty, TranslationActive());
+
+    // The picker, the detection or the text changed: the head start and the label follow the new language.
+    private void OnReadingLanguageMayHaveChanged()
+    {
+        RestartHeadStartIfKeyChanged();
+        _ = RefreshVoiceLabelAsync();
+    }
+
+    private static readonly TimeSpan ReadingLanguageDebounce = TimeSpan.FromMilliseconds(400);
+
+    private CancellationTokenSource? _languageRefreshCts;
+
+    // Every text change: the label and head-start key follow the new text's language once typing pauses.
+    private void ScheduleReadingLanguageRefresh()
+    {
+        _languageRefreshCts?.Cancel();
+        _languageRefreshCts = new CancellationTokenSource();
+        _ = RefreshReadingLanguageAfterDelayAsync(_languageRefreshCts.Token);
+    }
+
+    private async Task RefreshReadingLanguageAfterDelayAsync(CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(ReadingLanguageDebounce, token);
+            if (!_retired)
+            {
+                OnReadingLanguageMayHaveChanged();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // A newer change decides.
+        }
     }
 
     // The stored language, or what the UI resolved to when none is stored yet.
@@ -783,6 +932,7 @@ public partial class ReaderPage : ContentPage, IScanPackUi
     private void OnInstallerChanged(object? sender, EventArgs e) =>
         MainThread.BeginInvokeOnMainThread(() =>
         {
+            _planCache = null;
             RenderPackStatus();
             UpdateVoiceLabel();
             RestartHeadStartIfKeyChanged();
@@ -831,7 +981,7 @@ public partial class ReaderPage : ContentPage, IScanPackUi
     private string CurrentHeadStartKey()
     {
         VoiceModelPaths? paths = _model.Paths;
-        return string.Join('|', _settings.VoiceId, paths?.Kind, paths?.Language, paths?.RootDir, paths?.PackVersion);
+        return string.Join('|', _settings.VoiceId, paths?.Kind, paths?.Language, paths?.RootDir, paths?.PackVersion, CurrentReadingLanguage());
     }
 
     private void RestartHeadStartIfKeyChanged()
@@ -862,7 +1012,7 @@ public partial class ReaderPage : ContentPage, IScanPackUi
 
             if (!string.IsNullOrWhiteSpace(text) && !_headStart.ReadInProgress && !TranslationActive())
             {
-                await Task.Run(() => _headStart.PrepareAsync(text), token);
+                await PrepareInReadingLanguageAsync(text, token);
             }
         }
         catch (OperationCanceledException)
@@ -872,6 +1022,22 @@ public partial class ReaderPage : ContentPage, IScanPackUi
         catch (Exception)
         {
             // A head start is an optimization: failing to prepare never reaches the user.
+        }
+    }
+
+    // Slice 90: prepared with the pack and voice the read will use, so the cached sentences hit at Play;
+    // when the phone voice would read there is nothing to prepare.
+    private async Task PrepareInReadingLanguageAsync(string text, CancellationToken token)
+    {
+        VoicePlan plan = await PlanVoiceAsync(ReadingLanguageFor(text, false), atPlay: false);
+        token.ThrowIfCancellationRequested();
+        if (plan.Scope is null)
+        {
+            await Task.Run(() => _headStart.PrepareAsync(text), token);
+        }
+        else if (_headStart is IReadScoped scoped)
+        {
+            await Task.Run(() => scoped.PrepareAsync(text, plan.Scope), token);
         }
     }
 

@@ -8,6 +8,16 @@ namespace ReadTheStupidText.Application.Reading;
 /// </summary>
 public interface IVoicePackService
 {
+    /// <summary>
+    /// Raised after a pack is installed or replaced (Slice 90), so a cache of what is installed can drop
+    /// itself. A service that never raises it keeps the default no-op.
+    /// </summary>
+    event EventHandler? InstalledPacksChanged
+    {
+        add { }
+        remove { }
+    }
+
     /// <summary>Fetches <c>packs.json</c>; the status says why when it could not.</summary>
     Task<PackCatalogResult> GetCatalogAsync(CancellationToken cancellationToken);
 

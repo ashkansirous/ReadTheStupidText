@@ -125,3 +125,33 @@ public static class PlatformVoiceAvailability
         }
     }
 }
+
+/// <summary>A neural engine that can read, or prepare a head start, with a pack named per call (Slice 90).</summary>
+public interface IModelScopedReader
+{
+    /// <summary>Reads <paramref name="text"/> with <paramref name="model"/> instead of the app-language model.</summary>
+    Task SpeakAsync(string text, VoiceModelPaths model, int? activityId = null);
+
+    /// <summary>Prepares the head start with <paramref name="model"/> (null = the app-language model).</summary>
+    Task PrepareAsync(string text, VoiceModelPaths? model);
+}
+
+/// <summary>
+/// A reader that can read, and prepare a head start, in the text's language (Slice 90). The scope is an
+/// argument of the one read it belongs to, never state on the reader, so it cannot leak into or be
+/// taken by another read.
+/// </summary>
+public interface IReadScoped
+{
+    /// <summary>
+    /// Whether the natural engine can read with a pack named per read. Where it cannot (iOS), only the
+    /// app language reads naturally and any other language falls to the phone voice.
+    /// </summary>
+    bool SupportsModelScope { get; }
+
+    /// <summary>Reads <paramref name="text"/> the way <paramref name="scope"/> says, for this read only.</summary>
+    Task SpeakScopedAsync(string text, ReadVoiceScope scope, int? activityId = null);
+
+    /// <summary>Prepares the head start the way <paramref name="scope"/> would read.</summary>
+    Task PrepareAsync(string text, ReadVoiceScope scope);
+}
