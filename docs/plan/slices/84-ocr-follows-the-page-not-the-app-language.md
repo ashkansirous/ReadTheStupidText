@@ -1,6 +1,6 @@
 # Slice 84 — Scan reads the page in the page's script, whatever the app language
 
-*Planned.*
+*In progress (wave 2026-10-22), draft PR.*
 
 **Batch:** 14
 **Decisions:** 91
