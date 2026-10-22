@@ -38,8 +38,8 @@
   <data name="Reader_NoTextFoundTitle" xml:space="preserve"><value>لم يُعثر على نص</value></data>
   <data name="Reader_NoTextFoundMessage" xml:space="preserve"><value>حاول المسح مرة أخرى بإضاءة أو تركيز أفضل.</value></data>
   <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>تم تخطي بعض الصفحات</value></data>
-  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>تعذّرت قراءة الصفحة {0} — وأُضيف الباقي.</value></data>
-  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>تعذّرت قراءة الصفحات {0} — وأُضيف الباقي.</value></data>
+  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>تعذّرت قراءة الصفحة {0}. حلّت الصفحات التي أمكن قراءتها محل النص.</value></data>
+  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>تعذّرت قراءة الصفحات {0}. حلّت الصفحات التي أمكن قراءتها محل النص.</value></data>
   <data name="Reader_ScanProgressPage" xml:space="preserve"><value>جارٍ قراءة الصفحة {0} من {1}</value></data>
   <data name="Reader_ScanProgressSingle" xml:space="preserve"><value>جارٍ قراءة الصفحة</value></data>
   <data name="Reader_FilePickerTitle" xml:space="preserve"><value>اختر ملف txt أو pdf أو docx</value></data>

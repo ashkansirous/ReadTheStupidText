@@ -197,6 +197,11 @@ public partial class ReaderPage
     // and the head start prepares at once (the TextChanged this raises must not also schedule a debounced one).
     private void ReplaceEditorText(string text)
     {
+        // Whatever is playing (or generating) belongs to the old text.
+        _reader.Stop();
+        CancelTranslationRead();
+        ClearPendingRead();
+
         if (_detector is not null)
         {
             ResetSource();

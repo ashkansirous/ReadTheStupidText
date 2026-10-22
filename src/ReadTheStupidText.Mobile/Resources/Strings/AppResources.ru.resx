@@ -35,8 +35,8 @@
   <data name="Reader_NoTextFoundTitle" xml:space="preserve"><value>Текст не найден</value></data>
   <data name="Reader_NoTextFoundMessage" xml:space="preserve"><value>Отсканируйте ещё раз при лучшем освещении или фокусе.</value></data>
   <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>Некоторые страницы пропущены</value></data>
-  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>Не удалось прочитать страницу {0} — остальное добавлено.</value></data>
-  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>Не удалось прочитать страницы {0} — остальное добавлено.</value></data>
+  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>Не удалось прочитать страницу {0}. Читаемые страницы заменили текст.</value></data>
+  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>Не удалось прочитать страницы {0}. Читаемые страницы заменили текст.</value></data>
   <data name="Reader_ScanProgressPage" xml:space="preserve"><value>Чтение страницы {0} из {1}</value></data>
   <data name="Reader_ScanProgressSingle" xml:space="preserve"><value>Чтение страницы</value></data>
   <data name="Reader_FilePickerTitle" xml:space="preserve"><value>Выберите файл .txt, .pdf или .docx</value></data>

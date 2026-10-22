@@ -35,8 +35,8 @@
   <data name="Reader_NoTextFoundTitle" xml:space="preserve"><value>テキストが見つかりません</value></data>
   <data name="Reader_NoTextFoundMessage" xml:space="preserve"><value>照明やピントを調整して、もう一度スキャンしてください。</value></data>
   <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>一部のページをスキップしました</value></data>
-  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>{0} ページ目を読み取れませんでした。残りは追加されました。</value></data>
-  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>{0} ページ目を読み取れませんでした。残りは追加されました。</value></data>
+  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>{0} ページ目を読み取れませんでした。読み取れたページでテキストを置き換えました。</value></data>
+  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>{0} ページ目を読み取れませんでした。読み取れたページでテキストを置き換えました。</value></data>
   <data name="Reader_ScanProgressPage" xml:space="preserve"><value>{1} ページ中 {0} ページ目を読み取り中</value></data>
   <data name="Reader_ScanProgressSingle" xml:space="preserve"><value>ページを読み取り中</value></data>
   <data name="Reader_FilePickerTitle" xml:space="preserve"><value>.txt、.pdf、.docx のファイルを選択</value></data>

@@ -27,9 +27,6 @@ public partial class ReaderPage : ContentPage
         { DevicePlatform.iOS, ["public.plain-text", "com.adobe.pdf", "org.openxmlformats.wordprocessingml.document"] },
     });
 
-    // A blank line between scanned pages, and between existing editor text and a new scan.
-    private const string PageSeparator = "\n\n";
-
     private readonly ISpeechReader _reader;
     private readonly ISettingsStore _settings;
     private readonly IDocumentTextExtractor _documentExtractor;
@@ -189,11 +186,12 @@ public partial class ReaderPage : ContentPage
     }
 
     // Dims and disables Paste/Scan/File while one of them runs, so a second tap can't start a
-    // second scan or overwrite the editor mid-OCR.
+    // second scan or overwrite the editor mid-OCR. The editor is read-only meanwhile so typed edits are not lost.
     private void SetInputBusy(bool busy)
     {
         _inputBusy = busy;
         ActionRow.IsEnabled = !busy;
+        TextEditor.IsReadOnly = busy;
         ActionRow.Opacity = busy ? 0.5 : 1;
     }
 
@@ -312,7 +310,7 @@ public partial class ReaderPage : ContentPage
     }
 
     // Pages are read one after another, in order. A page that fails or is empty never discards
-    // the others: the pages that worked are appended below any text already there.
+    // the others: the pages that worked replace the editor text.
     private async Task ScanIntoEditorAsync(IReadOnlyList<string> pages)
     {
         BusyIndicator.IsRunning = true;
@@ -348,14 +346,14 @@ public partial class ReaderPage : ContentPage
             return;
         }
 
-        string updated = ScannedText.AppendPages(TextEditor.Text, texts);
-        if (updated == (TextEditor.Text ?? string.Empty))
+        string scanned = ScannedText.JoinPages(texts);
+        if (scanned.Length == 0)
         {
             await AlertAsync(AppResources.Reader_NoTextFoundTitle, AppResources.Reader_NoTextFoundMessage);
             return;
         }
 
-        ReplaceEditorText(updated);
+        ReplaceEditorText(scanned);
         if (failed.Count > 0)
         {
             string template = failed.Count == 1 ? AppResources.Reader_PagesSkippedOneMessage : AppResources.Reader_PagesSkippedManyMessage;

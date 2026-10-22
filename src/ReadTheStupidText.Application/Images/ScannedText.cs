@@ -12,23 +12,13 @@ public static class ScannedText
     private const string Separator = "\n\n";
 
     /// <summary>
-    /// Appends the pages' trimmed, non-empty texts (in page order, blank-line separated) below
-    /// <paramref name="existing"/>, separated by a blank line. Returns <paramref name="existing"/>
-    /// unchanged when no page has text.
+    /// Joins the pages' trimmed, non-empty texts (in page order, blank-line separated). Returns an
+    /// empty string when no page has text.
     /// </summary>
-    public static string AppendPages(string? existing, IReadOnlyList<string?> pageTexts)
-    {
-        string scanned = string.Join(Separator, pageTexts
+    public static string JoinPages(IReadOnlyList<string?> pageTexts) =>
+        string.Join(Separator, pageTexts
             .Select(text => text?.Trim())
             .Where(text => !string.IsNullOrEmpty(text)));
-
-        if (scanned.Length == 0)
-        {
-            return existing ?? string.Empty;
-        }
-
-        return string.IsNullOrWhiteSpace(existing) ? scanned : existing.TrimEnd() + Separator + scanned;
-    }
 
     /// <summary>The 1-based numbers of the pages whose entry is null (the OCR call failed).</summary>
     public static IReadOnlyList<int> FailedPageNumbers(IReadOnlyList<string?> pageTexts) =>

@@ -38,8 +38,8 @@
   <data name="Reader_NoTextFoundTitle" xml:space="preserve"><value>متنی پیدا نشد</value></data>
   <data name="Reader_NoTextFoundMessage" xml:space="preserve"><value>با نور یا فوکوس بهتر دوباره اسکن کنید.</value></data>
   <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>برخی صفحه‌ها رد شد</value></data>
-  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>صفحهٔ {0} خوانده نشد — بقیه اضافه شد.</value></data>
-  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>صفحه‌های {0} خوانده نشد — بقیه اضافه شد.</value></data>
+  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>صفحهٔ {0} خوانده نشد. صفحه‌های خوانده‌شده جای متن را گرفتند.</value></data>
+  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>صفحه‌های {0} خوانده نشد. صفحه‌های خوانده‌شده جای متن را گرفتند.</value></data>
   <data name="Reader_ScanProgressPage" xml:space="preserve"><value>در حال خواندن صفحهٔ {0} از {1}</value></data>
   <data name="Reader_ScanProgressSingle" xml:space="preserve"><value>در حال خواندن صفحه</value></data>
   <data name="Reader_FilePickerTitle" xml:space="preserve"><value>یک فایل txt، pdf یا docx انتخاب کنید</value></data>
