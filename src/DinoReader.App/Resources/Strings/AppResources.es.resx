@@ -96,6 +96,13 @@
   <data name="Wizard_NeedTextBody" xml:space="preserve"><value>Añade texto al menos a una página y guarda.</value></data>
   <data name="Wizard_SaveFailedTitle" xml:space="preserve"><value>No se pudo guardar el cuento</value></data>
   <data name="Wizard_SaveFailedBody" xml:space="preserve"><value>No se cambió nada. Inténtalo de nuevo en un momento.</value></data>
+  <data name="Regions_Helper" xml:space="preserve"><value>Toca un recuadro para leerlo u omitirlo.</value></data>
+  <data name="Regions_ReplaceTitle" xml:space="preserve"><value>¿Reemplazar tu texto editado por las regiones elegidas?</value></data>
+  <data name="Regions_ReplaceBody" xml:space="preserve"><value>Lo que escribiste en esta página se perderá.</value></data>
+  <data name="Regions_Replace" xml:space="preserve"><value>Reemplazar</value></data>
+  <data name="Regions_Keep" xml:space="preserve"><value>Conservar</value></data>
+  <data name="Regions_BoxRead" xml:space="preserve"><value>Recuadro de texto, se lee</value></data>
+  <data name="Regions_BoxLeftOut" xml:space="preserve"><value>Recuadro de texto, omitido</value></data>
   <data name="Editor_Title" xml:space="preserve"><value>Girar y recortar</value></data>
   <data name="Editor_RotateLeft" xml:space="preserve"><value>Girar a la izquierda</value></data>
   <data name="Editor_RotateRight" xml:space="preserve"><value>Girar a la derecha</value></data>

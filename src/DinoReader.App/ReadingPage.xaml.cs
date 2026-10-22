@@ -55,7 +55,7 @@ public partial class ReadingPage : ContentPage
 		_story = story;
 		TitleLabel.Text = story.Title;
 		_spoken.Use(story);
-		_sentences = StorySentences.Build(story.Text, LanguageRules.For(story.Language));
+		_sentences = StorySentences.Build(story.Text, LanguageRules.For(story.Language), story.BreakMap());
 		_session.Open(story, _sentences);
 		_theme = CurrentTheme();
 		Modes.Set(story.Mode, _theme);

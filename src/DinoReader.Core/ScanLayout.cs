@@ -32,13 +32,13 @@ public sealed class ScanLayout
         _scanned = new bool[pages.Count];
         _sentencesOnPage = SentencesByPage(pages.Count, sentences, _starts);
         string text = Story.JoinPages(pages);
-        var lineTexts = pages.Select(p => (IReadOnlyList<string>)(p.ImageFile is null
-            ? []
-            : (p.Lines ?? []).Select(l => l.Text).ToList())).ToList();
+        // Only the included lines are in the story text, so only they are matched; the index map leads back to their boxes.
+        var includedIndexes = pages.Select(p => p.ImageFile is null ? [] : p.IncludedLineIndexes).ToList();
+        var lineTexts = pages.Select((p, i) => (IReadOnlyList<string>)includedIndexes[i].Select(k => p.Lines![k].Text).ToList()).ToList();
         foreach (LocatedLine located in RangeToBoxMapper.Locate(text, lineTexts))
         {
             (int page, int line) = (located.Ref.Page, located.Ref.Line);
-            _lines.Add((page, pages[page].Lines![line].Box, located.Start, located.End));
+            _lines.Add((page, pages[page].Lines![includedIndexes[page][line]].Box, located.Start, located.End));
             _scanned[page] = true;
         }
 

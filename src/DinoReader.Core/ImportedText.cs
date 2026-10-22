@@ -6,6 +6,26 @@ public static class ImportedText
     /// <summary>One page's text: its recognised lines, one per row, in reading order.</summary>
     public static string PageText(IEnumerable<string> lines) => string.Join('\n', lines);
 
+    /// <summary>The lines left once the excluded regions' lines are removed (Slice 79); null regions leave every line, and a
+    /// line in no region is kept. Region line indexes outside the list are ignored.</summary>
+    public static IReadOnlyList<PageLine> IncludedLines(IReadOnlyList<PageLine> lines, IReadOnlyList<PageRegion>? regions)
+    {
+        if (regions is null)
+        {
+            return lines;
+        }
+
+        return IncludedIndexes(lines.Count, regions).Select(i => lines[i]).ToList();
+    }
+
+    /// <summary>The positions, in the page's line list, of the lines <see cref="IncludedLines"/> keeps (Slice 79): the way back
+    /// from an included line to its place among all the page's lines.</summary>
+    public static IReadOnlyList<int> IncludedIndexes(int lineCount, IReadOnlyList<PageRegion>? regions)
+    {
+        HashSet<int> excluded = (regions ?? []).Where(r => !r.IsIncluded).SelectMany(r => r.LineIndexes).ToHashSet();
+        return Enumerable.Range(0, lineCount).Where(i => !excluded.Contains(i)).ToList();
+    }
+
     /// <summary>Splits a document's own flowing text (one string for all pages) into one text per page, by where each
     /// page's recognised lines sit in it. A page's text runs from its first found line to the next page's first found
     /// line (the first page from the start), so the lines only decide the cut points and the text keeps its own

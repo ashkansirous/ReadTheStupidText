@@ -53,7 +53,7 @@ public static class StoryJson
         CoverPageIndex = s.CoverPageIndex,
         NarratorVoiceId = s.NarratorVoiceId,
         PreferredMode = s.PreferredMode is { } mode ? JsonSerializer.SerializeToElement(mode.ToString()) : null,
-        Pages = s.Pages.Select(p => new PageFile { Text = p.Text, ImageFile = p.ImageFile, Lines = ToLineFiles(p.Lines) }).ToList(),
+        Pages = s.Pages.Select(p => new PageFile { Text = p.Text, ImageFile = p.ImageFile, Lines = ToLineFiles(p.Lines), Regions = ToRegionFiles(p.Regions) }).ToList(),
         Cast = s.Cast.Select(c => new CastFile
         {
             CharacterId = c.CharacterId, Name = c.Name, Gender = c.Gender, VoiceId = c.VoiceId, Edited = c.Edited,
@@ -72,10 +72,45 @@ public static class StoryJson
         RequireFields(f);
         return new Story(
             f.Id, f.Title, f.Language, f.Created,
-            f.Pages.Select(p => new StoryPage(p.Text, p.ImageFile, FromLineFiles(p.Lines))).ToList(),
+            f.Pages.Select(p => ToPage(p)).ToList(),
             f.Cast.Select(c => new CastMember(c.CharacterId, c.Name, c.Gender, c.VoiceId, c.Edited)).ToList(),
             f.CoverStyle, f.CoverColourIndex, f.NarratorVoiceId, ParseMode(f.PreferredMode), CleanMerges(f.Merges), f.Translate,
             f.CoverFile, f.CoverPageIndex);
+    }
+
+    private static StoryPage ToPage(PageFile p)
+    {
+        List<PageLine>? lines = FromLineFiles(p.Lines, out int[] newIndexOf);
+        return new StoryPage(p.Text, p.ImageFile, lines, FromRegionFiles(p.Regions, newIndexOf));
+    }
+
+    private static List<RegionFile>? ToRegionFiles(IReadOnlyList<PageRegion>? regions) =>
+        regions is null || regions.Count == 0
+            ? null
+            : regions.Select(r => new RegionFile
+            {
+                X = r.Box.X, Y = r.Box.Y, Width = r.Box.Width, Height = r.Box.Height,
+                LineIndexes = r.LineIndexes.ToList(), Background = r.Background, Included = r.Included,
+            }).ToList();
+
+    // A damaged region (no lines, a line index the file never had, a box off the page) is dropped, and the page then
+    // follows the heuristic for what is left; null when no region survives (an older story has none). The indexes are the
+    // file's own; newIndexOf maps each to the line's place once damaged lines were dropped (-1 for a dropped line, which leaves
+    // the region), so a region keeps naming the lines it named.
+    private static List<PageRegion>? FromRegionFiles(List<RegionFile>? regions, int[] newIndexOf)
+    {
+        var kept = new List<PageRegion>();
+        foreach (RegionFile? r in regions ?? [])
+        {
+            if (r is { LineIndexes: { Count: > 0 } indexes } && indexes.All(i => i >= 0 && i < newIndexOf.Length)
+                && ClampToPage(r.X, r.Y, r.Width, r.Height) is { } box
+                && indexes.Select(i => newIndexOf[i]).Where(i => i >= 0).ToList() is { Count: > 0 } mapped)
+            {
+                kept.Add(new PageRegion(box, mapped, r.Background, r.Included));
+            }
+        }
+
+        return kept.Count > 0 ? kept : null;
     }
 
     private static List<LineFile>? ToLineFiles(IReadOnlyList<PageLine>? lines) =>
@@ -88,13 +123,17 @@ public static class StoryJson
 
     // A hand-edited or damaged line (no text, a box truly off the page) is dropped, not the whole story and not
     // the page's picture; a box that overshoots the page edge by rounding only is clamped onto it.
-    private static List<PageLine>? FromLineFiles(List<LineFile>? lines)
+    private static List<PageLine>? FromLineFiles(List<LineFile>? lines, out int[] newIndexOf)
     {
         var kept = new List<PageLine>();
-        foreach (LineFile? l in lines ?? [])
+        newIndexOf = new int[lines?.Count ?? 0];
+        for (int i = 0; i < newIndexOf.Length; i++)
         {
-            if (l is { Text: not null } && ClampToPage(l) is { } box)
+            LineFile? l = lines![i];
+            newIndexOf[i] = -1;
+            if (l is { Text: not null } && ClampToPage(l.X, l.Y, l.Width, l.Height) is { } box)
             {
+                newIndexOf[i] = kept.Count;
                 kept.Add(new PageLine(l.Text, box));
             }
         }
@@ -102,19 +141,19 @@ public static class StoryJson
         return kept.Count > 0 ? kept : null;
     }
 
-    private static NormalizedRect? ClampToPage(LineFile l)
+    private static NormalizedRect? ClampToPage(double x0, double y0, double w0, double h0)
     {
-        bool sane = l.Width > 0 && l.Height > 0 && l.X >= -BoxRoundingTolerance && l.Y >= -BoxRoundingTolerance
-            && l.X + l.Width <= 1 + BoxRoundingTolerance && l.Y + l.Height <= 1 + BoxRoundingTolerance;
+        bool sane = w0 > 0 && h0 > 0 && x0 >= -BoxRoundingTolerance && y0 >= -BoxRoundingTolerance
+            && x0 + w0 <= 1 + BoxRoundingTolerance && y0 + h0 <= 1 + BoxRoundingTolerance;
         if (!sane)
         {
             return null;
         }
 
-        double x = Math.Max(0, l.X);
-        double y = Math.Max(0, l.Y);
-        double width = Math.Min(l.Width, 1 - x);
-        double height = Math.Min(l.Height, 1 - y);
+        double x = Math.Max(0, x0);
+        double y = Math.Max(0, y0);
+        double width = Math.Min(w0, 1 - x);
+        double height = Math.Min(h0, 1 - y);
         return width > 0 && height > 0 ? new NormalizedRect(x, y, width, height) : null;
     }
 
@@ -175,6 +214,18 @@ public static class StoryJson
         public string Text { get; set; } = string.Empty;
         public string? ImageFile { get; set; }
         public List<LineFile>? Lines { get; set; }
+        public List<RegionFile>? Regions { get; set; }
+    }
+
+    private sealed class RegionFile
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+        public double Width { get; set; }
+        public double Height { get; set; }
+        public List<int>? LineIndexes { get; set; }
+        public bool Background { get; set; }
+        public bool? Included { get; set; }
     }
 
     private sealed class CastFile

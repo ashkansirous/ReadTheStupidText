@@ -369,7 +369,9 @@ public partial class PagesStep : ContentView
 
 			rendered.Add(image);
 			_session.ShowProgress(AppResources.Format(AppResources.Wizard_Reading, i + 1, pages.Count));
-			drafts.Add(StoryImport.DraftFromPositioned(pages[i], await import.CopyIntoAsync(image, _session.WorkFolder), pageTexts?[i]));
+			string copy = await import.CopyIntoAsync(image, _session.WorkFolder);
+			int at = i;
+			drafts.Add(await Task.Run(() => StoryImport.DraftFromPositioned(pages[at], copy, pageTexts?[at])));
 		}
 
 		return drafts;

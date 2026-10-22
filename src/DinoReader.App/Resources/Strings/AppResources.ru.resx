@@ -96,6 +96,13 @@
   <data name="Wizard_NeedTextBody" xml:space="preserve"><value>Добавьте текст хотя бы на одну страницу и сохраните.</value></data>
   <data name="Wizard_SaveFailedTitle" xml:space="preserve"><value>Не удалось сохранить историю</value></data>
   <data name="Wizard_SaveFailedBody" xml:space="preserve"><value>Ничего не изменилось. Повторите попытку чуть позже.</value></data>
+  <data name="Regions_Helper" xml:space="preserve"><value>Нажмите на рамку, чтобы читать этот текст или пропустить его.</value></data>
+  <data name="Regions_ReplaceTitle" xml:space="preserve"><value>Заменить ваш изменённый текст выбранными областями?</value></data>
+  <data name="Regions_ReplaceBody" xml:space="preserve"><value>Всё, что вы напечатали на этой странице, будет потеряно.</value></data>
+  <data name="Regions_Replace" xml:space="preserve"><value>Заменить</value></data>
+  <data name="Regions_Keep" xml:space="preserve"><value>Оставить</value></data>
+  <data name="Regions_BoxRead" xml:space="preserve"><value>Рамка с текстом, читается</value></data>
+  <data name="Regions_BoxLeftOut" xml:space="preserve"><value>Рамка с текстом, пропускается</value></data>
   <data name="Editor_Title" xml:space="preserve"><value>Поворот и обрезка</value></data>
   <data name="Editor_RotateLeft" xml:space="preserve"><value>Повернуть влево</value></data>
   <data name="Editor_RotateRight" xml:space="preserve"><value>Повернуть вправо</value></data>

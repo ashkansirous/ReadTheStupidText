@@ -20,6 +20,7 @@ public sealed class StoryImport(IPageImageKeeper keeper)
 {
 	private const string PictureNameFormat = "page-{0}-{1}.jpg";
 	private const string WorkNameFormat = "pick-{0}.jpg";
+	private const double SquareAspect = 1;
 
 	/// <summary>Deletes the scanner or picker output files (plain paths or file uris) that are no longer needed.</summary>
 	public static void DeleteLocations(IEnumerable<string> locations)
@@ -43,7 +44,7 @@ public sealed class StoryImport(IPageImageKeeper keeper)
 	/// document's own text for the page when it differs from them (<paramref name="pageText"/>).</summary>
 	public static PageDraft DraftFromPositioned(PositionedPage page, string copy, string? pageText)
 	{
-		PageReading reading = ReadingOf(page);
+		PageReading reading = ReadingOf(page, copy);
 		PageDraft draft = PageDraft.ForPicture(copy, reading);
 		return pageText is not null && pageText != reading.Text ? draft.WithText(pageText) : draft;
 	}
@@ -85,7 +86,7 @@ public sealed class StoryImport(IPageImageKeeper keeper)
 		try
 		{
 			PositionedPage read = await ocr.ExtractPageAsync(file, index, cancel);
-			return (page.WithOcr(ReadingOf(read)), true);
+			return (page.WithOcr(await Task.Run(() => ReadingOf(read, file), cancel)), true);
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException)
 		{
@@ -105,8 +106,8 @@ public sealed class StoryImport(IPageImageKeeper keeper)
 			for (int i = 0; i < pages.Count; i++)
 			{
 				string? name = await KeepPictureAsync(pages[i], i, storyId, library, token);
-				IReadOnlyList<PageLine>? lines = name is not null && pages[i].Ocr is { HasText: true } ocr ? ocr.Lines : null;
-				kept.Add(new StoryPage(pages[i].Text, name, lines));
+				PageReading? ocr = name is not null && pages[i].Ocr is { HasText: true } read ? read : null;
+				kept.Add(new StoryPage(pages[i].Text, name, ocr?.Lines, ocr?.Regions));
 			}
 		}
 		catch
@@ -162,8 +163,37 @@ public sealed class StoryImport(IPageImageKeeper keeper)
 		return name;
 	}
 
-	private static PageReading ReadingOf(PositionedPage page) =>
-		new(page.Lines.Select(l => new PageLine(l.Text, ToCore(l.Box))).ToList());
+	private static PageReading ReadingOf(PositionedPage page, string pictureFile)
+	{
+		List<PageLine> lines = page.Lines.Select(l => new PageLine(l.Text, ToCore(l.Box))).ToList();
+		Size? size = PageImageSize.Read(pictureFile);
+		double aspect = size is { Width: > 0, Height: > 0 } s ? s.Width / s.Height : SquareAspect;
+		return new PageReading(lines, RegionsOf(lines, aspect));
+	}
+
+	/// <summary>The page's text regions (Slice 79): its lines grouped into blocks, each marked story or background by
+	/// <see cref="TextRegions"/>; the grown-up can flip any of them. Null for a page with no lines. The boxes are 0..1 on each axis,
+	/// so x is scaled by the picture's <paramref name="aspect"/> (width over height) to make both axes the same unit, as the
+	/// classifier compares heights with widths and gaps.</summary>
+	public static IReadOnlyList<PageRegion>? RegionsOf(IReadOnlyList<PageLine> lines, double aspect = SquareAspect)
+	{
+		var ocrLines = lines.Select(l => new OcrLine(l.Text, new OcrBox((float)(l.Box.X * aspect), (float)l.Box.Y, (float)(l.Box.Right * aspect), (float)l.Box.Bottom))).ToList();
+		var indexOf = new Dictionary<OcrLine, int>(ReferenceEqualityComparer.Instance);
+		for (int i = 0; i < ocrLines.Count; i++)
+		{
+			indexOf[ocrLines[i]] = i;
+		}
+
+		IReadOnlyList<TextRegion> regions = TextRegions.Classify(new OcrReading(ocrLines, 1, 1));
+		return regions.Count == 0 ? null : regions.Select(r => ToPageRegion(r, indexOf, aspect)).ToList();
+	}
+
+	private static PageRegion ToPageRegion(TextRegion region, Dictionary<OcrLine, int> indexOf, double aspect)
+	{
+		OcrBox b = region.Bounds;
+		var box = new DinoReader.Core.NormalizedRect(b.Left / aspect, b.Top, b.Width / aspect, b.Height);
+		return new PageRegion(box, region.Lines.Select(l => indexOf[l]).Order().ToList(), region.Class == RegionClass.Background);
+	}
 
 	private static DinoReader.Core.NormalizedRect ToCore(AppImages.NormalizedRect r) => new(r.Left, r.Top, r.Width, r.Height);
 }
@@ -189,7 +219,7 @@ public sealed class StorySaver(IStoryLibrary library, IPageImageKeeper keeper, S
 			coverFile = await StoreCoverFileAsync(draft);
 			string text = Story.JoinPages(pages);
 			IReadOnlyList<CastMember> cast = isNew || draft.TextChanged || draft.LanguageChanged
-				? await voicing.CastAsync(draft.Language, text, draft.NarratorVoiceId, draft.Cast, draft.Merges)
+				? await voicing.CastAsync(draft.Language, text, draft.NarratorVoiceId, draft.Cast, draft.Merges, Story.BreakMapOf(pages))
 				: draft.Cast;
 			Story story = draft.Original with
 			{

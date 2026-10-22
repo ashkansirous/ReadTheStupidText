@@ -118,15 +118,40 @@ public partial class TextStep : ContentView
 		};
 		grid.Add(Thumbnail(page), 0);
 		grid.Add(texts, 1);
+		bool withRegions = RegionPicker.Offers(page) && page.PictureFile is not null;
 		var card = new Border
 		{
 			BackgroundColor = Colors.White, StrokeThickness = 0, Padding = 10,
-			StrokeShape = new RoundRectangle { CornerRadius = 16 }, Content = grid,
+			StrokeShape = new RoundRectangle { CornerRadius = 16 }, Content = withRegions ? WithRegions(grid, index, page) : grid,
 		};
 		var tap = new TapGestureRecognizer();
 		tap.Tapped += async (_, _) => await _busy.RunAsync(() => _session!.Host.Navigation.PushAsync(new PageTextPage(Draft, index)));
-		card.GestureRecognizers.Add(tap);
+		// With the picture's boxes under the text, only the text row opens the editor: a tap on a box is the box's own.
+		(withRegions ? grid : (View)card).GestureRecognizers.Add(tap);
 		return card;
+	}
+
+	// A page with text regions that are worth choosing between (Slice 79) shows its picture with them outlined under the text;
+	// a tap on a box includes or leaves out that region and the cards are drawn again with the text recomposed.
+	private View WithRegions(Grid grid, int index, PageDraft page)
+	{
+		var overlay = new RegionOverlay(page.PictureFile!, page.Ocr!.Regions!, region => _ = _busy.RunAsync(() => ToggleRegionAsync(index, region)));
+		return new VerticalStackLayout { Spacing = 8, Children = { grid, overlay, RegionPicker.Helper() } };
+	}
+
+	// Typed text on the page is asked about first; Keep leaves the page as it is. Otherwise only this page's card is drawn again
+	// and the cast is analysed again, as the text it was analysed from has changed.
+	private async Task ToggleRegionAsync(int index, int region)
+	{
+		PageDraft page = Draft.PageDrafts[index];
+		if (!await RegionPicker.MayReplaceAsync(_session!.Host, page.HasEditedText))
+		{
+			return;
+		}
+
+		Draft.ReplacePageDraft(page.WithRegionToggled(region));
+		PageCards.Children[index] = PageCard(index, Draft.PageDrafts[index]);
+		_ = AnalyseSafelyAsync();
 	}
 
 	private static Border Thumbnail(PageDraft page)
@@ -226,7 +251,7 @@ public partial class TextStep : ContentView
 		}
 
 		string key = AnalysisKey();
-		IReadOnlyList<CastMember> cast = await _voicing!.CastAsync(Draft.Language, text, Draft.NarratorVoiceId, Draft.Cast, Draft.Merges);
+		IReadOnlyList<CastMember> cast = await _voicing!.CastAsync(Draft.Language, text, Draft.NarratorVoiceId, Draft.Cast, Draft.Merges, Story.BreakMapOf(Draft.Pages));
 		token.ThrowIfCancellationRequested();
 		_analysedKey = key;
 		Draft.Cast = cast;

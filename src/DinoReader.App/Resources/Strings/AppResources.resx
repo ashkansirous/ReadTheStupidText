@@ -97,6 +97,13 @@
   <data name="Wizard_NeedTextBody" xml:space="preserve"><value>Add some text to at least one page, then save.</value></data>
   <data name="Wizard_SaveFailedTitle" xml:space="preserve"><value>Couldn’t save the story</value></data>
   <data name="Wizard_SaveFailedBody" xml:space="preserve"><value>Nothing was changed. Try again in a moment.</value></data>
+  <data name="Regions_Helper" xml:space="preserve"><value>Tap a box to read it or leave it out.</value></data>
+  <data name="Regions_ReplaceTitle" xml:space="preserve"><value>Replace your edited text with the selected regions?</value></data>
+  <data name="Regions_ReplaceBody" xml:space="preserve"><value>What you typed on this page will be lost.</value></data>
+  <data name="Regions_Replace" xml:space="preserve"><value>Replace</value></data>
+  <data name="Regions_Keep" xml:space="preserve"><value>Keep</value></data>
+  <data name="Regions_BoxRead" xml:space="preserve"><value>Text box, read</value></data>
+  <data name="Regions_BoxLeftOut" xml:space="preserve"><value>Text box, left out</value></data>
   <data name="Editor_Title" xml:space="preserve"><value>Rotate and crop</value></data>
   <data name="Editor_RotateLeft" xml:space="preserve"><value>Rotate left</value></data>
   <data name="Editor_RotateRight" xml:space="preserve"><value>Rotate right</value></data>

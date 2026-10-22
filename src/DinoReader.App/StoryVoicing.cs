@@ -30,7 +30,7 @@ public sealed class StoryVoicing
 	// One immutable snapshot, swapped atomically: attributing a long story is the costly part, and
 	// a second read of the same text (or a narrator change) does not need it again. The sentences are
 	// only built when a read asks for them (the cast screen never does).
-	private sealed record Cache(string Language, string Text, AttributionResult Attribution, Lazy<IReadOnlyList<SentenceSpan>> Sentences);
+	private sealed record Cache(string Language, string Text, LineBreakMap LineBreaks, AttributionResult Attribution, Lazy<IReadOnlyList<SentenceSpan>> Sentences);
 
 	// The cast and the sentence pieces a read speaks, before any translation.
 	private sealed record Prepared(VoiceCast Cast, IReadOnlyList<SplitSegment> Pieces);
@@ -75,8 +75,9 @@ public sealed class StoryVoicing
 	/// <summary>The cast for <paramref name="text"/>, keeping any voice <paramref name="stored"/> already gives a character.
 	/// <paramref name="merges"/> are the grown-up's merged characters (Slice 65).</summary>
 	public Task<IReadOnlyList<CastMember>> CastAsync(
-		string language, string text, string narratorVoiceId, IReadOnlyList<CastMember> stored, IReadOnlyDictionary<string, string>? merges = null) =>
-		Task.Run(() => CastFor(language, text, narratorVoiceId, stored, merges));
+		string language, string text, string narratorVoiceId, IReadOnlyList<CastMember> stored, IReadOnlyDictionary<string, string>? merges = null,
+		LineBreakMap? lineBreaks = null) =>
+		Task.Run(() => CastFor(language, text, narratorVoiceId, stored, merges, lineBreaks));
 
 	/// <summary>The voices a character of a story in <paramref name="language"/> can have (the whole pack; the narrator's is left out by the caller).</summary>
 	public IReadOnlyList<VoiceOption> VoicesFor(string language) =>
@@ -105,7 +106,7 @@ public sealed class StoryVoicing
 	/// <summary>The story's characters and lines as the cast screen shows them: merges applied, an edited
 	/// character's gender in place of the guess. On a worker thread, like <see cref="VoiceAsync"/>.</summary>
 	public Task<AttributionResult> ResolveAsync(Story story) =>
-		Task.Run(() => StoryCast.Resolve(Analyse(story.Language, story.Text).Attribution, story.Merges, story.Cast));
+		Task.Run(() => StoryCast.Resolve(Analyse(story.Language, story.Text, story.BreakMap()).Attribution, story.Merges, story.Cast));
 
 	/// <summary>The voiced segments of the story from <paramref name="fromPosition"/> on, untranslated (a story index: a tapped
 	/// or skipped-to sentence), read by <paramref name="narratorVoiceId"/> and the story's cast.</summary>
@@ -116,16 +117,17 @@ public sealed class StoryVoicing
 	}
 
 	public IReadOnlyList<CastMember> CastFor(
-		string language, string text, string narratorVoiceId, IReadOnlyList<CastMember> stored, IReadOnlyDictionary<string, string>? merges = null)
+		string language, string text, string narratorVoiceId, IReadOnlyList<CastMember> stored, IReadOnlyDictionary<string, string>? merges = null,
+		LineBreakMap? lineBreaks = null)
 	{
-		AttributionResult resolved = StoryCast.Resolve(Analyse(language, text).Attribution, merges ?? Story.NoMerges, stored);
+		AttributionResult resolved = StoryCast.Resolve(Analyse(language, text, lineBreaks).Attribution, merges ?? Story.NoMerges, stored);
 		return StoryCast.ToMembers(resolved.Characters, Cast(language, resolved, narratorVoiceId, stored), stored);
 	}
 
 	private Prepared Prepare(Story story, string narratorVoiceId, int fromPosition)
 	{
 		string text = story.Text;
-		Cache cache = Analyse(story.Language, text);
+		Cache cache = Analyse(story.Language, text, story.BreakMap());
 		AttributionResult resolved = StoryCast.Resolve(cache.Attribution, story.Merges, story.Cast);
 		VoiceCast cast = Cast(story.Language, resolved, narratorVoiceId, story.Cast);
 		IReadOnlyList<Segment> segments = SegmentSlicer.From(resolved.Segments, text, fromPosition);
@@ -137,21 +139,24 @@ public sealed class StoryVoicing
 	private VoiceCast Cast(string language, AttributionResult attribution, string narratorVoiceId, IReadOnlyList<CastMember> stored) =>
 		_caster.Cast(attribution.Characters, VoicesFor(language), narratorVoiceId, StoryCast.Pinned(stored));
 
-	private Cache Analyse(string language, string text)
+	private Cache Analyse(string language, string text, LineBreakMap? breaks = null)
 	{
 		Cache? cached = _cache;
-		if (cached is not null && cached.Text == text && cached.Language == language)
+		if (cached is not null && cached.Text == text && cached.Language == language && (breaks is null || SameBreaks(cached.LineBreaks, breaks)))
 		{
 			return cached;
 		}
 
+		LineBreakMap lineBreaks = breaks ?? LineReflow.BreakMap(text);
 		LanguagePipeline pipeline = _pipelines.GetOrAdd(UiLanguage.Resolve(language), PipelineFor);
-		LineBreakMap lineBreaks = LineReflow.BreakMap(text);
 		AttributionResult attribution = pipeline.Attributor.Attribute(text, pipeline.Segmenter.Split(text, lineBreaks));
-		var fresh = new Cache(language, text, attribution, new Lazy<IReadOnlyList<SentenceSpan>>(() => StorySentences.Build(text, pipeline.Rules, lineBreaks)));
+		var fresh = new Cache(language, text, lineBreaks, attribution, new Lazy<IReadOnlyList<SentenceSpan>>(() => StorySentences.Build(text, pipeline.Rules, lineBreaks)));
 		_cache = fresh;
 		return fresh;
 	}
+
+	private static bool SameBreaks(LineBreakMap a, LineBreakMap b) =>
+		a.SentenceBreaks.SetEquals(b.SentenceBreaks) && a.HeadingBreaks.SetEquals(b.HeadingBreaks) && a.DroppedHyphenBreaks.SetEquals(b.DroppedHyphenBreaks);
 
 	private static LanguagePipeline PipelineFor(string language)
 	{

@@ -96,6 +96,13 @@
   <data name="Wizard_NeedTextBody" xml:space="preserve"><value>دست‌کم به یک صفحه متن اضافه کنید و ذخیره کنید.</value></data>
   <data name="Wizard_SaveFailedTitle" xml:space="preserve"><value>ذخیره داستان ممکن نشد</value></data>
   <data name="Wizard_SaveFailedBody" xml:space="preserve"><value>چیزی تغییر نکرد. کمی بعد دوباره تلاش کنید.</value></data>
+  <data name="Regions_Helper" xml:space="preserve"><value>روی یک کادر بزنید تا خوانده شود یا کنار گذاشته شود.</value></data>
+  <data name="Regions_ReplaceTitle" xml:space="preserve"><value>متن ویرایش‌شده شما با بخش‌های انتخاب‌شده جایگزین شود؟</value></data>
+  <data name="Regions_ReplaceBody" xml:space="preserve"><value>آنچه در این صفحه تایپ کرده‌اید از بین می‌رود.</value></data>
+  <data name="Regions_Replace" xml:space="preserve"><value>جایگزین کن</value></data>
+  <data name="Regions_Keep" xml:space="preserve"><value>نگه دار</value></data>
+  <data name="Regions_BoxRead" xml:space="preserve"><value>کادر متن، خوانده می‌شود</value></data>
+  <data name="Regions_BoxLeftOut" xml:space="preserve"><value>کادر متن، کنار گذاشته شده</value></data>
   <data name="Editor_Title" xml:space="preserve"><value>چرخاندن و برش</value></data>
   <data name="Editor_RotateLeft" xml:space="preserve"><value>چرخش به چپ</value></data>
   <data name="Editor_RotateRight" xml:space="preserve"><value>چرخش به راست</value></data>
