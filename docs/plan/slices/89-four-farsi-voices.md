@@ -1,6 +1,6 @@
 # Slice 89 — Four Farsi voices in one pack (ganji_adabi by default), Amir dropped
 
-*Planned.*
+*In progress (wave 2026-10-22), draft PR.*
 
 **Batch:** 15
 **Decisions:** 93
