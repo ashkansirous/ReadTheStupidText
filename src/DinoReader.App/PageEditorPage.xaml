@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="DinoReader.PageEditorPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:DinoReader"
+    xmlns:res="clr-namespace:DinoReader.Resources.Strings"
+    BackgroundColor="{StaticResource Sand}"
+    NavigationPage.HasNavigationBar="False"
+    SafeAreaEdges="Container">
+
+    <!-- Rotate and crop one page (Slice 78): turn it in quarter turns and drag the corners of the frame to crop. No perspective
+         correction (the document scanner already does that for scans). -->
+    <Grid RowDefinitions="Auto,*,Auto">
+        <Grid x:Name="Header" ColumnDefinitions="Auto,*,Auto" Padding="8,10,16,10">
+            <Border WidthRequest="44" HeightRequest="44" BackgroundColor="Transparent" StrokeThickness="0"
+                    SemanticProperties.Description="{x:Static res:AppResources.Common_Back}">
+                <local:IconView Kind="Back" Color="{StaticResource Ink}" Size="22" StrokeWidth="2.6" />
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Border.GestureRecognizers>
+            </Border>
+            <Label Grid.Column="1" Text="{x:Static res:AppResources.Editor_Title}" FontSize="20" FontAttributes="Bold" VerticalOptions="Center"
+                   SemanticProperties.HeadingLevel="Level1" />
+            <Button Grid.Column="2" Text="{x:Static res:AppResources.Common_Done}" HeightRequest="38" CornerRadius="19" Padding="14,0" FontSize="13.5"
+                    BackgroundColor="{StaticResource Brand}" TextColor="White" Clicked="OnDoneClicked" />
+        </Grid>
+
+        <Grid x:Name="Stage" Grid.Row="1" Margin="14,0" SizeChanged="OnStageSizeChanged">
+            <Image x:Name="Preview" Aspect="AspectFit" />
+            <GraphicsView x:Name="CropSurface" BackgroundColor="Transparent"
+                          StartInteraction="OnStartInteraction" DragInteraction="OnDragInteraction" EndInteraction="OnEndInteraction" />
+        </Grid>
+
+        <Grid Grid.Row="2" ColumnDefinitions="*,*,*" ColumnSpacing="10" Margin="14,10,14,14">
+            <Button Text="↺" FontSize="22" HeightRequest="48" CornerRadius="24" BackgroundColor="{StaticResource BrandTint}" TextColor="{StaticResource Brand}"
+                    SemanticProperties.Description="{x:Static res:AppResources.Editor_RotateLeft}" Clicked="OnRotateLeftClicked" />
+            <Button Grid.Column="1" Text="{x:Static res:AppResources.Editor_ResetCrop}" FontSize="14" HeightRequest="48" CornerRadius="24"
+                    BackgroundColor="{StaticResource BrandTint}" TextColor="{StaticResource Brand}" Clicked="OnResetClicked" />
+            <Button Grid.Column="2" Text="↻" FontSize="22" HeightRequest="48" CornerRadius="24" BackgroundColor="{StaticResource BrandTint}" TextColor="{StaticResource Brand}"
+                    SemanticProperties.Description="{x:Static res:AppResources.Editor_RotateRight}" Clicked="OnRotateRightClicked" />
+        </Grid>
+    </Grid>
+</ContentPage>

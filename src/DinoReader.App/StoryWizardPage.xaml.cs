@@ -1,0 +1,411 @@
+using DinoReader.Core;
+using DinoReader.Resources.Strings;
+using Microsoft.Extensions.DependencyInjection;
+using ReadTheStupidText.Application.Images;
+using ReadTheStupidText.Mobile;
+
+namespace DinoReader;
+
+/// <summary>
+/// What the three wizard steps share (Slice 78): the draft, the folder the pictures being edited live in until Save, and a
+/// library view that finds a draft page's current picture (its transformed copy, or the picked file) by the name
+/// <see cref="StoryDraft.DraftImageName"/> gives it, so the cover picker and the cover preview work on drafts unchanged.
+/// </summary>
+public sealed class WizardSession
+{
+	private const string WorkFolderPrefix = "dino-wizard-";
+
+	public WizardSession(StoryDraft draft, bool isNew, IStoryLibrary library, IServiceProvider services, Page host)
+	{
+		Draft = draft;
+		IsNew = isNew;
+		Services = services;
+		Host = host;
+		Store = library;
+		Library = new DraftLibrary(library, PictureOfDraftName);
+		WorkFolder = Path.Combine(FileSystem.CacheDirectory, WorkFolderPrefix + Guid.NewGuid().ToString("N"));
+	}
+
+	public StoryDraft Draft { get; }
+
+	public bool IsNew { get; }
+
+	public IServiceProvider Services { get; }
+
+	/// <summary>The wizard page, for alerts and action sheets from the steps.</summary>
+	public Page Host { get; }
+
+	/// <summary>The real library (saves go here).</summary>
+	public IStoryLibrary Store { get; }
+
+	/// <summary>The library the previews and the cover picker read: a draft page name resolves to its current picture.</summary>
+	public IStoryLibrary Library { get; }
+
+	public string WorkFolder { get; }
+
+	private readonly Dictionary<string, string> _editFiles = [];
+
+	public bool LanguageChosen { get; set; }
+
+	public bool LanguageDetected { get; set; }
+
+	/// <summary>Raised to show the wizard's progress card with a text (empty for just the spinner), or hide it (null). While it is up
+	/// the Pages step ignores touches.</summary>
+	public event Action<string?>? ProgressChanged;
+
+	public void ShowProgress(string? text) => ProgressChanged?.Invoke(text);
+
+	/// <summary>Raised when the pages changed, so a step that shows them can rebuild.</summary>
+	public event Action? PagesChanged;
+
+	public void NotifyPagesChanged() => PagesChanged?.Invoke();
+
+	private string? PictureOfDraftName(string draftName)
+	{
+		string id = draftName[StoryDraft.DraftImagePrefix.Length..];
+		PageDraft? page = Draft.PageDrafts.FirstOrDefault(p => p.Id == id);
+		return page?.PictureFile;
+	}
+
+	/// <summary>Writes the page's rotated and cropped picture (from the original, never over it) when it has one to write.</summary>
+	public async Task<PageDraft> RenderAsync(PageDraft page)
+	{
+		if (page.SourceFile is not { } source || page.PictureFile is not null || !page.NeedsTransform)
+		{
+			return page;
+		}
+
+		string target = Path.Combine(WorkFolder, $"edit-{Guid.NewGuid():N}.jpg");
+		CropRect? crop = page.Crop is { } c ? new CropRect(c.X, c.Y, c.Width, c.Height) : null;
+		await ImageTransform.ApplyAsync(source, target, page.RotationQuarterTurns, crop);
+		ReplaceEditFile(page.Id, target);
+		return page.WithTransformedFile(target);
+	}
+
+	// Each page keeps only its latest rendered copy; the one before it is deleted so a page turned many times leaves one file.
+	private void ReplaceEditFile(string pageId, string target)
+	{
+		if (_editFiles.TryGetValue(pageId, out string? previous))
+		{
+			ScannedImageFiles.TryDelete(previous);
+		}
+
+		_editFiles[pageId] = target;
+	}
+
+	/// <summary>Forgets the pictures this session made. Run on every exit path.</summary>
+	public void Cleanup()
+	{
+		PickedPhotoCache.Delete(Draft.PendingCoverPhoto);
+		try
+		{
+			if (Directory.Exists(WorkFolder))
+			{
+				Directory.Delete(WorkFolder, recursive: true);
+			}
+		}
+		catch (Exception ex)
+		{
+			System.Diagnostics.Debug.WriteLine($"Dino Reader could not clear the wizard folder: {ex.Message}");
+		}
+	}
+}
+
+/// <summary>The library with one difference: a draft page's picture name resolves to its current file.</summary>
+internal sealed class DraftLibrary(IStoryLibrary inner, Func<string, string?> resolveDraft) : IStoryLibrary
+{
+	public Task<IReadOnlyList<Story>> ListAsync() => inner.ListAsync();
+
+	public Task<Story?> GetAsync(string id) => inner.GetAsync(id);
+
+	public Task AddAsync(Story story) => inner.AddAsync(story);
+
+	public Task UpdateAsync(Story story) => inner.UpdateAsync(story);
+
+	public Task DeleteAsync(string id) => inner.DeleteAsync(id);
+
+	public string FolderOf(string id) => inner.FolderOf(id);
+
+	public string? TryResolveFile(string storyId, string? fileName) =>
+		fileName is not null && fileName.StartsWith(StoryDraft.DraftImagePrefix, StringComparison.Ordinal)
+			? resolveDraft(fileName)
+			: inner.TryResolveFile(storyId, fileName);
+
+	public Task<string> StoreFileAsync(string storyId, string prefix, string extension, Func<string, Task> write) =>
+		inner.StoreFileAsync(storyId, prefix, extension, write);
+
+	public Task DeleteFileAsync(string storyId, string fileName) => inner.DeleteFileAsync(storyId, fileName);
+}
+
+/// <summary>
+/// Adds or edits a story in three steps (Slice 78): Pages (a grid you reorder, rotate, crop and add to), Cover, Text. OCR runs when
+/// the Pages step is confirmed, only on pages that changed. Replaces the add and edit screens.
+/// </summary>
+public partial class StoryWizardPage : ContentPage, IGrownUpPage
+{
+	private const int PagesStepIndex = 0;
+	private const int CoverStepIndex = 1;
+	private const int TextStepIndex = 2;
+	private const double PillRadius = 14;
+
+	private readonly IStoryLibrary _library;
+	private readonly IServiceProvider _services;
+	private readonly BusyGuard _busy = new();
+	private readonly List<(Border Pill, Label Label)> _pills = [];
+	private WizardSession? _session;
+	private int _step;
+	private int _shownVersion = -1;
+
+	public StoryWizardPage(IStoryLibrary library, IServiceProvider services)
+	{
+		InitializeComponent();
+		Header.Padding = UiFlow.Mirror(Header.Padding);
+		_library = library;
+		_services = services;
+		BuildStepBar();
+	}
+
+	/// <summary>Opens the wizard on a new story (<paramref name="existing"/> null) or on an existing one. Called once, right after the page is created.</summary>
+	public async Task LoadAsync(Story? existing)
+	{
+		bool isNew = existing is null;
+		Story story = existing ?? await NewStoryAsync();
+		var draft = new StoryDraft(story);
+		_session = new WizardSession(draft, isNew, _library, _services, this);
+		_session.ProgressChanged += OnProgressChanged;
+		if (!isNew)
+		{
+			draft.LoadPageDrafts(ExistingPicture(story));
+			_session.LanguageChosen = true;
+		}
+
+		TitleLabel.Text = isNew ? AppResources.Story_Add : AppResources.Manage_EditStory;
+		PagesView.Attach(_session, OnPagesEdited);
+		CoverView.Attach(_session);
+		TextView.Attach(_session);
+		ShowStep(PagesStepIndex);
+	}
+
+	private async Task<Story> NewStoryAsync()
+	{
+		int existing = (await _library.ListAsync()).Count;
+		string language = StoryTranslator.MyLanguage;
+		var voicing = _services.GetRequiredService<StoryVoicing>();
+		return new Story(StoryIds.New(), string.Empty, language, DateTimeOffset.UtcNow, [], [], CoverStyle.FirstPage,
+			existing, voicing.NarratorFor(language));
+	}
+
+	private Func<string?, string?> ExistingPicture(Story story) => name =>
+	{
+		string? path = _library.TryResolveFile(story.Id, name);
+		return path is not null && File.Exists(path) ? path : null;
+	};
+
+	private void BuildStepBar()
+	{
+		string[] names = [AppResources.Edit_Pages, AppResources.Edit_Cover, AppResources.Wizard_StepText];
+		for (int i = 0; i < names.Length; i++)
+		{
+			var label = new Label
+			{
+				Text = $"{i + 1} · {names[i]}", FontSize = 12.5, FontAttributes = FontAttributes.Bold,
+				HorizontalTextAlignment = TextAlignment.Center, VerticalOptions = LayoutOptions.Center,
+			};
+			var pill = new Border
+			{
+				Padding = new Thickness(6, 7), StrokeThickness = 0, Content = label,
+				StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = PillRadius },
+			};
+			StepBar.Add(pill, i);
+			_pills.Add((pill, label));
+		}
+	}
+
+	private void ShowStep(int step)
+	{
+		_step = step;
+		PagesView.IsVisible = step == PagesStepIndex;
+		CoverView.IsVisible = step == CoverStepIndex;
+		TextView.IsVisible = step == TextStepIndex;
+		BackButton.IsVisible = step > PagesStepIndex;
+		Grid.SetColumn(NextButton, step > PagesStepIndex ? 1 : 0);
+		Grid.SetColumnSpan(NextButton, step > PagesStepIndex ? 1 : 2);
+		NextButton.Text = step == TextStepIndex ? AppResources.Add_Save : AppResources.Wizard_Next;
+		for (int i = 0; i < _pills.Count; i++)
+		{
+			bool current = i == step;
+			_pills[i].Pill.BackgroundColor = current ? DinoTokens.Get(DinoTokens.BrandTint) : Colors.Transparent;
+			_pills[i].Label.TextColor = current ? DinoTokens.Get(DinoTokens.Brand) : DinoTokens.Get(DinoTokens.Muted);
+		}
+
+		RefreshStep();
+	}
+
+	private void RefreshStep()
+	{
+		_shownVersion = _session!.Draft.Version;
+		switch (_step)
+		{
+			case PagesStepIndex:
+				PagesView.Refresh();
+				break;
+			case CoverStepIndex:
+				CoverView.Show();
+				break;
+			default:
+				TextView.Show();
+				break;
+		}
+
+		RefreshNextState();
+	}
+
+	private void OnPagesEdited() => RefreshNextState();
+
+	private void RefreshNextState()
+	{
+		NextButton.IsEnabled = _step != PagesStepIndex || _session!.Draft.PageDrafts.Count > 0;
+		NextButton.Opacity = NextButton.IsEnabled ? 1 : 0.45;
+	}
+
+	// Coming back from the page editor, the text editor or the cast page: what they changed must show. Nothing is rebuilt when the
+	// pages are as they were (the scroll position and the cast analysis stay); the cast page only changes the cast.
+	protected override void OnAppearing()
+	{
+		base.OnAppearing();
+		if (_session is null)
+		{
+			return;
+		}
+
+		if (_session.Draft.Version != _shownVersion)
+		{
+			RefreshStep();
+		}
+		else if (_step == TextStepIndex)
+		{
+			TextView.ShowCurrentCast();
+		}
+	}
+
+	private async void OnNextClicked(object? sender, EventArgs e) => await _busy.RunAsync(NextAsync);
+
+	private async Task NextAsync()
+	{
+		switch (_step)
+		{
+			case PagesStepIndex:
+				await ConfirmPagesAsync();
+				break;
+			case CoverStepIndex:
+				ShowStep(TextStepIndex);
+				break;
+			default:
+				await SaveAsync();
+				break;
+		}
+	}
+
+	private void OnBackClicked(object? sender, EventArgs e)
+	{
+		if (_step > PagesStepIndex)
+		{
+			ShowStep(_step - 1);
+		}
+	}
+
+	private async void OnLeaveTapped(object? sender, TappedEventArgs e) => await _busy.RunAsync(LeaveAsync);
+
+	private async Task LeaveAsync()
+	{
+		_session?.Cleanup();
+		await Navigation.PopAsync();
+	}
+
+	// The page is gone for good (popped, system back), not just covered by the editor or the cast page: its pictures go too.
+	protected override void OnNavigatedFrom(NavigatedFromEventArgs args)
+	{
+		base.OnNavigatedFrom(args);
+		if (!Navigation.NavigationStack.Contains(this))
+		{
+			_session?.Cleanup();
+		}
+	}
+
+	// OCR is run here, after crop and rotate (which change what it reads), and only for the pages that changed.
+	private async Task ConfirmPagesAsync()
+	{
+		WizardSession session = _session!;
+		StoryDraft draft = session.Draft;
+		if (draft.PageDrafts.Count == 0)
+		{
+			return;
+		}
+
+		ReadResult? read = await ReadPagesWithProgressAsync(session);
+		if (read is null)
+		{
+			return;
+		}
+
+		// A page rotated, cropped or deleted while it was being read keeps its newer state; the next Next reads it again.
+		int stale = read.Pages.Count(page => !draft.ReplaceIfSamePicture(page));
+		if (stale > 0)
+		{
+			RefreshStep();
+			return;
+		}
+
+		ShowStep(CoverStepIndex);
+		if (read.Failed > 0)
+		{
+			await DisplayAlertAsync(AppResources.Wizard_ReadFailedTitle,
+				AppResources.Format(AppResources.Wizard_ReadFailedBody, read.Failed), AppResources.Common_Ok);
+		}
+	}
+
+	private async Task<ReadResult?> ReadPagesWithProgressAsync(WizardSession session)
+	{
+		var pages = new List<PageDraft>();
+		session.ShowProgress(string.Empty);
+		try
+		{
+			foreach (PageDraft page in session.Draft.PageDrafts)
+			{
+				pages.Add(await session.RenderAsync(page));
+			}
+
+			var ocr = _services.GetRequiredService<OcrPositionedTextExtractor>();
+			var progress = new Progress<ReadProgress>(p =>
+				session.ShowProgress(AppResources.Format(AppResources.Wizard_Reading, p.Current, p.Total)));
+			return await StoryImport.ReadPagesAsync(ocr, pages, progress, CancellationToken.None);
+		}
+		catch (Exception ex)
+		{
+			DinoLog.Error(_services, "reading the pages failed", ex);
+			await DisplayAlertAsync(AppResources.Add_ReadFailedTitle, AppResources.Add_ReadFailedBody, AppResources.Common_Ok);
+			return null;
+		}
+		finally
+		{
+			session.ShowProgress(null);
+		}
+	}
+
+	private void OnProgressChanged(string? text)
+	{
+		bool visible = text is not null;
+		ProgressCard.IsVisible = visible;
+		ProgressLabel.Text = text ?? string.Empty;
+		PagesView.InputTransparent = visible;
+	}
+
+	private async Task SaveAsync()
+	{
+		if (await TextView.SaveAsync())
+		{
+			_session!.Cleanup();
+			await Navigation.PopAsync();
+		}
+	}
+}

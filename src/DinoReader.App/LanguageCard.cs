@@ -5,7 +5,7 @@ using Microsoft.Maui.Controls.Shapes;
 namespace DinoReader;
 
 /// <summary>
-/// The white card of the add screen (mock 9) with the story language row ("English · detected") and, when this
+/// The white card of the wizard's Text step (mock 9) with the story language row ("English · detected") and, when this
 /// build can translate, the "Translate to my language" switch row.
 /// </summary>
 public sealed class LanguageCard : Border
@@ -23,6 +23,7 @@ public sealed class LanguageCard : Border
 		if (canTranslate)
 		{
 			_switch = new ToggleSwitch { VerticalOptions = LayoutOptions.Center };
+			_switch.Toggled += (_, _) => TranslateChanged?.Invoke();
 			rows.Children.Add(SettingsRows.Divider());
 			rows.Children.Add(SettingsRows.Row(AppResources.Story_Translate, _switch, null, busy));
 		}
@@ -30,7 +31,19 @@ public sealed class LanguageCard : Border
 		Content = rows;
 	}
 
-	public bool Translate => _switch?.IsOn == true;
+	public event Action? TranslateChanged;
+
+	public bool Translate
+	{
+		get => _switch?.IsOn == true;
+		set
+		{
+			if (_switch is not null)
+			{
+				_switch.IsOn = value;
+			}
+		}
+	}
 
 	/// <summary>Shows the language by its own name, with "· detected" while it is the app's guess.</summary>
 	public void Show(string language, bool detected)

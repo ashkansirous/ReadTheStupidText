@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="DinoReader.TextStep"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:DinoReader"
+    xmlns:res="clr-namespace:DinoReader.Resources.Strings">
+
+    <!-- Step 3 of the wizard (Slice 78): the title, one card per page with its text (tap to fix it), the language and the cast check.
+         Save is the wizard's Next button. -->
+    <ScrollView>
+        <VerticalStackLayout Padding="14,4,14,14" Spacing="12">
+            <Border BackgroundColor="White" StrokeThickness="0" Padding="14,10">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="18" />
+                </Border.StrokeShape>
+                <VerticalStackLayout>
+                    <Label Text="{x:Static res:AppResources.Story_Title}" FontSize="12" TextColor="{StaticResource Muted}" />
+                    <Entry x:Name="TitleEntry" FontSize="16" FontAttributes="Bold" Margin="-4,0" TextChanged="OnTitleChanged" />
+                </VerticalStackLayout>
+            </Border>
+
+            <VerticalStackLayout x:Name="PageCards" Spacing="8" />
+
+            <ContentView x:Name="LanguageHost" />
+
+            <Border x:Name="CastCard" IsVisible="False" BackgroundColor="{StaticResource Ink}" StrokeThickness="0" Padding="14">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="18" />
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="10">
+                    <HorizontalStackLayout Spacing="8">
+                        <local:IconView Kind="Check" Color="#7BE495" Size="20" StrokeWidth="2.6" />
+                        <Label x:Name="SummaryLabel" FontSize="14.5" FontAttributes="Bold" TextColor="White" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <FlexLayout x:Name="NameChips" Wrap="Wrap" />
+                    <Button Text="{x:Static res:AppResources.Add_CheckCast}" HeightRequest="44" CornerRadius="22" FontSize="14" BackgroundColor="#24FFFFFF"
+                            TextColor="White" Clicked="OnCheckCastClicked" />
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentView>
