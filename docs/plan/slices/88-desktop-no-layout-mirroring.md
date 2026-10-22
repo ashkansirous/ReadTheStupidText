@@ -1,6 +1,6 @@
 # Slice 88 — The Windows desktop layout never mirrors; only text flows by its own direction
 
-*Planned.*
+*In progress (wave 2026-10-22), draft PR.*
 
 **Batch:** 14 (follow-up to Slice 85)
 **Depends on:** Slice 85 (`TextDirection.Resolve` in Application)
