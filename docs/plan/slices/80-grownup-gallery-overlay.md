@@ -1,6 +1,6 @@
 # Slice 80 — Dino Reader: grown-up mode is the kids' gallery with an edit overlay
 
-*Planned.*
+*In progress (wave 2026-10-22), draft PR.*
 
 **Batch:** 13
 **Decisions:** 87
