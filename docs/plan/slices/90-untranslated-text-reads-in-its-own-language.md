@@ -1,6 +1,6 @@
 # Slice 90 — Untranslated text is read in its own language
 
-*Planned.*
+*In progress (wave 2026-10-22), draft PR.*
 
 **Batch:** 14 (follow-up to Slice 82)
 **Depends on:** Slice 82 (`VoiceRouting`, `VoiceAvailability`, the phone voice's `SetLanguage` per read)
