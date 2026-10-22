@@ -45,8 +45,9 @@ public sealed class SpokenLanguage
 		_worker.Use(code);
 	}
 
-	// One run per wanted language: store it, wait out any run another caller has in flight, start the
-	// installer for it, then wait for that run to settle.
+	// One run per wanted language: store it (the installer starts a run for the change itself), then
+	// join that run: StartAsync completes when the run in flight settles, so the language is never
+	// reported served while its pack is still resolving.
 	private async Task ServeAsync(string code)
 	{
 		await WhileBusyAsync();
@@ -55,7 +56,7 @@ public sealed class SpokenLanguage
 		await WhileBusyAsync();
 	}
 
-	// StartAsync returns at once when another caller's run is in flight; wait for that run to settle.
+	// A published state can still be queued for the main thread when StartAsync returns; wait it out.
 	private async Task WhileBusyAsync()
 	{
 		while (_installer.State is PackInstallState.Resolving or PackInstallState.Downloading)
