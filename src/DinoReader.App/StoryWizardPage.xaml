@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="DinoReader.StoryWizardPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:DinoReader"
+    xmlns:res="clr-namespace:DinoReader.Resources.Strings"
+    BackgroundColor="{StaticResource Sand}"
+    NavigationPage.HasNavigationBar="False"
+    SafeAreaEdges="Container, SoftInput">
+
+    <!-- Add or edit a story in three steps (Slice 78): Pages, Cover, Text. One StoryDraft is shared by the steps;
+         nothing is saved until the last step's Save. The step names carry their number from code. -->
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+        <Grid x:Name="Header" ColumnDefinitions="Auto,*" Padding="8,10,16,6">
+            <Border WidthRequest="44" HeightRequest="44" BackgroundColor="Transparent" StrokeThickness="0"
+                    SemanticProperties.Description="{x:Static res:AppResources.Common_Back}">
+                <local:IconView Kind="Back" Color="{StaticResource Ink}" Size="22" StrokeWidth="2.6" />
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnLeaveTapped" />
+                </Border.GestureRecognizers>
+            </Border>
+            <Label x:Name="TitleLabel" Grid.Column="1" FontSize="20" FontAttributes="Bold" VerticalOptions="Center"
+                   SemanticProperties.HeadingLevel="Level1" />
+        </Grid>
+
+        <Grid x:Name="StepBar" Grid.Row="1" ColumnDefinitions="*,*,*" ColumnSpacing="8" Padding="14,0,14,8" />
+
+        <Grid Grid.Row="2">
+            <local:PagesStep x:Name="PagesView" />
+            <local:CoverStep x:Name="CoverView" IsVisible="False" />
+            <local:TextStep x:Name="TextView" IsVisible="False" />
+
+            <Border x:Name="ProgressCard" IsVisible="False" BackgroundColor="{StaticResource Ink}" StrokeThickness="0"
+                    VerticalOptions="Center" HorizontalOptions="Center" Padding="22,18">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="18" />
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="10">
+                    <ActivityIndicator IsRunning="True" Color="White" />
+                    <Label x:Name="ProgressLabel" FontSize="14.5" FontAttributes="Bold" TextColor="White" HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="3" ColumnDefinitions="*,*" ColumnSpacing="10" Margin="14,4,14,14">
+            <Button x:Name="BackButton" Text="{x:Static res:AppResources.Common_Back}" HeightRequest="48" CornerRadius="24" FontSize="15"
+                    BackgroundColor="{StaticResource BrandTint}" TextColor="{StaticResource Brand}" Clicked="OnBackClicked" />
+            <Button x:Name="NextButton" Grid.Column="1" HeightRequest="48" CornerRadius="24" FontSize="15" FontAttributes="Bold"
+                    BackgroundColor="{StaticResource Coral}" TextColor="White" Clicked="OnNextClicked" />
+        </Grid>
+    </Grid>
+</ContentPage>

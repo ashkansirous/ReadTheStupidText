@@ -378,15 +378,11 @@ public partial class ReadingPage : ContentPage
 		}
 	}
 
-	// Manage mode opens over the gallery, as from the gallery's own lock; leaving this page stops the read.
+	// Grown-up mode is the gallery's own state: return to the gallery with it on; leaving this page stops the read.
 	private async Task GoToManageAsync()
 	{
-		var root = Microsoft.Maui.Controls.Application.Current?.Windows.FirstOrDefault()?.Page as NavigationPage;
 		await Navigation.PopToRootAsync(animated: false);
-		if (root is not null)
-		{
-			await root.PushAsync(_services.GetRequiredService<ManagePage>());
-		}
+		_services.GetRequiredService<GrownUpMode>().Enter();
 	}
 
 	private async void OnReadFailed(object? sender, EventArgs e) =>

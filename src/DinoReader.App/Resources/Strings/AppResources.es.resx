@@ -22,7 +22,6 @@
   <data name="Gallery_Title" xml:space="preserve"><value>Mis cuentos</value></data>
   <data name="Gallery_ForGrownUps" xml:space="preserve"><value>Para adultos</value></data>
   <data name="Gallery_OpensGateHint" xml:space="preserve"><value>Abre la puerta de adultos</value></data>
-  <data name="Gallery_Cast" xml:space="preserve"><value>Reparto · {0}</value></data>
   <data name="Gallery_Characters_One" xml:space="preserve"><value>{0} personaje</value></data>
   <data name="Gallery_Characters_Other" xml:space="preserve"><value>{0} personajes</value></data>
   <data name="Gallery_PagesSummary" xml:space="preserve"><value>{0} · reordenar, añadir, quitar</value></data>
@@ -34,10 +33,11 @@
   <data name="Delete_Body" xml:space="preserve"><value>Sus páginas, imágenes y voces se borran de este teléfono.</value></data>
   <data name="Delete_FailedTitle" xml:space="preserve"><value>No se pudo eliminar el cuento</value></data>
   <data name="Delete_FailedBody" xml:space="preserve"><value>Algo sigue usando sus archivos. Inténtalo de nuevo en un momento.</value></data>
-  <data name="Manage_Title" xml:space="preserve"><value>Gestionar cuentos</value></data>
   <data name="Manage_EditStory" xml:space="preserve"><value>Editar cuento</value></data>
-  <data name="Manage_DeleteStory" xml:space="preserve"><value>Eliminar cuento</value></data>
-  <data name="Manage_WhoIsSpeaking" xml:space="preserve"><value>Quién habla</value></data>
+  <data name="Gallery_EditStory" xml:space="preserve"><value>Editar {0}</value></data>
+  <data name="Gallery_CastStory" xml:space="preserve"><value>Reparto de {0}</value></data>
+  <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>Eliminar {0}</value></data>
+  <data name="Gallery_CastButton" xml:space="preserve"><value>Reparto</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Mantén pulsado 3 segundos.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Mantén pulsado 3 segundos</value></data>
   <data name="Gate_KeepHolding" xml:space="preserve"><value>Sigue manteniendo…</value></data>
@@ -75,12 +75,31 @@
   <data name="Edit_CoverColour" xml:space="preserve"><value>Color</value></data>
   <data name="Edit_CoverPhoto" xml:space="preserve"><value>Foto</value></data>
   <data name="Edit_Pages" xml:space="preserve"><value>Páginas</value></data>
-  <data name="Edit_FixText" xml:space="preserve"><value>Corregir el texto</value></data>
-  <data name="Edit_FixTextValue" xml:space="preserve"><value>Editar el texto reconocido</value></data>
-  <data name="Pages_Add" xml:space="preserve"><value>Añadir una página</value></data>
-  <data name="Pages_MoveUp" xml:space="preserve"><value>Subir página</value></data>
-  <data name="Pages_MoveDown" xml:space="preserve"><value>Bajar página</value></data>
-  <data name="Pages_Remove" xml:space="preserve"><value>Quitar página</value></data>
+  <!-- Slice 78: the page-review wizard -->
+  <data name="Wizard_Next" xml:space="preserve"><value>Siguiente</value></data>
+  <data name="Wizard_StepText" xml:space="preserve"><value>Texto</value></data>
+  <data name="Wizard_AddPages" xml:space="preserve"><value>Añadir páginas</value></data>
+  <data name="Wizard_DragHint" xml:space="preserve"><value>Mantén pulsada una página y arrástrala para moverla</value></data>
+  <data name="Wizard_EmptyBody" xml:space="preserve"><value>Añade las páginas de tu cuento: escanéalas, elige fotos, añade un PDF o un archivo, o escribe el texto. Después ordena las páginas.</value></data>
+  <data name="Wizard_PageN" xml:space="preserve"><value>Página {0}</value></data>
+  <data name="Wizard_PageMenu" xml:space="preserve"><value>Opciones de la página</value></data>
+  <data name="Wizard_MenuRotate" xml:space="preserve"><value>Girar</value></data>
+  <data name="Wizard_MenuCrop" xml:space="preserve"><value>Girar o recortar</value></data>
+  <data name="Wizard_MenuEditText" xml:space="preserve"><value>Editar el texto</value></data>
+  <data name="Wizard_NoTextShort" xml:space="preserve"><value>Sin texto</value></data>
+  <data name="Wizard_NoText" xml:space="preserve"><value>No se encontró texto en esta página</value></data>
+  <data name="Wizard_Reading" xml:space="preserve"><value>Leyendo la página {0} de {1}</value></data>
+  <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>Algunas páginas no se leyeron</value></data>
+  <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>No se pudieron leer {0} páginas. Se conservan como imágenes sin texto.</value></data>
+  <data name="Wizard_CoverHint" xml:space="preserve"><value>Elige una página, una foto o un color para la portada.</value></data>
+  <data name="Wizard_NeedTextTitle" xml:space="preserve"><value>Todavía no hay nada que leer</value></data>
+  <data name="Wizard_NeedTextBody" xml:space="preserve"><value>Añade texto al menos a una página y guarda.</value></data>
+  <data name="Wizard_SaveFailedTitle" xml:space="preserve"><value>No se pudo guardar el cuento</value></data>
+  <data name="Wizard_SaveFailedBody" xml:space="preserve"><value>No se cambió nada. Inténtalo de nuevo en un momento.</value></data>
+  <data name="Editor_Title" xml:space="preserve"><value>Girar y recortar</value></data>
+  <data name="Editor_RotateLeft" xml:space="preserve"><value>Girar a la izquierda</value></data>
+  <data name="Editor_RotateRight" xml:space="preserve"><value>Girar a la derecha</value></data>
+  <data name="Editor_ResetCrop" xml:space="preserve"><value>Restablecer recorte</value></data>
   <data name="Reading_TextMode" xml:space="preserve"><value>Modo texto</value></data>
   <data name="Reading_PictureMode" xml:space="preserve"><value>Modo imagen</value></data>
   <data name="Reading_Play" xml:space="preserve"><value>Reproducir</value></data>

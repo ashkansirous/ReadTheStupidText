@@ -25,7 +25,6 @@
   <data name="Gallery_Title" xml:space="preserve"><value>My stories</value></data>
   <data name="Gallery_ForGrownUps" xml:space="preserve"><value>For grown-ups</value></data>
   <data name="Gallery_OpensGateHint" xml:space="preserve"><value>Opens the grown-up gate</value></data>
-  <data name="Gallery_Cast" xml:space="preserve"><value>Cast · {0}</value></data>
   <data name="Gallery_Characters_One" xml:space="preserve"><value>{0} character</value></data>
   <data name="Gallery_Characters_Other" xml:space="preserve"><value>{0} characters</value></data>
   <data name="Gallery_PagesSummary" xml:space="preserve"><value>{0} · reorder, add, remove</value></data>
@@ -37,10 +36,11 @@
   <data name="Delete_Body" xml:space="preserve"><value>Its pages, pictures and voices are removed from this phone.</value></data>
   <data name="Delete_FailedTitle" xml:space="preserve"><value>Couldn't delete that story</value></data>
   <data name="Delete_FailedBody" xml:space="preserve"><value>Something is still using its files. Try again in a moment.</value></data>
-  <data name="Manage_Title" xml:space="preserve"><value>Manage stories</value></data>
   <data name="Manage_EditStory" xml:space="preserve"><value>Edit story</value></data>
-  <data name="Manage_DeleteStory" xml:space="preserve"><value>Delete story</value></data>
-  <data name="Manage_WhoIsSpeaking" xml:space="preserve"><value>Who is speaking</value></data>
+  <data name="Gallery_EditStory" xml:space="preserve"><value>Edit {0}</value></data>
+  <data name="Gallery_CastStory" xml:space="preserve"><value>Cast of {0}</value></data>
+  <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>Delete {0}</value></data>
+  <data name="Gallery_CastButton" xml:space="preserve"><value>Cast</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Press and hold for 3 seconds.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Press and hold for 3 seconds</value></data>
   <data name="Gate_KeepHolding" xml:space="preserve"><value>Keep holding…</value></data>
@@ -76,12 +76,31 @@
   <data name="Edit_CoverColour" xml:space="preserve"><value>Colour</value></data>
   <data name="Edit_CoverPhoto" xml:space="preserve"><value>Photo</value></data>
   <data name="Edit_Pages" xml:space="preserve"><value>Pages</value></data>
-  <data name="Edit_FixText" xml:space="preserve"><value>Fix the text</value></data>
-  <data name="Edit_FixTextValue" xml:space="preserve"><value>Edit OCR text</value></data>
-  <data name="Pages_Add" xml:space="preserve"><value>Add a page</value></data>
-  <data name="Pages_MoveUp" xml:space="preserve"><value>Move page up</value></data>
-  <data name="Pages_MoveDown" xml:space="preserve"><value>Move page down</value></data>
-  <data name="Pages_Remove" xml:space="preserve"><value>Remove page</value></data>
+  <!-- Slice 78: the page-review wizard -->
+  <data name="Wizard_Next" xml:space="preserve"><value>Next</value></data>
+  <data name="Wizard_StepText" xml:space="preserve"><value>Text</value></data>
+  <data name="Wizard_AddPages" xml:space="preserve"><value>Add pages</value></data>
+  <data name="Wizard_DragHint" xml:space="preserve"><value>Hold a page and drag it to move it</value></data>
+  <data name="Wizard_EmptyBody" xml:space="preserve"><value>Add the pages of your story: scan them, pick photos, add a PDF or file, or type the text. Then put the pages in order.</value></data>
+  <data name="Wizard_PageN" xml:space="preserve"><value>Page {0}</value></data>
+  <data name="Wizard_PageMenu" xml:space="preserve"><value>Page options</value></data>
+  <data name="Wizard_MenuRotate" xml:space="preserve"><value>Rotate</value></data>
+  <data name="Wizard_MenuCrop" xml:space="preserve"><value>Rotate or crop</value></data>
+  <data name="Wizard_MenuEditText" xml:space="preserve"><value>Edit text</value></data>
+  <data name="Wizard_NoTextShort" xml:space="preserve"><value>No text</value></data>
+  <data name="Wizard_NoText" xml:space="preserve"><value>No text found on this page</value></data>
+  <data name="Wizard_Reading" xml:space="preserve"><value>Reading page {0} of {1}</value></data>
+  <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>Some pages weren’t read</value></data>
+  <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>{0} pages could not be read. They are kept as pictures without text.</value></data>
+  <data name="Wizard_CoverHint" xml:space="preserve"><value>Pick a page, a photo or a colour for the cover.</value></data>
+  <data name="Wizard_NeedTextTitle" xml:space="preserve"><value>Nothing to read yet</value></data>
+  <data name="Wizard_NeedTextBody" xml:space="preserve"><value>Add some text to at least one page, then save.</value></data>
+  <data name="Wizard_SaveFailedTitle" xml:space="preserve"><value>Couldn’t save the story</value></data>
+  <data name="Wizard_SaveFailedBody" xml:space="preserve"><value>Nothing was changed. Try again in a moment.</value></data>
+  <data name="Editor_Title" xml:space="preserve"><value>Rotate and crop</value></data>
+  <data name="Editor_RotateLeft" xml:space="preserve"><value>Rotate left</value></data>
+  <data name="Editor_RotateRight" xml:space="preserve"><value>Rotate right</value></data>
+  <data name="Editor_ResetCrop" xml:space="preserve"><value>Reset crop</value></data>
   <data name="Reading_TextMode" xml:space="preserve"><value>Text mode</value></data>
   <data name="Reading_PictureMode" xml:space="preserve"><value>Picture mode</value></data>
   <data name="Reading_Play" xml:space="preserve"><value>Play</value></data>

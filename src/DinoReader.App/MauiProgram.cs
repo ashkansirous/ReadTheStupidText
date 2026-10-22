@@ -67,9 +67,8 @@ public static class MauiProgram
 	private static void AddPages(IServiceCollection services)
 	{
 		services.AddTransient<GalleryPage>();
-		services.AddTransient<ManagePage>();
-		services.AddTransient<AddStoryPage>();
-		services.AddTransient<EditStoryPage>();
+		services.AddSingleton<GrownUpMode>();
+		services.AddTransient<StoryWizardPage>();
 		services.AddTransient<CastPage>();
 		services.AddTransient<ReadingPage>();
 		services.AddTransient<ReadingSession>();

@@ -6,7 +6,8 @@ namespace DinoReader;
 /// <summary>Edits one page's text (or writes a new page when the index is -1) inside the shared <see cref="StoryDraft"/>.</summary>
 public sealed class PageTextPage : ContentPage, IGrownUpPage
 {
-	private const int NewPage = -1;
+	/// <summary>The index that means "write a new page".</summary>
+	public const int NewPage = -1;
 
 	private readonly StoryDraft _draft;
 	private readonly BusyGuard _busy = new();
@@ -22,7 +23,7 @@ public sealed class PageTextPage : ContentPage, IGrownUpPage
 		BackgroundColor = DinoTokens.Get(DinoTokens.Sand);
 		_editor = new Editor
 		{
-			Text = index == NewPage ? string.Empty : draft.Pages[index].Text,
+			Text = index == NewPage ? string.Empty : draft.PageDrafts[index].Text,
 			FontFamily = DinoFonts.Reading,
 			FontSize = 18,
 			AutoSize = EditorAutoSizeOption.Disabled,
@@ -62,23 +63,49 @@ public sealed class PageTextPage : ContentPage, IGrownUpPage
 
 	private async Task SaveAsync()
 	{
-		string text = _editor.Text ?? string.Empty;
-		if (!string.IsNullOrWhiteSpace(text))
-		{
-			Store(text);
-		}
-
+		string text = LineBreaks.ToLf(_editor.Text ?? string.Empty);
+		Store(text);
 		await Navigation.PopAsync();
 	}
 
+	// A new page needs some text. A picture page may be emptied (it stays a picture-only page); a text page emptied has nothing
+	// left to show, so it goes.
 	private void Store(string text)
 	{
+		bool blank = string.IsNullOrWhiteSpace(text);
 		if (_index == NewPage)
 		{
-			_draft.Pages.Add(new StoryPage(text));
+			if (!blank)
+			{
+				_draft.AddPageDraft(PageDraft.ForText(text));
+			}
+
 			return;
 		}
 
-		_draft.Pages[_index] = _draft.Pages[_index] with { Text = text };
+		PageDraft page = _draft.PageDrafts[_index];
+		if (blank && !page.HasPicture)
+		{
+			_draft.RemovePageDraft(_index);
+			return;
+		}
+
+		_draft.ReplacePageDraft(page.WithText(text));
+	}
+}
+
+/// <summary>Layout shorthands for the code-built pages.</summary>
+internal static class GridPlacement
+{
+	public static T Row<T>(this T view, int row) where T : BindableObject
+	{
+		Grid.SetRow(view, row);
+		return view;
+	}
+
+	public static T Column<T>(this T view, int column) where T : BindableObject
+	{
+		Grid.SetColumn(view, column);
+		return view;
 	}
 }

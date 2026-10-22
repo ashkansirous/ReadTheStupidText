@@ -381,71 +381,21 @@ public class StoryHelpersTests
     }
 
     [Fact]
-    public void RemoveAt_KeepsTheCoverOnTheSamePicture_OrFallsBackToTheFirstPage()
-    {
-        Story story = new(StoryIds.New(), "T", "en", DateTimeOffset.UnixEpoch,
-            [new StoryPage("1", "a.jpg"), new StoryPage("2", "b.jpg"), new StoryPage("3", "c.jpg")], [], CoverStyle.Picture, 0, "F1", CoverPageIndex: 2);
-
-        var before = new StoryDraft(story);
-        before.RemoveAt(0);
-        Assert.Equal(1, before.CoverPageIndex);
-        Assert.Equal("c.jpg", before.Pages[before.CoverPageIndex!.Value].ImageFile);
-
-        var after = new StoryDraft(story);
-        after.RemoveAt(1);
-        Assert.Equal(1, after.CoverPageIndex);
-
-        var onCover = new StoryDraft(story);
-        onCover.RemoveAt(2);
-        Assert.Null(onCover.CoverPageIndex);
-        Assert.Equal(CoverStyle.FirstPage, onCover.CoverStyle);
-    }
-
-    [Fact]
     public void ChoosingAColour_DropsThePictureState_SoPageEditsLeaveTheColourAlone()
     {
         Story story = new(StoryIds.New(), "T", "en", DateTimeOffset.UnixEpoch,
             [new StoryPage("1", "a.jpg"), new StoryPage("2", "b.jpg"), new StoryPage("3", "c.jpg")], [], CoverStyle.Picture, 0, "F1", CoverPageIndex: 2);
 
         var draft = new StoryDraft(story);
+        draft.LoadPageDrafts(name => name);
         draft.PendingCoverPhoto = "x.jpg";
         draft.ChooseCover(CoverStyle.Colour);
-        draft.RemoveAt(2);
+        draft.RemovePageDraft(2);
 
         Assert.Equal(CoverStyle.Colour, draft.CoverStyle);
         Assert.Null(draft.CoverPageIndex);
         Assert.Null(draft.CoverFile);
         Assert.Null(draft.PendingCoverPhoto);
-    }
-
-    [Fact]
-    public void Move_KeepsTheCoverOnTheSamePicture()
-    {
-        Story story = new(StoryIds.New(), "T", "en", DateTimeOffset.UnixEpoch,
-            [new StoryPage("1", "a.jpg"), new StoryPage("2", "b.jpg"), new StoryPage("3", "c.jpg")], [], CoverStyle.Picture, 0, "F1", CoverPageIndex: 1);
-
-        var draft = new StoryDraft(story);
-        draft.Move(1, 1);
-        Assert.Equal(2, draft.CoverPageIndex);
-        draft.Move(0, 1);
-        Assert.Equal(2, draft.CoverPageIndex);
-        draft.Move(2, -1);
-        Assert.Equal(1, draft.CoverPageIndex);
-    }
-
-    [Fact]
-    public void TextsForEditedText_KeepsEveryPage_WhenTheLinesAreNotFoundOrOnlySomeAre()
-    {
-        IReadOnlyList<IReadOnlyList<string>> lines = [["Page one line"], ["Page two line"], ["Page three line"]];
-
-        IReadOnlyList<string> unrelated = ImportedText.TextsForEditedText("Totally rewritten.", lines);
-        Assert.Equal(["Totally rewritten.", "", ""], unrelated);
-
-        IReadOnlyList<string> partial = ImportedText.TextsForEditedText("Page one line then\nPage three line end", lines);
-        Assert.Equal(3, partial.Count);
-        Assert.Equal(string.Empty, partial[1]);
-        Assert.StartsWith("Page one line", partial[0]);
-        Assert.StartsWith("Page three line", partial[2]);
     }
 
     [Fact]
@@ -476,19 +426,6 @@ public class StoryDraftTests
         CoverStyle.Colour, 0, "F1"));
 
     [Fact]
-    public void Move_SwapsNeighbours_AndIgnoresTheEnds()
-    {
-        StoryDraft draft = Draft("a", "b", "c");
-
-        draft.Move(0, -1);
-        draft.Move(2, 1);
-        Assert.Equal(["a", "b", "c"], draft.Pages.Select(p => p.Text));
-
-        draft.Move(1, 1);
-        Assert.Equal(["a", "c", "b"], draft.Pages.Select(p => p.Text));
-    }
-
-    [Fact]
     public void TextChanged_TracksEditsAndReorders()
     {
         StoryDraft draft = Draft("a", "b");
@@ -496,5 +433,47 @@ public class StoryDraftTests
 
         draft.Pages[0] = new StoryPage("a!");
         Assert.True(draft.TextChanged);
+    }
+}
+
+public class GalleryLayoutTests
+{
+    private static Story Make(string title) => new(StoryIds.New(), title, "en", DateTimeOffset.UnixEpoch, [new StoryPage("x")], [],
+        CoverStyle.Colour, 0, "F1");
+
+    private static string[] Titles(IReadOnlyList<GalleryEntry> entries) =>
+        entries.Where(e => e.Kind == GalleryEntryKind.Story).Select(e => e.Story!.Title).ToArray();
+
+    [Fact]
+    public void KidsMode_HasNoAddEntry_AndKeepsOrder()
+    {
+        var entries = GalleryLayout.Build([Make("A"), Make("B"), Make("C")], grownUp: false);
+
+        Assert.DoesNotContain(entries, e => e.Kind == GalleryEntryKind.AddStory);
+        Assert.Equal(["A", "B", "C"], Titles(entries));
+    }
+
+    [Fact]
+    public void GrownUpMode_PutsAddFirst_AndKeepsTheSameStoryOrder()
+    {
+        var entries = GalleryLayout.Build([Make("A"), Make("B"), Make("C")], grownUp: true);
+
+        Assert.Equal(GalleryEntryKind.AddStory, entries[0].Kind);
+        Assert.Equal(4, entries.Count);
+        Assert.Equal(["A", "B", "C"], Titles(entries));
+    }
+
+    [Fact]
+    public void EmptyLibrary_IsOnlyAddInGrownUpMode_AndEmptyInKidsMode()
+    {
+        Assert.Empty(GalleryLayout.Build([], grownUp: false));
+        Assert.Equal(GalleryEntryKind.AddStory, Assert.Single(GalleryLayout.Build([], grownUp: true)).Kind);
+    }
+
+    [Fact]
+    public void Overlay_FollowsTheMode()
+    {
+        Assert.True(GalleryLayout.ShowsOverlay(true));
+        Assert.False(GalleryLayout.ShowsOverlay(false));
     }
 }

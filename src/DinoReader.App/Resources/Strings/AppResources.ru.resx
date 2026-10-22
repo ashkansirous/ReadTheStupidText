@@ -22,7 +22,6 @@
   <data name="Gallery_Title" xml:space="preserve"><value>Мои истории</value></data>
   <data name="Gallery_ForGrownUps" xml:space="preserve"><value>Для взрослых</value></data>
   <data name="Gallery_OpensGateHint" xml:space="preserve"><value>Открывает вход для взрослых</value></data>
-  <data name="Gallery_Cast" xml:space="preserve"><value>Роли · {0}</value></data>
   <data name="Gallery_Characters_One" xml:space="preserve"><value>Персонажей: {0}</value></data>
   <data name="Gallery_Characters_Other" xml:space="preserve"><value>Персонажей: {0}</value></data>
   <data name="Gallery_PagesSummary" xml:space="preserve"><value>{0} · порядок, добавить, удалить</value></data>
@@ -34,10 +33,11 @@
   <data name="Delete_Body" xml:space="preserve"><value>Его страницы, картинки и голоса будут удалены с этого телефона.</value></data>
   <data name="Delete_FailedTitle" xml:space="preserve"><value>Не удалось удалить историю</value></data>
   <data name="Delete_FailedBody" xml:space="preserve"><value>Его файлы ещё используются. Попробуйте чуть позже.</value></data>
-  <data name="Manage_Title" xml:space="preserve"><value>Управление историями</value></data>
   <data name="Manage_EditStory" xml:space="preserve"><value>Изменить историю</value></data>
-  <data name="Manage_DeleteStory" xml:space="preserve"><value>Удалить историю</value></data>
-  <data name="Manage_WhoIsSpeaking" xml:space="preserve"><value>Кто говорит</value></data>
+  <data name="Gallery_EditStory" xml:space="preserve"><value>Изменить {0}</value></data>
+  <data name="Gallery_CastStory" xml:space="preserve"><value>Герои: {0}</value></data>
+  <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>Удалить {0}</value></data>
+  <data name="Gallery_CastButton" xml:space="preserve"><value>Герои</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Нажмите и удерживайте 3 секунды.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Нажмите и удерживайте 3 секунды</value></data>
   <data name="Gate_KeepHolding" xml:space="preserve"><value>Продолжайте удерживать…</value></data>
@@ -75,12 +75,31 @@
   <data name="Edit_CoverColour" xml:space="preserve"><value>Цвет</value></data>
   <data name="Edit_CoverPhoto" xml:space="preserve"><value>Фото</value></data>
   <data name="Edit_Pages" xml:space="preserve"><value>Страницы</value></data>
-  <data name="Edit_FixText" xml:space="preserve"><value>Исправить текст</value></data>
-  <data name="Edit_FixTextValue" xml:space="preserve"><value>Править распознанный текст</value></data>
-  <data name="Pages_Add" xml:space="preserve"><value>Добавить страницу</value></data>
-  <data name="Pages_MoveUp" xml:space="preserve"><value>Переместить страницу вверх</value></data>
-  <data name="Pages_MoveDown" xml:space="preserve"><value>Переместить страницу вниз</value></data>
-  <data name="Pages_Remove" xml:space="preserve"><value>Удалить страницу</value></data>
+  <!-- Slice 78: the page-review wizard -->
+  <data name="Wizard_Next" xml:space="preserve"><value>Далее</value></data>
+  <data name="Wizard_StepText" xml:space="preserve"><value>Текст</value></data>
+  <data name="Wizard_AddPages" xml:space="preserve"><value>Добавить страницы</value></data>
+  <data name="Wizard_DragHint" xml:space="preserve"><value>Удерживайте страницу и перетащите её, чтобы переместить</value></data>
+  <data name="Wizard_EmptyBody" xml:space="preserve"><value>Добавьте страницы истории: отсканируйте их, выберите фото, добавьте PDF или файл либо введите текст. Потом расставьте страницы по порядку.</value></data>
+  <data name="Wizard_PageN" xml:space="preserve"><value>Страница {0}</value></data>
+  <data name="Wizard_PageMenu" xml:space="preserve"><value>Параметры страницы</value></data>
+  <data name="Wizard_MenuRotate" xml:space="preserve"><value>Повернуть</value></data>
+  <data name="Wizard_MenuCrop" xml:space="preserve"><value>Повернуть или обрезать</value></data>
+  <data name="Wizard_MenuEditText" xml:space="preserve"><value>Изменить текст</value></data>
+  <data name="Wizard_NoTextShort" xml:space="preserve"><value>Нет текста</value></data>
+  <data name="Wizard_NoText" xml:space="preserve"><value>На этой странице текст не найден</value></data>
+  <data name="Wizard_Reading" xml:space="preserve"><value>Чтение страницы {0} из {1}</value></data>
+  <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>Некоторые страницы не прочитаны</value></data>
+  <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>Не удалось прочитать страниц: {0}. Они сохранятся как картинки без текста.</value></data>
+  <data name="Wizard_CoverHint" xml:space="preserve"><value>Выберите для обложки страницу, фото или цвет.</value></data>
+  <data name="Wizard_NeedTextTitle" xml:space="preserve"><value>Пока нечего читать</value></data>
+  <data name="Wizard_NeedTextBody" xml:space="preserve"><value>Добавьте текст хотя бы на одну страницу и сохраните.</value></data>
+  <data name="Wizard_SaveFailedTitle" xml:space="preserve"><value>Не удалось сохранить историю</value></data>
+  <data name="Wizard_SaveFailedBody" xml:space="preserve"><value>Ничего не изменилось. Повторите попытку чуть позже.</value></data>
+  <data name="Editor_Title" xml:space="preserve"><value>Поворот и обрезка</value></data>
+  <data name="Editor_RotateLeft" xml:space="preserve"><value>Повернуть влево</value></data>
+  <data name="Editor_RotateRight" xml:space="preserve"><value>Повернуть вправо</value></data>
+  <data name="Editor_ResetCrop" xml:space="preserve"><value>Сбросить обрезку</value></data>
   <data name="Reading_TextMode" xml:space="preserve"><value>Текстовый режим</value></data>
   <data name="Reading_PictureMode" xml:space="preserve"><value>Режим картинок</value></data>
   <data name="Reading_Play" xml:space="preserve"><value>Играть</value></data>

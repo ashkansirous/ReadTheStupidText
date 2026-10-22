@@ -8,14 +8,18 @@ public static class GalleryText
 	private const string SummarySeparator = " · ";
 	private const int Singular = 1;
 
-	public static string Cast(int count) => AppResources.Format(AppResources.Gallery_Cast, count);
-
 	public static string Characters(int count) =>
 		AppResources.Format(count == Singular ? AppResources.Gallery_Characters_One : AppResources.Gallery_Characters_Other, count);
 
 	public static string PagesSummary(int count) => AppResources.Format(AppResources.Gallery_PagesSummary, count);
 
 	public static string DeleteTitle(string title) => AppResources.Format(AppResources.Gallery_DeleteTitle, title);
+
+	public static string EditStory(string title) => AppResources.Format(AppResources.Gallery_EditStory, title);
+
+	public static string CastStory(string title) => AppResources.Format(AppResources.Gallery_CastStory, title);
+
+	public static string DeleteStory(string title) => AppResources.Format(AppResources.Gallery_DeleteStoryLabel, title);
 
 	public static string PagesRead(int pages) =>
 		AppResources.Format(pages == Singular ? AppResources.Gallery_PagesRead_One : AppResources.Gallery_PagesRead_Other, pages);

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="DinoReader.CoverStep"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:DinoReader"
+    xmlns:res="clr-namespace:DinoReader.Resources.Strings">
+
+    <!-- Step 2 of the wizard (Slice 78): the cover. Slice 77's CoverPicker over the draft's pages, plus the preview as the gallery shows it. -->
+    <ScrollView>
+        <VerticalStackLayout Padding="14,4,14,14" Spacing="12">
+            <Label Text="{x:Static res:AppResources.Wizard_CoverHint}" FontSize="14" TextColor="{StaticResource Body}" />
+            <HorizontalStackLayout Spacing="14">
+                <local:StoryCover x:Name="CoverPreview" WidthRequest="120" />
+                <VerticalStackLayout Spacing="8" VerticalOptions="Center">
+                    <Label Text="{x:Static res:AppResources.Edit_Cover}" FontSize="12" TextColor="{StaticResource Muted}" />
+                    <Border x:Name="FirstPageChip" Padding="10,6" StrokeThickness="0" HorizontalOptions="Start">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="9" />
+                        </Border.StrokeShape>
+                        <Label x:Name="FirstPageLabel" Text="{x:Static res:AppResources.Edit_CoverFirstPage}" FontSize="12.5" FontAttributes="Bold" />
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnFirstPageTapped" />
+                        </Border.GestureRecognizers>
+                    </Border>
+                </VerticalStackLayout>
+            </HorizontalStackLayout>
+            <ContentView x:Name="CoverPickerHost" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentView>
