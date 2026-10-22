@@ -106,6 +106,7 @@ this plan turns it into ordered, shippable vertical slices.
 | 86 | RTST scan reads with line geometry | built | #248 | | [86-rtst-scan-line-geometry.md](docs/plan/slices/86-rtst-scan-line-geometry.md) |
 | 87 | A scan in a script with no reader asks the page's language and downloads it | planned | | | [87-scan-downloads-the-page-language-pack.md](docs/plan/slices/87-scan-downloads-the-page-language-pack.md) |
 | 88 | The Windows desktop layout never mirrors; only text flows by its own direction | planned | | | [88-desktop-no-layout-mirroring.md](docs/plan/slices/88-desktop-no-layout-mirroring.md) |
+| 89 | Four Farsi voices in one pack (ganji_adabi by default), Amir dropped | planned | | | [89-four-farsi-voices.md](docs/plan/slices/89-four-farsi-voices.md) |
 
 Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
 
@@ -113,9 +114,11 @@ Batch 13 (76-80, planned 2026-10-22): 76 and 77 are independent and go first (To
 
 Batch 14 (81-85, planned 2026-10-22, Android bugs found on a Pixel 10 Pro running 1.16.0): 81 and 83 are independent and go first; 82 after 81; 84 after 83; 85 last (it edits the pages 81 and 82 touch). Decisions 88-92.
 
+Batch 15 (89, planned 2026-10-22): the Farsi voice swap; touches packs.yml, the pack format and every platform reader, so nothing else in those files runs alongside it. Decision 93.
+
 ### Notes
 
-- [Decisions 1-92](docs/plan/decisions.md): the full numbered decision list, moved verbatim.
+- [Decisions 1-93](docs/plan/decisions.md): the full numbered decision list, moved verbatim.
 - [2026-10-20 Android minSdk 28](docs/plan/notes/2026-10-20-android-min-sdk-28.md): why the Android floor is 28 (Decision 82).
 - [Batch introductions, Batches 2-8](docs/plan/notes/batch-intros-1-8.md): the framing paragraph that opened each batch (2026-10-20 move).
 - [Batch 9 and 10 indexes](docs/plan/notes/plan-batch-9-10-index.md): the former in-plan tables and lane order.
