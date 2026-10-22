@@ -1,11 +1,11 @@
 # Slice 81 — A language change in Settings downloads that language's voice
 
-*Planned.*
+*Built 2026-10-22 (wave 2026-10-22), PR #239. Verified on the RTST_Test emulator, not yet on a real phone.*
 
 **Batch:** 14
 **Decisions:** 88
 **Depends on:** —
-**Touches:** `src/ReadTheStupidText.Mobile/LanguageChooser.cs`, `src/ReadTheStupidText.Mobile/ReaderPage.xaml.cs`, `src/ReadTheStupidText.Mobile/VoicePickerPage.xaml.cs`, `src/ReadTheStupidText.Mobile/VoicePickerPage.xaml`, `src/ReadTheStupidText.Mobile.Shared/VoicePackInstaller.cs`, `src/ReadTheStupidText.Mobile/Resources/Strings/**`, `tests/ReadTheStupidText.Tests/VoicePackSetupTests.cs`
+**Touches:** `src/ReadTheStupidText.Mobile/LanguageChooser.cs`, `src/ReadTheStupidText.Mobile/ReaderPage.xaml.cs`, `src/ReadTheStupidText.Mobile/VoicePickerPage.xaml.cs`, `src/ReadTheStupidText.Mobile/VoicePickerPage.xaml`, `src/ReadTheStupidText.Mobile.Shared/VoicePackInstaller.cs`, `src/ReadTheStupidText.Mobile/Resources/Strings/**`, `tests/ReadTheStupidText.Tests/VoicePackSetupTests.cs`, `src/DinoReader.App/SpokenLanguage.cs`
 **Story issue:** —
 
 ## Goal
@@ -32,16 +32,16 @@ download. `LanguageChooser.Apply` stores the language and rebuilds the shell but
 
 ## Steps
 
-- [ ] `VoicePackInstaller` subscribes to `ILanguageChangeNotifier.LanguageChanged` and calls
+- [x] `VoicePackInstaller` subscribes to `ILanguageChangeNotifier.LanguageChanged` and calls
       `StartAsync()`; a run already in flight for the old language finishes, then a re-run
       for the new language starts (no dropped request, same pattern as
       `MobileVoiceModelService.RefreshInBackground`).
-- [ ] Unit test (fake pack service + notifier): a language change while idle starts a
+- [x] Unit test (fake pack service + notifier): a language change while idle starts a
       resolve for the new language; a change during a run re-runs once after it.
-- [ ] `VoicePickerPage`: when no pack serves the language, show the installer's state
+- [x] `VoicePickerPage`: when no pack serves the language, show the installer's state
       (Resolving / Downloading n% / failed) and a **Retry** button when `CanRetry`, instead
       of the static "isn't installed yet" line; strings in all nine `.resx` files.
-- [ ] Remove the stale "Offering that language's voice pack is Slice 51" remark in
+- [x] Remove the stale "Offering that language's voice pack is Slice 51" remark in
       `LanguageChooser`'s summary.
 
 ## Verification
@@ -53,3 +53,19 @@ download. `LanguageChooser.Apply` stores the language and rebuilds the shell but
   to English: no download (pack already installed), the Supertonic voices are listed.
 - Airplane mode during a switch: the picker shows the offline state and Retry; Retry after
   reconnecting completes the download.
+
+*Changed while building:* `VoicePackInstaller` is single-flight with a run generation (stale publishes and progress ticks are dropped) and cancels the in-flight run when the language changes, instead of finishing it and re-running. Publish happens outside the lock, a failure publishes Failed, a null language publishes Idle, and waiters are released in a `finally`. The voice picker shows localised status with Retry on Idle and failure; a progress tick updates only the status label. Tests use event waits with a 30 s cap (no polling). `src/DinoReader.App/SpokenLanguage.cs` got comment-only edits.
+
+*From review:* `D:\ReadTheStupidText-worktrees\reviews\81-review-{1,2}.md`: all findings fixed in both passes.
+
+*Checks:* RTST tests 693 pass / 2 skipped; Mobile and Dino Android builds. Emulator (RTST_Test): en to fa lists Piper Amir without a restart; back to en is instant; a change to zh downloads unprompted with progress, then Ready; zh to es to zh mid-download resumes and ends Ready; airplane mode shows offline plus Retry, and Retry works; app launches fine: PASS.
+
+#### For CLAUDE.md
+
+In `src/ReadTheStupidText.Mobile/CLAUDE.md`: Debug builds installed with `adb` (emulator) need `-p:EmbedAssembliesIntoApk=true -p:RuntimeIdentifier=android-arm64` (plus `-p:IncludeWindows=false`). A plain Debug build uses Fast Deployment and dies on launch with "No assemblies found" after `adb install`. (Slice 81: docs/plan/slices/81-language-change-starts-voice-download.md)
+
+#### Not yet verified
+
+- The header "tap to retry" label: no defect found in code, but the state flashes Resolving then Offline.
+- A reinstalled pack restores the previously chosen voice (the code says yes).
+- Everything above on a real phone.
