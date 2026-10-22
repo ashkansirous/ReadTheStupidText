@@ -108,3 +108,4 @@ physical device) before relying on a slice that touches the Mobile project.
 - Pages draw edge to edge on Android 15+. Set `SafeAreaEdges="None"` on the page/root and `Container` on the header,
   sheet or body that must clear the bars; never set status/navigation bar colours in code (deprecated).
   (Slice 73: docs/plan/slices/73-edge-to-edge-safe-areas.md)
+- Debug builds installed with `adb` (emulator) need `-p:EmbedAssembliesIntoApk=true -p:RuntimeIdentifier=android-arm64` (plus `-p:IncludeWindows=false`). A plain Debug build uses Fast Deployment and dies on launch with "No assemblies found" after `adb install`. (Slice 81: docs/plan/slices/81-language-change-starts-voice-download.md)
