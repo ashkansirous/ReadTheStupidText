@@ -1,6 +1,6 @@
 # Slice 87 — A scan in a script with no reader asks the page's language and downloads it
 
-*Planned.*
+*In progress (wave 2026-10-22), draft PR.*
 
 **Batch:** 14 (follow-up to Slice 84)
 **Depends on:** Slice 84 (`OcrPackChoice`, `OcrSource.MlKitPackPending`), Slice 83 (Scan replaces the text)
