@@ -1,11 +1,11 @@
 # Slice 79 — Background text: drop signs and titles from the story, with a manual override
 
-*Planned.*
+*In progress (wave 2026-10-22), draft PR.*
 
 **Batch:** 13
 **Decisions:** 86
 **Depends on:** Slice 76 (`LineReflow` and its geometry rule), Slice 78 (the wizard's Text step hosts the override)
-**Touches:** `src/ReadTheStupidText.Application/Images/Ocr/TextRegions.cs` (new), `src/ReadTheStupidText.Application/Images/Ocr/RegionClass.cs` (new), `src/ReadTheStupidText.Application/Images/Ocr/OcrReading.cs`, `src/ReadTheStupidText.Application/Images/Ocr/LineOrdering.cs`, `src/DinoReader.Core/StoryPage.cs` (or `Story.cs` where `StoryPage` lives), `src/DinoReader.Core/StoryJson.cs`, `src/DinoReader.Core/ImportedText.cs`, `src/DinoReader.App/StoryImport.cs`, `src/DinoReader.App/TextStep.xaml`, `src/DinoReader.App/TextStep.xaml.cs`, `src/DinoReader.App/PageTextPage.cs`, `src/DinoReader.App/RegionOverlay.cs` (new), `tests/ReadTheStupidText.Tests/TextRegionsTests.cs` (new), `tests/ReadTheStupidText.Tests/OcrLayoutTests.cs`, `tests/DinoReader.Tests/StorySegmenterTests.cs`
+**Touches:** `src/ReadTheStupidText.Application/Images/Ocr/TextRegions.cs` (new), `src/ReadTheStupidText.Application/Images/Ocr/RegionClass.cs` (new), `src/ReadTheStupidText.Application/Images/Ocr/OcrReading.cs`, `src/ReadTheStupidText.Application/Images/Ocr/LineOrdering.cs`, `src/DinoReader.Core/StoryPage.cs` (or `Story.cs` where `StoryPage` lives), `src/DinoReader.Core/StoryJson.cs`, `src/DinoReader.Core/ImportedText.cs`, `src/DinoReader.App/StoryImport.cs`, `src/DinoReader.App/TextStep.xaml`, `src/DinoReader.App/TextStep.xaml.cs`, `src/DinoReader.App/PageTextPage.cs`, `src/DinoReader.App/RegionOverlay.cs` (new), `tests/ReadTheStupidText.Tests/TextRegionsTests.cs` (new), `tests/ReadTheStupidText.Tests/OcrLayoutTests.cs`, `tests/DinoReader.Tests/StorySegmenterTests.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/StoryVoicing.cs`, `src/DinoReader.App/TextPages.cs`, `src/ReadTheStupidText.Application/Reading/LineClass.cs`, `src/ReadTheStupidText.Application/Reading/LineReflow.cs`, `tests/ReadTheStupidText.Tests/LineReflowTests.cs`
 **Story issue:** —
 
 ## Goal
@@ -68,6 +68,12 @@ Thresholds are named constants, tuned on the fixtures below.
 - [ ] Re-running OCR on a page (Slice 78 rotate/crop) resets that page's overrides.
 - [ ] `StorySegmenterTests`: a story built from the Bright Stadium fixture has no
       "BRIGHT STADIUM" segment.
+
+## Taken over from Slice 76 (wave 2026-10-22)
+
+- [ ] Dino: feed each page's `Lines` boxes into `StorySentences.Build(..., LineBreakMap)` / `StorySegmenter.Split(text, LineBreakMap)` (via `LineReflow.BreakMap(text, boxes)`), in `StoryVoicing`, `ReadingPage` and `TextPages`, so the geometry rule (height, gap) applies to scanned pages. Plain-text pages keep the plain-text rule.
+- [ ] Geometry heading needs a text-shape check too (Slice 76 review 2 #2): a line is a heading only if it also looks like one (short, no terminal punctuation, not starting lowercase), not on box height or gap alone.
+- The RTST Mobile/Windows scan text path (ReaderPage, image-text extractors) is **not** here: it is Slice 86, sequenced after the Mobile chain 81-85.
 
 ## Verification
 
