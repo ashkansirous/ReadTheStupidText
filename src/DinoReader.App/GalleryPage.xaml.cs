@@ -9,6 +9,7 @@ public partial class GalleryPage : ContentPage
 {
 	private const uint TileFadeMs = 180;
 	private const double TileShrinkTo = 0.85;
+	private const string TileTitleHeightKey = "TileTitleHeight";
 
 	private readonly IStoryLibrary _library;
 	private readonly GrownUpGate _gate;
@@ -97,13 +98,11 @@ public partial class GalleryPage : ContentPage
 		}
 	}
 
-	private void OnAddTileSizeChanged(object? sender, EventArgs e)
+	private void OnTitleProbeSizeChanged(object? sender, EventArgs e)
 	{
-		var tile = (VisualElement)sender!;
-		double height = tile.Width * StoryCover.CoverAspect;
-		if (tile.Width > 0 && Math.Abs(tile.HeightRequest - height) > 0.5)
+		if (TitleProbe.Height > 0 && Math.Abs(TitleProbe.Height - (double)Resources[TileTitleHeightKey]) > 0.5)
 		{
-			tile.HeightRequest = height;
+			Resources[TileTitleHeightKey] = Math.Ceiling(TitleProbe.Height);
 		}
 	}
 

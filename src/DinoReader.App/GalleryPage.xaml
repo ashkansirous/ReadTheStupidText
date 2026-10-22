@@ -12,8 +12,24 @@
     <!-- Home screen (mock screen 1): the child's stories. Reading needs no gate; the lock opens grown-up
          mode (Slice 80), which is this same grid with an edit overlay on each tile and the Add tile first. -->
     <ContentPage.Resources>
+        <!-- Fallback until the probe below has measured two real lines; replaced at runtime (GalleryPage.xaml.cs). -->
+        <x:Double x:Key="TileTitleHeight">36</x:Double>
+        <!-- Shared by the story and Add templates so their stacks cannot drift apart. -->
+        <x:Double x:Key="TileSpacing">7</x:Double>
+        <Style x:Key="TileTitleFont" TargetType="Label">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="LineHeight" Value="1.25" />
+            <Setter Property="MaxLines" Value="2" />
+            <Setter Property="LineBreakMode" Value="TailTruncation" />
+        </Style>
+        <!-- Every tile (and the Add spacer) gets the same two-line title height, scaled with the font, so rows always match. -->
+        <Style x:Key="TileTitle" TargetType="Label" BasedOn="{StaticResource TileTitleFont}">
+            <Setter Property="HeightRequest" Value="{DynamicResource TileTitleHeight}" />
+        </Style>
+
         <DataTemplate x:Key="StoryTemplate" x:DataType="local:StoryTile">
-            <VerticalStackLayout Spacing="7" HorizontalOptions="Fill">
+            <VerticalStackLayout Spacing="{StaticResource TileSpacing}" HorizontalOptions="Fill">
                 <Grid>
                     <local:StoryCover>
                         <local:StoryCover.GestureRecognizers>
@@ -22,7 +38,7 @@
                     </local:StoryCover>
                     <local:TileOverlay EditRequested="OnEditRequested" CastRequested="OnCastRequested" DeleteRequested="OnDeleteRequested" />
                 </Grid>
-                <Label Text="{Binding Title}" FontSize="14" FontAttributes="Bold" LineHeight="1.25">
+                <Label Style="{StaticResource TileTitle}" Text="{Binding Title}">
                     <Label.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnStoryTapped" />
                     </Label.GestureRecognizers>
@@ -31,25 +47,38 @@
         </DataTemplate>
 
         <DataTemplate x:Key="AddTemplate">
-            <Border HorizontalOptions="Fill" BackgroundColor="White" Stroke="#c9c0f5" StrokeThickness="3" StrokeDashArray="3,3"
-                    SizeChanged="OnAddTileSizeChanged" SemanticProperties.Description="{x:Static res:AppResources.Story_Add}">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="16" />
-                </Border.StrokeShape>
-                <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="6">
-                    <local:IconView Kind="Plus" Color="{StaticResource Brand}" Size="28" StrokeWidth="2.6" />
-                    <Label Text="{x:Static res:AppResources.Story_Add}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Brand}" />
-                </VerticalStackLayout>
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnAddTapped" />
-                </Border.GestureRecognizers>
-            </Border>
+            <!-- Same shape as a story tile (cover-shaped box + one title row) so the first item, which Windows sizes the
+                 whole grid from, measures like the rest. -->
+            <VerticalStackLayout Spacing="{StaticResource TileSpacing}" HorizontalOptions="Fill">
+                <local:AspectRatioView HorizontalOptions="Fill">
+                    <Border BackgroundColor="White" Stroke="#c9c0f5" StrokeThickness="3" StrokeDashArray="3,3"
+                            SemanticProperties.Description="{x:Static res:AppResources.Story_Add}">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="16" />
+                        </Border.StrokeShape>
+                        <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="6">
+                            <local:IconView Kind="Plus" Color="{StaticResource Brand}" Size="28" StrokeWidth="2.6" />
+                            <Label Text="{x:Static res:AppResources.Story_Add}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Brand}" />
+                        </VerticalStackLayout>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnAddTapped" />
+                        </Border.GestureRecognizers>
+                    </Border>
+                </local:AspectRatioView>
+                <!-- Placeholder for the title row: the same text style as a story title, hidden from Narrator. -->
+                <Label Style="{StaticResource TileTitle}" Text="&#160;" InputTransparent="True"
+                       AutomationProperties.IsInAccessibleTree="False" />
+            </VerticalStackLayout>
         </DataTemplate>
 
         <local:GalleryTemplateSelector x:Key="Selector" AddTemplate="{StaticResource AddTemplate}" StoryTemplate="{StaticResource StoryTemplate}" />
     </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,*">
+        <!-- Invisible two-line sample in the tile title font: its measured height sizes every tile title. Its lines are
+             fixed, so its height depends only on the font (not on the page or tile width) and the update cannot loop. -->
+        <Label x:Name="TitleProbe" HorizontalOptions="Start" Style="{StaticResource TileTitleFont}" Text="&#160;&#10;&#160;" Opacity="0" InputTransparent="True"
+               VerticalOptions="Start" AutomationProperties.IsInAccessibleTree="False" SizeChanged="OnTitleProbeSizeChanged" />
         <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Padding="16,10,16,12">
             <Border WidthRequest="40" HeightRequest="40" StrokeThickness="0">
                 <Border.StrokeShape>

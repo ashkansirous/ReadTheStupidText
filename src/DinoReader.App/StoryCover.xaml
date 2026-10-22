@@ -7,8 +7,9 @@
     x:DataType="local:StoryTile">
 
     <!-- A story's cover (mock gallery): 3/4, radius 16, flat colour with the title in Andika bold
-         white, or the first page picture. The height follows the width in SizeChanged. -->
-    <Border x:Name="CoverFrame" BackgroundColor="{Binding CoverColour}" StrokeThickness="0" SizeChanged="OnFrameSizeChanged">
+         white, or the first page picture. The height follows the width via AspectRatioView. -->
+    <local:AspectRatioView>
+    <Border BackgroundColor="{Binding CoverColour}" StrokeThickness="0">
         <Border.StrokeShape>
             <RoundRectangle CornerRadius="16" />
         </Border.StrokeShape>
@@ -21,4 +22,5 @@
                    TextColor="White" LineHeight="1.2" HorizontalTextAlignment="Center" VerticalOptions="Center" Margin="12" />
         </Grid>
     </Border>
+    </local:AspectRatioView>
 </ContentView>

@@ -116,9 +116,10 @@ public partial class ReadingPage : ContentPage
 	}
 
 	// The app pins UserAppTheme to Light (kids' palette), so RequestedTheme is always Light and MAUI raises no
-	// theme event; the night colours follow the phone's own theme through PlatformAppTheme, signalled by SystemTheme.
+	// theme event; the night colours follow the system's own theme through SystemTheme.IsDark
+	// (PlatformAppTheme on Android, UISettings on Windows), signalled by SystemTheme.
 	private static ReadingTheme CurrentTheme() =>
-		ReadingTheme.For(Microsoft.Maui.Controls.Application.Current?.PlatformAppTheme == AppTheme.Dark);
+		ReadingTheme.For(SystemTheme.IsDark);
 
 	private void OnThemeChanged()
 	{

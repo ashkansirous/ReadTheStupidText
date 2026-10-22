@@ -11,6 +11,12 @@
     <!-- Grown-up edit overlay on a gallery cover (Slice 80): a band at the foot with Edit and Cast,
          and a red trash badge top-right. Every control is at least 44 dp tall and labelled with the title. -->
     <Grid>
+        <!-- Swallows taps on the bare cover and treats them as Edit, so they never fall through to the cover's own tap. -->
+        <Grid BackgroundColor="Transparent">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnBackdropTapped" />
+            </Grid.GestureRecognizers>
+        </Grid>
         <Border VerticalOptions="End" BackgroundColor="#d92b2540" StrokeThickness="0" Padding="6">
             <Border.StrokeShape>
                 <RoundRectangle CornerRadius="0,0,16,16" />
