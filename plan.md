@@ -104,6 +104,8 @@ this plan turns it into ordered, shippable vertical slices.
 | 84 | Scan reads the page in the page's script, whatever the app language | built | #246 | | [84-ocr-follows-the-page-not-the-app-language.md](docs/plan/slices/84-ocr-follows-the-page-not-the-app-language.md) |
 | 85 | The layout never mirrors; only text flows by its own direction | built | #247 | | [85-no-layout-mirroring.md](docs/plan/slices/85-no-layout-mirroring.md) |
 | 86 | RTST scan reads with line geometry | built | #248 | | [86-rtst-scan-line-geometry.md](docs/plan/slices/86-rtst-scan-line-geometry.md) |
+| 87 | A scan in a script with no reader asks the page's language and downloads it | planned | | | [87-scan-downloads-the-page-language-pack.md](docs/plan/slices/87-scan-downloads-the-page-language-pack.md) |
+| 88 | The Windows desktop layout never mirrors; only text flows by its own direction | planned | | | [88-desktop-no-layout-mirroring.md](docs/plan/slices/88-desktop-no-layout-mirroring.md) |
 
 Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
 
