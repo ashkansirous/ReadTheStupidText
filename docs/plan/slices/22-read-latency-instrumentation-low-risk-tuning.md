@@ -1,6 +1,6 @@
 # Slice 22 — Read-latency instrumentation + low-risk tuning
 
-*Built in part (legacy entry marked `[~]`; moved verbatim by archive-docs 2026-10-20). See the Deferred note below.*
+*Built and verified 2026-10-23 on a Windows dev build (see Measured 2026-10-23 below). Legacy entry marked `[~]` moved verbatim by archive-docs 2026-10-20; its Deferred note (#117) is now closed by the measurement.*
 
 ## Plan entry (moved from plan.md)
 
@@ -50,4 +50,22 @@ confirmed via context7 `/k2-fsa/sherpa-onnx`) and `MaxSynthesisConcurrency =
 clamp(cores/threads, 2, 4)` — latency-first (more ONNX threads shorten the single
 first-chunk synthesis the user waits on), sized so `threads * concurrency` fits the
 cores without oversubscribing.
+
+## Measured 2026-10-23
+
+Windows dev build (merged `main` incl. Slices 47, 56, 88), Supertonic voice, 16 cores, so threads 4 and concurrency 4. Read from the system log's per-chunk lines.
+
+- **First audio on a first-chunk cache miss:** median 1.92 s (range 1.53-3.27 s) for a ~420-char, 4-sentence paragraph (5 reads), against the ~7 s that started the slice. Short one-sentence texts (47-77 chars): 0.87-1.57 s.
+- **Head-start cache hit (Slice 47):** 134 ms to first audio.
+- **Attribution:** the chunk timings sum to the observed latency. First audio is about chunk-1 generate plus ~50 ms (`MediaOpened`); the split takes under 1.2 ms. Chunk-1 synthesis is about 95% of the wait, so the remaining lever is synthesis itself, not chunking or plumbing.
+- **Decision:** keep first-chunk biasing at one sentence. Cutting below a sentence would trade prosody for under a second, not worth it. #117 closes with this data and story #104 closes.
+- **Gap, accepted:** the wav time is not logged as a separate figure (only `chunk i/K (n chars) ready in X ms`). Not worth a change.
+
+### Follow-up (not part of Slice 22)
+
+A new clipboard copy interrupting a read while the panel window is open crashed the app: `0xc000027b` in `CoreMessagingXP.dll`, WER fault `80070057` in `combase.dll` (a stowed WinUI exception). Seen once, not investigated. Needs its own issue. Crash filed as #264.
+
+#### For plan.md
+
+- Slice 22 status: `verified`. Remove its line from *Outstanding work*.
 
