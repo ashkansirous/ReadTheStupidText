@@ -17,6 +17,11 @@ public sealed record StoryTile(Story Story, Color CoverColour, string? CoverImag
 
 	public string DeleteHint => GalleryText.DeleteStory(Title);
 
+	/// <summary>The developer-only export badge (Slice 91): shown only with the developer switch on.</summary>
+	public bool ShowExport => DeveloperMode.Enabled;
+
+	public string ExportHint => GalleryText.ExportStory(Title);
+
 	public static StoryTile From(Story story, IStoryLibrary library, GrownUpMode mode)
 	{
 		string? image = library.TryResolveFile(story.Id, story.CoverImageFile);

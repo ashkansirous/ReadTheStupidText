@@ -60,6 +60,7 @@ public static class AppResources
 	public static string Gallery_EditStory => Get();
 	public static string Gallery_CastStory => Get();
 	public static string Gallery_DeleteStoryLabel => Get();
+	public static string Gallery_ExportStory => Get();
 	public static string Gallery_CastButton => Get();
 	public static string Gate_HoldBody => Get();
 	public static string Gate_HoldDescription => Get();

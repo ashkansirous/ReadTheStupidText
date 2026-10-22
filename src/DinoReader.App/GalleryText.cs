@@ -21,6 +21,8 @@ public static class GalleryText
 
 	public static string DeleteStory(string title) => AppResources.Format(AppResources.Gallery_DeleteStoryLabel, title);
 
+	public static string ExportStory(string title) => AppResources.Gallery_ExportStory + SummarySeparator + title;
+
 	public static string PagesRead(int pages) =>
 		AppResources.Format(pages == Singular ? AppResources.Gallery_PagesRead_One : AppResources.Gallery_PagesRead_Other, pages);
 

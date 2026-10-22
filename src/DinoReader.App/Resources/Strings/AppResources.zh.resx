@@ -37,6 +37,7 @@
   <data name="Gallery_EditStory" xml:space="preserve"><value>编辑{0}</value></data>
   <data name="Gallery_CastStory" xml:space="preserve"><value>{0}的角色</value></data>
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>删除{0}</value></data>
+  <data name="Gallery_ExportStory" xml:space="preserve"><value>导出故事</value></data>
   <data name="Gallery_CastButton" xml:space="preserve"><value>角色</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>请按住 3 秒。</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>请按住 3 秒</value></data>

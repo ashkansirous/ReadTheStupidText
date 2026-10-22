@@ -81,6 +81,8 @@
 		<MauiFont Include="Resources\Fonts\*" />
 		<!-- The gallery's top-bar app icon (copied from docs/design/dino-reader/icons/android/play-store-512.png). -->
 		<MauiImage Include="Resources\Images\dino_icon.png" BaseSize="40,40" />
+		<!-- The bundled starter stories (Slice 91): .dino packages opened with FileSystem.OpenAppPackageFileAsync("<name>.dino"); flat names, because the Windows package drops the folder. -->
+		<MauiAsset Include="Resources\Raw\starters\*.dino" LogicalName="%(Filename)%(Extension)" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -36,7 +36,7 @@
                             <TapGestureRecognizer Tapped="OnStoryTapped" />
                         </local:StoryCover.GestureRecognizers>
                     </local:StoryCover>
-                    <local:TileOverlay EditRequested="OnEditRequested" CastRequested="OnCastRequested" DeleteRequested="OnDeleteRequested" />
+                    <local:TileOverlay EditRequested="OnEditRequested" CastRequested="OnCastRequested" DeleteRequested="OnDeleteRequested" ExportRequested="OnExportRequested" />
                 </Grid>
                 <Label Style="{StaticResource TileTitle}" Text="{Binding Title}">
                     <Label.GestureRecognizers>
@@ -87,7 +87,11 @@
                 <Image Source="dino_icon" Aspect="AspectFill" SemanticProperties.Description="{x:Static res:AppResources.App_Name}" />
             </Border>
             <Label Grid.Column="1" Text="{x:Static res:AppResources.Gallery_Title}" FontSize="22" FontAttributes="Bold" VerticalOptions="Center"
-                   SemanticProperties.HeadingLevel="Level1" />
+                   SemanticProperties.HeadingLevel="Level1">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnTitleTapped" />
+                </Label.GestureRecognizers>
+            </Label>
             <Border Grid.Column="2" x:Name="LockButton" WidthRequest="44" HeightRequest="44" BackgroundColor="{StaticResource ControlFill}"
                     StrokeThickness="0" SemanticProperties.Description="{x:Static res:AppResources.Gallery_ForGrownUps}" SemanticProperties.Hint="{x:Static res:AppResources.Gallery_OpensGateHint}">
                 <Border.StrokeShape>

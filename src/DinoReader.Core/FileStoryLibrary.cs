@@ -70,6 +70,25 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         }
     }
 
+    public async Task ImportAsync(Story story, IReadOnlyList<PackageFile> files)
+    {
+        string path = FilePathOf(story.Id);
+        await _gate.WaitAsync();
+        try
+        {
+            if (File.Exists(path))
+            {
+                throw new InvalidOperationException($"Story {story.Id} already exists.");
+            }
+
+            await CopyFilesThenWriteAsync(story, files);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
     public async Task UpdateAsync(Story story)
     {
         string path = FilePathOf(story.Id);
@@ -201,6 +220,53 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         catch (Exception ex) when (ex is StoryFormatException or IOException or UnauthorizedAccessException)
         {
             return null;
+        }
+    }
+
+    // story.json is written last; any failure removes what this import created (the files it wrote, and the folder if it made it),
+    // so nothing half-imported is left behind and a pre-existing folder is never wiped. Files are created, never overwritten.
+    private async Task CopyFilesThenWriteAsync(Story story, IReadOnlyList<PackageFile> files)
+    {
+        string folder = FolderOf(story.Id);
+        bool createdFolder = !Directory.Exists(folder);
+        var written = new List<string>();
+        try
+        {
+            foreach (PackageFile file in files)
+            {
+                string target = TryResolveFile(story.Id, file.Name) ?? throw new ArgumentException("Not a plain file name.", nameof(files));
+                Directory.CreateDirectory(folder);
+                await using FileStream output = new(target, FileMode.CreateNew, FileAccess.Write);
+                written.Add(target);
+                await using Stream input = file.Open();
+                await input.CopyToAsync(output);
+            }
+
+            await WriteAsync(story);
+        }
+        catch
+        {
+            if (createdFolder)
+            {
+                TryDeleteFolder(folder);
+            }
+            else
+            {
+                written.ForEach(TryDelete);
+            }
+
+            throw;
+        }
+    }
+
+    private static void TryDeleteFolder(string folder)
+    {
+        try
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
         }
     }
 

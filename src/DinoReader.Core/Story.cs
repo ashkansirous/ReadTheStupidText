@@ -63,7 +63,8 @@ public sealed record Story(
     IReadOnlyDictionary<string, string>? CharacterMerges = null,
     bool TranslateToMyLanguage = false,
     string? CoverFile = null,
-    int? CoverPageIndex = null)
+    int? CoverPageIndex = null,
+    string? SourceId = null)
 {
     public const string PageSeparator = "\n\n";
 
@@ -91,6 +92,11 @@ public sealed record Story(
             : CoverFile,
         _ => null,
     };
+
+    /// <summary>Every picture file the story names (page pictures and the chosen cover photo), without blanks or repeats.</summary>
+    public IEnumerable<string> PictureFiles() =>
+        Pages.Select(p => p.ImageFile).Append(CoverFile)
+            .Where(n => !string.IsNullOrEmpty(n)).Select(n => n!).Distinct(StringComparer.Ordinal);
 
     /// <summary>Whether any page carries a picture (a scanned or photographed page).</summary>
     public bool HasPictures => Pages.Any(p => p.ImageFile is not null);

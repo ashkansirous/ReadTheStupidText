@@ -40,6 +40,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<GrownUpGate>();
 		builder.Services.AddSingleton<ExternalActivityGuard>();
 		builder.Services.AddSingleton<StoryActions>();
+		builder.Services.AddSingleton<StarterStories>();
 		AddDocumentExtractors(builder.Services);
 		AddPages(builder.Services);
 

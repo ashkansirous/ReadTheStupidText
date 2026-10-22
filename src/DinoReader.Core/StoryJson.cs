@@ -60,6 +60,7 @@ public static class StoryJson
         }).ToList(),
         Merges = s.Merges.Count == 0 ? null : s.Merges.ToDictionary(m => m.Key, m => m.Value),
         Translate = s.TranslateToMyLanguage,
+        SourceId = s.SourceId,
     };
 
     private static Story FromFile(StoryFile f)
@@ -75,7 +76,7 @@ public static class StoryJson
             f.Pages.Select(p => ToPage(p)).ToList(),
             f.Cast.Select(c => new CastMember(c.CharacterId, c.Name, c.Gender, c.VoiceId, c.Edited)).ToList(),
             f.CoverStyle, f.CoverColourIndex, f.NarratorVoiceId, ParseMode(f.PreferredMode), CleanMerges(f.Merges), f.Translate,
-            f.CoverFile, f.CoverPageIndex);
+            f.CoverFile, f.CoverPageIndex, StoryIds.IsValid(f.SourceId) ? f.SourceId : null);
     }
 
     private static StoryPage ToPage(PageFile p)
@@ -207,6 +208,7 @@ public static class StoryJson
         public List<CastFile> Cast { get; set; } = [];
         public Dictionary<string, string>? Merges { get; set; }
         public bool Translate { get; set; }
+        public string? SourceId { get; set; }
     }
 
     private sealed class PageFile
