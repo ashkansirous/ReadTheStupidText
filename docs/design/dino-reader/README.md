@@ -67,6 +67,53 @@ Also read these files the selection imports:
 Implement: `Dino Reader v2.dc.html`
 ```
 
+## Batch 16 mock — `Dino Reader Batch 16.dc.html`
+
+- **Source:** the same Claude Design project, file `Dino Reader Batch 16.dc.html`
+  (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+16.dc.html>).
+- **Copied:** 2026-10-22, verbatim from `DesignSync get_file`.
+- **Covers:** Batch 16, Slices 91-93 (first run, starter gallery, free stories
+  store, language, backup). Everything it doesn't show follows `Dino Reader v2`
+  and Slice 80's tile overlay. Read it the same way as the v2 file; it imports
+  the same `support.js` and app icon.
+
+| # | Screen | Line |
+|---|---|---|
+| — | Intro (Batch 16, Slices 91-93, Decisions 94-99) | 18 |
+| — | **First run · Slices 91 and 93** (group) | 23 |
+| 16 | First run · language | 28 |
+| 17 | First run · download | 55 |
+| 18 | First run · ready | 81 |
+| 19 | First grown-up | 100 |
+| 20 | Starter gallery | 134 |
+| — | **Grown-up · Free stories · Slice 92** (group) | 147 |
+| 21 | Store | 152 |
+| 22 | Store offline | 184 |
+| 23 | Store empty | 199 |
+| — | **Grown-up · Language** (group) | 213 |
+| 26 | Language | 217 |
+| — | **Grown-up · Backup · Slice 93** (group) | 239 |
+| 24 | Backup | 244 |
+| 25 | Restore result | 268 |
+
+(Generated from the group captions and `data-screen-label` attributes.)
+
+**Import prompt (verbatim):**
+
+```
+Use the claude_design MCP (https://api.anthropic.com/v1/design/mcp, auth via /design-login) to import this project:
+https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+16.dc.html
+
+Focus on these files (the whole project is readable):
+- `Dino Reader Batch 16.dc.html`
+
+Also read these files the selection imports:
+- `dino_reader_icons/ios/AppIcon-1024-light.png`
+- `support.js`
+
+Implement: `Dino Reader Batch 16.dc.html`
+```
+
 ## Icons — `icons/`
 
 Source: the user's "Tray and feature panel design.zip" (folder
