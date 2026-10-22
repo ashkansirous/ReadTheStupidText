@@ -51,7 +51,7 @@ From review (`reviews/88-review-1.md`, `88-review-2.md`): pass 1 fixed 1, 3-9, f
 
 Checks: App x64 build 0 warnings; RTST tests 809 pass.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-22)
 
 - `src/ReadTheStupidText.App/CLAUDE.md` (already written on the branch): the layout never mirrors; each `RootGrid` is fixed `LeftToRight`; only text takes a direction through `TextFlow` (`ContentDirection`/`ForUi`). Never set `FlowDirection` on a container. (Slice 88: docs/plan/slices/88-desktop-no-layout-mirroring.md)
 
