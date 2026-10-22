@@ -10,6 +10,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 {
 	private readonly IServiceProvider _services;
 	private readonly AwayTracker _away = new();
+	private CancellationTokenSource? _capTimer;
 
 	public DinoApp(IServiceProvider services, SpeechStartup startup)
 	{
@@ -28,6 +29,8 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 
 	protected override Window CreateWindow(IActivationState? activationState)
 	{
+		// A new window (activity recreated, second desktop window) always starts in kids' mode.
+		_services.GetRequiredService<GrownUpMode>().Leave();
 		var navigation = new NavigationPage(_services.GetRequiredService<GalleryPage>())
 		{
 			BarBackgroundColor = DinoTokens.Get(DinoTokens.Cream),
@@ -38,7 +41,9 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		var external = _services.GetRequiredService<ExternalActivityGuard>();
 		window.Stopped += (_, _) => OnStopped(navigation, external);
 		window.Resumed += (_, _) => OnResumed(navigation, external);
-		external.Ended += () => OnResumed(navigation, external);
+		Action ended = () => OnResumed(navigation, external);
+		external.Ended += ended;
+		window.Destroying += (_, _) => external.Ended -= ended;
 		return window;
 	}
 
@@ -53,15 +58,47 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		if (external.IsActive)
 		{
 			_away.Stopped(DateTimeOffset.UtcNow);
+			ScheduleCapReset(navigation);
 			return;
 		}
 
+		CancelCapReset();
 		_away.Clear();
 		_ = ObserveAsync(CloseGrownUpPagesAsync(navigation));
 	}
 
+	// The picker deferral is bounded: if the window is still away after the cap, reset anyway.
+	private void ScheduleCapReset(NavigationPage navigation)
+	{
+		CancelCapReset();
+		var timer = _capTimer = new CancellationTokenSource();
+		_ = ObserveAsync(ResetAfterCapAsync(navigation, timer.Token));
+	}
+
+	private void CancelCapReset()
+	{
+		_capTimer?.Cancel();
+		_capTimer = null;
+	}
+
+	private async Task ResetAfterCapAsync(NavigationPage navigation, CancellationToken token)
+	{
+		try
+		{
+			await Task.Delay(AwayTracker.ExternalActivityCap, token);
+		}
+		catch (OperationCanceledException)
+		{
+			return;
+		}
+
+		_away.Clear();
+		await MainThread.InvokeOnMainThreadAsync(() => CloseGrownUpPagesAsync(navigation));
+	}
+
 	private void OnResumed(NavigationPage navigation, ExternalActivityGuard external)
 	{
+		CancelCapReset();
 		if (_away.ReturnedTooLate(DateTimeOffset.UtcNow))
 		{
 			_ = ObserveAsync(CloseGrownUpPagesAsync(navigation));
@@ -82,8 +119,10 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 
 	// Each step is attempted whatever the one before did: a modal that will not dismiss must
 	// not leave the grown-up pages open behind it.
-	private static async Task CloseGrownUpPagesAsync(NavigationPage navigation)
+	private async Task CloseGrownUpPagesAsync(NavigationPage navigation)
 	{
+		// First and synchronous: kids' mode must hold whatever the navigation steps below do.
+		_services.GetRequiredService<GrownUpMode>().Leave();
 		await TryAsync(() => DismissGatesAsync(navigation));
 		await TryAsync(() => PopGrownUpPagesAsync(navigation));
 	}

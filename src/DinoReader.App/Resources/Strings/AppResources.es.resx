@@ -22,7 +22,6 @@
   <data name="Gallery_Title" xml:space="preserve"><value>Mis cuentos</value></data>
   <data name="Gallery_ForGrownUps" xml:space="preserve"><value>Para adultos</value></data>
   <data name="Gallery_OpensGateHint" xml:space="preserve"><value>Abre la puerta de adultos</value></data>
-  <data name="Gallery_Cast" xml:space="preserve"><value>Reparto · {0}</value></data>
   <data name="Gallery_Characters_One" xml:space="preserve"><value>{0} personaje</value></data>
   <data name="Gallery_Characters_Other" xml:space="preserve"><value>{0} personajes</value></data>
   <data name="Gallery_PagesSummary" xml:space="preserve"><value>{0} · reordenar, añadir, quitar</value></data>
@@ -34,10 +33,11 @@
   <data name="Delete_Body" xml:space="preserve"><value>Sus páginas, imágenes y voces se borran de este teléfono.</value></data>
   <data name="Delete_FailedTitle" xml:space="preserve"><value>No se pudo eliminar el cuento</value></data>
   <data name="Delete_FailedBody" xml:space="preserve"><value>Algo sigue usando sus archivos. Inténtalo de nuevo en un momento.</value></data>
-  <data name="Manage_Title" xml:space="preserve"><value>Gestionar cuentos</value></data>
   <data name="Manage_EditStory" xml:space="preserve"><value>Editar cuento</value></data>
-  <data name="Manage_DeleteStory" xml:space="preserve"><value>Eliminar cuento</value></data>
-  <data name="Manage_WhoIsSpeaking" xml:space="preserve"><value>Quién habla</value></data>
+  <data name="Gallery_EditStory" xml:space="preserve"><value>Editar {0}</value></data>
+  <data name="Gallery_CastStory" xml:space="preserve"><value>Reparto de {0}</value></data>
+  <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>Eliminar {0}</value></data>
+  <data name="Gallery_CastButton" xml:space="preserve"><value>Reparto</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Mantén pulsado 3 segundos.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Mantén pulsado 3 segundos</value></data>
   <data name="Gate_KeepHolding" xml:space="preserve"><value>Sigue manteniendo…</value></data>

@@ -435,3 +435,45 @@ public class StoryDraftTests
         Assert.True(draft.TextChanged);
     }
 }
+
+public class GalleryLayoutTests
+{
+    private static Story Make(string title) => new(StoryIds.New(), title, "en", DateTimeOffset.UnixEpoch, [new StoryPage("x")], [],
+        CoverStyle.Colour, 0, "F1");
+
+    private static string[] Titles(IReadOnlyList<GalleryEntry> entries) =>
+        entries.Where(e => e.Kind == GalleryEntryKind.Story).Select(e => e.Story!.Title).ToArray();
+
+    [Fact]
+    public void KidsMode_HasNoAddEntry_AndKeepsOrder()
+    {
+        var entries = GalleryLayout.Build([Make("A"), Make("B"), Make("C")], grownUp: false);
+
+        Assert.DoesNotContain(entries, e => e.Kind == GalleryEntryKind.AddStory);
+        Assert.Equal(["A", "B", "C"], Titles(entries));
+    }
+
+    [Fact]
+    public void GrownUpMode_PutsAddFirst_AndKeepsTheSameStoryOrder()
+    {
+        var entries = GalleryLayout.Build([Make("A"), Make("B"), Make("C")], grownUp: true);
+
+        Assert.Equal(GalleryEntryKind.AddStory, entries[0].Kind);
+        Assert.Equal(4, entries.Count);
+        Assert.Equal(["A", "B", "C"], Titles(entries));
+    }
+
+    [Fact]
+    public void EmptyLibrary_IsOnlyAddInGrownUpMode_AndEmptyInKidsMode()
+    {
+        Assert.Empty(GalleryLayout.Build([], grownUp: false));
+        Assert.Equal(GalleryEntryKind.AddStory, Assert.Single(GalleryLayout.Build([], grownUp: true)).Kind);
+    }
+
+    [Fact]
+    public void Overlay_FollowsTheMode()
+    {
+        Assert.True(GalleryLayout.ShowsOverlay(true));
+        Assert.False(GalleryLayout.ShowsOverlay(false));
+    }
+}

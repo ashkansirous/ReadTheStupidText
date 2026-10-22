@@ -22,7 +22,6 @@
   <data name="Gallery_Title" xml:space="preserve"><value>Мои истории</value></data>
   <data name="Gallery_ForGrownUps" xml:space="preserve"><value>Для взрослых</value></data>
   <data name="Gallery_OpensGateHint" xml:space="preserve"><value>Открывает вход для взрослых</value></data>
-  <data name="Gallery_Cast" xml:space="preserve"><value>Роли · {0}</value></data>
   <data name="Gallery_Characters_One" xml:space="preserve"><value>Персонажей: {0}</value></data>
   <data name="Gallery_Characters_Other" xml:space="preserve"><value>Персонажей: {0}</value></data>
   <data name="Gallery_PagesSummary" xml:space="preserve"><value>{0} · порядок, добавить, удалить</value></data>
@@ -34,10 +33,11 @@
   <data name="Delete_Body" xml:space="preserve"><value>Его страницы, картинки и голоса будут удалены с этого телефона.</value></data>
   <data name="Delete_FailedTitle" xml:space="preserve"><value>Не удалось удалить историю</value></data>
   <data name="Delete_FailedBody" xml:space="preserve"><value>Его файлы ещё используются. Попробуйте чуть позже.</value></data>
-  <data name="Manage_Title" xml:space="preserve"><value>Управление историями</value></data>
   <data name="Manage_EditStory" xml:space="preserve"><value>Изменить историю</value></data>
-  <data name="Manage_DeleteStory" xml:space="preserve"><value>Удалить историю</value></data>
-  <data name="Manage_WhoIsSpeaking" xml:space="preserve"><value>Кто говорит</value></data>
+  <data name="Gallery_EditStory" xml:space="preserve"><value>Изменить {0}</value></data>
+  <data name="Gallery_CastStory" xml:space="preserve"><value>Герои: {0}</value></data>
+  <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>Удалить {0}</value></data>
+  <data name="Gallery_CastButton" xml:space="preserve"><value>Герои</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Нажмите и удерживайте 3 секунды.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Нажмите и удерживайте 3 секунды</value></data>
   <data name="Gate_KeepHolding" xml:space="preserve"><value>Продолжайте удерживать…</value></data>
