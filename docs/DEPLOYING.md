@@ -30,6 +30,8 @@ are constants (`Host` in `worker/downloads.ts`, routing in `resolveSite`).
 | `/download/android/<x.y.z>` | that version's APK |
 | `/download` | redirects to `/` |
 | `/dino/icon.png` | `site/dino/icon.png` (the "Book hug" icon, copied from `docs/design/dino-reader/icons/android/play-store-512.png`) |
+| `/img/control-panel.webp` (on `readthestupidtext.sirous.uk`) | `site/img/control-panel.webp` (the hero screenshot of the Windows control panel) |
+| `/dino/reading-screen.webp` (on `dinoreader.sirous.uk`) | `site/dino/reading-screen.webp` (the hero screenshot of the reading screen) |
 
 **Check it on `workers.dev` first.** There the Dino site is under a `/dino/` prefix:
 `https://readthestupidtext.<account-subdomain>.workers.dev/dino/`, `/dino/privacy` and

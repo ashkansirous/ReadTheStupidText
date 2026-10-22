@@ -3,64 +3,205 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
   <title>Read The Stupid Text</title>
-  <meta name="description" content="A lightweight Windows tray app that reads selected or copied text — or an uploaded .txt/.pdf file — aloud with natural neural voices, fully offline." />
+  <meta name="description" content="Reads any text aloud in a natural voice, offline, at your speed. Windows, Android, iPhone and iPad." />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Read The Stupid Text" />
+  <meta property="og:description" content="Reads any text aloud in a natural voice, offline, at your speed." />
+  <meta property="og:image" content="https://readthestupidtext.sirous.uk/img/control-panel.webp" />
+  <meta property="og:image:alt" content="The Read The Stupid Text tray control panel with waveform, progress, speed, voice and language pickers." />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta property="og:url" content="https://readthestupidtext.sirous.uk/" />
   <style>
-    :root { color-scheme: light dark; }
-    body {
-      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-      line-height: 1.6; max-width: 720px; margin: 0 auto; padding: 3rem 1.25rem 4rem;
-      color: #1a1a2e; background: #fbfbfd; text-align: center;
+    :root {
+      color-scheme: light dark;
+      --bg: #fbfbfd; --ink: #1a1a2e; --soft: #4a4a5a; --card: #ffffff; --line: #dcdce6;
+      --accent: #3b6fe3; --accent-ink: #ffffff; --link: #2f5bc7; --chip: #eef1fb; --band: #eef1fb;
+      --shadow: 0 18px 40px rgba(26, 26, 46, .16);
     }
     @media (prefers-color-scheme: dark) {
-      body { color: #e6e6ea; background: #1b1b1f; }
-      a.btn { background: #5b8df0; }
-      .sub { color: #a0a0a8; }
+      :root {
+        --bg: #1b1b1f; --ink: #e6e6ea; --soft: #b4b4be; --card: #25252b; --line: #3a3a44;
+        --accent: #5b8df0; --accent-ink: #0f1220; --link: #8db0ff; --chip: #2a2c3c; --band: #23253a;
+        --shadow: 0 18px 40px rgba(0, 0, 0, .5);
+      }
     }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--ink);
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif; line-height: 1.6;
+    }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+    a { color: var(--link); }
+    a:focus-visible, .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+    header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 16px; padding-bottom: 16px; flex-wrap: wrap; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--ink); text-decoration: none; }
     .glyph {
-      width: 96px; height: 96px; border-radius: 22px; margin: 0 auto 1.25rem;
+      width: 40px; height: 40px; border-radius: 10px; flex: none;
       background: linear-gradient(135deg, #5B57E8, #3B82F6);
-      display: flex; align-items: center; justify-content: center; font-size: 2.6rem;
+      display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
     }
-    h1 { font-size: 2rem; margin: .25rem 0; }
-    .sub { color: #555; font-size: 1.1rem; margin-top: 0; }
-    .features { text-align: left; display: inline-block; margin: 1.5rem auto; }
-    .features li { margin: .35rem 0; }
-    a.btn {
-      display: inline-block; margin: 1.5rem .4rem 0; padding: .7rem 1.4rem; border-radius: 10px;
-      background: #3b6fe3; color: #fff; text-decoration: none; font-weight: 600;
+    nav { display: flex; gap: 18px; }
+    nav a { color: var(--ink); text-decoration: none; font-weight: 600; }
+    nav a:hover { text-decoration: underline; }
+    .hero { display: grid; gap: 32px; padding: 24px 0 48px; align-items: center; }
+    .eyebrow { font-size: .85rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--link); margin: 0 0 8px; }
+    h1 { font-size: 2.1rem; line-height: 1.15; margin: 0 0 16px; }
+    h2 { font-size: 1.6rem; line-height: 1.2; margin: 0 0 20px; }
+    h3 { font-size: 1.05rem; margin: 0 0 6px; }
+    .lede { color: var(--soft); font-size: 1.05rem; margin: 0 0 20px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+    .btn {
+      display: inline-block; padding: .7rem 1.2rem; border-radius: 10px; background: var(--accent);
+      color: var(--accent-ink); text-decoration: none; font-weight: 600;
     }
-    a.btn.alt { background: transparent; border: 1px solid rgba(128,128,128,.4); color: inherit; }
-    .note { font-size: .9rem; color: #777; margin-top: 1rem; }
-    footer { margin-top: 3rem; font-size: .85rem; color: #888; }
-    footer a { color: inherit; }
+    .btn:hover { filter: brightness(1.08); }
+    .btn.alt { background: transparent; border: 1px solid var(--line); color: var(--ink); }
+    .ios-note { margin: 14px 0 0; color: var(--soft); font-size: .95rem; }
+    .stage {
+      border-radius: 20px; padding: 28px 16px; display: flex; justify-content: center;
+      background: linear-gradient(135deg, rgba(91, 87, 232, .22), rgba(59, 130, 246, .22));
+    }
+    .frame { border: 1px solid var(--line); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow); background: var(--card); max-width: 100%; line-height: 0; }
+    .frame img { max-width: 100%; height: auto; }
+    section { padding: 40px 0; }
+    .grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+    .card p { margin: 0; color: var(--soft); }
+    .icon { font-size: 1.5rem; display: block; margin-bottom: 6px; line-height: 1.2; }
+    kbd {
+      font-family: inherit; font-size: .85em; padding: .1em .45em; border: 1px solid var(--line);
+      border-bottom-width: 2px; border-radius: 6px; background: var(--chip); color: var(--ink);
+    }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 0 0 12px; list-style: none; }
+    .chips li { background: var(--chip); border: 1px solid var(--line); border-radius: 999px; padding: .25rem .8rem; font-size: .95rem; }
+    .small { color: var(--soft); margin: 0; }
+    .tag { display: inline-block; font-size: .8rem; font-weight: 700; padding: .1rem .55rem; border-radius: 999px; background: var(--chip); border: 1px solid var(--line); margin-bottom: 8px; }
+    .card .actions { margin-top: 12px; }
+    .band { background: var(--band); border-radius: 20px; padding: 28px 20px; text-align: center; margin: 24px 0; }
+    .band p { margin: 0 0 8px; font-size: 1.15rem; font-weight: 600; }
+    footer { border-top: 1px solid var(--line); margin-top: 32px; padding: 24px 0 40px; font-size: .9rem; color: var(--soft); }
+    footer p { margin: 0 0 6px; }
+    @media (min-width: 760px) {
+      h1 { font-size: 2.7rem; }
+      .hero { grid-template-columns: 1.1fr .9fr; }
+      .grid.three { grid-template-columns: repeat(3, 1fr); }
+      .grid.four { grid-template-columns: repeat(4, 1fr); }
+    }
   </style>
 </head>
 <body>
-  <div class="glyph">👓</div>
-  <h1>Read The Stupid Text</h1>
-  <p class="sub">Reads any selected or copied text aloud — or an uploaded file — in natural neural voices, at the speed you choose. Fully offline.</p>
+  <header>
+    <div class="wrap">
+      <a class="brand" href="/"><span class="glyph" aria-hidden="true">👓</span><span>Read The Stupid Text</span></a>
+      <nav aria-label="Main">
+        <a href="#platforms">Download</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="https://github.com/ashkansirous/ReadTheStupidText">GitHub</a>
+      </nav>
+    </div>
+  </header>
 
-  <ul class="features">
-    <li>🔊 10 natural, on-device neural voices (no internet)</li>
-    <li>⏩ Smooth 0.5×–2.0× speed, changeable live mid-read</li>
-    <li>📄 Reads uploaded .txt and .pdf files aloud, not just selections</li>
-    <li>🖱️ Auto-read on select, on copy, or via global hotkey (Ctrl+Win+R)</li>
-    <li>🎛️ A tray control panel — waveform, progress, speed presets, activity log</li>
-    <li>🪶 Lives quietly in the system tray, launches at startup</li>
-    <li>🔒 No account, no telemetry, no data leaves your PC</li>
-  </ul>
+  <main>
+    <div class="wrap">
+      <div class="hero">
+        <div>
+          <p class="eyebrow">Windows &middot; Android &middot; iPhone and iPad</p>
+          <h1>Reads any text aloud in a natural voice, offline, at your speed.</h1>
+          <p class="lede">Select or copy text, press Ctrl+Win+R, or open a file, and it reads it aloud in a natural on-device neural voice at any speed from 0.5x to 2x. A Windows tray app on the Microsoft Store, with Android and iPhone apps that read a page straight from the camera. Nothing you read leaves the device.</p>
+          <div class="actions">
+            <a class="btn" href="https://apps.microsoft.com/detail/9NGT1BN1H92V">Windows &mdash; Microsoft Store</a>
+            <a class="btn alt" href="https://play.google.com/apps/testing/uk.sirous.readthestupidtext">Android &mdash; Google Play (beta)</a>
+            <a class="btn alt" href="/download">Android &mdash; direct download (APK)</a>
+          </div>
+          <p class="ios-note">iPhone and iPad via TestFlight (invite-only beta).</p>
+        </div>
+        <div class="stage">
+          <div class="frame">
+            <img src="/img/control-panel.webp" width="369" height="514" loading="eager" alt="The Read The Stupid Text control panel on Windows: now reading, play and skip buttons, 1.5x speed, voice Momonga, language English, a Read a file button and an activity log." />
+          </div>
+        </div>
+      </div>
 
-  <div>
-    <a class="btn" href="https://apps.microsoft.com/detail/9NGT1BN1H92V">Windows — Microsoft Store</a>
-    <a class="btn" href="https://play.google.com/apps/testing/uk.sirous.readthestupidtext">Android — Google Play (beta)</a>
-    <a class="btn alt" href="/download">Android — direct download (APK)</a>
-    <a class="btn alt" href="https://github.com/ashkansirous/ReadTheStupidText">View on GitHub</a>
-  </div>
-  <p class="note">Android is in closed testing: the Play link works once you're on the tester list, or install the APK directly. iPhone and iPad are coming via TestFlight.</p>
+      <section aria-labelledby="ways">
+        <h2 id="ways">How text gets in</h2>
+        <div class="grid four">
+          <div class="card"><span class="icon" aria-hidden="true">🖱️</span><h3>Auto-read on selection</h3><p>Select text in any app and it starts reading.</p></div>
+          <div class="card"><span class="icon" aria-hidden="true">📋</span><h3>Auto-read on copy</h3><p>Copy text, including from the terminal, and it reads it aloud.</p></div>
+          <div class="card"><span class="icon" aria-hidden="true">⌨️</span><h3>Global hotkey</h3><p>Press <kbd>Ctrl</kbd> + <kbd>Win</kbd> + <kbd>R</kbd> from any app, including the terminal.</p></div>
+          <div class="card"><span class="icon" aria-hidden="true">📷</span><h3>On your phone</h3><p>Point the camera at a page or use the multi-page document scanner.</p></div>
+        </div>
+      </section>
+
+      <section aria-labelledby="does">
+        <h2 id="does">What it does</h2>
+        <div class="grid three">
+          <div class="card"><span class="icon" aria-hidden="true">🔊</span><h3>Natural voices on the device</h3><p>Ten English voices such as &ldquo;Momonga&rdquo;, plus Farsi and Chinese. Voice packs download once (about 145 MB); the built-in system voice reads until the pack arrives. Fully offline afterwards.</p></div>
+          <div class="card"><span class="icon" aria-hidden="true">⏩</span><h3>Speed 0.5x to 2x</h3><p>Change it live mid-read, with presets. Skip 10 seconds back or forward, see a read-through timer, and swap voice while the current read continues.</p></div>
+          <div class="card"><span class="icon" aria-hidden="true">📄</span><h3>Reads your files</h3><p>Open a .txt, .pdf or .docx file and have it read aloud.</p></div>
+          <div class="card"><span class="icon" aria-hidden="true">🎛️</span><h3>Tray control panel</h3><p>Waveform, progress, speed pill, voice and language pickers, a draggable window, and an activity log that explains every read.</p></div>
+          <div class="card"><span class="icon" aria-hidden="true">🌐</span><h3>Translate to my language</h3><p>On-device machine translation turns selected, copied, scanned or opened text into your language before it is read (Windows and Android). The text language is detected automatically.</p></div>
+          <div class="card"><span class="icon" aria-hidden="true">⚡</span><h3>Head start</h3><p>The first sentences are prepared while you look at the text, and heard sentences are cached, so reading starts almost instantly.</p></div>
+          <div class="card"><span class="icon" aria-hidden="true">🔒</span><h3>Private</h3><p>No account, no telemetry. Text, files and scans never leave the device.</p></div>
+          <div class="card"><span class="icon" aria-hidden="true">📷</span><h3>Camera and scanner</h3><p>Text is recognised on the phone, with ML Kit and downloaded PaddleOCR models for Arabic, Farsi, Russian, Chinese and Japanese.</p></div>
+        </div>
+      </section>
+
+      <section aria-labelledby="langs">
+        <h2 id="langs">Nine languages</h2>
+        <ul class="chips">
+          <li>English</li><li>Farsi</li><li>French</li><li>Spanish</li><li>Portuguese</li><li>Chinese</li><li>Arabic</li><li>Russian</li><li>Japanese</li>
+        </ul>
+        <p class="small">For voices and the interface, with right-to-left layout for Farsi and Arabic, on Windows, Android and iOS. Translation runs on the device.</p>
+      </section>
+
+      <section id="platforms" aria-labelledby="runs">
+        <h2 id="runs">Where it runs</h2>
+        <div class="grid three">
+          <div class="card">
+            <span class="tag">Live</span>
+            <h3>Windows 11</h3>
+            <p>A tray app, live on the Microsoft Store.</p>
+            <div class="actions"><a class="btn" href="https://apps.microsoft.com/detail/9NGT1BN1H92V">Windows &mdash; Microsoft Store</a></div>
+          </div>
+          <div class="card">
+            <span class="tag">Closed testing</span>
+            <h3>Android</h3>
+            <p>The Play link works once you are on the tester list, or install the APK directly. Voice packs download once on first launch; the built-in system voice reads until the pack arrives.</p>
+            <div class="actions">
+              <a class="btn" href="https://play.google.com/apps/testing/uk.sirous.readthestupidtext">Android &mdash; Google Play (beta)</a>
+              <a class="btn alt" href="/download">Android &mdash; direct download (APK)</a>
+            </div>
+          </div>
+          <div class="card">
+            <span class="tag">TestFlight</span>
+            <h3>iPhone and iPad</h3>
+            <p>Builds ship from CI to TestFlight as an invite-only beta.</p>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="hood">
+        <h2 id="hood">Under the hood</h2>
+        <ul class="chips">
+          <li>.NET 10</li><li>C#</li><li>WinUI 3 + Windows App SDK (MSIX)</li><li>.NET MAUI (Android, iOS)</li><li>sherpa-onnx</li><li>Supertonic-3, Piper, MeloTTS (ONNX Runtime)</li><li>ML Kit and PaddleOCR on device</li><li>GitHub Actions releases to the Microsoft Store, Google Play and TestFlight</li><li>Cloudflare Worker landing site</li>
+        </ul>
+        <p class="small">Open source under the MIT license: <a href="https://github.com/ashkansirous/ReadTheStupidText">source code on GitHub</a>.</p>
+      </section>
+
+      <div class="band">
+        <p>No account, no telemetry. Text, files and scans never leave the device.</p>
+        <a href="privacy.html">Read the privacy policy</a>
+      </div>
+    </div>
+  </main>
 
   <footer>
-    &copy; 2026 Ashkan Sirous &middot; MIT License &middot; <a href="privacy.html">Privacy Policy</a>
+    <div class="wrap">
+      <p>&copy; 2026 Ashkan Sirous &middot; MIT License &middot; <a href="privacy.html">Privacy Policy</a></p>
+      <p><a href="https://sirous.uk/">More software at sirous.uk</a> &middot; Also by Ashkan: <a href="https://dinoreader.sirous.uk/">Dino Reader</a></p>
+    </div>
   </footer>
 </body>
 </html>

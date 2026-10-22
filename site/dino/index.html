@@ -3,8 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
   <title>Dino Reader</title>
-  <meta name="description" content="Dino Reader is a book reader for kids aged 3 to 8: a different voice for every character, and a highlight on every page. No ads, no accounts, works offline." />
+  <meta name="description" content="A storybook reader where every character has their own voice. For ages 3 to 8. No accounts, no ads, works offline." />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Dino Reader" />
+  <meta property="og:description" content="A storybook reader where every character has their own voice." />
+  <meta property="og:image" content="https://dinoreader.sirous.uk/dino/reading-screen.webp" />
+  <meta property="og:image:alt" content="The Dino Reader reading screen showing a storybook page with the current sentence highlighted." />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta property="og:url" content="https://dinoreader.sirous.uk/" />
   <link rel="icon" type="image/png" href="/dino/icon.png" />
   <style>
     :root {
@@ -20,52 +28,167 @@
     }
     * { box-sizing: border-box; }
     body {
-      margin: 0; background: var(--bg); color: var(--ink);
+      margin: 0; background: var(--bg); color: var(--ink); position: relative; overflow-x: clip;
       /* No webfont is loaded (no third-party request on a kids' site): Fredoka and Andika apply only if installed, else the rounded system fallback. */
       font-family: "Fredoka", "Andika", "Segoe UI Rounded", "Arial Rounded MT Bold", system-ui, -apple-system, sans-serif;
-      line-height: 1.6; text-align: center; padding: 3rem 1.25rem 4rem;
+      line-height: 1.6;
     }
-    main { max-width: 720px; margin: 0 auto; }
-    .icon { width: 128px; height: 128px; border-radius: 28px; box-shadow: 0 6px 18px rgba(43, 37, 64, .18); }
-    .eyebrow { font-size: .8rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--brand); margin: 1.25rem 0 0; }
-    h1 { font-size: 2.4rem; line-height: 1.15; margin: .25rem 0 .5rem; }
-    .lede { font-size: 1.15rem; color: var(--soft); margin: 0 auto; max-width: 34rem; }
-    .features { list-style: none; padding: 0; margin: 2rem auto; display: grid; gap: .75rem; text-align: left; }
-    .features li { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: .85rem 1.1rem; }
-    .features strong { display: block; }
-    .features span { color: var(--soft); font-size: .95rem; }
+    html { overflow-x: clip; }
+    body::before, body::after {
+      content: ""; position: absolute; border-radius: 50%; background: var(--brand); opacity: .08; pointer-events: none; z-index: 0;
+    }
+    body::before { width: 360px; height: 360px; top: -120px; left: -140px; }
+    body::after { width: 260px; height: 260px; top: 900px; right: -110px; }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; position: relative; z-index: 1; }
+    a { color: var(--brand); }
+    a:focus-visible, .btn:focus-visible { outline: 3px solid var(--brand); outline-offset: 3px; border-radius: 999px; }
+    header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 16px; padding-bottom: 16px; flex-wrap: wrap; }
+    .brandmark { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 1.2rem; color: var(--ink); text-decoration: none; }
+    .brandmark img { width: 40px; height: 40px; border-radius: 10px; }
+    nav { display: flex; gap: 18px; }
+    nav a { color: var(--ink); text-decoration: none; font-weight: 600; }
+    nav a:hover { text-decoration: underline; }
+    .hero { display: grid; gap: 40px; padding: 24px 0 56px; align-items: center; }
+    .eyebrow { font-size: .85rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--brand); margin: 0 0 8px; }
+    h1 { font-size: 2.2rem; line-height: 1.15; margin: 0 0 16px; }
+    h2 { font-size: 1.7rem; line-height: 1.2; margin: 0 0 22px; }
+    h3 { font-size: 1.15rem; margin: 0 0 6px; }
+    .lede { font-size: 1.1rem; color: var(--soft); margin: 0 0 22px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
     .btn {
-      display: inline-block; margin: .4rem; padding: .8rem 1.6rem; border-radius: 999px;
+      display: inline-block; padding: .8rem 1.6rem; border-radius: 999px;
       background: var(--brand); color: var(--brand-ink); text-decoration: none; font-weight: 600; font-size: 1.05rem;
     }
     .btn:hover { filter: brightness(1.08); }
-    .note { font-size: .9rem; color: var(--muted); max-width: 34rem; margin: 1rem auto 0; }
-    footer { margin-top: 3rem; font-size: .85rem; color: var(--muted); }
-    footer a { color: inherit; }
+    .pill { display: inline-flex; align-items: center; gap: 8px; padding: .3rem 0; color: var(--soft); font-weight: 500; }
+    .pill small { background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 0 .55rem; color: var(--soft); font-size: .8rem; }
+    .stage { position: relative; display: flex; justify-content: center; padding: 32px 0; }
+    .blob { position: absolute; inset: 4% 6%; background: var(--brand); border-radius: 48% 52% 55% 45% / 52% 45% 55% 48%; opacity: .9; }
+    .phone {
+      position: relative; border: 6px solid var(--ink); border-radius: 28px; overflow: hidden; line-height: 0;
+      box-shadow: 0 20px 44px rgba(43, 37, 64, .3); transform: none; width: 232px; max-width: 70%; background: var(--ink);
+    }
+    .phone img { width: 100%; height: auto; }
+    section { padding: 40px 0; }
+    .grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; }
+    .card p { margin: 0; color: var(--soft); }
+    .num {
+      width: 40px; height: 40px; border-radius: 50%; background: var(--brand); color: var(--brand-ink);
+      display: flex; align-items: center; justify-content: center; font-weight: 700; margin-bottom: 10px;
+    }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 0 0 12px; list-style: none; }
+    .chips li { background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: .3rem 1rem; }
+    .small { color: var(--soft); margin: 0; }
+    .tag { display: inline-block; font-size: .8rem; font-weight: 600; padding: .05rem .6rem; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); color: var(--soft); margin-bottom: 8px; }
+    .card .actions { margin-top: 12px; }
+    .band { background: var(--card); border: 1px solid var(--line); border-radius: 28px; padding: 32px 20px; text-align: center; margin: 24px 0; }
+    .band p { margin: 0 0 8px; font-size: 1.2rem; font-weight: 600; }
+    footer { border-top: 1px solid var(--line); margin-top: 32px; padding: 24px 0 40px; font-size: .9rem; color: var(--soft); }
+    footer p { margin: 0 0 6px; }
+    @media (min-width: 760px) {
+      h1 { font-size: 3rem; }
+      .hero { grid-template-columns: 1.1fr .9fr; }
+      .phone { transform: rotate(-3deg); }
+      .grid.three { grid-template-columns: repeat(3, 1fr); }
+    }
   </style>
 </head>
 <body>
-  <main>
-    <img class="icon" src="/dino/icon.png" width="128" height="128" alt="Dino Reader: a dinosaur hugging a book" />
-    <p class="eyebrow">For ages 3&ndash;8</p>
-    <h1>Dino Reader</h1>
-    <p class="lede">A book reader where every character has their own voice. Scan a page or open a story, and Dino reads it aloud, highlighting each sentence as it goes.</p>
-
-    <ul class="features">
-      <li><strong>A voice for every character</strong><span>Dino works out who is speaking and keeps each character&rsquo;s voice for the whole book. A grown-up picks the narrator.</span></li>
-      <li><strong>A highlight on every page</strong><span>Follow along with the spoken sentence, in the real scanned page or in a clean text view.</span></li>
-      <li><strong>Private by design</strong><span>No accounts, no ads, no tracking. Stories and photos never leave the device, and reading works offline.</span></li>
-    </ul>
-
-    <div>
-      <!-- Add the "Get it on Google Play" link here once the app is public (Slice 74). -->
-      <a class="btn" href="download/android">Download for Android</a>
+  <header>
+    <div class="wrap">
+      <a class="brandmark" href="/"><img src="/dino/icon.png" width="40" height="40" alt="" /><span>Dino Reader</span></a>
+      <nav aria-label="Main">
+        <a href="#platforms">Download</a>
+        <a href="privacy">Privacy</a>
+      </nav>
     </div>
-    <p class="note">Android only for now. Android will ask you to allow installs from your browser the first time.</p>
+  </header>
 
-    <footer>
-      &copy; 2026 Ashkan Sirous &middot; <a href="privacy">Privacy Policy</a>
-    </footer>
+  <main>
+    <div class="wrap">
+      <div class="hero">
+        <div>
+          <p class="eyebrow">For ages 3&ndash;8</p>
+          <h1>A storybook reader where every character has their own voice.</h1>
+          <p class="lede">Scan a page, open a PDF or type a story, and Dino works out who is speaking and reads each character in their own voice, with a highlight that follows every sentence across the real page. No accounts, no ads, no tracking; stories and photos never leave the device.</p>
+          <div class="actions">
+            <a class="btn" href="download/android">Download for Android</a>
+            <span class="pill">iPhone and iPad via TestFlight <small>in testing</small></span>
+            <span class="pill">Windows (coming to the Store) <small>in testing</small></span>
+          </div>
+        </div>
+        <div class="stage">
+          <div class="blob" aria-hidden="true"></div>
+          <div class="phone">
+            <img src="/dino/reading-screen.webp" width="464" height="1010" loading="eager" alt="The Dino Reader reading screen: an illustrated page of a bunny and a squirrel in a stadium with the spoken sentence highlighted, page dots, and previous, play and next buttons." />
+          </div>
+        </div>
+      </div>
+
+      <section aria-labelledby="how">
+        <h2 id="how">How it works</h2>
+        <div class="grid three">
+          <div class="card"><div class="num" aria-hidden="true">1</div><h3>Add a story</h3><p>Scan pages, import a PDF, or type or paste a story. Adding stories happens in the grown-up area: a hold, then a sum.</p></div>
+          <div class="card"><div class="num" aria-hidden="true">2</div><h3>Dino casts the voices</h3><p>A dialogue parser works out who is speaking and gives each character a voice. A grown-up picks the narrator, and a cast screen lets you change voices and merge names.</p></div>
+          <div class="card"><div class="num" aria-hidden="true">3</div><h3>Read along</h3><p>Picture mode shows the real page, text mode a clean view. The highlight follows each sentence; swipe or tap next to turn the page.</p></div>
+        </div>
+      </section>
+
+      <section aria-labelledby="does">
+        <h2 id="does">What it does</h2>
+        <div class="grid three">
+          <div class="card"><h3>A voice for every character</h3><p>Each line is attributed to a speaker, and the voice caster keeps that voice for the whole book. Unknown speakers get the narrator.</p></div>
+          <div class="card"><h3>Picture mode and text mode</h3><p>The spoken sentence is highlighted on the real scanned page or PDF, or in a clean text view. Pages turn with a swipe or the next button.</p></div>
+          <div class="card"><h3>Story gallery and grown-up area</h3><p>Add stories by typing, pasting, opening a file, scanning pages or importing a PDF, and edit or delete them.</p></div>
+          <div class="card"><h3>A cast screen</h3><p>Choose each character&rsquo;s voice, preview it, and merge two names that are the same character.</p></div>
+          <div class="card"><h3>Nine languages</h3><p>With right-to-left layout for Farsi and Arabic, and the same on-device neural voices and OCR as Read The Stupid Text.</p></div>
+          <div class="card"><h3>Works offline</h3><p>After the voice pack download it works offline, and nothing is collected.</p></div>
+        </div>
+      </section>
+
+      <section aria-labelledby="langs">
+        <h2 id="langs">Nine languages</h2>
+        <ul class="chips">
+          <li>English</li><li>Farsi</li><li>French</li><li>Spanish</li><li>Portuguese</li><li>Chinese</li><li>Arabic</li><li>Russian</li><li>Japanese</li>
+        </ul>
+        <p class="small">Farsi and Arabic read right to left.</p>
+      </section>
+
+      <section id="platforms" aria-labelledby="runs">
+        <h2 id="runs">Where it runs</h2>
+        <div class="grid three">
+          <div class="card">
+            <span class="tag">Internal testing</span>
+            <h3>Android</h3>
+            <p>Internal testing on Google Play, plus the direct download. Android will ask you to allow installs from your browser the first time.</p>
+            <div class="actions"><a class="btn" href="download/android">Download for Android</a></div>
+          </div>
+          <div class="card">
+            <span class="tag">TestFlight</span>
+            <h3>iPhone and iPad</h3>
+            <p>A TestFlight build is in testing.</p>
+          </div>
+          <div class="card">
+            <span class="tag">Store submission pending</span>
+            <h3>Windows</h3>
+            <p>A packaged app built in CI; the Microsoft Store submission is pending.</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="band">
+        <p>No accounts, no ads, no tracking. Stories and photos never leave the device, and reading works offline after the voice pack download.</p>
+        <a href="privacy">Read the privacy policy</a>
+      </div>
+    </div>
   </main>
+
+  <footer>
+    <div class="wrap">
+      <p>&copy; 2026 Ashkan Sirous &middot; <a href="privacy">Privacy Policy</a></p>
+      <p><a href="https://sirous.uk/">More software at sirous.uk</a> &middot; Also by Ashkan: <a href="https://readthestupidtext.sirous.uk/">Read The Stupid Text</a></p>
+    </div>
+  </footer>
 </body>
 </html>
