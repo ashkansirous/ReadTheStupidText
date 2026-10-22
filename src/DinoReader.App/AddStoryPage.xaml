@@ -37,7 +37,7 @@
                         <Entry x:Name="TitleEntry" FontSize="16" FontAttributes="Bold" />
                         <BoxView HeightRequest="1" Color="{StaticResource Hairline}" />
                         <Editor x:Name="TextEditor" HeightRequest="220" AutoSize="Disabled" FontFamily="Andika" FontSize="18"
-                                Placeholder="{x:Static res:AppResources.Add_Placeholder}" PlaceholderColor="{StaticResource Muted}"
+                                Placeholder="{x:Static res:AppResources.Add_Placeholder}"
                                 TextChanged="OnTextChanged" />
                     </VerticalStackLayout>
                 </Border>

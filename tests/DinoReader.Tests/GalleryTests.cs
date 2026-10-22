@@ -91,7 +91,7 @@ public class HoldTrackerTests
 
 public class StoryJsonTests
 {
-    private static Story Sample() => new(
+    internal static Story Sample() => new(
         StoryIds.New(), "The Little Lighthouse", "en", new DateTimeOffset(2026, 10, 21, 9, 0, 0, TimeSpan.Zero),
         [new StoryPage("Once upon a time."), new StoryPage("The end.", "page-02.jpg")],
         [new CastMember("peter", "Peter", Gender.Male, "M1"), new CastMember("mum", "Mum", Gender.Female, "F2")],
@@ -352,6 +352,100 @@ public class StoryHelpersTests
         Assert.True(cut.Length <= 40);
         Assert.StartsWith("A very long first line", cut);
         Assert.Equal(string.Empty, StoryTitles.FromText("  \n "));
+    }
+
+    [Fact]
+    public void CoverImageFile_ResolvesPicturePageAndPhoto_AndIgnoresABadIndex()
+    {
+        var story = new Story(StoryIds.New(), "T", "en", DateTimeOffset.UnixEpoch,
+            [new StoryPage("One.", "p1.jpg"), new StoryPage("Two.", "p2.jpg")], [], CoverStyle.Picture, 0, "F1");
+
+        Assert.Equal("p2.jpg", (story with { CoverPageIndex = 1 }).CoverImageFile);
+        Assert.Equal("cover.jpg", (story with { CoverFile = "cover.jpg" }).CoverImageFile);
+        Assert.Null((story with { CoverPageIndex = 5 }).CoverImageFile);
+        Assert.Null((story with { CoverStyle = CoverStyle.Colour, CoverFile = "cover.jpg" }).CoverImageFile);
+    }
+
+    [Theory]
+    [InlineData(CoverStyle.FirstPage, null, null)]
+    [InlineData(CoverStyle.Colour, null, null)]
+    [InlineData(CoverStyle.Picture, "cover.jpg", null)]
+    [InlineData(CoverStyle.Picture, null, 1)]
+    public void Json_RoundTripsEachCoverStyle(CoverStyle style, string? file, int? pageIndex)
+    {
+        Story story = StoryJsonTests.Sample() with { CoverStyle = style, CoverFile = file, CoverPageIndex = pageIndex };
+        Story back = StoryJson.Deserialize(StoryJson.Serialize(story));
+        Assert.Equal(style, back.CoverStyle);
+        Assert.Equal(file, back.CoverFile);
+        Assert.Equal(pageIndex, back.CoverPageIndex);
+    }
+
+    [Fact]
+    public void RemoveAt_KeepsTheCoverOnTheSamePicture_OrFallsBackToTheFirstPage()
+    {
+        Story story = new(StoryIds.New(), "T", "en", DateTimeOffset.UnixEpoch,
+            [new StoryPage("1", "a.jpg"), new StoryPage("2", "b.jpg"), new StoryPage("3", "c.jpg")], [], CoverStyle.Picture, 0, "F1", CoverPageIndex: 2);
+
+        var before = new StoryDraft(story);
+        before.RemoveAt(0);
+        Assert.Equal(1, before.CoverPageIndex);
+        Assert.Equal("c.jpg", before.Pages[before.CoverPageIndex!.Value].ImageFile);
+
+        var after = new StoryDraft(story);
+        after.RemoveAt(1);
+        Assert.Equal(1, after.CoverPageIndex);
+
+        var onCover = new StoryDraft(story);
+        onCover.RemoveAt(2);
+        Assert.Null(onCover.CoverPageIndex);
+        Assert.Equal(CoverStyle.FirstPage, onCover.CoverStyle);
+    }
+
+    [Fact]
+    public void ChoosingAColour_DropsThePictureState_SoPageEditsLeaveTheColourAlone()
+    {
+        Story story = new(StoryIds.New(), "T", "en", DateTimeOffset.UnixEpoch,
+            [new StoryPage("1", "a.jpg"), new StoryPage("2", "b.jpg"), new StoryPage("3", "c.jpg")], [], CoverStyle.Picture, 0, "F1", CoverPageIndex: 2);
+
+        var draft = new StoryDraft(story);
+        draft.PendingCoverPhoto = "x.jpg";
+        draft.ChooseCover(CoverStyle.Colour);
+        draft.RemoveAt(2);
+
+        Assert.Equal(CoverStyle.Colour, draft.CoverStyle);
+        Assert.Null(draft.CoverPageIndex);
+        Assert.Null(draft.CoverFile);
+        Assert.Null(draft.PendingCoverPhoto);
+    }
+
+    [Fact]
+    public void Move_KeepsTheCoverOnTheSamePicture()
+    {
+        Story story = new(StoryIds.New(), "T", "en", DateTimeOffset.UnixEpoch,
+            [new StoryPage("1", "a.jpg"), new StoryPage("2", "b.jpg"), new StoryPage("3", "c.jpg")], [], CoverStyle.Picture, 0, "F1", CoverPageIndex: 1);
+
+        var draft = new StoryDraft(story);
+        draft.Move(1, 1);
+        Assert.Equal(2, draft.CoverPageIndex);
+        draft.Move(0, 1);
+        Assert.Equal(2, draft.CoverPageIndex);
+        draft.Move(2, -1);
+        Assert.Equal(1, draft.CoverPageIndex);
+    }
+
+    [Fact]
+    public void TextsForEditedText_KeepsEveryPage_WhenTheLinesAreNotFoundOrOnlySomeAre()
+    {
+        IReadOnlyList<IReadOnlyList<string>> lines = [["Page one line"], ["Page two line"], ["Page three line"]];
+
+        IReadOnlyList<string> unrelated = ImportedText.TextsForEditedText("Totally rewritten.", lines);
+        Assert.Equal(["Totally rewritten.", "", ""], unrelated);
+
+        IReadOnlyList<string> partial = ImportedText.TextsForEditedText("Page one line then\nPage three line end", lines);
+        Assert.Equal(3, partial.Count);
+        Assert.Equal(string.Empty, partial[1]);
+        Assert.StartsWith("Page one line", partial[0]);
+        Assert.StartsWith("Page three line", partial[2]);
     }
 
     [Fact]

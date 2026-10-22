@@ -41,6 +41,7 @@ public class MainActivity : MauiAppCompatActivity
 	{
 		base.OnConfigurationChanged(newConfig);
 		SystemBarIcons.Reapply();
+		SystemTheme.Raise();
 	}
 
 	private void ApplyDarkIcons(bool dark)

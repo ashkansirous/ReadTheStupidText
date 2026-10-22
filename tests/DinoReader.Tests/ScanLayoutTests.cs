@@ -45,14 +45,14 @@ public class ScanLayoutTests
     }
 
     [Fact]
-    public void A_picture_whose_lines_are_not_in_the_text_is_not_scanned()
+    public void A_picture_whose_lines_are_not_in_the_text_is_still_shown_but_has_no_boxes()
     {
         StoryPage[] pages = [new("Hello there.", "a.jpg", [new("Something else entirely", Box(0.1))])];
 
         var layout = new ScanLayout(pages, [new SentenceSpan(0, 12)]);
 
-        Assert.False(layout.IsScanned(0));
-        Assert.False(layout.HasScannedPages);
+        Assert.True(layout.IsScanned(0));
+        Assert.Empty(layout.BoxesOf(0));
     }
 
     [Fact]

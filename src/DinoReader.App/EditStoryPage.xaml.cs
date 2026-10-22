@@ -1,6 +1,7 @@
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Extensions.DependencyInjection;
+using ReadTheStupidText.Application.Images;
 
 namespace DinoReader;
 
@@ -51,6 +52,17 @@ public partial class EditStoryPage : ContentPage, IGrownUpPage
 
 		_pagesValue!.Text = GalleryText.PagesSummary(_draft.Pages.Count);
 		_castValue!.Text = GalleryText.Characters(_draft.Cast.Count);
+		RefreshCoverAfterPageEdits();
+	}
+
+	// Pages may have been moved or removed on the Pages screen: the preview and an open picker must follow.
+	private void RefreshCoverAfterPageEdits()
+	{
+		RenderCover();
+		if (CoverPickerHost.IsVisible)
+		{
+			ShowCoverPicker();
+		}
 	}
 
 	private void BuildRows(Story story)
@@ -139,6 +151,8 @@ public partial class EditStoryPage : ContentPage, IGrownUpPage
 
 	private void OnColourChipTapped(object? sender, TappedEventArgs e) => SetCover(CoverStyle.Colour);
 
+	private void OnPhotoChipTapped(object? sender, TappedEventArgs e) => ShowCoverPicker();
+
 	private void SetCover(CoverStyle style)
 	{
 		if (style == CoverStyle.FirstPage && !_draft!.HasPageImages)
@@ -146,18 +160,46 @@ public partial class EditStoryPage : ContentPage, IGrownUpPage
 			return;
 		}
 
-		_draft!.CoverStyle = style;
+		_draft!.ChooseCover(style);
 		RenderCover();
+		ShowCoverPicker();
+	}
+
+	// Tapping the cover opens or closes the picker (page pictures, a gallery photo, the colours).
+	private void OnCoverTapped(object? sender, TappedEventArgs e)
+	{
+		if (CoverPickerHost.IsVisible)
+		{
+			CoverPickerHost.IsVisible = false;
+			return;
+		}
+
+		ShowCoverPicker();
+	}
+
+	private void ShowCoverPicker()
+	{
+		if (CoverPickerHost.Content is CoverPicker picker)
+		{
+			picker.Refresh();
+		}
+		else
+		{
+			CoverPickerHost.Content = new CoverPicker(
+				_draft!, _library, _services.GetRequiredService<ExternalActivityGuard>(), RenderCover);
+		}
+
+		CoverPickerHost.IsVisible = true;
 	}
 
 	private void RenderCover()
 	{
 		StoryDraft draft = _draft!;
-		bool firstPage = draft.CoverStyle == CoverStyle.FirstPage;
-		StyleChip(FirstPageChip, FirstPageLabel, firstPage, draft.HasPageImages);
-		StyleChip(ColourChip, ColourLabel, !firstPage, true);
-		CoverPreview.BindingContext = StoryTile.From(
-			draft.Original with { Title = TitleEntry.Text ?? draft.Title, CoverStyle = draft.CoverStyle, Pages = draft.Pages }, _library);
+		StyleChip(FirstPageChip, FirstPageLabel, draft.CoverStyle == CoverStyle.FirstPage, draft.HasPageImages);
+		StyleChip(ColourChip, ColourLabel, draft.CoverStyle == CoverStyle.Colour, true);
+		StyleChip(PhotoChip, PhotoLabel, draft.CoverStyle == CoverStyle.Picture && draft.CoverPageIndex is null, true);
+		StoryTile tile = StoryTile.From(draft.Current with { Title = TitleEntry.Text ?? draft.Title }, _library);
+		CoverPreview.BindingContext = draft.HasPendingCover ? tile with { CoverImagePath = draft.PendingCoverPhoto } : tile;
 	}
 
 	private static void StyleChip(Border chip, Label label, bool selected, bool enabled)
@@ -176,13 +218,50 @@ public partial class EditStoryPage : ContentPage, IGrownUpPage
 		IReadOnlyList<CastMember> cast = draft.TextChanged
 			? await _voicing.CastAsync(draft.Language, Story.JoinPages(draft.Pages), draft.NarratorVoiceId, draft.Cast, draft.Merges)
 			: draft.Cast;
-		await _library.UpdateAsync(draft.Original with
+		string? coverFile = await StoreCoverFileAsync(draft);
+		try
 		{
-			Title = title, Language = draft.Language, TranslateToMyLanguage = draft.TranslateToMyLanguage,
-			CoverStyle = draft.CoverStyle, Pages = draft.Pages.ToList(), Cast = cast,
-			CharacterMerges = draft.Merges, NarratorVoiceId = draft.NarratorVoiceId,
-		});
+			await _library.UpdateAsync(draft.Original with
+			{
+				Title = title, Language = draft.Language, TranslateToMyLanguage = draft.TranslateToMyLanguage,
+				CoverStyle = draft.CoverStyle, CoverFile = coverFile, CoverPageIndex = draft.CoverPageIndex,
+				CoverColourIndex = draft.CoverColourIndex, Pages = draft.Pages.ToList(), Cast = cast,
+				CharacterMerges = draft.Merges, NarratorVoiceId = draft.NarratorVoiceId,
+			});
+		}
+		catch
+		{
+			await DeleteCoverFileAsync(draft, coverFile, draft.Original.CoverFile);
+			throw;
+		}
+
+		PickedPhotoCache.Delete(draft.PendingCoverPhoto);
+		await DeleteCoverFileAsync(draft, draft.Original.CoverFile, coverFile);
 		await Navigation.PopAsync();
+	}
+
+	// A photo picked as the cover is copied into the story only now, under a fresh name, so cancelling leaves
+	// nothing behind and the image cache never shows the old photo. A cover that is not a photo keeps no file.
+	private async Task<string?> StoreCoverFileAsync(StoryDraft draft)
+	{
+		if (draft.HasPendingCover)
+		{
+			var keeper = _services.GetRequiredService<IPageImageKeeper>();
+			string stored = await _library.StoreFileAsync(draft.Original.Id, Story.CoverFilePrefix, Story.CoverFileExtension,
+				target => keeper.KeepAsync(draft.PendingCoverPhoto!, target));
+			return stored;
+		}
+
+		return draft.CoverStyle == CoverStyle.Picture && draft.CoverPageIndex is null ? draft.CoverFile : null;
+	}
+
+	// Removes a cover file that is no longer the story's (the old one after a save, the new one after a failed save).
+	private async Task DeleteCoverFileAsync(StoryDraft draft, string? file, string? keep)
+	{
+		if (file is not null && file != keep)
+		{
+			await _library.DeleteFileAsync(draft.Original.Id, file);
+		}
 	}
 
 	private async void OnDeleteClicked(object? sender, EventArgs e) => await _busy.RunAsync(DeleteAsync);
@@ -195,5 +274,11 @@ public partial class EditStoryPage : ContentPage, IGrownUpPage
 		}
 	}
 
-	private async void OnBackTapped(object? sender, TappedEventArgs e) => await _busy.RunAsync(() => Navigation.PopAsync());
+	private async void OnBackTapped(object? sender, TappedEventArgs e) => await _busy.RunAsync(CancelAsync);
+
+	private async Task CancelAsync()
+	{
+		PickedPhotoCache.Delete(_draft?.PendingCoverPhoto);
+		await Navigation.PopAsync();
+	}
 }

@@ -94,6 +94,7 @@ public static class AppResources
 	public static string Edit_Cover => Get();
 	public static string Edit_CoverFirstPage => Get();
 	public static string Edit_CoverColour => Get();
+	public static string Edit_CoverPhoto => Get();
 	public static string Edit_Pages => Get();
 	public static string Edit_FixText => Get();
 	public static string Edit_FixTextValue => Get();

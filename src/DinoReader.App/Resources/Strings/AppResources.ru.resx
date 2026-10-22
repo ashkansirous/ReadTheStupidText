@@ -73,6 +73,7 @@
   <data name="Edit_Cover" xml:space="preserve"><value>Обложка</value></data>
   <data name="Edit_CoverFirstPage" xml:space="preserve"><value>Первая страница</value></data>
   <data name="Edit_CoverColour" xml:space="preserve"><value>Цвет</value></data>
+  <data name="Edit_CoverPhoto" xml:space="preserve"><value>Фото</value></data>
   <data name="Edit_Pages" xml:space="preserve"><value>Страницы</value></data>
   <data name="Edit_FixText" xml:space="preserve"><value>Исправить текст</value></data>
   <data name="Edit_FixTextValue" xml:space="preserve"><value>Править распознанный текст</value></data>

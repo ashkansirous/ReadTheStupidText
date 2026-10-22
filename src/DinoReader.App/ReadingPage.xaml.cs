@@ -81,7 +81,7 @@ public partial class ReadingPage : ContentPage
 		_session.Attach();
 		_installer.Changed += OnInstallerChanged;
 		_model.ReadyChanged += OnInstallerChanged;
-		Microsoft.Maui.Controls.Application.Current!.RequestedThemeChanged += OnThemeChanged;
+		SystemTheme.Changed += OnThemeChanged;
 		ShowPackStatus();
 		if (CurrentTheme() != _theme)
 		{
@@ -112,16 +112,15 @@ public partial class ReadingPage : ContentPage
 	{
 		_installer.Changed -= OnInstallerChanged;
 		_model.ReadyChanged -= OnInstallerChanged;
-		if (Microsoft.Maui.Controls.Application.Current is { } app)
-		{
-			app.RequestedThemeChanged -= OnThemeChanged;
-		}
+		SystemTheme.Changed -= OnThemeChanged;
 	}
 
+	// The app pins UserAppTheme to Light (kids' palette), so RequestedTheme is always Light and MAUI raises no
+	// theme event; the night colours follow the phone's own theme through PlatformAppTheme, signalled by SystemTheme.
 	private static ReadingTheme CurrentTheme() =>
-		ReadingTheme.For(Microsoft.Maui.Controls.Application.Current?.RequestedTheme == AppTheme.Dark);
+		ReadingTheme.For(Microsoft.Maui.Controls.Application.Current?.PlatformAppTheme == AppTheme.Dark);
 
-	private void OnThemeChanged(object? sender, AppThemeChangedEventArgs e)
+	private void OnThemeChanged()
 	{
 		_theme = CurrentTheme();
 		ApplyTheme();

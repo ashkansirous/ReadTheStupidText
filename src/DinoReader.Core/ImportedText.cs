@@ -41,5 +41,11 @@ public static class ImportedText
         return pages;
     }
 
+    /// <summary>One text per imported page for text the grown-up edited: <see cref="SplitByPages"/> when the lines can be
+    /// found, otherwise the whole text on the first page. Every page keeps its place (so its picture survives); a page
+    /// whose lines are not found has an empty text.</summary>
+    public static IReadOnlyList<string> TextsForEditedText(string text, IReadOnlyList<IReadOnlyList<string>> pageLines) =>
+        SplitByPages(text, pageLines) ?? pageLines.Select((_, i) => i == 0 ? text : string.Empty).ToList();
+
     private static string Normalize(string text) => text.Replace("\r\n", "\n").Trim();
 }
