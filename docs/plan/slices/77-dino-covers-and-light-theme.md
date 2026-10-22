@@ -1,6 +1,6 @@
 # Slice 77 — Dino Reader: covers that survive edits, a cover picker, and readable inputs
 
-*Planned.*
+*In progress (wave 2026-10-22), draft PR.*
 
 **Batch:** 13
 **Decisions:** 84
