@@ -237,16 +237,36 @@ public class ReadAloudServiceGeneratingTests
     [Fact]
     public async Task Auto_read_prepares_the_head_start_before_the_settle_delay_ends()
     {
+        var release = new TaskCompletionSource();
         var spoken = new TaskCompletionSource();
-        var harness = new Harness { Speak = (_, _) => { spoken.TrySetResult(); return Task.CompletedTask; } };
+        int preparedAtSpeak = -1;
+        Harness? harness = null;
+        harness = new Harness
+        {
+            Speak = async (_, _) =>
+            {
+                Volatile.Write(ref preparedAtSpeak, harness!.HeadStart.Prepared.Count);
+                await release.Task;
+                spoken.TrySetResult();
+            },
+        };
         harness.Service.FirstAudioGrace = TimeSpan.FromMilliseconds(10);
 
         harness.Monitor.RaiseChanged("Some selected text.");
 
-        await harness.HeadStart.FirstPrepare.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
-        Assert.False(spoken.Task.IsCompleted); // the read waits for its settle; the prepare did not
-        Assert.Equal(["Some selected text."], harness.HeadStart.Prepared);
+        try
+        {
+            await harness.HeadStart.FirstPrepare.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            Assert.Equal(["Some selected text."], harness.HeadStart.Prepared);
+            Assert.False(spoken.Task.IsCompleted);
+        }
+        finally
+        {
+            release.TrySetResult();
+        }
+
         await spoken.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        Assert.Equal(1, Volatile.Read(ref preparedAtSpeak));
     }
 
     [Fact]
