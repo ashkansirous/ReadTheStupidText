@@ -1045,3 +1045,9 @@
     left-to-right in every language; text views follow their own content's
     direction. Supersedes the "full RTL layout for fa and ar" part of Decision 68.
     (Slice 85)
+93. **Four Farsi voices in one pack, Amir dropped (Batch 15).** The `piper-fa`
+    pack (v2) carries ganji_adabi (default), ganji, mana and gyro, one model
+    folder per voice with one shared espeak-ng-data; Amir scored worst on a
+    Whisper round-trip and was rejected by ear. A pack voice may name its own
+    model folder, and an installed pack older than the catalog's is replaced.
+    (Slice 89)
