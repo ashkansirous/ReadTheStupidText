@@ -13,8 +13,6 @@ public interface IBuiltInTextRecognizer
     /// <summary>True when this recognizer reads the language's script well without a pack.</summary>
     bool Covers(string language);
 
-    Task<string> ExtractTextAsync(string imagePath);
-
     /// <summary>The lines with their boxes, plus the pixel size of the frame the boxes are in.</summary>
     Task<OcrReading> ExtractLinesAsync(string imagePath);
 }
