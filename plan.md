@@ -107,6 +107,7 @@ this plan turns it into ordered, shippable vertical slices.
 | 87 | A scan in a script with no reader asks the page's language and downloads it | built | #253 | | [87-scan-downloads-the-page-language-pack.md](docs/plan/slices/87-scan-downloads-the-page-language-pack.md) |
 | 88 | The Windows desktop layout never mirrors; only text flows by its own direction | built | #254 | | [88-desktop-no-layout-mirroring.md](docs/plan/slices/88-desktop-no-layout-mirroring.md) |
 | 89 | Four Farsi voices in one pack (ganji_adabi by default), Amir dropped | planned | | | [89-four-farsi-voices.md](docs/plan/slices/89-four-farsi-voices.md) |
+| 90 | Untranslated text is read in its own language | planned | | | [90-untranslated-text-reads-in-its-own-language.md](docs/plan/slices/90-untranslated-text-reads-in-its-own-language.md) |
 
 Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
 
@@ -170,7 +171,7 @@ Built but not verified (details in each slice file):
 - Slice 80: Windows Dino nested taps and window recreate; TalkBack reading "Edit <title>" and "Delete <title>"; the 10-min `AwayTracker.ExternalActivityCap` timer (no test; lives in `DinoApp`) ([slice](docs/plan/slices/80-grownup-gallery-overlay.md)).
 - Slice 86: a scanned page with a heading reads the heading as its own unit on a Google-signed-in Android device and in the Windows Mobile build (the emulator's ML Kit scanner fails) ([slice](docs/plan/slices/86-rtst-scan-line-geometry.md)).
 - Slice 81: header "tap to retry" label (state flashes Resolving then Offline, no code defect found); a reinstalled pack restoring the chosen voice; all of it on a real phone ([slice](docs/plan/slices/81-language-change-starts-voice-download.md)).
-- Slice 82: iOS voice selection on a device (CI compile only); Windows does not switch the reading language (by design for now). User decision: with translation off, should untranslated text in another language (English while the app is in Farsi) be read by the voice for its detected language rather than the app language? ([slice](docs/plan/slices/82-phone-voice-reads-the-texts-language.md))
+- Slice 82: iOS voice selection on a device (CI compile only); Windows does not switch the reading language (by design for now). User decided 2026-10-22: untranslated text is read in its own language (Slice 90). ([slice](docs/plan/slices/82-phone-voice-reads-the-texts-language.md))
 - Slice 83: one-page, two-page and blank-page scans on a Google-signed-in device; the editor read-only during OCR ([slice](docs/plan/slices/83-scan-replaces-the-text.md)).
 - Slice 84: the Nutkin page with the app in Farsi, a Farsi page, and an English app with a Farsi page, on a Google-signed-in device. Resolved: the Farsi OCR pack is offered and downloaded (Slice 87). ([slice](docs/plan/slices/84-ocr-follows-the-page-not-the-app-language.md))
 - Slice 85: Arabic content in the editor and typing Farsi on a real keyboard; the first-run Language page in Farsi/Arabic. Resolved: the Windows desktop no longer mirrors (Slice 88). ([slice](docs/plan/slices/85-no-layout-mirroring.md))
