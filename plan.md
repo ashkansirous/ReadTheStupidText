@@ -93,8 +93,8 @@ this plan turns it into ordered, shippable vertical slices.
 | 73 | Edge-to-edge on Android 15+: safe areas on every screen | built | — | #224 | [73-edge-to-edge-safe-areas.md](docs/plan/slices/73-edge-to-edge-safe-areas.md) |
 | 74 | Dino Reader site: landing, privacy and downloads on dinoreader.sirous.uk | built | #219 | — | [74-dino-reader-site.md](docs/plan/slices/74-dino-reader-site.md) |
 | 75 | Windows translation engine | built | — | #223 | [75-windows-translation-engine.md](docs/plan/slices/75-windows-translation-engine.md) |
-| 76 | Soft line-break reflow and heading detection (both apps) | planned | | | [76-soft-line-break-reflow.md](docs/plan/slices/76-soft-line-break-reflow.md) |
-| 77 | Dino Reader: covers that survive edits, cover picker, readable inputs | planned | | | [77-dino-covers-and-light-theme.md](docs/plan/slices/77-dino-covers-and-light-theme.md) |
+| 76 | Soft line-break reflow and heading detection (both apps) | built | | #233 | [76-soft-line-break-reflow.md](docs/plan/slices/76-soft-line-break-reflow.md) |
+| 77 | Dino Reader: covers that survive edits, cover picker, readable inputs | built | | #234 | [77-dino-covers-and-light-theme.md](docs/plan/slices/77-dino-covers-and-light-theme.md) |
 | 78 | Dino Reader: page-review wizard (pages → cover → text) | planned | | | [78-dino-page-review-wizard.md](docs/plan/slices/78-dino-page-review-wizard.md) |
 | 79 | Background text filtering with a manual override | planned | | | [79-background-text-filtering.md](docs/plan/slices/79-background-text-filtering.md) |
 | 80 | Dino Reader: grown-up mode as a gallery overlay | planned | | | [80-grownup-gallery-overlay.md](docs/plan/slices/80-grownup-gallery-overlay.md) |
@@ -149,6 +149,9 @@ Built but not verified (details in each slice file):
 - Slice 72: Play Console "DEX obfuscation" metric after the next release (target >= 25%); iOS build on MAUI 10.0.120 / workload 10.0.401 in CI; a real-device scan with the GMS document scanner module ([slice](docs/plan/slices/72-android-deps-r8-obfuscation.md)).
 - Slice 67: TestFlight build installs and reads in four voices with picture-mode boxes; Windows desktop flows (typed story, voices, PDF picture mode, Windows OCR); real Partner Center identity and `DINOREADER_STORE_APP_ID`, then a Store submission ([slice](docs/plan/slices/67-dino-reader-ios-windows.md)).
 - Slice 73: Android 14 (API 34) inset path; landscape on both apps; RTST `LanguagePage` on first run; Dino `PageTextPage` with the keyboard up; Play's deprecated-API warning after the next release; follow-up: Dino gallery/Manage tiles re-lay out oddly after toggling night mode ([slice](docs/plan/slices/73-edge-to-edge-safe-areas.md)).
+- Slice 76: on a device, a pasted hard-wrapped email and a scanned book page read with no pause mid-sentence (RTST Android, RTST Windows, Dino) ([slice](docs/plan/slices/76-soft-line-break-reflow.md)).
+- Slice 77: page-2 cover pick on a multi-page story; a photo cover surviving an app restart; the Windows live theme switch (`UISettings.ColorValuesChanged`) ([slice](docs/plan/slices/77-dino-covers-and-light-theme.md)).
+- Slice 79 takes over Slice 76's geometry wiring (RTST scan text, Dino per-page Lines → LineBreakMap) and the geometry heading text-shape check.
 - Flaky test `ReadAloudServiceGeneratingTests.Auto_read_prepares_the_head_start_before_the_settle_delay_ends` (timing; failed once in CI on 2026-10-21).
 
 ## Out of Scope

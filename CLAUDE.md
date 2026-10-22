@@ -55,7 +55,7 @@ Infrastructure  →  Application / Domain
 Mobile  →  Application / Domain / Documents
 Mobile.Shared (Windows target only)  →  Infrastructure
 Documents  →  Application
-DinoReader.Core (standalone, no deps)
+DinoReader.Core → Application (LineReflow only)
 ```
 
 - **Domain** (`net10.0`) — entities, value objects, enums. No framework deps.
@@ -66,7 +66,8 @@ DinoReader.Core (standalone, no deps)
   Also `SupertonicVoiceTable`/`SupertonicFiles` (Slice 31) — pure voice-catalog
   data, moved here from Infrastructure so Mobile can reuse it too.
 - **Application** (`net10.0`) — use cases / orchestration, interfaces. Also
-  `SpeechTextChunker`/`ReadTimingTracker` (both `internal`, Slice 31) — pure
+  `LineReflow` (Slice 76, shared by both apps' read paths: `SpeechTextChunker`, Dino
+  `StorySentences`/`StorySegmenter`), `SpeechTextChunker`/`ReadTimingTracker` (both `internal`, Slice 31) — pure
   chunking/timing logic shared by every `ISpeechReader` implementation on
   every platform (`InternalsVisibleTo` covers `Tests`, `Infrastructure`, and
   `Mobile`).
@@ -77,7 +78,7 @@ DinoReader.Core (standalone, no deps)
   have no Windows-only dependency (so not stuck in Infrastructure) — both
   Infrastructure (Windows) and Mobile (Android) reference this project and
   share the exact same extractors.
-- **DinoReader.Core** (`src/DinoReader.Core`) — pure dialogue library, no references (details in its own file).
+- **DinoReader.Core** (`src/DinoReader.Core`) — pure dialogue library, references Application only for `LineReflow` (details in its own file).
 - **Infrastructure** (`net10.0-windows`) — speech engines (local neural
   **Supertonic-3** via sherpa-onnx, plus a WinRT `SpeechSynthesis` fallback),
   all played through `MediaPlayer`; every platform downloads its voice as a pack

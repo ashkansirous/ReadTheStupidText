@@ -31,3 +31,5 @@ are in `src/ReadTheStupidText.Mobile/CLAUDE.md`; its CI target is in `.github/CL
 - Same `SafeAreaEdges` pattern as RTST (`None` on page/root, `Container` on header, sheet or body; `Container, SoftInput`
   on text-entry pages). Bar icon colour comes from `SystemBarIcons`, which picks it from the page background shown,
   because MAUI follows system night mode but only the reading screen does. (Slice 73: docs/plan/slices/73-edge-to-edge-safe-areas.md)
+- Dino pins `UserAppTheme = Light` (`App.xaml.cs`). The reading screen's night theme must read `PlatformAppTheme` through `SystemTheme.cs`, never `RequestedTheme`. (Slice 77: docs/plan/slices/77-dino-covers-and-light-theme.md)
+- Cover photos are `cover-<id>.jpg` in the story folder; only those names may be deleted via `IStoryLibrary.DeleteFileAsync`. (Slice 77: docs/plan/slices/77-dino-covers-and-light-theme.md)
