@@ -70,7 +70,7 @@ New strings (both locales): "My stories", "For grown-ups", "Press and hold for 3
 ## Risks / notes
 
 - Hold-3-s must work with TalkBack/VoiceOver; decide the accessible alternative at implementation.
-- No sync, no export (Out of Scope).
+- No sync, no export (Out of Scope). Export is allowed since Slice 91 (Decision 94); sync stays out.
 
 ## Decisions taken during build
 
