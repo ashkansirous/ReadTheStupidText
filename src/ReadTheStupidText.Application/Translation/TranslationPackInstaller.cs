@@ -119,10 +119,4 @@ public sealed class TranslationPackInstaller
 
     private void Report(string source, string target, TranslationPackState state, double fraction) =>
         Progress?.Invoke(this, new TranslationPackProgress(source, target, state, fraction));
-
-    // Progress<T> posts to the thread pool, so a late report could land after the final Ready/Failed one.
-    private sealed class InlineProgress(Action<double> report) : IProgress<double>
-    {
-        public void Report(double value) => report(value);
-    }
 }

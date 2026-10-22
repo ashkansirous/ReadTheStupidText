@@ -1026,3 +1026,22 @@
     removed. The gate and the leave-the-app reset are unchanged and the mode is
     never persisted. (Slice 80)
 
+88. **The voice installer follows every language change (Batch 14).**
+    `VoicePackInstaller` listens to `LanguageChanged` like `OcrPackInstaller`, so
+    changing the language anywhere downloads that language's pack at once; the
+    voice picker shows the download state and Retry. (Slice 81)
+89. **No voice reads a language it can't speak (Batch 14).** The phone voice is
+    set to the language being read. A language is readable when the phone TTS has
+    a voice for it or a natural pack is installed or in the catalog; the Translate
+    toggle and the Phone voice row show only for readable languages. (Slice 82)
+90. **Scan replaces the editor text (Batch 14).** Paste, Scan and File all
+    replace; one multi-page scan still joins its pages in order. Supersedes the
+    "appended to the editor" part of Decision 64. (Slice 83)
+91. **OCR follows the page's script, never the app language (Batch 14).** The
+    built-in recognizer reads first; installed packs are tried only for mostly
+    non-Latin pages, and RTL ordering applies only to an RTL pack's result.
+    (Slice 84)
+92. **The layout never mirrors (Batch 14).** Pages and control rows stay
+    left-to-right in every language; text views follow their own content's
+    direction. Supersedes the "full RTL layout for fa and ar" part of Decision 68.
+    (Slice 85)

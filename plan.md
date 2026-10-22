@@ -93,19 +93,26 @@ this plan turns it into ordered, shippable vertical slices.
 | 73 | Edge-to-edge on Android 15+: safe areas on every screen | built | — | #224 | [73-edge-to-edge-safe-areas.md](docs/plan/slices/73-edge-to-edge-safe-areas.md) |
 | 74 | Dino Reader site: landing, privacy and downloads on dinoreader.sirous.uk | built | #219 | — | [74-dino-reader-site.md](docs/plan/slices/74-dino-reader-site.md) |
 | 75 | Windows translation engine | built | — | #223 | [75-windows-translation-engine.md](docs/plan/slices/75-windows-translation-engine.md) |
-| 76 | Soft line-break reflow and heading detection (both apps) | planned | | | [76-soft-line-break-reflow.md](docs/plan/slices/76-soft-line-break-reflow.md) |
-| 77 | Dino Reader: covers that survive edits, cover picker, readable inputs | planned | | | [77-dino-covers-and-light-theme.md](docs/plan/slices/77-dino-covers-and-light-theme.md) |
+| 76 | Soft line-break reflow and heading detection (both apps) | built | | #233 | [76-soft-line-break-reflow.md](docs/plan/slices/76-soft-line-break-reflow.md) |
+| 77 | Dino Reader: covers that survive edits, cover picker, readable inputs | built | | #234 | [77-dino-covers-and-light-theme.md](docs/plan/slices/77-dino-covers-and-light-theme.md) |
 | 78 | Dino Reader: page-review wizard (pages → cover → text) | planned | | | [78-dino-page-review-wizard.md](docs/plan/slices/78-dino-page-review-wizard.md) |
 | 79 | Background text filtering with a manual override | planned | | | [79-background-text-filtering.md](docs/plan/slices/79-background-text-filtering.md) |
 | 80 | Dino Reader: grown-up mode as a gallery overlay | planned | | | [80-grownup-gallery-overlay.md](docs/plan/slices/80-grownup-gallery-overlay.md) |
+| 81 | A language change in Settings downloads that language's voice | planned | | | [81-language-change-starts-voice-download.md](docs/plan/slices/81-language-change-starts-voice-download.md) |
+| 82 | The phone voice reads in the text's language, and is only offered when it can | planned | | | [82-phone-voice-reads-the-texts-language.md](docs/plan/slices/82-phone-voice-reads-the-texts-language.md) |
+| 83 | Scan replaces the text, like Paste and File | planned | | | [83-scan-replaces-the-text.md](docs/plan/slices/83-scan-replaces-the-text.md) |
+| 84 | Scan reads the page in the page's script, whatever the app language | planned | | | [84-ocr-follows-the-page-not-the-app-language.md](docs/plan/slices/84-ocr-follows-the-page-not-the-app-language.md) |
+| 85 | The layout never mirrors; only text flows by its own direction | planned | | | [85-no-layout-mirroring.md](docs/plan/slices/85-no-layout-mirroring.md) |
 
 Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
 
 Batch 13 (76-80, planned 2026-10-22): 76 and 77 are independent and go first (Touches do not overlap); 78 after 77; 79 and 80 after 78 (both edit the wizard's files). Decisions 83-87.
 
+Batch 14 (81-85, planned 2026-10-22, Android bugs found on a Pixel 10 Pro running 1.16.0): 81 and 83 are independent and go first; 82 after 81; 84 after 83; 85 last (it edits the pages 81 and 82 touch). Decisions 88-92.
+
 ### Notes
 
-- [Decisions 1-87](docs/plan/decisions.md): the full numbered decision list, moved verbatim.
+- [Decisions 1-92](docs/plan/decisions.md): the full numbered decision list, moved verbatim.
 - [2026-10-20 Android minSdk 28](docs/plan/notes/2026-10-20-android-min-sdk-28.md): why the Android floor is 28 (Decision 82).
 - [Batch introductions, Batches 2-8](docs/plan/notes/batch-intros-1-8.md): the framing paragraph that opened each batch (2026-10-20 move).
 - [Batch 9 and 10 indexes](docs/plan/notes/plan-batch-9-10-index.md): the former in-plan tables and lane order.
@@ -149,6 +156,9 @@ Built but not verified (details in each slice file):
 - Slice 72: Play Console "DEX obfuscation" metric after the next release (target >= 25%); iOS build on MAUI 10.0.120 / workload 10.0.401 in CI; a real-device scan with the GMS document scanner module ([slice](docs/plan/slices/72-android-deps-r8-obfuscation.md)).
 - Slice 67: TestFlight build installs and reads in four voices with picture-mode boxes; Windows desktop flows (typed story, voices, PDF picture mode, Windows OCR); real Partner Center identity and `DINOREADER_STORE_APP_ID`, then a Store submission ([slice](docs/plan/slices/67-dino-reader-ios-windows.md)).
 - Slice 73: Android 14 (API 34) inset path; landscape on both apps; RTST `LanguagePage` on first run; Dino `PageTextPage` with the keyboard up; Play's deprecated-API warning after the next release; follow-up: Dino gallery/Manage tiles re-lay out oddly after toggling night mode ([slice](docs/plan/slices/73-edge-to-edge-safe-areas.md)).
+- Slice 76: on a device, a pasted hard-wrapped email and a scanned book page read with no pause mid-sentence (RTST Android, RTST Windows, Dino) ([slice](docs/plan/slices/76-soft-line-break-reflow.md)).
+- Slice 77: page-2 cover pick on a multi-page story; a photo cover surviving an app restart; the Windows live theme switch (`UISettings.ColorValuesChanged`) ([slice](docs/plan/slices/77-dino-covers-and-light-theme.md)).
+- Slice 79 takes over Slice 76's geometry wiring (RTST scan text, Dino per-page Lines → LineBreakMap) and the geometry heading text-shape check.
 - Flaky test `ReadAloudServiceGeneratingTests.Auto_read_prepares_the_head_start_before_the_settle_delay_ends` (timing; failed once in CI on 2026-10-21).
 
 ## Out of Scope

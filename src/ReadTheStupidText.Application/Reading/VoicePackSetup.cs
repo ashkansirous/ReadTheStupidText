@@ -28,6 +28,7 @@ public enum PackSetupState
 public sealed class VoicePackSetup
 {
     private readonly IVoicePackService _packs;
+    private readonly object _stateLock = new();
     private readonly IVoiceModelService _model;
     private readonly ISettingsStore _settings;
     private int _running;
@@ -158,7 +159,7 @@ public sealed class VoicePackSetup
     private async Task<PackSetupState?> DownloadPackAsync(PackInfo pack)
     {
         Publish(PackSetupState.Downloading, 0);
-        var progress = new Progress<double>(PublishProgress);
+        var progress = new InlineProgress(PublishProgress);
         PackDownloadResult result = await _packs.DownloadAsync(pack.Id, progress, CancellationToken.None);
         return result == PackDownloadResult.Ok ? null : ToState(result);
     }
@@ -180,16 +181,27 @@ public sealed class VoicePackSetup
     // A late progress tick must not drag a finished or failed state back to Downloading.
     private void PublishProgress(double progress)
     {
-        if (State == PackSetupState.Downloading)
+        lock (_stateLock)
         {
-            Publish(PackSetupState.Downloading, progress);
+            if (State != PackSetupState.Downloading)
+            {
+                return;
+            }
+
+            Progress = progress;
         }
+
+        Changed?.Invoke(this, EventArgs.Empty);
     }
 
     private void Publish(PackSetupState state, double progress = 0)
     {
-        State = state;
-        Progress = progress;
+        lock (_stateLock)
+        {
+            State = state;
+            Progress = progress;
+        }
+
         Changed?.Invoke(this, EventArgs.Empty);
     }
 }
