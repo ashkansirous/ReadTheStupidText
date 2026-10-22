@@ -69,7 +69,7 @@ they are not showing any covers like the kids view."
 
 *Emulator (RTST_Test), PASS:* kids' mode reads; the gate leads to the overlay; Edit, Cast, Add, Delete and Done work; content descriptions present; delete fade; backgrounding over 2 min returns to kids' mode; rotation consistent; reading-screen lock enters grown-up mode; equal tile widths in portrait and landscape.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-22)
 
 - The `src/DinoReader.App/CLAUDE.md` grown-up-mode rule is already updated on this branch. Missing from it: every grown-up action re-checks `GrownUpMode` after each await (the mode can end mid-action); `DinoApp` owns the reset. (Slice 80: docs/plan/slices/80-grownup-gallery-overlay.md)
 

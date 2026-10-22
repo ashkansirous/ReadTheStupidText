@@ -96,6 +96,13 @@
   <data name="Wizard_NeedTextBody" xml:space="preserve"><value>少なくとも1ページにテキストを追加してから保存してください。</value></data>
   <data name="Wizard_SaveFailedTitle" xml:space="preserve"><value>物語を保存できませんでした</value></data>
   <data name="Wizard_SaveFailedBody" xml:space="preserve"><value>何も変更されていません。しばらくしてからもう一度お試しください。</value></data>
+  <data name="Regions_Helper" xml:space="preserve"><value>枠をタップすると、読むか読まないかを切り替えられます。</value></data>
+  <data name="Regions_ReplaceTitle" xml:space="preserve"><value>編集したテキストを、選んだ領域のテキストに置き換えますか？</value></data>
+  <data name="Regions_ReplaceBody" xml:space="preserve"><value>このページで入力した内容は失われます。</value></data>
+  <data name="Regions_Replace" xml:space="preserve"><value>置き換える</value></data>
+  <data name="Regions_Keep" xml:space="preserve"><value>そのまま残す</value></data>
+  <data name="Regions_BoxRead" xml:space="preserve"><value>テキスト枠、読む</value></data>
+  <data name="Regions_BoxLeftOut" xml:space="preserve"><value>テキスト枠、読まない</value></data>
   <data name="Editor_Title" xml:space="preserve"><value>回転とトリミング</value></data>
   <data name="Editor_RotateLeft" xml:space="preserve"><value>左に回転</value></data>
   <data name="Editor_RotateRight" xml:space="preserve"><value>右に回転</value></data>

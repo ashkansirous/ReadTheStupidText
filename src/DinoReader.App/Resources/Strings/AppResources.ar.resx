@@ -96,6 +96,13 @@
   <data name="Wizard_NeedTextBody" xml:space="preserve"><value>أضف نصًا إلى صفحة واحدة على الأقل ثم احفظ.</value></data>
   <data name="Wizard_SaveFailedTitle" xml:space="preserve"><value>تعذّر حفظ القصة</value></data>
   <data name="Wizard_SaveFailedBody" xml:space="preserve"><value>لم يتغيّر شيء. حاول مرة أخرى بعد قليل.</value></data>
+  <data name="Regions_Helper" xml:space="preserve"><value>اضغط على إطار لقراءته أو تركه.</value></data>
+  <data name="Regions_ReplaceTitle" xml:space="preserve"><value>هل تريد استبدال النص الذي عدّلته بالمناطق المحددة؟</value></data>
+  <data name="Regions_ReplaceBody" xml:space="preserve"><value>سيضيع ما كتبته في هذه الصفحة.</value></data>
+  <data name="Regions_Replace" xml:space="preserve"><value>استبدال</value></data>
+  <data name="Regions_Keep" xml:space="preserve"><value>إبقاء</value></data>
+  <data name="Regions_BoxRead" xml:space="preserve"><value>إطار نص، يُقرأ</value></data>
+  <data name="Regions_BoxLeftOut" xml:space="preserve"><value>إطار نص، متروك</value></data>
   <data name="Editor_Title" xml:space="preserve"><value>تدوير واقتصاص</value></data>
   <data name="Editor_RotateLeft" xml:space="preserve"><value>تدوير لليسار</value></data>
   <data name="Editor_RotateRight" xml:space="preserve"><value>تدوير لليمين</value></data>

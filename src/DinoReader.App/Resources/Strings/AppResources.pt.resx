@@ -96,6 +96,13 @@
   <data name="Wizard_NeedTextBody" xml:space="preserve"><value>Adicione texto a pelo menos uma página e salve.</value></data>
   <data name="Wizard_SaveFailedTitle" xml:space="preserve"><value>Não foi possível salvar a história</value></data>
   <data name="Wizard_SaveFailedBody" xml:space="preserve"><value>Nada foi alterado. Tente novamente em instantes.</value></data>
+  <data name="Regions_Helper" xml:space="preserve"><value>Toque numa caixa para lê-la ou deixá-la de fora.</value></data>
+  <data name="Regions_ReplaceTitle" xml:space="preserve"><value>Substituir o seu texto editado pelas regiões escolhidas?</value></data>
+  <data name="Regions_ReplaceBody" xml:space="preserve"><value>O que você digitou nesta página será perdido.</value></data>
+  <data name="Regions_Replace" xml:space="preserve"><value>Substituir</value></data>
+  <data name="Regions_Keep" xml:space="preserve"><value>Manter</value></data>
+  <data name="Regions_BoxRead" xml:space="preserve"><value>Caixa de texto, lida</value></data>
+  <data name="Regions_BoxLeftOut" xml:space="preserve"><value>Caixa de texto, deixada de fora</value></data>
   <data name="Editor_Title" xml:space="preserve"><value>Girar e cortar</value></data>
   <data name="Editor_RotateLeft" xml:space="preserve"><value>Girar para a esquerda</value></data>
   <data name="Editor_RotateRight" xml:space="preserve"><value>Girar para a direita</value></data>

@@ -116,6 +116,13 @@ public static class AppResources
 	public static string Wizard_NeedTextBody => Get();
 	public static string Wizard_SaveFailedTitle => Get();
 	public static string Wizard_SaveFailedBody => Get();
+	public static string Regions_Helper => Get();
+	public static string Regions_ReplaceTitle => Get();
+	public static string Regions_ReplaceBody => Get();
+	public static string Regions_Replace => Get();
+	public static string Regions_Keep => Get();
+	public static string Regions_BoxRead => Get();
+	public static string Regions_BoxLeftOut => Get();
 	public static string Editor_Title => Get();
 	public static string Editor_RotateLeft => Get();
 	public static string Editor_RotateRight => Get();

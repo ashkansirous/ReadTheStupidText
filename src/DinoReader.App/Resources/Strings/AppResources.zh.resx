@@ -96,6 +96,13 @@
   <data name="Wizard_NeedTextBody" xml:space="preserve"><value>请至少为一页添加文字，然后保存。</value></data>
   <data name="Wizard_SaveFailedTitle" xml:space="preserve"><value>无法保存故事</value></data>
   <data name="Wizard_SaveFailedBody" xml:space="preserve"><value>未做任何更改。请稍后重试。</value></data>
+  <data name="Regions_Helper" xml:space="preserve"><value>点按文字框，即可朗读或跳过这段文字。</value></data>
+  <data name="Regions_ReplaceTitle" xml:space="preserve"><value>用所选区域替换你编辑过的文字吗？</value></data>
+  <data name="Regions_ReplaceBody" xml:space="preserve"><value>你在这一页输入的内容将会丢失。</value></data>
+  <data name="Regions_Replace" xml:space="preserve"><value>替换</value></data>
+  <data name="Regions_Keep" xml:space="preserve"><value>保留</value></data>
+  <data name="Regions_BoxRead" xml:space="preserve"><value>文字框，朗读</value></data>
+  <data name="Regions_BoxLeftOut" xml:space="preserve"><value>文字框，已跳过</value></data>
   <data name="Editor_Title" xml:space="preserve"><value>旋转和裁剪</value></data>
   <data name="Editor_RotateLeft" xml:space="preserve"><value>向左旋转</value></data>
   <data name="Editor_RotateRight" xml:space="preserve"><value>向右旋转</value></data>

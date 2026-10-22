@@ -37,6 +37,7 @@ internal static partial class LineClass
     internal const double HeadingHeightRatio = 1.25;
     internal const double HeadingGapRatio = 1.5;
     internal const double HeadingLengthRatio = 0.6;
+    internal const int MaxHeadingLength = 60;
     // A gap below this share of a line's height is box jitter, not a heading gap.
     internal const double MinHeadingGapHeightRatio = 0.5;
     private const string TerminalPunctuation = ".!?…:;,。！？";
@@ -118,7 +119,7 @@ internal static partial class LineClass
 
     private static bool IsGeometryHeading(IReadOnlyList<ReflowLine> block, int index, BlockStats stats)
     {
-        if (index + 1 < block.Count && StartsLowerCase(block[index + 1].Text))
+        if (!LooksLikeHeading(block[index].Text) || (index + 1 < block.Count && StartsLowerCase(block[index + 1].Text)))
         {
             return false; // a mid-sentence wrap, however tall or spaced its box is
         }
@@ -136,6 +137,13 @@ internal static partial class LineClass
 
         double gap = block[index + 1].Box!.Value.Top - box.Bottom;
         return gap >= Math.Max(HeadingGapRatio * stats.MedianGap, MinHeadingGapHeightRatio * stats.MedianHeight);
+    }
+
+    // The text shape a heading needs on top of its box: short and not opening mid-sentence.
+    private static bool LooksLikeHeading(string text)
+    {
+        string trimmed = text.Trim();
+        return trimmed.Length <= MaxHeadingLength && !StartsLowerCase(trimmed);
     }
 
     private static bool StartsLowerCase(string text)
