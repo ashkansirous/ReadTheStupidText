@@ -1,9 +1,12 @@
+using ReadTheStupidText.Application.Reading;
+
 namespace DinoReader.Core;
 
 /// <summary>
 /// Splits story text into the sentences the reading screen highlights (Decision 79: the sentence
 /// is the unit, never a word). A sentence ends at its terminator (a title like "Mr." does not end
-/// one) plus any closing quote marks, at a line break, and between two quotes that follow each
+/// one) plus any closing quote marks, at a line break that <see cref="LineReflow"/> reads as a real
+/// break (a blank line, a heading, a list item; never a soft wrap, Slice 76), and between two quotes that follow each
 /// other ("Go!" "No!"). A quote and its attribution stay together: "Hi," said Peter. is one
 /// sentence, so the box never stops mid-sentence. After a closing quote the sentence ends unless the
 /// next word is an attribution: it starts lowercase, or in a script without case (Farsi, Arabic),
@@ -21,14 +24,22 @@ public static class StorySentences
 
     public static IReadOnlyList<SentenceSpan> Build(string text, LanguageRules rules)
     {
+        LineBreakMap lineBreaks = LineReflow.BreakMap(text);
+        return Build(text, rules, lineBreaks);
+    }
+
+    /// <summary>As <see cref="Build(string, LanguageRules)"/>, with the line breaks decided by the caller
+    /// (for example from the page's OCR line boxes).</summary>
+    public static IReadOnlyList<SentenceSpan> Build(string text, LanguageRules rules, LineBreakMap lineBreaks)
+    {
         var spans = new List<SentenceSpan>();
         int start = SkipWhitespace(text, 0);
         int i = start;
-        var quote = new QuoteState();
+        var quote = new QuoteState(lineBreaks.SentenceBreaks);
         while (i < text.Length)
         {
             quote.Advance(text, i, rules);
-            int end = EndAt(text, i, rules, quote);
+            int end = EndAt(text, i, rules, quote, lineBreaks.SentenceBreaks);
             if (end < 0)
             {
                 i++;
@@ -68,11 +79,11 @@ public static class StorySentences
     }
 
     // The exclusive end of a sentence that finishes at index i, or -1 when none does.
-    private static int EndAt(string text, int i, LanguageRules rules, QuoteState quote)
+    private static int EndAt(string text, int i, LanguageRules rules, QuoteState quote, IReadOnlySet<int> lineBreaks)
     {
         if (text[i] == '\n')
         {
-            return TrimEnd(text, i);
+            return lineBreaks.Contains(i) ? TrimEnd(text, i) : -1;
         }
 
         if (!IsTerminator(text[i], rules) || (i + 1 < text.Length && IsTerminator(text[i + 1], rules)))
@@ -168,7 +179,13 @@ public static class StorySentences
     // Which quote the scan is in, found by looking ahead to its close on the same line.
     private sealed class QuoteState
     {
+        private readonly IReadOnlySet<int> _lineBreaks;
         private int _close = -1;
+
+        public QuoteState(IReadOnlySet<int> lineBreaks)
+        {
+            _lineBreaks = lineBreaks;
+        }
 
         /// <summary>True inside a quote that ends with a comma or runs on into an attribution: one sentence.</summary>
         public bool HoldsTogether { get; private set; }
@@ -183,16 +200,16 @@ public static class StorySentences
 
             if (_close < 0 && IsOpeningQuote(text[i], rules))
             {
-                _close = FindClose(text, i, rules);
+                _close = FindClose(text, i, rules, _lineBreaks);
                 HoldsTogether = _close >= 0 && RunsOn(text, _close, rules);
             }
         }
 
-        private static int FindClose(string text, int open, LanguageRules rules)
+        private static int FindClose(string text, int open, LanguageRules rules, IReadOnlySet<int> lineBreaks)
         {
             for (int k = open + 1; k < text.Length; k++)
             {
-                if (text[k] == '\n')
+                if (text[k] == '\n' && lineBreaks.Contains(k))
                 {
                     return -1;
                 }

@@ -146,8 +146,9 @@ public sealed class StoryVoicing
 		}
 
 		LanguagePipeline pipeline = _pipelines.GetOrAdd(UiLanguage.Resolve(language), PipelineFor);
-		AttributionResult attribution = pipeline.Attributor.Attribute(text, pipeline.Segmenter.Split(text));
-		var fresh = new Cache(language, text, attribution, new Lazy<IReadOnlyList<SentenceSpan>>(() => StorySentences.Build(text, pipeline.Rules)));
+		LineBreakMap lineBreaks = LineReflow.BreakMap(text);
+		AttributionResult attribution = pipeline.Attributor.Attribute(text, pipeline.Segmenter.Split(text, lineBreaks));
+		var fresh = new Cache(language, text, attribution, new Lazy<IReadOnlyList<SentenceSpan>>(() => StorySentences.Build(text, pipeline.Rules, lineBreaks)));
 		_cache = fresh;
 		return fresh;
 	}
