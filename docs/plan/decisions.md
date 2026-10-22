@@ -1051,3 +1051,28 @@
     Whisper round-trip and was rejected by ear. A pack voice may name its own
     model folder, and an installed pack older than the catalog's is replaced.
     (Slice 89)
+94. **Dino stories travel as `.dino` packages (Batch 16).** A `.dino` file is a
+    zip of `package.json` (its own `schemaVersion`), `story.json` and the
+    story's cover and page images, all by plain file name. Import gives the
+    story a new id and refuses a newer schema, an unsafe path or an oversized
+    entry. Exporting is a developer-only action. Reverses Slice 61's "no export"
+    (export only; sync stays out). (Slice 91)
+95. **Three bundled starter stories (Batch 16).** The Three Little Pigs, The
+    Gingerbread Man and The Tortoise and the Hare: public-domain text only,
+    generated colour covers, installed once on first run, deletable. (Slice 91)
+96. **A free, curated story store behind the grown-up gate (Batch 16).** The
+    developer uploads `.dino` packages to R2 by hand under
+    `dinoreader/stories/<id>/`; the Worker lists only complete folders and
+    serves cover and download. No accounts, no tracking, no user uploads.
+    Reverses the Batch 10 out-of-scope "A story store or marketplace".
+    (Slice 92)
+97. **Backup is one manual file; phone backup stays off (Batch 16).** A
+    grown-up saves a single backup file from behind the gate and restores it,
+    skipping stories already present. `allowBackup="false"` (Slice 58) stays.
+    (Slice 93)
+98. **Dino's first run asks the language and shows the voice getting ready
+    (Batch 16).** Replaces the silent English default in `SpeechStartup`. No
+    tutorial. (Slice 93)
+99. **The store, backup and first-run screens are designed in Claude Design
+    first (Batch 16).** Slices 92 and 93 don't start their UI until the mock
+    has those screens. (Slices 92, 93)
