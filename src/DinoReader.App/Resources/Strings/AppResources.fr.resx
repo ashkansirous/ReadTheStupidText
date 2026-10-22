@@ -37,6 +37,7 @@
   <data name="Gallery_EditStory" xml:space="preserve"><value>Modifier {0}</value></data>
   <data name="Gallery_CastStory" xml:space="preserve"><value>Distribution de {0}</value></data>
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>Supprimer {0}</value></data>
+  <data name="Gallery_ExportStory" xml:space="preserve"><value>Exporter l'histoire</value></data>
   <data name="Gallery_CastButton" xml:space="preserve"><value>Distribution</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Appuyez et maintenez 3 secondes.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Appuyez et maintenez 3 secondes</value></data>

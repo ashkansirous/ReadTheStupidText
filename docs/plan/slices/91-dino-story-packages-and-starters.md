@@ -1,11 +1,11 @@
 # Slice 91 — Dino stories as packages, three starter stories, developer export
 
-*In progress (wave 2026-10-22), draft PR.* Planned 2026-10-22. Source: phone scope "Dino Reader: starter stories, story store, better
+*Built 2026-10-23, device-tested on the emulator; re-import on a device not yet verified.* Planned 2026-10-22. Source: phone scope "Dino Reader: starter stories, story store, better
 onboarding, backup" (Scope Inbox, 2026-10-22).
 
 **Batch:** 16 (Dino Reader content)
 **Depends on:** Slices 58-80 (built)
-**Touches:** `src/DinoReader.Core/StoryPackage*.cs` (new), `src/DinoReader.Core/FileStoryLibrary.cs`, `src/DinoReader.Core/IStoryLibrary.cs`, `src/DinoReader.Core/StoryJson.cs`, `src/DinoReader.App/DinoReader.App.csproj`, `src/DinoReader.App/StarterStories.cs` (new), `src/DinoReader.App/Resources/Raw/starters/**` (new), `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/TileOverlay.xaml`, `src/DinoReader.App/TileOverlay.xaml.cs`, `src/DinoReader.App/StoryActions.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.Core/CLAUDE.md`, `docs/plan/slices/61-gallery-grownup-gate.md`
+**Touches:** `src/DinoReader.Core/StoryPackage*.cs` (new), `src/DinoReader.Core/FileStoryLibrary.cs`, `src/DinoReader.Core/IStoryLibrary.cs`, `src/DinoReader.Core/StoryJson.cs`, `src/DinoReader.Core/Story.cs`, `src/DinoReader.App/DinoReader.App.csproj`, `src/DinoReader.App/StarterStories.cs` (new), `src/DinoReader.App/Resources/Raw/starters/**` (new), `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/TileOverlay.xaml`, `src/DinoReader.App/TileOverlay.xaml.cs`, `src/DinoReader.App/StoryActions.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.Core/CLAUDE.md`, `docs/plan/slices/61-gallery-grownup-gate.md`
 **Story issue:** —
 
 ## Why
@@ -44,18 +44,18 @@ Source: `docs/design/dino-reader/Dino Reader Batch 16.dc.html`, screens 18, 19 a
 
 ## Work
 
-- [ ] 1. **Package round-trip (first, smallest end-to-end).** `StoryPackageWriter` and
+- [x] 1. **Package round-trip (first, smallest end-to-end).** `StoryPackageWriter` and
   `StoryPackageReader` in `DinoReader.Core`, plus an import method on `IStoryLibrary` that writes
   page images and covers into the new story folder (today `StoreFileAsync` accepts only
   `cover-<id>.jpg`). Tests: the cast, merges and pinned voices (`CastMember.Edited`) survive the
   round-trip; a newer schema, a zip-slip path and an oversized entry are refused.
-- [ ] 2. **Developer export.** "Export story" in the grown-up tile overlay, shown only with the
+- [x] 2. **Developer export.** "Export story" in the grown-up tile overlay, shown only with the
   developer switch on. It writes the `.dino` file through the share sheet or save dialog.
-- [ ] 3. **Write the three starters.** Public-domain text with any Gutenberg header stripped, the
+- [x] 3. **Write the three starters.** Public-domain text with any Gutenberg header stripped, the
   cast checked by reading each one through the app, then exported as `.dino` with `meta.json`.
-- [ ] 4. **Bundle and install.** The `.dino` files ship as `MauiAsset`s. First run imports them
+- [x] 4. **Bundle and install.** The `.dino` files ship as `MauiAsset`s. First run imports them
   once, and a deleted starter doesn't come back. The gallery shows them instead of an empty grid.
-- [ ] 5. Amend Slice 61's out-of-scope line ("export allowed since Slice 91") and add the package
+- [x] 5. Amend Slice 61's out-of-scope line ("export allowed since Slice 91") and add the package
   and starter rules to `src/DinoReader.Core/CLAUDE.md` and `src/DinoReader.App/CLAUDE.md`.
 
 ## Verification
@@ -67,4 +67,36 @@ Source: `docs/design/dino-reader/Dino Reader Batch 16.dc.html`, screens 18, 19 a
 
 ## Not yet verified
 
-_(filled in when built)_
+- Re-importing a `.dino` on a device: there is no import UI until Slices 92/93, so only the unit round-trip tests cover it.
+
+## Changed while building
+
+- `Story.cs` gained a `SourceId` field (the package's original id), outside the original Touches.
+- `IStoryLibrary.ImportAsync` is a default interface method.
+- The share icon is a raw `Path`, not an `IconKind`.
+- The Pigs cover uses `CoverPalette` index 3.
+- Starter asset names are flat (the Windows package drops folders).
+- No `meta.json` in the starters: the Slice 92 store keeps meta in R2.
+- Starters are tracked per package id in Preferences, so a new starter can arrive later and a deleted one stays gone.
+- Developer switch: Debug builds, or 7 taps within 2 s in grown-up mode.
+- The cow is voiced male by the guesser.
+
+## From review
+
+High and medium passes: findings 1-9 fixed both times, and high #1-10 all fixed. Medium #10 skipped because `DraftLibrary` never imports. (Reviews: 91-review-high.md, 91-review-medium.md.)
+
+## Device test (emulator RTST_Test, Debug embedded arm64)
+
+Fresh install shows the three starters; Pigs opens and plays; the cast screens show distinct voices; a deleted starter stays gone after a restart; Export opens the share sheet with `TheThreeLittlePigs.dino`. No crashes. Import back not tested.
+
+#### For CLAUDE.md
+
+- (Already written into `src/DinoReader.Core/CLAUDE.md` and `src/DinoReader.App/CLAUDE.md` by this slice; the index pass need only check they are there.) Package format and import refusals: `src/DinoReader.Core/CLAUDE.md`. Starters, flat asset names, rebuild command, speaker-tag form, developer-only export: `src/DinoReader.App/CLAUDE.md`. (Slice 91: docs/plan/slices/91-dino-story-packages-and-starters.md)
+
+#### For README.md
+
+None (not user-facing: no import UI yet).
+
+#### Not yet verified
+
+- Re-importing a `.dino` on a device (no import UI until Slices 92/93; unit round-trip tests cover it). (Slice 91: docs/plan/slices/91-dino-story-packages-and-starters.md)

@@ -37,6 +37,7 @@
   <data name="Gallery_EditStory" xml:space="preserve"><value>تعديل {0}</value></data>
   <data name="Gallery_CastStory" xml:space="preserve"><value>شخصيات {0}</value></data>
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>حذف {0}</value></data>
+  <data name="Gallery_ExportStory" xml:space="preserve"><value>تصدير القصة</value></data>
   <data name="Gallery_CastButton" xml:space="preserve"><value>الشخصيات</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>اضغط مطولاً لمدة 3 ثوانٍ.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>اضغط مطولاً لمدة 3 ثوانٍ</value></data>

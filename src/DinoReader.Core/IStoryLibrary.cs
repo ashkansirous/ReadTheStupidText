@@ -11,6 +11,11 @@ public interface IStoryLibrary
     /// <summary>Saves a new story; throws if the id is already used.</summary>
     Task AddAsync(Story story);
 
+    /// <summary>Saves a new story together with its picture files (a package import, Slice 91): the files are copied into the story's
+    /// folder under their plain names and <c>story.json</c> is written last, so a failure leaves no listed half-story. Throws if the id is
+    /// already used or a file name is not a plain one. A library that does not store stories on disk (the wizard's draft view) leaves it unsupported.</summary>
+    Task ImportAsync(Story story, IReadOnlyList<PackageFile> files) => throw new NotSupportedException();
+
     /// <summary>Saves changes to an existing story; throws if it does not exist.</summary>
     Task UpdateAsync(Story story);
 
