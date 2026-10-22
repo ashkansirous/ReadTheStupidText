@@ -3,6 +3,7 @@ using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Domain.Reading;
 using ReadTheStupidText.Domain.Sanitizing;
 using ReadTheStupidText.Infrastructure.Reading;
+using ReadTheStupidText.Mobile;
 
 namespace ReadTheStupidText.Tests;
 
@@ -157,21 +158,264 @@ public class VoicePackSetupTests
         Assert.Equal(PackSetupState.Unavailable, setup.State);
     }
 
+    [Fact]
+    public async Task A_language_change_while_idle_starts_a_resolve_for_the_new_language()
+    {
+        var settings = new FakeSettings { Language = "en" };
+        var packs = new FakePacks { Catalog = new PackCatalogResult(PackDownloadResult.Ok, [EnglishPack]) };
+        var notifier = new FakeNotifier();
+        var installer = MobileInstaller(packs, settings, notifier);
+
+        settings.Language = "fa";
+        notifier.Raise();
+        await WaitForStateAsync(installer, PackInstallState.Unavailable);
+
+        Assert.Equal(1, packs.CatalogCalls);
+    }
+
+    [Fact]
+    public async Task A_language_change_during_a_run_re_runs_once_after_it()
+    {
+        var settings = new FakeSettings { Language = "en" };
+        var packs = new FakePacks { Catalog = new PackCatalogResult(PackDownloadResult.Ok, [EnglishPack]) };
+        var notifier = new FakeNotifier();
+        var installer = MobileInstaller(packs, settings, notifier);
+        packs.OnDownload = () =>
+        {
+            settings.Language = "fa";
+            notifier.Raise(); // arrives mid-run: the running call serves "fa" afterwards
+        };
+
+        await installer.StartAsync();
+
+        Assert.Equal(2, packs.CatalogCalls);
+        Assert.Equal(PackInstallState.Unavailable, installer.State);
+    }
+
+    private static readonly PackInfo FarsiPack =
+        new("piper-fa", ["fa"], PackKind.Voice, "1", 10, "hash", "MIT", "https://x/fa.zip");
+
+    [Fact]
+    public async Task An_error_in_an_event_started_run_ends_in_the_failed_state()
+    {
+        var settings = new FakeSettings { Language = "en" };
+        var packs = new FakePacks { CatalogThrows = true };
+        var notifier = new FakeNotifier();
+        var installer = MobileInstaller(packs, settings, notifier);
+
+        settings.Language = "fa";
+        notifier.Raise();
+        await WaitForStateAsync(installer, PackInstallState.Failed);
+
+        Assert.True(installer.CanRetry);
+    }
+
+    [Fact]
+    public async Task A_change_to_an_installed_language_cancels_the_download_in_flight()
+    {
+        var settings = new FakeSettings { Language = "fa" };
+        var packs = new FakePacks { Catalog = new PackCatalogResult(PackDownloadResult.Ok, [FarsiPack]) };
+        var model = new FakeModel();
+        var notifier = new FakeNotifier();
+        var installer = new VoicePackInstaller(packs, model, new NoopReader(), settings, new NeuralPlatform(), notifier);
+        Task<bool> cancelled = packs.BlockFirstDownload();
+
+        Task run = installer.StartAsync();
+        await packs.FirstDownloadStarted;
+        packs.Installed = [InstalledEnglish()];
+        settings.Language = "en";
+        notifier.Raise();
+        await run;
+
+        Assert.True(await cancelled);
+        Assert.Equal(PackInstallState.Ready, installer.State);
+        Assert.Equal(1, model.Initialized);
+        Assert.Equal(1, packs.DownloadCalls);
+    }
+
+    [Fact]
+    public async Task Flipping_back_to_the_original_language_after_a_cancel_downloads_it_again()
+    {
+        var settings = new FakeSettings { Language = "fa" };
+        var packs = new FakePacks { Catalog = new PackCatalogResult(PackDownloadResult.Ok, [EnglishPack, FarsiPack]) };
+        var notifier = new FakeNotifier();
+        var installer = MobileInstaller(packs, settings, notifier);
+        Task<bool> cancelled = packs.BlockFirstDownload();
+
+        Task run = installer.StartAsync();
+        await packs.FirstDownloadStarted;
+        settings.Language = "en";
+        notifier.Raise();
+        settings.Language = "fa";
+        notifier.Raise();
+        await run;
+
+        Assert.True(await cancelled);
+        Assert.Equal("piper-fa", packs.Downloaded);
+        Assert.Equal(PackInstallState.Ready, installer.State);
+    }
+
+    [Fact]
+    public async Task A_language_change_while_a_run_throws_is_still_served()
+    {
+        var settings = new FakeSettings { Language = "fa" };
+        var packs = new FakePacks { CatalogThrows = true };
+        var notifier = new FakeNotifier();
+        var installer = MobileInstaller(packs, settings, notifier);
+        packs.OnCatalog = () =>
+        {
+            packs.Installed = [InstalledEnglish()];
+            settings.Language = "en";
+            notifier.Raise();
+        };
+
+        await installer.StartAsync();
+
+        Assert.Equal(PackInstallState.Ready, installer.State);
+    }
+
+    [Fact]
+    public async Task Clearing_the_language_during_a_download_ends_in_idle()
+    {
+        var settings = new FakeSettings { Language = "fa" };
+        var packs = new FakePacks { Catalog = new PackCatalogResult(PackDownloadResult.Ok, [FarsiPack]) };
+        var notifier = new FakeNotifier();
+        var installer = MobileInstaller(packs, settings, notifier);
+        Task<bool> cancelled = packs.BlockFirstDownload();
+
+        Task run = installer.StartAsync();
+        await packs.FirstDownloadStarted;
+        settings.Language = null;
+        notifier.Raise();
+        await run;
+
+        Assert.True(await cancelled);
+        Assert.Equal(PackInstallState.Idle, installer.State);
+    }
+
+    [Fact]
+    public async Task Rapid_language_flips_never_throw_and_settle_on_the_last_language()
+    {
+        var settings = new FakeSettings { Language = "fa" };
+        var packs = new FakePacks { Catalog = new PackCatalogResult(PackDownloadResult.Ok, [EnglishPack, FarsiPack]) };
+        var notifier = new FakeNotifier();
+        var installer = MobileInstaller(packs, settings, notifier);
+        Task<bool> cancelled = packs.BlockFirstDownload();
+
+        Task run = installer.StartAsync();
+        await packs.FirstDownloadStarted;
+        for (int i = 0; i < 200; i++)
+        {
+            settings.Language = i % 2 == 0 ? "en" : "fa";
+            notifier.Raise();
+        }
+
+        settings.Language = "fa";
+        notifier.Raise();
+        await run;
+
+        Assert.True(await cancelled);
+        await WaitForStateAsync(installer, PackInstallState.Ready);
+    }
+
+    private static VoicePackInstaller MobileInstaller(FakePacks packs, FakeSettings settings, FakeNotifier notifier) =>
+        new(packs, new FakeModel(), new NoopReader(), settings, new NeuralPlatform(), notifier);
+
+    // Completes on the Changed event that reaches the state, so no clock decides the outcome.
+    private static Task WaitForStateAsync(VoicePackInstaller installer, PackInstallState expected)
+    {
+        var reached = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        installer.Changed += (_, _) =>
+        {
+            if (installer.State == expected)
+            {
+                reached.TrySetResult();
+            }
+        };
+
+        if (installer.State == expected)
+        {
+            reached.TrySetResult();
+        }
+
+        return AwaitWithinLimitAsync(installer, expected, reached.Task);
+    }
+
+    private static readonly TimeSpan StateWaitLimit = TimeSpan.FromSeconds(30);
+
+    private static async Task AwaitWithinLimitAsync(VoicePackInstaller installer, PackInstallState expected, Task reached)
+    {
+        if (await Task.WhenAny(reached, Task.Delay(StateWaitLimit)) != reached)
+        {
+            Assert.Fail($"Expected installer state {expected} within {StateWaitLimit.TotalSeconds}s, last seen {installer.State}.");
+        }
+    }
+
+    private sealed class FakeNotifier : ILanguageChangeNotifier
+    {
+        public event EventHandler? LanguageChanged;
+
+        public void Raise() => LanguageChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private sealed class NeuralPlatform : IPlatformServices
+    {
+        public bool SupportsNeuralVoice => true;
+        public bool SupportsTextScan => false;
+        public ISpeechReader CreateNeuralReader() => new NoopReader();
+        public ISpeechReader CreateFallbackReader() => new NoopReader();
+    }
+
+    private sealed class NoopReader : ISpeechReader
+    {
+        public event EventHandler<PlaybackState>? StateChanged { add { } remove { } }
+        public event EventHandler? Completed { add { } remove { } }
+        public event EventHandler<double>? ProgressChanged { add { } remove { } }
+        public event EventHandler<ReadTiming>? TimingChanged { add { } remove { } }
+        public event EventHandler<ReadChunk>? ChunkChanged { add { } remove { } }
+        public PlaybackState State => PlaybackState.Idle;
+        public Task SpeakAsync(string text, int? activityId = null) => Task.CompletedTask;
+        public Task WarmUpAsync() => Task.CompletedTask;
+        public void Pause() { }
+        public void Resume() { }
+        public void Stop() { }
+        public void SetSpeed(PlaybackRate speed) { }
+        public void SetVoice(string voiceId) { }
+        public Task SkipForward() => Task.CompletedTask;
+        public Task SkipBackward() => Task.CompletedTask;
+    }
+
     private sealed class FakePacks : IVoicePackService
     {
         public Action? OnDownload { get; set; }
+        public Action? OnCatalog { get; set; }
         public Action? AfterProgressReport { get; set; }
         public IReadOnlyList<InstalledVoicePack> Installed { get; set; } = [];
         public PackCatalogResult Catalog { get; set; } = PackCatalogResult.Failure(PackDownloadResult.Failed);
         public PackDownloadResult DownloadResult { get; set; } = PackDownloadResult.Ok;
         public int CatalogCalls { get; private set; }
+        public int DownloadCalls { get; private set; }
+        public bool CatalogThrows { get; set; }
+        public Task FirstDownloadStarted => _firstStarted.Task;
+        private readonly TaskCompletionSource _firstStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private bool _blockFirst;
+        private TaskCompletionSource<bool>? _firstCancelled;
+
+        /// <summary>The first download waits for cancellation; the result says whether it was cancelled.</summary>
+        public Task<bool> BlockFirstDownload()
+        {
+            _blockFirst = true;
+            _firstCancelled = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            return _firstCancelled.Task;
+        }
         public string? Downloaded { get; private set; }
         public IProgress<double>? LastProgress { get; private set; }
 
         public Task<PackCatalogResult> GetCatalogAsync(CancellationToken cancellationToken)
         {
             CatalogCalls++;
-            return Task.FromResult(Catalog);
+            OnCatalog?.Invoke();
+            return CatalogThrows ? throw new InvalidOperationException("catalog") : Task.FromResult(Catalog);
         }
 
         public string? GetInstalledPath(string packId) => null;
@@ -183,6 +427,13 @@ public class VoicePackSetupTests
         public Task<PackDownloadResult> DownloadAsync(string packId, IProgress<double>? progress, CancellationToken cancellationToken)
         {
             Downloaded = packId;
+            DownloadCalls++;
+            if (_blockFirst)
+            {
+                _blockFirst = false;
+                return WaitForCancelAsync(cancellationToken);
+            }
+
             OnDownload?.Invoke();
             LastProgress = progress;
             Task.Run(() =>
@@ -191,6 +442,22 @@ public class VoicePackSetupTests
                 AfterProgressReport?.Invoke();
             }).GetAwaiter().GetResult();
             return Task.FromResult(DownloadResult);
+        }
+
+        private async Task<PackDownloadResult> WaitForCancelAsync(CancellationToken cancellationToken)
+        {
+            _firstStarted.TrySetResult();
+            try
+            {
+                await Task.Delay(Timeout.Infinite, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                _firstCancelled!.TrySetResult(true);
+                throw;
+            }
+
+            return PackDownloadResult.Failed;
         }
     }
 

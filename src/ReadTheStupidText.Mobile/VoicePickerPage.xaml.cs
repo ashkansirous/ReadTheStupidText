@@ -29,6 +29,8 @@ public partial class VoicePickerPage : ContentPage
     private readonly IVoiceModelService _model;
     private readonly VoicePackInstaller _installer;
     private readonly Dictionary<string, Border> _rowsByVoiceId = new();
+    private Label? _statusLabel;
+    private PackInstallState _statusState;
 
     public VoicePickerPage(
         ISpeechReader reader,
@@ -67,13 +69,34 @@ public partial class VoicePickerPage : ContentPage
         _model.ReadyChanged -= OnPacksChanged;
     }
 
-    private void OnPacksChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(Rebuild);
+    private void OnPacksChanged(object? sender, EventArgs e) =>
+        MainThread.BeginInvokeOnMainThread(() => Refresh(ReferenceEquals(sender, _installer)));
+
+    // A download progress tick changes only the status text, so the list is not rebuilt for it.
+    private void Refresh(bool fromInstaller)
+    {
+        bool progressOnly = fromInstaller
+            && _statusLabel is not null
+            && _statusState == PackInstallState.Downloading
+            && _installer.State == PackInstallState.Downloading;
+        if (progressOnly)
+        {
+            _statusLabel!.Text = StatusText();
+            return;
+        }
+
+        Rebuild();
+    }
+
+    private string StatusText() =>
+        LocalizedPackStatus.Compose(_installer.State, _installer.Progress) ?? AppResources.VoicePicker_ReasonPackNotInstalled;
 
     // The voices on offer are the installed pack's for the user's language (Slice 51);
     // with none, only the phone voice reads and the page says why.
     private void Rebuild()
     {
         _rowsByVoiceId.Clear();
+        _statusLabel = null;
         PhoneVoiceList.Children.Clear();
         MaleVoiceList.Children.Clear();
         FemaleVoiceList.Children.Clear();
@@ -101,15 +124,40 @@ public partial class VoicePickerPage : ContentPage
 
     private void AddFallbackReason()
     {
-        string reason = _platform.SupportsNeuralVoice
-            ? PackStatusText.Compose(_installer.State, _installer.Progress) ?? AppResources.VoicePicker_ReasonPackNotInstalled
-            : AppResources.VoicePicker_ReasonNoNeuralEngine;
-        PhoneVoiceList.Children.Add(new Label
+        if (!_platform.SupportsNeuralVoice)
         {
-            Text = reason,
-            FontSize = 11,
+            PhoneVoiceList.Children.Add(BuildReasonLabel(AppResources.VoicePicker_ReasonNoNeuralEngine));
+            return;
+        }
+
+        _statusLabel = BuildReasonLabel(StatusText());
+        _statusState = _installer.State;
+        PhoneVoiceList.Children.Add(_statusLabel);
+
+        // Idle means a run ended without a state to show; offer the retry rather than a dead end.
+        if (_installer.CanRetry || _installer.State == PackInstallState.Idle)
+        {
+            PhoneVoiceList.Children.Add(BuildRetryButton());
+        }
+    }
+
+    private static Label BuildReasonLabel(string text) => new()
+    {
+        Text = text,
+        FontSize = 11,
+        Margin = new Thickness(12, 0, 12, 10),
+    };
+
+    private Button BuildRetryButton()
+    {
+        var retry = new Button
+        {
+            Text = AppResources.Language_Retry,
             Margin = new Thickness(12, 0, 12, 10),
-        });
+            HorizontalOptions = LayoutOptions.Start,
+        };
+        retry.Clicked += (_, _) => _ = _installer.StartAsync();
+        return retry;
     }
 
     // Supertonic keeps its MALE/FEMALE cards (Decision 43); any other engine's voices form
