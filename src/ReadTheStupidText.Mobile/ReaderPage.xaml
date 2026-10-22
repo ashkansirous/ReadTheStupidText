@@ -3,6 +3,7 @@
     x:Class="ReadTheStupidText.Mobile.ReaderPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:ReadTheStupidText.Mobile"
     xmlns:res="clr-namespace:ReadTheStupidText.Mobile.Resources.Strings"
     Title="{x:Static res:AppResources.Shell_ReaderTitle}"
     Shell.NavBarIsVisible="False"
@@ -176,7 +177,7 @@
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Tapped="OnSkipBackTapped" />
                             </Border.GestureRecognizers>
-                            <Label Text="{x:Static res:AppResources.Reader_SkipBackGlyph}" Style="{StaticResource TransportGlyphStyle}" FontSize="10" />
+                            <Label Text="{x:Static local:TransportGlyphs.SkipBack}" Style="{StaticResource TransportGlyphStyle}" FontSize="10" />
                         </Border>
 
                         <Border Grid.Column="1" WidthRequest="52" HeightRequest="52" Padding="0"
@@ -206,7 +207,7 @@
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Tapped="OnSkipForwardTapped" />
                             </Border.GestureRecognizers>
-                            <Label Text="{x:Static res:AppResources.Reader_SkipForwardGlyph}" Style="{StaticResource TransportGlyphStyle}" FontSize="10" />
+                            <Label Text="{x:Static local:TransportGlyphs.SkipForward}" Style="{StaticResource TransportGlyphStyle}" FontSize="10" />
                         </Border>
 
                         <VerticalStackLayout Grid.Column="3" Spacing="4" VerticalOptions="Center">

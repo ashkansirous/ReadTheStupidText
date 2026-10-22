@@ -11,11 +11,10 @@ public partial class LocalizedUiTests
     private const string NeutralFile = "AppResources.resx";
     private const string ResourcesFolder = @"src\ReadTheStupidText.Mobile\Resources\Strings";
 
-    // Keys whose value is deliberately inherited from English (the product name) or only
-    // overridden where the layout direction flips.
+    // Keys whose value is deliberately inherited from English (the product name).
     private static readonly HashSet<string> MayInherit =
     [
-        "App_Name", "Common_BackGlyph", "Reader_SkipBackGlyph", "Reader_SkipForwardGlyph",
+        "App_Name",
     ];
 
     [Theory]

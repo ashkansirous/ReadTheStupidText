@@ -9,14 +9,11 @@
   <data name="Common_Cancel" xml:space="preserve"><value>لغو</value></data>
   <data name="Common_Voice" xml:space="preserve"><value>صدا</value></data>
   <data name="Common_Language" xml:space="preserve"><value>زبان</value></data>
-  <data name="Common_BackGlyph" xml:space="preserve"><value>→</value></data>
   <data name="Reader_AddTextSection" xml:space="preserve"><value>افزودن متن</value></data>
   <data name="Reader_PasteButton" xml:space="preserve"><value>📋 جای‌گذاری</value></data>
   <data name="Reader_ScanButton" xml:space="preserve"><value>📷 اسکن</value></data>
   <data name="Reader_FileButton" xml:space="preserve"><value>📄 فایل</value></data>
   <data name="Reader_EditorPlaceholder" xml:space="preserve"><value>اینجا تایپ یا جای‌گذاری کنید، یک صفحه را اسکن کنید یا فایلی را باز کنید — همه‌چیز در همین کادر قرار می‌گیرد و با همان کنترل‌های پایین پخش می‌شود.</value></data>
-  <data name="Reader_SkipBackGlyph" xml:space="preserve"><value>⇥10</value></data>
-  <data name="Reader_SkipForwardGlyph" xml:space="preserve"><value>10⇤</value></data>
   <data name="Reader_PasteFailedTitle" xml:space="preserve"><value>جای‌گذاری نشد</value></data>
   <data name="Reader_PasteFailedMessage" xml:space="preserve"><value>کلیپ‌بورد خوانده نشد. دوباره متن را کپی کنید.</value></data>
   <data name="Reader_ScanFailedTitle" xml:space="preserve"><value>اسکن انجام نشد</value></data>

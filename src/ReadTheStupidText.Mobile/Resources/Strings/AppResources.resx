@@ -10,14 +10,11 @@
   <data name="Common_Cancel" xml:space="preserve"><value>Cancel</value></data>
   <data name="Common_Voice" xml:space="preserve"><value>Voice</value></data>
   <data name="Common_Language" xml:space="preserve"><value>Language</value></data>
-  <data name="Common_BackGlyph" xml:space="preserve"><value>←</value></data>
   <data name="Reader_AddTextSection" xml:space="preserve"><value>ADD TEXT</value></data>
   <data name="Reader_PasteButton" xml:space="preserve"><value>📋 Paste</value></data>
   <data name="Reader_ScanButton" xml:space="preserve"><value>📷 Scan</value></data>
   <data name="Reader_FileButton" xml:space="preserve"><value>📄 File</value></data>
   <data name="Reader_EditorPlaceholder" xml:space="preserve"><value>Type or paste here, scan a page, or open a file — everything lands in this one box and plays with the same controls below.</value></data>
-  <data name="Reader_SkipBackGlyph" xml:space="preserve"><value>⇤10</value></data>
-  <data name="Reader_SkipForwardGlyph" xml:space="preserve"><value>10⇥</value></data>
   <data name="Reader_PasteFailedTitle" xml:space="preserve"><value>Couldn't paste</value></data>
   <data name="Reader_PasteFailedMessage" xml:space="preserve"><value>The clipboard couldn't be read. Try copying the text again.</value></data>
   <data name="Reader_ScanFailedTitle" xml:space="preserve"><value>Couldn't scan</value></data>

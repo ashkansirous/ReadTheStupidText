@@ -65,8 +65,7 @@ public partial class ReaderPage : ContentPage
     public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, IImageTextExtractor imageExtractor, IVoiceModelService model, VoicePackInstaller installer, IPlatformServices platform, EditorDraft draft, IHeadStart headStart, IDocumentScanner? scanner = null, ILanguageDetector? detector = null, ITranslator? translator = null)
     {
         InitializeComponent();
-        FlowDirection = UiFlowDirection.ForCurrentCulture();
-        HeaderGrid.Padding = UiFlowDirection.Mirror(HeaderGrid.Padding);
+        FlowDirection = FlowDirection.LeftToRight;
         ApplyScanAvailability(platform.SupportsTextScan);
 
         _reader = reader;
@@ -80,17 +79,29 @@ public partial class ReaderPage : ContentPage
         _platform = platform;
         _draft = draft;
         TextEditor.Text = draft.Take();
+        TextEditor.FlowDirection = TextFlow.ContentDirection(TextEditor.Text);
         _speed = _settings.Speed;
         UpdatePresetHighlight();
         UpdateVoiceLabel();
-        LanguageNameLabel.Text = LanguageChoices.NativeName(CurrentLanguage());
+        TextFlow.ForContent(LanguageNameLabel, LanguageChoices.NativeName(CurrentLanguage()));
+        ApplySourcePickerDirection();
         InitTranslation(detector, translator);
         InitHeadStart();
+    }
+
+    // The Source picker sits at the right of its row in every language: its direction is the UI
+    // language's, so End/Start is chosen to keep that side.
+    private void ApplySourcePickerDirection()
+    {
+        bool rightToLeft = TextFlow.UiDirection() == FlowDirection.RightToLeft;
+        SourcePicker.FlowDirection = TextFlow.UiDirection();
+        SourcePicker.HorizontalTextAlignment = rightToLeft ? TextAlignment.Start : TextAlignment.End;
     }
 
     protected override void OnAppearing()
     {
         base.OnAppearing();
+        TextEditor.FlowDirection = TextFlow.ContentDirection(TextEditor.Text); // an empty editor follows the UI language as it is now
         _reader.StateChanged += OnReaderStateChanged;
         _reader.ProgressChanged += OnReaderProgressChanged;
         _reader.TimingChanged += OnReaderTimingChanged;
@@ -157,7 +168,7 @@ public partial class ReaderPage : ContentPage
     }
 
     private Task AlertAsync(string title, string message) =>
-        _retired ? Task.CompletedTask : DisplayAlertAsync(title, message, AppResources.Common_Ok, UiFlowDirection.ForCurrentCulture());
+        _retired ? Task.CompletedTask : DisplayAlertAsync(title, message, AppResources.Common_Ok, FlowDirection.LeftToRight);
 
     private async void OnPasteTapped(object? sender, TappedEventArgs e)
     {
@@ -733,7 +744,7 @@ public partial class ReaderPage : ContentPage
     private void RenderPackStatus()
     {
         string? text = _scanProgressText ?? LocalizedPackStatus.Compose(_installer.State, _installer.Progress);
-        PackStatusLabel.Text = text;
+        TextFlow.ForUi(PackStatusLabel, text);
         PackStatusLabel.IsVisible = text is not null;
     }
 

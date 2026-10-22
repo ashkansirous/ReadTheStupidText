@@ -14,7 +14,6 @@ public partial class LanguagePage : ContentPage
 {
     private static readonly Color SelectedRowTint = Color.FromArgb("#125B57E8");
 
-    private readonly Thickness _headerPadding; // as designed in XAML (left-to-right)
     private readonly ISettingsStore _settings;
     private readonly VoicePackInstaller _installer;
     private readonly Dictionary<AppLanguage, Border> _rows = new();
@@ -24,7 +23,7 @@ public partial class LanguagePage : ContentPage
     public LanguagePage(ISettingsStore settings, VoicePackInstaller installer)
     {
         InitializeComponent();
-        _headerPadding = HeaderGrid.Padding;
+        FlowDirection = FlowDirection.LeftToRight;
         _settings = settings;
         _installer = installer;
 
@@ -57,11 +56,19 @@ public partial class LanguagePage : ContentPage
             StrokeShape = new Microsoft.Maui.Controls.Shapes.Rectangle(),
             Stroke = Colors.Transparent,
             BackgroundColor = Colors.Transparent,
-            Content = new Label { Text = name, FontSize = 15 },
+            Content = BuildNameLabel(name),
         };
         border.GestureRecognizers.Add(new TapGestureRecognizer { Command = new Command(() => Select(language)) });
         _rows[language] = border;
         return border;
+    }
+
+    // Each row is a language's own name, so it takes the direction of its own script.
+    private static Label BuildNameLabel(string name)
+    {
+        var label = new Label { FontSize = 15 };
+        TextFlow.ForContent(label, name);
+        return label;
     }
 
     private void Select(AppLanguage language)
@@ -104,12 +111,12 @@ public partial class LanguagePage : ContentPage
     // (strings, direction and Continue/Start label), so the choice shows before leaving the page.
     private void ApplyTexts()
     {
-        FlowDirection = UiFlowDirection.ForCurrentCulture();
-        HeaderGrid.Padding = UiFlowDirection.Mirror(_headerPadding);
         Title = AppResources.Common_Language;
-        AppNameLabel.Text = AppResources.App_Name;
-        IntroLabel.Text = AppResources.Language_Intro;
+        TextFlow.ForUi(AppNameLabel, AppResources.App_Name);
+        TextFlow.ForUi(IntroLabel, AppResources.Language_Intro);
         RetryButton.Text = AppResources.Language_Retry;
+        TextFlow.ForUi(RetryButton);
+        TextFlow.ForUi(ContinueButton);
         ContinueButton.Text = _started ? AppResources.Language_StartReading : AppResources.Language_Continue;
         if (_started)
         {
@@ -136,7 +143,7 @@ public partial class LanguagePage : ContentPage
     private void RenderStatus()
     {
         DownloadProgressBar.Progress = _installer.Progress;
-        StatusLabel.Text = LocalizedPackStatus.Compose(_installer.State, _installer.Progress) ?? string.Empty;
+        TextFlow.ForUi(StatusLabel, LocalizedPackStatus.Compose(_installer.State, _installer.Progress) ?? string.Empty);
         DownloadProgressBar.IsVisible = _installer.State == PackInstallState.Downloading;
         RetryButton.IsVisible = _installer.CanRetry;
     }

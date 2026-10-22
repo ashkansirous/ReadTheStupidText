@@ -16,7 +16,7 @@ public static class LanguageChooser
     {
         string[] names = LanguageChoices.All.Select(c => c.NativeName).ToArray();
         string? picked = await host.DisplayActionSheetAsync(
-            AppResources.Common_Language, AppResources.Common_Cancel, null, UiFlowDirection.ForCurrentCulture(), names);
+            AppResources.Common_Language, AppResources.Common_Cancel, null, FlowDirection.LeftToRight, names);
         int index = Array.IndexOf(names, picked);
         if (index < 0)
         {

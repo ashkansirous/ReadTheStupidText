@@ -28,14 +28,11 @@ public static class AppResources
     public static string Common_Cancel => Get();
     public static string Common_Voice => Get();
     public static string Common_Language => Get();
-    public static string Common_BackGlyph => Get();
     public static string Reader_AddTextSection => Get();
     public static string Reader_PasteButton => Get();
     public static string Reader_ScanButton => Get();
     public static string Reader_FileButton => Get();
     public static string Reader_EditorPlaceholder => Get();
-    public static string Reader_SkipBackGlyph => Get();
-    public static string Reader_SkipForwardGlyph => Get();
     public static string Reader_PasteFailedTitle => Get();
     public static string Reader_PasteFailedMessage => Get();
     public static string Reader_ScanFailedTitle => Get();

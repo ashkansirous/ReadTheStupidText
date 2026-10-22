@@ -7,7 +7,7 @@ public partial class AppShell : Shell
 	public AppShell()
 	{
 		InitializeComponent();
-		FlowDirection = UiFlowDirection.ForCurrentCulture();
+		FlowDirection = FlowDirection.LeftToRight;
 		Routing.RegisterRoute(VoicePickerRoute, typeof(VoicePickerPage));
 	}
 }
