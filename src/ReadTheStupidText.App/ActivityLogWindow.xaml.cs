@@ -33,7 +33,7 @@ public sealed partial class ActivityLogWindow : Window
         _log = log;
         _logFolder = logFolder;
         InitializeComponent();
-        RootGrid.FlowDirection = UiStrings.CurrentFlowDirection;
+        RootGrid.FlowDirection = FlowDirection.LeftToRight; // layout never mirrors (Slice 88)
         Title = $"{ProductInfo.Name} — {UiStrings.Get("Window_ActivityLog")}";
         AppWindow.Resize(new SizeInt32(980, 480));
         ConfigureWindowChrome();

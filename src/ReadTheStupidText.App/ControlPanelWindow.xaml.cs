@@ -97,7 +97,7 @@ public sealed partial class ControlPanelWindow : Window
 
         InitializeComponent();
         Title = ProductInfo.Name;
-        RootGrid.FlowDirection = UiStrings.CurrentFlowDirection;
+        RootGrid.FlowDirection = FlowDirection.LeftToRight; // layout never mirrors (Slice 88)
         SystemBackdrop = new MicaBackdrop();
         _waveform = (Storyboard)RootGrid.Resources["WaveformStoryboard"];
         ConfigurePresenter();
@@ -125,7 +125,7 @@ public sealed partial class ControlPanelWindow : Window
         _dispatcher.TryEnqueue(UpdateVoiceStatus);
 
     private void UpdateVoiceStatus() =>
-        VoiceStatus.Text = PackSetupText.ForPanel(_packSetup.State, _packSetup.Progress);
+        TextFlow.ForUi(VoiceStatus, PackSetupText.ForPanel(_packSetup.State, _packSetup.Progress));
 
     private void OnVoicesChanged(object? sender, EventArgs e) =>
         _dispatcher.TryEnqueue(() =>
@@ -579,7 +579,7 @@ public sealed partial class ControlPanelWindow : Window
     private void ApplyPlaybackState(PlaybackState state)
     {
         PlayPauseIcon.Glyph = state == PlaybackState.Playing ? PauseGlyph : PlayGlyph;
-        StatusText.Text = DescribeStatus(state);
+        TextFlow.ForUi(StatusText, DescribeStatus(state));
         SetWaveformPlaying(state == PlaybackState.Playing);
         if (state == PlaybackState.Idle)
         {

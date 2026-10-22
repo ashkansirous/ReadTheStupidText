@@ -120,12 +120,14 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="{x:Bind Time}" Style="{ThemeResource CaptionTextBlockStyle}" />
-                        <TextBlock Grid.Column="1" Text="{x:Bind Trigger}" Style="{ThemeResource CaptionTextBlockStyle}" />
-                        <TextBlock Grid.Column="2" Text="{x:Bind State, Mode=OneWay}" />
+                        <TextBlock Grid.Column="1" Text="{x:Bind Trigger}" FlowDirection="{x:Bind UiFlowDirection}" TextAlignment="Start" Style="{ThemeResource CaptionTextBlockStyle}" />
+                        <TextBlock Grid.Column="2" Text="{x:Bind State, Mode=OneWay}" FlowDirection="{x:Bind UiFlowDirection}" TextAlignment="Start" />
                         <TextBlock
                             Grid.Column="3"
                             Text="{x:Bind Reason, Mode=OneWay}"
+                            FlowDirection="{x:Bind UiFlowDirection}"
                             Style="{ThemeResource CaptionTextBlockStyle}"
+                            TextAlignment="Start"
                             TextTrimming="CharacterEllipsis" />
                         <TextBlock
                             Grid.Column="4"
@@ -138,10 +140,11 @@
                         <TextBlock
                             Grid.Column="6"
                             Text="{x:Bind Source}"
+                            FlowDirection="{x:Bind SourceFlowDirection}"
                             Style="{ThemeResource CaptionTextBlockStyle}"
                             TextTrimming="CharacterEllipsis"
                             ToolTipService.ToolTip="{x:Bind Source}" />
-                        <TextBlock Grid.Column="7" Text="{x:Bind Text}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Grid.Column="7" Text="{x:Bind Text}" FlowDirection="{x:Bind TextFlowDirection}" TextAlignment="Start" TextTrimming="CharacterEllipsis" />
                     </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>

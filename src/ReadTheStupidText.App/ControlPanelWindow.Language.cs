@@ -24,7 +24,7 @@ public sealed partial class ControlPanelWindow
         LanguageCombo.ItemsSource = LanguageChoices.All;
         _sourceChoices = BuildSourceChoices();
         TranslateSourceCombo.ItemsSource = _sourceChoices;
-        TranslateNote.Text = TranslationNoteText.Default;
+        TextFlow.ForUi(TranslateNote, TranslationNoteText.Default);
         if (!_readAloud.CanTranslate)
         {
             HideTranslateControls();
@@ -46,7 +46,7 @@ public sealed partial class ControlPanelWindow
 
     // Slice 75: the pack download runs on a background thread, so the note is set on the dispatcher.
     private void OnTranslationPackProgress(object? sender, TranslationPackProgress progress) =>
-        _dispatcher.TryEnqueue(() => TranslateNote.Text = TranslationNoteText.For(progress));
+        _dispatcher.TryEnqueue(() => TextFlow.ForUi(TranslateNote, TranslationNoteText.For(progress)));
 
     // A tray toggle changed the setting: mirror it here without echoing back into the service.
     private void OnTranslateEnabledChanged(object? sender, bool enabled) =>
@@ -106,11 +106,20 @@ public sealed partial class ControlPanelWindow
 
         _settings.Language = code;
         UiStrings.ApplyLanguage(code);
+        ReapplyUiDirection();
         LanguageCombo.IsEnabled = false;
         await StartVoicePackSetupAsync();
         RestartRequested?.Invoke(this, EventArgs.Empty);
         // Only reached when the restart did not happen: give the picker back.
         LanguageCombo.IsEnabled = true;
+    }
+
+    // The language changed mid-session: code-set text takes the new UI direction now, the x:Uid text after the restart.
+    private void ReapplyUiDirection()
+    {
+        StatusText.FlowDirection = TextFlow.UiDirection();
+        TextFlow.ForUi(TranslateNote, TranslationNoteText.Default);
+        UpdateVoiceStatus();
     }
 
     // A failed setup is not fatal here: the startup quiet resume retries it after the restart.
@@ -172,10 +181,10 @@ public sealed partial class ControlPanelWindow
         }
 
         _settings.TranslateSourceLanguage = choice.Code;
-        TranslateNote.Text = TranslationNoteText.Default;
+        TextFlow.ForUi(TranslateNote, TranslationNoteText.Default);
     }
 
     // May fire on a non-UI thread (the read pipeline), so the note is set on the dispatcher.
     private void OnTranslationFinished(object? sender, ReadTranslationResult result) =>
-        _dispatcher.TryEnqueue(() => TranslateNote.Text = TranslationNoteText.For(result));
+        _dispatcher.TryEnqueue(() => TextFlow.ForUi(TranslateNote, TranslationNoteText.For(result)));
 }

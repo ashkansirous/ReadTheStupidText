@@ -1,7 +1,6 @@
 using System.Globalization;
 using Microsoft.Windows.ApplicationModel.Resources;
 using Microsoft.Windows.Globalization;
-using Microsoft.UI.Xaml;
 
 namespace ReadTheStupidText_App;
 
@@ -62,9 +61,7 @@ internal static class UiStrings
         _loader = null;
     }
 
-    /// <summary>The flow direction for the language applied at startup, or the device's when none is stored.</summary>
-    public static FlowDirection CurrentFlowDirection =>
-        UiLanguageTag.IsRightToLeft(_languageCode, CultureInfo.CurrentUICulture.Name)
-            ? FlowDirection.RightToLeft
-            : FlowDirection.LeftToRight;
+    /// <summary>True when the language last applied (at startup, or by a picker; the device's when none is stored) is right-to-left. Only text uses it, via <see cref="TextFlow"/>; layout never mirrors.</summary>
+    public static bool IsRightToLeft =>
+        UiLanguageTag.IsRightToLeft(_languageCode, CultureInfo.CurrentUICulture.Name);
 }
