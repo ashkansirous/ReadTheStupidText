@@ -23,10 +23,6 @@ public sealed class VisionImageTextExtractor : IBuiltInTextRecognizer
     // EXIF orientations 5 to 8 are the ones that rotate the stored image a quarter turn.
     private const int FirstQuarterTurnOrientation = 5;
 
-    /// <param name="imagePath">A plain file path or a <c>file://</c> uri string.</param>
-    public async Task<string> ExtractTextAsync(string imagePath) =>
-        new ImageText((await ExtractLinesAsync(imagePath)).Lines, OcrSource.MlKit).Text;
-
     public bool Covers(string language) =>
         OcrLanguages.IsLatinScript(language) || (OperatingSystem.IsIOSVersionAtLeast(16) && NonLatinCovered.Contains(language));
 

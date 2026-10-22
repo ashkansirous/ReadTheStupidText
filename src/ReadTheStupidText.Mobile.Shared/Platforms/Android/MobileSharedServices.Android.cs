@@ -1,5 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using ReadTheStupidText.Application.Images;
+using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 
@@ -20,6 +22,7 @@ public static partial class MobileSharedServices
 		services.AddSingleton(_ => new MlKitImageTextExtractor(global::Android.App.Application.Context));
 		services.AddSingleton<IBuiltInTextRecognizer>(sp => sp.GetRequiredService<MlKitImageTextExtractor>());
 		services.AddSingleton<IPixelImageLoader>(_ => new AndroidPixelImageLoader(global::Android.App.Application.Context));
+		services.TryAddSingleton<ISystemLog, AndroidSystemLog>();
 		services.AddSingleton<LanguageImageTextExtractor>();
 		services.AddSingleton<IImageTextExtractor>(sp => sp.GetRequiredService<LanguageImageTextExtractor>());
 		services.AddSingleton<IOcrLineExtractor>(sp => sp.GetRequiredService<LanguageImageTextExtractor>());

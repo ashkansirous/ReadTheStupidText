@@ -1,5 +1,4 @@
 using Android.Gms.Extensions;
-using AndroidNet = Android.Net;
 using ReadTheStupidText.Application.Images;
 using Xamarin.Google.MLKit.Vision.Common;
 using Xamarin.Google.MLKit.Vision.Text;
@@ -35,14 +34,6 @@ public sealed class MlKitImageTextExtractor : IBuiltInTextRecognizer
     /// <summary>ML Kit's Latin recognizer reads Latin-script languages only (no Arabic, Persian, Cyrillic, CJK).</summary>
     public bool Covers(string language) => OcrLanguages.IsLatinScript(language);
 
-    /// <param name="imagePath">A plain file path, or a <c>file://</c> / <c>content://</c> uri string.</param>
-    public async Task<string> ExtractTextAsync(string imagePath)
-    {
-        InputImage image = InputImage.FromFilePath(_context, ToUri(imagePath));
-        Java.Lang.Object result = await _recognizer.Value.Process(image);
-        return ((Text)result).GetText() ?? string.Empty;
-    }
-
     /// <summary>
     /// The recognized lines with their boxes (Slice 63), plus the pixel size of the frame the boxes
     /// are in. The image is decoded and turned upright here from its EXIF orientation (the same
@@ -59,11 +50,12 @@ public sealed class MlKitImageTextExtractor : IBuiltInTextRecognizer
         using Android.Graphics.Bitmap upright = DecodeUpright(imagePath);
         using InputImage image = InputImage.FromBitmap(upright, 0);
         Java.Lang.Object result = await _recognizer.Value.Process(image);
-        List<OcrLine> lines = ((Text)result).TextBlocks
+        Text text = (Text)result;
+        List<OcrLine> lines = text.TextBlocks
             .SelectMany(block => block.Lines)
             .Select(ToLine)
             .ToList();
-        return new OcrReading(lines, upright.Width, upright.Height);
+        return new OcrReading(lines, upright.Width, upright.Height, text.GetText());
     }
 
     // Always a bitmap the caller owns and disposes (never the intermediate one, which is disposed here).
@@ -95,13 +87,5 @@ public sealed class MlKitImageTextExtractor : IBuiltInTextRecognizer
     {
         Android.Graphics.Rect? box = line.BoundingBox;
         return new OcrLine(line.Text ?? string.Empty, box is null ? default : new OcrBox(box.Left, box.Top, box.Right, box.Bottom));
-    }
-
-    private static AndroidNet.Uri ToUri(string imagePath)
-    {
-        AndroidNet.Uri? uri = imagePath.Contains("://", StringComparison.Ordinal)
-            ? AndroidNet.Uri.Parse(imagePath)
-            : AndroidNet.Uri.FromFile(new Java.IO.File(imagePath));
-        return uri ?? throw new InvalidOperationException($"Could not build a Uri for '{imagePath}'.");
     }
 }

@@ -1,5 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using ReadTheStupidText.Application.Images;
+using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 
@@ -22,6 +24,7 @@ public static partial class MobileSharedServices
 		services.AddSingleton<VisionImageTextExtractor>();
 		services.AddSingleton<IBuiltInTextRecognizer>(sp => sp.GetRequiredService<VisionImageTextExtractor>());
 		services.AddSingleton<IPixelImageLoader, IosPixelImageLoader>();
+		services.TryAddSingleton<ISystemLog, IosSystemLog>();
 		services.AddSingleton<LanguageImageTextExtractor>();
 		services.AddSingleton<IImageTextExtractor>(sp => sp.GetRequiredService<LanguageImageTextExtractor>());
 		services.AddSingleton<IOcrLineExtractor>(sp => sp.GetRequiredService<LanguageImageTextExtractor>());

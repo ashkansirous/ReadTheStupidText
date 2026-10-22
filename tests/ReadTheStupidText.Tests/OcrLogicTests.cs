@@ -1,4 +1,5 @@
 using ReadTheStupidText.Application.Images;
+using ReadTheStupidText.Application.Reading;
 
 namespace ReadTheStupidText.Tests;
 
@@ -374,6 +375,173 @@ public class OcrLogicTests
         cts.Cancel();
 
         Assert.Throws<OperationCanceledException>(() => pipeline.Read(Solid(128, 64, 200), cts.Token));
+    }
+
+    // ---- OCR follows the page's script, not the app language (Slice 84) ----
+
+    private static InstalledVoicePack OcrPack(string id, string languages) =>
+        new($"/packs/{id}", new PackManifest(id, PackKind.Ocr, languages, "1", "onnxruntime", ["det.onnx", "rec.onnx", "dict.txt"]));
+
+    private static readonly string[] NutkinLines = ["Squirrel Nutkin loves exploring", "with his friend, Peter Rabbit."];
+
+    private static ScriptShare ShareOf(params string[] lines) => ScriptDetector.Analyze(lines);
+
+    [Fact]
+    public void EnglishPageWithTheAppInFarsi_KeepsTheBuiltInReading_AndConsultsNoPack()
+    {
+        ScriptShare share = ShareOf(NutkinLines);
+
+        Assert.True(OcrPackChoice.BuiltInIsFinal(share));
+        Assert.Equal(string.Join('\n', NutkinLines), new ImageText(NutkinLines.Select(l => new OcrLine(l, default)).ToList(), OcrSource.MlKit).Text);
+    }
+
+    [Fact]
+    public void FarsiPageReadAsLatinNoise_IsNotFinal_AndTheFarsiPackWins()
+    {
+        ScriptShare noise = ShareOf("oll l ,l", "AI");
+        Assert.False(OcrPackChoice.BuiltInIsFinal(noise));
+
+        InstalledVoicePack[] installed = [OcrPack("ocr-cjk", "zh,ja"), OcrPack("ocr-arabic", "ar,fa")];
+        IReadOnlyList<OcrModelPaths> candidates = OcrPackChoice.Candidates(installed, "en", noise);
+        var choice = new OcrPackChoice(noise);
+
+        OcrModelPaths arabic = candidates.Single(c => c.Language == "ar");
+        Assert.True(choice.Offer(arabic, ShareOf("سنجاب ناتکین عاشق گشتن است")));
+        Assert.Same(arabic, choice.Winner);
+        Assert.True(choice.IsDecided);
+    }
+
+    [Fact]
+    public void ABlankOrShortBuiltInReading_IsNotFinal()
+    {
+        Assert.False(OcrPackChoice.BuiltInIsFinal(ScriptShare.Empty));
+        Assert.False(OcrPackChoice.BuiltInIsFinal(ShareOf("Page 3")));
+    }
+
+    [Fact]
+    public void Offer_APackThatDoesNotBeatTheBuiltInScriptCount_Loses()
+    {
+        ScriptShare builtIn = ShareOf("سنجاب ناتکین عاشق گشتن است");
+        var choice = new OcrPackChoice(builtIn);
+        OcrModelPaths arabic = new("/packs/ocr-arabic", "fa", "1");
+
+        Assert.False(choice.Offer(arabic, ShareOf("سنجاب")));
+        Assert.Null(choice.Winner);
+    }
+
+    [Fact]
+    public void Offer_AMixedReading_DoesNotStopTheScan_AndALaterBetterPackReplacesIt()
+    {
+        var choice = new OcrPackChoice(ShareOf("oll"));
+        OcrModelPaths arabic = new("/packs/ocr-arabic", "ar", "1");
+        OcrModelPaths cyrillic = new("/packs/ocr-cyrillic", "ru", "1");
+
+        Assert.True(choice.Offer(arabic, ShareOf("ابتثجحخد", "abcdefgh")));
+        Assert.False(choice.IsDecided);
+        Assert.True(choice.Offer(cyrillic, ShareOf("Привет мир как дела")));
+        Assert.Same(cyrillic, choice.Winner);
+        Assert.True(choice.IsDecided);
+    }
+
+    [Fact]
+    public void Offer_AHallucinatedPackReadingOverShortEnglish_DoesNotReplaceIt()
+    {
+        ScriptShare builtIn = ShareOf("Page 3");
+        Assert.False(OcrPackChoice.BuiltInIsFinal(builtIn));
+        var choice = new OcrPackChoice(builtIn);
+
+        Assert.False(choice.Offer(new OcrModelPaths("/packs/ocr-arabic", "ar", "1"), ShareOf("ابت")));
+        Assert.Null(choice.Winner);
+    }
+
+    [Fact]
+    public void JunkLatinAroundARealFarsiPage_IsNotFinal_AndTheFarsiPackWins()
+    {
+        ScriptShare builtIn = ShareOf("abcdefghijkl mnopq", "سنجاب ناتکین عاشق");
+        Assert.False(OcrPackChoice.BuiltInIsFinal(builtIn));
+        var choice = new OcrPackChoice(builtIn);
+
+        Assert.True(choice.Offer(new OcrModelPaths("/packs/ocr-arabic", "fa", "1"), ShareOf("سنجاب ناتکین عاشق گشتن است و دوست دارد", "با دوستش پیتر خرگوش در جنگل", "بزرگ بازی می کند")));
+        Assert.NotNull(choice.Winner);
+    }
+
+    [Fact]
+    public void FarsiHint_AllLatinJunkBuiltIn_StillFinal_ButTheFarsiPackIsReadAndWins()
+    {
+        ScriptShare junk = ShareOf("abcdefghijklmnop qrstuvwx yzabcdef");
+        Assert.True(OcrPackChoice.BuiltInIsFinal(junk));
+        InstalledVoicePack[] installed = [OcrPack("ocr-cjk", "zh,ja"), OcrPack("ocr-arabic", "ar,fa")];
+
+        OcrModelPaths hintPack = Assert.Single(OcrPackChoice.HintPackOnly(installed, "fa"));
+        var choice = new OcrPackChoice(junk);
+
+        Assert.Equal("fa", hintPack.Language);
+        Assert.True(choice.Offer(hintPack, ShareOf("سنجاب ناتکین عاشق گشتن است و دوست دارد", "با دوستش پیتر خرگوش در جنگل", "بزرگ بازی می کند")));
+    }
+
+    [Fact]
+    public void FarsiHint_RealEnglishPage_StaysEnglish_WhenThePackHallucinates()
+    {
+        var choice = new OcrPackChoice(ShareOf(NutkinLines));
+        var farsi = new OcrModelPaths("/packs/ocr-arabic", "fa", "1");
+
+        Assert.False(choice.Offer(farsi, ShareOf("سنجاب ناتکین عاشق")));
+        Assert.Null(choice.Winner);
+        Assert.Empty(OcrPackChoice.HintPackOnly([OcrPack("ocr-arabic", "ar,fa")], "en"));
+    }
+
+    [Fact]
+    public void Candidates_TryTheAlreadyLoadedPackFirst()
+    {
+        InstalledVoicePack[] installed = [OcrPack("ocr-arabic", "ar,fa"), OcrPack("ocr-cyrillic", "ru")];
+        var loaded = new OcrModelPaths("/packs/ocr-cyrillic", "ru", "1");
+
+        IReadOnlyList<OcrModelPaths> candidates = OcrPackChoice.Candidates(installed, "fa", ShareOf("abc"), loaded);
+
+        Assert.Equal("ocr-cyrillic", Path.GetFileName(candidates[0].Folder));
+        Assert.True(candidates[0].IsSamePack(loaded with { Language = "uk" }));
+    }
+
+    [Fact]
+    public void NonLatinCandidates_AMixedLatinAndCyrillicPack_IsKeptWhenTheHintDoesNotMatch()
+    {
+        IReadOnlyList<OcrModelPaths> candidates = InstalledOcrCatalog.NonLatinCandidates([OcrPack("ocr-mixed", "en,ru")], "de");
+
+        Assert.Equal("ru", Assert.Single(candidates).Language);
+    }
+
+    [Fact]
+    public void Candidates_PutThePackOfTheBuiltInDominantScriptFirst()
+    {
+        InstalledVoicePack[] installed = [OcrPack("ocr-arabic", "ar,fa"), OcrPack("ocr-cyrillic", "ru")];
+
+        IReadOnlyList<OcrModelPaths> candidates = OcrPackChoice.Candidates(installed, "fa", ShareOf("Привет мир"));
+
+        Assert.Equal(["ocr-cyrillic", "ocr-arabic"], candidates.Select(c => Path.GetFileName(c.Folder)));
+    }
+
+    [Fact]
+    public void NonLatinCandidates_SkipsLatinPacks_AndPutsTheHintFirst()
+    {
+        InstalledVoicePack[] installed = [OcrPack("ocr-cjk", "zh,ja"), OcrPack("ocr-latin", "en,fr"), OcrPack("ocr-arabic", "ar,fa")];
+
+        IReadOnlyList<OcrModelPaths> candidates = InstalledOcrCatalog.NonLatinCandidates(installed, "fa");
+
+        Assert.Equal(["ocr-arabic", "ocr-cjk"], candidates.Select(c => Path.GetFileName(c.Folder)));
+        Assert.Equal("fa", candidates[0].Language);
+        Assert.True(candidates[0].RightToLeft);
+        Assert.Equal("zh", candidates[1].Language);
+        Assert.False(candidates[1].RightToLeft);
+    }
+
+    [Fact]
+    public void NonLatinCandidates_WithAnEnglishApp_StillOffersTheFarsiPack()
+    {
+        IReadOnlyList<OcrModelPaths> candidates = InstalledOcrCatalog.NonLatinCandidates([OcrPack("ocr-arabic", "ar,fa")], "en");
+
+        OcrModelPaths only = Assert.Single(candidates);
+        Assert.Equal("ar", only.Language);
+        Assert.True(only.RightToLeft);
     }
 
     // Detects two text rows on a 128x64 page (map == page size) and always recognizes "ab".
