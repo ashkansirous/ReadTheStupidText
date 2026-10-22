@@ -103,7 +103,7 @@ this plan turns it into ordered, shippable vertical slices.
 | 83 | Scan replaces the text, like Paste and File | built | #245 | | [83-scan-replaces-the-text.md](docs/plan/slices/83-scan-replaces-the-text.md) |
 | 84 | Scan reads the page in the page's script, whatever the app language | built | #246 | | [84-ocr-follows-the-page-not-the-app-language.md](docs/plan/slices/84-ocr-follows-the-page-not-the-app-language.md) |
 | 85 | The layout never mirrors; only text flows by its own direction | built | #247 | | [85-no-layout-mirroring.md](docs/plan/slices/85-no-layout-mirroring.md) |
-| 86 | RTST scan reads with line geometry | planned | | | [86-rtst-scan-line-geometry.md](docs/plan/slices/86-rtst-scan-line-geometry.md) |
+| 86 | RTST scan reads with line geometry | built | #248 | | [86-rtst-scan-line-geometry.md](docs/plan/slices/86-rtst-scan-line-geometry.md) |
 
 Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
 
@@ -160,9 +160,10 @@ Built but not verified (details in each slice file):
 - Slice 76: on a device, a pasted hard-wrapped email and a scanned book page read with no pause mid-sentence (RTST Android, RTST Windows, Dino) ([slice](docs/plan/slices/76-soft-line-break-reflow.md)).
 - Slice 77: page-2 cover pick on a multi-page story; a photo cover surviving an app restart; the Windows live theme switch (`UISettings.ColorValuesChanged`) ([slice](docs/plan/slices/77-dino-covers-and-light-theme.md)).
 - Slice 78: scan 2 pages + 1 photo with the ML Kit scanner (needs a Google-signed device); Windows rotate/crop and drag-reorder; iOS on a device; only the changed page re-read; whether the Photos picker should multi-select; no discard confirmation on system back ([slice](docs/plan/slices/78-dino-page-review-wizard.md))
-- Slice 76 follow-up: the Dino half (per-page Lines → LineBreakMap, geometry heading text-shape check) is done in Slice 79; the RTST scan half is Slice 86.
+- ~~Slice 76 follow-up: geometry takeover~~ done: Dino in Slice 79, RTST scan in Slice 86.
 - Slice 79: a real picture-book scan on a device; Windows overlay taps ([slice](docs/plan/slices/79-background-text-filtering.md)).
 - Slice 80: Windows Dino nested taps and window recreate; TalkBack reading "Edit <title>" and "Delete <title>"; the 10-min `AwayTracker.ExternalActivityCap` timer (no test; lives in `DinoApp`) ([slice](docs/plan/slices/80-grownup-gallery-overlay.md)).
+- Slice 86: a scanned page with a heading reads the heading as its own unit on a Google-signed-in Android device and in the Windows Mobile build (the emulator's ML Kit scanner fails) ([slice](docs/plan/slices/86-rtst-scan-line-geometry.md)).
 - Slice 81: header "tap to retry" label (state flashes Resolving then Offline, no code defect found); a reinstalled pack restoring the chosen voice; all of it on a real phone ([slice](docs/plan/slices/81-language-change-starts-voice-download.md)).
 - Slice 82: iOS voice selection on a device (CI compile only); Windows does not switch the reading language (by design for now). User decision: with translation off, should untranslated text in another language (English while the app is in Farsi) be read by the voice for its detected language rather than the app language? ([slice](docs/plan/slices/82-phone-voice-reads-the-texts-language.md))
 - Slice 83: one-page, two-page and blank-page scans on a Google-signed-in device; the editor read-only during OCR ([slice](docs/plan/slices/83-scan-replaces-the-text.md)).

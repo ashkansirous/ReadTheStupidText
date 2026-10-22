@@ -36,7 +36,7 @@ Slice 76 deferred this. `ImageText` already carries `Lines` (`OcrLine` boxes), b
 
 *Checks:* RTST 809 pass / 2 skipped, Dino 410; Mobile and Dino Android builds.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-22)
 
 In `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md`: RTST image-text extractors return `ScanReadingText.From(...)` from `ExtractTextAsync` (geometry headings become blank-line breaks); `ExtractLinesAsync` stays raw for Dino. (Slice 86: docs/plan/slices/86-rtst-scan-line-geometry.md)
 
