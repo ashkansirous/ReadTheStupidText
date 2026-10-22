@@ -5,35 +5,28 @@ namespace ReadTheStupidText.Tests;
 public class ScannedTextTests
 {
     [Fact]
-    public void AppendPages_EmptyExisting_JoinsPagesWithBlankLine()
+    public void JoinPages_JoinsPagesWithBlankLine()
     {
-        Assert.Equal("a\n\nb", ScannedText.AppendPages("", ["a", "b"]));
-        Assert.Equal("a", ScannedText.AppendPages(null, ["a"]));
+        Assert.Equal("a\n\nb", ScannedText.JoinPages(["a", "b"]));
+        Assert.Equal("a", ScannedText.JoinPages(["a"]));
     }
 
     [Fact]
-    public void AppendPages_ExistingText_AppendsBelowWithBlankLine()
+    public void JoinPages_SkipsWhitespaceAndNullPages_AndTrims()
     {
-        Assert.Equal("old\n\nnew", ScannedText.AppendPages("old  \n", ["new"]));
+        Assert.Equal("a\n\nc", ScannedText.JoinPages([" a \n", "   ", null, "\tc"]));
     }
 
     [Fact]
-    public void AppendPages_SkipsWhitespaceAndNullPages_AndTrims()
+    public void JoinPages_AllEmpty_ReturnsEmpty()
     {
-        Assert.Equal("a\n\nc", ScannedText.AppendPages("", [" a \n", "   ", null, "\tc"]));
+        Assert.Equal("", ScannedText.JoinPages([" ", null, ""]));
     }
 
     [Fact]
-    public void AppendPages_AllEmpty_ReturnsExistingUnchanged()
+    public void JoinPages_PreservesPageOrder()
     {
-        Assert.Equal("keep  ", ScannedText.AppendPages("keep  ", [" ", null, ""]));
-        Assert.Equal("", ScannedText.AppendPages(null, [null]));
-    }
-
-    [Fact]
-    public void AppendPages_PreservesPageOrder()
-    {
-        Assert.Equal("1\n\n2\n\n3", ScannedText.AppendPages("", ["1", "2", "3"]));
+        Assert.Equal("1\n\n2\n\n3", ScannedText.JoinPages(["1", "2", "3"]));
     }
 
     [Fact]

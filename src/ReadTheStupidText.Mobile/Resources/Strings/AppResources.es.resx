@@ -35,8 +35,8 @@
   <data name="Reader_NoTextFoundTitle" xml:space="preserve"><value>No se encontró texto</value></data>
   <data name="Reader_NoTextFoundMessage" xml:space="preserve"><value>Vuelve a escanear con mejor iluminación o enfoque.</value></data>
   <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>Algunas páginas omitidas</value></data>
-  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>No se pudo leer la página {0}; se añadió el resto.</value></data>
-  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>No se pudieron leer las páginas {0}; se añadió el resto.</value></data>
+  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>No se pudo leer la página {0}. Las páginas legibles reemplazaron el texto.</value></data>
+  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>No se pudieron leer las páginas {0}. Las páginas legibles reemplazaron el texto.</value></data>
   <data name="Reader_ScanProgressPage" xml:space="preserve"><value>Leyendo la página {0} de {1}</value></data>
   <data name="Reader_ScanProgressSingle" xml:space="preserve"><value>Leyendo la página</value></data>
   <data name="Reader_FilePickerTitle" xml:space="preserve"><value>Elige un archivo .txt, .pdf o .docx</value></data>

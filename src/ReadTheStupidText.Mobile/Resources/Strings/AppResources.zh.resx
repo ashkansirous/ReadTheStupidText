@@ -35,8 +35,8 @@
   <data name="Reader_NoTextFoundTitle" xml:space="preserve"><value>未找到文字</value></data>
   <data name="Reader_NoTextFoundMessage" xml:space="preserve"><value>请在光线更好或对焦更清晰的条件下重新扫描。</value></data>
   <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>已跳过部分页面</value></data>
-  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>无法读取第 {0} 页——其余内容已添加。</value></data>
-  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>无法读取第 {0} 页——其余内容已添加。</value></data>
+  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>无法读取第 {0} 页。可读取的页面已替换原文本。</value></data>
+  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>无法读取第 {0} 页。可读取的页面已替换原文本。</value></data>
   <data name="Reader_ScanProgressPage" xml:space="preserve"><value>正在读取第 {0}/{1} 页</value></data>
   <data name="Reader_ScanProgressSingle" xml:space="preserve"><value>正在读取页面</value></data>
   <data name="Reader_FilePickerTitle" xml:space="preserve"><value>选择 .txt、.pdf 或 .docx 文件</value></data>
