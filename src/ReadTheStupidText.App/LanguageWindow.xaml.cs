@@ -33,12 +33,12 @@ public sealed partial class LanguageWindow : Window
         _log = log;
         _restart = restart;
         InitializeComponent();
-        RootGrid.FlowDirection = UiStrings.CurrentFlowDirection;
+        RootGrid.FlowDirection = FlowDirection.LeftToRight; // layout never mirrors (Slice 88)
         Title = $"{ProductInfo.Name} — {UiStrings.Get("Window_Language")}";
         AppWindow.Resize(new SizeInt32(460, 640));
         AppWindow.SetIcon("Assets/AppIcon.ico");
 
-        IntroText.Text = PackSetupText.Intro;
+        TextFlow.ForUi(IntroText, PackSetupText.Intro);
         PopulateChoices();
         ShowSetupState();
         _setup.Changed += OnSetupChanged;
@@ -65,7 +65,7 @@ public sealed partial class LanguageWindow : Window
         UiStrings.ApplyLanguage(_settings.Language);
         // Restart only when the language differs from the one the window opened with (picking it back is a no-op).
         _languageChanged = !string.Equals(_settings.Language, _initialLanguage, StringComparison.OrdinalIgnoreCase);
-        IntroText.Text = PackSetupText.Intro;
+        TextFlow.ForUi(IntroText, PackSetupText.Intro);
         StartSetup();
     }
 
@@ -93,7 +93,7 @@ public sealed partial class LanguageWindow : Window
         catch (Exception ex)
         {
             _log.Error("voice pack setup failed", null, ex);
-            _dispatcher.TryEnqueue(() => StatusText.Text = PackSetupText.For(PackSetupState.Failed, 0));
+            _dispatcher.TryEnqueue(() => TextFlow.ForUi(StatusText, PackSetupText.For(PackSetupState.Failed, 0)));
         }
     }
 
@@ -123,7 +123,7 @@ public sealed partial class LanguageWindow : Window
     private void ShowSetupState()
     {
         PackSetupState state = _setup.State;
-        StatusText.Text = PackSetupText.For(state, _setup.Progress);
+        TextFlow.ForUi(StatusText, PackSetupText.For(state, _setup.Progress));
         DownloadBar.Value = _setup.Progress;
         DownloadBar.Visibility = state == PackSetupState.Downloading ? Visibility.Visible : Visibility.Collapsed;
         RetryButton.Visibility = _setup.CanRetry ? Visibility.Visible : Visibility.Collapsed;

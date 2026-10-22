@@ -70,9 +70,9 @@ public sealed partial class ReadingTextBoxWindow : Window
     {
         _readAloud = readAloud;
         InitializeComponent();
-        RootGrid.FlowDirection = UiStrings.CurrentFlowDirection;
+        RootGrid.FlowDirection = FlowDirection.LeftToRight; // layout never mirrors (Slice 88)
         Title = $"{ProductInfo.Name} — {UiStrings.Get("Window_Reading")}";
-        StatusText.Text = UiStrings.Get("Reading_Nothing");
+        TextFlow.ForUi(StatusText, UiStrings.Get("Reading_Nothing"));
         AppWindow.Resize(new SizeInt32(640, 520));
         ConfigureWindowChrome();
         ReadingText.TextHighlighters.Add(_highlighter);
@@ -213,7 +213,7 @@ public sealed partial class ReadingTextBoxWindow : Window
         {
             if (state == PlaybackState.Idle)
             {
-                StatusText.Text = UiStrings.Get("Reading_Nothing");
+                TextFlow.ForUi(StatusText, UiStrings.Get("Reading_Nothing"));
             }
         });
 
@@ -250,6 +250,7 @@ public sealed partial class ReadingTextBoxWindow : Window
     // the first page — so a zoom or a window resize never loses the reader's place.
     private void Repaginate()
     {
+        ApplyContentDirection();
         if (_fullText.Length == 0)
         {
             _pages = [];
@@ -284,7 +285,7 @@ public sealed partial class ReadingTextBoxWindow : Window
             return; // not paginated yet
         }
 
-        StatusText.Text = ChunkStatus(chunk);
+        TextFlow.ForUi(StatusText, ChunkStatus(chunk));
 
         int pageIndex = TextBoxPaginator.PageIndexContaining(_pages, chunk.SourceStart);
         if (pageIndex != _currentPageIndex)
@@ -301,6 +302,15 @@ public sealed partial class ReadingTextBoxWindow : Window
         {
             _highlighter.Ranges.Add(new TextRange { StartIndex = localStart, Length = localEnd - localStart });
         }
+    }
+
+    // One reading direction for the whole text (from its first strong letter), shared by every page
+    // and the measuring probe, so pages never flip direction as playback advances.
+    private void ApplyContentDirection()
+    {
+        FlowDirection direction = TextFlow.ContentDirection(_fullText);
+        TextScroller.FlowDirection = direction;
+        MeasureProbe.FlowDirection = direction;
     }
 
     private void ShowPage(int index)
@@ -324,9 +334,9 @@ public sealed partial class ReadingTextBoxWindow : Window
     }
 
     private void UpdatePageIndicator() =>
-        PageIndicator.Text = _pages.Count == 0
-            ? string.Empty
-            : UiStrings.Format("Reading_Page", _currentPageIndex + 1, _pages.Count);
+        TextFlow.ForUi(
+            PageIndicator,
+            _pages.Count == 0 ? string.Empty : UiStrings.Format("Reading_Page", _currentPageIndex + 1, _pages.Count));
 
     private bool Fits(string candidate) => MeasureFits(candidate, _fontSize);
 

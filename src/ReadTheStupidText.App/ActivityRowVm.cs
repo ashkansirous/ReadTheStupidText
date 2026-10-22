@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Microsoft.UI.Xaml;
 
 namespace ReadTheStupidText_App;
 
@@ -28,6 +29,9 @@ public sealed class ActivityRowVm : INotifyPropertyChanged
         _reason = reason;
         _firstAudio = string.Empty;
         _synth = string.Empty;
+        TextFlowDirection = TextFlow.ContentDirection(text);
+        SourceFlowDirection = TextFlow.ContentDirection(source);
+        UiFlowDirection = TextFlow.UiDirection();
     }
 
     public int Id { get; }
@@ -41,6 +45,15 @@ public sealed class ActivityRowVm : INotifyPropertyChanged
     public string Source { get; }
 
     public string Text { get; }
+
+    /// <summary>The direction of <see cref="Text"/> by its first strong letter (Slice 88).</summary>
+    public FlowDirection TextFlowDirection { get; }
+
+    /// <summary>The UI language's direction, for the localised columns (trigger, state, reason).</summary>
+    public FlowDirection UiFlowDirection { get; }
+
+    /// <summary>The direction of the originating window title by its own first strong letter.</summary>
+    public FlowDirection SourceFlowDirection { get; }
 
     public string State
     {

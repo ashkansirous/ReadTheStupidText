@@ -369,8 +369,8 @@
                     </StackPanel>
 
                     <!-- Transport row: skip back/forward flanking play/pause + progress + speed pill.
-                         Media transport stays left-to-right in right-to-left languages (Slice 57). -->
-                    <Grid Margin="0,15,0,0" ColumnSpacing="10" VerticalAlignment="Center" FlowDirection="LeftToRight">
+                         The whole layout stays left-to-right in every language (Slice 88). -->
+                    <Grid Margin="0,15,0,0" ColumnSpacing="10" VerticalAlignment="Center">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />

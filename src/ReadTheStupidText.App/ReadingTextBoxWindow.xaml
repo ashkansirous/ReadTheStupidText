@@ -73,13 +73,15 @@
                        Style="{ThemeResource CaptionTextBlockStyle}" />
         </Grid>
 
-        <ScrollViewer x:Name="TextScroller" Grid.Row="2" Padding="24,20" VerticalScrollBarVisibility="Auto"
+        <ScrollViewer x:Name="TextScroller" Grid.Row="2" Padding="24,20" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
                       SizeChanged="OnTextScrollerSizeChanged">
             <TextBlock
                 x:Name="ReadingText"
                 TextWrapping="Wrap"
+                HorizontalAlignment="Stretch"
                 FontSize="16"
                 LineHeight="27"
+                TextAlignment="Start"
                 IsTextSelectionEnabled="True" />
         </ScrollViewer>
 
