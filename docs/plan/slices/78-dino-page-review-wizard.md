@@ -1,6 +1,6 @@
 # Slice 78 — Dino Reader: the page-review wizard (pages → cover → text)
 
-*Planned.*
+*In progress (wave 2026-10-22), draft PR.*
 
 **Batch:** 13
 **Decisions:** 85
