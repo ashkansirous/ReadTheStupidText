@@ -107,7 +107,7 @@ this plan turns it into ordered, shippable vertical slices.
 | 87 | A scan in a script with no reader asks the page's language and downloads it | built | #253 | | [87-scan-downloads-the-page-language-pack.md](docs/plan/slices/87-scan-downloads-the-page-language-pack.md) |
 | 88 | The Windows desktop layout never mirrors; only text flows by its own direction | built | #254 | | [88-desktop-no-layout-mirroring.md](docs/plan/slices/88-desktop-no-layout-mirroring.md) |
 | 89 | Four Farsi voices in one pack (ganji_adabi by default), Amir dropped | planned | | | [89-four-farsi-voices.md](docs/plan/slices/89-four-farsi-voices.md) |
-| 90 | Untranslated text is read in its own language | planned | | | [90-untranslated-text-reads-in-its-own-language.md](docs/plan/slices/90-untranslated-text-reads-in-its-own-language.md) |
+| 90 | Untranslated text is read in its own language | built | #258 | | [90-untranslated-text-reads-in-its-own-language.md](docs/plan/slices/90-untranslated-text-reads-in-its-own-language.md) |
 
 Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
 
@@ -178,6 +178,7 @@ Built but not verified (details in each slice file):
 - Slice 87: on a Google-signed-in device with the app in English, scan a Farsi page, get asked, pick Farsi, see progress, and the page reads as Farsi; a second Farsi page has no prompt; Cancel keeps the text; airplane mode shows the message with Retry; native-speaker check of the 5 new strings ([slice](docs/plan/slices/87-scan-downloads-the-page-language-pack.md)).
 - Slice 88: paging back on the desktop (it has no back control); the Farsi/Arabic desktop check itself passed ([slice](docs/plan/slices/88-desktop-no-layout-mirroring.md)).
 - Flaky test `ReadAloudServiceGeneratingTests.Auto_read_prepares_the_head_start_before_the_settle_delay_ends` (timing; failed once in CI on 2026-10-21).
+- Slice 90: iOS on a device (a different-language read uses the phone voice in that language); Spanish text in an English app; the "no voice" message for a language with neither a natural pack nor a phone voice. ([slice](docs/plan/slices/90-untranslated-text-reads-in-its-own-language.md))
 
 ## Out of Scope
 

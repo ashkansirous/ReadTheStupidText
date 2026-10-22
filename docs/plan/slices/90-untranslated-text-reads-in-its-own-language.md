@@ -64,7 +64,7 @@ English! this is obvious." This replaces Slice 82's "else the app language" deci
 - Reviews: `<worktrees>/reviews/90-review-1.md` (13, all fixed), `90-review-2.md` (8, all fixed).
 - Emulator (RTST_Test; Piper Farsi and Supertonic English packs installed), app in Farsi: English text, translation off → read by the English Supertonic voice (label "Momonga"; cached audio 44.1 kHz, Piper is 22.05 kHz). Farsi text → Farsi Piper voice "Amir" with a head-start cache hit (first audio 180 ms). English text, translation on → translated to Farsi and read by Piper (22.05 kHz). Label follows the switch: Momonga off, Amir on.
 
-#### For CLAUDE.md (src/ReadTheStupidText.Mobile/CLAUDE.md, already updated on the branch)
+#### For CLAUDE.md (lifted 2026-10-22)
 - The reading language is the translation target when translated, else the text's own language (source picker, then detection, then the script table); never read text with a voice for a different language.
 
 #### Not yet verified
