@@ -76,6 +76,43 @@ public class VoicePackSetupTests
     }
 
     [Fact]
+    public async Task A_progress_tick_after_the_download_failed_does_not_revive_downloading()
+    {
+        var packs = new FakePacks
+        {
+            Catalog = new PackCatalogResult(PackDownloadResult.Ok, [EnglishPack]),
+            DownloadResult = PackDownloadResult.Offline,
+        };
+        var setup = new VoicePackSetup(packs, new FakeModel(), new FakeSettings { Language = "en" });
+        await setup.StartAsync();
+
+        packs.LastProgress!.Report(0.9);
+
+        Assert.Equal(PackSetupState.Offline, setup.State);
+    }
+
+    [Fact]
+    public async Task A_progress_tick_is_published_on_the_reporting_thread()
+    {
+        int reportThread = -1;
+        var changedThreads = new List<int>();
+        var packs = new FakePacks { Catalog = new PackCatalogResult(PackDownloadResult.Ok, [EnglishPack]) };
+        packs.AfterProgressReport = () => reportThread = Environment.CurrentManagedThreadId;
+        var setup = new VoicePackSetup(packs, new FakeModel(), new FakeSettings { Language = "en" });
+        setup.Changed += (_, _) =>
+        {
+            if (setup.Progress > 0)
+            {
+                changedThreads.Add(Environment.CurrentManagedThreadId);
+            }
+        };
+
+        await setup.StartAsync();
+
+        Assert.Equal([reportThread], changedThreads);
+    }
+
+    [Fact]
     public async Task A_language_with_no_pack_is_unavailable_so_the_windows_voice_reads()
     {
         var packs = new FakePacks { Catalog = new PackCatalogResult(PackDownloadResult.Ok, [EnglishPack]) };
@@ -123,11 +160,13 @@ public class VoicePackSetupTests
     private sealed class FakePacks : IVoicePackService
     {
         public Action? OnDownload { get; set; }
+        public Action? AfterProgressReport { get; set; }
         public IReadOnlyList<InstalledVoicePack> Installed { get; set; } = [];
         public PackCatalogResult Catalog { get; set; } = PackCatalogResult.Failure(PackDownloadResult.Failed);
         public PackDownloadResult DownloadResult { get; set; } = PackDownloadResult.Ok;
         public int CatalogCalls { get; private set; }
         public string? Downloaded { get; private set; }
+        public IProgress<double>? LastProgress { get; private set; }
 
         public Task<PackCatalogResult> GetCatalogAsync(CancellationToken cancellationToken)
         {
@@ -145,7 +184,12 @@ public class VoicePackSetupTests
         {
             Downloaded = packId;
             OnDownload?.Invoke();
-            progress?.Report(0.5);
+            LastProgress = progress;
+            Task.Run(() =>
+            {
+                progress?.Report(0.5);
+                AfterProgressReport?.Invoke();
+            }).GetAwaiter().GetResult();
             return Task.FromResult(DownloadResult);
         }
     }

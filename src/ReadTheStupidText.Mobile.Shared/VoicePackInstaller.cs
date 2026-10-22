@@ -1,3 +1,4 @@
+using ReadTheStupidText.Application;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Domain.Reading;
@@ -142,7 +143,7 @@ public sealed class VoicePackInstaller
     private async Task<PackInstallState?> DownloadPackAsync(PackInfo pack)
     {
         Publish(PackInstallState.Downloading, 0);
-        var progress = new Progress<double>(PublishProgress);
+        var progress = new InlineProgress(PublishProgress);
         PackDownloadResult result = await _packs.DownloadAsync(pack.Id, progress, CancellationToken.None);
         return result == PackDownloadResult.Ok ? null : ToState(result);
     }
