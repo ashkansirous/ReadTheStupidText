@@ -33,3 +33,6 @@ are in `src/ReadTheStupidText.Mobile/CLAUDE.md`; its CI target is in `.github/CL
   because MAUI follows system night mode but only the reading screen does. (Slice 73: docs/plan/slices/73-edge-to-edge-safe-areas.md)
 - Dino pins `UserAppTheme = Light` (`App.xaml.cs`). The reading screen's night theme must read `PlatformAppTheme` through `SystemTheme.cs`, never `RequestedTheme`. (Slice 77: docs/plan/slices/77-dino-covers-and-light-theme.md)
 - Cover photos are `cover-<id>.jpg` in the story folder; only those names may be deleted via `IStoryLibrary.DeleteFileAsync`. (Slice 77: docs/plan/slices/77-dino-covers-and-light-theme.md)
+- The story editor is `StoryWizardPage` (Pages, Cover, Text); `AddStoryPage`/`EditStoryPage`/`PagesPage` are gone. (Slice 78: docs/plan/slices/78-dino-page-review-wizard.md)
+- Never delete a story picture before the new `story.json` is saved (`StorySaver`). (Slice 78: docs/plan/slices/78-dino-page-review-wizard.md)
+- Rotate/crop invalidate only that page's reading; edited text is kept. (Slice 78: docs/plan/slices/78-dino-page-review-wizard.md)

@@ -95,7 +95,7 @@ this plan turns it into ordered, shippable vertical slices.
 | 75 | Windows translation engine | built | — | #223 | [75-windows-translation-engine.md](docs/plan/slices/75-windows-translation-engine.md) |
 | 76 | Soft line-break reflow and heading detection (both apps) | built | | #233 | [76-soft-line-break-reflow.md](docs/plan/slices/76-soft-line-break-reflow.md) |
 | 77 | Dino Reader: covers that survive edits, cover picker, readable inputs | built | | #234 | [77-dino-covers-and-light-theme.md](docs/plan/slices/77-dino-covers-and-light-theme.md) |
-| 78 | Dino Reader: page-review wizard (pages → cover → text) | planned | | | [78-dino-page-review-wizard.md](docs/plan/slices/78-dino-page-review-wizard.md) |
+| 78 | Dino Reader: page-review wizard (pages → cover → text) | built | | #235 | [78-dino-page-review-wizard.md](docs/plan/slices/78-dino-page-review-wizard.md) |
 | 79 | Background text filtering with a manual override | planned | | | [79-background-text-filtering.md](docs/plan/slices/79-background-text-filtering.md) |
 | 80 | Dino Reader: grown-up mode as a gallery overlay | planned | | | [80-grownup-gallery-overlay.md](docs/plan/slices/80-grownup-gallery-overlay.md) |
 | 81 | A language change in Settings downloads that language's voice | planned | | | [81-language-change-starts-voice-download.md](docs/plan/slices/81-language-change-starts-voice-download.md) |
@@ -103,6 +103,7 @@ this plan turns it into ordered, shippable vertical slices.
 | 83 | Scan replaces the text, like Paste and File | planned | | | [83-scan-replaces-the-text.md](docs/plan/slices/83-scan-replaces-the-text.md) |
 | 84 | Scan reads the page in the page's script, whatever the app language | planned | | | [84-ocr-follows-the-page-not-the-app-language.md](docs/plan/slices/84-ocr-follows-the-page-not-the-app-language.md) |
 | 85 | The layout never mirrors; only text flows by its own direction | planned | | | [85-no-layout-mirroring.md](docs/plan/slices/85-no-layout-mirroring.md) |
+| 86 | RTST scan reads with line geometry | planned | | | [86-rtst-scan-line-geometry.md](docs/plan/slices/86-rtst-scan-line-geometry.md) |
 
 Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
 
@@ -158,7 +159,8 @@ Built but not verified (details in each slice file):
 - Slice 73: Android 14 (API 34) inset path; landscape on both apps; RTST `LanguagePage` on first run; Dino `PageTextPage` with the keyboard up; Play's deprecated-API warning after the next release; follow-up: Dino gallery/Manage tiles re-lay out oddly after toggling night mode ([slice](docs/plan/slices/73-edge-to-edge-safe-areas.md)).
 - Slice 76: on a device, a pasted hard-wrapped email and a scanned book page read with no pause mid-sentence (RTST Android, RTST Windows, Dino) ([slice](docs/plan/slices/76-soft-line-break-reflow.md)).
 - Slice 77: page-2 cover pick on a multi-page story; a photo cover surviving an app restart; the Windows live theme switch (`UISettings.ColorValuesChanged`) ([slice](docs/plan/slices/77-dino-covers-and-light-theme.md)).
-- Slice 79 takes over Slice 76's geometry wiring (RTST scan text, Dino per-page Lines → LineBreakMap) and the geometry heading text-shape check.
+- Slice 78: scan 2 pages + 1 photo with the ML Kit scanner (needs a Google-signed device); Windows rotate/crop and drag-reorder; iOS on a device; only the changed page re-read; whether the Photos picker should multi-select; no discard confirmation on system back ([slice](docs/plan/slices/78-dino-page-review-wizard.md))
+- Slice 79 takes over Slice 76's Dino geometry wiring (per-page Lines → LineBreakMap) and the geometry heading text-shape check; Slice 86 takes the RTST scan half.
 - Flaky test `ReadAloudServiceGeneratingTests.Auto_read_prepares_the_head_start_before_the_settle_delay_ends` (timing; failed once in CI on 2026-10-21).
 
 ## Out of Scope
