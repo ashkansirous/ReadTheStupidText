@@ -1,6 +1,6 @@
 # Slice 82 — The phone voice reads in the text's language, and is only offered when it can
 
-*Planned.*
+*In progress (wave 2026-10-22), draft PR.*
 
 **Batch:** 14
 **Decisions:** 89
