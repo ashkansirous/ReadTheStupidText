@@ -19,12 +19,16 @@ public sealed record ReflowUnit(string Text, UnitKind Kind);
 /// that sit next to a heading. Every other newline is a soft wrap.
 /// </summary>
 public sealed record LineBreakMap(
-    IReadOnlySet<int> SentenceBreaks, IReadOnlySet<int> HeadingBreaks, IReadOnlySet<int>? HyphenDrops = null)
+    IReadOnlySet<int> SentenceBreaks, IReadOnlySet<int> HeadingBreaks, IReadOnlySet<int>? HyphenDrops = null,
+    IReadOnlySet<int>? HeadingPairs = null)
 {
     public static LineBreakMap Empty { get; } = new(new HashSet<int>(), new HashSet<int>(), new HashSet<int>());
 
     /// <summary>The newlines whose line ends in a hyphen that reflow drops ("foot-" line break "ball").</summary>
     public IReadOnlySet<int> DroppedHyphenBreaks { get; } = HyphenDrops ?? new HashSet<int>();
+
+    /// <summary>The newlines between two consecutive headings (a title and its subtitle).</summary>
+    public IReadOnlySet<int> HeadingPairBreaks { get; } = HeadingPairs ?? new HashSet<int>();
 }
 
 /// <summary>
@@ -119,6 +123,7 @@ public static class LineReflow
         var breaks = new HashSet<int>();
         var headingBreaks = new HashSet<int>();
         var hyphenDrops = new HashSet<int>();
+        var headingPairs = new HashSet<int>();
         int offset = 0;
         for (int i = 0; i < analysis.Joins.Length; i++)
         {
@@ -137,11 +142,15 @@ public static class LineReflow
             {
                 headingBreaks.Add(offset);
             }
+            else if (analysis.Headings[i])
+            {
+                headingPairs.Add(offset);
+            }
 
             offset++;
         }
 
-        return new LineBreakMap(breaks, headingBreaks, hyphenDrops);
+        return new LineBreakMap(breaks, headingBreaks, hyphenDrops, headingPairs);
     }
 
     // Joins (length lines - 1): blank lines and headings give paragraph breaks, list items

@@ -21,7 +21,7 @@ public sealed class WindowsOcrTextExtractor : IImageTextExtractor, IOcrLineExtra
 	private const string JapaneseCode = "ja";
 
 	public async Task<string> ExtractTextAsync(string imagePath) =>
-		(await ReadAsync(imagePath, language: null, CancellationToken.None).ConfigureAwait(false)).Text;
+		ReadTheStupidText.Application.Reading.ScanReadingText.From(await ReadAsync(imagePath, language: null, CancellationToken.None).ConfigureAwait(false));
 
 	public Task<ImageText> ExtractLinesAsync(string imagePath, string language, CancellationToken cancellationToken) =>
 		ReadAsync(imagePath, language, cancellationToken);

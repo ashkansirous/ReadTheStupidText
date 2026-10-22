@@ -42,7 +42,7 @@ public sealed class LanguageImageTextExtractor : IImageTextExtractor, IOcrLineEx
     }
 
     public async Task<string> ExtractTextAsync(string imagePath) =>
-        (await ReadAsync(imagePath, CurrentLanguage(), CancellationToken.None).ConfigureAwait(false)).Text;
+        ScanReadingText.From(await ReadAsync(imagePath, CurrentLanguage(), CancellationToken.None).ConfigureAwait(false));
 
     public Task<ImageText> ExtractLinesAsync(string imagePath, string language, CancellationToken cancellationToken) =>
         ReadAsync(imagePath, language, cancellationToken);
