@@ -63,6 +63,10 @@
   <data name="Translate_FailedMessage" xml:space="preserve"><value>تعذّرت ترجمة هذا النص. ستتم قراءة الأصل بدلًا من ذلك.</value></data>
   <data name="Translate_UnsupportedNote" xml:space="preserve"><value>الترجمة غير متاحة للغة {0}.</value></data>
   <data name="Translate_SourceUnsupportedNote" xml:space="preserve"><value>الترجمة من {0} غير متاحة.</value></data>
+  <data name="Translate_NoVoiceNote" xml:space="preserve"><value>لا يوجد على هذا الهاتف صوت للغة {0}، لذا لا يمكن قراءتها بصوت عالٍ.</value></data>
+  <data name="Reader_VoiceUnavailableTitle" xml:space="preserve"><value>تعذّرت القراءة بصوت عالٍ</value></data>
+  <data name="Reader_VoiceDownloadingMessage" xml:space="preserve"><value>الصوت الطبيعي للغة {0} لا يزال قيد التنزيل. حاول مرة أخرى بعد اكتماله.</value></data>
+  <data name="Reader_NoVoiceMessage" xml:space="preserve"><value>لا يوجد على هذا الهاتف صوت للغة {0}.</value></data>
   <data name="PackStatus_Resolving" xml:space="preserve"><value>جارٍ البحث عن الأصوات الطبيعية…</value></data>
   <data name="PackStatus_Downloading" xml:space="preserve"><value>جارٍ تنزيل الأصوات الطبيعية… {0}</value></data>
   <data name="PackStatus_Offline" xml:space="preserve"><value>لا يوجد اتصال. تتم القراءة بصوت الهاتف. اضغط لإعادة محاولة تنزيل الصوت.</value></data>

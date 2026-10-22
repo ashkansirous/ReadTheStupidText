@@ -14,6 +14,9 @@ public partial class ReaderPage
     private const int AutoChoiceIndex = 0;
     private static readonly TimeSpan DetectDebounce = TimeSpan.FromMilliseconds(600);
 
+    // Set when no voice can read the app language, so translating into it is not offered.
+    private bool _noVoiceForTarget;
+
     private ILanguageDetector? _detector;
     private ITranslator? _translator;
     private IReadOnlyList<TranslationLanguageChoice> _sourceChoices = [];
@@ -50,6 +53,58 @@ public partial class ReaderPage
         FillSourcePicker();
         TranslateSwitch.IsToggled = _settings.TranslateEnabled;
         RestoreSourceChoice();
+    }
+
+    // Only a platform without natural packs can lack a voice for the app language, so only there is
+    // the phone asked up front (which also starts its engine); elsewhere every language is on offer.
+    // Asked on every appearance (the answer is cached and shared), so a voice installed or a language
+    // changed meanwhile lifts or applies the block.
+    private void LoadVoiceAvailability()
+    {
+        if (_translator is null || _platform.SupportsNeuralVoice)
+        {
+            return;
+        }
+
+        _ = LoadVoiceAvailabilityAsync();
+    }
+
+    private async Task LoadVoiceAvailabilityAsync()
+    {
+        VoiceAvailability voices = await PlatformVoiceAvailability.BuildAsync(_platform);
+        if (_retired)
+        {
+            return;
+        }
+
+        if (voices.PhoneKnown && !voices.CanRead(TargetCode()))
+        {
+            ShowNoVoiceForTarget();
+        }
+        else if (_noVoiceForTarget)
+        {
+            ClearNoVoiceForTarget();
+        }
+    }
+
+    // A voice appeared for the app language: offer translating into it again.
+    private void ClearNoVoiceForTarget()
+    {
+        _noVoiceForTarget = false;
+        if (_translator?.SupportedLanguages.Contains(TargetCode(), StringComparer.OrdinalIgnoreCase) == true)
+        {
+            TranslateControls.IsVisible = true;
+            ResetNote();
+        }
+    }
+
+    // A language nothing can read is not offered as a translation target: the controls go and
+    // the note says why.
+    private void ShowNoVoiceForTarget()
+    {
+        _noVoiceForTarget = true;
+        TranslateControls.IsVisible = false;
+        TranslateNoteLabel.Text = AppResources.Format(AppResources.Translate_NoVoiceNote, LanguageChoices.NativeName(CurrentLanguage()));
     }
 
     private string TargetCode() => AppLanguages.Code(CurrentLanguage());
@@ -230,7 +285,7 @@ public partial class ReaderPage
     private async Task<string?> TextToSpeakAsync(string text, int readId)
     {
         CancelTranslationRead();
-        if (_translator is null || !_settings.TranslateEnabled)
+        if (_translator is null || !_settings.TranslateEnabled || _noVoiceForTarget)
         {
             return text;
         }
@@ -351,7 +406,7 @@ public partial class ReaderPage
     // read's "Downloading" note, which its own read clears.
     private void ResetNote()
     {
-        if (_downloadNoteReadId != 0)
+        if (_downloadNoteReadId != 0 || _noVoiceForTarget)
         {
             return;
         }

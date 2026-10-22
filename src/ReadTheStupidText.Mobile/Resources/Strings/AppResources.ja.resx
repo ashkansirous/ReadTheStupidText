@@ -60,6 +60,10 @@
   <data name="Translate_FailedMessage" xml:space="preserve"><value>このテキストを翻訳できませんでした。代わりに元のテキストを読み上げます。</value></data>
   <data name="Translate_UnsupportedNote" xml:space="preserve"><value>{0}の翻訳は利用できません。</value></data>
   <data name="Translate_SourceUnsupportedNote" xml:space="preserve"><value>{0}からの翻訳は利用できません。</value></data>
+  <data name="Translate_NoVoiceNote" xml:space="preserve"><value>このスマートフォンには{0}の音声がないため、読み上げられません。</value></data>
+  <data name="Reader_VoiceUnavailableTitle" xml:space="preserve"><value>読み上げできません</value></data>
+  <data name="Reader_VoiceDownloadingMessage" xml:space="preserve"><value>{0}の自然な音声はまだダウンロード中です。完了してからもう一度お試しください。</value></data>
+  <data name="Reader_NoVoiceMessage" xml:space="preserve"><value>このスマートフォンには{0}の音声がありません。</value></data>
   <data name="PackStatus_Resolving" xml:space="preserve"><value>自然な音声を確認中…</value></data>
   <data name="PackStatus_Downloading" xml:space="preserve"><value>自然な音声をダウンロード中… {0}</value></data>
   <data name="PackStatus_Offline" xml:space="preserve"><value>接続されていません。スマートフォンの音声で読み上げます。タップして音声のダウンロードを再試行します。</value></data>

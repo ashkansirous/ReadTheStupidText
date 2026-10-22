@@ -30,4 +30,20 @@ public sealed class WindowsPlatformServices : IPlatformServices
 	public ISpeechReader CreateNeuralReader() => new WindowsNeuralReader(new SupertonicSpeechReader(_model, _log, _audio));
 
 	public ISpeechReader CreateFallbackReader() => new SpeechReader();
+
+	// The installed WinRT voices; a failure to list them is an unknown phone, which blocks nothing.
+	public Task<IReadOnlyCollection<string>?> PhoneVoiceLanguagesAsync()
+	{
+		try
+		{
+			string[] languages = global::Windows.Media.SpeechSynthesis.SpeechSynthesizer.AllVoices
+				.Select(v => v.Language)
+				.ToArray();
+			return Task.FromResult<IReadOnlyCollection<string>?>(languages);
+		}
+		catch (Exception)
+		{
+			return Task.FromResult<IReadOnlyCollection<string>?>(null);
+		}
+	}
 }

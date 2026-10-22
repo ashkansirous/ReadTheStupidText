@@ -34,5 +34,8 @@ public sealed class IOSPlatformServices : IPlatformServices
 
     public ISpeechReader CreateFallbackReader() => SystemReader();
 
+    public Task<IReadOnlyCollection<string>?> PhoneVoiceLanguagesAsync() =>
+        Task.FromResult<IReadOnlyCollection<string>?>(AvSpeechReader.InstalledLanguages());
+
     private AvSpeechReader SystemReader() => _systemReader ??= new AvSpeechReader();
 }

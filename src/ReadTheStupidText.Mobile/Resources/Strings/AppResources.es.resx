@@ -60,6 +60,10 @@
   <data name="Translate_FailedMessage" xml:space="preserve"><value>No se pudo traducir este texto. Se leerá el original.</value></data>
   <data name="Translate_UnsupportedNote" xml:space="preserve"><value>La traducción no está disponible para {0}.</value></data>
   <data name="Translate_SourceUnsupportedNote" xml:space="preserve"><value>La traducción desde {0} no está disponible.</value></data>
+  <data name="Translate_NoVoiceNote" xml:space="preserve"><value>Este teléfono no tiene voz para {0}, así que no se puede leer en voz alta.</value></data>
+  <data name="Reader_VoiceUnavailableTitle" xml:space="preserve"><value>No se puede leer en voz alta</value></data>
+  <data name="Reader_VoiceDownloadingMessage" xml:space="preserve"><value>La voz natural de {0} aún se está descargando. Inténtalo de nuevo cuando termine.</value></data>
+  <data name="Reader_NoVoiceMessage" xml:space="preserve"><value>Este teléfono no tiene voz para {0}.</value></data>
   <data name="PackStatus_Resolving" xml:space="preserve"><value>Buscando voces naturales…</value></data>
   <data name="PackStatus_Downloading" xml:space="preserve"><value>Descargando voces naturales… {0}</value></data>
   <data name="PackStatus_Offline" xml:space="preserve"><value>Sin conexión. Se lee con la voz del teléfono. Toca para reintentar la descarga de la voz.</value></data>
