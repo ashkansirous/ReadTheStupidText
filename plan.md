@@ -111,8 +111,8 @@ this plan turns it into ordered, shippable vertical slices.
 | 91 | Dino stories as packages, three starter stories, developer export | built | #263 | | [91-dino-story-packages-and-starters.md](docs/plan/slices/91-dino-story-packages-and-starters.md) |
 | 92 | A free, curated Dino story store behind the grown-up gate | built | #266 | | [92-dino-story-store.md](docs/plan/slices/92-dino-story-store.md) |
 | 93 | Dino backup file and a first run that asks the language | built | #267 | | [93-dino-backup-and-first-run.md](docs/plan/slices/93-dino-backup-and-first-run.md) |
-| 94 | "Good Enough" ships as a starter story | planned | | | [94-good-enough-starter.md](docs/plan/slices/94-good-enough-starter.md) |
-| 95 | Dino translation works: bundled translations for every shipped book, live translation on Android | planned | | | [95-dino-translation-works.md](docs/plan/slices/95-dino-translation-works.md) |
+| 94 | "Good Enough" ships as a starter story | built | #271 | | [94-good-enough-starter.md](docs/plan/slices/94-good-enough-starter.md) |
+| 95 | Dino translation works: bundled translations for every shipped book, live translation on Android | built | #271 | | [95-dino-translation-works.md](docs/plan/slices/95-dino-translation-works.md) |
 
 Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
 
@@ -168,6 +168,8 @@ Built but not verified (details in each slice file):
 - Slice 64: a real camera scan of a picture book on a device; an Arabic or Farsi scan highlighting the right lines; the denied-permission alert on Photos; whether the 1.1 zoom snap threshold feels right on a phone ([slice](docs/plan/slices/64-picture-mode-real-pages.md)).
 - Slice 74: after the deploy, `https://dinoreader.sirous.uk` and `/privacy` load with the security headers; `/download/android` serves the Dino APK once a Dino release publishes; paste the privacy URL into Play Console's Dino Reader field; Play Families may want an email contact instead of the GitHub issues link ([slice](docs/plan/slices/74-dino-reader-site.md)).
 - Slice 75: desktop acceptance of toggle, pack download and streamed translated read (session was locked); `packs-3` contents after the workflow run; Android/iOS still find their packs in `packs-3` ([slice](docs/plan/slices/75-windows-translation-engine.md)).
+- Slice 94: the upgrade path for an install that already had the three starters gaining Good Enough ([slice](docs/plan/slices/94-good-enough-starter.md)).
+- Slice 95: distinct Farsi voices per character; the upgrade path from a real older install (adopt logic unit-tested only); Windows and iOS reading bundled translations; a native-speaker read of the translations; Spanish/Portuguese/Russian translations make the Hare or Fox feminine while the voice may be male ([slice](docs/plan/slices/95-dino-translation-works.md)).
 - Slice 72: Play Console "DEX obfuscation" metric after the next release (target >= 25%); iOS build on MAUI 10.0.120 / workload 10.0.401 in CI; a real-device scan with the GMS document scanner module ([slice](docs/plan/slices/72-android-deps-r8-obfuscation.md)).
 - Slice 67: TestFlight build installs and reads in four voices with picture-mode boxes; Windows desktop flows (typed story, voices, PDF picture mode, Windows OCR); real Partner Center identity and `DINOREADER_STORE_APP_ID`, then a Store submission ([slice](docs/plan/slices/67-dino-reader-ios-windows.md)).
 - Slice 73: Android 14 (API 34) inset path; landscape on both apps; RTST `LanguagePage` on first run; Dino `PageTextPage` with the keyboard up; Play's deprecated-API warning after the next release; follow-up: Dino gallery/Manage tiles re-lay out oddly after toggling night mode ([slice](docs/plan/slices/73-edge-to-edge-safe-areas.md)).

@@ -69,11 +69,11 @@ Review findings for this slice are recorded under Slice 95 (`reviews/95-review-h
 
 RTST_Test, Debug arm64: a fresh install shows 4 starters with Good Enough first and its cover; picture-mode boxes work. No crashes.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-23)
 
 Already in `src/DinoReader.App/CLAUDE.md` (picture starter sources, caption lines only, no back cover). (Slice 94: docs/plan/slices/94-good-enough-starter.md)
 
-#### For README.md
+#### For README.md (lifted 2026-10-23)
 
 Nothing beyond Slice 95's line.
 
