@@ -39,6 +39,19 @@
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>حذف {0}</value></data>
   <data name="Gallery_ExportStory" xml:space="preserve"><value>تصدير القصة</value></data>
   <data name="Gallery_CastButton" xml:space="preserve"><value>الشخصيات</value></data>
+  <data name="Store_Title" xml:space="preserve"><value>قصص مجانية</value></data>
+  <data name="Store_Subtitle" xml:space="preserve"><value>مختارة وموزّعة الأدوار من أجل دينو</value></data>
+  <data name="Store_Get" xml:space="preserve"><value>تنزيل</value></data>
+  <data name="Store_Downloaded" xml:space="preserve"><value>تم التنزيل</value></data>
+  <data name="Store_Length" xml:space="preserve"><value>{0} صفحات · {1} دقيقة</value></data>
+  <data name="Store_Footer" xml:space="preserve"><value>مجانية وبلا حساب. لا يُرسَل أي شيء عنك أو عن طفلك.</value></data>
+  <data name="Store_OfflineTitle" xml:space="preserve"><value>أنت غير متصل بالإنترنت</value></data>
+  <data name="Store_OfflineBody" xml:space="preserve"><value>تحتاج القصص المجانية إلى الإنترنت. القصص الموجودة على الرف تُقرأ بدونه.</value></data>
+  <data name="Store_TryAgain" xml:space="preserve"><value>حاول مرة أخرى</value></data>
+  <data name="Store_EmptyTitle" xml:space="preserve"><value>لا قصص جديدة بعد</value></data>
+  <data name="Store_EmptyBody" xml:space="preserve"><value>تُضاف قصص جديدة من وقت لآخر. عُد قريبًا.</value></data>
+  <data name="Store_BackToStories" xml:space="preserve"><value>العودة إلى قصصي</value></data>
+  <data name="Store_GetStory" xml:space="preserve"><value>تنزيل {0}</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>اضغط مطولاً لمدة 3 ثوانٍ.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>اضغط مطولاً لمدة 3 ثوانٍ</value></data>
   <data name="Gate_KeepHolding" xml:space="preserve"><value>واصل الضغط…</value></data>

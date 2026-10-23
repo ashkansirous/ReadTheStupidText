@@ -41,6 +41,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<ExternalActivityGuard>();
 		builder.Services.AddSingleton<StoryActions>();
 		builder.Services.AddSingleton<StarterStories>();
+		builder.Services.AddSingleton<StoreClient>();
 		AddDocumentExtractors(builder.Services);
 		AddPages(builder.Services);
 
@@ -68,6 +69,7 @@ public static class MauiProgram
 	private static void AddPages(IServiceCollection services)
 	{
 		services.AddTransient<GalleryPage>();
+		services.AddTransient<StorePage>();
 		services.AddSingleton<GrownUpMode>();
 		services.AddTransient<StoryWizardPage>();
 		services.AddTransient<CastPage>();

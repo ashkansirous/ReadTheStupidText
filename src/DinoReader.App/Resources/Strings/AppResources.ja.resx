@@ -39,6 +39,19 @@
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>{0}を削除</value></data>
   <data name="Gallery_ExportStory" xml:space="preserve"><value>おはなしを書き出す</value></data>
   <data name="Gallery_CastButton" xml:space="preserve"><value>登場人物</value></data>
+  <data name="Store_Title" xml:space="preserve"><value>むりょうのおはなし</value></data>
+  <data name="Store_Subtitle" xml:space="preserve"><value>ディノのために えらんで やくを きめました</value></data>
+  <data name="Store_Get" xml:space="preserve"><value>もらう</value></data>
+  <data name="Store_Downloaded" xml:space="preserve"><value>ダウンロードずみ</value></data>
+  <data name="Store_Length" xml:space="preserve"><value>{0}ページ · {1}分</value></data>
+  <data name="Store_Footer" xml:space="preserve"><value>むりょうで、アカウントもいりません。あなたやお子さんの情報は送られません。</value></data>
+  <data name="Store_OfflineTitle" xml:space="preserve"><value>オフラインです</value></data>
+  <data name="Store_OfflineBody" xml:space="preserve"><value>むりょうのおはなしはインターネットが必要です。本だなにあるおはなしは、つながらなくても読めます。</value></data>
+  <data name="Store_TryAgain" xml:space="preserve"><value>もういちど</value></data>
+  <data name="Store_EmptyTitle" xml:space="preserve"><value>新しいおはなしはまだありません</value></data>
+  <data name="Store_EmptyBody" xml:space="preserve"><value>ときどき新しいおはなしが追加されます。またのぞいてね。</value></data>
+  <data name="Store_BackToStories" xml:space="preserve"><value>わたしのおはなしにもどる</value></data>
+  <data name="Store_GetStory" xml:space="preserve"><value>{0}をもらう</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>3秒間長押ししてください。</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>3秒間長押ししてください</value></data>
   <data name="Gate_KeepHolding" xml:space="preserve"><value>そのまま押し続けて…</value></data>

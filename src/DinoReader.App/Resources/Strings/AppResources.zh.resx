@@ -39,6 +39,19 @@
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>删除{0}</value></data>
   <data name="Gallery_ExportStory" xml:space="preserve"><value>导出故事</value></data>
   <data name="Gallery_CastButton" xml:space="preserve"><value>角色</value></data>
+  <data name="Store_Title" xml:space="preserve"><value>免费故事</value></data>
+  <data name="Store_Subtitle" xml:space="preserve"><value>为小恐龙精选并分好角色</value></data>
+  <data name="Store_Get" xml:space="preserve"><value>获取</value></data>
+  <data name="Store_Downloaded" xml:space="preserve"><value>已下载</value></data>
+  <data name="Store_Length" xml:space="preserve"><value>{0} 页 · {1} 分钟</value></data>
+  <data name="Store_Footer" xml:space="preserve"><value>免费，无需账号。不会发送任何关于您或孩子的信息。</value></data>
+  <data name="Store_OfflineTitle" xml:space="preserve"><value>您已离线</value></data>
+  <data name="Store_OfflineBody" xml:space="preserve"><value>免费故事需要联网。书架上已有的故事无需联网也能阅读。</value></data>
+  <data name="Store_TryAgain" xml:space="preserve"><value>重试</value></data>
+  <data name="Store_EmptyTitle" xml:space="preserve"><value>暂时没有新故事</value></data>
+  <data name="Store_EmptyBody" xml:space="preserve"><value>我们会不定期添加新故事，请稍后再来。</value></data>
+  <data name="Store_BackToStories" xml:space="preserve"><value>返回我的故事</value></data>
+  <data name="Store_GetStory" xml:space="preserve"><value>获取{0}</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>请按住 3 秒。</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>请按住 3 秒</value></data>
   <data name="Gate_KeepHolding" xml:space="preserve"><value>继续按住…</value></data>
