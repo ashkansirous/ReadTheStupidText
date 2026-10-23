@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="DinoReader.FirstRunPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:DinoReader"
+    xmlns:res="clr-namespace:DinoReader.Resources.Strings"
+    BackgroundColor="{StaticResource Cream}"
+    NavigationPage.HasNavigationBar="False"
+    SafeAreaEdges="Container">
+
+    <!-- First run (mock screens 16, 17, 18), shown once on a fresh install before the gallery: pick the language, watch the voice
+         download, then hand over to grown-up mode. Values come from "Dino Reader Batch 16.dc.html". The download and ready
+         texts are set in code, after the pick, so they speak the language just chosen. -->
+    <Grid>
+        <!-- Screen 16: language. -->
+        <Grid x:Name="LanguagePanel" RowDefinitions="*,Auto" Padding="22,0,22,22">
+            <ScrollView>
+                <VerticalStackLayout Spacing="14" Padding="0,28,0,16">
+                    <Border WidthRequest="92" HeightRequest="92" StrokeThickness="0" HorizontalOptions="Center">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="24" />
+                        </Border.StrokeShape>
+                        <Image Source="dino_icon" Aspect="AspectFill" SemanticProperties.Description="{x:Static res:AppResources.App_Name}" />
+                    </Border>
+                    <Label Text="{x:Static res:AppResources.FirstRun_Hello}" FontSize="24" FontAttributes="Bold" HorizontalTextAlignment="Center"
+                           SemanticProperties.HeadingLevel="Level1" />
+                    <Label Text="{x:Static res:AppResources.FirstRun_HelloBody}" FontSize="14" LineHeight="1.4" TextColor="{StaticResource Body}"
+                           HorizontalTextAlignment="Center" />
+                    <Grid x:Name="LanguageGrid" ColumnSpacing="8" RowSpacing="8" Margin="0,8,0,0" />
+                </VerticalStackLayout>
+            </ScrollView>
+            <local:CoralButton Grid.Row="1" Text="{x:Static res:AppResources.FirstRun_Continue}" Clicked="OnContinueClicked" />
+        </Grid>
+
+        <!-- Screen 17: the voice downloads. -->
+        <Grid x:Name="DownloadPanel" RowDefinitions="*,Auto" Padding="22,0,22,22" IsVisible="False">
+            <VerticalStackLayout Spacing="14" Padding="0,56,0,0">
+                <Label x:Name="DownloadTitle" FontSize="22" FontAttributes="Bold" HorizontalTextAlignment="Center" SemanticProperties.HeadingLevel="Level1" />
+                <Label x:Name="DownloadSub" FontSize="14" TextColor="{StaticResource Body}" HorizontalTextAlignment="Center" />
+                <ProgressBar x:Name="Bar" ProgressColor="{StaticResource Brand}" HeightRequest="8" Margin="0,18,0,0" />
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label x:Name="DownloadState" FontSize="13.5" TextColor="{StaticResource Body}" />
+                    <Label Grid.Column="1" x:Name="DownloadPercent" FontSize="13.5" FontAttributes="Bold" TextColor="{StaticResource Brand}" />
+                </Grid>
+                <Label x:Name="DownloadProblem" FontSize="13.5" TextColor="{StaticResource Danger}" HorizontalTextAlignment="Center" IsVisible="False">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnRetryTapped" />
+                    </Label.GestureRecognizers>
+                </Label>
+                <Label x:Name="PhoneVoice" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource Brand}" HorizontalTextAlignment="Center" IsVisible="False">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnPhoneVoiceTapped" />
+                    </Label.GestureRecognizers>
+                </Label>
+                <Label x:Name="ShelfTitle" FontSize="13.5" FontAttributes="Bold" TextColor="{StaticResource Body}" Margin="0,22,0,0" />
+                <HorizontalStackLayout x:Name="Shelf" Spacing="12" />
+            </VerticalStackLayout>
+            <Label Grid.Row="1" x:Name="PickAnother" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource Brand}" HorizontalTextAlignment="Center"
+                   Padding="0,12">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnPickAnotherTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+        </Grid>
+
+        <!-- Screen 18: ready. -->
+        <Grid x:Name="ReadyPanel" RowDefinitions="*,Auto" Padding="22,0,22,22" IsVisible="False">
+            <VerticalStackLayout Spacing="14" Padding="0,56,0,0">
+                <Border WidthRequest="92" HeightRequest="92" StrokeThickness="0" HorizontalOptions="Center">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="24" />
+                    </Border.StrokeShape>
+                    <Image Source="dino_icon" Aspect="AspectFill" />
+                </Border>
+                <Label x:Name="ReadyTitle" FontSize="24" FontAttributes="Bold" HorizontalTextAlignment="Center" SemanticProperties.HeadingLevel="Level1" />
+                <Label x:Name="ReadyBody" FontSize="14" LineHeight="1.4" TextColor="{StaticResource Body}" HorizontalTextAlignment="Center" />
+                <Border x:Name="HelloPill" HeightRequest="48" BackgroundColor="{StaticResource BrandTint}" StrokeThickness="0" HorizontalOptions="Center" Padding="7,0,18,0">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="24" />
+                    </Border.StrokeShape>
+                    <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                        <Border WidthRequest="34" HeightRequest="34" BackgroundColor="{StaticResource Brand}" StrokeThickness="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="17" />
+                            </Border.StrokeShape>
+                            <local:IconView Kind="Play" Color="White" Size="16" HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <Label x:Name="HelloLabel" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource Brand}" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnHelloTapped" />
+                    </Border.GestureRecognizers>
+                </Border>
+            </VerticalStackLayout>
+            <local:CoralButton Grid.Row="1" x:Name="SetUpButton" Clicked="OnSetUpClicked" />
+        </Grid>
+    </Grid>
+</ContentPage>

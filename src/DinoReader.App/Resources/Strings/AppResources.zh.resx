@@ -39,6 +39,61 @@
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>删除{0}</value></data>
   <data name="Gallery_ExportStory" xml:space="preserve"><value>导出故事</value></data>
   <data name="Gallery_CastButton" xml:space="preserve"><value>角色</value></data>
+  <data name="Store_Title" xml:space="preserve"><value>免费故事</value></data>
+  <data name="Store_Subtitle" xml:space="preserve"><value>为小恐龙精选并分好角色</value></data>
+  <data name="Store_Get" xml:space="preserve"><value>获取</value></data>
+  <data name="Store_Downloaded" xml:space="preserve"><value>已下载</value></data>
+  <data name="Store_Length" xml:space="preserve"><value>{0} 页 · {1} 分钟</value></data>
+  <data name="Store_Footer" xml:space="preserve"><value>免费，无需账号。不会发送任何关于您或孩子的信息。</value></data>
+  <data name="Store_OfflineTitle" xml:space="preserve"><value>您已离线</value></data>
+  <data name="Store_OfflineBody" xml:space="preserve"><value>免费故事需要联网。书架上已有的故事无需联网也能阅读。</value></data>
+  <data name="Store_TryAgain" xml:space="preserve"><value>重试</value></data>
+  <data name="Store_EmptyTitle" xml:space="preserve"><value>暂时没有新故事</value></data>
+  <data name="Store_EmptyBody" xml:space="preserve"><value>我们会不定期添加新故事，请稍后再来。</value></data>
+  <data name="Store_BackToStories" xml:space="preserve"><value>返回我的故事</value></data>
+  <data name="Store_GetStory" xml:space="preserve"><value>获取{0}</value></data>
+  <data name="Backup_Title" xml:space="preserve"><value>备份</value></data>
+  <data name="Backup_SaveTitle" xml:space="preserve"><value>保存备份</value></data>
+  <data name="Backup_SaveBody_One" xml:space="preserve"><value>把故事连同页面、图片和调整好的角色分配存成一个文件。可存到云端硬盘或文件，也可发给自己。</value></data>
+  <data name="Backup_SaveBody_Other" xml:space="preserve"><value>全部 {0} 个故事存成一个文件，包含页面、图片和调整好的角色分配。可存到云端硬盘或文件，也可发给自己。</value></data>
+  <data name="Backup_SaveButton" xml:space="preserve"><value>保存备份</value></data>
+  <data name="Backup_RestoreTitle" xml:space="preserve"><value>从备份恢复</value></data>
+  <data name="Backup_RestoreBody" xml:space="preserve"><value>添加这部手机上没有的故事。已有的故事保持原样。</value></data>
+  <data name="Backup_RestoreButton" xml:space="preserve"><value>选择备份文件</value></data>
+  <data name="Backup_Footer" xml:space="preserve"><value>文件只会发到你指定的地方。Dino 不会在网上保留副本。</value></data>
+  <data name="Backup_Restored_One" xml:space="preserve"><value>已恢复 {0} 个故事</value></data>
+  <data name="Backup_Restored_Other" xml:space="preserve"><value>已恢复 {0} 个故事</value></data>
+  <data name="Backup_Added" xml:space="preserve"><value>已加入书架</value></data>
+  <data name="Backup_Skipped" xml:space="preserve"><value>已存在，已跳过</value></data>
+  <data name="Backup_Damaged" xml:space="preserve"><value>无法读取</value></data>
+  <data name="Backup_SeeStories" xml:space="preserve"><value>查看我的故事</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>此备份来自更新版本的 Dino Reader。请先更新应用，再重试。</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>该文件不是 Dino Reader 备份。</value></data>
+  <data name="Backup_Failed" xml:space="preserve"><value>备份没有成功，请重试。</value></data>
+  <data name="Backup_TooLarge" xml:space="preserve"><value>太大，无法恢复</value></data>
+  <data name="Backup_SaveSkipped" xml:space="preserve"><value>有 {0} 个故事无法加入备份。</value></data>
+  <data name="FirstRun_Hello" xml:space="preserve"><value>你好！我们用哪种语言阅读？</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Dino 会为它下载语音。你之后可以在锁后面更改。</value></data>
+  <data name="FirstRun_Continue" xml:space="preserve"><value>继续</value></data>
+  <data name="FirstRun_GettingReady" xml:space="preserve"><value>正在准备 Dino 的语音</value></data>
+  <data name="FirstRun_Once" xml:space="preserve"><value>语音：{0} · 只需一次</value></data>
+  <data name="FirstRun_Downloading" xml:space="preserve"><value>正在下载…</value></data>
+  <data name="FirstRun_Waiting" xml:space="preserve"><value>书架上等着</value></data>
+  <data name="FirstRun_PickAnother" xml:space="preserve"><value>选择其他语言</value></data>
+  <data name="FirstRun_Ready" xml:space="preserve"><value>准备好阅读啦！</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>每个角色都有自己的声音。书架上有三个故事。</value></data>
+  <data name="FirstRun_HearHello" xml:space="preserve"><value>听 Dino 打招呼</value></data>
+  <data name="FirstRun_HelloLine" xml:space="preserve"><value>你好！我是 Dino。我们一起读故事吧。</value></data>
+  <data name="FirstRun_SetUp" xml:space="preserve"><value>设置故事</value></data>
+  <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>使用手机语音继续</value></data>
+  <data name="Gallery_ReadyForChild" xml:space="preserve"><value>交给孩子</value></data>
+  <data name="Gallery_GrownUpMode" xml:space="preserve"><value>家长模式</value></data>
+  <data name="Language_Title" xml:space="preserve"><value>语言</value></data>
+  <data name="Language_Subtitle" xml:space="preserve"><value>Dino 会用这种语言朗读和翻译</value></data>
+  <data name="Language_Ready" xml:space="preserve"><value>就绪</value></data>
+  <data name="Language_Download" xml:space="preserve"><value>下载</value></data>
+  <data name="Language_Downloading" xml:space="preserve"><value>正在下载 {0}%</value></data>
+  <data name="Language_Footer" xml:space="preserve"><value>其他语言的故事仍会用它自己的语言朗读，除非该故事开启了“翻译成我的语言”。</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>请按住 3 秒。</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>请按住 3 秒</value></data>
   <data name="Gate_KeepHolding" xml:space="preserve"><value>继续按住…</value></data>

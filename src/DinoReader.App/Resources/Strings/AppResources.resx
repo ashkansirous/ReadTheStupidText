@@ -42,6 +42,61 @@
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>Delete {0}</value></data>
   <data name="Gallery_ExportStory" xml:space="preserve"><value>Export story</value></data>
   <data name="Gallery_CastButton" xml:space="preserve"><value>Cast</value></data>
+  <data name="Store_Title" xml:space="preserve"><value>Free stories</value></data>
+  <data name="Store_Subtitle" xml:space="preserve"><value>Picked and cast for Dino</value></data>
+  <data name="Store_Get" xml:space="preserve"><value>Get</value></data>
+  <data name="Store_Downloaded" xml:space="preserve"><value>Downloaded</value></data>
+  <data name="Store_Length" xml:space="preserve"><value>{0} pages · {1} min</value></data>
+  <data name="Store_Footer" xml:space="preserve"><value>Free, with no account. Nothing about you or your child is sent.</value></data>
+  <data name="Store_OfflineTitle" xml:space="preserve"><value>You’re offline</value></data>
+  <data name="Store_OfflineBody" xml:space="preserve"><value>The free stories need the internet. Stories already on the shelf still read without it.</value></data>
+  <data name="Store_TryAgain" xml:space="preserve"><value>Try again</value></data>
+  <data name="Store_EmptyTitle" xml:space="preserve"><value>No new stories yet</value></data>
+  <data name="Store_EmptyBody" xml:space="preserve"><value>New ones are added from time to time. Check back soon.</value></data>
+  <data name="Store_BackToStories" xml:space="preserve"><value>Back to my stories</value></data>
+  <data name="Store_GetStory" xml:space="preserve"><value>Get {0}</value></data>
+  <data name="Backup_Title" xml:space="preserve"><value>Backup</value></data>
+  <data name="Backup_SaveTitle" xml:space="preserve"><value>Save a backup</value></data>
+  <data name="Backup_SaveBody_One" xml:space="preserve"><value>Your story in one file, with its pages, pictures and fixed-up cast. Save it to Drive or Files, or send it to yourself.</value></data>
+  <data name="Backup_SaveBody_Other" xml:space="preserve"><value>All {0} stories in one file, with their pages, pictures and fixed-up casts. Save it to Drive or Files, or send it to yourself.</value></data>
+  <data name="Backup_SaveButton" xml:space="preserve"><value>Save a backup</value></data>
+  <data name="Backup_RestoreTitle" xml:space="preserve"><value>Restore from a backup</value></data>
+  <data name="Backup_RestoreBody" xml:space="preserve"><value>Adds the stories this phone doesn’t have. Stories already here stay exactly as they are.</value></data>
+  <data name="Backup_RestoreButton" xml:space="preserve"><value>Choose a backup file</value></data>
+  <data name="Backup_Footer" xml:space="preserve"><value>The file only goes where you send it. Dino keeps no copy online.</value></data>
+  <data name="Backup_Restored_One" xml:space="preserve"><value>{0} story restored</value></data>
+  <data name="Backup_Restored_Other" xml:space="preserve"><value>{0} stories restored</value></data>
+  <data name="Backup_Added" xml:space="preserve"><value>Added to the shelf</value></data>
+  <data name="Backup_Skipped" xml:space="preserve"><value>Already here, skipped</value></data>
+  <data name="Backup_Damaged" xml:space="preserve"><value>Couldn’t be read</value></data>
+  <data name="Backup_SeeStories" xml:space="preserve"><value>See my stories</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>This backup is from a newer Dino Reader. Update the app, then try again.</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>That file isn’t a Dino Reader backup.</value></data>
+  <data name="Backup_Failed" xml:space="preserve"><value>The backup didn’t work. Please try again.</value></data>
+  <data name="Backup_TooLarge" xml:space="preserve"><value>Too large to restore</value></data>
+  <data name="Backup_SaveSkipped" xml:space="preserve"><value>{0} could not be added to the backup.</value></data>
+  <data name="FirstRun_Hello" xml:space="preserve"><value>Hello! Which language do we read in?</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Dino downloads a voice for it. You can change it later behind the lock.</value></data>
+  <data name="FirstRun_Continue" xml:space="preserve"><value>Continue</value></data>
+  <data name="FirstRun_GettingReady" xml:space="preserve"><value>Getting Dino’s voice ready</value></data>
+  <data name="FirstRun_Once" xml:space="preserve"><value>{0} voices · this happens only once</value></data>
+  <data name="FirstRun_Downloading" xml:space="preserve"><value>Downloading…</value></data>
+  <data name="FirstRun_Waiting" xml:space="preserve"><value>Waiting on the shelf</value></data>
+  <data name="FirstRun_PickAnother" xml:space="preserve"><value>Pick another language</value></data>
+  <data name="FirstRun_Ready" xml:space="preserve"><value>Ready to read!</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Every character gets their own voice. Three stories are on the shelf.</value></data>
+  <data name="FirstRun_HearHello" xml:space="preserve"><value>Hear Dino say hello</value></data>
+  <data name="FirstRun_HelloLine" xml:space="preserve"><value>Hello! I’m Dino. Let’s read a story together.</value></data>
+  <data name="FirstRun_SetUp" xml:space="preserve"><value>Set up the stories</value></data>
+  <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>Continue with the phone voice</value></data>
+  <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Ready for my child</value></data>
+  <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Grown-up mode</value></data>
+  <data name="Language_Title" xml:space="preserve"><value>Language</value></data>
+  <data name="Language_Subtitle" xml:space="preserve"><value>Dino reads and translates into this</value></data>
+  <data name="Language_Ready" xml:space="preserve"><value>Ready</value></data>
+  <data name="Language_Download" xml:space="preserve"><value>Download</value></data>
+  <data name="Language_Downloading" xml:space="preserve"><value>Downloading {0}%</value></data>
+  <data name="Language_Footer" xml:space="preserve"><value>A story in another language is still read in its own language, unless Translate to my language is on for that story.</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Press and hold for 3 seconds.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Press and hold for 3 seconds</value></data>
   <data name="Gate_KeepHolding" xml:space="preserve"><value>Keep holding…</value></data>

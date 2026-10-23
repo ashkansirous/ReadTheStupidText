@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="DinoReader.BackupPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:DinoReader"
+    xmlns:res="clr-namespace:DinoReader.Resources.Strings"
+    BackgroundColor="{StaticResource Sand}"
+    NavigationPage.HasNavigationBar="False"
+    SafeAreaEdges="Container">
+
+    <!-- Backup (mock screens 24 and 25), behind the grown-up gate: save every story as one file, or restore from one.
+         Values come from "Dino Reader Batch 16.dc.html". -->
+    <ContentPage.Resources>
+        <Color x:Key="AddedDot">#4FC060</Color>
+        <Color x:Key="SkippedDot">#c9c0f5</Color>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*">
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6" Padding="6,8,14,10">
+            <Border WidthRequest="44" HeightRequest="44" StrokeThickness="0" BackgroundColor="Transparent"
+                    SemanticProperties.Description="{x:Static res:AppResources.Common_Back}">
+                <local:IconView Kind="Back" Color="{StaticResource Ink}" Size="22" StrokeWidth="2.6" />
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Border.GestureRecognizers>
+            </Border>
+            <Label Grid.Column="1" Text="{x:Static res:AppResources.Backup_Title}" FontSize="20" FontAttributes="Bold" VerticalOptions="Center"
+                   SemanticProperties.HeadingLevel="Level1" />
+        </Grid>
+
+        <!-- Screen 24. -->
+        <ScrollView Grid.Row="1" x:Name="MainPanel">
+            <VerticalStackLayout Padding="14,0,14,20" Spacing="14">
+                <Border BackgroundColor="White" StrokeThickness="0" Padding="18">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="20" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="{x:Static res:AppResources.Backup_SaveTitle}" FontSize="17" FontAttributes="Bold" SemanticProperties.HeadingLevel="Level2" />
+                        <Label x:Name="SaveBody" FontSize="14" LineHeight="1.45" TextColor="{StaticResource Body}" />
+                        <Button x:Name="SaveButton" Text="{x:Static res:AppResources.Backup_SaveButton}" HeightRequest="50" CornerRadius="25" FontSize="15.5"
+                                FontAttributes="Bold" BackgroundColor="{StaticResource Brand}" TextColor="White" Margin="0,6,0,0" Clicked="OnSaveClicked" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border BackgroundColor="White" StrokeThickness="0" Padding="18">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="20" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="{x:Static res:AppResources.Backup_RestoreTitle}" FontSize="17" FontAttributes="Bold" SemanticProperties.HeadingLevel="Level2" />
+                        <Label Text="{x:Static res:AppResources.Backup_RestoreBody}" FontSize="14" LineHeight="1.45" TextColor="{StaticResource Body}" />
+                        <Button x:Name="RestoreButton" Text="{x:Static res:AppResources.Backup_RestoreButton}" HeightRequest="50" CornerRadius="25" FontSize="15.5"
+                                FontAttributes="Bold" BackgroundColor="White" TextColor="{StaticResource Brand}" BorderColor="{StaticResource MergeBorder}"
+                                BorderWidth="2" Margin="0,6,0,0" Clicked="OnRestoreClicked" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <HorizontalStackLayout Spacing="8" Padding="4,0">
+                    <local:IconView Kind="Lock" Color="{StaticResource Muted}" Size="16" StrokeWidth="2" VerticalOptions="Start" Margin="0,1,0,0" />
+                    <Label Text="{x:Static res:AppResources.Backup_Footer}" FontSize="12.5" LineHeight="1.4" TextColor="{StaticResource Body}" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Screen 25: the restore result. -->
+        <VerticalStackLayout Grid.Row="1" x:Name="ResultPanel" IsVisible="False" Padding="14,0" Spacing="16" VerticalOptions="Center">
+            <Label x:Name="ResultTitle" FontSize="22" FontAttributes="Bold" HorizontalTextAlignment="Center" SemanticProperties.HeadingLevel="Level2" />
+            <Border BackgroundColor="White" StrokeThickness="0" Padding="18,6">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="20" />
+                </Border.StrokeShape>
+                <VerticalStackLayout x:Name="ResultRows" />
+            </Border>
+            <Button Text="{x:Static res:AppResources.Backup_SeeStories}" HeightRequest="50" CornerRadius="25" FontSize="15.5" FontAttributes="Bold"
+                    BackgroundColor="{StaticResource Brand}" TextColor="White" Padding="28,0" HorizontalOptions="Center" Clicked="OnSeeStoriesClicked" />
+        </VerticalStackLayout>
+
+        <ActivityIndicator Grid.Row="1" x:Name="WorkingIndicator" IsRunning="False" IsVisible="False" Color="{StaticResource Brand}"
+                           HorizontalOptions="Center" VerticalOptions="Center" />
+    </Grid>
+</ContentPage>

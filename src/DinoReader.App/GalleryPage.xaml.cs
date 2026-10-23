@@ -2,6 +2,9 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using DinoReader.Core;
+using DinoReader.Resources.Strings;
+using Microsoft.Extensions.DependencyInjection;
+using ReadTheStupidText.Application.Settings;
 
 namespace DinoReader;
 
@@ -16,10 +19,11 @@ public partial class GalleryPage : ContentPage
 	private readonly GrownUpMode _mode;
 	private readonly StoryActions _actions;
 	private readonly StarterStories _starters;
+	private readonly IServiceProvider _services;
 	private readonly BusyGuard _busy = new();
 	private readonly ObservableCollection<object> _items = [];
 
-	public GalleryPage(IStoryLibrary library, GrownUpGate gate, GrownUpMode mode, StoryActions actions, StarterStories starters)
+	public GalleryPage(IStoryLibrary library, GrownUpGate gate, GrownUpMode mode, StoryActions actions, StarterStories starters, IServiceProvider services)
 	{
 		InitializeComponent();
 		_library = library;
@@ -27,6 +31,7 @@ public partial class GalleryPage : ContentPage
 		_mode = mode;
 		_actions = actions;
 		_starters = starters;
+		_services = services;
 		StoryList.ItemsSource = _items;
 	}
 
@@ -35,6 +40,9 @@ public partial class GalleryPage : ContentPage
 		base.OnAppearing();
 		_mode.PropertyChanged -= OnModeChanged;
 		_mode.PropertyChanged += OnModeChanged;
+		StoreClient store = _services.GetRequiredService<StoreClient>();
+		store.LibraryChanged -= OnLibraryChanged;
+		store.LibraryChanged += OnLibraryChanged;
 		ApplyMode();
 		try
 		{
@@ -52,7 +60,21 @@ public partial class GalleryPage : ContentPage
 	{
 		base.OnDisappearing();
 		_mode.PropertyChanged -= OnModeChanged;
+		_services.GetRequiredService<StoreClient>().LibraryChanged -= OnLibraryChanged;
 	}
+
+	// A store download can finish on a background thread while the gallery shows; reload the list on the UI thread (Slice 92).
+	private void OnLibraryChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(async () =>
+	{
+		try
+		{
+			await RefreshAsync();
+		}
+		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+		{
+			Debug.WriteLine($"Dino Reader gallery refresh failed: {ex}");
+		}
+	});
 
 	// The tiles follow the mode through their binding; only the Add entry and the chrome change here.
 	private void OnModeChanged(object? sender, PropertyChangedEventArgs e) => MainThread.BeginInvokeOnMainThread(ApplyMode);
@@ -87,8 +109,15 @@ public partial class GalleryPage : ContentPage
 
 	private void ApplyModeChrome(bool grownUp)
 	{
+		bool handover = grownUp && FirstRunState.HandoverPending;
 		LockButton.IsVisible = !grownUp;
-		DoneButton.IsVisible = grownUp;
+		DoneButton.IsVisible = grownUp && !handover;
+		HandoverButton.IsVisible = handover;
+		HandoverButton.Text = AppResources.Gallery_ReadyForChild;
+		ModeLabel.IsVisible = grownUp;
+		LanguagePill.IsVisible = grownUp;
+		LanguagePillLabel.Text = LanguageNames.NativeName(LanguageChoice.Current(_services.GetRequiredService<ISettingsStore>()));
+		GrownUpActions.IsVisible = grownUp;
 		BackgroundColor = DinoTokens.Get(grownUp ? DinoTokens.Sand : DinoTokens.Cream);
 	}
 
@@ -112,6 +141,32 @@ public partial class GalleryPage : ContentPage
 
 	// Every grown-up action re-checks the mode right before it runs: a queued tap must not outlive the mode.
 	private Task RunGrownUpAsync(Func<Task> work) => _busy.RunAsync(() => _mode.IsGrownUp ? work() : Task.CompletedTask);
+
+	// Free stories (Slice 92): a grown-up page, so it is only reachable in grown-up mode and closes with it.
+	private async void OnStoreTapped(object? sender, TappedEventArgs e) => await RunGrownUpAsync(OpenStoreAsync);
+
+	private async Task OpenStoreAsync()
+	{
+		var store = _services.GetRequiredService<StorePage>();
+		if (_mode.IsGrownUp)
+		{
+			await Navigation.PushAsync(store);
+		}
+	}
+
+	// Backup (Slice 93): a grown-up page, so it is only reachable in grown-up mode and closes with it.
+	private async void OnBackupTapped(object? sender, TappedEventArgs e) => await RunGrownUpAsync(() => OpenGrownUpPageAsync<BackupPage>());
+
+	private async void OnLanguageTapped(object? sender, TappedEventArgs e) => await RunGrownUpAsync(() => OpenGrownUpPageAsync<LanguagePage>());
+
+	private async Task OpenGrownUpPageAsync<TPage>() where TPage : Page
+	{
+		var page = _services.GetRequiredService<TPage>();
+		if (_mode.IsGrownUp)
+		{
+			await Navigation.PushAsync(page);
+		}
+	}
 
 	private async void OnAddTapped(object? sender, TappedEventArgs e) => await RunGrownUpAsync(() => _actions.EditAsync(Navigation, null));
 
@@ -225,4 +280,11 @@ public partial class GalleryPage : ContentPage
 	}
 
 	private void OnDoneClicked(object? sender, EventArgs e) => _mode.Leave();
+
+	// The first hand-over (Slice 93): from now on the header shows Done instead.
+	private void OnHandoverClicked(object? sender, EventArgs e)
+	{
+		FirstRunState.HandoverPending = false;
+		_mode.Leave();
+	}
 }

@@ -6,7 +6,22 @@
 // enums and parameter properties: worker/downloads.test.mjs runs it under
 // node's type stripping.
 
-import { DINO_PATH_PREFIX, Host, MANIFEST_SUFFIX, Product, apkFileName, apkKey, manifestKey, manifestPrefix } from "./download-keys.mjs";
+import {
+  DINO_PATH_PREFIX,
+  Host,
+  JSON_CONTENT_TYPE,
+  LISTING_CACHE_MS,
+  LIST_PAGE_SIZE,
+  MANIFEST_SUFFIX,
+  MAX_LIST_PAGES,
+  NO_CACHE,
+  Product,
+  VERSIONED_CACHE,
+  apkFileName,
+  apkKey,
+  manifestKey,
+  manifestPrefix,
+} from "./download-keys.mjs";
 
 export { DINO_PATH_PREFIX, Host, Product, apkFileName, apkKey, manifestKey };
 
@@ -19,7 +34,6 @@ export const ANDROID_PATH = "/download/android";
 
 const APK_CONTENT_TYPE = "application/vnd.android.package-archive";
 const HTML_CONTENT_TYPE = "text/html; charset=utf-8";
-const JSON_CONTENT_TYPE = "application/json; charset=utf-8";
 
 const HttpHeader = {
   ContentType: "Content-Type",
@@ -38,6 +52,7 @@ const ErrorCode = {
   Unavailable: "downloads-unavailable",
   NotFound: "not-found",
   ApkUnavailable: "apk-unavailable",
+  StoryUnavailable: "story-unavailable",
 } as const;
 type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 const ALLOWED_METHODS = "GET, HEAD";
@@ -48,11 +63,6 @@ const ANY_ETAG = "*";
 const HTTP_ERROR_STATUS = 400;
 const VERSION_PATTERN = /^\d+\.\d+\.\d+$/;
 const SINGLE_RANGE = /^bytes=(\d*)-(\d*)$/;
-const LISTING_CACHE_MS = 60_000;
-const LIST_PAGE_SIZE = 1000;
-const MAX_LIST_PAGES = 20;
-const NO_CACHE = "no-cache";
-const VERSIONED_CACHE = "public, max-age=86400";
 const STORE_URL = "https://apps.microsoft.com/detail/9NGT1BN1H92V";
 const PLAY_URL = "https://play.google.com/apps/testing/uk.sirous.readthestupidtext";
 
@@ -291,10 +301,29 @@ export function singleRangeHeaders(request: Request): Headers | null {
   return new Headers({ [HttpHeader.Range]: header.trim() });
 }
 
-function apkHeaders(version: string, etag: string | null, cacheControl: string, product: Product): Headers {
+/** One R2 object to stream: its key, how it is sent, and what a failed read is called. */
+export interface ServedFile {
+  readonly key: string;
+  readonly contentType: string;
+  readonly fileName: string;
+  readonly disposition: "attachment" | "inline";
+  readonly unavailable: ErrorCode;
+}
+
+function apkFile(version: string, product: Product): ServedFile {
+  return {
+    key: apkKey(version, product),
+    contentType: APK_CONTENT_TYPE,
+    fileName: apkFileName(version, product),
+    disposition: "attachment",
+    unavailable: ErrorCode.ApkUnavailable,
+  };
+}
+
+function fileHeaders(file: ServedFile, etag: string | null, cacheControl: string): Headers {
   const headers = new Headers();
-  headers.set(HttpHeader.ContentType, APK_CONTENT_TYPE);
-  headers.set(HttpHeader.ContentDisposition, `attachment; filename="${apkFileName(version, product)}"`);
+  headers.set(HttpHeader.ContentType, file.contentType);
+  headers.set(HttpHeader.ContentDisposition, `${file.disposition}; filename="${file.fileName}"`);
   headers.set(HttpHeader.CacheControl, cacheControl);
   headers.set(HttpHeader.AcceptRanges, "bytes");
   if (etag) headers.set(HttpHeader.ETag, etag);
@@ -303,8 +332,8 @@ function apkHeaders(version: string, etag: string | null, cacheControl: string, 
 
 // `ranged` is whether the request asked for a range: local miniflare reports a
 // range on a whole-object read, which must still be a 200.
-function objectResponse(version: string, object: R2ObjectBody, cacheControl: string, ranged: boolean, product: Product): Response {
-  const headers = apkHeaders(version, object.httpEtag, cacheControl, product);
+function objectResponse(file: ServedFile, object: R2ObjectBody, cacheControl: string, ranged: boolean): Response {
+  const headers = fileHeaders(file, object.httpEtag, cacheControl);
   const span = ranged ? servedSpan(object.range, object.size) : null;
   if (!span) {
     headers.set(HttpHeader.ContentLength, String(object.size));
@@ -315,14 +344,14 @@ function objectResponse(version: string, object: R2ObjectBody, cacheControl: str
   return new Response(object.body, { status: 206, headers });
 }
 
-function headResponse(version: string, head: R2Object, cacheControl: string, product: Product): Response {
-  const headers = apkHeaders(version, head.httpEtag, cacheControl, product);
+function headResponse(file: ServedFile, head: R2Object, cacheControl: string): Response {
+  const headers = fileHeaders(file, head.httpEtag, cacheControl);
   headers.set(HttpHeader.ContentLength, String(head.size));
   return new Response(null, { status: 200, headers });
 }
 
-function notModifiedResponse(version: string, etag: string, cacheControl: string, product: Product): Response {
-  return new Response(null, { status: 304, headers: apkHeaders(version, etag, cacheControl, product) });
+function notModifiedResponse(file: ServedFile, etag: string, cacheControl: string): Response {
+  return new Response(null, { status: 304, headers: fileHeaders(file, etag, cacheControl) });
 }
 
 function opaqueTag(tag: string): string {
@@ -348,44 +377,48 @@ function isConditional(request: Request): boolean {
 }
 
 /** A failed ranged get is told apart by the object's size: gone is 404, a range outside it 416, else 502. */
-async function failedReadResponse(bucket: R2Bucket, version: string, rangeHeader: string | null, product: Product): Promise<Response> {
-  const head = await bucket.head(apkKey(version, product));
+async function failedReadResponse(bucket: R2Bucket, file: ServedFile, rangeHeader: string | null): Promise<Response> {
+  const head = await bucket.head(file.key);
   if (!head) return notFound();
   if (parseRange(rangeHeader, head.size) === "unsatisfiable") {
     return new Response(null, { status: 416, headers: { [HttpHeader.ContentRange]: `${BYTES_UNSATISFIED_PREFIX}${head.size}` } });
   }
-  return errorResponse(ErrorCode.ApkUnavailable, 502);
+  return errorResponse(file.unavailable, 502);
 }
 
 // A ranged get that comes back without `range` is a whole-object read, which
 // objectResponse serves as a 200.
-async function readApk(bucket: R2Bucket, version: string, range: Headers | null, product: Product): Promise<R2ObjectBody | null | "failed"> {
+async function readObject(bucket: R2Bucket, key: string, range: Headers | null): Promise<R2ObjectBody | null | "failed"> {
   try {
-    return await bucket.get(apkKey(version, product), range ? { range } : undefined);
+    return await bucket.get(key, range ? { range } : undefined);
   } catch {
     return "failed";
   }
 }
 
-/** Streams one version's APK: a single Range honoured (206), anything else whole; conditional requests get one extra head. */
-async function serveApk(request: Request, bucket: R2Bucket, version: string, cacheControl: string, product: Product): Promise<Response> {
+/** Streams one R2 object: a single Range honoured (206), anything else whole; conditional requests get one extra head. */
+export async function serveObject(request: Request, bucket: R2Bucket, file: ServedFile, cacheControl: string): Promise<Response> {
   try {
     const isHead = request.method === "HEAD";
-    const head = isHead || isConditional(request) ? await bucket.head(apkKey(version, product)) : null;
+    const head = isHead || isConditional(request) ? await bucket.head(file.key) : null;
     if (head === null && (isHead || isConditional(request))) return notFound();
     if (head && ifNoneMatchHits(request.headers.get(HttpHeader.IfNoneMatch), head.httpEtag)) {
-      return notModifiedResponse(version, head.httpEtag, cacheControl, product);
+      return notModifiedResponse(file, head.httpEtag, cacheControl);
     }
-    if (head && isHead) return headResponse(version, head, cacheControl, product);
+    if (head && isHead) return headResponse(file, head, cacheControl);
     const wanted = singleRangeHeaders(request);
     const honoured = head && !ifRangeAllowsRange(request.headers.get(HttpHeader.IfRange), head.httpEtag);
     const range = honoured ? null : wanted;
-    const object = await readApk(bucket, version, range, product);
-    if (object === "failed") return await failedReadResponse(bucket, version, range?.get(HttpHeader.Range) ?? null, product);
-    return object ? objectResponse(version, object, cacheControl, range !== null, product) : notFound();
+    const object = await readObject(bucket, file.key, range);
+    if (object === "failed") return await failedReadResponse(bucket, file, range?.get(HttpHeader.Range) ?? null);
+    return object ? objectResponse(file, object, cacheControl, range !== null) : notFound();
   } catch {
-    return errorResponse(ErrorCode.ApkUnavailable, 502);
+    return errorResponse(file.unavailable, 502);
   }
+}
+
+function serveApk(request: Request, bucket: R2Bucket, version: string, cacheControl: string, product: Product): Promise<Response> {
+  return serveObject(request, bucket, apkFile(version, product), cacheControl);
 }
 
 async function serveLatest(request: Request, bucket: R2Bucket, product: Product): Promise<Response> {

@@ -19,7 +19,7 @@ public static class MauiProgram
 	public static MauiApp CreateMauiApp()
 	{
 		// Before anything reads the culture (services, resources, the first page), including the UI thread's own.
-		UiCulture.Apply(UiCulture.Resolve(System.Globalization.CultureInfo.CurrentUICulture));
+		UiCulture.Apply(UiCulture.Resolve(LanguageChoice.Preferred()));
 		var builder = MauiApp.CreateBuilder();
 		builder
 			.UseMauiApp<DinoApp>()
@@ -41,6 +41,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<ExternalActivityGuard>();
 		builder.Services.AddSingleton<StoryActions>();
 		builder.Services.AddSingleton<StarterStories>();
+		builder.Services.AddSingleton<StoreClient>();
 		AddDocumentExtractors(builder.Services);
 		AddPages(builder.Services);
 
@@ -68,6 +69,10 @@ public static class MauiProgram
 	private static void AddPages(IServiceCollection services)
 	{
 		services.AddTransient<GalleryPage>();
+		services.AddTransient<StorePage>();
+		services.AddTransient<BackupPage>();
+		services.AddTransient<LanguagePage>();
+		services.AddTransient<FirstRunPage>();
 		services.AddSingleton<GrownUpMode>();
 		services.AddTransient<StoryWizardPage>();
 		services.AddTransient<CastPage>();

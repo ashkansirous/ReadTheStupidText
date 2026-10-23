@@ -25,7 +25,10 @@ import {
   renderDownloadPage,
   resolveSite,
   versionFromManifestKey,
+  serveObject,
 } from "./downloads.ts";
+import { completeIds, groupFolders, handleStories, isStoryPath, offeredVersion, packageVersionOf, parseMeta, parseStoryKey } from "./stories.ts";
+import { storyCoverKey, storyMetaKey, storyPackageKey } from "./download-keys.mjs";
 
 const APK_BYTES = Buffer.from("0123456789");
 
@@ -391,4 +394,184 @@ test("Dino's /download goes to its landing page (under the prefix too); /downloa
   const rtst = await handleDownload(get("/download/android"), { DOWNLOADS: bucketWith(["1.4.0"]) });
   assert.equal(rtst.status, 200);
   assert.equal(rtst.headers.get("content-disposition"), 'attachment; filename="ReadTheStupidText-1.4.0.apk"');
+});
+
+// ---- Slice 92: the free Dino story store (worker/stories.ts) ----
+
+const ID_A = "a".repeat(32);
+const ID_B = "b".repeat(32);
+const ID_C = "c".repeat(32);
+const PACKAGE_BYTES = Buffer.from("0123456789");
+const COVER_BYTES = Buffer.from("jpeg");
+
+function metaJson(overrides = {}) {
+  return Buffer.from(JSON.stringify({ schemaVersion: 1, title: "The Bear", language: "en", pageCount: 12, minutes: 6, added: "2026-10-01", ...overrides }));
+}
+
+function addStory(objects, id, { meta = metaJson(), versions = [1], cover = true } = {}) {
+  if (meta) objects.set(storyMetaKey(id), meta);
+  for (const version of versions) objects.set(storyPackageKey(id, version), PACKAGE_BYTES);
+  if (cover) objects.set(storyCoverKey(id), COVER_BYTES);
+}
+
+const storyApi = (request, bucket, prefix = "") => handleStories(request, { DOWNLOADS: bucket }, prefix, serveObject);
+
+test("story keys: only <id>/<file> under the prefix, with a 32-hex id", () => {
+  assert.deepEqual(parseStoryKey(`dinoreader/stories/${ID_A}/meta.json`), { id: ID_A, file: "meta.json" });
+  assert.equal(parseStoryKey(`dinoreader/stories/${ID_A}/sub/meta.json`), null);
+  assert.equal(parseStoryKey("dinoreader/stories/not-an-id/meta.json"), null);
+  assert.equal(parseStoryKey(`android/${ID_A}/meta.json`), null);
+  assert.equal(packageVersionOf("story-v3.dino"), 3);
+  assert.equal(packageVersionOf("story-v0.dino"), null);
+  assert.equal(packageVersionOf("story-v1.zip"), null);
+});
+
+test("a folder is complete only with meta.json and a package", () => {
+  const keys = [storyMetaKey(ID_A), storyPackageKey(ID_A, 1), storyPackageKey(ID_B, 1), storyMetaKey(ID_C)];
+  assert.deepEqual(completeIds(groupFolders(keys)), [ID_A]);
+});
+
+test("meta is checked; the offered version is meta's own when uploaded, else the highest", () => {
+  assert.equal(parseMeta({ schemaVersion: 1, title: "", language: "en" }), null);
+  assert.equal(parseMeta({ schemaVersion: "1", title: "x", language: "en" }), null);
+  assert.equal(parseMeta(null), null);
+  const meta = parseMeta({ schemaVersion: 1, title: "x", language: "en", pageCount: -3, version: 2 });
+  assert.equal(meta.pageCount, null);
+  assert.equal(offeredVersion(meta, [1, 2]), 2);
+  assert.equal(offeredVersion(meta, [1]), null);
+  assert.equal(offeredVersion({ ...meta, version: null }, [1, 4, 2]), 4);
+});
+
+test("/api/stories lists complete stories only, newest first, with versioned links", async () => {
+  const objects = new Map();
+  addStory(objects, ID_A, { meta: metaJson({ title: "Old", added: "2026-09-01" }) });
+  addStory(objects, ID_B, { meta: metaJson({ title: "New", added: "2026-10-01" }), versions: [1, 2], cover: false });
+  addStory(objects, ID_C, { meta: null });
+  objects.set(storyMetaKey("d".repeat(32)), metaJson());
+  addStory(objects, "e".repeat(32), { meta: Buffer.from("{not json") });
+  const response = await storyApi(get("/api/stories"), fakeBucket(objects));
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("Cache-Control"), "public, max-age=60");
+  const body = await response.json();
+  assert.equal(body.schemaVersion, 1);
+  assert.deepEqual(body.stories.map((story) => story.title), ["New", "Old"]);
+  assert.equal(body.stories[0].version, 2);
+  assert.equal(body.stories[0].coverUrl, null);
+  assert.equal(body.stories[0].downloadUrl, `/api/stories/${ID_B}/download?v=2`);
+  assert.equal(body.stories[1].coverUrl, `/api/stories/${ID_A}/cover?v=1`);
+  assert.equal(body.stories[1].pageCount, 12);
+});
+
+test("on workers.dev the list links carry the /dino prefix", async () => {
+  const objects = new Map();
+  addStory(objects, ID_A);
+  const body = await (await storyApi(get("/api/stories"), fakeBucket(objects), "/dino")).json();
+  assert.equal(body.stories[0].downloadUrl, `/dino/api/stories/${ID_A}/download?v=1`);
+});
+
+test("an empty store is an empty list, an unreadable bucket is 503, a missing binding 503", async () => {
+  const empty = await (await storyApi(get("/api/stories"), fakeBucket(new Map()))).json();
+  assert.deepEqual(empty.stories, []);
+  const broken = { async list() { throw new Error("r2 down"); } };
+  assert.equal((await storyApi(get("/api/stories"), broken)).status, 503);
+  assert.equal((await handleStories(get("/api/stories"), {}, "", serveObject)).status, 503);
+});
+
+test("download without ?v= is the newest package and never cached; with ?v= it is cached and ranged", async () => {
+  const objects = new Map();
+  addStory(objects, ID_A, { versions: [1, 2] });
+  const bucket = fakeBucket(objects);
+  const latest = await storyApi(get(`/api/stories/${ID_A}/download`), bucket);
+  assert.equal(latest.status, 200);
+  assert.equal(latest.headers.get("Cache-Control"), "no-cache");
+  assert.match(latest.headers.get("Content-Disposition"), /story-v2\.dino/);
+  assert.equal(Buffer.from(await latest.arrayBuffer()).toString(), "0123456789");
+  const pinned = await storyApi(get(`/api/stories/${ID_A}/download?v=1`, { headers: { Range: "bytes=2-4" } }), bucket);
+  assert.equal(pinned.status, 206);
+  assert.equal(pinned.headers.get("Cache-Control"), "public, max-age=86400");
+  assert.equal(pinned.headers.get("Content-Range"), "bytes 2-4/10");
+  assert.equal(Buffer.from(await pinned.arrayBuffer()).toString(), "234");
+});
+
+test("cover is an inline JPEG; a story without one, an unknown id, a bad version and an unfinished folder are 404", async () => {
+  const objects = new Map();
+  addStory(objects, ID_A);
+  addStory(objects, ID_B, { cover: false });
+  addStory(objects, ID_C, { meta: null });
+  const bucket = fakeBucket(objects);
+  const cover = await storyApi(get(`/api/stories/${ID_A}/cover?v=1`), bucket);
+  assert.equal(cover.status, 200);
+  assert.equal(cover.headers.get("Content-Type"), "image/jpeg");
+  assert.match(cover.headers.get("Content-Disposition"), /^inline/);
+  assert.equal(cover.headers.get("Cache-Control"), "public, max-age=3600");
+  const missing = [`/api/stories/${ID_B}/cover`, `/api/stories/${"f".repeat(32)}/download`, `/api/stories/${ID_A}/download?v=abc`,
+    `/api/stories/${ID_C}/download`, `/api/stories/${ID_A}/other`, `/api/stories/${ID_A}/download/extra`, `/api/stories/${ID_A}`];
+  for (const path of missing) {
+    assert.equal((await storyApi(get(path), bucket)).status, 404, path);
+  }
+});
+
+test("a pinned version that was never uploaded is 404; other methods are 405; HEAD errors have no body", async () => {
+  const objects = new Map();
+  addStory(objects, ID_A);
+  const bucket = fakeBucket(objects);
+  assert.equal((await storyApi(get(`/api/stories/${ID_A}/download?v=9`), bucket)).status, 404);
+  assert.equal((await storyApi(get("/api/stories", { method: "POST" }), bucket)).status, 405);
+  const head = await storyApi(get(`/api/stories/${ID_A}/download?v=9`, { method: "HEAD" }), bucket);
+  assert.equal(head.status, 404);
+  assert.equal(await head.text(), "");
+  assert.equal((await storyApi(get("/api/stories", { method: "HEAD" }), bucket)).status, 200);
+});
+
+test("story paths route on the Dino host and under /dino on workers.dev, and both configs let the Worker run first", () => {
+  assert.equal(isStoryPath("/api/stories"), true);
+  assert.equal(isStoryPath(`/api/stories/${ID_A}/cover`), true);
+  assert.equal(isStoryPath("/api/storiesx"), false);
+  assert.equal(resolveSite(Host.DinoReader, "/api/stories").path, "/api/stories");
+  const dev = resolveSite("x.workers.dev", "/dino/api/stories");
+  assert.equal(dev.product, Product.DinoReader);
+  assert.equal(dev.path, "/api/stories");
+  for (const file of ["../wrangler.jsonc", "../wrangler.workers-dev.jsonc"]) {
+    const config = JSON.parse(stripJsonc(readFileSync(new URL(file, import.meta.url), "utf8")));
+    for (const path of ["/api/stories", "/api/stories/*", "/dino/api/stories", "/dino/api/stories/*"]) {
+      assert.ok(config.assets.run_worker_first.includes(path), `${file} lacks ${path}`);
+    }
+  }
+});
+
+test("a failed meta.json read makes the list 503 rather than dropping the story", async () => {
+  const objects = new Map();
+  addStory(objects, ID_A);
+  addStory(objects, ID_B);
+  const bucket = fakeBucket(objects);
+  const flaky = { list: bucket.list, head: bucket.head, async get(key, options) {
+    if (key === storyMetaKey(ID_B)) throw new Error("r2 hiccup");
+    return bucket.get(key, options);
+  } };
+  assert.equal((await storyApi(get("/api/stories"), flaky)).status, 503);
+});
+
+test("concurrent list requests share one rebuild", async () => {
+  const objects = new Map();
+  addStory(objects, ID_A);
+  const inner = fakeBucket(objects);
+  let lists = 0;
+  const bucket = Object.create(inner);
+  bucket.list = async (options) => {
+    lists += 1;
+    return inner.list(options);
+  };
+  const responses = await Promise.all([1, 2, 3, 4].map(() => storyApi(get("/api/stories"), bucket)));
+  assert.deepEqual(responses.map((response) => response.status), [200, 200, 200, 200]);
+  assert.equal(lists, 1);
+});
+
+test("a story uploaded after the listing was cached is still served by cover and download", async () => {
+  const objects = new Map();
+  addStory(objects, ID_A);
+  const bucket = fakeBucket(objects);
+  assert.equal((await storyApi(get("/api/stories"), bucket)).status, 200);
+  addStory(objects, ID_B, { versions: [3] });
+  assert.equal((await storyApi(get(`/api/stories/${ID_B}/download`), bucket)).status, 200);
+  assert.equal((await storyApi(get(`/api/stories/${ID_B}/cover`), bucket)).status, 200);
 });

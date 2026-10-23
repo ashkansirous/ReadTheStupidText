@@ -39,6 +39,61 @@
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>حذف {0}</value></data>
   <data name="Gallery_ExportStory" xml:space="preserve"><value>تصدير القصة</value></data>
   <data name="Gallery_CastButton" xml:space="preserve"><value>الشخصيات</value></data>
+  <data name="Store_Title" xml:space="preserve"><value>قصص مجانية</value></data>
+  <data name="Store_Subtitle" xml:space="preserve"><value>مختارة وموزّعة الأدوار من أجل دينو</value></data>
+  <data name="Store_Get" xml:space="preserve"><value>تنزيل</value></data>
+  <data name="Store_Downloaded" xml:space="preserve"><value>تم التنزيل</value></data>
+  <data name="Store_Length" xml:space="preserve"><value>{0} صفحات · {1} دقيقة</value></data>
+  <data name="Store_Footer" xml:space="preserve"><value>مجانية وبلا حساب. لا يُرسَل أي شيء عنك أو عن طفلك.</value></data>
+  <data name="Store_OfflineTitle" xml:space="preserve"><value>أنت غير متصل بالإنترنت</value></data>
+  <data name="Store_OfflineBody" xml:space="preserve"><value>تحتاج القصص المجانية إلى الإنترنت. القصص الموجودة على الرف تُقرأ بدونه.</value></data>
+  <data name="Store_TryAgain" xml:space="preserve"><value>حاول مرة أخرى</value></data>
+  <data name="Store_EmptyTitle" xml:space="preserve"><value>لا قصص جديدة بعد</value></data>
+  <data name="Store_EmptyBody" xml:space="preserve"><value>تُضاف قصص جديدة من وقت لآخر. عُد قريبًا.</value></data>
+  <data name="Store_BackToStories" xml:space="preserve"><value>العودة إلى قصصي</value></data>
+  <data name="Store_GetStory" xml:space="preserve"><value>تنزيل {0}</value></data>
+  <data name="Backup_Title" xml:space="preserve"><value>نسخة احتياطية</value></data>
+  <data name="Backup_SaveTitle" xml:space="preserve"><value>حفظ نسخة احتياطية</value></data>
+  <data name="Backup_SaveBody_One" xml:space="preserve"><value>قصتك في ملف واحد، مع صفحاتها وصورها وتوزيع الأصوات بعد تعديله. احفظه في Drive أو الملفات، أو أرسله إلى نفسك.</value></data>
+  <data name="Backup_SaveBody_Other" xml:space="preserve"><value>كل القصص ({0}) في ملف واحد، مع صفحاتها وصورها وتوزيعات الأصوات بعد تعديلها. احفظه في Drive أو الملفات، أو أرسله إلى نفسك.</value></data>
+  <data name="Backup_SaveButton" xml:space="preserve"><value>حفظ نسخة احتياطية</value></data>
+  <data name="Backup_RestoreTitle" xml:space="preserve"><value>الاستعادة من نسخة احتياطية</value></data>
+  <data name="Backup_RestoreBody" xml:space="preserve"><value>يضيف القصص غير الموجودة على هذا الهاتف. تبقى القصص الموجودة هنا كما هي تمامًا.</value></data>
+  <data name="Backup_RestoreButton" xml:space="preserve"><value>اختيار ملف نسخة احتياطية</value></data>
+  <data name="Backup_Footer" xml:space="preserve"><value>لا يذهب الملف إلا إلى حيث ترسله. لا يحتفظ Dino بأي نسخة على الإنترنت.</value></data>
+  <data name="Backup_Restored_One" xml:space="preserve"><value>تمت استعادة {0} قصة</value></data>
+  <data name="Backup_Restored_Other" xml:space="preserve"><value>تمت استعادة {0} قصة</value></data>
+  <data name="Backup_Added" xml:space="preserve"><value>أُضيفت إلى الرف</value></data>
+  <data name="Backup_Skipped" xml:space="preserve"><value>موجودة بالفعل، تم تخطيها</value></data>
+  <data name="Backup_Damaged" xml:space="preserve"><value>تعذّرت قراءتها</value></data>
+  <data name="Backup_SeeStories" xml:space="preserve"><value>عرض قصصي</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>هذه النسخة من إصدار أحدث من Dino Reader. حدّث التطبيق ثم حاول مرة أخرى.</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>هذا الملف ليس نسخة احتياطية من Dino Reader.</value></data>
+  <data name="Backup_Failed" xml:space="preserve"><value>لم تنجح النسخة الاحتياطية. حاول مرة أخرى.</value></data>
+  <data name="Backup_TooLarge" xml:space="preserve"><value>كبيرة جدًا للاستعادة</value></data>
+  <data name="Backup_SaveSkipped" xml:space="preserve"><value>تعذّرت إضافة {0} إلى النسخة الاحتياطية.</value></data>
+  <data name="FirstRun_Hello" xml:space="preserve"><value>مرحبًا! بأي لغة نقرأ؟</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>ينزّل Dino صوتًا لها. يمكنك تغييرها لاحقًا خلف القفل.</value></data>
+  <data name="FirstRun_Continue" xml:space="preserve"><value>متابعة</value></data>
+  <data name="FirstRun_GettingReady" xml:space="preserve"><value>جارٍ تجهيز صوت Dino</value></data>
+  <data name="FirstRun_Once" xml:space="preserve"><value>الصوت: {0} · يحدث هذا مرة واحدة فقط</value></data>
+  <data name="FirstRun_Downloading" xml:space="preserve"><value>جارٍ التنزيل…</value></data>
+  <data name="FirstRun_Waiting" xml:space="preserve"><value>بانتظارك على الرف</value></data>
+  <data name="FirstRun_PickAnother" xml:space="preserve"><value>اختيار لغة أخرى</value></data>
+  <data name="FirstRun_Ready" xml:space="preserve"><value>جاهز للقراءة!</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>لكل شخصية صوتها الخاص. هناك ثلاث قصص على الرف.</value></data>
+  <data name="FirstRun_HearHello" xml:space="preserve"><value>اسمع Dino يقول مرحبًا</value></data>
+  <data name="FirstRun_HelloLine" xml:space="preserve"><value>مرحبًا! أنا Dino. لنقرأ قصة معًا.</value></data>
+  <data name="FirstRun_SetUp" xml:space="preserve"><value>تجهيز القصص</value></data>
+  <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>المتابعة بصوت الهاتف</value></data>
+  <data name="Gallery_ReadyForChild" xml:space="preserve"><value>جاهز لطفلي</value></data>
+  <data name="Gallery_GrownUpMode" xml:space="preserve"><value>وضع البالغين</value></data>
+  <data name="Language_Title" xml:space="preserve"><value>اللغة</value></data>
+  <data name="Language_Subtitle" xml:space="preserve"><value>يقرأ Dino ويترجم إلى هذه اللغة</value></data>
+  <data name="Language_Ready" xml:space="preserve"><value>جاهز</value></data>
+  <data name="Language_Download" xml:space="preserve"><value>تنزيل</value></data>
+  <data name="Language_Downloading" xml:space="preserve"><value>جارٍ التنزيل {0}%</value></data>
+  <data name="Language_Footer" xml:space="preserve"><value>تُقرأ القصة بلغة أخرى بلغتها الأصلية، ما لم يكن خيار «الترجمة إلى لغتي» مفعّلًا لتلك القصة.</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>اضغط مطولاً لمدة 3 ثوانٍ.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>اضغط مطولاً لمدة 3 ثوانٍ</value></data>
   <data name="Gate_KeepHolding" xml:space="preserve"><value>واصل الضغط…</value></data>

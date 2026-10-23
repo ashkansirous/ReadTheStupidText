@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="DinoReader.LanguagePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:DinoReader"
+    xmlns:res="clr-namespace:DinoReader.Resources.Strings"
+    BackgroundColor="{StaticResource Sand}"
+    NavigationPage.HasNavigationBar="False"
+    SafeAreaEdges="Container">
+
+    <!-- Language (mock screen 26), opened from the pill in the grown-up gallery. The nine rows are built in code-behind. -->
+    <Grid RowDefinitions="Auto,*">
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6" Padding="6,8,14,10">
+            <Border WidthRequest="44" HeightRequest="44" StrokeThickness="0" BackgroundColor="Transparent"
+                    SemanticProperties.Description="{x:Static res:AppResources.Common_Back}">
+                <local:IconView Kind="Back" Color="{StaticResource Ink}" Size="22" StrokeWidth="2.6" />
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Border.GestureRecognizers>
+            </Border>
+            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                <Label Text="{x:Static res:AppResources.Language_Title}" FontSize="20" FontAttributes="Bold" SemanticProperties.HeadingLevel="Level1" />
+                <Label Text="{x:Static res:AppResources.Language_Subtitle}" FontSize="12" TextColor="{StaticResource Muted}" />
+            </VerticalStackLayout>
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="14,0,14,20" Spacing="14">
+                <Border BackgroundColor="White" StrokeThickness="0">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="18" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout x:Name="Rows" />
+                </Border>
+                <Label Text="{x:Static res:AppResources.Language_Footer}" FontSize="12.5" LineHeight="1.4" TextColor="{StaticResource Body}" Margin="4,0" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

@@ -6,9 +6,10 @@ using ReadTheStupidText.Mobile;
 namespace DinoReader;
 
 /// <summary>
-/// Gets the default voice ready at launch: stores English as the language on first run (the
-/// language picker is a later slice), applies the saved speed, then lets the shared installer
-/// download or activate the Supertonic voice pack. Until the pack is ready the phone voice reads.
+/// Gets the voice ready at launch: applies the saved speed, then lets the shared installer
+/// download or activate the voice pack of the stored language. It no longer picks English by itself
+/// (Slice 93): a fresh install has no language until the first-run page stores the grown-up's choice.
+/// Until the pack is ready the phone voice reads.
 /// </summary>
 public sealed class SpeechStartup
 {
@@ -27,7 +28,6 @@ public sealed class SpeechStartup
 	{
 		try
 		{
-			_settings.Language ??= AppLanguages.Code(AppLanguage.English);
 			_reader.SetSpeed(_settings.Speed);
 			await _installer.StartAsync();
 		}

@@ -29,8 +29,11 @@
     // two .html paths also go through it so every page gets the security headers.
     "run_worker_first": [
       "/", "/index.html", "/privacy", "/privacy/", "/privacy.html", "/download", "/download/*",
+      // Slice 92: the free Dino story store API (worker/stories.ts).
+      "/api/stories", "/api/stories/*",
       // The Dino Reader site on *.workers.dev, under /dino/ (worker/downloads.ts resolveSite).
-      "/dino", "/dino/", "/dino/index.html", "/dino/privacy", "/dino/privacy/", "/dino/privacy.html", "/dino/download", "/dino/download/*"
+      "/dino", "/dino/", "/dino/index.html", "/dino/privacy", "/dino/privacy/", "/dino/privacy.html", "/dino/download", "/dino/download/*",
+      "/dino/api/stories", "/dino/api/stories/*"
     ]
   },
 
