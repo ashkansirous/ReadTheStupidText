@@ -231,7 +231,8 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
         int? activityId, bool open,
         Func<BuiltEngine, string?, Task<(IReadOnlyList<SpeechChunkPlan> Chunks, int TextLength)>> plan)
     {
-        BuiltEngine? owned = AcquireEngine() ?? throw new NeuralEngineUnavailableException();
+        // A cold model build takes seconds: never on the caller's (UI) thread.
+        BuiltEngine? owned = await Task.Run(() => AcquireEngine()) ?? throw new NeuralEngineUnavailableException();
         BuiltEngine engine = owned;
         ActiveRead read = BeginRead(engine);
         try

@@ -175,7 +175,8 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
 
     private async Task StartReadAsync(IReadOnlyList<SpeechChunkPlan> chunks)
     {
-        IosBuiltEngine? owned = AcquireEngine() ?? throw new NeuralEngineUnavailableException();
+        // A cold model build takes seconds: never on the caller's (UI) thread.
+        IosBuiltEngine? owned = await Task.Run(() => AcquireEngine()) ?? throw new NeuralEngineUnavailableException();
         IosBuiltEngine engine = owned;
 
         ActiveRead? read = null;

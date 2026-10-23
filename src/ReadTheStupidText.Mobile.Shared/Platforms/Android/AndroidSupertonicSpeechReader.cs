@@ -195,7 +195,8 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
 
     private async Task StartReadAsync(IReadOnlyList<SpeechChunkPlan> chunks, VoiceModelPaths? model = null)
     {
-        BuiltEngine? owned = AcquireEngine(model) ?? throw new NeuralEngineUnavailableException();
+        // A cold model build takes seconds: never on the caller's (UI) thread.
+        BuiltEngine? owned = await Task.Run(() => AcquireEngine(model)) ?? throw new NeuralEngineUnavailableException();
         BuiltEngine engine = owned;
 
         ActiveRead? read = null;
