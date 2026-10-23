@@ -106,7 +106,7 @@ this plan turns it into ordered, shippable vertical slices.
 | 86 | RTST scan reads with line geometry | built | #248 | | [86-rtst-scan-line-geometry.md](docs/plan/slices/86-rtst-scan-line-geometry.md) |
 | 87 | A scan in a script with no reader asks the page's language and downloads it | built | #253 | | [87-scan-downloads-the-page-language-pack.md](docs/plan/slices/87-scan-downloads-the-page-language-pack.md) |
 | 88 | The Windows desktop layout never mirrors; only text flows by its own direction | built | #254 | | [88-desktop-no-layout-mirroring.md](docs/plan/slices/88-desktop-no-layout-mirroring.md) |
-| 89 | Four Farsi voices in one pack (ganji_adabi by default), Amir dropped | planned | | | [89-four-farsi-voices.md](docs/plan/slices/89-four-farsi-voices.md) |
+| 89 | Four Farsi voices in one pack (ganji_adabi by default), Amir dropped | built | #262 | | [89-four-farsi-voices.md](docs/plan/slices/89-four-farsi-voices.md) |
 | 90 | Untranslated text is read in its own language | built | #258 | | [90-untranslated-text-reads-in-its-own-language.md](docs/plan/slices/90-untranslated-text-reads-in-its-own-language.md) |
 | 91 | Dino stories as packages, three starter stories, developer export | built | #263 | | [91-dino-story-packages-and-starters.md](docs/plan/slices/91-dino-story-packages-and-starters.md) |
 | 92 | A free, curated Dino story store behind the grown-up gate | built | #266 | | [92-dino-story-store.md](docs/plan/slices/92-dino-story-store.md) |
@@ -186,6 +186,7 @@ Built but not verified (details in each slice file):
 - Slice 91: re-importing a `.dino` on a device (unit round-trip tests cover it) ([slice](docs/plan/slices/91-dino-story-packages-and-starters.md)).
 - Slice 92: "Try again" after going offline and the gallery refresh on `StoreClient.LibraryChanged`, on a device; the production `/api/stories*` routes after deploy; the store is empty until curated stories are put in `dinoreader/stories/` in the bucket ([slice](docs/plan/slices/92-dino-story-store.md)).
 - Slice 93: the language rebuild after first run (`DinoApp.RebuildRoot`) on a device; Windows backup save and restore; iOS; native-speaker review of the new strings in the 9 locales ([slice](docs/plan/slices/93-dino-backup-and-first-run.md)).
+- Slice 89: Windows desktop acceptance of the four voices not run (a stale `desktop-rtl` dev package blocks deploy); iOS on a device; Pixel timing of cold voice preparation (7-8 s on the emulator, 16 s on a cold mid-read swap); a saved Amir choice falling back to Ganji Adabi, on a device; the play button shows idle after Back while chunks still play. ([slice](docs/plan/slices/89-four-farsi-voices.md))
 
 ## Out of Scope
 
