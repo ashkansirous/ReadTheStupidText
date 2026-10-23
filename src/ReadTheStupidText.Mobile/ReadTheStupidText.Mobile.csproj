@@ -89,10 +89,9 @@
 		     project reference. -->
 
 		<!-- Slice 54: ML Kit Language Identification (bundled model, so detection works with no
-		     Play services) and Translation (a ~30 MB model per language downloaded by ML Kit on
-		     first use; see PRIVACY.md). Android-only: Dino Reader has no translation. -->
+		     Play services). ML Kit Translation (a ~30 MB model per language downloaded on first use;
+		     see PRIVACY.md) moved to Mobile.Shared with Dino Reader's translation (Slice 95). -->
 		<PackageReference Include="Xamarin.Google.MLKit.Language.Id" Version="117.0.6.9" />
-		<PackageReference Include="Xamarin.Google.MLKit.Translate" Version="117.0.3.9" />
 
 		<!-- The scanner and the text recognizer both pull Fragment.Ktx 1.8.8.1 while the MAUI
 		     graph resolves Fragment 1.9.0 (which already contains the ktx classes): D8 fails

@@ -1,0 +1,181 @@
+{
+  "cover": "cover.jpg",
+  "pages": [
+    {
+      "image": "1.jpg",
+      "lines": [
+        {
+          "text": "Carrot and Hazelnut are best friends.",
+          "x": 0.1685,
+          "y": 0.8117,
+          "w": 0.6819,
+          "h": 0.0233
+        },
+        {
+          "text": "Today is a very special day because",
+          "x": 0.1775,
+          "y": 0.8475,
+          "w": 0.6629,
+          "h": 0.03
+        },
+        {
+          "text": "they are going to watch a big",
+          "x": 0.24,
+          "y": 0.8842,
+          "w": 0.5379,
+          "h": 0.03
+        },
+        {
+          "text": "football match together!",
+          "x": 0.2846,
+          "y": 0.92,
+          "w": 0.4475,
+          "h": 0.03
+        }
+      ]
+    },
+    {
+      "image": "2.jpg",
+      "lines": [
+        {
+          "text": "They find their seats, but they",
+          "x": 0.221,
+          "y": 0.8492,
+          "w": 0.5725,
+          "h": 0.03
+        },
+        {
+          "text": "are way in the back and can't",
+          "x": 0.2266,
+          "y": 0.885,
+          "w": 0.5625,
+          "h": 0.03
+        },
+        {
+          "text": "see the ball well.",
+          "x": 0.3482,
+          "y": 0.9217,
+          "w": 0.3181,
+          "h": 0.0233
+        }
+      ]
+    },
+    {
+      "image": "3.jpg",
+      "lines": [
+        {
+          "text": "Carrot wishes they could see",
+          "x": 0.2277,
+          "y": 0.8492,
+          "w": 0.577,
+          "h": 0.03
+        },
+        {
+          "text": "better. Hazelnut suggests",
+          "x": 0.2623,
+          "y": 0.885,
+          "w": 0.5078,
+          "h": 0.03
+        },
+        {
+          "text": "moving down.",
+          "x": 0.3783,
+          "y": 0.9208,
+          "w": 0.2746,
+          "h": 0.03
+        }
+      ]
+    },
+    {
+      "image": "4.jpg",
+      "lines": [
+        {
+          "text": "They wiggle through tall legs",
+          "x": 0.229,
+          "y": 0.85,
+          "w": 0.541,
+          "h": 0.027
+        },
+        {
+          "text": "and move down a few rows.",
+          "x": 0.238,
+          "y": 0.882,
+          "w": 0.527,
+          "h": 0.028
+        }
+      ]
+    },
+    {
+      "image": "5.jpg",
+      "lines": [
+        {
+          "text": "Now they have a good view, but",
+          "x": 0.1953,
+          "y": 0.8492,
+          "w": 0.6183,
+          "h": 0.03
+        },
+        {
+          "text": "Carrot wants to get even closer.",
+          "x": 0.1908,
+          "y": 0.885,
+          "w": 0.6217,
+          "h": 0.0308
+        }
+      ]
+    },
+    {
+      "image": "6.jpg",
+      "lines": [
+        {
+          "text": "Since nobody stops them, they",
+          "x": 0.2165,
+          "y": 0.8483,
+          "w": 0.5748,
+          "h": 0.0308
+        },
+        {
+          "text": "keep sneaking closer and closer.",
+          "x": 0.202,
+          "y": 0.885,
+          "w": 0.6027,
+          "h": 0.0308
+        }
+      ]
+    },
+    {
+      "image": "7.jpg",
+      "lines": [
+        {
+          "text": "They reach the very front row with",
+          "x": 0.1897,
+          "y": 0.8492,
+          "w": 0.6239,
+          "h": 0.03
+        },
+        {
+          "text": "a great view, but Carrot keeps going.",
+          "x": 0.1652,
+          "y": 0.885,
+          "w": 0.6741,
+          "h": 0.0308
+        }
+      ]
+    },
+    {
+      "image": "8.jpg",
+      "lines": [],
+      "text": "Carrot runs right past the front row, all the way onto the grass!"
+    },
+    {
+      "image": "9.jpg",
+      "lines": [],
+      "text": "Oh no! They are in the middle of the field. The players all stop and stare."
+    },
+    {
+      "image": "10.jpg",
+      "lines": [],
+      "text": "The referee smiles and walks them back to Row C. \"The best seat,\" says Hazelnut, \"is the one where we can enjoy the game together.\""
+    }
+  ]
+}

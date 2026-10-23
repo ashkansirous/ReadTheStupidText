@@ -4,6 +4,7 @@ using ReadTheStupidText.Application.Images;
 using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Application.Translation;
 
 namespace ReadTheStupidText.Mobile;
 
@@ -13,6 +14,8 @@ public static partial class MobileSharedServices
 	{
 		services.AddSingleton<IPlatformServices, AndroidPlatformServices>();
 		RegisterScanAndOcr(services);
+		// Slice 95: ML Kit translation for both apps (a model is downloaded on first use; Windows and iOS register no engine).
+		services.AddSingleton<ITranslator, MlKitTranslator>();
 	}
 
 	// Slice 52 and 63: PaddleOCR from the language's OCR pack with ML Kit Latin as the fallback,

@@ -61,6 +61,7 @@ public static class StoryJson
         Merges = s.Merges.Count == 0 ? null : s.Merges.ToDictionary(m => m.Key, m => m.Value),
         Translate = s.TranslateToMyLanguage,
         SourceId = s.SourceId,
+        Translations = ToTranslationFiles(s.Translations),
     };
 
     private static Story FromFile(StoryFile f)
@@ -76,7 +77,7 @@ public static class StoryJson
             f.Pages.Select(p => ToPage(p)).ToList(),
             f.Cast.Select(c => new CastMember(c.CharacterId, c.Name, c.Gender, c.VoiceId, c.Edited)).ToList(),
             f.CoverStyle, f.CoverColourIndex, f.NarratorVoiceId, ParseMode(f.PreferredMode), CleanMerges(f.Merges), f.Translate,
-            f.CoverFile, f.CoverPageIndex, StoryIds.IsValid(f.SourceId) ? f.SourceId : null);
+            f.CoverFile, f.CoverPageIndex, StoryIds.IsValid(f.SourceId) ? f.SourceId : null, CleanTranslations(f.Translations));
     }
 
     private static StoryPage ToPage(PageFile p)
@@ -173,6 +174,42 @@ public static class StoryJson
         return known ? mode : null;
     }
 
+    private static Dictionary<string, Dictionary<string, string>>? ToTranslationFiles(IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>>? translations) =>
+        translations is null || translations.Count == 0
+            ? null
+            : translations.ToDictionary(t => t.Key, t => t.Value.ToDictionary(e => e.Key, e => e.Value));
+
+    // A language or entry with a null or empty side (a hand edit) is dropped; no table left reads as no translations.
+    private static IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>>? CleanTranslations(Dictionary<string, Dictionary<string, string>>? translations)
+    {
+        var kept = new Dictionary<string, Dictionary<string, string>>();
+        foreach (var (language, table) in translations ?? [])
+        {
+            Dictionary<string, string> entries = (table ?? []).Where(e => !string.IsNullOrEmpty(e.Key) && !string.IsNullOrEmpty(e.Value)).ToDictionary(e => e.Key, e => e.Value);
+            if (!string.IsNullOrWhiteSpace(language) && entries.Count > 0)
+            {
+                MergeInto(kept, BundledTranslations.Key(language), entries);
+            }
+        }
+
+        return kept.Count > 0 ? kept.ToDictionary(k => k.Key, k => (IReadOnlyDictionary<string, string>)k.Value) : null;
+    }
+
+    // Two files keys that name one language ("fa" and "fa-IR") become one table; the first entry for a piece wins.
+    private static void MergeInto(Dictionary<string, Dictionary<string, string>> kept, string key, Dictionary<string, string> entries)
+    {
+        if (!kept.TryGetValue(key, out var existing))
+        {
+            kept[key] = entries;
+            return;
+        }
+
+        foreach (var (piece, text) in entries)
+        {
+            existing.TryAdd(piece, text);
+        }
+    }
+
     // A merge entry with a null or empty side (a hand edit) is dropped rather than failing the whole story.
     private static Dictionary<string, string>? CleanMerges(Dictionary<string, string>? merges) =>
         merges?.Where(m => !string.IsNullOrEmpty(m.Key) && !string.IsNullOrEmpty(m.Value)).ToDictionary(m => m.Key, m => m.Value);
@@ -209,6 +246,7 @@ public static class StoryJson
         public Dictionary<string, string>? Merges { get; set; }
         public bool Translate { get; set; }
         public string? SourceId { get; set; }
+        public Dictionary<string, Dictionary<string, string>>? Translations { get; set; }
     }
 
     private sealed class PageFile

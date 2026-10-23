@@ -53,7 +53,8 @@ public sealed class StoryVoicing
 	public async Task<IReadOnlyList<VoicedSegment>> VoiceAsync(
 		Story story, string narratorVoiceId, int fromPosition = 0, CancellationToken cancellationToken = default, Action? translationSkipped = null)
 	{
-		Prepared prepared = await Task.Run(() => Prepare(story, narratorVoiceId, fromPosition), cancellationToken);
+		bool wholePieces = _translator.UsesBundledTable(story);
+		Prepared prepared = await Task.Run(() => Prepare(story, narratorVoiceId, fromPosition, wholePieces), cancellationToken);
 		if (!_translator.Applies(story))
 		{
 			return prepared.Pieces.Select(p => ToVoicedSegment(p, prepared.Cast, null)).ToList();
@@ -124,16 +125,15 @@ public sealed class StoryVoicing
 		return StoryCast.ToMembers(resolved.Characters, Cast(language, resolved, narratorVoiceId, stored), stored);
 	}
 
-	private Prepared Prepare(Story story, string narratorVoiceId, int fromPosition)
+	private Prepared Prepare(Story story, string narratorVoiceId, int fromPosition, bool wholePieces = false)
 	{
-		string text = story.Text;
-		Cache cache = Analyse(story.Language, text, story.BreakMap());
+		Cache cache = Analyse(story.Language, story.Text, story.BreakMap());
 		AttributionResult resolved = StoryCast.Resolve(cache.Attribution, story.Merges, story.Cast);
 		VoiceCast cast = Cast(story.Language, resolved, narratorVoiceId, story.Cast);
-		IReadOnlyList<Segment> segments = SegmentSlicer.From(resolved.Segments, text, fromPosition);
 
 		// One piece per sentence, so the reader raises a chunk per sentence and the highlight steps with it.
-		return new Prepared(cast, SegmentSentenceSplitter.Split(segments, text, cache.Sentences.Value));
+		// StoryPieces is shared with the starter builder, so a bundled translation is keyed by exactly these pieces (Slice 95).
+		return new Prepared(cast, StoryPieces.Split(story, resolved, cache.Sentences.Value, fromPosition, wholePieces));
 	}
 
 	private VoiceCast Cast(string language, AttributionResult attribution, string narratorVoiceId, IReadOnlyList<CastMember> stored) =>

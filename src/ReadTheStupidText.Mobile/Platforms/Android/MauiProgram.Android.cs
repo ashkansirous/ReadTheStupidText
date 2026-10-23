@@ -10,6 +10,5 @@ public static partial class MauiProgram
         // The scanner and the OCR engines are registered by Mobile.Shared (Slice 63).
         services.AddSingleton<OcrPackInstaller>();
         services.AddSingleton<ILanguageDetector, MlKitLanguageDetector>();
-        services.AddSingleton<ITranslator, MlKitTranslator>();
     }
 }
