@@ -27,25 +27,36 @@ public enum PackInstallState
 /// </summary>
 public sealed class VoicePackInstaller
 {
+    private static readonly TimeSpan UpdateCatalogTimeout = TimeSpan.FromSeconds(15);
+
     private readonly IVoicePackService _packs;
     private readonly IVoiceModelService _model;
     private readonly ISpeechReader _reader;
     private readonly ISettingsStore _settings;
     private readonly IPlatformServices _platform;
+    private readonly IPackUpdateNetwork _network;
     private readonly object _gate = new();
+    private CancellationTokenSource? _updateCancel;
+    private bool _freshInstall; // the last run downloaded its pack, so the update check would only refetch the catalog
+
+    // One pack update at a time: a newer update waits for the one it cancelled to unwind, so two never
+    // touch the same scratch or target folder.
+    private readonly SemaphoreSlim _updateGate = new(1, 1);
+    private string? _failedUpdateKey;
     private bool _running;
     private string _runLanguage = SupertonicVoiceTable.EnglishCode;
     private CancellationTokenSource? _runCancel;
     private int _generation;
     private TaskCompletionSource _settled = new();
 
-    public VoicePackInstaller(IVoicePackService packs, IVoiceModelService model, ISpeechReader reader, ISettingsStore settings, IPlatformServices platform, ILanguageChangeNotifier languages)
+    public VoicePackInstaller(IVoicePackService packs, IVoiceModelService model, ISpeechReader reader, ISettingsStore settings, IPlatformServices platform, IPackUpdateNetwork network, ILanguageChangeNotifier languages)
     {
         _packs = packs;
         _model = model;
         _reader = reader;
         _settings = settings;
         _platform = platform;
+        _network = network;
         languages.LanguageChanged += (_, _) => OnLanguageChanged();
     }
 
@@ -144,6 +155,10 @@ public sealed class VoicePackInstaller
             {
                 Publish(generation, state);
             }
+            else if (!Volatile.Read(ref _freshInstall))
+            {
+                StartUpdateInBackground(generation); // a pack just downloaded is already the newest catalog entry
+            }
         }
         finally
         {
@@ -164,6 +179,7 @@ public sealed class VoicePackInstaller
     {
         while (true)
         {
+            CancelQuietly(Interlocked.Exchange(ref _updateCancel, null)); // a new run supersedes a pack update
             var cancel = new CancellationTokenSource();
             (Run run, string language) = BeginRun(cancel);
             PackInstallState? failure = await RunGuardedAsync(run);
@@ -237,6 +253,7 @@ public sealed class VoicePackInstaller
 
     private async Task<PackInstallState?> RunCoreAsync(Run run)
     {
+        Volatile.Write(ref _freshInstall, false);
         // A platform with no neural engine never fetches the catalog or the pack; the
         // phone voice reads, which the Unavailable state already says.
         if (!_platform.SupportsNeuralVoice)
@@ -266,13 +283,130 @@ public sealed class VoicePackInstaller
             return resolveFailure;
         }
 
-        PackInstallState? downloadFailure = await DownloadPackAsync(pack, run);
-        if (downloadFailure is null)
+        PackDownloadResult downloaded = await DownloadPackAsync(pack, run);
+        if (downloaded != PackDownloadResult.Ok)
         {
-            await ActivateInstalledAsync(run);
+            return ToState(downloaded);
         }
 
-        return downloadFailure;
+        Volatile.Write(ref _freshInstall, true);
+        await ActivateInstalledAsync(run);
+        return null;
+    }
+
+    // Slice 89: an installed pack the catalog lists in a newer version (Amir's pack becoming the
+    // four-voice one) is downloaded into a folder of its own, next to the old one, and activated again.
+    // It runs after the install run has ended, so a Retry or a language change never waits behind the
+    // catalog fetch or the download (a new run cancels it). Only on an unmetered connection: on cellular
+    // the installed pack stays Ready and the check happens again next launch. A first install is not an
+    // update and is never held back.
+    private void StartUpdateInBackground(int generation)
+    {
+        if (!_network.AllowsAutomaticUpdate || !_platform.SupportsNeuralVoice)
+        {
+            return;
+        }
+
+        _ = Task.Run(() => UpdateInstalledAsync(generation));
+    }
+
+    private async Task UpdateInstalledAsync(int generation)
+    {
+        var cancel = new CancellationTokenSource();
+        CancelQuietly(Interlocked.Exchange(ref _updateCancel, cancel));
+        var run = new Run(generation, cancel.Token);
+        bool holdsGate = false;
+        try
+        {
+            await _updateGate.WaitAsync(cancel.Token); // the update this one cancelled unwinds first
+            holdsGate = true;
+            await CheckAndApplyUpdateAsync(run);
+        }
+        catch (OperationCanceledException)
+        {
+            // A newer run took over; it publishes its own state.
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"VoicePackInstaller update check: {ex}");
+            if (!run.Token.IsCancellationRequested)
+            {
+                Publish(run.Generation, PackInstallState.Ready);
+            }
+        }
+        finally
+        {
+            if (holdsGate)
+            {
+                _updateGate.Release();
+            }
+
+            Interlocked.CompareExchange(ref _updateCancel, null, cancel);
+            cancel.Dispose();
+        }
+    }
+
+    private async Task CheckAndApplyUpdateAsync(Run run)
+    {
+        string language = CurrentLanguage;
+        if (InstalledVoiceCatalog.Resolve(_packs.GetInstalledVoicePacks(), language) is null)
+        {
+            return;
+        }
+
+        PackInfo? newer = await FindNewerPackAsync(run);
+        if (newer is not null && SameLanguage(language, CurrentLanguage) && !run.Token.IsCancellationRequested)
+        {
+            await DownloadAndActivateAsync(newer, run);
+        }
+    }
+
+    // The catalog fetch is bounded, so a slow network cannot hold the run (and a Retry behind it).
+    private async Task<PackInfo?> FindNewerPackAsync(Run run)
+    {
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(run.Token);
+        timeout.CancelAfter(UpdateCatalogTimeout);
+        try
+        {
+            PackCatalogResult catalog = await _packs.GetCatalogAsync(timeout.Token);
+            return catalog.Status == PackDownloadResult.Ok ? NewerThanInstalled(catalog.Packs) : null;
+        }
+        catch (OperationCanceledException) when (!run.Token.IsCancellationRequested)
+        {
+            return null;
+        }
+    }
+
+    // Only a download that was fetched and rejected (a bad hash, a broken zip) is remembered; being offline
+    // or a transient failure is retried at the next check.
+    private async Task DownloadAndActivateAsync(PackInfo pack, Run run)
+    {
+        string key = PackUpdateKey.For(pack);
+        if (key == Volatile.Read(ref _failedUpdateKey))
+        {
+            return; // this exact version was rejected: not again until the app restarts
+        }
+
+        PackDownloadResult result = await DownloadPackAsync(pack, run);
+        if (result == PackDownloadResult.Ok)
+        {
+            await ActivateInstalledAsync(run);
+            return;
+        }
+
+        if (PackUpdateKey.IsPermanentFailure(result) && !run.Token.IsCancellationRequested)
+        {
+            Volatile.Write(ref _failedUpdateKey, key);
+        }
+
+        Publish(run.Generation, PackInstallState.Ready);
+    }
+
+    private PackInfo? NewerThanInstalled(IReadOnlyList<PackInfo> catalog)
+    {
+        InstalledVoicePack? installed = PackSelection.Serving(_packs.GetInstalledVoicePacks(), PackKind.Voice, CurrentLanguage).FirstOrDefault();
+        PackInfo? listed = installed is null ? null : catalog.FirstOrDefault(p => p.Id == installed.Manifest.Id);
+        return listed is not null && PackVersions.IsNewer(listed.Version, installed!.Manifest.Version) ? listed : null;
     }
 
     private async Task<(PackInfo? Pack, PackInstallState? Failure)> ResolvePackAsync(string language, CancellationToken cancellationToken)
@@ -287,12 +421,11 @@ public sealed class VoicePackInstaller
         return pack is null ? (null, PackInstallState.Unavailable) : (pack, null);
     }
 
-    private async Task<PackInstallState?> DownloadPackAsync(PackInfo pack, Run run)
+    private async Task<PackDownloadResult> DownloadPackAsync(PackInfo pack, Run run)
     {
         Publish(run.Generation, PackInstallState.Downloading, 0);
         var progress = new InlineProgress(value => PublishProgress(run, value));
-        PackDownloadResult result = await _packs.DownloadAsync(pack.Id, progress, run.Token);
-        return result == PackDownloadResult.Ok ? null : ToState(result);
+        return await _packs.DownloadAsync(pack.Id, progress, run.Token);
     }
 
     private async Task ActivateInstalledAsync(Run run)

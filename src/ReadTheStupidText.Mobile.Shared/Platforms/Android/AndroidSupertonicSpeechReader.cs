@@ -81,13 +81,12 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     private readonly SemaphoreSlim _slots = new(MaxSynthesisConcurrency);
 
     private readonly object _gate = new();
-    private readonly object _ttsGate = new();
 
-    // The engine plus the model it was built from, swapped as one object under _ttsGate
-    // (Slice 51: engine kind, language, voices). Each read captures one BuiltEngine and uses
+    // The built engines (at most two, keyed by model folder and pack version), each with the model it was
+    // built from (Slice 51: engine kind, language, voices). Each read captures one BuiltEngine and uses
     // its Model for everything, so a language or pack change mid-read can't mix models.
-    private BuiltEngine? _engine;
-    private bool _disposed;
+    private readonly EngineCache<BuiltEngine> _engines = new(CreateEngine);
+    private string? _failedModelKey;
     private string? _voiceId;
     private readonly ConcurrentDictionary<VoiceEngineKind, string> _voiceByKind = new();
     private int _warmedUp;
@@ -196,7 +195,8 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
 
     private async Task StartReadAsync(IReadOnlyList<SpeechChunkPlan> chunks, VoiceModelPaths? model = null)
     {
-        BuiltEngine engine = AcquireEngine(model) ?? throw new NeuralEngineUnavailableException();
+        BuiltEngine? owned = AcquireEngine(model) ?? throw new NeuralEngineUnavailableException();
+        BuiltEngine engine = owned;
 
         ActiveRead? read = null;
         try
@@ -210,6 +210,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
             _timing.Start(chunks.Count);
             RaiseTiming(TimeSpan.Zero);
 
+            owned = null; // the playback loop owns the reference from here and gives it back when it moves on
             await SpeakChunksAsync(engine, chunks, 0, Volatile.Read(ref _voiceId), generation, token);
         }
         finally
@@ -219,7 +220,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
                 LeaveRead(read);
             }
 
-            engine.Release();
+            owned?.Release();
         }
     }
 
@@ -280,20 +281,22 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
 
         try
         {
-            await SkipOnEngineAsync(engine, delta);
+            await SkipOnEngineAsync(engine, delta); // takes over the reference taken here
         }
         finally
         {
-            engine.Release();
             LeaveRead(read);
         }
     }
 
+    // Owns the engine reference it is given: the playback loop gives it back, and so does a skip with
+    // nowhere to go.
     private async Task SkipOnEngineAsync(BuiltEngine engine, TimeSpan delta)
     {
         TimeSpan elapsed = _timing.CurrentTiming(CurrentChunkPosition()).Elapsed;
         if (_timing.ComputeSkipTarget(elapsed, delta) is not { } target)
         {
+            engine.Release();
             return;
         }
 
@@ -308,28 +311,39 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
 
     // Same ordered-consume design as the Windows reader — see that file for the
     // full rationale. Speaker is a parameter (not the mutable field) so a
-    // mid-read voice change can't half-apply to already-queued chunks.
+    // mid-read voice change can't half-apply to already-queued chunks. Owns the engine
+    // reference it is given and gives it back as soon as a voice change moves the read to
+    // another model, so a long read that toggles voices keeps at most two models resident.
     private async Task SpeakChunksAsync(
         BuiltEngine engine, IReadOnlyList<SpeechChunkPlan> chunks, int startIndex, string? voiceId, int generation,
         CancellationToken token)
     {
-        _chunkCount = chunks.Count;
-        _currentChunkIndex = startIndex;
-        ProgressChanged?.Invoke(this, chunks.Count == 0 ? 0 : (double)startIndex / chunks.Count);
-
-        List<Task<string>> generations = StartGenerations(engine, chunks, startIndex, voiceId, token);
-        for (int offset = 0; offset < generations.Count; offset++)
+        try
         {
-            int index = startIndex + offset;
-            if (!await PlayGeneratedChunkAsync(generations[offset], chunks, index, generation, token))
+            while (true)
             {
-                return;
-            }
+                _chunkCount = chunks.Count;
+                _currentChunkIndex = startIndex;
+                ProgressChanged?.Invoke(this, chunks.Count == 0 ? 0 : (double)startIndex / chunks.Count);
 
-            if (await RestartForVoiceSwapAsync(engine, chunks, index, voiceId))
-            {
-                return;
+                List<Task<string>> generations = StartGenerations(engine, chunks, startIndex, voiceId, token);
+                (bool played, VoiceSwap? swap) = await PlayRunAsync(generations, engine, chunks, startIndex, voiceId, generation, token);
+                if (swap is null)
+                {
+                    if (!played)
+                    {
+                        return;
+                    }
+
+                    break;
+                }
+
+                (engine, startIndex, voiceId, generation, token) = TakeOver(engine, swap);
             }
+        }
+        finally
+        {
+            engine.Release();
         }
 
         if (IsCurrent(generation))
@@ -337,6 +351,45 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
             FinishNaturalEnd();
             Completed?.Invoke(this, EventArgs.Empty);
         }
+    }
+
+    private static (BuiltEngine Engine, int StartIndex, string? Voice, int Generation, CancellationToken Token) TakeOver(
+        BuiltEngine current, VoiceSwap swap)
+    {
+        if (!ReferenceEquals(current, swap.Engine))
+        {
+            current.Release();
+        }
+
+        return (swap.Engine, swap.NextIndex, swap.Voice, swap.Generation, swap.Token);
+    }
+
+    // A voice change the read goes on in: the engine for the new voice (the run's own when the model is the
+    // same), the chunk to resume at and the generation that replaces the old one.
+    private sealed record VoiceSwap(BuiltEngine Engine, int NextIndex, string? Voice, int Generation, CancellationToken Token);
+
+    // Plays the generated chunks in order. Played is false when the read stopped or was superseded; the swap
+    // is set when the voice changed and the read goes on in it (the loop above restarts it); otherwise every
+    // chunk played.
+    private async Task<(bool Played, VoiceSwap? Swap)> PlayRunAsync(
+        List<Task<string>> generations, BuiltEngine engine, IReadOnlyList<SpeechChunkPlan> chunks, int startIndex,
+        string? voiceId, int generation, CancellationToken token)
+    {
+        for (int offset = 0; offset < generations.Count; offset++)
+        {
+            int index = startIndex + offset;
+            if (!await PlayGeneratedChunkAsync(generations[offset], chunks, index, generation, token))
+            {
+                return (false, null);
+            }
+
+            if (await RestartForVoiceSwapAsync(engine, chunks, index, voiceId, generation) is { } swap)
+            {
+                return (false, swap);
+            }
+        }
+
+        return (true, null);
     }
 
     // A read that ends by itself leaves the same state Stop() does: the poll loop is stopped
@@ -363,15 +416,65 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         Task<string>? firstChunk = null;
         for (int index = startIndex; index < chunks.Count; index++)
         {
-            VoiceInfo voice = ResolveVoice(engine, chunks[index].VoiceId, voiceId);
-            Task<string> chunkTask = index == startIndex
-                ? GenerateChunkAsync(engine, chunks[index].Text, index, voice, slots, token)
-                : GenerateAfterAsync(firstChunk!, engine, chunks[index].Text, index, voice, slots, token);
+            Task<string> chunkTask = GenerateOnVoiceEngineAsync(
+                firstChunk, engine, chunks[index], index, voiceId, slots, token);
             firstChunk ??= chunkTask;
             generations.Add(chunkTask);
         }
 
         return generations;
+    }
+
+    // A chunk whose voice lives in another model folder of the pack (a cast of pack voices, Slice 89)
+    // is built on that folder's engine, loaded off the caller's thread and under no gate: a model load
+    // takes seconds and must not hold up the first chunk. The chunk holds a reference on it while it
+    // synthesizes. If that model cannot load, the chunk falls back to the run's engine.
+    private async Task<string> GenerateOnVoiceEngineAsync(
+        Task<string>? gate, BuiltEngine engine, SpeechChunkPlan chunk, int index, string? voiceId,
+        SemaphoreSlim slots, CancellationToken token)
+    {
+        if (gate is not null)
+        {
+            try
+            {
+                await gate;
+            }
+            catch
+            {
+                // Swallowed: the first chunk's real outcome surfaces on its own await.
+            }
+        }
+
+        BuiltEngine? extra = await LoadExtraEngineAsync(engine, chunk, voiceId);
+        try
+        {
+            BuiltEngine chunkEngine = extra ?? engine;
+            VoiceInfo voice = ResolveVoice(chunkEngine, chunk.VoiceId, voiceId);
+            return await GenerateChunkAsync(chunkEngine, chunk.Text, index, voice, slots, token);
+        }
+        finally
+        {
+            extra?.Release();
+        }
+    }
+
+    // The engine of another model folder the chunk's voice needs, with a reference for the caller; null
+    // when the run's own serves it, or (with a warning) when that model cannot load.
+    private async Task<BuiltEngine?> LoadExtraEngineAsync(BuiltEngine engine, SpeechChunkPlan chunk, string? voiceId)
+    {
+        VoiceInfo wanted = PickVoice(engine.Model, chunk.VoiceId, voiceId);
+        if (wanted.ModelDir == engine.Model.ModelDir)
+        {
+            return null;
+        }
+
+        BuiltEngine? built = await Task.Run(() => TryAcquireForVoice(engine.Model, wanted.Id));
+        if (built is null)
+        {
+            _log.Warning($"voice {wanted.Id} could not be loaded; its lines use the read's voice");
+        }
+
+        return built;
     }
 
     // Waits for one chunk's audio and plays it. False when the read was cancelled,
@@ -411,31 +514,94 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     // A chunk with its own voice (a segment read) never follows the narrator picker; a plain
     // read restarts at the next chunk when the selected voice changed mid-read. Voices are
     // compared by id within the read's own model, so a language or pack change never
-    // restarts a read. True when it restarted (the restarted loop finishes the read, so the
-    // caller returns).
-    private async Task<bool> RestartForVoiceSwapAsync(
-        BuiltEngine engine, IReadOnlyList<SpeechChunkPlan> chunks, int index, string? voiceId)
+    // restarts a read. Returns the swap the playback loop goes on with, or null when the read
+    // carries on as it was.
+    private async Task<VoiceSwap?> RestartForVoiceSwapAsync(
+        BuiltEngine engine, IReadOnlyList<SpeechChunkPlan> chunks, int index, string? voiceId, int generation)
     {
         string? selected = Volatile.Read(ref _voiceId);
-        bool sameVoice = ResolveVoice(engine, selected).Id == ResolveVoice(engine, voiceId).Id;
+        VoiceInfo target = PickVoice(engine.Model, selected);
+        bool sameVoice = target.Id == PickVoice(engine.Model, voiceId).Id;
         if (sameVoice || index + 1 >= chunks.Count || chunks[index + 1].VoiceId is not null)
         {
-            return false;
+            return null;
+        }
+
+        // A voice with its own model folder needs its own engine (Slice 89), loaded off the playback loop
+        // (this runs on the main thread) and under no gate. The engine this read came in on is given back
+        // by the loop once the new one is in place (generations still running hold their own reference).
+        // If the new model cannot load, the read goes on in the current voice.
+        BuiltEngine next = engine;
+        if (target.ModelDir != engine.Model.ModelDir)
+        {
+            next = await Task.Run(() => TryAcquireForVoice(engine.Model, selected)) ?? engine;
+        }
+
+        if (!IsCurrent(generation))
+        {
+            ReleaseUnlessSame(next, engine); // stopped or superseded while the model loaded
+            return null;
         }
 
         (int nextGeneration, CancellationToken nextToken) = BeginGeneration();
-        await SpeakChunksAsync(engine, chunks, index + 1, selected, nextGeneration, nextToken);
-        return true;
+        ReplaceActiveEngine(engine, next);
+        return new VoiceSwap(next, index + 1, selected, nextGeneration, nextToken);
+    }
+
+    private static void ReleaseUnlessSame(BuiltEngine next, BuiltEngine engine)
+    {
+        if (!ReferenceEquals(next, engine))
+        {
+            next.Release();
+        }
+    }
+
+    // Built from the read's own model (Slice 90 reads name their pack), not the app-language one.
+    private BuiltEngine? TryAcquireForVoice(VoiceModelPaths model, string? voiceId)
+    {
+        try
+        {
+            return AcquireEngine(model, voiceId);
+        }
+        catch (NeuralEngineUnavailableException)
+        {
+            return null;
+        }
+    }
+
+    // Skip must continue on the engine the read now speaks with.
+    private void ReplaceActiveEngine(BuiltEngine from, BuiltEngine? to)
+    {
+        lock (_gate)
+        {
+            if (to is not null && _activeRead is { } read && ReferenceEquals(read.Engine, from))
+            {
+                read.Engine = to;
+            }
+        }
     }
 
     // The first of the given ids the read's model offers (a chunk's own voice, then the
     // selected one), then the voice last picked for this engine family, then the model's
     // default: a Piper pick for another language never displaces the Supertonic choice.
+    // A voice whose model folder differs from the engine's cannot speak on it (Slice 89), so it gives
+    // way to the engine's own first voice; a mid-read voice change gets its own engine instead.
     private VoiceInfo ResolveVoice(BuiltEngine engine, params string?[] ids)
     {
-        _voiceByKind.TryGetValue(engine.Model.Kind, out string? remembered);
+        VoiceInfo picked = PickVoice(engine.Model, ids);
+        if (picked.ModelDir == engine.Model.ModelDir)
+        {
+            return picked;
+        }
+
+        return engine.Model.AvailableVoices.FirstOrDefault(v => v.ModelDir == engine.Model.ModelDir) ?? picked;
+    }
+
+    private VoiceInfo PickVoice(VoiceModelPaths model, params string?[] ids)
+    {
+        _voiceByKind.TryGetValue(model.Kind, out string? remembered);
         string?[] candidates = [.. ids, Volatile.Read(ref _voiceId), remembered];
-        return VoiceChoices.Resolve(engine.Model, candidates);
+        return VoiceChoices.Resolve(model, candidates);
     }
 
     public Task WarmUpAsync() => Task.Run(WarmUp);
@@ -465,22 +631,6 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         {
             // Best-effort: AcquireEngine() in SpeakAsync remains the safety net.
         }
-    }
-
-    private async Task<string> GenerateAfterAsync(
-        Task gate, BuiltEngine engine, string chunk, int index, VoiceInfo voice, SemaphoreSlim slots,
-        CancellationToken token)
-    {
-        try
-        {
-            await gate;
-        }
-        catch
-        {
-            // Swallowed: the first chunk's real outcome surfaces on its own await.
-        }
-
-        return await GenerateChunkAsync(engine, chunk, index, voice, slots, token);
     }
 
     // A chunk is joined from its sentences' audio, each fetched from the cache or synthesized
@@ -733,58 +883,57 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     private static int KeepGenerating(IntPtr samples, int count, float progress, IntPtr arg) => 1;
 
     // Returns the engine for the language's current model with a reference taken for the
-    // caller, who must Release() it. A different pack or engine kind rebuilds the OfflineTts;
-    // the same pack under another language reuses it with the new model. The superseded
-    // OfflineTts is disposed once the last read or generation holding it lets go.
-    private BuiltEngine? AcquireEngine(VoiceModelPaths? model = null)
+    // caller, who must Release() it. A different pack folder, version or engine kind is another
+    // engine (a pack update is a new folder, so it is picked up here); the same folder under
+    // another language reuses the model. An engine nobody asks for any more is disposed once the
+    // last read or generation holding it lets go.
+    private BuiltEngine? AcquireEngine(VoiceModelPaths? model = null, string? voiceId = null)
     {
-        if ((model ?? _model.Paths) is not { } paths)
+        if ((model ?? _model.Paths) is not { } current)
         {
             return null;
         }
 
-        lock (_ttsGate)
+        // Aimed at the voice that will speak: voices of one pack can each have their own model folder.
+        VoiceModelPaths paths = current.ForVoice(PickVoice(current, voiceId));
+        if (ModelKey(paths) == Volatile.Read(ref _failedModelKey))
         {
-            if (_disposed)
-            {
-                return null;
-            }
+            // This exact model already failed to load: don't retry the multi-hundred-MB build on every
+            // chunk or read. A different pack folder, engine or version clears the block.
+            throw new NeuralEngineUnavailableException();
+        }
 
-            if (_engine is null || _engine.Model != paths)
-            {
-                _engine = SwapEngine(_engine, paths);
-            }
-
-            return TryAcquireCurrent(paths);
+        try
+        {
+            return AcquireEngineCore(paths);
+        }
+        catch (Exception ex) when (ex is not NeuralEngineUnavailableException)
+        {
+            Volatile.Write(ref _failedModelKey, ModelKey(paths));
+            _log.Warning("the neural engine could not be built", error: ex);
+            RefreshModelInBackground();
+            throw new NeuralEngineUnavailableException(ex);
         }
     }
 
-    // Takes the caller's reference on the current engine. A refused reference means the
-    // engine was already disposed, so it is rebuilt once from scratch; if that is refused too
-    // the read is not ready. A disposed engine is never handed out and a reference that was
-    // not acquired is never released. Called under _ttsGate.
-    private BuiltEngine? TryAcquireCurrent(VoiceModelPaths paths)
-    {
-        if (_engine!.TryAcquire())
-        {
-            return _engine;
-        }
+    private static string ModelKey(VoiceModelPaths paths) => $"{paths.RootDir}|{paths.Kind}|{paths.PackVersion}|{paths.ModelDir}";
 
-        _engine = SwapEngine(null, paths);
-        return _engine.TryAcquire() ? _engine : null;
-    }
+    // A pack that is "ready" but cannot be loaded: the model re-checks the installed packs.
+    private void RefreshModelInBackground() =>
+        _ = _model.InitializeAsync().ContinueWith(
+            t => _log.Warning("voice model refresh failed", error: t.Exception),
+            CancellationToken.None,
+            TaskContinuationOptions.OnlyOnFaulted,
+            TaskScheduler.Default);
 
-    private static BuiltEngine SwapEngine(BuiltEngine? current, VoiceModelPaths paths)
-    {
-        if (current is { Tts.IsAlive: true } && current.Model.RootDir == paths.RootDir && current.Model.Kind == paths.Kind)
-        {
-            return new BuiltEngine(current.Tts, paths);
-        }
+    private BuiltEngine? AcquireEngineCore(VoiceModelPaths paths) => _engines.Acquire(paths);
 
-        var fresh = new BuiltEngine(new RefCountedTts(BuildTts(paths)), paths);
-        current?.Release();
-        return fresh;
-    }
+    // The engine for a model folder: the live one of the same folder and pack version re-labelled for the
+    // new language (it shares the loaded model), else a freshly built one.
+    private static BuiltEngine CreateEngine(BuiltEngine? previous, VoiceModelPaths paths) =>
+        previous is not null && previous.Tts.TryAcquire()
+            ? new BuiltEngine(previous.Tts, paths)
+            : new BuiltEngine(new RefCountedTts(BuildTts(paths)), paths);
 
     private static OfflineTts BuildTts(VoiceModelPaths paths)
     {
@@ -795,7 +944,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
                 ConfigureSupertonic(ref config, paths.RootDir);
                 break;
             case VoiceEngineKind.Vits:
-                ConfigureVits(ref config, paths.RootDir);
+                ConfigureVits(ref config, paths);
                 break;
             case VoiceEngineKind.Melo:
                 ConfigureMelo(ref config, paths.RootDir);
@@ -852,11 +1001,13 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     }
 
     // Piper: the espeak-ng data directory phonemizes the text (it lives only in the pack).
-    private static void ConfigureVits(ref OfflineTtsConfig config, string dir)
+    // The voice's own model + tokens may sit in a folder of the pack (Slice 89); the data directory
+    // is shared and stays at the pack root.
+    private static void ConfigureVits(ref OfflineTtsConfig config, VoiceModelPaths paths)
     {
-        config.Model.Vits.Model = Path.Combine(dir, VitsFiles.Model);
-        config.Model.Vits.Tokens = Path.Combine(dir, VitsFiles.Tokens);
-        config.Model.Vits.DataDir = Path.Combine(dir, VitsFiles.EspeakDataDir);
+        config.Model.Vits.Model = Path.Combine(paths.ModelFolder, VitsFiles.Model);
+        config.Model.Vits.Tokens = Path.Combine(paths.ModelFolder, VitsFiles.Tokens);
+        config.Model.Vits.DataDir = Path.Combine(paths.RootDir, VitsFiles.EspeakDataDir);
     }
 
     // MeloTTS zh_en: lexicon + jieba dictionary, with the phone/date/number rule FSTs the
@@ -896,13 +1047,14 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     // chunks and indexing the cache never block the UI thread that asked.
     private async Task PrepareOffCallerAsync(string text, VoiceModelPaths? model, CancellationToken token)
     {
-        if (token.IsCancellationRequested || AcquireEngine(model) is not { } engine)
-        {
-            return;
-        }
-
+        BuiltEngine? engine = null;
         try
         {
+            if (token.IsCancellationRequested || (engine = AcquireEngine(model)) is null)
+            {
+                return;
+            }
+
             token.ThrowIfCancellationRequested();
             await PrepareChunksAsync(engine, text, token);
         }
@@ -916,7 +1068,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         }
         finally
         {
-            engine.Release();
+            engine?.Release();
         }
     }
 
@@ -1129,12 +1281,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         _playerReady = false;
         DeletePreviousChunkFile();
         DeleteCurrentChunkFile();
-        lock (_ttsGate)
-        {
-            _disposed = true;
-            _engine?.Release();
-            _engine = null;
-        }
+        _engines.Dispose();
     }
 
     /// <summary>An <see cref="OfflineTts"/> disposed when its last holder releases it. The
@@ -1175,11 +1322,23 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
 
     /// <summary>The read in progress: its engine and who still owns it (the original read and
     /// any Skip that continued its playback).</summary>
-    private sealed record ActiveRead(BuiltEngine Engine, ReadOwnership Owners);
+    private sealed class ActiveRead(BuiltEngine engine, ReadOwnership owners)
+    {
+        private BuiltEngine _engine = engine;
+
+        public ReadOwnership Owners { get; } = owners;
+
+        /// <summary>The engine the read speaks with; replaced when a mid-read voice change needs another model.</summary>
+        public BuiltEngine Engine
+        {
+            get => Volatile.Read(ref _engine);
+            set => Volatile.Write(ref _engine, value);
+        }
+    }
 
     /// <summary>An engine and the model it was built from, never changed after creation.
     /// A language change within one pack shares the <see cref="RefCountedTts"/>.</summary>
-    private sealed record BuiltEngine(RefCountedTts Tts, VoiceModelPaths Model)
+    private sealed record BuiltEngine(RefCountedTts Tts, VoiceModelPaths Model) : IEngineHandle
     {
         public bool TryAcquire() => Tts.TryAcquire();
 

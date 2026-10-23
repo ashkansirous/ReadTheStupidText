@@ -16,7 +16,7 @@ public class VoicePackSetupTests
         new("/packs/supertonic-3", new PackManifest(PackConstants.SupertonicPackId, PackKind.Voice, "en", "1", "sherpa-onnx", [], VoiceEngineKind.Supertonic));
 
     [Fact]
-    public async Task An_installed_pack_is_activated_without_touching_the_network()
+    public async Task An_installed_pack_is_activated_without_downloading_anything()
     {
         var packs = new FakePacks { Installed = [InstalledEnglish()] };
         var model = new FakeModel();
@@ -25,8 +25,124 @@ public class VoicePackSetupTests
         await setup.StartAsync();
 
         Assert.Equal(PackSetupState.Ready, setup.State);
-        Assert.Equal(0, packs.CatalogCalls);
+        Assert.Equal(0, packs.DownloadCalls);
         Assert.Equal(1, model.Initialized);
+    }
+
+    [Fact]
+    public async Task An_installed_pack_older_than_the_catalogs_is_downloaded_again_on_windows()
+    {
+        var oldFarsi = new InstalledVoicePack("/packs/piper-fa", new PackManifest("piper-fa", PackKind.Voice, "fa", "1", "sherpa-onnx", [], VoiceEngineKind.Vits, [new PackVoice("piper:fa-amir", "Amir", 0)]));
+        var packs = new FakePacks { Installed = [oldFarsi], Catalog = new PackCatalogResult(PackDownloadResult.Ok, [FarsiPack with { Version = "2" }]) };
+        var model = new FakeModel();
+        var setup = new VoicePackSetup(packs, model, new FakeSettings { Language = "fa" });
+
+        await setup.StartAsync();
+        await setup.UpdateCompleted;
+
+        Assert.Equal("piper-fa", packs.Downloaded);
+        Assert.Equal(2, model.Initialized); // the installed pack, then the updated one
+        Assert.Equal(PackSetupState.Ready, setup.State);
+    }
+
+    [Fact]
+    public async Task A_failed_update_download_is_not_tried_again_for_the_same_version()
+    {
+        var oldFarsi = new InstalledVoicePack("/packs/piper-fa", new PackManifest("piper-fa", PackKind.Voice, "fa", "1", "sherpa-onnx", [], VoiceEngineKind.Vits, [new PackVoice("piper:fa-amir", "Amir", 0)]));
+        var packs = new FakePacks { Installed = [oldFarsi], Catalog = new PackCatalogResult(PackDownloadResult.Ok, [FarsiPack with { Version = "2" }]), DownloadResult = PackDownloadResult.HashMismatch };
+        var setup = new VoicePackSetup(packs, new FakeModel(), new FakeSettings { Language = "fa" });
+
+        await setup.StartAsync();
+        await setup.UpdateCompleted;
+        await setup.StartAsync();
+        await setup.UpdateCompleted;
+
+        Assert.Equal(1, packs.DownloadCalls);
+        Assert.Equal(PackSetupState.Ready, setup.State);
+    }
+
+    [Fact]
+    public async Task An_offline_update_download_leaves_the_installed_pack_ready_and_is_tried_again_next_time()
+    {
+        var oldFarsi = new InstalledVoicePack("/packs/piper-fa", new PackManifest("piper-fa", PackKind.Voice, "fa", "1", "sherpa-onnx", [], VoiceEngineKind.Vits, [new PackVoice("piper:fa-amir", "Amir", 0)]));
+        var packs = new FakePacks { Installed = [oldFarsi], Catalog = new PackCatalogResult(PackDownloadResult.Ok, [FarsiPack with { Version = "2" }]), DownloadResult = PackDownloadResult.Offline };
+        var setup = new VoicePackSetup(packs, new FakeModel(), new FakeSettings { Language = "fa" });
+
+        await setup.StartAsync();
+        await setup.UpdateCompleted;
+        Assert.Equal(PackSetupState.Ready, setup.State);
+
+        await setup.StartAsync();
+        await setup.UpdateCompleted;
+        Assert.Equal(2, packs.DownloadCalls); // not remembered as failed: a network blip does not block the version
+    }
+
+    [Fact]
+    public async Task The_update_runs_in_the_background_so_start_returns_while_it_downloads()
+    {
+        var oldFarsi = new InstalledVoicePack("/packs/piper-fa", new PackManifest("piper-fa", PackKind.Voice, "fa", "1", "sherpa-onnx", [], VoiceEngineKind.Vits, [new PackVoice("piper:fa-amir", "Amir", 0)]));
+        var packs = new FakePacks { Installed = [oldFarsi], Catalog = new PackCatalogResult(PackDownloadResult.Ok, [FarsiPack with { Version = "2" }]) };
+        Task<bool> cancelled = packs.BlockFirstDownload();
+        var setup = new VoicePackSetup(packs, new FakeModel(), new FakeSettings { Language = "fa" });
+
+        await setup.StartAsync();
+        await packs.FirstDownloadStarted;
+
+        Assert.False(setup.UpdateCompleted.IsCompleted); // the update is still downloading; StartAsync did not wait for it
+        packs.ReleaseFirstDownload();
+        await setup.UpdateCompleted;
+        Assert.Equal(PackSetupState.Ready, setup.State);
+        Assert.False(cancelled.IsCompleted); // it ended because it was released, not because it was cancelled
+    }
+
+    [Fact]
+    public async Task A_second_start_during_an_update_does_not_start_a_second_download()
+    {
+        var oldFarsi = new InstalledVoicePack("/packs/piper-fa", new PackManifest("piper-fa", PackKind.Voice, "fa", "1", "sherpa-onnx", [], VoiceEngineKind.Vits, [new PackVoice("piper:fa-amir", "Amir", 0)]));
+        var packs = new FakePacks { Installed = [oldFarsi], Catalog = new PackCatalogResult(PackDownloadResult.Ok, [FarsiPack with { Version = "2" }]) };
+        packs.BlockFirstDownload();
+        var setup = new VoicePackSetup(packs, new FakeModel(), new FakeSettings { Language = "fa" });
+        await setup.StartAsync();
+        await packs.FirstDownloadStarted;
+        Task first = setup.UpdateCompleted;
+
+        await setup.StartAsync(); // the second update finds one for the language registered and ends at once
+
+        Assert.False(setup.UpdateCompleted.IsCompleted); // still holds the first
+        Assert.Equal(1, packs.DownloadCalls);
+        packs.ReleaseFirstDownload();
+        await first;
+        await setup.UpdateCompleted;
+    }
+
+    [Fact]
+    public async Task A_run_for_another_language_cancels_the_update_in_flight()
+    {
+        var settings = new FakeSettings { Language = "fa" };
+        var oldFarsi = new InstalledVoicePack("/packs/piper-fa", new PackManifest("piper-fa", PackKind.Voice, "fa", "1", "sherpa-onnx", [], VoiceEngineKind.Vits, [new PackVoice("piper:fa-amir", "Amir", 0)]));
+        var packs = new FakePacks { Installed = [oldFarsi, InstalledEnglish()], Catalog = new PackCatalogResult(PackDownloadResult.Ok, [FarsiPack with { Version = "2" }]) };
+        Task<bool> cancelled = packs.BlockFirstDownload();
+        var setup = new VoicePackSetup(packs, new FakeModel(), settings);
+        await setup.StartAsync();
+        await packs.FirstDownloadStarted;
+
+        settings.Language = "en";
+        await setup.StartAsync();
+
+        Assert.True(await cancelled);
+        await setup.UpdateCompleted;
+        Assert.Equal(PackSetupState.Ready, setup.State);
+    }
+
+    [Fact]
+    public async Task An_offline_or_throwing_catalog_leaves_the_installed_pack_ready_on_windows()
+    {
+        var packs = new FakePacks { Installed = [InstalledEnglish()], CatalogThrows = true };
+        var setup = new VoicePackSetup(packs, new FakeModel(), new FakeSettings { Language = "en" });
+
+        await setup.StartAsync();
+
+        Assert.Equal(PackSetupState.Ready, setup.State);
     }
 
     [Fact]
@@ -196,6 +312,96 @@ public class VoicePackSetupTests
         new("piper-fa", ["fa"], PackKind.Voice, "1", 10, "hash", "MIT", "https://x/fa.zip");
 
     [Fact]
+    public async Task An_installed_pack_older_than_the_catalogs_is_downloaded_again()
+    {
+        var settings = new FakeSettings { Language = "fa" };
+        var oldFarsi = new InstalledVoicePack("/packs/piper-fa", new PackManifest("piper-fa", PackKind.Voice, "fa", "1", "sherpa-onnx", [], VoiceEngineKind.Vits, [new PackVoice("piper:fa-amir", "Amir", 0)]));
+        var packs = new FakePacks
+        {
+            Installed = [oldFarsi],
+            Catalog = new PackCatalogResult(PackDownloadResult.Ok, [FarsiPack with { Version = "2" }]),
+        };
+        var model = new FakeModel();
+        var installer = new VoicePackInstaller(packs, model, new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork(), new FakeNotifier());
+
+        await installer.StartAsync();
+        await WaitUntilAsync(() => model.Initialized == 2); // the installed pack, then the updated one
+
+        Assert.Equal("piper-fa", packs.Downloaded);
+        await WaitForStateAsync(installer, PackInstallState.Ready);
+    }
+
+    [Fact]
+    public async Task An_installed_pack_is_not_updated_over_a_metered_connection()
+    {
+        var settings = new FakeSettings { Language = "fa" };
+        var oldFarsi = new InstalledVoicePack("/packs/piper-fa", new PackManifest("piper-fa", PackKind.Voice, "fa", "1", "sherpa-onnx", [], VoiceEngineKind.Vits, [new PackVoice("piper:fa-amir", "Amir", 0)]));
+        var packs = new FakePacks { Installed = [oldFarsi], Catalog = new PackCatalogResult(PackDownloadResult.Ok, [FarsiPack with { Version = "2" }]) };
+        var installer = new VoicePackInstaller(packs, new FakeModel(), new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork { Allows = false }, new FakeNotifier());
+
+        await installer.StartAsync();
+        await Task.Delay(200, TestContext.Current.CancellationToken);
+
+        Assert.Equal(0, packs.DownloadCalls);
+        Assert.Equal(PackInstallState.Ready, installer.State);
+    }
+
+    [Fact]
+    public async Task A_first_install_goes_ahead_over_a_metered_connection()
+    {
+        var settings = new FakeSettings { Language = "en" };
+        var packs = new FakePacks { Catalog = new PackCatalogResult(PackDownloadResult.Ok, [EnglishPack]) };
+        var installer = new VoicePackInstaller(packs, new FakeModel(), new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork { Allows = false }, new FakeNotifier());
+
+        await installer.StartAsync();
+
+        Assert.Equal(1, packs.DownloadCalls);
+    }
+
+    private static async Task WaitUntilAsync(Func<bool> condition)
+    {
+        DateTime deadline = DateTime.UtcNow.AddSeconds(10);
+        while (!condition() && DateTime.UtcNow < deadline)
+        {
+            await Task.Delay(20, TestContext.Current.CancellationToken);
+        }
+
+        Assert.True(condition());
+    }
+
+    private sealed class FakeNetwork : IPackUpdateNetwork
+    {
+        public bool Allows { get; init; } = true;
+
+        public bool AllowsAutomaticUpdate => Allows;
+    }
+
+    [Fact]
+    public async Task An_installed_pack_that_is_current_or_unlisted_is_not_downloaded_again()
+    {
+        var settings = new FakeSettings { Language = "en" };
+        var packs = new FakePacks { Installed = [InstalledEnglish()], Catalog = new PackCatalogResult(PackDownloadResult.Ok, [EnglishPack]) };
+        var installer = new VoicePackInstaller(packs, new FakeModel(), new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork(), new FakeNotifier());
+
+        await installer.StartAsync();
+
+        Assert.Equal(0, packs.DownloadCalls);
+        Assert.Equal(PackInstallState.Ready, installer.State);
+    }
+
+    [Fact]
+    public async Task An_offline_update_check_leaves_the_installed_pack_ready()
+    {
+        var settings = new FakeSettings { Language = "en" };
+        var packs = new FakePacks { Installed = [InstalledEnglish()], CatalogThrows = true };
+        var installer = new VoicePackInstaller(packs, new FakeModel(), new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork(), new FakeNotifier());
+
+        await installer.StartAsync();
+
+        Assert.Equal(PackInstallState.Ready, installer.State);
+    }
+
+    [Fact]
     public async Task An_error_in_an_event_started_run_ends_in_the_failed_state()
     {
         var settings = new FakeSettings { Language = "en" };
@@ -217,7 +423,7 @@ public class VoicePackSetupTests
         var packs = new FakePacks { Catalog = new PackCatalogResult(PackDownloadResult.Ok, [FarsiPack]) };
         var model = new FakeModel();
         var notifier = new FakeNotifier();
-        var installer = new VoicePackInstaller(packs, model, new NoopReader(), settings, new NeuralPlatform(), notifier);
+        var installer = new VoicePackInstaller(packs, model, new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork(), notifier);
         Task<bool> cancelled = packs.BlockFirstDownload();
 
         Task run = installer.StartAsync();
@@ -319,7 +525,7 @@ public class VoicePackSetupTests
     }
 
     private static VoicePackInstaller MobileInstaller(FakePacks packs, FakeSettings settings, FakeNotifier notifier) =>
-        new(packs, new FakeModel(), new NoopReader(), settings, new NeuralPlatform(), notifier);
+        new(packs, new FakeModel(), new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork(), notifier);
 
     // Completes on the Changed event that reaches the state, so no clock decides the outcome.
     private static Task WaitForStateAsync(VoicePackInstaller installer, PackInstallState expected)
@@ -408,6 +614,9 @@ public class VoicePackSetupTests
             _firstCancelled = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             return _firstCancelled.Task;
         }
+        public void ReleaseFirstDownload() => _releaseFirst.Cancel();
+
+        private readonly CancellationTokenSource _releaseFirst = new();
         public string? Downloaded { get; private set; }
         public IProgress<double>? LastProgress { get; private set; }
 
@@ -447,17 +656,22 @@ public class VoicePackSetupTests
         private async Task<PackDownloadResult> WaitForCancelAsync(CancellationToken cancellationToken)
         {
             _firstStarted.TrySetResult();
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _releaseFirst.Token);
             try
             {
-                await Task.Delay(Timeout.Infinite, cancellationToken);
+                await Task.Delay(Timeout.Infinite, linked.Token);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 _firstCancelled!.TrySetResult(true);
                 throw;
             }
+            catch (OperationCanceledException)
+            {
+                // Released by the test: the download ends on its own.
+            }
 
-            return PackDownloadResult.Failed;
+            return PackDownloadResult.Offline;
         }
     }
 

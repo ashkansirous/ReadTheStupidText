@@ -22,7 +22,6 @@ public sealed class MobileVoicePackService : IVoicePackService
 {
     private const string PacksFolder = "packs";
     private const string ExtractingSuffix = ".extracting";
-    private const string ReplacedSuffix = ".replaced";
     private const int CopyBufferBytes = 81920;
     private const int FileBufferBytes = 81920;
 
@@ -34,6 +33,11 @@ public sealed class MobileVoicePackService : IVoicePackService
 
     private IReadOnlyList<PackInfo>? _catalog;
     private DateTime _catalogFetchedUtc;
+
+    public MobileVoicePackService()
+    {
+        PackVersionFolders.DeleteOldVersions(PacksRoot()); // app start: nothing holds the folders of old versions yet
+    }
 
     public async Task<PackCatalogResult> GetCatalogAsync(CancellationToken cancellationToken)
     {
@@ -80,7 +84,7 @@ public sealed class MobileVoicePackService : IVoicePackService
 
     private static InstalledVoicePack? LoadInstalled(string packId)
     {
-        string folder = Path.Combine(PacksRoot(), packId);
+        string folder = PackVersionFolders.Resolve(Path.Combine(PacksRoot(), packId));
         string manifestPath = Path.Combine(folder, PackConstants.ManifestFileName);
         if (!File.Exists(manifestPath))
         {
@@ -337,7 +341,7 @@ public sealed class MobileVoicePackService : IVoicePackService
             cancellationToken.ThrowIfCancellationRequested();
             string payload = LocatePayload(scratch);
             ValidatePayload(pack, payload);
-            MovePayloadIntoPlace(payload, Path.Combine(PacksRoot(), pack.Id));
+            PackVersionFolders.Install(payload, Path.Combine(PacksRoot(), pack.Id), pack.Version);
         }
         finally
         {
@@ -385,35 +389,6 @@ public sealed class MobileVoicePackService : IVoicePackService
         {
             throw new InvalidDataException("The downloaded pack does not match its manifest.");
         }
-    }
-
-    // The verified, validated payload replaces the installed pack by swapping: the old folder is
-    // set aside first and restored if the move fails, so an upgrade never leaves no pack at all.
-    private static void MovePayloadIntoPlace(string payload, string target)
-    {
-        string aside = target + ReplacedSuffix;
-        DeleteDirectoryIfExists(aside);
-        bool hadOld = Directory.Exists(target);
-        if (hadOld)
-        {
-            Directory.Move(target, aside);
-        }
-
-        try
-        {
-            Directory.Move(payload, target);
-        }
-        catch
-        {
-            if (hadOld)
-            {
-                Directory.Move(aside, target);
-            }
-
-            throw;
-        }
-
-        DeleteDirectoryIfExists(aside);
     }
 
     /// <summary>The folder every pack lives in (created if needed); also read by the iOS backup exclusion.</summary>

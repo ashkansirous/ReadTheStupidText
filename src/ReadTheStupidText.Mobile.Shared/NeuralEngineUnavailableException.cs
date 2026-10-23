@@ -6,4 +6,17 @@ namespace ReadTheStupidText.Mobile;
 /// disposed). <see cref="CompositeSpeechReader"/> catches it and reads with the phone voice,
 /// so a read is never silently dropped.
 /// </summary>
-public sealed class NeuralEngineUnavailableException() : InvalidOperationException("No neural engine is available for this read.");
+public sealed class NeuralEngineUnavailableException : InvalidOperationException
+{
+    private const string DefaultMessage = "No neural engine is available for this read.";
+
+    public NeuralEngineUnavailableException()
+        : base(DefaultMessage)
+    {
+    }
+
+    public NeuralEngineUnavailableException(Exception innerException)
+        : base(DefaultMessage, innerException)
+    {
+    }
+}

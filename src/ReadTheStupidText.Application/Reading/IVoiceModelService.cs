@@ -15,8 +15,20 @@ public sealed record VoiceModelPaths(
     VoiceEngineKind Kind = VoiceEngineKind.Supertonic,
     string Language = SupertonicVoiceTable.EnglishCode,
     IReadOnlyList<VoiceInfo>? Voices = null,
-    string PackVersion = "")
+    string PackVersion = "",
+    string ModelDir = "")
 {
+    /// <summary>
+    /// The folder the engine loads <c>model.onnx</c> and <c>tokens.txt</c> from: the pack root, or
+    /// the chosen voice's own folder inside it (Slice 89). Shared data such as the espeak-ng
+    /// directory always stays at <see cref="RootDir"/>.
+    /// </summary>
+    public string ModelFolder => ModelDir.Length == 0 ? RootDir : Path.Combine(RootDir, ModelDir);
+
+    /// <summary>These paths aimed at <paramref name="voice"/>'s model folder; the engine is rebuilt only when that folder differs.</summary>
+    public VoiceModelPaths ForVoice(VoiceInfo voice) =>
+        ModelDir == voice.ModelDir ? this : this with { ModelDir = voice.ModelDir };
+
     /// <summary>The voices this model offers for <see cref="Language"/>.</summary>
     public IReadOnlyList<VoiceInfo> AvailableVoices => Voices ?? SupertonicVoiceTable.Voices;
 

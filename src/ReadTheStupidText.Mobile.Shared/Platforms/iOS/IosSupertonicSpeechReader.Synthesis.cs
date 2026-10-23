@@ -10,22 +10,6 @@ namespace ReadTheStupidText.Mobile;
 // turning a chunk into audio through the sentence cache (Slice 47), and writing it to a temp file.
 public sealed partial class IosSupertonicSpeechReader
 {
-    private async Task<string> GenerateAfterAsync(
-        Task gate, IosBuiltEngine engine, string chunk, int index, VoiceInfo voice,
-        ConcurrentQueue<string> files, CancellationToken token)
-    {
-        try
-        {
-            await gate;
-        }
-        catch
-        {
-            // Swallowed: the first chunk's real outcome surfaces on its own await.
-        }
-
-        return await GenerateChunkAsync(engine, chunk, index, voice, files, token);
-    }
-
     // A chunk is joined from its sentences' audio, each fetched from the cache or synthesized.
     // The sentences of one chunk are requested together; `_slots` bounds how many actually
     // synthesize at once. Every file written is recorded in `files` so the generation's drain
@@ -174,46 +158,50 @@ public sealed partial class IosSupertonicSpeechReader
     }
 
     // Returns the engine for the language's current model with a reference taken for the caller,
-    // who must Release() it. A different pack or engine kind rebuilds the OfflineTts; the same
-    // pack under another language reuses it with the new model. The superseded OfflineTts is
-    // disposed once the last read or generation holding it lets go.
-    private IosBuiltEngine? AcquireEngine()
+    // who must Release() it. A different pack folder, version or engine kind is another engine (a
+    // pack update is a new folder, so it is picked up here); the same folder under another
+    // language reuses the model. An engine nobody asks for any more is disposed once the last
+    // read or generation holding it lets go.
+    private IosBuiltEngine? AcquireEngine(string? voiceId = null)
     {
-        if (_model.Paths is not { } paths)
+        if (_model.Paths is not { } current)
         {
             return null;
         }
 
-        lock (_ttsGate)
+        // Aimed at the voice that will speak: voices of one pack can each have their own model folder.
+        VoiceModelPaths paths = current.ForVoice(PickVoice(current, voiceId));
+        if (ModelKey(paths) == Volatile.Read(ref _failedModelKey))
         {
-            if (_disposed)
-            {
-                return null;
-            }
+            // This exact model already failed to load: don't retry the multi-hundred-MB build on every
+            // chunk or read. A different pack folder, engine or version clears the block.
+            throw new NeuralEngineUnavailableException();
+        }
 
-            if (_engine is null || _engine.Model != paths)
-            {
-                _engine = IosTtsEngine.Swap(_engine, paths);
-            }
-
-            return TryAcquireCurrent(paths);
+        try
+        {
+            return AcquireEngineCore(paths);
+        }
+        catch (Exception ex) when (ex is not NeuralEngineUnavailableException)
+        {
+            Volatile.Write(ref _failedModelKey, ModelKey(paths));
+            _log.Warning("the neural engine could not be built", error: ex);
+            RefreshModelInBackground();
+            throw new NeuralEngineUnavailableException(ex);
         }
     }
 
-    // Takes the caller's reference on the current engine. A refused reference means the engine was
-    // already disposed, so it is rebuilt once from scratch; if that is refused too the read is not
-    // ready. A disposed engine is never handed out and a reference that was not acquired is never
-    // released. Called under _ttsGate.
-    private IosBuiltEngine? TryAcquireCurrent(VoiceModelPaths paths)
-    {
-        if (_engine!.TryAcquire())
-        {
-            return _engine;
-        }
+    private static string ModelKey(VoiceModelPaths paths) => $"{paths.RootDir}|{paths.Kind}|{paths.PackVersion}|{paths.ModelDir}";
 
-        _engine = IosTtsEngine.Swap(null, paths);
-        return _engine.TryAcquire() ? _engine : null;
-    }
+    // A pack that is "ready" but cannot be loaded: the model re-checks the installed packs.
+    private void RefreshModelInBackground() =>
+        _ = _model.InitializeAsync().ContinueWith(
+            t => _log.Warning("voice model refresh failed", error: t.Exception),
+            CancellationToken.None,
+            TaskContinuationOptions.OnlyOnFaulted,
+            TaskScheduler.Default);
+
+    private IosBuiltEngine? AcquireEngineCore(VoiceModelPaths paths) => _engines.Acquire(paths);
 
     private static async Task<string> WriteChunkFileAsync(byte[] wav)
     {

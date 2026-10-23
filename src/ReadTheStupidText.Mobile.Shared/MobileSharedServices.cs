@@ -19,6 +19,7 @@ public static partial class MobileSharedServices
 		RegisterPlatformServices(builder.Services);
 		builder.Services.AddSingleton<IVoicePackService, MobileVoicePackService>();
 		builder.Services.AddSingleton<IVoiceModelService, MobileVoiceModelService>();
+		builder.Services.AddSingleton<IPackUpdateNetwork, MauiPackUpdateNetwork>();
 		builder.Services.AddSingleton<VoicePackInstaller>();
 		builder.Services.AddSingleton<MobilePreferencesSettingsStore>();
 		builder.Services.AddSingleton<ISettingsStore>(sp => sp.GetRequiredService<MobilePreferencesSettingsStore>());

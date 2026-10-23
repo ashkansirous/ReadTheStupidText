@@ -22,4 +22,7 @@ public static class PackJsonKeys
 
     public const string VoiceName = "name";
     public const string SpeakerId = "sid";
+
+    /// <summary>Voice entry only: the pack-relative folder with the voice's own model (Slice 89).</summary>
+    public const string VoiceModel = "model";
 }

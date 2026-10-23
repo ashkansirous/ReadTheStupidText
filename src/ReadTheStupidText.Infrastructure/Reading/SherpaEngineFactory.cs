@@ -25,7 +25,7 @@ internal static class SherpaEngineFactory
                 ConfigureSupertonic(ref config, paths.RootDir);
                 break;
             case VoiceEngineKind.Vits:
-                ConfigureVits(ref config, paths.RootDir);
+                ConfigureVits(ref config, paths);
                 break;
             case VoiceEngineKind.Melo:
                 ConfigureMelo(ref config, paths.RootDir);
@@ -96,11 +96,13 @@ internal static class SherpaEngineFactory
     }
 
     // Piper: the espeak-ng data directory phonemizes the text (it lives only in the pack).
-    private static void ConfigureVits(ref OfflineTtsConfig config, string dir)
+    // The voice's own model + tokens may sit in a folder of the pack (Slice 89); the data directory
+    // is shared and stays at the pack root.
+    private static void ConfigureVits(ref OfflineTtsConfig config, VoiceModelPaths paths)
     {
-        config.Model.Vits.Model = Path.Combine(dir, VitsFiles.Model);
-        config.Model.Vits.Tokens = Path.Combine(dir, VitsFiles.Tokens);
-        config.Model.Vits.DataDir = Path.Combine(dir, VitsFiles.EspeakDataDir);
+        config.Model.Vits.Model = Path.Combine(paths.ModelFolder, VitsFiles.Model);
+        config.Model.Vits.Tokens = Path.Combine(paths.ModelFolder, VitsFiles.Tokens);
+        config.Model.Vits.DataDir = Path.Combine(paths.RootDir, VitsFiles.EspeakDataDir);
     }
 
     // MeloTTS zh_en: lexicon + jieba dictionary, with the phone/date/number rule FSTs the upstream
