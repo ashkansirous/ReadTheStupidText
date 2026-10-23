@@ -89,11 +89,11 @@ High and medium passes: findings 1-9 fixed both times, and high #1-10 all fixed.
 
 Fresh install shows the three starters; Pigs opens and plays; the cast screens show distinct voices; a deleted starter stays gone after a restart; Export opens the share sheet with `TheThreeLittlePigs.dino`. No crashes. Import back not tested.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-23)
 
 - (Already written into `src/DinoReader.Core/CLAUDE.md` and `src/DinoReader.App/CLAUDE.md` by this slice; the index pass need only check they are there.) Package format and import refusals: `src/DinoReader.Core/CLAUDE.md`. Starters, flat asset names, rebuild command, speaker-tag form, developer-only export: `src/DinoReader.App/CLAUDE.md`. (Slice 91: docs/plan/slices/91-dino-story-packages-and-starters.md)
 
-#### For README.md
+#### For README.md (lifted 2026-10-23)
 
 None (not user-facing: no import UI yet).
 

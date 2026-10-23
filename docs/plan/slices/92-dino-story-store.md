@@ -93,10 +93,10 @@ Source: `docs/design/dino-reader/Dino Reader Batch 16.dc.html`, screens 21 (line
 - The production Worker routes (`/api/stories*`) after deploy.
 - The store has no curated stories yet: `dinoreader/stories/` in the bucket is empty until the user picks some, so the app shows the empty state.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-23)
 
 Already added on this branch: the Worker/bucket layout in the root `CLAUDE.md` landing-site paragraph, and the `StoreClient`/`StorePage` rules in `src/DinoReader.App/CLAUDE.md` (Slice 92: docs/plan/slices/92-dino-story-store.md). Lift nothing further.
 
-#### For README.md
+#### For README.md (lifted 2026-10-23)
 
 Dino Reader: grown-ups can browse and download free curated stories from the in-app store (Free stories button in the gallery); nothing about the user is sent.

@@ -92,7 +92,7 @@ Source: `docs/design/dino-reader/Dino Reader Batch 16.dc.html`, screens 16 (line
 - iOS.
 - Native-speaker review of the new strings in the 9 locales.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-23)
 
 - Backup is one zip (`backup.json` + a `<id>.dino` per story, Core `StoryBackupWriter`/`StoryBackupReader`); restore keeps each story's id, dedupes by id or `SourceId`, counts a damaged package without stopping, stops at a 2 GiB budget ("Too large") and refuses a newer `backup.json` before adding anything. (Slice 93: docs/plan/slices/93-dino-backup-and-first-run.md)
 - A fresh install has no stored language and that is what shows `FirstRunPage`; never store a default language at launch (`SpeechStartup`). `LanguageChoice.Apply` is the one place a language is picked. (Slice 93: docs/plan/slices/93-dino-backup-and-first-run.md)
@@ -101,6 +101,6 @@ Source: `docs/design/dino-reader/Dino Reader Batch 16.dc.html`, screens 16 (line
 
 (Already added to `src/DinoReader.App/CLAUDE.md` on this branch by the implementer as one bullet; the index pass should not lift it twice.)
 
-#### For README.md
+#### For README.md (lifted 2026-10-23)
 
 Not user-facing beyond the app itself; nothing to add.
