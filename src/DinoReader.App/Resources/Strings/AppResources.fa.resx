@@ -52,6 +52,48 @@
   <data name="Store_EmptyBody" xml:space="preserve"><value>هر از گاهی داستان‌های تازه اضافه می‌شود. بعداً سر بزنید.</value></data>
   <data name="Store_BackToStories" xml:space="preserve"><value>بازگشت به داستان‌های من</value></data>
   <data name="Store_GetStory" xml:space="preserve"><value>دریافت {0}</value></data>
+  <data name="Backup_Title" xml:space="preserve"><value>پشتیبان</value></data>
+  <data name="Backup_SaveTitle" xml:space="preserve"><value>ذخیره پشتیبان</value></data>
+  <data name="Backup_SaveBody_One" xml:space="preserve"><value>داستانتان در یک فایل، همراه با صفحه‌ها، تصویرها و گروه صداهای تنظیم‌شده. آن را در Drive یا Files ذخیره کنید یا برای خودتان بفرستید.</value></data>
+  <data name="Backup_SaveBody_Other" xml:space="preserve"><value>هر {0} داستان در یک فایل، همراه با صفحه‌ها، تصویرها و گروه صداهای تنظیم‌شده. آن را در Drive یا Files ذخیره کنید یا برای خودتان بفرستید.</value></data>
+  <data name="Backup_SaveButton" xml:space="preserve"><value>ذخیره پشتیبان</value></data>
+  <data name="Backup_RestoreTitle" xml:space="preserve"><value>بازیابی از پشتیبان</value></data>
+  <data name="Backup_RestoreBody" xml:space="preserve"><value>داستان‌هایی را که این گوشی ندارد اضافه می‌کند. داستان‌های موجود دست‌نخورده می‌مانند.</value></data>
+  <data name="Backup_RestoreButton" xml:space="preserve"><value>انتخاب فایل پشتیبان</value></data>
+  <data name="Backup_Footer" xml:space="preserve"><value>فایل فقط به جایی می‌رود که بفرستید. Dino هیچ نسخه‌ای آنلاین نگه نمی‌دارد.</value></data>
+  <data name="Backup_Restored_One" xml:space="preserve"><value>{0} داستان بازیابی شد</value></data>
+  <data name="Backup_Restored_Other" xml:space="preserve"><value>{0} داستان بازیابی شد</value></data>
+  <data name="Backup_Added" xml:space="preserve"><value>به قفسه اضافه شد</value></data>
+  <data name="Backup_Skipped" xml:space="preserve"><value>از قبل بود، رد شد</value></data>
+  <data name="Backup_Damaged" xml:space="preserve"><value>خوانده نشد</value></data>
+  <data name="Backup_SeeStories" xml:space="preserve"><value>دیدن داستان‌های من</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>این پشتیبان از نسخه جدیدتر Dino Reader است. برنامه را به‌روز کنید و دوباره امتحان کنید.</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>این فایل پشتیبان Dino Reader نیست.</value></data>
+  <data name="Backup_Failed" xml:space="preserve"><value>پشتیبان‌گیری انجام نشد. دوباره امتحان کنید.</value></data>
+  <data name="Backup_TooLarge" xml:space="preserve"><value>برای بازیابی بسیار بزرگ است</value></data>
+  <data name="Backup_SaveSkipped" xml:space="preserve"><value>افزودن {0} به پشتیبان ممکن نبود.</value></data>
+  <data name="FirstRun_Hello" xml:space="preserve"><value>سلام! به چه زبانی بخوانیم؟</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Dino برای آن یک صدا دانلود می‌کند. بعداً می‌توانید پشت قفل آن را عوض کنید.</value></data>
+  <data name="FirstRun_Continue" xml:space="preserve"><value>ادامه</value></data>
+  <data name="FirstRun_GettingReady" xml:space="preserve"><value>آماده‌کردن صدای Dino</value></data>
+  <data name="FirstRun_Once" xml:space="preserve"><value>صدا: {0} · فقط یک بار پیش می‌آید</value></data>
+  <data name="FirstRun_Downloading" xml:space="preserve"><value>در حال دانلود…</value></data>
+  <data name="FirstRun_Waiting" xml:space="preserve"><value>روی قفسه منتظرند</value></data>
+  <data name="FirstRun_PickAnother" xml:space="preserve"><value>انتخاب زبان دیگر</value></data>
+  <data name="FirstRun_Ready" xml:space="preserve"><value>آماده‌ی خواندن!</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>هر شخصیت صدای خودش را دارد. سه داستان روی قفسه است.</value></data>
+  <data name="FirstRun_HearHello" xml:space="preserve"><value>شنیدن سلام Dino</value></data>
+  <data name="FirstRun_HelloLine" xml:space="preserve"><value>سلام! من Dino هستم. بیا با هم داستان بخوانیم.</value></data>
+  <data name="FirstRun_SetUp" xml:space="preserve"><value>تنظیم داستان‌ها</value></data>
+  <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>ادامه با صدای تلفن</value></data>
+  <data name="Gallery_ReadyForChild" xml:space="preserve"><value>آماده برای فرزندم</value></data>
+  <data name="Gallery_GrownUpMode" xml:space="preserve"><value>حالت بزرگسال</value></data>
+  <data name="Language_Title" xml:space="preserve"><value>زبان</value></data>
+  <data name="Language_Subtitle" xml:space="preserve"><value>Dino به این زبان می‌خواند و ترجمه می‌کند</value></data>
+  <data name="Language_Ready" xml:space="preserve"><value>آماده</value></data>
+  <data name="Language_Download" xml:space="preserve"><value>دانلود</value></data>
+  <data name="Language_Downloading" xml:space="preserve"><value>در حال دانلود {0}%</value></data>
+  <data name="Language_Footer" xml:space="preserve"><value>داستانی به زبان دیگر همچنان به زبان خودش خوانده می‌شود، مگر اینکه «ترجمه به زبان من» برای آن داستان روشن باشد.</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>برای ۳ ثانیه فشار دهید و نگه دارید.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>برای ۳ ثانیه فشار دهید و نگه دارید</value></data>
   <data name="Gate_KeepHolding" xml:space="preserve"><value>نگه دارید…</value></data>

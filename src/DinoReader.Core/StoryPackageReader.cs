@@ -163,11 +163,15 @@ internal sealed class ByteBudget(long total)
 {
     private long _left = total;
 
+    /// <summary>True once more than the total has been spent.</summary>
+    public bool Exhausted { get; private set; }
+
     public void Spend(int n)
     {
         _left -= n;
         if (_left < 0)
         {
+            Exhausted = true;
             throw new StoryPackageException("The package is too large.");
         }
     }

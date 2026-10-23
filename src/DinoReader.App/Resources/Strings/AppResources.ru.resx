@@ -52,6 +52,48 @@
   <data name="Store_EmptyBody" xml:space="preserve"><value>Новые истории добавляются время от времени. Загляните позже.</value></data>
   <data name="Store_BackToStories" xml:space="preserve"><value>К моим историям</value></data>
   <data name="Store_GetStory" xml:space="preserve"><value>Скачать: {0}</value></data>
+  <data name="Backup_Title" xml:space="preserve"><value>Резервная копия</value></data>
+  <data name="Backup_SaveTitle" xml:space="preserve"><value>Сохранить копию</value></data>
+  <data name="Backup_SaveBody_One" xml:space="preserve"><value>Ваша история в одном файле: страницы, картинки и настроенные голоса героев. Сохраните его в «Диск» или «Файлы» либо отправьте себе.</value></data>
+  <data name="Backup_SaveBody_Other" xml:space="preserve"><value>Все истории ({0}) в одном файле: страницы, картинки и настроенные голоса героев. Сохраните его в «Диск» или «Файлы» либо отправьте себе.</value></data>
+  <data name="Backup_SaveButton" xml:space="preserve"><value>Сохранить копию</value></data>
+  <data name="Backup_RestoreTitle" xml:space="preserve"><value>Восстановить из копии</value></data>
+  <data name="Backup_RestoreBody" xml:space="preserve"><value>Добавляет истории, которых нет на этом телефоне. Истории, которые уже есть, остаются как есть.</value></data>
+  <data name="Backup_RestoreButton" xml:space="preserve"><value>Выбрать файл копии</value></data>
+  <data name="Backup_Footer" xml:space="preserve"><value>Файл попадает только туда, куда вы его отправите. Dino не хранит копий в интернете.</value></data>
+  <data name="Backup_Restored_One" xml:space="preserve"><value>Историй восстановлено: {0}</value></data>
+  <data name="Backup_Restored_Other" xml:space="preserve"><value>Историй восстановлено: {0}</value></data>
+  <data name="Backup_Added" xml:space="preserve"><value>Добавлено на полку</value></data>
+  <data name="Backup_Skipped" xml:space="preserve"><value>Уже были, пропущены</value></data>
+  <data name="Backup_Damaged" xml:space="preserve"><value>Не удалось прочитать</value></data>
+  <data name="Backup_SeeStories" xml:space="preserve"><value>Мои истории</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>Эта копия создана в более новой версии Dino Reader. Обновите приложение и повторите попытку.</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>Этот файл не является копией Dino Reader.</value></data>
+  <data name="Backup_Failed" xml:space="preserve"><value>Не получилось сделать копию. Повторите попытку.</value></data>
+  <data name="Backup_TooLarge" xml:space="preserve"><value>Слишком большие для восстановления</value></data>
+  <data name="Backup_SaveSkipped" xml:space="preserve"><value>Не удалось добавить в копию: {0}.</value></data>
+  <data name="FirstRun_Hello" xml:space="preserve"><value>Привет! На каком языке читаем?</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Dino скачает для него голос. Язык можно сменить позже за замком.</value></data>
+  <data name="FirstRun_Continue" xml:space="preserve"><value>Продолжить</value></data>
+  <data name="FirstRun_GettingReady" xml:space="preserve"><value>Готовим голос Dino</value></data>
+  <data name="FirstRun_Once" xml:space="preserve"><value>Голос: {0} · это нужно только один раз</value></data>
+  <data name="FirstRun_Downloading" xml:space="preserve"><value>Загрузка…</value></data>
+  <data name="FirstRun_Waiting" xml:space="preserve"><value>Ждут на полке</value></data>
+  <data name="FirstRun_PickAnother" xml:space="preserve"><value>Выбрать другой язык</value></data>
+  <data name="FirstRun_Ready" xml:space="preserve"><value>Готово к чтению!</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>У каждого героя свой голос. На полке три истории.</value></data>
+  <data name="FirstRun_HearHello" xml:space="preserve"><value>Послушать, как Dino здоровается</value></data>
+  <data name="FirstRun_HelloLine" xml:space="preserve"><value>Привет! Я Dino. Давай прочитаем историю вместе.</value></data>
+  <data name="FirstRun_SetUp" xml:space="preserve"><value>Настроить истории</value></data>
+  <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>Продолжить с голосом телефона</value></data>
+  <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Готово, отдаю ребёнку</value></data>
+  <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Режим для взрослых</value></data>
+  <data name="Language_Title" xml:space="preserve"><value>Язык</value></data>
+  <data name="Language_Subtitle" xml:space="preserve"><value>Dino читает и переводит на этот язык</value></data>
+  <data name="Language_Ready" xml:space="preserve"><value>Готово</value></data>
+  <data name="Language_Download" xml:space="preserve"><value>Скачать</value></data>
+  <data name="Language_Downloading" xml:space="preserve"><value>Загрузка {0}%</value></data>
+  <data name="Language_Footer" xml:space="preserve"><value>История на другом языке по-прежнему читается на своём языке, если для неё не включён перевод на мой язык.</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Нажмите и удерживайте 3 секунды.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Нажмите и удерживайте 3 секунды</value></data>
   <data name="Gate_KeepHolding" xml:space="preserve"><value>Продолжайте удерживать…</value></data>

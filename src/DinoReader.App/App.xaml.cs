@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Globalization;
 using DinoReader.Core;
 using Microsoft.Extensions.DependencyInjection;
+using ReadTheStupidText.Application.Settings;
 
 namespace DinoReader;
 
@@ -11,17 +12,15 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 	private readonly IServiceProvider _services;
 	private readonly AwayTracker _away = new();
 	private CancellationTokenSource? _capTimer;
+	private NavigationPage? _navigation;
+	private bool _rtlFontsApplied;
 
 	public DinoApp(IServiceProvider services, SpeechStartup startup)
 	{
 		InitializeComponent();
 		// The kids' palette is light; night colours belong to ReadingTheme on the reading screen only.
 		UserAppTheme = AppTheme.Light;
-		if (UiCulture.IsRightToLeft)
-		{
-			DinoFonts.UseForRightToLeftUi(Resources);
-		}
-
+		ApplyRightToLeftFonts();
 		_services = services;
 		PageAppearing += (_, page) => SystemBarIcons.ForPage(page);
 		_ = startup.RunAsync();
@@ -31,21 +30,58 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 	{
 		// A new window (activity recreated, second desktop window) always starts in kids' mode.
 		_services.GetRequiredService<GrownUpMode>().Leave();
-		var navigation = new NavigationPage(_services.GetRequiredService<GalleryPage>())
-		{
-			BarBackgroundColor = DinoTokens.Get(DinoTokens.Cream),
-			BarTextColor = DinoTokens.Get(DinoTokens.Ink),
-			FlowDirection = UiFlow.ForCurrentCulture(),
-		};
+		var navigation = _navigation = BuildNavigation(RootPage());
 		var window = new Window(navigation);
 		var external = _services.GetRequiredService<ExternalActivityGuard>();
-		window.Stopped += (_, _) => OnStopped(navigation, external);
-		window.Resumed += (_, _) => OnResumed(navigation, external);
-		Action ended = () => OnResumed(navigation, external);
+		window.Stopped += (_, _) => OnStopped(_navigation!, external);
+		window.Resumed += (_, _) => OnResumed(_navigation!, external);
+		Action ended = () => OnResumed(_navigation!, external);
 		external.Ended += ended;
 		window.Destroying += (_, _) => external.Ended -= ended;
 		return window;
 	}
+
+	private static NavigationPage BuildNavigation(Page root) => new(root)
+	{
+		BarBackgroundColor = DinoTokens.Get(DinoTokens.Cream),
+		BarTextColor = DinoTokens.Get(DinoTokens.Ink),
+		FlowDirection = UiFlow.ForCurrentCulture(),
+	};
+
+	// The Farsi UI font is written into the shared styles once, before the first page that needs it is built.
+	private void ApplyRightToLeftFonts()
+	{
+		if (_rtlFontsApplied || !UiCulture.IsRightToLeft)
+		{
+			return;
+		}
+
+		DinoFonts.UseForRightToLeftUi(Resources);
+		_rtlFontsApplied = true;
+	}
+
+	/// <summary>
+	/// Replaces the whole page stack with a fresh gallery in the language just picked (the first run's hand-over, or a change on the
+	/// Language page): XAML text is read when a page is built, so only new pages speak the new language, and the flow direction
+	/// belongs to the new root. The window's stop/resume handlers follow <see cref="_navigation"/>.
+	/// </summary>
+	public void RebuildRoot()
+	{
+		UiCulture.Apply(LanguageChoice.Preferred());
+		ApplyRightToLeftFonts();
+		if (Windows.FirstOrDefault() is not { } window)
+		{
+			return;
+		}
+
+		window.Page = _navigation = BuildNavigation(_services.GetRequiredService<GalleryPage>());
+	}
+
+	// A fresh install opens on the first-run language page (Slice 93); every later start opens on the kids' gallery.
+	private Page RootPage() =>
+		FirstRunState.IsNeeded(_services.GetRequiredService<ISettingsStore>())
+			? _services.GetRequiredService<FirstRunPage>()
+			: _services.GetRequiredService<GalleryPage>();
 
 	// A grown-up area never stays open behind a locked phone or another app: leaving the app
 	// returns to the gallery, so the gate is needed again. An activity the app started itself

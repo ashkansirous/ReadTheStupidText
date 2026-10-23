@@ -1,6 +1,6 @@
 # Slice 93 — Dino backup file and a first run that asks the language
 
-*Planned 2026-10-22.* Source: phone scope "Dino Reader: starter stories, story store, better
+*Built 2026-10-23, not yet fully verified (Windows and iOS not run; see Not yet verified).* Planned 2026-10-22. Source: phone scope "Dino Reader: starter stories, story store, better
 onboarding, backup" (Scope Inbox, 2026-10-22).
 
 **Batch:** 16 (Dino Reader content)
@@ -49,16 +49,16 @@ Source: `docs/design/dino-reader/Dino Reader Batch 16.dc.html`, screens 16 (line
 
 - [x] 0. **Design gate.** Done 2026-10-22: the mock (`Dino Reader Batch 16.dc.html`, screens 16-19 and 24-26) is
   in `docs/design/dino-reader/`, see Design above.
-- [ ] 1. **Backup round-trip (Core, first).** `StoryBackupWriter` and `StoryBackupReader` on top of
+- [x] 1. **Backup round-trip (Core, first).** `StoryBackupWriter` and `StoryBackupReader` on top of
   Slice 91's package. Tests: restore skips existing ids, refuses a newer schema, and survives a
   corrupt entry.
-- [ ] 2. **Backup screen** behind the gate: "Save a backup" and "Restore from a backup", reporting
+- [x] 2. **Backup screen** behind the gate: "Save a backup" and "Restore from a backup", reporting
   how many stories were restored and skipped.
-- [ ] 3. **First-run page.** Language choice (the languages with a Dino voice pack), then the pack
+- [x] 3. **First-run page.** Language choice (the languages with a Dino voice pack), then the pack
   download progress and a ready state. `SpeechStartup` stops defaulting to English on its own.
   Shown once; the Slice 91 starters install alongside it.
-- [ ] 4. Rules into `src/DinoReader.App/CLAUDE.md`.
-- [ ] 5. **Grown-up Language page** (mock screen 26, added with the design). A language pill in the
+- [x] 4. Rules into `src/DinoReader.App/CLAUDE.md`.
+- [x] 5. **Grown-up Language page** (mock screen 26, added with the design). A language pill in the
   grown-up gallery header opens `LanguagePage`: the nine voice-pack languages with Ready /
   Download / Downloading n%, the same choice as first run, starting that language's pack on pick
   (the Slice 81 behaviour, via `ILanguageChangeNotifier`). Also the "Ready for my child" button on
@@ -70,6 +70,37 @@ Source: `docs/design/dino-reader/Dino Reader Batch 16.dc.html`, screens 16 (line
 - Emulator: a fresh install asks the language and shows the download and ready state. Make a
   backup, wipe the app data and restore: stories and casts come back. Restoring twice adds nothing.
 
+## Changed while building
+
+- First-run detection is "no stored language" (an old install always has one, so it never sees the picker).
+- A handover flag (`FirstRunState.HandoverPending`) drives "Ready for my child"; the language pill shows in grown-up mode on every visit.
+- "Pick another language" stops awaiting the download but does not cancel the installer, which is left untouched.
+- The Windows save dialog sits under `#if WINDOWS` in `BackupPage`. All nine languages are listed.
+- The backup is a `.zip` of `.dino` files. Restore dedupes by id or `SourceId` and has a 2 GiB budget; overflow stops the restore and reports "Too large".
+- Strings are machine-drafted in 9 locales. The Dino UI follows `UiFlow` (RTL for Farsi), like the existing Dino pages. The Persian UI font stays until restart after switching back from Farsi.
+
+## From review
+
+- Review 1 (high): findings 1-9 fixed; the upgrade path was confirmed (old installs always store a Language).
+- Review 2 (medium): findings 1-9 fixed. #6 only partly: Android and iOS cannot tell whether the share sheet saved the file.
+- Device (`93-device.md`): 6/6 pass. The gallery language bug found there was fixed afterwards with `DinoApp.RebuildRoot`; that fix was not re-run on a device.
+
 ## Not yet verified
 
-_(filled in when built)_
+- The language rebuild after the first run (`DinoApp.RebuildRoot`), on a device.
+- Windows backup save and restore.
+- iOS.
+- Native-speaker review of the new strings in the 9 locales.
+
+#### For CLAUDE.md
+
+- Backup is one zip (`backup.json` + a `<id>.dino` per story, Core `StoryBackupWriter`/`StoryBackupReader`); restore keeps each story's id, dedupes by id or `SourceId`, counts a damaged package without stopping, stops at a 2 GiB budget ("Too large") and refuses a newer `backup.json` before adding anything. (Slice 93: docs/plan/slices/93-dino-backup-and-first-run.md)
+- A fresh install has no stored language and that is what shows `FirstRunPage`; never store a default language at launch (`SpeechStartup`). `LanguageChoice.Apply` is the one place a language is picked. (Slice 93: docs/plan/slices/93-dino-backup-and-first-run.md)
+- `BackupPage` shares via `Share` (Android, iOS) or a `FileSavePicker` (Windows, `#if WINDOWS`), inside `ExternalActivityGuard`; the mobile share sheet cannot report whether the file was saved. (Slice 93: docs/plan/slices/93-dino-backup-and-first-run.md)
+- Changing language after first run rebuilds the root with `DinoApp.RebuildRoot`; `FirstRunState.HandoverPending` swaps "Done" for "Ready for my child" until the first hand-over. (Slice 93: docs/plan/slices/93-dino-backup-and-first-run.md)
+
+(Already added to `src/DinoReader.App/CLAUDE.md` on this branch by the implementer as one bullet; the index pass should not lift it twice.)
+
+#### For README.md
+
+Not user-facing beyond the app itself; nothing to add.
