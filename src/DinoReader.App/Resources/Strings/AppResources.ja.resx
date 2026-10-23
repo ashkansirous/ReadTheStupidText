@@ -52,6 +52,48 @@
   <data name="Store_EmptyBody" xml:space="preserve"><value>ときどき新しいおはなしが追加されます。またのぞいてね。</value></data>
   <data name="Store_BackToStories" xml:space="preserve"><value>わたしのおはなしにもどる</value></data>
   <data name="Store_GetStory" xml:space="preserve"><value>{0}をもらう</value></data>
+  <data name="Backup_Title" xml:space="preserve"><value>バックアップ</value></data>
+  <data name="Backup_SaveTitle" xml:space="preserve"><value>バックアップを保存</value></data>
+  <data name="Backup_SaveBody_One" xml:space="preserve"><value>ページ、絵、調整したキャストごと、物語を1つのファイルに。ドライブやファイルに保存するか、自分に送れます。</value></data>
+  <data name="Backup_SaveBody_Other" xml:space="preserve"><value>{0}冊すべての物語を、ページ、絵、調整したキャストごと1つのファイルに。ドライブやファイルに保存するか、自分に送れます。</value></data>
+  <data name="Backup_SaveButton" xml:space="preserve"><value>バックアップを保存</value></data>
+  <data name="Backup_RestoreTitle" xml:space="preserve"><value>バックアップから復元</value></data>
+  <data name="Backup_RestoreBody" xml:space="preserve"><value>このスマホにない物語を追加します。すでにある物語はそのままです。</value></data>
+  <data name="Backup_RestoreButton" xml:space="preserve"><value>バックアップファイルを選ぶ</value></data>
+  <data name="Backup_Footer" xml:space="preserve"><value>ファイルは送った先にだけ届きます。Dino がオンラインにコピーを残すことはありません。</value></data>
+  <data name="Backup_Restored_One" xml:space="preserve"><value>{0}冊の物語を復元しました</value></data>
+  <data name="Backup_Restored_Other" xml:space="preserve"><value>{0}冊の物語を復元しました</value></data>
+  <data name="Backup_Added" xml:space="preserve"><value>本棚に追加</value></data>
+  <data name="Backup_Skipped" xml:space="preserve"><value>すでにあるのでスキップ</value></data>
+  <data name="Backup_Damaged" xml:space="preserve"><value>読み込めませんでした</value></data>
+  <data name="Backup_SeeStories" xml:space="preserve"><value>私の物語を見る</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>このバックアップは新しいバージョンの Dino Reader のものです。アプリを更新してからもう一度お試しください。</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>このファイルは Dino Reader のバックアップではありません。</value></data>
+  <data name="Backup_Failed" xml:space="preserve"><value>バックアップに失敗しました。もう一度お試しください。</value></data>
+  <data name="Backup_TooLarge" xml:space="preserve"><value>大きすぎて復元できませんでした</value></data>
+  <data name="Backup_SaveSkipped" xml:space="preserve"><value>{0} 件をバックアップに追加できませんでした。</value></data>
+  <data name="FirstRun_Hello" xml:space="preserve"><value>こんにちは！どの言語で読みますか？</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Dino がその言語の声をダウンロードします。あとでロックの奥で変更できます。</value></data>
+  <data name="FirstRun_Continue" xml:space="preserve"><value>続ける</value></data>
+  <data name="FirstRun_GettingReady" xml:space="preserve"><value>Dino の声を準備中</value></data>
+  <data name="FirstRun_Once" xml:space="preserve"><value>声：{0} · 最初の1回だけです</value></data>
+  <data name="FirstRun_Downloading" xml:space="preserve"><value>ダウンロード中…</value></data>
+  <data name="FirstRun_Waiting" xml:space="preserve"><value>本棚で待っています</value></data>
+  <data name="FirstRun_PickAnother" xml:space="preserve"><value>別の言語を選ぶ</value></data>
+  <data name="FirstRun_Ready" xml:space="preserve"><value>読む準備ができました！</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>どのキャラクターにもそれぞれの声があります。本棚には3冊の物語があります。</value></data>
+  <data name="FirstRun_HearHello" xml:space="preserve"><value>Dino のあいさつを聞く</value></data>
+  <data name="FirstRun_HelloLine" xml:space="preserve"><value>こんにちは！ぼくは Dino。いっしょに物語を読もう。</value></data>
+  <data name="FirstRun_SetUp" xml:space="preserve"><value>物語を設定する</value></data>
+  <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>スマホの声で続ける</value></data>
+  <data name="Gallery_ReadyForChild" xml:space="preserve"><value>子どもに渡す</value></data>
+  <data name="Gallery_GrownUpMode" xml:space="preserve"><value>保護者モード</value></data>
+  <data name="Language_Title" xml:space="preserve"><value>言語</value></data>
+  <data name="Language_Subtitle" xml:space="preserve"><value>Dino はこの言語で読み上げ、翻訳します</value></data>
+  <data name="Language_Ready" xml:space="preserve"><value>準備OK</value></data>
+  <data name="Language_Download" xml:space="preserve"><value>ダウンロード</value></data>
+  <data name="Language_Downloading" xml:space="preserve"><value>ダウンロード中 {0}%</value></data>
+  <data name="Language_Footer" xml:space="preserve"><value>別の言語の物語は、その物語で「自分の言語に翻訳」をオンにしない限り、その言語のまま読み上げられます。</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>3秒間長押ししてください。</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>3秒間長押ししてください</value></data>
   <data name="Gate_KeepHolding" xml:space="preserve"><value>そのまま押し続けて…</value></data>

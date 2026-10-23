@@ -74,25 +74,38 @@
         <local:GalleryTemplateSelector x:Key="Selector" AddTemplate="{StaticResource AddTemplate}" StoryTemplate="{StaticResource StoryTemplate}" />
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="Auto,Auto,*">
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
         <!-- Invisible two-line sample in the tile title font: its measured height sizes every tile title. Its lines are
              fixed, so its height depends only on the font (not on the page or tile width) and the update cannot loop. -->
         <Label x:Name="TitleProbe" HorizontalOptions="Start" Style="{StaticResource TileTitleFont}" Text="&#160;&#10;&#160;" Opacity="0" InputTransparent="True"
                VerticalOptions="Start" AutomationProperties.IsInAccessibleTree="False" SizeChanged="OnTitleProbeSizeChanged" />
-        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Padding="16,10,16,12">
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="10" Padding="16,10,16,12">
             <Border WidthRequest="40" HeightRequest="40" StrokeThickness="0">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="11" />
                 </Border.StrokeShape>
                 <Image Source="dino_icon" Aspect="AspectFill" SemanticProperties.Description="{x:Static res:AppResources.App_Name}" />
             </Border>
-            <Label Grid.Column="1" Text="{x:Static res:AppResources.Gallery_Title}" FontSize="22" FontAttributes="Bold" VerticalOptions="Center"
-                   SemanticProperties.HeadingLevel="Level1">
-                <Label.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnTitleTapped" />
-                </Label.GestureRecognizers>
-            </Label>
-            <Border Grid.Column="2" x:Name="LockButton" WidthRequest="44" HeightRequest="44" BackgroundColor="{StaticResource ControlFill}"
+            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                <Label Text="{x:Static res:AppResources.Gallery_Title}" FontSize="22" FontAttributes="Bold" SemanticProperties.HeadingLevel="Level1">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnTitleTapped" />
+                    </Label.GestureRecognizers>
+                </Label>
+                <Label x:Name="ModeLabel" Text="{x:Static res:AppResources.Gallery_GrownUpMode}" FontSize="12.5" TextColor="{StaticResource Brand}" IsVisible="False" />
+            </VerticalStackLayout>
+            <!-- Language pill (mock 19): the current language, opens the Language page. Grown-up mode only. -->
+            <Border Grid.Column="2" x:Name="LanguagePill" HeightRequest="44" Padding="16,0" BackgroundColor="White" Stroke="{StaticResource MergeBorder}"
+                    StrokeThickness="1.5" IsVisible="False" VerticalOptions="Center" SemanticProperties.Hint="{x:Static res:AppResources.Language_Title}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="22" />
+                </Border.StrokeShape>
+                <Label x:Name="LanguagePillLabel" FontSize="14.5" FontAttributes="Bold" TextColor="{StaticResource Brand}" VerticalOptions="Center" />
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnLanguageTapped" />
+                </Border.GestureRecognizers>
+            </Border>
+            <Border Grid.Column="3" x:Name="LockButton" WidthRequest="44" HeightRequest="44" BackgroundColor="{StaticResource ControlFill}"
                     StrokeThickness="0" SemanticProperties.Description="{x:Static res:AppResources.Gallery_ForGrownUps}" SemanticProperties.Hint="{x:Static res:AppResources.Gallery_OpensGateHint}">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="14" />
@@ -102,12 +115,12 @@
                     <TapGestureRecognizer Tapped="OnLockTapped" />
                 </Border.GestureRecognizers>
             </Border>
-            <Button Grid.Column="2" x:Name="DoneButton" IsVisible="False" Text="{x:Static res:AppResources.Common_Done}" HeightRequest="44" CornerRadius="22"
+            <Button Grid.Column="3" x:Name="DoneButton" IsVisible="False" Text="{x:Static res:AppResources.Common_Done}" HeightRequest="44" CornerRadius="22"
                     Padding="18,0" FontSize="14" BackgroundColor="{StaticResource Brand}" TextColor="White" Clicked="OnDoneClicked" />
         </Grid>
 
-        <!-- Grown-up shortcuts (mock screen 19): Free stories now, Backup beside it in Slice 93. -->
-        <Grid Grid.Row="1" x:Name="GrownUpActions" Padding="14,0,14,12" IsVisible="False">
+        <!-- Grown-up shortcuts (mock screen 19): Free stories (Slice 92) and Backup (Slice 93) side by side. -->
+        <Grid Grid.Row="1" x:Name="GrownUpActions" Padding="14,0,14,12" ColumnDefinitions="*,*" ColumnSpacing="10" IsVisible="False">
             <Border x:Name="StoreButton" HeightRequest="48" BackgroundColor="White" Stroke="{StaticResource MergeBorder}" StrokeThickness="2"
                     SemanticProperties.Description="{x:Static res:AppResources.Store_Title}">
                 <Border.StrokeShape>
@@ -121,6 +134,19 @@
                     <TapGestureRecognizer Tapped="OnStoreTapped" />
                 </Border.GestureRecognizers>
             </Border>
+            <Border Grid.Column="1" x:Name="BackupButton" HeightRequest="48" BackgroundColor="White" Stroke="{StaticResource MergeBorder}" StrokeThickness="2"
+                    SemanticProperties.Description="{x:Static res:AppResources.Backup_Title}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16" />
+                </Border.StrokeShape>
+                <HorizontalStackLayout Spacing="8" Padding="12,0" VerticalOptions="Center" HorizontalOptions="Center">
+                    <local:IconView Kind="File" Color="{StaticResource Brand}" Size="20" StrokeWidth="2.2" VerticalOptions="Center" />
+                    <Label Text="{x:Static res:AppResources.Backup_Title}" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource Brand}" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackupTapped" />
+                </Border.GestureRecognizers>
+            </Border>
         </Grid>
 
         <CollectionView Grid.Row="2" x:Name="StoryList" SelectionMode="None" Margin="14,0" ItemTemplate="{StaticResource Selector}">
@@ -128,5 +154,8 @@
                 <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="12" VerticalItemSpacing="12" />
             </CollectionView.ItemsLayout>
         </CollectionView>
+
+        <!-- First grown-up view only (mock 19): hands the phone to the child. Later visits use the Done button in the header. -->
+        <local:CoralButton Grid.Row="3" x:Name="HandoverButton" Margin="22,8,22,14" Icon="Book" IsVisible="False" Clicked="OnHandoverClicked" />
     </Grid>
 </ContentPage>

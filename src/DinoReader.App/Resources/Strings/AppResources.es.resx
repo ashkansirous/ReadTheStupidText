@@ -52,6 +52,48 @@
   <data name="Store_EmptyBody" xml:space="preserve"><value>De vez en cuando se añaden otros. Vuelve pronto.</value></data>
   <data name="Store_BackToStories" xml:space="preserve"><value>Volver a mis cuentos</value></data>
   <data name="Store_GetStory" xml:space="preserve"><value>Obtener {0}</value></data>
+  <data name="Backup_Title" xml:space="preserve"><value>Copia de seguridad</value></data>
+  <data name="Backup_SaveTitle" xml:space="preserve"><value>Guardar una copia</value></data>
+  <data name="Backup_SaveBody_One" xml:space="preserve"><value>Tu cuento en un solo archivo, con sus páginas, imágenes y reparto ya ajustado. Guárdalo en Drive o Archivos, o envíatelo a ti mismo.</value></data>
+  <data name="Backup_SaveBody_Other" xml:space="preserve"><value>Los {0} cuentos en un solo archivo, con sus páginas, imágenes y repartos ya ajustados. Guárdalo en Drive o Archivos, o envíatelo a ti mismo.</value></data>
+  <data name="Backup_SaveButton" xml:space="preserve"><value>Guardar una copia</value></data>
+  <data name="Backup_RestoreTitle" xml:space="preserve"><value>Restaurar desde una copia</value></data>
+  <data name="Backup_RestoreBody" xml:space="preserve"><value>Añade los cuentos que este teléfono no tiene. Los cuentos que ya están aquí se quedan tal cual.</value></data>
+  <data name="Backup_RestoreButton" xml:space="preserve"><value>Elegir un archivo de copia</value></data>
+  <data name="Backup_Footer" xml:space="preserve"><value>El archivo solo va adonde tú lo envíes. Dino no guarda ninguna copia en línea.</value></data>
+  <data name="Backup_Restored_One" xml:space="preserve"><value>{0} cuento restaurado</value></data>
+  <data name="Backup_Restored_Other" xml:space="preserve"><value>{0} cuentos restaurados</value></data>
+  <data name="Backup_Added" xml:space="preserve"><value>Añadidos a la estantería</value></data>
+  <data name="Backup_Skipped" xml:space="preserve"><value>Ya estaban, omitidos</value></data>
+  <data name="Backup_Damaged" xml:space="preserve"><value>No se pudieron leer</value></data>
+  <data name="Backup_SeeStories" xml:space="preserve"><value>Ver mis cuentos</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>Esta copia es de una versión más nueva de Dino Reader. Actualiza la app y vuelve a intentarlo.</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>Ese archivo no es una copia de Dino Reader.</value></data>
+  <data name="Backup_Failed" xml:space="preserve"><value>La copia no funcionó. Inténtalo de nuevo.</value></data>
+  <data name="Backup_TooLarge" xml:space="preserve"><value>Demasiado grandes para restaurar</value></data>
+  <data name="Backup_SaveSkipped" xml:space="preserve"><value>No se pudieron añadir {0} a la copia.</value></data>
+  <data name="FirstRun_Hello" xml:space="preserve"><value>¡Hola! ¿En qué idioma leemos?</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Dino descarga una voz para ese idioma. Puedes cambiarlo más tarde detrás del candado.</value></data>
+  <data name="FirstRun_Continue" xml:space="preserve"><value>Continuar</value></data>
+  <data name="FirstRun_GettingReady" xml:space="preserve"><value>Preparando la voz de Dino</value></data>
+  <data name="FirstRun_Once" xml:space="preserve"><value>Voz: {0} · esto solo pasa una vez</value></data>
+  <data name="FirstRun_Downloading" xml:space="preserve"><value>Descargando…</value></data>
+  <data name="FirstRun_Waiting" xml:space="preserve"><value>Esperando en la estantería</value></data>
+  <data name="FirstRun_PickAnother" xml:space="preserve"><value>Elegir otro idioma</value></data>
+  <data name="FirstRun_Ready" xml:space="preserve"><value>¡Listo para leer!</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Cada personaje tiene su propia voz. Hay tres cuentos en la estantería.</value></data>
+  <data name="FirstRun_HearHello" xml:space="preserve"><value>Oír a Dino saludar</value></data>
+  <data name="FirstRun_HelloLine" xml:space="preserve"><value>¡Hola! Soy Dino. Vamos a leer un cuento juntos.</value></data>
+  <data name="FirstRun_SetUp" xml:space="preserve"><value>Preparar los cuentos</value></data>
+  <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>Continuar con la voz del teléfono</value></data>
+  <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Listo para mi peque</value></data>
+  <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Modo adultos</value></data>
+  <data name="Language_Title" xml:space="preserve"><value>Idioma</value></data>
+  <data name="Language_Subtitle" xml:space="preserve"><value>Dino lee y traduce a este idioma</value></data>
+  <data name="Language_Ready" xml:space="preserve"><value>Listo</value></data>
+  <data name="Language_Download" xml:space="preserve"><value>Descargar</value></data>
+  <data name="Language_Downloading" xml:space="preserve"><value>Descargando {0}%</value></data>
+  <data name="Language_Footer" xml:space="preserve"><value>Un cuento en otro idioma se lee igualmente en su propio idioma, salvo que «Traducir a mi idioma» esté activado para ese cuento.</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Mantén pulsado 3 segundos.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Mantén pulsado 3 segundos</value></data>
   <data name="Gate_KeepHolding" xml:space="preserve"><value>Sigue manteniendo…</value></data>

@@ -2,7 +2,9 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using DinoReader.Core;
+using DinoReader.Resources.Strings;
 using Microsoft.Extensions.DependencyInjection;
+using ReadTheStupidText.Application.Settings;
 
 namespace DinoReader;
 
@@ -107,8 +109,14 @@ public partial class GalleryPage : ContentPage
 
 	private void ApplyModeChrome(bool grownUp)
 	{
+		bool handover = grownUp && FirstRunState.HandoverPending;
 		LockButton.IsVisible = !grownUp;
-		DoneButton.IsVisible = grownUp;
+		DoneButton.IsVisible = grownUp && !handover;
+		HandoverButton.IsVisible = handover;
+		HandoverButton.Text = AppResources.Gallery_ReadyForChild;
+		ModeLabel.IsVisible = grownUp;
+		LanguagePill.IsVisible = grownUp;
+		LanguagePillLabel.Text = LanguageNames.NativeName(LanguageChoice.Current(_services.GetRequiredService<ISettingsStore>()));
 		GrownUpActions.IsVisible = grownUp;
 		BackgroundColor = DinoTokens.Get(grownUp ? DinoTokens.Sand : DinoTokens.Cream);
 	}
@@ -143,6 +151,20 @@ public partial class GalleryPage : ContentPage
 		if (_mode.IsGrownUp)
 		{
 			await Navigation.PushAsync(store);
+		}
+	}
+
+	// Backup (Slice 93): a grown-up page, so it is only reachable in grown-up mode and closes with it.
+	private async void OnBackupTapped(object? sender, TappedEventArgs e) => await RunGrownUpAsync(() => OpenGrownUpPageAsync<BackupPage>());
+
+	private async void OnLanguageTapped(object? sender, TappedEventArgs e) => await RunGrownUpAsync(() => OpenGrownUpPageAsync<LanguagePage>());
+
+	private async Task OpenGrownUpPageAsync<TPage>() where TPage : Page
+	{
+		var page = _services.GetRequiredService<TPage>();
+		if (_mode.IsGrownUp)
+		{
+			await Navigation.PushAsync(page);
 		}
 	}
 
@@ -258,4 +280,11 @@ public partial class GalleryPage : ContentPage
 	}
 
 	private void OnDoneClicked(object? sender, EventArgs e) => _mode.Leave();
+
+	// The first hand-over (Slice 93): from now on the header shows Done instead.
+	private void OnHandoverClicked(object? sender, EventArgs e)
+	{
+		FirstRunState.HandoverPending = false;
+		_mode.Leave();
+	}
 }

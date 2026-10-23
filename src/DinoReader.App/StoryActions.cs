@@ -16,9 +16,7 @@ public enum DeleteOutcome
 /// <summary>Library actions the gallery's grown-up overlay and the edit screens share.</summary>
 public sealed class StoryActions(IStoryLibrary library, IServiceProvider services, GrownUpMode mode)
 {
-	private const string ExportFolder = "exports";
 	private const string FallbackFileName = "story";
-	private static readonly TimeSpan StaleExportAge = TimeSpan.FromHours(1);
 
 	/// <summary>Opens the reading screen on <paramref name="story"/>.</summary>
 	public async Task ReadAsync(INavigation navigation, Story story)
@@ -94,41 +92,11 @@ public sealed class StoryActions(IStoryLibrary library, IServiceProvider service
 
 	private async Task<string> WriteExportAsync(Story story)
 	{
-		string root = Path.Combine(FileSystem.CacheDirectory, ExportFolder);
-		DeleteStaleExports(root);
-		string folder = Path.Combine(root, Guid.NewGuid().ToString("N"));
-		Directory.CreateDirectory(folder);
+		string folder = ExportFolders.CreateNew();
 		string path = Path.Combine(folder, ExportFileName(story.Title));
 		await using FileStream output = File.Create(path);
 		await StoryPackageWriter.WriteAsync(story, library, output);
 		return path;
-	}
-
-	// Each export gets its own folder, so a second export never truncates a file a share target is still reading; old ones go.
-	private static void DeleteStaleExports(string root)
-	{
-		if (!Directory.Exists(root))
-		{
-			return;
-		}
-
-		foreach (string old in Directory.GetDirectories(root).Where(d => DateTime.UtcNow - Directory.GetCreationTimeUtc(d) > StaleExportAge))
-		{
-			TryDeleteExport(old);
-		}
-	}
-
-	// Best effort: a folder a share target still holds open must not stop a new export.
-	private static void TryDeleteExport(string folder)
-	{
-		try
-		{
-			Directory.Delete(folder, recursive: true);
-		}
-		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-		{
-			Debug.WriteLine($"Dino Reader could not remove an old export: {ex.Message}");
-		}
 	}
 
 	private const int MaxExportNameLength = 60;
