@@ -1,11 +1,11 @@
 # Slice 92 — A free, curated Dino story store behind the grown-up gate
 
-*Planned 2026-10-22.* Source: phone scope "Dino Reader: starter stories, story store, better
+*Built 2026-10-23; device-tested 6/6 against a local wrangler with local R2, production Worker routes not yet checked.* Planned 2026-10-22. Source: phone scope "Dino Reader: starter stories, story store, better
 onboarding, backup" (Scope Inbox, 2026-10-22).
 
 **Batch:** 16 (Dino Reader content)
 **Depends on:** Slice 91 (the `.dino` package and import); the store screen in Claude Design (Decision 99)
-**Touches:** `worker/index.ts`, `worker/stories.ts` (new), `worker/downloads.ts`, `worker/download-keys.mjs`, `worker/download-keys.d.mts`, `wrangler.jsonc`, `wrangler.workers-dev.jsonc`, `worker/check-configs.mjs`, `worker/*.test.mjs`, `src/DinoReader.App/StorePage.xaml` (new), `src/DinoReader.App/StorePage.xaml.cs` (new), `src/DinoReader.App/StoreClient.cs` (new), `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Platforms/Android/AndroidManifest.xml` (comment only), `src/DinoReader.App/Platforms/iOS/Info.plist` (comment only), `site/dino/privacy.html`, `PRIVACY.md`, `docs/design/dino-reader/**`, `src/DinoReader.App/CLAUDE.md`, `CLAUDE.md` (landing-site paragraph)
+**Touches:** `worker/index.ts`, `worker/stories.ts` (new), `worker/downloads.ts`, `worker/download-keys.mjs`, `worker/download-keys.d.mts`, `wrangler.jsonc`, `wrangler.workers-dev.jsonc`, `worker/check-configs.mjs`, `worker/*.test.mjs`, `src/DinoReader.App/StorePage.xaml` (new), `src/DinoReader.App/StorePage.xaml.cs` (new), `src/DinoReader.App/StoreClient.cs` (new), `src/DinoReader.Core/StoreCatalog.cs` (new), `tests/DinoReader.Tests/StoreCatalogTests.cs` (new), `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/Resources/Strings/AppResources*.resx`, `src/DinoReader.App/Platforms/Android/AndroidManifest.xml` (comment only), `src/DinoReader.App/Platforms/iOS/Info.plist` (comment only), `site/dino/privacy.html`, `PRIVACY.md`, `docs/design/dino-reader/**`, `src/DinoReader.App/CLAUDE.md`, `CLAUDE.md` (landing-site paragraph)
 **Story issue:** —
 
 ## Why
@@ -55,12 +55,12 @@ Source: `docs/design/dino-reader/Dino Reader Batch 16.dc.html`, screens 21 (line
 
 - [x] 0. **Design gate.** Done 2026-10-22: the mock (`Dino Reader Batch 16.dc.html`, screens 21-23) is
   in `docs/design/dino-reader/`, see Design above. Item 1 doesn't wait for it; item 2 does.
-- [ ] 1. **Worker API, end to end with one real story.** `worker/stories.ts`, the routes and
+- [x] 1. **Worker API, end to end with one real story.** `worker/stories.ts`, the routes and
   twins, key helpers, and tests for "complete folders only" and the versioned download. Upload one
   starter by hand and fetch it from `dinoreader.sirous.uk/api/stories`.
-- [ ] 2. **Store screen.** `StoreClient` (list, cover, download into Slice 91's import) and
+- [x] 2. **Store screen.** `StoreClient` (list, cover, download into Slice 91's import) and
   `StorePage` per the mock, entered from the grown-up gallery.
-- [ ] 3. **Privacy and policy text**, plus the rules into `src/DinoReader.App/CLAUDE.md` and the
+- [x] 3. **Privacy and policy text**, plus the rules into `src/DinoReader.App/CLAUDE.md` and the
   root `CLAUDE.md` landing-site paragraph.
 
 ## Verification
@@ -70,6 +70,33 @@ Source: `docs/design/dino-reader/Dino Reader Batch 16.dc.html`, screens 21 (line
 - Emulator: a grown-up opens the store and downloads a story, which appears in the gallery with
   its cast. Airplane mode shows the offline state.
 
+## Changed while building
+
+- `PRIVACY.md` is unchanged: it covers RTST only; `site/dino/privacy.html` is updated.
+- The Free stories button is full width; Slice 93 puts Backup beside it.
+- The download and wifi icons are inline `Path`s.
+- Parsing lives in `DinoReader.Core/StoreCatalog` (tested in `StoreCatalogTests`).
+- Meta reads run in batches of 6 and a failed read returns 503. More than about 45 stories needs an `index.json` (subrequest cap).
+- Covers are served with a 1-hour cache.
+- The gallery refreshes on `StoreClient.LibraryChanged`.
+
+## From review
+
+- High pass (`reviews/92-review-high.md`): 1-10 fixed; #9 kept the duplication.
+- Medium pass (`reviews/92-review-medium.md`): 1-8 and 10 fixed; #9 got only the case fix; #7 changed so leaving the page does not cancel the download.
+- Device (`reviews/92-device.md`): 6/6 pass against a local wrangler with local R2.
+
 ## Not yet verified
 
-_(filled in when built)_
+- "Try again" after going offline, on a device.
+- The gallery refresh on `StoreClient.LibraryChanged`, on a device.
+- The production Worker routes (`/api/stories*`) after deploy.
+- The store has no curated stories yet: `dinoreader/stories/` in the bucket is empty until the user picks some, so the app shows the empty state.
+
+#### For CLAUDE.md
+
+Already added on this branch: the Worker/bucket layout in the root `CLAUDE.md` landing-site paragraph, and the `StoreClient`/`StorePage` rules in `src/DinoReader.App/CLAUDE.md` (Slice 92: docs/plan/slices/92-dino-story-store.md). Lift nothing further.
+
+#### For README.md
+
+Dino Reader: grown-ups can browse and download free curated stories from the in-app store (Free stories button in the gallery); nothing about the user is sent.

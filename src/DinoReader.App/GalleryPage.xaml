@@ -74,7 +74,7 @@
         <local:GalleryTemplateSelector x:Key="Selector" AddTemplate="{StaticResource AddTemplate}" StoryTemplate="{StaticResource StoryTemplate}" />
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="Auto,*">
+    <Grid RowDefinitions="Auto,Auto,*">
         <!-- Invisible two-line sample in the tile title font: its measured height sizes every tile title. Its lines are
              fixed, so its height depends only on the font (not on the page or tile width) and the update cannot loop. -->
         <Label x:Name="TitleProbe" HorizontalOptions="Start" Style="{StaticResource TileTitleFont}" Text="&#160;&#10;&#160;" Opacity="0" InputTransparent="True"
@@ -106,7 +106,24 @@
                     Padding="18,0" FontSize="14" BackgroundColor="{StaticResource Brand}" TextColor="White" Clicked="OnDoneClicked" />
         </Grid>
 
-        <CollectionView Grid.Row="1" x:Name="StoryList" SelectionMode="None" Margin="14,0" ItemTemplate="{StaticResource Selector}">
+        <!-- Grown-up shortcuts (mock screen 19): Free stories now, Backup beside it in Slice 93. -->
+        <Grid Grid.Row="1" x:Name="GrownUpActions" Padding="14,0,14,12" IsVisible="False">
+            <Border x:Name="StoreButton" HeightRequest="48" BackgroundColor="White" Stroke="{StaticResource MergeBorder}" StrokeThickness="2"
+                    SemanticProperties.Description="{x:Static res:AppResources.Store_Title}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16" />
+                </Border.StrokeShape>
+                <HorizontalStackLayout Spacing="8" Padding="12,0" VerticalOptions="Center" HorizontalOptions="Center">
+                    <local:IconView Kind="Book" Color="{StaticResource Brand}" Size="20" StrokeWidth="2.2" VerticalOptions="Center" />
+                    <Label Text="{x:Static res:AppResources.Store_Title}" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource Brand}" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnStoreTapped" />
+                </Border.GestureRecognizers>
+            </Border>
+        </Grid>
+
+        <CollectionView Grid.Row="2" x:Name="StoryList" SelectionMode="None" Margin="14,0" ItemTemplate="{StaticResource Selector}">
             <CollectionView.ItemsLayout>
                 <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="12" VerticalItemSpacing="12" />
             </CollectionView.ItemsLayout>

@@ -39,6 +39,19 @@
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>Удалить {0}</value></data>
   <data name="Gallery_ExportStory" xml:space="preserve"><value>Экспортировать историю</value></data>
   <data name="Gallery_CastButton" xml:space="preserve"><value>Герои</value></data>
+  <data name="Store_Title" xml:space="preserve"><value>Бесплатные истории</value></data>
+  <data name="Store_Subtitle" xml:space="preserve"><value>Подобраны и распределены по ролям для Дино</value></data>
+  <data name="Store_Get" xml:space="preserve"><value>Скачать</value></data>
+  <data name="Store_Downloaded" xml:space="preserve"><value>Скачано</value></data>
+  <data name="Store_Length" xml:space="preserve"><value>{0} стр. · {1} мин</value></data>
+  <data name="Store_Footer" xml:space="preserve"><value>Бесплатно и без аккаунта. Ничего о вас или вашем ребёнке не отправляется.</value></data>
+  <data name="Store_OfflineTitle" xml:space="preserve"><value>Нет подключения</value></data>
+  <data name="Store_OfflineBody" xml:space="preserve"><value>Для бесплатных историй нужен интернет. Истории, которые уже на полке, читаются и без него.</value></data>
+  <data name="Store_TryAgain" xml:space="preserve"><value>Повторить</value></data>
+  <data name="Store_EmptyTitle" xml:space="preserve"><value>Новых историй пока нет</value></data>
+  <data name="Store_EmptyBody" xml:space="preserve"><value>Новые истории добавляются время от времени. Загляните позже.</value></data>
+  <data name="Store_BackToStories" xml:space="preserve"><value>К моим историям</value></data>
+  <data name="Store_GetStory" xml:space="preserve"><value>Скачать: {0}</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Нажмите и удерживайте 3 секунды.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Нажмите и удерживайте 3 секунды</value></data>
   <data name="Gate_KeepHolding" xml:space="preserve"><value>Продолжайте удерживать…</value></data>

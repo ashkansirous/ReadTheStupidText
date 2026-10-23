@@ -126,7 +126,8 @@ command `npm run deploy`, watch paths `worker/*`, `site/*`, `wrangler*.jsonc`, `
 record: delete it first (wrangler has no DNS scope). Privacy policy edits touch both `PRIVACY.md` and
 `site/privacy.html`. Don't add `docs/CNAME` or a GitHub Actions deploy. See `docs/DEPLOYING.md`.
 The Worker also serves `dinoreader.sirous.uk` -> `site/dino/` (workers.dev: `/dino/` prefix); host routing is in `worker/downloads.ts` (`resolveSite`), every `run_worker_first` path needs its `/dino` twin (`check-configs` enforces), and the Dino site makes no third-party requests (kids' app).
-(Slice 68: docs/plan/slices/68-landing-site-on-worker.md; Slice 74: docs/plan/slices/74-dino-reader-site.md)
+The Dino host also serves the free story store (Slice 92): `GET /api/stories`, `/api/stories/<id>/cover` and `/api/stories/<id>/download[?v=n]` (`worker/stories.ts`, Dino only; `/api/stories` and `/api/stories/*` plus their `/dino` twins are in `run_worker_first`). Stories are uploaded by hand to `dinoreader/stories/<id>/{meta.json, cover.jpg, story-v<n>.dino}` in the downloads bucket, `meta.json` last: a folder is listed only with `meta.json` and a package, and `meta.json` carries `schemaVersion` (the `.dino` format), `title`, `language`, `pageCount`, `minutes`, optional `version`/`added`. The story id is the package id; upload a new `story-v<n+1>.dino` rather than overwriting a version (`?v=` is cached for a day).
+(Slice 68: docs/plan/slices/68-landing-site-on-worker.md; Slice 74: docs/plan/slices/74-dino-reader-site.md; Slice 92: docs/plan/slices/92-dino-story-store.md)
 
 ## Tests
 
