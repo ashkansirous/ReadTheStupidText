@@ -1,6 +1,6 @@
 # Slice 93 — Dino backup file and a first run that asks the language
 
-*Planned 2026-10-22.* Source: phone scope "Dino Reader: starter stories, story store, better
+*In progress (wave 2026-10-23), draft PR.* Planned 2026-10-22. Source: phone scope "Dino Reader: starter stories, story store, better
 onboarding, backup" (Scope Inbox, 2026-10-22).
 
 **Batch:** 16 (Dino Reader content)
