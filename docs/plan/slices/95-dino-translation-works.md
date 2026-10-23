@@ -83,11 +83,11 @@ own language, whatever language the grown-up picked.
 
 RTST_Test, Debug arm64: fresh install shows 4 starters; Farsi picked without restart gives 22050 Hz piper WAVs for Pigs and Good Enough only, pause/resume stays Farsi, English back gives 44100 Hz. A typed English story with Translate on downloaded the ML Kit en_fa model and played Farsi audio. No crashes.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-23)
 
 Rules are in `src/DinoReader.App/CLAUDE.md` and `src/DinoReader.Core/CLAUDE.md` and were amended: `MyLanguage` is `LanguageChoice.Current()`, never `CultureInfo.CurrentUICulture`; pieces must come from `StoryPieces.Split`. (Slice 95: docs/plan/slices/95-dino-translation-works.md)
 
-#### For README.md
+#### For README.md (lifted 2026-10-23)
 
 Dino Reader starters can be read in any of the nine languages; your own stories translate on Android.
 
