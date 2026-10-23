@@ -37,6 +37,7 @@
   <data name="Gallery_EditStory" xml:space="preserve"><value>Изменить {0}</value></data>
   <data name="Gallery_CastStory" xml:space="preserve"><value>Герои: {0}</value></data>
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>Удалить {0}</value></data>
+  <data name="Gallery_ExportStory" xml:space="preserve"><value>Экспортировать историю</value></data>
   <data name="Gallery_CastButton" xml:space="preserve"><value>Герои</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Нажмите и удерживайте 3 секунды.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Нажмите и удерживайте 3 секунды</value></data>

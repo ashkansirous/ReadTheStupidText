@@ -1,0 +1,45 @@
+using System.IO.Compression;
+using System.Text;
+
+namespace DinoReader.Core;
+
+/// <summary>Writes a story as a <c>.dino</c> package (Slice 91): the manifest, <c>story.json</c> and the pictures the story names.</summary>
+public static class StoryPackageWriter
+{
+    /// <summary>Writes <paramref name="story"/> and its page and cover pictures from <paramref name="library"/> to <paramref name="output"/>.
+    /// A picture the story names but the folder lacks is left out. The package id is the story's <see cref="Story.SourceId"/> when it
+    /// came from a package, so a re-exported story keeps its identity, else its own id.</summary>
+    public static async Task WriteAsync(Story story, IStoryLibrary library, Stream output)
+    {
+        string packageId = story.SourceId ?? story.Id;
+        using var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true);
+        var manifest = new StoryPackageManifest(StoryPackageManifest.CurrentSchemaVersion, packageId, story.Title, story.Language);
+        await AddTextAsync(zip, StoryPackageManifest.ManifestFileName, manifest.ToJson());
+        await AddTextAsync(zip, StoryPackageManifest.StoryFileName, StoryJson.Serialize(story with { SourceId = null }));
+        foreach (string name in story.PictureFiles())
+        {
+            await AddPictureAsync(zip, library.TryResolveFile(story.Id, name), name);
+        }
+    }
+
+    private static async Task AddTextAsync(ZipArchive zip, string name, string text)
+    {
+        ZipArchiveEntry entry = zip.CreateEntry(name, CompressionLevel.Optimal);
+        await using Stream stream = entry.Open();
+        await stream.WriteAsync(new UTF8Encoding(false).GetBytes(text));
+    }
+
+    private static async Task AddPictureAsync(ZipArchive zip, string? path, string name)
+    {
+        if (path is null || !File.Exists(path))
+        {
+            return;
+        }
+
+        // Pictures are already compressed, so storing them saves time for nothing lost.
+        ZipArchiveEntry entry = zip.CreateEntry(name, CompressionLevel.NoCompression);
+        await using Stream target = entry.Open();
+        await using FileStream source = File.OpenRead(path);
+        await source.CopyToAsync(target);
+    }
+}

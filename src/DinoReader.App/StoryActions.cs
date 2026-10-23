@@ -16,6 +16,10 @@ public enum DeleteOutcome
 /// <summary>Library actions the gallery's grown-up overlay and the edit screens share.</summary>
 public sealed class StoryActions(IStoryLibrary library, IServiceProvider services, GrownUpMode mode)
 {
+	private const string ExportFolder = "exports";
+	private const string FallbackFileName = "story";
+	private static readonly TimeSpan StaleExportAge = TimeSpan.FromHours(1);
+
 	/// <summary>Opens the reading screen on <paramref name="story"/>.</summary>
 	public async Task ReadAsync(INavigation navigation, Story story)
 	{
@@ -62,6 +66,77 @@ public sealed class StoryActions(IStoryLibrary library, IServiceProvider service
 		{
 			Cast = edited.Cast, CharacterMerges = edited.Merges, NarratorVoiceId = edited.NarratorVoiceId,
 		});
+	}
+
+	/// <summary>Developer-only (Slice 91): writes <paramref name="story"/> as a <c>.dino</c> package and hands it to the share sheet.
+	/// Does nothing unless grown-up mode and the developer switch are both on.</summary>
+	public async Task ExportAsync(Story story)
+	{
+		if (!mode.IsGrownUp || !DeveloperMode.Enabled)
+		{
+			return;
+		}
+
+		try
+		{
+			string path = await WriteExportAsync(story);
+			await services.GetRequiredService<ExternalActivityGuard>().RunAsync(async () =>
+			{
+				await Share.Default.RequestAsync(new ShareFileRequest(story.Title, new ShareFile(path)));
+				return true;
+			});
+		}
+		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or FeatureNotSupportedException)
+		{
+			Debug.WriteLine($"Dino Reader export failed: {ex}");
+		}
+	}
+
+	private async Task<string> WriteExportAsync(Story story)
+	{
+		string root = Path.Combine(FileSystem.CacheDirectory, ExportFolder);
+		DeleteStaleExports(root);
+		string folder = Path.Combine(root, Guid.NewGuid().ToString("N"));
+		Directory.CreateDirectory(folder);
+		string path = Path.Combine(folder, ExportFileName(story.Title));
+		await using FileStream output = File.Create(path);
+		await StoryPackageWriter.WriteAsync(story, library, output);
+		return path;
+	}
+
+	// Each export gets its own folder, so a second export never truncates a file a share target is still reading; old ones go.
+	private static void DeleteStaleExports(string root)
+	{
+		if (!Directory.Exists(root))
+		{
+			return;
+		}
+
+		foreach (string old in Directory.GetDirectories(root).Where(d => DateTime.UtcNow - Directory.GetCreationTimeUtc(d) > StaleExportAge))
+		{
+			TryDeleteExport(old);
+		}
+	}
+
+	// Best effort: a folder a share target still holds open must not stop a new export.
+	private static void TryDeleteExport(string folder)
+	{
+		try
+		{
+			Directory.Delete(folder, recursive: true);
+		}
+		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+		{
+			Debug.WriteLine($"Dino Reader could not remove an old export: {ex.Message}");
+		}
+	}
+
+	private const int MaxExportNameLength = 60;
+
+	private static string ExportFileName(string title)
+	{
+		string clean = string.Concat(title.Where(char.IsLetterOrDigit).Take(MaxExportNameLength));
+		return (clean.Length > 0 ? clean : FallbackFileName) + StoryPackageManifest.Extension;
 	}
 
 	/// <summary>Asks for confirmation, then deletes the story's folder. </summary>

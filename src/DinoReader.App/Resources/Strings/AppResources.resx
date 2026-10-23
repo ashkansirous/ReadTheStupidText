@@ -40,6 +40,7 @@
   <data name="Gallery_EditStory" xml:space="preserve"><value>Edit {0}</value></data>
   <data name="Gallery_CastStory" xml:space="preserve"><value>Cast of {0}</value></data>
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>Delete {0}</value></data>
+  <data name="Gallery_ExportStory" xml:space="preserve"><value>Export story</value></data>
   <data name="Gallery_CastButton" xml:space="preserve"><value>Cast</value></data>
   <data name="Gate_HoldBody" xml:space="preserve"><value>Press and hold for 3 seconds.</value></data>
   <data name="Gate_HoldDescription" xml:space="preserve"><value>Press and hold for 3 seconds</value></data>

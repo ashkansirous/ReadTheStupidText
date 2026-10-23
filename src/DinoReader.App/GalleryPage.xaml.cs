@@ -15,16 +15,18 @@ public partial class GalleryPage : ContentPage
 	private readonly GrownUpGate _gate;
 	private readonly GrownUpMode _mode;
 	private readonly StoryActions _actions;
+	private readonly StarterStories _starters;
 	private readonly BusyGuard _busy = new();
 	private readonly ObservableCollection<object> _items = [];
 
-	public GalleryPage(IStoryLibrary library, GrownUpGate gate, GrownUpMode mode, StoryActions actions)
+	public GalleryPage(IStoryLibrary library, GrownUpGate gate, GrownUpMode mode, StoryActions actions, StarterStories starters)
 	{
 		InitializeComponent();
 		_library = library;
 		_gate = gate;
 		_mode = mode;
 		_actions = actions;
+		_starters = starters;
 		StoryList.ItemsSource = _items;
 	}
 
@@ -36,6 +38,8 @@ public partial class GalleryPage : ContentPage
 		ApplyMode();
 		try
 		{
+			// The starters are on the shelf before the first list is read (Slice 91); a later call is a no-op.
+			await _starters.InstallOnceAsync();
 			await RefreshAsync();
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
@@ -124,6 +128,36 @@ public partial class GalleryPage : ContentPage
 		if (TileOf(sender) is { } tile)
 		{
 			await RunGrownUpAsync(() => _actions.CastAsync(Navigation, tile.Story));
+		}
+	}
+
+	private async void OnExportRequested(object? sender, EventArgs e)
+	{
+		if (TileOf(sender) is { } tile)
+		{
+			await RunGrownUpAsync(() => _actions.ExportAsync(tile.Story));
+		}
+	}
+
+	// Seven taps on the title in grown-up mode flip the developer switch (Slice 91); the tiles are rebuilt to show or hide Export.
+	private async void OnTitleTapped(object? sender, TappedEventArgs e)
+	{
+		if (!_mode.IsGrownUp)
+		{
+			DeveloperMode.ResetTaps();
+			return;
+		}
+
+		try
+		{
+			if (DeveloperMode.RegisterTap())
+			{
+				await RefreshAsync();
+			}
+		}
+		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+		{
+			Debug.WriteLine($"Dino Reader gallery refresh failed: {ex}");
 		}
 	}
 

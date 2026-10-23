@@ -30,6 +30,24 @@
                         SemanticProperties.Description="{Binding CastHint}" Clicked="OnCastClicked" />
             </Grid>
         </Border>
+        <!-- Developer-only Export story (Slice 91): the purple mirror of the trash badge, top-left. -->
+        <Grid HorizontalOptions="Start" VerticalOptions="Start" WidthRequest="44" HeightRequest="44"
+              IsVisible="{Binding ShowExport}" SemanticProperties.Description="{Binding ExportHint}">
+            <Border WidthRequest="32" HeightRequest="32" BackgroundColor="{StaticResource Brand}" StrokeThickness="0">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16" />
+                </Border.StrokeShape>
+                <Border.Shadow>
+                    <Shadow Brush="Black" Opacity="0.2" Offset="0,2" Radius="3" />
+                </Border.Shadow>
+                <Path Stroke="White" StrokeThickness="2.4" StrokeLineCap="Round" StrokeLineJoin="Round" Aspect="Uniform"
+                      WidthRequest="16" HeightRequest="16" HorizontalOptions="Center" VerticalOptions="Center"
+                      Data="M12 15V4 M8 8l4-4 4 4 M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7" />
+            </Border>
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnExportTapped" />
+            </Grid.GestureRecognizers>
+        </Grid>
         <Grid HorizontalOptions="End" VerticalOptions="Start" WidthRequest="44" HeightRequest="44"
               SemanticProperties.Description="{Binding DeleteHint}">
             <Border WidthRequest="32" HeightRequest="32" BackgroundColor="{StaticResource Danger}" StrokeThickness="0">
