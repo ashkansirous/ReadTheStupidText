@@ -111,6 +111,8 @@ this plan turns it into ordered, shippable vertical slices.
 | 91 | Dino stories as packages, three starter stories, developer export | built | #263 | | [91-dino-story-packages-and-starters.md](docs/plan/slices/91-dino-story-packages-and-starters.md) |
 | 92 | A free, curated Dino story store behind the grown-up gate | built | #266 | | [92-dino-story-store.md](docs/plan/slices/92-dino-story-store.md) |
 | 93 | Dino backup file and a first run that asks the language | built | #267 | | [93-dino-backup-and-first-run.md](docs/plan/slices/93-dino-backup-and-first-run.md) |
+| 94 | "Good Enough" ships as a starter story | planned | | | [94-good-enough-starter.md](docs/plan/slices/94-good-enough-starter.md) |
+| 95 | Dino translation works: bundled translations for every shipped book, live translation on Android | planned | | | [95-dino-translation-works.md](docs/plan/slices/95-dino-translation-works.md) |
 
 Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
 
@@ -121,6 +123,8 @@ Batch 14 (81-85, planned 2026-10-22, Android bugs found on a Pixel 10 Pro runnin
 Batch 15 (89, planned 2026-10-22): the Farsi voice swap; touches packs.yml, the pack format and every platform reader, so nothing else in those files runs alongside it. Decision 93.
 
 Batch 16 (91-93, planned 2026-10-22, Dino Reader content from the phone scope): 91 first (the `.dino` package the other two use); 92 and 93 after it, one at a time (both edit `GalleryPage` and `MauiProgram`). The store, backup and first-run screens wait for a Claude Design pass. Decisions 94-99.
+
+Batch 17 (94-95, planned 2026-10-23): 94 first (the user's own book as a starter), then 95 (it translates all four starters, so it rebuilds 94's package). Both edit `StarterBuilder` and the starter packages, so they run one after the other.
 
 ### Notes
 
