@@ -19,7 +19,10 @@ public static class InstalledVoiceCatalog
             IReadOnlyList<VoiceInfo> voices = VoicesOf(pack.Manifest, language);
             if (voices.Count > 0)
             {
-                return new VoiceModelPaths(pack.Folder, pack.Manifest.Model, language, voices, pack.Manifest.Version);
+                var paths = new VoiceModelPaths(pack.Folder, pack.Manifest.Model, language, voices, pack.Manifest.Version);
+
+                // Aimed at the default voice's model, for a reader that does not pick a model per voice.
+                return paths.ForVoice(paths.ResolveVoice(null));
             }
         }
 
@@ -32,7 +35,7 @@ public static class InstalledVoiceCatalog
     {
         if (manifest.Voices is { Count: > 0 } listed)
         {
-            return listed.Select(v => new VoiceInfo(v.Id, v.DisplayName, language, manifest.Model, v.SpeakerId)).ToList();
+            return listed.Select(v => new VoiceInfo(v.Id, v.DisplayName, language, manifest.Model, v.SpeakerId, v.Model ?? string.Empty)).ToList();
         }
 
         return manifest.Model == VoiceEngineKind.Supertonic ? SupertonicVoiceTable.VoicesFor(language) : [];

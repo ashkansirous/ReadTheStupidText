@@ -46,7 +46,7 @@ internal sealed class IosRefCountedTts(OfflineTts tts)
 /// An engine and the model it was built from, never changed after creation. A language change
 /// within one pack shares the <see cref="IosRefCountedTts"/>.
 /// </summary>
-internal sealed record IosBuiltEngine(IosRefCountedTts Tts, VoiceModelPaths Model)
+internal sealed record IosBuiltEngine(IosRefCountedTts Tts, VoiceModelPaths Model) : IEngineHandle
 {
     public bool TryAcquire() => Tts.TryAcquire();
 
@@ -75,21 +75,13 @@ internal static class IosTtsEngine
     private const float NormalSpeed = 1.0f;
 
     /// <summary>
-    /// The engine for <paramref name="paths"/>: the current one re-labelled when only the
-    /// language differs (the same pack folder and kind), otherwise a freshly built one, in
-    /// which case the superseded engine's reader reference is released.
+    /// The engine for <paramref name="paths"/>: the live <paramref name="previous"/> of the same model folder
+    /// re-labelled for the new language (it shares the loaded model), otherwise a freshly built one.
     /// </summary>
-    public static IosBuiltEngine Swap(IosBuiltEngine? current, VoiceModelPaths paths)
-    {
-        if (current is { Tts.IsAlive: true } && current.Model.RootDir == paths.RootDir && current.Model.Kind == paths.Kind)
-        {
-            return new IosBuiltEngine(current.Tts, paths);
-        }
-
-        var fresh = new IosBuiltEngine(new IosRefCountedTts(Build(paths)), paths);
-        current?.Release();
-        return fresh;
-    }
+    public static IosBuiltEngine Create(IosBuiltEngine? previous, VoiceModelPaths paths) =>
+        previous is not null && previous.Tts.TryAcquire()
+            ? new IosBuiltEngine(previous.Tts, paths)
+            : new IosBuiltEngine(new IosRefCountedTts(Build(paths)), paths);
 
     // Supertonic chooses its language per generation (Extra "lang"); the VITS-family models are
     // single-language and take only the speaker id. Both come from the model the read captured,
@@ -120,7 +112,7 @@ internal static class IosTtsEngine
                 ConfigureSupertonic(ref config, paths.RootDir);
                 break;
             case VoiceEngineKind.Vits:
-                ConfigureVits(ref config, paths.RootDir);
+                ConfigureVits(ref config, paths);
                 break;
             case VoiceEngineKind.Melo:
                 ConfigureMelo(ref config, paths.RootDir);
@@ -178,11 +170,13 @@ internal static class IosTtsEngine
     }
 
     // Piper: the espeak-ng data directory phonemizes the text (it lives only in the pack).
-    private static void ConfigureVits(ref OfflineTtsConfig config, string dir)
+    // The voice's own model + tokens may sit in a folder of the pack (Slice 89); the data directory
+    // is shared and stays at the pack root.
+    private static void ConfigureVits(ref OfflineTtsConfig config, VoiceModelPaths paths)
     {
-        config.Model.Vits.Model = Path.Combine(dir, VitsFiles.Model);
-        config.Model.Vits.Tokens = Path.Combine(dir, VitsFiles.Tokens);
-        config.Model.Vits.DataDir = Path.Combine(dir, VitsFiles.EspeakDataDir);
+        config.Model.Vits.Model = Path.Combine(paths.ModelFolder, VitsFiles.Model);
+        config.Model.Vits.Tokens = Path.Combine(paths.ModelFolder, VitsFiles.Tokens);
+        config.Model.Vits.DataDir = Path.Combine(paths.RootDir, VitsFiles.EspeakDataDir);
     }
 
     // MeloTTS zh_en: lexicon + jieba dictionary, with the phone/date/number rule FSTs the

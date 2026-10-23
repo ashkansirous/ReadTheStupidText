@@ -14,7 +14,7 @@ public class VoiceSelectionTests
         Pack(PackConstants.SupertonicPackId, "en,fr,es,pt,ru,ja,ar", VoiceEngineKind.Supertonic);
 
     private static InstalledVoicePack Piper() =>
-        Pack(PackConstants.PersianPackId, "fa", VoiceEngineKind.Vits, new PackVoice("piper:fa-amir", "Amir", 0));
+        Pack(PackConstants.PersianPackId, "fa", VoiceEngineKind.Vits, new PackVoice("piper:fa-ganji-adabi", "Ganji Adabi", 0));
 
     private static InstalledVoicePack Melo() =>
         Pack(PackConstants.ChinesePackId, "zh", VoiceEngineKind.Melo, new PackVoice("melo:zh", "Mei", 0));
@@ -97,7 +97,7 @@ public class VoiceSelectionTests
         VoiceModelPaths paths = InstalledVoiceCatalog.Resolve([Piper()], "fa")!;
 
         VoiceInfo voice = Assert.Single(paths.AvailableVoices);
-        Assert.Equal(new VoiceInfo("piper:fa-amir", "Amir", "fa", VoiceEngineKind.Vits, 0), voice);
+        Assert.Equal(new VoiceInfo("piper:fa-ganji-adabi", "Ganji Adabi", "fa", VoiceEngineKind.Vits, 0), voice);
     }
 
     [Fact]
@@ -105,7 +105,7 @@ public class VoiceSelectionTests
     {
         VoiceModelPaths paths = InstalledVoiceCatalog.Resolve([Piper()], "fa")!;
 
-        Assert.Equal("piper:fa-amir", paths.ResolveVoice("supertonic:F3").Id);
+        Assert.Equal("piper:fa-ganji-adabi", paths.ResolveVoice("supertonic:F3").Id);
         Assert.Equal(0, paths.ResolveVoice("supertonic:F3").SpeakerId);
     }
 
@@ -114,7 +114,7 @@ public class VoiceSelectionTests
     {
         VoiceModelPaths paths = new("/m");
 
-        Assert.Equal(SupertonicVoiceTable.Default.Id, paths.ResolveVoice("piper:fa-amir").Id);
+        Assert.Equal(SupertonicVoiceTable.Default.Id, paths.ResolveVoice("piper:fa-ganji-adabi").Id);
         Assert.Equal(SupertonicVoiceTable.DefaultSpeakerId, paths.ResolveVoice(null).SpeakerId);
     }
 
@@ -149,13 +149,73 @@ public class VoiceSelectionTests
         const string json = """
             { "id": "piper-fa", "kind": "voice", "language": "fa", "version": "1", "engine": "sherpa-onnx",
               "files": ["model.onnx"], "model": "vits",
-              "voices": [ { "id": "piper:fa-amir", "name": "Amir", "sid": 0 } ] }
+              "voices": [ { "id": "piper:fa-ganji-adabi", "name": "Ganji Adabi", "sid": 0 } ] }
             """;
 
         PackManifest manifest = PackManifest.Parse(json);
 
         Assert.Equal(VoiceEngineKind.Vits, manifest.Model);
-        Assert.Equal(new PackVoice("piper:fa-amir", "Amir", 0), Assert.Single(manifest.Voices!));
+        Assert.Equal(new PackVoice("piper:fa-ganji-adabi", "Ganji Adabi", 0), Assert.Single(manifest.Voices!));
+    }
+
+    [Fact]
+    public void Manifest_parses_a_voice_model_folder_and_the_catalog_aims_the_engine_at_it()
+    {
+        const string json = """
+            { "id": "piper-fa", "kind": "voice", "language": "fa", "version": "2", "engine": "sherpa-onnx",
+              "files": ["voices/mana/model.onnx", "voices/mana/tokens.txt", "voices/ganji_adabi/model.onnx", "voices/ganji_adabi/tokens.txt"], "model": "vits",
+              "voices": [ { "id": "piper:fa-ganji-adabi", "name": "Ganji Adabi", "sid": 0, "model": "voices/ganji_adabi" },
+                          { "id": "piper:fa-mana", "name": "Mana", "sid": 0, "model": "voices/mana" } ] }
+            """;
+        PackManifest manifest = PackManifest.Parse(json);
+        var installed = new InstalledVoicePack("/packs/piper-fa", manifest);
+
+        VoiceModelPaths paths = InstalledVoiceCatalog.Resolve([installed], "fa")!;
+        VoiceInfo mana = paths.AvailableVoices.Single(v => v.Id == "piper:fa-mana");
+
+        Assert.Equal("voices/ganji_adabi", paths.ModelDir);
+        Assert.Equal(Path.Combine("/packs/piper-fa", "voices/mana"), paths.ForVoice(mana).ModelFolder);
+        Assert.Equal("/packs/piper-fa", paths.ForVoice(mana).RootDir);
+        Assert.Same(paths, paths.ForVoice(paths.ResolveVoice(null)));
+    }
+
+    [Theory]
+    [InlineData("../evil")]
+    [InlineData("voices/../../evil")]
+    [InlineData("/abs")]
+    [InlineData("")]
+    [InlineData(".")]
+    [InlineData("voices//x")]
+    public void Manifest_rejects_a_voice_model_folder_outside_the_pack(string folder)
+    {
+        string json = $$"""
+            { "id": "a", "kind": "voice", "language": "fa", "version": "1", "engine": "e", "files": [],
+              "voices": [ { "id": "x", "name": "X", "model": "{{folder}}" } ] }
+            """;
+
+        Assert.Throws<FormatException>(() => PackManifest.Parse(json));
+    }
+
+    [Theory]
+    [InlineData("""["voices/gnaji/model.onnx"]""")]
+    [InlineData("""["voices/ganji/model.onnx"]""")]
+    [InlineData("""["voices/ganji/tokens.txt"]""")]
+    public void Manifest_rejects_a_voice_model_folder_missing_its_model_or_tokens(string files)
+    {
+        string json = $$"""
+            { "id": "a", "kind": "voice", "language": "fa", "version": "1", "engine": "e", "files": {{files}},
+              "voices": [ { "id": "x", "name": "X", "model": "voices/ganji" } ] }
+            """;
+
+        Assert.Throws<FormatException>(() => PackManifest.Parse(json));
+    }
+
+    [Fact]
+    public void A_saved_amir_choice_resolves_to_the_packs_first_voice()
+    {
+        VoiceModelPaths paths = InstalledVoiceCatalog.Resolve([Piper()], "fa")!;
+
+        Assert.Equal("piper:fa-ganji-adabi", VoiceChoices.Resolve(paths, "piper:fa-amir", null).Id);
     }
 
     [Theory]

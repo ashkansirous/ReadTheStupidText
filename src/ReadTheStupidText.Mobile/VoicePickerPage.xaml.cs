@@ -324,7 +324,10 @@ public partial class VoicePickerPage : ContentPage
         _settings.VoiceId = voice.Id;
         _reader.SetVoice(voice.Id);
         UpdateSelection(voice.Id);
-        _ = _reader.SpeakAsync(voice.DisplayName);
+        if (VoicePreviewPolicy.ShouldPreview(_reader.State))
+        {
+            _ = _reader.SpeakAsync(voice.DisplayName);
+        }
     }
 
     private void UpdateSelection(string selectedVoiceId)

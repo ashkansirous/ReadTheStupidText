@@ -256,7 +256,10 @@ dev time and is not a redistributable runtime (Decision 26 in `docs/plan/decisio
 | `H.NotifyIcon.WinUI` | tray icon | MIT |
 | `org.k2fsa.sherpa.onnx` | neural TTS runtime | Apache-2.0 |
 | Supertonic-3 voice model (`VoiceModel/`) | neural voices | Apache-2.0 (see `VoiceModel/LICENSE`) |
-| Piper `fa_IR` "amir" voice (downloaded Persian pack `piper-fa`, not in the package) | Persian neural voice | CC0 1.0 voice data (model card: [rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices/tree/main/fa/fa_IR/amir/medium)); finetuned from the Piper US-English "lessac" voice |
+| Piper `fa_IR` "ganji_adabi" voice, the default (downloaded Persian pack `piper-fa`, not in the package) | Persian neural voice | Model MIT, voice data CC0 1.0 ([rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices/tree/main/fa/fa_IR/ganji_adabi/medium); model card). Fine-tuned from `ganji`, itself fine-tuned from `amir` (dataset `SadeghK/datacula-pertts-amir`, Apache-2.0, so the pack keeps that attribution) |
+| Piper `fa_IR` "ganji" voice (same pack) | Persian neural voice | Model MIT, voice data CC0 1.0 ([rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices/tree/main/fa/fa_IR/ganji/medium); its own site `tts.datacula.com` did not respond on 2026-10-22, so CC0 rests on the Piper model card) |
+| "Mana" Persian Piper voice (same pack; no sherpa-onnx build, so metadata and int8 quantization are added in `packs.yml`) | Persian neural voice | Model MIT ([MahtaFetrat/Mana-Persian-Piper](https://huggingface.co/MahtaFetrat/Mana-Persian-Piper)), data CC0 ([MahtaFetrat/Mana-TTS](https://huggingface.co/datasets/MahtaFetrat/Mana-TTS), released by the Nasl-e-Mana magazine) |
+| Piper `fa_IR` "gyro" voice (same pack) | Persian neural voice | Model MIT ([gyroing/Persian-Piper-Model-gyro](https://huggingface.co/gyroing/Persian-Piper-Model-gyro)), data CC0 (Kaggle `magnoliasis/persian-tts-dataset-male`) |
 | espeak-ng data (inside the downloaded Persian pack only) | phonemizer data the Piper voice needs | GPL-3.0-or-later; corresponding source: <https://github.com/espeak-ng/espeak-ng> |
 | MeloTTS `zh_en` (downloaded Chinese pack `melo-zh-en`, not in the package) | Chinese + English neural voice | MIT (MyShell.ai; see the `LICENSE` inside the pack) |
 | PaddleOCR PP-OCR detection and recognition models (downloaded OCR packs `ocr-latin`, `ocr-cyrillic`, `ocr-arabic`, `ocr-cjk`, not in the package; ONNX conversion by [monkt/paddleocr-onnx](https://huggingface.co/monkt/paddleocr-onnx)) | on-device text recognition for scans (Android and iOS) | Apache-2.0 (PaddlePaddle Authors; see the `LICENSE` inside each pack) |
@@ -280,10 +283,13 @@ code. Check this by unzipping the app package: there is no `espeak-ng-data`.
 
 Persian is therefore available only on the platforms that download packs (Android
 and, since Slice 56, Windows). Where a pack can't be downloaded, Persian reads with the system voice.
-The `amir` voice was chosen over `gyro` because its dataset licence is stated as
-CC0 and `gyro`'s model card only says "See URL"; both are finetuned from the Piper
-"lessac" voice, whose dataset terms are an open question to re-check before a
-wide launch (Slice 51 notes).
+The Persian pack offers four voices (Slice 89, Decision 93): `ganji_adabi` (default),
+`ganji`, `mana` and `gyro`, all with stated CC0 voice data. Open licence question, to re-check before
+a wide launch: `ganji_adabi`, `ganji` and `mana` descend from `amir` (their model cards say fine-tuned
+from `ganji`, `amir` and `amir`), which was fine-tuned from the Piper US-English "lessac" voice, whose
+dataset terms were never settled (Slice 51 notes). `gyro`'s own card names no lessac parent. `amir` was dropped (the user found it
+Afghan-accented, not Farsi); `reza_ibrahim` (dataset page gone, Quran-recitation corpus), Gooya v2
+(needs its own G2P front end) and MMS-TTS (CC-BY-NC) were rejected.
 
 ## Versioning (GitVersion → tag → release)
 

@@ -46,7 +46,7 @@ internal sealed class RefCountedTts(OfflineTts tts)
 /// one pack shares the <see cref="RefCountedTts"/>. Each read captures one, so a language or pack
 /// change mid-read can never mix models.
 /// </summary>
-internal sealed record BuiltEngine(RefCountedTts Tts, VoiceModelPaths Model)
+internal sealed record BuiltEngine(RefCountedTts Tts, VoiceModelPaths Model) : IEngineHandle
 {
     public bool TryAcquire() => Tts.TryAcquire();
 
@@ -83,5 +83,17 @@ internal sealed class ReadOwnership
     public bool Leave() => Interlocked.Decrement(ref _owners) == 0;
 }
 
-/// <summary>The read now playing: its engine and who owns it.</summary>
-internal sealed record ActiveRead(BuiltEngine Engine, ReadOwnership Owners);
+/// <summary>The read now playing: its engine (which a voice change may replace) and who owns it.</summary>
+internal sealed class ActiveRead(BuiltEngine engine, ReadOwnership owners)
+{
+    private BuiltEngine _engine = engine;
+
+    public ReadOwnership Owners { get; } = owners;
+
+    /// <summary>The engine the read speaks with; replaced when a mid-read voice change needs another model.</summary>
+    public BuiltEngine Engine
+    {
+        get => Volatile.Read(ref _engine);
+        set => Volatile.Write(ref _engine, value);
+    }
+}

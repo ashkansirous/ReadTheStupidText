@@ -208,7 +208,31 @@ public sealed class WindowsVoicePackServiceTests : IDisposable
         Assert.Equal(PackDownloadResult.Ok, result);
         Assert.Equal(1, server.PackRequests);
         Assert.Equal("2", Assert.Single(Service(server).GetInstalledVoicePacks()).Manifest.Version);
-        Assert.Equal([Path.Combine(_root.FullName, PackId)], Directory.EnumerateDirectories(_root.FullName)); // no .replaced / .extracting left
+        Assert.Equal([Path.Combine(_root.FullName, PackId)], Directory.EnumerateDirectories(_root.FullName)); // no .extracting left
+    }
+
+    [Fact]
+    public async Task An_update_installs_next_to_a_pack_whose_files_are_open_and_the_old_version_goes_at_the_next_start()
+    {
+        byte[] v1 = BuildZip();
+        await Service(new FakeServer(CatalogJson(v1), v1)).DownloadAsync(PackId, null, CancellationToken.None);
+        string oldFolder = Service(new FakeServer("[]", [])).GetInstalledPath(PackId)!;
+        byte[] v2 = BuildZip(version: "2");
+        var server = new FakeServer(CatalogJson(v2, version: "2"), v2);
+        PackDownloadResult result;
+        string newFolder;
+        using (File.OpenRead(Path.Combine(oldFolder, PayloadFile))) // the engine holding the model
+        {
+            var service = Service(server);
+            result = await service.DownloadAsync(PackId, null, CancellationToken.None);
+            newFolder = service.GetInstalledPath(PackId)!;
+        }
+
+        Assert.Equal(PackDownloadResult.Ok, result);
+        Assert.NotEqual(oldFolder, newFolder);
+        Assert.True(Directory.Exists(oldFolder)); // nothing was renamed or moved under the reader
+        Assert.Equal(newFolder, Service(server).GetInstalledPath(PackId)); // a restart; the old folder is deleted
+        Assert.False(Directory.Exists(oldFolder));
     }
 
     [Fact]

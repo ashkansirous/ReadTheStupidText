@@ -71,7 +71,7 @@ back to ML Kit Latin. Installed by `OcrPackInstaller`.
 app start and on a language change, `OcrPackInstaller` (via `PackVersions`) compares the
 installed pack with the catalogue: a newer catalogue version is downloaded, and the old pack
 is kept until the new one verifies, so a failed upgrade never leaves the language without OCR.
-The voice installer does not yet check for newer voice-pack versions at start-up.
+Voice packs also update at start-up (Slice 89): see Client behaviour below.
 
 ### Translation packs (`kind: translation`, Slice 75)
 
@@ -104,7 +104,7 @@ the background while the original is read.
 Packs are assets of a dedicated GitHub release tagged `packs-<n>`, separate from the app's
 `v<x.y.z>` releases (Decision 62). Release assets don't count toward the Actions storage
 quota (Decision 52). The app reads the catalog from the **pinned** release named in
-`PackConstants.CatalogUrl` (currently `packs-3`), so publishing `packs-4` changes nothing
+`PackConstants.CatalogUrl` (currently `packs-4`), so publishing `packs-4` changes nothing
 until a new app version points at it. Every `packs-<n>` release carries every pack (voice, OCR and
 translation), because the app pins one catalogue: a run with a pack missing would leave the app
 pointing at a catalogue without it.
@@ -125,8 +125,21 @@ The voice packs:
 | pack | languages | engine | licence |
 | --- | --- | --- | --- |
 | `supertonic-3` | en, fr, es, pt, ru, ja, ar | Supertonic (zips `src/ReadTheStupidText.App/VoiceModel/`, LFS) | Apache-2.0 |
-| `piper-fa` | fa | Piper/VITS (`fa_IR-amir-medium`) | espeak-ng data is GPL-3.0, inside this zip only, with its `LICENSE` and `SOURCE` |
+| `piper-fa` | fa | Piper/VITS, four voices (below) | espeak-ng data is GPL-3.0, inside this zip only, with its `LICENSE` and `SOURCE` (also the amir Apache-2.0 attribution, Slice 89) |
 | `melo-zh-en` | zh | MeloTTS | MIT |
+
+`piper-fa` (Slice 89, version 2) holds four voices, `piper:fa-ganji-adabi` (the default, listed first),
+`piper:fa-ganji`, `piper:fa-mana` and `piper:fa-gyro`, one int8 model each (about 18 MB, zip about 61 MB). Amir is
+gone; a saved `piper:fa-amir` choice resolves to the default. Layout:
+
+```
+piper-fa/
+  pack.json   LICENSE   SOURCE
+  espeak-ng-data/              one shared copy
+  voices/<name>/model.onnx     one folder per voice, with tokens.txt
+```
+
+A `voices` entry in `pack.json` names its model folder (`model`); a voice without one uses the pack-root files.
 
 The espeak-ng data never enters the repo or an app package. After a run, confirm that `v*`
 versions and `releases/latest` are unchanged, then flip `PackConstants.CatalogUrl` to the new
@@ -134,7 +147,13 @@ release in a one-line PR.
 
 ## Client behaviour (Android, `MobileVoicePackService`)
 
-- Files live in `AppDataDirectory/packs/<id>/`.
+- Files live in `AppDataDirectory/packs/<id>/v<version>/`, and `packs/<id>/active` names the folder in use
+  (`PackVersionFolders`). A new version installs into its own folder and the `active` file is replaced
+  atomically, so a reader holding the old model keeps working; old version folders and loose files from the
+  first (unversioned) layout are deleted at the next app start. A pack with no `active` file is the old layout.
+- An installed pack is updated when the catalogue has a newer version, only on an unmetered connection
+  (Wi-Fi or Ethernet, `PackUpdatePolicy`); otherwise it stays Ready and the check repeats next launch.
+- Readers keep up to four engines (`EngineCache`, one per model folder and pack version).
 - Download streams into `<id>.zip.partial` and resumes with an HTTP `Range` request
   (`PackRetryPolicy.ResumeOffset`); a server that ignores Range restarts the file.
 - Failures retry with exponential backoff (2 s, 4 s, 8 s, capped at 30 s, four attempts).

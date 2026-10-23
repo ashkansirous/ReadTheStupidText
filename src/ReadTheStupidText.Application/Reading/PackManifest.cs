@@ -32,7 +32,24 @@ public sealed record PackManifest(
             throw new FormatException("pack.json is missing required fields.");
         }
 
-        return new PackManifest(dto.Id, kind, dto.Language, dto.Version, dto.Engine, dto.Files, ParseModel(dto.Model), ParseVoices(dto.Voices));
+        IReadOnlyList<PackVoice> voices = ParseVoices(dto.Voices);
+        RequireModelFiles(voices, dto.Files);
+        return new PackManifest(dto.Id, kind, dto.Language, dto.Version, dto.Engine, dto.Files, ParseModel(dto.Model), voices);
+    }
+
+    // A voice with its own model folder must ship the model and the tokens in it, so a typo in the
+    // folder fails at install (InvalidPack) and not later, at synthesis, as a native load error.
+    private static void RequireModelFiles(IReadOnlyList<PackVoice> voices, string[] files)
+    {
+        var listed = files.Select(f => f.Replace('\\', '/')).ToHashSet(StringComparer.Ordinal);
+        foreach (PackVoice voice in voices.Where(v => v.Model is not null))
+        {
+            string folder = voice.Model!.Replace('\\', '/').TrimEnd('/');
+            if (!listed.Contains($"{folder}/{VitsFiles.Model}") || !listed.Contains($"{folder}/{VitsFiles.Tokens}"))
+            {
+                throw new FormatException("pack.json lists a voice whose model folder is missing its model or tokens.");
+            }
+        }
     }
 
     private static VoiceEngineKind ParseModel(string? model)
@@ -62,7 +79,21 @@ public sealed record PackManifest(
             throw new FormatException("pack.json lists a voice without an id or name.");
         }
 
-        return voices.Select(v => new PackVoice(v.Id!, v.Name!, v.SpeakerId ?? 0)).ToList();
+        return voices.Select(v => new PackVoice(v.Id!, v.Name!, v.SpeakerId ?? 0, ValidModelFolder(v.Model))).ToList();
+    }
+
+    // A voice's model folder stays inside the pack: a real relative folder, with no "..", "." or empty segment.
+    private static string? ValidModelFolder(string? folder)
+    {
+        if (folder is null)
+        {
+            return null;
+        }
+
+        bool escapes = string.IsNullOrWhiteSpace(folder)
+            || Path.IsPathRooted(folder)
+            || folder.TrimEnd('/', '\\').Split('/', '\\').Any(segment => segment is ".." or "." or "");
+        return escapes ? throw new FormatException("pack.json lists a voice model outside the pack.") : folder;
     }
 
     private static ManifestDto Deserialize(string json)
@@ -90,5 +121,6 @@ public sealed record PackManifest(
     private sealed record VoiceDto(
         [property: JsonPropertyName(PackJsonKeys.Id)] string? Id,
         [property: JsonPropertyName(PackJsonKeys.VoiceName)] string? Name,
-        [property: JsonPropertyName(PackJsonKeys.SpeakerId)] int? SpeakerId);
+        [property: JsonPropertyName(PackJsonKeys.SpeakerId)] int? SpeakerId,
+        [property: JsonPropertyName(PackJsonKeys.VoiceModel)] string? Model = null);
 }

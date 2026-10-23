@@ -63,22 +63,18 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
     // Serializes the generation counter / synthesis-cancellation swap and the read/prepare bookkeeping.
     private readonly object _gate = new();
 
-    // Serializes engine builds so a warm-up and a first read racing each other build one model.
-    private readonly object _ttsGate = new();
-
     // The model (folder, engine kind, pack version) whose engine build last failed; reads skip straight
     // to the Windows voice until the installed model changes.
     private string? _failedModelKey;
 
-    // The engine plus the model it was built from, swapped as one object under _ttsGate. Each read
-    // captures one BuiltEngine and uses its Model for everything.
-    private BuiltEngine? _engine;
+    // The built engines (at most two, keyed by model folder and pack version). Each read captures one
+    // BuiltEngine and uses its Model for everything; a loaded engine is shared by whoever asks for it next.
+    private readonly EngineCache<BuiltEngine> _engines = new(CreateEngine);
 
     // The read now playing, with the engine it plays on and how many call stacks (the original
     // SpeakAsync, then each Skip that continued it) still own it. Replaced by the next read and cleared
     // by Stop, both under _gate; a superseded read's late cleanup compares the reference and does nothing.
     private ActiveRead? _activeRead;
-    private bool _disposed;
     private string? _voiceId;
     private readonly ConcurrentDictionary<VoiceEngineKind, string> _voiceByKind = new();
     private MediaSource? _currentSource;
@@ -235,7 +231,9 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
         int? activityId, bool open,
         Func<BuiltEngine, string?, Task<(IReadOnlyList<SpeechChunkPlan> Chunks, int TextLength)>> plan)
     {
-        BuiltEngine engine = AcquireEngine() ?? throw new NeuralEngineUnavailableException();
+        // A cold model build takes seconds: never on the caller's (UI) thread.
+        BuiltEngine? owned = await Task.Run(() => AcquireEngine()) ?? throw new NeuralEngineUnavailableException();
+        BuiltEngine engine = owned;
         ActiveRead read = BeginRead(engine);
         try
         {
@@ -254,12 +252,13 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
 
             ChunkFeed feed = CreateFeed(chunks, textLength, open, generation);
 
+            owned = null; // the playback loop owns the reference from here and gives it back when it moves on
             await SpeakChunksAsync(engine, feed, 0, voiceId, generation, token);
         }
         finally
         {
             LeaveRead(read);
-            engine.Release();
+            owned?.Release();
         }
     }
 
@@ -372,16 +371,10 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
 
         try
         {
-            if (read.Engine.TryAcquire())
+            BuiltEngine engine = read.Engine; // captured: a voice swap may replace read.Engine mid-await
+            if (engine.TryAcquire())
             {
-                try
-                {
-                    await SkipOnEngineAsync(read.Engine, delta);
-                }
-                finally
-                {
-                    read.Engine.Release();
-                }
+                await SkipOnEngineAsync(engine, delta); // takes over the reference taken here
             }
         }
         finally
@@ -391,12 +384,14 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
     }
 
     // Tears down the playing chunk (generation counter, as for a mid-read voice change) and restarts the
-    // ordered playback loop at the target chunk found by the tracker (Decision 32).
+    // ordered playback loop at the target chunk found by the tracker (Decision 32). Owns the engine
+    // reference it is given: the playback loop gives it back, and so does a skip with nowhere to go.
     private async Task SkipOnEngineAsync(BuiltEngine engine, TimeSpan delta)
     {
         TimeSpan elapsed = _timing.CurrentTiming(_player.PlaybackSession.Position).Elapsed;
         if (_timing.ComputeSkipTarget(elapsed, delta) is not { } target)
         {
+            engine.Release();
             return;
         }
 
@@ -413,34 +408,37 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
     // Synthesizes the chunks from startIndex onward (capped concurrency) with the given voice and plays
     // them strictly in order. The voice is a parameter, not the mutable field, so a change can't
     // half-apply to chunks already queued: the switch happens cleanly at the next chunk boundary
-    // (Decision 29), so heard text is neither repeated nor skipped.
+    // (Decision 29), so heard text is neither repeated nor skipped. Owns the engine reference it is
+    // given and gives it back as soon as a voice change moves the read to another model, so a long
+    // read that toggles voices keeps at most two models resident.
     private async Task SpeakChunksAsync(
-        BuiltEngine engine, ChunkFeed feed, int startIndex, string? voiceId,
-        int generation, CancellationToken token)
+        BuiltEngine engine, ChunkFeed feed, int startIndex, string? voiceId, int generation, CancellationToken token)
     {
-        _chunkCount = feed.Count;
-        _currentChunkIndex = startIndex;
-        ProgressChanged?.Invoke(this, feed.Count == 0 ? 0 : (double)startIndex / feed.Count);
-
-        var run = new GenerationRun(this, engine, feed, startIndex, voiceId, token);
-        _ = run.PumpAsync();
-        for (int index = startIndex; ; index++)
+        try
         {
-            if (!await WaitForChunkAsync(feed, index, token))
+            while (true)
             {
-                break;
-            }
+                _chunkCount = feed.Count;
+                _currentChunkIndex = startIndex;
+                ProgressChanged?.Invoke(this, feed.Count == 0 ? 0 : (double)startIndex / feed.Count);
 
-            run.StartPending();
-            if (!await PlayGeneratedChunkAsync(run.TaskAt(index), feed, index, generation, token))
-            {
-                return;
-            }
+                (RunEnd end, VoiceSwap? swap) = await RunChunksAsync(engine, feed, startIndex, voiceId, generation, token);
+                if (end == RunEnd.Stopped)
+                {
+                    return;
+                }
 
-            if (await RestartForVoiceSwapAsync(engine, feed, index, voiceId))
-            {
-                return;
+                if (swap is null)
+                {
+                    break;
+                }
+
+                (engine, startIndex, voiceId, generation, token) = TakeOver(engine, swap);
             }
+        }
+        finally
+        {
+            engine.Release();
         }
 
         if (token.IsCancellationRequested)
@@ -455,6 +453,69 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
             Completed?.Invoke(this, EventArgs.Empty);
         }
     }
+
+    private static (BuiltEngine Engine, int StartIndex, string? Voice, int Generation, CancellationToken Token) TakeOver(
+        BuiltEngine current, VoiceSwap swap)
+    {
+        if (!ReferenceEquals(current, swap.Engine))
+        {
+            current.Release();
+        }
+
+        return (swap.Engine, swap.NextIndex, swap.Voice, swap.Generation, swap.Token);
+    }
+
+    private async Task<(RunEnd End, VoiceSwap? Swap)> RunChunksAsync(
+        BuiltEngine engine, ChunkFeed feed, int startIndex, string? voiceId, int generation, CancellationToken token)
+    {
+        var run = new GenerationRun(this, engine, feed, startIndex, voiceId, token);
+        try
+        {
+            return await PlayRunAsync(run, engine, feed, startIndex, voiceId, generation, token);
+        }
+        finally
+        {
+            run.Close();
+        }
+    }
+
+    // Plays the run's chunks in order. Stopped when the read stopped or was superseded; Swapped when the
+    // voice changed and the read goes on in the swap's voice (and model); Played when every chunk played.
+    private async Task<(RunEnd End, VoiceSwap? Swap)> PlayRunAsync(
+        GenerationRun run, BuiltEngine engine, ChunkFeed feed, int startIndex, string? voiceId,
+        int generation, CancellationToken token)
+    {
+        _ = run.PumpAsync();
+        for (int index = startIndex; ; index++)
+        {
+            if (!await WaitForChunkAsync(feed, index, token))
+            {
+                return (RunEnd.Played, null);
+            }
+
+            run.StartPending();
+            if (!await PlayGeneratedChunkAsync(run.TaskAt(index), feed, index, generation, token))
+            {
+                return (RunEnd.Stopped, null);
+            }
+
+            if (await RestartForVoiceSwapAsync(engine, feed, index, voiceId, generation) is { } swap)
+            {
+                return (RunEnd.Swapped, swap);
+            }
+        }
+    }
+
+    private enum RunEnd
+    {
+        Played,
+        Swapped,
+        Stopped,
+    }
+
+    // A voice change the read goes on in: the engine for the new voice (the run's own when the model is the
+    // same), the chunk to resume at and the generation that replaces the old one.
+    private sealed record VoiceSwap(BuiltEngine Engine, int NextIndex, string? Voice, int Generation, CancellationToken Token);
 
     // True when the chunk at index exists (or arrives); false when the read has no more text or was stopped.
     private static async Task<bool> WaitForChunkAsync(ChunkFeed feed, int index, CancellationToken token)
@@ -482,24 +543,103 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
     // Starts synthesis of every chunk of the feed as it appears: the first runs straight away and the rest
     // wait for it, so the chunk the listener waits on is never starved of CPU. A streamed read's appended
     // chunks start the moment they arrive (the pump), not when the previous chunk has finished playing.
-    private sealed class GenerationRun(
-        SupertonicSpeechReader owner, BuiltEngine engine, ChunkFeed feed, int startIndex, string? voiceId, CancellationToken token)
+    private sealed class GenerationRun
     {
+        private readonly SupertonicSpeechReader _owner;
+        private readonly BuiltEngine _engine;
+        private readonly ChunkFeed _feed;
+        private readonly int _startIndex;
+        private readonly string? _voiceId;
+        private readonly CancellationToken _token;
         private readonly object _gate = new();
         private readonly List<Task<string>> _tasks = [];
+        private bool _closed;
+
+        public GenerationRun(
+            SupertonicSpeechReader owner, BuiltEngine engine, ChunkFeed feed, int startIndex, string? voiceId, CancellationToken token)
+        {
+            _owner = owner;
+            _engine = engine;
+            _feed = feed;
+            _startIndex = startIndex;
+            _voiceId = voiceId;
+            _token = token;
+        }
+
+        private bool IsClosed
+        {
+            get
+            {
+                lock (_gate)
+                {
+                    return _closed;
+                }
+            }
+        }
 
         public void StartPending()
         {
             lock (_gate)
             {
-                for (int index = startIndex + _tasks.Count; index < feed.Count; index++)
+                if (_closed)
                 {
-                    SpeechChunkPlan chunk = feed[index];
-                    VoiceInfo voice = owner.ResolveVoice(engine, chunk.VoiceId, voiceId);
-                    _tasks.Add(_tasks.Count == 0
-                        ? owner.GenerateChunkAsync(engine, chunk.Text, index, voice, token)
-                        : owner.GenerateAfterAsync(_tasks[0], engine, chunk.Text, index, voice, token));
+                    return; // the run is over: nothing may start (or load an engine) any more
                 }
+
+                for (int index = _startIndex + _tasks.Count; index < _feed.Count; index++)
+                {
+                    _tasks.Add(GenerateAsync(_tasks.Count == 0 ? null : _tasks[0], _feed[index], index));
+                }
+            }
+        }
+
+        // Defers every chunk after the first until the first has finished (the first gates time-to-first-audio).
+        // The gate's own outcome surfaces where it is consumed in order; a fault here just releases this chunk.
+        // A chunk whose voice lives in another model folder of the pack (a cast of pack voices, Slice 89) waits
+        // for that engine to load off-thread and holds a reference on it while it synthesizes; if it cannot
+        // load, the chunk uses the run's engine.
+        private async Task<string> GenerateAsync(Task? gate, SpeechChunkPlan chunk, int index)
+        {
+            if (gate is not null)
+            {
+                try
+                {
+                    await gate;
+                }
+                catch
+                {
+                    // Swallowed: the first chunk's real outcome surfaces on its own await.
+                }
+            }
+
+            BuiltEngine? extra = await ExtraEngineAsync(chunk.VoiceId);
+            try
+            {
+                BuiltEngine chunkEngine = extra ?? _engine;
+                VoiceInfo voice = _owner.ResolveVoice(chunkEngine, chunk.VoiceId, _voiceId);
+                return await _owner.GenerateChunkAsync(chunkEngine, chunk.Text, index, voice, _token);
+            }
+            finally
+            {
+                extra?.Release();
+            }
+        }
+
+        // The engine of another model folder the chunk's voice needs, or null when the run's own serves it
+        // (or the model cannot load, which is logged).
+        private async Task<BuiltEngine?> ExtraEngineAsync(string? chunkVoiceId)
+        {
+            VoiceInfo wanted = _owner.PickVoice(_engine.Model, chunkVoiceId, _voiceId);
+            return wanted.ModelDir == _engine.Model.ModelDir ? null : await _owner.LoadVoiceEngineAsync(wanted.Id);
+        }
+
+        // Ends the run. The pump and later StartPending calls do nothing from here on; generations still
+        // running hold their own reference on their engine, so a model is disposed only once they return.
+        public void Close()
+        {
+            lock (_gate)
+            {
+                _closed = true;
             }
         }
 
@@ -507,7 +647,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
         {
             lock (_gate)
             {
-                return _tasks[index - startIndex];
+                return _tasks[index - _startIndex];
             }
         }
 
@@ -521,15 +661,15 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
                     int started;
                     lock (_gate)
                     {
-                        started = startIndex + _tasks.Count;
+                        started = _startIndex + _tasks.Count;
                     }
 
-                    if (feed.IsComplete && started >= feed.Count)
+                    if (IsClosed || (_feed.IsComplete && started >= _feed.Count))
                     {
                         return;
                     }
 
-                    await feed.WaitForMoreAsync(started, token);
+                    await _feed.WaitForMoreAsync(started, _token);
                 }
             }
             catch (OperationCanceledException)
@@ -537,6 +677,19 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
                 // Stopped or superseded: the pump has nothing left to start.
             }
         }
+    }
+
+    // Loads, off the caller's thread and under no gate, the engine for a voice in another model folder of the
+    // pack, with a reference for the caller; null (with a warning) when it cannot.
+    private async Task<BuiltEngine?> LoadVoiceEngineAsync(string voiceId)
+    {
+        BuiltEngine? built = await Task.Run(() => TryAcquireForVoice(voiceId));
+        if (built is null)
+        {
+            _systemLog.Warning($"voice {voiceId} could not be loaded; its lines use the read's voice");
+        }
+
+        return built;
     }
 
     // Waits for one chunk's audio and plays it. False when the read was cancelled, stopped or
@@ -576,35 +729,97 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
     // When the selected voice changed during the chunk just played, continue the remaining chunks in
     // the new voice (a chunk with its own voice, in a segment read, never follows the picker),
     // cancelling the old-voice synthesis already in flight. Voices are compared by id within the read's
-    // own model, so a language or pack change never restarts a read. True when it restarted (the
-    // restarted loop finishes the read, so the caller returns).
-    private async Task<bool> RestartForVoiceSwapAsync(
-        BuiltEngine engine, ChunkFeed feed, int index, string? voiceId)
+    // own model, so a language or pack change never restarts a read. Returns the swap the playback loop
+    // goes on with, or null when the read carries on as it was.
+    private async Task<VoiceSwap?> RestartForVoiceSwapAsync(
+        BuiltEngine engine, ChunkFeed feed, int index, string? voiceId, int generation)
     {
         string? selected = Volatile.Read(ref _voiceId);
-        bool sameVoice = ResolveVoice(engine, selected).Id == ResolveVoice(engine, voiceId).Id;
+        VoiceInfo target = PickVoice(engine.Model, selected);
+        bool sameVoice = target.Id == PickVoice(engine.Model, voiceId).Id;
         bool lastChunk = index + 1 >= feed.Count && feed.IsComplete;
         if (sameVoice || lastChunk || (index + 1 < feed.Count && feed[index + 1].VoiceId is not null))
         {
-            return false;
+            return null;
+        }
+
+        // A voice with its own model folder needs its own engine (Slice 89), loaded off the playback loop
+        // and under no gate. The engine this read came in on is given back by the loop once the new one is
+        // in place (generations still running hold their own reference). If the new model cannot load, the
+        // read goes on in the current voice.
+        BuiltEngine next = engine;
+        if (target.ModelDir != engine.Model.ModelDir)
+        {
+            next = await Task.Run(() => TryAcquireForVoice(selected)) ?? engine;
+        }
+
+        if (!IsCurrent(generation))
+        {
+            ReleaseUnlessSame(next, engine); // stopped or superseded while the model loaded
+            return null;
         }
 
         (int nextGeneration, CancellationToken nextToken) = BeginGeneration();
         _systemLog.Info(
             $"voice changed mid-read; continuing at chunk {index + 2}/{feed.Count} in the new voice",
             _readActivityId);
-        await SpeakChunksAsync(engine, feed, index + 1, selected, nextGeneration, nextToken);
-        return true;
+        ReplaceActiveEngine(engine, next);
+        return new VoiceSwap(next, index + 1, selected, nextGeneration, nextToken);
+    }
+
+    private static void ReleaseUnlessSame(BuiltEngine next, BuiltEngine engine)
+    {
+        if (!ReferenceEquals(next, engine))
+        {
+            next.Release();
+        }
+    }
+
+    private BuiltEngine? TryAcquireForVoice(string? voiceId)
+    {
+        try
+        {
+            return AcquireEngine(voiceId);
+        }
+        catch (NeuralEngineUnavailableException)
+        {
+            return null;
+        }
+    }
+
+    // Skip must continue on the engine the read now speaks with.
+    private void ReplaceActiveEngine(BuiltEngine from, BuiltEngine? to)
+    {
+        lock (_gate)
+        {
+            if (to is not null && _activeRead is { } read && ReferenceEquals(read.Engine, from))
+            {
+                read.Engine = to;
+            }
+        }
     }
 
     // The selected voice if the read's model offers it, else the voice last picked for this engine
     // family, else the model's default: a Piper pick for another language never displaces the
     // Supertonic choice.
+    // A voice whose model folder differs from the engine's cannot speak on it (Slice 89), so it gives
+    // way to the engine's own first voice; a mid-read voice change gets its own engine instead.
     private VoiceInfo ResolveVoice(BuiltEngine engine, params string?[] ids)
     {
-        _voiceByKind.TryGetValue(engine.Model.Kind, out string? remembered);
+        VoiceInfo picked = PickVoice(engine.Model, ids);
+        if (picked.ModelDir == engine.Model.ModelDir)
+        {
+            return picked;
+        }
+
+        return engine.Model.AvailableVoices.FirstOrDefault(v => v.ModelDir == engine.Model.ModelDir) ?? picked;
+    }
+
+    private VoiceInfo PickVoice(VoiceModelPaths model, params string?[] ids)
+    {
+        _voiceByKind.TryGetValue(model.Kind, out string? remembered);
         string?[] candidates = [.. ids, Volatile.Read(ref _voiceId), remembered];
-        return VoiceChoices.Resolve(engine.Model, candidates);
+        return VoiceChoices.Resolve(model, candidates);
     }
 
     // Builds the engine and runs one discarded synthesis to warm the ONNX graph, off the UI thread, so
@@ -635,24 +850,6 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
         {
             // Best-effort: any real error surfaces on the first read.
         }
-    }
-
-    // Defers a chunk's synthesis until the first chunk has finished, so the first chunk (which gates
-    // time-to-first-audio) runs without competing for CPU. The gate's own outcome surfaces where it is
-    // consumed in order; faults here just release this chunk, which then honours the token itself.
-    private async Task<string> GenerateAfterAsync(
-        Task gate, BuiltEngine engine, string chunk, int index, VoiceInfo voice, CancellationToken token)
-    {
-        try
-        {
-            await gate;
-        }
-        catch
-        {
-            // Swallowed: the first chunk's real outcome surfaces on its own await.
-        }
-
-        return await GenerateChunkAsync(engine, chunk, index, voice, token);
     }
 
     // Builds one chunk's WAV from its cached or synthesized sentences and writes it to the read's temp
@@ -757,12 +954,13 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
     }
 
     // Returns the engine for the language's current model with a reference taken for the caller, who
-    // must Release() it. A different pack or engine kind rebuilds the OfflineTts; the same pack under
-    // another language reuses it with the new model. The superseded OfflineTts is disposed once the
-    // last read or generation holding it lets go.
-    private BuiltEngine? AcquireEngine()
+    // must Release() it. A different pack folder, version or engine kind is another engine (a pack update
+    // is a new folder, so it is picked up here); the same folder under another language reuses the model.
+    // An engine nobody asks for any more is disposed once the last read or generation holding it lets go.
+    private BuiltEngine? AcquireEngine(string? voiceId = null)
     {
-        if (_model.Paths is { } paths && ModelKey(paths) == Volatile.Read(ref _failedModelKey))
+        VoiceModelPaths? paths = SelectedPaths(voiceId);
+        if (paths is not null && ModelKey(paths) == Volatile.Read(ref _failedModelKey))
         {
             // This exact model already failed to load: don't retry the multi-hundred-MB build on every
             // read. A different pack folder, engine or version clears the block.
@@ -771,13 +969,13 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
 
         try
         {
-            return AcquireEngineCore();
+            return paths is null ? null : AcquireEngineCore(paths);
         }
         catch (Exception ex) when (ex is not NeuralEngineUnavailableException)
         {
-            if (_model.Paths is { } failed)
+            if (paths is not null)
             {
-                Volatile.Write(ref _failedModelKey, ModelKey(failed));
+                Volatile.Write(ref _failedModelKey, ModelKey(paths));
             }
 
             // A pack that is "ready" but cannot be loaded (files gone, native failure): the composite
@@ -788,7 +986,12 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
         }
     }
 
-    private static string ModelKey(VoiceModelPaths paths) => $"{paths.RootDir}|{paths.Kind}|{paths.PackVersion}";
+    private static string ModelKey(VoiceModelPaths paths) => $"{paths.RootDir}|{paths.Kind}|{paths.PackVersion}|{paths.ModelDir}";
+
+    // The language's current model aimed at the voice that will speak (the given id, else the selected
+    // one): voices of one pack can each have their own model folder (Slice 89).
+    private VoiceModelPaths? SelectedPaths(string? voiceId) =>
+        _model.Paths is { } paths ? paths.ForVoice(PickVoice(paths, voiceId)) : null;
 
     private void RefreshModelInBackground() =>
         _ = _model.InitializeAsync().ContinueWith(
@@ -797,54 +1000,14 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
             TaskContinuationOptions.OnlyOnFaulted,
             TaskScheduler.Default);
 
-    private BuiltEngine? AcquireEngineCore()
-    {
-        if (_model.Paths is not { } paths)
-        {
-            return null;
-        }
+    private BuiltEngine? AcquireEngineCore(VoiceModelPaths paths) => _engines.Acquire(paths);
 
-        lock (_ttsGate)
-        {
-            if (_disposed)
-            {
-                return null;
-            }
-
-            if (_engine is null || _engine.Model != paths)
-            {
-                _engine = SwapEngine(_engine, paths);
-            }
-
-            return TryAcquireCurrent(paths);
-        }
-    }
-
-    // Takes the caller's reference on the current engine. A refused reference means the engine was
-    // already disposed, so it is rebuilt once; if that is refused too the read is not ready.
-    // Called under _ttsGate.
-    private BuiltEngine? TryAcquireCurrent(VoiceModelPaths paths)
-    {
-        if (_engine!.TryAcquire())
-        {
-            return _engine;
-        }
-
-        _engine = SwapEngine(null, paths);
-        return _engine.TryAcquire() ? _engine : null;
-    }
-
-    private static BuiltEngine SwapEngine(BuiltEngine? current, VoiceModelPaths paths)
-    {
-        if (current is { Tts.IsAlive: true } && current.Model.RootDir == paths.RootDir && current.Model.Kind == paths.Kind)
-        {
-            return new BuiltEngine(current.Tts, paths);
-        }
-
-        var fresh = new BuiltEngine(new RefCountedTts(SherpaEngineFactory.Build(paths, SynthesisThreads)), paths);
-        current?.Release();
-        return fresh;
-    }
+    // The engine for a model folder: the live one of the same folder and pack version re-labelled for the
+    // new language (it shares the loaded model), else a freshly built one.
+    private static BuiltEngine CreateEngine(BuiltEngine? previous, VoiceModelPaths paths) =>
+        previous is not null && previous.Tts.TryAcquire()
+            ? new BuiltEngine(previous.Tts, paths)
+            : new BuiltEngine(new RefCountedTts(SherpaEngineFactory.Build(paths, SynthesisThreads)), paths);
 
     // Head start (Slice 47/56): synthesizes the sentences of the text's first chunks into the cache in
     // the voice that would read them now, without playing. A newer prepare, the start of a read,
@@ -1052,11 +1215,6 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
         _player.PlaybackSession.PositionChanged -= OnPositionChanged;
         _player.Dispose();
         _currentSource?.Dispose();
-        lock (_ttsGate)
-        {
-            _disposed = true;
-            _engine?.Release();
-            _engine = null;
-        }
+        _engines.Dispose();
     }
 }

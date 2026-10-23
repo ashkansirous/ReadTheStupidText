@@ -19,7 +19,6 @@ namespace ReadTheStupidText.Infrastructure.Reading;
 public sealed class WindowsVoicePackService : IVoicePackService
 {
     private const string ExtractingSuffix = ".extracting";
-    private const string ReplacedSuffix = ".replaced";
     private const int BufferBytes = 81920;
 
     private static readonly TimeSpan CatalogTimeout = TimeSpan.FromSeconds(30);
@@ -43,6 +42,7 @@ public sealed class WindowsVoicePackService : IVoicePackService
         _catalogUrl = catalogUrl;
         _stallTimeout = stallTimeout ?? TimeSpan.FromSeconds(60);
         _backoff = backoff ?? PackRetryPolicy.Backoff;
+        PackVersionFolders.DeleteOldVersions(packsRoot); // app start: nothing holds the folders of old versions yet
     }
 
     public async Task<PackCatalogResult> GetCatalogAsync(CancellationToken cancellationToken)
@@ -89,7 +89,7 @@ public sealed class WindowsVoicePackService : IVoicePackService
 
     private InstalledVoicePack? LoadInstalled(string packId)
     {
-        string folder = Path.Combine(PacksRoot(), packId);
+        string folder = PackVersionFolders.Resolve(Path.Combine(PacksRoot(), packId));
         string manifestPath = Path.Combine(folder, PackConstants.ManifestFileName);
         if (!File.Exists(manifestPath))
         {
@@ -357,7 +357,7 @@ public sealed class WindowsVoicePackService : IVoicePackService
             cancellationToken.ThrowIfCancellationRequested();
             string payload = LocatePayload(scratch);
             ValidatePayload(pack, payload);
-            MovePayloadIntoPlace(payload, Path.Combine(PacksRoot(), pack.Id));
+            PackVersionFolders.Install(payload, Path.Combine(PacksRoot(), pack.Id), pack.Version);
         }
         finally
         {
@@ -404,35 +404,6 @@ public sealed class WindowsVoicePackService : IVoicePackService
         {
             throw new InvalidDataException("The downloaded pack does not match its manifest.");
         }
-    }
-
-    // The new pack is already validated. An installed one is renamed aside first and removed only after
-    // the new folder is in place; if the move fails the old pack is put back, so a pack is never lost.
-    private static void MovePayloadIntoPlace(string payload, string target)
-    {
-        string aside = target + ReplacedSuffix;
-        DeleteDirectoryIfExists(aside);
-        bool hadOld = Directory.Exists(target);
-        if (hadOld)
-        {
-            Directory.Move(target, aside);
-        }
-
-        try
-        {
-            Directory.Move(payload, target);
-        }
-        catch
-        {
-            if (hadOld)
-            {
-                Directory.Move(aside, target);
-            }
-
-            throw;
-        }
-
-        DeleteDirectoryIfExists(aside);
     }
 
     private string PacksRoot()

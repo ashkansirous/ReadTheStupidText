@@ -18,7 +18,7 @@ public class PackVoiceModelServiceTests
         Pack(PackConstants.SupertonicPackId, "en,fr", VoiceEngineKind.Supertonic);
 
     private static readonly InstalledVoicePack Persian =
-        Pack(PackConstants.PersianPackId, "fa", VoiceEngineKind.Vits, new PackVoice("piper:fa-amir", "Amir", 0));
+        Pack(PackConstants.PersianPackId, "fa", VoiceEngineKind.Vits, new PackVoice("piper:fa-ganji-adabi", "Ganji Adabi", 0));
 
     [Fact]
     public async Task Initialize_resolves_the_pack_for_the_stored_language_and_raises_ready()
@@ -82,8 +82,8 @@ public class PackVoiceModelServiceTests
         await service.InitializeAsync();
         var catalog = new PackVoiceCatalog(service);
 
-        Assert.Equal(["piper:fa-amir", SystemVoice.Id], catalog.InstalledVoices.Select(v => v.Id));
-        Assert.Equal("piper:fa-amir", catalog.DefaultVoice!.Id);
+        Assert.Equal(["piper:fa-ganji-adabi", SystemVoice.Id], catalog.InstalledVoices.Select(v => v.Id));
+        Assert.Equal("piper:fa-ganji-adabi", catalog.DefaultVoice!.Id);
     }
 
     [Fact]
@@ -96,7 +96,7 @@ public class PackVoiceModelServiceTests
         int raised = 0;
         service.ReadyChanged += (_, _) => raised++;
 
-        packs.Installed = [PackVersion(PackConstants.PersianPackId, "fa", VoiceEngineKind.Vits, "2", new PackVoice("piper:fa-amir", "Amir", 0))];
+        packs.Installed = [PackVersion(PackConstants.PersianPackId, "fa", VoiceEngineKind.Vits, "2", new PackVoice("piper:fa-ganji-adabi", "Ganji Adabi", 0))];
         await service.InitializeAsync();
 
         Assert.Equal(1, raised);

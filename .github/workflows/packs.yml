@@ -15,8 +15,11 @@ name: packs
 #
 # Three voice packs are built into one release and listed in one packs.json:
 #   * supertonic-3  from the LFS model in the repo (en, fr, es, pt, ru, ja, ar)
-#   * piper-fa      the Piper fa_IR amir voice, downloaded from the sherpa-onnx
-#                   `tts-models` release and sha256-pinned. It carries the GPL-3.0
+#   * piper-fa      four Piper fa_IR voices (ganji_adabi, the default, ganji, mana, gyro),
+#                   each with its own model folder (Slice 89). Three come from the sherpa-onnx
+#                   `tts-models` release, sha256-pinned; mana has no sherpa build, so its
+#                   upstream onnx is pinned, given sherpa's Piper metadata and int8-quantized
+#                   here the way sherpa's piper export does. It carries the GPL-3.0
 #                   espeak-ng data, which therefore exists only inside this pack's zip,
 #                   never in the repo, the MSIX, the AAB or the .ipa (Decision 63).
 #   * melo-zh-en    MeloTTS Chinese + English (MIT), same download and pin.
@@ -45,7 +48,7 @@ on:
       piper_pack_version:
         description: 'Version stamped into the Persian (Piper) pack'
         required: true
-        default: '1'
+        default: '2'
         type: string
       melo_pack_version:
         description: 'Version stamped into the Chinese (MeloTTS) pack'
@@ -74,9 +77,19 @@ env:
   MODEL_DIR: src/ReadTheStupidText.App/VoiceModel
   # Keep the ids in sync with src/ReadTheStupidText.Application/Reading/PackConstants.cs.
   PERSIAN_ID: piper-fa
-  PERSIAN_LICENSE: 'CC0-1.0 (voice data) AND GPL-3.0-or-later (espeak-ng data)'
-  PERSIAN_URL: https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-fa_IR-amir-medium-int8.tar.bz2
-  PERSIAN_SHA256: b79dbf0b6b9629a36fd541bfda83817ec12e2697557d87b918638445971eac46
+  PERSIAN_LICENSE: 'CC0-1.0 (voice data) AND MIT (voice models) AND GPL-3.0-or-later (espeak-ng data)'
+  # Slice 89: four voices in one pack. The sherpa-onnx int8 archives are pinned by sha256 (their
+  # release digests); mana is built from the pinned upstream commit with sherpa-onnx's script.
+  PERSIAN_RELEASE_URL: https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models
+  GANJI_ADABI_SHA256: 42cc4a913e9e5a703a5a5d758267dd38ae6d86b47d4defad1e826be7885b050c
+  GANJI_SHA256: 2ae4658c3a69ef4f92e09d0014f4af31ca6c95e9ae417de3c34544b5e3a98120
+  GYRO_SHA256: 99bd3b912261c1a87a3f7930555622b36174b3e459e6bc153ba5fc743b931d9d
+  MANA_COMMIT: ad9dd8518bedf517bd7cbc9f63b8e5c844bf5bc0
+  MANA_ONNX_SHA256: e390c0e74ba71fd97c49ba662ee0c6e1724b462ba2d4561698af4f564840f126
+  MANA_JSON_SHA256: d102276a05436613a05e1fbad8f125abcf8f56759aaf4fd36adf216653949997
+  SHERPA_SCRIPTS_COMMIT: 36342561cbc256d55ecd61c2664bb8d598760a95
+  SHERPA_ADD_META_SHA256: a24b65a03e5c94c6cb1d9261bb93c197d1bede9357a2e829aabb64de1b404f42
+  PERSIAN_MAX_BYTES: 104857600
   CHINESE_ID: melo-zh-en
   CHINESE_LICENSE: MIT
   CHINESE_URL: https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-melo-tts-zh_en.tar.bz2
@@ -167,32 +180,81 @@ jobs:
             mkdir -p "$dir" && tar -xjf "$dir.tar.bz2" -C "$dir" --strip-components=1
           }
           mkdir -p src-models
-          fetch "$PERSIAN_URL" "$PERSIAN_SHA256" src-models/piper-fa
+          fetch "$PERSIAN_RELEASE_URL/vits-piper-fa_IR-ganji_adabi-medium-int8.tar.bz2" "$GANJI_ADABI_SHA256" src-models/fa-ganji_adabi
+          fetch "$PERSIAN_RELEASE_URL/vits-piper-fa_IR-ganji-medium-int8.tar.bz2" "$GANJI_SHA256" src-models/fa-ganji
+          fetch "$PERSIAN_RELEASE_URL/vits-piper-fa_IR-gyro-medium-int8.tar.bz2" "$GYRO_SHA256" src-models/fa-gyro
           fetch "$CHINESE_URL" "$CHINESE_SHA256" src-models/melo-zh-en
 
-      # The Persian pack: the Piper amir voice plus the espeak-ng data it phonemizes with.
+      # Mana (MahtaFetrat/Mana-Persian-Piper, MIT, CC0 data) has no sherpa-onnx build. Do what sherpa's
+      # piper export does (scripts/piper/generate.sh.in): write tokens.txt from the phoneme map and add
+      # the Piper metadata (sherpa's add_meta_data.py), then dynamic-int8 quantize (the same
+      # quantize_dynamic call as sherpa's dynamic_quantization.py, without its fp16 half, whose
+      # onnxmltools import has drifted). Inputs and the script are pinned by commit and sha256.
+      - name: Build the Mana voice for sherpa-onnx (metadata, tokens, int8)
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/mana"
+          mkdir -p "$work" src-models/fa-mana
+          hf="https://huggingface.co/MahtaFetrat/Mana-Persian-Piper/resolve/$MANA_COMMIT"
+          sherpa="https://raw.githubusercontent.com/k2-fsa/sherpa-onnx/$SHERPA_SCRIPTS_COMMIT/scripts/piper"
+          get() {
+            curl -fsSL --retry 3 -o "$work/$2" "$1/$2"
+            echo "$3  $work/$2" | sha256sum -c -
+          }
+          get "$hf" fa_IR-mana-medium.onnx "$MANA_ONNX_SHA256"
+          get "$hf" fa_IR-mana-medium.onnx.json "$MANA_JSON_SHA256"
+          get "$sherpa" add_meta_data.py "$SHERPA_ADD_META_SHA256"
+          # Pinned: the metadata and the int8 quantization depend on these versions, and the size check cannot
+          # tell a bad quantization from a good one.
+          python3 -m pip install --quiet onnx==1.19.1 onnxruntime==1.23.2 iso639-lang==2.6.3
+          (
+            cd "$work"
+            python3 add_meta_data.py --name mana --kind medium --lang fa_IR
+            python3 -c "from onnxruntime.quantization import QuantType, quantize_dynamic; quantize_dynamic(model_input='fa_IR-mana-medium.onnx', model_output='mana-int8.onnx', weight_type=QuantType.QUInt8)"
+          )
+          cp "$work/mana-int8.onnx" src-models/fa-mana/fa_IR-mana-medium.onnx
+          # add_meta_data.py (sherpa, pinned) writes tokens.txt from the phoneme_id_map in the .onnx.json.
+          if [ ! -s "$work/tokens.txt" ]; then echo "::error::add_meta_data.py did not write tokens.txt"; exit 1; fi
+          cp "$work/tokens.txt" src-models/fa-mana/tokens.txt
+
+      # The Persian pack: four Piper voices, one model folder each (voices/<name>/model.onnx +
+      # tokens.txt), plus the one espeak-ng data folder they all phonemize with.
       # The espeak-ng data is GPL-3.0; it ships ONLY in this downloaded zip (Decision 63),
       # with its licence text and the link to its corresponding source.
       - name: Build the Persian (Piper) pack zip
         run: |
           set -euo pipefail
-          src="src-models/piper-fa"
           dest="out/$PERSIAN_ID"
           mkdir -p "$dest"
-          copy_required() {
-            if [ ! -e "$src/$1" ]; then echo "::error::Missing $1 in the Piper archive"; exit 1; fi
-            cp -r "$src/$1" "$dest/$2"
+          copy_voice() {
+            local name="$1" src="src-models/fa-$1" out="$dest/voices/$1"
+            mkdir -p "$out"
+            for pair in "fa_IR-$name-medium.onnx model.onnx" "tokens.txt tokens.txt"; do
+              read -r from to <<< "$pair"
+              if [ ! -e "$src/$from" ]; then echo "::error::Missing $from for voice $name"; exit 1; fi
+              cp "$src/$from" "$out/$to"
+            done
+            if [ "$(stat -c %s "$out/model.onnx")" -lt 1048576 ]; then echo "::error::$name model.onnx is not a real model"; exit 1; fi
           }
-          copy_required fa_IR-amir-medium.onnx model.onnx
-          copy_required tokens.txt tokens.txt
-          copy_required espeak-ng-data espeak-ng-data
-          if [ "$(stat -c %s "$dest/model.onnx")" -lt 1048576 ]; then echo "::error::model.onnx is not a real model"; exit 1; fi
+          for voice in ganji_adabi ganji mana gyro; do copy_voice "$voice"; done
+          if [ ! -d src-models/fa-ganji_adabi/espeak-ng-data ]; then echo "::error::Missing espeak-ng-data in the Piper archive"; exit 1; fi
+          cp -r src-models/fa-ganji_adabi/espeak-ng-data "$dest/espeak-ng-data"
           cat > "$dest/LICENSE" <<'LICENSE_TEXT'
-          Persian voice "amir" (Piper, medium)
-            Voice data: CC0 1.0 Universal (public domain dedication), dataset from
-            https://datacula.com/tts-databases . Model card: MODEL_CARD.
-            Model: https://huggingface.co/rhasspy/piper-voices/tree/main/fa/fa_IR/amir/medium
-            Converted for sherpa-onnx by https://github.com/k2-fsa/sherpa-onnx (Apache-2.0).
+          Persian voices: ganji_adabi, ganji, mana, gyro (Piper, medium; one folder each under voices/)
+            ganji_adabi: model MIT (rhasspy/piper-voices), voice data CC0 1.0 Universal.
+              Fine-tuned from ganji.
+            ganji: model MIT (rhasspy/piper-voices), voice data CC0 1.0 Universal
+              (https://datacula.com/tts-databases ; per the Piper MODEL_CARD). Fine-tuned from amir.
+            mana: model MIT (https://huggingface.co/MahtaFetrat/Mana-Persian-Piper), voice data CC0 1.0
+              Universal (https://huggingface.co/datasets/MahtaFetrat/Mana-TTS, released by the
+              Nasl-e-Mana magazine).
+            gyro: model MIT (https://huggingface.co/gyroing/Persian-Piper-Model-gyro), voice data CC0 1.0
+              Universal (Kaggle: magnoliasis/persian-tts-dataset-male).
+            Attribution: ganji descends from amir, trained on the Apache-2.0 dataset
+              SadeghK/datacula-pertts-amir (https://huggingface.co/datasets/SadeghK/datacula-pertts-amir);
+              the Apache-2.0 attribution is kept here for that reason.
+            Converted for sherpa-onnx by https://github.com/k2-fsa/sherpa-onnx (Apache-2.0); mana was
+            given the same metadata and int8 quantization with sherpa-onnx's scripts/piper.
 
           espeak-ng data (folder espeak-ng-data): GPL-3.0-or-later
             Copyright the espeak-ng authors. This data is used only to turn text into
@@ -200,17 +262,30 @@ jobs:
             v3 or later (https://www.gnu.org/licenses/gpl-3.0.html). Its corresponding
             source code is available at https://github.com/espeak-ng/espeak-ng .
           LICENSE_TEXT
-          if [ -f "$src/MODEL_CARD" ]; then cp "$src/MODEL_CARD" "$dest/MODEL_CARD"; fi
-          printf 'Voice: https://huggingface.co/rhasspy/piper-voices/tree/main/fa/fa_IR/amir/medium\nespeak-ng source: https://github.com/espeak-ng/espeak-ng\nsherpa-onnx model: %s\n' "$PERSIAN_URL" > "$dest/SOURCE"
-          # Every file present except pack.json itself. The optional docs (LICENSE, SOURCE,
-          # MODEL_CARD) are listed only when they exist, so a missing one never marks the pack incomplete.
+          cat > "$dest/SOURCE" <<SOURCE_TEXT
+          Voices ganji_adabi, ganji, gyro (sherpa-onnx int8 builds): $PERSIAN_RELEASE_URL/vits-piper-fa_IR-<voice>-medium-int8.tar.bz2
+          Voice mana: https://huggingface.co/MahtaFetrat/Mana-Persian-Piper (commit $MANA_COMMIT), prepared with
+            https://github.com/k2-fsa/sherpa-onnx/tree/$SHERPA_SCRIPTS_COMMIT/scripts/piper
+          Piper voices: https://huggingface.co/rhasspy/piper-voices/tree/main/fa/fa_IR
+          espeak-ng source: https://github.com/espeak-ng/espeak-ng
+          SOURCE_TEXT
+          # Every file present except pack.json itself, so the app can verify an install is complete.
           files=$(cd "$dest" && find . -type f ! -path ./pack.json -printf '%P\n' | sort | jq -R . | jq -s .)
-          voices='[{"id": "piper:fa-amir", "name": "Amir", "sid": 0}]'
+          # ganji_adabi first: it is the default voice. Each model is single-speaker (sid 0).
+          voices='[
+            {"id": "piper:fa-ganji-adabi", "name": "Ganji Adabi", "sid": 0, "model": "voices/ganji_adabi"},
+            {"id": "piper:fa-ganji", "name": "Ganji", "sid": 0, "model": "voices/ganji"},
+            {"id": "piper:fa-mana", "name": "Mana", "sid": 0, "model": "voices/mana"},
+            {"id": "piper:fa-gyro", "name": "Gyro", "sid": 0, "model": "voices/gyro"}
+          ]'
           jq -n --arg id "$PERSIAN_ID" --arg version "$PERSIAN_VERSION" --argjson files "$files" --argjson voices "$voices" \
             '{id: $id, kind: "voice", language: "fa", version: $version, engine: "sherpa-onnx", model: "vits", voices: $voices, files: $files}' \
             > "$dest/pack.json"
           (cd out && zip -r -X "$PERSIAN_ID-$PERSIAN_VERSION.zip" "$PERSIAN_ID")
           ls -l out
+          if [ "$(stat -c %s "out/$PERSIAN_ID-$PERSIAN_VERSION.zip")" -gt "$PERSIAN_MAX_BYTES" ]; then
+            echo "::error::The Persian pack zip is over 100 MB"; exit 1
+          fi
 
       # The Chinese pack: the upstream MeloTTS zh_en folder (file names are what
       # Domain/Reading/MeloFiles.cs expects), minus the unused int8 stub and README.
