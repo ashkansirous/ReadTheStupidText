@@ -127,7 +127,7 @@ resumes and finishes; idle selection speaks its name.
 
 - The play button shows idle after Back while chunks are still playing (seen on the emulator).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-23)
 
 - **Pack layout.** An installed pack lives in `packs/<id>/v<version>/` with an `active` file naming the
   folder; always resolve it through `PackVersionFolders.Resolve` (`src/ReadTheStupidText.Application/Reading/PackVersionFolders.cs`),
@@ -140,7 +140,7 @@ resumes and finishes; idle selection speaks its name.
   version, reference counted). Acquire on the thread pool, never on the UI thread (it caused an ANR); the voice
   preview plays only when the reader is idle. (Slice 89: docs/plan/slices/89-four-farsi-voices.md)
 
-#### For README.md
+#### For README.md (lifted 2026-10-23)
 
 The Farsi voice pack now offers four voices (Ganji Adabi by default, Ganji, Mana, Gyro) in one download of
 about 61 MB; Amir is removed, and a phone with the old pack updates itself on Wi-Fi.

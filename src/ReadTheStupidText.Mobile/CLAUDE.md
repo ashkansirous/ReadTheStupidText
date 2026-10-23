@@ -89,6 +89,16 @@ physical device) before relying on a slice that touches the Mobile project.
 - Until the pack is Ready, `CompositeSpeechReader` reads with the Android `TextToSpeech` "Phone voice" (`SystemVoice.Id`), also user-selectable. (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
 - The app pins one `packs-<n>` release in `PackConstants.CatalogUrl` (how they are published and tag-filtered: `.github/CLAUDE.md`). (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
 - First-run language: `ISettingsStore.Language`; the app shows `LanguagePage` when it is null. Android declares `INTERNET` + `ACCESS_NETWORK_STATE`, used only for pack downloads; user data stays on the device. Android `minSdk` is 28 (Decision 82; see the API 28 rule above). (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
+- **Pack layout.** An installed pack lives in `packs/<id>/v<version>/` with an `active` file naming the
+  folder; always resolve it through `PackVersionFolders.Resolve` (`src/ReadTheStupidText.Application/Reading/PackVersionFolders.cs`),
+  never `packs/<id>/` directly, and never replace or delete the active folder (a live engine holds its files).
+  A multi-model voice pack puts each model in `voices/<name>/` (`model.onnx` + `tokens.txt`), with one shared
+  `espeak-ng-data` at the pack root. Phones update an installed pack only on an unmetered connection
+  (`PackUpdatePolicy`). (Slice 89: docs/plan/slices/89-four-farsi-voices.md)
+- **Engines are cached per model folder.** Readers get engines through `EngineCache`
+  (`src/ReadTheStupidText.Application/Reading/EngineCache.cs`, capacity 4, keyed by model folder and pack
+  version, reference counted). Acquire on the thread pool, never on the UI thread (it caused an ANR); the voice
+  preview plays only when the reader is idle. (Slice 89: docs/plan/slices/89-four-farsi-voices.md)
 
 ## Rules from the Batch 9 slices (lifted 2026-10-21)
 
