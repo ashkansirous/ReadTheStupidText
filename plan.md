@@ -39,7 +39,7 @@ this plan turns it into ordered, shippable vertical slices.
 | 19 | Local-only timing diagnostics | built | — | #86 | [19-local-only-timing-diagnostics.md](docs/plan/slices/19-local-only-timing-diagnostics.md) |
 | 20 | Text sanitizer (redact/simplify noise) | built | — | #102 | [20-text-sanitizer.md](docs/plan/slices/20-text-sanitizer.md) |
 | 21 | Daily on-disk logs + open-logs button | built | — | #103 | [21-daily-on-disk-logs-open-logs.md](docs/plan/slices/21-daily-on-disk-logs-open-logs.md) |
-| 22 | Read-latency instrumentation + low-risk tuning | built (partly; see Outstanding work) | — | #104 | [22-read-latency-instrumentation-low-risk-tuning.md](docs/plan/slices/22-read-latency-instrumentation-low-risk-tuning.md) |
+| 22 | Read-latency instrumentation + low-risk tuning | verified | #265 | #104 | [22-read-latency-instrumentation-low-risk-tuning.md](docs/plan/slices/22-read-latency-instrumentation-low-risk-tuning.md) |
 | 23 | Voice swap continues the current read | built | — | #105 | [23-voice-swap-continues-the-current-read.md](docs/plan/slices/23-voice-swap-continues-the-current-read.md) |
 | 24 | Draggable, position-persisted control panel | built | — | #106 | [24-draggable-position-persisted-control-panel.md](docs/plan/slices/24-draggable-position-persisted-control-panel.md) |
 | 25 | Read-through timer (elapsed/total) | built | — | — | [25-read-through-timer.md](docs/plan/slices/25-read-through-timer.md) |
@@ -108,9 +108,9 @@ this plan turns it into ordered, shippable vertical slices.
 | 88 | The Windows desktop layout never mirrors; only text flows by its own direction | built | #254 | | [88-desktop-no-layout-mirroring.md](docs/plan/slices/88-desktop-no-layout-mirroring.md) |
 | 89 | Four Farsi voices in one pack (ganji_adabi by default), Amir dropped | planned | | | [89-four-farsi-voices.md](docs/plan/slices/89-four-farsi-voices.md) |
 | 90 | Untranslated text is read in its own language | built | #258 | | [90-untranslated-text-reads-in-its-own-language.md](docs/plan/slices/90-untranslated-text-reads-in-its-own-language.md) |
-| 91 | Dino stories as packages, three starter stories, developer export | planned | | | [91-dino-story-packages-and-starters.md](docs/plan/slices/91-dino-story-packages-and-starters.md) |
-| 92 | A free, curated Dino story store behind the grown-up gate | planned | | | [92-dino-story-store.md](docs/plan/slices/92-dino-story-store.md) |
-| 93 | Dino backup file and a first run that asks the language | planned | | | [93-dino-backup-and-first-run.md](docs/plan/slices/93-dino-backup-and-first-run.md) |
+| 91 | Dino stories as packages, three starter stories, developer export | built | #263 | | [91-dino-story-packages-and-starters.md](docs/plan/slices/91-dino-story-packages-and-starters.md) |
+| 92 | A free, curated Dino story store behind the grown-up gate | built | #266 | | [92-dino-story-store.md](docs/plan/slices/92-dino-story-store.md) |
+| 93 | Dino backup file and a first run that asks the language | built | #267 | | [93-dino-backup-and-first-run.md](docs/plan/slices/93-dino-backup-and-first-run.md) |
 
 Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
 
@@ -143,7 +143,6 @@ Built but not verified (details in each slice file):
 - Slice 58: a signed Dino release cut by CI ([slice](docs/plan/slices/58-dino-reader-skeleton.md)).
 - Slice 46: the Windows tray panel's progress ring in the running app (auto-read, copy, hotkey; clears on supersede/failure/completion); follow-up: a reader-level generating signal on `ISpeechReader` for Android ([slice](docs/plan/slices/46-play-loading-state.md)).
 - Slice 69: real-R2 Range behaviour of `/download/android/latest` not separately tested ([slice](docs/plan/slices/69-apk-downloads-on-r2.md)).
-- Slice 22: latency win and any further first-chunk biasing still to be measured under the (Package) profile; issue #117 deferred, story #104 open ([slice](docs/plan/slices/22-read-latency-instrumentation-low-risk-tuning.md)).
 - Slice 45: a real multi-page scan on a Google-signed-in device (module download, edge detection, page order, gallery import, text appended and read aloud) ([slice](docs/plan/slices/45-android-document-scanner.md)).
 - Slice 45: the no-Play-services `MediaPicker` fallback on a device without Play services ([slice](docs/plan/slices/45-android-document-scanner.md)).
 - Slice 48: installing from TestFlight on an iPhone and adding testers (manual); the iOS app's runtime behaviour (AVSpeech reading, file picker); no Mac or iPhone here ([slice](docs/plan/slices/48-ios-target-testflight.md)).
@@ -184,6 +183,9 @@ Built but not verified (details in each slice file):
 - Slice 88: paging back on the desktop (it has no back control); the Farsi/Arabic desktop check itself passed ([slice](docs/plan/slices/88-desktop-no-layout-mirroring.md)).
 - Flaky test `ReadAloudServiceGeneratingTests.Auto_read_prepares_the_head_start_before_the_settle_delay_ends` (timing; failed once in CI on 2026-10-21).
 - Slice 90: iOS on a device (a different-language read uses the phone voice in that language); Spanish text in an English app; the "no voice" message for a language with neither a natural pack nor a phone voice. ([slice](docs/plan/slices/90-untranslated-text-reads-in-its-own-language.md))
+- Slice 91: re-importing a `.dino` on a device (unit round-trip tests cover it) ([slice](docs/plan/slices/91-dino-story-packages-and-starters.md)).
+- Slice 92: "Try again" after going offline and the gallery refresh on `StoreClient.LibraryChanged`, on a device; the production `/api/stories*` routes after deploy; the store is empty until curated stories are put in `dinoreader/stories/` in the bucket ([slice](docs/plan/slices/92-dino-story-store.md)).
+- Slice 93: the language rebuild after first run (`DinoApp.RebuildRoot`) on a device; Windows backup save and restore; iOS; native-speaker review of the new strings in the 9 locales ([slice](docs/plan/slices/93-dino-backup-and-first-run.md)).
 
 ## Out of Scope
 
