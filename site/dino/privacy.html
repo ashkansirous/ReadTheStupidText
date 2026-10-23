@@ -45,7 +45,8 @@
     <li><strong>Photos and scans</strong> are turned into text by on-device text recognition. The
       picture stays on the device, in the app&rsquo;s private storage, and is not sent to anyone.</li>
     <li><strong>Translation</strong>, where the app offers it, runs on the device with downloaded
-      language models. Your text is never sent to a translation service.</li>
+      language models, or uses the translation that comes built into the story. Your text is never
+      sent to a translation service.</li>
     <li><strong>Speech</strong> is generated on the device by an offline voice engine. No text or
       audio is sent to any server.</li>
     <li><strong>Settings and the story library</strong> (voices chosen for characters, reading
@@ -64,14 +65,17 @@
   chooses to get, from this project&rsquo;s own server (dinoreader.sirous.uk). These are plain file
   requests: no account, no identifier, and nothing about the child, the device&rsquo;s stories, photos
   or scans is sent. The app does not use cookies and does not record which stories were chosen.</p>
+  <p><strong>Translation models (Android).</strong> When a story is read translated and the book has
+  no built-in translation for that language, the phone downloads Google&rsquo;s on-device translation
+  model for the language, once. The story text is translated on the phone and is never sent anywhere.</p>
   <p>Like any web request, a download is seen by the server that hosts the file (GitHub for voice
-  and language packs, this project&rsquo;s own server for free stories), which may log the
+  and language packs, Google for translation models on Android, this project&rsquo;s own server for free stories), which may log the
   device&rsquo;s IP address under its own privacy policy. Dino Reader itself does not receive or keep
   that information.</p>
 
   <h2>Permissions</h2>
   <p>The app declares the <strong>Internet</strong> and <strong>Network state</strong> permissions,
-  used only to download voice and language packs and free stories, and to tell &ldquo;offline&rdquo;
+  used only to download voice and language packs, translation models and free stories, and to tell &ldquo;offline&rdquo;
   from a failed download. Pages you scan and photos you pick are processed on the device and never leave it.
   Choosing a file or photo uses the standard Android picker, and the app only opens what you pick.</p>
 

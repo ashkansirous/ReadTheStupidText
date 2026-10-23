@@ -5,7 +5,7 @@ using DinoReader.Core;
 namespace DinoReader;
 
 /// <summary>
-/// The three bundled starter stories (Slice 91, Decision 95): <c>.dino</c> packages shipped as app assets and imported on first run.
+/// The four bundled starter stories (Slice 91, Decision 95): <c>.dino</c> packages shipped as app assets and imported on first run.
 /// Each starter is recorded as installed on its own, by package id, in preferences: a failed pass retries only the starters still
 /// missing, and a starter a grown-up deleted never comes back because its record stays. A starter already in the library (restored or
 /// imported by hand, found by its <see cref="Story.SourceId"/>) is recorded without being imported again.
@@ -14,8 +14,11 @@ public sealed class StarterStories(IStoryLibrary library)
 {
 	private const string InstalledKeyPrefix = "dino.starter.installed.";
 
+	// Set once a starter's stored copy has taken the bundled translations (Slice 95): earlier versions installed the starters without them.
+	private const string TranslationsAdoptedKeyPrefix = "dino.starter.translations.";
+
 	// Listed in shelf order: the first is the newest, so it comes first in the gallery.
-	private static readonly string[] AssetNames = ["three-little-pigs.dino", "gingerbread-man.dino", "tortoise-and-hare.dino"];
+	private static readonly string[] AssetNames = ["good-enough.dino", "three-little-pigs.dino", "gingerbread-man.dino", "tortoise-and-hare.dino"];
 
 	private readonly SemaphoreSlim _gate = new(1, 1);
 	private bool _complete;
@@ -58,6 +61,10 @@ public sealed class StarterStories(IStoryLibrary library)
 
 	private static void Record(string packageId) => Preferences.Default.Set(InstalledKeyPrefix + packageId, true);
 
+	private static bool TranslationsAdopted(string packageId) => Preferences.Default.Get(TranslationsAdoptedKeyPrefix + packageId, false);
+
+	private static void RecordTranslationsAdopted(string packageId) => Preferences.Default.Set(TranslationsAdoptedKeyPrefix + packageId, true);
+
 	private async Task<bool> TryInstallOneAsync(string assetName, DateTimeOffset created, Func<Task<HashSet<string>>> presentIds)
 	{
 		try
@@ -73,6 +80,11 @@ public sealed class StarterStories(IStoryLibrary library)
 				Record(packageId);
 			}
 
+			if (!TranslationsAdopted(packageId))
+			{
+				await AdoptTranslationsAsync(copy, packageId);
+			}
+
 			return true;
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or StoryPackageException or InvalidDataException or InvalidOperationException or ArgumentException)
@@ -80,6 +92,26 @@ public sealed class StarterStories(IStoryLibrary library)
 			Debug.WriteLine($"Dino Reader could not install the starter {assetName}: {ex}");
 			return false;
 		}
+	}
+
+	// The copy in the library (found by its source id) takes the bundled translations and the switch; its cast, merges, cover and pages stay.
+	// A deleted starter has no copy, so nothing comes back. Recorded only when the bundled package has translations, so a later one still adopts.
+	private async Task AdoptTranslationsAsync(MemoryStream package, string packageId)
+	{
+		package.Position = 0;
+		Story bundled = await StoryPackageReader.ReadStoryOnlyAsync(package);
+		if (bundled.Translations is not { Count: > 0 })
+		{
+			return;
+		}
+
+		Story? stored = (await library.ListAsync()).FirstOrDefault(s => s.SourceId == packageId);
+		if (stored is not null && BundledTranslations.Adopt(stored, bundled) is { } adopted && !ReferenceEquals(adopted, stored))
+		{
+			await library.UpdateAsync(adopted);
+		}
+
+		RecordTranslationsAdopted(packageId);
 	}
 
 	private async Task ImportIfAbsentAsync(MemoryStream package, string packageId, DateTimeOffset created, HashSet<string> present)

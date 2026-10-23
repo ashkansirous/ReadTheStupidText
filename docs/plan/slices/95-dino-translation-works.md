@@ -1,6 +1,6 @@
 # Slice 95 — Dino translation works: bundled translations for every shipped book, live translation on Android
 
-*Planned.* 2026-10-23, from the user's report "the translation does not work. When a book's language is
+*Built 2026-10-23, emulator-tested.* Planned 2026-10-23, from the user's report "the translation does not work. When a book's language is
 English and someone selects Farsi, the book should be translated so it can be read in Farsi. For
 store-provided books, attach all available languages. Generate the translations yourself."
 
@@ -44,17 +44,17 @@ own language, whatever language the grown-up picked.
 
 ## Work
 
-- [ ] 1. **Smallest end-to-end: one starter in Farsi.** `Story.Translations` and its JSON, the
+- [x] 1. **Smallest end-to-end: one starter in Farsi.** `Story.Translations` and its JSON, the
   `StoryTranslator` lookup order and `Applies` (true with a bundled table for my language and the story
   switch on), a builder dump of the Pigs' pieces, a Farsi table, rebuilt package. Test: the Pigs read in
   Farsi with the same characters and source ranges, with no engine.
-- [ ] 2. **All languages, all starters.** Translations for the four starters (Pigs, Gingerbread Man,
+- [x] 2. **All languages, all starters.** Translations for the four starters (Pigs, Gingerbread Man,
   Tortoise and Hare, Good Enough) into all eight languages; the coverage test; `TranslateToMyLanguage` on
   in the builder; rebuild the four packages.
-- [ ] 3. **ML Kit for Dino on Android.** Move `MlKitTranslator` to Mobile.Shared, register it in both apps'
+- [x] 3. **ML Kit for Dino on Android.** Move `MlKitTranslator` to Mobile.Shared, register it in both apps'
   Android services, drop the "no engine" note from `StoryTranslator`. Test on the emulator with a typed
   English story and Farsi chosen.
-- [ ] 4. Rules into `src/DinoReader.App/CLAUDE.md` and `src/DinoReader.Core/CLAUDE.md` (done at planning,
+- [x] 4. Rules into `src/DinoReader.App/CLAUDE.md` and `src/DinoReader.Core/CLAUDE.md` (done at planning,
   check they still match what was built).
 
 ## Verification
@@ -64,3 +64,37 @@ own language, whatever language the grown-up picked.
 - Emulator: pick Farsi in the first run (or Settings), open each starter: it is read in Farsi, each
   character in its own voice, picture-mode boxes on the English line. Back to English: read in English.
   A typed English story with "Translate to my language" on and Farsi picked is read in Farsi through ML Kit.
+
+#### Changed while building
+
+- Core `BundledTranslations` (`Applies`, `Lookup`, `Compose`, `MissesAny`, `IsComplete`, `Adopt`, `Key`); `StoryPieces.Split`/`FromWholePiece` shared by `StoryVoicing` and the builder so keys cannot drift. `Story.Translations` is PascalCase `"Translations"` in `story.json`, keys normalised. `StoryPackageReader.ReadStoryOnlyAsync` added.
+- Existing installs: `StarterStories` adopts the bundled tables onto stored starters once per package id (pref `dino.starter.translations.<id>`), keeping cast edits.
+- `MlKitTranslator` moved to `Mobile.Shared/Platforms/Android`, registered in `MobileSharedServices.Android` for both apps.
+- 158 pieces (pigs 47, gingerbread 45, tortoise 49, good-enough 17) x 8 languages, written by Claude (Opus), in `tests/DinoReader.Tests/Starters/translations/`.
+- Privacy: `site/dino/privacy.html` and an `AndroidManifest` comment cover the ML Kit model download.
+- Device-found bug: `StoryTranslator.MyLanguage` read `CultureInfo.CurrentUICulture`, which `LanguageChoice.Apply` changes only inside the picker's async flow; it now reads `LanguageChoice.Current()`.
+
+#### From review
+
+- High (`reviews/95-review-high.md`): 1-2 cleared once translations landed; 3, 4, 5, 6, 9 fixed; 7, 8 skipped (minor perf).
+- Medium (`reviews/95-review-medium.md`): 4 fixed (holes with no engine keep the whole read and voice in the source language). Skipped: 1 (later translation updates are never re-adopted), 2 (adopt turns translate on; the switch was hidden before, so no user choice is overridden), 3 and 5-8 (low), 9 (model download on mobile data, consistent with voice packs).
+
+#### Device test
+
+RTST_Test, Debug arm64: fresh install shows 4 starters; Farsi picked without restart gives 22050 Hz piper WAVs for Pigs and Good Enough only, pause/resume stays Farsi, English back gives 44100 Hz. A typed English story with Translate on downloaded the ML Kit en_fa model and played Farsi audio. No crashes.
+
+#### For CLAUDE.md
+
+Rules are in `src/DinoReader.App/CLAUDE.md` and `src/DinoReader.Core/CLAUDE.md` and were amended: `MyLanguage` is `LanguageChoice.Current()`, never `CultureInfo.CurrentUICulture`; pieces must come from `StoryPieces.Split`. (Slice 95: docs/plan/slices/95-dino-translation-works.md)
+
+#### For README.md
+
+Dino Reader starters can be read in any of the nine languages; your own stories translate on Android.
+
+#### Not yet verified
+
+- Distinct Farsi voices per character (not observable on the emulator).
+- The upgrade path from a real older install (adopt logic is unit-tested only).
+- Windows and iOS reading bundled translations.
+- A native speaker's read of the translations.
+- Spanish and Portuguese translations make the Hare feminine, and Portuguese and Russian the Fox feminine, while the voice may be male.

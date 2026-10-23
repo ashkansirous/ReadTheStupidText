@@ -46,6 +46,24 @@ public static class StoryPackageReader
         }
     }
 
+    /// <summary>The story a package carries, without storing anything (to compare a bundled starter with the copy in the library).</summary>
+    public static async Task<Story> ReadStoryOnlyAsync(Stream package)
+    {
+        try
+        {
+            using var zip = new ZipArchive(package, ZipArchiveMode.Read, leaveOpen: true);
+            return await ReadStoryAsync(IndexEntries(zip));
+        }
+        catch (InvalidDataException ex)
+        {
+            throw new StoryPackageException("The package is not a valid zip file.", ex);
+        }
+        catch (StoryFormatException ex)
+        {
+            throw new StoryPackageException(ex.Message, ex);
+        }
+    }
+
     // The writer keeps the package id only in the manifest, so a kept-id restore gets its source back from there.
     private static string? SourceOf(StoryPackageManifest manifest, Story packaged, bool keepId) =>
         !keepId || manifest.Id != packaged.Id ? manifest.Id : packaged.SourceId;
