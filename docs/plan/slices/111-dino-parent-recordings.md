@@ -1,6 +1,6 @@
 # Slice 111 — Dino: parents read in their own voice
 
-*Planned 2026-10-24*, from the phone scope "Dino Reader - translated text on screen, voices in the
+*In progress (wave 2026-10-24), draft PR.* *Planned 2026-10-24*, from the phone scope "Dino Reader - translated text on screen, voices in the
 reading language, one narrator, parent recordings, store filters" (2026-10-24) —
 https://drive.google.com/file/d/1b2XPenCW2D4Kx1yx98js_LK4CRBSnnLf/view?usp=drivesdk (part 5, milestone 5).
 
