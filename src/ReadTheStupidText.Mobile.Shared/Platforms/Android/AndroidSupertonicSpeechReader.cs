@@ -102,7 +102,16 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     // chunks) throws IllegalArgumentException. SetSpeed can fire from the UI at
     // any moment, including that gap, so it must check this rather than assume
     // _player's native state.
+    // Guarded by _playerLock, like every call into _player: the poll, the UI and the playback loop
+    // would otherwise act on the player between a ready check and the call it guards.
     private bool _playerReady;
+
+    // Serialises all MediaPlayer access with the _playerReady check that guards it. Never held
+    // across an await; the player's event handlers only take it briefly (MarkPlayerNotReady).
+    private readonly object _playerLock = new();
+
+    // Counts chunks started; a chunk's player handlers ignore events once a newer chunk has begun.
+    private int _chunkSequence;
 
     private TaskCompletionSource<bool>? _chunkEnded;
     private CancellationTokenSource? _pollCts;
@@ -759,45 +768,165 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     private async Task<bool> PlayChunkAsync(string wavPath, ReadChunk readChunk, CancellationToken token)
     {
         var ended = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var prepared = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         _chunkEnded = ended;
+        int sequence = Interlocked.Increment(ref _chunkSequence);
 
         AndroidMedia.MediaPlayer player = EnsurePlayer();
+        using var subscription = new PlayerSubscription(
+            player,
+            (s, e) => HandlePrepared(sequence, prepared),
+            (s, e) => HandleChunkCompleted(sequence, ended),
+            (s, e) => HandlePlayerError(e, sequence, prepared, ended));
+        if (!BeginPrepare(player, wavPath, token))
+        {
+            TryDelete(wavPath);
+            return false;
+        }
+
+        return await PrepareAndPlayAsync(player, readChunk, sequence, prepared, ended, token);
+    }
+
+    // Resets the player and starts preparing the chunk in one step under the player lock, so a Stop
+    // or Pause cannot land between them. False when the read was stopped or superseded meanwhile.
+    private bool BeginPrepare(AndroidMedia.MediaPlayer player, string wavPath, CancellationToken token)
+    {
+        lock (_playerLock)
+        {
+            if (token.IsCancellationRequested)
+            {
+                return false;
+            }
+
+            ResetPlayerForChunk(player, wavPath);
+            player.SetDataSource(wavPath);
+            player.PrepareAsync();
+            return true;
+        }
+    }
+
+    // Called under _playerLock.
+    private void ResetPlayerForChunk(AndroidMedia.MediaPlayer player, string wavPath)
+    {
+        MarkPlayerNotReady();
+        StopPolling();
         player.Reset();
-        _playerReady = false;
         DeletePreviousChunkFile();
         _previousChunkFile = _currentChunkFile;
         _currentChunkFile = wavPath;
+    }
 
-        var prepared = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        void OnPrepared(object? s, EventArgs e) => prepared.TrySetResult();
-        player.Prepared += OnPrepared;
-        try
+    // The flag goes down before the player is touched.
+    private void MarkPlayerNotReady()
+    {
+        lock (_playerLock)
         {
-            player.SetDataSource(wavPath);
-            player.PrepareAsync();
-            await prepared.Task;
+            _playerReady = false;
         }
-        finally
+    }
+
+    private bool IsCurrentChunk(int sequence) => Volatile.Read(ref _chunkSequence) == sequence;
+
+    private void HandlePrepared(int sequence, TaskCompletionSource<bool> prepared)
+    {
+        if (IsCurrentChunk(sequence))
         {
-            player.Prepared -= OnPrepared;
+            prepared.TrySetResult(true);
+        }
+    }
+
+    private async Task<bool> PrepareAndPlayAsync(AndroidMedia.MediaPlayer player, ReadChunk readChunk, int sequence,
+        TaskCompletionSource<bool> prepared, TaskCompletionSource<bool> ended, CancellationToken token)
+    {
+        if (!await WaitPreparedAsync(prepared, ended, token))
+        {
+            // Stop/skip/supersede ends the chunk (false); a prepare error already completed it (true).
+            return !token.IsCancellationRequested && ended.Task is { IsCompletedSuccessfully: true, Result: true };
         }
 
-        _playerReady = true;
-
-        if (!token.IsCancellationRequested)
-        {
-            ApplyPlaybackRate(player);
-            player.Start();
-            LogFirstAudio();
-            ChunkChanged?.Invoke(this, readChunk);
-            UpdateState(PlaybackState.Playing);
-            StartPolling(player, token);
-        }
+        StartPreparedChunk(player, readChunk, sequence, token);
 
         using (token.Register(() => ended.TrySetResult(false)))
         {
             return await ended.Task;
         }
+    }
+
+    // A Reset() during PREPARING raises no Prepared, so a cancel or a chunk end must release this wait.
+    private static async Task<bool> WaitPreparedAsync(
+        TaskCompletionSource<bool> prepared, TaskCompletionSource<bool> ended, CancellationToken token)
+    {
+        using (token.Register(() => prepared.TrySetResult(false)))
+        {
+            await Task.WhenAny(prepared.Task, ended.Task);
+            return prepared.Task.IsCompletedSuccessfully && prepared.Task.Result;
+        }
+    }
+
+    // A pause pressed while the chunk was preparing is honoured: the chunk stays prepared, not playing.
+    // The state check, the Start and the state change are one step under the player lock, so a
+    // Pause or Resume lands either before it (and is honoured) or after it (and acts on a started chunk).
+    private void StartPreparedChunk(
+        AndroidMedia.MediaPlayer player, ReadChunk readChunk, int sequence, CancellationToken token)
+    {
+        PlaybackState state;
+        bool changed;
+        lock (_playerLock)
+        {
+            if (token.IsCancellationRequested || !IsCurrentChunk(sequence))
+            {
+                return;
+            }
+
+            _playerReady = true;
+            ApplyPlaybackRate(player);
+            state = _state == PlaybackState.Paused ? PlaybackState.Paused : PlaybackState.Playing;
+            if (state == PlaybackState.Playing)
+            {
+                player.Start();
+            }
+
+            changed = SwapState(state);
+            StartPolling(player, token);
+        }
+
+        LogFirstAudio();
+        ChunkChanged?.Invoke(this, readChunk);
+        RaiseStateChanged(changed, state);
+    }
+
+    // The chunk played to its end: nothing left to poll or query until the next chunk is prepared.
+    private void HandleChunkCompleted(int sequence, TaskCompletionSource<bool> ended)
+    {
+        if (!IsCurrentChunk(sequence))
+        {
+            return;
+        }
+
+        MarkPlayerNotReady();
+        StopPolling();
+        ended.TrySetResult(true);
+    }
+
+    // A MediaPlayer error (e.g. -38 on a state misuse) is logged and marked handled, so Android
+    // raises no Completion that would pass for a natural end. The failed prepare is released and
+    // the playing chunk ends once, on this chunk's own completion sources.
+    // A mid-play error still ends the chunk and the read moves on (logged as a warning). A superseded
+    // chunk's error is marked handled and otherwise ignored.
+    private void HandlePlayerError(AndroidMedia.MediaPlayer.ErrorEventArgs e, int sequence,
+        TaskCompletionSource<bool> prepared, TaskCompletionSource<bool> ended)
+    {
+        e.Handled = true;
+        if (!IsCurrentChunk(sequence))
+        {
+            return;
+        }
+
+        MarkPlayerNotReady();
+        StopPolling();
+        _log.Warning($"media player error what={e.What} extra={e.Extra}; the chunk is skipped");
+        prepared.TrySetResult(false);
+        ended.TrySetResult(true);
     }
 
     private void LogFirstAudio()
@@ -808,19 +937,45 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         }
     }
 
+    // Only a prepared player may be paused or started; between chunks the state alone records the
+    // request and StartPreparedChunk honours it.
     public void Pause()
     {
-        _player?.Pause();
-        UpdateState(PlaybackState.Paused);
+        bool changed;
+        lock (_playerLock)
+        {
+            if (_playerReady && _player is { } player)
+            {
+                player.Pause();
+            }
+
+            changed = SwapState(PlaybackState.Paused);
+        }
+
+        RaiseStateChanged(changed, PlaybackState.Paused);
     }
 
+    // Only a paused reader resumes. A chunk still preparing is started by StartPreparedChunk, which
+    // sees the Playing state set here.
     public void Resume()
     {
-        if (_player is { } player)
+        bool changed;
+        lock (_playerLock)
         {
-            player.Start();
-            UpdateState(PlaybackState.Playing);
+            if (_state != PlaybackState.Paused || _player is not { } player)
+            {
+                return;
+            }
+
+            if (_playerReady)
+            {
+                player.Start();
+            }
+
+            changed = SwapState(PlaybackState.Playing);
         }
+
+        RaiseStateChanged(changed, PlaybackState.Playing);
     }
 
     public void Stop()
@@ -834,8 +989,12 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
 
         _chunkEnded?.TrySetResult(false);
         StopPolling();
-        _player?.Reset();
-        _playerReady = false;
+        lock (_playerLock)
+        {
+            _playerReady = false;
+            _player?.Reset();
+        }
+
         DeletePreviousChunkFile();
         DeleteCurrentChunkFile();
         _chunkCount = 0;
@@ -848,9 +1007,12 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     public void SetSpeed(PlaybackRate speed)
     {
         _playbackRate = speed.Value;
-        if (_playerReady && _player is { } player)
+        lock (_playerLock)
         {
-            ApplyPlaybackRate(player);
+            if (_playerReady && _player is { } player)
+            {
+                ApplyPlaybackRate(player);
+            }
         }
     }
 
@@ -1133,15 +1295,13 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
 
     private AndroidMedia.MediaPlayer EnsurePlayer()
     {
-        if (_player is null)
+        lock (_playerLock)
         {
-            _player = new AndroidMedia.MediaPlayer();
-            _player.Completion += (_, _) => _chunkEnded?.TrySetResult(true);
+            return _player ??= new AndroidMedia.MediaPlayer();
         }
-
-        return _player;
     }
 
+    // Called under _playerLock.
     private void ApplyPlaybackRate(AndroidMedia.MediaPlayer player)
     {
         bool wasPlaying = player.IsPlaying;
@@ -1162,15 +1322,17 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     {
         StopPolling();
         var cts = CancellationTokenSource.CreateLinkedTokenSource(stopToken);
-        _pollCts = cts;
+        Volatile.Write(ref _pollCts, cts);
         _ = PollLoopAsync(player, cts.Token);
     }
 
+    // Callable from the Android looper thread too: take the source atomically so it is cancelled
+    // and disposed exactly once.
     private void StopPolling()
     {
-        _pollCts?.Cancel();
-        _pollCts?.Dispose();
-        _pollCts = null;
+        CancellationTokenSource? cts = Interlocked.Exchange(ref _pollCts, null);
+        cts?.Cancel();
+        cts?.Dispose();
     }
 
     private async Task PollLoopAsync(AndroidMedia.MediaPlayer player, CancellationToken token)
@@ -1193,12 +1355,12 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     {
         int chunkCount = Volatile.Read(ref _chunkCount);
         int chunkIndex = Volatile.Read(ref _currentChunkIndex);
-        if (chunkCount == 0)
+        if (chunkCount == 0 || !TryReadPlayer(player, out int duration, out int position))
         {
             return;
         }
 
-        double withinChunk = player.Duration > 0 ? (double)player.CurrentPosition / player.Duration : 0;
+        double withinChunk = duration > 0 ? (double)position / duration : 0;
         double fraction = (chunkIndex + Math.Clamp(withinChunk, 0, 1)) / chunkCount;
         ProgressChanged?.Invoke(this, Math.Clamp(fraction, 0, 1));
 
@@ -1208,12 +1370,28 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         }
     }
 
+    // The player is queried only while prepared, under the lock that serialises it against Reset.
+    private bool TryReadPlayer(AndroidMedia.MediaPlayer player, out int duration, out int position)
+    {
+        lock (_playerLock)
+        {
+            duration = _playerReady ? player.Duration : 0;
+            position = _playerReady ? player.CurrentPosition : 0;
+            return _playerReady;
+        }
+    }
+
     // Zero unless a chunk is actually playing (player prepared and the reader not Idle), so a
     // finished or reset player can never leak its position into the next read's timer.
-    private TimeSpan CurrentChunkPosition() =>
-        _playerReady && _state != PlaybackState.Idle && _player is { } player && player.Duration > 0
-            ? TimeSpan.FromMilliseconds(player.CurrentPosition)
-            : TimeSpan.Zero;
+    private TimeSpan CurrentChunkPosition()
+    {
+        lock (_playerLock)
+        {
+            return _playerReady && _state != PlaybackState.Idle && _player is { } player
+                ? TimeSpan.FromMilliseconds(player.CurrentPosition)
+                : TimeSpan.Zero;
+        }
+    }
 
     private void RaiseTiming(TimeSpan positionInCurrentChunk)
     {
@@ -1221,15 +1399,29 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         TimingChanged?.Invoke(this, _timing.CurrentTiming(positionInCurrentChunk));
     }
 
-    private void UpdateState(PlaybackState next)
-    {
-        if (next == _state)
-        {
-            return;
-        }
+    private void UpdateState(PlaybackState next) => RaiseStateChanged(SwapState(next), next);
 
-        _state = next;
-        StateChanged?.Invoke(this, next);
+    // True when the state changed. Callers holding _playerLock raise the event after releasing it.
+    private bool SwapState(PlaybackState next)
+    {
+        lock (_playerLock)
+        {
+            if (next == _state)
+            {
+                return false;
+            }
+
+            _state = next;
+            return true;
+        }
+    }
+
+    private void RaiseStateChanged(bool changed, PlaybackState state)
+    {
+        if (changed)
+        {
+            StateChanged?.Invoke(this, state);
+        }
     }
 
     private static async Task<string> WriteChunkFileAsync(byte[] wav)
@@ -1277,12 +1469,44 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         CancelPrepare();
         _synthCts?.Cancel();
         _synthCts?.Dispose();
-        _player?.Release();
-        _player = null;
-        _playerReady = false;
+        lock (_playerLock)
+        {
+            _playerReady = false;
+            _player?.Release();
+            _player = null;
+        }
+
         DeletePreviousChunkFile();
         DeleteCurrentChunkFile();
         _engines.Dispose();
+    }
+
+    /// <summary>Subscribes one chunk's handlers to the shared player and unsubscribes them on dispose.</summary>
+    private sealed class PlayerSubscription : IDisposable
+    {
+        private readonly AndroidMedia.MediaPlayer _player;
+        private readonly EventHandler _onPrepared;
+        private readonly EventHandler _onCompleted;
+        private readonly EventHandler<AndroidMedia.MediaPlayer.ErrorEventArgs> _onError;
+
+        public PlayerSubscription(AndroidMedia.MediaPlayer player, EventHandler onPrepared, EventHandler onCompleted,
+            EventHandler<AndroidMedia.MediaPlayer.ErrorEventArgs> onError)
+        {
+            _player = player;
+            _onPrepared = onPrepared;
+            _onCompleted = onCompleted;
+            _onError = onError;
+            _player.Prepared += _onPrepared;
+            _player.Completion += _onCompleted;
+            _player.Error += _onError;
+        }
+
+        public void Dispose()
+        {
+            _player.Prepared -= _onPrepared;
+            _player.Completion -= _onCompleted;
+            _player.Error -= _onError;
+        }
     }
 
     /// <summary>An <see cref="OfflineTts"/> disposed when its last holder releases it. The
