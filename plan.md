@@ -124,6 +124,12 @@ this plan turns it into ordered, shippable vertical slices.
 | 104 | A Norwegian voice pack (Piper nvcc, ten speakers) | planned | | | [104-piper-norwegian-pack.md](docs/plan/slices/104-piper-norwegian-pack.md) |
 | 105 | Dino: story rules and book translations for the five new languages | planned | | | [105-dino-nordic-dutch-books-and-rules.md](docs/plan/slices/105-dino-nordic-dutch-books-and-rules.md) |
 | 106 | Windows: offline translation packs for the five new languages | built | #281 | | [106-windows-nordic-dutch-translation-packs.md](docs/plan/slices/106-windows-nordic-dutch-translation-packs.md) |
+| 107 | Dino: own books translate by default | planned | | | [107-dino-own-books-translate-by-default.md](docs/plan/slices/107-dino-own-books-translate-by-default.md) |
+| 108 | Dino: a cast per reading language | planned | | | [108-dino-cast-per-reading-language.md](docs/plan/slices/108-dino-cast-per-reading-language.md) |
+| 109 | Dino: one narrator per language, for every book | planned | | | [109-dino-one-narrator-per-language.md](docs/plan/slices/109-dino-one-narrator-per-language.md) |
+| 110 | Dino: translated text on screen, with "Show original text" | planned | | | [110-dino-translated-text-on-screen.md](docs/plan/slices/110-dino-translated-text-on-screen.md) |
+| 111 | Dino: parents read in their own voice | planned | | | [111-dino-parent-recordings.md](docs/plan/slices/111-dino-parent-recordings.md) |
+| 112 | Dino: store filters by age and author | planned | | | [112-dino-store-age-author-filters.md](docs/plan/slices/112-dino-store-age-author-filters.md) |
 
 Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
 
@@ -144,6 +150,8 @@ Batch 19 (99-101, planned 2026-10-24, after two first-time users couldn't find t
 Batch 20 (102, planned 2026-10-24): ten open stories for the empty store. It touches only the test builders, translations, the upload script, `worker/stories.ts` and the store card, so it can run beside 96, 97 and 99-101. Illustrations follow as `story-v2` after Slice 98. Decision 106.
 
 Batch 21 (103-106, planned 2026-10-24): Danish, Finnish, Swedish, Norwegian (Bokmål) and Dutch. 103 first (it adds the languages every other slice uses); then 104 (`packs.yml`, Piper readers), 105 (Dino rules and books) and 106 (`packs.yml`, Windows translation) can run alongside each other except that 104 and 106 both edit `packs.yml`, so they merge one after the other. Decisions 107-110.
+
+Batch 22 (107-112, planned 2026-10-24, from the phone scope "translated text on screen, voices in the reading language, one narrator, parent recordings, store filters"): 107 first (own books translate by default; small). Then 108, 109, 110 and 111 one at a time in that order: all four edit `StoryVoicing`, `ReadingSession`, `Story`/`StoryJson` or the cast page. 112 (store filters) touches only the store and the Worker, so it runs beside any of them. Decisions 111-116.
 
 ### Notes
 
@@ -224,6 +232,7 @@ Built but not verified (details in each slice file):
 
 ## Out of Scope
 
+- **(Batch 22)** Cloud translation or TTS; sharing recordings between devices; voice cloning from a parent's recordings; several recorded voices per book (Mum, Dad, Grandma); iOS live translation of own books (Apple Translation framework, not researched); store search, language, length and "has pictures" filters.
 - **(Batch 13)** Fuzzy re-mapping of edited story text onto OCR boxes (an edited page reads
   without highlight boxes, Slice 77); an ML layout model for background text (Slice 79 is
   size/position heuristics plus a manual override); any RTST UI for region filtering (the
