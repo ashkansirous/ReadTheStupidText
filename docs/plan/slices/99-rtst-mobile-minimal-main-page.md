@@ -81,7 +81,7 @@ New strings (nine locales): "Settings", "Edit", "Text from pictures", "Text from
 
 *From review:* high pass, 9 applied (#6 perf and #11 by-design skipped). Medium pass, 8 applied (#6 voice-name refresh and #8 approximate scroll skipped).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-24)
 
 - `src/ReadTheStupidText.Mobile/`: the main page is read-only and shows only reading; language, voice and speed live in `SettingsPage` (route `settings`). Long-press Paste goes through `LongPressBehavior` (Android and iOS partials). The main page does not translate until Slice 101; `TranslateSourceMigration` clears the stored source once. (Slice 99: docs/plan/slices/99-rtst-mobile-minimal-main-page.md)
 

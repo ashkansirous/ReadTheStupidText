@@ -62,7 +62,7 @@ New strings (all nine locales): "Add a book (grown-ups)" (already in the slice).
   Add tile first. TalkBack reads "Add a book (grown-ups)".
 - Windows head: the icon renders and the gate opens.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-24)
 
 - Dino Reader's `IconKind.AddBook` (`src/DinoReader.App/IconView.cs`) is drawn in one fixed-size `AbsoluteLayout`, pinned left-to-right so it does not mirror in RTL languages. The badge and plus take `BadgeColor`/`PlusColor`, falling back to the Brand and OnBrand tokens; a page on its own theme (`ReadingPage`) must set them or night mode shows the wrong colours. (Slice 97: docs/plan/slices/97-dino-add-book-button.md)
 
