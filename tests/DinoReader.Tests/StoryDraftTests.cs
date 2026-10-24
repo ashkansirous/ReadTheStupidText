@@ -16,6 +16,14 @@ public class WizardDraftTests
         return draft;
     }
 
+    [Fact]
+    public void NewOwnBook_TranslatesByDefault_AndItsDraftKeepsIt()
+    {
+        var story = Story.NewOwnBook(StoryIds.New(), "en", DateTimeOffset.UnixEpoch, 0, "F1");
+
+        Assert.True(new StoryDraft(story).TranslateToMyLanguage);
+    }
+
     private static PageDraft Read(string file, string text) =>
         PageDraft.ForPicture(file, new PageReading([new PageLine(text, new NormalizedRect(0.1, 0.1, 0.5, 0.1))]));
 

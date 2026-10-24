@@ -22,6 +22,28 @@ public class BundledTranslationsTests
     }
 
     [Fact]
+    public void CanTranslate_is_true_for_the_same_language_a_complete_table_or_an_engine_pair()
+    {
+        string[] engine = ["en", "fa"];
+
+        Assert.True(BundledTranslations.CanTranslate(StoryWith(null), "en", null));
+        Assert.True(BundledTranslations.CanTranslate(StoryWith(Farsi), "fa", null));
+        Assert.True(BundledTranslations.CanTranslate(StoryWith(null), "fa", engine));
+        Assert.False(BundledTranslations.CanTranslate(StoryWith(null), "fa", null));
+        Assert.False(BundledTranslations.CanTranslate(StoryWith(null), "fr", engine));
+        Assert.True(BundledTranslations.CanTranslate(StoryWith(null, translate: false), "fa", engine));
+    }
+
+    [Fact]
+    public void CanTranslate_ignores_a_table_with_holes_only_when_there_is_no_engine()
+    {
+        var holey = new Dictionary<string, IReadOnlyDictionary<string, string>> { ["fa"] = new Dictionary<string, string> { ["Other."] = "x" } };
+
+        Assert.False(BundledTranslations.CanTranslate(StoryWith(holey), "fa", null));
+        Assert.True(BundledTranslations.CanTranslate(StoryWith(holey), "fa", ["en", "fr"]));
+    }
+
+    [Fact]
     public async Task A_bundled_table_translates_with_no_engine()
     {
         Story story = StoryWith(Farsi);

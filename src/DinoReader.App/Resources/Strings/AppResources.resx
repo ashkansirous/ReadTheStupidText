@@ -123,6 +123,11 @@
   <data name="Story_Language" xml:space="preserve"><value>Story language</value></data>
   <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · detected</value></data>
   <data name="Story_Translate" xml:space="preserve"><value>Translate to my language</value></data>
+  <!-- Slice 107 -->
+  <data name="Story_TranslateReadsIn" xml:space="preserve"><value>Reads and shows it in {0}</value></data>
+  <data name="Story_TranslateAndroidOnly" xml:space="preserve"><value>Translation works on Android for now</value></data>
+  <data name="Story_TranslateUnsupportedPair" xml:space="preserve"><value>Can't translate {0} yet</value></data>
+  <!-- /Slice 107 -->
   <data name="Add_Scan" xml:space="preserve"><value>Scan pages</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Keeps the page pictures</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Photos</value></data>

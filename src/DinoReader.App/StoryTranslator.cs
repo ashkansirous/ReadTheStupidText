@@ -40,6 +40,10 @@ public sealed class StoryTranslator
 			&& (_engine is not null || TableIsComplete(story, mine));
 	}
 
+	/// <summary>Whether the translate switch can do anything for <paramref name="story"/> (a table, a supported engine pair, or nothing to translate).</summary>
+	public bool CanTranslate(Story story) =>
+		BundledTranslations.CanTranslate(story, MyLanguage, _engine is null ? null : [.. _engine.SupportedLanguages]);
+
 	/// <summary>With no engine a table with holes is not used (see <see cref="TranslateAsync"/>), so the read stays in the story's language; checked once per story instance.</summary>
 	private bool TableIsComplete(Story story, string language) =>
 		_complete.GetValue(story, _ => new()).GetOrAdd(language, l => BundledTranslations.IsComplete(story, l));

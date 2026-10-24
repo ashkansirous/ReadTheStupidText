@@ -120,6 +120,11 @@
   <data name="Story_Language" xml:space="preserve"><value>おはなしの言語</value></data>
   <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · 自動判定</value></data>
   <data name="Story_Translate" xml:space="preserve"><value>自分の言語に翻訳</value></data>
+  <!-- Slice 107 -->
+  <data name="Story_TranslateReadsIn" xml:space="preserve"><value>{0}で読み上げて表示します</value></data>
+  <data name="Story_TranslateAndroidOnly" xml:space="preserve"><value>翻訳は今のところAndroidでのみ使えます</value></data>
+  <data name="Story_TranslateUnsupportedPair" xml:space="preserve"><value>{0}はまだ翻訳できません</value></data>
+  <!-- /Slice 107 -->
   <data name="Add_Scan" xml:space="preserve"><value>ページをスキャン</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>ページの絵を残します</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>写真</value></data>

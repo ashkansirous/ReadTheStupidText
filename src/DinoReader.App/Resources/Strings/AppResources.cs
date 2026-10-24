@@ -142,6 +142,9 @@ public static class AppResources
 	public static string Story_Language => Get();
 	public static string Story_LanguageDetected => Get();
 	public static string Story_Translate => Get();
+	public static string Story_TranslateReadsIn => Get();
+	public static string Story_TranslateAndroidOnly => Get();
+	public static string Story_TranslateUnsupportedPair => Get();
 	public static string Add_Scan => Get();
 	public static string Add_ScanSub => Get();
 	public static string Add_Photos => Get();

@@ -170,13 +170,21 @@ public partial class TextStep : ContentView
 	// The language card (Slice 66), built once: the language and, when this build can translate, the switch.
 	private void BuildRows()
 	{
-		var card = new LanguageCard(_translator!.IsAvailable, ChooseLanguageAsync, _busy) { Translate = Draft.TranslateToMyLanguage };
+		var card = new LanguageCard(CanTranslate(), _translator!.IsAvailable, Draft.Language, ChooseLanguageAsync, _busy) { Translate = Draft.TranslateToMyLanguage };
 		card.TranslateChanged += () => Draft.TranslateToMyLanguage = card.Translate;
 		_languageCard = card;
 		LanguageHost.Content = card;
 	}
 
-	private void ShowLanguage() => _languageCard!.Show(Draft.Language, _session!.LanguageDetected);
+	// The switch works when the story's language to my language can be translated (a table, or an engine that supports the pair) or
+	// there is nothing to translate; otherwise it shows greyed (Slice 107). Re-checked whenever the story language changes.
+	private bool CanTranslate() => _translator!.CanTranslate(Draft.Current);
+
+	private void ShowLanguage()
+	{
+		_languageCard!.SetCanTranslate(CanTranslate(), _translator!.IsAvailable, Draft.Language);
+		_languageCard.Show(Draft.Language, _session!.LanguageDetected);
+	}
 
 	// The language is guessed from the text until the grown-up picks one; "· detected" shows while the guess stands.
 	private void DetectLanguage()

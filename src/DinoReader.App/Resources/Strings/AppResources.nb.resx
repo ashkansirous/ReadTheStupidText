@@ -122,6 +122,11 @@
   <data name="Story_Language" xml:space="preserve"><value>Historiens språk</value></data>
   <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · oppdaget</value></data>
   <data name="Story_Translate" xml:space="preserve"><value>Oversett til mitt språk</value></data>
+  <!-- Slice 107 -->
+  <data name="Story_TranslateReadsIn" xml:space="preserve"><value>Leser og viser den på {0}</value></data>
+  <data name="Story_TranslateAndroidOnly" xml:space="preserve"><value>Oversettelse fungerer foreløpig på Android</value></data>
+  <data name="Story_TranslateUnsupportedPair" xml:space="preserve"><value>Kan ikke oversette {0} ennå</value></data>
+  <!-- /Slice 107 -->
   <data name="Add_Scan" xml:space="preserve"><value>Skann sider</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Beholder sidebildene</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Bilder</value></data>
