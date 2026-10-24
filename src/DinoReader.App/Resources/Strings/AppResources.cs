@@ -44,6 +44,7 @@ public static class AppResources
 	public static string Common_Edit => Get();
 	public static string Gallery_Title => Get();
 	public static string Gallery_ForGrownUps => Get();
+	public static string Gallery_AddBook => Get();
 	public static string Gallery_OpensGateHint => Get();
 	public static string Gallery_Characters_One => Get();
 	public static string Gallery_Characters_Other => Get();

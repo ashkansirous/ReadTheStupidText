@@ -138,6 +138,8 @@ public partial class ReadingPage : ContentPage
 		BackIcon.Color = _theme.BackIcon;
 		LockButton.BackgroundColor = _theme.ControlFill;
 		LockIcon.Color = _theme.ControlIcon;
+		LockIcon.BadgeColor = _theme.SwitchActive;
+		LockIcon.PlusColor = _theme.SwitchActiveIcon;
 		WanderPill.BackgroundColor = _theme.PillFill;
 		PillLabel.TextColor = _theme.PillText;
 		Modes.Set(Modes.Mode, _theme);

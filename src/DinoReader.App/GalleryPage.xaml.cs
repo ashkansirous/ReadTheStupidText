@@ -110,7 +110,7 @@ public partial class GalleryPage : ContentPage
 	private void ApplyModeChrome(bool grownUp)
 	{
 		bool handover = grownUp && FirstRunState.HandoverPending;
-		LockButton.IsVisible = !grownUp;
+		AddBookButton.IsVisible = !grownUp;
 		DoneButton.IsVisible = grownUp && !handover;
 		HandoverButton.IsVisible = handover;
 		HandoverButton.Text = AppResources.Gallery_ReadyForChild;
@@ -269,7 +269,7 @@ public partial class GalleryPage : ContentPage
 		root.Scale = 1;
 	}
 
-	private async void OnLockTapped(object? sender, TappedEventArgs e) => await _busy.RunAsync(EnterGrownUpAsync);
+	private async void OnAddBookTapped(object? sender, TappedEventArgs e) => await _busy.RunAsync(EnterGrownUpAsync);
 
 	private async Task EnterGrownUpAsync()
 	{
