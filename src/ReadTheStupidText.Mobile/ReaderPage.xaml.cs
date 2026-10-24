@@ -12,9 +12,10 @@ namespace ReadTheStupidText.Mobile;
 /// <summary>
 /// The app's single home screen, reduced to reading (Slice 99, Decision 103): the read-only text
 /// with the spoken sentence highlighted, two buttons that add text (pictures, a file) and the
-/// player. Language, voice and speed live on <see cref="SettingsPage"/>. Both buttons still fill
-/// <see cref="TextEditor"/>, the page's text holder, until Slice 101 gives them their own review
-/// page; Edit shows it in place. Text from pictures opens <see cref="CapturePage"/> (Slice 100).
+/// player. Language, voice and speed live on <see cref="SettingsPage"/>. <see cref="TextEditor"/> is only
+/// the page's hidden text holder: Text from pictures opens <see cref="CapturePage"/> (Slice 100), and
+/// pictures, a file, Edit and long-press Paste all end on <see cref="ReviewPage"/> (Slice 101), whose Read
+/// hands the text back to be shown and read.
 /// </summary>
 public partial class ReaderPage : ContentPage
 {
@@ -33,12 +34,16 @@ public partial class ReaderPage : ContentPage
     private readonly IPlatformServices _platform;
     private readonly IHeadStart _headStart;
     private readonly EditorDraft _draft;
-    private readonly CaptureHandOff _captured;
+    private readonly ReviewHandOff _review;
     private string? _lastSpokenText;
+
+    // The text a translation on the screen came from, so Edit can offer "Show original" (Slice 101).
+    private string? _original;
 
     // True while a Paste/Scan/File action is in flight; further input taps are ignored.
     private bool _inputBusy;
     private bool _openingCapture;
+    private bool _openingReview;
     private bool _scannerPrepared;
 
     // Set when a language change replaces this page: its in-flight scan or file read must not
@@ -55,7 +60,7 @@ public partial class ReaderPage : ContentPage
     // started (system TTS returns as soon as the utterance is queued).
     private static readonly TimeSpan FirstAudioGrace = TimeSpan.FromSeconds(8);
 
-    public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, IVoiceModelService model, VoicePackInstaller installer, IPlatformServices platform, EditorDraft draft, CaptureHandOff captured, IHeadStart headStart, IDocumentScanner? scanner = null, ILanguageDetector? detector = null)
+    public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, IVoiceModelService model, VoicePackInstaller installer, IPlatformServices platform, EditorDraft draft, ReviewHandOff review, IHeadStart headStart, IDocumentScanner? scanner = null, ILanguageDetector? detector = null)
     {
         InitializeComponent();
         FlowDirection = FlowDirection.LeftToRight;
@@ -70,8 +75,9 @@ public partial class ReaderPage : ContentPage
         _installer = installer;
         _platform = platform;
         _draft = draft;
-        _captured = captured;
+        _review = review;
         TextEditor.Text = draft.Take();
+        _original = draft.TakeOriginal();
         TextEditor.FlowDirection = TextFlow.ContentDirection(TextEditor.Text);
         draft.RegisterRebuildHook(PrepareForRebuild);
         ApplyStaticTexts();
@@ -121,16 +127,27 @@ public partial class ReaderPage : ContentPage
         RenderPackStatus();
         RestorePendingReadSpinner();
         PrepareScannerOnce();
-        TakeCapturedText();
+        TakeReviewResult();
     }
 
-    // The capture wizard's Done leaves the text of its pages here (Slice 100).
-    private void TakeCapturedText()
+    // The review page's Read leaves the checked (or translated) text here; it is shown and read at once (Slice 101).
+    private void TakeReviewResult()
     {
-        if (_captured.Take() is { } text)
+        if (_review.TakeResult() is not { } result)
         {
-            ReplaceEditorText(text);
+            return;
         }
+
+        ReplaceEditorText(result.Text);
+        _original = result.Original;
+        _detectedSource = result.Language;
+        if (result.Language is null && _detector is not null)
+        {
+            ScheduleDetection(result.Text); // the review page could not tell: look again, the voice follows the text
+        }
+
+        OnReadingLanguageMayHaveChanged();
+        _ = BeginReadAsync(result.Text);
     }
 
     // Asks the platform to have the scanner ready (Play-services module download) before the
@@ -179,7 +196,7 @@ public partial class ReaderPage : ContentPage
         _retired = true;
         CancelDetection();
         _reader.Stop();
-        _draft.Store(TextEditor.Text);
+        _draft.Store(TextEditor.Text, _original);
         DetachHandlers();
     }
 
@@ -211,8 +228,7 @@ public partial class ReaderPage : ContentPage
         Grid.SetColumnSpan(FileButton, 2);
     }
 
-    // Text from pictures opens the capture wizard (Slice 100, Decision 104); its Done hands the joined
-    // text back through CaptureHandOff, which OnAppearing takes.
+    // Text from pictures opens the capture wizard (Slice 100, Decision 104); its Done opens the review page.
     private async void OnScanTapped(object? sender, TappedEventArgs e)
     {
         if (_inputBusy || _openingCapture)
@@ -273,13 +289,10 @@ public partial class ReaderPage : ContentPage
 
         BusyIndicator.IsRunning = true;
         BusyIndicator.IsVisible = true;
+        string? extracted = null;
         try
         {
-            string extracted = await _documentExtractor.ExtractTextAsync(file.FullPath);
-            if (!_retired)
-            {
-                ReplaceEditorText(extracted);
-            }
+            extracted = await _documentExtractor.ExtractTextAsync(file.FullPath);
         }
         catch (DocumentTooLargeException ex)
         {
@@ -293,6 +306,11 @@ public partial class ReaderPage : ContentPage
         {
             BusyIndicator.IsRunning = false;
             BusyIndicator.IsVisible = false;
+        }
+
+        if (extracted is not null)
+        {
+            await OpenReviewAsync(new ReviewRequest(extracted));
         }
     }
 
@@ -324,6 +342,12 @@ public partial class ReaderPage : ContentPage
             return;
         }
 
+        await BeginReadAsync(text);
+    }
+
+    // Starts a fresh read of the text on screen, superseding whatever is playing or pending.
+    private async Task BeginReadAsync(string text)
+    {
         CancelHeadStart();
         _reader.Stop();
         ClearPendingRead();
@@ -349,7 +373,7 @@ public partial class ReaderPage : ContentPage
         SetPlayLoading(true);
         try
         {
-            // The text is read as it is: translation is off the main page until Slice 101.
+            // The text on screen is what is read: a translation was made on the review page (Slice 101).
             VoicePlan plan = await PlanVoiceAsync(ReadingLanguageFor(text), atPlay: true);
             if (!IsCurrentRead(id) || !await AllowReadAsync(id, plan))
             {
@@ -670,8 +694,6 @@ public partial class ReaderPage : ContentPage
 
     private const float HighlightAlpha = 0.16f;
     private (int Start, int End)? _highlight;
-    private bool _editing;
-
     private void OnReaderChunkChanged(object? sender, ReadChunk chunk) =>
         MainThread.BeginInvokeOnMainThread(() => ShowHighlight(chunk));
 
@@ -679,7 +701,7 @@ public partial class ReaderPage : ContentPage
     private void ShowHighlight(ReadChunk chunk)
     {
         string text = TextEditor.Text ?? string.Empty;
-        if (_lastSpokenText != text || _editing || !chunk.MatchesSource(text))
+        if (_lastSpokenText != text || !chunk.MatchesSource(text))
         {
             return;
         }
@@ -740,9 +762,8 @@ public partial class ReaderPage : ContentPage
     // With no text: a dashed card with one friendly line, outlined buttons, and a dimmed player whose Play does nothing.
     private void RenderEmptyState(bool empty)
     {
-        EmptyHint.IsVisible = empty && !_editing;
-        ReadingScroll.IsVisible = !_editing;
-        TextCard.StrokeDashArray = empty && !_editing ? [4, 3] : null;
+        EmptyHint.IsVisible = empty;
+        TextCard.StrokeDashArray = empty ? [4, 3] : null;
         RenderPlayerForState();
         Color outline = empty ? (Color)Microsoft.Maui.Controls.Application.Current!.Resources["Primary"] : Color.FromArgb("#1C000000");
         double width = empty ? 2 : 1;
@@ -786,10 +807,10 @@ public partial class ReaderPage : ContentPage
 
     private Brush? _playButtonBackground;
 
-    // Long-press on the text offers Paste, which replaces the text and shows it (Slice 101 will open page 2 instead).
+    // Long-press on the text offers Paste, which opens the review page with the clipboard text (Slice 101).
     private async void OnTextLongPressed(object? sender, EventArgs e)
     {
-        if (_inputBusy || _editing || _retired)
+        if (_inputBusy || _retired)
         {
             return;
         }
@@ -804,13 +825,10 @@ public partial class ReaderPage : ContentPage
     private async Task PasteFromClipboardAsync()
     {
         SetInputBusy(true);
+        string? text = null;
         try
         {
-            string? text = await Clipboard.Default.GetTextAsync();
-            if (!_retired && !string.IsNullOrWhiteSpace(text))
-            {
-                ReplaceEditorText(text);
-            }
+            text = await Clipboard.Default.GetTextAsync();
         }
         catch (Exception)
         {
@@ -820,32 +838,46 @@ public partial class ReaderPage : ContentPage
         {
             SetInputBusy(false);
         }
+
+        if (!string.IsNullOrWhiteSpace(text))
+        {
+            await OpenReviewAsync(new ReviewRequest(text));
+        }
     }
 
-    // Until Slice 101's page 2, Edit shows today's editor in place; OK puts the read-only text back.
-    private void OnEditTapped(object? sender, TappedEventArgs e)
+    // Edit opens the review page on the text (and, after Translate and read, its original).
+    private async void OnEditTapped(object? sender, TappedEventArgs e)
     {
         if (_inputBusy || _retired)
         {
             return;
         }
 
-        _editing = !_editing;
-        if (_editing && _reader.State == PlaybackState.Playing)
+        await OpenReviewAsync(new ReviewRequest(TextEditor.Text ?? string.Empty, _original));
+    }
+
+    private async Task OpenReviewAsync(ReviewRequest request)
+    {
+        if (_retired || _openingReview)
         {
-            // The text is about to change under the read: pause it. Play resumes only if the text is unchanged.
-            _reader.Pause();
+            return;
         }
 
-        TextEditor.IsVisible = _editing;
-        EditLabel.Text = _editing ? AppResources.Common_Ok : AppResources.Reader_EditLink;
-        SemanticProperties.SetDescription(EditLink, EditLabel.Text);
-        EditGlyph.IsVisible = !_editing;
-        _highlight = null;
-        RenderReading();
-        if (_editing)
+        _openingReview = true;
+        try
         {
-            TextEditor.Focus();
+            if (_reader.State == PlaybackState.Playing)
+            {
+                // The text may change under the read: pause it. Play resumes only if the text is unchanged.
+                _reader.Pause();
+            }
+
+            _review.Open(request);
+            await Shell.Current.GoToAsync(AppShell.ReviewRoute);
+        }
+        finally
+        {
+            _openingReview = false;
         }
     }
 

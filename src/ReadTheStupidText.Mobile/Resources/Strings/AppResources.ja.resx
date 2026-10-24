@@ -43,9 +43,6 @@
   <data name="Reader_ScanUnreadableMessage" xml:space="preserve"><value>照明やピントを調整して、もう一度スキャンしてください。</value></data>
   <data name="Reader_NoTextFoundTitle" xml:space="preserve"><value>テキストが見つかりません</value></data>
   <data name="Reader_NoTextFoundMessage" xml:space="preserve"><value>照明やピントを調整して、もう一度スキャンしてください。</value></data>
-  <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>一部のページをスキップしました</value></data>
-  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>{0} ページ目を読み取れませんでした。読み取れたページでテキストを置き換えました。</value></data>
-  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>{0} ページ目を読み取れませんでした。読み取れたページでテキストを置き換えました。</value></data>
   <data name="Capture_Title" xml:space="preserve"><value>各ページの写真を撮ってください</value></data>
   <data name="Capture_Hint" xml:space="preserve"><value>1ページずつ追加してください。全部撮り終えたら「{0}」をタップします。</value></data>
   <data name="Capture_HintDone" xml:space="preserve"><value>完了</value></data>
@@ -63,6 +60,19 @@
   <data name="Capture_RemovePage" xml:space="preserve"><value>このページを削除</value></data>
   <data name="Capture_CouldntRead" xml:space="preserve"><value>読み取れません</value></data>
   <data name="Capture_ClosePreview" xml:space="preserve"><value>閉じる</value></data>
+  <data name="Review_Title" xml:space="preserve"><value>テキストを確認</value></data>
+  <data name="Review_TranslateTo" xml:space="preserve"><value>{0}に翻訳</value></data>
+  <data name="Review_LooksLike" xml:space="preserve"><value>このテキストは{0}のようです</value></data>
+  <data name="Review_TranslateAndRead" xml:space="preserve"><value>翻訳して読み上げ</value></data>
+  <data name="Review_Read" xml:space="preserve"><value>読み上げ</value></data>
+  <data name="Review_GettingTranslator" xml:space="preserve"><value>{0}の翻訳データを取得中…</value></data>
+  <data name="Review_FirstTimeOnly" xml:space="preserve"><value>初回のみです。翻訳はこの端末内で行われます。</value></data>
+  <data name="Review_ShowOriginal" xml:space="preserve"><value>原文を表示</value></data>
+  <data name="Review_FailedOne" xml:space="preserve"><value>{0} ページ目を読み取れませんでした。</value></data>
+  <data name="Review_FailedMany" xml:space="preserve"><value>{0} ページ目を読み取れませんでした。</value></data>
+  <data name="Review_HereOne" xml:space="preserve"><value>{0} ページ目はここにあります。</value></data>
+  <data name="Review_HereMany" xml:space="preserve"><value>{0} ページ目はここにあります。</value></data>
+  <data name="Review_TranslateFailed" xml:space="preserve"><value>翻訳できなかったため、原文を読み上げます。</value></data>
   <data name="Reader_PageLanguageTitle" xml:space="preserve"><value>このページは何語ですか？</value></data>
   <data name="Reader_OcrDownloading" xml:space="preserve"><value>{0}の読み取りデータをダウンロード中… {1}%</value></data>
   <data name="Reader_OcrDownloadFailedTitle" xml:space="preserve"><value>読み取りデータをダウンロードできませんでした</value></data>

@@ -43,9 +43,6 @@
   <data name="Reader_ScanUnreadableMessage" xml:space="preserve"><value>Scan de tekst opnieuw met beter licht of scherpstelling.</value></data>
   <data name="Reader_NoTextFoundTitle" xml:space="preserve"><value>Geen tekst gevonden</value></data>
   <data name="Reader_NoTextFoundMessage" xml:space="preserve"><value>Scan opnieuw met beter licht of scherpstelling.</value></data>
-  <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>Sommige pagina’s zijn overgeslagen</value></data>
-  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>Pagina {0} kon niet worden gelezen. De pagina’s die wel konden worden gelezen hebben je tekst vervangen.</value></data>
-  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>Pagina’s {0} konden niet worden gelezen. De pagina’s die wel konden worden gelezen hebben je tekst vervangen.</value></data>
   <data name="Capture_Title" xml:space="preserve"><value>Maak een foto van elke pagina</value></data>
   <data name="Capture_Hint" xml:space="preserve"><value>Voeg één pagina tegelijk toe. Tik op {0} als je ze allemaal hebt.</value></data>
   <data name="Capture_HintDone" xml:space="preserve"><value>Klaar</value></data>
@@ -63,6 +60,19 @@
   <data name="Capture_RemovePage" xml:space="preserve"><value>Deze pagina verwijderen</value></data>
   <data name="Capture_CouldntRead" xml:space="preserve"><value>Kon niet lezen</value></data>
   <data name="Capture_ClosePreview" xml:space="preserve"><value>Sluiten</value></data>
+  <data name="Review_Title" xml:space="preserve"><value>Controleer de tekst</value></data>
+  <data name="Review_TranslateTo" xml:space="preserve"><value>Vertalen naar {0}</value></data>
+  <data name="Review_LooksLike" xml:space="preserve"><value>Deze tekst lijkt {0} te zijn</value></data>
+  <data name="Review_TranslateAndRead" xml:space="preserve"><value>Vertalen en lezen</value></data>
+  <data name="Review_Read" xml:space="preserve"><value>Lezen</value></data>
+  <data name="Review_GettingTranslator" xml:space="preserve"><value>De {0}-vertaler ophalen…</value></data>
+  <data name="Review_FirstTimeOnly" xml:space="preserve"><value>Alleen de eerste keer. Vertalen gebeurt op deze telefoon.</value></data>
+  <data name="Review_ShowOriginal" xml:space="preserve"><value>Origineel tonen</value></data>
+  <data name="Review_FailedOne" xml:space="preserve"><value>Pagina {0} kon niet worden gelezen.</value></data>
+  <data name="Review_FailedMany" xml:space="preserve"><value>Pagina’s {0} konden niet worden gelezen.</value></data>
+  <data name="Review_HereOne" xml:space="preserve"><value>Pagina {0} staat hier.</value></data>
+  <data name="Review_HereMany" xml:space="preserve"><value>Pagina’s {0} staan hier.</value></data>
+  <data name="Review_TranslateFailed" xml:space="preserve"><value>Vertalen is niet gelukt, dus de originele tekst wordt gelezen.</value></data>
   <data name="Reader_PageLanguageTitle" xml:space="preserve"><value>In welke taal is deze pagina?</value></data>
   <data name="Reader_OcrDownloading" xml:space="preserve"><value>De lezer voor {0} wordt gedownload… {1}%</value></data>
   <data name="Reader_OcrDownloadFailedTitle" xml:space="preserve"><value>De lezer kon niet worden gedownload</value></data>

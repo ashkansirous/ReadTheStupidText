@@ -43,9 +43,6 @@
   <data name="Reader_ScanUnreadableMessage" xml:space="preserve"><value>با نور یا فوکوس بهتر دوباره متن را اسکن کنید.</value></data>
   <data name="Reader_NoTextFoundTitle" xml:space="preserve"><value>متنی پیدا نشد</value></data>
   <data name="Reader_NoTextFoundMessage" xml:space="preserve"><value>با نور یا فوکوس بهتر دوباره اسکن کنید.</value></data>
-  <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>برخی صفحه‌ها رد شد</value></data>
-  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>صفحهٔ {0} خوانده نشد. صفحه‌های خوانده‌شده جای متن را گرفتند.</value></data>
-  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>صفحه‌های {0} خوانده نشد. صفحه‌های خوانده‌شده جای متن را گرفتند.</value></data>
   <data name="Capture_Title" xml:space="preserve"><value>از هر صفحه عکس بگیرید</value></data>
   <data name="Capture_Hint" xml:space="preserve"><value>صفحه‌ها را یکی‌یکی اضافه کنید. وقتی همه را گرفتید، {0} را بزنید.</value></data>
   <data name="Capture_HintDone" xml:space="preserve"><value>تمام</value></data>
@@ -63,6 +60,19 @@
   <data name="Capture_RemovePage" xml:space="preserve"><value>حذف این صفحه</value></data>
   <data name="Capture_CouldntRead" xml:space="preserve"><value>خوانده نشد</value></data>
   <data name="Capture_ClosePreview" xml:space="preserve"><value>بستن</value></data>
+  <data name="Review_Title" xml:space="preserve"><value>متن را بررسی کنید</value></data>
+  <data name="Review_TranslateTo" xml:space="preserve"><value>ترجمه به {0}</value></data>
+  <data name="Review_LooksLike" xml:space="preserve"><value>این متن شبیه {0} است</value></data>
+  <data name="Review_TranslateAndRead" xml:space="preserve"><value>ترجمه و خواندن</value></data>
+  <data name="Review_Read" xml:space="preserve"><value>خواندن</value></data>
+  <data name="Review_GettingTranslator" xml:space="preserve"><value>در حال دریافت مترجم {0}…</value></data>
+  <data name="Review_FirstTimeOnly" xml:space="preserve"><value>فقط بار اول. ترجمه روی همین گوشی انجام می‌شود.</value></data>
+  <data name="Review_ShowOriginal" xml:space="preserve"><value>نمایش متن اصلی</value></data>
+  <data name="Review_FailedOne" xml:space="preserve"><value>صفحهٔ {0} خوانده نشد.</value></data>
+  <data name="Review_FailedMany" xml:space="preserve"><value>صفحه‌های {0} خوانده نشد.</value></data>
+  <data name="Review_HereOne" xml:space="preserve"><value>صفحهٔ {0} اینجا است.</value></data>
+  <data name="Review_HereMany" xml:space="preserve"><value>صفحه‌های {0} اینجا هستند.</value></data>
+  <data name="Review_TranslateFailed" xml:space="preserve"><value>ترجمه نشد، پس متن اصلی خوانده می‌شود.</value></data>
   <data name="Reader_PageLanguageTitle" xml:space="preserve"><value>این صفحه به چه زبانی است؟</value></data>
   <data name="Reader_OcrDownloading" xml:space="preserve"><value>در حال دانلود خوانندهٔ {0}… {1}٪</value></data>
   <data name="Reader_OcrDownloadFailedTitle" xml:space="preserve"><value>دانلود خواننده انجام نشد</value></data>

@@ -85,6 +85,14 @@ public class CapturedPageListTests
     }
 
     [Fact]
+    public void Contributing_pages_leave_out_failed_and_blank_pages()
+    {
+        string?[] texts = ["one", "  ", null, "four"];
+
+        Assert.Equal([1, 4], ScannedText.ContributingPageNumbers(texts));
+    }
+
+    [Fact]
     public void Failed_page_numbers_follow_removals()
     {
         CapturedPageList list = ListOf("a", "b", "c");

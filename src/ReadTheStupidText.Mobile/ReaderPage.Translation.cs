@@ -4,14 +4,13 @@ using ReadTheStupidText.Application.Translation;
 namespace ReadTheStupidText.Mobile;
 
 /// <summary>
-/// The text's language and the editor's text changes. Translation (Slice 54) is off the main page
-/// until Slice 101 brings it back on its review page (Slice 99): the page reads the text as it is, and
-/// no card or switch is shown. The language detector still runs quietly, so the voice follows the text's
-/// own language (Slice 90). Runs only where the platform supplies a detector.
+/// The text's language and the text holder's changes. Translation lives on <see cref="ReviewPage"/> (Slice 101):
+/// this page reads the text as it is. The language detector still runs quietly, so the voice follows the
+/// text's own language (Slice 90). Runs only where the platform supplies a detector.
 /// </summary>
 public partial class ReaderPage
 {
-    private static readonly TimeSpan DetectDebounce = TimeSpan.FromMilliseconds(600);
+    internal static readonly TimeSpan DetectDebounce = TimeSpan.FromMilliseconds(600);
 
     private ILanguageDetector? _detector;
     private CancellationTokenSource? _detectCts;
@@ -42,15 +41,7 @@ public partial class ReaderPage
     {
         TextEditor.FlowDirection = TextFlow.ContentDirection(e.NewTextValue);
         _highlight = null;
-        if (_editing)
-        {
-            // The label is hidden while editing and OK re-renders it; only the player's state follows the text.
-            RenderPlayerForState();
-        }
-        else
-        {
-            RenderReading();
-        }
+        RenderReading();
 
         ScheduleReadingLanguageRefresh();
         if (_detector is null)

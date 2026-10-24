@@ -43,9 +43,6 @@
   <data name="Reader_ScanUnreadableMessage" xml:space="preserve"><value>حاول مسح النص مرة أخرى بإضاءة أو تركيز أفضل.</value></data>
   <data name="Reader_NoTextFoundTitle" xml:space="preserve"><value>لم يُعثر على نص</value></data>
   <data name="Reader_NoTextFoundMessage" xml:space="preserve"><value>حاول المسح مرة أخرى بإضاءة أو تركيز أفضل.</value></data>
-  <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>تم تخطي بعض الصفحات</value></data>
-  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>تعذّرت قراءة الصفحة {0}. حلّت الصفحات التي أمكن قراءتها محل النص.</value></data>
-  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>تعذّرت قراءة الصفحات {0}. حلّت الصفحات التي أمكن قراءتها محل النص.</value></data>
   <data name="Capture_Title" xml:space="preserve"><value>صوّر كل صفحة</value></data>
   <data name="Capture_Hint" xml:space="preserve"><value>أضف صفحة واحدة في كل مرة. اضغط {0} عندما تنتهي من جميع الصفحات.</value></data>
   <data name="Capture_HintDone" xml:space="preserve"><value>تم</value></data>
@@ -63,6 +60,19 @@
   <data name="Capture_RemovePage" xml:space="preserve"><value>احذف هذه الصفحة</value></data>
   <data name="Capture_CouldntRead" xml:space="preserve"><value>تعذّرت القراءة</value></data>
   <data name="Capture_ClosePreview" xml:space="preserve"><value>إغلاق</value></data>
+  <data name="Review_Title" xml:space="preserve"><value>راجع النص</value></data>
+  <data name="Review_TranslateTo" xml:space="preserve"><value>ترجمة إلى {0}</value></data>
+  <data name="Review_LooksLike" xml:space="preserve"><value>يبدو أن هذا النص بلغة {0}</value></data>
+  <data name="Review_TranslateAndRead" xml:space="preserve"><value>ترجمة وقراءة</value></data>
+  <data name="Review_Read" xml:space="preserve"><value>قراءة</value></data>
+  <data name="Review_GettingTranslator" xml:space="preserve"><value>جارٍ تنزيل مترجم {0}…</value></data>
+  <data name="Review_FirstTimeOnly" xml:space="preserve"><value>في المرة الأولى فقط. تتم الترجمة على هذا الهاتف.</value></data>
+  <data name="Review_ShowOriginal" xml:space="preserve"><value>عرض الأصل</value></data>
+  <data name="Review_FailedOne" xml:space="preserve"><value>تعذّرت قراءة الصفحة {0}.</value></data>
+  <data name="Review_FailedMany" xml:space="preserve"><value>تعذّرت قراءة الصفحات {0}.</value></data>
+  <data name="Review_HereOne" xml:space="preserve"><value>الصفحة {0} موجودة هنا.</value></data>
+  <data name="Review_HereMany" xml:space="preserve"><value>الصفحات {0} موجودة هنا.</value></data>
+  <data name="Review_TranslateFailed" xml:space="preserve"><value>تعذّرت الترجمة، لذا تتم قراءة النص الأصلي.</value></data>
   <data name="Reader_PageLanguageTitle" xml:space="preserve"><value>بأي لغة هذه الصفحة؟</value></data>
   <data name="Reader_OcrDownloading" xml:space="preserve"><value>جارٍ تنزيل قارئ {0}… {1}٪</value></data>
   <data name="Reader_OcrDownloadFailedTitle" xml:space="preserve"><value>تعذّر تنزيل القارئ</value></data>
