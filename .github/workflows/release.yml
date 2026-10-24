@@ -12,6 +12,11 @@ name: release
 # how a full (and, with the secrets set, signed) rebuild + release is triggered
 # by hand.
 #
+# Store submission: `store-submit` runs only for Windows-specific changes (the `windowsstore`
+# ship-targets output: App/Infrastructure/store-submit.yml/windows.yml, or force_all, a major bump or
+# no base tag). A core-only change (Domain/Application/Documents) still rebuilds the MSIX for the
+# GitHub release but does not start a Store submission.
+#
 # Rules carried over from build.yml (Batch 8, Decisions 52-58):
 #   * ZERO Actions artifacts. The account's Actions+Packages storage quota is
 #     500 MB, shared by every repo and billed as monthly GB-hours; one run's
@@ -101,6 +106,7 @@ jobs:
       version: ${{ steps.gitversion.outputs.majorMinorPatch }}
       versionCode: ${{ steps.versioncode.outputs.code }}
       windows: ${{ steps.targets.outputs.windows }}
+      windows_store: ${{ steps.targets.outputs.windowsstore }}
       android: ${{ steps.targets.outputs.android }}
       ios: ${{ steps.targets.outputs.ios }}
       dinoreader: ${{ steps.targets.outputs.dinoreader }}
@@ -591,7 +597,8 @@ jobs:
           node .github/scripts/publish-downloads.mjs
           echo "Copied ${STEM}-${VERSION}.apk to the downloads bucket (or it was already there)." >> "$GITHUB_STEP_SUMMARY"
 
-  # Microsoft Store submission (Decision 44) — only when Windows was rebuilt.
+  # Microsoft Store submission (Decision 44) — only when Windows-specific paths changed
+  # (`windowsstore`), not for a core-only change.
   # A job in this run, not an `on: release` trigger: a GITHUB_TOKEN-created
   # release never starts another workflow run (GitHub's recursion guard).
   store-submit:
@@ -599,7 +606,7 @@ jobs:
     if: >-
       !cancelled()
       && needs.release-publish.outputs.released == 'true'
-      && needs.version.outputs.windows == 'true'
+      && needs.version.outputs.windows_store == 'true'
     uses: ./.github/workflows/store-submit.yml
     with:
       tag: v${{ needs.version.outputs.version }}

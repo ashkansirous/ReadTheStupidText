@@ -24,12 +24,17 @@ Loaded when you edit workflows or scripts. Complements the root `CLAUDE.md`.
 > (Decisions 52-58, 69; Slice 44: docs/plan/slices/44-pipeline-ios-split.md;
 > Slice 70: docs/plan/slices/70-split-build-pipeline.md)
 
-> **Merging a change to a core path ships every app.** The core paths in
+> **Store submission is Windows-only.** `store-submit` is gated on the `windowsstore` output
+> (App/Infrastructure/`store-submit.yml`/`windows.yml` changes), not `windows`: a core-only change
+> rebuilds the MSIX for the release but is not submitted. `tests/ReadTheStupidText.Tests` is not a
+> core path (tests.yml still runs it on PRs). Force a submission with `release.yml` `force_all`.
+
+> **Merging a change to a core path builds every app.** The core paths in
 > `ship-targets.mjs` include `.github/workflows/release.yml`, `tests.yml`,
 > `.github/scripts/find-release.sh`, `ship-targets.mjs`, `*.slnx`, `GitVersion.yml`,
 > `global.json` and `Directory.Build.props`, so a PR that edits any of them (even a Dino
-> Reader-only PR adding a project to the solution) builds all platforms, cuts a version and submits to the
-> Microsoft Store, Google Play and TestFlight on merge. Expect that, or batch such
+> Reader-only PR adding a project to the solution) builds all platforms, cuts a version and submits to Google Play and
+> TestFlight on merge (the Store only if a Windows path also changed, see above). Expect that, or batch such
 > edits. (Slice 70: docs/plan/slices/70-split-build-pipeline.md)
 
 > **Dino CI rule:** the `dinoreader` paths run only the `test-dinoreader`

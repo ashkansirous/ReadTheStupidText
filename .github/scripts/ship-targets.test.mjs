@@ -7,10 +7,10 @@ import { GROUPS, IGNORED_PATTERNS, bumpKind, matchesPattern, newestAppTag, shipT
 
 const M = 'src/ReadTheStupidText.Mobile';
 const S = 'src/ReadTheStupidText.Mobile.Shared';
-const NONE = { windows: false, android: false, ios: false, dinoreader: false, dinoapp: false, dinoios: false, dinowin: false };
+const NONE = { windows: false, windowsstore: false, android: false, ios: false, dinoreader: false, dinoapp: false, dinoios: false, dinowin: false };
 // Core changes rebuild every app platform, Dino Reader's app included (its tests are separate).
 const ALL3 = { windows: true, android: true, ios: true, dinoapp: true, dinoios: true, dinowin: true };
-const EVERYTHING = { ...ALL3, dinoreader: true };
+const EVERYTHING = { ...ALL3, dinoreader: true, windowsstore: true };
 
 function targetsOf(changedFiles, extra = {}) {
     return shipTargets({ changedFiles, bump: 'other', ...extra });
@@ -31,7 +31,7 @@ const CASES = [
     ['Domain core', ['src/ReadTheStupidText.Domain/PlaybackRate.cs'], ALL3],
     ['Application core', ['src/ReadTheStupidText.Application/X.cs'], ALL3],
     ['Documents core', ['src/ReadTheStupidText.Documents/X.cs'], ALL3],
-    ['unit tests', ['tests/ReadTheStupidText.Tests/X.cs'], ALL3],
+    ['unit tests build and ship nothing', ['tests/ReadTheStupidText.Tests/X.cs'], {}],
     ['solution file', ['ReadTheStupidText.slnx'], ALL3],
     ['global.json', ['global.json'], ALL3],
     ['Directory.Build.props', ['Directory.Build.props'], ALL3],
@@ -39,15 +39,15 @@ const CASES = [
     ['.gitattributes', ['.gitattributes'], ALL3],
     ['release workflow (the pipeline itself)', ['.github/workflows/release.yml'], ALL3],
     ['find-release script', ['.github/scripts/find-release.sh'], ALL3],
-    ['Windows app only', ['src/ReadTheStupidText.App/App.xaml.cs'], { windows: true }],
-    ['Infrastructure only', ['src/ReadTheStupidText.Infrastructure/X.cs'], { windows: true, dinowin: true }],
-    ['store-submit workflow', ['.github/workflows/store-submit.yml'], { windows: true, dinowin: true }],
+    ['Windows app only', ['src/ReadTheStupidText.App/App.xaml.cs'], { windows: true, windowsstore: true }],
+    ['Infrastructure only', ['src/ReadTheStupidText.Infrastructure/X.cs'], { windows: true, windowsstore: true, dinowin: true }],
+    ['store-submit workflow', ['.github/workflows/store-submit.yml'], { windows: true, windowsstore: true, dinowin: true }],
     ['Dino Reader Windows workflow', ['.github/workflows/dinoreader-windows.yml'], { dinowin: true }],
     ['docs only', ['CLAUDE.md', 'docs/plan/decisions.md', 'plan.md'], {}],
     ['DinoReader only', ['src/DinoReader.Core/Parser.cs'], { dinoreader: true, dinoapp: true, dinoios: true, dinowin: true }],
     ['DinoReader tests only', ['tests/DinoReader.Tests/ParserTests.cs'], { dinoreader: true }],
     ['Android + iOS platform files', [`${M}/Platforms/Android/a.cs`, `${M}/Platforms/iOS/b.cs`], { android: true, ios: true }],
-    ['Windows + DinoReader', ['src/ReadTheStupidText.App/a.cs', 'src/DinoReader.Core/b.cs'], { windows: true, dinoreader: true, dinoapp: true, dinoios: true, dinowin: true }],
+    ['Windows + DinoReader', ['src/ReadTheStupidText.App/a.cs', 'src/DinoReader.Core/b.cs'], { windows: true, windowsstore: true, dinoreader: true, dinoapp: true, dinoios: true, dinowin: true }],
     // Slice 58: the shared MAUI library and the Dino Reader app.
     ['Dino Reader app only', ['src/DinoReader.App/MainPage.xaml.cs'], { dinoapp: true, dinoios: true, dinowin: true }],
     ['Dino Reader app csproj', ['src/DinoReader.App/DinoReader.App.csproj'], { dinoapp: true, dinoios: true, dinowin: true }],
@@ -74,6 +74,26 @@ for (const [name, files, expected] of CASES) {
         assert.deepEqual(targetsOf(files), { ...NONE, ...expected });
     });
 }
+
+test('a core-only change rebuilds the MSIX but does not submit to the Store', () => {
+    const t = targetsOf(['src/ReadTheStupidText.Application/X.cs']);
+    assert.deepEqual([t.windows, t.windowsstore], [true, false]);
+});
+
+test('a Windows App change builds and submits to the Store', () => {
+    const t = targetsOf(['src/ReadTheStupidText.App/X.cs', 'src/ReadTheStupidText.Application/X.cs']);
+    assert.deepEqual([t.windows, t.windowsstore], [true, true]);
+});
+
+test('a tests-only change builds and ships nothing', () => {
+    assert.deepEqual(targetsOf(['tests/ReadTheStupidText.Tests/X.cs']), NONE);
+});
+
+test('force_all, a major bump and a missing base tag submit to the Store', () => {
+    assert.equal(targetsOf([], { forceAll: true }).windowsstore, true);
+    assert.equal(targetsOf([], { bump: 'major' }).windowsstore, true);
+    assert.equal(targetsOf(null).windowsstore, true);
+});
 
 test('a major bump builds every target', () => {
     assert.deepEqual(targetsOf(['docs/x.md'], { bump: 'major' }), EVERYTHING);
@@ -189,7 +209,7 @@ const PR_TARGETS = {
     'dinoreader-ios.yml': ['core', 'dinoios', 'sharedroot'],
     'dinoreader-windows.yml': ['core', 'dinowin', 'sharedroot'],
     // tests.yml gates both the Windows and Android builds.
-    'tests.yml': ['core', 'windows', 'android', 'dinowin', 'mobileshared', 'sharedroot'],
+    'tests.yml': ['core', 'unittests', 'windows', 'android', 'dinowin', 'mobileshared', 'sharedroot'],
     'dinoreader.yml': ['dinoreader'],
 };
 

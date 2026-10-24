@@ -49,7 +49,7 @@ Verified end-to-end and **live**:
   GitHub Release → bundle → submit — now runs from one dispatch.
 
 Deploying an update now happens automatically on every push to `main` that
-changes Windows or shared code (Batch 8 path filter; Android-only or docs-only
+changes Windows-specific code (App, Infrastructure, store-submit.yml, windows.yml; core-only, Android-only or docs-only
 merges don't resubmit to the Store), with no manual step. To force a manual re-submit (e.g. retrying a transient upload
 failure, or resubmitting an older tag), it's still just:
 
@@ -462,8 +462,8 @@ than calling `msstore publish` once per `.msix` (which would open competing
 submissions).
 
 **Automatic since Decision 44.** `release.yml`'s `store-submit` job calls this
-workflow (`workflow_call`) right after cutting each new release, so every
-push to `main` reaches the Store with no manual step — this closed a real gap
+workflow (`workflow_call`) right after cutting a release that changed the Windows app
+(see line 51), so it reaches the Store with no manual step — this closed a real gap
 where the workflow was manual-only and simply wasn't re-run for 15 days
 (`v0.7.8` … `v0.14.0` piled up, unshipped). It's called as a job in the *same*
 run rather than via an `on: release: published` trigger on this file, because
