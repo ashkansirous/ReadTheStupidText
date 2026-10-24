@@ -67,3 +67,5 @@ CC0. That gives Dino ten distinct Norwegian character voices, and RTST an offlin
 - Listening to pick the clearest default voice (KNN is a placeholder).
 - Emulator: Norsk first run downloads the pack, and a Dino story gets distinct voices.
 - Windows head: the pack downloads and reads.
+
+- 2026-10-24 follow-up (fix/packs-nb-espeak): espeak-ng's Norwegian voice `lang/gmq/nb` uses `dictionary no`, so the data file is `no_dict` (there is no `nb_dict`). The packs.yml guard checks `no_dict`; do not "fix" it back.

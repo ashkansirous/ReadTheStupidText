@@ -352,9 +352,9 @@ jobs:
           if [ "$(stat -c %s "$dest/voices/nvcc/model.onnx")" -lt 1048576 ]; then echo "::error::nvcc model.onnx is not a real model"; exit 1; fi
           if [ ! -d "$ESPEAK_DATA_SRC" ]; then echo "::error::Missing espeak-ng-data at $ESPEAK_DATA_SRC (fetched by the Persian steps)"; exit 1; fi
           cp -r "$ESPEAK_DATA_SRC" "$dest/espeak-ng-data"
-          # The Norwegian voice is espeak voice "nb": the data copied from the Persian steps must carry it.
-          if [ ! -s "$dest/espeak-ng-data/nb_dict" ] || [ -z "$(find "$dest/espeak-ng-data/lang" -type f -name nb -print -quit)" ]; then
-            echo "::error::espeak-ng-data has no nb voice (needs nb_dict and lang/*/nb)"; exit 1
+          # The Norwegian voice is espeak voice "nb": the data copied from the Persian steps must carry it (lang/gmq/nb names dictionary "no", so the file is no_dict).
+          if [ ! -s "$dest/espeak-ng-data/no_dict" ] || [ -z "$(find "$dest/espeak-ng-data/lang" -type f -name nb -print -quit)" ]; then
+            echo "::error::espeak-ng-data has no nb voice (needs no_dict and lang/*/nb)"; exit 1
           fi
           cat > "$dest/LICENSE" <<'LICENSE_TEXT'
           Norwegian voice: nvcc (Piper, medium, ten speakers; folder voices/nvcc)
