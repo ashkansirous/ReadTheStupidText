@@ -1,6 +1,6 @@
 # Slice 106 — Windows: offline translation packs for the five new languages
 
-*Planned 2026-10-24*, from the user's request to add Danish, Finnish, Swedish, Norwegian and Dutch
+*In progress (wave 2026-10-24), draft PR.* Planned 2026-10-24, from the user's request to add Danish, Finnish, Swedish, Norwegian and Dutch
 (with Slice 103).
 
 **Batch:** 21 (five more languages)
