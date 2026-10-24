@@ -48,7 +48,8 @@ public sealed record LanguageRules(
     string VerbPrefix = "",
     string NameVerbGap = @"\s+",
     string NameLead = "",
-    string ExtraNamePattern = "")
+    string ExtraNamePattern = "",
+    bool DashTagAfterQuote = false)
 {
     private static readonly IReadOnlySet<string> NoWords = new HashSet<string>();
     private static readonly IReadOnlyList<string> NoEndings = [];

@@ -33,6 +33,11 @@ internal static class RuleSets
         AppLanguage.Arabic => ArabicRules.Create(),
         AppLanguage.Chinese => ChineseRules.Create(),
         AppLanguage.Japanese => JapaneseRules.Create(),
+        AppLanguage.Danish => DanishRules.Create(),
+        AppLanguage.Finnish => FinnishRules.Create(),
+        AppLanguage.Swedish => SwedishRules.Create(),
+        AppLanguage.Norwegian => NorwegianRules.Create(),
+        AppLanguage.Dutch => DutchRules.Create(),
         _ => LanguageRules.English,
     };
 
