@@ -84,7 +84,7 @@ New strings (nine locales): "Check the text", "Paste", "Page {n} couldn’t be r
 
 *From review:* high pass, 8 findings applied; medium pass, 9 findings applied.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-24)
 
 - `ReviewPage` hand-off: `ReviewHandOff` values clear on read, and `ReaderPage` guards against re-entry and pauses reading when it opens the page. Don't read the hand-off twice. (Slice 101: docs/plan/slices/101-rtst-mobile-review-and-translate.md)
 - Phone translation is a per-text choice on `ReviewPage`, never translate-on-speak. Language detection always routes the voice; the translator only gates the checkbox. `TranslateEnabled` stays in `ISettingsStore` for Windows only. (Slice 101: docs/plan/slices/101-rtst-mobile-review-and-translate.md)

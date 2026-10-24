@@ -55,7 +55,7 @@ CC0. That gives Dino ten distinct Norwegian character voices, and RTST an offlin
 
 *From review:* high pass, 6 applied (#1, the `PackConstants` pin bump, is left to the coordinator after the packs run; #7 skipped). Medium pass, 4 applied (#4 and #5 skipped).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-24)
 
 - Pack voices are shown as "Voice N (woman/man)" in every language, with gender from the speaker code's first letter via `NorwegianVoices`; `SupertonicVoiceTable.Serves` must keep Supertonic off `nb`. (Slice 104: docs/plan/slices/104-piper-norwegian-pack.md)
 - The `piper-nb` pack pins rhasspy/piper-voices revision 5041a7a in `.github/workflows/packs.yml`; bump the `PackConstants` pin after each packs run. (Slice 104: docs/plan/slices/104-piper-norwegian-pack.md)

@@ -77,7 +77,7 @@ New strings (nine locales): "Take a photo of each page", "Add one page at a time
 - High pass: 7 findings applied, #5 skipped.
 - Medium pass: 6 applied; #6 (retry) out of scope; #7 and #9 skipped; #10 found no dead keys.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-24)
 
 - (`src/ReadTheStupidText.Mobile/CLAUDE.md`) Multi-page capture is our own `CapturePage`, not Google's multi-page UI: each Add is one page (`ScanAsync(1)`). Text goes back to `ReaderPage` through the `CaptureHandOff` singleton, not query properties. Cleanup of cached images belongs in `OnNavigatedFrom`, not on backgrounding. (Slice 100: docs/plan/slices/100-rtst-mobile-page-capture-wizard.md)
 

@@ -55,11 +55,11 @@ the four starters (and the ten store stories) need five more translation tables 
 - Swedish reading could not be checked. The pinned packs-4 Supertonic pack doesn't declare sv yet, so the phone voice is used. The emulator's Google TTS accepted a synthesis request and never called back, so the highlight stayed on sentence 1. origin/main behaves the same, so this is not a Slice 105 regression. One ANR was seen once and couldn't be reproduced in three runs; the main thread was idle.
 - The upgrade from 1.33.0 couldn't be tested: a debug-signed build can't install over the release-signed one.
 
+*Update 2026-10-24:* story-v2 is uploaded to R2; all 10 store stories are live at version 2.
+
 #### Not yet verified
 
 - Swedish and Danish reading after the packs-5 release (Supertonic sv/da/fi/nl), on a real phone. Also check that the phone-voice fallback doesn't hang silently when the device has no voice for the language.
 - The upgrade from 1.33.0 with a release-signed build: the new language tables are adopted into the existing starters.
 
-- Emulator result (Svenska read of the Three Little Pigs, typed Danish story) to follow.
-- Store story-v2 upload to R2 (done by the coordinator after merge).
 - A native read of the translations (no native review of the 70 tables).
