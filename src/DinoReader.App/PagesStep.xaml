@@ -16,7 +16,7 @@
             </VerticalStackLayout>
         </ScrollView>
 
-        <Grid x:Name="PagesState" RowDefinitions="Auto,*" IsVisible="False">
+        <Grid x:Name="PagesState" RowDefinitions="Auto,Auto,*" IsVisible="False">
             <Border x:Name="AddRow" BackgroundColor="White" StrokeThickness="0" Padding="14,10" Margin="14,0,14,8"
                     SemanticProperties.Description="{x:Static res:AppResources.Wizard_AddPages}">
                 <Border.StrokeShape>
@@ -39,7 +39,42 @@
                 </Border.GestureRecognizers>
             </Border>
 
-            <CollectionView x:Name="PageGrid" Grid.Row="1" CanReorderItems="True" ReorderCompleted="OnReordered" Margin="14,0">
+            <!-- Slice 98 (mock screen 32): every page already has its picture. -->
+            <HorizontalStackLayout x:Name="FoundLine" Grid.Row="1" Spacing="8" Margin="18,0,14,8" IsVisible="False">
+                <local:IconView Kind="Check" Color="#2E7D32" Size="16" StrokeWidth="3" VerticalOptions="Center" />
+                <Label Text="{x:Static res:AppResources.Pictures_FoundEvery}" FontSize="13" FontAttributes="Bold" TextColor="#2E7D32" VerticalOptions="Center" />
+            </HorizontalStackLayout>
+
+            <!-- Slice 98 (mock screens 31, 32): one optional picture slot per page of a text-only file or typed text. -->
+            <ScrollView x:Name="SlotList" Grid.Row="2" IsVisible="False">
+                <VerticalStackLayout Padding="14,0,14,24" Spacing="8">
+                    <Border x:Name="NoPicturesCard" BackgroundColor="{StaticResource BrandTint}" StrokeThickness="0" Padding="14,12">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="16" />
+                        </Border.StrokeShape>
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="{x:Static res:AppResources.Pictures_NoneTitle}" FontSize="14" FontAttributes="Bold" />
+                            <Label Text="{x:Static res:AppResources.Pictures_NoneBody}" FontSize="12.5" LineHeight="1.4" TextColor="{StaticResource Body}" />
+                            <Border HeightRequest="44" BackgroundColor="{StaticResource Brand}" StrokeThickness="0"
+                                    SemanticProperties.Description="{x:Static res:AppResources.Pictures_PickAll}">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="22" />
+                                </Border.StrokeShape>
+                                <HorizontalStackLayout Spacing="8" HorizontalOptions="Center" VerticalOptions="Center">
+                                    <local:IconView Kind="Photos" Color="White" Size="18" StrokeWidth="2" VerticalOptions="Center" />
+                                    <Label Text="{x:Static res:AppResources.Pictures_PickAll}" FontSize="14" FontAttributes="Bold" TextColor="White" VerticalOptions="Center" />
+                                </HorizontalStackLayout>
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnPickAllTapped" />
+                                </Border.GestureRecognizers>
+                            </Border>
+                        </VerticalStackLayout>
+                    </Border>
+                    <VerticalStackLayout x:Name="SlotRows" Spacing="8" />
+                </VerticalStackLayout>
+            </ScrollView>
+
+            <CollectionView x:Name="PageGrid" Grid.Row="2" CanReorderItems="True" ReorderCompleted="OnReordered" Margin="14,0">
                 <CollectionView.ItemsLayout>
                     <GridItemsLayout x:Name="GridLayout" Orientation="Vertical" Span="3" HorizontalItemSpacing="8" VerticalItemSpacing="8" />
                 </CollectionView.ItemsLayout>

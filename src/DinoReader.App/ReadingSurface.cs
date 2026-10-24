@@ -269,6 +269,9 @@ public sealed class ReadingSurface : Border
 	{
 		renderer.SetTheme(_theme!);
 		_renderer = renderer;
+		// A renderer that takes touches on the boxes layer (PictureTextPages, ScanPages) must not leave it that way for the next one.
+		_boxes.InputTransparent = true;
+		_boxes.CascadeInputTransparent = true;
 		_laidOutFor = card;
 		_error.IsVisible = false;
 		StrokeShape = new RoundRectangle { CornerRadius = renderer.CornerRadius };
@@ -283,6 +286,12 @@ public sealed class ReadingSurface : Border
 		if (_mode != ReadingMode.Picture)
 		{
 			return new TextPages(content.Text, content.Sentences, measurer, content.Font, theme, content.RightToLeft);
+		}
+
+		if (content.Scans is { } book && PictureTextBook.IsPictureTextBook(book.Pages))
+		{
+			return new PictureTextPages(content.Text, book.Pages, content.Sentences, book.ResolveImage, content.Font, theme,
+				content.RightToLeft, sentence => SentenceTapped?.Invoke(this, sentence), e => OnSwiped(this, e));
 		}
 
 		return content.Scans is { } scans

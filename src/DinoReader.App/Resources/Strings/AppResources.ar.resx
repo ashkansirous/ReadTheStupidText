@@ -147,6 +147,16 @@
   <data name="Wizard_Reading" xml:space="preserve"><value>جارٍ قراءة الصفحة {0} من {1}</value></data>
   <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>تعذّرت قراءة بعض الصفحات</value></data>
   <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>تعذّرت قراءة {0} من الصفحات. ستبقى كصور بلا نص.</value></data>
+  <data name="Pictures_NoneTitle" xml:space="preserve"><value>يحتوي هذا الملف على كلمات بلا صور</value></data>
+  <data name="Pictures_NoneBody" xml:space="preserve"><value>أضف صورة لكل صفحة إن شئت. تُقرأ الصفحات التي بلا صورة كنص.</value></data>
+  <data name="Pictures_PickAll" xml:space="preserve"><value>اختر صورًا لكل الصفحات</value></data>
+  <data name="Pictures_PageN" xml:space="preserve"><value>الصفحة {0}</value></data>
+  <data name="Pictures_Change" xml:space="preserve"><value>تغيير</value></data>
+  <data name="Pictures_Add" xml:space="preserve"><value>إضافة صورة</value></data>
+  <data name="Pictures_FoundEvery" xml:space="preserve"><value>وُجدت صور في كل صفحة</value></data>
+  <data name="Pictures_Subtitle_Other" xml:space="preserve"><value>{0} · {1} صفحات</value></data>
+  <data name="Pictures_Subtitle_One" xml:space="preserve"><value>{0} · {1} صفحة</value></data>
+  <data name="Pictures_NextCover" xml:space="preserve"><value>التالي: الغلاف</value></data>
   <data name="Wizard_CoverHint" xml:space="preserve"><value>اختر صفحة أو صورة أو لونًا للغلاف.</value></data>
   <data name="Wizard_NeedTextTitle" xml:space="preserve"><value>لا يوجد ما يُقرأ بعد</value></data>
   <data name="Wizard_NeedTextBody" xml:space="preserve"><value>أضف نصًا إلى صفحة واحدة على الأقل ثم احفظ.</value></data>

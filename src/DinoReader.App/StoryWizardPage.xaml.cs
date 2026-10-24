@@ -30,6 +30,12 @@ public sealed class WizardSession
 
 	public bool IsNew { get; }
 
+	/// <summary>Ids of the pages that are picture + text pages (Slice 98): a rotate or crop clears their reading, but they are never read by OCR.</summary>
+	public HashSet<string> PictureTextPages { get; } = [];
+
+	/// <summary>The name of the file the grown-up imported pages from (with its extension), shown under the Pages title; null for scans, photos and typed text.</summary>
+	public string? FileName { get; set; }
+
 	public IServiceProvider Services { get; }
 
 	/// <summary>The wizard page, for alerts and action sheets from the steps.</summary>
@@ -175,6 +181,14 @@ public partial class StoryWizardPage : ContentPage, IGrownUpPage
 		if (!isNew)
 		{
 			draft.LoadPageDrafts(ExistingPicture(story));
+			for (int i = 0; i < draft.PageDrafts.Count; i++)
+			{
+				if (PictureTextBook.IsPictureText(story.Pages[i]))
+				{
+					_session.PictureTextPages.Add(draft.PageDrafts[i].Id);
+				}
+			}
+
 			_session.LanguageChosen = true;
 		}
 
@@ -229,7 +243,8 @@ public partial class StoryWizardPage : ContentPage, IGrownUpPage
 		BackButton.IsVisible = step > PagesStepIndex;
 		Grid.SetColumn(NextButton, step > PagesStepIndex ? 1 : 0);
 		Grid.SetColumnSpan(NextButton, step > PagesStepIndex ? 1 : 2);
-		NextButton.Text = step == TextStepIndex ? AppResources.Add_Save : AppResources.Wizard_Next;
+		NextButton.Text = step == TextStepIndex ? AppResources.Add_Save : step == PagesStepIndex ? AppResources.Pictures_NextCover : AppResources.Wizard_Next;
+		RenderHeader();
 		for (int i = 0; i < _pills.Count; i++)
 		{
 			bool current = i == step;
@@ -261,9 +276,29 @@ public partial class StoryWizardPage : ContentPage, IGrownUpPage
 
 	private void OnPagesEdited() => RefreshNextState();
 
+	// Slice 98 (mock screens 31, 32): the Pages step is titled "Pages" with the story's name and page count under it.
+	private void RenderHeader()
+	{
+		if (_session is null)
+		{
+			return;
+		}
+
+		StoryDraft? draft = _session.Draft;
+		bool pages = _step == PagesStepIndex;
+		TitleLabel.Text = pages ? AppResources.Edit_Pages : _session.IsNew ? AppResources.Story_Add : AppResources.Manage_EditStory;
+		bool named = pages && draft is { PageDrafts.Count: > 0 } && !string.IsNullOrWhiteSpace(_session!.FileName);
+		SubtitleLabel.IsVisible = named;
+		SubtitleLabel.Text = named ? SubtitleOf(_session!.FileName!, draft!.PageDrafts.Count) : string.Empty;
+	}
+
+	private static string SubtitleOf(string fileName, int pages) =>
+		AppResources.Format(pages == 1 ? AppResources.Pictures_Subtitle_One : AppResources.Pictures_Subtitle_Other, fileName, pages);
+
 	private void RefreshNextState()
 	{
-		NextButton.IsEnabled = _step != PagesStepIndex || _session!.Draft.PageDrafts.Count > 0;
+		RenderHeader();
+		NextButton.IsEnabled = _step != PagesStepIndex || _session?.Draft.PageDrafts.Count > 0;
 		NextButton.Opacity = NextButton.IsEnabled ? 1 : 0.45;
 	}
 
@@ -363,6 +398,12 @@ public partial class StoryWizardPage : ContentPage, IGrownUpPage
 		}
 	}
 
+	// A picture + text page keeps its text and no line boxes: an empty reading stands in for the OCR a rotate or crop would ask for.
+	private static PageDraft KeepPictureText(WizardSession session, PageDraft page) =>
+		page is { HasPicture: true, Ocr: null } && session.PictureTextPages.Contains(page.Id) && !string.IsNullOrWhiteSpace(page.Text)
+			? page.WithOcr(new PageReading([]))
+			: page;
+
 	private async Task<ReadResult?> ReadPagesWithProgressAsync(WizardSession session)
 	{
 		var pages = new List<PageDraft>();
@@ -371,7 +412,7 @@ public partial class StoryWizardPage : ContentPage, IGrownUpPage
 		{
 			foreach (PageDraft page in session.Draft.PageDrafts)
 			{
-				pages.Add(await session.RenderAsync(page));
+				pages.Add(KeepPictureText(session, await session.RenderAsync(page)));
 			}
 
 			var ocr = _services.GetRequiredService<OcrPositionedTextExtractor>();

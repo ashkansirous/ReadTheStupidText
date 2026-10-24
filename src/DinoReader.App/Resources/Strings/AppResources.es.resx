@@ -147,6 +147,16 @@
   <data name="Wizard_Reading" xml:space="preserve"><value>Leyendo la página {0} de {1}</value></data>
   <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>Algunas páginas no se leyeron</value></data>
   <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>No se pudieron leer {0} páginas. Se conservan como imágenes sin texto.</value></data>
+  <data name="Pictures_NoneTitle" xml:space="preserve"><value>Este archivo tiene texto pero no imágenes</value></data>
+  <data name="Pictures_NoneBody" xml:space="preserve"><value>Añade una imagen a cada página si quieres. Las páginas sin imagen se leen como texto.</value></data>
+  <data name="Pictures_PickAll" xml:space="preserve"><value>Elegir imágenes para todas las páginas</value></data>
+  <data name="Pictures_PageN" xml:space="preserve"><value>PÁGINA {0}</value></data>
+  <data name="Pictures_Change" xml:space="preserve"><value>Cambiar</value></data>
+  <data name="Pictures_Add" xml:space="preserve"><value>Añadir imagen</value></data>
+  <data name="Pictures_FoundEvery" xml:space="preserve"><value>Imágenes encontradas en todas las páginas</value></data>
+  <data name="Pictures_Subtitle_Other" xml:space="preserve"><value>{0} · {1} páginas</value></data>
+  <data name="Pictures_Subtitle_One" xml:space="preserve"><value>{0} · {1} página</value></data>
+  <data name="Pictures_NextCover" xml:space="preserve"><value>Siguiente: portada</value></data>
   <data name="Wizard_CoverHint" xml:space="preserve"><value>Elige una página, una foto o un color para la portada.</value></data>
   <data name="Wizard_NeedTextTitle" xml:space="preserve"><value>Todavía no hay nada que leer</value></data>
   <data name="Wizard_NeedTextBody" xml:space="preserve"><value>Añade texto al menos a una página y guarda.</value></data>

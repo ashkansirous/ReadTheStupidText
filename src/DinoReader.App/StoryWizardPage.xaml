@@ -20,8 +20,10 @@
                     <TapGestureRecognizer Tapped="OnLeaveTapped" />
                 </Border.GestureRecognizers>
             </Border>
-            <Label x:Name="TitleLabel" Grid.Column="1" FontSize="20" FontAttributes="Bold" VerticalOptions="Center"
-                   SemanticProperties.HeadingLevel="Level1" />
+            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                <Label x:Name="TitleLabel" FontSize="20" FontAttributes="Bold" SemanticProperties.HeadingLevel="Level1" />
+                <Label x:Name="SubtitleLabel" FontSize="12" TextColor="{StaticResource Muted}" IsVisible="False" LineBreakMode="TailTruncation" />
+            </VerticalStackLayout>
         </Grid>
 
         <Grid x:Name="StepBar" Grid.Row="1" ColumnDefinitions="*,*,*" ColumnSpacing="8" Padding="14,0,14,8" />

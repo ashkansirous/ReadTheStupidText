@@ -14,6 +14,9 @@ public static class DinoFonts
 	/// <summary>The font a story's text is set in: Vazirmatn for Farsi and Arabic, Andika otherwise.</summary>
 	public static string ReadingFor(string language) => IsRightToLeft(language) ? Persian : Reading;
 
+	/// <summary>The font for one piece of text, from its own script (Slice 96): Vazirmatn when it starts right to left, else Andika.</summary>
+	public static string ReadingForText(string? text) => TextDirection.StartsRightToLeft(text) ? Persian : Reading;
+
 	/// <summary>Whether a story language runs right to left (Farsi, Arabic): its page mirrors and its swipe direction flips.</summary>
 	public static bool IsRightToLeft(string language) => UiLanguage.IsRightToLeft(language);
 

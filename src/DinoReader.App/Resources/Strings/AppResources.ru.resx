@@ -147,6 +147,16 @@
   <data name="Wizard_Reading" xml:space="preserve"><value>Чтение страницы {0} из {1}</value></data>
   <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>Некоторые страницы не прочитаны</value></data>
   <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>Не удалось прочитать страниц: {0}. Они сохранятся как картинки без текста.</value></data>
+  <data name="Pictures_NoneTitle" xml:space="preserve"><value>В этом файле есть текст, но нет картинок</value></data>
+  <data name="Pictures_NoneBody" xml:space="preserve"><value>При желании добавьте по одной картинке к каждой странице. Страницы без картинки читаются как текст.</value></data>
+  <data name="Pictures_PickAll" xml:space="preserve"><value>Выбрать картинки для всех страниц</value></data>
+  <data name="Pictures_PageN" xml:space="preserve"><value>СТРАНИЦА {0}</value></data>
+  <data name="Pictures_Change" xml:space="preserve"><value>Изменить</value></data>
+  <data name="Pictures_Add" xml:space="preserve"><value>Добавить картинку</value></data>
+  <data name="Pictures_FoundEvery" xml:space="preserve"><value>Картинки найдены на каждой странице</value></data>
+  <data name="Pictures_Subtitle_Other" xml:space="preserve"><value>{0} · {1} стр.</value></data>
+  <data name="Pictures_Subtitle_One" xml:space="preserve"><value>{0} · {1} стр.</value></data>
+  <data name="Pictures_NextCover" xml:space="preserve"><value>Далее: обложка</value></data>
   <data name="Wizard_CoverHint" xml:space="preserve"><value>Выберите для обложки страницу, фото или цвет.</value></data>
   <data name="Wizard_NeedTextTitle" xml:space="preserve"><value>Пока нечего читать</value></data>
   <data name="Wizard_NeedTextBody" xml:space="preserve"><value>Добавьте текст хотя бы на одну страницу и сохраните.</value></data>

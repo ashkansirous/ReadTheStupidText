@@ -8,7 +8,7 @@ I give you a picture for each page and you show them side by side."
 **Batch:** 18 (Dino Reader: layout, add-a-book button, picture + text books)
 **Depends on:** Slice 91 (`.dino` packages, starters), Slice 94 (picture starter in `StarterBuilder`),
 Slice 95 (bundled translations), Slice 78 (`StoryWizardPage`), Slice 96 (the reader no longer mirrors)
-**Touches:** `src/DinoReader.Core/PictureTextBook.cs` (new), `src/DinoReader.Core/Story.cs`, `src/DinoReader.Core/CLAUDE.md`, `src/DinoReader.App/ReadingSurface.cs`, `src/DinoReader.App/PictureTextPages.cs` (new), `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/PagesStep.xaml`, `src/DinoReader.App/PagesStep.xaml.cs`, `src/DinoReader.App/StoryWizardPage.xaml.cs`, `src/DinoReader.App/StoryImport.cs`, `src/DinoReader.App/Resources/Strings/*.resx`, `src/DinoReader.App/CLAUDE.md`, `tests/DinoReader.Tests/PictureTextBookTests.cs` (new), `tests/DinoReader.Tests/StarterBuilder.cs`, `tests/DinoReader.Tests/Starters/<stem>/pictures/**` (when the user sends pictures), `src/DinoReader.App/Resources/Raw/starters/*.dino`
+**Touches:** `src/DinoReader.Core/PictureTextBook.cs` (new), `src/DinoReader.Core/Story.cs`, `src/DinoReader.Core/CLAUDE.md`, `src/DinoReader.App/ReadingSurface.cs`, `src/DinoReader.App/PictureTextPages.cs` (new), `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/PagesStep.xaml`, `src/DinoReader.App/PagesStep.xaml.cs`, `src/DinoReader.App/StoryWizardPage.xaml`, `src/DinoReader.App/StoryWizardPage.xaml.cs`, `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/StoryImport.cs`, `src/DinoReader.App/Resources/Strings/*.resx`, `src/DinoReader.App/CLAUDE.md`, `tests/DinoReader.Tests/PictureTextBookTests.cs` (new), `tests/DinoReader.Tests/StarterBuilder.cs`, `tests/DinoReader.Tests/Starters/<stem>/pictures/**` (when the user sends pictures), `src/DinoReader.App/Resources/Raw/starters/*.dino`
 
 ## Why
 
@@ -100,3 +100,5 @@ New strings (nine locales): "Pages", "{file} · {n} pages", "This file has words
   picture. A PDF that has pictures shows no slots. With Farsi chosen, an English
   picture + text starter reads in Farsi with the text side unchanged.
 - Windows head: the side-by-side layout in a wide window.
+
+Build notes: starter pictures must be supplied already sized (copied as-is, no re-encode); slot mode has no drag-reorder (delete and edit go through the text editor).

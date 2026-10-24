@@ -147,6 +147,16 @@
   <data name="Wizard_Reading" xml:space="preserve"><value>Lendo a página {0} de {1}</value></data>
   <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>Algumas páginas não foram lidas</value></data>
   <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>Não foi possível ler {0} páginas. Elas ficam como imagens sem texto.</value></data>
+  <data name="Pictures_NoneTitle" xml:space="preserve"><value>Este arquivo tem texto, mas não tem imagens</value></data>
+  <data name="Pictures_NoneBody" xml:space="preserve"><value>Adicione uma imagem a cada página, se quiser. As páginas sem imagem são lidas como texto.</value></data>
+  <data name="Pictures_PickAll" xml:space="preserve"><value>Escolher imagens para todas as páginas</value></data>
+  <data name="Pictures_PageN" xml:space="preserve"><value>PÁGINA {0}</value></data>
+  <data name="Pictures_Change" xml:space="preserve"><value>Alterar</value></data>
+  <data name="Pictures_Add" xml:space="preserve"><value>Adicionar imagem</value></data>
+  <data name="Pictures_FoundEvery" xml:space="preserve"><value>Imagens encontradas em todas as páginas</value></data>
+  <data name="Pictures_Subtitle_Other" xml:space="preserve"><value>{0} · {1} páginas</value></data>
+  <data name="Pictures_Subtitle_One" xml:space="preserve"><value>{0} · {1} página</value></data>
+  <data name="Pictures_NextCover" xml:space="preserve"><value>Próximo: capa</value></data>
   <data name="Wizard_CoverHint" xml:space="preserve"><value>Escolha uma página, uma foto ou uma cor para a capa.</value></data>
   <data name="Wizard_NeedTextTitle" xml:space="preserve"><value>Ainda não há nada para ler</value></data>
   <data name="Wizard_NeedTextBody" xml:space="preserve"><value>Adicione texto a pelo menos uma página e salve.</value></data>

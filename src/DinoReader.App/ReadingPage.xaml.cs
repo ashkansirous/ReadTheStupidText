@@ -15,6 +15,9 @@ namespace DinoReader;
 /// </summary>
 public partial class ReadingPage : ContentPage
 {
+	private const double CompactTitleSize = 17;
+	private const double FullTitleSize = 20;
+
 	private readonly ReadingSession _session;
 	private readonly IStoryLibrary _library;
 	private readonly GrownUpGate _gate;
@@ -29,6 +32,8 @@ public partial class ReadingPage : ContentPage
 	private ReadingTheme _theme = ReadingTheme.For(false);
 	private bool _visible;
 	private bool _stoppedDuringGate;
+	private const double FullHeaderRowSpacing = 2;
+	private bool _compactHeader;
 
 	public ReadingPage(ReadingSession session, IStoryLibrary library, GrownUpGate gate, IServiceProvider services,
 		VoicePackInstaller installer, IVoiceModelService model, SpokenLanguage spoken)
@@ -62,6 +67,7 @@ public partial class ReadingPage : ContentPage
 			DinoFonts.IsRightToLeft(story.Language), ScansOf(story));
 		Surface.Show(content, story.Mode, _theme);
 		ApplyTheme();
+		UpdateHeaderLayout(Width, Height);
 		if (_sentences.Count > 0)
 		{
 			_session.MoveTo(0);
@@ -71,6 +77,39 @@ public partial class ReadingPage : ContentPage
 	// A story with pictures draws its real pages in picture mode; one without keeps the generated pages.
 	private ScanSource? ScansOf(Story story) =>
 		story.HasPictures ? new ScanSource(story.Pages, file => _library.TryResolveFile(story.Id, file)) : null;
+
+	// Slice 98 (mock screen 35): a picture + text book held sideways has the title on the top bar beside the back button
+	// (one line, ellipsis) and no page dots, to save height.
+	protected override void OnSizeAllocated(double width, double height)
+	{
+		base.OnSizeAllocated(width, height);
+		UpdateHeaderLayout(width, height);
+	}
+
+	private void UpdateHeaderLayout(double width, double height)
+	{
+		bool compact = width > 0 && width > height && _story is { } story && PictureTextBook.IsPictureTextBook(story.Pages);
+		if (compact != _compactHeader)
+		{
+			_compactHeader = compact;
+			ApplyHeaderLayout();
+			RenderChrome();
+		}
+	}
+
+	private void ApplyHeaderLayout()
+	{
+		Grid.SetRow(TitleLabel, _compactHeader ? 0 : 1);
+		Grid.SetColumn(TitleLabel, _compactHeader ? 1 : 0);
+		Grid.SetColumnSpan(TitleLabel, _compactHeader ? 1 : 4);
+		TitleLabel.FontSize = _compactHeader ? CompactTitleSize : FullTitleSize;
+		TitleLabel.MaxLines = _compactHeader ? 1 : -1;
+		TitleLabel.LineBreakMode = _compactHeader ? LineBreakMode.TailTruncation : LineBreakMode.WordWrap;
+		TitleLabel.VerticalOptions = _compactHeader ? LayoutOptions.Center : LayoutOptions.Fill;
+		// The title shares row 0 when compact, so the second row and the gap before it must not take any height.
+		Header.RowDefinitions[1].Height = _compactHeader ? new GridLength(0) : GridLength.Auto;
+		Header.RowSpacing = _compactHeader ? 0 : FullHeaderRowSpacing;
+	}
 
 	protected override void OnAppearing()
 	{
@@ -194,6 +233,7 @@ public partial class ReadingPage : ContentPage
 		SessionState state = _session.State;
 		bool wandering = _follower.IsWandering && state != SessionState.Idle;
 		Dots.Show(Surface.PageCount, Surface.CurrentPage, _theme);
+		Dots.IsVisible = Dots.HasDots && !_compactHeader;
 		Transport.Apply(state, wandering, _theme);
 		WanderPill.IsVisible = wandering;
 		PillLabel.Text = ReadingText.ReadingPage(_follower.ReadingPage + 1);

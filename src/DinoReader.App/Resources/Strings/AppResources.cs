@@ -167,6 +167,16 @@ public static class AppResources
 	public static string Wizard_Reading => Get();
 	public static string Wizard_ReadFailedTitle => Get();
 	public static string Wizard_ReadFailedBody => Get();
+	public static string Pictures_NoneTitle => Get();
+	public static string Pictures_NoneBody => Get();
+	public static string Pictures_PickAll => Get();
+	public static string Pictures_PageN => Get();
+	public static string Pictures_Change => Get();
+	public static string Pictures_Add => Get();
+	public static string Pictures_FoundEvery => Get();
+	public static string Pictures_Subtitle_Other => Get();
+	public static string Pictures_Subtitle_One => Get();
+	public static string Pictures_NextCover => Get();
 	public static string Wizard_CoverHint => Get();
 	public static string Wizard_NeedTextTitle => Get();
 	public static string Wizard_NeedTextBody => Get();
