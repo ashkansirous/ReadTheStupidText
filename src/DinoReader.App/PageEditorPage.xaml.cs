@@ -146,7 +146,6 @@ public partial class PageEditorPage : ContentPage, IGrownUpPage
 	public PageEditorPage(WizardSession session, PageDraft page)
 	{
 		InitializeComponent();
-		Header.Padding = UiFlow.Mirror(Header.Padding);
 		_session = session;
 		_page = page;
 		_turns = page.RotationQuarterTurns;

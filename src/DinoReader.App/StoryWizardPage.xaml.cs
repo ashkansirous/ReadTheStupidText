@@ -159,7 +159,6 @@ public partial class StoryWizardPage : ContentPage, IGrownUpPage
 	public StoryWizardPage(IStoryLibrary library, IServiceProvider services)
 	{
 		InitializeComponent();
-		Header.Padding = UiFlow.Mirror(Header.Padding);
 		_library = library;
 		_services = services;
 		BuildStepBar();

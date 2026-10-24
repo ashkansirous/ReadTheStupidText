@@ -91,7 +91,6 @@ public sealed class ReadingSurface : Border
 		_mode = mode;
 		_theme = theme;
 		_error.TextColor = theme.Ink;
-		FlowDirection = content.RightToLeft ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
 		_renderer = null;
 		_anchor = -1;
 		_anchorPosition = -1;
@@ -345,7 +344,7 @@ public sealed class ReadingSurface : Border
 		}
 	}
 
-	// Swipe left turns to the next page in a left-to-right layout; the direction mirrors for right-to-left.
+	// Swipe left turns to the next page for every book: the page layout never mirrors (Slice 96).
 	private void OnSwiped(object? sender, SwipedEventArgs e)
 	{
 		if (_renderer?.IsZoomed == true)
@@ -353,7 +352,7 @@ public sealed class ReadingSurface : Border
 			return;
 		}
 
-		bool toNext = (e.Direction == SwipeDirection.Left) != (FlowDirection == FlowDirection.RightToLeft);
+		bool toNext = e.Direction == SwipeDirection.Left;
 		int target = Math.Clamp(_page + (toNext ? 1 : -1), 0, Math.Max(0, PageCount - 1));
 		if (_renderer is null || target == _page)
 		{
