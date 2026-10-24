@@ -33,9 +33,7 @@
 	<array>
 		<string>audio</string>
 	</array>
-	<key>XSAppIconAssets</key>
-	<string>Assets.xcassets/AppIcon.appiconset</string>
-
+	<!-- The app icon is named by <AppIcon> in DinoReader.App.csproj; the SDK refuses XSAppIconAssets here too. -->
 	<!-- App Store Connect rejects an iPad-capable app without a launch screen (90475). There is no
 	     MauiSplashScreen (it would generate other art), so this plain system launch screen
 	     (iOS 14+, the minimum here is 15) stands in for a storyboard. -->

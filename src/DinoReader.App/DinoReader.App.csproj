@@ -74,7 +74,7 @@
 		<!-- The privacy manifest App Store Connect requires. -->
 		<BundleResource Include="Platforms\iOS\Resources\PrivacyInfo.xcprivacy" LogicalName="PrivacyInfo.xcprivacy" />
 		<!-- Drop the SDK's default items for the catalog (their Link keeps the Platforms\iOS\Resources\
-		     prefix, which XSAppIconAssets never matched), then add it back linked at Assets.xcassets\. -->
+		     prefix, which the old XSAppIconAssets plist key never matched), then add it back linked at Assets.xcassets\. -->
 		<BundleResource Remove="Platforms\iOS\Resources\Assets.xcassets\**" />
 		<ImageAsset Remove="Platforms\iOS\Resources\Assets.xcassets\**" />
 		<ImageAsset Include="Platforms\iOS\Resources\Assets.xcassets\**\*.*" Link="Assets.xcassets\%(RecursiveDir)%(Filename)%(Extension)" />
