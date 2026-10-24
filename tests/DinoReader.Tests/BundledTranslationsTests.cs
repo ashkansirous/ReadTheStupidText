@@ -152,7 +152,28 @@ public class BundledTranslationsTests
     }
 
     [Fact]
-    public void A_copy_that_already_has_tables_or_a_bundle_without_any_is_left_alone()
+    public void A_nine_language_copy_gains_only_the_languages_it_lacks_and_keeps_its_own_tables()
+    {
+        var old = new Dictionary<string, IReadOnlyDictionary<string, string>> { ["fa"] = new Dictionary<string, string> { ["Hello there."] = "my edit" } };
+        var shipped = new Dictionary<string, IReadOnlyDictionary<string, string>>
+        {
+            ["fa"] = new Dictionary<string, string> { ["Hello there."] = "bundled fa" },
+            ["sv"] = new Dictionary<string, string> { ["Hello there."] = "hej." },
+            ["nl"] = new Dictionary<string, string> { ["Hello there."] = "hallo." },
+        };
+        Story stored = StoryWith(old, translate: false) with { Title = "Mine" };
+
+        Story adopted = BundledTranslations.Adopt(stored, StoryWith(shipped));
+
+        Assert.Equal("my edit", BundledTranslations.Lookup(adopted, "fa", "Hello there."));
+        Assert.Equal("hej.", BundledTranslations.Lookup(adopted, "sv", "Hello there."));
+        Assert.Equal("hallo.", BundledTranslations.Lookup(adopted, "nl", "Hello there."));
+        Assert.False(adopted.TranslateToMyLanguage);
+        Assert.Equal("Mine", adopted.Title);
+    }
+
+    [Fact]
+    public void A_copy_that_already_has_every_bundled_language_or_a_bundle_without_any_is_left_alone()
     {
         Story withTables = StoryWith(Farsi, translate: false);
 

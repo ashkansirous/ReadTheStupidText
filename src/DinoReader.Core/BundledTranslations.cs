@@ -28,12 +28,36 @@ public static class BundledTranslations
     public static bool IsComplete(Story story, string language) =>
         !MissesAny(story, language, StoryPieces.TranslatablePieceTexts(story));
 
-    /// <summary>The stored copy of a bundled story brought up to date (an app update, Slice 95): a copy that carries no translations takes the
-    /// bundled ones and the switch on; everything the grown-up changed (cast, merges, cover, pages) stays. A copy that has tables is left alone.</summary>
-    public static Story Adopt(Story stored, Story bundled) =>
-        stored.Translations is { Count: > 0 } || bundled.Translations is not { Count: > 0 }
-            ? stored
-            : stored with { Translations = bundled.Translations, TranslateToMyLanguage = true };
+    /// <summary>The stored copy of a bundled story brought up to date (an app update, Slice 95, 105): a copy that carries no translations takes the
+    /// bundled ones and the switch on; a copy that has some gains only the languages it lacks (its own tables and switch stay);
+    /// everything the grown-up changed (cast, merges, cover, pages) stays. A copy that already has every bundled language is returned as it is.</summary>
+    public static Story Adopt(Story stored, Story bundled)
+    {
+        if (bundled.Translations is not { Count: > 0 })
+        {
+            return stored;
+        }
+
+        if (stored.Translations is not { Count: > 0 })
+        {
+            return stored with { Translations = bundled.Translations, TranslateToMyLanguage = true };
+        }
+
+        var have = stored.Translations.Keys.Select(Key).ToHashSet();
+        var missing = bundled.Translations.Where(t => !have.Contains(Key(t.Key))).ToList();
+        if (missing.Count == 0)
+        {
+            return stored;
+        }
+
+        var merged = new Dictionary<string, IReadOnlyDictionary<string, string>>(stored.Translations);
+        foreach (var table in missing)
+        {
+            merged[table.Key] = table.Value;
+        }
+
+        return stored with { Translations = merged };
+    }
 
     /// <summary>Whether the story carries a table for <paramref name="language"/>.</summary>
     public static bool Has(Story story, string language) => TableFor(story, language) is not null;

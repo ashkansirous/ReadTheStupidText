@@ -30,16 +30,16 @@ internal static class StoreTexts
 
     public static IReadOnlyList<StoreStorySpec> All { get; } =
     [
-        new(LionAndMouseId, "The Lion and the Mouse", "lion-and-mouse", LionAndMouse, 1, RetoldAesop, ["Lion", "Mouse"], 1, AddedDate),
-        new(GoldilocksId, "Goldilocks and the Three Bears", "goldilocks", Goldilocks, 3, RetoldTraditional, ["Goldilocks", "Papa Bear", "Mama Bear", "Baby Bear"], 1, AddedDate),
-        new(RedRidingHoodId, "Little Red Riding Hood", "red-riding-hood", RedRidingHood, 3, RetoldTraditional, ["Red Riding Hood", "Mother", "Wolf", "Grandmother", "Woodcutter"], 1, AddedDate),
-        new(UglyDucklingId, "The Ugly Duckling", "ugly-duckling", UglyDuckling, 0, "Retold from Andersen · free to share", ["Mother Duck", "Duckling", "Hen", "Swan"], 1, AddedDate),
-        new(RedHenId, "The Little Red Hen", "little-red-hen", RedHen, 3, RetoldTraditional, ["Hen", "Dog", "Cat", "Duck"], 1, AddedDate),
-        new(BillyGoatsId, "The Three Billy Goats Gruff", "billy-goats-gruff", BillyGoats, 0, RetoldTraditional, ["Little Billy", "Middle Billy", "Big Billy", "Troll"], 1, AddedDate),
-        new(BeanstalkId, "Jack and the Beanstalk", "jack-and-the-beanstalk", Beanstalk, 2, RetoldTraditional, ["Jack", "Mother", "Giant", "Peddler"], 1, AddedDate),
-        new(ElvesId, "The Elves and the Shoemaker", "elves-and-shoemaker", Elves, 1, "Retold from the Brothers Grimm · free to share", ["Hans", "Greta", "Nib", "Nob"], 1, AddedDate),
-        new(TownMouseId, "The Town Mouse and the Country Mouse", "town-mouse-country-mouse", TownMouse, 2, RetoldAesop, ["Town Mouse", "Country Mouse"], 1, AddedDate),
-        new(PeterRabbitId, "The Tale of Peter Rabbit", "peter-rabbit", PeterRabbit, 3, "Beatrix Potter, 1902 (shortened)", ["Mrs. Rabbit", "Peter", "Mr. McGregor"], 1, AddedDate),
+        new(LionAndMouseId, "The Lion and the Mouse", "lion-and-mouse", LionAndMouse, 1, RetoldAesop, ["Lion", "Mouse"], 2, AddedDate),
+        new(GoldilocksId, "Goldilocks and the Three Bears", "goldilocks", Goldilocks, 3, RetoldTraditional, ["Goldilocks", "Papa Bear", "Mama Bear", "Baby Bear"], 2, AddedDate),
+        new(RedRidingHoodId, "Little Red Riding Hood", "red-riding-hood", RedRidingHood, 3, RetoldTraditional, ["Red Riding Hood", "Mother", "Wolf", "Grandmother", "Woodcutter"], 2, AddedDate),
+        new(UglyDucklingId, "The Ugly Duckling", "ugly-duckling", UglyDuckling, 0, "Retold from Andersen · free to share", ["Mother Duck", "Duckling", "Hen", "Swan"], 2, AddedDate),
+        new(RedHenId, "The Little Red Hen", "little-red-hen", RedHen, 3, RetoldTraditional, ["Hen", "Dog", "Cat", "Duck"], 2, AddedDate),
+        new(BillyGoatsId, "The Three Billy Goats Gruff", "billy-goats-gruff", BillyGoats, 0, RetoldTraditional, ["Little Billy", "Middle Billy", "Big Billy", "Troll"], 2, AddedDate),
+        new(BeanstalkId, "Jack and the Beanstalk", "jack-and-the-beanstalk", Beanstalk, 2, RetoldTraditional, ["Jack", "Mother", "Giant", "Peddler"], 2, AddedDate),
+        new(ElvesId, "The Elves and the Shoemaker", "elves-and-shoemaker", Elves, 1, "Retold from the Brothers Grimm · free to share", ["Hans", "Greta", "Nib", "Nob"], 2, AddedDate),
+        new(TownMouseId, "The Town Mouse and the Country Mouse", "town-mouse-country-mouse", TownMouse, 2, RetoldAesop, ["Town Mouse", "Country Mouse"], 2, AddedDate),
+        new(PeterRabbitId, "The Tale of Peter Rabbit", "peter-rabbit", PeterRabbit, 3, "Beatrix Potter, 1902 (shortened)", ["Mrs. Rabbit", "Peter", "Mr. McGregor"], 2, AddedDate),
     ];
 
     public const string LionAndMouse = """

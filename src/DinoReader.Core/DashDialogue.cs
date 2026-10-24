@@ -25,10 +25,91 @@ internal static class DashDialogue
     {
         int lineEnd = LineEnd(text, open);
         int close = FindClosingDash(text, open + 1, lineEnd, rules);
+        if (rules.DashTagAfterQuote && close < 0 && FindTrailingTag(text, open + 1, lineEnd, rules) is { } tag)
+        {
+            return new Segment(SegmentKind.Quote, text[(open + 1)..tag.QuoteEnd].Trim(), open, tag.SourceEnd);
+        }
+
         bool dashClosed = close >= 0;
         int innerEnd = dashClosed ? close : TrimEnd(text, open + 1, lineEnd);
         int sourceEnd = dashClosed ? close + 1 : innerEnd;
         return new Segment(SegmentKind.Quote, text[(open + 1)..innerEnd].Trim(), open, sourceEnd);
+    }
+
+    private readonly record struct TrailingTag(int QuoteEnd, int SourceEnd);
+
+    // Second person subjects: a speech verb followed by one of these opens a question inside the quote ("– Vad? Sa du något?"), not a tag.
+    private static readonly HashSet<string> SecondPersonPronouns = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "du", "ni", "dere", "je", "jij", "u", "jullie", "sinä", "te",
+    };
+
+    // First person subjects: "sa jag." is a tag, but "sa jag inget" goes on as a clause of the quote.
+    private static readonly HashSet<string> FirstPersonPronouns = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "jag", "vi", "jeg", "ik", "wij", "we", "minä", "me",
+    };
+
+    private const string TagStopChars = ".!?…";
+
+    // Finnish, Swedish, Danish, Norwegian and Dutch write "– Hei, sanoi Pekka.": the first speech verb that follows a comma
+    // (dropped from the quote) or a ? ! … (kept in it) starts the tag, so the quote ends there and the tag stays narration.
+    // Not a tag: the verb is followed by you, or by I/we and more words, or the tag is followed by a comma and more speech ("– Jag kommer, sa Peter, men ...").
+    private static TrailingTag? FindTrailingTag(string text, int from, int limit, LanguageRules rules)
+    {
+        for (int i = from; i < limit; i++)
+        {
+            bool comma = text[i] == ',';
+            if (!comma && text[i] != '?' && text[i] != '!' && text[i] != '…') continue;
+            int word = i + 1;
+            while (word < limit && char.IsWhiteSpace(text[word])) word++;
+            if (word == i + 1 || word >= limit) continue;
+            int end = word;
+            while (end < limit && char.IsLetter(text[end])) end++;
+            if (end == word || !rules.SpeechVerbs.Contains(text[word..end])) continue;
+            if (text.AsSpan(from, i - from).IsWhiteSpace()) continue;
+            if (SubjectIsPartOfQuote(text, end, limit)) continue;
+            return SpeechContinuesAfterTag(text, end, limit) ? null : new TrailingTag(comma ? i : i + 1, i + 1);
+        }
+
+        return null;
+    }
+
+    private static bool SubjectIsPartOfQuote(string text, int verbEnd, int limit)
+    {
+        int start = verbEnd;
+        while (start < limit && char.IsWhiteSpace(text[start])) start++;
+        int end = start;
+        while (end < limit && char.IsLetter(text[end])) end++;
+        if (end == start) return false;
+        string word = text[start..end];
+        if (SecondPersonPronouns.Contains(word)) return true;
+        return FirstPersonPronouns.Contains(word) && WordsFollow(text, end, limit);
+    }
+
+    // True when more words follow before the next stop or comma ("sa jag inget"), false for "sa jag." or "sa jag,".
+    private static bool WordsFollow(string text, int from, int limit)
+    {
+        for (int i = from; i < limit; i++)
+        {
+            if (TagStopChars.Contains(text[i]) || text[i] == ',') return false;
+            if (char.IsLetterOrDigit(text[i])) return true;
+        }
+
+        return false;
+    }
+
+    private static bool SpeechContinuesAfterTag(string text, int verbEnd, int limit)
+    {
+        int stop = verbEnd;
+        while (stop < limit && !TagStopChars.Contains(text[stop]) && text[stop] != ',') stop++;
+        if (stop >= limit || text[stop] != ',') return false;
+        for (int i = stop + 1; i < limit; i++)
+        {
+            if (char.IsLetter(text[i])) return true;
+        }
+
+        return false;
     }
 
     private static int FindClosingDash(string text, int from, int lineEnd, LanguageRules rules)
