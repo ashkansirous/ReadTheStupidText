@@ -95,13 +95,33 @@
                            VerticalOptions="Center" />
 
         <!-- Screen 21: the list and the privacy line. -->
-        <Grid Grid.Row="1" x:Name="ListPanel" RowDefinitions="*,Auto" IsVisible="False">
-            <CollectionView x:Name="StoryList" SelectionMode="None" ItemTemplate="{StaticResource StoreRowTemplate}" Margin="14,0">
+        <Grid Grid.Row="1" x:Name="ListPanel" RowDefinitions="Auto,Auto,*,Auto" IsVisible="False">
+            <!-- Slice 112 (mock frame 47): age chips (Google Play's bands) and the author picker; filtering is on the phone. -->
+            <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never" Margin="14,0,14,10">
+                <HorizontalStackLayout x:Name="AgeChips" Spacing="8" />
+            </ScrollView>
+            <Border Grid.Row="1" x:Name="AuthorRow" HeightRequest="44" Padding="14,0" Margin="14,0,14,10" BackgroundColor="White" StrokeThickness="0"
+                    SemanticProperties.Description="{x:Static res:AppResources.Store_Author}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="14" />
+                </Border.StrokeShape>
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                    <Label Text="{x:Static res:AppResources.Store_Author}" FontSize="14" TextColor="{StaticResource Muted}" VerticalOptions="Center" />
+                    <Label Grid.Column="1" x:Name="AuthorValue" FontSize="14" TextColor="{StaticResource Ink}" VerticalOptions="Center" />
+                    <local:IconView Grid.Column="2" Kind="ChevronDown" Color="{StaticResource Muted}" Size="16" StrokeWidth="2.2" VerticalOptions="Center" />
+                </Grid>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnAuthorTapped" />
+                </Border.GestureRecognizers>
+            </Border>
+            <Label Grid.Row="2" x:Name="NoMatchLabel" Text="{x:Static res:AppResources.Store_NoMatch}" FontSize="14" LineHeight="1.5" TextColor="{StaticResource Body}"
+                   HorizontalTextAlignment="Center" Margin="30,30" IsVisible="False" />
+            <CollectionView Grid.Row="2" x:Name="StoryList" SelectionMode="None" ItemTemplate="{StaticResource StoreRowTemplate}" Margin="14,0">
                 <CollectionView.ItemsLayout>
                     <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" />
                 </CollectionView.ItemsLayout>
             </CollectionView>
-            <HorizontalStackLayout Grid.Row="1" Spacing="8" Padding="18,10,18,14">
+            <HorizontalStackLayout Grid.Row="3" Spacing="8" Padding="18,10,18,14">
                 <local:IconView Kind="Lock" Color="{StaticResource Muted}" Size="16" StrokeWidth="2" VerticalOptions="Start" Margin="0,1,0,0" />
                 <Label Text="{x:Static res:AppResources.Store_Footer}" FontSize="12.5" LineHeight="1.4" TextColor="{StaticResource Body}" />
             </HorizontalStackLayout>

@@ -76,6 +76,16 @@ public static class AppResources
 	public static string Store_EmptyBody => Get();
 	public static string Store_BackToStories => Get();
 	public static string Store_GetStory => Get();
+	public static string Store_AllAges => Get();
+	public static string Store_AgeUpTo5 => Get();
+	public static string Store_Age6To8 => Get();
+	public static string Store_Age9To12 => Get();
+	public static string Store_Author => Get();
+	public static string Store_Anyone => Get();
+	public static string Store_Ages => Get();
+	public static string Store_AgeSingle => Get();
+	public static string Store_ChipSelected => Get();
+	public static string Store_NoMatch => Get();
 	public static string Backup_Title => Get();
 	public static string Backup_SaveTitle => Get();
 	public static string Backup_SaveBody_One => Get();

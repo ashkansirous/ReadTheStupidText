@@ -414,6 +414,30 @@ function addStory(objects, id, { meta = metaJson(), versions = [1], cover = true
   if (cover) objects.set(storyCoverKey(id), COVER_BYTES);
 }
 
+test("age range and author pass through the list; a bad range or author is null", async () => {
+  const objects = new Map();
+  addStory(objects, ID_A, { meta: metaJson({ title: "Ranged", ageMin: 3, ageMax: 6, author: " Beatrix Potter " }) });
+  addStory(objects, ID_B, { meta: metaJson({ title: "Plain" }) });
+  addStory(objects, ID_C, { meta: metaJson({ title: "Odd", ageMin: 9, ageMax: 4, author: 7 }) });
+  const body = await (await storyApi(get("/api/stories"), fakeBucket(objects))).json();
+  const byTitle = Object.fromEntries(body.stories.map((story) => [story.title, story]));
+  assert.deepEqual([byTitle.Ranged.ageMin, byTitle.Ranged.ageMax, byTitle.Ranged.author], [3, 6, "Beatrix Potter"]);
+  assert.deepEqual([byTitle.Plain.ageMin, byTitle.Plain.ageMax, byTitle.Plain.author], [null, null, null]);
+  assert.deepEqual([byTitle.Odd.ageMin, byTitle.Odd.ageMax, byTitle.Odd.author], [null, null, null]);
+});
+
+test("parseMeta age range: integers 0-18, both ends needed, min <= max", () => {
+  const base = { schemaVersion: 1, title: "x", language: "en" };
+  const range = (min, max) => { const m = parseMeta({ ...base, ageMin: min, ageMax: max }); return [m.ageMin, m.ageMax]; };
+  assert.deepEqual(range(0, 18), [0, 18]);
+  assert.deepEqual(range(5, 5), [5, 5]);
+  assert.deepEqual(range(-1, 5), [null, null]);
+  assert.deepEqual(range(5, 19), [null, null]);
+  assert.deepEqual(range(3.5, 6), [null, null]);
+  assert.deepEqual(range(3, undefined), [null, null]);
+  assert.deepEqual(range("3", 6), [null, null]);
+});
+
 const storyApi = (request, bucket, prefix = "") => handleStories(request, { DOWNLOADS: bucket }, prefix, serveObject);
 
 test("story keys: only <id>/<file> under the prefix, with a 32-hex id", () => {

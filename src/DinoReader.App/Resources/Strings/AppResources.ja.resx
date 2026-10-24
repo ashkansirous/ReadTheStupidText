@@ -53,6 +53,17 @@
   <data name="Store_EmptyBody" xml:space="preserve"><value>ときどき新しいおはなしが追加されます。またのぞいてね。</value></data>
   <data name="Store_BackToStories" xml:space="preserve"><value>わたしのおはなしにもどる</value></data>
   <data name="Store_GetStory" xml:space="preserve"><value>{0}をもらう</value></data>
+  <!-- Slice 112: store age and author filters -->
+  <data name="Store_AllAges" xml:space="preserve"><value>すべての年齢</value></data>
+  <data name="Store_AgeUpTo5" xml:space="preserve"><value>5歳以下</value></data>
+  <data name="Store_Age6To8" xml:space="preserve"><value>6–8</value></data>
+  <data name="Store_Age9To12" xml:space="preserve"><value>9–12</value></data>
+  <data name="Store_Author" xml:space="preserve"><value>作者</value></data>
+  <data name="Store_Anyone" xml:space="preserve"><value>指定なし</value></data>
+  <data name="Store_Ages" xml:space="preserve"><value>{0}–{1}歳</value></data>
+  <data name="Store_AgeSingle" xml:space="preserve"><value>{0}歳</value></data>
+  <data name="Store_ChipSelected" xml:space="preserve"><value>{0}、選択中</value></data>
+  <data name="Store_NoMatch" xml:space="preserve"><value>まだお話がありません。ほかの年齢を試してね。</value></data>
   <data name="Backup_Title" xml:space="preserve"><value>バックアップ</value></data>
   <data name="Backup_SaveTitle" xml:space="preserve"><value>バックアップを保存</value></data>
   <data name="Backup_SaveBody_One" xml:space="preserve"><value>ページ、絵、調整したキャストごと、物語を1つのファイルに。ドライブやファイルに保存するか、自分に送れます。</value></data>

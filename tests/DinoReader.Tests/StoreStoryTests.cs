@@ -59,6 +59,9 @@ public sealed class StoreStoryTests : IDisposable
 
             Assert.InRange(story.Pages.Count, MinPages, MaxPages);
             Assert.False(string.IsNullOrWhiteSpace(spec.Credits), spec.Title);
+            Assert.InRange(spec.AgeMin, 0, spec.AgeMax);
+            Assert.InRange(spec.AgeMax, spec.AgeMin, 18);
+            Assert.False(string.IsNullOrWhiteSpace(spec.Author), spec.Title);
             Assert.True(story.TranslateToMyLanguage, spec.Title);
         }
     }
@@ -134,6 +137,9 @@ public sealed class StoreStoryTests : IDisposable
         Assert.True(root.GetProperty("minutes").GetInt32() >= 1);
         Assert.Equal(spec.Added, root.GetProperty("added").GetString());
         Assert.Equal(spec.Credits, root.GetProperty("credits").GetString());
+        Assert.Equal(spec.AgeMin, root.GetProperty("ageMin").GetInt32());
+        Assert.Equal(spec.AgeMax, root.GetProperty("ageMax").GetInt32());
+        Assert.Equal(spec.Author, root.GetProperty("author").GetString());
     }
 
     [Theory]
