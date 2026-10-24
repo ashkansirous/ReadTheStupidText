@@ -28,6 +28,18 @@ confuses a small child, and the user wants it gone.
   lines are right-aligned. The highlight is unchanged.
 - The language picker, fonts and voice choice are unchanged. Only the direction changes.
 
+#### Design (Dino Reader Batch 17-18 mock, screens 29 and 30, added 2026-10-24)
+
+Source: `docs/design/dino-reader/Dino Reader Batch 17-18.dc.html`. Two frames: shelf in Farsi (screen 29, lines 67-82) and a Farsi book in the reader (screen 30, lines 84-94). The mock agrees with the plan: nothing mirrors, only RTL text aligns right inside its own box. Both frames are real UI at 360x760.
+
+- **Shelf in Farsi (29, Decision 100).** Page `#FFF6E6`. Header row, padding 10/16/12, gap 10: app icon 40x40 radius 11 on the left, label "قصه‌های من" (`dir="rtl"`, Vazirmatn 21/700, `text-align:right`, flex:1) and the 44x44 add-book button on the right (Slice 97). Icon left and button right are the same as English. Grid is 2 columns, 14px side padding, 12px gap, tiles fill left to right. Tile titles follow their own text: "Good Enough", "The Three Little Pigs" and "The Gingerbread Man" stay left-aligned (Fredoka 14/600, line-height 1.25); the Farsi book "خاله سوسکه" is `dir="rtl"`, Vazirmatn 14/700, line-height 1.35, right-aligned. Its generated cover is `#B9E4C9` with the title in Vazirmatn 18/700 `#2b2540`, line-height 1.35, centred (Latin generated covers are Andika 18/700 white).
+- **Farsi book in the reader (30, replaces v2 frame 14).** Header (wrap, padding 8/12/4/8, gap 8): back arrow 44x44 left, spacer, add-book button 40x40 radius 12 right, then the title on its own row (`order:3`, full width, padding 0 8): "پیتر و دُم‌پنبه" `dir="rtl"`, Vazirmatn 20/700, line-height 1.3, right-aligned. Text card: margin 6/14/0, radius 24, fill `#DFF5E3`, padding 24/22, content centred vertically. Story text is a `dir="rtl"` flex column, gap 3, Vazirmatn 24, line-height 1.8, `#2b2540`, right-aligned. The spoken sentence (two wrapped lines) has fill `rgba(255,214,0,.42)`, inset ring 2px `#F5B800`, radius 9, bleeding 6px past the text edge (`margin:0 -6px; padding:0 6px`). Page dots (9px round `#d9d2c4`, active 26x9 pill `#5B57E8`, gap 8) fill left to right; controls 72 / 104 / 72 circles unmirrored, previous left and next right. Copy: "پیتر تا درِ باغ پرید.", "«من هم بیام؟» پیتر پرسید.", "دُم‌پنبه گفت: «اگه تند", "بیای!» و دوید و رفت."
+- **Behaviour (notes).** Swipe left for the next page, as in English. Only the story text and title are right-aligned and laid out right to left; the sentence box is unchanged. Same rule on gate, wizard, store, backup and first run.
+
+**Settled by the mock: tile covers.** A generated cover for an RTL title uses Vazirmatn with dark text `#2b2540` on a pale colour (`#B9E4C9`); white text stays for the Latin covers on saturated colours.
+
+New strings: none (the Farsi samples above are mock data, not shipped copy).
+
 ## Work
 
 - [ ] 1. **Smallest end-to-end: the gallery in Farsi stays left to right.** `UiFlow` always returns

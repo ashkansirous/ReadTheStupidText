@@ -32,9 +32,25 @@ original. Both confused first-time users.
   is heard. Translation stays fully on-device; a missing ML Kit model is downloaded with a progress line,
   and if that fails the original is read with a short message.
 - **Reverses Slice 54's "the translated text is read; the editor keeps the original"** for the phone. The
-  `TranslateEnabled` setting and the Settings toggle added by Slice 99 go away; translation is now a
+  `TranslateEnabled` setting goes away (Slice 99 already removed the switch and stopped main-page translation, so translation is unavailable until this slice); translation is now a
   per-text choice on page 2.
 - **Back** from page 2 returns to the main page without changing what's there.
+
+#### Design (RTST Phone Batch 19 mock, screens R6 and R7, added 2026-10-24)
+
+Source: `docs/design/rtst-phone/RTST Phone Batch 19.dc.html`. Two frames at 360x760: another language with translate ticked (R6, lines 152-165) and translating while the model downloads (R7, lines 167-186). The mock agrees with the plan and adds the failed-page banner, the detected-language caption and the download card.
+
+- **Page chrome.** Header padding 8/8/8/4: back arrow 48x48, title "Check the text" 18/600 (flex), **Paste** pill at the right: height 40, padding 0/14, radius 20, fill `rgba(255,255,255,.18)`, white 14/600, clipboard icon (rect 13x15 radius 2) left of the label, gap 6.
+- **Text box (R6).** Fills the page: white, radius 16, padding 14/16, **2px `#5B57E8` border** (focused), 18px, line-height 1.6, `#1f2027`, editable, caret 2x20 `#5B57E8`. Sample is French (mock data).
+- **Failed-page banner (R6).** Fill `#FFF6E0`, radius 12, padding 10/12, gap 8, 14px `#6b4e00`, line-height 1.4, warning triangle icon: "Page 2 couldn’t be read. Pages 1 and 3 are here."
+- **Translate row (R6).** White, 1px `rgba(0,0,0,.11)`, radius 14, min height 56, padding 0/14, gap 12. Ticked box 28x28 radius 8 fill `#5B57E8` with a white check; title "Translate to English" 16.5/600; caption "This text looks like French" 13 `rgba(0,0,0,.58)`.
+- **Big button (R6).** Height 62, radius 16, header gradient, white 18/600, play triangle icon left (gap 10), shadow `0 4px 14px rgba(91,87,232,.32)`: "Translate and read". Unticked: "Read".
+- **Translating (R7).** Text box loses the border and goes grey (`rgba(0,0,0,.45)` text, 1px border). Translate row at opacity .55, title only. A progress card replaces the button: white, radius 16, padding 14/16, gap 10; "Getting the French translator…" 15/600 with "62%" right-aligned `#4A46D6` tabular; bar 8 high radius 4, track `rgba(0,0,0,.10)`, fill `#5B57E8`; "Only the first time. Translation happens on this phone." 13 `rgba(0,0,0,.58)`.
+- **Behaviour (notes).** Reached from Done (R4), straight from Text from a file, from Edit and from long-press Paste. Paste in the header replaces the text with the clipboard. The checkbox shows only when the text's language differs from the app's and the phone can translate (Android; never iOS); ticked by default, no source-language picker. The R7 card shows only when the translator is not on the phone yet. After translating, the text box is replaced with the translation and the main page (R1) shows and reads it. If the download fails, the original is read with one short line saying why. Coming back through **Edit**, page 2 shows the translation with a small **Show original** link under the box.
+
+**Settled by the mock: where "Show original" appears.** Only when page 2 is re-entered through Edit, under the text box; the plan said "on page 2" without saying when.
+
+New strings (nine locales): "Check the text", "Paste", "Page {n} couldn’t be read. Pages {list} are here.", "Translate to {language}", "This text looks like {language}", "Translate and read", "Read", "Getting the {language} translator…", "Only the first time. Translation happens on this phone.", "Show original".
 
 ## Work
 

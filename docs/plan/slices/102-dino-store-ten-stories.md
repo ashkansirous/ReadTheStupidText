@@ -45,7 +45,8 @@ those.
   slice.
 - **A credit line.** `meta.json` gets an optional `credits` string, e.g. "Retold from Aesop · free to share"
   or "Beatrix Potter, 1902". `worker/stories.ts` passes it through (still optional, so older entries
-  stay valid), and the store card shows it as one small muted line under the title. No change to
+  stay valid), and the store card shows it as one small muted line under the title, in place of the language name that
+  line shows today (changed to match the mock, 2026-10-24). The length line stays below it. No change to
   `story.json` or the `.dino` schema.
 - **Fixed ids.** Each store story gets a fixed GUID package id (recorded in `StoreTexts`), so a rebuild
   uploads as a new `story-v<n>` of the same story and "Downloaded" keeps working.
@@ -57,10 +58,25 @@ those.
     `wrangler r2 object put … --remote`, and `meta.json` last, so a half-upload never lists.
   - Claude runs the upload for all ten (wrangler is already logged in) and checks the live list.
 
+#### Design (Dino Reader Batch 17-18 mock, screen 36, added 2026-10-24)
+
+Source: `docs/design/dino-reader/Dino Reader Batch 17-18.dc.html`, screen 36 (lines 175-196). One frame at 360x760: the store frame from Batch 16 (screen 21) with ten real stories (four shown). Real UI. The plan was changed to match the mock on the dropped language line.
+
+- **Page and header.** Page `#F3EFE6`. Back arrow 44x44, title "Free stories" 20/600, subtitle "Picked and cast for Dino" 12 `#8a8399`. List padding 0/14/14, gap 10.
+- **Store card.** White, radius 18, padding 12, gap 12. Cover 66 wide, aspect 3/4, radius 10, generated colour with the title in Andika 9.5/700 white, line-height 1.15, padding 5, centred. Colours seen: `#FFC24D`, `#7FD0FF`, `#FF7A9C`, `#8BD38A`, `#B8A6FF`. Text column, gap 3: title 15.5/600, line-height 1.25; **credit line** 12 `#8a8399`, line-height 1.3; size line 12.5 `#5a5470` ("8 pages · 4 min").
+- **Credit examples.** "Retold from Aesop · free to share", "Beatrix Potter, 1902", "Retold traditional tale · free to share", "Retold from Andersen · free to share".
+- **Card states (right edge).** Get: height 44, padding 0/14, radius 22, fill `#5B57E8`, white 14/600, download icon and "Get". Downloading: pill 88x44, radius 22, fill `#ECE7FF`, progress fill `#c9c0f5` at 42% width, label "42%" 14/600 `#3f3bc4`. Downloaded: no fill, green check and "Downloaded" 13.5/600 `#2E7D32`.
+- **Behaviour (note).** The credit comes from `meta.json`'s optional `credits`; a card without credits looks as before. The language line is dropped: every store story is English and reads in all nine languages. Covers are the generated colour covers until the illustrated `story-v2`.
+
+Changed to match the mock (2026-10-24): the card's sub-line becomes the credit line, replacing the language name; the length line stays. Code today: `StorePage.xaml.cs:40,101-104` builds the card's sub-line as the language name plus the length (`Store_Length`); the mock keeps only the length line and puts the credit above it.
+
+New strings: none new for the card (credit text is data from `meta.json`, not a resource).
+
 ## Work
 
 - [ ] 1. **Smallest end-to-end: one story live.** `StoreTexts` with The Lion and the Mouse, `StoreBuilder`
-  (package, cover, meta), the upload script, the `credits` field in the Worker and on the store card. Upload
+  (package, cover, meta), the upload script, the `credits` field in the Worker and on the store card
+  (credit line replaces the language name; length kept). Upload
   it and see it in the live list and download it on the emulator.
 - [ ] 2. **The other nine retellings,** with speech tags the caster resolves (a test asserts each story
   finds its expected characters).
