@@ -1,6 +1,6 @@
 # Slice 112 — Dino: store filters by age and author
 
-*Planned 2026-10-24*, from the phone scope "Dino Reader - translated text on screen, voices in the
+*In progress (wave 2026-10-24), draft PR.* *Planned 2026-10-24*, from the phone scope "Dino Reader - translated text on screen, voices in the
 reading language, one narrator, parent recordings, store filters" (2026-10-24) —
 https://drive.google.com/file/d/1b2XPenCW2D4Kx1yx98js_LK4CRBSnnLf/view?usp=drivesdk (part 6, milestone 6).
 
