@@ -1080,16 +1080,18 @@
     included, stays left-to-right in every language, and page turns go the same
     way for every book; text elements follow their own content's direction.
     Extends Decision 92 to Dino. (Slice 96)
-101. **The gallery's grown-ups button is a book with a plus (Batch 18).** It
-    replaces the lock; the gate and grown-up mode behind it are unchanged.
+101. **The grown-ups button is a book with a plus, everywhere (Batch 18).** It
+    replaces the lock in the gallery header and on the reading page; the gate
+    and what it opens are unchanged. The `BackupPage` lock glyph stays.
     (Slice 97)
 102. **Picture + text books (Batch 18).** A page with a picture and its own text
     (no line boxes) shows the picture beside the text (sideways) or above it
-    (upright). Grown-ups add one from pictures in file-name order plus text
-    split on `---` lines; starters get pictures the same way. No schema bump.
-    (Slice 98)
+    (upright, as a text panel over the picture). Grown-ups add pictures per page in the
+    Pages step: each page of a text-only file gets an optional picture slot,
+    and "Pick pictures for all pages" fills them in file-name order; starters
+    get pictures the same way. No schema bump. (Slice 98)
 103. **The RTST phone main page shows only reading (Batch 19).** A gear for
-    Settings (language, voice, speed), a large read-only text area with the
+    Settings (language, voice, speed; no translate toggle), a large read-only text area with the
     highlight and an Edit link, two big buttons (Text from pictures, Text from
     a file) and a simple player. (Slice 99)
 104. **Multi-page capture is our own screen (Batch 19).** "Take a photo of

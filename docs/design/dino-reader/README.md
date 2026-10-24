@@ -5,7 +5,8 @@
 - **Source:** Claude Design project `90615641-f298-4e21-8c50-ca2efbeaaebc`,
   file `Dino Reader v2.dc.html`
   (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+v2.dc.html>).
-- **Copied:** 2026-10-20, verbatim from `DesignSync get_file` (refreshed the
+- **Copied:** 2026-10-20, verbatim from `DesignSync get_file` (refreshed again on
+  2026-10-24 with the Batch 17-18 import; refreshed the
   same day: added 6b, 8b, 14, 15 and the fonts note).
 - **Covers:** Batch 10, Slices 58-67 (each slice's `#### Design` subsection
   points at the screens below).
@@ -71,7 +72,7 @@ Implement: `Dino Reader v2.dc.html`
 
 - **Source:** the same Claude Design project, file `Dino Reader Batch 16.dc.html`
   (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+16.dc.html>).
-- **Copied:** 2026-10-22, verbatim from `DesignSync get_file`.
+- **Copied:** 2026-10-22, verbatim from `DesignSync get_file` (refreshed 2026-10-24).
 - **Covers:** Batch 16, Slices 91-93 (first run, starter gallery, free stories
   store, language, backup). Everything it doesn't show follows `Dino Reader v2`
   and Slice 80's tile overlay. Read it the same way as the v2 file; it imports
@@ -113,6 +114,34 @@ Also read these files the selection imports:
 
 Implement: `Dino Reader Batch 16.dc.html`
 ```
+
+## Batches 17-18 mock — `Dino Reader Batch 17-18.dc.html`
+
+- **Source:** the same Claude Design project, file `Dino Reader Batch 17-18.dc.html`
+  (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+17-18.dc.html>).
+- **Copied:** 2026-10-24, verbatim from `DesignSync get_file` (import prompt in
+  `docs/design/rtst-phone/README.md`).
+- **Covers:** Slices 94-98 (Good Enough, the add-a-book button, the never-mirroring layout, picture
+  for each page) and Slice 102 (store credit lines). Read it the same way as the v2 file.
+
+| # | Screen | Line |
+|---|---|---|
+| — | **Shelf and Good Enough · Slices 94, 95, 97** (group) | 23 |
+| 27 | Kids’ shelf · Good Enough first | 27 |
+| 28 | Good Enough · picture mode | 44 |
+| — | **Layout never mirrors · Slice 96 · Decision 100** (group) | 63 |
+| 29 | Shelf in Farsi · still left to right | 67 |
+| 30 | Farsi book · reader keeps its layout | 84 |
+| — | **A picture for each page · adding · Slice 98 · Decision 102** (group) | 96 |
+| 31 | Text-only file · add a picture per page | 100 |
+| 32 | File with its own pictures | 118 |
+| — | **A picture for each page · reading · Slice 98** (group) | 136 |
+| 34 | Upright · text over the picture | 140 |
+| 35 | Sideways · picture left, text right | 157 |
+| — | **Batch 20 · Ten open stories in the store · Slice 102 · Decision 106** (group) | 172 |
+| 36 | Free stories · with credit lines | 175 |
+
+(Generated from the captions with a script; regenerate it when the file is refreshed.)
 
 ## Icons — `icons/`
 
