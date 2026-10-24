@@ -35,3 +35,4 @@ Neural reader (Slices 17, 18, 22, 23; docs/plan/slices/17-warm-the-neural-engine
   ~337 MB (fp32 despite the `int8/` folder). `packs.yml` falls back to `max_position_embeddings` when `max_length`
   is null (the job fails if both are), and each table row names its repo layout and licence. `NormalizeTag` maps `no`
   to `nb`; `nn` is out of scope. (Slice 106: docs/plan/slices/106-windows-nordic-dutch-translation-packs.md)
+- Pack voices show as "Voice N (woman/man)" in every language, gender from the speaker code's first letter via `NorwegianVoices`; `SupertonicVoiceTable.Serves` must keep Supertonic off `nb`. (Slice 104: docs/plan/slices/104-piper-norwegian-pack.md)

@@ -100,3 +100,4 @@ after `release-publish` (no signing secrets; uses `CLOUDFLARE_API_TOKEN`/`CLOUDF
 The key layout lives only in `worker/download-keys.mjs`; an already-published version is skipped and
 the manifest is written last. Windows stays Store-only. A deploy needs the bucket to exist (wrangler
 fails on a missing R2 binding). (Slice 69: docs/plan/slices/69-apk-downloads-on-r2.md)
+- The `piper-nb` pack pins rhasspy/piper-voices revision 5041a7a in `packs.yml`; bump the `PackConstants` pin after each packs run. The espeak guard checks `no_dict` (Norwegian `lang/gmq/nb` uses `dictionary no`; there is no `nb_dict`): don't "fix" it back. `packs.yml` pins Python 3.12. (Slice 104: docs/plan/slices/104-piper-norwegian-pack.md)
