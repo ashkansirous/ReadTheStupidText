@@ -1088,3 +1088,15 @@
     (upright). Grown-ups add one from pictures in file-name order plus text
     split on `---` lines; starters get pictures the same way. No schema bump.
     (Slice 98)
+103. **The RTST phone main page shows only reading (Batch 19).** A gear for
+    Settings (language, voice, speed), a large read-only text area with the
+    highlight and an Edit link, two big buttons (Text from pictures, Text from
+    a file) and a simple player. (Slice 99)
+104. **Multi-page capture is our own screen (Batch 19).** "Take a photo of
+    each page": numbered thumbnails, "+ Add another page" and "Done"; each Add
+    captures one page; OCR runs in the background. (Slice 100)
+105. **One review page before reading; translation shows what it reads
+    (Batch 19).** A big editable text box, a "Translate to <app language>"
+    checkbox only when the languages differ, and one Read / Translate and read
+    button. Translating replaces the text. Files go straight here. Reverses
+    Slice 54's "the editor keeps the original" on the phone. (Slice 101)

@@ -116,6 +116,9 @@ this plan turns it into ordered, shippable vertical slices.
 | 96 | Dino's layout never mirrors when the language changes | planned | | | [96-dino-layout-never-mirrors.md](docs/plan/slices/96-dino-layout-never-mirrors.md) |
 | 97 | The grown-ups button says "add a book", not a lock | planned | | | [97-dino-add-book-button.md](docs/plan/slices/97-dino-add-book-button.md) |
 | 98 | Picture + text books: a picture per page, the text beside it | planned | | | [98-dino-picture-and-text-books.md](docs/plan/slices/98-dino-picture-and-text-books.md) |
+| 99 | RTST phone: a minimal main page and a Settings page | planned | | | [99-rtst-mobile-minimal-main-page.md](docs/plan/slices/99-rtst-mobile-minimal-main-page.md) |
+| 100 | RTST phone: "Take a photo of each page", wizard page 1 | planned | | | [100-rtst-mobile-page-capture-wizard.md](docs/plan/slices/100-rtst-mobile-page-capture-wizard.md) |
+| 101 | RTST phone: wizard page 2, check the text, translate, read | planned | | | [101-rtst-mobile-review-and-translate.md](docs/plan/slices/101-rtst-mobile-review-and-translate.md) |
 
 Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
 
@@ -130,6 +133,8 @@ Batch 16 (91-93, planned 2026-10-22, Dino Reader content from the phone scope): 
 Batch 17 (94-95, planned 2026-10-23): 94 first (the user's own book as a starter), then 95 (it translates all four starters, so it rebuilds 94's package). Both edit `StarterBuilder` and the starter packages, so they run one after the other.
 
 Batch 18 (96-98, planned 2026-10-24): 96 first (it changes how every Dino screen and the reader set direction), then 97 (a small gallery-header change, can run beside 96's tail), then 98 (its new reader layout builds on 96's non-mirroring reader). Decisions 100-102.
+
+Batch 19 (99-101, planned 2026-10-24, after two first-time users couldn't find their way around the RTST phone app): 99, then 100, then 101, one at a time; all three edit `ReaderPage` and `AppShell`. Each ships on its own with a stand-in for the next one. Android and iOS only; the Windows tray app is unchanged. Decisions 103-105.
 
 ### Notes
 
