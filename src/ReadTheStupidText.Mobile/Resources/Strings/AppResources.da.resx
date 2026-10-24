@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Shell_ReaderTitle" xml:space="preserve"><value>Læser</value></data>
+  <data name="Common_Ok" xml:space="preserve"><value>OK</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>Annuller</value></data>
+  <data name="Common_Voice" xml:space="preserve"><value>Stemme</value></data>
+  <data name="Common_Language" xml:space="preserve"><value>Sprog</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>Indstillinger</value></data>
+  <data name="Reader_EditLink" xml:space="preserve"><value>Rediger</value></data>
+  <data name="Reader_TextFromPictures" xml:space="preserve"><value>Tekst fra billeder</value></data>
+  <data name="Reader_TextFromFile" xml:space="preserve"><value>Tekst fra en fil</value></data>
+  <data name="Reader_EmptyHint" xml:space="preserve"><value>Tryk på en knap nedenfor for at tilføje noget at læse</value></data>
+  <data name="Settings_LanguageCaption" xml:space="preserve"><value>Sproget for appens tekster</value></data>
+  <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Læsehastighed</value></data>
+  <data name="Common_Back" xml:space="preserve"><value>Tilbage</value></data>
+  <data name="Reader_SkipBack" xml:space="preserve"><value>Forrige sætning</value></data>
+  <data name="Reader_SkipForward" xml:space="preserve"><value>Næste sætning</value></data>
+  <data name="Reader_Play" xml:space="preserve"><value>Afspil</value></data>
+  <data name="Reader_Pause" xml:space="preserve"><value>Pause</value></data>
+  <data name="Reader_PasteButton" xml:space="preserve"><value>Indsæt</value></data>
+  <data name="Reader_EditorHint" xml:space="preserve"><value>Skriv eller indsæt tekst her</value></data>
+  <data name="Reader_PasteFailedTitle" xml:space="preserve"><value>Kunne ikke indsætte</value></data>
+  <data name="Reader_PasteFailedMessage" xml:space="preserve"><value>Udklipsholderen kunne ikke læses. Prøv at kopiere teksten igen.</value></data>
+  <data name="Reader_ScanFailedTitle" xml:space="preserve"><value>Kunne ikke scanne</value></data>
+  <data name="Reader_ScanFailedMessage" xml:space="preserve"><value>Noget gik galt under scanningen. Prøv igen.</value></data>
+  <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>Kunne ikke starte scanneren</value></data>
+  <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>Kunne ikke starte scanneren — prøv igen.</value></data>
+  <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>Scanneren gør sig klar</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Google Play-tjenester er stadig ved at forberede dokumentscanneren. Prøv igen om lidt.</value></data>
+  <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>Scanner ikke tilgængelig</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>Dokumentscanneren kræver Google Play-tjenester. Tag i stedet et enkelt foto.</value></data>
+  <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>Kameraadgang påkrævet</value></data>
+  <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>Giv adgang til kameraet i Indstillinger for at fotografere tekst.</value></data>
+  <data name="Reader_NoCameraTitle" xml:space="preserve"><value>Intet kamera</value></data>
+  <data name="Reader_NoCameraMessage" xml:space="preserve"><value>Der kræves kameraadgang for at fotografere tekst, og denne enhed har intet tilgængeligt kamera.</value></data>
+  <data name="Reader_ScanUnavailableTitle" xml:space="preserve"><value>Scanning ikke tilgængelig</value></data>
+  <data name="Reader_ScanUnavailableMessage" xml:space="preserve"><value>Det er endnu ikke muligt at læse tekst fra fotos på denne enhed.</value></data>
+  <data name="Reader_ScanUnreadableTitle" xml:space="preserve"><value>Kunne ikke læse den scanning</value></data>
+  <data name="Reader_ScanUnreadableMessage" xml:space="preserve"><value>Prøv at scanne teksten igen med bedre lys eller fokus.</value></data>
+  <data name="Reader_NoTextFoundTitle" xml:space="preserve"><value>Ingen tekst fundet</value></data>
+  <data name="Reader_NoTextFoundMessage" xml:space="preserve"><value>Prøv at scanne igen med bedre lys eller fokus.</value></data>
+  <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>Nogle sider blev sprunget over</value></data>
+  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>Kunne ikke læse side {0}. De sider, der kunne læses, erstattede din tekst.</value></data>
+  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>Kunne ikke læse siderne {0}. De sider, der kunne læses, erstattede din tekst.</value></data>
+  <data name="Reader_ScanProgressPage" xml:space="preserve"><value>Læser side {0} af {1}</value></data>
+  <data name="Reader_ScanProgressSingle" xml:space="preserve"><value>Læser side</value></data>
+  <data name="Reader_PageLanguageTitle" xml:space="preserve"><value>Hvilket sprog er denne side på?</value></data>
+  <data name="Reader_OcrDownloading" xml:space="preserve"><value>Henter læseren til {0}… {1}%</value></data>
+  <data name="Reader_OcrDownloadFailedTitle" xml:space="preserve"><value>Kunne ikke hente læseren</value></data>
+  <data name="Reader_OcrDownloadFailedMessage" xml:space="preserve"><value>Kunne ikke hente læseren til {0}. Tjek din forbindelse, og prøv igen.</value></data>
+  <data name="Reader_OcrOfflineMessage" xml:space="preserve"><value>Denne side kræver, at en læser hentes. Opret forbindelse til internettet, og prøv igen.</value></data>
+  <data name="Reader_OcrFailedMessage" xml:space="preserve"><value>Kunne ikke klargøre læseren til {0}. Prøv igen senere.</value></data>
+  <data name="Reader_OcrUnreadableMessage" xml:space="preserve"><value>Denne side kunne ikke læses.</value></data>
+  <data name="Reader_FilePickerTitle" xml:space="preserve"><value>Vælg en .txt-, .pdf- eller .docx-fil</value></data>
+  <data name="Reader_FilePermissionTitle" xml:space="preserve"><value>Tilladelse påkrævet</value></data>
+  <data name="Reader_FilePermissionMessage" xml:space="preserve"><value>Giv adgang til filer for at læse et dokument.</value></data>
+  <data name="Reader_FileTooLargeTitle" xml:space="preserve"><value>Filen er for stor</value></data>
+  <data name="Reader_FileTooLargeMessage" xml:space="preserve"><value>Filen har {0} sider; grænsen er {1}.</value></data>
+  <data name="Reader_FileUnreadableTitle" xml:space="preserve"><value>Kunne ikke læse den fil</value></data>
+  <data name="Reader_FileUnreadableMessage" xml:space="preserve"><value>Filen kan være beskadiget eller i et format, der ikke understøttes.</value></data>
+  <data name="Reader_ReadFailedTitle" xml:space="preserve"><value>Kunne ikke læse den tekst</value></data>
+  <data name="Reader_ReadFailedMessage" xml:space="preserve"><value>Noget gik galt under læsningen.</value></data>
+  <data name="Reader_VoiceUnavailableTitle" xml:space="preserve"><value>Kan ikke læse dette højt</value></data>
+  <data name="Reader_VoiceDownloadingMessage" xml:space="preserve"><value>Den naturlige stemme til {0} bliver stadig hentet. Prøv igen, når den er færdig.</value></data>
+  <data name="Reader_NoVoiceMessage" xml:space="preserve"><value>Denne telefon har ingen stemme til {0}.</value></data>
+  <data name="PackStatus_Resolving" xml:space="preserve"><value>Leder efter naturlige stemmer…</value></data>
+  <data name="PackStatus_Downloading" xml:space="preserve"><value>Henter naturlige stemmer… {0}</value></data>
+  <data name="PackStatus_Offline" xml:space="preserve"><value>Ingen forbindelse. Læser med telefonens stemme. Tryk for at prøve at hente stemmen igen.</value></data>
+  <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Hentningen af stemmen blev beskadiget. Læser med telefonens stemme. Tryk for at prøve igen.</value></data>
+  <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Pakken med naturlige stemmer kan ikke bruges. Læser med telefonens stemme.</value></data>
+  <data name="PackStatus_Failed" xml:space="preserve"><value>Kunne ikke hente naturlige stemmer. Læser med telefonens stemme. Tryk for at prøve igen.</value></data>
+  <data name="PackStatus_Unavailable" xml:space="preserve"><value>Der er endnu ingen naturlig stemme til dit sprog. Læser med telefonens stemme.</value></data>
+  <data name="VoicePicker_Heading" xml:space="preserve"><value>Vælg en stemme</value></data>
+  <data name="VoicePicker_Subtitle" xml:space="preserve"><value>Naturlige stemmer hentes én gang · din tekst bliver på telefonen</value></data>
+  <data name="VoicePicker_SectionPhone" xml:space="preserve"><value>TELEFON</value></data>
+  <data name="VoicePicker_SectionMale" xml:space="preserve"><value>MAND</value></data>
+  <data name="VoicePicker_SectionFemale" xml:space="preserve"><value>KVINDE</value></data>
+  <data name="VoicePicker_Hint" xml:space="preserve"><value>Tryk på en stemme for at høre og vælge den. Hvis du skifter stemme under læsningen, bliver den nuværende sætning læst færdig med den gamle stemme.</value></data>
+  <data name="VoicePicker_PhoneVoiceName" xml:space="preserve"><value>Telefonstemme</value></data>
+  <data name="VoicePicker_EngineSupertonic" xml:space="preserve"><value>SUPERTONIC</value></data>
+  <data name="VoicePicker_EnginePiper" xml:space="preserve"><value>PIPER</value></data>
+  <data name="VoicePicker_EngineMelo" xml:space="preserve"><value>MELOTTS</value></data>
+  <data name="VoicePicker_ReasonPackNotInstalled" xml:space="preserve"><value>Den naturlige stemme til dit sprog er ikke installeret endnu, så telefonens stemme læser.</value></data>
+  <data name="VoicePicker_ReasonNoNeuralEngine" xml:space="preserve"><value>Naturlige stemmer er endnu ikke tilgængelige på denne enhed, så telefonens stemme læser.</value></data>
+  <data name="Language_Intro" xml:space="preserve"><value>Vælg dit sprog. Vi henter en naturlig stemme til det; indtil den er klar, læser din telefons egen stemme.</value></data>
+  <data name="Language_Retry" xml:space="preserve"><value>Prøv at hente igen</value></data>
+  <data name="Language_Continue" xml:space="preserve"><value>Fortsæt</value></data>
+  <data name="Language_StartReading" xml:space="preserve"><value>Begynd at læse</value></data>
+</root>

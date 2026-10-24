@@ -137,8 +137,8 @@ no `internetClientServer`). Where no network is available the Windows voice keep
 
 ## Store listing (Slice 43, Decision 71)
 
-The listing text is drafted in `docs/store-listings/<lang>.md` for the nine app
-languages (`en`, `fa`, `fr`, `es`, `pt`, `zh`, `ar`, `ru`, `ja`). Each file has
+The listing text is drafted in `docs/store-listings/<lang>.md` for the first nine app
+languages (`en`, `fa`, `fr`, `es`, `pt`, `zh`, `ar`, `ru`, `ja`); the five added by Slice 103 are further down. Each file has
 the same three blocks: 7 search terms, a short description and a long
 description. **The title does not change** (Decision 71): it stays "Read The
 Stupid Text". Everything except `en.md` is **machine-drafted and needs a native
@@ -193,6 +193,122 @@ accordingly.
   per language.
 - Google Play: Play Console -> Grow -> Store presence -> Main store listing ->
   Manage translations, then fill the short and full description per language.
+
+### Listing texts for Danish, Finnish, Swedish, Norwegian and Dutch (Slice 103, Decision 107)
+
+Written by Claude from `docs/store-listings/en.md`: the same blocks (7 search terms, short description, long
+description) plus the Google Play download note. **Not pasted into any store yet** (the apps are not public)
+and, like the other non-English texts, they need a native read before submission. The title stays "Read The
+Stupid Text" (Decision 71). Search terms are <= 30 chars each and short descriptions <= 80 chars (checked by
+script when written).
+
+#### Danish (`da`)
+
+Search terms: 1. læs højt, 2. tekst til tale, 3. tts, 4. læs tekst højt, 5. læs markeret tekst op, 6. pdf oplæser, 7. naturlige stemmer offline
+
+Short description: Læs al tekst højt med naturlige stemmer, der virker offline, i 0,5-2x fart.
+
+Long description:
+
+Read The Stupid Text læser al tekst højt, så du kan lytte i stedet for at stirre på en skærm.
+
+På Windows ligger den i systembakken. Markér tekst i næsten alle apps, eller kopiér den, og den bliver læst højt med det samme. Tryk på Ctrl+Win+R for at læse det, du har kopieret. (Terminaler melder ikke markeringer, så kopiér teksten dér.)
+
+På Android kan du indsætte eller skrive tekst, åbne en .txt-, .pdf- eller .docx-fil eller scanne en side med kameraet og derefter trykke på afspil.
+
+- Naturlige stemmer, der kører på din enhed
+- Læsehastighed fra 0,5x til 2x
+- Virker offline (Android henter sin stemme én gang ved første start). Din tekst, dine filer og dine scanninger forlader aldrig din enhed
+- Ingen konto og ingen analyse
+
+Google Play, download-note (føjes til den fulde beskrivelse): Første gang du starter appen på Android, henter den en stemmepakke på ca. 145 MB, så den skal bruge internetforbindelse én gang (Wi-Fi anbefales). Indtil overførslen er færdig, læser appen med telefonens indbyggede stemme. Kun stemmepakken hentes. Din tekst, dine filer og dine scanninger bliver på din enhed, og når stemmen er installeret, bruger appen ikke netværket.
+
+#### Finnish (`fi`)
+
+Search terms: 1. lue ääneen, 2. tekstistä puheeksi, 3. tts, 4. lue teksti ääneen, 5. valitun tekstin luku, 6. pdf ääneen, 7. luonnolliset äänet offline
+
+Short description: Lue teksti ääneen luonnollisilla, offline toimivilla äänillä nopeudella 0,5-2x.
+
+Long description:
+
+Read The Stupid Text lukee minkä tahansa tekstin ääneen, joten voit kuunnella näytön tuijottamisen sijaan.
+
+Windowsissa sovellus on ilmaisinalueella. Valitse teksti lähes missä tahansa sovelluksessa tai kopioi se, niin se luetaan heti ääneen. Paina Ctrl+Win+R, niin kopioimasi teksti luetaan. (Päätteet eivät ilmoita valintoja, joten kopioi teksti sinne.)
+
+Androidissa voit liittää tai kirjoittaa tekstin, avata .txt-, .pdf- tai .docx-tiedoston tai skannata sivun kameralla ja painaa sitten toistopainiketta.
+
+- Luonnollisen kuuloiset äänet, jotka toimivat laitteessasi
+- Lukunopeus 0,5x-2x
+- Toimii offline-tilassa (Android lataa äänensä kerran ensimmäisellä käynnistyskerralla). Tekstisi, tiedostosi ja skannauksesi eivät koskaan poistu laitteestasi
+- Ei tiliä eikä analytiikkaa
+
+Google Play, latausmerkintä (lisätään koko kuvaukseen): Kun käynnistät sovelluksen Androidissa ensimmäisen kerran, se lataa noin 145 Mt:n äänipaketin, joten se tarvitsee internetyhteyden kerran (Wi-Fi suositeltava). Kunnes lataus on valmis, sovellus lukee puhelimen oman äänen avulla. Vain äänipaketti ladataan. Tekstisi, tiedostosi ja skannauksesi pysyvät laitteessasi, eikä sovellus käytä verkkoa, kun ääni on asennettu.
+
+#### Swedish (`sv`)
+
+Search terms: 1. läs upp, 2. text till tal, 3. tts, 4. läs text högt, 5. läs upp markerad text, 6. pdf uppläsare, 7. naturliga röster offline
+
+Short description: Läs upp all text med naturliga röster som fungerar offline, i 0,5x-2x hastighet.
+
+Long description:
+
+Read The Stupid Text läser upp all text högt, så att du kan lyssna i stället för att stirra på en skärm.
+
+I Windows ligger appen i systemfältet. Markera text i nästan vilken app som helst, eller kopiera den, så läses den upp direkt. Tryck på Ctrl+Win+R för att läsa upp det du har kopierat. (Terminaler rapporterar inte markeringar, så kopiera texten där.)
+
+I Android kan du klistra in eller skriva text, öppna en .txt-, .pdf- eller .docx-fil eller skanna en sida med kameran och sedan trycka på spela upp.
+
+- Naturligt klingande röster som körs på din enhet
+- Läshastighet från 0,5x till 2x
+- Fungerar offline (Android hämtar sin röst en gång vid första start). Din text, dina filer och dina skanningar lämnar aldrig din enhet
+- Inget konto och ingen analys
+
+Google Play, nedladdningsnotis (läggs till i den fullständiga beskrivningen): Första gången du startar appen i Android hämtar den ett röstpaket på cirka 145 MB, så den behöver internetanslutning en gång (Wi-Fi rekommenderas). Tills nedladdningen är klar läser appen med telefonens inbyggda röst. Bara röstpaketet hämtas. Din text, dina filer och dina skanningar stannar på din enhet, och när rösten är installerad använder appen inte nätverket.
+
+#### Norwegian Bokmål (`nb`)
+
+Search terms: 1. les høyt, 2. tekst til tale, 3. tts, 4. les tekst høyt, 5. les opp valgt tekst, 6. pdf opplesing, 7. naturlige stemmer offline
+
+Short description: Les tekst høyt med naturlige stemmer som fungerer offline, i 0,5-2x hastighet.
+
+Long description:
+
+Read The Stupid Text leser all tekst høyt, slik at du kan lytte i stedet for å stirre på en skjerm.
+
+På Windows ligger appen i systemstatusfeltet. Merk tekst i nesten hvilken som helst app, eller kopier den, så blir den lest høyt med en gang. Trykk Ctrl+Win+R for å lese det du har kopiert. (Terminaler melder ikke fra om markeringer, så kopier teksten der.)
+
+På Android kan du lime inn eller skrive tekst, åpne en .txt-, .pdf- eller .docx-fil eller skanne en side med kameraet, og deretter trykke på spill av.
+
+- Naturlige stemmer som kjører på enheten din
+- Lesehastighet fra 0,5x til 2x
+- Fungerer offline (Android laster ned stemmen én gang ved første oppstart). Teksten, filene og skanningene dine forlater aldri enheten
+- Ingen konto og ingen analyse
+
+Google Play, nedlastingsmerknad (legges til i den fulle beskrivelsen): Første gang du starter appen på Android, laster den ned en stemmepakke på rundt 145 MB, så den trenger internettforbindelse én gang (Wi-Fi anbefales). Til nedlastingen er ferdig, leser appen med telefonens innebygde stemme. Bare stemmepakken lastes ned. Teksten, filene og skanningene dine blir på enheten din, og når stemmen er installert, bruker ikke appen nettverket.
+
+Norwegian reads with the phone's own voice until Slice 104 ships its pack, so drop the "natural voices" claims
+(short description, search term 7, first bullet) from the Norwegian text if the listing goes live first.
+
+#### Dutch (`nl`)
+
+Search terms: 1. voorlezen, 2. tekst naar spraak, 3. tts, 4. tekst hardop lezen, 5. geselecteerde tekst lezen, 6. pdf voorlezen, 7. natuurlijke stemmen offline
+
+Short description: Lees tekst voor met natuurlijke stemmen die offline werken, op 0,5-2x snelheid.
+
+Long description:
+
+Read The Stupid Text leest elke tekst hardop voor, zodat je kunt luisteren in plaats van naar een scherm te staren.
+
+Op Windows staat de app in het systeemvak. Selecteer tekst in bijna elke app, of kopieer die, en ze wordt meteen voorgelezen. Druk op Ctrl+Win+R om voor te lezen wat je hebt gekopieerd. (Terminals melden geen selecties, dus kopieer de tekst daar.)
+
+Op Android kun je tekst plakken of typen, een .txt-, .pdf- of .docx-bestand openen of een pagina met de camera scannen en daarna op afspelen tikken.
+
+- Natuurlijk klinkende stemmen die op je apparaat draaien
+- Leessnelheid van 0,5x tot 2x
+- Werkt offline (Android downloadt zijn stem één keer bij de eerste start). Je tekst, bestanden en scans verlaten je apparaat nooit
+- Geen account en geen analyse
+
+Google Play, downloadnotitie (toevoegen aan de volledige beschrijving): De eerste keer dat je de app op Android start, downloadt hij een stempakket van ongeveer 145 MB, dus er is één keer een internetverbinding nodig (wifi aanbevolen). Tot de download klaar is, leest de app voor met de ingebouwde stem van je telefoon. Alleen het stempakket wordt gedownload. Je tekst, bestanden en scans blijven op je apparaat en zodra de stem is geïnstalleerd, gebruikt de app het netwerk niet.
 
 ## Runtime deployment (.NET self-contained)
 
@@ -567,7 +683,7 @@ build cannot ship).
 
 **Batch 9 features on iOS (Slice 55).** The neural voice (sherpa-onnx 1.13.8, Supertonic, Piper
 and Melo packs with the sentence head start), language and OCR packs, PaddleOCR with Apple
-Vision as the fallback, the nine localized UI languages (right-to-left for Farsi and Arabic) and
+Vision as the fallback, the fourteen localized UI languages (right-to-left for Farsi and Arabic) and
 localized camera and photo permission prompts (`InfoPlist.strings`) are on iOS. Packs download over
 plain HTTPS from GitHub Releases, so no App Transport Security exception and no entitlement is
 needed (Decision 60); the packs folder is excluded from iCloud backup.

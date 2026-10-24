@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+    <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>
+  <data name="Cast_UnknownGender" xml:space="preserve"><value>?</value></data>
+  <data name="Common_Ok" xml:space="preserve"><value>OK</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>Annuleren</value></data>
+  <data name="PackStatus_Resolving" xml:space="preserve"><value>Zoeken naar natuurlijke stemmen…</value></data>
+  <data name="PackStatus_Downloading" xml:space="preserve"><value>Natuurlijke stemmen worden gedownload… {0}</value></data>
+  <data name="PackStatus_Offline" xml:space="preserve"><value>Geen verbinding. Voorlezen met de stem van de telefoon. Tik om de download van de stem opnieuw te proberen.</value></data>
+  <data name="PackStatus_HashMismatch" xml:space="preserve"><value>De download van de stem is beschadigd. Voorlezen met de stem van de telefoon. Tik om het opnieuw te proberen.</value></data>
+  <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Het pakket met natuurlijke stemmen is onbruikbaar. Voorlezen met de stem van de telefoon.</value></data>
+  <data name="PackStatus_Failed" xml:space="preserve"><value>Natuurlijke stemmen konden niet worden gedownload. Voorlezen met de stem van de telefoon. Tik om het opnieuw te proberen.</value></data>
+  <data name="PackStatus_Unavailable" xml:space="preserve"><value>Er is nog geen natuurlijke stem voor jouw taal. Voorlezen met de stem van de telefoon.</value></data>
+  <data name="Common_Back" xml:space="preserve"><value>Terug</value></data>
+  <data name="Common_Save" xml:space="preserve"><value>Opslaan</value></data>
+  <data name="Common_Done" xml:space="preserve"><value>Klaar</value></data>
+  <data name="Common_Delete" xml:space="preserve"><value>Verwijderen</value></data>
+  <data name="Common_Keep" xml:space="preserve"><value>Bewaren</value></data>
+  <data name="Common_Edit" xml:space="preserve"><value>Bewerken</value></data>
+  <data name="Gallery_Title" xml:space="preserve"><value>Mijn verhalen</value></data>
+  <data name="Gallery_ForGrownUps" xml:space="preserve"><value>Voor volwassenen</value></data>
+  <data name="Gallery_OpensGateHint" xml:space="preserve"><value>Opent het slot voor volwassenen</value></data>
+  <data name="Gallery_Characters_One" xml:space="preserve"><value>{0} personage</value></data>
+  <data name="Gallery_Characters_Other" xml:space="preserve"><value>{0} personages</value></data>
+  <data name="Gallery_PagesSummary" xml:space="preserve"><value>{0} · volgorde wijzigen, toevoegen, verwijderen</value></data>
+  <data name="Gallery_DeleteTitle" xml:space="preserve"><value>“{0}” verwijderen?</value></data>
+  <data name="Gallery_PagesRead_One" xml:space="preserve"><value>{0} pagina gelezen</value></data>
+  <data name="Gallery_PagesRead_Other" xml:space="preserve"><value>{0} pagina’s gelezen</value></data>
+  <data name="Gallery_CharactersFound_One" xml:space="preserve"><value>{0} personage gevonden</value></data>
+  <data name="Gallery_CharactersFound_Other" xml:space="preserve"><value>{0} personages gevonden</value></data>
+  <data name="Delete_Body" xml:space="preserve"><value>De pagina’s, plaatjes en stemmen worden van deze telefoon verwijderd.</value></data>
+  <data name="Delete_FailedTitle" xml:space="preserve"><value>Dat verhaal kon niet worden verwijderd</value></data>
+  <data name="Delete_FailedBody" xml:space="preserve"><value>Er gebruikt nog iets de bestanden ervan. Probeer het over een moment opnieuw.</value></data>
+  <data name="Manage_EditStory" xml:space="preserve"><value>Verhaal bewerken</value></data>
+  <data name="Gallery_EditStory" xml:space="preserve"><value>{0} bewerken</value></data>
+  <data name="Gallery_CastStory" xml:space="preserve"><value>Rolverdeling van {0}</value></data>
+  <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>{0} verwijderen</value></data>
+  <data name="Gallery_ExportStory" xml:space="preserve"><value>Verhaal exporteren</value></data>
+  <data name="Gallery_CastButton" xml:space="preserve"><value>Rollen</value></data>
+  <data name="Store_Title" xml:space="preserve"><value>Gratis verhalen</value></data>
+  <data name="Store_Subtitle" xml:space="preserve"><value>Uitgezocht en ingesproken voor Dino</value></data>
+  <data name="Store_Get" xml:space="preserve"><value>Ophalen</value></data>
+  <data name="Store_Downloaded" xml:space="preserve"><value>Opgehaald</value></data>
+  <data name="Store_Length" xml:space="preserve"><value>{0} pagina’s · {1} min</value></data>
+  <data name="Store_Footer" xml:space="preserve"><value>Gratis en zonder account. Er wordt niets over jou of je kind verstuurd.</value></data>
+  <data name="Store_OfflineTitle" xml:space="preserve"><value>Je bent offline</value></data>
+  <data name="Store_OfflineBody" xml:space="preserve"><value>De gratis verhalen hebben internet nodig. Verhalen die al op de plank staan, kun je nog steeds zonder internet lezen.</value></data>
+  <data name="Store_TryAgain" xml:space="preserve"><value>Opnieuw proberen</value></data>
+  <data name="Store_EmptyTitle" xml:space="preserve"><value>Nog geen nieuwe verhalen</value></data>
+  <data name="Store_EmptyBody" xml:space="preserve"><value>Er komen af en toe nieuwe bij. Kom later nog eens terug.</value></data>
+  <data name="Store_BackToStories" xml:space="preserve"><value>Terug naar mijn verhalen</value></data>
+  <data name="Store_GetStory" xml:space="preserve"><value>{0} ophalen</value></data>
+  <data name="Backup_Title" xml:space="preserve"><value>Back-up</value></data>
+  <data name="Backup_SaveTitle" xml:space="preserve"><value>Een back-up bewaren</value></data>
+  <data name="Backup_SaveBody_One" xml:space="preserve"><value>Je verhaal in één bestand, met de pagina’s, plaatjes en aangepaste rolverdeling. Bewaar het in Drive of Bestanden, of stuur het naar jezelf.</value></data>
+  <data name="Backup_SaveBody_Other" xml:space="preserve"><value>Alle {0} verhalen in één bestand, met hun pagina’s, plaatjes en aangepaste rolverdelingen. Bewaar het in Drive of Bestanden, of stuur het naar jezelf.</value></data>
+  <data name="Backup_SaveButton" xml:space="preserve"><value>Een back-up bewaren</value></data>
+  <data name="Backup_RestoreTitle" xml:space="preserve"><value>Terugzetten vanuit een back-up</value></data>
+  <data name="Backup_RestoreBody" xml:space="preserve"><value>Voegt de verhalen toe die deze telefoon nog niet heeft. Verhalen die er al zijn, blijven precies zoals ze zijn.</value></data>
+  <data name="Backup_RestoreButton" xml:space="preserve"><value>Kies een back-upbestand</value></data>
+  <data name="Backup_Footer" xml:space="preserve"><value>Het bestand gaat alleen waarheen jij het stuurt. Dino bewaart online geen kopie.</value></data>
+  <data name="Backup_Restored_One" xml:space="preserve"><value>{0} verhaal teruggezet</value></data>
+  <data name="Backup_Restored_Other" xml:space="preserve"><value>{0} verhalen teruggezet</value></data>
+  <data name="Backup_Added" xml:space="preserve"><value>Toegevoegd aan de plank</value></data>
+  <data name="Backup_Skipped" xml:space="preserve"><value>Al aanwezig, overgeslagen</value></data>
+  <data name="Backup_Damaged" xml:space="preserve"><value>Kon niet worden gelezen</value></data>
+  <data name="Backup_SeeStories" xml:space="preserve"><value>Mijn verhalen bekijken</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>Deze back-up komt uit een nieuwere Dino Book Reader. Werk de app bij en probeer het dan opnieuw.</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>Dat bestand is geen back-up van Dino Book Reader.</value></data>
+  <data name="Backup_Failed" xml:space="preserve"><value>De back-up is niet gelukt. Probeer het opnieuw.</value></data>
+  <data name="Backup_TooLarge" xml:space="preserve"><value>Te groot om terug te zetten</value></data>
+  <data name="Backup_SaveSkipped" xml:space="preserve"><value>{0} kon niet aan de back-up worden toegevoegd.</value></data>
+  <data name="FirstRun_Hello" xml:space="preserve"><value>Hallo! In welke taal lezen we?</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Dino downloadt er een stem voor. Je kunt de taal later wijzigen achter het slot.</value></data>
+  <data name="FirstRun_Continue" xml:space="preserve"><value>Doorgaan</value></data>
+  <data name="FirstRun_GettingReady" xml:space="preserve"><value>Dino’s stem wordt klaargemaakt</value></data>
+  <data name="FirstRun_Once" xml:space="preserve"><value>{0} stemmen · dit gebeurt maar één keer</value></data>
+  <data name="FirstRun_Downloading" xml:space="preserve"><value>Downloaden…</value></data>
+  <data name="FirstRun_Waiting" xml:space="preserve"><value>Wachten op de plank</value></data>
+  <data name="FirstRun_PickAnother" xml:space="preserve"><value>Kies een andere taal</value></data>
+  <data name="FirstRun_Ready" xml:space="preserve"><value>Klaar om te lezen!</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Elk personage krijgt een eigen stem. Er staan drie verhalen op de plank.</value></data>
+  <data name="FirstRun_HearHello" xml:space="preserve"><value>Hoor Dino hallo zeggen</value></data>
+  <data name="FirstRun_HelloLine" xml:space="preserve"><value>Hallo! Ik ben Dino. Laten we samen een verhaal lezen.</value></data>
+  <data name="FirstRun_SetUp" xml:space="preserve"><value>De verhalen instellen</value></data>
+  <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>Doorgaan met de telefoonstem</value></data>
+  <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Klaar voor mijn kind</value></data>
+  <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Volwassenenmodus</value></data>
+  <data name="Language_Title" xml:space="preserve"><value>Taal</value></data>
+  <data name="Language_Subtitle" xml:space="preserve"><value>Dino leest en vertaalt in deze taal</value></data>
+  <data name="Language_Ready" xml:space="preserve"><value>Klaar</value></data>
+  <data name="Language_Download" xml:space="preserve"><value>Downloaden</value></data>
+  <data name="Language_Downloading" xml:space="preserve"><value>{0}% downloaden</value></data>
+  <data name="Language_Footer" xml:space="preserve"><value>Een verhaal in een andere taal wordt nog steeds in zijn eigen taal voorgelezen, tenzij Vertalen naar mijn taal voor dat verhaal aan staat.</value></data>
+  <data name="Gate_HoldBody" xml:space="preserve"><value>Houd 3 seconden ingedrukt.</value></data>
+  <data name="Gate_HoldDescription" xml:space="preserve"><value>Houd 3 seconden ingedrukt</value></data>
+  <data name="Gate_KeepHolding" xml:space="preserve"><value>Blijf vasthouden…</value></data>
+  <data name="Gate_Continue" xml:space="preserve"><value>Door naar de vraag</value></data>
+  <data name="Gate_BackToStory" xml:space="preserve"><value>Terug naar het verhaal</value></data>
+  <data name="Gate_WhatIs" xml:space="preserve"><value>Hoeveel is</value></data>
+  <data name="Gate_Backspace" xml:space="preserve"><value>Wissen</value></data>
+  <data name="Gate_SumQuestion" xml:space="preserve"><value>Hoeveel is {0} plus {1}?</value></data>
+  <data name="Story_Add" xml:space="preserve"><value>Een verhaal toevoegen</value></data>
+  <data name="Story_Title" xml:space="preserve"><value>Titel</value></data>
+  <data name="Story_Language" xml:space="preserve"><value>Taal van het verhaal</value></data>
+  <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · herkend</value></data>
+  <data name="Story_Translate" xml:space="preserve"><value>Vertalen naar mijn taal</value></data>
+  <data name="Add_Scan" xml:space="preserve"><value>Pagina’s scannen</value></data>
+  <data name="Add_ScanSub" xml:space="preserve"><value>Bewaart de foto’s van de pagina’s</value></data>
+  <data name="Add_Photos" xml:space="preserve"><value>Foto’s</value></data>
+  <data name="Add_PhotosSub" xml:space="preserve"><value>Kies foto’s van pagina’s</value></data>
+  <data name="Add_File" xml:space="preserve"><value>PDF of bestand</value></data>
+  <data name="Add_Type" xml:space="preserve"><value>Typen of plakken</value></data>
+  <data name="Add_TypeSub" xml:space="preserve"><value>Alleen tekst</value></data>
+  <data name="Add_Placeholder" xml:space="preserve"><value>Typ of plak een verhaal</value></data>
+  <data name="Add_CheckCast" xml:space="preserve"><value>Rolverdeling controleren</value></data>
+  <data name="Add_Save" xml:space="preserve"><value>Verhaal opslaan</value></data>
+  <data name="Add_PickerTitle" xml:space="preserve"><value>Kies een .txt-, .pdf- of .docx-bestand</value></data>
+  <data name="Add_PermissionTitle" xml:space="preserve"><value>Toestemming nodig</value></data>
+  <data name="Add_PermissionBody" xml:space="preserve"><value>Geef toegang tot bestanden om een document te lezen.</value></data>
+  <data name="Add_FileTooLargeTitle" xml:space="preserve"><value>Bestand te groot</value></data>
+  <data name="Add_FileTooLargeBody" xml:space="preserve"><value>Dat bestand heeft {0} pagina’s; de limiet is {1}.</value></data>
+  <data name="Add_ReadFailedTitle" xml:space="preserve"><value>Dat bestand kon niet worden gelezen</value></data>
+  <data name="Add_ReadFailedBody" xml:space="preserve"><value>Het bestand is mogelijk beschadigd of heeft een niet-ondersteunde indeling.</value></data>
+  <data name="Edit_Cover" xml:space="preserve"><value>Omslag</value></data>
+  <data name="Edit_CoverFirstPage" xml:space="preserve"><value>Eerste pagina</value></data>
+  <data name="Edit_CoverColour" xml:space="preserve"><value>Kleur</value></data>
+  <data name="Edit_CoverPhoto" xml:space="preserve"><value>Foto</value></data>
+  <data name="Edit_Pages" xml:space="preserve"><value>Pagina’s</value></data>
+  <data name="Wizard_Next" xml:space="preserve"><value>Volgende</value></data>
+  <data name="Wizard_StepText" xml:space="preserve"><value>Tekst</value></data>
+  <data name="Wizard_AddPages" xml:space="preserve"><value>Pagina’s toevoegen</value></data>
+  <data name="Wizard_DragHint" xml:space="preserve"><value>Houd een pagina vast en sleep hem om hem te verplaatsen</value></data>
+  <data name="Wizard_EmptyBody" xml:space="preserve"><value>Voeg de pagina’s van je verhaal toe: scan ze, kies foto’s, voeg een PDF of bestand toe, of typ de tekst. Zet de pagina’s daarna in de juiste volgorde.</value></data>
+  <data name="Wizard_PageN" xml:space="preserve"><value>Pagina {0}</value></data>
+  <data name="Wizard_PageMenu" xml:space="preserve"><value>Paginaopties</value></data>
+  <data name="Wizard_MenuRotate" xml:space="preserve"><value>Draaien</value></data>
+  <data name="Wizard_MenuCrop" xml:space="preserve"><value>Draaien of bijsnijden</value></data>
+  <data name="Wizard_MenuEditText" xml:space="preserve"><value>Tekst bewerken</value></data>
+  <data name="Wizard_NoTextShort" xml:space="preserve"><value>Geen tekst</value></data>
+  <data name="Wizard_NoText" xml:space="preserve"><value>Geen tekst gevonden op deze pagina</value></data>
+  <data name="Wizard_Reading" xml:space="preserve"><value>Pagina {0} van {1} wordt gelezen</value></data>
+  <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>Sommige pagina’s zijn niet gelezen</value></data>
+  <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>{0} pagina’s konden niet worden gelezen. Ze worden bewaard als plaatjes zonder tekst.</value></data>
+  <data name="Wizard_CoverHint" xml:space="preserve"><value>Kies een pagina, een foto of een kleur voor het omslag.</value></data>
+  <data name="Wizard_NeedTextTitle" xml:space="preserve"><value>Nog niets om voor te lezen</value></data>
+  <data name="Wizard_NeedTextBody" xml:space="preserve"><value>Voeg tekst toe aan minstens één pagina en sla dan op.</value></data>
+  <data name="Wizard_SaveFailedTitle" xml:space="preserve"><value>Het verhaal kon niet worden opgeslagen</value></data>
+  <data name="Wizard_SaveFailedBody" xml:space="preserve"><value>Er is niets gewijzigd. Probeer het over een moment opnieuw.</value></data>
+  <data name="Regions_Helper" xml:space="preserve"><value>Tik op een vak om het te lezen of weg te laten.</value></data>
+  <data name="Regions_ReplaceTitle" xml:space="preserve"><value>Je bewerkte tekst vervangen door de geselecteerde gebieden?</value></data>
+  <data name="Regions_ReplaceBody" xml:space="preserve"><value>Wat je op deze pagina hebt getypt, gaat verloren.</value></data>
+  <data name="Regions_Replace" xml:space="preserve"><value>Vervangen</value></data>
+  <data name="Regions_Keep" xml:space="preserve"><value>Bewaren</value></data>
+  <data name="Regions_BoxRead" xml:space="preserve"><value>Tekstvak, wordt gelezen</value></data>
+  <data name="Regions_BoxLeftOut" xml:space="preserve"><value>Tekstvak, weggelaten</value></data>
+  <data name="Editor_Title" xml:space="preserve"><value>Draaien en bijsnijden</value></data>
+  <data name="Editor_RotateLeft" xml:space="preserve"><value>Naar links draaien</value></data>
+  <data name="Editor_RotateRight" xml:space="preserve"><value>Naar rechts draaien</value></data>
+  <data name="Editor_ResetCrop" xml:space="preserve"><value>Bijsnijden herstellen</value></data>
+  <data name="Reading_TextMode" xml:space="preserve"><value>Tekstmodus</value></data>
+  <data name="Reading_PictureMode" xml:space="preserve"><value>Plaatjesmodus</value></data>
+  <data name="Reading_Play" xml:space="preserve"><value>Afspelen</value></data>
+  <data name="Reading_Pause" xml:space="preserve"><value>Pauzeren</value></data>
+  <data name="Reading_Previous" xml:space="preserve"><value>Vorige zin</value></data>
+  <data name="Reading_Next" xml:space="preserve"><value>Volgende zin</value></data>
+  <data name="Reading_Loading" xml:space="preserve"><value>Laden…</value></data>
+  <data name="Reading_CouldntRead" xml:space="preserve"><value>Die tekst kon niet worden gelezen</value></data>
+  <data name="Reading_ReadFailed" xml:space="preserve"><value>Er ging iets mis tijdens het lezen.</value></data>
+  <data name="Reading_LayoutFailed" xml:space="preserve"><value>Dit verhaal kon niet worden weergegeven. Draai het scherm of wissel van modus om het opnieuw te proberen.</value></data>
+  <data name="Reading_PageN" xml:space="preserve"><value>Pagina {0} wordt gelezen</value></data>
+  <data name="Cast_Title" xml:space="preserve"><value>Wie praat er</value></data>
+  <data name="Cast_Narrator" xml:space="preserve"><value>Verteller</value></data>
+  <data name="Cast_Main" xml:space="preserve"><value>HOOFDROL</value></data>
+  <data name="Cast_Edited" xml:space="preserve"><value>AANGEPAST</value></data>
+  <data name="Cast_SharedVoice" xml:space="preserve"><value>Gedeelde stem</value></data>
+  <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>Onbekende spreker</value></data>
+  <data name="Cast_MergeButton" xml:space="preserve"><value>Twee personages samenvoegen</value></data>
+  <data name="Cast_MergeTitle" xml:space="preserve"><value>Personages samenvoegen</value></data>
+  <data name="Cast_MergeBody" xml:space="preserve"><value>Kies de twee namen die hetzelfde personage zijn. Hun tekst komt samen onder één naam en één stem.</value></data>
+  <data name="Cast_KeepName" xml:space="preserve"><value>Bewaar de naam</value></data>
+  <data name="Cast_VoiceTitle" xml:space="preserve"><value>Stem</value></data>
+  <data name="Cast_PreviewLine" xml:space="preserve"><value>Hallo! Zo klink ik als ik jouw verhaal voorlees.</value></data>
+  <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>Die wijziging kon niet worden opgeslagen</value></data>
+  <data name="Cast_SaveFailedBody" xml:space="preserve"><value>De rolverdeling is niet opgeslagen. Probeer het over een moment opnieuw.</value></data>
+  <data name="Cast_PreviewFailedBody" xml:space="preserve"><value>De stem kon nu niet worden afgespeeld.</value></data>
+  <data name="Cast_LoadFailedTitle" xml:space="preserve"><value>De rolverdeling kon niet worden geopend</value></data>
+  <data name="Cast_LoadFailedBody" xml:space="preserve"><value>De rolverdeling kon voor dit verhaal niet worden bepaald. Probeer het over een moment opnieuw.</value></data>
+  <data name="Cast_Boy" xml:space="preserve"><value>Jongen</value></data>
+  <data name="Cast_Girl" xml:space="preserve"><value>Meisje</value></data>
+  <data name="Cast_Words_One" xml:space="preserve"><value>{0} woord</value></data>
+  <data name="Cast_Words_Other" xml:space="preserve"><value>{0} woorden</value></data>
+  <data name="Cast_UnknownLines_One" xml:space="preserve"><value>{0} regel</value></data>
+  <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} regels</value></data>
+  <data name="Cast_UsesNarrator" xml:space="preserve"><value>gebruikt de stem van de verteller</value></data>
+  <data name="Cast_Hear" xml:space="preserve"><value>Hoor {0}</value></data>
+  <data name="Cast_NoBoyVoice" xml:space="preserve"><value>Dit stempakket heeft geen jongensstem, dus dit personage houdt de stem die het had.</value></data>
+  <data name="Cast_NoGirlVoice" xml:space="preserve"><value>Dit stempakket heeft geen meisjesstem, dus dit personage houdt de stem die het had.</value></data>
+  <data name="Cast_VoiceChanged_One" xml:space="preserve"><value>De stem van {0} is veranderd omdat de verteller nu de stem heeft die dit personage had gekregen.</value></data>
+  <data name="Cast_VoiceChanged_Other" xml:space="preserve"><value>{0} hebben een andere stem gekregen omdat de verteller nu de stem heeft die ze hadden gekregen.</value></data>
+  <data name="Cast_MergeInto" xml:space="preserve"><value>Samenvoegen met {0}</value></data>
+  <data name="Cast_SharedNote" xml:space="preserve"><value>Dit stempakket heeft maar {0} natuurlijke stemmen, dus sommige personages delen een stem. De stem van de verteller wordt nooit aan een personage gegeven.</value></data>
+</root>

@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+    <data name="ActivityTitle.Text" xml:space="preserve">
+    <value>Activiteitenlogboek</value>
+  </data>
+  <data name="ActivityOpenLogs.Content" xml:space="preserve">
+    <value>Logboeken openen</value>
+  </data>
+  <data name="ActivityOpenLogs.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>De map met de dagelijkse logbestanden openen</value>
+  </data>
+  <data name="ActivityClear.Content" xml:space="preserve">
+    <value>Wissen</value>
+  </data>
+  <data name="ColTime.Text" xml:space="preserve">
+    <value>Tijd</value>
+  </data>
+  <data name="ColTrigger.Text" xml:space="preserve">
+    <value>Trigger</value>
+  </data>
+  <data name="ColState.Text" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="ColReason.Text" xml:space="preserve">
+    <value>Reden</value>
+  </data>
+  <data name="ColFirstAudio.Text" xml:space="preserve">
+    <value>Eerste audio</value>
+  </data>
+  <data name="ColSynth.Text" xml:space="preserve">
+    <value>Synthese</value>
+  </data>
+  <data name="ColSource.Text" xml:space="preserve">
+    <value>Bron</value>
+  </data>
+  <data name="ColText.Text" xml:space="preserve">
+    <value>Tekst</value>
+  </data>
+  <data name="PanelEyebrow.Text" xml:space="preserve">
+    <value>NU AAN HET VOORLEZEN</value>
+  </data>
+  <data name="CloseButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Sluiten</value>
+  </data>
+  <data name="SkipBackButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>10 s terug</value>
+  </data>
+  <data name="SkipForwardButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>10 s vooruit</value>
+  </data>
+  <data name="SpeedPillToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Afspeelsnelheid — tik om aan te passen · 0,5×–2×</value>
+  </data>
+  <data name="VoiceLabel.Text" xml:space="preserve">
+    <value>Stem</value>
+  </data>
+  <data name="LanguageLabel.Text" xml:space="preserve">
+    <value>Taal</value>
+  </data>
+  <data name="UploadFileButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Een bestand lezen — opent .txt, .pdf of .docx</value>
+  </data>
+  <data name="UploadFileLabel.Text" xml:space="preserve">
+    <value>Een bestand lezen</value>
+  </data>
+  <data name="ActivityLogButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Activiteitenlogboek — geschiedenis, timing, logboekmap openen</value>
+  </data>
+  <data name="ActivityLogLabel.Text" xml:space="preserve">
+    <value>Activiteitenlogboek</value>
+  </data>
+  <data name="ControlsLabel.Text" xml:space="preserve">
+    <value>BEDIENING</value>
+  </data>
+  <data name="HotkeyLabel.Text" xml:space="preserve">
+    <value>Sneltoets als alternatief</value>
+  </data>
+  <data name="TranslateSourceLabel.Text" xml:space="preserve">
+    <value>Taal van de tekst</value>
+  </data>
+  <data name="ReadingZoomOut.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Kleinere tekst</value>
+  </data>
+  <data name="ReadingZoomIn.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Grotere tekst</value>
+  </data>
+  <data name="LanguageChooseTitle.Text" xml:space="preserve">
+    <value>Kies je taal</value>
+  </data>
+  <data name="LanguageRetry.Content" xml:space="preserve">
+    <value>Opnieuw proberen</value>
+  </data>
+  <data name="LanguageClose.Content" xml:space="preserve">
+    <value>Sluiten</value>
+  </data>
+  <data name="Status_Ready" xml:space="preserve">
+    <value>Klaar</value>
+  </data>
+  <data name="Status_Paused" xml:space="preserve">
+    <value>Gepauzeerd</value>
+  </data>
+  <data name="Status_ReadingClipboard" xml:space="preserve">
+    <value>Klembord wordt gelezen…</value>
+  </data>
+  <data name="Status_ReadingSelection" xml:space="preserve">
+    <value>Selectie wordt gelezen…</value>
+  </data>
+  <data name="Status_ReadingSelectionFrom" xml:space="preserve">
+    <value>Selectie uit {0} wordt gelezen…</value>
+  </data>
+  <data name="Toggle_On" xml:space="preserve">
+    <value>aan</value>
+  </data>
+  <data name="Toggle_Off" xml:space="preserve">
+    <value>uit</value>
+  </data>
+  <data name="Tip_AutoReadSelection" xml:space="preserve">
+    <value>Selectie automatisch voorlezen · {0} — Leest voor terwijl je selecteert</value>
+  </data>
+  <data name="Tip_AutoReadCopy" xml:space="preserve">
+    <value>Automatisch voorlezen bij kopiëren · {0} — Leest voor wanneer je kopieert</value>
+  </data>
+  <data name="Tip_Startup" xml:space="preserve">
+    <value>Starten bij opstarten · {0} — Start met Windows, in het systeemvak</value>
+  </data>
+  <data name="Tip_ReadingTextBox" xml:space="preserve">
+    <value>Leesvenster · {0} — Toont de tekst die wordt voorgelezen</value>
+  </data>
+  <data name="Tip_Translate" xml:space="preserve">
+    <value>Vertalen naar mijn taal · {0} — Vertaalt wat wordt voorgelezen naar jouw taal</value>
+  </data>
+  <data name="Menu_Play" xml:space="preserve">
+    <value>Afspelen</value>
+  </data>
+  <data name="Menu_Pause" xml:space="preserve">
+    <value>Pauzeren</value>
+  </data>
+  <data name="Menu_Quit" xml:space="preserve">
+    <value>Afsluiten</value>
+  </data>
+  <data name="Menu_AutoReadSelection" xml:space="preserve">
+    <value>Automatisch voorlezen bij selectie</value>
+  </data>
+  <data name="Menu_AutoReadCopy" xml:space="preserve">
+    <value>Automatisch voorlezen bij kopiëren</value>
+  </data>
+  <data name="Menu_Startup" xml:space="preserve">
+    <value>Starten bij opstarten</value>
+  </data>
+  <data name="Menu_Voice" xml:space="preserve">
+    <value>Stem</value>
+  </data>
+  <data name="Menu_ActivityLog" xml:space="preserve">
+    <value>Activiteitenlogboek tonen</value>
+  </data>
+  <data name="Menu_ReadFile" xml:space="preserve">
+    <value>Bestand lezen…</value>
+  </data>
+  <data name="Menu_VoiceLanguage" xml:space="preserve">
+    <value>Stemtaal…</value>
+  </data>
+  <data name="Menu_Translate" xml:space="preserve">
+    <value>Vertalen naar mijn taal</value>
+  </data>
+  <data name="Tray_Tooltip" xml:space="preserve">
+    <value>{0} — leest voor</value>
+  </data>
+  <data name="Pack_WindowsVoice" xml:space="preserve">
+    <value>Windows-stem</value>
+  </data>
+  <data name="Restart_Failed" xml:space="preserve">
+    <value>De taal wordt toegepast wanneer de app de volgende keer start.</value>
+  </data>
+  <data name="StatusText.Text" xml:space="preserve">
+    <value>Klaar</value>
+  </data>
+  <data name="Window_Language" xml:space="preserve">
+    <value>Taal</value>
+  </data>
+  <data name="Window_ActivityLog" xml:space="preserve">
+    <value>Activiteitenlogboek</value>
+  </data>
+  <data name="Window_Reading" xml:space="preserve">
+    <value>Voorlezen</value>
+  </data>
+  <data name="Reading_Nothing" xml:space="preserve">
+    <value>Er wordt nog niets voorgelezen</value>
+  </data>
+  <data name="Reading_Chunk" xml:space="preserve">
+    <value>Voorlezen — deel {0} van {1}</value>
+  </data>
+  <data name="Reading_Translated" xml:space="preserve">
+    <value>(vertaald)</value>
+  </data>
+  <data name="Reading_Page" xml:space="preserve">
+    <value>Pagina {0} van {1}</value>
+  </data>
+  <data name="State_Pending" xml:space="preserve">
+    <value>In wachtrij</value>
+  </data>
+  <data name="State_GeneratingAudio" xml:space="preserve">
+    <value>Audio wordt gemaakt</value>
+  </data>
+  <data name="State_Reading" xml:space="preserve">
+    <value>Wordt voorgelezen</value>
+  </data>
+  <data name="State_Read" xml:space="preserve">
+    <value>Voorgelezen</value>
+  </data>
+  <data name="State_Ignored" xml:space="preserve">
+    <value>Genegeerd</value>
+  </data>
+  <data name="State_Interrupted" xml:space="preserve">
+    <value>Onderbroken</value>
+  </data>
+  <data name="State_Failed" xml:space="preserve">
+    <value>Mislukt</value>
+  </data>
+  <data name="Reason_NewSelection" xml:space="preserve">
+    <value>Nieuwe selectie</value>
+  </data>
+  <data name="Reason_Deselected" xml:space="preserve">
+    <value>Selectie opgeheven</value>
+  </data>
+  <data name="Reason_Error" xml:space="preserve">
+    <value>Fout</value>
+  </data>
+  <data name="Trigger_AutoRead" xml:space="preserve">
+    <value>Automatisch voorlezen</value>
+  </data>
+  <data name="Trigger_Hotkey" xml:space="preserve">
+    <value>Sneltoets</value>
+  </data>
+  <data name="Trigger_Manual" xml:space="preserve">
+    <value>Handmatig</value>
+  </data>
+  <data name="Trigger_Clipboard" xml:space="preserve">
+    <value>Klembord</value>
+  </data>
+  <data name="Trigger_FileUpload" xml:space="preserve">
+    <value>Bestand</value>
+  </data>
+  <data name="Pack_Intro" xml:space="preserve">
+    <value>De natuurlijke stem voor jouw taal wordt één keer gedownload (ongeveer 145 MB, Wi-Fi aanbevolen). Tot die er is, leest de {0} voor. Je tekst verlaat dit apparaat nooit.</value>
+  </data>
+  <data name="Pack_Resolving" xml:space="preserve">
+    <value>Zoeken naar de stem voor jouw taal...</value>
+  </data>
+  <data name="Pack_Downloading" xml:space="preserve">
+    <value>De natuurlijke stem wordt gedownload... {0}%</value>
+  </data>
+  <data name="Pack_Ready" xml:space="preserve">
+    <value>Natuurlijke stem is klaar.</value>
+  </data>
+  <data name="Pack_Unavailable" xml:space="preserve">
+    <value>Er is nog geen natuurlijke stem voor deze taal. De {0} leest voor.</value>
+  </data>
+  <data name="Pack_Offline" xml:space="preserve">
+    <value>Je bent offline. De {0} leest voor en de download start zodra je weer online bent.</value>
+  </data>
+  <data name="Pack_HashMismatch" xml:space="preserve">
+    <value>De download is beschadigd. Probeer het opnieuw om hem nogmaals op te halen.</value>
+  </data>
+  <data name="Pack_InvalidPack" xml:space="preserve">
+    <value>Dit stempakket kan niet worden gebruikt. De {0} leest voor.</value>
+  </data>
+  <data name="Pack_Failed" xml:space="preserve">
+    <value>De download is mislukt. Probeer het opnieuw.</value>
+  </data>
+  <data name="Translate_AutoDetect" xml:space="preserve">
+    <value>Automatisch herkennen</value>
+  </data>
+  <data name="Translate_Note_Default" xml:space="preserve">
+    <value>Automatische vertaling, op dit apparaat. De kwaliteit kan wisselen.</value>
+  </data>
+  <data name="Translate_Note_Translated" xml:space="preserve">
+    <value>Vertaald vanuit: {0}.</value>
+  </data>
+  <data name="Translate_Note_ModelMissing" xml:space="preserve">
+    <value>Het vertaalpakket is nog niet geïnstalleerd, dus de originele tekst is voorgelezen.</value>
+  </data>
+  <data name="Translate_Note_PackDownloading" xml:space="preserve">
+    <value>Het vertaalpakket voor {0} wordt gedownload; deze keer is de originele tekst voorgelezen.</value>
+  </data>
+  <data name="Translate_Note_PackProgress" xml:space="preserve">
+    <value>Het vertaalpakket wordt gedownload: {0}%</value>
+  </data>
+  <data name="Translate_Note_PackReady" xml:space="preserve">
+    <value>Vertaalpakket is klaar.</value>
+  </data>
+  <data name="Translate_Note_PackFailed" xml:space="preserve">
+    <value>Het vertaalpakket kon niet worden gedownload. Controleer je verbinding en zet vertalen uit en weer aan om het opnieuw te proberen.</value>
+  </data>
+  <data name="Translate_Note_TimedOut" xml:space="preserve">
+    <value>Vertalen duurde te lang, dus de originele tekst is voorgelezen.</value>
+  </data>
+  <data name="Translate_Note_Failed" xml:space="preserve">
+    <value>Vertalen is mislukt, dus de originele tekst is voorgelezen.</value>
+  </data>
+  <data name="Translate_Note_SourceUnknown" xml:space="preserve">
+    <value>De taal van de tekst kon niet worden herkend, dus de originele tekst is voorgelezen. Kies de taal hierboven.</value>
+  </data>
+  <data name="Translate_Note_PairUnsupported" xml:space="preserve">
+    <value>Vertalen vanuit {0} is nog niet beschikbaar, dus de originele tekst is voorgelezen.</value>
+  </data>
+</root>

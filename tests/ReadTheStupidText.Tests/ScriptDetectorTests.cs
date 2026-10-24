@@ -59,6 +59,7 @@ public class ScriptDetectorTests
     [InlineData("नमस्ते दुनिया", TextScript.Devanagari)]
     [InlineData("Γειά σου Κόσμε", TextScript.Greek)]
     [InlineData("Café déjà vu", TextScript.Latin)]
+    [InlineData("Blåbærsyltetøy på æblekaken, så är det både gott och rött", TextScript.Latin)]
     public void Dominant_NamesTheScript(string text, TextScript expected)
     {
         Assert.Equal(expected, ScriptDetector.Analyze([text]).Dominant);
@@ -72,6 +73,11 @@ public class ScriptDetectorTests
     [InlineData("ja", TextScript.Cjk)]
     [InlineData("en", TextScript.Latin)]
     [InlineData("pt", TextScript.Latin)]
+    [InlineData("da", TextScript.Latin)]
+    [InlineData("fi", TextScript.Latin)]
+    [InlineData("sv", TextScript.Latin)]
+    [InlineData("nb", TextScript.Latin)]
+    [InlineData("nl", TextScript.Latin)]
     [InlineData("ko", TextScript.Hangul)]
     [InlineData("he", TextScript.Hebrew)]
     [InlineData("hi", TextScript.Devanagari)]

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+    <data name="Shell_ReaderTitle" xml:space="preserve"><value>Lezer</value></data>
+  <data name="Common_Ok" xml:space="preserve"><value>OK</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>Annuleren</value></data>
+  <data name="Common_Voice" xml:space="preserve"><value>Stem</value></data>
+  <data name="Common_Language" xml:space="preserve"><value>Taal</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>Instellingen</value></data>
+  <data name="Reader_EditLink" xml:space="preserve"><value>Bewerken</value></data>
+  <data name="Reader_TextFromPictures" xml:space="preserve"><value>Tekst uit foto’s</value></data>
+  <data name="Reader_TextFromFile" xml:space="preserve"><value>Tekst uit een bestand</value></data>
+  <data name="Reader_EmptyHint" xml:space="preserve"><value>Tik op een knop hieronder om iets toe te voegen om voor te lezen</value></data>
+  <data name="Settings_LanguageCaption" xml:space="preserve"><value>De taal van de woorden in de app</value></data>
+  <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Leessnelheid</value></data>
+  <data name="Common_Back" xml:space="preserve"><value>Terug</value></data>
+  <data name="Reader_SkipBack" xml:space="preserve"><value>Vorige zin</value></data>
+  <data name="Reader_SkipForward" xml:space="preserve"><value>Volgende zin</value></data>
+  <data name="Reader_Play" xml:space="preserve"><value>Afspelen</value></data>
+  <data name="Reader_Pause" xml:space="preserve"><value>Pauzeren</value></data>
+  <data name="Reader_PasteButton" xml:space="preserve"><value>Plakken</value></data>
+  <data name="Reader_EditorHint" xml:space="preserve"><value>Typ of plak hier tekst</value></data>
+  <data name="Reader_PasteFailedTitle" xml:space="preserve"><value>Plakken is niet gelukt</value></data>
+  <data name="Reader_PasteFailedMessage" xml:space="preserve"><value>Het klembord kon niet worden gelezen. Kopieer de tekst opnieuw en probeer het nog eens.</value></data>
+  <data name="Reader_ScanFailedTitle" xml:space="preserve"><value>Scannen is niet gelukt</value></data>
+  <data name="Reader_ScanFailedMessage" xml:space="preserve"><value>Er ging iets mis bij het scannen. Probeer het opnieuw.</value></data>
+  <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>De scanner kon niet starten</value></data>
+  <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>De scanner kon niet starten — probeer het opnieuw.</value></data>
+  <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>Scanner wordt voorbereid</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Google Play-services is de documentscanner nog aan het voorbereiden. Probeer het over een moment opnieuw.</value></data>
+  <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>Scanner niet beschikbaar</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>De documentscanner heeft Google Play-services nodig. Maak in plaats daarvan één foto.</value></data>
+  <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>Cameratoegang nodig</value></data>
+  <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>Geef in Instellingen toegang tot de camera om tekst te fotograferen.</value></data>
+  <data name="Reader_NoCameraTitle" xml:space="preserve"><value>Geen camera</value></data>
+  <data name="Reader_NoCameraMessage" xml:space="preserve"><value>Cameratoegang is nodig om tekst te fotograferen, en dit apparaat heeft geen camera beschikbaar.</value></data>
+  <data name="Reader_ScanUnavailableTitle" xml:space="preserve"><value>Scannen niet beschikbaar</value></data>
+  <data name="Reader_ScanUnavailableMessage" xml:space="preserve"><value>Tekst uit foto’s lezen is op dit apparaat nog niet beschikbaar.</value></data>
+  <data name="Reader_ScanUnreadableTitle" xml:space="preserve"><value>Die scan kon niet worden gelezen</value></data>
+  <data name="Reader_ScanUnreadableMessage" xml:space="preserve"><value>Scan de tekst opnieuw met beter licht of scherpstelling.</value></data>
+  <data name="Reader_NoTextFoundTitle" xml:space="preserve"><value>Geen tekst gevonden</value></data>
+  <data name="Reader_NoTextFoundMessage" xml:space="preserve"><value>Scan opnieuw met beter licht of scherpstelling.</value></data>
+  <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>Sommige pagina’s zijn overgeslagen</value></data>
+  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>Pagina {0} kon niet worden gelezen. De pagina’s die wel konden worden gelezen hebben je tekst vervangen.</value></data>
+  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>Pagina’s {0} konden niet worden gelezen. De pagina’s die wel konden worden gelezen hebben je tekst vervangen.</value></data>
+  <data name="Reader_ScanProgressPage" xml:space="preserve"><value>Pagina {0} van {1} wordt gelezen</value></data>
+  <data name="Reader_ScanProgressSingle" xml:space="preserve"><value>Pagina wordt gelezen</value></data>
+  <data name="Reader_PageLanguageTitle" xml:space="preserve"><value>In welke taal is deze pagina?</value></data>
+  <data name="Reader_OcrDownloading" xml:space="preserve"><value>De lezer voor {0} wordt gedownload… {1}%</value></data>
+  <data name="Reader_OcrDownloadFailedTitle" xml:space="preserve"><value>De lezer kon niet worden gedownload</value></data>
+  <data name="Reader_OcrDownloadFailedMessage" xml:space="preserve"><value>De lezer voor {0} kon niet worden gedownload. Controleer je verbinding en probeer het opnieuw.</value></data>
+  <data name="Reader_OcrOfflineMessage" xml:space="preserve"><value>Voor deze pagina is een download van de lezer nodig. Maak verbinding met internet en probeer het opnieuw.</value></data>
+  <data name="Reader_OcrFailedMessage" xml:space="preserve"><value>De lezer voor {0} kon niet worden ingesteld. Probeer het later opnieuw.</value></data>
+  <data name="Reader_OcrUnreadableMessage" xml:space="preserve"><value>Deze pagina kon niet worden gelezen.</value></data>
+  <data name="Reader_FilePickerTitle" xml:space="preserve"><value>Kies een .txt-, .pdf- of .docx-bestand</value></data>
+  <data name="Reader_FilePermissionTitle" xml:space="preserve"><value>Toestemming nodig</value></data>
+  <data name="Reader_FilePermissionMessage" xml:space="preserve"><value>Geef toegang tot bestanden om een document te lezen.</value></data>
+  <data name="Reader_FileTooLargeTitle" xml:space="preserve"><value>Bestand te groot</value></data>
+  <data name="Reader_FileTooLargeMessage" xml:space="preserve"><value>Dat bestand heeft {0} pagina’s; de limiet is {1}.</value></data>
+  <data name="Reader_FileUnreadableTitle" xml:space="preserve"><value>Dat bestand kon niet worden gelezen</value></data>
+  <data name="Reader_FileUnreadableMessage" xml:space="preserve"><value>Het bestand is mogelijk beschadigd of heeft een niet-ondersteunde indeling.</value></data>
+  <data name="Reader_ReadFailedTitle" xml:space="preserve"><value>Die tekst kon niet worden gelezen</value></data>
+  <data name="Reader_ReadFailedMessage" xml:space="preserve"><value>Er ging iets mis tijdens het lezen.</value></data>
+  <data name="Reader_VoiceUnavailableTitle" xml:space="preserve"><value>Voorlezen is niet mogelijk</value></data>
+  <data name="Reader_VoiceDownloadingMessage" xml:space="preserve"><value>De natuurlijke stem voor {0} wordt nog gedownload. Probeer het opnieuw als de download klaar is.</value></data>
+  <data name="Reader_NoVoiceMessage" xml:space="preserve"><value>Deze telefoon heeft geen stem voor {0}.</value></data>
+  <data name="PackStatus_Resolving" xml:space="preserve"><value>Zoeken naar natuurlijke stemmen…</value></data>
+  <data name="PackStatus_Downloading" xml:space="preserve"><value>Natuurlijke stemmen worden gedownload… {0}</value></data>
+  <data name="PackStatus_Offline" xml:space="preserve"><value>Geen verbinding. Voorlezen met de stem van de telefoon. Tik om de download van de stem opnieuw te proberen.</value></data>
+  <data name="PackStatus_HashMismatch" xml:space="preserve"><value>De download van de stem is beschadigd. Voorlezen met de stem van de telefoon. Tik om het opnieuw te proberen.</value></data>
+  <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Het pakket met natuurlijke stemmen is onbruikbaar. Voorlezen met de stem van de telefoon.</value></data>
+  <data name="PackStatus_Failed" xml:space="preserve"><value>Natuurlijke stemmen konden niet worden gedownload. Voorlezen met de stem van de telefoon. Tik om het opnieuw te proberen.</value></data>
+  <data name="PackStatus_Unavailable" xml:space="preserve"><value>Er is nog geen natuurlijke stem voor jouw taal. Voorlezen met de stem van de telefoon.</value></data>
+  <data name="VoicePicker_Heading" xml:space="preserve"><value>Kies een stem</value></data>
+  <data name="VoicePicker_Subtitle" xml:space="preserve"><value>Natuurlijke stemmen worden één keer gedownload · je tekst blijft op de telefoon</value></data>
+  <data name="VoicePicker_SectionPhone" xml:space="preserve"><value>TELEFOON</value></data>
+  <data name="VoicePicker_SectionMale" xml:space="preserve"><value>MANNELIJK</value></data>
+  <data name="VoicePicker_SectionFemale" xml:space="preserve"><value>VROUWELIJK</value></data>
+  <data name="VoicePicker_Hint" xml:space="preserve"><value>Tik op een stem om hem te horen en te kiezen. Als je tijdens het voorlezen van stem wisselt, wordt de huidige zin nog met de oude stem afgemaakt.</value></data>
+  <data name="VoicePicker_PhoneVoiceName" xml:space="preserve"><value>Telefoonstem</value></data>
+  <data name="VoicePicker_EngineSupertonic" xml:space="preserve"><value>SUPERTONIC</value></data>
+  <data name="VoicePicker_EnginePiper" xml:space="preserve"><value>PIPER</value></data>
+  <data name="VoicePicker_EngineMelo" xml:space="preserve"><value>MELOTTS</value></data>
+  <data name="VoicePicker_ReasonPackNotInstalled" xml:space="preserve"><value>De natuurlijke stem voor jouw taal is nog niet geïnstalleerd, dus de telefoonstem leest voor.</value></data>
+  <data name="VoicePicker_ReasonNoNeuralEngine" xml:space="preserve"><value>Natuurlijke stemmen zijn op dit apparaat nog niet beschikbaar, dus de telefoonstem leest voor.</value></data>
+  <data name="Language_Intro" xml:space="preserve"><value>Kies je taal. We downloaden er een natuurlijke stem voor; tot die er is, leest de eigen stem van je telefoon voor.</value></data>
+  <data name="Language_Retry" xml:space="preserve"><value>Download opnieuw proberen</value></data>
+  <data name="Language_Continue" xml:space="preserve"><value>Doorgaan</value></data>
+  <data name="Language_StartReading" xml:space="preserve"><value>Beginnen met lezen</value></data>
+</root>

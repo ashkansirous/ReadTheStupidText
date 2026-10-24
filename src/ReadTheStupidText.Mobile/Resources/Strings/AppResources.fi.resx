@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Shell_ReaderTitle" xml:space="preserve"><value>Lukija</value></data>
+  <data name="Common_Ok" xml:space="preserve"><value>OK</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>Peruuta</value></data>
+  <data name="Common_Voice" xml:space="preserve"><value>Ääni</value></data>
+  <data name="Common_Language" xml:space="preserve"><value>Kieli</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>Asetukset</value></data>
+  <data name="Reader_EditLink" xml:space="preserve"><value>Muokkaa</value></data>
+  <data name="Reader_TextFromPictures" xml:space="preserve"><value>Teksti kuvista</value></data>
+  <data name="Reader_TextFromFile" xml:space="preserve"><value>Teksti tiedostosta</value></data>
+  <data name="Reader_EmptyHint" xml:space="preserve"><value>Lisää luettavaa napauttamalla alla olevaa painiketta</value></data>
+  <data name="Settings_LanguageCaption" xml:space="preserve"><value>Sovelluksen kieli</value></data>
+  <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Lukunopeus</value></data>
+  <data name="Common_Back" xml:space="preserve"><value>Takaisin</value></data>
+  <data name="Reader_SkipBack" xml:space="preserve"><value>Edellinen lause</value></data>
+  <data name="Reader_SkipForward" xml:space="preserve"><value>Seuraava lause</value></data>
+  <data name="Reader_Play" xml:space="preserve"><value>Toista</value></data>
+  <data name="Reader_Pause" xml:space="preserve"><value>Tauko</value></data>
+  <data name="Reader_PasteButton" xml:space="preserve"><value>Liitä</value></data>
+  <data name="Reader_EditorHint" xml:space="preserve"><value>Kirjoita tai liitä teksti tähän</value></data>
+  <data name="Reader_PasteFailedTitle" xml:space="preserve"><value>Liittäminen epäonnistui</value></data>
+  <data name="Reader_PasteFailedMessage" xml:space="preserve"><value>Leikepöytää ei voitu lukea. Yritä kopioida teksti uudelleen.</value></data>
+  <data name="Reader_ScanFailedTitle" xml:space="preserve"><value>Skannaus epäonnistui</value></data>
+  <data name="Reader_ScanFailedMessage" xml:space="preserve"><value>Skannauksessa tapahtui virhe. Yritä uudelleen.</value></data>
+  <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>Skanneria ei voitu käynnistää</value></data>
+  <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>Skanneria ei voitu käynnistää — yritä uudelleen.</value></data>
+  <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>Skanneri valmistautuu</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Google Play -palvelut valmistelee vielä asiakirjaskanneria. Yritä hetken kuluttua uudelleen.</value></data>
+  <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>Skanneri ei ole käytettävissä</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>Asiakirjaskanneri tarvitsee Google Play -palvelut. Ota sen sijaan yksittäinen kuva.</value></data>
+  <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>Kameran käyttöoikeus tarvitaan</value></data>
+  <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>Salli kameran käyttö Asetuksissa, jotta voit kuvata tekstiä.</value></data>
+  <data name="Reader_NoCameraTitle" xml:space="preserve"><value>Ei kameraa</value></data>
+  <data name="Reader_NoCameraMessage" xml:space="preserve"><value>Tekstin kuvaaminen vaatii kameran, eikä tässä laitteessa ole käytettävissä kameraa.</value></data>
+  <data name="Reader_ScanUnavailableTitle" xml:space="preserve"><value>Skannaus ei ole käytettävissä</value></data>
+  <data name="Reader_ScanUnavailableMessage" xml:space="preserve"><value>Tekstin lukeminen kuvista ei ole vielä käytettävissä tässä laitteessa.</value></data>
+  <data name="Reader_ScanUnreadableTitle" xml:space="preserve"><value>Skannausta ei voitu lukea</value></data>
+  <data name="Reader_ScanUnreadableMessage" xml:space="preserve"><value>Yritä skannata teksti uudelleen paremmassa valaistuksessa tai tarkennuksella.</value></data>
+  <data name="Reader_NoTextFoundTitle" xml:space="preserve"><value>Tekstiä ei löytynyt</value></data>
+  <data name="Reader_NoTextFoundMessage" xml:space="preserve"><value>Yritä skannata uudelleen paremmassa valaistuksessa tai tarkennuksella.</value></data>
+  <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>Joitakin sivuja ohitettiin</value></data>
+  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>Sivua {0} ei voitu lukea. Luetut sivut korvasivat tekstisi.</value></data>
+  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>Sivuja {0} ei voitu lukea. Luetut sivut korvasivat tekstisi.</value></data>
+  <data name="Reader_ScanProgressPage" xml:space="preserve"><value>Luetaan sivua {0}/{1}</value></data>
+  <data name="Reader_ScanProgressSingle" xml:space="preserve"><value>Luetaan sivua</value></data>
+  <data name="Reader_PageLanguageTitle" xml:space="preserve"><value>Millä kielellä tämä sivu on?</value></data>
+  <data name="Reader_OcrDownloading" xml:space="preserve"><value>Ladataan lukijaa kielelle {0}… {1} %</value></data>
+  <data name="Reader_OcrDownloadFailedTitle" xml:space="preserve"><value>Lukijaa ei voitu ladata</value></data>
+  <data name="Reader_OcrDownloadFailedMessage" xml:space="preserve"><value>Lukijaa kielelle {0} ei voitu ladata. Tarkista yhteytesi ja yritä uudelleen.</value></data>
+  <data name="Reader_OcrOfflineMessage" xml:space="preserve"><value>Tämä sivu vaatii lukijan latauksen. Yhdistä internetiin ja yritä uudelleen.</value></data>
+  <data name="Reader_OcrFailedMessage" xml:space="preserve"><value>Lukijaa kielelle {0} ei voitu ottaa käyttöön. Yritä myöhemmin uudelleen.</value></data>
+  <data name="Reader_OcrUnreadableMessage" xml:space="preserve"><value>Tätä sivua ei voitu lukea.</value></data>
+  <data name="Reader_FilePickerTitle" xml:space="preserve"><value>Valitse .txt-, .pdf- tai .docx-tiedosto</value></data>
+  <data name="Reader_FilePermissionTitle" xml:space="preserve"><value>Lupa tarvitaan</value></data>
+  <data name="Reader_FilePermissionMessage" xml:space="preserve"><value>Salli tiedostojen käyttö, jotta asiakirjan voi lukea.</value></data>
+  <data name="Reader_FileTooLargeTitle" xml:space="preserve"><value>Tiedosto on liian suuri</value></data>
+  <data name="Reader_FileTooLargeMessage" xml:space="preserve"><value>Tiedostossa on {0} sivua; enimmäismäärä on {1}.</value></data>
+  <data name="Reader_FileUnreadableTitle" xml:space="preserve"><value>Tiedostoa ei voitu lukea</value></data>
+  <data name="Reader_FileUnreadableMessage" xml:space="preserve"><value>Tiedosto voi olla vioittunut tai muodoltaan tukematon.</value></data>
+  <data name="Reader_ReadFailedTitle" xml:space="preserve"><value>Tekstiä ei voitu lukea</value></data>
+  <data name="Reader_ReadFailedMessage" xml:space="preserve"><value>Lukemisessa tapahtui virhe.</value></data>
+  <data name="Reader_VoiceUnavailableTitle" xml:space="preserve"><value>Tätä ei voi lukea ääneen</value></data>
+  <data name="Reader_VoiceDownloadingMessage" xml:space="preserve"><value>Luonnollista ääntä ({0}) ladataan vielä. Yritä uudelleen, kun lataus on valmis.</value></data>
+  <data name="Reader_NoVoiceMessage" xml:space="preserve"><value>Tässä puhelimessa ei ole ääntä kielelle {0}.</value></data>
+  <data name="PackStatus_Resolving" xml:space="preserve"><value>Tarkistetaan luonnollisia ääniä…</value></data>
+  <data name="PackStatus_Downloading" xml:space="preserve"><value>Ladataan luonnollisia ääniä… {0}</value></data>
+  <data name="PackStatus_Offline" xml:space="preserve"><value>Ei yhteyttä. Luetaan puhelimen äänellä. Yritä äänen latausta uudelleen napauttamalla.</value></data>
+  <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Äänen lataus vioittui. Luetaan puhelimen äänellä. Yritä uudelleen napauttamalla.</value></data>
+  <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Luonnollisten äänten pakettia ei voi käyttää. Luetaan puhelimen äänellä.</value></data>
+  <data name="PackStatus_Failed" xml:space="preserve"><value>Luonnollisia ääniä ei voitu ladata. Luetaan puhelimen äänellä. Yritä uudelleen napauttamalla.</value></data>
+  <data name="PackStatus_Unavailable" xml:space="preserve"><value>Kielellesi ei ole vielä luonnollista ääntä. Luetaan puhelimen äänellä.</value></data>
+  <data name="VoicePicker_Heading" xml:space="preserve"><value>Valitse ääni</value></data>
+  <data name="VoicePicker_Subtitle" xml:space="preserve"><value>Luonnolliset äänet ladataan kerran · tekstisi pysyy puhelimessa</value></data>
+  <data name="VoicePicker_SectionPhone" xml:space="preserve"><value>PUHELIN</value></data>
+  <data name="VoicePicker_SectionMale" xml:space="preserve"><value>MIES</value></data>
+  <data name="VoicePicker_SectionFemale" xml:space="preserve"><value>NAINEN</value></data>
+  <data name="VoicePicker_Hint" xml:space="preserve"><value>Napauta ääntä kuullaksesi ja valitaksesi sen. Jos vaihdat äänen kesken lukemisen, nykyinen lause luetaan loppuun vanhalla äänellä.</value></data>
+  <data name="VoicePicker_PhoneVoiceName" xml:space="preserve"><value>Puhelimen ääni</value></data>
+  <data name="VoicePicker_EngineSupertonic" xml:space="preserve"><value>SUPERTONIC</value></data>
+  <data name="VoicePicker_EnginePiper" xml:space="preserve"><value>PIPER</value></data>
+  <data name="VoicePicker_EngineMelo" xml:space="preserve"><value>MELOTTS</value></data>
+  <data name="VoicePicker_ReasonPackNotInstalled" xml:space="preserve"><value>Kielesi luonnollista ääntä ei ole vielä asennettu, joten puhelimen ääni lukee.</value></data>
+  <data name="VoicePicker_ReasonNoNeuralEngine" xml:space="preserve"><value>Luonnolliset äänet eivät ole vielä käytettävissä tässä laitteessa, joten puhelimen ääni lukee.</value></data>
+  <data name="Language_Intro" xml:space="preserve"><value>Valitse kielesi. Lataamme sille luonnollisen äänen; siihen asti lukee puhelimesi oma ääni.</value></data>
+  <data name="Language_Retry" xml:space="preserve"><value>Yritä latausta uudelleen</value></data>
+  <data name="Language_Continue" xml:space="preserve"><value>Jatka</value></data>
+  <data name="Language_StartReading" xml:space="preserve"><value>Aloita lukeminen</value></data>
+</root>

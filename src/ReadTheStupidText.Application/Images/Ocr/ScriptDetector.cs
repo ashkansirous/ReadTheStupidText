@@ -40,7 +40,7 @@ public static class ScriptDetector
 
     private static readonly ScriptSpec[] Table =
     [
-        new(TextScript.Latin, false, ["en", "fr", "es", "pt"], [('\0', 'ɏ'), ('Ḁ', 'ỿ')]),
+        new(TextScript.Latin, false, ["en", "fr", "es", "pt", "da", "fi", "sv", "nb", "nl"], [('\0', 'ɏ'), ('Ḁ', 'ỿ')]),
         new(TextScript.Greek, false, ["el"], [('Ͱ', 'Ͽ'), ('ἀ', '῿')]),
         new(TextScript.Cyrillic, false, ["ru", "uk"], [('Ѐ', 'ԯ')]),
         new(TextScript.Hebrew, true, ["he"], [('֐', '׿'), ('יִ', 'ﭏ')]),

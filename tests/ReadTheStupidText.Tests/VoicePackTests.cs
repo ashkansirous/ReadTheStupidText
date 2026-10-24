@@ -189,6 +189,11 @@ public class VoicePackTests
     [Theory]
     [InlineData("en", true, AppLanguage.English)]
     [InlineData("FA", true, AppLanguage.Persian)]
+    [InlineData("SV", true, AppLanguage.Swedish)]
+    [InlineData("nb", true, AppLanguage.Norwegian)]
+    [InlineData("nl", true, AppLanguage.Dutch)]
+    [InlineData("da", true, AppLanguage.Danish)]
+    [InlineData("fi", true, AppLanguage.Finnish)]
     [InlineData("xx", false, default(AppLanguage))]
     [InlineData(null, false, default(AppLanguage))]
     public void Language_codes_round_trip(string? code, bool ok, AppLanguage expected)
@@ -202,7 +207,7 @@ public class VoicePackTests
     {
         string[] codes = Enum.GetValues<AppLanguage>().Select(AppLanguages.Code).ToArray();
 
-        Assert.Equal(9, codes.Length);
+        Assert.Equal(14, codes.Length);
         Assert.Equal(codes.Length, codes.Distinct().Count());
     }
 }

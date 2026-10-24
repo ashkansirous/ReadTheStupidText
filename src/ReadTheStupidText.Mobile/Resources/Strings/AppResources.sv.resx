@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Shell_ReaderTitle" xml:space="preserve"><value>Läsare</value></data>
+  <data name="Common_Ok" xml:space="preserve"><value>OK</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>Avbryt</value></data>
+  <data name="Common_Voice" xml:space="preserve"><value>Röst</value></data>
+  <data name="Common_Language" xml:space="preserve"><value>Språk</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>Inställningar</value></data>
+  <data name="Reader_EditLink" xml:space="preserve"><value>Redigera</value></data>
+  <data name="Reader_TextFromPictures" xml:space="preserve"><value>Text från bilder</value></data>
+  <data name="Reader_TextFromFile" xml:space="preserve"><value>Text från en fil</value></data>
+  <data name="Reader_EmptyHint" xml:space="preserve"><value>Tryck på en knapp nedan för att lägga till något att läsa</value></data>
+  <data name="Settings_LanguageCaption" xml:space="preserve"><value>Språket för appens text</value></data>
+  <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Uppläsningshastighet</value></data>
+  <data name="Common_Back" xml:space="preserve"><value>Tillbaka</value></data>
+  <data name="Reader_SkipBack" xml:space="preserve"><value>Föregående mening</value></data>
+  <data name="Reader_SkipForward" xml:space="preserve"><value>Nästa mening</value></data>
+  <data name="Reader_Play" xml:space="preserve"><value>Spela</value></data>
+  <data name="Reader_Pause" xml:space="preserve"><value>Pausa</value></data>
+  <data name="Reader_PasteButton" xml:space="preserve"><value>Klistra in</value></data>
+  <data name="Reader_EditorHint" xml:space="preserve"><value>Skriv eller klistra in text här</value></data>
+  <data name="Reader_PasteFailedTitle" xml:space="preserve"><value>Det gick inte att klistra in</value></data>
+  <data name="Reader_PasteFailedMessage" xml:space="preserve"><value>Urklipp kunde inte läsas. Försök kopiera texten igen.</value></data>
+  <data name="Reader_ScanFailedTitle" xml:space="preserve"><value>Det gick inte att skanna</value></data>
+  <data name="Reader_ScanFailedMessage" xml:space="preserve"><value>Något gick fel vid skanningen. Försök igen.</value></data>
+  <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>Det gick inte att starta skannern</value></data>
+  <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>Det gick inte att starta skannern — försök igen.</value></data>
+  <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>Skannern förbereds</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Google Play-tjänster förbereder fortfarande dokumentskannern. Försök igen om en stund.</value></data>
+  <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>Skannern är inte tillgänglig</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>Dokumentskannern kräver Google Play-tjänster. Ta ett enstaka foto i stället.</value></data>
+  <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>Kameraåtkomst behövs</value></data>
+  <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>Ge åtkomst till kameran i Inställningar för att fotografera text.</value></data>
+  <data name="Reader_NoCameraTitle" xml:space="preserve"><value>Ingen kamera</value></data>
+  <data name="Reader_NoCameraMessage" xml:space="preserve"><value>Kameraåtkomst behövs för att fotografera text, och den här enheten har ingen tillgänglig kamera.</value></data>
+  <data name="Reader_ScanUnavailableTitle" xml:space="preserve"><value>Skanning är inte tillgänglig</value></data>
+  <data name="Reader_ScanUnavailableMessage" xml:space="preserve"><value>Det går ännu inte att läsa text från foton på den här enheten.</value></data>
+  <data name="Reader_ScanUnreadableTitle" xml:space="preserve"><value>Det gick inte att läsa skanningen</value></data>
+  <data name="Reader_ScanUnreadableMessage" xml:space="preserve"><value>Försök skanna texten igen med bättre ljus eller skärpa.</value></data>
+  <data name="Reader_NoTextFoundTitle" xml:space="preserve"><value>Ingen text hittades</value></data>
+  <data name="Reader_NoTextFoundMessage" xml:space="preserve"><value>Försök skanna igen med bättre ljus eller skärpa.</value></data>
+  <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>Vissa sidor hoppades över</value></data>
+  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>Det gick inte att läsa sida {0}. De sidor som gick att läsa ersatte din text.</value></data>
+  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>Det gick inte att läsa sidorna {0}. De sidor som gick att läsa ersatte din text.</value></data>
+  <data name="Reader_ScanProgressPage" xml:space="preserve"><value>Läser sida {0} av {1}</value></data>
+  <data name="Reader_ScanProgressSingle" xml:space="preserve"><value>Läser sida</value></data>
+  <data name="Reader_PageLanguageTitle" xml:space="preserve"><value>Vilket språk är den här sidan på?</value></data>
+  <data name="Reader_OcrDownloading" xml:space="preserve"><value>Laddar ned läsaren för {0}… {1} %</value></data>
+  <data name="Reader_OcrDownloadFailedTitle" xml:space="preserve"><value>Det gick inte att ladda ned läsaren</value></data>
+  <data name="Reader_OcrDownloadFailedMessage" xml:space="preserve"><value>Det gick inte att ladda ned läsaren för {0}. Kontrollera anslutningen och försök igen.</value></data>
+  <data name="Reader_OcrOfflineMessage" xml:space="preserve"><value>Den här sidan kräver en nedladdning av läsaren. Anslut till internet och försök igen.</value></data>
+  <data name="Reader_OcrFailedMessage" xml:space="preserve"><value>Det gick inte att ställa in läsaren för {0}. Försök igen senare.</value></data>
+  <data name="Reader_OcrUnreadableMessage" xml:space="preserve"><value>Den här sidan gick inte att läsa.</value></data>
+  <data name="Reader_FilePickerTitle" xml:space="preserve"><value>Välj en .txt-, .pdf- eller .docx-fil</value></data>
+  <data name="Reader_FilePermissionTitle" xml:space="preserve"><value>Behörighet krävs</value></data>
+  <data name="Reader_FilePermissionMessage" xml:space="preserve"><value>Ge åtkomst till filer för att läsa ett dokument.</value></data>
+  <data name="Reader_FileTooLargeTitle" xml:space="preserve"><value>Filen är för stor</value></data>
+  <data name="Reader_FileTooLargeMessage" xml:space="preserve"><value>Filen har {0} sidor; gränsen är {1}.</value></data>
+  <data name="Reader_FileUnreadableTitle" xml:space="preserve"><value>Det gick inte att läsa filen</value></data>
+  <data name="Reader_FileUnreadableMessage" xml:space="preserve"><value>Filen kan vara skadad eller i ett format som inte stöds.</value></data>
+  <data name="Reader_ReadFailedTitle" xml:space="preserve"><value>Det gick inte att läsa texten</value></data>
+  <data name="Reader_ReadFailedMessage" xml:space="preserve"><value>Något gick fel vid uppläsningen.</value></data>
+  <data name="Reader_VoiceUnavailableTitle" xml:space="preserve"><value>Det går inte att läsa upp</value></data>
+  <data name="Reader_VoiceDownloadingMessage" xml:space="preserve"><value>Den naturliga rösten för {0} laddas fortfarande ned. Försök igen när den är klar.</value></data>
+  <data name="Reader_NoVoiceMessage" xml:space="preserve"><value>Den här telefonen har ingen röst för {0}.</value></data>
+  <data name="PackStatus_Resolving" xml:space="preserve"><value>Söker efter naturliga röster…</value></data>
+  <data name="PackStatus_Downloading" xml:space="preserve"><value>Laddar ned naturliga röster… {0}</value></data>
+  <data name="PackStatus_Offline" xml:space="preserve"><value>Ingen anslutning. Läser med telefonens röst. Tryck för att försöka ladda ned rösten igen.</value></data>
+  <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Nedladdningen av rösten blev skadad. Läser med telefonens röst. Tryck för att försöka igen.</value></data>
+  <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Paketet med naturliga röster går inte att använda. Läser med telefonens röst.</value></data>
+  <data name="PackStatus_Failed" xml:space="preserve"><value>Det gick inte att ladda ned naturliga röster. Läser med telefonens röst. Tryck för att försöka igen.</value></data>
+  <data name="PackStatus_Unavailable" xml:space="preserve"><value>Det finns ingen naturlig röst för ditt språk ännu. Läser med telefonens röst.</value></data>
+  <data name="VoicePicker_Heading" xml:space="preserve"><value>Välj en röst</value></data>
+  <data name="VoicePicker_Subtitle" xml:space="preserve"><value>Naturliga röster laddas ned en gång · din text stannar på telefonen</value></data>
+  <data name="VoicePicker_SectionPhone" xml:space="preserve"><value>TELEFON</value></data>
+  <data name="VoicePicker_SectionMale" xml:space="preserve"><value>MAN</value></data>
+  <data name="VoicePicker_SectionFemale" xml:space="preserve"><value>KVINNA</value></data>
+  <data name="VoicePicker_Hint" xml:space="preserve"><value>Tryck på en röst för att höra och välja den. Om du byter röst under uppläsningen avslutas den pågående meningen med den gamla rösten.</value></data>
+  <data name="VoicePicker_PhoneVoiceName" xml:space="preserve"><value>Telefonröst</value></data>
+  <data name="VoicePicker_EngineSupertonic" xml:space="preserve"><value>SUPERTONIC</value></data>
+  <data name="VoicePicker_EnginePiper" xml:space="preserve"><value>PIPER</value></data>
+  <data name="VoicePicker_EngineMelo" xml:space="preserve"><value>MELOTTS</value></data>
+  <data name="VoicePicker_ReasonPackNotInstalled" xml:space="preserve"><value>Den naturliga rösten för ditt språk är inte installerad ännu, så telefonens röst läser.</value></data>
+  <data name="VoicePicker_ReasonNoNeuralEngine" xml:space="preserve"><value>Naturliga röster finns inte på den här enheten ännu, så telefonens röst läser.</value></data>
+  <data name="Language_Intro" xml:space="preserve"><value>Välj ditt språk. Vi laddar ned en naturlig röst för det; tills den är klar läser telefonens egen röst.</value></data>
+  <data name="Language_Retry" xml:space="preserve"><value>Försök ladda ned igen</value></data>
+  <data name="Language_Continue" xml:space="preserve"><value>Fortsätt</value></data>
+  <data name="Language_StartReading" xml:space="preserve"><value>Börja läsa</value></data>
+</root>

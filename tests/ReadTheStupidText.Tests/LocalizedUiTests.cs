@@ -24,6 +24,9 @@ public partial class LocalizedUiTests
     [InlineData(null, "zh-Hans-CN", "zh")]
     [InlineData("xx", "ja-JP", "ja")]
     [InlineData(null, "de-DE", "en")]
+    [InlineData(null, "nb-NO", "nb")]
+    [InlineData(null, "nl-NL", "nl")]
+    [InlineData("sv", "en-US", "sv")]
     [InlineData("", "de-DE", "en")]
     public void Resolve_prefers_stored_then_device_then_english(string? stored, string device, string expected)
     {
@@ -56,7 +59,7 @@ public partial class LocalizedUiTests
     }
 
     [Fact]
-    public void Resolve_covers_all_nine_languages()
+    public void Resolve_covers_all_fourteen_languages()
     {
         foreach (AppLanguage language in Enum.GetValues<AppLanguage>())
         {
@@ -74,6 +77,11 @@ public partial class LocalizedUiTests
     [InlineData("zh", false)]
     [InlineData("ja", false)]
     [InlineData("ru", false)]
+    [InlineData("da", false)]
+    [InlineData("fi", false)]
+    [InlineData("sv", false)]
+    [InlineData("nb", false)]
+    [InlineData("nl", false)]
     public void Only_farsi_and_arabic_are_right_to_left(string code, bool expected)
     {
         Assert.Equal(expected, UiCulture.IsRightToLeft(CultureInfo.GetCultureInfo(code)));
