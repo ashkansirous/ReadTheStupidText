@@ -1130,3 +1130,8 @@
     uploads; mic only behind the grown-up gate; a recorded page always plays the recording. (Slice 111)
 116. **Dino store age range and author (Batch 22).** `ageMin`/`ageMax`/`author` in `meta.json`,
     chips for Play's bands 5 & under, 6-8, 9-12, filtered on the device. (Slice 112)
+117. **Dino voice flavours per character (Batch 23).** Small, Big, Bouncy, Sleepy or Normal (pitch
+    and pace), guessed from the character, editable on the cast screen; narrator at a storyteller pace. (Slice 113)
+118. **A downloadable `kokoro-en` pack for Dino English (Batch 23).** Kokoro storyteller voices when
+    installed, Supertonic otherwise; RTST unchanged. (Slice 114)
+119. **The espeak-ng GPL exception covers `kokoro-en` (Batch 23)**, same scope as `piper-fa`. (Slice 114)

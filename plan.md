@@ -130,6 +130,8 @@ this plan turns it into ordered, shippable vertical slices.
 | 110 | Dino: translated text on screen, with "Show original text" | planned | | | [110-dino-translated-text-on-screen.md](docs/plan/slices/110-dino-translated-text-on-screen.md) |
 | 111 | Dino: parents read in their own voice | planned | | | [111-dino-parent-recordings.md](docs/plan/slices/111-dino-parent-recordings.md) |
 | 112 | Dino: store filters by age and author | planned | | | [112-dino-store-age-author-filters.md](docs/plan/slices/112-dino-store-age-author-filters.md) |
+| 113 | Dino: playful character voices (pitch and pace per character) | planned | | | [113-dino-character-flavours.md](docs/plan/slices/113-dino-character-flavours.md) |
+| 114 | Dino: Kokoro storyteller voices for English | planned | | | [114-dino-kokoro-english-storyteller-pack.md](docs/plan/slices/114-dino-kokoro-english-storyteller-pack.md) |
 
 Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
 
@@ -152,6 +154,8 @@ Batch 20 (102, planned 2026-10-24): ten open stories for the empty store. It tou
 Batch 21 (103-106, planned 2026-10-24): Danish, Finnish, Swedish, Norwegian (Bokmål) and Dutch. 103 first (it adds the languages every other slice uses); then 104 (`packs.yml`, Piper readers), 105 (Dino rules and books) and 106 (`packs.yml`, Windows translation) can run alongside each other except that 104 and 106 both edit `packs.yml`, so they merge one after the other. Decisions 107-110.
 
 Batch 22 (107-112, planned 2026-10-24, from the phone scope "translated text on screen, voices in the reading language, one narrator, parent recordings, store filters"): 107 first (own books translate by default; small). Then 108, 109, 110 and 111 one at a time in that order: all four edit `StoryVoicing`, `ReadingSession`, `Story`/`StoryJson` or the cast page. 112 (store filters) touches only the store and the Worker, so it runs beside any of them. Decisions 111-116.
+
+Batch 23 (113-114, planned 2026-10-24, the voices sound too grown up for children's stories): 113 after 108 (flavours live on each language's cast), then 114 (the Kokoro English pack; flavours apply on top). 113 edits `StoryVoicing` and the cast page, so it does not run beside 109-111. Decisions 117-119.
 
 ### Notes
 
@@ -237,6 +241,7 @@ Built but not verified (details in each slice file):
 
 ## Out of Scope
 
+- **(Batch 23)** Children's or emotive voice models (none permissive and phone-sized; Chatterbox, Orpheus too big); an expressive Farsi voice (none exists; parent recordings, Slice 111, are the Farsi answer); Kokoro for Spanish/French/Italian/Portuguese until English proves out; flavours in RTST.
 - **(Batch 22)** Cloud translation or TTS; sharing recordings between devices; voice cloning from a parent's recordings; several recorded voices per book (Mum, Dad, Grandma); iOS live translation of own books (Apple Translation framework, not researched); store search, language, length and "has pictures" filters.
 - **(Batch 13)** Fuzzy re-mapping of edited story text onto OCR boxes (an edited page reads
   without highlight boxes, Slice 77); an ML layout model for background text (Slice 79 is
