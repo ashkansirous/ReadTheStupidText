@@ -73,6 +73,10 @@ public sealed record Story(
     public const string CoverFilePrefix = "cover";
     public const string CoverFileExtension = ".jpg";
 
+    /// <summary>A new own book (Slice 107): empty, in the grown-up's language, with the translate switch on so it reads and shows in "my language" wherever a translator exists.</summary>
+    public static Story NewOwnBook(string id, string language, DateTimeOffset created, int coverColourIndex, string narratorVoiceId) =>
+        new(id, string.Empty, language, created, [], [], CoverStyle.FirstPage, coverColourIndex, narratorVoiceId, TranslateToMyLanguage: true);
+
     /// <summary>The one shared "no merges" map.</summary>
     public static readonly IReadOnlyDictionary<string, string> NoMerges = new Dictionary<string, string>();
 

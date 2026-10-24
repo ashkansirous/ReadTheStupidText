@@ -109,6 +109,11 @@
   <data name="Story_Language" xml:space="preserve"><value>故事语言</value></data>
   <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · 已识别</value></data>
   <data name="Story_Translate" xml:space="preserve"><value>翻译成我的语言</value></data>
+  <!-- Slice 107 -->
+  <data name="Story_TranslateReadsIn" xml:space="preserve"><value>用{0}朗读并显示</value></data>
+  <data name="Story_TranslateAndroidOnly" xml:space="preserve"><value>翻译目前仅在 Android 上可用</value></data>
+  <data name="Story_TranslateUnsupportedPair" xml:space="preserve"><value>暂不支持翻译{0}</value></data>
+  <!-- /Slice 107 -->
   <data name="Add_Scan" xml:space="preserve"><value>扫描页面</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>保留页面图片</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>照片</value></data>

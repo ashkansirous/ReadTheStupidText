@@ -60,6 +60,9 @@
 
         <!-- Language rows (mock screens 9, 8b): the off track of the translate switch. -->
         <Color x:Key="SwitchOff">#d9d2c4</Color>
+        <Color x:Key="SwitchDisabled">#e6e0d4</Color>
+        <Color x:Key="DisabledLabel">#a39cb3</Color>
+        <Color x:Key="DisabledNote">#5a5470</Color>
         <Color x:Key="OnBrand">#FFFFFF</Color>
 
         <Style TargetType="Label">

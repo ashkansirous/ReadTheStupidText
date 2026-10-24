@@ -75,6 +75,17 @@ public static class BundledTranslations
             && (Has(story, myLanguage) || (engineLanguages is not null && TranslationFlow.IsPairSupported(engineLanguages, source, myLanguage)));
     }
 
+    /// <summary>Whether the switch can do anything for <paramref name="story"/> in <paramref name="myLanguage"/> (ignoring the switch itself): the story is
+    /// already in that language, it carries a table for it that covers every piece (an engine fills any holes; with none a table with holes is not used), or the engine
+    /// (its languages, null for no engine) covers the pair.</summary>
+    public static bool CanTranslate(Story story, string myLanguage, IReadOnlyCollection<string>? engineLanguages)
+    {
+        string source = UiLanguage.Resolve(story.Language);
+        return source == myLanguage
+            || (Has(story, myLanguage) && (engineLanguages is not null || IsComplete(story, myLanguage)))
+            || (engineLanguages is not null && TranslationFlow.IsPairSupported(engineLanguages, source, myLanguage));
+    }
+
     /// <summary>The per-piece translator: the bundled table first, then <paramref name="engine"/> (null for none), else the source text.</summary>
     public static PieceTranslator Compose(Story story, string myLanguage, PieceTranslator? engine) =>
         async (text, cancellationToken) =>

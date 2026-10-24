@@ -1,6 +1,6 @@
 # Slice 107 — Dino: own books translate by default
 
-*In progress (wave 2026-10-24), draft PR.* *Planned 2026-10-24*, from the phone scope "Dino Reader - translated text on screen, voices in the
+*Built 2026-10-24, not yet verified on a device.* *Planned 2026-10-24*, from the phone scope "Dino Reader - translated text on screen, voices in the
 reading language, one narrator, parent recordings, store filters" (2026-10-24) —
 https://drive.google.com/file/d/1b2XPenCW2D4Kx1yx98js_LK4CRBSnnLf/view?usp=drivesdk (part 2, milestone 1).
 
@@ -42,13 +42,17 @@ New strings (all 14 locales, in this slice's block): the second line "Reads and 
 
 ## Work
 
-- [ ] 1. `NewStoryAsync` creates the story with `TranslateToMyLanguage = true`; `StoryDraft` for a new
+- [x] 1. `NewStoryAsync` creates the story with `TranslateToMyLanguage = true`; `StoryDraft` for a new
   story keeps it. Existing stories are not changed. Core unit test: a new draft has the flag set.
-- [ ] 2. `TextStep`/`LanguageCard`: the enabled switch gets a second line naming the target language ("Reads and shows it in {language}", frame 37; new string). On a platform with no live `ITranslator` and a story with no bundled
+- [x] 2. `TextStep`/`LanguageCard`: the enabled switch gets a second line naming the target language ("Reads and shows it in {language}", frame 37; new string). On a platform with no live `ITranslator` and a story with no bundled
   translation for my language, show the switch disabled with the note (new resx string, all 14 locales,
   inside this slice's block).
-- [ ] 3. Rule in `src/DinoReader.App/CLAUDE.md`: amend the Slice 95 bullet (new books default on; the
+- [x] 3. Rule in `src/DinoReader.App/CLAUDE.md`: amend the Slice 95 bullet (new books default on; the
   no-engine note).
+
+*Changed while building:* `Story.NewOwnBook` in Core holds the default (used by `NewStoryAsync`). `ToggleSwitch` is now 52x32 with disabled tokens `SwitchDisabled`, `DisabledLabel`, `DisabledNote` (`DinoTokens.cs`). Two notes, not one: "Translation works on Android for now" when there is no engine, and "Can't translate {0} yet" when an engine exists but the pair is unsupported. `BundledTranslations.CanTranslate` checks the edited text.
+
+*From review:* high 1-6, 8, 9 and medium 1, 2, 4-8 applied. Skipped: high 7 (older slice docs are history) and medium 3 (the draft flag stays true while the switch is greyed, on purpose).
 
 ## Verification
 
@@ -56,3 +60,16 @@ New strings (all 14 locales, in this slice's block): the second line "Reads and 
 - Android emulator: app in Farsi, scan or type a short English page as a new book, open it: it reads in
   Farsi with no extra switch.
 - Windows head: the same new book shows the greyed switch and the note, and reads English.
+
+#### For CLAUDE.md
+
+- Every new book (`StoryWizardPage.NewStoryAsync`) is created with `TranslateToMyLanguage = true`; existing stories are unchanged.
+- The Text step's switch always shows (`LanguageCard`) with a second line "Reads and shows it in {language}". It is greyed, off, with "Translation works on Android for now" when there is no `ITranslator` and the story has no bundled table for my language (`TextStep.CanTranslate`). The draft's flag is left true meanwhile: `LanguageCard.Translate` holds the wanted value and a greyed switch only shows it off, never writes it back (switching the story language re-checks via `StoryTranslator.CanTranslate`).
+- A second note, "Can't translate {0} yet", shows when an engine exists but the language pair is unsupported; `BundledTranslations.CanTranslate` checks the edited text. `Story.NewOwnBook` (Core) holds the default.
+- Strings `Story_TranslateReadsIn` and `Story_TranslateAndroidOnly` sit in a `Slice 107` block in all 14 resx files (13 locales and the default).
+
+#### Not yet verified
+
+- Android emulator: app in Farsi, a new book shows the switch on and reads in Farsi.
+- Windows head: the greyed switch state with its note.
+- Native-speaker check of the 3 new strings (all locales except English).

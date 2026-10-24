@@ -109,6 +109,11 @@
   <data name="Story_Language" xml:space="preserve"><value>لغة القصة</value></data>
   <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · تم اكتشافها</value></data>
   <data name="Story_Translate" xml:space="preserve"><value>الترجمة إلى لغتي</value></data>
+  <!-- Slice 107 -->
+  <data name="Story_TranslateReadsIn" xml:space="preserve"><value>يقرأها ويعرضها بـ{0}</value></data>
+  <data name="Story_TranslateAndroidOnly" xml:space="preserve"><value>الترجمة تعمل على أندرويد حاليًا</value></data>
+  <data name="Story_TranslateUnsupportedPair" xml:space="preserve"><value>لا يمكن ترجمة {0} بعد</value></data>
+  <!-- /Slice 107 -->
   <data name="Add_Scan" xml:space="preserve"><value>مسح الصفحات</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>تحتفظ بصور الصفحات</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>الصور</value></data>

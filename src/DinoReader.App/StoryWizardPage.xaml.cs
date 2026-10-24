@@ -204,8 +204,7 @@ public partial class StoryWizardPage : ContentPage, IGrownUpPage
 		int existing = (await _library.ListAsync()).Count;
 		string language = StoryTranslator.MyLanguage;
 		var voicing = _services.GetRequiredService<StoryVoicing>();
-		return new Story(StoryIds.New(), string.Empty, language, DateTimeOffset.UtcNow, [], [], CoverStyle.FirstPage,
-			existing, voicing.NarratorFor(language));
+		return Story.NewOwnBook(StoryIds.New(), language, DateTimeOffset.UtcNow, existing, voicing.NarratorFor(language));
 	}
 
 	private Func<string?, string?> ExistingPicture(Story story) => name =>
