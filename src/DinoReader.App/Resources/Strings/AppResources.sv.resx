@@ -147,6 +147,16 @@
   <data name="Wizard_Reading" xml:space="preserve"><value>Läser sida {0} av {1}</value></data>
   <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>Vissa sidor lästes inte</value></data>
   <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>{0} sidor gick inte att läsa. De sparas som bilder utan text.</value></data>
+  <data name="Pictures_NoneTitle" xml:space="preserve"><value>Filen har ord men inga bilder</value></data>
+  <data name="Pictures_NoneBody" xml:space="preserve"><value>Lägg till en bild på varje sida om du vill. Sidor utan bild läses som text.</value></data>
+  <data name="Pictures_PickAll" xml:space="preserve"><value>Välj bilder till alla sidor</value></data>
+  <data name="Pictures_PageN" xml:space="preserve"><value>SIDA {0}</value></data>
+  <data name="Pictures_Change" xml:space="preserve"><value>Byt</value></data>
+  <data name="Pictures_Add" xml:space="preserve"><value>Lägg till bild</value></data>
+  <data name="Pictures_FoundEvery" xml:space="preserve"><value>Bilder hittades på varje sida</value></data>
+  <data name="Pictures_Subtitle_Other" xml:space="preserve"><value>{0} · {1} sidor</value></data>
+  <data name="Pictures_Subtitle_One" xml:space="preserve"><value>{0} · {1} sida</value></data>
+  <data name="Pictures_NextCover" xml:space="preserve"><value>Nästa: omslag</value></data>
   <data name="Wizard_CoverHint" xml:space="preserve"><value>Välj en sida, ett foto eller en färg till omslaget.</value></data>
   <data name="Wizard_NeedTextTitle" xml:space="preserve"><value>Inget att läsa ännu</value></data>
   <data name="Wizard_NeedTextBody" xml:space="preserve"><value>Lägg till text på minst en sida och spara sedan.</value></data>

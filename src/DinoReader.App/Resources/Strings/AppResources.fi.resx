@@ -147,6 +147,16 @@
   <data name="Wizard_Reading" xml:space="preserve"><value>Luetaan sivua {0}/{1}</value></data>
   <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>Joitakin sivuja ei luettu</value></data>
   <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>{0} sivua ei voitu lukea. Ne säilytetään kuvina ilman tekstiä.</value></data>
+  <data name="Pictures_NoneTitle" xml:space="preserve"><value>Tiedostossa on sanoja mutta ei kuvia</value></data>
+  <data name="Pictures_NoneBody" xml:space="preserve"><value>Lisää halutessasi yksi kuva jokaiselle sivulle. Sivut ilman kuvaa luetaan tekstinä.</value></data>
+  <data name="Pictures_PickAll" xml:space="preserve"><value>Valitse kuvat kaikille sivuille</value></data>
+  <data name="Pictures_PageN" xml:space="preserve"><value>SIVU {0}</value></data>
+  <data name="Pictures_Change" xml:space="preserve"><value>Vaihda</value></data>
+  <data name="Pictures_Add" xml:space="preserve"><value>Lisää kuva</value></data>
+  <data name="Pictures_FoundEvery" xml:space="preserve"><value>Kuvat löytyivät joka sivulle</value></data>
+  <data name="Pictures_Subtitle_Other" xml:space="preserve"><value>{0} · {1} sivua</value></data>
+  <data name="Pictures_Subtitle_One" xml:space="preserve"><value>{0} · {1} sivu</value></data>
+  <data name="Pictures_NextCover" xml:space="preserve"><value>Seuraavaksi: kansi</value></data>
   <data name="Wizard_CoverHint" xml:space="preserve"><value>Valitse kanneksi sivu, kuva tai väri.</value></data>
   <data name="Wizard_NeedTextTitle" xml:space="preserve"><value>Ei vielä mitään luettavaa</value></data>
   <data name="Wizard_NeedTextBody" xml:space="preserve"><value>Lisää tekstiä vähintään yhdelle sivulle ja tallenna sitten.</value></data>
