@@ -82,7 +82,7 @@ New strings: none new for the card (credit text is data from `meta.json`, not a 
   finds its expected characters).
 - [x] 3. **Translations** for all ten into the eight other languages. The coverage test is extended to store
   stories.
-- [ ] 4. **Upload all ten** and check them in `GET /api/stories`; download two on the emulator and read one in
+- [x] 4. **Upload all ten** and check them in `GET /api/stories`; download two on the emulator and read one in
   Farsi.
 - [x] 5. Rules: the root `CLAUDE.md` store paragraph (`credits`, the builder and the upload script) and
   `src/DinoReader.App/CLAUDE.md` (written at planning; check they still match).
