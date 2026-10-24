@@ -1100,3 +1100,8 @@
     checkbox only when the languages differ, and one Read / Translate and read
     button. Translating replaces the text. Files go straight here. Reverses
     Slice 54's "the editor keeps the original" on the phone. (Slice 101)
+106. **Ten open stories in the store (Batch 20).** Short retellings Claude
+    writes from public-domain tales (Peter Rabbit in Potter's own words), all
+    nine languages, coloured covers now and public-domain illustrations later
+    as `story-v2`. `meta.json` gains an optional `credits` line shown on the
+    store card. (Slice 102)
