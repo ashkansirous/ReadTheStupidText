@@ -127,6 +127,9 @@
   <data name="Story_TranslateAndroidOnly" xml:space="preserve"><value>Vertalen werkt voorlopig op Android</value></data>
   <data name="Story_TranslateUnsupportedPair" xml:space="preserve"><value>{0} kan nog niet worden vertaald</value></data>
   <!-- /Slice 107 -->
+  <!-- Slice 108 -->
+  <data name="Cast_VoicesFor" xml:space="preserve"><value>Stemmen voor {0}</value></data>
+  <!-- /Slice 108 -->
   <data name="Add_Scan" xml:space="preserve"><value>Pagina’s scannen</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Bewaart de foto’s van de pagina’s</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Foto’s</value></data>

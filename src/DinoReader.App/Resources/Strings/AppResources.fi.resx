@@ -127,6 +127,9 @@
   <data name="Story_TranslateAndroidOnly" xml:space="preserve"><value>Käännös toimii toistaiseksi Androidilla</value></data>
   <data name="Story_TranslateUnsupportedPair" xml:space="preserve"><value>Kieltä {0} ei voi vielä kääntää</value></data>
   <!-- /Slice 107 -->
+  <!-- Slice 108 -->
+  <data name="Cast_VoicesFor" xml:space="preserve"><value>Äänet kielelle {0}</value></data>
+  <!-- /Slice 108 -->
   <data name="Add_Scan" xml:space="preserve"><value>Skannaa sivut</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Säilyttää sivukuvat</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Kuvat</value></data>

@@ -304,6 +304,7 @@ public partial class TextStep : ContentView
 		page.Load(Draft.Current, story =>
 		{
 			Draft.Cast = story.Cast;
+			Draft.LanguageCasts = story.LanguageCasts;
 			Draft.Merges = story.Merges;
 			Draft.NarratorVoiceId = story.NarratorVoiceId;
 			return Task.CompletedTask;

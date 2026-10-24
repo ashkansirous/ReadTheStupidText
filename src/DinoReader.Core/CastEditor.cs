@@ -11,6 +11,13 @@ public sealed record CastEdit(IReadOnlyList<CastMember> Cast, IReadOnlyDictionar
 /// </summary>
 public static class CastEditor
 {
+    /// <summary>The edit state for one reading language (Slice 108): that language's cast and the story's merges, which every language shares.</summary>
+    public static CastEdit Open(Story story, string language) => new(story.CastIn(language), story.Merges);
+
+    /// <summary>The story with <paramref name="edit"/> saved into <paramref name="language"/>'s cast; other languages' casts keep their pins.</summary>
+    public static Story Close(Story story, string language, CastEdit edit) =>
+        story.WithCastIn(language, edit.Cast) with { CharacterMerges = edit.Merges };
+
     /// <summary>Gives a character a voice by hand. The narrator's voice is refused (nothing changes).</summary>
     public static CastEdit SetVoice(CastEdit state, string characterId, string voiceId, string narratorVoiceId)
     {

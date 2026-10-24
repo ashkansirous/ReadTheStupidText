@@ -1,12 +1,12 @@
 # Slice 108 — Dino: a cast per reading language
 
-*Planned 2026-10-24*, from the phone scope "Dino Reader - translated text on screen, voices in the
+*In progress (wave 2026-10-24), draft PR.* *Planned 2026-10-24*, from the phone scope "Dino Reader - translated text on screen, voices in the
 reading language, one narrator, parent recordings, store filters" (2026-10-24) —
 https://drive.google.com/file/d/1b2XPenCW2D4Kx1yx98js_LK4CRBSnnLf/view?usp=drivesdk (part 3, milestone 3).
 
 **Batch:** 22
 **Depends on:** Slice 65 (cast screen), Slice 95 (translation), Slice 107 (so own books actually translate)
-**Touches:** `src/DinoReader.Core/Story.cs`, `src/DinoReader.Core/StoryJson.cs`, `src/DinoReader.Core/CastEditor.cs`, `src/DinoReader.App/StoryVoicing.cs`, `src/DinoReader.App/CastPage.cs`, `src/DinoReader.App/CastRows.cs`, `src/DinoReader.App/StoryActions.cs`, `src/DinoReader.App/ReadingSession.cs`, `src/DinoReader.App/Resources/Strings/*.resx`, `tests/DinoReader.Tests/**`, `src/DinoReader.Core/CLAUDE.md`, `src/DinoReader.App/CLAUDE.md`
+**Touches:** `src/DinoReader.Core/Story.cs`, `src/DinoReader.Core/StoryJson.cs`, `src/DinoReader.Core/CastEditor.cs`, `src/DinoReader.App/StoryVoicing.cs`, `src/DinoReader.App/CastPage.cs`, `src/DinoReader.App/CastRows.cs`, `src/DinoReader.App/StoryActions.cs`, `src/DinoReader.App/ReadingSession.cs`, `src/DinoReader.App/Resources/Strings/*.resx`, `src/DinoReader.App/TextStep.xaml.cs`, `src/DinoReader.Core/StoryDraft.cs`, `src/DinoReader.App/IconView.cs`, `src/DinoReader.App/StoryImport.cs`, `tests/DinoReader.Tests/**`, `src/DinoReader.Core/CLAUDE.md`, `src/DinoReader.App/CLAUDE.md`
 
 ## Why
 
@@ -46,14 +46,14 @@ New strings (all 14 locales): "Voices for {0}" (the chip).
 
 ## Work
 
-- [ ] 1. Core: per-language cast on `Story`, `StoryJson` read/write with the old-cast migration,
+- [x] 1. Core: per-language cast on `Story`, `StoryJson` read/write with the old-cast migration,
   `CastEditor` operating on one language's cast; unit tests (round trip, migration, merge shared, pins
   per language).
-- [ ] 2. `StoryVoicing`: `Prepare`/`Cast`/`Remapped` use the reading language's cast, auto-casting and
+- [x] 2. `StoryVoicing`: `Prepare`/`Cast`/`Remapped` use the reading language's cast, auto-casting and
   saving it on first use.
-- [ ] 3. `CastPage`/`CastRows`: voice list and gender from the reading language, the language label as a "Voices for {language}" chip under the header (frame 40), and
+- [x] 3. `CastPage`/`CastRows`: voice list and gender from the reading language, the language label as a "Voices for {language}" chip under the header (frame 40), and
   edits saved into that language's cast.
-- [ ] 4. `.dino` package and backup round trip carry every language's cast.
+- [x] 4. `.dino` package and backup round trip carry every language's cast.
 - [ ] 5. Rules in `src/DinoReader.Core/CLAUDE.md` and `src/DinoReader.App/CLAUDE.md`.
 
 ## Verification
@@ -62,3 +62,25 @@ New strings (all 14 locales): "Voices for {0}" (the chip).
 - Android emulator: an English book, app in Farsi, open the cast screen: Farsi voices with a Farsi label;
   pin one, read it, the pinned voice speaks; switch the app to English: the English cast is unchanged.
 - An old backup from before this slice restores and reads.
+
+## Built (2026-10-24)
+
+`Story.LanguageCasts` (other languages' casts; `Cast` stays the story language's) with `CastIn`/`HasCastIn`/`WithCastIn`; `CastEditor.Open`/`Close` edit one language's cast; `story.json` field `LanguageCasts` (optional, schema 1). `StoryVoicing` casts a translated read from the spoken language's own cast (no more `Remapped`; the narrator is mapped once by `NarratorIn`), `ReadingSession` saves a new language cast on the first read, `CastPage` edits the reading language's cast and shows the "Voices for {language}" chip. Follow-up: `IconKind.Globe`, the chip's ink (`DinoTokens.BrandEdge`) and the wizard keeping every language's cast (`StoryDraft.LanguageCasts`, saved by `StorySaver`). Not done: the narrator row still opens the per-book picker (the Narrator page is Slice 109).
+
+*Built 2026-10-24, not yet verified on the emulator.*
+
+*Changed while building:* Touches grew by `TextStep.xaml.cs`, `StoryDraft.cs`, `IconView.cs` (`IconKind.Globe`) and `StoryImport.cs`. The narrator picker lists the reading language's voices and stores a story narrator that round-trips until Slice 109.
+
+*From review:* high pass findings 1-10 and medium pass findings 1-8 applied. Key fixes: an empty cast counts as none; `LanguageCasts` are ignored when the text or language changed, and a revert restores them; `ReadingSession` saves a new language cast on the first read through `ReadingPage.SaveCastAsync`, under one `SemaphoreSlim` shared with the mode save.
+
+*Known gap:* the `StoryVoicing` paths are untested (they live in the App project, which the test project does not reference).
+
+#### Not yet verified
+
+- Emulator: an English book read in Farsi gets its own cast, the chip shows "Voices for فارسی", and editing the Farsi cast does not change the English one.
+- Native check of `Cast_VoicesFor`.
+
+## For CLAUDE.md
+
+- Core: a story has one cast per language (`Story.Cast` is the story language's, `Story.LanguageCasts` the others', keyed by `BundledTranslations.Key`); always go through `CastIn`/`WithCastIn`, never read `Cast` for another language. Merges are the story's and shared. `story.json` carries `LanguageCasts` (optional, `schemaVersion` stays 1); a damaged language entry is dropped, not the story. (Slice 108: docs/plan/slices/108-dino-cast-per-reading-language.md)
+- App: the cast screen edits the cast of `StoryVoicing.ReadingLanguage` (the spoken language), saved through `CastEditor.Open`/`Close`; a translated read uses that language's cast and `NarratorIn` (the story's narrator mapped into its pack), and `ReadingSession` stores a missing language cast on the first read. Only `ReadingPage` switches `SpokenLanguage`, never the cast screen. (Slice 108: docs/plan/slices/108-dino-cast-per-reading-language.md)

@@ -127,6 +127,9 @@
   <data name="Story_TranslateAndroidOnly" xml:space="preserve"><value>Översättning fungerar än så länge på Android</value></data>
   <data name="Story_TranslateUnsupportedPair" xml:space="preserve"><value>Kan inte översätta {0} än</value></data>
   <!-- /Slice 107 -->
+  <!-- Slice 108 -->
+  <data name="Cast_VoicesFor" xml:space="preserve"><value>Röster för {0}</value></data>
+  <!-- /Slice 108 -->
   <data name="Add_Scan" xml:space="preserve"><value>Skanna sidor</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Behåller sidbilderna</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Foton</value></data>

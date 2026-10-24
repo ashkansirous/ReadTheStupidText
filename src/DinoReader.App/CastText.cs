@@ -33,6 +33,9 @@ public static class CastText
 	public static string PreviewFailedBody => AppResources.Cast_PreviewFailedBody;
 	public static string Ok => AppResources.Common_Ok;
 	public static string Back => AppResources.Common_Back;
+
+	/// <summary>The chip under the header (Slice 108): whose cast is being edited, the language named in itself.</summary>
+	public static string VoicesFor(string language) => AppResources.Format(AppResources.Cast_VoicesFor, LanguageNames.NativeName(language));
 	public static string LoadFailedTitle => AppResources.Cast_LoadFailedTitle;
 	public static string LoadFailedBody => AppResources.Cast_LoadFailedBody;
 

@@ -64,6 +64,31 @@ internal static class CastViews
 		},
 	};
 
+	/// <summary>The pill under the header that says which language's cast is on screen (Slice 108, mock frame 40).</summary>
+	public static Border LanguageChip(string text) => new()
+	{
+		HeightRequest = ChipHeight,
+		BackgroundColor = DinoTokens.Get(DinoTokens.BrandTint),
+		StrokeThickness = 0,
+		Padding = new Thickness(14, 0),
+		HorizontalOptions = LayoutOptions.Start,
+		StrokeShape = new RoundRectangle { CornerRadius = 16 },
+		Content = new HorizontalStackLayout
+		{
+			Spacing = 6,
+			VerticalOptions = LayoutOptions.Center,
+			Children =
+			{
+				new IconView { Kind = IconKind.Globe, Color = DinoTokens.Get(DinoTokens.BrandEdge), Size = 15, StrokeWidth = 2.2, VerticalOptions = LayoutOptions.Center },
+				new Label
+				{
+					Text = text, FontSize = 13, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.BrandEdge),
+					VerticalOptions = LayoutOptions.Center,
+				},
+			},
+		},
+	};
+
 	public static Border PreviewButton(string description) => new()
 	{
 		WidthRequest = 36,
