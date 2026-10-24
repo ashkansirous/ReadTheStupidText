@@ -48,6 +48,9 @@ public sealed class StoryDraft(Story original)
 
 	public IReadOnlyDictionary<string, string> Merges { get; set; } = original.Merges;
 
+	/// <summary>The casts of the other reading languages as the cast screen last left them (Slice 108); written with Save.</summary>
+	public IReadOnlyDictionary<string, IReadOnlyList<CastMember>>? LanguageCasts { get; set; } = original.LanguageCasts;
+
 	public string NarratorVoiceId { get; set; } = original.NarratorVoiceId;
 
 	public List<StoryPage> Pages { get; } = [.. original.Pages];
@@ -208,11 +211,15 @@ public sealed class StoryDraft(Story original)
 		CoverColourIndex = CoverColourIndex,
 		Pages = Pages.ToList(),
 		Cast = Cast,
+		LanguageCasts = RecastNeeded ? null : LanguageCasts,
 		CharacterMerges = Merges,
 		NarratorVoiceId = NarratorVoiceId,
 	};
 
 	public bool HasPageImages => Pages.Any(p => p.ImageFile is not null);
+
+	/// <summary>Other languages' casts were made from the original text and language: an edit of either has them rebuilt on the next read (Slice 108). The draft keeps them, so undoing the edit brings them back.</summary>
+	public bool RecastNeeded => TextChanged || LanguageChanged;
 
 	public bool TextChanged => Story.JoinPages(Pages) != Original.Text;
 }

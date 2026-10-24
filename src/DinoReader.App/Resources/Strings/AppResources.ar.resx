@@ -125,6 +125,9 @@
   <data name="Story_TranslateAndroidOnly" xml:space="preserve"><value>الترجمة تعمل على أندرويد حاليًا</value></data>
   <data name="Story_TranslateUnsupportedPair" xml:space="preserve"><value>لا يمكن ترجمة {0} بعد</value></data>
   <!-- /Slice 107 -->
+  <!-- Slice 108 -->
+  <data name="Cast_VoicesFor" xml:space="preserve"><value>أصوات {0}</value></data>
+  <!-- /Slice 108 -->
   <data name="Add_Scan" xml:space="preserve"><value>مسح الصفحات</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>تحتفظ بصور الصفحات</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>الصور</value></data>

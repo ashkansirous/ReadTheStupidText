@@ -65,7 +65,8 @@ public sealed record Story(
     string? CoverFile = null,
     int? CoverPageIndex = null,
     string? SourceId = null,
-    IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>>? Translations = null)
+    IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>>? Translations = null,
+    IReadOnlyDictionary<string, IReadOnlyList<CastMember>>? LanguageCasts = null)
 {
     public const string PageSeparator = "\n\n";
 
@@ -83,6 +84,38 @@ public sealed record Story(
     /// <summary>Characters a grown-up merged (Slice 65): merged-away character id to the id it joined.
     /// Applied to the attribution every time the story is read, so the fix is remembered with the story.</summary>
     public IReadOnlyDictionary<string, string> Merges => CharacterMerges ?? NoMerges;
+
+    /// <summary>The cast of the story's own language (<see cref="Cast"/>) or of another language it has been read in (Slice 108, Decision 113):
+    /// each language has its own voices and pins; merges are shared. Empty when that language has no cast yet.</summary>
+    public IReadOnlyList<CastMember> CastIn(string language) =>
+        IsOwnLanguage(language) ? Cast : OtherCast(language) ?? [];
+
+    /// <summary>Whether <paramref name="language"/> has a stored cast (the story's own language always does). An empty stored cast
+    /// (made while the language's voices were missing) does not count: it is made again on the next look or read.</summary>
+    public bool HasCastIn(string language) => IsOwnLanguage(language) || OtherCast(language) is { Count: > 0 };
+
+    /// <summary>The story with <paramref name="cast"/> as the cast of <paramref name="language"/>; every other language's cast is left as it is.</summary>
+    public Story WithCastIn(string language, IReadOnlyList<CastMember> cast)
+    {
+        if (IsOwnLanguage(language))
+        {
+            return this with { Cast = cast };
+        }
+
+        var casts = new Dictionary<string, IReadOnlyList<CastMember>>(LanguageCasts ?? NoLanguageCasts)
+        {
+            [BundledTranslations.Key(language)] = cast,
+        };
+        return this with { LanguageCasts = casts };
+    }
+
+    private static readonly IReadOnlyDictionary<string, IReadOnlyList<CastMember>> NoLanguageCasts = new Dictionary<string, IReadOnlyList<CastMember>>();
+
+    // Compared as the screens resolve a language (an unsupported code reads as English), so the reading language and the story's own agree.
+    private bool IsOwnLanguage(string language) => UiLanguage.Resolve(language) == UiLanguage.Resolve(Language);
+
+    private IReadOnlyList<CastMember>? OtherCast(string language) =>
+        LanguageCasts?.FirstOrDefault(c => BundledTranslations.Key(c.Key) == BundledTranslations.Key(language)).Value;
 
     /// <summary>All page texts as one string, a blank line between pages: what the reader speaks.</summary>
     public string Text => JoinPages(Pages);

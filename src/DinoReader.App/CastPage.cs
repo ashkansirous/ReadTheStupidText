@@ -21,12 +21,14 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	private readonly VerticalStackLayout _body = new() { Padding = new Thickness(14, 0, 14, 14), Spacing = 10 };
 	private readonly Label _subtitle = new() { FontSize = 12, TextColor = DinoTokens.Get(DinoTokens.Muted) };
 	private readonly Border _mergeButton = new();
+	private readonly ContentView _languageChip = new() { Margin = new Thickness(14, 0, 14, 10) };
 	private readonly CastMergeSheet _sheet = new();
 	private readonly CastRowActions _actions;
 	private readonly Grid _root = new();
 	private Story? _story;
 	private Func<Story, Task>? _persist;
 	private AttributionResult? _resolved;
+	private string _castLanguage = string.Empty;
 	private bool _previewing;
 	private bool _previewHeard;
 
@@ -106,7 +108,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		{
 			RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto)],
 		};
-		column.Add(BuildHeader(), 0, 0);
+		column.Add(new VerticalStackLayout { Children = { BuildHeader(), _languageChip } }, 0, 0);
 		column.Add(scroll, 0, 1);
 		column.Add(BuildMergeButton(), 0, 2);
 		_root.Add(column);
@@ -157,18 +159,35 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 
 	private async Task RefreshAsync()
 	{
-		_resolved = await _voicing.ResolveAsync(_story!);
+		_castLanguage = _voicing.ReadingLanguage(_story!);
+		await EnsureCastAsync();
+		_resolved = await _voicing.ResolveAsync(_story!, _castLanguage);
 		Render();
+	}
+
+	// The language the book will be read in may have no cast yet (a first look at a book read in another language): make and keep it (Slice 108).
+	private async Task EnsureCastAsync()
+	{
+		StoryVoicing.NewCast? made = await _voicing.NewCastForReadingAsync(_story!);
+		if (made is null)
+		{
+			return;
+		}
+
+		_story = _story!.WithCastIn(made.Language, made.Members);
+		// A failed save (already reported) keeps the cast on screen: the next edit saves it with the story.
+		await SaveAsync();
 	}
 
 	private CastSheet Sheet() => _resolved is null || _story is null
 		? new CastSheet([], 0, false, 0)
-		: CastSheet.Build(_resolved, _story.Cast, _voicing.CharacterVoiceCount(_story.Language, _story.NarratorVoiceId));
+		: CastSheet.Build(_resolved, _story.CastIn(_castLanguage), _voicing.CharacterVoiceCount(_castLanguage, _voicing.NarratorIn(_story, _castLanguage)));
 
 	private void Render()
 	{
 		CastSheet sheet = Sheet();
 		_body.Children.Clear();
+		_languageChip.Content = CastViews.LanguageChip(CastText.VoicesFor(_castLanguage));
 		if (sheet.VoicesAreShort)
 		{
 			_body.Children.Add(CastRows.SharedNote(sheet.VoiceCount));
@@ -182,7 +201,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	private View NarratorCard()
 	{
 		Border card = CastViews.Card();
-		card.Content = CastRows.Narrator(_story!.NarratorVoiceId, () => _busy.RunAsync(ChangeNarratorAsync));
+		card.Content = CastRows.Narrator(_voicing.NarratorIn(_story!, _castLanguage), () => _busy.RunAsync(ChangeNarratorAsync));
 		return card;
 	}
 
@@ -201,13 +220,11 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		return card;
 	}
 
-	private CastEdit Edit() => new(_story!.Cast, _story.Merges);
-
+	// Edits go into the reading language's cast; merges are the story's, shared by every language.
 	private async Task ApplyAsync(Func<CastEdit, CastEdit> change)
 	{
 		Story previous = _story!;
-		CastEdit edit = change(Edit());
-		_story = previous with { Cast = edit.Cast, CharacterMerges = edit.Merges };
+		_story = CastEditor.Close(previous, _castLanguage, change(CastEditor.Open(previous, _castLanguage)));
 		await SaveOrRollBackAsync(previous);
 	}
 
@@ -262,9 +279,9 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		}
 
 		AttributionResult resolved = _resolved!;
-		string narrator = _story!.NarratorVoiceId;
-		await ApplyAsync(edit => CastEditor.SetGender(edit, resolved.Characters, _voicing.VoicesFor(_story!.Language), narrator, row.Member.CharacterId, gender));
-		if (!CastEditor.HasVoiceOfGender(_voicing.VoicesFor(_story!.Language), narrator, gender))
+		string narrator = _voicing.NarratorIn(_story!, _castLanguage);
+		await ApplyAsync(edit => CastEditor.SetGender(edit, resolved.Characters, _voicing.VoicesFor(_castLanguage), narrator, row.Member.CharacterId, gender));
+		if (!CastEditor.HasVoiceOfGender(_voicing.VoicesFor(_castLanguage), narrator, gender))
 		{
 			await DisplayAlertAsync(CastText.Title, CastText.NoVoiceOfGender(gender), CastText.Ok);
 		}
@@ -272,8 +289,8 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 
 	private async Task PickVoiceAsync(CastRow row)
 	{
-		string narrator = _story!.NarratorVoiceId;
-		VoiceOption? voice = await ChooseVoiceAsync(CastEditor.VoiceChoices(_voicing.VoicesFor(_story.Language), narrator, row.Member.Gender));
+		string narrator = _voicing.NarratorIn(_story!, _castLanguage);
+		VoiceOption? voice = await ChooseVoiceAsync(CastEditor.VoiceChoices(_voicing.VoicesFor(_castLanguage), narrator, row.Member.Gender));
 		if (voice is not null && voice.Id != row.Member.VoiceId)
 		{
 			await ApplyAsync(edit => CastEditor.SetVoice(edit, row.Member.CharacterId, voice.Id, narrator));
@@ -282,23 +299,25 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 
 	private async Task ChangeNarratorAsync()
 	{
-		VoiceOption? voice = await ChooseVoiceAsync(_voicing.VoicesFor(_story!.Language));
-		if (voice is null || voice.Id == _story!.NarratorVoiceId)
+		// The picker lists the voices of the language being edited, the same ones the narrator card names.
+		VoiceOption? voice = await ChooseVoiceAsync(_voicing.NarratorChoicesIn(_story!, _castLanguage));
+		string? storyNarrator = voice is null ? null : _voicing.StoryNarratorFor(_story!, _castLanguage, voice.Id);
+		if (voice is null || storyNarrator is null || voice.Id == _voicing.NarratorIn(_story!, _castLanguage))
 		{
 			return;
 		}
 
-		Story previous = _story;
-		IReadOnlyList<CastMember>? cast = await RecastForNarratorAsync(previous, voice.Id);
-		if (cast is null)
+		Story previous = _story!;
+		Story? changed = await WithNarratorAsync(previous, storyNarrator);
+		if (changed is null)
 		{
 			Render();
 			return;
 		}
 
 		// A character the grown-up pinned to this voice loses it to the narrator: say so, and unpin them.
-		IReadOnlyList<string> moved = CastEditor.NamesLosingVoice(previous.Cast, cast, voice.Id);
-		_story = previous with { NarratorVoiceId = voice.Id, Cast = CastEditor.UnpinOverridden(previous.Cast, cast, voice.Id) };
+		IReadOnlyList<string> moved = CastEditor.NamesLosingVoice(previous.CastIn(_castLanguage), changed.CastIn(_castLanguage), _voicing.NarratorIn(changed, _castLanguage));
+		_story = changed;
 		await SaveOrRollBackAsync(previous);
 		if (moved.Count > 0 && ReferenceEquals(_story, previous) is false)
 		{
@@ -306,12 +325,39 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		}
 	}
 
+	// Every stored cast is recast around the new narrator: the story's own language's, the reading language's and any other language's kept.
+	private async Task<Story?> WithNarratorAsync(Story story, string narratorVoiceId)
+	{
+		Story changed = story with { NarratorVoiceId = narratorVoiceId };
+		string[] languages = [story.Language, _castLanguage, .. story.LanguageCasts?.Keys ?? []];
+		foreach (string language in languages.DistinctBy(UiLanguage.Resolve))
+		{
+			IReadOnlyList<CastMember>? cast = await RecastForNarratorAsync(changed, language, story.CastIn(language));
+			if (cast is null)
+			{
+				return null;
+			}
+
+			// A language whose voices are missing recasts to nothing: keep its stored cast (pins, edited genders) as it is.
+			if (cast.Count == 0 && story.CastIn(language).Count > 0)
+			{
+				continue;
+			}
+
+			changed = changed.WithCastIn(language, CastEditor.UnpinOverridden(
+				story.CastIn(language), cast, _voicing.NarratorIn(changed, language)));
+		}
+
+		return changed;
+	}
+
 	// Recasting takes the new narrator's voice off any character who had it; everyone else keeps theirs.
-	private async Task<IReadOnlyList<CastMember>?> RecastForNarratorAsync(Story story, string narratorVoiceId)
+	private async Task<IReadOnlyList<CastMember>?> RecastForNarratorAsync(Story story, string language, IReadOnlyList<CastMember> stored)
 	{
 		try
 		{
-			return await _voicing.CastAsync(story.Language, story.Text, narratorVoiceId, story.Cast, story.Merges, story.BreakMap());
+			string narrator = _voicing.NarratorIn(story, language);
+			return await Task.Run(() => _voicing.CastFor(story.Language, language, story.Text, narrator, stored, story.Merges, story.BreakMap()));
 		}
 		catch (Exception ex)
 		{
@@ -337,7 +383,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	private async Task PreviewAsync(CastRow row)
 	{
 		StopPreview();
-		string line = CastText.PreviewLineFor(_voicing.PreviewLanguage(_story!.Language, _spoken.Current));
+		string line = CastText.PreviewLineFor(_voicing.PreviewLanguage(_castLanguage, _spoken.Current));
 		var segment = new VoicedSegment(line, row.Member.VoiceId, 0, line.Length, 0);
 		try
 		{

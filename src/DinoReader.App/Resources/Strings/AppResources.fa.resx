@@ -125,6 +125,9 @@
   <data name="Story_TranslateAndroidOnly" xml:space="preserve"><value>ترجمه فعلاً فقط در اندروید کار می‌کند</value></data>
   <data name="Story_TranslateUnsupportedPair" xml:space="preserve"><value>هنوز نمی‌توان {0} را ترجمه کرد</value></data>
   <!-- /Slice 107 -->
+  <!-- Slice 108 -->
+  <data name="Cast_VoicesFor" xml:space="preserve"><value>صداها برای {0}</value></data>
+  <!-- /Slice 108 -->
   <data name="Add_Scan" xml:space="preserve"><value>اسکن صفحه‌ها</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>تصویر صفحه‌ها را نگه می‌دارد</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>عکس‌ها</value></data>

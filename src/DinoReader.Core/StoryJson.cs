@@ -54,14 +54,12 @@ public static class StoryJson
         NarratorVoiceId = s.NarratorVoiceId,
         PreferredMode = s.PreferredMode is { } mode ? JsonSerializer.SerializeToElement(mode.ToString()) : null,
         Pages = s.Pages.Select(p => new PageFile { Text = p.Text, ImageFile = p.ImageFile, Lines = ToLineFiles(p.Lines), Regions = ToRegionFiles(p.Regions) }).ToList(),
-        Cast = s.Cast.Select(c => new CastFile
-        {
-            CharacterId = c.CharacterId, Name = c.Name, Gender = c.Gender, VoiceId = c.VoiceId, Edited = c.Edited,
-        }).ToList(),
+        Cast = ToCastFiles(s.Cast),
         Merges = s.Merges.Count == 0 ? null : s.Merges.ToDictionary(m => m.Key, m => m.Value),
         Translate = s.TranslateToMyLanguage,
         SourceId = s.SourceId,
         Translations = ToTranslationFiles(s.Translations),
+        LanguageCasts = ToLanguageCastFiles(s.LanguageCasts),
     };
 
     private static Story FromFile(StoryFile f)
@@ -77,7 +75,33 @@ public static class StoryJson
             f.Pages.Select(p => ToPage(p)).ToList(),
             f.Cast.Select(c => new CastMember(c.CharacterId, c.Name, c.Gender, c.VoiceId, c.Edited)).ToList(),
             f.CoverStyle, f.CoverColourIndex, f.NarratorVoiceId, ParseMode(f.PreferredMode), CleanMerges(f.Merges), f.Translate,
-            f.CoverFile, f.CoverPageIndex, StoryIds.IsValid(f.SourceId) ? f.SourceId : null, CleanTranslations(f.Translations));
+            f.CoverFile, f.CoverPageIndex, StoryIds.IsValid(f.SourceId) ? f.SourceId : null, CleanTranslations(f.Translations),
+            CleanLanguageCasts(f.LanguageCasts, f.Language));
+    }
+
+    private static List<CastFile> ToCastFiles(IReadOnlyList<CastMember> cast) =>
+        cast.Select(c => new CastFile { CharacterId = c.CharacterId, Name = c.Name, Gender = c.Gender, VoiceId = c.VoiceId, Edited = c.Edited }).ToList();
+
+    private static Dictionary<string, List<CastFile>>? ToLanguageCastFiles(IReadOnlyDictionary<string, IReadOnlyList<CastMember>>? casts) =>
+        casts is null || casts.Count == 0 ? null : casts.ToDictionary(c => c.Key, c => ToCastFiles(c.Value));
+
+    // A language with a damaged member (a null field, a hand edit) is dropped, not the whole story; so is one that names the story's own
+    // language (its cast is the main one). Two keys naming one language ("fa" and "fa-IR") keep the first.
+    private static IReadOnlyDictionary<string, IReadOnlyList<CastMember>>? CleanLanguageCasts(Dictionary<string, List<CastFile>>? casts, string ownLanguage)
+    {
+        var kept = new Dictionary<string, IReadOnlyList<CastMember>>();
+        foreach (var (language, members) in casts ?? [])
+        {
+            string key = BundledTranslations.Key(language);
+            bool usable = !string.IsNullOrWhiteSpace(language) && UiLanguage.Resolve(language) != UiLanguage.Resolve(ownLanguage) && !kept.ContainsKey(key)
+                && members is not null && members.All(c => c is { CharacterId: not null, Name: not null, VoiceId: not null });
+            if (usable)
+            {
+                kept[key] = members!.Select(c => new CastMember(c.CharacterId, c.Name, c.Gender, c.VoiceId, c.Edited)).ToList();
+            }
+        }
+
+        return kept.Count > 0 ? kept : null;
     }
 
     private static StoryPage ToPage(PageFile p)
@@ -247,6 +271,9 @@ public static class StoryJson
         public bool Translate { get; set; }
         public string? SourceId { get; set; }
         public Dictionary<string, Dictionary<string, string>>? Translations { get; set; }
+
+        /// <summary>The casts of the other languages the story was read in (Slice 108); <see cref="Cast"/> is the story language's own.</summary>
+        public Dictionary<string, List<CastFile>>? LanguageCasts { get; set; }
     }
 
     private sealed class PageFile

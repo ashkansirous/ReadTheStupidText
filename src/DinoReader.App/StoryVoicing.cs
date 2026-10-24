@@ -32,8 +32,11 @@ public sealed class StoryVoicing
 	// only built when a read asks for them (the cast screen never does).
 	private sealed record Cache(string Language, string Text, LineBreakMap LineBreaks, AttributionResult Attribution, Lazy<IReadOnlyList<SentenceSpan>> Sentences);
 
-	// The cast and the sentence pieces a read speaks, before any translation.
-	private sealed record Prepared(VoiceCast Cast, IReadOnlyList<SplitSegment> Pieces);
+	// The analysis and the sentence pieces a read speaks, before any translation. The cast is worked out afterwards, in the language spoken (Slice 108).
+	private sealed record Prepared(Cache Analysis, IReadOnlyList<SplitSegment> Pieces);
+
+	/// <summary>A cast made for a language that had none (Slice 108), for the caller to save.</summary>
+	public sealed record NewCast(string Language, IReadOnlyList<CastMember> Members);
 
 	private volatile Cache? _cache;
 
@@ -54,10 +57,10 @@ public sealed class StoryVoicing
 		Story story, string narratorVoiceId, int fromPosition = 0, CancellationToken cancellationToken = default, Action? translationSkipped = null)
 	{
 		bool wholePieces = _translator.UsesBundledTable(story);
-		Prepared prepared = await Task.Run(() => Prepare(story, narratorVoiceId, fromPosition, wholePieces), cancellationToken);
+		Prepared prepared = await Task.Run(() => Prepare(story, fromPosition, wholePieces), cancellationToken);
 		if (!_translator.Applies(story))
 		{
-			return prepared.Pieces.Select(p => ToVoicedSegment(p, prepared.Cast, null)).ToList();
+			return await Task.Run(() => VoicedInOwnLanguage(story, prepared, narratorVoiceId), cancellationToken);
 		}
 
 		StoryTranslator.Outcome outcome = await _translator.TranslateAsync(story, prepared.Pieces, cancellationToken);
@@ -65,12 +68,77 @@ public sealed class StoryVoicing
 		{
 			// The story is read as written, in its own language and voices, so the spoken pack goes back to its language too.
 			translationSkipped?.Invoke();
-			return prepared.Pieces.Select(p => ToVoicedSegment(p, prepared.Cast, null)).ToList();
+			return await Task.Run(() => VoicedInOwnLanguage(story, prepared, narratorVoiceId), cancellationToken);
 		}
 
-		IReadOnlyList<SplitSegment> translated = outcome.Pieces;
-		IReadOnlyList<VoicedSegment> voiced = translated.Select(p => ToVoicedSegment(p, prepared.Cast, null)).ToList();
-		return Remapped(voiced, story.Language, _translator.SpokenLanguage(story), story.NarratorVoiceId);
+		return await Task.Run(() => VoicedTranslated(story, prepared, outcome.Pieces, narratorVoiceId), cancellationToken);
+	}
+
+	// A translated read is cast from the spoken language's own cast (Slice 108), its narrator the story's narrator mapped into that pack.
+	// The pack scans behind the voices run here, on the worker thread that calls it.
+	private IReadOnlyList<VoicedSegment> VoicedTranslated(Story story, Prepared prepared, IReadOnlyList<SplitSegment> pieces, string narratorVoiceId)
+	{
+		string spoken = _translator.SpokenLanguage(story);
+		VoiceCast cast = CastIn(story, prepared, spoken, NarratorIn(story, spoken, narratorVoiceId));
+		return pieces.Select(p => ToVoicedSegment(p, cast)).ToList();
+	}
+
+	private IReadOnlyList<VoicedSegment> VoicedInOwnLanguage(Story story, Prepared prepared, string narratorVoiceId)
+	{
+		VoiceCast cast = CastIn(story, prepared, story.Language, narratorVoiceId);
+		return prepared.Pieces.Select(p => ToVoicedSegment(p, cast)).ToList();
+	}
+
+	/// <summary>The language a read of <paramref name="story"/> is spoken in now, and so the one whose cast the cast screen edits (Slice 108).</summary>
+	public string ReadingLanguage(Story story) => _translator.SpokenLanguage(story);
+
+	/// <summary>The narrator voice in <paramref name="language"/>'s pack: the story's own pick, or its nearest voice there (the story's narrator belongs to its own language's pack).</summary>
+	public string NarratorIn(Story story, string language, string? narratorVoiceId = null)
+	{
+		string narrator = narratorVoiceId ?? story.NarratorVoiceId;
+		if (UiLanguage.Resolve(language) == UiLanguage.Resolve(story.Language))
+		{
+			return narrator;
+		}
+
+		return VoiceRemap.MapSet([narrator], VoicesFor(story.Language), VoicesFor(language)).GetValueOrDefault(narrator, narrator);
+	}
+
+	/// <summary>The voices of <paramref name="language"/>'s pack the grown-up can pick as the narrator there: those the story's one narrator
+	/// (kept in its own language's pack until Slice 109) can be set to so that <see cref="NarratorIn"/> gives exactly that voice.</summary>
+	public IReadOnlyList<VoiceOption> NarratorChoicesIn(Story story, string language) =>
+		VoicesFor(language).Where(v => StoryNarratorFor(story, language, v.Id) is not null).ToList();
+
+	/// <summary>The <see cref="Story.NarratorVoiceId"/> that makes <paramref name="voiceId"/> the narrator in <paramref name="language"/>, or null when none does.</summary>
+	public string? StoryNarratorFor(Story story, string language, string voiceId)
+	{
+		if (UiLanguage.Resolve(language) == UiLanguage.Resolve(story.Language))
+		{
+			return voiceId;
+		}
+
+		return new[] { voiceId }.Concat(VoicesFor(story.Language).Select(v => v.Id))
+			.FirstOrDefault(own => NarratorIn(story, language, own) == voiceId);
+	}
+
+	/// <summary>A cast for the language <paramref name="story"/> is read in now when it has none yet (Slice 108), else null (also null while that
+	/// language has no voices yet or the story no characters, so nothing empty is kept). Seeded by the genders the grown-up corrected in the
+	/// story's own cast; the caller saves it so the voices stay put. On a worker thread.</summary>
+	public Task<NewCast?> NewCastForReadingAsync(Story story) =>
+		story.HasCastIn(ReadingLanguage(story)) ? Task.FromResult<NewCast?>(null) : Task.Run(() => NewCastForReading(story));
+
+	private NewCast? NewCastForReading(Story story)
+	{
+		string language = ReadingLanguage(story);
+		if (story.HasCastIn(language) || VoicesFor(language).Count == 0)
+		{
+			return null;
+		}
+
+		// Only the corrected genders carry over, never the voices: those belong to the story language's pack.
+		IReadOnlyList<CastMember> seed = story.Cast.Where(m => m.Edited).Select(m => m with { VoiceId = string.Empty }).ToList();
+		IReadOnlyList<CastMember> members = CastFor(story.Language, language, story.Text, NarratorIn(story, language), seed, story.Merges, story.BreakMap());
+		return members.Count == 0 ? null : new NewCast(language, members);
 	}
 
 	/// <summary>The cast for <paramref name="text"/>, keeping any voice <paramref name="stored"/> already gives a character.
@@ -112,34 +180,47 @@ public sealed class StoryVoicing
 
 	/// <summary>The story's characters and lines as the cast screen shows them: merges applied, an edited
 	/// character's gender in place of the guess. On a worker thread, like <see cref="VoiceAsync"/>.</summary>
-	public Task<AttributionResult> ResolveAsync(Story story) =>
-		Task.Run(() => StoryCast.Resolve(Analyse(story.Language, story.Text, story.BreakMap()).Attribution, story.Merges, story.Cast));
+	public Task<AttributionResult> ResolveAsync(Story story, string castLanguage) =>
+		Task.Run(() => StoryCast.Resolve(Analyse(story.Language, story.Text, story.BreakMap()).Attribution, story.Merges, story.CastIn(castLanguage)));
 
 	/// <summary>The voiced segments of the story from <paramref name="fromPosition"/> on, untranslated (a story index: a tapped
 	/// or skipped-to sentence), read by <paramref name="narratorVoiceId"/> and the story's cast.</summary>
 	public IReadOnlyList<VoicedSegment> Voice(Story story, string narratorVoiceId, int fromPosition = 0)
 	{
-		Prepared prepared = Prepare(story, narratorVoiceId, fromPosition);
-		return prepared.Pieces.Select(p => ToVoicedSegment(p, prepared.Cast, null)).ToList();
+		return VoicedInOwnLanguage(story, Prepare(story, fromPosition), narratorVoiceId);
 	}
 
 	public IReadOnlyList<CastMember> CastFor(
 		string language, string text, string narratorVoiceId, IReadOnlyList<CastMember> stored, IReadOnlyDictionary<string, string>? merges = null,
-		LineBreakMap? lineBreaks = null)
+		LineBreakMap? lineBreaks = null) =>
+		CastFor(language, language, text, narratorVoiceId, stored, merges, lineBreaks);
+
+	/// <summary>The cast of a story written in <paramref name="storyLanguage"/>, voiced from <paramref name="castLanguage"/>'s pack (Slice 108):
+	/// who speaks is worked out in the story's language, the voices come from the language it is read in.</summary>
+	public IReadOnlyList<CastMember> CastFor(
+		string storyLanguage, string castLanguage, string text, string narratorVoiceId, IReadOnlyList<CastMember> stored,
+		IReadOnlyDictionary<string, string>? merges = null, LineBreakMap? lineBreaks = null)
 	{
-		AttributionResult resolved = StoryCast.Resolve(Analyse(language, text, lineBreaks).Attribution, merges ?? Story.NoMerges, stored);
-		return StoryCast.ToMembers(resolved.Characters, Cast(language, resolved, narratorVoiceId, stored), stored);
+		AttributionResult resolved = StoryCast.Resolve(Analyse(storyLanguage, text, lineBreaks).Attribution, merges ?? Story.NoMerges, stored);
+		return StoryCast.ToMembers(resolved.Characters, Cast(castLanguage, resolved, narratorVoiceId, stored), stored);
 	}
 
-	private Prepared Prepare(Story story, string narratorVoiceId, int fromPosition, bool wholePieces = false)
+	private Prepared Prepare(Story story, int fromPosition, bool wholePieces = false)
 	{
 		Cache cache = Analyse(story.Language, story.Text, story.BreakMap());
 		AttributionResult resolved = StoryCast.Resolve(cache.Attribution, story.Merges, story.Cast);
-		VoiceCast cast = Cast(story.Language, resolved, narratorVoiceId, story.Cast);
 
 		// One piece per sentence, so the reader raises a chunk per sentence and the highlight steps with it.
 		// StoryPieces is shared with the starter builder, so a bundled translation is keyed by exactly these pieces (Slice 95).
-		return new Prepared(cast, StoryPieces.Split(story, resolved, cache.Sentences.Value, fromPosition, wholePieces));
+		return new Prepared(cache, StoryPieces.Split(story, resolved, cache.Sentences.Value, fromPosition, wholePieces));
+	}
+
+	// The voices of the language's own cast: its pins and edited genders, in its own pack. A language with no stored cast is cast fresh here.
+	private VoiceCast CastIn(Story story, Prepared prepared, string language, string narratorVoiceId)
+	{
+		IReadOnlyList<CastMember> stored = story.CastIn(language);
+		AttributionResult resolved = StoryCast.Resolve(prepared.Analysis.Attribution, story.Merges, stored);
+		return Cast(language, resolved, narratorVoiceId, stored);
 	}
 
 	private VoiceCast Cast(string language, AttributionResult attribution, string narratorVoiceId, IReadOnlyList<CastMember> stored) =>
@@ -203,20 +284,10 @@ public sealed class StoryVoicing
 		return new VoiceOption(voice.Id, gender);
 	}
 
-	// A translated story is spoken in another language, whose pack may not have the voices the cast was given:
-	// the whole set is remapped together (narrator first) so the narrator and the characters stay distinct.
-	private IReadOnlyList<VoicedSegment> Remapped(IReadOnlyList<VoicedSegment> voiced, string storyLanguage, string spokenLanguage, string narratorVoiceId)
-	{
-		IEnumerable<string> ids = new[] { narratorVoiceId }.Concat(voiced.Select(v => v.VoiceId));
-		var map = VoiceRemap.MapSet(ids, VoicesFor(storyLanguage), VoicesFor(spokenLanguage));
-		return voiced.Select(v => v with { VoiceId = map.GetValueOrDefault(v.VoiceId, v.VoiceId) }).ToList();
-	}
-
 	// Narration, and a quote nobody could be attributed to, are read by the narrator (VoiceForLine).
-	private static VoicedSegment ToVoicedSegment(SplitSegment piece, VoiceCast cast, Func<string, string>? remap)
+	private static VoicedSegment ToVoicedSegment(SplitSegment piece, VoiceCast cast)
 	{
 		Segment segment = piece.Segment;
-		string voiceId = cast.VoiceForLine(segment.CharacterId);
-		return new VoicedSegment(segment.Text, remap is null ? voiceId : remap(voiceId), segment.SourceStart, segment.SourceEnd, piece.TextStart);
+		return new VoicedSegment(segment.Text, cast.VoiceForLine(segment.CharacterId), segment.SourceStart, segment.SourceEnd, piece.TextStart);
 	}
 }
