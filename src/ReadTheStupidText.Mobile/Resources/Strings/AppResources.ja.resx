@@ -9,11 +9,20 @@
   <data name="Common_Cancel" xml:space="preserve"><value>キャンセル</value></data>
   <data name="Common_Voice" xml:space="preserve"><value>音声</value></data>
   <data name="Common_Language" xml:space="preserve"><value>言語</value></data>
-  <data name="Reader_AddTextSection" xml:space="preserve"><value>テキストを追加</value></data>
-  <data name="Reader_PasteButton" xml:space="preserve"><value>📋 貼り付け</value></data>
-  <data name="Reader_ScanButton" xml:space="preserve"><value>📷 スキャン</value></data>
-  <data name="Reader_FileButton" xml:space="preserve"><value>📄 ファイル</value></data>
-  <data name="Reader_EditorPlaceholder" xml:space="preserve"><value>ここに入力・貼り付けるか、ページをスキャン、またはファイルを開きます。すべてこの1つのボックスに入り、下の同じコントロールで再生されます。</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>設定</value></data>
+  <data name="Reader_EditLink" xml:space="preserve"><value>編集</value></data>
+  <data name="Reader_TextFromPictures" xml:space="preserve"><value>写真からテキスト</value></data>
+  <data name="Reader_TextFromFile" xml:space="preserve"><value>ファイルからテキスト</value></data>
+  <data name="Reader_EmptyHint" xml:space="preserve"><value>下のボタンをタップして、読み上げるものを追加します</value></data>
+  <data name="Settings_LanguageCaption" xml:space="preserve"><value>アプリの表示言語</value></data>
+  <data name="Settings_ReadingSpeed" xml:space="preserve"><value>読み上げ速度</value></data>
+  <data name="Common_Back" xml:space="preserve"><value>戻る</value></data>
+  <data name="Reader_SkipBack" xml:space="preserve"><value>前の文</value></data>
+  <data name="Reader_SkipForward" xml:space="preserve"><value>次の文</value></data>
+  <data name="Reader_Play" xml:space="preserve"><value>再生</value></data>
+  <data name="Reader_Pause" xml:space="preserve"><value>一時停止</value></data>
+  <data name="Reader_PasteButton" xml:space="preserve"><value>貼り付け</value></data>
+  <data name="Reader_EditorHint" xml:space="preserve"><value>ここにテキストを入力または貼り付け</value></data>
   <data name="Reader_PasteFailedTitle" xml:space="preserve"><value>貼り付けできませんでした</value></data>
   <data name="Reader_PasteFailedMessage" xml:space="preserve"><value>クリップボードを読み取れませんでした。もう一度テキストをコピーしてください。</value></data>
   <data name="Reader_ScanFailedTitle" xml:space="preserve"><value>スキャンできませんでした</value></data>
@@ -55,19 +64,6 @@
   <data name="Reader_FileUnreadableMessage" xml:space="preserve"><value>ファイルが破損しているか、対応していない形式の可能性があります。</value></data>
   <data name="Reader_ReadFailedTitle" xml:space="preserve"><value>テキストを読み上げできませんでした</value></data>
   <data name="Reader_ReadFailedMessage" xml:space="preserve"><value>読み上げ中に問題が発生しました。</value></data>
-  <data name="Translate_ToggleLabel" xml:space="preserve"><value>{0}に翻訳</value></data>
-  <data name="Translate_SourceLabel" xml:space="preserve"><value>テキストの言語</value></data>
-  <data name="Translate_AutoDetect" xml:space="preserve"><value>自動検出</value></data>
-  <data name="Translate_SourcePickerTitle" xml:space="preserve"><value>テキストの言語</value></data>
-  <data name="Translate_QualityNote" xml:space="preserve"><value>端末内での簡易翻訳です。品質は参考程度です。</value></data>
-  <data name="Translate_DownloadingStatus" xml:space="preserve"><value>翻訳モデルをダウンロードしています…</value></data>
-  <data name="Translate_ModelUnavailableTitle" xml:space="preserve"><value>まだ翻訳できません</value></data>
-  <data name="Translate_ModelUnavailableMessage" xml:space="preserve"><value>翻訳モデルがまだスマートフォンになく、ダウンロードできませんでした。一度インターネットに接続して取得してください。代わりに元のテキストを読み上げます。</value></data>
-  <data name="Translate_FailedTitle" xml:space="preserve"><value>翻訳に失敗しました</value></data>
-  <data name="Translate_FailedMessage" xml:space="preserve"><value>このテキストを翻訳できませんでした。代わりに元のテキストを読み上げます。</value></data>
-  <data name="Translate_UnsupportedNote" xml:space="preserve"><value>{0}の翻訳は利用できません。</value></data>
-  <data name="Translate_SourceUnsupportedNote" xml:space="preserve"><value>{0}からの翻訳は利用できません。</value></data>
-  <data name="Translate_NoVoiceNote" xml:space="preserve"><value>このスマートフォンには{0}の音声がないため、読み上げられません。</value></data>
   <data name="Reader_VoiceUnavailableTitle" xml:space="preserve"><value>読み上げできません</value></data>
   <data name="Reader_VoiceDownloadingMessage" xml:space="preserve"><value>{0}の自然な音声はまだダウンロード中です。完了してからもう一度お試しください。</value></data>
   <data name="Reader_NoVoiceMessage" xml:space="preserve"><value>このスマートフォンには{0}の音声がありません。</value></data>

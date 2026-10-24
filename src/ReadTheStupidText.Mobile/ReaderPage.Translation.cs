@@ -1,186 +1,63 @@
-using System.Globalization;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Translation;
-using ReadTheStupidText.Mobile.Resources.Strings;
 
 namespace ReadTheStupidText.Mobile;
 
 /// <summary>
-/// The "translate to my language" half of the reader (Slice 54): the card under the editor, the
-/// debounced language detection, and the translate-before-read step. Only shown where the platform
-/// supplies a detector and a translator (Android today).
+/// The text's language and the editor's text changes. Translation (Slice 54) is off the main page
+/// until Slice 101 brings it back on its review page (Slice 99): the page reads the text as it is, and
+/// no card or switch is shown. The language detector still runs quietly, so the voice follows the text's
+/// own language (Slice 90). Runs only where the platform supplies a detector.
 /// </summary>
 public partial class ReaderPage
 {
-    private const int AutoChoiceIndex = 0;
     private static readonly TimeSpan DetectDebounce = TimeSpan.FromMilliseconds(600);
 
-    // Set when no voice can read the app language, so translating into it is not offered.
-    private bool _noVoiceForTarget;
-
     private ILanguageDetector? _detector;
-    private ITranslator? _translator;
-    private IReadOnlyList<TranslationLanguageChoice> _sourceChoices = [];
     private CancellationTokenSource? _detectCts;
-    private CancellationTokenSource? _translateCts;
-    private bool _syncingSourcePicker;
-    private const int PreviewLength = 600;
-
-    // The read id whose "Downloading" note is on screen, so a superseded read never clears a newer one's.
-    private int _downloadNoteReadId;
 
     // The detector's latest confident guess (a primary language code), or null.
     private string? _detectedSource;
 
-    /// <summary>What the reader is handed, and whether it is a translation (so the voice follows the target).</summary>
-    private sealed record SpokenText(string Text, bool Translated);
-
-    private void InitTranslation(ILanguageDetector? detector, ITranslator? translator)
+    private void InitTranslation(ILanguageDetector? detector)
     {
-        if (detector is null || translator is null)
+        TranslateSourceMigration.RunOnce(_settings);
+        if (detector is null)
         {
             return;
         }
 
         _detector = detector;
-        _translator = translator;
-        TranslateCard.IsVisible = true;
-        TextFlow.ForUi(TranslateNoteLabel, AppResources.Translate_QualityNote);
-        TextFlow.ForUi(TranslateToggleLabel, AppResources.Format(AppResources.Translate_ToggleLabel, LanguageChoices.NativeName(CurrentLanguage())));
-        if (!translator.SupportedLanguages.Contains(TargetCode(), StringComparer.OrdinalIgnoreCase))
+        if (!string.IsNullOrWhiteSpace(TextEditor.Text))
         {
-            ShowTargetUnsupported();
-            return;
+            ScheduleDetection(TextEditor.Text);
         }
-
-        _sourceChoices = TranslationLanguageChoices.Build(translator.SupportedLanguages);
-        FillSourcePicker();
-        TranslateSwitch.IsToggled = _settings.TranslateEnabled;
-        RestoreSourceChoice();
-    }
-
-    // Only a platform without natural packs can lack a voice for the app language, so only there is
-    // the phone asked up front (which also starts its engine); elsewhere every language is on offer.
-    // Asked on every appearance (the answer is cached and shared), so a voice installed or a language
-    // changed meanwhile lifts or applies the block.
-    private void LoadVoiceAvailability()
-    {
-        if (_translator is null || _platform.SupportsNeuralVoice)
-        {
-            return;
-        }
-
-        _ = LoadVoiceAvailabilityAsync();
-    }
-
-    private async Task LoadVoiceAvailabilityAsync()
-    {
-        VoiceAvailability voices = await PlatformVoiceAvailability.BuildAsync(_platform);
-        if (_retired)
-        {
-            return;
-        }
-
-        if (voices.PhoneKnown && !voices.CanRead(TargetCode()))
-        {
-            ShowNoVoiceForTarget();
-        }
-        else if (_noVoiceForTarget)
-        {
-            ClearNoVoiceForTarget();
-        }
-    }
-
-    // A voice appeared for the app language: offer translating into it again.
-    private void ClearNoVoiceForTarget()
-    {
-        _noVoiceForTarget = false;
-        if (_translator?.SupportedLanguages.Contains(TargetCode(), StringComparer.OrdinalIgnoreCase) == true)
-        {
-            TranslateControls.IsVisible = true;
-            ResetNote();
-        }
-    }
-
-    // A language nothing can read is not offered as a translation target: the controls go and
-    // the note says why.
-    private void ShowNoVoiceForTarget()
-    {
-        _noVoiceForTarget = true;
-        TranslateControls.IsVisible = false;
-        TextFlow.ForUi(TranslateNoteLabel, AppResources.Format(AppResources.Translate_NoVoiceNote, LanguageChoices.NativeName(CurrentLanguage())));
     }
 
     private string TargetCode() => AppLanguages.Code(CurrentLanguage());
 
-    // A gap, not a silent no-op: the controls go and the note says why.
-    private void ShowTargetUnsupported()
-    {
-        TranslateControls.IsVisible = false;
-        TextFlow.ForUi(TranslateNoteLabel, AppResources.Format(AppResources.Translate_UnsupportedNote, LanguageChoices.NativeName(CurrentLanguage())));
-    }
-
-    private void FillSourcePicker()
-    {
-        SourcePicker.Items.Add(AppResources.Translate_AutoDetect);
-        foreach (TranslationLanguageChoice choice in _sourceChoices)
-        {
-            SourcePicker.Items.Add(choice.Name);
-        }
-
-        _syncingSourcePicker = true;
-        SourcePicker.SelectedIndex = AutoChoiceIndex;
-        _syncingSourcePicker = false;
-    }
-
-    // A rebuilt page (language change) keeps its text, so keep the user's pick too; a fresh start
-    // with an empty editor forgets it.
-    private void RestoreSourceChoice()
-    {
-        if (string.IsNullOrWhiteSpace(TextEditor.Text))
-        {
-            _settings.TranslateSourceLanguage = null;
-            return;
-        }
-
-        SelectSource(_settings.TranslateSourceLanguage);
-        ScheduleDetection(TextEditor.Text);
-    }
-
-    private void SelectSource(string? code)
-    {
-        int index = code is null ? -1 : IndexOfChoice(code);
-        ResetNote();
-        _syncingSourcePicker = true;
-        SourcePicker.SelectedIndex = index < 0 ? AutoChoiceIndex : index + 1;
-        _syncingSourcePicker = false;
-    }
-
-    private int IndexOfChoice(string code)
-    {
-        for (int i = 0; i < _sourceChoices.Count; i++)
-        {
-            if (_sourceChoices[i].Code == code)
-            {
-                return i;
-            }
-        }
-
-        return -1;
-    }
-
-    // The layout never mirrors (Slice 85); only the editor follows its own text. Empty, it follows the
+    // The layout never mirrors (Slice 85); only the text follows its own direction. Empty, it follows the
     // UI language, so the placeholder sits on the side it reads from.
     private void OnEditorTextChanged(object? sender, TextChangedEventArgs e)
     {
         TextEditor.FlowDirection = TextFlow.ContentDirection(e.NewTextValue);
+        _highlight = null;
+        if (_editing)
+        {
+            // The label is hidden while editing and OK re-renders it; only the player's state follows the text.
+            RenderPlayerForState();
+        }
+        else
+        {
+            RenderReading();
+        }
+
         ScheduleReadingLanguageRefresh();
         if (_detector is null)
         {
             return;
         }
 
-        TranslatedTextLabel.IsVisible = false;
         _detectedSource = null;
         if (string.IsNullOrWhiteSpace(e.NewTextValue))
         {
@@ -191,23 +68,18 @@ public partial class ReaderPage
         ScheduleDetection(e.NewTextValue);
     }
 
-    // The override sticks while the user edits; it goes when the text is cleared or replaced wholesale.
     private void ResetSource()
     {
         _detectCts?.Cancel();
         _detectedSource = null;
-        _settings.TranslateSourceLanguage = null;
-        ResetNote();
-        SelectSource(null);
     }
 
-    // Paste, file import and scan replace the text for good, so the old text's language pick goes too,
+    // Scan and file import replace the text for good, so the old text's detected language goes too,
     // and the head start prepares at once (the TextChanged this raises must not also schedule a debounced one).
     private void ReplaceEditorText(string text)
     {
         // Whatever is playing (or generating) belongs to the old text.
         _reader.Stop();
-        CancelTranslationRead();
         ClearPendingRead();
 
         if (_detector is not null)
@@ -240,20 +112,14 @@ public partial class ReaderPage
         try
         {
             await Task.Delay(DetectDebounce, token);
-            if (_settings.TranslateSourceLanguage is not null)
-            {
-                return;
-            }
-
             string? detected = TranslationFlow.SourceFromDetection(
                 await _detector!.DetectAsync(TranslationFlow.DetectionSample(text), token));
-            if (token.IsCancellationRequested || _retired || _settings.TranslateSourceLanguage is not null)
+            if (token.IsCancellationRequested || _retired)
             {
                 return;
             }
 
             _detectedSource = detected;
-            SelectSource(detected);
             OnReadingLanguageMayHaveChanged();
         }
         catch (OperationCanceledException)
@@ -262,197 +128,13 @@ public partial class ReaderPage
         }
         catch (Exception)
         {
-            // A failed detection leaves the source unknown; it never blocks reading.
+            // A failed detection leaves the language unknown; it never blocks reading.
             _detectedSource = null;
             OnReadingLanguageMayHaveChanged();
         }
     }
 
-    private void OnSourcePickerChanged(object? sender, EventArgs e)
-    {
-        if (_syncingSourcePicker)
-        {
-            return;
-        }
+    private static string SourceName(string code) => TranslationLanguageChoices.Build([code])[0].Name;
 
-        _lastSpokenText = null;
-        ResetNote();
-        int index = SourcePicker.SelectedIndex;
-        _settings.TranslateSourceLanguage = index > AutoChoiceIndex ? _sourceChoices[index - 1].Code : null;
-        OnReadingLanguageMayHaveChanged();
-        if (index == AutoChoiceIndex && !string.IsNullOrWhiteSpace(TextEditor.Text))
-        {
-            ScheduleDetection(TextEditor.Text);
-        }
-    }
-
-    private void OnTranslateToggled(object? sender, ToggledEventArgs e)
-    {
-        _settings.TranslateEnabled = e.Value;
-        _lastSpokenText = null;
-        StartHeadStart(TimeSpan.Zero);
-        _ = RefreshVoiceLabelAsync();
-    }
-
-    /// <summary>
-    /// What to hand the reader: the translation when the toggle is on and the pair differs, otherwise
-    /// the text itself. Null means the read was superseded while translating. A failure (or an empty
-    /// translation) never blocks reading: it is announced and the original is read.
-    /// </summary>
-    private async Task<SpokenText?> TextToSpeakAsync(string text, int readId)
-    {
-        CancelTranslationRead();
-        if (_translator is null || !_settings.TranslateEnabled || _noVoiceForTarget)
-        {
-            return new SpokenText(text, false);
-        }
-
-        CancellationTokenSource cts = _translateCts = new CancellationTokenSource();
-        try
-        {
-            return await TranslateOrOriginalAsync(text, readId, cts.Token);
-        }
-        catch (OperationCanceledException) when (cts.IsCancellationRequested)
-        {
-            return null;
-        }
-        catch (TranslationModelUnavailableException)
-        {
-            await AlertAsync(AppResources.Translate_ModelUnavailableTitle, AppResources.Translate_ModelUnavailableMessage);
-        }
-        catch (Exception)
-        {
-            await AlertAsync(AppResources.Translate_FailedTitle, AppResources.Translate_FailedMessage);
-        }
-        finally
-        {
-            ClearDownloadingNote(readId);
-        }
-
-        return new SpokenText(text, false);
-    }
-
-    private async Task<SpokenText> TranslateOrOriginalAsync(string text, int readId, CancellationToken token)
-    {
-        string? source = await ResolveSourceAsync(text, token);
-        if (!TranslationFlow.ShouldTranslate(_settings.TranslateEnabled, source, TargetCode()))
-        {
-            return new SpokenText(text, false);
-        }
-
-        string? translated = await TranslateAsync(text, source!, readId, token);
-        if (translated is null)
-        {
-            return new SpokenText(text, false);
-        }
-
-        if (string.IsNullOrWhiteSpace(translated))
-        {
-            await AlertAsync(AppResources.Translate_FailedTitle, AppResources.Translate_FailedMessage);
-            return new SpokenText(text, false);
-        }
-
-        TextFlow.ForContent(TranslatedTextLabel, TranslationFlow.Prefix(translated, PreviewLength));
-        TranslatedTextLabel.IsVisible = true;
-        return new SpokenText(translated, true);
-    }
-
-    // The override, else the last confident detection. If the text changed since (or detection has not
-    // run), a fresh detection on this text decides, so a Play inside the debounce never uses a stale language.
-    private async Task<string?> ResolveSourceAsync(string text, CancellationToken token)
-    {
-        string? source = _settings.TranslateSourceLanguage ?? _detectedSource;
-        if (source is not null)
-        {
-            return source;
-        }
-
-        _detectCts?.Cancel();
-        string? detected = null;
-        try
-        {
-            detected = TranslationFlow.SourceFromDetection(
-                await _detector!.DetectAsync(TranslationFlow.DetectionSample(text), token));
-        }
-        catch (Exception) when (!token.IsCancellationRequested)
-        {
-            // A failed detection means an unknown source: the original is read.
-        }
-
-        token.ThrowIfCancellationRequested();
-        _detectedSource = detected;
-        SelectSource(detected);
-        OnReadingLanguageMayHaveChanged();
-        return detected;
-    }
-
-    // Null when the pair is unsupported: nothing was translated and the original is read.
-    private async Task<string?> TranslateAsync(string text, string source, int readId, CancellationToken token)
-    {
-        string target = TargetCode();
-        if (!TranslationFlow.IsPairSupported(_translator!.SupportedLanguages.ToArray(), source, target))
-        {
-            TextFlow.ForUi(TranslateNoteLabel, AppResources.Format(AppResources.Translate_SourceUnsupportedNote, SourceName(source)));
-            return null;
-        }
-
-        if (!await ModelReadyAsync(source, target))
-        {
-            TextFlow.ForUi(TranslateNoteLabel, AppResources.Translate_DownloadingStatus);
-            _downloadNoteReadId = readId;
-        }
-
-        return await TranslationFlow.TranslateAsync(_translator, text, source, target, token);
-    }
-
-    private async Task<bool> ModelReadyAsync(string source, string target)
-    {
-        try
-        {
-            return await _translator!.IsModelReadyAsync(source, target);
-        }
-        catch (Exception)
-        {
-            return false;
-        }
-    }
-
-    private void ClearDownloadingNote(int readId)
-    {
-        if (_downloadNoteReadId == readId)
-        {
-            _downloadNoteReadId = 0;
-            ResetNote();
-        }
-    }
-
-    // Back to the quality note: drops a transient note (pair unsupported), but never an in-flight
-    // read's "Downloading" note, which its own read clears.
-    private void ResetNote()
-    {
-        if (_downloadNoteReadId != 0 || _noVoiceForTarget)
-        {
-            return;
-        }
-
-        TextFlow.ForUi(TranslateNoteLabel, AppResources.Translate_QualityNote);
-    }
-
-    private string SourceName(string code) =>
-        _sourceChoices.FirstOrDefault(c => c.Code == code)?.Name ?? code;
-
-    private void CancelTranslation()
-    {
-        _detectCts?.Cancel();
-        CancelTranslationRead();
-    }
-
-    // Supersedes any translation in flight (a new read, Stop, a rebuild) and releases its token source.
-    private void CancelTranslationRead()
-    {
-        CancellationTokenSource? old = _translateCts;
-        _translateCts = null;
-        old?.Cancel();
-        old?.Dispose();
-    }
+    private void CancelDetection() => _detectCts?.Cancel();
 }

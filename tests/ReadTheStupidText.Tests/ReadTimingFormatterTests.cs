@@ -20,6 +20,22 @@ public class ReadTimingFormatterTests
         Assert.Equal("00:03/02:23", ReadTimingFormatter.Format(timing));
     }
 
+    [Theory]
+    [InlineData(0, "0:00")]
+    [InlineData(3, "0:03")]
+    [InlineData(143, "2:23")]
+    [InlineData(3900, "65:00")]
+    public void FormatClock_leaves_minutes_unpadded_and_pads_seconds(int seconds, string expected)
+    {
+        Assert.Equal(expected, ReadTimingFormatter.FormatClock(TimeSpan.FromSeconds(seconds)));
+    }
+
+    [Fact]
+    public void FormatClock_renders_dashes_when_unknown()
+    {
+        Assert.Equal("--:--", ReadTimingFormatter.FormatClock(null));
+    }
+
     [Fact]
     public void Minutes_grow_past_two_digits_without_wrapping()
     {

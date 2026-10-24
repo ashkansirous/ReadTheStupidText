@@ -1,6 +1,6 @@
 # Slice 99 — RTST phone: a minimal main page and a Settings page
 
-*In progress (wave 2026-10-24), draft PR.* Planned 2026-10-24, from the user's report: "I gave Read The Stupid Text to my dad and my wife's dad,
+*Built 2026-10-24 (PR #279), emulator-checked on RTST_Test the same day.* Planned 2026-10-24, from the user's report: "I gave Read The Stupid Text to my dad and my wife's dad,
 and they did not know what to do with it. The page is very crowded, and they didn't even see the add
 more images button. The main page should keep the minimal requirements: the text being read, two
 buttons that start a wizard for adding a new text, and a settings button for the language and the
@@ -8,7 +8,7 @@ voice."
 
 **Batch:** 19 (RTST phone overhaul for first-time users)
 **Depends on:** Slices 45 (scan), 53 (localised UI), 54 (translation), 85 (layout never mirrors)
-**Touches:** `src/ReadTheStupidText.Mobile/ReaderPage.xaml`, `src/ReadTheStupidText.Mobile/ReaderPage.xaml.cs`, `src/ReadTheStupidText.Mobile/ReaderPage.Translation.cs`, `src/ReadTheStupidText.Mobile/SettingsPage.xaml` (new), `src/ReadTheStupidText.Mobile/SettingsPage.xaml.cs` (new), `src/ReadTheStupidText.Mobile/AppShell.xaml`, `src/ReadTheStupidText.Mobile/AppShell.xaml.cs`, `src/ReadTheStupidText.Mobile/MauiProgram.cs`, `src/ReadTheStupidText.Mobile/LanguageChooser.cs`, `src/ReadTheStupidText.Mobile/EditorDraft.cs`, `src/ReadTheStupidText.Mobile/Resources/Strings/*.resx`, `src/ReadTheStupidText.Mobile/CLAUDE.md`
+**Touches:** `src/ReadTheStupidText.Mobile/ReaderPage.xaml`, `src/ReadTheStupidText.Mobile/ReaderPage.xaml.cs`, `src/ReadTheStupidText.Mobile/ReaderPage.Translation.cs`, `src/ReadTheStupidText.Mobile/SettingsPage.xaml` (new), `src/ReadTheStupidText.Mobile/SettingsPage.xaml.cs` (new), `src/ReadTheStupidText.Mobile/AppShell.xaml`, `src/ReadTheStupidText.Mobile/AppShell.xaml.cs`, `src/ReadTheStupidText.Mobile/MauiProgram.cs`, `src/ReadTheStupidText.Mobile/LanguageChooser.cs`, `src/ReadTheStupidText.Mobile/EditorDraft.cs`, `src/ReadTheStupidText.Mobile/Resources/Strings/*.resx`, `src/ReadTheStupidText.Mobile/CLAUDE.md`, `src/ReadTheStupidText.Mobile/Platforms/**`, `src/ReadTheStupidText.Mobile/LongPressBehavior.cs`, `src/ReadTheStupidText.Mobile/TranslateSourceMigration.cs`, `src/ReadTheStupidText.Mobile/Resources/Images/header_glyph.png`, `src/ReadTheStupidText.Mobile/AppResources.cs`
 
 ## Why
 
@@ -58,15 +58,15 @@ New strings (nine locales): "Settings", "Edit", "Text from pictures", "Text from
 
 ## Work
 
-- [ ] 1. **Smallest end-to-end:** `SettingsPage` with language, voice and speed. The main page loses those
+- [x] 1. **Smallest end-to-end:** `SettingsPage` with language, voice and speed. The main page loses those
   rows and the speed presets and gains the gear button; reading still works the same.
-- [ ] 2. **The reading area:** the text area becomes read-only with the sentence highlight and the Edit
+- [x] 2. **The reading area:** the text area becomes read-only with the sentence highlight and the Edit
   link; the empty-state line; long-press Paste.
-- [ ] 3. **The two big buttons:** **Text from pictures** (today's scan until Slice 100) and **Text from a
+- [x] 3. **The two big buttons:** **Text from pictures** (today's scan until Slice 100) and **Text from a
   file** (today's file import until Slice 101); the translate card leaves the main page. Translation is
   unavailable until Slice 101 brings it back on page 2: the main page stops calling the translator and the
   switch UI is removed. Settings gets no toggle.
-- [ ] 4. Strings in all nine UI languages; the rule in `src/ReadTheStupidText.Mobile/CLAUDE.md` (written
+- [x] 4. Strings in all nine UI languages; the rule in `src/ReadTheStupidText.Mobile/CLAUDE.md` (written
   at planning; check it still matches).
 
 ## Verification
@@ -76,3 +76,27 @@ New strings (nine locales): "Settings", "Edit", "Text from pictures", "Text from
   changes the language, voice and speed, and the main page reads with them. Edit and long-press Paste
   work, and Play is disabled with no text.
 - iOS compile check (`-p:IncludeIos=true`).
+
+*Changed while building:* the main page's icons are the mock's SVG paths drawn as MAUI `Path`, plus the header watermark (`header_glyph.png`). Long-press Paste works through `LongPressBehavior` with Android and iOS partials. Translation is off on the main page until Slice 101; the language detector still routes the voice, and `TranslateSourceMigration` clears the stored source once. Unused strings were removed and five accessibility strings added, in all nine languages. `ReadTimingFormatter.FormatClock` is tested. Known limit: a language change lands on the main page, not Settings.
+
+*From review:* high pass, 9 applied (#6 perf and #11 by-design skipped). Medium pass, 8 applied (#6 voice-name refresh and #8 approximate scroll skipped).
+
+#### For CLAUDE.md
+
+- `src/ReadTheStupidText.Mobile/`: the main page is read-only and shows only reading; language, voice and speed live in `SettingsPage` (route `settings`). Long-press Paste goes through `LongPressBehavior` (Android and iOS partials). The main page does not translate until Slice 101; `TranslateSourceMigration` clears the stored source once. (Slice 99: docs/plan/slices/99-rtst-mobile-minimal-main-page.md)
+
+#### Verified on the emulator (2026-10-24, RTST_Test, fresh install)
+
+- Empty state (dashed card, outlined buttons, dimmed player), no scrolling at 1080x2400, icons sized correctly.
+- Long-press Paste, Play/Pause/skip with progress, Edit pauses the read, typing, OK back to read-only.
+- Settings: 1.5x persists, the voice picker opens, a Farsi switch lands on the main page with Farsi labels and an LTR layout.
+- Text from a file opens the picker; Text from pictures reaches the ML Kit scanner. The icon buttons have content descriptions.
+
+#### Not yet verified
+
+- The highlight covers the whole `SpeechTextChunker` chunk (up to three sentences), not one sentence as the mock shows. Probably old behaviour; needs a follow-up.
+- A full TalkBack walk-through (only the labels were checked).
+
+- Emulator result pending (the user will pass it separately).
+- iOS device run.
+- The voice name in Settings does not refresh after a voice pack installs.
