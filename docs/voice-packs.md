@@ -93,6 +93,15 @@ model, the leading `>>xx<<` token). Installed ids are `translation-<from>-<to>`.
 | `translation-ru-en`, `translation-en-ru` | `opus-mt-ru-en`, `opus-mt-en-ru` | about 110 MB |
 | `translation-pt-en`, `translation-en-pt` | `opus-mt-ROMANCE-en`, `opus-mt-en-ROMANCE` (`>>pt<<`) | about 113 MB |
 | `translation-ja-en` | `opus-mt-ja-en` | about 108 MB |
+| `translation-da-en`, `translation-en-da` | `opus-mt-da-en`, `opus-mt-en-da` | about 110 MB |
+| `translation-fi-en`, `translation-en-fi` | `opus-mt-fi-en`, `opus-mt-en-fi` | about 110 MB |
+| `translation-sv-en`, `translation-en-sv` | `opus-mt-sv-en`, `opus-mt-en-sv` | about 110 MB |
+| `translation-nl-en`, `translation-en-nl` | `opus-mt-nl-en`, `opus-mt-en-nl` | about 110 MB |
+| `translation-nb-en`, `translation-en-nb` | TigreGotico `opus-mt-gmq-en-onnx`, `opus-mt-en-gmq-onnx` (`>>nob<<`; model card says apache-2.0) | about 390 MB |
+
+The `nb` packs (Slice 106) are about four times the others: the "int8" merged decoder in the TigreGotico
+repos holds fp32 weights (~337 MB), and no smaller Norwegian export exists. Sizes in the other rows are
+approximate (the Xenova int8 pairs); the table's repo layout column in `packs.yml` selects the source paths.
 
 No pack exists for Persian (either way) or English to Japanese: no usable Opus-MT model (Slice 75
 research). Installed by `TranslationPackInstaller` through the pack service; the translate toggle
@@ -118,7 +127,7 @@ created `--latest=false`, so `releases/latest` stays the app.
 Manual: run the **packs** workflow (`.github/workflows/packs.yml`, `workflow_dispatch`) with
 the release number and the pack versions (`pack_version` for Supertonic,
 `piper_pack_version`, `melo_pack_version`, and `ocr_pack_version` for the four OCR packs,
-Slice 52, and `translation_pack_version` for the thirteen translation packs, Slice 75). One run builds the packs into the one
+Slice 52, and `translation_pack_version` for the twenty-three translation packs, Slice 75). One run builds the packs into the one
 `packs-<n>` release, computes each sha256 and size, and publishes the zips with `packs.json`.
 The voice packs:
 

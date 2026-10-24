@@ -31,6 +31,87 @@ public class TranslationPacksTests : IDisposable
         Assert.Empty(TranslationPacks.RequiredPackIds(source, target));
     }
 
+    [Theory]
+    [InlineData("da")]
+    [InlineData("fi")]
+    [InlineData("sv")]
+    [InlineData("nb")]
+    [InlineData("nl")]
+    public void The_nordic_and_dutch_languages_have_a_pack_each_way(string language)
+    {
+        Assert.Equal([$"translation-{language}-en"], TranslationPacks.RequiredPackIds(language, "en"));
+        Assert.Equal([$"translation-en-{language}"], TranslationPacks.RequiredPackIds("en", language));
+        Assert.True(TranslationPacks.CanServeTarget(language));
+        Assert.Contains(language, TranslationPacks.Languages);
+    }
+
+    [Theory]
+    [InlineData("sv", "nl", "translation-sv-en,translation-en-nl")]
+    [InlineData("nb", "fr", "translation-nb-en,translation-en-fr")]
+    [InlineData("ja", "da", "translation-ja-en,translation-en-da")]
+    public void A_pair_of_new_and_old_languages_pivots_through_english(string source, string target, string expected) =>
+        Assert.Equal(expected.Split(','), TranslationPacks.RequiredPackIds(source, target));
+
+    [Fact]
+    public void Norwegian_is_nb_and_the_old_no_code_has_no_pack()
+    {
+        Assert.True(TranslationPacks.IsPairSupported("nb", "en"));
+        Assert.True(TranslationPacks.IsPairSupported("en", "nb"));
+        Assert.Equal("nb", TranslationFlow.NormalizeTag("no-NO"));
+        Assert.Equal("nb", TranslationFlow.NormalizeTag("no"));
+        Assert.False(TranslationPacks.IsPairSupported("nn", "en"));
+    }
+
+    [Fact]
+    public void The_packs_workflow_table_has_one_complete_row_per_shipped_pair()
+    {
+        const int Columns = 11;
+        var workflow = ReadPacksWorkflow();
+        var block = System.Text.RegularExpressions.Regex.Match(workflow, @"<<'TABLE'\r?\n(.*?)\r?\n\s*TABLE", System.Text.RegularExpressions.RegexOptions.Singleline);
+        Assert.True(block.Success);
+        var rows = block.Groups[1].Value.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(r => r.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            .ToArray();
+
+        Assert.All(rows, r => Assert.Equal(Columns, r.Length));
+        Assert.All(rows, r => Assert.False(string.IsNullOrWhiteSpace(r[Columns - 1])));
+        Assert.Equal(ShippedTranslationPairs().Order(), rows.Select(r => r[0]).Order());
+    }
+
+    [Fact]
+    public void Every_leg_in_the_tables_is_a_pair_the_packs_workflow_ships_and_the_reverse()
+    {
+        var shipped = ShippedTranslationPairs().Order().ToArray();
+        var supported = TranslationPacks.Languages
+            .Where(l => l != "en")
+            .SelectMany(l => new[] { (Source: l, Target: "en"), (Source: "en", Target: l) })
+            .Where(p => TranslationPacks.IsLegSupported(p.Source, p.Target))
+            .Select(p => $"{p.Source}-{p.Target}")
+            .Order()
+            .ToArray();
+
+        Assert.Equal(shipped, supported);
+    }
+
+    private static string[] ShippedTranslationPairs()
+    {
+        var match = System.Text.RegularExpressions.Regex.Match(ReadPacksWorkflow(), @"TRANSLATION_PAIRS:\s*'([^']+)'");
+        Assert.True(match.Success);
+        return match.Groups[1].Value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+    }
+
+    private static string ReadPacksWorkflow()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null && !File.Exists(Path.Combine(dir.FullName, ".github", "workflows", "packs.yml")))
+        {
+            dir = dir.Parent;
+        }
+
+        Assert.True(dir is not null, "packs.yml not found above the test output; run from a full checkout");
+        return File.ReadAllText(Path.Combine(dir.FullName, ".github", "workflows", "packs.yml"));
+    }
+
     [Fact]
     public void Japanese_translates_into_english_but_not_out_of_it()
     {

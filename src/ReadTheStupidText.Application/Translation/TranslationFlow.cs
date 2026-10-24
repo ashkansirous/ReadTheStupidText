@@ -21,6 +21,8 @@ public static partial class TranslationFlow
 
     private const string UndeterminedTag = "und";
     private const char SubtagSeparator = '-';
+    private const string MacroNorwegianTag = "no";
+    private const string BokmalTag = "nb";
     private const string ParagraphJoin = "\n\n";
     private const string SentenceJoin = " ";
 
@@ -42,7 +44,7 @@ public static partial class TranslationFlow
         && !string.IsNullOrEmpty(target)
         && !string.Equals(source, target, StringComparison.OrdinalIgnoreCase);
 
-    /// <summary>The lower-case primary language code of a BCP-47 tag ("zh-Latn" becomes "zh"), or null for blank or undetermined.</summary>
+    /// <summary>The lower-case primary language code of a BCP-47 tag ("zh-Latn" becomes "zh", the macrolanguage "no" becomes "nb"), or null for blank or undetermined.</summary>
     public static string? NormalizeTag(string? tag)
     {
         if (string.IsNullOrWhiteSpace(tag))
@@ -51,7 +53,12 @@ public static partial class TranslationFlow
         }
 
         string primary = tag.Split(SubtagSeparator)[0].Trim().ToLowerInvariant();
-        return primary.Length == 0 || primary == UndeterminedTag ? null : primary;
+        if (primary.Length == 0 || primary == UndeterminedTag)
+        {
+            return null;
+        }
+
+        return primary == MacroNorwegianTag ? BokmalTag : primary;
     }
 
     /// <summary>The detected language's code, or null when there is no guess or it is not confident enough.</summary>

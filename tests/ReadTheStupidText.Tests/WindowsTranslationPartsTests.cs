@@ -105,11 +105,11 @@ public class WindowsTranslationPartsTests
     }
 
     [Fact]
-    public void Pack_translator_supports_eight_languages_and_no_persian()
+    public void Pack_translator_supports_every_pack_language_and_no_persian()
     {
         var translator = new PackTranslator(() => string.Empty);
 
-        Assert.Equal(8, translator.SupportedLanguages.Count);
+        Assert.Equal(TranslationPacks.Languages.Order(), translator.SupportedLanguages.Order());
         Assert.DoesNotContain("fa", translator.SupportedLanguages);
     }
 }
