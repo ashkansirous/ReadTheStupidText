@@ -60,7 +60,7 @@ New strings (all 14 locales): "All ages", "5 & under", "6–8", "9–12", "Autho
 
 *From review:* high pass, findings 1-9 applied: empty state "No stories here yet. Try another age."; `StorePage` filters through `StoreFilter.Apply`; "Age 5" when the range is a single age; the author picker shows only authors in the chosen band; the client drops only the bad field (as the Worker does), not the story; authors compared case-insensitively. Medium pass, findings 1-6 applied: the "9–12" chip is open-ended, so it also matches stories for 13+; `5.0` is accepted as an integer age; the chosen author is cleared on reload; the store refreshes in `OnAppearing`; duplicate author labels show a visible "(2)".
 
-## For CLAUDE.md (index pass; the CLAUDE.md files are not edited on the branch)
+## For CLAUDE.md (lifted 2026-10-24; index pass; the CLAUDE.md files are not edited on the branch)
 
 - Root `CLAUDE.md` store paragraph: `meta.json` also carries optional `ageMin`/`ageMax` (both or neither; integers 0-18, min <= max) and `author` (trimmed, max 100); the list response repeats them (Slice 112: docs/plan/slices/112-dino-store-age-author-filters.md).
 - `src/DinoReader.App/CLAUDE.md`, "Store stories (Slice 102)": the card shows the age range (then pages and minutes) above `credits`; the store filters on the phone by Google Play age band and author (`StoreFilter` in Core), also on the cached list offline.
