@@ -12,10 +12,12 @@ public static class TranslationPacks
     private const char PairSeparator = '-';
 
     // The legs the Opus-MT packs cover (Slice 75, docs/plan/slices/75-windows-translation-engine.md):
-    // seven languages into English, six out of English. Persian has no usable Opus-MT leg in either
+    // twelve languages into English, eleven out of English (Slice 106 added da, fi, sv, nb, nl both ways; nb is
+    // Norwegian Bokmal, served by the Scandinavian multi-language models, the target token lives in the pack's
+    // translation.json). Persian has no usable Opus-MT leg in either
     // direction and Japanese none out of English, so those pairs are unsupported rather than badly translated.
-    private static readonly string[] IntoEnglish = ["fr", "es", "pt", "zh", "ar", "ru", "ja"];
-    private static readonly string[] FromEnglish = ["fr", "es", "pt", "zh", "ar", "ru"];
+    private static readonly string[] IntoEnglish = ["fr", "es", "pt", "zh", "ar", "ru", "ja", "da", "fi", "sv", "nb", "nl"];
+    private static readonly string[] FromEnglish = ["fr", "es", "pt", "zh", "ar", "ru", "da", "fi", "sv", "nb", "nl"];
 
     /// <summary>Every language that has at least one leg, English included.</summary>
     public static IReadOnlyList<string> Languages { get; } = [Pivot, .. IntoEnglish.Union(FromEnglish)];
