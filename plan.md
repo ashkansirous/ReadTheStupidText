@@ -127,8 +127,8 @@ this plan turns it into ordered, shippable vertical slices.
 | 107 | Dino: own books translate by default | built | #305 | | [107-dino-own-books-translate-by-default.md](docs/plan/slices/107-dino-own-books-translate-by-default.md) |
 | 108 | Dino: a cast per reading language | built | #307 | | [108-dino-cast-per-reading-language.md](docs/plan/slices/108-dino-cast-per-reading-language.md) |
 | 109 | Dino: one narrator per language, for every book | built | #309 | | [109-dino-one-narrator-per-language.md](docs/plan/slices/109-dino-one-narrator-per-language.md) |
-| 110 | Dino: translated text on screen, with "Show original text" | planned | | | [110-dino-translated-text-on-screen.md](docs/plan/slices/110-dino-translated-text-on-screen.md) |
-| 111 | Dino: parents read in their own voice | planned | | | [111-dino-parent-recordings.md](docs/plan/slices/111-dino-parent-recordings.md) |
+| 110 | Dino: translated text on screen, with "Show original text" | built | #311 | | [110-dino-translated-text-on-screen.md](docs/plan/slices/110-dino-translated-text-on-screen.md) |
+| 111 | Dino: parents read in their own voice | built | #313 | | [111-dino-parent-recordings.md](docs/plan/slices/111-dino-parent-recordings.md) |
 | 112 | Dino: store filters by age and author | built | #306 | | [112-dino-store-age-author-filters.md](docs/plan/slices/112-dino-store-age-author-filters.md) |
 | 113 | Dino: playful character voices (pitch and pace per character) | planned | | | [113-dino-character-flavours.md](docs/plan/slices/113-dino-character-flavours.md) |
 | 114 | Dino: Kokoro storyteller voices for English | planned | | | [114-dino-kokoro-english-storyteller-pack.md](docs/plan/slices/114-dino-kokoro-english-storyteller-pack.md) |
@@ -184,6 +184,8 @@ Built but not verified (details in each slice file):
 - Slice 107: emulator in Farsi, a new book shows the switch on; Windows head greyed switch and note; native read of the 3 new strings ([slice](docs/plan/slices/107-dino-own-books-translate-by-default.md)).
 - Slice 108: emulator, English book read in Farsi gets its own cast and chip; native check of `Cast_VoicesFor` ([slice](docs/plan/slices/108-dino-cast-per-reading-language.md)).
 - Slice 109: emulator, Narrator page, change English/Farsi narrator (re-cast, old backup); older build opens new package; native check of 14 locales ([slice](docs/plan/slices/109-dino-one-narrator-per-language.md)).
+- Slice 110: emulator, English book in Farsi (RTL text, highlight), scanned page picture plus translation, "Show original text" round-trip; native read of `Book_*` in 14 locales ([slice](docs/plan/slices/110-dino-translated-text-on-screen.md)).
+- Slice 111: **human:** Play Console Data safety "audio recordings, on-device only" answer; record/replay on Android (incl. 9-11), iOS, Windows head; mic permission denial; backup round trip; native read of `Rec_*` ([slice](docs/plan/slices/111-dino-parent-recordings.md)).
 - Slice 112: emulator check of chips, author picker, empty state; native read of new strings ([slice](docs/plan/slices/112-dino-store-age-author-filters.md)).
 - Dino first-run "Ready" screen says "Three stories" but four ship; a fix is in progress. (fix PR open)
 - Slice 106: Norwegian on a Windows head via `MarianEngine` (third-party conversion, never run); en to da/fi/sv/nl/nb and back on Windows; the Norwegian packs are about 390 MB each ([slice](docs/plan/slices/106-windows-nordic-dutch-translation-packs.md)).
