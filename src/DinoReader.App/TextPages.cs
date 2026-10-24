@@ -15,7 +15,9 @@ public sealed class TextPages(string text, IReadOnlyList<SentenceSpan> sentences
 	// current sentence (its index). A line is rebuilt only when this changes.
 	private const int PlainKey = -1;
 	private const int ReadKey = -2;
-	private const int NotApplied = int.MinValue;
+	private const long NotApplied = long.MinValue;
+	private const int RangeShift = 30;
+	private const int SoftShift = 60;
 
 	// A wrapped line with the sentence each of its words belongs to, worked out once at wrap time.
 	private sealed record TextLine(IReadOnlyList<WordAt> Words, int[] SentenceOfWord)
@@ -31,7 +33,7 @@ public sealed class TextPages(string text, IReadOnlyList<SentenceSpan> sentences
 	private double _textWidth;
 	private readonly Dictionary<int, IReadOnlyList<TextLine>> _lines = [];
 	private readonly List<Label> _labels = [];
-	private int[] _applied = [];
+	private long[] _applied = [];
 
 	public int PageCount => _pages.Count;
 
@@ -85,7 +87,15 @@ public sealed class TextPages(string text, IReadOnlyList<SentenceSpan> sentences
 		Mark(layers, page, -1);
 	}
 
-	public void Mark(PageLayers layers, int page, int sentence)
+	public void Mark(PageLayers layers, int page, int sentence) => Apply(page, new SentenceRange(sentence, sentence, false));
+
+	/// <summary>Marks sentences <paramref name="first"/> to <paramref name="last"/> as one soft highlight: a page with a parent recording (Slice 111), which has no sentence timings.</summary>
+	public void MarkPage(PageLayers layers, int page, int first, int last) => Apply(page, new SentenceRange(first, last, true));
+
+	// The sentences marked and how: one spoken sentence (the strong highlight), or a whole recorded page (the soft one).
+	private readonly record struct SentenceRange(int First, int Last, bool Soft);
+
+	private void Apply(int page, SentenceRange range)
 	{
 		if (page < 0 || page >= _pages.Count)
 		{
@@ -95,23 +105,28 @@ public sealed class TextPages(string text, IReadOnlyList<SentenceSpan> sentences
 		IReadOnlyList<TextLine> lines = LinesOf(page);
 		for (int i = 0; i < lines.Count && i < _labels.Count; i++)
 		{
-			int key = KeyFor(lines[i], sentence);
+			long key = KeyFor(lines[i], range);
 			if (_applied[i] != key)
 			{
 				_applied[i] = key;
-				_labels[i].FormattedText = BuildLine(lines[i], sentence);
+				_labels[i].FormattedText = BuildLine(lines[i], range);
 			}
 		}
 	}
 
-	private static int KeyFor(TextLine line, int current)
+	private static long KeyFor(TextLine line, SentenceRange range)
 	{
-		if (current < 0 || line.Words.Count == 0 || line.FirstSentence > current)
+		if (range.First < 0 || line.Words.Count == 0 || line.FirstSentence > range.Last)
 		{
 			return PlainKey;
 		}
 
-		return line.LastSentence < current ? ReadKey : current;
+		if (line.LastSentence < range.First)
+		{
+			return ReadKey;
+		}
+
+		return ((range.Soft ? 1L : 0L) << SoftShift) | ((long)range.First << RangeShift) | (uint)range.Last;
 	}
 
 	public int SentenceAt(int page, Point point)
@@ -170,14 +185,14 @@ public sealed class TextPages(string text, IReadOnlyList<SentenceSpan> sentences
 		new(words, words.Select(w => StorySentences.IndexAt(sentences, w.Start)).ToArray());
 
 	// Consecutive words in the same state share one span, so a line is a handful of spans, not one per word.
-	private FormattedString BuildLine(TextLine line, int current)
+	private FormattedString BuildLine(TextLine line, SentenceRange range)
 	{
 		var formatted = new FormattedString();
 		var run = new System.Text.StringBuilder();
 		int runState = 0;
 		for (int i = 0; i < line.Words.Count; i++)
 		{
-			int state = StateOf(line.SentenceOfWord[i], current);
+			int state = StateOf(line.SentenceOfWord[i], range);
 			if (run.Length > 0 && state != runState)
 			{
 				formatted.Spans.Add(BuildSpan(run.ToString(), runState));
@@ -196,15 +211,20 @@ public sealed class TextPages(string text, IReadOnlyList<SentenceSpan> sentences
 		return formatted;
 	}
 
-	// -1 read, 0 unread, 1 the sentence being spoken.
-	private static int StateOf(int sentence, int current)
+	// -1 read, 0 unread, 1 the sentence being spoken, 2 inside a soft-highlighted recorded page.
+	private static int StateOf(int sentence, SentenceRange range)
 	{
-		if (current < 0)
+		if (range.First < 0)
 		{
 			return 0;
 		}
 
-		return sentence < current ? -1 : sentence == current ? 1 : 0;
+		if (sentence < range.First)
+		{
+			return -1;
+		}
+
+		return sentence <= range.Last ? (range.Soft ? 2 : 1) : 0;
 	}
 
 	private Span BuildSpan(string words, int state)
@@ -214,9 +234,13 @@ public sealed class TextPages(string text, IReadOnlyList<SentenceSpan> sentences
 		{
 			span.TextColor = _theme.ReadText;
 		}
-		else if (state > 0)
+		else if (state == 1)
 		{
 			span.BackgroundColor = _theme.TextHighlight;
+		}
+		else if (state == 2)
+		{
+			span.BackgroundColor = _theme.PageHighlight;
 		}
 
 		return span;

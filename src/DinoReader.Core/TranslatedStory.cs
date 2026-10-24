@@ -18,13 +18,15 @@ public static class TranslatedStoryBuilder
     /// The translated pages. A piece belongs to the source sentence holding its <see cref="Segment.SourceStart"/>; a sentence shows its pieces'
     /// texts in order (a quote's pieces wrapped in quote marks), or its source text when it has none. Paragraph breaks of the source stay
     /// paragraph breaks; every page keeps its picture file but drops its recognised lines, so a scanned page becomes a picture + text page
-    /// (Slice 98) and no source-language boxes are drawn.
+    /// (Slice 98) and no source-language boxes are drawn. A page in <paramref name="keepSource"/> (a page with a parent recording read in the story's own language,
+    /// Slice 111) shows its source text instead of the translation.
     /// </summary>
     public static TranslatedStory Build(
-        IReadOnlyList<StoryPage> sourcePages, IReadOnlyList<SentenceSpan> sourceSentences, IReadOnlyList<SplitSegment> translated)
+        IReadOnlyList<StoryPage> sourcePages, IReadOnlyList<SentenceSpan> sourceSentences, IReadOnlyList<SplitSegment> translated,
+        IReadOnlySet<int>? keepSource = null)
     {
         string source = Story.JoinPages(sourcePages);
-        IReadOnlyList<string> texts = SentenceTexts(source, sourceSentences, translated);
+        IReadOnlyList<string> texts = KeepSourceText(source, SentenceTexts(source, sourceSentences, translated), sourceSentences, sourcePages, keepSource);
         var pages = new List<StoryPage>();
         var spans = new SentenceSpan[sourceSentences.Count];
         var placed = new bool[sourceSentences.Count];
@@ -41,6 +43,28 @@ public static class TranslatedStoryBuilder
 
         ParkUnplaced(spans, placed);
         return new TranslatedStory(pages, Story.JoinPages(pages), spans);
+    }
+
+    // The sentences that start on a kept page show their own words, whatever the translation made of them.
+    private static IReadOnlyList<string> KeepSourceText(
+        string source, IReadOnlyList<string> texts, IReadOnlyList<SentenceSpan> sentences, IReadOnlyList<StoryPage> pages, IReadOnlySet<int>? keepSource)
+    {
+        if (keepSource is not { Count: > 0 })
+        {
+            return texts;
+        }
+
+        IReadOnlyList<int> starts = StoryRecordings.PageStarts(pages);
+        var kept = texts.ToList();
+        for (int i = 0; i < sentences.Count; i++)
+        {
+            if (keepSource.Contains(StoryRecordings.PageOfPosition(starts, sentences[i].Start)))
+            {
+                kept[i] = source[sentences[i].Start..sentences[i].End];
+            }
+        }
+
+        return kept;
     }
 
     // A sentence that lies wholly between pages shows nowhere; it gets an empty span where the one before it ended, never the start of the story.

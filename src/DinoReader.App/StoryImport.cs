@@ -228,6 +228,7 @@ public sealed class StorySaver(IStoryLibrary library, IPageImageKeeper keeper, S
 				CoverStyle = draft.CoverStyle, CoverFile = coverFile, CoverPageIndex = draft.CoverPageIndex,
 				CoverColourIndex = draft.CoverColourIndex, Cast = cast, LanguageCasts = recast ? null : draft.LanguageCasts, CharacterMerges = draft.Merges,
 			};
+			story = KeepMatchingRecordings(draft.Original, story);
 			await (isNew ? library.AddAsync(story) : library.UpdateAsync(story));
 		}
 		catch
@@ -241,6 +242,13 @@ public sealed class StorySaver(IStoryLibrary library, IPageImageKeeper keeper, S
 		{
 			await TryDeleteReplacedAsync(draft.Original, pages, coverFile);
 		}
+	}
+
+	// A parent's recording stays only with a page that is still there with the same text (Slice 111); the rest read in the generated voice again, and their files are deleted once the story is saved.
+	private static Story KeepMatchingRecordings(Story original, Story edited)
+	{
+		IReadOnlyDictionary<int, PageRecording>? kept = StoryRecordings.Kept(original, edited.Pages);
+		return edited with { Recordings = kept, UseRecordings = kept is not null && original.UseRecordings };
 	}
 
 	// The story is saved by now: a file that cannot be removed is only left behind, it must not make the save look failed.
@@ -294,6 +302,11 @@ public sealed class StorySaver(IStoryLibrary library, IPageImageKeeper keeper, S
 
 	private async Task DeleteReplacedAsync(Story original, IReadOnlyList<StoryPage> pages, string? coverFile)
 	{
+		foreach (string name in StoryRecordings.Dropped(original, StoryRecordings.Kept(original, pages)))
+		{
+			await library.DeleteFileAsync(original.Id, name);
+		}
+
 		var keep = pages.Select(p => p.ImageFile).ToHashSet();
 		StoryImport.DeletePictures(library, original.Id, original.Pages.Select(p => p.ImageFile).Where(f => !keep.Contains(f)));
 		if (original.CoverFile is not null && original.CoverFile != coverFile)

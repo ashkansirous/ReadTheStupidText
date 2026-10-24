@@ -18,6 +18,11 @@ public static class DinoTokens
 	public const string ControlFill = "ControlFill";
 	public const string ReadDim = "ReadDim";
 	public const string SentenceFill = "SentenceFill";
+	public const string PageHighlight = "PageHighlight";
+	public const string NightPageHighlight = "NightPageHighlight";
+	public const string RecordEdge = "RecordEdge";
+	public const string RecordHalo = "RecordHalo";
+	public const string RecordedDot = "RecordedDot";
 	public const string BoxFill = "BoxFill";
 	public const string BoxStroke = "BoxStroke";
 	public const string ScanCard = "ScanCard";

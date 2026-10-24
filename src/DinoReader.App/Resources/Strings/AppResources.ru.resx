@@ -142,6 +142,28 @@
   <data name="Book_ShowOriginalHint" xml:space="preserve"><value>Показать слова на языке: {0}. Голос по-прежнему читает на языке: {1}.</value></data>
   <data name="Book_Back" xml:space="preserve"><value>Вернуться к сказке</value></data>
   <!-- /Slice 110 -->
+  <!-- Slice 111 -->
+  <data name="Rec_Title" xml:space="preserve"><value>Запись</value></data>
+  <data name="Rec_Script" xml:space="preserve"><value>Прочитайте слова на этой странице вслух и нажмите «Стоп».</value></data>
+  <data name="Rec_Recording" xml:space="preserve"><value>Идёт запись · {0}</value></data>
+  <data name="Rec_Stop" xml:space="preserve"><value>Стоп</value></data>
+  <data name="Rec_Start" xml:space="preserve"><value>Запись</value></data>
+  <data name="Rec_Yours" xml:space="preserve"><value>Ваша запись</value></data>
+  <data name="Rec_Detail" xml:space="preserve"><value>{0} · {1}</value></data>
+  <data name="Rec_Redo" xml:space="preserve"><value>Записать заново</value></data>
+  <data name="Rec_Delete" xml:space="preserve"><value>Удалить запись</value></data>
+  <data name="Rec_DeleteBody" xml:space="preserve"><value>Эта страница снова будет звучать голосом Дино.</value></data>
+  <data name="Rec_Next" xml:space="preserve"><value>Следующая страница</value></data>
+  <data name="Rec_Previous" xml:space="preserve"><value>Предыдущая страница</value></data>
+  <data name="Rec_Play" xml:space="preserve"><value>Прослушать запись</value></data>
+  <data name="Rec_Subtitle" xml:space="preserve"><value>{0} · страница {1} из {2}</value></data>
+  <data name="Rec_UseVoice" xml:space="preserve"><value>Читать моим голосом</value></data>
+  <data name="Rec_UseVoiceHint" xml:space="preserve"><value>Записано страниц: {0} из {1}. Остальные читаются голосами Дино.</value></data>
+  <data name="Rec_RecordPage" xml:space="preserve"><value>Записать {0} вашим голосом</value></data>
+  <data name="Rec_NoMicTitle" xml:space="preserve"><value>Микрофон выключен</value></data>
+  <data name="Rec_NoMic" xml:space="preserve"><value>Разрешите доступ к микрофону для Dino Book Reader в настройках устройства и попробуйте снова.</value></data>
+  <data name="Rec_Failed" xml:space="preserve"><value>Запись не удалась. Попробуйте ещё раз.</value></data>
+  <!-- /Slice 111 -->
   <data name="Add_Scan" xml:space="preserve"><value>Сканировать страницы</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Сохраняет картинки страниц</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Фото</value></data>

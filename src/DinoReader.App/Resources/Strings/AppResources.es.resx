@@ -142,6 +142,28 @@
   <data name="Book_ShowOriginalHint" xml:space="preserve"><value>Muestra las palabras en {0}. La voz sigue leyendo en {1}.</value></data>
   <data name="Book_Back" xml:space="preserve"><value>Volver al cuento</value></data>
   <!-- /Slice 110 -->
+  <!-- Slice 111 -->
+  <data name="Rec_Title" xml:space="preserve"><value>Grabar</value></data>
+  <data name="Rec_Script" xml:space="preserve"><value>Lee en voz alta las palabras de esta página y toca Detener.</value></data>
+  <data name="Rec_Recording" xml:space="preserve"><value>Grabando · {0}</value></data>
+  <data name="Rec_Stop" xml:space="preserve"><value>Detener</value></data>
+  <data name="Rec_Start" xml:space="preserve"><value>Grabar</value></data>
+  <data name="Rec_Yours" xml:space="preserve"><value>Tu grabación</value></data>
+  <data name="Rec_Detail" xml:space="preserve"><value>{0} · {1}</value></data>
+  <data name="Rec_Redo" xml:space="preserve"><value>Grabar de nuevo</value></data>
+  <data name="Rec_Delete" xml:space="preserve"><value>Eliminar grabación</value></data>
+  <data name="Rec_DeleteBody" xml:space="preserve"><value>Esta página volverá a usar la voz de Dino.</value></data>
+  <data name="Rec_Next" xml:space="preserve"><value>Página siguiente</value></data>
+  <data name="Rec_Previous" xml:space="preserve"><value>Página anterior</value></data>
+  <data name="Rec_Play" xml:space="preserve"><value>Reproducir tu grabación</value></data>
+  <data name="Rec_Subtitle" xml:space="preserve"><value>{0} · página {1} de {2}</value></data>
+  <data name="Rec_UseVoice" xml:space="preserve"><value>Leer con mi voz</value></data>
+  <data name="Rec_UseVoiceHint" xml:space="preserve"><value>{0} de {1} páginas grabadas. Las demás páginas usan las voces de Dino.</value></data>
+  <data name="Rec_RecordPage" xml:space="preserve"><value>Grabar {0} con tu voz</value></data>
+  <data name="Rec_NoMicTitle" xml:space="preserve"><value>El micrófono está desactivado</value></data>
+  <data name="Rec_NoMic" xml:space="preserve"><value>Permite el micrófono para Dino Book Reader en los ajustes del dispositivo y vuelve a intentarlo.</value></data>
+  <data name="Rec_Failed" xml:space="preserve"><value>La grabación no funcionó. Inténtalo de nuevo.</value></data>
+  <!-- /Slice 111 -->
   <data name="Add_Scan" xml:space="preserve"><value>Escanear páginas</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Conserva las imágenes de las páginas</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Fotos</value></data>

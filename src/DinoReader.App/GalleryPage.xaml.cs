@@ -189,6 +189,15 @@ public partial class GalleryPage : ContentPage
 		}
 	}
 
+	// Record (Slice 111): the page-by-page recording screen for this book.
+	private async void OnRecordRequested(object? sender, EventArgs e)
+	{
+		if (TileOf(sender) is { } tile)
+		{
+			await RunGrownUpAsync(() => _actions.RecordAsync(Navigation, tile.Story));
+		}
+	}
+
 	private async void OnExportRequested(object? sender, EventArgs e)
 	{
 		if (TileOf(sender) is { } tile)

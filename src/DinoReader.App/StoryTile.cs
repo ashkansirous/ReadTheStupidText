@@ -35,6 +35,8 @@ public sealed record StoryTile(Story Story, Color CoverColour, string? CoverImag
 
 	public string CastHint => GalleryText.CastStory(Title);
 
+	public string RecordHint => GalleryText.RecordStory(Title);
+
 	public string DeleteHint => GalleryText.DeleteStory(Title);
 
 	/// <summary>The developer-only export badge (Slice 91): shown only with the developer switch on.</summary>

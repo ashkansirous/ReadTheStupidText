@@ -55,6 +55,22 @@ public sealed class StoryActions(IStoryLibrary library, IServiceProvider service
 		await navigation.PushAsync(cast);
 	}
 
+	/// <summary>Opens the Record screen on <paramref name="story"/> (Slice 111): the grown-up reads each page aloud and the recordings are saved as they are made.</summary>
+	public async Task RecordAsync(INavigation navigation, Story story)
+	{
+		if (!mode.IsGrownUp)
+		{
+			return;
+		}
+
+		var record = services.GetRequiredService<RecordPage>();
+		await record.LoadAsync(story);
+		if (mode.IsGrownUp)
+		{
+			await navigation.PushAsync(record);
+		}
+	}
+
 	/// <summary>Saves the casts (every language's) and merges of <paramref name="edited"/> onto the stored story, leaving
 	/// everything else in the stored file (its reading mode, say) as it is.</summary>
 	public async Task SaveCastAsync(Story edited)

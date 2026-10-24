@@ -144,6 +144,28 @@
   <data name="Book_ShowOriginalHint" xml:space="preserve"><value>Näytä sanat kielellä {0}. Ääni lukee edelleen kielellä {1}.</value></data>
   <data name="Book_Back" xml:space="preserve"><value>Takaisin tarinaan</value></data>
   <!-- /Slice 110 -->
+  <!-- Slice 111 -->
+  <data name="Rec_Title" xml:space="preserve"><value>Nauhoita</value></data>
+  <data name="Rec_Script" xml:space="preserve"><value>Lue tämän sivun sanat ääneen ja napauta sitten Lopeta.</value></data>
+  <data name="Rec_Recording" xml:space="preserve"><value>Nauhoitetaan · {0}</value></data>
+  <data name="Rec_Stop" xml:space="preserve"><value>Lopeta</value></data>
+  <data name="Rec_Start" xml:space="preserve"><value>Nauhoita</value></data>
+  <data name="Rec_Yours" xml:space="preserve"><value>Sinun nauhoituksesi</value></data>
+  <data name="Rec_Detail" xml:space="preserve"><value>{0} · {1}</value></data>
+  <data name="Rec_Redo" xml:space="preserve"><value>Nauhoita uudelleen</value></data>
+  <data name="Rec_Delete" xml:space="preserve"><value>Poista nauhoitus</value></data>
+  <data name="Rec_DeleteBody" xml:space="preserve"><value>Tämä sivu käyttää taas Dinon ääntä.</value></data>
+  <data name="Rec_Next" xml:space="preserve"><value>Seuraava sivu</value></data>
+  <data name="Rec_Previous" xml:space="preserve"><value>Edellinen sivu</value></data>
+  <data name="Rec_Play" xml:space="preserve"><value>Kuuntele nauhoituksesi</value></data>
+  <data name="Rec_Subtitle" xml:space="preserve"><value>{0} · sivu {1}/{2}</value></data>
+  <data name="Rec_UseVoice" xml:space="preserve"><value>Lue minun äänelläni</value></data>
+  <data name="Rec_UseVoiceHint" xml:space="preserve"><value>{0}/{1} sivua nauhoitettu. Muut sivut käyttävät Dinon ääniä.</value></data>
+  <data name="Rec_RecordPage" xml:space="preserve"><value>Nauhoita {0} omalla äänelläsi</value></data>
+  <data name="Rec_NoMicTitle" xml:space="preserve"><value>Mikrofoni on pois päältä</value></data>
+  <data name="Rec_NoMic" xml:space="preserve"><value>Salli mikrofoni Dino Book Readerille laitteen asetuksissa ja yritä uudelleen.</value></data>
+  <data name="Rec_Failed" xml:space="preserve"><value>Nauhoitus ei onnistunut. Yritä uudelleen.</value></data>
+  <!-- /Slice 111 -->
   <data name="Add_Scan" xml:space="preserve"><value>Skannaa sivut</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Säilyttää sivukuvat</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Kuvat</value></data>

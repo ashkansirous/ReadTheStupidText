@@ -14,6 +14,8 @@ public partial class TileOverlay : ContentView
 
 	public event EventHandler? DeleteRequested;
 
+	public event EventHandler? RecordRequested;
+
 	public event EventHandler? ExportRequested;
 
 	private void OnEditClicked(object? sender, EventArgs e) => EditRequested?.Invoke(this, e);
@@ -25,4 +27,6 @@ public partial class TileOverlay : ContentView
 	private void OnExportTapped(object? sender, TappedEventArgs e) => ExportRequested?.Invoke(this, e);
 
 	private void OnDeleteTapped(object? sender, TappedEventArgs e) => DeleteRequested?.Invoke(this, e);
+
+	private void OnRecordTapped(object? sender, TappedEventArgs e) => RecordRequested?.Invoke(this, e);
 }

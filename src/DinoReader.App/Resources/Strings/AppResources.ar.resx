@@ -142,6 +142,28 @@
   <data name="Book_ShowOriginalHint" xml:space="preserve"><value>أظهر كلمات {0}. ما زال الصوت يقرأ بـ{1}.</value></data>
   <data name="Book_Back" xml:space="preserve"><value>العودة إلى القصة</value></data>
   <!-- /Slice 110 -->
+  <!-- Slice 111 -->
+  <data name="Rec_Title" xml:space="preserve"><value>تسجيل</value></data>
+  <data name="Rec_Script" xml:space="preserve"><value>اقرأ كلمات هذه الصفحة بصوت عالٍ، ثم اضغط إيقاف.</value></data>
+  <data name="Rec_Recording" xml:space="preserve"><value>جارٍ التسجيل · {0}</value></data>
+  <data name="Rec_Stop" xml:space="preserve"><value>إيقاف</value></data>
+  <data name="Rec_Start" xml:space="preserve"><value>تسجيل</value></data>
+  <data name="Rec_Yours" xml:space="preserve"><value>تسجيلك</value></data>
+  <data name="Rec_Detail" xml:space="preserve"><value>{0} · {1}</value></data>
+  <data name="Rec_Redo" xml:space="preserve"><value>إعادة التسجيل</value></data>
+  <data name="Rec_Delete" xml:space="preserve"><value>حذف التسجيل</value></data>
+  <data name="Rec_DeleteBody" xml:space="preserve"><value>ستستخدم هذه الصفحة صوت دينو مرة أخرى.</value></data>
+  <data name="Rec_Next" xml:space="preserve"><value>الصفحة التالية</value></data>
+  <data name="Rec_Previous" xml:space="preserve"><value>الصفحة السابقة</value></data>
+  <data name="Rec_Play" xml:space="preserve"><value>شغّل تسجيلك</value></data>
+  <data name="Rec_Subtitle" xml:space="preserve"><value>{0} · الصفحة {1} من {2}</value></data>
+  <data name="Rec_UseVoice" xml:space="preserve"><value>اقرأ بصوتي</value></data>
+  <data name="Rec_UseVoiceHint" xml:space="preserve"><value>تم تسجيل {0} من {1} صفحات. باقي الصفحات تستخدم أصوات دينو.</value></data>
+  <data name="Rec_RecordPage" xml:space="preserve"><value>سجّل {0} بصوتك</value></data>
+  <data name="Rec_NoMicTitle" xml:space="preserve"><value>الميكروفون مغلق</value></data>
+  <data name="Rec_NoMic" xml:space="preserve"><value>اسمح بالميكروفون لتطبيق Dino Book Reader في إعدادات جهازك، ثم حاول مجدداً.</value></data>
+  <data name="Rec_Failed" xml:space="preserve"><value>لم ينجح التسجيل. حاول مرة أخرى.</value></data>
+  <!-- /Slice 111 -->
   <data name="Add_Scan" xml:space="preserve"><value>مسح الصفحات</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>تحتفظ بصور الصفحات</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>الصور</value></data>

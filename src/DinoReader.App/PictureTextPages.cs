@@ -97,7 +97,18 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 			return;
 		}
 
-		_label.FormattedText = TextOf(_slots[page].StoryPage, sentence);
+		_label.FormattedText = TextOf(_slots[page].StoryPage, sentence, whole: false);
+	}
+
+	/// <summary>The whole page's text on one soft highlight (a page read from a parent's recording, Slice 111).</summary>
+	public void MarkPage(PageLayers layers, int page, int first, int last)
+	{
+		if (_label is null || page != _drawnPage || !InRange(page))
+		{
+			return;
+		}
+
+		_label.FormattedText = TextOf(_slots[page].StoryPage, -1, whole: true);
 	}
 
 	// Taps on the text are handled by each sentence's own span (the label takes touches, so they reach the spans), so the
@@ -190,7 +201,7 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 
 	// The page's text cut at each sentence start: what was read and the spoken sentence are ink (the spoken one on the
 	// highlight), what is still to come is dim; with nothing spoken the page is all ink.
-	private FormattedString TextOf(int storyPage, int current)
+	private FormattedString TextOf(int storyPage, int current, bool whole)
 	{
 		int start = _layout.PageStart(storyPage);
 		int end = _layout.PageEnd(storyPage);
@@ -200,22 +211,26 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		for (int i = first; i >= 0 && i <= last; i++)
 		{
 			int pieceEnd = i == last ? end : Math.Clamp(sentences[i + 1].Start, at, end);
-			formatted.Spans.Add(SpanOf(text[at..pieceEnd], i, current));
+			formatted.Spans.Add(SpanOf(text[at..pieceEnd], i, current, whole));
 			at = pieceEnd;
 		}
 
 		if (formatted.Spans.Count == 0)
 		{
-			formatted.Spans.Add(SpanOf(text[start..end], -1, current));
+			formatted.Spans.Add(SpanOf(text[start..end], -1, current, whole));
 		}
 
 		return formatted;
 	}
 
-	private Span SpanOf(string piece, int sentence, int current)
+	private Span SpanOf(string piece, int sentence, int current, bool whole)
 	{
 		var span = new Span { Text = piece, TextColor = _theme.Ink, FontFamily = font, FontSize = PanelFontSize };
-		if (current >= 0 && sentence > current)
+		if (whole)
+		{
+			span.BackgroundColor = _theme.PageHighlight;
+		}
+		else if (current >= 0 && sentence > current)
 		{
 			span.TextColor = _theme.ReadText;
 		}

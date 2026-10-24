@@ -27,7 +27,7 @@
 </head>
 <body>
   <h1>Privacy Policy &mdash; Dino Book Reader</h1>
-  <p class="eff"><strong>Effective date:</strong> 24 October 2026</p>
+  <p class="eff"><strong>Effective date:</strong> 25 October 2026</p>
 
   <p class="lede">Dino Book Reader (&ldquo;the app&rdquo;) is a book reader for children aged 3 to 8. It reads
   stories aloud with a different voice for each character. This policy explains how the app handles
@@ -38,7 +38,7 @@
   It has no accounts, no advertising, and no analytics of its own. Everything the app does happens
   <strong>on the device</strong>, apart from downloading voice packs and free stories. On Android, the Google
   ML Kit components the app uses send Google technical diagnostics data, described under
-  &ldquo;Google ML Kit (Android)&rdquo; below. Your stories, photos, scans and audio are never sent.</p>
+  &ldquo;Google ML Kit (Android)&rdquo; below. Your stories, photos, scans and recordings are never sent.</p>
 
   <h2>What the app processes, and where</h2>
   <ul>
@@ -51,6 +51,12 @@
       sent to a translation service.</li>
     <li><strong>Speech</strong> is generated on the device by an offline voice engine. No text or
       audio is sent to any server.</li>
+    <li><strong>Recordings of a parent&rsquo;s voice</strong> are made only if a grown-up opens the Record screen
+      (behind the grown-ups gate) and taps record, to read a page of a story aloud in their own voice. A recording
+      is saved on the device, in that story&rsquo;s private folder, and is played back when the story is read. It is
+      never sent to anyone, never analysed and never used for anything else. It is included in a backup file only
+      when a grown-up makes one and chooses where to keep it, and it is deleted when the grown-up deletes it or the
+      story. The app does not record the child, and does not listen at any other time.</li>
     <li><strong>Settings and the story library</strong> (voices chosen for characters, reading
       progress, display choices) are stored on the device and never leave it.</li>
     <li>The app contains <strong>no advertising and no in-app purchases</strong>, and it does not
@@ -88,12 +94,14 @@
   <h2>Permissions</h2>
   <p>The app declares the <strong>Internet</strong> and <strong>Network state</strong> permissions,
   used only to download voice and language packs, translation models and free stories, and to tell &ldquo;offline&rdquo;
-  from a failed download. Pages you scan and photos you pick are processed on the device and never leave it.
+  from a failed download. On Android it also declares the <strong>Microphone</strong> permission (on iPhone and Windows the
+  matching microphone access), asked for only when a grown-up first taps record on the Record screen, and used only while
+  a recording is running. Pages you scan and photos you pick are processed on the device and never leave it.
   Choosing a file or photo uses the standard Android picker, and the app only opens what you pick.</p>
 
   <h2>Children&rsquo;s privacy</h2>
   <p>Dino Book Reader is designed for children, and the app collects no personal information from anyone,
-  including children: no name, email address, photos or stories. It has no accounts, no ads, no social
+  including children: no name, email address, photos, recordings or stories. It has no accounts, no ads, no social
   features, no behavioural tracking, and no way for a child to send information to anyone. The only data
   that leaves the device is the technical diagnostics data that Google ML Kit sends on Android
   (see &ldquo;Google ML Kit (Android)&rdquo; above), which does not include any content a child creates. Settings and the story library sit behind a

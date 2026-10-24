@@ -37,6 +37,11 @@ public interface IStoryLibrary
     /// Only cover files (<see cref="Story.CoverFilePrefix"/>, <see cref="Story.CoverFileExtension"/>) are accepted, the same ones <see cref="DeleteFileAsync"/> removes. A fresh name each time means a replaced picture is never served from an image cache (Slice 77).</summary>
     Task<string> StoreFileAsync(string storyId, string prefix, string extension, Func<string, Task> write);
 
-    /// <summary>Deletes one cover file this library stored; a missing file, an unusable name or any other file does nothing.</summary>
+    /// <summary>Stores page <paramref name="page"/>'s recording as <see cref="StoryRecordings.FileNameOf"/> in the story's folder (Slice 111): <paramref name="write"/> fills a temp file (given its
+    /// path), which is then renamed over any earlier recording of the page, so a failed write keeps the old one. Returns the file name.
+    /// A library that does not store stories on disk leaves it unsupported.</summary>
+    Task<string> StoreRecordingAsync(string storyId, int page, Func<string, Task> write) => throw new NotSupportedException();
+
+    /// <summary>Deletes one cover file or page recording this library stored; a missing file, an unusable name or any other file does nothing.</summary>
     Task DeleteFileAsync(string storyId, string fileName);
 }

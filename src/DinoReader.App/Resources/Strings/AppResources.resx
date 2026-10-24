@@ -145,6 +145,28 @@
   <data name="Book_ShowOriginalHint" xml:space="preserve"><value>Show the {0} words. The voice still reads in {1}.</value></data>
   <data name="Book_Back" xml:space="preserve"><value>Back to the story</value></data>
   <!-- /Slice 110 -->
+  <!-- Slice 111 -->
+  <data name="Rec_Title" xml:space="preserve"><value>Record</value></data>
+  <data name="Rec_Script" xml:space="preserve"><value>Read the words on this page aloud, then tap Stop.</value></data>
+  <data name="Rec_Recording" xml:space="preserve"><value>Recording · {0}</value></data>
+  <data name="Rec_Stop" xml:space="preserve"><value>Stop</value></data>
+  <data name="Rec_Start" xml:space="preserve"><value>Record</value></data>
+  <data name="Rec_Yours" xml:space="preserve"><value>Your recording</value></data>
+  <data name="Rec_Detail" xml:space="preserve"><value>{0} · {1}</value></data>
+  <data name="Rec_Redo" xml:space="preserve"><value>Re-record</value></data>
+  <data name="Rec_Delete" xml:space="preserve"><value>Delete recording</value></data>
+  <data name="Rec_DeleteBody" xml:space="preserve"><value>This page will use Dino's voice again.</value></data>
+  <data name="Rec_Next" xml:space="preserve"><value>Next page</value></data>
+  <data name="Rec_Previous" xml:space="preserve"><value>Previous page</value></data>
+  <data name="Rec_Play" xml:space="preserve"><value>Play your recording</value></data>
+  <data name="Rec_Subtitle" xml:space="preserve"><value>{0} · page {1} of {2}</value></data>
+  <data name="Rec_UseVoice" xml:space="preserve"><value>Read with my voice</value></data>
+  <data name="Rec_UseVoiceHint" xml:space="preserve"><value>{0} of {1} pages recorded. Other pages use Dino's voices.</value></data>
+  <data name="Rec_RecordPage" xml:space="preserve"><value>Record {0} in your voice</value></data>
+  <data name="Rec_NoMicTitle" xml:space="preserve"><value>Microphone is off</value></data>
+  <data name="Rec_NoMic" xml:space="preserve"><value>Allow the microphone for Dino Book Reader in your device settings, then try again.</value></data>
+  <data name="Rec_Failed" xml:space="preserve"><value>The recording didn't work. Please try again.</value></data>
+  <!-- /Slice 111 -->
   <data name="Add_Scan" xml:space="preserve"><value>Scan pages</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Keeps the page pictures</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Photos</value></data>

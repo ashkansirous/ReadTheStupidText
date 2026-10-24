@@ -26,6 +26,7 @@ public enum IconKind
 	AddBook,
 	Globe,
 	Narrator,
+	Mic,
 }
 
 /// <summary>Draws one <see cref="IconKind"/> as a stroked path, so colour and size follow the design tokens.</summary>
@@ -79,6 +80,7 @@ public sealed class IconView : ContentView
 		[IconKind.Camera] = "M4 8a2 2 0 0 1 2-2h1.5l1.2-2h6.6l1.2 2H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z M9.6 12.5a3.4 3.4 0 1 0 6.8 0a3.4 3.4 0 1 0-6.8 0",
 		[IconKind.Globe] = "M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0 M3 12h18 M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z",
 		[IconKind.Narrator] = "M5.5 8a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0-7 0 M3 20c.6-3.6 3-5.5 6-5.5s5.4 1.9 6 5.5 M17 8.5c1 .8 1.5 1.8 1.5 3s-.5 2.2-1.5 3 M19.5 6c1.6 1.4 2.5 3.4 2.5 5.5s-.9 4.1-2.5 5.5",
+		[IconKind.Mic] = "M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3z M5.5 11a6.5 6.5 0 0 0 13 0 M12 17.5V21",
 		[IconKind.Book] = "M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5z M12 6.5v13",
 		[IconKind.Picture] = "M6 4.5h12A2.5 2.5 0 0 1 20.5 7v10a2.5 2.5 0 0 1-2.5 2.5H6A2.5 2.5 0 0 1 3.5 17V7A2.5 2.5 0 0 1 6 4.5z M7.2 10a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0-3.6 0 M4.5 17.5l5-5 4 4 2.5-2.5 3.5 3.5",
 		[IconKind.SkipBack] = "M11 5L4 12l7 7 M19 5l-7 7 7 7",

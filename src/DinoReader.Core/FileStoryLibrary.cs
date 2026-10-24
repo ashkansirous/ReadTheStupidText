@@ -155,15 +155,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         {
             // The slow write (decode, rescale, encode) runs outside the library-wide gate; only the move is serialised.
             await write(temp);
-            await _gate.WaitAsync();
-            try
-            {
-                File.Move(temp, target, overwrite: true);
-            }
-            finally
-            {
-                _gate.Release();
-            }
+            await MoveIntoPlaceAsync(temp, target);
         }
         catch
         {
@@ -174,10 +166,48 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         return name;
     }
 
+    public async Task<string> StoreRecordingAsync(string storyId, int page, Func<string, Task> write)
+    {
+        if (page < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(page));
+        }
+
+        string name = StoryRecordings.FileNameOf(page);
+        string target = TryResolveFile(storyId, name) ?? throw new ArgumentException("Not a plain file name.", nameof(storyId));
+        Directory.CreateDirectory(FolderOf(storyId));
+        string temp = $"{target}.{Guid.NewGuid():N}{TempSuffix}";
+        try
+        {
+            await write(temp);
+            await MoveIntoPlaceAsync(temp, target);
+        }
+        catch
+        {
+            TryDelete(temp);
+            throw;
+        }
+
+        return name;
+    }
+
+    private async Task MoveIntoPlaceAsync(string temp, string target)
+    {
+        await _gate.WaitAsync();
+        try
+        {
+            File.Move(temp, target, overwrite: true);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
     public async Task DeleteFileAsync(string storyId, string fileName)
     {
         string? path = TryResolveFile(storyId, fileName);
-        if (path is null || !IsCoverFileName(fileName))
+        if (path is null || !(IsCoverFileName(fileName) || StoryRecordings.IsRecordingFileName(fileName)))
         {
             return;
         }
@@ -193,7 +223,7 @@ public sealed class FileStoryLibrary(string root) : IStoryLibrary
         }
     }
 
-    // Only cover photos this library stored are ever deleted; a hand-edited story.json naming a page picture must not remove it.
+    // Only cover photos and page recordings this library stored are ever deleted; a hand-edited story.json naming a page picture must not remove it.
     private static bool IsCoverFileName(string fileName) =>
         fileName.StartsWith(Story.CoverFilePrefix + "-", StringComparison.Ordinal)
         && fileName.EndsWith(Story.CoverFileExtension, StringComparison.Ordinal);

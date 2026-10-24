@@ -142,6 +142,28 @@
   <data name="Book_ShowOriginalHint" xml:space="preserve"><value>{0}の文字を表示します。声は今までどおり{1}で読みます。</value></data>
   <data name="Book_Back" xml:space="preserve"><value>お話にもどる</value></data>
   <!-- /Slice 110 -->
+  <!-- Slice 111 -->
+  <data name="Rec_Title" xml:space="preserve"><value>録音</value></data>
+  <data name="Rec_Script" xml:space="preserve"><value>このページの言葉を声に出して読み、「停止」をタップしてください。</value></data>
+  <data name="Rec_Recording" xml:space="preserve"><value>録音中 · {0}</value></data>
+  <data name="Rec_Stop" xml:space="preserve"><value>停止</value></data>
+  <data name="Rec_Start" xml:space="preserve"><value>録音</value></data>
+  <data name="Rec_Yours" xml:space="preserve"><value>あなたの録音</value></data>
+  <data name="Rec_Detail" xml:space="preserve"><value>{0} · {1}</value></data>
+  <data name="Rec_Redo" xml:space="preserve"><value>録り直す</value></data>
+  <data name="Rec_Delete" xml:space="preserve"><value>録音を削除</value></data>
+  <data name="Rec_DeleteBody" xml:space="preserve"><value>このページは、またディノの声を使います。</value></data>
+  <data name="Rec_Next" xml:space="preserve"><value>次のページ</value></data>
+  <data name="Rec_Previous" xml:space="preserve"><value>前のページ</value></data>
+  <data name="Rec_Play" xml:space="preserve"><value>録音を再生</value></data>
+  <data name="Rec_Subtitle" xml:space="preserve"><value>{0} · {2}ページ中{1}ページ目</value></data>
+  <data name="Rec_UseVoice" xml:space="preserve"><value>自分の声で読む</value></data>
+  <data name="Rec_UseVoiceHint" xml:space="preserve"><value>{1}ページ中{0}ページを録音済み。ほかのページはディノの声を使います。</value></data>
+  <data name="Rec_RecordPage" xml:space="preserve"><value>{0}をあなたの声で録音</value></data>
+  <data name="Rec_NoMicTitle" xml:space="preserve"><value>マイクがオフです</value></data>
+  <data name="Rec_NoMic" xml:space="preserve"><value>端末の設定で Dino Book Reader にマイクを許可してから、もう一度お試しください。</value></data>
+  <data name="Rec_Failed" xml:space="preserve"><value>録音できませんでした。もう一度お試しください。</value></data>
+  <!-- /Slice 111 -->
   <data name="Add_Scan" xml:space="preserve"><value>ページをスキャン</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>ページの絵を残します</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>写真</value></data>

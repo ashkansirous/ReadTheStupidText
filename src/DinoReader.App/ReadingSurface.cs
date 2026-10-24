@@ -41,6 +41,7 @@ public sealed class ReadingSurface : Border
 	private IPageRenderer? _renderer;
 	private int _page;
 	private int _sentence = -1;
+	private int _lastSentence = -1; // the end of a soft-highlighted recorded page (Slice 111); -1 when one sentence is marked
 	private Size _laidOutFor;
 	private int _anchor = -1;
 	private int _anchorPosition = -1;
@@ -133,8 +134,30 @@ public sealed class ReadingSurface : Border
 	public void Mark(int sentence, int position = -1)
 	{
 		_sentence = sentence;
+		_lastSentence = -1;
 		_position = position;
 		_renderer?.Mark(_layers, _page, sentence);
+	}
+
+	/// <summary>Marks sentences <paramref name="first"/> to <paramref name="last"/> with the soft page highlight: a page read from a parent's
+	/// recording (Slice 111). <paramref name="first"/> is the sentence the reading is at, so the page still follows it.</summary>
+	public void MarkPage(int first, int last, int position = -1)
+	{
+		_sentence = first;
+		_lastSentence = last;
+		_position = position;
+		ApplyMark();
+	}
+
+	private void ApplyMark()
+	{
+		if (_lastSentence >= 0)
+		{
+			_renderer?.MarkPage(_layers, _page, _sentence, _lastSentence);
+			return;
+		}
+
+		_renderer?.Mark(_layers, _page, _sentence);
 	}
 
 	public int FirstSentenceOnPage(int page) => _renderer?.FirstSentenceOf(page) ?? -1;
@@ -155,7 +178,7 @@ public sealed class ReadingSurface : Border
 		_anchorPosition = _renderer.FirstPositionOf(_page);
 		BackgroundColor = _renderer.CardColour(_page);
 		_renderer.DrawPage(_layers, _page);
-		_renderer.Mark(_layers, _page, _sentence);
+		ApplyMark();
 	}
 
 	// The first layout (and a retry after a failed one) runs at once; any other size change, a

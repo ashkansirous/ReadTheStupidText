@@ -144,6 +144,28 @@
   <data name="Book_ShowOriginalHint" xml:space="preserve"><value>Vis ordene på {0}. Stemmen leser fortsatt på {1}.</value></data>
   <data name="Book_Back" xml:space="preserve"><value>Tilbake til historien</value></data>
   <!-- /Slice 110 -->
+  <!-- Slice 111 -->
+  <data name="Rec_Title" xml:space="preserve"><value>Ta opp</value></data>
+  <data name="Rec_Script" xml:space="preserve"><value>Les ordene på siden høyt, og trykk deretter på Stopp.</value></data>
+  <data name="Rec_Recording" xml:space="preserve"><value>Tar opp · {0}</value></data>
+  <data name="Rec_Stop" xml:space="preserve"><value>Stopp</value></data>
+  <data name="Rec_Start" xml:space="preserve"><value>Ta opp</value></data>
+  <data name="Rec_Yours" xml:space="preserve"><value>Opptaket ditt</value></data>
+  <data name="Rec_Detail" xml:space="preserve"><value>{0} · {1}</value></data>
+  <data name="Rec_Redo" xml:space="preserve"><value>Ta opp igjen</value></data>
+  <data name="Rec_Delete" xml:space="preserve"><value>Slett opptak</value></data>
+  <data name="Rec_DeleteBody" xml:space="preserve"><value>Siden bruker Dinos stemme igjen.</value></data>
+  <data name="Rec_Next" xml:space="preserve"><value>Neste side</value></data>
+  <data name="Rec_Previous" xml:space="preserve"><value>Forrige side</value></data>
+  <data name="Rec_Play" xml:space="preserve"><value>Spill av opptaket ditt</value></data>
+  <data name="Rec_Subtitle" xml:space="preserve"><value>{0} · side {1} av {2}</value></data>
+  <data name="Rec_UseVoice" xml:space="preserve"><value>Les med stemmen min</value></data>
+  <data name="Rec_UseVoiceHint" xml:space="preserve"><value>{0} av {1} sider tatt opp. De andre sidene bruker Dinos stemmer.</value></data>
+  <data name="Rec_RecordPage" xml:space="preserve"><value>Ta opp {0} med stemmen din</value></data>
+  <data name="Rec_NoMicTitle" xml:space="preserve"><value>Mikrofonen er av</value></data>
+  <data name="Rec_NoMic" xml:space="preserve"><value>Gi Dino Book Reader tilgang til mikrofonen i enhetens innstillinger, og prøv igjen.</value></data>
+  <data name="Rec_Failed" xml:space="preserve"><value>Opptaket fungerte ikke. Prøv igjen.</value></data>
+  <!-- /Slice 111 -->
   <data name="Add_Scan" xml:space="preserve"><value>Skann sider</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Beholder sidebildene</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Bilder</value></data>

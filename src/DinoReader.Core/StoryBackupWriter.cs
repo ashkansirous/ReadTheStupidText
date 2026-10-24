@@ -56,7 +56,7 @@ public static class StoryBackupWriter
     {
         try
         {
-            await StoryPackageWriter.WriteAsync(story, library, temp);
+            await StoryPackageWriter.WriteAsync(story, library, temp, includeRecordings: true);
             return true;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or StoryPackageException)

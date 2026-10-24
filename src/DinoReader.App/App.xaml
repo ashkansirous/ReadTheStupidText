@@ -21,6 +21,12 @@
         <!-- Reading screens (mock screens 3, 4, 5): generated pages, highlights, pager and transport. -->
         <Color x:Key="ReadDim">#b3abc2</Color>
         <Color x:Key="SentenceFill">#FFE27A</Color>
+        <!-- Parents read in their own voice (Slice 111, mock frames 44-46): the soft page highlight, the record button and the recorded-page dot. -->
+        <Color x:Key="PageHighlight">#FFF3C4</Color>
+        <Color x:Key="NightPageHighlight">#1FFFD678</Color>
+        <Color x:Key="RecordEdge">#B9363A</Color>
+        <Color x:Key="RecordHalo">#2EE5484D</Color>
+        <Color x:Key="RecordedDot">#4FC060</Color>
         <Color x:Key="BoxFill">#6BFFD600</Color>
         <Color x:Key="BoxStroke">#F5B800</Color>
         <Color x:Key="ScanCard">#f7f1e3</Color>
