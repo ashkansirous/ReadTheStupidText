@@ -61,7 +61,7 @@ New strings (all 14 locales, in this slice's block): the second line "Reads and 
   Farsi with no extra switch.
 - Windows head: the same new book shows the greyed switch and the note, and reads English.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-24)
 
 - Every new book (`StoryWizardPage.NewStoryAsync`) is created with `TranslateToMyLanguage = true`; existing stories are unchanged.
 - The Text step's switch always shows (`LanguageCard`) with a second line "Reads and shows it in {language}". It is greyed, off, with "Translation works on Android for now" when there is no `ITranslator` and the story has no bundled table for my language (`TextStep.CanTranslate`). The draft's flag is left true meanwhile: `LanguageCard.Translate` holds the wanted value and a greyed switch only shows it off, never writes it back (switching the story language re-checks via `StoryTranslator.CanTranslate`).
