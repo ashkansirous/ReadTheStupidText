@@ -1,6 +1,6 @@
 # Slice 104 — A Norwegian voice pack (Piper nvcc, ten speakers)
 
-*Planned 2026-10-24*, from the user's request to add Norwegian (with Slice 103).
+*In progress (wave 2026-10-24), draft PR.* Planned 2026-10-24, from the user's request to add Norwegian (with Slice 103).
 
 **Batch:** 21 (five more languages)
 **Depends on:** Slice 103 (`nb` exists), Slice 89 (the `piper-fa` pack format and per-platform Piper readers)
