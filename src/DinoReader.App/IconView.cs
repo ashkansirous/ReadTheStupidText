@@ -125,12 +125,6 @@ public sealed class IconView : ContentView
 			HeightRequest = Size,
 			HorizontalOptions = LayoutOptions.Center,
 			VerticalOptions = LayoutOptions.Center,
-			ScaleX = PointsAcross(Kind) && UiCulture.IsRightToLeft ? -1 : 1,
 		};
 	}
-
-	// Arrows and chevrons point along the reading direction, so a right-to-left screen draws them flipped
-	// (the mock's scaleX(-1) back arrow); play, pause and the rest keep their shape.
-	private static bool PointsAcross(IconKind kind) =>
-		kind is IconKind.Back or IconKind.Chevron or IconKind.SkipBack or IconKind.SkipForward;
 }

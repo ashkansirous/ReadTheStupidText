@@ -34,7 +34,6 @@ public partial class ReadingPage : ContentPage
 		VoicePackInstaller installer, IVoiceModelService model, SpokenLanguage spoken)
 	{
 		InitializeComponent();
-		Header.Padding = UiFlow.Mirror(Header.Padding);
 		_spoken = spoken;
 		_session = session;
 		_library = library;

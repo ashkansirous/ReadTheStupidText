@@ -45,7 +45,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 	{
 		BarBackgroundColor = DinoTokens.Get(DinoTokens.Cream),
 		BarTextColor = DinoTokens.Get(DinoTokens.Ink),
-		FlowDirection = UiFlow.ForCurrentCulture(),
+		FlowDirection = UiFlow.Screen,
 	};
 
 	// The Farsi UI font is written into the shared styles once, before the first page that needs it is built.
