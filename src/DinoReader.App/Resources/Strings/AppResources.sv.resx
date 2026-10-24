@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>
+  <data name="Cast_UnknownGender" xml:space="preserve"><value>?</value></data>
+  <data name="Common_Ok" xml:space="preserve"><value>OK</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>Avbryt</value></data>
+  <data name="PackStatus_Resolving" xml:space="preserve"><value>Söker efter naturliga röster…</value></data>
+  <data name="PackStatus_Downloading" xml:space="preserve"><value>Laddar ned naturliga röster… {0}</value></data>
+  <data name="PackStatus_Offline" xml:space="preserve"><value>Ingen anslutning. Läser med telefonens röst. Tryck för att försöka ladda ned rösten igen.</value></data>
+  <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Nedladdningen av rösten blev skadad. Läser med telefonens röst. Tryck för att försöka igen.</value></data>
+  <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Paketet med naturliga röster går inte att använda. Läser med telefonens röst.</value></data>
+  <data name="PackStatus_Failed" xml:space="preserve"><value>Det gick inte att ladda ned naturliga röster. Läser med telefonens röst. Tryck för att försöka igen.</value></data>
+  <data name="PackStatus_Unavailable" xml:space="preserve"><value>Det finns ingen naturlig röst för ditt språk ännu. Läser med telefonens röst.</value></data>
+  <data name="Common_Back" xml:space="preserve"><value>Tillbaka</value></data>
+  <data name="Common_Save" xml:space="preserve"><value>Spara</value></data>
+  <data name="Common_Done" xml:space="preserve"><value>Klar</value></data>
+  <data name="Common_Delete" xml:space="preserve"><value>Ta bort</value></data>
+  <data name="Common_Keep" xml:space="preserve"><value>Behåll</value></data>
+  <data name="Common_Edit" xml:space="preserve"><value>Redigera</value></data>
+  <data name="Gallery_Title" xml:space="preserve"><value>Mina sagor</value></data>
+  <data name="Gallery_ForGrownUps" xml:space="preserve"><value>För vuxna</value></data>
+  <data name="Gallery_AddBook" xml:space="preserve"><value>Lägg till en bok (vuxna)</value></data>
+  <data name="Gallery_OpensGateHint" xml:space="preserve"><value>Öppnar vuxenlåset</value></data>
+  <data name="Gallery_Characters_One" xml:space="preserve"><value>{0} figur</value></data>
+  <data name="Gallery_Characters_Other" xml:space="preserve"><value>{0} figurer</value></data>
+  <data name="Gallery_PagesSummary" xml:space="preserve"><value>{0} · ändra ordning, lägg till, ta bort</value></data>
+  <data name="Gallery_DeleteTitle" xml:space="preserve"><value>Ta bort ”{0}”?</value></data>
+  <data name="Gallery_PagesRead_One" xml:space="preserve"><value>{0} sida läst</value></data>
+  <data name="Gallery_PagesRead_Other" xml:space="preserve"><value>{0} sidor lästa</value></data>
+  <data name="Gallery_CharactersFound_One" xml:space="preserve"><value>{0} figur hittades</value></data>
+  <data name="Gallery_CharactersFound_Other" xml:space="preserve"><value>{0} figurer hittades</value></data>
+  <data name="Delete_Body" xml:space="preserve"><value>Dess sidor, bilder och röster tas bort från den här telefonen.</value></data>
+  <data name="Delete_FailedTitle" xml:space="preserve"><value>Det gick inte att ta bort sagan</value></data>
+  <data name="Delete_FailedBody" xml:space="preserve"><value>Något använder fortfarande dess filer. Försök igen om en stund.</value></data>
+  <data name="Manage_EditStory" xml:space="preserve"><value>Redigera saga</value></data>
+  <data name="Gallery_EditStory" xml:space="preserve"><value>Redigera {0}</value></data>
+  <data name="Gallery_CastStory" xml:space="preserve"><value>Rollbesättning för {0}</value></data>
+  <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>Ta bort {0}</value></data>
+  <data name="Gallery_ExportStory" xml:space="preserve"><value>Exportera saga</value></data>
+  <data name="Gallery_CastButton" xml:space="preserve"><value>Roller</value></data>
+  <data name="Store_Title" xml:space="preserve"><value>Gratis sagor</value></data>
+  <data name="Store_Subtitle" xml:space="preserve"><value>Utvalda och rollsatta för Dino</value></data>
+  <data name="Store_Get" xml:space="preserve"><value>Hämta</value></data>
+  <data name="Store_Downloaded" xml:space="preserve"><value>Hämtad</value></data>
+  <data name="Store_Length" xml:space="preserve"><value>{0} sidor · {1} min</value></data>
+  <data name="Store_Footer" xml:space="preserve"><value>Gratis och utan konto. Inget om dig eller ditt barn skickas.</value></data>
+  <data name="Store_OfflineTitle" xml:space="preserve"><value>Du är offline</value></data>
+  <data name="Store_OfflineBody" xml:space="preserve"><value>De gratis sagorna kräver internet. Sagor som redan finns på hyllan går att läsa utan.</value></data>
+  <data name="Store_TryAgain" xml:space="preserve"><value>Försök igen</value></data>
+  <data name="Store_EmptyTitle" xml:space="preserve"><value>Inga nya sagor ännu</value></data>
+  <data name="Store_EmptyBody" xml:space="preserve"><value>Nya läggs till då och då. Titta in igen snart.</value></data>
+  <data name="Store_BackToStories" xml:space="preserve"><value>Tillbaka till mina sagor</value></data>
+  <data name="Store_GetStory" xml:space="preserve"><value>Hämta {0}</value></data>
+  <data name="Backup_Title" xml:space="preserve"><value>Säkerhetskopia</value></data>
+  <data name="Backup_SaveTitle" xml:space="preserve"><value>Spara en säkerhetskopia</value></data>
+  <data name="Backup_SaveBody_One" xml:space="preserve"><value>Din saga i en fil, med sidor, bilder och justerad rollbesättning. Spara den på Drive eller i Filer, eller skicka den till dig själv.</value></data>
+  <data name="Backup_SaveBody_Other" xml:space="preserve"><value>Alla {0} sagor i en fil, med sidor, bilder och justerade rollbesättningar. Spara den på Drive eller i Filer, eller skicka den till dig själv.</value></data>
+  <data name="Backup_SaveButton" xml:space="preserve"><value>Spara en säkerhetskopia</value></data>
+  <data name="Backup_RestoreTitle" xml:space="preserve"><value>Återställ från en säkerhetskopia</value></data>
+  <data name="Backup_RestoreBody" xml:space="preserve"><value>Lägger till de sagor som saknas på den här telefonen. Sagor som redan finns här förblir precis som de är.</value></data>
+  <data name="Backup_RestoreButton" xml:space="preserve"><value>Välj en säkerhetskopia</value></data>
+  <data name="Backup_Footer" xml:space="preserve"><value>Filen går bara dit du skickar den. Dino sparar ingen kopia online.</value></data>
+  <data name="Backup_Restored_One" xml:space="preserve"><value>{0} saga återställd</value></data>
+  <data name="Backup_Restored_Other" xml:space="preserve"><value>{0} sagor återställda</value></data>
+  <data name="Backup_Added" xml:space="preserve"><value>Tillagd på hyllan</value></data>
+  <data name="Backup_Skipped" xml:space="preserve"><value>Fanns redan, hoppades över</value></data>
+  <data name="Backup_Damaged" xml:space="preserve"><value>Gick inte att läsa</value></data>
+  <data name="Backup_SeeStories" xml:space="preserve"><value>Se mina sagor</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>Den här säkerhetskopian kommer från en nyare version av Dino Book Reader. Uppdatera appen och försök igen.</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>Den filen är inte en säkerhetskopia från Dino Book Reader.</value></data>
+  <data name="Backup_Failed" xml:space="preserve"><value>Säkerhetskopian fungerade inte. Försök igen.</value></data>
+  <data name="Backup_TooLarge" xml:space="preserve"><value>För stor för att återställas</value></data>
+  <data name="Backup_SaveSkipped" xml:space="preserve"><value>{0} kunde inte läggas till i säkerhetskopian.</value></data>
+  <data name="FirstRun_Hello" xml:space="preserve"><value>Hej! Vilket språk ska vi läsa på?</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Dino laddar ned en röst för det. Du kan ändra det senare bakom låset.</value></data>
+  <data name="FirstRun_Continue" xml:space="preserve"><value>Fortsätt</value></data>
+  <data name="FirstRun_GettingReady" xml:space="preserve"><value>Dinos röst görs klar</value></data>
+  <data name="FirstRun_Once" xml:space="preserve"><value>{0} röster · det här sker bara en gång</value></data>
+  <data name="FirstRun_Downloading" xml:space="preserve"><value>Laddar ned…</value></data>
+  <data name="FirstRun_Waiting" xml:space="preserve"><value>Väntar på hyllan</value></data>
+  <data name="FirstRun_PickAnother" xml:space="preserve"><value>Välj ett annat språk</value></data>
+  <data name="FirstRun_Ready" xml:space="preserve"><value>Redo att läsa!</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Varje figur får sin egen röst. Tre sagor finns på hyllan.</value></data>
+  <data name="FirstRun_HearHello" xml:space="preserve"><value>Hör Dino säga hej</value></data>
+  <data name="FirstRun_HelloLine" xml:space="preserve"><value>Hej! Jag är Dino. Nu läser vi en saga tillsammans.</value></data>
+  <data name="FirstRun_SetUp" xml:space="preserve"><value>Ställ in sagorna</value></data>
+  <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>Fortsätt med telefonens röst</value></data>
+  <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Klart för mitt barn</value></data>
+  <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Vuxenläge</value></data>
+  <data name="Language_Title" xml:space="preserve"><value>Språk</value></data>
+  <data name="Language_Subtitle" xml:space="preserve"><value>Dino läser och översätter till det här språket</value></data>
+  <data name="Language_Ready" xml:space="preserve"><value>Klart</value></data>
+  <data name="Language_Download" xml:space="preserve"><value>Ladda ned</value></data>
+  <data name="Language_Downloading" xml:space="preserve"><value>Laddar ned {0} %</value></data>
+  <data name="Language_Footer" xml:space="preserve"><value>En saga på ett annat språk läses fortfarande på sitt eget språk, om inte Översätt till mitt språk är på för den sagan.</value></data>
+  <data name="Gate_HoldBody" xml:space="preserve"><value>Tryck och håll i 3 sekunder.</value></data>
+  <data name="Gate_HoldDescription" xml:space="preserve"><value>Tryck och håll i 3 sekunder</value></data>
+  <data name="Gate_KeepHolding" xml:space="preserve"><value>Fortsätt hålla…</value></data>
+  <data name="Gate_Continue" xml:space="preserve"><value>Fortsätt till frågan</value></data>
+  <data name="Gate_BackToStory" xml:space="preserve"><value>Tillbaka till sagan</value></data>
+  <data name="Gate_WhatIs" xml:space="preserve"><value>Hur mycket är</value></data>
+  <data name="Gate_Backspace" xml:space="preserve"><value>Radera</value></data>
+  <data name="Gate_SumQuestion" xml:space="preserve"><value>Hur mycket är {0} plus {1}?</value></data>
+  <data name="Story_Add" xml:space="preserve"><value>Lägg till en saga</value></data>
+  <data name="Story_Title" xml:space="preserve"><value>Titel</value></data>
+  <data name="Story_Language" xml:space="preserve"><value>Sagans språk</value></data>
+  <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · identifierat</value></data>
+  <data name="Story_Translate" xml:space="preserve"><value>Översätt till mitt språk</value></data>
+  <data name="Add_Scan" xml:space="preserve"><value>Skanna sidor</value></data>
+  <data name="Add_ScanSub" xml:space="preserve"><value>Behåller sidbilderna</value></data>
+  <data name="Add_Photos" xml:space="preserve"><value>Foton</value></data>
+  <data name="Add_PhotosSub" xml:space="preserve"><value>Välj sidfoton</value></data>
+  <data name="Add_File" xml:space="preserve"><value>PDF eller fil</value></data>
+  <data name="Add_Type" xml:space="preserve"><value>Skriv eller klistra in</value></data>
+  <data name="Add_TypeSub" xml:space="preserve"><value>Endast text</value></data>
+  <data name="Add_Placeholder" xml:space="preserve"><value>Skriv eller klistra in en saga</value></data>
+  <data name="Add_CheckCast" xml:space="preserve"><value>Kontrollera rollerna</value></data>
+  <data name="Add_Save" xml:space="preserve"><value>Spara saga</value></data>
+  <data name="Add_PickerTitle" xml:space="preserve"><value>Välj en .txt-, .pdf- eller .docx-fil</value></data>
+  <data name="Add_PermissionTitle" xml:space="preserve"><value>Behörighet krävs</value></data>
+  <data name="Add_PermissionBody" xml:space="preserve"><value>Ge åtkomst till filer för att läsa ett dokument.</value></data>
+  <data name="Add_FileTooLargeTitle" xml:space="preserve"><value>Filen är för stor</value></data>
+  <data name="Add_FileTooLargeBody" xml:space="preserve"><value>Filen har {0} sidor; gränsen är {1}.</value></data>
+  <data name="Add_ReadFailedTitle" xml:space="preserve"><value>Det gick inte att läsa filen</value></data>
+  <data name="Add_ReadFailedBody" xml:space="preserve"><value>Filen kan vara skadad eller i ett format som inte stöds.</value></data>
+  <data name="Edit_Cover" xml:space="preserve"><value>Omslag</value></data>
+  <data name="Edit_CoverFirstPage" xml:space="preserve"><value>Första sidan</value></data>
+  <data name="Edit_CoverColour" xml:space="preserve"><value>Färg</value></data>
+  <data name="Edit_CoverPhoto" xml:space="preserve"><value>Foto</value></data>
+  <data name="Edit_Pages" xml:space="preserve"><value>Sidor</value></data>
+  <data name="Wizard_Next" xml:space="preserve"><value>Nästa</value></data>
+  <data name="Wizard_StepText" xml:space="preserve"><value>Text</value></data>
+  <data name="Wizard_AddPages" xml:space="preserve"><value>Lägg till sidor</value></data>
+  <data name="Wizard_DragHint" xml:space="preserve"><value>Håll in en sida och dra för att flytta den</value></data>
+  <data name="Wizard_EmptyBody" xml:space="preserve"><value>Lägg till sidorna i din saga: skanna dem, välj foton, lägg till en PDF eller fil, eller skriv texten. Lägg sedan sidorna i ordning.</value></data>
+  <data name="Wizard_PageN" xml:space="preserve"><value>Sida {0}</value></data>
+  <data name="Wizard_PageMenu" xml:space="preserve"><value>Sidalternativ</value></data>
+  <data name="Wizard_MenuRotate" xml:space="preserve"><value>Rotera</value></data>
+  <data name="Wizard_MenuCrop" xml:space="preserve"><value>Rotera eller beskär</value></data>
+  <data name="Wizard_MenuEditText" xml:space="preserve"><value>Redigera text</value></data>
+  <data name="Wizard_NoTextShort" xml:space="preserve"><value>Ingen text</value></data>
+  <data name="Wizard_NoText" xml:space="preserve"><value>Ingen text hittades på den här sidan</value></data>
+  <data name="Wizard_Reading" xml:space="preserve"><value>Läser sida {0} av {1}</value></data>
+  <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>Vissa sidor lästes inte</value></data>
+  <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>{0} sidor gick inte att läsa. De sparas som bilder utan text.</value></data>
+  <data name="Wizard_CoverHint" xml:space="preserve"><value>Välj en sida, ett foto eller en färg till omslaget.</value></data>
+  <data name="Wizard_NeedTextTitle" xml:space="preserve"><value>Inget att läsa ännu</value></data>
+  <data name="Wizard_NeedTextBody" xml:space="preserve"><value>Lägg till text på minst en sida och spara sedan.</value></data>
+  <data name="Wizard_SaveFailedTitle" xml:space="preserve"><value>Det gick inte att spara sagan</value></data>
+  <data name="Wizard_SaveFailedBody" xml:space="preserve"><value>Ingenting ändrades. Försök igen om en stund.</value></data>
+  <data name="Regions_Helper" xml:space="preserve"><value>Tryck på en ruta för att läsa den eller utelämna den.</value></data>
+  <data name="Regions_ReplaceTitle" xml:space="preserve"><value>Ersätta din redigerade text med de valda områdena?</value></data>
+  <data name="Regions_ReplaceBody" xml:space="preserve"><value>Det du skrev på den här sidan går förlorat.</value></data>
+  <data name="Regions_Replace" xml:space="preserve"><value>Ersätt</value></data>
+  <data name="Regions_Keep" xml:space="preserve"><value>Behåll</value></data>
+  <data name="Regions_BoxRead" xml:space="preserve"><value>Textruta, läses</value></data>
+  <data name="Regions_BoxLeftOut" xml:space="preserve"><value>Textruta, utelämnas</value></data>
+  <data name="Editor_Title" xml:space="preserve"><value>Rotera och beskär</value></data>
+  <data name="Editor_RotateLeft" xml:space="preserve"><value>Rotera åt vänster</value></data>
+  <data name="Editor_RotateRight" xml:space="preserve"><value>Rotera åt höger</value></data>
+  <data name="Editor_ResetCrop" xml:space="preserve"><value>Återställ beskärning</value></data>
+  <data name="Reading_TextMode" xml:space="preserve"><value>Textläge</value></data>
+  <data name="Reading_PictureMode" xml:space="preserve"><value>Bildläge</value></data>
+  <data name="Reading_Play" xml:space="preserve"><value>Spela</value></data>
+  <data name="Reading_Pause" xml:space="preserve"><value>Pausa</value></data>
+  <data name="Reading_Previous" xml:space="preserve"><value>Föregående mening</value></data>
+  <data name="Reading_Next" xml:space="preserve"><value>Nästa mening</value></data>
+  <data name="Reading_Loading" xml:space="preserve"><value>Läser in…</value></data>
+  <data name="Reading_CouldntRead" xml:space="preserve"><value>Det gick inte att läsa texten</value></data>
+  <data name="Reading_ReadFailed" xml:space="preserve"><value>Något gick fel vid uppläsningen.</value></data>
+  <data name="Reading_LayoutFailed" xml:space="preserve"><value>Det gick inte att lägga ut sagan. Vrid skärmen eller byt läge och försök igen.</value></data>
+  <data name="Reading_PageN" xml:space="preserve"><value>Läser sida {0}</value></data>
+  <data name="Cast_Title" xml:space="preserve"><value>Vem pratar</value></data>
+  <data name="Cast_Narrator" xml:space="preserve"><value>Berättare</value></data>
+  <data name="Cast_Main" xml:space="preserve"><value>HUVUDROLL</value></data>
+  <data name="Cast_Edited" xml:space="preserve"><value>ÄNDRAD</value></data>
+  <data name="Cast_SharedVoice" xml:space="preserve"><value>Delad röst</value></data>
+  <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>Okänd talare</value></data>
+  <data name="Cast_MergeButton" xml:space="preserve"><value>Slå ihop två figurer</value></data>
+  <data name="Cast_MergeTitle" xml:space="preserve"><value>Slå ihop figurer</value></data>
+  <data name="Cast_MergeBody" xml:space="preserve"><value>Välj de två namn som är samma figur. Replikerna slås ihop under ett namn och en röst.</value></data>
+  <data name="Cast_KeepName" xml:space="preserve"><value>Behåll namnet</value></data>
+  <data name="Cast_VoiceTitle" xml:space="preserve"><value>Röst</value></data>
+  <data name="Cast_PreviewLine" xml:space="preserve"><value>Hej! Så här låter jag när jag läser din saga.</value></data>
+  <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>Det gick inte att spara ändringen</value></data>
+  <data name="Cast_SaveFailedBody" xml:space="preserve"><value>Rollbesättningen sparades inte. Försök igen om en stund.</value></data>
+  <data name="Cast_PreviewFailedBody" xml:space="preserve"><value>Rösten kunde inte spelas upp just nu.</value></data>
+  <data name="Cast_LoadFailedTitle" xml:space="preserve"><value>Det gick inte att öppna rollbesättningen</value></data>
+  <data name="Cast_LoadFailedBody" xml:space="preserve"><value>Rollbesättningen kunde inte tas fram för den här sagan. Försök igen om en stund.</value></data>
+  <data name="Cast_Boy" xml:space="preserve"><value>Pojke</value></data>
+  <data name="Cast_Girl" xml:space="preserve"><value>Flicka</value></data>
+  <data name="Cast_Words_One" xml:space="preserve"><value>{0} ord</value></data>
+  <data name="Cast_Words_Other" xml:space="preserve"><value>{0} ord</value></data>
+  <data name="Cast_UnknownLines_One" xml:space="preserve"><value>{0} replik</value></data>
+  <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} repliker</value></data>
+  <data name="Cast_UsesNarrator" xml:space="preserve"><value>använder berättarens röst</value></data>
+  <data name="Cast_Hear" xml:space="preserve"><value>Hör {0}</value></data>
+  <data name="Cast_NoBoyVoice" xml:space="preserve"><value>Det här röstpaketet har ingen pojkröst, så figuren behåller rösten den hade.</value></data>
+  <data name="Cast_NoGirlVoice" xml:space="preserve"><value>Det här röstpaketet har ingen flickröst, så figuren behåller rösten den hade.</value></data>
+  <data name="Cast_VoiceChanged_One" xml:space="preserve"><value>{0}s röst ändrades eftersom berättaren nu har rösten som figuren fick.</value></data>
+  <data name="Cast_VoiceChanged_Other" xml:space="preserve"><value>{0} fick sina röster ändrade eftersom berättaren nu har rösten de fick.</value></data>
+  <data name="Cast_MergeInto" xml:space="preserve"><value>Slå ihop med {0}</value></data>
+  <data name="Cast_SharedNote" xml:space="preserve"><value>Det här röstpaketet har bara {0} naturliga röster, så vissa figurer delar röst. Berättarens röst ges aldrig till en figur.</value></data>
+</root>

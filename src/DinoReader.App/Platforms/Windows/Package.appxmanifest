@@ -37,6 +37,11 @@
     <Resource Language="ar" />
     <Resource Language="ru" />
     <Resource Language="ja" />
+    <Resource Language="da" />
+    <Resource Language="fi" />
+    <Resource Language="sv" />
+    <Resource Language="nb" />
+    <Resource Language="nl" />
   </Resources>
 
   <Applications>

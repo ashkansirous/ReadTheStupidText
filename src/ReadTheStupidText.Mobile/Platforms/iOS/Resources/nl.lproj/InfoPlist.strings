@@ -1,0 +1,4 @@
+"NSCameraUsageDescription" = "De camera fotografeert gedrukte tekst zodat de app die kan voorlezen. Foto's worden op het apparaat verwerkt en nooit geüpload.";
+"NSPhotoLibraryUsageDescription" = "De app leest een foto die je kiest uit je fotobibliotheek, alleen om de tekst erin voor te lezen. Foto's worden op het apparaat verwerkt en nooit geüpload.";
+"NSPhotoLibraryAddUsageDescription" = "De app slaat niets op in je fotobibliotheek.";
+"NSMicrophoneUsageDescription" = "De app neemt geen geluid op. Dit wordt alleen gevraagd als video-opname ooit wordt gebruikt, wat deze app niet doet.";

@@ -1,7 +1,9 @@
+using ReadTheStupidText.Application.Reading;
+
 namespace ReadTheStupidText_App;
 
 /// <summary>
-/// Maps the stored language code (one of the nine, Decision 68) to the BCP-47 tag of its
+/// Maps the stored language code (one of the fourteen, Decisions 68 and 107) to the BCP-47 tag of its
 /// <c>Strings\&lt;tag&gt;\Resources.resw</c> folder, and says which are right-to-left (Slice 57).
 /// Pure BCL, so the unit tests compile this file directly.
 /// </summary>
@@ -20,6 +22,11 @@ internal static class UiLanguageTag
         ["ar"] = "ar",
         ["ru"] = "ru",
         ["ja"] = "ja",
+        ["da"] = "da",
+        ["fi"] = "fi",
+        ["sv"] = "sv",
+        ["nb"] = "nb",
+        ["nl"] = "nl",
     };
 
     private static readonly HashSet<string> RightToLeft = new(StringComparer.OrdinalIgnoreCase) { "fa", "ar" };
@@ -27,7 +34,7 @@ internal static class UiLanguageTag
     /// <summary>Every resource folder the app ships, in manifest order (English first, the default).</summary>
     public static IReadOnlyCollection<string> AllTags => Tags.Values;
 
-    /// <summary>The resource tag for a stored language code, or null when the code is not one of the nine.</summary>
+    /// <summary>The resource tag for a stored language code, or null when the code is not one of the fourteen.</summary>
     public static string? For(string? code) =>
         code is not null && Tags.TryGetValue(code, out string? tag) ? tag : null;
 
@@ -42,6 +49,7 @@ internal static class UiLanguageTag
     public static string? Match(string deviceTag)
     {
         string primary = deviceTag.Split('-', '_')[0];
+        primary = AppLanguages.TryParse(primary, out AppLanguage known) ? AppLanguages.Code(known) : primary;
         return Tags.TryGetValue(primary, out string? tag) ? tag : null;
     }
 

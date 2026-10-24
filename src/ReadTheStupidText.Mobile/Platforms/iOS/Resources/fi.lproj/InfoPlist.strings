@@ -1,0 +1,4 @@
+"NSCameraUsageDescription" = "Kamera valokuvaa painettua tekstiä, jotta sovellus voi lukea sen ääneen. Kuvat käsitellään laitteessa, eikä niitä koskaan lähetetä.";
+"NSPhotoLibraryUsageDescription" = "Sovellus lukee valitsemasi kuvan kuvakirjastostasi vain lukeakseen kuvassa olevan tekstin ääneen. Kuvat käsitellään laitteessa, eikä niitä koskaan lähetetä.";
+"NSPhotoLibraryAddUsageDescription" = "Sovellus ei tallenna mitään kuvakirjastoosi.";
+"NSMicrophoneUsageDescription" = "Sovellus ei tallenna ääntä. Lupaa kysytään vain, jos videokuvausta käytetään, mitä tämä sovellus ei tee.";

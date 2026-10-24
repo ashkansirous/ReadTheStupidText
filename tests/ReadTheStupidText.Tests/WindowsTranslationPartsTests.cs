@@ -14,8 +14,13 @@ public class WindowsTranslationPartsTests
     [InlineData("The boy said that they were here with his friends and that he had a plan.", "en")]
     [InlineData("Il est dans la maison et elle est avec les enfants pour que tout soit prêt.", "fr")]
     [InlineData("El niño dijo que los amigos estaban en la casa por la tarde y con su madre.", "es")]
-    [InlineData("O menino disse que os amigos estavam em casa com a sua mãe e não queria sair.", "pt")]
-    public void Detector_recognizes_each_of_the_nine_languages(string text, string expected)
+    [InlineData("O menino disse que os amigos estavam em casa com a sua mãe e não queria sair.", "pt")]    [InlineData("De man en de vrouw gingen naar de markt en het kind was niet thuis.", "nl")]
+    [InlineData("Mannen och kvinnan gick till marknaden och det var inte jag som var hemma.", "sv")]
+    [InlineData("Manden og kvinden gik til markedet og det var ikke mig som var hjemme.", "da")]
+    [InlineData("Mannen og kvinnen gikk til markedet og det var ikke meg som var hjemme.", "nb")]
+    [InlineData("Mies ja nainen menivät torille ja lapsi ei ollut kotona, mutta hän oli.", "fi")]
+
+    public void Detector_recognizes_each_of_the_app_languages(string text, string expected)
     {
         DetectedLanguage? detected = ScriptLanguageDetector.Detect(text);
 

@@ -58,8 +58,8 @@ public interface IReadingLanguage
 public static class PlatformVoiceAvailability
 {
     /// <summary>
-    /// The phone voice's languages, plus every app language when the platform runs natural packs
-    /// (the catalog offers a pack for each, so a language is never hidden for want of one).
+    /// The phone voice's languages, plus every language a pack declares when the platform runs natural packs
+    /// (<see cref="PackConstants.NaturallyReadable"/>; Norwegian has none until Slice 104).
     /// </summary>
     public static Task<VoiceAvailability> BuildAsync(IPlatformServices platform)
     {
@@ -94,7 +94,7 @@ public static class PlatformVoiceAvailability
     {
         IReadOnlyCollection<string>? phone = await AskPhoneAsync(platform);
         IEnumerable<string> natural = platform.SupportsNeuralVoice
-            ? Enum.GetValues<AppLanguage>().Select(AppLanguages.Code)
+            ? PackConstants.NaturallyReadable.Select(AppLanguages.Code)
             : [];
         var availability = new VoiceAvailability(phone, natural);
 

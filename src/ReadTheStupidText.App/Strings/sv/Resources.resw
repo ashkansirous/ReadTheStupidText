@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="ActivityTitle.Text" xml:space="preserve">
+    <value>Aktivitetslogg</value>
+  </data>
+  <data name="ActivityOpenLogs.Content" xml:space="preserve">
+    <value>Öppna loggar</value>
+  </data>
+  <data name="ActivityOpenLogs.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Öppna mappen med de dagliga loggfilerna</value>
+  </data>
+  <data name="ActivityClear.Content" xml:space="preserve">
+    <value>Rensa</value>
+  </data>
+  <data name="ColTime.Text" xml:space="preserve">
+    <value>Tid</value>
+  </data>
+  <data name="ColTrigger.Text" xml:space="preserve">
+    <value>Utlösare</value>
+  </data>
+  <data name="ColState.Text" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="ColReason.Text" xml:space="preserve">
+    <value>Orsak</value>
+  </data>
+  <data name="ColFirstAudio.Text" xml:space="preserve">
+    <value>Första ljud</value>
+  </data>
+  <data name="ColSynth.Text" xml:space="preserve">
+    <value>Syntes</value>
+  </data>
+  <data name="ColSource.Text" xml:space="preserve">
+    <value>Källa</value>
+  </data>
+  <data name="ColText.Text" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="PanelEyebrow.Text" xml:space="preserve">
+    <value>LÄSER NU</value>
+  </data>
+  <data name="CloseButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Stäng</value>
+  </data>
+  <data name="SkipBackButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Hoppa bakåt 10 s</value>
+  </data>
+  <data name="SkipForwardButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Hoppa framåt 10 s</value>
+  </data>
+  <data name="SpeedPillToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Uppläsningshastighet — tryck för att ändra · 0,5×–2×</value>
+  </data>
+  <data name="VoiceLabel.Text" xml:space="preserve">
+    <value>Röst</value>
+  </data>
+  <data name="LanguageLabel.Text" xml:space="preserve">
+    <value>Språk</value>
+  </data>
+  <data name="UploadFileButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Läs en fil — öppnar .txt, .pdf eller .docx</value>
+  </data>
+  <data name="UploadFileLabel.Text" xml:space="preserve">
+    <value>Läs en fil</value>
+  </data>
+  <data name="ActivityLogButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Aktivitetslogg — historik, tider, öppna loggmappen</value>
+  </data>
+  <data name="ActivityLogLabel.Text" xml:space="preserve">
+    <value>Aktivitetslogg</value>
+  </data>
+  <data name="ControlsLabel.Text" xml:space="preserve">
+    <value>REGLAGE</value>
+  </data>
+  <data name="HotkeyLabel.Text" xml:space="preserve">
+    <value>Reservgenväg</value>
+  </data>
+  <data name="TranslateSourceLabel.Text" xml:space="preserve">
+    <value>Textens språk</value>
+  </data>
+  <data name="ReadingZoomOut.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Mindre text</value>
+  </data>
+  <data name="ReadingZoomIn.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Större text</value>
+  </data>
+  <data name="LanguageChooseTitle.Text" xml:space="preserve">
+    <value>Välj ditt språk</value>
+  </data>
+  <data name="LanguageRetry.Content" xml:space="preserve">
+    <value>Försök igen</value>
+  </data>
+  <data name="LanguageClose.Content" xml:space="preserve">
+    <value>Stäng</value>
+  </data>
+  <data name="Status_Ready" xml:space="preserve">
+    <value>Redo</value>
+  </data>
+  <data name="Status_Paused" xml:space="preserve">
+    <value>Pausad</value>
+  </data>
+  <data name="Status_ReadingClipboard" xml:space="preserve">
+    <value>Läser upp urklipp…</value>
+  </data>
+  <data name="Status_ReadingSelection" xml:space="preserve">
+    <value>Läser upp markering…</value>
+  </data>
+  <data name="Status_ReadingSelectionFrom" xml:space="preserve">
+    <value>Läser upp markering från {0}…</value>
+  </data>
+  <data name="Toggle_On" xml:space="preserve">
+    <value>på</value>
+  </data>
+  <data name="Toggle_Off" xml:space="preserve">
+    <value>av</value>
+  </data>
+  <data name="Tip_AutoReadSelection" xml:space="preserve">
+    <value>Läs upp markering automatiskt · {0} — Läser högt när du markerar</value>
+  </data>
+  <data name="Tip_AutoReadCopy" xml:space="preserve">
+    <value>Läs upp vid kopiering automatiskt · {0} — Läser högt när du kopierar</value>
+  </data>
+  <data name="Tip_Startup" xml:space="preserve">
+    <value>Starta vid uppstart · {0} — Startar med Windows, i systemfältet</value>
+  </data>
+  <data name="Tip_ReadingTextBox" xml:space="preserve">
+    <value>Textruta för uppläsning · {0} — Visar texten som läses</value>
+  </data>
+  <data name="Tip_Translate" xml:space="preserve">
+    <value>Översätt till mitt språk · {0} — Översätter det som läses till ditt språk</value>
+  </data>
+  <data name="Menu_Play" xml:space="preserve">
+    <value>Spela</value>
+  </data>
+  <data name="Menu_Pause" xml:space="preserve">
+    <value>Pausa</value>
+  </data>
+  <data name="Menu_Quit" xml:space="preserve">
+    <value>Avsluta</value>
+  </data>
+  <data name="Menu_AutoReadSelection" xml:space="preserve">
+    <value>Läs upp markering automatiskt</value>
+  </data>
+  <data name="Menu_AutoReadCopy" xml:space="preserve">
+    <value>Läs upp vid kopiering automatiskt</value>
+  </data>
+  <data name="Menu_Startup" xml:space="preserve">
+    <value>Starta vid uppstart</value>
+  </data>
+  <data name="Menu_Voice" xml:space="preserve">
+    <value>Röst</value>
+  </data>
+  <data name="Menu_ActivityLog" xml:space="preserve">
+    <value>Visa aktivitetslogg</value>
+  </data>
+  <data name="Menu_ReadFile" xml:space="preserve">
+    <value>Läs fil…</value>
+  </data>
+  <data name="Menu_VoiceLanguage" xml:space="preserve">
+    <value>Röstspråk…</value>
+  </data>
+  <data name="Menu_Translate" xml:space="preserve">
+    <value>Översätt till mitt språk</value>
+  </data>
+  <data name="Tray_Tooltip" xml:space="preserve">
+    <value>{0} — läs högt</value>
+  </data>
+  <data name="Pack_WindowsVoice" xml:space="preserve">
+    <value>Windows-röst</value>
+  </data>
+  <data name="Restart_Failed" xml:space="preserve">
+    <value>Språket tillämpas nästa gång appen startar.</value>
+  </data>
+  <data name="StatusText.Text" xml:space="preserve">
+    <value>Redo</value>
+  </data>
+  <data name="Window_Language" xml:space="preserve">
+    <value>Språk</value>
+  </data>
+  <data name="Window_ActivityLog" xml:space="preserve">
+    <value>Aktivitetslogg</value>
+  </data>
+  <data name="Window_Reading" xml:space="preserve">
+    <value>Uppläsning</value>
+  </data>
+  <data name="Reading_Nothing" xml:space="preserve">
+    <value>Inget läses ännu</value>
+  </data>
+  <data name="Reading_Chunk" xml:space="preserve">
+    <value>Läser — del {0} av {1}</value>
+  </data>
+  <data name="Reading_Translated" xml:space="preserve">
+    <value>(översatt)</value>
+  </data>
+  <data name="Reading_Page" xml:space="preserve">
+    <value>Sida {0} av {1}</value>
+  </data>
+  <data name="State_Pending" xml:space="preserve">
+    <value>Väntar</value>
+  </data>
+  <data name="State_GeneratingAudio" xml:space="preserve">
+    <value>Skapar ljud</value>
+  </data>
+  <data name="State_Reading" xml:space="preserve">
+    <value>Läser</value>
+  </data>
+  <data name="State_Read" xml:space="preserve">
+    <value>Läst</value>
+  </data>
+  <data name="State_Ignored" xml:space="preserve">
+    <value>Ignorerad</value>
+  </data>
+  <data name="State_Interrupted" xml:space="preserve">
+    <value>Avbruten</value>
+  </data>
+  <data name="State_Failed" xml:space="preserve">
+    <value>Misslyckades</value>
+  </data>
+  <data name="Reason_NewSelection" xml:space="preserve">
+    <value>Ny markering</value>
+  </data>
+  <data name="Reason_Deselected" xml:space="preserve">
+    <value>Avmarkerad</value>
+  </data>
+  <data name="Reason_Error" xml:space="preserve">
+    <value>Fel</value>
+  </data>
+  <data name="Trigger_AutoRead" xml:space="preserve">
+    <value>Automatisk uppläsning</value>
+  </data>
+  <data name="Trigger_Hotkey" xml:space="preserve">
+    <value>Kortkommando</value>
+  </data>
+  <data name="Trigger_Manual" xml:space="preserve">
+    <value>Manuell</value>
+  </data>
+  <data name="Trigger_Clipboard" xml:space="preserve">
+    <value>Urklipp</value>
+  </data>
+  <data name="Trigger_FileUpload" xml:space="preserve">
+    <value>Fil</value>
+  </data>
+  <data name="Pack_Intro" xml:space="preserve">
+    <value>Den naturliga rösten för ditt språk laddas ned en gång (cirka 145 MB, Wi-Fi rekommenderas). {0} läser tills den är klar. Din text lämnar aldrig den här enheten.</value>
+  </data>
+  <data name="Pack_Resolving" xml:space="preserve">
+    <value>Letar efter rösten för ditt språk...</value>
+  </data>
+  <data name="Pack_Downloading" xml:space="preserve">
+    <value>Laddar ned den naturliga rösten... {0} %</value>
+  </data>
+  <data name="Pack_Ready" xml:space="preserve">
+    <value>Den naturliga rösten är klar.</value>
+  </data>
+  <data name="Pack_Unavailable" xml:space="preserve">
+    <value>Det finns ingen naturlig röst för det här språket ännu. {0} läser.</value>
+  </data>
+  <data name="Pack_Offline" xml:space="preserve">
+    <value>Du är offline. {0} läser, och nedladdningen startar när du är online igen.</value>
+  </data>
+  <data name="Pack_HashMismatch" xml:space="preserve">
+    <value>Nedladdningen blev skadad. Försök igen för att hämta den på nytt.</value>
+  </data>
+  <data name="Pack_InvalidPack" xml:space="preserve">
+    <value>Det går inte att använda det här röstpaketet. {0} läser.</value>
+  </data>
+  <data name="Pack_Failed" xml:space="preserve">
+    <value>Nedladdningen misslyckades. Försök igen.</value>
+  </data>
+  <data name="Translate_AutoDetect" xml:space="preserve">
+    <value>Identifiera automatiskt</value>
+  </data>
+  <data name="Translate_Note_Default" xml:space="preserve">
+    <value>Maskinöversättning, på den här enheten. Kvaliteten varierar.</value>
+  </data>
+  <data name="Translate_Note_Translated" xml:space="preserve">
+    <value>Översatt från {0}.</value>
+  </data>
+  <data name="Translate_Note_ModelMissing" xml:space="preserve">
+    <value>Översättningspaketet är inte installerat ännu, så originalet lästes.</value>
+  </data>
+  <data name="Translate_Note_PackDownloading" xml:space="preserve">
+    <value>Laddar ned översättningspaketet för {0}; originalet lästes den här gången.</value>
+  </data>
+  <data name="Translate_Note_PackProgress" xml:space="preserve">
+    <value>Laddar ned översättningspaketet: {0} %</value>
+  </data>
+  <data name="Translate_Note_PackReady" xml:space="preserve">
+    <value>Översättningspaketet är klart.</value>
+  </data>
+  <data name="Translate_Note_PackFailed" xml:space="preserve">
+    <value>Det gick inte att ladda ned översättningspaketet. Kontrollera anslutningen och stäng av och slå på översättning igen för att försöka på nytt.</value>
+  </data>
+  <data name="Translate_Note_TimedOut" xml:space="preserve">
+    <value>Översättningen tog för lång tid, så originalet lästes.</value>
+  </data>
+  <data name="Translate_Note_Failed" xml:space="preserve">
+    <value>Översättningen misslyckades, så originalet lästes.</value>
+  </data>
+  <data name="Translate_Note_SourceUnknown" xml:space="preserve">
+    <value>Det gick inte att avgöra textens språk, så originalet lästes. Välj det ovan.</value>
+  </data>
+  <data name="Translate_Note_PairUnsupported" xml:space="preserve">
+    <value>Översättning från {0} finns inte ännu, så originalet lästes.</value>
+  </data>
+</root>

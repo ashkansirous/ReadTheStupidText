@@ -3,7 +3,7 @@ using ReadTheStupidText.Application.Reading;
 namespace DinoReader.Core;
 
 /// <summary>
-/// The nine languages, each named in itself (endonyms) so a grown-up can find theirs whatever language
+/// The fourteen languages, each named in itself (endonyms) so a grown-up can find theirs whatever language
 /// the screens speak. Endonyms are data, not translatable copy.
 /// </summary>
 public static class LanguageNames
@@ -22,6 +22,11 @@ public static class LanguageNames
         AppLanguage.Arabic => "العربية",
         AppLanguage.Russian => "Русский",
         AppLanguage.Japanese => "日本語",
+        AppLanguage.Danish => "Dansk",
+        AppLanguage.Finnish => "Suomi",
+        AppLanguage.Swedish => "Svenska",
+        AppLanguage.Norwegian => "Norsk",
+        AppLanguage.Dutch => "Nederlands",
         _ => throw new ArgumentOutOfRangeException(nameof(language)),
     };
 
@@ -32,7 +37,7 @@ public static class LanguageNames
         return All.First(l => l.Code == resolved).NativeName;
     }
 
-    /// <summary>The code behind a picked endonym, or null when it is none of the nine.</summary>
+    /// <summary>The code behind a picked endonym, or null when it is none of the fourteen.</summary>
     public static string? CodeOf(string nativeName) =>
         All.Where(l => l.NativeName == nativeName).Select(l => l.Code).FirstOrDefault();
 }

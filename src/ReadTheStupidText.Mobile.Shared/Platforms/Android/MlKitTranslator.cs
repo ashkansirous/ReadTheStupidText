@@ -28,10 +28,12 @@ public sealed class MlKitTranslator : AppTranslator, IDisposable
 
     private sealed record Opening((string Source, string Target) Pair, MlKitClient Client, Task Download);
 
-    public IReadOnlyList<string> SupportedLanguages { get; } = TranslateLanguage.AllLanguages!.ToArray();
+    public IReadOnlyList<string> SupportedLanguages { get; } = TranslateLanguage.AllLanguages!.Select(EngineLanguageCodes.FromEngine).ToArray();
 
     public async Task<bool> IsModelReadyAsync(string source, string target)
     {
+        source = EngineLanguageCodes.ToEngine(source);
+        target = EngineLanguageCodes.ToEngine(target);
         Java.Lang.Object? downloaded = await RemoteModelManager.Instance.GetDownloadedModels(Java.Lang.Class.FromType(typeof(TranslateRemoteModel)));
         HashSet<string> languages = DownloadedLanguages(downloaded);
         return RequiredModels(source, target).All(languages.Contains);
@@ -50,6 +52,8 @@ public sealed class MlKitTranslator : AppTranslator, IDisposable
 
     public async Task<string> TranslateAsync(string text, string source, string target, CancellationToken cancellationToken)
     {
+        source = EngineLanguageCodes.ToEngine(source);
+        target = EngineLanguageCodes.ToEngine(target);
         while (true)
         {
             Opening opening = await StartOrJoinOpeningAsync(source, target, cancellationToken);

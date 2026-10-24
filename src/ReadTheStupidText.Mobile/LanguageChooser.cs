@@ -6,7 +6,7 @@ namespace ReadTheStupidText.Mobile;
 
 /// <summary>
 /// The Settings page's Language row (Slice 99) for changing language after first run (Slice 53, Decision 68): an action
-/// sheet of the nine endonyms. A pick is stored, applied, and the shell is rebuilt in the new
+/// sheet of the fourteen endonyms. A pick is stored, applied, and the shell is rebuilt in the new
 /// language and direction (no app restart), landing on the main page. The voice pack download follows the language change
 /// (VoicePackInstaller, Slice 81).
 /// </summary>

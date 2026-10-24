@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="ActivityTitle.Text" xml:space="preserve">
+    <value>Toimintaloki</value>
+  </data>
+  <data name="ActivityOpenLogs.Content" xml:space="preserve">
+    <value>Avaa lokit</value>
+  </data>
+  <data name="ActivityOpenLogs.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Avaa päivittäisten lokitiedostojen kansio</value>
+  </data>
+  <data name="ActivityClear.Content" xml:space="preserve">
+    <value>Tyhjennä</value>
+  </data>
+  <data name="ColTime.Text" xml:space="preserve">
+    <value>Aika</value>
+  </data>
+  <data name="ColTrigger.Text" xml:space="preserve">
+    <value>Käynnistäjä</value>
+  </data>
+  <data name="ColState.Text" xml:space="preserve">
+    <value>Tila</value>
+  </data>
+  <data name="ColReason.Text" xml:space="preserve">
+    <value>Syy</value>
+  </data>
+  <data name="ColFirstAudio.Text" xml:space="preserve">
+    <value>Ensimmäinen ääni</value>
+  </data>
+  <data name="ColSynth.Text" xml:space="preserve">
+    <value>Synteesi</value>
+  </data>
+  <data name="ColSource.Text" xml:space="preserve">
+    <value>Lähde</value>
+  </data>
+  <data name="ColText.Text" xml:space="preserve">
+    <value>Teksti</value>
+  </data>
+  <data name="PanelEyebrow.Text" xml:space="preserve">
+    <value>LUETAAN NYT</value>
+  </data>
+  <data name="CloseButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Sulje</value>
+  </data>
+  <data name="SkipBackButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Taaksepäin 10 s</value>
+  </data>
+  <data name="SkipForwardButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Eteenpäin 10 s</value>
+  </data>
+  <data name="SpeedPillToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Toistonopeus — napauta säätääksesi · 0,5×–2×</value>
+  </data>
+  <data name="VoiceLabel.Text" xml:space="preserve">
+    <value>Ääni</value>
+  </data>
+  <data name="LanguageLabel.Text" xml:space="preserve">
+    <value>Kieli</value>
+  </data>
+  <data name="UploadFileButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Lue tiedosto — avaa .txt-, .pdf- tai .docx-tiedoston</value>
+  </data>
+  <data name="UploadFileLabel.Text" xml:space="preserve">
+    <value>Lue tiedosto</value>
+  </data>
+  <data name="ActivityLogButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Toimintaloki — historia, ajoitukset, lokikansion avaus</value>
+  </data>
+  <data name="ActivityLogLabel.Text" xml:space="preserve">
+    <value>Toimintaloki</value>
+  </data>
+  <data name="ControlsLabel.Text" xml:space="preserve">
+    <value>OHJAIMET</value>
+  </data>
+  <data name="HotkeyLabel.Text" xml:space="preserve">
+    <value>Pikanäppäinvaranto</value>
+  </data>
+  <data name="TranslateSourceLabel.Text" xml:space="preserve">
+    <value>Tekstin kieli</value>
+  </data>
+  <data name="ReadingZoomOut.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Pienempi teksti</value>
+  </data>
+  <data name="ReadingZoomIn.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Suurempi teksti</value>
+  </data>
+  <data name="LanguageChooseTitle.Text" xml:space="preserve">
+    <value>Valitse kielesi</value>
+  </data>
+  <data name="LanguageRetry.Content" xml:space="preserve">
+    <value>Yritä uudelleen</value>
+  </data>
+  <data name="LanguageClose.Content" xml:space="preserve">
+    <value>Sulje</value>
+  </data>
+  <data name="Status_Ready" xml:space="preserve">
+    <value>Valmis</value>
+  </data>
+  <data name="Status_Paused" xml:space="preserve">
+    <value>Tauolla</value>
+  </data>
+  <data name="Status_ReadingClipboard" xml:space="preserve">
+    <value>Luetaan leikepöytää…</value>
+  </data>
+  <data name="Status_ReadingSelection" xml:space="preserve">
+    <value>Luetaan valintaa…</value>
+  </data>
+  <data name="Status_ReadingSelectionFrom" xml:space="preserve">
+    <value>Luetaan valintaa sovelluksesta {0}…</value>
+  </data>
+  <data name="Toggle_On" xml:space="preserve">
+    <value>päällä</value>
+  </data>
+  <data name="Toggle_Off" xml:space="preserve">
+    <value>pois</value>
+  </data>
+  <data name="Tip_AutoReadSelection" xml:space="preserve">
+    <value>Automaattinen luku valittaessa · {0} — Lukee ääneen, kun valitset tekstiä</value>
+  </data>
+  <data name="Tip_AutoReadCopy" xml:space="preserve">
+    <value>Automaattinen luku kopioitaessa · {0} — Lukee ääneen, kun kopioit</value>
+  </data>
+  <data name="Tip_Startup" xml:space="preserve">
+    <value>Käynnistys Windowsin mukana · {0} — Käynnistyy Windowsin mukana ilmaisinalueelle</value>
+  </data>
+  <data name="Tip_ReadingTextBox" xml:space="preserve">
+    <value>Lukutekstiruutu · {0} — Näyttää luettavan tekstin</value>
+  </data>
+  <data name="Tip_Translate" xml:space="preserve">
+    <value>Käännä omalle kielelleni · {0} — Kääntää luetun tekstin kielellesi</value>
+  </data>
+  <data name="Menu_Play" xml:space="preserve">
+    <value>Toista</value>
+  </data>
+  <data name="Menu_Pause" xml:space="preserve">
+    <value>Tauko</value>
+  </data>
+  <data name="Menu_Quit" xml:space="preserve">
+    <value>Lopeta</value>
+  </data>
+  <data name="Menu_AutoReadSelection" xml:space="preserve">
+    <value>Automaattinen luku valittaessa</value>
+  </data>
+  <data name="Menu_AutoReadCopy" xml:space="preserve">
+    <value>Automaattinen luku kopioitaessa</value>
+  </data>
+  <data name="Menu_Startup" xml:space="preserve">
+    <value>Käynnistys Windowsin mukana</value>
+  </data>
+  <data name="Menu_Voice" xml:space="preserve">
+    <value>Ääni</value>
+  </data>
+  <data name="Menu_ActivityLog" xml:space="preserve">
+    <value>Näytä toimintaloki</value>
+  </data>
+  <data name="Menu_ReadFile" xml:space="preserve">
+    <value>Lue tiedosto…</value>
+  </data>
+  <data name="Menu_VoiceLanguage" xml:space="preserve">
+    <value>Äänen kieli…</value>
+  </data>
+  <data name="Menu_Translate" xml:space="preserve">
+    <value>Käännä omalle kielelleni</value>
+  </data>
+  <data name="Tray_Tooltip" xml:space="preserve">
+    <value>{0} — lukee ääneen</value>
+  </data>
+  <data name="Pack_WindowsVoice" xml:space="preserve">
+    <value>Windows-ääni</value>
+  </data>
+  <data name="Restart_Failed" xml:space="preserve">
+    <value>Kieli otetaan käyttöön, kun sovellus käynnistetään seuraavan kerran.</value>
+  </data>
+  <data name="StatusText.Text" xml:space="preserve">
+    <value>Valmis</value>
+  </data>
+  <data name="Window_Language" xml:space="preserve">
+    <value>Kieli</value>
+  </data>
+  <data name="Window_ActivityLog" xml:space="preserve">
+    <value>Toimintaloki</value>
+  </data>
+  <data name="Window_Reading" xml:space="preserve">
+    <value>Luku</value>
+  </data>
+  <data name="Reading_Nothing" xml:space="preserve">
+    <value>Ei vielä mitään luettavaa</value>
+  </data>
+  <data name="Reading_Chunk" xml:space="preserve">
+    <value>Luetaan — osa {0}/{1}</value>
+  </data>
+  <data name="Reading_Translated" xml:space="preserve">
+    <value>(käännetty)</value>
+  </data>
+  <data name="Reading_Page" xml:space="preserve">
+    <value>Sivu {0}/{1}</value>
+  </data>
+  <data name="State_Pending" xml:space="preserve">
+    <value>Odottaa</value>
+  </data>
+  <data name="State_GeneratingAudio" xml:space="preserve">
+    <value>Luodaan ääntä</value>
+  </data>
+  <data name="State_Reading" xml:space="preserve">
+    <value>Luetaan</value>
+  </data>
+  <data name="State_Read" xml:space="preserve">
+    <value>Luettu</value>
+  </data>
+  <data name="State_Ignored" xml:space="preserve">
+    <value>Ohitettu</value>
+  </data>
+  <data name="State_Interrupted" xml:space="preserve">
+    <value>Keskeytetty</value>
+  </data>
+  <data name="State_Failed" xml:space="preserve">
+    <value>Epäonnistui</value>
+  </data>
+  <data name="Reason_NewSelection" xml:space="preserve">
+    <value>Uusi valinta</value>
+  </data>
+  <data name="Reason_Deselected" xml:space="preserve">
+    <value>Valinta poistettu</value>
+  </data>
+  <data name="Reason_Error" xml:space="preserve">
+    <value>Virhe</value>
+  </data>
+  <data name="Trigger_AutoRead" xml:space="preserve">
+    <value>Automaattinen luku</value>
+  </data>
+  <data name="Trigger_Hotkey" xml:space="preserve">
+    <value>Pikanäppäin</value>
+  </data>
+  <data name="Trigger_Manual" xml:space="preserve">
+    <value>Manuaalinen</value>
+  </data>
+  <data name="Trigger_Clipboard" xml:space="preserve">
+    <value>Leikepöytä</value>
+  </data>
+  <data name="Trigger_FileUpload" xml:space="preserve">
+    <value>Tiedosto</value>
+  </data>
+  <data name="Pack_Intro" xml:space="preserve">
+    <value>Kielesi luonnollinen ääni ladataan kerran (noin 145 Mt, Wi-Fi suositeltava). {0} lukee, kunnes se on valmis. Tekstisi ei koskaan poistu tältä laitteelta.</value>
+  </data>
+  <data name="Pack_Resolving" xml:space="preserve">
+    <value>Etsitään kielesi ääntä...</value>
+  </data>
+  <data name="Pack_Downloading" xml:space="preserve">
+    <value>Ladataan luonnollista ääntä... {0} %</value>
+  </data>
+  <data name="Pack_Ready" xml:space="preserve">
+    <value>Luonnollinen ääni on valmis.</value>
+  </data>
+  <data name="Pack_Unavailable" xml:space="preserve">
+    <value>Tälle kielelle ei ole vielä luonnollista ääntä. {0} lukee.</value>
+  </data>
+  <data name="Pack_Offline" xml:space="preserve">
+    <value>Olet offline-tilassa. {0} lukee, ja lataus alkaa, kun olet taas verkossa.</value>
+  </data>
+  <data name="Pack_HashMismatch" xml:space="preserve">
+    <value>Lataus vioittui. Hae se uudelleen yrittämällä uudestaan.</value>
+  </data>
+  <data name="Pack_InvalidPack" xml:space="preserve">
+    <value>Tätä ääntä ei voi käyttää. {0} lukee.</value>
+  </data>
+  <data name="Pack_Failed" xml:space="preserve">
+    <value>Lataus epäonnistui. Yritä uudelleen.</value>
+  </data>
+  <data name="Translate_AutoDetect" xml:space="preserve">
+    <value>Tunnista automaattisesti</value>
+  </data>
+  <data name="Translate_Note_Default" xml:space="preserve">
+    <value>Konekäännös, tällä laitteella. Laatu vaihtelee.</value>
+  </data>
+  <data name="Translate_Note_Translated" xml:space="preserve">
+    <value>Käännetty kielestä {0}.</value>
+  </data>
+  <data name="Translate_Note_ModelMissing" xml:space="preserve">
+    <value>Käännöspakettia ei ole vielä asennettu, joten alkuperäinen teksti luettiin.</value>
+  </data>
+  <data name="Translate_Note_PackDownloading" xml:space="preserve">
+    <value>Ladataan käännöspakettia ({0}); tällä kertaa luettiin alkuperäinen.</value>
+  </data>
+  <data name="Translate_Note_PackProgress" xml:space="preserve">
+    <value>Ladataan käännöspakettia: {0} %</value>
+  </data>
+  <data name="Translate_Note_PackReady" xml:space="preserve">
+    <value>Käännöspaketti on valmis.</value>
+  </data>
+  <data name="Translate_Note_PackFailed" xml:space="preserve">
+    <value>Käännöspakettia ei voitu ladata. Tarkista yhteytesi ja yritä uudelleen kytkemällä käännös pois ja takaisin päälle.</value>
+  </data>
+  <data name="Translate_Note_TimedOut" xml:space="preserve">
+    <value>Käännös kesti liian kauan, joten alkuperäinen teksti luettiin.</value>
+  </data>
+  <data name="Translate_Note_Failed" xml:space="preserve">
+    <value>Käännös epäonnistui, joten alkuperäinen teksti luettiin.</value>
+  </data>
+  <data name="Translate_Note_SourceUnknown" xml:space="preserve">
+    <value>Tekstin kieltä ei voitu tunnistaa, joten alkuperäinen teksti luettiin. Valitse kieli yltä.</value>
+  </data>
+  <data name="Translate_Note_PairUnsupported" xml:space="preserve">
+    <value>Käännös kielestä {0} ei ole vielä saatavilla, joten alkuperäinen teksti luettiin.</value>
+  </data>
+</root>

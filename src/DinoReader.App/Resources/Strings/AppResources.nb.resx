@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+    <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>
+  <data name="Cast_UnknownGender" xml:space="preserve"><value>?</value></data>
+  <data name="Common_Ok" xml:space="preserve"><value>OK</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>Avbryt</value></data>
+  <data name="PackStatus_Resolving" xml:space="preserve"><value>Ser etter naturlige stemmer …</value></data>
+  <data name="PackStatus_Downloading" xml:space="preserve"><value>Laster ned naturlige stemmer … {0}</value></data>
+  <data name="PackStatus_Offline" xml:space="preserve"><value>Ingen tilkobling. Leser med telefonens stemme. Trykk for å prøve stemmenedlastingen på nytt.</value></data>
+  <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Stemmenedlastingen ble skadet. Leser med telefonens stemme. Trykk for å prøve igjen.</value></data>
+  <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Pakken med naturlige stemmer kan ikke brukes. Leser med telefonens stemme.</value></data>
+  <data name="PackStatus_Failed" xml:space="preserve"><value>Kunne ikke laste ned naturlige stemmer. Leser med telefonens stemme. Trykk for å prøve igjen.</value></data>
+  <data name="PackStatus_Unavailable" xml:space="preserve"><value>Det finnes ingen naturlig stemme for språket ditt ennå. Leser med telefonens stemme.</value></data>
+  <data name="Common_Back" xml:space="preserve"><value>Tilbake</value></data>
+  <data name="Common_Save" xml:space="preserve"><value>Lagre</value></data>
+  <data name="Common_Done" xml:space="preserve"><value>Ferdig</value></data>
+  <data name="Common_Delete" xml:space="preserve"><value>Slett</value></data>
+  <data name="Common_Keep" xml:space="preserve"><value>Behold</value></data>
+  <data name="Common_Edit" xml:space="preserve"><value>Rediger</value></data>
+  <data name="Gallery_Title" xml:space="preserve"><value>Historiene mine</value></data>
+  <data name="Gallery_ForGrownUps" xml:space="preserve"><value>For voksne</value></data>
+  <data name="Gallery_AddBook" xml:space="preserve"><value>Legg til en bok (voksne)</value></data>
+  <data name="Gallery_OpensGateHint" xml:space="preserve"><value>Åpner voksenlåsen</value></data>
+  <data name="Gallery_Characters_One" xml:space="preserve"><value>{0} figur</value></data>
+  <data name="Gallery_Characters_Other" xml:space="preserve"><value>{0} figurer</value></data>
+  <data name="Gallery_PagesSummary" xml:space="preserve"><value>{0} · endre rekkefølge, legg til, fjern</value></data>
+  <data name="Gallery_DeleteTitle" xml:space="preserve"><value>Slette «{0}»?</value></data>
+  <data name="Gallery_PagesRead_One" xml:space="preserve"><value>{0} side lest</value></data>
+  <data name="Gallery_PagesRead_Other" xml:space="preserve"><value>{0} sider lest</value></data>
+  <data name="Gallery_CharactersFound_One" xml:space="preserve"><value>{0} figur funnet</value></data>
+  <data name="Gallery_CharactersFound_Other" xml:space="preserve"><value>{0} figurer funnet</value></data>
+  <data name="Delete_Body" xml:space="preserve"><value>Sidene, bildene og stemmene fjernes fra denne telefonen.</value></data>
+  <data name="Delete_FailedTitle" xml:space="preserve"><value>Kunne ikke slette historien</value></data>
+  <data name="Delete_FailedBody" xml:space="preserve"><value>Noe bruker fortsatt filene. Prøv igjen om litt.</value></data>
+  <data name="Manage_EditStory" xml:space="preserve"><value>Rediger historie</value></data>
+  <data name="Gallery_EditStory" xml:space="preserve"><value>Rediger {0}</value></data>
+  <data name="Gallery_CastStory" xml:space="preserve"><value>Rollebesetning for {0}</value></data>
+  <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>Slett {0}</value></data>
+  <data name="Gallery_ExportStory" xml:space="preserve"><value>Eksporter historie</value></data>
+  <data name="Gallery_CastButton" xml:space="preserve"><value>Roller</value></data>
+  <data name="Store_Title" xml:space="preserve"><value>Gratis historier</value></data>
+  <data name="Store_Subtitle" xml:space="preserve"><value>Valgt ut og rollebesatt for Dino</value></data>
+  <data name="Store_Get" xml:space="preserve"><value>Hent</value></data>
+  <data name="Store_Downloaded" xml:space="preserve"><value>Lastet ned</value></data>
+  <data name="Store_Length" xml:space="preserve"><value>{0} sider · {1} min</value></data>
+  <data name="Store_Footer" xml:space="preserve"><value>Gratis og uten konto. Ingenting om deg eller barnet ditt sendes.</value></data>
+  <data name="Store_OfflineTitle" xml:space="preserve"><value>Du er frakoblet</value></data>
+  <data name="Store_OfflineBody" xml:space="preserve"><value>De gratis historiene trenger internett. Historier som allerede står i hyllen, kan fortsatt leses uten.</value></data>
+  <data name="Store_TryAgain" xml:space="preserve"><value>Prøv igjen</value></data>
+  <data name="Store_EmptyTitle" xml:space="preserve"><value>Ingen nye historier ennå</value></data>
+  <data name="Store_EmptyBody" xml:space="preserve"><value>Nye historier legges til av og til. Kom tilbake snart.</value></data>
+  <data name="Store_BackToStories" xml:space="preserve"><value>Tilbake til historiene mine</value></data>
+  <data name="Store_GetStory" xml:space="preserve"><value>Hent {0}</value></data>
+  <data name="Backup_Title" xml:space="preserve"><value>Sikkerhetskopi</value></data>
+  <data name="Backup_SaveTitle" xml:space="preserve"><value>Lagre en sikkerhetskopi</value></data>
+  <data name="Backup_SaveBody_One" xml:space="preserve"><value>Historien din i én fil, med sider, bilder og justert rollebesetning. Lagre den i Drive eller Filer, eller send den til deg selv.</value></data>
+  <data name="Backup_SaveBody_Other" xml:space="preserve"><value>Alle {0} historiene i én fil, med sider, bilder og justerte rollebesetninger. Lagre den i Drive eller Filer, eller send den til deg selv.</value></data>
+  <data name="Backup_SaveButton" xml:space="preserve"><value>Lagre en sikkerhetskopi</value></data>
+  <data name="Backup_RestoreTitle" xml:space="preserve"><value>Gjenopprett fra en sikkerhetskopi</value></data>
+  <data name="Backup_RestoreBody" xml:space="preserve"><value>Legger til historiene som ikke finnes på denne telefonen. Historier som allerede er her, blir akkurat som de er.</value></data>
+  <data name="Backup_RestoreButton" xml:space="preserve"><value>Velg en sikkerhetskopifil</value></data>
+  <data name="Backup_Footer" xml:space="preserve"><value>Filen går bare dit du sender den. Dino beholder ingen kopi på nett.</value></data>
+  <data name="Backup_Restored_One" xml:space="preserve"><value>{0} historie gjenopprettet</value></data>
+  <data name="Backup_Restored_Other" xml:space="preserve"><value>{0} historier gjenopprettet</value></data>
+  <data name="Backup_Added" xml:space="preserve"><value>Lagt til i hyllen</value></data>
+  <data name="Backup_Skipped" xml:space="preserve"><value>Fantes fra før, hoppet over</value></data>
+  <data name="Backup_Damaged" xml:space="preserve"><value>Kunne ikke leses</value></data>
+  <data name="Backup_SeeStories" xml:space="preserve"><value>Se historiene mine</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>Denne sikkerhetskopien er fra en nyere versjon av Dino Book Reader. Oppdater appen og prøv igjen.</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>Den filen er ikke en sikkerhetskopi fra Dino Book Reader.</value></data>
+  <data name="Backup_Failed" xml:space="preserve"><value>Sikkerhetskopieringen fungerte ikke. Prøv igjen.</value></data>
+  <data name="Backup_TooLarge" xml:space="preserve"><value>For stor til å gjenopprettes</value></data>
+  <data name="Backup_SaveSkipped" xml:space="preserve"><value>{0} kunne ikke legges til i sikkerhetskopien.</value></data>
+  <data name="FirstRun_Hello" xml:space="preserve"><value>Hei! Hvilket språk skal vi lese på?</value></data>
+  <data name="FirstRun_HelloBody" xml:space="preserve"><value>Dino laster ned en stemme for det. Du kan endre det senere bak låsen.</value></data>
+  <data name="FirstRun_Continue" xml:space="preserve"><value>Fortsett</value></data>
+  <data name="FirstRun_GettingReady" xml:space="preserve"><value>Gjør Dinos stemme klar</value></data>
+  <data name="FirstRun_Once" xml:space="preserve"><value>{0} stemmer · dette skjer bare én gang</value></data>
+  <data name="FirstRun_Downloading" xml:space="preserve"><value>Laster ned …</value></data>
+  <data name="FirstRun_Waiting" xml:space="preserve"><value>Venter i hyllen</value></data>
+  <data name="FirstRun_PickAnother" xml:space="preserve"><value>Velg et annet språk</value></data>
+  <data name="FirstRun_Ready" xml:space="preserve"><value>Klar til å lese!</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Hver figur får sin egen stemme. Tre historier står i hyllen.</value></data>
+  <data name="FirstRun_HearHello" xml:space="preserve"><value>Hør Dino si hei</value></data>
+  <data name="FirstRun_HelloLine" xml:space="preserve"><value>Hei! Jeg er Dino. La oss lese en historie sammen.</value></data>
+  <data name="FirstRun_SetUp" xml:space="preserve"><value>Gjør historiene klare</value></data>
+  <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>Fortsett med telefonstemmen</value></data>
+  <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Klar for barnet mitt</value></data>
+  <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Voksenmodus</value></data>
+  <data name="Language_Title" xml:space="preserve"><value>Språk</value></data>
+  <data name="Language_Subtitle" xml:space="preserve"><value>Dino leser og oversetter til dette</value></data>
+  <data name="Language_Ready" xml:space="preserve"><value>Klar</value></data>
+  <data name="Language_Download" xml:space="preserve"><value>Last ned</value></data>
+  <data name="Language_Downloading" xml:space="preserve"><value>Laster ned {0} %</value></data>
+  <data name="Language_Footer" xml:space="preserve"><value>En historie på et annet språk leses fortsatt på sitt eget språk, med mindre «Oversett til mitt språk» er slått på for den historien.</value></data>
+  <data name="Gate_HoldBody" xml:space="preserve"><value>Trykk og hold i 3 sekunder.</value></data>
+  <data name="Gate_HoldDescription" xml:space="preserve"><value>Trykk og hold i 3 sekunder</value></data>
+  <data name="Gate_KeepHolding" xml:space="preserve"><value>Hold inne …</value></data>
+  <data name="Gate_Continue" xml:space="preserve"><value>Fortsett til spørsmålet</value></data>
+  <data name="Gate_BackToStory" xml:space="preserve"><value>Tilbake til historien</value></data>
+  <data name="Gate_WhatIs" xml:space="preserve"><value>Hva er</value></data>
+  <data name="Gate_Backspace" xml:space="preserve"><value>Slett</value></data>
+  <data name="Gate_SumQuestion" xml:space="preserve"><value>Hva er {0} pluss {1}?</value></data>
+  <data name="Story_Add" xml:space="preserve"><value>Legg til en historie</value></data>
+  <data name="Story_Title" xml:space="preserve"><value>Tittel</value></data>
+  <data name="Story_Language" xml:space="preserve"><value>Historiens språk</value></data>
+  <data name="Story_LanguageDetected" xml:space="preserve"><value>{0} · oppdaget</value></data>
+  <data name="Story_Translate" xml:space="preserve"><value>Oversett til mitt språk</value></data>
+  <data name="Add_Scan" xml:space="preserve"><value>Skann sider</value></data>
+  <data name="Add_ScanSub" xml:space="preserve"><value>Beholder sidebildene</value></data>
+  <data name="Add_Photos" xml:space="preserve"><value>Bilder</value></data>
+  <data name="Add_PhotosSub" xml:space="preserve"><value>Velg bilder av sidene</value></data>
+  <data name="Add_File" xml:space="preserve"><value>PDF eller fil</value></data>
+  <data name="Add_Type" xml:space="preserve"><value>Skriv eller lim inn</value></data>
+  <data name="Add_TypeSub" xml:space="preserve"><value>Bare tekst</value></data>
+  <data name="Add_Placeholder" xml:space="preserve"><value>Skriv eller lim inn en historie</value></data>
+  <data name="Add_CheckCast" xml:space="preserve"><value>Sjekk rollene</value></data>
+  <data name="Add_Save" xml:space="preserve"><value>Lagre historie</value></data>
+  <data name="Add_PickerTitle" xml:space="preserve"><value>Velg en .txt-, .pdf- eller .docx-fil</value></data>
+  <data name="Add_PermissionTitle" xml:space="preserve"><value>Tillatelse trengs</value></data>
+  <data name="Add_PermissionBody" xml:space="preserve"><value>Gi tilgang til filer for å lese et dokument.</value></data>
+  <data name="Add_FileTooLargeTitle" xml:space="preserve"><value>Filen er for stor</value></data>
+  <data name="Add_FileTooLargeBody" xml:space="preserve"><value>Filen har {0} sider, og grensen er {1}.</value></data>
+  <data name="Add_ReadFailedTitle" xml:space="preserve"><value>Kunne ikke lese filen</value></data>
+  <data name="Add_ReadFailedBody" xml:space="preserve"><value>Filen kan være skadet eller i et format som ikke støttes.</value></data>
+  <data name="Edit_Cover" xml:space="preserve"><value>Omslag</value></data>
+  <data name="Edit_CoverFirstPage" xml:space="preserve"><value>Første side</value></data>
+  <data name="Edit_CoverColour" xml:space="preserve"><value>Farge</value></data>
+  <data name="Edit_CoverPhoto" xml:space="preserve"><value>Bilde</value></data>
+  <data name="Edit_Pages" xml:space="preserve"><value>Sider</value></data>
+  <data name="Wizard_Next" xml:space="preserve"><value>Neste</value></data>
+  <data name="Wizard_StepText" xml:space="preserve"><value>Tekst</value></data>
+  <data name="Wizard_AddPages" xml:space="preserve"><value>Legg til sider</value></data>
+  <data name="Wizard_DragHint" xml:space="preserve"><value>Hold inne en side og dra for å flytte den</value></data>
+  <data name="Wizard_EmptyBody" xml:space="preserve"><value>Legg til sidene i historien din: skann dem, velg bilder, legg til en PDF eller fil, eller skriv teksten. Sett deretter sidene i riktig rekkefølge.</value></data>
+  <data name="Wizard_PageN" xml:space="preserve"><value>Side {0}</value></data>
+  <data name="Wizard_PageMenu" xml:space="preserve"><value>Sidevalg</value></data>
+  <data name="Wizard_MenuRotate" xml:space="preserve"><value>Roter</value></data>
+  <data name="Wizard_MenuCrop" xml:space="preserve"><value>Roter eller beskjær</value></data>
+  <data name="Wizard_MenuEditText" xml:space="preserve"><value>Rediger tekst</value></data>
+  <data name="Wizard_NoTextShort" xml:space="preserve"><value>Ingen tekst</value></data>
+  <data name="Wizard_NoText" xml:space="preserve"><value>Fant ingen tekst på denne siden</value></data>
+  <data name="Wizard_Reading" xml:space="preserve"><value>Leser side {0} av {1}</value></data>
+  <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>Noen sider ble ikke lest</value></data>
+  <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>{0} sider kunne ikke leses. De beholdes som bilder uten tekst.</value></data>
+  <data name="Wizard_CoverHint" xml:space="preserve"><value>Velg en side, et bilde eller en farge til omslaget.</value></data>
+  <data name="Wizard_NeedTextTitle" xml:space="preserve"><value>Ingenting å lese ennå</value></data>
+  <data name="Wizard_NeedTextBody" xml:space="preserve"><value>Legg til tekst på minst én side, og lagre.</value></data>
+  <data name="Wizard_SaveFailedTitle" xml:space="preserve"><value>Kunne ikke lagre historien</value></data>
+  <data name="Wizard_SaveFailedBody" xml:space="preserve"><value>Ingenting ble endret. Prøv igjen om litt.</value></data>
+  <data name="Regions_Helper" xml:space="preserve"><value>Trykk på en boks for å lese den eller utelate den.</value></data>
+  <data name="Regions_ReplaceTitle" xml:space="preserve"><value>Erstatte den redigerte teksten med de valgte områdene?</value></data>
+  <data name="Regions_ReplaceBody" xml:space="preserve"><value>Det du skrev på denne siden, går tapt.</value></data>
+  <data name="Regions_Replace" xml:space="preserve"><value>Erstatt</value></data>
+  <data name="Regions_Keep" xml:space="preserve"><value>Behold</value></data>
+  <data name="Regions_BoxRead" xml:space="preserve"><value>Tekstboks, leses</value></data>
+  <data name="Regions_BoxLeftOut" xml:space="preserve"><value>Tekstboks, utelatt</value></data>
+  <data name="Editor_Title" xml:space="preserve"><value>Roter og beskjær</value></data>
+  <data name="Editor_RotateLeft" xml:space="preserve"><value>Roter mot venstre</value></data>
+  <data name="Editor_RotateRight" xml:space="preserve"><value>Roter mot høyre</value></data>
+  <data name="Editor_ResetCrop" xml:space="preserve"><value>Tilbakestill beskjæring</value></data>
+  <data name="Reading_TextMode" xml:space="preserve"><value>Tekstmodus</value></data>
+  <data name="Reading_PictureMode" xml:space="preserve"><value>Bildemodus</value></data>
+  <data name="Reading_Play" xml:space="preserve"><value>Spill av</value></data>
+  <data name="Reading_Pause" xml:space="preserve"><value>Pause</value></data>
+  <data name="Reading_Previous" xml:space="preserve"><value>Forrige setning</value></data>
+  <data name="Reading_Next" xml:space="preserve"><value>Neste setning</value></data>
+  <data name="Reading_Loading" xml:space="preserve"><value>Laster …</value></data>
+  <data name="Reading_CouldntRead" xml:space="preserve"><value>Kunne ikke lese teksten</value></data>
+  <data name="Reading_ReadFailed" xml:space="preserve"><value>Noe gikk galt under lesingen.</value></data>
+  <data name="Reading_LayoutFailed" xml:space="preserve"><value>Kunne ikke sette opp denne historien. Vri skjermen eller bytt modus og prøv igjen.</value></data>
+  <data name="Reading_PageN" xml:space="preserve"><value>Leser side {0}</value></data>
+  <data name="Cast_Title" xml:space="preserve"><value>Hvem snakker?</value></data>
+  <data name="Cast_Narrator" xml:space="preserve"><value>Forteller</value></data>
+  <data name="Cast_Main" xml:space="preserve"><value>HOVED</value></data>
+  <data name="Cast_Edited" xml:space="preserve"><value>ENDRET</value></data>
+  <data name="Cast_SharedVoice" xml:space="preserve"><value>Delt stemme</value></data>
+  <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>Ukjent taler</value></data>
+  <data name="Cast_MergeButton" xml:space="preserve"><value>Slå sammen to figurer</value></data>
+  <data name="Cast_MergeTitle" xml:space="preserve"><value>Slå sammen figurer</value></data>
+  <data name="Cast_MergeBody" xml:space="preserve"><value>Velg de to navnene som er den samme figuren. Replikkene deres slås sammen under ett navn og én stemme.</value></data>
+  <data name="Cast_KeepName" xml:space="preserve"><value>Behold navnet</value></data>
+  <data name="Cast_VoiceTitle" xml:space="preserve"><value>Stemme</value></data>
+  <data name="Cast_PreviewLine" xml:space="preserve"><value>Hei! Slik høres jeg ut når jeg leser historien din.</value></data>
+  <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>Kunne ikke lagre endringen</value></data>
+  <data name="Cast_SaveFailedBody" xml:space="preserve"><value>Rollebesetningen ble ikke lagret. Prøv igjen om litt.</value></data>
+  <data name="Cast_PreviewFailedBody" xml:space="preserve"><value>Stemmen kunne ikke spilles av akkurat nå.</value></data>
+  <data name="Cast_LoadFailedTitle" xml:space="preserve"><value>Kunne ikke åpne rollebesetningen</value></data>
+  <data name="Cast_LoadFailedBody" xml:space="preserve"><value>Rollebesetningen kunne ikke finnes ut for denne historien. Prøv igjen om litt.</value></data>
+  <data name="Cast_Boy" xml:space="preserve"><value>Gutt</value></data>
+  <data name="Cast_Girl" xml:space="preserve"><value>Jente</value></data>
+  <data name="Cast_Words_One" xml:space="preserve"><value>{0} ord</value></data>
+  <data name="Cast_Words_Other" xml:space="preserve"><value>{0} ord</value></data>
+  <data name="Cast_UnknownLines_One" xml:space="preserve"><value>{0} replikk</value></data>
+  <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} replikker</value></data>
+  <data name="Cast_UsesNarrator" xml:space="preserve"><value>bruker fortellerens stemme</value></data>
+  <data name="Cast_Hear" xml:space="preserve"><value>Hør {0}</value></data>
+  <data name="Cast_NoBoyVoice" xml:space="preserve"><value>Denne stemmepakken har ingen guttestemme, så denne figuren beholder stemmen den hadde.</value></data>
+  <data name="Cast_NoGirlVoice" xml:space="preserve"><value>Denne stemmepakken har ingen jentestemme, så denne figuren beholder stemmen den hadde.</value></data>
+  <data name="Cast_VoiceChanged_One" xml:space="preserve"><value>Stemmen til {0} ble endret fordi fortelleren nå har stemmen de fikk.</value></data>
+  <data name="Cast_VoiceChanged_Other" xml:space="preserve"><value>{0} fikk endret stemmene sine fordi fortelleren nå har stemmen de fikk.</value></data>
+  <data name="Cast_MergeInto" xml:space="preserve"><value>Slå sammen med {0}</value></data>
+  <data name="Cast_SharedNote" xml:space="preserve"><value>Denne stemmepakken har bare {0} naturlige stemmer, så noen figurer deler stemme. Fortellerens stemme blir aldri gitt til en figur.</value></data>
+</root>

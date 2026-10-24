@@ -7,11 +7,11 @@ namespace DinoReader;
 
 /// <summary>
 /// Picks and applies the culture the screens speak (Slice 66, Decision 74): the device language when it is one
-/// of the nine, else English. Dino Reader has no in-app UI language picker: a child's device already has one.
+/// of the fourteen, else English. Dino Reader has no in-app UI language picker: a child's device already has one.
 /// </summary>
 public static class UiCulture
 {
-	/// <summary>The culture for a device culture: one of the nine languages, English when the device speaks another.</summary>
+	/// <summary>The culture for a device culture: one of the fourteen languages, English when the device speaks another.</summary>
 	public static CultureInfo Resolve(CultureInfo device) => CultureInfo.GetCultureInfo(UiLanguage.Resolve(device.Name));
 
 	/// <summary>

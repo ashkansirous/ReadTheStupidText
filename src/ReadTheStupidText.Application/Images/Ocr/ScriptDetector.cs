@@ -1,3 +1,5 @@
+using ReadTheStupidText.Application.Reading;
+
 namespace ReadTheStupidText.Application.Images;
 
 /// <summary>The writing systems the OCR choice tells apart (Slice 84). <see cref="Unknown"/> is never guessed as Latin.</summary>
@@ -40,7 +42,7 @@ public static class ScriptDetector
 
     private static readonly ScriptSpec[] Table =
     [
-        new(TextScript.Latin, false, ["en", "fr", "es", "pt"], [('\0', 'ɏ'), ('Ḁ', 'ỿ')]),
+        new(TextScript.Latin, false, ["en", "fr", "es", "pt", "da", "fi", "sv", "nb", "nl"], [('\0', 'ɏ'), ('Ḁ', 'ỿ')]),
         new(TextScript.Greek, false, ["el"], [('Ͱ', 'Ͽ'), ('ἀ', '῿')]),
         new(TextScript.Cyrillic, false, ["ru", "uk"], [('Ѐ', 'ԯ')]),
         new(TextScript.Hebrew, true, ["he"], [('֐', '׿'), ('יִ', 'ﭏ')]),
@@ -84,7 +86,7 @@ public static class ScriptDetector
     public static bool IsRightToLeft(string language) => SpecOf(language)?.RightToLeft ?? false;
 
     private static ScriptSpec? SpecOf(string language) =>
-        Table.FirstOrDefault(spec => spec.Languages.Contains(language, StringComparer.OrdinalIgnoreCase));
+        Table.FirstOrDefault(spec => spec.Languages.Contains(AppLanguages.Canonical(language), StringComparer.OrdinalIgnoreCase));
 
     private static TextScript? ScriptOf(char c) =>
         Table.FirstOrDefault(spec => spec.Ranges.Any(range => c >= range.From && c <= range.To))?.Script;

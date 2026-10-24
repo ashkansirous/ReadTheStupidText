@@ -3,7 +3,7 @@ using ReadTheStupidText.Application.Reading;
 namespace DinoReader.Core;
 
 /// <summary>
-/// A small on-device guess of which of the nine languages a text is written in, from its letters:
+/// A small on-device guess of which of the app languages a text is written in, from its letters:
 /// the script settles Russian, Chinese, Japanese, Arabic and Farsi, and common-word counts settle
 /// English, French, Spanish and Portuguese. Used to pre-fill the story language at import ("· detected");
 /// the grown-up can always change it. It never leaves the device and returns null when unsure.
@@ -12,6 +12,8 @@ public static class ScriptLanguageGuesser
 {
     private const int SampleLength = 2000;
     private const int MinLatinScore = 2;
+    // Danish, Norwegian and Swedish share words, so a tie is no answer (null).
+    private const int MinLatinMargin = 1;
     private const double KanaShare = 0.05;
 
     private static readonly Dictionary<AppLanguage, HashSet<string>> StopWords = new()
@@ -20,6 +22,11 @@ public static class ScriptLanguageGuesser
         [AppLanguage.French] = Words("le la les des une est et il elle dans que qui pas pour avec sur sont mais très être"),
         [AppLanguage.Spanish] = Words("el los las una es y en que de un por con para su sus pero muy estaba dijo"),
         [AppLanguage.Portuguese] = Words("o os as uma é e em que de um por com para seu sua mas muito estava disse não"),
+        [AppLanguage.Danish] = Words("og at det som er på for med ikke jeg var han de en af mig noget hvad hvor hende sig efter også hun"),
+        [AppLanguage.Finnish] = Words("ja että on ei se oli hän mutta kuin ovat tämä mitä oli kun"),
+        [AppLanguage.Swedish] = Words("och att det som är på för med inte jag var han de en av något vad från hennes också hon"),
+        [AppLanguage.Norwegian] = Words("og at det som er på for med ikke jeg var han de en av meg noe hva ikkje henne seg etter også hun"),
+        [AppLanguage.Dutch] = Words("de en is dat het een van niet naar zijn ook maar voor met ik was hij zij waren"),
     };
 
     // Letters only Farsi uses (peh, tcheh, jeh, gaf) and the Farsi forms of kaf and yeh, against the Arabic ones.
@@ -47,7 +54,7 @@ public static class ScriptLanguageGuesser
             .Select(w => w.Trim('.', ',', '!', '?', ';', ':', '"', '\'', '“', '”', '«', '»', '—', '-', '(', ')').ToLowerInvariant())
             .ToList();
         var scores = StopWords.Select(l => (Language: l.Key, Score: words.Count(l.Value.Contains))).OrderByDescending(s => s.Score).ToList();
-        bool clear = scores[0].Score >= MinLatinScore && scores[0].Score > scores[1].Score;
+        bool clear = scores[0].Score >= MinLatinScore && scores[0].Score - scores[1].Score >= MinLatinMargin;
         return clear ? scores[0].Language : null;
     }
 

@@ -14,7 +14,7 @@ name: packs
 # Details and the pack format: docs/voice-packs.md.
 #
 # Three voice packs are built into one release and listed in one packs.json:
-#   * supertonic-3  from the LFS model in the repo (en, fr, es, pt, ru, ja, ar)
+#   * supertonic-3  from the LFS model in the repo (en, fr, es, pt, ru, ja, ar, da, fi, sv, nl)
 #   * piper-fa      four Piper fa_IR voices (ganji_adabi, the default, ganji, mana, gyro),
 #                   each with its own model folder (Slice 89). Three come from the sherpa-onnx
 #                   `tts-models` release, sha256-pinned; mana has no sherpa build, so its
@@ -72,7 +72,7 @@ permissions:
 
 env:
   SUPERTONIC_ID: supertonic-3
-  SUPERTONIC_LANGUAGES: 'en,fr,es,pt,ru,ja,ar'
+  SUPERTONIC_LANGUAGES: 'en,fr,es,pt,ru,ja,ar,da,fi,sv,nl'
   SUPERTONIC_LICENSE: Apache-2.0
   MODEL_DIR: src/ReadTheStupidText.App/VoiceModel
   # Keep the ids in sync with src/ReadTheStupidText.Application/Reading/PackConstants.cs.

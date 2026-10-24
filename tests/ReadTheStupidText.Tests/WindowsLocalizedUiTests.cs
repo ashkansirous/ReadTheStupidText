@@ -104,6 +104,9 @@ public partial class WindowsLocalizedUiTests
     [InlineData("fa-IR", "fa")]
     [InlineData("zh-CN", "zh-Hans")]
     [InlineData("pt_BR", "pt")]
+    [InlineData("nb-NO", "nb")]
+    [InlineData("nl-NL", "nl")]
+    [InlineData("da-DK", "da")]
     [InlineData("de-DE", null)]
     public void Match_resolves_a_device_tag_to_a_shipped_folder(string deviceTag, string? expected)
     {
@@ -114,6 +117,8 @@ public partial class WindowsLocalizedUiTests
     [InlineData("zh", "zh-Hans")]
     [InlineData("EN", "en-US")]
     [InlineData("ja", "ja")]
+    [InlineData("fi", "fi")]
+    [InlineData("SV", "sv")]
     [InlineData("de", null)]
     [InlineData(null, null)]
     public void Tag_maps_a_stored_code_to_its_resource_folder(string? code, string? expected)

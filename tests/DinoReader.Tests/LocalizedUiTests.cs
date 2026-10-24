@@ -4,7 +4,7 @@ using DinoReader.Core;
 
 namespace DinoReader.Tests;
 
-/// <summary>The Dino Reader UI strings (Slice 66, the pattern of Read The Stupid Text's Slice 53): all nine languages carry the same keys and placeholders.</summary>
+/// <summary>The Dino Reader UI strings (Slice 66, the pattern of Read The Stupid Text's Slice 53): all fourteen languages carry the same keys and placeholders.</summary>
 public partial class LocalizedUiTests
 {
     private const string NeutralFile = "AppResources.resx";

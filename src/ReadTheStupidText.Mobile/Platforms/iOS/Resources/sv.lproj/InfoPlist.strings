@@ -1,0 +1,4 @@
+"NSCameraUsageDescription" = "Kameran fotograferar tryckt text så att appen kan läsa upp den. Foton behandlas på enheten och laddas aldrig upp.";
+"NSPhotoLibraryUsageDescription" = "Appen läser ett foto som du väljer i ditt fotobibliotek, bara för att läsa upp texten i det. Foton behandlas på enheten och laddas aldrig upp.";
+"NSPhotoLibraryAddUsageDescription" = "Appen sparar ingenting i ditt fotobibliotek.";
+"NSMicrophoneUsageDescription" = "Appen spelar inte in ljud. Det här frågas bara om videoinspelning någonsin används, vilket den här appen inte gör.";
