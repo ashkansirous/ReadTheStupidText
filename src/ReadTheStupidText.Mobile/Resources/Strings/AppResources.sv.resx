@@ -43,9 +43,6 @@
   <data name="Reader_ScanUnreadableMessage" xml:space="preserve"><value>Försök skanna texten igen med bättre ljus eller skärpa.</value></data>
   <data name="Reader_NoTextFoundTitle" xml:space="preserve"><value>Ingen text hittades</value></data>
   <data name="Reader_NoTextFoundMessage" xml:space="preserve"><value>Försök skanna igen med bättre ljus eller skärpa.</value></data>
-  <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>Vissa sidor hoppades över</value></data>
-  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>Det gick inte att läsa sida {0}. De sidor som gick att läsa ersatte din text.</value></data>
-  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>Det gick inte att läsa sidorna {0}. De sidor som gick att läsa ersatte din text.</value></data>
   <data name="Capture_Title" xml:space="preserve"><value>Ta en bild av varje sida</value></data>
   <data name="Capture_Hint" xml:space="preserve"><value>Lägg till en sida i taget. Tryck på {0} när du har alla.</value></data>
   <data name="Capture_HintDone" xml:space="preserve"><value>Klar</value></data>
@@ -63,6 +60,19 @@
   <data name="Capture_RemovePage" xml:space="preserve"><value>Ta bort den här sidan</value></data>
   <data name="Capture_CouldntRead" xml:space="preserve"><value>Kunde inte läsas</value></data>
   <data name="Capture_ClosePreview" xml:space="preserve"><value>Stäng</value></data>
+  <data name="Review_Title" xml:space="preserve"><value>Kontrollera texten</value></data>
+  <data name="Review_TranslateTo" xml:space="preserve"><value>Översätt till {0}</value></data>
+  <data name="Review_LooksLike" xml:space="preserve"><value>Texten ser ut att vara på {0}</value></data>
+  <data name="Review_TranslateAndRead" xml:space="preserve"><value>Översätt och läs</value></data>
+  <data name="Review_Read" xml:space="preserve"><value>Läs</value></data>
+  <data name="Review_GettingTranslator" xml:space="preserve"><value>Hämtar översättaren för {0}…</value></data>
+  <data name="Review_FirstTimeOnly" xml:space="preserve"><value>Bara första gången. Översättningen sker på den här telefonen.</value></data>
+  <data name="Review_ShowOriginal" xml:space="preserve"><value>Visa original</value></data>
+  <data name="Review_FailedOne" xml:space="preserve"><value>Det gick inte att läsa sida {0}.</value></data>
+  <data name="Review_FailedMany" xml:space="preserve"><value>Det gick inte att läsa sidorna {0}.</value></data>
+  <data name="Review_HereOne" xml:space="preserve"><value>Sida {0} finns här.</value></data>
+  <data name="Review_HereMany" xml:space="preserve"><value>Sidorna {0} finns här.</value></data>
+  <data name="Review_TranslateFailed" xml:space="preserve"><value>Det gick inte att översätta, så originaltexten läses upp.</value></data>
   <data name="Reader_PageLanguageTitle" xml:space="preserve"><value>Vilket språk är den här sidan på?</value></data>
   <data name="Reader_OcrDownloading" xml:space="preserve"><value>Laddar ned läsaren för {0}… {1} %</value></data>
   <data name="Reader_OcrDownloadFailedTitle" xml:space="preserve"><value>Det gick inte att ladda ned läsaren</value></data>

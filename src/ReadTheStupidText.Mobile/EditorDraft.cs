@@ -7,6 +7,7 @@ namespace ReadTheStupidText.Mobile;
 public sealed class EditorDraft
 {
     private string? _text;
+    private string? _original;
     private Action? _prepareForRebuild;
 
     /// <summary>
@@ -23,7 +24,19 @@ public sealed class EditorDraft
         hook?.Invoke();
     }
 
-    public void Store(string? text) => _text = text;
+    public void Store(string? text, string? original = null)
+    {
+        _text = text;
+        _original = original;
+    }
+
+    /// <summary>The text a stored translation came from (Slice 101), cleared like the text; call after <see cref="Take"/>.</summary>
+    public string? TakeOriginal()
+    {
+        string? original = _original;
+        _original = null;
+        return original;
+    }
 
     /// <summary>The stored text, cleared so a later fresh page does not restore a stale draft.</summary>
     public string? Take()

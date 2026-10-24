@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ReadTheStupidText.Application.Documents;
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Translation;
 using ReadTheStupidText.Documents;
 
 namespace ReadTheStupidText.Mobile;
@@ -27,12 +28,13 @@ public static partial class MauiProgram
 		builder.Services.AddSingleton<DocxTextExtractor>();
 		builder.Services.AddSingleton<IDocumentTextExtractor, CompositeDocumentTextExtractor>();
 		builder.Services.AddSingleton<EditorDraft>();
-		builder.Services.AddSingleton<CaptureHandOff>();
+		builder.Services.AddSingleton<ReviewHandOff>();
 		builder.Services.AddTransient<LanguagePage>();
 		builder.Services.AddTransient<ReaderPage>();
 		builder.Services.AddTransient<VoicePickerPage>();
 		builder.Services.AddTransient<SettingsPage>();
 		builder.Services.AddTransient<CapturePage>();
+		builder.Services.AddTransient<ReviewPage>();
 
 #if DEBUG
 		builder.Logging.AddDebug();

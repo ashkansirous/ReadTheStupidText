@@ -1,38 +1,17 @@
 using ReadTheStupidText.Application.Images;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Application.Translation;
 using ReadTheStupidText.Mobile.Resources.Strings;
 
 namespace ReadTheStupidText.Mobile;
 
 /// <summary>
-/// Hands the capture wizard's joined text back to the <see cref="ReaderPage"/> (Slice 100). A singleton,
-/// not a Shell query parameter: a one-shot hand-off to the cached root page replays on later navigation.
-/// </summary>
-public sealed class CaptureHandOff
-{
-    private string? _text;
-
-    public void Set(string text)
-    {
-        _text = text;
-    }
-
-    /// <summary>The text left by the wizard, cleared so it is applied once.</summary>
-    public string? Take()
-    {
-        string? text = _text;
-        _text = null;
-        return text;
-    }
-}
-
-/// <summary>
 /// Wizard page 1, "Take a photo of each page" (Slice 100, Decision 104): our own multi-page capture so
 /// "add another page" cannot hide inside Google's scanner. Each Add captures one page (the ML Kit scanner
 /// limited to one page, or a single photo without Play services) and returns here; every page is read in
-/// the background as it arrives, so Done is quick. Done joins the pages' text and leaves it for the main
-/// page; pictures are deleted when the wizard ends.
+/// the background as it arrives, so Done is quick. Done joins the pages' text and opens the review page
+/// (Slice 101); pictures are deleted when the wizard ends.
 /// </summary>
 public partial class CapturePage : ContentPage, IScanPackUi
 {
@@ -53,7 +32,7 @@ public partial class CapturePage : ContentPage, IScanPackUi
     private readonly OcrPackInstaller? _ocrPacks;
     private readonly IDocumentScanner? _scanner;
     private readonly ISettingsStore _settings;
-    private readonly CaptureHandOff _handOff;
+    private readonly ReviewHandOff _handOff;
     private readonly CapturedPageList _pages = new();
     private readonly Dictionary<Guid, View> _spinners = [];
     private readonly Dictionary<Guid, View> _cells = [];
@@ -72,7 +51,7 @@ public partial class CapturePage : ContentPage, IScanPackUi
     private bool _ocrUnavailable;
     private string? _pickedLanguage;
 
-    public CapturePage(IImageTextExtractor imageExtractor, ISettingsStore settings, CaptureHandOff handOff, IDocumentScanner? scanner = null, IOcrLineExtractor? lineExtractor = null, OcrPackInstaller? ocrPacks = null)
+    public CapturePage(IImageTextExtractor imageExtractor, ISettingsStore settings, ReviewHandOff handOff, IDocumentScanner? scanner = null, IOcrLineExtractor? lineExtractor = null, OcrPackInstaller? ocrPacks = null)
     {
         InitializeComponent();
         FlowDirection = FlowDirection.LeftToRight;
@@ -519,9 +498,7 @@ public partial class CapturePage : ContentPage, IScanPackUi
         }
         else
         {
-            await ReportFailedPagesAsync(failed);
-            _handOff.Set(joined);
-            await LeaveAsync();
+            await OpenReviewAsync(new ReviewRequest(joined, null, failed, ScannedText.ContributingPageNumbers(texts)));
         }
     }
 
@@ -530,15 +507,18 @@ public partial class CapturePage : ContentPage, IScanPackUi
             ? AlertAsync(AppResources.Reader_ScanUnavailableTitle, AppResources.Reader_ScanUnavailableMessage)
             : AlertAsync(AppResources.Reader_ScanUnreadableTitle, AppResources.Reader_ScanUnreadableMessage);
 
-    private async Task ReportFailedPagesAsync(IReadOnlyList<int> failed)
+    // The wizard ends and page 2 takes its place, so Back from it returns to the main page.
+    // The request is queued only once we know the page really opens (not while leaving).
+    private async Task OpenReviewAsync(ReviewRequest request)
     {
-        if (failed.Count == 0)
+        if (_leaving)
         {
             return;
         }
 
-        string template = failed.Count == 1 ? AppResources.Reader_PagesSkippedOneMessage : AppResources.Reader_PagesSkippedManyMessage;
-        await AlertAsync(AppResources.Reader_PagesSkippedTitle, AppResources.Format(template, ScannedText.FormatPageNumbers(failed)));
+        _handOff.Open(request);
+        EndWizard();
+        await Shell.Current.GoToAsync($"../{AppShell.ReviewRoute}");
     }
 
     // ---- leaving ---------------------------------------------------------------------------
