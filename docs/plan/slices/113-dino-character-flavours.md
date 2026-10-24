@@ -1,6 +1,6 @@
 # Slice 113 — Dino: playful character voices (pitch and pace per character)
 
-*Planned 2026-10-24*, from the user's note that Dino's voices are "too grown up": stories about sheep
+*In progress (wave 2026-10-24), draft PR.* *Planned 2026-10-24*, from the user's note that Dino's voices are "too grown up": stories about sheep
 and pigs are read in a serious adult tone.
 
 **Batch:** 23 (voices that sound like a story for children)
