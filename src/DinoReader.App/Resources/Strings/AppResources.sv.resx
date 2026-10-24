@@ -215,4 +215,6 @@
   <data name="Cast_VoiceChanged_Other" xml:space="preserve"><value>{0} fick sina röster ändrade eftersom berättaren nu har rösten de fick.</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>Slå ihop med {0}</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Det här röstpaketet har bara {0} naturliga röster, så vissa figurer delar röst. Berättarens röst ges aldrig till en figur.</value></data>
+  <data name="Voice_NbWoman" xml:space="preserve"><value>Röst {0} (kvinna)</value></data>
+  <data name="Voice_NbMan" xml:space="preserve"><value>Röst {0} (man)</value></data>
 </root>

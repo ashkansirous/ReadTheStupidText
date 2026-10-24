@@ -216,4 +216,6 @@
   <data name="Cast_VoiceChanged_Other" xml:space="preserve"><value>Les voix de {0} ont changé parce que le narrateur a maintenant la voix qui leur avait été donnée.</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>Fusionner avec {0}</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Ce pack de voix ne contient que {0} voix naturelles ; certains personnages partagent donc une voix. La voix du narrateur n’est jamais donnée à un personnage.</value></data>
+  <data name="Voice_NbWoman" xml:space="preserve"><value>Voix {0} (femme)</value></data>
+  <data name="Voice_NbMan" xml:space="preserve"><value>Voix {0} (homme)</value></data>
 </root>

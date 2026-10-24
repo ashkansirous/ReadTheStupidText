@@ -215,4 +215,6 @@
   <data name="Cast_VoiceChanged_Other" xml:space="preserve"><value>{0} hebben een andere stem gekregen omdat de verteller nu de stem heeft die ze hadden gekregen.</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>Samenvoegen met {0}</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Dit stempakket heeft maar {0} natuurlijke stemmen, dus sommige personages delen een stem. De stem van de verteller wordt nooit aan een personage gegeven.</value></data>
+  <data name="Voice_NbWoman" xml:space="preserve"><value>Stem {0} (vrouw)</value></data>
+  <data name="Voice_NbMan" xml:space="preserve"><value>Stem {0} (man)</value></data>
 </root>
