@@ -215,4 +215,6 @@
   <data name="Cast_VoiceChanged_Other" xml:space="preserve"><value>Hahmojen {0} äänet vaihdettiin, koska kertoja sai nyt heille annetun äänen.</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>Yhdistä hahmoon {0}</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Tässä äänipaketissa on vain {0} luonnollista ääntä, joten jotkin hahmot jakavat äänen. Kertojan ääntä ei koskaan anneta hahmolle.</value></data>
+  <data name="Voice_NbWoman" xml:space="preserve"><value>Ääni {0} (nainen)</value></data>
+  <data name="Voice_NbMan" xml:space="preserve"><value>Ääni {0} (mies)</value></data>
 </root>

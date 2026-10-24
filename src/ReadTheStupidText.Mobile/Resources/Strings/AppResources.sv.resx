@@ -90,4 +90,6 @@
   <data name="Language_Retry" xml:space="preserve"><value>Försök ladda ned igen</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>Fortsätt</value></data>
   <data name="Language_StartReading" xml:space="preserve"><value>Börja läsa</value></data>
+  <data name="Voice_NbWoman" xml:space="preserve"><value>Röst {0} (kvinna)</value></data>
+  <data name="Voice_NbMan" xml:space="preserve"><value>Röst {0} (man)</value></data>
 </root>

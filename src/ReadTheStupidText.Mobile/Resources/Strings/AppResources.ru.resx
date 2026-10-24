@@ -90,4 +90,6 @@
   <data name="Language_Retry" xml:space="preserve"><value>Повторить загрузку</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>Продолжить</value></data>
   <data name="Language_StartReading" xml:space="preserve"><value>Начать чтение</value></data>
+  <data name="Voice_NbWoman" xml:space="preserve"><value>Голос {0} (женщина)</value></data>
+  <data name="Voice_NbMan" xml:space="preserve"><value>Голос {0} (мужчина)</value></data>
 </root>

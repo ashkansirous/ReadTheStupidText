@@ -91,13 +91,19 @@ public sealed class StoryVoicing
 		return InstalledVoices(code) is not null ? code : current;
 	}
 
-	/// <summary>The voice a new story in <paramref name="language"/> starts with as its narrator: the default style when the pack has it, else the pack's first voice.</summary>
+	private const string NorwegianLanguageCode = "nb";
+
+	/// <summary>The voice a new story in <paramref name="language"/> starts with as its narrator: the default style when the pack has it, else the pack's first voice
+	/// (Norwegian, before its pack installs: the pack's first voice, so the saved id is one the pack knows).</summary>
 	public string NarratorFor(string language)
 	{
 		IReadOnlyList<VoiceOption> pool = VoicesFor(language);
-		return pool.Any(v => v.Id == SupertonicVoiceTable.Default.Id) || pool.Count == 0
-			? SupertonicVoiceTable.Default.Id
-			: pool[0].Id;
+		if (pool.Count == 0)
+		{
+			return UiLanguage.Resolve(language) == NorwegianLanguageCode ? NorwegianVoices.DefaultId : SupertonicVoiceTable.Default.Id;
+		}
+
+		return pool.Any(v => v.Id == SupertonicVoiceTable.Default.Id) ? SupertonicVoiceTable.Default.Id : pool[0].Id;
 	}
 
 	/// <summary>How many voices characters can share out once <paramref name="narratorVoiceId"/> is the narrator's.</summary>
@@ -166,7 +172,10 @@ public sealed class StoryVoicing
 
 	private IReadOnlyList<VoiceOption> BuildPool(string language)
 	{
-		IReadOnlyList<VoiceInfo> voices = InstalledVoices(language) ?? SupertonicVoiceTable.VoicesFor(language);
+		// A language Supertonic does not serve (Norwegian) has an empty pool until its pack installs, so no Supertonic id
+		// is saved into a cast that the pack's own voices would then not know (pinned stored voices are kept as they are).
+		IReadOnlyList<VoiceInfo> voices = InstalledVoices(language)
+			?? (SupertonicVoiceTable.Serves(language) ? SupertonicVoiceTable.VoicesFor(language) : []);
 		CastText.RememberVoices(voices);
 		return voices.Select(ToOption).ToList();
 	}
@@ -183,11 +192,14 @@ public sealed class StoryVoicing
 		}
 	}
 
-	// A pack that does not say which of its voices are for girls (Piper, Melo) gives Unknown, which any character may take.
+	// A pack that does not say which of its voices are for girls (Persian Piper, Melo) gives Unknown, which any character may take.
+	// Supertonic and the Norwegian pack (speaker codes, Slice 104) know theirs.
 	private static VoiceOption ToOption(VoiceInfo voice)
 	{
 		bool supertonic = voice.Id.StartsWith(SupertonicVoiceTable.IdPrefix, StringComparison.Ordinal);
-		Gender gender = !supertonic ? Gender.Unknown : SupertonicVoiceTable.IsFemale(voice.Id) ? Gender.Female : Gender.Male;
+		Gender gender = supertonic
+			? (SupertonicVoiceTable.IsFemale(voice.Id) ? Gender.Female : Gender.Male)
+			: NorwegianVoices.IsFemale(voice.Id) switch { true => Gender.Female, false => Gender.Male, null => Gender.Unknown };
 		return new VoiceOption(voice.Id, gender);
 	}
 
