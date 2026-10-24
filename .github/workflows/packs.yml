@@ -151,6 +151,13 @@ jobs:
         with:
           lfs: true
 
+      # The quantiser pins below (onnxruntime 1.23.2, matching the apps) have no wheels for the
+      # runner image's newer default Python, so pin one they support.
+      - name: Use Python 3.12 for the quantiser
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
       - name: Refuse a tag that is not packs-<number>
         run: |
           if ! [[ "$TAG" =~ ^packs-[0-9]+$ ]]; then
