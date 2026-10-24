@@ -7,6 +7,21 @@ namespace ReadTheStupidText.Mobile;
 public sealed class EditorDraft
 {
     private string? _text;
+    private Action? _prepareForRebuild;
+
+    /// <summary>
+    /// Registered by the live reader page, so the Settings page (which cannot see it) can ask it to stop
+    /// reading and store its text before a language change rebuilds the shell (Slice 99).
+    /// </summary>
+    public void RegisterRebuildHook(Action prepareForRebuild) => _prepareForRebuild = prepareForRebuild;
+
+    /// <summary>Runs the registered hook once and drops it, so the retired page is not kept alive or called again.</summary>
+    public void PrepareForRebuild()
+    {
+        Action? hook = _prepareForRebuild;
+        _prepareForRebuild = null;
+        hook?.Invoke();
+    }
 
     public void Store(string? text) => _text = text;
 
