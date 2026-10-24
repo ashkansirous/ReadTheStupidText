@@ -1,6 +1,6 @@
 # Slice 97 — The grown-ups button says "add a book", not a lock
 
-*Planned 2026-10-24*, from the user's request "the menu button for grown-ups is very bad. It should be
+*In progress (wave 2026-10-24), draft PR.* Planned 2026-10-24, from the user's request "the menu button for grown-ups is very bad. It should be
 something indicating that you could add a book, not a lock."
 
 **Batch:** 18 (Dino Reader: layout, add-a-book button, picture + text books)
