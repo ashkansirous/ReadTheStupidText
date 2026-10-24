@@ -27,6 +27,13 @@ public static class ScannedText
             .Select(i => i + 1)
             .ToList();
 
+    /// <summary>The 1-based numbers of the pages that contributed text to <see cref="JoinPages"/> (not failed, not blank).</summary>
+    public static IReadOnlyList<int> ContributingPageNumbers(IReadOnlyList<string?> pageTexts) =>
+        Enumerable.Range(0, pageTexts.Count)
+            .Where(i => !string.IsNullOrWhiteSpace(pageTexts[i]))
+            .Select(i => i + 1)
+            .ToList();
+
     /// <summary>
     /// Converts a plain path or a <c>file://</c> uri string (percent-encoded) to a local path.
     /// Returns null for any other scheme, which is not ours to touch.

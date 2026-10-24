@@ -1,6 +1,6 @@
 # Slice 101 — RTST phone: wizard page 2, check the text, translate, read
 
-*In progress (wave 2026-10-24), draft PR.* Planned 2026-10-24, from the user's request: "Wizard page 2 shows the captured text in a text box and
+*Built 2026-10-24 (PR #297), not yet verified on a device.* Planned 2026-10-24, from the user's request: "Wizard page 2 shows the captured text in a text box and
 lets people edit it. The text box should be big so they see as much as possible, plus a checkbox, if it
 is in a different language, to translate to the app's language, with a button to translate/read. If they
 upload a file instead of an image, it should go directly to wizard page 2."
@@ -54,12 +54,12 @@ New strings (nine locales): "Check the text", "Paste", "Page {n} couldn’t be r
 
 ## Work
 
-- [ ] 1. **Smallest end-to-end:** `ReviewPage` with the big editor and **Read**, reached from **Text from a
+- [x] 1. **Smallest end-to-end:** `ReviewPage` with the big editor and **Read**, reached from **Text from a
   file**; Read puts the text on the main page and starts reading.
-- [ ] 2. The checkbox and **Translate and read** (detect, translate, replace, "Show original"), the model
+- [x] 2. The checkbox and **Translate and read** (detect, translate, replace, "Show original"), the model
   download line and the failure fallback; `TranslateEnabled` and the translate card code removed.
-- [ ] 3. Wire Done (Slice 100), Edit and long-press Paste (Slice 99) to page 2; the Paste button on page 2.
-- [ ] 4. Strings in nine languages; rule in `src/ReadTheStupidText.Mobile/CLAUDE.md` replacing the Slice 54
+- [x] 3. Wire Done (Slice 100), Edit and long-press Paste (Slice 99) to page 2; the Paste button on page 2.
+- [x] 4. Strings in nine languages; rule in `src/ReadTheStupidText.Mobile/CLAUDE.md` replacing the Slice 54
   translation line (written at planning; check it still matches).
 
 ## Verification
@@ -71,3 +71,35 @@ New strings (nine locales): "Check the text", "Paste", "Page {n} couldn’t be r
   reads the French. An English text with the app in English shows no checkbox. Captured pages from
   Slice 100 arrive here.
 - iOS compile check; on iOS the checkbox never shows.
+
+## Built 2026-10-24 (PR #297)
+
+*Changed while building:*
+
+- `ReviewPage` (`AppShell.ReviewRoute`) implements mock R6-R7: big editable box, Paste pill, failed-pages banner (singular/plural safe, blank pages not listed). The translate row reads "Translate to <UI language>" and "This text looks like <language>", names in the UI language, ticked by default, shown only when the languages differ and a translator exists (never on iOS).
+- The button reads "Translate and read" or "Read". Translating replaces the text; "Show original" restores it and survives a language rebuild via `EditorDraft`. The model-download card shows a sweep, not a percentage, because ML Kit gives no %. On failure: one alert, then the original is read.
+- Entry points: Done (capture), Text from a file, Edit, long-press Paste. `ReaderPage` has a re-entrancy guard and pauses reading; `ReviewHandOff` values clear on read.
+- Detection always routes the voice; the translator only gates the checkbox. The old translate-on-speak path is gone from the phone. `TranslateEnabled` stays in `ISettingsStore` for Windows.
+- Soft input switches to `AdjustResize` on this page and back to `Pan` on leaving.
+
+*From review:* high pass, 8 findings applied; medium pass, 9 findings applied.
+
+#### For CLAUDE.md
+
+- `ReviewPage` hand-off: `ReviewHandOff` values clear on read, and `ReaderPage` guards against re-entry and pauses reading when it opens the page. Don't read the hand-off twice. (Slice 101: docs/plan/slices/101-rtst-mobile-review-and-translate.md)
+- Phone translation is a per-text choice on `ReviewPage`, never translate-on-speak. Language detection always routes the voice; the translator only gates the checkbox. `TranslateEnabled` stays in `ISettingsStore` for Windows only. (Slice 101: docs/plan/slices/101-rtst-mobile-review-and-translate.md)
+- `ReviewPage` sets soft input to `AdjustResize` and must restore `Pan` on leaving. (Slice 101: docs/plan/slices/101-rtst-mobile-review-and-translate.md)
+
+#### Verified on the emulator (2026-10-24, RTST_Test, app in English)
+
+- A French .txt opens "Check the text" with "Translate to English" ticked and "This text looks like French" shown. The ML Kit model downloaded (download card with sweep), and the main page showed and read the English translation.
+- Unticked, the button says Read, and the French is read as-is. An English .txt shows no checkbox.
+- Edit opens page 2 and Back changes nothing. Long-press Paste opens page 2 (clipboard replacement checked only weakly). Choose from photos, then Done, lands on page 2.
+- With the keyboard open, the button sits just above it.
+
+#### Not yet verified
+
+- Emulator device-test of the page (result to follow from the caller).
+- A real ML Kit model download and translation on a phone.
+- iOS (compile and that the checkbox never shows).
+- A native-speaker read of the new strings in the nine locales.

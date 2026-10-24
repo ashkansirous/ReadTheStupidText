@@ -43,9 +43,6 @@
   <data name="Reader_ScanUnreadableMessage" xml:space="preserve"><value>Yritä skannata teksti uudelleen paremmassa valaistuksessa tai tarkennuksella.</value></data>
   <data name="Reader_NoTextFoundTitle" xml:space="preserve"><value>Tekstiä ei löytynyt</value></data>
   <data name="Reader_NoTextFoundMessage" xml:space="preserve"><value>Yritä skannata uudelleen paremmassa valaistuksessa tai tarkennuksella.</value></data>
-  <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>Joitakin sivuja ohitettiin</value></data>
-  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>Sivua {0} ei voitu lukea. Luetut sivut korvasivat tekstisi.</value></data>
-  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>Sivuja {0} ei voitu lukea. Luetut sivut korvasivat tekstisi.</value></data>
   <data name="Capture_Title" xml:space="preserve"><value>Ota kuva jokaisesta sivusta</value></data>
   <data name="Capture_Hint" xml:space="preserve"><value>Lisää yksi sivu kerrallaan. Napauta {0}, kun sivut ovat kaikki mukana.</value></data>
   <data name="Capture_HintDone" xml:space="preserve"><value>Valmis</value></data>
@@ -63,6 +60,19 @@
   <data name="Capture_RemovePage" xml:space="preserve"><value>Poista tämä sivu</value></data>
   <data name="Capture_CouldntRead" xml:space="preserve"><value>Ei voitu lukea</value></data>
   <data name="Capture_ClosePreview" xml:space="preserve"><value>Sulje</value></data>
+  <data name="Review_Title" xml:space="preserve"><value>Tarkista teksti</value></data>
+  <data name="Review_TranslateTo" xml:space="preserve"><value>Käännä kielelle {0}</value></data>
+  <data name="Review_LooksLike" xml:space="preserve"><value>Teksti näyttää olevan kieltä {0}</value></data>
+  <data name="Review_TranslateAndRead" xml:space="preserve"><value>Käännä ja lue</value></data>
+  <data name="Review_Read" xml:space="preserve"><value>Lue</value></data>
+  <data name="Review_GettingTranslator" xml:space="preserve"><value>Haetaan {0}-kääntäjää…</value></data>
+  <data name="Review_FirstTimeOnly" xml:space="preserve"><value>Vain ensimmäisellä kerralla. Käännös tehdään tällä puhelimella.</value></data>
+  <data name="Review_ShowOriginal" xml:space="preserve"><value>Näytä alkuperäinen</value></data>
+  <data name="Review_FailedOne" xml:space="preserve"><value>Sivua {0} ei voitu lukea.</value></data>
+  <data name="Review_FailedMany" xml:space="preserve"><value>Sivuja {0} ei voitu lukea.</value></data>
+  <data name="Review_HereOne" xml:space="preserve"><value>Sivu {0} on tässä.</value></data>
+  <data name="Review_HereMany" xml:space="preserve"><value>Sivut {0} ovat tässä.</value></data>
+  <data name="Review_TranslateFailed" xml:space="preserve"><value>Kääntäminen ei onnistunut, joten alkuperäinen teksti luetaan.</value></data>
   <data name="Reader_PageLanguageTitle" xml:space="preserve"><value>Millä kielellä tämä sivu on?</value></data>
   <data name="Reader_OcrDownloading" xml:space="preserve"><value>Ladataan lukijaa kielelle {0}… {1} %</value></data>
   <data name="Reader_OcrDownloadFailedTitle" xml:space="preserve"><value>Lukijaa ei voitu ladata</value></data>

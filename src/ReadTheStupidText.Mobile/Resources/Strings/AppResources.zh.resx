@@ -43,9 +43,6 @@
   <data name="Reader_ScanUnreadableMessage" xml:space="preserve"><value>请在光线更好或对焦更清晰的条件下重新扫描文字。</value></data>
   <data name="Reader_NoTextFoundTitle" xml:space="preserve"><value>未找到文字</value></data>
   <data name="Reader_NoTextFoundMessage" xml:space="preserve"><value>请在光线更好或对焦更清晰的条件下重新扫描。</value></data>
-  <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>已跳过部分页面</value></data>
-  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>无法读取第 {0} 页。可读取的页面已替换原文本。</value></data>
-  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>无法读取第 {0} 页。可读取的页面已替换原文本。</value></data>
   <data name="Capture_Title" xml:space="preserve"><value>给每一页拍张照</value></data>
   <data name="Capture_Hint" xml:space="preserve"><value>一次添加一页。全部拍完后，点按“{0}”。</value></data>
   <data name="Capture_HintDone" xml:space="preserve"><value>完成</value></data>
@@ -63,6 +60,19 @@
   <data name="Capture_RemovePage" xml:space="preserve"><value>删除此页</value></data>
   <data name="Capture_CouldntRead" xml:space="preserve"><value>无法识别</value></data>
   <data name="Capture_ClosePreview" xml:space="preserve"><value>关闭</value></data>
+  <data name="Review_Title" xml:space="preserve"><value>检查文本</value></data>
+  <data name="Review_TranslateTo" xml:space="preserve"><value>翻译成{0}</value></data>
+  <data name="Review_LooksLike" xml:space="preserve"><value>此文本看起来是{0}</value></data>
+  <data name="Review_TranslateAndRead" xml:space="preserve"><value>翻译并朗读</value></data>
+  <data name="Review_Read" xml:space="preserve"><value>朗读</value></data>
+  <data name="Review_GettingTranslator" xml:space="preserve"><value>正在获取{0}翻译器…</value></data>
+  <data name="Review_FirstTimeOnly" xml:space="preserve"><value>仅首次需要。翻译在此手机上完成。</value></data>
+  <data name="Review_ShowOriginal" xml:space="preserve"><value>显示原文</value></data>
+  <data name="Review_FailedOne" xml:space="preserve"><value>无法读取第 {0} 页。</value></data>
+  <data name="Review_FailedMany" xml:space="preserve"><value>无法读取第 {0} 页。</value></data>
+  <data name="Review_HereOne" xml:space="preserve"><value>第 {0} 页的文字已在这里。</value></data>
+  <data name="Review_HereMany" xml:space="preserve"><value>第 {0} 页的文字已在这里。</value></data>
+  <data name="Review_TranslateFailed" xml:space="preserve"><value>无法翻译，将朗读原文。</value></data>
   <data name="Reader_PageLanguageTitle" xml:space="preserve"><value>这一页是什么语言？</value></data>
   <data name="Reader_OcrDownloading" xml:space="preserve"><value>正在下载{0}的识别包… {1}%</value></data>
   <data name="Reader_OcrDownloadFailedTitle" xml:space="preserve"><value>无法下载识别包</value></data>

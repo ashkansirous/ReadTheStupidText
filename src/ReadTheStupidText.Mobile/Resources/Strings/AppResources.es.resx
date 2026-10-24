@@ -43,9 +43,6 @@
   <data name="Reader_ScanUnreadableMessage" xml:space="preserve"><value>Vuelve a escanear el texto con mejor iluminación o enfoque.</value></data>
   <data name="Reader_NoTextFoundTitle" xml:space="preserve"><value>No se encontró texto</value></data>
   <data name="Reader_NoTextFoundMessage" xml:space="preserve"><value>Vuelve a escanear con mejor iluminación o enfoque.</value></data>
-  <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>Algunas páginas omitidas</value></data>
-  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>No se pudo leer la página {0}. Las páginas legibles reemplazaron el texto.</value></data>
-  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>No se pudieron leer las páginas {0}. Las páginas legibles reemplazaron el texto.</value></data>
   <data name="Capture_Title" xml:space="preserve"><value>Haz una foto de cada página</value></data>
   <data name="Capture_Hint" xml:space="preserve"><value>Añade una página cada vez. Toca {0} cuando las tengas todas.</value></data>
   <data name="Capture_HintDone" xml:space="preserve"><value>Listo</value></data>
@@ -63,6 +60,19 @@
   <data name="Capture_RemovePage" xml:space="preserve"><value>Quitar esta página</value></data>
   <data name="Capture_CouldntRead" xml:space="preserve"><value>No se pudo leer</value></data>
   <data name="Capture_ClosePreview" xml:space="preserve"><value>Cerrar</value></data>
+  <data name="Review_Title" xml:space="preserve"><value>Revisa el texto</value></data>
+  <data name="Review_TranslateTo" xml:space="preserve"><value>Traducir a {0}</value></data>
+  <data name="Review_LooksLike" xml:space="preserve"><value>Este texto parece estar en {0}</value></data>
+  <data name="Review_TranslateAndRead" xml:space="preserve"><value>Traducir y leer</value></data>
+  <data name="Review_Read" xml:space="preserve"><value>Leer</value></data>
+  <data name="Review_GettingTranslator" xml:space="preserve"><value>Descargando el traductor de {0}…</value></data>
+  <data name="Review_FirstTimeOnly" xml:space="preserve"><value>Solo la primera vez. La traducción se hace en este teléfono.</value></data>
+  <data name="Review_ShowOriginal" xml:space="preserve"><value>Ver original</value></data>
+  <data name="Review_FailedOne" xml:space="preserve"><value>No se pudo leer la página {0}.</value></data>
+  <data name="Review_FailedMany" xml:space="preserve"><value>No se pudieron leer las páginas {0}.</value></data>
+  <data name="Review_HereOne" xml:space="preserve"><value>La página {0} está aquí.</value></data>
+  <data name="Review_HereMany" xml:space="preserve"><value>Las páginas {0} están aquí.</value></data>
+  <data name="Review_TranslateFailed" xml:space="preserve"><value>No se pudo traducir, así que se lee el texto original.</value></data>
   <data name="Reader_PageLanguageTitle" xml:space="preserve"><value>¿En qué idioma está esta página?</value></data>
   <data name="Reader_OcrDownloading" xml:space="preserve"><value>Descargando el lector para {0}… {1} %</value></data>
   <data name="Reader_OcrDownloadFailedTitle" xml:space="preserve"><value>No se pudo descargar el lector</value></data>

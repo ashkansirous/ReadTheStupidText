@@ -43,9 +43,6 @@
   <data name="Reader_ScanUnreadableMessage" xml:space="preserve"><value>Prøv å skanne teksten på nytt med bedre lys eller skarpere fokus.</value></data>
   <data name="Reader_NoTextFoundTitle" xml:space="preserve"><value>Fant ingen tekst</value></data>
   <data name="Reader_NoTextFoundMessage" xml:space="preserve"><value>Prøv å skanne på nytt med bedre lys eller skarpere fokus.</value></data>
-  <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>Noen sider ble hoppet over</value></data>
-  <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>Kunne ikke lese side {0}. Sidene som kunne leses, erstattet teksten din.</value></data>
-  <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>Kunne ikke lese sidene {0}. Sidene som kunne leses, erstattet teksten din.</value></data>
   <data name="Capture_Title" xml:space="preserve"><value>Ta bilde av hver side</value></data>
   <data name="Capture_Hint" xml:space="preserve"><value>Legg til én side om gangen. Trykk {0} når du har dem alle.</value></data>
   <data name="Capture_HintDone" xml:space="preserve"><value>Ferdig</value></data>
@@ -63,6 +60,19 @@
   <data name="Capture_RemovePage" xml:space="preserve"><value>Fjern denne siden</value></data>
   <data name="Capture_CouldntRead" xml:space="preserve"><value>Kunne ikke leses</value></data>
   <data name="Capture_ClosePreview" xml:space="preserve"><value>Lukk</value></data>
+  <data name="Review_Title" xml:space="preserve"><value>Sjekk teksten</value></data>
+  <data name="Review_TranslateTo" xml:space="preserve"><value>Oversett til {0}</value></data>
+  <data name="Review_LooksLike" xml:space="preserve"><value>Teksten ser ut til å være på {0}</value></data>
+  <data name="Review_TranslateAndRead" xml:space="preserve"><value>Oversett og les</value></data>
+  <data name="Review_Read" xml:space="preserve"><value>Les</value></data>
+  <data name="Review_GettingTranslator" xml:space="preserve"><value>Henter {0}-oversetteren…</value></data>
+  <data name="Review_FirstTimeOnly" xml:space="preserve"><value>Bare første gang. Oversettelsen skjer på denne telefonen.</value></data>
+  <data name="Review_ShowOriginal" xml:space="preserve"><value>Vis original</value></data>
+  <data name="Review_FailedOne" xml:space="preserve"><value>Kunne ikke lese side {0}.</value></data>
+  <data name="Review_FailedMany" xml:space="preserve"><value>Kunne ikke lese sidene {0}.</value></data>
+  <data name="Review_HereOne" xml:space="preserve"><value>Side {0} er her.</value></data>
+  <data name="Review_HereMany" xml:space="preserve"><value>Sidene {0} er her.</value></data>
+  <data name="Review_TranslateFailed" xml:space="preserve"><value>Kunne ikke oversette, så originalteksten leses.</value></data>
   <data name="Reader_PageLanguageTitle" xml:space="preserve"><value>Hvilket språk er denne siden på?</value></data>
   <data name="Reader_OcrDownloading" xml:space="preserve"><value>Laster ned leseren for {0} … {1} %</value></data>
   <data name="Reader_OcrDownloadFailedTitle" xml:space="preserve"><value>Kunne ikke laste ned leseren</value></data>
