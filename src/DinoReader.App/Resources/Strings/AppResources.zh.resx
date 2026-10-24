@@ -53,6 +53,17 @@
   <data name="Store_EmptyBody" xml:space="preserve"><value>我们会不定期添加新故事，请稍后再来。</value></data>
   <data name="Store_BackToStories" xml:space="preserve"><value>返回我的故事</value></data>
   <data name="Store_GetStory" xml:space="preserve"><value>获取{0}</value></data>
+  <!-- Slice 112: store age and author filters -->
+  <data name="Store_AllAges" xml:space="preserve"><value>所有年龄</value></data>
+  <data name="Store_AgeUpTo5" xml:space="preserve"><value>5岁及以下</value></data>
+  <data name="Store_Age6To8" xml:space="preserve"><value>6–8</value></data>
+  <data name="Store_Age9To12" xml:space="preserve"><value>9–12</value></data>
+  <data name="Store_Author" xml:space="preserve"><value>作者</value></data>
+  <data name="Store_Anyone" xml:space="preserve"><value>不限</value></data>
+  <data name="Store_Ages" xml:space="preserve"><value>{0}–{1}岁</value></data>
+  <data name="Store_AgeSingle" xml:space="preserve"><value>{0}岁</value></data>
+  <data name="Store_ChipSelected" xml:space="preserve"><value>{0}，已选中</value></data>
+  <data name="Store_NoMatch" xml:space="preserve"><value>这里还没有故事。试试其他年龄。</value></data>
   <data name="Backup_Title" xml:space="preserve"><value>备份</value></data>
   <data name="Backup_SaveTitle" xml:space="preserve"><value>保存备份</value></data>
   <data name="Backup_SaveBody_One" xml:space="preserve"><value>把故事连同页面、图片和调整好的角色分配存成一个文件。可存到云端硬盘或文件，也可发给自己。</value></data>

@@ -34,6 +34,52 @@ public class StoreCatalogTests
     }
 
     [Fact]
+    public void Parse_ReadsAgeRangeAndAuthor()
+    {
+        string json = $$"""{"stories":[{{Entry().Replace("\"minutes\"", "\"ageMin\":3,\"ageMax\":6,\"author\":\" Beatrix Potter \",\"minutes\"")}}]}""";
+        StoreItem item = Assert.Single(StoreCatalog.Parse(json));
+        Assert.Equal((3, 6, "Beatrix Potter"), (item.AgeMin, item.AgeMax, item.Author));
+    }
+
+    [Theory]
+    [InlineData("\"ageMin\":9,\"ageMax\":4")]
+    [InlineData("\"ageMin\":3")]
+    [InlineData("\"ageMin\":-1,\"ageMax\":4")]
+    [InlineData("\"ageMin\":3,\"ageMax\":19")]
+    public void Parse_DropsAnInvalidAgeRange(string fields)
+    {
+        StoreItem item = Assert.Single(StoreCatalog.Parse($$"""{"stories":[{{Entry().Replace("\"minutes\"", fields + ",\"minutes\"")}}]}"""));
+        Assert.Null(item.AgeMin);
+        Assert.Null(item.AgeMax);
+    }
+
+    [Theory]
+    [InlineData("\"ageMin\":3.5,\"ageMax\":6")]
+    [InlineData("\"ageMin\":\"3\",\"ageMax\":6")]
+    public void Parse_DropsOnlyTheRange_WhenAnAgeIsWrongTyped(string fields)
+    {
+        StoreItem item = Assert.Single(StoreCatalog.Parse($$"""{"stories":[{{Entry().Replace("\"minutes\"", fields + ",\"minutes\"")}}]}"""));
+        Assert.Equal(Id, item.Id);
+        Assert.Null(item.AgeMin);
+        Assert.Null(item.AgeMax);
+    }
+
+    [Theory]
+    [InlineData("\"ageMin\":3.0,\"ageMax\":6e0")]
+    public void Parse_AcceptsWholeNumbersWrittenAsDecimals(string fields)
+    {
+        StoreItem item = Assert.Single(StoreCatalog.Parse($$"""{"stories":[{{Entry().Replace("\"minutes\"", fields + ",\"minutes\"")}}]}"""));
+        Assert.Equal((3, 6), (item.AgeMin, item.AgeMax));
+    }
+
+    [Fact]
+    public void Parse_KeepsTheStory_WhenTheAuthorIsWrongTyped()
+    {
+        StoreItem item = Assert.Single(StoreCatalog.Parse($$"""{"stories":[{{Entry().Replace("\"minutes\"", "\"author\":7,\"minutes\"")}}]}"""));
+        Assert.Null(item.Author);
+    }
+
+    [Fact]
     public void Parse_SkipsMalformedEntries()
     {
         string json = $$"""{"stories":[{{Entry("not-an-id")}},{{Entry(title: " ")}},{{Entry(download: "")}},{{Entry(schema: 0)}},{{Entry()}}]}""";

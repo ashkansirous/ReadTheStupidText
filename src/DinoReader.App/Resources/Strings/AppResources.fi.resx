@@ -55,6 +55,17 @@
   <data name="Store_EmptyBody" xml:space="preserve"><value>Uusia lisätään aina välillä. Käy katsomassa pian uudelleen.</value></data>
   <data name="Store_BackToStories" xml:space="preserve"><value>Takaisin omiin tarinoihini</value></data>
   <data name="Store_GetStory" xml:space="preserve"><value>Hae {0}</value></data>
+  <!-- Slice 112: store age and author filters -->
+  <data name="Store_AllAges" xml:space="preserve"><value>Kaikki iät</value></data>
+  <data name="Store_AgeUpTo5" xml:space="preserve"><value>5 ja alle</value></data>
+  <data name="Store_Age6To8" xml:space="preserve"><value>6–8</value></data>
+  <data name="Store_Age9To12" xml:space="preserve"><value>9–12</value></data>
+  <data name="Store_Author" xml:space="preserve"><value>Kirjailija</value></data>
+  <data name="Store_Anyone" xml:space="preserve"><value>Kaikki</value></data>
+  <data name="Store_Ages" xml:space="preserve"><value>Ikä {0}–{1}</value></data>
+  <data name="Store_AgeSingle" xml:space="preserve"><value>Ikä {0}</value></data>
+  <data name="Store_ChipSelected" xml:space="preserve"><value>{0}, valittu</value></data>
+  <data name="Store_NoMatch" xml:space="preserve"><value>Täällä ei ole vielä tarinoita. Kokeile toista ikää.</value></data>
   <data name="Backup_Title" xml:space="preserve"><value>Varmuuskopio</value></data>
   <data name="Backup_SaveTitle" xml:space="preserve"><value>Tallenna varmuuskopio</value></data>
   <data name="Backup_SaveBody_One" xml:space="preserve"><value>Tarinasi yhdessä tiedostossa sivuineen, kuvineen ja korjattuine hahmoineen. Tallenna se Driveen tai Tiedostoihin tai lähetä itsellesi.</value></data>

@@ -53,6 +53,17 @@
   <data name="Store_EmptyBody" xml:space="preserve"><value>هر از گاهی داستان‌های تازه اضافه می‌شود. بعداً سر بزنید.</value></data>
   <data name="Store_BackToStories" xml:space="preserve"><value>بازگشت به داستان‌های من</value></data>
   <data name="Store_GetStory" xml:space="preserve"><value>دریافت {0}</value></data>
+  <!-- Slice 112: store age and author filters -->
+  <data name="Store_AllAges" xml:space="preserve"><value>همه سنین</value></data>
+  <data name="Store_AgeUpTo5" xml:space="preserve"><value>۵ و کمتر</value></data>
+  <data name="Store_Age6To8" xml:space="preserve"><value>۶–۸</value></data>
+  <data name="Store_Age9To12" xml:space="preserve"><value>۹–۱۲</value></data>
+  <data name="Store_Author" xml:space="preserve"><value>نویسنده</value></data>
+  <data name="Store_Anyone" xml:space="preserve"><value>همه</value></data>
+  <data name="Store_Ages" xml:space="preserve"><value>سن {0}–{1}</value></data>
+  <data name="Store_AgeSingle" xml:space="preserve"><value>سن {0}</value></data>
+  <data name="Store_ChipSelected" xml:space="preserve"><value>{0}، انتخاب شده</value></data>
+  <data name="Store_NoMatch" xml:space="preserve"><value>هنوز داستانی اینجا نیست. سن دیگری را امتحان کنید.</value></data>
   <data name="Backup_Title" xml:space="preserve"><value>پشتیبان</value></data>
   <data name="Backup_SaveTitle" xml:space="preserve"><value>ذخیره پشتیبان</value></data>
   <data name="Backup_SaveBody_One" xml:space="preserve"><value>داستانتان در یک فایل، همراه با صفحه‌ها، تصویرها و گروه صداهای تنظیم‌شده. آن را در Drive یا Files ذخیره کنید یا برای خودتان بفرستید.</value></data>

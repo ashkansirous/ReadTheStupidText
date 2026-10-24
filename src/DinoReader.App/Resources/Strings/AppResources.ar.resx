@@ -53,6 +53,17 @@
   <data name="Store_EmptyBody" xml:space="preserve"><value>تُضاف قصص جديدة من وقت لآخر. عُد قريبًا.</value></data>
   <data name="Store_BackToStories" xml:space="preserve"><value>العودة إلى قصصي</value></data>
   <data name="Store_GetStory" xml:space="preserve"><value>تنزيل {0}</value></data>
+  <!-- Slice 112: store age and author filters -->
+  <data name="Store_AllAges" xml:space="preserve"><value>كل الأعمار</value></data>
+  <data name="Store_AgeUpTo5" xml:space="preserve"><value>٥ وأقل</value></data>
+  <data name="Store_Age6To8" xml:space="preserve"><value>٦–٨</value></data>
+  <data name="Store_Age9To12" xml:space="preserve"><value>٩–١٢</value></data>
+  <data name="Store_Author" xml:space="preserve"><value>المؤلف</value></data>
+  <data name="Store_Anyone" xml:space="preserve"><value>أي مؤلف</value></data>
+  <data name="Store_Ages" xml:space="preserve"><value>الأعمار {0}–{1}</value></data>
+  <data name="Store_AgeSingle" xml:space="preserve"><value>العمر {0}</value></data>
+  <data name="Store_ChipSelected" xml:space="preserve"><value>{0}، محدد</value></data>
+  <data name="Store_NoMatch" xml:space="preserve"><value>لا توجد قصص هنا بعد. جرّب عمرًا آخر.</value></data>
   <data name="Backup_Title" xml:space="preserve"><value>نسخة احتياطية</value></data>
   <data name="Backup_SaveTitle" xml:space="preserve"><value>حفظ نسخة احتياطية</value></data>
   <data name="Backup_SaveBody_One" xml:space="preserve"><value>قصتك في ملف واحد، مع صفحاتها وصورها وتوزيع الأصوات بعد تعديله. احفظه في Drive أو الملفات، أو أرسله إلى نفسك.</value></data>

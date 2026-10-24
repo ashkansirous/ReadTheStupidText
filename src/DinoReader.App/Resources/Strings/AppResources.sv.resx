@@ -55,6 +55,17 @@
   <data name="Store_EmptyBody" xml:space="preserve"><value>Nya läggs till då och då. Titta in igen snart.</value></data>
   <data name="Store_BackToStories" xml:space="preserve"><value>Tillbaka till mina sagor</value></data>
   <data name="Store_GetStory" xml:space="preserve"><value>Hämta {0}</value></data>
+  <!-- Slice 112: store age and author filters -->
+  <data name="Store_AllAges" xml:space="preserve"><value>Alla åldrar</value></data>
+  <data name="Store_AgeUpTo5" xml:space="preserve"><value>5 och under</value></data>
+  <data name="Store_Age6To8" xml:space="preserve"><value>6–8</value></data>
+  <data name="Store_Age9To12" xml:space="preserve"><value>9–12</value></data>
+  <data name="Store_Author" xml:space="preserve"><value>Författare</value></data>
+  <data name="Store_Anyone" xml:space="preserve"><value>Alla</value></data>
+  <data name="Store_Ages" xml:space="preserve"><value>Ålder {0}–{1}</value></data>
+  <data name="Store_AgeSingle" xml:space="preserve"><value>Ålder {0}</value></data>
+  <data name="Store_ChipSelected" xml:space="preserve"><value>{0}, vald</value></data>
+  <data name="Store_NoMatch" xml:space="preserve"><value>Inga berättelser här ännu. Prova en annan ålder.</value></data>
   <data name="Backup_Title" xml:space="preserve"><value>Säkerhetskopia</value></data>
   <data name="Backup_SaveTitle" xml:space="preserve"><value>Spara en säkerhetskopia</value></data>
   <data name="Backup_SaveBody_One" xml:space="preserve"><value>Din saga i en fil, med sidor, bilder och justerad rollbesättning. Spara den på Drive eller i Filer, eller skicka den till dig själv.</value></data>

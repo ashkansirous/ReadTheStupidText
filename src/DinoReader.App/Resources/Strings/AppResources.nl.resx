@@ -55,6 +55,17 @@
   <data name="Store_EmptyBody" xml:space="preserve"><value>Er komen af en toe nieuwe bij. Kom later nog eens terug.</value></data>
   <data name="Store_BackToStories" xml:space="preserve"><value>Terug naar mijn verhalen</value></data>
   <data name="Store_GetStory" xml:space="preserve"><value>{0} ophalen</value></data>
+  <!-- Slice 112: store age and author filters -->
+  <data name="Store_AllAges" xml:space="preserve"><value>Alle leeftijden</value></data>
+  <data name="Store_AgeUpTo5" xml:space="preserve"><value>5 en jonger</value></data>
+  <data name="Store_Age6To8" xml:space="preserve"><value>6–8</value></data>
+  <data name="Store_Age9To12" xml:space="preserve"><value>9–12</value></data>
+  <data name="Store_Author" xml:space="preserve"><value>Auteur</value></data>
+  <data name="Store_Anyone" xml:space="preserve"><value>Iedereen</value></data>
+  <data name="Store_Ages" xml:space="preserve"><value>Leeftijd {0}–{1}</value></data>
+  <data name="Store_AgeSingle" xml:space="preserve"><value>Leeftijd {0}</value></data>
+  <data name="Store_ChipSelected" xml:space="preserve"><value>{0}, geselecteerd</value></data>
+  <data name="Store_NoMatch" xml:space="preserve"><value>Hier zijn nog geen verhalen. Probeer een andere leeftijd.</value></data>
   <data name="Backup_Title" xml:space="preserve"><value>Back-up</value></data>
   <data name="Backup_SaveTitle" xml:space="preserve"><value>Een back-up bewaren</value></data>
   <data name="Backup_SaveBody_One" xml:space="preserve"><value>Je verhaal in één bestand, met de pagina’s, plaatjes en aangepaste rolverdeling. Bewaar het in Drive of Bestanden, of stuur het naar jezelf.</value></data>
