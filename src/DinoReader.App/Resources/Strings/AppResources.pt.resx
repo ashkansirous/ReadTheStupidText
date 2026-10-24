@@ -21,6 +21,7 @@
   <data name="Common_Edit" xml:space="preserve"><value>Editar</value></data>
   <data name="Gallery_Title" xml:space="preserve"><value>Minhas histórias</value></data>
   <data name="Gallery_ForGrownUps" xml:space="preserve"><value>Para adultos</value></data>
+  <data name="Gallery_AddBook" xml:space="preserve"><value>Adicionar um livro (adultos)</value></data>
   <data name="Gallery_OpensGateHint" xml:space="preserve"><value>Abre o portão dos adultos</value></data>
   <data name="Gallery_Characters_One" xml:space="preserve"><value>{0} personagem</value></data>
   <data name="Gallery_Characters_Other" xml:space="preserve"><value>{0} personagens</value></data>

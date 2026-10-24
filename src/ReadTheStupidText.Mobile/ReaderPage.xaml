@@ -10,51 +10,65 @@
     SafeAreaEdges="None">
 
     <ContentPage.Resources>
-        <Style x:Key="SpeedPresetStyle" TargetType="Button">
-            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource ChipBackgroundLight}, Dark={StaticResource ChipBackgroundDark}}" />
-            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="FontAttributes" Value="Bold" />
-            <Setter Property="CornerRadius" Value="7" />
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="HeightRequest" Value="28" />
-            <Setter Property="BorderWidth" Value="0" />
-        </Style>
-        <Style x:Key="TransportGlyphStyle" TargetType="Label">
+        <!-- Outline icons: the paths of RTST Phone Batch 19 (24x24 grid, Play on 16x16), drawn unscaled and sized with Scale. -->
+        <x:String x:Key="IconGear">M 9 12 A 3 3 0 1 0 15 12 A 3 3 0 1 0 9 12 M 19.4 15 a 1.7 1.7 0 0 0 .3 1.8 l .1 .1 a 2 2 0 1 1 -2.8 2.8 l -.1 -.1 a 1.7 1.7 0 0 0 -1.8 -.3 a 1.7 1.7 0 0 0 -1 1.5 V 21 a 2 2 0 1 1 -4 0 v -.1 a 1.7 1.7 0 0 0 -1.1 -1.5 a 1.7 1.7 0 0 0 -1.8 .3 l -.1 .1 a 2 2 0 1 1 -2.8 -2.8 l .1 -.1 a 1.7 1.7 0 0 0 .3 -1.8 a 1.7 1.7 0 0 0 -1.5 -1 H 3 a 2 2 0 1 1 0 -4 h .1 a 1.7 1.7 0 0 0 1.5 -1.1 a 1.7 1.7 0 0 0 -.3 -1.8 l -.1 -.1 a 2 2 0 1 1 2.8 -2.8 l .1 .1 a 1.7 1.7 0 0 0 1.8 .3 H 9 a 1.7 1.7 0 0 0 1 -1.5 V 3 a 2 2 0 1 1 4 0 v .1 a 1.7 1.7 0 0 0 1 1.5 a 1.7 1.7 0 0 0 1.8 -.3 l .1 -.1 a 2 2 0 1 1 2.8 2.8 l -.1 .1 a 1.7 1.7 0 0 0 -.3 1.8 V 9 a 1.7 1.7 0 0 0 1.5 1 H 21 a 2 2 0 1 1 0 4 h -.1 a 1.7 1.7 0 0 0 -1.5 1 Z</x:String>
+        <x:String x:Key="IconCamera">M 4 8 a 2 2 0 0 1 2 -2 h 1.5 l 1.2 -2 h 6.6 l 1.2 2 H 20 a 2 2 0 0 1 2 2 v 9 a 2 2 0 0 1 -2 2 H 6 a 2 2 0 0 1 -2 -2 V 8 Z M 9.6 12.5 A 3.4 3.4 0 1 0 16.4 12.5 A 3.4 3.4 0 1 0 9.6 12.5</x:String>
+        <x:String x:Key="IconFile">M 14 3 H 7 a 2 2 0 0 0 -2 2 v 14 a 2 2 0 0 0 2 2 h 10 a 2 2 0 0 0 2 -2 V 8 l -5 -5 Z M 14 3 v 5 h 5</x:String>
+        <x:String x:Key="IconEdit">M 4 20 h 4 L 19 9 l -4 -4 L 4 16 v 4 Z</x:String>
+        <x:String x:Key="IconChevronsLeft">M 11 5 L 4 12 l 7 7 M 19 5 l -7 7 l 7 7</x:String>
+        <x:String x:Key="IconChevronsRight">M 13 5 l 7 7 l -7 7 M 5 5 l 7 7 l -7 7</x:String>
+        <x:String x:Key="IconDownArrow">M 12 5 v 14 M 6 13 l 6 6 l 6 -6</x:String>
+        <x:String x:Key="IconPlay">M 5 3.4 c 0 -.6 .7 -1 1.2 -.6 l 5.4 4.1 c .4 .3 .4 1 0 1.3 l -5.4 4.1 c -.5 .4 -1.2 0 -1.2 -.6 Z</x:String>
+        <SolidColorBrush x:Key="IconBrushLight" Color="#4A46D6" />
+        <SolidColorBrush x:Key="IconBrushDark" Color="{StaticResource PrimaryDark}" />
+        <Style x:Key="IconPath" TargetType="Path">
+            <Setter Property="Aspect" Value="None" />
+            <Setter Property="WidthRequest" Value="24" />
+            <Setter Property="HeightRequest" Value="24" />
             <Setter Property="HorizontalOptions" Value="Center" />
             <Setter Property="VerticalOptions" Value="Center" />
-            <Setter Property="FontSize" Value="16" />
-            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
+            <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource IconBrushLight}, Dark={StaticResource IconBrushDark}}" />
+            <Setter Property="StrokeThickness" Value="1.9" />
+            <Setter Property="StrokeLineCap" Value="Round" />
+            <Setter Property="StrokeLineJoin" Value="Round" />
         </Style>
-        <Style x:Key="ActionButtonBorderStyle" TargetType="Border">
-            <Setter Property="HeightRequest" Value="44" />
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="StrokeShape" Value="RoundRectangle 10" />
-            <Setter Property="Stroke" Value="{StaticResource CardBorder}" />
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="StrokeShape" Value="RoundRectangle 16" />
+            <Setter Property="Stroke" Value="#1C000000" />
             <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}" />
         </Style>
-        <Style x:Key="ActionButtonLabelStyle" TargetType="Label">
+        <Style x:Key="BigButtonBorderStyle" TargetType="Border" BasedOn="{StaticResource CardStyle}">
+            <Setter Property="HeightRequest" Value="92" />
+            <Setter Property="Padding" Value="4" />
+        </Style>
+        <Style x:Key="BigButtonLabelStyle" TargetType="Label">
             <Setter Property="HorizontalOptions" Value="Center" />
-            <Setter Property="VerticalOptions" Value="Center" />
-            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="HorizontalTextAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="15.5" />
             <Setter Property="FontAttributes" Value="Bold" />
-            <Setter Property="LineBreakMode" Value="TailTruncation" />
+            <Setter Property="LineHeight" Value="1.2" />
+        </Style>
+        <Style x:Key="PlayerTimeStyle" TargetType="Label">
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="FlowDirection" Value="LeftToRight" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
         </Style>
     </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,*" SafeAreaEdges="None" BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}">
 
-        <!-- Brand app bar: title only — the reader has no per-page subtitle anymore
-             (voice + speed now live in the Voice row and speed presets below). -->
-        <Grid x:Name="HeaderGrid" Grid.Row="0" Padding="18,14,16,15" SafeAreaEdges="Container">
+        <!-- Brand app bar (Slice 99): the title and the Settings gear. -->
+        <Grid x:Name="HeaderGrid" Grid.Row="0" Padding="18,8,8,8" SafeAreaEdges="Container" ColumnDefinitions="*,48" IsClippedToBounds="True">
             <Grid.Background>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                     <GradientStop Color="{StaticResource BrandStart}" Offset="0.0" />
                     <GradientStop Color="{StaticResource BrandEnd}" Offset="1.0" />
                 </LinearGradientBrush>
             </Grid.Background>
-            <VerticalStackLayout Spacing="3">
-                <Label Text="{x:Static res:AppResources.App_Name}" TextColor="White" FontSize="16" FontAttributes="Bold" />
+            <Image Grid.ColumnSpan="2" Source="header_glyph.png" WidthRequest="100" HeightRequest="100" Aspect="AspectFit"
+                   Opacity="0.12" Rotation="-8" HorizontalOptions="End" VerticalOptions="Start" Margin="0,-18,40,0" InputTransparent="True" />
+            <VerticalStackLayout Grid.Column="0" Spacing="2" VerticalOptions="Center">
+                <Label Text="{x:Static res:AppResources.App_Name}" TextColor="White" FontSize="17" FontAttributes="Bold" />
                 <!-- Voice pack status (Slice 50): shown only while a pack downloads or needs a retry. -->
                 <Label x:Name="PackStatusLabel" TextColor="#C8FFFFFF" FontSize="11.5" IsVisible="False">
                     <Label.GestureRecognizers>
@@ -62,129 +76,102 @@
                     </Label.GestureRecognizers>
                 </Label>
             </VerticalStackLayout>
+            <Grid x:Name="SettingsButton" Grid.Column="1" WidthRequest="48" HeightRequest="48">
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnSettingsTapped" />
+                </Grid.GestureRecognizers>
+                <Path Data="{StaticResource IconGear}" Style="{StaticResource IconPath}" Stroke="White" StrokeThickness="2" />
+            </Grid>
         </Grid>
 
-        <Grid Grid.Row="1" Padding="14,12,14,10" SafeAreaEdges="Container" RowDefinitions="Auto,Auto,*,Auto,Auto,Auto" RowSpacing="10">
+        <Grid Grid.Row="1" Padding="14,14,14,12" SafeAreaEdges="Container" RowDefinitions="*,Auto,Auto" RowSpacing="12">
 
-            <!-- "ADD TEXT" section label -->
-            <Grid Grid.Row="0" ColumnDefinitions="Auto,*" ColumnSpacing="8" VerticalOptions="Center">
-                <Label Grid.Column="0" Text="{x:Static res:AppResources.Reader_AddTextSection}" FontSize="10" FontAttributes="Bold"
-                       CharacterSpacing="1" TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
-                <BoxView Grid.Column="1" HeightRequest="1" VerticalOptions="Center"
-                         Color="{AppThemeBinding Light={StaticResource CardBorder}, Dark={StaticResource TextSecondaryDark}}" />
+            <!-- The text being read: read-only, with the spoken sentence highlighted. Edit swaps in the editor. -->
+            <Grid Grid.Row="0" RowDefinitions="*,Auto">
+                <Border x:Name="TextCard" Grid.Row="0" Style="{StaticResource CardStyle}" Padding="16">
+                    <Grid>
+                        <ScrollView x:Name="ReadingScroll">
+                            <ScrollView.Behaviors>
+                                <local:LongPressBehavior LongPressed="OnTextLongPressed" />
+                            </ScrollView.Behaviors>
+                            <Label x:Name="ReadingLabel" FontSize="19" LineHeight="1.6"
+                                   TextColor="{AppThemeBinding Light=#1f2027, Dark=#E6E6EA}" />
+                        </ScrollView>
+                        <Editor x:Name="TextEditor" IsVisible="False" TextChanged="OnEditorTextChanged" FontSize="19"
+                                Placeholder="{x:Static res:AppResources.Reader_EditorHint}" />
+                        <VerticalStackLayout x:Name="EmptyHint" IsVisible="False" Spacing="10" MaximumWidthRequest="240"
+                                             HorizontalOptions="Center" VerticalOptions="Center">
+                            <Path Data="{StaticResource IconDownArrow}" Style="{StaticResource IconPath}" Stroke="#59000000" StrokeThickness="1.6" Scale="1.6667" Margin="8" />
+                            <Label x:Name="EmptyHintLabel" FontSize="19" LineHeight="1.45" HorizontalTextAlignment="Center"
+                                   TextColor="{AppThemeBinding Light=#99000000, Dark=#A3FFFFFF}" />
+                        </VerticalStackLayout>
+                        <ActivityIndicator x:Name="BusyIndicator" IsRunning="False" IsVisible="False"
+                                           HorizontalOptions="Center" VerticalOptions="Center" />
+                        <Button x:Name="CancelOcrButton" Text="{x:Static res:AppResources.Common_Cancel}" IsVisible="False"
+                                HorizontalOptions="Center" VerticalOptions="Center" Margin="0,90,0,0"
+                                Clicked="OnCancelOcrDownloadClicked" />
+                    </Grid>
+                </Border>
+                <Grid x:Name="EditLink" Grid.Row="1" HeightRequest="40" HorizontalOptions="End" ColumnDefinitions="Auto,Auto" ColumnSpacing="6">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnEditTapped" />
+                    </Grid.GestureRecognizers>
+                    <Path x:Name="EditGlyph" Grid.Column="0" Data="{StaticResource IconEdit}" Style="{StaticResource IconPath}"
+                          Scale="0.6667" StrokeThickness="2" Margin="-4" />
+                    <Label x:Name="EditLabel" Grid.Column="1" FontSize="15" FontAttributes="Bold" VerticalOptions="Center"
+                           TextColor="{AppThemeBinding Light=#4A46D6, Dark={StaticResource PrimaryDark}}" />
+                </Grid>
             </Grid>
 
-            <!-- Input actions: Paste / Scan / File all feed the one text box below. -->
-            <Grid x:Name="ActionRow" Grid.Row="1" ColumnDefinitions="*,*,*" ColumnSpacing="8">
-                <Border Grid.Column="0" Style="{StaticResource ActionButtonBorderStyle}">
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnPasteTapped" />
-                    </Border.GestureRecognizers>
-                    <Label Text="{x:Static res:AppResources.Reader_PasteButton}" Style="{StaticResource ActionButtonLabelStyle}" />
-                </Border>
-                <Border x:Name="ScanButton" Grid.Column="1" Style="{StaticResource ActionButtonBorderStyle}">
+            <!-- The two ways to add text. -->
+            <Grid x:Name="ActionRow" Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="10">
+                <Border x:Name="ScanButton" Grid.Column="0" Style="{StaticResource BigButtonBorderStyle}">
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnScanTapped" />
                     </Border.GestureRecognizers>
-                    <Label Text="{x:Static res:AppResources.Reader_ScanButton}" Style="{StaticResource ActionButtonLabelStyle}" />
+                    <VerticalStackLayout Spacing="8" VerticalOptions="Center">
+                        <Path Data="{StaticResource IconCamera}" Style="{StaticResource IconPath}" Scale="1.1667" />
+                        <Label x:Name="ScanLabel" Style="{StaticResource BigButtonLabelStyle}" />
+                    </VerticalStackLayout>
                 </Border>
-                <Border x:Name="FileButton" Grid.Column="2" Style="{StaticResource ActionButtonBorderStyle}">
+                <Border x:Name="FileButton" Grid.Column="1" Style="{StaticResource BigButtonBorderStyle}">
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnFileTapped" />
                     </Border.GestureRecognizers>
-                    <Label Text="{x:Static res:AppResources.Reader_FileButton}" Style="{StaticResource ActionButtonLabelStyle}" />
-                </Border>
-            </Grid>
-
-            <!-- Editor card: the one text box every input action fills. -->
-            <Grid Grid.Row="2" RowDefinitions="*,Auto" RowSpacing="8">
-                <Border Padding="14"
-                        StrokeShape="RoundRectangle 14" Stroke="{StaticResource CardBorder}"
-                        BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}">
-                    <Editor x:Name="TextEditor" TextChanged="OnEditorTextChanged"
-                            Placeholder="{x:Static res:AppResources.Reader_EditorPlaceholder}"
-                            FontSize="13.5" />
-                </Border>
-                <ActivityIndicator x:Name="BusyIndicator" IsRunning="False" IsVisible="False"
-                                    HorizontalOptions="Center" VerticalOptions="Center" />
-                <Button x:Name="CancelOcrButton" Text="{x:Static res:AppResources.Common_Cancel}" IsVisible="False"
-                        HorizontalOptions="Center" VerticalOptions="Center" Margin="0,90,0,0"
-                        Clicked="OnCancelOcrDownloadClicked" />
-
-                <!-- Translate card (Slice 54): shown only where the platform has a translator. The toggle's
-                     label names the target language, so it is set in code. -->
-                <Border x:Name="TranslateCard" Grid.Row="1" IsVisible="False" Padding="13,6"
-                        StrokeShape="RoundRectangle 14" Stroke="{StaticResource CardBorder}"
-                        BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}">
-                    <VerticalStackLayout Spacing="2">
-                        <VerticalStackLayout x:Name="TranslateControls" Spacing="2">
-                            <Grid ColumnDefinitions="*,Auto">
-                                <Label x:Name="TranslateToggleLabel" FontSize="12.5" VerticalOptions="Center" />
-                                <Switch x:Name="TranslateSwitch" Grid.Column="1" Toggled="OnTranslateToggled" />
-                            </Grid>
-                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                                <Label Text="{x:Static res:AppResources.Translate_SourceLabel}" FontSize="12.5" VerticalOptions="Center"
-                                       TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
-                                <Picker x:Name="SourcePicker" Grid.Column="1" Title="{x:Static res:AppResources.Translate_SourcePickerTitle}"
-                                        FontSize="13" FontAttributes="Bold" HorizontalTextAlignment="End"
-                                        SelectedIndexChanged="OnSourcePickerChanged" />
-                            </Grid>
-                            <Label x:Name="TranslatedTextLabel" IsVisible="False" FontSize="12" MaxLines="4" LineBreakMode="TailTruncation" />
-                        </VerticalStackLayout>
-                        <Label x:Name="TranslateNoteLabel" FontSize="10.5"
-                               TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
+                    <VerticalStackLayout Spacing="8" VerticalOptions="Center">
+                        <Path Data="{StaticResource IconFile}" Style="{StaticResource IconPath}" Scale="1.1667" />
+                        <Label x:Name="FileLabel" Style="{StaticResource BigButtonLabelStyle}" />
                     </VerticalStackLayout>
                 </Border>
             </Grid>
 
-            <!-- Voice row: opens the picker; no hidden action in the app bar. -->
-            <Border Grid.Row="3" Padding="13,0" HeightRequest="46"
-                    StrokeShape="RoundRectangle 14" Stroke="{StaticResource CardBorder}"
-                    BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}">
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnVoiceRowTapped" />
-                </Border.GestureRecognizers>
-                <Grid ColumnDefinitions="Auto,*,Auto">
-                    <Label Grid.Column="0" Text="{x:Static res:AppResources.Common_Voice}" FontSize="12.5" VerticalOptions="Center"
-                           TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
-                    <Label Grid.Column="2" x:Name="VoiceNameLabel" FontSize="13" FontAttributes="Bold"
-                           HorizontalOptions="End" VerticalOptions="Center" />
-                </Grid>
-            </Border>
-
-            <!-- Language row (Slice 53): opens the language chooser. The value is an endonym, so it is set in code. -->
-            <Border Grid.Row="4" Padding="13,0" HeightRequest="46"
-                    StrokeShape="RoundRectangle 14" Stroke="{StaticResource CardBorder}"
-                    BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}">
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnLanguageRowTapped" />
-                </Border.GestureRecognizers>
-                <Grid ColumnDefinitions="Auto,*,Auto">
-                    <Label Grid.Column="0" Text="{x:Static res:AppResources.Common_Language}" FontSize="12.5" VerticalOptions="Center"
-                           TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
-                    <Label Grid.Column="2" x:Name="LanguageNameLabel" FontSize="13" FontAttributes="Bold"
-                           HorizontalOptions="End" VerticalOptions="Center" />
-                </Grid>
-            </Border>
-
-            <!-- Player card: transport + speed presets, applies to whatever is in the text box. -->
-            <Border Grid.Row="5" Padding="14"
-                    StrokeShape="RoundRectangle 14" Stroke="{StaticResource CardBorder}"
-                    BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}">
+            <!-- Player: progress, back, one big Play/Pause, forward. -->
+            <Border x:Name="PlayerCard" Grid.Row="2" Style="{StaticResource CardStyle}" Padding="16,14">
                 <VerticalStackLayout Spacing="12">
 
-                    <Grid ColumnDefinitions="34,52,34,*" ColumnSpacing="10" VerticalOptions="Center">
-                        <Border Grid.Column="0" WidthRequest="34" HeightRequest="34" Padding="0"
-                                StrokeShape="RoundRectangle 17" Stroke="Transparent"
-                                BackgroundColor="{AppThemeBinding Light={StaticResource ChipBackgroundLight}, Dark={StaticResource ChipBackgroundDark}}">
+                    <VerticalStackLayout Spacing="6">
+                        <ProgressBar x:Name="ReadProgressBar" Progress="0" HeightRequest="6"
+                                     ProgressColor="{StaticResource Primary}" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label x:Name="ElapsedLabel" Grid.Column="0" Text="0:00" Style="{StaticResource PlayerTimeStyle}" />
+                            <Label x:Name="TotalLabel" Grid.Column="1" Text="--:--" Style="{StaticResource PlayerTimeStyle}" />
+                        </Grid>
+                    </VerticalStackLayout>
+
+                    <HorizontalStackLayout Spacing="28" HorizontalOptions="Center">
+                        <Border x:Name="SkipBackButton" WidthRequest="52" HeightRequest="52" Padding="0" VerticalOptions="Center"
+                                StrokeShape="RoundRectangle 26" Stroke="Transparent" BackgroundColor="#1A5B57E8">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Tapped="OnSkipBackTapped" />
                             </Border.GestureRecognizers>
-                            <Label Text="{x:Static local:TransportGlyphs.SkipBack}" Style="{StaticResource TransportGlyphStyle}" FontSize="10" />
+                            <Path x:Name="SkipBackIcon" Data="{StaticResource IconChevronsLeft}" Style="{StaticResource IconPath}" Scale="0.9167" StrokeThickness="2.2" />
                         </Border>
 
-                        <Border Grid.Column="1" WidthRequest="52" HeightRequest="52" Padding="0"
-                                StrokeShape="RoundRectangle 26" Stroke="Transparent">
+                        <Border x:Name="PlayButton" WidthRequest="72" HeightRequest="72" Padding="0"
+                                StrokeShape="RoundRectangle 36" Stroke="Transparent">
+                            <Border.Shadow>
+                                <Shadow Brush="#5B57E8" Opacity="0.38" Radius="14" Offset="0,4" />
+                            </Border.Shadow>
                             <Border.Background>
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                                     <GradientStop Color="{StaticResource BrandStart}" Offset="0.0" />
@@ -195,40 +182,29 @@
                                 <TapGestureRecognizer Tapped="OnPlayPauseTapped" />
                             </Border.GestureRecognizers>
                             <Grid>
-                                <Label x:Name="PlayPauseGlyph" Text="&#9654;" TextColor="White" FontSize="20"
-                                       HorizontalOptions="Center" VerticalOptions="Center" />
+                                <Grid x:Name="PlayPauseIcon" WidthRequest="30" HeightRequest="30" HorizontalOptions="Center" VerticalOptions="Center">
+                                    <Path x:Name="PlayShape" Data="{StaticResource IconPlay}" Aspect="None" Fill="White" Stroke="Transparent"
+                                          WidthRequest="16" HeightRequest="16" Scale="1.875" HorizontalOptions="Center" VerticalOptions="Center" />
+                                    <HorizontalStackLayout x:Name="PauseShape" Spacing="5" HorizontalOptions="Center" VerticalOptions="Center" IsVisible="False">
+                                        <Border WidthRequest="6.4" HeightRequest="20.6" StrokeShape="RoundRectangle 2.6" Stroke="Transparent" BackgroundColor="White" />
+                                        <Border WidthRequest="6.4" HeightRequest="20.6" StrokeShape="RoundRectangle 2.6" Stroke="Transparent" BackgroundColor="White" />
+                                    </HorizontalStackLayout>
+                                </Grid>
                                 <ActivityIndicator x:Name="PlayLoadingIndicator" Color="White"
-                                                   WidthRequest="24" HeightRequest="24"
+                                                   WidthRequest="32" HeightRequest="32"
                                                    HorizontalOptions="Center" VerticalOptions="Center"
                                                    IsRunning="False" IsVisible="False" />
                             </Grid>
                         </Border>
 
-                        <Border Grid.Column="2" WidthRequest="34" HeightRequest="34" Padding="0"
-                                StrokeShape="RoundRectangle 17" Stroke="Transparent"
-                                BackgroundColor="{AppThemeBinding Light={StaticResource ChipBackgroundLight}, Dark={StaticResource ChipBackgroundDark}}">
+                        <Border x:Name="SkipForwardButton" WidthRequest="52" HeightRequest="52" Padding="0" VerticalOptions="Center"
+                                StrokeShape="RoundRectangle 26" Stroke="Transparent" BackgroundColor="#1A5B57E8">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Tapped="OnSkipForwardTapped" />
                             </Border.GestureRecognizers>
-                            <Label Text="{x:Static local:TransportGlyphs.SkipForward}" Style="{StaticResource TransportGlyphStyle}" FontSize="10" />
+                            <Path x:Name="SkipForwardIcon" Data="{StaticResource IconChevronsRight}" Style="{StaticResource IconPath}" Scale="0.9167" StrokeThickness="2.2" />
                         </Border>
-
-                        <VerticalStackLayout Grid.Column="3" Spacing="4" VerticalOptions="Center">
-                            <ProgressBar x:Name="ReadProgressBar" Progress="0"
-                                         ProgressColor="{StaticResource Primary}" />
-                            <Label x:Name="TimerLabel" Text="00:00/--:--" FontSize="10" FlowDirection="LeftToRight" HorizontalOptions="Start"
-                                   TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
-                        </VerticalStackLayout>
-                    </Grid>
-
-                    <Grid x:Name="SpeedPresetRow" ColumnDefinitions="*,*,*,*,*,*" ColumnSpacing="6">
-                        <Button Grid.Column="0" Text="0.5×" ClassId="0.5" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedPresetStyle}" />
-                        <Button Grid.Column="1" Text="1×" ClassId="1.0" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedPresetStyle}" />
-                        <Button Grid.Column="2" Text="1.25×" ClassId="1.25" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedPresetStyle}" />
-                        <Button Grid.Column="3" Text="1.5×" ClassId="1.5" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedPresetStyle}" />
-                        <Button Grid.Column="4" Text="1.75×" ClassId="1.75" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedPresetStyle}" />
-                        <Button Grid.Column="5" Text="2×" ClassId="2.0" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedPresetStyle}" />
-                    </Grid>
+                    </HorizontalStackLayout>
 
                 </VerticalStackLayout>
             </Border>

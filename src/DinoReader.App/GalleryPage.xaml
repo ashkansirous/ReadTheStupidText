@@ -9,7 +9,7 @@
     NavigationPage.HasNavigationBar="False"
     SafeAreaEdges="Container">
 
-    <!-- Home screen (mock screen 1): the child's stories. Reading needs no gate; the lock opens grown-up
+    <!-- Home screen (mock screen 1): the child's stories. Reading needs no gate; the add-book button opens grown-up
          mode (Slice 80), which is this same grid with an edit overlay on each tile and the Add tile first. -->
     <ContentPage.Resources>
         <!-- Fallback until the probe below has measured two real lines; replaced at runtime (GalleryPage.xaml.cs). -->
@@ -105,14 +105,14 @@
                     <TapGestureRecognizer Tapped="OnLanguageTapped" />
                 </Border.GestureRecognizers>
             </Border>
-            <Border Grid.Column="3" x:Name="LockButton" WidthRequest="44" HeightRequest="44" BackgroundColor="{StaticResource ControlFill}"
-                    StrokeThickness="0" SemanticProperties.Description="{x:Static res:AppResources.Gallery_ForGrownUps}" SemanticProperties.Hint="{x:Static res:AppResources.Gallery_OpensGateHint}">
+            <Border Grid.Column="3" x:Name="AddBookButton" WidthRequest="44" HeightRequest="44" BackgroundColor="{StaticResource ControlFill}"
+                    StrokeThickness="0" SemanticProperties.Description="{x:Static res:AppResources.Gallery_AddBook}" ToolTipProperties.Text="{x:Static res:AppResources.Gallery_AddBook}" SemanticProperties.Hint="{x:Static res:AppResources.Gallery_OpensGateHint}">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="14" />
                 </Border.StrokeShape>
-                <local:IconView Kind="Lock" Color="{StaticResource Muted}" Size="20" />
+                <local:IconView Kind="AddBook" Color="{StaticResource Muted}" Size="24" />
                 <Border.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnLockTapped" />
+                    <TapGestureRecognizer Tapped="OnAddBookTapped" />
                 </Border.GestureRecognizers>
             </Border>
             <Button Grid.Column="3" x:Name="DoneButton" IsVisible="False" Text="{x:Static res:AppResources.Common_Done}" HeightRequest="44" CornerRadius="22"

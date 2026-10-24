@@ -10,14 +10,11 @@ using ReadTheStupidText.Mobile.Resources.Strings;
 namespace ReadTheStupidText.Mobile;
 
 /// <summary>
-/// The app's single home screen (design refresh, post-Slice 34 — see plan.md
-/// Decision 43's second resync). Paste / Scan / File are <b>input actions</b>,
-/// not separate modes: each fills the same <see cref="TextEditor"/>, and the one
-/// voice row + transport card below applies to whatever text is in it. This
-/// replaces the former three-tab Type/Camera/File navigation — Scan opens the system
-/// document scanner (Slice 45) and OCRs its pages straight into this box, and File no
-/// longer needs its own screen since there is nothing left for it to show once the
-/// text lands in this box.
+/// The app's single home screen, reduced to reading (Slice 99, Decision 103): the read-only text
+/// with the spoken sentence highlighted, two buttons that add text (pictures, a file) and the
+/// player. Language, voice and speed live on <see cref="SettingsPage"/>. Both buttons still fill
+/// <see cref="TextEditor"/>, the page's text holder, until Slices 100 and 101 give them their own
+/// pages; Edit shows it in place. Scan opens the system document scanner (Slice 45).
 /// </summary>
 public partial class ReaderPage : ContentPage, IScanPackUi
 {
@@ -39,7 +36,6 @@ public partial class ReaderPage : ContentPage, IScanPackUi
     private readonly IPlatformServices _platform;
     private readonly IHeadStart _headStart;
     private readonly EditorDraft _draft;
-    private PlaybackRate _speed;
     private string? _lastSpokenText;
 
     // True while a Paste/Scan/File action is in flight; further input taps are ignored.
@@ -67,7 +63,7 @@ public partial class ReaderPage : ContentPage, IScanPackUi
     // started (system TTS returns as soon as the utterance is queued).
     private static readonly TimeSpan FirstAudioGrace = TimeSpan.FromSeconds(8);
 
-    public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, IImageTextExtractor imageExtractor, IVoiceModelService model, VoicePackInstaller installer, IPlatformServices platform, EditorDraft draft, IHeadStart headStart, IDocumentScanner? scanner = null, ILanguageDetector? detector = null, ITranslator? translator = null, IOcrLineExtractor? lineExtractor = null, OcrPackInstaller? ocrPacks = null)
+    public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, IImageTextExtractor imageExtractor, IVoiceModelService model, VoicePackInstaller installer, IPlatformServices platform, EditorDraft draft, IHeadStart headStart, IDocumentScanner? scanner = null, ILanguageDetector? detector = null, IOcrLineExtractor? lineExtractor = null, OcrPackInstaller? ocrPacks = null)
     {
         InitializeComponent();
         FlowDirection = FlowDirection.LeftToRight;
@@ -87,42 +83,54 @@ public partial class ReaderPage : ContentPage, IScanPackUi
         _draft = draft;
         TextEditor.Text = draft.Take();
         TextEditor.FlowDirection = TextFlow.ContentDirection(TextEditor.Text);
-        _speed = _settings.Speed;
-        UpdatePresetHighlight();
-        UpdateVoiceLabel();
-        TextFlow.ForContent(LanguageNameLabel, LanguageChoices.NativeName(CurrentLanguage()));
-        ApplySourcePickerDirection();
-        InitTranslation(detector, translator);
+        draft.RegisterRebuildHook(PrepareForRebuild);
+        ApplyStaticTexts();
+        InitTranslation(detector);
         InitHeadStart();
+        RenderReading();
     }
 
-    // The Source picker sits at the right of its row in every language: its direction is the UI
-    // language's, so End/Start is chosen to keep that side.
-    private void ApplySourcePickerDirection()
+    private void ApplyStaticTexts()
     {
-        bool rightToLeft = TextFlow.UiDirection() == FlowDirection.RightToLeft;
-        SourcePicker.FlowDirection = TextFlow.UiDirection();
-        SourcePicker.HorizontalTextAlignment = rightToLeft ? TextAlignment.Start : TextAlignment.End;
+        TextFlow.ForUi(EmptyHintLabel, AppResources.Reader_EmptyHint);
+        TextFlow.ForUi(ScanLabel, AppResources.Reader_TextFromPictures);
+        TextFlow.ForUi(FileLabel, AppResources.Reader_TextFromFile);
+        TextFlow.ForUi(EditLabel, AppResources.Reader_EditLink);
+        ApplyAccessibilityNames();
+    }
+
+    // The icon-only controls are gesture views, so TalkBack and VoiceOver read nothing unless they are named.
+    private void ApplyAccessibilityNames()
+    {
+        SemanticProperties.SetDescription(SettingsButton, AppResources.Settings_Title);
+        SemanticProperties.SetDescription(EditLink, AppResources.Reader_EditLink);
+        SemanticProperties.SetDescription(ScanButton, AppResources.Reader_TextFromPictures);
+        SemanticProperties.SetDescription(FileButton, AppResources.Reader_TextFromFile);
+        SemanticProperties.SetDescription(SkipBackButton, AppResources.Reader_SkipBack);
+        SemanticProperties.SetDescription(SkipForwardButton, AppResources.Reader_SkipForward);
+        SemanticProperties.SetDescription(PlayButton, AppResources.Reader_Play);
     }
 
     protected override void OnAppearing()
     {
         base.OnAppearing();
         TextEditor.FlowDirection = TextFlow.ContentDirection(TextEditor.Text); // an empty editor follows the UI language as it is now
+        RenderReading();
         _reader.StateChanged += OnReaderStateChanged;
         _reader.ProgressChanged += OnReaderProgressChanged;
         _reader.TimingChanged += OnReaderTimingChanged;
+        _reader.ChunkChanged += OnReaderChunkChanged;
         _installer.Changed += OnInstallerChanged;
         _model.ReadyChanged += OnInstallerChanged;
 
-        // Re-read on every appearance: the voice picker may have changed the
-        // persisted voice while this page was off-stack.
-        UpdateVoiceLabel();
+        // The read may have paused or ended while Settings was on top.
+        ApplyPlaybackState(_reader.State);
+
+        // Settings may have changed the voice or language while this page was off-stack.
         RestartHeadStartIfKeyChanged();
         RenderPackStatus();
         RestorePendingReadSpinner();
         PrepareScannerOnce();
-        LoadVoiceAvailability();
     }
 
     // Asks the platform to have the scanner ready (Play-services module download) before the
@@ -157,6 +165,7 @@ public partial class ReaderPage : ContentPage, IScanPackUi
         _reader.StateChanged -= OnReaderStateChanged;
         _reader.ProgressChanged -= OnReaderProgressChanged;
         _reader.TimingChanged -= OnReaderTimingChanged;
+        _reader.ChunkChanged -= OnReaderChunkChanged;
         _installer.Changed -= OnInstallerChanged;
         _model.ReadyChanged -= OnInstallerChanged;
     }
@@ -168,7 +177,7 @@ public partial class ReaderPage : ContentPage, IScanPackUi
     public void PrepareForRebuild()
     {
         _retired = true;
-        CancelTranslation();
+        CancelDetection();
         _reader.Stop();
         _draft.Store(TextEditor.Text);
         DetachHandlers();
@@ -177,33 +186,7 @@ public partial class ReaderPage : ContentPage, IScanPackUi
     private Task AlertAsync(string title, string message) =>
         _retired ? Task.CompletedTask : DisplayAlertAsync(title, message, AppResources.Common_Ok, FlowDirection.LeftToRight);
 
-    private async void OnPasteTapped(object? sender, TappedEventArgs e)
-    {
-        if (_inputBusy)
-        {
-            return;
-        }
-
-        SetInputBusy(true);
-        try
-        {
-            string? text = await Clipboard.Default.GetTextAsync();
-            if (!_retired && !string.IsNullOrWhiteSpace(text))
-            {
-                ReplaceEditorText(text);
-            }
-        }
-        catch (Exception)
-        {
-            await AlertAsync(AppResources.Reader_PasteFailedTitle, AppResources.Reader_PasteFailedMessage);
-        }
-        finally
-        {
-            SetInputBusy(false);
-        }
-    }
-
-    // Dims and disables Paste/Scan/File while one of them runs, so a second tap can't start a
+    // Dims and disables the two add-text buttons while one of them runs, so a second tap can't start a
     // second scan or overwrite the editor mid-OCR. The editor is read-only meanwhile so typed edits are not lost.
     private void SetInputBusy(bool busy)
     {
@@ -211,6 +194,7 @@ public partial class ReaderPage : ContentPage, IScanPackUi
         ActionRow.IsEnabled = !busy;
         TextEditor.IsReadOnly = busy;
         ActionRow.Opacity = busy ? 0.5 : 1;
+        EditLink.IsEnabled = !busy;
     }
 
     private void SetScanProgress(string? text)
@@ -224,7 +208,7 @@ public partial class ReaderPage : ContentPage, IScanPackUi
         RenderPackStatus();
     }
 
-    // A platform with no OCR engine hides Scan; File takes its place so no gap is left.
+    // A platform with no OCR engine hides "Text from pictures"; "Text from a file" takes its place so no gap is left.
     // ScanIntoEditorAsync still catches OcrUnavailableException as a safety net.
     private void ApplyScanAvailability(bool supportsTextScan)
     {
@@ -234,7 +218,7 @@ public partial class ReaderPage : ContentPage, IScanPackUi
         }
 
         ScanButton.IsVisible = false;
-        Grid.SetColumn(FileButton, 1);
+        Grid.SetColumn(FileButton, 0);
         Grid.SetColumnSpan(FileButton, 2);
     }
 
@@ -522,9 +506,6 @@ public partial class ReaderPage : ContentPage, IScanPackUi
         }
     }
 
-    private async void OnVoiceRowTapped(object? sender, TappedEventArgs e) =>
-        await Shell.Current.GoToAsync(AppShell.VoicePickerRoute);
-
     // Resuming only makes sense if the text box still holds what's paused —
     // otherwise a stale paused read would keep playing over edited text with no
     // way for the user to make it stop (this was the "text sticks" bug: editing
@@ -555,7 +536,6 @@ public partial class ReaderPage : ContentPage, IScanPackUi
 
         CancelHeadStart();
         _reader.Stop();
-        CancelTranslationRead();
         ClearPendingRead();
         if (string.IsNullOrWhiteSpace(text))
         {
@@ -579,21 +559,14 @@ public partial class ReaderPage : ContentPage, IScanPackUi
         SetPlayLoading(true);
         try
         {
-            // The spinner covers the translation too; the reader gets the translation, while
-            // _lastSpokenText and _pendingReadText stay the source text so Resume still matches.
-            SpokenText? spoken = await TextToSpeakAsync(text, id);
-            if (spoken is null || !IsCurrentRead(id))
-            {
-                return;
-            }
-
-            VoicePlan plan = await PlanVoiceAsync(ReadingLanguageFor(text, spoken.Translated), atPlay: true);
+            // The text is read as it is: translation is off the main page until Slice 101.
+            VoicePlan plan = await PlanVoiceAsync(ReadingLanguageFor(text), atPlay: true);
             if (!IsCurrentRead(id) || !await AllowReadAsync(id, plan))
             {
                 return;
             }
 
-            await SpeakPlannedAsync(spoken.Text, plan);
+            await SpeakPlannedAsync(text, plan);
         }
         catch (Exception)
         {
@@ -641,20 +614,20 @@ public partial class ReaderPage : ContentPage, IScanPackUi
     /// translation target when translated, else the text's own language: the picker's choice, the translate
     /// card's detection of this text, else a guess from its script. No detection runs here.
     /// </summary>
-    private string ReadingLanguageFor(string text, bool translated)
+    private string ReadingLanguageFor(string text)
     {
-        var key = new LanguageKey(text, translated, TargetCode(), _settings.TranslateSourceLanguage, _detectedSource);
+        var key = new LanguageKey(text, TargetCode(), _settings.TranslateSourceLanguage, _detectedSource);
         if (_languageMemo is { } memo && memo.Key == key)
         {
             return memo.Language;
         }
 
-        string language = VoiceRouting.ReadingLanguage(translated, key.Target, key.Choice, key.Detected, text);
+        string language = VoiceRouting.ReadingLanguage(false, key.Target, key.Choice, key.Detected, text);
         _languageMemo = (key, language);
         return language;
     }
 
-    private sealed record LanguageKey(string Text, bool Translated, string Target, string? Choice, string? Detected);
+    private sealed record LanguageKey(string Text, string Target, string? Choice, string? Detected);
 
     private (LanguageKey Key, string Language)? _languageMemo;
 
@@ -737,7 +710,6 @@ public partial class ReaderPage : ContentPage, IScanPackUi
         if (leave && _model.Paths is { } paths)
         {
             PhoneVoiceMigration.MoveToNatural(_settings, _reader, paths);
-            UpdateVoiceLabel();
         }
     }
 
@@ -794,25 +766,12 @@ public partial class ReaderPage : ContentPage, IScanPackUi
     {
         PlayLoadingIndicator.IsRunning = loading;
         PlayLoadingIndicator.IsVisible = loading;
-        PlayPauseGlyph.IsVisible = !loading;
+        PlayPauseIcon.IsVisible = !loading;
     }
 
     private async void OnSkipBackTapped(object? sender, TappedEventArgs e) => await _reader.SkipBackward();
 
     private async void OnSkipForwardTapped(object? sender, TappedEventArgs e) => await _reader.SkipForward();
-
-    private void OnSpeedPresetClicked(object? sender, EventArgs e)
-    {
-        if (sender is not Button { ClassId: string classId } || !double.TryParse(classId, CultureInfo.InvariantCulture, out double value))
-        {
-            return;
-        }
-
-        _speed = new PlaybackRate(value);
-        _settings.Speed = _speed;
-        _reader.SetSpeed(_speed);
-        UpdatePresetHighlight();
-    }
 
     private void OnReaderStateChanged(object? sender, PlaybackState state)
     {
@@ -821,7 +780,18 @@ public partial class ReaderPage : ContentPage, IScanPackUi
 
     private void ApplyPlaybackState(PlaybackState state)
     {
-        PlayPauseGlyph.Text = state == PlaybackState.Playing ? "⏸" : "▶";
+        bool playing = state == PlaybackState.Playing;
+        PlayShape.IsVisible = !playing;
+        PauseShape.IsVisible = playing;
+        SemanticProperties.SetDescription(PlayButton, playing ? AppResources.Reader_Pause : AppResources.Reader_Play);
+        if (state == PlaybackState.Idle)
+        {
+            ClearHighlight();
+        }
+
+        // The dimmed, untouchable player is for an idle page only: a read still playing keeps its controls.
+        RenderPlayerForState();
+
         bool idleAfterReturn = state == PlaybackState.Idle
             && _pendingReadId != 0 && _pendingReadId == _returnedReadId;
         if (state == PlaybackState.Playing || idleAfterReturn)
@@ -833,73 +803,27 @@ public partial class ReaderPage : ContentPage, IScanPackUi
     private void OnReaderProgressChanged(object? sender, double progress) =>
         MainThread.BeginInvokeOnMainThread(() => ReadProgressBar.Progress = progress);
 
-    private void OnReaderTimingChanged(object? sender, ReadTiming timing) =>
-        MainThread.BeginInvokeOnMainThread(() => TimerLabel.Text = ReadTimingFormatter.Format(timing));
-
-    private void UpdatePresetHighlight()
-    {
-        bool isDark = Microsoft.Maui.Controls.Application.Current!.RequestedTheme == AppTheme.Dark;
-        var unselectedBackground = (Color)Microsoft.Maui.Controls.Application.Current!.Resources[isDark ? "ChipBackgroundDark" : "ChipBackgroundLight"];
-        var unselectedText = (Color)Microsoft.Maui.Controls.Application.Current!.Resources[isDark ? "TextSecondaryDark" : "TextSecondaryLight"];
-
-        foreach (Button button in SpeedPresetRow.Children.OfType<Button>())
-        {
-            bool selected = button.ClassId is string classId
-                && double.TryParse(classId, CultureInfo.InvariantCulture, out double value)
-                && new PlaybackRate(value).Value == _speed.Value;
-
-            button.BackgroundColor = selected ? Color.FromArgb("#5B57E8") : unselectedBackground;
-            button.TextColor = selected ? Colors.White : unselectedText;
-        }
-    }
-
-    // The label names the voice that will read next (Decision 61, Slice 90): the app language's voice at
-    // once, then, once the reading language is known, the voice for that language. It only reads; the stored
-    // choice is never changed here.
-    private void UpdateVoiceLabel()
-    {
-        VoiceNameLabel.Text = VoiceNameFor(_model.Paths, _settings.VoiceId == SystemVoice.Id || !_model.IsReady);
-        _ = RefreshVoiceLabelAsync();
-    }
-
-    private string VoiceNameFor(VoiceModelPaths? paths, bool phoneReads) =>
-        phoneReads || paths is null ? VoicePickerPage.PhoneVoiceName : NeuralVoiceMemory.Resolve(paths, _settings.VoiceId).DisplayName;
-
-    private int _labelVersion;
-
-    private async Task RefreshVoiceLabelAsync()
-    {
-        int version = ++_labelVersion;
-        try
-        {
-            VoicePlan plan = await PlanVoiceAsync(CurrentReadingLanguage(), atPlay: false);
-            if (version == _labelVersion && !_retired)
-            {
-                VoiceNameLabel.Text = VoiceNameFor(plan.Pack, plan.PhoneReads);
-            }
-        }
-        catch (Exception)
-        {
-            // The label keeps the app language's voice.
-        }
-    }
-
-    // What the next Play would read in: the text is read untranslated unless translation is on.
+    // What the next Play would read in: the text is read as it is, in its own language.
     private string CurrentReadingLanguage() =>
-        ReadingLanguageFor(TextEditor.Text ?? string.Empty, TranslationActive());
+        ReadingLanguageFor(TextEditor.Text ?? string.Empty);
 
-    // The picker, the detection or the text changed: the head start and the label follow the new language.
-    private void OnReadingLanguageMayHaveChanged()
+    // The detection or the text changed: the head start follows the new language.
+    private void OnReadingLanguageMayHaveChanged() => RestartHeadStartIfKeyChanged();
+
+    private void OnReaderTimingChanged(object? sender, ReadTiming timing) =>
+        MainThread.BeginInvokeOnMainThread(() => ShowTiming(timing));
+
+    private void ShowTiming(ReadTiming timing)
     {
-        RestartHeadStartIfKeyChanged();
-        _ = RefreshVoiceLabelAsync();
+        ElapsedLabel.Text = ReadTimingFormatter.FormatClock(timing.Elapsed);
+        TotalLabel.Text = ReadTimingFormatter.FormatClock(timing.Total);
     }
 
     private static readonly TimeSpan ReadingLanguageDebounce = TimeSpan.FromMilliseconds(400);
 
     private CancellationTokenSource? _languageRefreshCts;
 
-    // Every text change: the label and head-start key follow the new text's language once typing pauses.
+    // Every text change: the head-start key follows the new text's language once typing pauses.
     private void ScheduleReadingLanguageRefresh()
     {
         _languageRefreshCts?.Cancel();
@@ -926,15 +850,14 @@ public partial class ReaderPage : ContentPage, IScanPackUi
     // The stored language, or what the UI resolved to when none is stored yet.
     private AppLanguage CurrentLanguage() => AppLanguageSetting.Current(_settings);
 
-    private async void OnLanguageRowTapped(object? sender, TappedEventArgs e) =>
-        await LanguageChooser.ChooseAsync(this, _settings);
+    private async void OnSettingsTapped(object? sender, TappedEventArgs e) =>
+        await Shell.Current.GoToAsync(AppShell.SettingsRoute);
 
     private void OnInstallerChanged(object? sender, EventArgs e) =>
         MainThread.BeginInvokeOnMainThread(() =>
         {
             _planCache = null;
             RenderPackStatus();
-            UpdateVoiceLabel();
             RestartHeadStartIfKeyChanged();
         });
 
@@ -950,6 +873,189 @@ public partial class ReaderPage : ContentPage, IScanPackUi
         if (_installer.CanRetry)
         {
             _ = _installer.StartAsync();
+        }
+    }
+
+    // ---- The reading area (Slice 99): read-only text, the spoken-sentence highlight, Edit, the empty state. ----
+
+    private const float HighlightAlpha = 0.16f;
+    private (int Start, int End)? _highlight;
+    private bool _editing;
+
+    private void OnReaderChunkChanged(object? sender, ReadChunk chunk) =>
+        MainThread.BeginInvokeOnMainThread(() => ShowHighlight(chunk));
+
+    // Only a read of the text now on screen highlights it.
+    private void ShowHighlight(ReadChunk chunk)
+    {
+        string text = TextEditor.Text ?? string.Empty;
+        if (_lastSpokenText != text || _editing || !chunk.MatchesSource(text))
+        {
+            return;
+        }
+
+        int start = Math.Clamp(chunk.SourceStart, 0, text.Length);
+        _highlight = (start, Math.Clamp(chunk.SourceEnd, start, text.Length));
+        RenderReading();
+        ScrollToHighlight(text.Length);
+    }
+
+    private void ClearHighlight()
+    {
+        if (_highlight is not null)
+        {
+            _highlight = null;
+            RenderReading();
+        }
+    }
+
+    // The label is one block, so the highlight's place is estimated from its share of the text.
+    private void ScrollToHighlight(int textLength)
+    {
+        if (_highlight is not { } range || textLength == 0)
+        {
+            return;
+        }
+
+        double target = ReadingLabel.Height * range.Start / textLength - ReadingScroll.Height / 3;
+        _ = ReadingScroll.ScrollToAsync(0, Math.Max(0, target), true);
+    }
+
+    private static Color BrandColor() => (Color)Microsoft.Maui.Controls.Application.Current!.Resources["Primary"];
+
+    // Read text dimmed, the spoken sentence tinted, the unread text in full colour.
+    private void RenderReading()
+    {
+        string text = TextEditor.Text ?? string.Empty;
+        bool isDark = Microsoft.Maui.Controls.Application.Current!.RequestedTheme == AppTheme.Dark;
+        Color unread = isDark ? Color.FromArgb("#E6E6EA") : Color.FromArgb("#1F2027");
+        Color read = isDark ? Color.FromArgb("#73FFFFFF") : Color.FromArgb("#73000000");
+        var formatted = new FormattedString();
+        if (_highlight is { } range && range.End > range.Start)
+        {
+            formatted.Spans.Add(new Span { Text = text[..range.Start], TextColor = read });
+            formatted.Spans.Add(new Span { Text = text[range.Start..range.End], TextColor = unread, BackgroundColor = BrandColor().WithAlpha(HighlightAlpha) });
+            formatted.Spans.Add(new Span { Text = text[range.End..], TextColor = unread });
+        }
+        else
+        {
+            formatted.Spans.Add(new Span { Text = text, TextColor = unread });
+        }
+
+        ReadingLabel.FormattedText = formatted;
+        ReadingLabel.FlowDirection = TextFlow.ContentDirection(text);
+        RenderEmptyState(string.IsNullOrWhiteSpace(text));
+    }
+
+    // With no text: a dashed card with one friendly line, outlined buttons, and a dimmed player whose Play does nothing.
+    private void RenderEmptyState(bool empty)
+    {
+        EmptyHint.IsVisible = empty && !_editing;
+        ReadingScroll.IsVisible = !_editing;
+        TextCard.StrokeDashArray = empty && !_editing ? [4, 3] : null;
+        RenderPlayerForState();
+        Color outline = empty ? (Color)Microsoft.Maui.Controls.Application.Current!.Resources["Primary"] : Color.FromArgb("#1C000000");
+        double width = empty ? 2 : 1;
+        ScanButton.Stroke = new SolidColorBrush(outline);
+        FileButton.Stroke = new SolidColorBrush(outline);
+        ScanButton.StrokeThickness = width;
+        FileButton.StrokeThickness = width;
+    }
+
+    // The one definition of "empty player": no text, and nothing playing. Both the text and the state
+    // are read here, so every caller agrees.
+    private void RenderPlayerForState() =>
+        RenderEmptyPlayer(string.IsNullOrWhiteSpace(TextEditor.Text) && _reader.State != PlaybackState.Playing);
+
+    // The empty player is dimmed: a grey Play circle, grey skip buttons, and nothing to tap.
+    private void RenderEmptyPlayer(bool empty)
+    {
+        PlayerCard.Opacity = empty ? 0.5 : 1;
+        PlayerCard.InputTransparent = empty;
+        _playButtonBackground ??= PlayButton.Background;
+        PlayButton.Background = empty ? new SolidColorBrush(Color.FromArgb("#C9CBD6")) : _playButtonBackground;
+        Color skipFill = empty ? Color.FromArgb("#0F000000") : Color.FromArgb("#1A5B57E8");
+        SkipBackButton.BackgroundColor = skipFill;
+        SkipForwardButton.BackgroundColor = skipFill;
+        Brush? skipStroke = empty ? new SolidColorBrush(Color.FromArgb("#66000000")) : null;
+        SetSkipStroke(SkipBackIcon, skipStroke);
+        SetSkipStroke(SkipForwardIcon, skipStroke);
+    }
+
+    // A null brush gives the icon its themed style stroke back.
+    private static void SetSkipStroke(Microsoft.Maui.Controls.Shapes.Path icon, Brush? stroke)
+    {
+        if (stroke is null)
+        {
+            icon.ClearValue(Microsoft.Maui.Controls.Shapes.Shape.StrokeProperty);
+            return;
+        }
+
+        icon.Stroke = stroke;
+    }
+
+    private Brush? _playButtonBackground;
+
+    // Long-press on the text offers Paste, which replaces the text and shows it (Slice 101 will open page 2 instead).
+    private async void OnTextLongPressed(object? sender, EventArgs e)
+    {
+        if (_inputBusy || _editing || _retired)
+        {
+            return;
+        }
+
+        string? choice = await DisplayActionSheetAsync(null, AppResources.Common_Cancel, null, FlowDirection.LeftToRight, AppResources.Reader_PasteButton);
+        if (choice == AppResources.Reader_PasteButton && !_retired)
+        {
+            await PasteFromClipboardAsync();
+        }
+    }
+
+    private async Task PasteFromClipboardAsync()
+    {
+        SetInputBusy(true);
+        try
+        {
+            string? text = await Clipboard.Default.GetTextAsync();
+            if (!_retired && !string.IsNullOrWhiteSpace(text))
+            {
+                ReplaceEditorText(text);
+            }
+        }
+        catch (Exception)
+        {
+            await AlertAsync(AppResources.Reader_PasteFailedTitle, AppResources.Reader_PasteFailedMessage);
+        }
+        finally
+        {
+            SetInputBusy(false);
+        }
+    }
+
+    // Until Slice 101's page 2, Edit shows today's editor in place; OK puts the read-only text back.
+    private void OnEditTapped(object? sender, TappedEventArgs e)
+    {
+        if (_inputBusy || _retired)
+        {
+            return;
+        }
+
+        _editing = !_editing;
+        if (_editing && _reader.State == PlaybackState.Playing)
+        {
+            // The text is about to change under the read: pause it. Play resumes only if the text is unchanged.
+            _reader.Pause();
+        }
+
+        TextEditor.IsVisible = _editing;
+        EditLabel.Text = _editing ? AppResources.Common_Ok : AppResources.Reader_EditLink;
+        SemanticProperties.SetDescription(EditLink, EditLabel.Text);
+        EditGlyph.IsVisible = !_editing;
+        _highlight = null;
+        RenderReading();
+        if (_editing)
+        {
+            TextEditor.Focus();
         }
     }
 
@@ -1010,7 +1116,7 @@ public partial class ReaderPage : ContentPage, IScanPackUi
                 await Task.Delay(delay, token);
             }
 
-            if (!string.IsNullOrWhiteSpace(text) && !_headStart.ReadInProgress && !TranslationActive())
+            if (!string.IsNullOrWhiteSpace(text) && !_headStart.ReadInProgress)
             {
                 await PrepareInReadingLanguageAsync(text, token);
             }
@@ -1029,7 +1135,7 @@ public partial class ReaderPage : ContentPage, IScanPackUi
     // when the phone voice would read there is nothing to prepare.
     private async Task PrepareInReadingLanguageAsync(string text, CancellationToken token)
     {
-        VoicePlan plan = await PlanVoiceAsync(ReadingLanguageFor(text, false), atPlay: false);
+        VoicePlan plan = await PlanVoiceAsync(ReadingLanguageFor(text), atPlay: false);
         token.ThrowIfCancellationRequested();
         if (plan.Scope is null)
         {
@@ -1040,10 +1146,6 @@ public partial class ReaderPage : ContentPage, IScanPackUi
             await Task.Run(() => scoped.PrepareAsync(text, plan.Scope), token);
         }
     }
-
-    // With translate on, the read speaks the translated text, so preparing the source would cache
-    // the wrong sentences: skip the head start until the toggle goes off.
-    private bool TranslationActive() => _translator is not null && _settings.TranslateEnabled;
 
     private void CancelHeadStart()
     {

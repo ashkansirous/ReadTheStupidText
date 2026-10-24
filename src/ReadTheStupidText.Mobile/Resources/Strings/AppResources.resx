@@ -10,11 +10,20 @@
   <data name="Common_Cancel" xml:space="preserve"><value>Cancel</value></data>
   <data name="Common_Voice" xml:space="preserve"><value>Voice</value></data>
   <data name="Common_Language" xml:space="preserve"><value>Language</value></data>
-  <data name="Reader_AddTextSection" xml:space="preserve"><value>ADD TEXT</value></data>
-  <data name="Reader_PasteButton" xml:space="preserve"><value>📋 Paste</value></data>
-  <data name="Reader_ScanButton" xml:space="preserve"><value>📷 Scan</value></data>
-  <data name="Reader_FileButton" xml:space="preserve"><value>📄 File</value></data>
-  <data name="Reader_EditorPlaceholder" xml:space="preserve"><value>Type or paste here, scan a page, or open a file — everything lands in this one box and plays with the same controls below.</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>Settings</value></data>
+  <data name="Reader_EditLink" xml:space="preserve"><value>Edit</value></data>
+  <data name="Reader_TextFromPictures" xml:space="preserve"><value>Text from pictures</value></data>
+  <data name="Reader_TextFromFile" xml:space="preserve"><value>Text from a file</value></data>
+  <data name="Reader_EmptyHint" xml:space="preserve"><value>Tap a button below to add something to read</value></data>
+  <data name="Settings_LanguageCaption" xml:space="preserve"><value>The language of the app’s words</value></data>
+  <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Reading speed</value></data>
+  <data name="Common_Back" xml:space="preserve"><value>Back</value></data>
+  <data name="Reader_SkipBack" xml:space="preserve"><value>Previous sentence</value></data>
+  <data name="Reader_SkipForward" xml:space="preserve"><value>Next sentence</value></data>
+  <data name="Reader_Play" xml:space="preserve"><value>Play</value></data>
+  <data name="Reader_Pause" xml:space="preserve"><value>Pause</value></data>
+  <data name="Reader_PasteButton" xml:space="preserve"><value>Paste</value></data>
+  <data name="Reader_EditorHint" xml:space="preserve"><value>Type or paste text here</value></data>
   <data name="Reader_PasteFailedTitle" xml:space="preserve"><value>Couldn't paste</value></data>
   <data name="Reader_PasteFailedMessage" xml:space="preserve"><value>The clipboard couldn't be read. Try copying the text again.</value></data>
   <data name="Reader_ScanFailedTitle" xml:space="preserve"><value>Couldn't scan</value></data>
@@ -56,19 +65,6 @@
   <data name="Reader_FileUnreadableMessage" xml:space="preserve"><value>The file may be corrupted or in an unsupported format.</value></data>
   <data name="Reader_ReadFailedTitle" xml:space="preserve"><value>Couldn't read that text</value></data>
   <data name="Reader_ReadFailedMessage" xml:space="preserve"><value>Something went wrong while reading.</value></data>
-  <data name="Translate_ToggleLabel" xml:space="preserve"><value>Translate to {0}</value></data>
-  <data name="Translate_SourceLabel" xml:space="preserve"><value>Text is in</value></data>
-  <data name="Translate_AutoDetect" xml:space="preserve"><value>Auto-detect</value></data>
-  <data name="Translate_SourcePickerTitle" xml:space="preserve"><value>Text language</value></data>
-  <data name="Translate_QualityNote" xml:space="preserve"><value>Quick on-device translation; the quality is casual.</value></data>
-  <data name="Translate_DownloadingStatus" xml:space="preserve"><value>Downloading the translation model…</value></data>
-  <data name="Translate_ModelUnavailableTitle" xml:space="preserve"><value>Can't translate yet</value></data>
-  <data name="Translate_ModelUnavailableMessage" xml:space="preserve"><value>The translation model isn't on your phone yet and couldn't be downloaded. Connect to the internet once to get it. Reading the original text instead.</value></data>
-  <data name="Translate_FailedTitle" xml:space="preserve"><value>Translation failed</value></data>
-  <data name="Translate_FailedMessage" xml:space="preserve"><value>This text couldn't be translated. Reading the original instead.</value></data>
-  <data name="Translate_UnsupportedNote" xml:space="preserve"><value>Translation isn't available for {0}.</value></data>
-  <data name="Translate_SourceUnsupportedNote" xml:space="preserve"><value>Translation isn't available from {0}.</value></data>
-  <data name="Translate_NoVoiceNote" xml:space="preserve"><value>This phone has no voice for {0}, so it can't be read aloud.</value></data>
   <data name="Reader_VoiceUnavailableTitle" xml:space="preserve"><value>Can't read this aloud</value></data>
   <data name="Reader_VoiceDownloadingMessage" xml:space="preserve"><value>The natural {0} voice is still downloading. Try again when it has finished.</value></data>
   <data name="Reader_NoVoiceMessage" xml:space="preserve"><value>This phone has no voice for {0}.</value></data>

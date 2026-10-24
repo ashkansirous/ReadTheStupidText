@@ -9,11 +9,20 @@
   <data name="Common_Cancel" xml:space="preserve"><value>إلغاء</value></data>
   <data name="Common_Voice" xml:space="preserve"><value>الصوت</value></data>
   <data name="Common_Language" xml:space="preserve"><value>اللغة</value></data>
-  <data name="Reader_AddTextSection" xml:space="preserve"><value>إضافة نص</value></data>
-  <data name="Reader_PasteButton" xml:space="preserve"><value>📋 لصق</value></data>
-  <data name="Reader_ScanButton" xml:space="preserve"><value>📷 مسح</value></data>
-  <data name="Reader_FileButton" xml:space="preserve"><value>📄 ملف</value></data>
-  <data name="Reader_EditorPlaceholder" xml:space="preserve"><value>اكتب أو الصق هنا، أو امسح صفحة ضوئيًا، أو افتح ملفًا — كل شيء يصل إلى هذا المربع الواحد ويُقرأ بأزرار التحكم نفسها أدناه.</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>الإعدادات</value></data>
+  <data name="Reader_EditLink" xml:space="preserve"><value>تعديل</value></data>
+  <data name="Reader_TextFromPictures" xml:space="preserve"><value>نص من الصور</value></data>
+  <data name="Reader_TextFromFile" xml:space="preserve"><value>نص من ملف</value></data>
+  <data name="Reader_EmptyHint" xml:space="preserve"><value>اضغط على زر في الأسفل لإضافة شيء للقراءة</value></data>
+  <data name="Settings_LanguageCaption" xml:space="preserve"><value>لغة كلمات التطبيق</value></data>
+  <data name="Settings_ReadingSpeed" xml:space="preserve"><value>سرعة القراءة</value></data>
+  <data name="Common_Back" xml:space="preserve"><value>رجوع</value></data>
+  <data name="Reader_SkipBack" xml:space="preserve"><value>الجملة السابقة</value></data>
+  <data name="Reader_SkipForward" xml:space="preserve"><value>الجملة التالية</value></data>
+  <data name="Reader_Play" xml:space="preserve"><value>تشغيل</value></data>
+  <data name="Reader_Pause" xml:space="preserve"><value>إيقاف مؤقت</value></data>
+  <data name="Reader_PasteButton" xml:space="preserve"><value>لصق</value></data>
+  <data name="Reader_EditorHint" xml:space="preserve"><value>اكتب النص أو الصقه هنا</value></data>
   <data name="Reader_PasteFailedTitle" xml:space="preserve"><value>تعذّر اللصق</value></data>
   <data name="Reader_PasteFailedMessage" xml:space="preserve"><value>تعذّرت قراءة الحافظة. حاول نسخ النص مرة أخرى.</value></data>
   <data name="Reader_ScanFailedTitle" xml:space="preserve"><value>تعذّر المسح</value></data>
@@ -55,19 +64,6 @@
   <data name="Reader_FileUnreadableMessage" xml:space="preserve"><value>قد يكون الملف تالفًا أو بتنسيق غير مدعوم.</value></data>
   <data name="Reader_ReadFailedTitle" xml:space="preserve"><value>تعذّرت قراءة النص</value></data>
   <data name="Reader_ReadFailedMessage" xml:space="preserve"><value>حدث خطأ أثناء القراءة.</value></data>
-  <data name="Translate_ToggleLabel" xml:space="preserve"><value>الترجمة إلى {0}</value></data>
-  <data name="Translate_SourceLabel" xml:space="preserve"><value>لغة النص</value></data>
-  <data name="Translate_AutoDetect" xml:space="preserve"><value>اكتشاف تلقائي</value></data>
-  <data name="Translate_SourcePickerTitle" xml:space="preserve"><value>لغة النص</value></data>
-  <data name="Translate_QualityNote" xml:space="preserve"><value>ترجمة سريعة على الجهاز؛ جودتها عادية.</value></data>
-  <data name="Translate_DownloadingStatus" xml:space="preserve"><value>جارٍ تنزيل نموذج الترجمة…</value></data>
-  <data name="Translate_ModelUnavailableTitle" xml:space="preserve"><value>تعذّرت الترجمة حاليًا</value></data>
-  <data name="Translate_ModelUnavailableMessage" xml:space="preserve"><value>نموذج الترجمة غير موجود على هاتفك بعد وتعذّر تنزيله. اتصل بالإنترنت مرة واحدة للحصول عليه. ستتم قراءة النص الأصلي بدلًا من ذلك.</value></data>
-  <data name="Translate_FailedTitle" xml:space="preserve"><value>فشلت الترجمة</value></data>
-  <data name="Translate_FailedMessage" xml:space="preserve"><value>تعذّرت ترجمة هذا النص. ستتم قراءة الأصل بدلًا من ذلك.</value></data>
-  <data name="Translate_UnsupportedNote" xml:space="preserve"><value>الترجمة غير متاحة للغة {0}.</value></data>
-  <data name="Translate_SourceUnsupportedNote" xml:space="preserve"><value>الترجمة من {0} غير متاحة.</value></data>
-  <data name="Translate_NoVoiceNote" xml:space="preserve"><value>لا يوجد على هذا الهاتف صوت للغة {0}، لذا لا يمكن قراءتها بصوت عالٍ.</value></data>
   <data name="Reader_VoiceUnavailableTitle" xml:space="preserve"><value>تعذّرت القراءة بصوت عالٍ</value></data>
   <data name="Reader_VoiceDownloadingMessage" xml:space="preserve"><value>الصوت الطبيعي للغة {0} لا يزال قيد التنزيل. حاول مرة أخرى بعد اكتماله.</value></data>
   <data name="Reader_NoVoiceMessage" xml:space="preserve"><value>لا يوجد على هذا الهاتف صوت للغة {0}.</value></data>
