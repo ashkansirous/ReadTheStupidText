@@ -105,4 +105,6 @@
   <data name="Language_Retry" xml:space="preserve"><value>ダウンロードを再試行</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>続ける</value></data>
   <data name="Language_StartReading" xml:space="preserve"><value>読み上げを始める</value></data>
+  <data name="Voice_NbWoman" xml:space="preserve"><value>声 {0}（女性）</value></data>
+  <data name="Voice_NbMan" xml:space="preserve"><value>声 {0}（男性）</value></data>
 </root>

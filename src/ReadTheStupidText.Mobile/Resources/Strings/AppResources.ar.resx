@@ -105,4 +105,6 @@
   <data name="Language_Retry" xml:space="preserve"><value>إعادة محاولة التنزيل</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>متابعة</value></data>
   <data name="Language_StartReading" xml:space="preserve"><value>ابدأ القراءة</value></data>
+  <data name="Voice_NbWoman" xml:space="preserve"><value>الصوت {0} (امرأة)</value></data>
+  <data name="Voice_NbMan" xml:space="preserve"><value>الصوت {0} (رجل)</value></data>
 </root>

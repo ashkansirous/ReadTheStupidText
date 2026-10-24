@@ -22,6 +22,8 @@ public static class AppResources
     public static string Format(string template, params object[] args) =>
         string.Format(CultureInfo.CurrentUICulture, template, args);
 
+    public static string Voice_NbWoman => Get();
+    public static string Voice_NbMan => Get();
     public static string App_Name => Get();
     public static string Shell_ReaderTitle => Get();
     public static string Common_Ok => Get();

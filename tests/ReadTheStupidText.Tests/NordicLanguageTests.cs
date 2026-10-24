@@ -34,11 +34,12 @@ public class NordicLanguageTests
     {
         string workflow = ReadPacksWorkflow();
         string supertonic = Regex.Match(workflow, @"SUPERTONIC_LANGUAGES:\s*'([^']+)'").Groups[1].Value;
-        var shipped = supertonic.Split(',').Append("fa").Append("zh").Order().ToList();
+        var shipped = supertonic.Split(',').Append("fa").Append("nb").Append("zh").Order().ToList();
 
         var readable = PackConstants.NaturallyReadable.Select(AppLanguages.Code).Order().ToList();
 
         Assert.Equal(shipped, readable);
+        Assert.Contains($"entry \"$NORWEGIAN_ID\" nb ", workflow);
     }
 
     private static string ReadPacksWorkflow()

@@ -216,4 +216,6 @@
   <data name="Cast_VoiceChanged_Other" xml:space="preserve"><value>Голоса персонажей {0} изменены, потому что рассказчик теперь использует выданный им голос.</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>Объединить с {0}</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>В этом наборе голосов всего {0} естественных голосов, поэтому некоторые персонажи говорят одним голосом. Голос рассказчика персонажам не выдаётся.</value></data>
+  <data name="Voice_NbWoman" xml:space="preserve"><value>Голос {0} (женщина)</value></data>
+  <data name="Voice_NbMan" xml:space="preserve"><value>Голос {0} (мужчина)</value></data>
 </root>

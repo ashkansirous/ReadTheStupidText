@@ -109,7 +109,7 @@ New strings (nine locales): "Pages", "{file} · {n} pages", "This file has words
 
 Build notes: starter pictures must be supplied already sized (copied as-is, no re-encode); slot mode has no drag-reorder (delete and edit go through the text editor).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-24)
 
 - `PictureTextBook` (`src/DinoReader.Core`) holds the pure parts: natural file-name sort, `ImportPages` (splits on a `---` line once, only for `.txt` and typed text, never PDF or DOCX) and `FillEmptySlots`. (Slice 98: docs/plan/slices/98-dino-picture-and-text-books.md)
 - A page with an `ImageFile` and `Text` but no `Lines` is a picture + text page; no schema change. `PictureTextPages` draws it (sideways: picture left, text right, no dots; upright: full picture with a 92% panel of up to 58% height; each sentence a tappable span); a mixed book stays in this layout. (Slice 98: docs/plan/slices/98-dino-picture-and-text-books.md)

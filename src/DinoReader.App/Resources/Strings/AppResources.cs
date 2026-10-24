@@ -222,6 +222,8 @@ public static class AppResources
 	public static string Cast_PreviewFailedBody => Get();
 	public static string Cast_LoadFailedTitle => Get();
 	public static string Cast_LoadFailedBody => Get();
+	public static string Voice_NbWoman => Get();
+	public static string Voice_NbMan => Get();
 	public static string Cast_Boy => Get();
 	public static string Cast_Girl => Get();
 	public static string Cast_Words_One => Get();

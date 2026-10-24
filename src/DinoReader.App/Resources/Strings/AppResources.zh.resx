@@ -216,4 +216,6 @@
   <data name="Cast_VoiceChanged_Other" xml:space="preserve"><value>{0} 的声音已更换，因为旁白现在使用了原本分配给他们的声音。</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>合并到 {0}</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>这个语音包只有 {0} 个自然声音，所以有些角色会共用声音。旁白的声音不会分给任何角色。</value></data>
+  <data name="Voice_NbWoman" xml:space="preserve"><value>声音 {0}（女）</value></data>
+  <data name="Voice_NbMan" xml:space="preserve"><value>声音 {0}（男）</value></data>
 </root>

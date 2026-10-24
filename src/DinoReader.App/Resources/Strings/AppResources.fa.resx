@@ -216,4 +216,6 @@
   <data name="Cast_VoiceChanged_Other" xml:space="preserve"><value>صدای {0} تغییر کرد، چون راوی اکنون صدایی را دارد که به آن‌ها داده شده بود.</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>ادغام در {0}</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>فارسی فقط {0} صدای طبیعی دارد، پس بعضی شخصیت‌ها صدای مشترک دارند. صدای راوی هیچ‌وقت به شخصیتی داده نمی‌شود.</value></data>
+  <data name="Voice_NbWoman" xml:space="preserve"><value>صدا {0} (زن)</value></data>
+  <data name="Voice_NbMan" xml:space="preserve"><value>صدا {0} (مرد)</value></data>
 </root>

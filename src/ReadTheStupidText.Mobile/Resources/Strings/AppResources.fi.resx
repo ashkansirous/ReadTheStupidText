@@ -105,4 +105,6 @@
   <data name="Language_Retry" xml:space="preserve"><value>Yritä latausta uudelleen</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>Jatka</value></data>
   <data name="Language_StartReading" xml:space="preserve"><value>Aloita lukeminen</value></data>
+  <data name="Voice_NbWoman" xml:space="preserve"><value>Ääni {0} (nainen)</value></data>
+  <data name="Voice_NbMan" xml:space="preserve"><value>Ääni {0} (mies)</value></data>
 </root>

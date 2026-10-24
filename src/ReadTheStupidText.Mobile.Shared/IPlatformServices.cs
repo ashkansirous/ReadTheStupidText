@@ -59,7 +59,7 @@ public static class PlatformVoiceAvailability
 {
     /// <summary>
     /// The phone voice's languages, plus every language a pack declares when the platform runs natural packs
-    /// (<see cref="PackConstants.NaturallyReadable"/>; Norwegian has none until Slice 104).
+    /// (<see cref="PackConstants.NaturallyReadable"/>).
     /// </summary>
     public static Task<VoiceAvailability> BuildAsync(IPlatformServices platform)
     {

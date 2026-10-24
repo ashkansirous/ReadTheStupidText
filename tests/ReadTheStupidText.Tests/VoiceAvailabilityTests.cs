@@ -69,12 +69,12 @@ public class VoiceAvailabilityTests
     }
 
     [Fact]
-    public void Norwegian_is_not_naturally_readable_until_a_pack_declares_it()
+    public void Norwegian_is_naturally_readable_since_the_piper_nb_pack()
     {
         var availability = new VoiceAvailability(["en"], PackConstants.NaturallyReadable.Select(AppLanguages.Code));
 
-        Assert.False(availability.CanNaturalRead("nb"));
-        Assert.False(availability.CanRead("nb"));
+        Assert.True(availability.CanNaturalRead("nb"));
+        Assert.True(availability.CanRead("nb"));
         Assert.True(availability.CanNaturalRead("sv"));
     }
 

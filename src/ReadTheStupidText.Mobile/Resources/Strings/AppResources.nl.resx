@@ -105,4 +105,6 @@
   <data name="Language_Retry" xml:space="preserve"><value>Download opnieuw proberen</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>Doorgaan</value></data>
   <data name="Language_StartReading" xml:space="preserve"><value>Beginnen met lezen</value></data>
+  <data name="Voice_NbWoman" xml:space="preserve"><value>Stem {0} (vrouw)</value></data>
+  <data name="Voice_NbMan" xml:space="preserve"><value>Stem {0} (man)</value></data>
 </root>
