@@ -62,14 +62,22 @@
 	<!-- iOS app icon (Slice 67): the ready-made "Book hug" asset catalog (iOS 18 light/dark/tinted
 	     1024s), copied from docs/design/dino-reader/icons/ios, never regenerated. Deliberately NO
 	     <MauiIcon> for the same reason as Android: it would generate a different icon. The legacy
-	     sizes are unused because the deployment target uses single-size icons. The catalog is picked up
-	     by the SDK's default items and named by XSAppIconAssets in Info.plist, as in Read The Stupid Text. -->
+	     sizes are unused because the deployment target uses single-size icons, which actool expands.
+	     The catalog is declared explicitly as ImageAsset items linked at Assets.xcassets\ and named by
+	     AppIcon: leaning on the SDK's default items shipped it as a raw folder with no Assets.car or
+	     CFBundleIconName, and App Store Connect rejected v1.33.0 (90022, 90023, 90713). -->
 	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
 		<CodesignEntitlements>Platforms\iOS\Entitlements.plist</CodesignEntitlements>
+		<AppIcon>AppIcon</AppIcon>
 	</PropertyGroup>
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
 		<!-- The privacy manifest App Store Connect requires. -->
 		<BundleResource Include="Platforms\iOS\Resources\PrivacyInfo.xcprivacy" LogicalName="PrivacyInfo.xcprivacy" />
+		<!-- Drop the SDK's default items for the catalog (their Link keeps the Platforms\iOS\Resources\
+		     prefix, which the old XSAppIconAssets plist key never matched), then add it back linked at Assets.xcassets\. -->
+		<BundleResource Remove="Platforms\iOS\Resources\Assets.xcassets\**" />
+		<ImageAsset Remove="Platforms\iOS\Resources\Assets.xcassets\**" />
+		<ImageAsset Include="Platforms\iOS\Resources\Assets.xcassets\**\*.*" Link="Assets.xcassets\%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
 
 	<!-- App icon: deliberately NO <MauiIcon>. MauiIcon generates a mipmap/appicon adaptive icon

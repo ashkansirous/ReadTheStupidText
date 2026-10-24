@@ -38,6 +38,7 @@ on:
       - 'src/ReadTheStupidText.Mobile.Shared/IosSherpaPackaging.props'
       - '.github/scripts/ios-signing.sh'
       - '.github/scripts/testflight-upload.sh'
+      - '.github/scripts/check-ios-bundle.sh'
       - '.github/workflows/dinoreader-ios.yml'
       - '!**/*.md'
   workflow_dispatch:
@@ -122,6 +123,12 @@ jobs:
           -c Debug
           -p:RuntimeIdentifier=iossimulator-arm64
 
+      # The icon catalog and launch screen are only validated by App Store Connect on
+      # upload, so check the simulator .app for them on every PR.
+      - name: Check the simulator bundle's icon and launch screen
+        if: ${{ env.SIGN_RELEASE != 'true' }}
+        run: bash .github/scripts/check-ios-bundle.sh "$(find src/DinoReader.App/bin/Debug/net10.0-ios/iossimulator-arm64 -maxdepth 1 -name '*.app' | head -n 1)"
+
       - name: Install signing certificate and profile
         id: signing
         if: ${{ env.SIGN_RELEASE == 'true' }}
@@ -168,6 +175,9 @@ jobs:
           mkdir -p dist
           cp "$found" "dist/DinoReader-${VERSION}.ipa"
           unzip -l "dist/DinoReader-${VERSION}.ipa" | grep -E 'Frameworks/|[.]dylib|[.]a$' || echo "No Frameworks/ or dylib entries in the .ipa."
+          rm -rf ipa-check && unzip -q "dist/DinoReader-${VERSION}.ipa" -d ipa-check
+          bash .github/scripts/check-ios-bundle.sh "$(find ipa-check/Payload -maxdepth 1 -name '*.app' | head -n 1)"
+          rm -rf ipa-check
 
       - name: Upload .ipa to the draft release
         if: ${{ env.SIGN_RELEASE == 'true' }}
