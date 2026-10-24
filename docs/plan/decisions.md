@@ -1118,3 +1118,15 @@
     per language and every shipped book translated into all five. (Slice 105)
 110. **Ten more Windows translation packs (Batch 21).** Opus-MT to and from
     English for da, fi, sv, nb and nl. (Slice 106)
+111. **Every new Dino book translates to my language by default (Batch 22).** The per-story switch
+    stays; on Windows and iOS the switch is greyed with "Translation works on Android for now". (Slice 107)
+112. **Dino shows the translated text (Batch 22).** Highlight follows the translated sentence; scanned
+    pages show picture plus text while translated; a per-story grown-up "Show original text" switch. (Slice 110)
+113. **A Dino cast per reading language (Batch 22).** Auto-cast on first read in a language, pins kept
+    per language, merges shared; the cast screen lists that language's voices. (Slice 108)
+114. **One Dino narrator per language (Batch 22).** Chosen from a Narrator button on the grown-up
+    gallery, used by every book; the per-book narrator is dropped. (Slice 109)
+115. **Parent recordings in Dino (Batch 22).** AAC per page, on device, in backups, never in store
+    uploads; mic only behind the grown-up gate; a recorded page always plays the recording. (Slice 111)
+116. **Dino store age range and author (Batch 22).** `ageMin`/`ageMax`/`author` in `meta.json`,
+    chips for Play's bands 5 & under, 6-8, 9-12, filtered on the device. (Slice 112)
