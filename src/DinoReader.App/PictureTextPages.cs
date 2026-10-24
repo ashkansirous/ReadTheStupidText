@@ -6,7 +6,7 @@ namespace DinoReader;
 /// <summary>
 /// Picture mode for a picture + text book (Slice 98, Decision 102, mock screens 34 and 35): each story page is one page of the
 /// reader, its picture fitted without cropping and its text beside it. Held sideways the picture is the left half and the text card
-/// the right half; held upright the picture fills the page and the text sits on a 92% white panel over its lower part (up to 58% of
+/// the right half with the transport row under it; held upright the picture fills the page and the text sits on a 92% white panel over its lower part (up to 58% of
 /// the height) that scrolls when the text is long. The spoken sentence has the highlight behind its words; a tap on a sentence
 /// reads from it. A page with only a picture shows the picture, a page with only text shows the text card.
 /// </summary>
@@ -138,7 +138,8 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		if (HasText(slot))
 		{
 			Border card = TextPanel(SidewaysPanelCorner, new Thickness(18, 14), 1f);
-			card.Margin = new Thickness(SidewaysGap);
+			// The transport row sits under the text card, in the bottom of this half (mock screen 35).
+			card.Margin = new Thickness(SidewaysGap, SidewaysGap, SidewaysGap, SidewaysGap + TransportRow.SidewaysHeight);
 			grid.Add(card, 1);
 		}
 

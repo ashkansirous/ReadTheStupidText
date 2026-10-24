@@ -245,7 +245,7 @@ public partial class PagesStep : ContentView
 		return action;
 	}
 
-	// The page options a slot row keeps from the grid: edit the text and delete the page (reordering is not offered here).
+	// The page options a slot row keeps from the grid: edit the text, rotate and crop a picture, and delete the page (reordering is not offered here).
 	private View SlotMenu(PageDraft page, int index)
 	{
 		var menu = new Border
@@ -272,7 +272,11 @@ public partial class PagesStep : ContentView
 			return;
 		}
 
-		string picked = await _session!.Host.DisplayActionSheetAsync(tile.Description, AppResources.Common_Cancel, AppResources.Common_Delete, AppResources.Wizard_MenuEditText);
+		// Rotate and crop come from the grid: the page keeps its text and stays picture + text (KeepPictureText on the next read).
+		string[] options = Draft.PageDrafts[index].HasPicture
+			? [AppResources.Wizard_MenuEditText, AppResources.Wizard_MenuRotate, AppResources.Wizard_MenuCrop]
+			: [AppResources.Wizard_MenuEditText];
+		string picked = await _session!.Host.DisplayActionSheetAsync(tile.Description, AppResources.Common_Cancel, AppResources.Common_Delete, options);
 		if (picked == AppResources.Common_Delete)
 		{
 			Draft.RemovePageDraft(index);
@@ -281,6 +285,14 @@ public partial class PagesStep : ContentView
 		else if (picked == AppResources.Wizard_MenuEditText)
 		{
 			await _session.Host.Navigation.PushAsync(new PageTextPage(Draft, index));
+		}
+		else if (picked == AppResources.Wizard_MenuRotate)
+		{
+			await RotateAsync(index);
+		}
+		else if (picked == AppResources.Wizard_MenuCrop)
+		{
+			await _session.Host.Navigation.PushAsync(new PageEditorPage(_session, Draft.PageDrafts[index]));
 		}
 	}
 

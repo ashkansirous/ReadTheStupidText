@@ -85,6 +85,8 @@ public sealed class ReadingSurface : Border
 	/// The page shown is the one holding the sentence the old page began with.</summary>
 	public event EventHandler? LaidOut;
 
+	public ReadingMode Mode => _mode;
+
 	public void Show(ReadingContent content, ReadingMode mode, ReadingTheme theme)
 	{
 		_content = content;

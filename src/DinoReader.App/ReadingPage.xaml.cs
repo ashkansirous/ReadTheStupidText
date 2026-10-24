@@ -34,6 +34,7 @@ public partial class ReadingPage : ContentPage
 	private bool _stoppedDuringGate;
 	private const double FullHeaderRowSpacing = 2;
 	private bool _compactHeader;
+	private bool _sideControls;
 
 	public ReadingPage(ReadingSession session, IStoryLibrary library, GrownUpGate gate, IServiceProvider services,
 		VoicePackInstaller installer, IVoiceModelService model, SpokenLanguage spoken)
@@ -89,12 +90,30 @@ public partial class ReadingPage : ContentPage
 	private void UpdateHeaderLayout(double width, double height)
 	{
 		bool compact = width > 0 && width > height && _story is { } story && PictureTextBook.IsPictureTextBook(story.Pages);
-		if (compact != _compactHeader)
+		bool sideControls = compact && Surface.Mode == ReadingMode.Picture;
+		if (compact != _compactHeader || sideControls != _sideControls)
 		{
 			_compactHeader = compact;
+			_sideControls = sideControls;
 			ApplyHeaderLayout();
+			ApplyTransportLayout();
 			RenderChrome();
 		}
+	}
+
+	// Mock screen 35: in picture mode the transport row sits under the text half on the right, and the page card runs the
+	// full height (the text card leaves room for the controls). Otherwise the row is centred below the page as usual.
+	private void ApplyTransportLayout()
+	{
+		Root.ColumnDefinitions = _sideControls
+			? [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Star)]
+			: [];
+		Grid.SetColumnSpan(Header, _sideControls ? 2 : 1);
+		Grid.SetColumnSpan(SurfaceHost, _sideControls ? 2 : 1);
+		Grid.SetRowSpan(SurfaceHost, _sideControls ? 4 : 1);
+		Grid.SetColumn(Transport, _sideControls ? 1 : 0);
+		Transport.Compact = _sideControls;
+		SurfaceHost.Margin = _sideControls ? new Thickness(14, 6, 14, 8) : new Thickness(14, 6, 14, 0);
 	}
 
 	private void ApplyHeaderLayout()
@@ -244,6 +263,7 @@ public partial class ReadingPage : ContentPage
 	private void OnModeChanged(object? sender, ReadingMode mode)
 	{
 		Surface.SetMode(mode);
+		UpdateHeaderLayout(Width, Height);
 		_ = SaveModeAsync(mode);
 	}
 
