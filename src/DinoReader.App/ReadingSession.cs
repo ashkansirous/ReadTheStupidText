@@ -27,6 +27,8 @@ public sealed class ReadingSession
 	private readonly ISpeechReader _reader;
 	private readonly StoryVoicing _voicing;
 	private Story? _story;
+	private Func<Story, Task>? _saveCast;
+	private string? _noCastLanguage; // a language that needed no cast (no voices or characters yet): not asked again this session
 	private IReadOnlyList<SentenceSpan> _sentences = [];
 	private int _readSequence;
 	private int _pendingReadId;
@@ -88,10 +90,13 @@ public sealed class ReadingSession
 		}
 	}
 
-	public void Open(Story story, IReadOnlyList<SentenceSpan> sentences)
+	/// <param name="saveCast">Stores the story with a cast made for a language that had none (Slice 108); null keeps nothing.</param>
+	public void Open(Story story, IReadOnlyList<SentenceSpan> sentences, Func<Story, Task>? saveCast = null)
 	{
 		_story = story;
 		_sentences = sentences;
+		_saveCast = saveCast;
+		_noCastLanguage = null;
 	}
 
 	public void Attach()
@@ -178,6 +183,7 @@ public sealed class ReadingSession
 	{
 		try
 		{
+			story = await KeepNewCastAsync(story);
 			IReadOnlyList<VoicedSegment> segments = await _voicing.VoiceAsync(story, story.NarratorVoiceId, fromPosition, cancellation,
 				() => TranslationSkipped?.Invoke(this, EventArgs.Empty));
 			if (id != _pendingReadId)
@@ -199,6 +205,36 @@ public sealed class ReadingSession
 			FailRead(id);
 			return false;
 		}
+	}
+
+	// The first read in a language with no cast stores the one it makes, so its voices stay put (Slice 108). A failed save only costs that.
+	private async Task<Story> KeepNewCastAsync(Story story)
+	{
+		string language = _voicing.ReadingLanguage(story);
+		if (_saveCast is null || story.HasCastIn(language) || _noCastLanguage == language)
+		{
+			return story;
+		}
+
+		StoryVoicing.NewCast? made = await _voicing.NewCastForReadingAsync(story);
+		if (made is null)
+		{
+			_noCastLanguage = language;
+			return story;
+		}
+
+		Story withCast = story.WithCastIn(made.Language, made.Members);
+		try
+		{
+			await _saveCast(withCast);
+		}
+		catch (Exception)
+		{
+			return story;
+		}
+
+		_story = withCast;
+		return withCast;
 	}
 
 	private CancellationToken BeginReadCancellation()

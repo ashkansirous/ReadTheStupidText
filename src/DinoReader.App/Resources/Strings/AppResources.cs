@@ -27,6 +27,7 @@ public static class AppResources
 	public static string App_Name => Get();
 	public static string Add_FileSub => Get();
 	public static string Cast_UnknownGender => Get();
+	public static string Cast_VoicesFor => Get();
 	public static string Common_Ok => Get();
 	public static string Common_Cancel => Get();
 	public static string PackStatus_Resolving => Get();

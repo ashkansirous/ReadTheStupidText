@@ -218,14 +218,15 @@ public sealed class StorySaver(IStoryLibrary library, IPageImageKeeper keeper, S
 			pages = await StoryImport.KeepAsync(draft.PageDrafts, id, library, token);
 			coverFile = await StoreCoverFileAsync(draft);
 			string text = Story.JoinPages(pages);
-			IReadOnlyList<CastMember> cast = isNew || draft.TextChanged || draft.LanguageChanged
+			bool recast = isNew || draft.RecastNeeded;
+			IReadOnlyList<CastMember> cast = recast
 				? await voicing.CastAsync(draft.Language, text, draft.NarratorVoiceId, draft.Cast, draft.Merges, Story.BreakMapOf(pages))
 				: draft.Cast;
 			Story story = draft.Original with
 			{
 				Title = title, Language = draft.Language, TranslateToMyLanguage = draft.TranslateToMyLanguage, Pages = pages,
 				CoverStyle = draft.CoverStyle, CoverFile = coverFile, CoverPageIndex = draft.CoverPageIndex,
-				CoverColourIndex = draft.CoverColourIndex, Cast = cast, CharacterMerges = draft.Merges,
+				CoverColourIndex = draft.CoverColourIndex, Cast = cast, LanguageCasts = recast ? null : draft.LanguageCasts, CharacterMerges = draft.Merges,
 				NarratorVoiceId = draft.NarratorVoiceId,
 			};
 			await (isNew ? library.AddAsync(story) : library.UpdateAsync(story));

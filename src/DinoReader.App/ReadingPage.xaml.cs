@@ -27,6 +27,7 @@ public partial class ReadingPage : ContentPage
 	private readonly SpokenLanguage _spoken;
 	private readonly PageFollower _follower = new();
 	private readonly BusyGuard _busy = new();
+	private readonly SemaphoreSlim _saveLock = new(1, 1); // the cast save and the mode save each read-modify-write _story: one at a time
 	private Story? _story;
 	private IReadOnlyList<SentenceSpan> _sentences = [];
 	private ReadingTheme _theme = ReadingTheme.For(false);
@@ -61,7 +62,7 @@ public partial class ReadingPage : ContentPage
 		TitleLabel.Text = story.Title;
 		_spoken.Use(story);
 		_sentences = StorySentences.Build(story.Text, LanguageRules.For(story.Language), story.BreakMap());
-		_session.Open(story, _sentences);
+		_session.Open(story, _sentences, SaveCastAsync);
 		_theme = CurrentTheme();
 		Modes.Set(story.Mode, _theme);
 		var content = new ReadingContent(story.Text, _sentences, DinoFonts.ReadingFor(story.Language),
@@ -267,23 +268,42 @@ public partial class ReadingPage : ContentPage
 		_ = SaveModeAsync(mode);
 	}
 
+	// The casts made on a first read in another language are kept in story.json, on top of whatever the page has saved since (the reading mode).
+	private async Task SaveCastAsync(Story withCast)
+	{
+		await _saveLock.WaitAsync();
+		try
+		{
+			Story updated = (_story ?? withCast) with { Cast = withCast.Cast, LanguageCasts = withCast.LanguageCasts };
+			await _library.UpdateAsync(updated);
+			_story = updated;
+		}
+		finally
+		{
+			_saveLock.Release();
+		}
+	}
+
 	// The choice is remembered per story in story.json. A failed save only loses the preference.
 	private async Task SaveModeAsync(ReadingMode mode)
 	{
-		if (_story is not { } story)
-		{
-			return;
-		}
-
+		await _saveLock.WaitAsync();
 		try
 		{
-			Story updated = story with { PreferredMode = mode };
-			await _library.UpdateAsync(updated);
-			_story = updated;
+			if (_story is { } story)
+			{
+				Story updated = story with { PreferredMode = mode };
+				await _library.UpdateAsync(updated);
+				_story = updated;
+			}
 		}
 		catch (Exception ex)
 		{
 			Debug.WriteLine($"Dino Reader could not save the reading mode: {ex}");
+		}
+		finally
+		{
+			_saveLock.Release();
 		}
 	}
 
