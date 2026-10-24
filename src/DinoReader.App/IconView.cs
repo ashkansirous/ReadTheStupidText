@@ -23,6 +23,7 @@ public enum IconKind
 	SkipForward,
 	Play,
 	Pause,
+	AddBook,
 }
 
 /// <summary>Draws one <see cref="IconKind"/> as a stroked path, so colour and size follow the design tokens.</summary>
@@ -46,7 +47,20 @@ public sealed class IconView : ContentView
 	public static readonly BindableProperty FilledProperty = BindableProperty.Create(
 		nameof(Filled), typeof(bool), typeof(IconView), false, propertyChanged: OnChanged);
 
+	public static readonly BindableProperty BadgeColorProperty = BindableProperty.Create(
+		nameof(BadgeColor), typeof(Color), typeof(IconView), null, propertyChanged: OnChanged);
+
+	public static readonly BindableProperty PlusColorProperty = BindableProperty.Create(
+		nameof(PlusColor), typeof(Color), typeof(IconView), null, propertyChanged: OnChanged);
+
 	private static readonly PathGeometryConverter Converter = new();
+
+	// The add-book icon (Slice 97) is a currentColor book plus a badge in the brand colour that never follows Color.
+	// All three layers are drawn unstretched in the one 24-unit grid, then the whole grid is scaled uniformly to Size.
+	private const double GridSize = 24;
+	private const string AddBookBody = "M5 18V5.5A2.5 2.5 0 0 1 7.5 3H17v12.5 M5 18a2.5 2.5 0 0 1 2.5-2.5H12 M5 18a2.5 2.5 0 0 0 2.5 2.5H12";
+	private const string AddBookBadge = "M13.4 18a4.6 4.6 0 1 0 9.2 0a4.6 4.6 0 1 0-9.2 0";
+	private const string AddBookPlus = "M18 15.9v4.2M15.9 18h4.2";
 
 	// Path data copied from the mock's inline SVGs (rects and circles rewritten as arcs).
 	private static readonly Dictionary<IconKind, string> Paths = new()
@@ -95,6 +109,20 @@ public sealed class IconView : ContentView
 		set => SetValue(FilledProperty, value);
 	}
 
+	/// <summary>Badge of the add-book icon; null means the Brand token.</summary>
+	public Color? BadgeColor
+	{
+		get => (Color?)GetValue(BadgeColorProperty);
+		set => SetValue(BadgeColorProperty, value);
+	}
+
+	/// <summary>Plus glyph of the add-book icon; null means the OnBrand token.</summary>
+	public Color? PlusColor
+	{
+		get => (Color?)GetValue(PlusColorProperty);
+		set => SetValue(PlusColorProperty, value);
+	}
+
 	public double Size
 	{
 		get => (double)GetValue(SizeProperty);
@@ -112,19 +140,66 @@ public sealed class IconView : ContentView
 
 	private void Render()
 	{
-		Content = new Path
+		if (Kind == IconKind.AddBook)
 		{
-			Data = (Geometry)Converter.ConvertFromInvariantString(Paths[Kind])!,
-			Stroke = new SolidColorBrush(Color),
-			Fill = Filled ? new SolidColorBrush(Color) : Brush.Transparent,
-			StrokeThickness = Filled ? 0 : StrokeWidth,
-			StrokeLineCap = PenLineCap.Round,
-			StrokeLineJoin = PenLineJoin.Round,
-			Aspect = Stretch.Uniform,
+			Content = BuildAddBook();
+			return;
+		}
+
+		var path = StrokedPath(
+			ParseGeometry(Paths[Kind]),
+			Color,
+			Filled ? new SolidColorBrush(Color) : Brush.Transparent,
+			Filled ? 0 : StrokeWidth,
+			Stretch.Uniform);
+		path.WidthRequest = Size;
+		path.HeightRequest = Size;
+		path.HorizontalOptions = LayoutOptions.Center;
+		path.VerticalOptions = LayoutOptions.Center;
+		Content = path;
+	}
+
+	private static Geometry ParseGeometry(string data) => (Geometry)Converter.ConvertFromInvariantString(data)!;
+
+	private static Path StrokedPath(Geometry data, Color stroke, Brush fill, double thickness, Stretch aspect) => new()
+	{
+		Data = data,
+		Stroke = new SolidColorBrush(stroke),
+		Fill = fill,
+		StrokeThickness = thickness,
+		StrokeLineCap = PenLineCap.Round,
+		StrokeLineJoin = PenLineJoin.Round,
+		Aspect = aspect,
+	};
+
+	// AddBook is a layered kind with no entry in Paths and no Filled mode; Render() branches to it before the Paths lookup.
+	private View BuildAddBook()
+	{
+		var brand = BadgeColor ?? DinoTokens.Get(DinoTokens.Brand);
+		var plus = PlusColor ?? DinoTokens.Get(DinoTokens.OnBrand);
+		var scale = Size / GridSize;
+		var layout = new AbsoluteLayout
+		{
 			WidthRequest = Size,
 			HeightRequest = Size,
+			FlowDirection = FlowDirection.LeftToRight,
 			HorizontalOptions = LayoutOptions.Center,
 			VerticalOptions = LayoutOptions.Center,
 		};
+		layout.Add(GridLayer(AddBookBody, Color, Brush.Transparent, scale));
+		layout.Add(GridLayer(AddBookBadge, brand, new SolidColorBrush(brand), scale));
+		layout.Add(GridLayer(AddBookPlus, plus, Brush.Transparent, scale));
+		return layout;
+	}
+
+	// Each layer is laid out on the 24-unit grid and scaled about the box origin into the Size x Size layout box (stroke too).
+	private Path GridLayer(string data, Color stroke, Brush fill, double scale)
+	{
+		var path = StrokedPath(ParseGeometry(data), stroke, fill, StrokeWidth, Stretch.None);
+		path.AnchorX = 0;
+		path.AnchorY = 0;
+		path.Scale = scale;
+		AbsoluteLayout.SetLayoutBounds(path, new Rect(0, 0, GridSize, GridSize));
+		return path;
 	}
 }
