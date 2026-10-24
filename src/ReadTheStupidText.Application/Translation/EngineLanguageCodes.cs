@@ -1,3 +1,5 @@
+using ReadTheStupidText.Application.Reading;
+
 namespace ReadTheStupidText.Application.Translation;
 
 /// <summary>
@@ -14,7 +16,7 @@ public static class EngineLanguageCodes
 
     /// <summary>The code the engine knows a language by.</summary>
     public static string ToEngine(string appCode) =>
-        AppToEngine.TryGetValue(appCode, out string? engine) ? engine : appCode;
+        AppToEngine.TryGetValue(AppLanguages.Canonical(appCode)!, out string? engine) ? engine : appCode;
 
     /// <summary>The app's code for a language the engine names.</summary>
     public static string FromEngine(string engineCode) =>

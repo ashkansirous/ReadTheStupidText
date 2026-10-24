@@ -22,5 +22,13 @@ public static class PackConstants
     /// <summary>The MeloTTS Chinese + English voice pack (Slice 51).</summary>
     public const string ChinesePackId = "melo-zh-en";
 
+    /// <summary>
+    /// The app languages some voice pack declares (Supertonic-3 plus the Persian and Chinese packs).
+    /// Norwegian (nb) is missing on purpose: no pack declares it until Slice 104 adds piper-nb, so
+    /// Norwegian is read with the phone voice only. Add "nb" here together with that pack.
+    /// </summary>
+    public static readonly IReadOnlyList<AppLanguage> NaturallyReadable =
+        Enum.GetValues<AppLanguage>().Where(language => language != AppLanguage.Norwegian).ToList();
+
     public const char LanguageSeparator = ',';
 }

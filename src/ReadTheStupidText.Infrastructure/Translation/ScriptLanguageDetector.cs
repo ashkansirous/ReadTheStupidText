@@ -4,13 +4,14 @@ using ReadTheStupidText.Application.Translation;
 namespace ReadTheStupidText.Infrastructure.Translation;
 
 /// <summary>
-/// A small on-device guess of which of the nine app languages a text is written in (Slice 57): the
-/// script settles Russian, Chinese, Japanese, Arabic and Farsi, and common-word counts settle English,
-/// French, Spanish and Portuguese. Returns null when unsure, so the original is read. Nothing leaves the device.
+/// A small on-device guess of which of the app languages a text is written in (Slice 57): the
+/// script settles Russian, Chinese, Japanese, Arabic and Farsi, and common-word counts settle the Latin-script languages. Returns null when unsure, so the original is read. Nothing leaves the device.
 /// </summary>
 public sealed class ScriptLanguageDetector : ILanguageDetector
 {
     private const int MinLatinScore = 2;
+    // Danish, Norwegian and Swedish share words, so a tie is no answer (null).
+    private const int MinLatinMargin = 1;
     private const double KanaShare = 0.05;
     private const float ScriptConfidence = 0.9f;
     private const float LatinConfidence = 0.7f;
@@ -38,6 +39,11 @@ public sealed class ScriptLanguageDetector : ILanguageDetector
         [AppLanguage.French] = Words("le la les des une est et il elle dans que qui pas pour avec sur sont mais très être"),
         [AppLanguage.Spanish] = Words("el los las una es y en que de un por con para su sus pero muy estaba dijo"),
         [AppLanguage.Portuguese] = Words("o os as uma é e em que de um por com para seu sua mas muito estava disse não"),
+        [AppLanguage.Danish] = Words("og at det som er på for med ikke jeg var han de en af mig noget hvad hvor hende sig efter også hun"),
+        [AppLanguage.Finnish] = Words("ja että on ei se oli hän mutta kuin ovat tämä mitä oli kun"),
+        [AppLanguage.Swedish] = Words("och att det som är på för med inte jag var han de en av något vad från hennes också hon"),
+        [AppLanguage.Norwegian] = Words("og at det som er på for med ikke jeg var han de en av meg noe hva ikkje henne seg etter også hun"),
+        [AppLanguage.Dutch] = Words("de en is dat het een van niet naar zijn ook maar voor met ik was hij zij waren"),
     };
 
     public Task<DetectedLanguage?> DetectAsync(string text, CancellationToken cancellationToken) =>
@@ -84,7 +90,7 @@ public sealed class ScriptLanguageDetector : ILanguageDetector
             .Select(l => (Language: l.Key, Score: words.Count(l.Value.Contains)))
             .OrderByDescending(s => s.Score)
             .ToList();
-        bool clear = scores[0].Score >= MinLatinScore && scores[0].Score > scores[1].Score;
+        bool clear = scores[0].Score >= MinLatinScore && scores[0].Score - scores[1].Score >= MinLatinMargin;
         return clear ? Found(scores[0].Language, LatinConfidence) : null;
     }
 

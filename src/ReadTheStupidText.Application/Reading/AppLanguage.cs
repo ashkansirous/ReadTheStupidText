@@ -44,6 +44,7 @@ public static class AppLanguages
 
     public static bool TryParse(string? code, out AppLanguage language)
     {
+        code = Canonical(code);
         foreach ((AppLanguage candidate, string candidateCode) in Codes)
         {
             if (string.Equals(candidateCode, code, StringComparison.OrdinalIgnoreCase))
@@ -56,4 +57,13 @@ public static class AppLanguages
         language = default;
         return false;
     }
+
+    /// <summary>
+    /// The one place a language tag is canonicalised: devices and tagged stories still report Norwegian as
+    /// the legacy "no", or as Nynorsk "nn"; both are read and shown as Bokmal (nb), the one Norwegian the app ships.
+    /// </summary>
+    public static string? Canonical(string? code) =>
+        string.Equals(code, "no", StringComparison.OrdinalIgnoreCase) || string.Equals(code, "nn", StringComparison.OrdinalIgnoreCase)
+            ? "nb"
+            : code;
 }

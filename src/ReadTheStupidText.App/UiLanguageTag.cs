@@ -1,3 +1,5 @@
+using ReadTheStupidText.Application.Reading;
+
 namespace ReadTheStupidText_App;
 
 /// <summary>
@@ -47,6 +49,7 @@ internal static class UiLanguageTag
     public static string? Match(string deviceTag)
     {
         string primary = deviceTag.Split('-', '_')[0];
+        primary = AppLanguages.TryParse(primary, out AppLanguage known) ? AppLanguages.Code(known) : primary;
         return Tags.TryGetValue(primary, out string? tag) ? tag : null;
     }
 

@@ -13,8 +13,8 @@ public static class UiCulture
     private static readonly HashSet<string> RightToLeftCodes = ["fa", "ar"];
 
     /// <summary>
-    /// The stored language if it is one of the nine; otherwise the device language if it is
-    /// one of the nine (so the first-run page already speaks the user's language); otherwise English.
+    /// The stored language if it is one of the fourteen; otherwise the device language if it is
+    /// one of the fourteen (so the first-run page already speaks the user's language); otherwise English.
     /// </summary>
     public static CultureInfo Resolve(string? storedCode, CultureInfo deviceCulture)
     {

@@ -23,6 +23,7 @@
   <data name="Common_Edit" xml:space="preserve"><value>Rediger</value></data>
   <data name="Gallery_Title" xml:space="preserve"><value>Mine historier</value></data>
   <data name="Gallery_ForGrownUps" xml:space="preserve"><value>For voksne</value></data>
+  <data name="Gallery_AddBook" xml:space="preserve"><value>Tilføj en bog (voksne)</value></data>
   <data name="Gallery_OpensGateHint" xml:space="preserve"><value>Åbner voksenlåsen</value></data>
   <data name="Gallery_Characters_One" xml:space="preserve"><value>{0} figur</value></data>
   <data name="Gallery_Characters_Other" xml:space="preserve"><value>{0} figurer</value></data>

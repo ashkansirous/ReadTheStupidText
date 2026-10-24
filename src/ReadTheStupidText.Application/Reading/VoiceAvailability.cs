@@ -37,7 +37,7 @@ public sealed class VoiceAvailability
     {
         int separator = languageCode.IndexOfAny(['-', '_']);
         string primary = separator < 0 ? languageCode : languageCode[..separator];
-        return primary.Trim().ToLowerInvariant();
+        return AppLanguages.Canonical(primary.Trim().ToLowerInvariant())!;
     }
 
     private static HashSet<string> Normalise(IEnumerable<string> codes) =>

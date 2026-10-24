@@ -152,7 +152,12 @@ public class LanguageRulesTests
     [InlineData("The boy said that he was tired and they went home with his dog.", "en")]
     [InlineData("Il est très fatigué et elle dit que le chat est dans la maison pour toujours.", "fr")]
     [InlineData("El niño dijo que los perros estaban en el jardín con su madre.", "es")]
-    [InlineData("O menino disse que os cães estavam no jardim com a sua mãe, não é.", "pt")]
+    [InlineData("O menino disse que os cães estavam no jardim com a sua mãe, não é.", "pt")]    [InlineData("De man en de vrouw gingen naar de markt en het kind was niet thuis.", "nl")]
+    [InlineData("Mannen och kvinnan gick till marknaden och det var inte jag som var hemma.", "sv")]
+    [InlineData("Manden og kvinden gik til markedet og det var ikke mig som var hjemme.", "da")]
+    [InlineData("Mannen og kvinnen gikk til markedet og det var ikke meg som var hjemme.", "nb")]
+    [InlineData("Mies ja nainen menivät torille ja lapsi ei ollut kotona, mutta hän oli.", "fi")]
+
     [InlineData("Мальчик пошёл в сад и увидел там большую собаку.", "ru")]
     [InlineData("پسرک به باغ رفت و گربه‌ای چاق دید که می‌خندید.", "fa")]
     [InlineData("ذهب الولد إلى الحديقة وشاهد قطة كبيرة هناك.", "ar")]

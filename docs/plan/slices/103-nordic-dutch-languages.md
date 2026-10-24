@@ -1,11 +1,11 @@
 # Slice 103 — Danish, Finnish, Swedish, Norwegian and Dutch in every app
 
-*In progress (wave 2026-10-24), draft PR.* Planned 2026-10-24, from the user's request "add Scandinavian languages: Danish, Finnish, Swedish,
+*Built 2026-10-24 (PR #286), not yet verified on device.* Planned 2026-10-24, from the user's request "add Scandinavian languages: Danish, Finnish, Swedish,
 Norwegian and Dutch".
 
 **Batch:** 21 (five more languages)
 **Depends on:** Decision 68 (the nine first-run languages), Slices 53, 57, 66 (localised UIs)
-**Touches:** `src/ReadTheStupidText.Application/Reading/AppLanguage.cs`, `src/ReadTheStupidText.Application/Images/Ocr/ScriptDetector.cs`, `src/ReadTheStupidText.App/UiLanguageTag.cs`, `src/ReadTheStupidText.App/Strings/{da,fi,sv,nb,nl}/Resources.resw` (new), `src/ReadTheStupidText.App/Package.appxmanifest`, `src/ReadTheStupidText.Mobile/Resources/Strings/AppResources.{da,fi,sv,nb,nl}.resx` (new), `src/DinoReader.App/Resources/Strings/AppResources.{da,fi,sv,nb,nl}.resx` (new), `src/DinoReader.Core/UiLanguage.cs`, `src/ReadTheStupidText.Mobile/LanguagePage.xaml.cs`, `src/DinoReader.App/LanguagePage.xaml.cs`, `src/DinoReader.App/FirstRunPage.xaml.cs`, `src/ReadTheStupidText.Mobile/Platforms/Android/AndroidManifest.xml`, `src/*/Platforms/iOS/Info.plist`, `tests/ReadTheStupidText.Tests/**`, `tests/DinoReader.Tests/LocalizedUiTests.cs`, `STORE.md`, `README.md`, `CLAUDE.md`
+**Touches:** `src/ReadTheStupidText.Application/Reading/AppLanguage.cs`, `src/ReadTheStupidText.Application/Images/Ocr/ScriptDetector.cs`, `src/ReadTheStupidText.App/UiLanguageTag.cs`, `src/ReadTheStupidText.App/Strings/{da,fi,sv,nb,nl}/Resources.resw` (new), `src/ReadTheStupidText.App/Package.appxmanifest`, `src/ReadTheStupidText.Mobile/Resources/Strings/AppResources.{da,fi,sv,nb,nl}.resx` (new), `src/DinoReader.App/Resources/Strings/AppResources.{da,fi,sv,nb,nl}.resx` (new), `src/DinoReader.Core/UiLanguage.cs`, `src/ReadTheStupidText.Mobile/LanguagePage.xaml.cs`, `src/DinoReader.App/LanguagePage.xaml.cs`, `src/DinoReader.App/FirstRunPage.xaml.cs`, `src/ReadTheStupidText.Mobile/Platforms/Android/AndroidManifest.xml`, `src/*/Platforms/iOS/Info.plist`, `tests/ReadTheStupidText.Tests/**`, `tests/DinoReader.Tests/LocalizedUiTests.cs`, `.github/workflows/packs.yml`, `src/ReadTheStupidText.Mobile.Shared/IPlatformServices.cs`, `src/ReadTheStupidText.Application/Reading/PackConstants.cs`, `src/ReadTheStupidText.Application/Translation/EngineLanguageCodes.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/MlKitTranslator.cs`, `src/ReadTheStupidText.Infrastructure/Translation/ScriptLanguageDetector.cs`, `src/DinoReader.Core/ScriptLanguageGuesser.cs`, `src/ReadTheStupidText.Mobile/UiCulture.cs`, `src/DinoReader.App/UiCulture.cs`, `src/DinoReader.App/StoryTranslator.cs`, `src/DinoReader.App/LanguageChooser.cs`, `src/DinoReader.App/LanguagePage.xaml`, `src/ReadTheStupidText.Mobile/LanguageChooser.cs`, `src/ReadTheStupidText.Mobile/TranslationLanguageChoices.cs`, `src/ReadTheStupidText.App/LanguageWindow.xaml.cs`, `STORE.md`, `README.md`, `CLAUDE.md`
 
 ## Why
 
@@ -34,12 +34,12 @@ letters (å, æ, ø, ä, ö) with no OCR pack.
 
 ## Work
 
-- [ ] 1. **Smallest end-to-end: Swedish on the phone.** `AppLanguage.Swedish`, the phone's Swedish `.resx`,
+- [x] 1. **Smallest end-to-end: Swedish on the phone.** `AppLanguage.Swedish`, the phone's Swedish `.resx`,
   picker entry. Choose Swedish, the UI is Swedish, and Swedish text reads with Supertonic.
-- [ ] 2. The other four languages on the phone; `ScriptDetector`; the ML Kit code table.
-- [ ] 3. Dino: five `.resx` files, the picker and first run (books and story rules are Slice 105).
-- [ ] 4. Windows: five `.resw` folders, `UiLanguageTag`, the manifest `Resources`.
-- [ ] 5. `STORE.md` listing texts, the "nine languages" wording in README/CLAUDE.md/STORE.md, rules.
+- [x] 2. The other four languages on the phone; `ScriptDetector`; the ML Kit code table.
+- [x] 3. Dino: five `.resx` files, the picker and first run (books and story rules are Slice 105).
+- [x] 4. Windows: five `.resw` folders, `UiLanguageTag`, the manifest `Resources`.
+- [x] 5. `STORE.md` listing texts, the "nine languages" wording in README/CLAUDE.md/STORE.md, rules.
 
 ## Verification
 
@@ -49,3 +49,30 @@ letters (å, æ, ø, ä, ö) with no OCR pack.
   paragraph in that language reads aloud (Norwegian with the phone voice if the image has one), and a
   scanned Swedish page keeps å/ä/ö.
 - Windows head: switch to Dutch, the tray menu and control panel are Dutch, Dutch text reads.
+
+*Changed while building:*
+
+- `AppLanguage` has 14 values. `AppLanguages.Canonical` maps `no`/`nn` to `nb` in one place, used by `TryParse`, `VoiceAvailability`, `ScriptDetector` and `EngineLanguageCodes` (`nb` to `no` for ML Kit).
+- UI translations for da/fi/sv/nb/nl (written by Claude) in all three apps; `LanguageNames` and both `LanguageChoices` updated. Manifests: RTST and Dino Windows. RTST iOS gets `Info.plist` `CFBundleLocalizations` and `.lproj` files.
+- `STORE.md` holds the five listing texts; they are not pasted into the stores.
+- Stop-word detection for the five languages in `ScriptLanguageDetector` and Dino's `ScriptLanguageGuesser`, with distinctive words for da/nb/sv, and tests.
+- `packs.yml` `SUPERTONIC_LANGUAGES` now includes da/fi/sv/nl. `PackConstants.NaturallyReadable` excludes `nb` until piper-nb (Slice 104 must add it); a test ties it to `packs.yml`.
+- Starter and store coverage tests are pinned to the nine languages with tables, until Slice 105.
+
+*From review:* high pass, 7 applied (#4 and #5 go to Slice 105, #9 Nynorsk is out of scope). Medium pass, 5 applied (#3 goes to Slice 105, #7 out of scope, #8 catalog-driven availability not done).
+
+#### For CLAUDE.md
+
+- `AppLanguages.Canonical` is the one place `no`/`nn` map to `nb`; route every language parse and engine code through it. `PackConstants.NaturallyReadable` must stay in step with `packs.yml`; Slice 104 adds `nb` when piper-nb lands. (Slice 103: docs/plan/slices/103-nordic-dutch-languages.md)
+
+#### For README.md
+
+- "Nine languages" becomes fourteen wherever README says it.
+
+#### Not yet verified
+
+- The `packs.yml` run and pin bump that gives the Supertonic pack da/fi/sv/nl (the coordinator does it right after merge); until then those languages read with the phone voice, and a pack that doesn't declare a language falls back safely.
+- Emulator check of each new UI language.
+- Windows head in Dutch.
+- A native read of all translations.
+- Dino's iOS app has no localisation plist entries (pre-existing).

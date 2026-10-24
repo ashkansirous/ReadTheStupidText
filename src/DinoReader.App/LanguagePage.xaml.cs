@@ -59,7 +59,7 @@ public static class LanguageChoice
 }
 
 /// <summary>
-/// The grown-up Language page (Slice 93, mock screen 26): the nine languages with Ready / Download / Downloading n%. Picking one switches
+/// The grown-up Language page (Slice 93, mock screen 26): the fourteen languages with Ready / Download / Downloading n%. Picking one switches
 /// to it at once and downloads its voice in that row (Slice 81); the old voice keeps reading until the new one is ready.
 /// </summary>
 public partial class LanguagePage : ContentPage, IGrownUpPage
