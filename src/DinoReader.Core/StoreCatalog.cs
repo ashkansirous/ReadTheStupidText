@@ -4,7 +4,7 @@ namespace DinoReader.Core;
 
 /// <summary>One free story the store lists (Slice 92): the list line from <c>GET /api/stories</c>, checked.</summary>
 public sealed record StoreItem(
-    string Id, string Title, string Language, int SchemaVersion, int Version, int? PageCount, int? Minutes, string? CoverUrl, string DownloadUrl)
+    string Id, string Title, string Language, int SchemaVersion, int Version, int? PageCount, int? Minutes, string? CoverUrl, string DownloadUrl, string? Credits = null)
 {
     /// <summary>False for a story packed in a newer format than this app reads: such a story is hidden, not greyed out.</summary>
     public bool IsReadable => SchemaVersion <= StoryPackageManifest.CurrentSchemaVersion;
@@ -14,6 +14,7 @@ public sealed record StoreItem(
 public static class StoreCatalog
 {
     private const string StoriesProperty = "stories";
+    private const int MaxCreditsLength = 200;
 
     private static readonly JsonSerializerOptions Options = new() { PropertyNameCaseInsensitive = true };
 
@@ -56,9 +57,13 @@ public static class StoreCatalog
         bool valid = StoryIds.IsValid(dto.Id) && !string.IsNullOrWhiteSpace(dto.Title) && !string.IsNullOrWhiteSpace(dto.Language)
             && !string.IsNullOrWhiteSpace(dto.DownloadUrl) && dto.SchemaVersion >= 1 && dto.Version >= 1;
         return valid
-            ? new StoreItem(dto.Id!, dto.Title!, dto.Language!, dto.SchemaVersion, dto.Version, dto.PageCount, dto.Minutes, dto.CoverUrl, dto.DownloadUrl!)
+            ? new StoreItem(dto.Id!, dto.Title!, dto.Language!, dto.SchemaVersion, dto.Version, dto.PageCount, dto.Minutes, dto.CoverUrl, dto.DownloadUrl!, CreditsOf(dto.Credits))
             : null;
     }
+
+    // The optional credit line: blank, or longer than the Worker allows, means none.
+    private static string? CreditsOf(string? credits) =>
+        string.IsNullOrWhiteSpace(credits) || credits.Trim().Length > MaxCreditsLength ? null : credits.Trim();
 
     private sealed class ItemDto
     {
@@ -79,5 +84,7 @@ public static class StoreCatalog
         public string? CoverUrl { get; set; }
 
         public string? DownloadUrl { get; set; }
+
+        public string? Credits { get; set; }
     }
 }

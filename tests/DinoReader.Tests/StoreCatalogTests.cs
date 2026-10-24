@@ -18,6 +18,22 @@ public class StoreCatalogTests
     }
 
     [Fact]
+    public void Parse_ReadsTheCreditLine_WhenThereIsOne()
+    {
+        string json = $$"""{"stories":[{{Entry().Replace("\"minutes\"", "\"credits\":\" Beatrix Potter, 1902 \",\"minutes\"")}}]}""";
+        Assert.Equal("Beatrix Potter, 1902", Assert.Single(StoreCatalog.Parse(json)).Credits);
+    }
+
+    [Fact]
+    public void Parse_LeavesTheCreditNull_WhenAbsentBlankOrTooLong()
+    {
+        string blank = Entry().Replace("\"minutes\"", "\"credits\":\"  \",\"minutes\"");
+        string tooLong = Entry().Replace("\"minutes\"", $"\"credits\":\"{new string('x', 201)}\",\"minutes\"");
+        string json = $$"""{"stories":[{{Entry()}},{{blank}},{{tooLong}}]}""";
+        Assert.All(StoreCatalog.Parse(json), item => Assert.Null(item.Credits));
+    }
+
+    [Fact]
     public void Parse_SkipsMalformedEntries()
     {
         string json = $$"""{"stories":[{{Entry("not-an-id")}},{{Entry(title: " ")}},{{Entry(download: "")}},{{Entry(schema: 0)}},{{Entry()}}]}""";

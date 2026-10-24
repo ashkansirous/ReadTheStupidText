@@ -462,6 +462,17 @@ test("/api/stories lists complete stories only, newest first, with versioned lin
   assert.equal(body.stories[1].pageCount, 12);
 });
 
+test("credits pass through the list when meta has them, and are null when absent or malformed", async () => {
+  const objects = new Map();
+  addStory(objects, ID_A, { meta: metaJson({ title: "Credited", credits: "Beatrix Potter, 1902" }) });
+  addStory(objects, ID_B, { meta: metaJson({ title: "Plain" }) });
+  addStory(objects, ID_C, { meta: metaJson({ title: "Odd", credits: 7 }) });
+  const body = await (await storyApi(get("/api/stories"), fakeBucket(objects))).json();
+  const credits = Object.fromEntries(body.stories.map((story) => [story.title, story.credits]));
+  assert.deepEqual(credits, { Credited: "Beatrix Potter, 1902", Plain: null, Odd: null });
+  assert.equal(parseMeta({ schemaVersion: 1, title: "x", language: "en", credits: "y".repeat(201) }).credits, null);
+});
+
 test("on workers.dev the list links carry the /dino prefix", async () => {
   const objects = new Map();
   addStory(objects, ID_A);

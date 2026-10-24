@@ -35,8 +35,14 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 	/// <summary>Titles in Farsi and Arabic are set in Vazirmatn and run right to left, as the mock's Farsi row does.</summary>
 	public string TitleFont => DinoFonts.IsRightToLeft(Item.Language) ? DinoFonts.Persian : DinoFonts.Ui;
 
-	/// <summary>The language in its own name, then the length on the next line (omitted when the server gave none).</summary>
+	/// <summary>The length line, "8 pages · 4 min" (empty when the server gave none).</summary>
 	public string Detail => StoreText.Detail(Item);
+
+	/// <summary>The sub-line under the title: the credit line (<c>meta.json</c>'s <c>credits</c>), or the language in its own name when the story has none.</summary>
+	public string Credits => Item.Credits ?? StoreText.Language(Item);
+
+	public bool HasDetail => Detail.Length > 0;
+	public bool HasCredits => Credits.Length > 0;
 
 	public string GetHint => StoreText.GetHint(Item.Title);
 
@@ -94,12 +100,14 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 /// <summary>The store's copy that is composed from numbers or names, in the UI language.</summary>
 public static class StoreText
 {
+	public static string Language(StoreItem item) =>
+		LanguageNames.All.Any(l => l.Code == item.Language) ? LanguageNames.NativeName(item.Language) : item.Language;
+
 	public static string Detail(StoreItem item)
 	{
-		string language = LanguageNames.All.Any(l => l.Code == item.Language) ? LanguageNames.NativeName(item.Language) : item.Language;
 		return item.PageCount is { } pages && item.Minutes is { } minutes
-			? language + Environment.NewLine + AppResources.Format(AppResources.Store_Length, pages, minutes)
-			: language;
+			? AppResources.Format(AppResources.Store_Length, pages, minutes)
+			: string.Empty;
 	}
 
 	public static string GetHint(string title) => AppResources.Format(AppResources.Store_GetStory, title);

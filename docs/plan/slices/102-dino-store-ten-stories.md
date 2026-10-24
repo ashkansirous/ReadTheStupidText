@@ -1,11 +1,11 @@
 # Slice 102 — Ten open stories in the Dino story store
 
-*Planned 2026-10-24*, from the user's request "add 10 open source stories to the store, so they can
+*Built 2026-10-24 (PR #280), not yet verified: the R2 upload, the live list and the emulator check are outstanding.* Planned 2026-10-24, from the user's request "add 10 open source stories to the store, so they can
 download them from my server".
 
 **Batch:** 20 (Dino Reader store content)
 **Depends on:** Slice 92 (store), Slice 95 (bundled translations), Slice 91 (`StarterBuilder`); illustrations later depend on Slice 98
-**Touches:** `tests/DinoReader.Tests/StoreTexts.cs` (new), `tests/DinoReader.Tests/StoreBuilder.cs` (new), `tests/DinoReader.Tests/StarterBuilder.cs`, `tests/DinoReader.Tests/StarterStoryTests.cs`, `tests/DinoReader.Tests/StoreStoryTests.cs` (new), `tests/DinoReader.Tests/Starters/translations/**`, `tools/upload-store-story.ps1` (new), `worker/stories.ts`, `worker/*.test.ts`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/StorePage.xaml`, `src/DinoReader.App/StorePage.xaml.cs`, `CLAUDE.md`, `src/DinoReader.App/CLAUDE.md`
+**Touches:** `tests/DinoReader.Tests/StoreTexts.cs` (new), `tests/DinoReader.Tests/StoreBuilder.cs` (new), `tests/DinoReader.Tests/StarterBuilder.cs`, `tests/DinoReader.Tests/StarterStoryTests.cs`, `tests/DinoReader.Tests/StoreStoryTests.cs` (new), `tests/DinoReader.Tests/Starters/translations/**`, `tools/upload-store-story.ps1` (new), `worker/stories.ts`, `worker/downloads.test.mjs`, `src/DinoReader.Core/StoreCatalog.cs`, `tests/DinoReader.Tests/StoreCatalogTests.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/StorePage.xaml`, `src/DinoReader.App/StorePage.xaml.cs`, `CLAUDE.md`, `src/DinoReader.App/CLAUDE.md`
 
 ## Why
 
@@ -66,7 +66,7 @@ Source: `docs/design/dino-reader/Dino Reader Batch 17-18.dc.html`, screen 36 (li
 - **Store card.** White, radius 18, padding 12, gap 12. Cover 66 wide, aspect 3/4, radius 10, generated colour with the title in Andika 9.5/700 white, line-height 1.15, padding 5, centred. Colours seen: `#FFC24D`, `#7FD0FF`, `#FF7A9C`, `#8BD38A`, `#B8A6FF`. Text column, gap 3: title 15.5/600, line-height 1.25; **credit line** 12 `#8a8399`, line-height 1.3; size line 12.5 `#5a5470` ("8 pages · 4 min").
 - **Credit examples.** "Retold from Aesop · free to share", "Beatrix Potter, 1902", "Retold traditional tale · free to share", "Retold from Andersen · free to share".
 - **Card states (right edge).** Get: height 44, padding 0/14, radius 22, fill `#5B57E8`, white 14/600, download icon and "Get". Downloading: pill 88x44, radius 22, fill `#ECE7FF`, progress fill `#c9c0f5` at 42% width, label "42%" 14/600 `#3f3bc4`. Downloaded: no fill, green check and "Downloaded" 13.5/600 `#2E7D32`.
-- **Behaviour (note).** The credit comes from `meta.json`'s optional `credits`; a card without credits looks as before. The language line is dropped: every store story is English and reads in all nine languages. Covers are the generated colour covers until the illustrated `story-v2`.
+- **Behaviour (note).** The credit comes from `meta.json`'s optional `credits`; a card without credits shows the language name as its sub-line, as before. With credits, the credit line replaces the language name (the mock), and the length line stays. Covers are the generated colour covers until the illustrated `story-v2`.
 
 Changed to match the mock (2026-10-24): the card's sub-line becomes the credit line, replacing the language name; the length line stays. Code today: `StorePage.xaml.cs:40,101-104` builds the card's sub-line as the language name plus the length (`Store_Length`); the mock keeps only the length line and puts the credit above it.
 
@@ -74,17 +74,17 @@ New strings: none new for the card (credit text is data from `meta.json`, not a 
 
 ## Work
 
-- [ ] 1. **Smallest end-to-end: one story live.** `StoreTexts` with The Lion and the Mouse, `StoreBuilder`
+- [x] 1. **Smallest end-to-end: one story live.** `StoreTexts` with The Lion and the Mouse, `StoreBuilder`
   (package, cover, meta), the upload script, the `credits` field in the Worker and on the store card
   (credit line replaces the language name; length kept). Upload
-  it and see it in the live list and download it on the emulator.
-- [ ] 2. **The other nine retellings,** with speech tags the caster resolves (a test asserts each story
+  it and see it in the live list and download it on the emulator. (Code built; the upload and emulator check are under Not yet verified.)
+- [x] 2. **The other nine retellings,** with speech tags the caster resolves (a test asserts each story
   finds its expected characters).
-- [ ] 3. **Translations** for all ten into the eight other languages. The coverage test is extended to store
+- [x] 3. **Translations** for all ten into the eight other languages. The coverage test is extended to store
   stories.
 - [ ] 4. **Upload all ten** and check them in `GET /api/stories`; download two on the emulator and read one in
   Farsi.
-- [ ] 5. Rules: the root `CLAUDE.md` store paragraph (`credits`, the builder and the upload script) and
+- [x] 5. Rules: the root `CLAUDE.md` store paragraph (`credits`, the builder and the upload script) and
   `src/DinoReader.App/CLAUDE.md` (written at planning; check they still match).
 
 ## Verification
@@ -101,3 +101,27 @@ New strings: none new for the card (credit text is data from `meta.json`, not a 
 ## Follow-up (not this slice)
 
 - Illustrations as `story-v2` once Slice 98 is built.
+
+## Built
+
+*Changed while building:*
+
+- Ten retellings live in `StoreTexts` with fixed GUID ids; each has its own `Version` (1) and `Added` (2026-10-24).
+- Peter Rabbit is Potter's text shortened to 13 pages, so its credit reads "Beatrix Potter, 1902 (shortened)". Its cast is Mrs. Rabbit and Mr. McGregor; Peter has no spoken line.
+- 80 translations plus 10 pieces files are written. A Claude-written check confirms counts and scripts; translation quality is unreviewed.
+- `StoreBuilder` writes `artifacts/store/<id>/` using its own baseline JPEG encoder, with a structural test.
+- The upload script resolves `$Root` from the script folder, uploads `meta.json` last, and checks the version.
+- Credits: the Worker passes them through trimmed, max 200 characters. Core `StoreItem.Credits` is tested. The card shows credits, or the native language name when a story has none.
+
+*From review:* high pass: 7 findings applied, #6 left for docs (this note). Medium pass: 3 applied, #2 accepted, #5 not a bug.
+
+#### For CLAUDE.md
+
+- Store `meta.json` takes an optional `credits` string; `worker/stories.ts` trims it and caps it at 200 characters. The store card shows credits, or the native language name when there are none (`src/DinoReader.App/StorePage.xaml.cs`). (Slice 102: docs/plan/slices/102-dino-store-ten-stories.md)
+- Store stories are built from `tests/DinoReader.Tests/StoreTexts.cs` with fixed GUID ids; `DINO_BUILD_STORE=1 dotnet test tests/DinoReader.Tests` writes `artifacts/store/<id>/`. Bump a story's `Version` and upload a new `story-v<n+1>.dino` rather than overwriting. `tools/upload-store-story.ps1 <id>` uploads `meta.json` last. (Slice 102: docs/plan/slices/102-dino-store-ten-stories.md)
+
+#### Not yet verified
+
+- The R2 upload of all ten and the live `GET /api/stories` listing (the coordinator does this after merge).
+- Emulator: the store shows ten cards with credits; download; read with voices; Farsi read.
+- A native-speaker read of the translations.
