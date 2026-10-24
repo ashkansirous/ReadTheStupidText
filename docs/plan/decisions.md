@@ -1105,3 +1105,14 @@
     nine languages, coloured covers now and public-domain illustrations later
     as `story-v2`. `meta.json` gains an optional `credits` line shown on the
     store card. (Slice 102)
+107. **Fourteen app languages (Batch 21).** `AppLanguage` adds Danish, Finnish,
+    Swedish, Norwegian Bokmål (`nb`) and Dutch to all three apps; Claude writes
+    the UI translations; da/fi/sv/nl read with Supertonic-3. Extends Decision 68.
+    (Slice 103)
+108. **A `piper-nb` voice pack (Batch 21).** Piper `no_NO-nvcc-medium` (ten
+    speakers, CC0) for Norwegian on every platform; the espeak-ng GPL exception
+    covers this pack with the same scope as `piper-fa`. (Slice 104)
+109. **Dino speaks the five new languages fully (Batch 21).** A story rule set
+    per language and every shipped book translated into all five. (Slice 105)
+110. **Ten more Windows translation packs (Batch 21).** Opus-MT to and from
+    English for da, fi, sv, nb and nl. (Slice 106)

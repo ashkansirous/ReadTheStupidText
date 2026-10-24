@@ -120,6 +120,10 @@ this plan turns it into ordered, shippable vertical slices.
 | 100 | RTST phone: "Take a photo of each page", wizard page 1 | planned | | | [100-rtst-mobile-page-capture-wizard.md](docs/plan/slices/100-rtst-mobile-page-capture-wizard.md) |
 | 101 | RTST phone: wizard page 2, check the text, translate, read | planned | | | [101-rtst-mobile-review-and-translate.md](docs/plan/slices/101-rtst-mobile-review-and-translate.md) |
 | 102 | Ten open stories in the Dino story store | planned | | | [102-dino-store-ten-stories.md](docs/plan/slices/102-dino-store-ten-stories.md) |
+| 103 | Danish, Finnish, Swedish, Norwegian and Dutch in every app | planned | | | [103-nordic-dutch-languages.md](docs/plan/slices/103-nordic-dutch-languages.md) |
+| 104 | A Norwegian voice pack (Piper nvcc, ten speakers) | planned | | | [104-piper-norwegian-pack.md](docs/plan/slices/104-piper-norwegian-pack.md) |
+| 105 | Dino: story rules and book translations for the five new languages | planned | | | [105-dino-nordic-dutch-books-and-rules.md](docs/plan/slices/105-dino-nordic-dutch-books-and-rules.md) |
+| 106 | Windows: offline translation packs for the five new languages | planned | | | [106-windows-nordic-dutch-translation-packs.md](docs/plan/slices/106-windows-nordic-dutch-translation-packs.md) |
 
 Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
 
@@ -139,6 +143,8 @@ Batch 19 (99-101, planned 2026-10-24, after two first-time users couldn't find t
 
 Batch 20 (102, planned 2026-10-24): ten open stories for the empty store. It touches only the test builders, translations, the upload script, `worker/stories.ts` and the store card, so it can run beside 96, 97 and 99-101. Illustrations follow as `story-v2` after Slice 98. Decision 106.
 
+Batch 21 (103-106, planned 2026-10-24): Danish, Finnish, Swedish, Norwegian (Bokmål) and Dutch. 103 first (it adds the languages every other slice uses); then 104 (`packs.yml`, Piper readers), 105 (Dino rules and books) and 106 (`packs.yml`, Windows translation) can run alongside each other except that 104 and 106 both edit `packs.yml`, so they merge one after the other. Decisions 107-110.
+
 ### Notes
 
 - [Decisions 1-99](docs/plan/decisions.md): the full numbered decision list, moved verbatim.
@@ -152,6 +158,7 @@ Batch 20 (102, planned 2026-10-24): ten open stories for the empty store. It tou
 
 Built but not verified (details in each slice file):
 
+- Windows has no `en-ja` translation pack (`TranslationPacks.FromEnglish` and `packs.yml` lack it), so English cannot be translated into Japanese offline on Windows; found while planning Slice 106, not yet scheduled.
 - Slice 43: the 8 translated Play listings are only worth adding when the app goes to Play production (it is closed testing now); get a native read first. The Microsoft Store keeps its existing Windows-specific listing (decided 2026-10-20). ([slice](docs/plan/slices/43-store-listing-refresh.md))
 - Slice 59: attribution quality on a real children's book text (only unit-test fixtures so far); check with the first Slice 60 read ([slice](docs/plan/slices/59-dialogue-parser-voice-caster.md)).
 - Slice 58: decide whether Dino Reader project additions to `ReadTheStupidText.slnx` / the workflows should keep re-releasing the RTST apps (today `*.slnx` and `release.yml` are core paths in `ship-targets.mjs`); seen when Slice 59's merge shipped an unchanged RTST release ([slice](docs/plan/slices/58-dino-reader-skeleton.md)).

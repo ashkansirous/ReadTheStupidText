@@ -159,7 +159,7 @@ so a failing test blocks the release.
   provided the copyright notice is kept. Do **not** add GPL/LGPL components (the
   Supertonic/sherpa stack was chosen to keep this clean — see `STORE.md`). The one
   **scoped exception**: espeak-ng data (GPL-3.0) lives only inside the downloaded `piper-fa`
-  pack, never in the repo or any package (Decisions 59-71).
+  and `piper-nb` packs, never in the repo or any package (Decisions 59-71, 108).
 - **Every merge to `main` that touches app code ships a version** (Decision 17;
   docs-only merges cut none, and only the changed platforms are rebuilt and
   submitted — Batch 8), derived by

@@ -16,7 +16,7 @@ Loaded when you work under `src/ReadTheStupidText.Mobile`. Shared platform code 
 > the system voice reads until it arrives. User data (text, images, scans,
 > translations) stays **100% offline**; only packs and ML Kit models are downloaded.
 > One **scoped GPL exception**: espeak-ng data (GPL-3.0) lives only inside the downloaded
-> `piper-fa` pack, never in the repo or any package. **iOS** is the same MAUI project
+> `piper-fa` and `piper-nb` packs (Slice 104), never in the repo or any package. **iOS** is the same MAUI project
 > (`net10.0-ios`) shipped to TestFlight from CI. (Decisions 59-71,
 > `docs/plan/slices/43-57`; note: docs/plan/notes/claude-md-history.md)
 
