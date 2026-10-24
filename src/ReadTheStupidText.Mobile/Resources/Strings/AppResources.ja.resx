@@ -46,8 +46,23 @@
   <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>一部のページをスキップしました</value></data>
   <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>{0} ページ目を読み取れませんでした。読み取れたページでテキストを置き換えました。</value></data>
   <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>{0} ページ目を読み取れませんでした。読み取れたページでテキストを置き換えました。</value></data>
-  <data name="Reader_ScanProgressPage" xml:space="preserve"><value>{1} ページ中 {0} ページ目を読み取り中</value></data>
-  <data name="Reader_ScanProgressSingle" xml:space="preserve"><value>ページを読み取り中</value></data>
+  <data name="Capture_Title" xml:space="preserve"><value>各ページの写真を撮ってください</value></data>
+  <data name="Capture_Hint" xml:space="preserve"><value>1ページずつ追加してください。全部撮り終えたら「{0}」をタップします。</value></data>
+  <data name="Capture_HintDone" xml:space="preserve"><value>完了</value></data>
+  <data name="Capture_PageLabel" xml:space="preserve"><value>{0}ページ目</value></data>
+  <data name="Capture_Reading" xml:space="preserve"><value>読み取り中…</value></data>
+  <data name="Capture_AddPage" xml:space="preserve"><value>もう1ページ追加</value></data>
+  <data name="Capture_Done" xml:space="preserve"><value>完了 – テキストを見る</value></data>
+  <data name="Capture_ChoosePhotos" xml:space="preserve"><value>写真から選ぶ</value></data>
+  <data name="Capture_DiscardTitle" xml:space="preserve"><value>これらのページを破棄しますか？</value></data>
+  <data name="Capture_DiscardMessage" xml:space="preserve"><value>{0}ページ撮影しました。戻ると保存されません。</value></data>
+  <data name="Capture_DiscardMessageOne" xml:space="preserve"><value>1ページ撮影しました。戻ると保存されません。</value></data>
+  <data name="Capture_PageLimit" xml:space="preserve"><value>一度に追加できるのは最大 {0} ページです。残りは追加されませんでした。</value></data>
+  <data name="Capture_KeepTaking" xml:space="preserve"><value>撮影を続ける</value></data>
+  <data name="Capture_Discard" xml:space="preserve"><value>破棄して戻る</value></data>
+  <data name="Capture_RemovePage" xml:space="preserve"><value>このページを削除</value></data>
+  <data name="Capture_CouldntRead" xml:space="preserve"><value>読み取れません</value></data>
+  <data name="Capture_ClosePreview" xml:space="preserve"><value>閉じる</value></data>
   <data name="Reader_PageLanguageTitle" xml:space="preserve"><value>このページは何語ですか？</value></data>
   <data name="Reader_OcrDownloading" xml:space="preserve"><value>{0}の読み取りデータをダウンロード中… {1}%</value></data>
   <data name="Reader_OcrDownloadFailedTitle" xml:space="preserve"><value>読み取りデータをダウンロードできませんでした</value></data>
