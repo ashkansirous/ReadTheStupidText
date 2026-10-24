@@ -1076,3 +1076,15 @@
 99. **The store, backup and first-run screens are designed in Claude Design
     first (Batch 16).** Slices 92 and 93 don't start their UI until the mock
     has those screens. (Slices 92, 93)
+100. **Dino's layout never mirrors (Batch 18).** Every Dino screen, the reader
+    included, stays left-to-right in every language, and page turns go the same
+    way for every book; text elements follow their own content's direction.
+    Extends Decision 92 to Dino. (Slice 96)
+101. **The gallery's grown-ups button is a book with a plus (Batch 18).** It
+    replaces the lock; the gate and grown-up mode behind it are unchanged.
+    (Slice 97)
+102. **Picture + text books (Batch 18).** A page with a picture and its own text
+    (no line boxes) shows the picture beside the text (sideways) or above it
+    (upright). Grown-ups add one from pictures in file-name order plus text
+    split on `---` lines; starters get pictures the same way. No schema bump.
+    (Slice 98)
