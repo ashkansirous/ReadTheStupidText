@@ -64,6 +64,8 @@ msstore CLI) once the Partner Center secrets are set.
 
 `packs-<n>` releases hold packs + `packs.json`, published by the manual `packs.yml` with `--latest=false`. Every app-release tag scan (`release.yml` release-publish, `.github/scripts/find-release.sh`) must filter to `^v[0-9]+\.[0-9]+\.[0-9]+$`. (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
 
+A new translation pair in `packs.yml` needs its `TRANSLATION_PAIRS` entry, an 11-column table row (layout and per-pair licence) and a matching `TranslationPacks` leg; a test ties the three together, and `maxLength` must resolve (`max_position_embeddings` fallback) or the job fails. New packs reach users only after a `packs.yml` run and the `PackConstants` pin bump. (Slice 106: docs/plan/slices/106-windows-nordic-dutch-translation-packs.md)
+
 ## Dino Reader pipeline
 
 Dino Reader has its own path-filter target (`dinoapp` in `ship-targets`, with

@@ -115,7 +115,7 @@ New strings: none new for the card (credit text is data from `meta.json`, not a 
 
 *From review:* high pass: 7 findings applied, #6 left for docs (this note). Medium pass: 3 applied, #2 accepted, #5 not a bug.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-24)
 
 - Store `meta.json` takes an optional `credits` string; `worker/stories.ts` trims it and caps it at 200 characters. The store card shows credits, or the native language name when there are none (`src/DinoReader.App/StorePage.xaml.cs`). (Slice 102: docs/plan/slices/102-dino-store-ten-stories.md)
 - Store stories are built from `tests/DinoReader.Tests/StoreTexts.cs` with fixed GUID ids; `DINO_BUILD_STORE=1 dotnet test tests/DinoReader.Tests` writes `artifacts/store/<id>/`. Bump a story's `Version` and upload a new `story-v<n+1>.dino` rather than overwriting. `tools/upload-store-story.ps1 <id>` uploads `meta.json` last. (Slice 102: docs/plan/slices/102-dino-store-ten-stories.md)

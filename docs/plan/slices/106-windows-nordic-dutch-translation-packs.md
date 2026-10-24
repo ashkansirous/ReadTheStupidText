@@ -57,7 +57,7 @@ which already covers them.
 - High pass: 9 applied; #8 handled by the rollout step above.
 - Medium pass: 6 applied; #4 skipped because the sha pins were verified by download.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-24)
 
 - `.github/workflows/packs.yml`: a new translation pair needs its `TRANSLATION_PAIRS` entry, an 11-column table row
   (layout and per-pair licence) and a matching `TranslationPacks` leg; a test ties the three together, and `maxLength`
