@@ -14,24 +14,34 @@ internal static class CastRows
 	private const double AvatarSize = 34;
 	private const double AvatarFont = 15;
 	private const double TextIndent = 44;
+	private const double LinkMinHeight = 44;
 
-	public static View Narrator(string voiceId, Func<Task> pick)
+	/// <summary>The narrator row (mock 40): read-only, the voice named, with a link to the Narrator page where it is chosen for every book (Slice 109).</summary>
+	public static View Narrator(string voiceId, Func<Task> changeForAll)
 	{
 		var avatar = CastViews.Avatar(string.Empty, DinoTokens.Get(DinoTokens.Ink), Colors.White, AvatarSize, AvatarFont);
 		avatar.Content = new IconView { Kind = IconKind.Book, Color = Colors.White, Size = 18, StrokeWidth = 2.2, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center };
-		Border chip = CastViews.VoiceChip(CastText.VoiceName(voiceId));
-		SemanticProperties.SetDescription(chip, CastText.Narrator + ": " + CastText.VoiceName(voiceId));
-		CastViews.AddTap(chip, pick);
+		var link = new Label
+		{
+			Text = CastText.ChangeForAll, FontSize = 13, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Brand),
+			MinimumHeightRequest = LinkMinHeight, VerticalTextAlignment = TextAlignment.Center,
+		};
+		SemanticProperties.SetDescription(link, CastText.ChangeForAll);
+		CastViews.AddTap(link, changeForAll);
+		var text = new VerticalStackLayout
+		{
+			VerticalOptions = LayoutOptions.Center,
+			Children = { new Label { Text = CastText.NameAndVoice(CastText.Narrator, voiceId), FontSize = 15, FontAttributes = FontAttributes.Bold }, link },
+		};
 		var row = new Grid
 		{
-			MinimumHeightRequest = 56,
-			Padding = new Thickness(14, 0),
+			MinimumHeightRequest = 60,
+			Padding = new Thickness(14, 8),
 			ColumnSpacing = 10,
-			ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)],
+			ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star)],
 		};
 		row.Add(avatar, 0);
-		row.Add(new Label { Text = CastText.Narrator, FontSize = 15, FontAttributes = FontAttributes.Bold, VerticalOptions = LayoutOptions.Center }, 1);
-		row.Add(chip, 2);
+		row.Add(text, 1);
 		return row;
 	}
 

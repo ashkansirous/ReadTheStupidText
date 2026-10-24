@@ -128,6 +128,14 @@
   <!-- Slice 108 -->
   <data name="Cast_VoicesFor" xml:space="preserve"><value>Voix pour {0}</value></data>
   <!-- /Slice 108 -->
+  <!-- Slice 109 -->
+  <data name="Narrator_Title" xml:space="preserve"><value>Narrateur</value></data>
+  <data name="Narrator_Subtitle" xml:space="preserve"><value>La voix du narrateur pour tous les livres</value></data>
+  <data name="Narrator_MyLanguage" xml:space="preserve"><value>MA LANGUE</value></data>
+  <data name="Narrator_Footnote" xml:space="preserve"><value>Si un personnage d’un livre a la voix du narrateur, Dino lui en donne une autre.</value></data>
+  <data name="Cast_ChangeForAll" xml:space="preserve"><value>Changer pour tous les livres</value></data>
+  <data name="Narrator_Sample" xml:space="preserve"><value>Écouter cette voix</value></data>
+  <!-- /Slice 109 -->
   <data name="Add_Scan" xml:space="preserve"><value>Scanner des pages</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Garde les images des pages</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Photos</value></data>
@@ -232,8 +240,6 @@
   <data name="Cast_Hear" xml:space="preserve"><value>Écouter {0}</value></data>
   <data name="Cast_NoBoyVoice" xml:space="preserve"><value>Ce pack de voix n’a pas de voix de garçon ; ce personnage garde donc sa voix actuelle.</value></data>
   <data name="Cast_NoGirlVoice" xml:space="preserve"><value>Ce pack de voix n’a pas de voix de fille ; ce personnage garde donc sa voix actuelle.</value></data>
-  <data name="Cast_VoiceChanged_One" xml:space="preserve"><value>La voix de {0} a changé parce que le narrateur a maintenant la voix qui lui avait été donnée.</value></data>
-  <data name="Cast_VoiceChanged_Other" xml:space="preserve"><value>Les voix de {0} ont changé parce que le narrateur a maintenant la voix qui leur avait été donnée.</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>Fusionner avec {0}</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Ce pack de voix ne contient que {0} voix naturelles ; certains personnages partagent donc une voix. La voix du narrateur n’est jamais donnée à un personnage.</value></data>
   <data name="Voice_NbWoman" xml:space="preserve"><value>Voix {0} (femme)</value></data>

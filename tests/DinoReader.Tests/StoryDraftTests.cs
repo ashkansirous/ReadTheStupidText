@@ -19,7 +19,7 @@ public class WizardDraftTests
     [Fact]
     public void NewOwnBook_TranslatesByDefault_AndItsDraftKeepsIt()
     {
-        var story = Story.NewOwnBook(StoryIds.New(), "en", DateTimeOffset.UnixEpoch, 0, "F1");
+        var story = Story.NewOwnBook(StoryIds.New(), "en", DateTimeOffset.UnixEpoch, 0);
 
         Assert.True(new StoryDraft(story).TranslateToMyLanguage);
     }

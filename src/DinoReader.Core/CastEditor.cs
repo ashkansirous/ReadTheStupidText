@@ -73,10 +73,8 @@ public static class CastEditor
         return new CastEdit(cast, CastMerges.Add(state.Merges, keepId, dropId));
     }
 
-    /// <summary>Names of characters a grown-up had pinned to <paramref name="narratorVoiceId"/> who got another voice in <paramref name="recast"/>.</summary>
-    public static IReadOnlyList<string> NamesLosingVoice(
-        IReadOnlyList<CastMember> before, IReadOnlyList<CastMember> recast, string narratorVoiceId) =>
-        recast.Where(m => LosesVoice(before, m, narratorVoiceId)).Select(m => m.Name).ToList();
+    /// <summary>Whether any character of <paramref name="cast"/> has <paramref name="voiceId"/>: a cast that must be recast once that voice is the narrator's.</summary>
+    public static bool UsesVoice(IReadOnlyList<CastMember> cast, string voiceId) => cast.Any(m => m.VoiceId == voiceId);
 
     /// <summary>The recast with those characters unpinned: their pin was overridden by the new narrator.</summary>
     public static IReadOnlyList<CastMember> UnpinOverridden(

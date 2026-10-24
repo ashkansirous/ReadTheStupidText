@@ -10,7 +10,6 @@ namespace DinoReader;
 public static class CastText
 {
 	private const string NameAndVoiceSeparator = " · ";
-	private const string NameSeparator = ", ";
 	private const int Singular = 1;
 
 	// Display names of the voices in the packs seen so far (a Piper pack names its own voices).
@@ -18,6 +17,7 @@ public static class CastText
 
 	public static string Title => AppResources.Cast_Title;
 	public static string Narrator => AppResources.Cast_Narrator;
+	public static string ChangeForAll => AppResources.Cast_ChangeForAll;
 	public static string Main => AppResources.Cast_Main;
 	public static string Edited => AppResources.Cast_Edited;
 	public static string SharedVoice => AppResources.Cast_SharedVoice;
@@ -54,11 +54,6 @@ public static class CastText
 
 	public static string NoVoiceOfGender(Gender gender) =>
 		gender == Gender.Male ? AppResources.Cast_NoBoyVoice : AppResources.Cast_NoGirlVoice;
-
-	public static string VoiceChanged(IReadOnlyList<string> names) =>
-		names.Count == Singular
-			? AppResources.Format(AppResources.Cast_VoiceChanged_One, names[0])
-			: AppResources.Format(AppResources.Cast_VoiceChanged_Other, string.Join(NameSeparator, names));
 
 	public static string MergeInto(string name) => AppResources.Format(AppResources.Cast_MergeInto, name);
 

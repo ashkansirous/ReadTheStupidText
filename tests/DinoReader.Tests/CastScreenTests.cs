@@ -205,12 +205,10 @@ public class CastEditorTests
     }
 
     [Fact]
-    public void NarratorTakingAPinnedVoice_UnpinsThatCharacterAndNamesThem()
+    public void NarratorTakingAPinnedVoice_UnpinsThatCharacter()
     {
         var before = new CastMember[] { new("peter", "Peter", Gender.Male, "M1", true), new("mum", "Mum", Gender.Female, "F1", true) };
         var recast = new CastMember[] { new("peter", "Peter", Gender.Male, "M2", true), new("mum", "Mum", Gender.Female, "F1", true) };
-
-        Assert.Equal(["Peter"], CastEditor.NamesLosingVoice(before, recast, "M1"));
         var unpinned = CastEditor.UnpinOverridden(before, recast, "M1");
         Assert.False(unpinned[0].Edited);
         Assert.True(unpinned[1].Edited);

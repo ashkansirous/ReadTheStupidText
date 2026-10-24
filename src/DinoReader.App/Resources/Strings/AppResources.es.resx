@@ -128,6 +128,14 @@
   <!-- Slice 108 -->
   <data name="Cast_VoicesFor" xml:space="preserve"><value>Voces para {0}</value></data>
   <!-- /Slice 108 -->
+  <!-- Slice 109 -->
+  <data name="Narrator_Title" xml:space="preserve"><value>Narrador</value></data>
+  <data name="Narrator_Subtitle" xml:space="preserve"><value>La voz del narrador para todos los libros</value></data>
+  <data name="Narrator_MyLanguage" xml:space="preserve"><value>MI IDIOMA</value></data>
+  <data name="Narrator_Footnote" xml:space="preserve"><value>Si un personaje de un libro tiene la voz del narrador, Dino le da otra.</value></data>
+  <data name="Cast_ChangeForAll" xml:space="preserve"><value>Cambiar para todos los libros</value></data>
+  <data name="Narrator_Sample" xml:space="preserve"><value>Escuchar esta voz</value></data>
+  <!-- /Slice 109 -->
   <data name="Add_Scan" xml:space="preserve"><value>Escanear páginas</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Conserva las imágenes de las páginas</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Fotos</value></data>
@@ -232,8 +240,6 @@
   <data name="Cast_Hear" xml:space="preserve"><value>Escuchar a {0}</value></data>
   <data name="Cast_NoBoyVoice" xml:space="preserve"><value>Este paquete de voces no tiene voz de niño, así que este personaje conserva la voz que tenía.</value></data>
   <data name="Cast_NoGirlVoice" xml:space="preserve"><value>Este paquete de voces no tiene voz de niña, así que este personaje conserva la voz que tenía.</value></data>
-  <data name="Cast_VoiceChanged_One" xml:space="preserve"><value>Se cambió la voz de {0} porque el narrador ahora tiene la voz que se le había dado.</value></data>
-  <data name="Cast_VoiceChanged_Other" xml:space="preserve"><value>Se cambiaron las voces de {0} porque el narrador ahora tiene la voz que se les había dado.</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>Unir con {0}</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Este paquete de voces solo tiene {0} voces naturales, así que algunos personajes comparten voz. La voz del narrador nunca se da a un personaje.</value></data>
   <data name="Voice_NbWoman" xml:space="preserve"><value>Voz {0} (mujer)</value></data>

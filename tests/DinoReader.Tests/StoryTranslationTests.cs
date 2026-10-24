@@ -92,39 +92,6 @@ public class StoryTranslationTests
         Assert.Equal(new[] { "One. Two! Three?" }, StoryTranslation.SplitSpoken("One. Two! Three?"));
     }
 
-    private static readonly IReadOnlyList<VoiceOption> Supertonic =
-        [new("f1", Gender.Female), new("f2", Gender.Female), new("m1", Gender.Male), new("m2", Gender.Male)];
-
-    [Fact]
-    public void A_voice_the_other_pack_has_is_kept()
-    {
-        Assert.Equal("m2", VoiceRemap.Map("m2", Supertonic, Supertonic));
-    }
-
-    [Fact]
-    public void A_voice_the_other_pack_lacks_maps_to_one_of_the_same_gender_at_the_same_place()
-    {
-        VoiceOption[] other = [new("p1", Gender.Female), new("p2", Gender.Male), new("p3", Gender.Male)];
-
-        Assert.Equal("p2", VoiceRemap.Map("m1", Supertonic, other));
-        Assert.Equal("p3", VoiceRemap.Map("m2", Supertonic, other));
-        Assert.Equal("p1", VoiceRemap.Map("f2", Supertonic, other));
-    }
-
-    [Fact]
-    public void A_pack_with_unknown_genders_is_shared_by_position()
-    {
-        VoiceOption[] other = [new("p1", Gender.Unknown), new("p2", Gender.Unknown)];
-
-        Assert.NotEqual(VoiceRemap.Map("m1", Supertonic, other), VoiceRemap.Map("m2", Supertonic, other));
-    }
-
-    [Fact]
-    public void With_no_voices_the_id_is_left_alone()
-    {
-        Assert.Equal("m1", VoiceRemap.Map("m1", Supertonic, []));
-    }
-
     [Fact]
     public async Task Pieces_translate_in_parallel_but_come_back_in_story_order()
     {
@@ -174,16 +141,6 @@ public class StoryTranslationTests
         }, CancellationToken.None, maxParallel: 1));
 
         Assert.True(started < pieces.Count);
-    }
-
-    [Fact]
-    public void A_cast_is_remapped_as_a_set_so_voices_stay_distinct()
-    {
-        IReadOnlyList<VoiceOption> other = [new("p1", Gender.Unknown), new("p2", Gender.Unknown), new("p3", Gender.Unknown)];
-
-        var map = VoiceRemap.MapSet(["m1", "f1", "m2"], Supertonic, other);
-
-        Assert.Equal(3, map.Values.Distinct().Count());
     }
 }
 

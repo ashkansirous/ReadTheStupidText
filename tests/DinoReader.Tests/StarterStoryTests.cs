@@ -1,3 +1,4 @@
+using ReadTheStupidText.Domain.Reading;
 using DinoReader.Core;
 
 namespace DinoReader.Tests;
@@ -45,7 +46,7 @@ public sealed class StarterStoryTests : IDisposable
 
             Assert.True(story.Cast.Count >= 3, $"{title} has {story.Cast.Count} characters: {string.Join(", ", story.Cast.Select(c => c.Name))}");
             Assert.Equal(story.Cast.Count, story.Cast.Select(c => c.VoiceId).Distinct().Count());
-            Assert.DoesNotContain(story.Cast, c => c.VoiceId == story.NarratorVoiceId);
+            Assert.DoesNotContain(story.Cast, c => c.VoiceId == SupertonicVoiceTable.Default.Id);
         }
     }
 
@@ -109,7 +110,7 @@ public sealed class StarterStoryTests : IDisposable
         Story story = await ImportGoodEnoughAsync();
 
         CastMember hazelnut = story.Cast.Single(c => c.Name == "Hazelnut");
-        Assert.NotEqual(story.NarratorVoiceId, hazelnut.VoiceId);
+        Assert.NotEqual(SupertonicVoiceTable.Default.Id, hazelnut.VoiceId);
     }
 
     [Fact]

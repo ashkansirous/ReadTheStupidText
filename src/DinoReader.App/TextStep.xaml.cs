@@ -70,7 +70,7 @@ public partial class TextStep : ContentView
 	}
 
 	// What the cast analysis depends on; when it has not changed since the last analysis, the cast is shown as it is.
-	private string AnalysisKey() => string.Join('', Draft.Language, Draft.NarratorVoiceId, Story.JoinPages(Draft.Pages));
+	private string AnalysisKey() => string.Join('', Draft.Language, Story.JoinPages(Draft.Pages));
 
 	private bool AnalysisIsCurrent() => Draft.Cast.Count > 0 && _analysedKey == AnalysisKey();
 
@@ -202,16 +202,6 @@ public partial class TextStep : ContentView
 
 		Draft.Language = guess;
 		_session.LanguageDetected = true;
-		UseNarratorOfLanguage();
-	}
-
-	// Moves the narrator to a voice of the language's pack when it has no such voice.
-	private void UseNarratorOfLanguage()
-	{
-		if (_voicing!.VoicesFor(Draft.Language).All(v => v.Id != Draft.NarratorVoiceId))
-		{
-			Draft.NarratorVoiceId = _voicing.NarratorFor(Draft.Language);
-		}
 	}
 
 	private async Task ChooseLanguageAsync()
@@ -225,7 +215,6 @@ public partial class TextStep : ContentView
 		Draft.Language = picked;
 		_session.LanguageChosen = true;
 		_session.LanguageDetected = false;
-		UseNarratorOfLanguage();
 		ShowLanguage();
 		await AnalyseSafelyAsync();
 	}
@@ -259,7 +248,7 @@ public partial class TextStep : ContentView
 		}
 
 		string key = AnalysisKey();
-		IReadOnlyList<CastMember> cast = await _voicing!.CastAsync(Draft.Language, text, Draft.NarratorVoiceId, Draft.Cast, Draft.Merges, Story.BreakMapOf(Draft.Pages));
+		IReadOnlyList<CastMember> cast = await _voicing!.CastAsync(Draft.Language, text, Draft.Cast, Draft.Merges, Story.BreakMapOf(Draft.Pages));
 		token.ThrowIfCancellationRequested();
 		_analysedKey = key;
 		Draft.Cast = cast;
@@ -306,7 +295,6 @@ public partial class TextStep : ContentView
 			Draft.Cast = story.Cast;
 			Draft.LanguageCasts = story.LanguageCasts;
 			Draft.Merges = story.Merges;
-			Draft.NarratorVoiceId = story.NarratorVoiceId;
 			return Task.CompletedTask;
 		});
 		await _session.Host.Navigation.PushAsync(page);

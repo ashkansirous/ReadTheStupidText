@@ -28,7 +28,6 @@ public sealed class ReadingSession
 	private readonly StoryVoicing _voicing;
 	private Story? _story;
 	private Func<Story, Task>? _saveCast;
-	private string? _noCastLanguage; // a language that needed no cast (no voices or characters yet): not asked again this session
 	private IReadOnlyList<SentenceSpan> _sentences = [];
 	private int _readSequence;
 	private int _pendingReadId;
@@ -96,7 +95,6 @@ public sealed class ReadingSession
 		_story = story;
 		_sentences = sentences;
 		_saveCast = saveCast;
-		_noCastLanguage = null;
 	}
 
 	public void Attach()
@@ -184,7 +182,7 @@ public sealed class ReadingSession
 		try
 		{
 			story = await KeepNewCastAsync(story);
-			IReadOnlyList<VoicedSegment> segments = await _voicing.VoiceAsync(story, story.NarratorVoiceId, fromPosition, cancellation,
+			IReadOnlyList<VoicedSegment> segments = await _voicing.VoiceAsync(story, fromPosition, cancellation,
 				() => TranslationSkipped?.Invoke(this, EventArgs.Empty));
 			if (id != _pendingReadId)
 			{
@@ -211,7 +209,7 @@ public sealed class ReadingSession
 	private async Task<Story> KeepNewCastAsync(Story story)
 	{
 		string language = _voicing.ReadingLanguage(story);
-		if (_saveCast is null || story.HasCastIn(language) || _noCastLanguage == language)
+		if (_saveCast is null || story.HasCastIn(language))
 		{
 			return story;
 		}
@@ -219,8 +217,7 @@ public sealed class ReadingSession
 		StoryVoicing.NewCast? made = await _voicing.NewCastForReadingAsync(story);
 		if (made is null)
 		{
-			_noCastLanguage = language;
-			return story;
+			return story; // no voices or characters yet: asked again on the next read, once a pack has installed
 		}
 
 		Story withCast = story.WithCastIn(made.Language, made.Members);
@@ -230,7 +227,7 @@ public sealed class ReadingSession
 		}
 		catch (Exception)
 		{
-			return story;
+			// The cast stays in memory for this session, so every later read keeps the same voices; the next successful save stores it.
 		}
 
 		_story = withCast;
