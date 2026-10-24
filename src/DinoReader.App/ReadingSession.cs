@@ -16,7 +16,8 @@ public enum SessionState
 /// One story being read aloud: starts a read at a sentence, follows the reader's chunks to say which
 /// sentence is being spoken, and keeps the loading state straight. The page only draws what this
 /// reports. Events are raised on the main thread (Slice 60's <c>ChunkChanged</c> fires after
-/// <c>player.Start()</c>, possibly off it).
+/// <c>player.Start()</c>, possibly off it). A page with a parent's recording (Slice 111, Decision 115) plays its file instead, then the read goes on
+/// with the next page; a generated read stops where the next recorded page begins.
 /// </summary>
 public sealed class ReadingSession
 {
@@ -24,9 +25,23 @@ public sealed class ReadingSession
 	// stops showing the loading state (same grace as the Read The Stupid Text reader page).
 	private static readonly TimeSpan FirstAudioGrace = TimeSpan.FromSeconds(8);
 
+	private enum RecordedPlay
+	{
+		None,
+		Playing,
+		Paused,
+	}
+
 	private readonly ISpeechReader _reader;
 	private readonly StoryVoicing _voicing;
+	private readonly IRecordingPlayer _player;
+	private readonly IStoryLibrary _library;
 	private Story? _story;
+	private IReadOnlyList<int> _pageStarts = [];
+	private (int First, int Last)[] _pageSentences = [];
+	private RecordedPlay _recorded;
+	private readonly HashSet<int> _unplayable = []; // pages whose recording failed to play this session: read in the generated voice
+	private (int ReadId, int Sentence)? _continueRead; // a generated read cut short before a recorded page: where the read goes on once it ends
 	private Func<Story, Task>? _saveCast;
 	private IReadOnlyList<SentenceSpan> _sentences = [];
 	private int _readSequence;
@@ -46,10 +61,12 @@ public sealed class ReadingSession
 	/// <summary>Raised (off the main thread) when a read turns out not to be translated, so the voice should speak the story's own language.</summary>
 	public event EventHandler? TranslationSkipped;
 
-	public ReadingSession(ISpeechReader reader, StoryVoicing voicing)
+	public ReadingSession(ISpeechReader reader, StoryVoicing voicing, IRecordingPlayer player, IStoryLibrary library)
 	{
 		_reader = reader;
 		_voicing = voicing;
+		_player = player;
+		_library = library;
 	}
 
 	/// <summary>The sentence being spoken, or the last one spoken; -1 before the first.</summary>
@@ -75,6 +92,11 @@ public sealed class ReadingSession
 	{
 		get
 		{
+			if (_recorded != RecordedPlay.None)
+			{
+				return _recorded == RecordedPlay.Playing ? SessionState.Playing : SessionState.Paused;
+			}
+
 			if (_reader.State == PlaybackState.Playing)
 			{
 				return SessionState.Playing;
@@ -95,6 +117,62 @@ public sealed class ReadingSession
 		_story = story;
 		_sentences = sentences;
 		_saveCast = saveCast;
+		_pageStarts = StoryRecordings.PageStarts(story.Pages);
+		_pageSentences = SentencesOfPages(story.Pages.Count);
+		_unplayable.Clear();
+	}
+
+	/// <summary>Takes the story as it is now (the grown-up turned "Read with my voice" on or off); the next read follows it.</summary>
+	public void UpdateStory(Story story) => _story = story;
+
+	/// <summary>Turns "Read with my voice" on or off on the session's own story, leaving the rest of it (a cast made this session, say) as it is.</summary>
+	public void SetUseRecordings(bool useRecordings)
+	{
+		if (_story is { } story)
+		{
+			_story = story with { UseRecordings = useRecordings };
+		}
+	}
+
+	/// <summary>The first and last sentence of the page that holds <paramref name="sentence"/> when that page plays a parent's recording (so the screen marks
+	/// the whole page softly), else null.</summary>
+	public (int First, int Last)? RecordedRangeOf(int sentence)
+	{
+		if (_story is not { } story || sentence < 0 || sentence >= _sentences.Count)
+		{
+			return null;
+		}
+
+		int page = PageOf(sentence);
+		return PlaysRecording(story, page) && _pageSentences[page].First >= 0 ? _pageSentences[page] : null;
+	}
+
+	/// <summary>How long the recording of the page holding <paramref name="sentence"/> runs, in seconds, when that page plays one; else null.</summary>
+	public int? RecordedSecondsOf(int sentence)
+	{
+		if (RecordedRangeOf(sentence) is null || _story is not { } story)
+		{
+			return null;
+		}
+
+		return StoryRecordings.Of(story, PageOf(sentence))?.Seconds;
+	}
+
+	private bool PlaysRecording(Story story, int page) => StoryRecordings.Plays(story, page) && !_unplayable.Contains(page);
+
+	private int PageOf(int sentence) => StoryRecordings.PageOfPosition(_pageStarts, _sentences[sentence].Start);
+
+	// The sentences a page holds, by the sentence that starts on it; (-1, -1) for a page with none.
+	private (int First, int Last)[] SentencesOfPages(int pageCount)
+	{
+		var pages = Enumerable.Repeat((First: -1, Last: -1), Math.Max(1, pageCount)).ToArray();
+		for (int i = 0; i < _sentences.Count; i++)
+		{
+			int page = PageOf(i);
+			pages[page] = (pages[page].First < 0 ? i : pages[page].First, i);
+		}
+
+		return pages;
 	}
 
 	public void Attach()
@@ -125,6 +203,14 @@ public sealed class ReadingSession
 
 	public void Pause()
 	{
+		if (_recorded == RecordedPlay.Playing)
+		{
+			_player.Pause();
+			_recorded = RecordedPlay.Paused;
+			StateChanged?.Invoke(this, EventArgs.Empty);
+			return;
+		}
+
 		if (_reader.State == PlaybackState.Playing)
 		{
 			_reader.Pause();
@@ -133,6 +219,14 @@ public sealed class ReadingSession
 
 	public void Resume()
 	{
+		if (_recorded == RecordedPlay.Paused)
+		{
+			_player.Resume();
+			_recorded = RecordedPlay.Playing;
+			StateChanged?.Invoke(this, EventArgs.Empty);
+			return;
+		}
+
 		if (_reader.State == PlaybackState.Paused)
 		{
 			_reader.Resume();
@@ -142,6 +236,7 @@ public sealed class ReadingSession
 	public void Stop()
 	{
 		CancelRead();
+		StopRecording();
 		_reader.Stop();
 		_activeReadId = 0;
 		_playingReadId = 0;
@@ -157,6 +252,7 @@ public sealed class ReadingSession
 		}
 
 		_reader.Stop();
+		StopRecording();
 		CancellationToken cancellation = BeginReadCancellation();
 		Finished = false;
 		MoveTo(sentence);
@@ -164,8 +260,93 @@ public sealed class ReadingSession
 		_pendingReadId = id;
 		_playingReadId = 0;
 		Volatile.Write(ref _activeReadId, id);
+		if (TryPlayRecording(story, sentence, id))
+		{
+			return;
+		}
+
 		StateChanged?.Invoke(this, EventArgs.Empty);
 		await SpeakAsync(story, _sentences[sentence].Start, id, cancellation);
+	}
+
+	private void StopRecording()
+	{
+		_continueRead = null;
+		if (_recorded != RecordedPlay.None)
+		{
+			_player.Stop();
+			_recorded = RecordedPlay.None;
+		}
+	}
+
+	// A recorded page plays its file (Slice 111); a file that is gone reads the page in the generated voice. It is playing as soon as the
+	// player has the file, so there is no loading state.
+	private bool TryPlayRecording(Story story, int sentence, int id)
+	{
+		int page = PageOf(sentence);
+		string? path = PlaysRecording(story, page) ? _library.TryResolveFile(story.Id, StoryRecordings.FileNameOf(page)) : null;
+		if (path is null || !File.Exists(path))
+		{
+			return false;
+		}
+
+		try
+		{
+			_player.Play(path, () => MainThread.BeginInvokeOnMainThread(() => ApplyRecordingEnded(id, page)),
+				() => MainThread.BeginInvokeOnMainThread(() => ApplyRecordingFailed(id, page)));
+		}
+		catch (Exception)
+		{
+			_unplayable.Add(page);
+			return false;
+		}
+
+		_recorded = RecordedPlay.Playing;
+		_playingReadId = id;
+		ClearPending();
+		return true;
+	}
+
+	// The page's recording played to its end: the read goes on with the sentence after the page (a recorded or a generated page), or the story is finished.
+	private void ApplyRecordingEnded(int id, int page)
+	{
+		if (id != _activeReadId || _recorded == RecordedPlay.None)
+		{
+			return;
+		}
+
+		_recorded = RecordedPlay.None;
+		int next = _pageSentences[page].Last + 1;
+		if (next >= _sentences.Count)
+		{
+			_activeReadId = 0;
+			_playingReadId = 0;
+			Finished = true;
+			StateChanged?.Invoke(this, EventArgs.Empty);
+			return;
+		}
+
+		_ = StartAtAsync(next);
+	}
+
+	// The recording cannot be played (a corrupt or empty file): this page is read in the generated voice instead, and the read goes on from its start.
+	private void ApplyRecordingFailed(int id, int page)
+	{
+		if (id != _activeReadId || _recorded == RecordedPlay.None)
+		{
+			return;
+		}
+
+		_unplayable.Add(page);
+		if (_recorded == RecordedPlay.Paused)
+		{
+			_player.Stop();
+			_recorded = RecordedPlay.None;
+			StateChanged?.Invoke(this, EventArgs.Empty);
+			return; // paused by the user: the page reads in the generated voice when they resume playing, not on its own
+		}
+
+		_ = StartAtAsync(_pageSentences[page].First);
 	}
 
 	private async Task SpeakAsync(Story story, int fromPosition, int id, CancellationToken cancellation)
@@ -181,17 +362,7 @@ public sealed class ReadingSession
 	{
 		try
 		{
-			story = await KeepNewCastAsync(story);
-			IReadOnlyList<VoicedSegment> segments = await _voicing.VoiceAsync(story, fromPosition, cancellation,
-				() => TranslationSkipped?.Invoke(this, EventArgs.Empty));
-			if (id != _pendingReadId)
-			{
-				return false;
-			}
-
-			_readOrigin = segments.Count > 0 ? segments[0].SourceStart : fromPosition;
-			await _reader.SpeakSegmentsAsync(segments);
-			return true;
+			return await StartVoicedReadAsync(story, fromPosition, id, cancellation);
 		}
 		catch (OperationCanceledException)
 		{
@@ -203,6 +374,44 @@ public sealed class ReadingSession
 			FailRead(id);
 			return false;
 		}
+	}
+
+	private async Task<bool> StartVoicedReadAsync(Story story, int fromPosition, int id, CancellationToken cancellation)
+	{
+		story = await KeepNewCastAsync(story);
+		IReadOnlyList<VoicedSegment> segments = await _voicing.VoiceAsync(story, fromPosition, cancellation,
+			() => TranslationSkipped?.Invoke(this, EventArgs.Empty));
+		if (id != _pendingReadId)
+		{
+			return false;
+		}
+
+		segments = StopBeforeRecordedPage(story, segments, fromPosition, id);
+		if (segments.Count == 0 && _continueRead is { } cut && cut.ReadId == id)
+		{
+			_continueRead = null;
+			_ = StartAtAsync(cut.Sentence);
+			return false;
+		}
+
+		_readOrigin = segments.Count > 0 ? segments[0].SourceStart : fromPosition;
+		await _reader.SpeakSegmentsAsync(segments);
+		return true;
+	}
+
+	// A generated read ends where the next page with a parent's recording begins, and goes on there with the recording (Slice 111).
+	private IReadOnlyList<VoicedSegment> StopBeforeRecordedPage(Story story, IReadOnlyList<VoicedSegment> segments, int fromPosition, int id)
+	{
+		int fromPage = StoryRecordings.PageOfPosition(_pageStarts, fromPosition);
+		int next = StoryRecordings.RecordedPages(story).FirstOrDefault(p => p > fromPage && PlaysRecording(story, p) && _pageSentences[p].First >= 0, -1);
+		if (next < 0)
+		{
+			return segments;
+		}
+
+		int boundary = _pageStarts[next];
+		_continueRead = (id, _pageSentences[next].First);
+		return segments.Where(s => s.SourceEnd <= boundary).ToList(); // a segment running over the break is left to the recording, so its words are not heard twice
 	}
 
 	// The first read in a language with no cast stores the one it makes, so its voices stay put (Slice 108). A failed save only costs that.
@@ -325,13 +534,20 @@ public sealed class ReadingSession
 	// loading, so it is ignored and neither sets Finished nor clears the new read's id.
 	private void ApplyCompleted(int id)
 	{
-		if (id == 0 || id != _activeReadId || id != _playingReadId)
+		if (id == 0 || id != _activeReadId || id != _playingReadId || _recorded != RecordedPlay.None)
 		{
-			return;
+			return; // a recording plays now: this is the stopped generated read's late Completed
 		}
 
 		_activeReadId = 0;
 		_playingReadId = 0;
+		if (_continueRead is { } cut && cut.ReadId == id)
+		{
+			_continueRead = null;
+			_ = StartAtAsync(cut.Sentence);
+			return;
+		}
+
 		Finished = true;
 	}
 

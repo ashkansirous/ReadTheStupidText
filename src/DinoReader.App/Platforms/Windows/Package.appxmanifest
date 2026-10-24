@@ -75,5 +75,7 @@
     <!-- Network is used only to download the language voice pack; story text never leaves the device. -->
     <Capability Name="internetClient" />
     <rescap:Capability Name="runFullTrust" />
+    <!-- The microphone is used only on the Record screen, behind the grown-up gate, to save a parent's own reading of a page (Slice 111); recordings stay on the device. -->
+    <DeviceCapability Name="microphone" />
   </Capabilities>
 </Package>

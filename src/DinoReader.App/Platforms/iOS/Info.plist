@@ -60,9 +60,10 @@
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>The app does not save anything to your photo library.</string>
 
-	<!-- MAUI's MediaPicker declares the microphone for video capture. Nothing here records audio
-	     or video; the key exists so that path can never crash the app. -->
+	<!-- The microphone is asked for only on the Record screen, behind the grown-up gate, when a parent records their own reading of a
+	     page (Slice 111). The recording stays on the device (and in a backup the grown-up makes) and is never uploaded. MAUI's MediaPicker
+	     also declares this key for video capture, which the app does not use. -->
 	<key>NSMicrophoneUsageDescription</key>
-	<string>The app does not record audio. This is only asked if video capture is ever used, which this app does not do.</string>
+	<string>A parent can record their own voice reading a page of a story. The recording stays on this device and is never uploaded.</string>
 </dict>
 </plist>

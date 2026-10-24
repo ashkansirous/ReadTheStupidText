@@ -144,6 +144,28 @@
   <data name="Book_ShowOriginalHint" xml:space="preserve"><value>Toon de tekst in {0}. De stem leest nog steeds in {1}.</value></data>
   <data name="Book_Back" xml:space="preserve"><value>Terug naar het verhaal</value></data>
   <!-- /Slice 110 -->
+  <!-- Slice 111 -->
+  <data name="Rec_Title" xml:space="preserve"><value>Opnemen</value></data>
+  <data name="Rec_Script" xml:space="preserve"><value>Lees de woorden op deze pagina hardop voor en tik dan op Stop.</value></data>
+  <data name="Rec_Recording" xml:space="preserve"><value>Opnemen · {0}</value></data>
+  <data name="Rec_Stop" xml:space="preserve"><value>Stop</value></data>
+  <data name="Rec_Start" xml:space="preserve"><value>Opnemen</value></data>
+  <data name="Rec_Yours" xml:space="preserve"><value>Jouw opname</value></data>
+  <data name="Rec_Detail" xml:space="preserve"><value>{0} · {1}</value></data>
+  <data name="Rec_Redo" xml:space="preserve"><value>Opnieuw opnemen</value></data>
+  <data name="Rec_Delete" xml:space="preserve"><value>Opname verwijderen</value></data>
+  <data name="Rec_DeleteBody" xml:space="preserve"><value>Deze pagina gebruikt weer de stem van Dino.</value></data>
+  <data name="Rec_Next" xml:space="preserve"><value>Volgende pagina</value></data>
+  <data name="Rec_Previous" xml:space="preserve"><value>Vorige pagina</value></data>
+  <data name="Rec_Play" xml:space="preserve"><value>Je opname afspelen</value></data>
+  <data name="Rec_Subtitle" xml:space="preserve"><value>{0} · pagina {1} van {2}</value></data>
+  <data name="Rec_UseVoice" xml:space="preserve"><value>Lezen met mijn stem</value></data>
+  <data name="Rec_UseVoiceHint" xml:space="preserve"><value>{0} van {1} pagina's opgenomen. De andere pagina's gebruiken de stemmen van Dino.</value></data>
+  <data name="Rec_RecordPage" xml:space="preserve"><value>{0} met je eigen stem opnemen</value></data>
+  <data name="Rec_NoMicTitle" xml:space="preserve"><value>De microfoon staat uit</value></data>
+  <data name="Rec_NoMic" xml:space="preserve"><value>Sta de microfoon toe voor Dino Book Reader in de instellingen van je apparaat en probeer het opnieuw.</value></data>
+  <data name="Rec_Failed" xml:space="preserve"><value>De opname is mislukt. Probeer het opnieuw.</value></data>
+  <!-- /Slice 111 -->
   <data name="Add_Scan" xml:space="preserve"><value>Pagina’s scannen</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Bewaart de foto’s van de pagina’s</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Foto’s</value></data>

@@ -21,13 +21,24 @@
             <Border.StrokeShape>
                 <RoundRectangle CornerRadius="0,0,16,16" />
             </Border.StrokeShape>
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+            <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="6">
                 <Button Text="{x:Static res:AppResources.Common_Edit}" HeightRequest="44" CornerRadius="12" Padding="4,0" FontSize="13"
                         FontAttributes="Bold" BackgroundColor="{StaticResource BrandTint}" TextColor="{StaticResource Brand}"
                         SemanticProperties.Description="{Binding EditHint}" Clicked="OnEditClicked" />
                 <Button Grid.Column="1" Text="{x:Static res:AppResources.Gallery_CastButton}" HeightRequest="44" CornerRadius="12" Padding="4,0"
                         FontSize="13" FontAttributes="Bold" BackgroundColor="{StaticResource BrandTint}" TextColor="{StaticResource Brand}"
                         SemanticProperties.Description="{Binding CastHint}" Clicked="OnCastClicked" />
+                <!-- Record (Slice 111, mock frame 38): the red microphone, 44 square, opens the page-by-page Record screen. -->
+                <Border Grid.Column="2" WidthRequest="44" HeightRequest="44" BackgroundColor="White" StrokeThickness="0"
+                        SemanticProperties.Description="{Binding RecordHint}">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12" />
+                    </Border.StrokeShape>
+                    <local:IconView Kind="Mic" Color="{StaticResource Danger}" Size="20" StrokeWidth="2.2" />
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnRecordTapped" />
+                    </Border.GestureRecognizers>
+                </Border>
             </Grid>
         </Border>
         <!-- Developer-only Export story (Slice 91): the purple mirror of the trash badge, top-left. -->

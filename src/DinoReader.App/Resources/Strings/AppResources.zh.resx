@@ -142,6 +142,28 @@
   <data name="Book_ShowOriginalHint" xml:space="preserve"><value>显示{0}文字。声音仍然用{1}朗读。</value></data>
   <data name="Book_Back" xml:space="preserve"><value>回到故事</value></data>
   <!-- /Slice 110 -->
+  <!-- Slice 111 -->
+  <data name="Rec_Title" xml:space="preserve"><value>录音</value></data>
+  <data name="Rec_Script" xml:space="preserve"><value>大声读出这一页的文字，然后点按“停止”。</value></data>
+  <data name="Rec_Recording" xml:space="preserve"><value>正在录音 · {0}</value></data>
+  <data name="Rec_Stop" xml:space="preserve"><value>停止</value></data>
+  <data name="Rec_Start" xml:space="preserve"><value>录音</value></data>
+  <data name="Rec_Yours" xml:space="preserve"><value>你的录音</value></data>
+  <data name="Rec_Detail" xml:space="preserve"><value>{0} · {1}</value></data>
+  <data name="Rec_Redo" xml:space="preserve"><value>重新录音</value></data>
+  <data name="Rec_Delete" xml:space="preserve"><value>删除录音</value></data>
+  <data name="Rec_DeleteBody" xml:space="preserve"><value>这一页将再次使用恐龙的声音。</value></data>
+  <data name="Rec_Next" xml:space="preserve"><value>下一页</value></data>
+  <data name="Rec_Previous" xml:space="preserve"><value>上一页</value></data>
+  <data name="Rec_Play" xml:space="preserve"><value>播放你的录音</value></data>
+  <data name="Rec_Subtitle" xml:space="preserve"><value>{0} · 第 {1} 页，共 {2} 页</value></data>
+  <data name="Rec_UseVoice" xml:space="preserve"><value>用我的声音朗读</value></data>
+  <data name="Rec_UseVoiceHint" xml:space="preserve"><value>已录制 {0} / {1} 页。其他页使用恐龙的声音。</value></data>
+  <data name="Rec_RecordPage" xml:space="preserve"><value>用你的声音录制{0}</value></data>
+  <data name="Rec_NoMicTitle" xml:space="preserve"><value>麦克风已关闭</value></data>
+  <data name="Rec_NoMic" xml:space="preserve"><value>请在设备设置中允许 Dino Book Reader 使用麦克风，然后重试。</value></data>
+  <data name="Rec_Failed" xml:space="preserve"><value>录音失败了。请再试一次。</value></data>
+  <!-- /Slice 111 -->
   <data name="Add_Scan" xml:space="preserve"><value>扫描页面</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>保留页面图片</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>照片</value></data>

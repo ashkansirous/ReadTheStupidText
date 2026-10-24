@@ -23,6 +23,11 @@ public static class ReadingText
 	public static string ShowOriginal => AppResources.Book_ShowOriginal;
 	public static string BackToStory => AppResources.Book_Back;
 	public static string CastButton => AppResources.Gallery_CastButton;
+	// Slice 111: parents read in their own voice.
+	public static string RecordButton => AppResources.Rec_Title;
+	public static string UseMyVoice => AppResources.Rec_UseVoice;
+
+	public static string UseMyVoiceHint(int recorded, int pages) => AppResources.Format(AppResources.Rec_UseVoiceHint, recorded, pages);
 
 	public static string ShowOriginalHint(string original, string spoken) => AppResources.Format(AppResources.Book_ShowOriginalHint, original, spoken);
 

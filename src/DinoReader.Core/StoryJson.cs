@@ -63,6 +63,8 @@ public static class StoryJson
         Merges = s.Merges.Count == 0 ? null : s.Merges.ToDictionary(m => m.Key, m => m.Value),
         Translate = s.TranslateToMyLanguage,
         ShowOriginal = s.ShowOriginalText ? true : null,
+        Recordings = ToRecordingFiles(s.Recordings, s.Pages.Count),
+        UseRecordings = s.UseRecordings && s.Recordings is { Count: > 0 } ? true : null,
         SourceId = s.SourceId,
         Translations = ToTranslationFiles(s.Translations),
         LanguageCasts = ToLanguageCastFiles(s.LanguageCasts),
@@ -82,7 +84,32 @@ public static class StoryJson
             f.Cast.Select(c => new CastMember(c.CharacterId, c.Name, c.Gender, c.VoiceId, c.Edited)).ToList(),
             f.CoverStyle, f.CoverColourIndex, f.NarratorVoiceId ?? string.Empty, ParseMode(f.PreferredMode), CleanMerges(f.Merges), f.Translate,
             f.CoverFile, f.CoverPageIndex, StoryIds.IsValid(f.SourceId) ? f.SourceId : null, CleanTranslations(f.Translations),
-            CleanLanguageCasts(f.LanguageCasts, f.Language), f.ShowOriginal == true);
+            CleanLanguageCasts(f.LanguageCasts, f.Language), f.ShowOriginal == true,
+            CleanRecordings(f.Recordings, f.Pages.Count, f.Language), f.UseRecordings == true);
+    }
+
+    private static List<RecordingFile>? ToRecordingFiles(IReadOnlyDictionary<int, PageRecording>? recordings, int pageCount)
+    {
+        List<RecordingFile> files = (recordings ?? new Dictionary<int, PageRecording>())
+            .Where(r => r.Key >= 0 && r.Key < pageCount).OrderBy(r => r.Key)
+            .Select(r => new RecordingFile { Page = r.Key, Language = r.Value.Language, Seconds = r.Value.Seconds }).ToList();
+        return files.Count == 0 ? null : files;
+    }
+
+    // A recording for a page the story does not have, or a second one for a page, is dropped (a hand edit); a missing language reads as the story's own,
+    // a negative length as zero. No recording left reads as none, and "Read with my voice" with none is off.
+    private static IReadOnlyDictionary<int, PageRecording>? CleanRecordings(List<RecordingFile>? recordings, int pageCount, string storyLanguage)
+    {
+        var kept = new Dictionary<int, PageRecording>();
+        foreach (RecordingFile? r in recordings ?? [])
+        {
+            if (r is not null && r.Page >= 0 && r.Page < pageCount && !kept.ContainsKey(r.Page))
+            {
+                kept[r.Page] = new PageRecording(string.IsNullOrWhiteSpace(r.Language) ? storyLanguage : r.Language, Math.Max(0, r.Seconds));
+            }
+        }
+
+        return kept.Count > 0 ? kept : null;
     }
 
     private static List<CastFile> ToCastFiles(IReadOnlyList<CastMember> cast) =>
@@ -279,11 +306,24 @@ public static class StoryJson
 
         /// <summary>The grown-up's per-story "Show original text" switch (Slice 110); absent when off.</summary>
         public bool? ShowOriginal { get; set; }
+
+        /// <summary>The parent's page recordings (Slice 111): the file of each is <see cref="StoryRecordings.FileNameOf"/>; absent when there are none.</summary>
+        public List<RecordingFile>? Recordings { get; set; }
+
+        /// <summary>The per-book "Read with my voice" switch (Slice 111); absent when off.</summary>
+        public bool? UseRecordings { get; set; }
         public string? SourceId { get; set; }
         public Dictionary<string, Dictionary<string, string>>? Translations { get; set; }
 
         /// <summary>The casts of the other languages the story was read in (Slice 108); <see cref="Cast"/> is the story language's own.</summary>
         public Dictionary<string, List<CastFile>>? LanguageCasts { get; set; }
+    }
+
+    private sealed class RecordingFile
+    {
+        public int Page { get; set; }
+        public string? Language { get; set; }
+        public int Seconds { get; set; }
     }
 
     private sealed class PageFile

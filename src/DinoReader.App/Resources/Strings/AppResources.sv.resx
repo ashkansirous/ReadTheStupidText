@@ -144,6 +144,28 @@
   <data name="Book_ShowOriginalHint" xml:space="preserve"><value>Visa orden på {0}. Rösten läser fortfarande på {1}.</value></data>
   <data name="Book_Back" xml:space="preserve"><value>Tillbaka till sagan</value></data>
   <!-- /Slice 110 -->
+  <!-- Slice 111 -->
+  <data name="Rec_Title" xml:space="preserve"><value>Spela in</value></data>
+  <data name="Rec_Script" xml:space="preserve"><value>Läs orden på sidan högt och tryck sedan på Stopp.</value></data>
+  <data name="Rec_Recording" xml:space="preserve"><value>Spelar in · {0}</value></data>
+  <data name="Rec_Stop" xml:space="preserve"><value>Stopp</value></data>
+  <data name="Rec_Start" xml:space="preserve"><value>Spela in</value></data>
+  <data name="Rec_Yours" xml:space="preserve"><value>Din inspelning</value></data>
+  <data name="Rec_Detail" xml:space="preserve"><value>{0} · {1}</value></data>
+  <data name="Rec_Redo" xml:space="preserve"><value>Spela in igen</value></data>
+  <data name="Rec_Delete" xml:space="preserve"><value>Ta bort inspelning</value></data>
+  <data name="Rec_DeleteBody" xml:space="preserve"><value>Sidan använder Dinos röst igen.</value></data>
+  <data name="Rec_Next" xml:space="preserve"><value>Nästa sida</value></data>
+  <data name="Rec_Previous" xml:space="preserve"><value>Föregående sida</value></data>
+  <data name="Rec_Play" xml:space="preserve"><value>Spela upp din inspelning</value></data>
+  <data name="Rec_Subtitle" xml:space="preserve"><value>{0} · sida {1} av {2}</value></data>
+  <data name="Rec_UseVoice" xml:space="preserve"><value>Läs med min röst</value></data>
+  <data name="Rec_UseVoiceHint" xml:space="preserve"><value>{0} av {1} sidor inspelade. De andra sidorna använder Dinos röster.</value></data>
+  <data name="Rec_RecordPage" xml:space="preserve"><value>Spela in {0} med din röst</value></data>
+  <data name="Rec_NoMicTitle" xml:space="preserve"><value>Mikrofonen är av</value></data>
+  <data name="Rec_NoMic" xml:space="preserve"><value>Tillåt mikrofonen för Dino Book Reader i enhetens inställningar och försök igen.</value></data>
+  <data name="Rec_Failed" xml:space="preserve"><value>Inspelningen fungerade inte. Försök igen.</value></data>
+  <!-- /Slice 111 -->
   <data name="Add_Scan" xml:space="preserve"><value>Skanna sidor</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Behåller sidbilderna</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Foton</value></data>

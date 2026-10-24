@@ -69,7 +69,7 @@ internal static class StoreBuilder
         await library.AddAsync(story);
         await using (FileStream output = File.Create(Path.Combine(folder, PackageFileName(spec.Version))))
         {
-            await StoryPackageWriter.WriteAsync(story, library, output);
+            await StoryPackageWriter.WriteAsync(story, library, output, includeRecordings: false); // a store upload never carries a parent recording (Slice 111)
         }
 
         await File.WriteAllBytesAsync(Path.Combine(folder, CoverFile), StoreCover.Render(spec.Title, CoverPalette.ColourAt(spec.ColourIndex)));

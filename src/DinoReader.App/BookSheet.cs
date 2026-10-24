@@ -4,11 +4,15 @@ namespace DinoReader;
 
 /// <summary>
 /// The "This book" sheet of the reading screen (Slice 110, mock frame 43): a white bottom sheet over the dimmed page, opened from the add-book button
-/// behind the grown-up gate. It holds the per-book "Show original text" switch (Decision 112), a way to the cast and "Back to the story".
+/// behind the grown-up gate. It holds the per-book "Show original text" switch (Decision 112), "Read with my voice" once a page is recorded (Slice 111, Decision 115),
+/// the Record and Cast pills and "Back to the story".
 /// It lives inside the reading page rather than on the navigation stack, so leaving the app cannot strand it.
 /// </summary>
 internal sealed class BookSheet : Grid
 {
+	/// <summary>The "Read with my voice" row: how many pages are recorded, of how many, and the switch.</summary>
+	public sealed record VoiceOffer(int Recorded, int Pages, bool On);
+
 	private const double SheetCorner = 28;
 	private const double RowHeight = 64;
 	private const double RowCorner = 16;
@@ -21,6 +25,9 @@ internal sealed class BookSheet : Grid
 	private readonly Label _hint = new() { FontSize = HintSize, LineHeight = 1.3, TextColor = DinoTokens.Get(DinoTokens.Body) };
 	private readonly ToggleSwitch _original = new();
 	private readonly Border _row = new();
+	private readonly Label _voiceHint = new() { FontSize = HintSize, LineHeight = 1.3, TextColor = DinoTokens.Get(DinoTokens.Body) };
+	private readonly ToggleSwitch _voice = new();
+	private readonly Border _voiceRow = new();
 	private bool _loading;
 
 	public BookSheet()
@@ -40,25 +47,36 @@ internal sealed class BookSheet : Grid
 		CastViews.AddTap(sheet, () => Task.CompletedTask);
 		Children.Add(sheet);
 		_original.Toggled += (_, _) => OnToggled();
+		_voice.Toggled += (_, _) => OnVoiceToggled();
 	}
 
 	/// <summary>Raised with the new state of "Show original text".</summary>
 	public event Func<bool, Task>? OriginalChanged;
 
+	/// <summary>Raised with the new state of "Read with my voice".</summary>
+	public event Func<bool, Task>? VoiceChanged;
+
 	/// <summary>Raised when the grown-up asks for the cast screen; the sheet closes first.</summary>
 	public event Func<Task>? CastRequested;
+
+	/// <summary>Raised when the grown-up asks for the Record screen; the sheet closes first.</summary>
+	public event Func<Task>? RecordRequested;
 
 	/// <summary>Raised when the grown-up closes the sheet to go on with the story (Back, a tap on the dimmed page or the system back button), not when it closes for the cast screen.</summary>
 	public event Action? Dismissed;
 
-	public void Show(string bookTitle, bool offerOriginal, bool showOriginal, string hint)
+	/// <param name="voice">The "Read with my voice" row; null hides it (no page is recorded yet).</param>
+	public void Show(string bookTitle, bool offerOriginal, bool showOriginal, string hint, VoiceOffer? voice)
 	{
 		_subtitle.Text = bookTitle;
 		_hint.Text = hint;
 		_row.IsVisible = offerOriginal;
+		_voiceRow.IsVisible = voice is not null;
 		_loading = true;
 		_original.IsOn = showOriginal;
+		_voice.IsOn = voice?.On ?? false;
 		_loading = false;
+		_voiceHint.Text = voice is null ? string.Empty : ReadingText.UseMyVoiceHint(voice.Recorded, voice.Pages);
 		IsVisible = true;
 	}
 
@@ -84,13 +102,92 @@ internal sealed class BookSheet : Grid
 		}
 	}
 
+	private void OnVoiceToggled()
+	{
+		if (!_loading && VoiceChanged is { } changed)
+		{
+			_ = changed(_voice.IsOn);
+		}
+	}
+
 	private VerticalStackLayout Content()
 	{
 		var title = new Label { Text = ReadingText.BookTitle, FontSize = 20, FontAttributes = FontAttributes.Bold };
 		SemanticProperties.SetHeadingLevel(title, SemanticHeadingLevel.Level1);
 		var header = new VerticalStackLayout { Spacing = 2, Children = { title, _subtitle } };
-		return new VerticalStackLayout { Spacing = 12, Children = { header, OriginalRow(), CastPill(), BackButton() } };
+		return new VerticalStackLayout { Spacing = 12, Children = { header, OriginalRow(), VoiceRow(), Pills(), BackButton() } };
 	}
+
+	// "Read with my voice" (frame 43): the same card as "Show original text", with the count of recorded pages under it.
+	private Border VoiceRow()
+	{
+		var texts = new VerticalStackLayout
+		{
+			Spacing = 2,
+			VerticalOptions = LayoutOptions.Center,
+			Children = { new Label { Text = ReadingText.UseMyVoice, FontSize = 15, FontAttributes = FontAttributes.Bold }, _voiceHint },
+		};
+		var grid = new Grid { ColumnSpacing = 12, ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)] };
+		grid.Add(texts, 0);
+		_voice.VerticalOptions = LayoutOptions.Center;
+		AutomationProperties.SetIsInAccessibleTree(_voice, false);
+		grid.Add(_voice, 1);
+		_voiceRow.BackgroundColor = DinoTokens.Get(DinoTokens.Sand);
+		_voiceRow.StrokeThickness = 0;
+		_voiceRow.MinimumHeightRequest = RowHeight;
+		_voiceRow.Padding = new Thickness(16, 10);
+		_voiceRow.StrokeShape = new RoundRectangle { CornerRadius = RowCorner };
+		_voiceRow.Content = grid;
+		_voiceRow.IsVisible = false;
+		SemanticProperties.SetDescription(_voiceRow, ReadingText.UseMyVoice);
+		CastViews.AddTap(_voiceRow, () => { _voice.IsOn = !_voice.IsOn; return Task.CompletedTask; });
+		return _voiceRow;
+	}
+
+	// The Record and Cast pills side by side (frame 43); both leave the reading page for their own screen.
+	private Grid Pills()
+	{
+		var grid = new Grid { ColumnSpacing = 8, ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Star)] };
+		grid.Add(RecordPill(), 0);
+		grid.Add(CastPill(), 1);
+		return grid;
+	}
+
+	private Border RecordPill()
+	{
+		var content = new HorizontalStackLayout
+		{
+			Spacing = 6,
+			HorizontalOptions = LayoutOptions.Center,
+			VerticalOptions = LayoutOptions.Center,
+			Children =
+			{
+				new IconView { Kind = IconKind.Mic, Color = DinoTokens.Get(DinoTokens.Danger), Size = 18, StrokeWidth = 2.2, VerticalOptions = LayoutOptions.Center },
+				new Label { Text = ReadingText.RecordButton, FontSize = 15, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Brand), VerticalOptions = LayoutOptions.Center },
+			},
+		};
+		Border pill = OutlinedPill(content);
+		SemanticProperties.SetDescription(pill, ReadingText.RecordButton);
+		CastViews.AddTap(pill, async () =>
+		{
+			Hide();
+			if (RecordRequested is { } requested)
+			{
+				await requested();
+			}
+		});
+		return pill;
+	}
+
+	private static Border OutlinedPill(View content) => new()
+	{
+		HeightRequest = PillHeight,
+		StrokeThickness = PillStroke,
+		Stroke = DinoTokens.Get(DinoTokens.MergeBorder),
+		BackgroundColor = Colors.White,
+		StrokeShape = new RoundRectangle { CornerRadius = PillHeight / 2 },
+		Content = content,
+	};
 
 	private Border OriginalRow()
 	{
@@ -118,19 +215,11 @@ internal sealed class BookSheet : Grid
 
 	private Border CastPill()
 	{
-		var pill = new Border
+		Border pill = OutlinedPill(new Label
 		{
-			HeightRequest = PillHeight,
-			StrokeThickness = PillStroke,
-			Stroke = DinoTokens.Get(DinoTokens.MergeBorder),
-			BackgroundColor = Colors.White,
-			StrokeShape = new RoundRectangle { CornerRadius = PillHeight / 2 },
-			Content = new Label
-			{
-				Text = ReadingText.CastButton, FontSize = 15, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Brand),
-				HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center,
-			},
-		};
+			Text = ReadingText.CastButton, FontSize = 15, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Brand),
+			HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center,
+		});
 		SemanticProperties.SetDescription(pill, ReadingText.CastButton);
 		CastViews.AddTap(pill, async () =>
 		{

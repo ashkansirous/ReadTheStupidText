@@ -61,6 +61,8 @@ public partial class ReadingPage : ContentPage
 		_session.TranslationSkipped += (_, _) => _spoken.Use(_story?.Language ?? UiLanguage.English);
 		BookInfo.OriginalChanged += SaveShowOriginalAsync;
 		BookInfo.CastRequested += OpenCastAsync;
+		BookInfo.RecordRequested += OpenRecordAsync;
+		BookInfo.VoiceChanged += SaveUseVoiceAsync;
 		BookInfo.Dismissed += OnBookSheetDismissed;
 		ShowPackStatus();
 	}
@@ -138,8 +140,16 @@ public partial class ReadingPage : ContentPage
 		return _displayCancellation.Token;
 	}
 
+	private IDispatcherTimer? _recordedPager;
+	private ((int First, int Last) Range, int First, int Count) _recordedSpan;
+	private int _recordedTurned;
+	private TimeSpan _recordedPlayed;
+	private TimeSpan _recordedPerPage;
+	private static readonly TimeSpan RecordedPagerTick = TimeSpan.FromMilliseconds(250);
+
 	private void CancelDisplay()
 	{
+		_recordedPager?.Stop();
 		_displayCancellation?.Cancel();
 		_displayCancellation?.Dispose();
 		_displayCancellation = null;
@@ -211,11 +221,23 @@ public partial class ReadingPage : ContentPage
 		_surfaceShown = true;
 		if (_session.CurrentSentence >= 0)
 		{
-			Surface.Mark(_session.CurrentSentence, DisplayedPosition);
+			MarkSentence(_session.CurrentSentence);
 		}
 
 		UpdateHeaderLayout(Width, Height);
 		RenderChrome();
+	}
+
+	// A page that plays a parent's recording has no sentence timings, so the whole page gets one soft highlight (Slice 111, mock frame 46).
+	private void MarkSentence(int sentence)
+	{
+		if (_session.RecordedRangeOf(sentence) is { } range)
+		{
+			Surface.MarkPage(range.First, range.Last, DisplayedPosition);
+			return;
+		}
+
+		Surface.Mark(sentence, DisplayedPosition);
 	}
 
 	// A translated page has its own text offsets, so only the sentence (never the story index inside it) is followed.
@@ -354,7 +376,8 @@ public partial class ReadingPage : ContentPage
 
 	private void OnSentenceChanged(object? sender, int sentence)
 	{
-		Surface.Mark(sentence, DisplayedPosition);
+		MarkSentence(sentence);
+		FollowRecordedPages(sentence);
 		int page = Surface.PageOfSentence(sentence, DisplayedPosition);
 		if (page >= 0)
 		{
@@ -364,6 +387,62 @@ public partial class ReadingPage : ContentPage
 		}
 
 		RenderChrome();
+	}
+
+	// A recorded page has no sentence timings, so a page that wraps onto several display pages turns them evenly across the recording's length.
+	private void FollowRecordedPages(int sentence)
+	{
+		_recordedPager?.Stop();
+		if (_session.RecordedRangeOf(sentence) is not { } range || _session.RecordedSecondsOf(sentence) is not { } seconds)
+		{
+			return;
+		}
+
+		int first = Surface.PageOfSentence(range.First);
+		int count = Surface.PageOfSentence(range.Last) - first + 1;
+		if (first < 0 || count < 2)
+		{
+			return;
+		}
+
+		_recordedSpan = (range, first, count);
+		_recordedTurned = 0;
+		_recordedPlayed = TimeSpan.Zero;
+		_recordedPerPage = TimeSpan.FromSeconds(Math.Max(1, seconds) / (double)count);
+		_recordedPager ??= CreateRecordedPager();
+		_recordedPager.Interval = RecordedPagerTick;
+		_recordedPager.Start();
+	}
+
+	private IDispatcherTimer CreateRecordedPager()
+	{
+		IDispatcherTimer timer = Dispatcher.CreateTimer();
+		timer.Tick += (_, _) => TurnRecordedPage();
+		return timer;
+	}
+
+	private void TurnRecordedPage()
+	{
+		bool stillThere = _session.RecordedRangeOf(_session.CurrentSentence) is { } now && now == _recordedSpan.Range;
+		if (!stillThere || _recordedTurned >= _recordedSpan.Count - 1)
+		{
+			_recordedPager?.Stop();
+			return;
+		}
+
+		if (_session.State != SessionState.Playing)
+		{
+			return; // paused or loading: the recording's clock stands still, so a resume carries on in step
+		}
+
+		_recordedPlayed += RecordedPagerTick;
+		if (_recordedPlayed >= _recordedPerPage * (_recordedTurned + 1))
+		{
+			_recordedTurned++;
+			_follower.Read(_recordedSpan.First + _recordedTurned);
+			ShowFollowedPage();
+			RenderChrome();
+		}
 	}
 
 	private void ShowFollowedPage()
@@ -531,7 +610,7 @@ public partial class ReadingPage : ContentPage
 	{
 		SessionState state = _session.State;
 		bool playing = state is SessionState.Playing or SessionState.Loading;
-		SkipPlan plan = SkipPlanner.Plan(_session.CurrentSentence, delta, _sentences.Count, playing);
+		SkipPlan plan = SkipPlanner.Plan(SkipFrom(delta), delta, _sentences.Count, playing);
 		if (plan.Target < 0)
 		{
 			return;
@@ -550,6 +629,13 @@ public partial class ReadingPage : ContentPage
 		}
 
 		_session.MoveTo(plan.Target);
+	}
+
+	// A recorded page is one unit: skipping forward leaves from its last sentence, skipping back from its first (Slice 111).
+	private int SkipFrom(int delta)
+	{
+		int current = _session.CurrentSentence;
+		return _session.RecordedRangeOf(current) is { } range ? (delta > 0 ? range.Last : range.First) : current;
 	}
 
 	// The "This book" sheet is part of this page, so the system back button closes it first instead of leaving the story.
@@ -639,11 +725,12 @@ public partial class ReadingPage : ContentPage
 		}
 	}
 
-	// A book that is being translated opens the "This book" sheet (Slice 110, mock frame 43); any other book goes straight to grown-up mode as before.
-	// The story stays paused under the sheet and goes on when the sheet is dismissed.
+	// A book that is being translated, or has a recorded page, opens the "This book" sheet (Slice 110 and 111, mock frame 43); any other book goes straight to
+	// grown-up mode as before. The story stays paused under the sheet and goes on when the sheet is dismissed.
 	private Task OpenBookSheetOrManageAsync(SessionState before, int sentence)
 	{
-		if (_story is not { } story || !_services.GetRequiredService<StoryTranslator>().Applies(story))
+		bool translated = _story is { } shown && _services.GetRequiredService<StoryTranslator>().Applies(shown);
+		if (_story is not { } story || !(translated || StoryRecordings.Count(story) > 0))
 		{
 			return GoToManageAsync();
 		}
@@ -657,9 +744,13 @@ public partial class ReadingPage : ContentPage
 		string original = LanguageNames.NativeName(story.Language);
 		string spoken = LanguageNames.NativeName(StoryTranslator.MyLanguage);
 		_sheetResume = (before, sentence);
-		BookInfo.Show(story.Title, offerOriginal: true, story.ShowOriginalText, ReadingText.ShowOriginalHint(original, spoken));
+		BookInfo.Show(story.Title, translated, story.ShowOriginalText, ReadingText.ShowOriginalHint(original, spoken), VoiceOfferOf(story));
 		return Task.CompletedTask;
 	}
+
+	// "Read with my voice" shows only once a page is recorded.
+	private static BookSheet.VoiceOffer? VoiceOfferOf(Story story) =>
+		StoryRecordings.Count(story) is var recorded && recorded > 0 ? new BookSheet.VoiceOffer(recorded, story.Pages.Count, story.UseRecordings) : null;
 
 	private async void OnBookSheetDismissed()
 	{
@@ -703,6 +794,55 @@ public partial class ReadingPage : ContentPage
 		}
 
 		await ShowStoryAsync();
+	}
+
+	// "Read with my voice" is remembered per story in story.json; the next read follows it, and the screen shows each page in the right language at once.
+	private async Task SaveUseVoiceAsync(bool useVoice)
+	{
+		if (_story is { } shown)
+		{
+			_story = shown with { UseRecordings = useVoice };
+			_session.SetUseRecordings(useVoice);
+		}
+
+		await _saveLock.WaitAsync();
+		try
+		{
+			if (_story is { } current)
+			{
+				Story latest = await _library.GetAsync(current.Id) ?? current;
+				await _library.UpdateAsync(latest with { UseRecordings = current.UseRecordings });
+			}
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader could not save the recording switch: {ex}");
+		}
+		finally
+		{
+			_saveLock.Release();
+		}
+
+		await ShowStoryAsync();
+	}
+
+	// Like the cast screen: this page leaves the stack (and stops reading) for the Record screen, in grown-up mode.
+	private async Task OpenRecordAsync()
+	{
+		if (_story is not { } story)
+		{
+			return;
+		}
+
+		INavigation? root = Window?.Page?.Navigation;
+		if (root is null)
+		{
+			return;
+		}
+
+		await root.PopToRootAsync(animated: false);
+		_services.GetRequiredService<GrownUpMode>().Enter();
+		await _services.GetRequiredService<StoryActions>().RecordAsync(root, story);
 	}
 
 	private async Task OpenCastAsync()

@@ -42,6 +42,8 @@ public static class MauiProgram
 		builder.Services.AddSingleton<GrownUpGate>();
 		builder.Services.AddSingleton<ExternalActivityGuard>();
 		builder.Services.AddSingleton<StoryActions>();
+		builder.Services.AddTransient<IMicRecorder, MicRecorder>();
+		builder.Services.AddTransient<IRecordingPlayer, RecordingPlayer>();
 		builder.Services.AddSingleton<StarterStories>();
 		builder.Services.AddSingleton<StoreClient>();
 		AddDocumentExtractors(builder.Services);
@@ -82,6 +84,7 @@ public static class MauiProgram
 		services.AddSingleton<GrownUpMode>();
 		services.AddTransient<StoryWizardPage>();
 		services.AddTransient<CastPage>();
+		services.AddTransient<RecordPage>();
 		services.AddTransient<ReadingPage>();
 		services.AddTransient<ReadingSession>();
 	}

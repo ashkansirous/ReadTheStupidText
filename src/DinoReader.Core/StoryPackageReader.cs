@@ -32,7 +32,7 @@ public static class StoryPackageReader
             Story packaged = await ReadStoryAsync(entries);
             string id = keepId ? packaged.Id : StoryIds.New();
             Story story = packaged with { Id = id, SourceId = SourceOf(manifest, packaged, keepId), Created = created ?? DateTimeOffset.UtcNow };
-            story = WithoutMissingPictures(story, entries);
+            story = WithoutMissingPictures(keepId ? story : WithoutRecordings(story), entries);
             await library.ImportAsync(story, PicturesOf(story, entries, new ByteBudget(MaxTotalBytes)));
             return story;
         }
@@ -154,17 +154,32 @@ public static class StoryPackageReader
     private static Story WithoutMissingPictures(Story story, Dictionary<string, ZipArchiveEntry> entries)
     {
         string? Keep(string? name) => name is not null && IsPlainName(name) && entries.ContainsKey(name) ? name : null;
-        return story with
+        return WithoutMissingRecordings(story with
         {
             Pages = story.Pages.Select(p => p with { ImageFile = Keep(p.ImageFile) }).ToList(),
             CoverFile = Keep(story.CoverFile),
-        };
+        }, entries);
     }
 
-    // Only the pictures the story names are imported. The caps count the bytes actually read, whatever an entry's header declared.
+    // Only a backup restore brings a parent's recordings back (Slice 111): a shared or store package never carries any, so one that names recordings is not trusted with them.
+    private static Story WithoutRecordings(Story story) => story with { Recordings = null, UseRecordings = false };
+
+    // A recording the package does not carry (the writer skips a missing file) is dropped, so "Read with my voice" never names a page with nothing to play (Slice 111).
+    private static Story WithoutMissingRecordings(Story story, Dictionary<string, ZipArchiveEntry> entries)
+    {
+        Story kept = story;
+        foreach (int page in StoryRecordings.RecordedPages(story).Where(p => !entries.ContainsKey(StoryRecordings.FileNameOf(p))))
+        {
+            kept = StoryRecordings.Without(kept, page);
+        }
+
+        return kept;
+    }
+
+    // Only the pictures and recordings the story names are imported. The caps count the bytes actually read, whatever an entry's header declared.
     private static List<PackageFile> PicturesOf(Story story, Dictionary<string, ZipArchiveEntry> entries, ByteBudget budget)
     {
-        string[] names = story.PictureFiles().ToArray();
+        string[] names = story.PictureFiles().Concat(StoryRecordings.Files(story)).ToArray();
         if (names.Any(IsReserved))
         {
             throw new StoryPackageException("The story names a file it must not.");

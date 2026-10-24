@@ -40,6 +40,10 @@ public interface IPageRenderer
 	/// <summary>Marks the sentence being spoken on the page that is drawn.</summary>
 	void Mark(PageLayers layers, int page, int sentence);
 
+	/// <summary>Marks sentences <paramref name="first"/> to <paramref name="last"/> with one soft highlight: a page read from a parent's recording (Slice 111), which has no sentence timings.
+	/// A renderer that cannot draw it shows no sentence mark.</summary>
+	void MarkPage(PageLayers layers, int page, int first, int last) => Mark(layers, page, -1);
+
 	/// <summary>The sentence under a point of the card (dp), or -1.</summary>
 	int SentenceAt(int page, Point point);
 }
