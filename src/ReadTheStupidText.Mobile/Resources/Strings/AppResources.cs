@@ -22,6 +22,8 @@ public static class AppResources
     public static string Format(string template, params object[] args) =>
         string.Format(CultureInfo.CurrentUICulture, template, args);
 
+    public static string Voice_NbWoman => Get();
+    public static string Voice_NbMan => Get();
     public static string App_Name => Get();
     public static string Shell_ReaderTitle => Get();
     public static string Common_Ok => Get();
@@ -65,8 +67,23 @@ public static class AppResources
     public static string Reader_PagesSkippedTitle => Get();
     public static string Reader_PagesSkippedOneMessage => Get();
     public static string Reader_PagesSkippedManyMessage => Get();
-    public static string Reader_ScanProgressPage => Get();
-    public static string Reader_ScanProgressSingle => Get();
+    public static string Capture_Title => Get();
+    public static string Capture_Hint => Get();
+    public static string Capture_HintDone => Get();
+    public static string Capture_PageLabel => Get();
+    public static string Capture_Reading => Get();
+    public static string Capture_AddPage => Get();
+    public static string Capture_Done => Get();
+    public static string Capture_ChoosePhotos => Get();
+    public static string Capture_DiscardTitle => Get();
+    public static string Capture_DiscardMessage => Get();
+    public static string Capture_PageLimit => Get();
+    public static string Capture_DiscardMessageOne => Get();
+    public static string Capture_KeepTaking => Get();
+    public static string Capture_Discard => Get();
+    public static string Capture_RemovePage => Get();
+    public static string Capture_CouldntRead => Get();
+    public static string Capture_ClosePreview => Get();
     public static string Reader_PageLanguageTitle => Get();
     public static string Reader_OcrDownloading => Get();
     public static string Reader_OcrDownloadFailedTitle => Get();

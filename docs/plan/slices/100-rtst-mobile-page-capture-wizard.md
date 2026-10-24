@@ -1,11 +1,11 @@
 # Slice 100 — RTST phone: "Take a photo of each page", wizard page 1
 
-*Planned 2026-10-24*, from the user's request: "The text from picture button lets people take a picture
+*Built 2026-10-24 (PR #290), emulator-checked on RTST_Test the same day.* Planned 2026-10-24, from the user's request: "The text from picture button lets people take a picture
 and add more, until they are done. It should be clear that it expects multiple pages."
 
 **Batch:** 19 (RTST phone overhaul for first-time users)
 **Depends on:** Slice 99 (the **Text from pictures** button), Slice 45 (scanner), Slice 52/84 (OCR, `ScanPackFlow`)
-**Touches:** `src/ReadTheStupidText.Mobile/CapturePage.xaml` (new), `src/ReadTheStupidText.Mobile/CapturePage.xaml.cs` (new), `src/ReadTheStupidText.Mobile/ReaderPage.xaml.cs`, `src/ReadTheStupidText.Mobile/AppShell.xaml.cs`, `src/ReadTheStupidText.Mobile/MauiProgram.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/AndroidDocumentScanner.cs`, `src/ReadTheStupidText.Mobile.Shared/IDocumentScanner.cs`, `src/ReadTheStupidText.Application/**/ScannedText.cs`, `src/ReadTheStupidText.Mobile/Resources/Strings/*.resx`, `src/ReadTheStupidText.Mobile/CLAUDE.md`, `tests/ReadTheStupidText.Tests/**`
+**Touches:** `src/ReadTheStupidText.Mobile/CapturePage.xaml` (new), `src/ReadTheStupidText.Mobile/CapturePage.xaml.cs` (new), `src/ReadTheStupidText.Mobile/ReaderPage.xaml`, `src/ReadTheStupidText.Mobile/ReaderPage.xaml.cs`, `src/ReadTheStupidText.Mobile/AppShell.xaml.cs`, `src/ReadTheStupidText.Mobile/MauiProgram.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/AndroidDocumentScanner.cs`, `src/ReadTheStupidText.Mobile.Shared/IDocumentScanner.cs`, `src/ReadTheStupidText.Application/**/ScannedText.cs`, `src/ReadTheStupidText.Mobile/Resources/Strings/*.resx`, `src/ReadTheStupidText.Mobile/CLAUDE.md`, `tests/ReadTheStupidText.Tests/**`
 
 ## Why
 
@@ -48,11 +48,11 @@ New strings (nine locales): "Take a photo of each page", "Add one page at a time
 
 ## Work
 
-- [ ] 1. **Smallest end-to-end:** `CapturePage` with Add (one-page scanner), the thumbnail strip, Done
+- [x] 1. **Smallest end-to-end:** `CapturePage` with Add (one-page scanner), the thumbnail strip, Done
   joining the OCR text into the main page; `IDocumentScanner` gains a page-limit option.
-- [ ] 2. Background OCR per page with the "reading…" mark, `ScanPackFlow` per page, failed pages reported.
-- [ ] 3. Remove a page, choose from photos, the discard prompt on Back, and auto-open the camera on entry.
-- [ ] 4. Strings in nine languages; rule in `src/ReadTheStupidText.Mobile/CLAUDE.md` replacing the "no
+- [x] 2. Background OCR per page with the "reading…" mark, `ScanPackFlow` per page, failed pages reported.
+- [x] 3. Remove a page, choose from photos, the discard prompt on Back, and auto-open the camera on entry.
+- [x] 4. Strings in nine languages; rule in `src/ReadTheStupidText.Mobile/CLAUDE.md` replacing the "no
   ScanPage" line (written at planning; check it still matches).
 
 ## Verification
@@ -61,3 +61,36 @@ New strings (nine locales): "Take a photo of each page", "Add one page at a time
 - Emulator (device-test): capture three pages one by one, remove page 2, Done shows pages 1 and 3 in
   order. Back with pages asks first. Choosing two photos from the gallery adds two pages.
 - iOS compile check.
+
+## Built
+
+*Changed while building:*
+
+- `CapturePage` (route) implements mock R4-R5, with the icons drawn as MAUI `Path`. The camera opens on entry. **Add** captures one page (`IDocumentScanner.ScanAsync(1)`, or the `MediaPicker` fallback). **Choose from photos** takes up to 20 at a time, with a session cap of 30 pages.
+- A background OCR queue processes pages in order. It catches every exception, marks a failed page with "!" and "Couldn't read", and remembers the page language picked for the session.
+- Removing a page waits for its OCR before deleting it. The discard prompt and the viewer overlays block other taps. Cleanup runs in `OnNavigatedFrom`, not on backgrounding. Thumbnails are a 360 px cached JPEG.
+- The `CaptureHandOff` singleton hands the text back to `ReaderPage`. `IDocumentScanner.ScanAsync(int)` is a default interface method. `CapturedPageList` (pure) is unit-tested.
+- `ReaderPage`'s old scan code and `CancelOcrButton` are gone.
+
+*From review:*
+
+- High pass: 7 findings applied, #5 skipped.
+- Medium pass: 6 applied; #6 (retry) out of scope; #7 and #9 skipped; #10 found no dead keys.
+
+#### For CLAUDE.md
+
+- (`src/ReadTheStupidText.Mobile/CLAUDE.md`) Multi-page capture is our own `CapturePage`, not Google's multi-page UI: each Add is one page (`ScanAsync(1)`). Text goes back to `ReaderPage` through the `CaptureHandOff` singleton, not query properties. Cleanup of cached images belongs in `OnNavigatedFrom`, not on backgrounding. (Slice 100: docs/plan/slices/100-rtst-mobile-page-capture-wizard.md)
+
+#### Verified on the emulator (2026-10-24, RTST_Test)
+
+- The capture page opens and the scanner starts at once (ML Kit isn't usable on this emulator because Play services isn't signed in; Cancel returns to the page).
+- Choose from photos adds 3 numbered tiles with "reading…", and OCR finishes one page after another.
+- Removing page 2 drops it, and Done shows the remaining pages in order.
+- The discard dialog's keep and discard choices both work. Sending the app to the background and coming back keeps the pages. A double tap opens one capture page.
+
+#### Not yet verified
+
+- Emulator device test of the capture wizard (result to follow from the caller).
+- A real ML Kit scan on a signed-in phone.
+- iOS capture (compile and behaviour).
+- A native-speaker read of the new strings.

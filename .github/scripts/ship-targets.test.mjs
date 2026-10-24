@@ -22,6 +22,7 @@ const CASES = [
     ['iOS platform only', [`${M}/Platforms/iOS/AppDelegate.cs`], { ios: true }],
     ['iOS signing script', ['.github/scripts/ios-signing.sh'], { ios: true, dinoios: true }],
     ['TestFlight upload script', ['.github/scripts/testflight-upload.sh'], { ios: true, dinoios: true }],
+    ['iOS bundle check script', ['.github/scripts/check-ios-bundle.sh'], { dinoios: true }],
     ['Android stage script', ['.github/scripts/stage-android-package.sh'], { android: true, dinoapp: true }],
     ['Android natives check script', ['.github/scripts/check-android-natives.sh'], { android: true, dinoapp: true }],
     ['shared Mobile code', [`${M}/ReaderPage.xaml.cs`], { android: true, ios: true }],

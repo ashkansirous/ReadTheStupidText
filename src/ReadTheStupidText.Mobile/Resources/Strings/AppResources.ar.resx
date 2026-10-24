@@ -46,8 +46,23 @@
   <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>تم تخطي بعض الصفحات</value></data>
   <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>تعذّرت قراءة الصفحة {0}. حلّت الصفحات التي أمكن قراءتها محل النص.</value></data>
   <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>تعذّرت قراءة الصفحات {0}. حلّت الصفحات التي أمكن قراءتها محل النص.</value></data>
-  <data name="Reader_ScanProgressPage" xml:space="preserve"><value>جارٍ قراءة الصفحة {0} من {1}</value></data>
-  <data name="Reader_ScanProgressSingle" xml:space="preserve"><value>جارٍ قراءة الصفحة</value></data>
+  <data name="Capture_Title" xml:space="preserve"><value>صوّر كل صفحة</value></data>
+  <data name="Capture_Hint" xml:space="preserve"><value>أضف صفحة واحدة في كل مرة. اضغط {0} عندما تنتهي من جميع الصفحات.</value></data>
+  <data name="Capture_HintDone" xml:space="preserve"><value>تم</value></data>
+  <data name="Capture_PageLabel" xml:space="preserve"><value>صفحة {0}</value></data>
+  <data name="Capture_Reading" xml:space="preserve"><value>جارٍ القراءة…</value></data>
+  <data name="Capture_AddPage" xml:space="preserve"><value>أضف صفحة أخرى</value></data>
+  <data name="Capture_Done" xml:space="preserve"><value>تم – أرني النص</value></data>
+  <data name="Capture_ChoosePhotos" xml:space="preserve"><value>اختر من الصور</value></data>
+  <data name="Capture_DiscardTitle" xml:space="preserve"><value>تجاهل هذه الصفحات؟</value></data>
+  <data name="Capture_DiscardMessage" xml:space="preserve"><value>التقطت {0} صفحات. لن يتم الاحتفاظ بها إذا رجعت.</value></data>
+  <data name="Capture_DiscardMessageOne" xml:space="preserve"><value>التقطت صفحة واحدة. لن يتم الاحتفاظ بها إذا رجعت.</value></data>
+  <data name="Capture_PageLimit" xml:space="preserve"><value>يمكنك إضافة ما يصل إلى {0} صفحة في المرة الواحدة. لم تتم إضافة الباقي.</value></data>
+  <data name="Capture_KeepTaking" xml:space="preserve"><value>تابع التقاط الصفحات</value></data>
+  <data name="Capture_Discard" xml:space="preserve"><value>تجاهل وارجع</value></data>
+  <data name="Capture_RemovePage" xml:space="preserve"><value>احذف هذه الصفحة</value></data>
+  <data name="Capture_CouldntRead" xml:space="preserve"><value>تعذّرت القراءة</value></data>
+  <data name="Capture_ClosePreview" xml:space="preserve"><value>إغلاق</value></data>
   <data name="Reader_PageLanguageTitle" xml:space="preserve"><value>بأي لغة هذه الصفحة؟</value></data>
   <data name="Reader_OcrDownloading" xml:space="preserve"><value>جارٍ تنزيل قارئ {0}… {1}٪</value></data>
   <data name="Reader_OcrDownloadFailedTitle" xml:space="preserve"><value>تعذّر تنزيل القارئ</value></data>
@@ -90,4 +105,6 @@
   <data name="Language_Retry" xml:space="preserve"><value>إعادة محاولة التنزيل</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>متابعة</value></data>
   <data name="Language_StartReading" xml:space="preserve"><value>ابدأ القراءة</value></data>
+  <data name="Voice_NbWoman" xml:space="preserve"><value>الصوت {0} (امرأة)</value></data>
+  <data name="Voice_NbMan" xml:space="preserve"><value>الصوت {0} (رجل)</value></data>
 </root>

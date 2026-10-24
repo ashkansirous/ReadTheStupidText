@@ -286,8 +286,7 @@ På Android kan du lime inn eller skrive tekst, åpne en .txt-, .pdf- eller .doc
 
 Google Play, nedlastingsmerknad (legges til i den fulle beskrivelsen): Første gang du starter appen på Android, laster den ned en stemmepakke på rundt 145 MB, så den trenger internettforbindelse én gang (Wi-Fi anbefales). Til nedlastingen er ferdig, leser appen med telefonens innebygde stemme. Bare stemmepakken lastes ned. Teksten, filene og skanningene dine blir på enheten din, og når stemmen er installert, bruker ikke appen nettverket.
 
-Norwegian reads with the phone's own voice until Slice 104 ships its pack, so drop the "natural voices" claims
-(short description, search term 7, first bullet) from the Norwegian text if the listing goes live first.
+Norwegian has its own natural-voice pack (`piper-nb`, Slice 104), so the "natural voices" claims stand once the pinned catalogue lists it.
 
 #### Dutch (`nl`)
 

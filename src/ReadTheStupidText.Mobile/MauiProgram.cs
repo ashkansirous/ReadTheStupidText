@@ -27,10 +27,12 @@ public static partial class MauiProgram
 		builder.Services.AddSingleton<DocxTextExtractor>();
 		builder.Services.AddSingleton<IDocumentTextExtractor, CompositeDocumentTextExtractor>();
 		builder.Services.AddSingleton<EditorDraft>();
+		builder.Services.AddSingleton<CaptureHandOff>();
 		builder.Services.AddTransient<LanguagePage>();
 		builder.Services.AddTransient<ReaderPage>();
 		builder.Services.AddTransient<VoicePickerPage>();
 		builder.Services.AddTransient<SettingsPage>();
+		builder.Services.AddTransient<CapturePage>();
 
 #if DEBUG
 		builder.Logging.AddDebug();

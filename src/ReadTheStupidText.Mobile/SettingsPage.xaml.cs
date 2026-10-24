@@ -58,7 +58,7 @@ public partial class SettingsPage : ContentPage
     {
         VoiceModelPaths? paths = _model.Paths;
         bool phoneReads = _settings.VoiceId == SystemVoice.Id || !_model.IsReady || paths is null;
-        return phoneReads ? VoicePickerPage.PhoneVoiceName : NeuralVoiceMemory.Resolve(paths!, _settings.VoiceId).DisplayName;
+        return phoneReads ? VoicePickerPage.PhoneVoiceName : VoiceLabel.For(NeuralVoiceMemory.Resolve(paths!, _settings.VoiceId));
     }
 
     private async void OnBackTapped(object? sender, TappedEventArgs e) => await Shell.Current.GoToAsync("..");

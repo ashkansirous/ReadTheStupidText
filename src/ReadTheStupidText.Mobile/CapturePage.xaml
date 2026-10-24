@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="ReadTheStupidText.Mobile.CapturePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:res="clr-namespace:ReadTheStupidText.Mobile.Resources.Strings"
+    Title="{x:Static res:AppResources.Capture_Title}"
+    Shell.NavBarIsVisible="False"
+    SafeAreaEdges="None">
+
+    <ContentPage.Resources>
+        <!-- Outline icons: the paths of RTST Phone Batch 19 R4 (24x24 grid), drawn unscaled and sized with Scale. -->
+        <x:String x:Key="IconBack">M 15 5 l -7 7 l 7 7</x:String>
+        <x:String x:Key="IconPlus">M 12 5 v 14 M 5 12 h 14</x:String>
+        <x:String x:Key="IconSpinnerRing">M 3 12 A 9 9 0 1 0 21 12 A 9 9 0 1 0 3 12</x:String>
+        <x:String x:Key="IconSpinnerArc">M 12 3 a 9 9 0 0 1 9 9</x:String>
+        <SolidColorBrush x:Key="IconBrushLight" Color="#4A46D6" />
+        <SolidColorBrush x:Key="IconBrushDark" Color="{StaticResource PrimaryDark}" />
+        <Style x:Key="IconPath" TargetType="Path">
+            <Setter Property="Aspect" Value="None" />
+            <Setter Property="WidthRequest" Value="24" />
+            <Setter Property="HeightRequest" Value="24" />
+            <Setter Property="HorizontalOptions" Value="Center" />
+            <Setter Property="VerticalOptions" Value="Center" />
+            <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource IconBrushLight}, Dark={StaticResource IconBrushDark}}" />
+            <Setter Property="StrokeThickness" Value="1.9" />
+            <Setter Property="StrokeLineCap" Value="Round" />
+            <Setter Property="StrokeLineJoin" Value="Round" />
+        </Style>
+        <Style x:Key="BigActionBorder" TargetType="Border">
+            <Setter Property="HeightRequest" Value="60" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 16" />
+        </Style>
+        <Style x:Key="BigActionLabel" TargetType="Label">
+            <Setter Property="FontSize" Value="17" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="HorizontalOptions" Value="Center" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+        <Style x:Key="DialogCard" TargetType="Border">
+            <Setter Property="Margin" Value="24" />
+            <Setter Property="Padding" Value="20,22,20,18" />
+            <Setter Property="VerticalOptions" Value="Center" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 22" />
+            <Setter Property="StrokeThickness" Value="0" />
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}" />
+        </Style>
+        <Style x:Key="DialogButton" TargetType="Border">
+            <Setter Property="HeightRequest" Value="52" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 14" />
+            <Setter Property="StrokeThickness" Value="0" />
+        </Style>
+        <Style x:Key="DialogButtonLabel" TargetType="Label">
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="HorizontalOptions" Value="Center" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+        <LinearGradientBrush x:Key="BrandGradient" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="{StaticResource BrandStart}" Offset="0.0" />
+            <GradientStop Color="{StaticResource BrandEnd}" Offset="1.0" />
+        </LinearGradientBrush>
+    </ContentPage.Resources>
+
+    <Grid SafeAreaEdges="None" BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}">
+
+        <Grid RowDefinitions="Auto,*" SafeAreaEdges="None">
+
+            <Grid Grid.Row="0" Padding="4,8,18,8" SafeAreaEdges="Container" ColumnDefinitions="48,*" ColumnSpacing="4"
+                  Background="{StaticResource BrandGradient}">
+                <Grid x:Name="BackButton" Grid.Column="0" WidthRequest="48" HeightRequest="48">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackTapped" />
+                    </Grid.GestureRecognizers>
+                    <Path x:Name="BackGlyph" Data="{StaticResource IconBack}" Style="{StaticResource IconPath}" Stroke="White" StrokeThickness="2.4" />
+                </Grid>
+                <Label x:Name="TitleLabel" Grid.Column="1" FontSize="18" FontAttributes="Bold" TextColor="White" VerticalOptions="Center" />
+            </Grid>
+
+            <Grid Grid.Row="1" Padding="14,16,14,14" RowSpacing="12" SafeAreaEdges="Container" RowDefinitions="Auto,Auto,*,Auto">
+                <Label x:Name="HintLabel" Grid.Row="0" FontSize="15" LineHeight="1.45"
+                       TextColor="{AppThemeBinding Light=#99000000, Dark=#A3FFFFFF}" />
+
+                <!-- Reading-the-page-language status and its Cancel, only while a pack downloads (Slice 87 flow). -->
+                <HorizontalStackLayout x:Name="StatusRow" Grid.Row="1" IsVisible="False" Spacing="14">
+                    <Label x:Name="StatusLabel" FontSize="15" VerticalOptions="Center"
+                           TextColor="{AppThemeBinding Light=#99000000, Dark=#A3FFFFFF}" />
+                    <Label x:Name="CancelLabel" Text="{x:Static res:AppResources.Common_Cancel}" FontSize="15" FontAttributes="Bold" VerticalOptions="Center"
+                           TextColor="{AppThemeBinding Light=#4A46D6, Dark={StaticResource PrimaryDark}}">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnCancelDownloadTapped" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                </HorizontalStackLayout>
+
+                <ScrollView Grid.Row="2" VerticalScrollBarVisibility="Never">
+                    <Grid x:Name="ThumbGrid" ColumnDefinitions="*,*,*" ColumnSpacing="10" RowSpacing="12" VerticalOptions="Start"
+                          SizeChanged="OnThumbGridSizeChanged" />
+                </ScrollView>
+
+                <VerticalStackLayout Grid.Row="3" Spacing="10">
+                    <Border x:Name="AddButton" Style="{StaticResource BigActionBorder}" StrokeThickness="2" Stroke="{StaticResource Primary}"
+                            BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnAddTapped" />
+                        </Border.GestureRecognizers>
+                        <HorizontalStackLayout Spacing="10" HorizontalOptions="Center" VerticalOptions="Center">
+                            <Path Data="{StaticResource IconPlus}" Style="{StaticResource IconPath}" Scale="0.9167" StrokeThickness="2.6" />
+                            <Label x:Name="AddLabel" Style="{StaticResource BigActionLabel}"
+                                   TextColor="{AppThemeBinding Light=#4A46D6, Dark={StaticResource PrimaryDark}}" />
+                        </HorizontalStackLayout>
+                    </Border>
+                    <Border x:Name="DoneButton" Style="{StaticResource BigActionBorder}" StrokeThickness="0" Background="{StaticResource BrandGradient}">
+                        <Border.Shadow>
+                            <Shadow Brush="#5B57E8" Opacity="0.32" Radius="14" Offset="0,4" />
+                        </Border.Shadow>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnDoneTapped" />
+                        </Border.GestureRecognizers>
+                        <Label x:Name="DoneLabel" Style="{StaticResource BigActionLabel}" TextColor="White" />
+                    </Border>
+                    <Label x:Name="ChoosePhotosLabel" HeightRequest="44" FontSize="15" FontAttributes="Bold"
+                           HorizontalOptions="Center" VerticalTextAlignment="Center"
+                           TextColor="{AppThemeBinding Light=#4A46D6, Dark={StaticResource PrimaryDark}}">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnChoosePhotosTapped" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                </VerticalStackLayout>
+            </Grid>
+        </Grid>
+
+        <!-- Discard dialog (R5): asked on Back once at least one page has been taken. -->
+        <Grid x:Name="DiscardOverlay" IsVisible="False" BackgroundColor="#8014161E" SafeAreaEdges="None">
+            <Border Style="{StaticResource DialogCard}">
+                <VerticalStackLayout Spacing="12">
+                    <Label x:Name="DiscardTitle" FontSize="20" FontAttributes="Bold" />
+                    <Label x:Name="DiscardMessage" FontSize="15.5" LineHeight="1.45"
+                           TextColor="{AppThemeBinding Light=#99000000, Dark=#A3FFFFFF}" />
+                    <VerticalStackLayout Spacing="8" Margin="0,6,0,0">
+                        <Border Style="{StaticResource DialogButton}" Background="{StaticResource BrandGradient}">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnKeepTakingTapped" />
+                            </Border.GestureRecognizers>
+                            <Label x:Name="KeepTakingLabel" Style="{StaticResource DialogButtonLabel}" TextColor="White" />
+                        </Border>
+                        <Border Style="{StaticResource DialogButton}" BackgroundColor="Transparent">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnDiscardTapped" />
+                            </Border.GestureRecognizers>
+                            <Label x:Name="DiscardLabel" Style="{StaticResource DialogButtonLabel}" TextColor="#C62828" />
+                        </Border>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+
+        <!-- A page seen larger, with the way to remove it. -->
+        <Grid x:Name="ViewerOverlay" IsVisible="False" BackgroundColor="#8014161E" SafeAreaEdges="None">
+            <Border Style="{StaticResource DialogCard}">
+                <VerticalStackLayout Spacing="12">
+                    <Label x:Name="ViewerTitle" FontSize="20" FontAttributes="Bold" />
+                    <Image x:Name="ViewerImage" HeightRequest="380" Aspect="AspectFit" />
+                    <VerticalStackLayout Spacing="8" Margin="0,6,0,0">
+                        <Border Style="{StaticResource DialogButton}" Background="{StaticResource BrandGradient}">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnCloseViewerTapped" />
+                            </Border.GestureRecognizers>
+                            <Label x:Name="CloseViewerLabel" Style="{StaticResource DialogButtonLabel}" TextColor="White" />
+                        </Border>
+                        <Border Style="{StaticResource DialogButton}" BackgroundColor="Transparent">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnRemovePageTapped" />
+                            </Border.GestureRecognizers>
+                            <Label x:Name="RemovePageLabel" Style="{StaticResource DialogButtonLabel}" TextColor="#C62828" />
+                        </Border>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+    </Grid>
+</ContentPage>

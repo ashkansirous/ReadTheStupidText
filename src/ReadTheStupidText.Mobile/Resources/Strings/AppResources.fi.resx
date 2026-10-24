@@ -46,8 +46,23 @@
   <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>Joitakin sivuja ohitettiin</value></data>
   <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>Sivua {0} ei voitu lukea. Luetut sivut korvasivat tekstisi.</value></data>
   <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>Sivuja {0} ei voitu lukea. Luetut sivut korvasivat tekstisi.</value></data>
-  <data name="Reader_ScanProgressPage" xml:space="preserve"><value>Luetaan sivua {0}/{1}</value></data>
-  <data name="Reader_ScanProgressSingle" xml:space="preserve"><value>Luetaan sivua</value></data>
+  <data name="Capture_Title" xml:space="preserve"><value>Ota kuva jokaisesta sivusta</value></data>
+  <data name="Capture_Hint" xml:space="preserve"><value>Lisää yksi sivu kerrallaan. Napauta {0}, kun sivut ovat kaikki mukana.</value></data>
+  <data name="Capture_HintDone" xml:space="preserve"><value>Valmis</value></data>
+  <data name="Capture_PageLabel" xml:space="preserve"><value>Sivu {0}</value></data>
+  <data name="Capture_Reading" xml:space="preserve"><value>luetaan…</value></data>
+  <data name="Capture_AddPage" xml:space="preserve"><value>Lisää toinen sivu</value></data>
+  <data name="Capture_Done" xml:space="preserve"><value>Valmis – näytä teksti</value></data>
+  <data name="Capture_ChoosePhotos" xml:space="preserve"><value>Valitse kuvista</value></data>
+  <data name="Capture_DiscardTitle" xml:space="preserve"><value>Hylätäänkö nämä sivut?</value></data>
+  <data name="Capture_DiscardMessage" xml:space="preserve"><value>Otit {0} sivua. Niitä ei säilytetä, jos palaat takaisin.</value></data>
+  <data name="Capture_DiscardMessageOne" xml:space="preserve"><value>Otit 1 sivun. Sitä ei säilytetä, jos palaat takaisin.</value></data>
+  <data name="Capture_PageLimit" xml:space="preserve"><value>Voit lisätä enintään {0} sivua kerrallaan. Loput jätettiin pois.</value></data>
+  <data name="Capture_KeepTaking" xml:space="preserve"><value>Jatka sivujen ottamista</value></data>
+  <data name="Capture_Discard" xml:space="preserve"><value>Hylkää ja palaa takaisin</value></data>
+  <data name="Capture_RemovePage" xml:space="preserve"><value>Poista tämä sivu</value></data>
+  <data name="Capture_CouldntRead" xml:space="preserve"><value>Ei voitu lukea</value></data>
+  <data name="Capture_ClosePreview" xml:space="preserve"><value>Sulje</value></data>
   <data name="Reader_PageLanguageTitle" xml:space="preserve"><value>Millä kielellä tämä sivu on?</value></data>
   <data name="Reader_OcrDownloading" xml:space="preserve"><value>Ladataan lukijaa kielelle {0}… {1} %</value></data>
   <data name="Reader_OcrDownloadFailedTitle" xml:space="preserve"><value>Lukijaa ei voitu ladata</value></data>
@@ -90,4 +105,6 @@
   <data name="Language_Retry" xml:space="preserve"><value>Yritä latausta uudelleen</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>Jatka</value></data>
   <data name="Language_StartReading" xml:space="preserve"><value>Aloita lukeminen</value></data>
+  <data name="Voice_NbWoman" xml:space="preserve"><value>Ääni {0} (nainen)</value></data>
+  <data name="Voice_NbMan" xml:space="preserve"><value>Ääni {0} (mies)</value></data>
 </root>

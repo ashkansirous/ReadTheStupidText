@@ -46,8 +46,23 @@
   <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>Sommige pagina’s zijn overgeslagen</value></data>
   <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>Pagina {0} kon niet worden gelezen. De pagina’s die wel konden worden gelezen hebben je tekst vervangen.</value></data>
   <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>Pagina’s {0} konden niet worden gelezen. De pagina’s die wel konden worden gelezen hebben je tekst vervangen.</value></data>
-  <data name="Reader_ScanProgressPage" xml:space="preserve"><value>Pagina {0} van {1} wordt gelezen</value></data>
-  <data name="Reader_ScanProgressSingle" xml:space="preserve"><value>Pagina wordt gelezen</value></data>
+  <data name="Capture_Title" xml:space="preserve"><value>Maak een foto van elke pagina</value></data>
+  <data name="Capture_Hint" xml:space="preserve"><value>Voeg één pagina tegelijk toe. Tik op {0} als je ze allemaal hebt.</value></data>
+  <data name="Capture_HintDone" xml:space="preserve"><value>Klaar</value></data>
+  <data name="Capture_PageLabel" xml:space="preserve"><value>Pagina {0}</value></data>
+  <data name="Capture_Reading" xml:space="preserve"><value>lezen…</value></data>
+  <data name="Capture_AddPage" xml:space="preserve"><value>Nog een pagina toevoegen</value></data>
+  <data name="Capture_Done" xml:space="preserve"><value>Klaar – toon me de tekst</value></data>
+  <data name="Capture_ChoosePhotos" xml:space="preserve"><value>Kies uit foto’s</value></data>
+  <data name="Capture_DiscardTitle" xml:space="preserve"><value>Deze pagina’s weggooien?</value></data>
+  <data name="Capture_DiscardMessage" xml:space="preserve"><value>Je hebt {0} pagina’s gemaakt. Ze worden niet bewaard als je teruggaat.</value></data>
+  <data name="Capture_DiscardMessageOne" xml:space="preserve"><value>Je hebt 1 pagina gemaakt. Die wordt niet bewaard als je teruggaat.</value></data>
+  <data name="Capture_PageLimit" xml:space="preserve"><value>Je kunt maximaal {0} pagina’s tegelijk toevoegen. De rest is niet toegevoegd.</value></data>
+  <data name="Capture_KeepTaking" xml:space="preserve"><value>Doorgaan met pagina’s maken</value></data>
+  <data name="Capture_Discard" xml:space="preserve"><value>Weggooien en teruggaan</value></data>
+  <data name="Capture_RemovePage" xml:space="preserve"><value>Deze pagina verwijderen</value></data>
+  <data name="Capture_CouldntRead" xml:space="preserve"><value>Kon niet lezen</value></data>
+  <data name="Capture_ClosePreview" xml:space="preserve"><value>Sluiten</value></data>
   <data name="Reader_PageLanguageTitle" xml:space="preserve"><value>In welke taal is deze pagina?</value></data>
   <data name="Reader_OcrDownloading" xml:space="preserve"><value>De lezer voor {0} wordt gedownload… {1}%</value></data>
   <data name="Reader_OcrDownloadFailedTitle" xml:space="preserve"><value>De lezer kon niet worden gedownload</value></data>
@@ -90,4 +105,6 @@
   <data name="Language_Retry" xml:space="preserve"><value>Download opnieuw proberen</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>Doorgaan</value></data>
   <data name="Language_StartReading" xml:space="preserve"><value>Beginnen met lezen</value></data>
+  <data name="Voice_NbWoman" xml:space="preserve"><value>Stem {0} (vrouw)</value></data>
+  <data name="Voice_NbMan" xml:space="preserve"><value>Stem {0} (man)</value></data>
 </root>

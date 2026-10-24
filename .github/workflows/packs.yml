@@ -13,7 +13,7 @@ name: packs
 #   * the release is created with --latest=false, so releases/latest stays the app.
 # Details and the pack format: docs/voice-packs.md.
 #
-# Three voice packs are built into one release and listed in one packs.json:
+# Four voice packs are built into one release and listed in one packs.json:
 #   * supertonic-3  from the LFS model in the repo (en, fr, es, pt, ru, ja, ar, da, fi, sv, nl)
 #   * piper-fa      four Piper fa_IR voices (ganji_adabi, the default, ganji, mana, gyro),
 #                   each with its own model folder (Slice 89). Three come from the sherpa-onnx
@@ -22,6 +22,10 @@ name: packs
 #                   here the way sherpa's piper export does. It carries the GPL-3.0
 #                   espeak-ng data, which therefore exists only inside this pack's zip,
 #                   never in the repo, the MSIX, the AAB or the .ipa (Decision 63).
+#   * piper-nb      one Piper no_NO voice (nvcc, ten speakers, CC0) as a bokmal (nb) pack (Slice 104).
+#                   The upstream onnx is pinned by revision and sha256, given sherpa's Piper metadata
+#                   and int8-quantized here like mana. It carries the same GPL-3.0 espeak-ng data
+#                   (copied from the Persian archive), only inside this pack's zip (Decision 108).
 #   * melo-zh-en    MeloTTS Chinese + English (MIT), same download and pin.
 # Twenty-three translation packs (Slice 75, Decision 67; Slice 106, Decision 110) ride in the same release and packs.json:
 #   one Opus-MT (Marian) leg each, `<source>-<target>` with English at one end, so a pair like
@@ -49,6 +53,11 @@ on:
         description: 'Version stamped into the Persian (Piper) pack'
         required: true
         default: '2'
+        type: string
+      norwegian_pack_version:
+        description: 'Version stamped into the Norwegian (Piper) pack'
+        required: true
+        default: '1'
         type: string
       melo_pack_version:
         description: 'Version stamped into the Chinese (MeloTTS) pack'
@@ -90,6 +99,17 @@ env:
   SHERPA_SCRIPTS_COMMIT: 36342561cbc256d55ecd61c2664bb8d598760a95
   SHERPA_ADD_META_SHA256: a24b65a03e5c94c6cb1d9261bb93c197d1bede9357a2e829aabb64de1b404f42
   PERSIAN_MAX_BYTES: 104857600
+  # Slice 104: one multi-speaker Piper voice, pinned to a rhasspy/piper-voices revision. The onnx sha256 is
+  # its Git LFS object id. Reuses SHERPA_SCRIPTS_COMMIT / SHERPA_ADD_META_SHA256 above for the metadata.
+  NORWEGIAN_ID: piper-nb
+  NORWEGIAN_LICENSE: 'CC0-1.0 (voice data) AND MIT (voice model) AND GPL-3.0-or-later (espeak-ng data)'
+  NORWEGIAN_COMMIT: 5041a7a49ae5b3a0f30e6837769eb03fdbb231bd
+  NORWEGIAN_ONNX_SHA256: 3f51702946d9544898440a1a66906155661a9d680ee103130ff68f73360b512e
+  NORWEGIAN_JSON_SHA256: 98410e911e5a9076ac4677a79b08b20f98c54f550c4388e29978f6bafa32b83d
+  NORWEGIAN_MAX_BYTES: 104857600
+  NORWEGIAN_SPEAKERS: 10
+  # The espeak-ng data the Persian fetch step unpacks (the Piper archive), shared by the Norwegian pack.
+  ESPEAK_DATA_SRC: src-models/fa-ganji_adabi/espeak-ng-data
   CHINESE_ID: melo-zh-en
   CHINESE_LICENSE: MIT
   CHINESE_URL: https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-melo-tts-zh_en.tar.bz2
@@ -121,6 +141,7 @@ jobs:
       TAG: packs-${{ inputs.release_number }}
       SUPERTONIC_VERSION: ${{ inputs.pack_version }}
       PERSIAN_VERSION: ${{ inputs.piper_pack_version }}
+      NORWEGIAN_VERSION: ${{ inputs.norwegian_pack_version }}
       CHINESE_VERSION: ${{ inputs.melo_pack_version }}
       OCR_VERSION: ${{ inputs.ocr_pack_version }}
       TRANSLATION_VERSION: ${{ inputs.translation_pack_version }}
@@ -129,6 +150,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           lfs: true
+
+      # The quantiser pins below (onnxruntime 1.23.2, matching the apps) have no wheels for the
+      # runner image's newer default Python, so pin one they support.
+      - name: Use Python 3.12 for the quantiser
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
 
       - name: Refuse a tag that is not packs-<number>
         run: |
@@ -284,6 +312,97 @@ jobs:
           ls -l out
           if [ "$(stat -c %s "out/$PERSIAN_ID-$PERSIAN_VERSION.zip")" -gt "$PERSIAN_MAX_BYTES" ]; then
             echo "::error::The Persian pack zip is over 100 MB"; exit 1
+          fi
+
+      # Norwegian (rhasspy/piper-voices no_NO-nvcc-medium, MIT model, CC0 data): no sherpa-onnx build, so
+      # prepare it like Mana above (metadata, tokens.txt, dynamic int8). Pinned by commit and sha256.
+      - name: Build the Norwegian voice for sherpa-onnx (metadata, tokens, int8)
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/nvcc"
+          mkdir -p "$work" src-models/nb-nvcc
+          hf="https://huggingface.co/rhasspy/piper-voices/resolve/$NORWEGIAN_COMMIT/no/no_NO/nvcc/medium"
+          sherpa="https://raw.githubusercontent.com/k2-fsa/sherpa-onnx/$SHERPA_SCRIPTS_COMMIT/scripts/piper"
+          get() {
+            curl -fsSL --retry 3 -o "$work/$2" "$1/$2"
+            echo "$3  $work/$2" | sha256sum -c -
+          }
+          get "$hf" no_NO-nvcc-medium.onnx "$NORWEGIAN_ONNX_SHA256"
+          get "$hf" no_NO-nvcc-medium.onnx.json "$NORWEGIAN_JSON_SHA256"
+          get "$sherpa" add_meta_data.py "$SHERPA_ADD_META_SHA256"
+          python3 -m pip install --quiet onnx==1.19.1 onnxruntime==1.23.2 iso639-lang==2.6.3
+          (
+            cd "$work"
+            python3 add_meta_data.py --name nvcc --kind medium --lang no_NO
+            python3 -c "from onnxruntime.quantization import QuantType, quantize_dynamic; quantize_dynamic(model_input='no_NO-nvcc-medium.onnx', model_output='nvcc-int8.onnx', weight_type=QuantType.QUInt8)"
+          )
+          cp "$work/nvcc-int8.onnx" src-models/nb-nvcc/model.onnx
+          if [ ! -s "$work/tokens.txt" ]; then echo "::error::add_meta_data.py did not write tokens.txt"; exit 1; fi
+          cp "$work/tokens.txt" src-models/nb-nvcc/tokens.txt
+
+      # The Norwegian pack: one model folder holding ten speakers (sid 0-9, the speaker_id_map of the
+      # upstream .onnx.json), plus the espeak-ng data from the Persian archive. The data is GPL-3.0 and
+      # ships ONLY in this downloaded zip (Decision 108), with its licence text and source link.
+      - name: Build the Norwegian (Piper) pack zip
+        run: |
+          set -euo pipefail
+          dest="out/$NORWEGIAN_ID"
+          mkdir -p "$dest/voices/nvcc"
+          cp src-models/nb-nvcc/model.onnx src-models/nb-nvcc/tokens.txt "$dest/voices/nvcc/"
+          if [ "$(stat -c %s "$dest/voices/nvcc/model.onnx")" -lt 1048576 ]; then echo "::error::nvcc model.onnx is not a real model"; exit 1; fi
+          if [ ! -d "$ESPEAK_DATA_SRC" ]; then echo "::error::Missing espeak-ng-data at $ESPEAK_DATA_SRC (fetched by the Persian steps)"; exit 1; fi
+          cp -r "$ESPEAK_DATA_SRC" "$dest/espeak-ng-data"
+          # The Norwegian voice is espeak voice "nb": the data copied from the Persian steps must carry it (lang/gmq/nb names dictionary "no", so the file is no_dict).
+          if [ ! -s "$dest/espeak-ng-data/no_dict" ] || [ -z "$(find "$dest/espeak-ng-data/lang" -type f -name nb -print -quit)" ]; then
+            echo "::error::espeak-ng-data has no nb voice (needs no_dict and lang/*/nb)"; exit 1
+          fi
+          cat > "$dest/LICENSE" <<'LICENSE_TEXT'
+          Norwegian voice: nvcc (Piper, medium, ten speakers; folder voices/nvcc)
+            Model MIT (rhasspy/piper-voices), voice data CC0 1.0 Universal (Norwegian Language Bank,
+            https://www.nb.no/sprakbanken/en/resource-catalogue/oai-nb-no-sbr-75/ ; per the Piper MODEL_CARD).
+            Given sherpa-onnx's Piper metadata and int8 quantization with sherpa-onnx's scripts/piper
+            (https://github.com/k2-fsa/sherpa-onnx, Apache-2.0).
+
+          espeak-ng data (folder espeak-ng-data): GPL-3.0-or-later
+            Copyright the espeak-ng authors. This data is used only to turn text into
+            phonemes and is distributed in this pack under the GNU General Public License
+            v3 or later (https://www.gnu.org/licenses/gpl-3.0.html). Its corresponding
+            source code is available at https://github.com/espeak-ng/espeak-ng .
+          LICENSE_TEXT
+          cat > "$dest/SOURCE" <<SOURCE_TEXT
+          Voice nvcc: https://huggingface.co/rhasspy/piper-voices/tree/$NORWEGIAN_COMMIT/no/no_NO/nvcc/medium, prepared with
+            https://github.com/k2-fsa/sherpa-onnx/tree/$SHERPA_SCRIPTS_COMMIT/scripts/piper
+          espeak-ng source: https://github.com/espeak-ng/espeak-ng
+          SOURCE_TEXT
+          files=$(cd "$dest" && find . -type f ! -path ./pack.json -printf '%P\n' | sort | jq -R . | jq -s .)
+          # Speaker codes of the upstream speaker_id_map (K = woman, M = man; the app shows the gender, localised). KNN first: it is the default voice.
+          # Keep the ids in sync with NorwegianVoices.cs in src/ReadTheStupidText.Application/Reading.
+          voices='[
+            {"id": "piper:nb-knn", "name": "KNN", "sid": 0, "model": "voices/nvcc"},
+            {"id": "piper:nb-ksv", "name": "KSV", "sid": 1, "model": "voices/nvcc"},
+            {"id": "piper:nb-mmn", "name": "MMN", "sid": 2, "model": "voices/nvcc"},
+            {"id": "piper:nb-kon", "name": "KON", "sid": 3, "model": "voices/nvcc"},
+            {"id": "piper:nb-mnn", "name": "MNN", "sid": 4, "model": "voices/nvcc"},
+            {"id": "piper:nb-msv", "name": "MSV", "sid": 5, "model": "voices/nvcc"},
+            {"id": "piper:nb-mon", "name": "MON", "sid": 6, "model": "voices/nvcc"},
+            {"id": "piper:nb-mnv", "name": "MNV", "sid": 7, "model": "voices/nvcc"},
+            {"id": "piper:nb-kmn", "name": "KMN", "sid": 8, "model": "voices/nvcc"},
+            {"id": "piper:nb-knv", "name": "KNV", "sid": 9, "model": "voices/nvcc"}
+          ]'
+          # The hardcoded voices must be exactly the upstream speakers: same count, each code at its sid.
+          speakers_json="$RUNNER_TEMP/nvcc/no_NO-nvcc-medium.onnx.json"
+          if [ "$(jq '.num_speakers' "$speakers_json")" != "$NORWEGIAN_SPEAKERS" ] || [ "$(jq '.speaker_id_map | length' "$speakers_json")" != "$NORWEGIAN_SPEAKERS" ] || [ "$(jq length <<<"$voices")" != "$NORWEGIAN_SPEAKERS" ]; then
+            echo "::error::The upstream nvcc voice does not have $NORWEGIAN_SPEAKERS speakers"; exit 1
+          fi
+          mismatch=$(jq -rn --argjson voices "$voices" --slurpfile up "$speakers_json"             '$voices[] | select(($up[0].speaker_id_map[(.id | sub("^piper:nb-"; "") | ascii_upcase)]) != .sid) | .id')
+          if [ -n "$mismatch" ]; then echo "::error::Voices out of step with the upstream speaker_id_map: $mismatch"; exit 1; fi
+          jq -n --arg id "$NORWEGIAN_ID" --arg version "$NORWEGIAN_VERSION" --argjson files "$files" --argjson voices "$voices" \
+            '{id: $id, kind: "voice", language: "nb", version: $version, engine: "sherpa-onnx", model: "vits", voices: $voices, files: $files}' \
+            > "$dest/pack.json"
+          (cd out && zip -r -X "$NORWEGIAN_ID-$NORWEGIAN_VERSION.zip" "$NORWEGIAN_ID")
+          ls -l out
+          if [ "$(stat -c %s "out/$NORWEGIAN_ID-$NORWEGIAN_VERSION.zip")" -gt "$NORWEGIAN_MAX_BYTES" ]; then
+            echo "::error::The Norwegian pack zip is over 100 MB"; exit 1
           fi
 
       # The Chinese pack: the upstream MeloTTS zh_en folder (file names are what
@@ -473,6 +592,7 @@ jobs:
           {
             entry "$SUPERTONIC_ID" "$SUPERTONIC_LANGUAGES" "$SUPERTONIC_VERSION" "$SUPERTONIC_LICENSE"
             entry "$PERSIAN_ID" fa "$PERSIAN_VERSION" "$PERSIAN_LICENSE"
+            entry "$NORWEGIAN_ID" nb "$NORWEGIAN_VERSION" "$NORWEGIAN_LICENSE"
             entry "$CHINESE_ID" zh "$CHINESE_VERSION" "$CHINESE_LICENSE"
             entry ocr-latin "en,fr,es,pt" "$OCR_VERSION" "$OCR_LICENSE" ocr
             entry ocr-cyrillic ru "$OCR_VERSION" "$OCR_LICENSE" ocr
@@ -493,6 +613,7 @@ jobs:
           gh release create "$TAG" \
             "out/$SUPERTONIC_ID-$SUPERTONIC_VERSION.zip" \
             "out/$PERSIAN_ID-$PERSIAN_VERSION.zip" \
+            "out/$NORWEGIAN_ID-$NORWEGIAN_VERSION.zip" \
             "out/$CHINESE_ID-$CHINESE_VERSION.zip" \
             "out/ocr-latin-$OCR_VERSION.zip" \
             "out/ocr-cyrillic-$OCR_VERSION.zip" \

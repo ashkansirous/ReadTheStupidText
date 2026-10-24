@@ -47,3 +47,82 @@ public static class ScannedText
     public static string FormatPageNumbers(IReadOnlyList<int> pages) =>
         string.Join(", ", pages.Select(p => p.ToString(CultureInfo.InvariantCulture)));
 }
+
+/// <summary>Where a captured page is in the background OCR (Slice 100).</summary>
+public enum CapturedPageState
+{
+    Reading,
+    Read,
+    Failed,
+}
+
+/// <summary>One captured page: where its image is, and what its OCR gave once settled.</summary>
+public sealed class CapturedPage
+{
+    public CapturedPage(Guid id, string location)
+    {
+        Id = id;
+        Location = location;
+    }
+
+    public Guid Id { get; }
+
+    public string Location { get; }
+
+    public CapturedPageState State { get; internal set; } = CapturedPageState.Reading;
+
+    public string? Text { get; internal set; }
+}
+
+/// <summary>
+/// The pages of the capture wizard, in the order they will be read (Slice 100). Pure bookkeeping:
+/// pages are added as they arrive, settle one by one as their OCR finishes (in any order), can be
+/// removed, and read out as the per-page texts <see cref="ScannedText"/> joins. A removed page's
+/// late result is ignored.
+/// </summary>
+public sealed class CapturedPageList
+{
+    private readonly List<CapturedPage> _pages = [];
+
+    public IReadOnlyList<CapturedPage> Pages => _pages;
+
+    public int Count => _pages.Count;
+
+    public CapturedPage Add(string location)
+    {
+        var page = new CapturedPage(Guid.NewGuid(), location);
+        _pages.Add(page);
+        return page;
+    }
+
+    /// <summary>Removes the page and returns it, or null when it is not there.</summary>
+    public CapturedPage? Remove(Guid id)
+    {
+        CapturedPage? page = Find(id);
+        if (page is not null)
+        {
+            _pages.Remove(page);
+        }
+
+        return page;
+    }
+
+    /// <summary>Records the page's OCR text; a null text marks a page whose OCR failed. Ignored for a removed page.</summary>
+    public void Settle(Guid id, string? text)
+    {
+        CapturedPage? page = Find(id);
+        if (page is null)
+        {
+            return;
+        }
+
+        page.Text = text;
+        page.State = text is null ? CapturedPageState.Failed : CapturedPageState.Read;
+    }
+
+    /// <summary>The pages' texts in order, null for a failed page; the shape <see cref="ScannedText.JoinPages"/> takes.</summary>
+    public IReadOnlyList<string?> Texts() =>
+        _pages.Select(page => page.State == CapturedPageState.Read ? page.Text : null).ToList();
+
+    private CapturedPage? Find(Guid id) => _pages.FirstOrDefault(page => page.Id == id);
+}

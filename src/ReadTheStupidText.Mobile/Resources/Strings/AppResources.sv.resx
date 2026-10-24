@@ -46,8 +46,23 @@
   <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>Vissa sidor hoppades över</value></data>
   <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>Det gick inte att läsa sida {0}. De sidor som gick att läsa ersatte din text.</value></data>
   <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>Det gick inte att läsa sidorna {0}. De sidor som gick att läsa ersatte din text.</value></data>
-  <data name="Reader_ScanProgressPage" xml:space="preserve"><value>Läser sida {0} av {1}</value></data>
-  <data name="Reader_ScanProgressSingle" xml:space="preserve"><value>Läser sida</value></data>
+  <data name="Capture_Title" xml:space="preserve"><value>Ta en bild av varje sida</value></data>
+  <data name="Capture_Hint" xml:space="preserve"><value>Lägg till en sida i taget. Tryck på {0} när du har alla.</value></data>
+  <data name="Capture_HintDone" xml:space="preserve"><value>Klar</value></data>
+  <data name="Capture_PageLabel" xml:space="preserve"><value>Sida {0}</value></data>
+  <data name="Capture_Reading" xml:space="preserve"><value>läser…</value></data>
+  <data name="Capture_AddPage" xml:space="preserve"><value>Lägg till en sida till</value></data>
+  <data name="Capture_Done" xml:space="preserve"><value>Klar – visa mig texten</value></data>
+  <data name="Capture_ChoosePhotos" xml:space="preserve"><value>Välj från bilder</value></data>
+  <data name="Capture_DiscardTitle" xml:space="preserve"><value>Kassera de här sidorna?</value></data>
+  <data name="Capture_DiscardMessage" xml:space="preserve"><value>Du tog {0} sidor. De sparas inte om du går tillbaka.</value></data>
+  <data name="Capture_DiscardMessageOne" xml:space="preserve"><value>Du tog 1 sida. Den sparas inte om du går tillbaka.</value></data>
+  <data name="Capture_PageLimit" xml:space="preserve"><value>Du kan lägga till upp till {0} sidor åt gången. Resten lades inte till.</value></data>
+  <data name="Capture_KeepTaking" xml:space="preserve"><value>Fortsätt ta sidor</value></data>
+  <data name="Capture_Discard" xml:space="preserve"><value>Kassera och gå tillbaka</value></data>
+  <data name="Capture_RemovePage" xml:space="preserve"><value>Ta bort den här sidan</value></data>
+  <data name="Capture_CouldntRead" xml:space="preserve"><value>Kunde inte läsas</value></data>
+  <data name="Capture_ClosePreview" xml:space="preserve"><value>Stäng</value></data>
   <data name="Reader_PageLanguageTitle" xml:space="preserve"><value>Vilket språk är den här sidan på?</value></data>
   <data name="Reader_OcrDownloading" xml:space="preserve"><value>Laddar ned läsaren för {0}… {1} %</value></data>
   <data name="Reader_OcrDownloadFailedTitle" xml:space="preserve"><value>Det gick inte att ladda ned läsaren</value></data>
@@ -90,4 +105,6 @@
   <data name="Language_Retry" xml:space="preserve"><value>Försök ladda ned igen</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>Fortsätt</value></data>
   <data name="Language_StartReading" xml:space="preserve"><value>Börja läsa</value></data>
+  <data name="Voice_NbWoman" xml:space="preserve"><value>Röst {0} (kvinna)</value></data>
+  <data name="Voice_NbMan" xml:space="preserve"><value>Röst {0} (man)</value></data>
 </root>

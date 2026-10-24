@@ -29,7 +29,12 @@ public sealed class AndroidDocumentScanner : IDocumentScanner
 
     private sealed record PendingScan(int RequestCode, TaskCompletionSource<IReadOnlyList<string>> Completion);
 
-    public async Task<IReadOnlyList<string>> ScanAsync()
+    public Task<IReadOnlyList<string>> ScanAsync()
+    {
+        return ScanAsync(MaxPages);
+    }
+
+    public async Task<IReadOnlyList<string>> ScanAsync(int maxPages)
     {
         Activity activity = Microsoft.Maui.ApplicationModel.Platform.CurrentActivity
             ?? throw new DocumentScannerStartFailedException();
@@ -43,7 +48,7 @@ public sealed class AndroidDocumentScanner : IDocumentScanner
 
         try
         {
-            IntentSender sender = await GetStartIntentAsync(activity);
+            IntentSender sender = await GetStartIntentAsync(activity, maxPages);
             Launch(activity, sender, request.RequestCode);
             return await request.Completion.Task;
         }
@@ -58,7 +63,7 @@ public sealed class AndroidDocumentScanner : IDocumentScanner
         try
         {
             Context context = Microsoft.Maui.ApplicationModel.Platform.AppContext;
-            IOptionalModuleApi scanner = GmsDocumentScanning.GetClient(BuildOptions()).JavaCast<IOptionalModuleApi>();
+            IOptionalModuleApi scanner = GmsDocumentScanning.GetClient(BuildOptions(MaxPages)).JavaCast<IOptionalModuleApi>();
             GmsModuleInstall.ModuleInstallRequest request = GmsModuleInstall.ModuleInstallRequest.NewBuilder().AddApi(scanner).Build();
             await GmsModuleInstall.ModuleInstall.GetClient(context).InstallModules(request);
         }
@@ -90,11 +95,11 @@ public sealed class AndroidDocumentScanner : IDocumentScanner
         }
     }
 
-    private static async Task<IntentSender> GetStartIntentAsync(Activity activity)
+    private static async Task<IntentSender> GetStartIntentAsync(Activity activity, int maxPages)
     {
         try
         {
-            IGmsDocumentScanner scanner = GmsDocumentScanning.GetClient(BuildOptions());
+            IGmsDocumentScanner scanner = GmsDocumentScanning.GetClient(BuildOptions(maxPages));
             Java.Lang.Object sender = await scanner.GetStartScanIntent(activity);
             return (IntentSender)sender;
         }
@@ -130,10 +135,10 @@ public sealed class AndroidDocumentScanner : IDocumentScanner
         }
     }
 
-    private static GmsDocumentScannerOptions BuildOptions() =>
+    private static GmsDocumentScannerOptions BuildOptions(int maxPages) =>
         new GmsDocumentScannerOptions.Builder()
             .SetGalleryImportAllowed(true)!
-            .SetPageLimit(MaxPages)!
+            .SetPageLimit(Math.Clamp(maxPages, 1, MaxPages))!
             .SetResultFormats(GmsDocumentScannerOptions.ResultFormatJpeg)!
             .SetScannerMode(GmsDocumentScannerOptions.ScannerModeFull)!
             .Build()!;
