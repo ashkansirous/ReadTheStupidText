@@ -147,6 +147,16 @@
   <data name="Wizard_Reading" xml:space="preserve"><value>Læser side {0} af {1}</value></data>
   <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>Nogle sider blev ikke læst</value></data>
   <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>{0} sider kunne ikke læses. De beholdes som billeder uden tekst.</value></data>
+  <data name="Pictures_NoneTitle" xml:space="preserve"><value>Denne fil har ord, men ingen billeder</value></data>
+  <data name="Pictures_NoneBody" xml:space="preserve"><value>Tilføj om du vil ét billede til hver side. Sider uden billede læses som tekst.</value></data>
+  <data name="Pictures_PickAll" xml:space="preserve"><value>Vælg billeder til alle sider</value></data>
+  <data name="Pictures_PageN" xml:space="preserve"><value>SIDE {0}</value></data>
+  <data name="Pictures_Change" xml:space="preserve"><value>Skift</value></data>
+  <data name="Pictures_Add" xml:space="preserve"><value>Tilføj billede</value></data>
+  <data name="Pictures_FoundEvery" xml:space="preserve"><value>Der er billeder på alle sider</value></data>
+  <data name="Pictures_Subtitle_Other" xml:space="preserve"><value>{0} · {1} sider</value></data>
+  <data name="Pictures_Subtitle_One" xml:space="preserve"><value>{0} · {1} side</value></data>
+  <data name="Pictures_NextCover" xml:space="preserve"><value>Næste: omslag</value></data>
   <data name="Wizard_CoverHint" xml:space="preserve"><value>Vælg en side, et foto eller en farve til forsiden.</value></data>
   <data name="Wizard_NeedTextTitle" xml:space="preserve"><value>Intet at læse endnu</value></data>
   <data name="Wizard_NeedTextBody" xml:space="preserve"><value>Tilføj tekst til mindst én side, og gem derefter.</value></data>

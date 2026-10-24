@@ -61,11 +61,11 @@ letters (å, æ, ø, ä, ö) with no OCR pack.
 
 *From review:* high pass, 7 applied (#4 and #5 go to Slice 105, #9 Nynorsk is out of scope). Medium pass, 5 applied (#3 goes to Slice 105, #7 out of scope, #8 catalog-driven availability not done).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-24)
 
 - `AppLanguages.Canonical` is the one place `no`/`nn` map to `nb`; route every language parse and engine code through it. `PackConstants.NaturallyReadable` must stay in step with `packs.yml`; Slice 104 adds `nb` when piper-nb lands. (Slice 103: docs/plan/slices/103-nordic-dutch-languages.md)
 
-#### For README.md
+#### For README.md (lifted 2026-10-24)
 
 - "Nine languages" becomes fourteen wherever README says it.
 
