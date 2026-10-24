@@ -60,6 +60,7 @@
       background: var(--brand); color: var(--brand-ink); text-decoration: none; font-weight: 600; font-size: 1.05rem;
     }
     .btn:hover { filter: brightness(1.08); }
+    .btn.alt { background: transparent; color: var(--ink); border: 2px solid var(--line); padding: calc(.8rem - 2px) calc(1.6rem - 2px); }
     .pill { display: inline-flex; align-items: center; gap: 8px; padding: .3rem 0; color: var(--soft); font-weight: 500; }
     .pill small { background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 0 .55rem; color: var(--soft); font-size: .8rem; }
     .stage { position: relative; display: flex; justify-content: center; padding: 32px 0; }
@@ -113,7 +114,8 @@
           <h1>A storybook reader where every character has their own voice.</h1>
           <p class="lede">Scan a page, open a PDF or type a story, and Dino works out who is speaking and reads each character in their own voice, with a highlight that follows every sentence across the real page. No accounts, no ads, no tracking; stories and photos never leave the device.</p>
           <div class="actions">
-            <a class="btn" href="download/android">Download for Android</a>
+            <a class="btn" href="https://play.google.com/apps/testing/uk.sirous.dinoreader">Android &mdash; Google Play (beta)</a>
+            <a class="btn alt" href="download/android">Download the APK</a>
             <span class="pill">iPhone and iPad via TestFlight <small>in testing</small></span>
             <span class="pill">Windows (coming to the Store) <small>in testing</small></span>
           </div>
@@ -159,10 +161,10 @@
         <h2 id="runs">Where it runs</h2>
         <div class="grid three">
           <div class="card">
-            <span class="tag">Internal testing</span>
+            <span class="tag">Google Play beta</span>
             <h3>Android</h3>
-            <p>Internal testing on Google Play, plus the direct download. Android will ask you to allow installs from your browser the first time.</p>
-            <div class="actions"><a class="btn" href="download/android">Download for Android</a></div>
+            <p>Join the beta on Google Play and it installs and updates like any other app. The direct download also works; Android will ask you to allow installs from your browser the first time.</p>
+            <div class="actions"><a class="btn" href="https://play.google.com/apps/testing/uk.sirous.dinoreader">Android &mdash; Google Play (beta)</a> <a class="btn alt" href="download/android">Download the APK</a></div>
           </div>
           <div class="card">
             <span class="tag">TestFlight</span>
