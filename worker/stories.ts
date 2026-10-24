@@ -46,6 +46,7 @@ const META_READ_BATCH = 6;
 const MAX_STORIES = 200;
 const MAX_TITLE_LENGTH = 200;
 const MAX_LANGUAGE_LENGTH = 12;
+const MAX_CREDITS_LENGTH = 200;
 const ALLOWED_METHODS = "GET, HEAD";
 const PACKAGE_FILE = /^story-v(\d+)\.dino$/;
 const POSITIVE_INTEGER = /^[1-9]\d{0,8}$/;
@@ -65,6 +66,8 @@ export interface StoryMeta {
   readonly pageCount: number | null;
   readonly minutes: number | null;
   readonly added: string | null;
+  /** The optional one-line credit the store card shows ("Beatrix Potter, 1902"); older entries have none. */
+  readonly credits: string | null;
 }
 
 /** One complete story: its checked meta, the package version it offers, and whether a cover was uploaded. */
@@ -130,7 +133,9 @@ function positiveIntegerOrNull(value: unknown): number | null {
 }
 
 function boundedText(value: unknown, max: number): string | null {
-  return typeof value === "string" && value.trim() !== "" && value.length <= max ? value : null;
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed !== "" && trimmed.length <= max ? trimmed : null;
 }
 
 /** A checked meta, or null when a required field is missing or malformed (the story is then not offered). */
@@ -149,6 +154,7 @@ export function parseMeta(parsed: unknown): StoryMeta | null {
     pageCount: positiveIntegerOrNull(raw["pageCount"]),
     minutes: positiveIntegerOrNull(raw["minutes"]),
     added: boundedText(raw["added"], MAX_TITLE_LENGTH),
+    credits: boundedText(raw["credits"], MAX_CREDITS_LENGTH),
   };
 }
 
@@ -172,6 +178,7 @@ export interface ListItem {
   readonly version: number;
   readonly pageCount: number | null;
   readonly minutes: number | null;
+  readonly credits: string | null;
   readonly coverUrl: string | null;
   readonly downloadUrl: string;
 }
@@ -188,6 +195,7 @@ export function toListItem(entry: StoryEntry, pathPrefix: string): ListItem {
     version: entry.version,
     pageCount: entry.meta.pageCount,
     minutes: entry.meta.minutes,
+    credits: entry.meta.credits,
     coverUrl: entry.hasCover ? `${base}${COVER_SEGMENT}${versioned}` : null,
     downloadUrl: `${base}${DOWNLOAD_SEGMENT}${versioned}`,
   };
