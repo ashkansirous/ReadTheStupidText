@@ -113,17 +113,17 @@ this plan turns it into ordered, shippable vertical slices.
 | 93 | Dino backup file and a first run that asks the language | built | #267 | | [93-dino-backup-and-first-run.md](docs/plan/slices/93-dino-backup-and-first-run.md) |
 | 94 | "Good Enough" ships as a starter story | built | #271 | | [94-good-enough-starter.md](docs/plan/slices/94-good-enough-starter.md) |
 | 95 | Dino translation works: bundled translations for every shipped book, live translation on Android | built | #271 | | [95-dino-translation-works.md](docs/plan/slices/95-dino-translation-works.md) |
-| 96 | Dino's layout never mirrors when the language changes | planned | | | [96-dino-layout-never-mirrors.md](docs/plan/slices/96-dino-layout-never-mirrors.md) |
+| 96 | Dino's layout never mirrors when the language changes | built | #278 | | [96-dino-layout-never-mirrors.md](docs/plan/slices/96-dino-layout-never-mirrors.md) |
 | 97 | The grown-ups button says "add a book", not a lock | planned | | | [97-dino-add-book-button.md](docs/plan/slices/97-dino-add-book-button.md) |
 | 98 | Picture + text books: a picture per page, the text beside it | planned | | | [98-dino-picture-and-text-books.md](docs/plan/slices/98-dino-picture-and-text-books.md) |
 | 99 | RTST phone: a minimal main page and a Settings page | planned | | | [99-rtst-mobile-minimal-main-page.md](docs/plan/slices/99-rtst-mobile-minimal-main-page.md) |
 | 100 | RTST phone: "Take a photo of each page", wizard page 1 | planned | | | [100-rtst-mobile-page-capture-wizard.md](docs/plan/slices/100-rtst-mobile-page-capture-wizard.md) |
 | 101 | RTST phone: wizard page 2, check the text, translate, read | planned | | | [101-rtst-mobile-review-and-translate.md](docs/plan/slices/101-rtst-mobile-review-and-translate.md) |
-| 102 | Ten open stories in the Dino story store | planned | | | [102-dino-store-ten-stories.md](docs/plan/slices/102-dino-store-ten-stories.md) |
+| 102 | Ten open stories in the Dino story store | built | #280 | | [102-dino-store-ten-stories.md](docs/plan/slices/102-dino-store-ten-stories.md) |
 | 103 | Danish, Finnish, Swedish, Norwegian and Dutch in every app | planned | | | [103-nordic-dutch-languages.md](docs/plan/slices/103-nordic-dutch-languages.md) |
 | 104 | A Norwegian voice pack (Piper nvcc, ten speakers) | planned | | | [104-piper-norwegian-pack.md](docs/plan/slices/104-piper-norwegian-pack.md) |
 | 105 | Dino: story rules and book translations for the five new languages | planned | | | [105-dino-nordic-dutch-books-and-rules.md](docs/plan/slices/105-dino-nordic-dutch-books-and-rules.md) |
-| 106 | Windows: offline translation packs for the five new languages | planned | | | [106-windows-nordic-dutch-translation-packs.md](docs/plan/slices/106-windows-nordic-dutch-translation-packs.md) |
+| 106 | Windows: offline translation packs for the five new languages | built | #281 | | [106-windows-nordic-dutch-translation-packs.md](docs/plan/slices/106-windows-nordic-dutch-translation-packs.md) |
 
 Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
 
@@ -158,6 +158,9 @@ Batch 21 (103-106, planned 2026-10-24): Danish, Finnish, Swedish, Norwegian (Bok
 
 Built but not verified (details in each slice file):
 
+- Slice 96: emulator in Farsi and Arabic (gallery, gate, wizard, store, backup, reader, swipe direction, highlight on RTL lines); Windows head gallery and reader ([slice](docs/plan/slices/96-dino-layout-never-mirrors.md)).
+- Slice 102: the R2 upload of all ten stories and the live `GET /api/stories` listing; emulator: ten cards with credits, download, read with voices, Farsi read; a native-speaker read of the translations ([slice](docs/plan/slices/102-dino-store-ten-stories.md)).
+- Slice 106: the `packs.yml` run that publishes the ten packs; Norwegian on a Windows head via `MarianEngine` (third-party conversion, never run); en to da/fi/sv/nl/nb and back on Windows. The packs reach users only after that run and the `PackConstants` pin bump, done once Slice 104 merges. The Norwegian packs are about 390 MB each ([slice](docs/plan/slices/106-windows-nordic-dutch-translation-packs.md)).
 - Windows has no `en-ja` translation pack (`TranslationPacks.FromEnglish` and `packs.yml` lack it), so English cannot be translated into Japanese offline on Windows; found while planning Slice 106, not yet scheduled.
 - Slice 43: the 8 translated Play listings are only worth adding when the app goes to Play production (it is closed testing now); get a native read first. The Microsoft Store keeps its existing Windows-specific listing (decided 2026-10-20). ([slice](docs/plan/slices/43-store-listing-refresh.md))
 - Slice 59: attribution quality on a real children's book text (only unit-test fixtures so far); check with the first Slice 60 read ([slice](docs/plan/slices/59-dialogue-parser-voice-caster.md)).

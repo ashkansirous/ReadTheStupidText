@@ -23,7 +23,7 @@ name: packs
 #                   espeak-ng data, which therefore exists only inside this pack's zip,
 #                   never in the repo, the MSIX, the AAB or the .ipa (Decision 63).
 #   * melo-zh-en    MeloTTS Chinese + English (MIT), same download and pin.
-# Thirteen translation packs (Slice 75, Decision 67) ride in the same release and packs.json:
+# Twenty-three translation packs (Slice 75, Decision 67; Slice 106, Decision 110) ride in the same release and packs.json:
 #   one Opus-MT (Marian) leg each, `<source>-<target>` with English at one end, so a pair like
 #   fr -> ru pivots through two packs. Pre-converted int8 ONNX encoder/decoder from the Xenova
 #   Hugging Face repos (CC-BY-4.0 Opus-MT weights by Helsinki-NLP), pinned to one revision and
@@ -62,7 +62,7 @@ on:
         type: string
 
       translation_pack_version:
-        description: 'Version stamped into the thirteen Opus-MT translation packs (bump when any model changes)'
+        description: 'Version stamped into the twenty-three Opus-MT translation packs (bump when any model changes)'
         required: true
         default: '1'
         type: string
@@ -111,8 +111,7 @@ env:
   OCR_CJK_DICT_SHA256: d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b
   # Opus-MT ONNX models (Slice 75). The pack ids and folder layout are read by
   # src/ReadTheStupidText.Infrastructure/Translation (TranslationPacks, TranslationPackFiles).
-  TRANSLATION_LICENSE: CC-BY-4.0
-  TRANSLATION_PAIRS: 'fr-en en-fr es-en en-es pt-en en-pt zh-en en-zh ar-en en-ar ru-en en-ru ja-en'
+  TRANSLATION_PAIRS: 'fr-en en-fr es-en en-es pt-en en-pt zh-en en-zh ar-en en-ar ru-en en-ru ja-en da-en en-da fi-en en-fi sv-en en-sv nl-en en-nl nb-en en-nb'
 
 jobs:
   publish-packs:
@@ -356,8 +355,10 @@ jobs:
 
       # The translation packs: one Opus-MT leg per zip (encoder.onnx, decoder.onnx, source.spm, vocab.json,
       # translation.json, LICENSE, SOURCE). The table is: pair, Hugging Face repo, pinned revision, then the
-      # sha256 of the int8 encoder, int8 merged decoder (with key/value cache), source.spm, vocab.json, config.json, and the target token a
-      # multi-target model needs (">>xx<<", or "-"). translation.json copies the decoding ids from config.json.
+      # sha256 of the encoder, merged decoder (with key/value cache), source.spm, vocab.json, config.json, the target token a
+      # multi-target model needs (">>xx<<", or "-"), the repo layout ("-" for Xenova's onnx/*_quantized.onnx, or a directory
+      # such as "int8/" holding unsuffixed files) and the licence the model card declares (Xenova's repos declare none and
+      # point at the CC-BY-4.0 Helsinki-NLP base; TigreGotico's cards say apache-2.0). translation.json copies the decoding ids from config.json.
       - name: Build the translation (Opus-MT) pack zips
         run: |
           set -euo pipefail
@@ -368,26 +369,37 @@ jobs:
             echo "$sha  $dest" | sha256sum -c -
           }
           build_translation() {
-            local pair="$1" repo="$2" rev="$3" enc="$4" dec="$5" spm="$6" vocab="$7" cfg="$8" token="$9"
+            local pair="$1" repo="$2" rev="$3" enc="$4" dec="$5" spm="$6" vocab="$7" cfg="$8" token="$9" layout="${10}" license="${11}"
             local id="translation-$pair" source="${pair%-*}" target="${pair#*-}"
-            local dest="out/$id"
+            local dest="out/$id" owner="${repo%%/*}" dir="" enc_file=onnx/encoder_model_quantized.onnx dec_file=onnx/decoder_model_merged_quantized.onnx
+            # The Norwegian pair has no Xenova conversion: TigreGotico's export of the multi-language
+            # Helsinki-NLP gmq models keeps everything under int8/ with unsuffixed file names. Its "int8"
+            # merged decoder is really fp32 (no quantized ops, ~337 MB), so the zip is ~390 MB (Slice 106).
+            if [ "$layout" != "-" ]; then
+              dir="$layout"; enc_file="${dir}encoder_model.onnx"; dec_file="${dir}decoder_model_merged.onnx"
+            fi
             mkdir -p "$dest"
-            fetch "$repo" "$rev" onnx/encoder_model_quantized.onnx "$enc" "$dest/encoder.onnx"
-            fetch "$repo" "$rev" onnx/decoder_model_merged_quantized.onnx "$dec" "$dest/decoder.onnx"
-            fetch "$repo" "$rev" source.spm "$spm" "$dest/source.spm"
-            fetch "$repo" "$rev" vocab.json "$vocab" "$dest/vocab.json"
-            fetch "$repo" "$rev" config.json "$cfg" "tr-src/$pair-config.json"
+            fetch "$repo" "$rev" "$enc_file" "$enc" "$dest/encoder.onnx"
+            fetch "$repo" "$rev" "$dec_file" "$dec" "$dest/decoder.onnx"
+            fetch "$repo" "$rev" "${dir}source.spm" "$spm" "$dest/source.spm"
+            fetch "$repo" "$rev" "${dir}vocab.json" "$vocab" "$dest/vocab.json"
+            fetch "$repo" "$rev" "${dir}config.json" "$cfg" "tr-src/$pair-config.json"
             if [ "$token" = "-" ]; then token=""; fi
+            printf '%s' "$license" > "tr-src/$pair.license"
+            jq -e '(.max_length // .max_position_embeddings) != null' "tr-src/$pair-config.json" > /dev/null \
+              || { echo "::error::$id config.json has neither max_length nor max_position_embeddings"; exit 1; }
             jq --arg source "$source" --arg target "$target" --arg token "$token" \
               '{source: $source, target: $target, targetToken: (if $token == "" then null else $token end),
                 decoderStartTokenId: .decoder_start_token_id, eosTokenId: .eos_token_id,
-                padTokenId: .pad_token_id, maxLength: .max_length}' "tr-src/$pair-config.json" > "$dest/translation.json"
+                padTokenId: .pad_token_id, maxLength: (.max_length // .max_position_embeddings)}' "tr-src/$pair-config.json" > "$dest/translation.json"
             cat > "$dest/LICENSE" <<LICENSE_TEXT
-          Opus-MT translation model $source to $target (Marian, int8 ONNX)
-            Model weights and SentencePiece data: Copyright the Helsinki-NLP / OPUS-MT authors,
-            licensed under Creative Commons Attribution 4.0 (CC-BY-4.0,
-            https://creativecommons.org/licenses/by/4.0/). Changes: converted to ONNX and
-            quantised to int8 (Xenova, https://huggingface.co/$repo).
+          Opus-MT translation model $source to $target (Marian, ONNX)
+            Model weights and SentencePiece data: Copyright the Helsinki-NLP / OPUS-MT authors
+            (upstream licence CC-BY-4.0, https://creativecommons.org/licenses/by/4.0/).
+            Licence declared by the converted model card: $license. Changes: converted to ONNX
+            ($owner, https://huggingface.co/$repo); the encoder and merged decoder files are as
+            published there (int8 for the Xenova repos; for TigreGotico the encoder is int8 and
+            the merged decoder is effectively fp32).
             Upstream: https://github.com/Helsinki-NLP/Opus-MT
             Pinned files: https://huggingface.co/$repo/tree/$rev
           LICENSE_TEXT
@@ -403,29 +415,44 @@ jobs:
             rm -rf "$dest"
           }
           table=$(cat <<'TABLE'
-          fr-en Xenova/opus-mt-fr-en 6b166a182780e118c997879d0ad5be4b53671644 e727cb26ac6bf816394c49671af69c9ae5798868fed1e40849872415dffc1772 73bc7ac8e29c42e6f212ebcc29a2991d3646a04aabb642c0036aa54b40e4e1a9 78d0e717c77053f1c4b856d8661d9cb87c64f083a35418c087b9146300e4f585 f2ba9c69ae20f96b8bd821239a9152be422394f980350b77907cffc183db5f2d 6c2851f154d7b88c7767e4fdcf8a5694a36a456bfa6cbcde1b13fdbade3b56f6 -
-          en-fr Xenova/opus-mt-en-fr 28726206f80896b90035bd99cccd5cc1e151f916 0a81bdba62f53223740a8c6c6f58e716eba8ea1f92dfa569caf27ed5e3b6a0f7 333b244bce16023df04541c8cf9fd60aec9b0569da393c4b831d561897b0bda8 173e9f493a668fe396d599e28d414a201193094e6ffd7a4678e5aab0f6d3d838 f2ba9c69ae20f96b8bd821239a9152be422394f980350b77907cffc183db5f2d b522b73fcc86f77981349c1df2a2e041eed0dbcbea4acf2635019cf21d51ffc0 -
-          es-en Xenova/opus-mt-es-en eadfd7c658a9d8929ac3b8e996b68a68e2c7d480 c01e70f8455efc350831aa2af7ed187b16829241f0018ba07d1ba643a391bc18 4cd91ab30240d295ce907b5100826031838c672005e57e524d711122d75605fa e236ee6d866b635c0142114f8647f39831f9d92534aa2aad75c942f6a78ad0e3 b074b4cca0036ade5a39ea97faabd534e1015482c480fc2cb02c6481983eb163 fab3a7f93185bc5aa7b419f6a1e6e74d98c8f2a506c94493d3019bf46da3478d -
-          en-es Xenova/opus-mt-en-es 4b002a4c7edd54a7ced58877258b87f7efd3f892 03434edd1147e6c49e22066e9dc5888235e99cc35a6711d1c4ea5b06455d5da9 58ee5ddd6e22d1693d8722b90c1486afb93700a4376cf28fd74175052ad530ae 4dd547c24816a335e7b0b2e63376a8f1b3cbfc671eda5ab808dd44fdadaa8791 b074b4cca0036ade5a39ea97faabd534e1015482c480fc2cb02c6481983eb163 499eae1f97eeba63172fc884f92fd727ae803b7ceb79c0f653aa4b011152af2f -
-          zh-en Xenova/opus-mt-zh-en 39d480d52a9ea3065a1f117adfe4dbc55de10e6f 84d5e171b626bc8b6b220d022ac58696e9528c25deeacca62b5cbf4364547a99 c6b7f04ff1ba0fbd1bf6852599b4c0cad6fe512d57cd887f44ef36cf705424cb e27a3a1b539f4959ec72ea60e453f49156289f95d4e6000b29332efc45616203 08a119a1defd522fa047cb5e3bfe3e89633e96caa38ced0dc9cee7ef1021a011 293d318fce41dbf04114eac45037bb88a32d7c4ee21011a75e24a8b98ca45ad1 -
-          en-zh Xenova/opus-mt-en-zh 046f55aec303cdee3e0318604406d4df20f1e8ea d3b7912bf6a9bd27e4c074c2df91d4ff3d5b4bc5f7f6c8d7cc9c805c98fbafee 023be4f841f4c47cd65fffcbaa81c0d99d7f7e0138f7ba0e03fa220a4e688aff 5775ddc9e3ff2fae91554da56468ad35ff56edaba870fea74447bc7234bfdaa8 22c957348eed495ee925afc40a36da3e387c8a34a734c8486967c2dca271613e 4727d1229a04f95bf6f39abf949d8080615433d99d6ebd85f81c09edd247d5fa >>cmn_Hans<<
-          ar-en Xenova/opus-mt-ar-en 09c7556866400dcc53562ba8d7035119e7d9a2c1 d9b0d612acff86cf87634b49bda566d1ef39b312837de549786ea18fecefc708 cdb25ae736afe9d48035b0ea311ab4b25f315810fab7f3c6f6cb0d8d87af35fa 484f7210e5f4466f7e5b99b660717c6ef2a6f90746196daba507795b69dc02a2 87b78c097c331672ca22a522c3ba24c5dc2cdff90495dcb52cf742635439a3a0 451ee0da95b01fe58d78f05c47e9ad89f0a17a4c03dcecb389136a12248ef9aa -
-          en-ar Xenova/opus-mt-en-ar 034a684356c19021a187cda4d7f823298b913921 53c354d87ced44b39085fe8a46a25f09ea4578d442dbce9663f3977228f8a04e c0e553b0c26611780c70417c9b4c1ca7169e9cdb18ba9e649197efb017af9f02 81ac8f4d4ee271f4109eac67560a31f9c2d555463ba5eb95c32c6deee8ae819d 8b74af9e4c1ec122b8d06362db6c38795e10ca2b0156b2110cf08d4716744b76 8135d646cd810090349e8833b7ba593ac3b72d632f8858cb34925bdbcb6a1bea >>ara<<
-          ru-en Xenova/opus-mt-ru-en afe8c6c738ec81b6d033fd8f44f9678a639a7c67 c10df0466540534bb70c4402d539c349b8bfa9968184cad89f51408cf13e7eb7 25e7ff97b201bce64ab9c39749761d657b70b8602bcbc1ce01c67f713e90ffdf 745998e51ba5b058e38b7ac7765c25c43ed5c1c39cc92b27163b9b2e323c9d7c 5cf0d95d930d8d3e783c9e2f46a72f08b43a18060dab4ddefbcb66a733efedcb 60dc7d0906dbe42a1d740cdd7e84ce1534685b81fbe16005a0301adac69086ce -
-          en-ru Xenova/opus-mt-en-ru e050376e960175e8ddc5cff85025dc8436cddd68 97f28d8295d231b7da721ded06fa8c034787df2122cd8f85b904abdc4d15bd53 7efefcd793a5663bc204224a92a123524f3dfe2ffad59e5f73d6734d1b11ad04 16bebef1389a0b8ab452772c4e35b9e605e5713f8ac7baa71ca701394eaa086d 5cf0d95d930d8d3e783c9e2f46a72f08b43a18060dab4ddefbcb66a733efedcb db16bf0ea7bac239273214c3b9ab44577884227371a9a25e0191b7baf8d6f167 -
-          ja-en Xenova/opus-mt-ja-en 1a906cfaaf7c8f4193f67f5885c082aa6dbd9d16 345262b16bcdda1468b0f3380c112b7ce79f731176b4b1d21f6edd5b2ae0d25c b304d0014e4e1575437b6af95467b6cb54405d923732d8359113bd6dbbee93c0 d0b5c3b10b5959f056ff2c86e2f2356129242ff1fc72d3a4a34d6a8c0eee4e57 a1667b43d021e09c76f385101bd473f20b5691a12cdca7dda43e4a8daff20021 d35476f1d3858883feec67e5a63ddc387452a70fda9c8e26db99c71aa2ad6a34 -
-          pt-en Xenova/opus-mt-ROMANCE-en f60feaabe8bb435a5871e7702b25f53a01e770f8 13750ba31ee80c88f6bbb28aa03320674c50394efb95f791d5c4f5c8894232bf 5c0d95a8072a463c747343cf25ac9b4a17e9a90e08131e7efab12691ca13c979 baeab21ec00d0b490382b82499ef0348235c5a8e75de28aec8290adf62b007c4 32c8eeec099b448425a7da4e09ec10acbe424a733780c9bcec2062846f03e706 df1876a346b1852ef4590bc74c6e180eb2ba10193cf2bded24c31876f357d83c -
-          en-pt Xenova/opus-mt-en-ROMANCE 9d2ba69ac80c8e8453c3d9a1e2323a0e7b8ca3cd b4ddfd9338ba3d7c6b9c2d1410ed94fb7e06741226918cef6148031101bbd019 b5f6d442da7fa69f9d500df90373d2fdca4f799c43696b41888353b5c3c8eb13 b1f89e7b05828846baf19109a61029a36838f1c4f3defc218e6aee0ee2787864 d9c3b6b01d3a9c9403befa60fd17e4a50dc4929698e3d6b9c2e7f066a9d1f041 dc4f6f9ffbbf1196ff9e8329e5666fe190aef1b1c6806649d86b962b9bde292c >>pt<<
+          fr-en Xenova/opus-mt-fr-en 6b166a182780e118c997879d0ad5be4b53671644 e727cb26ac6bf816394c49671af69c9ae5798868fed1e40849872415dffc1772 73bc7ac8e29c42e6f212ebcc29a2991d3646a04aabb642c0036aa54b40e4e1a9 78d0e717c77053f1c4b856d8661d9cb87c64f083a35418c087b9146300e4f585 f2ba9c69ae20f96b8bd821239a9152be422394f980350b77907cffc183db5f2d 6c2851f154d7b88c7767e4fdcf8a5694a36a456bfa6cbcde1b13fdbade3b56f6 - - CC-BY-4.0
+          en-fr Xenova/opus-mt-en-fr 28726206f80896b90035bd99cccd5cc1e151f916 0a81bdba62f53223740a8c6c6f58e716eba8ea1f92dfa569caf27ed5e3b6a0f7 333b244bce16023df04541c8cf9fd60aec9b0569da393c4b831d561897b0bda8 173e9f493a668fe396d599e28d414a201193094e6ffd7a4678e5aab0f6d3d838 f2ba9c69ae20f96b8bd821239a9152be422394f980350b77907cffc183db5f2d b522b73fcc86f77981349c1df2a2e041eed0dbcbea4acf2635019cf21d51ffc0 - - CC-BY-4.0
+          es-en Xenova/opus-mt-es-en eadfd7c658a9d8929ac3b8e996b68a68e2c7d480 c01e70f8455efc350831aa2af7ed187b16829241f0018ba07d1ba643a391bc18 4cd91ab30240d295ce907b5100826031838c672005e57e524d711122d75605fa e236ee6d866b635c0142114f8647f39831f9d92534aa2aad75c942f6a78ad0e3 b074b4cca0036ade5a39ea97faabd534e1015482c480fc2cb02c6481983eb163 fab3a7f93185bc5aa7b419f6a1e6e74d98c8f2a506c94493d3019bf46da3478d - - CC-BY-4.0
+          en-es Xenova/opus-mt-en-es 4b002a4c7edd54a7ced58877258b87f7efd3f892 03434edd1147e6c49e22066e9dc5888235e99cc35a6711d1c4ea5b06455d5da9 58ee5ddd6e22d1693d8722b90c1486afb93700a4376cf28fd74175052ad530ae 4dd547c24816a335e7b0b2e63376a8f1b3cbfc671eda5ab808dd44fdadaa8791 b074b4cca0036ade5a39ea97faabd534e1015482c480fc2cb02c6481983eb163 499eae1f97eeba63172fc884f92fd727ae803b7ceb79c0f653aa4b011152af2f - - CC-BY-4.0
+          zh-en Xenova/opus-mt-zh-en 39d480d52a9ea3065a1f117adfe4dbc55de10e6f 84d5e171b626bc8b6b220d022ac58696e9528c25deeacca62b5cbf4364547a99 c6b7f04ff1ba0fbd1bf6852599b4c0cad6fe512d57cd887f44ef36cf705424cb e27a3a1b539f4959ec72ea60e453f49156289f95d4e6000b29332efc45616203 08a119a1defd522fa047cb5e3bfe3e89633e96caa38ced0dc9cee7ef1021a011 293d318fce41dbf04114eac45037bb88a32d7c4ee21011a75e24a8b98ca45ad1 - - CC-BY-4.0
+          en-zh Xenova/opus-mt-en-zh 046f55aec303cdee3e0318604406d4df20f1e8ea d3b7912bf6a9bd27e4c074c2df91d4ff3d5b4bc5f7f6c8d7cc9c805c98fbafee 023be4f841f4c47cd65fffcbaa81c0d99d7f7e0138f7ba0e03fa220a4e688aff 5775ddc9e3ff2fae91554da56468ad35ff56edaba870fea74447bc7234bfdaa8 22c957348eed495ee925afc40a36da3e387c8a34a734c8486967c2dca271613e 4727d1229a04f95bf6f39abf949d8080615433d99d6ebd85f81c09edd247d5fa >>cmn_Hans<< - CC-BY-4.0
+          ar-en Xenova/opus-mt-ar-en 09c7556866400dcc53562ba8d7035119e7d9a2c1 d9b0d612acff86cf87634b49bda566d1ef39b312837de549786ea18fecefc708 cdb25ae736afe9d48035b0ea311ab4b25f315810fab7f3c6f6cb0d8d87af35fa 484f7210e5f4466f7e5b99b660717c6ef2a6f90746196daba507795b69dc02a2 87b78c097c331672ca22a522c3ba24c5dc2cdff90495dcb52cf742635439a3a0 451ee0da95b01fe58d78f05c47e9ad89f0a17a4c03dcecb389136a12248ef9aa - - CC-BY-4.0
+          en-ar Xenova/opus-mt-en-ar 034a684356c19021a187cda4d7f823298b913921 53c354d87ced44b39085fe8a46a25f09ea4578d442dbce9663f3977228f8a04e c0e553b0c26611780c70417c9b4c1ca7169e9cdb18ba9e649197efb017af9f02 81ac8f4d4ee271f4109eac67560a31f9c2d555463ba5eb95c32c6deee8ae819d 8b74af9e4c1ec122b8d06362db6c38795e10ca2b0156b2110cf08d4716744b76 8135d646cd810090349e8833b7ba593ac3b72d632f8858cb34925bdbcb6a1bea >>ara<< - CC-BY-4.0
+          ru-en Xenova/opus-mt-ru-en afe8c6c738ec81b6d033fd8f44f9678a639a7c67 c10df0466540534bb70c4402d539c349b8bfa9968184cad89f51408cf13e7eb7 25e7ff97b201bce64ab9c39749761d657b70b8602bcbc1ce01c67f713e90ffdf 745998e51ba5b058e38b7ac7765c25c43ed5c1c39cc92b27163b9b2e323c9d7c 5cf0d95d930d8d3e783c9e2f46a72f08b43a18060dab4ddefbcb66a733efedcb 60dc7d0906dbe42a1d740cdd7e84ce1534685b81fbe16005a0301adac69086ce - - CC-BY-4.0
+          en-ru Xenova/opus-mt-en-ru e050376e960175e8ddc5cff85025dc8436cddd68 97f28d8295d231b7da721ded06fa8c034787df2122cd8f85b904abdc4d15bd53 7efefcd793a5663bc204224a92a123524f3dfe2ffad59e5f73d6734d1b11ad04 16bebef1389a0b8ab452772c4e35b9e605e5713f8ac7baa71ca701394eaa086d 5cf0d95d930d8d3e783c9e2f46a72f08b43a18060dab4ddefbcb66a733efedcb db16bf0ea7bac239273214c3b9ab44577884227371a9a25e0191b7baf8d6f167 - - CC-BY-4.0
+          ja-en Xenova/opus-mt-ja-en 1a906cfaaf7c8f4193f67f5885c082aa6dbd9d16 345262b16bcdda1468b0f3380c112b7ce79f731176b4b1d21f6edd5b2ae0d25c b304d0014e4e1575437b6af95467b6cb54405d923732d8359113bd6dbbee93c0 d0b5c3b10b5959f056ff2c86e2f2356129242ff1fc72d3a4a34d6a8c0eee4e57 a1667b43d021e09c76f385101bd473f20b5691a12cdca7dda43e4a8daff20021 d35476f1d3858883feec67e5a63ddc387452a70fda9c8e26db99c71aa2ad6a34 - - CC-BY-4.0
+          pt-en Xenova/opus-mt-ROMANCE-en f60feaabe8bb435a5871e7702b25f53a01e770f8 13750ba31ee80c88f6bbb28aa03320674c50394efb95f791d5c4f5c8894232bf 5c0d95a8072a463c747343cf25ac9b4a17e9a90e08131e7efab12691ca13c979 baeab21ec00d0b490382b82499ef0348235c5a8e75de28aec8290adf62b007c4 32c8eeec099b448425a7da4e09ec10acbe424a733780c9bcec2062846f03e706 df1876a346b1852ef4590bc74c6e180eb2ba10193cf2bded24c31876f357d83c - - CC-BY-4.0
+          en-pt Xenova/opus-mt-en-ROMANCE 9d2ba69ac80c8e8453c3d9a1e2323a0e7b8ca3cd b4ddfd9338ba3d7c6b9c2d1410ed94fb7e06741226918cef6148031101bbd019 b5f6d442da7fa69f9d500df90373d2fdca4f799c43696b41888353b5c3c8eb13 b1f89e7b05828846baf19109a61029a36838f1c4f3defc218e6aee0ee2787864 d9c3b6b01d3a9c9403befa60fd17e4a50dc4929698e3d6b9c2e7f066a9d1f041 dc4f6f9ffbbf1196ff9e8329e5666fe190aef1b1c6806649d86b962b9bde292c >>pt<< - CC-BY-4.0
+          da-en Xenova/opus-mt-da-en 6496d5e47a016552357be8f06294096609256ac4 0c4522c24f540c82a3e5ae58a079a9919448adf23798142a1821f189646715d7 871e5ed856e41b95f1a7b32ff4cdb683e1092963bf2300d502298a1fcb4fb0ed c97d12d35fe411947392d927f0be14985e2ea0e5cf258164db7f37780563ca15 c329aacdc29f1f83df0a4d32ded5858405cccb3ff45558fb2dd0f07d04ad558b ae9bd343d197231b82cb92382199f820665e75d0d26ee9b51c9881782d4e3640 - - CC-BY-4.0
+          en-da Xenova/opus-mt-en-da 33862dc071a5cc43e821e60742553c501c587e77 0b607addd3d4eb4ab6560cbcdac6f0018bf90b52eee2069412ba9f4a2e00f2f6 0e612107b64044539d273234c9baeea724f47d0523156443426cc781bc9834d0 08d1d21ea3f6f80f06484db753c1a60238b2acfe4aa0fafd496be869857f697f c329aacdc29f1f83df0a4d32ded5858405cccb3ff45558fb2dd0f07d04ad558b 9c4c6652a8bfd906673b85194060e4fc13bb5521f7357f3cb573c6d6c37c7947 - - CC-BY-4.0
+          fi-en Xenova/opus-mt-fi-en a623e4812687be788e3ab720c8a950ab64704793 3891d400cfe8693a6f590078302dabc15cbc7289e194a9261d90eceee573dc82 320fb97fed0f0989a3a1a4777f77a8b236f41c2b59c4503f659f5eea5b5f01c6 82fcb74f79c5f5b5bf0fe73f7dfb6a646efa50ffb4b2a0cd564a1193c78a032e df0ff4337b256c5a4709f0c427430d3fc9977fe8cf03b89ad4a45e02faefd6d2 9ff0e3a1c47345550bc568858b9e2817011f20a798886e31f2610d4d179d370d - - CC-BY-4.0
+          en-fi Xenova/opus-mt-en-fi 4e5799273dbd7cce94c1e99cc9d3acb9f191b8eb 874d962be7b3d5dadae3e98a156b2df0344febaa17809f6f0411ce23a59ff4c3 58759988d510656029ef9ea744efdda9fd66dbfb689333abe7fb29bca7b239f3 412535c7eb38271082f86d9574881af46057dddaf17be876da8021557104a488 5b96eb2965f1f9e0d52408bf83bfa113b3ae32cefd1f6d4f8529966db5938ad1 ae3b9d95d8e812898f9fdf6b18d0c8a594b2514b604dfb391947bf1086093be4 - - CC-BY-4.0
+          sv-en Xenova/opus-mt-sv-en 63a40256869b6a2b29a84e47aa7f03524fa5f3a2 07ae6446ef6520117da869986e396ee55b05c471124ff851399701253fb306cc 29973afcd575cc61d17133d432fa1a81d8ba1f4b717b247384c2eb11342a472d 845278915ae2a708063110903d08c1e75ebb36607ef16ec9530955e1e95e62b8 460d831ec477916c208f144b0d2368385d78626b946dca077a3e86ae33f0f644 dfcd75781057f34a0fe027f3c85336b88b8a0c9ae788575bb8057281872623d5 - - CC-BY-4.0
+          en-sv Xenova/opus-mt-en-sv 33d522d806c041cdebecd549c558d22a2b9b4ea4 2477c172f2001ee486f2d21e452c4d74838af973dfb58d00cf53632c2e3f3dba 9aa80d76a5c67a89e208367cb0b3315dffbedcc685ce86da0ef9b99442695ee3 70d69a2c08a7a2c18e4529c8ff62886aad2f8fd0e94fedeafe4bafc47a5f0d69 460d831ec477916c208f144b0d2368385d78626b946dca077a3e86ae33f0f644 5e2d3cf07dc92aa6c6dd82b9d552a4c1d7ef43f60c5054804ac2e4ee232e552d - - CC-BY-4.0
+          nl-en Xenova/opus-mt-nl-en 82c42d95d1508037cbe7172d85fd4e940a2f3584 7b8b1e9071bed8e2394e3bd2f65b952700b1dd1293d087141134c8bac018653b ad4df9a08f16952c0d9ee06807f54d62fcd07a9109c2c0b8ea05a4422d7bf4d7 f538d23d4b30641cd97c608d2a83890d503aa1286a5560f19ef949404a786e94 b1fba91c620564d90848c5f77b03f13d17949790f8e7c7741e4a8ea13b8b0d91 e03f36d5475954f1c09b08d0da68d6ea06a051e299a399e740554ed768d2a99c - - CC-BY-4.0
+          en-nl Xenova/opus-mt-en-nl c3a0541231a7329b4492809fc2bd7ab7d2ceb0bc 0febb990f8ca8ed9fd3e0017dfcb55ec5293999f20ead81d2bb4370e9e3120ff 5f8034fddc4cdcb6fa6c3b64a06e1cd9b1955c0c6dcd13e0e47610ab99ac4a99 d05781fde84b8793191528a7a176e1b17f96265388f602379ee6ae3139f59141 b1fba91c620564d90848c5f77b03f13d17949790f8e7c7741e4a8ea13b8b0d91 3469caf791a6a038451e418d4254434087c94afc7d9676c03d38b9c64ce258c5 - - CC-BY-4.0
+          nb-en TigreGotico/opus-mt-gmq-en-onnx ecd47b4e0a9c9eb4d40a123b322767ee58a4f81d b75ea6a3b2ffdc5edfa0589c73bf85da5e86e1e2c17540e54550d80cf3ea6c00 448c94360727e828321799b6518af9244cd7a112f7cb6a134522240b0c082967 ecb3285be46e1047515fdc47ea65c7343f443cbe9b0b0cc41a9d3e0feb1113c5 94f433c1d9717aa8e147c04eaeff87416bb9732299fdac2ed4303d2eed238cb0 ba8b8dcf80e43c847de5dee82d26f36ec41ad7b694bb4c3a0b75bf0d1fe5e21e - int8/ apache-2.0
+          en-nb TigreGotico/opus-mt-en-gmq-onnx e6446f9200d61edc0515700144605072168d46ce 3cb48b3f74e3f24f73be28f03380b94ecffddb95c001a7594747baa78d7e406d 6d284c0dec4296ce399d53fd42f7eca6997fa447d10c70e6b01a8d7b0f63a2b5 f0a2cf42e3ee550c8501bada732d720212ba0156167ca726afb8df552235be0f b50a8d4b5432f030def03ddc8a31a413a6e2dd6f805318ac65c2f42b5e53af6d 154dd7612b71492c4ed9c7b79b78abb13a8d8bef1b9eb69f51c4a85e70ffd23e >>nob<< int8/ apache-2.0
           TABLE
           )
           # TRANSLATION_PAIRS (env) is the one list: the table must have exactly one row per pair in it.
           if [ "$(wc -l <<<"$table")" -ne "$(wc -w <<<"$TRANSLATION_PAIRS")" ]; then
             echo "::error::the translation table and TRANSLATION_PAIRS list different pairs"; exit 1
           fi
+          while read -r line; do
+            if [ "$(wc -w <<<"$line")" -ne 11 ]; then
+              echo "::error::translation table row does not have 11 columns: ${line%% *}"; exit 1
+            fi
+          done <<<"$table"
           for pair in $TRANSLATION_PAIRS; do
             row=$(grep -E "^$pair " <<<"$table") || { echo "::error::no table row for $pair"; exit 1; }
-            read -r _ repo rev enc dec spm vocab cfg token <<<"$row"
-            build_translation "$pair" "$repo" "$rev" "$enc" "$dec" "$spm" "$vocab" "$cfg" "$token"
+            read -r _ repo rev enc dec spm vocab cfg token layout license <<<"$row"
+            build_translation "$pair" "$repo" "$rev" "$enc" "$dec" "$spm" "$vocab" "$cfg" "$token" "$layout" "$license"
           done
           ls -l out
 
@@ -452,7 +479,7 @@ jobs:
             entry ocr-arabic "ar,fa" "$OCR_VERSION" "$OCR_LICENSE" ocr
             entry ocr-cjk "zh,ja" "$OCR_VERSION" "$OCR_LICENSE" ocr
             for pair in $TRANSLATION_PAIRS; do
-              entry "translation-$pair" "$pair" "$TRANSLATION_VERSION" "$TRANSLATION_LICENSE" translation
+              entry "translation-$pair" "$pair" "$TRANSLATION_VERSION" "$(cat "tr-src/$pair.license")" translation
             done
           } | jq -s . > out/packs.json
           cat out/packs.json

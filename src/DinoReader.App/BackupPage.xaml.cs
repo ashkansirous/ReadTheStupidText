@@ -37,7 +37,6 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 		_library = library;
 		_external = external;
 		_mode = mode;
-		FlowDirection = UiFlow.ForCurrentCulture();
 	}
 
 	protected override async void OnAppearing()

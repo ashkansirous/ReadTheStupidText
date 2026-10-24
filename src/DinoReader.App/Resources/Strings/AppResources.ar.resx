@@ -67,8 +67,8 @@
   <data name="Backup_Skipped" xml:space="preserve"><value>موجودة بالفعل، تم تخطيها</value></data>
   <data name="Backup_Damaged" xml:space="preserve"><value>تعذّرت قراءتها</value></data>
   <data name="Backup_SeeStories" xml:space="preserve"><value>عرض قصصي</value></data>
-  <data name="Backup_Newer" xml:space="preserve"><value>هذه النسخة من إصدار أحدث من Dino Reader. حدّث التطبيق ثم حاول مرة أخرى.</value></data>
-  <data name="Backup_NotABackup" xml:space="preserve"><value>هذا الملف ليس نسخة احتياطية من Dino Reader.</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>هذه النسخة من إصدار أحدث من Dino Book Reader. حدّث التطبيق ثم حاول مرة أخرى.</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>هذا الملف ليس نسخة احتياطية من Dino Book Reader.</value></data>
   <data name="Backup_Failed" xml:space="preserve"><value>لم تنجح النسخة الاحتياطية. حاول مرة أخرى.</value></data>
   <data name="Backup_TooLarge" xml:space="preserve"><value>كبيرة جدًا للاستعادة</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>تعذّرت إضافة {0} إلى النسخة الاحتياطية.</value></data>

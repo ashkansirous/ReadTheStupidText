@@ -27,6 +27,10 @@ version (`v<x.y.z>`) covers both products.
 > — do not "rename" those. Store identity (ID `9NGT1BN1H92V`) is wired into
 > `Package.appxmanifest`; see Decision 23 in `docs/plan/decisions.md` and `STORE.md`.
 
+> **Naming:** the user-facing product display name is **"Dino Book Reader"** (manifest, store listing,
+> app title, UI strings, site). Package ids (`uk.sirous.dinoreader`, `AshkanSirous.DinoReader`), namespaces,
+> projects, the `.dino` format and the domain `dinoreader.sirous.uk` stay "DinoReader": do not rename those.
+
 Read [`plan.md`](plan.md) before starting work — it defines the vertical slices
 and their GitHub issue numbers. Tick slices off in `plan.md` as they complete. The numbered **Decisions** live in `docs/plan/decisions.md` ("Decision NN" anywhere in these files refers to it); each slice's full record is under `docs/plan/slices/`.
 
@@ -126,7 +130,7 @@ command `npm run deploy`, watch paths `worker/*`, `site/*`, `wrangler*.jsonc`, `
 record: delete it first (wrangler has no DNS scope). Privacy policy edits touch both `PRIVACY.md` and
 `site/privacy.html`. Don't add `docs/CNAME` or a GitHub Actions deploy. See `docs/DEPLOYING.md`.
 The Worker also serves `dinoreader.sirous.uk` -> `site/dino/` (workers.dev: `/dino/` prefix); host routing is in `worker/downloads.ts` (`resolveSite`), every `run_worker_first` path needs its `/dino` twin (`check-configs` enforces), and the Dino site makes no third-party requests (kids' app).
-The Dino host also serves the free story store (Slice 92): `GET /api/stories`, `/api/stories/<id>/cover` and `/api/stories/<id>/download[?v=n]` (`worker/stories.ts`, Dino only; `/api/stories` and `/api/stories/*` plus their `/dino` twins are in `run_worker_first`). Store stories are built with `DINO_BUILD_STORE=1 dotnet test tests/DinoReader.Tests` (to `artifacts/store/<id>/`) and uploaded with `tools/upload-store-story.ps1 <id>` to `dinoreader/stories/<id>/{meta.json, cover.jpg, story-v<n>.dino}` in the downloads bucket, `meta.json` last: a folder is listed only with `meta.json` and a package, and `meta.json` carries `schemaVersion` (the `.dino` format), `title`, `language`, `pageCount`, `minutes`, optional `version`/`added`/`credits` (Slice 102). The story id is the package id; upload a new `story-v<n+1>.dino` rather than overwriting a version (`?v=` is cached for a day).
+The Dino host also serves the free story store (Slice 92): `GET /api/stories`, `/api/stories/<id>/cover` and `/api/stories/<id>/download[?v=n]` (`worker/stories.ts`, Dino only; `/api/stories` and `/api/stories/*` plus their `/dino` twins are in `run_worker_first`). Store stories are built with `DINO_BUILD_STORE=1 dotnet test tests/DinoReader.Tests` (to `artifacts/store/<id>/`) and uploaded with `tools/upload-store-story.ps1 <id>` to `dinoreader/stories/<id>/{meta.json, cover.jpg, story-v<n>.dino}` in the downloads bucket, `meta.json` last: a folder is listed only with `meta.json` and a package, and `meta.json` carries `schemaVersion` (the `.dino` format), `title`, `language`, `pageCount`, `minutes`, optional `version`/`added`/`credits` (`worker/stories.ts` trims `credits` and caps it at 200 characters; Slice 102). The story id is the package id; upload a new `story-v<n+1>.dino` rather than overwriting a version (`?v=` is cached for a day).
 (Slice 68: docs/plan/slices/68-landing-site-on-worker.md; Slice 74: docs/plan/slices/74-dino-reader-site.md; Slice 92: docs/plan/slices/92-dino-story-store.md)
 
 ## Tests

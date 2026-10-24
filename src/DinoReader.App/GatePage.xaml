@@ -50,7 +50,7 @@
 
                 <VerticalStackLayout x:Name="SumStep" Spacing="12" IsVisible="False" HorizontalOptions="Fill">
                     <Label Text="{x:Static res:AppResources.Gate_WhatIs}" FontSize="15" TextColor="{StaticResource Body}" HorizontalTextAlignment="Center" />
-                    <HorizontalStackLayout x:Name="SumRow" HorizontalOptions="Center" Spacing="8">
+                    <HorizontalStackLayout x:Name="SumRow" FlowDirection="LeftToRight" HorizontalOptions="Center" Spacing="8">
                         <Label x:Name="SumLabel" FontSize="40" FontAttributes="Bold" VerticalOptions="End" />
                         <VerticalStackLayout VerticalOptions="End">
                             <Label x:Name="AnswerLabel" FontSize="40" FontAttributes="Bold" TextColor="{StaticResource Brand}"
@@ -58,7 +58,7 @@
                             <BoxView HeightRequest="4" Color="{StaticResource Brand}" />
                         </VerticalStackLayout>
                     </HorizontalStackLayout>
-                    <Grid x:Name="KeyPad" ColumnDefinitions="*,*,*" ColumnSpacing="8" RowSpacing="8" Margin="0,4,0,0" />
+                    <Grid x:Name="KeyPad" FlowDirection="LeftToRight" ColumnDefinitions="*,*,*" ColumnSpacing="8" RowSpacing="8" Margin="0,4,0,0" />
                 </VerticalStackLayout>
 
                 <Button x:Name="BackButton" Text="{x:Static res:AppResources.Gate_BackToStory}" HeightRequest="48" CornerRadius="24" FontSize="15"

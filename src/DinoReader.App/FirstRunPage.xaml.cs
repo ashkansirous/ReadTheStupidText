@@ -127,7 +127,6 @@ public partial class FirstRunPage : ContentPage
 		_library = library;
 		_mode = mode;
 		_services = services;
-		FlowDirection = UiFlow.ForCurrentCulture();
 		BuildLanguageButtons();
 	}
 
@@ -218,7 +217,6 @@ public partial class FirstRunPage : ContentPage
 	// The texts of the download and ready screens are set here, after the pick, so they speak the language just chosen.
 	private void ApplyTexts()
 	{
-		FlowDirection = UiFlow.ForCurrentCulture();
 		DownloadTitle.Text = AppResources.FirstRun_GettingReady;
 		DownloadSub.Text = AppResources.Format(AppResources.FirstRun_Once, LanguageNames.NativeName(_chosen));
 		DownloadState.Text = AppResources.FirstRun_Downloading;

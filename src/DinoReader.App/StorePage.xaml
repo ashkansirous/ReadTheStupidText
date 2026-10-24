@@ -30,9 +30,10 @@
                         </Border.StrokeShape>
                         <Image Source="{Binding Cover}" Aspect="AspectFill" />
                     </Border>
-                    <VerticalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center" FlowDirection="{Binding TextFlow}">
+                    <VerticalStackLayout Grid.Column="1" Spacing="3" VerticalOptions="Center">
                         <Label Text="{Binding Title}" FontSize="15.5" FontAttributes="Bold" LineHeight="1.25" FontFamily="{Binding TitleFont}" />
-                        <Label Text="{Binding Detail}" FontSize="12.5" LineHeight="1.3" TextColor="{StaticResource Muted}" />
+                        <Label Text="{Binding Credits}" IsVisible="{Binding HasCredits}" FontSize="12" LineHeight="1.3" TextColor="{StaticResource Muted}" />
+                        <Label Text="{Binding Detail}" IsVisible="{Binding HasDetail}" FontSize="12.5" LineHeight="1.3" TextColor="{StaticResource Body}" />
                     </VerticalStackLayout>
 
                     <!-- Get: the brand pill. -->

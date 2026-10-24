@@ -1,10 +1,14 @@
 # Slice 96 — Dino's layout never mirrors when the language changes
 
-*Planned 2026-10-24*, from the user's request "do not change the layout direction when changing language".
+*Built 2026-10-24 (PR #278), not yet verified on the emulator in Farsi/Arabic or on the Windows head.* Planned 2026-10-24, from the user's request "do not change the layout direction when changing language".
+
+*Changed while building:* `UiFlow.Screen` is always LTR; `Mirror` and `ForCurrentCulture` are deleted. `TextFlowHandlers` (`UiCulture.cs`, registered in `MauiProgram`) sets each Label/Entry/Editor direction from its own text, skips elements whose direction is set or bound, and resets empty text to LTR. Core `TextDirection.StartsRightToLeft` is unit-tested. In the reader the page and swipe stay LTR and RTL is set on each reading-line label, so the highlight geometry stays physical. The generated cover for an RTL title uses Vazirmatn `#2b2540` on a 70% tint of the cover colour. The gate `SumRow` and `KeyPad` are pinned LTR. `IconView` arrows don't mirror. `TextFlowConverter` is now unused (cleanup later).
+
+*From review:* high pass: 7 findings applied, 3 skipped as nits. Medium pass: 4 applied; #5 was not a bug.
 
 **Batch:** 18 (Dino Reader: layout, add-a-book button, picture + text books)
 **Depends on:** Slice 93 (language picker), Decision 92 (RTST Mobile already never mirrors, Slice 85)
-**Touches:** `src/DinoReader.App/UiCulture.cs`, `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/IconView.cs`, `src/DinoReader.App/ReadingSurface.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/BackupPage.xaml.cs`, `src/DinoReader.App/CastPage.xaml.cs`, `src/DinoReader.App/FirstRunPage.xaml.cs`, `src/DinoReader.App/GatePage.xaml.cs`, `src/DinoReader.App/LanguagePage.xaml.cs`, `src/DinoReader.App/StorePage.xaml`, `src/DinoReader.App/StorePage.xaml.cs`, `src/DinoReader.App/StoryWizardPage.xaml.cs`, `src/DinoReader.App/*Step.xaml*`, `src/DinoReader.App/CLAUDE.md`
+**Touches:** `src/DinoReader.App/UiCulture.cs`, `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/IconView.cs`, `src/DinoReader.App/ReadingSurface.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/BackupPage.xaml.cs`, `src/DinoReader.App/CastPage.xaml.cs`, `src/DinoReader.App/FirstRunPage.xaml.cs`, `src/DinoReader.App/GatePage.xaml.cs`, `src/DinoReader.App/LanguagePage.xaml.cs`, `src/DinoReader.App/StorePage.xaml`, `src/DinoReader.App/StorePage.xaml.cs`, `src/DinoReader.App/StoryWizardPage.xaml.cs`, `src/DinoReader.App/*Step.xaml*`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.App/CastPage.cs`, `src/DinoReader.App/PageEditorPage.xaml.cs`, `src/DinoReader.App/PageTextPage.cs`, `src/DinoReader.App/StoryTile.cs`, `src/DinoReader.App/StoryCover.xaml`, `src/DinoReader.Core/TextDirection.cs`, `tests/DinoReader.Tests/TextDirectionTests.cs`
 
 ## Why
 
@@ -42,17 +46,17 @@ New strings: none (the Farsi samples above are mock data, not shipped copy).
 
 ## Work
 
-- [ ] 1. **Smallest end-to-end: the gallery in Farsi stays left to right.** `UiFlow` always returns
+- [x] 1. **Smallest end-to-end: the gallery in Farsi stays left to right.** `UiFlow` always returns
   LeftToRight; `App.xaml.cs` and each page stop setting a culture-driven direction. Tile titles and the
   header labels get per-text direction from their own text.
-- [ ] 2. **Icons and paddings.** `IconView` stops mirroring arrows on the UI culture; `UiCulture.Mirror`
+- [x] 2. **Icons and paddings.** `IconView` stops mirroring arrows on the UI culture; `UiCulture.Mirror`
   is removed or becomes the identity, with its call sites cleaned up.
-- [ ] 3. **Every grown-up screen.** Backup, Cast, FirstRun, Gate, Language, Store and the wizard steps:
+- [x] 3. **Every grown-up screen.** Backup, Cast, FirstRun, Gate, Language, Store and the wizard steps:
   layout LTR, each text element right-aligned when its text is RTL. Remove the now-redundant LTR overrides
   (GatePage keypad, ZoomablePage) only where they're truly redundant.
-- [ ] 4. **The reader.** `ReadingSurface` keeps the page layout and swipe direction LTR for every book; the
+- [x] 4. **The reader.** `ReadingSurface` keeps the page layout and swipe direction LTR for every book; the
   text views of an RTL book are right-aligned (`FlowDirection` on the text element only).
-- [ ] 5. Rule in `src/DinoReader.App/CLAUDE.md` (written at planning; check it still matches).
+- [x] 5. Rule in `src/DinoReader.App/CLAUDE.md` (written at planning; check it still matches).
 
 ## Verification
 
@@ -62,3 +66,12 @@ New strings: none (the Farsi samples above are mock data, not shipped copy).
   grown-up mode, gate, wizard, store, backup and a reading page keep the same positions as English. Farsi
   text is right-aligned, back arrows point left, and swiping left turns to the next page in a Farsi book.
 - Windows head: the same check on the gallery and the reader.
+
+#### For CLAUDE.md (lifted 2026-10-24)
+
+None new: the rule was written at planning in `src/DinoReader.App/CLAUDE.md` (Slice 96: docs/plan/slices/96-dino-layout-never-mirrors.md); the index pass should check it matches the built behaviour above (`TextFlowHandlers`, no `Mirror`/`ForCurrentCulture`).
+
+#### Not yet verified
+
+- Emulator in Farsi and Arabic: gallery, gate, wizard, store, backup, reader, swipe direction, highlight on RTL lines.
+- Windows head: gallery and reader.

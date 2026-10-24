@@ -30,3 +30,8 @@ Neural reader (Slices 17, 18, 22, 23; docs/plan/slices/17-warm-the-neural-engine
   has a 20 s budget, and failure falls back to the original from that block on. fa and ja targets are unsupported, so the
   toggle stays hidden. `PackConstants.CatalogUrl` is shared by every platform: a new `packs-N` release must re-ship every
   existing pack at the same versions. (Slice 75: docs/plan/slices/75-windows-translation-engine.md)
+- **Norwegian translation packs (Slice 106).** The pack code is `nb`; `TranslationFlow.NormalizeTag` maps `no`/`no-NO` to it. Both legs come from TigreGotico's
+  gmq exports (no Xenova conversion exists); `en-nb` needs `targetToken` `>>nob<<`; the `nb` merged decoders are
+  ~337 MB (fp32 despite the `int8/` folder). `packs.yml` falls back to `max_position_embeddings` when `max_length`
+  is null (the job fails if both are), and each table row names its repo layout and licence. `NormalizeTag` maps `no`
+  to `nb`; `nn` is out of scope. (Slice 106: docs/plan/slices/106-windows-nordic-dutch-translation-packs.md)

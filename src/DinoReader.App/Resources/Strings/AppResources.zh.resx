@@ -67,8 +67,8 @@
   <data name="Backup_Skipped" xml:space="preserve"><value>已存在，已跳过</value></data>
   <data name="Backup_Damaged" xml:space="preserve"><value>无法读取</value></data>
   <data name="Backup_SeeStories" xml:space="preserve"><value>查看我的故事</value></data>
-  <data name="Backup_Newer" xml:space="preserve"><value>此备份来自更新版本的 Dino Reader。请先更新应用，再重试。</value></data>
-  <data name="Backup_NotABackup" xml:space="preserve"><value>该文件不是 Dino Reader 备份。</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>此备份来自更新版本的 Dino Book Reader。请先更新应用，再重试。</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>该文件不是 Dino Book Reader 备份。</value></data>
   <data name="Backup_Failed" xml:space="preserve"><value>备份没有成功，请重试。</value></data>
   <data name="Backup_TooLarge" xml:space="preserve"><value>太大，无法恢复</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>有 {0} 个故事无法加入备份。</value></data>
