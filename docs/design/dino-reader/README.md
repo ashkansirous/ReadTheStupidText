@@ -157,3 +157,56 @@ Source: the user's "Tray and feature panel design.zip" (folder
 
 See `icons/README.md` for the designer's notes. Copy these into the app
 project when its slice runs; don't redraw or regenerate them.
+
+## Batches 22-23 mock — `Dino Reader Batch 22-23.dc.html`
+
+- **Source:** the same Claude Design project, file `Dino Reader Batch 22-23.dc.html`
+  (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+22-23.dc.html>).
+- **Copied:** 2026-10-24, verbatim from `DesignSync get_file`.
+- **Covers:** Slices 107-114 (Decisions 111-119). Frames continue from Batch 17-18 (36). Frame 41
+  supersedes the frame 28 note "nothing on screen changes": the translated text is shown.
+- **Images it imports:** `assets/good-enough/2.jpg` and `assets/good-enough/cover.jpg` are the Good
+  Enough starter's pictures (`tests/DinoReader.Tests/Starters/good-enough/`);
+  `dino_reader_icons/ios/AppIcon-1024-light.png` is `icons/ios/AppIcon-1024-light.png`.
+  Read it the same way as the v2 file.
+
+| # | Screen | Line |
+|---|---|---|
+| — | **Translate by default · narrator for all books · Slices 107, 109 · Decisions 111, 114** (group) | 23 |
+| 37 | New book · Text step · translate is on | 27 |
+| 38 | Grown-up mode · Narrator and Record | 50 |
+| 39 | Narrator · one per language | 82 |
+| — | **A cast per reading language · Slice 108 · Decision 113** (group) | 106 |
+| 40 | Who’s speaking · Farsi cast of an English book | 109 |
+| — | **Translated text on screen · Slice 110 · Decision 112** (group) | 128 |
+| 41 | English book, Farsi on screen | 132 |
+| 42 | Scanned page, translated · picture + text | 144 |
+| 43 | This book · grown-up options | 161 |
+| — | **Parents read in their own voice · Slice 111 · Decision 115** (group) | 182 |
+| 44 | Record · recording a page | 186 |
+| 45 | Record · page recorded | 204 |
+| 46 | Reading a recorded page | 219 |
+| — | **Store filters · Slice 112 · Decision 116** (group) | 231 |
+| 47 | Free stories · ages 6–8 | 234 |
+| — | **Batch 23 · Voices that sound like a story · Slices 113, 114 · Decisions 117–119** (group) | 255 |
+| 48 | Who’s speaking · flavours and Storyteller offer | 259 |
+| 49 | Storyteller voices installed | 285 |
+
+(Generated from the captions with a script; regenerate it when the file is refreshed.)
+
+Import prompt (verbatim):
+
+```
+Use the claude_design MCP (https://api.anthropic.com/v1/design/mcp, auth via /design-login) to import this project:
+https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+22-23.dc.html
+
+Focus on these files (the whole project is readable):
+- `Dino Reader Batch 22-23.dc.html`
+
+Also read these files the selection imports:
+- `assets/good-enough/2.jpg`
+- `assets/good-enough/cover.jpg`
+- `dino_reader_icons/ios/AppIcon-1024-light.png`
+
+Implement: `Dino Reader Batch 22-23.dc.html`
+```

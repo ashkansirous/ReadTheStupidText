@@ -28,13 +28,27 @@ persisted in `story.json` and is required for a story to load (`StoryJson.cs:221
   equals the new narrator's is re-cast through `CastEditor.NamesLosingVoice`/`UnpinOverridden`, per
   language's cast (Slice 108).
 
+#### Design (Dino Reader Batch 22-23 mock, frames 38 and 39, added 2026-10-24)
+
+Source: `docs/design/dino-reader/Dino Reader Batch 22-23.dc.html`, frames 38 (lines 50-80) and 39 (lines 82-104); the cast-page link is in frame 40 (see Slice 108). Two real-UI frames (360x760 phone frame, 6px `#2b2540` border, radius 34.). Icons in the mock are inline SVG strokes (2.2 wide, `#5B57E8`), not Phosphor names; the app uses its own `IconKind` set. The mock differs from the plan in how the grown-up row looks and in who gets a card on the Narrator page.
+
+- **Grown-up gallery (38, 109-3).** Page `#FFF6E6`. Header: app icon 40 (radius 11), "My stories" 22/600, "Grown-up mode" 12.5/600 `#5B57E8`, and the **Language** pill (44 high, radius 22, white, 2px `#c9c0f5` ring, globe icon, "English") as the header's right side. Below, **three equal buttons** in a 3-column grid, gap 8: "Free stories", "Narrator" (new), "Backup". Each is 64 high, radius 16, white, 2px `#c9c0f5` ring, icon (20) above the label 14/600 `#5B57E8`. Narrator's icon is a person with sound waves; the dashed outline in the frame only marks it as new.
+- **Tile record button (Slice 111, shown here).** Each story tile's action bar gains a red microphone (44x44, white, radius 12) beside Edit and Cast; a 36 circle `#E5484D` with a mic is also drawn on the tile. Screen reader: "Record Good Enough in your voice". Done button 56 high, radius 28, `#FF7A59`.
+- **Narrator page (39).** Page `#F3EFE6`. Header: back arrow, "Narrator" 20/600, subtitle "The storyteller voice for every book" 12 `#8a8399`. One white card per language (radius 18): language name 16/600, a voice picker (44 high, radius 12, `#F3EFE6`, 14.5, chevron) and a 44 sample circle `#ECE7FF` with a play icon. **My language is first and ringed** (2px `#c9c0f5`) with a badge "MY LANGUAGE" (11/700 `#5B57E8` on `#ECE7FF`, radius 6). Cards shown: English (Demiurge), فارسی (Ganji Adabi, RTL name), Español (Momonga). Voice names are the placeholders of today's `NarratorFor` picks.
+- **Footnote under the cards.** "If a character in a book has the narrator's voice, Dino gives that character another one." 13 `#5a5470`, line-height 1.45.
+- **Behaviour (note).** Opened from Narrator (38) or the cast screen's "Change for all books" link (40). **One card per language with an installed voice pack**, my language first. A change applies to starter, store and own books at once; clashing characters are re-cast quietly. The sample button speaks a short line in that voice.
+
+Changed to match the mock (2026-10-24): the Narrator page lists only languages with an installed voice pack (the plan said "each language"); the gallery's grown-up row is three equal icon-above-label buttons with Language kept as the header pill (the plan said the button sits "beside Free stories, Backup and Language"); a new `IconKind` is needed unless one already fits (a person with sound waves).
+
+New strings (all 14 locales): "Narrator" (button and page title), "The storyteller voice for every book", "MY LANGUAGE", the footnote, "Change for all books", and the screen-reader label for the sample button.
+
 ## Work
 
 - [ ] 1. `NarratorChoice`: per-language setting (named key constant), default from `NarratorFor`; unit-
   testable resolution in Core if it holds logic.
 - [ ] 2. Replace every `story.NarratorVoiceId` read with `NarratorChoice` for the reading language;
   `StoryJson` stays backward compatible and no longer treats the field as required.
-- [ ] 3. `NarratorPage` and the grown-up gallery's Narrator button (a new `IconKind` only if none fits).
+- [ ] 3. `NarratorPage` (one card per language with an installed voice pack, my language first with the "MY LANGUAGE" badge, sample button, footnote; frame 39) and the grown-up gallery's three equal buttons Free stories / Narrator / Backup with Language staying as the header pill (frame 38). New `IconKind` for Narrator (a person with sound waves) unless one fits.
 - [ ] 4. Cast page: read-only narrator row with the "Change for all books" link; remove the per-book picker.
   Changing the narrator re-casts clashing characters in every story's cast for that language.
 - [ ] 5. Upgrade tests: an old story, an old `.dino` and an old backup still open and read.
