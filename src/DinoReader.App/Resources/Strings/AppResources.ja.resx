@@ -216,4 +216,6 @@
   <data name="Cast_VoiceChanged_Other" xml:space="preserve"><value>{0} の声を変更しました。ナレーターがその声を使うことになったためです。</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>{0} にまとめる</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>この音声パックには自然な声が {0} 種類しかないため、同じ声を使うキャラクターがいます。ナレーターの声はキャラクターには使われません。</value></data>
+  <data name="Voice_NbWoman" xml:space="preserve"><value>声 {0}（女性）</value></data>
+  <data name="Voice_NbMan" xml:space="preserve"><value>声 {0}（男性）</value></data>
 </root>

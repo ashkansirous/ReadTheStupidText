@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
+using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Domain.Reading;
 
 namespace DinoReader;
@@ -81,11 +82,30 @@ public static class CastText
 	/// <summary>The voice's display name, or its id when no pack seen so far lists it.</summary>
 	public static string VoiceName(string voiceId)
 	{
+		string? norwegian = NorwegianLabel(voiceId);
+		if (norwegian is not null)
+		{
+			return norwegian;
+		}
+
 		if (PackVoiceNames.TryGetValue(voiceId, out string? known))
 		{
 			return known;
 		}
 
 		return SupertonicVoiceTable.Voices.FirstOrDefault(v => v.Id == voiceId)?.DisplayName ?? voiceId;
+	}
+
+	// The Norwegian pack's speaker codes are shown as a localised "Voice N (woman)" / "Voice N (man)" (Slice 104).
+	private static string? NorwegianLabel(string voiceId)
+	{
+		int? position = NorwegianVoices.Position(voiceId);
+		bool? female = NorwegianVoices.IsFemale(voiceId);
+		if (position is null || female is null)
+		{
+			return null;
+		}
+
+		return AppResources.Format(female.Value ? AppResources.Voice_NbWoman : AppResources.Voice_NbMan, position.Value);
 	}
 }

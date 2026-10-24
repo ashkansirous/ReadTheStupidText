@@ -216,4 +216,6 @@
   <data name="Cast_VoiceChanged_Other" xml:space="preserve"><value>تم تغيير أصوات {0} لأن الراوي أصبح يستخدم الصوت الذي مُنح لهم.</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>دمج في {0}</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>تحتوي حزمة الأصوات هذه على {0} أصوات طبيعية فقط، لذا تشترك بعض الشخصيات في الصوت. لا يُمنح صوت الراوي لأي شخصية.</value></data>
+  <data name="Voice_NbWoman" xml:space="preserve"><value>الصوت {0} (امرأة)</value></data>
+  <data name="Voice_NbMan" xml:space="preserve"><value>الصوت {0} (رجل)</value></data>
 </root>

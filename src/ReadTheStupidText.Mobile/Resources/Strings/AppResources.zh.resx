@@ -90,4 +90,6 @@
   <data name="Language_Retry" xml:space="preserve"><value>重试下载</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>继续</value></data>
   <data name="Language_StartReading" xml:space="preserve"><value>开始朗读</value></data>
+  <data name="Voice_NbWoman" xml:space="preserve"><value>声音 {0}（女）</value></data>
+  <data name="Voice_NbMan" xml:space="preserve"><value>声音 {0}（男）</value></data>
 </root>

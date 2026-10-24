@@ -1,6 +1,6 @@
 # Slice 104 — A Norwegian voice pack (Piper nvcc, ten speakers)
 
-*In progress (wave 2026-10-24), draft PR.* Planned 2026-10-24, from the user's request to add Norwegian (with Slice 103).
+*Built 2026-10-24 (PR #291), not yet verified on a device or in a packs.yml run.* Planned 2026-10-24, from the user's request to add Norwegian (with Slice 103).
 
 **Batch:** 21 (five more languages)
 **Depends on:** Slice 103 (`nb` exists), Slice 89 (the `piper-fa` pack format and per-platform Piper readers)
@@ -26,13 +26,13 @@ CC0. That gives Dino ten distinct Norwegian character voices, and RTST an offlin
 
 ## Work
 
-- [ ] 1. **Smallest end-to-end: the pack on Android.** The packs.yml job builds and releases `piper-nb`;
+- [x] 1. **Smallest end-to-end: the pack on Android.** The packs.yml job builds and releases `piper-nb`;
   the catalog lists it; choosing Norwegian downloads it and Norwegian text reads with nvcc.
-- [ ] 2. Speaker names and the default; the voice picker lists the ten.
-- [ ] 3. Dino casts Norwegian stories across the ten speakers (gender from the speaker metadata where
+- [x] 2. Speaker names and the default; the voice picker lists the ten.
+- [x] 3. Dino casts Norwegian stories across the ten speakers (gender from the speaker metadata where
   known, else balanced).
-- [ ] 4. Windows and iOS read with the pack (the per-platform Piper readers from Slice 89).
-- [ ] 5. The GPL-exception wording in the root, Mobile and Infrastructure `CLAUDE.md` and `.github/CLAUDE.md`
+- [x] 4. Windows and iOS read with the pack (the per-platform Piper readers from Slice 89).
+- [x] 5. The GPL-exception wording in the root, Mobile and Infrastructure `CLAUDE.md` and `.github/CLAUDE.md`
   (written at planning; check it still matches).
 
 ## Verification
@@ -41,4 +41,29 @@ CC0. That gives Dino ten distinct Norwegian character voices, and RTST an offlin
   the GPL text and no app package contains `espeak-ng-data`.
 - Emulator (device-test): choose Norsk on first run; the pack downloads; a Norwegian paragraph reads with
   the default speaker; a Norwegian Dino story gives distinct voices to three characters.
+- Windows head: the pack downloads and reads.
+
+## Built
+
+*Changed while building:*
+
+- `packs.yml` builds `piper-nb` from rhasspy/piper-voices `no_NO-nvcc-medium`, pinned to revision 5041a7a with sha256s, converted to int8 with sherpa `add_meta_data`. CI checks 10 speakers, a consistent sid map and `nb` in `espeak-ng-data`; the GPL LICENSE ships in the pack; the zip is capped at 100 MB.
+- `PackConstants.NorwegianPackId`; `NaturallyReadable` now covers every language; `SupertonicVoiceTable.Serves` keeps Supertonic off `nb`.
+- `NorwegianVoices` takes gender from the speaker code's first letter (K/M). Users see "Voice N (woman/man)" in all 14 languages, in the RTST picker and on Dino's cast page. Dino casts `nb` stories from the pack; the narrator falls back to KNN.
+- The default voice is KNN (first in the list); nobody has listened to it, so it is not yet the chosen clearest speaker.
+- Item 5 (GPL wording in the `CLAUDE.md` files) was not rechecked in this slice.
+
+*From review:* high pass, 6 applied (#1, the `PackConstants` pin bump, is left to the coordinator after the packs run; #7 skipped). Medium pass, 4 applied (#4 and #5 skipped).
+
+#### For CLAUDE.md
+
+- Pack voices are shown as "Voice N (woman/man)" in every language, with gender from the speaker code's first letter via `NorwegianVoices`; `SupertonicVoiceTable.Serves` must keep Supertonic off `nb`. (Slice 104: docs/plan/slices/104-piper-norwegian-pack.md)
+- The `piper-nb` pack pins rhasspy/piper-voices revision 5041a7a in `.github/workflows/packs.yml`; bump the `PackConstants` pin after each packs run. (Slice 104: docs/plan/slices/104-piper-norwegian-pack.md)
+
+#### Not yet verified
+
+- The `packs.yml` run: int8 on a multi-speaker model, and the espeak `nb` path.
+- The `PackConstants` pin bump after that run.
+- Listening to pick the clearest default voice (KNN is a placeholder).
+- Emulator: Norsk first run downloads the pack, and a Dino story gets distinct voices.
 - Windows head: the pack downloads and reads.

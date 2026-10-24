@@ -90,4 +90,6 @@
   <data name="Language_Retry" xml:space="preserve"><value>تلاش دوباره دانلود</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>ادامه</value></data>
   <data name="Language_StartReading" xml:space="preserve"><value>شروع خواندن</value></data>
+  <data name="Voice_NbWoman" xml:space="preserve"><value>صدا {0} (زن)</value></data>
+  <data name="Voice_NbMan" xml:space="preserve"><value>صدا {0} (مرد)</value></data>
 </root>

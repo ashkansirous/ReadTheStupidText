@@ -264,7 +264,7 @@ public partial class VoicePickerPage : ContentPage
             BackgroundColor = Color.FromArgb("#5B57E8"),
             Content = new Label
             {
-                Text = voice.DisplayName[..1],
+                Text = VoiceLabel.Initial(voice),
                 TextColor = Colors.White,
                 FontAttributes = FontAttributes.Bold,
                 HorizontalOptions = LayoutOptions.Center,
@@ -286,7 +286,7 @@ public partial class VoicePickerPage : ContentPage
             FontSize = 13.5,
             VerticalOptions = LayoutOptions.Center,
         };
-        TextFlow.ForContent(nameLabel, voice.DisplayName);
+        TextFlow.ForContent(nameLabel, VoiceLabel.For(voice));
 
         var row = new Grid
         {
@@ -326,7 +326,7 @@ public partial class VoicePickerPage : ContentPage
         UpdateSelection(voice.Id);
         if (VoicePreviewPolicy.ShouldPreview(_reader.State))
         {
-            _ = _reader.SpeakAsync(voice.DisplayName);
+            _ = _reader.SpeakAsync(VoiceLabel.For(voice));
         }
     }
 

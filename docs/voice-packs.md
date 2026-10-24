@@ -126,7 +126,7 @@ created `--latest=false`, so `releases/latest` stays the app.
 
 Manual: run the **packs** workflow (`.github/workflows/packs.yml`, `workflow_dispatch`) with
 the release number and the pack versions (`pack_version` for Supertonic,
-`piper_pack_version`, `melo_pack_version`, and `ocr_pack_version` for the four OCR packs,
+`piper_pack_version`, `norwegian_pack_version`, `melo_pack_version`, and `ocr_pack_version` for the four OCR packs,
 Slice 52, and `translation_pack_version` for the twenty-three translation packs, Slice 75). One run builds the packs into the one
 `packs-<n>` release, computes each sha256 and size, and publishes the zips with `packs.json`.
 The voice packs:
@@ -135,6 +135,7 @@ The voice packs:
 | --- | --- | --- | --- |
 | `supertonic-3` | en, fr, es, pt, ru, ja, ar | Supertonic (zips `src/ReadTheStupidText.App/VoiceModel/`, LFS) | Apache-2.0 |
 | `piper-fa` | fa | Piper/VITS, four voices (below) | espeak-ng data is GPL-3.0, inside this zip only, with its `LICENSE` and `SOURCE` (also the amir Apache-2.0 attribution, Slice 89) |
+| `piper-nb` | nb | Piper/VITS, one model with ten speakers (`piper:nb-knn` default, codes from the upstream `speaker_id_map`; Slice 104) | espeak-ng data is GPL-3.0, inside this zip only, with its `LICENSE` and `SOURCE`; voice data CC0 |
 | `melo-zh-en` | zh | MeloTTS | MIT |
 
 `piper-fa` (Slice 89, version 2) holds four voices, `piper:fa-ganji-adabi` (the default, listed first),
