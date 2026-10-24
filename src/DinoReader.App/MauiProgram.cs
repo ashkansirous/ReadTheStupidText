@@ -36,6 +36,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<SpeechStartup>();
 		builder.Services.AddSingleton<StoryTranslator>();
 		builder.Services.AddSingleton<SpokenLanguage>();
+		builder.Services.AddSingleton<NarratorChoice>();
 		builder.Services.AddSingleton<StoryVoicing>();
 		builder.Services.AddSingleton<IStoryLibrary>(_ => new FileStoryLibrary(Path.Combine(FileSystem.AppDataDirectory, StoriesFolder)));
 		builder.Services.AddSingleton<GrownUpGate>();
@@ -50,7 +51,10 @@ public static class MauiProgram
 		builder.Logging.AddDebug();
 #endif
 
-		return builder.Build();
+		MauiApp app = builder.Build();
+		// Stories still carry their language's narrator on disk, for older builds that require the field (Slice 109).
+		StoryJson.LegacyNarratorOf = language => app.Services.GetRequiredService<StoryVoicing>().LegacyNarratorOf(language);
+		return app;
 	}
 
 	private static void AddDocumentExtractors(IServiceCollection services)
@@ -73,6 +77,7 @@ public static class MauiProgram
 		services.AddTransient<StorePage>();
 		services.AddTransient<BackupPage>();
 		services.AddTransient<LanguagePage>();
+		services.AddTransient<NarratorPage>();
 		services.AddTransient<FirstRunPage>();
 		services.AddSingleton<GrownUpMode>();
 		services.AddTransient<StoryWizardPage>();

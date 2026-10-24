@@ -95,12 +95,15 @@
                 <Label x:Name="ModeLabel" Text="{x:Static res:AppResources.Gallery_GrownUpMode}" FontSize="12.5" TextColor="{StaticResource Brand}" IsVisible="False" />
             </VerticalStackLayout>
             <!-- Language pill (mock 19): the current language, opens the Language page. Grown-up mode only. -->
-            <Border Grid.Column="2" x:Name="LanguagePill" HeightRequest="44" Padding="16,0" BackgroundColor="White" Stroke="{StaticResource MergeBorder}"
-                    StrokeThickness="1.5" IsVisible="False" VerticalOptions="Center" SemanticProperties.Hint="{x:Static res:AppResources.Language_Title}">
+            <Border Grid.Column="2" x:Name="LanguagePill" HeightRequest="44" Padding="12,0,14,0" BackgroundColor="White" Stroke="{StaticResource MergeBorder}"
+                    StrokeThickness="2" IsVisible="False" VerticalOptions="Center" SemanticProperties.Hint="{x:Static res:AppResources.Language_Title}">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="22" />
                 </Border.StrokeShape>
-                <Label x:Name="LanguagePillLabel" FontSize="14.5" FontAttributes="Bold" TextColor="{StaticResource Brand}" VerticalOptions="Center" />
+                <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
+                    <local:IconView Kind="Globe" Color="{StaticResource Brand}" Size="18" StrokeWidth="2.2" VerticalOptions="Center" />
+                    <Label x:Name="LanguagePillLabel" FontSize="14.5" FontAttributes="Bold" TextColor="{StaticResource Brand}" VerticalOptions="Center" />
+                </HorizontalStackLayout>
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnLanguageTapped" />
                 </Border.GestureRecognizers>
@@ -119,30 +122,43 @@
                     Padding="18,0" FontSize="14" BackgroundColor="{StaticResource Brand}" TextColor="White" Clicked="OnDoneClicked" />
         </Grid>
 
-        <!-- Grown-up shortcuts (mock screen 19): Free stories (Slice 92) and Backup (Slice 93) side by side. -->
-        <Grid Grid.Row="1" x:Name="GrownUpActions" Padding="14,0,14,12" ColumnDefinitions="*,*" ColumnSpacing="10" IsVisible="False">
-            <Border x:Name="StoreButton" HeightRequest="48" BackgroundColor="White" Stroke="{StaticResource MergeBorder}" StrokeThickness="2"
+        <!-- Grown-up shortcuts (mock 38): Free stories (Slice 92), Narrator (Slice 109) and Backup (Slice 93), three equal buttons with the icon above the label. -->
+        <Grid Grid.Row="1" x:Name="GrownUpActions" Padding="14,0,14,12" ColumnDefinitions="*,*,*" ColumnSpacing="8" IsVisible="False">
+            <Border x:Name="StoreButton" HeightRequest="64" BackgroundColor="White" Stroke="{StaticResource MergeBorder}" StrokeThickness="2"
                     SemanticProperties.Description="{x:Static res:AppResources.Store_Title}">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="16" />
                 </Border.StrokeShape>
-                <HorizontalStackLayout Spacing="8" Padding="12,0" VerticalOptions="Center" HorizontalOptions="Center">
-                    <local:IconView Kind="Book" Color="{StaticResource Brand}" Size="20" StrokeWidth="2.2" VerticalOptions="Center" />
-                    <Label Text="{x:Static res:AppResources.Store_Title}" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource Brand}" VerticalOptions="Center" />
-                </HorizontalStackLayout>
+                <VerticalStackLayout Spacing="3" VerticalOptions="Center" HorizontalOptions="Center">
+                    <local:IconView Kind="Book" Color="{StaticResource Brand}" Size="20" StrokeWidth="2.2" HorizontalOptions="Center" />
+                    <Label Text="{x:Static res:AppResources.Store_Title}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Brand}" HorizontalTextAlignment="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+                </VerticalStackLayout>
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnStoreTapped" />
                 </Border.GestureRecognizers>
             </Border>
-            <Border Grid.Column="1" x:Name="BackupButton" HeightRequest="48" BackgroundColor="White" Stroke="{StaticResource MergeBorder}" StrokeThickness="2"
+            <Border Grid.Column="1" x:Name="NarratorButton" HeightRequest="64" BackgroundColor="White" Stroke="{StaticResource MergeBorder}" StrokeThickness="2"
+                    SemanticProperties.Description="{x:Static res:AppResources.Narrator_Title}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16" />
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="3" VerticalOptions="Center" HorizontalOptions="Center">
+                    <local:IconView Kind="Narrator" Color="{StaticResource Brand}" Size="20" StrokeWidth="2.2" HorizontalOptions="Center" />
+                    <Label Text="{x:Static res:AppResources.Narrator_Title}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Brand}" HorizontalTextAlignment="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+                </VerticalStackLayout>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnNarratorTapped" />
+                </Border.GestureRecognizers>
+            </Border>
+            <Border Grid.Column="2" x:Name="BackupButton" HeightRequest="64" BackgroundColor="White" Stroke="{StaticResource MergeBorder}" StrokeThickness="2"
                     SemanticProperties.Description="{x:Static res:AppResources.Backup_Title}">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="16" />
                 </Border.StrokeShape>
-                <HorizontalStackLayout Spacing="8" Padding="12,0" VerticalOptions="Center" HorizontalOptions="Center">
-                    <local:IconView Kind="File" Color="{StaticResource Brand}" Size="20" StrokeWidth="2.2" VerticalOptions="Center" />
-                    <Label Text="{x:Static res:AppResources.Backup_Title}" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource Brand}" VerticalOptions="Center" />
-                </HorizontalStackLayout>
+                <VerticalStackLayout Spacing="3" VerticalOptions="Center" HorizontalOptions="Center">
+                    <local:IconView Kind="File" Color="{StaticResource Brand}" Size="20" StrokeWidth="2.2" HorizontalOptions="Center" />
+                    <Label Text="{x:Static res:AppResources.Backup_Title}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Brand}" HorizontalTextAlignment="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+                </VerticalStackLayout>
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnBackupTapped" />
                 </Border.GestureRecognizers>

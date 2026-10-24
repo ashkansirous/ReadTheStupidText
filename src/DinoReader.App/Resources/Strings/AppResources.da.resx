@@ -130,6 +130,14 @@
   <!-- Slice 108 -->
   <data name="Cast_VoicesFor" xml:space="preserve"><value>Stemmer til {0}</value></data>
   <!-- /Slice 108 -->
+  <!-- Slice 109 -->
+  <data name="Narrator_Title" xml:space="preserve"><value>Fortæller</value></data>
+  <data name="Narrator_Subtitle" xml:space="preserve"><value>Fortællerstemmen til alle bøger</value></data>
+  <data name="Narrator_MyLanguage" xml:space="preserve"><value>MIT SPROG</value></data>
+  <data name="Narrator_Footnote" xml:space="preserve"><value>Hvis en figur i en bog har fortællerens stemme, giver Dino figuren en anden.</value></data>
+  <data name="Cast_ChangeForAll" xml:space="preserve"><value>Skift for alle bøger</value></data>
+  <data name="Narrator_Sample" xml:space="preserve"><value>Hør denne stemme</value></data>
+  <!-- /Slice 109 -->
   <data name="Add_Scan" xml:space="preserve"><value>Scan sider</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Beholder sidebillederne</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Fotos</value></data>
@@ -231,8 +239,6 @@
   <data name="Cast_Hear" xml:space="preserve"><value>Hør {0}</value></data>
   <data name="Cast_NoBoyVoice" xml:space="preserve"><value>Denne stemmepakke har ingen drengestemme, så figuren beholder den stemme, den havde.</value></data>
   <data name="Cast_NoGirlVoice" xml:space="preserve"><value>Denne stemmepakke har ingen pigestemme, så figuren beholder den stemme, den havde.</value></data>
-  <data name="Cast_VoiceChanged_One" xml:space="preserve"><value>{0}s stemme blev ændret, fordi fortælleren nu har den stemme, figuren fik.</value></data>
-  <data name="Cast_VoiceChanged_Other" xml:space="preserve"><value>{0} fik ændret deres stemmer, fordi fortælleren nu har den stemme, de fik.</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>Slå sammen med {0}</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Denne stemmepakke har kun {0} naturlige stemmer, så nogle figurer deler stemme. Fortællerens stemme gives aldrig til en figur.</value></data>
   <data name="Voice_NbWoman" xml:space="preserve"><value>Stemme {0} (kvinde)</value></data>

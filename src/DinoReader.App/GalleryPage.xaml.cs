@@ -157,6 +157,9 @@ public partial class GalleryPage : ContentPage
 	// Backup (Slice 93): a grown-up page, so it is only reachable in grown-up mode and closes with it.
 	private async void OnBackupTapped(object? sender, TappedEventArgs e) => await RunGrownUpAsync(() => OpenGrownUpPageAsync<BackupPage>());
 
+	// Narrator (Slice 109): the storyteller voice per language, for every book.
+	private async void OnNarratorTapped(object? sender, TappedEventArgs e) => await RunGrownUpAsync(() => OpenGrownUpPageAsync<NarratorPage>());
+
 	private async void OnLanguageTapped(object? sender, TappedEventArgs e) => await RunGrownUpAsync(() => OpenGrownUpPageAsync<LanguagePage>());
 
 	private async Task OpenGrownUpPageAsync<TPage>() where TPage : Page

@@ -130,6 +130,14 @@
   <!-- Slice 108 -->
   <data name="Cast_VoicesFor" xml:space="preserve"><value>Röster för {0}</value></data>
   <!-- /Slice 108 -->
+  <!-- Slice 109 -->
+  <data name="Narrator_Title" xml:space="preserve"><value>Berättare</value></data>
+  <data name="Narrator_Subtitle" xml:space="preserve"><value>Berättarrösten för alla böcker</value></data>
+  <data name="Narrator_MyLanguage" xml:space="preserve"><value>MITT SPRÅK</value></data>
+  <data name="Narrator_Footnote" xml:space="preserve"><value>Om en figur i en bok har berättarens röst ger Dino figuren en annan.</value></data>
+  <data name="Cast_ChangeForAll" xml:space="preserve"><value>Ändra för alla böcker</value></data>
+  <data name="Narrator_Sample" xml:space="preserve"><value>Lyssna på rösten</value></data>
+  <!-- /Slice 109 -->
   <data name="Add_Scan" xml:space="preserve"><value>Skanna sidor</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Behåller sidbilderna</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Foton</value></data>
@@ -231,8 +239,6 @@
   <data name="Cast_Hear" xml:space="preserve"><value>Hör {0}</value></data>
   <data name="Cast_NoBoyVoice" xml:space="preserve"><value>Det här röstpaketet har ingen pojkröst, så figuren behåller rösten den hade.</value></data>
   <data name="Cast_NoGirlVoice" xml:space="preserve"><value>Det här röstpaketet har ingen flickröst, så figuren behåller rösten den hade.</value></data>
-  <data name="Cast_VoiceChanged_One" xml:space="preserve"><value>{0}s röst ändrades eftersom berättaren nu har rösten som figuren fick.</value></data>
-  <data name="Cast_VoiceChanged_Other" xml:space="preserve"><value>{0} fick sina röster ändrade eftersom berättaren nu har rösten de fick.</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>Slå ihop med {0}</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Det här röstpaketet har bara {0} naturliga röster, så vissa figurer delar röst. Berättarens röst ges aldrig till en figur.</value></data>
   <data name="Voice_NbWoman" xml:space="preserve"><value>Röst {0} (kvinna)</value></data>

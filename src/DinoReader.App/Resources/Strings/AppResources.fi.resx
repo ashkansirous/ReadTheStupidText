@@ -130,6 +130,14 @@
   <!-- Slice 108 -->
   <data name="Cast_VoicesFor" xml:space="preserve"><value>Äänet kielelle {0}</value></data>
   <!-- /Slice 108 -->
+  <!-- Slice 109 -->
+  <data name="Narrator_Title" xml:space="preserve"><value>Kertoja</value></data>
+  <data name="Narrator_Subtitle" xml:space="preserve"><value>Kertojan ääni kaikille kirjoille</value></data>
+  <data name="Narrator_MyLanguage" xml:space="preserve"><value>OMA KIELENI</value></data>
+  <data name="Narrator_Footnote" xml:space="preserve"><value>Jos kirjan henkilöllä on kertojan ääni, Dino antaa hänelle toisen äänen.</value></data>
+  <data name="Cast_ChangeForAll" xml:space="preserve"><value>Vaihda kaikille kirjoille</value></data>
+  <data name="Narrator_Sample" xml:space="preserve"><value>Kuuntele tämä ääni</value></data>
+  <!-- /Slice 109 -->
   <data name="Add_Scan" xml:space="preserve"><value>Skannaa sivut</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Säilyttää sivukuvat</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Kuvat</value></data>
@@ -231,8 +239,6 @@
   <data name="Cast_Hear" xml:space="preserve"><value>Kuuntele: {0}</value></data>
   <data name="Cast_NoBoyVoice" xml:space="preserve"><value>Tässä äänipaketissa ei ole poikaääntä, joten tämä hahmo säilyttää äänensä.</value></data>
   <data name="Cast_NoGirlVoice" xml:space="preserve"><value>Tässä äänipaketissa ei ole tyttöääntä, joten tämä hahmo säilyttää äänensä.</value></data>
-  <data name="Cast_VoiceChanged_One" xml:space="preserve"><value>Hahmon {0} ääni vaihdettiin, koska kertoja sai nyt hänelle annetun äänen.</value></data>
-  <data name="Cast_VoiceChanged_Other" xml:space="preserve"><value>Hahmojen {0} äänet vaihdettiin, koska kertoja sai nyt heille annetun äänen.</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>Yhdistä hahmoon {0}</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Tässä äänipaketissa on vain {0} luonnollista ääntä, joten jotkin hahmot jakavat äänen. Kertojan ääntä ei koskaan anneta hahmolle.</value></data>
   <data name="Voice_NbWoman" xml:space="preserve"><value>Ääni {0} (nainen)</value></data>

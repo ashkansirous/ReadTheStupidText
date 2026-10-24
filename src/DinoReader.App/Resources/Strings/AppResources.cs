@@ -28,6 +28,12 @@ public static class AppResources
 	public static string Add_FileSub => Get();
 	public static string Cast_UnknownGender => Get();
 	public static string Cast_VoicesFor => Get();
+	public static string Narrator_Title => Get();
+	public static string Narrator_Subtitle => Get();
+	public static string Narrator_MyLanguage => Get();
+	public static string Narrator_Footnote => Get();
+	public static string Cast_ChangeForAll => Get();
+	public static string Narrator_Sample => Get();
 	public static string Common_Ok => Get();
 	public static string Common_Cancel => Get();
 	public static string PackStatus_Resolving => Get();
@@ -249,8 +255,6 @@ public static class AppResources
 	public static string Cast_Hear => Get();
 	public static string Cast_NoBoyVoice => Get();
 	public static string Cast_NoGirlVoice => Get();
-	public static string Cast_VoiceChanged_One => Get();
-	public static string Cast_VoiceChanged_Other => Get();
 	public static string Cast_MergeInto => Get();
 	public static string Cast_SharedNote => Get();
 }

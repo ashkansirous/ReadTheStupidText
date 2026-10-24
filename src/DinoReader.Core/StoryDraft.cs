@@ -43,15 +43,13 @@ public sealed class StoryDraft(Story original)
 
 	public bool LanguageChanged => Language != Original.Language;
 
-	/// <summary>The cast, merges and narrator as the cast screen last left them (Slice 65); written with Save.</summary>
+	/// <summary>The cast and merges as the cast screen last left them (Slice 65); written with Save.</summary>
 	public IReadOnlyList<CastMember> Cast { get; set; } = original.Cast;
 
 	public IReadOnlyDictionary<string, string> Merges { get; set; } = original.Merges;
 
 	/// <summary>The casts of the other reading languages as the cast screen last left them (Slice 108); written with Save.</summary>
 	public IReadOnlyDictionary<string, IReadOnlyList<CastMember>>? LanguageCasts { get; set; } = original.LanguageCasts;
-
-	public string NarratorVoiceId { get; set; } = original.NarratorVoiceId;
 
 	public List<StoryPage> Pages { get; } = [.. original.Pages];
 
@@ -213,7 +211,6 @@ public sealed class StoryDraft(Story original)
 		Cast = Cast,
 		LanguageCasts = RecastNeeded ? null : LanguageCasts,
 		CharacterMerges = Merges,
-		NarratorVoiceId = NarratorVoiceId,
 	};
 
 	public bool HasPageImages => Pages.Any(p => p.ImageFile is not null);

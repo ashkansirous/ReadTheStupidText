@@ -48,7 +48,8 @@ public sealed record StoryPage(string Text, string? ImageFile = null, IReadOnlyL
     public IReadOnlyList<int> IncludedLineIndexes => ImportedText.IncludedIndexes(Lines?.Count ?? 0, Regions);
 }
 
-/// <summary>A story on the device: its pages, its cover choice and the cast worked out at import.</summary>
+/// <summary>A story on the device: its pages, its cover choice and the cast worked out at import. <see cref="NarratorVoiceId"/> is only what
+/// an older story or package carried: the narrator is one per language now (Slice 109, Decision 114), so it is read but never used (it is still written, filled with the language's narrator, for older builds: <see cref="StoryJson.LegacyNarratorOf"/>).</summary>
 public sealed record Story(
     string Id,
     string Title,
@@ -75,8 +76,8 @@ public sealed record Story(
     public const string CoverFileExtension = ".jpg";
 
     /// <summary>A new own book (Slice 107): empty, in the grown-up's language, with the translate switch on so it reads and shows in "my language" wherever a translator exists.</summary>
-    public static Story NewOwnBook(string id, string language, DateTimeOffset created, int coverColourIndex, string narratorVoiceId) =>
-        new(id, string.Empty, language, created, [], [], CoverStyle.FirstPage, coverColourIndex, narratorVoiceId, TranslateToMyLanguage: true);
+    public static Story NewOwnBook(string id, string language, DateTimeOffset created, int coverColourIndex) =>
+        new(id, string.Empty, language, created, [], [], CoverStyle.FirstPage, coverColourIndex, string.Empty, TranslateToMyLanguage: true);
 
     /// <summary>The one shared "no merges" map.</summary>
     public static readonly IReadOnlyDictionary<string, string> NoMerges = new Dictionary<string, string>();

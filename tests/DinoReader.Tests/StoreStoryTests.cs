@@ -1,3 +1,4 @@
+using ReadTheStupidText.Domain.Reading;
 using System.Text.Json;
 using DinoReader.Core;
 
@@ -80,7 +81,7 @@ public sealed class StoreStoryTests : IDisposable
             }
 
             Assert.Equal(story.Cast.Count, story.Cast.Select(c => c.VoiceId).Distinct().Count());
-            Assert.DoesNotContain(story.Cast, c => c.VoiceId == story.NarratorVoiceId);
+            Assert.DoesNotContain(story.Cast, c => c.VoiceId == SupertonicVoiceTable.Default.Id);
         }
     }
 

@@ -41,7 +41,7 @@ internal static class CastViews
 		Padding = new Thickness(6, 1),
 		VerticalOptions = LayoutOptions.Center,
 		StrokeShape = new RoundRectangle { CornerRadius = 6 },
-		Content = new Label { Text = text, FontSize = 10.5, FontAttributes = FontAttributes.Bold, TextColor = ink },
+		Content = new Label { Text = text, FontSize = 11, FontAttributes = FontAttributes.Bold, TextColor = ink },
 	};
 
 	/// <summary>The rounded drop-down look of a voice: its name and a down chevron.</summary>

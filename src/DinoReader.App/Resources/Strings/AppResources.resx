@@ -131,6 +131,14 @@
   <!-- Slice 108 -->
   <data name="Cast_VoicesFor" xml:space="preserve"><value>Voices for {0}</value></data>
   <!-- /Slice 108 -->
+  <!-- Slice 109 -->
+  <data name="Narrator_Title" xml:space="preserve"><value>Narrator</value></data>
+  <data name="Narrator_Subtitle" xml:space="preserve"><value>The storyteller voice for every book</value></data>
+  <data name="Narrator_MyLanguage" xml:space="preserve"><value>MY LANGUAGE</value></data>
+  <data name="Narrator_Footnote" xml:space="preserve"><value>If a character in a book has the narrator’s voice, Dino gives that character another one.</value></data>
+  <data name="Cast_ChangeForAll" xml:space="preserve"><value>Change for all books</value></data>
+  <data name="Narrator_Sample" xml:space="preserve"><value>Hear this voice</value></data>
+  <!-- /Slice 109 -->
   <data name="Add_Scan" xml:space="preserve"><value>Scan pages</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Keeps the page pictures</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Photos</value></data>
@@ -233,8 +241,6 @@
   <data name="Cast_Hear" xml:space="preserve"><value>Hear {0}</value></data>
   <data name="Cast_NoBoyVoice" xml:space="preserve"><value>This voice pack has no boy voice, so this character keeps the voice they had.</value></data>
   <data name="Cast_NoGirlVoice" xml:space="preserve"><value>This voice pack has no girl voice, so this character keeps the voice they had.</value></data>
-  <data name="Cast_VoiceChanged_One" xml:space="preserve"><value>{0}’s voice was changed because the narrator now has the voice they were given.</value></data>
-  <data name="Cast_VoiceChanged_Other" xml:space="preserve"><value>{0} had their voices changed because the narrator now has the voice they were given.</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>Merge into {0}</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>This voice pack only has {0} natural voices, so some characters share a voice. The narrator’s voice is never given to a character.</value></data>
   <data name="Voice_NbWoman" xml:space="preserve"><value>Voice {0} (woman)</value></data>

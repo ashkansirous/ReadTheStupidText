@@ -274,14 +274,34 @@ public partial class ReadingPage : ContentPage
 		await _saveLock.WaitAsync();
 		try
 		{
-			Story updated = (_story ?? withCast) with { Cast = withCast.Cast, LanguageCasts = withCast.LanguageCasts };
-			await _library.UpdateAsync(updated);
-			_story = updated;
+			// Merged into the latest stored story (the cast screen may have saved edits meanwhile): only a language that has no cast there yet is added.
+			Story latest = await _library.GetAsync(withCast.Id) ?? _story ?? withCast;
+			Story updated = AddNewCasts(latest, withCast);
+			if (!ReferenceEquals(updated, latest))
+			{
+				await _library.UpdateAsync(updated);
+			}
+
+			_story = _story is { } shown ? AddNewCasts(shown, updated) : updated;
 		}
 		finally
 		{
 			_saveLock.Release();
 		}
+	}
+
+	private static Story AddNewCasts(Story target, Story source)
+	{
+		Story merged = target;
+		foreach (string language in source.LanguageCasts?.Keys ?? [])
+		{
+			if (!merged.HasCastIn(language) && source.CastIn(language).Count > 0)
+			{
+				merged = merged.WithCastIn(language, source.CastIn(language));
+			}
+		}
+
+		return merged;
 	}
 
 	// The choice is remembered per story in story.json. A failed save only loses the preference.

@@ -107,7 +107,6 @@ public class StoryJsonTests
         Assert.Equal(story.Created, back.Created);
         Assert.Equal(story.CoverStyle, back.CoverStyle);
         Assert.Equal(story.CoverColourIndex, back.CoverColourIndex);
-        Assert.Equal(story.NarratorVoiceId, back.NarratorVoiceId);
         Assert.Equal(story.Pages, back.Pages);
         Assert.Equal(story.Cast, back.Cast);
     }

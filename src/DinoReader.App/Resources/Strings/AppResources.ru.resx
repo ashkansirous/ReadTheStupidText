@@ -128,6 +128,14 @@
   <!-- Slice 108 -->
   <data name="Cast_VoicesFor" xml:space="preserve"><value>Голоса для {0}</value></data>
   <!-- /Slice 108 -->
+  <!-- Slice 109 -->
+  <data name="Narrator_Title" xml:space="preserve"><value>Рассказчик</value></data>
+  <data name="Narrator_Subtitle" xml:space="preserve"><value>Голос рассказчика для всех книг</value></data>
+  <data name="Narrator_MyLanguage" xml:space="preserve"><value>МОЙ ЯЗЫК</value></data>
+  <data name="Narrator_Footnote" xml:space="preserve"><value>Если у героя книги голос рассказчика, Дино даст ему другой голос.</value></data>
+  <data name="Cast_ChangeForAll" xml:space="preserve"><value>Изменить для всех книг</value></data>
+  <data name="Narrator_Sample" xml:space="preserve"><value>Послушать этот голос</value></data>
+  <!-- /Slice 109 -->
   <data name="Add_Scan" xml:space="preserve"><value>Сканировать страницы</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Сохраняет картинки страниц</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Фото</value></data>
@@ -232,8 +240,6 @@
   <data name="Cast_Hear" xml:space="preserve"><value>Послушать: {0}</value></data>
   <data name="Cast_NoBoyVoice" xml:space="preserve"><value>В этом наборе голосов нет мальчишеского голоса, поэтому у персонажа остаётся прежний голос.</value></data>
   <data name="Cast_NoGirlVoice" xml:space="preserve"><value>В этом наборе голосов нет девичьего голоса, поэтому у персонажа остаётся прежний голос.</value></data>
-  <data name="Cast_VoiceChanged_One" xml:space="preserve"><value>Голос персонажа {0} изменён, потому что рассказчик теперь использует выданный ему голос.</value></data>
-  <data name="Cast_VoiceChanged_Other" xml:space="preserve"><value>Голоса персонажей {0} изменены, потому что рассказчик теперь использует выданный им голос.</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>Объединить с {0}</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>В этом наборе голосов всего {0} естественных голосов, поэтому некоторые персонажи говорят одним голосом. Голос рассказчика персонажам не выдаётся.</value></data>
   <data name="Voice_NbWoman" xml:space="preserve"><value>Голос {0} (женщина)</value></data>

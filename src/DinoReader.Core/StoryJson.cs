@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using ReadTheStupidText.Domain.Reading;
 
 namespace DinoReader.Core;
 
@@ -17,6 +18,10 @@ public static class StoryJson
 
     // How far a stored line box may overshoot the page edge and still be pulled back onto it (rounding only).
     private const double BoxRoundingTolerance = 0.001;
+
+    /// <summary>The narrator written as <c>NarratorVoiceId</c> for a story in the given language, so older app builds (which require the field)
+    /// still open new packages and backups. The app sets it to the language's current narrator (Slice 109); reading never uses it.</summary>
+    public static Func<string, string> LegacyNarratorOf { get; set; } = _ => SupertonicVoiceTable.Default.Id;
 
     private static readonly JsonSerializerOptions Options = new()
     {
@@ -51,7 +56,7 @@ public static class StoryJson
         CoverColourIndex = s.CoverColourIndex,
         CoverFile = s.CoverFile,
         CoverPageIndex = s.CoverPageIndex,
-        NarratorVoiceId = s.NarratorVoiceId,
+        NarratorVoiceId = LegacyNarratorOf(s.Language),
         PreferredMode = s.PreferredMode is { } mode ? JsonSerializer.SerializeToElement(mode.ToString()) : null,
         Pages = s.Pages.Select(p => new PageFile { Text = p.Text, ImageFile = p.ImageFile, Lines = ToLineFiles(p.Lines), Regions = ToRegionFiles(p.Regions) }).ToList(),
         Cast = ToCastFiles(s.Cast),
@@ -74,7 +79,7 @@ public static class StoryJson
             f.Id, f.Title, f.Language, f.Created,
             f.Pages.Select(p => ToPage(p)).ToList(),
             f.Cast.Select(c => new CastMember(c.CharacterId, c.Name, c.Gender, c.VoiceId, c.Edited)).ToList(),
-            f.CoverStyle, f.CoverColourIndex, f.NarratorVoiceId, ParseMode(f.PreferredMode), CleanMerges(f.Merges), f.Translate,
+            f.CoverStyle, f.CoverColourIndex, f.NarratorVoiceId ?? string.Empty, ParseMode(f.PreferredMode), CleanMerges(f.Merges), f.Translate,
             f.CoverFile, f.CoverPageIndex, StoryIds.IsValid(f.SourceId) ? f.SourceId : null, CleanTranslations(f.Translations),
             CleanLanguageCasts(f.LanguageCasts, f.Language));
     }
@@ -242,7 +247,7 @@ public static class StoryJson
     // carry nulls; refuse it as a format error rather than failing later with a NullReference.
     private static void RequireFields(StoryFile f)
     {
-        bool complete = f.Title is not null && f.Language is not null && f.NarratorVoiceId is not null
+        bool complete = f.Title is not null && f.Language is not null
             && f.Pages is not null && f.Pages.All(p => p is { Text: not null })
             && f.Cast is not null
             && f.Cast.All(c => c is { CharacterId: not null, Name: not null, VoiceId: not null });
@@ -263,7 +268,8 @@ public static class StoryJson
         public int CoverColourIndex { get; set; }
         public string? CoverFile { get; set; }
         public int? CoverPageIndex { get; set; }
-        public string NarratorVoiceId { get; set; } = string.Empty;
+        /// <summary>Written for older builds only (<see cref="LegacyNarratorOf"/>); the narrator is one per language now (Slice 109), so reading ignores it.</summary>
+        public string? NarratorVoiceId { get; set; }
         public JsonElement? PreferredMode { get; set; }
         public List<PageFile> Pages { get; set; } = [];
         public List<CastFile> Cast { get; set; } = [];
