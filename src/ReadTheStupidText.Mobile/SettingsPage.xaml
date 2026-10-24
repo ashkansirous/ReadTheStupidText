@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="ReadTheStupidText.Mobile.SettingsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:res="clr-namespace:ReadTheStupidText.Mobile.Resources.Strings"
+    Title="{x:Static res:AppResources.Settings_Title}"
+    Shell.NavBarIsVisible="False"
+    SafeAreaEdges="None">
+
+    <ContentPage.Resources>
+        <!-- Outline icons: the paths of RTST Phone Batch 19 R3 (24x24 grid; the row chevron is on 12x12), drawn unscaled and sized with Scale. -->
+        <x:String x:Key="IconBack">M 15 5 l -7 7 l 7 7</x:String>
+        <x:String x:Key="IconGlobe">M 3 12 A 9 9 0 1 0 21 12 A 9 9 0 1 0 3 12 M 3 12 h 18 M 12 3 c 2.5 2.7 3.8 5.7 3.8 9 s -1.3 6.3 -3.8 9 c -2.5 -2.7 -3.8 -5.7 -3.8 -9 S 9.5 5.7 12 3 Z</x:String>
+        <x:String x:Key="IconSpeaker">M 11 5 L 6 9 H 3 v 6 h 3 l 5 4 V 5 Z M 15.5 8.5 a 5 5 0 0 1 0 7 M 18.5 5.5 a 9 9 0 0 1 0 13</x:String>
+        <x:String x:Key="IconGauge">M 12 14 l 4 -4 M 3.3 17 a 9 9 0 1 1 17.4 0</x:String>
+        <x:String x:Key="IconRowChevron">M 4.5 2.5 L 8 6 L 4.5 9.5</x:String>
+        <SolidColorBrush x:Key="IconBrushLight" Color="#4A46D6" />
+        <SolidColorBrush x:Key="IconBrushDark" Color="{StaticResource PrimaryDark}" />
+        <SolidColorBrush x:Key="ChevronBrushLight" Color="#73000000" />
+        <SolidColorBrush x:Key="ChevronBrushDark" Color="#73FFFFFF" />
+        <Style x:Key="IconPath" TargetType="Path">
+            <Setter Property="Aspect" Value="None" />
+            <Setter Property="WidthRequest" Value="24" />
+            <Setter Property="HeightRequest" Value="24" />
+            <Setter Property="HorizontalOptions" Value="Center" />
+            <Setter Property="VerticalOptions" Value="Center" />
+            <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource IconBrushLight}, Dark={StaticResource IconBrushDark}}" />
+            <Setter Property="StrokeThickness" Value="1.9" />
+            <Setter Property="StrokeLineCap" Value="Round" />
+            <Setter Property="StrokeLineJoin" Value="Round" />
+        </Style>
+        <Style x:Key="RowChevron" TargetType="Path" BasedOn="{StaticResource IconPath}">
+            <Setter Property="WidthRequest" Value="12" />
+            <Setter Property="HeightRequest" Value="12" />
+            <Setter Property="Scale" Value="1.1667" />
+            <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource ChevronBrushLight}, Dark={StaticResource ChevronBrushDark}}" />
+            <Setter Property="StrokeThickness" Value="1.6" />
+        </Style>
+        <Style x:Key="SettingsCard" TargetType="Border">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 16" />
+            <Setter Property="Stroke" Value="{StaticResource CardBorder}" />
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}" />
+        </Style>
+        <Style x:Key="SettingsRowTitle" TargetType="Label">
+            <Setter Property="FontSize" Value="16.5" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+        <Style x:Key="SettingsRowValue" TargetType="Label">
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="VerticalOptions" Value="Center" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
+        </Style>
+        <Style x:Key="SpeedChip" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource ChipBackgroundLight}, Dark={StaticResource ChipBackgroundDark}}" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HeightRequest" Value="48" />
+            <Setter Property="BorderWidth" Value="0" />
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*" SafeAreaEdges="None" BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}">
+
+        <Grid Grid.Row="0" Padding="4,8,18,8" SafeAreaEdges="Container" ColumnDefinitions="48,*" ColumnSpacing="4">
+            <Grid.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="{StaticResource BrandStart}" Offset="0.0" />
+                    <GradientStop Color="{StaticResource BrandEnd}" Offset="1.0" />
+                </LinearGradientBrush>
+            </Grid.Background>
+            <Grid x:Name="BackButton" Grid.Column="0" WidthRequest="48" HeightRequest="48">
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Grid.GestureRecognizers>
+                <Path Data="{StaticResource IconBack}" Style="{StaticResource IconPath}" Stroke="White" StrokeThickness="2.4" />
+            </Grid>
+            <Label x:Name="TitleLabel" Grid.Column="1" FontSize="18" FontAttributes="Bold" TextColor="White" VerticalOptions="Center" />
+        </Grid>
+
+        <VerticalStackLayout Grid.Row="1" Padding="14,16" Spacing="10" SafeAreaEdges="Container">
+
+            <Border Style="{StaticResource SettingsCard}">
+                <VerticalStackLayout>
+                    <Grid Padding="16,0" MinimumHeightRequest="64" ColumnDefinitions="32,*,Auto,Auto" ColumnSpacing="12">
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnLanguageRowTapped" />
+                        </Grid.GestureRecognizers>
+                        <Path Grid.Column="0" Data="{StaticResource IconGlobe}" Style="{StaticResource IconPath}" />
+                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2" Padding="0,8">
+                            <Label x:Name="LanguageTitle" Style="{StaticResource SettingsRowTitle}" />
+                            <Label x:Name="LanguageCaption" FontSize="13"
+                                   TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="2" x:Name="LanguageValue" Style="{StaticResource SettingsRowValue}" />
+                        <Path Grid.Column="3" Data="{StaticResource IconRowChevron}" Style="{StaticResource RowChevron}" />
+                    </Grid>
+                    <BoxView HeightRequest="1" Color="#14000000" />
+                    <Grid Padding="16,0" MinimumHeightRequest="64" ColumnDefinitions="32,*,Auto,Auto" ColumnSpacing="12">
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnVoiceRowTapped" />
+                        </Grid.GestureRecognizers>
+                        <Path Grid.Column="0" Data="{StaticResource IconSpeaker}" Style="{StaticResource IconPath}" />
+                        <Label Grid.Column="1" x:Name="VoiceTitle" Style="{StaticResource SettingsRowTitle}" />
+                        <Label Grid.Column="2" x:Name="VoiceValue" Style="{StaticResource SettingsRowValue}" />
+                        <Path Grid.Column="3" Data="{StaticResource IconRowChevron}" Style="{StaticResource RowChevron}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource SettingsCard}" Padding="16,14,16,16">
+                <VerticalStackLayout Spacing="12">
+                    <Grid ColumnDefinitions="32,*" ColumnSpacing="12">
+                        <Path Grid.Column="0" Data="{StaticResource IconGauge}" Style="{StaticResource IconPath}" />
+                        <Label Grid.Column="1" x:Name="SpeedTitle" Style="{StaticResource SettingsRowTitle}" />
+                    </Grid>
+                    <Grid x:Name="SpeedPresetGrid" ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+                        <Button Grid.Row="0" Grid.Column="0" Text="0.5×" ClassId="0.5" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedChip}" />
+                        <Button Grid.Row="0" Grid.Column="1" Text="1×" ClassId="1.0" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedChip}" />
+                        <Button Grid.Row="0" Grid.Column="2" Text="1.25×" ClassId="1.25" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedChip}" />
+                        <Button Grid.Row="1" Grid.Column="0" Text="1.5×" ClassId="1.5" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedChip}" />
+                        <Button Grid.Row="1" Grid.Column="1" Text="1.75×" ClassId="1.75" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedChip}" />
+                        <Button Grid.Row="1" Grid.Column="2" Text="2×" ClassId="2.0" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedChip}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>

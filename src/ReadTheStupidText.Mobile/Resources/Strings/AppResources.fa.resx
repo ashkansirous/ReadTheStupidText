@@ -9,11 +9,20 @@
   <data name="Common_Cancel" xml:space="preserve"><value>لغو</value></data>
   <data name="Common_Voice" xml:space="preserve"><value>صدا</value></data>
   <data name="Common_Language" xml:space="preserve"><value>زبان</value></data>
-  <data name="Reader_AddTextSection" xml:space="preserve"><value>افزودن متن</value></data>
-  <data name="Reader_PasteButton" xml:space="preserve"><value>📋 جای‌گذاری</value></data>
-  <data name="Reader_ScanButton" xml:space="preserve"><value>📷 اسکن</value></data>
-  <data name="Reader_FileButton" xml:space="preserve"><value>📄 فایل</value></data>
-  <data name="Reader_EditorPlaceholder" xml:space="preserve"><value>اینجا تایپ یا جای‌گذاری کنید، یک صفحه را اسکن کنید یا فایلی را باز کنید — همه‌چیز در همین کادر قرار می‌گیرد و با همان کنترل‌های پایین پخش می‌شود.</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>تنظیمات</value></data>
+  <data name="Reader_EditLink" xml:space="preserve"><value>ویرایش</value></data>
+  <data name="Reader_TextFromPictures" xml:space="preserve"><value>متن از تصویر</value></data>
+  <data name="Reader_TextFromFile" xml:space="preserve"><value>متن از فایل</value></data>
+  <data name="Reader_EmptyHint" xml:space="preserve"><value>برای افزودن چیزی برای خواندن، یکی از دکمه‌های زیر را بزنید</value></data>
+  <data name="Settings_LanguageCaption" xml:space="preserve"><value>زبان متن‌های برنامه</value></data>
+  <data name="Settings_ReadingSpeed" xml:space="preserve"><value>سرعت خواندن</value></data>
+  <data name="Common_Back" xml:space="preserve"><value>بازگشت</value></data>
+  <data name="Reader_SkipBack" xml:space="preserve"><value>جمله قبلی</value></data>
+  <data name="Reader_SkipForward" xml:space="preserve"><value>جمله بعدی</value></data>
+  <data name="Reader_Play" xml:space="preserve"><value>پخش</value></data>
+  <data name="Reader_Pause" xml:space="preserve"><value>توقف</value></data>
+  <data name="Reader_PasteButton" xml:space="preserve"><value>جای‌گذاری</value></data>
+  <data name="Reader_EditorHint" xml:space="preserve"><value>متن را اینجا بنویسید یا جای‌گذاری کنید</value></data>
   <data name="Reader_PasteFailedTitle" xml:space="preserve"><value>جای‌گذاری نشد</value></data>
   <data name="Reader_PasteFailedMessage" xml:space="preserve"><value>کلیپ‌بورد خوانده نشد. دوباره متن را کپی کنید.</value></data>
   <data name="Reader_ScanFailedTitle" xml:space="preserve"><value>اسکن انجام نشد</value></data>
@@ -55,19 +64,6 @@
   <data name="Reader_FileUnreadableMessage" xml:space="preserve"><value>ممکن است فایل خراب باشد یا قالب آن پشتیبانی نشود.</value></data>
   <data name="Reader_ReadFailedTitle" xml:space="preserve"><value>متن خوانده نشد</value></data>
   <data name="Reader_ReadFailedMessage" xml:space="preserve"><value>هنگام خواندن مشکلی پیش آمد.</value></data>
-  <data name="Translate_ToggleLabel" xml:space="preserve"><value>ترجمه به {0}</value></data>
-  <data name="Translate_SourceLabel" xml:space="preserve"><value>زبان متن</value></data>
-  <data name="Translate_AutoDetect" xml:space="preserve"><value>تشخیص خودکار</value></data>
-  <data name="Translate_SourcePickerTitle" xml:space="preserve"><value>زبان متن</value></data>
-  <data name="Translate_QualityNote" xml:space="preserve"><value>ترجمهٔ سریع روی گوشی؛ کیفیت آن معمولی است.</value></data>
-  <data name="Translate_DownloadingStatus" xml:space="preserve"><value>در حال دانلود مدل ترجمه…</value></data>
-  <data name="Translate_ModelUnavailableTitle" xml:space="preserve"><value>هنوز نمی‌توان ترجمه کرد</value></data>
-  <data name="Translate_ModelUnavailableMessage" xml:space="preserve"><value>مدل ترجمه هنوز روی گوشی شما نیست و دانلود نشد. یک بار به اینترنت وصل شوید تا دریافت شود. فعلاً متن اصلی خوانده می‌شود.</value></data>
-  <data name="Translate_FailedTitle" xml:space="preserve"><value>ترجمه ناموفق بود</value></data>
-  <data name="Translate_FailedMessage" xml:space="preserve"><value>این متن ترجمه نشد. به جای آن متن اصلی خوانده می‌شود.</value></data>
-  <data name="Translate_UnsupportedNote" xml:space="preserve"><value>ترجمه برای {0} در دسترس نیست.</value></data>
-  <data name="Translate_SourceUnsupportedNote" xml:space="preserve"><value>ترجمه از {0} در دسترس نیست.</value></data>
-  <data name="Translate_NoVoiceNote" xml:space="preserve"><value>این گوشی صدایی برای {0} ندارد، پس نمی‌توان آن را بلند خواند.</value></data>
   <data name="Reader_VoiceUnavailableTitle" xml:space="preserve"><value>خواندن با صدا ممکن نیست</value></data>
   <data name="Reader_VoiceDownloadingMessage" xml:space="preserve"><value>صدای طبیعی {0} هنوز در حال دانلود است. پس از پایان دوباره امتحان کنید.</value></data>
   <data name="Reader_NoVoiceMessage" xml:space="preserve"><value>این گوشی صدایی برای {0} ندارد.</value></data>

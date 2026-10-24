@@ -8,11 +8,9 @@
     Title="{x:Static res:AppResources.App_Name}"
     FlyoutBehavior="Disabled">
 
-    <!-- Single home screen (design refresh, post-Slice 34): Paste/Scan/File are
-         input actions on ReaderPage itself, not tabs (Decision 38's three
-         Android input paths still apply — they just no longer need separate
-         navigation destinations). The voice picker is a pushed route, registered
-         in the code-behind. Scan opens the system document scanner, not a page. -->
+    <!-- Single home screen: the reading page (Slice 99, Decision 103) holds only the text, the two
+         "add text" buttons and the player. Settings and the voice picker are pushed routes,
+         registered in the code-behind. Scan opens the system document scanner, not a page. -->
     <ShellContent Title="{x:Static res:AppResources.Shell_ReaderTitle}" ContentTemplate="{DataTemplate local:ReaderPage}" Route="Reader" />
 
 </Shell>

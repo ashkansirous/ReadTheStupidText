@@ -12,6 +12,10 @@ public static class ReadTimingFormatter
     public static string Format(ReadTiming timing) =>
         $"{FormatDuration(timing.Elapsed)}/{FormatDuration(timing.Total)}";
 
+    /// <summary>One side of the player clock for the phone: <c>m:ss</c> (minutes unpadded), or <c>--:--</c> when unknown.</summary>
+    public static string FormatClock(TimeSpan? duration) =>
+        duration is { } value ? $"{(int)value.TotalMinutes}:{value.Seconds:D2}" : UnknownDuration;
+
     private static string FormatDuration(TimeSpan? duration)
     {
         if (duration is not { } value)
