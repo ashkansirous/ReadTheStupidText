@@ -4,7 +4,7 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
-  <data name="App_Name" xml:space="preserve"><value>Dino Reader</value></data>
+  <data name="App_Name" xml:space="preserve"><value>Dino Book Reader</value></data>
   <data name="Add_FileSub" xml:space="preserve"><value>.pdf · .docx · .txt</value></data>
   <data name="Cast_UnknownGender" xml:space="preserve"><value>?</value></data>
   <data name="Common_Ok" xml:space="preserve"><value>OK</value></data>
@@ -70,8 +70,8 @@
   <data name="Backup_Skipped" xml:space="preserve"><value>Already here, skipped</value></data>
   <data name="Backup_Damaged" xml:space="preserve"><value>Couldn’t be read</value></data>
   <data name="Backup_SeeStories" xml:space="preserve"><value>See my stories</value></data>
-  <data name="Backup_Newer" xml:space="preserve"><value>This backup is from a newer Dino Reader. Update the app, then try again.</value></data>
-  <data name="Backup_NotABackup" xml:space="preserve"><value>That file isn’t a Dino Reader backup.</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>This backup is from a newer Dino Book Reader. Update the app, then try again.</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>That file isn’t a Dino Book Reader backup.</value></data>
   <data name="Backup_Failed" xml:space="preserve"><value>The backup didn’t work. Please try again.</value></data>
   <data name="Backup_TooLarge" xml:space="preserve"><value>Too large to restore</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>{0} could not be added to the backup.</value></data>

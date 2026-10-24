@@ -6,7 +6,7 @@ namespace DinoReader.Core;
 public class StoryBackupException(string message, Exception? inner = null) : Exception(message, inner);
 
 /// <summary>Raised, before anything is added, when a backup comes from a newer app than this one (Slice 93).</summary>
-public sealed class StoryBackupNewerException() : StoryBackupException("The backup is from a newer version of Dino Reader.");
+public sealed class StoryBackupNewerException() : StoryBackupException("The backup is from a newer version of Dino Book Reader.");
 
 /// <summary>
 /// How a restore went: stories added, stories skipped because their id was already on the shelf, stories that could not be read, and

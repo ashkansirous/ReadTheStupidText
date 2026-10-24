@@ -21,7 +21,7 @@
 		<Nullable>enable</Nullable>
 		<MauiXamlInflator>SourceGen</MauiXamlInflator>
 
-		<ApplicationTitle>Dino Reader</ApplicationTitle>
+		<ApplicationTitle>Dino Book Reader</ApplicationTitle>
 
 		<!-- Google Play package name — fixed once published. -->
 		<ApplicationId>uk.sirous.dinoreader</ApplicationId>

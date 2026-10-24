@@ -4,6 +4,10 @@ Loaded when you work under `src/DinoReader.App`. The pure library is `src/DinoRe
 (own CLAUDE.md); shared platform code is `src/ReadTheStupidText.Mobile.Shared`; MAUI gotchas
 are in `src/ReadTheStupidText.Mobile/CLAUDE.md`; its CI target is in `.github/CLAUDE.md`.
 
+> **Naming:** the user-facing product display name is **"Dino Book Reader"** (manifest, store listing,
+> app title, UI strings, site). Package ids (`uk.sirous.dinoreader`, `AshkanSirous.DinoReader`), namespaces,
+> projects, the `.dino` format and the domain `dinoreader.sirous.uk` stay "DinoReader": do not rename those.
+
 > **Dino Reader (Batch 10):** a second product in this repo, a kids' book reader
 > with a voice per character: a second MAUI app, `src/DinoReader.App`, sharing
 > `src/ReadTheStupidText.Mobile.Shared` plus Domain/Application/Documents. The pure

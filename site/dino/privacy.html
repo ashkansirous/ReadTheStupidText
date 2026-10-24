@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Privacy Policy &mdash; Dino Reader</title>
-  <meta name="description" content="Privacy policy for Dino Reader, a children&rsquo;s book reader. The app collects no data, has no accounts, ads or analytics, and keeps stories, photos and scans on the device." />
+  <title>Privacy Policy &mdash; Dino Book Reader</title>
+  <meta name="description" content="Privacy policy for Dino Book Reader, a children&rsquo;s book reader. The app collects no personal information, has no accounts or ads, and keeps stories, photos and scans on the device. On Android, Google&rsquo;s ML Kit sends Google technical diagnostics." />
   <link rel="icon" type="image/png" href="/dino/icon.png" />
   <style>
     :root { color-scheme: light dark; --bg: #F3EFE6; --ink: #2b2540; --soft: #5a5470; --muted: #8a8399; --link: #5B57E8; }
@@ -26,17 +26,19 @@
   </style>
 </head>
 <body>
-  <h1>Privacy Policy &mdash; Dino Reader</h1>
-  <p class="eff"><strong>Effective date:</strong> 23 October 2026</p>
+  <h1>Privacy Policy &mdash; Dino Book Reader</h1>
+  <p class="eff"><strong>Effective date:</strong> 24 October 2026</p>
 
-  <p class="lede">Dino Reader (&ldquo;the app&rdquo;) is a book reader for children aged 3 to 8. It reads
+  <p class="lede">Dino Book Reader (&ldquo;the app&rdquo;) is a book reader for children aged 3 to 8. It reads
   stories aloud with a different voice for each character. This policy explains how the app handles
   data, for the children who use it and the grown-ups who set it up.</p>
 
   <h2>The short version</h2>
-  <p><strong>Dino Reader does not collect, store, transmit, or share any personal information.</strong>
-  It has no accounts, no advertising, no analytics, and no third-party components that collect data.
-  Everything the app does happens <strong>on the device</strong>, apart from downloading voice packs and free stories.</p>
+  <p><strong>Dino Book Reader itself does not collect, store, transmit, or share any personal information.</strong>
+  It has no accounts, no advertising, and no analytics of its own. Everything the app does happens
+  <strong>on the device</strong>, apart from downloading voice packs and free stories. On Android, the Google
+  ML Kit components the app uses send Google technical diagnostics data, described under
+  &ldquo;Google ML Kit (Android)&rdquo; below. Your stories, photos, scans and audio are never sent.</p>
 
   <h2>What the app processes, and where</h2>
   <ul>
@@ -68,9 +70,19 @@
   <p><strong>Translation models (Android).</strong> When a story is read translated and the book has
   no built-in translation for that language, the phone downloads Google&rsquo;s on-device translation
   model for the language, once. The story text is translated on the phone and is never sent anywhere.</p>
+  <p><strong>Google ML Kit (Android).</strong> On Android the app uses Google&rsquo;s ML Kit for the document
+  scanner, text recognition and translation. ML Kit sends Google technical diagnostics and usage-analytics
+  data over HTTPS: device information (manufacturer, model, operating system version), the app&rsquo;s package
+  name and version, performance metrics, API configuration, event types, error codes, the translation
+  languages configured, and an identifier for the app installation that is not intended to identify a user
+  or device (ML Kit also uses Firebase installations for remote configuration). ML Kit does not transfer this
+  data to third parties. Story text, photos, scans and audio are never part of it. Google handles this data
+  under <a href="https://policies.google.com/privacy">Google&rsquo;s Privacy Policy</a>; see also
+  <a href="https://developers.google.com/ml-kit/android-data-disclosure">Google&rsquo;s ML Kit data disclosure</a>.
+  The Windows and iOS versions do not use ML Kit.</p>
   <p>Like any web request, a download is seen by the server that hosts the file (GitHub for voice
   and language packs, Google for translation models on Android, this project&rsquo;s own server for free stories), which may log the
-  device&rsquo;s IP address under its own privacy policy. Dino Reader itself does not receive or keep
+  device&rsquo;s IP address under its own privacy policy. Dino Book Reader itself does not receive or keep
   that information.</p>
 
   <h2>Permissions</h2>
@@ -80,10 +92,12 @@
   Choosing a file or photo uses the standard Android picker, and the app only opens what you pick.</p>
 
   <h2>Children&rsquo;s privacy</h2>
-  <p>Dino Reader is designed for children, and it collects no personal information from anyone,
-  including children. It has no accounts, no ads, no social features, no behavioural tracking, and
-  no way for a child to send information to anyone. Settings and the story library sit behind a
-  grown-ups gate. Because nothing is collected, there is nothing for a parent to review, correct or
+  <p>Dino Book Reader is designed for children, and the app collects no personal information from anyone,
+  including children: no name, email address, photos or stories. It has no accounts, no ads, no social
+  features, no behavioural tracking, and no way for a child to send information to anyone. The only data
+  that leaves the device is the technical diagnostics data that Google ML Kit sends on Android
+  (see &ldquo;Google ML Kit (Android)&rdquo; above), which does not include any content a child creates. Settings and the story library sit behind a
+  grown-ups gate. Because the app collects no personal information, there is nothing for a parent to review, correct or
   delete beyond the content on their own device, which they can remove by deleting a story or
   clearing the app&rsquo;s storage.</p>
 
@@ -95,6 +109,6 @@
   <p>Questions about this policy can be raised by opening an issue at
   <a href="https://github.com/ashkansirous/ReadTheStupidText/issues">the GitHub repository</a>.</p>
 
-  <footer>&copy; 2026 Ashkan Sirous. <a href="./">Dino Reader</a></footer>
+  <footer>&copy; 2026 Ashkan Sirous. <a href="./">Dino Book Reader</a></footer>
 </body>
 </html>

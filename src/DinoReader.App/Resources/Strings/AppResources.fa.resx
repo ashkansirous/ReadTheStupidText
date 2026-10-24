@@ -67,8 +67,8 @@
   <data name="Backup_Skipped" xml:space="preserve"><value>از قبل بود، رد شد</value></data>
   <data name="Backup_Damaged" xml:space="preserve"><value>خوانده نشد</value></data>
   <data name="Backup_SeeStories" xml:space="preserve"><value>دیدن داستان‌های من</value></data>
-  <data name="Backup_Newer" xml:space="preserve"><value>این پشتیبان از نسخه جدیدتر Dino Reader است. برنامه را به‌روز کنید و دوباره امتحان کنید.</value></data>
-  <data name="Backup_NotABackup" xml:space="preserve"><value>این فایل پشتیبان Dino Reader نیست.</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>این پشتیبان از نسخه جدیدتر Dino Book Reader است. برنامه را به‌روز کنید و دوباره امتحان کنید.</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>این فایل پشتیبان Dino Book Reader نیست.</value></data>
   <data name="Backup_Failed" xml:space="preserve"><value>پشتیبان‌گیری انجام نشد. دوباره امتحان کنید.</value></data>
   <data name="Backup_TooLarge" xml:space="preserve"><value>برای بازیابی بسیار بزرگ است</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>افزودن {0} به پشتیبان ممکن نبود.</value></data>
