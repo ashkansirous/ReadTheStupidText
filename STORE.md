@@ -269,7 +269,7 @@ dev time and is not a redistributable runtime (Decision 26 in `docs/plan/decisio
 | `Microsoft.ML.OnnxRuntime` (iOS only) | the same binding plus its own static onnxruntime for PaddleOCR; sherpa-onnx's iOS framework does not export one | MIT |
 | `PdfPig` | PDF text extraction (file upload) | Apache-2.0 |
 | `DocumentFormat.OpenXml` | DOCX text extraction (file upload) | MIT |
-| Fredoka, Andika, Vazirmatn fonts (Dino Reader only, bundled in `src/DinoReader.App/Resources/Fonts/`) | Dino Reader UI, reading and Farsi/Arabic text | SIL OFL 1.1 (texts in `src/DinoReader.App/Licenses/`) |
+| Fredoka, Andika, Vazirmatn fonts (Dino Book Reader only, bundled in `src/DinoReader.App/Resources/Fonts/`) | Dino Book Reader UI, reading and Farsi/Arabic text | SIL OFL 1.1 (texts in `src/DinoReader.App/Licenses/`) |
 
 No GPL/LGPL components ship in the package. There is one deliberate, scoped
 exception (Decision 63): the Persian voice is a Piper voice that needs the
@@ -581,9 +581,9 @@ revisit with a small Swift wrapper (Apple's framework, gated to iOS 18, Farsi hi
 verified ML Kit binding. Language identification (`NLLanguageRecognizer`) is already in place.
 The store listing for iOS must not mention translation until then.
 
-## Dino Reader on Windows (Slice 67)
+## Dino Book Reader on Windows (Slice 67)
 
-Dino Reader is a **separate Store product** from Read The Stupid Text: its own listing, its own
+Dino Book Reader is a **separate Store product** from Read The Stupid Text: its own listing, its own
 package identity, the same developer account. The package is `src/DinoReader.App` (a MAUI WinUI head,
 `net10.0-windows10.0.19041.0`), built by `dinoreader-windows.yml` from `release.yml`'s `build-dinowin` job
 as an **unsigned** MSIX per architecture (x64, ARM64; the Store re-signs), uploaded to the draft release as
@@ -595,6 +595,9 @@ tray, no hotkey and no startup task: it is a normal window app.
 https://apps.microsoft.com/detail/9N9VHRLCZXN5. `Platforms/Windows/Package.appxmanifest` matches the
 reservation: `Name` `AshkanSirous.DinoReader`, `Publisher` `CN=53769961-EF08-4BA5-A1DE-7A51B62A9AA7`,
 `PublisherDisplayName` `Ashkan Sirous`. They must keep matching exactly or submission fails.
+
+The Partner Center app name **"Dino Book Reader"** must be reserved under `9N9VHRLCZXN5` before the first Store
+submission: the manifest `DisplayName` must match a reserved name.
 
 **Capabilities (Package.appxmanifest):**
 

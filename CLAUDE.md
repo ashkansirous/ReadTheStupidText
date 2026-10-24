@@ -27,6 +27,10 @@ version (`v<x.y.z>`) covers both products.
 > — do not "rename" those. Store identity (ID `9NGT1BN1H92V`) is wired into
 > `Package.appxmanifest`; see Decision 23 in `docs/plan/decisions.md` and `STORE.md`.
 
+> **Naming:** the user-facing product display name is **"Dino Book Reader"** (manifest, store listing,
+> app title, UI strings, site). Package ids (`uk.sirous.dinoreader`, `AshkanSirous.DinoReader`), namespaces,
+> projects, the `.dino` format and the domain `dinoreader.sirous.uk` stay "DinoReader": do not rename those.
+
 Read [`plan.md`](plan.md) before starting work — it defines the vertical slices
 and their GitHub issue numbers. Tick slices off in `plan.md` as they complete. The numbered **Decisions** live in `docs/plan/decisions.md` ("Decision NN" anywhere in these files refers to it); each slice's full record is under `docs/plan/slices/`.
 

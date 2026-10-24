@@ -67,8 +67,8 @@
   <data name="Backup_Skipped" xml:space="preserve"><value>すでにあるのでスキップ</value></data>
   <data name="Backup_Damaged" xml:space="preserve"><value>読み込めませんでした</value></data>
   <data name="Backup_SeeStories" xml:space="preserve"><value>私の物語を見る</value></data>
-  <data name="Backup_Newer" xml:space="preserve"><value>このバックアップは新しいバージョンの Dino Reader のものです。アプリを更新してからもう一度お試しください。</value></data>
-  <data name="Backup_NotABackup" xml:space="preserve"><value>このファイルは Dino Reader のバックアップではありません。</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>このバックアップは新しいバージョンの Dino Book Reader のものです。アプリを更新してからもう一度お試しください。</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>このファイルは Dino Book Reader のバックアップではありません。</value></data>
   <data name="Backup_Failed" xml:space="preserve"><value>バックアップに失敗しました。もう一度お試しください。</value></data>
   <data name="Backup_TooLarge" xml:space="preserve"><value>大きすぎて復元できませんでした</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>{0} 件をバックアップに追加できませんでした。</value></data>

@@ -67,8 +67,8 @@
   <data name="Backup_Skipped" xml:space="preserve"><value>Déjà là, ignorées</value></data>
   <data name="Backup_Damaged" xml:space="preserve"><value>Illisibles</value></data>
   <data name="Backup_SeeStories" xml:space="preserve"><value>Voir mes histoires</value></data>
-  <data name="Backup_Newer" xml:space="preserve"><value>Cette sauvegarde vient d’une version plus récente de Dino Reader. Mettez l’app à jour, puis réessayez.</value></data>
-  <data name="Backup_NotABackup" xml:space="preserve"><value>Ce fichier n’est pas une sauvegarde de Dino Reader.</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>Cette sauvegarde vient d’une version plus récente de Dino Book Reader. Mettez l’app à jour, puis réessayez.</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>Ce fichier n’est pas une sauvegarde de Dino Book Reader.</value></data>
   <data name="Backup_Failed" xml:space="preserve"><value>La sauvegarde a échoué. Réessayez.</value></data>
   <data name="Backup_TooLarge" xml:space="preserve"><value>Trop volumineuses pour être restaurées</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>{0} n’ont pas pu être ajoutées à la sauvegarde.</value></data>

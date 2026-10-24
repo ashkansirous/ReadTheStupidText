@@ -67,8 +67,8 @@
   <data name="Backup_Skipped" xml:space="preserve"><value>Уже были, пропущены</value></data>
   <data name="Backup_Damaged" xml:space="preserve"><value>Не удалось прочитать</value></data>
   <data name="Backup_SeeStories" xml:space="preserve"><value>Мои истории</value></data>
-  <data name="Backup_Newer" xml:space="preserve"><value>Эта копия создана в более новой версии Dino Reader. Обновите приложение и повторите попытку.</value></data>
-  <data name="Backup_NotABackup" xml:space="preserve"><value>Этот файл не является копией Dino Reader.</value></data>
+  <data name="Backup_Newer" xml:space="preserve"><value>Эта копия создана в более новой версии Dino Book Reader. Обновите приложение и повторите попытку.</value></data>
+  <data name="Backup_NotABackup" xml:space="preserve"><value>Этот файл не является копией Dino Book Reader.</value></data>
   <data name="Backup_Failed" xml:space="preserve"><value>Не получилось сделать копию. Повторите попытку.</value></data>
   <data name="Backup_TooLarge" xml:space="preserve"><value>Слишком большие для восстановления</value></data>
   <data name="Backup_SaveSkipped" xml:space="preserve"><value>Не удалось добавить в копию: {0}.</value></data>
