@@ -24,7 +24,15 @@ fail() {
 [ -f "$plist" ] || { echo "::error::No Info.plist in $app"; exit 1; }
 [ -f "$app/Assets.car" ] || fail "No Assets.car in $app: the icon catalog was not compiled by actool."
 [ -d "$app/Assets.xcassets" ] && fail "A raw Assets.xcassets folder was copied into $app instead of being compiled."
-has_key CFBundleIconName || fail "Info.plist has no CFBundleIconName (App Store Connect error 90713)."
+# actool writes the icon name inside CFBundleIcons (and ~ipad), not at the top level; an
+# accepted Read The Stupid Text .ipa has it only there.
+for icons in CFBundleIcons 'CFBundleIcons~ipad'; do
+  has_key "$icons:CFBundlePrimaryIcon:CFBundleIconName" \
+    || fail "Info.plist has no $icons:CFBundlePrimaryIcon:CFBundleIconName (App Store Connect error 90713)."
+done
+echo "Icon keys and loose icon files in $app:"
+plutil -p "$plist" | grep -i -A6 'CFBundleIcons' || true
+find "$app" -maxdepth 1 -iname '*icon*.png' -print || true
 if ! has_key UILaunchScreen && ! has_key UILaunchStoryboardName; then
   fail "Info.plist has no UILaunchScreen or UILaunchStoryboardName (App Store Connect error 90475)."
 fi
@@ -32,4 +40,4 @@ fi
 if [ "$failed" -ne 0 ]; then
   exit 1
 fi
-echo "iOS bundle check passed: Assets.car, CFBundleIconName=$("$buddy" -c 'Print :CFBundleIconName' "$plist"), launch screen."
+echo "iOS bundle check passed: Assets.car, CFBundleIconName=$("$buddy" -c 'Print :CFBundleIcons:CFBundlePrimaryIcon:CFBundleIconName' "$plist"), launch screen."
