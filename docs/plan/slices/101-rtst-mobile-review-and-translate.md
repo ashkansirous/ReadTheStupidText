@@ -1,6 +1,6 @@
 # Slice 101 — RTST phone: wizard page 2, check the text, translate, read
 
-*Planned 2026-10-24*, from the user's request: "Wizard page 2 shows the captured text in a text box and
+*In progress (wave 2026-10-24), draft PR.* Planned 2026-10-24, from the user's request: "Wizard page 2 shows the captured text in a text box and
 lets people edit it. The text box should be big so they see as much as possible, plus a checkbox, if it
 is in a different language, to translate to the app's language, with a button to translate/read. If they
 upload a file instead of an image, it should go directly to wizard page 2."
