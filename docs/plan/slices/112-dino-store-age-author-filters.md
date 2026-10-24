@@ -27,12 +27,25 @@ needs repackaging.
   5-8) in `StoreTexts.cs`; the user can change them in review. Their `meta.json` files are re-uploaded with
   `tools/upload-store-story.ps1` (no new `story-v<n>.dino`).
 
+#### Design (Dino Reader Batch 22-23 mock, frame 47, added 2026-10-24)
+
+Source: `docs/design/dino-reader/Dino Reader Batch 22-23.dc.html`, frame 47 (lines 234-252). One real-UI frame (360x760 phone frame, 6px `#2b2540` border, radius 34.); it builds on the store frame of Batch 17-18 (screen 36, see Slice 102). Icons in the mock are inline SVG strokes (2.2 wide, `#5B57E8`), not Phosphor names; the app uses its own `IconKind` set. The mock agrees with the plan and adds an "All ages" chip.
+
+- **Age chips (112-3).** A row of four chips under the header, each 40 high, radius 20: "All ages" (default), "5 & under", "6–8", "9–12". Selected: fill `#5B57E8`, white 14/600. Unselected: white fill, `#5a5470` 14. One chip at a time. Bands are Google Play's; a story shows under every band its range overlaps (The Lion and the Mouse, 4–7, shows under "5 & under" and "6–8").
+- **Author filter.** A row under the chips: a white field, 44 high, radius 14, label "Author" 14 `#8a8399`, value "Anyone" 14, chevron. It opens a picker of the authors in the list.
+- **Card.** As in Slice 102 (white, radius 18, padding 12, cover 66 wide, Get button 44 high `#5B57E8`), with the detail line now "Ages 5–8 · 14 pages · 7 min" (12.5 `#5a5470`): the age range leads the length line. The credit line above it stays ("Retold from Andersen · free to share"). Cards shown: The Ugly Duckling (Ages 5–8, 14 pages, 7 min), The Lion and the Mouse (Ages 4–7, 8 pages, 4 min), The Three Billy Goats Gruff (Ages 4–7, 10 pages, 5 min).
+- **Behaviour (note).** Filtering is on the phone, works offline on the cached list. The ages are Claude's drafts for review.
+
+Settled by the mock: the chip labels use an en dash ("6–8", "9–12"); "All ages" is a chip and the default; the age sits on the detail line, not the credit line; the author control is a labelled picker with "Anyone" as no filter.
+
+New strings (all 14 locales): "All ages", "5 & under", "6–8", "9–12", "Author", "Anyone", "Ages {0}–{1}" (card line).
+
 ## Work
 
 - [ ] 1. Worker: parse and list `ageMin`/`ageMax`/`author` (validated: integers 0-18, min <= max), tests in
   `worker/downloads.test.mjs`.
 - [ ] 2. Core: `StoreItem` fields, catalog parse, and a pure band/author filter helper with tests.
-- [ ] 3. `StorePage`: chips, author filter, card age line; resx strings in all 14 locales.
+- [ ] 3. `StorePage`: four chips ("All ages" default, "5 & under", "6–8", "9–12"), the "Author" picker with "Anyone", the card line "Ages {0}–{1} · {pages} pages · {min} min" (frame 47); resx strings in all 14 locales.
 - [ ] 4. `StoreTexts.cs` age ranges and authors for the ten stories; the builder and upload script write
   them to `meta.json`; re-upload the ten `meta.json` files.
 - [ ] 5. Docs: the root `CLAUDE.md` store paragraph lists the new `meta.json` fields; the store rule in

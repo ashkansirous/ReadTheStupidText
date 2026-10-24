@@ -31,6 +31,18 @@ For Dino, expressiveness matters more than RTST's reasons.
   phone worse than Supertonic's by more than 2x, or the user prefers Supertonic plus flavours in the
   listening check.
 
+#### Design (Dino Reader Batch 22-23 mock, frames 48 and 49, added 2026-10-24)
+
+Source: `docs/design/dino-reader/Dino Reader Batch 22-23.dc.html`, frames 48 (lines 259-283, the offer) and 49 (285-301, installed). Two real-UI frames (360x760 phone frame, 6px `#2b2540` border, radius 34.). Icons in the mock are inline SVG strokes (2.2 wide, `#5B57E8`), not Phosphor names; the app uses its own `IconKind` set. The mock agrees with the plan; Kokoro voice names ("Heart", "Puck", "Santa", "Bella") are drafts, and "90 MB" is a placeholder until the pack is built.
+
+- **Offer card (48, 114-5).** At the top of the cast screen, only for English books without the pack: fill `#ECE7FF`, radius 18. Title "Storyteller voices" 15/600; text "Warmer, livelier English voices for stories. 90 MB download." 12.5 `#5a5470`, line-height 1.4. Two buttons side by side, 44 high, radius 22: **Download** (fill `#5B57E8`, white 14/600, download icon 16) and **Hear one** (white, `#5B57E8` text, play icon 14). "Hear one" plays a sample before the download.
+- **Installed (49).** The card is replaced by a green line (13 `#2E7D32`, check icon) "Storyteller voices are on for English books". The narrator row reads "Narrator · Heart". Rows are collapsed (tap to open the full row from 48) with the flavour in the subtitle: "Boy · Puck · Small", "Boy · Santa · Big", "Girl · Bella · Normal". An outlined pill "Use Dino's first voices" (48 high, radius 24, 2px `#c9c0f5`, `#5B57E8` 15/600) removes the pack and goes back to Supertonic.
+- **Behaviour (note).** After the download English books re-cast from the Kokoro voices by gender, with a warm storyteller narrator by default and the flavours kept on top. Other languages are unchanged.
+
+Settled by the mock: "Hear one" is a sample before the download; the way back is "Use Dino's first voices" on the cast screen (the plan said only "uninstall").
+
+New strings (all 14 locales): "Storyteller voices", "Warmer, livelier English voices for stories. {0} MB download.", "Download", "Hear one", "Storyteller voices are on for English books", "Use Dino's first voices".
+
 ## Work
 
 - [ ] 1. `library-docs`: sherpa-onnx 1.13.3 `OfflineTtsKokoroModelConfig` in the C# binding, the int8
@@ -43,7 +55,7 @@ For Dino, expressiveness matters more than RTST's reasons.
   source link), size check.
 - [ ] 4. `KokoroFiles`/`KokoroVoiceTable`, `PackManifest` and `SherpaEngineFactory` Kokoro config;
   unit tests for the table and manifest.
-- [ ] 5. Dino: pack offer on the cast screen, voices from Kokoro for English when installed, narrator
+- [ ] 5. Dino: pack offer on the cast screen ("Storyteller voices" card with Download and "Hear one", frame 48; the green line and "Use Dino's first voices" once installed, frame 49), voices from Kokoro for English when installed, narrator
   default.
 - [ ] 6. Rules in `src/ReadTheStupidText.Infrastructure/CLAUDE.md`, `src/DinoReader.App/CLAUDE.md` and
   `.github/CLAUDE.md` (the new pack and its GPL scope).
