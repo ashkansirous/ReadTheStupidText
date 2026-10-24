@@ -82,7 +82,8 @@
   <data name="FirstRun_Waiting" xml:space="preserve"><value>Ждут на полке</value></data>
   <data name="FirstRun_PickAnother" xml:space="preserve"><value>Выбрать другой язык</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>Готово к чтению!</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>У каждого героя свой голос. На полке три истории.</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>У каждого героя свой голос. Историй на полке: {0}.</value></data>
+  <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>У каждого героя свой голос. На полке одна история.</value></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>Послушать, как Dino здоровается</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>Привет! Я Dino. Давай прочитаем историю вместе.</value></data>
   <data name="FirstRun_SetUp" xml:space="preserve"><value>Настроить истории</value></data>

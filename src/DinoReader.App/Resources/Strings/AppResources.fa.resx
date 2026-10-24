@@ -82,7 +82,8 @@
   <data name="FirstRun_Waiting" xml:space="preserve"><value>روی قفسه منتظرند</value></data>
   <data name="FirstRun_PickAnother" xml:space="preserve"><value>انتخاب زبان دیگر</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>آماده‌ی خواندن!</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>هر شخصیت صدای خودش را دارد. سه داستان روی قفسه است.</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>هر شخصیت صدای خودش را دارد. {0} داستان روی قفسه است.</value></data>
+  <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>هر شخصیت صدای خودش را دارد. یک داستان روی قفسه است.</value></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>شنیدن سلام Dino</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>سلام! من Dino هستم. بیا با هم داستان بخوانیم.</value></data>
   <data name="FirstRun_SetUp" xml:space="preserve"><value>تنظیم داستان‌ها</value></data>

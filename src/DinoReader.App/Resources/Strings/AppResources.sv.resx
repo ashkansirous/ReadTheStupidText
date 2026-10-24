@@ -84,7 +84,8 @@
   <data name="FirstRun_Waiting" xml:space="preserve"><value>Väntar på hyllan</value></data>
   <data name="FirstRun_PickAnother" xml:space="preserve"><value>Välj ett annat språk</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>Redo att läsa!</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Varje figur får sin egen röst. Tre sagor finns på hyllan.</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Varje figur får sin egen röst. {0} sagor finns på hyllan.</value></data>
+  <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>Varje figur får sin egen röst. En saga finns på hyllan.</value></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>Hör Dino säga hej</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>Hej! Jag är Dino. Nu läser vi en saga tillsammans.</value></data>
   <data name="FirstRun_SetUp" xml:space="preserve"><value>Ställ in sagorna</value></data>

@@ -82,7 +82,8 @@
   <data name="FirstRun_Waiting" xml:space="preserve"><value>بانتظارك على الرف</value></data>
   <data name="FirstRun_PickAnother" xml:space="preserve"><value>اختيار لغة أخرى</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>جاهز للقراءة!</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>لكل شخصية صوتها الخاص. هناك ثلاث قصص على الرف.</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>لكل شخصية صوتها الخاص. عدد القصص على الرف: {0}.</value></data>
+  <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>لكل شخصية صوتها الخاص. هناك قصة واحدة على الرف.</value></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>اسمع Dino يقول مرحبًا</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>مرحبًا! أنا Dino. لنقرأ قصة معًا.</value></data>
   <data name="FirstRun_SetUp" xml:space="preserve"><value>تجهيز القصص</value></data>

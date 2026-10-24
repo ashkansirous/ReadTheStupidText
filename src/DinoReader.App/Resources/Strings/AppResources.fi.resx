@@ -84,7 +84,8 @@
   <data name="FirstRun_Waiting" xml:space="preserve"><value>Odottaa hyllyssä</value></data>
   <data name="FirstRun_PickAnother" xml:space="preserve"><value>Valitse toinen kieli</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>Valmista luettavaksi!</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Jokainen hahmo saa oman äänensä. Hyllyssä on kolme tarinaa.</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Jokainen hahmo saa oman äänensä. Hyllyssä on {0} tarinaa.</value></data>
+  <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>Jokainen hahmo saa oman äänensä. Hyllyssä on yksi tarina.</value></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>Kuule, kun Dino sanoo hei</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>Hei! Olen Dino. Luetaan yhdessä tarina.</value></data>
   <data name="FirstRun_SetUp" xml:space="preserve"><value>Valmistele tarinat</value></data>

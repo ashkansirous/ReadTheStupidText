@@ -84,7 +84,8 @@
   <data name="FirstRun_Waiting" xml:space="preserve"><value>Wachten op de plank</value></data>
   <data name="FirstRun_PickAnother" xml:space="preserve"><value>Kies een andere taal</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>Klaar om te lezen!</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Elk personage krijgt een eigen stem. Er staan drie verhalen op de plank.</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Elk personage krijgt een eigen stem. Er staan {0} verhalen op de plank.</value></data>
+  <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>Elk personage krijgt een eigen stem. Er staat één verhaal op de plank.</value></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>Hoor Dino hallo zeggen</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>Hallo! Ik ben Dino. Laten we samen een verhaal lezen.</value></data>
   <data name="FirstRun_SetUp" xml:space="preserve"><value>De verhalen instellen</value></data>

@@ -96,7 +96,8 @@ public sealed class CoralButton : Border
 /// </summary>
 public partial class FirstRunPage : ContentPage
 {
-	private const int ShelfCovers = 3;
+	// One cover per starter, capped at four so the strip fits a 320dp-wide phone.
+	private static readonly int ShelfCovers = Math.Min(StarterStories.Count, 4);
 	private const double CoverWidth = 56;
 	private const int PercentScale = 100;
 
@@ -224,7 +225,9 @@ public partial class FirstRunPage : ContentPage
 		PickAnother.Text = AppResources.FirstRun_PickAnother;
 		PhoneVoice.Text = AppResources.FirstRun_PhoneVoice;
 		ReadyTitle.Text = AppResources.FirstRun_Ready;
-		ReadyBody.Text = AppResources.FirstRun_ReadyBody;
+		ReadyBody.Text = StarterStories.Count == 1
+			? AppResources.FirstRun_ReadyBodyOne
+			: AppResources.Format(AppResources.FirstRun_ReadyBody, StarterStories.Count);
 		HelloLabel.Text = AppResources.FirstRun_HearHello;
 		SetUpButton.Text = AppResources.FirstRun_SetUp;
 	}
