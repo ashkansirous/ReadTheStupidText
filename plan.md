@@ -124,12 +124,12 @@ this plan turns it into ordered, shippable vertical slices.
 | 104 | A Norwegian voice pack (Piper nvcc, ten speakers) | built | #291 | | [104-piper-norwegian-pack.md](docs/plan/slices/104-piper-norwegian-pack.md) |
 | 105 | Dino: story rules and book translations for the five new languages | built | #292 | | [105-dino-nordic-dutch-books-and-rules.md](docs/plan/slices/105-dino-nordic-dutch-books-and-rules.md) |
 | 106 | Windows: offline translation packs for the five new languages | built | #281 | | [106-windows-nordic-dutch-translation-packs.md](docs/plan/slices/106-windows-nordic-dutch-translation-packs.md) |
-| 107 | Dino: own books translate by default | planned | | | [107-dino-own-books-translate-by-default.md](docs/plan/slices/107-dino-own-books-translate-by-default.md) |
+| 107 | Dino: own books translate by default | built | #305 | | [107-dino-own-books-translate-by-default.md](docs/plan/slices/107-dino-own-books-translate-by-default.md) |
 | 108 | Dino: a cast per reading language | planned | | | [108-dino-cast-per-reading-language.md](docs/plan/slices/108-dino-cast-per-reading-language.md) |
 | 109 | Dino: one narrator per language, for every book | planned | | | [109-dino-one-narrator-per-language.md](docs/plan/slices/109-dino-one-narrator-per-language.md) |
 | 110 | Dino: translated text on screen, with "Show original text" | planned | | | [110-dino-translated-text-on-screen.md](docs/plan/slices/110-dino-translated-text-on-screen.md) |
 | 111 | Dino: parents read in their own voice | planned | | | [111-dino-parent-recordings.md](docs/plan/slices/111-dino-parent-recordings.md) |
-| 112 | Dino: store filters by age and author | planned | | | [112-dino-store-age-author-filters.md](docs/plan/slices/112-dino-store-age-author-filters.md) |
+| 112 | Dino: store filters by age and author | built | #306 | | [112-dino-store-age-author-filters.md](docs/plan/slices/112-dino-store-age-author-filters.md) |
 | 113 | Dino: playful character voices (pitch and pace per character) | planned | | | [113-dino-character-flavours.md](docs/plan/slices/113-dino-character-flavours.md) |
 | 114 | Dino: Kokoro storyteller voices for English | planned | | | [114-dino-kokoro-english-storyteller-pack.md](docs/plan/slices/114-dino-kokoro-english-storyteller-pack.md) |
 
@@ -181,6 +181,8 @@ Built but not verified (details in each slice file):
 - Slice 101: emulator device-test of the page; a real ML Kit model download and translation on a phone; iOS (compile, the checkbox never shows); a native read of the new strings in the nine locales ([slice](docs/plan/slices/101-rtst-mobile-review-and-translate.md)).
 - Slice 104: listen to pick the clearest default voice (KNN is a placeholder); emulator: Norsk first run downloads the pack and a Dino story gets distinct voices; Windows head: the pack downloads and reads. Follow-ups merged 2026-10-24: #295 (`packs.yml` pins Python 3.12), #296 (the nb espeak guard checks `no_dict`) ([slice](docs/plan/slices/104-piper-norwegian-pack.md)).
 - Slice 105: Swedish and Danish reading after the packs-5 release on a real phone, and that the phone-voice fallback doesn't hang silently with no voice for the language; the upgrade from 1.33.0 with a release-signed build; a native read of the 70 translation tables. Story-v2 is uploaded (10 live at version 2). Follow-up merged 2026-10-24: #289 (`Pictures_*` strings in the 5 new Dino languages) ([slice](docs/plan/slices/105-dino-nordic-dutch-books-and-rules.md)).
+- Slice 107: emulator in Farsi, a new book shows the switch on; Windows head greyed switch and note; native read of the 3 new strings ([slice](docs/plan/slices/107-dino-own-books-translate-by-default.md)).
+- Slice 112: re-upload the ten stories' `meta.json` (`-MetaOnly`; live has no ages/authors until then); emulator check of chips, author picker, empty state; native read of new strings ([slice](docs/plan/slices/112-dino-store-age-author-filters.md)).
 - Dino first-run "Ready" screen says "Three stories" but four ship; a fix is in progress. (fix PR open)
 - Slice 106: Norwegian on a Windows head via `MarianEngine` (third-party conversion, never run); en to da/fi/sv/nl/nb and back on Windows; the Norwegian packs are about 390 MB each ([slice](docs/plan/slices/106-windows-nordic-dutch-translation-packs.md)).
 - Windows has no `en-ja` translation pack (`TranslationPacks.FromEnglish` and `packs.yml` lack it), so English cannot be translated into Japanese offline on Windows; found while planning Slice 106, not yet scheduled.
