@@ -119,6 +119,7 @@ this plan turns it into ordered, shippable vertical slices.
 | 99 | RTST phone: a minimal main page and a Settings page | planned | | | [99-rtst-mobile-minimal-main-page.md](docs/plan/slices/99-rtst-mobile-minimal-main-page.md) |
 | 100 | RTST phone: "Take a photo of each page", wizard page 1 | planned | | | [100-rtst-mobile-page-capture-wizard.md](docs/plan/slices/100-rtst-mobile-page-capture-wizard.md) |
 | 101 | RTST phone: wizard page 2, check the text, translate, read | planned | | | [101-rtst-mobile-review-and-translate.md](docs/plan/slices/101-rtst-mobile-review-and-translate.md) |
+| 102 | Ten open stories in the Dino story store | planned | | | [102-dino-store-ten-stories.md](docs/plan/slices/102-dino-store-ten-stories.md) |
 
 Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
 
@@ -135,6 +136,8 @@ Batch 17 (94-95, planned 2026-10-23): 94 first (the user's own book as a starter
 Batch 18 (96-98, planned 2026-10-24): 96 first (it changes how every Dino screen and the reader set direction), then 97 (a small gallery-header change, can run beside 96's tail), then 98 (its new reader layout builds on 96's non-mirroring reader). Decisions 100-102.
 
 Batch 19 (99-101, planned 2026-10-24, after two first-time users couldn't find their way around the RTST phone app): 99, then 100, then 101, one at a time; all three edit `ReaderPage` and `AppShell`. Each ships on its own with a stand-in for the next one. Android and iOS only; the Windows tray app is unchanged. Decisions 103-105.
+
+Batch 20 (102, planned 2026-10-24): ten open stories for the empty store. It touches only the test builders, translations, the upload script, `worker/stories.ts` and the store card, so it can run beside 96, 97 and 99-101. Illustrations follow as `story-v2` after Slice 98. Decision 106.
 
 ### Notes
 
