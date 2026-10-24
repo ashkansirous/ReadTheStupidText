@@ -1,6 +1,12 @@
 # Slice 98 — Picture + text books: a picture per page, the text beside it
 
-*In progress (wave 2026-10-24), draft PR.* Planned 2026-10-24, from the user's request "I want an easier way to add books for kids older than 3.
+*Built 2026-10-24 (PR #285), not yet verified on the emulator, the Windows head or by a native read of the strings.*
+
+*Changed while building:* the Pages step in slot mode has no drag-reorder (delete and edit-text kept). Starter pictures are copied as-is, so they must be supplied already sized (no re-encode). Rotate/crop keeps a picture + text page's text and status (`KeepPictureText`). A mixed book stays in the picture + text layout: a picture-only page shows the picture full, a text-only page shows its text. Thumbnails are decoded at display size.
+
+*From review:* high pass, 10 findings applied. Medium pass, 7 applied; #5 skipped per Decision 100, #9 skipped per Decision 102.
+
+Planned 2026-10-24, from the user's request "I want an easier way to add books for kids older than 3.
 Those books are usually one side picture and the other side text. Accept a format that is text
 separately from image, but show it together. For the Three Little Pigs, you have the text for each page;
 I give you a picture for each page and you show them side by side."
@@ -76,17 +82,17 @@ New strings (nine locales): "Pages", "{file} · {n} pages", "This file has words
 
 ## Work
 
-- [ ] 1. **Smallest end-to-end: a picture + text page reads side by side.** Core `PictureTextBook`
+- [x] 1. **Smallest end-to-end: a picture + text page reads side by side.** Core `PictureTextBook`
   (natural sort, `---` split, filling empty slots in order) with tests; `ReadingSurface` picks a new
   `PictureTextPages` layout for picture + text pages: sideways (picture left, text right, no dots) and
   upright (picture filling the page, text panel over it). Test it with a hand-built story.
-- [ ] 2. **The picture slots.** `PagesStep`: one optional slot per page for a text-only file or typed text
+- [x] 2. **The picture slots.** `PagesStep`: one optional slot per page for a text-only file or typed text
   (a `---` line splits a `.txt`), tap-to-pick, "Pick pictures for all pages", the "Pictures found on every
   page" state (screen 32), then into Cover/Text as usual. Strings in all nine languages.
-- [ ] 3. **Starter pictures.** `StarterBuilder` reads `Starters/<stem>/pictures/` and the coverage tests
-  stay green. Three Little Pigs is rebuilt when the user's pictures arrive (re-split pages and
-  re-translate if needed).
-- [ ] 4. Rules in `src/DinoReader.App/CLAUDE.md` and `src/DinoReader.Core/CLAUDE.md` (written at planning;
+- [x] 3. **Starter pictures.** `StarterBuilder` reads `Starters/<stem>/pictures/*.jpg` (fails on a count
+  mismatch) and the coverage tests stay green. Three Little Pigs is rebuilt when the user's pictures
+  arrive (re-split pages and re-translate if needed): not done, waiting on the pictures.
+- [x] 4. Rules in `src/DinoReader.App/CLAUDE.md` and `src/DinoReader.Core/CLAUDE.md` (written at planning;
   check they still match).
 
 ## Verification
@@ -102,3 +108,25 @@ New strings (nine locales): "Pages", "{file} · {n} pages", "This file has words
 - Windows head: the side-by-side layout in a wide window.
 
 Build notes: starter pictures must be supplied already sized (copied as-is, no re-encode); slot mode has no drag-reorder (delete and edit go through the text editor).
+
+#### For CLAUDE.md
+
+- `PictureTextBook` (`src/DinoReader.Core`) holds the pure parts: natural file-name sort, `ImportPages` (splits on a `---` line once, only for `.txt` and typed text, never PDF or DOCX) and `FillEmptySlots`. (Slice 98: docs/plan/slices/98-dino-picture-and-text-books.md)
+- A page with an `ImageFile` and `Text` but no `Lines` is a picture + text page; no schema change. `PictureTextPages` draws it (sideways: picture left, text right, no dots; upright: full picture with a 92% panel of up to 58% height; each sentence a tappable span); a mixed book stays in this layout. (Slice 98: docs/plan/slices/98-dino-picture-and-text-books.md)
+- Rotate/crop must keep a picture + text page's text and status (`KeepPictureText`). (Slice 98: docs/plan/slices/98-dino-picture-and-text-books.md)
+- `StarterBuilder` reads `Starters/<stem>/pictures/*.jpg` and copies them as-is, so supply them pre-sized; the build fails if the count differs from the pages. (Slice 98: docs/plan/slices/98-dino-picture-and-text-books.md)
+
+#### Verified on the emulator (2026-10-24, RTST_Test)
+
+- A 3-page .txt shows 3 picture slots. Picking 10, 2, 1 fills them as 1, 2, 10. Next is never blocked, including with an empty slot.
+- Sideways: picture on the left, text on the right, no dots, title in the bar, the highlight moves, and tapping a sentence reads from it.
+- Upright: picture fitted with the white text panel over it, the highlight and page turns work, and tapping a sentence works.
+- Rotating a picture keeps its text and the picture + text layout.
+- After the run, fixed in 34dc109 (not re-run on the emulator): Rotate and Crop added to the slot menu, and the sideways controls moved under the text half.
+
+#### Not yet verified
+
+- Emulator result for the picture + text flow (result to follow from the caller).
+- Windows head: the side-by-side layout in a wide window.
+- Three Little Pigs pictures from the user; the starter is not rebuilt.
+- A native read of the new `Pictures_*` strings (the non-English ones are Claude drafts).
