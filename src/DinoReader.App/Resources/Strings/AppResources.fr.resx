@@ -53,6 +53,17 @@
   <data name="Store_EmptyBody" xml:space="preserve"><value>De nouvelles histoires sont ajoutées de temps en temps. Revenez bientôt.</value></data>
   <data name="Store_BackToStories" xml:space="preserve"><value>Retour à mes histoires</value></data>
   <data name="Store_GetStory" xml:space="preserve"><value>Obtenir {0}</value></data>
+  <!-- Slice 112: store age and author filters -->
+  <data name="Store_AllAges" xml:space="preserve"><value>Tous les âges</value></data>
+  <data name="Store_AgeUpTo5" xml:space="preserve"><value>5 ans et moins</value></data>
+  <data name="Store_Age6To8" xml:space="preserve"><value>6–8</value></data>
+  <data name="Store_Age9To12" xml:space="preserve"><value>9–12</value></data>
+  <data name="Store_Author" xml:space="preserve"><value>Auteur</value></data>
+  <data name="Store_Anyone" xml:space="preserve"><value>Tous</value></data>
+  <data name="Store_Ages" xml:space="preserve"><value>{0}–{1} ans</value></data>
+  <data name="Store_AgeSingle" xml:space="preserve"><value>{0} ans</value></data>
+  <data name="Store_ChipSelected" xml:space="preserve"><value>{0}, sélectionné</value></data>
+  <data name="Store_NoMatch" xml:space="preserve"><value>Pas encore d'histoires ici. Essayez un autre âge.</value></data>
   <data name="Backup_Title" xml:space="preserve"><value>Sauvegarde</value></data>
   <data name="Backup_SaveTitle" xml:space="preserve"><value>Enregistrer une sauvegarde</value></data>
   <data name="Backup_SaveBody_One" xml:space="preserve"><value>Votre histoire dans un seul fichier, avec ses pages, ses images et sa distribution ajustée. Enregistrez-la dans Drive ou Fichiers, ou envoyez-la-vous.</value></data>

@@ -47,6 +47,8 @@ const MAX_STORIES = 200;
 const MAX_TITLE_LENGTH = 200;
 const MAX_LANGUAGE_LENGTH = 12;
 const MAX_CREDITS_LENGTH = 200;
+const MAX_AUTHOR_LENGTH = 100;
+const MAX_AGE = 18;
 const ALLOWED_METHODS = "GET, HEAD";
 const PACKAGE_FILE = /^story-v(\d+)\.dino$/;
 const POSITIVE_INTEGER = /^[1-9]\d{0,8}$/;
@@ -68,6 +70,11 @@ export interface StoryMeta {
   readonly added: string | null;
   /** The optional one-line credit the store card shows ("Beatrix Potter, 1902"); older entries have none. */
   readonly credits: string | null;
+  /** Slice 112: the age range the story suits (both set or both null; integers 0-18, min <= max). */
+  readonly ageMin: number | null;
+  readonly ageMax: number | null;
+  /** Slice 112: the author the store filters by ("Beatrix Potter"). */
+  readonly author: string | null;
 }
 
 /** One complete story: its checked meta, the package version it offers, and whether a cover was uploaded. */
@@ -132,6 +139,12 @@ function positiveIntegerOrNull(value: unknown): number | null {
   return typeof value === "number" && Number.isInteger(value) && value >= 1 && value <= 1_000_000_000 ? value : null;
 }
 
+/** Slice 112: a valid age range, or null for both ends when either is missing, not a 0-18 integer, or min > max. */
+export function parseAgeRange(rawMin: unknown, rawMax: unknown): { ageMin: number | null; ageMax: number | null } {
+  const valid = (v: unknown): v is number => typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= MAX_AGE;
+  return valid(rawMin) && valid(rawMax) && rawMin <= rawMax ? { ageMin: rawMin, ageMax: rawMax } : { ageMin: null, ageMax: null };
+}
+
 function boundedText(value: unknown, max: number): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
@@ -146,6 +159,7 @@ export function parseMeta(parsed: unknown): StoryMeta | null {
   const title = boundedText(raw["title"], MAX_TITLE_LENGTH);
   const language = boundedText(raw["language"], MAX_LANGUAGE_LENGTH);
   if (schemaVersion === null || title === null || language === null) return null;
+  const ages = parseAgeRange(raw["ageMin"], raw["ageMax"]);
   return {
     schemaVersion,
     title,
@@ -155,6 +169,9 @@ export function parseMeta(parsed: unknown): StoryMeta | null {
     minutes: positiveIntegerOrNull(raw["minutes"]),
     added: boundedText(raw["added"], MAX_TITLE_LENGTH),
     credits: boundedText(raw["credits"], MAX_CREDITS_LENGTH),
+    ageMin: ages.ageMin,
+    ageMax: ages.ageMax,
+    author: boundedText(raw["author"], MAX_AUTHOR_LENGTH),
   };
 }
 
@@ -179,6 +196,9 @@ export interface ListItem {
   readonly pageCount: number | null;
   readonly minutes: number | null;
   readonly credits: string | null;
+  readonly ageMin: number | null;
+  readonly ageMax: number | null;
+  readonly author: string | null;
   readonly coverUrl: string | null;
   readonly downloadUrl: string;
 }
@@ -196,6 +216,9 @@ export function toListItem(entry: StoryEntry, pathPrefix: string): ListItem {
     pageCount: entry.meta.pageCount,
     minutes: entry.meta.minutes,
     credits: entry.meta.credits,
+    ageMin: entry.meta.ageMin,
+    ageMax: entry.meta.ageMax,
+    author: entry.meta.author,
     coverUrl: entry.hasCover ? `${base}${COVER_SEGMENT}${versioned}` : null,
     downloadUrl: `${base}${DOWNLOAD_SEGMENT}${versioned}`,
   };

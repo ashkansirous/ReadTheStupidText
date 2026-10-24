@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
+using Microsoft.Maui.Controls.Shapes;
 
 namespace DinoReader;
 
@@ -35,7 +36,7 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 	/// <summary>Titles in Farsi and Arabic are set in Vazirmatn and run right to left, as the mock's Farsi row does.</summary>
 	public string TitleFont => DinoFonts.IsRightToLeft(Item.Language) ? DinoFonts.Persian : DinoFonts.Ui;
 
-	/// <summary>The length line, "8 pages · 4 min" (empty when the server gave none).</summary>
+	/// <summary>The detail line, "Ages 5–8 · 14 pages · 7 min": the age range leads the length (each part is left out when the server gave none).</summary>
 	public string Detail => StoreText.Detail(Item);
 
 	/// <summary>The sub-line under the title: the credit line (<c>meta.json</c>'s <c>credits</c>), or the language in its own name when the story has none.</summary>
@@ -103,12 +104,29 @@ public static class StoreText
 	public static string Language(StoreItem item) =>
 		LanguageNames.All.Any(l => l.Code == item.Language) ? LanguageNames.NativeName(item.Language) : item.Language;
 
-	public static string Detail(StoreItem item)
-	{
-		return item.PageCount is { } pages && item.Minutes is { } minutes
+	private const string DetailSeparator = " · ";
+
+	public static string Detail(StoreItem item) =>
+		string.Join(DetailSeparator, new[] { Ages(item), Length(item) }.Where(part => part.Length > 0));
+
+	public static string Ages(StoreItem item) =>
+		item.AgeMin is { } min && item.AgeMax is { } max ? AgesOf(min, max) : string.Empty;
+
+	private static string AgesOf(int min, int max) =>
+		min == max ? AppResources.Format(AppResources.Store_AgeSingle, min) : AppResources.Format(AppResources.Store_Ages, min, max);
+
+	public static string Length(StoreItem item) =>
+		item.PageCount is { } pages && item.Minutes is { } minutes
 			? AppResources.Format(AppResources.Store_Length, pages, minutes)
 			: string.Empty;
-	}
+
+	public static string BandLabel(StoreAgeBand band) => band switch
+	{
+		StoreAgeBand.UpTo5 => AppResources.Store_AgeUpTo5,
+		StoreAgeBand.From6To8 => AppResources.Store_Age6To8,
+		StoreAgeBand.From9To12 => AppResources.Store_Age9To12,
+		_ => AppResources.Store_AllAges,
+	};
 
 	public static string GetHint(string title) => AppResources.Format(AppResources.Store_GetStory, title);
 
@@ -125,9 +143,18 @@ public partial class StorePage : ContentPage, IGrownUpPage
 	private readonly StoreClient _client;
 	private readonly GrownUpMode _mode;
 	private const int CoverParallelism = 4;
+	private const double ChipHeight = 40;
+	private const double ChipFontSize = 14;
+	private const double ChipPaddingX = 16;
+	private const string BrandColorKey = "Brand";
+	private const string BodyColorKey = "Body";
 
 	private readonly BusyGuard _busy = new();
 	private readonly ObservableCollection<StoreRow> _rows = [];
+	private readonly List<StoreRow> _allRows = [];
+	private StoreAgeBand _band = StoreAgeBand.All;
+	private string? _author;
+	private readonly Dictionary<StoreAgeBand, (Border Chip, Label Label)> _chips = [];
 	private CancellationTokenSource _lifetime = new();
 	private bool _loaded;
 
@@ -137,11 +164,15 @@ public partial class StorePage : ContentPage, IGrownUpPage
 		_client = client;
 		_mode = mode;
 		StoryList.ItemsSource = _rows;
+		BuildChips();
+		ShowAuthor();
 	}
 
 	protected override async void OnAppearing()
 	{
 		base.OnAppearing();
+		RefreshChips();
+		ShowAuthor();
 		if (_lifetime.IsCancellationRequested)
 		{
 			_lifetime = new CancellationTokenSource();
@@ -154,7 +185,7 @@ public partial class StorePage : ContentPage, IGrownUpPage
 		else
 		{
 			// Leaving the page may have cut the cover fetches short: pick the missing ones up again.
-			_ = LoadCoversAsync(_rows.Where(r => r.Cover is null).ToList(), _lifetime.Token);
+			_ = LoadCoversAsync(_allRows.Where(r => r.Cover is null).ToList(), _lifetime.Token);
 		}
 	}
 
@@ -197,14 +228,133 @@ public partial class StorePage : ContentPage, IGrownUpPage
 	private async Task ShowItemsAsync(IReadOnlyList<StoreItem> items, CancellationToken cancel)
 	{
 		HashSet<string> onShelf = await _client.InstalledIdsAsync();
-		_rows.Clear();
-		foreach (StoreItem item in items)
+		_allRows.Clear();
+		_allRows.AddRange(items.Select(item => new StoreRow(item, onShelf.Contains(item.Id))));
+		if (_author is not null && !AuthorsInBand().Any(a => StoreFilter.SameAuthor(a, _author)))
 		{
-			_rows.Add(new StoreRow(item, onShelf.Contains(item.Id)));
+			_author = null;
 		}
 
-		Show(_rows.Count == 0 ? EmptyView : ListPanel);
-		_ = LoadCoversAsync(_rows.ToList(), cancel);
+		ApplyFilter();
+		ShowAuthor();
+		Show(_allRows.Count == 0 ? EmptyView : ListPanel);
+		_ = LoadCoversAsync(_allRows.ToList(), cancel);
+	}
+
+	// Slice 112: filtering is on the phone, over the rows already fetched (so it works on the cached list offline); rows keep their download state.
+	private void ApplyFilter()
+	{
+		_rows.Clear();
+		foreach (StoreRow row in StoreFilter.Apply(_allRows, r => r.Item, _band, _author))
+		{
+			_rows.Add(row);
+		}
+
+		// A filter that matches nothing says so, rather than leaving a blank list.
+		NoMatchLabel.IsVisible = _allRows.Count > 0 && _rows.Count == 0;
+	}
+
+	// The four chips are built once; a tap only recolours them, so the tapped chip is never torn down inside its own handler.
+	private void BuildChips()
+	{
+		AgeChips.Children.Clear();
+		foreach (StoreAgeBand band in Enum.GetValues<StoreAgeBand>())
+		{
+			AgeChips.Children.Add(MakeChip(band));
+		}
+
+		RefreshChips();
+	}
+
+	private Border MakeChip(StoreAgeBand band)
+	{
+		var label = new Label { FontSize = ChipFontSize, VerticalOptions = LayoutOptions.Center };
+		var chip = new Border
+		{
+			HeightRequest = ChipHeight,
+			Padding = new Thickness(ChipPaddingX, 0),
+			StrokeThickness = 0,
+			StrokeShape = new RoundRectangle { CornerRadius = ChipHeight / 2 },
+			Content = label,
+		};
+		var tap = new TapGestureRecognizer();
+		tap.Tapped += (_, _) => SelectBand(band);
+		chip.GestureRecognizers.Add(tap);
+		_chips[band] = (chip, label);
+		return chip;
+	}
+
+	private void RefreshChips()
+	{
+		foreach ((StoreAgeBand band, (Border chip, Label label)) in _chips)
+		{
+			bool selected = band == _band;
+			string text = StoreText.BandLabel(band);
+			chip.BackgroundColor = selected ? (Color)Application.Current!.Resources[BrandColorKey] : Colors.White;
+			label.Text = text;
+			label.FontAttributes = selected ? FontAttributes.Bold : FontAttributes.None;
+			label.TextColor = selected ? Colors.White : (Color)Application.Current!.Resources[BodyColorKey];
+			SemanticProperties.SetDescription(chip, selected ? AppResources.Format(AppResources.Store_ChipSelected, text) : text);
+		}
+	}
+
+	private void SelectBand(StoreAgeBand band)
+	{
+		if (band == _band)
+		{
+			return;
+		}
+
+		_band = band;
+		if (_author is not null && !AuthorsInBand().Any(a => StoreFilter.SameAuthor(a, _author)))
+		{
+			_author = null;
+		}
+
+		ShowAuthor();
+		RefreshChips();
+		ApplyFilter();
+	}
+
+	// The picker offers only authors with a story in the chosen age band, so a pick never empties the list.
+	private IReadOnlyList<string> AuthorsInBand() =>
+		StoreFilter.Authors(StoreFilter.Apply(_allRows, r => r.Item, _band, null).Select(r => r.Item));
+
+	private void ShowAuthor()
+	{
+		AuthorValue.Text = _author ?? AppResources.Store_Anyone;
+		AuthorRow.IsVisible = AuthorsInBand().Count > 0;
+	}
+
+	private async void OnAuthorTapped(object? sender, TappedEventArgs e)
+	{
+		// Each button label maps to its author (null for "Anyone"); an author named like a fixed button gets a visible number so the pick is never misread.
+		var choices = new Dictionary<string, string?> { [AppResources.Store_Anyone] = null };
+		foreach (string author in AuthorsInBand())
+		{
+			choices[UniqueLabel(author, choices)] = author;
+		}
+
+		string? picked = await DisplayActionSheetAsync(AppResources.Store_Author, AppResources.Common_Cancel, null, [.. choices.Keys]);
+		if (picked is null || !choices.TryGetValue(picked, out string? chosen))
+		{
+			return;
+		}
+
+		_author = chosen;
+		ShowAuthor();
+		ApplyFilter();
+	}
+
+	private static string UniqueLabel(string author, Dictionary<string, string?> taken)
+	{
+		string label = author;
+		for (int n = 2; taken.ContainsKey(label) || label == AppResources.Common_Cancel; n++)
+		{
+			label = $"{author} ({n})";
+		}
+
+		return label;
 	}
 
 	// Covers arrive a few at a time after the list is on screen; a cover that cannot be fetched leaves the plain placeholder.

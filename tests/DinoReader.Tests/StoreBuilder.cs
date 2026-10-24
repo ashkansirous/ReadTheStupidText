@@ -88,6 +88,9 @@ internal static class StoreBuilder
             ["minutes"] = Minutes(story.Text),
             ["added"] = spec.Added,
             ["credits"] = spec.Credits,
+            ["ageMin"] = spec.AgeMin,
+            ["ageMax"] = spec.AgeMax,
+            ["author"] = spec.Author,
         }, MetaOptions);
 
     /// <summary>Reading time in whole minutes at a child's pace, never below one.</summary>

@@ -1,6 +1,6 @@
 # Slice 112 — Dino: store filters by age and author
 
-*In progress (wave 2026-10-24), draft PR.* *Planned 2026-10-24*, from the phone scope "Dino Reader - translated text on screen, voices in the
+*Built 2026-10-24, not yet verified on the emulator or live (see "Not yet verified / after merge").* *Planned 2026-10-24*, from the phone scope "Dino Reader - translated text on screen, voices in the
 reading language, one narrator, parent recordings, store filters" (2026-10-24) —
 https://drive.google.com/file/d/1b2XPenCW2D4Kx1yx98js_LK4CRBSnnLf/view?usp=drivesdk (part 6, milestone 6).
 
@@ -42,14 +42,34 @@ New strings (all 14 locales): "All ages", "5 & under", "6–8", "9–12", "Autho
 
 ## Work
 
-- [ ] 1. Worker: parse and list `ageMin`/`ageMax`/`author` (validated: integers 0-18, min <= max), tests in
+- [x] 1. Worker: parse and list `ageMin`/`ageMax`/`author` (validated: integers 0-18, min <= max), tests in
   `worker/downloads.test.mjs`.
-- [ ] 2. Core: `StoreItem` fields, catalog parse, and a pure band/author filter helper with tests.
-- [ ] 3. `StorePage`: four chips ("All ages" default, "5 & under", "6–8", "9–12"), the "Author" picker with "Anyone", the card line "Ages {0}–{1} · {pages} pages · {min} min" (frame 47); resx strings in all 14 locales.
-- [ ] 4. `StoreTexts.cs` age ranges and authors for the ten stories; the builder and upload script write
-  them to `meta.json`; re-upload the ten `meta.json` files.
-- [ ] 5. Docs: the root `CLAUDE.md` store paragraph lists the new `meta.json` fields; the store rule in
+- [x] 2. Core: `StoreItem` fields, catalog parse, and a pure band/author filter helper with tests.
+- [x] 3. `StorePage`: four chips ("All ages" default, "5 & under", "6–8", "9–12"), the "Author" picker with "Anyone", the card line "Ages {0}–{1} · {pages} pages · {min} min" (frame 47); resx strings in all 14 locales.
+- [x] 4. `StoreTexts.cs` age ranges and authors for the ten stories; the builder and upload script write
+  them to `meta.json`. The re-upload of the ten `meta.json` files is outstanding (see "Not yet verified / after merge").
+- [ ] 5. (tracked under "For CLAUDE.md" below, done by the index pass) Docs: the root `CLAUDE.md` store paragraph lists the new `meta.json` fields; the store rule in
   `src/DinoReader.App/CLAUDE.md`.
+
+## Built (implementer notes)
+
+- `meta.json` fields: `ageMin`/`ageMax` (both or neither; integers 0-18, min <= max, else both dropped) and `author` (trimmed, max 100). Worker `parseMeta` and `StoreCatalog` apply the same rule.
+- Filtering: `StoreFilter` (Core, pure: `InBand`, `Apply`, `Authors`); `StorePage` keeps every row and shows the filtered subset, so a row's download state survives a filter change.
+- Ages and authors drafted in `StoreTexts.cs` (traditional tales: author "Traditional"). Re-upload needed: `pwsh tools/upload-store-story.ps1 <id> -MetaOnly` for each of the ten ids after `DINO_BUILD_STORE=1 dotnet test tests/DinoReader.Tests` (version stays 2, no new package).
+- Not in the mock, added in review: a muted line "No stories here yet. Try another age." (`Store_NoMatch`) when a filter empties the list; the author picker lists only authors in the chosen band and a band change clears an author it excludes. Review also added `Store_AgeSingle` ("Age 5" when min = max) and `Store_ChipSelected` (chip accessibility description), authors compared ignoring case, and the client dropping only a wrong-typed age range or author (not the story), as the Worker does.
+
+*From review:* high pass, findings 1-9 applied: empty state "No stories here yet. Try another age."; `StorePage` filters through `StoreFilter.Apply`; "Age 5" when the range is a single age; the author picker shows only authors in the chosen band; the client drops only the bad field (as the Worker does), not the story; authors compared case-insensitively. Medium pass, findings 1-6 applied: the "9–12" chip is open-ended, so it also matches stories for 13+; `5.0` is accepted as an integer age; the chosen author is cleared on reload; the store refreshes in `OnAppearing`; duplicate author labels show a visible "(2)".
+
+## For CLAUDE.md (index pass; the CLAUDE.md files are not edited on the branch)
+
+- Root `CLAUDE.md` store paragraph: `meta.json` also carries optional `ageMin`/`ageMax` (both or neither; integers 0-18, min <= max) and `author` (trimmed, max 100); the list response repeats them (Slice 112: docs/plan/slices/112-dino-store-age-author-filters.md).
+- `src/DinoReader.App/CLAUDE.md`, "Store stories (Slice 102)": the card shows the age range (then pages and minutes) above `credits`; the store filters on the phone by Google Play age band and author (`StoreFilter` in Core), also on the cached list offline.
+
+## Not yet verified / after merge
+
+- Re-upload the ten stories' `meta.json` (`DINO_BUILD_STORE=1 dotnet test tests/DinoReader.Tests`, then `pwsh tools/upload-store-story.ps1 <id> -MetaOnly` for each id). Until then live `/api/stories` has no ages or authors: the author row hides, cards show no ages and the chips filter nothing.
+- Emulator check of the age chips, the author picker and the empty state.
+- Native-speaker check of the new strings in the 13 non-English locales.
 
 ## Verification
 
