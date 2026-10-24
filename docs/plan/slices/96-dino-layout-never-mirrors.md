@@ -1,6 +1,6 @@
 # Slice 96 — Dino's layout never mirrors when the language changes
 
-*Planned 2026-10-24*, from the user's request "do not change the layout direction when changing language".
+*In progress (wave 2026-10-24), draft PR.* Planned 2026-10-24, from the user's request "do not change the layout direction when changing language".
 
 **Batch:** 18 (Dino Reader: layout, add-a-book button, picture + text books)
 **Depends on:** Slice 93 (language picker), Decision 92 (RTST Mobile already never mirrors, Slice 85)
