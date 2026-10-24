@@ -107,9 +107,6 @@
                         </VerticalStackLayout>
                         <ActivityIndicator x:Name="BusyIndicator" IsRunning="False" IsVisible="False"
                                            HorizontalOptions="Center" VerticalOptions="Center" />
-                        <Button x:Name="CancelOcrButton" Text="{x:Static res:AppResources.Common_Cancel}" IsVisible="False"
-                                HorizontalOptions="Center" VerticalOptions="Center" Margin="0,90,0,0"
-                                Clicked="OnCancelOcrDownloadClicked" />
                     </Grid>
                 </Border>
                 <Grid x:Name="EditLink" Grid.Row="1" HeightRequest="40" HorizontalOptions="End" ColumnDefinitions="Auto,Auto" ColumnSpacing="6">

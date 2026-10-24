@@ -13,10 +13,10 @@ namespace ReadTheStupidText.Mobile;
 /// The app's single home screen, reduced to reading (Slice 99, Decision 103): the read-only text
 /// with the spoken sentence highlighted, two buttons that add text (pictures, a file) and the
 /// player. Language, voice and speed live on <see cref="SettingsPage"/>. Both buttons still fill
-/// <see cref="TextEditor"/>, the page's text holder, until Slices 100 and 101 give them their own
-/// pages; Edit shows it in place. Scan opens the system document scanner (Slice 45).
+/// <see cref="TextEditor"/>, the page's text holder, until Slice 101 gives them their own review
+/// page; Edit shows it in place. Text from pictures opens <see cref="CapturePage"/> (Slice 100).
 /// </summary>
-public partial class ReaderPage : ContentPage, IScanPackUi
+public partial class ReaderPage : ContentPage
 {
     private static readonly FilePickerFileType SupportedFileTypes = new(new Dictionary<DevicePlatform, IEnumerable<string>>
     {
@@ -27,31 +27,23 @@ public partial class ReaderPage : ContentPage, IScanPackUi
     private readonly ISpeechReader _reader;
     private readonly ISettingsStore _settings;
     private readonly IDocumentTextExtractor _documentExtractor;
-    private readonly IImageTextExtractor _imageExtractor;
-    private readonly IOcrLineExtractor? _lineExtractor; // keeps which engine read a page (Slice 87)
-    private readonly OcrPackInstaller? _ocrPacks;
     private readonly IDocumentScanner? _scanner;
     private readonly IVoiceModelService _model;
     private readonly VoicePackInstaller _installer;
     private readonly IPlatformServices _platform;
     private readonly IHeadStart _headStart;
     private readonly EditorDraft _draft;
+    private readonly CaptureHandOff _captured;
     private string? _lastSpokenText;
 
     // True while a Paste/Scan/File action is in flight; further input taps are ignored.
     private bool _inputBusy;
+    private bool _openingCapture;
     private bool _scannerPrepared;
 
     // Set when a language change replaces this page: its in-flight scan or file read must not
     // touch the editor or show alerts on a page nobody sees any more.
     private bool _retired;
-
-    // "Reading page i of N" while OCR runs; shown in the header status line, which
-    // RenderPackStatus restores to the pack status once it is cleared.
-    private string? _scanProgressText;
-
-    // Set while a page-language OCR pack downloads; only the Cancel button runs it (Slice 87).
-    private Action? _cancelOcrDownload;
 
     // Per-read token for the play-button spinner (see SpeakWithLoadingAsync).
     private int _readSequence;
@@ -63,7 +55,7 @@ public partial class ReaderPage : ContentPage, IScanPackUi
     // started (system TTS returns as soon as the utterance is queued).
     private static readonly TimeSpan FirstAudioGrace = TimeSpan.FromSeconds(8);
 
-    public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, IImageTextExtractor imageExtractor, IVoiceModelService model, VoicePackInstaller installer, IPlatformServices platform, EditorDraft draft, IHeadStart headStart, IDocumentScanner? scanner = null, ILanguageDetector? detector = null, IOcrLineExtractor? lineExtractor = null, OcrPackInstaller? ocrPacks = null)
+    public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, IVoiceModelService model, VoicePackInstaller installer, IPlatformServices platform, EditorDraft draft, CaptureHandOff captured, IHeadStart headStart, IDocumentScanner? scanner = null, ILanguageDetector? detector = null)
     {
         InitializeComponent();
         FlowDirection = FlowDirection.LeftToRight;
@@ -72,15 +64,13 @@ public partial class ReaderPage : ContentPage, IScanPackUi
         _reader = reader;
         _settings = settings;
         _documentExtractor = documentExtractor;
-        _imageExtractor = imageExtractor;
-        _lineExtractor = lineExtractor;
-        _ocrPacks = ocrPacks;
         _scanner = scanner;
         _headStart = headStart;
         _model = model;
         _installer = installer;
         _platform = platform;
         _draft = draft;
+        _captured = captured;
         TextEditor.Text = draft.Take();
         TextEditor.FlowDirection = TextFlow.ContentDirection(TextEditor.Text);
         draft.RegisterRebuildHook(PrepareForRebuild);
@@ -131,6 +121,16 @@ public partial class ReaderPage : ContentPage, IScanPackUi
         RenderPackStatus();
         RestorePendingReadSpinner();
         PrepareScannerOnce();
+        TakeCapturedText();
+    }
+
+    // The capture wizard's Done leaves the text of its pages here (Slice 100).
+    private void TakeCapturedText()
+    {
+        if (_captured.Take() is { } text)
+        {
+            ReplaceEditorText(text);
+        }
     }
 
     // Asks the platform to have the scanner ready (Play-services module download) before the
@@ -197,17 +197,6 @@ public partial class ReaderPage : ContentPage, IScanPackUi
         EditLink.IsEnabled = !busy;
     }
 
-    private void SetScanProgress(string? text)
-    {
-        if (_retired)
-        {
-            return;
-        }
-
-        _scanProgressText = text;
-        RenderPackStatus();
-    }
-
     // A platform with no OCR engine hides "Text from pictures"; "Text from a file" takes its place so no gap is left.
     // ScanIntoEditorAsync still catches OcrUnavailableException as a safety net.
     private void ApplyScanAvailability(bool supportsTextScan)
@@ -222,222 +211,23 @@ public partial class ReaderPage : ContentPage, IScanPackUi
         Grid.SetColumnSpan(FileButton, 2);
     }
 
-    // Scan runs the system document scanner and puts the text straight into the editor, with
-    // no result screen and no Shell hand-off (the replay bug PendingScanResult once worked
-    // around). Without Play services it falls back to one photo.
+    // Text from pictures opens the capture wizard (Slice 100, Decision 104); its Done hands the joined
+    // text back through CaptureHandOff, which OnAppearing takes.
     private async void OnScanTapped(object? sender, TappedEventArgs e)
     {
-        if (_inputBusy)
+        if (_inputBusy || _openingCapture)
         {
             return;
         }
 
-        SetInputBusy(true);
+        _openingCapture = true;
         try
         {
-            IReadOnlyList<string> pages = await ScanPagesAsync();
-            if (pages.Count > 0 && _retired)
-            {
-                DeleteImages(pages);
-            }
-            else if (pages.Count > 0)
-            {
-                await ScanIntoEditorAsync(pages);
-            }
-        }
-        catch (Exception)
-        {
-            await AlertAsync(AppResources.Reader_ScanFailedTitle, AppResources.Reader_ScanFailedMessage);
+            await Shell.Current.GoToAsync(AppShell.CaptureRoute);
         }
         finally
         {
-            SetInputBusy(false);
-        }
-    }
-
-    private async Task<IReadOnlyList<string>> ScanPagesAsync()
-    {
-        if (_scanner is null)
-        {
-            return await ScanUnavailableFallbackAsync();
-        }
-
-        try
-        {
-            return await _scanner.ScanAsync();
-        }
-        catch (DocumentScannerStartFailedException)
-        {
-            await AlertAsync(AppResources.Reader_ScannerStartFailedTitle, AppResources.Reader_ScannerStartFailedMessage);
-            return [];
-        }
-        catch (DocumentScannerPreparingException)
-        {
-            await AlertAsync(AppResources.Reader_ScannerPreparingTitle, AppResources.Reader_ScannerPreparingMessage);
-            return [];
-        }
-        catch (DocumentScannerUnavailableException)
-        {
-            return await ScanUnavailableFallbackAsync();
-        }
-    }
-
-    private async Task<IReadOnlyList<string>> ScanUnavailableFallbackAsync()
-    {
-        await AlertAsync(AppResources.Reader_ScannerUnavailableTitle, AppResources.Reader_ScannerUnavailableMessage);
-        return await CapturePhotoAsync();
-    }
-
-    private async Task<IReadOnlyList<string>> CapturePhotoAsync()
-    {
-        try
-        {
-            if (MediaPicker.Default.IsCaptureSupported)
-            {
-                FileResult? photo = await MediaPicker.Default.CapturePhotoAsync();
-                return photo is null ? [] : [photo.FullPath];
-            }
-        }
-        catch (PermissionException)
-        {
-            await AlertAsync(AppResources.Reader_CameraAccessTitle, AppResources.Reader_CameraAccessMessage);
-            return [];
-        }
-        catch (FeatureNotSupportedException)
-        {
-        }
-
-        await AlertAsync(AppResources.Reader_NoCameraTitle, AppResources.Reader_NoCameraMessage);
-        return [];
-    }
-
-    // Pages are read one after another, in order. A page that fails or is empty never discards
-    // the others: the pages that worked replace the editor text.
-    private async Task ScanIntoEditorAsync(IReadOnlyList<string> pages)
-    {
-        BusyIndicator.IsRunning = true;
-        BusyIndicator.IsVisible = true;
-        try
-        {
-            IReadOnlyList<ScanPageRead> first = await ExtractPagesAsync(pages, AppLanguages.Code(CurrentLanguage()));
-            IReadOnlyList<ScanPageRead>? reads = _ocrPacks is null ? first : await new ScanPackFlow(_ocrPacks, this).ResolveAsync(pages, first, ExtractPagesAsync);
-            if (reads is not null && !_retired)
-            {
-                await ApplyScanResultAsync(reads.Select(r => r.Text).ToList());
-            }
-        }
-        catch (OcrUnavailableException)
-        {
-            await AlertAsync(AppResources.Reader_ScanUnavailableTitle, AppResources.Reader_ScanUnavailableMessage);
-        }
-        finally
-        {
-            SetScanProgress(null);
-            // There is no retry UI, so the page images go whether or not OCR succeeded.
-            DeleteImages(pages);
-            BusyIndicator.IsRunning = false;
-            BusyIndicator.IsVisible = false;
-        }
-    }
-
-    private async Task ApplyScanResultAsync(IReadOnlyList<string?> texts)
-    {
-        IReadOnlyList<int> failed = ScannedText.FailedPageNumbers(texts);
-        if (failed.Count == texts.Count)
-        {
-            await AlertAsync(AppResources.Reader_ScanUnreadableTitle, AppResources.Reader_ScanUnreadableMessage);
-            return;
-        }
-
-        string scanned = ScannedText.JoinPages(texts);
-        if (scanned.Length == 0)
-        {
-            await AlertAsync(AppResources.Reader_NoTextFoundTitle, AppResources.Reader_NoTextFoundMessage);
-            return;
-        }
-
-        ReplaceEditorText(scanned);
-        if (failed.Count > 0)
-        {
-            string template = failed.Count == 1 ? AppResources.Reader_PagesSkippedOneMessage : AppResources.Reader_PagesSkippedManyMessage;
-            await AlertAsync(AppResources.Reader_PagesSkippedTitle, AppResources.Format(template, ScannedText.FormatPageNumbers(failed)));
-        }
-    }
-
-    // A null text marks a page whose OCR threw; OcrUnavailableException is not per-page and
-    // aborts the pass.
-    private async Task<IReadOnlyList<ScanPageRead>> ExtractPagesAsync(IReadOnlyList<string> pages, string language)
-    {
-        var reads = new List<ScanPageRead>();
-        for (int i = 0; i < pages.Count && !_retired; i++)
-        {
-            SetScanProgress(pages.Count > 1 ? AppResources.Format(AppResources.Reader_ScanProgressPage, i + 1, pages.Count) : AppResources.Reader_ScanProgressSingle);
-            reads.Add(await ExtractPageAsync(pages[i], language));
-        }
-
-        return reads;
-    }
-
-    private async Task<ScanPageRead> ExtractPageAsync(string page, string language)
-    {
-        try
-        {
-            if (_lineExtractor is null)
-            {
-                return new ScanPageRead(await _imageExtractor.ExtractTextAsync(page), OcrSource.MlKit, ScriptShare.Empty);
-            }
-
-            ImageText image = await _lineExtractor.ExtractLinesAsync(page, language, CancellationToken.None);
-            return new ScanPageRead(ScanReadingText.From(image), image.Source, ScriptDetector.Analyze(image.Lines.Select(l => l.Text)));
-        }
-        catch (OcrUnavailableException)
-        {
-            throw;
-        }
-        catch (Exception)
-        {
-            return new ScanPageRead(null, OcrSource.MlKit, ScriptShare.Empty);
-        }
-    }
-
-    // Slice 87: the page-language pack flow (ScanPackFlow) talks to the screen through IScanPackUi.
-    bool IScanPackUi.IsRetired => _retired;
-
-    async Task<int> IScanPackUi.PickLanguageAsync(IReadOnlyList<string> names)
-    {
-        string? picked = await DisplayActionSheetAsync(AppResources.Reader_PageLanguageTitle, AppResources.Common_Cancel, null, FlowDirection.LeftToRight, names.ToArray());
-
-        return picked is null ? -1 : names.ToList().IndexOf(picked);
-    }
-
-    // Ticks arrive from the download thread; one that lands after the flow ended (Cancel hidden) is dropped.
-    void IScanPackUi.ShowProgress(string? text) =>
-        MainThread.BeginInvokeOnMainThread(() =>
-        {
-            if (_cancelOcrDownload is not null)
-            {
-                SetScanProgress(text);
-            }
-        });
-
-    void IScanPackUi.SetCancel(Action? cancel)
-    {
-        _cancelOcrDownload = cancel;
-        CancelOcrButton.IsVisible = cancel is not null;
-    }
-
-    Task<bool> IScanPackUi.AskRetryAsync(string title, string message) =>
-        _retired ? Task.FromResult(false) : DisplayAlertAsync(title, message, AppResources.Language_Retry, AppResources.Common_Cancel, FlowDirection.LeftToRight);
-
-    Task IScanPackUi.NotifyAsync(string title, string message) => AlertAsync(title, message);
-
-    private void OnCancelOcrDownloadClicked(object? sender, EventArgs e) => _cancelOcrDownload?.Invoke();
-
-    private static void DeleteImages(IReadOnlyList<string> pages)
-    {
-        foreach (string page in pages)
-        {
-            ScannedImageFiles.TryDelete(page);
+            _openingCapture = false;
         }
     }
 
@@ -863,7 +653,7 @@ public partial class ReaderPage : ContentPage, IScanPackUi
 
     private void RenderPackStatus()
     {
-        string? text = _scanProgressText ?? LocalizedPackStatus.Compose(_installer.State, _installer.Progress);
+        string? text = LocalizedPackStatus.Compose(_installer.State, _installer.Progress);
         TextFlow.ForUi(PackStatusLabel, text);
         PackStatusLabel.IsVisible = text is not null;
     }

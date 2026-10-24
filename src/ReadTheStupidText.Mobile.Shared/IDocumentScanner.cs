@@ -18,6 +18,13 @@ public interface IDocumentScanner
     Task<IReadOnlyList<string>> ScanAsync();
 
     /// <summary>
+    /// Like <see cref="ScanAsync()"/> but asks the scanner to take at most <paramref name="maxPages"/>
+    /// pages (Slice 100: one page per Add). A scanner that cannot limit its pages keeps taking as
+    /// many as it takes today, so callers must accept more than they asked for.
+    /// </summary>
+    Task<IReadOnlyList<string>> ScanAsync(int maxPages) => ScanAsync();
+
+    /// <summary>
     /// Best-effort warm-up so the first <see cref="ScanAsync"/> finds the scanner ready. Never
     /// throws.
     /// </summary>

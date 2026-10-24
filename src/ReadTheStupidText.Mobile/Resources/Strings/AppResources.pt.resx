@@ -46,8 +46,23 @@
   <data name="Reader_PagesSkippedTitle" xml:space="preserve"><value>Algumas páginas ignoradas</value></data>
   <data name="Reader_PagesSkippedOneMessage" xml:space="preserve"><value>Não foi possível ler a página {0}. As páginas legíveis substituíram o texto.</value></data>
   <data name="Reader_PagesSkippedManyMessage" xml:space="preserve"><value>Não foi possível ler as páginas {0}. As páginas legíveis substituíram o texto.</value></data>
-  <data name="Reader_ScanProgressPage" xml:space="preserve"><value>Lendo a página {0} de {1}</value></data>
-  <data name="Reader_ScanProgressSingle" xml:space="preserve"><value>Lendo a página</value></data>
+  <data name="Capture_Title" xml:space="preserve"><value>Tire uma foto de cada página</value></data>
+  <data name="Capture_Hint" xml:space="preserve"><value>Adicione uma página de cada vez. Toque em {0} quando tiver todas.</value></data>
+  <data name="Capture_HintDone" xml:space="preserve"><value>Concluir</value></data>
+  <data name="Capture_PageLabel" xml:space="preserve"><value>Página {0}</value></data>
+  <data name="Capture_Reading" xml:space="preserve"><value>lendo…</value></data>
+  <data name="Capture_AddPage" xml:space="preserve"><value>Adicionar outra página</value></data>
+  <data name="Capture_Done" xml:space="preserve"><value>Concluir – mostrar o texto</value></data>
+  <data name="Capture_ChoosePhotos" xml:space="preserve"><value>Escolher das fotos</value></data>
+  <data name="Capture_DiscardTitle" xml:space="preserve"><value>Descartar estas páginas?</value></data>
+  <data name="Capture_DiscardMessage" xml:space="preserve"><value>Você tirou {0} páginas. Elas não serão guardadas se você voltar.</value></data>
+  <data name="Capture_DiscardMessageOne" xml:space="preserve"><value>Você tirou 1 página. Ela não será guardada se você voltar.</value></data>
+  <data name="Capture_PageLimit" xml:space="preserve"><value>Pode adicionar até {0} páginas de cada vez. As restantes não foram adicionadas.</value></data>
+  <data name="Capture_KeepTaking" xml:space="preserve"><value>Continuar tirando páginas</value></data>
+  <data name="Capture_Discard" xml:space="preserve"><value>Descartar e voltar</value></data>
+  <data name="Capture_RemovePage" xml:space="preserve"><value>Remover esta página</value></data>
+  <data name="Capture_CouldntRead" xml:space="preserve"><value>Não foi possível ler</value></data>
+  <data name="Capture_ClosePreview" xml:space="preserve"><value>Fechar</value></data>
   <data name="Reader_PageLanguageTitle" xml:space="preserve"><value>Em que idioma está esta página?</value></data>
   <data name="Reader_OcrDownloading" xml:space="preserve"><value>Baixando o leitor para {0}… {1}%</value></data>
   <data name="Reader_OcrDownloadFailedTitle" xml:space="preserve"><value>Não foi possível baixar o leitor</value></data>
