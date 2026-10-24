@@ -67,7 +67,7 @@ New strings: none (the Farsi samples above are mock data, not shipped copy).
   text is right-aligned, back arrows point left, and swiping left turns to the next page in a Farsi book.
 - Windows head: the same check on the gallery and the reader.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-24)
 
 None new: the rule was written at planning in `src/DinoReader.App/CLAUDE.md` (Slice 96: docs/plan/slices/96-dino-layout-never-mirrors.md); the index pass should check it matches the built behaviour above (`TextFlowHandlers`, no `Mirror`/`ForCurrentCulture`).
 
