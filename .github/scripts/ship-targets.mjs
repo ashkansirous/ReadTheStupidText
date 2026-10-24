@@ -4,22 +4,26 @@
  * `changes` job and its dorny/paths-filter block).
  *
  * The mapping is exactly the one Slices 44/48 settled (Decision 69):
- *   - core (Domain/Application/Documents/tests/solution/pipeline) -> windows + android + ios
- *   - App / Infrastructure                                        -> windows
+ *   - core (Domain/Application/Documents/solution/pipeline)       -> windows + android + ios
+ *   - tests/ReadTheStupidText.Tests                               -> nothing (tests.yml runs it on PRs)
+ *   - App / Infrastructure / store-submit.yml / windows.yml       -> windows + windowsstore (the Store submission)
  *   - Mobile/Platforms/Android/**                                 -> android
  *   - Mobile/Platforms/iOS/**                                     -> ios
  *   - the rest of Mobile/** (the RTST app's MAUI root)            -> android + ios
  *   - Mobile.Shared/Platforms/Android/**                          -> android + dinoapp
  *   - Mobile.Shared/Platforms/iOS/**                              -> ios + dinoios
  *   - Mobile.Shared/Platforms/Windows/**                          -> dinowin (Slice 67)
- *   - Infrastructure/**                                           -> windows + dinowin (Dino Reader on Windows reads with its engines)
+ *   - (Infrastructure/** also -> dinowin: Dino Reader on Windows reads with its engines)
  *   - DinoReader.App/**, DinoReader.Core/**                       -> also dinoios (Slice 67, ships only with its own iOS secrets) and dinowin (unsigned MSIX, needs no secrets)
  *   - the rest of Mobile.Shared/** (platform code both apps use)  -> android + ios + dinoapp
  *   - DinoReader.App/**, DinoReader.Core/**                       -> dinoapp (Slice 58/60; ships only with its own signing secrets)
  *   - DinoReader.Core / tests/DinoReader.Tests                    -> dinoreader (its tests; Core also rebuilds dinoapp)
  *   - Markdown anywhere (IGNORED_PATTERNS, case-sensitive like GitHub's `paths`) -> nothing (ignored before matching)
  *   - docs and anything else                                      -> nothing
- * A major version bump builds every target, and so does a missing base tag.
+ * `windowsstore` is true only for the Windows group's own paths (a core-only change sets `windows`,
+ * so the MSIX is rebuilt for the GitHub release, but is not submitted to the Store).
+ * A major version bump builds every target (windowsstore included), and so does a missing base tag
+ * or a force_all run.
  *
  * Changes are measured from the newest published v<x.y.z> tag merged into HEAD
  * (not from the push's own `before`): a failed run, or a pending run dropped
@@ -52,7 +56,6 @@ export const CORE_PATHS = [
     'src/ReadTheStupidText.Domain/',
     'src/ReadTheStupidText.Application/',
     'src/ReadTheStupidText.Documents/',
-    'tests/ReadTheStupidText.Tests/',
     'global.json',
     'Directory.Build.props',
     'GitVersion.yml',
@@ -70,6 +73,9 @@ export const CORE_PATHS = [
  */
 export const GROUPS = {
     core: { include: CORE_PATHS },
+    // RTST's unit tests: they build and ship nothing, so no target maps here. The group only exists so
+    // tests.yml's pull_request.paths (which runs them on PRs) stays derived from GROUPS.
+    unittests: { include: ['tests/ReadTheStupidText.Tests/'] },
     windows: {
         include: [
             'src/ReadTheStupidText.App/',
@@ -186,7 +192,10 @@ export function shipTargets({ changedFiles, bump, forceAll = false }) {
     const dinoapp = everything || g.core || g.dinoapp || g.sharedroot;
     const dinoios = everything || g.core || g.dinoios || g.sharedroot;
     const dinowin = everything || g.core || g.dinowin || g.sharedroot;
-    return { windows, android, ios, dinoreader, dinoapp, dinoios, dinowin };
+    // The Microsoft Store only gets a submission for Windows-specific changes: a core-only change
+    // rebuilds the MSIX (windows) for the GitHub release but is not worth a Store review.
+    const windowsstore = everything || g.windows;
+    return { windows, windowsstore, android, ios, dinoreader, dinoapp, dinoios, dinowin };
 }
 
 /** The newest strict v<x.y.z> tag in a list (null when none). */
