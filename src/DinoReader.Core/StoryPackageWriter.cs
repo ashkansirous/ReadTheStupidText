@@ -15,7 +15,7 @@ public static class StoryPackageWriter
         using var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true);
         var manifest = new StoryPackageManifest(StoryPackageManifest.CurrentSchemaVersion, packageId, story.Title, story.Language);
         await AddTextAsync(zip, StoryPackageManifest.ManifestFileName, manifest.ToJson());
-        await AddTextAsync(zip, StoryPackageManifest.StoryFileName, StoryJson.Serialize(story with { SourceId = null }));
+        await AddTextAsync(zip, StoryPackageManifest.StoryFileName, StoryJson.Serialize(story with { SourceId = null, ShowOriginalText = false }));
         foreach (string name in story.PictureFiles())
         {
             await AddPictureAsync(zip, library.TryResolveFile(story.Id, name), name);

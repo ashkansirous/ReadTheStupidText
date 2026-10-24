@@ -136,6 +136,12 @@
   <data name="Cast_ChangeForAll" xml:space="preserve"><value>تغییر برای همهٔ کتاب‌ها</value></data>
   <data name="Narrator_Sample" xml:space="preserve"><value>شنیدن این صدا</value></data>
   <!-- /Slice 109 -->
+  <!-- Slice 110 -->
+  <data name="Book_Title" xml:space="preserve"><value>این کتاب</value></data>
+  <data name="Book_ShowOriginal" xml:space="preserve"><value>نمایش متن اصلی</value></data>
+  <data name="Book_ShowOriginalHint" xml:space="preserve"><value>کلمه‌های {0} را نشان بده. صدا همچنان به {1} می‌خواند.</value></data>
+  <data name="Book_Back" xml:space="preserve"><value>بازگشت به داستان</value></data>
+  <!-- /Slice 110 -->
   <data name="Add_Scan" xml:space="preserve"><value>اسکن صفحه‌ها</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>تصویر صفحه‌ها را نگه می‌دارد</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>عکس‌ها</value></data>

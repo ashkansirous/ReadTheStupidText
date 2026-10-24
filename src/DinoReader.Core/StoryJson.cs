@@ -62,6 +62,7 @@ public static class StoryJson
         Cast = ToCastFiles(s.Cast),
         Merges = s.Merges.Count == 0 ? null : s.Merges.ToDictionary(m => m.Key, m => m.Value),
         Translate = s.TranslateToMyLanguage,
+        ShowOriginal = s.ShowOriginalText ? true : null,
         SourceId = s.SourceId,
         Translations = ToTranslationFiles(s.Translations),
         LanguageCasts = ToLanguageCastFiles(s.LanguageCasts),
@@ -81,7 +82,7 @@ public static class StoryJson
             f.Cast.Select(c => new CastMember(c.CharacterId, c.Name, c.Gender, c.VoiceId, c.Edited)).ToList(),
             f.CoverStyle, f.CoverColourIndex, f.NarratorVoiceId ?? string.Empty, ParseMode(f.PreferredMode), CleanMerges(f.Merges), f.Translate,
             f.CoverFile, f.CoverPageIndex, StoryIds.IsValid(f.SourceId) ? f.SourceId : null, CleanTranslations(f.Translations),
-            CleanLanguageCasts(f.LanguageCasts, f.Language));
+            CleanLanguageCasts(f.LanguageCasts, f.Language), f.ShowOriginal == true);
     }
 
     private static List<CastFile> ToCastFiles(IReadOnlyList<CastMember> cast) =>
@@ -275,6 +276,9 @@ public static class StoryJson
         public List<CastFile> Cast { get; set; } = [];
         public Dictionary<string, string>? Merges { get; set; }
         public bool Translate { get; set; }
+
+        /// <summary>The grown-up's per-story "Show original text" switch (Slice 110); absent when off.</summary>
+        public bool? ShowOriginal { get; set; }
         public string? SourceId { get; set; }
         public Dictionary<string, Dictionary<string, string>>? Translations { get; set; }
 

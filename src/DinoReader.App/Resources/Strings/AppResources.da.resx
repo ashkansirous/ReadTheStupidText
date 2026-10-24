@@ -138,6 +138,12 @@
   <data name="Cast_ChangeForAll" xml:space="preserve"><value>Skift for alle bøger</value></data>
   <data name="Narrator_Sample" xml:space="preserve"><value>Hør denne stemme</value></data>
   <!-- /Slice 109 -->
+  <!-- Slice 110 -->
+  <data name="Book_Title" xml:space="preserve"><value>Denne bog</value></data>
+  <data name="Book_ShowOriginal" xml:space="preserve"><value>Vis den originale tekst</value></data>
+  <data name="Book_ShowOriginalHint" xml:space="preserve"><value>Vis ordene på {0}. Stemmen læser stadig på {1}.</value></data>
+  <data name="Book_Back" xml:space="preserve"><value>Tilbage til historien</value></data>
+  <!-- /Slice 110 -->
   <data name="Add_Scan" xml:space="preserve"><value>Scan sider</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Beholder sidebillederne</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Fotos</value></data>

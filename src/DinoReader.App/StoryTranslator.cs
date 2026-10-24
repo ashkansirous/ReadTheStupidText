@@ -17,6 +17,7 @@ public sealed class StoryTranslator
 {
 	private readonly ITranslator? _engine;
 	private readonly ConcurrentDictionary<(string Text, string Source, string Target), string> _cache = new();
+	private readonly SharedWork<(string Text, string Source, string Target), string> _inFlight = new(); // the screen and the voice translate the same pieces (Slice 110)
 
 	public StoryTranslator(IServiceProvider services)
 	{
@@ -82,6 +83,31 @@ public sealed class StoryTranslator
 		}
 	}
 
+	/// <summary>The story's title in the grown-up's language for the reading screen (Slice 110): the bundled table's entry, else the engine's, else the title as it is.</summary>
+	public async Task<string> TitleAsync(Story story, CancellationToken cancellationToken)
+	{
+		string target = MyLanguage;
+		if (BundledTranslations.Lookup(story, target, story.Title) is { } bundled)
+		{
+			return bundled;
+		}
+
+		if (_engine is null || !story.Title.Any(char.IsLetter))
+		{
+			return story.Title;
+		}
+
+		try
+		{
+			string translated = (await PieceAsync(story.Title, UiLanguage.Resolve(story.Language), target, cancellationToken)).Trim();
+			return translated.Length > 0 ? translated : story.Title;
+		}
+		catch (TranslationModelUnavailableException)
+		{
+			return story.Title;
+		}
+	}
+
 	private async Task<string> PieceAsync(string text, string source, string target, CancellationToken cancellationToken)
 	{
 		if (_cache.TryGetValue((text, source, target), out string? known))
@@ -89,8 +115,12 @@ public sealed class StoryTranslator
 			return known;
 		}
 
-		string translated = await _engine!.TranslateAsync(text, source, target, cancellationToken);
-		_cache[(text, source, target)] = translated;
-		return translated;
+		var key = (text, source, target);
+		return await _inFlight.RunAsync(key, async token =>
+		{
+			string translated = await _engine!.TranslateAsync(text, source, target, token);
+			_cache[key] = translated;
+			return translated;
+		}, cancellationToken);
 	}
 }

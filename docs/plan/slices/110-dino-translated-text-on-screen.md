@@ -1,12 +1,12 @@
 # Slice 110 — Dino: translated text on screen, with "Show original text"
 
-*In progress (wave 2026-10-24), draft PR.* *Planned 2026-10-24*, from the phone scope "Dino Reader - translated text on screen, voices in the
+*Built 2026-10-24, not yet verified on the emulator.* *Planned 2026-10-24*, from the phone scope "Dino Reader - translated text on screen, voices in the
 reading language, one narrator, parent recordings, store filters" (2026-10-24) —
 https://drive.google.com/file/d/1b2XPenCW2D4Kx1yx98js_LK4CRBSnnLf/view?usp=drivesdk (part 1, milestone 2).
 
 **Batch:** 22
 **Depends on:** Slice 107; runs after 108 and 109 (all three edit `StoryVoicing` and `ReadingSession`)
-**Touches:** `src/DinoReader.Core/**` (voiced segment and display-span mapping types), `src/DinoReader.Core/Story.cs`, `src/DinoReader.Core/StoryJson.cs`, `src/DinoReader.App/StoryTranslator.cs`, `src/DinoReader.App/StoryVoicing.cs`, `src/DinoReader.App/ReadingSession.cs`, `src/DinoReader.App/ReadingSurface.cs`, `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/PictureTextPages.cs`, `src/DinoReader.App/ScanPages.cs`, `src/DinoReader.App/TextPages.cs`, `src/DinoReader.App/Resources/Strings/*.resx`, `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`
+**Touches:** `src/DinoReader.Core/**` (voiced segment and display-span mapping types), `src/DinoReader.Core/Story.cs`, `src/DinoReader.Core/StoryJson.cs`, `src/DinoReader.App/StoryTranslator.cs`, `src/DinoReader.App/StoryVoicing.cs`, `src/DinoReader.App/ReadingSession.cs`, `src/DinoReader.App/ReadingSurface.cs`, `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/PictureTextPages.cs`, `src/DinoReader.App/ScanPages.cs`, `src/DinoReader.App/TextPages.cs`, `src/DinoReader.Core/TranslatedStory.cs` (new), `src/DinoReader.App/BookSheet.cs` (new), `src/DinoReader.App/ReadingText.cs`, `src/DinoReader.App/Resources/Strings/*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`
 
 ## Why
 
@@ -41,12 +41,12 @@ New strings (all 14 locales): "This book", "Show original text", "Show the {0} w
 
 ## Work
 
-- [ ] 1. Core: translated page text plus a piece-to-display-span map beside the source offsets, so a
+- [x] 1. Core: translated page text plus a piece-to-display-span map beside the source offsets, so a
   voiced segment can highlight either text; unit tests including RTL and multi-piece sentences.
-- [ ] 2. `ReadingSession`/`ReadingSurface`/`TextPages`: render and highlight the translated text.
-- [ ] 3. Scanned picture pages switch to the picture-plus-text layout while translated.
-- [ ] 4. The "Show original text" switch (grown-up only, in the "This book" sheet from the add-book button behind the gate, frame 43; shown only when translated) and its persistence.
-- [ ] 5. Rule in `src/DinoReader.App/CLAUDE.md` (amend the Slice 95 "speakers in the source language"
+- [x] 2. `ReadingSession`/`ReadingSurface`/`TextPages`: render and highlight the translated text.
+- [x] 3. Scanned picture pages switch to the picture-plus-text layout while translated.
+- [x] 4. The "Show original text" switch (grown-up only, in the "This book" sheet from the add-book button behind the gate, frame 43; shown only when translated) and its persistence.
+- [x] 5. Rule (written as the For CLAUDE.md block below, not edited in the file) in `src/DinoReader.App/CLAUDE.md` (amend the Slice 95 "speakers in the source language"
   bullet: the screen shows the translation).
 
 ## Verification
@@ -55,3 +55,28 @@ New strings (all 14 locales): "This book", "Show original text", "Show the {0} w
 - Android emulator, app in Farsi: a starter and a scanned English book show Farsi RTL text, highlight
   follows each spoken sentence, the scanned book shows picture plus text; "Show original text" brings back
   English and the OCR boxes.
+
+## Built (2026-10-24)
+
+- Core `TranslatedStoryBuilder.Build` (`TranslatedStory.cs`) turns the translated pieces into pages, joined text and **one span per source sentence in the same order**, so the spoken-sentence index, dots, taps and `PageFollower` work unchanged; only the text differs. Pieces map to a sentence by `SourceStart`; a quote's pieces get quote marks; paragraph breaks stay; pages keep `ImageFile` and drop `Lines` (so a scan becomes a picture + text page and `PictureTextPages` draws it, no OCR boxes).
+- `StoryVoicing.TranslatedDisplayAsync` (null when not translated, "Show original text" on, or a model is missing) and `StoryTranslator.TitleAsync` (title from the table, else the engine, else as is). `ReadingPage.ShowStoryAsync` shows the source first only when the engine is needed, then swaps; a bundled table waits for the translation.
+- A translated page ignores the spoken story index (`DisplayedPosition` is -1): offsets differ, so a sentence that spans pages follows from its first word.
+- `Story.ShowOriginalText` (`story.json` `showOriginal`, absent when off). `BookSheet` (frame 43) opens from the add-book button behind the gate **only for a book that is being translated**; other books go to grown-up mode as before. Cast pill leaves for the cast screen in grown-up mode. Strings `Book_*`, Slice 110 block, all 14 locales (machine-drafted).
+- `ShowOriginalText` is saved over the latest story and stripped from `.dino` exports (`StoryPackageWriter`), kept in backups. `StoryTranslator.SharedWork` shares each engine piece between the screen and the voice and serialises work on the same key.
+- Not built: the Record pill and "Read with my voice" row (Slice 111); text in a parent recording's language (Slice 111).
+
+*Changed while building:* a sentence running over a page break is shown once, on its starting page (medium review; the earlier note that it shows on every page is superseded). Source text shows first and swaps once when the engine is needed.
+
+*From review (high 1-9, medium 1-10, all applied):* tracked mode for the translated page; the sheet's Dismissed resumes reading; the screen and voice share engine pieces; quote marks span pieces; the sheet opens only when `StoryTranslator.Applies` (the grown-up path change is in For CLAUDE.md); one source-then-translation swap; `ShowOriginalText` persistence and export stripping; `SharedWork` serialisation. Deferred to Slice 111: Record pill, "Read with my voice".
+
+## For CLAUDE.md
+
+- (`src/DinoReader.App/CLAUDE.md`, amend the Slice 95 "speakers in the source language" bullet) The screen shows the translation while a book is translated (`StoryTranslator.Applies`): `StoryVoicing.TranslatedDisplayAsync` builds a `TranslatedStory` with one span per source sentence, so sentence indexes are shared by source and translation; never map positions between the two texts, a translated page follows the sentence only. A grown-up's per-book "Show original text" (`Story.ShowOriginalText`, the "This book" sheet from the reading page's add-book button, translated books only) returns the source text and OCR boxes; the audio stays translated. Amend the Slice 97 sentence "it still opens the gate, then grown-up mode" (the reading page's grown-ups button): for a translated book (`StoryTranslator.Applies`) the reading page's button opens the "This book" sheet after the gate instead, the story stays paused under it and resumes when the sheet is dismissed (Back, scrim, system back button); grown-up mode is reached only through the sheet's Cast pill (it has no direct entry, the mock has none). Any other book still goes straight to grown-up mode. The screen's translation and the voice share each engine piece (`SharedWork` in `StoryTranslator`), cancelled when the page goes away; a sentence running over a page break is shown once, on the page it starts on. (Slice 110: docs/plan/slices/110-dino-translated-text-on-screen.md)
+
+#### Not yet verified
+
+- Emulator: an English book in Farsi shows Farsi RTL text with the highlight following (mock frame 41).
+- Emulator: a scanned page shows as picture plus translated text (frame 42).
+- Emulator: "Show original text" round-trip brings back English and the OCR boxes (frame 43).
+- Native-speaker check of the machine-drafted `Book_*` strings in all 14 locales.
+- Starter book titles may stay English where the tables lack titles.

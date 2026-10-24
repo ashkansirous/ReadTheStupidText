@@ -39,7 +39,10 @@ public sealed class StoryVoicing
 	/// <summary>A cast made for a language that had none (Slice 108), for the caller to save.</summary>
 	public sealed record NewCast(string Language, IReadOnlyList<CastMember> Members);
 
+	private sealed record SharedPrepared(Story Story, bool WholePieces, Prepared Prepared);
+
 	private volatile Cache? _cache;
+	private volatile SharedPrepared? _lastPrepared;
 
 	public StoryVoicing(IVoicePackService packs, IVoiceModelService model, StoryTranslator translator, VoicePackInstaller installer, NarratorChoice narrators)
 	{
@@ -59,7 +62,7 @@ public sealed class StoryVoicing
 		Story story, int fromPosition = 0, CancellationToken cancellationToken = default, Action? translationSkipped = null)
 	{
 		bool wholePieces = _translator.UsesBundledTable(story);
-		Prepared prepared = await Task.Run(() => Prepare(story, fromPosition, wholePieces), cancellationToken);
+		Prepared prepared = await Task.Run(() => fromPosition == 0 ? PrepareShared(story, wholePieces) : Prepare(story, fromPosition, wholePieces), cancellationToken);
 		if (!_translator.Applies(story))
 		{
 			return await Task.Run(() => VoicedInOwnLanguage(story, prepared), cancellationToken);
@@ -74,6 +77,22 @@ public sealed class StoryVoicing
 		}
 
 		return await Task.Run(() => VoicedTranslated(story, prepared, outcome.Pieces), cancellationToken);
+	}
+
+	/// <summary>The story's text in the language it is read in, for the reading screen (Slice 110, Decision 112); null when the screen shows the story as it is:
+	/// the story is not translated now, the grown-up chose "Show original text", or a missing language model left it untranslated. <paramref name="sentences"/> are the
+	/// story's sentences, which the result keeps one-to-one.</summary>
+	public async Task<TranslatedStory?> TranslatedDisplayAsync(Story story, IReadOnlyList<SentenceSpan> sentences, CancellationToken cancellationToken = default)
+	{
+		if (story.ShowOriginalText || !_translator.Applies(story))
+		{
+			return null;
+		}
+
+		Prepared prepared = await Task.Run(() => PrepareShared(story, _translator.UsesBundledTable(story)), cancellationToken);
+		// The engine's pieces are shared with a read that speaks them at the same time (StoryTranslator), so each is translated once.
+		StoryTranslator.Outcome outcome = await _translator.TranslateAsync(story, prepared.Pieces, cancellationToken);
+		return outcome.Translated ? TranslatedStoryBuilder.Build(story.Pages, sentences, outcome.Pieces) : null;
 	}
 
 	// A translated read is cast from the spoken language's own cast (Slice 108), narrated by that language's narrator.
@@ -207,6 +226,19 @@ public sealed class StoryVoicing
 	{
 		AttributionResult resolved = StoryCast.Resolve(Analyse(storyLanguage, text, lineBreaks).Attribution, merges ?? Story.NoMerges, stored);
 		return StoryCast.ToMembers(resolved.Characters, Cast(castLanguage, resolved, stored), stored);
+	}
+
+	// The screen and the voice both prepare the whole story: the last one is kept for the same story instance, so the split runs once for the two.
+	private Prepared PrepareShared(Story story, bool wholePieces)
+	{
+		if (_lastPrepared is { } last && ReferenceEquals(last.Story, story) && last.WholePieces == wholePieces)
+		{
+			return last.Prepared;
+		}
+
+		Prepared prepared = Prepare(story, 0, wholePieces);
+		_lastPrepared = new SharedPrepared(story, wholePieces, prepared);
+		return prepared;
 	}
 
 	private Prepared Prepare(Story story, int fromPosition, bool wholePieces = false)

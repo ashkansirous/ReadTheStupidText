@@ -136,6 +136,12 @@
   <data name="Cast_ChangeForAll" xml:space="preserve"><value>为所有书更改</value></data>
   <data name="Narrator_Sample" xml:space="preserve"><value>试听这个声音</value></data>
   <!-- /Slice 109 -->
+  <!-- Slice 110 -->
+  <data name="Book_Title" xml:space="preserve"><value>这本书</value></data>
+  <data name="Book_ShowOriginal" xml:space="preserve"><value>显示原文</value></data>
+  <data name="Book_ShowOriginalHint" xml:space="preserve"><value>显示{0}文字。声音仍然用{1}朗读。</value></data>
+  <data name="Book_Back" xml:space="preserve"><value>回到故事</value></data>
+  <!-- /Slice 110 -->
   <data name="Add_Scan" xml:space="preserve"><value>扫描页面</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>保留页面图片</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>照片</value></data>
