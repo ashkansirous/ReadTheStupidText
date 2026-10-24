@@ -1,6 +1,6 @@
 # Slice 102 — Ten open stories in the Dino story store
 
-*Planned 2026-10-24*, from the user's request "add 10 open source stories to the store, so they can
+*In progress (wave 2026-10-24), draft PR.* Planned 2026-10-24, from the user's request "add 10 open source stories to the store, so they can
 download them from my server".
 
 **Batch:** 20 (Dino Reader store content)
