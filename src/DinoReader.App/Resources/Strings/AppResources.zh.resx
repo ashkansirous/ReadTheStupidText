@@ -82,7 +82,8 @@
   <data name="FirstRun_Waiting" xml:space="preserve"><value>书架上等着</value></data>
   <data name="FirstRun_PickAnother" xml:space="preserve"><value>选择其他语言</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>准备好阅读啦！</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>每个角色都有自己的声音。书架上有三个故事。</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>每个角色都有自己的声音。书架上有{0}个故事。</value></data>
+  <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>每个角色都有自己的声音。书架上有1个故事。</value></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>听 Dino 打招呼</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>你好！我是 Dino。我们一起读故事吧。</value></data>
   <data name="FirstRun_SetUp" xml:space="preserve"><value>设置故事</value></data>

@@ -82,7 +82,8 @@
   <data name="FirstRun_Waiting" xml:space="preserve"><value>En attente sur l’étagère</value></data>
   <data name="FirstRun_PickAnother" xml:space="preserve"><value>Choisir une autre langue</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>Prêt à lire !</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Chaque personnage a sa propre voix. Trois histoires sont sur l’étagère.</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Chaque personnage a sa propre voix. {0} histoires sont sur l’étagère.</value></data>
+  <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>Chaque personnage a sa propre voix. Une histoire est sur l’étagère.</value></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>Écouter Dino dire bonjour</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>Bonjour ! Je suis Dino. Lisons une histoire ensemble.</value></data>
   <data name="FirstRun_SetUp" xml:space="preserve"><value>Préparer les histoires</value></data>

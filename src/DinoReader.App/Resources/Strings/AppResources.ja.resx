@@ -82,7 +82,8 @@
   <data name="FirstRun_Waiting" xml:space="preserve"><value>本棚で待っています</value></data>
   <data name="FirstRun_PickAnother" xml:space="preserve"><value>別の言語を選ぶ</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>読む準備ができました！</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>どのキャラクターにもそれぞれの声があります。本棚には3冊の物語があります。</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>どのキャラクターにもそれぞれの声があります。本棚には{0}冊の物語があります。</value></data>
+  <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>どのキャラクターにもそれぞれの声があります。本棚には1冊の物語があります。</value></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>Dino のあいさつを聞く</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>こんにちは！ぼくは Dino。いっしょに物語を読もう。</value></data>
   <data name="FirstRun_SetUp" xml:space="preserve"><value>物語を設定する</value></data>

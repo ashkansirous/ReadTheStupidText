@@ -106,6 +106,7 @@ public static class AppResources
 	public static string FirstRun_PickAnother => Get();
 	public static string FirstRun_Ready => Get();
 	public static string FirstRun_ReadyBody => Get();
+	public static string FirstRun_ReadyBodyOne => Get();
 	public static string FirstRun_HearHello => Get();
 	public static string FirstRun_HelloLine => Get();
 	public static string FirstRun_SetUp => Get();

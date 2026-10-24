@@ -84,7 +84,8 @@
   <data name="FirstRun_Waiting" xml:space="preserve"><value>Venter på hylden</value></data>
   <data name="FirstRun_PickAnother" xml:space="preserve"><value>Vælg et andet sprog</value></data>
   <data name="FirstRun_Ready" xml:space="preserve"><value>Klar til at læse!</value></data>
-  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Hver figur får sin egen stemme. Der står tre historier på hylden.</value></data>
+  <data name="FirstRun_ReadyBody" xml:space="preserve"><value>Hver figur får sin egen stemme. Der står {0} historier på hylden.</value></data>
+  <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>Hver figur får sin egen stemme. Der står én historie på hylden.</value></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>Hør Dino sige hej</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>Hej! Jeg er Dino. Lad os læse en historie sammen.</value></data>
   <data name="FirstRun_SetUp" xml:space="preserve"><value>Gør historierne klar</value></data>

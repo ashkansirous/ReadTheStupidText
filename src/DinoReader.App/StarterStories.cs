@@ -20,6 +20,9 @@ public sealed class StarterStories(IStoryLibrary library)
 	// Listed in shelf order: the first is the newest, so it comes first in the gallery.
 	private static readonly string[] AssetNames = ["good-enough.dino", "three-little-pigs.dino", "gingerbread-man.dino", "tortoise-and-hare.dino"];
 
+	/// <summary>How many starter stories ship with the app.</summary>
+	public static int Count => AssetNames.Length;
+
 	private readonly SemaphoreSlim _gate = new(1, 1);
 	private bool _complete;
 
