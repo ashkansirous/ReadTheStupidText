@@ -14,8 +14,8 @@ public sealed class StarterStories(IStoryLibrary library)
 {
 	private const string InstalledKeyPrefix = "dino.starter.installed.";
 
-	// Set once a starter's stored copy has taken the bundled translations (Slice 95): earlier versions installed the starters without them.
-	private const string TranslationsAdoptedKeyPrefix = "dino.starter.translations.";
+	// Set once a starter's stored copy has taken the bundled translations (Slice 95; v2 key, Slice 105: the five Nordic and Dutch tables): earlier versions installed the starters without them.
+	private const string TranslationsAdoptedKeyPrefix = "dino.starter.translations.v2.";
 
 	// Listed in shelf order: the first is the newest, so it comes first in the gallery.
 	private static readonly string[] AssetNames = ["good-enough.dino", "three-little-pigs.dino", "gingerbread-man.dino", "tortoise-and-hare.dino"];
@@ -95,7 +95,7 @@ public sealed class StarterStories(IStoryLibrary library)
 	}
 
 	// The copy in the library (found by its source id) takes the bundled translations and the switch; its cast, merges, cover and pages stay.
-	// A deleted starter has no copy, so nothing comes back. Recorded only when the bundled package has translations, so a later one still adopts.
+	// A deleted starter has no copy, so nothing comes back. Recorded once attempted (even if it failed), and only when the bundled package has translations, so a later one still adopts.
 	private async Task AdoptTranslationsAsync(MemoryStream package, string packageId)
 	{
 		package.Position = 0;
@@ -105,13 +105,19 @@ public sealed class StarterStories(IStoryLibrary library)
 			return;
 		}
 
-		Story? stored = (await library.ListAsync()).FirstOrDefault(s => s.SourceId == packageId);
-		if (stored is not null && BundledTranslations.Adopt(stored, bundled) is { } adopted && !ReferenceEquals(adopted, stored))
+		try
 		{
-			await library.UpdateAsync(adopted);
+			Story? stored = (await library.ListAsync()).FirstOrDefault(s => s.SourceId == packageId);
+			if (stored is not null && BundledTranslations.Adopt(stored, bundled) is { } adopted && !ReferenceEquals(adopted, stored))
+			{
+				await library.UpdateAsync(adopted);
+			}
 		}
-
-		RecordTranslationsAdopted(packageId);
+		finally
+		{
+			// Recorded even when the attempt fails, so a bad copy is not re-read and re-parsed on every launch.
+			RecordTranslationsAdopted(packageId);
+		}
 	}
 
 	private async Task ImportIfAbsentAsync(MemoryStream package, string packageId, DateTimeOffset created, HashSet<string> present)
