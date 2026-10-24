@@ -34,6 +34,10 @@ public static class AppResources
 	public static string Narrator_Footnote => Get();
 	public static string Cast_ChangeForAll => Get();
 	public static string Narrator_Sample => Get();
+	public static string Book_Title => Get();
+	public static string Book_ShowOriginal => Get();
+	public static string Book_ShowOriginalHint => Get();
+	public static string Book_Back => Get();
 	public static string Common_Ok => Get();
 	public static string Common_Cancel => Get();
 	public static string PackStatus_Resolving => Get();

@@ -70,5 +70,6 @@
         <local:PagerDots x:Name="Dots" Grid.Row="3" />
         <local:TransportRow x:Name="Transport" Grid.Row="4" VerticalOptions="End" PreviousTapped="OnPreviousTapped" PlayTapped="OnPlayTapped"
                             NextTapped="OnNextTapped" />
+        <local:BookSheet x:Name="BookInfo" Grid.RowSpan="5" Grid.ColumnSpan="2" />
     </Grid>
 </ContentPage>

@@ -36,6 +36,13 @@ public partial class ReadingPage : ContentPage
 	private const double FullHeaderRowSpacing = 2;
 	private bool _compactHeader;
 	private bool _sideControls;
+	private IReadOnlyList<StoryPage> _shownPages = [];
+	private bool _surfaceShown;
+	private bool _translatedDisplay; // the page shows the translation (Slice 110): its offsets are not the story's, so the spoken position is not used
+	private int _displayVersion;
+	private CancellationTokenSource? _displayCancellation; // the screen's translation: stopped when a newer one starts or the page goes away
+	private ReadingMode _mode = ReadingMode.Text; // the mode on screen now, which a translation that arrives late must not undo
+	private (SessionState State, int Sentence)? _sheetResume; // what the story was doing when the book sheet opened
 
 	public ReadingPage(ReadingSession session, IStoryLibrary library, GrownUpGate gate, IServiceProvider services,
 		VoicePackInstaller installer, IVoiceModelService model, SpokenLanguage spoken)
@@ -52,6 +59,9 @@ public partial class ReadingPage : ContentPage
 		_session.StateChanged += OnSessionStateChanged;
 		_session.Failed += OnReadFailed;
 		_session.TranslationSkipped += (_, _) => _spoken.Use(_story?.Language ?? UiLanguage.English);
+		BookInfo.OriginalChanged += SaveShowOriginalAsync;
+		BookInfo.CastRequested += OpenCastAsync;
+		BookInfo.Dismissed += OnBookSheetDismissed;
 		ShowPackStatus();
 	}
 
@@ -64,17 +74,152 @@ public partial class ReadingPage : ContentPage
 		_sentences = StorySentences.Build(story.Text, LanguageRules.For(story.Language), story.BreakMap());
 		_session.Open(story, _sentences, SaveCastAsync);
 		_theme = CurrentTheme();
+		_mode = story.Mode;
 		Modes.Set(story.Mode, _theme);
-		var content = new ReadingContent(story.Text, _sentences, DinoFonts.ReadingFor(story.Language),
-			DinoFonts.IsRightToLeft(story.Language), ScansOf(story));
-		Surface.Show(content, story.Mode, _theme);
 		ApplyTheme();
-		UpdateHeaderLayout(Width, Height);
+		_ = ShowStoryAsync();
 		if (_sentences.Count > 0)
 		{
 			_session.MoveTo(0);
 		}
 	}
+
+	// Slice 110, Decision 112: while the story is read in the grown-up's language the page shows the translation too, unless the
+	// grown-up chose "Show original text". The source shows at once and the translation replaces it when ready (one rebuild); it stays when
+	// there is nothing to translate or a language model is missing. A newer call supersedes an older one.
+	private async Task ShowStoryAsync()
+	{
+		try
+		{
+			await ShowStoryCoreAsync();
+		}
+		catch (OperationCanceledException)
+		{
+			// A newer call, or the page leaving, superseded this one.
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader could not show the story: {ex}");
+		}
+	}
+
+	private async Task ShowStoryCoreAsync()
+	{
+		if (_story is not { } story)
+		{
+			return;
+		}
+
+		int version = ++_displayVersion;
+		CancellationToken cancellation = RestartDisplayCancellation();
+		var translator = _services.GetRequiredService<StoryTranslator>();
+		if (story.ShowOriginalText || !translator.Applies(story))
+		{
+			ShowSource(story);
+			return;
+		}
+
+		if (!_surfaceShown)
+		{
+			ShowSource(story);
+		}
+
+		(TranslatedStory? translated, string title) = await TranslateForScreenAsync(story, translator, cancellation);
+		if (translated is not null && version == _displayVersion && !cancellation.IsCancellationRequested)
+		{
+			ShowTranslation(story, translated, title);
+		}
+	}
+
+	private CancellationToken RestartDisplayCancellation()
+	{
+		CancelDisplay();
+		_displayCancellation = new CancellationTokenSource();
+		return _displayCancellation.Token;
+	}
+
+	private void CancelDisplay()
+	{
+		_displayCancellation?.Cancel();
+		_displayCancellation?.Dispose();
+		_displayCancellation = null;
+	}
+
+	// The title and the text translate side by side; the voice shares the engine's pieces with the text (StoryTranslator), so none is translated twice.
+	private async Task<(TranslatedStory? Translated, string Title)> TranslateForScreenAsync(
+		Story story, StoryTranslator translator, CancellationToken cancellation)
+	{
+		try
+		{
+			var voicing = _services.GetRequiredService<StoryVoicing>();
+			Task<string> title = TitleOrSourceAsync(story, translator, cancellation);
+			TranslatedStory? translated = await voicing.TranslatedDisplayAsync(story, _sentences, cancellation);
+			return (translated, translated is null ? story.Title : await title);
+		}
+		catch (Exception ex) when (ex is not OperationCanceledException)
+		{
+			Debug.WriteLine($"Dino Reader could not translate the page: {ex}");
+			return (null, story.Title);
+		}
+	}
+
+	// The title is cosmetic: any failure of its own leaves the source title and never costs the translated text.
+	private static async Task<string> TitleOrSourceAsync(Story story, StoryTranslator translator, CancellationToken cancellation)
+	{
+		try
+		{
+			return await translator.TitleAsync(story, cancellation);
+		}
+		catch (Exception ex) when (ex is not OperationCanceledException)
+		{
+			Debug.WriteLine($"Dino Reader could not translate the title: {ex}");
+			return story.Title;
+		}
+	}
+
+	private void ShowSource(Story story)
+	{
+		_translatedDisplay = false;
+		_shownPages = story.Pages;
+		ApplyTitle(story.Title, story.Language);
+		var content = new ReadingContent(story.Text, _sentences, DinoFonts.ReadingFor(story.Language),
+			DinoFonts.IsRightToLeft(story.Language), ScansOf(story));
+		ShowContent(content, story);
+	}
+
+	private void ShowTranslation(Story story, TranslatedStory translated, string title)
+	{
+		string mine = StoryTranslator.MyLanguage;
+		_translatedDisplay = true;
+		_shownPages = translated.Pages;
+		ApplyTitle(title, mine);
+		var scans = story.HasPictures ? new ScanSource(translated.Pages, file => _library.TryResolveFile(story.Id, file)) : null;
+		var content = new ReadingContent(translated.Text, translated.Sentences, DinoFonts.ReadingFor(mine), DinoFonts.IsRightToLeft(mine), scans);
+		ShowContent(content, story);
+	}
+
+	// The title is set in the language it is shown in: right to left for Farsi and Arabic, with the page itself not mirrored (Slice 96).
+	private void ApplyTitle(string title, string language)
+	{
+		TitleLabel.Text = title;
+		TitleLabel.FlowDirection = DinoFonts.IsRightToLeft(language) ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
+	}
+
+	private void ShowContent(ReadingContent content, Story story)
+	{
+		Surface.Show(content, _mode, _theme);
+		_surfaceShown = true;
+		if (_session.CurrentSentence >= 0)
+		{
+			Surface.Mark(_session.CurrentSentence, DisplayedPosition);
+		}
+
+		UpdateHeaderLayout(Width, Height);
+		RenderChrome();
+	}
+
+	// A translated page has its own text offsets, so only the sentence (never the story index inside it) is followed.
+	private int DisplayedPosition => _translatedDisplay ? -1 : _session.CurrentPosition;
 
 	// A story with pictures draws its real pages in picture mode; one without keeps the generated pages.
 	private ScanSource? ScansOf(Story story) =>
@@ -90,7 +235,7 @@ public partial class ReadingPage : ContentPage
 
 	private void UpdateHeaderLayout(double width, double height)
 	{
-		bool compact = width > 0 && width > height && _story is { } story && PictureTextBook.IsPictureTextBook(story.Pages);
+		bool compact = width > 0 && width > height && PictureTextBook.IsPictureTextBook(_shownPages);
 		bool sideControls = compact && Surface.Mode == ReadingMode.Picture;
 		if (compact != _compactHeader || sideControls != _sideControls)
 		{
@@ -159,6 +304,7 @@ public partial class ReadingPage : ContentPage
 		{
 			if (!Navigation.NavigationStack.Contains(this))
 			{
+				CancelDisplay();
 				Unsubscribe();
 				_session.Detach();
 				_session.Stop();
@@ -208,8 +354,8 @@ public partial class ReadingPage : ContentPage
 
 	private void OnSentenceChanged(object? sender, int sentence)
 	{
-		Surface.Mark(sentence, _session.CurrentPosition);
-		int page = Surface.PageOfSentence(sentence, _session.CurrentPosition);
+		Surface.Mark(sentence, DisplayedPosition);
+		int page = Surface.PageOfSentence(sentence, DisplayedPosition);
 		if (page >= 0)
 		{
 			// While a layout is pending there is no page to follow; OnLaidOut catches up once it is adopted.
@@ -234,7 +380,7 @@ public partial class ReadingPage : ContentPage
 	// had wandered keeps the page that now holds what they were looking at (the surface remapped it).
 	private void OnLaidOut(object? sender, EventArgs e)
 	{
-		int reading = Math.Max(0, Surface.PageOfSentence(_session.CurrentSentence, _session.CurrentPosition));
+		int reading = Math.Max(0, Surface.PageOfSentence(_session.CurrentSentence, DisplayedPosition));
 		_follower.Relaid(reading, Surface.CurrentPage);
 		ShowFollowedPage();
 		RenderChrome();
@@ -263,6 +409,7 @@ public partial class ReadingPage : ContentPage
 
 	private void OnModeChanged(object? sender, ReadingMode mode)
 	{
+		_mode = mode;
 		Surface.SetMode(mode);
 		UpdateHeaderLayout(Width, Height);
 		_ = SaveModeAsync(mode);
@@ -405,6 +552,18 @@ public partial class ReadingPage : ContentPage
 		_session.MoveTo(plan.Target);
 	}
 
+	// The "This book" sheet is part of this page, so the system back button closes it first instead of leaving the story.
+	protected override bool OnBackButtonPressed()
+	{
+		if (BookInfo.IsVisible)
+		{
+			BookInfo.Dismiss();
+			return true;
+		}
+
+		return base.OnBackButtonPressed();
+	}
+
 	private async void OnBackTapped(object? sender, TappedEventArgs e) => await _busy.RunAsync(() => Navigation.PopAsync());
 
 	private async void OnLockTapped(object? sender, TappedEventArgs e) => await _busy.RunAsync(OpenGrownUpAsync);
@@ -419,7 +578,7 @@ public partial class ReadingPage : ContentPage
 		PauseForGate(before);
 		if (await AskGateAsync())
 		{
-			await GoToManageAsync();
+			await OpenBookSheetOrManageAsync(before, sentence);
 			return;
 		}
 
@@ -478,6 +637,91 @@ public partial class ReadingPage : ContentPage
 				await _session.StartAtAsync(sentence);
 				break;
 		}
+	}
+
+	// A book that is being translated opens the "This book" sheet (Slice 110, mock frame 43); any other book goes straight to grown-up mode as before.
+	// The story stays paused under the sheet and goes on when the sheet is dismissed.
+	private Task OpenBookSheetOrManageAsync(SessionState before, int sentence)
+	{
+		if (_story is not { } story || !_services.GetRequiredService<StoryTranslator>().Applies(story))
+		{
+			return GoToManageAsync();
+		}
+
+		if (_sheetResume is not null)
+		{
+			// The sheet is open already: keep the state recorded when it opened, so dismissing it resumes the read.
+			return Task.CompletedTask;
+		}
+
+		string original = LanguageNames.NativeName(story.Language);
+		string spoken = LanguageNames.NativeName(StoryTranslator.MyLanguage);
+		_sheetResume = (before, sentence);
+		BookInfo.Show(story.Title, offerOriginal: true, story.ShowOriginalText, ReadingText.ShowOriginalHint(original, spoken));
+		return Task.CompletedTask;
+	}
+
+	private async void OnBookSheetDismissed()
+	{
+		if (_sheetResume is not { } resume)
+		{
+			return;
+		}
+
+		_sheetResume = null;
+		if (!_stoppedDuringGate && IsOnTop())
+		{
+			await ResumeAfterGateAsync(resume.State, resume.Sentence);
+		}
+	}
+
+	// "Show original text" is remembered per story in story.json; the screen follows at once, the audio stays translated.
+	private async Task SaveShowOriginalAsync(bool showOriginal)
+	{
+		if (_story is { } shown)
+		{
+			_story = shown with { ShowOriginalText = showOriginal };
+		}
+
+		await _saveLock.WaitAsync();
+		try
+		{
+			// The latest stored story and the latest switch position, whatever order quick toggles reach the lock in; cast edits saved meanwhile stay.
+			if (_story is { } current)
+			{
+				Story latest = await _library.GetAsync(current.Id) ?? current;
+				await _library.UpdateAsync(latest with { ShowOriginalText = current.ShowOriginalText });
+			}
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader could not save the original-text switch: {ex}");
+		}
+		finally
+		{
+			_saveLock.Release();
+		}
+
+		await ShowStoryAsync();
+	}
+
+	private async Task OpenCastAsync()
+	{
+		if (_story is not { } story)
+		{
+			return;
+		}
+
+		// The window's own navigation outlives this page, which leaves the stack (and stops reading) for the cast screen.
+		INavigation? root = Window?.Page?.Navigation;
+		if (root is null)
+		{
+			return;
+		}
+
+		await root.PopToRootAsync(animated: false);
+		_services.GetRequiredService<GrownUpMode>().Enter();
+		await _services.GetRequiredService<StoryActions>().CastAsync(root, story);
 	}
 
 	// Grown-up mode is the gallery's own state: return to the gallery with it on; leaving this page stops the read.
