@@ -1,6 +1,6 @@
 # Slice 98 — Picture + text books: a picture per page, the text beside it
 
-*Planned 2026-10-24*, from the user's request "I want an easier way to add books for kids older than 3.
+*In progress (wave 2026-10-24), draft PR.* Planned 2026-10-24, from the user's request "I want an easier way to add books for kids older than 3.
 Those books are usually one side picture and the other side text. Accept a format that is text
 separately from image, but show it together. For the Three Little Pigs, you have the text for each page;
 I give you a picture for each page and you show them side by side."
