@@ -1,6 +1,6 @@
 # Slice 97 — The grown-ups button says "add a book", not a lock
 
-*In progress (wave 2026-10-24), draft PR.* Planned 2026-10-24, from the user's request "the menu button for grown-ups is very bad. It should be
+*Built 2026-10-24 (PR #284); verified on the RTST_Test emulator, not yet on the Windows head.* Planned 2026-10-24, from the user's request "the menu button for grown-ups is very bad. It should be
 something indicating that you could add a book, not a lock."
 
 **Batch:** 18 (Dino Reader: layout, add-a-book button, picture + text books)
@@ -43,11 +43,17 @@ New strings (all nine locales): "Add a book (grown-ups)" (already in the slice).
 
 ## Work
 
-- [ ] 1. **Smallest end-to-end:** the `AddBook` icon path in `IconView`, swapped into the gallery header
+- [x] 1. **Smallest end-to-end:** the `AddBook` icon path in `IconView`, swapped into the gallery header
   and renamed; the gate and grown-up mode are unchanged.
-- [ ] 1b. The reading page's `LockIcon` becomes `AddBook` (40x40 button, icon 22) with the same accessible name.
-- [ ] 2. The accessible name and tooltip strings in every language's `.resx`.
-- [ ] 3. Rule in `src/DinoReader.App/CLAUDE.md` (written at planning; check it still matches).
+- [x] 1b. The reading page's `LockIcon` becomes `AddBook` (40x40 button, icon 22) with the same accessible name.
+- [x] 2. The accessible name and tooltip strings in every language's `.resx`.
+- [x] 3. Rule in `src/DinoReader.App/CLAUDE.md` (written at planning; check it still matches).
+
+*Changed while building:* `IconKind.AddBook` is three layers (body, badge, plus) in one Size x Size `AbsoluteLayout` scaled from a 24 grid, pinned left-to-right. `BadgeColor`/`PlusColor` fall back to the Brand and new OnBrand tokens, and `ReadingPage` sets them from its theme so night mode works. Gallery: `AddBookButton`/`OnAddBookTapped`, icon 24. Reading page: icon 22 in the 40x40 button; its `Lock*` identifiers stay until a later rename. New `Gallery_AddBook` string in all nine languages (non-English versions are Claude drafts), with a tooltip.
+
+*From review:* high pass: 6 applied, #5 (the renames) deferred. Medium pass: 4 applied plus the LTR pin; #2, #4, #5 skipped.
+
+*Verified on emulator RTST_Test (2026-10-24):* 44dp gallery icon aligned, the gate leads to the Add tile first, 40dp reading-page icon, badge follows system night mode, content description correct.
 
 ## Verification
 
@@ -55,3 +61,12 @@ New strings (all nine locales): "Add a book (grown-ups)" (already in the slice).
   44x44 with the same fill as before. Tapping it opens the gate; after the gate, grown-up mode shows the
   Add tile first. TalkBack reads "Add a book (grown-ups)".
 - Windows head: the icon renders and the gate opens.
+
+#### For CLAUDE.md
+
+- Dino Reader's `IconKind.AddBook` (`src/DinoReader.App/IconView.cs`) is drawn in one fixed-size `AbsoluteLayout`, pinned left-to-right so it does not mirror in RTL languages. The badge and plus take `BadgeColor`/`PlusColor`, falling back to the Brand and OnBrand tokens; a page on its own theme (`ReadingPage`) must set them or night mode shows the wrong colours. (Slice 97: docs/plan/slices/97-dino-add-book-button.md)
+
+#### Not yet verified
+
+- Windows head: the AddBook icon rendering and the gate opening.
+- A native-speaker read of the `Gallery_AddBook` strings (non-English versions are Claude drafts).

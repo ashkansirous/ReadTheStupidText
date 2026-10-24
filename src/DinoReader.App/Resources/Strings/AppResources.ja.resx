@@ -21,6 +21,7 @@
   <data name="Common_Edit" xml:space="preserve"><value>編集</value></data>
   <data name="Gallery_Title" xml:space="preserve"><value>わたしのおはなし</value></data>
   <data name="Gallery_ForGrownUps" xml:space="preserve"><value>おとな向け</value></data>
+  <data name="Gallery_AddBook" xml:space="preserve"><value>本を追加（おとな向け）</value></data>
   <data name="Gallery_OpensGateHint" xml:space="preserve"><value>おとな用の入口を開きます</value></data>
   <data name="Gallery_Characters_One" xml:space="preserve"><value>登場人物: {0}</value></data>
   <data name="Gallery_Characters_Other" xml:space="preserve"><value>登場人物: {0}</value></data>

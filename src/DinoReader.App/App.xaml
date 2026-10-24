@@ -60,6 +60,7 @@
 
         <!-- Language rows (mock screens 9, 8b): the off track of the translate switch. -->
         <Color x:Key="SwitchOff">#d9d2c4</Color>
+        <Color x:Key="OnBrand">#FFFFFF</Color>
 
         <Style TargetType="Label">
             <Setter Property="FontFamily" Value="Fredoka" />
