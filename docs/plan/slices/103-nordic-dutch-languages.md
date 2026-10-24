@@ -1,6 +1,6 @@
 # Slice 103 — Danish, Finnish, Swedish, Norwegian and Dutch in every app
 
-*Planned 2026-10-24*, from the user's request "add Scandinavian languages: Danish, Finnish, Swedish,
+*In progress (wave 2026-10-24), draft PR.* Planned 2026-10-24, from the user's request "add Scandinavian languages: Danish, Finnish, Swedish,
 Norwegian and Dutch".
 
 **Batch:** 21 (five more languages)
