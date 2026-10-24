@@ -9,7 +9,7 @@ namespace ReadTheStupidText.Application.Reading;
 public static class PackConstants
 {
     public const string CatalogUrl =
-        "https://github.com/ashkansirous/ReadTheStupidText/releases/download/packs-4/packs.json";
+        "https://github.com/ashkansirous/ReadTheStupidText/releases/download/packs-5/packs.json";
 
     public const string ManifestFileName = "pack.json";
 
