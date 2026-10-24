@@ -67,7 +67,7 @@ New strings (all 14 locales): "All ages", "5 & under", "6–8", "9–12", "Autho
 
 ## Not yet verified / after merge
 
-- Re-upload the ten stories' `meta.json` (`DINO_BUILD_STORE=1 dotnet test tests/DinoReader.Tests`, then `pwsh tools/upload-store-story.ps1 <id> -MetaOnly` for each id). Until then live `/api/stories` has no ages or authors: the author row hides, cards show no ages and the chips filter nothing.
+- Done 2026-10-24, verified via `/api/stories`: re-upload of the ten stories' `meta.json` (`DINO_BUILD_STORE=1 dotnet test tests/DinoReader.Tests`, then `pwsh tools/upload-store-story.ps1 <id> -MetaOnly` for each id). Until then live `/api/stories` has no ages or authors: the author row hides, cards show no ages and the chips filter nothing.
 - Emulator check of the age chips, the author picker and the empty state.
 - Native-speaker check of the new strings in the 13 non-English locales.
 
