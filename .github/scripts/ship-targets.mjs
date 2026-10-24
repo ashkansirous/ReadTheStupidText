@@ -114,6 +114,7 @@ export const GROUPS = {
             `${SHARED}IosSherpaPackaging.props`,
             '.github/scripts/ios-signing.sh',
             '.github/scripts/testflight-upload.sh',
+            '.github/scripts/check-ios-bundle.sh',
             '.github/workflows/dinoreader-ios.yml',
         ],
     },

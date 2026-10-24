@@ -36,6 +36,12 @@
 	<key>XSAppIconAssets</key>
 	<string>Assets.xcassets/AppIcon.appiconset</string>
 
+	<!-- App Store Connect rejects an iPad-capable app without a launch screen (90475). There is no
+	     MauiSplashScreen (it would generate other art), so this plain system launch screen
+	     (iOS 14+, the minimum here is 15) stands in for a storyboard. -->
+	<key>UILaunchScreen</key>
+	<dict/>
+
 	<!-- The only encryption is HTTPS to download voice packs and, behind the grown-up gate, the free
 	     story list and the stories a grown-up picks (Slice 92), which is exempt; this answers App
 	     Store Connect's export-compliance question so TestFlight builds are not held at
