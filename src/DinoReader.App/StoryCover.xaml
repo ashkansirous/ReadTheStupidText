@@ -9,7 +9,7 @@
     <!-- A story's cover (mock gallery): 3/4, radius 16, flat colour with the title in Andika bold
          white, or the first page picture. The height follows the width via AspectRatioView. -->
     <local:AspectRatioView>
-    <Border BackgroundColor="{Binding CoverColour}" StrokeThickness="0">
+    <Border BackgroundColor="{Binding CoverFill}" StrokeThickness="0">
         <Border.StrokeShape>
             <RoundRectangle CornerRadius="16" />
         </Border.StrokeShape>
@@ -18,7 +18,9 @@
         </Border.Shadow>
         <Grid>
             <Image Source="{Binding CoverImagePath}" Aspect="AspectFill" IsVisible="{Binding HasImage}" />
-            <Label Text="{Binding Title}" IsVisible="{Binding ShowGeneratedCover}" FontFamily="AndikaBold" FontSize="18"
+            <Label Text="{Binding Title}" IsVisible="{Binding ShowRtlCoverTitle}" FontFamily="{Binding RtlCoverFont}" FontSize="18" FontAttributes="Bold"
+                   TextColor="#2b2540" LineHeight="1.35" HorizontalTextAlignment="Center" VerticalOptions="Center" Margin="12" FlowDirection="RightToLeft" />
+            <Label Text="{Binding Title}" IsVisible="{Binding ShowLatinCoverTitle}" FontFamily="AndikaBold" FontSize="18"
                    TextColor="White" LineHeight="1.2" HorizontalTextAlignment="Center" VerticalOptions="Center" Margin="12" />
         </Grid>
     </Border>

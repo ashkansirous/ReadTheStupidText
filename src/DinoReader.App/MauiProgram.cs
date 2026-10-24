@@ -20,6 +20,7 @@ public static class MauiProgram
 	{
 		// Before anything reads the culture (services, resources, the first page), including the UI thread's own.
 		UiCulture.Apply(UiCulture.Resolve(LanguageChoice.Preferred()));
+		TextFlowHandlers.Register();
 		var builder = MauiApp.CreateBuilder();
 		builder
 			.UseMauiApp<DinoApp>()

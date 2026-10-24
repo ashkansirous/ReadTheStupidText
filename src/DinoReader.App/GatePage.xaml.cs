@@ -29,10 +29,8 @@ public partial class GatePage : ContentPage
 	public GatePage(bool screenReaderOn)
 	{
 		InitializeComponent();
-		FlowDirection = UiFlow.ForCurrentCulture();
-		// The sum and the number pad read left to right in every language.
-		SumRow.FlowDirection = FlowDirection.LeftToRight;
-		KeyPad.FlowDirection = FlowDirection.LeftToRight;
+		// A modal page does not inherit the navigation page's direction: the sum and the number pad stay left to right.
+		FlowDirection = UiFlow.Screen;
 		HoldRing.Drawable = _ring;
 		_timer = Dispatcher.CreateTimer();
 		_timer.Interval = TickInterval;

@@ -99,7 +99,7 @@ public sealed class PageTextPage : ContentPage, IGrownUpPage
 		save.Clicked += async (_, _) => await _busy.RunAsync(SaveAsync);
 		return new Grid
 		{
-			Padding = UiFlow.Mirror(new Thickness(8, 10, 16, 10)),
+			Padding = new Thickness(8, 10, 16, 10),
 			ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)],
 			Children = { back, save.Column(2) },
 		};

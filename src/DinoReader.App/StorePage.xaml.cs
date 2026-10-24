@@ -35,8 +35,6 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 	/// <summary>Titles in Farsi and Arabic are set in Vazirmatn and run right to left, as the mock's Farsi row does.</summary>
 	public string TitleFont => DinoFonts.IsRightToLeft(Item.Language) ? DinoFonts.Persian : DinoFonts.Ui;
 
-	public FlowDirection TextFlow => DinoFonts.IsRightToLeft(Item.Language) ? FlowDirection.RightToLeft : UiFlow.ForCurrentCulture();
-
 	/// <summary>The language in its own name, then the length on the next line (omitted when the server gave none).</summary>
 	public string Detail => StoreText.Detail(Item);
 
@@ -130,7 +128,6 @@ public partial class StorePage : ContentPage, IGrownUpPage
 		InitializeComponent();
 		_client = client;
 		_mode = mode;
-		FlowDirection = UiFlow.ForCurrentCulture();
 		StoryList.ItemsSource = _rows;
 	}
 

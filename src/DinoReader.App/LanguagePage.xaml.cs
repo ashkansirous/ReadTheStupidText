@@ -88,7 +88,6 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 		_installer = installer;
 		_packs = packs;
 		_settings = settings;
-		FlowDirection = UiFlow.ForCurrentCulture();
 	}
 
 	protected override void OnAppearing()
