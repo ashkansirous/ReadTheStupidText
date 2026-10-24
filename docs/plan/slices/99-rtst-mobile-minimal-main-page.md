@@ -1,6 +1,6 @@
 # Slice 99 — RTST phone: a minimal main page and a Settings page
 
-*Planned 2026-10-24*, from the user's report: "I gave Read The Stupid Text to my dad and my wife's dad,
+*In progress (wave 2026-10-24), draft PR.* Planned 2026-10-24, from the user's report: "I gave Read The Stupid Text to my dad and my wife's dad,
 and they did not know what to do with it. The page is very crowded, and they didn't even see the add
 more images button. The main page should keep the minimal requirements: the text being read, two
 buttons that start a wizard for adding a new text, and a settings button for the language and the
