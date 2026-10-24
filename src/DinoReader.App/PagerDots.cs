@@ -24,6 +24,10 @@ public sealed class PagerDots : HorizontalStackLayout
 		SemanticProperties.SetDescription(this, string.Empty);
 	}
 
+	/// <summary>Whether the last <see cref="Show"/> had dots worth showing; a caller that hides the row for its layout restores
+	/// visibility from this, since <see cref="Show"/> does nothing when called again with the same facts.</summary>
+	public bool HasDots { get; private set; }
+
 	public void Show(int count, int current, ReadingTheme theme)
 	{
 		if (count == _count && current == _current && ReferenceEquals(theme, _theme))
@@ -33,8 +37,9 @@ public sealed class PagerDots : HorizontalStackLayout
 
 		(_count, _current, _theme) = (count, current, theme);
 		Children.Clear();
-		IsVisible = count > 1 && count <= MaxDots;
-		for (int i = 0; i < count && IsVisible; i++)
+		HasDots = count > 1 && count <= MaxDots;
+		IsVisible = HasDots;
+		for (int i = 0; i < count && HasDots; i++)
 		{
 			Children.Add(Dot(i == current, theme));
 		}

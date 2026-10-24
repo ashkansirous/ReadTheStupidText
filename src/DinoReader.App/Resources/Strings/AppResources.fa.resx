@@ -148,6 +148,16 @@
   <data name="Wizard_Reading" xml:space="preserve"><value>در حال خواندن صفحه {0} از {1}</value></data>
   <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>برخی صفحه‌ها خوانده نشدند</value></data>
   <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>خواندن {0} صفحه ممکن نشد. این صفحه‌ها به‌صورت تصویر و بدون متن نگه داشته می‌شوند.</value></data>
+  <data name="Pictures_NoneTitle" xml:space="preserve"><value>این فایل کلمه دارد اما تصویر ندارد</value></data>
+  <data name="Pictures_NoneBody" xml:space="preserve"><value>اگر خواستید برای هر صفحه یک تصویر اضافه کنید. صفحه‌های بدون تصویر به‌صورت متن خوانده می‌شوند.</value></data>
+  <data name="Pictures_PickAll" xml:space="preserve"><value>انتخاب تصویر برای همه صفحه‌ها</value></data>
+  <data name="Pictures_PageN" xml:space="preserve"><value>صفحه {0}</value></data>
+  <data name="Pictures_Change" xml:space="preserve"><value>تغییر</value></data>
+  <data name="Pictures_Add" xml:space="preserve"><value>افزودن تصویر</value></data>
+  <data name="Pictures_FoundEvery" xml:space="preserve"><value>در همه صفحه‌ها تصویر پیدا شد</value></data>
+  <data name="Pictures_Subtitle_Other" xml:space="preserve"><value>{0} · {1} صفحه</value></data>
+  <data name="Pictures_Subtitle_One" xml:space="preserve"><value>{0} · {1} صفحه</value></data>
+  <data name="Pictures_NextCover" xml:space="preserve"><value>بعدی: جلد</value></data>
   <data name="Wizard_CoverHint" xml:space="preserve"><value>یک صفحه، عکس یا رنگ را برای جلد انتخاب کنید.</value></data>
   <data name="Wizard_NeedTextTitle" xml:space="preserve"><value>هنوز چیزی برای خواندن نیست</value></data>
   <data name="Wizard_NeedTextBody" xml:space="preserve"><value>دست‌کم به یک صفحه متن اضافه کنید و ذخیره کنید.</value></data>

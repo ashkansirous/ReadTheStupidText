@@ -24,6 +24,8 @@ internal static class StarterBuilder
     private const string LinesFile = "lines.json";
     private const string PiecesSuffix = ".pieces.json";
     private const string StoryLanguage = "en";
+    private const string PicturesDirectory = "pictures";
+    private const string PictureExtension = ".jpg";
 
     public static readonly DateTimeOffset Created = new(2026, 10, 22, 0, 0, 0, TimeSpan.Zero);
 
@@ -46,6 +48,46 @@ internal static class StarterBuilder
 
     public static string TranslationsFolder() =>
         Path.Combine(RepoRoot(), "tests", "DinoReader.Tests", "Starters", "translations");
+
+    /// <summary><c>Starters/&lt;stem&gt;/pictures</c>: the page pictures (<c>1.jpg</c> ... <c>N.jpg</c>) that turn a text starter into a picture + text book (Slice 98).</summary>
+    public static string PicturesFolder(string stem) =>
+        Path.Combine(RepoRoot(), "tests", "DinoReader.Tests", "Starters", stem, PicturesDirectory);
+
+    /// <summary>The starter's page pictures in natural file-name order, or none when it has no pictures folder.</summary>
+    public static IReadOnlyList<string> PictureFilesOf(string stem)
+    {
+        string folder = PicturesFolder(stem);
+        return Directory.Exists(folder) ? PictureTextBook.SortNaturally(Directory.GetFiles(folder, "*" + PictureExtension)) : [];
+    }
+
+    /// <summary>The story with picture <i>n</i> on page <i>n</i> (a picture + text book). No pictures leaves it as it is; a different count fails,
+    /// so a page break moved in <see cref="StarterTexts"/> cannot silently shift every picture. The files are copied as they are (JPEG), since
+    /// the test project has no image encoder to re-encode them at quality 85.</summary>
+    public static Story WithPictures(Story story, IReadOnlyList<string> pictures)
+    {
+        if (pictures.Count == 0)
+        {
+            return story;
+        }
+
+        if (pictures.Count != story.Pages.Count)
+        {
+            throw new InvalidOperationException($"\"{story.Title}\" has {story.Pages.Count} pages but {pictures.Count} pictures.");
+        }
+
+        IReadOnlyList<StoryPage> pages = story.Pages.Select((p, i) => p with { ImageFile = PictureName(i) }).ToList();
+        return story with { Pages = pages };
+    }
+
+    public static string PictureName(int pageIndex) => $"page-{pageIndex + 1}{PictureExtension}";
+
+    private static void CopyPictures(Story story, IReadOnlyList<string> pictures, FileStoryLibrary library)
+    {
+        for (int i = 0; i < pictures.Count; i++)
+        {
+            File.Copy(pictures[i], library.TryResolveFile(story.Id, PictureName(i))!, overwrite: true);
+        }
+    }
 
     public static string GoodEnoughFolder() =>
         Path.Combine(RepoRoot(), "tests", "DinoReader.Tests", "Starters", "good-enough");
@@ -83,8 +125,10 @@ internal static class StarterBuilder
         {
             foreach (var (id, title, text, colour, fileName) in Starters)
             {
-                Story story = WithTranslations(Build(id, title, text, colour), fileName);
+                IReadOnlyList<string> pictures = PictureFilesOf(Path.GetFileNameWithoutExtension(fileName));
+                Story story = WithTranslations(WithPictures(Build(id, title, text, colour), pictures), fileName);
                 await library.AddAsync(story);
+                CopyPictures(story, pictures, library);
                 await WriteOneAsync(story, Path.Combine(StartersFolder(), fileName), library);
             }
 

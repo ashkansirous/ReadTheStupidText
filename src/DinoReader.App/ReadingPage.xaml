@@ -12,7 +12,7 @@
     <!-- Reading screen (mock screens 3, 4, 5 and 12): back, grown-up lock and the text / picture
          switch on the top bar, the story title on its own row, the page card, page dots and the
          transport row. Colours are applied from ReadingTheme (daytime or bedtime). -->
-    <Grid RowDefinitions="Auto,*,Auto,Auto,Auto">
+    <Grid x:Name="Root" RowDefinitions="Auto,*,Auto,Auto,Auto">
         <Grid x:Name="Header" ColumnDefinitions="Auto,*,Auto,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="2"
               Padding="8,8,12,4">
             <Border x:Name="BackButton" WidthRequest="44" HeightRequest="44" BackgroundColor="Transparent" StrokeThickness="0"
@@ -38,7 +38,7 @@
                    LineHeight="1.25" SemanticProperties.HeadingLevel="Level1" />
         </Grid>
 
-        <Grid Grid.Row="1" Margin="14,6,14,0">
+        <Grid x:Name="SurfaceHost" Grid.Row="1" Margin="14,6,14,0">
             <local:ReadingSurface x:Name="Surface" PageSwiped="OnPageSwiped" SentenceTapped="OnSentenceTapped"
                                   LaidOut="OnLaidOut" />
             <Border x:Name="WanderPill" IsVisible="False" HorizontalOptions="Center" VerticalOptions="Start" Margin="0,18,0,0"
@@ -68,7 +68,7 @@
         </Label>
 
         <local:PagerDots x:Name="Dots" Grid.Row="3" />
-        <local:TransportRow x:Name="Transport" Grid.Row="4" PreviousTapped="OnPreviousTapped" PlayTapped="OnPlayTapped"
+        <local:TransportRow x:Name="Transport" Grid.Row="4" VerticalOptions="End" PreviousTapped="OnPreviousTapped" PlayTapped="OnPlayTapped"
                             NextTapped="OnNextTapped" />
     </Grid>
 </ContentPage>

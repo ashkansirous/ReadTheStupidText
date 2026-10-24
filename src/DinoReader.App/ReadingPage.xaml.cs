@@ -15,6 +15,9 @@ namespace DinoReader;
 /// </summary>
 public partial class ReadingPage : ContentPage
 {
+	private const double CompactTitleSize = 17;
+	private const double FullTitleSize = 20;
+
 	private readonly ReadingSession _session;
 	private readonly IStoryLibrary _library;
 	private readonly GrownUpGate _gate;
@@ -29,6 +32,9 @@ public partial class ReadingPage : ContentPage
 	private ReadingTheme _theme = ReadingTheme.For(false);
 	private bool _visible;
 	private bool _stoppedDuringGate;
+	private const double FullHeaderRowSpacing = 2;
+	private bool _compactHeader;
+	private bool _sideControls;
 
 	public ReadingPage(ReadingSession session, IStoryLibrary library, GrownUpGate gate, IServiceProvider services,
 		VoicePackInstaller installer, IVoiceModelService model, SpokenLanguage spoken)
@@ -62,6 +68,7 @@ public partial class ReadingPage : ContentPage
 			DinoFonts.IsRightToLeft(story.Language), ScansOf(story));
 		Surface.Show(content, story.Mode, _theme);
 		ApplyTheme();
+		UpdateHeaderLayout(Width, Height);
 		if (_sentences.Count > 0)
 		{
 			_session.MoveTo(0);
@@ -71,6 +78,57 @@ public partial class ReadingPage : ContentPage
 	// A story with pictures draws its real pages in picture mode; one without keeps the generated pages.
 	private ScanSource? ScansOf(Story story) =>
 		story.HasPictures ? new ScanSource(story.Pages, file => _library.TryResolveFile(story.Id, file)) : null;
+
+	// Slice 98 (mock screen 35): a picture + text book held sideways has the title on the top bar beside the back button
+	// (one line, ellipsis) and no page dots, to save height.
+	protected override void OnSizeAllocated(double width, double height)
+	{
+		base.OnSizeAllocated(width, height);
+		UpdateHeaderLayout(width, height);
+	}
+
+	private void UpdateHeaderLayout(double width, double height)
+	{
+		bool compact = width > 0 && width > height && _story is { } story && PictureTextBook.IsPictureTextBook(story.Pages);
+		bool sideControls = compact && Surface.Mode == ReadingMode.Picture;
+		if (compact != _compactHeader || sideControls != _sideControls)
+		{
+			_compactHeader = compact;
+			_sideControls = sideControls;
+			ApplyHeaderLayout();
+			ApplyTransportLayout();
+			RenderChrome();
+		}
+	}
+
+	// Mock screen 35: in picture mode the transport row sits under the text half on the right, and the page card runs the
+	// full height (the text card leaves room for the controls). Otherwise the row is centred below the page as usual.
+	private void ApplyTransportLayout()
+	{
+		Root.ColumnDefinitions = _sideControls
+			? [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Star)]
+			: [];
+		Grid.SetColumnSpan(Header, _sideControls ? 2 : 1);
+		Grid.SetColumnSpan(SurfaceHost, _sideControls ? 2 : 1);
+		Grid.SetRowSpan(SurfaceHost, _sideControls ? 4 : 1);
+		Grid.SetColumn(Transport, _sideControls ? 1 : 0);
+		Transport.Compact = _sideControls;
+		SurfaceHost.Margin = _sideControls ? new Thickness(14, 6, 14, 8) : new Thickness(14, 6, 14, 0);
+	}
+
+	private void ApplyHeaderLayout()
+	{
+		Grid.SetRow(TitleLabel, _compactHeader ? 0 : 1);
+		Grid.SetColumn(TitleLabel, _compactHeader ? 1 : 0);
+		Grid.SetColumnSpan(TitleLabel, _compactHeader ? 1 : 4);
+		TitleLabel.FontSize = _compactHeader ? CompactTitleSize : FullTitleSize;
+		TitleLabel.MaxLines = _compactHeader ? 1 : -1;
+		TitleLabel.LineBreakMode = _compactHeader ? LineBreakMode.TailTruncation : LineBreakMode.WordWrap;
+		TitleLabel.VerticalOptions = _compactHeader ? LayoutOptions.Center : LayoutOptions.Fill;
+		// The title shares row 0 when compact, so the second row and the gap before it must not take any height.
+		Header.RowDefinitions[1].Height = _compactHeader ? new GridLength(0) : GridLength.Auto;
+		Header.RowSpacing = _compactHeader ? 0 : FullHeaderRowSpacing;
+	}
 
 	protected override void OnAppearing()
 	{
@@ -196,6 +254,7 @@ public partial class ReadingPage : ContentPage
 		SessionState state = _session.State;
 		bool wandering = _follower.IsWandering && state != SessionState.Idle;
 		Dots.Show(Surface.PageCount, Surface.CurrentPage, _theme);
+		Dots.IsVisible = Dots.HasDots && !_compactHeader;
 		Transport.Apply(state, wandering, _theme);
 		WanderPill.IsVisible = wandering;
 		PillLabel.Text = ReadingText.ReadingPage(_follower.ReadingPage + 1);
@@ -204,6 +263,7 @@ public partial class ReadingPage : ContentPage
 	private void OnModeChanged(object? sender, ReadingMode mode)
 	{
 		Surface.SetMode(mode);
+		UpdateHeaderLayout(Width, Height);
 		_ = SaveModeAsync(mode);
 	}
 
