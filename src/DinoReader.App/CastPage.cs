@@ -53,7 +53,6 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		_story = story;
 		_persist = persist;
 		_subtitle.Text = story.Title;
-		_root.FlowDirection = UiFlow.ForCurrentCulture();
 	}
 
 	protected override async void OnAppearing()
@@ -128,7 +127,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		SemanticProperties.SetHeadingLevel(title, SemanticHeadingLevel.Level1);
 		var header = new Grid
 		{
-			Padding = UiFlow.Mirror(new Thickness(6, 8, 14, 8)),
+			Padding = new Thickness(6, 8, 14, 8),
 			ColumnSpacing = 6,
 			ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star)],
 		};

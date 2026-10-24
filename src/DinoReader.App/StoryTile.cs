@@ -11,6 +11,26 @@ public sealed record StoryTile(Story Story, Color CoverColour, string? CoverImag
 
 	public bool ShowGeneratedCover => CoverImagePath is null;
 
+	private bool TitleIsRightToLeft => TextDirection.StartsRightToLeft(Title);
+
+	/// <summary>Latin generated covers: white Andika on the saturated colour.</summary>
+	public bool ShowLatinCoverTitle => ShowGeneratedCover && !TitleIsRightToLeft;
+
+	/// <summary>Farsi and Arabic generated covers: dark Vazirmatn on a pale colour (Slice 96 mock).</summary>
+	public bool ShowRtlCoverTitle => ShowGeneratedCover && TitleIsRightToLeft;
+
+	/// <summary>The chosen colour, as a pale tint when a generated cover carries dark Farsi or Arabic text.</summary>
+	public Color CoverFill => TitleIsRightToLeft && ShowGeneratedCover ? PaleTint(CoverColour) : CoverColour;
+
+	public string RtlCoverFont => DinoFonts.Persian;
+
+	private const float TintTowardsWhite = 0.7f;
+
+	private static Color PaleTint(Color colour) => new(
+		colour.Red + (1 - colour.Red) * TintTowardsWhite,
+		colour.Green + (1 - colour.Green) * TintTowardsWhite,
+		colour.Blue + (1 - colour.Blue) * TintTowardsWhite);
+
 	public string EditHint => GalleryText.EditStory(Title);
 
 	public string CastHint => GalleryText.CastStory(Title);

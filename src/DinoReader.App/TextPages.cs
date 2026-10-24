@@ -76,6 +76,7 @@ public sealed class TextPages(string text, IReadOnlyList<SentenceSpan> sentences
 			AbsoluteLayout.SetLayoutBounds(label, new Rect(
 				ReadingMetrics.TextPadding, ReadingMetrics.TextPadding + i * ReadingMetrics.TextLineHeight,
 				_textWidth, ReadingMetrics.TextLineHeight));
+			label.FlowDirection = rightToLeft ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
 			_labels.Add(label);
 			layers.Text.Children.Add(label);
 		}

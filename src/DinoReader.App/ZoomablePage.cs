@@ -49,8 +49,6 @@ public sealed class ZoomablePage
 		inner.Children.Add(Picture(path, fit));
 		var container = new AbsoluteLayout
 		{
-			// The picture is the real page: its own left-to-right frame, whatever the app's direction.
-			FlowDirection = FlowDirection.LeftToRight,
 			WidthRequest = fit.Width,
 			HeightRequest = fit.Height,
 			IsClippedToBounds = true,
