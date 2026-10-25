@@ -29,6 +29,18 @@ so. Research and code check: [2026-10-25-dino-usage-insights](../notes/2026-10-2
 - The privacy page, `PRIVACY.md`, `STORE.md`, the iOS privacy manifest and the store forms change in
   the same release that first sends events.
 
+#### Design (Dino Reader Batch 26-28 mock, section 26-28, added 2026-10-25)
+
+Frames 62 (counts switch) and 63 (first-run line), lines 76 and 96 of `docs/design/dino-reader/Dino Reader Batch 26-28.dc.html`. The mock agrees with the plan. Frame 62's first card (App language, Narrator) is filler.
+
+- **Counts switch (frame 62, `SettingsRows`).** Own white card (radius 18, min 64px), title "Help make Dino better" (15px, 600), helper "Sends counts like "a store book was finished". No names, no ids, nothing you typed." (12.5px, `#5a5470`). Switch 52x32, on state `#5B57E8` with a 26px white knob on the right. On by default (Decision 141); off sends nothing. Placement is a proposal, pending a grown-up settings mock.
+- **First-run line (frame 63, `FirstRunPage`).** Frame 18 "Ready to read!" plus one non-tappable line above "Set up the stories": "Dino counts which books get read, with no names or ids. You can turn this off in Settings." (12.5px, `#5a5470`, centred, max 290px, pushed to the bottom by `margin-top:auto`).
+
+**New strings (all Dino locales):** the switch title, its helper, the first-run line.
+
+**Open point: First-run line wording.** The plan says "one line in the first-run screens" (plural). The mock puts it only on the final "ready" screen. **Default:** only the ready screen.
+
+
 ## Work
 
 - [ ] Smallest end to end: `book opened` and `book finished` from the reader -> batch -> Worker ->

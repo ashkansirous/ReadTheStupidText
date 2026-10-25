@@ -22,6 +22,12 @@ roster has one animal character ("Cheeky Piglet"). Nothing guesses an animal fro
 
 ## Decisions (Decision 132, from the user's message; defaults chosen where it was silent)
 
+> **Changed 2026-10-25 by the Batch 26-28 mock (frame 59), built in Slice 136:** the cast page has no
+> "Animal" line or sheet. A character's animal comes from the storyteller character it is cast as (Cheeky
+> Piglet = pig, Big Bad Wolf = wolf, Brave Knight = none), and sounds follow it. `CastMember.Animal`, the
+> `story.json` `animal` field, `AnimalGuess` and the build-time animals only pick the first character when a
+> book is cast or recast. The "grown-up can change it" bullet below is replaced by changing the character.
+
 - **Each cast character can carry an animal.** `CastMember.Animal`, stored as the optional `story.json` cast
   field `animal` (an `AnimalKind` name, or `none` for "not an animal"; absent = guess). It travels in
   `.dino` and backups, survives recasts (`StoryCast.ToMembers`, `CastEditor.KeepExplicitPicks`, per-language
@@ -61,7 +67,7 @@ roster has one animal character ("Cheeky Piglet"). Nothing guesses an animal fro
 - [x] 5. Store and starter specs name each character's animal; rebuild the packages; bump the starter content
   version; re-upload the changed store stories with `tools/upload-store-story.ps1` as a new `story-v<n+1>`.
   Built and tested; the upload is not done (needs `tools/upload-store-story.ps1` for billy-goats-gruff and peter-rabbit at `story-v4`; the pigs starter is bundled, its store copy is `three-little-pigs`).
-- [x] 6. The cast page "Animal" line and sheet, with strings in all 14 `.resx` files; rules in the Core and App `CLAUDE.md` files.
+- [x] 6. ~~The cast page "Animal" line and sheet~~ **replaced by Slice 136** (the mock drops them), with strings in all 14 `.resx` files; rules in the Core and App `CLAUDE.md` files.
 
 ## Verification
 
@@ -70,7 +76,7 @@ roster has one animal character ("Cheeky Piglet"). Nothing guesses an animal fro
   Wolf is cast as the wolf. On the cast page Pip shows "Pig"; setting Pip to "Not an animal" stops Pip's sounds and
   recasts the voice. A user-added book with "Pip the pig" in the text gets the guess.
 
-*Changed while building:* `story.json` cast field `Animal` plus `NotAnimal`. `AnimalSounds.Resolve` order is stored, name, text guess (`AnimalGuess`, `AnimalGuessWords`; strict: adjacent name only, group lists next to a plural animal word, plural-only words never tag one name; full cue lists for en/fr/es/pt/nl/da/sv/nb, punctuation-only elsewhere). Rabbit (silent) and Bear kinds in 14 languages. Eight animal roster characters (lamb, puppy, kitten, duckling, bear cub, big bear, wolf, ewe) plus the existing piglet in all 14 rosters (roster-size test cap 30); es/pt bear cub stays Normal (3 voices). Non-animals avoid animal characters while a plain one is free. Cast row "Animal" line plus `CastAnimalPicker`. Built books' animals live in `tests/DinoReader.Tests/StarterAnimals.cs`. Pigs starter rebuilt as version 5 on top of #336's retold text. `StarterUpdate` fills animals into kept casts and `StarterStories.ReplaceAsync` recasts un-picked voices (`StoryVoicing.RecastCharacters`, others held for that recast only, failure logged, copy kept). Store specs billy-goats-gruff and peter-rabbit at Version 4. Merged origin/main mid-slice (#336, #338).
+*Changed while building:* `story.json` cast field `Animal` plus `NotAnimal`. `AnimalSounds.Resolve` order is stored, name, text guess (`AnimalGuess`, `AnimalGuessWords`; strict: adjacent name only, group lists next to a plural animal word, plural-only words never tag one name; full cue lists for en/fr/es/pt/nl/da/sv/nb, punctuation-only elsewhere). Rabbit (silent) and Bear kinds in 14 languages. Eight animal roster characters (lamb, puppy, kitten, duckling, bear cub, big bear, wolf, ewe) plus the existing piglet in all 14 rosters (roster-size test cap 30); es/pt bear cub stays Normal (3 voices). Non-animals avoid animal characters while a plain one is free. Cast row "Animal" line plus `CastAnimalPicker` (removed again by Slice 136: the picked character names the animal; docs/plan/slices/136-dino-animal-from-character.md). Built books' animals live in `tests/DinoReader.Tests/StarterAnimals.cs`. Pigs starter rebuilt as version 5 on top of #336's retold text. `StarterUpdate` fills animals into kept casts and `StarterStories.ReplaceAsync` recasts un-picked voices (`StoryVoicing.RecastCharacters`, others held for that recast only, failure logged, copy kept). Store specs billy-goats-gruff and peter-rabbit at Version 4. Merged origin/main mid-slice (#336, #338).
 
 *From review:* high findings 1-8 and 10 applied, 9 accepted (Slice 124 limit); medium 1-8 applied, 9 and 10 skipped.
 
