@@ -22,12 +22,16 @@ public static class StoryCast
                 FlavourOf(cast, stored, x.Character, rules)) with { Animal = AnimalOf(stored, animals, x.Character.Id), NotAnimal = NotAnimalIn(stored, x.Character.Id) })
             .ToList();
 
-    private static AnimalKind? AnimalOf(IReadOnlyList<CastMember>? stored, IReadOnlyDictionary<string, AnimalKind>? animals, string characterId) =>
-        stored?.FirstOrDefault(m => m.CharacterId == characterId)?.Animal
-        ?? (animals is not null && animals.TryGetValue(characterId, out AnimalKind kind) ? kind : null);
+    private static AnimalKind? AnimalOf(IReadOnlyList<CastMember>? stored, IReadOnlyDictionary<string, AnimalKind>? animals, string characterId)
+    {
+        return stored?.FirstOrDefault(m => m.CharacterId == characterId)?.Animal
+            ?? (animals is not null && animals.TryGetValue(characterId, out AnimalKind kind) ? kind : null);
+    }
 
-    private static bool NotAnimalIn(IReadOnlyList<CastMember>? stored, string characterId) =>
-        stored?.Any(m => m.CharacterId == characterId && m.NotAnimal) == true;
+    private static bool NotAnimalIn(IReadOnlyList<CastMember>? stored, string characterId)
+    {
+        return stored?.Any(m => m.CharacterId == characterId && m.NotAnimal) == true;
+    }
 
     // The grown-up's pick first, but with a roster cast (Slice 116) only while the character still has the voice they picked it with: a voice that was dropped and recast
     // takes the flavour of the character the caster gave, not the old pick's. A voice-only cast has no flavours of its own, so the pick stays. Else a guess from the name.

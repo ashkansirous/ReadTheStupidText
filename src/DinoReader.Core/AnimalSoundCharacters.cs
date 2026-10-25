@@ -54,11 +54,16 @@ public static class AnimalCharacters
     public static IReadOnlyCollection<string> RosterIds => ByRosterId.Keys;
 
     /// <summary>The animal a roster character plays and whether it is a young one, or null for a character that is not an animal.</summary>
-    public static (IReadOnlyList<AnimalKind> Kinds, bool Young)? Of(string rosterId) =>
-        ByRosterId.TryGetValue(rosterId, out Animal? animal) ? (animal.Kinds, animal.Young) : null;
+    public static (IReadOnlyList<AnimalKind> Kinds, bool Young)? Of(string rosterId)
+    {
+        return ByRosterId.TryGetValue(rosterId, out Animal? animal) ? (animal.Kinds, animal.Young) : null;
+    }
 
     /// <summary>The hint for a story character known to be <paramref name="kind"/>: young or grown when its name says so.</summary>
-    public static AnimalHint HintFor(AnimalKind kind, string name, string? language) => new(kind, AgeOf(name, language));
+    public static AnimalHint HintFor(AnimalKind kind, string name, string? language)
+    {
+        return new AnimalHint(kind, AgeOf(name, language));
+    }
 
     /// <summary>Whether the name says the character is young (true), grown (false) or neither (null). Grown words ("Mrs.", "Papa", "old") come first, then the flavour the name guesses.</summary>
     public static bool? AgeOf(string name, string? language)
@@ -93,7 +98,10 @@ public static class AnimalCharacters
         return animal.Young && WantsYoung(hint) ? AnimalFit.Young : AnimalFit.None;
     }
 
-    private static bool WantsYoung(AnimalHint hint) => hint.Young ?? YoungByDefault.Contains(hint.Kind);
+    private static bool WantsYoung(AnimalHint hint)
+    {
+        return hint.Young ?? YoungByDefault.Contains(hint.Kind);
+    }
 
     // The animal's own characters of the age wanted. A name that states the age gets only that age (no grown pig: a Mother Pig is cast like any mother); a name that says
     // nothing gets the animal's usual age, or whichever the animal has.

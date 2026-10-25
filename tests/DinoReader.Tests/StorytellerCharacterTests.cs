@@ -134,7 +134,9 @@ public partial class StorytellerCharacterTests
         var roster = CharacterRoster.For("en");
         var choices = CharacterRoster.Choices(CharacterRoster.Speakers("en"), "kokoro:af_heart");
 
-        VoiceCast cast = CastCharacters.Cast(characters, choices, roster, "kokoro:af_heart", Guess);
+        // Both are pigs (an animal character is only for an animal story character, Slice 125).
+        VoiceCast cast = CastCharacters.Cast(
+            characters, choices, roster, "kokoro:af_heart", Guess, animalOf: c => AnimalCharacters.HintFor(AnimalKind.Pig, c.Name, "en"));
 
         Assert.Equal("kokoro:am_puck", cast.VoiceFor("pig"));
         Assert.Equal(VoiceFlavour.Small, cast.Flavours!["pig"]);
@@ -246,7 +248,9 @@ public partial class StorytellerCharacterTests
         var choices = CharacterRoster.Choices(roster.Where(c => c.Kind == CharacterKind.Speaker).ToList(), narrator);
         var characters = new[] { C("a", "小兔子", Gender.Unknown, 5), C("b", "小老鼠", Gender.Unknown, 4) };
 
-        VoiceCast cast = CastCharacters.Cast(characters, choices, roster, narrator, c => FlavourGuess.Guess(c.Name, LanguageRules.For(ChineseCode)));
+        VoiceCast cast = CastCharacters.Cast(
+            characters, choices, roster, narrator, c => FlavourGuess.Guess(c.Name, LanguageRules.For(ChineseCode)),
+            animalOf: c => AnimalCharacters.HintFor(c.Id == "a" ? AnimalKind.Rabbit : AnimalKind.Mouse, c.Name, ChineseCode));
 
         Assert.Equal(VoiceFlavour.Small, cast.Flavours!["a"]);
         Assert.Equal(VoiceFlavour.Squeaky, cast.Flavours["b"]);

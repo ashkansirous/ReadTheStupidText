@@ -12,7 +12,7 @@ namespace DinoReader;
 /// version (<see cref="StoryPackageManifest.Version"/>): an installed starter recorded at a lower version is replaced by the bundled one on launch,
 /// keeping the grown-up's cast and switches (<see cref="StarterUpdate"/>, Decision 130); a deleted starter is not brought back.
 /// </summary>
-public sealed class StarterStories(IStoryLibrary library)
+public sealed class StarterStories(IStoryLibrary library, StoryVoicing voicing)
 {
 	private const string InstalledKeyPrefix = "dino.starter.installed.";
 
@@ -194,7 +194,7 @@ public sealed class StarterStories(IStoryLibrary library)
 		try
 		{
 			IReadOnlyList<StarterUpdate.RecordingMove> copied = await CopyRecordingsAsync(stored, fresh, StarterUpdate.RecordingMoves(stored, fresh));
-			Story refreshed = StarterUpdate.Refresh(stored, fresh, copied);
+			Story refreshed = await WithAnimalVoicesAsync(stored, StarterUpdate.Refresh(stored, fresh, copied));
 			await library.UpdateAsync(await WithCoverPhotoAsync(stored, fresh, refreshed));
 		}
 		catch
@@ -204,6 +204,30 @@ public sealed class StarterStories(IStoryLibrary library)
 		}
 
 		await library.DeleteAsync(stored.Id);
+	}
+
+	// A kept character that just gained an animal gets the animal's voice, the way the cast screen picks it (a voice the grown-up chose by hand stays; a language with no voices yet is left).
+	// The voices are a nicety: if picking them fails the refreshed story is kept without them, never dropped.
+	private async Task<Story> WithAnimalVoicesAsync(Story stored, Story refreshed)
+	{
+		try
+		{
+			foreach (var group in StarterUpdate.AnimalVoicesToRecast(stored, refreshed).GroupBy(r => r.Language))
+			{
+				if (voicing.VoicesFor(group.Key).Count > 0)
+				{
+					IReadOnlyList<CastMember> cast = await voicing.RecastCharactersAsync(
+						refreshed, group.Key, refreshed.CastIn(group.Key), group.Select(r => r.CharacterId).ToList());
+					refreshed = refreshed.WithCastIn(group.Key, cast);
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader could not pick the animal voices of the refreshed starter {stored.SourceId}: {ex}");
+		}
+
+		return refreshed;
 	}
 
 	// A gallery photo cover the grown-up chose is copied into the refreshed story's folder under a new name; a missing file falls back to the bundled cover.

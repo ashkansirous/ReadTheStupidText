@@ -119,29 +119,35 @@ public static class CastCharacters
             _voiceUses[voiceId] = _voiceUses.GetValueOrDefault(voiceId) + 1;
         }
 
-        public StorytellerCharacter? Pick(Character character, VoiceFlavour wanted) =>
-            choices
-                .Select((c, order) => (Character: c, Order: order, Cost: Cost(c, character, wanted)))
+        public StorytellerCharacter? Pick(Character character, VoiceFlavour wanted)
+        {
+            AnimalHint? hint = animalOf?.Invoke(character);
+            // A story character that is no animal keeps off the animal characters only while a plain one is still free: on a small roster it takes what there is, as before Slice 125.
+            bool plainFree = hint is null && choices.Any(c => AnimalCharacters.Of(c.Id) is null && !_used.Contains(c.Id));
+            return choices
+                .Select((c, order) => (Character: c, Order: order, Cost: Cost(c, character, wanted, hint, plainFree)))
                 .OrderBy(x => x.Cost)
                 .ThenBy(x => x.Order)
                 .Select(x => x.Character)
                 .FirstOrDefault();
+        }
 
-        private int Cost(StorytellerCharacter candidate, Character character, VoiceFlavour wanted)
+        private int Cost(StorytellerCharacter candidate, Character character, VoiceFlavour wanted, AnimalHint? hint, bool plainFree)
         {
             int gender = CharacterRoster.GenderMisfit(candidate.Gender, character.Gender);
-            int animal = AnimalCost(candidate, animalOf?.Invoke(character), ref gender);
+            int animal = AnimalCost(candidate, hint, plainFree, ref gender);
             int cost = CharacterRoster.FlavourDistance(candidate.Flavour, wanted) + animal + gender;
             cost += _used.Contains(candidate.Id) ? UsedAlready : 0;
             return cost + (_voiceUses.GetValueOrDefault(candidate.VoiceId) * VoiceUsedAlready);
         }
 
         // An animal story character prefers its own animal character (the voice's gender matters little for an animal), then another young one, over a plain character.
-        private static int AnimalCost(StorytellerCharacter candidate, AnimalHint? hint, ref int gender)
+        private static int AnimalCost(StorytellerCharacter candidate, AnimalHint? hint, bool plainFree, ref int gender)
         {
             if (hint is null)
             {
-                return 0;
+                // A story character that is no animal does not take an animal character either, which would leave a real animal without its own.
+                return plainFree && AnimalCharacters.Of(candidate.Id) is not null ? NotAnAnimalCharacter : 0;
             }
 
             switch (AnimalCharacters.FitOf(candidate, hint))

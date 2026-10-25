@@ -35,6 +35,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	private bool _wordsStoredOffAtOpen;
 	private Func<Story, Task>? _persist;
 	private AttributionResult? _resolved;
+	private (Story? Story, AttributionResult Resolved, string Language, IReadOnlyDictionary<string, AnimalKind> Animals)? _animalCache;
 	private string _castLanguage = string.Empty;
 	private readonly VoicePreview _preview;
 	private bool _returningFromNarrator;
@@ -279,8 +280,23 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	}
 
 	// What each character is (Slice 125): the stored animal, then its name, then a guess from the story text.
-	private IReadOnlyDictionary<string, AnimalKind> Animals() =>
-		_resolved is null ? new Dictionary<string, AnimalKind>() : AnimalSounds.Resolve(_resolved.Characters, _story!.Language, _story.CastIn(_castLanguage), _story.Text);
+	// Worked out once per story and cast (the story, the resolved cast and the language are replaced, never changed, when anything changes), not on every render: the guess reads the whole book.
+	private IReadOnlyDictionary<string, AnimalKind> Animals()
+	{
+		if (_resolved is null)
+		{
+			return new Dictionary<string, AnimalKind>();
+		}
+
+		if (_animalCache is { } cached && ReferenceEquals(cached.Story, _story) && ReferenceEquals(cached.Resolved, _resolved) && cached.Language == _castLanguage)
+		{
+			return cached.Animals;
+		}
+
+		var animals = AnimalSounds.Resolve(_resolved.Characters, _story!.Language, _story.CastIn(_castLanguage), _story.Text);
+		_animalCache = (_story, _resolved, _castLanguage, animals);
+		return animals;
+	}
 
 	// Animal sounds, then (for a picture + text book) the words switch, in one card (Slice 124).
 	private View SwitchesCard()
@@ -292,7 +308,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	// The per-story switch is saved with the story (Slice 117); a story with no sounding animal shows it dimmed and keeps the value.
 	private View AnimalSoundsRow()
 	{
-		bool hasAnimals = _resolved is not null && AnimalSounds.AnimalsIn(_resolved.Characters, _story!.Language, _story.CastIn(_castLanguage), _story.Text).Count > 0;
+		bool hasAnimals = Animals().Any(a => AnimalSounds.SoundOf(a.Value, _story!.Language) is not null);
 		return CastRows.AnimalSoundsRow(hasAnimals, _story!.AnimalSoundsOn, on => _ = _busy.RunAsync(() => SetAnimalSoundsAsync(on)));
 	}
 

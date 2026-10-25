@@ -161,6 +161,67 @@ public class AnimalCharacterTests
     }
 
     [Theory]
+    [InlineData("The sheep grazed in the field. Jack and Jill went up the hill.")]
+    [InlineData("The pigs saw Jack and Jill.")]
+    [InlineData("The pigs ran. They saw Jack and Jill.")]
+    [InlineData("The wolf chased Jack.")]
+    [InlineData("Jack loves cats.")]
+    [InlineData("Jack milked cows.")]
+    [InlineData("Jack has been busy.")]
+    [InlineData("Jack and Jill were afraid of the pigs.")]
+    public void A_verb_or_a_far_animal_word_does_not_make_a_person_an_animal(string text)
+    {
+        var characters = new[] { C("jack", "Jack"), C("jill", "Jill") };
+
+        Assert.Empty(AnimalGuess.Guess(characters, text, "en"));
+    }
+
+    [Fact]
+    public void An_animal_that_belongs_to_the_name_before_it_is_not_given_to_the_next_name()
+    {
+        var found = AnimalGuess.Guess([C("pip", "Pip"), C("pop", "Pop")], "Pip the pig and Pop the cow lived there.", "en");
+
+        Assert.Equal(AnimalKind.Pig, found["pip"]);
+        Assert.Equal(AnimalKind.Cow, found["pop"]);
+    }
+
+    [Theory]
+    [InlineData("Three little sheep lived in a meadow. They were called Baa, Bo and Boo.", AnimalKind.Sheep)]
+    [InlineData("Three wolves lived in a cave. Their names were Baa, Bo and Boo.", AnimalKind.Wolf)]
+    [InlineData("The pigs ran. Three rabbits, Baa, Bo and Boo, hid.", AnimalKind.Rabbit)]
+    [InlineData("Baa, Bo and Boo were three little pigs.", AnimalKind.Pig)]
+    [InlineData("There were three little pigs called Baa, Bo and Boo.", AnimalKind.Pig)]
+    public void A_group_binds_only_the_names_listed_next_to_the_plural_animal(string text, AnimalKind kind)
+    {
+        var characters = new[] { C("baa", "Baa"), C("bo", "Bo"), C("boo", "Boo") };
+
+        var found = AnimalGuess.Guess(characters, text, "en");
+
+        Assert.All(characters, c => Assert.Equal(kind, found[c.Id]));
+    }
+
+    [Theory]
+    [InlineData("Pip", "Pip has been busy all day.")]
+    [InlineData("Pip", "Pip would cower, cater and bear it.")]
+    public void Ordinary_english_words_are_not_animal_plurals(string name, string text)
+    {
+        Assert.Empty(AnimalGuess.Guess([C("pip", name)], text, "en"));
+    }
+
+    [Fact]
+    public void A_non_animal_character_does_not_take_an_animal_character()
+    {
+        var roster = CharacterRoster.For("en");
+        string narrator = CharacterRoster.Narrators("en")[0].VoiceId;
+        var choices = CharacterRoster.Choices(CharacterRoster.Speakers("en"), narrator);
+        var goldilocks = new Character("g", "Little Goldilocks", Gender.Female, 20);
+
+        VoiceCast cast = CastCharacters.Cast([goldilocks], choices, roster, narrator, _ => VoiceFlavour.Small);
+
+        Assert.Null(AnimalCharacters.Of(CharacterRoster.Nearest(roster, cast.VoiceFor("g")!, cast.Flavours!["g"])!.Id));
+    }
+
+    [Theory]
     [InlineData("Pip walked to the farm and saw a pig.")]
     [InlineData("Pip said hello. The pig was asleep in the straw.")]
     [InlineData("A pig lived there. Pip and Pop met in the road.")]
@@ -338,4 +399,49 @@ public class AnimalCharacterTests
 
     [Fact]
     public void A_bare_name_says_nothing_about_age() => Assert.Null(AnimalCharacters.AgeOf("Pip", "en"));
+
+    [Theory]
+    [InlineData("Jack hugged Jill, the cows laughed.")]
+    [InlineData("She fed the cats, then Jack and Jill ran off.")]
+    [InlineData("Jack and Jill, chased by wolves, ran.")]
+    [InlineData("Jack and Jill were near cats.")]
+    public void Names_that_only_stand_near_a_plural_animal_are_not_a_group(string text)
+    {
+        var characters = new[] { C("jack", "Jack"), C("jill", "Jill") };
+
+        Assert.Empty(AnimalGuess.Guess(characters, text, "en"));
+    }
+
+    private static (IReadOnlyList<StorytellerCharacter> Roster, StorytellerCharacter Plain, StorytellerCharacter Animal) PlainAndAnimal()
+    {
+        var roster = CharacterRoster.For("en");
+        var speakers = roster.Where(c => c.Kind == CharacterKind.Speaker).ToList();
+        StorytellerCharacter animal = speakers.First(c => AnimalCharacters.Of(c.Id) is not null);
+        StorytellerCharacter plain = speakers.First(c => AnimalCharacters.Of(c.Id) is null && c.Gender == animal.Gender);
+        return (roster, plain, animal);
+    }
+
+    [Fact]
+    public void A_non_animal_character_takes_a_free_plain_character_over_an_animal_one()
+    {
+        var (roster, plain, animal) = PlainAndAnimal();
+        string narrator = CharacterRoster.Narrators("en")[0].VoiceId;
+
+        VoiceCast cast = CastCharacters.Cast([new Character("g", "Goldie", animal.Gender, 10)], [animal, plain], roster, narrator, _ => animal.Flavour);
+
+        Assert.Equal(plain.VoiceId, cast.VoiceFor("g"));
+    }
+
+    [Fact]
+    public void A_non_animal_character_still_gets_a_voice_when_every_plain_character_is_taken()
+    {
+        var (roster, plain, animal) = PlainAndAnimal();
+        string narrator = CharacterRoster.Narrators("en")[0].VoiceId;
+        var pinned = new Dictionary<string, PinnedCharacter> { ["a"] = new(plain.VoiceId, plain.Flavour, Edited: true) };
+
+        VoiceCast cast = CastCharacters.Cast(
+            [new Character("a", "Ann", animal.Gender, 10), new Character("b", "Bea", animal.Gender, 9)], [animal, plain], roster, narrator, _ => plain.Flavour, pinned);
+
+        Assert.Equal(animal.VoiceId, cast.VoiceFor("b"));
+    }
 }
