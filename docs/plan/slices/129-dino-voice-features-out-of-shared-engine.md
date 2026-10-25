@@ -1,6 +1,6 @@
 # Slice 129 — Dino voice features out of the shared speech engine
 
-*Planned 2026-10-25.*
+*In progress (wave 2026-10-25 B), draft PR.*
 
 **Batch:** 27 (product separation, Decisions 133-137)
 **Touches:** `src/ReadTheStupidText.Domain/Reading/VoiceFlavour.cs`, `src/ReadTheStupidText.Application/Reading/PitchShifter.cs`, `src/ReadTheStupidText.Application/Reading/VoicedSegment.cs`, `src/ReadTheStupidText.Application/Reading/SentenceCacheKey.cs`, `src/ReadTheStupidText.Application/Reading/SpeechChunkPlan.cs`, `src/ReadTheStupidText.Application/Reading/**` (new hook interface), `src/ReadTheStupidText.Infrastructure/Reading/NeuralSentenceSource.cs`, `src/ReadTheStupidText.Infrastructure/Reading/SupertonicSpeechReader.cs`, `src/ReadTheStupidText.Infrastructure/Reading/SherpaEngineFactory.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/AndroidSupertonicSpeechReader.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/IosSupertonicSpeechReader.*.cs`, `src/DinoReader.Core/**`, `src/DinoReader.App/**`, `tests/ReadTheStupidText.Tests/**`, `tests/DinoReader.Tests/**`, `src/ReadTheStupidText.Infrastructure/CLAUDE.md`, `src/DinoReader.Core/CLAUDE.md`
