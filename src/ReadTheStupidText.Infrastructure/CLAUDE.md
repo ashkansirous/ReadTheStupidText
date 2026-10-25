@@ -36,3 +36,6 @@ Neural reader (Slices 17, 18, 22, 23; docs/plan/slices/17-warm-the-neural-engine
   is null (the job fails if both are), and each table row names its repo layout and licence. `NormalizeTag` maps `no`
   to `nb`; `nn` is out of scope. (Slice 106: docs/plan/slices/106-windows-nordic-dutch-translation-packs.md)
 - Pack voices show as "Voice N (woman/man)" in every language, gender from the speaker code's first letter via `NorwegianVoices`; `SupertonicVoiceTable.Serves` must keep Supertonic off `nb`. (Slice 104: docs/plan/slices/104-piper-norwegian-pack.md)
+
+- Head start (`NeuralSentenceSource.AreCached/PrepareAsync`) takes the flavour in its key; `PrepareChunksAsync` passes Normal because a head start reads plain text. The synthesize/shape/join logic is copied in the Windows `NeuralSentenceSource`, Android and iOS readers: fix it in all three. (Slice 113: docs/plan/slices/113-dino-character-flavours.md)
+- Kokoro (`VoiceEngineKind.Kokoro`) is Dino-only English storyteller voices: one model, speaker id picks the voice, config via `ConfigureKokoro` (model, voices, tokens, lexicon, espeak data dir) in `SherpaEngineFactory`, the Android reader and `IosTtsEngine` (keep the three in step). Its pack `kokoro-en` has catalog kind `storyteller`; the text reader never resolves it. (Slice 114: docs/plan/slices/114-dino-kokoro-english-storyteller-pack.md)

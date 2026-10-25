@@ -15,3 +15,5 @@
 
 Tests: `dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj` (xUnit v3, plain `net10.0`, any OS).
 - A story has one cast per language (`Story.Cast` is the story language's, `Story.LanguageCasts` the others', keyed by `BundledTranslations.Key`); always use `CastIn`/`WithCastIn`, never read `Cast` for another language. Merges are the story's and shared. `story.json` `LanguageCasts` is optional (`schemaVersion` stays 1); a damaged language entry is dropped, not the story. (Slice 108: docs/plan/slices/108-dino-cast-per-reading-language.md)
+
+- A character's flavour is `CastMember.Flavour` (the guess from `FlavourGuess` when the cast is built, or the grown-up's pick, pinned with `Edited`); null (older story) means guess from the name. Word lists live in `FlavourWords` and each language's `LanguageRules.Flavours`; a diminutive ("little", "baby") beats the animal word. `Storyteller` is the narrator's own flavour and is never guessed or offered. (Slice 113: docs/plan/slices/113-dino-character-flavours.md)
