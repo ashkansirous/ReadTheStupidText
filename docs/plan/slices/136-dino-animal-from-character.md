@@ -55,7 +55,7 @@ The `HasAnimalSetting` paths stay for old saved data.
 
 *Tests:* 1097 pass; Android build green.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-25)
 
 - `src/DinoReader.Core/CLAUDE.md`: a cast member not Edited by a grown-up keeps its story animal
   (`Resolve`), so a cow with no cow character still moos; an Edited member takes the cast character's animal
