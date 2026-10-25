@@ -64,25 +64,6 @@ public class AnimalCharacterTests
         Assert.True(members.Single(m => m.CharacterId == "jo").NotAnimal);
     }
 
-    [Fact]
-    public void Setting_the_animal_changes_the_main_cast_and_every_language_cast()
-    {
-        Story story = StoryWith(new CastMember("pip", "Pip", Gender.Male, "M1")) with
-        {
-            LanguageCasts = new Dictionary<string, IReadOnlyList<CastMember>> { ["fa"] = [new CastMember("pip", "Pip", Gender.Male, "F1", Edited: true)] },
-        };
-
-        Story pig = CastEditor.WithAnimal(story, "pip", AnimalKind.Pig);
-        Story none = CastEditor.WithAnimal(pig, "pip", null);
-
-        Assert.Equal(AnimalKind.Pig, pig.Cast.Single().Animal);
-        Assert.Equal(AnimalKind.Pig, pig.LanguageCasts!["fa"].Single().Animal);
-        Assert.True(pig.LanguageCasts["fa"].Single().Edited);
-        Assert.True(none.Cast.Single().NotAnimal);
-        Assert.Null(none.Cast.Single().Animal);
-        Assert.True(none.LanguageCasts!["fa"].Single().NotAnimal);
-    }
-
     // ---- which animal a character is ----
 
     [Fact]
@@ -109,23 +90,114 @@ public class AnimalCharacterTests
         var cast = new[] { new CastMember("peter", "Peter", Gender.Male, "M1", Animal: AnimalKind.Rabbit) };
 
         Assert.Equal(AnimalKind.Rabbit, AnimalSounds.Resolve(characters, "en", cast)["peter"]);
-        Assert.Empty(AnimalSounds.AnimalsIn(characters, "en", cast));
+        Assert.Empty(AnimalSounds.WithSound(AnimalSounds.OfCast(characters, "en", cast, CharacterRoster.Speakers("en")), "en"));
         Assert.Null(AnimalSounds.SoundOf(AnimalKind.Rabbit, "en"));
         Assert.Equal("Grr!", AnimalSounds.SoundOf(AnimalKind.Bear, "en"));
     }
 
     [Fact]
-    public void The_pigs_starter_names_its_pigs_so_they_oink_and_the_wolf_comes_from_his_name()
+    public void The_pigs_starter_cast_as_piglets_oink_and_the_wolf_growls()
     {
         Story story = StarterBuilder.Build(StarterTexts.PigsId, "The Three Little Pigs", StarterTexts.Pigs, 3);
         var characters = story.Cast.Select(m => C(m.CharacterId, m.Name)).ToList();
 
-        var animals = AnimalSounds.AnimalsIn(characters, "en", story.Cast);
+        var animals = AnimalSounds.OfCast(characters, "en", CastAsRoster(characters, story.Text, "en"), CharacterRoster.Speakers("en"), story.Text);
 
         Assert.Equal(AnimalKind.Pig, animals["Pip"]);
         Assert.Equal(AnimalKind.Pig, animals["Pop"]);
         Assert.Equal(AnimalKind.Pig, animals["Pim"]);
         Assert.Equal(AnimalKind.Wolf, animals["Wolf"]);
+    }
+
+    [Fact]
+    public void A_pig_cast_as_a_plain_character_is_silent_and_another_stays_a_pig()
+    {
+        var characters = new[] { C("pip", "Pip"), C("pop", "Pop") };
+        var speakers = CharacterRoster.Speakers("en");
+        StorytellerCharacter plain = speakers.First(c => AnimalCharacters.Of(c.Id) is null && c.Gender == Gender.Male);
+        StorytellerCharacter piglet = speakers.First(c => c.Id == "piglet");
+        var cast = new[]
+        {
+            new CastMember("pip", "Pip", Gender.Male, plain.VoiceId, true, plain.Flavour, Animal: AnimalKind.Pig),
+            new CastMember("pop", "Pop", Gender.Male, piglet.VoiceId, true, piglet.Flavour, Animal: AnimalKind.Cat),
+        };
+
+        var animals = AnimalSounds.OfCast(characters, "en", cast, speakers);
+
+        Assert.False(animals.ContainsKey("pip"));
+        Assert.Equal(AnimalKind.Pig, animals["pop"]);
+    }
+
+    [Fact]
+    public void An_own_book_with_a_pig_first_casts_it_as_a_piglet()
+    {
+        var pip = C("pip", "Pip");
+        var cast = CastAsRoster([pip], "Pip the pig lived by the sea.", "en");
+
+        var playing = CharacterRoster.Nearest(CharacterRoster.Speakers("en"), cast.Single().VoiceId, cast.Single().Flavour!.Value, Gender.Male)!;
+
+        Assert.StartsWith("piglet", playing.Id);
+        Assert.Equal(AnimalKind.Pig, AnimalSounds.OfCast([pip], "en", cast, CharacterRoster.Speakers("en"), "Pip the pig lived by the sea.")["pip"]);
+    }
+
+    [Fact]
+    public void Every_animal_roster_character_has_a_kind_and_every_plain_one_has_none_in_every_language()
+    {
+        foreach (string language in UiLanguage.Supported)
+        {
+            var speakers = CharacterRoster.Speakers(language);
+            Assert.All(speakers.Where(c => AnimalCharacters.RosterIds.Contains(c.Id)), c => Assert.NotEmpty(AnimalCharacters.Of(c.Id)!.Value.Kinds));
+            Assert.All(speakers.Where(c => !AnimalCharacters.RosterIds.Contains(c.Id)), c => Assert.Null(AnimalCharacters.Of(c.Id)));
+        }
+
+        Assert.All(AnimalCharacters.RosterIds, id => Assert.Contains(UiLanguage.Supported, l => CharacterRoster.For(l).Any(c => c.Id == id)));
+    }
+
+    // The members of a first cast, the way the app makes it: each story character gets the roster character that fits its animal (found from the name, then the text).
+    private static IReadOnlyList<CastMember> CastAsRoster(IReadOnlyList<Character> characters, string text, string language)
+    {
+        VoiceCast cast = FirstCast(characters, text, language);
+        return characters.Select(c => new CastMember(c.Id, c.Name, c.Gender, cast.VoiceFor(c.Id)!, Flavour: cast.Flavours![c.Id])).ToList();
+    }
+
+    private static VoiceCast FirstCast(IReadOnlyList<Character> characters, string text, string language)
+    {
+        var roster = CharacterRoster.For(language);
+        string narrator = CharacterRoster.Narrators(language)[0].VoiceId;
+        var choices = CharacterRoster.Choices(CharacterRoster.Speakers(language), narrator);
+        var found = AnimalSounds.Resolve(characters, language, null, text);
+        return CastCharacters.Cast(
+            characters, choices, roster, narrator, c => FlavourGuess.Guess(c.Name, LanguageRules.For(language)),
+            animalOf: c => found.TryGetValue(c.Id, out AnimalKind kind) ? AnimalCharacters.HintFor(kind, c.Name, language) : null);
+    }
+
+    [Fact]
+    public void A_cow_with_no_cow_character_still_moos_until_a_grown_up_recasts_it()
+    {
+        var cow = C("cow", "Cow");
+        const string text = "The Cow went to the farm.";
+        var speakers = CharacterRoster.Speakers("en");
+        var cast = CastAsRoster([cow], text, "en");
+
+        Assert.Equal(AnimalKind.Cow, AnimalSounds.OfCast([cow], "en", cast, speakers, text)["cow"]);
+
+        StorytellerCharacter other = speakers.First(c => AnimalCharacters.Of(c.Id) is null && (c.VoiceId != cast[0].VoiceId || c.Flavour != cast[0].Flavour));
+        var recast = new[] { cast[0] with { VoiceId = other.VoiceId, Flavour = other.Flavour, Edited = true } };
+
+        Assert.Empty(AnimalSounds.WithSound(AnimalSounds.OfCast([cow], "en", recast, speakers, text), "en"));
+    }
+
+    [Fact]
+    public void A_duck_auto_cast_as_a_piglet_still_quacks_but_a_duck_a_grown_up_gave_a_piglet_oinks()
+    {
+        var duck = C("duck", "Duck");
+        var speakers = CharacterRoster.Speakers("en");
+        StorytellerCharacter piglet = speakers.First(c => c.Id == "piglet");
+        var asAuto = new[] { new CastMember("duck", "Duck", Gender.Male, piglet.VoiceId, false, piglet.Flavour) };
+        var changed = new[] { new CastMember("duck", "Duck", Gender.Male, piglet.VoiceId, true, piglet.Flavour) };
+
+        Assert.Equal(AnimalKind.Duck, AnimalSounds.OfCast([duck], "en", asAuto, speakers)["duck"]);
+        Assert.Equal(AnimalKind.Pig, AnimalSounds.OfCast([duck], "en", changed, speakers)["duck"]);
     }
 
     [Fact]

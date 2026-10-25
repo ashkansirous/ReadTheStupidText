@@ -15,7 +15,7 @@ listing="$(unzip -l "$pkg")"
 missing=0
 for lib in libonnxruntime.so libsherpa-onnx-c-api.so; do
   # .aab keeps libs under base/lib/<abi>/, .apk under lib/<abi>/.
-  if printf '%s\n' "$listing" | grep -Eq "[[:space:]](base/)?lib/arm64-v8a/${lib}\$"; then
+  if grep -Eq "[[:space:]](base/)?lib/arm64-v8a/${lib}$" <<< "$listing"; then
     echo "ok: $lib in $pkg"
   else
     echo "::error::$lib is missing from lib/arm64-v8a/ in $pkg"
