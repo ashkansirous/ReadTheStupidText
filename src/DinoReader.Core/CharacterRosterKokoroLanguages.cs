@@ -5,10 +5,10 @@ namespace DinoReader.Core;
 
 public static partial class CharacterRoster
 {
-    // Spanish, Portuguese and Chinese run on the Kokoro storyteller voices (Slice 118). The slots are the same twenty-six ideas as TenVoiceSlots, so the names and
+    // Spanish, Portuguese and Chinese run on the Kokoro storyteller voices (Slice 118). The slots are the same ideas as TenVoiceSlots (Slice 135: 32 with the extra young animals; the three-voice list has 27), so the names and
     // plain words (CharacterRosterWords.cs) keep their order; the voice key is F (a woman's voice) or M (a man's) and a place.
 
-    // Spanish and Portuguese have three voices: one woman (F1) and two men (M1, M2: Santa is the deep one). Twenty-six characters on three voices: no two share
+    // Spanish and Portuguese have three voices: one woman (F1) and two men (M1, M2: Santa is the deep one). Twenty-seven characters on three voices: no two share
     // a voice and a flavour. Dora plays the girls and women, Santa the big and grumpy, Alex the bright and quick.
     private static readonly Slot[] ThreeVoiceSlots =
     [
@@ -38,6 +38,8 @@ public static partial class CharacterRoster
         new("bigbear", "M1", VoiceFlavour.Big, CharacterKind.Speaker),
         new("wolf", "M1", VoiceFlavour.Grumpy, CharacterKind.Speaker),
         new("ewe", "M1", VoiceFlavour.Sleepy, CharacterKind.Speaker),
+        // Slice 135: three voices leave one young-sounding place free (every other young flavour is taken), so only a second piglet is added.
+        new("piglet2", "M2", VoiceFlavour.Whisper, CharacterKind.Speaker),
     ];
 
     // Chinese has eight voices, four women (F1-F4) and four men (M1-M4). Three narrators, then the cast.
@@ -69,6 +71,12 @@ public static partial class CharacterRoster
         new("bigbear", "M3", VoiceFlavour.Big, CharacterKind.Speaker),
         new("wolf", "M3", VoiceFlavour.Grumpy, CharacterKind.Speaker),
         new("ewe", "F2", VoiceFlavour.Sleepy, CharacterKind.Speaker),
+        new("piglet2", "M2", VoiceFlavour.Small, CharacterKind.Speaker),
+        new("piglet3", "M3", VoiceFlavour.Bouncy, CharacterKind.Speaker),
+        new("lamb2", "F4", VoiceFlavour.Bouncy, CharacterKind.Speaker),
+        new("duckling2", "F2", VoiceFlavour.Small, CharacterKind.Speaker),
+        new("puppy2", "M3", VoiceFlavour.Squeaky, CharacterKind.Speaker),
+        new("kitten2", "F2", VoiceFlavour.Squeaky, CharacterKind.Speaker),
     ];
 
     // The Kokoro key of a place, by the voice's language letter: Spanish voices start with e (ef_dora), Portuguese with p (pf_dora).

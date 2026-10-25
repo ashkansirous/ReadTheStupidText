@@ -14,16 +14,28 @@ public sealed record PinnedCharacter(string VoiceId, VoiceFlavour? Flavour, bool
 /// Small, so Cheeky Piglet), and no two story characters share a roster character while the roster has another that fits. Fully deterministic:
 /// stored picks first, then the main characters (most words) and the rest in the order given; ties break by roster order. The result is the
 /// same <see cref="VoiceCast"/> the rest of Dino reads: a voice per character and its flavour. A story character that is an animal (<c>animalOf</c>, Slice 125) is
-/// cast to its animal character first (piglet for a pig, big bear for a grown bear), or to another young animal character while its own is taken; only a voice a
-/// grown-up picked is never replaced.
+/// cast to its animal character first (piglet for a pig, big bear for a grown bear); when its own animal's characters are all taken it reuses them, the least used
+/// first, if the animal has more than one, else takes another young animal character. Only a voice a grown-up picked is never replaced.
 /// </summary>
 public static class CastCharacters
 {
     private const int UsedAlready = 30;
     private const int VoiceUsedAlready = 3;
     private const int NotAnAnimalCharacter = 25;
-    private const int OtherYoungAnimal = 8;
+
+    // An animal story character stays its own animal as long as there is a character for it: its own animal's characters (reused, the least used first, once all are
+    // taken) always beat another young animal, which beats a plain character (Slice 135: the third pig is a piglet again, never a puppy). These are tiers compared before
+    // any cost, so no number of reuses can make another animal cheaper. A reused character gets a flavour it has not sounded with yet, so two story characters of one kind
+    // sound different.
     private const int AnimalGenderRelief = 10;
+    private static readonly VoiceFlavour[] ReuseFlavours = [VoiceFlavour.Small, VoiceFlavour.Squeaky, VoiceFlavour.Bouncy, VoiceFlavour.Normal, VoiceFlavour.Whisper, VoiceFlavour.Sleepy, VoiceFlavour.Big];
+
+    private enum AnimalTier
+    {
+        Own,
+        OtherYoungAnimal,
+        NotTheAnimal,
+    }
 
     public static VoiceCast Cast(
         IReadOnlyList<Character> characters,
@@ -41,7 +53,7 @@ public static class CastCharacters
         foreach ((Character character, int order) in characters.Select((c, i) => (c, i)).Where(x => kept.ContainsKey(x.c.Id)))
         {
             (string voice, VoiceFlavour flavour, StorytellerCharacter? near) = kept[character.Id];
-            state.Use(near, voice);
+            state.Use(near, voice, flavour);
             picks.Add((order, character, voice, flavour));
         }
 
@@ -51,7 +63,7 @@ public static class CastCharacters
             StorytellerCharacter? pick = state.Pick(character, guess(character));
             if (pick is not null)
             {
-                state.Use(pick, pick.VoiceId);
+                state.Use(pick, pick.VoiceId, pick.Flavour);
                 picks.Add((order, character, pick.VoiceId, pick.Flavour));
             }
         }
@@ -106,14 +118,16 @@ public static class CastCharacters
     /// <summary>Running state of one casting pass: which roster characters and voices are taken.</summary>
     private sealed class State(IReadOnlyList<StorytellerCharacter> choices, Func<Character, AnimalHint?>? animalOf)
     {
-        private readonly HashSet<string> _used = [];
+        private readonly Dictionary<string, int> _used = [];
         private readonly Dictionary<string, int> _voiceUses = [];
+        private readonly HashSet<(string VoiceId, VoiceFlavour Flavour)> _sounds = [];
 
-        public void Use(StorytellerCharacter? character, string voiceId)
+        public void Use(StorytellerCharacter? character, string voiceId, VoiceFlavour flavour)
         {
+            _sounds.Add((voiceId, flavour));
             if (character is not null)
             {
-                _used.Add(character.Id);
+                _used[character.Id] = _used.GetValueOrDefault(character.Id) + 1;
             }
 
             _voiceUses[voiceId] = _voiceUses.GetValueOrDefault(voiceId) + 1;
@@ -123,43 +137,62 @@ public static class CastCharacters
         {
             AnimalHint? hint = animalOf?.Invoke(character);
             // A story character that is no animal keeps off the animal characters only while a plain one is still free: on a small roster it takes what there is, as before Slice 125.
-            bool plainFree = hint is null && choices.Any(c => AnimalCharacters.Of(c.Id) is null && !_used.Contains(c.Id));
-            return choices
-                .Select((c, order) => (Character: c, Order: order, Cost: Cost(c, character, wanted, hint, plainFree)))
-                .OrderBy(x => x.Cost)
+            bool plainFree = hint is null && choices.Any(c => AnimalCharacters.Of(c.Id) is null && !_used.ContainsKey(c.Id));
+            StorytellerCharacter? pick = choices
+                .Select((c, order) => (Character: c, Order: order, Tier: Tier(c, hint), Cost: Cost(c, character, wanted, hint, plainFree)))
+                .OrderBy(x => x.Tier)
+                .ThenBy(x => x.Cost)
                 .ThenBy(x => x.Order)
                 .Select(x => x.Character)
                 .FirstOrDefault();
+            return pick is not null && hint is not null && Tier(pick, hint) == AnimalTier.Own ? Distinct(pick) : pick;
+        }
+
+        private static AnimalTier Tier(StorytellerCharacter candidate, AnimalHint? hint)
+        {
+            if (hint is null)
+            {
+                return AnimalTier.Own;
+            }
+
+            return AnimalCharacters.FitOf(candidate, hint) switch
+            {
+                AnimalFit.Exact => AnimalTier.Own,
+                AnimalFit.Young => AnimalTier.OtherYoungAnimal,
+                _ => AnimalTier.NotTheAnimal,
+            };
+        }
+
+        // A reused animal character takes the first flavour that its voice has not sounded with yet, so the reuse sounds different; none left, it stays as it is.
+        private StorytellerCharacter Distinct(StorytellerCharacter pick)
+        {
+            if (!_used.ContainsKey(pick.Id) || !_sounds.Contains((pick.VoiceId, pick.Flavour)))
+            {
+                return pick;
+            }
+
+            VoiceFlavour? fresh = ReuseFlavours.Cast<VoiceFlavour?>().FirstOrDefault(f => !_sounds.Contains((pick.VoiceId, f!.Value)));
+            return fresh is { } flavour ? pick with { Flavour = flavour } : pick;
         }
 
         private int Cost(StorytellerCharacter candidate, Character character, VoiceFlavour wanted, AnimalHint? hint, bool plainFree)
         {
             int gender = CharacterRoster.GenderMisfit(candidate.Gender, character.Gender);
-            int animal = AnimalCost(candidate, hint, plainFree, ref gender);
-            int cost = CharacterRoster.FlavourDistance(candidate.Flavour, wanted) + animal + gender;
-            cost += _used.Contains(candidate.Id) ? UsedAlready : 0;
-            return cost + (_voiceUses.GetValueOrDefault(candidate.VoiceId) * VoiceUsedAlready);
-        }
-
-        // An animal story character prefers its own animal character (the voice's gender matters little for an animal), then another young one, over a plain character.
-        private static int AnimalCost(StorytellerCharacter candidate, AnimalHint? hint, bool plainFree, ref int gender)
-        {
+            int animal = 0;
             if (hint is null)
             {
                 // A story character that is no animal does not take an animal character either, which would leave a real animal without its own.
-                return plainFree && AnimalCharacters.Of(candidate.Id) is not null ? NotAnAnimalCharacter : 0;
+                animal = plainFree && AnimalCharacters.Of(candidate.Id) is not null ? NotAnAnimalCharacter : 0;
+            }
+            else if (Tier(candidate, hint) == AnimalTier.Own)
+            {
+                // The voice's gender matters little for an animal.
+                gender /= AnimalGenderRelief;
             }
 
-            switch (AnimalCharacters.FitOf(candidate, hint))
-            {
-                case AnimalFit.Exact:
-                    gender /= AnimalGenderRelief;
-                    return 0;
-                case AnimalFit.Young:
-                    return OtherYoungAnimal;
-                default:
-                    return NotAnAnimalCharacter;
-            }
+            int cost = CharacterRoster.FlavourDistance(candidate.Flavour, wanted) + animal + gender;
+            cost += _used.GetValueOrDefault(candidate.Id) * UsedAlready;
+            return cost + (_voiceUses.GetValueOrDefault(candidate.VoiceId) * VoiceUsedAlready);
         }
     }
 }

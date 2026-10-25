@@ -30,10 +30,16 @@ public static class AnimalCharacters
     private static readonly Dictionary<string, Animal> ByRosterId = new()
     {
         ["piglet"] = new([AnimalKind.Pig], Young: true),
+        ["piglet2"] = new([AnimalKind.Pig], Young: true),
+        ["piglet3"] = new([AnimalKind.Pig], Young: true),
         ["lamb"] = new([AnimalKind.Sheep, AnimalKind.Goat], Young: true),
+        ["lamb2"] = new([AnimalKind.Sheep, AnimalKind.Goat], Young: true),
         ["puppy"] = new([AnimalKind.Dog], Young: true),
+        ["puppy2"] = new([AnimalKind.Dog], Young: true),
         ["kitten"] = new([AnimalKind.Cat], Young: true),
+        ["kitten2"] = new([AnimalKind.Cat], Young: true),
         ["duckling"] = new([AnimalKind.Duck], Young: true),
+        ["duckling2"] = new([AnimalKind.Duck], Young: true),
         ["bunny"] = new([AnimalKind.Rabbit], Young: true),
         ["cub"] = new([AnimalKind.Bear], Young: true),
         ["mouse"] = new([AnimalKind.Mouse], Young: true),

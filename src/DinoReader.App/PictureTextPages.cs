@@ -140,8 +140,8 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 			Border panel = TextPanel(UprightPanelCorner, UprightPanelPadding, PanelAlpha, fade: true);
 			panel.VerticalOptions = LayoutOptions.End;
 			panel.Margin = new Thickness(PanelMargin);
-			CapPanel(panel, _card, slot.Aspect);
-			grid.SizeChanged += (_, _) => CapPanel(panel, new Size(grid.Width, grid.Height), slot.Aspect);
+			PlacePanel(panel, _card, slot.Aspect);
+			grid.SizeChanged += (_, _) => PlacePanel(panel, new Size(grid.Width, grid.Height), slot.Aspect);
 			panel.Shadow = new Shadow { Brush = new SolidColorBrush(Color.FromRgb(43, 37, 64)), Opacity = 0.16f, Radius = 12, Offset = new Point(0, 4) };
 			grid.Add(panel);
 		}
@@ -149,13 +149,15 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		return grid;
 	}
 
-	// A card with no size yet leaves the panel uncapped; the cap is applied again once the page has been laid out.
-	private static void CapPanel(Border panel, Size card, double aspect)
+	// The panel sits inside the visible picture (Decision 131, Slice 135): the placement (Core) puts its bottom edge a margin above the picture's, not the card's, so a picture
+	// letterboxed in a tall card does not leave the panel hanging below it. A card with no size yet leaves the panel as it is; it is placed again once the page has been laid out.
+	private static void PlacePanel(Border panel, Size card, double aspect)
 	{
 		if (card.Width > 0 && card.Height > 0)
 		{
-			panel.MaximumHeightRequest = PictureTextBook.PanelMaxHeight(card.Width, card.Height, aspect, PanelMargin,
-				UprightPictureTop, UprightPictureSide);
+			PictureTextBook.PanelPlacement place = PictureTextBook.PlacePanel(card.Width, card.Height, aspect, PanelMargin, UprightPictureTop, UprightPictureSide);
+			panel.Margin = new Thickness(PanelMargin, PanelMargin, PanelMargin, place.BottomMargin);
+			panel.MaximumHeightRequest = place.MaxHeight;
 		}
 	}
 

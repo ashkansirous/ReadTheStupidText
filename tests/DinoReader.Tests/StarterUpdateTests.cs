@@ -1,4 +1,5 @@
 using DinoReader.Core;
+using ReadTheStupidText.Domain.Reading;
 
 namespace DinoReader.Tests;
 
@@ -24,6 +25,11 @@ public sealed class StarterUpdateTests : IDisposable
     {
         Assert.Equal(expected, StarterUpdate.NeedsUpdate(installed, bundled));
     }
+
+    // A member that sounds like a plain (no animal) character of the English roster, so a recast can tell what it plays.
+    private static readonly StorytellerCharacter PlainCharacter = CharacterRoster.Speakers("en").First(c => AnimalCharacters.Of(c.Id) is null);
+
+    private static CastMember Plain(string id) => new CastMember(id, id, Gender.Female, PlainCharacter.VoiceId, false, Flavour: PlainCharacter.Flavour);
 
     private static CastMember Member(string id, string voice, bool edited = false) => new(id, id, Gender.Female, voice, edited);
 
@@ -55,9 +61,9 @@ public sealed class StarterUpdateTests : IDisposable
     [Fact]
     public void AnimalVoicesToRecast_NamesTheKeptMembersThatGainedAnAnimalAndWereNotPickedByHand()
     {
-        Story stored = StoryWith("old", Member("pip", "v1"), Member("pop", "v2") with { Edited = true }, Member("pim", "v3"), Member("pup", "v4") with { NotAnimal = true }) with
+        Story stored = StoryWith("old", Plain("pip"), Plain("pop") with { Edited = true }, Plain("pim"), Plain("pup") with { NotAnimal = true }) with
         {
-            LanguageCasts = new Dictionary<string, IReadOnlyList<CastMember>> { ["fr"] = [Member("pip", "f1"), Member("pop", "f2") with { Edited = true }, Member("pim", "f3"), Member("pup", "f4") with { NotAnimal = true }] },
+            LanguageCasts = new Dictionary<string, IReadOnlyList<CastMember>> { ["fr"] = [Plain("pip"), Plain("pop") with { Edited = true }, Plain("pim"), Plain("pup") with { NotAnimal = true }] },
         };
         Story bundled = StoryWith("new", Member("pip", "b1") with { Animal = AnimalKind.Pig }, Member("pop", "b2") with { Animal = AnimalKind.Pig }, Member("pim", "b3"), Member("pup", "b4") with { Animal = AnimalKind.Pig }) with
         {
@@ -65,23 +71,113 @@ public sealed class StarterUpdateTests : IDisposable
         };
 
         Story refreshed = StarterUpdate.Refresh(stored, bundled);
-        var recast = StarterUpdate.AnimalVoicesToRecast(stored, refreshed);
+        var recast = StarterUpdate.AnimalVoicesToRecast(stored, refreshed, _ => CharacterRoster.Speakers("en"));
 
         Assert.Equal([("en", "pip"), ("fr", "pip")], recast.OrderBy(r => r.Language, StringComparer.Ordinal));
     }
 
     [Fact]
-    public void Refresh_LeavesALanguageCastAloneWhenTheBundledCopyHasNoCastForIt()
+    public void Refresh_GivesALanguageCastTheBaseCastsAnimalsWhenTheBundledCopyHasNoCastForIt()
+    {
+        // Slice 135: the Farsi cast of an installed pigs book kept no animals (Pop and Pim read "Not an animal"); character ids are the same in every language.
+        Story stored = StoryWith("old", Plain("pip"), Plain("pop")) with
+        {
+            LanguageCasts = new Dictionary<string, IReadOnlyList<CastMember>> { ["fa"] = [Plain("pip"), Plain("pop") with { NotAnimal = true }] },
+        };
+        Story bundled = StoryWith("new", Member("pip", "b1") with { Animal = AnimalKind.Pig }, Member("pop", "b2") with { Animal = AnimalKind.Pig });
+
+        Story refreshed = StarterUpdate.Refresh(stored, bundled);
+
+        Assert.Equal(AnimalKind.Pig, refreshed.LanguageCasts!["fa"][0].Animal);
+        Assert.True(refreshed.LanguageCasts["fa"][1].NotAnimal);
+        Assert.Equal([("en", "pip"), ("en", "pop"), ("fa", "pip")], StarterUpdate.AnimalVoicesToRecast(stored, refreshed, _ => CharacterRoster.Speakers("en")).OrderBy(r => r.Language, StringComparer.Ordinal).ThenBy(r => r.CharacterId, StringComparer.Ordinal));
+    }
+
+    [Fact]
+    public void Refresh_GivesALanguageMemberTheBaseCastsAnimalByIdEvenWhenTheNameIsTranslated()
     {
         Story stored = StoryWith("old", Member("pip", "v1")) with
         {
-            LanguageCasts = new Dictionary<string, IReadOnlyList<CastMember>> { ["fr"] = [Member("pip", "f1")] },
+            LanguageCasts = new Dictionary<string, IReadOnlyList<CastMember>> { ["fa"] = [new CastMember("pip", "Translated name", Gender.Male, "f1", false)] },
         };
         Story bundled = StoryWith("new", Member("pip", "b1") with { Animal = AnimalKind.Pig });
 
         Story refreshed = StarterUpdate.Refresh(stored, bundled);
 
-        Assert.Null(refreshed.LanguageCasts!["fr"][0].Animal);
+        Assert.Equal(AnimalKind.Pig, refreshed.LanguageCasts!["fa"][0].Animal);
+    }
+
+    private static StorytellerCharacter Roster(string id, string voice, VoiceFlavour flavour) =>
+        new(id, voice, flavour, Gender.Male, CharacterKind.Speaker, id, id);
+
+    private static (Story Stored, Story Refreshed) Refreshed(CastMember member)
+    {
+        Story stored = StoryWith("old", member);
+        return (stored, StarterUpdate.Refresh(stored, StoryWith("new", member)));
+    }
+
+    [Fact]
+    public void AnimalVoicesToRecast_LeavesAMemberWhoseVoiceMatchesNoRosterCharacterAlone()
+    {
+        var (stored, refreshed) = Refreshed(new CastMember("pip", "Pip", Gender.Male, "unknown:voice", Flavour: VoiceFlavour.Normal) with { Animal = AnimalKind.Pig });
+
+        Assert.Empty(StarterUpdate.AnimalVoicesToRecast(stored, refreshed));
+    }
+
+    [Fact]
+    public void AnimalVoicesToRecast_LeavesAMotherPigAloneBecauseNoGrownPigExists()
+    {
+        var (stored, refreshed) = Refreshed(new CastMember("mother", "Mother Pig", Gender.Female, "kokoro:af_x", Flavour: VoiceFlavour.Normal));
+        IReadOnlyList<StorytellerCharacter> roster = [Roster("mummy", "kokoro:af_x", VoiceFlavour.Normal), Roster("piglet", "kokoro:am_a", VoiceFlavour.Small)];
+
+        Assert.Empty(StarterUpdate.AnimalVoicesToRecast(stored, refreshed, _ => roster));
+    }
+
+    [Fact]
+    public void AnimalVoicesToRecast_LeavesAnOwlAloneWhenTheCastLanguagesRosterHasNoOwl()
+    {
+        var (stored, refreshed) = Refreshed(new CastMember("owl", "Owl", Gender.Male, "kokoro:am_a", Flavour: VoiceFlavour.Normal));
+        IReadOnlyList<StorytellerCharacter> roster = [Roster("knight", "kokoro:am_a", VoiceFlavour.Normal), Roster("piglet", "kokoro:am_b", VoiceFlavour.Small)];
+
+        Assert.Empty(StarterUpdate.AnimalVoicesToRecast(stored, refreshed, _ => roster));
+    }
+
+    [Fact]
+    public void AnimalVoicesToRecast_LeavesAGrownBearOnTheCubAndRecastsOneOnAPlainCharacter()
+    {
+        IReadOnlyList<StorytellerCharacter> roster = [Roster("cub", "kokoro:am_a", VoiceFlavour.Small), Roster("bigbear", "kokoro:am_c", VoiceFlavour.Big), Roster("knight", "kokoro:am_b", VoiceFlavour.Normal)];
+        var (onCub, refreshedCub) = Refreshed(new CastMember("papa", "Papa Bear", Gender.Male, "kokoro:am_a", Flavour: VoiceFlavour.Small));
+        var (onKnight, refreshedKnight) = Refreshed(new CastMember("papa", "Papa Bear", Gender.Male, "kokoro:am_b", Flavour: VoiceFlavour.Normal));
+
+        Assert.Empty(StarterUpdate.AnimalVoicesToRecast(onCub, refreshedCub, _ => roster));
+        Assert.Equal([("en", "papa")], StarterUpdate.AnimalVoicesToRecast(onKnight, refreshedKnight, _ => roster));
+    }
+
+    [Fact]
+    public void AnimalVoicesToRecast_IncludesAWolfFoundByItsNameWhoseVoiceIsAnotherCharacters()
+    {
+        var wolfAsDragon = new CastMember("wolf", "Wolf", Gender.Male, "kokoro:am_santa", Flavour: VoiceFlavour.Big);
+        var wolfAsWolf = new CastMember("wolf2", "Wolf", Gender.Male, "kokoro:bm_fable", Flavour: VoiceFlavour.Grumpy);
+        var picked = wolfAsDragon with { CharacterId = "wolf3", Edited = true };
+        Story stored = StoryWith("old", wolfAsDragon, wolfAsWolf, picked);
+
+        Story refreshed = StarterUpdate.Refresh(stored, StoryWith("new", wolfAsDragon, wolfAsWolf, picked));
+
+        Assert.Equal([("en", "wolf")], StarterUpdate.AnimalVoicesToRecast(stored, refreshed));
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Refresh_KeepsTheAnimalSoundsSwitchAndItSurvivesTheSavedFile(bool on)
+    {
+        Story stored = StoryWith("old", Member("pip", "v1")) with { AnimalSoundsOn = on };
+        Story bundled = StoryWith("new", Member("pip", "b1") with { Animal = AnimalKind.Pig }) with { SourceId = "pkg" };
+
+        Story refreshed = StarterUpdate.Refresh(stored, bundled);
+
+        Assert.Equal(on, refreshed.AnimalSoundsOn);
+        Assert.Equal(on, StoryJson.Deserialize(StoryJson.Serialize(refreshed with { Id = StoryIds.New() })).AnimalSoundsOn);
     }
 
     [Fact]

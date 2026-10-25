@@ -212,7 +212,7 @@ public sealed class StarterStories(IStoryLibrary library, StoryVoicing voicing)
 	{
 		try
 		{
-			foreach (var group in StarterUpdate.AnimalVoicesToRecast(stored, refreshed).GroupBy(r => r.Language))
+			foreach (var group in StarterUpdate.AnimalVoicesToRecast(stored, refreshed, SpeakersFor).GroupBy(r => r.Language))
 			{
 				if (voicing.VoicesFor(group.Key).Count > 0)
 				{
@@ -229,6 +229,10 @@ public sealed class StarterStories(IStoryLibrary library, StoryVoicing voicing)
 
 		return refreshed;
 	}
+
+	// The speakers a cast language can really be cast with: its roster adapted to the voices installed now.
+	private IReadOnlyList<StorytellerCharacter> SpeakersFor(string language) =>
+		voicing.RosterFor(language).Where(c => c.Kind == CharacterKind.Speaker).ToList();
 
 	// A gallery photo cover the grown-up chose is copied into the refreshed story's folder under a new name; a missing file falls back to the bundled cover.
 	private async Task<Story> WithCoverPhotoAsync(Story stored, Story fresh, Story refreshed)

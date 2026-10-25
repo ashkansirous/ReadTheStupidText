@@ -299,6 +299,19 @@ public class AnimalCharacterTests
         }
     }
 
+    // Slice 135: the first of a kind takes the original character (piglet, lamb); a numbered extra (piglet2) only when its flavour matches the name's guess strictly better.
+    private static void AssertOriginalUnlessNumberedFitsBetter(StorytellerCharacter pick, IReadOnlyList<StorytellerCharacter> roster, string originalId, string name)
+    {
+        if (pick.Id == originalId)
+        {
+            return;
+        }
+
+        VoiceFlavour wanted = FlavourGuess.Guess(name, LanguageRules.For("en"));
+        Assert.Equal(originalId, pick.Id.TrimEnd('2', '3'));
+        Assert.True(CharacterRoster.FlavourDistance(pick.Flavour, wanted) < CharacterRoster.FlavourDistance(roster.Single(c => c.Id == originalId).Flavour, wanted));
+    }
+
     private static (StorytellerCharacter Pick, IReadOnlyList<StorytellerCharacter> Roster) CastOne(string language, Character character, AnimalHint? hint, string storyLanguage = "en")
     {
         var roster = CharacterRoster.For(language);
@@ -314,9 +327,9 @@ public class AnimalCharacterTests
     [MemberData(nameof(Languages))]
     public void A_pig_is_cast_as_the_piglet_in_every_language(string language)
     {
-        var (pick, _) = CastOne(language, C("pip", "Pip"), new AnimalHint(AnimalKind.Pig, null));
+        var (pick, roster) = CastOne(language, C("pip", "Pip"), new AnimalHint(AnimalKind.Pig, null));
 
-        Assert.Equal("piglet", pick.Id);
+        AssertOriginalUnlessNumberedFitsBetter(pick, roster, "piglet", "Pip");
     }
 
     [Theory]
@@ -351,9 +364,9 @@ public class AnimalCharacterTests
     [InlineData("Peter", AnimalKind.Rabbit, "bunny")]
     public void Each_animal_finds_its_own_character(string name, AnimalKind kind, string rosterId)
     {
-        var (pick, _) = CastOne("en", C("x", name), AnimalCharacters.HintFor(kind, name, "en"));
+        var (pick, roster) = CastOne("en", C("x", name), AnimalCharacters.HintFor(kind, name, "en"));
 
-        Assert.Equal(rosterId, pick.Id);
+        AssertOriginalUnlessNumberedFitsBetter(pick, roster, rosterId, name);
     }
 
     [Fact]
@@ -370,7 +383,73 @@ public class AnimalCharacterTests
         var sounds = characters.Select(c => (cast.VoiceFor(c.Id), cast.Flavours![c.Id])).ToList();
         Assert.Equal(3, sounds.Distinct().Count());
         Assert.Equal(("kokoro:am_puck", VoiceFlavour.Small), sounds[0]);
-        Assert.All(sounds.Skip(1), s => Assert.True(AnimalCharacters.Of(CharacterRoster.Nearest(roster, s.Item1!, s.Item2)!.Id) is not null));
+        Assert.All(sounds, s => Assert.StartsWith("piglet", CharacterRoster.Nearest(roster, s.Item1!, s.Item2)!.Id));
+    }
+
+    // Slice 135: the Three Little Pigs, cast the way the app casts a pig starter, get three different piglets in English and Farsi, never a puppy or a cub.
+    [Theory]
+    [InlineData("en", 3)]
+    [InlineData("fa", 3)]
+    [InlineData("en", 6)]
+    [InlineData("fa", 6)]
+    public void Pigs_are_always_piglets_and_the_first_three_sound_different(string language, int pigs)
+    {
+        var characters = Enumerable.Range(0, pigs).Select(i => C($"pig{i}", $"Pig {i}")).ToList();
+        var roster = CharacterRoster.For(language);
+        string narrator = CharacterRoster.Narrators(language).First(n => roster.Where(c => c.Id.StartsWith("piglet")).All(c => c.VoiceId != n.VoiceId)).VoiceId;
+        var choices = CharacterRoster.Choices(CharacterRoster.Speakers(language), narrator);
+
+        VoiceCast cast = CastCharacters.Cast(
+            characters, choices, roster, narrator, _ => VoiceFlavour.Normal, animalOf: _ => new AnimalHint(AnimalKind.Pig, null));
+
+        var sounds = characters.Select(c => (cast.VoiceFor(c.Id)!, cast.Flavours![c.Id])).ToList();
+        var pigletVoices = roster.Where(c => c.Id.StartsWith("piglet")).Select(c => c.VoiceId).ToHashSet();
+        Assert.All(sounds, s => Assert.Contains(s.Item1, pigletVoices));
+        Assert.Equal(3, sounds.Take(3).Distinct().Count());
+        Assert.All(sounds.Take(3), s => Assert.StartsWith("piglet", CharacterRoster.Nearest(roster, s.Item1, s.Item2)!.Id));
+    }
+
+    // Slice 135: an animal with a single character of its own (a bunny) is reused for its second story character with another flavour, never another animal's character.
+    [Fact]
+    public void Two_bunnies_sound_different_and_both_stay_bunnies()
+    {
+        var characters = new[] { C("m1", "Bunny One"), C("m2", "Bunny Two") };
+        var roster = CharacterRoster.For("en");
+        string narrator = CharacterRoster.Narrators("en").First().VoiceId;
+        var choices = CharacterRoster.Choices(CharacterRoster.Speakers("en"), narrator);
+
+        VoiceCast cast = CastCharacters.Cast(characters, choices, roster, narrator, _ => VoiceFlavour.Normal, animalOf: _ => new AnimalHint(AnimalKind.Rabbit, null));
+
+        var sounds = characters.Select(c => (cast.VoiceFor(c.Id)!, cast.Flavours![c.Id])).ToList();
+        Assert.Equal(2, sounds.Distinct().Count());
+        Assert.All(sounds, s => Assert.Equal(sounds[0].Item1, s.Item1));
+        Assert.Equal("bunny", roster.Single(c => c.Id == "bunny").Id);
+    }
+
+    [Fact]
+    public void Many_reuses_of_a_single_character_never_switch_to_another_animal()
+    {
+        var characters = Enumerable.Range(0, 40).Select(i => C($"b{i}", $"Bunny {i}")).ToList();
+        var roster = CharacterRoster.For("en");
+        string narrator = CharacterRoster.Narrators("en").First().VoiceId;
+        var choices = CharacterRoster.Choices(CharacterRoster.Speakers("en"), narrator);
+        string bunnyVoice = roster.Single(c => c.Id == "bunny").VoiceId;
+
+        VoiceCast cast = CastCharacters.Cast(characters, choices, roster, narrator, _ => VoiceFlavour.Normal, animalOf: _ => new AnimalHint(AnimalKind.Rabbit, null));
+
+        Assert.All(characters, c => Assert.Equal(bunnyVoice, cast.VoiceFor(c.Id)));
+    }
+
+    [Theory]
+    [MemberData(nameof(Languages))]
+    public void Every_roster_has_a_second_piglet_and_the_big_rosters_have_the_other_young_farm_animals(string language)
+    {
+        var roster = CharacterRoster.For(language);
+
+        Assert.Contains(roster, c => c.Id == "piglet2");
+        string[] others = ["piglet3", "lamb2", "duckling2", "puppy2", "kitten2"];
+        Assert.All(others, id => Assert.Equal(language is not ("es" or "pt"), roster.Any(c => c.Id == id)));
+        Assert.All(roster.Where(c => c.Id.EndsWith('2') || c.Id.EndsWith('3')), c => Assert.NotNull(AnimalCharacters.Of(c.Id)));
     }
 
     [Fact]

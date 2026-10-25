@@ -204,6 +204,26 @@ public class PictureTextBookTests
     }
 
     [Fact]
+    public void PlacePanel_TallCardWithLetterbox_RaisesThePanelOverTheBandAndTakesItOffTheCap()
+    {
+        // Card 400x800, square picture: area 372 wide, 794 tall; picture 372 tall, band (794-372)/2 = 211 under it.
+        PictureTextBook.PanelPlacement place = PictureTextBook.PlacePanel(400, 800, 1.0, 10, areaTop: 6, areaSide: 14);
+
+        Assert.Equal(211, PictureTextBook.LetterboxBelow(400, 800, 1.0, 6, 14), 3);
+        Assert.Equal(221, place.BottomMargin, 3);
+        Assert.Equal(0.3 * 372 - 10, place.MaxHeight, 3);
+    }
+
+    [Fact]
+    public void PlacePanel_UnknownPictureShape_KeepsTheMarginAndCardShare()
+    {
+        PictureTextBook.PanelPlacement place = PictureTextBook.PlacePanel(400, 800, 0, 10);
+
+        Assert.Equal(10, place.BottomMargin);
+        Assert.Equal(0.3 * 800 - 10, place.MaxHeight, 3);
+    }
+
+    [Fact]
     public void PanelMaxHeight_TallCardWithLetterbox_CountsBandUnderPictureAndMargin()
     {
         // Area 372 x 794 (card 400 x 800 less 6 on top and 14 each side); a 1:1 picture is 372 high, bands of 211 above and below.

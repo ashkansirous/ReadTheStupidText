@@ -21,7 +21,7 @@ public static partial class CharacterRoster
     /// <summary>The voice id of the Chinese Melo pack (the fallback voice while the storyteller pack is not installed).</summary>
     internal static string ChineseVoiceId => MeloChinese;
 
-    // Four voices and nine flavours: three narrators (one voice each), then sixteen characters and (Slice 125) eight animals, three to five to a voice; Mana (the one woman's voice) plays the female characters: the mum, chick, dragon, fairy, bee, witch and princess. Names are written in Persian.
+    // Four voices and nine flavours: three narrators (one voice each), then sixteen characters, (Slice 125) eight animals and (Slice 135) six more young animals, many to a voice (Farsi has only four voices, so the later young animals sound Normal, Whisper or Sleepy rather than small: a voice-count limit, not a missing flavour); Mana (the one woman's voice) plays the female characters: the mum, chick, dragon, fairy, bee, witch and princess. Names are written in Persian.
     private static IReadOnlyList<StorytellerCharacter> Persian() =>
     [
         Man("storyteller", FaGanjiAdabi, VoiceFlavour.Storyteller, CharacterKind.Narrator, "قصه‌گوی مهربان", "گرم و آروم"),
@@ -51,6 +51,13 @@ public static partial class CharacterRoster
         Man("bigbear", FaGyro, VoiceFlavour.Big, CharacterKind.Speaker, "خرس قهوه‌ای بزرگ", "بم و آروم"),
         Man("wolf", FaGanji, VoiceFlavour.Grumpy, CharacterKind.Speaker, "گرگ گرسنه", "بم و غرغرو"),
         Woman("ewe", FaMana, VoiceFlavour.Sleepy, CharacterKind.Speaker, "میش پشمالو", "نرم و آروم"),
+        // Slice 135: more than one of each young farm animal. Four voices leave few young places free, so the later ones take a calmer flavour.
+        Man("piglet2", FaGyro, VoiceFlavour.Squeaky, CharacterKind.Speaker, "خوکچه ریزه", "ریز و نازک"),
+        Man("piglet3", FaGanjiAdabi, VoiceFlavour.Normal, CharacterKind.Speaker, "خوکچه آرام", "ساده و مهربون"),
+        Man("lamb2", FaGanji, VoiceFlavour.Normal, CharacterKind.Speaker, "بره پشمالو", "نرم و ساده"),
+        Man("duckling2", FaGanjiAdabi, VoiceFlavour.Whisper, CharacterKind.Speaker, "اردکچه پچ‌پچی", "آروم و پچ‌پچی"),
+        Man("puppy2", FaGanji, VoiceFlavour.Whisper, CharacterKind.Speaker, "توله‌سگ آروم", "مهربون و دوستانه"),
+        Man("kitten2", FaGanjiAdabi, VoiceFlavour.Sleepy, CharacterKind.Speaker, "بچه‌گربه خوابالو", "نرم و خواب‌آلود"),
     ];
 
     private static StorytellerCharacter Man(string id, string voiceId, VoiceFlavour flavour, CharacterKind kind, string name, string hint) =>

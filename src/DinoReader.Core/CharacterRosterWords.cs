@@ -1,7 +1,7 @@
 namespace DinoReader.Core;
 
 // The names and plain words of the rosters built from Slot lists (ten-voice, and the Kokoro languages of Slice 118), in the order of TenVoiceSlots: three narrators (granny, grandad, whisperer), then mummy, mouse,
-// bunny, princess, bee, witch, hen, troll, giant, bear, fox, knight, piglet, chick, dragon, then (Slice 125) the animals lamb, puppy, kitten, duckling, cub, bigbear, wolf, ewe. Each language is written for itself, not translated
+// bunny, princess, bee, witch, hen, troll, giant, bear, fox, knight, piglet, chick, dragon, then (Slice 125) the animals lamb, puppy, kitten, duckling, cub, bigbear, wolf, ewe, then (Slice 135) the young farm animals piglet2, piglet3, lamb2, duckling2, puppy2, kitten2 (Spanish and Portuguese only piglet2). Each language is written for itself, not translated
 // word for word. Machine-drafted: they wait for a native speaker, like every other Dino string.
 public static partial class CharacterRoster
 {
@@ -17,6 +17,7 @@ public static partial class CharacterRoster
         ("Chaton Curieux", "minuscule et ronronnant"), ("Caneton Piou", "petit et pépiant"),
         ("Petit Ourson", "petit et doux"), ("Grand Ours Brun", "grave et lent"),
         ("Loup Affamé", "bas et grondant"), ("Brebis Laineuse", "douce et lente"),
+        ("Goret Fripon", "minuscule et reniflant"), ("Porcelet Frisé", "vif et pétillant"), ("Agnelet Duveteux", "léger et doux"), ("Caneton Barboteur", "gai et éclaboussant"), ("Chiot Frétillant", "joyeux et chaleureux"), ("Chaton Câlin", "minuscule et tendre"),
     ];
 
     private static (string Name, string Hint)[] SpanishWords() =>
@@ -31,6 +32,7 @@ public static partial class CharacterRoster
         ("Gatito Curioso", "diminuto y ronroneante"), ("Patito Pío", "pequeño y piador"),
         ("Osito Pequeño", "pequeño y suave"), ("Oso Pardo Grande", "grave y lento"),
         ("Lobo Hambriento", "bajo y gruñón"), ("Oveja Lanuda", "suave y lenta"),
+        ("Cochinito Pequeñín", "diminuto y suave"),
     ];
 
     private static (string Name, string Hint)[] PortugueseWords() =>
@@ -45,6 +47,7 @@ public static partial class CharacterRoster
         ("Gatinho Curioso", "miúdo e ronronante"), ("Patinho Piu", "pequeno e piador"),
         ("Ursinho Pequeno", "pequeno e macio"), ("Urso Pardo Grande", "grave e lento"),
         ("Lobo Faminto", "baixo e rosnado"), ("Ovelha Lanzuda", "macia e lenta"),
+        ("Leitãozinho Miúdo", "pequenino e suave"),
     ];
 
     private static (string Name, string Hint)[] ChineseWords() =>
@@ -59,6 +62,7 @@ public static partial class CharacterRoster
         ("好奇的小猫", "又小又轻柔"), ("小鸭子", "又小又脆"),
         ("熊宝宝", "又小又软"), ("大棕熊", "低沉又缓慢"),
         ("饥饿的大灰狼", "低低的，沉沉的"), ("毛茸茸的绵羊妈妈", "柔软又缓慢"),
+        ("小粉猪", "又小又轻"), ("卷毛小猪", "活泼又明亮"), ("蓬松小羔羊", "轻快又欢跳"), ("戏水小鸭", "又小又清脆"), ("摇尾巴小狗", "清脆又温暖"), ("甜甜小猫咪", "又小又甜"),
     ];
 
     private static (string Name, string Hint)[] RussianWords() =>
@@ -73,6 +77,7 @@ public static partial class CharacterRoster
         ("Любопытный котёнок", "крошечный и мурлыкающий"), ("Утёнок Кря", "маленький и пискливый"),
         ("Медвежонок", "маленький и мягкий"), ("Большой бурый медведь", "низкий и неспешный"),
         ("Голодный волк", "низкий и ворчливый"), ("Пушистая овечка", "мягкая и неспешная"),
+        ("Пятачок-крошка", "крошечный и сопящий"), ("Кудрявый поросёнок", "звонкий и бойкий"), ("Мягкий агнёнок", "лёгкий и пушистый"), ("Утёнок Плюх", "звонкий и брызгливый"), ("Щенок-вертихвост", "весёлый и тёплый"), ("Нежный котёнок", "крошечный и нежный"),
     ];
 
     private static (string Name, string Hint)[] JapaneseWords() =>
@@ -87,6 +92,7 @@ public static partial class CharacterRoster
         ("ふしぎがりの こねこ", "ちいさくて ごろごろ"), ("ちいさな あひるのこ", "ちいさくて ぴよぴよ"),
         ("くまのこ", "ちいさくて やわらかい"), ("おおきな くま", "低くて ゆっくり"),
         ("はらぺこ おおかみ", "低くて うなるよう"), ("ふわふわ ひつじ", "やわらかく ゆっくり"),
+        ("ちびこぶた", "小さくて ふんふん"), ("くるくるこぶた", "はずんで あかるい"), ("ふんわりこひつじ", "かるくて ふわふわ"), ("ばしゃばしゃあひる", "はずんで ぴちゃぴちゃ"), ("しっぽふりこいぬ", "げんきで あたたかい"), ("あまえんぼの こねこ", "小さくて あまい"),
     ];
 
     private static (string Name, string Hint)[] ArabicWords() =>
@@ -101,6 +107,7 @@ public static partial class CharacterRoster
         ("القط الصغير الفضولي", "صغير ويخرخر"), ("فرخ البط الصغير", "صغير ومزقزق"),
         ("شبل الدب", "صغير وناعم"), ("الدب البني الكبير", "عميق وبطيء"),
         ("الذئب الجائع", "منخفض ومزمجر"), ("النعجة الصوفية", "ناعمة وبطيئة"),
+        ("الخنزير الصغير الفضولي", "صغير وشمّام"), ("الخنزير المجعّد", "مرح ورنّان"), ("الحمل الرقيق", "خفيف وناعم"), ("بطّوط الماء", "مرح ومتطاير"), ("الجرو الهزّاز", "دافئ ومرح"), ("القطة الحلوة", "صغيرة وحلوة"),
     ];
 
     private static (string Name, string Hint)[] DanishWords() =>
@@ -115,6 +122,7 @@ public static partial class CharacterRoster
         ("Nysgerrig Killing", "lille og spindende"), ("Lille Andunge", "lille og pippende"),
         ("Bjørneunge", "lille og blød"), ("Stor Brun Bjørn", "dyb og langsom"),
         ("Sulten Ulv", "lav og knurrende"), ("Uldent Får", "blød og langsom"),
+        ("Snøvlende Pattegris", "lille og snorkende"), ("Krøllet Gris", "livlig og lys"), ("Fnuglet Lam", "let og blødt"), ("Plaskende Andunge", "boblende og pjaskende"), ("Logrende Hvalp", "glad og varm"), ("Sød Killing", "lille og sød"),
     ];
 
     private static (string Name, string Hint)[] SwedishWords() =>
@@ -129,6 +137,7 @@ public static partial class CharacterRoster
         ("Nyfiken Kattunge", "liten och spinnande"), ("Liten Ankunge", "liten och pipig"),
         ("Björnunge", "liten och mjuk"), ("Stor Brun Björn", "djup och långsam"),
         ("Hungrig Varg", "låg och morrande"), ("Ullig Tacka", "mjuk och långsam"),
+        ("Snuffande Smågris", "liten och snörvlande"), ("Krulliga Grisen", "pigg och ljus"), ("Fluffigt Lamm", "lätt och mjukt"), ("Plaskande Ankunge", "bubblande och plaskig"), ("Viftande Valp", "glad och varm"), ("Söt Kattunge", "liten och söt"),
     ];
 
     private static (string Name, string Hint)[] NorwegianWords() =>
@@ -143,6 +152,7 @@ public static partial class CharacterRoster
         ("Nysgjerrig Kattunge", "liten og spinnende"), ("Liten Andunge", "liten og pipende"),
         ("Bjørneunge", "liten og myk"), ("Stor Brun Bjørn", "dyp og langsom"),
         ("Sulten Ulv", "lav og knurrende"), ("Ullent Får", "mykt og langsomt"),
+        ("Snufsende Smågris", "liten og snorkende"), ("Krøllete Gris", "livlig og lys"), ("Lodnet Lam", "lett og mykt"), ("Plaskende Andunge", "boblende og plaskete"), ("Logrende Valp", "glad og varm"), ("Søt Kattunge", "liten og søt"),
     ];
 
     private static (string Name, string Hint)[] FinnishWords() =>
@@ -157,6 +167,7 @@ public static partial class CharacterRoster
         ("Utelias Kissanpentu", "pieni ja kehräävä"), ("Pieni Ankanpoikanen", "pieni ja piipittävä"),
         ("Karhunpentu", "pieni ja pehmeä"), ("Iso Ruskea Karhu", "syvä ja hidas"),
         ("Nälkäinen Susi", "matala ja murisevä"), ("Villainen Lammas", "pehmeä ja hidas"),
+        ("Tuhiseva Possunpoikanen", "pieni ja tuhiseva"), ("Kihara Possu", "vilkas ja kirkas"), ("Pehmoinen Karitsa", "kevyt ja pehmeä"), ("Molskahtava Ankanpoikanen", "kuplivan loiskiva"), ("Häntää Heiluttava Pentu", "iloinen ja lämmin"), ("Suloinen Kissanpentu", "pieni ja suloinen"),
     ];
 
     private static (string Name, string Hint)[] DutchWords() =>
@@ -171,5 +182,6 @@ public static partial class CharacterRoster
         ("Nieuwsgierig Katje", "klein en spinnend"), ("Klein Eendje", "klein en piepend"),
         ("Berenwelpje", "klein en zacht"), ("Grote Bruine Beer", "diep en langzaam"),
         ("Hongerige Wolf", "laag en grommend"), ("Wollig Schaap", "zacht en langzaam"),
+        ("Snuffelend Biggetje", "klein en snuivend"), ("Krullend Biggetje", "levendig en helder"), ("Pluizig Lammetje", "licht en zacht"), ("Plassend Eendje", "bruisend en spetterend"), ("Kwispelend Hondje", "blij en warm"), ("Lief Katje", "klein en lief"),
     ];
 }
