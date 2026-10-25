@@ -46,7 +46,7 @@ Built: piglet2/3, lamb2, duckling2, puppy2, kitten2 in all 14 rosters (32 charac
 
 *From review:* high findings 1-9 applied; medium 1, 2, 4, 5, 9 applied, 7 not a bug, 3, 6 and 8 skipped.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-25)
 
 - `src/DinoReader.Core/CLAUDE.md`, extend the Slice 125 line: animal casting tiers are own animal kind, then another young animal, then plain; a reused character takes an unused flavour. The starter recast (`StarterUpdate`) covers any un-edited member not playing a character of its own animal kind on the adapted roster (none if the roster has no such kind). Per-language casts match animals by id. (Slice 135: docs/plan/slices/135-dino-animal-voices-fixes.md)
 
