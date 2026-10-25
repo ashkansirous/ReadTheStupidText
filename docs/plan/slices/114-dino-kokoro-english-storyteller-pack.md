@@ -106,7 +106,7 @@ New strings (all 14 locales): "Storyteller voices", "Warmer, livelier English vo
 - **From review.** High 1-10 applied: the download outlives the page, refresh is queued, uninstall is atomic, Edited picks are kept on install/remove, `SupportsStorytellerPacks`. Medium 1-10 applied as above; #4 accepted (stored casts are recast on the next cast visit).
 - **Not yet verified.** The `packs.yml` run incl. the Kokoro sample step; device listening (Kokoro English front end, flavours on top); Windows head storyteller; native check of the Slice 114 strings.
 
-### For CLAUDE.md
+### For CLAUDE.md (lifted 2026-10-25)
 
 - `src/ReadTheStupidText.Infrastructure/CLAUDE.md`: Kokoro (`VoiceEngineKind.Kokoro`, Slice 114) is Dino-only English storyteller voices: one model, speaker id picks the voice, config via `ConfigureKokoro` (model, voices, tokens, lexicon, espeak data dir) in `SherpaEngineFactory`, the Android reader and `IosTtsEngine` (keep the three in step). Its pack `kokoro-en` has catalog kind `storyteller`; the text reader never resolves it. (Slice 114: docs/plan/slices/114-dino-kokoro-english-storyteller-pack.md)
 - `src/DinoReader.App/CLAUDE.md`: Storyteller voices (Slice 114): Dino alone registers `StorytellerVoices`; English books read with Kokoro while `kokoro-en` is installed, else Supertonic. Pools come from `StoryVoicing` (storyteller packs scanned), a pool change re-casts through `NarratorRecast` (`CastEditor.HasVoiceOutside`), the card is `StorytellerCard`/`StorytellerController` and shows only when the catalog lists the pack. Never add `kokoro` voices to RTST. (Slice 114: docs/plan/slices/114-dino-kokoro-english-storyteller-pack.md)

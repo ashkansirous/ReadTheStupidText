@@ -87,7 +87,7 @@ New strings (all 14 locales): "Sounds", "Normal", "Small", "Big", "Bouncy", "Sle
 - iOS reader build (not compiled).
 - Native-speaker check of the Slice 113 strings in the non-English locales.
 
-### For CLAUDE.md
+### For CLAUDE.md (lifted 2026-10-25)
 
 - `src/DinoReader.Core/CLAUDE.md`: a character's flavour is `CastMember.Flavour` (the guess from `FlavourGuess` when the cast is built, or the grown-up's pick, pinned with `Edited`); null (older story) means guess from the name. Word lists live in `FlavourWords` and each language's `LanguageRules.Flavours`; a diminutive ("little", "baby") beats the animal word. `Storyteller` is the narrator's own flavour and is never guessed or offered. (Slice 113: docs/plan/slices/113-dino-character-flavours.md)
 - `src/DinoReader.App/CLAUDE.md`: `StoryVoicing` sets each `VoicedSegment.Flavour` from `VoiceCast.FlavourForLine` (narration and unknown speakers are Storyteller). Pace is the sherpa `speed` per sentence and pitch is `PitchShifter` on the samples; both are in the sentence cache key, so a flavour never reuses another's audio. RTST and the system-voice fallbacks always play Normal.

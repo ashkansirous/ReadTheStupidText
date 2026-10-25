@@ -130,8 +130,8 @@ this plan turns it into ordered, shippable vertical slices.
 | 110 | Dino: translated text on screen, with "Show original text" | built | #311 | | [110-dino-translated-text-on-screen.md](docs/plan/slices/110-dino-translated-text-on-screen.md) |
 | 111 | Dino: parents read in their own voice | built | #313 | | [111-dino-parent-recordings.md](docs/plan/slices/111-dino-parent-recordings.md) |
 | 112 | Dino: store filters by age and author | built | #306 | | [112-dino-store-age-author-filters.md](docs/plan/slices/112-dino-store-age-author-filters.md) |
-| 113 | Dino: playful character voices (pitch and pace per character) | planned | | | [113-dino-character-flavours.md](docs/plan/slices/113-dino-character-flavours.md) |
-| 114 | Dino: Kokoro storyteller voices for English | planned | | | [114-dino-kokoro-english-storyteller-pack.md](docs/plan/slices/114-dino-kokoro-english-storyteller-pack.md) |
+| 113 | Dino: playful character voices (pitch and pace per character) | built | #314 | | [113-dino-character-flavours.md](docs/plan/slices/113-dino-character-flavours.md) |
+| 114 | Dino: Kokoro storyteller voices for English | built | #316 | | [114-dino-kokoro-english-storyteller-pack.md](docs/plan/slices/114-dino-kokoro-english-storyteller-pack.md) |
 
 Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
 
@@ -188,6 +188,8 @@ Built but not verified (details in each slice file):
 - Slice 111: **human:** Play Console Data safety "audio recordings, on-device only" answer; record/replay on Android (incl. 9-11), iOS, Windows head; mic permission denial; backup round trip; native read of `Rec_*` ([slice](docs/plan/slices/111-dino-parent-recordings.md)).
 - Slice 112: emulator check of chips, author picker, empty state; native read of new strings ([slice](docs/plan/slices/112-dino-store-age-author-filters.md)).
 - Dino first-run "Ready" screen says "Three stories" but four ship; a fix is in progress. (fix PR open)
+- Slice 113: emulator listening check (English and Farsi animal casts; drop pitch if robotic); system-voice fallback plays Normal; iOS reader build; native read of the strings ([slice](docs/plan/slices/113-dino-character-flavours.md)).
+- Slice 114: packs-6 run 40149528993 in progress, then bump `PackConstants.CatalogUrl`; Kokoro sample step; device listening (Kokoro English, flavours on top); Windows head storyteller; native check of the strings ([slice](docs/plan/slices/114-dino-kokoro-english-storyteller-pack.md)).
 - Slice 106: Norwegian on a Windows head via `MarianEngine` (third-party conversion, never run); en to da/fi/sv/nl/nb and back on Windows; the Norwegian packs are about 390 MB each ([slice](docs/plan/slices/106-windows-nordic-dutch-translation-packs.md)).
 - Windows has no `en-ja` translation pack (`TranslationPacks.FromEnglish` and `packs.yml` lack it), so English cannot be translated into Japanese offline on Windows; found while planning Slice 106, not yet scheduled.
 - Slice 43: the 8 translated Play listings are only worth adding when the app goes to Play production (it is closed testing now); get a native read first. The Microsoft Store keeps its existing Windows-specific listing (decided 2026-10-20). ([slice](docs/plan/slices/43-store-listing-refresh.md))

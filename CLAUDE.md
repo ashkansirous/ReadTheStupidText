@@ -59,7 +59,7 @@ Infrastructure  →  Application / Domain
 Mobile  →  Application / Domain / Documents
 Mobile.Shared (Windows target only)  →  Infrastructure
 Documents  →  Application
-DinoReader.Core → Application (LineReflow only)
+DinoReader.Core → Application, Domain
 ```
 
 - **Domain** (`net10.0`) — entities, value objects, enums. No framework deps.
@@ -162,8 +162,12 @@ so a failing test blocks the release.
 - **License is MIT** (Decision 16 in `docs/plan/decisions.md`). Anyone may use/extend/sell it
   provided the copyright notice is kept. Do **not** add GPL/LGPL components (the
   Supertonic/sherpa stack was chosen to keep this clean — see `STORE.md`). The one
-  **scoped exception**: espeak-ng data (GPL-3.0) lives only inside the downloaded `piper-fa`
-  and `piper-nb` packs, never in the repo or any package (Decisions 59-71, 108).
+  **scoped exception**: espeak-ng data (GPL-3.0) lives only inside the downloaded `piper-fa`,
+  `piper-nb` and `kokoro-en` packs, never in the repo or any package (Decisions 59-71, 108, 119).
+  The MIT licence covers the code only: Supertonic-3 weights are BigScience OpenRAIL-M, not
+  MIT/Apache-2.0. The `supertonic-3` pack ships `LICENSE-OpenRAIL-M` + `NOTICE` (via `packs.yml`);
+  keep both and pass the use restrictions on. Kokoro-82M is Apache-2.0.
+  (Slice 114: docs/plan/slices/114-dino-kokoro-english-storyteller-pack.md)
 - **Every merge to `main` that touches app code ships a version** (Decision 17;
   docs-only merges cut none, and only the changed platforms are rebuilt and
   submitted — Batch 8), derived by
