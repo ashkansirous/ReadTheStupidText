@@ -31,24 +31,24 @@ internal static class StoreTexts
 
     public static IReadOnlyList<StoreStorySpec> All { get; } =
     [
-        new(LionAndMouseId, "The Lion and the Mouse", "lion-and-mouse", LionAndMouse, 1, RetoldAesop, 4, 7, "Aesop", ["Lion", "Mouse"], 2, AddedDate),
-        new(GoldilocksId, "Goldilocks and the Three Bears", "goldilocks", Goldilocks, 3, RetoldTraditional, 3, 6, Traditional, ["Goldilocks", "Papa Bear", "Mama Bear", "Baby Bear"], 2, AddedDate),
-        new(RedRidingHoodId, "Little Red Riding Hood", "red-riding-hood", RedRidingHood, 3, RetoldTraditional, 4, 7, Traditional, ["Red Riding Hood", "Mother", "Wolf", "Grandmother", "Woodcutter"], 2, AddedDate),
-        new(UglyDucklingId, "The Ugly Duckling", "ugly-duckling", UglyDuckling, 0, "Retold from Andersen · free to share", 5, 8, "Hans Christian Andersen", ["Mother Duck", "Duckling", "Hen", "Swan"], 2, AddedDate),
-        new(RedHenId, "The Little Red Hen", "little-red-hen", RedHen, 3, RetoldTraditional, 3, 6, Traditional, ["Hen", "Dog", "Cat", "Duck"], 2, AddedDate),
-        new(BillyGoatsId, "The Three Billy Goats Gruff", "billy-goats-gruff", BillyGoats, 0, RetoldTraditional, 4, 7, Traditional, ["Little Billy", "Middle Billy", "Big Billy", "Troll"], 2, AddedDate),
-        new(BeanstalkId, "Jack and the Beanstalk", "jack-and-the-beanstalk", Beanstalk, 2, RetoldTraditional, 5, 8, Traditional, ["Jack", "Mother", "Giant", "Peddler"], 2, AddedDate),
-        new(ElvesId, "The Elves and the Shoemaker", "elves-and-shoemaker", Elves, 1, "Retold from the Brothers Grimm · free to share", 5, 8, "Brothers Grimm", ["Hans", "Greta", "Nib", "Nob"], 2, AddedDate),
-        new(TownMouseId, "The Town Mouse and the Country Mouse", "town-mouse-country-mouse", TownMouse, 2, RetoldAesop, 4, 7, "Aesop", ["Town Mouse", "Country Mouse"], 2, AddedDate),
-        new(PeterRabbitId, "The Tale of Peter Rabbit", "peter-rabbit", PeterRabbit, 3, "Beatrix Potter, 1902 (shortened)", 3, 6, "Beatrix Potter", ["Mrs. Rabbit", "Peter", "Mr. McGregor"], 2, AddedDate),
+        new(LionAndMouseId, "The Lion and the Mouse", "lion-and-mouse", LionAndMouse, 1, RetoldAesop, 4, 7, "Aesop", ["Lion", "Mouse"], 3, AddedDate),
+        new(GoldilocksId, "Goldilocks and the Three Bears", "goldilocks", Goldilocks, 3, RetoldTraditional, 3, 6, Traditional, ["Goldilocks", "Papa Bear", "Mama Bear", "Baby Bear"], 3, AddedDate),
+        new(RedRidingHoodId, "Little Red Riding Hood", "red-riding-hood", RedRidingHood, 3, RetoldTraditional, 4, 7, Traditional, ["Red Riding Hood", "Mother", "Wolf", "Grandmother", "Woodcutter"], 3, AddedDate),
+        new(UglyDucklingId, "The Ugly Duckling", "ugly-duckling", UglyDuckling, 0, "Retold from Andersen · free to share", 5, 8, "Hans Christian Andersen", ["Mother Duck", "Duckling", "Hen", "Swan"], 3, AddedDate),
+        new(RedHenId, "The Little Red Hen", "little-red-hen", RedHen, 3, RetoldTraditional, 3, 6, Traditional, ["Hen", "Dog", "Cat", "Duck"], 3, AddedDate),
+        new(BillyGoatsId, "The Three Billy Goats Gruff", "billy-goats-gruff", BillyGoats, 0, RetoldTraditional, 4, 7, Traditional, ["Little Billy", "Middle Billy", "Big Billy", "Troll"], 3, AddedDate),
+        new(BeanstalkId, "Jack and the Beanstalk", "jack-and-the-beanstalk", Beanstalk, 2, RetoldTraditional, 5, 8, Traditional, ["Jack", "Mother", "Giant", "Peddler"], 3, AddedDate),
+        new(ElvesId, "The Elves and the Shoemaker", "elves-and-shoemaker", Elves, 1, "Retold from the Brothers Grimm · free to share", 5, 8, "Brothers Grimm", ["Hans", "Greta", "Nib", "Nob"], 3, AddedDate),
+        new(TownMouseId, "The Town Mouse and the Country Mouse", "town-mouse-country-mouse", TownMouse, 2, RetoldAesop, 4, 7, "Aesop", ["Town Mouse", "Country Mouse"], 3, AddedDate),
+        new(PeterRabbitId, "The Tale of Peter Rabbit", "peter-rabbit", PeterRabbit, 3, "Beatrix Potter, 1902 (shortened)", 3, 6, "Beatrix Potter", ["Mrs. Rabbit", "Peter", "Mr. McGregor"], 3, AddedDate),
     ];
 
     public const string LionAndMouse = """
 One hot afternoon a great Lion lay asleep in the shade of a tree. A tiny Mouse was running home through the grass. She did not see the Lion, and she ran right over his nose.
 ---
-The Lion woke up with a roar. He caught the little Mouse under his big paw.
+The Lion woke up with a roar. He put his big paw down beside the little Mouse.
 
-"Who dares to wake the king of the beasts?" said Lion. "I am going to eat you!"
+"Who dares to wake the king of the beasts?" said Lion. "You gave me such a fright!"
 ---
 "Please let me go, great Lion," said Mouse. "I did not mean to wake you. If you are kind to me today, I will be kind to you one day."
 ---
@@ -56,7 +56,7 @@ Lion laughed so hard that his tummy shook. "You, help me?" said Lion. "You are f
 
 But he was a kind king, and he lifted his paw. "Run home, little Mouse," said Lion.
 ---
-Some days later the Lion was walking through the forest. Snap! A hunter's net fell over him, and the ropes pulled tight. The Lion roared and roared, but he could not get out.
+Some days later the Lion was walking through the forest. Snap! A big net fell over him, and the ropes pulled tight. The Lion roared and roared, but he could not get out.
 ---
 Mouse heard the roar from far away. She ran through the grass as fast as her legs could go.
 
@@ -80,9 +80,9 @@ In the house lived three bears. Papa Bear was big, Mama Bear was middle-sized an
 
 On the table stood three bowls of porridge.
 ---
-Goldilocks tasted the porridge in the big bowl. "Ouch, this porridge is too hot," said Goldilocks.
+Goldilocks tasted the porridge in the big bowl. "Oh, this porridge is too hot," said Goldilocks.
 
-She tasted the porridge in the middle bowl. "Yuck, this porridge is too cold," said Goldilocks.
+She tasted the porridge in the middle bowl. "Oh, this porridge is too cold," said Goldilocks.
 
 Then she tasted the porridge in the little bowl. "Mmm, this porridge is just right," said Goldilocks, and she ate it all up.
 ---
@@ -128,7 +128,7 @@ One morning her mother packed a basket of cakes and honey.
 
 "I will be careful," said Red Riding Hood, and off she went.
 ---
-In the wood Red Riding Hood met a big grey Wolf. He had a sly smile and shiny teeth.
+In the wood Red Riding Hood met a big grey Wolf. He had a sly smile and a bushy tail.
 
 "Good morning, little girl," said Wolf. "Where are you going so early?"
 
@@ -140,7 +140,7 @@ Red Riding Hood stopped to pick flowers. Meanwhile the Wolf ran as fast as he co
 ---
 Knock, knock! The Wolf knocked on the door. "Who is there?" said Grandmother.
 
-"It is Red Riding Hood," said Wolf in a soft little voice. Grandmother opened the door, and the Wolf jumped inside. He shut her in the big wardrobe, put on her nightcap and climbed into her bed.
+"It is Red Riding Hood," said Wolf in a soft little voice. Grandmother opened the door, and the Wolf jumped inside. Grandmother hid in the big wardrobe, and the Wolf put on her nightcap and climbed into her bed.
 ---
 Soon Red Riding Hood came to the cottage with her flowers. She went in and walked up to the bed.
 
@@ -154,15 +154,15 @@ Soon Red Riding Hood came to the cottage with her flowers. She went in and walke
 ---
 "Grandmother, what big teeth you have!" said Red Riding Hood.
 
-"All the better to scare you with!" said Wolf, and he jumped out of the bed.
+"All the better to surprise you with!" said Wolf, and he jumped out of the bed.
 
-"Help!" cried Red Riding Hood, and she ran out of the door.
+"Oh!" cried Red Riding Hood, and she ran out of the door.
 ---
-A Woodcutter was chopping wood nearby. He heard the shout and came running with his big axe.
+A Woodcutter was working nearby. He heard the shout and came running.
 
 "Stop right there, Wolf!" said Woodcutter. "That is no way to treat a little girl."
 
-The Wolf took one look at the axe, and he ran away into the wood as fast as his legs could carry him. He never came back.
+The Wolf took one look at the Woodcutter, and he ran away into the wood as fast as his legs could carry him. He never came back.
 ---
 The Woodcutter opened the wardrobe, and out came Grandmother, quite safe. "Thank you, dear Woodcutter," said Grandmother. "And thank you for coming, my little Red Riding Hood."
 
@@ -176,17 +176,17 @@ One sunny summer, in a nest by the pond, a mother duck sat on her eggs. One by o
 ---
 At last the big egg cracked, and out came a big grey bird with a long neck. "Oh my," said Mother Duck. "He does not look like my other babies. But he swims very well, so he must be mine."
 
-The other ducklings laughed. "You are so ugly!" said Duckling's brothers.
+The other ducklings looked surprised. "You look different!" said Duckling's brothers.
 ---
-Every day it was worse. The ducks pecked him, the hens chased him, and even the children laughed. "Go away, you ugly thing!" said Hen.
+Every day he felt a little more left out. The ducks paddled off, the hens were busy, and nobody asked him to play. "Not today," said Hen.
 
-The little grey duckling was very sad. One night he ran away, across the fields and over the marsh.
+The little grey duckling felt sad. One night he set off to look for friends, across the fields and over the marsh.
 ---
-He wandered for a long time. In the autumn the leaves turned brown and the wind grew cold. He found a little cottage and went in, but a grumpy cat lived there.
+He wandered for a long time. In the autumn the leaves turned brown and the wind grew cold. He found a little cottage and went in, but a sleepy cat lived there.
 
-"Can you purr?" said Cat. "Can you catch mice? No? Then you are no use here."
+"Can you purr?" said Cat. "Can you catch mice? No? Then I think your home is somewhere else."
 ---
-The winter was long and hard. The duckling hid in the reeds by a frozen pond. He was cold and hungry, and he was very lonely. "Will I ever be happy?" said Duckling.
+The winter was long and hard. The duckling hid in the reeds by a frozen pond. He was cold, and he missed having friends. "Will I ever find my family?" said Duckling.
 
 But he did not give up, and slowly the snow melted.
 ---
@@ -194,13 +194,13 @@ At last it was spring. The sun was warm and the birds were singing. The duckling
 
 Below him, on a clear lake, floated three beautiful white swans.
 ---
-"I will fly down to them," said Duckling. "Perhaps they will chase me away, but I would rather be chased by swans than be alone."
+"I will fly down to them," said Duckling. "Perhaps they will not want to play, but I would like to say hello."
 
 He bent his head to the water. In the lake he saw not a grey bird, but a white swan with a long, graceful neck.
 ---
 The three swans swam up to him. "Welcome, friend," said Swan. "Come and swim with us."
 
-"I am not ugly after all," said Duckling softly. "I was a swan all the time!"
+"I am not a plain grey bird after all," said Duckling softly. "I was a swan all the time!"
 
 And the young swan spread his shining wings. He was happier than he had ever dreamed.
 """;
@@ -278,7 +278,7 @@ Once upon a time three Billy Goats lived on a hill. Their name was Gruff. Little
 
 The grass on their hill was getting short. Across the river there was a meadow full of sweet green grass.
 ---
-To get to the meadow, the goats had to cross a wooden bridge. And under the bridge lived a nasty Troll, with eyes like saucers and a nose as long as a poker.
+To get to the meadow, the goats had to cross a wooden bridge. And under the bridge lived a grumpy Troll, with eyes like saucers and a nose as long as a carrot.
 
 Little Billy went first. Trip, trap, trip, trap, went his little hooves on the bridge.
 ---
@@ -286,9 +286,9 @@ Little Billy went first. Trip, trap, trip, trap, went his little hooves on the b
 
 "It is only I, Little Billy Goat Gruff," said Little Billy in a tiny voice. "I am going to the meadow to eat grass."
 
-"I am coming to gobble you up!" said Troll.
+"Nobody crosses my bridge without a fuss!" said Troll.
 ---
-"Oh, please do not eat me," said Little Billy. "I am so small. Wait for my brother, who is much bigger than I."
+"Oh, please let me cross," said Little Billy. "I am so small. Wait for my brother, who is much bigger than I."
 
 "Well, be off with you," said Troll. And Little Billy skipped across the bridge to the meadow.
 ---
@@ -298,9 +298,9 @@ Then Middle Billy came. Trip, trap, trip, trap, went his hooves on the bridge.
 
 "It is only I, Middle Billy Goat Gruff," said Middle Billy. "I am going to the meadow to eat grass."
 
-"I am coming to gobble you up!" said Troll.
+"Nobody crosses my bridge without a fuss!" said Troll.
 ---
-"Oh, please do not eat me," said Middle Billy. "Wait for my brother, who is much bigger than I."
+"Oh, please let me cross," said Middle Billy. "Wait for my brother, who is much bigger than I."
 
 "Very well, be off with you," said Troll. And Middle Billy trotted across the bridge to the meadow.
 ---
@@ -310,13 +310,13 @@ At last Big Billy came. TRIP, TRAP, TRIP, TRAP, went his big hooves on the bridg
 
 "It is I, Big Billy Goat Gruff," said Big Billy in a deep, loud voice.
 
-"I am coming to gobble you up!" said Troll, and he climbed onto the bridge.
+"Nobody crosses my bridge without a fuss!" said Troll, and he stamped onto the bridge.
 ---
-"Come on, then," said Big Billy. "I have two horns, and I will toss you high into the air."
+"Why are you so grumpy?" said Big Billy. "I think you are just lonely. Come across with us and taste the sweet green grass."
 
-Big Billy lowered his horns and gave the Troll a mighty toss. Up, up, up went the Troll, and he landed with a splash in the river. He swam away, and nobody ever saw him under the bridge again.
+"Nobody ever asks me to come along," said Troll. He nibbled a little grass, and it was so good that he smiled for the very first time.
 ---
-Big Billy crossed the bridge to join his brothers in the meadow. The three Billy Goats Gruff ate sweet green grass all summer long, and they grew so fat that they could hardly walk home.
+Big Billy and the Troll crossed the bridge to join the other goats in the meadow. The three Billy Goats Gruff and their new friend ate sweet green grass all summer long, and they grew so fat that they could hardly walk home.
 
 Snip, snap, snout, this tale's told out.
 """;
@@ -330,19 +330,19 @@ On the way Jack met a funny little Peddler. "That is a fine cow," said Peddler. 
 
 "Magic beans?" said Jack. He thought it was a wonderful bargain, so he handed over Milky-White and ran home with the beans.
 ---
-"Five beans?" said Mother. "Oh, Jack, how silly you are!" She threw the beans out of the window and sent Jack to bed without his supper.
+"Five beans?" said Mother. "Oh, Jack, how silly you are!" She threw the beans out of the window and sent Jack to bed.
 
 In the morning Jack looked out of the window. A giant beanstalk had grown up in the night, so tall that it went right up into the clouds.
 ---
 Jack began to climb. Up and up he went, past the birds and into the clouds. At the top he found a long road and a huge castle.
 
-A giant woman opened the door. "Oh dear, my husband eats boys for his breakfast," said Giant's Wife. "But you look so hungry that I will give you some bread first."
+A giant woman opened the door. "Oh dear, my husband does not like visitors," said Giant's Wife. "But you look so hungry that I will give you some bread first."
 ---
 Boom, boom, boom! The whole castle shook. "Fee, fi, fo, fum!" said Giant. "I smell a boy!"
 
-"Nonsense, dear," said Giant's Wife. "It is only the sheep." She hid Jack in the oven, and the Giant sat down to eat.
+"Nonsense, dear," said Giant's Wife. "It is only the sheep." She hid Jack in the cupboard, and the Giant sat down to eat.
 ---
-After supper the Giant took out a bag of gold coins and counted them. Soon he began to nod, and then he was fast asleep and snoring. Jack crept out of the oven, grabbed the bag of gold and ran down the beanstalk as fast as he could.
+After supper the Giant took out a bag of gold coins and counted them. Soon he began to nod, and then he was fast asleep and snoring. Jack crept out of the cupboard, grabbed the bag of gold and ran down the beanstalk as fast as he could.
 
 "Look, Mother!" said Jack. "We are rich!"
 ---
@@ -354,7 +354,7 @@ Jack went up a third time. The Giant had a golden harp that played by itself. Ja
 
 The Giant woke up and ran after him. "Fee, fi, fo, fum!" said Giant.
 ---
-Jack slid down the beanstalk. "Mother, bring me the axe!" said Jack. Chop, chop, chop! The beanstalk came crashing down, and the Giant never climbed down again.
+Jack slid down the beanstalk as fast as he could. The Giant tried to follow, but the beanstalk wobbled and swayed. "Oh dear, I am too scared to climb down," said Giant. So he went back to his castle in the clouds and never came down again.
 
 Jack and his mother lived happily ever after, with the little hen and the golden harp.
 """;
@@ -408,31 +408,31 @@ So the two mice set off to the city. When they reached the big house, Town Mouse
 ---
 Country Mouse had never seen so much food. "What a feast!" said Country Mouse. "You are so lucky to live here."
 
-He was just about to take a bite of cake when the door burst open. In came a big Cat, with sharp claws and green eyes.
+He was just about to take a bite of cake when the door burst open. In came a big, curious Cat.
 ---
-"Run!" said Town Mouse. The two mice dashed under the table and hid behind a cupboard. They were trembling, and their hearts were beating very fast.
+"Run!" said Town Mouse. The two mice dashed under the table and hid behind a cupboard. They held very still, and their little noses twitched.
 
 The cat padded away at last.
 ---
 "Is it always like this?" said Country Mouse.
 
-"Oh, yes," said Town Mouse. "There is always a cat or a trap or a broom. But the food is so good that it is worth it."
+"Oh, yes," said Town Mouse. "There is always a cat or a dog or a broom. But the food is so good that it is worth it."
 
-They crept out, but the door opened again, and in came the Cat's friend, a barking Dog.
+They crept out, but the door opened again, and in came a big, barking Dog.
 ---
-Country Mouse had seen enough. "Thank you for the feast, cousin," said Country Mouse. "But I would rather have a nut in peace than a cake in fear."
+Country Mouse had seen enough. "Thank you for the feast, cousin," said Country Mouse. "But I would rather have a nut in peace than a cake in a fuss."
 
 "Then go home, dear cousin," said Town Mouse. "I will stay here."
 ---
 Country Mouse hurried back to his quiet field, and he was very glad to be home. He ate his barley and nuts under the warm sun, and he had never tasted anything so good.
 
-Simple food in peace is better than a feast in fear.
+Simple food in peace is better than a feast in a fuss.
 """;
 
     public const string PeterRabbit = """
 Once upon a time there were four little Rabbits, and their names were Flopsy, Mopsy, Cotton-tail and Peter. They lived with their Mother in a sand-bank, underneath the root of a very big fir-tree.
 ---
-"Now, my dears," said Mrs. Rabbit one morning, "you may go into the fields or down the lane, but don't go into Mr. McGregor's garden. Your Father had an accident there; he was put in a pie by Mrs. McGregor."
+"Now, my dears," said Mrs. Rabbit one morning, "you may go into the fields or down the lane, but don't go into Mr. McGregor's garden. Mr. McGregor is a grumpy gardener, and he does not like rabbits in his garden."
 
 "Now run along, and don't get into mischief. I am going out," said Mrs. Rabbit.
 ---
@@ -440,23 +440,23 @@ Then old Mrs. Rabbit took a basket and her umbrella, and went through the wood t
 
 But Peter, who was very naughty, ran straight away to Mr. McGregor's garden, and squeezed under the gate!
 ---
-First he ate some lettuces and some French beans, and then he ate some radishes. And then, feeling rather sick, he went to look for some parsley.
+First he ate some lettuces and some French beans, and then he ate some radishes. And then, feeling rather full, he went to look for some parsley.
 
 But round the end of a cucumber frame, whom should he meet but Mr. McGregor!
 ---
-Mr. McGregor was on his hands and knees planting out young cabbages, but he jumped up and ran after Peter, waving a rake. "Stop thief!" said Mr. McGregor.
+Mr. McGregor was on his hands and knees planting out young cabbages, but he jumped up and ran after Peter, waving his arms. "Stop thief!" said Mr. McGregor.
 
-Peter was most dreadfully frightened. He rushed all over the garden, for he had forgotten the way back to the gate. He lost one of his shoes among the cabbages, and the other shoe amongst the potatoes.
+Peter was in a great hurry. He scampered all over the garden, for he had forgotten the way back to the gate. He lost one of his shoes among the cabbages, and the other shoe amongst the potatoes.
 ---
-Peter gave himself up for lost, and shed big tears. But his sobs were overheard by some friendly sparrows, who flew to him in great excitement, and implored him to exert himself.
+Peter felt lost. But some friendly sparrows saw him, and flew to him in great excitement, and cheered him on. "Come along, Peter! You can do it!" they chirped.
 
-Mr. McGregor came up with a sieve, which he intended to pop upon the top of Peter. But Peter wriggled out just in time, leaving his jacket behind him.
+Mr. McGregor came hurrying up with a rake. But Peter wriggled out of his little jacket just in time, leaving it behind him.
 ---
 And he rushed into the tool-shed, and jumped into a can. It would have been a beautiful thing to hide in, if it had not had so much water in it.
 
 Presently Peter sneezed. "Kertyschoo!" said Peter. Mr. McGregor was after him in no time, but Peter jumped out of a window, upsetting three plants. The window was too small for Mr. McGregor, and he was tired of running after Peter. He went back to his work.
 ---
-Peter sat down to rest. He was out of breath and trembling with fright, and he had not the least idea which way to go. Also he was very damp with sitting in that can.
+Peter sat down to rest. He was out of breath, and he had not the least idea which way to go. Also he was very damp with sitting in that can.
 
 After a time he began to wander about, going lippity, lippity, not very fast, and looking all around.
 ---
@@ -468,7 +468,7 @@ Peter got down very quietly off the wheelbarrow, and started running as fast as 
 
 Mr. McGregor caught sight of him at the corner, but Peter did not care. He slipped underneath the gate, and was safe at last in the wood outside the garden.
 ---
-Mr. McGregor hung up the little jacket and the shoes for a scare-crow to frighten the blackbirds.
+Mr. McGregor hung up the little jacket and the shoes for a scare-crow.
 
 Peter never stopped running or looked behind him till he got home to the big fir-tree. He was so tired that he flopped down upon the nice soft sand on the floor of the rabbit-hole, and shut his eyes.
 ---

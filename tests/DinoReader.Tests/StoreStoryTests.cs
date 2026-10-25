@@ -179,6 +179,71 @@ public sealed class StoreStoryTests : IDisposable
         Assert.Equal(StoreCover.Width, (jpeg[frame + 7] << 8) | jpeg[frame + 8]);
     }
 
+    [Fact]
+    public void EveryBundledStarter_HasAStoreEntry_WithTheSameIdAsTheBundledFile()
+    {
+        Assert.Equal(StarterBuilder.AllFileNames.Order(), StoreBuilder.StarterEntries.Keys.Order());
+        var ids = StarterBuilder.Starters.ToDictionary(s => s.FileName, s => s.Id);
+        ids[StarterBuilder.GoodEnoughFile] = StarterBuilder.GoodEnoughId;
+        foreach (var (fileName, entry) in StoreBuilder.StarterEntries)
+        {
+            Assert.Equal(ids[fileName], entry.Id);
+            Assert.InRange(entry.AgeMin, 0, entry.AgeMax);
+            Assert.InRange(entry.AgeMax, entry.AgeMin, 18);
+            Assert.False(string.IsNullOrWhiteSpace(entry.Credits) || string.IsNullOrWhiteSpace(entry.Author), entry.Title);
+        }
+    }
+
+    [Fact]
+    public async Task TheStarterStoreBuild_KeepsTheBundledIds_AndWritesMetaTheWorkerChecks()
+    {
+        var library = new FileStoryLibrary(_root);
+
+        var built = await StarterBuilder.BuildAllAsync(library);
+
+        Assert.Equal(StarterBuilder.AllFileNames.Count, built.Count);
+        foreach (var (fileName, story) in built)
+        {
+            StoreStorySpec spec = StoreBuilder.StarterEntries[fileName].ToSpec(story, StarterBuilder.StarterVersions[fileName]);
+            Assert.Equal(story.Id, spec.Id);
+            using JsonDocument meta = JsonDocument.Parse(StoreBuilder.MetaJson(spec, story));
+            Assert.Equal(story.Pages.Count, meta.RootElement.GetProperty("pageCount").GetInt32());
+            Assert.Equal(StarterBuilder.StarterVersions[fileName], meta.RootElement.GetProperty("version").GetInt32());
+        }
+    }
+
+    [Fact]
+    public async Task APictureCover_IsStoredAsTheCoverPhoto_AndBecomesTheStoreCover()
+    {
+        var library = new FileStoryLibrary(_root);
+        StoreStorySpec spec = StoreTexts.All[0];
+        Story story = StoreBuilder.Build(spec);
+        await library.AddAsync(story);
+        string source = Path.Combine(_root, "source-cover.jpg");
+        byte[] picture = [0xFF, 0xD8, 1, 2, 3, 0xFF, 0xD9];
+        await File.WriteAllBytesAsync(source, picture);
+
+        Story covered = await StarterBuilder.WithPictureCoverAsync(story, source, library);
+
+        Assert.Equal(CoverStyle.Picture, covered.CoverStyle);
+        Assert.Throws<InvalidOperationException>(() => StoreBuilder.CoverBytes(covered, spec, library));
+        string thumb = Path.Combine(_root, "thumb.jpg");
+        await File.WriteAllBytesAsync(thumb, [0xFF, 0xD8, 9, 0xFF, 0xD9]);
+        Assert.Equal(await File.ReadAllBytesAsync(thumb), StoreBuilder.CoverBytes(covered, spec, library, thumb));
+        Assert.Same(story, await StarterBuilder.WithPictureCoverAsync(story, null, library));
+        Assert.Equal(CoverStyle.Colour, story.CoverStyle);
+    }
+
+    [Fact]
+    public void PicturesOfTheWrongCount_FailTheBuild()
+    {
+        Story story = StoreBuilder.Build(StoreTexts.All[0]);
+        string[] tooFew = Enumerable.Range(1, story.Pages.Count - 1).Select(i => $"{i}.jpg").ToArray();
+
+        Assert.Throws<InvalidOperationException>(() => StarterBuilder.WithPictures(story, tooFew));
+        Assert.All(StarterBuilder.WithPictures(story, Enumerable.Range(1, story.Pages.Count).Select(i => $"{i}.jpg").ToArray()).Pages, p => Assert.NotNull(p.ImageFile));
+    }
+
     /// <summary>The first offset of each marker segment before the scan data (<c>FF xx</c> then a two-byte length), keyed by marker.</summary>
     private static Dictionary<byte, int> JpegSegments(byte[] jpeg)
     {

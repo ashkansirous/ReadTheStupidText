@@ -9,8 +9,9 @@ public static class StoryPackageWriter
     /// <summary>Writes <paramref name="story"/> and its page and cover pictures from <paramref name="library"/> to <paramref name="output"/>.
     /// A picture the story names but the folder lacks is left out. The package id is the story's <see cref="Story.SourceId"/> when it
     /// came from a package, so a re-exported story keeps its identity, else its own id. The parent's page recordings (Slice 111) go in only when
-    /// <paramref name="includeRecordings"/> is true (a backup); a shared or exported package never carries a parent's voice.</summary>
-    public static async Task WriteAsync(Story story, IStoryLibrary library, Stream output, bool includeRecordings = false)
+    /// <paramref name="includeRecordings"/> is true (a backup); a shared or exported package never carries a parent's voice.
+    /// <paramref name="version"/> is the content version a bundled starter records in its manifest (omitted when not set).</summary>
+    public static async Task WriteAsync(Story story, IStoryLibrary library, Stream output, bool includeRecordings = false, int? version = null)
     {
         if (!includeRecordings)
         {
@@ -19,7 +20,7 @@ public static class StoryPackageWriter
 
         string packageId = story.SourceId ?? story.Id;
         using var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true);
-        var manifest = new StoryPackageManifest(StoryPackageManifest.CurrentSchemaVersion, packageId, story.Title, story.Language);
+        var manifest = new StoryPackageManifest(StoryPackageManifest.CurrentSchemaVersion, packageId, story.Title, story.Language, version);
         await AddTextAsync(zip, StoryPackageManifest.ManifestFileName, manifest.ToJson());
         await AddTextAsync(zip, StoryPackageManifest.StoryFileName, StoryJson.Serialize(story with { SourceId = null, ShowOriginalText = false }));
         foreach (string name in story.PictureFiles().Concat(StoryRecordings.Files(story)))
