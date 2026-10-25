@@ -36,7 +36,7 @@ internal static class StoreTexts
         new(RedRidingHoodId, "Little Red Riding Hood", "red-riding-hood", RedRidingHood, 3, RetoldTraditional, 4, 7, Traditional, ["Red Riding Hood", "Mother", "Wolf", "Grandmother", "Woodcutter"], 3, AddedDate),
         new(UglyDucklingId, "The Ugly Duckling", "ugly-duckling", UglyDuckling, 0, "Retold from Andersen · free to share", 5, 8, "Hans Christian Andersen", ["Mother Duck", "Duckling", "Hen", "Swan"], 3, AddedDate),
         new(RedHenId, "The Little Red Hen", "little-red-hen", RedHen, 3, RetoldTraditional, 3, 6, Traditional, ["Hen", "Dog", "Cat", "Duck"], 3, AddedDate),
-        new(BillyGoatsId, "The Three Billy Goats Gruff", "billy-goats-gruff", BillyGoats, 0, RetoldTraditional, 4, 7, Traditional, ["Little Billy", "Middle Billy", "Big Billy", "Troll"], 4, AddedDate),
+        new(BillyGoatsId, "The Three Billy Goats Gruff", "billy-goats-gruff", BillyGoats, 0, RetoldTraditional, 4, 7, Traditional, ["Little Billy", "Middle Billy", "Big Billy", "Troll"], 5, AddedDate),
         new(BeanstalkId, "Jack and the Beanstalk", "jack-and-the-beanstalk", Beanstalk, 2, RetoldTraditional, 5, 8, Traditional, ["Jack", "Mother", "Giant", "Peddler"], 3, AddedDate),
         new(ElvesId, "The Elves and the Shoemaker", "elves-and-shoemaker", Elves, 1, "Retold from the Brothers Grimm · free to share", 5, 8, "Brothers Grimm", ["Hans", "Greta", "Nib", "Nob"], 3, AddedDate),
         new(TownMouseId, "The Town Mouse and the Country Mouse", "town-mouse-country-mouse", TownMouse, 2, RetoldAesop, 4, 7, "Aesop", ["Town Mouse", "Country Mouse"], 3, AddedDate),
@@ -280,15 +280,17 @@ The grass on their hill was getting short. Across the river there was a meadow f
 ---
 To get to the meadow, the goats had to cross a wooden bridge. And under the bridge lived a grumpy Troll, with eyes like saucers and a nose as long as a carrot.
 
-Little Billy went first. Trip, trap, trip, trap, went his little hooves on the bridge.
+He sat there all alone, day after day.
 ---
+Little Billy went first. Trip, trap, trip, trap, went his little hooves on the bridge.
+
 "Who is that trip-trapping over my bridge?" said Troll.
 
-"It is only I, Little Billy Goat Gruff," said Little Billy in a tiny voice. "I am going to the meadow to eat grass."
-
-"Nobody crosses my bridge without a fuss!" said Troll.
+"It is only me, Little Billy Goat Gruff," said Little Billy in a tiny voice. "I am going to the meadow to eat grass."
 ---
-"Oh, please let me cross," said Little Billy. "I am so small. Wait for my brother, who is much bigger than I."
+"Nobody crosses my bridge without a stamping match!" said Troll.
+
+"Oh, please let me cross," said Little Billy. "I am too small to stamp. Wait for my brother, who is much bigger than me."
 
 "Well, be off with you," said Troll. And Little Billy skipped across the bridge to the meadow.
 ---
@@ -296,27 +298,53 @@ Then Middle Billy came. Trip, trap, trip, trap, went his hooves on the bridge.
 
 "Who is that trip-trapping over my bridge?" said Troll.
 
-"It is only I, Middle Billy Goat Gruff," said Middle Billy. "I am going to the meadow to eat grass."
-
-"Nobody crosses my bridge without a fuss!" said Troll.
+"It is only me, Middle Billy Goat Gruff," said Middle Billy. "I am going to the meadow to eat grass."
 ---
-"Oh, please let me cross," said Middle Billy. "Wait for my brother, who is much bigger than I."
+"Nobody crosses my bridge without a stamping match!" said Troll.
+
+"Oh, please let me cross," said Middle Billy. "I am too small to stamp. Wait for my brother, who is much bigger than me."
 
 "Very well, be off with you," said Troll. And Middle Billy trotted across the bridge to the meadow.
 ---
-At last Big Billy came. TRIP, TRAP, TRIP, TRAP, went his big hooves on the bridge.
+At last Big Billy came. TRIP, TRAP, TRIP, TRAP, went his big hooves on the bridge. The whole bridge shook.
 
 "Who is that trip-trapping over my bridge?" said Troll.
 
-"It is I, Big Billy Goat Gruff," said Big Billy in a deep, loud voice.
-
-"Nobody crosses my bridge without a fuss!" said Troll, and he stamped onto the bridge.
+"It is me, Big Billy Goat Gruff," said Big Billy in a deep, loud voice.
 ---
-"Why are you so grumpy?" said Big Billy. "I think you are just lonely. Come across with us and taste the sweet green grass."
+"Nobody crosses my bridge without a stamping match!" said Troll, and he stamped onto the bridge.
 
-"Nobody ever asks me to come along," said Troll. He nibbled a little grass, and it was so good that he smiled for the very first time.
+Stamp, stamp, stamp, went his big feet. Big Billy stood still and waited for his turn.
 ---
-Big Billy and the Troll crossed the bridge to join the other goats in the meadow. The three Billy Goats Gruff and their new friend ate sweet green grass all summer long, and they grew so fat that they could hardly walk home.
+But the old boards were wet and slippery. The Troll wobbled this way and that way.
+
+Splash! He slid off the low bridge and sat down in the shallow river.
+---
+"Are you all right?" said Big Billy.
+
+The water was shallow and cool, and it only came up to the Troll's tummy. A little fish tickled his toes, and he began to laugh.
+
+"Ho, ho, ho! That tickles!" said Troll. And the three Billy Goats laughed too.
+---
+The soggy Troll climbed out onto the bank below the hill and sat down. Big Billy came down from the bridge and sat beside him.
+
+"Why are you so grumpy?" said Big Billy. "I think you are just lonely."
+
+"Nobody ever asks me to come along," said Troll.
+---
+"Come across with us and taste the sweet green grass," said Big Billy.
+
+Big Billy and the Troll crossed the bridge to join the other goats in the meadow.
+---
+The Troll nibbled a little grass, and it was so good that he gave a big, happy smile.
+
+"Thank you, Billy Goats," said Troll. "This is the best day I have ever had."
+---
+The three Billy Goats Gruff and their new friend ate sweet green grass all summer long.
+
+Every evening the goats went trip, trap, home over the bridge, and the Troll waved goodnight.
+
+"Come back tomorrow!" said Troll.
 
 Snip, snap, snout, this tale's told out.
 """;

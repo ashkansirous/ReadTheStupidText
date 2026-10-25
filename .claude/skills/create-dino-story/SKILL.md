@@ -87,12 +87,42 @@ Prompt templates: [prompts.md](prompts.md).
   - The art record's character lines are the canonical outfits, written from the accepted line-up,
     not from the first prompt (the pilot asked for a "red cap" but the line-up drew a knitted beanie;
     later prompts must follow the picture).
+- **Image model: leave the picker alone** (checked 2026-10-25,
+  https://gemini.google/overview/image-generation/). The Images tool has its own model choice, separate from
+  the text-model picker (3.5 Flash-Lite / 3.8 Flash / 3.1 Pro / 4 Argon); Google doesn't document that the
+  text picker changes the image model, so leave it. In practice (Billy Goats, 2026-10-25) the Images tool
+  showed no model menu at all, only Aspect ratio; after the user's Google AI Pro upgrade pictures simply came
+  out at 1792x2400 instead of 896x1200, a Pro-class image model (the prepare script shrinks them). If a
+  "Redo with Pro" button or an image-model menu appears, use the Pro option and update this line. Note in
+  the art record each accepted picture's size. The limit is compute-based (5-hour refresh plus a weekly cap, Settings > Usage Limits), not a
+  fixed daily count.
 - Set **Aspect ratio 3:4** with the button under the prompt box in every new chat. Pictures come out
-  896x1200.
-- Free tier: when Gemini refuses or says the image limit is reached, stop, write where you got to in
-  the art record, and resume next day.
+  896x1200 (1792x2400 on the Pro plan). Paste the line-up first: the menu moves once a picture is attached, so open it after the paste
+  and take a screenshot before clicking 3:4 (Billy Goats: a misplaced click gave a 4:3 picture).
+- **No coordinate clicks on a new chat page.** Its suggestion chips sit right under the prompt box, and a
+  click on one sends a prompt you didn't write (three stray chats so far: "Script Doctor Refusal", "The Art of
+  Doing Nothing", a film-history quiz). Click only through `find` refs (prompt box, Upload & tools, Create
+  image, Aspect ratio, 3:4). Coordinate (`computer`) clicks are banned, with one exception: the grabber's
+  single real click, made on the newest picture itself (its `find` ref, clicked with `computer`), which already sits in the chat and sends nothing. If a stray prompt goes out anyway, say so in the
+  report.
+- In a fresh chat the first `ctrl+v` after clicking the prompt box often pastes nothing: click the box
+  twice, then paste, and check the thumbnail appeared. Wait for the page to finish loading before any click.
+- The free-tier image limit is shared with every other session drawing in this Chrome profile, and so is
+  the clipboard. Check the open tabs first; if another Gemini drawing chat is busy, tell the caller.
+- Usage limit: write the time of the first picture of each session in the art record (the 5-hour window
+  runs from when usage started, not from when the limit hits). When Gemini says the limit is reached, stop,
+  write where you got to, and report the reset time it shows (the message, or Settings > Usage Limits).
+  The caller resumes at that time; if no time is shown, at the estimate from the first picture, rechecking
+  every hour until drawing works again.
 
 ## 4. Page prompts
+
+**Every image prompt (sheets, line-up, cover, pages) ends with the size line:** `Output size: small, 1K
+resolution, 896x1200 pixels (portrait 3:4).` The app needs nothing bigger (the prepare script shrinks to
+896x1200), and larger pictures (1792x2400 after the Pro upgrade) use more of the usage limit. Record each
+accepted picture's actual size in the art record. Billy Goats' cover prompt carried the line and still came
+back 1792x2400; still being tried: the line on more prompts, and the text picker on 3.5 Flash-Lite. Update
+this paragraph once one of them gives 896x1200.
 
 Every page prompt repeats: same characters, the style line, portrait 3:4, no text, **exact count**
 ("exactly three pigs, each appearing once"), every character's outfit, and **"the whole scene sits in
@@ -104,6 +134,12 @@ Two traps from the 16-page pigs (Slice 123): Gemini writes sound effects into a 
 knocked door), so say "no text, letters, words, sound effects or writing anywhere"; and a window with
 crossbars multiplies the faces behind it (four pigs in four panes), so ask for "one wide window with a
 single pane" and name who stands where, left to right.
+
+Two more from Billy Goats Gruff (Slice 121): Gemini dresses a character it thinks should be clothed once
+they move (ragged trousers on a Troll who wears only a waistcoat, whenever he stamped or sat), so every
+prompt with that character names what they do NOT wear ("no trousers, no shorts, nothing below the
+waistcoat"); and it gives the "villain" teeth or fangs, so say "mouth closed or smiling, no teeth showing".
+A chat that drew a wrong picture tends to repeat it when asked again: redo it in a fresh chat.
 
 ## 5. Full-size check (every picture, no exceptions)
 
@@ -132,9 +168,11 @@ Record each pass in the art record table (page, attempt number, why earlier atte
   `window.fetch` to keep the image blob of any `rd-gg` response. Run `await window.__grab(1)` (clicks the
   newest picture's button), then make one real `computer` click on empty page space: its click handler
   copies the blob to the clipboard as PNG (needs a real click; the user granted gemini.google.com clipboard
-  access). `window.__clipResult` then reads `896x1200`. Save it with
+  access). `window.__clipResult` then reads the picture size (`WxH`). Save it with
   `pwsh -STA .claude/skills/create-dino-story/gemini-clipboard.ps1 Save <working folder>/cand-<page>.jpg`
-  (JPEG quality 95). Re-inject the script after any reload or new chat.
+  (JPEG quality 95). `__clipResult` can take 1-2 s after the click: poll it until it is a size like `WxH` (any 3:4 size;
+  the Pro plan gives 1792x2400), not ERR or null, before saving; a `Save` that finds no picture is fixed by grabbing again. Re-inject the script after any
+  reload or new chat.
 - Save each picture under a candidate name (`cand-5.jpg`), check it (step 5) by reading the file, and
   only then rename it to `cover.jpg`, `1.jpg`... Delete rejected candidates.
 - Then run `pwsh tools/prepare-story-pictures.ps1 <working folder> <target folder> <pageCount>` with the full target
