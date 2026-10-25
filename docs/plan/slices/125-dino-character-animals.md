@@ -1,6 +1,6 @@
 # Slice 125 — Dino: each character knows its animal, and animal voices to match
 
-*Planned 2026-10-25.* Dino Reader only; RTST is not touched.
+*In progress (wave 2026-10-25), draft PR.* Dino Reader only; RTST is not touched.
 
 **Batch:** 26 (Batch 25 mock follow-ups)
 **Depends on:** Slice 117 (animal sounds), Slice 116 (storyteller characters), Slice 124 (same cast-page files; merge after it), PR #336 (the pigs retell edits `StarterBuilder.cs`/`StarterTexts.cs`; merge after it)
