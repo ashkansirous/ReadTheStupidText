@@ -610,6 +610,7 @@ jobs:
     uses: ./.github/workflows/store-submit.yml
     with:
       tag: v${{ needs.version.outputs.version }}
+      product_id: ${{ vars.STORE_PRODUCT_ID }}
     secrets: inherit
 
   # Dino Reader's Microsoft Store submission (Slice 67) - only when Dino Reader's MSIX were rebuilt AND
@@ -719,7 +720,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          if ! gh release view "v${VERSION}" --repo "${{ github.repository }}" --json assets --jq '.assets[].name' | grep -qxF "ReadTheStupidText-${VERSION}.ipa"; then
+          # Capture first: `gh | grep -q` under pipefail fails on grep's early exit (SIGPIPE), reading as "asset missing".
+          names=$(gh release view "v${VERSION}" --repo "${{ github.repository }}" --json assets --jq '.assets[].name')
+          if ! grep -qxF "ReadTheStupidText-${VERSION}.ipa" <<< "$names"; then
             echo "::error::Release v${VERSION} was published as signed iOS but carries no ReadTheStupidText-${VERSION}.ipa; nothing was sent to TestFlight."; exit 1
           fi
           gh release download "v${VERSION}" --repo "${{ github.repository }}" --pattern "ReadTheStupidText-${VERSION}.ipa" --dir testflight
@@ -755,7 +758,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          if ! gh release view "v${VERSION}" --repo "${{ github.repository }}" --json assets --jq '.assets[].name' | grep -qxF "DinoReader-${VERSION}.ipa"; then
+          # Capture first: `gh | grep -q` under pipefail fails on grep's early exit (SIGPIPE), reading as "asset missing".
+          names=$(gh release view "v${VERSION}" --repo "${{ github.repository }}" --json assets --jq '.assets[].name')
+          if ! grep -qxF "DinoReader-${VERSION}.ipa" <<< "$names"; then
             echo "::error::Release v${VERSION} was published as signed Dino Reader iOS but carries no DinoReader-${VERSION}.ipa; nothing was sent to TestFlight."; exit 1
           fi
           gh release download "v${VERSION}" --repo "${{ github.repository }}" --pattern "DinoReader-${VERSION}.ipa" --dir testflight

@@ -202,7 +202,7 @@ jobs:
             src="$MODEL_DIR/$f"
             if [ ! -f "$src" ]; then echo "::error::Missing required pack file $src"; exit 1; fi
             # An LFS pointer (checkout without the real objects) is a tiny text file.
-            if head -c 24 "$src" | grep -q '^version https://git-lfs'; then
+            if [[ "$(head -c 24 "$src" | tr -d '\0')" == 'version https://git-lfs'* ]]; then
               echo "::error::$src is an unresolved Git LFS pointer"; exit 1
             fi
             if [ "$f" != LICENSE ] && [ "$(stat -c %s "$src")" -lt 1024 ] && [[ "$f" == *.onnx ]]; then
