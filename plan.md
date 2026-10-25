@@ -144,6 +144,11 @@ this plan turns it into ordered, shippable vertical slices.
 | 124 | Dino: the words panel and its switch match the Batch 25 mock | built | #338 | | [124-dino-words-panel-matches-mock.md](docs/plan/slices/124-dino-words-panel-matches-mock.md) |
 | 125 | Dino: each character knows its animal, and animal voices to match | planned | | | [125-dino-character-animals.md](docs/plan/slices/125-dino-character-animals.md) |
 | 126 | Dino: keep the screen awake while a book is playing | planned | | | [126-dino-keep-screen-awake.md](docs/plan/slices/126-dino-keep-screen-awake.md) |
+| 127 | Release safety: Dino iOS .ipa gap and the Store id fallback | planned | | | [127-release-safety-fixes.md](docs/plan/slices/127-release-safety-fixes.md) |
+| 128 | Tray code out of the shared Infrastructure, and tests per product | planned | | | [128-tray-code-out-of-shared-infrastructure.md](docs/plan/slices/128-tray-code-out-of-shared-infrastructure.md) |
+| 129 | Dino voice features out of the shared speech engine | planned | | | [129-dino-voice-features-out-of-shared-engine.md](docs/plan/slices/129-dino-voice-features-out-of-shared-engine.md) |
+| 130 | A version and a release per product | planned | | | [130-per-product-versions-and-releases.md](docs/plan/slices/130-per-product-versions-and-releases.md) |
+| 131 | Mobile.Shared gets its own namespace | planned | | | [131-mobile-shared-namespace.md](docs/plan/slices/131-mobile-shared-namespace.md) |
 
 Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
 
@@ -175,9 +180,12 @@ Batch 25 (119-123; 119, 120, 122, 123 built, 121 planned; planned 2026-10-25, th
 
 Batch 26 (124-125, planned 2026-10-25, the Batch 25 mock and the animal-identity follow-up of Slice 117): 124 first (small; matches the words panel and switch card to the mock), then 125 (both edit `CastRows`/`CastPage` and the strings). 125 also merges after PR #336 (the pigs retell, `StarterBuilder`/`StarterTexts`). Decision 132.
 
+Batch 27 (127-131, planned 2026-10-25, after Dino work kept resubmitting Read The Stupid Text to the Store): keep one repo, stop one product shipping the other. 127 first (small CI fixes), then 128 and 130 one after the other (both edit `release.yml` and `ship-targets.mjs`); 129 (code only) can run beside 127, 128 or 130; 131 runs alone between waves (it touches usings everywhere). Decisions 133-137.
+
 ### Notes
 
 - [Decisions 1-99](docs/plan/decisions.md): the full numbered decision list, moved verbatim.
+- [2026-10-25 Product separation](docs/plan/notes/2026-10-25-product-separation.md): how much RTST and Dino share, and which changes ship the other product (Batch 27).
 - [2026-10-20 Android minSdk 28](docs/plan/notes/2026-10-20-android-min-sdk-28.md): why the Android floor is 28 (Decision 82).
 - [Batch introductions, Batches 2-8](docs/plan/notes/batch-intros-1-8.md): the framing paragraph that opened each batch (2026-10-20 move).
 - [Batch 9 and 10 indexes](docs/plan/notes/plan-batch-9-10-index.md): the former in-plan tables and lane order.
@@ -223,6 +231,7 @@ Built but not verified (details in each slice file):
 
 ## Out of Scope
 
+- **(Batch 27)** Splitting into two repos or publishing the shared code as NuGet packages; renaming the shared projects or their namespaces beyond Mobile.Shared; a commit flag that skips one product's release.
 - **(Batch 23)** Children's or emotive voice models (none permissive and phone-sized; Chatterbox, Orpheus too big); an expressive Farsi voice (none exists; parent recordings, Slice 111, are the Farsi answer); Kokoro for Spanish/French/Italian/Portuguese until English proves out; flavours in RTST.
 - **(Batch 22)** Cloud translation or TTS; sharing recordings between devices; voice cloning from a parent's recordings; several recorded voices per book (Mum, Dad, Grandma); iOS live translation of own books (Apple Translation framework, not researched); store search, language, length and "has pictures" filters.
 - **(Batch 13)** Fuzzy re-mapping of edited story text onto OCR boxes (an edited page reads

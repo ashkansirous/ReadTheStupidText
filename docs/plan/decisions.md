@@ -1165,3 +1165,13 @@
 131. **In Dino picture mode the words take at most 30% of the visible picture with the phone upright, and each book has a grown-up switch to hide them (Batch 25).**
     The switch is off by default for books whose pictures already show the words (scans, photos of pages, PDFs) and on for every other book. (Slice 122)
 132. **Each Dino cast character can carry an animal (Batch 26).** It is stored per character (`animal` in `story.json`; `none` = not an animal). Built books set it at build time. Other books get a best guess from the name, then from the story text. The grown-up can change it on the cast page. A known animal makes the character sound like that animal and casts it to an animal voice (piglet, lamb, wolf...) from that language's roster, unless the grown-up picked the voice. (Slice 125)
+
+133. **Read The Stupid Text and Dino Reader stay in one repo (Batch 27).** About a third of the app code is shared and it is the engine (speech readers, voice packs, chunking, OCR, translation); splitting would mean versioned NuGet packages for every engine fix. The fix is in how changes ship. (note: docs/plan/notes/2026-10-25-product-separation.md)
+
+134. **Only Mobile.Shared's namespace is renamed, to `ReadTheStupidText.Mobile.Shared` (Batch 27).** No wider rename of the shared projects for now. (Slice 131)
+
+135. **Tray-only code lives in `ReadTheStupidText.Windows.Tray`, referenced only by the RTST Windows app (Batch 27).** Shared Infrastructure keeps speech, translation, settings, logging and sanitizing; tests run per product. (Slice 128)
+
+136. **The shared speech engine carries no Dino-only voice features (Batch 27).** Flavours, pitch and animal effects live in `DinoReader.Core` and reach the engine through one small hook, so a shared-engine change is a real engine change and shipping both apps for it is correct. (Slice 129)
+
+137. **Each product has its own version, tag and GitHub Release: `rtst-v<x.y.z>` and `dino-v<x.y.z>` (Batch 27).** Both continue from the current shared version; a release carries only its own product's files. (Slice 130)
