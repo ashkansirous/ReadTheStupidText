@@ -23,9 +23,12 @@ The Tortoise and the Hare) in the store, so anyone who deletes one can download 
 
 - **Decision 125: Claude illustrates the books by driving the Gemini web app in the user's Chrome.**
   The user approved, once and for all, saving Gemini's pictures into a working folder and committing
-  them to the repo. One Gemini chat per book: character sheets and a line-up first, then the cover, then
-  one picture per page in the same chat, so Gemini keeps the characters consistent. The free tier has a
-  daily image cap: when Gemini refuses, stop and resume next day in the same chat.
+  them to the repo. Per-chat procedure (revised 2026-10-25 after the pigs pilot,
+  where one long chat mixed scenes and outfits: wrong-scene wolf, trousers on pigs, a 4th pig): one
+  character chat makes the sheets and the line-up; each picture then comes from a fresh page chat with
+  the saved line-up pasted in and every outfit spelled out (including what they do not wear), at most
+  3 pictures per chat, and one per chat once a chat repeats an earlier scene. The free tier has a daily
+  image cap: when Gemini refuses, stop and resume next day.
 - **Decision 126: one house style for every book.** "Children's picture book illustration, soft
   watercolour and coloured pencil, warm gentle colours, simple rounded shapes, no text". The exact
   style line and each book's character descriptions are kept in `docs/design/story-art/<stem>.md`.
@@ -41,18 +44,18 @@ The Tortoise and the Hare) in the store, so anyone who deletes one can download 
 
 ## Work
 
-- [ ] **Art record.** Write `docs/design/story-art/three-little-pigs.md`: the style line, each
+- [x] **Art record.** Write `docs/design/story-art/three-little-pigs.md`: the style line, each
       character's description (Pip, Pop, Pim, Wolf, as in the thread; Mother Pig if the text has her),
       the cover prompt and one prompt per page (page text summarised into a scene, characters in the top
       half). Page count comes from `StarterTexts.Pigs` (pages split on `---`).
-- [ ] **Generate in Gemini** (Chrome, the existing thread): set aspect ratio 3:4, finish any missing
+- [x] **Generate in Gemini** (Chrome: one character chat, then fresh page chats of 1-3 pictures, Decision 125): set aspect ratio 3:4, finish any missing
       character sheets (Pip, Pop), then the cover, then pages 1..N. Check each against the line-up; redo
       any that drift (wrong colours, extra pig, text in the picture). Save the originals to a working
       folder outside the repo.
-- [ ] **`tools/prepare-story-pictures.ps1 <source folder> <target folder> <page count>`**: centre-crop to 3:4,
+- [x] **`tools/prepare-story-pictures.ps1 <source folder> <target folder> <page count>`**: centre-crop to 3:4,
       resize down to at most 896x1200 (Gemini's native size; never upscaled), JPEG quality 85, write `<target>/pictures/1..N.jpg`,
       `cover.jpg` and a 288x384 `cover-thumb.jpg` for the store list. Fails if the count doesn't match the page count it is given.
-- [ ] **Starter build picks up the cover.** `StarterBuilder` uses `Starters/<stem>/cover.jpg` as a
+- [x] **Starter build picks up the cover.** `StarterBuilder` uses `Starters/<stem>/cover.jpg` as a
       Picture cover when present (as Good Enough does), then rebuild with `DINO_BUILD_STARTERS=1` so
       `Resources/Raw/starters/three-little-pigs.dino` carries the pictures. Check the shelf, the store and
       the reader show the title over or beside a picture cover; if a picture cover hides the title
@@ -116,7 +119,17 @@ The Tortoise and the Hare) in the store, so anyone who deletes one can download 
 
 *From review:* pass 1 (high) 7 findings, all fixed. Pass 2 (medium) 9 findings, 8 fixed; #8 (English-only scan in `GentleTextTests`) skipped by decision.
 
-Still open in this slice: art record, Gemini generation, the pigs' pictures and starter rebuild, store upload, recover-after-delete check, and the `src/DinoReader.App/CLAUDE.md` rules (lifted after merge).
+Still open in this slice: store upload, recover-after-delete check on the emulator, and the `src/DinoReader.App/CLAUDE.md` rules (lifted after merge).
+
+## Part 2 built (2026-10-25)
+
+- [x] The pigs starter has a Picture cover and 6 page pictures (896x1200), made by driving Gemini with the per-chat procedure (Decision 125). Attempts and reasons: `docs/design/story-art/three-little-pigs.md`; line-up: `docs/design/story-art/three-little-pigs/characters/lineup.jpg`. Package 1.41 MB.
+- [x] Pigs starter is version 3. Auto-update refreshes unedited older copies even when only pictures changed; a shipped colour cover (table of shipped colours per starter in `StarterUpdate`) is replaced by the new cover, a user-changed colour or gallery photo is kept.
+- [x] Skill `create-dino-story` updated: character chat, fresh page chats of 1-3 pictures with the line-up pasted, outfits spelled out including what they don't wear, clipboard save, check the saved file.
+
+*Known limit:* once a picture cover has shipped, a later update can't tell the shipped cover from a user's gallery photo. Add a per-version hash of the shipped cover before the next starter cover change.
+
+*From review:* pass 1 (high) 8 findings; 1-4 and 8 fixed, 5-7 skipped by decision. Pass 2 (medium) 8 findings; 1, 3-5 and 8 fixed, plus a lost-gallery-photo bug found by the new tests; 2, 6, 7 skipped by decision.
 
 #### For CLAUDE.md
 
@@ -129,5 +142,5 @@ Into `src/DinoReader.App/CLAUDE.md`:
 #### Not yet verified
 
 - On-device starter auto-update and recording copy (unchanged pages keep recordings, edited text is skipped).
-- The Three Little Pigs pictures (part 2).
+- The Three Little Pigs pictures (part 2): emulator or phone check in both orientations, auto-update from v2 on a device, store download of pigs v3.
 - Store upload of the version 3 stories and the four starters, after merge.

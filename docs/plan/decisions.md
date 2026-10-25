@@ -1148,9 +1148,10 @@
     switch, on by default. (Slice 117)
 124. **The storyteller pack serves Spanish, French and Portuguese if it speaks them well (Batch 24)**;
     Japanese and Chinese only if the same check passes. (Slice 118)
-125. **Claude illustrates Dino books by driving the Gemini web app in the user's Chrome (Batch 25).** One chat per
-    book: character sheets, a line-up, the cover, then one picture per page; pictures are saved and committed without
-    asking each time; stop at the free tier's daily cap and resume. Reverses Batch 10's "no AI illustrations" and
+125. **Claude illustrates Dino books by driving the Gemini web app in the user's Chrome (Batch 25).** One character
+    chat per book (sheets, line-up), then fresh page chats with the line-up pasted in and outfits spelled out, at most 3
+    pictures per chat and one per chat once a chat repeats a scene (a single long chat mixed scenes and outfits in the
+    pilot); pictures are saved and committed without asking each time; stop at the free tier's daily cap and resume. Reverses Batch 10's "no AI illustrations" and
     supersedes Decision 106's public-domain follow-up. (Slice 119)
 126. **One house style for every Dino book (Batch 25)**: soft watercolour and coloured pencil, warm gentle colours,
     simple rounded shapes, no text; style line and cast per book in `docs/design/story-art/<stem>.md`. (Slice 119)

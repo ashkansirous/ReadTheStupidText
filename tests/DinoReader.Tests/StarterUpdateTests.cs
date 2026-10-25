@@ -183,6 +183,65 @@ public sealed class StarterUpdateTests : IDisposable
     }
 
     [Fact]
+    public void AnUneditedV2CopyWithTheSameText_IsRefreshedToV3_KeepingEveryRecording()
+    {
+        const string pigs = "966400017c494fb5b045786f53852c9e";
+        Story stored = Paged("One.", "Two.") with { CoverStyle = CoverStyle.Colour, CoverFile = null, Recordings = new Dictionary<int, PageRecording> { [0] = new("en", 1), [1] = new("en", 2) }, UseRecordings = true };
+        Story bundled = Paged("One.", "Two.") with
+        {
+            Id = "new",
+            Pages = [new StoryPage("One.", "page-1.jpg"), new StoryPage("Two.", "page-2.jpg")],
+            CoverStyle = CoverStyle.Picture,
+            CoverFile = "cover-new.jpg",
+        };
+
+        Assert.True(StarterUpdate.NeedsUpdate(2, 3));
+        Assert.False(StarterUpdate.IsEdited(pigs, stored, bundled));
+        Story refreshed = StarterUpdate.Refresh(stored, bundled);
+        Assert.Equal(2, refreshed.Recordings!.Count);
+        Assert.True(refreshed.UseRecordings);
+        Assert.Equal(["page-1.jpg", "page-2.jpg"], refreshed.Pages.Select(p => p.ImageFile));
+        Assert.Equal(CoverStyle.Picture, refreshed.CoverStyle);
+        Assert.Equal("cover-new.jpg", refreshed.CoverFile);
+        Assert.True(StarterUpdate.IsEdited(pigs, Paged("My own words."), bundled));
+    }
+
+    private static Story PigsCopy(CoverStyle style, int colour, string? coverFile) =>
+        Paged("One.") with { SourceId = StarterTexts.PigsId, CoverStyle = style, CoverColourIndex = colour, CoverFile = coverFile };
+
+    private static Story PigsPictureBundle() =>
+        Paged("One.") with { Id = "new", Pages = [new StoryPage("One.", "page-1.jpg")], CoverStyle = CoverStyle.Picture, CoverFile = "cover-new.jpg" };
+
+    [Fact]
+    public void Refresh_ReplacesAPigsCopyStillOnItsShippedColourCover_WithThePictureCover()
+    {
+        Story refreshed = StarterUpdate.Refresh(PigsCopy(CoverStyle.Colour, 3, null), PigsPictureBundle());
+
+        Assert.Equal(CoverStyle.Picture, refreshed.CoverStyle);
+        Assert.Equal("cover-new.jpg", refreshed.CoverFile);
+    }
+
+    [Fact]
+    public void Refresh_KeepsAPigsCopyWhoseColourTheUserChanged()
+    {
+        Story refreshed = StarterUpdate.Refresh(PigsCopy(CoverStyle.Colour, 5, null), PigsPictureBundle());
+
+        Assert.Equal(CoverStyle.Colour, refreshed.CoverStyle);
+        Assert.Equal(5, refreshed.CoverColourIndex);
+    }
+
+    [Fact]
+    public void Refresh_KeepsAPigsCopyWithAGalleryPhotoCover()
+    {
+        Story stored = PigsCopy(CoverStyle.Picture, 3, "cover-mine.jpg") with { CoverPageIndex = null };
+
+        Story refreshed = StarterUpdate.Refresh(stored, PigsPictureBundle());
+
+        Assert.Equal(CoverStyle.Picture, refreshed.CoverStyle);
+        Assert.Equal("cover-mine.jpg", refreshed.CoverFile);
+    }
+
+    [Fact]
     public void CopyToKeep_PicksTheCopyHoldingTheBundledText()
     {
         Story old = Paged("Old.") with { Id = "old" };
