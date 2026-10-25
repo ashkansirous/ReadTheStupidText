@@ -1,6 +1,6 @@
 # Slice 136 — Dino: the animal comes from the picked character (no Animal line)
 
-*Planned 2026-10-25.* Dino Reader only; RTST is not touched.
+*In progress (wave 2026-10-25), draft PR.* Dino Reader only; RTST is not touched.
 
 **Batch:** 26 (Batch 25 mock follow-ups)
 **Depends on:** Slice 125 (built), Slice 135 (in progress, draft PR #352: roster variants, starter-update recast; merge after it, both edit the rosters, `AnimalSounds` and the cast page)
