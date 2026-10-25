@@ -95,6 +95,8 @@ It needs no secrets to build, so any change to `src/DinoReader.App/**`, `DinoRea
 `Platforms/Windows/`) or `Infrastructure` now cuts a release (a Dino-only change did not before). Never pass a global
 `-p:RuntimeIdentifier` to the Dino build: the csproj derives it from `-p:Platform` (a global one makes the package list
 Mobile.Shared's `.pdb` twice, APPX1101). The RTST Store submit matches only `ReadTheStupidText.App_*.msix`.
+`store-submit.yml` has no default Store id: `product_id` is required (RTST passes `vars.STORE_PRODUCT_ID`, Dino `vars.DINOREADER_STORE_APP_ID`) and a guard step fails when the package and id belong to different apps or `STORE_PRODUCT_ID` is unset. (Slice 127: docs/plan/slices/127-release-safety-fixes.md)
+Never pipe a producer into `grep -q` under `pipefail` (`release.yml`, `.github/scripts`): capture the output first, or here-string it into grep. (Slice 127)
 
 ## Android downloads
 

@@ -490,7 +490,7 @@ run rather than via an `on: release: published` trigger on this file, because
 recursion guard means a `GITHUB_TOKEN`-authored event never starts another
 workflow run — that trigger would have looked correct and never fired.
 `workflow_dispatch` still works standalone for a manual re-submit (e.g.
-retrying a transient upload failure) — pass a tag, or omit it to resubmit
+retrying a transient upload failure) — pass `product_id` (required) and a tag, or omit the tag to resubmit
 whatever is currently the latest release.
 
 Each call creates a **new** Store submission from the given release,
