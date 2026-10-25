@@ -409,6 +409,25 @@ public class AnimalCharacterTests
         Assert.All(sounds.Take(3), s => Assert.StartsWith("piglet", CharacterRoster.Nearest(roster, s.Item1, s.Item2)!.Id));
     }
 
+    // Slice 135 follow-up: the Farsi narrator shares a voice with two piglets; they are still offered to the pigs (their flavours are not the narrator's), so the three pigs are
+    // three different piglets, named so by the cast screen's lookup, and none is shown as the bear cub or the puppy.
+    [Fact]
+    public void Farsi_pigs_with_the_default_narrator_are_three_distinct_piglets()
+    {
+        var characters = new[] { C("pip", "Pip"), C("pop", "Pop"), C("pim", "Pim") };
+        var roster = CharacterRoster.For("fa");
+        string narrator = CharacterRoster.Narrators("fa")[0].VoiceId;
+        var choices = CharacterRoster.Choices(CharacterRoster.Speakers("fa"), narrator);
+
+        VoiceCast cast = CastCharacters.Cast(characters, choices, roster, narrator, _ => VoiceFlavour.Normal, animalOf: _ => new AnimalHint(AnimalKind.Pig, null));
+
+        var speakers = CharacterRoster.Speakers("fa");
+        var named = characters.Select(c => CharacterRoster.Nearest(speakers, cast.VoiceFor(c.Id)!, cast.Flavours![c.Id])!.Id).ToList();
+        Assert.All(named, id => Assert.StartsWith("piglet", id));
+        Assert.Equal(3, named.Distinct().Count());
+        Assert.All(cast.Assignments, a => Assert.False(a.IsShared));
+    }
+
     // Slice 135: an animal with a single character of its own (a bunny) is reused for its second story character with another flavour, never another animal's character.
     [Fact]
     public void Two_bunnies_sound_different_and_both_stay_bunnies()

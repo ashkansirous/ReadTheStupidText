@@ -125,6 +125,21 @@ public sealed class StarterUpdateTests : IDisposable
     }
 
     [Fact]
+    public void AnimalVoicesToRecast_RecastsFarsiPigsThatReadAsTheBearCubAndThePuppy()
+    {
+        // Slice 135 follow-up: installed Farsi pigs on the Gyro voice with the Small and Bouncy flavours are shown as the bear cub and the puppy.
+        var roster = CharacterRoster.Speakers("fa");
+        string gyro = roster.First(c => c.Id == "piglet2").VoiceId;
+        CastMember Pig(string id, VoiceFlavour flavour) => new CastMember(id, id, Gender.Male, gyro, Flavour: flavour) with { Animal = AnimalKind.Pig };
+        Story stored = StoryWith("old", Pig("pip", VoiceFlavour.Squeaky), Pig("pop", VoiceFlavour.Small), Pig("pim", VoiceFlavour.Bouncy));
+        Story refreshed = StarterUpdate.Refresh(stored, stored);
+
+        var recast = StarterUpdate.AnimalVoicesToRecast(stored, refreshed, _ => roster);
+
+        Assert.Equal([("en", "pim"), ("en", "pop")], recast.OrderBy(r => r.CharacterId, StringComparer.Ordinal));
+    }
+
+    [Fact]
     public void AnimalVoicesToRecast_LeavesAMotherPigAloneBecauseNoGrownPigExists()
     {
         var (stored, refreshed) = Refreshed(new CastMember("mother", "Mother Pig", Gender.Female, "kokoro:af_x", Flavour: VoiceFlavour.Normal));
