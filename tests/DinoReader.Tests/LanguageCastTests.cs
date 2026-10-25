@@ -2,6 +2,7 @@ using System.IO.Compression;
 using System.Text;
 using System.Text.Json.Nodes;
 using DinoReader.Core;
+using ReadTheStupidText.Domain.Reading;
 
 namespace DinoReader.Tests;
 
@@ -79,7 +80,7 @@ public sealed class LanguageCastTests : IDisposable
     {
         Story story = Make().WithCastIn("fa", Farsi);
 
-        CastEdit edit = CastEditor.SetVoice(CastEditor.Open(story, "fa"), "mum", "piper-fa:other", "piper-fa:narrator");
+        CastEdit edit = CastEditor.SetCharacter(CastEditor.Open(story, "fa"), "mum", new StorytellerCharacter("x", "piper-fa:other", VoiceFlavour.Normal, Gender.Female, CharacterKind.Speaker, "X", "h"));
         Story saved = CastEditor.Close(story, "fa", edit);
 
         CastMember mum = saved.CastIn("fa").Single(m => m.CharacterId == "mum");

@@ -124,7 +124,7 @@ public static class StoryJson
         new(c.CharacterId, c.Name, c.Gender, c.VoiceId, c.Edited, ParseFlavour(c.Flavour));
 
     private static VoiceFlavour? ParseFlavour(string? name) =>
-        Enum.TryParse(name, ignoreCase: true, out VoiceFlavour flavour) && VoiceFlavours.Pickable.Contains(flavour) ? flavour : null;
+        Enum.TryParse(name, ignoreCase: true, out VoiceFlavour flavour) && VoiceFlavours.Assignable.Contains(flavour) ? flavour : null;
 
     private static Dictionary<string, List<CastFile>>? ToLanguageCastFiles(IReadOnlyDictionary<string, IReadOnlyList<CastMember>>? casts) =>
         casts is null || casts.Count == 0 ? null : casts.ToDictionary(c => c.Key, c => ToCastFiles(c.Value));

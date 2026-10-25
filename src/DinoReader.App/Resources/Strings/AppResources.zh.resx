@@ -166,16 +166,11 @@
   <!-- /Slice 111 -->
   <!-- Slice 113 -->
   <data name="Cast_Pair" xml:space="preserve"><value>{0}：{1}</value></data>
-  <data name="Cast_Sounds" xml:space="preserve"><value>声音</value></data>
-  <data name="Cast_Flavour_Normal" xml:space="preserve"><value>普通</value></data>
-  <data name="Cast_Flavour_Small" xml:space="preserve"><value>小小</value></data>
-  <data name="Cast_Flavour_Big" xml:space="preserve"><value>大大</value></data>
-  <data name="Cast_Flavour_Bouncy" xml:space="preserve"><value>活泼</value></data>
-  <data name="Cast_Flavour_Sleepy" xml:space="preserve"><value>瞌睡</value></data>
-  <data name="Cast_FlavourHint_Small" xml:space="preserve"><value>更高，稍快</value></data>
-  <data name="Cast_FlavourHint_Big" xml:space="preserve"><value>更低，更慢</value></data>
-  <data name="Cast_FlavourHint_Bouncy" xml:space="preserve"><value>更高，很快</value></data>
-  <data name="Cast_FlavourHint_Sleepy" xml:space="preserve"><value>很慢，稍低</value></data>
+  <data name="Cast_PickTitle" xml:space="preserve"><value>谁来扮演{0}？</value></data>
+  <data name="Cast_PickSubtitle" xml:space="preserve"><value>这本书用的语言：{0}</value></data>
+  <data name="Cast_FilterGirls" xml:space="preserve"><value>女孩</value></data>
+  <data name="Cast_FilterBoys" xml:space="preserve"><value>男孩</value></data>
+  <data name="Cast_FilterEveryone" xml:space="preserve"><value>所有人</value></data>
   <!-- /Slice 113 -->
   <!-- Slice 115 -->
   <data name="Storyteller_Getting" xml:space="preserve"><value>正在下载讲故事的声音…</value></data>
@@ -275,25 +270,18 @@
   <data name="Cast_MergeTitle" xml:space="preserve"><value>合并角色</value></data>
   <data name="Cast_MergeBody" xml:space="preserve"><value>选出指同一个角色的两个名字。他们的台词会合并到一个名字和一种声音下。</value></data>
   <data name="Cast_KeepName" xml:space="preserve"><value>保留名字</value></data>
-  <data name="Cast_VoiceTitle" xml:space="preserve"><value>声音</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>你好！这就是我朗读你的故事时的声音。</value></data>
   <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>无法保存这项更改</value></data>
   <data name="Cast_SaveFailedBody" xml:space="preserve"><value>角色未保存。请稍后再试。</value></data>
   <data name="Cast_PreviewFailedBody" xml:space="preserve"><value>暂时无法播放这个声音。</value></data>
   <data name="Cast_LoadFailedTitle" xml:space="preserve"><value>无法打开角色列表</value></data>
   <data name="Cast_LoadFailedBody" xml:space="preserve"><value>无法确定这个故事的角色。请稍后再试。</value></data>
-  <data name="Cast_Boy" xml:space="preserve"><value>男孩</value></data>
-  <data name="Cast_Girl" xml:space="preserve"><value>女孩</value></data>
   <data name="Cast_Words_One" xml:space="preserve"><value>{0} 个词</value></data>
   <data name="Cast_Words_Other" xml:space="preserve"><value>{0} 个词</value></data>
   <data name="Cast_UnknownLines_One" xml:space="preserve"><value>{0} 句台词</value></data>
   <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} 句台词</value></data>
   <data name="Cast_UsesNarrator" xml:space="preserve"><value>使用旁白的声音</value></data>
   <data name="Cast_Hear" xml:space="preserve"><value>听 {0} 的声音</value></data>
-  <data name="Cast_NoBoyVoice" xml:space="preserve"><value>这个语音包没有男孩的声音，所以这个角色保留原来的声音。</value></data>
-  <data name="Cast_NoGirlVoice" xml:space="preserve"><value>这个语音包没有女孩的声音，所以这个角色保留原来的声音。</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>合并到 {0}</value></data>
-  <data name="Cast_SharedNote" xml:space="preserve"><value>这个语音包只有 {0} 个自然声音，所以有些角色会共用声音。旁白的声音不会分给任何角色。</value></data>
-  <data name="Voice_NbWoman" xml:space="preserve"><value>声音 {0}（女）</value></data>
-  <data name="Voice_NbMan" xml:space="preserve"><value>声音 {0}（男）</value></data>
+  <data name="Cast_SharedNote" xml:space="preserve"><value>这本书的角色比现有的 {0} 个讲故事角色还多，所以有些角色听起来会一样。旁白不会分给任何角色。</value></data>
 </root>

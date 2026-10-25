@@ -166,16 +166,11 @@
   <!-- /Slice 111 -->
   <!-- Slice 113 -->
   <data name="Cast_Pair" xml:space="preserve"><value>{0}: {1}</value></data>
-  <data name="Cast_Sounds" xml:space="preserve"><value>Sonidos</value></data>
-  <data name="Cast_Flavour_Normal" xml:space="preserve"><value>Normal</value></data>
-  <data name="Cast_Flavour_Small" xml:space="preserve"><value>Pequeño</value></data>
-  <data name="Cast_Flavour_Big" xml:space="preserve"><value>Grande</value></data>
-  <data name="Cast_Flavour_Bouncy" xml:space="preserve"><value>Saltarín</value></data>
-  <data name="Cast_Flavour_Sleepy" xml:space="preserve"><value>Dormilón</value></data>
-  <data name="Cast_FlavourHint_Small" xml:space="preserve"><value>más agudo, un poco más rápido</value></data>
-  <data name="Cast_FlavourHint_Big" xml:space="preserve"><value>más grave, más lento</value></data>
-  <data name="Cast_FlavourHint_Bouncy" xml:space="preserve"><value>más agudo, rápido</value></data>
-  <data name="Cast_FlavourHint_Sleepy" xml:space="preserve"><value>lento, un poco más grave</value></data>
+  <data name="Cast_PickTitle" xml:space="preserve"><value>¿Quién hace de {0}?</value></data>
+  <data name="Cast_PickSubtitle" xml:space="preserve"><value>Para este libro, en {0}</value></data>
+  <data name="Cast_FilterGirls" xml:space="preserve"><value>Niñas</value></data>
+  <data name="Cast_FilterBoys" xml:space="preserve"><value>Niños</value></data>
+  <data name="Cast_FilterEveryone" xml:space="preserve"><value>Todos</value></data>
   <!-- /Slice 113 -->
   <!-- Slice 115 -->
   <data name="Storyteller_Getting" xml:space="preserve"><value>Descargando las voces narradoras…</value></data>
@@ -275,25 +270,18 @@
   <data name="Cast_MergeTitle" xml:space="preserve"><value>Unir personajes</value></data>
   <data name="Cast_MergeBody" xml:space="preserve"><value>Elige los dos nombres que son el mismo personaje. Sus líneas se unen bajo un solo nombre y una sola voz.</value></data>
   <data name="Cast_KeepName" xml:space="preserve"><value>Conservar el nombre</value></data>
-  <data name="Cast_VoiceTitle" xml:space="preserve"><value>Voz</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>¡Hola! Así suena mi voz cuando leo tu cuento.</value></data>
   <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>No se pudo guardar el cambio</value></data>
   <data name="Cast_SaveFailedBody" xml:space="preserve"><value>No se guardó el reparto. Inténtalo de nuevo en un momento.</value></data>
   <data name="Cast_PreviewFailedBody" xml:space="preserve"><value>La voz no se pudo reproducir ahora.</value></data>
   <data name="Cast_LoadFailedTitle" xml:space="preserve"><value>No se pudo abrir el reparto</value></data>
   <data name="Cast_LoadFailedBody" xml:space="preserve"><value>No se pudo calcular el reparto de este cuento. Inténtalo de nuevo en un momento.</value></data>
-  <data name="Cast_Boy" xml:space="preserve"><value>Niño</value></data>
-  <data name="Cast_Girl" xml:space="preserve"><value>Niña</value></data>
   <data name="Cast_Words_One" xml:space="preserve"><value>{0} palabra</value></data>
   <data name="Cast_Words_Other" xml:space="preserve"><value>{0} palabras</value></data>
   <data name="Cast_UnknownLines_One" xml:space="preserve"><value>{0} línea</value></data>
   <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} líneas</value></data>
   <data name="Cast_UsesNarrator" xml:space="preserve"><value>usa la voz del narrador</value></data>
   <data name="Cast_Hear" xml:space="preserve"><value>Escuchar a {0}</value></data>
-  <data name="Cast_NoBoyVoice" xml:space="preserve"><value>Este paquete de voces no tiene voz de niño, así que este personaje conserva la voz que tenía.</value></data>
-  <data name="Cast_NoGirlVoice" xml:space="preserve"><value>Este paquete de voces no tiene voz de niña, así que este personaje conserva la voz que tenía.</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>Unir con {0}</value></data>
-  <data name="Cast_SharedNote" xml:space="preserve"><value>Este paquete de voces solo tiene {0} voces naturales, así que algunos personajes comparten voz. La voz del narrador nunca se da a un personaje.</value></data>
-  <data name="Voice_NbWoman" xml:space="preserve"><value>Voz {0} (mujer)</value></data>
-  <data name="Voice_NbMan" xml:space="preserve"><value>Voz {0} (hombre)</value></data>
+  <data name="Cast_SharedNote" xml:space="preserve"><value>Este libro tiene más personajes que los {0} personajes narradores disponibles, así que algunos suenan igual. El narrador nunca se da a un personaje.</value></data>
 </root>

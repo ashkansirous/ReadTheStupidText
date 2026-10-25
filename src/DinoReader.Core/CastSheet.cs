@@ -3,7 +3,8 @@ using ReadTheStupidText.Domain.Reading;
 namespace DinoReader.Core;
 
 /// <summary>One line of the cast screen: the stored member and what the screen shows beside it.</summary>
-public sealed record CastRow(CastMember Member, int Words, bool IsMain, bool SharesVoice, VoiceFlavour Flavour = VoiceFlavour.Normal);
+public sealed record CastRow(
+    CastMember Member, int Words, bool IsMain, bool SharesVoice, VoiceFlavour Flavour = VoiceFlavour.Normal, StorytellerCharacter? Character = null);
 
 /// <summary>
 /// What the cast screen draws (Slice 65): a row per character with words and flags, how many lines have
@@ -18,19 +19,28 @@ public sealed record CastSheet(IReadOnlyList<CastRow> Rows, int UnknownLines, bo
     /// </summary>
     public static CastSheet Build(
         AttributionResult resolved, IReadOnlyList<CastMember> cast, int voiceCount, LanguageRules rules,
-        int mainCount = VoiceCaster.DefaultMainCount)
+        int mainCount = VoiceCaster.DefaultMainCount, IReadOnlyList<StorytellerCharacter>? roster = null)
     {
         HashSet<string> mains = VoiceCaster.MainIds(resolved.Characters, mainCount);
         var members = cast.DistinctBy(m => m.CharacterId).ToDictionary(m => m.CharacterId);
         var present = resolved.Characters.Where(c => members.ContainsKey(c.Id)).ToList();
         bool voicesShort = present.Count > voiceCount;
-        var seen = new HashSet<string>();
-        var rows = present
-            .Select(c => new CastRow(
-                members[c.Id], c.WordCount, mains.Contains(c.Id), !seen.Add(members[c.Id].VoiceId) && voicesShort,
-                FlavourGuess.Effective(members[c.Id], rules)))
-            .ToList();
+        var seen = new HashSet<(string, VoiceFlavour)>();
+        // A speaker row is named by a speaker, never by a narrator the picker does not list.
+        var speakers = roster?.Where(c => c.Kind == CharacterKind.Speaker).ToList();
+        var rows = present.Select(c => RowOf(c, members[c.Id], mains, seen, voicesShort, rules, speakers)).ToList();
         return new CastSheet(rows, CountUnknownLines(resolved.Segments), voicesShort, voiceCount);
+    }
+
+    // Two characters share when they sound the same: the same voice and flavour (Slice 116), not the same voice alone.
+    private static CastRow RowOf(
+        Character c, CastMember member, HashSet<string> mains, HashSet<(string, VoiceFlavour)> seen, bool voicesShort, LanguageRules rules,
+        IReadOnlyList<StorytellerCharacter>? roster)
+    {
+        VoiceFlavour flavour = FlavourGuess.Effective(member, rules);
+        return new CastRow(
+            member, c.WordCount, mains.Contains(c.Id), !seen.Add((member.VoiceId, flavour)) && voicesShort, flavour,
+            roster is null ? null : CharacterRoster.Nearest(roster, member.VoiceId, flavour, member.Gender));
     }
 
     /// <summary>Quoted lines nobody could be attributed to: the narrator reads them.</summary>

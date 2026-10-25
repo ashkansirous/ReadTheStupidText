@@ -168,16 +168,11 @@
   <!-- /Slice 111 -->
   <!-- Slice 113 -->
   <data name="Cast_Pair" xml:space="preserve"><value>{0}: {1}</value></data>
-  <data name="Cast_Sounds" xml:space="preserve"><value>Geluid</value></data>
-  <data name="Cast_Flavour_Normal" xml:space="preserve"><value>Normaal</value></data>
-  <data name="Cast_Flavour_Small" xml:space="preserve"><value>Klein</value></data>
-  <data name="Cast_Flavour_Big" xml:space="preserve"><value>Groot</value></data>
-  <data name="Cast_Flavour_Bouncy" xml:space="preserve"><value>Dartel</value></data>
-  <data name="Cast_Flavour_Sleepy" xml:space="preserve"><value>Slaperig</value></data>
-  <data name="Cast_FlavourHint_Small" xml:space="preserve"><value>hoger, iets sneller</value></data>
-  <data name="Cast_FlavourHint_Big" xml:space="preserve"><value>dieper, langzamer</value></data>
-  <data name="Cast_FlavourHint_Bouncy" xml:space="preserve"><value>hoger, snel</value></data>
-  <data name="Cast_FlavourHint_Sleepy" xml:space="preserve"><value>langzaam, iets lager</value></data>
+  <data name="Cast_PickTitle" xml:space="preserve"><value>Wie speelt {0}?</value></data>
+  <data name="Cast_PickSubtitle" xml:space="preserve"><value>Voor dit boek, taal: {0}</value></data>
+  <data name="Cast_FilterGirls" xml:space="preserve"><value>Meisjes</value></data>
+  <data name="Cast_FilterBoys" xml:space="preserve"><value>Jongens</value></data>
+  <data name="Cast_FilterEveryone" xml:space="preserve"><value>Iedereen</value></data>
   <!-- /Slice 113 -->
   <!-- Slice 115 -->
   <data name="Storyteller_Getting" xml:space="preserve"><value>Verteller-stemmen worden opgehaald…</value></data>
@@ -274,25 +269,18 @@
   <data name="Cast_MergeTitle" xml:space="preserve"><value>Personages samenvoegen</value></data>
   <data name="Cast_MergeBody" xml:space="preserve"><value>Kies de twee namen die hetzelfde personage zijn. Hun tekst komt samen onder één naam en één stem.</value></data>
   <data name="Cast_KeepName" xml:space="preserve"><value>Bewaar de naam</value></data>
-  <data name="Cast_VoiceTitle" xml:space="preserve"><value>Stem</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>Hallo! Zo klink ik als ik jouw verhaal voorlees.</value></data>
   <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>Die wijziging kon niet worden opgeslagen</value></data>
   <data name="Cast_SaveFailedBody" xml:space="preserve"><value>De rolverdeling is niet opgeslagen. Probeer het over een moment opnieuw.</value></data>
   <data name="Cast_PreviewFailedBody" xml:space="preserve"><value>De stem kon nu niet worden afgespeeld.</value></data>
   <data name="Cast_LoadFailedTitle" xml:space="preserve"><value>De rolverdeling kon niet worden geopend</value></data>
   <data name="Cast_LoadFailedBody" xml:space="preserve"><value>De rolverdeling kon voor dit verhaal niet worden bepaald. Probeer het over een moment opnieuw.</value></data>
-  <data name="Cast_Boy" xml:space="preserve"><value>Jongen</value></data>
-  <data name="Cast_Girl" xml:space="preserve"><value>Meisje</value></data>
   <data name="Cast_Words_One" xml:space="preserve"><value>{0} woord</value></data>
   <data name="Cast_Words_Other" xml:space="preserve"><value>{0} woorden</value></data>
   <data name="Cast_UnknownLines_One" xml:space="preserve"><value>{0} regel</value></data>
   <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} regels</value></data>
   <data name="Cast_UsesNarrator" xml:space="preserve"><value>gebruikt de stem van de verteller</value></data>
   <data name="Cast_Hear" xml:space="preserve"><value>Hoor {0}</value></data>
-  <data name="Cast_NoBoyVoice" xml:space="preserve"><value>Dit stempakket heeft geen jongensstem, dus dit personage houdt de stem die het had.</value></data>
-  <data name="Cast_NoGirlVoice" xml:space="preserve"><value>Dit stempakket heeft geen meisjesstem, dus dit personage houdt de stem die het had.</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>Samenvoegen met {0}</value></data>
-  <data name="Cast_SharedNote" xml:space="preserve"><value>Dit stempakket heeft maar {0} natuurlijke stemmen, dus sommige personages delen een stem. De stem van de verteller wordt nooit aan een personage gegeven.</value></data>
-  <data name="Voice_NbWoman" xml:space="preserve"><value>Stem {0} (vrouw)</value></data>
-  <data name="Voice_NbMan" xml:space="preserve"><value>Stem {0} (man)</value></data>
+  <data name="Cast_SharedNote" xml:space="preserve"><value>Dit boek heeft meer personages dan de {0} vertelfiguren die er zijn, dus sommige klinken hetzelfde. De verteller wordt nooit aan een personage gegeven.</value></data>
 </root>

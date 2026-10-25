@@ -166,16 +166,11 @@
   <!-- /Slice 111 -->
   <!-- Slice 113 -->
   <data name="Cast_Pair" xml:space="preserve"><value>{0}: {1}</value></data>
-  <data name="Cast_Sounds" xml:space="preserve"><value>Звучание</value></data>
-  <data name="Cast_Flavour_Normal" xml:space="preserve"><value>Обычный</value></data>
-  <data name="Cast_Flavour_Small" xml:space="preserve"><value>Маленький</value></data>
-  <data name="Cast_Flavour_Big" xml:space="preserve"><value>Большой</value></data>
-  <data name="Cast_Flavour_Bouncy" xml:space="preserve"><value>Озорной</value></data>
-  <data name="Cast_Flavour_Sleepy" xml:space="preserve"><value>Сонный</value></data>
-  <data name="Cast_FlavourHint_Small" xml:space="preserve"><value>выше и чуть быстрее</value></data>
-  <data name="Cast_FlavourHint_Big" xml:space="preserve"><value>ниже и медленнее</value></data>
-  <data name="Cast_FlavourHint_Bouncy" xml:space="preserve"><value>выше и быстро</value></data>
-  <data name="Cast_FlavourHint_Sleepy" xml:space="preserve"><value>медленно и чуть ниже</value></data>
+  <data name="Cast_PickTitle" xml:space="preserve"><value>Кто играет {0}?</value></data>
+  <data name="Cast_PickSubtitle" xml:space="preserve"><value>Для этой книги, язык: {0}</value></data>
+  <data name="Cast_FilterGirls" xml:space="preserve"><value>Девочки</value></data>
+  <data name="Cast_FilterBoys" xml:space="preserve"><value>Мальчики</value></data>
+  <data name="Cast_FilterEveryone" xml:space="preserve"><value>Все</value></data>
   <!-- /Slice 113 -->
   <!-- Slice 115 -->
   <data name="Storyteller_Getting" xml:space="preserve"><value>Загружаем голоса рассказчика…</value></data>
@@ -275,25 +270,18 @@
   <data name="Cast_MergeTitle" xml:space="preserve"><value>Объединение персонажей</value></data>
   <data name="Cast_MergeBody" xml:space="preserve"><value>Выберите два имени одного и того же персонажа. Их реплики объединятся под одним именем и одним голосом.</value></data>
   <data name="Cast_KeepName" xml:space="preserve"><value>Оставить имя</value></data>
-  <data name="Cast_VoiceTitle" xml:space="preserve"><value>Голос</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>Привет! Вот так я звучу, когда читаю вашу историю.</value></data>
   <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>Не удалось сохранить изменение</value></data>
   <data name="Cast_SaveFailedBody" xml:space="preserve"><value>Роли не сохранены. Попробуйте чуть позже.</value></data>
   <data name="Cast_PreviewFailedBody" xml:space="preserve"><value>Сейчас не удаётся воспроизвести голос.</value></data>
   <data name="Cast_LoadFailedTitle" xml:space="preserve"><value>Не удалось открыть роли</value></data>
   <data name="Cast_LoadFailedBody" xml:space="preserve"><value>Не удалось определить роли для этой истории. Попробуйте чуть позже.</value></data>
-  <data name="Cast_Boy" xml:space="preserve"><value>Мальчик</value></data>
-  <data name="Cast_Girl" xml:space="preserve"><value>Девочка</value></data>
   <data name="Cast_Words_One" xml:space="preserve"><value>Слов: {0}</value></data>
   <data name="Cast_Words_Other" xml:space="preserve"><value>Слов: {0}</value></data>
   <data name="Cast_UnknownLines_One" xml:space="preserve"><value>Реплик: {0}</value></data>
   <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>Реплик: {0}</value></data>
   <data name="Cast_UsesNarrator" xml:space="preserve"><value>читает рассказчик</value></data>
   <data name="Cast_Hear" xml:space="preserve"><value>Послушать: {0}</value></data>
-  <data name="Cast_NoBoyVoice" xml:space="preserve"><value>В этом наборе голосов нет мальчишеского голоса, поэтому у персонажа остаётся прежний голос.</value></data>
-  <data name="Cast_NoGirlVoice" xml:space="preserve"><value>В этом наборе голосов нет девичьего голоса, поэтому у персонажа остаётся прежний голос.</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>Объединить с {0}</value></data>
-  <data name="Cast_SharedNote" xml:space="preserve"><value>В этом наборе голосов всего {0} естественных голосов, поэтому некоторые персонажи говорят одним голосом. Голос рассказчика персонажам не выдаётся.</value></data>
-  <data name="Voice_NbWoman" xml:space="preserve"><value>Голос {0} (женщина)</value></data>
-  <data name="Voice_NbMan" xml:space="preserve"><value>Голос {0} (мужчина)</value></data>
+  <data name="Cast_SharedNote" xml:space="preserve"><value>В этой книге больше персонажей, чем есть рассказчиков ({0}), поэтому некоторые звучат одинаково. Рассказчик персонажам не выдаётся.</value></data>
 </root>

@@ -20,7 +20,6 @@ public sealed class StoryVoicing
 	private readonly IVoicePackService _packs;
 	private readonly NarratorChoice _narrators;
 	private readonly StoryTranslator _translator;
-	private readonly VoiceCaster _caster = new();
 	private readonly ConcurrentDictionary<string, IReadOnlyList<VoiceOption>> _pools = new();
 
 	// One segmenter and attributor per language (their rules are shared per language too), built on first use.
@@ -47,6 +46,7 @@ public sealed class StoryVoicing
 	public StoryVoicing(IVoicePackService packs, IVoiceModelService model, StoryTranslator translator, VoicePackInstaller installer, NarratorChoice narrators)
 	{
 		_packs = packs;
+		CastText.RosterSource = RosterFor;
 		_narrators = narrators;
 		_translator = translator;
 		model.ReadyChanged += (_, _) => _pools.Clear();
@@ -117,7 +117,20 @@ public sealed class StoryVoicing
 
 	/// <summary>The narrator of every book read in <paramref name="language"/> (Slice 109): the grown-up's pick for it while its pack still has that voice, else <see cref="NarratorFor"/>.</summary>
 	public string NarratorOf(string language) =>
-		NarratorSetting.Resolve(_narrators.Stored(language), VoicesFor(language), NarratorFor(language));
+		OnNarratorRoster(language, NarratorSetting.Resolve(_narrators.Stored(language), VoicesFor(language), NarratorFor(language)));
+
+	// A narrator picked before the storyteller characters (Slice 116) can be any voice of the pack; it becomes the roster narrator of the same gender, so the Narrator page always shows a character.
+	private string OnNarratorRoster(string language, string voiceId)
+	{
+		IReadOnlyList<StorytellerCharacter> narrators = NarratorsFor(language);
+		if (narrators.Count == 0 || narrators.Any(n => n.VoiceId == voiceId))
+		{
+			return voiceId;
+		}
+
+		Gender gender = VoicesFor(language).FirstOrDefault(v => v.Id == voiceId)?.Gender ?? Gender.Unknown;
+		return (narrators.FirstOrDefault(n => n.Gender == gender) ?? narrators[0]).VoiceId;
+	}
 
 	/// <summary>The narrator written into <c>NarratorVoiceId</c> for older builds (Slice 109): the stored pick or the default, with no pack scan, so a save never does I/O for it.</summary>
 	public string LegacyNarratorOf(string language) =>
@@ -168,10 +181,6 @@ public sealed class StoryVoicing
 	public IReadOnlyList<VoiceOption> VoicesFor(string language) =>
 		_pools.GetOrAdd(UiLanguage.Resolve(language), BuildPool);
 
-	/// <summary>Whether <paramref name="language"/>'s voices are the storyteller pack's (Slice 115): the cast screen folds its rows then (mock frame 49).</summary>
-	public bool UsesStorytellerVoices(string language) =>
-		CastEditor.HasStorytellerVoice(VoicesFor(language));
-
 	/// <summary>The language a voice preview speaks: the story's when its own pack is installed, else the one the voice speaks now. Never switches the voice.</summary>
 	public string PreviewLanguage(string storyLanguage, string current)
 	{
@@ -194,12 +203,20 @@ public sealed class StoryVoicing
 		return pool.Any(v => v.Id == SupertonicVoiceTable.Default.Id) ? SupertonicVoiceTable.Default.Id : pool[0].Id;
 	}
 
-	/// <summary>How many voices characters can share out once <paramref name="language"/>'s narrator has taken one.</summary>
-	public int CharacterVoiceCount(string language)
-	{
-		string narrator = NarratorOf(language);
-		return VoicesFor(language).Count(v => v.Id != narrator);
-	}
+	/// <summary>How many storyteller characters story characters can share out once <paramref name="language"/>'s narrator has taken a voice (Slice 116).</summary>
+	public int CharacterVoiceCount(string language) => ChoicesFor(language).Count;
+
+	/// <summary>The language's whole roster that its voices can speak (Slice 116): narrators first, voices mapped when another engine speaks the language for now.</summary>
+	public IReadOnlyList<StorytellerCharacter> RosterFor(string language) =>
+		CharacterRoster.Adapt(CharacterRoster.For(language), VoicesFor(language));
+
+	/// <summary>The narrators a grown-up can pick for <paramref name="language"/> on the Narrator page.</summary>
+	public IReadOnlyList<StorytellerCharacter> NarratorsFor(string language) =>
+		RosterFor(language).Where(c => c.Kind == CharacterKind.Narrator).ToList();
+
+	/// <summary>The storyteller characters a story character can be given in <paramref name="language"/>: its roster without the narrator's voice (the cast screen's picker).</summary>
+	public IReadOnlyList<StorytellerCharacter> ChoicesFor(string language) =>
+		CharacterRoster.Choices(RosterFor(language).Where(c => c.Kind == CharacterKind.Speaker).ToList(), NarratorOf(language));
 
 	/// <summary>The story's characters and lines as the cast screen shows them: merges applied, an edited
 	/// character's gender in place of the guess. On a worker thread, like <see cref="VoiceAsync"/>.</summary>
@@ -231,7 +248,7 @@ public sealed class StoryVoicing
 		IReadOnlyDictionary<string, string>? merges = null, LineBreakMap? lineBreaks = null)
 	{
 		AttributionResult resolved = StoryCast.Resolve(Analyse(storyLanguage, text, lineBreaks).Attribution, merges ?? Story.NoMerges, stored);
-		return StoryCast.ToMembers(resolved.Characters, Cast(castLanguage, resolved, stored), LanguageRules.For(storyLanguage), stored);
+		return StoryCast.ToMembers(resolved.Characters, Cast(castLanguage, resolved, stored, LanguageRules.For(storyLanguage)), LanguageRules.For(storyLanguage), stored);
 	}
 
 	// The screen and the voice both prepare the whole story: the last one is kept for the same story instance, so the split runs once for the two.
@@ -266,17 +283,27 @@ public sealed class StoryVoicing
 		IReadOnlyList<CastMember> stored = hasCast ? story.CastIn(language) : EditedSeed(story);
 		IReadOnlyList<VoiceOption> pool = hasCast || VoicesFor(language).Count > 0 ? VoicesFor(language) : VoicesFor(story.Language);
 		AttributionResult resolved = StoryCast.Resolve(prepared.Analysis.Attribution, story.Merges, stored);
-		VoiceCast cast = _caster.Cast(resolved.Characters, pool, NarratorOf(language), StoryCast.Pinned(stored));
-		// Names are in the story's language, so its rules guess the flavours; a grown-up's pick in this cast wins (Slice 113).
-		return cast.WithFlavours(FlavourGuess.ForCast(resolved.Characters, stored, LanguageRules.For(story.Language)));
+		// Names are in the story's language, so its rules guess the flavours; the stored voice and flavour (a grown-up's pick included) win (Slices 113, 116).
+		return CastWithRoster(resolved.Characters, language, pool, stored, LanguageRules.For(story.Language));
 	}
 
 	// Only the corrected genders carry over to another language, never the voices: those belong to the story language's pack.
 	private static IReadOnlyList<CastMember> EditedSeed(Story story) =>
 		story.Cast.Where(m => m.Edited).Select(m => m with { VoiceId = string.Empty }).ToList();
 
-	private VoiceCast Cast(string language, AttributionResult attribution, IReadOnlyList<CastMember> stored) =>
-		_caster.Cast(attribution.Characters, VoicesFor(language), NarratorOf(language), StoryCast.Pinned(stored));
+	private VoiceCast Cast(string language, AttributionResult attribution, IReadOnlyList<CastMember> stored, LanguageRules nameRules) =>
+		CastWithRoster(attribution.Characters, language, VoicesFor(language), stored, nameRules);
+
+	// Each story character gets the storyteller character of the language's roster that fits it best (Slice 116); the roster is the one the pool's voices can speak.
+	private VoiceCast CastWithRoster(
+		IReadOnlyList<Character> characters, string language, IReadOnlyList<VoiceOption> pool, IReadOnlyList<CastMember> stored, LanguageRules nameRules)
+	{
+		string narrator = NarratorOf(language);
+		IReadOnlyList<StorytellerCharacter> roster = CharacterRoster.Adapt(CharacterRoster.For(language), pool);
+		IReadOnlyList<StorytellerCharacter> choices = CharacterRoster.Choices(roster.Where(c => c.Kind == CharacterKind.Speaker).ToList(), narrator);
+		return CastCharacters.Cast(
+			characters, choices, roster, narrator, c => FlavourGuess.Guess(c.Name, nameRules), StoryCast.PinnedCharacters(stored));
+	}
 
 	private Cache Analyse(string language, string text, LineBreakMap? breaks = null)
 	{
@@ -309,8 +336,9 @@ public sealed class StoryVoicing
 		// is saved into a cast that the pack's own voices would then not know (pinned stored voices are kept as they are).
 		IReadOnlyList<VoiceInfo> voices = InstalledVoices(language)
 			?? (SupertonicVoiceTable.Serves(language) ? SupertonicVoiceTable.VoicesFor(language) : []);
-		CastText.RememberVoices(voices);
-		return voices.Select(ToOption).ToList();
+		IReadOnlyList<VoiceOption> options = voices.Select(ToOption).ToList();
+		CastText.RememberRoster(language, CharacterRoster.Adapt(CharacterRoster.For(language), options));
+		return options;
 	}
 
 	private IReadOnlyList<VoiceInfo>? InstalledVoices(string language) => InstalledCatalog(InstalledPacks(), language);

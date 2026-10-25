@@ -10,7 +10,7 @@ namespace DinoReader;
 
 /// <summary>
 /// The grown-up Narrator page (Slice 109, Decision 114, mock 39): one card per language with an installed voice pack (none for a language without one), my language first,
-/// each with a voice picker and a sample. The pick is the narrator of every book read in that language (starter, store and own), so a change
+/// each with a narrator picker (an open list of the language's narrator characters, each with plain words and a sample, Slice 116, mock frame 55) and a sample. The pick is the narrator of every book read in that language (starter, store and own), so a change
 /// re-casts, quietly, any character of any saved book who had that voice (<see cref="NarratorRecast"/>).
 /// </summary>
 public sealed class NarratorPage : ContentPage, IGrownUpPage
@@ -19,6 +19,8 @@ public sealed class NarratorPage : ContentPage, IGrownUpPage
 	private const double PickerHeight = 44;
 	private const double SampleSize = 44;
 	private const double ChevronSize = 12;
+	private const double RowHeight = 52;
+	private const double CheckSize = 18;
 
 	private readonly StoryVoicing _voicing;
 	private readonly IStoryLibrary _library;
@@ -27,6 +29,7 @@ public sealed class NarratorPage : ContentPage, IGrownUpPage
 	private readonly ISettingsStore _settings;
 	private readonly BusyGuard _busy = new();
 	private readonly VerticalStackLayout _cards = new() { Spacing = 10 };
+	private readonly HashSet<string> _open = [];
 
 	public NarratorPage(StoryVoicing voicing, IStoryLibrary library, ISpeechReader reader, SpokenLanguage spoken, ISettingsStore settings)
 	{
@@ -76,9 +79,9 @@ public sealed class NarratorPage : ContentPage, IGrownUpPage
 		};
 		SemanticProperties.SetDescription(back, AppResources.Common_Back);
 		CastViews.AddTap(back, () => _busy.RunAsync(() => Navigation.PopAsync()));
-		var title = new Label { Text = AppResources.Narrator_Title, FontSize = 20, FontAttributes = FontAttributes.Bold };
+		Label title = CastText.InOwnScriptAligned(new Label { Text = AppResources.Narrator_Title, FontSize = 20, FontAttributes = FontAttributes.Bold });
 		SemanticProperties.SetHeadingLevel(title, SemanticHeadingLevel.Level1);
-		var subtitle = new Label { Text = AppResources.Narrator_Subtitle, FontSize = 12, TextColor = DinoTokens.Get(DinoTokens.Muted) };
+		Label subtitle = CastText.InOwnScriptAligned(new Label { Text = AppResources.Narrator_Subtitle, FontSize = 12, TextColor = DinoTokens.Get(DinoTokens.Muted) });
 		var header = new Grid
 		{
 			Padding = new Thickness(6, 8, 14, 10),
@@ -104,6 +107,11 @@ public sealed class NarratorPage : ContentPage, IGrownUpPage
 	{
 		string voice = _voicing.NarratorOf(language);
 		var stack = new VerticalStackLayout { Spacing = 10, Children = { CardTitle(language, isMine), PickerRow(language, voice) } };
+		if (_open.Contains(language))
+		{
+			stack.Children.Add(NarratorList(language, voice));
+		}
+
 		return new Border
 		{
 			BackgroundColor = Colors.White,
@@ -150,9 +158,7 @@ public sealed class NarratorPage : ContentPage, IGrownUpPage
 
 	private Border VoicePicker(string language, string voice)
 	{
-		var content = new Grid { ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)] };
-		content.Add(new Label { Text = CastText.VoiceName(voice, language), FontSize = 14.5, FontAttributes = FontAttributes.Bold, VerticalOptions = LayoutOptions.Center }, 0);
-		content.Add(new IconView { Kind = IconKind.ChevronDown, Color = DinoTokens.Get(DinoTokens.Body), Size = ChevronSize, StrokeWidth = 1.6, VerticalOptions = LayoutOptions.Center }, 1);
+		Grid content = CastText.PickerLine(CastText.VoiceName(voice, language), 14.5, ChevronSize, LineBreakMode.WordWrap);
 		var picker = new Border
 		{
 			HeightRequest = PickerHeight,
@@ -163,7 +169,7 @@ public sealed class NarratorPage : ContentPage, IGrownUpPage
 			Content = content,
 		};
 		SemanticProperties.SetDescription(picker, LanguageNames.NativeName(language) + ": " + CastText.VoiceName(voice, language));
-		CastViews.AddTap(picker, () => _busy.RunAsync(() => ChooseAsync(language)));
+		CastViews.AddTap(picker, () => ToggleList(language));
 		return picker;
 	}
 
@@ -183,18 +189,77 @@ public sealed class NarratorPage : ContentPage, IGrownUpPage
 		return button;
 	}
 
-	private async Task ChooseAsync(string language)
+	private Task ToggleList(string language)
 	{
-		IReadOnlyList<VoiceOption> voices = _voicing.VoicesFor(language);
-		string[] labels = voices.Select(v => CastText.VoiceName(v.Id, language)).ToArray();
-		string picked = await DisplayActionSheetAsync(CastText.VoiceTitle, CastText.Cancel, null, labels);
-		int at = picked is null || picked == CastText.Cancel ? -1 : Array.IndexOf(labels, picked);
-		if (at >= 0 && voices[at].Id != _voicing.NarratorOf(language))
+		if (!_open.Remove(language))
 		{
-			_voicing.SetNarrator(language, voices[at].Id);
-			await RecastLibraryAsync();
-			Rebuild();
+			_open.Add(language);
 		}
+
+		Rebuild();
+		return Task.CompletedTask;
+	}
+
+	// The open list (mock frame 55): a Sand box with a row per narrator character, the chosen one checked.
+	private Border NarratorList(string language, string current)
+	{
+		var rows = new VerticalStackLayout();
+		foreach (StorytellerCharacter narrator in _voicing.NarratorsFor(language))
+		{
+			rows.Children.Add(NarratorRow(language, narrator, narrator.VoiceId == current));
+		}
+
+		return new Border
+		{
+			BackgroundColor = DinoTokens.Get(DinoTokens.Sand),
+			StrokeThickness = 0,
+			Padding = new Thickness(4),
+			StrokeShape = new RoundRectangle { CornerRadius = 14 },
+			Content = rows,
+		};
+	}
+
+	private Grid NarratorRow(string language, StorytellerCharacter narrator, bool selected)
+	{
+		var text = new VerticalStackLayout
+		{
+			VerticalOptions = LayoutOptions.Center,
+			Children =
+			{
+				CastText.InOwnScript(new Label { Text = narrator.Name, FontSize = 14.5, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(selected ? DinoTokens.BrandEdge : DinoTokens.Ink) }),
+				CastText.InOwnScript(new Label { Text = narrator.Hint, FontSize = 12, TextColor = DinoTokens.Get(DinoTokens.Muted) }),
+			},
+		};
+		var row = new Grid
+		{
+			MinimumHeightRequest = RowHeight,
+			BackgroundColor = DinoTokens.Get(DinoTokens.Sand),
+			Padding = new Thickness(10, 4, 4, 4),
+			ColumnSpacing = 8,
+			ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Auto)],
+		};
+		row.Add(text, 0);
+		if (selected)
+		{
+			row.Add(new IconView { Kind = IconKind.Check, Color = DinoTokens.Get(DinoTokens.BrandEdge), Size = CheckSize, StrokeWidth = 2.6, VerticalOptions = LayoutOptions.Center }, 1);
+		}
+
+		row.Add(SampleButton(language, narrator.VoiceId), 2);
+		SemanticProperties.SetDescription(text, CastText.Pair(narrator.Name, narrator.Hint));
+		CastViews.AddTap(row, () => _busy.RunAsync(() => ChooseAsync(language, narrator)));
+		return row;
+	}
+
+	private async Task ChooseAsync(string language, StorytellerCharacter narrator)
+	{
+		_open.Remove(language);
+		if (narrator.VoiceId != _voicing.NarratorOf(language))
+		{
+			_voicing.SetNarrator(language, narrator.VoiceId);
+			await RecastLibraryAsync();
+		}
+
+		Rebuild();
 	}
 
 	// Every saved book follows the new narrator at once: a character who had its voice is given another (starter, store and own books alike).

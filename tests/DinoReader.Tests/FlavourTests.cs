@@ -101,11 +101,11 @@ public class FlavourGuessTests
     }
 
     [Fact]
-    public void A_stored_flavour_of_an_unedited_member_is_ignored_in_favour_of_the_guess()
+    public void A_stored_flavour_of_an_unedited_member_still_stands_over_the_guess()
     {
         var member = new CastMember("pig", "Little Pig", Gender.Male, "M1", false, VoiceFlavour.Big);
 
-        Assert.Equal(VoiceFlavour.Small, FlavourGuess.Effective(member, LanguageRules.English));
+        Assert.Equal(VoiceFlavour.Big, FlavourGuess.Effective(member, LanguageRules.English));
     }
 
     [Fact]
@@ -183,25 +183,6 @@ public class FlavourCastTests
     }
 
     [Fact]
-    public void SetFlavour_pins_the_pick_with_the_edited_flag()
-    {
-        var state = new CastEdit([new CastMember("pig", "Little Pig", Gender.Male, "M1")], new Dictionary<string, string>());
-
-        CastMember member = CastEditor.SetFlavour(state, "pig", VoiceFlavour.Bouncy).Cast.Single();
-
-        Assert.Equal(VoiceFlavour.Bouncy, member.Flavour);
-        Assert.True(member.Edited);
-    }
-
-    [Fact]
-    public void SetFlavour_refuses_the_narrators_flavour()
-    {
-        var state = new CastEdit([new CastMember("pig", "Little Pig", Gender.Male, "M1")], new Dictionary<string, string>());
-
-        Assert.Same(state, CastEditor.SetFlavour(state, "pig", VoiceFlavour.Storyteller));
-    }
-
-    [Fact]
     public void The_cast_sheet_shows_the_effective_flavour_of_each_row()
     {
         var attribution = new AttributionResult([], Characters);
@@ -253,30 +234,6 @@ public class FlavourCastTests
 public class FlavourReviewTests
 {
     [Fact]
-    public void SetVoice_drops_a_stored_guess_so_it_is_not_pinned_as_a_pick()
-    {
-        var guessed = new CastMember("bear", "Baby Bear", Gender.Male, "M1", false, VoiceFlavour.Small);
-        var state = new CastEdit([guessed], new Dictionary<string, string>());
-
-        CastMember edited = CastEditor.SetVoice(state, "bear", "M2", "N").Cast.Single();
-
-        Assert.True(edited.Edited);
-        Assert.Null(edited.Flavour);
-        Assert.Equal(VoiceFlavour.Small, FlavourGuess.Effective(edited, LanguageRules.English));
-    }
-
-    [Fact]
-    public void SetVoice_keeps_a_flavour_the_grown_up_picked()
-    {
-        var picked = new CastMember("bear", "Baby Bear", Gender.Male, "M1", true, VoiceFlavour.Big);
-        var state = new CastEdit([picked], new Dictionary<string, string>());
-
-        CastMember edited = CastEditor.SetVoice(state, "bear", "M2", "N").Cast.Single();
-
-        Assert.Equal(VoiceFlavour.Big, edited.Flavour);
-    }
-
-    [Fact]
     public void ForCast_survives_duplicate_character_ids()
     {
         Character[] twins = [new("pig", "Little Pig", Gender.Male, 4), new("pig", "Little Pig", Gender.Male, 2)];
@@ -284,5 +241,30 @@ public class FlavourReviewTests
         var flavours = FlavourGuess.ForCast(twins, [], LanguageRules.English);
 
         Assert.Equal(VoiceFlavour.Small, flavours["pig"]);
+    }
+}
+
+public class StoredFarsiPigsTests
+{
+    // The real stored Farsi cast of The Three Little Pigs on an installed device (not edited, flavours the cast gave).
+    private static readonly CastMember[] Stored =
+    [
+        new("Pip", "Pip", Gender.Male, "piper:fa-ganji", false, VoiceFlavour.Small),
+        new("Pop", "Pop", Gender.Male, "piper:fa-ganji", false, VoiceFlavour.Squeaky),
+        new("Pim", "Pim", Gender.Male, "piper:fa-gyro", false, VoiceFlavour.Normal),
+        new("Wolf", "Wolf", Gender.Male, "piper:fa-gyro", false, VoiceFlavour.Grumpy),
+    ];
+
+    [Fact]
+    public void An_installed_farsi_cast_names_four_different_characters()
+    {
+        LanguageRules rules = LanguageRules.For("fa");
+        var speakers = CharacterRoster.Speakers("fa");
+
+        var names = Stored.Select(m => CharacterRoster.Nearest(speakers, m.VoiceId, FlavourGuess.Effective(m, rules), m.Gender)!.Name).ToList();
+
+        Assert.Equal(4, names.Distinct().Count());
+        Assert.Equal("خرگوش شیطون", names[0]);
+        Assert.Equal("موش کوچولو", names[1]);
     }
 }
