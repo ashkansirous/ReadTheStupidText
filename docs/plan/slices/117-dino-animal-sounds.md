@@ -1,6 +1,6 @@
 # Slice 117 — Dino: animal characters make their sounds
 
-*Built 2026-10-25, not yet verified on the emulator or by ear.* *Planned 2026-10-25*, from the user's ask that reading be "more kids like": a daddy sheep should say
+*Built 2026-10-25, merged (PR #327); emulator PASS, not yet verified by ear.* *Planned 2026-10-25*, from the user's ask that reading be "more kids like": a daddy sheep should say
 "baa" every 2–3 sentences when the story doesn't, a cow "moo", a cat "meow" and so on, in every
 language. Dino Reader only; RTST is not touched.
 
@@ -68,13 +68,17 @@ New strings (all 14 locales): "Animal sounds", "Animals say “Oink!” or “Ba
 
 *From review:* high pass findings 1-9 applied. Medium pass findings 1 and 3 applied; 2 skipped (Persian pig "خرخر" left for a native read).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-25)
 
 Already added on the branch in `src/DinoReader.Core/CLAUDE.md` and `src/DinoReader.App/CLAUDE.md` (Slice 117: docs/plan/slices/117-dino-animal-sounds.md).
 
+*Emulator result (2026-10-25): PASS.* The card is on by default; the Wolf's sound segments follow the 2nd/5th/7th line cadence and never appear in page text; the switch off persists across reopening the story and an app restart (after a fix); the Farsi card renders; the none state is dimmed; the switch has an accessibility label and checked state.
+
+*Known limit:* sounds come from the character's name only, so in The Three Little Pigs (pigs named Pip/Pop/Pim) only the Wolf makes a sound. Follow-up idea: let the cast know a character's animal (from the story text or a grown-up pick).
+
 #### Not yet verified
 
-- Emulator run (English and Farsi starter with an animal cast; switch off silences; page text unchanged): in progress.
 - Native read of all animal words and sounds (Persian pig and cow are guesses).
 - Bleat wobble depth (`BleatWobble`) by ear.
 - iOS reader build.
+- Known limit, follow-up idea: the animal comes from the name only (Pip/Pop/Pim pigs are silent); let the cast know a character's animal.
