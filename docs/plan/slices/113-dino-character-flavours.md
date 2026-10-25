@@ -94,3 +94,5 @@ New strings (all 14 locales): "Sounds", "Normal", "Small", "Big", "Bouncy", "Sle
 - Root `CLAUDE.md` layering: `DinoReader.Core` references `Application` (`LineReflow`, `AppLanguage`) and `Domain` (`VoiceFlavour`, direct reference since Slice 113); the line `DinoReader.Core -> Application (LineReflow only)` should read `-> Application, Domain`.
 - Head start (`NeuralSentenceSource.AreCached/PrepareAsync`) takes the flavour in its key; `PrepareChunksAsync` passes Normal because a head start reads plain text. A flavoured head start would pass the chunk's flavour.
 - Not done (review 113 #10): the synthesize/shape/join logic is copied in the Windows `NeuralSentenceSource`, Android and iOS readers; extracting a shared helper is a cross-platform reader refactor left for a later slice. A fix to it must be made in all three.
+
+*Emulator check 2026-10-25 (Android emulator, Debug arm64, main 7846b1c): PASS. Flavours and menu work; pace differs per flavour (pitch not checked by ear). Bug: the first Sounds-row play tap right after changing a flavour is silent; the second tap works.*

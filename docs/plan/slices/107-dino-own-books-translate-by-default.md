@@ -73,3 +73,5 @@ New strings (all 14 locales, in this slice's block): the second line "Reads and 
 - Android emulator: app in Farsi, a new book shows the switch on and reads in Farsi.
 - Windows head: the greyed switch state with its note.
 - Native-speaker check of the 3 new strings (all locales except English).
+
+*Emulator check 2026-10-25 (Android emulator, Debug arm64, main 7846b1c): PASS. Switch is on for a new book with "Reads and shows it in English".*

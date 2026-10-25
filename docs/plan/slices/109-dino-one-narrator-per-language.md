@@ -80,3 +80,5 @@ New strings (all 14 locales): "Narrator" (button and page title), "The storytell
 #### For CLAUDE.md (lifted 2026-10-24)
 
 - App: the narrator is one voice per language for every book (`NarratorChoice` preference, resolved by `StoryVoicing.NarratorOf(language)` against the language's pack, default `NarratorFor`); never read `Story.NarratorVoiceId` for voicing (`StoryJson.LegacyNarratorOf` still writes it only so older builds can open new packages and backups). The cast screen shows it read-only; it is chosen on `NarratorPage` (grown-up gallery, Narrator button), and a change re-casts clashing characters in every saved book through `NarratorRecast`. (Slice 109: docs/plan/slices/109-dino-one-narrator-per-language.md)
+
+*Emulator check 2026-10-25 (Android emulator, Debug arm64, main 7846b1c): PASS. Grown-up row and Narrator page work.*
