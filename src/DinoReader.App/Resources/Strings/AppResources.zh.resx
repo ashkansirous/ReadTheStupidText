@@ -291,6 +291,8 @@
   <data name="Cast_Animal_Title" xml:space="preserve"><value>{0}是什么动物？</value></data>
   <data name="Cast_Animal_Hint" xml:space="preserve"><value>选择这个角色是哪种动物</value></data>
   <data name="Cast_WordsOverPictures_Title" xml:space="preserve"><value>在图片上显示文字</value></data>
-  <data name="Cast_WordsOverPictures_Hint" xml:space="preserve"><value>朗读时，故事文字显示在图片上方</value></data>
+  <data name="Cast_WordsOverPictures_HintOn" xml:space="preserve"><value>文字显示在底部的面板中</value></data>
+  <data name="Cast_WordsOverPictures_HintOff" xml:space="preserve"><value>已关闭，因为这些图片本身已经有文字</value></data>
+  <data name="Cast_WordsOverPictures_HintOffPlain" xml:space="preserve"><value>只显示图片</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>这本书的角色比现有的 {0} 个讲故事角色还多，所以有些角色听起来会一样。旁白不会分给任何角色。</value></data>
 </root>

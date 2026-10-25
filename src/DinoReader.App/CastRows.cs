@@ -92,27 +92,55 @@ internal static class CastRows
 		return row;
 	}
 
-	/// <summary>The "Animal sounds" card under the cast card (mock frames 52 and 54, Slice 117): the story's switch, on by default. With no sounding animal in the story the hint says so and the switch is dimmed (it keeps its stored value).</summary>
+	/// <summary>The "Animal sounds" row (mock frames 52 and 54, Slice 117): the story's switch, on by default. With no sounding animal in the story the hint says so and the switch is dimmed (it keeps its stored value).</summary>
 	public static View AnimalSoundsRow(bool hasAnimals, bool on, Action<bool> changed) =>
-		SwitchCard(AppResources.Cast_AnimalSounds_Title, hasAnimals ? AppResources.Cast_AnimalSounds_Hint : AppResources.Cast_AnimalSounds_None, on: on, enabled: hasAnimals, changed: changed);
+		SwitchRow(AppResources.Cast_AnimalSounds_Title, hasAnimals ? AppResources.Cast_AnimalSounds_Hint : AppResources.Cast_AnimalSounds_None, on: on, enabled: hasAnimals, changed: changed);
 
-	/// <summary>The "Show the words over the pictures" card (Slice 122), under the animal-sounds card, for a book with pictures.</summary>
-	public static View WordsOverPicturesRow(bool on, Action<bool> changed) =>
-		SwitchCard(AppResources.Cast_WordsOverPictures_Title, AppResources.Cast_WordsOverPictures_Hint, on: on, enabled: AlwaysEnabled, changed: changed);
+	/// <summary>The "Show the words over the pictures" row (Slice 122, mock frames 56-58), for a book with pictures. Its sub-line follows the switch.</summary>
+	public static View WordsOverPicturesRow(bool on, bool picturesHaveWords, Action<bool> changed) =>
+		SwitchRow(AppResources.Cast_WordsOverPictures_Title, WordsHint(on, picturesHaveWords), on: on, enabled: AlwaysEnabled, changed: changed);
+
+	/// <summary>One white card holding the switch rows, a hairline between them (Slice 124).</summary>
+	public static View SwitchesCard(params View[] rows)
+	{
+		var stack = new VerticalStackLayout();
+		foreach (View row in rows)
+		{
+			if (stack.Children.Count > 0)
+			{
+				stack.Children.Add(CastViews.Divider());
+			}
+
+			stack.Children.Add(row);
+		}
+
+		Border card = CastViews.Card();
+		card.Content = stack;
+		return card;
+	}
 
 	private const bool AlwaysEnabled = true;
 
-	private static View SwitchCard(string title, string hint, bool on, bool enabled, Action<bool> changed)
+	// Off reads "already have the words" only for a book of photos, scans or PDF pages; any other book says just what is shown.
+	private static string WordsHint(bool on, bool picturesHaveWords) =>
+		on ? AppResources.Cast_WordsOverPictures_HintOn
+			: picturesHaveWords ? AppResources.Cast_WordsOverPictures_HintOff : AppResources.Cast_WordsOverPictures_HintOffPlain;
+
+	private static View SwitchRow(string title, string hintText, bool on, bool enabled, Action<bool> changed)
 	{
 		var toggle = new ToggleSwitch { IsOn = on, IsEnabled = enabled, AccessibleName = title, VerticalOptions = LayoutOptions.Center };
-		toggle.Toggled += (_, _) => changed(toggle.IsOn);
+		var hint = new Label { Text = hintText, FontSize = 12.5, TextColor = DinoTokens.Get(DinoTokens.Body) };
+		toggle.Toggled += (_, _) =>
+		{
+			changed(toggle.IsOn);
+		};
 		var text = new VerticalStackLayout
 		{
 			VerticalOptions = LayoutOptions.Center,
 			Children =
 			{
 				CastText.InOwnScript(new Label { Text = title, FontSize = 15, FontAttributes = FontAttributes.Bold }),
-				CastText.InOwnScript(new Label { Text = hint, FontSize = 12.5, TextColor = DinoTokens.Get(DinoTokens.Body) }),
+				CastText.InOwnScript(hint),
 			},
 		};
 		var row = new Grid
@@ -124,9 +152,7 @@ internal static class CastRows
 		};
 		row.Add(text, 0);
 		row.Add(toggle, 1);
-		Border card = CastViews.Card();
-		card.Content = row;
-		return card;
+		return row;
 	}
 
 	public static View SharedNote(int voices) => new Border

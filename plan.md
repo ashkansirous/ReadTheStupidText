@@ -136,9 +136,11 @@ this plan turns it into ordered, shippable vertical slices.
 | 116 | Dino: storyteller characters in every language | built | #325 | | [116-dino-storyteller-characters.md](docs/plan/slices/116-dino-storyteller-characters.md) |
 | 117 | Dino: animal characters make their sounds | built | #327 | | [117-dino-animal-sounds.md](docs/plan/slices/117-dino-animal-sounds.md) |
 | 118 | Dino: storyteller voices for Spanish, French and Portuguese | built | #330 | | [118-dino-storyteller-more-languages.md](docs/plan/slices/118-dino-storyteller-more-languages.md) |
-| 119 | Dino: illustrated Three Little Pigs, and the starters in the store | planned | | | [119-dino-illustrated-three-little-pigs.md](docs/plan/slices/119-dino-illustrated-three-little-pigs.md) |
-| 120 | Dino: a repo skill for making a story | planned | | | [120-dino-create-story-skill.md](docs/plan/slices/120-dino-create-story-skill.md) |
+| 119 | Dino: illustrated Three Little Pigs, and the starters in the store | built | #332, #334 | | [119-dino-illustrated-three-little-pigs.md](docs/plan/slices/119-dino-illustrated-three-little-pigs.md) |
+| 120 | Dino: a repo skill for making a story | built | #332 | | [120-dino-create-story-skill.md](docs/plan/slices/120-dino-create-story-skill.md) |
 | 121 | Dino: pictures for the ten store stories | planned | | | [121-dino-illustrate-store-stories.md](docs/plan/slices/121-dino-illustrate-store-stories.md) |
+| 122 | Dino: words panel at most 30% of the picture, and a words switch | built | #335, #340 | | [122-dino-text-panel-30-and-switch.md](docs/plan/slices/122-dino-text-panel-30-and-switch.md) |
+| 123 | Dino: the pigs retold as 16 pages, one action each | built | #336 | | [123-dino-pigs-one-action-per-page.md](docs/plan/slices/123-dino-pigs-one-action-per-page.md) |
 | 124 | Dino: the words panel and its switch match the Batch 25 mock | planned | | | [124-dino-words-panel-matches-mock.md](docs/plan/slices/124-dino-words-panel-matches-mock.md) |
 | 125 | Dino: each character knows its animal, and animal voices to match | planned | | | [125-dino-character-animals.md](docs/plan/slices/125-dino-character-animals.md) |
 
@@ -168,7 +170,7 @@ Batch 23 (113-114, planned 2026-10-24, the voices sound too grown up for childre
 
 Batch 24 (115-118, planned 2026-10-25, Dino stuck on the old voices; storyteller characters for every language and animal sounds): one at a time in order 115, 116, 117, 118 (all built). All four edit `StoryVoicing`, the cast page or the voice tables. Dino only; RTST unchanged. Decisions 120-124.
 
-Batch 25 (119-121, planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
+Batch 25 (119-123; 119, 120, 122, 123 built, 121 planned; planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
 
 Batch 26 (124-125, planned 2026-10-25, the Batch 25 mock and the animal-identity follow-up of Slice 117): 124 first (small; matches the words panel and switch card to the mock), then 125 (both edit `CastRows`/`CastPage` and the strings). 125 also merges after PR #336 (the pigs retell, `StarterBuilder`/`StarterTexts`). Decision 132.
 
@@ -210,6 +212,9 @@ Built but not verified (details in each slice file):
 - Slice 116: native read of roster names and hints, especially Farsi; Farsi bee=Small and princess=Whisper flavours by ear; Chinese has only one voice (confirm acceptable) ([slice](docs/plan/slices/116-dino-storyteller-characters.md)).
 - Slice 117: native read of all animal words and sounds (Persian pig and cow are guesses); `BleatWobble` depth by ear; iOS reader build. Known limit: sounds come from the character's name only, so in The Three Little Pigs only the Wolf sounds; follow-up planned as Slice 125 ([slice](docs/plan/slices/117-dino-animal-sounds.md)).
 - Slice 118: the listening check of the es, pt and zh WAVs; real-phone Kokoro speed (about 9x slower than Supertonic on the emulator); a Chinese sentence with Latin words on a device; the Wi-Fi plus cellular pack-update path on a device ([slice](docs/plan/slices/118-dino-storyteller-more-languages.md)).
+- Slice 119: on-device starter auto-update and recording copy (unchanged pages keep recordings, edited text is skipped); the pigs pictures in both orientations and the store download of pigs v3 ([slice](docs/plan/slices/119-dino-illustrated-three-little-pigs.md)).
+- Slice 122: on the user's phone, pigs upright and sideways (panel at most 30%); photo/PDF import defaults the switch off; a wide picture sideways with the words off ([slice](docs/plan/slices/122-dino-text-panel-30-and-switch.md)).
+- Slice 123: on the phone, the pigs show 16 pages with pictures; an installed v3 copy updates to v4 and keeps recordings on unchanged pages ([slice](docs/plan/slices/123-dino-pigs-one-action-per-page.md)).
 - Slice 106: Norwegian on a Windows head via `MarianEngine` (third-party conversion, never run); en to da/fi/sv/nl/nb and back on Windows; the Norwegian packs are about 390 MB each ([slice](docs/plan/slices/106-windows-nordic-dutch-translation-packs.md)).
 - Windows has no `en-ja` translation pack (`TranslationPacks.FromEnglish` and `packs.yml` lack it), so English cannot be translated into Japanese offline on Windows; found while planning Slice 106, not yet scheduled.
 - Older unverified items (Slices 43-95 and a flaky-test note), moved verbatim: [outstanding-older](docs/plan/notes/2026-10-25-outstanding-older.md). Still open until verified.

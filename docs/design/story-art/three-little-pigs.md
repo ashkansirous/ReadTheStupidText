@@ -1,6 +1,7 @@
 # The Three Little Pigs: art record
 
-Pilot book for the `create-dino-story` skill (Slice 119). Bundled starter, 6 pages.
+Pilot book for the `create-dino-story` skill (Slice 119). Bundled starter. Retold as 16 pages with one
+action each in Slice 123 (`dino-storytelling` skill); the 6-page table below is the Slice 119 record.
 
 **Style:** Children's picture book illustration, soft watercolour and coloured pencil, warm gentle
 colours, simple rounded shapes, no text or letters anywhere. Portrait 3:4, 896x1200.
@@ -32,3 +33,30 @@ Line-up: [`three-little-pigs/characters/lineup.jpg`](three-little-pigs/character
 
 Lesson: one long chat mixed scenes and outfits; a fresh chat with the line-up pasted and every outfit
 spelled out (including what a character does not wear) got it right first time.
+
+## Slice 123: 16 pages, one action each
+
+The user found two actions on each of the 6 pages: the pig's act and the Wolf's answer. Pages are
+composed for the 30% words panel (Slice 122): action in the top 70%, bottom 30% plain.
+
+| Page | One action (who, count, where, when) | Picture | Attempts | Why earlier attempts failed |
+| --- | --- | --- | --- | --- |
+| Cover | unchanged | Slice 119 cover | | |
+| 1 | Morning: Pip, Pop, Pim (3) walk off down a country road with bundles on sticks, waving back; Mother Pig small in the doorway of a cottage far behind, waving | new | 1 | |
+| 2 | Sunny meadow: Pip alone (1) piles straw into a little round straw house, happy | new | 1 | |
+| 3 | Edge of a wood: Pop alone (1) ties sticks into a little stick house | new | 1 | |
+| 4 | Hilltop: Pim alone (1) carefully lays bricks with his trowel, brick house half built | new | 1 | |
+| 5 | Evening: Wolf knocks at the straw house, Pip peeks out | Slice 119 page 2 | | |
+| 6 | Evening: Wolf blows (cheeks puffed), straw flies up in the air; Pip (1) scampers off towards the stick house | new | 1 | |
+| 7 | Evening: Wolf knocks at the stick-house door; Pop and Pip (2) peek out of its window | new | 2 | 1: "tink tink" written on the door and a plank house, not sticks |
+| 8 | Wolf blows the stick house into a heap; Pip and Pop run hand in hand | Slice 119 page 3 | | |
+| 9 | Dusk: Pim (1) holds the brick-house door wide; Pip and Pop (2) dash inside; no Wolf | new | 1 | |
+| 10 | Dusk: Wolf knocks on the brick-house door; Pim, Pip, Pop (3) look out of the window beside it | new | 2 | 1: four pigs at a window of four panes (fixed by asking for one single-pane window with the three named left to right) |
+| 11 | Dusk: Wolf huffs and puffs with all his might (big cheeks, leaves swirling), the brick house stands still; the three pigs (3) peek out of the window, smiling | new | 1 | |
+| 12 | Dusk: the Wolf (1), cross in a funny way, arms folded at the foot of a ladder against the brick house, looking up at the chimney; no pigs | new | 1 | |
+| 13 | Indoors, evening: Pim (1) pushes a big tub of white soap bubbles under the empty fireplace (no fire, no logs); Pop (1) points up the chimney; Pip (1) watches; no Wolf | new | 1 | |
+| 14 | Wolf in the tub of cold soap bubbles, sneezing; pigs giggle | Slice 119 page 5 | | |
+| 15 | Moonlit road: the soggy, soapy Wolf (1) jogs home with a sheepish smile; three tiny pigs wave from the lit brick-house door far behind | new | 1 | |
+| 16 | Sunset: the three pigs dance in a circle by the brick house | Slice 119 page 6 | | |
+
+Chats: pages 1-3 in one, pages 4 and 6 (and the rejected 7) in a second, pages 7 and 9 (and the rejected 10) in a third, pages 10, 11 and the tub page in a fourth, the Wolf-at-the-ladder and soggy-Wolf pages in a fifth (added after review split the roof and the run home onto their own pages), the line-up pasted into each. Three pictures per chat kept every outfit right. The fails were text drawn into a scene and a 4-pane window that multiplied the pigs.

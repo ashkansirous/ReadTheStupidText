@@ -291,6 +291,8 @@
   <data name="Cast_Animal_Title" xml:space="preserve"><value>Que animal é {0}?</value></data>
   <data name="Cast_Animal_Hint" xml:space="preserve"><value>Escolha o animal deste personagem</value></data>
   <data name="Cast_WordsOverPictures_Title" xml:space="preserve"><value>Mostrar as palavras sobre as imagens</value></data>
-  <data name="Cast_WordsOverPictures_Hint" xml:space="preserve"><value>O texto da história aparece sobre a imagem enquanto é lido</value></data>
+  <data name="Cast_WordsOverPictures_HintOn" xml:space="preserve"><value>As palavras aparecem num painel na parte de baixo</value></data>
+  <data name="Cast_WordsOverPictures_HintOff" xml:space="preserve"><value>Desligado porque estas imagens já têm as palavras</value></data>
+  <data name="Cast_WordsOverPictures_HintOffPlain" xml:space="preserve"><value>Só as imagens aparecem</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Este livro tem mais personagens do que os {0} personagens narradores disponíveis, então alguns soam iguais. O narrador nunca é dado a um personagem.</value></data>
 </root>

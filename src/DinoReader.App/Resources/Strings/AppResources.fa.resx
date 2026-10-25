@@ -291,6 +291,8 @@
   <data name="Cast_Animal_Title" xml:space="preserve"><value>{0} چه حیوانی است؟</value></data>
   <data name="Cast_Animal_Hint" xml:space="preserve"><value>حیوان این شخصیت را انتخاب کنید</value></data>
   <data name="Cast_WordsOverPictures_Title" xml:space="preserve"><value>نمایش کلمات روی تصویرها</value></data>
-  <data name="Cast_WordsOverPictures_Hint" xml:space="preserve"><value>متن داستان هنگام خواندن روی تصویر نشان داده می‌شود</value></data>
+  <data name="Cast_WordsOverPictures_HintOn" xml:space="preserve"><value>کلمات در یک پنل پایین تصویر نشان داده می‌شوند</value></data>
+  <data name="Cast_WordsOverPictures_HintOff" xml:space="preserve"><value>خاموش است چون این تصاویر از قبل کلمات را دارند</value></data>
+  <data name="Cast_WordsOverPictures_HintOffPlain" xml:space="preserve"><value>فقط تصاویر نشان داده می‌شوند</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>این کتاب شخصیت‌های بیشتری از {0} شخصیت قصه‌گوی موجود دارد، پس بعضی‌ها یک‌جور صدا می‌دهند. راوی هیچ‌وقت به شخصیتی داده نمی‌شود.</value></data>
 </root>

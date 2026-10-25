@@ -17,7 +17,7 @@
 - [x] `UprightPage` uses the helper. Remove the 58% constant and update its doc comment.
 - [x] `Story.WordsOverPictures` (`bool?`; null means the default from the rule above), stored in `story.json` only when it was set (the `AnimalSoundsOn` pattern, no schema bump). Copy it through `StoryImport` and `StoryActions` `with`-copies.
 - [x] `PictureTextBook.ShowsWordsOverPictures(Story)` gives the effective value (the stored value, else true). Tests cover each case.
-- [x] `PictureTextPages`: when it is false, draw the picture card only. Upright, the picture fills the card. Sideways, the picture takes the full width and the transport row stays.
+- [x] `PictureTextPages`: when it is false, draw the picture card only. Upright, the picture fills the card. Sideways, a tall picture keeps the left half at full height and the other half keeps the transport row; a wide picture gets the whole page above the transport row (the first build left a small thumbnail, fixed after the emulator check).
 - [x] The grown-up switch row, with strings in every app language. The switch applies the next time the book opens (the reading page closes when the grown-up opens the cast screen).
 - [ ] Emulator check, upright and sideways: on the pigs book the panel covers at most 30% of the picture. With the switch off, only the picture shows. A book imported from photos or a PDF has the switch off by default.
 
@@ -56,7 +56,7 @@ Checked against the built code on `main` (PR #335), 2026-10-25.
 - **Panel measurements differ.** Margin 10 (`:23`) vs 8; padding 16x14 (`:137`) vs 14x10; line-height 1.55 (`:19`) vs 1.5; corner 18 (`:21`) vs 16; shadow radius 18, offset 6, opacity .18 (`:142`) vs `0 4 12 .16`. The cap counts the margin inside the 30% as the mock does (`PictureTextBook.cs:29-34`), so a smaller margin gives a 2px taller panel.
 - **Matching the mock:** 30% of the visible picture (`PictureTextBook.PanelMaxHeight`); switch under Animal sounds and only for picture + text books (`CastPage.cs:241`); photo/PDF default off (`PictureTextBook.cs:43`, `StoryDraft.MarkPicturesAsPages`); picture only when off, no label so no highlight (`PictureTextPages.cs:187`); pages without a picture keep their text card; scans with placed lines go through `ScanPages`, unaffected.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-25)
 
 - The words panel over a picture is capped at 30% of the visible AspectFit picture, margin included (`PictureTextBook.PanelMaxHeight` in `src/DinoReader.Core/PictureTextBook.cs`); never size it from the card. `Story.WordsOverPictures` is `bool?`, omitted from `story.json` when null, effective value `?? true`; photo/PDF page imports set it false (`StoryDraft.MarkPicturesAsPages`). (Slice 122: docs/plan/slices/122-dino-text-panel-30-and-switch.md)
 

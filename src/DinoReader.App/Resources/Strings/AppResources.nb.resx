@@ -290,6 +290,8 @@
   <data name="Cast_Animal_Title" xml:space="preserve"><value>Hvilket dyr er {0}?</value></data>
   <data name="Cast_Animal_Hint" xml:space="preserve"><value>Velg dyret for denne figuren</value></data>
   <data name="Cast_WordsOverPictures_Title" xml:space="preserve"><value>Vis ordene over bildene</value></data>
-  <data name="Cast_WordsOverPictures_Hint" xml:space="preserve"><value>Historiens tekst ligger oppå bildet mens den leses</value></data>
+  <data name="Cast_WordsOverPictures_HintOn" xml:space="preserve"><value>Ordene vises i et felt nederst</value></data>
+  <data name="Cast_WordsOverPictures_HintOff" xml:space="preserve"><value>Av fordi bildene allerede har ordene i seg</value></data>
+  <data name="Cast_WordsOverPictures_HintOffPlain" xml:space="preserve"><value>Bare bildene vises</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Det er flere figurer i boken enn de {0} fortellerfigurene vi har, så noen høres like ut. Fortelleren blir aldri gitt til en figur.</value></data>
 </root>

@@ -291,6 +291,8 @@
   <data name="Cast_Animal_Title" xml:space="preserve"><value>أي حيوان هو {0}؟</value></data>
   <data name="Cast_Animal_Hint" xml:space="preserve"><value>اختر حيوان هذه الشخصية</value></data>
   <data name="Cast_WordsOverPictures_Title" xml:space="preserve"><value>إظهار الكلمات فوق الصور</value></data>
-  <data name="Cast_WordsOverPictures_Hint" xml:space="preserve"><value>يظهر نص القصة فوق الصورة أثناء القراءة</value></data>
+  <data name="Cast_WordsOverPictures_HintOn" xml:space="preserve"><value>تظهر الكلمات في لوحة أسفل الصورة</value></data>
+  <data name="Cast_WordsOverPictures_HintOff" xml:space="preserve"><value>متوقف لأن هذه الصور فيها الكلمات أصلًا</value></data>
+  <data name="Cast_WordsOverPictures_HintOffPlain" xml:space="preserve"><value>تظهر الصور فقط</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>عدد الشخصيات في هذا الكتاب أكبر من عدد الشخصيات الراوية المتاحة وهو {0}، لذا يتشابه صوت بعضها. لا يُمنح الراوي لأي شخصية.</value></data>
 </root>

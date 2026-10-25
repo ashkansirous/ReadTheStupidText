@@ -242,6 +242,36 @@ public sealed class StarterUpdateTests : IDisposable
     }
 
     [Fact]
+    public void Refresh_DropsAPageCoverPick_WhenThePageCountChanged()
+    {
+        Story stored = PigsCopy(CoverStyle.Picture, 3, null) with { Pages = [new StoryPage("A.", "a.jpg"), new StoryPage("B.", "b.jpg")], CoverPageIndex = 1 };
+        Story bundled = PigsPictureBundle() with { Pages = [new StoryPage("A.", "x.jpg"), new StoryPage("B.", "y.jpg"), new StoryPage("C.", "z.jpg")] };
+
+        Story refreshed = StarterUpdate.Refresh(stored, bundled);
+
+        Assert.Equal("cover-new.jpg", refreshed.CoverFile);
+        Assert.Null(refreshed.CoverPageIndex);
+    }
+
+    [Fact]
+    public void Refresh_KeepsAPageCoverPick_WhenThePageCountIsTheSame()
+    {
+        Story stored = PigsCopy(CoverStyle.Picture, 3, null) with { Pages = [new StoryPage("A.", "a.jpg"), new StoryPage("B.", "b.jpg")], CoverPageIndex = 1 };
+        Story bundled = PigsPictureBundle() with { Pages = [new StoryPage("A.", "x.jpg"), new StoryPage("B.", "y.jpg")] };
+
+        Assert.Equal(1, StarterUpdate.Refresh(stored, bundled).CoverPageIndex);
+    }
+
+    [Fact]
+    public void EarlierPageTextHashes_HoldTheShippedV3PigsText()
+    {
+        var field = typeof(StarterUpdate).GetField("EarlierPageTextHashes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!;
+        var table = (IReadOnlyDictionary<string, string[]>)field.GetValue(null)!;
+
+        Assert.Contains("8C1DD87C17BFC3A1386D16CEF384F13FD3C04DEDA8FD2A7D514FC90130F1CC3D", table[StarterTexts.PigsId]);
+    }
+
+    [Fact]
     public void CopyToKeep_PicksTheCopyHoldingTheBundledText()
     {
         Story old = Paged("Old.") with { Id = "old" };
