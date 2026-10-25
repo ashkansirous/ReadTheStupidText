@@ -1,6 +1,6 @@
 # Slice 118 — Dino: storyteller voices for Spanish, French and Portuguese
 
-*Planned 2026-10-25.* Dino Reader only; RTST is not touched.
+*In progress (wave 2026-10-25), draft PR.* *Planned 2026-10-25.* Dino Reader only; RTST is not touched.
 
 **Batch:** 24 (storyteller characters)
 **Depends on:** Slice 116 (rosters per language; this slice moves three rosters onto Kokoro)
