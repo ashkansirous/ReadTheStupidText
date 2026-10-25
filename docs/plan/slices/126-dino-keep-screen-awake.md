@@ -1,6 +1,6 @@
 ### Slice 126 — Dino: keep the screen awake while a book is playing
 
-*Planned.*
+*In progress (wave 2026-10-25), draft PR.*
 
 **Touches:** `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/ScreenAwake.cs` (new), `src/DinoReader.App/CLAUDE.md`
 
