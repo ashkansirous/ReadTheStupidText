@@ -48,12 +48,14 @@ public class AnimalSoundTests
     [InlineData("Bee", AnimalKind.Bee)]
     [InlineData("Wolf", AnimalKind.Wolf)]
     [InlineData("Bird", AnimalKind.Bird)]
+    [InlineData("Papa Bear", AnimalKind.Bear)]
+    [InlineData("Peter Rabbit", AnimalKind.Rabbit)]
+    [InlineData("Bunny", AnimalKind.Rabbit)]
     public void English_names_find_their_animal(string name, AnimalKind kind) =>
         Assert.Equal(kind, AnimalSounds.KindOf(name, "en"));
 
     [Theory]
     [InlineData("Anna")]
-    [InlineData("Mr Bear")]
     [InlineData("Sheridan")]
     [InlineData("Cowan")]
     [InlineData("Billy")]
@@ -217,7 +219,7 @@ public class AnimalSoundTests
         {
             foreach (AnimalKind kind in Enum.GetValues<AnimalKind>())
             {
-                Assert.False(string.IsNullOrWhiteSpace(AnimalSounds.SoundOf(kind, code)), $"{code} {kind} has no sound");
+                Assert.Equal(kind == AnimalKind.Rabbit, string.IsNullOrWhiteSpace(AnimalSounds.SoundOf(kind, code)));
                 Assert.NotEmpty(AnimalSoundWords.For(code).Entries.First(e => e.Kind == kind).Names);
             }
         }
@@ -230,7 +232,12 @@ public class AnimalSoundTests
         {
             foreach (AnimalKind kind in Enum.GetValues<AnimalKind>())
             {
-                string sound = AnimalSounds.SoundOf(kind, code)!;
+                string? sound = AnimalSounds.SoundOf(kind, code);
+                if (sound is null)
+                {
+                    continue;
+                }
+
                 Assert.True(AnimalSounds.SaysIt(sound, kind, code), $"{code} {kind} '{sound}' is not seen as said");
             }
         }

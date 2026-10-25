@@ -46,7 +46,7 @@ internal static class StarterBuilder
     public static IReadOnlyDictionary<string, int> StarterVersions { get; } = new Dictionary<string, int>
     {
         [GoodEnoughFile] = 1,
-        ["three-little-pigs.dino"] = 4,
+        ["three-little-pigs.dino"] = 5,
         ["gingerbread-man.dino"] = 2,
         ["tortoise-and-hare.dino"] = 2,
     };
@@ -152,7 +152,7 @@ internal static class StarterBuilder
         var rules = LanguageRules.English;
         AttributionResult attribution = new SpeakerAttributor(rules).Attribute(story.Text, new StorySegmenter(rules).Split(story.Text, story.BreakMap()));
         VoiceCast cast = new VoiceCaster().Cast(attribution.Characters, Voices, NarratorVoice);
-        return StoryCast.ToMembers(attribution.Characters, cast, rules);
+        return StoryCast.ToMembers(attribution.Characters, cast, rules, animals: StarterAnimals.For(story.Id, attribution.Characters));
     }
 
     public static async Task WriteAllAsync()

@@ -26,6 +26,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	private readonly ContentView _languageChip = new() { Margin = new Thickness(14, 0, 14, 10) };
 	private readonly CastMergeSheet _sheet = new();
 	private readonly CastCharacterPicker _picker = new();
+	private readonly CastAnimalPicker _animalPicker = new();
 	private readonly CastRowActions _actions;
 	private readonly StorytellerDefault _storyteller;
 	private readonly Grid _root = new();
@@ -34,6 +35,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	private bool _wordsStoredOffAtOpen;
 	private Func<Story, Task>? _persist;
 	private AttributionResult? _resolved;
+	private (Story? Story, AttributionResult Resolved, string Language, IReadOnlyDictionary<string, AnimalKind> Animals)? _animalCache;
 	private string _castLanguage = string.Empty;
 	private readonly VoicePreview _preview;
 	private bool _returningFromNarrator;
@@ -48,7 +50,8 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		_spoken = spoken;
 		_actions = new CastRowActions(
 			row => _busy.RunAsync(() => PreviewAsync(row.Member.VoiceId, row.Flavour)),
-			row => _busy.RunAsync(() => PickCharacterAsync(row)));
+			row => _busy.RunAsync(() => PickCharacterAsync(row)),
+			row => _busy.RunAsync(() => PickAnimalAsync(row)));
 		NavigationPage.SetHasNavigationBar(this, false);
 		SafeAreaEdges = new SafeAreaEdges(SafeAreaRegions.Container);
 		BackgroundColor = DinoTokens.Get(DinoTokens.Sand);
@@ -129,6 +132,12 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 			return true;
 		}
 
+		if (_animalPicker.IsVisible)
+		{
+			_animalPicker.Dismiss();
+			return true;
+		}
+
 		if (!_sheet.IsVisible)
 		{
 			return base.OnBackButtonPressed();
@@ -151,6 +160,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		_root.Add(column);
 		_root.Add(_sheet);
 		_root.Add(_picker);
+		_root.Add(_animalPicker);
 		return _root;
 	}
 
@@ -255,9 +265,11 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	private View CharacterCard(CastSheet sheet)
 	{
 		var rows = new VerticalStackLayout();
+		IReadOnlyDictionary<string, AnimalKind> animals = Animals();
 		for (int i = 0; i < sheet.Rows.Count; i++)
 		{
-			rows.Children.Add(CastRows.Character(sheet.Rows[i], i, _actions, _castLanguage));
+			AnimalKind? animal = animals.TryGetValue(sheet.Rows[i].Member.CharacterId, out AnimalKind kind) ? kind : null;
+			rows.Children.Add(CastRows.Character(sheet.Rows[i], i, _actions, _castLanguage, animal));
 			rows.Children.Add(CastViews.Divider());
 		}
 
@@ -265,6 +277,25 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		Border card = CastViews.Card();
 		card.Content = rows;
 		return card;
+	}
+
+	// What each character is (Slice 125): the stored animal, then its name, then a guess from the story text.
+	// Worked out once per story and cast (the story, the resolved cast and the language are replaced, never changed, when anything changes), not on every render: the guess reads the whole book.
+	private IReadOnlyDictionary<string, AnimalKind> Animals()
+	{
+		if (_resolved is null)
+		{
+			return new Dictionary<string, AnimalKind>();
+		}
+
+		if (_animalCache is { } cached && ReferenceEquals(cached.Story, _story) && ReferenceEquals(cached.Resolved, _resolved) && cached.Language == _castLanguage)
+		{
+			return cached.Animals;
+		}
+
+		var animals = AnimalSounds.Resolve(_resolved.Characters, _story!.Language, _story.CastIn(_castLanguage), _story.Text);
+		_animalCache = (_story, _resolved, _castLanguage, animals);
+		return animals;
 	}
 
 	// Animal sounds, then (for a picture + text book) the words switch, in one card (Slice 124).
@@ -277,7 +308,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	// The per-story switch is saved with the story (Slice 117); a story with no sounding animal shows it dimmed and keeps the value.
 	private View AnimalSoundsRow()
 	{
-		bool hasAnimals = _resolved is not null && AnimalSounds.AnimalsIn(_resolved.Characters, _story!.Language).Count > 0;
+		bool hasAnimals = Animals().Any(a => AnimalSounds.SoundOf(a.Value, _story!.Language) is not null);
 		return CastRows.AnimalSoundsRow(hasAnimals, _story!.AnimalSoundsOn, on => _ = _busy.RunAsync(() => SetAnimalSoundsAsync(on)));
 	}
 
@@ -378,6 +409,26 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		{
 			await ApplyAsync(edit => CastEditor.SetCharacter(edit, row.Member.CharacterId, picked));
 		}
+	}
+
+	// The animal sheet (Slice 125): the animal is the character's in every language's cast; its voice is picked again unless the grown-up chose that by hand.
+	private async Task PickAnimalAsync(CastRow row)
+	{
+		AnimalKind? current = Animals().TryGetValue(row.Member.CharacterId, out AnimalKind kind) ? kind : null;
+		AnimalPick? picked = await _animalPicker.PickAsync(row.Member.Name, current);
+		if (picked is not null && picked.Kind != current)
+		{
+			await ApplyAnimalAsync(row.Member.CharacterId, picked.Kind);
+		}
+	}
+
+	private async Task ApplyAnimalAsync(string characterId, AnimalKind? animal)
+	{
+		Story previous = _story!;
+		CastEdit edit = CastEditor.SetAnimal(CastEditor.Open(previous, _castLanguage), characterId, animal);
+		IReadOnlyList<CastMember> cast = await _voicing.RecastCharacterAsync(previous, _castLanguage, edit.Cast, characterId);
+		_story = CastEditor.WithAnimal(CastEditor.Close(previous, _castLanguage, edit with { Cast = cast }), characterId, animal);
+		await SaveOrRollBackAsync(previous);
 	}
 
 	// The name of another story character of this book who already has the character (the same voice and flavour), for the picker's hint.

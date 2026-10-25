@@ -18,6 +18,7 @@ public static class StoryJson
 
     // How far a stored line box may overshoot the page edge and still be pulled back onto it (rounding only).
     private const double BoxRoundingTolerance = 0.001;
+    private const string NoAnimal = "none";
 
     /// <summary>The narrator written as <c>NarratorVoiceId</c> for a story in the given language, so older app builds (which require the field)
     /// still open new packages and backups. The app sets it to the language's current narrator (Slice 109); reading never uses it.</summary>
@@ -118,12 +119,28 @@ public static class StoryJson
         cast.Select(c => new CastFile
         {
             CharacterId = c.CharacterId, Name = c.Name, Gender = c.Gender, VoiceId = c.VoiceId, Edited = c.Edited,
-            Flavour = c.Flavour?.ToString(),
+            Flavour = c.Flavour?.ToString(), Animal = AnimalText(c),
         }).ToList();
 
+    // The animal is a kind's name, or "none" for "not an animal"; absent means guess. A value this build does not know (a newer app's) reads as absent.
+    private static string? AnimalText(CastMember member) => member.NotAnimal ? NoAnimal : member.Animal?.ToString();
+
+    private static (AnimalKind? Animal, bool NotAnimal) ParseAnimal(string? text)
+    {
+        if (string.Equals(text, NoAnimal, StringComparison.OrdinalIgnoreCase))
+        {
+            return (null, true);
+        }
+
+        return Enum.TryParse(text, ignoreCase: true, out AnimalKind kind) && Enum.IsDefined(kind) ? (kind, false) : (null, false);
+    }
+
     // The flavour is a name in the file; one this build does not know (a newer app's) reads as no pick, so the guess applies.
-    private static CastMember ToMember(CastFile c) =>
-        new(c.CharacterId, c.Name, c.Gender, c.VoiceId, c.Edited, ParseFlavour(c.Flavour));
+    private static CastMember ToMember(CastFile c)
+    {
+        (AnimalKind? animal, bool notAnimal) = ParseAnimal(c.Animal);
+        return new CastMember(c.CharacterId, c.Name, c.Gender, c.VoiceId, c.Edited, ParseFlavour(c.Flavour), animal, notAnimal);
+    }
 
     private static VoiceFlavour? ParseFlavour(string? name) =>
         Enum.TryParse(name, ignoreCase: true, out VoiceFlavour flavour) && VoiceFlavours.Assignable.Contains(flavour) ? flavour : null;
@@ -376,6 +393,9 @@ public static class StoryJson
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Flavour { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? Animal { get; set; }
     }
 
     private sealed class LineFile

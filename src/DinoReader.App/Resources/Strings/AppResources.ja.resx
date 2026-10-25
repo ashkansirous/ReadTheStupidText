@@ -286,6 +286,10 @@
   <data name="Cast_AnimalSounds_Title" xml:space="preserve"><value>どうぶつのこえ</value></data>
   <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>どうぶつが ときどき「ブーブー!」や「メェー!」と いいます</value></data>
   <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>このおはなしには なきごえの どうぶつは いません</value></data>
+  <data name="Cast_Animal_Label" xml:space="preserve"><value>どうぶつ</value></data>
+  <data name="Cast_Animal_NotAnimal" xml:space="preserve"><value>どうぶつではない</value></data>
+  <data name="Cast_Animal_Title" xml:space="preserve"><value>{0}は どのどうぶつ？</value></data>
+  <data name="Cast_Animal_Hint" xml:space="preserve"><value>このキャラクターの どうぶつを えらんでください</value></data>
   <data name="Cast_WordsOverPictures_Title" xml:space="preserve"><value>えのうえに ことばを だす</value></data>
   <data name="Cast_WordsOverPictures_HintOn" xml:space="preserve"><value>ことばは、したの パネルに でます</value></data>
   <data name="Cast_WordsOverPictures_HintOff" xml:space="preserve"><value>この えには もう ことばが はいっているので オフです</value></data>

@@ -157,7 +157,7 @@ public sealed class StoryVoicing
 		}
 
 		AttributionResult resolved = StoryCast.Resolve(prepared.Analysis.Attribution, story.Merges, story.Cast);
-		IReadOnlyDictionary<string, AnimalKind> animals = AnimalSounds.AnimalsIn(resolved.Characters, story.Language);
+		IReadOnlyDictionary<string, AnimalKind> animals = AnimalSounds.AnimalsIn(resolved.Characters, story.Language, story.Cast, story.Text);
 		IReadOnlyDictionary<int, AnimalKind> plan = animals.Count == 0
 			? new Dictionary<int, AnimalKind>()
 			: AnimalSounds.Plan(WholeBookPieces(story, prepared, resolved), animals, story.Language);
@@ -302,6 +302,35 @@ public sealed class StoryVoicing
 	public IReadOnlyList<StorytellerCharacter> ChoicesFor(string language) =>
 		CharacterRoster.Choices(RosterFor(language).Where(c => c.Kind == CharacterKind.Speaker).ToList(), NarratorOf(language));
 
+	/// <summary><see cref="RecastCharacters"/> on a worker thread.</summary>
+	public Task<IReadOnlyList<CastMember>> RecastCharacterAsync(Story story, string castLanguage, IReadOnlyList<CastMember> cast, string characterId) =>
+		RecastCharactersAsync(story, castLanguage, cast, [characterId]);
+
+	/// <summary><see cref="RecastCharacters"/> on a worker thread.</summary>
+	public Task<IReadOnlyList<CastMember>> RecastCharactersAsync(Story story, string castLanguage, IReadOnlyList<CastMember> cast, IReadOnlyCollection<string> characterIds) =>
+		Task.Run(() => RecastCharacters(story, castLanguage, cast, characterIds));
+
+	/// <summary>The cast with one character's voice picked again (its animal changed, Slice 125), from its new animal; the voice a grown-up chose by hand stays.
+	/// The other characters keep the voices they have.</summary>
+	public IReadOnlyList<CastMember> RecastCharacter(Story story, string castLanguage, IReadOnlyList<CastMember> cast, string characterId) =>
+		RecastCharacters(story, castLanguage, cast, [characterId]);
+
+	/// <summary>The cast with the voices of several characters picked again in one pass (their animals changed); a voice a grown-up chose by hand stays, and so does every other character's.</summary>
+	public IReadOnlyList<CastMember> RecastCharacters(Story story, string castLanguage, IReadOnlyList<CastMember> cast, IReadOnlyCollection<string> characterIds)
+	{
+		var changing = cast.Where(m => characterIds.Contains(m.CharacterId) && !m.Edited).Select(m => m.CharacterId).ToHashSet();
+		if (changing.Count == 0)
+		{
+			return cast;
+		}
+
+		// The others are held as picked for this pass only (never written as hand-picked), so the new picks avoid every voice they hold.
+		HashSet<string> held = cast.Select(m => m.CharacterId).Where(id => !changing.Contains(id)).ToHashSet();
+		var forgotten = cast.Select(m => changing.Contains(m.CharacterId) ? m with { VoiceId = string.Empty } : m).ToList();
+		IReadOnlyList<CastMember> recast = CastFor(story.Language, castLanguage, story.Text, forgotten, story.Merges, story.BreakMap(), held);
+		return cast.Select(m => changing.Contains(m.CharacterId) ? recast.FirstOrDefault(r => r.CharacterId == m.CharacterId) ?? m : m).ToList();
+	}
+
 	/// <summary>The story's characters and lines as the cast screen shows them: merges applied, an edited
 	/// character's gender in place of the guess. On a worker thread, like <see cref="VoiceAsync"/>.</summary>
 	public Task<AttributionResult> ResolveAsync(Story story, string castLanguage) =>
@@ -329,10 +358,11 @@ public sealed class StoryVoicing
 	/// who speaks is worked out in the story's language, the voices come from the language it is read in.</summary>
 	public IReadOnlyList<CastMember> CastFor(
 		string storyLanguage, string castLanguage, string text, IReadOnlyList<CastMember> stored,
-		IReadOnlyDictionary<string, string>? merges = null, LineBreakMap? lineBreaks = null)
+		IReadOnlyDictionary<string, string>? merges = null, LineBreakMap? lineBreaks = null, IReadOnlySet<string>? heldIds = null)
 	{
 		AttributionResult resolved = StoryCast.Resolve(Analyse(storyLanguage, text, lineBreaks).Attribution, merges ?? Story.NoMerges, stored);
-		return StoryCast.ToMembers(resolved.Characters, Cast(castLanguage, resolved, stored, LanguageRules.For(storyLanguage)), LanguageRules.For(storyLanguage), stored);
+		VoiceCast cast = Cast(castLanguage, resolved, stored, storyLanguage, text, heldIds);
+		return StoryCast.ToMembers(resolved.Characters, cast, LanguageRules.For(storyLanguage), stored);
 	}
 
 	// The screen and the voice both prepare the whole story: the last one is kept for the same story instance, so the split runs once for the two.
@@ -368,26 +398,35 @@ public sealed class StoryVoicing
 		IReadOnlyList<VoiceOption> pool = hasCast || VoicesFor(language).Count > 0 ? VoicesFor(language) : VoicesFor(story.Language);
 		AttributionResult resolved = StoryCast.Resolve(prepared.Analysis.Attribution, story.Merges, stored);
 		// Names are in the story's language, so its rules guess the flavours; the stored voice and flavour (a grown-up's pick included) win (Slices 113, 116).
-		return CastWithRoster(resolved.Characters, language, pool, stored, LanguageRules.For(story.Language));
+		return CastWithRoster(resolved.Characters, language, pool, stored, story.Language, story.Text);
 	}
 
-	// Only the corrected genders carry over to another language, never the voices: those belong to the story language's pack.
+	// Only the corrected genders and the animal settings (Slice 125) carry over to another language, never the voices: those belong to the story language's pack.
 	private static IReadOnlyList<CastMember> EditedSeed(Story story) =>
-		story.Cast.Where(m => m.Edited).Select(m => m with { VoiceId = string.Empty }).ToList();
+		story.Cast.Where(m => m.Edited || m.HasAnimalSetting).Select(m => m with { VoiceId = string.Empty }).ToList();
 
-	private VoiceCast Cast(string language, AttributionResult attribution, IReadOnlyList<CastMember> stored, LanguageRules nameRules) =>
-		CastWithRoster(attribution.Characters, language, VoicesFor(language), stored, nameRules);
+	private VoiceCast Cast(string language, AttributionResult attribution, IReadOnlyList<CastMember> stored, string storyLanguage, string text, IReadOnlySet<string>? heldIds = null) =>
+		CastWithRoster(attribution.Characters, language, VoicesFor(language), stored, storyLanguage, text, heldIds);
 
 	// Each story character gets the storyteller character of the language's roster that fits it best (Slice 116); the roster is the one the pool's voices can speak.
 	private VoiceCast CastWithRoster(
-		IReadOnlyList<Character> characters, string language, IReadOnlyList<VoiceOption> pool, IReadOnlyList<CastMember> stored, LanguageRules nameRules)
+		IReadOnlyList<Character> characters, string language, IReadOnlyList<VoiceOption> pool, IReadOnlyList<CastMember> stored, string storyLanguage, string text,
+		IReadOnlySet<string>? heldIds = null)
 	{
+		// Names are in the story's language, so its rules guess the flavours; an animal character is cast to its animal's character (Slice 125).
+		LanguageRules nameRules = LanguageRules.For(storyLanguage);
+		IReadOnlyDictionary<string, AnimalKind> animals = AnimalSounds.Resolve(characters, storyLanguage, stored, text);
 		string narrator = NarratorOf(language);
 		IReadOnlyList<StorytellerCharacter> roster = CharacterRoster.Adapt(CharacterRoster.For(language), pool);
 		IReadOnlyList<StorytellerCharacter> choices = CharacterRoster.Choices(roster.Where(c => c.Kind == CharacterKind.Speaker).ToList(), narrator);
 		return CastCharacters.Cast(
-			characters, choices, roster, narrator, c => FlavourGuess.Guess(c.Name, nameRules), StoryCast.PinnedCharacters(stored));
+			characters, choices, roster, narrator, c => FlavourGuess.Guess(c.Name, nameRules), Held(StoryCast.PinnedCharacters(stored), heldIds),
+			animalOf: c => animals.TryGetValue(c.Id, out AnimalKind kind) ? AnimalCharacters.HintFor(kind, c.Name, storyLanguage) : null);
 	}
+
+	// The characters named in heldIds keep their voices for this casting only, as if the grown-up had picked them; nothing is written to the cast.
+	private static IReadOnlyDictionary<string, PinnedCharacter> Held(IReadOnlyDictionary<string, PinnedCharacter> pinned, IReadOnlySet<string>? heldIds) =>
+		heldIds is null ? pinned : pinned.ToDictionary(p => p.Key, p => heldIds.Contains(p.Key) ? p.Value with { Edited = true } : p.Value);
 
 	private Cache Analyse(string language, string text, LineBreakMap? breaks = null)
 	{

@@ -186,8 +186,11 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 	// With the words off (Slice 122) a tall picture keeps its half at full height, as big as it can be there, and the other half keeps
 	// the transport row; a wide picture would shrink in one half, so it gets the whole page above the transport row.
 	// Wide means wider than one half of the page, where it would be width-bound and small; before layout, wider than square.
-	private bool IsWide(Slot slot) =>
-		slot.Aspect > (_card.Width > 0 && _card.Height > 0 ? _card.Width / 2 / _card.Height : 1);
+	private bool IsWide(Slot slot)
+	{
+		double oneHalf = _card.Width > 0 && _card.Height > 0 ? _card.Width / 2 / _card.Height : 1;
+		return slot.Aspect > oneHalf;
+	}
 
 	private static Grid WidePicture(string file)
 	{
@@ -257,7 +260,10 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		return grid;
 	}
 
-	private static void ShowFadeWhenScrolled(BoxView fade, ScrollView scroll) => fade.IsVisible = scroll.ScrollY > 1;
+	private static void ShowFadeWhenScrolled(BoxView fade, ScrollView scroll)
+	{
+		fade.IsVisible = scroll.ScrollY > 1;
+	}
 
 	private BoxView TopFade() => new()
 	{

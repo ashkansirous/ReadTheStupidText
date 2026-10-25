@@ -1,6 +1,6 @@
 # Slice 125 — Dino: each character knows its animal, and animal voices to match
 
-*Planned 2026-10-25.* Dino Reader only; RTST is not touched.
+*Built 2026-10-25, not yet verified on an emulator (1061 tests green, Android build clean).* Dino Reader only; RTST is not touched.
 
 **Batch:** 26 (Batch 25 mock follow-ups)
 **Depends on:** Slice 117 (animal sounds), Slice 116 (storyteller characters), Slice 124 (same cast-page files; merge after it), PR #336 (the pigs retell edits `StarterBuilder.cs`/`StarterTexts.cs`; merge after it)
@@ -51,16 +51,17 @@ roster has one animal character ("Cheeky Piglet"). Nothing guesses an animal fro
 
 ## Work
 
-- [ ] 1. Smallest end to end, English: `CastMember.Animal` plus the `story.json` field; `AnimalsIn` takes the cast
+- [x] 1. Smallest end to end, English: `CastMember.Animal` plus the `story.json` field; `AnimalsIn` takes the cast
   and prefers the stored animal; the pigs starter names Pip, Pop and Pim as pigs, so they oink. Tests: round
   trip, recast keeps it, the pigs get sounds.
-- [ ] 2. The story-text guess (`AnimalGuess`) used when a book is cast (import and recast) for characters with no
+- [x] 2. The story-text guess (`AnimalGuess`) used when a book is cast (import and recast) for characters with no
   stored animal; tests on all 14 starter and store texts plus invented sentences.
-- [ ] 3. Rabbit and Bear kinds, Bear's sound words in 14 languages.
-- [ ] 4. Animal characters in every roster, and the animal-first auto-cast.
-- [ ] 5. Store and starter specs name each character's animal; rebuild the packages; bump the starter content
+- [x] 3. Rabbit and Bear kinds, Bear's sound words in 14 languages.
+- [x] 4. Animal characters in every roster, and the animal-first auto-cast.
+- [x] 5. Store and starter specs name each character's animal; rebuild the packages; bump the starter content
   version; re-upload the changed store stories with `tools/upload-store-story.ps1` as a new `story-v<n+1>`.
-- [ ] 6. The cast page "Animal" line and sheet, with strings in all 14 `.resx` files; rules in the Core and App `CLAUDE.md` files.
+  Built and tested; the upload is not done (needs `tools/upload-store-story.ps1` for billy-goats-gruff and peter-rabbit at `story-v4`; the pigs starter is bundled, its store copy is `three-little-pigs`).
+- [x] 6. The cast page "Animal" line and sheet, with strings in all 14 `.resx` files; rules in the Core and App `CLAUDE.md` files.
 
 ## Verification
 
@@ -68,3 +69,18 @@ roster has one animal character ("Cheeky Piglet"). Nothing guesses an animal fro
 - Emulator: the pigs starter, English and Farsi. Pip, Pop and Pim are cast as piglets, oink every 2-3 lines, and the
   Wolf is cast as the wolf. On the cast page Pip shows "Pig"; setting Pip to "Not an animal" stops Pip's sounds and
   recasts the voice. A user-added book with "Pip the pig" in the text gets the guess.
+
+*Changed while building:* `story.json` cast field `Animal` plus `NotAnimal`. `AnimalSounds.Resolve` order is stored, name, text guess (`AnimalGuess`, `AnimalGuessWords`; strict: adjacent name only, group lists next to a plural animal word, plural-only words never tag one name; full cue lists for en/fr/es/pt/nl/da/sv/nb, punctuation-only elsewhere). Rabbit (silent) and Bear kinds in 14 languages. Eight animal roster characters (lamb, puppy, kitten, duckling, bear cub, big bear, wolf, ewe) plus the existing piglet in all 14 rosters (roster-size test cap 30); es/pt bear cub stays Normal (3 voices). Non-animals avoid animal characters while a plain one is free. Cast row "Animal" line plus `CastAnimalPicker`. Built books' animals live in `tests/DinoReader.Tests/StarterAnimals.cs`. Pigs starter rebuilt as version 5 on top of #336's retold text. `StarterUpdate` fills animals into kept casts and `StarterStories.ReplaceAsync` recasts un-picked voices (`StoryVoicing.RecastCharacters`, others held for that recast only, failure logged, copy kept). Store specs billy-goats-gruff and peter-rabbit at Version 4. Merged origin/main mid-slice (#336, #338).
+
+*From review:* high findings 1-8 and 10 applied, 9 accepted (Slice 124 limit); medium 1-8 applied, 9 and 10 skipped.
+
+#### For CLAUDE.md
+
+Already on the branch: Core rule (`src/DinoReader.Core/CLAUDE.md`, animal resolver and roster) and App rule (`src/DinoReader.App/CLAUDE.md`, cast animal line and built-book animals). Nothing further to lift. (Slice 125: docs/plan/slices/125-dino-character-animals.md)
+
+#### Not yet verified
+
+- Emulator check from this slice's Verification (pigs starter in English and Farsi, cast page Animal line).
+- Store upload of three-little-pigs v5, billy-goats-gruff v4 and peter-rabbit v4 (done after merge).
+- Native read of the new strings and roster names in 13 languages.
+- Windows head.

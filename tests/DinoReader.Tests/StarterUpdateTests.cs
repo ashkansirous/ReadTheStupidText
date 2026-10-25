@@ -31,6 +31,69 @@ public sealed class StarterUpdateTests : IDisposable
         new(id, "Title", "en", DateTimeOffset.UnixEpoch, [new StoryPage("Page.")], cast, CoverStyle.Picture, 1, "narrator", CoverFile: "cover-x.jpg");
 
     [Fact]
+    public void Refresh_FillsAnimalsFromTheBundledCopy_ForKeptMembersWithNone_ButNeverOverridesTheGrownUp()
+    {
+        Story stored = StoryWith("old", Member("pip", "v1"), Member("pop", "v2") with { NotAnimal = true }, Member("pim", "v3") with { Animal = AnimalKind.Cat }) with
+        {
+            LanguageCasts = new Dictionary<string, IReadOnlyList<CastMember>> { ["fr"] = [Member("pip", "v1"), Member("pop", "v2"), Member("pim", "v3")] },
+        };
+        Story bundled = StoryWith("new", Member("pip", "b1") with { Animal = AnimalKind.Pig }, Member("pop", "b2") with { Animal = AnimalKind.Pig }, Member("pim", "b3") with { Animal = AnimalKind.Pig }) with
+        {
+            LanguageCasts = new Dictionary<string, IReadOnlyList<CastMember>> { ["fr"] = [Member("pip", "bf1") with { Animal = AnimalKind.Pig }] },
+        };
+
+        Story refreshed = StarterUpdate.Refresh(stored, bundled);
+
+        Assert.Equal(AnimalKind.Pig, refreshed.Cast[0].Animal);
+        Assert.Equal("v1", refreshed.Cast[0].VoiceId);
+        Assert.True(refreshed.Cast[1].NotAnimal);
+        Assert.Null(refreshed.Cast[1].Animal);
+        Assert.Equal(AnimalKind.Cat, refreshed.Cast[2].Animal);
+        Assert.Equal(AnimalKind.Pig, refreshed.LanguageCasts!["fr"][0].Animal);
+    }
+
+    [Fact]
+    public void AnimalVoicesToRecast_NamesTheKeptMembersThatGainedAnAnimalAndWereNotPickedByHand()
+    {
+        Story stored = StoryWith("old", Member("pip", "v1"), Member("pop", "v2") with { Edited = true }, Member("pim", "v3"), Member("pup", "v4") with { NotAnimal = true }) with
+        {
+            LanguageCasts = new Dictionary<string, IReadOnlyList<CastMember>> { ["fr"] = [Member("pip", "f1"), Member("pop", "f2") with { Edited = true }, Member("pim", "f3"), Member("pup", "f4") with { NotAnimal = true }] },
+        };
+        Story bundled = StoryWith("new", Member("pip", "b1") with { Animal = AnimalKind.Pig }, Member("pop", "b2") with { Animal = AnimalKind.Pig }, Member("pim", "b3"), Member("pup", "b4") with { Animal = AnimalKind.Pig }) with
+        {
+            LanguageCasts = new Dictionary<string, IReadOnlyList<CastMember>> { ["fr"] = [Member("pip", "bf1") with { Animal = AnimalKind.Pig }] },
+        };
+
+        Story refreshed = StarterUpdate.Refresh(stored, bundled);
+        var recast = StarterUpdate.AnimalVoicesToRecast(stored, refreshed);
+
+        Assert.Equal([("en", "pip"), ("fr", "pip")], recast.OrderBy(r => r.Language, StringComparer.Ordinal));
+    }
+
+    [Fact]
+    public void Refresh_LeavesALanguageCastAloneWhenTheBundledCopyHasNoCastForIt()
+    {
+        Story stored = StoryWith("old", Member("pip", "v1")) with
+        {
+            LanguageCasts = new Dictionary<string, IReadOnlyList<CastMember>> { ["fr"] = [Member("pip", "f1")] },
+        };
+        Story bundled = StoryWith("new", Member("pip", "b1") with { Animal = AnimalKind.Pig });
+
+        Story refreshed = StarterUpdate.Refresh(stored, bundled);
+
+        Assert.Null(refreshed.LanguageCasts!["fr"][0].Animal);
+    }
+
+    [Fact]
+    public void AnimalVoicesToRecast_IsEmptyWhenTheCastWasReplaced()
+    {
+        Story stored = StoryWith("old", Member("pip", "v1"));
+        Story bundled = StoryWith("new", Member("pip", "b1") with { Animal = AnimalKind.Pig }, Member("pop", "b2") with { Animal = AnimalKind.Pig });
+
+        Assert.Empty(StarterUpdate.AnimalVoicesToRecast(stored, StarterUpdate.Refresh(stored, bundled)));
+    }
+
+    [Fact]
     public void Refresh_TakesTheBundledText_AndKeepsTheGrownUpsChoices()
     {
         Story stored = StoryWith("old", Member("pig", "supertonic:F3", edited: true), Member("wolf", "supertonic:M2")) with

@@ -5,7 +5,7 @@ using ReadTheStupidText.Domain.Reading;
 namespace DinoReader.Core;
 
 /// <summary>
-/// The storyteller characters of every language Dino reads (Slice 116, Decision 122): 16 to 20 per language, a few of them narrators,
+/// The storyteller characters of every language Dino reads (Slice 116, Decision 122): 16 to 30 per language, a few of them narrators,
 /// each a real voice of that language's engine (Kokoro for English, Spanish, Portuguese and Chinese, Supertonic-3 for fr/ru/ja/ar/da/fi/sv/nl,
 /// the Piper packs for Farsi and Norwegian) plus a flavour, with a name and a few plain words written for the language.
 /// Pure data: the per-language lists are in the <c>CharacterRoster*.cs</c> files. A language the pack serves with other voices than

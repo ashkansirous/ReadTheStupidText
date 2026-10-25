@@ -5,7 +5,7 @@ namespace DinoReader.Core;
 /// <summary>
 /// One language's animal words and sound words (Slice 117, Decision 123): for each animal the names that make a character that animal, the sound it says
 /// ("Baa!", written for the language) and any other spellings of that sound a story may already use. Each table line is
-/// <c>Animal|name, name|Sound|other spelling, other spelling</c>; the sound's first word is always counted as a spelling too. Every
+/// <c>Animal|name, name|Sound|other spelling, other spelling</c>; the sound's first word is always counted as a spelling too. An animal with no sound (a rabbit) leaves the sound empty. Every
 /// <see cref="AppLanguage"/> has a table (a test checks it); an unknown language reads with English.
 /// </summary>
 internal sealed class AnimalSoundWords
@@ -38,9 +38,13 @@ internal sealed class AnimalSoundWords
         {
             string[] fields = line.Split(FieldSeparator, StringSplitOptions.TrimEntries);
             AnimalKind kind = Enum.Parse<AnimalKind>(fields[0]);
-            string sound = fields[SoundField];
+            string sound = fields.Length > SoundField ? fields[SoundField] : string.Empty;
             var stems = new List<string>(fields.Length > StemField ? RuleSets.List(fields[StemField]) : []);
-            stems.Add(AnimalSounds.Words(sound)[0]);
+            if (sound.Length > 0)
+            {
+                stems.Add(AnimalSounds.Words(sound)[0]);
+            }
+
             entries.Add(new Entry(kind, RuleSets.List(fields[NameField]), sound, stems));
         }
 

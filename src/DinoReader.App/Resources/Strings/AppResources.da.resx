@@ -285,6 +285,10 @@
   <data name="Cast_AnimalSounds_Title" xml:space="preserve"><value>Dyrelyde</value></data>
   <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>Dyrene siger af og til “Øf!” eller “Mæh!”</value></data>
   <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>Ingen dyr i denne historie, der laver lyde</value></data>
+  <data name="Cast_Animal_Label" xml:space="preserve"><value>Dyr</value></data>
+  <data name="Cast_Animal_NotAnimal" xml:space="preserve"><value>Ikke et dyr</value></data>
+  <data name="Cast_Animal_Title" xml:space="preserve"><value>Hvilket dyr er {0}?</value></data>
+  <data name="Cast_Animal_Hint" xml:space="preserve"><value>Vælg dyret for denne figur</value></data>
   <data name="Cast_WordsOverPictures_Title" xml:space="preserve"><value>Vis ordene over billederne</value></data>
   <data name="Cast_WordsOverPictures_HintOn" xml:space="preserve"><value>Ordene vises i et felt nederst</value></data>
   <data name="Cast_WordsOverPictures_HintOff" xml:space="preserve"><value>Slået fra, fordi billederne allerede har ordene i sig</value></data>

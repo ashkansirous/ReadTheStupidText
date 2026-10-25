@@ -44,6 +44,8 @@ internal static class AnimalSoundTables
         Bee|bee, bumblebee|Buzz buzz!|buzz, bzz
         Wolf|wolf|Aooo!|howl, awoo, ahoo
         Bird|bird, birdie|Tweet tweet!|tweet, chirp, cheep
+        Rabbit|rabbit, bunny|
+        Bear|bear|Grr!|growl, grr
         """;
 
     private const string French = """
@@ -64,6 +66,8 @@ internal static class AnimalSoundTables
         Bee|abeille, bourdon|Bzzz !|bzz, bzzz
         Wolf|loup, louve, louveteau|Aouuu !|aou, ahou
         Bird|oiseau, oisillon, moineau, pinson|Cui cui !|cui, piou, cuicui
+        Rabbit|lapin, lapine, lapereau|
+        Bear|ours, ourse, ourson|Grrr !|grr
         """;
 
     private const string Spanish = """
@@ -84,6 +88,8 @@ internal static class AnimalSoundTables
         Bee|abeja, abejorro|¡Zzzum!|zum, bzz, zzz
         Wolf|lobo, loba, lobito|¡Auuu!|auu
         Bird|pájaro, pajarito, gorrión, petirrojo|¡Pío pío!|pio, pío, pip
+        Rabbit|conejo, coneja, conejito, conejita|
+        Bear|oso, osa, osito, osezno|¡Grr!|grr, gruñe
         """;
 
     private const string Portuguese = """
@@ -104,6 +110,8 @@ internal static class AnimalSoundTables
         Bee|abelha, abelhinha, zangão|Zum zum!|zum, bzz
         Wolf|lobo, loba, lobinho|Auuu!|au, auu
         Bird|pássaro, passarinho, pardal|Piu piu!|piu, pip
+        Rabbit|coelho, coelha, coelhinho, coelhinha|
+        Bear|urso, ursa, ursinho, ursinha|Grr!|grr, rosna
         """;
 
     private const string Russian = """
@@ -124,6 +132,8 @@ internal static class AnimalSoundTables
         Bee|пчела, пчёлка, шмель|Ж-ж-ж!|жж, жжж
         Wolf|волк, волчица, волчонок|У-у-у!|уу, ууу, воет
         Bird|птица, птичка, воробей, воробушек, снегирь|Чик-чирик!|чирик
+        Rabbit|кролик, крольчиха, крольчонок, зайчик, заяц|
+        Bear|медведь, медведица, медвежонок, мишка|Рр!|рр, ррр, рычит
         """;
 
     private const string Persian = """
@@ -144,6 +154,8 @@ internal static class AnimalSoundTables
         Bee|زنبور|ویز ویز!|ویز, وزوز
         Wolf|گرگ|اووو!|اوو, عوعو
         Bird|پرنده, گنجشک, پرستو|جیک جیک!|جیک, چهچه
+        Rabbit|خرگوش|
+        Bear|خرس|غرغر!|غر, غرش
         """;
 
     private const string Arabic = """
@@ -164,6 +176,8 @@ internal static class AnimalSoundTables
         Bee|نحلة, نحل, دبور|زززز!|زز, طنين
         Wolf|ذئب, ذئبة|أوووو!|اوو, عواء
         Bird|طائر, عصفور, عصفورة, طير, بلبل|زق زق!|زق, زقزقة
+        Rabbit|أرنب, أرنبة|
+        Bear|دب, دبة, دبدوب|غررر!|غرر
         """;
 
     private const string Chinese = """
@@ -184,6 +198,8 @@ internal static class AnimalSoundTables
         Bee|蜜蜂, 小蜜蜂, 蜂|嗡嗡!|嗡
         Wolf|大灰狼, 灰狼, 狼|嗷呜!|嗷呜, 嗷
         Bird|小鸟, 鸟儿, 鸟, 麻雀, 燕子|叽叽喳喳!|叽叽, 喳喳, 啾啾
+        Rabbit|兔子, 小兔, 兔|
+        Bear|熊, 小熊, 大熊|呜!|呜呜, 吼
         """;
 
     private const string Japanese = """
@@ -204,6 +220,8 @@ internal static class AnimalSoundTables
         Bee|みつばち, ミツバチ, 蜂|ブンブン!|ブン, ぶん
         Wolf|おおかみ, オオカミ, 狼|アオーン!|アオ, あお
         Bird|ことり, 小鳥, すずめ, スズメ, 雀, とり, トリ, 鳥|ピヨピヨ!|ピヨ, チュン, ぴよ
+        Rabbit|うさぎ, ウサギ, 兎|
+        Bear|くま, クマ, 熊|ウォー!|ウォ, ガオ
         """;
 
     private const string Danish = """
@@ -224,6 +242,8 @@ internal static class AnimalSoundTables
         Bee|bi, bie, humlebi|Sum sum!|bzz
         Wolf|ulv, ulvehvalp|Uuuuh!|uh, uuh, uuu
         Bird|fugl, spurv, rødhals|Pip pip!|kvit
+        Rabbit|kanin, kaninunge, hare|
+        Bear|bjørn, bjørnunge, bamse|Grr!|grr, brum
         """;
 
     private const string Finnish = """
@@ -244,6 +264,8 @@ internal static class AnimalSoundTables
         Bee|mehiläinen, kimalainen|Pörrr!|pörr, bzz, sirr
         Wolf|susi, sudenpentu|Auuu!|au, auu, uuu
         Bird|lintu, linnunpoika, varpunen, lintunen|Piip piip!|piip, tsirp, viserrys
+        Rabbit|kani, pupu, jänis|
+        Bear|karhu, karhunpentu, nalle|Grr!|grr, örr
         """;
 
     private const string Swedish = """
@@ -264,6 +286,8 @@ internal static class AnimalSoundTables
         Bee|bi, humla|Surr!|surr, bzz
         Wolf|varg, vargunge|Ooouuu!|ou, oou, ooouu
         Bird|fågel, fågelunge, sparv|Pip pip!|pip, kvitter, tvit
+        Rabbit|kanin, kaninunge, hare|
+        Bear|björn, björnunge, nalle|Grr!|grr, brum
         """;
 
     private const string Norwegian = """
@@ -284,6 +308,8 @@ internal static class AnimalSoundTables
         Bee|bie, humle|Summ!|summ, bzz
         Wolf|ulv, ulvevalp|Uuuuu!|uuu, uuuh
         Bird|fugl, fugleunge, spurv|Pip pip!|pip, kvitre, kvitter
+        Rabbit|kanin, kaninunge, hare|
+        Bear|bjørn, bjørnunge, bamse|Grr!|grr, brum
         """;
 
     private const string Dutch = """
@@ -304,5 +330,7 @@ internal static class AnimalSoundTables
         Bee|bij, bijtje, hommel|Zoem!|zoem, bzz
         Wolf|wolf, wolfje|Auuu!|auu
         Bird|vogel, vogeltje, mus, mees, roodborstje|Tjilp!|tsjilp
+        Rabbit|konijn, konijntje, haas|
+        Bear|beer, berenjong, beertje|Grr!|grr, brom
         """;
 }

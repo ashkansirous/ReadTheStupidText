@@ -286,6 +286,10 @@
   <data name="Cast_AnimalSounds_Title" xml:space="preserve"><value>Sonidos de animales</value></data>
   <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>Los animales dicen «¡Oink!» o «¡Beee!» de vez en cuando</value></data>
   <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>Ningún animal que haga sonidos en este cuento</value></data>
+  <data name="Cast_Animal_Label" xml:space="preserve"><value>Animal</value></data>
+  <data name="Cast_Animal_NotAnimal" xml:space="preserve"><value>No es un animal</value></data>
+  <data name="Cast_Animal_Title" xml:space="preserve"><value>¿Qué animal es {0}?</value></data>
+  <data name="Cast_Animal_Hint" xml:space="preserve"><value>Elige el animal de este personaje</value></data>
   <data name="Cast_WordsOverPictures_Title" xml:space="preserve"><value>Mostrar las palabras sobre las imágenes</value></data>
   <data name="Cast_WordsOverPictures_HintOn" xml:space="preserve"><value>Las palabras se muestran en un panel en la parte inferior</value></data>
   <data name="Cast_WordsOverPictures_HintOff" xml:space="preserve"><value>Desactivado porque estas imágenes ya llevan las palabras</value></data>

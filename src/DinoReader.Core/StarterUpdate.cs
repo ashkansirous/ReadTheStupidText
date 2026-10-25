@@ -80,8 +80,8 @@ public static class StarterUpdate
             UseRecordings = recordings is not null && stored.UseRecordings,
             Created = stored.Created,
             Title = stored.Title,
-            Cast = sameCast ? stored.Cast : bundled.Cast,
-            LanguageCasts = sameCast ? stored.LanguageCasts : bundled.LanguageCasts,
+            Cast = sameCast ? WithBundledAnimals(stored.Cast, bundled.Cast) : bundled.Cast,
+            LanguageCasts = sameCast ? KeptLanguageCasts(stored, bundled) : bundled.LanguageCasts,
             CharacterMerges = sameCast ? stored.CharacterMerges : bundled.CharacterMerges,
             PreferredMode = stored.PreferredMode,
             TranslateToMyLanguage = stored.TranslateToMyLanguage,
@@ -89,6 +89,54 @@ public static class StarterUpdate
             AnimalSoundsOn = stored.AnimalSoundsOn,
             WordsOverPictures = stored.WordsOverPictures,
         });
+    }
+
+    // A kept cast member with no animal decided yet takes the bundled one (Slice 125), so an installed starter that gains animals still gets them;
+    // an animal the grown-up set (or "not an animal") stays.
+    private static IReadOnlyList<CastMember> WithBundledAnimals(IReadOnlyList<CastMember> kept, IReadOnlyList<CastMember> bundled) =>
+        kept.Select(m => !m.HasAnimalSetting && bundled.FirstOrDefault(b => b.CharacterId == m.CharacterId) is { HasAnimalSetting: true } b
+            ? m with { Animal = b.Animal, NotAnimal = b.NotAnimal }
+            : m).ToList();
+
+    /// <summary>The kept cast members whose animal <see cref="Refresh"/> just filled in and whose voice the grown-up did not choose by hand, as (cast language, character id):
+    /// each needs its voice picked again from its animal (the caller does it the way the cast screen does, <c>StoryVoicing.RecastCharacter</c>). Nothing when the cast was replaced.</summary>
+    public static IReadOnlyList<(string Language, string CharacterId)> AnimalVoicesToRecast(Story stored, Story refreshed)
+    {
+        if (!SameCharacters(stored.Cast, refreshed.Cast))
+        {
+            return [];
+        }
+
+        var gained = GainedAnimals(stored.Cast, refreshed.Cast).Select(id => (refreshed.Language, id)).ToList();
+        foreach (var (language, members) in refreshed.LanguageCasts ?? new Dictionary<string, IReadOnlyList<CastMember>>())
+        {
+            if (stored.LanguageCasts?.TryGetValue(language, out IReadOnlyList<CastMember>? before) == true)
+            {
+                gained.AddRange(GainedAnimals(before, members).Select(id => (language, id)));
+            }
+        }
+
+        return gained;
+    }
+
+    private static IEnumerable<string> GainedAnimals(IReadOnlyList<CastMember> before, IReadOnlyList<CastMember> after)
+    {
+        return after
+            .Where(a => a.Animal is not null && !a.Edited && before.FirstOrDefault(b => b.CharacterId == a.CharacterId) is { HasAnimalSetting: false })
+            .Select(a => a.CharacterId);
+    }
+
+    private static IReadOnlyDictionary<string, IReadOnlyList<CastMember>>? KeptLanguageCasts(Story stored, Story bundled)
+    {
+        if (stored.LanguageCasts is null)
+        {
+            return null;
+        }
+
+        // A language the bundled package has no cast for is kept as it is: character ids come from names, which differ between languages, so the base cast would not match.
+        return stored.LanguageCasts.ToDictionary(
+            c => c.Key,
+            c => bundled.LanguageCasts?.GetValueOrDefault(c.Key) is { } own ? WithBundledAnimals(c.Value, own) : c.Value);
     }
 
     // A grown-up's cover pick stays: a gallery photo, a page of the story that still has a picture, a first-page cover, or a colour other than the bundled one.
