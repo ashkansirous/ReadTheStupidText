@@ -32,6 +32,8 @@ public partial class ReadingPage : ContentPage
 	private IReadOnlyList<SentenceSpan> _sentences = [];
 	private ReadingTheme _theme = ReadingTheme.For(false);
 	private bool _visible;
+	private bool _onStack;
+	private Window? _watchedWindow;
 	private bool _stoppedDuringGate;
 	private const double FullHeaderRowSpacing = 2;
 	private bool _compactHeader;
@@ -302,6 +304,8 @@ public partial class ReadingPage : ContentPage
 	{
 		base.OnAppearing();
 		_visible = true;
+		_onStack = true;
+		ApplyScreenAwake();
 		Unsubscribe();
 		_session.Attach();
 		_installer.Changed += OnInstallerChanged;
@@ -326,6 +330,8 @@ public partial class ReadingPage : ContentPage
 		{
 			if (!Navigation.NavigationStack.Contains(this))
 			{
+				_onStack = false;
+				ApplyScreenAwake();
 				CancelDisplay();
 				Unsubscribe();
 				_session.Detach();
@@ -453,7 +459,49 @@ public partial class ReadingPage : ContentPage
 		}
 	}
 
-	private void OnSessionStateChanged(object? sender, EventArgs e) => RenderChrome();
+	private void OnSessionStateChanged(object? sender, EventArgs e)
+	{
+		RenderChrome();
+		ApplyScreenAwake();
+	}
+
+	// One rule for the screen: on while the book plays and the page is still on the navigation stack (a gate or
+	// sheet over it leaves the audio, and so the screen, running). Paused releases the screen on purpose: the
+	// screen stays on only while the book is read aloud. Also retries the window subscription, as Window can
+	// still be null in OnAppearing.
+	private void ApplyScreenAwake()
+	{
+		WatchWindow(_onStack);
+		ScreenAwake.Set(this, _onStack && ScreenAwake.Wants(_session.State));
+	}
+
+	// While the window is stopped the screen is released (audio can keep running and change state in the
+	// background); coming back to the front sets it again, since iOS and a recreated Android window drop it.
+	private void OnWindowStoppedReleaseScreen(object? sender, EventArgs e) => ScreenAwake.Suspend(true);
+
+	private void OnWindowResumedKeepScreen(object? sender, EventArgs e) => ScreenAwake.Suspend(false);
+
+	private void WatchWindow(bool watch)
+	{
+		Window? target = watch ? Window : null;
+		if (ReferenceEquals(_watchedWindow, target))
+		{
+			return;
+		}
+
+		if (_watchedWindow is { } old)
+		{
+			old.Stopped -= OnWindowStoppedReleaseScreen;
+			old.Resumed -= OnWindowResumedKeepScreen;
+		}
+
+		_watchedWindow = target;
+		if (target is not null)
+		{
+			target.Stopped += OnWindowStoppedReleaseScreen;
+			target.Resumed += OnWindowResumedKeepScreen;
+		}
+	}
 
 	// The pages were laid out again (a new size or mode). A follower goes with the reading; a child who
 	// had wandered keeps the page that now holds what they were looking at (the surface remapped it).

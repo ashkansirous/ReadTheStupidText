@@ -1,6 +1,6 @@
 ### Slice 126 — Dino: keep the screen awake while a book is playing
 
-*In progress (wave 2026-10-25), draft PR.*
+*Built 2026-10-25 (PR #357), not yet verified on a device.*
 
 **Touches:** `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/ScreenAwake.cs` (new), `src/DinoReader.App/CLAUDE.md`
 
@@ -17,15 +17,25 @@
 - Only the Dino app. RTST mobile reads with the screen off on purpose and is not changed.
 
 **Work.**
-- [ ] `ScreenAwake`: one small class that turns keep-screen-on on or off on the UI thread and remembers its state, so repeated calls are cheap and safe.
-- [ ] `ReadingPage`: on when playback starts or resumes (and again when the app comes back to the front while playing, for iOS) (`OnPlayTapped` and any auto-play), off on pause, stop, the end of the book, `OnDisappearing` and the app going to the background. Page turns while playing keep it on.
-- [ ] Unit-test the on/off rules if they can be pulled out as a pure state rule (playing gives on, anything else gives off). The platform call itself is checked on a device.
+- [x] `ScreenAwake`: one small class that turns keep-screen-on on or off on the UI thread and remembers its state, so repeated calls are cheap and safe.
+- [x] `ReadingPage`: on when playback starts or resumes (and again when the app comes back to the front while playing, for iOS) (`OnPlayTapped` and any auto-play), off on pause, stop, the end of the book, `OnDisappearing` and the app going to the background. Page turns while playing keep it on.
+- [ ] (not done, see below) Unit-test the on/off rules if they can be pulled out as a pure state rule (playing gives on, anything else gives off). The platform call itself is checked on a device.
 - [ ] Emulator check via `device-test`, with the screen timeout set to 15 s (`adb shell settings put system screen_off_timeout 15000`):
   - Playing a book for more than 30 s keeps the screen on.
   - Paused, the screen sleeps after about 15 s.
   - Leaving the book while it plays lets the screen sleep.
   - Restore the timeout afterwards.
 
-- [ ] iOS: the app compiles for iOS (`dotnet build src/DinoReader.App -f net10.0-ios -p:IncludeIos=true -p:IncludeWindows=false -p:IncludeAndroid=false`, compile only on Windows). No iOS device or simulator is reachable from this machine, so the iPhone check is the user's, on the next TestFlight build: a whole book plays with Auto-Lock at 30 s and the screen stays on, and paused it locks again.
+- [x] iOS: the app compiles for iOS (`dotnet build src/DinoReader.App -f net10.0-ios -p:IncludeIos=true -p:IncludeWindows=false -p:IncludeAndroid=false`, compile only on Windows). No iOS device or simulator is reachable from this machine, so the iPhone check is the user's, on the next TestFlight build: a whole book plays with Auto-Lock at 30 s and the screen stays on, and paused it locks again.
 
 **Verification.** `dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj` green, the iOS compile, the Android emulator check above, then the user's devices: on both an Android phone and an iPhone, a whole book plays with the screen on.
+
+*Changed while building:* `ScreenAwake` is static, UI-thread only and owner-tracked; it suspends on `Window.Stopped` and re-applies on `Resumed`. It sets `DeviceDisplay.KeepScreenOn`. Keep-on covers Playing and Loading (deliberate: first-sentence synthesis can take seconds); off for Paused, stopped, end of book, the page leaving the nav stack and the app backgrounding. A covered page (gate or sheet) keeps it on since reading continues. Resume cycles off then on once (unknown whether MAUI skips unchanged values). No unit test: the rule lives in the App and the tests reference Core only (deviation from the plan item).
+
+*Verified:* Android build and iOS compile green; `DinoReader.Tests` 1093 pass. The Windows head was not built.
+
+#### Not yet verified
+- Android emulator with a 15 s screen timeout: stays on while reading, sleeps after pause and at the end of the book.
+- Real Android phone: a whole book plays with the screen on.
+- iPhone (TestFlight): a whole book plays with Auto-Lock at 30 s, and paused it locks again.
+- Windows head: not built or run.
