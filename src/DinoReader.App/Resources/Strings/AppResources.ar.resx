@@ -286,6 +286,10 @@
   <data name="Cast_AnimalSounds_Title" xml:space="preserve"><value>أصوات الحيوانات</value></data>
   <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>الحيوانات تقول أحيانًا «غرغر!» أو «ماع!»</value></data>
   <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>لا توجد حيوانات تُصدر أصواتًا في هذه القصة</value></data>
+  <data name="Cast_Animal_Label" xml:space="preserve"><value>الحيوان</value></data>
+  <data name="Cast_Animal_NotAnimal" xml:space="preserve"><value>ليس حيواناً</value></data>
+  <data name="Cast_Animal_Title" xml:space="preserve"><value>أي حيوان هو {0}؟</value></data>
+  <data name="Cast_Animal_Hint" xml:space="preserve"><value>اختر حيوان هذه الشخصية</value></data>
   <data name="Cast_WordsOverPictures_Title" xml:space="preserve"><value>إظهار الكلمات فوق الصور</value></data>
   <data name="Cast_WordsOverPictures_Hint" xml:space="preserve"><value>يظهر نص القصة فوق الصورة أثناء القراءة</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>عدد الشخصيات في هذا الكتاب أكبر من عدد الشخصيات الراوية المتاحة وهو {0}، لذا يتشابه صوت بعضها. لا يُمنح الراوي لأي شخصية.</value></data>

@@ -285,6 +285,10 @@
   <data name="Cast_AnimalSounds_Title" xml:space="preserve"><value>Eläinten äänet</value></data>
   <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>Eläimet sanovat välillä “Röh!” tai “Mää!”</value></data>
   <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>Tässä tarinassa ei ole eläimiä, jotka päästävät ääniä</value></data>
+  <data name="Cast_Animal_Label" xml:space="preserve"><value>Eläin</value></data>
+  <data name="Cast_Animal_NotAnimal" xml:space="preserve"><value>Ei eläin</value></data>
+  <data name="Cast_Animal_Title" xml:space="preserve"><value>Mikä eläin {0} on?</value></data>
+  <data name="Cast_Animal_Hint" xml:space="preserve"><value>Valitse tämän hahmon eläin</value></data>
   <data name="Cast_WordsOverPictures_Title" xml:space="preserve"><value>Näytä sanat kuvien päällä</value></data>
   <data name="Cast_WordsOverPictures_Hint" xml:space="preserve"><value>Tarinan teksti näkyy kuvan päällä lukemisen aikana</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Tässä kirjassa on enemmän hahmoja kuin käytettävissä olevia {0} kertojahahmoa, joten jotkin kuulostavat samalta. Kertojaa ei koskaan anneta hahmolle.</value></data>

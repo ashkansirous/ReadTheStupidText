@@ -13,12 +13,17 @@ public sealed record PinnedCharacter(string VoiceId, VoiceFlavour? Flavour, bool
 /// Each story character gets the roster character that fits its name best: the gender, then the flavour the name guesses ("Little Pig" is
 /// Small, so Cheeky Piglet), and no two story characters share a roster character while the roster has another that fits. Fully deterministic:
 /// stored picks first, then the main characters (most words) and the rest in the order given; ties break by roster order. The result is the
-/// same <see cref="VoiceCast"/> the rest of Dino reads: a voice per character and its flavour.
+/// same <see cref="VoiceCast"/> the rest of Dino reads: a voice per character and its flavour. A story character that is an animal (<c>animalOf</c>, Slice 125) is
+/// cast to its animal character first (piglet for a pig, big bear for a grown bear), or to another young animal character while its own is taken; only a voice a
+/// grown-up picked is never replaced.
 /// </summary>
 public static class CastCharacters
 {
     private const int UsedAlready = 30;
     private const int VoiceUsedAlready = 3;
+    private const int NotAnAnimalCharacter = 25;
+    private const int OtherYoungAnimal = 8;
+    private const int AnimalGenderRelief = 10;
 
     public static VoiceCast Cast(
         IReadOnlyList<Character> characters,
@@ -27,9 +32,10 @@ public static class CastCharacters
         string narratorVoiceId,
         Func<Character, VoiceFlavour> guess,
         IReadOnlyDictionary<string, PinnedCharacter>? pinned = null,
-        int mainCharacterCount = VoiceCaster.DefaultMainCount)
+        int mainCharacterCount = VoiceCaster.DefaultMainCount,
+        Func<Character, AnimalHint?>? animalOf = null)
     {
-        var state = new State(choices);
+        var state = new State(choices, animalOf);
         var picks = new List<(int Order, Character Character, string VoiceId, VoiceFlavour Flavour)>();
         var kept = Kept(characters, choices, roster, guess, pinned);
         foreach ((Character character, int order) in characters.Select((c, i) => (c, i)).Where(x => kept.ContainsKey(x.c.Id)))
@@ -98,7 +104,7 @@ public static class CastCharacters
     }
 
     /// <summary>Running state of one casting pass: which roster characters and voices are taken.</summary>
-    private sealed class State(IReadOnlyList<StorytellerCharacter> choices)
+    private sealed class State(IReadOnlyList<StorytellerCharacter> choices, Func<Character, AnimalHint?>? animalOf)
     {
         private readonly HashSet<string> _used = [];
         private readonly Dictionary<string, int> _voiceUses = [];
@@ -123,9 +129,31 @@ public static class CastCharacters
 
         private int Cost(StorytellerCharacter candidate, Character character, VoiceFlavour wanted)
         {
-            int cost = CharacterRoster.GenderMisfit(candidate.Gender, character.Gender) + CharacterRoster.FlavourDistance(candidate.Flavour, wanted);
+            int gender = CharacterRoster.GenderMisfit(candidate.Gender, character.Gender);
+            int animal = AnimalCost(candidate, animalOf?.Invoke(character), ref gender);
+            int cost = CharacterRoster.FlavourDistance(candidate.Flavour, wanted) + animal + gender;
             cost += _used.Contains(candidate.Id) ? UsedAlready : 0;
             return cost + (_voiceUses.GetValueOrDefault(candidate.VoiceId) * VoiceUsedAlready);
+        }
+
+        // An animal story character prefers its own animal character (the voice's gender matters little for an animal), then another young one, over a plain character.
+        private static int AnimalCost(StorytellerCharacter candidate, AnimalHint? hint, ref int gender)
+        {
+            if (hint is null)
+            {
+                return 0;
+            }
+
+            switch (AnimalCharacters.FitOf(candidate, hint))
+            {
+                case AnimalFit.Exact:
+                    gender /= AnimalGenderRelief;
+                    return 0;
+                case AnimalFit.Young:
+                    return OtherYoungAnimal;
+                default:
+                    return NotAnAnimalCharacter;
+            }
         }
     }
 }

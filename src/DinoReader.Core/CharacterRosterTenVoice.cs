@@ -11,7 +11,7 @@ public static partial class CharacterRoster
     /// <summary>One place of the shared ten-voice layout: a voice key (F1-F5 women, M1-M5 men), a flavour and who plays it.</summary>
     private sealed record Slot(string Id, string VoiceKey, VoiceFlavour Flavour, CharacterKind Kind);
 
-    // The same eighteen ideas in every language that has ten voices (Supertonic-3 for eight languages, Piper for Norwegian): three narrators, then the cast.
+    // The same twenty-six ideas (Slice 125 added eight animals) in every language that has ten voices (Supertonic-3 for eight languages, Piper for Norwegian): three narrators, then the cast.
     // No two slots share a voice and flavour. The names and plain words of each language follow this order.
     private static readonly Slot[] TenVoiceSlots =
     [
@@ -33,6 +33,14 @@ public static partial class CharacterRoster
         new("piglet", "M2", VoiceFlavour.Small, CharacterKind.Speaker),
         new("chick", "M4", VoiceFlavour.Bouncy, CharacterKind.Speaker),
         new("dragon", "M3", VoiceFlavour.Big, CharacterKind.Speaker),
+        new("lamb", "F5", VoiceFlavour.Squeaky, CharacterKind.Speaker),
+        new("puppy", "M5", VoiceFlavour.Bouncy, CharacterKind.Speaker),
+        new("kitten", "F4", VoiceFlavour.Small, CharacterKind.Speaker),
+        new("duckling", "F3", VoiceFlavour.Squeaky, CharacterKind.Speaker),
+        new("cub", "M4", VoiceFlavour.Small, CharacterKind.Speaker),
+        new("bigbear", "M4", VoiceFlavour.Big, CharacterKind.Speaker),
+        new("wolf", "M2", VoiceFlavour.Grumpy, CharacterKind.Speaker),
+        new("ewe", "F2", VoiceFlavour.Sleepy, CharacterKind.Speaker),
     ];
 
     private static IReadOnlyList<StorytellerCharacter> Norwegian() => FromSlots(TenVoiceSlots, NorwegianVoiceId, NorwegianWords());

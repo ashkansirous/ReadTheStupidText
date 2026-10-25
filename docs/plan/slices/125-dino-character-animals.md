@@ -51,16 +51,17 @@ roster has one animal character ("Cheeky Piglet"). Nothing guesses an animal fro
 
 ## Work
 
-- [ ] 1. Smallest end to end, English: `CastMember.Animal` plus the `story.json` field; `AnimalsIn` takes the cast
+- [x] 1. Smallest end to end, English: `CastMember.Animal` plus the `story.json` field; `AnimalsIn` takes the cast
   and prefers the stored animal; the pigs starter names Pip, Pop and Pim as pigs, so they oink. Tests: round
   trip, recast keeps it, the pigs get sounds.
-- [ ] 2. The story-text guess (`AnimalGuess`) used when a book is cast (import and recast) for characters with no
+- [x] 2. The story-text guess (`AnimalGuess`) used when a book is cast (import and recast) for characters with no
   stored animal; tests on all 14 starter and store texts plus invented sentences.
-- [ ] 3. Rabbit and Bear kinds, Bear's sound words in 14 languages.
-- [ ] 4. Animal characters in every roster, and the animal-first auto-cast.
+- [x] 3. Rabbit and Bear kinds, Bear's sound words in 14 languages.
+- [x] 4. Animal characters in every roster, and the animal-first auto-cast.
 - [ ] 5. Store and starter specs name each character's animal; rebuild the packages; bump the starter content
   version; re-upload the changed store stories with `tools/upload-store-story.ps1` as a new `story-v<n+1>`.
-- [ ] 6. The cast page "Animal" line and sheet, with strings in all 14 `.resx` files; rules in the Core and App `CLAUDE.md` files.
+  Built and tested; the upload is not done (needs `tools/upload-store-story.ps1` for billy-goats-gruff and peter-rabbit at `story-v4`; the pigs starter is bundled, its store copy is `three-little-pigs`).
+- [x] 6. The cast page "Animal" line and sheet, with strings in all 14 `.resx` files; rules in the Core and App `CLAUDE.md` files.
 
 ## Verification
 

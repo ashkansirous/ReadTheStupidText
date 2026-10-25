@@ -9,7 +9,7 @@ namespace DinoReader.Tests;
 public partial class StorytellerCharacterTests
 {
     private const int MinCharacters = 16;
-    private const int MaxCharacters = 20;
+    private const int MaxCharacters = 30;
     private const string ChineseCode = "zh";
     private const string PacksWorkflow = ".github/workflows/packs.yml";
 
@@ -57,7 +57,7 @@ public partial class StorytellerCharacterTests
 
     [Theory]
     [MemberData(nameof(Languages))]
-    public void A_roster_has_sixteen_to_twenty_characters_and_narrators(string language)
+    public void A_roster_has_sixteen_to_thirty_characters_and_narrators(string language)
     {
         IReadOnlyList<StorytellerCharacter> roster = CharacterRoster.For(language);
 

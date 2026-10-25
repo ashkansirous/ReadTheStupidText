@@ -34,6 +34,24 @@ public static class CastEditor
         return state with { Cast = Replace(state.Cast, characterId, m => m with { VoiceId = character.VoiceId, Flavour = character.Flavour, Edited = true }) };
     }
 
+    /// <summary>Sets what a character is (Slice 125): an animal, or <c>null</c> for "not an animal". It is the animal alone: the voice and the edited mark are not touched
+    /// (the cast screen picks the voice again when it was not chosen by hand).</summary>
+    public static CastEdit SetAnimal(CastEdit state, string characterId, AnimalKind? animal) =>
+        state with { Cast = Replace(state.Cast, characterId, m => m with { Animal = animal, NotAnimal = animal is null }) };
+
+    /// <summary>The story with a character's animal set in every language's cast: what a character is does not depend on the language it is read in.</summary>
+    public static Story WithAnimal(Story story, string characterId, AnimalKind? animal)
+    {
+        Story main = story with { Cast = SetAnimal(new CastEdit(story.Cast, story.Merges), characterId, animal).Cast };
+        if (story.LanguageCasts is null)
+        {
+            return main;
+        }
+
+        var casts = story.LanguageCasts.ToDictionary(c => c.Key, c => (IReadOnlyList<CastMember>)SetAnimal(new CastEdit(c.Value, story.Merges), characterId, animal).Cast);
+        return main with { LanguageCasts = casts };
+    }
+
     /// <summary>
     /// Merges <paramref name="dropId"/> into <paramref name="keepId"/>: one entry is left, with the kept
     /// character's name and voice; the other's lines are re-attributed by <see cref="CastMerges"/>. The kept

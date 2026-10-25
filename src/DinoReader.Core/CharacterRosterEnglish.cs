@@ -27,6 +27,14 @@ public static partial class CharacterRoster
         Kokoro("witch", "bf_alice", VoiceFlavour.Grumpy, Gender.Female, CharacterKind.Speaker, "Crafty Witch", "croaky and sly"),
         Kokoro("fairy", "bf_lily", VoiceFlavour.Squeaky, Gender.Female, CharacterKind.Speaker, "Tiny Fairy", "tiny and twinkly"),
         Kokoro("hen", "bf_emma", VoiceFlavour.Sleepy, Gender.Female, CharacterKind.Speaker, "Granny Hen", "slow and cosy"),
+        Kokoro("lamb", "af_nova", VoiceFlavour.Squeaky, Gender.Female, CharacterKind.Speaker, "Woolly Lamb", "soft and bleaty"),
+        Kokoro("puppy", "am_liam", VoiceFlavour.Bouncy, Gender.Male, CharacterKind.Speaker, "Playful Puppy", "bouncy and bright"),
+        Kokoro("kitten", "bf_lily", VoiceFlavour.Small, Gender.Female, CharacterKind.Speaker, "Curious Kitten", "tiny and purry"),
+        Kokoro("duckling", "af_sky", VoiceFlavour.Squeaky, Gender.Female, CharacterKind.Speaker, "Little Duckling", "peepy and quick"),
+        Kokoro("cub", "bm_daniel", VoiceFlavour.Small, Gender.Male, CharacterKind.Speaker, "Bear Cub", "small and soft"),
+        Kokoro("bigbear", "am_michael", VoiceFlavour.Big, Gender.Male, CharacterKind.Speaker, "Big Brown Bear", "deep and slow"),
+        Kokoro("wolf", "bm_fable", VoiceFlavour.Grumpy, Gender.Male, CharacterKind.Speaker, "Hungry Wolf", "low and growly"),
+        Kokoro("ewe", "af_bella", VoiceFlavour.Sleepy, Gender.Female, CharacterKind.Speaker, "Woolly Sheep", "soft and slow"),
     ];
 
     private static StorytellerCharacter Kokoro(

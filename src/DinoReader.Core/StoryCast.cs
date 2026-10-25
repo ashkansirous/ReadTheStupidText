@@ -9,16 +9,25 @@ public static class StoryCast
     /// One member per character that has a voice in <paramref name="cast"/>. A character a grown-up
     /// edited stays edited, whatever voice the caster ended up with. Each member's flavour is the grown-up's pick when
     /// they made one, else the guess from the name in <paramref name="rules"/> (Slice 113; the rules are required, so a path that forgets them cannot guess in the wrong language).
+    /// The animal setting (Slice 125) is kept from the stored member; <paramref name="animals"/> names the animals a book's builder decided for characters that have none stored.
     /// </summary>
     public static IReadOnlyList<CastMember> ToMembers(
-        IReadOnlyList<Character> characters, VoiceCast cast, LanguageRules rules, IReadOnlyList<CastMember>? stored = null) =>
+        IReadOnlyList<Character> characters, VoiceCast cast, LanguageRules rules, IReadOnlyList<CastMember>? stored = null,
+        IReadOnlyDictionary<string, AnimalKind>? animals = null) =>
         characters
             .Select(c => (Character: c, Voice: cast.VoiceFor(c.Id)))
             .Where(x => x.Voice is not null)
             .Select(x => new CastMember(
                 x.Character.Id, x.Character.Name, x.Character.Gender, x.Voice!, WasEdited(stored, x.Character.Id),
-                FlavourOf(cast, stored, x.Character, rules)))
+                FlavourOf(cast, stored, x.Character, rules)) with { Animal = AnimalOf(stored, animals, x.Character.Id), NotAnimal = NotAnimalIn(stored, x.Character.Id) })
             .ToList();
+
+    private static AnimalKind? AnimalOf(IReadOnlyList<CastMember>? stored, IReadOnlyDictionary<string, AnimalKind>? animals, string characterId) =>
+        stored?.FirstOrDefault(m => m.CharacterId == characterId)?.Animal
+        ?? (animals is not null && animals.TryGetValue(characterId, out AnimalKind kind) ? kind : null);
+
+    private static bool NotAnimalIn(IReadOnlyList<CastMember>? stored, string characterId) =>
+        stored?.Any(m => m.CharacterId == characterId && m.NotAnimal) == true;
 
     // The grown-up's pick first, but with a roster cast (Slice 116) only while the character still has the voice they picked it with: a voice that was dropped and recast
     // takes the flavour of the character the caster gave, not the old pick's. A voice-only cast has no flavours of its own, so the pick stays. Else a guess from the name.

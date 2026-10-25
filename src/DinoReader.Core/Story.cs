@@ -18,8 +18,16 @@ public enum CoverStyle
 /// once a grown-up changed the character on the cast screen (Slice 65): the stored gender then also
 /// overrides the guessed one, and the EDITED badge shows. <see cref="Flavour"/> (Slice 113) is how the voice is shaped: the guess made
 /// when the cast was built, or the grown-up's pick (pinned with <see cref="Edited"/>); null (an older story) means guess from the name.
+/// <see cref="Animal"/> (Slice 125) is the animal the character is, decided by the book's builder or the grown-up; <see cref="NotAnimal"/> is the grown-up's (or builder's)
+/// "not an animal". With neither set the animal is guessed from the name, then the story text (<see cref="AnimalSounds.Resolve"/>).
 /// </summary>
-public sealed record CastMember(string CharacterId, string Name, Gender Gender, string VoiceId, bool Edited = false, VoiceFlavour? Flavour = null);
+public sealed record CastMember(
+    string CharacterId, string Name, Gender Gender, string VoiceId, bool Edited = false, VoiceFlavour? Flavour = null,
+    AnimalKind? Animal = null, bool NotAnimal = false)
+{
+    /// <summary>Whether the animal was decided (an animal or "not an animal") rather than left to the guess.</summary>
+    public bool HasAnimalSetting => Animal is not null || NotAnimal;
+}
 
 /// <summary>One recognised line of a scanned page: its text and where it sits on the page image (0..1 across its width and height).</summary>
 public sealed record PageLine(string Text, NormalizedRect Box);

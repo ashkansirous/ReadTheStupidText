@@ -5,10 +5,10 @@ namespace DinoReader.Core;
 
 public static partial class CharacterRoster
 {
-    // Spanish, Portuguese and Chinese run on the Kokoro storyteller voices (Slice 118). The slots are the same eighteen ideas as TenVoiceSlots, so the names and
+    // Spanish, Portuguese and Chinese run on the Kokoro storyteller voices (Slice 118). The slots are the same twenty-six ideas as TenVoiceSlots, so the names and
     // plain words (CharacterRosterWords.cs) keep their order; the voice key is F (a woman's voice) or M (a man's) and a place.
 
-    // Spanish and Portuguese have three voices: one woman (F1) and two men (M1, M2: Santa is the deep one). Eighteen characters on three voices: no two share
+    // Spanish and Portuguese have three voices: one woman (F1) and two men (M1, M2: Santa is the deep one). Twenty-six characters on three voices: no two share
     // a voice and a flavour. Dora plays the girls and women, Santa the big and grumpy, Alex the bright and quick.
     private static readonly Slot[] ThreeVoiceSlots =
     [
@@ -30,6 +30,14 @@ public static partial class CharacterRoster
         new("piglet", "M1", VoiceFlavour.Small, CharacterKind.Speaker),
         new("chick", "M1", VoiceFlavour.Bouncy, CharacterKind.Speaker),
         new("dragon", "M2", VoiceFlavour.Big, CharacterKind.Speaker),
+        new("lamb", "M1", VoiceFlavour.Squeaky, CharacterKind.Speaker),
+        new("puppy", "M2", VoiceFlavour.Bouncy, CharacterKind.Speaker),
+        new("kitten", "M2", VoiceFlavour.Squeaky, CharacterKind.Speaker),
+        new("duckling", "M2", VoiceFlavour.Small, CharacterKind.Speaker),
+        new("cub", "M2", VoiceFlavour.Normal, CharacterKind.Speaker),
+        new("bigbear", "M1", VoiceFlavour.Big, CharacterKind.Speaker),
+        new("wolf", "M1", VoiceFlavour.Grumpy, CharacterKind.Speaker),
+        new("ewe", "M1", VoiceFlavour.Sleepy, CharacterKind.Speaker),
     ];
 
     // Chinese has eight voices, four women (F1-F4) and four men (M1-M4). Three narrators, then the cast.
@@ -53,6 +61,14 @@ public static partial class CharacterRoster
         new("piglet", "M4", VoiceFlavour.Small, CharacterKind.Speaker),
         new("chick", "M4", VoiceFlavour.Bouncy, CharacterKind.Speaker),
         new("dragon", "M2", VoiceFlavour.Big, CharacterKind.Speaker),
+        new("lamb", "F4", VoiceFlavour.Small, CharacterKind.Speaker),
+        new("puppy", "M4", VoiceFlavour.Squeaky, CharacterKind.Speaker),
+        new("kitten", "F3", VoiceFlavour.Squeaky, CharacterKind.Speaker),
+        new("duckling", "F2", VoiceFlavour.Bouncy, CharacterKind.Speaker),
+        new("cub", "M3", VoiceFlavour.Small, CharacterKind.Speaker),
+        new("bigbear", "M3", VoiceFlavour.Big, CharacterKind.Speaker),
+        new("wolf", "M3", VoiceFlavour.Grumpy, CharacterKind.Speaker),
+        new("ewe", "F2", VoiceFlavour.Sleepy, CharacterKind.Speaker),
     ];
 
     // The Kokoro key of a place, by the voice's language letter: Spanish voices start with e (ef_dora), Portuguese with p (pf_dora).

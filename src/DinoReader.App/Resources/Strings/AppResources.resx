@@ -287,6 +287,10 @@
   <data name="Cast_AnimalSounds_Title" xml:space="preserve"><value>Animal sounds</value></data>
   <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>Animals say “Oink!” or “Baa!” now and then</value></data>
   <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>No animals that make a sound in this story</value></data>
+  <data name="Cast_Animal_Label" xml:space="preserve"><value>Animal</value></data>
+  <data name="Cast_Animal_NotAnimal" xml:space="preserve"><value>Not an animal</value></data>
+  <data name="Cast_Animal_Title" xml:space="preserve"><value>What is {0}?</value></data>
+  <data name="Cast_Animal_Hint" xml:space="preserve"><value>Pick the animal this character is</value></data>
   <data name="Cast_WordsOverPictures_Title" xml:space="preserve"><value>Show the words over the pictures</value></data>
   <data name="Cast_WordsOverPictures_Hint" xml:space="preserve"><value>The story text sits on the picture while it is read</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>This book has more characters than the {0} storyteller characters there are, so some of them sound alike. The narrator is never given to a character.</value></data>

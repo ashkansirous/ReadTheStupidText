@@ -23,6 +23,8 @@ public enum AnimalKind
     Lion,
     Bee,
     Wolf,
+    Rabbit,
+    Bear,
     Bird,
 }
 
@@ -45,24 +47,59 @@ public static partial class AnimalSounds
         return AnimalSoundWords.For(language).Entries.FirstOrDefault(e => Mentions(name, e, script))?.Kind;
     }
 
-    /// <summary>The sound word of an animal in a language ("Baa!"), written for that language.</summary>
-    public static string? SoundOf(AnimalKind kind, string? language) =>
-        AnimalSoundWords.For(language).Entries.FirstOrDefault(e => e.Kind == kind)?.Sound;
+    /// <summary>The word for an animal in a language, capitalised for a list ("Pig", "Cochon"): the first name of its table entry.</summary>
+    public static string NameOf(AnimalKind kind, string? language)
+    {
+        string name = AnimalSoundWords.For(language).Entries.First(e => e.Kind == kind).Names[0];
+        return name.Length == 0 ? name : char.ToUpperInvariant(name[0]) + name[1..];
+    }
 
-    /// <summary>The characters of a story that are animals with a sound, by character id.</summary>
-    public static IReadOnlyDictionary<string, AnimalKind> AnimalsIn(IReadOnlyList<Character> characters, string? language)
+    /// <summary>The sound word of an animal in a language ("Baa!"), written for that language; null for an animal with no sound (a rabbit).</summary>
+    public static string? SoundOf(AnimalKind kind, string? language) =>
+        AnimalSoundWords.For(language).Entries.FirstOrDefault(e => e.Kind == kind)?.Sound is { Length: > 0 } sound ? sound : null;
+
+    /// <summary>
+    /// The animal of every story character that is one (Slice 125, Decision 132), by character id: the stored animal first (<see cref="CastMember.NotAnimal"/> says it is none),
+    /// then the animal word in the name, then a best guess from the story <paramref name="text"/> (<see cref="AnimalGuess"/>). Animals with no sound are included.
+    /// </summary>
+    public static IReadOnlyDictionary<string, AnimalKind> Resolve(
+        IReadOnlyList<Character> characters, string? language, IReadOnlyList<CastMember>? cast = null, string? text = null)
     {
         var animals = new Dictionary<string, AnimalKind>();
+        var undecided = new List<Character>();
         foreach (Character character in characters)
         {
-            if (KindOf(character.Name, language) is { } kind)
+            CastMember? member = cast?.FirstOrDefault(m => m.CharacterId == character.Id);
+            if (member is { NotAnimal: true })
+            {
+                continue;
+            }
+
+            if ((member?.Animal ?? KindOf(character.Name, language)) is { } kind)
             {
                 animals[character.Id] = kind;
+            }
+            else
+            {
+                undecided.Add(character);
+            }
+        }
+
+        if (text is not null && undecided.Count > 0)
+        {
+            foreach (var (id, kind) in AnimalGuess.Guess(undecided, text, language))
+            {
+                animals[id] = kind;
             }
         }
 
         return animals;
     }
+
+    /// <summary>The characters of a story that are animals with a sound (the ones <see cref="Plan"/> works on), by character id.</summary>
+    public static IReadOnlyDictionary<string, AnimalKind> AnimalsIn(
+        IReadOnlyList<Character> characters, string? language, IReadOnlyList<CastMember>? cast = null, string? text = null) =>
+        Resolve(characters, language, cast, text).Where(a => SoundOf(a.Value, language) is not null).ToDictionary(a => a.Key, a => a.Value);
 
     /// <summary>Whether <paramref name="text"/> already says the animal's sound (any stretched spelling of it: "Baaaa", "moooo"), so no sound is added after it.</summary>
     public static bool SaysIt(string text, AnimalKind kind, string? language)
@@ -214,7 +251,7 @@ public static partial class AnimalSounds
         }
 
         bool deepVoice = lineFlavour is VoiceFlavour.Big or VoiceFlavour.Giant or VoiceFlavour.Grumpy;
-        return kind is AnimalKind.Cow or AnimalKind.Lion or AnimalKind.Wolf ? (deepVoice ? VoiceFlavour.Giant : VoiceFlavour.Big) : lineFlavour;
+        return kind is AnimalKind.Cow or AnimalKind.Lion or AnimalKind.Wolf or AnimalKind.Bear ? (deepVoice ? VoiceFlavour.Giant : VoiceFlavour.Big) : lineFlavour;
     }
 
     private sealed record Line(string CharacterId, int LastEnd, string Text);

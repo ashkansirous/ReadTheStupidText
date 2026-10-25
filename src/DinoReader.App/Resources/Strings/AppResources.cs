@@ -291,6 +291,10 @@ public static class AppResources
 	public static string Cast_AnimalSounds_Title => Get();
 	public static string Cast_AnimalSounds_Hint => Get();
 	public static string Cast_AnimalSounds_None => Get();
+	public static string Cast_Animal_Label => Get();
+	public static string Cast_Animal_NotAnimal => Get();
+	public static string Cast_Animal_Title => Get();
+	public static string Cast_Animal_Hint => Get();
 	public static string Cast_WordsOverPictures_Title => Get();
 	public static string Cast_WordsOverPictures_Hint => Get();
 	public static string Cast_SharedNote => Get();
