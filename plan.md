@@ -143,6 +143,7 @@ this plan turns it into ordered, shippable vertical slices.
 | 123 | Dino: the pigs retold as 16 pages, one action each | built | #336 | | [123-dino-pigs-one-action-per-page.md](docs/plan/slices/123-dino-pigs-one-action-per-page.md) |
 | 124 | Dino: the words panel and its switch match the Batch 25 mock | planned | | | [124-dino-words-panel-matches-mock.md](docs/plan/slices/124-dino-words-panel-matches-mock.md) |
 | 125 | Dino: each character knows its animal, and animal voices to match | planned | | | [125-dino-character-animals.md](docs/plan/slices/125-dino-character-animals.md) |
+| 126 | Dino: keep the screen awake while a book is playing | planned | | | [126-dino-keep-screen-awake.md](docs/plan/slices/126-dino-keep-screen-awake.md) |
 
 Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
 
