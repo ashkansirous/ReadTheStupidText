@@ -1,6 +1,6 @@
 # Slice 132 — Dino: a remote switchboard and a forced update
 
-*Planned 2026-10-25.*
+*In progress (wave 2026-10-25), draft PR.*
 
 **Batch:** 28 (Dino usage insights, Decisions 138-142)
 **Touches:** `worker/stories.ts`, `worker/appconfig.ts` (new), `worker/index.ts`, `worker/*.test.ts`, `wrangler.jsonc`, `wrangler.workers-dev.jsonc`, `src/DinoReader.App/AppConfigClient.cs` (new), `src/DinoReader.App/UpdatePage.cs` (new), `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/GrownUpGate.cs`, `src/DinoReader.App/Platforms/Android/**`, `src/DinoReader.App/Platforms/iOS/**`, `src/DinoReader.App/Platforms/Windows/**`, `src/DinoReader.App/DinoReader.App.csproj`, `src/DinoReader.App/Resources/Strings/*.resx`, `src/DinoReader.Core/AppConfig.cs` (new), `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`, `CLAUDE.md`
