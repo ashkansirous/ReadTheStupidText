@@ -19,7 +19,8 @@ name: store-submit
 # racing ahead of a newer version.
 #
 # workflow_dispatch stays available for a manual re-run (e.g. retrying a
-# failed submission) — pass a tag, or omit it to resubmit the latest release.
+# failed submission) — product_id is required (STORE_PRODUCT_ID for ReadTheStupidText.App, the
+# Dino app id for DinoReader.App); a tag is optional, omit it to resubmit the latest release.
 #
 # The app is published and live in the Store (product 9NGT1BN1H92V), so the
 # Actions-based msstore flow — which does *updates* to an already-live free
@@ -27,7 +28,8 @@ name: store-submit
 # and variables -> Actions (see STORE.md):
 #   - Secrets:  AZURE_AD_TENANT_ID, AZURE_AD_APPLICATION_CLIENT_ID,
 #               AZURE_AD_APPLICATION_SECRET, SELLER_ID
-#   - Variable: STORE_PRODUCT_ID  (already set to 9NGT1BN1H92V)
+#   - Variable: STORE_PRODUCT_ID  (already set to 9NGT1BN1H92V; release.yml passes it as
+#               product_id, and the guard step compares the package against it)
 # Without the secrets the "Configure Store credentials" step fails fast.
 #
 # This is an *individual* Partner Center account, which ships with no Microsoft
@@ -53,23 +55,25 @@ on:
         type: string
         default: 'ReadTheStupidText.App'
       product_id:
-        description: 'Store product (app) id. Empty: the STORE_PRODUCT_ID repository variable.'
-        required: false
+        description: 'Store product (app) id. Required, no fallback: the caller passes its own app id.'
+        required: true
         type: string
-        default: ''
   workflow_dispatch:
     inputs:
       tag:
         description: 'Release tag to submit (e.g. v1.0.0). Leave blank to submit the latest release.'
         required: false
       package:
-        description: 'MSIX package name stem (ReadTheStupidText.App or DinoReader.App).'
+        description: 'MSIX package name stem.'
         required: false
+        type: choice
+        options:
+          - ReadTheStupidText.App
+          - DinoReader.App
         default: 'ReadTheStupidText.App'
       product_id:
-        description: 'Store product id. Empty: the STORE_PRODUCT_ID repository variable (Read The Stupid Text).'
-        required: false
-        default: ''
+        description: 'Store product id (required): STORE_PRODUCT_ID for ReadTheStupidText.App, the Dino app id for DinoReader.App.'
+        required: true
 
 env:
   PACKAGE: ${{ inputs.package || 'ReadTheStupidText.App' }}
@@ -82,6 +86,30 @@ jobs:
         uses: actions/checkout@v4
         with:
           sparse-checkout: .github/scripts
+
+      # Slice 127: the two apps must never swap listings. STORE_PRODUCT_ID is Read The Stupid Text's.
+      - name: Check the product id matches the package
+        shell: bash
+        env:
+          PRODUCT_ID: ${{ inputs.product_id }}
+          RTST_ID: ${{ vars.STORE_PRODUCT_ID }}
+          DINO_ID: ${{ vars.DINOREADER_STORE_APP_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "$PRODUCT_ID" ]; then echo "::error::product_id is empty"; exit 1; fi
+          if [ -z "$RTST_ID" ]; then echo "::error::vars.STORE_PRODUCT_ID is not set, so the package/id pairing cannot be checked"; exit 1; fi
+          case "$PACKAGE" in
+            ReadTheStupidText.App)
+              if [ "$PRODUCT_ID" != "$RTST_ID" ]; then
+                echo "::error::ReadTheStupidText.App must be submitted to STORE_PRODUCT_ID ($RTST_ID), not $PRODUCT_ID"; exit 1
+              fi ;;
+            DinoReader.App)
+              if [ -z "$DINO_ID" ]; then echo "::error::vars.DINOREADER_STORE_APP_ID is not set, so the package/id pairing cannot be checked"; exit 1; fi
+              if [ "$PRODUCT_ID" != "$DINO_ID" ]; then
+                echo "::error::DinoReader.App must be submitted to DINOREADER_STORE_APP_ID ($DINO_ID), not $PRODUCT_ID"; exit 1
+              fi ;;
+            *) echo "::error::Unknown package $PACKAGE"; exit 1 ;;
+          esac
 
       # Without an explicit tag, pick the newest published release whose MSIX
       # were built FOR that version. Android-only releases carry the previous
@@ -195,4 +223,4 @@ jobs:
           # generic "Error while uploading the application package." with the
           # real exception only reaching the logger, which -v surfaces.
           msstore publish "out\$($env:PACKAGE).msixbundle" `
-            -id "${{ inputs.product_id || vars.STORE_PRODUCT_ID }}" -ut 300 -v
+            -id "${{ inputs.product_id }}" -ut 300 -v
