@@ -152,11 +152,13 @@ function megabytes(sizeBytes: number | null): string {
 
 function androidBlock(model: PageModel): string {
   if (model.version === null) {
-    return `<p class="note">No Android build has been published here yet. Android is also in <a href="${PLAY_URL}">Google Play closed testing</a>.</p>`;
+    return `<p class="note">No Android build has been published here yet. Android is in beta: if you are on the tester list, <a href="${PLAY_URL}">get it from Google Play (beta)</a>.</p>`;
   }
   const version = escapeHtml(model.version);
-  return `<a class="btn" href="${LATEST_PATH}">Download for Android</a>
-    <p class="note">Version ${version}${megabytes(model.sizeBytes)}. Allow installs from your browser when Android asks.</p>`;
+  return `<h2>Android <span class="badge">Beta</span></h2>
+    <a class="btn" href="${LATEST_PATH}">Download the Android beta (APK)</a>
+    <p class="note">This is a test build and can change or break. Version ${version}${megabytes(model.sizeBytes)}. Allow installs from your browser when Android asks.</p>
+    <p class="note">On the tester list? <a href="${PLAY_URL}">Get it from Google Play (beta)</a></p>`;
 }
 
 /** Pure: the /download page for the newest build (or none). */
@@ -173,6 +175,8 @@ export function renderDownloadPage(model: PageModel): string {
     @media (prefers-color-scheme: dark) { body { color: #e6e6ea; background: #1b1b1f; } a.btn { background: #5b8df0; } }
     a.btn { display: inline-block; margin: 1.5rem .4rem 0; padding: .7rem 1.4rem; border-radius: 10px; background: #3b6fe3; color: #fff; text-decoration: none; font-weight: 600; }
     a.btn.alt { background: transparent; border: 1px solid rgba(128,128,128,.4); color: inherit; }
+    h2 { font-size: 1.2rem; margin: 2rem 0 0; }
+    .badge { display: inline-block; font-size: .75rem; font-weight: 700; padding: .05rem .5rem; border-radius: 999px; border: 1px solid rgba(128,128,128,.5); vertical-align: middle; }
     .note { font-size: .9rem; color: #777; margin-top: 1rem; }
     footer { margin-top: 3rem; font-size: .85rem; color: #888; }
     footer a { color: inherit; }
@@ -185,6 +189,7 @@ export function renderDownloadPage(model: PageModel): string {
   </div>
   <div>
     <a class="btn alt" href="${STORE_URL}">Windows &mdash; Microsoft Store</a>
+    <p class="note">iPhone and iPad: invite-only beta on TestFlight.</p>
   </div>
   <footer><a href="/">Home</a> &middot; <a href="/privacy.html">Privacy Policy</a></footer>
 </body>
