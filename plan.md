@@ -139,6 +139,8 @@ this plan turns it into ordered, shippable vertical slices.
 | 119 | Dino: illustrated Three Little Pigs, and the starters in the store | planned | | | [119-dino-illustrated-three-little-pigs.md](docs/plan/slices/119-dino-illustrated-three-little-pigs.md) |
 | 120 | Dino: a repo skill for making a story | planned | | | [120-dino-create-story-skill.md](docs/plan/slices/120-dino-create-story-skill.md) |
 | 121 | Dino: pictures for the ten store stories | planned | | | [121-dino-illustrate-store-stories.md](docs/plan/slices/121-dino-illustrate-store-stories.md) |
+| 124 | Dino: the words panel and its switch match the Batch 25 mock | planned | | | [124-dino-words-panel-matches-mock.md](docs/plan/slices/124-dino-words-panel-matches-mock.md) |
+| 125 | Dino: each character knows its animal, and animal voices to match | planned | | | [125-dino-character-animals.md](docs/plan/slices/125-dino-character-animals.md) |
 
 Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
 
@@ -167,6 +169,8 @@ Batch 23 (113-114, planned 2026-10-24, the voices sound too grown up for childre
 Batch 24 (115-118, planned 2026-10-25, Dino stuck on the old voices; storyteller characters for every language and animal sounds): one at a time in order 115, 116, 117, 118 (all built). All four edit `StoryVoicing`, the cast page or the voice tables. Dino only; RTST unchanged. Decisions 120-124.
 
 Batch 25 (119-121, planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
+
+Batch 26 (124-125, planned 2026-10-25, the Batch 25 mock and the animal-identity follow-up of Slice 117): 124 first (small; matches the words panel and switch card to the mock), then 125 (both edit `CastRows`/`CastPage` and the strings). 125 also merges after PR #336 (the pigs retell, `StarterBuilder`/`StarterTexts`). Decision 132.
 
 ### Notes
 
@@ -204,7 +208,7 @@ Built but not verified (details in each slice file):
 - Slice 113: pitch by ear (drop it if robotic); bug: the first Sounds-row play tap right after changing a flavour is silent (second tap works); system-voice fallback plays Normal; iOS reader build; native read of the strings ([slice](docs/plan/slices/113-dino-character-flavours.md)).
 - Slice 114: listening to Kokoro English with flavours on a real phone; Windows head storyteller; native check of the strings ([slice](docs/plan/slices/114-dino-kokoro-english-storyteller-pack.md)).
 - Slice 116: native read of roster names and hints, especially Farsi; Farsi bee=Small and princess=Whisper flavours by ear; Chinese has only one voice (confirm acceptable) ([slice](docs/plan/slices/116-dino-storyteller-characters.md)).
-- Slice 117: native read of all animal words and sounds (Persian pig and cow are guesses); `BleatWobble` depth by ear; iOS reader build. Known limit: sounds come from the character's name only, so in The Three Little Pigs only the Wolf sounds; follow-up idea: let the cast know a character's animal ([slice](docs/plan/slices/117-dino-animal-sounds.md)).
+- Slice 117: native read of all animal words and sounds (Persian pig and cow are guesses); `BleatWobble` depth by ear; iOS reader build. Known limit: sounds come from the character's name only, so in The Three Little Pigs only the Wolf sounds; follow-up planned as Slice 125 ([slice](docs/plan/slices/117-dino-animal-sounds.md)).
 - Slice 118: the listening check of the es, pt and zh WAVs; real-phone Kokoro speed (about 9x slower than Supertonic on the emulator); a Chinese sentence with Latin words on a device; the Wi-Fi plus cellular pack-update path on a device ([slice](docs/plan/slices/118-dino-storyteller-more-languages.md)).
 - Slice 106: Norwegian on a Windows head via `MarianEngine` (third-party conversion, never run); en to da/fi/sv/nl/nb and back on Windows; the Norwegian packs are about 390 MB each ([slice](docs/plan/slices/106-windows-nordic-dutch-translation-packs.md)).
 - Windows has no `en-ja` translation pack (`TranslationPacks.FromEnglish` and `packs.yml` lack it), so English cannot be translated into Japanese offline on Windows; found while planning Slice 106, not yet scheduled.
