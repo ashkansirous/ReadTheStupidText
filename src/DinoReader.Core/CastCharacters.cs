@@ -30,6 +30,9 @@ public static class CastCharacters
     private const int AnimalGenderRelief = 10;
     private static readonly VoiceFlavour[] ReuseFlavours = [VoiceFlavour.Small, VoiceFlavour.Squeaky, VoiceFlavour.Bouncy, VoiceFlavour.Normal, VoiceFlavour.Whisper, VoiceFlavour.Sleepy, VoiceFlavour.Big];
 
+    // A reused young animal (piglet, lamb, duckling) never gets a flavour that sounds grown: it would turn into a deep bear.
+    private static readonly HashSet<VoiceFlavour> OldSounding = [VoiceFlavour.Big, VoiceFlavour.Sleepy, VoiceFlavour.Giant, VoiceFlavour.Grumpy];
+
     private enum AnimalTier
     {
         Own,
@@ -47,9 +50,10 @@ public static class CastCharacters
         int mainCharacterCount = VoiceCaster.DefaultMainCount,
         Func<Character, AnimalHint?>? animalOf = null)
     {
-        var state = new State(choices, animalOf);
+        IReadOnlyList<StorytellerCharacter> narratorVoiceAnimals = NarratorVoiceAnimals(choices, roster, narratorVoiceId);
+        var state = new State(choices, narratorVoiceAnimals, roster.Where(c => c.Kind == CharacterKind.Speaker).ToList(), animalOf);
         var picks = new List<(int Order, Character Character, string VoiceId, VoiceFlavour Flavour)>();
-        var kept = Kept(characters, choices, roster, guess, pinned);
+        var kept = Kept(characters, choices, narratorVoiceAnimals, roster, guess, pinned, animalOf);
         foreach ((Character character, int order) in characters.Select((c, i) => (c, i)).Where(x => kept.ContainsKey(x.c.Id)))
         {
             (string voice, VoiceFlavour flavour, StorytellerCharacter? near) = kept[character.Id];
@@ -72,10 +76,23 @@ public static class CastCharacters
         return new VoiceCast(narratorVoiceId, Flag(ordered), ordered.ToDictionary(p => p.Character.Id, p => p.Flavour));
     }
 
+    // The narrator's voice is left out of the choices so no character sounds like the narrator, but an animal's own characters on it (Farsi, Slice 135: two of the three
+    // piglets sit on the narrator's voice) are still offered to animal story characters when their flavour is not the narrator's, which the pitch and pace tell apart.
+    private static IReadOnlyList<StorytellerCharacter> NarratorVoiceAnimals(
+        IReadOnlyList<StorytellerCharacter> choices, IReadOnlyList<StorytellerCharacter> roster, string narratorVoiceId)
+    {
+        VoiceFlavour narratorFlavour = roster.FirstOrDefault(c => c.Kind == CharacterKind.Narrator && c.VoiceId == narratorVoiceId)?.Flavour ?? VoiceFlavour.Storyteller;
+        return roster
+            .Where(c => c.Kind == CharacterKind.Speaker && c.VoiceId == narratorVoiceId && c.Flavour != narratorFlavour)
+            .Where(c => AnimalCharacters.Of(c.Id) is not null && choices.All(o => o.Id != c.Id))
+            .ToList();
+    }
+
     // A stored voice that is still among the choices' voices stays, with its stored flavour (else the guess): the pick of an earlier read or of a grown-up.
     private static Dictionary<string, (string Voice, VoiceFlavour Flavour, StorytellerCharacter? Near)> Kept(
-        IReadOnlyList<Character> characters, IReadOnlyList<StorytellerCharacter> choices, IReadOnlyList<StorytellerCharacter> roster,
-        Func<Character, VoiceFlavour> guess, IReadOnlyDictionary<string, PinnedCharacter>? pinned)
+        IReadOnlyList<Character> characters, IReadOnlyList<StorytellerCharacter> choices, IReadOnlyList<StorytellerCharacter> narratorVoiceAnimals,
+        IReadOnlyList<StorytellerCharacter> roster, Func<Character, VoiceFlavour> guess, IReadOnlyDictionary<string, PinnedCharacter>? pinned,
+        Func<Character, AnimalHint?>? animalOf)
     {
         var result = new Dictionary<string, (string, VoiceFlavour, StorytellerCharacter?)>();
         if (pinned is null)
@@ -84,11 +101,12 @@ public static class CastCharacters
         }
 
         var voices = choices.Select(c => c.VoiceId).ToHashSet();
+        var animalVoices = voices.Union(narratorVoiceAnimals.Select(c => c.VoiceId)).ToHashSet();
         var speakers = roster.Where(c => c.Kind == CharacterKind.Speaker).ToList();
         var sounds = new HashSet<(string, VoiceFlavour)>();
         foreach (Character character in characters.OrderBy(c => pinned.TryGetValue(c.Id, out PinnedCharacter? p) && p.Edited ? 0 : 1))
         {
-            if (!pinned.TryGetValue(character.Id, out PinnedCharacter? stored) || !voices.Contains(stored.VoiceId))
+            if (!pinned.TryGetValue(character.Id, out PinnedCharacter? stored) || !(animalOf?.Invoke(character) is null ? voices : animalVoices).Contains(stored.VoiceId))
             {
                 continue;
             }
@@ -116,8 +134,11 @@ public static class CastCharacters
     }
 
     /// <summary>Running state of one casting pass: which roster characters and voices are taken.</summary>
-    private sealed class State(IReadOnlyList<StorytellerCharacter> choices, Func<Character, AnimalHint?>? animalOf)
+    private sealed class State(
+        IReadOnlyList<StorytellerCharacter> choices, IReadOnlyList<StorytellerCharacter> narratorVoiceAnimals, IReadOnlyList<StorytellerCharacter> speakers,
+        Func<Character, AnimalHint?>? animalOf)
     {
+        private readonly Dictionary<(string CharacterId, string VoiceId, Gender Gender, VoiceFlavour Flavour), bool> _foreignSounds = [];
         private readonly Dictionary<string, int> _used = [];
         private readonly Dictionary<string, int> _voiceUses = [];
         private readonly HashSet<(string VoiceId, VoiceFlavour Flavour)> _sounds = [];
@@ -138,14 +159,22 @@ public static class CastCharacters
             AnimalHint? hint = animalOf?.Invoke(character);
             // A story character that is no animal keeps off the animal characters only while a plain one is still free: on a small roster it takes what there is, as before Slice 125.
             bool plainFree = hint is null && choices.Any(c => AnimalCharacters.Of(c.Id) is null && !_used.ContainsKey(c.Id));
-            StorytellerCharacter? pick = choices
-                .Select((c, order) => (Character: c, Order: order, Tier: Tier(c, hint), Cost: Cost(c, character, wanted, hint, plainFree)))
+            IEnumerable<StorytellerCharacter> candidates = hint is null ? choices : choices.Concat(narratorVoiceAnimals);
+            StorytellerCharacter? pick = candidates
+                .Select((c, order) => ScoreOf(c, order, character, wanted, hint, plainFree))
                 .OrderBy(x => x.Tier)
                 .ThenBy(x => x.Cost)
                 .ThenBy(x => x.Order)
                 .Select(x => x.Character)
                 .FirstOrDefault();
             return pick is not null && hint is not null && Tier(pick, hint) == AnimalTier.Own ? Distinct(pick) : pick;
+        }
+
+        private (StorytellerCharacter Character, int Order, AnimalTier Tier, int Cost) ScoreOf(
+            StorytellerCharacter candidate, int order, Character character, VoiceFlavour wanted, AnimalHint? hint, bool plainFree)
+        {
+            AnimalTier tier = Tier(candidate, hint);
+            return (candidate, order, tier, Cost(candidate, character, wanted, hint, plainFree, tier));
         }
 
         private static AnimalTier Tier(StorytellerCharacter candidate, AnimalHint? hint)
@@ -164,6 +193,8 @@ public static class CastCharacters
         }
 
         // A reused animal character takes the first flavour that its voice has not sounded with yet, so the reuse sounds different; none left, it stays as it is.
+        // A flavour the cast screen would name another animal is skipped (Farsi, Slice 135: a third pig shown as the bear cub); a reuse with no such free flavour shares the
+        // sound it has, which the cast screen flags.
         private StorytellerCharacter Distinct(StorytellerCharacter pick)
         {
             if (!_used.ContainsKey(pick.Id) || !_sounds.Contains((pick.VoiceId, pick.Flavour)))
@@ -171,11 +202,36 @@ public static class CastCharacters
                 return pick;
             }
 
-            VoiceFlavour? fresh = ReuseFlavours.Cast<VoiceFlavour?>().FirstOrDefault(f => !_sounds.Contains((pick.VoiceId, f!.Value)));
+            bool young = AnimalCharacters.Of(pick.Id)?.Young ?? false;
+            VoiceFlavour? fresh = ReuseFlavours.Cast<VoiceFlavour?>()
+                .FirstOrDefault(f => !_sounds.Contains((pick.VoiceId, f!.Value)) && !(young && OldSounding.Contains(f.Value)) && !SoundsLikeAnotherAnimal(pick, f.Value));
             return fresh is { } flavour ? pick with { Flavour = flavour } : pick;
         }
 
-        private int Cost(StorytellerCharacter candidate, Character character, VoiceFlavour wanted, AnimalHint? hint, bool plainFree)
+        // Judged the way the cast screen names a sound: the nearest speaker of the whole roster, by voice, flavour family and distance (with the character's gender, or none).
+        private bool SoundsLikeAnotherAnimal(StorytellerCharacter pick, VoiceFlavour flavour)
+        {
+            if (!_foreignSounds.TryGetValue((pick.Id, pick.VoiceId, pick.Gender, flavour), out bool foreign))
+            {
+                foreign = new[] { pick.Gender, Gender.Unknown }.Any(g => IsAnotherAnimal(pick, CharacterRoster.Nearest(speakers, pick.VoiceId, flavour, g)));
+                _foreignSounds[(pick.Id, pick.VoiceId, pick.Gender, flavour)] = foreign;
+            }
+
+            return foreign;
+        }
+
+        private static bool IsAnotherAnimal(StorytellerCharacter pick, StorytellerCharacter? named)
+        {
+            if (named is null || named.Id == pick.Id)
+            {
+                return false;
+            }
+
+            var own = AnimalCharacters.Of(pick.Id)?.Kinds ?? [];
+            return !own.Intersect(AnimalCharacters.Of(named.Id)?.Kinds ?? []).Any();
+        }
+
+        private int Cost(StorytellerCharacter candidate, Character character, VoiceFlavour wanted, AnimalHint? hint, bool plainFree, AnimalTier tier)
         {
             int gender = CharacterRoster.GenderMisfit(candidate.Gender, character.Gender);
             int animal = 0;
@@ -184,7 +240,7 @@ public static class CastCharacters
                 // A story character that is no animal does not take an animal character either, which would leave a real animal without its own.
                 animal = plainFree && AnimalCharacters.Of(candidate.Id) is not null ? NotAnAnimalCharacter : 0;
             }
-            else if (Tier(candidate, hint) == AnimalTier.Own)
+            else if (tier == AnimalTier.Own)
             {
                 // The voice's gender matters little for an animal.
                 gender /= AnimalGenderRelief;
