@@ -1,6 +1,6 @@
 # Slice 115 — Dino: storyteller voices by default
 
-*Planned 2026-10-25*, from the user's report that Dino "is stuck to the old voices": the cast still
+*In progress (wave 2026-10-25), draft PR.* *Planned 2026-10-25*, from the user's report that Dino "is stuck to the old voices": the cast still
 shows Demiurge and Momonga after the storyteller pack is downloaded, and "Use Dino's first voices"
 deletes the pack so the offer comes back on every visit. Dino Reader only; RTST is not touched.
 
