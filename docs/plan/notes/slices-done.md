@@ -1,0 +1,160 @@
+# Finished slices
+
+Rows moved out of `plan.md`'s status table once a slice is `built` or `verified` (2026-10-25). Each slice's full record is its own file under `docs/plan/slices/`. New finished slices are appended here by the `update-docs` index pass; a row that becomes `verified` is updated here.
+
+| # | Slice | Status | PR | Story | File |
+| --- | --- | --- | --- | --- | --- |
+| 0 | Project scaffold | built | — | #3 | [00-project-scaffold.md](../slices/00-project-scaffold.md) |
+| 1 | Clipboard-read on hotkey at chosen speed (smallest E2E) | built | — | #4 | [01-clipboard-read-on-hotkey-at-chosen.md](../slices/01-clipboard-read-on-hotkey-at-chosen.md) |
+| 2 | Hotkey copies the current selection | built | — | #5 | [02-hotkey-copies-the-current-selection.md](../slices/02-hotkey-copies-the-current-selection.md) |
+| 3 | Auto-read on selection (UIA) | built | — | #6 | [03-auto-read-on-selection.md](../slices/03-auto-read-on-selection.md) |
+| 4 | Launch at startup | built | — | #7 | [04-launch-at-startup.md](../slices/04-launch-at-startup.md) |
+| 5 | Store packaging & CI | built | — | #8 | [05-store-packaging-ci.md](../slices/05-store-packaging-ci.md) |
+| 6 | Fix speed control | built | — | — | [06-fix-speed-control.md](../slices/06-fix-speed-control.md) |
+| 7 | Narrator voice selection | built | — | — | [07-narrator-voice-selection.md](../slices/07-narrator-voice-selection.md) |
+| 8 | Tray control panel window | built | — | — | [08-tray-control-panel-window.md](../slices/08-tray-control-panel-window.md) |
+| 9 | Local neural voices (sherpa-onnx + Supertonic-3) | built | — | — | [09-local-neural-voices.md](../slices/09-local-neural-voices.md) |
+| 10 | Live activity log + auto-read fix | built | — | — | [10-live-activity-log-auto-read-fix.md](../slices/10-live-activity-log-auto-read-fix.md) |
+| 11 | Overlord voice names | built | — | #46 | [11-overlord-voice-names.md](../slices/11-overlord-voice-names.md) |
+| 12 | Split auto-read into two toggles | built | — | #48 | [12-split-auto-read-into-two-toggles.md](../slices/12-split-auto-read-into-two-toggles.md) |
+| 13 | "Media Card" control-panel redesign + media-player | built | — | #52 | [13-media-card-control-panel-redesign-media.md](../slices/13-media-card-control-panel-redesign-media.md) |
+| 14 | MIT license + Conventional-Commits auto-release | built | — | #57 | [14-mit-license-conventional-commits-auto-release.md](../slices/14-mit-license-conventional-commits-auto-release.md) |
+| 15 | Deep code-review pass + fixes | built | — | #61 | [15-deep-code-review-pass-fixes.md](../slices/15-deep-code-review-pass-fixes.md) |
+| 16 | Store-pipeline finalize + signing docs, first release | built | — | #64 | [16-store-pipeline-finalize-signing-docs-first.md](../slices/16-store-pipeline-finalize-signing-docs-first.md) |
+| 17 | Warm the neural engine at startup | built | — | #84 | [17-warm-the-neural-engine-at-startup.md](../slices/17-warm-the-neural-engine-at-startup.md) |
+| 18 | Adaptive settle delay + smaller first chunk | built | — | #85 | [18-adaptive-settle-delay-smaller-first-chunk.md](../slices/18-adaptive-settle-delay-smaller-first-chunk.md) |
+| 19 | Local-only timing diagnostics | built | — | #86 | [19-local-only-timing-diagnostics.md](../slices/19-local-only-timing-diagnostics.md) |
+| 20 | Text sanitizer (redact/simplify noise) | built | — | #102 | [20-text-sanitizer.md](../slices/20-text-sanitizer.md) |
+| 21 | Daily on-disk logs + open-logs button | built | — | #103 | [21-daily-on-disk-logs-open-logs.md](../slices/21-daily-on-disk-logs-open-logs.md) |
+| 22 | Read-latency instrumentation + low-risk tuning | verified | #265 | #104 | [22-read-latency-instrumentation-low-risk-tuning.md](../slices/22-read-latency-instrumentation-low-risk-tuning.md) |
+| 23 | Voice swap continues the current read | built | — | #105 | [23-voice-swap-continues-the-current-read.md](../slices/23-voice-swap-continues-the-current-read.md) |
+| 24 | Draggable, position-persisted control panel | built | — | #106 | [24-draggable-position-persisted-control-panel.md](../slices/24-draggable-position-persisted-control-panel.md) |
+| 25 | Read-through timer (elapsed/total) | built | — | — | [25-read-through-timer.md](../slices/25-read-through-timer.md) |
+| 26 | Skip forward / backward (±10s) | built | — | — | [26-skip-forward-backward.md](../slices/26-skip-forward-backward.md) |
+| 27 | File upload: plain text (.txt) | built | — | — | [27-file-upload-plain-text.md](../slices/27-file-upload-plain-text.md) |
+| 28 | File upload: PDF | built | — | — | [28-file-upload-pdf.md](../slices/28-file-upload-pdf.md) |
+| 29 | File upload: DOCX | built | — | — | [29-file-upload-docx.md](../slices/29-file-upload-docx.md) |
+| 30 | MAUI Android scaffold + type-to-read (smallest E2E) | built | — | — | [30-maui-android-scaffold-type-to-read.md](../slices/30-maui-android-scaffold-type-to-read.md) |
+| 31 | Neural voice on Android (sherpa-onnx + Supertonic-3) | built | — | #29270 | [31-neural-voice-on-android.md](../slices/31-neural-voice-on-android.md) |
+| 32 | Camera capture → OCR → read | built | — | — | [32-camera-capture-ocr-read.md](../slices/32-camera-capture-ocr-read.md) |
+| 33 | File upload: .txt/.pdf/.docx (reused) | built | — | — | [33-file-upload.md](../slices/33-file-upload.md) |
+| 34 | Android CI: build + signed AAB, internal testing track | built | — | — | [34-android-ci-build-signed-aab-internal.md](../slices/34-android-ci-build-signed-aab-internal.md) |
+| 35 | Fix the stuck elapsed/total read-through timer | built | — | — | [35-fix-the-stuck-elapsed-total-read.md](../slices/35-fix-the-stuck-elapsed-total-read.md) |
+| 36 | Disk-backed audio chunks | built | — | — | [36-disk-backed-audio-chunks.md](../slices/36-disk-backed-audio-chunks.md) |
+| 37 | Reading text box: window, toggle, whole-chunk highlight | built | — | — | [37-reading-text-box-window-toggle-whole.md](../slices/37-reading-text-box-window-toggle-whole.md) |
+| 38 | Reading text box: zoom + fit-to-box pagination | built | — | — | [38-reading-text-box-zoom-fit-to.md](../slices/38-reading-text-box-zoom-fit-to.md) |
+| 39 | Windows: no artifacts, release via draft | built | — | — | [39-windows-no-artifacts-release-via-draft.md](../slices/39-windows-no-artifacts-release-via-draft.md) |
+| 40 | Android into the same pipeline and release | built | — | — | [40-android-into-the-same-pipeline-and.md](../slices/40-android-into-the-same-pipeline-and.md) |
+| 41 | Path-filtered per-platform builds | built | — | — | [41-path-filtered-per-platform-builds.md](../slices/41-path-filtered-per-platform-builds.md) |
+| 42 | Retention safety net | built | — | — | [42-retention-safety-net.md](../slices/42-retention-safety-net.md) |
+| 43 | Store listing refresh (9 languages) | built | #174 | — | [43-store-listing-refresh.md](../slices/43-store-listing-refresh.md) |
+| 44 | Pipeline: iOS filter group, platform-neutral Mobile root | built | #183 | — | [44-pipeline-ios-split.md](../slices/44-pipeline-ios-split.md) |
+| 45 | Android: document scanner into the editor | built | #189 | — | [45-android-document-scanner.md](../slices/45-android-document-scanner.md) |
+| 46 | Play button loading state | built | #185 | — | [46-play-loading-state.md](../slices/46-play-loading-state.md) |
+| 47 | Head start: sentence-level audio cache | built | #201 | — | [47-head-start-sentence-cache.md](../slices/47-head-start-sentence-cache.md) |
+| 48 | iOS target and TestFlight from CI | built | #186 | — | [48-ios-target-testflight.md](../slices/48-ios-target-testflight.md) |
+| 49 | iOS reaches Android parity | built | #196 | — | [49-ios-parity.md](../slices/49-ios-parity.md) |
+| 50 | Voice packs, first-run language, slimmer app (Android) | built | #173 | — | [50-voice-packs-first-run-language.md](../slices/50-voice-packs-first-run-language.md) |
+| 51 | Multilingual voices (Supertonic, Piper fa, MeloTTS zh) | built | #197 | — | [51-multilingual-voices.md](../slices/51-multilingual-voices.md) |
+| 52 | PaddleOCR per language (Android) | built | #203 | — | [52-paddleocr-per-language.md](../slices/52-paddleocr-per-language.md) |
+| 53 | Android: localized UI and RTL | built | #194 | — | [53-localized-ui-rtl.md](../slices/53-localized-ui-rtl.md) |
+| 54 | Android: on-device translation | built | #199 | — | [54-on-device-translation.md](../slices/54-on-device-translation.md) |
+| 55 | iOS gets the Batch 9 features | built | #207 | — | [55-ios-batch9-features.md](../slices/55-ios-batch9-features.md) |
+| 56 | Windows: packs, first-run language, head start | built | #204 | — | [56-windows-packs-language-headstart.md](../slices/56-windows-packs-language-headstart.md) |
+| 57 | Windows: localized UI and translation | built | #217 | — | [57-windows-localization-translation.md](../slices/57-windows-localization-translation.md) |
+| 58 | Dino Reader skeleton: shared Mobile library, new app, pipeline | built | #191 | — | [58-dino-reader-skeleton.md](../slices/58-dino-reader-skeleton.md) |
+| 59 | Dialogue parser and voice caster (pure) | built | #175 | — | [59-dialogue-parser-voice-caster.md](../slices/59-dialogue-parser-voice-caster.md) |
+| 60 | Reading with a voice per character | built | #193 | — | [60-per-character-voice-reading.md](../slices/60-per-character-voice-reading.md) |
+| 61 | Gallery, stories on device, grown-up gate | built | #198 | — | [61-gallery-grownup-gate.md](../slices/61-gallery-grownup-gate.md) |
+| 62 | Reading screen: text and picture modes | built | #200 | — | [62-reading-screen-modes.md](../slices/62-reading-screen-modes.md) |
+| 63 | Positioned text extraction, kept page images | built | #205 | — | [63-positioned-text-extraction.md](../slices/63-positioned-text-extraction.md) |
+| 64 | Picture mode on real pages | built | #218 | — | [64-picture-mode-real-pages.md](../slices/64-picture-mode-real-pages.md) |
+| 65 | Cast screen | built | #202 | — | [65-cast-screen.md](../slices/65-cast-screen.md) |
+| 66 | Dino Reader languages and translation | built | #208 | — | [66-dino-reader-languages-translation.md](../slices/66-dino-reader-languages-translation.md) |
+| 67 | Dino Reader on iOS and Windows | built | — | #221 | [67-dino-reader-ios-windows.md](../slices/67-dino-reader-ios-windows.md) |
+| 68 | Landing site served by a Cloudflare Worker | built | #182 | — | [68-landing-site-on-worker.md](../slices/68-landing-site-on-worker.md) |
+| 69 | Android APK downloads from R2, with a "latest" link | built | #187 | — | [69-apk-downloads-on-r2.md](../slices/69-apk-downloads-on-r2.md) |
+| 70 | Split the build pipeline into the Lets-Call-Mom shape | built | #190 | — | [70-split-build-pipeline.md](../slices/70-split-build-pipeline.md) |
+| 71 | Repo hygiene and the Drive mirror | built | #184 | — | [71-repo-hygiene.md](../slices/71-repo-hygiene.md) |
+| 72 | Android dependencies to latest, R8 shrinking and obfuscation | built | — | #220 | [72-android-deps-r8-obfuscation.md](../slices/72-android-deps-r8-obfuscation.md) |
+| 73 | Edge-to-edge on Android 15+: safe areas on every screen | built | — | #224 | [73-edge-to-edge-safe-areas.md](../slices/73-edge-to-edge-safe-areas.md) |
+| 74 | Dino Reader site: landing, privacy and downloads on dinoreader.sirous.uk | built | #219 | — | [74-dino-reader-site.md](../slices/74-dino-reader-site.md) |
+| 75 | Windows translation engine | built | — | #223 | [75-windows-translation-engine.md](../slices/75-windows-translation-engine.md) |
+| 76 | Soft line-break reflow and heading detection (both apps) | built | | #233 | [76-soft-line-break-reflow.md](../slices/76-soft-line-break-reflow.md) |
+| 77 | Dino Reader: covers that survive edits, cover picker, readable inputs | built | | #234 | [77-dino-covers-and-light-theme.md](../slices/77-dino-covers-and-light-theme.md) |
+| 78 | Dino Reader: page-review wizard (pages → cover → text) | built | | #235 | [78-dino-page-review-wizard.md](../slices/78-dino-page-review-wizard.md) |
+| 79 | Background text filtering with a manual override | built | #240 | | [79-background-text-filtering.md](../slices/79-background-text-filtering.md) |
+| 80 | Dino Reader: grown-up mode as a gallery overlay | built | #241 | | [80-grownup-gallery-overlay.md](../slices/80-grownup-gallery-overlay.md) |
+| 81 | A language change in Settings downloads that language's voice | built | #239 | | [81-language-change-starts-voice-download.md](../slices/81-language-change-starts-voice-download.md) |
+| 82 | The phone voice reads in the text's language, and is only offered when it can | built | #243 | | [82-phone-voice-reads-the-texts-language.md](../slices/82-phone-voice-reads-the-texts-language.md) |
+| 83 | Scan replaces the text, like Paste and File | built | #245 | | [83-scan-replaces-the-text.md](../slices/83-scan-replaces-the-text.md) |
+| 84 | Scan reads the page in the page's script, whatever the app language | built | #246 | | [84-ocr-follows-the-page-not-the-app-language.md](../slices/84-ocr-follows-the-page-not-the-app-language.md) |
+| 85 | The layout never mirrors; only text flows by its own direction | built | #247 | | [85-no-layout-mirroring.md](../slices/85-no-layout-mirroring.md) |
+| 86 | RTST scan reads with line geometry | built | #248 | | [86-rtst-scan-line-geometry.md](../slices/86-rtst-scan-line-geometry.md) |
+| 87 | A scan in a script with no reader asks the page's language and downloads it | built | #253 | | [87-scan-downloads-the-page-language-pack.md](../slices/87-scan-downloads-the-page-language-pack.md) |
+| 88 | The Windows desktop layout never mirrors; only text flows by its own direction | built | #254 | | [88-desktop-no-layout-mirroring.md](../slices/88-desktop-no-layout-mirroring.md) |
+| 89 | Four Farsi voices in one pack (ganji_adabi by default), Amir dropped | built | #262 | | [89-four-farsi-voices.md](../slices/89-four-farsi-voices.md) |
+| 90 | Untranslated text is read in its own language | built | #258 | | [90-untranslated-text-reads-in-its-own-language.md](../slices/90-untranslated-text-reads-in-its-own-language.md) |
+| 91 | Dino stories as packages, three starter stories, developer export | built | #263 | | [91-dino-story-packages-and-starters.md](../slices/91-dino-story-packages-and-starters.md) |
+| 92 | A free, curated Dino story store behind the grown-up gate | built | #266 | | [92-dino-story-store.md](../slices/92-dino-story-store.md) |
+| 93 | Dino backup file and a first run that asks the language | built | #267 | | [93-dino-backup-and-first-run.md](../slices/93-dino-backup-and-first-run.md) |
+| 94 | "Good Enough" ships as a starter story | built | #271 | | [94-good-enough-starter.md](../slices/94-good-enough-starter.md) |
+| 95 | Dino translation works: bundled translations for every shipped book, live translation on Android | built | #271 | | [95-dino-translation-works.md](../slices/95-dino-translation-works.md) |
+| 96 | Dino's layout never mirrors when the language changes | built | #278 | | [96-dino-layout-never-mirrors.md](../slices/96-dino-layout-never-mirrors.md) |
+| 97 | The grown-ups button says "add a book", not a lock | built | #284 | | [97-dino-add-book-button.md](../slices/97-dino-add-book-button.md) |
+| 98 | Picture + text books: a picture per page, the text beside it | built | #285 | | [98-dino-picture-and-text-books.md](../slices/98-dino-picture-and-text-books.md) |
+| 99 | RTST phone: a minimal main page and a Settings page | built | #279 | | [99-rtst-mobile-minimal-main-page.md](../slices/99-rtst-mobile-minimal-main-page.md) |
+| 100 | RTST phone: "Take a photo of each page", wizard page 1 | built | #290 | | [100-rtst-mobile-page-capture-wizard.md](../slices/100-rtst-mobile-page-capture-wizard.md) |
+| 101 | RTST phone: wizard page 2, check the text, translate, read | built | #297 | | [101-rtst-mobile-review-and-translate.md](../slices/101-rtst-mobile-review-and-translate.md) |
+| 102 | Ten open stories in the Dino story store | built | #280 | | [102-dino-store-ten-stories.md](../slices/102-dino-store-ten-stories.md) |
+| 103 | Danish, Finnish, Swedish, Norwegian and Dutch in every app | built | #286 | | [103-nordic-dutch-languages.md](../slices/103-nordic-dutch-languages.md) |
+| 104 | A Norwegian voice pack (Piper nvcc, ten speakers) | built | #291 | | [104-piper-norwegian-pack.md](../slices/104-piper-norwegian-pack.md) |
+| 105 | Dino: story rules and book translations for the five new languages | built | #292 | | [105-dino-nordic-dutch-books-and-rules.md](../slices/105-dino-nordic-dutch-books-and-rules.md) |
+| 106 | Windows: offline translation packs for the five new languages | built | #281 | | [106-windows-nordic-dutch-translation-packs.md](../slices/106-windows-nordic-dutch-translation-packs.md) |
+| 107 | Dino: own books translate by default | built | #305 | | [107-dino-own-books-translate-by-default.md](../slices/107-dino-own-books-translate-by-default.md) |
+| 108 | Dino: a cast per reading language | built | #307 | | [108-dino-cast-per-reading-language.md](../slices/108-dino-cast-per-reading-language.md) |
+| 109 | Dino: one narrator per language, for every book | built | #309 | | [109-dino-one-narrator-per-language.md](../slices/109-dino-one-narrator-per-language.md) |
+| 110 | Dino: translated text on screen, with "Show original text" | built | #311 | | [110-dino-translated-text-on-screen.md](../slices/110-dino-translated-text-on-screen.md) |
+| 111 | Dino: parents read in their own voice | built | #313 | | [111-dino-parent-recordings.md](../slices/111-dino-parent-recordings.md) |
+| 112 | Dino: store filters by age and author | built | #306 | | [112-dino-store-age-author-filters.md](../slices/112-dino-store-age-author-filters.md) |
+| 113 | Dino: playful character voices (pitch and pace per character) | built | #314 | | [113-dino-character-flavours.md](../slices/113-dino-character-flavours.md) |
+| 114 | Dino: Kokoro storyteller voices for English | built | #316 | | [114-dino-kokoro-english-storyteller-pack.md](../slices/114-dino-kokoro-english-storyteller-pack.md) |
+| 115 | Dino: storyteller voices by default | built | #323 | | [115-dino-storyteller-voices-by-default.md](../slices/115-dino-storyteller-voices-by-default.md) |
+| 116 | Dino: storyteller characters in every language | built | #325 | | [116-dino-storyteller-characters.md](../slices/116-dino-storyteller-characters.md) |
+| 117 | Dino: animal characters make their sounds | built | #327 | | [117-dino-animal-sounds.md](../slices/117-dino-animal-sounds.md) |
+| 118 | Dino: storyteller voices for Spanish, French and Portuguese | built | #330 | | [118-dino-storyteller-more-languages.md](../slices/118-dino-storyteller-more-languages.md) |
+| 119 | Dino: illustrated Three Little Pigs, and the starters in the store | built | #332, #334 | | [119-dino-illustrated-three-little-pigs.md](../slices/119-dino-illustrated-three-little-pigs.md) |
+| 120 | Dino: a repo skill for making a story | built | #332 | | [120-dino-create-story-skill.md](../slices/120-dino-create-story-skill.md) |
+| 122 | Dino: words panel at most 30% of the picture, and a words switch | built | #335, #340 | | [122-dino-text-panel-30-and-switch.md](../slices/122-dino-text-panel-30-and-switch.md) |
+| 123 | Dino: the pigs retold as 16 pages, one action each | built | #336 | | [123-dino-pigs-one-action-per-page.md](../slices/123-dino-pigs-one-action-per-page.md) |
+| 124 | Dino: the words panel and its switch match the Batch 25 mock | built | #338 | | [124-dino-words-panel-matches-mock.md](../slices/124-dino-words-panel-matches-mock.md) |
+
+## Batch ordering notes
+
+The lane-order paragraphs of finished batches, moved verbatim.
+
+Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
+
+Batch 13 (76-80, planned 2026-10-22): 76 and 77 are independent and go first (Touches do not overlap); 78 after 77; 79 and 80 after 78 (both edit the wizard's files). Decisions 83-87.
+
+Batch 14 (81-85, planned 2026-10-22, Android bugs found on a Pixel 10 Pro running 1.16.0): 81 and 83 are independent and go first; 82 after 81; 84 after 83; 85 last (it edits the pages 81 and 82 touch). Decisions 88-92.
+
+Batch 15 (89, planned 2026-10-22): the Farsi voice swap; touches packs.yml, the pack format and every platform reader, so nothing else in those files runs alongside it. Decision 93.
+
+Batch 16 (91-93, planned 2026-10-22, Dino Reader content from the phone scope): 91 first (the `.dino` package the other two use); 92 and 93 after it, one at a time (both edit `GalleryPage` and `MauiProgram`). The store, backup and first-run screens wait for a Claude Design pass. Decisions 94-99.
+
+Batch 17 (94-95, planned 2026-10-23): 94 first (the user's own book as a starter), then 95 (it translates all four starters, so it rebuilds 94's package). Both edit `StarterBuilder` and the starter packages, so they run one after the other.
+
+Batch 18 (96-98, planned 2026-10-24): 96 first (it changes how every Dino screen and the reader set direction), then 97 (a small gallery-header change, can run beside 96's tail), then 98 (its new reader layout builds on 96's non-mirroring reader). Decisions 100-102.
+
+Batch 19 (99-101, planned 2026-10-24, after two first-time users couldn't find their way around the RTST phone app): 99, then 100, then 101, one at a time; all three edit `ReaderPage` and `AppShell`. Each ships on its own with a stand-in for the next one. Android and iOS only; the Windows tray app is unchanged. Decisions 103-105.
+
+Batch 20 (102, planned 2026-10-24): ten open stories for the empty store. It touches only the test builders, translations, the upload script, `worker/stories.ts` and the store card, so it can run beside 96, 97 and 99-101. Illustrations follow as `story-v2` after Slice 98. Decision 106.
+
+Batch 21 (103-106, planned 2026-10-24): Danish, Finnish, Swedish, Norwegian (Bokmål) and Dutch. 103 first (it adds the languages every other slice uses); then 104 (`packs.yml`, Piper readers), 105 (Dino rules and books) and 106 (`packs.yml`, Windows translation) can run alongside each other except that 104 and 106 both edit `packs.yml`, so they merge one after the other. Decisions 107-110.
+
+Batch 22 (107-112, planned 2026-10-24, from the phone scope "translated text on screen, voices in the reading language, one narrator, parent recordings, store filters"): 107 first (own books translate by default; small). Then 108, 109, 110 and 111 one at a time in that order: all four edit `StoryVoicing`, `ReadingSession`, `Story`/`StoryJson` or the cast page. 112 (store filters) touches only the store and the Worker, so it runs beside any of them. Decisions 111-116.
+
+Batch 23 (113-114, planned 2026-10-24, the voices sound too grown up for children's stories): 113 after 108 (flavours live on each language's cast), then 114 (the Kokoro English pack; flavours apply on top). 113 edits `StoryVoicing` and the cast page, so it does not run beside 109-111. Decisions 117-119.
+
+Batch 24 (115-118, planned 2026-10-25, Dino stuck on the old voices; storyteller characters for every language and animal sounds): one at a time in order 115, 116, 117, 118 (all built). All four edit `StoryVoicing`, the cast page or the voice tables. Dino only; RTST unchanged. Decisions 120-124.
