@@ -1,6 +1,6 @@
 # Slice 124 — Dino: the words panel and its switch match the Batch 25 mock
 
-*Planned 2026-10-25.* Dino Reader only; RTST is not touched.
+*In progress (wave 2026-10-25), draft PR.* Dino Reader only; RTST is not touched.
 
 **Batch:** 26 (Batch 25 mock follow-ups)
 **Depends on:** Slice 122 (built, PR #335)
