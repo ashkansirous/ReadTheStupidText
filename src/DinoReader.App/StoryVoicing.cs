@@ -44,7 +44,7 @@ public sealed class StoryVoicing
 	private volatile SharedPrepared? _lastPrepared;
 
 	// The animal-sound plan of the last story and analysis: a tap-to-seek or resume read from the middle needs the whole book's plan, and re-splitting the book each time is wasted.
-	private sealed record SharedPlan(Story Story, Cache Analysis, IReadOnlyDictionary<int, AnimalKind> Plan);
+	private sealed record SharedPlan(Story Story, Cache Analysis, string Language, IReadOnlyDictionary<int, AnimalKind> Plan);
 
 	private volatile SharedPlan? _lastPlan;
 
@@ -123,7 +123,7 @@ public sealed class StoryVoicing
 	private IReadOnlyList<VoicedSegment> WithAnimalSounds(
 		Story story, Prepared prepared, VoiceCast cast, IReadOnlyList<SplitSegment> pieces, string spokenLanguage)
 	{
-		IReadOnlyDictionary<int, AnimalSounds.Placement> sounds = AnimalSoundPlacements(story, prepared, pieces).ToDictionary(p => p.After);
+		IReadOnlyDictionary<int, AnimalSounds.Placement> sounds = AnimalSoundPlacements(story, prepared, pieces, spokenLanguage).ToDictionary(p => p.After);
 		var voiced = new List<VoicedSegment>(pieces.Count + sounds.Count);
 		for (int i = 0; i < pieces.Count; i++)
 		{
@@ -137,31 +137,31 @@ public sealed class StoryVoicing
 		return voiced;
 	}
 
-	private IReadOnlyList<AnimalSounds.Placement> AnimalSoundPlacements(Story story, Prepared prepared, IReadOnlyList<SplitSegment> pieces)
+	private IReadOnlyList<AnimalSounds.Placement> AnimalSoundPlacements(Story story, Prepared prepared, IReadOnlyList<SplitSegment> pieces, string spokenLanguage)
 	{
 		if (!story.AnimalSoundsOn)
 		{
 			return [];
 		}
 
-		IReadOnlyDictionary<int, AnimalKind> plan = AnimalPlan(story, prepared);
+		IReadOnlyDictionary<int, AnimalKind> plan = AnimalPlan(story, prepared, spokenLanguage);
 		return plan.Count == 0 ? [] : AnimalSounds.Placements(pieces, plan, prepared.Analysis.Sentences.Value);
 	}
 
 	// The plan counts the story's own lines; a read that is the whole book already has exactly those pieces. Kept for the same story instance and analysis.
-	private IReadOnlyDictionary<int, AnimalKind> AnimalPlan(Story story, Prepared prepared)
+	private IReadOnlyDictionary<int, AnimalKind> AnimalPlan(Story story, Prepared prepared, string spokenLanguage)
 	{
-		if (_lastPlan is { } last && ReferenceEquals(last.Story, story) && ReferenceEquals(last.Analysis, prepared.Analysis))
+		if (_lastPlan is { } last && ReferenceEquals(last.Story, story) && ReferenceEquals(last.Analysis, prepared.Analysis) && last.Language == spokenLanguage)
 		{
 			return last.Plan;
 		}
 
 		AttributionResult resolved = StoryCast.Resolve(prepared.Analysis.Attribution, story.Merges, story.Cast);
-		IReadOnlyDictionary<string, AnimalKind> animals = AnimalSounds.AnimalsIn(resolved.Characters, story.Language, story.Cast, story.Text);
+		IReadOnlyDictionary<string, AnimalKind> animals = AnimalSounds.WithSound(AnimalsOf(story, resolved.Characters, spokenLanguage), story.Language);
 		IReadOnlyDictionary<int, AnimalKind> plan = animals.Count == 0
 			? new Dictionary<int, AnimalKind>()
 			: AnimalSounds.Plan(WholeBookPieces(story, prepared, resolved), animals, story.Language);
-		_lastPlan = new SharedPlan(story, prepared.Analysis, plan);
+		_lastPlan = new SharedPlan(story, prepared.Analysis, spokenLanguage, plan);
 		return plan;
 	}
 
@@ -285,6 +285,19 @@ public sealed class StoryVoicing
 		}
 
 		return pool.Any(v => v.Id == SupertonicVoiceTable.Default.Id) ? SupertonicVoiceTable.Default.Id : pool[0].Id;
+	}
+
+	/// <summary>
+	/// The animal each story character plays in <paramref name="castLanguage"/>'s cast (Slice 136): the one place the cast screen and a read both ask, so the card and the sounds agree.
+	/// A character no grown-up has recast keeps its animal from the story; one a grown-up recast plays its character's. Animals with no sound are included.
+	/// </summary>
+	public IReadOnlyDictionary<string, AnimalKind> AnimalsOf(Story story, IReadOnlyList<Character> characters, string castLanguage)
+	{
+		IReadOnlyList<CastMember> cast = story.CastIn(castLanguage);
+		IReadOnlyList<StorytellerCharacter> speakers = RosterFor(castLanguage).Where(c => c.Kind == CharacterKind.Speaker).ToList();
+		return speakers.Count == 0
+			? AnimalSounds.Resolve(characters, story.Language, cast, story.Text)
+			: AnimalSounds.OfCast(characters, story.Language, cast, speakers, story.Text);
 	}
 
 	/// <summary>How many storyteller characters story characters can share out once <paramref name="language"/>'s narrator has taken a voice (Slice 116).</summary>

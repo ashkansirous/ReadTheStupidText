@@ -286,10 +286,6 @@
   <data name="Cast_AnimalSounds_Title" xml:space="preserve"><value>صدای حیوان‌ها</value></data>
   <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>حیوان‌ها گاهی «خرخر!» یا «بع بع!» می‌گویند</value></data>
   <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>در این داستان حیوانی که صدا دربیاورد نیست</value></data>
-  <data name="Cast_Animal_Label" xml:space="preserve"><value>حیوان</value></data>
-  <data name="Cast_Animal_NotAnimal" xml:space="preserve"><value>حیوان نیست</value></data>
-  <data name="Cast_Animal_Title" xml:space="preserve"><value>{0} چه حیوانی است؟</value></data>
-  <data name="Cast_Animal_Hint" xml:space="preserve"><value>حیوان این شخصیت را انتخاب کنید</value></data>
   <data name="Cast_WordsOverPictures_Title" xml:space="preserve"><value>نمایش کلمات روی تصویرها</value></data>
   <data name="Cast_WordsOverPictures_HintOn" xml:space="preserve"><value>کلمات در یک پنل پایین تصویر نشان داده می‌شوند</value></data>
   <data name="Cast_WordsOverPictures_HintOff" xml:space="preserve"><value>خاموش است چون این تصاویر از قبل کلمات را دارند</value></data>

@@ -1,11 +1,10 @@
-using System.Globalization;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
 
 namespace DinoReader;
 
 /// <summary>What a tap on a cast row does; the page supplies it (every one runs behind the page's <see cref="BusyGuard"/>).</summary>
-internal sealed record CastRowActions(Func<CastRow, Task> Preview, Func<CastRow, Task> PickCharacter, Func<CastRow, Task> PickAnimal);
+internal sealed record CastRowActions(Func<CastRow, Task> Preview, Func<CastRow, Task> PickCharacter);
 
 /// <summary>Builds the rows of the cast screen: the narrator, a character, the unknown speaker and the shared-voice note.</summary>
 internal static class CastRows
@@ -47,36 +46,13 @@ internal static class CastRows
 		return row;
 	}
 
-	/// <summary>A story character (mock frame 52, Slice 116): its initial, name and word count, and under them the storyteller character playing it (a picker) with a play button.</summary>
-	public static View Character(CastRow row, int index, CastRowActions actions, string language, AnimalKind? animal)
+	/// <summary>A story character (mock frame 52, Slice 116): its initial, name and word count, and under them the storyteller character playing it (a picker) with a play button; nothing else (Slice 136: the character names the animal).</summary>
+	public static View Character(CastRow row, int index, CastRowActions actions, string language)
 	{
 		var body = new VerticalStackLayout { Padding = new Thickness(14, 12), Spacing = 9 };
 		body.Add(TopLine(row, index));
 		body.Add(PickerLine(row, actions, language));
-		body.Add(AnimalLine(row, actions, animal));
 		return body;
-	}
-
-	// The animal line (Slice 125) under the voice picker: the animal's word in the screen's language, or "Not an animal"; a tap opens the animal sheet. There is no mock:
-	// it is the picker row's own style, without the play button, and a ring once the grown-up (or the book's builder) has decided the animal.
-	private static Border AnimalLine(CastRow row, CastRowActions actions, AnimalKind? animal)
-	{
-		string word = animal is { } kind ? AnimalSounds.NameOf(kind, CultureInfo.CurrentUICulture.TwoLetterISOLanguageName) : AppResources.Cast_Animal_NotAnimal;
-		bool decided = row.Member.HasAnimalSetting;
-		var picker = new Border
-		{
-			HeightRequest = PickerHeight,
-			Margin = new Thickness(TextIndent, 0, PlaySize + 8, 0),
-			Padding = new Thickness(12, 0),
-			BackgroundColor = decided ? Colors.White : DinoTokens.Get(DinoTokens.Sand),
-			Stroke = DinoTokens.Get(DinoTokens.Brand),
-			StrokeThickness = decided ? PickerRing : 0,
-			StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 10 },
-			Content = CastText.PickerLine(CastText.Pair(AppResources.Cast_Animal_Label, word), 14, 12),
-		};
-		SemanticProperties.SetDescription(picker, CastText.Pair(row.Member.Name, CastText.Pair(AppResources.Cast_Animal_Label, word)));
-		CastViews.AddTap(picker, () => actions.PickAnimal(row));
-		return picker;
 	}
 
 	public static View Unknown(int lines)
