@@ -174,7 +174,7 @@ public sealed class StorytellerDefault
 		}
 
 		int megabytes = StorytellerOffer.Megabytes(listed.SizeBytes);
-		if (!allowMobileData && Volatile.Read(ref _mobileDataRequested) == 0 && !_network.AllowsAutomaticUpdate)
+		if (!allowMobileData && Volatile.Read(ref _mobileDataRequested) == 0 && !WifiCapable())
 		{
 			WatchNetwork();
 			SetStatus(new StorytellerStatus(StorytellerPhase.WaitingForWifi, 0, megabytes));
@@ -358,6 +358,17 @@ public sealed class StorytellerDefault
 		}
 	}
 
+	// Wi-Fi or Ethernet among the active links is enough, even with mobile data also listed (Android reports both); only a cellular-only phone waits.
+	private static bool WifiCapable() => StorytellerNetworkPolicy.AllowsAutomaticDownload(Connectivity.Current.ConnectionProfiles.Select(ToProfile));
+
+	private static NetworkProfile ToProfile(ConnectionProfile profile) => profile switch
+	{
+		ConnectionProfile.WiFi => NetworkProfile.WiFi,
+		ConnectionProfile.Ethernet => NetworkProfile.Ethernet,
+		ConnectionProfile.Cellular => NetworkProfile.Cellular,
+		_ => NetworkProfile.Other,
+	};
+
 	// A phone that joins Wi-Fi while the line waits (or that was offline at launch) starts the download without a tap.
 	private void WatchNetwork()
 	{
@@ -373,7 +384,7 @@ public sealed class StorytellerDefault
 	// One handler for the life of the singleton (registered once, atomically); it acts only while a start is waiting for the network.
 	private void OnConnectivityChanged(object? sender, ConnectivityChangedEventArgs e)
 	{
-		if (_awaitingNetwork && _network.AllowsAutomaticUpdate)
+		if (_awaitingNetwork && WifiCapable())
 		{
 			_ = StartAsync();
 		}
