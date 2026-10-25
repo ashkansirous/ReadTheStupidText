@@ -1,6 +1,6 @@
 # Slice 116 — Dino: storyteller characters in every language
 
-*Built 2026-10-25, emulator run in progress, not yet verified.* *Planned 2026-10-25*, from the user's ask to "create multiple characters, auto assign them yourself,
+*Built 2026-10-25; emulator check passed (migrated English cast, picker and EDITED pin, narrator page, Farsi cast with distinct right-aligned characters, reading plays); native-speaker read open.* *Planned 2026-10-25*, from the user's ask to "create multiple characters, auto assign them yourself,
 then allow people to change the character… be creative with the voice… create enough characters for
 all languages". Dino Reader only; RTST is not touched.
 
@@ -79,11 +79,11 @@ New strings (all 14 locales): picker title "Who plays {name}?", subtitle "For th
 
 ## Changed while building
 
-*Changed while building:* rosters live in `src/DinoReader.Core/CharacterRoster*.cs`: English 20 on Kokoro; Farsi 19 on four `piper-fa` voices (mana female; ganji, ganji_adabi, gyro male); Norwegian and ten Supertonic languages 18 each; Chinese 10 on the one Melo voice, with one narrator. `StorytellerCharacter` plus the `CastCharacters` caster pick by gender, then `FlavourGuess`, and repeat only when the roster runs out. Before the English pack lands, the Kokoro roster maps onto Supertonic by gender (`MapOnto`, speaker voices first). New flavours Squeaky, Grumpy, Whisper and Giant are in `VoiceFlavours.Assignable` (`Pickable` stays 5 for RTST). A stored flavour wins only when Edited. The picker is the `CastCharacterPicker` sheet in `CastFlavourMenu.cs`; the narrator page has an inline list. Names and hints live in the rosters, not the resx files. Removed: the Sounds row, Supertonic names, `GenderControl`/`VoiceChip`, and `CastEditor` `SetVoice`/`SetGender`/`SetFlavour`/`VoiceChoices`/`HasVoiceOfGender` with their tests. Added a `CastText.RosterSource` hook. Files outside Touches: `AppResources.cs`, `CastMergeSheet.cs`.
+*Changed while building:* rosters live in `src/DinoReader.Core/CharacterRoster*.cs`: English 20 on Kokoro; Farsi 19 on four `piper-fa` voices (mana female; ganji, ganji_adabi, gyro male); Norwegian and ten Supertonic languages 18 each; Chinese 10 on the one Melo voice, with one narrator. `StorytellerCharacter` plus the `CastCharacters` caster pick by gender, then `FlavourGuess`, and repeat only when the roster runs out. Before the English pack lands, the Kokoro roster maps onto Supertonic by gender (`MapOnto`, speaker voices first). New flavours Squeaky, Grumpy, Whisper and Giant are in `VoiceFlavours.Assignable` (`Pickable` stays 5 for RTST). `FlavourGuess.Effective` is now `stored ?? guess`: any stored flavour wins (changed after the emulator found Farsi Pip/Pop shown as one character). The picker is the `CastCharacterPicker` sheet in `CastFlavourMenu.cs`; the narrator page has an inline list. Names and hints live in the rosters, not the resx files. Removed: the Sounds row, Supertonic names, `GenderControl`/`VoiceChip`, and `CastEditor` `SetVoice`/`SetGender`/`SetFlavour`/`VoiceChoices`/`HasVoiceOfGender` with their tests. Added a `CastText.RosterSource` hook. Files outside Touches: `AppResources.cs`, `CastMergeSheet.cs`.
 
 *From review:* high findings 1-7 applied (5 was doc-only: the Chinese narrator shares the one voice); medium findings 1-5 applied.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-25)
 
 Rules were already added on this branch in `src/DinoReader.Core/CLAUDE.md` and `src/DinoReader.App/CLAUDE.md`; the index pass should not lift them again.
 

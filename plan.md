@@ -133,7 +133,7 @@ this plan turns it into ordered, shippable vertical slices.
 | 113 | Dino: playful character voices (pitch and pace per character) | built | #314 | | [113-dino-character-flavours.md](docs/plan/slices/113-dino-character-flavours.md) |
 | 114 | Dino: Kokoro storyteller voices for English | built | #316 | | [114-dino-kokoro-english-storyteller-pack.md](docs/plan/slices/114-dino-kokoro-english-storyteller-pack.md) |
 | 115 | Dino: storyteller voices by default | built | #323 | | [115-dino-storyteller-voices-by-default.md](docs/plan/slices/115-dino-storyteller-voices-by-default.md) |
-| 116 | Dino: storyteller characters in every language | planned | | | [116-dino-storyteller-characters.md](docs/plan/slices/116-dino-storyteller-characters.md) |
+| 116 | Dino: storyteller characters in every language | built | #325 | | [116-dino-storyteller-characters.md](docs/plan/slices/116-dino-storyteller-characters.md) |
 | 117 | Dino: animal characters make their sounds | planned | | | [117-dino-animal-sounds.md](docs/plan/slices/117-dino-animal-sounds.md) |
 | 118 | Dino: storyteller voices for Spanish, French and Portuguese | planned | | | [118-dino-storyteller-more-languages.md](docs/plan/slices/118-dino-storyteller-more-languages.md) |
 | 119 | Dino: illustrated Three Little Pigs, and the starters in the store | planned | | | [119-dino-illustrated-three-little-pigs.md](docs/plan/slices/119-dino-illustrated-three-little-pigs.md) |
@@ -203,6 +203,7 @@ Built but not verified (details in each slice file):
 - Dino first-run "Ready" screen says "Three stories" but four ship; a fix is in progress. (fix PR open)
 - Slice 113: pitch by ear (drop it if robotic); bug: the first Sounds-row play tap right after changing a flavour is silent (second tap works); system-voice fallback plays Normal; iOS reader build; native read of the strings ([slice](docs/plan/slices/113-dino-character-flavours.md)).
 - Slice 114: listening to Kokoro English with flavours on a real phone; Windows head storyteller; native check of the strings ([slice](docs/plan/slices/114-dino-kokoro-english-storyteller-pack.md)).
+- Slice 116: native read of roster names and hints, especially Farsi; Farsi bee=Small and princess=Whisper flavours by ear; Chinese has only one voice (confirm acceptable) ([slice](docs/plan/slices/116-dino-storyteller-characters.md)).
 - Slice 106: Norwegian on a Windows head via `MarianEngine` (third-party conversion, never run); en to da/fi/sv/nl/nb and back on Windows; the Norwegian packs are about 390 MB each ([slice](docs/plan/slices/106-windows-nordic-dutch-translation-packs.md)).
 - Windows has no `en-ja` translation pack (`TranslationPacks.FromEnglish` and `packs.yml` lack it), so English cannot be translated into Japanese offline on Windows; found while planning Slice 106, not yet scheduled.
 - Older unverified items (Slices 43-95 and a flaky-test note), moved verbatim: [outstanding-older](docs/plan/notes/2026-10-25-outstanding-older.md). Still open until verified.
