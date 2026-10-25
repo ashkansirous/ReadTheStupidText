@@ -6,15 +6,14 @@ namespace DinoReader;
 /// <summary>
 /// Picture mode for a picture + text book (Slice 98, Decision 102, mock screens 34 and 35): each story page is one page of the
 /// reader, its picture fitted without cropping and its text beside it. Held sideways the picture is the left half and the text card
-/// the right half with the transport row under it; held upright the picture fills the page and the text sits on a 92% white panel over its lower part (up to 58% of
-/// the height) that scrolls when the text is long. The spoken sentence has the highlight behind its words; a tap on a sentence
-/// reads from it. A page with only a picture shows the picture, a page with only text shows the text card.
+/// the right half with the transport row under it; held upright the picture fills the page and the text sits on a 92% white panel over its lower part (up to 30% of
+/// the visible picture, Slice 122) that scrolls when the text is long. The spoken sentence has the highlight behind its words; a tap on a sentence
+/// reads from it. With the words switched off (<c>wordsOver</c>, Slice 122) only the picture is drawn, in both orientations. A page with only a picture shows the picture, a page with only text shows the text card.
 /// </summary>
 public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> storyPages, IReadOnlyList<SentenceSpan> sentences,
 	Func<string?, string?> resolveImage, string font, ReadingTheme theme, bool rightToLeft, Action<int> onSentence,
-	Action<SwipedEventArgs> onSwipe) : IPageRenderer
+	Action<SwipedEventArgs> onSwipe, bool wordsOver = true) : IPageRenderer
 {
-	private const double PanelHeightShare = 0.58;
 	private const float PanelAlpha = 0.92f;
 	private const double PanelFontSize = 21;
 	private const double PanelLineHeight = 1.55;
@@ -26,7 +25,7 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 	private const double UprightPictureTop = 6;
 	private const double UprightPictureSide = 14;
 
-	private sealed record Slot(int StoryPage, string? Image);
+	private sealed record Slot(int StoryPage, string? Image, double Aspect);
 
 	private ReadingTheme _theme = theme;
 	private ScanLayout _layout = null!;
@@ -50,10 +49,18 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		for (int page = 0; page < storyPages.Count; page++)
 		{
 			// Every story page keeps its place (even a blank one), so page numbers and dots match the story's pages.
-			slots.Add(new Slot(page, resolveImage(storyPages[page].ImageFile)));
+			slots.Add(SlotOf(page));
 		}
 
 		_slots = slots;
+	}
+
+	private Slot SlotOf(int page)
+	{
+		string? image = resolveImage(storyPages[page].ImageFile);
+		// The shape only sizes the upright panel, so it is not read when the words are off. Compose runs on a worker thread.
+		Size? size = image is null || !wordsOver ? null : PageImageSize.Read(image);
+		return new Slot(page, image, size is { Height: > 0 } s ? s.Width / s.Height : 0);
 	}
 
 	public void SetTheme(ReadingTheme newTheme) => _theme = newTheme;
@@ -130,7 +137,8 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 			Border panel = TextPanel(UprightPanelCorner, new Thickness(16, 14), PanelAlpha);
 			panel.VerticalOptions = LayoutOptions.End;
 			panel.Margin = new Thickness(PanelMargin);
-			panel.MaximumHeightRequest = _card.Height * PanelHeightShare;
+			CapPanel(panel, _card, slot.Aspect);
+			grid.SizeChanged += (_, _) => CapPanel(panel, new Size(grid.Width, grid.Height), slot.Aspect);
 			panel.Shadow = new Shadow { Brush = new SolidColorBrush(Color.FromRgb(43, 37, 64)), Opacity = 0.18f, Radius = 18, Offset = new Point(0, 6) };
 			grid.Add(panel);
 		}
@@ -138,12 +146,22 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		return grid;
 	}
 
+	// A card with no size yet leaves the panel uncapped; the cap is applied again once the page has been laid out.
+	private static void CapPanel(Border panel, Size card, double aspect)
+	{
+		if (card.Width > 0 && card.Height > 0)
+		{
+			panel.MaximumHeightRequest = PictureTextBook.PanelMaxHeight(card.Width, card.Height, aspect, PanelMargin,
+				UprightPictureTop, UprightPictureSide);
+		}
+	}
+
 	private View SidewaysPage(Slot slot)
 	{
 		var grid = new Grid { ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Star)] };
 		if (slot.Image is not null)
 		{
-			grid.Add(PictureCard(slot.Image, new Thickness(SidewaysGap)), 0);
+			grid.Add(wordsOver ? PictureCard(slot.Image, new Thickness(SidewaysGap)) : FullWidthPicture(slot.Image), 0);
 		}
 
 		if (HasText(slot))
@@ -157,7 +175,16 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		return grid;
 	}
 
-	private bool HasText(Slot slot) => _layout.SentencesOnPage(slot.StoryPage).First >= 0;
+	// With the words off the picture takes both columns and leaves the foot to the transport row (Slice 122).
+	private static Border FullWidthPicture(string file)
+	{
+		Border picture = PictureCard(file, new Thickness(SidewaysGap, SidewaysGap, SidewaysGap, SidewaysGap + TransportRow.SidewaysHeight));
+		Grid.SetColumnSpan(picture, 2);
+		return picture;
+	}
+
+	// A page with no picture keeps its text card whatever the switch says: there is nothing else to show.
+	private bool HasText(Slot slot) => (wordsOver || slot.Image is null) && _layout.SentencesOnPage(slot.StoryPage).First >= 0;
 
 	private static Border PictureCard(string file, Thickness margin) => new()
 	{

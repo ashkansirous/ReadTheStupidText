@@ -87,6 +87,7 @@ public static class StarterUpdate
             TranslateToMyLanguage = stored.TranslateToMyLanguage,
             ShowOriginalText = stored.ShowOriginalText,
             AnimalSoundsOn = stored.AnimalSoundsOn,
+            WordsOverPictures = stored.WordsOverPictures,
         });
     }
 

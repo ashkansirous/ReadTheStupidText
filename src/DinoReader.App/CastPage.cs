@@ -238,6 +238,11 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		_body.Children.Add(NarratorCard());
 		_body.Children.Add(CharacterCard(sheet));
 		_body.Children.Add(AnimalSoundsCard());
+		if (PictureTextBook.IsPictureTextBook(_story!.Pages))
+		{
+			_body.Children.Add(WordsOverPicturesCard());
+		}
+
 		_mergeButton.IsVisible = sheet.Rows.Count >= 2;
 	}
 
@@ -268,6 +273,21 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	{
 		bool hasAnimals = _resolved is not null && AnimalSounds.AnimalsIn(_resolved.Characters, _story!.Language).Count > 0;
 		return CastRows.AnimalSoundsRow(hasAnimals, _story!.AnimalSoundsOn, on => _ = _busy.RunAsync(() => SetAnimalSoundsAsync(on)));
+	}
+
+	// Saved with the story (Slice 122); the reading screen follows the next time the book is opened.
+	private View WordsOverPicturesCard() =>
+		CastRows.WordsOverPicturesRow(PictureTextBook.ShowsWordsOverPictures(_story!), on => _ = _busy.RunAsync(() => SetWordsOverPicturesAsync(on)));
+
+	private async Task SetWordsOverPicturesAsync(bool on)
+	{
+		Story previous = _story!;
+		_story = previous with { WordsOverPictures = on };
+		if (!await SaveAsync())
+		{
+			_story = previous;
+			Render();
+		}
 	}
 
 	private async Task SetAnimalSoundsAsync(bool on)

@@ -203,5 +203,109 @@ public class PictureTextBookTests
         Assert.Equal([" Plain \n"], PictureTextBook.ImportPages(" Plain \n"));
     }
 
+    [Fact]
+    public void PanelMaxHeight_TallCardWithLetterbox_CountsBandUnderPictureAndMargin()
+    {
+        // Area 372 x 794 (card 400 x 800 less 6 on top and 14 each side); a 1:1 picture is 372 high, bands of 211 above and below.
+        double max = PictureTextBook.PanelMaxHeight(400, 800, 1.0, 10, areaTop: 6, areaSide: 14);
+
+        Assert.Equal(0.30 * 372 + 211 - 10, max, 3);
+    }
+
+    [Fact]
+    public void PanelMaxHeight_WidePicture_UsesPictureHeightNotCard()
+    {
+        // A 2:1 picture in a 400-wide area is 186 high.
+        double max = PictureTextBook.PanelMaxHeight(400, 800, 2.0, 10, areaTop: 0, areaSide: 14);
+
+        Assert.Equal(0.30 * 186 + (800 - 186) / 2.0 - 10, max, 3);
+    }
+
+    [Fact]
+    public void PanelMaxHeight_PictureFillsAreaHeight_IsThirtyPercentLessMargin()
+    {
+        // A tall 1:4 picture fills the height: no band, so the panel is 30% of the picture less the margin.
+        double max = PictureTextBook.PanelMaxHeight(400, 800, 0.25, 10);
+
+        Assert.Equal(0.30 * 800 - 10, max, 3);
+    }
+
+    [Fact]
+    public void PanelMaxHeight_NeverNegative_AndSurvivesNoAspect()
+    {
+        Assert.Equal(0, PictureTextBook.PanelMaxHeight(10, 20, 0.5, 100));
+        Assert.True(PictureTextBook.PanelMaxHeight(400, 800, 0, 10) > 0);
+    }
+
+    [Fact]
+    public void ShowsWordsOverPictures_DefaultsOnForPictureTextBooks()
+    {
+        Story story = Original() with { Pages = [new StoryPage("Once.", "1.jpg")] };
+
+        Assert.True(PictureTextBook.ShowsWordsOverPictures(story));
+    }
+
+    [Fact]
+    public void WordsOverPictures_IsOmittedFromJsonWhenUnset()
+    {
+        Assert.DoesNotContain("wordsOverPictures", StoryJson.Serialize(Original()), StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void ShowsWordsOverPictures_StoredChoiceBeatsTheDefault()
+    {
+        Story off = Original() with { Pages = [new StoryPage("Once.", "1.jpg")], WordsOverPictures = false };
+        Story on = Original() with { WordsOverPictures = true };
+
+        Assert.False(PictureTextBook.ShowsWordsOverPictures(off));
+        Assert.True(PictureTextBook.ShowsWordsOverPictures(on));
+    }
+
+    [Fact]
+    public void MarkPicturesAsPages_TurnsWordsOff_ButKeepsAnExplicitChoice()
+    {
+        var fresh = new StoryDraft(Original());
+        fresh.MarkPicturesAsPages();
+        var chosen = new StoryDraft(Original() with { WordsOverPictures = true });
+        chosen.MarkPicturesAsPages();
+
+        Assert.False(fresh.WordsOverPictures);
+        Assert.True(chosen.WordsOverPictures);
+    }
+
+    [Fact]
+    public async Task WordsOverPictures_SurvivesPackageExportAndImport()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "dino-wop-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var source = new FileStoryLibrary(Path.Combine(root, "source"));
+            var target = new FileStoryLibrary(Path.Combine(root, "target"));
+            using var package = new MemoryStream();
+            await StoryPackageWriter.WriteAsync(Original() with { WordsOverPictures = false }, source, package);
+            package.Position = 0;
+
+            Story imported = await StoryPackageReader.ImportAsync(package, target);
+
+            Assert.False(imported.WordsOverPictures);
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, true);
+            }
+        }
+    }
+
+    [Fact]
+    public void WordsOverPictures_RoundTripsThroughJson_AndStaysNullWhenUnset()
+    {
+        Story set = Original() with { WordsOverPictures = false };
+
+        Assert.False(StoryJson.Deserialize(StoryJson.Serialize(set)).WordsOverPictures);
+        Assert.Null(StoryJson.Deserialize(StoryJson.Serialize(Original())).WordsOverPictures);
+    }
+
     private static Story Original() => new("0123456789abcdef0123456789abcdef", "Title", "en", DateTimeOffset.UnixEpoch, [], [], CoverStyle.Colour, 0, "supertonic:M1");
 }

@@ -15,6 +15,33 @@ public static partial class PictureTextBook
     [GeneratedRegex(@"^[ \t]*---[ \t]*$", RegexOptions.Multiline)]
     private static partial Regex SeparatorLine();
 
+    /// <summary>The most of the visible picture the text panel may cover with the phone upright (Slice 122), its bottom margin included (the drop shadow is not counted).</summary>
+    public const double PanelHeightShare = 0.30;
+
+    /// <summary>The tallest the upright text panel may be: <see cref="PanelHeightShare"/> of the visible picture (the AspectFit
+    /// rectangle inside the picture area, not the card), where the panel's bottom margin counts toward the share and the letterbox
+    /// band under the picture does not cover any of it. The picture area is the card less <paramref name="areaTop"/> above and
+    /// <paramref name="areaSide"/> either side; the panel sits on the card's bottom edge.</summary>
+    public static double PanelMaxHeight(double cardWidth, double cardHeight, double pictureAspect, double panelMargin,
+        double areaTop = 0, double areaSide = 0)
+    {
+        double areaWidth = Math.Max(0, cardWidth - 2 * areaSide);
+        double areaHeight = Math.Max(0, cardHeight - areaTop);
+        if (pictureAspect <= 0)
+        {
+            // The picture's shape is unknown: take the share of the card height.
+            return Math.Max(0, PanelHeightShare * cardHeight - panelMargin);
+        }
+
+        double pictureHeight = Math.Min(areaHeight, areaWidth / pictureAspect);
+        double bottomBand = (areaHeight - pictureHeight) / 2;
+        return Math.Max(0, PanelHeightShare * pictureHeight + bottomBand - panelMargin);
+    }
+
+    /// <summary>Whether the words are drawn over the pictures (Slice 122): the stored value, on when none is stored. An import
+    /// from camera photos, gallery photos of pages or PDF pages stores false (their words are already in the pictures).</summary>
+    public static bool ShowsWordsOverPictures(Story story) => story.WordsOverPictures ?? true;
+
     [GeneratedRegex(@"\d+")]
     private static partial Regex DigitRun();
 

@@ -286,5 +286,7 @@
   <data name="Cast_AnimalSounds_Title" xml:space="preserve"><value>Звуки животных</value></data>
   <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>Животные иногда говорят «Хрю!» или «Бе-е!»</value></data>
   <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>В этой истории нет животных, которые подают голос</value></data>
+  <data name="Cast_WordsOverPictures_Title" xml:space="preserve"><value>Показывать слова поверх картинок</value></data>
+  <data name="Cast_WordsOverPictures_Hint" xml:space="preserve"><value>Текст истории отображается поверх картинки во время чтения</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>В этой книге больше персонажей, чем есть рассказчиков ({0}), поэтому некоторые звучат одинаково. Рассказчик персонажам не выдаётся.</value></data>
 </root>
