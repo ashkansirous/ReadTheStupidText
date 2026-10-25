@@ -166,16 +166,11 @@
   <!-- /Slice 111 -->
   <!-- Slice 113 -->
   <data name="Cast_Pair" xml:space="preserve"><value>{0}: {1}</value></data>
-  <data name="Cast_Sounds" xml:space="preserve"><value>الصوت</value></data>
-  <data name="Cast_Flavour_Normal" xml:space="preserve"><value>عادي</value></data>
-  <data name="Cast_Flavour_Small" xml:space="preserve"><value>صغير</value></data>
-  <data name="Cast_Flavour_Big" xml:space="preserve"><value>كبير</value></data>
-  <data name="Cast_Flavour_Bouncy" xml:space="preserve"><value>مرح</value></data>
-  <data name="Cast_Flavour_Sleepy" xml:space="preserve"><value>نعسان</value></data>
-  <data name="Cast_FlavourHint_Small" xml:space="preserve"><value>أعلى وأسرع قليلًا</value></data>
-  <data name="Cast_FlavourHint_Big" xml:space="preserve"><value>أغلظ وأبطأ</value></data>
-  <data name="Cast_FlavourHint_Bouncy" xml:space="preserve"><value>أعلى وسريع</value></data>
-  <data name="Cast_FlavourHint_Sleepy" xml:space="preserve"><value>بطيء وأخفض قليلًا</value></data>
+  <data name="Cast_PickTitle" xml:space="preserve"><value>من يؤدي دور {0}؟</value></data>
+  <data name="Cast_PickSubtitle" xml:space="preserve"><value>لهذا الكتاب، بـ{0}</value></data>
+  <data name="Cast_FilterGirls" xml:space="preserve"><value>بنات</value></data>
+  <data name="Cast_FilterBoys" xml:space="preserve"><value>أولاد</value></data>
+  <data name="Cast_FilterEveryone" xml:space="preserve"><value>الجميع</value></data>
   <!-- /Slice 113 -->
   <!-- Slice 115 -->
   <data name="Storyteller_Getting" xml:space="preserve"><value>جارٍ تنزيل أصوات الراوي…</value></data>
@@ -275,25 +270,18 @@
   <data name="Cast_MergeTitle" xml:space="preserve"><value>دمج الشخصيات</value></data>
   <data name="Cast_MergeBody" xml:space="preserve"><value>اختر الاسمين اللذين يعودان إلى الشخصية نفسها. تُدمَج جملهما تحت اسم واحد وصوت واحد.</value></data>
   <data name="Cast_KeepName" xml:space="preserve"><value>إبقاء الاسم</value></data>
-  <data name="Cast_VoiceTitle" xml:space="preserve"><value>الصوت</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>مرحبًا! هكذا يبدو صوتي حين أقرأ قصتك.</value></data>
   <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>تعذّر حفظ هذا التغيير</value></data>
   <data name="Cast_SaveFailedBody" xml:space="preserve"><value>لم تُحفَظ الشخصيات. حاول مرة أخرى بعد قليل.</value></data>
   <data name="Cast_PreviewFailedBody" xml:space="preserve"><value>تعذّر تشغيل الصوت الآن.</value></data>
   <data name="Cast_LoadFailedTitle" xml:space="preserve"><value>تعذّر فتح الشخصيات</value></data>
   <data name="Cast_LoadFailedBody" xml:space="preserve"><value>تعذّر تحديد شخصيات هذه القصة. حاول مرة أخرى بعد قليل.</value></data>
-  <data name="Cast_Boy" xml:space="preserve"><value>ولد</value></data>
-  <data name="Cast_Girl" xml:space="preserve"><value>بنت</value></data>
   <data name="Cast_Words_One" xml:space="preserve"><value>{0} كلمة</value></data>
   <data name="Cast_Words_Other" xml:space="preserve"><value>{0} كلمات</value></data>
   <data name="Cast_UnknownLines_One" xml:space="preserve"><value>{0} سطر</value></data>
   <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} أسطر</value></data>
   <data name="Cast_UsesNarrator" xml:space="preserve"><value>تستخدم صوت الراوي</value></data>
   <data name="Cast_Hear" xml:space="preserve"><value>استمع إلى {0}</value></data>
-  <data name="Cast_NoBoyVoice" xml:space="preserve"><value>لا تحتوي حزمة الأصوات هذه على صوت ولد، لذا تحتفظ هذه الشخصية بصوتها السابق.</value></data>
-  <data name="Cast_NoGirlVoice" xml:space="preserve"><value>لا تحتوي حزمة الأصوات هذه على صوت بنت، لذا تحتفظ هذه الشخصية بصوتها السابق.</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>دمج في {0}</value></data>
-  <data name="Cast_SharedNote" xml:space="preserve"><value>تحتوي حزمة الأصوات هذه على {0} أصوات طبيعية فقط، لذا تشترك بعض الشخصيات في الصوت. لا يُمنح صوت الراوي لأي شخصية.</value></data>
-  <data name="Voice_NbWoman" xml:space="preserve"><value>الصوت {0} (امرأة)</value></data>
-  <data name="Voice_NbMan" xml:space="preserve"><value>الصوت {0} (رجل)</value></data>
+  <data name="Cast_SharedNote" xml:space="preserve"><value>عدد الشخصيات في هذا الكتاب أكبر من عدد الشخصيات الراوية المتاحة وهو {0}، لذا يتشابه صوت بعضها. لا يُمنح الراوي لأي شخصية.</value></data>
 </root>

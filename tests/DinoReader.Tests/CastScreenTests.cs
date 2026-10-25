@@ -1,4 +1,5 @@
 using DinoReader.Core;
+using ReadTheStupidText.Domain.Reading;
 
 namespace DinoReader.Tests;
 
@@ -27,30 +28,26 @@ public class CastEditorTests
 
     private static CastMember Of(CastEdit state, string id) => state.Cast.Single(m => m.CharacterId == id);
 
-    [Fact]
-    public void SetVoice_PinsTheVoiceAndMarksItEdited()
-    {
-        CastEdit edited = CastEditor.SetVoice(Start(), "cotton", "F2", "F3");
+    private static StorytellerCharacter Pick(string voiceId) =>
+        new("pick", voiceId, VoiceFlavour.Normal, Gender.Male, CharacterKind.Speaker, "Pick", "hint");
 
-        Assert.Equal(new CastMember("cotton", "Cotton Tail", Gender.Male, "F2", true), Of(edited, "cotton"));
+    private static CastEdit Pinned(CastEdit state, string characterId, string voiceId) => CastEditor.SetCharacter(state, characterId, Pick(voiceId));
+
+
+    [Fact]
+    public void SetCharacter_PinsTheVoiceAndFlavourAndMarksItEdited()
+    {
+        CastEdit edited = Pinned(Start(), "cotton", "F2");
+
+        Assert.Equal(new CastMember("cotton", "Cotton Tail", Gender.Male, "F2", true, VoiceFlavour.Normal), Of(edited, "cotton"));
         Assert.Equal("M1", Of(edited, "peter").VoiceId);
         Assert.False(Of(edited, "peter").Edited);
     }
 
     [Fact]
-    public void SetVoice_NeverGivesACharacterTheNarratorsVoice()
-    {
-        CastEdit state = Start();
-
-        CastEdit edited = CastEditor.SetVoice(state, "cotton", "F3", "F3");
-
-        Assert.Same(state, edited);
-    }
-
-    [Fact]
     public void RunningTheCasterAgain_NeverOverridesAnEditedVoice()
     {
-        CastEdit edited = CastEditor.SetVoice(Start(), "cotton", "F2", "F3");
+        CastEdit edited = Pinned(Start(), "cotton", "F2");
 
         VoiceCast recast = new VoiceCaster().Cast(Characters, Voices, "F3", StoryCast.Pinned(edited.Cast));
 
@@ -62,7 +59,7 @@ public class CastEditorTests
     [Fact]
     public void ToMembers_KeepsTheEditedFlagWhateverVoiceTheCasterEndsWith()
     {
-        CastEdit edited = CastEditor.SetVoice(Start(), "cotton", "F2", "F3");
+        CastEdit edited = Pinned(Start(), "cotton", "F2");
         VoiceCast recast = new VoiceCaster().Cast(Characters, Voices, "F2", StoryCast.Pinned(edited.Cast));
 
         var members = StoryCast.ToMembers(Characters, recast, LanguageRules.English, edited.Cast);
@@ -71,104 +68,6 @@ public class CastEditorTests
         Assert.NotEqual("F2", members.Single(m => m.CharacterId == "cotton").VoiceId);
         Assert.False(members.Single(m => m.CharacterId == "peter").Edited);
     }
-
-    [Fact]
-    public void SetGender_RecastsThatCharacterWithinTheGender_WithoutTouchingOtherPins()
-    {
-        CastEdit state = CastEditor.SetVoice(Start(), "mum", "F2", "M3");
-
-        CastEdit edited = CastEditor.SetGender(state, Characters, Voices, "M3", "cotton", Gender.Female);
-
-        CastMember cotton = Of(edited, "cotton");
-        Assert.Equal(Gender.Female, cotton.Gender);
-        Assert.Equal("F1", cotton.VoiceId);
-        Assert.True(cotton.Edited);
-        Assert.Equal("M1", Of(edited, "peter").VoiceId);
-        Assert.Equal(new CastMember("mum", "Mum", Gender.Female, "F2", true), Of(edited, "mum"));
-    }
-
-    [Fact]
-    public void SetGender_KeepsTheVoiceWhenItAlreadyFitsOrWhenTheGenderIsUnknown()
-    {
-        CastEdit sameGender = CastEditor.SetGender(Start(), Characters, Voices, "F3", "peter", Gender.Male);
-        CastEdit unknown = CastEditor.SetGender(Start(), Characters, Voices, "F3", "peter", Gender.Unknown);
-
-        Assert.Equal("M1", Of(sameGender, "peter").VoiceId);
-        Assert.Equal("M1", Of(unknown, "peter").VoiceId);
-        Assert.Equal(Gender.Unknown, Of(unknown, "peter").Gender);
-        Assert.True(Of(unknown, "peter").Edited);
-    }
-
-    [Fact]
-    public void SetGender_NeverPicksTheNarratorsVoice()
-    {
-        CastEdit edited = CastEditor.SetGender(Start(), Characters, Voices, "F1", "cotton", Gender.Female);
-
-        Assert.NotEqual("F1", Of(edited, "cotton").VoiceId);
-        Assert.Equal(Gender.Female, SupertonicLike(Voices, Of(edited, "cotton").VoiceId));
-    }
-
-    private static readonly VoiceOption[] TwoVoices = [new("M1", Gender.Male), new("F1", Gender.Female)];
-
-    private static CastEdit TwoVoiceStart() => new(
-        [
-            new CastMember("peter", "Peter", Gender.Male, "M1"),
-            new CastMember("cotton", "Cotton Tail", Gender.Male, "M1"),
-            new CastMember("mum", "Mum", Gender.Female, "F1"),
-        ],
-        new Dictionary<string, string>());
-
-    [Fact]
-    public void SetGender_InATwoVoicePack_SharesTheTargetGendersVoice_NeverTheOpposite()
-    {
-        CastEdit edited = CastEditor.SetGender(TwoVoiceStart(), Characters, TwoVoices, "none", "cotton", Gender.Female);
-
-        Assert.Equal("F1", Of(edited, "cotton").VoiceId);
-        Assert.Equal(Gender.Female, Of(edited, "cotton").Gender);
-    }
-
-    [Fact]
-    public void SetGender_WhenSharing_PicksTheVoiceWhoseHoldersSpeakTheFewestWords()
-    {
-        CastMember[] cast =
-        [
-            new("peter", "Peter", Gender.Male, "M1"), new("cotton", "Cotton Tail", Gender.Male, "M2"),
-            new("mum", "Mum", Gender.Female, "F1"), new("gran", "Gran", Gender.Female, "F2"),
-        ];
-        Character[] characters =
-        [
-            new("peter", "Peter", Gender.Male, 212), new("cotton", "Cotton Tail", Gender.Male, 148),
-            new("mum", "Mum", Gender.Female, 300), new("gran", "Gran", Gender.Female, 20),
-        ];
-        VoiceOption[] voices = [new("M1", Gender.Male), new("M2", Gender.Male), new("F1", Gender.Female), new("F2", Gender.Female)];
-
-        CastEdit edited = CastEditor.SetGender(new CastEdit(cast, new Dictionary<string, string>()), characters, voices, "none", "cotton", Gender.Female);
-
-        Assert.Equal("F2", Of(edited, "cotton").VoiceId);
-    }
-
-    [Fact]
-    public void SetGender_WithNoVoiceOfThatGender_KeepsTheCurrentVoice_AndTheCallerCanTell()
-    {
-        VoiceOption[] maleOnly = [new("M1", Gender.Male), new("M2", Gender.Male)];
-
-        CastEdit edited = CastEditor.SetGender(Start(), Characters, maleOnly, "M2", "mum", Gender.Female);
-
-        Assert.Equal("F1", Of(edited, "mum").VoiceId);
-        Assert.Equal(Gender.Female, Of(edited, "mum").Gender);
-        Assert.False(CastEditor.HasVoiceOfGender(maleOnly, "M2", Gender.Female));
-        Assert.True(CastEditor.HasVoiceOfGender(Voices, "F1", Gender.Female));
-    }
-
-    [Fact]
-    public void SetGender_NeverTakesTheNarratorsOnlyVoiceOfTheGender()
-    {
-        CastEdit edited = CastEditor.SetGender(TwoVoiceStart(), Characters, TwoVoices, "F1", "cotton", Gender.Female);
-
-        Assert.Equal("M1", Of(edited, "cotton").VoiceId);
-    }
-
-    private static Gender SupertonicLike(VoiceOption[] voices, string id) => voices.Single(v => v.Id == id).Gender;
 
     [Fact]
     public void Merge_LeavesOneEntryWithTheKeptVoice()
@@ -184,7 +83,7 @@ public class CastEditorTests
     [Fact]
     public void Merge_KeepsAnEditedFlagTheKeptCharacterAlreadyHad()
     {
-        CastEdit pinned = CastEditor.SetVoice(Start(), "peter", "M3", "F3");
+        CastEdit pinned = Pinned(Start(), "peter", "M3");
 
         Assert.True(Of(CastEditor.Merge(pinned, "peter", "cotton"), "peter").Edited);
     }
@@ -232,14 +131,6 @@ public class CastEditorTests
         Assert.Same(state, CastEditor.Merge(state, "peter", "nobody"));
     }
 
-    [Fact]
-    public void VoiceChoices_LeaveOutTheNarrator_AndListTheGendersVoicesFirst()
-    {
-        var choices = CastEditor.VoiceChoices(Voices, "F1", Gender.Female);
-
-        Assert.DoesNotContain(choices, v => v.Id == "F1");
-        Assert.Equal(["F2", "F3", "M1", "M2", "M3"], choices.Select(v => v.Id));
-    }
 }
 
 public class CastMergesTests

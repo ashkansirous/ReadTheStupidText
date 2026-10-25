@@ -17,12 +17,18 @@ public static class StoryCast
             .Where(x => x.Voice is not null)
             .Select(x => new CastMember(
                 x.Character.Id, x.Character.Name, x.Character.Gender, x.Voice!, WasEdited(stored, x.Character.Id),
-                FlavourOf(stored, x.Character, rules)))
+                FlavourOf(cast, stored, x.Character, rules)))
             .ToList();
 
-    private static VoiceFlavour FlavourOf(IReadOnlyList<CastMember>? stored, Character character, LanguageRules rules) =>
-        stored?.FirstOrDefault(m => m.CharacterId == character.Id && m.Edited)?.Flavour
-        ?? FlavourGuess.Guess(character.Name, rules);
+    // The grown-up's pick first, but with a roster cast (Slice 116) only while the character still has the voice they picked it with: a voice that was dropped and recast
+    // takes the flavour of the character the caster gave, not the old pick's. A voice-only cast has no flavours of its own, so the pick stays. Else a guess from the name.
+    private static VoiceFlavour FlavourOf(VoiceCast cast, IReadOnlyList<CastMember>? stored, Character character, LanguageRules rules)
+    {
+        VoiceFlavour? castFlavour = cast.Flavours?.GetValueOrDefault(character.Id);
+        CastMember? pick = stored?.FirstOrDefault(m => m.CharacterId == character.Id && m.Edited);
+        bool pickStands = pick is not null && (castFlavour is null || pick.VoiceId == cast.VoiceFor(character.Id));
+        return (pickStands ? pick!.Flavour : null) ?? castFlavour ?? FlavourGuess.Guess(character.Name, rules);
+    }
 
     private static bool WasEdited(IReadOnlyList<CastMember>? stored, string characterId) =>
         stored?.Any(m => m.CharacterId == characterId && m.Edited) == true;
@@ -48,4 +54,8 @@ public static class StoryCast
     /// </summary>
     public static IReadOnlyDictionary<string, string> Pinned(IReadOnlyList<CastMember> stored) =>
         stored.DistinctBy(m => m.CharacterId).ToDictionary(m => m.CharacterId, m => m.VoiceId);
+
+    /// <summary>The stored voice and flavour of every character, for <see cref="CastCharacters.Cast"/> to keep (Slice 116).</summary>
+    public static IReadOnlyDictionary<string, PinnedCharacter> PinnedCharacters(IReadOnlyList<CastMember> stored) =>
+        stored.DistinctBy(m => m.CharacterId).ToDictionary(m => m.CharacterId, m => new PinnedCharacter(m.VoiceId, m.Flavour, m.Edited));
 }

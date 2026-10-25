@@ -116,7 +116,7 @@ internal sealed class CastMergeSheet : Grid
 	{
 		CastRow? keep = _rows.FirstOrDefault(r => r.Member.CharacterId == _selection.KeepId);
 		_keepRow.IsVisible = keep is not null;
-		_keepValue.Text = keep is null ? string.Empty : CastText.NameAndVoice(keep.Member.Name, keep.Member.VoiceId, _language);
+		_keepValue.Text = keep is null ? string.Empty : CastText.NameAndCharacter(keep.Member.Name, keep.Member.VoiceId, keep.Flavour, _language);
 		_confirm.IsEnabled = keep is not null;
 		_confirm.Opacity = keep is null ? 0.45 : 1;
 		_confirm.Text = keep is null ? CastText.MergeButton : CastText.MergeInto(keep.Member.Name);
@@ -139,7 +139,7 @@ internal sealed class CastMergeSheet : Grid
 		line.Add(CheckBox(picked), 0);
 		line.Add(CastViews.Avatar(AvatarPalette.InitialOf(row.Member.Name), Color.FromArgb(AvatarPalette.ColourAt(index)), Colors.White, 30, 13), 1);
 		line.Add(new Label { Text = row.Member.Name, FontSize = 15, FontAttributes = picked ? FontAttributes.Bold : FontAttributes.None, VerticalOptions = LayoutOptions.Center }, 2);
-		line.Add(new Label { Text = CastText.VoiceName(row.Member.VoiceId, _language), FontSize = 12.5, TextColor = DinoTokens.Get(DinoTokens.Muted), VerticalOptions = LayoutOptions.Center }, 3);
+		line.Add(new Label { Text = CastText.CharacterName(row.Member.VoiceId, row.Flavour, _language), FontSize = 12.5, TextColor = DinoTokens.Get(DinoTokens.Muted), VerticalOptions = LayoutOptions.Center }, 3);
 		SemanticProperties.SetDescription(line, row.Member.Name);
 		CastViews.AddTap(line, () => ToggleAsync(row.Member.CharacterId));
 		return line;
@@ -173,7 +173,7 @@ internal sealed class CastMergeSheet : Grid
 		}
 
 		var picks = _selection.Picked.Select(id => _rows.First(r => r.Member.CharacterId == id)).ToList();
-		var labels = picks.Select(r => CastText.NameAndVoice(r.Member.Name, r.Member.VoiceId, _language)).ToList();
+		var labels = picks.Select(r => CastText.NameAndCharacter(r.Member.Name, r.Member.VoiceId, r.Flavour, _language)).ToList();
 		int at = await ChooseKeep(labels);
 		if (at >= 0 && at < picks.Count)
 		{

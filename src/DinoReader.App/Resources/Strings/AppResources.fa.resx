@@ -166,16 +166,11 @@
   <!-- /Slice 111 -->
   <!-- Slice 113 -->
   <data name="Cast_Pair" xml:space="preserve"><value>{0}: {1}</value></data>
-  <data name="Cast_Sounds" xml:space="preserve"><value>صدا</value></data>
-  <data name="Cast_Flavour_Normal" xml:space="preserve"><value>عادی</value></data>
-  <data name="Cast_Flavour_Small" xml:space="preserve"><value>کوچک</value></data>
-  <data name="Cast_Flavour_Big" xml:space="preserve"><value>بزرگ</value></data>
-  <data name="Cast_Flavour_Bouncy" xml:space="preserve"><value>سرزنده</value></data>
-  <data name="Cast_Flavour_Sleepy" xml:space="preserve"><value>خواب‌آلود</value></data>
-  <data name="Cast_FlavourHint_Small" xml:space="preserve"><value>بالاتر، کمی سریع‌تر</value></data>
-  <data name="Cast_FlavourHint_Big" xml:space="preserve"><value>بم‌تر، آهسته‌تر</value></data>
-  <data name="Cast_FlavourHint_Bouncy" xml:space="preserve"><value>بالاتر، سریع</value></data>
-  <data name="Cast_FlavourHint_Sleepy" xml:space="preserve"><value>آهسته، کمی بم‌تر</value></data>
+  <data name="Cast_PickTitle" xml:space="preserve"><value>چه کسی نقش {0} را بازی می‌کند؟</value></data>
+  <data name="Cast_PickSubtitle" xml:space="preserve"><value>برای این کتاب، به {0}</value></data>
+  <data name="Cast_FilterGirls" xml:space="preserve"><value>دخترها</value></data>
+  <data name="Cast_FilterBoys" xml:space="preserve"><value>پسرها</value></data>
+  <data name="Cast_FilterEveryone" xml:space="preserve"><value>همه</value></data>
   <!-- /Slice 113 -->
   <!-- Slice 115 -->
   <data name="Storyteller_Getting" xml:space="preserve"><value>در حال دریافت صداهای قصه‌گو…</value></data>
@@ -275,25 +270,18 @@
   <data name="Cast_MergeTitle" xml:space="preserve"><value>ادغام شخصیت‌ها</value></data>
   <data name="Cast_MergeBody" xml:space="preserve"><value>دو نامی را که یک شخصیت هستند انتخاب کنید. جمله‌هایشان زیر یک نام و یک صدا یکی می‌شود.</value></data>
   <data name="Cast_KeepName" xml:space="preserve"><value>نام را نگه دار</value></data>
-  <data name="Cast_VoiceTitle" xml:space="preserve"><value>صدا</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>سلام! صدای من وقتی داستان شما را می‌خوانم این‌طوری است.</value></data>
   <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>ذخیرهٔ این تغییر ممکن نشد</value></data>
   <data name="Cast_SaveFailedBody" xml:space="preserve"><value>بازیگران ذخیره نشدند. کمی بعد دوباره امتحان کنید.</value></data>
   <data name="Cast_PreviewFailedBody" xml:space="preserve"><value>پخش صدا در حال حاضر ممکن نیست.</value></data>
   <data name="Cast_LoadFailedTitle" xml:space="preserve"><value>باز کردن بازیگران ممکن نشد</value></data>
   <data name="Cast_LoadFailedBody" xml:space="preserve"><value>بازیگران این داستان مشخص نشدند. کمی بعد دوباره امتحان کنید.</value></data>
-  <data name="Cast_Boy" xml:space="preserve"><value>پسر</value></data>
-  <data name="Cast_Girl" xml:space="preserve"><value>دختر</value></data>
   <data name="Cast_Words_One" xml:space="preserve"><value>{0} کلمه</value></data>
   <data name="Cast_Words_Other" xml:space="preserve"><value>{0} کلمه</value></data>
   <data name="Cast_UnknownLines_One" xml:space="preserve"><value>{0} جمله</value></data>
   <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} جمله</value></data>
   <data name="Cast_UsesNarrator" xml:space="preserve"><value>با صدای راوی خوانده می‌شود</value></data>
   <data name="Cast_Hear" xml:space="preserve"><value>شنیدن صدای {0}</value></data>
-  <data name="Cast_NoBoyVoice" xml:space="preserve"><value>این بستهٔ صدا صدای پسرانه ندارد، پس این شخصیت صدای قبلی‌اش را نگه می‌دارد.</value></data>
-  <data name="Cast_NoGirlVoice" xml:space="preserve"><value>این بستهٔ صدا صدای دخترانه ندارد، پس این شخصیت صدای قبلی‌اش را نگه می‌دارد.</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>ادغام در {0}</value></data>
-  <data name="Cast_SharedNote" xml:space="preserve"><value>فارسی فقط {0} صدای طبیعی دارد، پس بعضی شخصیت‌ها صدای مشترک دارند. صدای راوی هیچ‌وقت به شخصیتی داده نمی‌شود.</value></data>
-  <data name="Voice_NbWoman" xml:space="preserve"><value>صدا {0} (زن)</value></data>
-  <data name="Voice_NbMan" xml:space="preserve"><value>صدا {0} (مرد)</value></data>
+  <data name="Cast_SharedNote" xml:space="preserve"><value>این کتاب شخصیت‌های بیشتری از {0} شخصیت قصه‌گوی موجود دارد، پس بعضی‌ها یک‌جور صدا می‌دهند. راوی هیچ‌وقت به شخصیتی داده نمی‌شود.</value></data>
 </root>

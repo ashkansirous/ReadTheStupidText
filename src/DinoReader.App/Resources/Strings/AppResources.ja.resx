@@ -166,16 +166,11 @@
   <!-- /Slice 111 -->
   <!-- Slice 113 -->
   <data name="Cast_Pair" xml:space="preserve"><value>{0}：{1}</value></data>
-  <data name="Cast_Sounds" xml:space="preserve"><value>声</value></data>
-  <data name="Cast_Flavour_Normal" xml:space="preserve"><value>ふつう</value></data>
-  <data name="Cast_Flavour_Small" xml:space="preserve"><value>ちいさい</value></data>
-  <data name="Cast_Flavour_Big" xml:space="preserve"><value>おおきい</value></data>
-  <data name="Cast_Flavour_Bouncy" xml:space="preserve"><value>はずむ</value></data>
-  <data name="Cast_Flavour_Sleepy" xml:space="preserve"><value>ねむい</value></data>
-  <data name="Cast_FlavourHint_Small" xml:space="preserve"><value>高め、少し速め</value></data>
-  <data name="Cast_FlavourHint_Big" xml:space="preserve"><value>低め、ゆっくり</value></data>
-  <data name="Cast_FlavourHint_Bouncy" xml:space="preserve"><value>高め、速め</value></data>
-  <data name="Cast_FlavourHint_Sleepy" xml:space="preserve"><value>ゆっくり、少し低め</value></data>
+  <data name="Cast_PickTitle" xml:space="preserve"><value>{0}を演じるのは誰？</value></data>
+  <data name="Cast_PickSubtitle" xml:space="preserve"><value>この本では、{0}</value></data>
+  <data name="Cast_FilterGirls" xml:space="preserve"><value>女の子</value></data>
+  <data name="Cast_FilterBoys" xml:space="preserve"><value>男の子</value></data>
+  <data name="Cast_FilterEveryone" xml:space="preserve"><value>みんな</value></data>
   <!-- /Slice 113 -->
   <!-- Slice 115 -->
   <data name="Storyteller_Getting" xml:space="preserve"><value>語り手の声をダウンロード中…</value></data>
@@ -275,25 +270,18 @@
   <data name="Cast_MergeTitle" xml:space="preserve"><value>登場人物をまとめる</value></data>
   <data name="Cast_MergeBody" xml:space="preserve"><value>同じ登場人物の名前を2つ選んでください。セリフはひとつの名前とひとつの声にまとまります。</value></data>
   <data name="Cast_KeepName" xml:space="preserve"><value>名前を残す</value></data>
-  <data name="Cast_VoiceTitle" xml:space="preserve"><value>声</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>こんにちは！あなたのおはなしを読むときの声はこんな感じです。</value></data>
   <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>変更を保存できませんでした</value></data>
   <data name="Cast_SaveFailedBody" xml:space="preserve"><value>配役は保存されませんでした。しばらくしてからもう一度お試しください。</value></data>
   <data name="Cast_PreviewFailedBody" xml:space="preserve"><value>今は声を再生できません。</value></data>
   <data name="Cast_LoadFailedTitle" xml:space="preserve"><value>配役を開けませんでした</value></data>
   <data name="Cast_LoadFailedBody" xml:space="preserve"><value>このおはなしの配役を調べられませんでした。しばらくしてからもう一度お試しください。</value></data>
-  <data name="Cast_Boy" xml:space="preserve"><value>男の子</value></data>
-  <data name="Cast_Girl" xml:space="preserve"><value>女の子</value></data>
   <data name="Cast_Words_One" xml:space="preserve"><value>{0} 語</value></data>
   <data name="Cast_Words_Other" xml:space="preserve"><value>{0} 語</value></data>
   <data name="Cast_UnknownLines_One" xml:space="preserve"><value>{0} 行</value></data>
   <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} 行</value></data>
   <data name="Cast_UsesNarrator" xml:space="preserve"><value>ナレーターの声で読みます</value></data>
   <data name="Cast_Hear" xml:space="preserve"><value>{0} の声を聞く</value></data>
-  <data name="Cast_NoBoyVoice" xml:space="preserve"><value>この音声パックには男の子の声がないため、このキャラクターは今の声のままです。</value></data>
-  <data name="Cast_NoGirlVoice" xml:space="preserve"><value>この音声パックには女の子の声がないため、このキャラクターは今の声のままです。</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>{0} にまとめる</value></data>
-  <data name="Cast_SharedNote" xml:space="preserve"><value>この音声パックには自然な声が {0} 種類しかないため、同じ声を使うキャラクターがいます。ナレーターの声はキャラクターには使われません。</value></data>
-  <data name="Voice_NbWoman" xml:space="preserve"><value>声 {0}（女性）</value></data>
-  <data name="Voice_NbMan" xml:space="preserve"><value>声 {0}（男性）</value></data>
+  <data name="Cast_SharedNote" xml:space="preserve"><value>この本には、用意されている {0} 人の語り手キャラクターより多くの登場人物がいるため、同じように聞こえるキャラクターがいます。ナレーターはキャラクターには使われません。</value></data>
 </root>

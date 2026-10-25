@@ -168,16 +168,11 @@
   <!-- /Slice 111 -->
   <!-- Slice 113 -->
   <data name="Cast_Pair" xml:space="preserve"><value>{0}: {1}</value></data>
-  <data name="Cast_Sounds" xml:space="preserve"><value>Äänet</value></data>
-  <data name="Cast_Flavour_Normal" xml:space="preserve"><value>Tavallinen</value></data>
-  <data name="Cast_Flavour_Small" xml:space="preserve"><value>Pieni</value></data>
-  <data name="Cast_Flavour_Big" xml:space="preserve"><value>Iso</value></data>
-  <data name="Cast_Flavour_Bouncy" xml:space="preserve"><value>Vilkas</value></data>
-  <data name="Cast_Flavour_Sleepy" xml:space="preserve"><value>Unelias</value></data>
-  <data name="Cast_FlavourHint_Small" xml:space="preserve"><value>korkeampi, hieman nopeampi</value></data>
-  <data name="Cast_FlavourHint_Big" xml:space="preserve"><value>matalampi, hitaampi</value></data>
-  <data name="Cast_FlavourHint_Bouncy" xml:space="preserve"><value>korkeampi, nopea</value></data>
-  <data name="Cast_FlavourHint_Sleepy" xml:space="preserve"><value>hidas, hieman matalampi</value></data>
+  <data name="Cast_PickTitle" xml:space="preserve"><value>Kuka esittää hahmoa {0}?</value></data>
+  <data name="Cast_PickSubtitle" xml:space="preserve"><value>Tälle kirjalle, kieli: {0}</value></data>
+  <data name="Cast_FilterGirls" xml:space="preserve"><value>Tytöt</value></data>
+  <data name="Cast_FilterBoys" xml:space="preserve"><value>Pojat</value></data>
+  <data name="Cast_FilterEveryone" xml:space="preserve"><value>Kaikki</value></data>
   <!-- /Slice 113 -->
   <!-- Slice 115 -->
   <data name="Storyteller_Getting" xml:space="preserve"><value>Ladataan tarinankertojan ääniä…</value></data>
@@ -274,25 +269,18 @@
   <data name="Cast_MergeTitle" xml:space="preserve"><value>Yhdistä hahmot</value></data>
   <data name="Cast_MergeBody" xml:space="preserve"><value>Valitse kaksi nimeä, jotka ovat sama hahmo. Heidän repliikkinsä yhdistetään yhden nimen ja yhden äänen alle.</value></data>
   <data name="Cast_KeepName" xml:space="preserve"><value>Säilytä nimi</value></data>
-  <data name="Cast_VoiceTitle" xml:space="preserve"><value>Ääni</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>Hei! Tältä kuulostan, kun luen tarinaasi.</value></data>
   <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>Muutosta ei voitu tallentaa</value></data>
   <data name="Cast_SaveFailedBody" xml:space="preserve"><value>Hahmoja ei tallennettu. Yritä hetken kuluttua uudelleen.</value></data>
   <data name="Cast_PreviewFailedBody" xml:space="preserve"><value>Ääntä ei voitu toistaa juuri nyt.</value></data>
   <data name="Cast_LoadFailedTitle" xml:space="preserve"><value>Hahmoja ei voitu avata</value></data>
   <data name="Cast_LoadFailedBody" xml:space="preserve"><value>Tämän tarinan hahmoja ei voitu selvittää. Yritä hetken kuluttua uudelleen.</value></data>
-  <data name="Cast_Boy" xml:space="preserve"><value>Poika</value></data>
-  <data name="Cast_Girl" xml:space="preserve"><value>Tyttö</value></data>
   <data name="Cast_Words_One" xml:space="preserve"><value>{0} sana</value></data>
   <data name="Cast_Words_Other" xml:space="preserve"><value>{0} sanaa</value></data>
   <data name="Cast_UnknownLines_One" xml:space="preserve"><value>{0} rivi</value></data>
   <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} riviä</value></data>
   <data name="Cast_UsesNarrator" xml:space="preserve"><value>käyttää kertojan ääntä</value></data>
   <data name="Cast_Hear" xml:space="preserve"><value>Kuuntele: {0}</value></data>
-  <data name="Cast_NoBoyVoice" xml:space="preserve"><value>Tässä äänipaketissa ei ole poikaääntä, joten tämä hahmo säilyttää äänensä.</value></data>
-  <data name="Cast_NoGirlVoice" xml:space="preserve"><value>Tässä äänipaketissa ei ole tyttöääntä, joten tämä hahmo säilyttää äänensä.</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>Yhdistä hahmoon {0}</value></data>
-  <data name="Cast_SharedNote" xml:space="preserve"><value>Tässä äänipaketissa on vain {0} luonnollista ääntä, joten jotkin hahmot jakavat äänen. Kertojan ääntä ei koskaan anneta hahmolle.</value></data>
-  <data name="Voice_NbWoman" xml:space="preserve"><value>Ääni {0} (nainen)</value></data>
-  <data name="Voice_NbMan" xml:space="preserve"><value>Ääni {0} (mies)</value></data>
+  <data name="Cast_SharedNote" xml:space="preserve"><value>Tässä kirjassa on enemmän hahmoja kuin käytettävissä olevia {0} kertojahahmoa, joten jotkin kuulostavat samalta. Kertojaa ei koskaan anneta hahmolle.</value></data>
 </root>

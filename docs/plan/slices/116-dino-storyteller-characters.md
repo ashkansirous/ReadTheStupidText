@@ -1,6 +1,6 @@
 # Slice 116 — Dino: storyteller characters in every language
 
-*Planned 2026-10-25*, from the user's ask to "create multiple characters, auto assign them yourself,
+*Built 2026-10-25, emulator run in progress, not yet verified.* *Planned 2026-10-25*, from the user's ask to "create multiple characters, auto assign them yourself,
 then allow people to change the character… be creative with the voice… create enough characters for
 all languages". Dino Reader only; RTST is not touched.
 
@@ -55,18 +55,18 @@ New strings (all 14 locales): picker title "Who plays {name}?", subtitle "For th
 
 ## Work
 
-- [ ] 1. Smallest end to end, English: the roster type in `DinoReader.Core` (id, voice id, flavour,
+- [x] 1. Smallest end to end, English: the roster type in `DinoReader.Core` (id, voice id, flavour,
   gender, age/size tags, localized name key), 16–20 English characters on Kokoro, `VoiceCaster` casts
   from it, the cast screen shows one character picker plus play button per story character (frame 52) and a picker sheet with the Girls/Boys/Everyone filter that starts on the character's gender, plain-word descriptions, a "· Little Pig" used-by label and tap-to-pick (frame 53; replaces the boy/girl toggle). Unit tests: casting from
   names, no duplicates, swap pins.
-- [ ] 2. New flavours in `VoiceFlavour` (Squeaky, Grumpy, Whisper, Giant or similar; keep pitch within
+- [x] 2. New flavours in `VoiceFlavour` (Squeaky, Grumpy, Whisper, Giant or similar; keep pitch within
   the range the listening check allows) and the per-language guess words that pick them.
-- [ ] 3. Rosters for the other 13 languages, each on that language's best engine (Supertonic-3 for
+- [x] 3. Rosters for the other 13 languages, each on that language's best engine (Supertonic-3 for
   fr/es/pt/ru/ja/ar/da/fi/sv/nl, `piper-fa` for Farsi, `piper-nb` for Norwegian, `melo-zh-en` for
   Chinese), with names written in each language.
-- [ ] 4. Narrator characters on the narrator screen (three English narrators with descriptions, frame 55; Farsi names written in Farsi, frame 54); migrate stored casts and narrator picks to
+- [x] 4. Narrator characters on the narrator screen (three English narrators with descriptions, frame 55; Farsi names written in Farsi, frame 54); migrate stored casts and narrator picks to
   characters; remove the "Sounds" row and Supertonic names from the UI.
-- [ ] 5. Strings in all 14 `.resx` files; rules in `src/DinoReader.Core/CLAUDE.md` and
+- [x] 5. Strings in all 14 `.resx` files; rules in `src/DinoReader.Core/CLAUDE.md` and
   `src/DinoReader.App/CLAUDE.md` (For CLAUDE.md block).
 
 ## Verification
@@ -76,3 +76,20 @@ New strings (all 14 locales): picker title "Who plays {name}?", subtitle "For th
 - Android emulator: an English and a Farsi starter auto-cast with sensible characters; swapping one
   is heard on the next read and kept after a restart; no engine or anime name anywhere in Dino.
 - The user listens to the English roster and picks favourites; drop characters that sound broken.
+
+## Changed while building
+
+*Changed while building:* rosters live in `src/DinoReader.Core/CharacterRoster*.cs`: English 20 on Kokoro; Farsi 19 on four `piper-fa` voices (mana female; ganji, ganji_adabi, gyro male); Norwegian and ten Supertonic languages 18 each; Chinese 10 on the one Melo voice, with one narrator. `StorytellerCharacter` plus the `CastCharacters` caster pick by gender, then `FlavourGuess`, and repeat only when the roster runs out. Before the English pack lands, the Kokoro roster maps onto Supertonic by gender (`MapOnto`, speaker voices first). New flavours Squeaky, Grumpy, Whisper and Giant are in `VoiceFlavours.Assignable` (`Pickable` stays 5 for RTST). A stored flavour wins only when Edited. The picker is the `CastCharacterPicker` sheet in `CastFlavourMenu.cs`; the narrator page has an inline list. Names and hints live in the rosters, not the resx files. Removed: the Sounds row, Supertonic names, `GenderControl`/`VoiceChip`, and `CastEditor` `SetVoice`/`SetGender`/`SetFlavour`/`VoiceChoices`/`HasVoiceOfGender` with their tests. Added a `CastText.RosterSource` hook. Files outside Touches: `AppResources.cs`, `CastMergeSheet.cs`.
+
+*From review:* high findings 1-7 applied (5 was doc-only: the Chinese narrator shares the one voice); medium findings 1-5 applied.
+
+#### For CLAUDE.md
+
+Rules were already added on this branch in `src/DinoReader.Core/CLAUDE.md` and `src/DinoReader.App/CLAUDE.md`; the index pass should not lift them again.
+
+#### Not yet verified
+
+- Emulator run (English and Farsi auto-cast, swap kept after restart) is in progress.
+- Native-speaker read of all roster names and hints, especially Farsi.
+- Farsi bee=Small and princess=Whisper flavours, by ear.
+- Chinese has only one voice (confirm that is acceptable).

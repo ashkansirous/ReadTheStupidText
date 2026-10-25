@@ -168,16 +168,11 @@
   <!-- /Slice 111 -->
   <!-- Slice 113 -->
   <data name="Cast_Pair" xml:space="preserve"><value>{0}: {1}</value></data>
-  <data name="Cast_Sounds" xml:space="preserve"><value>Ljud</value></data>
-  <data name="Cast_Flavour_Normal" xml:space="preserve"><value>Normal</value></data>
-  <data name="Cast_Flavour_Small" xml:space="preserve"><value>Liten</value></data>
-  <data name="Cast_Flavour_Big" xml:space="preserve"><value>Stor</value></data>
-  <data name="Cast_Flavour_Bouncy" xml:space="preserve"><value>Studsig</value></data>
-  <data name="Cast_Flavour_Sleepy" xml:space="preserve"><value>Sömnig</value></data>
-  <data name="Cast_FlavourHint_Small" xml:space="preserve"><value>högre, lite snabbare</value></data>
-  <data name="Cast_FlavourHint_Big" xml:space="preserve"><value>djupare, långsammare</value></data>
-  <data name="Cast_FlavourHint_Bouncy" xml:space="preserve"><value>högre, snabb</value></data>
-  <data name="Cast_FlavourHint_Sleepy" xml:space="preserve"><value>långsam, lite lägre</value></data>
+  <data name="Cast_PickTitle" xml:space="preserve"><value>Vem spelar {0}?</value></data>
+  <data name="Cast_PickSubtitle" xml:space="preserve"><value>För den här boken, på {0}</value></data>
+  <data name="Cast_FilterGirls" xml:space="preserve"><value>Flickor</value></data>
+  <data name="Cast_FilterBoys" xml:space="preserve"><value>Pojkar</value></data>
+  <data name="Cast_FilterEveryone" xml:space="preserve"><value>Alla</value></data>
   <!-- /Slice 113 -->
   <!-- Slice 115 -->
   <data name="Storyteller_Getting" xml:space="preserve"><value>Hämtar berättarrösterna…</value></data>
@@ -274,25 +269,18 @@
   <data name="Cast_MergeTitle" xml:space="preserve"><value>Slå ihop figurer</value></data>
   <data name="Cast_MergeBody" xml:space="preserve"><value>Välj de två namn som är samma figur. Replikerna slås ihop under ett namn och en röst.</value></data>
   <data name="Cast_KeepName" xml:space="preserve"><value>Behåll namnet</value></data>
-  <data name="Cast_VoiceTitle" xml:space="preserve"><value>Röst</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>Hej! Så här låter jag när jag läser din saga.</value></data>
   <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>Det gick inte att spara ändringen</value></data>
   <data name="Cast_SaveFailedBody" xml:space="preserve"><value>Rollbesättningen sparades inte. Försök igen om en stund.</value></data>
   <data name="Cast_PreviewFailedBody" xml:space="preserve"><value>Rösten kunde inte spelas upp just nu.</value></data>
   <data name="Cast_LoadFailedTitle" xml:space="preserve"><value>Det gick inte att öppna rollbesättningen</value></data>
   <data name="Cast_LoadFailedBody" xml:space="preserve"><value>Rollbesättningen kunde inte tas fram för den här sagan. Försök igen om en stund.</value></data>
-  <data name="Cast_Boy" xml:space="preserve"><value>Pojke</value></data>
-  <data name="Cast_Girl" xml:space="preserve"><value>Flicka</value></data>
   <data name="Cast_Words_One" xml:space="preserve"><value>{0} ord</value></data>
   <data name="Cast_Words_Other" xml:space="preserve"><value>{0} ord</value></data>
   <data name="Cast_UnknownLines_One" xml:space="preserve"><value>{0} replik</value></data>
   <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} repliker</value></data>
   <data name="Cast_UsesNarrator" xml:space="preserve"><value>använder berättarens röst</value></data>
   <data name="Cast_Hear" xml:space="preserve"><value>Hör {0}</value></data>
-  <data name="Cast_NoBoyVoice" xml:space="preserve"><value>Det här röstpaketet har ingen pojkröst, så figuren behåller rösten den hade.</value></data>
-  <data name="Cast_NoGirlVoice" xml:space="preserve"><value>Det här röstpaketet har ingen flickröst, så figuren behåller rösten den hade.</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>Slå ihop med {0}</value></data>
-  <data name="Cast_SharedNote" xml:space="preserve"><value>Det här röstpaketet har bara {0} naturliga röster, så vissa figurer delar röst. Berättarens röst ges aldrig till en figur.</value></data>
-  <data name="Voice_NbWoman" xml:space="preserve"><value>Röst {0} (kvinna)</value></data>
-  <data name="Voice_NbMan" xml:space="preserve"><value>Röst {0} (man)</value></data>
+  <data name="Cast_SharedNote" xml:space="preserve"><value>Det finns fler figurer i boken än de {0} berättarfigurer vi har, så vissa låter lika. Berättaren ges aldrig till en figur.</value></data>
 </root>

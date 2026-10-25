@@ -7,8 +7,8 @@ using ReadTheStupidText.Domain.Reading;
 namespace DinoReader;
 
 /// <summary>
-/// "Who's speaking" (mock screens 10, 11, 15), behind the gate: the narrator's voice, each character's
-/// gender and voice with a preview, and a merge for two names that are one character. Every edit is
+/// "Who's speaking" (mock screens 10, 11, 15 and, since Slice 116, frames 52-53), behind the gate: the narrator, each story character's
+/// storyteller character with a preview and a picker sheet, and a merge for two names that are one character. Every edit is
 /// pinned (EDITED) and saved at once through the callback the opener gave <see cref="Load"/>: the
 /// library for a saved story, the edit draft or the add screen otherwise. Reading picks the cast up
 /// at its next start; the gate always stops the story first, so no read is live while this is open.
@@ -25,7 +25,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	private readonly Border _mergeButton = new();
 	private readonly ContentView _languageChip = new() { Margin = new Thickness(14, 0, 14, 10) };
 	private readonly CastMergeSheet _sheet = new();
-	private readonly CastFlavourMenu _flavourMenu = new();
+	private readonly CastCharacterPicker _picker = new();
 	private readonly CastRowActions _actions;
 	private readonly StorytellerDefault _storyteller;
 	private readonly Grid _root = new();
@@ -35,7 +35,6 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	private string _castLanguage = string.Empty;
 	private readonly VoicePreview _preview;
 	private bool _returningFromNarrator;
-	private readonly HashSet<string> _openRows = [];
 
 	public CastPage(StoryVoicing voicing, ISpeechReader reader, SpokenLanguage spoken, IServiceProvider services)
 	{
@@ -46,11 +45,8 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		_preview = new VoicePreview(reader);
 		_spoken = spoken;
 		_actions = new CastRowActions(
-			row => _busy.RunAsync(() => PreviewAsync(row, VoiceFlavour.Normal)),
-			(row, gender) => _busy.RunAsync(() => SetGenderAsync(row, gender)),
-			row => _busy.RunAsync(() => PickVoiceAsync(row)),
-			row => _busy.RunAsync(() => PickFlavourAsync(row)),
-			row => _busy.RunAsync(() => PreviewAsync(row, row.Flavour)));
+			row => _busy.RunAsync(() => PreviewAsync(row.Member.VoiceId, row.Flavour)),
+			row => _busy.RunAsync(() => PickCharacterAsync(row)));
 		NavigationPage.SetHasNavigationBar(this, false);
 		SafeAreaEdges = new SafeAreaEdges(SafeAreaRegions.Container);
 		BackgroundColor = DinoTokens.Get(DinoTokens.Sand);
@@ -124,6 +120,12 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 
 	protected override bool OnBackButtonPressed()
 	{
+		if (_picker.IsVisible)
+		{
+			_picker.Dismiss();
+			return true;
+		}
+
 		if (!_sheet.IsVisible)
 		{
 			return base.OnBackButtonPressed();
@@ -145,7 +147,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		column.Add(new VerticalStackLayout { Children = { BuildMergeButton() } }, 0, 2);
 		_root.Add(column);
 		_root.Add(_sheet);
-		_root.Add(_flavourMenu);
+		_root.Add(_picker);
 		return _root;
 	}
 
@@ -158,7 +160,8 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		};
 		SemanticProperties.SetDescription(back, CastText.Back);
 		CastViews.AddTap(back, () => _busy.RunAsync(() => Navigation.PopAsync()));
-		var title = new Label { Text = CastText.Title, FontSize = 20, FontAttributes = FontAttributes.Bold };
+		Label title = CastText.InOwnScriptAligned(new Label { Text = CastText.Title, FontSize = 20, FontAttributes = FontAttributes.Bold });
+		CastText.AlignWith(_subtitle, title);
 		SemanticProperties.SetHeadingLevel(title, SemanticHeadingLevel.Level1);
 		var header = new Grid
 		{
@@ -220,7 +223,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 
 	private CastSheet Sheet() => _resolved is null || _story is null
 		? new CastSheet([], 0, false, 0)
-		: CastSheet.Build(_resolved, _story.CastIn(_castLanguage), _voicing.CharacterVoiceCount(_castLanguage), LanguageRules.For(_story.Language));
+		: CastSheet.Build(_resolved, _story.CastIn(_castLanguage), _voicing.CharacterVoiceCount(_castLanguage), LanguageRules.For(_story.Language), roster: _voicing.RosterFor(_castLanguage));
 
 	private void Render()
 	{
@@ -249,7 +252,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		var rows = new VerticalStackLayout();
 		for (int i = 0; i < sheet.Rows.Count; i++)
 		{
-			rows.Children.Add(CastRows.Character(sheet.Rows[i], i, _actions, _castLanguage, FoldOf(sheet.Rows[i])));
+			rows.Children.Add(CastRows.Character(sheet.Rows[i], i, _actions, _castLanguage));
 			rows.Children.Add(CastViews.Divider());
 		}
 
@@ -257,29 +260,6 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		Border card = CastViews.Card();
 		card.Content = rows;
 		return card;
-	}
-
-	// With the storyteller voices in use the rows start collapsed and a tap opens one (mock frame 49); otherwise they never fold.
-	private CastRowFold? FoldOf(CastRow row)
-	{
-		if (!_voicing.UsesStorytellerVoices(_castLanguage))
-		{
-			return null;
-		}
-
-		string id = row.Member.CharacterId;
-		return new CastRowFold(!_openRows.Contains(id), () => ToggleRow(id));
-	}
-
-	private Task ToggleRow(string characterId)
-	{
-		if (!_openRows.Remove(characterId))
-		{
-			_openRows.Add(characterId);
-		}
-
-		Render();
-		return Task.CompletedTask;
 	}
 
 	// Edits go into the reading language's cast; merges are the story's, shared by every language.
@@ -333,41 +313,26 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		}
 	}
 
-	private async Task SetGenderAsync(CastRow row, Gender gender)
+	// The picker sheet (Slice 116, mock frame 53): the pick is pinned (voice and flavour together) in this language's cast; a character already used in this book is labelled, not blocked.
+	private async Task PickCharacterAsync(CastRow row)
 	{
-		if (row.Member.Gender == gender)
+		IReadOnlyList<StorytellerCharacter> choices = _voicing.ChoicesFor(_castLanguage);
+		IReadOnlyList<CastRow> rows = Sheet().Rows;
+		StorytellerCharacter? picked = await _picker.PickAsync(
+			row.Member.Name, _castLanguage, choices, row.Character, row.Member.Gender, character => UsedBy(rows, character, row), PreviewCharacterAsync);
+		// Keeping the character a row already shows still pins it when the row is not yet edited, so a later narrator or pack change cannot re-cast it.
+		bool changed = picked is not null && (picked.VoiceId != row.Member.VoiceId || picked.Flavour != row.Flavour || !row.Member.Edited);
+		if (picked is not null && changed)
 		{
-			return;
-		}
-
-		AttributionResult resolved = _resolved!;
-		string narrator = _voicing.NarratorOf(_castLanguage);
-		await ApplyAsync(edit => CastEditor.SetGender(edit, resolved.Characters, _voicing.VoicesFor(_castLanguage), narrator, row.Member.CharacterId, gender));
-		if (!CastEditor.HasVoiceOfGender(_voicing.VoicesFor(_castLanguage), narrator, gender))
-		{
-			await DisplayAlertAsync(CastText.Title, CastText.NoVoiceOfGender(gender), CastText.Ok);
+			await ApplyAsync(edit => CastEditor.SetCharacter(edit, row.Member.CharacterId, picked));
 		}
 	}
 
-	private async Task PickVoiceAsync(CastRow row)
-	{
-		string narrator = _voicing.NarratorOf(_castLanguage);
-		VoiceOption? voice = await ChooseVoiceAsync(CastEditor.VoiceChoices(_voicing.VoicesFor(_castLanguage), narrator, row.Member.Gender));
-		if (voice is not null && voice.Id != row.Member.VoiceId)
-		{
-			await ApplyAsync(edit => CastEditor.SetVoice(edit, row.Member.CharacterId, voice.Id, narrator));
-		}
-	}
+	// The name of another story character of this book who already has the character (the same voice and flavour), for the picker's hint.
+	private static string? UsedBy(IReadOnlyList<CastRow> rows, StorytellerCharacter character, CastRow asking) =>
+		rows.FirstOrDefault(r => r.Member.CharacterId != asking.Member.CharacterId && r.Character?.Id == character.Id)?.Member.Name;
 
-	// The flavour menu (Slice 113, mock frame 48): the flavours with their hints and the current one marked; a pick is pinned with the voice in this language's cast.
-	private async Task PickFlavourAsync(CastRow row)
-	{
-		VoiceFlavour? picked = await _flavourMenu.PickAsync(row.Flavour);
-		if (picked is VoiceFlavour flavour && flavour != row.Flavour)
-		{
-			await ApplyAsync(edit => CastEditor.SetFlavour(edit, row.Member.CharacterId, flavour));
-		}
-	}
+	private Task PreviewCharacterAsync(StorytellerCharacter character) => PreviewAsync(character.VoiceId, character.Flavour);
 
 	// The Narrator page chooses the voice for every book; the grown-up comes back here and the cast is looked at again (Slice 109).
 	private async Task OpenNarratorPageAsync()
@@ -396,12 +361,6 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		}
 	}
 
-	private async Task<VoiceOption?> ChooseVoiceAsync(IReadOnlyList<VoiceOption> choices)
-	{
-		int at = await ChooseIndexAsync(CastText.VoiceTitle, choices.Select(v => CastText.VoiceName(v.Id, _castLanguage)).ToList());
-		return at < 0 ? null : choices[at];
-	}
-
 	// The index of the picked label, or -1 when cancelled; two voices can share a display name, so never map by text.
 	private async Task<int> ChooseIndexAsync(string title, IReadOnlyList<string> labels)
 	{
@@ -409,12 +368,12 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		return picked is null || picked == CastText.Cancel ? -1 : labels.ToList().IndexOf(picked);
 	}
 
-	private async Task PreviewAsync(CastRow row, VoiceFlavour flavour)
+	private async Task PreviewAsync(string voiceId, VoiceFlavour flavour)
 	{
 		string line = CastText.PreviewLineFor(_voicing.PreviewLanguage(_castLanguage, _spoken.Current));
 		try
 		{
-			await _preview.PlayAsync(line, row.Member.VoiceId, flavour);
+			await _preview.PlayAsync(line, voiceId, flavour);
 		}
 		catch (Exception ex)
 		{

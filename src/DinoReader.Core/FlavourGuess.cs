@@ -41,13 +41,34 @@ public static partial class FlavourGuess
             return VoiceFlavour.Big;
         }
 
-        return mentions(words.Small) ? VoiceFlavour.Small : VoiceFlavour.Normal;
+        if (mentions(words.Small))
+        {
+            return VoiceFlavour.Small;
+        }
+
+        return Extra(mentions, words);
     }
 
-    /// <summary>The flavour a member sounds with: the grown-up's pick when the member is Edited (the pick pins it), else a guess
-    /// from the name. The cast screen and the player use this one rule, so a stored guess never outlives a better one.</summary>
+    // Slice 116: the characters' own flavours come last, so the size and age words above keep winning ("Grumpy Troll" stays Big).
+    private static VoiceFlavour Extra(Func<IReadOnlySet<string>, bool> mentions, FlavourWords words)
+    {
+        if (mentions(words.Grumpy))
+        {
+            return VoiceFlavour.Grumpy;
+        }
+
+        if (mentions(words.Whisper))
+        {
+            return VoiceFlavour.Whisper;
+        }
+
+        return mentions(words.Squeaky) ? VoiceFlavour.Squeaky : VoiceFlavour.Normal;
+    }
+
+    /// <summary>The flavour a member sounds with: the one stored with the character (a grown-up's pick, or the flavour of the storyteller character the cast gave it), else the guess from the name.
+    /// The cast gives characters different flavours on purpose (Pip and Pop are both Normal by name, yet one is Small and one Squeaky), so a guess must never replace a stored one. The cast screen and the player use this one rule.</summary>
     public static VoiceFlavour Effective(CastMember member, LanguageRules rules) =>
-        member.Edited && member.Flavour is VoiceFlavour pinned ? pinned : Guess(member.Name, rules);
+        member.Flavour ?? Guess(member.Name, rules);
 
     /// <summary>The flavour of every character of a cast: the stored member's (<see cref="Effective"/>), or a guess for one with no member.</summary>
     public static IReadOnlyDictionary<string, VoiceFlavour> ForCast(

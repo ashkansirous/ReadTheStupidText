@@ -3,18 +3,7 @@ using DinoReader.Core;
 namespace DinoReader;
 
 /// <summary>What a tap on a cast row does; the page supplies it (every one runs behind the page's <see cref="BusyGuard"/>).</summary>
-internal sealed record CastRowActions(
-	Func<CastRow, Task> Preview,
-	Func<CastRow, Gender, Task> SetGender,
-	Func<CastRow, Task> PickVoice,
-	Func<CastRow, Task> PickFlavour,
-	Func<CastRow, Task> PreviewFlavour);
-
-/// <summary>
-/// How a character row folds (mock frame 49, Slice 114): collapsed it is the name, "Boy · Puck · Small" and the play button; a tap on it opens
-/// the full row, and a tap on the name of an open row closes it again. Null where rows never fold (no storyteller pack installed).
-/// </summary>
-internal sealed record CastRowFold(bool Collapsed, Func<Task> Toggle);
+internal sealed record CastRowActions(Func<CastRow, Task> Preview, Func<CastRow, Task> PickCharacter);
 
 /// <summary>Builds the rows of the cast screen: the narrator, a character, the unknown speaker and the shared-voice note.</summary>
 internal static class CastRows
@@ -23,8 +12,11 @@ internal static class CastRows
 	private const double AvatarFont = 15;
 	private const double TextIndent = 44;
 	private const double LinkMinHeight = 44;
+	private const double PickerHeight = 40;
+	private const double PickerRing = 2;
+	private const double PlaySize = 40;
 
-	/// <summary>The narrator row (mock 40): read-only, the voice named, with a link to the Narrator page where it is chosen for every book (Slice 109).</summary>
+	/// <summary>The narrator row (mock frames 40 and 52): read-only, the narrator character named, with a link to the Narrator page where it is chosen for every book (Slice 109).</summary>
 	public static View Narrator(string voiceId, string language, Func<Task> changeForAll)
 	{
 		var avatar = CastViews.Avatar(string.Empty, DinoTokens.Get(DinoTokens.Ink), Colors.White, AvatarSize, AvatarFont);
@@ -39,7 +31,7 @@ internal static class CastRows
 		var text = new VerticalStackLayout
 		{
 			VerticalOptions = LayoutOptions.Center,
-			Children = { new Label { Text = CastText.NameAndVoice(CastText.Narrator, voiceId, language), FontSize = 15, FontAttributes = FontAttributes.Bold }, link },
+			Children = { CastText.InOwnScript(new Label { Text = CastText.NarratorLine(voiceId, language), FontSize = 15, FontAttributes = FontAttributes.Bold }), link },
 		};
 		var row = new Grid
 		{
@@ -53,19 +45,12 @@ internal static class CastRows
 		return row;
 	}
 
-	public static View Character(CastRow row, int index, CastRowActions actions, string language, CastRowFold? fold = null)
+	/// <summary>A story character (mock frame 52, Slice 116): its initial, name and word count, and under them the storyteller character playing it (a picker) with a play button.</summary>
+	public static View Character(CastRow row, int index, CastRowActions actions, string language)
 	{
-		if (fold is { Collapsed: true })
-		{
-			Grid collapsed = TopLine(row, index, actions, CastText.RowSummary(row.Member.Gender, row.Member.VoiceId, row.Flavour, language), fold.Toggle);
-			collapsed.Padding = new Thickness(14, 12);
-			return collapsed;
-		}
-
 		var body = new VerticalStackLayout { Padding = new Thickness(14, 12), Spacing = 9 };
-		body.Add(TopLine(row, index, actions, CastText.Words(row.Words), fold?.Toggle));
-		body.Add(SecondLine(row, actions, language));
-		body.Add(SoundsLine(row, actions));
+		body.Add(TopLine(row, index));
+		body.Add(PickerLine(row, actions, language));
 		return body;
 	}
 
@@ -94,26 +79,15 @@ internal static class CastRows
 		},
 	};
 
-	// tapName: a tap on the avatar and name folds the row (null where rows do not fold); detail is the line under the name.
-	private static Grid TopLine(CastRow row, int index, CastRowActions actions, string detail, Func<Task>? tapName)
+	private static Grid TopLine(CastRow row, int index)
 	{
-		Border preview = CastViews.PreviewButton(row.Member.Name);
-		SemanticProperties.SetDescription(preview, CastText.HearName(row.Member.Name));
-		CastViews.AddTap(preview, () => actions.Preview(row));
 		var line = new Grid
 		{
 			ColumnSpacing = 10,
-			ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)],
+			ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star)],
 		};
-		VerticalStackLayout name = NameAndDetail(NameLine(row), detail);
 		line.Add(AvatarFor(row, index), 0);
-		line.Add(name, 1);
-		line.Add(preview, 2);
-		if (tapName is not null)
-		{
-			CastViews.AddTap(name, tapName);
-		}
-
+		line.Add(NameAndDetail(NameLine(row), CastText.Words(row.Words)), 1);
 		return line;
 	}
 
@@ -148,45 +122,44 @@ internal static class CastRows
 		Children = { name, new Label { Text = detail, FontSize = 12, TextColor = DinoTokens.Get(DinoTokens.Muted) } },
 	};
 
-	// The "Sounds" row (Slice 113, mock frame 48): the flavour picker and a button that plays a sample of it.
-	private static Grid SoundsLine(CastRow row, CastRowActions actions)
+	// The picker names the storyteller character; an edited row has a white fill and a ring (mock frame 52). A tap opens the picker sheet.
+	private static Grid PickerLine(CastRow row, CastRowActions actions, string language)
 	{
-		Border chip = CastViews.VoiceChip(CastText.FlavourName(row.Flavour));
-		SemanticProperties.SetDescription(chip, CastText.Pair(CastText.Sounds, CastText.FlavourName(row.Flavour)));
-		CastViews.AddTap(chip, () => actions.PickFlavour(row));
-		Border sample = CastViews.PreviewButton(CastText.Pair(row.Member.Name, CastText.Sounds));
-		SemanticProperties.SetDescription(sample, CastText.HearName(row.Member.Name));
-		CastViews.AddTap(sample, () => actions.PreviewFlavour(row));
+		string character = row.Character?.Name ?? CastText.CharacterName(row.Member.VoiceId, row.Flavour, language);
+		Grid label = CastText.PickerLine(character, 14, 12);
+		bool edited = row.Member.Edited;
+		var picker = new Border
+		{
+			HeightRequest = PickerHeight,
+			Padding = new Thickness(12, 0),
+			BackgroundColor = edited ? Colors.White : DinoTokens.Get(DinoTokens.Sand),
+			Stroke = DinoTokens.Get(DinoTokens.Brand),
+			StrokeThickness = edited ? PickerRing : 0,
+			StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 10 },
+			Content = label,
+		};
+		SemanticProperties.SetDescription(picker, CastText.Pair(row.Member.Name, character));
+		CastViews.AddTap(picker, () => actions.PickCharacter(row));
+		Border play = Play(row, actions);
 		var line = new Grid
 		{
 			Padding = new Thickness(TextIndent, 0, 0, 0),
 			ColumnSpacing = 8,
-			ColumnDefinitions =
-			[
-				new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star),
-			],
+			ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)],
 		};
-		line.Add(new Label { Text = CastText.Sounds, FontSize = 13, TextColor = DinoTokens.Get(DinoTokens.Body), VerticalOptions = LayoutOptions.Center }, 0);
-		line.Add(chip, 1);
-		sample.HorizontalOptions = LayoutOptions.End;
-		line.Add(sample, 2);
+		line.Add(picker, 0);
+		line.Add(play, 1);
 		return line;
 	}
 
-	private static Grid SecondLine(CastRow row, CastRowActions actions, string language)
+	private static Border Play(CastRow row, CastRowActions actions)
 	{
-		Border chip = CastViews.VoiceChip(CastText.VoiceName(row.Member.VoiceId, language));
-		SemanticProperties.SetDescription(chip, row.Member.Name + ": " + CastText.VoiceName(row.Member.VoiceId, language));
-		CastViews.AddTap(chip, () => actions.PickVoice(row));
-		var line = new Grid
-		{
-			Padding = new Thickness(TextIndent, 0, 0, 0),
-			ColumnSpacing = 8,
-			ColumnDefinitions = [new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)],
-		};
-		line.Add(CastViews.GenderControl(row.Member.Gender, gender => actions.SetGender(row, gender)), 0);
-		chip.HorizontalOptions = LayoutOptions.End;
-		line.Add(chip, 2);
-		return line;
+		Border play = CastViews.PreviewButton(row.Member.Name);
+		play.WidthRequest = PlaySize;
+		play.HeightRequest = PlaySize;
+		play.StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = PlaySize / 2 };
+		SemanticProperties.SetDescription(play, CastText.HearName(row.Member.Name));
+		CastViews.AddTap(play, () => actions.Preview(row));
+		return play;
 	}
 }
