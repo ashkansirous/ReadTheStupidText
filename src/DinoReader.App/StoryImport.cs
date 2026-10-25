@@ -226,7 +226,7 @@ public sealed class StorySaver(IStoryLibrary library, IPageImageKeeper keeper, S
 			{
 				Title = title, Language = draft.Language, TranslateToMyLanguage = draft.TranslateToMyLanguage, Pages = pages,
 				CoverStyle = draft.CoverStyle, CoverFile = coverFile, CoverPageIndex = draft.CoverPageIndex,
-				CoverColourIndex = draft.CoverColourIndex, Cast = cast, LanguageCasts = recast ? null : draft.LanguageCasts, CharacterMerges = draft.Merges,
+				CoverColourIndex = draft.CoverColourIndex, Cast = cast, LanguageCasts = recast ? null : draft.LanguageCasts, CharacterMerges = draft.Merges, AnimalSoundsOn = draft.AnimalSoundsOn,
 			};
 			story = KeepMatchingRecordings(draft.Original, story);
 			await (isNew ? library.AddAsync(story) : library.UpdateAsync(story));

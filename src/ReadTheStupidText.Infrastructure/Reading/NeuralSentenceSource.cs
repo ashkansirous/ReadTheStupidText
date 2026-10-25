@@ -119,8 +119,8 @@ internal sealed class NeuralSentenceSource
             _slots.Release();
         }
 
-        // The pitch shift is plain DSP: it runs after the slot is released so the next sentence can start synthesising.
-        return WavFile.Encode(PitchShifter.Shift(raw, sampleRate, shape.Semitones), sampleRate);
+        // The pitch shift and wobble are plain DSP: it runs after the slot is released so the next sentence can start synthesising.
+        return WavFile.Encode(PitchShifter.Apply(raw, sampleRate, shape), sampleRate);
     }
 
     // The native call keeps running after its caller is cancelled, so it holds its own reference on the

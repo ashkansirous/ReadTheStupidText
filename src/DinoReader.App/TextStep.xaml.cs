@@ -295,6 +295,7 @@ public partial class TextStep : ContentView
 			Draft.Cast = story.Cast;
 			Draft.LanguageCasts = story.LanguageCasts;
 			Draft.Merges = story.Merges;
+			Draft.AnimalSoundsOn = story.AnimalSoundsOn;
 			return Task.CompletedTask;
 		});
 		await _session.Host.Navigation.PushAsync(page);

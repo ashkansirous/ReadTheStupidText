@@ -283,5 +283,8 @@
   <data name="Cast_UsesNarrator" xml:space="preserve"><value>usa a voz do narrador</value></data>
   <data name="Cast_Hear" xml:space="preserve"><value>Ouvir {0}</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>Mesclar com {0}</value></data>
+  <data name="Cast_AnimalSounds_Title" xml:space="preserve"><value>Sons de animais</value></data>
+  <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>Os animais dizem “Oinc!” ou “Béé!” de vez em quando</value></data>
+  <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>Nenhum animal que faça sons nesta história</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Este livro tem mais personagens do que os {0} personagens narradores disponíveis, então alguns soam iguais. O narrador nunca é dado a um personagem.</value></data>
 </root>

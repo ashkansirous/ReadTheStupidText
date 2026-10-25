@@ -72,7 +72,8 @@ public sealed record Story(
     IReadOnlyDictionary<string, IReadOnlyList<CastMember>>? LanguageCasts = null,
     bool ShowOriginalText = false,
     IReadOnlyDictionary<int, PageRecording>? Recordings = null,
-    bool UseRecordings = false)
+    bool UseRecordings = false,
+    bool AnimalSoundsOn = true)
 {
     public const string PageSeparator = "\n\n";
 

@@ -283,5 +283,8 @@
   <data name="Cast_UsesNarrator" xml:space="preserve"><value>читает рассказчик</value></data>
   <data name="Cast_Hear" xml:space="preserve"><value>Послушать: {0}</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>Объединить с {0}</value></data>
+  <data name="Cast_AnimalSounds_Title" xml:space="preserve"><value>Звуки животных</value></data>
+  <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>Животные иногда говорят «Хрю!» или «Бе-е!»</value></data>
+  <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>В этой истории нет животных, которые подают голос</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>В этой книге больше персонажей, чем есть рассказчиков ({0}), поэтому некоторые звучат одинаково. Рассказчик персонажам не выдаётся.</value></data>
 </root>

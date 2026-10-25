@@ -237,6 +237,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 
 		_body.Children.Add(NarratorCard());
 		_body.Children.Add(CharacterCard(sheet));
+		_body.Children.Add(AnimalSoundsCard());
 		_mergeButton.IsVisible = sheet.Rows.Count >= 2;
 	}
 
@@ -260,6 +261,24 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		Border card = CastViews.Card();
 		card.Content = rows;
 		return card;
+	}
+
+	// The per-story switch is saved with the story (Slice 117); a story with no sounding animal shows it dimmed and keeps the value.
+	private View AnimalSoundsCard()
+	{
+		bool hasAnimals = _resolved is not null && AnimalSounds.AnimalsIn(_resolved.Characters, _story!.Language).Count > 0;
+		return CastRows.AnimalSoundsRow(hasAnimals, _story!.AnimalSoundsOn, on => _ = _busy.RunAsync(() => SetAnimalSoundsAsync(on)));
+	}
+
+	private async Task SetAnimalSoundsAsync(bool on)
+	{
+		Story previous = _story!;
+		_story = previous with { AnimalSoundsOn = on };
+		if (!await SaveAsync())
+		{
+			_story = previous;
+			Render();
+		}
 	}
 
 	// Edits go into the reading language's cast; merges are the story's, shared by every language.

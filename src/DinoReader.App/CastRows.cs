@@ -1,4 +1,5 @@
 using DinoReader.Core;
+using DinoReader.Resources.Strings;
 
 namespace DinoReader;
 
@@ -65,6 +66,38 @@ internal static class CastRows
 		row.Add(CastViews.Avatar("?", DinoTokens.Get(DinoTokens.AvatarGrey), DinoTokens.Get(DinoTokens.Body), AvatarSize, AvatarFont), 0);
 		row.Add(NameAndDetail(new Label { Text = CastText.UnknownSpeaker, FontSize = 15, FontAttributes = FontAttributes.Bold }, CastText.UnknownLines(lines)), 1);
 		return row;
+	}
+
+	/// <summary>The "Animal sounds" card under the cast card (mock frames 52 and 54, Slice 117): the story's switch, on by default. With no sounding animal in the story the hint says so and the switch is dimmed (it keeps its stored value).</summary>
+	public static View AnimalSoundsRow(bool hasAnimals, bool on, Action<bool> changed)
+	{
+		var toggle = new ToggleSwitch { IsOn = on, IsEnabled = hasAnimals, AccessibleName = AppResources.Cast_AnimalSounds_Title, VerticalOptions = LayoutOptions.Center };
+		toggle.Toggled += (_, _) => changed(toggle.IsOn);
+		var text = new VerticalStackLayout
+		{
+			VerticalOptions = LayoutOptions.Center,
+			Children =
+			{
+				CastText.InOwnScript(new Label { Text = AppResources.Cast_AnimalSounds_Title, FontSize = 15, FontAttributes = FontAttributes.Bold }),
+				CastText.InOwnScript(new Label
+				{
+					Text = hasAnimals ? AppResources.Cast_AnimalSounds_Hint : AppResources.Cast_AnimalSounds_None,
+					FontSize = 12.5, TextColor = DinoTokens.Get(DinoTokens.Body),
+				}),
+			},
+		};
+		var row = new Grid
+		{
+			MinimumHeightRequest = 64,
+			Padding = new Thickness(14, 12),
+			ColumnSpacing = 12,
+			ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)],
+		};
+		row.Add(text, 0);
+		row.Add(toggle, 1);
+		Border card = CastViews.Card();
+		card.Content = row;
+		return card;
 	}
 
 	public static View SharedNote(int voices) => new Border
