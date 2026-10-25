@@ -1,6 +1,6 @@
 # Slice 127 — Release safety: Dino iOS .ipa gap and the Store id fallback
 
-*Planned 2026-10-25.*
+*In progress (wave 2026-10-25), draft PR.*
 
 **Batch:** 27 (product separation, Decisions 133-137)
 **Touches:** `.github/workflows/release.yml`, `.github/workflows/store-submit.yml`, `.github/workflows/dinoreader-ios.yml`, `.github/CLAUDE.md`
