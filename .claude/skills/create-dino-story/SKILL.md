@@ -11,9 +11,29 @@ the classic tale and Gemini's output (Decision 130, Slice 119):
 1. **Nobody gets hurt.** No eating, burning, boiling, drowning, beating, dying, falling to death, or
    threats of any of it; no fire or hot water near a character; no "licks his lips". Conflicts end
    gently: cold bubbly water, a fright that turns into a laugh, a sorry, running home, a new friend.
-2. **No picture is accepted without the full-size check** (step 5). A rejected picture is never saved.
+2. **No picture is accepted without the full-size check** (step 5). A rejected picture is never kept: candidates are saved only to be checked, and rejected ones are deleted.
 
 Per-book prompts, cast and check results live in `docs/design/story-art/<stem>.md`.
+
+## Who does what
+
+The main thread coordinates and never drives Gemini or writes a book's text itself; that keeps its
+context free of screenshots, pictures and 13 translation files.
+
+1. **`dino-story-writer`** (Opus, high effort): steps 1-2 with the `dino-storytelling` skill. Several may
+   run at once, one book each, in their own worktrees.
+2. The coordinator reads the art record's picture plan (one line per page) and checks it: one action per
+   page, nobody hurt. Fix it with the writer before any picture is drawn, since pictures cost Gemini quota.
+3. **`dino-story-illustrator`** (Sonnet, medium effort): steps 3-6. **One at a time across the machine**
+   (one Chrome, one clipboard). It ends with `contact-sheet.jpg`, every picture on one sheet.
+4. The coordinator reads the contact sheet once as a second look. Anything odd: read that page's full-size
+   file and send the page back to the illustrator. Then step 7 goes through the usual gate and ship.
+
+Version bump: the writer bumps it when the text changes; the illustrator bumps it when only pictures change
+(`StarterBuilder.StarterVersions` for a starter, the story's `Version` for a store book; no text hash needed).
+
+Helpers in this folder: `gemini-grab.js` (step 6), `gemini-clipboard.ps1` (paste the line-up, save a
+picture) and `contact-sheet.ps1`.
 
 ## 1. Text
 
@@ -53,8 +73,8 @@ Prompt templates: [prompts.md](prompts.md).
     "These are the characters. Keep their outfits exactly as shown", every outfit spelled out
     (including what they do NOT wear: "no shirt", "no trousers", "no bobble"), then one prompt per
     page. Gemini adds no file input until its native picker opens, which can't be driven, so **paste**
-    the picture instead: put it on the Windows clipboard from PowerShell
-    (`Add-Type -AssemblyName System.Windows.Forms, System.Drawing`, then `System.Windows.Forms.Clipboard.SetImage`), click the prompt box, press `ctrl+v`.
+    the picture instead: `pwsh -STA .claude/skills/create-dino-story/gemini-clipboard.ps1 Put <line-up file>`,
+    then find the prompt box (`find`, not a guessed position), click it, press `ctrl+v`.
   - If a chat draws an earlier scene again instead of the new one (pigs pilot: the second picture of a
     fresh chat repeated page 2 for page 6), drop to **one picture per chat** for the rest of the book.
     A fresh chat with the line-up pasted got every outfit right first time.
@@ -102,18 +122,21 @@ Record each pass in the art record table (page, attempt number, why earlier atte
   button (Gemini lazy-loads older ones). Clicking it fetches the full-size JPEG
   (`lh3.googleusercontent.com/rd-gg/...`), but Chrome often drops the file silently, so don't rely on
   `%USERPROFILE%\Downloads`.
-- What works (2026-10-25): wrap `window.fetch` in the page to keep the image blob of any `rd-gg`
-  response, click the button from `javascript_tool`, then make one real `computer` click on empty page
-  space. Its click handler draws the blob to a canvas and calls `navigator.clipboard.write` with an
-  `image/png` ClipboardItem (needs a real click; the user granted gemini.google.com clipboard access).
-  Save the clipboard from PowerShell (`Add-Type -AssemblyName System.Windows.Forms, System.Drawing`, then `System.Windows.Forms.Clipboard.GetImage()`, JPEG quality 95)
-  to the working folder. Re-inject the wrapper after any reload or new chat.
+- What works (2026-10-25): inject `gemini-grab.js` (this folder) with `javascript_tool`. It wraps
+  `window.fetch` to keep the image blob of any `rd-gg` response. Run `await window.__grab(1)` (clicks the
+  newest picture's button), then make one real `computer` click on empty page space: its click handler
+  copies the blob to the clipboard as PNG (needs a real click; the user granted gemini.google.com clipboard
+  access). `window.__clipResult` then reads `896x1200`. Save it with
+  `pwsh -STA .claude/skills/create-dino-story/gemini-clipboard.ps1 Save <working folder>/cand-<page>.jpg`
+  (JPEG quality 95). Re-inject the script after any reload or new chat.
 - Save each picture under a candidate name (`cand-5.jpg`), check it (step 5) by reading the file, and
   only then rename it to `cover.jpg`, `1.jpg`... Delete rejected candidates.
 - Then run `pwsh tools/prepare-story-pictures.ps1 <working folder> <target folder> <pageCount>` with the full target
   path: `tests/DinoReader.Tests/Starters/<stem>` (starter) or `tests/DinoReader.Tests/Store/<stem>` (store). It checks the
   count, makes every picture 3:4 at most 896x1200 (never upscaled), JPEG quality 85, and writes `<target>/pictures/1..N.jpg`,
   `<target>/cover.jpg` and `<target>/cover-thumb.jpg` (288x384, the small cover the store list fetches).
+- Last, `pwsh .claude/skills/create-dino-story/contact-sheet.ps1 <working folder> <pageCount> <working folder>/contact-sheet.jpg`
+  for the coordinator's second look.
 
 ## 7. Build, test, upload
 

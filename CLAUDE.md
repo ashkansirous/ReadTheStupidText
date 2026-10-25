@@ -42,6 +42,7 @@ and their GitHub issue numbers. Tick slices off in `plan.md` as they complete. T
 - `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md` — scanner/OCR stack shared by every MAUI app.
 - `src/DinoReader.App/CLAUDE.md` — Dino Reader app: icons, the design mock, story, reading and cast rules.
 - `src/DinoReader.Core/CLAUDE.md` — the pure dialogue library.
+- `.claude/skills/create-dino-story/SKILL.md` — making or illustrating a Dino book: repo agents `dino-story-writer` (text, Opus) then `dino-story-illustrator` (Gemini pictures, Sonnet, one at a time); the main thread only coordinates.
 - `.github/CLAUDE.md` — CI quota rules, `release.yml`/`ship-targets.mjs`, path filters, iOS signing and toolchain, packs releases, APK downloads, actionlint.
 
 ## Stack & conventions
