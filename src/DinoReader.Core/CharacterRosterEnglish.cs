@@ -35,6 +35,13 @@ public static partial class CharacterRoster
         Kokoro("bigbear", "am_michael", VoiceFlavour.Big, Gender.Male, CharacterKind.Speaker, "Big Brown Bear", "deep and slow"),
         Kokoro("wolf", "bm_fable", VoiceFlavour.Grumpy, Gender.Male, CharacterKind.Speaker, "Hungry Wolf", "low and growly"),
         Kokoro("ewe", "af_bella", VoiceFlavour.Sleepy, Gender.Female, CharacterKind.Speaker, "Woolly Sheep", "soft and slow"),
+        // Slice 135: more than one of each young farm animal, so a story with several pigs, lambs, ducklings, puppies or kittens tells them apart.
+        Kokoro("piglet2", "am_liam", VoiceFlavour.Small, Gender.Male, CharacterKind.Speaker, "Snuffly Piglet", "tiny and snorty"),
+        Kokoro("piglet3", "bm_daniel", VoiceFlavour.Squeaky, Gender.Male, CharacterKind.Speaker, "Curly Piglet", "bright and squeaky"),
+        Kokoro("lamb2", "af_bella", VoiceFlavour.Small, Gender.Female, CharacterKind.Speaker, "Fluffy Lamb", "light and fluffy"),
+        Kokoro("duckling2", "bf_emma", VoiceFlavour.Bouncy, Gender.Female, CharacterKind.Speaker, "Splashy Duckling", "bubbly and splashy"),
+        Kokoro("puppy2", "am_michael", VoiceFlavour.Bouncy, Gender.Male, CharacterKind.Speaker, "Wiggly Puppy", "wagging and warm"),
+        Kokoro("kitten2", "bf_alice", VoiceFlavour.Small, Gender.Female, CharacterKind.Speaker, "Sweet Kitten", "tiny and sweet"),
     ];
 
     private static StorytellerCharacter Kokoro(

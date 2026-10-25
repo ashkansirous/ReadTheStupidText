@@ -93,37 +93,63 @@ public static class StarterUpdate
 
     // A kept cast member with no animal decided yet takes the bundled one (Slice 125), so an installed starter that gains animals still gets them;
     // an animal the grown-up set (or "not an animal") stays.
+    // Matched by character id alone: a story's character ids are shared by all its language casts (the speakers come from the story's own language), so a language cast
+    // that has no bundled cast of its own can take the animals of the base cast; a name check would only fail where the languages translate the names (Slice 135).
     private static IReadOnlyList<CastMember> WithBundledAnimals(IReadOnlyList<CastMember> kept, IReadOnlyList<CastMember> bundled) =>
         kept.Select(m => !m.HasAnimalSetting && bundled.FirstOrDefault(b => b.CharacterId == m.CharacterId) is { HasAnimalSetting: true } b
             ? m with { Animal = b.Animal, NotAnimal = b.NotAnimal }
             : m).ToList();
 
-    /// <summary>The kept cast members whose animal <see cref="Refresh"/> just filled in and whose voice the grown-up did not choose by hand, as (cast language, character id):
-    /// each needs its voice picked again from its animal (the caller does it the way the cast screen does, <c>StoryVoicing.RecastCharacter</c>). Nothing when the cast was replaced.</summary>
-    public static IReadOnlyList<(string Language, string CharacterId)> AnimalVoicesToRecast(Story stored, Story refreshed)
+    /// <summary>The kept cast members whose voice the grown-up did not choose by hand and whose character is not the one for their animal, as (cast language, character id):
+    /// each needs its voice picked again from its animal (the caller does it the way the cast screen does, <c>StoryVoicing.RecastCharacters</c>). The animal is the resolved one
+    /// (stored, then the name, then the text, Slice 135), so a Wolf found by its name is recast too, and a member that is no animal but sounds like one is recast as a plain character.
+    /// A member already on a character of its animal's kind (any age) stays, and so does one whose animal has no fitting character in the roster. <paramref name="speakersFor"/>
+    /// gives the speakers a cast language can really be cast with (the app's adapted roster); the default is the language's whole roster.
+    /// Nothing when the cast was replaced.</summary>
+    public static IReadOnlyList<(string Language, string CharacterId)> AnimalVoicesToRecast(
+        Story stored, Story refreshed, Func<string, IReadOnlyList<StorytellerCharacter>>? speakersFor = null)
     {
         if (!SameCharacters(stored.Cast, refreshed.Cast))
         {
             return [];
         }
 
-        var gained = GainedAnimals(stored.Cast, refreshed.Cast).Select(id => (refreshed.Language, id)).ToList();
-        foreach (var (language, members) in refreshed.LanguageCasts ?? new Dictionary<string, IReadOnlyList<CastMember>>())
-        {
-            if (stored.LanguageCasts?.TryGetValue(language, out IReadOnlyList<CastMember>? before) == true)
-            {
-                gained.AddRange(GainedAnimals(before, members).Select(id => (language, id)));
-            }
-        }
-
-        return gained;
+        var casts = new List<(string Language, IReadOnlyList<CastMember> Members)> { (refreshed.Language, refreshed.Cast) };
+        casts.AddRange((refreshed.LanguageCasts ?? new Dictionary<string, IReadOnlyList<CastMember>>()).Select(c => (c.Key, c.Value)));
+        return casts
+            .SelectMany(c => MembersWithOtherAnimal(c.Members, (speakersFor ?? CharacterRoster.Speakers)(c.Language), refreshed).Select(id => (c.Language, id)))
+            .Distinct()
+            .ToList();
     }
 
-    private static IEnumerable<string> GainedAnimals(IReadOnlyList<CastMember> before, IReadOnlyList<CastMember> after)
+    private static IEnumerable<string> MembersWithOtherAnimal(IReadOnlyList<CastMember> members, IReadOnlyList<StorytellerCharacter> roster, Story story)
     {
-        return after
-            .Where(a => a.Animal is not null && !a.Edited && before.FirstOrDefault(b => b.CharacterId == a.CharacterId) is { HasAnimalSetting: false })
-            .Select(a => a.CharacterId);
+        var characters = members.Select(m => new Character(m.CharacterId, m.Name, m.Gender, 0)).ToList();
+        IReadOnlyDictionary<string, AnimalKind> wanted = AnimalSounds.Resolve(characters, story.Language, members, story.Text);
+        return members
+            .Where(m => !m.Edited && PlaysOtherAnimal(m, wanted.TryGetValue(m.CharacterId, out AnimalKind kind) ? AnimalCharacters.HintFor(kind, m.Name, story.Language) : null, roster))
+            .Select(m => m.CharacterId);
+    }
+
+    // The roster character the member sounds like is known only when the voice and flavour are exactly a roster character's (a voice from another engine says nothing).
+    // An animal member is wrong unless it plays a character of its animal's kind, of any age; if the roster has no character that could play it (a limited pool, or a
+    // grown pig, which has none) there is nothing to recast to.
+    private static bool PlaysOtherAnimal(CastMember member, AnimalHint? wanted, IReadOnlyList<StorytellerCharacter> roster)
+    {
+        StorytellerCharacter? playing = roster.FirstOrDefault(c => c.VoiceId == member.VoiceId && c.Flavour == member.Flavour);
+        IReadOnlyList<AnimalKind>? current = playing is null ? null : AnimalCharacters.Of(playing.Id)?.Kinds ?? [];
+        if (playing is null)
+        {
+            return false;
+        }
+
+        if (wanted is null)
+        {
+            return current is { Count: > 0 };
+        }
+
+        bool canBeCast = roster.Any(c => AnimalCharacters.FitOf(c, wanted) != AnimalFit.None);
+        return canBeCast && current?.Contains(wanted.Kind) != true;
     }
 
     private static IReadOnlyDictionary<string, IReadOnlyList<CastMember>>? KeptLanguageCasts(Story stored, Story bundled)
@@ -133,10 +159,11 @@ public static class StarterUpdate
             return null;
         }
 
-        // A language the bundled package has no cast for is kept as it is: character ids come from names, which differ between languages, so the base cast would not match.
+        // A language the bundled package has no cast for takes its animals from the bundled base cast, by character id (Slice 135: the Farsi cast kept no animals, so Pop and
+        // Pim read "Not an animal").
         return stored.LanguageCasts.ToDictionary(
             c => c.Key,
-            c => bundled.LanguageCasts?.GetValueOrDefault(c.Key) is { } own ? WithBundledAnimals(c.Value, own) : c.Value);
+            c => WithBundledAnimals(WithBundledAnimals(c.Value, bundled.LanguageCasts?.GetValueOrDefault(c.Key) ?? []), bundled.Cast));
     }
 
     // A grown-up's cover pick stays: a gallery photo, a page of the story that still has a picture, a first-page cover, or a colour other than the bundled one.

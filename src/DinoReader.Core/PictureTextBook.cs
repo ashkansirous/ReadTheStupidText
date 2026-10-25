@@ -21,7 +21,7 @@ public static partial class PictureTextBook
     /// <summary>The tallest the upright text panel may be: <see cref="PanelHeightShare"/> of the visible picture (the AspectFit
     /// rectangle inside the picture area, not the card), where the panel's bottom margin counts toward the share and the letterbox
     /// band under the picture does not cover any of it. The picture area is the card less <paramref name="areaTop"/> above and
-    /// <paramref name="areaSide"/> either side; the panel sits on the card's bottom edge.</summary>
+    /// <paramref name="areaSide"/> either side; the panel's own place is <see cref="PlacePanel"/>.</summary>
     public static double PanelMaxHeight(double cardWidth, double cardHeight, double pictureAspect, double panelMargin,
         double areaTop = 0, double areaSide = 0)
     {
@@ -36,6 +36,32 @@ public static partial class PictureTextBook
         double pictureHeight = Math.Min(areaHeight, areaWidth / pictureAspect);
         double bottomBand = (areaHeight - pictureHeight) / 2;
         return Math.Max(0, PanelHeightShare * pictureHeight + bottomBand - panelMargin);
+    }
+
+    /// <summary>Where the upright text panel sits (Slice 135): <see cref="BottomMargin"/> above the card's bottom edge and at most <see cref="MaxHeight"/> tall.</summary>
+    public readonly record struct PanelPlacement(double BottomMargin, double MaxHeight);
+
+    /// <summary>The empty band under an AspectFit picture centred in the picture area (the card less <paramref name="areaTop"/> and <paramref name="areaSide"/>);
+    /// none when the picture's shape is unknown.</summary>
+    public static double LetterboxBelow(double cardWidth, double cardHeight, double pictureAspect, double areaTop = 0, double areaSide = 0)
+    {
+        if (pictureAspect <= 0)
+        {
+            return 0;
+        }
+
+        double areaWidth = Math.Max(0, cardWidth - 2 * areaSide);
+        double areaHeight = Math.Max(0, cardHeight - areaTop);
+        return (areaHeight - Math.Min(areaHeight, areaWidth / pictureAspect)) / 2;
+    }
+
+    /// <summary>The panel's bottom margin and height cap together: its bottom edge is <paramref name="panelMargin"/> above the visible picture's bottom edge (the letterbox band
+    /// is added to the margin), and the cap is <see cref="PanelMaxHeight"/> less that band, which it counts as covered.</summary>
+    public static PanelPlacement PlacePanel(double cardWidth, double cardHeight, double pictureAspect, double panelMargin, double areaTop = 0, double areaSide = 0)
+    {
+        double band = LetterboxBelow(cardWidth, cardHeight, pictureAspect, areaTop, areaSide);
+        double max = Math.Max(0, PanelMaxHeight(cardWidth, cardHeight, pictureAspect, panelMargin, areaTop, areaSide) - band);
+        return new PanelPlacement(panelMargin + band, max);
     }
 
     /// <summary>Whether the words are drawn over the pictures (Slice 122): the stored value, on when none is stored. An import
