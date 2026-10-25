@@ -1,6 +1,6 @@
 # Slice 133 — Dino: anonymous usage counts, first event end to end
 
-*Planned 2026-10-25.*
+*In progress (wave 2026-10-25 B), draft PR.*
 
 **Batch:** 28 (Dino usage insights, Decisions 138-142)
 **Touches:** `worker/events.ts` (new), `worker/index.ts`, `worker/*.test.ts`, `wrangler.jsonc`, `wrangler.workers-dev.jsonc`, `src/DinoReader.Core/UsageEvent.cs` (new), `src/DinoReader.App/UsageCounter.cs` (new), `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/SettingsRows.cs`, `src/DinoReader.App/FirstRunPage.xaml`, `src/DinoReader.App/FirstRunPage.xaml.cs`, `src/DinoReader.App/Platforms/iOS/Resources/PrivacyInfo.xcprivacy`, `src/DinoReader.App/Resources/Strings/*.resx`, `site/dino/privacy.html`, `PRIVACY.md`, `STORE.md`, `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`, `CLAUDE.md`
