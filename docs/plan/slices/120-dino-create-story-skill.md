@@ -1,6 +1,6 @@
 # Slice 120 — Dino: a repo skill for making a story
 
-*Planned 2026-10-25.* Dino Reader only; RTST is not touched.
+*Planned 2026-10-25. Work items delivered early on the Slice 119 branch (2026-10-25); the verification (a fresh session illustrating a new book) is still to do.* Dino Reader only; RTST is not touched.
 
 **Batch:** 25 (story illustrations)
 **Depends on:** Slice 119 (the loop it writes down is the one the pilot proved)
@@ -18,7 +18,7 @@ make the next book the same way: text, cast, pictures, build, upload.
 
 ## Work
 
-- [ ] Write `SKILL.md` (trigger: "make a Dino story", "illustrate <story>", "add a story to the store").
+- [x] Write `SKILL.md` (trigger: "make a Dino story", "illustrate <story>", "add a story to the store").
       Steps, each pointing at the file or command, not retyping it:
   1. Text: retell for ages 3-8, 8-15 pages split on `---`, in `StoreTexts.cs` (store) or
      `StarterTexts.cs` (starter); translations via `DINO_DUMP_PIECES=1` and `Starters/translations/`.
@@ -31,9 +31,9 @@ make the next book the same way: text, cast, pictures, build, upload.
      `DINO_BUILD_STARTERS=1`) and the tests.
   5. Upload with `tools/upload-store-story.ps1 <id>` (new `story-v<n+1>.dino`, `meta.json` last).
   6. Emulator check on both orientations.
-- [ ] Prompt templates in `.claude/skills/create-dino-story/prompts.md`: character sheet, line-up,
+- [x] Prompt templates in `.claude/skills/create-dino-story/prompts.md`: character sheet, line-up,
       cover, page scene (characters in the top half, no text).
-- [ ] One line in the root `CLAUDE.md` pointing at the skill.
+- [x] One line in the root `CLAUDE.md` pointing at the skill.
 
 ## Verification
 

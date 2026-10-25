@@ -1154,8 +1154,10 @@
     supersedes Decision 106's public-domain follow-up. (Slice 119)
 126. **One house style for every Dino book (Batch 25)**: soft watercolour and coloured pencil, warm gentle colours,
     simple rounded shapes, no text; style line and cast per book in `docs/design/story-art/<stem>.md`. (Slice 119)
-127. **Dino pictures are 3:4 portrait, 1080x1440, text-free, characters in the top half (Batch 25)**; the title on a
-    cover comes from our code, never from Gemini. (Slice 119)
+127. **Dino pictures are 3:4 portrait, 896x1200 (Gemini's native output; never upscaled), text-free, characters in the top half (Batch 25)**; the title on a
+    cover comes from our code, never from Gemini. The store list gets a 288x384 `cover-thumb.jpg`; the full cover stays inside the package. (Slice 119)
 128. **The bundled starters are also store stories with the same package id (Batch 25)**, so a deleted starter can be
     downloaded again. (Slice 119)
 129. **Making a Dino story is the project skill `create-dino-story` (Batch 25).** (Slice 120)
+130. **No Dino book shows harm or pain (Batch 25)**, in text or pictures, whatever the classic tale says;
+    conflicts end gently; all 14 books audited and rewritten, translations updated, and a test scans every starter and store text for banned harm words. Bundled starters carry a content version (package manifest `version`, the same number in their store entry): an installed starter at a lower version is replaced on launch, keeping the cast and switches; a deleted one stays deleted. (Slice 119)

@@ -11,16 +11,17 @@ public sealed record PackageFile(string Name, Func<Stream> Open);
 /// <summary>
 /// The <c>.dino</c> story package (Slice 91): a zip holding <c>package.json</c> (this manifest), <c>story.json</c> and the
 /// story's pictures, all at the top level under plain file names. <c>story.json</c> already uses plain names and 0..1
-/// layout boxes, so a story packages as it is, with no path rewriting.
+/// layout boxes, so a story packages as it is, with no path rewriting. <see cref="Version"/> is the content version of a bundled starter
+/// (null when the package carries none): the app replaces an installed starter whose version is lower (<see cref="StarterUpdate"/>).
 /// </summary>
-public sealed record StoryPackageManifest(int SchemaVersion, string Id, string Title, string Language)
+public sealed record StoryPackageManifest(int SchemaVersion, string Id, string Title, string Language, int? Version = null)
 {
     public const int CurrentSchemaVersion = 1;
     public const string ManifestFileName = "package.json";
     public const string StoryFileName = "story.json";
     public const string Extension = ".dino";
 
-    private static readonly JsonSerializerOptions Options = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true };
+    private static readonly JsonSerializerOptions Options = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true, DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull };
 
     public string ToJson() => JsonSerializer.Serialize(this, Options);
 

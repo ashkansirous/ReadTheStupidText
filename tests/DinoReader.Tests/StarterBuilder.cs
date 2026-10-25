@@ -20,12 +20,13 @@ internal static class StarterBuilder
     public const string GoodEnoughId = "61bb25b8f132413c82a4208827c7563b";
     public const string GoodEnoughTitle = "Good Enough";
     public const string GoodEnoughFile = "good-enough.dino";
-    private const int GoodEnoughColour = 2;
+    public const int GoodEnoughColourIndex = 2;
     private const string LinesFile = "lines.json";
     private const string PiecesSuffix = ".pieces.json";
     private const string StoryLanguage = "en";
     private const string PicturesDirectory = "pictures";
     private const string PictureExtension = ".jpg";
+    private const string CoverPictureFile = "cover" + PictureExtension;
 
     public static readonly DateTimeOffset Created = new(2026, 10, 22, 0, 0, 0, TimeSpan.Zero);
 
@@ -39,6 +40,16 @@ internal static class StarterBuilder
         (StarterTexts.GingerbreadId, "The Gingerbread Man", StarterTexts.Gingerbread, 1, "gingerbread-man.dino"),
         (StarterTexts.TortoiseId, "The Tortoise and the Hare", StarterTexts.Tortoise, 0, "tortoise-and-hare.dino"),
     ];
+
+    /// <summary>The content version of each bundled starter, by package file name: written to the package manifest and to the store entry (Decision 130).
+    /// Raise it whenever a starter's text or pictures change, so installed copies are refreshed (<see cref="StarterUpdate"/>).</summary>
+    public static IReadOnlyDictionary<string, int> StarterVersions { get; } = new Dictionary<string, int>
+    {
+        [GoodEnoughFile] = 1,
+        ["three-little-pigs.dino"] = 2,
+        ["gingerbread-man.dino"] = 2,
+        ["tortoise-and-hare.dino"] = 2,
+    };
 
     /// <summary>The package file name of every shipped starter, the picture one first (shelf order).</summary>
     public static IReadOnlyList<string> AllFileNames { get; } = [GoodEnoughFile, .. Starters.Select(s => s.FileName)];
@@ -54,9 +65,12 @@ internal static class StarterBuilder
         Path.Combine(RepoRoot(), "tests", "DinoReader.Tests", "Starters", stem, PicturesDirectory);
 
     /// <summary>The starter's page pictures in natural file-name order, or none when it has no pictures folder.</summary>
-    public static IReadOnlyList<string> PictureFilesOf(string stem)
+    public static IReadOnlyList<string> PictureFilesOf(string stem) =>
+        PictureFilesIn(PicturesFolder(stem));
+
+    /// <summary>The page pictures (<c>*.jpg</c>) of a <c>pictures</c> folder in natural file-name order, or none when the folder is missing.</summary>
+    public static IReadOnlyList<string> PictureFilesIn(string folder)
     {
-        string folder = PicturesFolder(stem);
         return Directory.Exists(folder) ? PictureTextBook.SortNaturally(Directory.GetFiles(folder, "*" + PictureExtension)) : [];
     }
 
@@ -81,7 +95,30 @@ internal static class StarterBuilder
 
     public static string PictureName(int pageIndex) => $"page-{pageIndex + 1}{PictureExtension}";
 
-    private static void CopyPictures(Story story, IReadOnlyList<string> pictures, FileStoryLibrary library)
+    /// <summary><c>Starters/&lt;stem&gt;/cover.jpg</c> when the book has a picture cover, else null.</summary>
+    public static string? CoverPictureOf(string stem) => ExistingFile(Path.Combine(StarterFolder(stem), CoverPictureFile));
+
+    /// <summary>The path when the file exists, else null.</summary>
+    public static string? ExistingFile(string path) => File.Exists(path) ? path : null;
+
+    public static string StarterFolder(string stem) =>
+        Path.Combine(RepoRoot(), "tests", "DinoReader.Tests", "Starters", stem);
+
+    /// <summary>The story with <paramref name="coverSource"/> stored as its cover photo (<see cref="CoverStyle.Picture"/>); no cover leaves it as it is.
+    /// The story must already be in <paramref name="library"/>.</summary>
+    public static async Task<Story> WithPictureCoverAsync(Story story, string? coverSource, FileStoryLibrary library)
+    {
+        if (coverSource is null)
+        {
+            return story;
+        }
+
+        string cover = await library.StoreFileAsync(story.Id, Story.CoverFilePrefix, Story.CoverFileExtension,
+            target => { File.Copy(coverSource, target, overwrite: true); return Task.CompletedTask; });
+        return story with { CoverStyle = CoverStyle.Picture, CoverFile = cover };
+    }
+
+    public static void CopyPictures(Story story, IReadOnlyList<string> pictures, FileStoryLibrary library)
     {
         for (int i = 0; i < pictures.Count; i++)
         {
@@ -123,18 +160,30 @@ internal static class StarterBuilder
         Directory.CreateDirectory(StartersFolder());
         await InScratchAsync(async library =>
         {
-            foreach (var (id, title, text, colour, fileName) in Starters)
+            foreach (var (fileName, story) in await BuildAllAsync(library))
             {
-                IReadOnlyList<string> pictures = PictureFilesOf(Path.GetFileNameWithoutExtension(fileName));
-                Story story = WithTranslations(WithPictures(Build(id, title, text, colour), pictures), fileName);
-                await library.AddAsync(story);
-                CopyPictures(story, pictures, library);
-                await WriteOneAsync(story, Path.Combine(StartersFolder(), fileName), library);
+                await WriteOneAsync(story, Path.Combine(StartersFolder(), fileName), library, StarterVersions[fileName]);
             }
-
-            Story goodEnough = WithTranslations(await BuildGoodEnoughAsync(library), GoodEnoughFile);
-            await WriteOneAsync(goodEnough, Path.Combine(StartersFolder(), GoodEnoughFile), library);
         });
+    }
+
+    /// <summary>Every shipped starter as it is packed (translations merged, page pictures and picture cover copied into <paramref name="library"/>),
+    /// the text starters first, then Good Enough. The store builds the same stories under the same ids (Decision 128).</summary>
+    public static async Task<IReadOnlyList<(string FileName, Story Story)>> BuildAllAsync(FileStoryLibrary library)
+    {
+        var built = new List<(string FileName, Story Story)>();
+        foreach (var (id, title, text, colour, fileName) in Starters)
+        {
+            string stem = Path.GetFileNameWithoutExtension(fileName);
+            IReadOnlyList<string> pictures = PictureFilesOf(stem);
+            Story story = WithTranslations(WithPictures(Build(id, title, text, colour), pictures), fileName);
+            await library.AddAsync(story);
+            CopyPictures(story, pictures, library);
+            built.Add((fileName, await WithPictureCoverAsync(story, CoverPictureOf(stem), library)));
+        }
+
+        built.Add((GoodEnoughFile, WithTranslations(await BuildGoodEnoughAsync(library), GoodEnoughFile)));
+        return built;
     }
 
     /// <summary>Writes <c>translations/&lt;stem&gt;.pieces.json</c> for every starter: the distinct piece texts, in story order, that need a translation.</summary>
@@ -175,7 +224,7 @@ internal static class StarterBuilder
         string folder = GoodEnoughFolder();
         using JsonDocument doc = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(folder, LinesFile)));
         IReadOnlyList<StoryPage> pages = doc.RootElement.GetProperty("pages").EnumerateArray().Select(PageOf).ToList();
-        var bare = new Story(GoodEnoughId, GoodEnoughTitle, StoryLanguage, Created, pages, [], CoverStyle.Colour, GoodEnoughColour, NarratorVoice, TranslateToMyLanguage: true);
+        var bare = new Story(GoodEnoughId, GoodEnoughTitle, StoryLanguage, Created, pages, [], CoverStyle.Colour, GoodEnoughColourIndex, NarratorVoice, TranslateToMyLanguage: true);
         await library.AddAsync(bare);
         foreach (StoryPage page in pages)
         {
@@ -183,9 +232,7 @@ internal static class StarterBuilder
         }
 
         string coverSource = Path.Combine(folder, doc.RootElement.GetProperty("cover").GetString()!);
-        string cover = await library.StoreFileAsync(GoodEnoughId, Story.CoverFilePrefix, Story.CoverFileExtension,
-            target => { File.Copy(coverSource, target, overwrite: true); return Task.CompletedTask; });
-        Story withCover = bare with { CoverStyle = CoverStyle.Picture, CoverFile = cover };
+        Story withCover = await WithPictureCoverAsync(bare, coverSource, library);
         return withCover with { Cast = CastOf(withCover) };
     }
 
@@ -221,9 +268,9 @@ internal static class StarterBuilder
         }
     }
 
-    private static async Task WriteOneAsync(Story story, string target, FileStoryLibrary library)
+    private static async Task WriteOneAsync(Story story, string target, FileStoryLibrary library, int version)
     {
         await using FileStream output = File.Create(target);
-        await StoryPackageWriter.WriteAsync(story, library, output);
+        await StoryPackageWriter.WriteAsync(story, library, output, version: version);
     }
 }
