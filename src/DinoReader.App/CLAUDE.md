@@ -20,7 +20,8 @@ are in `src/ReadTheStupidText.Mobile/CLAUDE.md`; its CI target is in `.github/CL
 > first run, store and backup (Batch 16), `Dino Reader Batch 16.dc.html`, and for Slices
 > 94-98 and 102, `Dino Reader Batch 17-18.dc.html`, for Slices 107-114,
 > `Dino Reader Batch 22-23.dc.html`, and for Slices 115-118, `Dino Reader Batch 24.dc.html`
-> (it supersedes frames 48-49) (index in
+> (it supersedes frames 48-49), for Slice 122 `Dino Reader Batch 25.dc.html`, and for Slices
+> 132, 133 and 136 `Dino Reader Batch 26-28.dc.html` (index in
 > that folder's README): read visual values (colours, sizes, copy, layout) from it,
 > never guess them, and never call `DesignSync` for them.
 

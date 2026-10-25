@@ -28,6 +28,19 @@ store list.
 - The version compared is the app's own version (the `dino-v` line after Slice 130; same numbers today).
 - Dino only; RTST gets no remote config.
 
+#### Design (Dino Reader Batch 26-28 mock, section 26-28, added 2026-10-25)
+
+Frames 61 and 62 (bottom row, line 58 and 76 of `docs/design/dino-reader/Dino Reader Batch 26-28.dc.html`; row of frame 62 only). The mock agrees with the plan. All frames are 360x760 phones; the copy is marked a draft.
+
+- **Please update (frame 61, `UpdatePage`).** Same layout as the first-run "ready" screen (18): background `#FFF6E6`, 150px `#ECE7FF` circle with the 120px app icon (radius 30) and a 44px `#5B57E8` download badge (white arrow, 4px `#FFF6E6` ring) at bottom-right. Title "Dino needs an update" (28px, 600). Body "Ask a grown-up to get the new version. Your books and recordings stay just as they are." (14.5px, `#5a5470`, max 280px). Button "Update Dino": 56px high, full width, `#FF7A59`, 5px `#E2583A` underlay, 17px 600. No close or skip. The button opens the grown-up gate first, then the per-platform update (Decision 139).
+- **New version row (frame 62, grown-up settings).** Last row of the Version card: "A new version is ready", 14.5px, 600, `#5B57E8`, with a grey chevron (`#8a8399`), 50px row. It sits under a "Version" row (value "1.42.0", draft). It shows only below `latestVersion`; it opens the store, no popup, no badge.
+- Placement in grown-up settings is the mock's own proposal (existing `SettingsRows` cards); no grown-up settings mock exists yet.
+
+**New strings (all Dino locales):** "Dino needs an update", the body line, "Update Dino", "A new version is ready", "Version" (if not present).
+
+**Open point: Store link from the settings row.** The plan says only "a quiet line"; the mock makes it a tappable row that opens the store. **Default:** tappable, same per-platform store target as the update page (no in-app update flow), no extra gate because grown-up mode is already gated.
+
+
 ## Work
 
 - [ ] Worker: `appconfig.ts` reads and validates the R2 JSON (bad file = defaults), route + `/dino`
