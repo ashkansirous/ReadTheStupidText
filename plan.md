@@ -14,12 +14,11 @@ this plan turns it into ordered, shippable vertical slices.
 
 ## Status
 
-Open slices only. Finished slices (124 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
+Open slices only. Finished slices (125 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
 | 121 | Dino: pictures for the ten store stories | planned | | | [121-dino-illustrate-store-stories.md](docs/plan/slices/121-dino-illustrate-store-stories.md) |
-| 125 | Dino: each character knows its animal, and animal voices to match | planned | | | [125-dino-character-animals.md](docs/plan/slices/125-dino-character-animals.md) |
 | 126 | Dino: keep the screen awake while a book is playing | planned | | | [126-dino-keep-screen-awake.md](docs/plan/slices/126-dino-keep-screen-awake.md) |
 | 127 | Release safety: Dino iOS .ipa gap and the Store id fallback | planned | | | [127-release-safety-fixes.md](docs/plan/slices/127-release-safety-fixes.md) |
 | 128 | Tray code out of the shared Infrastructure, and tests per product | planned | | | [128-tray-code-out-of-shared-infrastructure.md](docs/plan/slices/128-tray-code-out-of-shared-infrastructure.md) |
@@ -72,12 +71,13 @@ Built but not verified (details in each slice file):
 - Slice 113: pitch by ear (drop it if robotic); bug: the first Sounds-row play tap right after changing a flavour is silent (second tap works); system-voice fallback plays Normal; iOS reader build; native read of the strings ([slice](docs/plan/slices/113-dino-character-flavours.md)).
 - Slice 114: listening to Kokoro English with flavours on a real phone; Windows head storyteller; native check of the strings ([slice](docs/plan/slices/114-dino-kokoro-english-storyteller-pack.md)).
 - Slice 116: native read of roster names and hints, especially Farsi; Farsi bee=Small and princess=Whisper flavours by ear; Chinese has only one voice (confirm acceptable) ([slice](docs/plan/slices/116-dino-storyteller-characters.md)).
-- Slice 117: native read of all animal words and sounds (Persian pig and cow are guesses); `BleatWobble` depth by ear; iOS reader build. Known limit: sounds come from the character's name only, so in The Three Little Pigs only the Wolf sounds; follow-up planned as Slice 125 ([slice](docs/plan/slices/117-dino-animal-sounds.md)).
+- Slice 117: native read of all animal words and sounds (Persian pig and cow are guesses); `BleatWobble` depth by ear; iOS reader build. ([slice](docs/plan/slices/117-dino-animal-sounds.md)).
 - Slice 118: the listening check of the es, pt and zh WAVs; real-phone Kokoro speed (about 9x slower than Supertonic on the emulator); a Chinese sentence with Latin words on a device; the Wi-Fi plus cellular pack-update path on a device ([slice](docs/plan/slices/118-dino-storyteller-more-languages.md)).
 - Slice 119: on-device starter auto-update and recording copy (unchanged pages keep recordings, edited text is skipped); the pigs pictures in both orientations and the store download of pigs v3 ([slice](docs/plan/slices/119-dino-illustrated-three-little-pigs.md)).
 - Slice 122: on the user's phone, pigs upright and sideways (panel at most 30%); photo/PDF import defaults the switch off; a wide picture sideways with the words off ([slice](docs/plan/slices/122-dino-text-panel-30-and-switch.md)).
 - Slice 123: on the phone, the pigs show 16 pages with pictures; an installed v3 copy updates to v4 and keeps recordings on unchanged pages ([slice](docs/plan/slices/123-dino-pigs-one-action-per-page.md)).
 - Slice 124: emulator look of the panel fade, the bottom alignment and the one switch card (pigs starter upright); native read of the 3 new strings in the 13 non-English languages ([slice](docs/plan/slices/124-dino-words-panel-matches-mock.md)).
+- Slice 125: emulator check (pigs starter in English and Farsi, cast page Animal line); store upload of three-little-pigs v5, billy-goats-gruff v4 and peter-rabbit v4 (done after merge); native read of the new strings and roster names in 13 languages; Windows head ([slice](docs/plan/slices/125-dino-character-animals.md)).
 - Slice 106: Norwegian on a Windows head via `MarianEngine` (third-party conversion, never run); en to da/fi/sv/nl/nb and back on Windows; the Norwegian packs are about 390 MB each ([slice](docs/plan/slices/106-windows-nordic-dutch-translation-packs.md)).
 - Windows has no `en-ja` translation pack (`TranslationPacks.FromEnglish` and `packs.yml` lack it), so English cannot be translated into Japanese offline on Windows; found while planning Slice 106, not yet scheduled.
 - Older unverified items (Slices 43-95 and a flaky-test note), moved verbatim: [outstanding-older](docs/plan/notes/2026-10-25-outstanding-older.md). Still open until verified.
