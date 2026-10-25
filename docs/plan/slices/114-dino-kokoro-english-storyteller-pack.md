@@ -1,6 +1,6 @@
 # Slice 114 — Dino: Kokoro storyteller voices for English
 
-*Planned 2026-10-24*, from the user's note that Dino's voices are "too grown up", asking for better
+*In progress (wave 2026-10-24), draft PR.* *Planned 2026-10-24*, from the user's note that Dino's voices are "too grown up", asking for better
 options "at least for English and alike".
 
 **Batch:** 23
