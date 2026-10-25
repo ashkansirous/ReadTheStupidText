@@ -131,7 +131,7 @@ Still open in this slice: store upload, recover-after-delete check on the emulat
 
 *From review:* pass 1 (high) 8 findings; 1-4 and 8 fixed, 5-7 skipped by decision. Pass 2 (medium) 8 findings; 1, 3-5 and 8 fixed, plus a lost-gallery-photo bug found by the new tests; 2, 6, 7 skipped by decision.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-25)
 
 Into `src/DinoReader.App/CLAUDE.md`:
 
