@@ -132,7 +132,7 @@ this plan turns it into ordered, shippable vertical slices.
 | 112 | Dino: store filters by age and author | built | #306 | | [112-dino-store-age-author-filters.md](docs/plan/slices/112-dino-store-age-author-filters.md) |
 | 113 | Dino: playful character voices (pitch and pace per character) | built | #314 | | [113-dino-character-flavours.md](docs/plan/slices/113-dino-character-flavours.md) |
 | 114 | Dino: Kokoro storyteller voices for English | built | #316 | | [114-dino-kokoro-english-storyteller-pack.md](docs/plan/slices/114-dino-kokoro-english-storyteller-pack.md) |
-| 115 | Dino: storyteller voices by default | planned | | | [115-dino-storyteller-voices-by-default.md](docs/plan/slices/115-dino-storyteller-voices-by-default.md) |
+| 115 | Dino: storyteller voices by default | built | #323 | | [115-dino-storyteller-voices-by-default.md](docs/plan/slices/115-dino-storyteller-voices-by-default.md) |
 | 116 | Dino: storyteller characters in every language | planned | | | [116-dino-storyteller-characters.md](docs/plan/slices/116-dino-storyteller-characters.md) |
 | 117 | Dino: animal characters make their sounds | planned | | | [117-dino-animal-sounds.md](docs/plan/slices/117-dino-animal-sounds.md) |
 | 118 | Dino: storyteller voices for Spanish, French and Portuguese | planned | | | [118-dino-storyteller-more-languages.md](docs/plan/slices/118-dino-storyteller-more-languages.md) |
@@ -199,6 +199,7 @@ Built but not verified (details in each slice file):
 - Slice 110: scanned page picture plus translation; native read of `Book_*` in 14 locales ([slice](docs/plan/slices/110-dino-translated-text-on-screen.md)).
 - Slice 111: **human:** Play Console Data safety "audio recordings, on-device only" answer; record/replay on a real phone (Android 9-11), iOS, Windows head; mic permission denial; backup round trip; native read of `Rec_*` ([slice](docs/plan/slices/111-dino-parent-recordings.md)).
 - Slice 112: native read of new strings ([slice](docs/plan/slices/112-dino-store-age-author-filters.md)).
+- Slice 115: the emulator checks listed under Verification; native read of the `Storyteller_*` strings (12 are machine drafts); a "Download now" tap right after the mobile-data check can still be dropped; real-phone Kokoro first-sentence latency (emulator 74 s vs Supertonic 8 s; Slice 114 kill criterion) ([slice](docs/plan/slices/115-dino-storyteller-voices-by-default.md)).
 - Dino first-run "Ready" screen says "Three stories" but four ship; a fix is in progress. (fix PR open)
 - Slice 113: pitch by ear (drop it if robotic); bug: the first Sounds-row play tap right after changing a flavour is silent (second tap works); system-voice fallback plays Normal; iOS reader build; native read of the strings ([slice](docs/plan/slices/113-dino-character-flavours.md)).
 - Slice 114: listening to Kokoro English with flavours on a real phone; Windows head storyteller; native check of the strings ([slice](docs/plan/slices/114-dino-kokoro-english-storyteller-pack.md)).
