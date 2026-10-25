@@ -128,6 +128,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 122 | Dino: words panel at most 30% of the picture, and a words switch | built | #335, #340 | | [122-dino-text-panel-30-and-switch.md](../slices/122-dino-text-panel-30-and-switch.md) |
 | 123 | Dino: the pigs retold as 16 pages, one action each | built | #336 | | [123-dino-pigs-one-action-per-page.md](../slices/123-dino-pigs-one-action-per-page.md) |
 | 124 | Dino: the words panel and its switch match the Batch 25 mock | built | #338 | | [124-dino-words-panel-matches-mock.md](../slices/124-dino-words-panel-matches-mock.md) |
+| 125 | Dino: each character knows its animal, and animal voices to match | built | #339 | | [125-dino-character-animals.md](../slices/125-dino-character-animals.md) |
 
 ## Batch ordering notes
 
