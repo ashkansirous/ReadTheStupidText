@@ -17,9 +17,12 @@
       "/", "/index.html", "/privacy", "/privacy/", "/privacy.html", "/download", "/download/*",
       // Slice 92: the free Dino story store API (worker/stories.ts).
       "/api/stories", "/api/stories/*",
+      // Slice 132: Dino Reader's remote config (worker/appconfig.ts).
+      "/api/app-config",
       // The Dino Reader site on *.workers.dev, under /dino/ (worker/downloads.ts resolveSite).
       "/dino", "/dino/", "/dino/index.html", "/dino/privacy", "/dino/privacy/", "/dino/privacy.html", "/dino/download", "/dino/download/*",
-      "/dino/api/stories", "/dino/api/stories/*"
+      "/dino/api/stories", "/dino/api/stories/*",
+      "/dino/api/app-config"
     ]
   },
   "r2_buckets": [{ "binding": "DOWNLOADS", "bucket_name": "readthestupidtext-downloads" }],

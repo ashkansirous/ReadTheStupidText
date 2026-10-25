@@ -6,7 +6,7 @@ name: site-checks
 # release-scripts.yml with every other .github/scripts test. Runs on every PR
 # (no path filter, as before), by hand, and from release.yml on main as a
 # standalone job that nothing needs, so it can never block a release.
-# Node 24 strips the types of worker/downloads.ts.
+# Node 24 strips the types of worker/downloads.ts and worker/appconfig.ts.
 
 on:
   pull_request:
@@ -45,4 +45,4 @@ jobs:
         run: node worker/check-site-eol.mjs
 
       - name: Test the downloads Worker
-        run: node --test worker/downloads.test.mjs
+        run: node --test worker/*.test.mjs

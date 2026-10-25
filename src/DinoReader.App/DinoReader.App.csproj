@@ -98,6 +98,11 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
 	</ItemGroup>
 
+	<!-- Slice 132: Play's in-app update (the forced "Please update" page uses its immediate flow). -->
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+		<PackageReference Include="Xamarin.Google.Android.Play.App.Update" Version="2.1.0.20" />
+	</ItemGroup>
+
 	<!-- ExcludeAssets does not flow through a project reference (see AndroidSherpaPackaging.props). -->
 	<Import Project="..\AndroidSherpaPackaging.props" />
 	<Import Project="..\AndroidRelease.props" />

@@ -180,6 +180,11 @@
   <data name="Storyteller_DownloadNow" xml:space="preserve"><value>Last ned nå</value></data>
   <data name="Storyteller_Ready" xml:space="preserve"><value>Fortellerstemmene er klare</value></data>
   <data name="Storyteller_ReadyBody" xml:space="preserve"><value>Historiene dine bruker nå de nye fortellerstemmene.</value></data>
+  <data name="Update_Title" xml:space="preserve"><value>Dino må oppdateres</value></data>
+  <data name="Update_Body" xml:space="preserve"><value>Be en voksen om å hente den nye versjonen. Bøkene og opptakene dine blir som de er.</value></data>
+  <data name="Update_Button" xml:space="preserve"><value>Oppdater Dino</value></data>
+  <data name="Version_NewReady" xml:space="preserve"><value>En ny versjon er klar</value></data>
+  <data name="Version_Title" xml:space="preserve"><value>Versjon</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Din forteller ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
   <data name="Storyteller_Failed" xml:space="preserve"><value>Kunne ikke hente fortellerstemmene</value></data>

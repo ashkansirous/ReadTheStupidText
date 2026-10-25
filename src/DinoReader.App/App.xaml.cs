@@ -11,17 +11,20 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 {
 	private readonly IServiceProvider _services;
 	private readonly AwayTracker _away = new();
+	private readonly AppConfigClient _config;
 	private CancellationTokenSource? _capTimer;
 	private NavigationPage? _navigation;
 	private bool _rtlFontsApplied;
 
-	public DinoApp(IServiceProvider services, SpeechStartup startup)
+	public DinoApp(IServiceProvider services, SpeechStartup startup, AppConfigClient config)
 	{
 		InitializeComponent();
 		// The kids' palette is light; night colours belong to ReadingTheme on the reading screen only.
 		UserAppTheme = AppTheme.Light;
 		ApplyRightToLeftFonts();
 		_services = services;
+		_config = config;
+		_config.Changed += (_, _) => MainThread.BeginInvokeOnMainThread(ShowUpdateIfRequired);
 		PageAppearing += (_, page) => SystemBarIcons.ForPage(page);
 		_ = startup.RunAsync();
 	}
@@ -35,9 +38,12 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		var external = _services.GetRequiredService<ExternalActivityGuard>();
 		window.Stopped += (_, _) => OnStopped(_navigation!, external);
 		window.Resumed += (_, _) => OnResumed(_navigation!, external);
+		window.Resumed += (_, _) => _ = _config.RefreshAsync();
 		Action ended = () => OnResumed(_navigation!, external);
 		external.Ended += ended;
 		window.Destroying += (_, _) => external.Ended -= ended;
+		// Resumed does not fire on a cold start, so the launch fetch is made here; the client joins an overlapping call.
+		_ = _config.RefreshAsync();
 		return window;
 	}
 
@@ -74,14 +80,54 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 			return;
 		}
 
-		window.Page = _navigation = BuildNavigation(_services.GetRequiredService<GalleryPage>());
+		// A forced update raised while a pack downloaded must not be undone by the hand-over to the gallery.
+		Page root = _config.UpdateRequired ? _services.GetRequiredService<UpdatePage>() : _services.GetRequiredService<GalleryPage>();
+		window.Page = _navigation = BuildNavigation(root);
 	}
 
-	// A fresh install opens on the first-run language page (Slice 93); every later start opens on the kids' gallery.
-	private Page RootPage() =>
-		FirstRunState.IsNeeded(_services.GetRequiredService<ISettingsStore>())
+	// A build below the config's minVersion opens on the "Please update" page and nothing else (Slice 132); a fresh install opens
+	// on the first-run language page (Slice 93); every later start opens on the kids' gallery.
+	private Page RootPage()
+	{
+		if (_config.UpdateRequired)
+		{
+			return _services.GetRequiredService<UpdatePage>();
+		}
+
+		return FirstRunState.IsNeeded(_services.GetRequiredService<ISettingsStore>())
 			? _services.GetRequiredService<FirstRunPage>()
 			: _services.GetRequiredService<GalleryPage>();
+	}
+
+	// A fetched config can raise minVersion while the app is open: the update page then replaces everything, grown-up mode included.
+	// Lowering it again never takes the page away; the next launch opens normally.
+	private void ShowUpdateIfRequired()
+	{
+		if (!_config.UpdateRequired || Windows.FirstOrDefault() is not { } window || window.Page is NavigationPage { RootPage: UpdatePage })
+		{
+			return;
+		}
+
+		_services.GetRequiredService<GrownUpMode>().Leave();
+		_ = ObserveAsync(ReplaceWithUpdatePageAsync(window));
+	}
+
+	// Modals are dismissed and the stack popped first, so a reading page stops its narration and a record page its recording
+	// instead of carrying on behind the update page.
+	private async Task ReplaceWithUpdatePageAsync(Window window)
+	{
+		if (_navigation is { } old)
+		{
+			for (int open = old.Navigation.ModalStack.Count; open > 0; open--)
+			{
+				await TryAsync(() => old.Navigation.PopModalAsync(animated: false));
+			}
+
+			await TryAsync(() => old.PopToRootAsync(animated: false));
+		}
+
+		window.Page = _navigation = BuildNavigation(_services.GetRequiredService<UpdatePage>());
+	}
 
 	// A grown-up area never stays open behind a locked phone or another app: leaving the app
 	// returns to the gallery, so the gate is needed again. An activity the app started itself

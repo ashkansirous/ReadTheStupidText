@@ -178,6 +178,11 @@
   <data name="Storyteller_DownloadNow" xml:space="preserve"><value>Descargar ahora</value></data>
   <data name="Storyteller_Ready" xml:space="preserve"><value>Las voces narradoras están listas</value></data>
   <data name="Storyteller_ReadyBody" xml:space="preserve"><value>Tus cuentos ahora usan las nuevas voces narradoras.</value></data>
+  <data name="Update_Title" xml:space="preserve"><value>Dino necesita una actualización</value></data>
+  <data name="Update_Body" xml:space="preserve"><value>Pídele a un adulto que consiga la nueva versión. Tus libros y grabaciones se quedan como están.</value></data>
+  <data name="Update_Button" xml:space="preserve"><value>Actualizar Dino</value></data>
+  <data name="Version_NewReady" xml:space="preserve"><value>Hay una versión nueva</value></data>
+  <data name="Version_Title" xml:space="preserve"><value>Versión</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Tu narrador ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
   <data name="Storyteller_Failed" xml:space="preserve"><value>No se pudieron descargar las voces narradoras</value></data>

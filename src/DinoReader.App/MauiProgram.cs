@@ -51,6 +51,7 @@ public static class MauiProgram
 		builder.Services.AddTransient<IRecordingPlayer, RecordingPlayer>();
 		builder.Services.AddSingleton<StarterStories>();
 		builder.Services.AddSingleton<StoreClient>();
+		builder.Services.AddSingleton<AppConfigClient>();
 		AddDocumentExtractors(builder.Services);
 		AddPages(builder.Services);
 
@@ -82,6 +83,7 @@ public static class MauiProgram
 	{
 		services.AddTransient<GalleryPage>();
 		services.AddTransient<StorePage>();
+		services.AddTransient<UpdatePage>();
 		services.AddTransient<BackupPage>();
 		services.AddTransient<LanguagePage>();
 		services.AddTransient<NarratorPage>();

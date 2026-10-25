@@ -180,6 +180,11 @@
   <data name="Storyteller_DownloadNow" xml:space="preserve"><value>Lataa nyt</value></data>
   <data name="Storyteller_Ready" xml:space="preserve"><value>Tarinankertojan äänet ovat valmiina</value></data>
   <data name="Storyteller_ReadyBody" xml:space="preserve"><value>Tarinasi käyttävät nyt uusia tarinankertojan ääniä.</value></data>
+  <data name="Update_Title" xml:space="preserve"><value>Dino tarvitsee päivityksen</value></data>
+  <data name="Update_Body" xml:space="preserve"><value>Pyydä aikuista hakemaan uusi versio. Kirjasi ja äänityksesi säilyvät sellaisinaan.</value></data>
+  <data name="Update_Button" xml:space="preserve"><value>Päivitä Dino</value></data>
+  <data name="Version_NewReady" xml:space="preserve"><value>Uusi versio on valmis</value></data>
+  <data name="Version_Title" xml:space="preserve"><value>Versio</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Kertojasi ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} Mt</value></data>
   <data name="Storyteller_Failed" xml:space="preserve"><value>Tarinankertojan äänien lataus epäonnistui</value></data>
