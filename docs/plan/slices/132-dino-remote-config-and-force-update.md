@@ -67,7 +67,7 @@ Frames 61 and 62 (bottom row, line 58 and 76 of `docs/design/dino-reader/Dino Re
 - `.github/workflows/site-checks.yml` now runs `worker/*.test.mjs` (outside Touches, approved). The worker tests are `.mjs`, not `.ts`.
 - 5 new strings in all 14 resx files (machine drafts).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-25)
 
 - Remote config: Dino `GET /api/app-config` reads R2 `dinoreader/config.json`; a missing or bad file means no forced update and telemetry off; change it with `wrangler r2 object put`. Root `CLAUDE.md` (Slice 132: docs/plan/slices/132-dino-remote-config-and-force-update.md)
 - `AppConfigClient`, `UpdatePage` (gated button, no close), `StoreUpdater` per platform and the Version card: `src/DinoReader.App/CLAUDE.md` (Slice 132: docs/plan/slices/132-dino-remote-config-and-force-update.md)

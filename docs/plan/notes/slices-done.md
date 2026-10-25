@@ -130,6 +130,10 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 124 | Dino: the words panel and its switch match the Batch 25 mock | built | #338 | | [124-dino-words-panel-matches-mock.md](../slices/124-dino-words-panel-matches-mock.md) |
 | 125 | Dino: each character knows its animal, and animal voices to match | built | #339 | | [125-dino-character-animals.md](../slices/125-dino-character-animals.md) |
 | 135 | Dino: every pig a piglet, and the emulator fixes for Slices 124-125 | built | #352 | | [135-dino-animal-voices-fixes.md](../slices/135-dino-animal-voices-fixes.md) |
+| 126 | Dino: keep the screen awake while a book is playing | built | #357 | | [126-dino-keep-screen-awake.md](../slices/126-dino-keep-screen-awake.md) |
+| 127 | Release safety: Dino iOS .ipa gap and the Store id fallback | built | #358 | | [127-release-safety-fixes.md](../slices/127-release-safety-fixes.md) |
+| 132 | Dino: a remote switchboard and a forced update | built | #359 | | [132-dino-remote-config-and-force-update.md](../slices/132-dino-remote-config-and-force-update.md) |
+| 136 | Dino: the animal comes from the picked character (no Animal line) | built | #360 | | [136-dino-animal-from-character.md](../slices/136-dino-animal-from-character.md) |
 
 ## Batch ordering notes
 
