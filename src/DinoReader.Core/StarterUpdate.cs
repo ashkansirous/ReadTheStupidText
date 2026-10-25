@@ -32,6 +32,15 @@ public static class StarterUpdate
     public static string PageTextHash(Story story) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join(Story.PageSeparator, story.Pages.Select(p => p.Text)))));
 
+    // The colour cover index every earlier version of each starter shipped with (never changed since v1): a stored colour cover with that index is the
+    // shipped one, not the grown-up's pick, so a bundled picture cover replaces it.
+    private static readonly IReadOnlyDictionary<string, int> ShippedCoverColours = new Dictionary<string, int>
+    {
+        ["966400017c494fb5b045786f53852c9e"] = 3,
+        ["bee62232085d4c1ab50cdf574530f473"] = 1,
+        ["0fa29ae0d09643a9a16a5e586e8c7119"] = 0,
+    };
+
     /// <summary>Whether the grown-up changed the stored copy's page text: it matches neither the bundled text nor any earlier shipped version of the starter.
     /// An edited copy is not refreshed, so the edits are not lost.</summary>
     public static bool IsEdited(string packageId, Story stored, Story bundled)
@@ -48,10 +57,12 @@ public static class StarterUpdate
         return copies.FirstOrDefault(c => PageTextHash(c) == bundledHash) ?? copies[0];
     }
 
-    /// <summary>Whether the stored copy's cover is a gallery photo the grown-up chose (the bundled cover is not a photo), whose file has to move to the refreshed story.</summary>
+    /// <summary>Whether the stored copy's cover is a gallery photo the grown-up chose, whose file has to move to the refreshed story: a photo on a starter that earlier
+    /// shipped a colour cover (<see cref="ShippedCoverColours"/>) is always the grown-up's; otherwise it is, only while the bundled cover is not a photo.</summary>
     public static bool KeepsStoredPhoto(Story stored, Story bundled) =>
         stored.CoverStyle == CoverStyle.Picture && stored.CoverPageIndex is null && stored.CoverFile is not null
-        && !(bundled.CoverStyle == CoverStyle.Picture && bundled.CoverFile is not null);
+        && (!(bundled.CoverStyle == CoverStyle.Picture && bundled.CoverFile is not null)
+            || (stored.SourceId is { } id && ShippedCoverColours.ContainsKey(id)));
 
     /// <summary>The refreshed story: the bundled text, pictures and translations, with the stored copy's id-independent choices kept (cast, merges, mode, switches,
     /// title and a cover the grown-up picked; a gallery photo cover keeps the stored file name, which the caller must copy: <see cref="KeepsStoredPhoto"/>).
@@ -105,9 +116,12 @@ public static class StarterUpdate
     private static bool KeepsOtherCover(Story stored, Story refreshed) => stored.CoverStyle switch
     {
         CoverStyle.Picture => stored.CoverPageIndex is { } index && index < refreshed.Pages.Count && refreshed.Pages[index].ImageFile is not null,
-        CoverStyle.Colour => stored.CoverColourIndex != refreshed.CoverColourIndex,
+        CoverStyle.Colour => stored.CoverColourIndex != ShippedCoverColour(stored, refreshed),
         _ => true,
     };
+
+    private static int ShippedCoverColour(Story stored, Story refreshed) =>
+        stored.SourceId is { } id && ShippedCoverColours.TryGetValue(id, out int shipped) ? shipped : refreshed.CoverColourIndex;
 
     /// <summary>The story with the recordings of <paramref name="moves"/> (taken from <paramref name="source"/>) added to the pages that have none yet.</summary>
     public static Story WithMovedRecordings(Story target, Story source, IReadOnlyList<RecordingMove> moves)

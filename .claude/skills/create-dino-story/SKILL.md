@@ -31,7 +31,7 @@ Create `docs/design/story-art/<stem>.md` with:
 - The house style line (Decision 126): `Children's picture book illustration, soft watercolour and
   coloured pencil, warm gentle colours, simple rounded shapes, no text or letters anywhere.`
 - One line per character: species, size relative to the others, clothes and colours, one prop.
-  Name the distinguishing detail of each look-alike (three pigs: hat, scarf, dungarees, cap).
+  Name the distinguishing detail of each look-alike (three pigs: hat, scarf, dungarees, beanie).
 - One scene per page: who is in it (with a count), what they do, where, time of day.
 - A table for the check results (step 5).
 
@@ -40,15 +40,30 @@ Prompt templates: [prompts.md](prompts.md).
 ## 3. Gemini setup (Chrome)
 
 - Use the claude-in-chrome tools on `https://gemini.google.com/app`. The user is signed in (free tier).
-- **One chat per book**, titled after it. Every later picture is asked for in the same chat so Gemini
-  keeps the characters consistent.
-- Set **Aspect ratio 3:4** with the button under the prompt box before the first picture. Pictures
-  come out 896x1200.
-- Order: one reference sheet per character, a line-up of the whole cast, the cover, then pages 1..N.
-- If a chat gets long and Gemini starts mixing earlier scenes into a new one, say "ignore the last
-  picture" and describe the whole scene again from scratch with every character's outfit.
+- **Gemini mixes scenes and outfits from earlier pictures in the same chat** (2026-10-25 pigs pilot: a
+  page-3 wolf in page 5's bathroom, trousers appearing on pigs, a 4th pig). Never draw a book in one chat:
+  - **Character chat** (one per book): one reference sheet per character, then a line-up of the whole
+    cast. Save the accepted line-up and sheets to `docs/design/story-art/<stem>/characters/`; they are
+    the reference every page chat gets. Still being tried: whether sheets stay more consistent in one
+    chat or with a new chat every 2-3 characters. Note in the art record which you did and how it went,
+    and update this line once it is clear.
+  - **Page chats**: a **new chat for every 3 pictures at most** (cover + pages 1-2, pages 3-5, ...).
+    Start each by giving it the line-up (plus the sheets of the characters on those pages), then
+    "These are the characters. Keep their outfits exactly as shown", every outfit spelled out
+    (including what they do NOT wear: "no shirt", "no trousers", "no bobble"), then one prompt per
+    page. Gemini adds no file input until its native picker opens, which can't be driven, so **paste**
+    the picture instead: put it on the Windows clipboard from PowerShell
+    (`Add-Type -AssemblyName System.Windows.Forms, System.Drawing`, then `System.Windows.Forms.Clipboard.SetImage`), click the prompt box, press `ctrl+v`.
+  - If a chat draws an earlier scene again instead of the new one (pigs pilot: the second picture of a
+    fresh chat repeated page 2 for page 6), drop to **one picture per chat** for the rest of the book.
+    A fresh chat with the line-up pasted got every outfit right first time.
+  - The art record's character lines are the canonical outfits, written from the accepted line-up,
+    not from the first prompt (the pilot asked for a "red cap" but the line-up drew a knitted beanie;
+    later prompts must follow the picture).
+- Set **Aspect ratio 3:4** with the button under the prompt box in every new chat. Pictures come out
+  896x1200.
 - Free tier: when Gemini refuses or says the image limit is reached, stop, write where you got to in
-  the art record, and resume next day in the same chat.
+  the art record, and resume next day.
 
 ## 4. Page prompts
 
@@ -59,8 +74,10 @@ the phone is upright the story text panel covers up to 58% of the page from the 
 
 ## 5. Full-size check (every picture, no exceptions)
 
-Zoom into the picture at full size (`computer` action `zoom` over the image) and check each item. Any
-fail means: say what is wrong, ask Gemini to fix that, and check the new one from the top.
+Read the saved full-size file (not the chat preview) and check each item. Any fail means: say what
+is wrong, ask for that page again (a fresh chat if this one has already drawn 3), and check the new one
+from the top. Compare outfits against the line-up picture, item by item (hat type, shirt or no shirt,
+trousers or none).
 
 - [ ] Exact number of characters; nobody appears twice; no extra characters.
 - [ ] Each character's outfit and colours match the line-up (hat, scarf, dungarees, waistcoat...).
@@ -74,11 +91,18 @@ Record each pass in the art record table (page, attempt number, why earlier atte
 
 ## 6. Save the pictures
 
-- Each picture has a "Download full size image" button (aria-label). Download only accepted ones.
-- Chrome must allow automatic downloads for `gemini.google.com` (the user added it on 2026-10-25). If a
-  download doesn't arrive in `%USERPROFILE%\Downloads` (`Gemini_Generated_Image_*.jpg`), reload the
-  chat and click again; Gemini lazy-loads older images, so the newest are the last buttons.
-- Move each file straight away to a working folder outside the repo, named `cover.jpg`, `1.jpg`...
+- Each picture has a "Download full size image" button (aria-label); the newest picture is the last
+  button (Gemini lazy-loads older ones). Clicking it fetches the full-size JPEG
+  (`lh3.googleusercontent.com/rd-gg/...`), but Chrome often drops the file silently, so don't rely on
+  `%USERPROFILE%\Downloads`.
+- What works (2026-10-25): wrap `window.fetch` in the page to keep the image blob of any `rd-gg`
+  response, click the button from `javascript_tool`, then make one real `computer` click on empty page
+  space. Its click handler draws the blob to a canvas and calls `navigator.clipboard.write` with an
+  `image/png` ClipboardItem (needs a real click; the user granted gemini.google.com clipboard access).
+  Save the clipboard from PowerShell (`Add-Type -AssemblyName System.Windows.Forms, System.Drawing`, then `System.Windows.Forms.Clipboard.GetImage()`, JPEG quality 95)
+  to the working folder. Re-inject the wrapper after any reload or new chat.
+- Save each picture under a candidate name (`cand-5.jpg`), check it (step 5) by reading the file, and
+  only then rename it to `cover.jpg`, `1.jpg`... Delete rejected candidates.
 - Then run `pwsh tools/prepare-story-pictures.ps1 <working folder> <target folder> <pageCount>` with the full target
   path: `tests/DinoReader.Tests/Starters/<stem>` (starter) or `tests/DinoReader.Tests/Store/<stem>` (store). It checks the
   count, makes every picture 3:4 at most 896x1200 (never upscaled), JPEG quality 85, and writes `<target>/pictures/1..N.jpg`,
@@ -87,7 +111,10 @@ Record each pass in the art record table (page, attempt number, why earlier atte
 ## 7. Build, test, upload
 
 - Starter: `DINO_BUILD_STARTERS=1 dotnet test tests/DinoReader.Tests` rewrites
-  `src/DinoReader.App/Resources/Raw/starters/<stem>.dino`.
+  `src/DinoReader.App/Resources/Raw/starters/<stem>.dino`. Whenever its text or pictures change, bump its version in
+  `StarterBuilder.StarterVersions` (and add the old text's page hashes to `StarterUpdate.EarlierPageTextHashes` if
+  the text changed), or installed copies never update. A rebuild rewrites all four starters: `git checkout` the
+  other starters' `.dino` files.
 - Store: `DINO_BUILD_STORE=1 dotnet test tests/DinoReader.Tests` writes `artifacts/store/<id>/`; bump the
   story's `Version` whenever text or pictures change.
 - `dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj` green.

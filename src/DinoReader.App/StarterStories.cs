@@ -171,12 +171,12 @@ public sealed class StarterStories(IStoryLibrary library)
 		RecordVersion(manifest.Id, bundledVersion);
 	}
 
-	// Whether the copy was replaced: a copy whose page text the grown-up edited, or that already holds the bundled text, is left as it is.
+	// Whether the copy was replaced: a copy whose page text the grown-up edited is left as it is (equal text is still replaced, the pictures or cover may differ).
 	private async Task<bool> ReplaceUnlessEditedAsync(MemoryStream package, Story stored)
 	{
 		package.Position = 0;
 		Story bundled = await StoryPackageReader.ReadStoryOnlyAsync(package);
-		if (StarterUpdate.PageTextHash(stored) == StarterUpdate.PageTextHash(bundled) || StarterUpdate.IsEdited(stored.SourceId!, stored, bundled))
+		if (StarterUpdate.IsEdited(stored.SourceId!, stored, bundled))
 		{
 			return false;
 		}
