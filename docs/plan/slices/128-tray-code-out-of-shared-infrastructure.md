@@ -1,6 +1,6 @@
 # Slice 128 — Tray code out of the shared Infrastructure, and tests per product
 
-*Planned 2026-10-25.*
+*In progress (wave 2026-10-25 B), draft PR.*
 
 **Batch:** 27 (product separation, Decisions 133-137)
 **Touches:** `src/ReadTheStupidText.Infrastructure/Input/**`, `src/ReadTheStupidText.Infrastructure/Startup/**`, `src/ReadTheStupidText.Application/Input/**`, `src/ReadTheStupidText.Application/Startup/**`, `src/ReadTheStupidText.Application/Activity/**`, `src/ReadTheStupidText.Domain/Activity/**`, `src/ReadTheStupidText.Windows.Tray/**` (new), `src/ReadTheStupidText.App/**`, `ReadTheStupidText.slnx`, `tests/ReadTheStupidText.Tests/**`, `.github/scripts/ship-targets.mjs`, `.github/workflows/release.yml`, `.github/CLAUDE.md`, `src/ReadTheStupidText.Infrastructure/CLAUDE.md`, `src/ReadTheStupidText.App/CLAUDE.md`, `CLAUDE.md`
