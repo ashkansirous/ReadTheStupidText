@@ -63,8 +63,7 @@ public sealed class StarterStoryTests : IDisposable
             Story expected = StarterBuilder.Build(id, title, text, colour);
             Assert.Equal(id, imported.SourceId);
             Assert.Equal(title, imported.Title);
-            // The shipped packages were written before voice flavours: their members carry none, and read as the guess.
-            Assert.Equal(expected.Cast.Select(m => m with { Flavour = null }), imported.Cast);
+            Assert.Equal(expected.Cast, imported.Cast);
             Assert.Equal(expected.Pages.Select(p => p.Text), imported.Pages.Select(p => p.Text));
         }
 

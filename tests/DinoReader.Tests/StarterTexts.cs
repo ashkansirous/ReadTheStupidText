@@ -20,7 +20,7 @@ Pop wanted to play too. He built his house out of sticks. "Now I can play all da
 ---
 Pim worked slowly and carefully. He built his house out of bricks. "A strong house takes time," said Pim. "I will play when it is done."
 
-One evening a big grey Wolf came walking down the road. He licked his lips when he saw the house of straw. He knocked on the door.
+One evening a big grey Wolf came walking down the road. He grinned when he saw the house of straw. He knocked on the door.
 
 "Little pig, little pig, let me come in," Wolf said.
 
@@ -46,9 +46,9 @@ The Wolf was cross. "I will climb onto the roof and come down the chimney," Wolf
 
 "He is going to come down the chimney!" said Pop.
 
-"Do not worry," said Pim. "I have put a big pot of water on the fire."
+"Do not worry," said Pim. "I have put a big tub of cold, bubbly bath water under the chimney."
 
-The Wolf climbed onto the roof and slid down the chimney. Splash! He landed in the hot pot. "Ow, ow, ow!" Wolf cried. He jumped out of the pot, ran out of the door and down the road, and he was never seen in that wood again.
+The Wolf climbed onto the roof and slid down the chimney. Splash! He landed in the bubbly tub. Bubbles went up his nose. "Achoo!" sneezed Wolf. Soggy and soapy, he climbed out, ran all the way home, and he never blew down a house again.
 ---
 "I am sorry I laughed at your bricks," said Pip.
 
@@ -62,9 +62,9 @@ And the three little pigs lived happily in the house of bricks for ever after.
     public const string Gingerbread = """
 Once upon a time Granny and Grandpa lived in a little house at the edge of a wood. They had no children, and they were often lonely.
 
-One morning Granny made a gingerbread man. She gave him two raisin eyes, a smiling mouth and three candy buttons. Then she put him in the oven to bake.
+One morning Granny made a gingerbread man. She gave him two raisin eyes, a smiling mouth and three candy buttons. Then she laid him on a tray by the window.
 ---
-After a while Granny opened the oven door. Out jumped the Gingerbread Man, and he ran across the kitchen floor.
+After a while Granny came back to the tray. Up jumped the Gingerbread Man, and he ran across the kitchen floor.
 
 "Stop!" Granny said. "Come back here!"
 
@@ -74,7 +74,7 @@ Granny and Grandpa ran after him, but they could not catch him.
 ---
 The Gingerbread Man ran on until he met a Cow in a green field.
 
-"Stop, Gingerbread Man!" Cow said. "I want to eat you!" She swished her tail and set off after him.
+"Stop, Gingerbread Man!" Cow said. "Come and play with me!" She swished her tail and set off after him.
 
 "I have run away from Granny and Grandpa," Gingerbread Man said. "Run, run, as fast as you can. You can't catch me, I'm the Gingerbread Man!"
 
@@ -82,13 +82,13 @@ The Cow ran after him, but she could not catch him.
 ---
 Next the Gingerbread Man met a Horse by the fence.
 
-"Stop, Gingerbread Man!" Horse said. "I want to eat you!"
+"Stop, Gingerbread Man!" Horse said. "Come and play with me!"
 
 "I have run away from Granny, Grandpa and a cow," Gingerbread Man said. "Run, run, as fast as you can. You can't catch me, I'm the Gingerbread Man!"
 
 The Horse galloped after him, but he could not catch him either.
 ---
-Then the Gingerbread Man came to a river. He could not swim, and he did not know what to do. A sly Fox was sitting on the bank.
+Then the Gingerbread Man came to a river. He could not swim, and he did not know what to do. A clever Fox was sitting on the bank.
 
 "I will help you," Fox said in a kind voice. "Jump on my tail and I will carry you across."
 
@@ -102,7 +102,7 @@ The water grew deeper still. "You are too heavy," Fox said. "Jump on my nose, an
 
 "Thank you, Fox," Gingerbread Man said, and he jumped on the Fox's nose.
 
-Snap! The sly Fox tossed his head, and that was the end of the Gingerbread Man.
+Fox swam across and set him down on the far bank. "Now go home to Granny and Grandpa," Fox said with a smile. "They miss you." So the Gingerbread Man went home, and they all sat together for a bedtime story.
 """;
 
     public const string Tortoise = """
@@ -120,7 +120,7 @@ One day he met a Tortoise who was walking slowly down the path.
 
 The animals gathered to watch. The Owl stood at the start and raised her wing. "Ready, steady, go!" Owl said.
 ---
-The Hare shot off like an arrow. In a moment he was far ahead, and he could hardly see the Tortoise at all. The Tortoise did not hurry. He kept walking, one slow step after another.
+The Hare shot off like the wind. In a moment he was far ahead, and he could hardly see the Tortoise at all. The Tortoise did not hurry. He kept walking, one slow step after another.
 
 "This is too easy," Hare said to himself. "I have time for a little rest in the shade."
 

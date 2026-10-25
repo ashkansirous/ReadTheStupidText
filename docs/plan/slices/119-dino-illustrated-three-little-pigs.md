@@ -1,6 +1,6 @@
 # Slice 119 — Dino: illustrated Three Little Pigs, and the starters in the store
 
-*Planned 2026-10-25.* Dino Reader only; RTST is not touched.
+*Planned 2026-10-25. Part 1 built 2026-10-25 (gentle stories, starters in the store, auto-update, picture tooling, skill); not yet verified on a device. Part 2 (the pigs' cover and page pictures, generated in Gemini) follows in a second PR.* Dino Reader only; RTST is not touched.
 
 **Batch:** 25 (story illustrations)
 **Depends on:** Slice 98 (starter pictures), Slice 92/102 (store build and upload)
@@ -49,9 +49,9 @@ The Tortoise and the Hare) in the store, so anyone who deletes one can download 
       character sheets (Pip, Pop), then the cover, then pages 1..N. Check each against the line-up; redo
       any that drift (wrong colours, extra pig, text in the picture). Save the originals to a working
       folder outside the repo.
-- [ ] **`tools/prepare-story-pictures.ps1 <source folder> <stem>`**: centre-crop to 3:4, resize to
-      1080x1440, JPEG quality 85, write `tests/DinoReader.Tests/Starters/<stem>/pictures/1..N.jpg` and
-      `cover.jpg`. Fails if the count doesn't match the page count it is given.
+- [ ] **`tools/prepare-story-pictures.ps1 <source folder> <target folder> <page count>`**: centre-crop to 3:4,
+      resize down to at most 896x1200 (Gemini's native size; never upscaled), JPEG quality 85, write `<target>/pictures/1..N.jpg`,
+      `cover.jpg` and a 288x384 `cover-thumb.jpg` for the store list. Fails if the count doesn't match the page count it is given.
 - [ ] **Starter build picks up the cover.** `StarterBuilder` uses `Starters/<stem>/cover.jpg` as a
       Picture cover when present (as Good Enough does), then rebuild with `DINO_BUILD_STARTERS=1` so
       `Resources/Raw/starters/three-little-pigs.dino` carries the pictures. Check the shelf, the store and
@@ -59,13 +59,13 @@ The Tortoise and the Hare) in the store, so anyone who deletes one can download 
       anywhere, draw it there in the app.
 - [ ] **Starters in the store.** `StoreBuilder` also writes the four starters to `artifacts/store/<id>/`
       (same package ids as the bundled files, `meta.json` with credits, ages, author, `version` one higher
-      than anything uploaded before), with `cover.jpg` from the picture cover or `StoreCover.Render`.
+      than anything uploaded before), with `cover.jpg` from the picture cover's `cover-thumb.jpg` (or `StoreCover.Render` when there is no picture cover).
       Upload all four with `tools/upload-store-story.ps1`.
 - [ ] **Recover after delete.** Confirm on the emulator: delete The Three Little Pigs from the shelf, open
       the store, download it, and it reads with its pictures. If the store hides stories whose id is
       bundled, change that.
 - [ ] Record the house-style and picture-size rules in `src/DinoReader.App/CLAUDE.md` (where pictures go,
-      3:4 at 1080x1440, run the prepare script, never commit unresized originals).
+      3:4 at 896x1200, never upscaled, run the prepare script, never commit unresized originals).
 
 ## Verification
 
@@ -74,3 +74,60 @@ The Tortoise and the Hare) in the store, so anyone who deletes one can download 
   no character hidden under the text panel on the pages checked; delete it and get it back from the store.
 - `GET https://dinoreader.sirous.uk/api/stories` lists all four starters.
 - The user checks the book on their phone before Slice 121 starts.
+
+## Gentle stories (added 2026-10-25, after the user's review of the first pictures)
+
+- **Decision 130: no Dino book shows harm or pain, in its text or its pictures, whatever the classic
+  tale says.** Readers are 3-9. Nobody is eaten, burnt, boiled, drowned, beaten, killed, falls to
+  their death or is threatened with any of that; no fire or hot water near a character; no "licks his
+  lips" or other hints of eating someone. Conflicts end gently: a splash of cold bubbly water, a
+  fright that turns into a laugh, a sorry, running home, a new friend. Keep each story recognisable
+  and its page breaks (`---`) where they are, so picture counts stay right.
+- Audit and rewrite all 14 books (the 4 starters in `StarterTexts.cs`, the 10 store stories in
+  `StoreTexts.cs`), then update every changed piece in `Starters/translations/<stem>.<lang>.json`
+  (13 languages) and rebuild: `DINO_BUILD_STARTERS=1` for the bundled starters and
+  `DINO_BUILD_STORE=1` for the store, store stories as `version: 3`.
+- The Three Little Pigs page 5: the Wolf slides down the chimney into a big tub of cold, bubbly bath
+  water, sneezes "Achoo!", climbs out soggy and soapy, runs home and never blows down a house again.
+  Page 2: "He licked his lips" becomes "He grinned".
+- Every generated picture passes the full-size check in the `create-dino-story` skill before it is
+  saved: exact character count and outfits, the scene matches the page, nothing hurt, scary or on
+  fire, no text, action high on the page.
+
+## Part 1 built (2026-10-25)
+
+- [x] **Decision 130 applied.** All 14 books audited, 11 rewritten (Elves and the Shoemaker, Little Red Hen and Good Enough needed nothing). Full before/after in [`docs/plan/notes/2026-10-25-gentle-stories-changes.md`](../notes/2026-10-25-gentle-stories-changes.md), one line per book:
+  - Three Little Pigs: "licked his lips" becomes "grinned"; the Wolf lands in a cold bubbly tub, sneezes and runs home.
+  - Gingerbread Man: baked on a tray by the window, not in the oven; Cow wants to play, not eat; the Fox is "clever", ends with a bedtime story.
+  - Tortoise and the Hare: "shot off like an arrow" becomes "like the wind".
+  - Lion and Mouse: no "eat you"; the paw goes down beside the Mouse; the net is no hunter's.
+  - Goldilocks: porridge "too hot"/"too cold" without "Ouch"/"Yuck".
+  - Little Red Riding Hood: Grandmother hides in the wardrobe, no axe, the Wolf runs from the Woodcutter, "surprise" not "scare".
+  - Billy Goats Gruff: the Troll is grumpy and lonely, no gobbling or tossing; he joins them for grass.
+  - Jack and the Beanstalk: no boy-eating, hides in the cupboard not the oven, the Giant is not chopped down with an axe.
+  - Peter Rabbit, The Ugly Duckling, and the Town Mouse and the Country Mouse: fright, pecking, hunger and traps/claws toned down.
+- [x] Translations updated in 13 languages; 299 stale keys removed. `GentleTextTests` bans harm words in every story text (plain "trap" and "teeth" dropped from the list, see the test).
+- [x] **Store stories all `version: 3`.** The four starters are now store entries with their bundled package ids and versions (pigs, gingerbread, tortoise 2; good-enough 1), metadata in `StoreBuilder.StarterEntries`. Good Enough's author and credit are to be confirmed by the user.
+- [x] **Bundled starters auto-update on launch** (`src/DinoReader.Core/StarterUpdate.cs`, `src/DinoReader.App/StarterStories.cs`): the version is recorded per copy, store downloads included; skipped when the grown-up edited the text (v1 page-text hashes); keeps title, cover pick, cast settings and recordings of unchanged pages; duplicate copies cleaned up on launch.
+- [x] `tools/prepare-story-pictures.ps1` (896x1200, never upscaled, `cover-thumb.jpg` 288x384). `StarterBuilder` and `StoreBuilder` pick up pictures, cover and thumb; the store build fails without a thumb.
+- [x] Skill `.claude/skills/create-dino-story` (`SKILL.md`, `prompts.md`), which is Slice 120's work.
+
+*Changed while building:* the starters went into the store with versions already above the old text (Decision 128 plus 130), and auto-update was added so existing installs get the gentle text; this was not in the plan.
+
+*From review:* pass 1 (high) 7 findings, all fixed. Pass 2 (medium) 9 findings, 8 fixed; #8 (English-only scan in `GentleTextTests`) skipped by decision.
+
+Still open in this slice: art record, Gemini generation, the pigs' pictures and starter rebuild, store upload, recover-after-delete check, and the `src/DinoReader.App/CLAUDE.md` rules (lifted after merge).
+
+#### For CLAUDE.md
+
+Into `src/DinoReader.App/CLAUDE.md`:
+
+- No harm in any Dino text or picture: nobody eaten, burnt, boiled, hurt or threatened. `GentleTextTests` enforces it for text. (Slice 119: docs/plan/slices/119-dino-illustrated-three-little-pigs.md, Decision 130)
+- Story pictures are 896x1200 (3:4), never upscaled; run `tools/prepare-story-pictures.ps1` before building; never commit unresized originals. (Slice 119: docs/plan/slices/119-dino-illustrated-three-little-pigs.md)
+- Whenever a starter's text changes, bump its version in `StarterBuilder.StarterVersions` and add the old text's page hashes to `StarterUpdate.EarlierPageTextHashes`, or installed copies will not update. (Slice 119: docs/plan/slices/119-dino-illustrated-three-little-pigs.md)
+
+#### Not yet verified
+
+- On-device starter auto-update and recording copy (unchanged pages keep recordings, edited text is skipped).
+- The Three Little Pigs pictures (part 2).
+- Store upload of the version 3 stories and the four starters, after merge.

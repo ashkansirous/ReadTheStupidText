@@ -15,9 +15,14 @@ internal static class StoreBuilder
     public const string BuildSwitch = "DINO_BUILD_STORE";
     public const string MetaFile = "meta.json";
     public const string CoverFile = "cover.jpg";
+    public const string CoverThumbFile = "cover-thumb.jpg";
     public const string StoreLanguage = "en";
 
     private const int WordsPerMinute = 110;
+    public const string StarterAdded = "2026-10-25";
+    private const string RetoldAesop = "Retold from Aesop · free to share";
+    private const string RetoldTraditional = "Retold traditional tale · free to share";
+    private const string Traditional = "Traditional";
 
     private static readonly JsonSerializerOptions MetaOptions = new() { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
@@ -25,9 +30,26 @@ internal static class StoreBuilder
 
     public static string StoreFolder() => Path.Combine(StarterBuilder.RepoRoot(), "artifacts", "store");
 
+    /// <summary>The store entries of the four bundled starters (Decision 128), by package file name: the same ids as the bundled files, so a deleted starter can be downloaded again.</summary>
+    public static IReadOnlyDictionary<string, StoreEntry> StarterEntries { get; } = new Dictionary<string, StoreEntry>
+    {
+        [StarterBuilder.GoodEnoughFile] = new("Good Enough", StarterBuilder.GoodEnoughId, StarterBuilder.GoodEnoughColourIndex, "A Dino Reader picture book · free to share", 5, 8, "Dino Reader"),
+        ["three-little-pigs.dino"] = new("The Three Little Pigs", StarterTexts.PigsId, 3, RetoldTraditional, 3, 6, Traditional),
+        ["gingerbread-man.dino"] = new("The Gingerbread Man", StarterTexts.GingerbreadId, 1, RetoldTraditional, 3, 6, Traditional),
+        ["tortoise-and-hare.dino"] = new("The Tortoise and the Hare", StarterTexts.TortoiseId, 0, RetoldAesop, 4, 7, "Aesop"),
+    };
+
+    /// <summary><c>Store/&lt;stem&gt;</c>: the checked-in <c>pictures/1..N.jpg</c> and <c>cover.jpg</c> of a store story (Slice 119).</summary>
+    public static string StoryArtFolder(string stem) =>
+        Path.Combine(StarterBuilder.RepoRoot(), "tests", "DinoReader.Tests", "Store", stem);
+
     /// <summary>The story as it is packed: cast voices, <c>TranslateToMyLanguage</c> on and every checked-in translation merged in.</summary>
     public static Story Build(StoreStorySpec spec) =>
-        StarterBuilder.WithTranslations(StarterBuilder.Build(spec.Id, spec.Title, spec.Text, spec.ColourIndex), spec.Stem + ".dino");
+        StarterBuilder.WithTranslations(
+            StarterBuilder.WithPictures(StarterBuilder.Build(spec.Id, spec.Title, spec.Text, spec.ColourIndex), PictureFilesOf(spec)), spec.Stem + ".dino");
+
+    private static IReadOnlyList<string> PictureFilesOf(StoreStorySpec spec) =>
+        StarterBuilder.PictureFilesIn(Path.Combine(StoryArtFolder(spec.Stem), "pictures"));
 
     /// <summary>Writes <c>translations/&lt;stem&gt;.pieces.json</c> for every store story: the distinct piece texts, in story order, that need a translation.</summary>
     public static async Task DumpPiecesAsync()
@@ -49,7 +71,13 @@ internal static class StoreBuilder
             var library = new FileStoryLibrary(scratch);
             foreach (StoreStorySpec spec in StoreTexts.All)
             {
-                await WriteOneAsync(spec, library);
+                await WriteStoryAsync(spec, library);
+            }
+
+            foreach (var (fileName, story) in await StarterBuilder.BuildAllAsync(library))
+            {
+                string thumb = Path.Combine(StarterBuilder.StarterFolder(Path.GetFileNameWithoutExtension(fileName)), CoverThumbFile);
+                await WritePackageAsync(story, StarterEntries[fileName].ToSpec(story, StarterBuilder.StarterVersions[fileName]), library, thumb);
             }
         }
         finally
@@ -61,19 +89,42 @@ internal static class StoreBuilder
         }
     }
 
-    private static async Task WriteOneAsync(StoreStorySpec spec, FileStoryLibrary library)
+    private static async Task WriteStoryAsync(StoreStorySpec spec, FileStoryLibrary library)
     {
         Story story = Build(spec);
+        await library.AddAsync(story);
+        IReadOnlyList<string> pictures = PictureFilesOf(spec);
+        StarterBuilder.CopyPictures(story, pictures, library);
+        string? coverSource = StarterBuilder.ExistingFile(Path.Combine(StoryArtFolder(spec.Stem), "cover.jpg"));
+        await WritePackageAsync(await StarterBuilder.WithPictureCoverAsync(story, coverSource, library), spec, library, Path.Combine(StoryArtFolder(spec.Stem), CoverThumbFile));
+    }
+
+    private static async Task WritePackageAsync(Story story, StoreStorySpec spec, FileStoryLibrary library, string thumbnailPath)
+    {
         string folder = Path.Combine(StoreFolder(), spec.Id);
         Directory.CreateDirectory(folder);
-        await library.AddAsync(story);
         await using (FileStream output = File.Create(Path.Combine(folder, PackageFileName(spec.Version))))
         {
-            await StoryPackageWriter.WriteAsync(story, library, output, includeRecordings: false); // a store upload never carries a parent recording (Slice 111)
+            await StoryPackageWriter.WriteAsync(story, library, output, includeRecordings: false, version: spec.Version); // a store upload never carries a parent recording (Slice 111)
         }
 
-        await File.WriteAllBytesAsync(Path.Combine(folder, CoverFile), StoreCover.Render(spec.Title, CoverPalette.ColourAt(spec.ColourIndex)));
+        await File.WriteAllBytesAsync(Path.Combine(folder, CoverFile), CoverBytes(story, spec, library, thumbnailPath));
         await File.WriteAllTextAsync(Path.Combine(folder, MetaFile), MetaJson(spec, story));
+    }
+
+    /// <summary>The store list's cover (a row per story on a metered phone, so small): the checked-in <c>cover-thumb.jpg</c> (288x384, written by
+    /// <c>tools/prepare-story-pictures.ps1</c>) when the story has a picture cover, else the generated colour cover. The full cover stays inside the package.
+    /// A picture cover with no thumbnail file fails the build with a clear message.</summary>
+    public static byte[] CoverBytes(Story story, StoreStorySpec spec, FileStoryLibrary library, string? thumbnailPath = null)
+    {
+        if (story.CoverStyle != CoverStyle.Picture || story.CoverFile is null)
+        {
+            return StoreCover.Render(spec.Title, CoverPalette.ColourAt(spec.ColourIndex));
+        }
+
+        string path = StarterBuilder.ExistingFile(thumbnailPath ?? string.Empty)
+            ?? throw new InvalidOperationException($"The store story '{spec.Title}' has a picture cover but no {CoverThumbFile}; run tools/prepare-story-pictures.ps1 to make it.");
+        return File.ReadAllBytes(path);
     }
 
     /// <summary>The <c>meta.json</c> the Worker checks (<c>worker/stories.ts</c> <c>parseMeta</c>): the page count and the reading time come from the text.</summary>
@@ -99,6 +150,14 @@ internal static class StoreBuilder
         int words = text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
         return Math.Max(1, (int)Math.Ceiling(words / (double)WordsPerMinute));
     }
+}
+
+/// <summary>The store metadata of a bundled starter that is also a store story (Decision 128).</summary>
+internal sealed record StoreEntry(string Title, string Id, int ColourIndex, string Credits, int AgeMin, int AgeMax, string Author)
+{
+    /// <summary>The spec the store builder writes it under: the story's own text and the starter's content version (<see cref="StarterBuilder.StarterVersions"/>).</summary>
+    public StoreStorySpec ToSpec(Story story, int version) =>
+        new(Id, Title, string.Empty, story.Text, ColourIndex, Credits, AgeMin, AgeMax, Author, [], version, StoreBuilder.StarterAdded);
 }
 
 /// <summary>

@@ -174,6 +174,8 @@ public sealed class StoreClient(IStoryLibrary library)
 		Story story = await StoryPackageReader.ImportAsync(package, library);
 		if (string.Equals(story.SourceId, itemId, StringComparison.OrdinalIgnoreCase))
 		{
+			package.Position = 0;
+			await StarterStories.RecordStoreInstallAsync(package);
 			return true;
 		}
 
