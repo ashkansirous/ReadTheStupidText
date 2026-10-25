@@ -1,7 +1,7 @@
 # CLAUDE.md — Infrastructure (Windows speech engines, packs, logging)
 
 Loaded when you work under `src/ReadTheStupidText.Infrastructure`. The tray UI and read orchestration
-rules are in `src/ReadTheStupidText.App/CLAUDE.md`.
+rules are in `src/ReadTheStupidText.App/CLAUDE.md`. Tray-only code (hotkey, UIA selection monitor, clipboard listener, selection copier, foreground probe, startup task) lives in `src/ReadTheStupidText.Windows.Tray`, not here: Dino Reader's Windows head shares this project, so keep tray code out (Slice 128: docs/plan/slices/128-tray-code-out-of-shared-infrastructure.md). `Input/NativeMethods.cs` here is only the clipboard-read subset `ClipboardReader` uses.
 
 Note (Windows; Android/iOS use downloaded packs): the narrator voice is a **local neural voice** (Slice 9, Decision 14) — the
 **sherpa-onnx** runtime (Apache-2.0) running the **Supertonic-3** model

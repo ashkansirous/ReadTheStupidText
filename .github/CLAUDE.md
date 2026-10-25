@@ -41,6 +41,11 @@ Loaded when you edit workflows or scripts. Complements the root `CLAUDE.md`.
 > job (ubuntu), never the version, release or store jobs. Keep Dino paths out of
 > the core paths in `ship-targets.mjs`. (Slice 59: docs/plan/slices/59-dialogue-parser-voice-caster.md)
 
+> **Tests per product (Slice 128):** `tests.yml` (RTST's suite) runs on `windows|android|ios` and gates those builds;
+> `dinoreader.yml` (Dino's suite) runs for `dinoreader|dinoapp|dinoios|dinowin` and is standalone (gates nothing). A Dino-only
+> change skips RTST's tests, an RTST-only change skips Dino's. `src/ReadTheStupidText.Windows.Tray/**` is in the `windows` group
+> only (no `dinowin`). (Slice 128: docs/plan/slices/128-tray-code-out-of-shared-infrastructure.md)
+
 > **iOS toolchain pin:** `ios.yml` pins dotnet 10.0.401 + workload set 10.0.401
 > (Microsoft.iOS.Sdk 26.5.10318) + Xcode 26.6, because `macos-26` has no Xcode 27.
 > Bump all three together. (Slice 48: docs/plan/slices/48-ios-target-testflight.md)

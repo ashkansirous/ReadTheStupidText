@@ -40,6 +40,7 @@ const CASES = [
     ['release workflow (the pipeline itself)', ['.github/workflows/release.yml'], ALL3],
     ['find-release script', ['.github/scripts/find-release.sh'], ALL3],
     ['Windows app only', ['src/ReadTheStupidText.App/App.xaml.cs'], { windows: true, windowsstore: true }],
+    ['Windows tray library only (no Dino target)', ['src/ReadTheStupidText.Windows.Tray/Input/X.cs'], { windows: true, windowsstore: true }],
     ['Infrastructure only', ['src/ReadTheStupidText.Infrastructure/X.cs'], { windows: true, windowsstore: true, dinowin: true }],
     ['store-submit workflow', ['.github/workflows/store-submit.yml'], { windows: true, windowsstore: true, dinowin: true }],
     ['Dino Reader Windows workflow', ['.github/workflows/dinoreader-windows.yml'], { dinowin: true }],
@@ -208,9 +209,10 @@ const PR_TARGETS = {
     'dinoreader-android.yml': ['core', 'dinoapp', 'sharedroot'],
     'dinoreader-ios.yml': ['core', 'dinoios', 'sharedroot'],
     'dinoreader-windows.yml': ['core', 'dinowin', 'sharedroot'],
-    // tests.yml gates both the Windows and Android builds.
-    'tests.yml': ['core', 'unittests', 'windows', 'android', 'dinowin', 'mobileshared', 'sharedroot'],
-    'dinoreader.yml': ['dinoreader'],
+    // tests.yml is RTST's suite (Slice 128): it gates the Windows, Android and iOS builds, never Dino alone.
+    'tests.yml': ['core', 'unittests', 'windows', 'android', 'ios', 'mobileshared', 'sharedroot'],
+    // dinoreader.yml is Dino's suite: it runs for every Dino target (core is in each of them).
+    'dinoreader.yml': ['core', 'dinoreader', 'dinoapp', 'dinoios', 'dinowin', 'sharedroot'],
 };
 
 for (const [file, groups] of Object.entries(PR_TARGETS)) {
