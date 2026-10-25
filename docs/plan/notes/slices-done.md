@@ -129,6 +129,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 123 | Dino: the pigs retold as 16 pages, one action each | built | #336 | | [123-dino-pigs-one-action-per-page.md](../slices/123-dino-pigs-one-action-per-page.md) |
 | 124 | Dino: the words panel and its switch match the Batch 25 mock | built | #338 | | [124-dino-words-panel-matches-mock.md](../slices/124-dino-words-panel-matches-mock.md) |
 | 125 | Dino: each character knows its animal, and animal voices to match | built | #339 | | [125-dino-character-animals.md](../slices/125-dino-character-animals.md) |
+| 135 | Dino: every pig a piglet, and the emulator fixes for Slices 124-125 | built | #352 | | [135-dino-animal-voices-fixes.md](../slices/135-dino-animal-voices-fixes.md) |
 
 ## Batch ordering notes
 
