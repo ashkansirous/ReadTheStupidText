@@ -1148,3 +1148,14 @@
     switch, on by default. (Slice 117)
 124. **The storyteller pack serves Spanish, French and Portuguese if it speaks them well (Batch 24)**;
     Japanese and Chinese only if the same check passes. (Slice 118)
+125. **Claude illustrates Dino books by driving the Gemini web app in the user's Chrome (Batch 25).** One chat per
+    book: character sheets, a line-up, the cover, then one picture per page; pictures are saved and committed without
+    asking each time; stop at the free tier's daily cap and resume. Reverses Batch 10's "no AI illustrations" and
+    supersedes Decision 106's public-domain follow-up. (Slice 119)
+126. **One house style for every Dino book (Batch 25)**: soft watercolour and coloured pencil, warm gentle colours,
+    simple rounded shapes, no text; style line and cast per book in `docs/design/story-art/<stem>.md`. (Slice 119)
+127. **Dino pictures are 3:4 portrait, 1080x1440, text-free, characters in the top half (Batch 25)**; the title on a
+    cover comes from our code, never from Gemini. (Slice 119)
+128. **The bundled starters are also store stories with the same package id (Batch 25)**, so a deleted starter can be
+    downloaded again. (Slice 119)
+129. **Making a Dino story is the project skill `create-dino-story` (Batch 25).** (Slice 120)
