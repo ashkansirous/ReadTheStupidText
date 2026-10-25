@@ -25,12 +25,12 @@ supertonic-3/
 | key | meaning |
 | --- | --- |
 | `id` | the pack id, equal to the folder name and the catalog id |
-| `kind` | `voice`, `ocr` or `translation` |
+| `kind` | `voice`, `ocr`, `translation` or `storyteller` |
 | `language` | comma-separated language codes the pack serves (`en,fr,es,pt,ru,ja,ar`) |
 | `version` | pack version string |
 | `engine` | the synthesis/recognition engine (`sherpa-onnx`; `onnxruntime` for `kind: ocr`, Slice 52, and `kind: translation`, Slice 75) |
 | `files` | every payload file the app must find after extraction (`pack.json` excluded) |
-| `model` | optional (Slice 51): the engine family, Piper/VITS or MeloTTS. Absent means Supertonic |
+| `model` | optional (Slice 51): the engine family, Piper/VITS, MeloTTS or Kokoro (Slice 114). Absent means Supertonic |
 | `voices` | optional (Slice 51): the voices the pack offers. Supertonic lists none (its ten styles are `SupertonicVoiceTable`); Piper and Melo list theirs |
 
 The app installs a pack only after the whole file list is present, so a killed or partial
@@ -108,6 +108,31 @@ research). Installed by `TranslationPackInstaller` through the pack service; the
 fetches the user's `en` to language pack, and a read whose source needs another leg downloads it in
 the background while the original is read.
 
+### Storyteller packs (`kind: storyteller`, Slice 114)
+
+A pack of richer voices that only **Dino Reader** uses, for a language it already reads with a voice pack. The one pack,
+`kokoro-en`, is Kokoro-82M v1.0 (Apache-2.0 weights) as sherpa-onnx's int8 build (`model.onnx`, `voices.bin`, `tokens.txt`,
+`lexicon-us-en.txt`) plus the GPL-3.0 espeak-ng data inside the zip only, with its `LICENSE`, `LICENSE-Kokoro-Apache-2.0` and `SOURCE`
+(`model: kokoro`, `language: en`; about 126 MB, so `packs.yml` gives it its own 150 MB cap). Its voices are not listed in `pack.json`:
+the English ones are `KokoroVoiceTable` (ids `kokoro:<name>`, Heart is the narrator default).
+
+- **Not a voice pack.** Every text-reader lookup (`VoicePackSelector`, `VoicePackSetup`, `VoicePackInstaller`,
+  `GetInstalledVoicePacks`) filters on `PackKind.Voice`, so RTST never sees, picks or updates one. Dino alone registers
+  `StorytellerVoices`; with it `MobileVoiceModelService` and `StoryVoicing` also scan `GetInstalledVoiceAndStorytellerPacks`, and
+  `InstalledVoiceCatalog.Resolve` lets an installed storyteller pack win over the language's voice pack.
+- **Old apps skip it.** An entry whose `kind` is not a known `PackKind` is dropped by `PackCatalogParser` and `PackManifest`, so a
+  catalogue with this entry still works in an older build.
+- **Offer and removal.** The cast screen's "Storyteller voices" card (`StorytellerCard`, `StorytellerController`) lists it from the
+  catalogue only when the service says `SupportsStorytellerPacks` and `KokoroVoiceTable.Serves` the book's language (otherwise the card
+  is hidden and no catalogue request is made). "Hear one" plays `<id>-<version>-sample.wav`, a clip `packs.yml` makes with the pack's own
+  files and uploads next to the zip (it is not in the catalogue and not part of the pack). "Use Dino's first voices" is
+  `IVoicePackService.Uninstall`: the folder is renamed out of the way first (a rename fails whole when a loaded model holds a file, leaving
+  the pack intact), then deleted, then `InstalledPacksChanged` is raised.
+- **Updates.** An installed pack is updated like the voice packs, quietly and only on an unmetered connection, when the cast screen opens
+  (`StorytellerController.UpdateInstalledAsync`, `StorytellerOffer.UpdateAvailable`).
+- **Casting.** Installing or removing the pack re-casts English books once (`NarratorRecast`): characters the grown-up did not pick
+  take voices from the new pool, an explicit pick stays unless its voice left with the pack (then it takes the closest voice of its gender).
+
 ## Hosting
 
 Packs are assets of a dedicated GitHub release tagged `packs-<n>`, separate from the app's
@@ -126,14 +151,14 @@ created `--latest=false`, so `releases/latest` stays the app.
 
 Manual: run the **packs** workflow (`.github/workflows/packs.yml`, `workflow_dispatch`) with
 the release number and the pack versions (`pack_version` for Supertonic,
-`piper_pack_version`, `norwegian_pack_version`, `melo_pack_version`, and `ocr_pack_version` for the four OCR packs,
+`piper_pack_version`, `norwegian_pack_version`, `melo_pack_version`, `kokoro_pack_version` for the Dino storyteller pack (Slice 114), and `ocr_pack_version` for the four OCR packs,
 Slice 52, and `translation_pack_version` for the twenty-three translation packs, Slice 75). One run builds the packs into the one
 `packs-<n>` release, computes each sha256 and size, and publishes the zips with `packs.json`.
 The voice packs:
 
 | pack | languages | engine | licence |
 | --- | --- | --- | --- |
-| `supertonic-3` | en, fr, es, pt, ru, ja, ar | Supertonic (zips `src/ReadTheStupidText.App/VoiceModel/`, LFS) | Apache-2.0 |
+| `supertonic-3` | en, fr, es, pt, ru, ja, ar | Supertonic (zips `src/ReadTheStupidText.App/VoiceModel/`, LFS) | weights BigScience OpenRAIL-M (`LICENSE-OpenRAIL-M` and a `NOTICE` with the use restrictions are in the zip, from `.github/licenses/`), sample code MIT (`LICENSE`); see STORE.md |
 | `piper-fa` | fa | Piper/VITS, four voices (below) | espeak-ng data is GPL-3.0, inside this zip only, with its `LICENSE` and `SOURCE` (also the amir Apache-2.0 attribution, Slice 89) |
 | `piper-nb` | nb | Piper/VITS, one model with ten speakers (`piper:nb-knn` default, codes from the upstream `speaker_id_map`; Slice 104) | espeak-ng data is GPL-3.0, inside this zip only, with its `LICENSE` and `SOURCE`; voice data CC0 |
 | `melo-zh-en` | zh | MeloTTS | MIT |

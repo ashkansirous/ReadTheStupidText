@@ -22,6 +22,7 @@ public sealed class MobileVoicePackService : IVoicePackService
 {
     private const string PacksFolder = "packs";
     private const string ExtractingSuffix = ".extracting";
+    private const string RemovingSuffix = ".removing";
     private const int CopyBufferBytes = 81920;
     private const int FileBufferBytes = 81920;
 
@@ -73,13 +74,72 @@ public sealed class MobileVoicePackService : IVoicePackService
     // OCR packs (Slice 52) are installed, validated and listed exactly like voice packs.
     public IReadOnlyList<InstalledVoicePack> GetInstalledOcrPacks() => InstalledPacks(PackKind.Ocr);
 
-    private static IReadOnlyList<InstalledVoicePack> InstalledPacks(PackKind kind) =>
+    // Dino's storyteller packs (Slice 114): listed apart from the voice packs so the text reader never sees one.
+    public IReadOnlyList<InstalledVoicePack> GetInstalledStorytellerPacks() => InstalledPacks(PackKind.Storyteller);
+
+    public bool SupportsStorytellerPacks => true;
+
+    public IReadOnlyList<InstalledVoicePack> GetInstalledVoiceAndStorytellerPacks() =>
+        InstalledPacks(kind => kind is PackKind.Voice or PackKind.Storyteller);
+
+    // Removes the whole pack (every version) and raises InstalledPacksChanged. The folder is first renamed out of the way: a rename fails as
+    // a whole when a loaded model still holds a file (Windows), leaving the pack intact, where a half-finished delete would leave it broken.
+    // Only the cast screen calls it, behind the grown-up gate, after it stopped the reader.
+    public bool Uninstall(string packId)
+    {
+        if (!PackNaming.IsValidId(packId))
+        {
+            return false;
+        }
+
+        string folder = Path.Combine(PacksRoot(), packId);
+        if (!Directory.Exists(folder))
+        {
+            return false;
+        }
+
+        string removing = folder + RemovingSuffix;
+        try
+        {
+            DeleteQuietly(removing);
+            Directory.Move(folder, removing);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            System.Diagnostics.Debug.WriteLine($"Could not remove pack '{packId}': {ex.Message}");
+            return false;
+        }
+
+        InstalledPacksChanged?.Invoke(this, EventArgs.Empty);
+        DeleteQuietly(removing);
+        return true;
+    }
+
+    // The renamed folder is not a pack id, so no scan sees it; a delete that fails is retried by the next removal of this pack.
+    private static void DeleteQuietly(string folder)
+    {
+        try
+        {
+            if (Directory.Exists(folder))
+            {
+                Directory.Delete(folder, recursive: true);
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            System.Diagnostics.Debug.WriteLine($"Could not delete '{folder}': {ex.Message}");
+        }
+    }
+
+    private static IReadOnlyList<InstalledVoicePack> InstalledPacks(PackKind kind) => InstalledPacks(k => k == kind);
+
+    private static IReadOnlyList<InstalledVoicePack> InstalledPacks(Func<PackKind, bool> wanted) =>
         Directory.EnumerateDirectories(PacksRoot())
             .Select(folder => Path.GetFileName(folder))
             .Where(PackNaming.IsValidId)
             .Select(LoadInstalled)
             .OfType<InstalledVoicePack>()
-            .Where(p => p.Manifest.Kind == kind)
+            .Where(p => wanted(p.Manifest.Kind))
             .ToList();
 
     private static InstalledVoicePack? LoadInstalled(string packId)

@@ -118,6 +118,9 @@ internal static class IosTtsEngine
             case VoiceEngineKind.Melo:
                 ConfigureMelo(ref config, paths.RootDir);
                 break;
+            case VoiceEngineKind.Kokoro:
+                KokoroEngineConfig.Configure(ref config, paths.RootDir);
+                break;
             default:
                 throw new NotSupportedException($"No engine for voice model kind {paths.Kind}.");
         }
@@ -137,7 +140,7 @@ internal static class IosTtsEngine
     {
         foreach (string file in RequiredFiles(paths.Kind, config))
         {
-            if (string.IsNullOrEmpty(file) || !File.Exists(file))
+            if (string.IsNullOrEmpty(file) || !(File.Exists(file) || Directory.Exists(file)))
             {
                 string message = $"Voice model file missing for {paths.Kind}: '{file}'.";
                 System.Diagnostics.Debug.WriteLine(message);
@@ -156,6 +159,7 @@ internal static class IosTtsEngine
                 config.Model.Supertonic.TtsJson, config.Model.Supertonic.UnicodeIndexer,
                 config.Model.Supertonic.VoiceStyle,
             ],
+            VoiceEngineKind.Kokoro => KokoroEngineConfig.RequiredPaths(config),
             _ => [config.Model.Vits.Model, config.Model.Vits.Tokens],
         };
 

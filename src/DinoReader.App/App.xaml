@@ -62,6 +62,7 @@
         <Color x:Key="SelectedRow">#F4F2FF</Color>
         <Color x:Key="CheckEmpty">#cfc7b8</Color>
         <Color x:Key="MergeBorder">#c9c0f5</Color>
+        <Color x:Key="StorytellerOn">#2E7D32</Color>
         <Color x:Key="SheetScrim">#802b2540</Color>
 
         <!-- Language rows (mock screens 9, 8b): the off track of the translate switch. -->

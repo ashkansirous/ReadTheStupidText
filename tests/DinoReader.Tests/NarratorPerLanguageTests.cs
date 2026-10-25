@@ -38,6 +38,92 @@ public class NarratorPerLanguageTests
         Assert.False(CastEditor.UsesVoice(cast, "M2"));
     }
 
+    [Fact]
+    public void HasVoiceOutside_FlagsACastWhoseVoicesLeftThePool()
+    {
+        CastMember[] cast = [new("a", "A", Gender.Male, "supertonic:M1"), new("b", "B", Gender.Female, "kokoro:af_bella")];
+        VoiceOption[] kokoro = [new("kokoro:af_heart", Gender.Female), new("kokoro:af_bella", Gender.Female)];
+
+        Assert.True(CastEditor.HasVoiceOutside(cast, kokoro));
+        Assert.False(CastEditor.HasVoiceOutside(cast.Skip(1).ToList(), kokoro));
+    }
+
+    [Fact]
+    public void HasVoiceOutside_IgnoresAnEmptyPool()
+    {
+        CastMember[] cast = [new("a", "A", Gender.Male, "supertonic:M1")];
+
+        Assert.False(CastEditor.HasVoiceOutside(cast, []));
+    }
+
+    [Fact]
+    public void HasVoiceOutside_IgnoresPoolsAndVoicesThatAreNotTheSupertonicKokoroSwitch()
+    {
+        VoiceOption[] piper = [new("piper:fa-a", Gender.Female)];
+        CastMember[] persian = [new("a", "A", Gender.Female, "piper:fa-gone")];
+        CastMember[] english = [new("b", "B", Gender.Male, "supertonic:M1")];
+
+        Assert.False(CastEditor.HasVoiceOutside(persian, piper));
+        Assert.False(CastEditor.HasVoiceOutside(english, piper));
+        Assert.False(CastEditor.HasVoiceOutside(persian, [new("kokoro:af_heart", Gender.Female)]));
+    }
+
+    private static readonly VoiceOption[] KokoroPool = [new("kokoro:af_heart", Gender.Female), new("kokoro:am_puck", Gender.Male)];
+
+    [Fact]
+    public void HasVoiceOutside_IgnoresAnExplicitSupertonicPick_ButFlagsAnExplicitKokoroPickWhoseVoiceLeft()
+    {
+        CastMember[] pickedSupertonic = [new("a", "A", Gender.Male, "supertonic:M1", Edited: true)];
+        CastMember[] pickedKokoro = [new("b", "B", Gender.Female, "kokoro:af_bella", Edited: true)];
+
+        Assert.False(CastEditor.HasVoiceOutside(pickedSupertonic, KokoroPool));
+        Assert.True(CastEditor.HasVoiceOutside(pickedKokoro, KokoroPool));
+    }
+
+    [Fact]
+    public void KeepExplicitPicks_RecastsOnlyTheCharactersTheGrownUpDidNotPick()
+    {
+        CastMember[] before =
+        [
+            new("a", "A", Gender.Male, "supertonic:M1", Edited: true),
+            new("b", "B", Gender.Female, "supertonic:F1"),
+        ];
+        CastMember[] recast =
+        [
+            new("a", "A", Gender.Male, "kokoro:am_puck", Edited: true),
+            new("b", "B", Gender.Female, "kokoro:af_heart"),
+        ];
+
+        IReadOnlyList<CastMember> kept = CastEditor.KeepExplicitPicks(before, recast, KokoroPool, "kokoro:af_nicole");
+
+        Assert.Equal("supertonic:M1", kept[0].VoiceId);
+        Assert.True(kept[0].Edited);
+        Assert.Equal("kokoro:af_heart", kept[1].VoiceId);
+    }
+
+    [Fact]
+    public void KeepExplicitPicks_GivesAPickWhoseVoiceLeftWithItsPackTheClosestVoice()
+    {
+        CastMember[] before = [new("a", "A", Gender.Female, "kokoro:af_bella", Edited: true)];
+        VoiceOption[] supertonic = [new("supertonic:F1", Gender.Female), new("supertonic:M1", Gender.Male)];
+        CastMember[] recast = [new("a", "A", Gender.Female, "supertonic:F1", Edited: true)];
+
+        IReadOnlyList<CastMember> kept = CastEditor.KeepExplicitPicks(before, recast, supertonic, "supertonic:M1");
+
+        Assert.Equal("supertonic:F1", kept[0].VoiceId);
+    }
+
+    [Fact]
+    public void KeepExplicitPicks_NeverKeepsThePickThatIsNowTheNarrators()
+    {
+        CastMember[] before = [new("a", "A", Gender.Male, "supertonic:M1", Edited: true)];
+        CastMember[] recast = [new("a", "A", Gender.Male, "kokoro:am_puck", Edited: true)];
+
+        IReadOnlyList<CastMember> kept = CastEditor.KeepExplicitPicks(before, recast, KokoroPool, "supertonic:M1");
+
+        Assert.Equal("kokoro:am_puck", kept[0].VoiceId);
+    }
+
     private const string OldStory = """
         {"Version":1,"Id":"{ID}","Title":"T","Language":"en","Created":"2026-10-01T00:00:00+00:00","CoverStyle":"Colour","CoverColourIndex":0,
          "NarratorVoiceId":"F1","Pages":[{"Text":"Hi."}],"Cast":[]}

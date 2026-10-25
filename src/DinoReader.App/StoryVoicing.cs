@@ -52,6 +52,8 @@ public sealed class StoryVoicing
 		model.ReadyChanged += (_, _) => _pools.Clear();
 		// A pack that finishes installing changes which voices a language has; a stale pool would keep fallback ids.
 		installer.Changed += (_, _) => { if (installer.State == PackInstallState.Ready) _pools.Clear(); };
+		// The storyteller pack coming or going (Slice 114) changes the English pool the same way.
+		packs.InstalledPacksChanged += (_, _) => _pools.Clear();
 	}
 
 	/// <summary>
@@ -316,7 +318,8 @@ public sealed class StoryVoicing
 	{
 		try
 		{
-			return _packs.GetInstalledVoicePacks();
+			// The storyteller packs (Slice 114) take part: an installed one gives its language its Kokoro voices.
+			return _packs.GetInstalledVoiceAndStorytellerPacks();
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 		{
@@ -325,14 +328,25 @@ public sealed class StoryVoicing
 	}
 
 	// A pack that does not say which of its voices are for girls (Persian Piper, Melo) gives Unknown, which any character may take.
-	// Supertonic and the Norwegian pack (speaker codes, Slice 104) know theirs.
+	// Supertonic, the storyteller voices (Slice 114) and the Norwegian pack (speaker codes, Slice 104) know theirs.
 	private static VoiceOption ToOption(VoiceInfo voice)
 	{
-		bool supertonic = voice.Id.StartsWith(SupertonicVoiceTable.IdPrefix, StringComparison.Ordinal);
-		Gender gender = supertonic
-			? (SupertonicVoiceTable.IsFemale(voice.Id) ? Gender.Female : Gender.Male)
-			: NorwegianVoices.IsFemale(voice.Id) switch { true => Gender.Female, false => Gender.Male, null => Gender.Unknown };
-		return new VoiceOption(voice.Id, gender);
+		return new VoiceOption(voice.Id, GenderOf(voice.Id));
+	}
+
+	private static Gender GenderOf(string voiceId)
+	{
+		if (voiceId.StartsWith(SupertonicVoiceTable.IdPrefix, StringComparison.Ordinal))
+		{
+			return SupertonicVoiceTable.IsFemale(voiceId) ? Gender.Female : Gender.Male;
+		}
+
+		if (voiceId.StartsWith(KokoroVoiceTable.IdPrefix, StringComparison.Ordinal))
+		{
+			return KokoroVoiceTable.IsFemale(voiceId) ? Gender.Female : Gender.Male;
+		}
+
+		return NorwegianVoices.IsFemale(voiceId) switch { true => Gender.Female, false => Gender.Male, null => Gender.Unknown };
 	}
 
 	// Narration, and a quote nobody could be attributed to, are read by the narrator (VoiceForLine).

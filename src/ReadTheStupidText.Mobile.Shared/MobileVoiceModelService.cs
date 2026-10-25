@@ -34,8 +34,12 @@ public sealed class MobileVoiceModelService : IVoiceModelService, IReadingModelR
     private int _refreshing;
     private int _rerunRequested;
 
-    public MobileVoiceModelService(IVoicePackService packs, ISettingsStore settings, ILanguageChangeNotifier languages)
+    private readonly bool _storyteller;
+
+    // storyteller is registered by Dino Reader only (Slice 114): with it the storyteller packs take part in the scan.
+    public MobileVoiceModelService(IVoicePackService packs, ISettingsStore settings, ILanguageChangeNotifier languages, StorytellerVoices? storyteller = null)
     {
+        _storyteller = storyteller is not null;
         _packs = packs;
         _settings = settings;
         languages.LanguageChanged += (_, _) => RefreshInBackground();
@@ -179,7 +183,7 @@ public sealed class MobileVoiceModelService : IVoiceModelService, IReadingModelR
     {
         try
         {
-            return _packs.GetInstalledVoicePacks();
+            return _storyteller ? _packs.GetInstalledVoiceAndStorytellerPacks() : _packs.GetInstalledVoicePacks();
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {

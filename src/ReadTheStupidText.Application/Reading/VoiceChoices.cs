@@ -11,6 +11,7 @@ public static class VoiceChoices
 {
     public const string PiperIdPrefix = "piper:";
     public const string MeloIdPrefix = "melo:";
+    public const string KokoroIdPrefix = KokoroVoiceTable.IdPrefix;
 
     /// <summary>The engine family a voice id belongs to, or null for an id of no known family
     /// (the "Phone voice" id, or garbage).</summary>
@@ -31,7 +32,12 @@ public static class VoiceChoices
             return VoiceEngineKind.Vits;
         }
 
-        return voiceId.StartsWith(MeloIdPrefix, StringComparison.Ordinal) ? VoiceEngineKind.Melo : null;
+        if (voiceId.StartsWith(MeloIdPrefix, StringComparison.Ordinal))
+        {
+            return VoiceEngineKind.Melo;
+        }
+
+        return voiceId.StartsWith(KokoroIdPrefix, StringComparison.Ordinal) ? VoiceEngineKind.Kokoro : null;
     }
 
     /// <summary>
@@ -43,7 +49,7 @@ public static class VoiceChoices
     {
         foreach (string? candidate in candidates)
         {
-            VoiceInfo? match = model.AvailableVoices.FirstOrDefault(v => v.Id == candidate);
+            VoiceInfo? match = model.Find(candidate);
             if (match is not null)
             {
                 return match;

@@ -1124,6 +1124,9 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
             case VoiceEngineKind.Melo:
                 ConfigureMelo(ref config, paths.RootDir);
                 break;
+            case VoiceEngineKind.Kokoro:
+                KokoroEngineConfig.Configure(ref config, paths.RootDir);
+                break;
             default:
                 throw new NotSupportedException($"No engine for voice model kind {paths.Kind}.");
         }
@@ -1150,12 +1153,13 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
                 config.Model.Supertonic.TtsJson, config.Model.Supertonic.UnicodeIndexer,
                 config.Model.Supertonic.VoiceStyle,
             ],
+            VoiceEngineKind.Kokoro => KokoroEngineConfig.RequiredPaths(config),
             _ => [config.Model.Vits.Model, config.Model.Vits.Tokens],
         };
 
         foreach (string file in required)
         {
-            if (string.IsNullOrEmpty(file) || !File.Exists(file))
+            if (string.IsNullOrEmpty(file) || !(File.Exists(file) || Directory.Exists(file)))
             {
                 string message = $"Voice model file missing for {paths.Kind}: '{file}'.";
                 System.Diagnostics.Debug.WriteLine(message);

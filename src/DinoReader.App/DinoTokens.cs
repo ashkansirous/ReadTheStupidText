@@ -60,6 +60,7 @@ public static class DinoTokens
 	public const string DisabledLabel = "DisabledLabel";
 	public const string DisabledNote = "DisabledNote";
 	public const string OnBrand = "OnBrand";
+	public const string StorytellerOn = "StorytellerOn";
 
 	public static Color Get(string key) => (Color)Microsoft.Maui.Controls.Application.Current!.Resources[key];
 }

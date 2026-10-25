@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using DinoReader.Core;
 using ReadTheStupidText.Application.Documents;
 using ReadTheStupidText.Application.Images;
+using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Documents;
 using ReadTheStupidText.Mobile;
 
@@ -37,6 +38,9 @@ public static class MauiProgram
 		builder.Services.AddSingleton<StoryTranslator>();
 		builder.Services.AddSingleton<SpokenLanguage>();
 		builder.Services.AddSingleton<NarratorChoice>();
+		// Registered here only (Slice 114): with it the voice model service also looks at the installed storyteller packs, so Dino's English books can read with Kokoro.
+		builder.Services.AddSingleton<StorytellerVoices>();
+		builder.Services.AddTransient<StorytellerController>();
 		builder.Services.AddSingleton<StoryVoicing>();
 		builder.Services.AddSingleton<IStoryLibrary>(_ => new FileStoryLibrary(Path.Combine(FileSystem.AppDataDirectory, StoriesFolder)));
 		builder.Services.AddSingleton<GrownUpGate>();

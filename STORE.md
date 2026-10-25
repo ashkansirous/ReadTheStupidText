@@ -370,12 +370,13 @@ dev time and is not a redistributable runtime (Decision 26 in `docs/plan/decisio
 | Windows App SDK / WinUI 3 | UI, windowing | MIT |
 | `H.NotifyIcon.WinUI` | tray icon | MIT |
 | `org.k2fsa.sherpa.onnx` | neural TTS runtime | Apache-2.0 |
-| Supertonic-3 voice model (`VoiceModel/`) | neural voices | Apache-2.0 (see `VoiceModel/LICENSE`) |
+| Supertonic-3 voice model (`VoiceModel/`) | neural voices | Sample code MIT (`VoiceModel/LICENSE`); the model weights are **BigScience OpenRAIL-M** per the Hugging Face model card and its `LICENSE` file (checked 2026-10-25; this row said Apache-2.0 before). See "Supertonic weights licence" below |
+| Kokoro-82M v1.0 voices (downloaded storyteller pack `kokoro-en`, Dino Book Reader only, not in the package; sherpa-onnx int8 build `kokoro-int8-multi-lang-v1_0`) | English storyteller voices | Apache-2.0 (model card, checked 2026-10-25; the licence text is in the pack as `LICENSE-Kokoro-Apache-2.0`) |
 | Piper `fa_IR` "ganji_adabi" voice, the default (downloaded Persian pack `piper-fa`, not in the package) | Persian neural voice | Model MIT, voice data CC0 1.0 ([rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices/tree/main/fa/fa_IR/ganji_adabi/medium); model card). Fine-tuned from `ganji`, itself fine-tuned from `amir` (dataset `SadeghK/datacula-pertts-amir`, Apache-2.0, so the pack keeps that attribution) |
 | Piper `fa_IR` "ganji" voice (same pack) | Persian neural voice | Model MIT, voice data CC0 1.0 ([rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices/tree/main/fa/fa_IR/ganji/medium); its own site `tts.datacula.com` did not respond on 2026-10-22, so CC0 rests on the Piper model card) |
 | "Mana" Persian Piper voice (same pack; no sherpa-onnx build, so metadata and int8 quantization are added in `packs.yml`) | Persian neural voice | Model MIT ([MahtaFetrat/Mana-Persian-Piper](https://huggingface.co/MahtaFetrat/Mana-Persian-Piper)), data CC0 ([MahtaFetrat/Mana-TTS](https://huggingface.co/datasets/MahtaFetrat/Mana-TTS), released by the Nasl-e-Mana magazine) |
 | Piper `fa_IR` "gyro" voice (same pack) | Persian neural voice | Model MIT ([gyroing/Persian-Piper-Model-gyro](https://huggingface.co/gyroing/Persian-Piper-Model-gyro)), data CC0 (Kaggle `magnoliasis/persian-tts-dataset-male`) |
-| espeak-ng data (inside the downloaded Persian pack only) | phonemizer data the Piper voice needs | GPL-3.0-or-later; corresponding source: <https://github.com/espeak-ng/espeak-ng> |
+| espeak-ng data (inside the downloaded Persian, Norwegian and Kokoro storyteller packs only) | phonemizer data the Piper voice needs | GPL-3.0-or-later; corresponding source: <https://github.com/espeak-ng/espeak-ng> |
 | MeloTTS `zh_en` (downloaded Chinese pack `melo-zh-en`, not in the package) | Chinese + English neural voice | MIT (MyShell.ai; see the `LICENSE` inside the pack) |
 | PaddleOCR PP-OCR detection and recognition models (downloaded OCR packs `ocr-latin`, `ocr-cyrillic`, `ocr-arabic`, `ocr-cjk`, not in the package; ONNX conversion by [monkt/paddleocr-onnx](https://huggingface.co/monkt/paddleocr-onnx)) | on-device text recognition for scans (Android and iOS) | Apache-2.0 (PaddlePaddle Authors; see the `LICENSE` inside each pack) |
 | Opus-MT translation models (downloaded translation packs `translation-<from>-<to>`, not in the package; Marian encoder/decoder, int8 ONNX conversion by [Xenova](https://huggingface.co/Xenova)) | offline translate-before-read (Windows) | CC-BY-4.0 (Helsinki-NLP / OPUS-MT, https://github.com/Helsinki-NLP/Opus-MT; converted and quantised to int8; see the `LICENSE` inside each pack) |
@@ -395,6 +396,24 @@ source in the pack's `LICENSE`). It is never in the repository, the MSIX, the AA
 or the `.ipa`, and the app only passes its folder path to the engine (a
 data-file use at arm's length), so the Store package itself stays free of GPL
 code. Check this by unzipping the app package: there is no `espeak-ng-data`.
+
+The same exception covers the Kokoro storyteller pack `kokoro-en` (Slice 114, Decision 119): Dino Book Reader's
+English storyteller voices run on espeak-ng phonemes, so that pack carries the GPL-3.0 espeak-ng data inside its zip
+only, with its licence text (`LICENSE`) and the source link (`SOURCE`), and the app only passes its folder path to the
+engine. Check this by unzipping the app package: still no `espeak-ng-data`.
+
+**Supertonic weights licence (found 2026-10-25, Slice 114).** The Supertonic-3 model card and the `LICENSE` file in
+`Supertone/supertonic-3` on Hugging Face say the weights are BigScience OpenRAIL-M (the repo's own `LICENSE` is MIT
+for the sample code only). OpenRAIL-M allows commercial use but requires: a copy of the licence for recipients
+(section 4(b)), the use-based restrictions of its Attachment A passed on as an enforceable term to anyone who uses or
+receives the model (4(a)), and the notices kept (4(d)). The restrictions that matter here: no use to exploit or harm
+minors, to spread false information, to impersonate people, to defame or harass, to give medical advice, or for
+automated decisions about legal rights, and machine-generated content must be disclosed as such when it is published.
+Reading a child's picture book aloud complies with all of them. **Done (Slice 114):** the `supertonic-3` pack zip now carries the
+OpenRAIL-M text (`LICENSE-OpenRAIL-M`, from `.github/licenses/supertonic-3-OpenRAIL-M.txt`), a `NOTICE` with the restrictions and the
+source link, and the MIT text (`LICENSE`); `packs.yml` stamps pack version 3 so it is re-released, and its catalogue `license` says
+OpenRAIL-M and MIT. The model files inside the app package still carry only the MIT `VoiceModel/LICENSE`: the Store listing
+terms are the remaining place to state the restrictions.
 
 Persian is therefore available only on the platforms that download packs (Android
 and, since Slice 56, Windows). Where a pack can't be downloaded, Persian reads with the system voice.

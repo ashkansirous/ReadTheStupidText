@@ -255,6 +255,13 @@ public static class AppResources
 	public static string Cast_Main => Get();
 	public static string Cast_Edited => Get();
 	public static string Cast_Sounds => Get();
+	public static string Cast_Storyteller_Title => Get();
+	public static string Cast_Storyteller_Text => Get();
+	public static string Cast_Storyteller_Download => Get();
+	public static string Cast_Storyteller_HearOne => Get();
+	public static string Cast_Storyteller_On => Get();
+	public static string Cast_Storyteller_UseFirst => Get();
+	public static string Cast_Storyteller_Failed => Get();
 	public static string Cast_Pair => Get();
 	public static string Cast_Flavour_Normal => Get();
 	public static string Cast_Flavour_Small => Get();

@@ -151,7 +151,7 @@ public sealed class NarratorPage : ContentPage, IGrownUpPage
 	private Border VoicePicker(string language, string voice)
 	{
 		var content = new Grid { ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)] };
-		content.Add(new Label { Text = CastText.VoiceName(voice), FontSize = 14.5, FontAttributes = FontAttributes.Bold, VerticalOptions = LayoutOptions.Center }, 0);
+		content.Add(new Label { Text = CastText.VoiceName(voice, language), FontSize = 14.5, FontAttributes = FontAttributes.Bold, VerticalOptions = LayoutOptions.Center }, 0);
 		content.Add(new IconView { Kind = IconKind.ChevronDown, Color = DinoTokens.Get(DinoTokens.Body), Size = ChevronSize, StrokeWidth = 1.6, VerticalOptions = LayoutOptions.Center }, 1);
 		var picker = new Border
 		{
@@ -162,7 +162,7 @@ public sealed class NarratorPage : ContentPage, IGrownUpPage
 			StrokeShape = new RoundRectangle { CornerRadius = 12 },
 			Content = content,
 		};
-		SemanticProperties.SetDescription(picker, LanguageNames.NativeName(language) + ": " + CastText.VoiceName(voice));
+		SemanticProperties.SetDescription(picker, LanguageNames.NativeName(language) + ": " + CastText.VoiceName(voice, language));
 		CastViews.AddTap(picker, () => _busy.RunAsync(() => ChooseAsync(language)));
 		return picker;
 	}
@@ -178,7 +178,7 @@ public sealed class NarratorPage : ContentPage, IGrownUpPage
 			StrokeShape = new RoundRectangle { CornerRadius = SampleSize / 2 },
 			Content = new IconView { Kind = IconKind.Play, Color = DinoTokens.Get(DinoTokens.Brand), Filled = true, Size = 16 },
 		};
-		SemanticProperties.SetDescription(button, AppResources.Narrator_Sample + ": " + CastText.VoiceName(voice));
+		SemanticProperties.SetDescription(button, AppResources.Narrator_Sample + ": " + CastText.VoiceName(voice, language));
 		CastViews.AddTap(button, () => _busy.RunAsync(() => SampleAsync(language, voice)));
 		return button;
 	}
@@ -186,7 +186,7 @@ public sealed class NarratorPage : ContentPage, IGrownUpPage
 	private async Task ChooseAsync(string language)
 	{
 		IReadOnlyList<VoiceOption> voices = _voicing.VoicesFor(language);
-		string[] labels = voices.Select(v => CastText.VoiceName(v.Id)).ToArray();
+		string[] labels = voices.Select(v => CastText.VoiceName(v.Id, language)).ToArray();
 		string picked = await DisplayActionSheetAsync(CastText.VoiceTitle, CastText.Cancel, null, labels);
 		int at = picked is null || picked == CastText.Cancel ? -1 : Array.IndexOf(labels, picked);
 		if (at >= 0 && voices[at].Id != _voicing.NarratorOf(language))

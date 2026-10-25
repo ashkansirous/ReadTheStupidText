@@ -179,6 +179,15 @@
   <data name="Cast_FlavourHint_Bouncy" xml:space="preserve"><value>højere, hurtig</value></data>
   <data name="Cast_FlavourHint_Sleepy" xml:space="preserve"><value>langsom, lidt lavere</value></data>
   <!-- /Slice 113 -->
+  <!-- Slice 114 -->
+  <data name="Cast_Storyteller_Title" xml:space="preserve"><value>Fortællerstemmer</value></data>
+  <data name="Cast_Storyteller_Text" xml:space="preserve"><value>Varmere, mere levende engelske stemmer til historier. Download på {0} MB.</value></data>
+  <data name="Cast_Storyteller_Download" xml:space="preserve"><value>Hent</value></data>
+  <data name="Cast_Storyteller_HearOne" xml:space="preserve"><value>Hør en</value></data>
+  <data name="Cast_Storyteller_On" xml:space="preserve"><value>Fortællerstemmer er slået til for engelske bøger</value></data>
+  <data name="Cast_Storyteller_UseFirst" xml:space="preserve"><value>Brug Dinos første stemmer</value></data>
+  <data name="Cast_Storyteller_Failed" xml:space="preserve"><value>Fortællerstemmerne kunne ikke hentes. Tjek forbindelsen, og prøv igen.</value></data>
+  <!-- /Slice 114 -->
   <data name="Add_Scan" xml:space="preserve"><value>Scan sider</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Beholder sidebillederne</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Fotos</value></data>
