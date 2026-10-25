@@ -84,7 +84,7 @@ Source: `docs/design/dino-reader/Dino Reader Batch 24.dc.html`. The mock has no 
 
 **Note (pre-existing, not changed, RTST out of scope):** RTST's shared `PackUpdatePolicy` refuses automatic pack updates whenever cellular is listed, even on Wi-Fi.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-25)
 
 - `src/ReadTheStupidText.Infrastructure/CLAUDE.md`: Kokoro is a per-language engine (`lang` "" for en, `es`, `pt-br`, `cmn`), and only one stays resident (`EngineCache`, `ModelKey` IsKokoro plus language). Keep the three engine builders in step (`SherpaEngineFactory`, Android and iOS `KokoroEngineConfig`) and the three readers' model keys. (Slice 118: docs/plan/slices/118-dino-storyteller-more-languages.md)
 - `.github/CLAUDE.md`: the `kokoro-en` v2 pack ships the zh lexicon, dict and rule fsts; the packs.yml self-check synthesizes every sid; the current packs release is packs-7 (`PackConstants.CatalogUrl`). (Slice 118: docs/plan/slices/118-dino-storyteller-more-languages.md)
