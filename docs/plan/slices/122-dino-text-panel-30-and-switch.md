@@ -17,7 +17,7 @@
 - [x] `UprightPage` uses the helper. Remove the 58% constant and update its doc comment.
 - [x] `Story.WordsOverPictures` (`bool?`; null means the default from the rule above), stored in `story.json` only when it was set (the `AnimalSoundsOn` pattern, no schema bump). Copy it through `StoryImport` and `StoryActions` `with`-copies.
 - [x] `PictureTextBook.ShowsWordsOverPictures(Story)` gives the effective value (the stored value, else true). Tests cover each case.
-- [x] `PictureTextPages`: when it is false, draw the picture card only. Upright, the picture fills the card. Sideways, the picture takes the full width and the transport row stays.
+- [x] `PictureTextPages`: when it is false, draw the picture card only. Upright, the picture fills the card. Sideways, a tall picture keeps the left half at full height and the other half keeps the transport row; a wide picture gets the whole page above the transport row (the first build left a small thumbnail, fixed after the emulator check).
 - [x] The grown-up switch row, with strings in every app language. The switch applies the next time the book opens (the reading page closes when the grown-up opens the cast screen).
 - [ ] Emulator check, upright and sideways: on the pigs book the panel covers at most 30% of the picture. With the switch off, only the picture shows. A book imported from photos or a PDF has the switch off by default.
 
