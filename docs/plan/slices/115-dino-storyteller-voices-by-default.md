@@ -92,7 +92,7 @@ New strings (all 14 locales): "Getting the storyteller voices…", "Storyteller 
 
 *From review:* high findings 1-10 applied. Medium 1-3, 6-11, 13 and 14 applied. Skipped: medium 4 (rare mid-edit reload), 5 (duplicate), 12 (English-only is correct).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-25)
 
 The rule is already edited in place in `src/DinoReader.App/CLAUDE.md` on this branch (Slice 115: docs/plan/slices/115-dino-storyteller-voices-by-default.md). Nothing further to lift.
 
