@@ -177,15 +177,17 @@
   <data name="Cast_FlavourHint_Bouncy" xml:space="preserve"><value>mais agudo, rápido</value></data>
   <data name="Cast_FlavourHint_Sleepy" xml:space="preserve"><value>lento, um pouco mais grave</value></data>
   <!-- /Slice 113 -->
-  <!-- Slice 114 -->
-  <data name="Cast_Storyteller_Title" xml:space="preserve"><value>Vozes de contador de histórias</value></data>
-  <data name="Cast_Storyteller_Text" xml:space="preserve"><value>Vozes em inglês mais calorosas e animadas para histórias. Download de {0} MB.</value></data>
-  <data name="Cast_Storyteller_Download" xml:space="preserve"><value>Baixar</value></data>
-  <data name="Cast_Storyteller_HearOne" xml:space="preserve"><value>Ouvir uma</value></data>
-  <data name="Cast_Storyteller_On" xml:space="preserve"><value>As vozes de contador de histórias estão ativadas para livros em inglês</value></data>
-  <data name="Cast_Storyteller_UseFirst" xml:space="preserve"><value>Usar as primeiras vozes do Dino</value></data>
-  <data name="Cast_Storyteller_Failed" xml:space="preserve"><value>Não foi possível baixar as vozes. Verifique a conexão e tente novamente.</value></data>
-  <!-- /Slice 114 -->
+  <!-- Slice 115 -->
+  <data name="Storyteller_Getting" xml:space="preserve"><value>Baixando as vozes de narrador…</value></data>
+  <data name="Storyteller_WaitWifi" xml:space="preserve"><value>As vozes de narrador aguardam o Wi-Fi</value></data>
+  <data name="Storyteller_DownloadNow" xml:space="preserve"><value>Baixar agora</value></data>
+  <data name="Storyteller_Ready" xml:space="preserve"><value>As vozes de narrador estão prontas</value></data>
+  <data name="Storyteller_ReadyBody" xml:space="preserve"><value>Suas histórias agora usam as novas vozes de narrador.</value></data>
+  <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Seu narrador ({0})</value></data>
+  <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
+  <data name="Storyteller_Failed" xml:space="preserve"><value>Não foi possível baixar as vozes de narrador</value></data>
+  <data name="Storyteller_TryAgain" xml:space="preserve"><value>Tentar de novo</value></data>
+  <!-- /Slice 115 -->
   <data name="Add_Scan" xml:space="preserve"><value>Digitalizar páginas</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Mantém as imagens das páginas</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Fotos</value></data>

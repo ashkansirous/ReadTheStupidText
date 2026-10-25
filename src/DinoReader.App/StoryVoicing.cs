@@ -168,6 +168,10 @@ public sealed class StoryVoicing
 	public IReadOnlyList<VoiceOption> VoicesFor(string language) =>
 		_pools.GetOrAdd(UiLanguage.Resolve(language), BuildPool);
 
+	/// <summary>Whether <paramref name="language"/>'s voices are the storyteller pack's (Slice 115): the cast screen folds its rows then (mock frame 49).</summary>
+	public bool UsesStorytellerVoices(string language) =>
+		CastEditor.HasStorytellerVoice(VoicesFor(language));
+
 	/// <summary>The language a voice preview speaks: the story's when its own pack is installed, else the one the voice speaks now. Never switches the voice.</summary>
 	public string PreviewLanguage(string storyLanguage, string current)
 	{

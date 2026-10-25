@@ -40,8 +40,9 @@ public static class MauiProgram
 		builder.Services.AddSingleton<NarratorChoice>();
 		// Registered here only (Slice 114): with it the voice model service also looks at the installed storyteller packs, so Dino's English books can read with Kokoro.
 		builder.Services.AddSingleton<StorytellerVoices>();
-		builder.Services.AddTransient<StorytellerController>();
 		builder.Services.AddSingleton<StoryVoicing>();
+		// The storyteller pack downloads by itself and re-casts every book when it lands (Slice 115).
+		builder.Services.AddSingleton<StorytellerDefault>();
 		builder.Services.AddSingleton<IStoryLibrary>(_ => new FileStoryLibrary(Path.Combine(FileSystem.AppDataDirectory, StoriesFolder)));
 		builder.Services.AddSingleton<GrownUpGate>();
 		builder.Services.AddSingleton<ExternalActivityGuard>();

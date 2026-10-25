@@ -1,6 +1,6 @@
 # Slice 115 — Dino: storyteller voices by default
 
-*Planned 2026-10-25*, from the user's report that Dino "is stuck to the old voices": the cast still
+*Built 2026-10-25, not yet verified on an emulator.* *Planned 2026-10-25*, from the user's report that Dino "is stuck to the old voices": the cast still
 shows Demiurge and Momonga after the storyteller pack is downloaded, and "Use Dino's first voices"
 deletes the pack so the offer comes back on every visit. Dino Reader only; RTST is not touched.
 
@@ -56,19 +56,19 @@ New strings (all 14 locales): "Getting the storyteller voices…", "Storyteller 
 
 ## Work
 
-- [ ] 1. Smallest end to end: re-cast on install. `StorytellerController` (or the pack service's
+- [x] 1. Smallest end to end: re-cast on install. `StorytellerController` (or the pack service's
   `InstalledPacksChanged`) triggers a re-cast of every stored cast, Edited included, through
   `CastEditor`, then refreshes the `CastText` name flag. Unit test in `DinoReader.Tests`: an Edited
   Supertonic cast re-casts to Kokoro by gender and keeps flavours.
-- [ ] 2. Automatic download: `SpeechStartup` starts the storyteller pack download on Wi-Fi when it is
+- [x] 2. Automatic download: `SpeechStartup` starts the storyteller pack download on Wi-Fi when it is
   missing (resumes after a restart, no duplicate downloads), the grown-up gallery status line with
   progress, the wait-for-Wi-Fi card with "Download now", and the single "ready" sheet (title, re-cast
   line, narrator row with play, OK) shown the next time grown-up mode opens (frames 50-51).
-- [ ] 3. Remove the offer card, "Hear one" and "Use Dino's first voices" (`CastStoryteller.cs`,
+- [x] 3. Remove the offer card, "Hear one" and "Use Dino's first voices" (`CastStoryteller.cs`,
   `StorytellerController.cs`), and their strings from all 14 `.resx` files; add the new strings
   ("Getting the storyteller voices…", "Storyteller voices wait for Wi-Fi", "Download now", "Storyteller voices are ready",
   "Your stories now use the new storyteller voices.", "Your {language} narrator").
-- [ ] 4. Rule in `src/DinoReader.App/CLAUDE.md` (written as a For CLAUDE.md block; `update-docs` lifts it).
+- [x] 4. Rule in `src/DinoReader.App/CLAUDE.md` (edited in place in `src/DinoReader.App/CLAUDE.md` on this branch).
 
 ## Verification
 
@@ -78,3 +78,26 @@ New strings (all 14 locales): "Getting the storyteller voices…", "Storyteller 
 - Existing install with hand-picked Supertonic voices: after the pack lands every book shows Kokoro
   names without opening the cast screen first.
 - Mobile data only: no download until "Download now" or Wi-Fi.
+
+## Built 2026-10-25
+
+*Changed while building:*
+
+- `StorytellerDefault` is a singleton: auto-download on Wi-Fi; on mobile data it waits for "Download now"; a `Failed` state shows "Try again"; it watches the network; the catalog fetch retries once after 3 s.
+- The re-cast runs on every launch while the pack is installed. It is idempotent and skips a book whose cast changed mid-recast. `CastEditor.HasStorytellerVoice` was added. `StaysPicked` exempts Supertonic picks only where the pool has no Kokoro voice.
+- `CastStoryteller.cs` and `StorytellerController.cs` are deleted. Dead code in `StorytellerOffer` is removed (`MapFromSupertonic` kept).
+- The status line and ready sheet are declared in `GalleryPage.xaml` (`StorytellerViews.cs`).
+- New `Storyteller_*` strings in all 14 resx (12 are machine drafts).
+- Files outside the Touches line: `StorytellerDefault.cs`, `StorytellerViews.cs`, `GalleryPage.xaml`, `StorytellerOffer.cs` and tests.
+
+*From review:* high findings 1-10 applied. Medium 1-3, 6-11, 13 and 14 applied. Skipped: medium 4 (rare mid-edit reload), 5 (duplicate), 12 (English-only is correct).
+
+#### For CLAUDE.md
+
+The rule is already edited in place in `src/DinoReader.App/CLAUDE.md` on this branch (Slice 115: docs/plan/slices/115-dino-storyteller-voices-by-default.md). Nothing further to lift.
+
+#### Not yet verified
+
+- The emulator checks listed under Verification.
+- A native-speaker read of the new `Storyteller_*` strings (12 are machine drafts).
+- A "Download now" tap right after the mobile-data check can still be dropped.

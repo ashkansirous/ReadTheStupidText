@@ -195,27 +195,6 @@ public class KokoroStorytellerTests
         Assert.Empty(PackSelection.Serving([kokoro], PackKind.Voice, "en"));
     }
 
-    [Fact]
-    public void The_card_is_hidden_when_the_catalog_has_no_storyteller_pack()
-    {
-        Assert.Equal(StorytellerState.Hidden, StorytellerOffer.StateFor("en", [], StorytellerOffer.ListedFor([ListedSupertonic], "en")));
-    }
-
-    [Fact]
-    public void The_card_offers_a_listed_pack_for_its_language_only()
-    {
-        Assert.Equal(StorytellerState.Offer, StorytellerOffer.StateFor("en", [], Listed));
-        Assert.Equal(StorytellerState.Hidden, StorytellerOffer.StateFor("fr", [], StorytellerOffer.ListedFor([Listed], "fr")));
-    }
-
-    [Fact]
-    public void An_installed_pack_wins_even_when_the_catalog_could_not_be_read()
-    {
-        InstalledVoicePack kokoro = Installed(PackKind.Storyteller, PackConstants.StorytellerPackId, "en", VoiceEngineKind.Kokoro);
-
-        Assert.Equal(StorytellerState.Installed, StorytellerOffer.StateFor("en", [kokoro], null));
-    }
-
     [Theory]
     [InlineData(125_582_024L, 126)]
     [InlineData(90_400_000L, 90)]
@@ -223,15 +202,6 @@ public class KokoroStorytellerTests
     public void The_size_is_named_in_whole_megabytes(long bytes, int megabytes)
     {
         Assert.Equal(megabytes, StorytellerOffer.Megabytes(bytes));
-    }
-
-    [Fact]
-    public void The_sample_lives_next_to_the_zip_on_the_packs_release()
-    {
-        Assert.Equal("kokoro-en-1-sample.wav", StorytellerOffer.SampleFileName(Listed));
-        Assert.Equal(
-            "https://github.com/example/repo/releases/download/packs-6/kokoro-en-1-sample.wav",
-            StorytellerOffer.SampleUri(Listed).ToString());
     }
 
     // Implements only the members every service must: the storyteller ones keep their defaults.

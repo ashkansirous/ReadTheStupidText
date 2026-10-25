@@ -104,9 +104,8 @@ public static class CastEditor
 
     /// <summary>
     /// The recast of a cast whose pool changed (Slice 114) with the grown-up's explicit picks put back: a character marked <see cref="CastMember.Edited"/>
-    /// keeps its stored member while its voice is still there. A voice is there while it is in the pool, or is a Supertonic one (Dino's first voices: while the storyteller pack is installed the reader
-    /// speaks it as the Kokoro voice of the same gender, <see cref="KokoroVoiceTable.MapFromSupertonic"/>); a voice that left with its pack (a storyteller voice after "Use Dino's first voices") takes the recast's voice, the
-    /// closest one of the character's gender. A pick that is the narrator's voice never stays.
+    /// keeps its stored member while its voice is still there. A voice is there while it is in the pool, or is a Supertonic one while the pool is not the storyteller's (Slice 115, Decision 121: once the pool is Kokoro a Supertonic pick is not exempt,
+    /// so it takes the recast's voice, the closest one of the character's gender). A pick that is the narrator's voice never stays.
     /// </summary>
     public static IReadOnlyList<CastMember> KeepExplicitPicks(
         IReadOnlyList<CastMember> before, IReadOnlyList<CastMember> recast, IReadOnlyList<VoiceOption> pool, string narratorVoiceId) =>
@@ -116,8 +115,16 @@ public static class CastEditor
 
     private static bool IsOutside(CastMember member, IReadOnlyList<VoiceOption> pool) => pool.All(v => v.Id != member.VoiceId);
 
+    // Slice 115, Decision 121: only a pool that has become the storyteller pack's (Kokoro) takes a Supertonic pick over, re-casting it to a Kokoro voice (gender and
+    // flavour kept by the caster and the stored member). Anywhere else a Supertonic pick stays, as before.
     private static bool StaysPicked(CastMember member, IReadOnlyList<VoiceOption> pool) =>
-        member.Edited && (!IsOutside(member, pool) || member.VoiceId.StartsWith(SupertonicVoiceTable.IdPrefix, StringComparison.Ordinal));
+        member.Edited && (!IsOutside(member, pool) || (IsSupertonic(member.VoiceId) && !HasStorytellerVoice(pool)));
+
+    /// <summary>Whether a pool has become the storyteller pack's (Kokoro) voices (Slice 115).</summary>
+    public static bool HasStorytellerVoice(IReadOnlyList<VoiceOption> pool) =>
+        pool.Any(v => v.Id.StartsWith(KokoroVoiceTable.IdPrefix, StringComparison.Ordinal));
+
+    private static bool IsSupertonic(string voiceId) => voiceId.StartsWith(SupertonicVoiceTable.IdPrefix, StringComparison.Ordinal);
 
     /// <summary>The recast with those characters unpinned: their pin was overridden by the new narrator.</summary>
     public static IReadOnlyList<CastMember> UnpinOverridden(

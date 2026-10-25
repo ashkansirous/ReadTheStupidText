@@ -180,15 +180,17 @@
   <data name="Cast_FlavourHint_Bouncy" xml:space="preserve"><value>higher, quick</value></data>
   <data name="Cast_FlavourHint_Sleepy" xml:space="preserve"><value>slow, a little lower</value></data>
   <!-- /Slice 113 -->
-  <!-- Slice 114 -->
-  <data name="Cast_Storyteller_Title" xml:space="preserve"><value>Storyteller voices</value></data>
-  <data name="Cast_Storyteller_Text" xml:space="preserve"><value>Warmer, livelier English voices for stories. {0} MB download.</value></data>
-  <data name="Cast_Storyteller_Download" xml:space="preserve"><value>Download</value></data>
-  <data name="Cast_Storyteller_HearOne" xml:space="preserve"><value>Hear one</value></data>
-  <data name="Cast_Storyteller_On" xml:space="preserve"><value>Storyteller voices are on for English books</value></data>
-  <data name="Cast_Storyteller_UseFirst" xml:space="preserve"><value>Use Dino's first voices</value></data>
-  <data name="Cast_Storyteller_Failed" xml:space="preserve"><value>Couldn't download the storyteller voices. Check the connection and try again.</value></data>
-  <!-- /Slice 114 -->
+  <!-- Slice 115 -->
+  <data name="Storyteller_Getting" xml:space="preserve"><value>Getting the storyteller voices…</value></data>
+  <data name="Storyteller_WaitWifi" xml:space="preserve"><value>Storyteller voices wait for Wi-Fi</value></data>
+  <data name="Storyteller_DownloadNow" xml:space="preserve"><value>Download now</value></data>
+  <data name="Storyteller_Ready" xml:space="preserve"><value>Storyteller voices are ready</value></data>
+  <data name="Storyteller_ReadyBody" xml:space="preserve"><value>Your stories now use the new storyteller voices.</value></data>
+  <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Your {0} narrator</value></data>
+  <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
+  <data name="Storyteller_Failed" xml:space="preserve"><value>Couldn't get the storyteller voices</value></data>
+  <data name="Storyteller_TryAgain" xml:space="preserve"><value>Try again</value></data>
+  <!-- /Slice 115 -->
   <data name="Add_Scan" xml:space="preserve"><value>Scan pages</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Keeps the page pictures</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Photos</value></data>
