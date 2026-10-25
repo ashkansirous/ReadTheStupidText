@@ -31,6 +31,20 @@ built per line in `StoryVoicing.ToVoicedSegment` (`StoryVoicing.cs:353-360`) wit
 - On by default; a per-story "Animal sounds" switch on the cast screen turns them off. Parent
   recordings (Slice 111) are never changed.
 
+#### Design (Dino Reader Batch 24 mock, frames 52 and 54, added 2026-10-25)
+
+Source: `docs/design/dino-reader/Dino Reader Batch 24.dc.html`, the "Animal sounds" card at the bottom of frame 52 (pigs) and frame 54 (rabbits, no sounds). Two real-UI frames. The mock agrees with the plan: per story, on by default, spoken only, recordings never changed. It settles the card and the empty state. There are no icons on the card.
+
+- **Animal sounds card (117-4, frame 52).** A white card (radius 18, padding 12x14, min height 64) under the cast card: title "Animal sounds" 15 / 600, hint "Animals say “Oink!” or “Baa!” now and then" 12.5 `#5a5470`, and a switch (52x32, radius 16; on = `#5B57E8` track, 26 white knob at the right). The caption says the pigs get an "Oink!" every 2nd or 3rd of their lines, in their own voice, never added to the page text.
+- **No animals state (117-4, frame 54).** Same card, the hint becomes "No animals that make a sound in this story". The switch is still drawn, on. The caption says rabbits have no sound in the word list, so the card says so instead of hiding.
+- **Simplified.** The hint's "Oink!" and "Baa!" are fixed English examples in the frame.
+
+**Open point: switch in the empty state.** The mock keeps the switch visible and on when there are no sounding animals. **Default:** show it on but disabled (dimmed, no effect), so it cannot look like a switch that does something; the stored value stays on.
+
+**Open point: example words per language.** The mock hint names "Oink!" and "Baa!". **Default:** one string per language with examples written in that language's sound words (Slice 117's table), not a literal translation.
+
+New strings (all 14 locales): "Animal sounds", "Animals say “Oink!” or “Baa!” now and then", "No animals that make a sound in this story".
+
 ## Work
 
 - [ ] 1. Smallest end to end, English: `AnimalSounds` (word list → sound, "already said" check, every
@@ -40,7 +54,7 @@ built per line in `StoryVoicing.ToVoicedSegment` (`StoryVoicing.cs:353-360`) wit
 - [ ] 2. The stronger per-sound flavour (a wobble flavour on `PitchShifter`'s output for bleats, or
   the nearest existing flavour if the wobble sounds bad in the listening check).
 - [ ] 3. Word lists and sound words for the other 13 languages.
-- [ ] 4. The "Animal sounds" switch on the cast screen (stored per story, default on); strings in all
+- [ ] 4. The "Animal sounds" card on the cast screen (switch stored per story, default on; hint, or "No animals that make a sound in this story" with the switch dimmed when the story has none; frames 52 and 54); strings in all
   14 `.resx` files; rules in the Core and App `CLAUDE.md` files (For CLAUDE.md block).
 
 ## Verification

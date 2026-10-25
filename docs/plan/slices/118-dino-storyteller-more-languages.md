@@ -25,6 +25,10 @@ Portuguese voices (and Japanese and Chinese ones). The same pack may already cov
 - Farsi, Arabic, Russian, Danish, Finnish, Swedish, Norwegian and Dutch are not covered by Kokoro and
   keep their current engines under the Slice 116 characters.
 
+#### Design (Dino Reader Batch 24 mock, no frames, added 2026-10-25)
+
+Source: `docs/design/dino-reader/Dino Reader Batch 24.dc.html`. The mock has no frame for this slice; its header says Slice 118 "changes no screens". The only mention is under frame 55: Spanish moves to Kokoro underneath only if this slice's listening check passes, and the narrator screen is the same either way. The mock agrees with the plan. No new strings, no open points.
+
 ## Work
 
 - [ ] 1. `library-docs`: sherpa-onnx 1.13.3 Kokoro multi-lang `lang` handling and which languages the
