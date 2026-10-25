@@ -141,7 +141,7 @@ this plan turns it into ordered, shippable vertical slices.
 | 121 | Dino: pictures for the ten store stories | planned | | | [121-dino-illustrate-store-stories.md](docs/plan/slices/121-dino-illustrate-store-stories.md) |
 | 122 | Dino: words panel at most 30% of the picture, and a words switch | built | #335, #340 | | [122-dino-text-panel-30-and-switch.md](docs/plan/slices/122-dino-text-panel-30-and-switch.md) |
 | 123 | Dino: the pigs retold as 16 pages, one action each | built | #336 | | [123-dino-pigs-one-action-per-page.md](docs/plan/slices/123-dino-pigs-one-action-per-page.md) |
-| 124 | Dino: the words panel and its switch match the Batch 25 mock | planned | | | [124-dino-words-panel-matches-mock.md](docs/plan/slices/124-dino-words-panel-matches-mock.md) |
+| 124 | Dino: the words panel and its switch match the Batch 25 mock | built | #338 | | [124-dino-words-panel-matches-mock.md](docs/plan/slices/124-dino-words-panel-matches-mock.md) |
 | 125 | Dino: each character knows its animal, and animal voices to match | planned | | | [125-dino-character-animals.md](docs/plan/slices/125-dino-character-animals.md) |
 
 Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
@@ -215,6 +215,7 @@ Built but not verified (details in each slice file):
 - Slice 119: on-device starter auto-update and recording copy (unchanged pages keep recordings, edited text is skipped); the pigs pictures in both orientations and the store download of pigs v3 ([slice](docs/plan/slices/119-dino-illustrated-three-little-pigs.md)).
 - Slice 122: on the user's phone, pigs upright and sideways (panel at most 30%); photo/PDF import defaults the switch off; a wide picture sideways with the words off ([slice](docs/plan/slices/122-dino-text-panel-30-and-switch.md)).
 - Slice 123: on the phone, the pigs show 16 pages with pictures; an installed v3 copy updates to v4 and keeps recordings on unchanged pages ([slice](docs/plan/slices/123-dino-pigs-one-action-per-page.md)).
+- Slice 124: emulator look of the panel fade, the bottom alignment and the one switch card (pigs starter upright); native read of the 3 new strings in the 13 non-English languages ([slice](docs/plan/slices/124-dino-words-panel-matches-mock.md)).
 - Slice 106: Norwegian on a Windows head via `MarianEngine` (third-party conversion, never run); en to da/fi/sv/nl/nb and back on Windows; the Norwegian packs are about 390 MB each ([slice](docs/plan/slices/106-windows-nordic-dutch-translation-packs.md)).
 - Windows has no `en-ja` translation pack (`TranslationPacks.FromEnglish` and `packs.yml` lack it), so English cannot be translated into Japanese offline on Windows; found while planning Slice 106, not yet scheduled.
 - Older unverified items (Slices 43-95 and a flaky-test note), moved verbatim: [outstanding-older](docs/plan/notes/2026-10-25-outstanding-older.md). Still open until verified.

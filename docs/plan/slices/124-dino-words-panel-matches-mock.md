@@ -50,7 +50,7 @@ photo books off by default), but the look differs. The gaps are listed in
 - Medium: 1, 2, 3, 6, 9, 10 applied; 4 accepted as a limit; 5 not a bug; 7 and 8 skipped.
 - Known limit: an illustrated book switched off in an earlier visit shows the photo-book reason.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-25)
 
 - Already added to `src/DinoReader.App/CLAUDE.md` on this branch (Slice 124: docs/plan/slices/124-dino-words-panel-matches-mock.md). Nothing for the root file.
 
