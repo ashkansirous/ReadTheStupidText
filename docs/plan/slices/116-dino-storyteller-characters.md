@@ -1,6 +1,6 @@
 # Slice 116 — Dino: storyteller characters in every language
 
-*Planned 2026-10-25*, from the user's ask to "create multiple characters, auto assign them yourself,
+*In progress (wave 2026-10-25), draft PR.* *Planned 2026-10-25*, from the user's ask to "create multiple characters, auto assign them yourself,
 then allow people to change the character… be creative with the voice… create enough characters for
 all languages". Dino Reader only; RTST is not touched.
 
