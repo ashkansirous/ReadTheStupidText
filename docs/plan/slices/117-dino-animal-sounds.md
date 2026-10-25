@@ -1,6 +1,6 @@
 # Slice 117 — Dino: animal characters make their sounds
 
-*Planned 2026-10-25*, from the user's ask that reading be "more kids like": a daddy sheep should say
+*In progress (wave 2026-10-25), draft PR.* *Planned 2026-10-25*, from the user's ask that reading be "more kids like": a daddy sheep should say
 "baa" every 2–3 sentences when the story doesn't, a cow "moo", a cat "meow" and so on, in every
 language. Dino Reader only; RTST is not touched.
 
