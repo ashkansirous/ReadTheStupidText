@@ -288,5 +288,8 @@ public static class AppResources
 	public static string Cast_UsesNarrator => Get();
 	public static string Cast_Hear => Get();
 	public static string Cast_MergeInto => Get();
+	public static string Cast_AnimalSounds_Title => Get();
+	public static string Cast_AnimalSounds_Hint => Get();
+	public static string Cast_AnimalSounds_None => Get();
 	public static string Cast_SharedNote => Get();
 }

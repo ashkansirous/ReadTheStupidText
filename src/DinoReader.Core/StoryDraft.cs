@@ -48,6 +48,9 @@ public sealed class StoryDraft(Story original)
 
 	public IReadOnlyDictionary<string, string> Merges { get; set; } = original.Merges;
 
+	/// <summary>Whether animals make their sounds in the reading (Slice 117), set on the cast page.</summary>
+	public bool AnimalSoundsOn { get; set; } = original.AnimalSoundsOn;
+
 	/// <summary>The casts of the other reading languages as the cast screen last left them (Slice 108); written with Save.</summary>
 	public IReadOnlyDictionary<string, IReadOnlyList<CastMember>>? LanguageCasts { get; set; } = original.LanguageCasts;
 
@@ -211,6 +214,7 @@ public sealed class StoryDraft(Story original)
 		Cast = Cast,
 		LanguageCasts = RecastNeeded ? null : LanguageCasts,
 		CharacterMerges = Merges,
+		AnimalSoundsOn = AnimalSoundsOn,
 	};
 
 	public bool HasPageImages => Pages.Any(p => p.ImageFile is not null);

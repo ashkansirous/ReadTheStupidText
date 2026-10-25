@@ -33,7 +33,7 @@ public sealed class StoryVoicing
 	private sealed record Cache(string Language, string Text, LineBreakMap LineBreaks, AttributionResult Attribution, Lazy<IReadOnlyList<SentenceSpan>> Sentences);
 
 	// The analysis and the sentence pieces a read speaks, before any translation. The cast is worked out afterwards, in the language spoken (Slice 108).
-	private sealed record Prepared(Cache Analysis, IReadOnlyList<SplitSegment> Pieces);
+	private sealed record Prepared(Cache Analysis, IReadOnlyList<SplitSegment> Pieces, bool WholeBook);
 
 	/// <summary>A cast made for a language that had none (Slice 108), for the caller to save.</summary>
 	public sealed record NewCast(string Language, IReadOnlyList<CastMember> Members);
@@ -42,6 +42,11 @@ public sealed class StoryVoicing
 
 	private volatile Cache? _cache;
 	private volatile SharedPrepared? _lastPrepared;
+
+	// The animal-sound plan of the last story and analysis: a tap-to-seek or resume read from the middle needs the whole book's plan, and re-splitting the book each time is wasted.
+	private sealed record SharedPlan(Story Story, Cache Analysis, IReadOnlyDictionary<int, AnimalKind> Plan);
+
+	private volatile SharedPlan? _lastPlan;
 
 	public StoryVoicing(IVoicePackService packs, IVoiceModelService model, StoryTranslator translator, VoicePackInstaller installer, NarratorChoice narrators)
 	{
@@ -103,13 +108,92 @@ public sealed class StoryVoicing
 	{
 		string spoken = _translator.SpokenLanguage(story);
 		VoiceCast cast = CastIn(story, prepared, spoken);
-		return pieces.Select(p => ToVoicedSegment(p, cast)).ToList();
+		return WithAnimalSounds(story, prepared, cast, pieces, spoken);
 	}
 
 	private IReadOnlyList<VoicedSegment> VoicedInOwnLanguage(Story story, Prepared prepared)
 	{
 		VoiceCast cast = CastIn(story, prepared, story.Language);
-		return prepared.Pieces.Select(p => ToVoicedSegment(p, cast)).ToList();
+		return WithAnimalSounds(story, prepared, cast, prepared.Pieces, story.Language);
+	}
+
+	// Animal characters say their sound after every 2nd or 3rd line of their own (Slice 117, Decision 123): one extra short segment in the character's voice,
+	// spoken only (it has no text on the page). The lines are counted over the whole book in the story's language, so a read from the middle sounds like a read from the start.
+	// The sound comes after the whole line, dialogue tag included, and after the last piece of a translated line.
+	private IReadOnlyList<VoicedSegment> WithAnimalSounds(
+		Story story, Prepared prepared, VoiceCast cast, IReadOnlyList<SplitSegment> pieces, string spokenLanguage)
+	{
+		IReadOnlyDictionary<int, AnimalSounds.Placement> sounds = AnimalSoundPlacements(story, prepared, pieces).ToDictionary(p => p.After);
+		var voiced = new List<VoicedSegment>(pieces.Count + sounds.Count);
+		for (int i = 0; i < pieces.Count; i++)
+		{
+			voiced.Add(ToVoicedSegment(pieces[i], cast));
+			if (sounds.TryGetValue(i, out AnimalSounds.Placement? placement) && AnimalSoundAfter(pieces, placement, cast, spokenLanguage) is { } sound)
+			{
+				voiced.Add(sound);
+			}
+		}
+
+		return voiced;
+	}
+
+	private IReadOnlyList<AnimalSounds.Placement> AnimalSoundPlacements(Story story, Prepared prepared, IReadOnlyList<SplitSegment> pieces)
+	{
+		if (!story.AnimalSoundsOn)
+		{
+			return [];
+		}
+
+		IReadOnlyDictionary<int, AnimalKind> plan = AnimalPlan(story, prepared);
+		return plan.Count == 0 ? [] : AnimalSounds.Placements(pieces, plan, prepared.Analysis.Sentences.Value);
+	}
+
+	// The plan counts the story's own lines; a read that is the whole book already has exactly those pieces. Kept for the same story instance and analysis.
+	private IReadOnlyDictionary<int, AnimalKind> AnimalPlan(Story story, Prepared prepared)
+	{
+		if (_lastPlan is { } last && ReferenceEquals(last.Story, story) && ReferenceEquals(last.Analysis, prepared.Analysis))
+		{
+			return last.Plan;
+		}
+
+		AttributionResult resolved = StoryCast.Resolve(prepared.Analysis.Attribution, story.Merges, story.Cast);
+		IReadOnlyDictionary<string, AnimalKind> animals = AnimalSounds.AnimalsIn(resolved.Characters, story.Language);
+		IReadOnlyDictionary<int, AnimalKind> plan = animals.Count == 0
+			? new Dictionary<int, AnimalKind>()
+			: AnimalSounds.Plan(WholeBookPieces(story, prepared, resolved), animals, story.Language);
+		_lastPlan = new SharedPlan(story, prepared.Analysis, plan);
+		return plan;
+	}
+
+	private static IReadOnlyList<SplitSegment> WholeBookPieces(Story story, Prepared prepared, AttributionResult resolved) =>
+		prepared.WholeBook ? prepared.Pieces : StoryPieces.Split(story, resolved, prepared.Analysis.Sentences.Value, 0);
+
+	// The sound segment, a zero-width one at the last character of the line (its dialogue tag included, so the order of positions holds and the highlight
+	// stays on that sentence); none when the spoken line already says it.
+	private static VoicedSegment? AnimalSoundAfter(IReadOnlyList<SplitSegment> pieces, AnimalSounds.Placement placement, VoiceCast cast, string spokenLanguage)
+	{
+		Segment quote = pieces[placement.Quote].Segment;
+		string? sound = AnimalSounds.SoundOf(placement.Kind, spokenLanguage);
+		if (sound is null || AnimalSounds.SaysIt(LineText(pieces, placement.Quote), placement.Kind, spokenLanguage))
+		{
+			return null;
+		}
+
+		int at = Math.Max(quote.SourceStart, pieces[placement.After].Segment.SourceEnd - 1);
+		return new VoicedSegment(
+			sound, cast.VoiceForLine(quote.CharacterId), at, at, at, AnimalSounds.FlavourFor(placement.Kind, cast.FlavourForLine(quote.CharacterId)));
+	}
+
+	// The spoken text of the line the piece at <paramref name="last"/> ends: the consecutive pieces of the same character before it.
+	private static string LineText(IReadOnlyList<SplitSegment> pieces, int last)
+	{
+		int first = last;
+		while (first > 0 && pieces[first - 1].Segment.Kind == SegmentKind.Quote && pieces[first - 1].Segment.CharacterId == pieces[last].Segment.CharacterId)
+		{
+			first--;
+		}
+
+		return string.Join(' ', pieces.Skip(first).Take(last - first + 1).Select(p => p.Segment.Text));
 	}
 
 	/// <summary>The language a read of <paramref name="story"/> is spoken in now, and so the one whose cast the cast screen edits (Slice 108).</summary>
@@ -271,7 +355,7 @@ public sealed class StoryVoicing
 
 		// One piece per sentence, so the reader raises a chunk per sentence and the highlight steps with it.
 		// StoryPieces is shared with the starter builder, so a bundled translation is keyed by exactly these pieces (Slice 95).
-		return new Prepared(cache, StoryPieces.Split(story, resolved, cache.Sentences.Value, fromPosition, wholePieces));
+		return new Prepared(cache, StoryPieces.Split(story, resolved, cache.Sentences.Value, fromPosition, wholePieces), fromPosition == 0 && !wholePieces);
 	}
 
 	// The voices of the language's own cast: its pins and edited genders, in its own pack. A language with no stored cast is cast fresh here.

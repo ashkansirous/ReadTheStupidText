@@ -17,6 +17,7 @@ public sealed class ToggleSwitch : Border
 
 	private readonly Border _knob;
 	private bool _isOn;
+	private string _accessibleName = AppResources.Story_Translate;
 
 	public ToggleSwitch()
 	{
@@ -46,9 +47,23 @@ public sealed class ToggleSwitch : Border
 		};
 		GestureRecognizers.Add(tap);
 		Apply();
+#if ANDROID
+		ToggleSwitchAccessibility.Attach(this);
+#endif
 	}
 
 	public event EventHandler? Toggled;
+
+	/// <summary>What a screen reader calls the switch; the translate switch's name unless the owner sets another.</summary>
+	public string AccessibleName
+	{
+		get => _accessibleName;
+		set
+		{
+			_accessibleName = value;
+			Apply();
+		}
+	}
 
 	public bool IsOn
 	{
@@ -79,7 +94,10 @@ public sealed class ToggleSwitch : Border
 	{
 		BackgroundColor = TrackColor();
 		_knob.HorizontalOptions = _isOn ? LayoutOptions.End : LayoutOptions.Start;
-		SemanticProperties.SetDescription(this, AppResources.Story_Translate);
+		SemanticProperties.SetDescription(this, _accessibleName);
+#if ANDROID
+		ToggleSwitchAccessibility.Announce(this);
+#endif
 	}
 
 	// Falls back to the plain on/off colours where there is no app (design time, a test host) or a token is missing.

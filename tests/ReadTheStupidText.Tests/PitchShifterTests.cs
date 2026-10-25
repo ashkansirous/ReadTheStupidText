@@ -125,6 +125,22 @@ public class PitchShifterTests
 
         Assert.All(shifted, s => Assert.Equal(0f, s));
     }
+
+    [Fact]
+    public void A_bleat_wobbles_the_voice_but_keeps_its_length_and_loudness()
+    {
+        float[] tone = Tone(220, 1.0);
+
+        float[] bleat = PitchShifter.Apply(tone, Rate, VoiceFlavours.ShapeOf(VoiceFlavour.Bleat));
+
+        Assert.Equal(tone.Length, bleat.Length);
+        Assert.NotEqual(tone, bleat);
+        Assert.InRange(bleat.Max(Math.Abs), 0.3f, 0.55f);
+    }
+
+    [Fact]
+    public void A_flavour_without_a_wobble_is_left_as_the_pitch_shift_made_it() =>
+        Assert.Equal(Tone(220, 0.5), PitchShifter.Apply(Tone(220, 0.5), Rate, VoiceFlavours.ShapeOf(VoiceFlavour.Normal)));
 }
 
 public class VoiceFlavourTests

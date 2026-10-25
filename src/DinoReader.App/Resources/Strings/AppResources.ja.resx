@@ -283,5 +283,8 @@
   <data name="Cast_UsesNarrator" xml:space="preserve"><value>ナレーターの声で読みます</value></data>
   <data name="Cast_Hear" xml:space="preserve"><value>{0} の声を聞く</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>{0} にまとめる</value></data>
+  <data name="Cast_AnimalSounds_Title" xml:space="preserve"><value>どうぶつのこえ</value></data>
+  <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>どうぶつが ときどき「ブーブー!」や「メェー!」と いいます</value></data>
+  <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>このおはなしには なきごえの どうぶつは いません</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>この本には、用意されている {0} 人の語り手キャラクターより多くの登場人物がいるため、同じように聞こえるキャラクターがいます。ナレーターはキャラクターには使われません。</value></data>
 </root>

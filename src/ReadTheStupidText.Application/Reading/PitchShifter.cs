@@ -1,3 +1,5 @@
+using ReadTheStupidText.Domain.Reading;
+
 namespace ReadTheStupidText.Application.Reading;
 
 /// <summary>
@@ -14,6 +16,43 @@ internal static class PitchShifter
     private const int CorrelationStride = 4;
     private const int CandidateStep = 2;
     private const int MinFrame = 64;
+
+    private const double WobbleHertz = 7.0;
+    private const double TremoloShare = 4.0;
+
+    /// <summary>A flavour's pitch shift and, for a bleat, its faint wobble (Slice 117); the three readers call this one step.</summary>
+    public static float[] Apply(float[] samples, int sampleRate, FlavourShape shape)
+    {
+        float[] shifted = Shift(samples, sampleRate, shape.Semitones);
+        return shape.WobbleDepth > 0 ? Wobble(shifted, sampleRate, shape.WobbleDepth) : shifted;
+    }
+
+    /// <summary>
+    /// A bleat's wobble: a vibrato of about 7 Hz (the read position swings so the pitch moves by <paramref name="depth"/>, a fraction, either way)
+    /// with a faint matching tremolo. Same length as the input; pure C#.
+    /// </summary>
+    public static float[] Wobble(float[] samples, int sampleRate, double depth)
+    {
+        if (samples.Length < 2 || depth <= 0)
+        {
+            return samples;
+        }
+
+        double angular = 2 * Math.PI * WobbleHertz / sampleRate;
+        double swing = depth / angular; // samples of read-position swing that give +-depth of pitch
+        var output = new float[samples.Length];
+        for (int i = 0; i < samples.Length; i++)
+        {
+            double phase = Math.Sin(angular * i);
+            double position = Math.Clamp(i + swing * phase, 0, samples.Length - 1);
+            int index = (int)position;
+            float next = index + 1 < samples.Length ? samples[index + 1] : samples[index];
+            float value = samples[index] + (next - samples[index]) * (float)(position - index);
+            output[i] = value * (float)(1 - depth * TremoloShare * (0.5 + 0.5 * Math.Cos(angular * i)));
+        }
+
+        return output;
+    }
 
     /// <summary>A shifted copy of <paramref name="samples"/> of the same length (the input itself for a shift of about zero).</summary>
     public static float[] Shift(float[] samples, int sampleRate, double semitones)

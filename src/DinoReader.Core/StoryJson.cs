@@ -65,6 +65,7 @@ public static class StoryJson
         ShowOriginal = s.ShowOriginalText ? true : null,
         Recordings = ToRecordingFiles(s.Recordings, s.Pages.Count),
         UseRecordings = s.UseRecordings && s.Recordings is { Count: > 0 } ? true : null,
+        AnimalSounds = s.AnimalSoundsOn ? null : false,
         SourceId = s.SourceId,
         Translations = ToTranslationFiles(s.Translations),
         LanguageCasts = ToLanguageCastFiles(s.LanguageCasts),
@@ -85,7 +86,7 @@ public static class StoryJson
             f.CoverStyle, f.CoverColourIndex, f.NarratorVoiceId ?? string.Empty, ParseMode(f.PreferredMode), CleanMerges(f.Merges), f.Translate,
             f.CoverFile, f.CoverPageIndex, StoryIds.IsValid(f.SourceId) ? f.SourceId : null, CleanTranslations(f.Translations),
             CleanLanguageCasts(f.LanguageCasts, f.Language), f.ShowOriginal == true,
-            CleanRecordings(f.Recordings, f.Pages.Count, f.Language), f.UseRecordings == true);
+            CleanRecordings(f.Recordings, f.Pages.Count, f.Language), f.UseRecordings == true, f.AnimalSounds != false);
     }
 
     private static List<RecordingFile>? ToRecordingFiles(IReadOnlyDictionary<int, PageRecording>? recordings, int pageCount)
@@ -323,6 +324,10 @@ public static class StoryJson
 
         /// <summary>The per-book "Read with my voice" switch (Slice 111); absent when off.</summary>
         public bool? UseRecordings { get; set; }
+
+        /// <summary>The per-story "Animal sounds" switch (Slice 117); absent when on (the default).</summary>
+        public bool? AnimalSounds { get; set; }
+
         public string? SourceId { get; set; }
         public Dictionary<string, Dictionary<string, string>>? Translations { get; set; }
 

@@ -282,5 +282,8 @@
   <data name="Cast_UsesNarrator" xml:space="preserve"><value>gebruikt de stem van de verteller</value></data>
   <data name="Cast_Hear" xml:space="preserve"><value>Hoor {0}</value></data>
   <data name="Cast_MergeInto" xml:space="preserve"><value>Samenvoegen met {0}</value></data>
+  <data name="Cast_AnimalSounds_Title" xml:space="preserve"><value>Dierengeluiden</value></data>
+  <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>De dieren zeggen af en toe “Knor!” of “Mê!”</value></data>
+  <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>Geen dieren die geluid maken in dit verhaal</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Dit boek heeft meer personages dan de {0} vertelfiguren die er zijn, dus sommige klinken hetzelfde. De verteller wordt nooit aan een personage gegeven.</value></data>
 </root>
