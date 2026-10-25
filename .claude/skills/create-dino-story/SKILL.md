@@ -22,12 +22,18 @@ context free of screenshots, pictures and 13 translation files.
 
 1. **`dino-story-writer`** (Opus, high effort): steps 1-2 with the `dino-storytelling` skill. Several may
    run at once, one book each, in their own worktrees.
-2. The coordinator reads the art record's picture plan (one line per page) and checks it: one action per
-   page, nobody hurt. Fix it with the writer before any picture is drawn, since pictures cost Gemini quota.
+2. **`dino-story-reviewer`** (Opus, high effort), **text** mode: safety, story quality for the age, one
+   action per page, the picture plan. Failed pages go back to the writer, then review again, before any
+   picture is drawn, since pictures cost Gemini quota.
 3. **`dino-story-illustrator`** (Sonnet, medium effort): steps 3-6. **One at a time across the machine**
    (one Chrome, one clipboard). It ends with `contact-sheet.jpg`, every picture on one sheet.
-4. The coordinator reads the contact sheet once as a second look. Anything odd: read that page's full-size
-   file and send the page back to the illustrator. Then step 7 goes through the usual gate and ship.
+4. **`dino-story-reviewer`**, **full** mode: every picture at full size against its page and the line-up,
+   and characters, places and time of day consistent across the book. Failed pages go back to the
+   illustrator (or the writer), then review again until `PASS`. The coordinator may glance at the contact
+   sheet but never accepts a book from it. Then step 7 goes through the usual gate and ship.
+
+The reviewer never reviews its own work and changes nothing. Its pass is required before a book ships;
+the illustrator's own step 5 check still runs on every candidate.
 
 Version bump: the writer bumps it when the text changes; the illustrator bumps it when only pictures change
 (`StarterBuilder.StarterVersions` for a starter, the story's `Version` for a store book; no text hash needed).

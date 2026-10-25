@@ -1175,3 +1175,13 @@
 136. **The shared speech engine carries no Dino-only voice features (Batch 27).** Flavours, pitch and animal effects live in `DinoReader.Core` and reach the engine through one small hook, so a shared-engine change is a real engine change and shipping both apps for it is correct. (Slice 129)
 
 137. **Each product has its own version, tag and GitHub Release: `rtst-v<x.y.z>` and `dino-v<x.y.z>` (Batch 27).** Both continue from the current shared version; a release carries only its own product's files. (Slice 130)
+
+138. **Dino fetches one small config from the Worker (Batch 28).** `GET /api/app-config` serves per-platform `minVersion`/`latestVersion` and the telemetry switch and sample rate from the R2 object `dinoreader/config.json`, so they change without a deploy or an app release; the app falls back to its cached copy, then to safe defaults. (Slice 132)
+
+139. **Below `minVersion` Dino shows only a "Please update" page (Batch 28).** Its button passes the grown-up gate, then opens the Play in-app immediate update, the App Store page or the Windows Store update. Below `latestVersion` there is only a quiet line in grown-up settings. (Slice 132)
+
+140. **Dino usage data is anonymous counts with context, never an install, device or advertising id (Batch 28).** No typed text, no own-book titles, nothing finer than the hour. A per-device profile would be a child's personal information under COPPA and profiling under the UK Children's code. (Slice 133; note: docs/plan/notes/2026-10-25-dino-usage-insights.md)
+
+141. **Usage counts are on by default with a grown-up off switch and a line in the first-run screens (Batch 28).** (Slice 133)
+
+142. **Usage events go to Workers Analytics Engine, batched per session, switched and sampled by the remote config (Batch 28).** Reports suppress counts under 10. (Slices 133-134)
