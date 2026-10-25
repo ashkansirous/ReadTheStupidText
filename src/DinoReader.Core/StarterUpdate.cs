@@ -18,7 +18,7 @@ public static class StarterUpdate
     // A stored copy whose text matches none of these (nor the bundled text) was edited by the grown-up, so a refresh would overwrite their work.
     private static readonly IReadOnlyDictionary<string, string[]> EarlierPageTextHashes = new Dictionary<string, string[]>
     {
-        ["966400017c494fb5b045786f53852c9e"] = ["ABD1A8864145C962A41879303519F1BB98A1CF3E85D78CECFDBF8C299D38482B"],
+        ["966400017c494fb5b045786f53852c9e"] = ["ABD1A8864145C962A41879303519F1BB98A1CF3E85D78CECFDBF8C299D38482B", "8C1DD87C17BFC3A1386D16CEF384F13FD3C04DEDA8FD2A7D514FC90130F1CC3D"],
         ["bee62232085d4c1ab50cdf574530f473"] = ["4884F000A3C51474F02A4B4209EF16D50FA24EFFC0EA6F682460B99CD419FA65"],
         ["0fa29ae0d09643a9a16a5e586e8c7119"] = ["86147AB77F14E5F15887D4FC67235CFF06020CD242986082122C685E78ED356C"],
         ["61bb25b8f132413c82a4208827c7563b"] = ["F6CB92153C1C9713DBDBA7F3AFA6072A78DB84C8FE124CF005A194D5D5E10AF5"],
@@ -116,7 +116,7 @@ public static class StarterUpdate
 
     private static bool KeepsOtherCover(Story stored, Story refreshed) => stored.CoverStyle switch
     {
-        CoverStyle.Picture => stored.CoverPageIndex is { } index && index < refreshed.Pages.Count && refreshed.Pages[index].ImageFile is not null,
+        CoverStyle.Picture => stored.Pages.Count == refreshed.Pages.Count && stored.CoverPageIndex is { } index && index < refreshed.Pages.Count && refreshed.Pages[index].ImageFile is not null,
         CoverStyle.Colour => stored.CoverColourIndex != ShippedCoverColour(stored, refreshed),
         _ => true,
     };
