@@ -132,6 +132,10 @@ this plan turns it into ordered, shippable vertical slices.
 | 112 | Dino: store filters by age and author | built | #306 | | [112-dino-store-age-author-filters.md](docs/plan/slices/112-dino-store-age-author-filters.md) |
 | 113 | Dino: playful character voices (pitch and pace per character) | built | #314 | | [113-dino-character-flavours.md](docs/plan/slices/113-dino-character-flavours.md) |
 | 114 | Dino: Kokoro storyteller voices for English | built | #316 | | [114-dino-kokoro-english-storyteller-pack.md](docs/plan/slices/114-dino-kokoro-english-storyteller-pack.md) |
+| 115 | Dino: storyteller voices by default | planned | | | [115-dino-storyteller-voices-by-default.md](docs/plan/slices/115-dino-storyteller-voices-by-default.md) |
+| 116 | Dino: storyteller characters in every language | planned | | | [116-dino-storyteller-characters.md](docs/plan/slices/116-dino-storyteller-characters.md) |
+| 117 | Dino: animal characters make their sounds | planned | | | [117-dino-animal-sounds.md](docs/plan/slices/117-dino-animal-sounds.md) |
+| 118 | Dino: storyteller voices for Spanish, French and Portuguese | planned | | | [118-dino-storyteller-more-languages.md](docs/plan/slices/118-dino-storyteller-more-languages.md) |
 
 Batch 9 (43-57) and Batch 10 (58-67) lane order: see [plan-batch-9-10-index.md](docs/plan/notes/plan-batch-9-10-index.md).
 
@@ -156,6 +160,8 @@ Batch 21 (103-106, planned 2026-10-24): Danish, Finnish, Swedish, Norwegian (Bok
 Batch 22 (107-112, planned 2026-10-24, from the phone scope "translated text on screen, voices in the reading language, one narrator, parent recordings, store filters"): 107 first (own books translate by default; small). Then 108, 109, 110 and 111 one at a time in that order: all four edit `StoryVoicing`, `ReadingSession`, `Story`/`StoryJson` or the cast page. 112 (store filters) touches only the store and the Worker, so it runs beside any of them. Decisions 111-116.
 
 Batch 23 (113-114, planned 2026-10-24, the voices sound too grown up for children's stories): 113 after 108 (flavours live on each language's cast), then 114 (the Kokoro English pack; flavours apply on top). 113 edits `StoryVoicing` and the cast page, so it does not run beside 109-111. Decisions 117-119.
+
+Batch 24 (115-118, planned 2026-10-25, Dino stuck on the old voices; storyteller characters for every language and animal sounds): one at a time in order 115, 116, 117, 118. All four edit `StoryVoicing`, the cast page or the voice tables. Dino only; RTST unchanged. Decisions 120-124.
 
 ### Notes
 

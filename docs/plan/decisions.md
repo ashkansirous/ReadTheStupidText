@@ -1135,3 +1135,16 @@
 118. **A downloadable `kokoro-en` pack for Dino English (Batch 23).** Kokoro storyteller voices when
     installed, Supertonic otherwise; RTST unchanged. (Slice 114)
 119. **The espeak-ng GPL exception covers `kokoro-en` (Batch 23)**, same scope as `piper-fa`. (Slice 114)
+120. **The storyteller pack is Dino's default voice (Batch 24).** Downloaded by itself over Wi-Fi on
+    launch when missing ("Download now" for mobile data); the offer card, "Hear one" and "Use Dino's
+    first voices" are removed. (Slice 115)
+121. **One re-cast of every Dino book when the storyteller pack lands (Batch 24)**, hand-picked voices
+    included (genders and flavours kept), replacing Slice 114's keep-Edited rule. (Slice 115)
+122. **Dino's cast is a list of storyteller characters in every language (Batch 24).** About 16-20 per
+    language, each a voice plus a flavour plus a local kid-friendly name, on the language's best engine;
+    engine and Supertonic (Overlord) names are never shown; Dino casts, a grown-up swaps. (Slice 116)
+123. **Dino animal characters say their sound about every 2-3 of their lines (Batch 24)**, in their own
+    voice, per-language word lists, never when the line already has it, not on narration; a per-story
+    switch, on by default. (Slice 117)
+124. **The storyteller pack serves Spanish, French and Portuguese if it speaks them well (Batch 24)**;
+    Japanese and Chinese only if the same check passes. (Slice 118)
