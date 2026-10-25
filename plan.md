@@ -26,6 +26,9 @@ Open slices only. Finished slices (124 rows) are in [slices-done](docs/plan/note
 | 129 | Dino voice features out of the shared speech engine | planned | | | [129-dino-voice-features-out-of-shared-engine.md](docs/plan/slices/129-dino-voice-features-out-of-shared-engine.md) |
 | 130 | A version and a release per product | planned | | | [130-per-product-versions-and-releases.md](docs/plan/slices/130-per-product-versions-and-releases.md) |
 | 131 | Mobile.Shared gets its own namespace | planned | | | [131-mobile-shared-namespace.md](docs/plan/slices/131-mobile-shared-namespace.md) |
+| 132 | Dino: a remote switchboard and a forced update | planned | | | [132-dino-remote-config-and-force-update.md](docs/plan/slices/132-dino-remote-config-and-force-update.md) |
+| 133 | Dino: anonymous usage counts, first event end to end | planned | | | [133-dino-anonymous-usage-counts.md](docs/plan/slices/133-dino-anonymous-usage-counts.md) |
+| 134 | Dino: the rest of the usage events, and a report | planned | | | [134-dino-usage-events-and-report.md](docs/plan/slices/134-dino-usage-events-and-report.md) |
 
 Batch 25 (119-123; 119, 120, 122, 123 built, 121 planned; planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
 
@@ -33,11 +36,14 @@ Batch 26 (124-125, planned 2026-10-25, the Batch 25 mock and the animal-identity
 
 Batch 27 (127-131, planned 2026-10-25, after Dino work kept resubmitting Read The Stupid Text to the Store): keep one repo, stop one product shipping the other. 127 first (small CI fixes), then 128 and 130 one after the other (both edit `release.yml` and `ship-targets.mjs`); 129 (code only) can run beside 127, 128 or 130; 131 runs alone between waves (it touches usings everywhere). Decisions 133-137.
 
+Batch 28 (132-134, planned 2026-10-25, which books families like and how parents use the app): 132 first (the remote config the counts are switched by, and the forced update), then 133 (first events, privacy texts and store forms), then 134. All three edit `worker/` and Dino's `MauiProgram`, so one at a time; they can run beside Batch 27's 127, 128 and 130 (CI) but not beside 129's Dino edits to `CastPage`. Decisions 138-142.
+
 ### Notes
 
 - [Finished slices](docs/plan/notes/slices-done.md): the status rows of every built or verified slice, and the finished batches' lane-order paragraphs.
 - [Out of scope, earlier batches](docs/plan/notes/out-of-scope-history.md): every earlier batch's out-of-scope lines, moved verbatim.
 - [Decisions 1-99](docs/plan/decisions.md): the full numbered decision list, moved verbatim.
+- [2026-10-25 Dino usage insights](docs/plan/notes/2026-10-25-dino-usage-insights.md): what Play, Apple, COPPA and the UK Children's code allow for analytics in a kids' app, and the Cloudflare cost (Batch 28).
 - [2026-10-25 Product separation](docs/plan/notes/2026-10-25-product-separation.md): how much RTST and Dino share, and which changes ship the other product (Batch 27).
 - [2026-10-20 Android minSdk 28](docs/plan/notes/2026-10-20-android-min-sdk-28.md): why the Android floor is 28 (Decision 82).
 - [Batch introductions, Batches 2-8](docs/plan/notes/batch-intros-1-8.md): the framing paragraph that opened each batch (2026-10-20 move).
@@ -84,6 +90,7 @@ Built but not verified (details in each slice file):
 
 ## Out of Scope
 
+- **(Batch 28)** Any install, device or advertising id; per-family profiles or parental-consent flows; third-party analytics SDKs; analytics in RTST; remote config for RTST.
 - **(Batch 27)** Splitting into two repos or publishing the shared code as NuGet packages; renaming the shared projects or their namespaces beyond Mobile.Shared; a commit flag that skips one product's release.
 
 Earlier batches' out-of-scope lines (still binding unless a later Decision reverses them): [out-of-scope-history](docs/plan/notes/out-of-scope-history.md).
