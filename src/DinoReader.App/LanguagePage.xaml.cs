@@ -78,22 +78,44 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 	private readonly Dictionary<string, LanguageVoiceState> _shown = [];
 	private readonly Dictionary<string, ProgressBar> _bars = [];
 	private readonly Dictionary<string, Label> _statuses = [];
+	private readonly AppConfigClient _config;
+	private View? _versionCard;
 	private string? _pending;
 	private bool _changed;
 
-	public LanguagePage(SpokenLanguage spoken, VoicePackInstaller installer, IVoicePackService packs, ISettingsStore settings)
+	public LanguagePage(SpokenLanguage spoken, VoicePackInstaller installer, IVoicePackService packs, ISettingsStore settings, AppConfigClient config)
 	{
 		InitializeComponent();
 		_spoken = spoken;
 		_installer = installer;
 		_packs = packs;
 		_settings = settings;
+		_config = config;
 	}
+
+	// Slice 132: the Version card closes the page (a quiet "A new version is ready" row below latestVersion); it is built again
+	// whenever the page appears or a fetched config changes, so the row follows the config while the page is open.
+	private void ShowVersionCard()
+	{
+		int index = Cards.Children.Count;
+		if (_versionCard is not null)
+		{
+			index = Cards.Children.IndexOf(_versionCard);
+			Cards.Children.RemoveAt(index);
+		}
+
+		_versionCard = VersionCard.Build(_config, _busy);
+		Cards.Children.Insert(index, _versionCard);
+	}
+
+	private void OnConfigChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(ShowVersionCard);
 
 	protected override void OnAppearing()
 	{
 		base.OnAppearing();
 		_installer.Changed += OnInstallerChanged;
+		_config.Changed += OnConfigChanged;
+		ShowVersionCard();
 		Rebuild();
 	}
 
@@ -101,6 +123,7 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 	{
 		base.OnDisappearing();
 		_installer.Changed -= OnInstallerChanged;
+		_config.Changed -= OnConfigChanged;
 	}
 
 	// A progress tick only moves the downloading row's bar and percentage; any change of state rebuilds the rows.

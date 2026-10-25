@@ -178,6 +178,11 @@
   <data name="Storyteller_DownloadNow" xml:space="preserve"><value>今すぐダウンロード</value></data>
   <data name="Storyteller_Ready" xml:space="preserve"><value>語り手の声の準備ができました</value></data>
   <data name="Storyteller_ReadyBody" xml:space="preserve"><value>お話に新しい語り手の声が使われるようになりました。</value></data>
+  <data name="Update_Title" xml:space="preserve"><value>ディノのアップデートが必要です</value></data>
+  <data name="Update_Body" xml:space="preserve"><value>おとなの人に、新しいバージョンを入れてもらってね。本や録音は、そのまま残ります。</value></data>
+  <data name="Update_Button" xml:space="preserve"><value>ディノをアップデート</value></data>
+  <data name="Version_NewReady" xml:space="preserve"><value>新しいバージョンがあります</value></data>
+  <data name="Version_Title" xml:space="preserve"><value>バージョン</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>あなたのナレーター（{0}）</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
   <data name="Storyteller_Failed" xml:space="preserve"><value>語り手の声をダウンロードできませんでした</value></data>

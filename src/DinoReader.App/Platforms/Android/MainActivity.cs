@@ -37,6 +37,13 @@ public class MainActivity : MauiAppCompatActivity
 		}
 	}
 
+	// Play's immediate update must be shown again when the app returns while it is still running (Slice 132).
+	protected override void OnResume()
+	{
+		base.OnResume();
+		_ = StoreUpdater.ResumePlayUpdateAsync(this);
+	}
+
 	public override void OnConfigurationChanged(Configuration newConfig)
 	{
 		base.OnConfigurationChanged(newConfig);
@@ -63,6 +70,7 @@ public class MainActivity : MauiAppCompatActivity
 	{
 		base.OnActivityResult(requestCode, resultCode, data);
 		AndroidDocumentScanner.HandleActivityResult(requestCode, resultCode, data);
+		StoreUpdater.HandleActivityResult(requestCode, resultCode);
 	}
 #pragma warning restore CS0618
 }

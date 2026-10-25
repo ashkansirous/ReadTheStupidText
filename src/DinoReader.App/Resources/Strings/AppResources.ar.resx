@@ -178,6 +178,11 @@
   <data name="Storyteller_DownloadNow" xml:space="preserve"><value>نزّل الآن</value></data>
   <data name="Storyteller_Ready" xml:space="preserve"><value>أصوات الراوي جاهزة</value></data>
   <data name="Storyteller_ReadyBody" xml:space="preserve"><value>قصصك تستخدم الآن أصوات الراوي الجديدة.</value></data>
+  <data name="Update_Title" xml:space="preserve"><value>دينو يحتاج إلى تحديث</value></data>
+  <data name="Update_Body" xml:space="preserve"><value>اطلب من شخص بالغ تثبيت الإصدار الجديد. تبقى كتبك وتسجيلاتك كما هي.</value></data>
+  <data name="Update_Button" xml:space="preserve"><value>تحديث دينو</value></data>
+  <data name="Version_NewReady" xml:space="preserve"><value>يتوفر إصدار جديد</value></data>
+  <data name="Version_Title" xml:space="preserve"><value>الإصدار</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>الراوي الخاص بك ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} ميغابايت</value></data>
   <data name="Storyteller_Failed" xml:space="preserve"><value>تعذّر تنزيل أصوات الراوي</value></data>

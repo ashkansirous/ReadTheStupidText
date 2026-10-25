@@ -178,6 +178,11 @@
   <data name="Storyteller_DownloadNow" xml:space="preserve"><value>Скачать сейчас</value></data>
   <data name="Storyteller_Ready" xml:space="preserve"><value>Голоса рассказчика готовы</value></data>
   <data name="Storyteller_ReadyBody" xml:space="preserve"><value>Ваши истории теперь звучат новыми голосами рассказчика.</value></data>
+  <data name="Update_Title" xml:space="preserve"><value>Дино нужно обновить</value></data>
+  <data name="Update_Body" xml:space="preserve"><value>Попроси взрослого установить новую версию. Твои книги и записи останутся как есть.</value></data>
+  <data name="Update_Button" xml:space="preserve"><value>Обновить Дино</value></data>
+  <data name="Version_NewReady" xml:space="preserve"><value>Доступна новая версия</value></data>
+  <data name="Version_Title" xml:space="preserve"><value>Версия</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Ваш рассказчик ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} МБ</value></data>
   <data name="Storyteller_Failed" xml:space="preserve"><value>Не удалось загрузить голоса рассказчика</value></data>
