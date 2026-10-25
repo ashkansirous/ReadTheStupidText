@@ -177,7 +177,7 @@ test("/download still offers the version and button when the manifest cannot be 
   const failing = { ...bucket, list: bucket.list, get: async () => { throw new Error("boom"); } };
   const html = await (await handleDownload(get("/download"), { DOWNLOADS: failing })).text();
   assert.match(html, /Version 1\.4\.0\./);
-  assert.match(html, /Download for Android/);
+  assert.match(html, /Download the Android beta \(APK\)/);
   assert.doesNotMatch(html, /MB/);
 });
 
