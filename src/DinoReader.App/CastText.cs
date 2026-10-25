@@ -69,14 +69,16 @@ public static class CastText
 	public static string RowSummary(Gender gender, string voiceId, VoiceFlavour flavour, string language) =>
 		string.Join(NameAndVoiceSeparator, GenderLabel(gender), VoiceName(voiceId, language), FlavourName(flavour));
 
-	// The storyteller voices card (Slice 114).
-	public static string StorytellerTitle => AppResources.Cast_Storyteller_Title;
-	public static string StorytellerDownload => AppResources.Cast_Storyteller_Download;
-	public static string StorytellerHearOne => AppResources.Cast_Storyteller_HearOne;
-	public static string StorytellerOn => AppResources.Cast_Storyteller_On;
-	public static string StorytellerUseFirst => AppResources.Cast_Storyteller_UseFirst;
-	public static string StorytellerFailed => AppResources.Cast_Storyteller_Failed;
-	public static string StorytellerText(int megabytes) => AppResources.Format(AppResources.Cast_Storyteller_Text, megabytes);
+	// The storyteller voices by default (Slice 115).
+	public static string StorytellerGetting => AppResources.Storyteller_Getting;
+	public static string StorytellerWaitWifi => AppResources.Storyteller_WaitWifi;
+	public static string StorytellerDownloadNow => AppResources.Storyteller_DownloadNow;
+	public static string StorytellerFailed => AppResources.Storyteller_Failed;
+	public static string StorytellerTryAgain => AppResources.Storyteller_TryAgain;
+	public static string StorytellerSize(int megabytes) => AppResources.Format(AppResources.Storyteller_Size, megabytes);
+	public static string StorytellerReady => AppResources.Storyteller_Ready;
+	public static string StorytellerReadyBody => AppResources.Storyteller_ReadyBody;
+	public static string StorytellerYourNarrator(string language) => AppResources.Format(AppResources.Storyteller_YourNarrator, LanguageNames.NativeName(language));
 
 	/// <summary>Two labels joined the way this language writes a label and its value (a localized format, so RTL and full-width colons read right).</summary>
 	public static string Pair(string label, string value) => AppResources.Format(AppResources.Cast_Pair, label, value);

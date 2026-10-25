@@ -27,7 +27,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	private readonly CastMergeSheet _sheet = new();
 	private readonly CastFlavourMenu _flavourMenu = new();
 	private readonly CastRowActions _actions;
-	private readonly StorytellerCard _storyteller;
+	private readonly StorytellerDefault _storyteller;
 	private readonly Grid _root = new();
 	private Story? _story;
 	private Func<Story, Task>? _persist;
@@ -40,6 +40,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	public CastPage(StoryVoicing voicing, ISpeechReader reader, SpokenLanguage spoken, IServiceProvider services)
 	{
 		_services = services;
+		_storyteller = services.GetRequiredService<StorytellerDefault>();
 		_voicing = voicing;
 		_reader = reader;
 		_preview = new VoicePreview(reader);
@@ -50,13 +51,6 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 			row => _busy.RunAsync(() => PickVoiceAsync(row)),
 			row => _busy.RunAsync(() => PickFlavourAsync(row)),
 			row => _busy.RunAsync(() => PreviewAsync(row, row.Flavour)));
-		// The storyteller card installs or removes a pack, then the page casts again from the voices it has now (Slice 114).
-		_storyteller = new StorytellerCard(
-			services.GetRequiredService<StorytellerController>(),
-			(title, body) => DisplayAlertAsync(title, body, CastText.Ok),
-			() => _busy.RunWhenFreeAsync(RefreshOrLeaveAsync),
-			_reader.Stop);
-		_storyteller.InstalledChanged += (_, _) => RenderIfShown();
 		NavigationPage.SetHasNavigationBar(this, false);
 		SafeAreaEdges = new SafeAreaEdges(SafeAreaRegions.Container);
 		BackgroundColor = DinoTokens.Get(DinoTokens.Sand);
@@ -77,6 +71,8 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	{
 		base.OnAppearing();
 		_preview.Attach();
+		_storyteller.LibraryRecast -= OnLibraryRecast;
+		_storyteller.LibraryRecast += OnLibraryRecast;
 		if (_story is not null && (_resolved is null || _returningFromNarrator))
 		{
 			_returningFromNarrator = false;
@@ -102,7 +98,28 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	{
 		base.OnDisappearing();
 		_preview.Detach();
-		_storyteller.Leave();
+		_storyteller.LibraryRecast -= OnLibraryRecast;
+	}
+
+	// The storyteller pack finished installing in the background and the library was re-cast (Slice 115): this book is read again so the next edit does not save the old cast over it.
+	private void OnLibraryRecast(object? sender, EventArgs e) =>
+		MainThread.BeginInvokeOnMainThread(() => _ = _busy.RunWhenFreeAsync(ReloadAfterRecastAsync));
+
+	private async Task ReloadAfterRecastAsync()
+	{
+		if (_story is null)
+		{
+			return;
+		}
+
+		Story? fresh = await _services.GetRequiredService<IStoryLibrary>().GetAsync(_story.Id);
+		if (fresh is null)
+		{
+			return;
+		}
+
+		_story = fresh;
+		await RefreshOrLeaveAsync();
 	}
 
 	protected override bool OnBackButtonPressed()
@@ -125,7 +142,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		};
 		column.Add(new VerticalStackLayout { Children = { BuildHeader(), _languageChip } }, 0, 0);
 		column.Add(scroll, 0, 1);
-		column.Add(new VerticalStackLayout { Children = { BuildMergeButton(), _storyteller.UseFirstVoices } }, 0, 2);
+		column.Add(new VerticalStackLayout { Children = { BuildMergeButton() } }, 0, 2);
 		_root.Add(column);
 		_root.Add(_sheet);
 		_root.Add(_flavourMenu);
@@ -185,11 +202,6 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 
 		_resolved = await _voicing.ResolveAsync(_story!, _castLanguage);
 		Render();
-		if (housekeeping)
-		{
-			// The catalog may be slow: the card fills in when it answers, and the cast is already on screen.
-			_ = _storyteller.ShowAsync(_castLanguage);
-		}
 	}
 
 	// The language the book will be read in may have no cast yet (a first look at a book read in another language): make and keep it (Slice 108).
@@ -210,20 +222,10 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		? new CastSheet([], 0, false, 0)
 		: CastSheet.Build(_resolved, _story.CastIn(_castLanguage), _voicing.CharacterVoiceCount(_castLanguage), LanguageRules.For(_story.Language));
 
-	// The storyteller card answered after the rows were drawn: with the pack installed the rows fold (mock frame 49).
-	private void RenderIfShown()
-	{
-		if (_resolved is not null)
-		{
-			Render();
-		}
-	}
-
 	private void Render()
 	{
 		CastSheet sheet = Sheet();
 		_body.Children.Clear();
-		_body.Children.Add(_storyteller);
 		_languageChip.Content = CastViews.LanguageChip(CastText.VoicesFor(_castLanguage));
 		if (sheet.VoicesAreShort)
 		{
@@ -257,10 +259,10 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		return card;
 	}
 
-	// With the storyteller pack installed the rows start collapsed and a tap opens one (mock frame 49); otherwise they never fold.
+	// With the storyteller voices in use the rows start collapsed and a tap opens one (mock frame 49); otherwise they never fold.
 	private CastRowFold? FoldOf(CastRow row)
 	{
-		if (!_storyteller.IsInstalled)
+		if (!_voicing.UsesStorytellerVoices(_castLanguage))
 		{
 			return null;
 		}

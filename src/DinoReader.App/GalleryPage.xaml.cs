@@ -4,7 +4,9 @@ using System.Diagnostics;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Extensions.DependencyInjection;
+using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Domain.Reading;
 
 namespace DinoReader;
 
@@ -22,6 +24,9 @@ public partial class GalleryPage : ContentPage
 	private readonly IServiceProvider _services;
 	private readonly BusyGuard _busy = new();
 	private readonly ObservableCollection<object> _items = [];
+	private readonly StorytellerDefault _storyteller;
+	private bool _readySheetOpening;
+	private readonly VoicePreview _preview;
 
 	public GalleryPage(IStoryLibrary library, GrownUpGate gate, GrownUpMode mode, StoryActions actions, StarterStories starters, IServiceProvider services)
 	{
@@ -33,6 +38,12 @@ public partial class GalleryPage : ContentPage
 		_starters = starters;
 		_services = services;
 		StoryList.ItemsSource = _items;
+		_storyteller = services.GetRequiredService<StorytellerDefault>();
+		_preview = new VoicePreview(services.GetRequiredService<ISpeechReader>());
+		StorytellerLine.DownloadNow = _storyteller.DownloadNowAsync;
+		StorytellerLine.Retry = _storyteller.RetryAsync;
+		ReadySheet.Play = PlayNarratorAsync;
+		ReadySheet.Closed = OnReadyClosed;
 	}
 
 	protected override async void OnAppearing()
@@ -40,6 +51,9 @@ public partial class GalleryPage : ContentPage
 		base.OnAppearing();
 		_mode.PropertyChanged -= OnModeChanged;
 		_mode.PropertyChanged += OnModeChanged;
+		_storyteller.Changed -= OnStorytellerChanged;
+		_storyteller.Changed += OnStorytellerChanged;
+		_preview.Attach();
 		StoreClient store = _services.GetRequiredService<StoreClient>();
 		store.LibraryChanged -= OnLibraryChanged;
 		store.LibraryChanged += OnLibraryChanged;
@@ -60,6 +74,8 @@ public partial class GalleryPage : ContentPage
 	{
 		base.OnDisappearing();
 		_mode.PropertyChanged -= OnModeChanged;
+		_storyteller.Changed -= OnStorytellerChanged;
+		_preview.Detach();
 		_services.GetRequiredService<StoreClient>().LibraryChanged -= OnLibraryChanged;
 	}
 
@@ -118,7 +134,65 @@ public partial class GalleryPage : ContentPage
 		LanguagePill.IsVisible = grownUp;
 		LanguagePillLabel.Text = LanguageNames.NativeName(LanguageChoice.Current(_services.GetRequiredService<ISettingsStore>()));
 		GrownUpActions.IsVisible = grownUp;
+		ApplyStorytellerChrome(grownUp);
 		BackgroundColor = DinoTokens.Get(grownUp ? DinoTokens.Sand : DinoTokens.Cream);
+	}
+
+	// The pack service reports from a worker thread (Slice 115).
+	private void OnStorytellerChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(() => ApplyStorytellerChrome(_mode.IsGrownUp));
+
+	private void ApplyStorytellerChrome(bool grownUp)
+	{
+		StorytellerLine.Apply(_storyteller.Status, grownUp);
+		if (grownUp && _storyteller.ReadyPending && !ReadySheet.IsVisible && !_readySheetOpening)
+		{
+			_readySheetOpening = true;
+			_ = ShowReadySheetAsync();
+		}
+		else if (!grownUp)
+		{
+			// Never in the child's view: the note waits for the next time grown-up mode opens.
+			ReadySheet.Hide();
+		}
+	}
+
+	private async Task ShowReadySheetAsync()
+	{
+		try
+		{
+			string narrator = await Task.Run(() => _services.GetRequiredService<StoryVoicing>().NarratorOf(KokoroVoiceTable.EnglishCode));
+			if (_mode.IsGrownUp && _storyteller.ReadyPending)
+			{
+				ReadySheet.Show(CastText.VoiceName(narrator, KokoroVoiceTable.EnglishCode), KokoroVoiceTable.EnglishCode);
+			}
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader ready sheet failed: {ex}");
+		}
+		finally
+		{
+			_readySheetOpening = false;
+		}
+	}
+
+	private async Task PlayNarratorAsync()
+	{
+		try
+		{
+			string narrator = _services.GetRequiredService<StoryVoicing>().NarratorOf(KokoroVoiceTable.EnglishCode);
+			await _preview.PlayAsync(CastText.PreviewLineFor(KokoroVoiceTable.EnglishCode), narrator, VoiceFlavour.Storyteller);
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader narrator sample failed: {ex}");
+		}
+	}
+
+	private void OnReadyClosed()
+	{
+		_preview.Stop();
+		_storyteller.AcknowledgeReady();
 	}
 
 	private static StoryTile? TileOf(object? sender) => (sender as BindableObject)?.BindingContext as StoryTile;

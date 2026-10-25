@@ -123,7 +123,8 @@
         </Grid>
 
         <!-- Grown-up shortcuts (mock 38): Free stories (Slice 92), Narrator (Slice 109) and Backup (Slice 93), three equal buttons with the icon above the label. -->
-        <Grid Grid.Row="1" x:Name="GrownUpActions" Padding="14,0,14,12" ColumnDefinitions="*,*,*" ColumnSpacing="8" IsVisible="False">
+        <VerticalStackLayout Grid.Row="1">
+        <Grid x:Name="GrownUpActions" Padding="14,0,14,12" ColumnDefinitions="*,*,*" ColumnSpacing="8" IsVisible="False">
             <Border x:Name="StoreButton" HeightRequest="64" BackgroundColor="White" Stroke="{StaticResource MergeBorder}" StrokeThickness="2"
                     SemanticProperties.Description="{x:Static res:AppResources.Store_Title}">
                 <Border.StrokeShape>
@@ -164,6 +165,9 @@
                 </Border.GestureRecognizers>
             </Border>
         </Grid>
+        <!-- Slice 115 (mock frame 50): the storyteller download's status line, grown-up mode only. -->
+        <local:StorytellerStatusLine x:Name="StorytellerLine" />
+        </VerticalStackLayout>
 
         <CollectionView Grid.Row="2" x:Name="StoryList" SelectionMode="None" Margin="14,0" ItemTemplate="{StaticResource Selector}">
             <CollectionView.ItemsLayout>
@@ -173,5 +177,8 @@
 
         <!-- First grown-up view only (mock 19): hands the phone to the child. Later visits use the Done button in the header. -->
         <local:CoralButton Grid.Row="3" x:Name="HandoverButton" Margin="22,8,22,14" Icon="Book" IsVisible="False" Clicked="OnHandoverClicked" />
+
+        <!-- Slice 115 (mock frame 51): the one-time "Storyteller voices are ready" sheet over the whole page. -->
+        <local:StorytellerReadySheet Grid.RowSpan="4" x:Name="ReadySheet" />
     </Grid>
 </ContentPage>

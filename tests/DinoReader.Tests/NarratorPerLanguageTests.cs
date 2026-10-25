@@ -1,6 +1,7 @@
 using System.IO.Compression;
 using System.Text.Json;
 using DinoReader.Core;
+using ReadTheStupidText.Domain.Reading;
 
 namespace DinoReader.Tests;
 
@@ -71,17 +72,18 @@ public class NarratorPerLanguageTests
     private static readonly VoiceOption[] KokoroPool = [new("kokoro:af_heart", Gender.Female), new("kokoro:am_puck", Gender.Male)];
 
     [Fact]
-    public void HasVoiceOutside_IgnoresAnExplicitSupertonicPick_ButFlagsAnExplicitKokoroPickWhoseVoiceLeft()
+    public void HasVoiceOutside_FlagsAnExplicitSupertonicPick_AndAnExplicitKokoroPickWhoseVoiceLeft()
     {
         CastMember[] pickedSupertonic = [new("a", "A", Gender.Male, "supertonic:M1", Edited: true)];
         CastMember[] pickedKokoro = [new("b", "B", Gender.Female, "kokoro:af_bella", Edited: true)];
 
-        Assert.False(CastEditor.HasVoiceOutside(pickedSupertonic, KokoroPool));
+        Assert.True(CastEditor.HasVoiceOutside(pickedSupertonic, KokoroPool));
         Assert.True(CastEditor.HasVoiceOutside(pickedKokoro, KokoroPool));
+        Assert.False(CastEditor.HasVoiceOutside(pickedSupertonic, [new("supertonic:M1", Gender.Male)]));
     }
 
     [Fact]
-    public void KeepExplicitPicks_RecastsOnlyTheCharactersTheGrownUpDidNotPick()
+    public void KeepExplicitPicks_RecastsASupertonicPickToKokoro_KeepingGenderAndFlavour()
     {
         CastMember[] before =
         [
@@ -90,15 +92,65 @@ public class NarratorPerLanguageTests
         ];
         CastMember[] recast =
         [
-            new("a", "A", Gender.Male, "kokoro:am_puck", Edited: true),
+            new("a", "A", Gender.Male, "kokoro:am_puck", Edited: true, Flavour: VoiceFlavour.Big),
             new("b", "B", Gender.Female, "kokoro:af_heart"),
         ];
 
         IReadOnlyList<CastMember> kept = CastEditor.KeepExplicitPicks(before, recast, KokoroPool, "kokoro:af_nicole");
 
-        Assert.Equal("supertonic:M1", kept[0].VoiceId);
+        Assert.Equal("kokoro:am_puck", kept[0].VoiceId);
+        Assert.Equal(Gender.Male, kept[0].Gender);
+        Assert.Equal(VoiceFlavour.Big, kept[0].Flavour);
         Assert.True(kept[0].Edited);
         Assert.Equal("kokoro:af_heart", kept[1].VoiceId);
+    }
+
+    [Fact]
+    public void KeepExplicitPicks_KeepsASupertonicPickWhenThePoolIsNotTheStorytellers()
+    {
+        VoiceOption[] supertonicPool = [new("supertonic:F1", Gender.Female), new("supertonic:M2", Gender.Male)];
+        CastMember[] before = [new("a", "A", Gender.Male, "supertonic:M1", Edited: true)];
+        CastMember[] recast = [new("a", "A", Gender.Male, "supertonic:M2")];
+
+        IReadOnlyList<CastMember> kept = CastEditor.KeepExplicitPicks(before, recast, supertonicPool, "supertonic:F1");
+
+        Assert.Equal("supertonic:M1", kept[0].VoiceId);
+    }
+
+    [Fact]
+    public void StorytellerInstall_RecastsAnEditedSupertonicCastToKokoroByGender_KeepingFlavours()
+    {
+        Character[] characters = [new("pig", "Pig", Gender.Female, 50), new("wolf", "Wolf", Gender.Male, 40)];
+        CastMember[] stored =
+        [
+            new("pig", "Pig", Gender.Female, "supertonic:F2", Edited: true, Flavour: VoiceFlavour.Small),
+            new("wolf", "Wolf", Gender.Male, "supertonic:M2", Edited: true, Flavour: VoiceFlavour.Big),
+        ];
+        VoiceOption[] pool =
+        [
+            new("kokoro:af_heart", Gender.Female), new("kokoro:af_bella", Gender.Female),
+            new("kokoro:am_puck", Gender.Male), new("kokoro:am_adam", Gender.Male),
+        ];
+        Assert.True(CastEditor.HasVoiceOutside(stored, pool));
+
+        VoiceCast cast = new VoiceCaster().Cast(characters, pool, "kokoro:af_bella", StoryCast.Pinned(stored));
+        IReadOnlyList<CastMember> members = StoryCast.ToMembers(characters, cast, LanguageRules.English, stored);
+        IReadOnlyList<CastMember> result = CastEditor.KeepExplicitPicks(stored, members, pool, "kokoro:af_bella");
+
+        Assert.StartsWith("kokoro:af_", result.Single(m => m.CharacterId == "pig").VoiceId);
+        Assert.StartsWith("kokoro:am_", result.Single(m => m.CharacterId == "wolf").VoiceId);
+        Assert.Equal(VoiceFlavour.Small, result.Single(m => m.CharacterId == "pig").Flavour);
+        Assert.Equal(VoiceFlavour.Big, result.Single(m => m.CharacterId == "wolf").Flavour);
+        Assert.False(CastEditor.HasVoiceOutside(result, pool));
+    }
+
+    [Fact]
+    public void KeepExplicitPicks_KeepsAnExplicitPickWhoseVoiceIsStillInThePool()
+    {
+        CastMember[] before = [new("a", "A", Gender.Male, "kokoro:am_puck", Edited: true)];
+        CastMember[] recast = [new("a", "A", Gender.Male, "kokoro:am_puck", Edited: true)];
+
+        Assert.Equal("kokoro:am_puck", CastEditor.KeepExplicitPicks(before, recast, KokoroPool, "kokoro:af_nicole")[0].VoiceId);
     }
 
     [Fact]

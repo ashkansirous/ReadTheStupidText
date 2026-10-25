@@ -177,15 +177,17 @@
   <data name="Cast_FlavourHint_Bouncy" xml:space="preserve"><value>выше и быстро</value></data>
   <data name="Cast_FlavourHint_Sleepy" xml:space="preserve"><value>медленно и чуть ниже</value></data>
   <!-- /Slice 113 -->
-  <!-- Slice 114 -->
-  <data name="Cast_Storyteller_Title" xml:space="preserve"><value>Голоса рассказчика</value></data>
-  <data name="Cast_Storyteller_Text" xml:space="preserve"><value>Более тёплые и живые английские голоса для историй. Загрузка {0} МБ.</value></data>
-  <data name="Cast_Storyteller_Download" xml:space="preserve"><value>Скачать</value></data>
-  <data name="Cast_Storyteller_HearOne" xml:space="preserve"><value>Послушать один</value></data>
-  <data name="Cast_Storyteller_On" xml:space="preserve"><value>Голоса рассказчика включены для книг на английском</value></data>
-  <data name="Cast_Storyteller_UseFirst" xml:space="preserve"><value>Использовать первые голоса Dino</value></data>
-  <data name="Cast_Storyteller_Failed" xml:space="preserve"><value>Не удалось скачать голоса рассказчика. Проверьте подключение и попробуйте снова.</value></data>
-  <!-- /Slice 114 -->
+  <!-- Slice 115 -->
+  <data name="Storyteller_Getting" xml:space="preserve"><value>Загружаем голоса рассказчика…</value></data>
+  <data name="Storyteller_WaitWifi" xml:space="preserve"><value>Голоса рассказчика ждут Wi-Fi</value></data>
+  <data name="Storyteller_DownloadNow" xml:space="preserve"><value>Скачать сейчас</value></data>
+  <data name="Storyteller_Ready" xml:space="preserve"><value>Голоса рассказчика готовы</value></data>
+  <data name="Storyteller_ReadyBody" xml:space="preserve"><value>Ваши истории теперь звучат новыми голосами рассказчика.</value></data>
+  <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Ваш рассказчик ({0})</value></data>
+  <data name="Storyteller_Size" xml:space="preserve"><value>{0} МБ</value></data>
+  <data name="Storyteller_Failed" xml:space="preserve"><value>Не удалось загрузить голоса рассказчика</value></data>
+  <data name="Storyteller_TryAgain" xml:space="preserve"><value>Повторить</value></data>
+  <!-- /Slice 115 -->
   <data name="Add_Scan" xml:space="preserve"><value>Сканировать страницы</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Сохраняет картинки страниц</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Фото</value></data>

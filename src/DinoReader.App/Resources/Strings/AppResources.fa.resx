@@ -177,15 +177,17 @@
   <data name="Cast_FlavourHint_Bouncy" xml:space="preserve"><value>بالاتر، سریع</value></data>
   <data name="Cast_FlavourHint_Sleepy" xml:space="preserve"><value>آهسته، کمی بم‌تر</value></data>
   <!-- /Slice 113 -->
-  <!-- Slice 114 -->
-  <data name="Cast_Storyteller_Title" xml:space="preserve"><value>صداهای قصه‌گو</value></data>
-  <data name="Cast_Storyteller_Text" xml:space="preserve"><value>صداهای انگلیسی گرم‌تر و پرجنب‌وجوش‌تر برای قصه‌ها. دانلود {0} مگابایت.</value></data>
-  <data name="Cast_Storyteller_Download" xml:space="preserve"><value>دانلود</value></data>
-  <data name="Cast_Storyteller_HearOne" xml:space="preserve"><value>یکی را بشنوید</value></data>
-  <data name="Cast_Storyteller_On" xml:space="preserve"><value>صداهای قصه‌گو برای کتاب‌های انگلیسی روشن است</value></data>
-  <data name="Cast_Storyteller_UseFirst" xml:space="preserve"><value>استفاده از صداهای اول دینو</value></data>
-  <data name="Cast_Storyteller_Failed" xml:space="preserve"><value>دانلود صداهای قصه‌گو انجام نشد. اتصال را بررسی کنید و دوباره تلاش کنید.</value></data>
-  <!-- /Slice 114 -->
+  <!-- Slice 115 -->
+  <data name="Storyteller_Getting" xml:space="preserve"><value>در حال دریافت صداهای قصه‌گو…</value></data>
+  <data name="Storyteller_WaitWifi" xml:space="preserve"><value>صداهای قصه‌گو منتظر Wi-Fi هستند</value></data>
+  <data name="Storyteller_DownloadNow" xml:space="preserve"><value>همین حالا دریافت کن</value></data>
+  <data name="Storyteller_Ready" xml:space="preserve"><value>صداهای قصه‌گو آماده‌اند</value></data>
+  <data name="Storyteller_ReadyBody" xml:space="preserve"><value>قصه‌های شما اکنون از صداهای جدید قصه‌گو استفاده می‌کنند.</value></data>
+  <data name="Storyteller_YourNarrator" xml:space="preserve"><value>قصه‌گوی شما ({0})</value></data>
+  <data name="Storyteller_Size" xml:space="preserve"><value>{0} مگابایت</value></data>
+  <data name="Storyteller_Failed" xml:space="preserve"><value>دریافت صداهای قصه‌گو ممکن نشد</value></data>
+  <data name="Storyteller_TryAgain" xml:space="preserve"><value>دوباره تلاش کنید</value></data>
+  <!-- /Slice 115 -->
   <data name="Add_Scan" xml:space="preserve"><value>اسکن صفحه‌ها</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>تصویر صفحه‌ها را نگه می‌دارد</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>عکس‌ها</value></data>

@@ -179,15 +179,17 @@
   <data name="Cast_FlavourHint_Bouncy" xml:space="preserve"><value>högre, snabb</value></data>
   <data name="Cast_FlavourHint_Sleepy" xml:space="preserve"><value>långsam, lite lägre</value></data>
   <!-- /Slice 113 -->
-  <!-- Slice 114 -->
-  <data name="Cast_Storyteller_Title" xml:space="preserve"><value>Berättarröster</value></data>
-  <data name="Cast_Storyteller_Text" xml:space="preserve"><value>Varmare, livligare engelska röster för sagor. Nedladdning på {0} MB.</value></data>
-  <data name="Cast_Storyteller_Download" xml:space="preserve"><value>Ladda ner</value></data>
-  <data name="Cast_Storyteller_HearOne" xml:space="preserve"><value>Lyssna på en</value></data>
-  <data name="Cast_Storyteller_On" xml:space="preserve"><value>Berättarröster är på för engelska böcker</value></data>
-  <data name="Cast_Storyteller_UseFirst" xml:space="preserve"><value>Använd Dinos första röster</value></data>
-  <data name="Cast_Storyteller_Failed" xml:space="preserve"><value>Det gick inte att ladda ner berättarrösterna. Kontrollera anslutningen och försök igen.</value></data>
-  <!-- /Slice 114 -->
+  <!-- Slice 115 -->
+  <data name="Storyteller_Getting" xml:space="preserve"><value>Hämtar berättarrösterna…</value></data>
+  <data name="Storyteller_WaitWifi" xml:space="preserve"><value>Berättarrösterna väntar på Wi-Fi</value></data>
+  <data name="Storyteller_DownloadNow" xml:space="preserve"><value>Hämta nu</value></data>
+  <data name="Storyteller_Ready" xml:space="preserve"><value>Berättarrösterna är klara</value></data>
+  <data name="Storyteller_ReadyBody" xml:space="preserve"><value>Dina sagor använder nu de nya berättarrösterna.</value></data>
+  <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Din berättare ({0})</value></data>
+  <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
+  <data name="Storyteller_Failed" xml:space="preserve"><value>Det gick inte att hämta berättarrösterna</value></data>
+  <data name="Storyteller_TryAgain" xml:space="preserve"><value>Försök igen</value></data>
+  <!-- /Slice 115 -->
   <data name="Add_Scan" xml:space="preserve"><value>Skanna sidor</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Behåller sidbilderna</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Foton</value></data>
