@@ -225,7 +225,7 @@ public sealed class StoryVoicing
 		IReadOnlyDictionary<string, string>? merges = null, LineBreakMap? lineBreaks = null)
 	{
 		AttributionResult resolved = StoryCast.Resolve(Analyse(storyLanguage, text, lineBreaks).Attribution, merges ?? Story.NoMerges, stored);
-		return StoryCast.ToMembers(resolved.Characters, Cast(castLanguage, resolved, stored), stored);
+		return StoryCast.ToMembers(resolved.Characters, Cast(castLanguage, resolved, stored), LanguageRules.For(storyLanguage), stored);
 	}
 
 	// The screen and the voice both prepare the whole story: the last one is kept for the same story instance, so the split runs once for the two.
@@ -260,7 +260,9 @@ public sealed class StoryVoicing
 		IReadOnlyList<CastMember> stored = hasCast ? story.CastIn(language) : EditedSeed(story);
 		IReadOnlyList<VoiceOption> pool = hasCast || VoicesFor(language).Count > 0 ? VoicesFor(language) : VoicesFor(story.Language);
 		AttributionResult resolved = StoryCast.Resolve(prepared.Analysis.Attribution, story.Merges, stored);
-		return _caster.Cast(resolved.Characters, pool, NarratorOf(language), StoryCast.Pinned(stored));
+		VoiceCast cast = _caster.Cast(resolved.Characters, pool, NarratorOf(language), StoryCast.Pinned(stored));
+		// Names are in the story's language, so its rules guess the flavours; a grown-up's pick in this cast wins (Slice 113).
+		return cast.WithFlavours(FlavourGuess.ForCast(resolved.Characters, stored, LanguageRules.For(story.Language)));
 	}
 
 	// Only the corrected genders carry over to another language, never the voices: those belong to the story language's pack.
@@ -337,6 +339,8 @@ public sealed class StoryVoicing
 	private static VoicedSegment ToVoicedSegment(SplitSegment piece, VoiceCast cast)
 	{
 		Segment segment = piece.Segment;
-		return new VoicedSegment(segment.Text, cast.VoiceForLine(segment.CharacterId), segment.SourceStart, segment.SourceEnd, piece.TextStart);
+		return new VoicedSegment(
+			segment.Text, cast.VoiceForLine(segment.CharacterId), segment.SourceStart, segment.SourceEnd, piece.TextStart,
+			cast.FlavourForLine(segment.CharacterId));
 	}
 }

@@ -35,5 +35,6 @@ internal static class FarsiRules
         DialogueGapChars: RuleSets.GapChars,
         ExtraOpenQuotes: "“",
         ExtraCloseQuotes: "”",
-        Script: ScriptStyle.CaselessSpaced);
+        Script: ScriptStyle.CaselessSpaced,
+        Flavours: FlavourWords.Persian);
 }

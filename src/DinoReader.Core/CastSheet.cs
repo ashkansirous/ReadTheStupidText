@@ -1,7 +1,9 @@
+using ReadTheStupidText.Domain.Reading;
+
 namespace DinoReader.Core;
 
 /// <summary>One line of the cast screen: the stored member and what the screen shows beside it.</summary>
-public sealed record CastRow(CastMember Member, int Words, bool IsMain, bool SharesVoice);
+public sealed record CastRow(CastMember Member, int Words, bool IsMain, bool SharesVoice, VoiceFlavour Flavour = VoiceFlavour.Normal);
 
 /// <summary>
 /// What the cast screen draws (Slice 65): a row per character with words and flags, how many lines have
@@ -15,7 +17,8 @@ public sealed record CastSheet(IReadOnlyList<CastRow> Rows, int UnknownLines, bo
     /// the voices are short: otherwise a share is the grown-up's own choice.
     /// </summary>
     public static CastSheet Build(
-        AttributionResult resolved, IReadOnlyList<CastMember> cast, int voiceCount, int mainCount = VoiceCaster.DefaultMainCount)
+        AttributionResult resolved, IReadOnlyList<CastMember> cast, int voiceCount, LanguageRules rules,
+        int mainCount = VoiceCaster.DefaultMainCount)
     {
         HashSet<string> mains = VoiceCaster.MainIds(resolved.Characters, mainCount);
         var members = cast.DistinctBy(m => m.CharacterId).ToDictionary(m => m.CharacterId);
@@ -24,7 +27,8 @@ public sealed record CastSheet(IReadOnlyList<CastRow> Rows, int UnknownLines, bo
         var seen = new HashSet<string>();
         var rows = present
             .Select(c => new CastRow(
-                members[c.Id], c.WordCount, mains.Contains(c.Id), !seen.Add(members[c.Id].VoiceId) && voicesShort))
+                members[c.Id], c.WordCount, mains.Contains(c.Id), !seen.Add(members[c.Id].VoiceId) && voicesShort,
+                FlavourGuess.Effective(members[c.Id], rules)))
             .ToList();
         return new CastSheet(rows, CountUnknownLines(resolved.Segments), voicesShort, voiceCount);
     }

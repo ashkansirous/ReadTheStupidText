@@ -86,15 +86,16 @@ internal static class IosTtsEngine
     // Supertonic chooses its language per generation (Extra "lang"); the VITS-family models are
     // single-language and take only the speaker id. Both come from the model the read captured,
     // never from whatever is current now.
-    public static OfflineTtsGeneratedAudio Generate(IosBuiltEngine engine, string text, int speakerId)
+    public static OfflineTtsGeneratedAudio Generate(
+        IosBuiltEngine engine, string text, int speakerId, float pace = NormalSpeed)
     {
         VoiceModelPaths model = engine.Model;
         if (model.Kind != VoiceEngineKind.Supertonic)
         {
-            return engine.Tts.Tts.Generate(text, NormalSpeed, speakerId);
+            return engine.Tts.Tts.Generate(text, pace, speakerId);
         }
 
-        var config = new OfflineTtsGenerationConfig { Sid = speakerId, Speed = NormalSpeed };
+        var config = new OfflineTtsGenerationConfig { Sid = speakerId, Speed = pace };
         config.Extra[SupertonicLanguageKey] = model.Language;
         return engine.Tts.Tts.GenerateWithConfig(text, config, KeepGenerating);
     }

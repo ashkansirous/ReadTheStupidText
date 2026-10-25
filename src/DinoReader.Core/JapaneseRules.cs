@@ -31,5 +31,6 @@ internal static class JapaneseRules
         Script: ScriptStyle.Unspaced,
         NameVerbGap: @"(?:は|が)?\s*",
         NameLead: "(?:と|って)?",
-        ExtraNamePattern: @"[ァ-ヺー]{2,}");
+        ExtraNamePattern: @"[ァ-ヺー]{2,}",
+        Flavours: FlavourWords.Japanese);
 }

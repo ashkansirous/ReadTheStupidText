@@ -167,6 +167,19 @@
   <data name="Rec_NoMic" xml:space="preserve"><value>Allow the microphone for Dino Book Reader in your device settings, then try again.</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>The recording didn't work. Please try again.</value></data>
   <!-- /Slice 111 -->
+  <!-- Slice 113 -->
+  <data name="Cast_Pair" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="Cast_Sounds" xml:space="preserve"><value>Sounds</value></data>
+  <data name="Cast_Flavour_Normal" xml:space="preserve"><value>Normal</value></data>
+  <data name="Cast_Flavour_Small" xml:space="preserve"><value>Small</value></data>
+  <data name="Cast_Flavour_Big" xml:space="preserve"><value>Big</value></data>
+  <data name="Cast_Flavour_Bouncy" xml:space="preserve"><value>Bouncy</value></data>
+  <data name="Cast_Flavour_Sleepy" xml:space="preserve"><value>Sleepy</value></data>
+  <data name="Cast_FlavourHint_Small" xml:space="preserve"><value>higher, a little quicker</value></data>
+  <data name="Cast_FlavourHint_Big" xml:space="preserve"><value>deeper, slower</value></data>
+  <data name="Cast_FlavourHint_Bouncy" xml:space="preserve"><value>higher, quick</value></data>
+  <data name="Cast_FlavourHint_Sleepy" xml:space="preserve"><value>slow, a little lower</value></data>
+  <!-- /Slice 113 -->
   <data name="Add_Scan" xml:space="preserve"><value>Scan pages</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Keeps the page pictures</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Photos</value></data>

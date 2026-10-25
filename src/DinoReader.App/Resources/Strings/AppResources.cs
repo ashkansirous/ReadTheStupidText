@@ -254,6 +254,17 @@ public static class AppResources
 	public static string Cast_Narrator => Get();
 	public static string Cast_Main => Get();
 	public static string Cast_Edited => Get();
+	public static string Cast_Sounds => Get();
+	public static string Cast_Pair => Get();
+	public static string Cast_Flavour_Normal => Get();
+	public static string Cast_Flavour_Small => Get();
+	public static string Cast_Flavour_Big => Get();
+	public static string Cast_Flavour_Bouncy => Get();
+	public static string Cast_Flavour_Sleepy => Get();
+	public static string Cast_FlavourHint_Small => Get();
+	public static string Cast_FlavourHint_Big => Get();
+	public static string Cast_FlavourHint_Bouncy => Get();
+	public static string Cast_FlavourHint_Sleepy => Get();
 	public static string Cast_SharedVoice => Get();
 	public static string Cast_UnknownSpeaker => Get();
 	public static string Cast_MergeButton => Get();

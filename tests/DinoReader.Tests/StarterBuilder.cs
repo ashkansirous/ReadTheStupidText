@@ -115,7 +115,7 @@ internal static class StarterBuilder
         var rules = LanguageRules.English;
         AttributionResult attribution = new SpeakerAttributor(rules).Attribute(story.Text, new StorySegmenter(rules).Split(story.Text, story.BreakMap()));
         VoiceCast cast = new VoiceCaster().Cast(attribution.Characters, Voices, NarratorVoice);
-        return StoryCast.ToMembers(attribution.Characters, cast);
+        return StoryCast.ToMembers(attribution.Characters, cast, rules);
     }
 
     public static async Task WriteAllAsync()

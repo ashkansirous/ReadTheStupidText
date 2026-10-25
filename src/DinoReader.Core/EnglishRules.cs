@@ -48,7 +48,8 @@ internal static class EnglishRules
         IndefinitePronouns: Set("everyone", "everybody", "everything", "nobody", "no one", "someone",
             "somebody", "anyone", "anybody", "all", "both", "they", "we", "none", "others"),
         SentenceTerminators: ".!?…",
-        DialogueGapChars: DialogueGapChars);
+        DialogueGapChars: DialogueGapChars,
+        Flavours: FlavourWords.English);
 
     private static HashSet<string> Set(params string[] items) =>
         new(items, StringComparer.OrdinalIgnoreCase);

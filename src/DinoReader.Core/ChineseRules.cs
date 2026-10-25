@@ -31,5 +31,6 @@ internal static class ChineseRules
         ExtraCloseQuotes: "」",
         Script: ScriptStyle.Unspaced,
         NameVerbGap: @"\s*",
-        ExtraNamePattern: @"[小阿老]\p{Lo}");
+        ExtraNamePattern: @"[小阿老]\p{Lo}",
+        Flavours: FlavourWords.Chinese);
 }

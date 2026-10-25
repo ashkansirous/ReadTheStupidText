@@ -223,7 +223,7 @@ public sealed class NarratorPage : ContentPage, IGrownUpPage
 		string line = CastText.PreviewLineFor(_voicing.PreviewLanguage(language, _spoken.Current));
 		try
 		{
-			await _preview.PlayAsync(line, voice);
+			await _preview.PlayAsync(line, voice, VoiceFlavour.Storyteller);
 		}
 		catch (Exception ex)
 		{

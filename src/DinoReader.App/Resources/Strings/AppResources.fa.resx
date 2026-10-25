@@ -164,6 +164,19 @@
   <data name="Rec_NoMic" xml:space="preserve"><value>در تنظیمات دستگاه، میکروفون را برای Dino Book Reader فعال کنید و دوباره امتحان کنید.</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>ضبط انجام نشد. دوباره امتحان کنید.</value></data>
   <!-- /Slice 111 -->
+  <!-- Slice 113 -->
+  <data name="Cast_Pair" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="Cast_Sounds" xml:space="preserve"><value>صدا</value></data>
+  <data name="Cast_Flavour_Normal" xml:space="preserve"><value>عادی</value></data>
+  <data name="Cast_Flavour_Small" xml:space="preserve"><value>کوچک</value></data>
+  <data name="Cast_Flavour_Big" xml:space="preserve"><value>بزرگ</value></data>
+  <data name="Cast_Flavour_Bouncy" xml:space="preserve"><value>سرزنده</value></data>
+  <data name="Cast_Flavour_Sleepy" xml:space="preserve"><value>خواب‌آلود</value></data>
+  <data name="Cast_FlavourHint_Small" xml:space="preserve"><value>بالاتر، کمی سریع‌تر</value></data>
+  <data name="Cast_FlavourHint_Big" xml:space="preserve"><value>بم‌تر، آهسته‌تر</value></data>
+  <data name="Cast_FlavourHint_Bouncy" xml:space="preserve"><value>بالاتر، سریع</value></data>
+  <data name="Cast_FlavourHint_Sleepy" xml:space="preserve"><value>آهسته، کمی بم‌تر</value></data>
+  <!-- /Slice 113 -->
   <data name="Add_Scan" xml:space="preserve"><value>اسکن صفحه‌ها</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>تصویر صفحه‌ها را نگه می‌دارد</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>عکس‌ها</value></data>

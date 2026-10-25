@@ -35,5 +35,6 @@ internal static class FrenchRules
         DialogueGapChars: RuleSets.GapChars,
         ExtraOpenQuotes: "“",
         ExtraCloseQuotes: "”",
-        DialogueDashes: "—–");
+        DialogueDashes: "—–",
+        Flavours: FlavourWords.French);
 }

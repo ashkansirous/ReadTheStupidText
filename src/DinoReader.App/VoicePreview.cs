@@ -25,11 +25,11 @@ internal sealed class VoicePreview(ISpeechReader reader)
 		reader.Completed -= OnReaderCompleted;
 	}
 
-	/// <summary>Plays <paramref name="line"/> in <paramref name="voiceId"/>, replacing any sample still playing. Throws when the read fails to start.</summary>
-	public async Task PlayAsync(string line, string voiceId)
+	/// <summary>Plays <paramref name="line"/> in <paramref name="voiceId"/> shaped by <paramref name="flavour"/>, replacing any sample still playing. Throws when the read fails to start.</summary>
+	public async Task PlayAsync(string line, string voiceId, VoiceFlavour flavour = VoiceFlavour.Normal)
 	{
 		Stop();
-		var segment = new VoicedSegment(line, voiceId, 0, line.Length, 0);
+		var segment = new VoicedSegment(line, voiceId, 0, line.Length, 0, flavour);
 		try
 		{
 			_previewing = true;

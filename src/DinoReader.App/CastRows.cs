@@ -6,7 +6,9 @@ namespace DinoReader;
 internal sealed record CastRowActions(
 	Func<CastRow, Task> Preview,
 	Func<CastRow, Gender, Task> SetGender,
-	Func<CastRow, Task> PickVoice);
+	Func<CastRow, Task> PickVoice,
+	Func<CastRow, Task> PickFlavour,
+	Func<CastRow, Task> PreviewFlavour);
 
 /// <summary>Builds the rows of the cast screen: the narrator, a character, the unknown speaker and the shared-voice note.</summary>
 internal static class CastRows
@@ -50,6 +52,7 @@ internal static class CastRows
 		var body = new VerticalStackLayout { Padding = new Thickness(14, 12), Spacing = 9 };
 		body.Add(TopLine(row, index, actions));
 		body.Add(SecondLine(row, actions));
+		body.Add(SoundsLine(row, actions));
 		return body;
 	}
 
@@ -124,6 +127,31 @@ internal static class CastRows
 		VerticalOptions = LayoutOptions.Center,
 		Children = { name, new Label { Text = detail, FontSize = 12, TextColor = DinoTokens.Get(DinoTokens.Muted) } },
 	};
+
+	// The "Sounds" row (Slice 113, mock frame 48): the flavour picker and a button that plays a sample of it.
+	private static Grid SoundsLine(CastRow row, CastRowActions actions)
+	{
+		Border chip = CastViews.VoiceChip(CastText.FlavourName(row.Flavour));
+		SemanticProperties.SetDescription(chip, CastText.Pair(CastText.Sounds, CastText.FlavourName(row.Flavour)));
+		CastViews.AddTap(chip, () => actions.PickFlavour(row));
+		Border sample = CastViews.PreviewButton(CastText.Pair(row.Member.Name, CastText.Sounds));
+		SemanticProperties.SetDescription(sample, CastText.HearName(row.Member.Name));
+		CastViews.AddTap(sample, () => actions.PreviewFlavour(row));
+		var line = new Grid
+		{
+			Padding = new Thickness(TextIndent, 0, 0, 0),
+			ColumnSpacing = 8,
+			ColumnDefinitions =
+			[
+				new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star),
+			],
+		};
+		line.Add(new Label { Text = CastText.Sounds, FontSize = 13, TextColor = DinoTokens.Get(DinoTokens.Body), VerticalOptions = LayoutOptions.Center }, 0);
+		line.Add(chip, 1);
+		sample.HorizontalOptions = LayoutOptions.End;
+		line.Add(sample, 2);
+		return line;
+	}
 
 	private static Grid SecondLine(CastRow row, CastRowActions actions)
 	{

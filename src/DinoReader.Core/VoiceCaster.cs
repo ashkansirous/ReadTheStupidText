@@ -1,3 +1,5 @@
+using ReadTheStupidText.Domain.Reading;
+
 namespace DinoReader.Core;
 
 /// <summary>A voice the caster may hand out: an opaque id and the voice's gender.</summary>
@@ -7,8 +9,20 @@ public sealed record VoiceOption(string Id, Gender Gender);
 public sealed record VoiceAssignment(string CharacterId, string VoiceId, bool IsShared);
 
 /// <summary>The finished cast: the narrator's voice and one assignment per character.</summary>
-public sealed record VoiceCast(string NarratorVoiceId, IReadOnlyList<VoiceAssignment> Assignments)
+public sealed record VoiceCast(
+    string NarratorVoiceId, IReadOnlyList<VoiceAssignment> Assignments,
+    IReadOnlyDictionary<string, VoiceFlavour>? Flavours = null)
 {
+    /// <summary>The flavour that shapes a line's voice (Slice 113): the narrator's storyteller pace for narration and for a quote nobody
+    /// could be attributed to, else the speaker's, Normal when none is known.</summary>
+    public VoiceFlavour FlavourForLine(string? characterId) =>
+        characterId is not null && VoiceFor(characterId) is not null
+            ? Flavours?.GetValueOrDefault(characterId) ?? VoiceFlavour.Normal
+            : VoiceFlavour.Storyteller;
+
+    /// <summary>The cast with each character's flavour set.</summary>
+    public VoiceCast WithFlavours(IReadOnlyDictionary<string, VoiceFlavour> flavours) => this with { Flavours = flavours };
+
     public string? VoiceFor(string characterId) =>
         Assignments.FirstOrDefault(a => a.CharacterId == characterId)?.VoiceId;
 

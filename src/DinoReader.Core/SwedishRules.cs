@@ -34,5 +34,6 @@ internal static class SwedishRules
         ExtraOpenQuotes: "»“",
         ExtraCloseQuotes: "»“«",
         DialogueDashes: "–—",
-        DashTagAfterQuote: true);
+        DashTagAfterQuote: true,
+        Flavours: FlavourWords.Swedish);
 }

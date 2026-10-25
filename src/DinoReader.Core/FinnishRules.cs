@@ -35,5 +35,6 @@ internal static class FinnishRules
         ExtraOpenQuotes: "»“",
         ExtraCloseQuotes: "»“",
         DialogueDashes: "–—",
-        DashTagAfterQuote: true);
+        DashTagAfterQuote: true,
+        Flavours: FlavourWords.Finnish);
 }

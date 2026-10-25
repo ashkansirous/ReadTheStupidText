@@ -35,5 +35,6 @@ internal static class DutchRules
         ExtraOpenQuotes: "„",
         ExtraCloseQuotes: "“",
         DialogueDashes: "–—",
-        DashTagAfterQuote: true);
+        DashTagAfterQuote: true,
+        Flavours: FlavourWords.Dutch);
 }

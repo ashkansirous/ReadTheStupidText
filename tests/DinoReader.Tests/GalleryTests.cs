@@ -1,4 +1,5 @@
 using DinoReader.Core;
+using ReadTheStupidText.Domain.Reading;
 
 namespace DinoReader.Tests;
 
@@ -265,9 +266,14 @@ public class StoryCastTests
     {
         var cast = new VoiceCast("F1", [new VoiceAssignment("peter", "M1", false), new VoiceAssignment("mum", "F2", false)]);
 
-        IReadOnlyList<CastMember> members = StoryCast.ToMembers([Peter, Mum], cast);
+        IReadOnlyList<CastMember> members = StoryCast.ToMembers([Peter, Mum], cast, LanguageRules.English);
 
-        Assert.Equal([new CastMember("peter", "Peter", Gender.Male, "M1"), new CastMember("mum", "Mum", Gender.Female, "F2")], members);
+        Assert.Equal(
+            [
+                new CastMember("peter", "Peter", Gender.Male, "M1", Flavour: VoiceFlavour.Normal),
+                new CastMember("mum", "Mum", Gender.Female, "F2", Flavour: VoiceFlavour.Normal),
+            ],
+            members);
     }
 
     private static VoiceCast Recast(IReadOnlyList<Character> characters, string narrator, params CastMember[] stored)

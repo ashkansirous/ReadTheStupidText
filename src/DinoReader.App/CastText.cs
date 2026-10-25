@@ -11,6 +11,7 @@ public static class CastText
 {
 	private const string NameAndVoiceSeparator = " · ";
 	private const int Singular = 1;
+	private const string FlavourHintSeparator = " - ";
 
 	// Display names of the voices in the packs seen so far (a Piper pack names its own voices).
 	private static readonly ConcurrentDictionary<string, string> PackVoiceNames = new();
@@ -58,6 +59,35 @@ public static class CastText
 	public static string MergeInto(string name) => AppResources.Format(AppResources.Cast_MergeInto, name);
 
 	public static string NameAndVoice(string name, string voiceId) => name + NameAndVoiceSeparator + VoiceName(voiceId);
+
+	public static string Sounds => AppResources.Cast_Sounds;
+
+	/// <summary>Two labels joined the way this language writes a label and its value (a localized format, so RTL and full-width colons read right).</summary>
+	public static string Pair(string label, string value) => AppResources.Format(AppResources.Cast_Pair, label, value);
+
+	/// <summary>The name of a voice flavour as the Sounds picker shows it (Slice 113).</summary>
+	public static string FlavourName(VoiceFlavour flavour) => flavour switch
+	{
+		VoiceFlavour.Small => AppResources.Cast_Flavour_Small,
+		VoiceFlavour.Big => AppResources.Cast_Flavour_Big,
+		VoiceFlavour.Bouncy => AppResources.Cast_Flavour_Bouncy,
+		VoiceFlavour.Sleepy => AppResources.Cast_Flavour_Sleepy,
+		_ => AppResources.Cast_Flavour_Normal,
+	};
+
+	/// <summary>The line under a flavour's name in the picker; empty for Normal, which needs none.</summary>
+	public static string FlavourHint(VoiceFlavour flavour) => flavour switch
+	{
+		VoiceFlavour.Small => AppResources.Cast_FlavourHint_Small,
+		VoiceFlavour.Big => AppResources.Cast_FlavourHint_Big,
+		VoiceFlavour.Bouncy => AppResources.Cast_FlavourHint_Bouncy,
+		VoiceFlavour.Sleepy => AppResources.Cast_FlavourHint_Sleepy,
+		_ => string.Empty,
+	};
+
+	/// <summary>A picker entry: the name, then its hint after a dash ("Small - higher, a little quicker").</summary>
+	public static string FlavourChoice(VoiceFlavour flavour) =>
+		FlavourHint(flavour).Length == 0 ? FlavourName(flavour) : FlavourName(flavour) + FlavourHintSeparator + FlavourHint(flavour);
 
 	public static string SharedNote(int voices) => AppResources.Format(AppResources.Cast_SharedNote, voices);
 

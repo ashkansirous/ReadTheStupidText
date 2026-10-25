@@ -305,7 +305,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
         {
             IReadOnlyList<SpeechChunkPlan> plan = SpeechChunkPlanner.ForText(text, CachedHead);
             bool cached = plan.Count > 0
-                && _sentences.AreCached(engine, SentenceUnits.Split(plan[0].Text), ResolveVoice(engine, voiceId));
+                && _sentences.AreCached(engine, SentenceUnits.Split(plan[0].Text), ResolveVoice(engine, voiceId), plan[0].Flavour);
             return cached ? CachedHead : SpeechTextChunker.HeadPolicy.Default;
         });
 
@@ -617,7 +617,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
             {
                 BuiltEngine chunkEngine = extra ?? _engine;
                 VoiceInfo voice = _owner.ResolveVoice(chunkEngine, chunk.VoiceId, _voiceId);
-                return await _owner.GenerateChunkAsync(chunkEngine, chunk.Text, index, voice, _token);
+                return await _owner.GenerateChunkAsync(chunkEngine, chunk.Text, index, voice, chunk.Flavour, _token);
             }
             finally
             {
@@ -857,11 +857,11 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
     // the token is checked again before any shared state or file is touched: a superseded generation
     // must not record a stale duration or write a stale chunk file (Slice 35).
     private async Task<string> GenerateChunkAsync(
-        BuiltEngine engine, string chunk, int index, VoiceInfo voice, CancellationToken token)
+        BuiltEngine engine, string chunk, int index, VoiceInfo voice, VoiceFlavour flavour, CancellationToken token)
     {
         int? activityId = _readActivityId;
         long started = Stopwatch.GetTimestamp();
-        byte[] wav = await _sentences.JoinChunkAsync(engine, chunk, voice, activityId, token);
+        byte[] wav = await _sentences.JoinChunkAsync(engine, chunk, voice, activityId, token, flavour);
         token.ThrowIfCancellationRequested();
 
         RecordChunkDuration(index, WavFile.TryGetDuration(wav) ?? TimeSpan.Zero);
@@ -1069,7 +1069,8 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
             .Take(PrepareMaxChunks)
             .SelectMany(chunk => SentenceUnits.Split(chunk.Text));
 
-        await _sentences.PrepareAsync(engine, sentences, voice, token);
+        // A head start reads plain text, so its audio is the Normal flavour (the key a plain read looks up).
+        await _sentences.PrepareAsync(engine, sentences, voice, VoiceFlavour.Normal, token);
     }
 
     public void CancelPrepare()

@@ -42,9 +42,6 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
     // stays one short sentence for a reader without a cache.
     private static readonly SpeechTextChunker.HeadPolicy HeadPolicy = SpeechTextChunker.HeadPolicy.Cached;
 
-    // Silence between the sentences of one chunk (each was synthesized on its own).
-    private static readonly TimeSpan SentenceGap = TimeSpan.FromMilliseconds(150);
-
     private static readonly TimeSpan TimingRaiseInterval = TimeSpan.FromSeconds(1);
     private static readonly TimeSpan SkipAmount = TimeSpan.FromSeconds(10);
     private static readonly TimeSpan PollInterval = TimeSpan.FromMilliseconds(200);
@@ -458,7 +455,7 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
         {
             IosBuiltEngine chunkEngine = extra ?? engine;
             VoiceInfo voice = ResolveVoice(chunkEngine, chunk.VoiceId, voiceId);
-            return await GenerateChunkAsync(chunkEngine, chunk.Text, index, voice, files, token);
+            return await GenerateChunkAsync(chunkEngine, chunk.Text, index, voice, chunk.Flavour, files, token);
         }
         finally
         {

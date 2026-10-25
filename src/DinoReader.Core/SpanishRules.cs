@@ -35,5 +35,6 @@ internal static class SpanishRules
         ExtraCloseQuotes: "”",
         DialogueDashes: "—―–",
         MaleNameEndings: RuleSets.List("o"),
-        FemaleNameEndings: RuleSets.List("a"));
+        FemaleNameEndings: RuleSets.List("a"),
+        Flavours: FlavourWords.Spanish);
 }

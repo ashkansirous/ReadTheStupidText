@@ -15,9 +15,6 @@ namespace ReadTheStupidText.Infrastructure.Reading;
 /// </summary>
 internal sealed class NeuralSentenceSource
 {
-    // Silence between the sentences of one chunk (each was synthesized on its own).
-    private static readonly TimeSpan SentenceGap = TimeSpan.FromMilliseconds(150);
-
     private readonly SentenceAudioSource _sentences;
     private readonly ISystemLog _log;
     private readonly SemaphoreSlim _slots;
@@ -35,19 +32,20 @@ internal sealed class NeuralSentenceSource
     /// dropped and synthesized afresh. A second failure is real and propagates.
     /// </summary>
     public async Task<byte[]> JoinChunkAsync(
-        BuiltEngine engine, string chunk, VoiceInfo voice, int? activityId, CancellationToken token)
+        BuiltEngine engine, string chunk, VoiceInfo voice, int? activityId, CancellationToken token,
+        VoiceFlavour flavour = VoiceFlavour.Normal)
     {
         IReadOnlyList<string> units = SentenceUnits.Split(chunk);
-        byte[][] clips = await GetClipsAsync(engine, units, voice, activityId, token);
+        byte[][] clips = await GetClipsAsync(engine, units, voice, activityId, token, flavour);
         try
         {
-            return JoinClips(clips);
+            return JoinClips(clips, flavour);
         }
         catch (InvalidDataException ex)
         {
             _log.Warning("cached sentence audio would not join; resynthesizing the chunk", activityId, ex);
-            units.ToList().ForEach(u => _sentences.Invalidate(KeyFor(engine, u, voice)));
-            return JoinClips(await GetClipsAsync(engine, units, voice, activityId, token));
+            units.ToList().ForEach(u => _sentences.Invalidate(KeyFor(engine, u, voice, flavour)));
+            return JoinClips(await GetClipsAsync(engine, units, voice, activityId, token, flavour), flavour);
         }
     }
 
@@ -55,23 +53,25 @@ internal sealed class NeuralSentenceSource
     public void LoadIndex() => _sentences.LoadIndex();
 
     /// <summary>True when every sentence already has cached audio for this engine and voice.</summary>
-    public bool AreCached(BuiltEngine engine, IEnumerable<string> sentences, VoiceInfo voice) =>
-        sentences.All(s => _sentences.IsCached(KeyFor(engine, s, voice)));
+    public bool AreCached(BuiltEngine engine, IEnumerable<string> sentences, VoiceInfo voice, VoiceFlavour flavour) =>
+        sentences.All(s => _sentences.IsCached(KeyFor(engine, s, voice, flavour)));
 
     /// <summary>Synthesizes the given sentences into the cache without playing them (head start).</summary>
-    public Task PrepareAsync(BuiltEngine engine, IEnumerable<string> sentences, VoiceInfo voice, CancellationToken token) =>
-        Task.WhenAll(sentences.Select(s => GetSentenceAsync(engine, s, voice, null, token)));
+    public Task PrepareAsync(
+        BuiltEngine engine, IEnumerable<string> sentences, VoiceInfo voice, VoiceFlavour flavour, CancellationToken token) =>
+        Task.WhenAll(sentences.Select(s => GetSentenceAsync(engine, s, voice, null, token, flavour)));
 
     private async Task<byte[][]> GetClipsAsync(
-        BuiltEngine engine, IReadOnlyList<string> units, VoiceInfo voice, int? activityId, CancellationToken token)
+        BuiltEngine engine, IReadOnlyList<string> units, VoiceInfo voice, int? activityId, CancellationToken token,
+        VoiceFlavour flavour)
     {
-        byte[][] clips = await Task.WhenAll(units.Select(u => GetSentenceAsync(engine, u, voice, activityId, token)));
+        byte[][] clips = await Task.WhenAll(units.Select(u => GetSentenceAsync(engine, u, voice, activityId, token, flavour)));
         token.ThrowIfCancellationRequested();
         return clips;
     }
 
-    private static byte[] JoinClips(byte[][] clips) =>
-        clips.Length == 1 ? ValidClip(clips[0]) : WavFile.Concat(clips, SentenceGap);
+    private static byte[] JoinClips(byte[][] clips, VoiceFlavour flavour) =>
+        clips.Length == 1 ? ValidClip(clips[0]) : WavFile.Concat(clips, VoiceFlavours.ShapeOf(flavour).SentenceGap);
 
     private static byte[] ValidClip(byte[] clip) =>
         WavFile.IsComplete(clip, clip.LongLength) ? clip : throw new InvalidDataException("Not a WAV written by this app.");
@@ -79,28 +79,35 @@ internal sealed class NeuralSentenceSource
     // The key carries the voice, engine, language and model, so audio is never reused across them; the
     // engine and voice come from the read's own captured model.
     private Task<byte[]> GetSentenceAsync(
-        BuiltEngine engine, string sentence, VoiceInfo voice, int? activityId, CancellationToken token)
+        BuiltEngine engine, string sentence, VoiceInfo voice, int? activityId, CancellationToken token,
+        VoiceFlavour flavour)
     {
-        SentenceCacheKey key = KeyFor(engine, sentence, voice);
-        return _sentences.GetAsync(key, t => SynthesizeAsync(engine, sentence, voice.SpeakerId, t), token, activityId);
+        SentenceCacheKey key = KeyFor(engine, sentence, voice, flavour);
+        return _sentences.GetAsync(key, t => SynthesizeAsync(engine, sentence, voice.SpeakerId, flavour, t), token, activityId);
     }
 
-    private static SentenceCacheKey KeyFor(BuiltEngine engine, string sentence, VoiceInfo voice) =>
-        new(sentence, engine.Model.Kind, engine.Model.Language, voice.Id, engine.Model.RootDir, engine.Model.PackVersion);
+    private static SentenceCacheKey KeyFor(BuiltEngine engine, string sentence, VoiceInfo voice, VoiceFlavour flavour) =>
+        new(sentence, engine.Model.Kind, engine.Model.Language, voice.Id, engine.Model.RootDir, engine.Model.PackVersion, flavour);
 
     // The native Generate call cannot be interrupted, and its result may be wanted by another caller
     // that joined this synthesis, so a cancelled caller only stops waiting for a slot; a call already
     // running finishes and its audio goes to whoever is still waiting.
-    private async Task<byte[]> SynthesizeAsync(BuiltEngine engine, string sentence, int speakerId, CancellationToken token)
+    private async Task<byte[]> SynthesizeAsync(
+        BuiltEngine engine, string sentence, int speakerId, VoiceFlavour flavour, CancellationToken token)
     {
+        float[] raw;
+        int sampleRate;
+        FlavourShape shape;
         await _slots.WaitAsync(token);
         try
         {
             token.ThrowIfCancellationRequested(); // superseded while queued: never start the native call
-            OfflineTtsGeneratedAudio audio = await GenerateGuardedAsync(engine, sentence, speakerId);
+            shape = VoiceFlavours.ShapeOf(flavour);
+            OfflineTtsGeneratedAudio audio = await GenerateGuardedAsync(engine, sentence, speakerId, shape.Pace);
             try
             {
-                return WavFile.Encode(audio.Samples, audio.SampleRate);
+                raw = audio.Samples;
+                sampleRate = audio.SampleRate;
             }
             finally
             {
@@ -111,11 +118,14 @@ internal sealed class NeuralSentenceSource
         {
             _slots.Release();
         }
+
+        // The pitch shift is plain DSP: it runs after the slot is released so the next sentence can start synthesising.
+        return WavFile.Encode(PitchShifter.Shift(raw, sampleRate, shape.Semitones), sampleRate);
     }
 
     // The native call keeps running after its caller is cancelled, so it holds its own reference on the
     // engine, released when the call returns: a retired engine is disposed only once it returns.
-    private static Task<OfflineTtsGeneratedAudio> GenerateGuardedAsync(BuiltEngine engine, string text, int speakerId)
+    private static Task<OfflineTtsGeneratedAudio> GenerateGuardedAsync(BuiltEngine engine, string text, int speakerId, float pace)
     {
         if (!engine.TryAcquire())
         {
@@ -126,7 +136,7 @@ internal sealed class NeuralSentenceSource
         {
             try
             {
-                return SherpaEngineFactory.Generate(engine, text, speakerId);
+                return SherpaEngineFactory.Generate(engine, text, speakerId, pace);
             }
             finally
             {

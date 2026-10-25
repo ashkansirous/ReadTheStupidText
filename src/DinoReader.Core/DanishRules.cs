@@ -34,5 +34,6 @@ internal static class DanishRules
         ExtraOpenQuotes: "„“”«",
         ExtraCloseQuotes: "“”»",
         DialogueDashes: "–—",
-        DashTagAfterQuote: true);
+        DashTagAfterQuote: true,
+        Flavours: FlavourWords.Danish);
 }
