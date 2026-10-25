@@ -41,7 +41,6 @@ public sealed class StorytellerDefault
 	private static readonly TimeSpan CatalogRetryBackoff = TimeSpan.FromSeconds(3);
 
 	private readonly IVoicePackService _packs;
-	private readonly IPackUpdateNetwork _network;
 	private readonly IStoryLibrary _library;
 	private readonly StoryVoicing _voicing;
 	private readonly object _gate = new();
@@ -53,10 +52,9 @@ public sealed class StorytellerDefault
 	private double _lastReported = -1;
 	private StorytellerStatus _status = StorytellerStatus.None;
 
-	public StorytellerDefault(IVoicePackService packs, IPackUpdateNetwork network, IStoryLibrary library, StoryVoicing voicing)
+	public StorytellerDefault(IVoicePackService packs, IStoryLibrary library, StoryVoicing voicing)
 	{
 		_packs = packs;
-		_network = network;
 		_library = library;
 		_voicing = voicing;
 	}
@@ -242,11 +240,11 @@ public sealed class StorytellerDefault
 		Changed?.Invoke(this, EventArgs.Empty);
 	}
 
-	// A newer version of the installed pack comes in quietly, on an unmetered connection only.
+	// A newer version of the installed pack comes in quietly, like the first download: Wi-Fi or Ethernet active, even with mobile data also listed.
 	private async Task UpdateInstalledAsync()
 	{
 		InstalledVoicePack? installed = InstalledPacks().FirstOrDefault(p => p.Manifest.Id == PackConstants.StorytellerPackId);
-		if (installed is null || !_network.AllowsAutomaticUpdate)
+		if (installed is null || !WifiCapable())
 		{
 			return;
 		}

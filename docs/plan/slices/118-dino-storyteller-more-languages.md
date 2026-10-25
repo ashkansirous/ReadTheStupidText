@@ -1,6 +1,6 @@
 # Slice 118 — Dino: storyteller voices for Spanish, French and Portuguese
 
-*In progress (wave 2026-10-25), draft PR.* *Planned 2026-10-25.* Dino Reader only; RTST is not touched.
+*Built 2026-10-25, listening check and real-phone checks not yet done.* *Planned 2026-10-25.* Dino Reader only; RTST is not touched.
 
 **Batch:** 24 (storyteller characters)
 **Depends on:** Slice 116 (rosters per language; this slice moves three rosters onto Kokoro)
@@ -64,7 +64,7 @@ Source: `docs/design/dino-reader/Dino Reader Batch 24.dc.html`. The mock has no 
   only voice for its characters when that voice narrates (Spanish and Portuguese have one woman, Dora, the default narrator). The "ready" sheet and
   its sample name the narrator of the grown-up's language when the pack speaks it (`GalleryPage.StorytellerLanguage`).
 - [x] 4. `packs.yml`: `KOKORO_LANGUAGES: 'en,es,pt,zh'` in pack.json and the catalog entry, the zh files copied into the pack, `kokoro_pack_version` default 2.
-  Not run. Rules in the Infrastructure, App and `.github` `CLAUDE.md` files are left to `update-docs`.
+  Run: packs-7 released (run 40215938305; `kokoro-en-2.zip` 131,413,882 bytes, cap 150 MiB), `PackConstants.CatalogUrl` points at packs-7; self-check synthesizes every sid. Rules in the Infrastructure, App and `.github` `CLAUDE.md` files are left to `update-docs`.
 - Review fixes (high pass): espeak voices are `cmn` for Chinese (espeak has no `zh`; a Latin word in a Chinese sentence failed) and `pt-br` for Portuguese (the voices are Brazilian), both self-checked in packs.yml; `melo:` ids count as pool-switch voices so a Melo Chinese cast is recast to Kokoro (and back); a pack update that adds languages recasts the library and re-raises the ready sheet; at most one Kokoro engine stays resident (the previous language is evicted) and the failed-model key includes the language; the Persian Choices change (Mana keeps the girls when she narrates) is deliberate and tested; the ready sheet names the language the installed pack speaks.
 - [ ] 5. The user's listening check of es, pt and zh (WAVs of item 1), then the packs workflow run and the emulator check below.
 
@@ -75,3 +75,23 @@ Source: `docs/design/dino-reader/Dino Reader Batch 24.dc.html`. The mock has no 
 - Android emulator: a Spanish, French and Portuguese starter read with Kokoro characters.
 - Kill criterion: a language whose Kokoro reading is worse than Supertonic-3 in the listening check
   stays on Supertonic.
+
+**Changed while building:** the scope grew from es/fr/pt to es, pt and zh on Kokoro. fr stays on Supertonic (Kokoro has one French voice) and ja stays too (espeak phonemes are dropped). The Chinese cast moved from Melo to Kokoro: `melo:zh` casts are recast to Kokoro and back. Spanish and Portuguese girls share Dora, the only female voice and also the narrator. A language the storyteller pack serves counts as ready (no melo download). A pack v2 update recasts the library and shows the ready sheet; storyteller pack updates use `StorytellerNetworkPolicy`. Files outside Touches: `EngineCache`, `InstalledVoiceCatalog`, `IVoiceModelService`, `GalleryPage.xaml.cs`, `StorytellerDefault`, `LanguageChoice`/installer files, `CharacterRoster*`. KokoroVoiceTable: es 28/29/53, pt 42/43/44, zh 45-52 (voices.bin verified: 54 voices).
+
+**From review:** high pass 1-9 applied; medium 1, 3, 4 applied, 2 left (correct, leak-free).
+
+**Verified on the emulator (packs-7):** v2 picked up, ready sheet shown, es/pt/zh casts and audio (first chunk 77-136 s on the emulator CPU), en and fr still read, zh language row shows ready.
+
+**Note (pre-existing, not changed, RTST out of scope):** RTST's shared `PackUpdatePolicy` refuses automatic pack updates whenever cellular is listed, even on Wi-Fi.
+
+#### For CLAUDE.md
+
+- `src/ReadTheStupidText.Infrastructure/CLAUDE.md`: Kokoro is a per-language engine (`lang` "" for en, `es`, `pt-br`, `cmn`), and only one stays resident (`EngineCache`, `ModelKey` IsKokoro plus language). Keep the three engine builders in step (`SherpaEngineFactory`, Android and iOS `KokoroEngineConfig`) and the three readers' model keys. (Slice 118: docs/plan/slices/118-dino-storyteller-more-languages.md)
+- `.github/CLAUDE.md`: the `kokoro-en` v2 pack ships the zh lexicon, dict and rule fsts; the packs.yml self-check synthesizes every sid; the current packs release is packs-7 (`PackConstants.CatalogUrl`). (Slice 118: docs/plan/slices/118-dino-storyteller-more-languages.md)
+
+#### Not yet verified
+
+- The user's listening check of the es, pt and zh WAVs (`C:\Users\ashka\AppData\Local\Temp\claude\D--ReadTheStupidText\79206b78-34d3-4af8-8cda-a6d0d584a09b\scratchpad\wav\`).
+- Real-phone speed: Kokoro is about 9x slower than Supertonic on the emulator.
+- A Chinese sentence with Latin words on a device.
+- The Wi-Fi plus cellular pack-update path on a device.
