@@ -2,6 +2,9 @@
 
 `<STYLE>` = `Children's picture book illustration, soft watercolour and coloured pencil, warm gentle
 colours, simple rounded shapes, no text or letters anywhere.`
+`<SIZE>` = `Output size: small, 1K resolution, 896x1200 pixels (portrait 3:4).` It ends **every** prompt that
+asks for a picture: nothing bigger is needed, and bigger pictures use more of the usage limit.
+
 
 ## Character reference sheet (one per character)
 
@@ -9,7 +12,7 @@ colours, simple rounded shapes, no text or letters anywhere.`
 Children's picture book character reference sheet, <STYLE> Plain white background.
 <Name>: <species, size, build>, <clothes and colours>, <prop>. Full body shown from front, side and
 back, plus three small expressions: <calm>, <happy>, <surprised>. Friendly and gentle, suitable for
-children aged 3-9.
+children aged 3-9. <SIZE>
 ```
 
 ## Line-up
@@ -17,7 +20,7 @@ children aged 3-9.
 ```
 Children's picture book character line-up, <STYLE> Plain white background. Standing side by side, full
 body, facing forward: <Name 1> (<short look>), <Name 2> (<short look>), ... <Relative sizes, e.g. "Wolf
-is about twice the height of the pigs">. Each character appears exactly once.
+is about twice the height of the pigs">. Each character appears exactly once. <SIZE>
 ```
 
 ## Cover
@@ -26,7 +29,7 @@ is about twice the height of the pigs">. Each character appears exactly once.
 Make the book cover. <STYLE> Portrait 3:4. The characters, with their outfits: <Name 1: look, what
 they wear and do NOT wear>, <Name 2: ...>. Exactly <k> characters. <Scene: the main characters together, the story's key
 place>. <Villain, if any, shown silly not scary>. Keep all characters in the top 70% of the picture;
-the bottom 30% is <plain ground> with nothing important in it.
+the bottom 30% is <plain ground> with nothing important in it. <SIZE>
 ```
 
 ## Page
@@ -37,7 +40,7 @@ as in the pasted picture: <Name: look, what they wear and do NOT wear>. Scene: <
 day, place>. <Who does what, with each character's outfit in brackets>. <Who is NOT on this page>.
 Exactly <k> <characters>, each appearing once. Nobody is hurt or in danger. The whole scene sits in the
 TOP 70% of the picture; the bottom 30% is <plain ground/floor> with nothing
-important in it.
+important in it. <SIZE>
 ```
 
 ## Fresh page chat opener (first message of every page chat, with the line-up pasted)
@@ -55,7 +58,7 @@ Then send the Cover or Page template as the next message.
 
 ```
 Almost: <what is wrong, concretely>. Please redo page <n> keeping everything else: <restate the
-scene, the count and every outfit>.
+scene, the count and every outfit>. <SIZE>
 ```
 
 ## Restart (Gemini mixed scenes)
@@ -64,5 +67,5 @@ Do not argue in the same chat. Start a **new chat**, paste the line-up, send the
 
 ```
 Draw a single picture. <STYLE> Portrait 3:4. <Full scene description from scratch, every character
-with outfit, the count, indoor/outdoor, the top-70% rule.>
+with outfit, the count, indoor/outdoor, the top-70% rule.> <SIZE>
 ```

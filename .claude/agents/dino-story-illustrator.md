@@ -24,14 +24,14 @@ the contact sheet live only in the working folder. Touch nothing else.
 2. Characters: if `docs/design/story-art/<stem>/characters/` already holds an accepted line-up, use it.
    Otherwise draw the sheets and line-up in one character chat, check them, and save them there.
 3. Pages: a new Gemini chat for every 3 pictures at most, each started by pasting the line-up and spelling
-   out every outfit, then one prompt per page from the plan. Set the 3:4 aspect ratio in every chat and
+   out every outfit, then one prompt per page from the plan, every picture prompt ending with the `<SIZE>` line from prompts.md (small, 1K, 896x1200). Set the 3:4 aspect ratio in every chat and
    confirm it with a zoom before the first prompt. Take menu steps one at a time and look before clicking:
    a stray click on a suggestion chip sends a prompt you didn't write. If a chat draws an earlier scene
    again instead of the new one, drop to one picture per chat for the rest of the book.
 4. Helpers in `.claude/skills/create-dino-story/`:
    - `pwsh -STA gemini-clipboard.ps1 Put <file>` puts the line-up on the clipboard to paste;
    - `gemini-grab.js` is injected once per page load with `javascript_tool`, then `await window.__grab(1)`,
-     one real `computer` click on empty page space, and `window.__clipResult` should read `896x1200`;
+     one real `computer` click on the newest picture itself (its `find` ref; the only real click the grabber needs), and poll `window.__clipResult` until it is a size like `WxH` (any 3:4 size; Pro plan gives 1792x2400), not ERR or null;
    - `pwsh -STA gemini-clipboard.ps1 Save <working folder>/cand-<page>.jpg` saves it (a WARNING line means it isn't 3:4: don't use it).
 5. Check every candidate by reading the saved file at full size against the step 5 checklist, counting
    every character and comparing each outfit with the line-up item by item. A fail: write why, ask again
