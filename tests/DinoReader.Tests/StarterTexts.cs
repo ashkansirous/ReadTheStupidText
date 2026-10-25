@@ -14,41 +14,51 @@ internal static class StarterTexts
     public const string Pigs = """
 Once upon a time three little pigs left home to build houses of their own. Their names were Pip, Pop and Pim.
 
+They waved goodbye to their mother and set off down the road.
+---
 Pip was in a hurry. He built his house out of straw. "Now I can play all day," said Pip.
-
+---
 Pop wanted to play too. He built his house out of sticks. "Now I can play all day," said Pop.
 ---
 Pim worked slowly and carefully. He built his house out of bricks. "A strong house takes time," said Pim. "I will play when it is done."
-
+---
 One evening a big grey Wolf came walking down the road. He grinned when he saw the house of straw. He knocked on the door.
 
 "Little pig, little pig, let me come in," Wolf said.
 
 "Not by the hair of my chinny chin chin," said Pip.
 ---
-"Then I'll huff, and I'll puff, and I'll blow your house in," Wolf said. He huffed and he puffed, and the house of straw blew away. Pip ran as fast as he could to his brother's house of sticks.
+"Then I'll huff, and I'll puff, and I'll blow your house in," Wolf said. He huffed and he puffed, and the house of straw blew away.
 
+Pip ran as fast as he could to his brother's house of sticks.
+---
 The Wolf followed and knocked on the door of sticks. "Little pig, little pig, let me come in," Wolf said.
 
 "Not by the hair of my chinny chin chin," said Pop.
-
+---
 "Then I'll huff, and I'll puff, and I'll blow your house in," Wolf said. He huffed and he puffed, and the house of sticks fell down in a heap.
+
+Out ran Pip and Pop, as fast as their little legs could go.
 ---
 Pip and Pop ran all the way to the house of bricks. Pim opened the door and let them in. "Come in quickly," said Pim.
-
+---
 The Wolf marched up to the door of bricks. "Little pig, little pig, let me come in," Wolf said.
 
 "Not by the hair of my chinny chin chin," said Pim.
-
+---
 "Then I'll huff, and I'll puff, and I'll blow your house in," Wolf said. He huffed and he puffed, and he huffed and he puffed, but the house of bricks did not move at all.
+
+Inside, the three little pigs peeked out of the window.
 ---
 The Wolf was cross. "I will climb onto the roof and come down the chimney," Wolf said.
-
+---
 "He is going to come down the chimney!" said Pop.
 
 "Do not worry," said Pim. "I have put a big tub of cold, bubbly bath water under the chimney."
-
-The Wolf climbed onto the roof and slid down the chimney. Splash! He landed in the bubbly tub. Bubbles went up his nose. "Achoo!" sneezed Wolf. Soggy and soapy, he climbed out, ran all the way home, and he never blew down a house again.
+---
+The Wolf climbed onto the roof and slid down the chimney. Splash! He landed in the bubbly tub. Bubbles went up his nose. "Achoo!" sneezed Wolf.
+---
+Soggy and soapy, he climbed out, ran all the way home, and he never blew down a house again.
 ---
 "I am sorry I laughed at your bricks," said Pip.
 

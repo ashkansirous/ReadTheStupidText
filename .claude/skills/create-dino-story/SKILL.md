@@ -18,8 +18,9 @@ Per-book prompts, cast and check results live in `docs/design/story-art/<stem>.m
 ## 1. Text
 
 - Store story: a constant in `tests/DinoReader.Tests/StoreTexts.cs`. Starter (bundled): `StarterTexts.cs`.
-- 8-15 pages for a store story, split on lines holding only `---`. Short sentences, dialogue as
-  `"...," said <Name>.` so speaker attribution casts voices.
+- **Write or retell the text with the `dino-storytelling` skill first**: one action per page, 10-16
+  pages, split on lines holding only `---`, dialogue as `"...," said <Name>.` so speaker attribution
+  casts voices.
 - Read every page against rule 1 before anything else. Rewrite what fails.
 - Translations: `DINO_DUMP_PIECES=1 dotnet test tests/DinoReader.Tests` writes the pieces;
   translate into `tests/DinoReader.Tests/Starters/translations/<stem>.<lang>.json` (all 13 languages).
@@ -69,8 +70,14 @@ Prompt templates: [prompts.md](prompts.md).
 
 Every page prompt repeats: same characters, the style line, portrait 3:4, no text, **exact count**
 ("exactly three pigs, each appearing once"), every character's outfit, and **"the whole scene sits in
-the top 40% of the picture; the lower 60% is plain ground/floor with nothing important in it"**. When
-the phone is upright the story text panel covers up to 58% of the page from the bottom.
+the top 70% of the picture; the bottom 30% is plain ground/floor with nothing important in it"**. When
+the phone is upright the words panel covers up to 30% of the picture from the bottom (Slice 122; before
+it, 58%, which is why the Slice 119 pigs pictures used the top 40%).
+
+Two traps from the 16-page pigs (Slice 123): Gemini writes sound effects into a scene ("tink tink" on a
+knocked door), so say "no text, letters, words, sound effects or writing anywhere"; and a window with
+crossbars multiplies the faces behind it (four pigs in four panes), so ask for "one wide window with a
+single pane" and name who stands where, left to right.
 
 ## 5. Full-size check (every picture, no exceptions)
 
@@ -84,7 +91,7 @@ trousers or none).
 - [ ] The scene shows what the page text says, and nothing from another page.
 - [ ] Rule 1: nobody hurt, in pain, crying in fear, near fire or hot water; no teeth-bared menace.
 - [ ] No text, letters or signatures anywhere.
-- [ ] Faces and action are in the top half; the lower part is plain.
+- [ ] Faces and action are in the top 70%; the bottom 30% is plain.
 - [ ] Indoors/outdoors and time of day match the text (no grass on an indoor floor).
 
 Record each pass in the art record table (page, attempt number, why earlier attempts failed).

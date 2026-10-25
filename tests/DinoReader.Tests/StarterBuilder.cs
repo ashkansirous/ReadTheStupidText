@@ -46,7 +46,7 @@ internal static class StarterBuilder
     public static IReadOnlyDictionary<string, int> StarterVersions { get; } = new Dictionary<string, int>
     {
         [GoodEnoughFile] = 1,
-        ["three-little-pigs.dino"] = 3,
+        ["three-little-pigs.dino"] = 4,
         ["gingerbread-man.dino"] = 2,
         ["tortoise-and-hare.dino"] = 2,
     };
