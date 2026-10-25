@@ -1,6 +1,6 @@
 # Slice 124 — Dino: the words panel and its switch match the Batch 25 mock
 
-*Planned 2026-10-25.* Dino Reader only; RTST is not touched.
+*Built 2026-10-25, not yet checked on an emulator (943 tests green, Android build clean).* Dino Reader only; RTST is not touched.
 
 **Batch:** 26 (Batch 25 mock follow-ups)
 **Depends on:** Slice 122 (built, PR #335)
@@ -28,11 +28,34 @@ photo books off by default), but the look differs. The gaps are listed in
 
 ## Work
 
-- [ ] 1. Panel look and bottom alignment in `PictureTextPages` (upright `TextPanel`), with the cap unchanged.
-- [ ] 2. One switch card with a divider in `CastRows`/`CastPage`, and the sub-line chosen by the switch value.
-- [ ] 3. The two new strings in all 14 `.resx` files, and the old hint key removed if nothing else uses it.
+- [x] 1. Panel look and bottom alignment in `PictureTextPages` (upright `TextPanel`), with the cap unchanged.
+- [x] 2. One switch card with a divider in `CastRows`/`CastPage`, and the sub-line chosen by the switch value.
+- [x] 3. The two new strings in all 14 `.resx` files, and the old hint key removed if nothing else uses it.
 
 ## Verification
 
 - `dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj` and the Android build.
 - Emulator: the pigs starter upright. A short page sits at the bottom of the panel with the fade at the top, and a long page scrolls. On the cast page the one card shows both switches, and turning the words switch on or off changes its sub-line.
+
+## Changed while building
+
+- The off sub-line is "already have the words" only when the book opened with the switch stored off; otherwise a new string, "Only the pictures show" (`Cast_WordsOverPictures_HintOffPlain`, 14 locales). The hint keys `HintOn`/`HintOff` replace the old `Hint` key.
+- The fade uses the theme's TextCard colour (not fixed white) and shows only while the text is scrolled (`ScrollY > 1`).
+- Bottom alignment and label padding apply to the upright layout only.
+- One `SwitchesCard` holds both rows with the divider.
+
+## From review
+
+- High: findings 1-7 applied; 8 skipped (existing pattern).
+- Medium: 1, 2, 3, 6, 9, 10 applied; 4 accepted as a limit; 5 not a bug; 7 and 8 skipped.
+- Known limit: an illustrated book switched off in an earlier visit shows the photo-book reason.
+
+#### For CLAUDE.md
+
+- Already added to `src/DinoReader.App/CLAUDE.md` on this branch (Slice 124: docs/plan/slices/124-dino-words-panel-matches-mock.md). Nothing for the root file.
+
+#### Not yet verified
+
+- Emulator look of the panel fade, the bottom alignment and the one switch card (pigs starter upright).
+- Native read of the 3 new strings in the 13 non-English languages.
+
