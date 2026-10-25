@@ -285,3 +285,39 @@ Also read these files the selection imports:
 
 Implement: `Dino Reader Batch 25.dc.html`
 ```
+
+## Batches 26-28 mock — `Dino Reader Batch 26-28.dc.html`
+
+- **Source:** the same Claude Design project, file `Dino Reader Batch 26-28.dc.html`
+  (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+26-28.dc.html>).
+- **Copied:** 2026-10-25, verbatim from `DesignSync get_file`.
+- **Covers:** Slice 125 as changed by Slice 136 (Decision 132 changed: no cast page Animal line), Slice 132
+  (forced update, Decision 139) and Slice 133 (usage counts switch and first-run line, Decisions 140-141).
+  The imported icon `dino_reader_icons/ios/AppIcon-1024-light.png` is already here as
+  `icons/ios/AppIcon-1024-light.png`.
+
+| # | Screen | Line |
+|---|---|---|
+| — | Character animals · Slice 125 · Decision 132 (changed) | 23 |
+| 59 | Who's speaking · animal comes from the character | 27 |
+| — | Forced update and usage counts · Slices 132–133 · Decisions 139–141 | 54 |
+| 61 | Please update | 58 |
+| 62 | Grown-up mode · counts switch, update line | 76 |
+| 63 | First run · ready, with the counts line | 96 |
+
+To refresh: `DesignSync get_file` on the same project and path, overwrite this file, regenerate the table.
+
+The user's import prompt, verbatim:
+
+```
+Use the claude_design MCP (https://api.anthropic.com/v1/design/mcp, auth via /design-login) to import this project:
+https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+26-28.dc.html
+
+Focus on these files (the whole project is readable):
+- `Dino Reader Batch 26-28.dc.html`
+
+Also read these files the selection imports:
+- `dino_reader_icons/ios/AppIcon-1024-light.png`
+
+Implement: `Dino Reader Batch 26-28.dc.html`
+```

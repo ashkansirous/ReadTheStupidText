@@ -28,10 +28,11 @@ Open slices only. Finished slices (125 rows) are in [slices-done](docs/plan/note
 | 132 | Dino: a remote switchboard and a forced update | planned | | | [132-dino-remote-config-and-force-update.md](docs/plan/slices/132-dino-remote-config-and-force-update.md) |
 | 133 | Dino: anonymous usage counts, first event end to end | planned | | | [133-dino-anonymous-usage-counts.md](docs/plan/slices/133-dino-anonymous-usage-counts.md) |
 | 134 | Dino: the rest of the usage events, and a report | planned | | | [134-dino-usage-events-and-report.md](docs/plan/slices/134-dino-usage-events-and-report.md) |
+| 136 | Dino: the animal comes from the picked character (no Animal line) | planned | | | [136-dino-animal-from-character.md](docs/plan/slices/136-dino-animal-from-character.md) |
 
 Batch 25 (119-123; 119, 120, 122, 123 built, 121 planned; planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
 
-Batch 26 (124-125, planned 2026-10-25, the Batch 25 mock and the animal-identity follow-up of Slice 117): 124 first (small; matches the words panel and switch card to the mock), then 125 (both edit `CastRows`/`CastPage` and the strings). 125 also merges after PR #336 (the pigs retell, `StarterBuilder`/`StarterTexts`). Decision 132.
+Batch 26 (124-125, planned 2026-10-25, the Batch 25 mock and the animal-identity follow-up of Slice 117): 124 first (small; matches the words panel and switch card to the mock), then 125 (both edit `CastRows`/`CastPage` and the strings). 125 also merges after PR #336 (the pigs retell, `StarterBuilder`/`StarterTexts`). Decision 132. Slice 136 (the Batch 26-28 mock drops the cast page Animal line; Decision 132 changed) runs after Slice 135 merges: both edit the rosters, `AnimalSounds` and `CastPage`.
 
 Batch 27 (127-131, planned 2026-10-25, after Dino work kept resubmitting Read The Stupid Text to the Store): keep one repo, stop one product shipping the other. 127 first (small CI fixes), then 128 and 130 one after the other (both edit `release.yml` and `ship-targets.mjs`); 129 (code only) can run beside 127, 128 or 130; 131 runs alone between waves (it touches usings everywhere). Decisions 133-137.
 
