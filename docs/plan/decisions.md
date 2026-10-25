@@ -1162,3 +1162,5 @@
 129. **Making a Dino story is the project skill `create-dino-story` (Batch 25).** (Slice 120)
 130. **No Dino book shows harm or pain (Batch 25)**, in text or pictures, whatever the classic tale says;
     conflicts end gently; all 14 books audited and rewritten, translations updated, and a test scans every starter and store text for banned harm words. Bundled starters carry a content version (package manifest `version`, the same number in their store entry): an installed starter at a lower version is replaced on launch, keeping the cast and switches; a deleted one stays deleted. (Slice 119)
+131. **In Dino picture mode the words take at most 30% of the visible picture with the phone upright, and each book has a grown-up switch to hide them (Batch 25).**
+    The switch is off by default for books whose pictures already show the words (scans, photos of pages, PDFs) and on for every other book. (Slice 122)
