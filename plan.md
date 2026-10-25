@@ -190,7 +190,7 @@ Built but not verified (details in each slice file):
 - Slice 112: emulator check of chips, author picker, empty state; native read of new strings ([slice](docs/plan/slices/112-dino-store-age-author-filters.md)).
 - Dino first-run "Ready" screen says "Three stories" but four ship; a fix is in progress. (fix PR open)
 - Slice 113: emulator listening check (English and Farsi animal casts; drop pitch if robotic); system-voice fallback plays Normal; iOS reader build; native read of the strings ([slice](docs/plan/slices/113-dino-character-flavours.md)).
-- Slice 114: packs-6 run 40149528993 in progress, then bump `PackConstants.CatalogUrl`; Kokoro sample step; device listening (Kokoro English, flavours on top); Windows head storyteller; native check of the strings ([slice](docs/plan/slices/114-dino-kokoro-english-storyteller-pack.md)).
+- Slice 114: packs-6 published 2026-10-25 (run 40149528993, sample built) and `CatalogUrl` pinned to it; device listening (Kokoro English, flavours on top); Windows head storyteller; native check of the strings ([slice](docs/plan/slices/114-dino-kokoro-english-storyteller-pack.md)).
 - Slice 106: Norwegian on a Windows head via `MarianEngine` (third-party conversion, never run); en to da/fi/sv/nl/nb and back on Windows; the Norwegian packs are about 390 MB each ([slice](docs/plan/slices/106-windows-nordic-dutch-translation-packs.md)).
 - Windows has no `en-ja` translation pack (`TranslationPacks.FromEnglish` and `packs.yml` lack it), so English cannot be translated into Japanese offline on Windows; found while planning Slice 106, not yet scheduled.
 - Older unverified items (Slices 43-95 and a flaky-test note), moved verbatim: [outstanding-older](docs/plan/notes/2026-10-25-outstanding-older.md). Still open until verified.
