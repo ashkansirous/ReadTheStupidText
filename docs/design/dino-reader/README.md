@@ -210,3 +210,43 @@ Also read these files the selection imports:
 
 Implement: `Dino Reader Batch 22-23.dc.html`
 ```
+
+## Batch 24 mock — `Dino Reader Batch 24.dc.html`
+
+- **Source:** the same Claude Design project, file `Dino Reader Batch 24.dc.html`
+  (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+24.dc.html>).
+- **Copied:** 2026-10-25, verbatim from `DesignSync get_file`.
+- **Covers:** Batch 24, Slices 115-118 (Decisions 120-124). **Supersedes frames 48-49** of the
+  Batch 22-23 mock: the offer card, "Hear one", "Use Dino's first voices", the Sounds row and raw
+  voice names are gone.
+- Imports: `dino_reader_icons/ios/AppIcon-1024-light.png` is `icons/ios/AppIcon-1024-light.png`
+  here; `assets/good-enough/cover.jpg` is only the sample cover of the shipped starter and is not copied.
+
+| # | Screen | Line |
+|---|---|---|
+| — | **Storyteller voices by default · Slice 115 · Decisions 120, 121** (group) | 23 |
+| 50 | Grown-up mode · getting the voices | 27 |
+| 51 | Voices ready · every book re-cast | 56 |
+| — | **Storyteller characters · Slice 116 · Decision 122 · animal sounds · Slice 117 · Decision 123** (group) | 84 |
+| 52 | Who’s speaking · characters | 88 |
+| 53 | Pick a character | 107 |
+| 54 | Who’s speaking · Farsi characters | 136 |
+| 55 | Narrator · narrator characters | 155 |
+
+(Generated from the captions with a script; regenerate it when the file is refreshed.)
+
+Import prompt (verbatim):
+
+```
+Use the claude_design MCP (https://api.anthropic.com/v1/design/mcp, auth via /design-login) to import this project:
+https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+24.dc.html
+
+Focus on these files (the whole project is readable):
+- `Dino Reader Batch 24.dc.html`
+
+Also read these files the selection imports:
+- `assets/good-enough/cover.jpg`
+- `dino_reader_icons/ios/AppIcon-1024-light.png`
+
+Implement: `Dino Reader Batch 24.dc.html`
+```
