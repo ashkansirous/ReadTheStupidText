@@ -1,6 +1,6 @@
 namespace DinoReader.Core;
 
-// The names and plain words of the ten-voice rosters, in the order of TenVoiceSlots: three narrators (granny, grandad, whisperer), then mummy, mouse,
+// The names and plain words of the rosters built from Slot lists (ten-voice, and the Kokoro languages of Slice 118), in the order of TenVoiceSlots: three narrators (granny, grandad, whisperer), then mummy, mouse,
 // bunny, princess, bee, witch, hen, troll, giant, bear, fox, knight, piglet, chick, dragon. Each language is written for itself, not translated
 // word for word. Machine-drafted: they wait for a native speaker, like every other Dino string.
 public static partial class CharacterRoster
@@ -33,6 +33,16 @@ public static partial class CharacterRoster
         ("Galinha Vovó", "lenta e quentinha"), ("Troll Resmungão", "rude e grave"), ("Gigante Bondoso", "grande, grave e lento"),
         ("Vovô Urso", "grave e bondoso"), ("Raposa Esperta", "ligeira e sussurrada"), ("Cavaleiro Valente", "ousado e claro"),
         ("Porquinho Travesso", "pequeno e rápido"), ("Pintinho Piu", "alegre e piador"), ("Dragão Estrondoso", "estrondoso e forte"),
+    ];
+
+    private static (string Name, string Hint)[] ChineseWords() =>
+    [
+        ("故事奶奶", "温暖又温柔"), ("故事爷爷", "低沉又舒服"), ("晚安悄悄话", "轻轻的，慢慢的"),
+        ("温柔妈妈", "温暖又亲切"), ("小老鼠", "又小又尖"), ("小兔子", "软软的，蹦蹦跳"),
+        ("勇敢的公主", "清亮又明朗"), ("嗡嗡小蜜蜂", "欢快又敏捷"), ("坏脾气女巫", "沙哑又狡猾"),
+        ("老母鸡奶奶", "慢悠悠，暖洋洋"), ("爱生气的巨魔", "粗声粗气"), ("友好的大巨人", "又大又慢又低"),
+        ("熊爷爷", "低低的，慢慢的"), ("狡猾的小狐狸", "又快又悄悄"), ("勇敢的骑士", "坚定又清晰"),
+        ("淘气小猪", "又小又快"), ("快乐小鸡", "欢快又清脆"), ("隆隆大恐龙", "低沉又响亮"),
     ];
 
     private static (string Name, string Hint)[] RussianWords() =>

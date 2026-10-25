@@ -55,7 +55,7 @@ public sealed record VoiceModelPaths(
             return match;
         }
 
-        string? mappedId = KokoroVoiceTable.MapFromSupertonic(voiceId)?.Id;
+        string? mappedId = KokoroVoiceTable.MapFromSupertonic(voiceId, Language)?.Id;
         return mappedId is null ? null : AvailableVoices.FirstOrDefault(v => v.Id == mappedId);
     }
 

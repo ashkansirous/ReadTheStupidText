@@ -11,7 +11,7 @@ public static partial class CharacterRoster
     /// <summary>One place of the shared ten-voice layout: a voice key (F1-F5 women, M1-M5 men), a flavour and who plays it.</summary>
     private sealed record Slot(string Id, string VoiceKey, VoiceFlavour Flavour, CharacterKind Kind);
 
-    // The same eighteen ideas in every language that has ten voices (Supertonic-3 for ten languages, Piper for Norwegian): three narrators, then the cast.
+    // The same eighteen ideas in every language that has ten voices (Supertonic-3 for eight languages, Piper for Norwegian): three narrators, then the cast.
     // No two slots share a voice and flavour. The names and plain words of each language follow this order.
     private static readonly Slot[] TenVoiceSlots =
     [
@@ -35,22 +35,22 @@ public static partial class CharacterRoster
         new("dragon", "M3", VoiceFlavour.Big, CharacterKind.Speaker),
     ];
 
-    private static IReadOnlyList<StorytellerCharacter> Norwegian() => FromSlots(NorwegianVoiceId, NorwegianWords());
+    private static IReadOnlyList<StorytellerCharacter> Norwegian() => FromSlots(TenVoiceSlots, NorwegianVoiceId, NorwegianWords());
 
     private static IReadOnlyList<StorytellerCharacter> SupertonicRoster(AppLanguage language) =>
-        FromSlots(key => SupertonicVoiceTable.IdPrefix + key, WordsOf(language));
+        FromSlots(TenVoiceSlots, key => SupertonicVoiceTable.IdPrefix + key, WordsOf(language));
 
     private static string NorwegianVoiceId(string key) =>
         NorwegianVoices.IdPrefix + NorwegianCodes[(key[0] == 'F' ? 0 : 5) + (key[1] - '1')];
 
-    private static IReadOnlyList<StorytellerCharacter> FromSlots(Func<string, string> voiceOf, (string Name, string Hint)[] words)
+    private static IReadOnlyList<StorytellerCharacter> FromSlots(Slot[] slots, Func<string, string> voiceOf, (string Name, string Hint)[] words)
     {
-        if (words.Length != TenVoiceSlots.Length)
+        if (words.Length != slots.Length)
         {
-            throw new InvalidOperationException($"A ten-voice roster needs {TenVoiceSlots.Length} entries, got {words.Length}.");
+            throw new InvalidOperationException($"A roster of {slots.Length} places needs {slots.Length} entries, got {words.Length}.");
         }
 
-        return TenVoiceSlots
+        return slots
             .Select((s, i) => new StorytellerCharacter(
                 s.Id, voiceOf(s.VoiceKey), s.Flavour, s.VoiceKey[0] == 'F' ? Gender.Female : Gender.Male, s.Kind, words[i].Name, words[i].Hint))
             .ToList();
@@ -59,8 +59,6 @@ public static partial class CharacterRoster
     private static (string Name, string Hint)[] WordsOf(AppLanguage language) => language switch
     {
         AppLanguage.French => FrenchWords(),
-        AppLanguage.Spanish => SpanishWords(),
-        AppLanguage.Portuguese => PortugueseWords(),
         AppLanguage.Russian => RussianWords(),
         AppLanguage.Japanese => JapaneseWords(),
         AppLanguage.Arabic => ArabicWords(),

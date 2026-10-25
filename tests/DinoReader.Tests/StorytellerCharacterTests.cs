@@ -10,7 +10,6 @@ public partial class StorytellerCharacterTests
 {
     private const int MinCharacters = 16;
     private const int MaxCharacters = 20;
-    private const int OneVoiceCharacters = 10;
     private const string ChineseCode = "zh";
     private const string PacksWorkflow = ".github/workflows/packs.yml";
 
@@ -41,10 +40,9 @@ public partial class StorytellerCharacterTests
 
     private static HashSet<string> EngineVoices(string language) => UiLanguage.Resolve(language) switch
     {
-        "en" => KokoroVoiceTable.Voices.Select(v => v.Id).ToHashSet(),
+        "en" or "es" or "pt" or ChineseCode => KokoroVoiceTable.VoicesFor(UiLanguage.Resolve(language)).Select(v => v.Id).ToHashSet(),
         "nb" => NorwegianVoices.Ids.ToHashSet(),
         "fa" => PackVoiceIds("piper:fa-"),
-        ChineseCode => PackVoiceIds("melo:"),
         _ => SupertonicVoiceTable.Voices.Select(v => v.Id).ToHashSet(),
     };
 
@@ -62,14 +60,6 @@ public partial class StorytellerCharacterTests
     public void A_roster_has_sixteen_to_twenty_characters_and_narrators(string language)
     {
         IReadOnlyList<StorytellerCharacter> roster = CharacterRoster.For(language);
-
-        // Chinese has one voice, so only its nine flavours (and one narrator) can sound different.
-        if (language == ChineseCode)
-        {
-            Assert.Equal(OneVoiceCharacters, roster.Count);
-            Assert.Single(CharacterRoster.Narrators(language));
-            return;
-        }
 
         Assert.InRange(roster.Count, MinCharacters, MaxCharacters);
         Assert.InRange(CharacterRoster.Narrators(language).Count, 2, 3);
@@ -124,6 +114,10 @@ public partial class StorytellerCharacterTests
     {
         Assert.All(CharacterRoster.For("en"), c => Assert.Equal(KokoroVoiceTable.IsFemale(c.VoiceId) ? Gender.Female : Gender.Male, c.Gender));
         Assert.All(CharacterRoster.For("fr"), c => Assert.Equal(SupertonicVoiceTable.IsFemale(c.VoiceId) ? Gender.Female : Gender.Male, c.Gender));
+        foreach (string language in new[] { "es", "pt", ChineseCode })
+        {
+            Assert.All(CharacterRoster.For(language), c => Assert.Equal(KokoroVoiceTable.IsFemale(c.VoiceId) ? Gender.Female : Gender.Male, c.Gender));
+        }
         Assert.All(CharacterRoster.For("nb"), c => Assert.Equal(NorwegianVoices.IsFemale(c.VoiceId) == true ? Gender.Female : Gender.Male, c.Gender));
     }
 
@@ -245,9 +239,11 @@ public partial class StorytellerCharacterTests
     [Fact]
     public void A_single_voice_language_still_casts_through_flavours()
     {
-        var roster = CharacterRoster.For(ChineseCode);
+        // Chinese before the storyteller pack lands: the one Melo voice speaks every character.
+        var melo = new[] { new VoiceOption(CharacterRoster.ChineseVoiceId, Gender.Unknown) };
+        var roster = CharacterRoster.Adapt(CharacterRoster.For(ChineseCode), melo);
         string narrator = CharacterRoster.ChineseVoiceId;
-        var choices = CharacterRoster.Choices(CharacterRoster.Speakers(ChineseCode), narrator);
+        var choices = CharacterRoster.Choices(roster.Where(c => c.Kind == CharacterKind.Speaker).ToList(), narrator);
         var characters = new[] { C("a", "小兔子", Gender.Unknown, 5), C("b", "小老鼠", Gender.Unknown, 4) };
 
         VoiceCast cast = CastCharacters.Cast(characters, choices, roster, narrator, c => FlavourGuess.Guess(c.Name, LanguageRules.For(ChineseCode)));
@@ -263,7 +259,57 @@ public partial class StorytellerCharacterTests
         string narrator = "piper:fa-ganji-adabi";
 
         Assert.DoesNotContain(CharacterRoster.Choices(speakers, narrator), c => c.VoiceId == narrator);
-        Assert.Equal(CharacterRoster.Speakers(ChineseCode), CharacterRoster.Choices(CharacterRoster.Speakers(ChineseCode), CharacterRoster.ChineseVoiceId));
+        var melo = new[] { new VoiceOption(CharacterRoster.ChineseVoiceId, Gender.Unknown) };
+        var chinese = CharacterRoster.Adapt(CharacterRoster.For(ChineseCode), melo).Where(c => c.Kind == CharacterKind.Speaker).ToList();
+        Assert.Equal(chinese, CharacterRoster.Choices(chinese, CharacterRoster.ChineseVoiceId));
+    }
+
+    [Fact]
+    public void Choices_keep_the_girls_in_the_only_persian_womans_voice_when_she_narrates()
+    {
+        // Decided on purpose (Slice 118): Mana is Persian's one woman's voice, so when she narrates the female characters keep her (a flavour apart) rather than vanish.
+        string mana = "piper:fa-mana";
+        var speakers = CharacterRoster.Speakers("fa");
+
+        var choices = CharacterRoster.Choices(speakers, mana);
+
+        Assert.Equal(speakers.Where(c => c.Gender == Gender.Female).Select(c => c.Id), choices.Where(c => c.VoiceId == mana).Select(c => c.Id));
+        Assert.Contains(choices, c => c.Gender == Gender.Male);
+    }
+
+    [Theory]
+    [InlineData("es", "kokoro:ef_dora")]
+    [InlineData("pt", "kokoro:pf_dora")]
+    public void Choices_keep_the_only_womans_voice_for_the_girls_when_she_narrates(string language, string dora)
+    {
+        var speakers = CharacterRoster.Speakers(language);
+
+        var choices = CharacterRoster.Choices(speakers, dora);
+
+        Assert.Equal(speakers.Where(c => c.Gender == Gender.Female).Select(c => c.Id), choices.Where(c => c.VoiceId == dora).Select(c => c.Id));
+        Assert.Contains(choices, c => c.Gender == Gender.Male);
+    }
+
+    [Theory]
+    [InlineData("es", 3)]
+    [InlineData("pt", 3)]
+    [InlineData(ChineseCode, 8)]
+    public void The_kokoro_languages_use_every_voice_of_their_table(string language, int voices)
+    {
+        Assert.Equal(voices, KokoroVoiceTable.VoicesFor(language).Count);
+        Assert.Equal(voices, CharacterRoster.For(language).Select(c => c.VoiceId).Distinct().Count());
+    }
+
+    [Fact]
+    public void Spanish_and_portuguese_before_the_storyteller_pack_map_onto_the_supertonic_voices()
+    {
+        var supertonic = SupertonicVoiceTable.VoicesFor("es")
+            .Select(v => new VoiceOption(v.Id, SupertonicVoiceTable.IsFemale(v.Id) ? Gender.Female : Gender.Male)).ToList();
+
+        IReadOnlyList<StorytellerCharacter> adapted = CharacterRoster.Adapt(CharacterRoster.For("es"), supertonic);
+
+        Assert.NotEmpty(adapted);
+        Assert.All(adapted, c => Assert.StartsWith(SupertonicVoiceTable.IdPrefix, c.VoiceId, StringComparison.Ordinal));
     }
 
     [Fact]

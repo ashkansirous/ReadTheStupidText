@@ -119,7 +119,7 @@ internal static class IosTtsEngine
                 ConfigureMelo(ref config, paths.RootDir);
                 break;
             case VoiceEngineKind.Kokoro:
-                KokoroEngineConfig.Configure(ref config, paths.RootDir);
+                KokoroEngineConfig.Configure(ref config, paths.RootDir, paths.Language);
                 break;
             default:
                 throw new NotSupportedException($"No engine for voice model kind {paths.Kind}.");

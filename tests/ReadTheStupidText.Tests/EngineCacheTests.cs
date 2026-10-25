@@ -1,4 +1,5 @@
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Domain.Reading;
 
 namespace ReadTheStupidText.Tests;
 
@@ -72,6 +73,25 @@ public class EngineCacheTests
 
     private static Engine Create(Engine? previous, VoiceModelPaths paths) =>
         previous is not null && previous.TryAcquire() ? new Engine(paths, previous) : new Engine(paths);
+
+    [Fact]
+    public void A_kokoro_pack_gets_one_engine_per_language_and_only_the_latest_stays_resident()
+    {
+        int loads = 0;
+        using var cache = new EngineCache<Engine>((prev, p) => { loads++; return Create(prev, p); });
+        VoiceModelPaths Kokoro(string language) => new("/k", VoiceEngineKind.Kokoro, language, PackVersion: "2");
+
+        Engine spanish = cache.Acquire(Kokoro("es"))!;
+        Engine spanishAgain = cache.Acquire(Kokoro("es"))!;
+        Engine portuguese = cache.Acquire(Kokoro("pt"))!;
+
+        Assert.Same(spanish, spanishAgain);
+        Assert.NotSame(spanish, portuguese);
+        Assert.Equal("pt", portuguese.Model.Language);
+        Assert.Equal(2, loads);
+        Assert.Equal(1, cache.Count);
+        Assert.Equal(2, spanish.References); // the cache's reference is given back; the two callers' remain
+    }
 
     [Fact]
     public void The_same_model_folder_and_version_is_loaded_once_and_shared()

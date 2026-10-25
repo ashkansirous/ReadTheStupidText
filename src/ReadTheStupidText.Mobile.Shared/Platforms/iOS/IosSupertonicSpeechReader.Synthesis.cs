@@ -172,7 +172,7 @@ public sealed partial class IosSupertonicSpeechReader
     // Returns the engine for the language's current model with a reference taken for the caller,
     // who must Release() it. A different pack folder, version or engine kind is another engine (a
     // pack update is a new folder, so it is picked up here); the same folder under another
-    // language reuses the model. An engine nobody asks for any more is disposed once the last
+    // language reuses the model (a Kokoro pack excepted: each language has an engine of its own). An engine nobody asks for any more is disposed once the last
     // read or generation holding it lets go.
     private IosBuiltEngine? AcquireEngine(string? voiceId = null)
     {
@@ -203,7 +203,10 @@ public sealed partial class IosSupertonicSpeechReader
         }
     }
 
-    private static string ModelKey(VoiceModelPaths paths) => $"{paths.RootDir}|{paths.Kind}|{paths.PackVersion}|{paths.ModelDir}";
+    private static string ModelKey(VoiceModelPaths paths) => $"{paths.RootDir}|{paths.Kind}|{paths.PackVersion}|{paths.ModelDir}|{KokoroLanguageOf(paths)}";
+
+    // A Kokoro engine is configured for one language (Slice 118), so a failure to build one is that language's only; any other engine kind has no language in its key.
+    private static string KokoroLanguageOf(VoiceModelPaths paths) => paths.Kind == VoiceEngineKind.Kokoro ? paths.Language : string.Empty;
 
     // A pack that is "ready" but cannot be loaded: the model re-checks the installed packs.
     private void RefreshModelInBackground() =>

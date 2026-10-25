@@ -1,3 +1,4 @@
+using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Domain.Reading;
 
 namespace DinoReader.Core;
@@ -66,10 +67,11 @@ public static class CastEditor
         pool.Count > 0 && pool.All(v => IsStorytellerSwitchVoice(v.Id))
         && cast.Any(m => IsStorytellerSwitchVoice(m.VoiceId) && IsOutside(m, pool) && !StaysPicked(m, pool));
 
-    // The two engine families a storyteller pack swaps between for English.
+    // The engine families a storyteller pack swaps between: Supertonic and Kokoro, and (Slice 118) the Chinese Melo voice, which Kokoro replaces for Chinese.
     private static bool IsStorytellerSwitchVoice(string voiceId) =>
         voiceId.StartsWith(SupertonicVoiceTable.IdPrefix, StringComparison.Ordinal)
-        || voiceId.StartsWith(KokoroVoiceTable.IdPrefix, StringComparison.Ordinal);
+        || voiceId.StartsWith(KokoroVoiceTable.IdPrefix, StringComparison.Ordinal)
+        || voiceId.StartsWith(VoiceChoices.MeloIdPrefix, StringComparison.Ordinal);
 
     /// <summary>
     /// The recast of a cast whose pool changed (Slice 114) with the grown-up's explicit picks put back: a character marked <see cref="CastMember.Edited"/>

@@ -6,8 +6,8 @@ namespace DinoReader.Core;
 
 /// <summary>
 /// The storyteller characters of every language Dino reads (Slice 116, Decision 122): 16 to 20 per language, a few of them narrators,
-/// each a real voice of that language's engine (Kokoro for English, Supertonic-3 for fr/es/pt/ru/ja/ar/da/fi/sv/nl, the Piper
-/// packs for Farsi and Norwegian, Melo for Chinese) plus a flavour, with a name and a few plain words written for the language.
+/// each a real voice of that language's engine (Kokoro for English, Spanish, Portuguese and Chinese, Supertonic-3 for fr/ru/ja/ar/da/fi/sv/nl,
+/// the Piper packs for Farsi and Norwegian) plus a flavour, with a name and a few plain words written for the language.
 /// Pure data: the per-language lists are in the <c>CharacterRoster*.cs</c> files. A language the pack serves with other voices than
 /// the roster names (English before the storyteller pack lands, when Supertonic speaks it) gets the roster mapped onto the voices
 /// it has (<see cref="Adapt"/>), so a child never sees an engine voice.
@@ -35,14 +35,16 @@ public static partial class CharacterRoster
     {
         AppLanguage.English => English(),
         AppLanguage.Persian => Persian(),
-        AppLanguage.Chinese => Chinese(),
+        AppLanguage.Chinese => KokoroRoster(language),
+        AppLanguage.Spanish => KokoroRoster(language),
+        AppLanguage.Portuguese => KokoroRoster(language),
         AppLanguage.Norwegian => Norwegian(),
         _ => SupertonicRoster(language),
     };
 
     /// <summary>
     /// The part of <paramref name="roster"/> that can be spoken with the voices of <paramref name="pool"/>. Characters whose voice the pool has stay as they are.
-    /// When the pool has none of the roster's voices (English read by Supertonic until the storyteller pack lands) every voice is mapped to the pool's voice of the same gender
+    /// When the pool has none of the roster's voices (English, Spanish, Portuguese and Chinese read by their other engines until the storyteller pack lands) every voice is mapped to the pool's voice of the same gender
     /// at the same place, and a character that then sounds like an earlier one (same voice and flavour) is dropped. An empty pool gives an empty list.
     /// </summary>
     public static IReadOnlyList<StorytellerCharacter> Adapt(IReadOnlyList<StorytellerCharacter> roster, IReadOnlyList<VoiceOption> pool)
@@ -75,12 +77,19 @@ public static partial class CharacterRoster
 
     /// <summary>
     /// The speakers a story's characters can be given: the narrator's voice is left out, so no character sounds like the narrator. A pool with only the
-    /// narrator's voice (Chinese has one) keeps it, the flavours telling the characters apart.
+    /// narrator's voice (the Chinese Melo voice, when the storyteller pack is not installed, is one) keeps it, the flavours telling the characters apart.
+    /// So does a gender whose only voice is the narrator's (Spanish and Portuguese have one woman's voice, Slice 118): its characters keep that voice, a flavour apart from the narrator.
     /// </summary>
     public static IReadOnlyList<StorytellerCharacter> Choices(IReadOnlyList<StorytellerCharacter> speakers, string narratorVoiceId)
     {
         var others = speakers.Where(c => c.VoiceId != narratorVoiceId).ToList();
-        return others.Count > 0 ? others : speakers;
+        if (others.Count == 0)
+        {
+            return speakers;
+        }
+
+        var left = others.Select(c => c.Gender).ToHashSet();
+        return speakers.Where(c => c.VoiceId != narratorVoiceId || !left.Contains(c.Gender)).ToList();
     }
 
     /// <summary>
