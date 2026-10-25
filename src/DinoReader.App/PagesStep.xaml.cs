@@ -544,6 +544,7 @@ public partial class PagesStep : ContentView
 		{
 			string copy = await import.CopyIntoAsync(location, _session!.WorkFolder);
 			Draft.AddPageDraft(PageDraft.ForPicture(copy));
+			Draft.MarkPicturesAsPages();
 			return true;
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException)
@@ -626,6 +627,7 @@ public partial class PagesStep : ContentView
 			UseTitleIfBlank(title);
 			_session.FileName = Path.GetFileName(path);
 			Draft.AddPageDrafts(drafts);
+			Draft.MarkPicturesAsPages();
 			Refresh();
 			return true;
 		}

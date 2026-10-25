@@ -51,6 +51,12 @@ public sealed class StoryDraft(Story original)
 	/// <summary>Whether animals make their sounds in the reading (Slice 117), set on the cast page.</summary>
 	public bool AnimalSoundsOn { get; set; } = original.AnimalSoundsOn;
 
+	/// <summary>The grown-up's choice to show the words over the pictures (Slice 122); null keeps the default for the book.</summary>
+	public bool? WordsOverPictures { get; set; } = original.WordsOverPictures;
+
+	/// <summary>Records that pages were built from camera photos, gallery photos of pages or PDF pages (Slice 122): their words are already in the pictures, so words over pictures defaults off. A choice the grown-up already made stays.</summary>
+	public void MarkPicturesAsPages() => WordsOverPictures ??= false;
+
 	/// <summary>The casts of the other reading languages as the cast screen last left them (Slice 108); written with Save.</summary>
 	public IReadOnlyDictionary<string, IReadOnlyList<CastMember>>? LanguageCasts { get; set; } = original.LanguageCasts;
 
@@ -215,6 +221,7 @@ public sealed class StoryDraft(Story original)
 		LanguageCasts = RecastNeeded ? null : LanguageCasts,
 		CharacterMerges = Merges,
 		AnimalSoundsOn = AnimalSoundsOn,
+		WordsOverPictures = WordsOverPictures,
 	};
 
 	public bool HasPageImages => Pages.Any(p => p.ImageFile is not null);

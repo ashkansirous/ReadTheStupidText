@@ -78,7 +78,7 @@ public sealed class StoryActions(IStoryLibrary library, IServiceProvider service
 		Story current = await library.GetAsync(edited.Id) ?? throw new InvalidOperationException("The story is no longer saved.");
 		await library.UpdateAsync(current with
 		{
-			Cast = edited.Cast, LanguageCasts = edited.LanguageCasts, CharacterMerges = edited.Merges, AnimalSoundsOn = edited.AnimalSoundsOn,
+			Cast = edited.Cast, LanguageCasts = edited.LanguageCasts, CharacterMerges = edited.Merges, AnimalSoundsOn = edited.AnimalSoundsOn, WordsOverPictures = edited.WordsOverPictures,
 		});
 	}
 

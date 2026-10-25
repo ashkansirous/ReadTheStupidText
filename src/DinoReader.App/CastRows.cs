@@ -69,21 +69,26 @@ internal static class CastRows
 	}
 
 	/// <summary>The "Animal sounds" card under the cast card (mock frames 52 and 54, Slice 117): the story's switch, on by default. With no sounding animal in the story the hint says so and the switch is dimmed (it keeps its stored value).</summary>
-	public static View AnimalSoundsRow(bool hasAnimals, bool on, Action<bool> changed)
+	public static View AnimalSoundsRow(bool hasAnimals, bool on, Action<bool> changed) =>
+		SwitchCard(AppResources.Cast_AnimalSounds_Title, hasAnimals ? AppResources.Cast_AnimalSounds_Hint : AppResources.Cast_AnimalSounds_None, on: on, enabled: hasAnimals, changed: changed);
+
+	/// <summary>The "Show the words over the pictures" card (Slice 122), under the animal-sounds card, for a book with pictures.</summary>
+	public static View WordsOverPicturesRow(bool on, Action<bool> changed) =>
+		SwitchCard(AppResources.Cast_WordsOverPictures_Title, AppResources.Cast_WordsOverPictures_Hint, on: on, enabled: AlwaysEnabled, changed: changed);
+
+	private const bool AlwaysEnabled = true;
+
+	private static View SwitchCard(string title, string hint, bool on, bool enabled, Action<bool> changed)
 	{
-		var toggle = new ToggleSwitch { IsOn = on, IsEnabled = hasAnimals, AccessibleName = AppResources.Cast_AnimalSounds_Title, VerticalOptions = LayoutOptions.Center };
+		var toggle = new ToggleSwitch { IsOn = on, IsEnabled = enabled, AccessibleName = title, VerticalOptions = LayoutOptions.Center };
 		toggle.Toggled += (_, _) => changed(toggle.IsOn);
 		var text = new VerticalStackLayout
 		{
 			VerticalOptions = LayoutOptions.Center,
 			Children =
 			{
-				CastText.InOwnScript(new Label { Text = AppResources.Cast_AnimalSounds_Title, FontSize = 15, FontAttributes = FontAttributes.Bold }),
-				CastText.InOwnScript(new Label
-				{
-					Text = hasAnimals ? AppResources.Cast_AnimalSounds_Hint : AppResources.Cast_AnimalSounds_None,
-					FontSize = 12.5, TextColor = DinoTokens.Get(DinoTokens.Body),
-				}),
+				CastText.InOwnScript(new Label { Text = title, FontSize = 15, FontAttributes = FontAttributes.Bold }),
+				CastText.InOwnScript(new Label { Text = hint, FontSize = 12.5, TextColor = DinoTokens.Get(DinoTokens.Body) }),
 			},
 		};
 		var row = new Grid

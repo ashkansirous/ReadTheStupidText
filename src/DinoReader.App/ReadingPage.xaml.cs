@@ -203,7 +203,7 @@ public partial class ReadingPage : ContentPage
 		_translatedDisplay = true;
 		_shownPages = translated.Pages;
 		ApplyTitle(title, mine);
-		var scans = story.HasPictures ? new ScanSource(translated.Pages, file => _library.TryResolveFile(story.Id, file)) : null;
+		var scans = story.HasPictures ? new ScanSource(translated.Pages, file => _library.TryResolveFile(story.Id, file), PictureTextBook.ShowsWordsOverPictures(story)) : null;
 		var content = new ReadingContent(translated.Text, translated.Sentences, DinoFonts.ReadingFor(mine), DinoFonts.IsRightToLeft(mine), scans);
 		ShowContent(content, story);
 	}
@@ -245,7 +245,7 @@ public partial class ReadingPage : ContentPage
 
 	// A story with pictures draws its real pages in picture mode; one without keeps the generated pages.
 	private ScanSource? ScansOf(Story story) =>
-		story.HasPictures ? new ScanSource(story.Pages, file => _library.TryResolveFile(story.Id, file)) : null;
+		story.HasPictures ? new ScanSource(story.Pages, file => _library.TryResolveFile(story.Id, file), PictureTextBook.ShowsWordsOverPictures(story)) : null;
 
 	// Slice 98 (mock screen 35): a picture + text book held sideways has the title on the top bar beside the back button
 	// (one line, ellipsis) and no page dots, to save height.

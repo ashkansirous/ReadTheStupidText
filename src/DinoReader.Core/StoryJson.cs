@@ -66,6 +66,7 @@ public static class StoryJson
         Recordings = ToRecordingFiles(s.Recordings, s.Pages.Count),
         UseRecordings = s.UseRecordings && s.Recordings is { Count: > 0 } ? true : null,
         AnimalSounds = s.AnimalSoundsOn ? null : false,
+        WordsOverPictures = s.WordsOverPictures,
         SourceId = s.SourceId,
         Translations = ToTranslationFiles(s.Translations),
         LanguageCasts = ToLanguageCastFiles(s.LanguageCasts),
@@ -86,7 +87,7 @@ public static class StoryJson
             f.CoverStyle, f.CoverColourIndex, f.NarratorVoiceId ?? string.Empty, ParseMode(f.PreferredMode), CleanMerges(f.Merges), f.Translate,
             f.CoverFile, f.CoverPageIndex, StoryIds.IsValid(f.SourceId) ? f.SourceId : null, CleanTranslations(f.Translations),
             CleanLanguageCasts(f.LanguageCasts, f.Language), f.ShowOriginal == true,
-            CleanRecordings(f.Recordings, f.Pages.Count, f.Language), f.UseRecordings == true, f.AnimalSounds != false);
+            CleanRecordings(f.Recordings, f.Pages.Count, f.Language), f.UseRecordings == true, f.AnimalSounds != false, f.WordsOverPictures);
     }
 
     private static List<RecordingFile>? ToRecordingFiles(IReadOnlyDictionary<int, PageRecording>? recordings, int pageCount)
@@ -327,6 +328,10 @@ public static class StoryJson
 
         /// <summary>The per-story "Animal sounds" switch (Slice 117); absent when on (the default).</summary>
         public bool? AnimalSounds { get; set; }
+
+        /// <summary>The per-book "Show the words over the pictures" switch (Slice 122); absent when never set.</summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? WordsOverPictures { get; set; }
 
         public string? SourceId { get; set; }
         public Dictionary<string, Dictionary<string, string>>? Translations { get; set; }
