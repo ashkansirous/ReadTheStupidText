@@ -84,3 +84,5 @@ New strings (all 14 locales): "Voices for {0}" (the chip).
 
 - Core: a story has one cast per language (`Story.Cast` is the story language's, `Story.LanguageCasts` the others', keyed by `BundledTranslations.Key`); always go through `CastIn`/`WithCastIn`, never read `Cast` for another language. Merges are the story's and shared. `story.json` carries `LanguageCasts` (optional, `schemaVersion` stays 1); a damaged language entry is dropped, not the story. (Slice 108: docs/plan/slices/108-dino-cast-per-reading-language.md)
 - App: the cast screen edits the cast of `StoryVoicing.ReadingLanguage` (the spoken language), saved through `CastEditor.Open`/`Close`; a translated read uses that language's cast and `NarratorIn` (the story's narrator mapped into its pack), and `ReadingSession` stores a missing language cast on the first read. Only `ReadingPage` switches `SpokenLanguage`, never the cast screen. (Slice 108: docs/plan/slices/108-dino-cast-per-reading-language.md)
+
+*Emulator check 2026-10-25 (Android emulator, Debug arm64, main 7846b1c): PASS. Farsi chip and separate casts work.*

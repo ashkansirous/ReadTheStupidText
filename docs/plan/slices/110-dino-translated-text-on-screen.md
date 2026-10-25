@@ -80,3 +80,5 @@ New strings (all 14 locales): "This book", "Show original text", "Show the {0} w
 - Emulator: "Show original text" round-trip brings back English and the OCR boxes (frame 43).
 - Native-speaker check of the machine-drafted `Book_*` strings in all 14 locales.
 - Starter book titles may stay English where the tables lack titles.
+
+*Emulator check 2026-10-25 (Android emulator, Debug arm64, main 7846b1c): PASS. Farsi RTL text and title; "Show original" round-trip works.*

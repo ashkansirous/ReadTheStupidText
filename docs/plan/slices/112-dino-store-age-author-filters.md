@@ -77,3 +77,5 @@ New strings (all 14 locales): "All ages", "5 & under", "6–8", "9–12", "Autho
 - `GET https://dinoreader.sirous.uk/api/stories` lists the age and author fields after the upload.
 - Android emulator: the "6-8" chip and an author filter narrow the list; airplane mode, reopen the store:
   filtering still works on the cached list.
+
+*Emulator check 2026-10-25 (Android emulator, Debug arm64, main 7846b1c): PASS. Chips (5 & under / 6-8 / 9-12), author picker and empty state work.*

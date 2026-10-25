@@ -102,3 +102,5 @@ New strings (all 14 locales): "Record", "Read the words on this page aloud, then
 - Pause, skip and page turn while a recording plays; a book with a recorded page between generated pages reads on correctly.
 - Native-speaker check of the machine-drafted `Rec_*` strings in all 14 locales.
 - A store story built with `DINO_BUILD_STORE=1` contains no `rec-*` file (covered by a test of the writer; the build itself was not run).
+
+*Emulator check 2026-10-25 (Android emulator, Debug arm64, main 7846b1c): PASS. Record/replay and highlight work.*
