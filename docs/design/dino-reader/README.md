@@ -250,3 +250,38 @@ Also read these files the selection imports:
 
 Implement: `Dino Reader Batch 24.dc.html`
 ```
+
+## Batch 25 mock — `Dino Reader Batch 25.dc.html`
+
+- **Source:** the same Claude Design project, file `Dino Reader Batch 25.dc.html`
+  (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+25.dc.html>).
+- **Copied:** 2026-10-25, verbatim from `DesignSync get_file`.
+- **Covers:** Batch 25, Slice 122 (Decision 127). **Supersedes frame 34** (58% panel cap) of the
+  Batch 17-18 mock. Slices 119-121 change no screens.
+- Imports: `assets/three-little-pigs/3.jpg` and `5.jpg` are the starter's page pictures, already in
+  the repo at `tests/DinoReader.Tests/Starters/three-little-pigs/pictures/` (not copied again).
+
+| # | Screen | Line |
+|---|---|---|
+| — | **Words over pictures · Slice 122 · Decision 127** (group) | 23 |
+| 56 | Upright · panel at most 30% | 27 |
+| 57 | Words switched off · picture only | 44 |
+| 58 | Who’s speaking · photo book, words off | 58 |
+
+(Generated from the captions with a script; regenerate it when the file is refreshed.)
+
+Import prompt (verbatim):
+
+```
+Use the claude_design MCP (https://api.anthropic.com/v1/design/mcp, auth via /design-login) to import this project:
+https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+25.dc.html
+
+Focus on these files (the whole project is readable):
+- `Dino Reader Batch 25.dc.html`
+
+Also read these files the selection imports:
+- `assets/three-little-pigs/3.jpg`
+- `assets/three-little-pigs/5.jpg`
+
+Implement: `Dino Reader Batch 25.dc.html`
+```
