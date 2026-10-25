@@ -43,5 +43,6 @@ internal static class ArabicRules
         MaleVerbs: MaleVerbs,
         FemaleVerbs: FemaleVerbs,
         FemaleNameEndings: RuleSets.List("ة"),
-        VerbPrefix: "[وف]?");
+        VerbPrefix: "[وف]?",
+        Flavours: FlavourWords.Arabic);
 }

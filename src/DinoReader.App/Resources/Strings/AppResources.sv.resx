@@ -166,6 +166,19 @@
   <data name="Rec_NoMic" xml:space="preserve"><value>Tillåt mikrofonen för Dino Book Reader i enhetens inställningar och försök igen.</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>Inspelningen fungerade inte. Försök igen.</value></data>
   <!-- /Slice 111 -->
+  <!-- Slice 113 -->
+  <data name="Cast_Pair" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="Cast_Sounds" xml:space="preserve"><value>Ljud</value></data>
+  <data name="Cast_Flavour_Normal" xml:space="preserve"><value>Normal</value></data>
+  <data name="Cast_Flavour_Small" xml:space="preserve"><value>Liten</value></data>
+  <data name="Cast_Flavour_Big" xml:space="preserve"><value>Stor</value></data>
+  <data name="Cast_Flavour_Bouncy" xml:space="preserve"><value>Studsig</value></data>
+  <data name="Cast_Flavour_Sleepy" xml:space="preserve"><value>Sömnig</value></data>
+  <data name="Cast_FlavourHint_Small" xml:space="preserve"><value>högre, lite snabbare</value></data>
+  <data name="Cast_FlavourHint_Big" xml:space="preserve"><value>djupare, långsammare</value></data>
+  <data name="Cast_FlavourHint_Bouncy" xml:space="preserve"><value>högre, snabb</value></data>
+  <data name="Cast_FlavourHint_Sleepy" xml:space="preserve"><value>långsam, lite lägre</value></data>
+  <!-- /Slice 113 -->
   <data name="Add_Scan" xml:space="preserve"><value>Skanna sidor</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Behåller sidbilderna</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Foton</value></data>

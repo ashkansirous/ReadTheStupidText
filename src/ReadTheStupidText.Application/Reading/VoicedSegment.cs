@@ -1,3 +1,5 @@
+using ReadTheStupidText.Domain.Reading;
+
 namespace ReadTheStupidText.Application.Reading;
 
 /// <summary>
@@ -7,9 +9,11 @@ namespace ReadTheStupidText.Application.Reading;
 /// for a multi-voice read without the Application layer knowing about characters.
 /// <see cref="SourceStart"/>/<see cref="SourceEnd"/> may be wider than <see cref="Text"/>
 /// (a quote's range includes its quote marks); <see cref="TextStart"/> is the story index
-/// where <see cref="Text"/> itself begins (one past a quote's opening mark).
+/// where <see cref="Text"/> itself begins (one past a quote's opening mark). <see cref="Flavour"/> (Slice 113)
+/// shapes the voice's pitch and pace; a plain read and RTST use <see cref="VoiceFlavour.Normal"/>.
 /// </summary>
-public readonly record struct VoicedSegment(string Text, string VoiceId, int SourceStart, int SourceEnd, int TextStart)
+public readonly record struct VoicedSegment(
+    string Text, string VoiceId, int SourceStart, int SourceEnd, int TextStart, VoiceFlavour Flavour = VoiceFlavour.Normal)
 {
     /// <summary>The segments' texts joined with a space: what a single-voice engine reads.</summary>
     public static string JoinText(IReadOnlyList<VoicedSegment> segments) =>

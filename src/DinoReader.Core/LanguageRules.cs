@@ -49,10 +49,14 @@ public sealed record LanguageRules(
     string NameVerbGap = @"\s+",
     string NameLead = "",
     string ExtraNamePattern = "",
-    bool DashTagAfterQuote = false)
+    bool DashTagAfterQuote = false,
+    FlavourWords? Flavours = null)
 {
     private static readonly IReadOnlySet<string> NoWords = new HashSet<string>();
     private static readonly IReadOnlyList<string> NoEndings = [];
+
+    /// <summary>The words that tell how a character should sound (Slice 113); none means every character is Normal.</summary>
+    public FlavourWords FlavourWordLists => Flavours ?? FlavourWords.None;
 
     /// <summary>Speech-verb forms that show the speaker is male (Russian past tense, Arabic).</summary>
     public IReadOnlySet<string> GenderedMaleVerbs => MaleVerbs ?? NoWords;

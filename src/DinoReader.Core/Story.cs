@@ -1,5 +1,6 @@
 using ReadTheStupidText.Application.Images;
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Domain.Reading;
 
 namespace DinoReader.Core;
 
@@ -15,9 +16,10 @@ public enum CoverStyle
 /// <summary>
 /// A character's stored voice: the cast is saved with its story (Slice 61). <see cref="Edited"/> is set
 /// once a grown-up changed the character on the cast screen (Slice 65): the stored gender then also
-/// overrides the guessed one, and the EDITED badge shows.
+/// overrides the guessed one, and the EDITED badge shows. <see cref="Flavour"/> (Slice 113) is how the voice is shaped: the guess made
+/// when the cast was built, or the grown-up's pick (pinned with <see cref="Edited"/>); null (an older story) means guess from the name.
 /// </summary>
-public sealed record CastMember(string CharacterId, string Name, Gender Gender, string VoiceId, bool Edited = false);
+public sealed record CastMember(string CharacterId, string Name, Gender Gender, string VoiceId, bool Edited = false, VoiceFlavour? Flavour = null);
 
 /// <summary>One recognised line of a scanned page: its text and where it sits on the page image (0..1 across its width and height).</summary>
 public sealed record PageLine(string Text, NormalizedRect Box);

@@ -34,5 +34,6 @@ internal static class NorwegianRules
         ExtraOpenQuotes: "„“”",
         ExtraCloseQuotes: "“”",
         DialogueDashes: "–—",
-        DashTagAfterQuote: true);
+        DashTagAfterQuote: true,
+        Flavours: FlavourWords.Norwegian);
 }

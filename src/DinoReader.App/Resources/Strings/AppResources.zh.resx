@@ -164,6 +164,19 @@
   <data name="Rec_NoMic" xml:space="preserve"><value>请在设备设置中允许 Dino Book Reader 使用麦克风，然后重试。</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>录音失败了。请再试一次。</value></data>
   <!-- /Slice 111 -->
+  <!-- Slice 113 -->
+  <data name="Cast_Pair" xml:space="preserve"><value>{0}：{1}</value></data>
+  <data name="Cast_Sounds" xml:space="preserve"><value>声音</value></data>
+  <data name="Cast_Flavour_Normal" xml:space="preserve"><value>普通</value></data>
+  <data name="Cast_Flavour_Small" xml:space="preserve"><value>小小</value></data>
+  <data name="Cast_Flavour_Big" xml:space="preserve"><value>大大</value></data>
+  <data name="Cast_Flavour_Bouncy" xml:space="preserve"><value>活泼</value></data>
+  <data name="Cast_Flavour_Sleepy" xml:space="preserve"><value>瞌睡</value></data>
+  <data name="Cast_FlavourHint_Small" xml:space="preserve"><value>更高，稍快</value></data>
+  <data name="Cast_FlavourHint_Big" xml:space="preserve"><value>更低，更慢</value></data>
+  <data name="Cast_FlavourHint_Bouncy" xml:space="preserve"><value>更高，很快</value></data>
+  <data name="Cast_FlavourHint_Sleepy" xml:space="preserve"><value>很慢，稍低</value></data>
+  <!-- /Slice 113 -->
   <data name="Add_Scan" xml:space="preserve"><value>扫描页面</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>保留页面图片</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>照片</value></data>

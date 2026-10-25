@@ -40,16 +40,19 @@ internal static class SherpaEngineFactory
         return new OfflineTts(config);
     }
 
-    /// <summary>Generates speech at 1x (the player applies the rate) for the model the read captured.</summary>
-    public static OfflineTtsGeneratedAudio Generate(BuiltEngine engine, string text, int speakerId)
+    /// <summary>
+    /// Generates speech for the model the read captured at <paramref name="pace"/> (1 unless a voice flavour
+    /// speeds it up or slows it down, Slice 113; the player applies the listener's rate on top).
+    /// </summary>
+    public static OfflineTtsGeneratedAudio Generate(BuiltEngine engine, string text, int speakerId, float pace = 1.0f)
     {
         VoiceModelPaths model = engine.Model;
         if (model.Kind != VoiceEngineKind.Supertonic)
         {
-            return engine.Tts.Tts.Generate(text, 1.0f, speakerId);
+            return engine.Tts.Tts.Generate(text, pace, speakerId);
         }
 
-        var config = new OfflineTtsGenerationConfig { Sid = speakerId, Speed = 1.0f };
+        var config = new OfflineTtsGenerationConfig { Sid = speakerId, Speed = pace };
         config.Extra[SupertonicLanguageKey] = model.Language;
         return engine.Tts.Tts.GenerateWithConfig(text, config, KeepGenerating);
     }

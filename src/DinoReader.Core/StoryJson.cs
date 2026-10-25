@@ -81,7 +81,7 @@ public static class StoryJson
         return new Story(
             f.Id, f.Title, f.Language, f.Created,
             f.Pages.Select(p => ToPage(p)).ToList(),
-            f.Cast.Select(c => new CastMember(c.CharacterId, c.Name, c.Gender, c.VoiceId, c.Edited)).ToList(),
+            f.Cast.Select(ToMember).ToList(),
             f.CoverStyle, f.CoverColourIndex, f.NarratorVoiceId ?? string.Empty, ParseMode(f.PreferredMode), CleanMerges(f.Merges), f.Translate,
             f.CoverFile, f.CoverPageIndex, StoryIds.IsValid(f.SourceId) ? f.SourceId : null, CleanTranslations(f.Translations),
             CleanLanguageCasts(f.LanguageCasts, f.Language), f.ShowOriginal == true,
@@ -113,7 +113,18 @@ public static class StoryJson
     }
 
     private static List<CastFile> ToCastFiles(IReadOnlyList<CastMember> cast) =>
-        cast.Select(c => new CastFile { CharacterId = c.CharacterId, Name = c.Name, Gender = c.Gender, VoiceId = c.VoiceId, Edited = c.Edited }).ToList();
+        cast.Select(c => new CastFile
+        {
+            CharacterId = c.CharacterId, Name = c.Name, Gender = c.Gender, VoiceId = c.VoiceId, Edited = c.Edited,
+            Flavour = c.Flavour?.ToString(),
+        }).ToList();
+
+    // The flavour is a name in the file; one this build does not know (a newer app's) reads as no pick, so the guess applies.
+    private static CastMember ToMember(CastFile c) =>
+        new(c.CharacterId, c.Name, c.Gender, c.VoiceId, c.Edited, ParseFlavour(c.Flavour));
+
+    private static VoiceFlavour? ParseFlavour(string? name) =>
+        Enum.TryParse(name, ignoreCase: true, out VoiceFlavour flavour) && VoiceFlavours.Pickable.Contains(flavour) ? flavour : null;
 
     private static Dictionary<string, List<CastFile>>? ToLanguageCastFiles(IReadOnlyDictionary<string, IReadOnlyList<CastMember>>? casts) =>
         casts is null || casts.Count == 0 ? null : casts.ToDictionary(c => c.Key, c => ToCastFiles(c.Value));
@@ -130,7 +141,7 @@ public static class StoryJson
                 && members is not null && members.All(c => c is { CharacterId: not null, Name: not null, VoiceId: not null });
             if (usable)
             {
-                kept[key] = members!.Select(c => new CastMember(c.CharacterId, c.Name, c.Gender, c.VoiceId, c.Edited)).ToList();
+                kept[key] = members!.Select(ToMember).ToList();
             }
         }
 
@@ -352,6 +363,9 @@ public static class StoryJson
         public Gender Gender { get; set; }
         public string VoiceId { get; set; } = string.Empty;
         public bool Edited { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? Flavour { get; set; }
     }
 
     private sealed class LineFile

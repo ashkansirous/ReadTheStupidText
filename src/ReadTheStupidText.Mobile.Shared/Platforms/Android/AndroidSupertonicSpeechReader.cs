@@ -51,9 +51,6 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     // the shared chunker's default stays one short sentence for the reader without a cache.
     private static readonly SpeechTextChunker.HeadPolicy HeadPolicy = SpeechTextChunker.HeadPolicy.Cached;
 
-    // Silence between the sentences of one chunk (each was synthesized on its own).
-    private static readonly TimeSpan SentenceGap = TimeSpan.FromMilliseconds(150);
-
     // A head start prepares the opening of the text only: this many chunks (the two-sentence
     // head plus a few after it), not the whole file, so a long document costs no battery.
     private const int PrepareMaxChunks = 4;
@@ -460,7 +457,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         {
             BuiltEngine chunkEngine = extra ?? engine;
             VoiceInfo voice = ResolveVoice(chunkEngine, chunk.VoiceId, voiceId);
-            return await GenerateChunkAsync(chunkEngine, chunk.Text, index, voice, slots, token);
+            return await GenerateChunkAsync(chunkEngine, chunk.Text, index, voice, chunk.Flavour, slots, token);
         }
         finally
         {
@@ -647,11 +644,12 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     // (Slice 47). The sentences of one chunk are requested together; `slots` bounds how many
     // actually synthesize at once.
     private async Task<string> GenerateChunkAsync(
-        BuiltEngine engine, string chunk, int index, VoiceInfo voice, SemaphoreSlim slots, CancellationToken token)
+        BuiltEngine engine, string chunk, int index, VoiceInfo voice, VoiceFlavour flavour, SemaphoreSlim slots,
+        CancellationToken token)
     {
         long started = Stopwatch.GetTimestamp();
         IReadOnlyList<string> units = SentenceUnits.Split(chunk);
-        byte[] wav = await JoinSentencesAsync(engine, units, voice, slots, token);
+        byte[] wav = await JoinSentencesAsync(engine, units, voice, flavour, slots, token);
         RecordChunkDuration(index, WavFile.TryGetDuration(wav) ?? TimeSpan.Zero);
         _log.Debug($"chunk {index} ({chunk.Length} chars, {units.Count} sentence(s)) ready in " +
             $"{Stopwatch.GetElapsedTime(started).TotalMilliseconds:F0} ms");
@@ -662,31 +660,33 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     // or a different sample rate) is a miss, not a failed read: the chunk's cached clips are
     // dropped and synthesized afresh. A second failure is real and propagates.
     private async Task<byte[]> JoinSentencesAsync(
-        BuiltEngine engine, IReadOnlyList<string> units, VoiceInfo voice, SemaphoreSlim slots, CancellationToken token)
+        BuiltEngine engine, IReadOnlyList<string> units, VoiceInfo voice, VoiceFlavour flavour, SemaphoreSlim slots,
+        CancellationToken token)
     {
-        byte[][] clips = await GetClipsAsync(engine, units, voice, slots, token);
+        byte[][] clips = await GetClipsAsync(engine, units, voice, flavour, slots, token);
         try
         {
-            return JoinClips(clips);
+            return JoinClips(clips, flavour);
         }
         catch (InvalidDataException ex)
         {
             _log.Warning("cached sentence audio would not join; resynthesizing the chunk", error: ex);
-            units.ToList().ForEach(u => _sentences.Invalidate(KeyFor(engine, u, voice)));
-            return JoinClips(await GetClipsAsync(engine, units, voice, slots, token));
+            units.ToList().ForEach(u => _sentences.Invalidate(KeyFor(engine, u, voice, flavour)));
+            return JoinClips(await GetClipsAsync(engine, units, voice, flavour, slots, token), flavour);
         }
     }
 
     private async Task<byte[][]> GetClipsAsync(
-        BuiltEngine engine, IReadOnlyList<string> units, VoiceInfo voice, SemaphoreSlim slots, CancellationToken token)
+        BuiltEngine engine, IReadOnlyList<string> units, VoiceInfo voice, VoiceFlavour flavour, SemaphoreSlim slots,
+        CancellationToken token)
     {
-        byte[][] clips = await Task.WhenAll(units.Select(u => GetSentenceAsync(engine, u, voice, slots, token)));
+        byte[][] clips = await Task.WhenAll(units.Select(u => GetSentenceAsync(engine, u, voice, flavour, slots, token)));
         token.ThrowIfCancellationRequested();
         return clips;
     }
 
-    private static byte[] JoinClips(byte[][] clips) =>
-        clips.Length == 1 ? ValidClip(clips[0]) : WavFile.Concat(clips, SentenceGap);
+    private static byte[] JoinClips(byte[][] clips, VoiceFlavour flavour) =>
+        clips.Length == 1 ? ValidClip(clips[0]) : WavFile.Concat(clips, VoiceFlavours.ShapeOf(flavour).SentenceGap);
 
     private static byte[] ValidClip(byte[] clip) =>
         WavFile.IsComplete(clip, clip.LongLength) ? clip : throw new InvalidDataException("Not a WAV written by this app.");
@@ -694,28 +694,36 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     // The key carries the voice, engine, language and model, so audio is never reused across
     // them; the engine and voice come from the read's own captured model.
     private Task<byte[]> GetSentenceAsync(
-        BuiltEngine engine, string sentence, VoiceInfo voice, SemaphoreSlim slots, CancellationToken token)
+        BuiltEngine engine, string sentence, VoiceInfo voice, VoiceFlavour flavour, SemaphoreSlim slots,
+        CancellationToken token)
     {
-        SentenceCacheKey key = KeyFor(engine, sentence, voice);
-        return _sentences.GetAsync(key, t => SynthesizeSentenceAsync(engine, sentence, voice.SpeakerId, slots, t), token);
+        SentenceCacheKey key = KeyFor(engine, sentence, voice, flavour);
+        return _sentences.GetAsync(
+            key, t => SynthesizeSentenceAsync(engine, sentence, voice.SpeakerId, flavour, slots, t), token);
     }
 
-    private static SentenceCacheKey KeyFor(BuiltEngine engine, string sentence, VoiceInfo voice) =>
-        new(sentence, engine.Model.Kind, engine.Model.Language, voice.Id, engine.Model.RootDir, engine.Model.PackVersion);
+    private static SentenceCacheKey KeyFor(BuiltEngine engine, string sentence, VoiceInfo voice, VoiceFlavour flavour) =>
+        new(sentence, engine.Model.Kind, engine.Model.Language, voice.Id, engine.Model.RootDir, engine.Model.PackVersion, flavour);
 
     // The native Generate call cannot be interrupted, and its result may be wanted by another
     // caller that joined this synthesis, so a cancelled caller only stops waiting for a slot;
     // a call already running finishes and its audio goes to whoever is still waiting.
     private static async Task<byte[]> SynthesizeSentenceAsync(
-        BuiltEngine engine, string sentence, int speakerId, SemaphoreSlim slots, CancellationToken token)
+        BuiltEngine engine, string sentence, int speakerId, VoiceFlavour flavour, SemaphoreSlim slots,
+        CancellationToken token)
     {
+        float[] raw;
+        int sampleRate;
+        FlavourShape shape;
         await slots.WaitAsync(token);
         try
         {
-            OfflineTtsGeneratedAudio audio = await GenerateGuardedAsync(engine, sentence, speakerId);
+            shape = VoiceFlavours.ShapeOf(flavour);
+            OfflineTtsGeneratedAudio audio = await GenerateGuardedAsync(engine, sentence, speakerId, shape.Pace);
             try
             {
-                return WavFile.Encode(audio.Samples, audio.SampleRate);
+                raw = audio.Samples;
+                sampleRate = audio.SampleRate;
             }
             finally
             {
@@ -726,13 +734,16 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         {
             slots.Release();
         }
+
+        // The pitch shift is plain DSP: it runs after the slot is released so the next sentence can start synthesising.
+        return WavFile.Encode(PitchShifter.Shift(raw, sampleRate, shape.Semitones), sampleRate);
     }
 
     // The native Generate call keeps running after its caller is cancelled, so it holds its
     // own reference on the engine, released by the task itself when the call returns (success,
     // fault or abandonment alike, so the count stays balanced): a retired engine is disposed
     // only once it returns.
-    private static Task<OfflineTtsGeneratedAudio> GenerateGuardedAsync(BuiltEngine engine, string chunk, int speakerId)
+    private static Task<OfflineTtsGeneratedAudio> GenerateGuardedAsync(BuiltEngine engine, string chunk, int speakerId, float pace)
     {
         if (!engine.TryAcquire())
         {
@@ -743,7 +754,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         {
             try
             {
-                return GenerateAudio(engine, chunk, speakerId);
+                return GenerateAudio(engine, chunk, speakerId, pace);
             }
             finally
             {
@@ -1029,15 +1040,16 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     // Supertonic chooses its language per generation (Extra "lang"); the VITS-family
     // models are single-language and take only the speaker id. Both come from the model
     // the read captured, never from whatever is current now.
-    private static OfflineTtsGeneratedAudio GenerateAudio(BuiltEngine engine, string text, int speakerId)
+    // The pace is 1 unless a voice flavour changes it (Slice 113).
+    private static OfflineTtsGeneratedAudio GenerateAudio(BuiltEngine engine, string text, int speakerId, float pace = 1.0f)
     {
         VoiceModelPaths model = engine.Model;
         if (model.Kind != VoiceEngineKind.Supertonic)
         {
-            return engine.Tts.Tts.Generate(text, 1.0f, speakerId);
+            return engine.Tts.Tts.Generate(text, pace, speakerId);
         }
 
-        var config = new OfflineTtsGenerationConfig { Sid = speakerId, Speed = 1.0f };
+        var config = new OfflineTtsGenerationConfig { Sid = speakerId, Speed = pace };
         config.Extra[SupertonicLanguageKey] = model.Language;
         return engine.Tts.Tts.GenerateWithConfig(text, config, KeepGenerating);
     }
@@ -1243,7 +1255,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
             .Take(PrepareMaxChunks)
             .SelectMany(chunk => SentenceUnits.Split(chunk.Text));
 
-        await Task.WhenAll(sentences.Select(s => GetSentenceAsync(engine, s, voice, _slots, token)));
+        await Task.WhenAll(sentences.Select(s => GetSentenceAsync(engine, s, voice, VoiceFlavour.Normal, _slots, token)));
     }
 
     public void CancelPrepare()

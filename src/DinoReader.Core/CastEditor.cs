@@ -1,3 +1,5 @@
+using ReadTheStupidText.Domain.Reading;
+
 namespace DinoReader.Core;
 
 /// <summary>The cast a grown-up is editing: the stored members and the merges made so far.</summary>
@@ -26,7 +28,18 @@ public static class CastEditor
             return state;
         }
 
-        return state with { Cast = Replace(state.Cast, characterId, m => m with { VoiceId = voiceId, Edited = true }) };
+        return state with { Cast = Replace(state.Cast, characterId, m => m with { VoiceId = voiceId, Flavour = GuessOnly(m), Edited = true }) };
+    }
+
+    /// <summary>Sets how a character's voice sounds (Slice 113) and pins it with the voice, so recasting keeps it. The narrator's storyteller flavour is refused.</summary>
+    public static CastEdit SetFlavour(CastEdit state, string characterId, VoiceFlavour flavour)
+    {
+        if (!VoiceFlavours.Pickable.Contains(flavour))
+        {
+            return state;
+        }
+
+        return state with { Cast = Replace(state.Cast, characterId, m => m with { Flavour = flavour, Edited = true }) };
     }
 
     /// <summary>
@@ -48,7 +61,7 @@ public static class CastEditor
         string voice = Fits(voices, member.VoiceId, gender)
             ? member.VoiceId
             : Recast(state, characters, voices, narratorVoiceId, characterId, gender) ?? member.VoiceId;
-        return state with { Cast = Replace(state.Cast, characterId, m => m with { Gender = gender, VoiceId = voice, Edited = true }) };
+        return state with { Cast = Replace(state.Cast, characterId, m => m with { Gender = gender, VoiceId = voice, Flavour = GuessOnly(m), Edited = true }) };
     }
 
     /// <summary>
@@ -116,6 +129,9 @@ public static class CastEditor
             .OrderBy(v => others.Where(m => m.VoiceId == v.Id).Sum(m => words.GetValueOrDefault(m.CharacterId)))
             .First().Id;
     }
+
+    // A stored flavour of a member not yet Edited is only a guess: dropped, so editing the voice or gender does not pin it as the grown-up's pick.
+    private static VoiceFlavour? GuessOnly(CastMember member) => member.Edited ? member.Flavour : null;
 
     private static bool Fits(IReadOnlyList<VoiceOption> voices, string voiceId, Gender gender) =>
         gender == Gender.Unknown || voices.FirstOrDefault(v => v.Id == voiceId)?.Gender == gender;

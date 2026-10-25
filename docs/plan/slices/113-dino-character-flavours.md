@@ -1,6 +1,6 @@
 # Slice 113 — Dino: playful character voices (pitch and pace per character)
 
-*Planned 2026-10-24*, from the user's note that Dino's voices are "too grown up": stories about sheep
+*Built 2026-10-25, not yet verified (listening and device checks open).* *Planned 2026-10-24*, from the user's note that Dino's voices are "too grown up": stories about sheep
 and pigs are read in a serious adult tone.
 
 **Batch:** 23 (voices that sound like a story for children)
@@ -50,14 +50,14 @@ New strings (all 14 locales): "Sounds", "Normal", "Small", "Big", "Bouncy", "Sle
 
 ## Work
 
-- [ ] 1. Smallest end to end: `VoiceFlavour` + pitch/pace table, `VoicedSegment` carries it,
+- [x] 1. Smallest end to end: `VoiceFlavour` + pitch/pace table, `VoicedSegment` carries it,
   `PitchShifter` (unit tests on a synthetic tone: pitch moves, length stays), the sherpa sentence sources
-  pass speed and shift; one hard-coded Small character on the emulator to hear it.
-- [ ] 2. `FlavourGuess` (Big: wolf, bear, giant, elephant; Small: lamb, mouse, rabbit, bird plus the modifiers "little"/"small" that win over the animal word; Sleepy: owl, grandad; so Little Pig is Small and Mother Pig Normal, as in frame 48) with word lists in each language's rules (all 14 app languages; Farsi included),
+  pass speed and shift; one hard-coded Small character on the emulator to hear it (not done: no device run yet, see Not yet verified).
+- [x] 2. `FlavourGuess` (Big: wolf, bear, giant, elephant; Small: lamb, mouse, rabbit, bird plus the modifiers "little"/"small" that win over the animal word; Sleepy: owl, grandad; so Little Pig is Small and Mother Pig Normal, as in frame 48) with word lists in each language's rules (all 14 app languages; Farsi included),
   unit tests; auto-cast stores the guess on `CastMember` (optional `story.json` field, schema stays 1).
-- [ ] 3. Cast screen "Sounds" row (label, flavour picker with the hints, sample button; frame 48); edits through `CastEditor`, pinned per language.
-- [ ] 4. Narrator storyteller pace.
-- [ ] 5. Rules in `src/DinoReader.Core/CLAUDE.md` and `src/DinoReader.App/CLAUDE.md`.
+- [x] 3. Cast screen "Sounds" row (label, flavour picker with the hints, sample button; frame 48); edits through `CastEditor`, pinned per language.
+- [x] 4. Narrator storyteller pace (`VoiceFlavour.Storyteller`: pace 0.94, no pitch, 260 ms sentence gap).
+- [x] 5. Rules in `src/DinoReader.Core/CLAUDE.md` and `src/DinoReader.App/CLAUDE.md` (written below as the For CLAUDE.md block; `update-docs` lifts them).
 
 ## Verification
 
@@ -67,3 +67,30 @@ New strings (all 14 locales): "Sounds", "Normal", "Small", "Big", "Bouncy", "Sle
   big ones deeper; change a flavour on the cast screen and hear it on the next read; RTST reads unchanged.
 - Kill criterion: if shifted voices sound robotic in the listening check, ship pace-only flavours and
   drop pitch.
+
+## Built (2026-10-25)
+
+- `VoiceFlavour` + `VoiceFlavours.ShapeOf` (Domain): Small +3 st / 1.08, Big -3 / 0.92, Bouncy +4 / 1.15, Sleepy -1.5 / 0.85, Storyteller 0 / 0.94 with a 260 ms sentence gap (others 150 ms). `VoicedSegment`, `SpeechChunkPlan` and `SentenceCacheKey` carry the flavour; a Normal key keeps its old cache id.
+- `PitchShifter` (Application, WSOLA, pure C#); the Windows, Android and iOS sherpa readers pass `pace` to the engine's `speed` and shift the samples before encoding. Android system voice / WinRT fallback readers do not read segments, so they play Normal.
+- Core: `FlavourWords` (14 languages), `FlavourGuess` (diminutive, Big, Small, Sleepy), `CastMember.Flavour` (optional `Flavour` name in story.json, unknown names read as none), `CastEditor.SetFlavour`, `VoiceCast.FlavourForLine`, `CastRow.Flavour`.
+- Cast screen: "Sounds" row (label, flavour chip, sample button). The picker is a floating 190 px `CastFlavourMenu` centred on a scrim, as in the mock's list.
+- Shipped starter `.dino` packages carry no flavour: they read as the guess from the name.
+
+*Changed while building:* the menu is centred on the scrim, not anchored to the chip (small deviation from frame 48). `DinoReader.Core` now references `Domain` directly. Guess order is size > age > animal; Japanese and Chinese match whole names (no word splitting). Normal adds no cache-key suffix, so existing caches stay valid. Pitch uses WSOLA with normalised correlation.
+
+*From review:* high 1, 3-9 and medium 1-6, 8, 9 applied. Skipped: high 2 (picking pins `Edited`, per the design); medium 7 (guesses are best-effort). Deferred: medium 10 (reader shaping is duplicated across platforms, see the last bullet below).
+
+### Not yet verified
+
+- Listening check on the emulator (English and Farsi animal casts; kill criterion: drop pitch if robotic).
+- The system-voice fallback plays Normal (not checked on a device).
+- iOS reader build (not compiled).
+- Native-speaker check of the Slice 113 strings in the non-English locales.
+
+### For CLAUDE.md
+
+- `src/DinoReader.Core/CLAUDE.md`: a character's flavour is `CastMember.Flavour` (the guess from `FlavourGuess` when the cast is built, or the grown-up's pick, pinned with `Edited`); null (older story) means guess from the name. Word lists live in `FlavourWords` and each language's `LanguageRules.Flavours`; a diminutive ("little", "baby") beats the animal word. `Storyteller` is the narrator's own flavour and is never guessed or offered. (Slice 113: docs/plan/slices/113-dino-character-flavours.md)
+- `src/DinoReader.App/CLAUDE.md`: `StoryVoicing` sets each `VoicedSegment.Flavour` from `VoiceCast.FlavourForLine` (narration and unknown speakers are Storyteller). Pace is the sherpa `speed` per sentence and pitch is `PitchShifter` on the samples; both are in the sentence cache key, so a flavour never reuses another's audio. RTST and the system-voice fallbacks always play Normal.
+- Root `CLAUDE.md` layering: `DinoReader.Core` references `Application` (`LineReflow`, `AppLanguage`) and `Domain` (`VoiceFlavour`, direct reference since Slice 113); the line `DinoReader.Core -> Application (LineReflow only)` should read `-> Application, Domain`.
+- Head start (`NeuralSentenceSource.AreCached/PrepareAsync`) takes the flavour in its key; `PrepareChunksAsync` passes Normal because a head start reads plain text. A flavoured head start would pass the chunk's flavour.
+- Not done (review 113 #10): the synthesize/shape/join logic is copied in the Windows `NeuralSentenceSource`, Android and iOS readers; extracting a shared helper is a cross-platform reader refactor left for a later slice. A fix to it must be made in all three.

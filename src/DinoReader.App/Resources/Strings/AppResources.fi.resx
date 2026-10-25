@@ -166,6 +166,19 @@
   <data name="Rec_NoMic" xml:space="preserve"><value>Salli mikrofoni Dino Book Readerille laitteen asetuksissa ja yritä uudelleen.</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>Nauhoitus ei onnistunut. Yritä uudelleen.</value></data>
   <!-- /Slice 111 -->
+  <!-- Slice 113 -->
+  <data name="Cast_Pair" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="Cast_Sounds" xml:space="preserve"><value>Äänet</value></data>
+  <data name="Cast_Flavour_Normal" xml:space="preserve"><value>Tavallinen</value></data>
+  <data name="Cast_Flavour_Small" xml:space="preserve"><value>Pieni</value></data>
+  <data name="Cast_Flavour_Big" xml:space="preserve"><value>Iso</value></data>
+  <data name="Cast_Flavour_Bouncy" xml:space="preserve"><value>Vilkas</value></data>
+  <data name="Cast_Flavour_Sleepy" xml:space="preserve"><value>Unelias</value></data>
+  <data name="Cast_FlavourHint_Small" xml:space="preserve"><value>korkeampi, hieman nopeampi</value></data>
+  <data name="Cast_FlavourHint_Big" xml:space="preserve"><value>matalampi, hitaampi</value></data>
+  <data name="Cast_FlavourHint_Bouncy" xml:space="preserve"><value>korkeampi, nopea</value></data>
+  <data name="Cast_FlavourHint_Sleepy" xml:space="preserve"><value>hidas, hieman matalampi</value></data>
+  <!-- /Slice 113 -->
   <data name="Add_Scan" xml:space="preserve"><value>Skannaa sivut</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Säilyttää sivukuvat</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Kuvat</value></data>

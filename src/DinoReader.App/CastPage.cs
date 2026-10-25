@@ -25,6 +25,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	private readonly Border _mergeButton = new();
 	private readonly ContentView _languageChip = new() { Margin = new Thickness(14, 0, 14, 10) };
 	private readonly CastMergeSheet _sheet = new();
+	private readonly CastFlavourMenu _flavourMenu = new();
 	private readonly CastRowActions _actions;
 	private readonly Grid _root = new();
 	private Story? _story;
@@ -42,9 +43,11 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		_preview = new VoicePreview(reader);
 		_spoken = spoken;
 		_actions = new CastRowActions(
-			row => _busy.RunAsync(() => PreviewAsync(row)),
+			row => _busy.RunAsync(() => PreviewAsync(row, VoiceFlavour.Normal)),
 			(row, gender) => _busy.RunAsync(() => SetGenderAsync(row, gender)),
-			row => _busy.RunAsync(() => PickVoiceAsync(row)));
+			row => _busy.RunAsync(() => PickVoiceAsync(row)),
+			row => _busy.RunAsync(() => PickFlavourAsync(row)),
+			row => _busy.RunAsync(() => PreviewAsync(row, row.Flavour)));
 		NavigationPage.SetHasNavigationBar(this, false);
 		SafeAreaEdges = new SafeAreaEdges(SafeAreaRegions.Container);
 		BackgroundColor = DinoTokens.Get(DinoTokens.Sand);
@@ -115,6 +118,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		column.Add(BuildMergeButton(), 0, 2);
 		_root.Add(column);
 		_root.Add(_sheet);
+		_root.Add(_flavourMenu);
 		return _root;
 	}
 
@@ -189,7 +193,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 
 	private CastSheet Sheet() => _resolved is null || _story is null
 		? new CastSheet([], 0, false, 0)
-		: CastSheet.Build(_resolved, _story.CastIn(_castLanguage), _voicing.CharacterVoiceCount(_castLanguage));
+		: CastSheet.Build(_resolved, _story.CastIn(_castLanguage), _voicing.CharacterVoiceCount(_castLanguage), LanguageRules.For(_story.Language));
 
 	private void Render()
 	{
@@ -305,6 +309,16 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		}
 	}
 
+	// The flavour menu (Slice 113, mock frame 48): the flavours with their hints and the current one marked; a pick is pinned with the voice in this language's cast.
+	private async Task PickFlavourAsync(CastRow row)
+	{
+		VoiceFlavour? picked = await _flavourMenu.PickAsync(row.Flavour);
+		if (picked is VoiceFlavour flavour && flavour != row.Flavour)
+		{
+			await ApplyAsync(edit => CastEditor.SetFlavour(edit, row.Member.CharacterId, flavour));
+		}
+	}
+
 	// The Narrator page chooses the voice for every book; the grown-up comes back here and the cast is looked at again (Slice 109).
 	private async Task OpenNarratorPageAsync()
 	{
@@ -345,12 +359,12 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		return picked is null || picked == CastText.Cancel ? -1 : labels.ToList().IndexOf(picked);
 	}
 
-	private async Task PreviewAsync(CastRow row)
+	private async Task PreviewAsync(CastRow row, VoiceFlavour flavour)
 	{
 		string line = CastText.PreviewLineFor(_voicing.PreviewLanguage(_castLanguage, _spoken.Current));
 		try
 		{
-			await _preview.PlayAsync(line, row.Member.VoiceId);
+			await _preview.PlayAsync(line, row.Member.VoiceId, flavour);
 		}
 		catch (Exception ex)
 		{

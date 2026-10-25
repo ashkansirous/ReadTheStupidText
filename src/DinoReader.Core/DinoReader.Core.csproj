@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Pure, framework-free library (Slice 59): no package references; the only project reference is the
-       library-free Application, for the AppLanguage enum (Slice 66).
+  <!-- Pure, framework-free library (Slice 59): no package references; the project references are the
+       library-free Application (AppLanguage, Slice 66) and Domain (VoiceFlavour, Slice 113).
        Rule-based dialogue segmenting, speaker attribution and voice casting. -->
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ReadTheStupidText.Application\ReadTheStupidText.Application.csproj" />
+    <ProjectReference Include="..\ReadTheStupidText.Domain\ReadTheStupidText.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>

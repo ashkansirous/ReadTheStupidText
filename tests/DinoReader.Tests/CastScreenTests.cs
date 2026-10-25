@@ -65,7 +65,7 @@ public class CastEditorTests
         CastEdit edited = CastEditor.SetVoice(Start(), "cotton", "F2", "F3");
         VoiceCast recast = new VoiceCaster().Cast(Characters, Voices, "F2", StoryCast.Pinned(edited.Cast));
 
-        var members = StoryCast.ToMembers(Characters, recast, edited.Cast);
+        var members = StoryCast.ToMembers(Characters, recast, LanguageRules.English, edited.Cast);
 
         Assert.True(members.Single(m => m.CharacterId == "cotton").Edited);
         Assert.NotEqual("F2", members.Single(m => m.CharacterId == "cotton").VoiceId);
@@ -355,7 +355,7 @@ public class CastSheetTests
     [Fact]
     public void Build_MarksTheTwoWordiestAsMain_AndCountsUnknownLines()
     {
-        var sheet = CastSheet.Build(Result(("a", 5), ("b", 50), ("c", 20)), [Member("a", "V1"), Member("b", "V2"), Member("c", "V3")], 9);
+        var sheet = CastSheet.Build(Result(("a", 5), ("b", 50), ("c", 20)), [Member("a", "V1"), Member("b", "V2"), Member("c", "V3")], 9, LanguageRules.English);
 
         Assert.Equal([false, true, true], sheet.Rows.Select(r => r.IsMain));
         Assert.Equal([5, 50, 20], sheet.Rows.Select(r => r.Words));
@@ -368,8 +368,8 @@ public class CastSheetTests
     {
         var cast = new[] { Member("a", "V1"), Member("b", "V1"), Member("c", "V2") };
 
-        var plenty = CastSheet.Build(Result(("a", 3), ("b", 2), ("c", 1)), cast, 5);
-        var few = CastSheet.Build(Result(("a", 3), ("b", 2), ("c", 1)), cast, 2);
+        var plenty = CastSheet.Build(Result(("a", 3), ("b", 2), ("c", 1)), cast, 5, LanguageRules.English);
+        var few = CastSheet.Build(Result(("a", 3), ("b", 2), ("c", 1)), cast, 2, LanguageRules.English);
 
         Assert.All(plenty.Rows, r => Assert.False(r.SharesVoice));
         Assert.True(few.VoicesAreShort);
@@ -379,7 +379,7 @@ public class CastSheetTests
     [Fact]
     public void Build_SkipsACharacterWithNoStoredVoice()
     {
-        var sheet = CastSheet.Build(Result(("a", 3), ("b", 2)), [Member("b", "V1")], 5);
+        var sheet = CastSheet.Build(Result(("a", 3), ("b", 2)), [Member("b", "V1")], 5, LanguageRules.English);
 
         Assert.Equal(["b"], sheet.Rows.Select(r => r.Member.CharacterId));
     }

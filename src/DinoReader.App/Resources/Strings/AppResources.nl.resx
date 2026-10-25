@@ -166,6 +166,19 @@
   <data name="Rec_NoMic" xml:space="preserve"><value>Sta de microfoon toe voor Dino Book Reader in de instellingen van je apparaat en probeer het opnieuw.</value></data>
   <data name="Rec_Failed" xml:space="preserve"><value>De opname is mislukt. Probeer het opnieuw.</value></data>
   <!-- /Slice 111 -->
+  <!-- Slice 113 -->
+  <data name="Cast_Pair" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="Cast_Sounds" xml:space="preserve"><value>Geluid</value></data>
+  <data name="Cast_Flavour_Normal" xml:space="preserve"><value>Normaal</value></data>
+  <data name="Cast_Flavour_Small" xml:space="preserve"><value>Klein</value></data>
+  <data name="Cast_Flavour_Big" xml:space="preserve"><value>Groot</value></data>
+  <data name="Cast_Flavour_Bouncy" xml:space="preserve"><value>Dartel</value></data>
+  <data name="Cast_Flavour_Sleepy" xml:space="preserve"><value>Slaperig</value></data>
+  <data name="Cast_FlavourHint_Small" xml:space="preserve"><value>hoger, iets sneller</value></data>
+  <data name="Cast_FlavourHint_Big" xml:space="preserve"><value>dieper, langzamer</value></data>
+  <data name="Cast_FlavourHint_Bouncy" xml:space="preserve"><value>hoger, snel</value></data>
+  <data name="Cast_FlavourHint_Sleepy" xml:space="preserve"><value>langzaam, iets lager</value></data>
+  <!-- /Slice 113 -->
   <data name="Add_Scan" xml:space="preserve"><value>Pagina’s scannen</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Bewaart de foto’s van de pagina’s</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Foto’s</value></data>
