@@ -27,6 +27,11 @@ name: packs
 #                   and int8-quantized here like mana. It carries the same GPL-3.0 espeak-ng data
 #                   (copied from the Persian archive), only inside this pack's zip (Decision 108).
 #   * melo-zh-en    MeloTTS Chinese + English (MIT), same download and pin.
+#   * kokoro-en     Dino Reader's English storyteller voices (Slice 114, Decision 118): Kokoro-82M v1.0
+#                   (Apache-2.0 weights) as sherpa-onnx's int8 multi-language build, pinned by sha256, with
+#                   its English lexicon and the GPL-3.0 espeak-ng data, only inside this pack's zip
+#                   (Decision 119). Its catalog kind is `storyteller`, so the text reader never picks it and an
+#                   older app skips the entry. A sample wav (the "Hear one" button) rides next to the zip.
 # Twenty-three translation packs (Slice 75, Decision 67; Slice 106, Decision 110) ride in the same release and packs.json:
 #   one Opus-MT (Marian) leg each, `<source>-<target>` with English at one end, so a pair like
 #   fr -> ru pivots through two packs. Pre-converted int8 ONNX encoder/decoder from the Xenova
@@ -45,9 +50,9 @@ on:
         required: true
         type: string
       pack_version:
-        description: 'Version stamped into the Supertonic-3 pack (bump when the model files change)'
+        description: 'Version stamped into the Supertonic-3 pack (bump when the model files or its licence texts change)'
         required: true
-        default: '1'
+        default: '3'
         type: string
       piper_pack_version:
         description: 'Version stamped into the Persian (Piper) pack'
@@ -61,6 +66,11 @@ on:
         type: string
       melo_pack_version:
         description: 'Version stamped into the Chinese (MeloTTS) pack'
+        required: true
+        default: '1'
+        type: string
+      kokoro_pack_version:
+        description: 'Version stamped into the Kokoro storyteller pack (Dino Reader, English)'
         required: true
         default: '1'
         type: string
@@ -82,7 +92,7 @@ permissions:
 env:
   SUPERTONIC_ID: supertonic-3
   SUPERTONIC_LANGUAGES: 'en,fr,es,pt,ru,ja,ar,da,fi,sv,nl'
-  SUPERTONIC_LICENSE: Apache-2.0
+  SUPERTONIC_LICENSE: 'BigScience OpenRAIL-M (model weights) AND MIT (sample code)'
   MODEL_DIR: src/ReadTheStupidText.App/VoiceModel
   # Keep the ids in sync with src/ReadTheStupidText.Application/Reading/PackConstants.cs.
   PERSIAN_ID: piper-fa
@@ -114,6 +124,15 @@ env:
   CHINESE_LICENSE: MIT
   CHINESE_URL: https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-melo-tts-zh_en.tar.bz2
   CHINESE_SHA256: e58351ed7149f290a54534538badd4077cdbe6fddc964b24d0bee870415d1514
+  # Slice 114: Kokoro-82M v1.0 as sherpa-onnx's int8 multi-language archive (132 MB; model.int8.onnx 114 MB, voices.bin 28 MB,
+  # 53 voices of which Dino lists the English ones, see KokoroVoiceTable.cs). Pinned by the archive's sha256 (the release digest).
+  # The zip comes to about 126 MB, over the 100 MB cap of the other packs, so this pack has its own cap (150 MB).
+  # Keep the id in sync with PackConstants.StorytellerPackId.
+  KOKORO_ID: kokoro-en
+  KOKORO_LICENSE: 'Apache-2.0 (Kokoro-82M weights) AND GPL-3.0-or-later (espeak-ng data)'
+  KOKORO_URL: https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-int8-multi-lang-v1_0.tar.bz2
+  KOKORO_SHA256: 4c3052abaa60943a341f193888cf6abd68787dae6ab8ae5c925a706caa247e4e
+  KOKORO_MAX_BYTES: 157286400
   # PaddleOCR ONNX models (Apache-2.0), pinned to one revision of the monkt/paddleocr-onnx repo.
   # The sha256 values are the Git LFS object ids (the files' sha256) and the dictionaries' hashes.
   # Keep the ids in sync with the OCR pack ids in the Mobile app's OCR catalog tests.
@@ -143,6 +162,7 @@ jobs:
       PERSIAN_VERSION: ${{ inputs.piper_pack_version }}
       NORWEGIAN_VERSION: ${{ inputs.norwegian_pack_version }}
       CHINESE_VERSION: ${{ inputs.melo_pack_version }}
+      KOKORO_VERSION: ${{ inputs.kokoro_pack_version }}
       OCR_VERSION: ${{ inputs.ocr_pack_version }}
       TRANSLATION_VERSION: ${{ inputs.translation_pack_version }}
     steps:
@@ -187,6 +207,21 @@ jobs:
             fi
             cp "$src" "out/$SUPERTONIC_ID/$f"
           done
+          # The weights are BigScience OpenRAIL-M; the repo's LICENSE above is MIT for the sample code only. OpenRAIL-M asks for a copy of
+          # its text, its use-based restrictions passed on, and the source (STORE.md, "Supertonic weights licence").
+          cp .github/licenses/supertonic-3-OpenRAIL-M.txt "out/$SUPERTONIC_ID/LICENSE-OpenRAIL-M"
+          cat > "out/$SUPERTONIC_ID/NOTICE" <<'NOTICE_TEXT'
+          Supertonic-3 voice model
+            Model weights: BigScience OpenRAIL-M (full text: LICENSE-OpenRAIL-M).
+            Sample code: MIT (LICENSE).
+            Source: https://huggingface.co/Supertone/supertonic-3
+
+          Use restrictions (Attachment A of the OpenRAIL-M licence, summarised; the licence text governs). Do not use the model to:
+            exploit or harm minors; generate or spread false information meant to harm others; impersonate or defame people;
+            harass or discriminate against people; give medical advice; or make automated decisions about legal rights.
+          Anyone who receives this model or a work made with it is bound by the same restrictions. Machine-generated content
+          must be disclosed as such when it is published.
+          NOTICE_TEXT
           files=$(printf '%s\n' "${model_files[@]}" | jq -R . | jq -s .)
           # The ten voice styles are the fixed SupertonicVoiceTable, offered for every
           # language the pack serves, so the manifest lists no voices (model only).
@@ -211,6 +246,7 @@ jobs:
           fetch "$PERSIAN_RELEASE_URL/vits-piper-fa_IR-ganji-medium-int8.tar.bz2" "$GANJI_SHA256" src-models/fa-ganji
           fetch "$PERSIAN_RELEASE_URL/vits-piper-fa_IR-gyro-medium-int8.tar.bz2" "$GYRO_SHA256" src-models/fa-gyro
           fetch "$CHINESE_URL" "$CHINESE_SHA256" src-models/melo-zh-en
+          fetch "$KOKORO_URL" "$KOKORO_SHA256" src-models/kokoro
 
       # Mana (MahtaFetrat/Mana-Persian-Piper, MIT, CC0 data) has no sherpa-onnx build. Do what sherpa's
       # piper export does (scripts/piper/generate.sh.in): write tokens.txt from the phoneme map and add
@@ -431,6 +467,101 @@ jobs:
           (cd out && zip -r -X "$CHINESE_ID-$CHINESE_VERSION.zip" "$CHINESE_ID")
           ls -l out
 
+      # The Kokoro storyteller pack (Slice 114): the upstream int8 model stored as model.onnx (the name
+      # Domain/Reading/KokoroFiles.cs expects), all 53 voices in voices.bin, the English lexicon and the espeak-ng
+      # data. The Chinese lexicon, jieba dictionary and rule FSTs of the multi-language archive are left out.
+      # No voices are listed in pack.json: the English ones live in KokoroVoiceTable.cs with their speaker ids.
+      - name: Build the Kokoro (storyteller) pack zip
+        run: |
+          set -euo pipefail
+          src="src-models/kokoro"
+          dest="out/$KOKORO_ID"
+          mkdir -p "$dest"
+          cp "$src/model.int8.onnx" "$dest/model.onnx"
+          for f in voices.bin tokens.txt lexicon-us-en.txt; do
+            if [ ! -f "$src/$f" ]; then echo "::error::Missing $f in the Kokoro archive"; exit 1; fi
+            cp "$src/$f" "$dest/$f"
+          done
+          if [ ! -d "$src/espeak-ng-data" ]; then echo "::error::Missing espeak-ng-data in the Kokoro archive"; exit 1; fi
+          cp -r "$src/espeak-ng-data" "$dest/espeak-ng-data"
+          if [ "$(stat -c %s "$dest/model.onnx")" -lt 1048576 ]; then echo "::error::model.onnx is not a real model"; exit 1; fi
+          if [ ! -s "$dest/espeak-ng-data/en_dict" ] || [ -z "$(find "$dest/espeak-ng-data/lang" -type f -name en-US -print -quit)" ]; then
+            echo "::error::espeak-ng-data has no en-US voice (needs en_dict and lang/*/en-US)"; exit 1
+          fi
+          cp "$src/LICENSE" "$dest/LICENSE-Kokoro-Apache-2.0"
+          cat > "$dest/LICENSE" <<'LICENSE_TEXT'
+          Kokoro storyteller voices for Dino Reader (English)
+            Kokoro-82M v1.0 weights: Apache License 2.0 (https://huggingface.co/hexgrad/Kokoro-82M; the licence text is
+            LICENSE-Kokoro-Apache-2.0). Converted to ONNX and int8-quantized by sherpa-onnx
+            (https://github.com/k2-fsa/sherpa-onnx, Apache-2.0), archive kokoro-int8-multi-lang-v1_0.
+
+          espeak-ng data (folder espeak-ng-data): GPL-3.0-or-later
+            Copyright the espeak-ng authors. This data is used only to turn text into
+            phonemes and is distributed in this pack under the GNU General Public License
+            v3 or later (https://www.gnu.org/licenses/gpl-3.0.html). Its corresponding
+            source code is available at https://github.com/espeak-ng/espeak-ng .
+          LICENSE_TEXT
+          cat > "$dest/SOURCE" <<SOURCE_TEXT
+          Model, voices, tokens, lexicon: $KOKORO_URL (sha256 $KOKORO_SHA256)
+          Kokoro-82M: https://huggingface.co/hexgrad/Kokoro-82M
+          espeak-ng source: https://github.com/espeak-ng/espeak-ng
+          SOURCE_TEXT
+          files=$(cd "$dest" && find . -type f ! -path ./pack.json -printf '%P\n' | sort | jq -R . | jq -s .)
+          jq -n --arg id "$KOKORO_ID" --arg version "$KOKORO_VERSION" --argjson files "$files" \
+            '{id: $id, kind: "storyteller", language: "en", version: $version, engine: "sherpa-onnx", model: "kokoro", files: $files}' \
+            > "$dest/pack.json"
+          (cd out && zip -r -X "$KOKORO_ID-$KOKORO_VERSION.zip" "$KOKORO_ID")
+          ls -l out
+          size=$(stat -c %s "out/$KOKORO_ID-$KOKORO_VERSION.zip")
+          echo "Kokoro pack zip: $size bytes (cap $KOKORO_MAX_BYTES)"
+          if [ "$size" -gt "$KOKORO_MAX_BYTES" ]; then
+            echo "::error::The Kokoro pack zip is over $KOKORO_MAX_BYTES bytes"; exit 1
+          fi
+
+      # The "Hear one" sample of the cast screen, made with the pack's own files so it always matches the voices
+      # (Heart narrates, Puck speaks; speaker ids from KokoroVoiceTable.cs). It sits next to the zip on the release as
+      # <id>-<version>-sample.wav (StorytellerOffer.SampleFileName), is not in the catalog and is not part of the pack.
+      - name: Make the Kokoro voice sample
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet "sherpa-onnx==1.13.3"
+          python - "out/$KOKORO_ID" "out/$KOKORO_ID-$KOKORO_VERSION-sample.wav" <<'PY'
+          import array, os, sys, wave
+          import sherpa_onnx
+          pack, target = sys.argv[1], sys.argv[2]
+          kokoro = sherpa_onnx.OfflineTtsKokoroModelConfig(
+              model=os.path.join(pack, "model.onnx"),
+              voices=os.path.join(pack, "voices.bin"),
+              tokens=os.path.join(pack, "tokens.txt"),
+              lexicon=os.path.join(pack, "lexicon-us-en.txt"),
+              data_dir=os.path.join(pack, "espeak-ng-data"),
+          )
+          tts = sherpa_onnx.OfflineTts(sherpa_onnx.OfflineTtsConfig(model=sherpa_onnx.OfflineTtsModelConfig(kokoro=kokoro, num_threads=2)))
+          lines = [
+              (3, 0.94, "Once upon a time, a little lamb found a very big, very friendly dinosaur."),
+              (18, 1.0, "Hello! Will you read me a story?"),
+          ]
+          rate, samples = 0, []
+          for sid, speed, text in lines:
+              audio = tts.generate(text, sid=sid, speed=speed)
+              if not audio.samples:
+                  raise SystemExit("Kokoro made no audio for: " + text)
+              rate = audio.sample_rate
+              samples.extend(audio.samples)
+              samples.extend([0.0] * (rate // 4))
+          pcm = array.array("h", (max(-32768, min(32767, int(v * 32767))) for v in samples))
+          with wave.open(target, "wb") as out:
+              out.setnchannels(1)
+              out.setsampwidth(2)
+              out.setframerate(rate)
+              out.writeframes(pcm.tobytes())
+          print("sample", len(pcm) / rate, "seconds")
+          PY
+          ls -l "out/$KOKORO_ID-$KOKORO_VERSION-sample.wav"
+          if [ "$(stat -c %s "out/$KOKORO_ID-$KOKORO_VERSION-sample.wav")" -gt 4000000 ]; then
+            echo "::error::The sample is over 4 MB (the app refuses a larger one)"; exit 1
+          fi
+
       # The OCR packs: det.onnx (the shared PP-OCRv3 mobile detector, 2.4 MB) + rec.onnx + dict.txt
       # per script, each zip standalone so a pack never depends on another being installed.
       # PP-OCRv5 Latin and Cyrillic (eslav) recognizers, the PP-OCRv3 Arabic one (Arabic, Persian) and
@@ -594,6 +725,7 @@ jobs:
             entry "$PERSIAN_ID" fa "$PERSIAN_VERSION" "$PERSIAN_LICENSE"
             entry "$NORWEGIAN_ID" nb "$NORWEGIAN_VERSION" "$NORWEGIAN_LICENSE"
             entry "$CHINESE_ID" zh "$CHINESE_VERSION" "$CHINESE_LICENSE"
+            entry "$KOKORO_ID" en "$KOKORO_VERSION" "$KOKORO_LICENSE" storyteller
             entry ocr-latin "en,fr,es,pt" "$OCR_VERSION" "$OCR_LICENSE" ocr
             entry ocr-cyrillic ru "$OCR_VERSION" "$OCR_LICENSE" ocr
             entry ocr-arabic "ar,fa" "$OCR_VERSION" "$OCR_LICENSE" ocr
@@ -615,6 +747,8 @@ jobs:
             "out/$PERSIAN_ID-$PERSIAN_VERSION.zip" \
             "out/$NORWEGIAN_ID-$NORWEGIAN_VERSION.zip" \
             "out/$CHINESE_ID-$CHINESE_VERSION.zip" \
+            "out/$KOKORO_ID-$KOKORO_VERSION.zip" \
+            "out/$KOKORO_ID-$KOKORO_VERSION-sample.wav" \
             "out/ocr-latin-$OCR_VERSION.zip" \
             "out/ocr-cyrillic-$OCR_VERSION.zip" \
             "out/ocr-arabic-$OCR_VERSION.zip" \

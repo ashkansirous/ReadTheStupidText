@@ -39,13 +39,24 @@ public sealed record VoiceModelPaths(
     /// </summary>
     public VoiceInfo ResolveVoice(string? voiceId)
     {
+        return Find(voiceId) ?? DefaultVoice();
+    }
+
+    /// <summary>
+    /// The voice <paramref name="voiceId"/> names, or null when this model does not offer it. A Kokoro storyteller model
+    /// speaks a stored Supertonic pick as the Kokoro voice of the same gender that <see cref="KokoroVoiceTable.MapFromSupertonic"/>
+    /// picks (Slice 114), so different picks stay different voices while the pack is installed and the pick itself is kept.
+    /// </summary>
+    public VoiceInfo? Find(string? voiceId)
+    {
         VoiceInfo? match = AvailableVoices.FirstOrDefault(v => v.Id == voiceId);
-        if (match is not null)
+        if (match is not null || Kind != VoiceEngineKind.Kokoro)
         {
             return match;
         }
 
-        return DefaultVoice();
+        string? mappedId = KokoroVoiceTable.MapFromSupertonic(voiceId)?.Id;
+        return mappedId is null ? null : AvailableVoices.FirstOrDefault(v => v.Id == mappedId);
     }
 
     // The Supertonic default when this is a Supertonic model that still lists it, else the

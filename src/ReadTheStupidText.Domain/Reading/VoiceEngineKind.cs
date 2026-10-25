@@ -14,4 +14,7 @@ public enum VoiceEngineKind
 
     /// <summary>MeloTTS (VITS with a lexicon and a jieba dictionary): Chinese + English.</summary>
     Melo,
+
+    /// <summary>Kokoro-82M (Dino's English storyteller voices, Slice 114): one model, many speakers, phonemized by espeak-ng data.</summary>
+    Kokoro,
 }

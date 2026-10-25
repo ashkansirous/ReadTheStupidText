@@ -74,5 +74,8 @@ public static class SupertonicVoiceTable
     /// 0-4. Used to group the Android voice picker into MALE/FEMALE cards
     /// (Decision 43). An unknown id resolves through <see cref="SpeakerIdFor"/>
     /// to the default (male) voice.</summary>
-    public static bool IsFemale(string? voiceId) => SpeakerIdFor(voiceId) < 5;
+    public static bool IsFemale(string? voiceId) => SpeakerIdFor(voiceId) < FemaleStyleCount;
+
+    /// <summary>The number of female styles (F1-F5): sids below it are female.</summary>
+    public const int FemaleStyleCount = 5;
 }

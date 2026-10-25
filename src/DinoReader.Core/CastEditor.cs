@@ -89,6 +89,36 @@ public static class CastEditor
     /// <summary>Whether any character of <paramref name="cast"/> has <paramref name="voiceId"/>: a cast that must be recast once that voice is the narrator's.</summary>
     public static bool UsesVoice(IReadOnlyList<CastMember> cast, string voiceId) => cast.Any(m => m.VoiceId == voiceId);
 
+    /// <summary>Whether any character of <paramref name="cast"/> has a voice that is not in <paramref name="pool"/> and is not an explicit pick that stays (Slice 114):
+    /// the language's voices changed under it (a storyteller pack was installed or removed), so the cast is recast from the pool it has now.
+    /// Only that switch counts: the pool and the cast voice must both be Supertonic or Kokoro ones, so a renamed or momentarily different pack voice list of any
+    /// other language never recasts a cast. An empty pool (no voices yet) never counts.</summary>
+    public static bool HasVoiceOutside(IReadOnlyList<CastMember> cast, IReadOnlyList<VoiceOption> pool) =>
+        pool.Count > 0 && pool.All(v => IsStorytellerSwitchVoice(v.Id))
+        && cast.Any(m => IsStorytellerSwitchVoice(m.VoiceId) && IsOutside(m, pool) && !StaysPicked(m, pool));
+
+    // The two engine families a storyteller pack swaps between for English.
+    private static bool IsStorytellerSwitchVoice(string voiceId) =>
+        voiceId.StartsWith(SupertonicVoiceTable.IdPrefix, StringComparison.Ordinal)
+        || voiceId.StartsWith(KokoroVoiceTable.IdPrefix, StringComparison.Ordinal);
+
+    /// <summary>
+    /// The recast of a cast whose pool changed (Slice 114) with the grown-up's explicit picks put back: a character marked <see cref="CastMember.Edited"/>
+    /// keeps its stored member while its voice is still there. A voice is there while it is in the pool, or is a Supertonic one (Dino's first voices: while the storyteller pack is installed the reader
+    /// speaks it as the Kokoro voice of the same gender, <see cref="KokoroVoiceTable.MapFromSupertonic"/>); a voice that left with its pack (a storyteller voice after "Use Dino's first voices") takes the recast's voice, the
+    /// closest one of the character's gender. A pick that is the narrator's voice never stays.
+    /// </summary>
+    public static IReadOnlyList<CastMember> KeepExplicitPicks(
+        IReadOnlyList<CastMember> before, IReadOnlyList<CastMember> recast, IReadOnlyList<VoiceOption> pool, string narratorVoiceId) =>
+        recast
+            .Select(m => before.FirstOrDefault(b => b.CharacterId == m.CharacterId) is { } old && old.VoiceId != narratorVoiceId && StaysPicked(old, pool) ? old : m)
+            .ToList();
+
+    private static bool IsOutside(CastMember member, IReadOnlyList<VoiceOption> pool) => pool.All(v => v.Id != member.VoiceId);
+
+    private static bool StaysPicked(CastMember member, IReadOnlyList<VoiceOption> pool) =>
+        member.Edited && (!IsOutside(member, pool) || member.VoiceId.StartsWith(SupertonicVoiceTable.IdPrefix, StringComparison.Ordinal));
+
     /// <summary>The recast with those characters unpinned: their pin was overridden by the new narrator.</summary>
     public static IReadOnlyList<CastMember> UnpinOverridden(
         IReadOnlyList<CastMember> before, IReadOnlyList<CastMember> recast, string narratorVoiceId) =>

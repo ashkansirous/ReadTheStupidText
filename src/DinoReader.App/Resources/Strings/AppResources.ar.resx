@@ -177,6 +177,15 @@
   <data name="Cast_FlavourHint_Bouncy" xml:space="preserve"><value>أعلى وسريع</value></data>
   <data name="Cast_FlavourHint_Sleepy" xml:space="preserve"><value>بطيء وأخفض قليلًا</value></data>
   <!-- /Slice 113 -->
+  <!-- Slice 114 -->
+  <data name="Cast_Storyteller_Title" xml:space="preserve"><value>أصوات الراوي</value></data>
+  <data name="Cast_Storyteller_Text" xml:space="preserve"><value>أصوات إنجليزية أدفأ وأكثر حيوية للقصص. تنزيل {0} ميغابايت.</value></data>
+  <data name="Cast_Storyteller_Download" xml:space="preserve"><value>تنزيل</value></data>
+  <data name="Cast_Storyteller_HearOne" xml:space="preserve"><value>استمع إلى مثال</value></data>
+  <data name="Cast_Storyteller_On" xml:space="preserve"><value>أصوات الراوي مفعّلة للكتب الإنجليزية</value></data>
+  <data name="Cast_Storyteller_UseFirst" xml:space="preserve"><value>استخدم أصوات دينو الأولى</value></data>
+  <data name="Cast_Storyteller_Failed" xml:space="preserve"><value>تعذّر تنزيل أصوات الراوي. تحقق من الاتصال وحاول مرة أخرى.</value></data>
+  <!-- /Slice 114 -->
   <data name="Add_Scan" xml:space="preserve"><value>مسح الصفحات</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>تحتفظ بصور الصفحات</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>الصور</value></data>

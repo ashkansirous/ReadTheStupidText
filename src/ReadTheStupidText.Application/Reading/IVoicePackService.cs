@@ -30,6 +30,27 @@ public interface IVoicePackService
     /// <summary>Every installed, complete voice pack with its parsed manifest (Slice 51); the input of <see cref="InstalledVoiceCatalog"/>.</summary>
     IReadOnlyList<InstalledVoicePack> GetInstalledVoicePacks();
 
+    /// <summary>
+    /// Whether this service installs, lists and removes storyteller packs (Slice 114, Dino Reader only). False by default: a head whose service
+    /// does not say so shows no storyteller card, whatever else is registered.
+    /// </summary>
+    bool SupportsStorytellerPacks => false;
+
+    /// <summary>
+    /// Every installed, complete storyteller pack (Slice 114). Only Dino reads this, so the text reader's lookups never see one.
+    /// A service without storyteller support (<see cref="SupportsStorytellerPacks"/>) has none.
+    /// </summary>
+    IReadOnlyList<InstalledVoicePack> GetInstalledStorytellerPacks() => [];
+
+    /// <summary>The voice and the storyteller packs in one scan of the packs folder (each scan validates every installed pack's files).</summary>
+    IReadOnlyList<InstalledVoicePack> GetInstalledVoiceAndStorytellerPacks() => [.. GetInstalledVoicePacks(), .. GetInstalledStorytellerPacks()];
+
+    /// <summary>
+    /// Removes an installed pack (Slice 114: "Use Dino's first voices") and raises <see cref="InstalledPacksChanged"/>; false when it was not
+    /// installed or this service cannot remove packs. Call it only while nothing is reading.
+    /// </summary>
+    bool Uninstall(string packId) => false;
+
     /// <summary>Every installed, complete OCR pack with its parsed manifest (Slice 52); the input of <c>InstalledOcrCatalog</c>.</summary>
     IReadOnlyList<InstalledVoicePack> GetInstalledOcrPacks();
 

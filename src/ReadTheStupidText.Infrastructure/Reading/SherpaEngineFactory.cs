@@ -30,6 +30,9 @@ internal static class SherpaEngineFactory
             case VoiceEngineKind.Melo:
                 ConfigureMelo(ref config, paths.RootDir);
                 break;
+            case VoiceEngineKind.Kokoro:
+                ConfigureKokoro(ref config, paths.RootDir);
+                break;
             default:
                 throw new NotSupportedException($"No engine for voice model kind {paths.Kind}.");
         }
@@ -75,12 +78,17 @@ internal static class SherpaEngineFactory
                 config.Model.Supertonic.TtsJson, config.Model.Supertonic.UnicodeIndexer,
                 config.Model.Supertonic.VoiceStyle,
             ],
+            VoiceEngineKind.Kokoro =>
+            [
+                config.Model.Kokoro.Model, config.Model.Kokoro.Voices, config.Model.Kokoro.Tokens,
+                config.Model.Kokoro.Lexicon, config.Model.Kokoro.DataDir,
+            ],
             _ => [config.Model.Vits.Model, config.Model.Vits.Tokens],
         };
 
         foreach (string file in required)
         {
-            if (string.IsNullOrEmpty(file) || !File.Exists(file))
+            if (string.IsNullOrEmpty(file) || !(File.Exists(file) || Directory.Exists(file)))
             {
                 throw new FileNotFoundException($"Voice model file missing for {paths.Kind}: '{file}'.", file);
             }
@@ -106,6 +114,17 @@ internal static class SherpaEngineFactory
         config.Model.Vits.Model = Path.Combine(paths.ModelFolder, VitsFiles.Model);
         config.Model.Vits.Tokens = Path.Combine(paths.ModelFolder, VitsFiles.Tokens);
         config.Model.Vits.DataDir = Path.Combine(paths.RootDir, VitsFiles.EspeakDataDir);
+    }
+
+    // Kokoro-82M (Dino's English storyteller voices, Slice 114): one model with every voice in voices.bin (the speaker id
+    // picks one), the English lexicon, and the espeak-ng data that lives only in the pack.
+    private static void ConfigureKokoro(ref OfflineTtsConfig config, string dir)
+    {
+        config.Model.Kokoro.Model = Path.Combine(dir, KokoroFiles.Model);
+        config.Model.Kokoro.Voices = Path.Combine(dir, KokoroFiles.Voices);
+        config.Model.Kokoro.Tokens = Path.Combine(dir, KokoroFiles.Tokens);
+        config.Model.Kokoro.Lexicon = Path.Combine(dir, KokoroFiles.Lexicon);
+        config.Model.Kokoro.DataDir = Path.Combine(dir, KokoroFiles.EspeakDataDir);
     }
 
     // MeloTTS zh_en: lexicon + jieba dictionary, with the phone/date/number rule FSTs the upstream

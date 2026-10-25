@@ -177,6 +177,15 @@
   <data name="Cast_FlavourHint_Bouncy" xml:space="preserve"><value>más agudo, rápido</value></data>
   <data name="Cast_FlavourHint_Sleepy" xml:space="preserve"><value>lento, un poco más grave</value></data>
   <!-- /Slice 113 -->
+  <!-- Slice 114 -->
+  <data name="Cast_Storyteller_Title" xml:space="preserve"><value>Voces de cuentacuentos</value></data>
+  <data name="Cast_Storyteller_Text" xml:space="preserve"><value>Voces en inglés más cálidas y animadas para los cuentos. Descarga de {0} MB.</value></data>
+  <data name="Cast_Storyteller_Download" xml:space="preserve"><value>Descargar</value></data>
+  <data name="Cast_Storyteller_HearOne" xml:space="preserve"><value>Escuchar una</value></data>
+  <data name="Cast_Storyteller_On" xml:space="preserve"><value>Las voces de cuentacuentos están activadas para los libros en inglés</value></data>
+  <data name="Cast_Storyteller_UseFirst" xml:space="preserve"><value>Usar las primeras voces de Dino</value></data>
+  <data name="Cast_Storyteller_Failed" xml:space="preserve"><value>No se pudieron descargar las voces. Comprueba la conexión e inténtalo de nuevo.</value></data>
+  <!-- /Slice 114 -->
   <data name="Add_Scan" xml:space="preserve"><value>Escanear páginas</value></data>
   <data name="Add_ScanSub" xml:space="preserve"><value>Conserva las imágenes de las páginas</value></data>
   <data name="Add_Photos" xml:space="preserve"><value>Fotos</value></data>

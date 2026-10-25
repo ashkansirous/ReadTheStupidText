@@ -16,6 +16,9 @@ public static class CastText
 	// Display names of the voices in the packs seen so far (a Piper pack names its own voices).
 	private static readonly ConcurrentDictionary<string, string> PackVoiceNames = new();
 
+	// Whether the English pool is the Kokoro storyteller's: a kept Supertonic pick is then spoken as, and shown with the name of, its mapped Kokoro voice.
+	private static volatile bool _kokoroSpeaksSupertonicPicks;
+
 	public static string Title => AppResources.Cast_Title;
 	public static string Narrator => AppResources.Cast_Narrator;
 	public static string ChangeForAll => AppResources.Cast_ChangeForAll;
@@ -58,9 +61,22 @@ public static class CastText
 
 	public static string MergeInto(string name) => AppResources.Format(AppResources.Cast_MergeInto, name);
 
-	public static string NameAndVoice(string name, string voiceId) => name + NameAndVoiceSeparator + VoiceName(voiceId);
+	public static string NameAndVoice(string name, string voiceId, string language) => name + NameAndVoiceSeparator + VoiceName(voiceId, language);
 
 	public static string Sounds => AppResources.Cast_Sounds;
+
+	/// <summary>The line under a collapsed character (mock frame 49, Slice 114): "Boy · Puck · Small", the gender, the voice and how it sounds.</summary>
+	public static string RowSummary(Gender gender, string voiceId, VoiceFlavour flavour, string language) =>
+		string.Join(NameAndVoiceSeparator, GenderLabel(gender), VoiceName(voiceId, language), FlavourName(flavour));
+
+	// The storyteller voices card (Slice 114).
+	public static string StorytellerTitle => AppResources.Cast_Storyteller_Title;
+	public static string StorytellerDownload => AppResources.Cast_Storyteller_Download;
+	public static string StorytellerHearOne => AppResources.Cast_Storyteller_HearOne;
+	public static string StorytellerOn => AppResources.Cast_Storyteller_On;
+	public static string StorytellerUseFirst => AppResources.Cast_Storyteller_UseFirst;
+	public static string StorytellerFailed => AppResources.Cast_Storyteller_Failed;
+	public static string StorytellerText(int megabytes) => AppResources.Format(AppResources.Cast_Storyteller_Text, megabytes);
 
 	/// <summary>Two labels joined the way this language writes a label and its value (a localized format, so RTL and full-width colons read right).</summary>
 	public static string Pair(string label, string value) => AppResources.Format(AppResources.Cast_Pair, label, value);
@@ -104,16 +120,35 @@ public static class CastText
 		foreach (VoiceInfo voice in voices)
 		{
 			PackVoiceNames[voice.Id] = voice.DisplayName;
+			TrackStorytellerPool(voice);
 		}
 	}
 
-	/// <summary>The voice's display name, or its id when no pack seen so far lists it.</summary>
-	public static string VoiceName(string voiceId)
+	// Only the English pool decides: the other languages' Supertonic pools say nothing about the storyteller.
+	private static void TrackStorytellerPool(VoiceInfo voice)
+	{
+		if (voice.Engine == VoiceEngineKind.Kokoro)
+		{
+			_kokoroSpeaksSupertonicPicks = true;
+		}
+		else if (voice.Engine == VoiceEngineKind.Supertonic && voice.Language == KokoroVoiceTable.EnglishCode)
+		{
+			_kokoroSpeaksSupertonicPicks = false;
+		}
+	}
+
+	/// <summary>The voice's display name for a cast in <paramref name="language"/> (a kept Supertonic pick shows its mapped Kokoro voice for English while the storyteller pool is active), or its id when no pack seen so far lists it.</summary>
+	public static string VoiceName(string voiceId, string language)
 	{
 		string? norwegian = NorwegianLabel(voiceId);
 		if (norwegian is not null)
 		{
 			return norwegian;
+		}
+
+		if (_kokoroSpeaksSupertonicPicks && KokoroVoiceTable.Serves(UiLanguage.Resolve(language)) && KokoroVoiceTable.MapFromSupertonic(voiceId) is { } mapped)
+		{
+			return mapped.DisplayName;
 		}
 
 		if (PackVoiceNames.TryGetValue(voiceId, out string? known))

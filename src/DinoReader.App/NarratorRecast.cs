@@ -5,6 +5,8 @@ namespace DinoReader;
 /// <summary>
 /// Keeps the narrator's voice out of every cast (Slice 109, Decision 114). The narrator is one voice per language for all books, so a book
 /// whose stored cast already gave that voice to a character has that character re-cast quietly; a character the grown-up had pinned to it loses the pin.
+/// The same pass re-casts a cast whose voices are no longer the language's (the storyteller pack was installed or removed, Slice 114), but only the
+/// characters the grown-up did not pick: an explicit pick stays unless its voice left with its pack, and then it takes the closest voice.
 /// </summary>
 internal static class NarratorRecast
 {
@@ -16,7 +18,8 @@ internal static class NarratorRecast
 		{
 			IReadOnlyList<CastMember> stored = story.CastIn(language);
 			string narrator = voicing.NarratorOf(language);
-			if (!CastEditor.UsesVoice(stored, narrator))
+			IReadOnlyList<VoiceOption> pool = voicing.VoicesFor(language);
+			if (!CastEditor.UsesVoice(stored, narrator) && !CastEditor.HasVoiceOutside(stored, pool))
 			{
 				continue;
 			}
@@ -24,7 +27,9 @@ internal static class NarratorRecast
 			IReadOnlyList<CastMember> recast = await voicing.CastForAsync(story.Language, language, story.Text, stored, story.Merges, story.BreakMap());
 			if (recast.Count > 0)
 			{
-				changed = changed.WithCastIn(language, CastEditor.UnpinOverridden(stored, recast, narrator));
+				IReadOnlyList<CastMember> kept = CastEditor.KeepExplicitPicks(stored, recast, pool, narrator);
+				IReadOnlyList<CastMember> result = CastEditor.UnpinOverridden(stored, kept, narrator);
+				changed = result.SequenceEqual(stored) ? changed : changed.WithCastIn(language, result);
 			}
 		}
 

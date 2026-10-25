@@ -25,6 +25,9 @@ public static class PackConstants
     /// <summary>The Piper Norwegian (nb) voice pack, ten nvcc speakers (Slice 104); carries the GPL espeak-ng data (Decision 108).</summary>
     public const string NorwegianPackId = "piper-nb";
 
+    /// <summary>The Kokoro-82M English storyteller pack, Dino only (Slice 114); carries the GPL espeak-ng data (Decision 119).</summary>
+    public const string StorytellerPackId = "kokoro-en";
+
     /// <summary>
     /// The app languages some voice pack declares (Supertonic-3 plus the Persian, Norwegian and Chinese packs).
     /// Keep it equal to the languages packs.yml publishes (NordicLanguageTests checks).
