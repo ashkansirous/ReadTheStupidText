@@ -1,6 +1,6 @@
 # Slice 121 — Dino: pictures for the ten store stories
 
-*Planned 2026-10-25.* Dino Reader only; RTST is not touched.
+*In progress* (one book per PR; Billy Goats Gruff first). Dino Reader only; RTST is not touched.
 
 **Batch:** 25 (story illustrations)
 **Depends on:** Slice 119 (user checked the pigs on their phone), Slice 120 (the skill)
