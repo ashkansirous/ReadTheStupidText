@@ -156,14 +156,22 @@ public partial class GalleryPage : ContentPage
 		}
 	}
 
+	// The language the "ready" sheet names the narrator of: the grown-up's own when the installed storyteller pack speaks it (Slice 118: a version-2 pack speaks English, Spanish, Portuguese, Chinese; version 1 only English), else English.
+	private string StorytellerLanguage()
+	{
+		string mine = LanguageChoice.Current(_services.GetRequiredService<ISettingsStore>());
+		return KokoroVoiceTable.Serves(mine) && _storyteller.Speaks(mine) ? mine : KokoroVoiceTable.EnglishCode;
+	}
+
 	private async Task ShowReadySheetAsync()
 	{
 		try
 		{
-			string narrator = await Task.Run(() => _services.GetRequiredService<StoryVoicing>().NarratorOf(KokoroVoiceTable.EnglishCode));
+			string language = StorytellerLanguage();
+			string narrator = await Task.Run(() => _services.GetRequiredService<StoryVoicing>().NarratorOf(language));
 			if (_mode.IsGrownUp && _storyteller.ReadyPending)
 			{
-				ReadySheet.Show(CastText.VoiceName(narrator, KokoroVoiceTable.EnglishCode), KokoroVoiceTable.EnglishCode);
+				ReadySheet.Show(CastText.VoiceName(narrator, language), language);
 			}
 		}
 		catch (Exception ex)
@@ -180,8 +188,9 @@ public partial class GalleryPage : ContentPage
 	{
 		try
 		{
-			string narrator = _services.GetRequiredService<StoryVoicing>().NarratorOf(KokoroVoiceTable.EnglishCode);
-			await _preview.PlayAsync(CastText.PreviewLineFor(KokoroVoiceTable.EnglishCode), narrator, VoiceFlavour.Storyteller);
+			string language = StorytellerLanguage();
+			string narrator = _services.GetRequiredService<StoryVoicing>().NarratorOf(language);
+			await _preview.PlayAsync(CastText.PreviewLineFor(language), narrator, VoiceFlavour.Storyteller);
 		}
 		catch (Exception ex)
 		{

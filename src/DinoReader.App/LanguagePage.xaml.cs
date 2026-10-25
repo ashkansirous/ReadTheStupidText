@@ -55,7 +55,7 @@ public static class LanguageChoice
 
 	/// <summary>Whether a voice pack for <paramref name="code"/> is installed.</summary>
 	public static bool IsInstalled(IVoicePackService packs, string code) =>
-		InstalledVoiceCatalog.Resolve(packs.GetInstalledVoicePacks(), code) is not null;
+		InstalledVoiceCatalog.Resolve(packs.GetInstalledVoiceAndStorytellerPacks(), code) is not null;
 }
 
 /// <summary>

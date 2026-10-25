@@ -31,7 +31,7 @@ internal static class SherpaEngineFactory
                 ConfigureMelo(ref config, paths.RootDir);
                 break;
             case VoiceEngineKind.Kokoro:
-                ConfigureKokoro(ref config, paths.RootDir);
+                ConfigureKokoro(ref config, paths.RootDir, paths.Language);
                 break;
             default:
                 throw new NotSupportedException($"No engine for voice model kind {paths.Kind}.");
@@ -81,7 +81,9 @@ internal static class SherpaEngineFactory
             VoiceEngineKind.Kokoro =>
             [
                 config.Model.Kokoro.Model, config.Model.Kokoro.Voices, config.Model.Kokoro.Tokens,
-                config.Model.Kokoro.Lexicon, config.Model.Kokoro.DataDir,
+                .. config.Model.Kokoro.Lexicon.Split(','), config.Model.Kokoro.DataDir,
+                .. (string.IsNullOrEmpty(config.Model.Kokoro.DictDir) ? [] : new[] { config.Model.Kokoro.DictDir }),
+                .. config.RuleFsts.Split(',', StringSplitOptions.RemoveEmptyEntries),
             ],
             _ => [config.Model.Vits.Model, config.Model.Vits.Tokens],
         };
@@ -116,15 +118,22 @@ internal static class SherpaEngineFactory
         config.Model.Vits.DataDir = Path.Combine(paths.RootDir, VitsFiles.EspeakDataDir);
     }
 
-    // Kokoro-82M (Dino's English storyteller voices, Slice 114): one model with every voice in voices.bin (the speaker id
-    // picks one), the English lexicon, and the espeak-ng data that lives only in the pack.
-    private static void ConfigureKokoro(ref OfflineTtsConfig config, string dir)
+    // Kokoro-82M (Dino's storyteller voices, Slice 114): one model with every voice in voices.bin (the speaker id
+    // picks one), the English lexicon, and the espeak-ng data that lives only in the pack. The engine is configured for one language
+    // (Slice 118): lang picks the espeak-ng voice (empty for English), and Chinese adds its lexicon, the jieba dictionary and the rule FSTs.
+    private static void ConfigureKokoro(ref OfflineTtsConfig config, string dir, string language)
     {
         config.Model.Kokoro.Model = Path.Combine(dir, KokoroFiles.Model);
         config.Model.Kokoro.Voices = Path.Combine(dir, KokoroFiles.Voices);
         config.Model.Kokoro.Tokens = Path.Combine(dir, KokoroFiles.Tokens);
-        config.Model.Kokoro.Lexicon = Path.Combine(dir, KokoroFiles.Lexicon);
+        config.Model.Kokoro.Lexicon = string.Join(',', KokoroFiles.LexiconsFor(language).Select(file => Path.Combine(dir, file)));
         config.Model.Kokoro.DataDir = Path.Combine(dir, KokoroFiles.EspeakDataDir);
+        config.Model.Kokoro.Lang = KokoroVoiceTable.EngineLang(language);
+        if (KokoroFiles.UsesChineseFiles(language))
+        {
+            config.Model.Kokoro.DictDir = Path.Combine(dir, KokoroFiles.DictDir);
+            config.RuleFsts = string.Join(',', KokoroFiles.RuleFsts.Select(file => Path.Combine(dir, file)));
+        }
     }
 
     // MeloTTS zh_en: lexicon + jieba dictionary, with the phone/date/number rule FSTs the upstream

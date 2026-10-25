@@ -263,7 +263,7 @@ public sealed class VoicePackInstaller
 
         // Activates a pack that already serves the language (Slice 51: one pack per
         // language family, so the Supertonic pack no longer stands for every language).
-        if (InstalledVoiceCatalog.Resolve(_packs.GetInstalledVoicePacks(), CurrentLanguage) is not null)
+        if (InstalledVoiceCatalog.Resolve(_packs.GetInstalledVoiceAndStorytellerPacks(), CurrentLanguage) is not null)
         {
             await ActivateInstalledAsync(run);
             return null;

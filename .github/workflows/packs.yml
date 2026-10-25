@@ -27,10 +27,11 @@ name: packs
 #                   and int8-quantized here like mana. It carries the same GPL-3.0 espeak-ng data
 #                   (copied from the Persian archive), only inside this pack's zip (Decision 108).
 #   * melo-zh-en    MeloTTS Chinese + English (MIT), same download and pin.
-#   * kokoro-en     Dino Reader's English storyteller voices (Slice 114, Decision 118): Kokoro-82M v1.0
+#   * kokoro-en     Dino Reader's storyteller voices (Slice 114, Decision 118; Slice 118 adds Spanish, Portuguese
+#                   and Chinese, so the pack serves en,es,pt,zh under its old id): Kokoro-82M v1.0
 #                   (Apache-2.0 weights) as sherpa-onnx's int8 multi-language build, pinned by sha256, with
-#                   its English lexicon and the GPL-3.0 espeak-ng data, only inside this pack's zip
-#                   (Decision 119). Its catalog kind is `storyteller`, so the text reader never picks it and an
+#                   its English lexicon, the Chinese lexicon, jieba dictionary and rule FSTs, and the GPL-3.0
+#                   espeak-ng data, only inside this pack's zip (Decision 119). Its catalog kind is `storyteller`, so the text reader never picks it and an
 #                   older app skips the entry. A sample wav (the "Hear one" button) rides next to the zip.
 # Twenty-three translation packs (Slice 75, Decision 67; Slice 106, Decision 110) ride in the same release and packs.json:
 #   one Opus-MT (Marian) leg each, `<source>-<target>` with English at one end, so a pair like
@@ -70,9 +71,9 @@ on:
         default: '1'
         type: string
       kokoro_pack_version:
-        description: 'Version stamped into the Kokoro storyteller pack (Dino Reader, English)'
+        description: 'Version stamped into the Kokoro storyteller pack (Dino Reader: English, Spanish, Portuguese, Chinese; 2 is the first with es, pt and zh)'
         required: true
-        default: '1'
+        default: '2'
         type: string
       ocr_pack_version:
         description: 'Version stamped into the four PaddleOCR packs (bump when any model or dictionary changes)'
@@ -125,10 +126,12 @@ env:
   CHINESE_URL: https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-melo-tts-zh_en.tar.bz2
   CHINESE_SHA256: e58351ed7149f290a54534538badd4077cdbe6fddc964b24d0bee870415d1514
   # Slice 114: Kokoro-82M v1.0 as sherpa-onnx's int8 multi-language archive (132 MB; model.int8.onnx 114 MB, voices.bin 28 MB,
-  # 53 voices of which Dino lists the English ones, see KokoroVoiceTable.cs). Pinned by the archive's sha256 (the release digest).
-  # The zip comes to about 126 MB, over the 100 MB cap of the other packs, so this pack has its own cap (150 MB).
-  # Keep the id in sync with PackConstants.StorytellerPackId.
+  # 54 voices of which Dino lists the English, Spanish, Portuguese and Chinese ones, see KokoroVoiceTable.cs). Pinned by the archive's sha256 (the release digest).
+  # The zip comes to about 126 MB (English only), over the 100 MB cap of the other packs, so this pack has its own cap (150 MB); the Chinese
+  # lexicon, jieba dictionary and FSTs (Slice 118) add about 17 MB uncompressed, so check the size line of the run.
+  # Keep the id in sync with PackConstants.StorytellerPackId, and the languages with KokoroVoiceTable.Serves.
   KOKORO_ID: kokoro-en
+  KOKORO_LANGUAGES: 'en,es,pt,zh'
   KOKORO_LICENSE: 'Apache-2.0 (Kokoro-82M weights) AND GPL-3.0-or-later (espeak-ng data)'
   KOKORO_URL: https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-int8-multi-lang-v1_0.tar.bz2
   KOKORO_SHA256: 4c3052abaa60943a341f193888cf6abd68787dae6ab8ae5c925a706caa247e4e
@@ -468,9 +471,10 @@ jobs:
           ls -l out
 
       # The Kokoro storyteller pack (Slice 114): the upstream int8 model stored as model.onnx (the name
-      # Domain/Reading/KokoroFiles.cs expects), all 53 voices in voices.bin, the English lexicon and the espeak-ng
-      # data. The Chinese lexicon, jieba dictionary and rule FSTs of the multi-language archive are left out.
-      # No voices are listed in pack.json: the English ones live in KokoroVoiceTable.cs with their speaker ids.
+      # Domain/Reading/KokoroFiles.cs expects), all 54 voices in voices.bin, the English lexicon and the espeak-ng
+      # data, and (Slice 118) the Chinese lexicon, jieba dictionary and rule FSTs that the Chinese voices need (Domain/Reading/KokoroFiles.cs).
+      # Spanish and Portuguese need only espeak-ng's es and pt data, which the data folder already has.
+      # No voices are listed in pack.json: they live in KokoroVoiceTable.cs with their speaker ids.
       - name: Build the Kokoro (storyteller) pack zip
         run: |
           set -euo pipefail
@@ -478,19 +482,32 @@ jobs:
           dest="out/$KOKORO_ID"
           mkdir -p "$dest"
           cp "$src/model.int8.onnx" "$dest/model.onnx"
-          for f in voices.bin tokens.txt lexicon-us-en.txt; do
+          for f in voices.bin tokens.txt lexicon-us-en.txt lexicon-zh.txt date-zh.fst phone-zh.fst number-zh.fst; do
             if [ ! -f "$src/$f" ]; then echo "::error::Missing $f in the Kokoro archive"; exit 1; fi
             cp "$src/$f" "$dest/$f"
           done
           if [ ! -d "$src/espeak-ng-data" ]; then echo "::error::Missing espeak-ng-data in the Kokoro archive"; exit 1; fi
           cp -r "$src/espeak-ng-data" "$dest/espeak-ng-data"
+          if [ ! -s "$src/dict/jieba.dict.utf8" ]; then echo "::error::Missing the jieba dictionary (dict/) in the Kokoro archive"; exit 1; fi
+          cp -r "$src/dict" "$dest/dict"
           if [ "$(stat -c %s "$dest/model.onnx")" -lt 1048576 ]; then echo "::error::model.onnx is not a real model"; exit 1; fi
           if [ ! -s "$dest/espeak-ng-data/en_dict" ] || [ -z "$(find "$dest/espeak-ng-data/lang" -type f -name en-US -print -quit)" ]; then
             echo "::error::espeak-ng-data has no en-US voice (needs en_dict and lang/*/en-US)"; exit 1
           fi
+          for lang in es pt; do
+            if [ ! -s "$dest/espeak-ng-data/${lang}_dict" ] || [ -z "$(find "$dest/espeak-ng-data/lang" -type f -name "$lang" -print -quit)" ]; then
+              echo "::error::espeak-ng-data has no $lang voice (needs ${lang}_dict and lang/*/$lang)"; exit 1
+            fi
+          done
+          # The Brazilian voices run with espeak voice pt-br, the Chinese ones with cmn (espeak has no "zh").
+          for voice in pt-BR cmn; do
+            if [ -z "$(find "$dest/espeak-ng-data/lang" -type f -iname "$voice" -print -quit)" ]; then
+              echo "::error::espeak-ng-data has no $voice voice (lang/*/$voice)"; exit 1
+            fi
+          done
           cp "$src/LICENSE" "$dest/LICENSE-Kokoro-Apache-2.0"
           cat > "$dest/LICENSE" <<'LICENSE_TEXT'
-          Kokoro storyteller voices for Dino Reader (English)
+          Kokoro storyteller voices for Dino Reader (English, Spanish, Portuguese, Chinese)
             Kokoro-82M v1.0 weights: Apache License 2.0 (https://huggingface.co/hexgrad/Kokoro-82M; the licence text is
             LICENSE-Kokoro-Apache-2.0). Converted to ONNX and int8-quantized by sherpa-onnx
             (https://github.com/k2-fsa/sherpa-onnx, Apache-2.0), archive kokoro-int8-multi-lang-v1_0.
@@ -502,13 +519,13 @@ jobs:
             source code is available at https://github.com/espeak-ng/espeak-ng .
           LICENSE_TEXT
           cat > "$dest/SOURCE" <<SOURCE_TEXT
-          Model, voices, tokens, lexicon: $KOKORO_URL (sha256 $KOKORO_SHA256)
+          Model, voices, tokens, lexicons, rule FSTs, jieba dictionary: $KOKORO_URL (sha256 $KOKORO_SHA256)
           Kokoro-82M: https://huggingface.co/hexgrad/Kokoro-82M
           espeak-ng source: https://github.com/espeak-ng/espeak-ng
           SOURCE_TEXT
           files=$(cd "$dest" && find . -type f ! -path ./pack.json -printf '%P\n' | sort | jq -R . | jq -s .)
-          jq -n --arg id "$KOKORO_ID" --arg version "$KOKORO_VERSION" --argjson files "$files" \
-            '{id: $id, kind: "storyteller", language: "en", version: $version, engine: "sherpa-onnx", model: "kokoro", files: $files}' \
+          jq -n --arg id "$KOKORO_ID" --arg languages "$KOKORO_LANGUAGES" --arg version "$KOKORO_VERSION" --argjson files "$files" \
+            '{id: $id, kind: "storyteller", language: $languages, version: $version, engine: "sherpa-onnx", model: "kokoro", files: $files}' \
             > "$dest/pack.json"
           (cd out && zip -r -X "$KOKORO_ID-$KOKORO_VERSION.zip" "$KOKORO_ID")
           ls -l out
@@ -537,6 +554,30 @@ jobs:
               data_dir=os.path.join(pack, "espeak-ng-data"),
           )
           tts = sherpa_onnx.OfflineTts(sherpa_onnx.OfflineTtsConfig(model=sherpa_onnx.OfflineTtsModelConfig(kokoro=kokoro, num_threads=2)))
+          # Self-check of the engine languages the app configures (KokoroVoiceTable.EngineLang): Brazilian Portuguese as pt-br, Spanish,
+          # and Chinese as cmn with Latin-script words in the sentence (espeak "zh" fails on those). Every speaker id of
+          # KokoroVoiceTable's Spanish, Portuguese and Chinese tables is synthesized (voices.bin holds 54 voices, ids 0-53).
+          checks = [
+              ("pt-br", (42, 43, 44), "Olá, vamos ler uma história?", False),
+              ("es", (28, 29, 53), "Hola, ¿quieres leer un cuento?", False),
+              ("cmn", tuple(range(45, 53)), "他叫 Bobby,住在 London。", True),
+          ]
+          for lang, check_sids, text, chinese in checks:
+              check_kokoro = sherpa_onnx.OfflineTtsKokoroModelConfig(
+                  model=os.path.join(pack, "model.onnx"),
+                  voices=os.path.join(pack, "voices.bin"),
+                  tokens=os.path.join(pack, "tokens.txt"),
+                  lexicon=(os.path.join(pack, "lexicon-us-en.txt") + "," + os.path.join(pack, "lexicon-zh.txt")) if chinese else os.path.join(pack, "lexicon-us-en.txt"),
+                  data_dir=os.path.join(pack, "espeak-ng-data"),
+                  dict_dir=os.path.join(pack, "dict") if chinese else "",
+                  lang=lang,
+              )
+              check_tts = sherpa_onnx.OfflineTts(sherpa_onnx.OfflineTtsConfig(
+                  model=sherpa_onnx.OfflineTtsModelConfig(kokoro=check_kokoro, num_threads=2),
+                  rule_fsts=",".join(os.path.join(pack, f) for f in ("date-zh.fst", "phone-zh.fst", "number-zh.fst")) if chinese else ""))
+              for check_sid in check_sids:
+                  if not check_tts.generate(text, sid=check_sid, speed=1.0).samples:
+                      raise SystemExit("Kokoro made no audio for lang " + lang + " sid " + str(check_sid))
           lines = [
               (3, 0.94, "Once upon a time, a little lamb found a very big, very friendly dinosaur."),
               (18, 1.0, "Hello! Will you read me a story?"),
@@ -725,7 +766,7 @@ jobs:
             entry "$PERSIAN_ID" fa "$PERSIAN_VERSION" "$PERSIAN_LICENSE"
             entry "$NORWEGIAN_ID" nb "$NORWEGIAN_VERSION" "$NORWEGIAN_LICENSE"
             entry "$CHINESE_ID" zh "$CHINESE_VERSION" "$CHINESE_LICENSE"
-            entry "$KOKORO_ID" en "$KOKORO_VERSION" "$KOKORO_LICENSE" storyteller
+            entry "$KOKORO_ID" "$KOKORO_LANGUAGES" "$KOKORO_VERSION" "$KOKORO_LICENSE" storyteller
             entry ocr-latin "en,fr,es,pt" "$OCR_VERSION" "$OCR_LICENSE" ocr
             entry ocr-cyrillic ru "$OCR_VERSION" "$OCR_LICENSE" ocr
             entry ocr-arabic "ar,fa" "$OCR_VERSION" "$OCR_LICENSE" ocr

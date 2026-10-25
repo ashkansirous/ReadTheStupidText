@@ -44,7 +44,7 @@ public static class InstalledVoiceCatalog
         return manifest.Model switch
         {
             VoiceEngineKind.Supertonic => SupertonicVoiceTable.VoicesFor(language),
-            VoiceEngineKind.Kokoro when KokoroVoiceTable.Serves(language) => KokoroVoiceTable.Voices,
+            VoiceEngineKind.Kokoro when KokoroVoiceTable.Serves(language) => KokoroVoiceTable.VoicesFor(language),
             _ => [],
         };
     }

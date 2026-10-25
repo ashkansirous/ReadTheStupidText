@@ -8,7 +8,7 @@ public class KokoroStorytellerTests
     private const string ZipUrl = "https://github.com/example/repo/releases/download/packs-6/kokoro-en-1.zip";
 
     private static readonly PackInfo Listed = new(
-        PackConstants.StorytellerPackId, ["en"], PackKind.Storyteller, "1", 125_582_024, "abc", "Apache-2.0", ZipUrl);
+        PackConstants.StorytellerPackId, ["en", "es", "pt", "zh"], PackKind.Storyteller, "1", 125_582_024, "abc", "Apache-2.0", ZipUrl);
 
     private static readonly PackInfo ListedSupertonic = new(
         PackConstants.SupertonicPackId, ["en", "fr"], PackKind.Voice, "1", 145_000_000, "def", "Apache-2.0", "https://example.com/supertonic-3-1.zip");
@@ -47,6 +47,141 @@ public class KokoroStorytellerTests
         Assert.Equal(KokoroVoiceTable.Voices.Count, KokoroVoiceTable.Voices.Select(v => v.Id).Distinct().Count());
         Assert.Equal(KokoroVoiceTable.Voices.Count, KokoroVoiceTable.Voices.Select(v => v.SpeakerId).Distinct().Count());
         Assert.All(KokoroVoiceTable.Voices, v => Assert.InRange(v.SpeakerId, 0, EnglishSpeakers - 1));
+    }
+
+    [Theory]
+    [InlineData("es", "ef_dora", 28)]
+    [InlineData("es", "em_alex", 29)]
+    [InlineData("es", "em_santa", 53)]
+    [InlineData("pt", "pf_dora", 42)]
+    [InlineData("pt", "pm_alex", 43)]
+    [InlineData("pt", "pm_santa", 44)]
+    [InlineData("zh", "zf_xiaobei", 45)]
+    [InlineData("zh", "zf_xiaoni", 46)]
+    [InlineData("zh", "zf_xiaoxiao", 47)]
+    [InlineData("zh", "zf_xiaoyi", 48)]
+    [InlineData("zh", "zm_yunjian", 49)]
+    [InlineData("zh", "zm_yunxi", 50)]
+    [InlineData("zh", "zm_yunxia", 51)]
+    [InlineData("zh", "zm_yunyang", 52)]
+    public void Each_spanish_portuguese_and_chinese_voice_has_its_speaker_id_and_language(string language, string key, int sid)
+    {
+        VoiceInfo voice = KokoroVoiceTable.VoicesFor(language).Single(v => v.Id == KokoroVoiceTable.IdPrefix + key);
+
+        Assert.Equal(sid, voice.SpeakerId);
+        Assert.Equal(language, voice.Language);
+        Assert.Equal(VoiceEngineKind.Kokoro, voice.Engine);
+        Assert.Equal(key[1] == 'f', KokoroVoiceTable.IsFemale(voice.Id));
+    }
+
+    [Fact]
+    public void The_storyteller_voices_serve_english_spanish_portuguese_and_chinese_and_not_french()
+    {
+        Assert.All(new[] { "en", "es", "pt", "zh" }, language => Assert.True(KokoroVoiceTable.Serves(language)));
+        Assert.All(new[] { "fr", "ja", "fa", "ru" }, language => Assert.False(KokoroVoiceTable.Serves(language)));
+        Assert.Empty(KokoroVoiceTable.VoicesFor("fr"));
+    }
+
+    [Fact]
+    public void The_whole_table_has_unique_ids_and_speakers_and_each_language_has_a_woman_and_a_man()
+    {
+        string[] languages = ["en", "es", "pt", "zh"];
+        List<VoiceInfo> all = languages.SelectMany(KokoroVoiceTable.VoicesFor).ToList();
+
+        Assert.Equal(all.Count, all.Select(v => v.Id).Distinct().Count());
+        Assert.Equal(all.Count, all.Select(v => v.SpeakerId).Distinct().Count());
+        Assert.All(languages, l => Assert.Contains(KokoroVoiceTable.VoicesFor(l), v => KokoroVoiceTable.IsFemale(v.Id)));
+        Assert.All(languages, l => Assert.Contains(KokoroVoiceTable.VoicesFor(l), v => !KokoroVoiceTable.IsFemale(v.Id)));
+    }
+
+    [Theory]
+    [InlineData("en", "")]
+    [InlineData("es", "es")]
+    [InlineData("pt", "pt-br")]
+    [InlineData("zh", "cmn")]
+    public void The_engine_lang_is_the_espeak_voice_and_empty_for_english(string language, string lang)
+    {
+        Assert.Equal(lang, KokoroVoiceTable.EngineLang(language));
+    }
+
+    [Fact]
+    public void Only_the_chinese_engine_loads_the_chinese_lexicon_dictionary_and_rule_fsts()
+    {
+        Assert.Equal([KokoroFiles.Lexicon], KokoroFiles.LexiconsFor("es"));
+        Assert.Equal([KokoroFiles.Lexicon, KokoroFiles.LexiconZh], KokoroFiles.LexiconsFor("zh"));
+        Assert.True(KokoroFiles.UsesChineseFiles("zh"));
+        Assert.False(KokoroFiles.UsesChineseFiles("en"));
+        Assert.Equal(3, KokoroFiles.RuleFsts.Count);
+    }
+
+    [Fact]
+    public void A_supertonic_pick_maps_into_the_voices_of_the_models_language()
+    {
+        var spanish = new VoiceModelPaths("/k", VoiceEngineKind.Kokoro, "es", KokoroVoiceTable.VoicesFor("es"));
+
+        VoiceInfo woman = spanish.ResolveVoice("supertonic:F3");
+        VoiceInfo man = spanish.ResolveVoice("supertonic:M4");
+
+        Assert.Equal("es", woman.Language);
+        Assert.True(KokoroVoiceTable.IsFemale(woman.Id));
+        Assert.False(KokoroVoiceTable.IsFemale(man.Id));
+    }
+
+    [Theory]
+    [InlineData("es")]
+    [InlineData("pt")]
+    [InlineData("zh")]
+    public void With_a_storyteller_pack_that_lists_the_language_it_resolves_to_that_languages_kokoro_voices(string language)
+    {
+        InstalledVoicePack supertonic = Installed(PackKind.Voice, PackConstants.SupertonicPackId, "en,fr,es,pt", VoiceEngineKind.Supertonic);
+        InstalledVoicePack kokoro = Installed(PackKind.Storyteller, PackConstants.StorytellerPackId, "en,es,pt,zh", VoiceEngineKind.Kokoro);
+
+        VoiceModelPaths? model = InstalledVoiceCatalog.Resolve([supertonic, kokoro], language);
+
+        Assert.Equal(VoiceEngineKind.Kokoro, model!.Kind);
+        Assert.Equal(language, model.Language);
+        Assert.Equal(KokoroVoiceTable.VoicesFor(language).Select(v => v.Id), model.AvailableVoices.Select(v => v.Id));
+    }
+
+    [Fact]
+    public void An_older_storyteller_pack_that_lists_only_english_leaves_spanish_on_supertonic_and_french_always_does()
+    {
+        InstalledVoicePack supertonic = Installed(PackKind.Voice, PackConstants.SupertonicPackId, "en,fr,es", VoiceEngineKind.Supertonic);
+        InstalledVoicePack oldKokoro = Installed(PackKind.Storyteller, PackConstants.StorytellerPackId, "en", VoiceEngineKind.Kokoro);
+        InstalledVoicePack kokoro = Installed(PackKind.Storyteller, PackConstants.StorytellerPackId, "en,es,pt,zh", VoiceEngineKind.Kokoro);
+
+        Assert.Equal(VoiceEngineKind.Supertonic, InstalledVoiceCatalog.Resolve([supertonic, oldKokoro], "es")!.Kind);
+        Assert.Equal(VoiceEngineKind.Supertonic, InstalledVoiceCatalog.Resolve([supertonic, kokoro], "fr")!.Kind);
+    }
+
+    [Fact]
+    public void The_catalog_lists_the_storyteller_pack_for_each_language_it_speaks()
+    {
+        Assert.All(new[] { "en", "es", "pt", "zh" }, language => Assert.Equal(Listed, StorytellerOffer.ListedFor([Listed], language)));
+        Assert.Null(StorytellerOffer.ListedFor([Listed], "fr"));
+    }
+
+    [Fact]
+    public void The_packs_workflow_ships_the_chinese_files_and_lists_the_four_languages()
+    {
+        string workflow = File.ReadAllText(Path.Combine(RepoRoot(), ".github", "workflows", "packs.yml"));
+
+        Assert.Contains(KokoroFiles.LexiconZh, workflow);
+        Assert.All(KokoroFiles.RuleFsts, fst => Assert.Contains(fst, workflow));
+        Assert.Contains("\"$src/" + KokoroFiles.DictDir + "\"", workflow);
+        Assert.Contains("KOKORO_LANGUAGES: 'en,es,pt,zh'", workflow);
+        Assert.Contains("entry \"$KOKORO_ID\" \"$KOKORO_LANGUAGES\"", workflow);
+    }
+
+    private static string RepoRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "ReadTheStupidText.slnx")))
+        {
+            dir = dir.Parent;
+        }
+
+        return dir!.FullName;
     }
 
     [Fact]

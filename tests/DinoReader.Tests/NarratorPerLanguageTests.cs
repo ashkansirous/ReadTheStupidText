@@ -50,6 +50,19 @@ public class NarratorPerLanguageTests
     }
 
     [Fact]
+    public void HasVoiceOutside_FlagsAMeloChineseCastOnceTheKokoroPoolServesChinese_AndAKokoroOneWhenItDoesNot()
+    {
+        CastMember[] melo = [new("a", "A", Gender.Male, "melo:zh")];
+        CastMember[] kokoroCast = [new("b", "B", Gender.Male, "kokoro:zm_yunxi")];
+        VoiceOption[] kokoroZh = [new("kokoro:zf_xiaobei", Gender.Female), new("kokoro:zm_yunxi", Gender.Male)];
+        VoiceOption[] meloPool = [new("melo:zh", Gender.Unknown)];
+
+        Assert.True(CastEditor.HasVoiceOutside(melo, kokoroZh));
+        Assert.True(CastEditor.HasVoiceOutside(kokoroCast, meloPool));
+        Assert.False(CastEditor.HasVoiceOutside(melo, meloPool));
+    }
+
+    [Fact]
     public void HasVoiceOutside_IgnoresAnEmptyPool()
     {
         CastMember[] cast = [new("a", "A", Gender.Male, "supertonic:M1")];

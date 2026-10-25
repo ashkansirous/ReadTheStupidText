@@ -35,12 +35,12 @@ public sealed class StorytellerDefault
 {
 	private const string ReadyPendingKey = "dino.storyteller.ready.pending";
 	private const double ProgressStep = 0.01;
+	private static readonly string[] KokoroLanguages = [KokoroVoiceTable.EnglishCode, KokoroVoiceTable.SpanishCode, KokoroVoiceTable.PortugueseCode, KokoroVoiceTable.ChineseCode];
 	private static readonly TimeSpan CatalogMaxAge = TimeSpan.FromMinutes(10);
 	private static readonly IReadOnlyDictionary<string, IReadOnlyList<CastMember>> NoCasts = new Dictionary<string, IReadOnlyList<CastMember>>();
 	private static readonly TimeSpan CatalogRetryBackoff = TimeSpan.FromSeconds(3);
 
 	private readonly IVoicePackService _packs;
-	private readonly IPackUpdateNetwork _network;
 	private readonly IStoryLibrary _library;
 	private readonly StoryVoicing _voicing;
 	private readonly object _gate = new();
@@ -52,10 +52,9 @@ public sealed class StorytellerDefault
 	private double _lastReported = -1;
 	private StorytellerStatus _status = StorytellerStatus.None;
 
-	public StorytellerDefault(IVoicePackService packs, IPackUpdateNetwork network, IStoryLibrary library, StoryVoicing voicing)
+	public StorytellerDefault(IVoicePackService packs, IStoryLibrary library, StoryVoicing voicing)
 	{
 		_packs = packs;
-		_network = network;
 		_library = library;
 		_voicing = voicing;
 	}
@@ -241,11 +240,11 @@ public sealed class StorytellerDefault
 		Changed?.Invoke(this, EventArgs.Empty);
 	}
 
-	// A newer version of the installed pack comes in quietly, on an unmetered connection only.
+	// A newer version of the installed pack comes in quietly, like the first download: Wi-Fi or Ethernet active, even with mobile data also listed.
 	private async Task UpdateInstalledAsync()
 	{
 		InstalledVoicePack? installed = InstalledPacks().FirstOrDefault(p => p.Manifest.Id == PackConstants.StorytellerPackId);
-		if (installed is null || !_network.AllowsAutomaticUpdate)
+		if (installed is null || !WifiCapable())
 		{
 			return;
 		}
@@ -253,9 +252,34 @@ public sealed class StorytellerDefault
 		PackCatalogResult catalog = await _packs.GetCatalogCachedAsync(CatalogMaxAge, CancellationToken.None);
 		if (catalog.Status == PackDownloadResult.Ok && StorytellerOffer.UpdateAvailable(installed, catalog.Packs))
 		{
-			await _packs.DownloadAsync(PackConstants.StorytellerPackId, null, CancellationToken.None);
+			await DownloadUpdateAsync();
 		}
 	}
+
+	// The new version can speak more languages (Slice 118: es, pt and zh): the library is re-cast from the voices it has now, and when the update added a language
+	// the grown-up gets the "ready" note again.
+	private async Task DownloadUpdateAsync()
+	{
+		IReadOnlyList<string> before = ServedLanguages();
+		PackDownloadResult result = await _packs.DownloadAsync(PackConstants.StorytellerPackId, null, CancellationToken.None);
+		if (result != PackDownloadResult.Ok)
+		{
+			return;
+		}
+
+		if (ServedLanguages().Except(before).Any())
+		{
+			Preferences.Default.Set(ReadyPendingKey, true);
+		}
+
+		await RecastQuietlyAsync();
+		Changed?.Invoke(this, EventArgs.Empty);
+	}
+
+	/// <summary>Whether the installed storyteller pack speaks <paramref name="language"/> (a version-1 pack speaks English only).</summary>
+	public bool Speaks(string language) => PackSelection.Serving(InstalledPacks(), PackKind.Storyteller, language).Any();
+
+	private IReadOnlyList<string> ServedLanguages() => KokoroLanguages.Where(Speaks).ToList();
 
 	// The library is re-cast whenever the pack is there (Decision 121): a book already on the pack's voices is left alone, so it is cheap and idempotent, and it covers
 	// books added later and a pack removed and installed again. A failing book never stops the rest, and a failing handler never costs the "ready" note.

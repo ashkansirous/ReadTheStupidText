@@ -1,3 +1,5 @@
+using ReadTheStupidText.Domain.Reading;
+
 namespace ReadTheStupidText.Application.Reading;
 
 /// <summary>An engine a reader can share: it knows its model and is reference counted, so it is disposed after its last holder.</summary>
@@ -12,8 +14,9 @@ internal interface IEngineHandle
 }
 
 /// <summary>
-/// The engines one reader keeps built, keyed by (model folder, pack version) and holding at most
-/// <see cref="Capacity"/> of them, least recently used out first (Slice 89: a cast read alternates
+/// The engines one reader keeps built, keyed by (model folder, pack version, language for a Kokoro pack: its engine is configured for one language,
+/// Slice 118) and holding at most
+/// <see cref="Capacity"/> of them (a Kokoro pack's engine: only the latest language's), least recently used out first (Slice 89: a cast read alternates
 /// between the model folders of one pack, and a pack update is a new folder, hence a new key). The
 /// cache owns one reference per engine; a caller gets its own from <see cref="Acquire"/> and an
 /// engine that is evicted is disposed only after its last user releases it. A model load takes a lock
@@ -24,7 +27,7 @@ internal interface IEngineHandle
 internal sealed class EngineCache<TEngine>(Func<TEngine?, VoiceModelPaths, TEngine> create) : IDisposable
     where TEngine : class, IEngineHandle
 {
-    public const int Capacity = 4; // the most model folders a pack has (the Farsi pack)
+    public const int Capacity = 4; // the most model folders a pack has (the Farsi pack); a Kokoro pack keeps only its latest language (EvictOtherKokoro)
 
     private const int AcquireAttempts = 2;
 
@@ -45,7 +48,7 @@ internal sealed class EngineCache<TEngine>(Func<TEngine?, VoiceModelPaths, TEngi
         public bool Loading { get; set; }
     }
 
-    private readonly record struct ModelKey(string Folder, string Version);
+    private readonly record struct ModelKey(string Folder, string Version, string Language, bool IsKokoro);
 
     public int Count
     {
@@ -61,7 +64,7 @@ internal sealed class EngineCache<TEngine>(Func<TEngine?, VoiceModelPaths, TEngi
     /// <summary>
     /// The engine for <paramref name="paths"/> with a reference taken for the caller (who must
     /// <c>Release()</c> it), building it on first use; null once the cache is disposed. The same folder and
-    /// version under another language re-labels the live engine instead of loading the model again.
+    /// version under another language re-labels the live engine instead of loading the model again (not for a Kokoro pack: one engine per language, and only the latest stays).
     /// </summary>
     public TEngine? Acquire(VoiceModelPaths paths)
     {
@@ -100,7 +103,8 @@ internal sealed class EngineCache<TEngine>(Func<TEngine?, VoiceModelPaths, TEngi
 
     private Slot? Touch(VoiceModelPaths paths)
     {
-        var key = new ModelKey(paths.ModelFolder, paths.PackVersion);
+        bool isKokoro = paths.Kind == VoiceEngineKind.Kokoro;
+        var key = new ModelKey(paths.ModelFolder, paths.PackVersion, isKokoro ? paths.Language : string.Empty, isKokoro);
         List<TEngine> dropped = [];
         Slot slot;
         lock (_lock)
@@ -113,6 +117,7 @@ internal sealed class EngineCache<TEngine>(Func<TEngine?, VoiceModelPaths, TEngi
             slot = _slots.Find(s => s.Key == key) ?? new Slot(key);
             _slots.Remove(slot);
             _slots.Add(slot);
+            dropped.AddRange(EvictOtherKokoro(slot));
             while (_slots.Count > Capacity && _slots.Find(s => !s.Loading && s != slot) is { } victim)
             {
                 dropped.AddRange(Evict(victim) is { } engine ? [engine] : []);
@@ -122,6 +127,26 @@ internal sealed class EngineCache<TEngine>(Func<TEngine?, VoiceModelPaths, TEngi
 
         ReleaseAll(dropped);
         return slot;
+    }
+
+    // Called under _lock. A Kokoro engine is one 114 MB model per language and a book reads one language, so at most one stays resident (Slice 118):
+    // loading another language's drops the previous one (one still loading is left, as in Touch).
+    private IEnumerable<TEngine> EvictOtherKokoro(Slot current)
+    {
+        if (!current.Key.IsKokoro)
+        {
+            return [];
+        }
+
+        List<Slot> others = _slots.Where(s => s != current && s.Key.IsKokoro && !s.Loading).ToList();
+        List<TEngine> engines = [];
+        foreach (Slot other in others)
+        {
+            engines.AddRange(Evict(other) is { } engine ? [engine] : []);
+            _slots.Remove(other);
+        }
+
+        return engines;
     }
 
     private TEngine? AcquireFrom(Slot slot, VoiceModelPaths paths)
