@@ -8,7 +8,7 @@ namespace DinoReader;
 /// reader, its picture fitted without cropping and its text beside it. Held sideways the picture is the left half and the text card
 /// the right half with the transport row under it; held upright the picture fills the page and the text sits on a 92% white panel over its lower part (up to 30% of
 /// the visible picture, Slice 122) that scrolls when the text is long. The spoken sentence has the highlight behind its words; a tap on a sentence
-/// reads from it. With the words switched off (<c>wordsOver</c>, Slice 122) only the picture is drawn, in both orientations. A page with only a picture shows the picture, a page with only text shows the text card.
+/// reads from it. With the words switched off (<c>wordsOver</c>, Slice 122) only the picture is drawn: upright it fills the page; sideways a tall picture keeps the left half and a wide one spans both halves above the transport row. A page with only a picture shows the picture, a page with only text shows the text card.
 /// </summary>
 public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> storyPages, IReadOnlyList<SentenceSpan> sentences,
 	Func<string?, string?> resolveImage, string font, ReadingTheme theme, bool rightToLeft, Action<int> onSentence,
@@ -58,8 +58,8 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 	private Slot SlotOf(int page)
 	{
 		string? image = resolveImage(storyPages[page].ImageFile);
-		// The shape only sizes the upright panel, so it is not read when the words are off. Compose runs on a worker thread.
-		Size? size = image is null || !wordsOver ? null : PageImageSize.Read(image);
+		// The shape sizes the upright panel and, with the words off, places a sideways picture. Compose runs on a worker thread.
+		Size? size = image is null ? null : PageImageSize.Read(image);
 		return new Slot(page, image, size is { Height: > 0 } s ? s.Width / s.Height : 0);
 	}
 
@@ -158,10 +158,15 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 
 	private View SidewaysPage(Slot slot)
 	{
+		if (!wordsOver && slot.Image is not null && IsWide(slot))
+		{
+			return WidePicture(slot.Image);
+		}
+
 		var grid = new Grid { ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Star)] };
 		if (slot.Image is not null)
 		{
-			grid.Add(wordsOver ? PictureCard(slot.Image, new Thickness(SidewaysGap)) : FullWidthPicture(slot.Image), 0);
+			grid.Add(PictureCard(slot.Image, new Thickness(SidewaysGap)), 0);
 		}
 
 		if (HasText(slot))
@@ -175,12 +180,17 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		return grid;
 	}
 
-	// With the words off the picture takes both columns and leaves the foot to the transport row (Slice 122).
-	private static Border FullWidthPicture(string file)
+	// With the words off (Slice 122) a tall picture keeps its half at full height, as big as it can be there, and the other half keeps
+	// the transport row; a wide picture would shrink in one half, so it gets the whole page above the transport row.
+	// Wide means wider than one half of the page, where it would be width-bound and small; before layout, wider than square.
+	private bool IsWide(Slot slot) =>
+		slot.Aspect > (_card.Width > 0 && _card.Height > 0 ? _card.Width / 2 / _card.Height : 1);
+
+	private static Grid WidePicture(string file)
 	{
-		Border picture = PictureCard(file, new Thickness(SidewaysGap, SidewaysGap, SidewaysGap, SidewaysGap + TransportRow.SidewaysHeight));
-		Grid.SetColumnSpan(picture, 2);
-		return picture;
+		var holder = new Grid { Padding = new Thickness(0, 0, 0, TransportRow.SidewaysHeight) };
+		holder.Add(PictureCard(file, new Thickness(SidewaysGap)));
+		return holder;
 	}
 
 	// A page with no picture keeps its text card whatever the switch says: there is nothing else to show.
