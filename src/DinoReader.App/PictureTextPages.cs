@@ -16,11 +16,14 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 {
 	private const float PanelAlpha = 0.92f;
 	private const double PanelFontSize = 21;
-	private const double PanelLineHeight = 1.55;
+	private const double PanelLineHeight = 1.5;
 	private const double PictureCorner = 18;
-	private const double UprightPanelCorner = 18;
+	private const double UprightPanelCorner = 16;
 	private const double SidewaysPanelCorner = 22;
-	private const double PanelMargin = 10;
+	private const double PanelMargin = 8;
+	private static readonly Thickness UprightPanelPadding = new(14, 10);
+	private const double FadeHeight = 22;
+	private const float FadeAlpha = 0.95f;
 	private const double SidewaysGap = 6;
 	private const double UprightPictureTop = 6;
 	private const double UprightPictureSide = 14;
@@ -134,12 +137,12 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 
 		if (HasText(slot))
 		{
-			Border panel = TextPanel(UprightPanelCorner, new Thickness(16, 14), PanelAlpha);
+			Border panel = TextPanel(UprightPanelCorner, UprightPanelPadding, PanelAlpha, fade: true);
 			panel.VerticalOptions = LayoutOptions.End;
 			panel.Margin = new Thickness(PanelMargin);
 			CapPanel(panel, _card, slot.Aspect);
 			grid.SizeChanged += (_, _) => CapPanel(panel, new Size(grid.Width, grid.Height), slot.Aspect);
-			panel.Shadow = new Shadow { Brush = new SolidColorBrush(Color.FromRgb(43, 37, 64)), Opacity = 0.18f, Radius = 18, Offset = new Point(0, 6) };
+			panel.Shadow = new Shadow { Brush = new SolidColorBrush(Color.FromRgb(43, 37, 64)), Opacity = 0.16f, Radius = 12, Offset = new Point(0, 4) };
 			grid.Add(panel);
 		}
 
@@ -166,7 +169,7 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 
 		if (HasText(slot))
 		{
-			Border card = TextPanel(SidewaysPanelCorner, new Thickness(18, 14), 1f);
+			Border card = TextPanel(SidewaysPanelCorner, new Thickness(18, 14), 1f, fade: false);
 			// The transport row sits under the text card, in the bottom of this half (mock screen 35).
 			card.Margin = new Thickness(SidewaysGap, SidewaysGap, SidewaysGap, SidewaysGap + TransportRow.SidewaysHeight);
 			grid.Add(card, 1);
@@ -195,7 +198,7 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		Content = new Image { Source = ImageSource.FromFile(file), Aspect = Aspect.AspectFit, InputTransparent = true },
 	};
 
-	private Border TextPanel(double corner, Thickness padding, float alpha)
+	private Border TextPanel(double corner, Thickness padding, float alpha, bool fade)
 	{
 		_label = new Label
 		{
@@ -210,14 +213,52 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		{
 			BackgroundColor = _theme.TextCard.WithAlpha(alpha),
 			StrokeThickness = 0,
-			Padding = padding,
 			StrokeShape = new RoundRectangle { CornerRadius = corner },
-			Content = new ScrollView { Content = _label },
 		};
+		if (fade)
+		{
+			panel.Content = PanelContent(padding);
+		}
+		else
+		{
+			panel.Padding = padding;
+			panel.Content = new ScrollView { Content = _label };
+		}
+
 		panel.GestureRecognizers.Add(PanelSwipe(SwipeDirection.Left));
 		panel.GestureRecognizers.Add(PanelSwipe(SwipeDirection.Right));
 		return panel;
 	}
+
+	// The upright panel: short text sits at the bottom, and a soft fade in the panel's own colour covers its top edge while
+	// some text is scrolled out above (mock frames 56-58, Slice 124). The padding is the label's margin, so the scroll area
+	// and the fade both reach the panel's edges and the Border's rounded clip trims them.
+	private View PanelContent(Thickness padding)
+	{
+		_label!.Margin = padding;
+		var scroll = new ScrollView { Content = _label, VerticalOptions = LayoutOptions.End };
+		BoxView top = TopFade();
+		scroll.Scrolled += (_, _) => ShowFadeWhenScrolled(top, scroll);
+		scroll.SizeChanged += (_, _) => ShowFadeWhenScrolled(top, scroll);
+		_label.SizeChanged += (_, _) => ShowFadeWhenScrolled(top, scroll);
+		var grid = new Grid();
+		grid.Add(scroll);
+		grid.Add(top);
+		return grid;
+	}
+
+	private static void ShowFadeWhenScrolled(BoxView fade, ScrollView scroll) => fade.IsVisible = scroll.ScrollY > 1;
+
+	private BoxView TopFade() => new()
+	{
+		HeightRequest = FadeHeight,
+		VerticalOptions = LayoutOptions.Start,
+		IsVisible = false,
+		InputTransparent = true,
+		Background = new LinearGradientBrush(
+			[new GradientStop(_theme.TextCard.WithAlpha(FadeAlpha), 0f), new GradientStop(_theme.TextCard.WithAlpha(0f), 1f)],
+			new Point(0, 0), new Point(0, 1)),
+	};
 
 	private SwipeGestureRecognizer PanelSwipe(SwipeDirection direction)
 	{

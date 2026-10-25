@@ -286,6 +286,8 @@
   <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>Djuren säger då och då “Nöff!” eller “Bää!”</value></data>
   <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>Inga djur som låter i den här berättelsen</value></data>
   <data name="Cast_WordsOverPictures_Title" xml:space="preserve"><value>Visa orden över bilderna</value></data>
-  <data name="Cast_WordsOverPictures_Hint" xml:space="preserve"><value>Berättelsens text ligger ovanpå bilden medan den läses</value></data>
+  <data name="Cast_WordsOverPictures_HintOn" xml:space="preserve"><value>Orden visas i en panel längst ned</value></data>
+  <data name="Cast_WordsOverPictures_HintOff" xml:space="preserve"><value>Av eftersom bilderna redan har orden i sig</value></data>
+  <data name="Cast_WordsOverPictures_HintOffPlain" xml:space="preserve"><value>Bara bilderna visas</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Det finns fler figurer i boken än de {0} berättarfigurer vi har, så vissa låter lika. Berättaren ges aldrig till en figur.</value></data>
 </root>

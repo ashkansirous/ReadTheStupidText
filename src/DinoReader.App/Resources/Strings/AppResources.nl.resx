@@ -286,6 +286,8 @@
   <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>De dieren zeggen af en toe “Knor!” of “Mê!”</value></data>
   <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>Geen dieren die geluid maken in dit verhaal</value></data>
   <data name="Cast_WordsOverPictures_Title" xml:space="preserve"><value>Toon de woorden over de plaatjes</value></data>
-  <data name="Cast_WordsOverPictures_Hint" xml:space="preserve"><value>De tekst van het verhaal staat op het plaatje terwijl het wordt voorgelezen</value></data>
+  <data name="Cast_WordsOverPictures_HintOn" xml:space="preserve"><value>De woorden staan in een paneel onderaan</value></data>
+  <data name="Cast_WordsOverPictures_HintOff" xml:space="preserve"><value>Uit, omdat deze plaatjes de woorden al bevatten</value></data>
+  <data name="Cast_WordsOverPictures_HintOffPlain" xml:space="preserve"><value>Alleen de plaatjes zijn te zien</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Dit boek heeft meer personages dan de {0} vertelfiguren die er zijn, dus sommige klinken hetzelfde. De verteller wordt nooit aan een personage gegeven.</value></data>
 </root>

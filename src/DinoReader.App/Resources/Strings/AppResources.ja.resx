@@ -287,6 +287,8 @@
   <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>どうぶつが ときどき「ブーブー!」や「メェー!」と いいます</value></data>
   <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>このおはなしには なきごえの どうぶつは いません</value></data>
   <data name="Cast_WordsOverPictures_Title" xml:space="preserve"><value>えのうえに ことばを だす</value></data>
-  <data name="Cast_WordsOverPictures_Hint" xml:space="preserve"><value>よんでいるあいだ、おはなしの ぶんが えの うえに でます</value></data>
+  <data name="Cast_WordsOverPictures_HintOn" xml:space="preserve"><value>ことばは、したの パネルに でます</value></data>
+  <data name="Cast_WordsOverPictures_HintOff" xml:space="preserve"><value>この えには もう ことばが はいっているので オフです</value></data>
+  <data name="Cast_WordsOverPictures_HintOffPlain" xml:space="preserve"><value>えだけが でます</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>この本には、用意されている {0} 人の語り手キャラクターより多くの登場人物がいるため、同じように聞こえるキャラクターがいます。ナレーターはキャラクターには使われません。</value></data>
 </root>

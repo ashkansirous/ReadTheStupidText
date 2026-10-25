@@ -30,6 +30,8 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	private readonly StorytellerDefault _storyteller;
 	private readonly Grid _root = new();
 	private Story? _story;
+	// A book opened with the words already off is taken as photos, scans or PDF pages (the Pages step stores that default); a switch turned off here is not.
+	private bool _wordsStoredOffAtOpen;
 	private Func<Story, Task>? _persist;
 	private AttributionResult? _resolved;
 	private string _castLanguage = string.Empty;
@@ -59,6 +61,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	public void Load(Story story, Func<Story, Task> persist)
 	{
 		_story = story;
+		_wordsStoredOffAtOpen = story.WordsOverPictures == false;
 		_persist = persist;
 		_subtitle.Text = story.Title;
 	}
@@ -237,11 +240,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 
 		_body.Children.Add(NarratorCard());
 		_body.Children.Add(CharacterCard(sheet));
-		_body.Children.Add(AnimalSoundsCard());
-		if (PictureTextBook.IsPictureTextBook(_story!.Pages))
-		{
-			_body.Children.Add(WordsOverPicturesCard());
-		}
+		_body.Children.Add(SwitchesCard());
 
 		_mergeButton.IsVisible = sheet.Rows.Count >= 2;
 	}
@@ -268,16 +267,30 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		return card;
 	}
 
+	// Animal sounds, then (for a picture + text book) the words switch, in one card (Slice 124).
+	private View SwitchesCard()
+	{
+		View animals = AnimalSoundsRow();
+		return PictureTextBook.IsPictureTextBook(_story!.Pages) ? CastRows.SwitchesCard(animals, WordsOverPicturesRow()) : CastRows.SwitchesCard(animals);
+	}
+
 	// The per-story switch is saved with the story (Slice 117); a story with no sounding animal shows it dimmed and keeps the value.
-	private View AnimalSoundsCard()
+	private View AnimalSoundsRow()
 	{
 		bool hasAnimals = _resolved is not null && AnimalSounds.AnimalsIn(_resolved.Characters, _story!.Language).Count > 0;
 		return CastRows.AnimalSoundsRow(hasAnimals, _story!.AnimalSoundsOn, on => _ = _busy.RunAsync(() => SetAnimalSoundsAsync(on)));
 	}
 
 	// Saved with the story (Slice 122); the reading screen follows the next time the book is opened.
-	private View WordsOverPicturesCard() =>
-		CastRows.WordsOverPicturesRow(PictureTextBook.ShowsWordsOverPictures(_story!), on => _ = _busy.RunAsync(() => SetWordsOverPicturesAsync(on)));
+	private View WordsOverPicturesRow() =>
+		CastRows.WordsOverPicturesRow(PictureTextBook.ShowsWordsOverPictures(_story!), _wordsStoredOffAtOpen, on => _ = SetWordsAndRenderAsync(on));
+
+	// The row is rebuilt from the story afterwards, so the switch and its hint show what is stored even when the save failed or the page was busy.
+	private async Task SetWordsAndRenderAsync(bool on)
+	{
+		await _busy.RunAsync(() => SetWordsOverPicturesAsync(on));
+		Render();
+	}
 
 	private async Task SetWordsOverPicturesAsync(bool on)
 	{
