@@ -47,13 +47,6 @@ public static partial class AnimalSounds
         return AnimalSoundWords.For(language).Entries.FirstOrDefault(e => Mentions(name, e, script))?.Kind;
     }
 
-    /// <summary>The word for an animal in a language, capitalised for a list ("Pig", "Cochon"): the first name of its table entry.</summary>
-    public static string NameOf(AnimalKind kind, string? language)
-    {
-        string name = AnimalSoundWords.For(language).Entries.First(e => e.Kind == kind).Names[0];
-        return name.Length == 0 ? name : char.ToUpperInvariant(name[0]) + name[1..];
-    }
-
     /// <summary>The sound word of an animal in a language ("Baa!"), written for that language; null for an animal with no sound (a rabbit).</summary>
     public static string? SoundOf(AnimalKind kind, string? language) =>
         AnimalSoundWords.For(language).Entries.FirstOrDefault(e => e.Kind == kind)?.Sound is { Length: > 0 } sound ? sound : null;
@@ -96,10 +89,58 @@ public static partial class AnimalSounds
         return animals;
     }
 
-    /// <summary>The characters of a story that are animals with a sound (the ones <see cref="Plan"/> works on), by character id.</summary>
-    public static IReadOnlyDictionary<string, AnimalKind> AnimalsIn(
-        IReadOnlyList<Character> characters, string? language, IReadOnlyList<CastMember>? cast = null, string? text = null) =>
-        Resolve(characters, language, cast, text).Where(a => SoundOf(a.Value, language) is not null).ToDictionary(a => a.Key, a => a.Value);
+    /// <summary>
+    /// The animal each story character plays now (Slice 136, Decision 132). A character no grown-up has recast (<see cref="CastMember.Edited"/> is false) keeps the animal
+    /// <see cref="Resolve"/> finds (a Cow with no cow character still moos, a duck cast as a piglet still quacks). Once a grown-up has changed the character, the animal is
+    /// the cast character's own (found exactly by its voice and flavour among <paramref name="speakers"/>; Brave Knight is none, so it is silent). A character with no cast
+    /// voice, or one whose voice and flavour are not a roster character, keeps the resolved animal. Animals with no sound are included (<see cref="WithSound"/> drops them).
+    /// </summary>
+    public static IReadOnlyDictionary<string, AnimalKind> OfCast(
+        IReadOnlyList<Character> characters, string? language, IReadOnlyList<CastMember>? cast, IReadOnlyList<StorytellerCharacter> speakers, string? text = null)
+    {
+        ArgumentOutOfRangeException.ThrowIfZero(speakers.Count);
+        LanguageRules rules = LanguageRules.For(language);
+        IReadOnlyDictionary<string, AnimalKind> resolved = Resolve(characters, language, cast, text);
+        var animals = new Dictionary<string, AnimalKind>();
+        foreach (Character character in characters)
+        {
+            CastMember? member = cast?.FirstOrDefault(m => m.CharacterId == character.Id);
+            AnimalKind? taken = resolved.TryGetValue(character.Id, out AnimalKind found) ? found : null;
+            if (PlayedKind(member, taken, speakers, rules) is { } animal)
+            {
+                animals[character.Id] = animal;
+            }
+        }
+
+        return animals;
+    }
+
+    private static AnimalKind? PlayedKind(CastMember? member, AnimalKind? taken, IReadOnlyList<StorytellerCharacter> speakers, LanguageRules rules)
+    {
+        if (member is not { VoiceId.Length: > 0, Edited: true })
+        {
+            return taken;
+        }
+
+        VoiceFlavour flavour = FlavourGuess.Effective(member, rules);
+        StorytellerCharacter? playing = speakers.FirstOrDefault(c => c.VoiceId == member.VoiceId && c.Flavour == flavour);
+        return playing is null ? taken : KindOfCharacter(playing, taken);
+    }
+
+    // The animal a roster character plays; of a sheep-or-goat character, the one the story character was taken for when it is one of them.
+    private static AnimalKind? KindOfCharacter(StorytellerCharacter character, AnimalKind? taken)
+    {
+        if (AnimalCharacters.Of(character.Id) is not { } of)
+        {
+            return null;
+        }
+
+        return taken is { } kind && of.Kinds.Contains(kind) ? kind : of.Kinds[0];
+    }
+
+    /// <summary>The animals of <paramref name="animals"/> that make a sound in <paramref name="language"/> (the ones <see cref="Plan"/> works on).</summary>
+    public static IReadOnlyDictionary<string, AnimalKind> WithSound(IReadOnlyDictionary<string, AnimalKind> animals, string? language) =>
+        animals.Where(a => SoundOf(a.Value, language) is not null).ToDictionary(a => a.Key, a => a.Value);
 
     /// <summary>Whether <paramref name="text"/> already says the animal's sound (any stretched spelling of it: "Baaaa", "moooo"), so no sound is added after it.</summary>
     public static bool SaysIt(string text, AnimalKind kind, string? language)

@@ -1,9 +1,9 @@
 # Slice 136 — Dino: the animal comes from the picked character (no Animal line)
 
-*Planned 2026-10-25.* Dino Reader only; RTST is not touched.
+*Built 2026-10-25 (PR #360), not yet verified on the emulator.* Dino Reader only; RTST is not touched.
 
 **Batch:** 26 (Batch 25 mock follow-ups)
-**Depends on:** Slice 125 (built), Slice 135 (in progress, draft PR #352: roster variants, starter-update recast; merge after it, both edit the rosters, `AnimalSounds` and the cast page)
+**Depends on:** Slice 125 (built), Slice 135 (merged: roster variants, starter-update recast)
 **Touches:** `src/DinoReader.Core/CharacterRoster*.cs`, `src/DinoReader.Core/StorytellerCharacter.cs`, `src/DinoReader.Core/CastCharacters.cs`, `src/DinoReader.Core/AnimalSound*.cs`, `src/DinoReader.Core/VoiceCaster.cs`, `src/DinoReader.Core/CastEditor.cs`, `src/DinoReader.Core/StarterUpdate.cs`, `src/DinoReader.App/CastPage.cs`, `src/DinoReader.App/CastRows.cs`, `src/DinoReader.App/CastAnimalPicker.cs` (deleted), `src/DinoReader.App/StoryVoicing.cs`, `src/DinoReader.App/Resources/Strings/*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `tests/DinoReader.Tests/**`, `src/DinoReader.Core/CLAUDE.md`, `src/DinoReader.App/CLAUDE.md`
 
 ## Why
@@ -31,14 +31,44 @@ sounds card stays below the cast card, unchanged. Changing the character (frame 
 
 ## Work
 
-- [ ] Give every roster character an animal kind or none, in all 14 languages (Slice 135's new variants
+- [x] Give every roster character an animal kind or none, in all 14 languages (Slice 135's new variants
       included); a test that every animal roster character has a kind and every plain one has none.
-- [ ] `AnimalSounds` resolves from the cast character's animal, not from `CastMember.Animal`; the Animal
+- [x] `AnimalSounds` resolves from the cast character's animal, not from `CastMember.Animal`; the Animal
       sounds card's "no animals" state follows the same rule.
-- [ ] Remove the cast row "Animal" line (`CastRows.AnimalLine`) and `CastAnimalPicker`, plus their strings
+- [x] Remove the cast row "Animal" line (`CastRows.AnimalLine`) and `CastAnimalPicker`, plus their strings
       in all 14 `.resx` files and `AppResources.cs`.
-- [ ] Update the tests (a pig cast as Brave Knight is silent; the pigs starter still oinks; an own book
+- [x] Update the tests (a pig cast as Brave Knight is silent; the pigs starter still oinks; an own book
       with "Pip the pig" first casts Pip as a piglet) and the Core and App `CLAUDE.md` rules.
+      (CLAUDE.md rules are lifted by the index pass, see below.)
+
+*Changed while building:* no new field on `StorytellerCharacter`. The animal comes from the roster id via
+the existing `AnimalCharacters.ByRosterId` (ids are the same in all 14 languages, so Slice 135's variants
+are covered). Refines Decision 132: a member not Edited by a grown-up keeps its story animal (`Resolve`),
+so a cow with no cow character still moos and a duck auto-cast to a piglet quacks; an Edited member takes
+the cast character's animal (none = silent; a pig cast as Brave Knight is silent). Sheep and goat
+characters follow the story's resolved animal. The sound plan and the Animal sounds card share
+`AnimalsOf`/`WithSound`, built from the spoken language's cast.
+
+*Removed:* `CastRows.AnimalLine`, `CastAnimalPicker.cs`, `CastEditor.SetAnimal`/`WithAnimal`,
+`AnimalSounds.NameOf`, and the four `Cast_Animal_*` strings in the 14 `.resx` files and `AppResources.cs`.
+The `HasAnimalSetting` paths stay for old saved data.
+
+*Tests:* 1097 pass; Android build green.
+
+#### For CLAUDE.md
+
+- `src/DinoReader.Core/CLAUDE.md`: a cast member not Edited by a grown-up keeps its story animal
+  (`Resolve`), so a cow with no cow character still moos; an Edited member takes the cast character's animal
+  via `AnimalCharacters.ByRosterId` (none = silent, a pig as Brave Knight is silent). Sheep/goat characters
+  follow the story's resolved animal. The sound plan and the Animal sounds card share `AnimalsOf`/`WithSound`,
+  built from the spoken language's cast. There is no per-cast Animal setting any more; keep `HasAnimalSetting`
+  paths for old saved data. (Slice 136: docs/plan/slices/136-dino-animal-from-character.md)
+
+#### Not yet verified
+
+- Emulator: pigs starter in English and Farsi (oink, Wolf growls).
+- Emulator: cast page matches frame 59 (no Animal line).
+- Emulator: recasting Pip to a non-animal character goes silent.
 
 ## Verification
 
