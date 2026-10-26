@@ -87,15 +87,7 @@ Prompt templates: [prompts.md](prompts.md).
   - The art record's character lines are the canonical outfits, written from the accepted line-up,
     not from the first prompt (the pilot asked for a "red cap" but the line-up drew a knitted beanie;
     later prompts must follow the picture).
-- **Image model: leave the picker alone** (checked 2026-10-25,
-  https://gemini.google/overview/image-generation/). The Images tool has its own model choice, separate from
-  the text-model picker (3.5 Flash-Lite / 3.8 Flash / 3.1 Pro / 4 Argon); Google doesn't document that the
-  text picker changes the image model, so leave it. In practice (Billy Goats, 2026-10-25) the Images tool
-  showed no model menu at all, only Aspect ratio; after the user's Google AI Pro upgrade pictures simply came
-  out at 1792x2400 instead of 896x1200, a Pro-class image model (the prepare script shrinks them). If a
-  "Redo with Pro" button or an image-model menu appears, use the Pro option and update this line. Note in
-  the art record each accepted picture's size. The limit is compute-based (5-hour refresh plus a weekly cap, Settings > Usage Limits), not a
-  fixed daily count.
+- **Image model: default to 3.5 Flash-Lite in the text-model picker** (a measured default, not a law; usage numbers and the failed Flash attempts are in `docs/design/story-art/lion-and-mouse.md`). The Images tool has no model menu; the text picker decides what draws. Flash-Lite cost about 0.3% of the 5-hour window per picture against +4% on 3.8 Flash, same 1792x2400 size and quality, and 3.8 Flash refused pictures with a pasted line-up. Set the picker before the first prompt (it persists across chats); keep 3.8 Flash for text-only prompts. If Flash-Lite gets the same picture wrong twice in a row, try 3.1 Pro for that picture and note its cost. Re-measure at each book and record each picture's size in the art record. The limit is compute-based (5-hour window plus a weekly cap, Settings > Usage Limits).
 - Set **Aspect ratio 3:4** with the button under the prompt box in every new chat. Pictures come out
   896x1200 (1792x2400 on the Pro plan). Paste the line-up first: the menu moves once a picture is attached, so open it after the paste
   and take a screenshot before clicking 3:4 (Billy Goats: a misplaced click gave a 4:3 picture).
@@ -109,6 +101,7 @@ Prompt templates: [prompts.md](prompts.md).
   twice, then paste, and check the thumbnail appeared. Wait for the page to finish loading before any click.
 - The free-tier image limit is shared with every other session drawing in this Chrome profile, and so is
   the clipboard. Check the open tabs first; if another Gemini drawing chat is busy, tell the caller.
+- **The Windows clipboard fails while the PC is locked** (`Requested Clipboard operation did not succeed`, HRESULT 0x800401D0; Lion and the Mouse, 2026-10-26 00:15). Gemini still draws, but nothing can be pasted or saved. Check first: if `LogonUI` is running, stop and report; the caller rechecks hourly until the user unlocks.
 - Usage limit: write the time of the first picture of each session in the art record (the 5-hour window
   runs from when usage started, not from when the limit hits). When Gemini says the limit is reached, stop,
   write where you got to, and report the reset time it shows (the message, or Settings > Usage Limits).
@@ -119,10 +112,8 @@ Prompt templates: [prompts.md](prompts.md).
 
 **Every image prompt (sheets, line-up, cover, pages) ends with the size line:** `Output size: small, 1K
 resolution, 896x1200 pixels (portrait 3:4).` The app needs nothing bigger (the prepare script shrinks to
-896x1200), and larger pictures (1792x2400 after the Pro upgrade) use more of the usage limit. Record each
-accepted picture's actual size in the art record. Billy Goats' cover prompt carried the line and still came
-back 1792x2400; still being tried: the line on more prompts, and the text picker on 3.5 Flash-Lite. Update
-this paragraph once one of them gives 896x1200.
+896x1200), and the usage cost is set by the model, not the size (Flash-Lite at 1792x2400 costs about 0.3% a picture). Record each
+accepted picture's actual size in the art record. The size line never changed the size (Billy Goats, Lion and the Mouse: always 1792x2400), but it is harmless; 3.5 Flash-Lite makes the same size at a fraction of the usage.
 
 Every page prompt repeats: same characters, the style line, portrait 3:4, no text, **exact count**
 ("exactly three pigs, each appearing once"), every character's outfit, and **"the whole scene sits in

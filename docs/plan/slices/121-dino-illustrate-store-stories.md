@@ -23,7 +23,7 @@ One item per book: art record, Gemini chat, pictures through the prepare script 
 `StarterBuilder` does (first book adds that), build, upload, emulator check.
 
 - [x] Three Billy Goats Gruff (Little, Middle and Big Billy, Troll)
-- [ ] The Lion and the Mouse (Lion, Mouse)
+- [x] The Lion and the Mouse (Lion, Mouse)
 - [ ] Goldilocks and the Three Bears (Goldilocks, Papa, Mama and Baby Bear)
 - [ ] Little Red Riding Hood (Red Riding Hood, Mother, Wolf, Grandmother, Woodcutter)
 - [x] The Ugly Duckling (Mother Duck, Duckling, Hen, Swan)

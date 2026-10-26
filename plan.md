@@ -19,6 +19,12 @@ Open slices only. Finished slices (135 rows) are in [slices-done](docs/plan/note
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
 | 121 | Dino: pictures for the ten store stories | in progress | #350 (Billy Goats) | | [121-dino-illustrate-store-stories.md](docs/plan/slices/121-dino-illustrate-store-stories.md) |
+| 137 | RTST phone: anonymous usage counts and timings | planned | | | [137-rtst-phone-usage-counts.md](docs/plan/slices/137-rtst-phone-usage-counts.md) |
+| 138 | RTST phone: a wait indicator after 500 ms | planned | | | [138-rtst-phone-wait-indicator.md](docs/plan/slices/138-rtst-phone-wait-indicator.md) |
+| 139 | RTST phone: start translating and voicing before the tap | planned | | | [139-rtst-phone-early-start.md](docs/plan/slices/139-rtst-phone-early-start.md) |
+| 140 | RTST Windows: the same usage counts and timings | planned | | | [140-rtst-windows-usage-counts.md](docs/plan/slices/140-rtst-windows-usage-counts.md) |
+| 141 | RTST Windows: a wait indicator after 500 ms | planned | | | [141-rtst-windows-wait-indicator.md](docs/plan/slices/141-rtst-windows-wait-indicator.md) |
+| 142 | RTST Windows: early translate and voice in the control panel | planned | | | [142-rtst-windows-early-start.md](docs/plan/slices/142-rtst-windows-early-start.md) |
 
 Batch 25 (119-123; 119, 120, 122, 123 built, 121 in progress: Billy Goats done, nine books left; planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
 
@@ -27,6 +33,8 @@ Batch 26 (124-125, planned 2026-10-25, the Batch 25 mock and the animal-identity
 Batch 27 (127-131, planned 2026-10-25, after Dino work kept resubmitting Read The Stupid Text to the Store): keep one repo, stop one product shipping the other. 127 (small CI fixes), 128, 129 and 130 (a version and release per product, PR #367) are built; 131 (PR #371) is built; it ran alone between waves because it touches usings everywhere. Decisions 133-137.
 
 Batch 28 (132-134, planned 2026-10-25, which books families like and how parents use the app): 132 (the remote config the counts are switched by, and the forced update) and 133 (first events, privacy texts and store forms) and 134 (the rest of the events and the report, PR #368) are built, so the batch is done. All three edit `worker/` and Dino's `MauiProgram`, so one at a time. Decisions 138-142.
+
+Batch 29 (137-142, planned 2026-10-26, RTST usage counts, waiting and early start): which languages people use, whether they translate or change the voice, and how long translation and the first sound take (a user reported a "hang" on Translate). Phone first, one at a time (all three edit ReaderPage/ReviewPage): 137, 138, 139; then Windows 140, 141, 142. 137 reuses Dino's Batch 28 pipe and edits `worker/` and Dino's `UsageCounter`/`AppConfigClient`. Decisions 143-148.
 
 ### Notes
 
@@ -43,6 +51,15 @@ Batch 28 (132-134, planned 2026-10-25, which books families like and how parents
 - [CLAUDE.md history](docs/plan/notes/claude-md-history.md): the Batch 6-10 narrative blockquotes moved out of `CLAUDE.md` (2026-10-20).
 
 ## Outstanding work
+
+**Store privacy declarations (legal; gates all usage counts, Decision 145).** No `telemetry.enabled` is set to `true` for an app until its rows are ticked. Claude drafts the answers and fills the forms in the user's signed-in Chrome; the user reviews and presses Submit/Publish.
+
+- [ ] RTST repo texts: `PRIVACY.md`, `site/privacy.html` (deployed), `STORE.md`, iOS `PrivacyInfo.xcprivacy` (Slice 137; Windows sources in Slice 140). Claude.
+- [ ] RTST Google Play Console: Data safety (app activity and app info/performance, not linked to the user, not shared, optional to turn off). User submits.
+- [ ] RTST Apple App Store Connect: App Privacy (usage data and diagnostics, not linked, no tracking). User publishes.
+- [ ] RTST Microsoft Partner Center: privacy policy URL and the data-collection answers. User submits.
+- [ ] Dino Google Play Data safety and Apple App Privacy for its usage counts (Slices 133-134, still pending). User submits.
+- [ ] Then: enable Analytics Engine, add the bindings, deploy, set `telemetry.enabled` per app.
 
 Built but not verified (details in each slice file):
 
@@ -78,7 +95,6 @@ Built but not verified (details in each slice file):
 - Slice 135 (and the Farsi follow-up, PR #355): emulator 2026-10-25 PASS on an upgraded install: three distinct piglets and the Wolf voice in English and Farsi, Animal sounds on, upright panel inside the picture; store copies live (pigs v7, gingerbread v3, tortoise v3). Still open: listening by ear; native read of the new roster names ([slice](docs/plan/slices/135-dino-animal-voices-fixes.md)).
 - Slice 126: emulator PASS (screen stays on while playing, sleeps after pause and at the end); real Android phone whole book; iPhone Auto-Lock 30 s; Windows head not built or run ([slice](docs/plan/slices/126-dino-keep-screen-awake.md)).
 - Slice 127: Dino Microsoft Store submit with the `DinoReader.App` package (store-submit-dino was skipped in run 40253931851; RTST store-submit, both TestFlight jobs and actionlint passed) ([slice](docs/plan/slices/127-release-safety-fixes.md)).
-- Slice 128: desktop acceptance of the packaged RTST app (hotkey read, auto-read on selection, start-at-login toggle) blocked 2026-10-26: a dev copy of the RTST package from another worktree was running and holding the package identity; first release run after the merge picks the right targets and the Dino test gate behaves ([slice](docs/plan/slices/128-tray-code-out-of-shared-infrastructure.md)).
 - Slice 129: emulator Dino story with flavoured voices (Small, Whisper, animal sounds) sounds the same, by ear; Windows head flavoured character reads; RTST phone read unchanged ([slice](docs/plan/slices/129-dino-voice-features-out-of-shared-engine.md)).
 - Slice 133: human enables Analytics Engine, then emulator read shows rows in `dino_usage` and settings off sends nothing (usage switch present on the emulator 2026-10-26); Play Data safety and App Store privacy answers once the sending release ships; no rate limit or origin check on `/api/events` (accepted); native read of the new strings ([slice](docs/plan/slices/133-dino-anonymous-usage-counts.md)).
 - Slice 132: seed R2 `config.json` after merge; emulator: Version card and "A new version is ready" row PASS, and the resume fetch (follow-up #366) PASS with no NetworkOnMainThread in logcat 2026-10-26; forced-update `UpdatePage`, the gate and Play page fallback not run on a device (needs a temporary `minVersion` change in the live config); Windows head and iOS builds; Play in-app update needs a Play-installed build with a higher versionCode; native read of the 5 new strings ([slice](docs/plan/slices/132-dino-remote-config-and-force-update.md)).

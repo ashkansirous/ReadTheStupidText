@@ -51,5 +51,9 @@ Rules:
   accepted and where to resume, and report it. Don't try to get around the limit.
 - Never rework a plan line to make a picture easier; if the plan can't be drawn, report it.
 
+- Before you report, release what you hold: close the Chrome tabs you opened (leave the user's own tabs),
+  let go of the clipboard, stop any helper script or timer you started, and delete the Gemini downloads you
+  already copied into the repo from `Downloads`. End the report with `released: …` or `left running: … (why)`.
+
 Report in at most 12 lines, no tables: pages accepted; pages still missing and why; every rejection in a few
 words (page, attempt, what was wrong); any stray chat; the contact sheet path. Don't paste prompts.
