@@ -76,7 +76,7 @@ Two frames in `docs/design/rtst-phone/RTST Batch 29.dc.html` (R8 line 42, R9 lin
 - 138-high: 6 findings applied.
 - 138-medium: 8 applied, 8 skipped.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-26)
 
 - RTST waits use `Mobile.Shared/Waiting` through `ReaderPage.Wait.cs`; colours live in `Colors.xaml` / `ThemeColors.cs`, no hex literals. Goes in `src/ReadTheStupidText.Mobile/CLAUDE.md`. (Slice 138: docs/plan/slices/138-rtst-phone-wait-indicator.md)
 
