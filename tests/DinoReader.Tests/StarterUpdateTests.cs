@@ -468,6 +468,16 @@ public sealed class StarterUpdateTests : IDisposable
         Assert.Contains("8C1DD87C17BFC3A1386D16CEF384F13FD3C04DEDA8FD2A7D514FC90130F1CC3D", table[StarterTexts.PigsId]);
     }
 
+    // The 6-page Gingerbread Man shipped as v2 and v3 (same text); the 14-page retelling is v4, so an unedited v3 copy must still count as unedited.
+    [Fact]
+    public void EarlierPageTextHashes_HoldTheShippedV3GingerbreadText()
+    {
+        var field = typeof(StarterUpdate).GetField("EarlierPageTextHashes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!;
+        var table = (IReadOnlyDictionary<string, string[]>)field.GetValue(null)!;
+
+        Assert.Contains("8620E996ACD6233280E3BC6A8B23C96E0DAF60E79DD4A73A7115FB23A89D7A1B", table[StarterTexts.GingerbreadId]);
+    }
+
     [Fact]
     public void CopyToKeep_PicksTheCopyHoldingTheBundledText()
     {

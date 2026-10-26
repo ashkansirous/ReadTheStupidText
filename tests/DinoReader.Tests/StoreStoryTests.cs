@@ -118,6 +118,23 @@ public sealed class StoreStoryTests : IDisposable
         }
     }
 
+    // The Gingerbread Man starter (also a store story) is a boy, so he must get a male voice in every language; Granny, the Cow and the Horse are "she",
+    // Grandpa and the Fox "he" (the stored English genders are checked too, since every other language is cast from them).
+    [Theory]
+    [MemberData(nameof(Languages))]
+    public void TheGingerbreadMan_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
+    {
+        Story story = StarterBuilder.Build(StarterTexts.GingerbreadId, "The Gingerbread Man", StarterTexts.Gingerbread, 1);
+        var expected = new Dictionary<string, Gender>
+        {
+            ["Granny"] = Gender.Female, ["Grandpa"] = Gender.Male, ["Gingerbread Man"] = Gender.Male, ["Cow"] = Gender.Female, ["Horse"] = Gender.Female, ["Fox"] = Gender.Male,
+        };
+
+        Assert.Equal(expected.Keys.Order(), story.Cast.Select(m => m.Name).Order());
+        Assert.All(story.Cast, m => Assert.True(m.Gender == expected[m.Name], $"{m.Name} is stored as {m.Gender}"));
+        AssertEachIsPlayedByTheirGender(story, language, expected);
+    }
+
     // The Tortoise and the Hare starter (also a store story): the Hare, Owl and Hedgehog are "he", the Tortoise, Squirrel and Frog "she", three of each, and each
     // must get a voice of that gender in every language (the stored English genders are checked too, since every other language is cast from them).
     [Theory]

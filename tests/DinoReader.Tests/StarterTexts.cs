@@ -69,50 +69,93 @@ Soggy and soapy, he climbed out, ran all the way home, and he never blew down a 
 And the three little pigs lived happily in the house of bricks for ever after.
 """;
 
+    // Page 13 says "You can catch me" (not "can't") on purpose: it is the story's twist, so keep it.
     public const string Gingerbread = """
 Once upon a time Granny and Grandpa lived in a little house at the edge of a wood. They had no children, and they were often lonely.
 
 One morning Granny made a gingerbread man. She gave him two raisin eyes, a smiling mouth and three candy buttons. Then she laid him on a tray by the window.
 ---
-After a while Granny came back to the tray. Up jumped the Gingerbread Man, and he ran across the kitchen floor.
+After a while Granny came back to the tray, and she could not believe her eyes. Up jumped the Gingerbread Man! He blinked and waved.
 
-"Stop!" Granny said. "Come back here!"
-
-"Run, run, as fast as you can," Gingerbread Man said. "You can't catch me, I'm the Gingerbread Man!"
-
-Granny and Grandpa ran after him, but they could not catch him.
+"Oh my!" said Granny. "Grandpa, come and see!"
 ---
-The Gingerbread Man ran on until he met a Cow in a green field.
+The Gingerbread Man hopped off the tray and ran across the kitchen floor. Running was such fun!
 
-"Stop, Gingerbread Man!" Cow said. "Come and play with me!" She swished her tail and set off after him.
+"Stop!" said Granny. "Come back and give me a cuddle!"
 
-"I have run away from Granny and Grandpa," Gingerbread Man said. "Run, run, as fast as you can. You can't catch me, I'm the Gingerbread Man!"
+"Run, run, as fast as you can! You can't catch me, I'm the Gingerbread Man!" said Gingerbread Man.
+---
+Out of the door and down the lane he ran. Granny and Grandpa hurried after him, puffing and laughing.
 
-The Cow ran after him, but she could not catch him.
+"Wait for us, little one!" said Grandpa.
+
+But they could not catch him.
+---
+Soon the Gingerbread Man met a Cow in a green field.
+
+"Stop, Gingerbread Man!" said Cow. "Come and play with me!"
+
+"Run, run, as fast as you can! You can't catch me, I'm the Gingerbread Man!" said Gingerbread Man.
+
+The Cow swished her tail and trotted after him as fast as she could. But she could not catch him.
 ---
 Next the Gingerbread Man met a Horse by the fence.
 
-"Stop, Gingerbread Man!" Horse said. "Come and play with me!"
+"Stop, Gingerbread Man!" said Horse. "Come and play with me!"
 
-"I have run away from Granny, Grandpa and a cow," Gingerbread Man said. "Run, run, as fast as you can. You can't catch me, I'm the Gingerbread Man!"
+"Run, run, as fast as you can! You can't catch me, I'm the Gingerbread Man!" said Gingerbread Man.
 
-The Horse galloped after him, but he could not catch him either.
+The Horse tossed her mane and galloped after him as fast as she could. But she could not catch him either.
 ---
-Then the Gingerbread Man came to a river. He could not swim, and he did not know what to do. A clever Fox was sitting on the bank.
+Then the Gingerbread Man came to a river. He stopped on the grass, well back from the water.
 
-"I will help you," Fox said in a kind voice. "Jump on my tail and I will carry you across."
+He could not swim, and he did not know what to do.
 
-"Thank you, Fox," Gingerbread Man said, and he jumped on the Fox's tail.
+"Oh dear," said Gingerbread Man. "How will I get across?"
 ---
-The water grew deeper. "You are getting wet," Fox said. "Jump on my back."
+A friendly Fox with a bushy red tail was sitting on the bank.
 
-"Thank you, Fox," Gingerbread Man said, and he jumped on the Fox's back.
+"I can swim," said Fox. "Hop on my back, and I will carry you across."
 
-The water grew deeper still. "You are too heavy," Fox said. "Jump on my nose, and you will be safe."
+"Thank you, Fox," said Gingerbread Man, and he climbed onto the Fox's back.
+---
+The Fox swam across the river. Splish, splosh, went his paws. The Gingerbread Man held on tight and stayed nice and dry.
 
-"Thank you, Fox," Gingerbread Man said, and he jumped on the Fox's nose.
+"This is fun!" said Gingerbread Man.
+---
+On the far bank the Fox set him down.
 
-Fox swam across and set him down on the far bank. "Now go home to Granny and Grandpa," Fox said with a smile. "They miss you." So the Gingerbread Man went home, and they all sat together for a bedtime story.
+"There you are," said Fox. "Where are you running to?"
+
+The Gingerbread Man opened his mouth. Then he shut it again. He did not know!
+---
+He looked back across the river. Granny, Grandpa, the Cow and the Horse had followed all the way. Now they stood on the other bank, puffing and waving.
+
+"I ran away from everyone who wanted to play with me," said Gingerbread Man. "Now I am far away, and I miss them."
+
+"Then let's go back," said Fox.
+---
+So the Fox swam back across the river, with the Gingerbread Man on his back.
+
+"Will you be my friend, Fox?" said Gingerbread Man.
+
+"I already am," said Fox.
+---
+The Gingerbread Man hopped down and ran to Granny as fast as he could.
+
+"Run, run, as fast as you can! You can catch me, I'm the Gingerbread Man!" said Gingerbread Man.
+
+And Granny caught him in a big, soft cuddle.
+
+"I'm sorry I ran away," said Gingerbread Man.
+
+"We missed you, little one," said Granny.
+---
+That evening Granny and Grandpa sat by the open window with the Gingerbread Man and the Fox. The Cow and the Horse looked in from the garden.
+
+Granny read them all a bedtime story from her big book, and nobody in the little house was lonely any more.
+
+"Goodnight, everybody," said Gingerbread Man with a yawn.
 """;
 
     public const string Tortoise = """
