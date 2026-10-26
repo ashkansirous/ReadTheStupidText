@@ -1,9 +1,9 @@
 # Slice 155 — Dino: a first-run intro wizard for the four things Dino does
 
-*Planned 2026-10-26.* Dino Reader only.
+*In progress (wave 2026-10-26b), draft PR.* Dino Reader only.
 
 **Batch:** 32 (Dino onboarding, 2026-10-26; Decision 160)
-**Touches:** `src/DinoReader.App/FirstRunPage.xaml`, `src/DinoReader.App/FirstRunPage.xaml.cs`, `src/DinoReader.App/FirstRunState.cs`, `src/DinoReader.App/IntroWizardPage*.cs` (new), `src/DinoReader.App/IntroState.cs` (new), `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/StoryActions.cs`, `src/DinoReader.App/RecordPage.cs`, `src/DinoReader.App/StoryWizardPage.xaml.cs`, `src/DinoReader.App/PagesStep.xaml.cs`, `src/DinoReader.App/SettingsRows.cs`, `src/DinoReader.App/UsageCounter.cs`, `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/Resources/Strings/*.resx`, `src/DinoReader.App/Resources/Images/**` (step pictures, if not already bundled), `src/DinoReader.Core/UsageEvent.cs`, `worker/events.ts`, `worker/*.test.ts`, `tools/dino-usage-report.ps1`, `site/dino/privacy.html`, `STORE.md`, `tests/DinoReader.Tests/**`, `docs/design/dino-reader/**`, `src/DinoReader.App/CLAUDE.md`
+**Touches:** `src/DinoReader.App/FirstRunPage.xaml`, `src/DinoReader.App/FirstRunPage.xaml.cs`, `src/DinoReader.App/FirstRunState.cs` (new: `FirstRunState` is a static class in `FirstRunPage.xaml.cs:14` today; move it out or leave it), `src/DinoReader.App/IntroWizardPage*.cs` (new), `src/DinoReader.App/IntroState.cs` (new), `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/StoryActions.cs`, `src/DinoReader.App/RecordPage.cs`, `src/DinoReader.App/StoryWizardPage.xaml.cs`, `src/DinoReader.App/PagesStep.xaml.cs`, `src/DinoReader.App/SettingsRows.cs`, `src/DinoReader.App/UsageCounter.cs`, `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/Resources/Strings/*.resx`, `src/DinoReader.App/Resources/Images/**` (step pictures, if not already bundled), `src/DinoReader.Core/UsageEvent.cs`, `worker/events.ts`, `worker/*.test.ts`, `tools/dino-usage-report.ps1`, `site/dino/privacy.html`, `STORE.md`, `tests/DinoReader.Tests/**`, `docs/design/dino-reader/**`, `src/DinoReader.App/CLAUDE.md`
 
 ## Why
 
@@ -41,9 +41,9 @@ sit behind the grown-up gate. Windows has no camera scan (`PagesStep`'s Scan til
     isn't mentioned.
 - **No grown-up gate during the wizard.** The person installing is the grown-up; steps 3 and 4 open directly.
   After the hand-over the gate works as today.
-- **Every step** shows a counter ("2 of 4") and a **Skip all** link that goes straight to the hand-over.
+- **Every step** shows a counter ("2 of 3") and a **Skip all** link that goes straight to the hand-over.
 - **New installs only.** Existing installs never see it (no what's-new). A **Show the intro again** row in grown-up
-  mode, next to the language and version rows, replays the four steps (not language or voice download).
+  mode, next to the language and version rows, replays the three steps (not language or voice download).
 - **Resuming.** The current step is saved, so if the app is closed mid-wizard the next launch continues at that
   step, until the wizard is finished or skipped.
 - **Telemetry, like the rest of the app** (Slices 133-134, Decision 140). The wizard's actions are counted through
@@ -108,6 +108,6 @@ Checked, no conflict: no gate in the intro, the step is saved and resumes after 
 - On the Android emulator, a fresh install: language, voice download, Ready to read, then each step's **Try it**
   opens the right screen and coming back shows the next step; **Skip** and **Skip all** work; offline the store
   step shows the offline screen; killing the app on step 3 reopens on step 3; an existing install (language set)
-  never sees the wizard; **Show the intro again** replays it. On Windows, step 4 has no camera wording.
+  never sees the wizard; **Show the intro again** replays it. On Windows, step 3 has no camera wording.
 - With the counts switch on, a debug log of the batched events shows `intro_started:first_run`, one `intro_step`
   per step and `intro_ended`; with it off, nothing is queued.
