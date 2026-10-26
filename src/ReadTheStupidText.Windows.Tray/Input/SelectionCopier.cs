@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using ReadTheStupidText.Application.Input;
 
-namespace ReadTheStupidText.Infrastructure.Input;
+namespace ReadTheStupidText.Windows.Tray.Input;
 
 /// <summary>
 /// Copies the focused window's selection by synthesizing Ctrl+C. The Windows

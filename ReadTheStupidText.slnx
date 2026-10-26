@@ -20,6 +20,7 @@
     <Project Path="src/ReadTheStupidText.Documents/ReadTheStupidText.Documents.csproj" />
     <Project Path="src/ReadTheStupidText.Domain/ReadTheStupidText.Domain.csproj" />
     <Project Path="src/ReadTheStupidText.Infrastructure/ReadTheStupidText.Infrastructure.csproj" />
+    <Project Path="src/ReadTheStupidText.Windows.Tray/ReadTheStupidText.Windows.Tray.csproj" />
     <Project Path="src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj" />
     <Project Path="src/ReadTheStupidText.Mobile.Shared/ReadTheStupidText.Mobile.Shared.csproj" />
     <Project Path="src/DinoReader.App/DinoReader.App.csproj" />

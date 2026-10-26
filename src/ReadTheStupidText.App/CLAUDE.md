@@ -3,6 +3,7 @@
 Loaded when you work under `src/ReadTheStupidText.App`. Speech engines, voice packs and the
 neural reader are in `src/ReadTheStupidText.Infrastructure/CLAUDE.md`. (This folder's `AGENTS.md` is
 a generic WinUI template and is separate from these rules.)
+The tray's Win32/UIA services (hotkey, selection monitor, clipboard listener, selection copier, foreground probe, startup task) live in `src/ReadTheStupidText.Windows.Tray`, referenced only by this project (Slice 128).
 
 Keep `App.xaml.cs` thin: provider/DI wiring and window bootstrap only. Real
 logic lives in Application/Infrastructure; XAML views stay free of business
