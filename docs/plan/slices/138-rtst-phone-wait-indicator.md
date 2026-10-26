@@ -3,7 +3,7 @@
 *Planned.*
 
 **Batch:** 29 (Decisions 143-148)
-**Touches:** `src/ReadTheStupidText.Mobile/WaitIndicator*` (new), `src/ReadTheStupidText.Mobile/ReaderPage.xaml`, `src/ReadTheStupidText.Mobile/ReaderPage*.cs`, `src/ReadTheStupidText.Mobile/ReviewPage.xaml`, `src/ReadTheStupidText.Mobile/ReviewPage.xaml.cs`, `src/ReadTheStupidText.Application/Reading/WaitStage.cs` (new), `src/ReadTheStupidText.Application/Usage/**`, `src/ReadTheStupidText.Mobile/Resources/Strings/*.resx`, `tests/ReadTheStupidText.Tests/**`
+**Touches:** `src/ReadTheStupidText.Mobile.Shared/Waiting/**` (the shared overlay, Decision 149; built here or by Slice 143, whichever goes first), `src/ReadTheStupidText.Mobile/ReaderPage.xaml`, `src/ReadTheStupidText.Mobile/ReaderPage*.cs`, `src/ReadTheStupidText.Mobile/ReviewPage.xaml`, `src/ReadTheStupidText.Mobile/ReviewPage.xaml.cs`, `src/ReadTheStupidText.Application/Reading/WaitStage.cs` (new), `src/ReadTheStupidText.Application/Usage/**`, `src/ReadTheStupidText.Mobile/Resources/Strings/*.resx`, `tests/ReadTheStupidText.Tests/**`
 
 ## Why
 
