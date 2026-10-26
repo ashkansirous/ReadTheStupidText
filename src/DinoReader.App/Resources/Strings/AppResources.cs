@@ -46,6 +46,11 @@ public static class AppResources
 	public static string Version_Title => Get();
 	public static string Usage_Title => Get();
 	public static string Usage_Helper => Get();
+	public static string Speed_Title => Get();
+	public static string Speed_Sub => Get();
+	public static string Speed_EndSlow => Get();
+	public static string Speed_Value => Get();
+	public static string Speed_Play => Get();
 	public static string FirstRun_Usage => Get();
 	public static string Storyteller_YourNarrator => Get();
 	public static string Storyteller_Size => Get();

@@ -187,6 +187,11 @@
   <data name="Version_Title" xml:space="preserve"><value>Version</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Hjælp med at gøre Dino bedre</value></data>
   <data name="Usage_Helper" xml:space="preserve"><value>Sender tal som "en bog fra butikken blev læst færdig". Ingen navne, ingen id'er, intet du har skrevet.</value></data>
+  <data name="Speed_Title" xml:space="preserve"><value>Læsehastighed</value></data>
+  <data name="Speed_Sub" xml:space="preserve"><value>Langsommere er nemmere for de små</value></data>
+  <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · langsom</value></data>
+  <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
+  <data name="Speed_Play" xml:space="preserve"><value>Hør denne hastighed</value></data>
   <data name="FirstRun_Usage" xml:space="preserve"><value>Dino tæller, hvilke bøger der bliver læst, uden navne eller id'er. Du kan slå det fra i Indstillinger.</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Din fortæller ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
