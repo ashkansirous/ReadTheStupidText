@@ -1,6 +1,6 @@
 # Slice 138 — RTST phone: a wait indicator after 500 ms
 
-*Planned.*
+*In progress (wave 2026-10-26), draft PR.*
 
 **Batch:** 29 (Decisions 143-148)
 **Touches:** `src/ReadTheStupidText.Mobile.Shared/Waiting/**` (the shared overlay, Decision 149; built here or by Slice 143, whichever goes first), `src/ReadTheStupidText.Mobile/ReaderPage.xaml`, `src/ReadTheStupidText.Mobile/ReaderPage*.cs`, `src/ReadTheStupidText.Mobile/ReviewPage.xaml`, `src/ReadTheStupidText.Mobile/ReviewPage.xaml.cs`, `src/ReadTheStupidText.Application/Reading/WaitStage.cs` (new), `src/ReadTheStupidText.Application/Usage/**`, `src/ReadTheStupidText.Mobile/Resources/Strings/*.resx`, `tests/ReadTheStupidText.Tests/**`
