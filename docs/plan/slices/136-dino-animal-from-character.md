@@ -75,3 +75,7 @@ The `HasAnimalSetting` paths stay for old saved data.
 - `dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj` and the Android build.
 - Emulator: the pigs starter, English and Farsi: the cast page matches frame 59 (no Animal line), the pigs
   oink, the Wolf growls; recast Pip to a non-animal character and Pip goes quiet.
+
+#### Emulator result (2026-10-26)
+
+PASS: the cast page matches frame 59 in English and Farsi (no Animal line). The animal sounds (oink, Wolf growls) and recasting Pip to a non-animal going silent are not verifiable by adb and need a listen.
