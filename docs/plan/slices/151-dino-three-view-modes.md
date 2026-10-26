@@ -1,6 +1,6 @@
 # Slice 151 — Dino: three view modes, and no merging of characters
 
-*Planned 2026-10-26.* Dino Reader only.
+*In progress (wave 2026-10-26b), draft PR.* Dino Reader only.
 
 **Batch:** 31 (tester review, 2026-10-26; Decision 156)
 **Touches:** `src/DinoReader.Core/ReadingMode.cs`, `src/DinoReader.Core/Story.cs`, `src/DinoReader.Core/StoryCast.cs`, `src/DinoReader.Core/CastMerges.cs` (deleted), `src/DinoReader.Core/MergeSelection.cs` (deleted), `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/ReadingSurface.cs`, `src/DinoReader.App/PicturePages.cs`, `src/DinoReader.App/PictureTextPages.cs`, `src/DinoReader.App/CastPage.cs`, `src/DinoReader.App/CastRows.cs`, `src/DinoReader.App/CastMergeSheet.cs` (deleted), `src/DinoReader.App/StoryVoicing.cs`, `src/DinoReader.App/Resources/Strings/*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.Core/CLAUDE.md`
@@ -23,7 +23,7 @@ From the tester review (2026-10-26):
 - The **"Words over pictures" switch is removed** (`Story.WordsOverPictures` is ignored when read, and no longer
   written).
 - **"Merge two characters" is removed**: the button, the sheet, `CastMerges`/`MergeSelection` and
-  `Story.Merges`. Merges already saved in a book are ignored, so those names get their own voices again.
+  `Story.Merges` (stored field `CharacterMerges`, `Story.cs:74,102`). Merges already saved in a book are ignored, so those names get their own voices again.
 - "Show original text" (translated books, Slice 110) stays.
 - The `.dino` schema version does not change: the old fields are read and ignored, so older files still open.
 
