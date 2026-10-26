@@ -1207,3 +1207,5 @@
 152. **Dino books are written in spoken, kid-friendly language in every language (Batch 30).** The way a parent talks to a 4-6-year-old: colloquial forms, diminutives, exclamations; never literary or written-only forms. (Slice 146)
 
 153. **All existing Dino books are rewritten to Decision 152, one PR per book: Farsi first, then English, then the other languages (Batch 30).** (Slice 146)
+
+154. **iOS reviews follow one cadence for every app (Pipeline).** Never cancel a waiting review or expire a build; at most one review waiting per app; always the newest processed (`VALID`, unexpired) build. External TestFlight testers (group "Rofagha"): daily and automatic (`testflight-external.yml`). App Store: a manual button (`appstore-submit.yml`, release type after approval; the first listing is filled in App Store Connect by hand). Internal "Family" testers are unchanged (every merge, no review). Supersedes Decision 70's manual tester-group step. (Slice 147: docs/plan/slices/147-ios-review-cadence.md)

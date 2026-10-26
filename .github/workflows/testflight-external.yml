@@ -1,0 +1,48 @@
+name: testflight-external
+
+# Daily: sends each iOS app's newest processed build to the external TestFlight group ("Rofagha")
+# and submits it for Beta App Review. One review waiting per app, never cancels, never expires a
+# build (Decision 154, Slice 147). Internal testers still get every merge via release.yml.
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      app:
+        description: 'Which app to send to external testers.'
+        required: true
+        type: choice
+        options: [both, rtst, dino]
+        default: both
+
+permissions:
+  contents: read
+
+# Never cancel a running submission.
+concurrency:
+  group: testflight-external
+  cancel-in-progress: false
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      APPS: ${{ (github.event.inputs.app || 'both') == 'both' && 'rtst dino' || github.event.inputs.app }}
+      ASC_API_KEY_P8_BASE64: ${{ secrets.ASC_API_KEY_P8_BASE64 }}
+      ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+      ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Submit the newest build to external testers
+        run: node .github/scripts/ios-review-cadence.mjs testflight $APPS

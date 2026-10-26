@@ -8,6 +8,8 @@ name: release-scripts
 #     paths; publish-downloads copies the APK to R2). Node's own runner, no
 #     dependencies. This workflow is the only place these tests run; release.yml
 #     relies on it having passed on the PR.
+#   * ios-review-cadence.test.mjs guards the daily TestFlight / manual App Store review
+#     script (Slice 147); it runs with the others and its paths are covered by the filter.
 #   * actionlint: lints every workflow (config: .github/actionlint.yaml, which
 #     declares the macos-26 runner label). Any finding fails the PR.
 
