@@ -14,6 +14,12 @@ Shared files (`StarterTexts.cs`/`StoreTexts.cs`, `StarterUpdate.EarlierPageTextH
 The caller gives you: the worktree path, the book (stem, and whether it is a starter or a store story),
 the task (new story, retelling, re-split, a fix) and any notes from the user. Work only in that path.
 
+0. First run `gh pr list --state open --json number,title,headRefName,files` and stop if any open PR
+   (from any session) touches this book's text, translations, pictures, `.dino` or version entry:
+   report the PR number instead of writing. Another lane owns the book until it merges. (2026-10-26:
+   three Farsi rewrites collided with the illustration tab's PRs on the same books.) Scratch files go
+   inside the worktree, never at a drive root.
+
 1. Read, in full, before writing a word:
    - `.claude/skills/dino-storytelling/SKILL.md` (page rules, rhythm, picture plan, changing a book)
    - `.claude/skills/create-dino-story/SKILL.md` steps 1-2 (the two rules that beat everything, the art record)
