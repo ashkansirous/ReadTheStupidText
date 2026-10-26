@@ -27,6 +27,17 @@ likely cause). Today Read The Stupid Text sends nothing and `PRIVACY.md`, `site/
   texts ship in this slice, but `telemetry.enabled` in `readthestupidtext/config.json` stays `false`
   until every row of the *Store privacy declarations* checklist in `plan.md` is ticked.
 
+#### Design (RTST Batch 29 mock, frames R10 and R11, added 2026-10-26)
+
+Two frames in `docs/design/rtst-phone/RTST Batch 29.dc.html` (R10 line 93, R11 line 124). The mock agrees with the plan. R11 is a stand-in (see the open point).
+
+- **Counts switch (R10, Settings).** R3 plus one card at the bottom: white, 1px `rgba(0,0,0,.11)` border, radius 16, padding 14x16, min height 72, gap 12. Title "Help improve the app" (16.5px, 600). Helper "Sends counts like "a French text was read". No names, no ids, nothing you read." (13px, `rgba(0,0,0,.58)`, line 1.4). Switch 52x32, radius 16, on state `#5B57E8`, white 26px knob 3px from the right. On by default; off sends nothing. While the store declarations are open the remote config keeps sending off whatever the switch says (Decision 145).
+- **First-run line (R11, language page).** One non-tappable line above Continue: "The app counts things like which languages are read, with no names or ids. You can turn this off in Settings." (13.5px, `rgba(0,0,0,.6)`, line 1.45, centred, 8px side padding). No consent prompt (Decision 143). Continue is 60px high, radius 16, gradient `#5B57E8` to `#3B82F6`, 17px 600.
+
+**New strings (all RTST locales):** the switch title, its helper, the first-run line.
+
+**Open point: First-run screen is a stand-in.** The mock says there is no real mock of the first-run language page yet, so R11 only shows where the line goes (header "Choose your language", sub "For the app's words and translations", rows English, Francais, Espanol, Deutsch, Farsi). **Default:** put the line above the existing Continue and change nothing else on that page.
+
 ## Work
 
 - [ ] Shared client: move the queue/batch/flush/sample logic out of `DinoReader.App/UsageCounter.cs`

@@ -19,6 +19,23 @@ must see that it is working and on what.
   No Lottie for now: it adds an animation library per platform and the stage text is what tells the
   user it has not frozen. A Lottie animation can come later as polish.
 
+#### Design (RTST Batch 29 mock, frames R8 and R9, added 2026-10-26)
+
+Two frames in `docs/design/rtst-phone/RTST Batch 29.dc.html` (R8 line 42, R9 line 133), both the Main page behind the overlay. The mock agrees with the plan except for the points below. The text box, the two source buttons and the greyed player are the real page; only the overlay is new.
+
+- **Overlay (R8, R9).** Covers the text box only (the white 16px-radius box), not a new page; "Text from pictures", "Text from a file" and the player (opacity .5) stay visible. Fill `rgba(255,255,255,.9)`, content centred in a column, gap 14, padding 24. The text behind is dimmed to `rgba(0,0,0,.45)`.
+- **Spinner.** 44px, ring `rgba(0,0,0,.10)`, arc `#5B57E8`, stroke 2.6, one turn per .9 s. The note calls it the phone's own spinner, so a native `ActivityIndicator` coloured `#5B57E8` is fine; the SVG is an illustration.
+- **Stage line.** 18px, 600. R8 "Downloading French… 40%"; R9 "Preparing the voice…". Other stages: "Translating…" and a mid-read stall.
+- **Progress bar (R8 only).** 200x8, radius 4, track `rgba(0,0,0,.10)`, fill `#5B57E8` (40% in the frame). Shown only when ML Kit reports progress; otherwise no bar. Under it a hint, 13.5px, `rgba(0,0,0,.58)`, max 240: "Only the first time. Translation happens on this phone."
+- **Cancel.** 48px high, radius 14, padding 0x28, fill `rgba(91,87,232,.10)`, text `#4A46D6` 16px 600, 4px extra top margin. Stops the work and shows the original text.
+- **Timing.** Shows 500 ms after the wait begins, goes away the moment audio starts, nothing under 500 ms. On mobile data the download starts at the tap (Decision 147). TalkBack and VoiceOver read the stage. The copy is a draft.
+
+**Open point: R8 replaces the R7 progress card.** The plan says only to replace `BusyIndicator` and `PlayLoadingIndicator`; the mock also drops the R7 progress card. **Default:** remove the R7 card when the overlay lands.
+
+**Open point: Cancel on a mid-read stall.** The plan says Cancel stops the work and returns to the text for every stage. The RTST mock lists the mid-read stall as "the same layout" and so keeps Cancel (the Dino mock removes it for stalls, but that is Dino). **Default:** follow R9: Cancel on RTST stalls too, and it stops playback.
+
+**New strings (all RTST locales):** "Downloading <language>… N%", "Translating…", "Preparing the voice…", the download hint, "Cancel" (if not present).
+
 ## Work
 
 - [ ] `WaitStage` enum and a pure "show after 500 ms, hide on first audio or cancel" timer model in

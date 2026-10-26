@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Andika&display=swap" rel="stylesheet">
+<style>html,body{margin:0;padding:0;background:#f3efe6;}*{box-sizing:border-box;}a{color:#5B57E8;}a:hover{color:#3f3bc4;}@keyframes dinoHop{0%,100%{transform:translateY(0) scale(1,1)}10%{transform:translateY(0) scale(1.08,.9)}45%{transform:translateY(-34px) scale(.96,1.05)}80%{transform:translateY(0) scale(1.06,.92)}}@keyframes dinoShadow{0%,100%{transform:scaleX(1);opacity:.28}45%{transform:scaleX(.6);opacity:.12}}</style>
+</helmet>
+<section style="padding:48px 56px 80px;font-family:'Fredoka',system-ui,sans-serif;color:#2b2540">
+ <div style="max-width:1200px">
+  <div style="font-size:12px;font-weight:600;letter-spacing:2px;color:#5B57E8;text-transform:uppercase">Dino Reader · Batch 30 (Slices 143–146) · Decisions 149–153</div>
+  <div style="font-size:34px;font-weight:600;margin-top:6px">A bouncing dino whenever you wait</div>
+  <div style="font-size:15px;color:#5a5470;line-height:1.55;max-width:1000px;text-wrap:pretty">Only <b>Slice 143</b> adds screens. Any wait that blocks the screen for more than 500 ms shows one overlay with a hopping dino and one short line for grown-ups. Under 500 ms nothing shows. It is the same control as Read The Stupid Text’s wait overlay (<a href="RTST%20Batch%2029.dc.html">Batch 29</a>), with Dino’s own animation in it. The other slices change no screens: 144 makes <b>mana</b> the default Farsi voice, 145 tests sound-word spellings, and 146 rewrites every book in everyday spoken language.</div>
+ </div>
+
+ <div style="font-size:12px;font-weight:700;letter-spacing:1.6px;color:#8a8399;text-transform:uppercase;margin-top:36px">Shared wait overlay · Slice 143 · Decisions 146, 149</div>
+ <div style="display:flex;flex-wrap:wrap;gap:40px;margin-top:14px;align-items:flex-start">
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">64 · Opening a book · first audio not ready</div>
+   <div data-screen-label="64 Book opening wait" style="width:360px;height:760px;border-radius:34px;overflow:hidden;background:#FFF6E6;border:6px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;flex-direction:column;position:relative">
+    <div style="height:28px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-size:12px;font-weight:600;color:#2b2540"><span>9:41</span><span>100%</span></div>
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;row-gap:2px;padding:8px 12px 4px 8px;flex-shrink:0"><div style="width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#2b2540"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></div><div style="flex:1"></div><span style="order:3;flex-basis:100%;padding:0 8px;font-size:20px;font-weight:600;line-height:1.25">The Three Little Pigs</span></div>
+    <div style="flex:1;min-height:0;padding:6px 14px 0;display:flex;align-items:center;justify-content:center">
+     <div style="position:relative;width:100%;aspect-ratio:3/4;max-height:100%;border-radius:18px;overflow:hidden">
+      <img src="assets/three-little-pigs/3.jpg" style="width:100%;height:100%;object-fit:contain;display:block">
+      <div style="position:absolute;inset:0;background:rgba(255,246,230,.86);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px;text-align:center">
+       <div style="width:130px;height:130px;display:flex;align-items:flex-end;justify-content:center">{{ dinoA }}</div>
+       <span style="font-size:16px;font-weight:600;color:#2b2540">Getting the voices ready…</span>
+       <div style="height:44px;padding:0 22px;border-radius:22px;background:#fff;border:2px solid #e3dccd;color:#5a5470;font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center">Cancel</div>
+      </div>
+     </div>
+    </div>
+    <div style="display:flex;justify-content:center;gap:8px;padding:12px 0 2px;flex-shrink:0"><div style="width:26px;height:9px;border-radius:5px;background:#5B57E8"></div><div style="width:9px;height:9px;border-radius:50%;background:#d9d2c4"></div><div style="width:9px;height:9px;border-radius:50%;background:#d9d2c4"></div><div style="width:9px;height:9px;border-radius:50%;background:#d9d2c4"></div><div style="width:9px;height:9px;border-radius:50%;background:#d9d2c4"></div><div style="width:9px;height:9px;border-radius:50%;background:#d9d2c4"></div></div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:26px;padding:12px 0 26px;flex-shrink:0;opacity:.4"><div style="width:72px;height:72px;border-radius:50%;background:#ECE7FF;color:#5B57E8;display:flex;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 4 12l7 7"></path><path d="M19 5l-7 7 7 7"></path></svg></div><div style="width:104px;height:104px;border-radius:50%;background:#FF7A59;box-shadow:0 8px 0 #E2583A;display:flex;align-items:center;justify-content:center"><svg width="40" height="40" viewBox="0 0 16 16"><path d="M5 3.4c0-.6.7-1 1.2-.6l5.4 4.1c.4.3.4 1 0 1.3l-5.4 4.1c-.5.4-1.2 0-1.2-.6z" fill="#fff"></path></svg></div><div style="width:72px;height:72px;border-radius:50%;background:#ECE7FF;color:#5B57E8;display:flex;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5l7 7-7 7"></path><path d="M5 5l7 7-7 7"></path></svg></div></div>
+   </div>
+   <div style="width:360px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">The overlay covers <b>only the picture</b>, so the title and back button stay put. The play controls are dimmed until audio starts. It shows 500 ms after the wait begins and goes away the moment the first sound plays. A short cached book never shows it. <b>Cancel</b> goes back to the shelf. A <b>mid-read stall</b> (the next page isn’t voiced yet) looks the same, but with no Cancel. With reduce motion on, the dino stands still. TalkBack and VoiceOver read the line. The copy is a draft.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#3a3450">65 · Own book · reading the pictures</div>
+   <div data-screen-label="65 Import wait" style="width:360px;height:760px;border-radius:34px;overflow:hidden;background:#F3EFE6;border:6px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;flex-direction:column;position:relative">
+    <div style="height:28px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-size:12px;font-weight:600"><span>9:41</span><span>100%</span></div>
+    <div style="display:flex;align-items:center;gap:6px;padding:8px 14px 10px 6px;flex-shrink:0"><div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></div><div style="display:flex;flex-direction:column"><span style="font-size:20px;font-weight:600">New book</span><span style="font-size:12px;color:#8a8399">Grown-up mode</span></div></div>
+    <div style="flex:1;min-height:0;padding:0 14px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start">
+     <img src="assets/good-enough/1.jpg" style="width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:14px;display:block">
+     <img src="assets/good-enough/2.jpg" style="width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:14px;display:block">
+     <img src="assets/good-enough/3.jpg" style="width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:14px;display:block">
+     <div style="width:100%;aspect-ratio:3/4;border-radius:14px;background:#e6dfd0"></div>
+    </div>
+    <div style="position:absolute;inset:0;background:rgba(243,239,230,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center">
+     <div style="width:130px;height:130px;display:flex;align-items:flex-end;justify-content:center">{{ dinoB }}</div>
+     <span style="font-size:16px;font-weight:600;color:#2b2540">Reading the pictures…</span>
+     <span style="font-size:13px;color:#5a5470;margin-top:-8px">Page 3 of 8</span>
+     <div style="height:44px;padding:0 22px;border-radius:22px;background:#fff;border:2px solid #e3dccd;color:#5a5470;font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center">Cancel</div>
+    </div>
+   </div>
+   <div style="width:360px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">For waits that block the <b>whole screen</b>, the overlay covers the full page. Other lines are “Translating…”, “Saving…” (recording), “Getting the book…” (backup and restore) and “Getting the voices ready…”. A second line shows progress only when the work can count it. <b>Cancel</b> stops the import and keeps nothing. Saving a recording has no Cancel. The store pill, the first-run bar and the language pack bar keep their own progress and don’t use this overlay. The copy is a draft.</div>
+  </div>
+
+ </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  dino(key) {
+    const h = React.createElement;
+    return h('div', { key, style: { position: 'relative', width: 96, height: 120, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end' } },
+      h('img', { src: 'dino_reader_icons/ios/AppIcon-1024-light.png', style: { width: 84, height: 84, borderRadius: 22, display: 'block', transformOrigin: '50% 100%', animation: 'dinoHop 1.1s cubic-bezier(.45,0,.55,1) infinite' } }),
+      h('div', { style: { width: 64, height: 10, borderRadius: '50%', background: '#2b2540', marginTop: 6, animation: 'dinoShadow 1.1s cubic-bezier(.45,0,.55,1) infinite' } })
+    );
+  }
+  renderVals() {
+    return { dinoA: this.dino('a'), dinoB: this.dino('b') };
+  }
+}
+</script>
+</body>
+</html>

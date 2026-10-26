@@ -20,6 +20,10 @@ already the "night-storyteller" and the mum/fairy/princess voices; `CharacterRos
 - Change the default in code (`StoryVoicing.NarratorFor`, the roster, RTST's Farsi default), not by
   reordering `packs.yml` (that needs a new packs release).
 
+#### Design (Dino Reader Batch 30 mock, added 2026-10-26)
+
+No screens. The Batch 30 mock intro says 144 changes no screens (it makes **mana** the default Farsi voice). Nothing to build from the mock.
+
 ## Work
 
 - [ ] `NarratorFor("fa")` returns `mana`; RTST's Farsi default likewise (find where RTST picks it).

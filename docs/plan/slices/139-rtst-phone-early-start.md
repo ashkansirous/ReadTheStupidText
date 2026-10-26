@@ -32,6 +32,10 @@ do the first part of both choices.
     network; on mobile data the download waits for the tap (and the Slice 138 indicator shows it).
   - New text (edit, paste, scan) cancels all early work and restarts it after the existing 1 s idle.
 
+#### Design (RTST Batch 29 mock, added 2026-10-26)
+
+No screens. The Batch 29 mock intro says the early start "has no screen of its own: it just makes these waits shorter or skips them". Nothing to build from the mock.
+
 ## Work
 
 - [ ] Pure `EarlyStartPlan` in Application: head sentences for the original, the translation span
