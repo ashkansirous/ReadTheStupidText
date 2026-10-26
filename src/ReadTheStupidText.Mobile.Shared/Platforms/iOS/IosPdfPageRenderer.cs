@@ -4,7 +4,7 @@ using PdfKit;
 using ReadTheStupidText.Application.Images;
 using UIKit;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// <see cref="IPdfPageRenderer"/> over PDFKit (<see cref="PdfDocument"/>, Slice 67): renders a

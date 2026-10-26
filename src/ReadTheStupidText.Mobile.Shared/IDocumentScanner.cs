@@ -1,4 +1,4 @@
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// A multi-page document scanner (Slice 45, Decision 64). Android implements it with the ML Kit

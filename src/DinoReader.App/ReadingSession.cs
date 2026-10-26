@@ -549,6 +549,7 @@ public sealed class ReadingSession
 		}
 
 		Finished = true;
+		StateChanged?.Invoke(this, EventArgs.Empty); // the page counts a finished book from this
 	}
 
 	private void OnChunkChanged(object? sender, ReadChunk chunk)

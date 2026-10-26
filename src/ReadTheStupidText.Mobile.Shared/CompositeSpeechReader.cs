@@ -1,7 +1,7 @@
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Domain.Reading;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// Routes speech to the local Supertonic-3 neural engine once its downloaded voice

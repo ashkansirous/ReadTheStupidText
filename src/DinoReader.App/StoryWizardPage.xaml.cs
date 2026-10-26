@@ -2,7 +2,7 @@ using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Extensions.DependencyInjection;
 using ReadTheStupidText.Application.Images;
-using ReadTheStupidText.Mobile;
+using ReadTheStupidText.Mobile.Shared;
 
 namespace DinoReader;
 
@@ -29,6 +29,22 @@ public sealed class WizardSession
 	public StoryDraft Draft { get; }
 
 	public bool IsNew { get; }
+
+	/// <summary>How the first pages of a new book came in (a <see cref="UsageDetail"/> kind: photo, pdf, scan), for the usage count (Slice 134); null means typed or file text.</summary>
+	public string? OwnBookKind { get; private set; }
+
+	private bool _counted;
+
+	/// <summary>True the first time only: a new book is counted once per session, however many times it is saved.</summary>
+	public bool TryMarkCounted()
+	{
+		bool first = !_counted;
+		_counted = true;
+		return first;
+	}
+
+	/// <summary>Remembers the first kind of source the grown-up used; later sources do not change it.</summary>
+	public void NoteKind(string kind) => OwnBookKind ??= kind;
 
 	/// <summary>Ids of the pages that are picture + text pages (Slice 98): a rotate or crop clears their reading, but they are never read by OCR.</summary>
 	public HashSet<string> PictureTextPages { get; } = [];

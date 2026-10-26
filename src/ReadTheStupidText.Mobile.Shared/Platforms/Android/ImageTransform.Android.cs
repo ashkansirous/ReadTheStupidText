@@ -1,6 +1,6 @@
 using Android.Graphics;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 public static partial class ImageTransform
 {

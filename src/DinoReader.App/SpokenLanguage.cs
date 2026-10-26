@@ -1,6 +1,6 @@
 using DinoReader.Core;
 using ReadTheStupidText.Application.Settings;
-using ReadTheStupidText.Mobile;
+using ReadTheStupidText.Mobile.Shared;
 
 namespace DinoReader;
 

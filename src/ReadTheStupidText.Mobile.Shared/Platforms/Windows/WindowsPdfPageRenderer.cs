@@ -5,7 +5,7 @@ using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.Streams;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// <see cref="IPdfPageRenderer"/> over <c>Windows.Data.Pdf</c> (Slice 67): renders a page on a

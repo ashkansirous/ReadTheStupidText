@@ -1,7 +1,7 @@
 using Windows.Graphics.Imaging;
 using Windows.Storage.Streams;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>Writes a bitmap as a JPEG file (Slice 67): the one encoder the PDF renderer and the page image keeper share.</summary>
 internal static class WindowsJpeg

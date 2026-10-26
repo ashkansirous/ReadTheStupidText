@@ -6,7 +6,7 @@ using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Infrastructure.Logging;
 using ReadTheStupidText.Infrastructure.Reading;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 public static partial class MobileSharedServices
 {

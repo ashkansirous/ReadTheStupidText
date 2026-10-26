@@ -1,5 +1,3 @@
-using ReadTheStupidText.Domain.Reading;
-
 namespace ReadTheStupidText.Application.Reading;
 
 /// <summary>
@@ -8,7 +6,7 @@ namespace ReadTheStupidText.Application.Reading;
 /// text it covers.
 /// </summary>
 internal readonly record struct SpeechChunkPlan(
-    string Text, string? VoiceId, int SourceStart, int SourceEnd, VoiceFlavour Flavour = VoiceFlavour.Normal);
+    string Text, string? VoiceId, int SourceStart, int SourceEnd, IVoicedAudioTransform? Transform = null);
 
 /// <summary>
 /// Turns text or voiced segments into the ordered chunks an engine synthesizes. Pure
@@ -60,7 +58,7 @@ internal static class SpeechChunkPlanner
             int rawEnd = i == chunks.Count - 1 ? segment.SourceEnd : segment.TextStart + chunks[i].SourceEnd;
             int start = Math.Clamp(Math.Max(rawStart, cursor), segment.SourceStart, segment.SourceEnd);
             int end = Math.Clamp(rawEnd, start, segment.SourceEnd);
-            result.Add(new SpeechChunkPlan(chunks[i].Text, segment.VoiceId, start, end, segment.Flavour));
+            result.Add(new SpeechChunkPlan(chunks[i].Text, segment.VoiceId, start, end, segment.Transform));
             cursor = end;
         }
 

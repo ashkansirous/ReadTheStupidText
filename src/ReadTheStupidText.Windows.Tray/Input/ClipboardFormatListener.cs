@@ -1,6 +1,6 @@
 using ReadTheStupidText.Application.Input;
 
-namespace ReadTheStupidText.Infrastructure.Input;
+namespace ReadTheStupidText.Windows.Tray.Input;
 
 /// <summary>
 /// Registers the host window as a clipboard-format listener and raises

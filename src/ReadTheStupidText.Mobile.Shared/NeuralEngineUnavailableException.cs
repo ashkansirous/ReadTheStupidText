@@ -1,4 +1,4 @@
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// Thrown by a neural reader, before anything is spoken, when no engine could be acquired for

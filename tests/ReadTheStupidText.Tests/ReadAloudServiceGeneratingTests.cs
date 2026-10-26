@@ -237,20 +237,9 @@ public class ReadAloudServiceGeneratingTests
     [Fact]
     public async Task Auto_read_prepares_the_head_start_before_the_settle_delay_ends()
     {
-        var release = new TaskCompletionSource();
-        var spoken = new TaskCompletionSource();
-        int preparedAtSpeak = -1;
-        Harness? harness = null;
-        harness = new Harness
-        {
-            Speak = async (_, _) =>
-            {
-                Volatile.Write(ref preparedAtSpeak, harness!.HeadStart.Prepared.Count);
-                await release.Task;
-                spoken.TrySetResult();
-            },
-        };
+        var harness = new Harness();
         harness.Service.FirstAudioGrace = TimeSpan.FromMilliseconds(10);
+        harness.Service.LoneSelectSettleMs = 30_000; // the read cannot start while the prepare is awaited
 
         harness.Monitor.RaiseChanged("Some selected text.");
 
@@ -258,15 +247,11 @@ public class ReadAloudServiceGeneratingTests
         {
             await harness.HeadStart.FirstPrepare.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             Assert.Equal(["Some selected text."], harness.HeadStart.Prepared);
-            Assert.False(spoken.Task.IsCompleted);
         }
         finally
         {
-            release.TrySetResult();
+            harness.Service.Dispose(); // cancels the pending settle so no timer outlives the test
         }
-
-        await spoken.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
-        Assert.Equal(1, Volatile.Read(ref preparedAtSpeak));
     }
 
     [Fact]

@@ -3,7 +3,7 @@ using Rect = Android.Graphics.Rect;
 using RectF = Android.Graphics.RectF;
 using ReadTheStupidText.Application.Images;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// One scanned page (Slice 52): the downscaled detection image plus a region decoder on the

@@ -26,7 +26,7 @@
         </Grid>
 
         <ScrollView Grid.Row="1">
-            <VerticalStackLayout Padding="14,0,14,20" Spacing="14">
+            <VerticalStackLayout x:Name="Cards" Padding="14,0,14,20" Spacing="14">
                 <Border BackgroundColor="White" StrokeThickness="0">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="18" />

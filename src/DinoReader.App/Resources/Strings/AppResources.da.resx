@@ -180,6 +180,14 @@
   <data name="Storyteller_DownloadNow" xml:space="preserve"><value>Hent nu</value></data>
   <data name="Storyteller_Ready" xml:space="preserve"><value>Fortællerstemmerne er klar</value></data>
   <data name="Storyteller_ReadyBody" xml:space="preserve"><value>Dine historier bruger nu de nye fortællerstemmer.</value></data>
+  <data name="Update_Title" xml:space="preserve"><value>Dino skal opdateres</value></data>
+  <data name="Update_Body" xml:space="preserve"><value>Bed en voksen om at hente den nye version. Dine bøger og optagelser forbliver, som de er.</value></data>
+  <data name="Update_Button" xml:space="preserve"><value>Opdater Dino</value></data>
+  <data name="Version_NewReady" xml:space="preserve"><value>En ny version er klar</value></data>
+  <data name="Version_Title" xml:space="preserve"><value>Version</value></data>
+  <data name="Usage_Title" xml:space="preserve"><value>Hjælp med at gøre Dino bedre</value></data>
+  <data name="Usage_Helper" xml:space="preserve"><value>Sender tal som "en bog fra butikken blev læst færdig". Ingen navne, ingen id'er, intet du har skrevet.</value></data>
+  <data name="FirstRun_Usage" xml:space="preserve"><value>Dino tæller, hvilke bøger der bliver læst, uden navne eller id'er. Du kan slå det fra i Indstillinger.</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Din fortæller ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
   <data name="Storyteller_Failed" xml:space="preserve"><value>Kunne ikke hente fortællerstemmerne</value></data>

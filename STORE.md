@@ -24,8 +24,8 @@ the four Partner Center secrets (the `STORE_PRODUCT_ID` variable is already set)
 Verified end-to-end and **live**:
 
 - ✅ **Versioning → build → release** runs in `release.yml` (GitVersion →
-  `windows.yml` per-arch MSIX → `v<x.y.z>` tag + GitHub Release). It has cut real releases
-  (`v0.1.0` … `v0.4.0`), staying in `0.x` as intended — **not** forced to `v1.0.0`.
+  `windows.yml` per-arch MSIX → `rtst-v<x.y.z>` tag + GitHub Release). It cut `v0.1.0` … `v0.4.0` as the
+  one shared version; since Slice 130 RTST and Dino Reader each have their own tag and release.
 - ✅ **Tests gate the release** — a `test` job runs the unit suite and blocks
   `build`/`release` on failure (Slice 15b).
 - ✅ **Store identity** wired into the manifest (Slice 16 / Decision 23) and
@@ -54,7 +54,7 @@ merges don't resubmit to the Store), with no manual step. To force a manual re-s
 failure, or resubmitting an older tag), it's still just:
 
 ```bash
-gh workflow run store-submit -f tag=v<x.y.z>
+gh workflow run store-submit -f tag=rtst-v<x.y.z>
 ```
 
 **One-time Partner Center setup — done, kept because it is the non-obvious part.**
@@ -431,13 +431,15 @@ Versioning is fully automatic and lives **entirely inside `release.yml`** — on
 workflow run does version → build → release, with no PAT and no commit-back
 (Decision 17 / Slice 14). **Git tags are the source of truth.**
 
-1. The `version` job runs **GitVersion** (`GitVersion.yml`, GitHub Flow preset),
-   which reads git history and computes the next SemVer. `main` defaults to a
-   **Patch** bump over the last `v*` tag.
+1. The `version` job runs **GitVersion** once per product (Slice 130, Decision 137):
+   `GitVersion.yml` (GitHub Flow preset, tag prefix `rtst-v`) for Read The Stupid Text and
+   `GitVersion.dino.yml` (`dino-v`) for Dino Reader. It reads git history and computes the next
+   SemVer. `main` defaults to a **Patch** bump over that product's last tag; the old shared `v*`
+   tags are ignored.
 2. The `build` job stamps that version (`x.y.z.0` — the Store needs revision `0`)
    into the manifest **at build time** and packages the MSIX. Nothing is
    committed back.
-3. On a push to `main`, the `release` job creates the **`v<x.y.z>` tag** at the
+3. On a push to `main`, the `release-publish-rtst` job creates the **`rtst-v<x.y.z>` tag** at the
    merge commit and a **GitHub Release** with both `.msix` assets — same run, so
    a plain `GITHUB_TOKEN` is enough (no second workflow to trigger).
 
@@ -463,9 +465,10 @@ Distribution uses **GitHub Releases**. They are also CI's only output store,
 because Release assets don't count toward the Actions storage quota. Every push
 to `main` that touches app code cuts one (see *Versioning* above). It is created
 as a **draft**, each platform build uploads into it, and it is published (which
-creates the `v*` tag) only once every affected build succeeded. When a change
+creates the `rtst-v*` tag) only once every affected build succeeded. When a change
 touched only one platform, the other platform's assets are **carried forward**
-from its last release, so `releases/latest` always has the MSIX and the APK. The packages get **stable URLs** under
+from the product's last release, so `releases/latest` (always the RTST release; Dino Reader's
+`dino-v*` releases are published not-latest) has the MSIX and the APK. The packages get **stable URLs** under
 `…/releases/latest`, linked from the README, and serve as the hosted source the
 Store-submission step pulls from.
 
@@ -759,3 +762,26 @@ secrets as Read The Stupid Text (they belong to the developer account). The very
 brand-new listing (age rating, pricing, store listing text) is done once by hand in Partner Center; the
 CLI then pushes updates. The first submission is manual; after it, set the repository variable
 `DINOREADER_STORE_APP_ID=9N9VHRLCZXN5` to turn on `store-submit-dino`.
+
+## Dino Book Reader: anonymous usage counts (Slice 133, Decisions 140-142)
+
+Dino sends anonymous counts to its own Worker (`POST dinoreader.sirous.uk/api/events`, `worker/events.ts`, stored in the Workers
+Analytics Engine dataset `dino_usage`, 3 months). Each count is: its name (`book_opened`, `book_finished`, `store_download`, `own_book_added`, `recording_made`, `voice_changed`, `reading_language_changed`, `app_opened`; Slice 134), the book (a shelf book's
+package id for a starter or store story only, or `own` for any other book, never a title), the language, shelf or own, whether a parent recording exists, one closed extra value (`detail`: store filters set or not, own-book kind photo/pdf/scan/typed, recorded-pages bucket, what voice part changed, or the language changed from), app version, platform and the UTC
+date. Counts about no book (voice, language, app opened) name `none` as book and source. No install, device or advertising id, no typed text, no time of day. On by default, with a grown-up's switch ("Help make Dino
+better") in Settings and one line on the first-run ready screen; the remote config (`telemetry.enabled`, `sampleRate`) turns it down
+without a release. Store forms (the owner or Claude in the signed-in browser, after the release that first sends events ships):
+
+- **Google Play Data safety (Dino):** "Data collected: yes", type **App activity > App interactions**,
+  collected, **not shared**, **processed ephemerally: no**, optional (the user can turn it off), purpose **Analytics**; no
+  personal info, no device or other ids. Encrypted in transit: yes. Deletion request: not applicable (no way to tie data to a person).
+  Families policy: no advertising id, no third-party SDK for the counts (first-party call to our own server).
+- **App Store privacy (Dino):** data type **Usage Data > Product Interaction**, **not linked to the user**, **not used for tracking**,
+  purpose **Analytics**. `PrivacyInfo.xcprivacy` declares the same (`NSPrivacyCollectedDataTypeProductInteraction`, linked false, tracking false).
+- **Microsoft Store (Dino):** no data-collection question beyond the privacy policy URL; it must point at the updated `site/dino/privacy.html`.
+- Cloudflare Analytics Engine is the processor. The `USAGE` binding is not in the wrangler configs until Analytics Engine is enabled on
+  the account (see "Landing site" in `CLAUDE.md` for the switch-on steps); without it `/api/events` answers 204 and writes nothing. Each
+  point's double is the count's weight (1 / the sample rate it was counted at), so query with
+  `SELECT blob1 AS name, blob2 AS book, SUM(double1) FROM dino_usage GROUP BY name, book`.
+- `tools/dino-usage-report.ps1` hides groups of fewer than 10 events. That floor counts events, not households (there is no install id), so it is a noise filter and not an anonymity guarantee: say "no identifiers, counts only", never "cannot be traced".
+- Switch counting on with `telemetry` in `dinoreader/config.json` (`{"enabled": true, "sampleRate": 1}`); it is off until then.

@@ -1,6 +1,7 @@
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Mobile.Resources.Strings;
+using ReadTheStupidText.Mobile.Shared;
 
 namespace ReadTheStupidText.Mobile;
 

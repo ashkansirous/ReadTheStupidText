@@ -26,7 +26,7 @@ Loaded when you work under `src/ReadTheStupidText.Mobile`. Shared platform code 
   app; references `Domain`/`Application`/`Documents`/`Mobile.Shared`. The shared
   platform code (engines, voice packs, `IPlatformServices`, per-OS
   `Platforms/` folders) lives in **`src/ReadTheStupidText.Mobile.Shared`**
-  (namespace still `ReadTheStupidText.Mobile`; `Application` grants it
+  (namespace `ReadTheStupidText.Mobile.Shared`; `Application` grants it
   `InternalsVisibleTo`). OCR and the scanner stay RTST-only.
   **`src/DinoReader.App`** (`net10.0-android`, `uk.sirous.dinoreader`) references
   `Application`/`Domain`/`Mobile.Shared`. **Nothing outside `Platforms/`
@@ -46,7 +46,7 @@ Loaded when you work under `src/ReadTheStupidText.Mobile`. Shared platform code 
 
 ## Gotchas
 
-- Files under `Platforms/Android` use namespace `ReadTheStupidText.Mobile`,
+- Files under the app's own `Platforms/Android` use namespace `ReadTheStupidText.Mobile` (Mobile.Shared's use `ReadTheStupidText.Mobile.Shared`),
   *not* `...Platforms.Android` — a namespace segment literally named `Android`
   shadows the top-level `Android.*` binding namespace for unqualified lookups
   in that file.

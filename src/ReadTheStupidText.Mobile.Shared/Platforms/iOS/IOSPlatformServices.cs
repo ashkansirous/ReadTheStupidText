@@ -1,7 +1,7 @@
 using ReadTheStupidText.Application.Images;
 using ReadTheStupidText.Application.Reading;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// iOS's <see cref="IPlatformServices"/> (Slices 48-49): <c>AVSpeechSynthesizer</c> is the

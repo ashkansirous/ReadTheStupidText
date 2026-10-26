@@ -178,6 +178,14 @@
   <data name="Storyteller_DownloadNow" xml:space="preserve"><value>همین حالا دریافت کن</value></data>
   <data name="Storyteller_Ready" xml:space="preserve"><value>صداهای قصه‌گو آماده‌اند</value></data>
   <data name="Storyteller_ReadyBody" xml:space="preserve"><value>قصه‌های شما اکنون از صداهای جدید قصه‌گو استفاده می‌کنند.</value></data>
+  <data name="Update_Title" xml:space="preserve"><value>دینو به به‌روزرسانی نیاز دارد</value></data>
+  <data name="Update_Body" xml:space="preserve"><value>از یک بزرگ‌تر بخواه نسخهٔ تازه را بگیرد. کتاب‌ها و ضبط‌های تو همان‌طور که هستند می‌مانند.</value></data>
+  <data name="Update_Button" xml:space="preserve"><value>به‌روزرسانی دینو</value></data>
+  <data name="Version_NewReady" xml:space="preserve"><value>نسخهٔ تازه آماده است</value></data>
+  <data name="Version_Title" xml:space="preserve"><value>نسخه</value></data>
+  <data name="Usage_Title" xml:space="preserve"><value>به بهتر شدن دینو کمک کنید</value></data>
+  <data name="Usage_Helper" xml:space="preserve"><value>شمارش‌هایی مثل «یک کتاب فروشگاه تمام شد» می‌فرستد. بدون نام، بدون شناسه، بدون چیزی که شما نوشته‌اید.</value></data>
+  <data name="FirstRun_Usage" xml:space="preserve"><value>دینو می‌شمارد کدام کتاب‌ها خوانده می‌شوند، بدون نام و شناسه. می‌توانید این را در تنظیمات خاموش کنید.</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>قصه‌گوی شما ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} مگابایت</value></data>
   <data name="Storyteller_Failed" xml:space="preserve"><value>دریافت صداهای قصه‌گو ممکن نشد</value></data>

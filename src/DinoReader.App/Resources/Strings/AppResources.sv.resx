@@ -180,6 +180,14 @@
   <data name="Storyteller_DownloadNow" xml:space="preserve"><value>Hämta nu</value></data>
   <data name="Storyteller_Ready" xml:space="preserve"><value>Berättarrösterna är klara</value></data>
   <data name="Storyteller_ReadyBody" xml:space="preserve"><value>Dina sagor använder nu de nya berättarrösterna.</value></data>
+  <data name="Update_Title" xml:space="preserve"><value>Dino behöver uppdateras</value></data>
+  <data name="Update_Body" xml:space="preserve"><value>Be en vuxen hämta den nya versionen. Dina böcker och inspelningar finns kvar precis som de är.</value></data>
+  <data name="Update_Button" xml:space="preserve"><value>Uppdatera Dino</value></data>
+  <data name="Version_NewReady" xml:space="preserve"><value>En ny version är klar</value></data>
+  <data name="Version_Title" xml:space="preserve"><value>Version</value></data>
+  <data name="Usage_Title" xml:space="preserve"><value>Hjälp till att göra Dino bättre</value></data>
+  <data name="Usage_Helper" xml:space="preserve"><value>Skickar antal som "en bok från butiken lästes klart". Inga namn, inga id:n, inget du har skrivit.</value></data>
+  <data name="FirstRun_Usage" xml:space="preserve"><value>Dino räknar vilka böcker som läses, utan namn eller id:n. Du kan stänga av det i Inställningar.</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Din berättare ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
   <data name="Storyteller_Failed" xml:space="preserve"><value>Det gick inte att hämta berättarrösterna</value></data>

@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.Controls.Shapes;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
-using ReadTheStupidText.Mobile;
+using ReadTheStupidText.Mobile.Shared;
 
 namespace DinoReader;
 
@@ -230,6 +230,7 @@ public partial class FirstRunPage : ContentPage
 			: AppResources.Format(AppResources.FirstRun_ReadyBody, StarterStories.Count);
 		HelloLabel.Text = AppResources.FirstRun_HearHello;
 		SetUpButton.Text = AppResources.FirstRun_SetUp;
+		ReadyUsage.Text = AppResources.FirstRun_Usage;
 	}
 
 	private void OnInstallerChanged(object? sender, EventArgs e) => Refresh();

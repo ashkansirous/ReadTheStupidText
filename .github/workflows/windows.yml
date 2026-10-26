@@ -28,6 +28,7 @@ on:
       - '.github/scripts/find-release.sh'
       - '.github/scripts/ship-targets.mjs'
       - 'src/ReadTheStupidText.App/**'
+      - 'src/ReadTheStupidText.Windows.Tray/**'
       - 'src/ReadTheStupidText.Infrastructure/**'
       - '.github/workflows/store-submit.yml'
       - '.github/workflows/windows.yml'
@@ -149,7 +150,7 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: v${{ inputs.version || needs.version.outputs.version }}
+          TAG: rtst-v${{ inputs.version || needs.version.outputs.version }}
         run: |
           set -euo pipefail
           mapfile -t msix < <(find AppPackages -name 'ReadTheStupidText.App_*.msix')

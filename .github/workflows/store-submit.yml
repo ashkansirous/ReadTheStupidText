@@ -46,7 +46,7 @@ on:
   workflow_call:
     inputs:
       tag:
-        description: 'Release tag to submit (e.g. v1.0.0).'
+        description: 'Release tag to submit (e.g. rtst-v1.53.0 or dino-v1.70.1).'
         required: true
         type: string
       package:
@@ -61,7 +61,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag to submit (e.g. v1.0.0). Leave blank to submit the latest release.'
+        description: "Release tag to submit (e.g. rtst-v1.53.0 or dino-v1.70.1). Leave blank to submit the package's newest release."
         required: false
       package:
         description: 'MSIX package name stem.'
@@ -125,7 +125,12 @@ jobs:
           set -euo pipefail
           tag="$INPUT_TAG"
           if [ -z "$tag" ]; then
-            found=$(bash .github/scripts/find-release.sh "^${PACKAGE//./[.]}_{version}[.]0_.*[.]msix\$")
+            # Only this product's tags (plus the old shared v<x.y.z> ones, as release.yml's carry-forward does).
+            case "$PACKAGE" in
+              DinoReader.App) tag_regex='^(dino-)?v[0-9]' ;;
+              *) tag_regex='^(rtst-)?v[0-9]' ;;
+            esac
+            found=$(bash .github/scripts/find-release.sh "^${PACKAGE//./[.]}_{version}[.]0_.*[.]msix\$" "$tag_regex")
             tag=$(head -n 1 <<< "$found")
           fi
           if [ -z "$tag" ]; then echo "::error::Could not resolve a release tag to submit"; exit 1; fi

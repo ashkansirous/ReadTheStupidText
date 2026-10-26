@@ -1,7 +1,7 @@
 using Android.Graphics;
 using ReadTheStupidText.Application.Images;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// <see cref="IPageImageKeeper"/> for Android (Slice 63): decodes a scanned or photographed page

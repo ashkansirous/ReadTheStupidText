@@ -22,6 +22,7 @@ on:
       - 'src/ReadTheStupidText.Documents/**'
       - 'global.json'
       - 'GitVersion.yml'
+      - 'GitVersion.dino.yml'
       - 'Directory.Build.props'
       - '*.slnx'
       - '.gitattributes'
@@ -137,7 +138,7 @@ jobs:
           IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.DINOREADER_IOS_PROVISIONING_PROFILE_BASE64 }}
         run: bash .github/scripts/ios-signing.sh install
 
-      # CFBundleShortVersionString = the shared GitVersion. CFBundleVersion must
+      # CFBundleShortVersionString = this product's version. CFBundleVersion must
       # only ever go up per version: a UTC timestamp (yyyymmdd.hhmmss, no leading
       # zeros), as Lets Call Mom does. Key and profile go in via env so their
       # spaces and parentheses need no quoting inside the command.
@@ -182,7 +183,7 @@ jobs:
         if: ${{ env.SIGN_RELEASE == 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "v${VERSION}" "dist/DinoReader-${VERSION}.ipa" --repo "${{ github.repository }}" --clobber
+        run: gh release upload "dino-v${VERSION}" "dist/DinoReader-${VERSION}.ipa" --repo "${{ github.repository }}" --clobber
 
       - name: Remove signing material
         if: ${{ always() && env.SIGN_RELEASE == 'true' }}

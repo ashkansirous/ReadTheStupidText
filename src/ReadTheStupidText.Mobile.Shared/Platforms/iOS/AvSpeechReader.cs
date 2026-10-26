@@ -4,7 +4,7 @@ using Foundation;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Domain.Reading;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// <see cref="ISpeechReader"/> backed by iOS's built-in <see cref="AVSpeechSynthesizer"/>

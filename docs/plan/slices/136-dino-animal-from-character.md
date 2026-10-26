@@ -55,7 +55,7 @@ The `HasAnimalSetting` paths stay for old saved data.
 
 *Tests:* 1097 pass; Android build green.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-25)
 
 - `src/DinoReader.Core/CLAUDE.md`: a cast member not Edited by a grown-up keeps its story animal
   (`Resolve`), so a cow with no cow character still moos; an Edited member takes the cast character's animal
@@ -75,3 +75,7 @@ The `HasAnimalSetting` paths stay for old saved data.
 - `dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj` and the Android build.
 - Emulator: the pigs starter, English and Farsi: the cast page matches frame 59 (no Animal line), the pigs
   oink, the Wolf growls; recast Pip to a non-animal character and Pip goes quiet.
+
+#### Emulator result (2026-10-26)
+
+PASS: the cast page matches frame 59 in English and Farsi (no Animal line). The animal sounds (oink, Wolf growls) and recasting Pip to a non-animal going silent are not verifiable by adb and need a listen.

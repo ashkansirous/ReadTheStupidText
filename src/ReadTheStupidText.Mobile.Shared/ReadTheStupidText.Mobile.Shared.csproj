@@ -6,8 +6,9 @@
 	     the voice pack/model services, the settings store and the IPlatformServices seam.
 	     Read The Stupid Text Mobile and Dino Reader reference it. Pages, shells and the
 	     scan flow stay in the apps.
-	     The namespace stays ReadTheStupidText.Mobile (see CLAUDE.md: a namespace segment
-	     named "Android" would shadow the Android.* binding namespace). -->
+	     The namespace is ReadTheStupidText.Mobile.Shared (Slice 131), distinct from the apps'
+	     ReadTheStupidText.Mobile; see CLAUDE.md: a namespace segment named "Android" would shadow
+	     the Android.* binding namespace, so Platforms folders keep the plain namespace. -->
 	<PropertyGroup>
 		<!-- Same Android/iOS selection as ReadTheStupidText.Mobile.csproj (Decision 70, Slice 48):
 		     iOS is added only on macOS or with -p:IncludeIos=true, and -p:IncludeAndroid=false
@@ -23,7 +24,7 @@
 		     project it builds: this library is never an MSIX, so it keeps its own value (see the
 		     TreatAsLocalProperty on <Project>). -->
 
-		<RootNamespace>ReadTheStupidText.Mobile</RootNamespace>
+		<RootNamespace>ReadTheStupidText.Mobile.Shared</RootNamespace>
 		<UseMaui>true</UseMaui>
 		<SingleProject>true</SingleProject>
 		<ImplicitUsings>enable</ImplicitUsings>

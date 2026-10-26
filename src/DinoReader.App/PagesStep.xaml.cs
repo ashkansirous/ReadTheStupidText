@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using ReadTheStupidText.Application.Documents;
 using ReadTheStupidText.Application.Images;
 using ReadTheStupidText.Documents;
-using ReadTheStupidText.Mobile;
+using ReadTheStupidText.Mobile.Shared;
 
 namespace DinoReader;
 
@@ -492,7 +492,10 @@ public partial class PagesStep : ContentView
 		try
 		{
 			var external = _session.Services.GetRequiredService<ExternalActivityGuard>();
-			await AddPicturesAsync(await external.RunAsync(scanner.ScanAsync), scannerOutput: true);
+			if (await AddPicturesAsync(await external.RunAsync(scanner.ScanAsync), scannerOutput: true))
+			{
+				_session.NoteKind(UsageDetail.KindScan);
+			}
 		}
 		catch (Exception ex) when (ex is DocumentScannerPreparingException or DocumentScannerStartFailedException
 			or DocumentScannerUnavailableException)
@@ -507,7 +510,10 @@ public partial class PagesStep : ContentView
 		{
 			var external = _session!.Services.GetRequiredService<ExternalActivityGuard>();
 			List<FileResult> photos = await external.RunAsync(() => MediaPicker.Default.PickPhotosAsync());
-			await AddPicturesAsync(photos.Select(p => p.FullPath).ToList(), scannerOutput: false);
+			if (await AddPicturesAsync(photos.Select(p => p.FullPath).ToList(), scannerOutput: false))
+			{
+				_session.NoteKind(UsageDetail.KindPhoto);
+			}
 		}
 		catch (Exception ex) when (ex is PermissionException or FeatureNotSupportedException)
 		{
@@ -517,11 +523,12 @@ public partial class PagesStep : ContentView
 
 	// Each pick is copied (upright, JPEG) into the work folder; the scanner's or picker's own file is then removed if it was only a
 	// temporary one (a photo outside the app cache is the user's and stays).
-	private async Task AddPicturesAsync(IReadOnlyList<string> locations, bool scannerOutput)
+	// True when at least one picture became a page (a cancelled pick, or pictures that all failed, add none).
+	private async Task<bool> AddPicturesAsync(IReadOnlyList<string> locations, bool scannerOutput)
 	{
 		if (locations.Count == 0)
 		{
-			return;
+			return false;
 		}
 
 		var import = _session!.Services.GetRequiredService<StoryImport>();
@@ -536,6 +543,8 @@ public partial class PagesStep : ContentView
 		{
 			await ShowReadFailedAsync();
 		}
+
+		return failed < locations.Count;
 	}
 
 	private async Task<bool> TryAddPictureAsync(StoryImport import, string location, bool scannerOutput)
@@ -628,6 +637,7 @@ public partial class PagesStep : ContentView
 			_session.FileName = Path.GetFileName(path);
 			Draft.AddPageDrafts(drafts);
 			Draft.MarkPicturesAsPages();
+			_session.NoteKind(UsageDetail.KindPdf);
 			Refresh();
 			return true;
 		}

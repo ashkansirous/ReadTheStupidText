@@ -3,7 +3,7 @@ using Android.Graphics.Pdf;
 using Android.OS;
 using ReadTheStupidText.Application.Images;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// <see cref="IPdfPageRenderer"/> over Android's <see cref="PdfRenderer"/> (Slice 63): renders a

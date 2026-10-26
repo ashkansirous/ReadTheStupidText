@@ -6,7 +6,8 @@
  * The mapping is exactly the one Slices 44/48 settled (Decision 69):
  *   - core (Domain/Application/Documents/solution/pipeline)       -> windows + android + ios
  *   - tests/ReadTheStupidText.Tests                               -> nothing (tests.yml runs it on PRs)
- *   - App / Infrastructure / store-submit.yml / windows.yml       -> windows + windowsstore (the Store submission)
+ *   - App / Windows.Tray / Infrastructure / store-submit.yml / windows.yml -> windows + windowsstore (the Store submission)
+ *   - Windows.Tray (Slice 128, tray-only code) maps to no dino* target: only App references it
  *   - Mobile/Platforms/Android/**                                 -> android
  *   - Mobile/Platforms/iOS/**                                     -> ios
  *   - the rest of Mobile/** (the RTST app's MAUI root)            -> android + ios
@@ -25,13 +26,14 @@
  * A major version bump builds every target (windowsstore included), and so does a missing base tag
  * or a force_all run.
  *
- * Changes are measured from the newest published v<x.y.z> tag merged into HEAD
- * (not from the push's own `before`): a failed run, or a pending run dropped
- * by the concurrency queue, is still built next time. Failing safe means
- * building more, never less.
+ * Changes are measured per product (Slice 130, Decision 137) from the newest published tag of that
+ * product merged into HEAD (rtst-v<x.y.z> for the RTST targets, dino-v<x.y.z> for the Dino ones;
+ * the old shared v<x.y.z> tags are history and ignored), not from the push's own `before`: a failed
+ * run, or a pending run dropped by the concurrency queue, is still built next time. Failing safe
+ * means building more, never less. A product with no tag builds everything (release.yml's version
+ * job creates the baseline tags first, so this only happens if that is skipped).
  *
- * Known gap: changes to publish-downloads.mjs or the download-keys don't map to
- * any target, so they trigger no re-publish. Run release.yml with force_all if
+ * Known gap: changes to publish-downloads.mjs or the download-keys don't map to any target, so they trigger no re-publish. Run release.yml with force_all if
  * the downloads copy needs refreshing.
  *
  * Each platform workflow's own `pull_request.paths` mirrors its rows below (plus a
@@ -46,7 +48,14 @@ import { fileURLToPath } from 'node:url';
 const MOBILE = 'src/ReadTheStupidText.Mobile/';
 const SHARED = 'src/ReadTheStupidText.Mobile.Shared/';
 const MAJOR_BUMP = 'major';
-const APP_TAG = /^v(\d+)\.(\d+)\.(\d+)$/;
+/** Dino Reader's GitVersion config (the twin of the core GitVersion.yml): a path of every Dino target. */
+const DINO_VERSION_CONFIG = 'GitVersion.dino.yml';
+
+/** Each product's tag prefix (also its GitVersion tag-prefix) and the targets its release carries. */
+export const PRODUCTS = {
+    rtst: { prefix: 'rtst-v', targets: ['windows', 'windowsstore', 'android', 'ios'] },
+    dino: { prefix: 'dino-v', targets: ['dinoreader', 'dinoapp', 'dinoios', 'dinowin'] },
+};
 
 /** Changed files matching any of these never trigger a build (mirrored as trailing `!` entries in each workflow's `paths`). */
 export const IGNORED_PATTERNS = ['**/*.md'];
@@ -79,6 +88,7 @@ export const GROUPS = {
     windows: {
         include: [
             'src/ReadTheStupidText.App/',
+            'src/ReadTheStupidText.Windows.Tray/',
             'src/ReadTheStupidText.Infrastructure/',
             '.github/workflows/store-submit.yml',
             '.github/workflows/windows.yml',
@@ -98,6 +108,7 @@ export const GROUPS = {
     },
     dinoapp: {
         include: [
+            DINO_VERSION_CONFIG,
             'src/DinoReader.App/',
             'src/DinoReader.Core/',
             `${SHARED}Platforms/Android/`,
@@ -114,6 +125,7 @@ export const GROUPS = {
     // with its own signing secrets.
     dinoios: {
         include: [
+            DINO_VERSION_CONFIG,
             'src/DinoReader.App/',
             'src/DinoReader.Core/',
             `${SHARED}Platforms/iOS/`,
@@ -129,6 +141,7 @@ export const GROUPS = {
     // dinoapp/dinoios it needs no secrets; the Store submission is gated on DINOREADER_STORE_APP_ID.
     dinowin: {
         include: [
+            DINO_VERSION_CONFIG,
             'src/DinoReader.App/',
             'src/DinoReader.Core/',
             `${SHARED}Platforms/Windows/`,
@@ -150,7 +163,7 @@ export const GROUPS = {
     // Mobile.Shared's platform-neutral root: used by RTST on both OSes and by Dino Reader.
     sharedroot: { include: [SHARED], exclude: [`${SHARED}Platforms/`] },
     dinoreader: {
-        include: ['src/DinoReader.Core/', 'tests/DinoReader.Tests/', '.github/workflows/dinoreader.yml'],
+        include: [DINO_VERSION_CONFIG, 'src/DinoReader.Core/', 'tests/DinoReader.Tests/', '.github/workflows/dinoreader.yml'],
     },
 };
 
@@ -198,9 +211,12 @@ export function shipTargets({ changedFiles, bump, forceAll = false }) {
     return { windows, windowsstore, android, ios, dinoreader, dinoapp, dinoios, dinowin };
 }
 
-/** The newest strict v<x.y.z> tag in a list (null when none). */
-export function newestAppTag(tags) {
-    const parse = (tag) => APP_TAG.exec(tag)?.slice(1).map(Number);
+const appTagPattern = (prefix) => new RegExp(`^${prefix}(\\d+)\\.(\\d+)\\.(\\d+)$`);
+
+/** The newest strict <prefix><x.y.z> tag in a list (null when none). */
+export function newestAppTag(tags, prefix) {
+    const pattern = appTagPattern(prefix);
+    const parse = (tag) => pattern.exec(tag)?.slice(1).map(Number);
     const valid = tags.filter((tag) => parse(tag));
     valid.sort((a, b) => {
         const [pa, pb] = [parse(a), parse(b)];
@@ -214,8 +230,8 @@ export function newestAppTag(tags) {
  * base tag, else 'other'. No base tag (null) is treated as major: the first
  * release builds everything.
  */
-export function bumpKind(baseTag, newVersion) {
-    const base = APP_TAG.exec(baseTag ?? '');
+export function bumpKind(baseTag, newVersion, prefix) {
+    const base = appTagPattern(prefix).exec(baseTag ?? '');
     if (!base) return MAJOR_BUMP;
     const next = /^(\d+)\./.exec(newVersion ?? '');
     return next && Number(next[1]) > Number(base[1]) ? MAJOR_BUMP : 'other';
@@ -225,10 +241,10 @@ function git(args) {
     return execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
 }
 
-/** The newest published app tag merged into HEAD (HEAD's own tag included). */
-export function previousReleaseTag() {
+/** The newest published tag of a product merged into HEAD (HEAD's own tag included). */
+export function previousReleaseTag(prefix) {
     try {
-        return newestAppTag(git(['tag', '--merged', 'HEAD', '--list', 'v*']).split('\n'));
+        return newestAppTag(git(['tag', '--merged', 'HEAD', '--list', `${prefix}*`]).split('\n'), prefix);
     } catch {
         return null;
     }
@@ -245,18 +261,75 @@ export function changedFilesSince(base) {
     }
 }
 
+/** GitVersion's major-bump commit token, assembled so this file never contains it literally. */
+const MAJOR_TOKEN = new RegExp(String.raw`\+` + String.raw`semver:\s?(breaking|major)`, 'i');
+const COMMIT_START = '\u0001';
+const MESSAGE_END = '\u0002';
+
+/** Commits in `base..HEAD` as `{ message, files }`. */
+export function commitsSince(base) {
+    if (!base) return [];
+    try {
+        const raw = git(['log', '--no-renames', '--name-only', `--format=${COMMIT_START}%B${MESSAGE_END}`, `${base}..HEAD`]);
+        return parseCommits(raw);
+    } catch {
+        return [];
+    }
+}
+
+export function parseCommits(raw) {
+    return raw.split(COMMIT_START).filter((chunk) => chunk.includes(MESSAGE_END)).map((chunk) => {
+        const [message, rest] = chunk.split(MESSAGE_END);
+        return { message, files: rest.split('\n').map((f) => f.trim()).filter(Boolean) };
+    });
+}
+
+/**
+ * 'major' for a product only when the version moved up a major AND a commit carrying the major token
+ * touched one of that product's own targets; a token on the other product's commit does not count.
+ * No base tag is always major (first release builds everything).
+ */
+export function productBump({ baseTag, version, prefix, commits, targets }) {
+    if (bumpKind(baseTag, version, prefix) !== MAJOR_BUMP) return 'other';
+    if (!baseTag) return MAJOR_BUMP;
+    const ownsToken = commits.some((commit) => {
+        if (!MAJOR_TOKEN.test(commit.message)) return false;
+        const hit = shipTargets({ changedFiles: commit.files, bump: 'other' });
+        return targets.some((target) => hit[target]);
+    });
+    return ownsToken ? MAJOR_BUMP : 'other';
+}
+
 function writeOutputs(targets) {
     const lines = Object.entries(targets).map(([key, value]) => `${key}=${value}`);
     console.log(lines.join('\n'));
     if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `${lines.join('\n')}\n`);
 }
 
+/**
+ * Combines each product's own plan (`plans.rtst` / `plans.dino`, each `{ changedFiles, bump }`) into one
+ * flag set: a product's flags come only from the changes since its own last tag.
+ */
+export function shipTargetsPerProduct({ plans, forceAll = false }) {
+    const merged = {};
+    for (const [name, product] of Object.entries(PRODUCTS)) {
+        const all = shipTargets({ ...plans[name], forceAll });
+        product.targets.forEach((target) => { merged[target] = all[target]; });
+    }
+    return merged;
+}
+
+function planFor(name, versionEnv) {
+    const { prefix, targets } = PRODUCTS[name];
+    const base = previousReleaseTag(prefix);
+    console.log(base ? `ship-targets (${name}): changes since ${base}` : `ship-targets (${name}): no earlier ${prefix}* tag, building everything.`);
+    const bump = productBump({ baseTag: base, version: process.env[versionEnv], prefix, commits: commitsSince(base), targets });
+    return { changedFiles: changedFilesSince(base), bump };
+}
+
 function main() {
-    const base = previousReleaseTag();
-    const changedFiles = changedFilesSince(base);
-    const bump = bumpKind(base, process.env.NEW_VERSION);
-    console.log(base ? `ship-targets: changes since ${base}, bump ${bump}` : 'ship-targets: no earlier tag, building everything.');
-    writeOutputs(shipTargets({ changedFiles, bump, forceAll: process.env.FORCE_ALL === 'true' }));
+    const plans = { rtst: planFor('rtst', 'RTST_VERSION'), dino: planFor('dino', 'DINO_VERSION') };
+    writeOutputs(shipTargetsPerProduct({ plans, forceAll: process.env.FORCE_ALL === 'true' }));
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

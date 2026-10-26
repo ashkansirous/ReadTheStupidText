@@ -1,7 +1,7 @@
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Domain.Reading;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 // The head start (Slice 47, ported to iOS in Slice 55): the opening sentences of the text are
 // synthesized into the sentence cache before Play, in the voice that would read them now.
@@ -67,7 +67,7 @@ public sealed partial class IosSupertonicSpeechReader
             .Take(PrepareMaxChunks)
             .SelectMany(chunk => SentenceUnits.Split(chunk.Text));
 
-        await Task.WhenAll(sentences.Select(s => GetSentenceAsync(engine, s, voice, VoiceFlavour.Normal, token)));
+        await Task.WhenAll(sentences.Select(s => GetSentenceAsync(engine, s, voice, null, token)));
     }
 
     // The first PrepareMaxChars characters, cut back to the last sentence end so a sentence is never

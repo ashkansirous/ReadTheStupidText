@@ -39,6 +39,14 @@ public static class AppResources
 	public static string Storyteller_DownloadNow => Get();
 	public static string Storyteller_Ready => Get();
 	public static string Storyteller_ReadyBody => Get();
+	public static string Update_Title => Get();
+	public static string Update_Body => Get();
+	public static string Update_Button => Get();
+	public static string Version_NewReady => Get();
+	public static string Version_Title => Get();
+	public static string Usage_Title => Get();
+	public static string Usage_Helper => Get();
+	public static string FirstRun_Usage => Get();
 	public static string Storyteller_YourNarrator => Get();
 	public static string Storyteller_Size => Get();
 	public static string Storyteller_Failed => Get();

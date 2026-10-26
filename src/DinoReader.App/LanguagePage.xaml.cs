@@ -4,7 +4,7 @@ using DinoReader.Resources.Strings;
 using Microsoft.Maui.Controls.Shapes;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
-using ReadTheStupidText.Mobile;
+using ReadTheStupidText.Mobile.Shared;
 
 namespace DinoReader;
 
@@ -78,22 +78,50 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 	private readonly Dictionary<string, LanguageVoiceState> _shown = [];
 	private readonly Dictionary<string, ProgressBar> _bars = [];
 	private readonly Dictionary<string, Label> _statuses = [];
+	private readonly AppConfigClient _config;
+	private readonly UsageCounter _usage;
+	private readonly string _openedWith;
+	private View? _versionCard;
 	private string? _pending;
 	private bool _changed;
 
-	public LanguagePage(SpokenLanguage spoken, VoicePackInstaller installer, IVoicePackService packs, ISettingsStore settings)
+	public LanguagePage(SpokenLanguage spoken, VoicePackInstaller installer, IVoicePackService packs, ISettingsStore settings, AppConfigClient config, UsageCounter usage)
 	{
 		InitializeComponent();
 		_spoken = spoken;
 		_installer = installer;
 		_packs = packs;
 		_settings = settings;
+		_config = config;
+		_usage = usage;
+		_openedWith = UiLanguage.Resolve(LanguageChoice.Current(settings));
+		// Slice 133: the counts switch sits above the Version card, which OnAppearing adds last.
+		Cards.Children.Add(UsageCountsCard.Build(usage));
 	}
+
+	// Slice 132: the Version card closes the page (a quiet "A new version is ready" row below latestVersion); it is built again
+	// whenever the page appears or a fetched config changes, so the row follows the config while the page is open.
+	private void ShowVersionCard()
+	{
+		int index = Cards.Children.Count;
+		if (_versionCard is not null)
+		{
+			index = Cards.Children.IndexOf(_versionCard);
+			Cards.Children.RemoveAt(index);
+		}
+
+		_versionCard = VersionCard.Build(_config, _busy);
+		Cards.Children.Insert(index, _versionCard);
+	}
+
+	private void OnConfigChanged(object? sender, EventArgs e) => ShowVersionCard();
 
 	protected override void OnAppearing()
 	{
 		base.OnAppearing();
 		_installer.Changed += OnInstallerChanged;
+		_config.Changed += OnConfigChanged;
+		ShowVersionCard();
 		Rebuild();
 	}
 
@@ -101,6 +129,7 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 	{
 		base.OnDisappearing();
 		_installer.Changed -= OnInstallerChanged;
+		_config.Changed -= OnConfigChanged;
 	}
 
 	// A progress tick only moves the downloading row's bar and percentage; any change of state rebuilds the rows.
@@ -253,10 +282,21 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 	// A changed language rebuilds the root, so the gallery the grown-up returns to (and every page after it) speaks the new language.
 	private async void OnBackTapped(object? sender, TappedEventArgs e) => await _busy.RunAsync(BackAsync);
 
+	// Counted once, when the grown-up leaves with a language different from the one the page opened with (not for every tap while browsing).
+	private void CountLanguageChange()
+	{
+		string now = UiLanguage.Resolve(_pending ?? _openedWith);
+		if (now != _openedWith)
+		{
+			_usage.RecordGeneral(UsageEventName.ReadingLanguageChanged, now, _openedWith);
+		}
+	}
+
 	private async Task BackAsync()
 	{
 		if (_changed)
 		{
+			CountLanguageChange();
 			((DinoApp)Microsoft.Maui.Controls.Application.Current!).RebuildRoot();
 			return;
 		}

@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using DinoReader.Core;
 using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Mobile;
+using ReadTheStupidText.Mobile.Shared;
 using ReadTheStupidText.Domain.Reading;
 
 namespace DinoReader;
@@ -181,7 +181,7 @@ public sealed class StoryVoicing
 
 		int at = Math.Max(quote.SourceStart, pieces[placement.After].Segment.SourceEnd - 1);
 		return new VoicedSegment(
-			sound, cast.VoiceForLine(quote.CharacterId), at, at, at, AnimalSounds.FlavourFor(placement.Kind, cast.FlavourForLine(quote.CharacterId)));
+			sound, cast.VoiceForLine(quote.CharacterId), at, at, at, FlavourTransform.For(AnimalSounds.FlavourFor(placement.Kind, cast.FlavourForLine(quote.CharacterId))));
 	}
 
 	// The spoken text of the line the piece at <paramref name="last"/> ends: the consecutive pieces of the same character before it.
@@ -523,6 +523,6 @@ public sealed class StoryVoicing
 		Segment segment = piece.Segment;
 		return new VoicedSegment(
 			segment.Text, cast.VoiceForLine(segment.CharacterId), segment.SourceStart, segment.SourceEnd, piece.TextStart,
-			cast.FlavourForLine(segment.CharacterId));
+			FlavourTransform.For(cast.FlavourForLine(segment.CharacterId)));
 	}
 }

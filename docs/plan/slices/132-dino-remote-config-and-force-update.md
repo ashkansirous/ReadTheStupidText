@@ -1,6 +1,6 @@
 # Slice 132 — Dino: a remote switchboard and a forced update
 
-*Planned 2026-10-25.*
+*Built 2026-10-25 (PR #359), not yet verified on a device. Worker tests 59, DinoReader tests 1120.*
 
 **Batch:** 28 (Dino usage insights, Decisions 138-142)
 **Touches:** `worker/stories.ts`, `worker/appconfig.ts` (new), `worker/index.ts`, `worker/*.test.ts`, `wrangler.jsonc`, `wrangler.workers-dev.jsonc`, `src/DinoReader.App/AppConfigClient.cs` (new), `src/DinoReader.App/UpdatePage.cs` (new), `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/GrownUpGate.cs`, `src/DinoReader.App/Platforms/Android/**`, `src/DinoReader.App/Platforms/iOS/**`, `src/DinoReader.App/Platforms/Windows/**`, `src/DinoReader.App/DinoReader.App.csproj`, `src/DinoReader.App/Resources/Strings/*.resx`, `src/DinoReader.Core/AppConfig.cs` (new), `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`, `CLAUDE.md`
@@ -43,12 +43,12 @@ Frames 61 and 62 (bottom row, line 58 and 76 of `docs/design/dino-reader/Dino Re
 
 ## Work
 
-- [ ] Worker: `appconfig.ts` reads and validates the R2 JSON (bad file = defaults), route + `/dino`
-      twin, tests. Seed `config.json` with `minVersion` = current, telemetry off.
-- [ ] Core: `AppConfig` parsing and the version comparison (pure, unit-tested).
-- [ ] App: `AppConfigClient` fetch at start (non-blocking unless the cached config already forces an
+- [x] Worker: `appconfig.ts` reads and validates the R2 JSON (bad file = defaults), route + `/dino`
+      twin, tests. Seed `config.json` with `minVersion` = current, telemetry off. *(Seeding the R2 object is left to the coordinator after merge.)*
+- [x] Core: `AppConfig` parsing and the version comparison (pure, unit-tested).
+- [x] App: `AppConfigClient` fetch at start (non-blocking unless the cached config already forces an
       update), `UpdatePage`, the grown-up gate, per-platform update calls.
-- [ ] Strings in all Dino languages; CLAUDE.md lines (config file location, how to force an update).
+- [x] Strings in all Dino languages; CLAUDE.md lines (config file location, how to force an update).
 
 ## Verification
 
@@ -56,3 +56,37 @@ Frames 61 and 62 (bottom row, line 58 and 76 of `docs/design/dino-reader/Dino Re
 - Unit tests for version compare and parsing.
 - Emulator: set `minVersion` above the installed build in R2, relaunch: the update page shows, the gate
   works, the Play link opens; set it back, the app opens normally. Offline launch opens normally.
+
+*Changed while building:*
+- `GET /api/app-config` (and its `/dino` twin) reads R2 `dinoreader/config.json` on each request. A missing file returns defaults (no forced update, telemetry off). An unparseable file returns 503 with no-cache so clients keep their last good copy. `Cache-Control: max-age=300` is a client hint only; there is no edge cache.
+- `AppConfig.TryParseServed` (Core) needs a JSON object with a numeric `schemaVersion`. A higher schema is accepted only when it still has a readable `minVersion`.
+- `AppConfigClient` fetches at launch and on resume, at most every 15 minutes after a success and 1 minute after a failure. In-flight requests are de-duplicated and the body is compared before it is cached.
+- `UpdatePage` also appears mid-session when a fetch raises `minVersion` (it pops modals and the stack first). Its button goes through `GrownUpGate`.
+- Android uses the Play immediate in-app update (`Xamarin.Google.Android.Play.App.Update` 2.1.0.20; `OnActivityResult` clears a cancelled flow) with the Play page as fallback. Windows uses a `StoreContext` update (cancel does nothing, an error opens the Store page). iOS opens `apps.apple.com/app/id6825053435`.
+- A Version card sits last in `LanguagePage` (grown-up settings): a Version row always, and "A new version is ready" below `latestVersion`. This is outside Touches, approved.
+- `.github/workflows/site-checks.yml` now runs `worker/*.test.mjs` (outside Touches, approved). The worker tests are `.mjs`, not `.ts`.
+- 5 new strings in all 14 resx files (machine drafts).
+
+#### For CLAUDE.md (lifted 2026-10-25)
+
+- Remote config: Dino `GET /api/app-config` reads R2 `dinoreader/config.json`; a missing or bad file means no forced update and telemetry off; change it with `wrangler r2 object put`. Root `CLAUDE.md` (Slice 132: docs/plan/slices/132-dino-remote-config-and-force-update.md)
+- `AppConfigClient`, `UpdatePage` (gated button, no close), `StoreUpdater` per platform and the Version card: `src/DinoReader.App/CLAUDE.md` (Slice 132: docs/plan/slices/132-dino-remote-config-and-force-update.md)
+
+#### Not yet verified
+
+- R2 `config.json` seed (coordinator does it after merge).
+- Emulator: below-`minVersion` shows `UpdatePage`; the gate; the Play page fallback.
+- Emulator: the Version card and the "A new version is ready" row.
+- Windows head and iOS builds after the last fixes.
+- Play in-app update needs a Play-installed build with a higher versionCode.
+- Native-speaker read of the 5 new strings.
+
+#### Follow-up fix (2026-10-26)
+
+The emulator run found the resume refresh fetching on the UI thread (`NetworkOnMainThreadException`, Android). `AppConfigClient` now fetches on the thread pool under one lock, raises `Changed` on the main thread, and retries a no-connection failure after 10 s, 30 s and 60 s. Emulator: Version card and "A new version is ready" row PASS (D:/ReadTheStupidText-worktrees/reviews/132-device.md). Still not verified: the forced-update page on a device (needs a temporary `minVersion` change in the live config).
+
+#### Emulator result (2026-10-26)
+
+PASS: the Version card and the "A new version is ready" row. The forced-update `UpdatePage`, the gate and the Play page fallback were not run on a device; they need a temporary `minVersion` change in the live config.
+
+*Verified 2026-10-26 (emulator):* the resume fetch from follow-up #366 shows no NetworkOnMainThread in logcat.

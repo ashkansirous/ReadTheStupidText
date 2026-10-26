@@ -1,6 +1,6 @@
 using ReadTheStupidText.Application.Images;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// The text recognizer the operating system provides, used by <see cref="LanguageImageTextExtractor"/>

@@ -1,6 +1,6 @@
 using System.Globalization;
 using DinoReader.Resources.Strings;
-using ReadTheStupidText.Mobile;
+using ReadTheStupidText.Mobile.Shared;
 
 namespace DinoReader;
 

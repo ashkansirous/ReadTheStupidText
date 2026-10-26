@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Privacy Policy &mdash; Dino Book Reader</title>
-  <meta name="description" content="Privacy policy for Dino Book Reader, a children&rsquo;s book reader. The app collects no personal information, has no accounts or ads, and keeps stories, photos and scans on the device. On Android, Google&rsquo;s ML Kit sends Google technical diagnostics." />
+  <meta name="description" content="Privacy policy for Dino Book Reader, a children&rsquo;s book reader. The app has no accounts or ads, keeps stories, photos and scans on the device, and sends only anonymous counts (which can be turned off) that identify no one. On Android, Google&rsquo;s ML Kit sends Google technical diagnostics." />
   <link rel="icon" type="image/png" href="/dino/icon.png" />
   <style>
     :root { color-scheme: light dark; --bg: #F3EFE6; --ink: #2b2540; --soft: #5a5470; --muted: #8a8399; --link: #5B57E8; }
@@ -35,8 +35,10 @@
 
   <h2>The short version</h2>
   <p><strong>Dino Book Reader itself does not collect, store, transmit, or share any personal information.</strong>
-  It has no accounts, no advertising, and no analytics of its own. Everything the app does happens
-  <strong>on the device</strong>, apart from downloading voice packs and free stories. On Android, the Google
+  It has no accounts, no advertising, and no third-party analytics. It does send anonymous usage counts to this
+  project&rsquo;s own server, with no name, no identifier of the child, the install or the device, and nothing a
+  child typed; a grown-up can turn this off in Settings (see &ldquo;Anonymous usage counts&rdquo; below). Everything
+  else the app does happens <strong>on the device</strong>, apart from downloading voice packs and free stories. On Android, the Google
   ML Kit components the app uses send Google technical diagnostics data, described under
   &ldquo;Google ML Kit (Android)&rdquo; below. Your stories, photos, scans and recordings are never sent.</p>
 
@@ -72,7 +74,24 @@
   stories. Opening it fetches the list of stories, their cover pictures, and any story a grown-up
   chooses to get, from this project&rsquo;s own server (dinoreader.sirous.uk). These are plain file
   requests: no account, no identifier, and nothing about the child, the device&rsquo;s stories, photos
-  or scans is sent. The app does not use cookies and does not record which stories were chosen.</p>
+  or scans is sent. The app does not use cookies. What it counts about reading is described next.</p>
+  <p><strong>Anonymous usage counts.</strong> To learn which books families enjoy and which features are used, the app
+  counts a few things and sends the counts to this project&rsquo;s own server (dinoreader.sirous.uk), in one small batch
+  when a reading session ends or the app next starts. Today it counts: that a book was opened and that a book was read to
+  the end; that a free story was downloaded (and whether the age or author filter was in use, never which); that a
+  grown-up added a book of their own (and whether it came from photos, a PDF, a scan or typed text); that a page recording
+  was made (and roughly how many pages of the book are recorded: 1, 2&ndash;5, 6&ndash;10 or more); that a voice, a voice
+  style or the narrator was changed; that the language was changed (from which language to which); and that the app was
+  opened. Each count carries only: what happened; which free or starter book it was (its public story code) or just
+  &ldquo;own&rdquo; for a book a grown-up added, never its title or text; the language; the one extra fact named
+  above (such as the kind of source or the page range); whether a parent recording is on the book; the app version;
+  the platform (Android, iPhone or Windows); and the date, with no time of day.
+  There is no name, account, advertising or device identifier, no install identifier, no IP address kept by the app, and
+  nothing a child typed, so a count carries nothing that names a child, a family or a device. The server (like any web
+  server) may see the IP address of the request, which the project does not read or store with the counts. The counts are
+  stored with Cloudflare (our processor) for about three months and read only as totals. The project can turn counting down or
+  off from the server without an update. A grown-up can switch it off at any time under &ldquo;Help make Dino
+  better&rdquo; in Settings (behind the grown-ups gate); when it is off, nothing is sent.</p>
   <p><strong>Translation models (Android).</strong> When a story is read translated and the book has
   no built-in translation for that language, the phone downloads Google&rsquo;s on-device translation
   model for the language, once. The story text is translated on the phone and is never sent anywhere.</p>
@@ -86,8 +105,8 @@
   under <a href="https://policies.google.com/privacy">Google&rsquo;s Privacy Policy</a>; see also
   <a href="https://developers.google.com/ml-kit/android-data-disclosure">Google&rsquo;s ML Kit data disclosure</a>.
   The Windows and iOS versions do not use ML Kit.</p>
-  <p>Like any web request, a download is seen by the server that hosts the file (GitHub for voice
-  and language packs, Google for translation models on Android, this project&rsquo;s own server for free stories), which may log the
+  <p>Like any web request, a download or a batch of counts is seen by the server that receives it (GitHub for voice
+  and language packs, Google for translation models on Android, this project&rsquo;s own server for free stories and counts), which may log the
   device&rsquo;s IP address under its own privacy policy. Dino Book Reader itself does not receive or keep
   that information.</p>
 
@@ -103,8 +122,9 @@
   <p>Dino Book Reader is designed for children, and the app collects no personal information from anyone,
   including children: no name, email address, photos, recordings or stories. It has no accounts, no ads, no social
   features, no behavioural tracking, and no way for a child to send information to anyone. The only data
-  that leaves the device is the technical diagnostics data that Google ML Kit sends on Android
-  (see &ldquo;Google ML Kit (Android)&rdquo; above), which does not include any content a child creates. Settings and the story library sit behind a
+  that leaves the device is the anonymous counts described above (no identifier, off at a grown-up&rsquo;s choice) and the
+  technical diagnostics data that Google ML Kit sends on Android
+  (see &ldquo;Google ML Kit (Android)&rdquo; above), neither of which includes any content a child creates. Settings and the story library sit behind a
   grown-ups gate. Because the app collects no personal information, there is nothing for a parent to review, correct or
   delete beyond the content on their own device, which they can remove by deleting a story or
   clearing the app&rsquo;s storage.</p>
