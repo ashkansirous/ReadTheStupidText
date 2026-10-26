@@ -402,3 +402,47 @@ Also read these files the selection imports:
 
 Implement: `Dino Reader Batch 31.dc.html`
 ```
+
+## Batch 32 mock — `Dino Reader Batch 32.dc.html`
+
+- **Source:** Claude Design project `90615641-f298-4e21-8c50-ca2efbeaaebc`, file `Dino Reader Batch 32.dc.html`
+  (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+32.dc.html>).
+- **Copied:** 2026-10-26, verbatim from `DesignSync get_file`. The dino is `icons/ios/AppIcon-1024-light.png`. The story pictures (`assets/good-enough/1.jpg`, `2.jpg`, `3.jpg`, `cover.jpg`, `assets/three-little-pigs/5.jpg`) are copied from the starter books under `tests/DinoReader.Tests/Starters/` (DesignSync truncates files over 256 KiB).
+- **Covers:** Batch 32, Slice 155 (first-run intro: screens 73-77). Frame 73 is Batch 16's frame 18 with a new bottom; 77 extends frame 70 (Batch 31).
+
+Open it in a text editor (`support.js` is not copied). Each screen is headed by a caption
+`N · Title` with its behaviour in the note underneath.
+
+| # | Screen | Line |
+|---|---|---|
+| — | **The way in** (group) | 23 |
+| 73 | Ready to read · starts the intro | 27 |
+| — | **The three steps · in this order** (group) | 48 |
+| 74 | Step 1 · the free store | 53 |
+| 75 | Step 2 · record your voice | 77 |
+| 76 | Step 3 · add your own book | 99 |
+| — | **Replay from grown-up mode** (group) | 122 |
+| 77 | Grown-up settings · Show the intro again | 126 |
+
+To refresh: fetch the file again with `DesignSync get_file` and overwrite this copy, then
+regenerate this table. Never call `DesignSync` to read visual values; read this copy.
+
+Import prompt (verbatim):
+
+```
+Use the claude_design MCP (https://api.anthropic.com/v1/design/mcp, auth via /design-login) to import this project:
+https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+32.dc.html
+
+Focus on these files (the whole project is readable):
+- `Dino Reader Batch 32.dc.html`
+
+Also read these files the selection imports:
+- `assets/good-enough/1.jpg`
+- `assets/good-enough/2.jpg`
+- `assets/good-enough/3.jpg`
+- `assets/good-enough/cover.jpg`
+- `assets/three-little-pigs/5.jpg`
+- `dino_reader_icons/ios/AppIcon-1024-light.png`
+
+Implement: `Dino Reader Batch 32.dc.html`
+```
