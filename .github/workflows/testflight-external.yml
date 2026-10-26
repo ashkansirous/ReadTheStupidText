@@ -46,5 +46,5 @@ jobs:
 
       - name: Submit the newest build to external testers
         run: |
-          read -ra apps <<< "$APPS"
-          node .github/scripts/ios-review-cadence.mjs testflight "${apps[@]}"
+          read -ra app_keys <<< "$APPS"
+          node .github/scripts/ios-review-cadence.mjs testflight "${app_keys[@]}"
