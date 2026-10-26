@@ -27,7 +27,7 @@ One item per book: art record, Gemini chat, pictures through the prepare script 
 - [ ] Goldilocks and the Three Bears (Goldilocks, Papa, Mama and Baby Bear)
 - [ ] Little Red Riding Hood (Red Riding Hood, Mother, Wolf, Grandmother, Woodcutter)
 - [x] The Ugly Duckling (Mother Duck, Duckling, Hen, Swan)
-- [ ] The Little Red Hen (Hen, Dog, Cat, Duck)
+- [x] The Little Red Hen (Hen, Dog, Cat, Duck)
 - [ ] Jack and the Beanstalk (Jack, Mother, Giant, Peddler)
 - [ ] The Elves and the Shoemaker (Hans, Greta, Nib, Nob)
 - [ ] The Town Mouse and the Country Mouse (Town Mouse, Country Mouse)
