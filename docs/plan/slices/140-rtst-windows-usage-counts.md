@@ -46,7 +46,7 @@ One frame, W2 (line 172 of `docs/design/rtst-phone/RTST Batch 29.dc.html`), shar
 
 *From review:* 140-high: 13 findings applied, 6 left by design. 140-medium: 6 applied, 5 not a bug, 8 skipped.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-26)
 
 Already added by the build as "Anonymous usage counts (Slice 140)" in `src/ReadTheStupidText.App/CLAUDE.md` (queue cleared only on an explicit off, never while no config has been seen; Worker lists must grow with `UsageEngine`/`UsageSource`; counting stays off until the remote config says on). Index pass: do not lift it again.
 
