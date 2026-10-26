@@ -67,7 +67,7 @@ Two frames in `docs/design/rtst-phone/RTST Batch 29.dc.html` (W1 line 150, W2 li
 
 - `141-high`: 6 findings applied. `141-medium`: 7 applied, 4 judged not a bug.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-26)
 
 - Windows waits go through `WaitFlyoutController` (500 ms `WaitGate`); the flyout (`WaitFlyoutWindow`) must stay no-activate so a hotkey read never steals focus. Rule goes in `src/ReadTheStupidText.App/CLAUDE.md`. (Slice 141: docs/plan/slices/141-rtst-windows-wait-indicator.md)
 
