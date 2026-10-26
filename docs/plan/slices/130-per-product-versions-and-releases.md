@@ -1,6 +1,6 @@
 # Slice 130 — A version and a release per product
 
-*Planned 2026-10-25.*
+*In progress (wave 2026-10-26 C), draft PR.*
 
 **Batch:** 27 (product separation, Decisions 133-137)
 **Touches:** `GitVersion.yml`, `.github/workflows/release.yml`, `.github/scripts/ship-targets.mjs`, `.github/workflows/release-scripts.yml`, `.github/workflows/windows.yml`, `.github/workflows/android.yml`, `.github/workflows/ios.yml`, `.github/workflows/dinoreader-*.yml`, `worker/downloads.ts`, `worker/**` tests, `site/**` (download links only), `.github/CLAUDE.md`, `CLAUDE.md`, `STORE.md`
