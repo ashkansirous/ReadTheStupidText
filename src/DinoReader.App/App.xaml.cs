@@ -15,6 +15,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 	private CancellationTokenSource? _capTimer;
 	private NavigationPage? _navigation;
 	private bool _rtlFontsApplied;
+	private bool _launchCounted;
 
 	public DinoApp(IServiceProvider services, SpeechStartup startup, AppConfigClient config)
 	{
@@ -37,14 +38,51 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		var window = new Window(navigation);
 		var external = _services.GetRequiredService<ExternalActivityGuard>();
 		window.Stopped += (_, _) => OnStopped(_navigation!, external);
+		window.Stopped += (_, _) => FlushUsage();
 		window.Resumed += (_, _) => OnResumed(_navigation!, external);
 		window.Resumed += (_, _) => _ = _config.RefreshAsync();
 		Action ended = () => OnResumed(_navigation!, external);
 		external.Ended += ended;
 		window.Destroying += (_, _) => external.Ended -= ended;
 		// Resumed does not fire on a cold start, so the launch fetch is made here; the client joins an overlapping call.
-		_ = _config.RefreshAsync();
+		_ = CountLaunchAsync();
 		return window;
+	}
+
+	// The launch count waits for the first config fetch, which says whether counting is on at all (Slice 134); the fetch is joined, not repeated.
+	// Then the queue is sent, so a session with no reading still reports (the start-up flush ran before this count existed).
+	private async Task CountLaunchAsync()
+	{
+		try
+		{
+			await _config.RefreshAsync();
+			if (_launchCounted)
+			{
+				return;
+			}
+
+			_launchCounted = true;
+			var usage = _services.GetRequiredService<UsageCounter>();
+			usage.RecordGeneral(UsageEventName.AppOpened, LanguageChoice.Current());
+			await usage.FlushAsync();
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader could not count the launch: {ex.Message}");
+		}
+	}
+
+	// Counts made in a session with no reading are sent when the window stops, as the app goes to the background.
+	private void FlushUsage()
+	{
+		try
+		{
+			_ = _services.GetRequiredService<UsageCounter>().FlushAsync();
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader could not send its counts: {ex.Message}");
+		}
 	}
 
 	private static NavigationPage BuildNavigation(Page root) => new(root)

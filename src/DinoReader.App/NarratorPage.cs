@@ -27,12 +27,14 @@ public sealed class NarratorPage : ContentPage, IGrownUpPage
 	private readonly VoicePreview _preview;
 	private readonly SpokenLanguage _spoken;
 	private readonly ISettingsStore _settings;
+	private readonly UsageCounter _usage;
 	private readonly BusyGuard _busy = new();
 	private readonly VerticalStackLayout _cards = new() { Spacing = 10 };
 	private readonly HashSet<string> _open = [];
 
-	public NarratorPage(StoryVoicing voicing, IStoryLibrary library, ISpeechReader reader, SpokenLanguage spoken, ISettingsStore settings)
+	public NarratorPage(StoryVoicing voicing, IStoryLibrary library, ISpeechReader reader, SpokenLanguage spoken, ISettingsStore settings, UsageCounter usage)
 	{
+		_usage = usage;
 		_voicing = voicing;
 		_library = library;
 		_preview = new VoicePreview(reader);
@@ -256,6 +258,7 @@ public sealed class NarratorPage : ContentPage, IGrownUpPage
 		if (narrator.VoiceId != _voicing.NarratorOf(language))
 		{
 			_voicing.SetNarrator(language, narrator.VoiceId);
+			_usage.RecordGeneral(UsageEventName.VoiceChanged, language, UsageDetail.ChangeNarrator);
 			await RecastLibraryAsync();
 		}
 

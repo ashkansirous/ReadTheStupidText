@@ -336,24 +336,25 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	}
 
 	// Edits go into the reading language's cast; merges are the story's, shared by every language.
-	private async Task ApplyAsync(Func<CastEdit, CastEdit> change)
+	private async Task<bool> ApplyAsync(Func<CastEdit, CastEdit> change)
 	{
 		Story previous = _story!;
 		_story = CastEditor.Close(previous, _castLanguage, change(CastEditor.Open(previous, _castLanguage)));
-		await SaveOrRollBackAsync(previous);
+		return await SaveOrRollBackAsync(previous);
 	}
 
 	// A failed save puts the story back as it was, so the screen never shows an edit that was not kept.
-	private async Task SaveOrRollBackAsync(Story previous)
+	private async Task<bool> SaveOrRollBackAsync(Story previous)
 	{
 		if (await SaveAsync())
 		{
 			await RefreshAfterSaveAsync();
-			return;
+			return true;
 		}
 
 		_story = previous;
 		Render();
+		return false;
 	}
 
 	// The edit is saved by now: a failed refresh shows the saved story again instead of leaving the old rows.
@@ -397,8 +398,47 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		bool changed = picked is not null && (picked.VoiceId != row.Member.VoiceId || picked.Flavour != row.Flavour || !row.Member.Edited);
 		if (picked is not null && changed)
 		{
-			await ApplyAsync(edit => CastEditor.SetCharacter(edit, row.Member.CharacterId, picked));
+			// Worked out before the apply, from the row as the grown-up saw it; a voice and a flavour changed together count as both.
+			string[] kinds = ChangeKinds(row, picked);
+			bool kept = await ApplyAsync(edit => CastEditor.SetCharacter(edit, row.Member.CharacterId, picked));
+			// Counted only when the save kept the change; a keep that only pins the same voice and flavour changed nothing.
+			if (kept)
+			{
+				foreach (string kind in kinds)
+				{
+					CountVoiceChange(kind);
+				}
+			}
 		}
+	}
+
+	private void CountVoiceChange(string kind)
+	{
+		try
+		{
+			_services.GetRequiredService<UsageCounter>().RecordGeneral(UsageEventName.VoiceChanged, _castLanguage, kind);
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader could not count a voice change: {ex.Message}");
+		}
+	}
+
+	// A new voice is a character voice change, another flavour is a flavour change; a pick can be both (Slice 134).
+	private static string[] ChangeKinds(CastRow row, StorytellerCharacter picked)
+	{
+		var kinds = new List<string>();
+		if (picked.VoiceId != row.Member.VoiceId)
+		{
+			kinds.Add(UsageDetail.ChangeCharacterVoice);
+		}
+
+		if (picked.Flavour != row.Flavour)
+		{
+			kinds.Add(UsageDetail.ChangeFlavour);
+		}
+
+		return [.. kinds];
 	}
 
 	// The name of another story character of this book who already has the character (the same voice and flavour), for the picker's hint.

@@ -142,6 +142,7 @@ public partial class StorePage : ContentPage, IGrownUpPage
 {
 	private readonly StoreClient _client;
 	private readonly GrownUpMode _mode;
+	private readonly UsageCounter _usage;
 	private const int CoverParallelism = 4;
 	private const double ChipHeight = 40;
 	private const double ChipFontSize = 14;
@@ -158,11 +159,12 @@ public partial class StorePage : ContentPage, IGrownUpPage
 	private CancellationTokenSource _lifetime = new();
 	private bool _loaded;
 
-	public StorePage(StoreClient client, GrownUpMode mode)
+	public StorePage(StoreClient client, GrownUpMode mode, UsageCounter usage)
 	{
 		InitializeComponent();
 		_client = client;
 		_mode = mode;
+		_usage = usage;
 		StoryList.ItemsSource = _rows;
 		BuildChips();
 		ShowAuthor();
@@ -408,6 +410,9 @@ public partial class StorePage : ContentPage, IGrownUpPage
 	private async Task GetAsync(StoreRow row)
 	{
 		row.SetState(StoreRowState.Downloading);
+		// The filters in use when Get was tapped, not when the download ends.
+		bool ageFilterSet = _band != StoreAgeBand.All;
+		bool authorFilterSet = _author is not null;
 		DownloadOutcome outcome = DownloadOutcome.Failed;
 		try
 		{
@@ -419,7 +424,12 @@ public partial class StorePage : ContentPage, IGrownUpPage
 		}
 		finally
 		{
-			// Only a finished download shows Downloaded; a failed one offers Try again.
+			// Only a finished download shows Downloaded and is counted (Slice 134: which filters were set, not their values); a failed one offers Try again.
+			if (outcome == DownloadOutcome.Done)
+			{
+				_usage.RecordStoreDownload(row.Item, ageFilterSet, authorFilterSet);
+			}
+
 			row.SetState(outcome == DownloadOutcome.Done ? StoreRowState.Downloaded : StoreRowState.Failed);
 		}
 	}

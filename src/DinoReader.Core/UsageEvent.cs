@@ -8,6 +8,12 @@ public static class UsageEventName
 {
     public const string BookOpened = "book_opened";
     public const string BookFinished = "book_finished";
+    public const string StoreDownload = "store_download";
+    public const string OwnBookAdded = "own_book_added";
+    public const string RecordingMade = "recording_made";
+    public const string VoiceChanged = "voice_changed";
+    public const string ReadingLanguageChanged = "reading_language_changed";
+    public const string AppOpened = "app_opened";
 }
 
 /// <summary>Where a counted book came from: Dino's own shelf (a starter or a store story) or a grown-up's own book.</summary>
@@ -15,14 +21,66 @@ public static class UsageSource
 {
     public const string Shelf = "shelf";
     public const string Own = "own";
+
+    /// <summary>The book and source of a count that is about no book (a voice change, an app launch).</summary>
+    public const string None = "none";
+}
+
+/// <summary>
+/// The closed values of <see cref="UsageEvent.Detail"/> (Slice 134, Decision 140): what else a count says besides its book and language. The Worker
+/// accepts exactly these shapes per event name, so nothing a grown-up typed or picked from free text can be carried.
+/// </summary>
+public static class UsageDetail
+{
+    public const string StoreNoFilter = "none";
+    public const string StoreAge = "age";
+    public const string StoreAuthor = "author";
+    public const string StoreAgeAndAuthor = "age+author";
+
+    public const string KindPhoto = "photo";
+    public const string KindPdf = "pdf";
+    public const string KindScan = "scan";
+    public const string KindTyped = "typed";
+
+    public const string PagesOne = "1";
+    public const string PagesTwoToFive = "2-5";
+    public const string PagesSixToTen = "6-10";
+    public const string PagesMore = "11+";
+
+    public const string ChangeCharacterVoice = "character_voice";
+    public const string ChangeFlavour = "flavour";
+    public const string ChangeNarrator = "narrator";
+
+    private const int TwoPages = 2;
+    private const int FivePages = 5;
+    private const int TenPages = 10;
+
+    /// <summary>Which store filters were in use when a story was downloaded: only whether each was set, never its value.</summary>
+    public static string StoreFilters(bool ageSet, bool authorSet) => (ageSet, authorSet) switch
+    {
+        (true, true) => StoreAgeAndAuthor,
+        (true, false) => StoreAge,
+        (false, true) => StoreAuthor,
+        _ => StoreNoFilter,
+    };
+
+    /// <summary>How many pages of a book have a parent recording, as a bucket (never the exact count).</summary>
+    public static string PagesBucket(int recordedPages) => recordedPages switch
+    {
+        < TwoPages => PagesOne,
+        <= FivePages => PagesTwoToFive,
+        <= TenPages => PagesSixToTen,
+        _ => PagesMore,
+    };
 }
 
 /// <summary>
 /// One anonymous count (Slice 133, Decision 140): a name plus context, and nothing that identifies a person or a device. The book is the
 /// shelf book's package id (32 lower-case hex digits) or <see cref="UsageSource.Own"/> for a grown-up's own book, never a title; the day is
 /// the UTC date, no finer. <see cref="SampleRate"/> is the share of launches counted when this was queued, so the Worker can weight each count by 1 / rate.
+/// <see cref="Detail"/> (Slice 134) is the event's one extra closed value (see <see cref="UsageDetail"/>), empty for the reader events; a count about no book has <see cref="UsageSource.None"/> as book and source.
 /// </summary>
-public sealed record UsageEvent(string Name, string Book, string Language, string Source, bool HasRecording, string Version, string Platform, string Day, double SampleRate)
+public sealed record UsageEvent(string Name, string Book, string Language, string Source, bool HasRecording, string Version, string Platform, string Day, double SampleRate, string Detail = "")
 {
     private const int PackageIdLength = 32;
     private const string DayFormat = "yyyy-MM-dd";
@@ -31,7 +89,7 @@ public sealed record UsageEvent(string Name, string Book, string Language, strin
     /// The count for <paramref name="name"/> about <paramref name="story"/>. Only a book that came from the starters or the store
     /// (<paramref name="fromCatalogue"/>) with a usable package id is a shelf book; any other book, a re-imported own one included, counts as the grown-up's own.
     /// </summary>
-    public static UsageEvent For(string name, Story story, bool fromCatalogue, double sampleRate, string version, AppPlatform platform, DateTimeOffset now)
+    public static UsageEvent For(string name, Story story, bool fromCatalogue, double sampleRate, string version, AppPlatform platform, DateTimeOffset now, string detail = "")
     {
         string? shelfId = fromCatalogue ? ShelfId(story.SourceId) : null;
         return new UsageEvent(
@@ -42,9 +100,22 @@ public sealed record UsageEvent(string Name, string Book, string Language, strin
             StoryRecordings.Count(story) > 0,
             version,
             platform.ToString().ToLowerInvariant(),
-            now.UtcDateTime.ToString(DayFormat, CultureInfo.InvariantCulture),
-            sampleRate);
+            DayOf(now),
+            sampleRate,
+            detail);
     }
+
+    /// <summary>A count about a store story (by its package id, <paramref name="storyId"/>) the user has not necessarily got yet; null when the id is not a package id.</summary>
+    public static UsageEvent? ForShelfBook(string name, string storyId, string language, string detail, double sampleRate, string version, AppPlatform platform, DateTimeOffset now) =>
+        ShelfId(storyId) is { } id
+            ? new UsageEvent(name, id, language, UsageSource.Shelf, false, version, platform.ToString().ToLowerInvariant(), DayOf(now), sampleRate, detail)
+            : null;
+
+    /// <summary>A count that is about no book (a voice change, a launch): <paramref name="language"/> is the one that matters for it.</summary>
+    public static UsageEvent ForNoBook(string name, string language, string detail, double sampleRate, string version, AppPlatform platform, DateTimeOffset now) =>
+        new(name, UsageSource.None, language, UsageSource.None, false, version, platform.ToString().ToLowerInvariant(), DayOf(now), sampleRate, detail);
+
+    private static string DayOf(DateTimeOffset now) => now.UtcDateTime.ToString(DayFormat, CultureInfo.InvariantCulture);
 
     /// <summary>The package id in its stored form (hex digits, no dashes, lower case), or null when <paramref name="sourceId"/> is missing or not an id.</summary>
     public static string? ShelfId(string? sourceId)

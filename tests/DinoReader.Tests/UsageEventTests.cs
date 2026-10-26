@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using DinoReader.Core;
 
 namespace DinoReader.Tests;
@@ -60,7 +61,7 @@ public class UsageEventTests
         string json = UsageBatch.ToJson([count]);
 
         Assert.Equal(
-            """{"schemaVersion":1,"events":[{"name":"book_opened","book":"0123456789abcdef0123456789abcdef","language":"en","source":"shelf","hasRecording":false,"version":"1.42.0","platform":"android","day":"2026-10-25","sampleRate":0.5}]}""",
+            """{"schemaVersion":1,"events":[{"name":"book_opened","book":"0123456789abcdef0123456789abcdef","language":"en","source":"shelf","hasRecording":false,"version":"1.42.0","platform":"android","day":"2026-10-25","sampleRate":0.5,"detail":""}]}""",
             json);
     }
 
@@ -85,4 +86,81 @@ public class UsageEventTests
 
     [Fact]
     public void The_default_config_counts_nothing() => Assert.False(UsageBatch.Samples(AppConfig.Default.Telemetry, 0));
+
+    [Theory]
+    [InlineData(true, true, "age+author")]
+    [InlineData(true, false, "age")]
+    [InlineData(false, true, "author")]
+    [InlineData(false, false, "none")]
+    public void Store_filters_are_counted_as_set_or_not_never_by_value(bool age, bool author, string expected) =>
+        Assert.Equal(expected, UsageDetail.StoreFilters(age, author));
+
+    [Theory]
+    [InlineData(0, "1")]
+    [InlineData(1, "1")]
+    [InlineData(2, "2-5")]
+    [InlineData(5, "2-5")]
+    [InlineData(6, "6-10")]
+    [InlineData(10, "6-10")]
+    [InlineData(11, "11+")]
+    [InlineData(40, "11+")]
+    public void Recorded_pages_are_a_bucket_not_a_count(int recorded, string expected) =>
+        Assert.Equal(expected, UsageDetail.PagesBucket(recorded));
+
+    [Fact]
+    public void A_store_download_is_counted_by_package_id_language_and_filters()
+    {
+        UsageEvent? count = UsageEvent.ForShelfBook(UsageEventName.StoreDownload, "01234567-89AB-CDEF-0123-456789ABCDEF", "nb", UsageDetail.StoreAge, 1, "1.0", AppPlatform.Android, Now);
+
+        Assert.Equal(new UsageEvent("store_download", PackageId, "nb", "shelf", false, "1.0", "android", "2026-10-25", 1, "age"), count);
+        Assert.Null(UsageEvent.ForShelfBook(UsageEventName.StoreDownload, "My Story", "en", UsageDetail.StoreNoFilter, 1, "1.0", AppPlatform.Android, Now));
+    }
+
+    [Fact]
+    public void A_count_about_no_book_names_none_and_carries_only_its_detail()
+    {
+        UsageEvent count = UsageEvent.ForNoBook(UsageEventName.ReadingLanguageChanged, "nb", "en", 0.5, "1.0", AppPlatform.Ios, Now);
+
+        Assert.Equal(new UsageEvent("reading_language_changed", "none", "nb", "none", false, "1.0", "ios", "2026-10-25", 0.5, "en"), count);
+    }
+
+    [Fact]
+    public void A_recording_count_keeps_the_book_rule_and_adds_the_bucket()
+    {
+        UsageEvent shelf = UsageEvent.For(UsageEventName.RecordingMade, StoryWith(PackageId), true, 1, "1.0", AppPlatform.Android, Now, UsageDetail.PagesTwoToFive);
+        UsageEvent own = UsageEvent.For(UsageEventName.RecordingMade, StoryWith(PackageId), false, 1, "1.0", AppPlatform.Android, Now, UsageDetail.PagesOne);
+
+        Assert.Equal((PackageId, "2-5"), (shelf.Book, shelf.Detail));
+        Assert.Equal(("own", "1"), (own.Book, own.Detail));
+    }
+
+    [Fact]
+    public void A_queue_stored_before_Slice_134_reads_with_an_empty_detail()
+    {
+        const string old = """[{"name":"book_opened","book":"own","language":"en","source":"own","hasRecording":false,"version":"1.0","platform":"android","day":"2026-10-25","sampleRate":1}]""";
+
+        Assert.Equal(string.Empty, Assert.Single(UsageBatch.ParseQueue(old)).Detail);
+    }
+
+    [Fact]
+    public void The_Worker_lists_exactly_the_apps_supported_reading_languages()
+    {
+        string source = File.ReadAllText(Path.Combine(RepoRoot(), "worker", "events.ts"));
+        Match list = Regex.Match(source, @"READING_LANGUAGES = \[(?<codes>[^\]]*)\]");
+
+        Assert.True(list.Success);
+        string[] inWorker = Regex.Matches(list.Groups["codes"].Value, "\"(?<code>[a-z]+)\"").Select(m => m.Groups["code"].Value).ToArray();
+        Assert.Equal(UiLanguage.Supported.Order(), inWorker.Order());
+    }
+
+    private static string RepoRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "ReadTheStupidText.slnx")))
+        {
+            dir = dir.Parent;
+        }
+
+        return dir?.FullName ?? throw new DirectoryNotFoundException("Repo root (ReadTheStupidText.slnx) not found.");
+    }
 }

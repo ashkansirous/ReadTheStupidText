@@ -79,6 +79,8 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 	private readonly Dictionary<string, ProgressBar> _bars = [];
 	private readonly Dictionary<string, Label> _statuses = [];
 	private readonly AppConfigClient _config;
+	private readonly UsageCounter _usage;
+	private readonly string _openedWith;
 	private View? _versionCard;
 	private string? _pending;
 	private bool _changed;
@@ -91,6 +93,8 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 		_packs = packs;
 		_settings = settings;
 		_config = config;
+		_usage = usage;
+		_openedWith = UiLanguage.Resolve(LanguageChoice.Current(settings));
 		// Slice 133: the counts switch sits above the Version card, which OnAppearing adds last.
 		Cards.Children.Add(UsageCountsCard.Build(usage));
 	}
@@ -278,10 +282,21 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 	// A changed language rebuilds the root, so the gallery the grown-up returns to (and every page after it) speaks the new language.
 	private async void OnBackTapped(object? sender, TappedEventArgs e) => await _busy.RunAsync(BackAsync);
 
+	// Counted once, when the grown-up leaves with a language different from the one the page opened with (not for every tap while browsing).
+	private void CountLanguageChange()
+	{
+		string now = UiLanguage.Resolve(_pending ?? _openedWith);
+		if (now != _openedWith)
+		{
+			_usage.RecordGeneral(UsageEventName.ReadingLanguageChanged, now, _openedWith);
+		}
+	}
+
 	private async Task BackAsync()
 	{
 		if (_changed)
 		{
+			CountLanguageChange();
 			((DinoApp)Microsoft.Maui.Controls.Application.Current!).RebuildRoot();
 			return;
 		}
