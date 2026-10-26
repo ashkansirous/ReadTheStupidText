@@ -25,6 +25,7 @@ Open slices only. Finished slices (137 rows) are in [slices-done](docs/plan/note
 | 145 | Which sound-word spellings sound right aloud | planned | | | [145-sound-words-aloud-test.md](docs/plan/slices/145-sound-words-aloud-test.md) |
 | 146 | Rewrite every Dino book in spoken, kid-friendly language | planned | | | [146-dino-books-kid-friendly-language.md](docs/plan/slices/146-dino-books-kid-friendly-language.md) |
 | 148 | Phone apps: mid-read stalls, wait counts and wave leftovers | planned | | | [148-phone-wait-followups.md](docs/plan/slices/148-phone-wait-followups.md) |
+| 149 | Never drop a short word: catch silent output from the voices | planned | | | [149-never-drop-a-short-word.md](docs/plan/slices/149-never-drop-a-short-word.md) |
 
 Batch 25 (119-123; 119, 120, 122, 123 built, 121 in progress: Billy Goats done, nine books left; planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
 
