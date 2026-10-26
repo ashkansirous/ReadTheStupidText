@@ -93,7 +93,29 @@ public sealed class StoreStoryTests : IDisposable
     [MemberData(nameof(Languages))]
     public void TheUglyDuckling_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
     {
-        Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.UglyDucklingId));
+        AssertEachCharacterHasAVoiceOfTheirGender(StoreTexts.UglyDucklingId, language, new Dictionary<string, Gender>
+        {
+            ["Mother Duck"] = Gender.Female, ["Dilly"] = Gender.Female, ["Hen"] = Gender.Female, ["Duckling"] = Gender.Male, ["Swan"] = Gender.Male,
+        });
+    }
+
+    // Every roster's bear voices (bear, big bear, cub) are men's, so the builder stores Mama Bear as no animal (StarterAnimals): she is cast by gender, a woman's voice.
+    // Papa Bear and Baby Bear keep their bear voices and growl; Baby Bear is a boy cub ("he forgot to shut the door").
+    // Mum has no line, so she is normally not in the cast; if a reworded line ever makes her a speaker, she must still get a woman's voice.
+    [Theory]
+    [MemberData(nameof(Languages))]
+    public void Goldilocks_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
+    {
+        AssertEachCharacterHasAVoiceOfTheirGender(StoreTexts.GoldilocksId, language, new Dictionary<string, Gender>
+        {
+            ["Goldilocks"] = Gender.Female, ["Mama Bear"] = Gender.Female, ["Papa Bear"] = Gender.Male, ["Baby Bear"] = Gender.Male, ["Mum"] = Gender.Female,
+        });
+    }
+
+    /// <summary>Casts the store story <paramref name="storyId"/> the way the app does for <paramref name="language"/> and checks each character's voice has the <paramref name="expected"/> gender.</summary>
+    private static void AssertEachCharacterHasAVoiceOfTheirGender(string storyId, string language, IReadOnlyDictionary<string, Gender> expected)
+    {
+        Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == storyId));
         IReadOnlyList<CastMember> stored = language == story.Language
             ? story.Cast
             : story.Cast.Where(m => m.HasAnimalSetting).Select(m => m with { VoiceId = string.Empty }).ToList();
@@ -106,10 +128,6 @@ public sealed class StoreStoryTests : IDisposable
             characters, CharacterRoster.Choices(speakers, narrator), CharacterRoster.For(language), narrator, c => FlavourGuess.Guess(c.Name, LanguageRules.English),
             StoryCast.PinnedCharacters(stored), animalOf: c => animals.TryGetValue(c.Id, out AnimalKind kind) ? AnimalCharacters.HintFor(kind, c.Name, story.Language) : null);
 
-        var expected = new Dictionary<string, Gender>
-        {
-            ["Mother Duck"] = Gender.Female, ["Dilly"] = Gender.Female, ["Hen"] = Gender.Female, ["Duckling"] = Gender.Male, ["Swan"] = Gender.Male,
-        };
         foreach (Character character in characters)
         {
             Assert.True(expected.ContainsKey(character.Name), $"{language}: the cast has {character.Name}, which this test has no expected gender for");

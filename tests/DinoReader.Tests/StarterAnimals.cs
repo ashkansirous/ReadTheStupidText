@@ -6,7 +6,8 @@ namespace DinoReader.Tests;
 /// The animals of the characters whose names do not say it (Slice 125, Decision 132): the builders store them in the book's cast, so the pigs Pip, Pop and Pim oink
 /// and are cast as piglets. A character whose name has an animal word (Wolf, Papa Bear, Mrs. Rabbit) is found from the name and needs no entry here.
 /// A character stored as no animal (<see cref="CastMember.NotAnimal"/>) is cast by gender like a person in every language: the Ugly Duckling (really a swan) and his
-/// sister Dilly, whose rosters' duckling voices are one gender per language and would otherwise give him a girl's voice or her a boy's.
+/// sister Dilly, whose rosters' duckling voices are one gender per language and would otherwise give him a girl's voice or her a boy's; and Goldilocks' Mama Bear,
+/// since every roster's bear voices are men's.
 /// </summary>
 internal static class StarterAnimals
 {
@@ -20,6 +21,7 @@ internal static class StarterAnimals
     private static readonly IReadOnlyDictionary<string, IReadOnlySet<string>> NotAnimalsByStory = new Dictionary<string, IReadOnlySet<string>>
     {
         [StoreTexts.UglyDucklingId] = new HashSet<string> { "Duckling", "Dilly" },
+        [StoreTexts.GoldilocksId] = new HashSet<string> { "Mama Bear" },
     };
 
     private static IReadOnlyDictionary<string, AnimalKind> Named(AnimalKind kind, params string[] names) => names.ToDictionary(n => n, _ => kind);
