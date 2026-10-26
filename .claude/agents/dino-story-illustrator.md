@@ -38,6 +38,8 @@ the contact sheet live only in the working folder. Touch nothing else.
    again instead of the new one, drop to one picture per chat for the rest of the book.
 4. Helpers in `.claude/skills/create-dino-story/`:
    - `pwsh -STA gemini-clipboard.ps1 Put <file>` puts the line-up on the clipboard to paste;
+   - while Gemini draws, never use fixed sleeps: `window.__markPictures()` before sending, then
+     `await window.__waitForPicture()` (returns `READY` as soon as the picture exists; repeat on `WAITING`);
    - `gemini-grab.js` is injected once per page load with `javascript_tool`, then `await window.__grab(1)`
      clicks the newest picture's "Download full size image" button, and Chrome writes the full-size file to `Downloads`;
    - `pwsh gemini-take-download.ps1 <working folder>/cand-<page>.jpg -Bytes <n>` (`<n>` = the size `__grab` printed) waits for that download, moves it out of
