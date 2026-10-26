@@ -36,3 +36,15 @@ screen ever writes it, so parents cannot change it.
 - `dotnet test tests/DinoReader.Tests` (ReadingSpeed tests).
 - Emulator: a fresh install reads at 0.8x. The slider stops at 0.5 and 1.2, and a change is heard on the next sentence.
   The setting survives an app restart.
+
+#### Design (Dino Reader Batch 31 mock, screen 70, added 2026-10-26)
+
+Source: `docs/design/dino-reader/Dino Reader Batch 31.dc.html`, screen 70 (lines 122-149). One frame at 360x760, real UI. The mock agrees with Decision 155 (0.5x-1.2x, 0.05 steps, default 0.8x, one app-wide setting, flavour pace multiplies on top).
+
+- **Page.** Header: back 44x44, "Settings" 20/600, sub-line "Grown-up mode" 12 `#8a8399`. Cards on `#F3EFE6`, gap 10, side padding 14. Card order: App language and Narrator rows, **Reading speed**, Animal sounds (see Slice 152), "Help make Dino better", Version ("1.43.0"). Rows in the first card are min-height 50, text 14.5, value 14.5/700.
+- **Reading speed card.** White, radius 18, padding 14/14/12, gap 10. Top row: title "Reading speed" 15/600; sub-line "Slower is easier for little ones" 12.5 `#5a5470`; value "0.8x" 17/700 `#5B57E8`, min-width 44, right-aligned; then a **Play** button, 44x44, round, fill `#ECE7FF` (play icon).
+- **Slider.** Row height 44. Track 8 px, radius 4, fill `#ECE7FF`; filled part `#5B57E8`; thumb 28 px, white, 3 px border `#5B57E8`, shadow `0 2px 6px rgba(43,37,64,.2)`. At 0.8x the fill is 42.86% (0.5-1.2 on one linear scale). End labels 12 `#8a8399`: "0.5x · slow" at the left, "1.2x" at the right.
+- **Behaviour (note).** Range 0.5x-1.2x in 0.05 steps. A fresh install starts at 0.8x. Play reads a sample sentence at the chosen speed. A change applies from the next sentence. A character's flavour pace multiplies on top. TalkBack and VoiceOver read the value as "0.8 times".
+- **New strings (14 locales).** "Reading speed", "Slower is easier for little ones" (draft), "0.5x · slow", the value format "0.8x", and the accessible value "0.8 times". The mock does not give the sample sentence.
+
+**Settled by the mock (the plan left open).** The row is a card of its own, the value sits left of the Play button, and the left end label says "slow". Still open: the sample sentence. **Default:** a short sentence from a starter book, translated per locale.
