@@ -70,10 +70,15 @@
   <data name="Review_LooksLike" xml:space="preserve"><value>このテキストは{0}のようです</value></data>
   <data name="Review_TranslateAndRead" xml:space="preserve"><value>翻訳して読み上げ</value></data>
   <data name="Review_Read" xml:space="preserve"><value>読み上げ</value></data>
-  <data name="Review_GettingTranslator" xml:space="preserve"><value>{0}の翻訳データを取得中…</value></data>
+  <data name="Wait_DownloadingModel" xml:space="preserve"><value>{0}をダウンロード中…</value></data>
+  <data name="Wait_Translating" xml:space="preserve"><value>翻訳中…</value></data>
+  <data name="Wait_PreparingVoice" xml:space="preserve"><value>音声を準備中…</value></data>
+  <data name="Wait_Stalled" xml:space="preserve"><value>まだ音声を準備しています…</value></data>
+  <data name="Wait_ReadingFile" xml:space="preserve"><value>ファイルを読み込み中…</value></data>
   <data name="Review_FirstTimeOnly" xml:space="preserve"><value>初回のみです。翻訳はこの端末内で行われます。</value></data>
   <data name="Review_ShowOriginal" xml:space="preserve"><value>原文を表示</value></data>
   <data name="Review_FailedOne" xml:space="preserve"><value>{0} ページ目を読み取れませんでした。</value></data>
+  <data name="Review_TextCut" xml:space="preserve"><value>テキストが非常に長いため、最初の{0}文字だけを表示しています。</value></data>
   <data name="Review_FailedMany" xml:space="preserve"><value>{0} ページ目を読み取れませんでした。</value></data>
   <data name="Review_HereOne" xml:space="preserve"><value>{0} ページ目はここにあります。</value></data>
   <data name="Review_HereMany" xml:space="preserve"><value>{0} ページ目はここにあります。</value></data>

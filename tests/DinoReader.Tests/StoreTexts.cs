@@ -5,10 +5,10 @@ namespace DinoReader.Tests;
 internal sealed record StoreStorySpec(string Id, string Title, string Stem, string Text, int ColourIndex, string Credits, int AgeMin, int AgeMax, string Author, IReadOnlyList<string> Characters, int Version, string Added);
 
 /// <summary>
-/// The ten free store stories (Slice 102, Decision 106): public-domain tales retold in plain words for ages 3 to 8, with a named
+/// The free store stories (Slice 102, Decision 106): public-domain tales retold in plain words for ages 3 to 8, and original Dino Reader books, with a named
 /// speaker on every line so the caster gives each character a voice (the starter rule: <c>said Name</c> or <c>Name said</c>, a bare
 /// capitalised name). Pages are separated by a line holding only "---". The retellings are original to this repo (MIT); Peter Rabbit
-/// is Beatrix Potter's 1902 text, shortened to fit fifteen pages (a few speech tags added). The ids never change: "Downloaded" and updates match on them.
+/// is Beatrix Potter's 1902 text, shortened to fit its page count (a few speech tags added). The ids never change: "Downloaded" and updates match on them.
 /// <see cref="StoreBuilder"/> turns them into the files that go up to R2.
 /// </summary>
 internal static class StoreTexts
@@ -23,24 +23,27 @@ internal static class StoreTexts
     public const string ElvesId = "34efea95400343ac998e9ed99158d370";
     public const string TownMouseId = "67dfb7db7c1c418c811cfed88876327f";
     public const string PeterRabbitId = "18cab2f1fec84aad831ba12dccad5336";
+    public const string TreasureId = "a02c0731b7ac475a896e9184f3575e7b";
 
     private const string AddedDate = "2026-10-24";
+    private const string TreasureAddedDate = "2026-10-26";
     private const string RetoldAesop = "Retold from Aesop · free to share";
     private const string Traditional = "Traditional";
     private const string RetoldTraditional = "Retold traditional tale · free to share";
 
     public static IReadOnlyList<StoreStorySpec> All { get; } =
     [
-        new(LionAndMouseId, "The Lion and the Mouse", "lion-and-mouse", LionAndMouse, 1, RetoldAesop, 4, 7, "Aesop", ["Lion", "Mouse"], 4, AddedDate),
+        new(LionAndMouseId, "The Lion and the Mouse", "lion-and-mouse", LionAndMouse, 1, RetoldAesop, 4, 7, "Aesop", ["Lion", "Mouse"], 5, AddedDate),
         new(GoldilocksId, "Goldilocks and the Three Bears", "goldilocks", Goldilocks, 3, RetoldTraditional, 3, 6, Traditional, ["Goldilocks", "Papa Bear", "Mama Bear", "Baby Bear"], 3, AddedDate),
         new(RedRidingHoodId, "Little Red Riding Hood", "red-riding-hood", RedRidingHood, 3, RetoldTraditional, 4, 7, Traditional, ["Red Riding Hood", "Mother", "Wolf", "Grandma", "Woodcutter"], 4, AddedDate),
-        new(UglyDucklingId, "The Ugly Duckling", "ugly-duckling", UglyDuckling, 0, "Retold from Andersen · free to share", 5, 8, "Hans Christian Andersen", ["Mother Duck", "Duckling", "Dilly", "Hen", "Swan"], 4, AddedDate),
-        new(RedHenId, "The Little Red Hen", "little-red-hen", RedHen, 3, RetoldTraditional, 3, 6, Traditional, ["Hen", "Dog", "Cat", "Duck"], 3, AddedDate),
-        new(BillyGoatsId, "The Three Billy Goats Gruff", "billy-goats-gruff", BillyGoats, 0, RetoldTraditional, 4, 7, Traditional, ["Little Billy", "Middle Billy", "Big Billy", "Troll"], 5, AddedDate),
+        new(UglyDucklingId, "The Ugly Duckling", "ugly-duckling", UglyDuckling, 0, "Retold from Andersen · free to share", 5, 8, "Hans Christian Andersen", ["Mother Duck", "Duckling", "Dilly", "Hen", "Swan"], 5, AddedDate),
+        new(RedHenId, "The Little Red Hen", "little-red-hen", RedHen, 3, RetoldTraditional, 3, 6, Traditional, ["Hen", "Dog", "Cat", "Duck"], 4, AddedDate),
+        new(BillyGoatsId, "The Three Billy Goats Gruff", "billy-goats-gruff", BillyGoats, 0, RetoldTraditional, 4, 7, Traditional, ["Little Billy", "Middle Billy", "Big Billy", "Troll"], 6, AddedDate),
         new(BeanstalkId, "Jack and the Beanstalk", "jack-and-the-beanstalk", Beanstalk, 2, RetoldTraditional, 5, 8, Traditional, ["Jack", "Mother", "Giant", "Peddler"], 3, AddedDate),
-        new(ElvesId, "The Elves and the Shoemaker", "elves-and-shoemaker", Elves, 1, "Retold from the Brothers Grimm · free to share", 5, 8, "Brothers Grimm", ["Hans", "Greta", "Nib", "Nob"], 3, AddedDate),
-        new(TownMouseId, "The Town Mouse and the Country Mouse", "town-mouse-country-mouse", TownMouse, 2, RetoldAesop, 4, 7, "Aesop", ["Town Mouse", "Country Mouse"], 3, AddedDate),
-        new(PeterRabbitId, "The Tale of Peter Rabbit", "peter-rabbit", PeterRabbit, 3, "Beatrix Potter, 1902 (shortened)", 3, 6, "Beatrix Potter", ["Mrs. Rabbit", "Peter", "Mr. McGregor"], 4, AddedDate),
+        new(ElvesId, "The Elves and the Shoemaker", "elves-and-shoemaker", Elves, 1, "Retold from the Brothers Grimm · free to share", 5, 8, "Brothers Grimm", ["Hans", "Greta", "Nib", "Nob"], 4, AddedDate),
+        new(TownMouseId, "The Town Mouse and the Country Mouse", "town-mouse-country-mouse", TownMouse, 2, RetoldAesop, 4, 7, "Aesop", ["Town Mouse", "Country Mouse"], 4, AddedDate),
+        new(PeterRabbitId, "The Tale of Peter Rabbit", "peter-rabbit", PeterRabbit, 3, "Beatrix Potter, 1902 (shortened)", 3, 6, "Beatrix Potter", ["Mrs. Rabbit", "Peter", "Mr. McGregor"], 5, AddedDate),
+        new(TreasureId, "X Marks the Treasure!", "x-marks-the-treasure", Treasure, 0, StoreBuilder.DinoReaderCredit, 3, 6, "Ashkan Sirous", ["Kaatrin", "Seagull", "Izzy", "Pancake Polly", "Billy"], 1, TreasureAddedDate),
     ];
 
     public const string LionAndMouse = """
@@ -330,71 +333,87 @@ That evening the sun went down, pink and gold. Dilly and the other ducklings rod
 """;
 
     public const string RedHen = """
-Once upon a time a little red Hen lived on a farm. She shared her house with a lazy Dog, a sleepy Cat and a noisy Duck. The Hen worked hard every day, but the others did nothing at all.
+Once upon a time a little red Hen lived on a farm with her three friends, Dog, Cat and Duck.
+
+Dog liked to snooze in the sun with his nose on his paws. Cat liked to sit on the fence and lick her paws. Duck liked to splash in his puddle.
+
+But Hen was always busy, busy, busy!
 ---
-One morning Hen found some grains of wheat. "Who will help me plant this wheat?" said Hen.
+One morning Hen found some grains of wheat in the yard. "Who will help me plant this wheat?" said Hen.
 
-"Not I," said Dog.
+"Not me!" said Dog. "Not me!" said Cat. "Not me!" said Duck.
 
-"Not I," said Cat.
-
-"Not I," said Duck.
-
-"Then I will do it myself," said Hen. And she did.
+"Then I'll do it myself," said Hen.
 ---
-The wheat grew tall and golden. "Who will help me cut the wheat?" said Hen.
+So she did it all by herself. Hen dug a long, straight row in the field and dropped in the grains, one by one.
 
-"Not I," said Dog.
+Dig, dig, pat! Dig, dig, pat!
 
-"Not I," said Cat.
-
-"Not I," said Duck.
-
-"Then I will do it myself," said Hen. And she did.
+Over by the fence, Dog, Cat and Duck were fast asleep.
 ---
-Next it was time to take the wheat to the mill. "Who will help me grind the wheat into flour?" said Hen.
+All summer long the sun shone and the rain fell, and the wheat grew tall and golden. "Who will help me cut the wheat?" said Hen.
 
-"Not I," said Dog.
+"Not me!" said Dog. "Not me!" said Cat. "Not me!" said Duck.
 
-"Not I," said Cat.
-
-"Not I," said Duck.
-
-"Then I will do it myself," said Hen. And she did.
+"Then I'll do it myself," said Hen.
 ---
-Hen took the flour home. "Who will help me bake the bread?" said Hen.
+So she did it all by herself. Snip, snip, snip! Snip, snip, snip! Hen cut the wheat and tied it up in neat golden bundles.
 
-"Not I," said Dog.
-
-"Not I," said Cat.
-
-"Not I," said Duck.
-
-"Then I will do it myself," said Hen. And she did.
+Dog, Cat and Duck watched from the shade of the apple tree.
 ---
-Soon the little house smelled of warm, fresh bread. The Dog, the Cat and the Duck came running into the kitchen.
+Hen piled the bundles into her little red cart. "Who will help me take the wheat to the mill?" said Hen.
+
+"Not me!" said Dog. "Not me!" said Cat. "Not me!" said Duck.
+
+"Then I'll do it myself," said Hen.
 ---
+So she did it all by herself. Hen pulled her cart up the hill to the windmill.
+
+Whoosh, whoosh, whoosh, went the big sails, and soon Hen had a sack of soft white flour.
+---
+Hen brought the flour home to her cosy kitchen. "Who will help me bake the bread?" said Hen.
+
+"Not me!" said Dog. "Not me!" said Cat. "Not me!" said Duck.
+
+"Then I'll do it myself," said Hen.
+---
+So she did it all by herself. Hen mixed the flour with water and squished it into a big round loaf.
+
+Mix, mix, squish! Mix, mix, squish!
+
+Dog, Cat and Duck snoozed on the rug in a sleepy heap.
+---
+At last the bread was ready, round and golden. Sniff, sniff, sniff! The smell of warm, fresh bread floated across the farm, and Dog, Cat and Duck woke up and ran to the table.
+
 "Who will help me eat the bread?" said Hen.
 
-"I will!" said Dog.
-
-"I will!" said Cat.
-
-"I will!" said Duck.
+"I will!" said Dog. "I will!" said Cat. "I will!" said Duck.
 ---
-"No, you will not," said Hen. "I planted the wheat, I cut it, I ground it and I baked the bread. Now I will eat it myself, with my little chicks."
+Then Dog looked at the bread, and he looked at Hen. "You did all the work by yourself," said Dog.
 
-Dog, Cat and Duck hung their heads. They had not helped at all.
+"And we didn't help you at all," said Cat.
+
+"We're sorry, Hen," said Duck. "Next time we'll help. We promise!"
 ---
-The next day Hen found more wheat. "Who will help me plant this wheat?" said Hen.
+Hen gave them a big smile. "Thank you for saying sorry," said Hen. "Bread is yummier when we share it."
 
-"I will!" said Dog.
+She broke the loaf into four pieces, and they had a picnic under the apple tree. Munch, munch, munch! Mmm, yum!
+---
+After the picnic there was a big pile of cups and plates. This time everyone wanted to help!
 
-"I will!" said Cat.
+Dog washed, Cat dried, and Duck splashed in the bubbles. Splish, splash, splosh! Hen laughed and laughed.
 
-"I will!" said Duck.
+"Washing-up is fun when we do it together!" said Duck.
+---
+The next spring Hen found some more grains of wheat. "Who will help me plant this wheat?" said Hen.
 
-And this time they did, and they shared the bread together.
+"I will!" said Dog. "I will!" said Cat. "I will!" said Duck.
+
+They already had their little spades ready.
+---
+So the four friends planted the wheat together, side by side. Dig, dig, pat! Dig, dig, pat! They dug and planted and laughed until the sun went down.
+
+"Helping is more fun together," said Hen. And Dog, Cat and Duck all agreed.
 """;
 
     public const string BillyGoats = """
@@ -629,5 +648,97 @@ His mother was busy cooking. She wondered what he had done with his clothes. It 
 I am sorry to say that Peter was not very well during the evening. His mother put him to bed, and made some camomile tea. "One table-spoonful to be taken at bedtime," said Mrs. Rabbit.
 ---
 But Flopsy, Mopsy, and Cotton-tail had bread and milk and blackberries for supper.
+""";
+
+    // Book 1 of the Captain Kaatrin and Seagull series, an original story. The captain is spelled "Kaatrin" so the English voices say
+    // KAA-trin: Kokoro reads "Katrin" as KAT-rin (espeak en-us, /kˈætɹɪn/) and "Kaatrin" as /kˈɑːtɹɪn/. Art record: docs/design/story-art/x-marks-the-treasure.md.
+    public const string Treasure = """
+Seagull flew high over the sea. She looked down at the little boats, the sandy beach and the sunny harbour.
+
+Then she saw a big pirate hat she knew. Captain Kaatrin was running to her ship, waving a piece of paper. She looked very happy!
+---
+Seagull swooped down, down, down, and she landed right on top of Kaatrin's big hat.
+
+"Squawk! Squawk! Squawk! What's up, Kaatrin?" said Seagull.
+
+Kaatrin held up an old map with a little island on it and a big red X. "I've found the map to the lost treasure!" said Kaatrin. "X marks the treasure!"
+---
+Kaatrin ran up onto her ship. "Ahoy, pirates! Hoist the sail! We're going to find the lost treasure!" said Kaatrin.
+
+Her crew came running. Izzy looked after the map and the compass. Pancake Polly made the yummiest pancakes. Billy could climb all the way up the mast.
+---
+Seagull flapped her wings. "A treasure hunt? I love treasure hunts! I'm coming too!" said Seagull.
+
+"Hooray! Then sit on my hat until we find the treasure," said Kaatrin.
+---
+Izzy, Pancake Polly and Billy danced a happy pirate dance across the deck.
+
+"Yo ho, yo ho!" sang Izzy.
+
+"Yo ho, yo ho!" sang Billy.
+
+"We're going to find the lost treasure!" sang Pancake Polly.
+---
+Billy pulled the rope, and up went the big sail. Flap, flap, flap!
+
+Kaatrin turned the ship's big wheel. "Off we go to Treasure Island!" said Kaatrin. And away they sailed, far across the sea.
+---
+The trip was long, long, long. Soon everyone on deck felt slow and grumbly, and nobody knew why.
+
+"Billy, can you see an island?" said Kaatrin.
+
+Billy sat in the basket at the top of the mast, but he was too hungry to answer. He just gave a big yawn. His tummy went rumble, rumble, rumble!
+---
+"Izzy, can you check the map with your compass?" said Kaatrin.
+
+Izzy sat on a barrel with the map on her lap, but she was hungry too, and she didn't answer. She just gave a big sigh. Her tummy went rumble, rumble, rumble!
+---
+"Let me go and see what's wrong!" said Seagull, and she flew all around the ship.
+
+Every tummy went rumble, rumble, rumble! Even Kaatrin's tummy! "Squawk! Squawk! Squawk! I know! Everyone is hungry!" said Seagull.
+---
+Seagull flew down the steps to the ship's kitchen. There was Pancake Polly, stirring pancake mix in her big blue bowl.
+
+"Polly, Polly! Everyone is too hungry to find the treasure!" said Seagull.
+
+"Hungry pirates? Then it's pancake time!" said Pancake Polly.
+---
+Up came Pancake Polly with a big pile of plates. There were pancakes with banana, strawberries and honey for everyone!
+
+The pirates ate and ate, and Seagull had a pancake too. "Yum, yum, yum!" said Seagull.
+---
+Now everyone was full of pancakes and full of energy! Izzy and Pancake Polly danced across the deck, and Billy sang from the top of the mast.
+
+"Yo ho, yo ho!" sang Izzy.
+
+"Yo ho, yo ho!" sang Billy.
+
+"We're going to find the lost treasure!" sang Pancake Polly.
+---
+"I spot an island!" said Billy, and he pointed far across the sea.
+
+Everyone cheered. Kaatrin looked through her telescope. "There it is! Treasure Island!" said Kaatrin.
+---
+The ship stopped near the island, and Seagull flew ahead to the sandy beach.
+
+There in the sand lay two long sticks in a big X. "Squawk! Squawk! Squawk! I found it! X marks the treasure!" said Seagull.
+
+Splish, splash, splosh! Behind her, the pirates waded to the beach with their spades.
+---
+Dig, dig, dig! The pirates dug at the X. Up came an old wooden treasure chest.
+---
+Kaatrin lifted the lid. Inside were gold coins, sparkly jewels and shiny pearls, enough for everyone!
+
+"Yo ho, yo ho!" sang Izzy.
+
+"Yo ho, yo ho!" sang Billy.
+
+"We found the lost treasure!" sang Pancake Polly.
+---
+That evening, as the sun went down, the pirates had a treasure party on the beach, with music and dancing.
+
+Kaatrin gave Seagull a big hug. "Thank you, Seagull. You're the best friend a pirate could have!" said Kaatrin.
+
+"Squawk, squawk, squawk," said Seagull softly, and she snuggled down on Kaatrin's big hat.
 """;
 }

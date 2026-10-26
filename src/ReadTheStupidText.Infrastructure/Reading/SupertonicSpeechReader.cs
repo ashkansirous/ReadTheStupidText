@@ -58,6 +58,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
     private readonly AudioChunkPaths _audioPaths;
     private readonly NeuralSentenceSource _sentences;
     private readonly ReadTimingTracker _timing = new();
+    private readonly StallReporter _stall;
     private readonly MediaPlayer _player = new() { AutoPlay = false };
 
     // Serializes the generation counter / synthesis-cancellation swap and the read/prepare bookkeeping.
@@ -76,6 +77,9 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
     // by Stop, both under _gate; a superseded read's late cleanup compares the reference and does nothing.
     private ActiveRead? _activeRead;
     private string? _voiceId;
+
+    // The heads a head start has stored, so the read of the text they start plans them as its first chunk (Slice 142).
+    private readonly FirstChunkHints _hints = new();
     private readonly ConcurrentDictionary<VoiceEngineKind, string> _voiceByKind = new();
     private MediaSource? _currentSource;
     private double _playbackRate = PlaybackRate.Default.Value;
@@ -114,10 +118,11 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
 
     public SupertonicSpeechReader(IVoiceModelService model, ISystemLog systemLog, AudioChunkPaths audioPaths)
     {
+        _stall = new StallReporter(this);
         _model = model;
         _systemLog = systemLog;
         _audioPaths = audioPaths;
-        _sentences = new NeuralSentenceSource(audioPaths.SentenceFolder, systemLog, MaxSynthesisConcurrency);
+        _sentences = new NeuralSentenceSource(audioPaths.SentenceFolder, systemLog, MaxSynthesisConcurrency, paths => _engines.Acquire(paths));
         _player.MediaOpened += OnMediaOpened;
         _player.MediaEnded += OnMediaEnded;
         _player.PlaybackSession.PlaybackStateChanged += OnPlaybackStateChanged;
@@ -133,6 +138,13 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
     public event EventHandler<ReadTiming>? TimingChanged;
 
     public event EventHandler<ReadChunk>? ChunkChanged;
+
+    // Raised while the read waits for the next chunk's audio (Slice 148); the UI shows its "still getting the voice ready" overlay.
+    public event EventHandler<bool>? StallChanged
+    {
+        add => _stall.Changed += value;
+        remove => _stall.Changed -= value;
+    }
 
     public PlaybackState State => _state;
 
@@ -151,13 +163,13 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
 
     public Task SpeakAsync(string text, int? activityId = null) =>
         ReadAsync(activityId, open: false, async (engine, voiceId) =>
-            (PlanChunks(text, await ChooseHeadPolicyAsync(engine, text, voiceId), activityId), text.Length));
+            (await PlanReadAsync(engine, text, voiceId, activityId), text.Length));
 
     // Slice 75: a read that grows. The first block is planned like any read; AppendText adds the rest
     // while it plays, and CompleteStream lets it finish.
     public Task SpeakStreamAsync(string firstText, int? activityId = null) =>
         ReadAsync(activityId, open: true, async (engine, voiceId) =>
-            (PlanChunks(firstText, await ChooseHeadPolicyAsync(engine, firstText, voiceId), activityId), firstText.Length));
+            (await PlanReadAsync(engine, firstText, voiceId, activityId), firstText.Length));
 
     public void AppendText(string text, int? activityId = null)
     {
@@ -309,10 +321,19 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
             return cached ? CachedHead : SpeechTextChunker.HeadPolicy.Default;
         });
 
-    private IReadOnlyList<SpeechChunkPlan> PlanChunks(string text, SpeechTextChunker.HeadPolicy head, int? activityId)
+    // The head the early start stored for this voice and pack, if the text starts with it, is the first chunk (consumed by this
+    // read, Slice 142); otherwise the plan is exactly the plain one.
+    private async Task<IReadOnlyList<SpeechChunkPlan>> PlanReadAsync(BuiltEngine engine, string text, string? voiceId, int? activityId)
+    {
+        string? hint = FirstChunkHints.ConfirmedBy(text, _hints.Take(text, FirstChunkHints.ScopeOf(voiceId, engine.Model)), CachedHead);
+        SpeechTextChunker.HeadPolicy head = hint is null ? await ChooseHeadPolicyAsync(engine, text, voiceId) : CachedHead;
+        return PlanChunks(text, head, activityId, hint);
+    }
+
+    private IReadOnlyList<SpeechChunkPlan> PlanChunks(string text, SpeechTextChunker.HeadPolicy head, int? activityId, string? firstChunkHint = null)
     {
         long splitStart = Stopwatch.GetTimestamp();
-        IReadOnlyList<SpeechChunkPlan> chunks = SpeechChunkPlanner.ForText(text, head);
+        IReadOnlyList<SpeechChunkPlan> chunks = SpeechChunkPlanner.ForText(text, head, firstChunkHint: firstChunkHint);
         _systemLog.Debug(
             $"split {text.Length} chars into {chunks.Count} chunk(s) in " +
             $"{Stopwatch.GetElapsedTime(splitStart).TotalMilliseconds:F1} ms " +
@@ -701,7 +722,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
         string path;
         try
         {
-            path = await generated;
+            path = await _stall.WatchAsync(generated);
         }
         catch (OperationCanceledException)
         {
@@ -1019,44 +1040,38 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
     {
         if (string.IsNullOrWhiteSpace(text))
         {
-            return Task.CompletedTask;
+            return HeadStartRun.Skipped;
         }
 
         // The token is taken here, synchronously and in call order, so a later call always supersedes an
-        // earlier one and CancelPrepare reaches a prepare still queued on the pool.
+        // earlier one and CancelPrepare reaches a prepare still queued on the pool. The task completes
+        // normally only when the clips are stored (HeadStartRun).
         return BeginPrepare() is { } token
-            ? Task.Run(() => PrepareOffCallerAsync(text, token))
-            : Task.CompletedTask;
+            ? Task.Run(() => HeadStartRun.CompleteAsync(token, t => PrepareOffCallerAsync(text, t)))
+            : HeadStartRun.Skipped;
     }
 
     // Runs on the thread pool, so acquiring the engine (which may build the model), planning the chunks
     // and indexing the cache never block the thread that asked.
-    private async Task PrepareOffCallerAsync(string text, CancellationToken token)
+    private async Task<bool> PrepareOffCallerAsync(string text, CancellationToken token)
     {
-        if (token.IsCancellationRequested)
-        {
-            return;
-        }
-
         BuiltEngine? engine = null;
         try
         {
             engine = AcquireEngine();
             if (engine is null)
             {
-                return;
+                return false;
             }
 
             token.ThrowIfCancellationRequested();
             await PrepareChunksAsync(engine, text, token);
+            return true;
         }
-        catch (OperationCanceledException)
-        {
-            // Superseded or cancelled: nothing to clean up.
-        }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _systemLog.Warning("head start failed", null, ex);
+            return false;
         }
         finally
         {
@@ -1066,14 +1081,18 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
 
     private async Task PrepareChunksAsync(BuiltEngine engine, string text, CancellationToken token)
     {
-        VoiceInfo voice = ResolveVoice(engine, Volatile.Read(ref _voiceId));
+        string? voiceId = Volatile.Read(ref _voiceId);
+        VoiceInfo voice = ResolveVoice(engine, voiceId);
         string prefix = text.Length > PrepareMaxChars ? text[..PrepareMaxChars] : text;
-        IEnumerable<string> sentences = SpeechChunkPlanner.ForText(prefix, CachedHead)
-            .Take(PrepareMaxChunks)
-            .SelectMany(chunk => SentenceUnits.Split(chunk.Text));
+        IReadOnlyList<SpeechChunkPlan> chunks = SpeechChunkPlanner.ForText(prefix, CachedHead).Take(PrepareMaxChunks).ToList();
+        List<string> sentences = chunks.SelectMany(chunk => SentenceUnits.Split(chunk.Text)).ToList();
 
         // A head start reads plain text, so its audio is the untagged one (the key a plain read looks up).
         await _sentences.PrepareAsync(engine, sentences, voice, null, token);
+        if (chunks.Count > 0 && _sentences.AreCached(engine, sentences, voice, null))
+        {
+            _hints.Remember(chunks[0].Text, FirstChunkHints.ScopeOf(voiceId, engine.Model), CachedHead); // only when the units are really stored
+        }
     }
 
     public void CancelPrepare()

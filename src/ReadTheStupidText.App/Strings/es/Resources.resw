@@ -271,8 +271,35 @@
   <data name="Pack_Failed" xml:space="preserve">
     <value>La descarga falló. Reintenta.</value>
   </data>
+  <data name="CountsTitle.Text" xml:space="preserve">
+    <value>Ayuda a mejorar la app</value>
+  </data>
+  <data name="CountsCaption.Text" xml:space="preserve">
+    <value>Envía recuentos como «se leyó un texto en francés». Sin nombres, sin identificadores, nada de lo que lees.</value>
+  </data>
+  <data name="CountsSwitch.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Ayuda a mejorar la app</value>
+  </data>
   <data name="Translate_AutoDetect" xml:space="preserve">
     <value>Detección automática</value>
+  </data>
+  <data name="Wait_DownloadingPercent" xml:space="preserve">
+    <value>Descargando {0}… {1} %</value>
+  </data>
+  <data name="Wait_Translating" xml:space="preserve">
+    <value>Traduciendo…</value>
+  </data>
+  <data name="Wait_PreparingVoice" xml:space="preserve">
+    <value>Preparando la voz…</value>
+  </data>
+  <data name="Wait_Stalled" xml:space="preserve">
+    <value>Todavía preparando la voz…</value>
+  </data>
+  <data name="Wait_Pair" xml:space="preserve">
+    <value>{0} a {1}</value>
+  </data>
+  <data name="Wait_Cancel" xml:space="preserve">
+    <value>Cancelar</value>
   </data>
   <data name="Translate_Note_Default" xml:space="preserve">
     <value>Traducción automática en este dispositivo. La calidad varía.</value>

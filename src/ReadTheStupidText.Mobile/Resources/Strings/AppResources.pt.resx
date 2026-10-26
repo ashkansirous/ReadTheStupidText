@@ -70,10 +70,15 @@
   <data name="Review_LooksLike" xml:space="preserve"><value>Este texto parece estar em {0}</value></data>
   <data name="Review_TranslateAndRead" xml:space="preserve"><value>Traduzir e ler</value></data>
   <data name="Review_Read" xml:space="preserve"><value>Ler</value></data>
-  <data name="Review_GettingTranslator" xml:space="preserve"><value>Baixando o tradutor de {0}…</value></data>
+  <data name="Wait_DownloadingModel" xml:space="preserve"><value>Baixando {0}…</value></data>
+  <data name="Wait_Translating" xml:space="preserve"><value>Traduzindo…</value></data>
+  <data name="Wait_PreparingVoice" xml:space="preserve"><value>Preparando a voz…</value></data>
+  <data name="Wait_Stalled" xml:space="preserve"><value>Ainda a preparar a voz…</value></data>
+  <data name="Wait_ReadingFile" xml:space="preserve"><value>Lendo o arquivo…</value></data>
   <data name="Review_FirstTimeOnly" xml:space="preserve"><value>Só na primeira vez. A tradução acontece neste telefone.</value></data>
   <data name="Review_ShowOriginal" xml:space="preserve"><value>Mostrar original</value></data>
   <data name="Review_FailedOne" xml:space="preserve"><value>Não foi possível ler a página {0}.</value></data>
+  <data name="Review_TextCut" xml:space="preserve"><value>O texto é muito longo, por isso só são mostrados os primeiros {0} caracteres.</value></data>
   <data name="Review_FailedMany" xml:space="preserve"><value>Não foi possível ler as páginas {0}.</value></data>
   <data name="Review_HereOne" xml:space="preserve"><value>A página {0} está aqui.</value></data>
   <data name="Review_HereMany" xml:space="preserve"><value>As páginas {0} estão aqui.</value></data>

@@ -130,7 +130,7 @@ Declared in `Package.appxmanifest`:
 | Capability | Type | Justification |
 | --- | --- | --- |
 | `runFullTrust` | restricted | The app is a full-trust packaged desktop app. It needs Win32 reach that the UWP sandbox forbids: a notification-area (tray) icon, a system-wide global hotkey, reading the **selection/clipboard of other apps** (UI Automation `TextPattern` + simulated copy), and a packaged `StartupTask`. None of these are possible without `runFullTrust`. This is the standard capability for WinUI 3 / Windows App SDK desktop apps and is the justification given in Partner Center. |
-| `internetClient` | standard | Added in Slice 56 (Decision 60). The package no longer carries the ~145 MB voice model: after the first-run language choice the app downloads the matching **voice pack** (an anonymous HTTPS file download from this project's public GitHub Releases, `packs-<n>`, see `docs/voice-packs.md`) and checks nothing else on the network. No text, audio, document or identifier is ever sent; once a pack is installed the app makes no network request at all. Partner Center justification: "Downloads the text-to-speech voice for the language the user chooses, on first run." |
+| `internetClient` | standard | Added in Slice 56 (Decision 60). The package no longer carries the ~145 MB voice model: after the first-run language choice the app downloads the matching **voice pack** (an anonymous HTTPS file download from this project's public GitHub Releases, `packs-<n>`, see `docs/voice-packs.md`) and, apart from the optional usage counts (Slice 140: a small config GET and batches of anonymous counts, off with the control-panel switch), checks nothing else on the network. No text, audio, document or identifier is ever sent; once a pack is installed the app makes no network request for it. Partner Center justification: "Downloads the text-to-speech voice for the language the user chooses, on first run, and sends optional anonymous usage counts." |
 
 `internetClient` is the only network capability declared (no `privateNetworkClientServer`,
 no `internetClientServer`). Where no network is available the Windows voice keeps reading.
@@ -330,16 +330,17 @@ stays framework-dependent so it remains fast.
 
 ## Privacy & diagnostics
 
-The Windows app **collects and transmits nothing** (the phone apps send only anonymous counts, see
-"Phone apps: anonymous usage counts" below). The read-latency timing diagnostics
+The Windows app's only data use is the same anonymous counts as the phones (Slice 140, see
+"Phone apps: anonymous usage counts" below), **off until the remote config switches them on** (Decision 145). The read-latency timing diagnostics
 added in Slice 19 (time-to-first-audio and synthesis duration per read) live only in
 the in-memory activity log — shown in the activity-log window, capped, and cleared on
 every restart. There is no third-party analytics SDK and no on-disk telemetry. Since
-Slice 56 the only network call on Windows is the voice-pack download (below), so the Store
-privacy questionnaire stays "no data collected".
+Slice 56 the network calls on Windows are the voice-pack download (below) and, from Slice 140, the
+optional anonymous counts, so the Store privacy questionnaire is answered for the counts
+("Microsoft Store (RTST)" in the checklist below) once they are switched on.
 
 **Windows / Microsoft Store (Slice 56, Decision 60).** The Windows app's only network use
-is downloading language voice packs from this repo's GitHub Releases, through the
+is downloading language voice packs from this repo's GitHub Releases (plus, since Slice 140, the optional counts), through the
 `internetClient` capability. It is an anonymous file download (the host sees an IP address,
 as for any web request; the app does not log it). Nothing about the user, their device or
 their content is sent. Packs are stored under the package's `LocalCache\packs` folder, and
@@ -375,7 +376,7 @@ outcome `done`/`cancelled`/`failed`, duration bucket <0.5, 0.5-1, 1-2, 2-5, 5-10
 device or advertising id, no read text, no file names, no time of day. The server sees the caller's IP while it answers but reads and stores
 none of it with the counts. On by default, with a "Help improve the app" switch in Settings and one line on the first-run language screen; no
 consent prompt (Decision 143). The remote config (`readthestupidtext/config.json`, `telemetry.enabled`, `sampleRate`) is **off until every row of
-the Store privacy declarations checklist in `plan.md` is ticked** (Decision 145). Windows sends nothing yet (Slices 140-141).
+the Store privacy declarations checklist in `plan.md` is ticked** (Decision 145). Windows (Slice 140) sends the same counts through the same pipe, with `platform = windows`, the engine `windows` (the Windows speech voice) and a `source` on each read (`selection`, `clipboard`, `hotkey` or `panel`, never a window or app name); its switch is the last row of the control panel, stored in the app's local data. **Microsoft Store row of the checklist:** answer the Store privacy questionnaire for the counts (anonymous app-activity counts, no identifier, optional) in the same step as the Play and App Store forms; until it is ticked the config keeps counting off, so the Windows build sends nothing.
 Store forms (Claude drafts and fills them in the signed-in browser; the user reviews and submits):
 
 - **Google Play Data safety (RTST):** "Data collected: yes", **App activity > App interactions** and **App info and performance > Diagnostics**,
@@ -386,14 +387,14 @@ Store forms (Claude drafts and fills them in the signed-in browser; the user rev
   for tracking**, purpose **Analytics**. `PrivacyInfo.xcprivacy` declares the same (`NSPrivacyCollectedDataTypeProductInteraction` and
   `NSPrivacyCollectedDataTypePerformanceData`, linked false, tracking false).
 - **Microsoft Store (RTST):** no data-collection question beyond the privacy policy URL, which must point at the updated `site/privacy.html`
-  (the Windows app still sends nothing).
+  (the Windows app sends the same counts once switched on; the switch is the last row of the control panel).
 - Cloudflare Analytics Engine is the processor. The `RTST_USAGE` binding is **not** in the wrangler configs until Analytics Engine is enabled on
   the account (a deploy fails otherwise); until then `/api/events` on the RTST host answers 204 while telemetry is off. To switch on: enable
   Analytics Engine, add `"analytics_engine_datasets": [{ "binding": "RTST_USAGE", "dataset": "rtst_usage" }]` to both wrangler configs
   (next to `r2_buckets`), deploy, then put `{"telemetry": {"enabled": true, "sampleRate": 1}}` in `readthestupidtext/config.json`
   (`wrangler r2 object put readthestupidtext-downloads/readthestupidtext/config.json --file config.json --remote`).
 - Each point's double is the count's weight (1 / the sample rate it was counted at), so query with `SUM(double1)`, never `COUNT(*)`; blobs are
-  `name, version, platform, day, language, sourceLanguage, mode, engine, voiceDefault, lengthBucket, osMajor, stage, outcome, durationBucket`.
+  `name, version, platform, day, language, sourceLanguage, mode, engine, voiceDefault, lengthBucket, osMajor, stage, outcome, durationBucket, source, early` (`source` on Windows reads only; `early` on timing counts only, `yes` when the first sentences were prepared while the person decided, Slice 139).
   `tools/rtst-usage-report.ps1` hides groups of fewer than 10 events. That floor counts events, not households (there is no install id), so it
   is a noise filter and not an anonymity guarantee: say "no identifiers, counts only", never "cannot be traced".
 

@@ -271,8 +271,35 @@
   <data name="Pack_Failed" xml:space="preserve">
     <value>فشل التنزيل. أعد المحاولة.</value>
   </data>
+  <data name="CountsTitle.Text" xml:space="preserve">
+    <value>ساعد في تحسين التطبيق</value>
+  </data>
+  <data name="CountsCaption.Text" xml:space="preserve">
+    <value>يرسل أعدادًا مثل «تمت قراءة نص فرنسي». لا أسماء ولا معرّفات ولا شيء مما تقرؤه.</value>
+  </data>
+  <data name="CountsSwitch.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>ساعد في تحسين التطبيق</value>
+  </data>
   <data name="Translate_AutoDetect" xml:space="preserve">
     <value>كشف تلقائي</value>
+  </data>
+  <data name="Wait_DownloadingPercent" xml:space="preserve">
+    <value>جارٍ تنزيل {0}… {1}%</value>
+  </data>
+  <data name="Wait_Translating" xml:space="preserve">
+    <value>جارٍ الترجمة…</value>
+  </data>
+  <data name="Wait_PreparingVoice" xml:space="preserve">
+    <value>جارٍ تجهيز الصوت…</value>
+  </data>
+  <data name="Wait_Stalled" xml:space="preserve">
+    <value>ما زلنا نجهّز الصوت…</value>
+  </data>
+  <data name="Wait_Pair" xml:space="preserve">
+    <value>{0} إلى {1}</value>
+  </data>
+  <data name="Wait_Cancel" xml:space="preserve">
+    <value>إلغاء</value>
   </data>
   <data name="Translate_Note_Default" xml:space="preserve">
     <value>ترجمة آلية على هذا الجهاز. تختلف الجودة.</value>

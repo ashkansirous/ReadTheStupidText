@@ -1,6 +1,6 @@
 # Slice 146 — Rewrite every Dino book in spoken, kid-friendly language
 
-*Planned. Starts after Slice 145 (the sound-word list).*
+*In progress (Wave A, Farsi). Slice 145 is built.*
 
 **Batch:** 30 (Decisions 149-153)
 **Touches:** `tests/DinoReader.Tests/StarterTexts.cs`, `tests/DinoReader.Tests/StoreTexts.cs`, `tests/DinoReader.Tests/Starters/translations/**`, `tests/DinoReader.Tests/Store/**`, `tests/DinoReader.Tests/StarterBuilder*.cs`, `src/DinoReader.App/StarterUpdate*.cs`, `src/DinoReader.App/Resources/Raw/starters/*.dino`
@@ -27,7 +27,7 @@ No screens. The Batch 30 mock intro says 146 (books rewritten in everyday spoken
 
 ## Work
 
-- [ ] Wave A: Farsi for the 4 starters, then each store story.
+- [ ] Wave A: Farsi for the 4 starters, then each store story. Farsi done and merged for: good-enough (#403), three-little-pigs (#404), elves-and-shoemaker (#405, store v4), lion-and-mouse (#406, v5), billy-goats-gruff (#407, v6), town-mouse-country-mouse (#409, v4), peter-rabbit (#410, v5), ugly-duckling (#411, v5). The store packages are NOT yet uploaded (upload needs the user's OK). Remaining Farsi books wait for the other tab's open PRs: tortoise-and-hare (#389), goldilocks (#393), red-riding-hood (#394), little-red-hen (#395), jack-and-the-beanstalk (#402), gingerbread-man (#379).
 - [ ] Wave B: English for every book (reworded English pieces need their 13 translations redone in
       the new register).
 - [ ] Wave C: the other 12 languages for every book.

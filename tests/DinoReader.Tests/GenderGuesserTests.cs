@@ -12,6 +12,12 @@ public class GenderGuesserTests
     [InlineData("Queen Anna", Gender.Female)]
     [InlineData("King Zog", Gender.Male)]
     [InlineData("Miss Moppet", Gender.Female)]
+    [InlineData("Granny", Gender.Female)]
+    [InlineData("Grandma", Gender.Female)]
+    [InlineData("Nana", Gender.Female)]
+    [InlineData("Grandpa", Gender.Male)]
+    [InlineData("Grandad", Gender.Male)]
+    [InlineData("Granddad", Gender.Male)]
     public void Titles_decide_gender(string name, Gender expected) =>
         Assert.Equal(expected, Guesser.Guess(name, ""));
 
@@ -36,6 +42,11 @@ public class GenderGuesserTests
 
         Assert.Equal(Gender.Unknown, Guesser.Guess("Zorp", text));
     }
+
+    // A grandparent title wins over the pronouns around it: "Granny" is a she even when the next sentence is about a boy (the Gingerbread Man, Slice 121).
+    [Fact]
+    public void A_grandparent_title_beats_the_pronouns_after_it() =>
+        Assert.Equal(Gender.Female, Guesser.Guess("Granny", "Granny came back. Up jumped the boy, and he ran to Granny as fast as he could. Granny caught him."));
 
     [Fact]
     public void Unknown_stays_unknown() =>

@@ -1,6 +1,6 @@
 ---
 name: dino-storytelling
-description: Write or retell a Dino Reader picture-book story for ages 3-9 - one action per page so every page gets its own picture, 10-16 pages, gentle endings, speaker-tagged dialogue for voices, repetition children can join in with, and a page-by-page picture plan. Use before illustrating any Dino book, when the user says "write a story", "retell <tale>", "split the story into pages", "more pages", or a book has pages that hold two actions. Then hand over to create-dino-story for the pictures.
+description: Write or retell a Dino Reader picture-book story for ages 3-9 - one action per page so every page gets its own picture, 10-18 pages, gentle endings, speaker-tagged dialogue for voices, repetition children can join in with, and a page-by-page picture plan. Use before illustrating any Dino book, when the user says "write a story", "retell <tale>", "split the story into pages", "more pages", or a book has pages that hold two actions. Then hand over to create-dino-story for the pictures.
 ---
 
 # Telling a Dino Reader story
@@ -28,7 +28,7 @@ and Decision 130. Read them first: they beat the classic tale.
 
 ## 2. Length and rhythm
 
-- **10-16 pages** for a classic tale; never fewer than 8. A page holds 1-4 short sentences, about 15-60
+- **10-18 pages** for a classic tale; never fewer than 8. A page holds 1-4 short sentences, about 15-60
   words. A page over ~60 words is two pages.
 - With the phone upright the words sit in a panel over the bottom of the picture (at most 30%,
   Slice 122), so short pages keep it small.
@@ -42,13 +42,19 @@ and Decision 130. Read them first: they beat the classic tale.
 - Short sentences, everyday words, past tense. One idea per sentence.
 - **Spoken, not written (Decision 152).** Write the way a parent talks to a 4-6-year-old at bedtime, in
   every language: colloquial forms, diminutives, exclamations, contractions. Never literary, old or
-  written-only forms. Farsi is the worst offender: «خوک کوچولو! خوک کوچولو! بزار بیام تو!», never
-  «بچه خوک بچه خوک بگذار بیایم تو» (spoken verb forms: بزار، بیام، میخوام، نمیشه; کوچولو, not بچه‌ی).
+  written-only forms. Farsi is the worst offender: «خوک کوچولو! خوک کوچولو! بذار بیام تو!», never
+  «بچه خوک بچه خوک بگذار بیایم تو» (spoken verb forms: بذار، بیام، میخوام، نمیشه; کوچولو, not بچه‌ی).
   English: "Little pig, little pig, let me come in!", "Uh-oh!", "Yay!", not "Pray let me enter".
-- **Sounds are read aloud by a voice, so make them long enough to hear (Decision 151).** Repeat them
-  with punctuation: "Knock! Knock! Knock!", "Whoosh… whoosh!", "Oink, oink, oiiink!", «تق! تق! تق!».
-  Never a single short "Bang!". Use each language's own sound words (Farsi «هاپ هاپ», «میو میو»,
-  «بع بع»), not the English ones. Slice 145 replaces this rule with the measured per-language list.
+- **Sounds are read aloud by a voice, so make them long enough to hear (Decision 151).** Never a single short "Bang!".
+  Measured only in English, Spanish, Chinese and Farsi, by length and a weak speech-recognition check, **not yet confirmed by a
+  human listen** (Slice 145; numbers and per-voice detail: docs/plan/notes/2026-10-26-sound-words-aloud.md). Any other language
+  is untested: use the repeat form and flag the sound for a listen.
+  - **Repeat the sound with `!`, `,` or `...` between** ("Dang! Dang! Dang!", «¡Pum! ¡Pum! ¡Pum!», 砰砰砰！). A triple is the
+    only form measured long enough on every voice; a double is uneven.
+  - **Little or no letter stretching.** It lengthened a little but cost recognition ("Whooosh!", "Daaang!", "Knoooock!"), and
+    stretch inside a repeat was spelled out by Kokoro.
+  - **Farsi: never a lone short sound word** (the default voice, mana, drops «تق!», «دنگ!», «ووش!»); prefer a plain triple
+    («تق تق تق!»), and avoid «دَنگ» forms. **Chinese: never a lone character**; repeat it.
 - Dialogue as `"...," said <Name>.` or `<Name> said.`, with the name spelled the same everywhere, so the
   caster gives each character their own voice. Give every character in a group a name (Pip, Pop, Pim).
 - Feelings are gentle: cross, grumpy, surprised, soggy, sorry. Never terrified, hurt or crying in pain.

@@ -200,6 +200,10 @@ internal sealed class FakeTranslator(string result) : ITranslator
 
     public string? LastSource { get; private set; }
 
+    public IReadOnlyList<string> Packs { get; set; } = [];
+
+    public IReadOnlyList<string> RequiredPackIds(string source, string target) => Packs;
+
     public Task<bool> IsModelReadyAsync(string source, string target) => Task.FromResult(ModelReady);
 
     public async Task<string> TranslateAsync(string text, string source, string target, CancellationToken cancellationToken)

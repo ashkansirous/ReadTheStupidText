@@ -19,8 +19,9 @@ internal readonly record struct SpeechChunkPlan(
 internal static class SpeechChunkPlanner
 {
     public static IReadOnlyList<SpeechChunkPlan> ForText(
-        string text, SpeechTextChunker.HeadPolicy? head = null, bool biasFirstChunk = true) =>
-        SpeechTextChunker.SplitWithRanges(text, biasFirstChunk, head)
+        string text, SpeechTextChunker.HeadPolicy? head = null, bool biasFirstChunk = true,
+        string? firstChunkHint = null) =>
+        SpeechTextChunker.SplitWithRanges(text, biasFirstChunk, head, firstChunkHint)
             .Select(c => new SpeechChunkPlan(c.Text, null, c.SourceStart, c.SourceEnd))
             .ToList();
 

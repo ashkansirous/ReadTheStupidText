@@ -14,6 +14,8 @@ public static class UsageEventName
     public const string VoiceChanged = "voice_changed";
     public const string ReadingLanguageChanged = "reading_language_changed";
     public const string AppOpened = "app_opened";
+    public const string WaitShown = "wait_shown";
+    public const string WaitCancelled = "wait_cancelled";
 }
 
 /// <summary>Where a counted book came from: Dino's own shelf (a starter or a store story) or a grown-up's own book.</summary>
@@ -51,6 +53,9 @@ public static class UsageDetail
     public const string ChangeFlavour = "flavour";
     public const string ChangeNarrator = "narrator";
 
+    /// <summary>Separates a wait count's stage from its duration bucket in <c>detail</c> (Slice 148): <c>stalled:2-5</c>.</summary>
+    public const char WaitSeparator = ':';
+
     private const int TwoPages = 2;
     private const int FivePages = 5;
     private const int TenPages = 10;
@@ -63,6 +68,9 @@ public static class UsageDetail
         (false, true) => StoreAuthor,
         _ => StoreNoFilter,
     };
+
+    /// <summary>The detail of a wait count: the wait's stage (a <c>UsageWaitStage</c> name) and how long its overlay showed (a <c>UsageBuckets.Duration</c> bucket).</summary>
+    public static string Wait(string stage, string durationBucket) => string.Concat(stage, WaitSeparator, durationBucket);
 
     /// <summary>How many pages of a book have a parent recording, as a bucket (never the exact count).</summary>
     public static string PagesBucket(int recordedPages) => recordedPages switch
@@ -114,6 +122,9 @@ public sealed record UsageEvent(string Name, string Book, string Language, strin
     /// <summary>A count that is about no book (a voice change, a launch): <paramref name="language"/> is the one that matters for it.</summary>
     public static UsageEvent ForNoBook(string name, string language, string detail, double sampleRate, string version, AppPlatform platform, DateTimeOffset now) =>
         new(name, UsageSource.None, language, UsageSource.None, false, version, platform.ToString().ToLowerInvariant(), DayOf(now), sampleRate, detail);
+
+    /// <summary>The language code a count sends when it is about no language (a wait count, Slice 148); the Worker takes only this for those counts.</summary>
+    public const string NoLanguage = "und";
 
     private static string DayOf(DateTimeOffset now) => now.UtcDateTime.ToString(DayFormat, CultureInfo.InvariantCulture);
 

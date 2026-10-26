@@ -26,21 +26,34 @@ const NO_BOOK = "none";
 const PLATFORMS = ["android", "ios", "windows"] as const;
 const BOOK_SOURCES = [SHELF_SOURCE, OWN_BOOK] as const;
 const NO_DETAIL = "";
+// A wait count says nothing about a language (Slice 148): the app sends this "undetermined" code, the only one the Worker takes for it.
+const NO_LANGUAGE = "und";
 const STORE_FILTERS = ["none", "age", "author", "age+author"] as const;
 const OWN_BOOK_KINDS = ["photo", "pdf", "scan", "typed"] as const;
 const PAGE_BUCKETS = ["1", "2-5", "6-10", "11+"] as const;
 // The app's supported reading languages (UiLanguage.Supported in DinoReader.Core); UsageEventTests fails when this list and the app's drift apart.
 const READING_LANGUAGES = ["en", "fa", "fr", "es", "pt", "zh", "ar", "ru", "ja", "da", "fi", "sv", "nb", "nl"] as const;
 const VOICE_CHANGES = ["character_voice", "flavour", "narrator"] as const;
+/** The waits the phone apps' overlay can show (WaitStage in the app, Slice 148); both products count them, and a test keeps this list and the app's `UsageWaitStage` the same. */
+const WAIT_STAGES = ["preparing_voice", "stalled", "downloading_model", "translating", "reading_pictures", "saving", "getting_file"] as const;
+const WAIT_DETAIL_SEPARATOR = ":";
 
 /** What an event name allows: the sources it may come from and the one extra value (`detail`) it carries. */
 interface EventRule {
   readonly sources: readonly string[];
   readonly detail: (value: unknown) => boolean;
+  /** When set, the only language the event may carry. */
+  readonly language?: string;
 }
 
 const emptyDetail = (value: unknown): boolean => value === undefined || value === NO_DETAIL;
 const detailIn = (list: readonly string[]) => (value: unknown): boolean => oneOf(list, value);
+
+// A wait count's detail is "<stage>:<duration bucket>", like "stalled:2-5" (Slice 148): both halves come from closed lists.
+const waitDetail = (value: unknown): boolean => {
+  const parts = typeof value === "string" ? value.split(WAIT_DETAIL_SEPARATOR) : [];
+  return parts.length === 2 && oneOf(WAIT_STAGES, parts[0]) && oneOf(RTST_DURATION_BUCKETS, parts[1]);
+};
 
 // Slice 133 events carry no detail; Slice 134 added the rest. Anything not named here is dropped.
 const EVENT_RULES: Readonly<Record<string, EventRule>> = {
@@ -52,6 +65,8 @@ const EVENT_RULES: Readonly<Record<string, EventRule>> = {
   voice_changed: { sources: [NO_BOOK], detail: detailIn(VOICE_CHANGES) },
   reading_language_changed: { sources: [NO_BOOK], detail: detailIn(READING_LANGUAGES) },
   app_opened: { sources: [NO_BOOK], detail: emptyDetail },
+  wait_shown: { sources: [NO_BOOK], detail: waitDetail, language: NO_LANGUAGE },
+  wait_cancelled: { sources: [NO_BOOK], detail: waitDetail, language: NO_LANGUAGE },
 };
 const LANGUAGE_PATTERN = /^[a-z]{2,3}(-[A-Za-z]{2,4})?$/;
 const VERSION_PATTERN = /^\d{1,6}(\.\d{1,6}){1,3}$/;
@@ -130,6 +145,7 @@ export function parseEvent(raw: unknown): UsageEvent | null {
     oneOf(rule.sources, source) &&
     bookMatchesSource(book, source) &&
     matches(LANGUAGE_PATTERN, language) &&
+    (rule.language === undefined || language === rule.language) &&
     typeof hasRecording === "boolean" &&
     matches(VERSION_PATTERN, version) &&
     oneOf(PLATFORMS, platform) &&
@@ -238,7 +254,8 @@ export interface RtstEventsEnv {
 const YES = "yes";
 const NO = "no";
 const RTST_MODES = ["original", "translation"] as const;
-const RTST_ENGINES = ["phone", "supertonic", "piper", "melo", "kokoro"] as const;
+const RTST_ENGINES = ["phone", "supertonic", "piper", "melo", "kokoro", "windows"] as const;
+const RTST_SOURCES = ["selection", "clipboard", "hotkey", "panel"] as const;
 const RTST_LENGTH_BUCKETS = ["<200", "200-1000", "1000-5000", ">5000"] as const;
 const RTST_STAGES = ["model_download", "translate", "first_audio"] as const;
 const RTST_OUTCOMES = ["done", "cancelled", "failed"] as const;
@@ -246,8 +263,8 @@ const RTST_DURATION_BUCKETS = ["<0.5", "0.5-1", "1-2", "2-5", "5-10", "10-20", "
 const MIN_OS_MAJOR = 1;
 const MAX_OS_MAJOR = 99;
 
-/** The blob order of a phone count after its envelope; a field a count does not carry is an empty blob. */
-export const RTST_FIELDS = ["language", "sourceLanguage", "mode", "engine", "voiceDefault", "lengthBucket", "osMajor", "stage", "outcome", "durationBucket"] as const;
+/** The blob order of a count after its envelope; a field a count does not carry is an empty blob. New fields are only ever appended (Slice 140 added `source`, Slice 139 `early`, Slice 148 `waitStage`). */
+export const RTST_FIELDS = ["language", "sourceLanguage", "mode", "engine", "voiceDefault", "lengthBucket", "osMajor", "stage", "outcome", "durationBucket", "source", "early", "waitStage"] as const;
 type RtstField = (typeof RTST_FIELDS)[number];
 type FieldValue = string | number | boolean;
 
@@ -264,6 +281,9 @@ const RTST_VALIDATORS: Readonly<Record<RtstField, (value: unknown) => boolean>> 
   stage: (value) => oneOf(RTST_STAGES, value),
   outcome: (value) => oneOf(RTST_OUTCOMES, value),
   durationBucket: (value) => oneOf(RTST_DURATION_BUCKETS, value),
+  source: (value) => oneOf(RTST_SOURCES, value),
+  early: (value) => typeof value === "boolean",
+  waitStage: (value) => oneOf(WAIT_STAGES, value),
 };
 
 interface RtstRule {
@@ -273,11 +293,13 @@ interface RtstRule {
 
 const RTST_EVENT_RULES: Readonly<Record<string, RtstRule>> = {
   app_opened: { required: ["language", "osMajor"], optional: [] },
-  read_started: { required: ["language", "mode", "engine", "voiceDefault", "lengthBucket"], optional: ["sourceLanguage"] },
+  read_started: { required: ["language", "mode", "engine", "voiceDefault", "lengthBucket"], optional: ["sourceLanguage", "source"] },
   translate_offered: { required: ["sourceLanguage", "language"], optional: [] },
-  translate_chosen: { required: ["sourceLanguage", "language"], optional: [] },
+  translate_chosen: { required: ["language"], optional: ["sourceLanguage"] },
   voice_changed: { required: ["language", "engine"], optional: [] },
-  timing: { required: ["stage", "outcome", "durationBucket"], optional: ["sourceLanguage", "language"] },
+  timing: { required: ["stage", "outcome", "durationBucket"], optional: ["sourceLanguage", "language", "early"] },
+  wait_shown: { required: ["waitStage", "durationBucket"], optional: [] },
+  wait_cancelled: { required: ["waitStage", "durationBucket"], optional: [] },
 };
 
 /** A phone count that passed every check: the envelope plus the closed fields its event allows. */

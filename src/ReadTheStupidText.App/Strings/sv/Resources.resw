@@ -271,8 +271,35 @@
   <data name="Pack_Failed" xml:space="preserve">
     <value>Nedladdningen misslyckades. Försök igen.</value>
   </data>
+  <data name="CountsTitle.Text" xml:space="preserve">
+    <value>Hjälp till att förbättra appen</value>
+  </data>
+  <data name="CountsCaption.Text" xml:space="preserve">
+    <value>Skickar räkningar som ”en fransk text lästes”. Inga namn, inga id:n, inget av det du läser.</value>
+  </data>
+  <data name="CountsSwitch.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Hjälp till att förbättra appen</value>
+  </data>
   <data name="Translate_AutoDetect" xml:space="preserve">
     <value>Identifiera automatiskt</value>
+  </data>
+  <data name="Wait_DownloadingPercent" xml:space="preserve">
+    <value>Hämtar {0}… {1} %</value>
+  </data>
+  <data name="Wait_Translating" xml:space="preserve">
+    <value>Översätter…</value>
+  </data>
+  <data name="Wait_PreparingVoice" xml:space="preserve">
+    <value>Förbereder rösten…</value>
+  </data>
+  <data name="Wait_Stalled" xml:space="preserve">
+    <value>Gör fortfarande rösten redo…</value>
+  </data>
+  <data name="Wait_Pair" xml:space="preserve">
+    <value>{0} till {1}</value>
+  </data>
+  <data name="Wait_Cancel" xml:space="preserve">
+    <value>Avbryt</value>
   </data>
   <data name="Translate_Note_Default" xml:space="preserve">
     <value>Maskinöversättning, på den här enheten. Kvaliteten varierar.</value>
