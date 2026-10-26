@@ -1,7 +1,7 @@
 // Gemini picture grabber for create-dino-story step 6. Inject this whole file with javascript_tool once per page load
-// (again after a reload or a new chat). Then `await window.__grab(1)` (1 = newest picture, 2 = the one before), one real
-// `computer` click on empty page space (the clipboard write needs a user gesture), then read `window.__clipResult`
-// ("896x1200" once the picture is on the clipboard) and run `pwsh -STA gemini-clipboard.ps1 Save <file>`.
+// (again after a reload or a new chat). `await window.__grab(1)` clicks the newest picture's download button (1 = newest,
+// 2 = the one before); then save it with gemini-take-download.ps1. Fallback only: one real `computer` click on the picture
+// copies it to the clipboard, poll `window.__clipResult` for "WxH" and run `pwsh -STA gemini-clipboard.ps1 Save <file>`.
 if (!window.__grabReady) {
   window.__grabReady = true;
   window.__blobs = [];
