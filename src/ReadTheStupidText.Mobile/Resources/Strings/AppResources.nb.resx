@@ -70,7 +70,10 @@
   <data name="Review_LooksLike" xml:space="preserve"><value>Teksten ser ut til å være på {0}</value></data>
   <data name="Review_TranslateAndRead" xml:space="preserve"><value>Oversett og les</value></data>
   <data name="Review_Read" xml:space="preserve"><value>Les</value></data>
-  <data name="Review_GettingTranslator" xml:space="preserve"><value>Henter {0}-oversetteren…</value></data>
+  <data name="Wait_DownloadingModel" xml:space="preserve"><value>Laster ned {0}…</value></data>
+  <data name="Wait_Translating" xml:space="preserve"><value>Oversetter…</value></data>
+  <data name="Wait_PreparingVoice" xml:space="preserve"><value>Gjør stemmen klar…</value></data>
+  <data name="Wait_ReadingFile" xml:space="preserve"><value>Leser filen…</value></data>
   <data name="Review_FirstTimeOnly" xml:space="preserve"><value>Bare første gang. Oversettelsen skjer på denne telefonen.</value></data>
   <data name="Review_ShowOriginal" xml:space="preserve"><value>Vis original</value></data>
   <data name="Review_FailedOne" xml:space="preserve"><value>Kunne ikke lese side {0}.</value></data>

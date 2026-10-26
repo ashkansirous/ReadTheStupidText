@@ -70,7 +70,10 @@
   <data name="Review_LooksLike" xml:space="preserve"><value>Ce texte semble être en {0}</value></data>
   <data name="Review_TranslateAndRead" xml:space="preserve"><value>Traduire et lire</value></data>
   <data name="Review_Read" xml:space="preserve"><value>Lire</value></data>
-  <data name="Review_GettingTranslator" xml:space="preserve"><value>Téléchargement du traducteur {0}…</value></data>
+  <data name="Wait_DownloadingModel" xml:space="preserve"><value>Téléchargement : {0}…</value></data>
+  <data name="Wait_Translating" xml:space="preserve"><value>Traduction en cours…</value></data>
+  <data name="Wait_PreparingVoice" xml:space="preserve"><value>Préparation de la voix…</value></data>
+  <data name="Wait_ReadingFile" xml:space="preserve"><value>Lecture du fichier…</value></data>
   <data name="Review_FirstTimeOnly" xml:space="preserve"><value>Uniquement la première fois. La traduction se fait sur ce téléphone.</value></data>
   <data name="Review_ShowOriginal" xml:space="preserve"><value>Voir l’original</value></data>
   <data name="Review_FailedOne" xml:space="preserve"><value>Impossible de lire la page {0}.</value></data>
