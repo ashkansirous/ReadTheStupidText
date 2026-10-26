@@ -5,7 +5,7 @@ namespace DinoReader.Tests;
 internal sealed record StoreStorySpec(string Id, string Title, string Stem, string Text, int ColourIndex, string Credits, int AgeMin, int AgeMax, string Author, IReadOnlyList<string> Characters, int Version, string Added);
 
 /// <summary>
-/// The ten free store stories (Slice 102, Decision 106): public-domain tales retold in plain words for ages 3 to 8, with a named
+/// The free store stories (Slice 102, Decision 106): ten public-domain tales retold in plain words for ages 3 to 8, and original Dino Reader books, with a named
 /// speaker on every line so the caster gives each character a voice (the starter rule: <c>said Name</c> or <c>Name said</c>, a bare
 /// capitalised name). Pages are separated by a line holding only "---". The retellings are original to this repo (MIT); Peter Rabbit
 /// is Beatrix Potter's 1902 text, shortened to fit fifteen pages (a few speech tags added). The ids never change: "Downloaded" and updates match on them.
@@ -23,6 +23,7 @@ internal static class StoreTexts
     public const string ElvesId = "34efea95400343ac998e9ed99158d370";
     public const string TownMouseId = "67dfb7db7c1c418c811cfed88876327f";
     public const string PeterRabbitId = "18cab2f1fec84aad831ba12dccad5336";
+    public const string TreasureId = "a02c0731b7ac475a896e9184f3575e7b";
 
     private const string AddedDate = "2026-10-24";
     private const string RetoldAesop = "Retold from Aesop · free to share";
@@ -41,6 +42,7 @@ internal static class StoreTexts
         new(ElvesId, "The Elves and the Shoemaker", "elves-and-shoemaker", Elves, 1, "Retold from the Brothers Grimm · free to share", 5, 8, "Brothers Grimm", ["Hans", "Greta", "Nib", "Nob"], 4, AddedDate),
         new(TownMouseId, "The Town Mouse and the Country Mouse", "town-mouse-country-mouse", TownMouse, 2, RetoldAesop, 4, 7, "Aesop", ["Town Mouse", "Country Mouse"], 4, AddedDate),
         new(PeterRabbitId, "The Tale of Peter Rabbit", "peter-rabbit", PeterRabbit, 3, "Beatrix Potter, 1902 (shortened)", 3, 6, "Beatrix Potter", ["Mrs. Rabbit", "Peter", "Mr. McGregor"], 5, AddedDate),
+        new(TreasureId, "X Marks the Treasure!", "x-marks-the-treasure", Treasure, 0, "A Dino Reader picture book · free to share", 3, 6, "Ashkan Sirous", ["Kaatrin", "Seagull", "Izzy", "Pancake Polly", "Billy"], 1, "2026-10-26"),
     ];
 
     public const string LionAndMouse = """
@@ -587,5 +589,97 @@ His mother was busy cooking. She wondered what he had done with his clothes. It 
 I am sorry to say that Peter was not very well during the evening. His mother put him to bed, and made some camomile tea. "One table-spoonful to be taken at bedtime," said Mrs. Rabbit.
 ---
 But Flopsy, Mopsy, and Cotton-tail had bread and milk and blackberries for supper.
+""";
+
+    // Book 1 of the Captain Kaatrin and Seagull series, an original story. The captain is spelled "Kaatrin" so the English voices say
+    // KAA-trin: Kokoro reads "Katrin" as KAT-rin (espeak en-us, /kˈætɹɪn/) and "Kaatrin" as /kˈɑːtɹɪn/. Art record: docs/design/story-art/x-marks-the-treasure.md.
+    public const string Treasure = """
+Seagull flew high over the sea. She looked down at the little boats, the sandy beach and the sunny harbour.
+
+Then she saw a big pirate hat she knew. Captain Kaatrin was running to her ship, waving a piece of paper. She looked very happy!
+---
+Seagull swooped down, down, down, and she landed right on top of Kaatrin's big hat.
+
+"Squawk! Squawk! Squawk! What's up, Kaatrin?" said Seagull.
+
+Kaatrin held up an old map with a little island on it and a big red X. "I've found the map to the lost treasure!" said Kaatrin. "X marks the treasure!"
+---
+Kaatrin ran up onto her ship. "Ahoy, pirates! Hoist the sail! We're going to find the lost treasure!" said Kaatrin.
+
+Her crew came running. Izzy looked after the map and the compass. Pancake Polly made the yummiest pancakes. Billy could climb all the way up the mast.
+---
+Seagull flapped her wings. "A treasure hunt? I love treasure hunts! I'm coming too!" said Seagull.
+
+"Hooray! Then sit on my hat until we find the treasure," said Kaatrin.
+---
+Izzy, Pancake Polly and Billy danced a happy pirate dance across the deck.
+
+"Yo ho, yo ho!" sang Izzy.
+
+"Yo ho, yo ho!" sang Billy.
+
+"We're going to find the lost treasure!" sang Pancake Polly.
+---
+Billy pulled the rope, and up went the big sail. Flap, flap, flap!
+
+Kaatrin turned the ship's big wheel. "Off we go to Treasure Island!" said Kaatrin. And away they sailed, far across the sea.
+---
+The trip was long, long, long. Soon everyone on deck felt slow and grumbly, and nobody knew why.
+
+"Billy, can you see an island?" said Kaatrin.
+
+Billy sat in the basket at the top of the mast, but he was too hungry to answer. He just gave a big yawn. His tummy went rumble, rumble, rumble!
+---
+"Izzy, can you check the map with your compass?" said Kaatrin.
+
+Izzy sat on a barrel with the map on her lap, but she was hungry too, and she didn't answer. She just gave a big sigh. Her tummy went rumble, rumble, rumble!
+---
+"Let me go and see what's wrong!" said Seagull, and she flew all around the ship.
+
+Every tummy went rumble, rumble, rumble! Even Kaatrin's tummy! "Squawk! Squawk! Squawk! I know! Everyone is hungry!" said Seagull.
+---
+Seagull flew down the steps to the ship's kitchen. There was Pancake Polly, stirring pancake mix in her big blue bowl.
+
+"Polly, Polly! Everyone is too hungry to find the treasure!" said Seagull.
+
+"Hungry pirates? Then it's pancake time!" said Pancake Polly.
+---
+Up came Pancake Polly with a big pile of plates. There were pancakes with banana, strawberries and honey for everyone!
+
+The pirates ate and ate, and Seagull had a pancake too. "Yum, yum, yum!" said Seagull.
+---
+Now everyone was full of pancakes and full of energy! Izzy and Pancake Polly danced across the deck, and Billy sang from the top of the mast.
+
+"Yo ho, yo ho!" sang Izzy.
+
+"Yo ho, yo ho!" sang Billy.
+
+"We're going to find the lost treasure!" sang Pancake Polly.
+---
+"I spot an island!" said Billy, and he pointed far across the sea.
+
+Everyone cheered. Kaatrin looked through her telescope. "There it is! Treasure Island!" said Kaatrin.
+---
+The ship stopped near the island, and Seagull flew ahead to the sandy beach.
+
+There in the sand lay two long sticks in a big X. "Squawk! Squawk! Squawk! I found it! X marks the treasure!" said Seagull.
+
+Splish, splash, splosh! Behind her, the pirates waded to the beach with their spades.
+---
+Dig, dig, dig! The pirates dug at the X. Up came an old wooden treasure chest.
+---
+Kaatrin lifted the lid. Inside were gold coins, sparkly jewels and shiny pearls, enough for everyone!
+
+"Yo ho, yo ho!" sang Izzy.
+
+"Yo ho, yo ho!" sang Billy.
+
+"We found the lost treasure!" sang Pancake Polly.
+---
+That evening, as the sun went down, the pirates had a treasure party on the beach, with music and dancing.
+
+Kaatrin gave Seagull a big hug. "Thank you, Seagull. You're the best friend a pirate could have!" said Kaatrin.
+
+"Squawk, squawk, squawk," said Seagull softly, and she snuggled down on Kaatrin's big hat.
 """;
 }

@@ -33,7 +33,7 @@ internal static class StoreBuilder
     /// <summary>The store entries of the four bundled starters (Decision 128), by package file name: the same ids as the bundled files, so a deleted starter can be downloaded again.</summary>
     public static IReadOnlyDictionary<string, StoreEntry> StarterEntries { get; } = new Dictionary<string, StoreEntry>
     {
-        [StarterBuilder.GoodEnoughFile] = new("Good Enough", StarterBuilder.GoodEnoughId, StarterBuilder.GoodEnoughColourIndex, "A Dino Reader picture book · free to share", 5, 8, "Dino Reader"),
+        [StarterBuilder.GoodEnoughFile] = new("Good Enough", StarterBuilder.GoodEnoughId, StarterBuilder.GoodEnoughColourIndex, "A Dino Reader picture book · free to share", 5, 8, "Ashkan Sirous"),
         ["three-little-pigs.dino"] = new("The Three Little Pigs", StarterTexts.PigsId, 3, RetoldTraditional, 3, 6, Traditional),
         ["gingerbread-man.dino"] = new("The Gingerbread Man", StarterTexts.GingerbreadId, 1, RetoldTraditional, 3, 6, Traditional),
         ["tortoise-and-hare.dino"] = new("The Tortoise and the Hare", StarterTexts.TortoiseId, 0, RetoldAesop, 4, 7, "Aesop"),
@@ -197,6 +197,9 @@ internal static class StoreCover
         "#...#/#...#/.#.#./..#../..#../..#../..#..", "#####/....#/...#./..#../.#.../#..../#####",
     ];
 
+    // The one punctuation mark a title may carry ("X Marks the Treasure!").
+    private const string Exclamation = "..#../..#../..#../..#../..#../...../..#..";
+
     /// <summary>The JPEG of a cover: <paramref name="title"/> in white capitals, wrapped and centred, on <paramref name="colourHex"/> (<c>#RRGGBB</c>).</summary>
     public static byte[] Render(string title, string colourHex)
     {
@@ -259,9 +262,15 @@ internal static class StoreCover
         int left = (Width - (line.Length * advance - GlyphGap * Scale)) / 2;
         for (int i = 0; i < line.Length; i++)
         {
-            if (line[i] is >= 'A' and <= 'Z')
+            string? glyph = line[i] switch
             {
-                DrawGlyph(ink, Glyphs[line[i] - 'A'].Split('/'), left + i * advance, top);
+                >= 'A' and <= 'Z' => Glyphs[line[i] - 'A'],
+                '!' => Exclamation,
+                _ => null,
+            };
+            if (glyph is not null)
+            {
+                DrawGlyph(ink, glyph.Split('/'), left + i * advance, top);
             }
         }
     }

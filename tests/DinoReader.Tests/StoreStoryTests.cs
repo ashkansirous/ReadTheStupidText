@@ -7,7 +7,8 @@ namespace DinoReader.Tests;
 public sealed class StoreStoryTests : IDisposable
 {
     private const int MinPages = 8;
-    private const int MaxPages = 15;
+    private const int MaxPages = 18; // the user's limit for a store book (2026-10-26, X Marks the Treasure!)
+    private const int StoryCount = 11;
 
     private readonly string _root = Path.Combine(Path.GetTempPath(), "dino-store-test-" + Guid.NewGuid().ToString("N"));
 
@@ -42,11 +43,11 @@ public sealed class StoreStoryTests : IDisposable
     }
 
     [Fact]
-    public void TheStore_HasTenStories_WithFixedUniqueIds()
+    public void TheStore_HasElevenStories_WithFixedUniqueIds()
     {
-        Assert.Equal(10, StoreTexts.All.Count);
-        Assert.Equal(10, StoreTexts.All.Select(s => s.Id).Distinct().Count());
-        Assert.Equal(10, StoreTexts.All.Select(s => s.Stem).Distinct().Count());
+        Assert.Equal(StoryCount, StoreTexts.All.Count);
+        Assert.Equal(StoryCount, StoreTexts.All.Select(s => s.Id).Distinct().Count());
+        Assert.Equal(StoryCount, StoreTexts.All.Select(s => s.Stem).Distinct().Count());
         Assert.All(StoreTexts.All, s => Assert.True(StoryIds.IsValid(s.Id), s.Title));
         Assert.Empty(StoreTexts.All.Select(s => s.Id).Intersect(StarterBuilder.Starters.Select(s => s.Id).Append(StarterBuilder.GoodEnoughId)));
     }
@@ -191,7 +192,7 @@ public sealed class StoreStoryTests : IDisposable
     [Fact]
     public void EveryStoreTitle_FitsTheCoverFont()
     {
-        Assert.All(StoreTexts.All, s => Assert.All(StoreCover.Wrap(s.Title), l => Assert.True(l.Length <= 10 && l.All(c => c is ' ' or (>= 'A' and <= 'Z')), l)));
+        Assert.All(StoreTexts.All, s => Assert.All(StoreCover.Wrap(s.Title), l => Assert.True(l.Length <= 10 && l.All(c => c is ' ' or '!' or (>= 'A' and <= 'Z')), l)));
     }
 
     [Fact]
