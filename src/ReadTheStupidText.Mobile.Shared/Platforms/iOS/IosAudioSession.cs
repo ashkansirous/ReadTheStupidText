@@ -1,7 +1,7 @@
 using AVFoundation;
 using Foundation;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// The shared <see cref="AVAudioSession"/> setup for every iOS reader (Slice 49): the playback

@@ -1,6 +1,6 @@
 using ReadTheStupidText.Application.Reading;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// The one seam between the platform-neutral Mobile root and each OS's engines

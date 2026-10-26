@@ -10,11 +10,11 @@ using QueueMode = Android.Speech.Tts.QueueMode;
 using OperationResult = Android.Speech.Tts.OperationResult;
 using UtteranceProgressListener = Android.Speech.Tts.UtteranceProgressListener;
 
-// Deliberately not "ReadTheStupidText.Mobile.Platforms.Android" — a namespace
+// Deliberately not "ReadTheStupidText.Mobile.Shared.Platforms.Android" — a namespace
 // segment literally named "Android" shadows the top-level Android.* bindings
 // namespace for unqualified lookups inside this file (matches MainActivity.cs's
 // own namespace, which sidesteps the same trap).
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// <see cref="ISpeechReader"/> backed by Android's built-in <see cref="TextToSpeech"/>

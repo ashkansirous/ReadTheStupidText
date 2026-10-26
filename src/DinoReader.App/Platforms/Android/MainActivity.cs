@@ -4,7 +4,7 @@ using Android.Content.Res;
 using Android.OS;
 using Android.Views;
 using AndroidX.Core.View;
-using ReadTheStupidText.Mobile;
+using ReadTheStupidText.Mobile.Shared;
 
 namespace DinoReader;
 

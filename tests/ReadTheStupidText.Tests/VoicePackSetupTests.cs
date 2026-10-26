@@ -4,6 +4,7 @@ using ReadTheStupidText.Domain.Reading;
 using ReadTheStupidText.Domain.Sanitizing;
 using ReadTheStupidText.Infrastructure.Reading;
 using ReadTheStupidText.Mobile;
+using ReadTheStupidText.Mobile.Shared;
 
 namespace ReadTheStupidText.Tests;
 

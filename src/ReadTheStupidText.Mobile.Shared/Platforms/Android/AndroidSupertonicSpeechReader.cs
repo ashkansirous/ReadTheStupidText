@@ -6,7 +6,7 @@ using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Domain.Reading;
 using SherpaOnnx;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// Speaks text with the local Supertonic-3 neural engine on Android (Slice 31,

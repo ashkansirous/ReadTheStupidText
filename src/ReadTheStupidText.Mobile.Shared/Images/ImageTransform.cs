@@ -1,4 +1,4 @@
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// Rotates (by quarter turns) and crops a picture into a new JPEG file (Slice 78). The source is never written to, so undoing

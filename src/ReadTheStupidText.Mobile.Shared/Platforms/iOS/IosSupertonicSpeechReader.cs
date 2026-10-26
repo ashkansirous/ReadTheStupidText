@@ -6,7 +6,7 @@ using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Domain.Reading;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// Speaks text with the local neural engine on iOS (Slices 49 and 55), the iOS counterpart of

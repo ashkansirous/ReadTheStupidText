@@ -5,7 +5,7 @@ using ReadTheStupidText.Application.Documents;
 using ReadTheStupidText.Application.Images;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Documents;
-using ReadTheStupidText.Mobile;
+using ReadTheStupidText.Mobile.Shared;
 
 namespace DinoReader;
 

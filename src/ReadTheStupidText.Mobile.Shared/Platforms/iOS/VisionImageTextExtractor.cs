@@ -4,7 +4,7 @@ using ImageIO;
 using ReadTheStupidText.Application.Images;
 using Vision;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// Apple's on-device Vision text recognition (<see cref="VNRecognizeTextRequest"/>, accurate

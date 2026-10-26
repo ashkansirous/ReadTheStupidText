@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using Foundation;
 using SherpaOnnx;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// Tells the managed sherpa-onnx binding where its native library is on iOS (Slice 49). The

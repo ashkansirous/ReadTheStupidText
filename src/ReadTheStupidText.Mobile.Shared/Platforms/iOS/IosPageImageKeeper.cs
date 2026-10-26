@@ -2,7 +2,7 @@ using Foundation;
 using ReadTheStupidText.Application.Images;
 using UIKit;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// <see cref="IPageImageKeeper"/> for iOS (Slice 67): ImageIO decodes the page upright (its EXIF

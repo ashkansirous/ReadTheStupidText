@@ -2,7 +2,7 @@ using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Infrastructure.Reading;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// Windows's <see cref="IPlatformServices"/> (Slice 67): the sherpa-onnx Supertonic reader that

@@ -1,7 +1,7 @@
 using CoreGraphics;
 using ReadTheStupidText.Application.Images;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// One scanned page for the OCR engine on iOS (Slice 55): the downscaled detection image, decoded

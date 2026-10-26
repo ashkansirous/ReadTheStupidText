@@ -1,7 +1,7 @@
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Domain.Reading;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 // The head start (Slice 47, ported to iOS in Slice 55): the opening sentences of the text are
 // synthesized into the sentence cache before Play, in the voice that would read them now.

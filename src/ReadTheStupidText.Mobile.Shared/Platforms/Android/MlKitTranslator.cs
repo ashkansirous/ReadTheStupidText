@@ -6,7 +6,7 @@ using Xamarin.Google.MLKit.NL.Translate;
 using MlKitClient = Xamarin.Google.MLKit.NL.Translate.ITranslator;
 using AppTranslator = ReadTheStupidText.Application.Translation.ITranslator;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// Translates on the device with ML Kit Translation (Slice 54). ML Kit downloads one model per

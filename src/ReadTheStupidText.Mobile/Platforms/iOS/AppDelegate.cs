@@ -1,4 +1,5 @@
 using Foundation;
+using ReadTheStupidText.Mobile.Shared;
 
 // Namespace matches the Android files (and the rest of Mobile), not
 // "...Platforms.iOS" — see the namespace note in AndroidSpeechReader.cs.

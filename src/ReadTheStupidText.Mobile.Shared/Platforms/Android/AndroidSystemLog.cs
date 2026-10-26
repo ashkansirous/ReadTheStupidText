@@ -1,6 +1,6 @@
 using ReadTheStupidText.Application.Logging;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// Android's <see cref="ISystemLog"/> (Slice 47): lines go to logcat under one tag, so the

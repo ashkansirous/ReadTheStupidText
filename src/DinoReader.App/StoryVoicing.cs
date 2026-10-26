@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using DinoReader.Core;
 using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Mobile;
+using ReadTheStupidText.Mobile.Shared;
 using ReadTheStupidText.Domain.Reading;
 
 namespace DinoReader;

@@ -1,6 +1,6 @@
 using ReadTheStupidText.Application.Reading;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// Builds the app's local Supertonic-3 reader on iOS. Mobile.Shared cannot reference

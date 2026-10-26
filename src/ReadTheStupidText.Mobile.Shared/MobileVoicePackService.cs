@@ -4,7 +4,7 @@ using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using ReadTheStupidText.Application.Reading;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// Android implementation of <see cref="IVoicePackService"/> (Slice 50). Packs live

@@ -1,6 +1,6 @@
 using ReadTheStupidText.Application.Images;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// One loaded OCR pack: its two onnxruntime sessions and the pipeline around them (Slice 52).

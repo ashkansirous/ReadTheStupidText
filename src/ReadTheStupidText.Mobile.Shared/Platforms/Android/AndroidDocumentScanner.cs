@@ -7,7 +7,7 @@ using GmsModuleInstall = Android.Gms.Common.ModuleInstall;
 using Google.MLKit.Vision.Documentscanner;
 using Xamarin.Google.MLKit.Common;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// <see cref="IDocumentScanner"/> over Google's ML Kit Document Scanner (Slice 45, Decision 64).

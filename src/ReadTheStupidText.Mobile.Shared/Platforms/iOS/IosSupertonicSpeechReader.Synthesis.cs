@@ -4,7 +4,7 @@ using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Domain.Reading;
 using SherpaOnnx;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 // The synthesis half of the iOS neural reader: acquiring the engine for the language's pack,
 // turning a chunk into audio through the sentence cache (Slice 47), and writing it to a temp file.

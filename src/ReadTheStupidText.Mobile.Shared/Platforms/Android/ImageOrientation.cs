@@ -2,7 +2,7 @@ using Android.Graphics;
 using Android.Media;
 using ReadTheStupidText.Application.Images;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// EXIF orientation as a bitmap transform. The matrices are the standard ones for all eight values

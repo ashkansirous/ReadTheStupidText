@@ -4,7 +4,7 @@ using Foundation;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Domain.Reading;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 // The playback half of the iOS neural reader: one AVAudioPlayer per chunk, pause/resume, the
 // audio-session interruptions and the poll loop that reports progress and timing.

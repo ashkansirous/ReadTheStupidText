@@ -1,6 +1,6 @@
 using ReadTheStupidText.Application.Reading;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>Reads the active connection profiles from MAUI Connectivity (Connectivity.Current.ConnectionProfiles).</summary>
 public sealed class MauiPackUpdateNetwork : IPackUpdateNetwork
