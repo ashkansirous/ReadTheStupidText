@@ -38,6 +38,8 @@ the contact sheet live only in the working folder. Touch nothing else.
    again instead of the new one, drop to one picture per chat for the rest of the book.
 4. Helpers in `.claude/skills/create-dino-story/`:
    - `pwsh -STA gemini-clipboard.ps1 Put <file>` puts the line-up on the clipboard to paste;
+   - within ~20 s of every navigation or reload, check `window.__geminiHealth()` and the tab URL: `CAPTCHA` (google.com/sorry)
+     means stop and report at once; `HUNG` means reload once, then stop and report if still not `OK`. Never wait on a page that won't load;
    - while Gemini draws, never use fixed sleeps: `window.__markPictures()` before sending, then
      `await window.__waitForPicture()` (returns `READY` as soon as the picture exists; repeat on `WAITING`);
    - `gemini-grab.js` is injected once per page load with `javascript_tool`, then `await window.__grab(1)`

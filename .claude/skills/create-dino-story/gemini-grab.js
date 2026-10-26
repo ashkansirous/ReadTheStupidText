@@ -34,6 +34,16 @@ if (!window.__grabReady) {
     window.__wantClip = false;
     try { window.__clipResult = await window.__toClipboard(); } catch (e) { window.__clipResult = 'ERR ' + e.message; }
   }, true);
+  // Page health: a Gemini tab can hang silently (the sidebar chat list never loads, no error shown) and turn out to be
+  // Google's CAPTCHA (google.com/sorry) on reload. Returns 'OK', 'CAPTCHA' or 'HUNG: <what is missing>'.
+  window.__geminiHealth = () => {
+    if (/google\.com\/sorry/.test(location.href)) return 'CAPTCHA';
+    const missing = [];
+    if (document.readyState !== 'complete') missing.push('page still loading');
+    if (!document.querySelector('rich-textarea, div[contenteditable="true"]')) missing.push('no prompt box');
+    if (!document.querySelector('a[href*="/app/"]')) missing.push('no chat list in the sidebar');
+    return missing.length ? 'HUNG: ' + missing.join(', ') : 'OK';
+  };
   const pictureCount = () => [...document.querySelectorAll('button')]
     .filter(b => (b.getAttribute('aria-label') || '') === 'Download full size image').length;
   // Call before sending a prompt: remembers how many pictures the chat already has.
