@@ -306,6 +306,9 @@ public sealed partial class ReadAloudService : IDisposable
         remove => _reader.ChunkChanged -= value;
     }
 
+    /// <summary>The id of the active read, or null when idle; changes when a new read replaces one.</summary>
+    public int? CurrentReadId => _activeEntry?.Id;
+
     /// <summary>The foreground window the active read came from, or null when no
     /// read is in progress. The UI composes the status line from this.</summary>
     public WindowSource? CurrentReadWindow => _activeEntry?.Window;
@@ -657,9 +660,18 @@ public sealed partial class ReadAloudService : IDisposable
     }
 
     // A deselect stops a read in progress (and drops a still-pending one).
-    private void OnSelectionCleared(object? sender, EventArgs e)
+    private void OnSelectionCleared(object? sender, EventArgs e) => CancelRead();
+
+    /// <summary>
+    /// Stops the read that is still waiting for its first audio, or the one in progress (the wait indicator's Cancel, Slice 141):
+    /// cancels a pending debounce and head-start prepare, then supersedes the active entry, which cancels its translation and
+    /// synthesis. A no-op when nothing is active.
+    /// </summary>
+    public void CancelRead()
     {
-        _selectionCts?.Cancel();
+        CancellationTokenSource? selection = Interlocked.Exchange(ref _selectionCts, null); // swapped, as BeginAutoRead does: Cancel comes from the UI thread too
+        CancelWithoutDispose(selection);
+        selection?.Dispose();
         CancelPendingPrepare(Interlocked.Exchange(ref _prepareCts, null));
         _headStart?.CancelPrepare();
         Supersede(ActivityReason.Deselected);
@@ -682,6 +694,16 @@ public sealed partial class ReadAloudService : IDisposable
         _activeReadStartTicks = Stopwatch.GetTimestamp();
         _systemLog.Info($"intercepted via {trigger}, {text.Length} chars", entry.Id);
         return entry;
+    }
+
+    // Stops the shared reader only when this read was cancelled (no entry is active). When a newer read
+    // is active it already stopped the reader and may be playing now: stopping would cut it off.
+    private void StopIfSuperseded(ActivityEntry entry)
+    {
+        if (_activeEntry is null)
+        {
+            _reader.Stop();
+        }
     }
 
     private void Supersede(ActivityReason reason)
@@ -744,7 +766,9 @@ public sealed partial class ReadAloudService : IDisposable
 
             DropHeadStartIfTranslated(spoken);
             ReadTextChanged?.Invoke(this, spoken);
-            await _reader.SpeakAsync(spoken.Text, entry.Id);
+            Task speak = _reader.SpeakAsync(spoken.Text, entry.Id);
+            StopIfSuperseded(entry); // Cancel may have landed between the check above and SpeakAsync starting
+            await speak;
             await FailIfNeverPlayedAsync(entry);
         }
         catch (Exception ex)
@@ -916,8 +940,9 @@ public sealed partial class ReadAloudService : IDisposable
         _reader.StateChanged -= OnReaderStateChanged;
         _reader.Completed -= OnReaderCompleted;
         _selectionMonitor.Stop();
-        _selectionCts?.Cancel();
-        _selectionCts?.Dispose();
+        CancellationTokenSource? selection = Interlocked.Exchange(ref _selectionCts, null);
+        CancelWithoutDispose(selection);
+        selection?.Dispose();
         CancelWithoutDispose(Interlocked.Exchange(ref _translationCts, null));
         CancelPendingPrepare(Interlocked.Exchange(ref _prepareCts, null));
         StopUsageTracking();
