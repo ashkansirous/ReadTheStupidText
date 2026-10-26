@@ -166,6 +166,12 @@ Record each pass in the art record table (page, attempt number, why earlier atte
 - Each picture has a "Download full size image" button (aria-label); the newest picture is the last
   button (Gemini lazy-loads older ones). Clicking it writes the full-size JPEG to `%USERPROFILE%\Downloads`
   as `Gemini_Generated_Image_*.jpg` (every picture of 2026-10-26 arrived, 1792x2400).
+- **Check the page is alive; never wait for a hung one** (2026-10-26): a Gemini tab can hang with no error, where the
+  sidebar chat list never loads, and on reload it turns out to be Google's CAPTCHA (`google.com/sorry`). Within about
+  20 s of every navigation or reload, read the tab URL and run `window.__geminiHealth()` (gemini-grab.js; returns `OK`,
+  `CAPTCHA` or `HUNG: ...`; if the script can't be injected, the page is hung). `CAPTCHA`: stop at once and report it; only
+  the user can solve it, and every other illustrator in this Chrome will hit it too. `HUNG`: reload once and check again;
+  still not `OK`, stop and report. Run the same check when `__waitForPicture` returns `WAITING` three times in a row.
 - **Poll, never sleep, while Gemini draws** (2026-10-26: fixed `computer wait` sleeps left each finished picture
   idle for up to a minute). Inject `gemini-grab.js`, run `window.__markPictures()` just before sending, then
   `await window.__waitForPicture()` right after: it returns `READY <n>` the moment the new picture exists (call it again
