@@ -1,6 +1,6 @@
 # Slice 148 — Phone apps: mid-read stalls, wait counts and the leftovers of Slices 137, 138 and 143
 
-*Planned (2026-10-26, from the deferred items of Slices 137, 138 and 143). Starts after Slices 139 and 140.*
+*In progress (wave 2026-10-26), draft PR.*
 
 **Batch:** 30 (Decisions 146, 149; no new decision)
 **Touches:** `src/ReadTheStupidText.Application/Reading/ISpeechReader.cs`, `src/ReadTheStupidText.Application/Reading/WaitStage.cs`, `src/ReadTheStupidText.Application/Usage/**`, `src/ReadTheStupidText.Infrastructure/Speech/**`, `src/ReadTheStupidText.Mobile.Shared/Speech/**`, `src/ReadTheStupidText.Mobile.Shared/Usage/**`, `src/ReadTheStupidText.Mobile.Shared/Waiting/**`, `src/ReadTheStupidText.Mobile/ReaderPage*.cs`, `src/ReadTheStupidText.Mobile/ReviewPage.xaml.cs`, `src/DinoReader.App/ReadingSession.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/UsageCounter.cs`, `src/DinoReader.Core/UsageEventName.cs`, `worker/events.ts`, `worker/*.test.mjs`, `tools/dino-usage-report.ps1`, `tools/rtst-usage-report.ps1`, `PRIVACY.md`, `site/privacy.html`, `site/dino/privacy.html`, `tests/ReadTheStupidText.Tests/**`, `tests/DinoReader.Tests/**`
