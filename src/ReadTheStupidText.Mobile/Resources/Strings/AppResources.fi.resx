@@ -73,10 +73,12 @@
   <data name="Wait_DownloadingModel" xml:space="preserve"><value>Ladataan kieltä {0}…</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>Käännetään…</value></data>
   <data name="Wait_PreparingVoice" xml:space="preserve"><value>Valmistellaan ääntä…</value></data>
+  <data name="Wait_Stalled" xml:space="preserve"><value>Ääntä valmistellaan vielä…</value></data>
   <data name="Wait_ReadingFile" xml:space="preserve"><value>Luetaan tiedostoa…</value></data>
   <data name="Review_FirstTimeOnly" xml:space="preserve"><value>Vain ensimmäisellä kerralla. Käännös tehdään tällä puhelimella.</value></data>
   <data name="Review_ShowOriginal" xml:space="preserve"><value>Näytä alkuperäinen</value></data>
   <data name="Review_FailedOne" xml:space="preserve"><value>Sivua {0} ei voitu lukea.</value></data>
+  <data name="Review_TextCut" xml:space="preserve"><value>Teksti on hyvin pitkä, joten vain ensimmäiset {0} merkkiä näytetään.</value></data>
   <data name="Review_FailedMany" xml:space="preserve"><value>Sivuja {0} ei voitu lukea.</value></data>
   <data name="Review_HereOne" xml:space="preserve"><value>Sivu {0} on tässä.</value></data>
   <data name="Review_HereMany" xml:space="preserve"><value>Sivut {0} ovat tässä.</value></data>

@@ -73,10 +73,12 @@
   <data name="Wait_DownloadingModel" xml:space="preserve"><value>Загрузка: {0}…</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>Перевод…</value></data>
   <data name="Wait_PreparingVoice" xml:space="preserve"><value>Подготовка голоса…</value></data>
+  <data name="Wait_Stalled" xml:space="preserve"><value>Всё ещё готовим голос…</value></data>
   <data name="Wait_ReadingFile" xml:space="preserve"><value>Чтение файла…</value></data>
   <data name="Review_FirstTimeOnly" xml:space="preserve"><value>Только в первый раз. Перевод выполняется на этом телефоне.</value></data>
   <data name="Review_ShowOriginal" xml:space="preserve"><value>Показать оригинал</value></data>
   <data name="Review_FailedOne" xml:space="preserve"><value>Не удалось прочитать страницу {0}.</value></data>
+  <data name="Review_TextCut" xml:space="preserve"><value>Текст очень длинный, поэтому показаны только первые {0} символов.</value></data>
   <data name="Review_FailedMany" xml:space="preserve"><value>Не удалось прочитать страницы {0}.</value></data>
   <data name="Review_HereOne" xml:space="preserve"><value>Страница {0} здесь.</value></data>
   <data name="Review_HereMany" xml:space="preserve"><value>Страницы {0} здесь.</value></data>

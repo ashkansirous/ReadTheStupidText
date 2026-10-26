@@ -9,8 +9,9 @@ public interface IHeadStart
 {
     /// <summary>
     /// Synthesizes the first sentences of <paramref name="text"/> into the cache, in the voice
-    /// that would read them now, without playing anything. Best effort: returns quietly when
-    /// no neural engine is ready, a read is in progress, or the call was cancelled.
+    /// that would read them now, without playing anything. Best effort, and truthful: the task
+    /// completes normally only when the clips are stored; with no neural engine ready, a read in progress, or a
+    /// superseded or cancelled preparation it ends cancelled (see <see cref="HeadStartRun"/>).
     /// </summary>
     Task PrepareAsync(string text);
 

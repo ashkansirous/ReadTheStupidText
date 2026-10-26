@@ -7,7 +7,7 @@
   Reads the dataset `rtst_usage` that worker/events.ts (handleRtstEvents) writes (needs the RTST_USAGE binding to be switched on first, see
   STORE.md, "Phone apps: anonymous usage counts"). Blob layout, one data point per count: blob1 name, blob2 app version, blob3 platform,
   blob4 UTC day, blob5 language, blob6 source language, blob7 mode (original | translation), blob8 voice engine, blob9 voice is default (yes | no),
-  blob10 text length bucket, blob11 OS major version, blob12 stage, blob13 outcome, blob14 duration bucket, blob15 source (Windows reads only: selection | clipboard | hotkey | panel); a field an event does not carry is
+  blob10 text length bucket, blob11 OS major version, blob12 stage, blob13 outcome, blob14 duration bucket, blob15 source (Windows reads only: selection | clipboard | hotkey | panel), blob16 early (timing counts only: yes when the head was prepared before the tap, Slice 139), blob17 wait stage (wait_shown and wait_cancelled only, Slice 148: preparing_voice | stalled | downloading_model | translating | reading_pictures | saving | getting_file; blob14 is how long the overlay showed); a field an event does not carry is
   empty. double1 is the count's weight (1 / the app's sample rate). Every sum is SUM(_sample_interval * double1): _sample_interval is Analytics
   Engine's own sampling, double1 the app's.
 
@@ -88,6 +88,17 @@ GROUP BY stage, platform, outcome, duration $Enough ORDER BY stage, platform, ou
 SELECT blob12 AS stage, blob6 AS from_language, blob5 AS to_language, blob14 AS duration, $Weighted AS waits
 FROM $Dataset WHERE blob1 = 'timing' AND blob12 IN ('model_download', 'translate') AND $Window
 GROUP BY stage, from_language, to_language, duration $Enough ORDER BY stage, waits DESC LIMIT 200
+"@
+    'Timing: early start vs not (stage, platform, early, duration)' = @"
+SELECT blob12 AS stage, blob3 AS platform, blob16 AS early, blob14 AS duration, $Weighted AS waits
+FROM $Dataset WHERE blob1 = 'timing' AND blob12 IN ('first_audio', 'translate') AND $Window
+GROUP BY stage, platform, early, duration $Enough ORDER BY stage, platform, early, duration
+"@
+    'Waits the overlay showed, and the ones cancelled (wait, platform, duration)' = @"
+SELECT blob17 AS wait_stage, blob3 AS platform, blob14 AS duration, $Weighted AS shown,
+  SUM(IF(blob1 = 'wait_cancelled', _sample_interval * double1, 0)) AS cancelled
+FROM $Dataset WHERE blob1 IN ('wait_shown', 'wait_cancelled') AND $Window
+GROUP BY wait_stage, platform, duration $Enough ORDER BY wait_stage, platform, duration
 "@
     'Text length of reads' = @"
 SELECT blob10 AS length_bucket, $Weighted AS reads

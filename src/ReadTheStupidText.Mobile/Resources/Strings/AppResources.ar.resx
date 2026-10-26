@@ -73,10 +73,12 @@
   <data name="Wait_DownloadingModel" xml:space="preserve"><value>جارٍ تنزيل {0}…</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>جارٍ الترجمة…</value></data>
   <data name="Wait_PreparingVoice" xml:space="preserve"><value>جارٍ تجهيز الصوت…</value></data>
+  <data name="Wait_Stalled" xml:space="preserve"><value>ما زلنا نجهّز الصوت…</value></data>
   <data name="Wait_ReadingFile" xml:space="preserve"><value>جارٍ قراءة الملف…</value></data>
   <data name="Review_FirstTimeOnly" xml:space="preserve"><value>في المرة الأولى فقط. تتم الترجمة على هذا الهاتف.</value></data>
   <data name="Review_ShowOriginal" xml:space="preserve"><value>عرض الأصل</value></data>
   <data name="Review_FailedOne" xml:space="preserve"><value>تعذّرت قراءة الصفحة {0}.</value></data>
+  <data name="Review_TextCut" xml:space="preserve"><value>النص طويل جدًا، لذا يُعرض أول {0} حرف فقط.</value></data>
   <data name="Review_FailedMany" xml:space="preserve"><value>تعذّرت قراءة الصفحات {0}.</value></data>
   <data name="Review_HereOne" xml:space="preserve"><value>الصفحة {0} موجودة هنا.</value></data>
   <data name="Review_HereMany" xml:space="preserve"><value>الصفحات {0} موجودة هنا.</value></data>

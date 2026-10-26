@@ -54,6 +54,7 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
         reader.ProgressChanged += (_, p) => ForwardProgress(reader, p);
         reader.TimingChanged += (_, t) => ForwardTiming(reader, t);
         reader.ChunkChanged += (_, c) => ForwardChunk(reader, c);
+        reader.StallChanged += (_, stalled) => ForwardStall(reader, stalled);
     }
 
     public event EventHandler<PlaybackState>? StateChanged;
@@ -61,6 +62,8 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
     public event EventHandler<double>? ProgressChanged;
     public event EventHandler<ReadTiming>? TimingChanged;
     public event EventHandler<ReadChunk>? ChunkChanged;
+
+    public event EventHandler<bool>? StallChanged;
 
     public PlaybackState State => _active.State;
 
@@ -193,12 +196,12 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
     public Task PrepareAsync(string text) =>
         _model.IsReady && !_useSystemVoice && _neural is IHeadStart neural
             ? neural.PrepareAsync(text)
-            : Task.CompletedTask;
+            : HeadStartRun.Skipped;
 
     public Task PrepareAsync(string text, ReadVoiceScope scope) =>
         !scope.PhoneVoice && scope.Model is { } model && _neural is IModelScopedReader scoped
             ? scoped.PrepareAsync(text, model)
-            : Task.CompletedTask;
+            : HeadStartRun.Skipped;
 
     public bool ReadInProgress => (_neural as IHeadStart)?.ReadInProgress ?? false;
 
@@ -245,6 +248,15 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
         if (ReferenceEquals(source, _active))
         {
             ChunkChanged?.Invoke(this, chunk);
+        }
+    }
+
+    // A stall ending is forwarded whichever reader raised it, so a swap mid-stall can never leave the overlay up.
+    private void ForwardStall(ISpeechReader source, bool stalled)
+    {
+        if (!stalled || ReferenceEquals(source, _active))
+        {
+            StallChanged?.Invoke(this, stalled);
         }
     }
 

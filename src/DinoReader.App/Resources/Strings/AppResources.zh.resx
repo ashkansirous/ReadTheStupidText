@@ -230,6 +230,7 @@
   <data name="Wizard_NoText" xml:space="preserve"><value>此页未找到文字</value></data>
   <data name="Wizard_Reading" xml:space="preserve"><value>正在读取第 {0} 页，共 {1} 页</value></data>
   <data name="Wait_GettingVoices" xml:space="preserve"><value>正在准备声音…</value></data>
+  <data name="Wait_Stalled" xml:space="preserve"><value>仍在准备语音…</value></data>
   <data name="Wait_ReadingPictures" xml:space="preserve"><value>正在识别图片…</value></data>
   <data name="Wait_PageOf" xml:space="preserve"><value>第 {0} 页，共 {1} 页</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>正在翻译…</value></data>

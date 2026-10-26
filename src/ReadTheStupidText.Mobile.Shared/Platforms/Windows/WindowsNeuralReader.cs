@@ -23,6 +23,7 @@ public sealed class WindowsNeuralReader : ISpeechReader, IDisposable
 		_inner.ProgressChanged += (_, p) => ProgressChanged?.Invoke(this, p);
 		_inner.TimingChanged += (_, t) => TimingChanged?.Invoke(this, t);
 		_inner.ChunkChanged += (_, c) => ChunkChanged?.Invoke(this, c);
+		_inner.StallChanged += (_, stalled) => StallChanged?.Invoke(this, stalled);
 	}
 
 	public event EventHandler<PlaybackState>? StateChanged;
@@ -30,6 +31,7 @@ public sealed class WindowsNeuralReader : ISpeechReader, IDisposable
 	public event EventHandler<double>? ProgressChanged;
 	public event EventHandler<ReadTiming>? TimingChanged;
 	public event EventHandler<ReadChunk>? ChunkChanged;
+	public event EventHandler<bool>? StallChanged;
 
 	public PlaybackState State => _inner.State;
 

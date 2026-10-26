@@ -1,4 +1,5 @@
 using ReadTheStupidText.Application.Logging;
+using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 
 namespace ReadTheStupidText.Application.Translation;
@@ -22,11 +23,19 @@ public sealed class ReadTranslator
     private readonly ISettingsStore _settings;
     private readonly ISystemLog _log;
     private readonly TranslationPackInstaller? _packs;
+    private readonly IPackUpdateNetwork? _network;
+
+    // The shortest gap before an early-start download of the same pair may be tried again.
+    private const long DownloadRetryGapMs = 5 * 60 * 1000;
+
+    private readonly object _downloadGate = new();
+    private readonly Dictionary<string, long> _lastDownloadTicks = new(); // per pair, so alternating pairs do not defeat the gap
 
     public ReadTranslator(
         ITranslator translator, ILanguageDetector detector, ISettingsStore settings, ISystemLog log,
-        TranslationPackInstaller? packs = null)
+        TranslationPackInstaller? packs = null, IPackUpdateNetwork? network = null)
     {
+        _network = network;
         _translator = translator;
         _detector = detector;
         _settings = settings;
@@ -74,10 +83,82 @@ public sealed class ReadTranslator
     }
 
     /// <summary>
-    /// The text to speak for <paramref name="text"/>. Only the caller's own token being cancelled
-    /// throws; a timeout or failure is an outcome.
+    /// The language pair the early start would translate <paramref name="text"/> in (Slice 142), or null when it would not:
+    /// toggle off, same language, no model for the pair, or the model not on the device. A missing model downloads here only on an
+    /// unmetered network; the read itself still starts its own download as before. Only the caller's cancel throws.
     /// </summary>
-    public async Task<ReadTranslationResult> PrepareAsync(string text, int activityId, CancellationToken cancellationToken)
+    public async Task<(string Source, string Target)?> PlanEarlyAsync(string text, CancellationToken cancellationToken)
+    {
+        string? target = TranslationFlow.NormalizeTag(_settings.Language);
+        if (!_settings.TranslateEnabled || target is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            string? source = await ResolveSourceAsync(text, cancellationToken);
+            if (source is null || !TranslationFlow.ShouldTranslate(true, source, target) || !_translator.SupportsPair(source, target))
+            {
+                return null;
+            }
+
+            if (await _translator.IsModelReadyAsync(source, target))
+            {
+                return (source, target);
+            }
+
+            StartMissingPackDownload(source, target);
+            return null;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _log.Warning("early translation planning failed", null, ex);
+            return null;
+        }
+    }
+
+    // The early start's own download trigger: only on an unmetered network, and a pair that was tried lately is not tried again
+    // on every selection (a failing download would otherwise restart and raise progress events with each one).
+    private void StartMissingPackDownload(string source, string target)
+    {
+        string key = $"{source}>{target}";
+        long now = Environment.TickCount64;
+        lock (_downloadGate)
+        {
+            if (_network?.AllowsAutomaticUpdate != true
+                || (_lastDownloadTicks.TryGetValue(key, out long last) && now - last < DownloadRetryGapMs))
+            {
+                return;
+            }
+
+            _lastDownloadTicks[key] = now;
+        }
+
+        _packs?.StartInBackground(source, target);
+    }
+
+    /// <summary>Translates the early span (Slice 142) within the read's time budget; null when it timed out or failed.</summary>
+    public async Task<string?> TranslateEarlyAsync(string span, string source, string target, CancellationToken cancellationToken)
+    {
+        using var budget = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        budget.CancelAfter(Budget);
+        try
+        {
+            return await TranslationFlow.TranslateAsync(_translator, span, source, target, budget.Token);
+        }
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            _log.Warning("early translation failed or timed out", null, ex);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// The text to speak for <paramref name="text"/>. Only the caller's own token being cancelled
+    /// throws; a timeout or failure is an outcome. A matching <paramref name="early"/> translation is reused (Slice 142).
+    /// </summary>
+    public async Task<ReadTranslationResult> PrepareAsync(string text, int activityId, CancellationToken cancellationToken, EarlyTranslation? early = null)
     {
         string? target = TranslationFlow.NormalizeTag(_settings.Language);
         if (!_settings.TranslateEnabled || target is null)
@@ -89,7 +170,7 @@ public sealed class ReadTranslator
         budget.CancelAfter(Budget);
         try
         {
-            return await TranslateAsync(text, target, activityId, budget.Token);
+            return await TranslateAsync(text, target, activityId, budget.Token, early);
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
@@ -113,7 +194,7 @@ public sealed class ReadTranslator
     /// instead (toggle off, or a text of a single block); otherwise either a terminal result (nothing to
     /// translate: read the original) or a stream of translated blocks to speak as they arrive.
     /// </summary>
-    public async Task<TranslationStreamStart?> PlanStreamAsync(string text, int activityId, CancellationToken cancellationToken)
+    public async Task<TranslationStreamStart?> PlanStreamAsync(string text, int activityId, CancellationToken cancellationToken, EarlyTranslation? early = null)
     {
         string? target = TranslationFlow.NormalizeTag(_settings.Language);
         if (!_settings.TranslateEnabled || target is null)
@@ -121,7 +202,7 @@ public sealed class ReadTranslator
             return null;
         }
 
-        IReadOnlyList<string> blocks = TranslationBlocks.Plan(text);
+        IReadOnlyList<string> blocks = TranslationBlocks.Plan(text, early?.Target == target ? early : null);
         if (blocks.Count < 2)
         {
             return null;
@@ -133,11 +214,47 @@ public sealed class ReadTranslator
             return new TranslationStreamStart(terminal, null);
         }
 
+        if (early is not null && !early.Matches(text, source!, target))
+        {
+            blocks = TranslationBlocks.Plan(text); // the early span is of another source language: plan the plain, shorter first block
+        }
+
+        string? reused = ReusableEarly(early, text, source!, target, blocks);
+
         _log.Info($"translating {source} -> {target} in {blocks.Count} blocks", activityId);
-        return new TranslationStreamStart(null, new TranslationStream(_translator, _log, source!, target, blocks, Budget, activityId));
+        return new TranslationStreamStart(null, new TranslationStream(_translator, _log, source!, target, blocks, Budget, activityId, reused));
     }
 
-    private async Task<ReadTranslationResult> TranslateAsync(string text, string target, int activityId, CancellationToken token)
+    // The early translation only when it is of this very text and pair and its span is the first block (true by construction).
+    private static string? ReusableEarly(EarlyTranslation? early, string text, string source, string target, IReadOnlyList<string> blocks) =>
+        early is not null && early.Matches(text, source, target) && blocks.Count > 0 && blocks[0] == early.Split.Head
+            ? early.TranslatedHead
+            : null;
+
+    // With a matching early translation only what follows its span is translated.
+    private async Task<string> TranslateReusingEarlyAsync(string text, string source, string target, EarlyTranslation? early, CancellationToken token)
+    {
+        if (early is null || !early.Matches(text, source, target))
+        {
+            return await TranslationFlow.TranslateAsync(_translator, text, source, target, token);
+        }
+
+        if (early.Split.Remainder.Length == 0)
+        {
+            return early.TranslatedHead;
+        }
+
+        string rest = await TranslationFlow.TranslateAsync(_translator, early.Split.Remainder, source, target, token);
+        if (string.IsNullOrWhiteSpace(rest))
+        {
+            // The rest came back empty: never read only the head. Translate the whole text, which fails the usual way if it too is empty.
+            return await TranslationFlow.TranslateAsync(_translator, text, source, target, token);
+        }
+
+        return early.Joined(rest);
+    }
+
+    private async Task<ReadTranslationResult> TranslateAsync(string text, string target, int activityId, CancellationToken token, EarlyTranslation? early)
     {
         (ReadTranslationResult? terminal, string? source) = await ResolveAsync(text, target, token);
         if (terminal is not null)
@@ -145,7 +262,7 @@ public sealed class ReadTranslator
             return terminal;
         }
 
-        string translated = await TranslationFlow.TranslateAsync(_translator, text, source!, target, token);
+        string translated = await TranslateReusingEarlyAsync(text, source!, target, early, token);
         if (string.IsNullOrWhiteSpace(translated))
         {
             return Original(text, TranslationOutcome.Failed, source, target);
@@ -216,11 +333,13 @@ public sealed class TranslationStream
     private readonly IReadOnlyList<string> _blocks;
     private readonly TimeSpan _budget;
     private readonly int _activityId;
+    private readonly string? _translatedFirst;
 
     internal TranslationStream(
         ITranslator translator, ISystemLog log, string source, string target,
-        IReadOnlyList<string> blocks, TimeSpan budget, int activityId)
+        IReadOnlyList<string> blocks, TimeSpan budget, int activityId, string? translatedFirst = null)
     {
+        _translatedFirst = translatedFirst;
         _translator = translator;
         _log = log;
         Source = source;
@@ -243,12 +362,13 @@ public sealed class TranslationStream
     /// <summary>The text to speak for each block, in order. Only the caller's token being cancelled throws.</summary>
     public async IAsyncEnumerable<string> BlocksAsync([System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        foreach (string block in _blocks)
+        for (int i = 0; i < _blocks.Count; i++)
         {
+            string block = _blocks[i];
             cancellationToken.ThrowIfCancellationRequested();
-            string? translated = Outcome == TranslationOutcome.Translated
-                ? await TryTranslateAsync(block, cancellationToken)
-                : null;
+            string? translated = i == 0 && _translatedFirst is not null
+                ? _translatedFirst // the early start already translated this span
+                : Outcome == TranslationOutcome.Translated ? await TryTranslateAsync(block, cancellationToken) : null;
             yield return translated ?? block;
         }
     }

@@ -37,6 +37,7 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IDisposab
         _fallback.TimingChanged += (_, t) => ForwardTiming(_fallback, t);
         _neural.ChunkChanged += (_, c) => ForwardChunk(_neural, c);
         _fallback.ChunkChanged += (_, c) => ForwardChunk(_fallback, c);
+        _neural.StallChanged += (_, stalled) => ForwardStall(_neural, stalled);
     }
 
     public event EventHandler<PlaybackState>? StateChanged;
@@ -48,6 +49,8 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IDisposab
     public event EventHandler<ReadTiming>? TimingChanged;
 
     public event EventHandler<ReadChunk>? ChunkChanged;
+
+    public event EventHandler<bool>? StallChanged;
 
     public PlaybackState State => _active.State;
 
@@ -135,7 +138,7 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IDisposab
 
     // Slice 47/56: only the neural engine has audio worth preparing, and only when it would be the one
     // to read; otherwise there is nothing to do.
-    public Task PrepareAsync(string text) => UseNeural ? _neural.PrepareAsync(text) : Task.CompletedTask;
+    public Task PrepareAsync(string text) => UseNeural ? _neural.PrepareAsync(text) : HeadStartRun.Skipped;
 
     public bool ReadInProgress => _neural.ReadInProgress;
 
@@ -182,6 +185,15 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IDisposab
         if (ReferenceEquals(source, _active))
         {
             ChunkChanged?.Invoke(this, chunk);
+        }
+    }
+
+    // A stall ending is forwarded whichever reader raised it, so a swap mid-stall can never leave the overlay up.
+    private void ForwardStall(ISpeechReader source, bool stalled)
+    {
+        if (!stalled || ReferenceEquals(source, _active))
+        {
+            StallChanged?.Invoke(this, stalled);
         }
     }
 

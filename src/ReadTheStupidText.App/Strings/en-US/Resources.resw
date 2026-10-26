@@ -292,6 +292,9 @@
   <data name="Wait_PreparingVoice" xml:space="preserve">
     <value>Preparing the voice…</value>
   </data>
+  <data name="Wait_Stalled" xml:space="preserve">
+    <value>Still getting the voice ready…</value>
+  </data>
   <data name="Wait_Pair" xml:space="preserve">
     <value>{0} to {1}</value>
   </data>

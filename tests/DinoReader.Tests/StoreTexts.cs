@@ -5,10 +5,11 @@ namespace DinoReader.Tests;
 internal sealed record StoreStorySpec(string Id, string Title, string Stem, string Text, int ColourIndex, string Credits, int AgeMin, int AgeMax, string Author, IReadOnlyList<string> Characters, int Version, string Added);
 
 /// <summary>
-/// The ten free store stories (Slice 102, Decision 106): public-domain tales retold in plain words for ages 3 to 8, with a named
+/// The free store stories (Slice 102, Decision 106): public-domain tales retold in plain words for ages 3 to 8, and original Dino Reader books, with a named
 /// speaker on every line so the caster gives each character a voice (the starter rule: <c>said Name</c> or <c>Name said</c>, a bare
 /// capitalised name). Pages are separated by a line holding only "---". The retellings are original to this repo (MIT); Peter Rabbit
-/// is retold from Beatrix Potter's 1902 text in fifteen gentle pages (Slice 121). The ids never change: "Downloaded" and updates match on them.
+/// is retold from Beatrix Potter's 1902 text in fifteen gentle pages (Slice 121); X Marks the Treasure! is an original Dino Reader book. The ids never change:
+/// "Downloaded" and updates match on them.
 /// <see cref="StoreBuilder"/> turns them into the files that go up to R2.
 /// </summary>
 internal static class StoreTexts
@@ -23,8 +24,10 @@ internal static class StoreTexts
     public const string ElvesId = "34efea95400343ac998e9ed99158d370";
     public const string TownMouseId = "67dfb7db7c1c418c811cfed88876327f";
     public const string PeterRabbitId = "18cab2f1fec84aad831ba12dccad5336";
+    public const string TreasureId = "a02c0731b7ac475a896e9184f3575e7b";
 
     private const string AddedDate = "2026-10-24";
+    private const string TreasureAddedDate = "2026-10-26";
     private const string RetoldAesop = "Retold from Aesop · free to share";
     private const string Traditional = "Traditional";
     private const string RetoldTraditional = "Retold traditional tale · free to share";
@@ -32,15 +35,16 @@ internal static class StoreTexts
     public static IReadOnlyList<StoreStorySpec> All { get; } =
     [
         new(LionAndMouseId, "The Lion and the Mouse", "lion-and-mouse", LionAndMouse, 1, RetoldAesop, 4, 7, "Aesop", ["Lion", "Mouse"], 5, AddedDate),
-        new(GoldilocksId, "Goldilocks and the Three Bears", "goldilocks", Goldilocks, 3, RetoldTraditional, 3, 6, Traditional, ["Goldilocks", "Papa Bear", "Mama Bear", "Baby Bear"], 3, AddedDate),
-        new(RedRidingHoodId, "Little Red Riding Hood", "red-riding-hood", RedRidingHood, 3, RetoldTraditional, 4, 7, Traditional, ["Red Riding Hood", "Mother", "Wolf", "Grandmother", "Woodcutter"], 3, AddedDate),
+        new(GoldilocksId, "Goldilocks and the Three Bears", "goldilocks", Goldilocks, 3, RetoldTraditional, 3, 6, Traditional, ["Goldilocks", "Papa Bear", "Mama Bear", "Baby Bear"], 4, AddedDate),
+        new(RedRidingHoodId, "Little Red Riding Hood", "red-riding-hood", RedRidingHood, 3, RetoldTraditional, 4, 7, Traditional, ["Red Riding Hood", "Mother", "Wolf", "Grandma", "Woodcutter"], 4, AddedDate),
         new(UglyDucklingId, "The Ugly Duckling", "ugly-duckling", UglyDuckling, 0, "Retold from Andersen · free to share", 5, 8, "Hans Christian Andersen", ["Mother Duck", "Duckling", "Dilly", "Hen", "Swan"], 5, AddedDate),
         new(RedHenId, "The Little Red Hen", "little-red-hen", RedHen, 3, RetoldTraditional, 3, 6, Traditional, ["Hen", "Dog", "Cat", "Duck"], 4, AddedDate),
         new(BillyGoatsId, "The Three Billy Goats Gruff", "billy-goats-gruff", BillyGoats, 0, RetoldTraditional, 4, 7, Traditional, ["Little Billy", "Middle Billy", "Big Billy", "Troll"], 6, AddedDate),
-        new(BeanstalkId, "Jack and the Beanstalk", "jack-and-the-beanstalk", Beanstalk, 2, RetoldTraditional, 5, 8, Traditional, ["Jack", "Mother", "Giant", "Peddler"], 3, AddedDate),
+        new(BeanstalkId, "Jack and the Beanstalk", "jack-and-the-beanstalk", Beanstalk, 2, RetoldTraditional, 5, 8, Traditional, ["Jack", "Mother", "Giant", "Peddler"], 4, AddedDate),
         new(ElvesId, "The Elves and the Shoemaker", "elves-and-shoemaker", Elves, 1, "Retold from the Brothers Grimm · free to share", 5, 8, "Brothers Grimm", ["Hans", "Greta", "Nib", "Nob"], 4, AddedDate),
         new(TownMouseId, "The Town Mouse and the Country Mouse", "town-mouse-country-mouse", TownMouse, 2, RetoldAesop, 4, 7, "Aesop", ["Town Mouse", "Country Mouse"], 4, AddedDate),
         new(PeterRabbitId, "The Tale of Peter Rabbit", "peter-rabbit", PeterRabbit, 3, "Beatrix Potter, 1902 (retold)", 3, 6, "Beatrix Potter", ["Mrs. Rabbit", "Peter", "Mr. McGregor", "Robin", "Flopsy"], 6, AddedDate),
+        new(TreasureId, "X Marks the Treasure!", "x-marks-the-treasure", Treasure, 0, StoreBuilder.DinoReaderCredit, 3, 6, "Ashkan Sirous", ["Kaatrin", "Seagull", "Izzy", "Pancake Polly", "Billy"], 1, TreasureAddedDate),
     ];
 
     public const string LionAndMouse = """
@@ -110,103 +114,181 @@ From that day on, the Lion and the Mouse were the best of friends.
 """;
 
     public const string Goldilocks = """
-Once upon a time there was a little girl called Goldilocks. She had long golden hair, and she loved to explore.
+Once upon a time three bears lived in a little house in the woods. There was big Papa Bear, middle-sized Mama Bear and little Baby Bear.
 
-One morning she went for a walk in the forest, and she found a little house. The door was open, so she peeked inside.
+One morning their porridge was too hot to eat, so they went for a walk while it cooled. Baby Bear skipped out last, and he forgot to shut the door.
 ---
-In the house lived three bears. Papa Bear was big, Mama Bear was middle-sized and Baby Bear was very small. They had gone for a walk while their porridge cooled.
+Pitter, patter, pitter, patter! Down came the rain.
 
-On the table stood three bowls of porridge.
+"Quick, under this big tree!" said Papa Bear. So the three bears snuggled up together under the leaves, to wait until the rain stopped.
 ---
-Goldilocks tasted the porridge in the big bowl. "Oh, this porridge is too hot," said Goldilocks.
+A little girl called Goldilocks had wandered too far from her mum's garden, picking flowers, and the rain caught her too. She came to a little house, and its door was wide open.
 
-She tasted the porridge in the middle bowl. "Oh, this porridge is too cold," said Goldilocks.
-
-Then she tasted the porridge in the little bowl. "Mmm, this porridge is just right," said Goldilocks, and she ate it all up.
+"Hello? Is anybody home?" called Goldilocks. But nobody answered. Goldilocks knew she should wait outside.
 ---
-Goldilocks went into the next room. There were three chairs.
+But she stepped inside to keep dry. On the table stood three bowls of porridge.
 
-She sat in the big chair. "This chair is too hard," said Goldilocks. She sat in the middle chair. "This chair is too soft," said Goldilocks.
+She tried the big bowl. "Oh, this porridge is too hot!" said Goldilocks.
 
-Then she sat in the little chair. "This chair is just right," said Goldilocks. But crack! The little chair broke into pieces.
+She tried the middle bowl. "Oh, this porridge is too cold!" said Goldilocks.
+
+She tried the little bowl. "Mmm, this porridge is just right!" said Goldilocks. And she ate it all up.
 ---
-Goldilocks was sleepy, so she went upstairs. There were three beds. She lay on the big bed, but it was too high. She lay on the middle bed, but it was too lumpy. Then she lay on the little bed, and it was just right. Soon she was fast asleep.
+Then Goldilocks saw three chairs.
+
+She sat in the big chair. "This chair is too hard!" said Goldilocks.
+
+She sat in the middle chair. "This chair is too soft!" said Goldilocks.
+
+She sat in the little chair. "This chair is just right!" said Goldilocks. But creak, creak, crack! One leg came off, and she slid down onto the soft rug.
 ---
-The three bears came home. Papa Bear looked at the table. "Somebody has been eating my porridge," said Papa Bear.
+Goldilocks felt sleepy, so she went upstairs. The big bed was too high. The middle bed was too lumpy. But the little bed was just right, and soon she was fast asleep.
 
-"Somebody has been eating my porridge," said Mama Bear.
-
-"Somebody has been eating my porridge, and it is all gone!" said Baby Bear.
+Outside, the rain stopped. Drip, drop, drip, drop. The three bears set off for home.
 ---
-The bears looked at the chairs. "Somebody has been sitting in my chair," said Papa Bear.
+The three bears came home and looked at the table.
 
-"Somebody has been sitting in my chair," said Mama Bear.
+"Somebody has been eating my porridge!" said Papa Bear.
 
-"Somebody has been sitting in my chair, and it is broken!" said Baby Bear.
+"Somebody has been eating my porridge!" said Mama Bear.
 
-Then the three bears went upstairs.
+"Somebody has been eating my porridge, and it's all gone!" said Baby Bear.
 ---
-"Somebody has been sleeping in my bed," said Papa Bear.
+Then the three bears looked at the chairs.
 
-"Somebody has been sleeping in my bed," said Mama Bear.
+"Somebody has been sitting in my chair!" said Papa Bear.
 
-"Somebody is sleeping in my bed, and she is still here!" said Baby Bear.
+"Somebody has been sitting in my chair!" said Mama Bear.
+
+"Somebody has been sitting in my chair, and its leg came off!" said Baby Bear.
 ---
-Goldilocks woke up and saw the three bears. "Oh dear!" said Goldilocks. She jumped out of the bed, ran down the stairs and out of the door, and she did not stop until she was home.
+The three bears tiptoed upstairs.
 
-"I am sorry I ate your porridge," she said to herself. And she never went into the bears' house again.
+"Somebody has been sleeping in my bed!" said Papa Bear.
+
+"Somebody has been sleeping in my bed!" said Mama Bear.
+
+"Somebody is sleeping in my bed, and here she is!" said Baby Bear.
+---
+Goldilocks woke up and saw three surprised bears looking at her. "Oh!" said Goldilocks, and she sat up.
+
+"I'm so sorry," said Goldilocks. "The rain caught me, and your door was open. I ate your porridge, and I broke your chair. I should have asked first."
+---
+The bears looked at each other. Then Mama Bear gave Goldilocks a big, soft hug.
+
+"Thank you for telling us the truth," said Mama Bear. "Next time, never go into a house you don't know. Find your grown-up first."
+
+"And next time, I'll shut the door!" said Baby Bear. Everyone laughed.
+---
+Downstairs, Goldilocks picked up the little chair. "Can I help mend it?" said Goldilocks.
+
+Papa Bear fetched a pot of glue. Goldilocks held the chair steady, Baby Bear held the leg, and Papa Bear stuck them together. Dab, dab, dab!
+---
+Papa Bear's porridge had cooled down at last. "Mmm, this porridge is just right!" said Papa Bear.
+
+So Mama Bear shared it out into four little bowls, and they all sat down to eat together.
+
+Baby Bear sat on his mended chair. "This chair is just right!" said Baby Bear.
+---
+Soon the sun came out, and a rainbow shone over the woods. So the three bears walked Goldilocks home, where her mum was waiting at the garden gate.
+
+"Thank you, bears!" said Goldilocks. "Next time, I'll stay with my mum, and I'll never go into a house I don't know."
+
+"Come back soon, with your mum!" said Baby Bear.
 """;
 
     public const string RedRidingHood = """
-Once upon a time a little girl lived near a big green wood. She always wore a bright red hood that her grandmother had made, so everyone called her Red Riding Hood.
+Once upon a time a little girl lived with her mother at the edge of a big green wood. Her grandma had made her a bright red hood, and she wore it every single day. So everyone called her Red Riding Hood.
 
-One morning her mother packed a basket of cakes and honey.
+Her little white puppy, Button, went everywhere with her.
 ---
-"Take this basket to your grandmother, who is not feeling well," said Mother. "Go straight along the path, and do not talk to strangers."
+One morning Mother packed a basket of honey cakes and apples for Grandma's birthday.
 
-"I will be careful," said Red Riding Hood, and off she went.
+"Stay on the path all the way," said Mother. "If a stranger asks you to leave the path, say no, thank you, and tell a grown-up you know."
+
+"I stay on the path, all the way to Grandma's!" said Red Riding Hood.
 ---
-In the wood Red Riding Hood met a big grey Wolf. He had a sly smile and a bushy tail.
+Red Riding Hood waved goodbye, and off she went, with the basket on her arm and Button at her heels.
 
-"Good morning, little girl," said Wolf. "Where are you going so early?"
-
-"I am taking cakes and honey to my grandmother," said Red Riding Hood. "She lives in the cottage by the old oak tree."
+Tip, tap, tip, tap, went her little red boots along the path.
 ---
-"What a lovely idea," said Wolf. "Why not pick some flowers for her too? There are pretty ones in that meadow."
+In the middle of the wood, a big grey Wolf was sitting on a log by the path. He looked lost, and his tummy was rumbling. Rumble, rumble, rumble!
 
-Red Riding Hood stopped to pick flowers. Meanwhile the Wolf ran as fast as he could to the cottage by the old oak tree.
+"Hello," said Wolf. "I'm new in this wood, and I can't find my way."
 ---
-Knock, knock! The Wolf knocked on the door. "Who is there?" said Grandmother.
+"Will you come and pick blackberries with me, over there in the trees?" said Wolf. "I'm so hungry, and I've got nobody to play with."
 
-"It is Red Riding Hood," said Wolf in a soft little voice. Grandmother opened the door, and the Wolf jumped inside. Grandmother hid in the big wardrobe, and the Wolf put on her nightcap and climbed into her bed.
+"No, thank you," said Red Riding Hood. "I stay on the path, all the way to Grandma's!"
+
+"Oh, all right," said Wolf, and his ears drooped a little.
 ---
-Soon Red Riding Hood came to the cottage with her flowers. She went in and walked up to the bed.
+Tip, tap, tip, tap, went her little red boots along the path.
 
-"Grandmother, what big ears you have!" said Red Riding Hood.
+Soon she met the Woodcutter, Grandma's friend, stacking logs by the path.
 
-"All the better to hear you with," said Wolf.
+"A Wolf I don't know asked me to leave the path, so I said no, thank you," said Red Riding Hood.
 
-"Grandmother, what big eyes you have!" said Red Riding Hood.
-
-"All the better to see you with," said Wolf.
+"Well done for staying on the path and telling me," said Woodcutter.
 ---
-"Grandmother, what big teeth you have!" said Red Riding Hood.
+The Woodcutter put down his logs. He took Red Riding Hood's hand, and they went back to see if the Wolf needed help.
 
-"All the better to surprise you with!" said Wolf, and he jumped out of the bed.
+"Hello, Wolf. Are you all right?" said Woodcutter.
 
-"Oh!" cried Red Riding Hood, and she ran out of the door.
+"I'm lost, and I'm hungry, and I haven't got a single friend," said Wolf.
+
+His tummy rumbled again. Rumble, rumble, rumble!
 ---
-A Woodcutter was working nearby. He heard the shout and came running.
+"It's Grandma's birthday today. Come to her party with us!" said Woodcutter. "She always says there's room for one more."
 
-"Stop right there, Wolf!" said Woodcutter. "That is no way to treat a little girl."
+So they all walked along the path together, and the Wolf wagged his tail.
 
-The Wolf took one look at the Woodcutter, and he ran away into the wood as fast as his legs could carry him. He never came back.
+"I stay on the path, all the way to Grandma's!" sang Red Riding Hood.
 ---
-The Woodcutter opened the wardrobe, and out came Grandmother, quite safe. "Thank you, dear Woodcutter," said Grandmother. "And thank you for coming, my little Red Riding Hood."
+Knock! Knock! Knock!
 
-"I will never talk to strangers again," said Red Riding Hood.
+"Who's there?" said Grandma.
 
-They all sat down together and ate the cakes and honey.
+"It's me, Red Riding Hood, and I've brought some friends!" said Red Riding Hood.
+
+Grandma opened the door wide. "Come in, come in! There's always room for one more!" said Grandma.
+---
+Everyone sat round Grandma's little table, and they shared the honey cakes and apples from the basket.
+
+"Happy birthday, Grandma!" said Red Riding Hood.
+
+The Wolf ate three honey cakes. "Mmm! Yum, yum, yum!" said Wolf. "This is the best cake in the whole wood!"
+---
+Grandma's spare glasses were lying on the table. "Can I try them on?" said Wolf. "Of course!" said Grandma. The Wolf put them on, and his eyes looked big and round!
+
+"Wolf, what big eyes you have!" said Red Riding Hood.
+
+"All the better to see you with!" said Wolf.
+
+Ha, ha, ha! Hee, hee, hee! Everybody laughed.
+---
+Next the Wolf tried on Grandma's fluffy pink earmuffs from the peg by the door. They were much too small for his big pointy ears!
+
+"Wolf, what big ears you have!" said Red Riding Hood.
+
+"All the better to hear you with!" said Wolf.
+
+Ha, ha, ha! Hee, hee, hee! Everybody laughed.
+---
+Then the Wolf smiled the biggest, happiest smile of all.
+
+"Wolf, what a big smile you have!" said Red Riding Hood.
+
+"That's because I'm not lost any more," said Wolf. "I've found some friends!"
+
+And Grandma gave him a big, warm hug.
+---
+That night, tucked up in bed, Red Riding Hood told Mother all about her day.
+
+"I stayed on the path, and I told a grown-up," said Red Riding Hood.
+
+"Well done, my love," said Mother, and she kissed her goodnight. Button was already fast asleep at her feet.
+
+From that day on, the Wolf came to Grandma's for honey cake every Sunday.
 """;
 
     public const string UglyDuckling = """
@@ -448,41 +530,89 @@ Snip, snap, snout, this tale's told out.
 """;
 
     public const string Beanstalk = """
-Once upon a time a boy called Jack lived with his mother in a little cottage. They were very poor. All they had left was a cow named Milky-White, and the milk had run dry.
+Once upon a time a boy called Jack lived in a little cottage with his mother and their old cow, Milky-White. They didn't have much, and the cupboard was nearly empty.
 
-"We must sell the cow, Jack," said Mother. "Take her to market and bring home a good price."
+"Here's our last coin, Jack," said Mother. "Please take it to the market and buy some seeds for our garden."
 ---
-On the way Jack met a funny little Peddler. "That is a fine cow," said Peddler. "I will give you five magic beans for her."
+At the market Jack met a funny little Peddler. She had a cart full of seeds and a sleepy grey donkey.
 
-"Magic beans?" said Jack. He thought it was a wonderful bargain, so he handed over Milky-White and ran home with the beans.
+"I've got something better than seeds," said Peddler. "Five magic beans! Plant them tonight, and look out of your window in the morning."
+
+So Jack gave her his coin, and she gave him the beans.
 ---
-"Five beans?" said Mother. "Oh, Jack, how silly you are!" She threw the beans out of the window and sent Jack to bed.
+That evening Jack showed his mother the five beans.
 
-In the morning Jack looked out of the window. A giant beanstalk had grown up in the night, so tall that it went right up into the clouds.
+"Only five beans?" said Mother, and she laughed. "Well, beans are seeds too. Let's plant them and see!"
+
+So they planted the beans under the kitchen window: one, two, three, four, five. Milky-White watched over the fence.
 ---
-Jack began to climb. Up and up he went, past the birds and into the clouds. At the top he found a long road and a huge castle.
+In the morning Jack and his mother ran out into the garden. "Wow!" said Jack.
 
-A giant woman opened the door. "Oh dear, my husband does not like visitors," said Giant's Wife. "But you look so hungry that I will give you some bread first."
+A great big beanstalk had grown in the night. It went up, up, up, right into the clouds!
+
+Even Milky-White looked up. Moo, moo, moooo!
 ---
-Boom, boom, boom! The whole castle shook. "Fee, fi, fo, fum!" said Giant. "I smell a boy!"
+Then the leaves began to rustle. Rustle, rustle, rustle! Down the beanstalk, leaf by leaf, came a plump little hen with shiny golden feathers.
 
-"Nonsense, dear," said Giant's Wife. "It is only the sheep." She hid Jack in the cupboard, and the Giant sat down to eat.
+She hopped onto Jack's arm. Cluck, cluck, cluck!
+
+"Hello, little hen," said Jack. "Are you lost?"
 ---
-After supper the Giant took out a bag of gold coins and counted them. Soon he began to nod, and then he was fast asleep and snoring. Jack crept out of the cupboard, grabbed the bag of gold and ran down the beanstalk as fast as he could.
+"I think she lives up in the clouds," said Jack. "Somebody up there must be missing her. Mother, may I take her home?"
 
-"Look, Mother!" said Jack. "We are rich!"
+"Let's take her home together," said Mother. She tied a basket onto Jack's back and tucked the little hen inside.
+
+"Hold on with both hands, one step at a time," said Mother.
 ---
-When the gold was spent, Jack climbed the beanstalk again. This time the Giant had a little hen that laid golden eggs. "Lay!" said Giant, and the hen laid a golden egg.
+Jack held on to the beanstalk with both hands, and Mother climbed right behind him.
 
-When the Giant fell asleep, Jack tucked the hen under his arm and tiptoed away.
+"Hold on with both hands, one step at a time, Mother," said Jack. Up and up they climbed, slowly and carefully, past the treetops and the birds, right into the soft white clouds.
+
+The little hen peeked out of the basket. Cluck, cluck, cluck!
 ---
-Jack went up a third time. The Giant had a golden harp that played by itself. Jack took it, but the harp cried out. "Master, master!" said Harp.
+At the top, a road of soft white cloud led to a huge castle. Boom! Boom! Boom! Out came a Giant with a big, round, friendly face.
 
-The Giant woke up and ran after him. "Fee, fi, fo, fum!" said Giant.
+"Fee, fi, fo, fum! Hello, hello, everyone!" sang Giant, so loudly that the birds flew away. Jack giggled and put his fingers in his ears. So did Mother.
 ---
-Jack slid down the beanstalk as fast as he could. The Giant tried to follow, but the beanstalk wobbled and swayed. "Oh dear, I am too scared to climb down," said Giant. So he went back to his castle in the clouds and never came down again.
+Then the Giant saw the little hen in Jack's basket. "Goldie!" said Giant. "My Goldie! I looked for you everywhere!"
 
-Jack and his mother lived happily ever after, with the little hen and the golden harp.
+Jack lifted Goldie out, and she fluttered up into the Giant's big hands. Cluck, cluck, cluck!
+
+"Thank you, thank you!" said Giant. His happy voice was so loud that the castle windows rattled.
+---
+The Giant sat down on his castle step and gave a great big sigh. Whoosh... whoosh! The sigh blew Jack's cap right off his head.
+
+"Oops, sorry!" said Giant, and he caught the cap between two fingers. "Everything about me is too big and too loud. When I say hello, the birds fly away, and nobody ever comes to play."
+---
+"I can help," said Jack. "Put a finger on your lips, like this, and sing as softly as a mouse."
+
+The Giant put a finger on his lips. "Fee, fi, fo, fum! Hello, hello, everyone!" whispered Giant.
+
+This time the birds didn't fly away. Two little bluebirds flew down and sat on his shoulder.
+---
+"Thank you, Jack," said Giant. "You brought Goldie home, and you taught me to sing softly. Goldie lays a golden egg every morning, and I'd like to share."
+
+Very gently, the Giant put a shiny golden egg into Jack's basket.
+
+"Come and visit me every Sunday, both of you," said Giant.
+---
+Jack and Mother waved goodbye and began to climb down.
+
+"Hold on with both hands, one step at a time, Mother," said Jack. Down and down they went, slowly and carefully, with the golden egg safe in his basket.
+
+"Goodbye, my friends!" whispered Giant, and he waved from the edge of the cloud.
+---
+Jack and Mother stepped off the last leaf. The Peddler was waiting at the bottom.
+
+Jack held up the golden egg. "It's a present from our new friend, the Giant," said Jack. "Now we can buy seeds for the whole garden!"
+
+"I told you they were magic beans," said Peddler, and she winked. Mother gave Jack a big hug.
+---
+That night Mother tucked Jack into bed and kissed him goodnight. From high up in the clouds came a soft little song.
+
+"Fee, fi, fo, fum! Goodnight, goodnight, everyone!" sang Giant, as softly as a mouse.
+
+"Goodnight, Giant," whispered Jack, and soon he was fast asleep. From that day on, Jack and the Giant were the best of friends.
 """;
 
     public const string Elves = """
@@ -631,5 +761,97 @@ Peter's tummy still felt funny, so Mrs. Rabbit tucked him into bed with a little
 Flopsy, Mopsy and Cotton-tail had bread and milk and blackberries for supper. "We saved you some blackberries for tomorrow, Peter," said Flopsy.
 
 "Goodnight, my little bunnies," said Mrs. Rabbit. And soon Peter was fast asleep.
+""";
+
+    // Book 1 of the Captain Kaatrin and Seagull series, an original story. The captain is spelled "Kaatrin" so the English voices say
+    // KAA-trin: Kokoro reads "Katrin" as KAT-rin (espeak en-us, /kˈætɹɪn/) and "Kaatrin" as /kˈɑːtɹɪn/. Art record: docs/design/story-art/x-marks-the-treasure.md.
+    public const string Treasure = """
+Seagull flew high over the sea. She looked down at the little boats, the sandy beach and the sunny harbour.
+
+Then she saw a big pirate hat she knew. Captain Kaatrin was running to her ship, waving a piece of paper. She looked very happy!
+---
+Seagull swooped down, down, down, and she landed right on top of Kaatrin's big hat.
+
+"Squawk! Squawk! Squawk! What's up, Kaatrin?" said Seagull.
+
+Kaatrin held up an old map with a little island on it and a big red X. "I've found the map to the lost treasure!" said Kaatrin. "X marks the treasure!"
+---
+Kaatrin ran up onto her ship. "Ahoy, pirates! Hoist the sail! We're going to find the lost treasure!" said Kaatrin.
+
+Her crew came running. Izzy looked after the map and the compass. Pancake Polly made the yummiest pancakes. Billy could climb all the way up the mast.
+---
+Seagull flapped her wings. "A treasure hunt? I love treasure hunts! I'm coming too!" said Seagull.
+
+"Hooray! Then sit on my hat until we find the treasure," said Kaatrin.
+---
+Izzy, Pancake Polly and Billy danced a happy pirate dance across the deck.
+
+"Yo ho, yo ho!" sang Izzy.
+
+"Yo ho, yo ho!" sang Billy.
+
+"We're going to find the lost treasure!" sang Pancake Polly.
+---
+Billy pulled the rope, and up went the big sail. Flap, flap, flap!
+
+Kaatrin turned the ship's big wheel. "Off we go to Treasure Island!" said Kaatrin. And away they sailed, far across the sea.
+---
+The trip was long, long, long. Soon everyone on deck felt slow and grumbly, and nobody knew why.
+
+"Billy, can you see an island?" said Kaatrin.
+
+Billy sat in the basket at the top of the mast, but he was too hungry to answer. He just gave a big yawn. His tummy went rumble, rumble, rumble!
+---
+"Izzy, can you check the map with your compass?" said Kaatrin.
+
+Izzy sat on a barrel with the map on her lap, but she was hungry too, and she didn't answer. She just gave a big sigh. Her tummy went rumble, rumble, rumble!
+---
+"Let me go and see what's wrong!" said Seagull, and she flew all around the ship.
+
+Every tummy went rumble, rumble, rumble! Even Kaatrin's tummy! "Squawk! Squawk! Squawk! I know! Everyone is hungry!" said Seagull.
+---
+Seagull flew down the steps to the ship's kitchen. There was Pancake Polly, stirring pancake mix in her big blue bowl.
+
+"Polly, Polly! Everyone is too hungry to find the treasure!" said Seagull.
+
+"Hungry pirates? Then it's pancake time!" said Pancake Polly.
+---
+Up came Pancake Polly with a big pile of plates. There were pancakes with banana, strawberries and honey for everyone!
+
+The pirates ate and ate, and Seagull had a pancake too. "Yum, yum, yum!" said Seagull.
+---
+Now everyone was full of pancakes and full of energy! Izzy and Pancake Polly danced across the deck, and Billy sang from the top of the mast.
+
+"Yo ho, yo ho!" sang Izzy.
+
+"Yo ho, yo ho!" sang Billy.
+
+"We're going to find the lost treasure!" sang Pancake Polly.
+---
+"I spot an island!" said Billy, and he pointed far across the sea.
+
+Everyone cheered. Kaatrin looked through her telescope. "There it is! Treasure Island!" said Kaatrin.
+---
+The ship stopped near the island, and Seagull flew ahead to the sandy beach.
+
+There in the sand lay two long sticks in a big X. "Squawk! Squawk! Squawk! I found it! X marks the treasure!" said Seagull.
+
+Splish, splash, splosh! Behind her, the pirates waded to the beach with their spades.
+---
+Dig, dig, dig! The pirates dug at the X. Up came an old wooden treasure chest.
+---
+Kaatrin lifted the lid. Inside were gold coins, sparkly jewels and shiny pearls, enough for everyone!
+
+"Yo ho, yo ho!" sang Izzy.
+
+"Yo ho, yo ho!" sang Billy.
+
+"We found the lost treasure!" sang Pancake Polly.
+---
+That evening, as the sun went down, the pirates had a treasure party on the beach, with music and dancing.
+
+Kaatrin gave Seagull a big hug. "Thank you, Seagull. You're the best friend a pirate could have!" said Kaatrin.
+
+"Squawk, squawk, squawk," said Seagull softly, and she snuggled down on Kaatrin's big hat.
 """;
 }
