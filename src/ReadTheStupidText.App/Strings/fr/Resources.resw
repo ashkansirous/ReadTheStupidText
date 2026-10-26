@@ -271,8 +271,35 @@
   <data name="Pack_Failed" xml:space="preserve">
     <value>Le téléchargement a échoué. Réessayez.</value>
   </data>
+  <data name="CountsTitle.Text" xml:space="preserve">
+    <value>Aider à améliorer l’appli</value>
+  </data>
+  <data name="CountsCaption.Text" xml:space="preserve">
+    <value>Envoie des comptes comme « un texte français a été lu ». Aucun nom, aucun identifiant, rien de ce que vous lisez.</value>
+  </data>
+  <data name="CountsSwitch.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Aider à améliorer l’appli</value>
+  </data>
   <data name="Translate_AutoDetect" xml:space="preserve">
     <value>Détection auto</value>
+  </data>
+  <data name="Wait_DownloadingPercent" xml:space="preserve">
+    <value>Téléchargement de {0}… {1} %</value>
+  </data>
+  <data name="Wait_Translating" xml:space="preserve">
+    <value>Traduction…</value>
+  </data>
+  <data name="Wait_PreparingVoice" xml:space="preserve">
+    <value>Préparation de la voix…</value>
+  </data>
+  <data name="Wait_Stalled" xml:space="preserve">
+    <value>Préparation de la voix en cours…</value>
+  </data>
+  <data name="Wait_Pair" xml:space="preserve">
+    <value>{0} vers {1}</value>
+  </data>
+  <data name="Wait_Cancel" xml:space="preserve">
+    <value>Annuler</value>
   </data>
   <data name="Translate_Note_Default" xml:space="preserve">
     <value>Traduction automatique, sur cet appareil. La qualité varie.</value>

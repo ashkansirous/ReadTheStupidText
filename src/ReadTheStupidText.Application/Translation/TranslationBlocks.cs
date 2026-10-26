@@ -5,7 +5,8 @@ namespace ReadTheStupidText.Application.Translation;
 /// <summary>
 /// Splits a text into the blocks a streamed translated read translates one after another (Slice 75): a
 /// short first block (one or two sentences) so the listener hears the start soon, then larger blocks that
-/// each translate well ahead of the speech. Pure.
+/// each translate well ahead of the speech. When the early start already translated the text's head (Slice 142), that
+/// span is the first block instead, so its translation is reused. Pure.
 /// </summary>
 public static class TranslationBlocks
 {
@@ -17,13 +18,29 @@ public static class TranslationBlocks
 
     private const int HeadMaxSentences = 2;
 
-    public static IReadOnlyList<string> Plan(string text)
+    public static IReadOnlyList<string> Plan(string text) => Plan(text, null);
+
+    /// <summary>As <see cref="Plan(string)"/>; a head translated early for exactly this text is the first block.</summary>
+    public static IReadOnlyList<string> Plan(string text, EarlyTranslation? early)
     {
-        List<string> sentences = SentencesOf(text);
         var blocks = new List<string>();
-        int index = TakeHead(sentences, blocks);
+        if (early is not null && early.FullText == text && early.Split.Head.Length > 0)
+        {
+            blocks.Add(early.Split.Head);
+            AddGroupedBlocks(SentencesOf(early.Split.Remainder), 0, blocks);
+            return blocks;
+        }
+
+        List<string> sentences = SentencesOf(text);
+        AddGroupedBlocks(sentences, TakeHead(sentences, blocks), blocks);
+        return blocks;
+    }
+
+    // Whole sentences from startIndex packed into blocks of about BlockChars.
+    private static void AddGroupedBlocks(List<string> sentences, int startIndex, List<string> blocks)
+    {
         var block = new System.Text.StringBuilder();
-        for (; index < sentences.Count; index++)
+        for (int index = startIndex; index < sentences.Count; index++)
         {
             if (block.Length > 0 && block.Length + sentences[index].Length > BlockChars)
             {
@@ -38,8 +55,6 @@ public static class TranslationBlocks
         {
             blocks.Add(block.ToString());
         }
-
-        return blocks;
     }
 
     // One sentence, plus the second when the pair stays short. Returns the index of the next sentence.

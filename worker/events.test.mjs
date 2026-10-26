@@ -202,10 +202,62 @@ test("a phone read count is written with its fields in the fixed blob order", as
   assert.deepEqual(env.points, [
     {
       indexes: ["read_started"],
-      blobs: ["read_started", "1.4.0", "android", "2026-10-26", "fr", "fr", "original", "supertonic", "yes", "200-1000", "", "", "", ""],
+      blobs: ["read_started", "1.4.0", "android", "2026-10-26", "fr", "fr", "original", "supertonic", "yes", "200-1000", "", "", "", "", "", "", ""],
       doubles: [2],
     },
   ]);
+});
+
+test("a Windows read count carries its source as a blob (Slice 140)", async () => {
+  const env = rtstRecorder();
+  const windowsRead = { ...rtst("read_started", { language: "en", mode: "translation", engine: "windows", voiceDefault: true, lengthBucket: "<200", sourceLanguage: "fr", source: "hotkey" }), platform: "windows" };
+  assert.equal((await handleRtstEvents(rtstPost([windowsRead]), env, on)).status, 204);
+  assert.deepEqual(env.points[0].blobs.slice(3), ["2026-10-26", "en", "fr", "translation", "windows", "yes", "<200", "", "", "", "", "hotkey", "", ""]);
+  assert.equal(env.points[0].blobs[2], "windows");
+});
+
+test("a timing count carries whether the head start had run, as the blob before the wait stage (Slice 139)", async () => {
+  const env = rtstRecorder();
+  const timing = rtst("timing", { stage: "first_audio", outcome: "done", durationBucket: "0.5-1", language: "en", early: true });
+  assert.equal((await handleRtstEvents(rtstPost([timing]), env, on)).status, 204);
+  assert.equal(env.points[0].blobs.at(-2), "yes");
+  assert.equal(parseRtstEvent(rtst("timing", { stage: "first_audio", outcome: "done", durationBucket: "0.5-1", early: "yes" })), null);
+  assert.equal(parseRtstEvent({ ...readStarted, early: true }), null);
+});
+
+test("a phone wait count carries its stage and duration, and the stage is the last blob (Slice 148)", async () => {
+  const env = rtstRecorder();
+  const shown = rtst("wait_shown", { waitStage: "stalled", durationBucket: "2-5" });
+  const cancelled = { ...rtst("wait_cancelled", { waitStage: "preparing_voice", durationBucket: "<0.5" }), platform: "windows" };
+  assert.equal((await handleRtstEvents(rtstPost([shown, cancelled]), env, on)).status, 204);
+  assert.equal(env.points.length, 2);
+  assert.equal(env.points[0].blobs.at(-1), "stalled");
+  assert.equal(env.points[0].blobs.at(-4), "2-5");
+});
+
+test("a phone wait count with an unknown stage, a missing duration or an extra field is dropped", () => {
+  assert.equal(parseRtstEvent(rtst("wait_shown", { waitStage: "loading", durationBucket: "2-5" })), null);
+  assert.equal(parseRtstEvent(rtst("wait_shown", { waitStage: "stalled" })), null);
+  assert.equal(parseRtstEvent(rtst("wait_cancelled", { waitStage: "stalled", durationBucket: "3-4" })), null);
+  assert.equal(parseRtstEvent(rtst("wait_shown", { waitStage: "stalled", durationBucket: "2-5", language: "en" })), null);
+  assert.equal(parseRtstEvent({ ...readStarted, waitStage: "stalled" }), null);
+});
+
+test("Dino takes wait counts about no book, with a stage:bucket detail from the closed lists (Slice 148)", () => {
+  const wait = { ...shelfEvent, name: "wait_shown", book: "none", source: "none", language: "und", detail: "stalled:2-5" };
+  assert.notEqual(parseEvent(wait), null);
+  assert.notEqual(parseEvent({ ...wait, name: "wait_cancelled", detail: "getting_file:>20" }), null);
+  for (const detail of ["", "stalled", "stalled:", "stalled:3-4", "loading:2-5", "stalled:2-5:x", ":2-5"]) {
+    assert.equal(parseEvent({ ...wait, detail }), null, detail);
+  }
+  assert.equal(parseEvent({ ...wait, book: BOOK, source: "shelf" }), null);
+  assert.equal(parseEvent({ ...wait, language: "en" }), null); // a wait count carries no language
+});
+
+test("the Windows translate switch count needs no source language, but a source outside the list drops a read", () => {
+  assert.notEqual(parseRtstEvent(rtst("translate_chosen", { language: "en" })), null);
+  assert.equal(parseRtstEvent({ ...readStarted, source: "window title" }), null);
+  assert.equal(parseRtstEvent(rtst("voice_changed", { language: "en", engine: "windows", source: "panel" })), null);
 });
 
 test("every phone event name is taken with its required fields", () => {

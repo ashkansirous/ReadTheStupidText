@@ -1,7 +1,8 @@
 // Gemini picture grabber for create-dino-story step 6. Inject this whole file with javascript_tool once per page load
-// (again after a reload or a new chat). Then `await window.__grab(1)` (1 = newest picture, 2 = the one before), one real
-// `computer` click on empty page space (the clipboard write needs a user gesture), then read `window.__clipResult`
-// ("896x1200" once the picture is on the clipboard) and run `pwsh -STA gemini-clipboard.ps1 Save <file>`.
+// (again after a reload or a new chat). `await window.__grab(1)` clicks the newest picture's download button (1 = newest,
+// 2 = the one before); then save it with gemini-take-download.ps1. The clipboard is NOT touched by default. Fallback only:
+// call `await window.__grab(1, { clipboard: true })`, then one real `computer` click on the picture copies it to the clipboard;
+// poll `window.__clipResult` for "WxH" and run `pwsh -STA gemini-clipboard.ps1 Save <file>`.
 if (!window.__grabReady) {
   window.__grabReady = true;
   window.__blobs = [];
@@ -33,7 +34,33 @@ if (!window.__grabReady) {
     window.__wantClip = false;
     try { window.__clipResult = await window.__toClipboard(); } catch (e) { window.__clipResult = 'ERR ' + e.message; }
   }, true);
-  window.__grab = async (indexFromEnd) => {
+  // Page health: a Gemini tab can hang silently (the sidebar chat list never loads, no error shown) and turn out to be
+  // Google's CAPTCHA (google.com/sorry) on reload. Returns 'OK', 'CAPTCHA' or 'HUNG: <what is missing>'.
+  window.__geminiHealth = () => {
+    if (/google\.com\/sorry/.test(location.href)) return 'CAPTCHA';
+    const missing = [];
+    if (document.readyState !== 'complete') missing.push('page still loading');
+    if (!document.querySelector('rich-textarea, div[contenteditable="true"]')) missing.push('no prompt box');
+    if (!document.querySelector('a[href*="/app/"]')) missing.push('no chat list in the sidebar');
+    return missing.length ? 'HUNG: ' + missing.join(', ') : 'OK';
+  };
+  const pictureCount = () => [...document.querySelectorAll('button')]
+    .filter(b => (b.getAttribute('aria-label') || '') === 'Download full size image').length;
+  // Call before sending a prompt: remembers how many pictures the chat already has.
+  window.__markPictures = () => { window.__picturesBefore = pictureCount(); return window.__picturesBefore; };
+  // Call right after sending: returns 'READY <n>' the moment a new picture exists, or 'WAITING <n>' after
+  // maxMs (call it again). Never use fixed sleeps while Gemini draws; they waste up to a minute per picture.
+  window.__waitForPicture = async (maxMs = 40000) => {
+    const before = window.__picturesBefore ?? 0;
+    const start = Date.now();
+    let count = pictureCount();
+    while (count <= before && Date.now() - start < maxMs) {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      count = pictureCount();
+    }
+    return (count > before ? 'READY ' : 'WAITING ') + count;
+  };
+  window.__grab = async (indexFromEnd, options) => {
     window.__blobs = [];
     window.__wantClip = false;
     window.__clipResult = null;
@@ -44,7 +71,7 @@ if (!window.__grabReady) {
     for (let i = 0; i < 40 && !window.__blobs.length; i++) await new Promise(resolve => setTimeout(resolve, 500));
     if (window.__blobs.length) await new Promise(resolve => setTimeout(resolve, 1500));
     window.__clipResult = null;
-    window.__wantClip = window.__blobs.length > 0;
+    window.__wantClip = !!(options && options.clipboard) && window.__blobs.length > 0;
     return window.__blobs.length ? window.__blobs.map(b => b.type + ' ' + b.size).join(',') : 'no blob';
   };
 }

@@ -271,8 +271,35 @@
   <data name="Pack_Failed" xml:space="preserve">
     <value>دانلود ناموفق بود. برای تلاش دوباره، تلاش مجدد را بزنید.</value>
   </data>
+  <data name="CountsTitle.Text" xml:space="preserve">
+    <value>به بهتر شدن برنامه کمک کنید</value>
+  </data>
+  <data name="CountsCaption.Text" xml:space="preserve">
+    <value>شمارش‌هایی مانند «یک متن فرانسوی خوانده شد» ارسال می‌کند. بدون نام، بدون شناسه، و بدون هیچ‌چیز از آنچه می‌خوانید.</value>
+  </data>
+  <data name="CountsSwitch.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>به بهتر شدن برنامه کمک کنید</value>
+  </data>
   <data name="Translate_AutoDetect" xml:space="preserve">
     <value>تشخیص خودکار</value>
+  </data>
+  <data name="Wait_DownloadingPercent" xml:space="preserve">
+    <value>در حال دریافت {0}… {1}٪</value>
+  </data>
+  <data name="Wait_Translating" xml:space="preserve">
+    <value>در حال ترجمه…</value>
+  </data>
+  <data name="Wait_PreparingVoice" xml:space="preserve">
+    <value>در حال آماده‌سازی صدا…</value>
+  </data>
+  <data name="Wait_Stalled" xml:space="preserve">
+    <value>هنوز در حال آماده‌سازی صدا…</value>
+  </data>
+  <data name="Wait_Pair" xml:space="preserve">
+    <value>{0} به {1}</value>
+  </data>
+  <data name="Wait_Cancel" xml:space="preserve">
+    <value>لغو</value>
   </data>
   <data name="Translate_Note_Default" xml:space="preserve">
     <value>ترجمه ماشینی، روی همین دستگاه. کیفیت متفاوت است.</value>

@@ -229,6 +229,7 @@
   <data name="Wizard_NoText" xml:space="preserve"><value>Fant ingen tekst på denne siden</value></data>
   <data name="Wizard_Reading" xml:space="preserve"><value>Leser side {0} av {1}</value></data>
   <data name="Wait_GettingVoices" xml:space="preserve"><value>Gjør stemmene klare…</value></data>
+  <data name="Wait_Stalled" xml:space="preserve"><value>Gjør fortsatt stemmen klar…</value></data>
   <data name="Wait_ReadingPictures" xml:space="preserve"><value>Leser bildene…</value></data>
   <data name="Wait_PageOf" xml:space="preserve"><value>Side {0} av {1}</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>Oversetter…</value></data>

@@ -70,10 +70,15 @@
   <data name="Review_LooksLike" xml:space="preserve"><value>Texten ser ut att vara på {0}</value></data>
   <data name="Review_TranslateAndRead" xml:space="preserve"><value>Översätt och läs</value></data>
   <data name="Review_Read" xml:space="preserve"><value>Läs</value></data>
-  <data name="Review_GettingTranslator" xml:space="preserve"><value>Hämtar översättaren för {0}…</value></data>
+  <data name="Wait_DownloadingModel" xml:space="preserve"><value>Hämtar {0}…</value></data>
+  <data name="Wait_Translating" xml:space="preserve"><value>Översätter…</value></data>
+  <data name="Wait_PreparingVoice" xml:space="preserve"><value>Förbereder rösten…</value></data>
+  <data name="Wait_Stalled" xml:space="preserve"><value>Gör fortfarande rösten redo…</value></data>
+  <data name="Wait_ReadingFile" xml:space="preserve"><value>Läser filen…</value></data>
   <data name="Review_FirstTimeOnly" xml:space="preserve"><value>Bara första gången. Översättningen sker på den här telefonen.</value></data>
   <data name="Review_ShowOriginal" xml:space="preserve"><value>Visa original</value></data>
   <data name="Review_FailedOne" xml:space="preserve"><value>Det gick inte att läsa sida {0}.</value></data>
+  <data name="Review_TextCut" xml:space="preserve"><value>Texten är mycket lång, så bara de första {0} tecknen visas.</value></data>
   <data name="Review_FailedMany" xml:space="preserve"><value>Det gick inte att läsa sidorna {0}.</value></data>
   <data name="Review_HereOne" xml:space="preserve"><value>Sida {0} finns här.</value></data>
   <data name="Review_HereMany" xml:space="preserve"><value>Sidorna {0} finns här.</value></data>

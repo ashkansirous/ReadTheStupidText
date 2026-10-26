@@ -50,6 +50,7 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
     private readonly ISystemLog _log;
     private readonly SentenceAudioSource _sentences;
     private readonly ReadTimingTracker _timing = new();
+    private readonly StallReporter _stall;
     private readonly NSObject _interruptionObserver;
 
     // One engine-level pool of native synthesis slots shared by reads and head-start prepares,
@@ -116,6 +117,13 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
     // Raised once each chunk has started playing, with its real source range (Slice 60).
     public event EventHandler<ReadChunk>? ChunkChanged;
 
+    // Raised while the read waits for the next chunk's audio (Slice 148); the UI shows its "still getting the voice ready" overlay.
+    public event EventHandler<bool>? StallChanged
+    {
+        add => _stall.Changed += value;
+        remove => _stall.Changed -= value;
+    }
+
     public PlaybackState State => _state;
 
     public bool SupportsSegments => true;
@@ -133,6 +141,7 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
 
     public IosSupertonicSpeechReader(IVoiceModelService model, ISystemLog? log = null)
     {
+        _stall = new StallReporter(this);
         _model = model;
         _log = log ?? new IosSystemLog();
         string cacheRoot = FileSystem.Current.CacheDirectory;
@@ -163,7 +172,7 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
     }
 
     public Task SpeakAsync(string text, int? activityId = null) =>
-        StartReadAsync(SpeechChunkPlanner.ForText(text, HeadPolicy));
+        StartReadAsync(PlanText(text));
 
     // Slice 60: each segment is chunked on its own and each chunk is synthesized in its
     // segment's voice, so a character keeps one voice for the whole read.
@@ -491,7 +500,7 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
         string wavPath;
         try
         {
-            wavPath = await generated;
+            wavPath = await _stall.WatchAsync(generated);
         }
         catch (OperationCanceledException)
         {

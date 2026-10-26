@@ -2,6 +2,9 @@ using ReadTheStupidText.Application.Reading;
 
 namespace ReadTheStupidText.Mobile.Shared.Waiting;
 
+/// <summary>A wait whose overlay showed has ended (Slice 148): its last stage, how long the overlay showed, and whether the person tapped Cancel.</summary>
+public readonly record struct WaitFinish(WaitStage Stage, TimeSpan Shown, bool Cancelled);
+
 /// <summary>
 /// Drives one <see cref="WaitOverlay"/> from the pure <see cref="WaitGate"/> (Slice 143, Decision 149): a wait shows the
 /// overlay 500 ms after it begins and hides it the moment it ends, so a short wait never flashes. Use it from the UI thread.
@@ -18,6 +21,8 @@ public sealed class WaitController
     private bool _canCancel;
     private CancellationTokenSource? _cancellation;
     private int _wait;
+    private bool _cancelled;
+    private WaitStage? _shownStage;
 
     public WaitController(WaitOverlay overlay, TimeProvider? clock = null)
     {
@@ -26,11 +31,20 @@ public sealed class WaitController
         _overlay.CancelTapped += (_, _) => OnCancelTapped();
     }
 
+    /// <summary>
+    /// Raised (on the thread that ended the wait) whenever a wait whose overlay showed ends, from any controller. The app hooks it once to count
+    /// <c>wait_shown</c> and <c>wait_cancelled</c>; a wait that never showed (under 500 ms) raises nothing. A handler must not throw.
+    /// </summary>
+    public static event Action<WaitFinish>? Finished;
+
     /// <summary>The user tapped Cancel.</summary>
     public event Action? CancelRequested;
 
     /// <summary>Raised with true when a wait begins and false when it ends (the page can ignore touches meanwhile, even before the overlay shows).</summary>
     public event Action<bool>? ActiveChanged;
+
+    /// <summary>Raised with true when the overlay actually appears (after 500 ms) and false when it goes, so a page can dim itself only for a wait the user sees.</summary>
+    public event Action<bool>? ShownChanged;
 
     public bool IsActive => _gate.IsActive;
 
@@ -49,6 +63,8 @@ public sealed class WaitController
         _canCancel = canCancel;
         if (starting)
         {
+            _cancelled = false;
+            _shownStage = null;
             _ = ShowWhenDueAsync(++_wait);
             ActiveChanged?.Invoke(true);
         }
@@ -83,7 +99,18 @@ public sealed class WaitController
         _cancellation = null;
         bool wasActive = _gate.IsActive;
         TimeSpan? shown = _gate.End(_clock.GetUtcNow());
+        bool wasShown = _overlay.IsVisible;
         _overlay.Hide();
+        if (shown is { } duration)
+        {
+            RaiseFinished(new WaitFinish(_shownStage ?? _gate.Stage, duration, _cancelled)); // counted under the stage the person first saw
+        }
+
+        if (wasShown)
+        {
+            ShownChanged?.Invoke(false);
+        }
+
         if (wasActive)
         {
             ActiveChanged?.Invoke(false);
@@ -112,8 +139,21 @@ public sealed class WaitController
         return CancellationToken.None;
     }
 
+    private static void RaiseFinished(WaitFinish finish)
+    {
+        try
+        {
+            Finished?.Invoke(finish);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"A wait count handler failed: {ex.Message}"); // counting must never change what the wait does
+        }
+    }
+
     private void OnCancelTapped()
     {
+        _cancelled = true;
         _cancellation?.Cancel();
         CancelRequested?.Invoke();
     }
@@ -138,7 +178,9 @@ public sealed class WaitController
         _overlay.Show(_line, _detail, _canCancel);
         if (announce)
         {
+            _shownStage ??= _gate.Stage;
             SemanticScreenReader.Announce(_line);
+            ShownChanged?.Invoke(true);
         }
     }
 }

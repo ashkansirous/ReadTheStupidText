@@ -271,8 +271,35 @@
   <data name="Pack_Failed" xml:space="preserve">
     <value>ダウンロードに失敗しました。再試行してください。</value>
   </data>
+  <data name="CountsTitle.Text" xml:space="preserve">
+    <value>アプリの改善にご協力ください</value>
+  </data>
+  <data name="CountsCaption.Text" xml:space="preserve">
+    <value>「フランス語のテキストが読まれた」のような回数を送ります。名前も ID も、読んだ内容も送りません。</value>
+  </data>
+  <data name="CountsSwitch.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>アプリの改善にご協力ください</value>
+  </data>
   <data name="Translate_AutoDetect" xml:space="preserve">
     <value>自動検出</value>
+  </data>
+  <data name="Wait_DownloadingPercent" xml:space="preserve">
+    <value>{0}をダウンロード中… {1}%</value>
+  </data>
+  <data name="Wait_Translating" xml:space="preserve">
+    <value>翻訳中…</value>
+  </data>
+  <data name="Wait_PreparingVoice" xml:space="preserve">
+    <value>音声を準備中…</value>
+  </data>
+  <data name="Wait_Stalled" xml:space="preserve">
+    <value>まだ音声を準備しています…</value>
+  </data>
+  <data name="Wait_Pair" xml:space="preserve">
+    <value>{0}から{1}へ</value>
+  </data>
+  <data name="Wait_Cancel" xml:space="preserve">
+    <value>キャンセル</value>
   </data>
   <data name="Translate_Note_Default" xml:space="preserve">
     <value>このデバイス上の機械翻訳です。品質はさまざまです。</value>

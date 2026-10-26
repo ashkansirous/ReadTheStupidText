@@ -78,3 +78,9 @@ $RECYCLE.BIN/
 # Cloudflare Worker (Slice 68)
 node_modules/
 .wrangler/
+
+# Python tooling (Slice 145: tools/sound-words-test)
+__pycache__/
+*.pyc
+venv/
+.venv/
