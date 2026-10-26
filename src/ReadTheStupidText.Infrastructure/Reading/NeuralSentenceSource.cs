@@ -18,9 +18,11 @@ internal sealed class NeuralSentenceSource
     private readonly SentenceAudioSource _sentences;
     private readonly ISystemLog _log;
     private readonly SemaphoreSlim _slots;
+    private readonly Func<VoiceModelPaths, BuiltEngine?> _acquireEngine;
 
-    public NeuralSentenceSource(string folder, ISystemLog log, int maxConcurrency)
+    public NeuralSentenceSource(string folder, ISystemLog log, int maxConcurrency, Func<VoiceModelPaths, BuiltEngine?> acquireEngine)
     {
+        _acquireEngine = acquireEngine;
         _sentences = new SentenceAudioSource(new SentenceAudioCache(new FileSentenceStore(folder)), log);
         _log = log;
         _slots = new SemaphoreSlim(maxConcurrency);
@@ -83,34 +85,28 @@ internal sealed class NeuralSentenceSource
         IVoicedAudioTransform? transform)
     {
         SentenceCacheKey key = KeyFor(engine, sentence, voice, transform);
-        return _sentences.GetAsync(key, t => SynthesizeAsync(engine, sentence, voice.SpeakerId, transform, t), token, activityId);
+        return _sentences.GetClipAsync(key, t => SynthesizeAsync(engine, sentence, voice, transform, activityId, t), token, activityId);
     }
 
     private static SentenceCacheKey KeyFor(BuiltEngine engine, string sentence, VoiceInfo voice, IVoicedAudioTransform? transform) =>
-        new(sentence, engine.Model.Kind, engine.Model.Language, voice.Id, engine.Model.RootDir, engine.Model.PackVersion, VoicedAudio.TagOf(transform));
+        new(sentence, engine.Model.Kind, engine.Model.Language, voice.Id, engine.Model.RootDir, engine.Model.PackVersion, SiblingVoice.CacheTag(voice, transform));
 
     // The native Generate call cannot be interrupted, and its result may be wanted by another caller
     // that joined this synthesis, so a cancelled caller only stops waiting for a slot; a call already
     // running finishes and its audio goes to whoever is still waiting.
-    private async Task<byte[]> SynthesizeAsync(
-        BuiltEngine engine, string sentence, int speakerId, IVoicedAudioTransform? transform, CancellationToken token)
+    private async Task<SentenceClip> SynthesizeAsync(
+        BuiltEngine engine, string sentence, VoiceInfo voice, IVoicedAudioTransform? transform, int? activityId,
+        CancellationToken token)
     {
-        float[] raw;
-        int sampleRate;
+        RescueResult rescue;
         await _slots.WaitAsync(token);
         try
         {
             token.ThrowIfCancellationRequested(); // superseded while queued: never start the native call
-            OfflineTtsGeneratedAudio audio = await GenerateGuardedAsync(engine, sentence, speakerId, VoicedAudio.PaceOf(transform));
-            try
-            {
-                raw = audio.Samples;
-                sampleRate = audio.SampleRate;
-            }
-            finally
-            {
-                audio.Dispose();
-            }
+            float pace = VoicedAudio.PaceOf(transform);
+            rescue = await SilentOutputGuard.RescueUnitAsync(
+                sentence, voice.Id, pace, SiblingVoice.IsDropProne(voice), phrase => TakeAsync(engine, phrase, voice.SpeakerId, pace),
+                message => _log.Warning(message, activityId), token, phrase => SiblingTakeAsync(engine, phrase, voice, pace, activityId, token));
         }
         finally
         {
@@ -118,7 +114,32 @@ internal sealed class NeuralSentenceSource
         }
 
         // The product's voice transform is plain DSP: it runs after the slot is released so the next sentence can start synthesising.
-        return WavFile.Encode(VoicedAudio.Apply(transform, raw, sampleRate), sampleRate);
+        // A take the guard gave up on is played this once but never cached, so the next read tries again.
+        SpokenTake take = rescue.Take;
+        return new SentenceClip(WavFile.Encode(VoicedAudio.Apply(transform, take.Samples, take.SampleRate), take.SampleRate), !rescue.GaveUp);
+    }
+
+    // The pack's other voice speaks the unit when this one stays silent (Slice 149; shared logic in SiblingRescue).
+    private Task<SpokenTake?> SiblingTakeAsync(BuiltEngine engine, string text, VoiceInfo voice, float pace, int? activityId, CancellationToken token) =>
+        SiblingRescue.TakeAsync(
+            engine, engine.Model, voice, text,
+            new SiblingEngineOps<BuiltEngine>(
+                _acquireEngine, e => e.Release(), (e, speakerId) => TakeAsync(e, text, speakerId, pace), _slots,
+                (m, e) => _log.Warning(m, activityId, e)),
+            token);
+
+    // One take of the voice, copied out so the native audio is released at once (Slice 149).
+    private static async Task<SpokenTake> TakeAsync(BuiltEngine engine, string text, int speakerId, float pace)
+    {
+        OfflineTtsGeneratedAudio audio = await GenerateGuardedAsync(engine, text, speakerId, pace);
+        try
+        {
+            return new SpokenTake(audio.Samples, audio.SampleRate);
+        }
+        finally
+        {
+            audio.Dispose();
+        }
     }
 
     // The native call keeps running after its caller is cancelled, so it holds its own reference on the
