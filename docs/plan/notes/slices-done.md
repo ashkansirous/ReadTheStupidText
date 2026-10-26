@@ -151,6 +151,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 139 | RTST phone: start translating and voicing before the tap | built | #398 | | [139-rtst-phone-early-start.md](../slices/139-rtst-phone-early-start.md) |
 | 142 | RTST Windows: early translate and voice in the control panel | built | #408 | | [142-rtst-windows-early-start.md](../slices/142-rtst-windows-early-start.md) |
 | 148 | Phone apps: mid-read stalls, wait counts and wave leftovers | built | #416 | | [148-phone-wait-followups.md](../slices/148-phone-wait-followups.md) |
+| 121 | Dino: pictures for the ten store stories | built | #350 and following (see slice file) | — | [121-dino-illustrate-store-stories.md](../slices/121-dino-illustrate-store-stories.md) |
 
 ## Batch ordering notes
 

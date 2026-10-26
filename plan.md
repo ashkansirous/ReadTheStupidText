@@ -18,7 +18,6 @@ Open slices only. Finished slices (143 rows) are in [slices-done](docs/plan/note
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
-| 121 | Dino: pictures for the ten store stories | in progress | #350 (Billy Goats) | | [121-dino-illustrate-store-stories.md](docs/plan/slices/121-dino-illustrate-store-stories.md) |
 | 146 | Rewrite every Dino book in spoken, kid-friendly language | in progress | | | [146-dino-books-kid-friendly-language.md](docs/plan/slices/146-dino-books-kid-friendly-language.md) |
 | 150 | Dino: slower reading by default (0.8x), grown-up speed 0.5-1.2x | planned | | | [150-dino-slower-reading-speed.md](docs/plan/slices/150-dino-slower-reading-speed.md) |
 | 151 | Dino: three view modes, no merging of characters | planned | | | [151-dino-three-view-modes.md](docs/plan/slices/151-dino-three-view-modes.md) |
@@ -27,7 +26,7 @@ Open slices only. Finished slices (143 rows) are in [slices-done](docs/plan/note
 | 154 | Dino: vowel marks in Farsi and Arabic books | planned | | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
 | 155 | Dino: a first-run intro wizard for the four things Dino does | planned | | | [155-dino-first-run-intro-wizard.md](docs/plan/slices/155-dino-first-run-intro-wizard.md) |
 
-Batch 25 (119-123; 119, 120, 122, 123 built, 121 in progress: Billy Goats done, nine books left; planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
+Batch 25 (119-123; 119, 120, 122, 123 built, 121 built; planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
 
 Batch 26 (124-125, planned 2026-10-25, the Batch 25 mock and the animal-identity follow-up of Slice 117): 124 first (small; matches the words panel and switch card to the mock), then 125 (both edit `CastRows`/`CastPage` and the strings). 125 also merges after PR #336 (the pigs retell, `StarterBuilder`/`StarterTexts`). Decision 132. Slice 136 (the cast page drops the Animal line; Decision 132 changed) is built.
 
@@ -79,6 +78,7 @@ Built but not verified (details in each slice file):
 - Slice 139: emulator 2026-10-26 (swapping AVD): early work finished gives first audio in 396-749 ms with a cache hit on sentence 1, but in-flight races (a Read tapped ~0.3 s after unticking Translate, or Translate-and-read before the early voice is stored) still read cold; re-test on a real phone and follow up in the read path (`OnReadTapped`/`EarlyStartCoordinator` settle after a restart). Known limits: no early work before language detection + 0.4 s idle; unpunctuated text misses the sentence cache; iOS ([slice](docs/plan/slices/139-rtst-phone-early-start.md)).
 - Slice 142: packaged desktop run done 2026-10-26 on a CPU-saturated host; re-check first-audio timing on a quiet machine; prompt tray exit not verified ([slice](docs/plan/slices/142-rtst-windows-early-start.md)).
 - Slice 148: emulator PASS 2026-10-26 (timings not representative). Not done: Windows stall overlay on a packaged run; native read of `Wait_Stalled` and `Review_TextCut`; re-run the 300k-character repeated-text read on a 2 GB AVD to confirm the 8-chunk `GenerationWindow`; iOS and Windows neural readers not checked ([slice](docs/plan/slices/148-phone-wait-followups.md)).
+- Slice 121: check the illustrated books on a phone (pictures, text panel, voices) ([slice](docs/plan/slices/121-dino-illustrate-store-stories.md)).
 - Slice 146 (in progress): upload the six rewritten store books (`tools/upload-store-story.ps1`; user OK needed) ([slice](docs/plan/slices/146-dino-books-kid-friendly-language.md)).
 - Slice 96: emulator in Farsi and Arabic (gallery, gate, wizard, store, backup, reader, swipe direction, highlight on RTL lines); Windows head gallery and reader ([slice](docs/plan/slices/96-dino-layout-never-mirrors.md)).
 - Slice 97: Windows head: the AddBook icon rendering and the gate opening; native-speaker read of the `Gallery_AddBook` strings ([slice](docs/plan/slices/97-dino-add-book-button.md)).

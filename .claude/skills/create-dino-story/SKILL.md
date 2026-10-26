@@ -25,13 +25,13 @@ context free of screenshots, pictures and 13 translation files.
 2. **`dino-story-reviewer`** (Opus, high effort), **text** mode: safety, story quality for the age, one
    action per page, the picture plan. Failed pages go back to the writer, then review again, before any
    picture is drawn, since pictures cost Gemini quota.
-3. **`dino-story-illustrator`** (Sonnet, medium effort): steps 3-6. **One at a time across the machine.** Two or more were
-   tried on 2026-10-26 (the user asked for two, then four, to use more of the usage window) and failed in practice:
-   the shared Chrome extension recreated the tab group about five times an hour, keystrokes and pastes landed in the
-   other illustrator's tab, Gemini answered sends with "Something went wrong (1095)" and once with a Google bot check,
-   while a single illustrator drew pages 4-10 of a book cleanly. The usage window was never the limit (42% used).
-   Run the books one after another; writers and reviewers (no Chrome) can still run alongside. `gemini-lock.ps1`
-   stays as a guard against another session drawing in the same Chrome. It ends with `contact-sheet.jpg`, every picture on one sheet.
+3. **`dino-story-illustrator`** (Sonnet, medium effort): steps 3-6. **Up to four at once across the machine, each on its own book** (the user's choice,
+   2026-10-26). What makes it work: every illustrator acts only on its own `tabId`; prompts go in with
+   `javascript_tool` (`execCommand('insertText')`) and Send is a JS or `find`-ref click, never keyboard typing or
+   Enter (keystrokes land in whichever tab has focus); `gemini-lock.ps1` is held only around the line-up paste and
+   the save; each illustrator closes its own tab when done (reset tab groups left ~20 orphans). Four in parallel
+   drew about 39 accepted pictures an hour against 15-25 for one. If Gemini answers 1095 or shows a CAPTCHA, report
+   it; never reduce the number of illustrators without asking the user. It ends with `contact-sheet.jpg`, every picture on one sheet.
 4. **`dino-story-reviewer`**, **full** mode: every picture at full size against its page and the line-up,
    and characters, places and time of day consistent across the book. Failed pages go back to the
    illustrator (or the writer), then review again until `PASS`. The coordinator may glance at the contact
@@ -173,6 +173,9 @@ Record each pass in the art record table (page, attempt number, why earlier atte
   means hung). Not `OK`: reload once and check again 5 s later; still not `OK`, stop and report (`CAPTCHA` stops at once).
   Claude never solves a CAPTCHA (not allowed, even on the user's own account). The coordinator alerts the user with a
   push notification the moment an illustrator reports `CAPTCHA`, and resumes once the user says it is solved.
+- **A pasted line-up can leak characters into a picture** (Elves, Peter Rabbit, 2026-10-26): Gemini drew the elves on
+  pages where the plan has none and turned the line-up into a picnic. When that happens, drop the paste for that
+  picture and spell every look out in words, or paste a crop holding only the characters on that page.
 - **Poll, never sleep, while Gemini draws** (2026-10-26: fixed `computer wait` sleeps left each finished picture
   idle for up to a minute). Inject `gemini-grab.js`, run `window.__markPictures()` just before sending, then
   `await window.__waitForPicture()` right after: it returns `READY <n>` the moment the new picture exists (call it again
