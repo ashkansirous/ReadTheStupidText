@@ -88,3 +88,5 @@ The emulator run found the resume refresh fetching on the UI thread (`NetworkOnM
 #### Emulator result (2026-10-26)
 
 PASS: the Version card and the "A new version is ready" row. The forced-update `UpdatePage`, the gate and the Play page fallback were not run on a device; they need a temporary `minVersion` change in the live config.
+
+*Verified 2026-10-26 (emulator):* the resume fetch from follow-up #366 shows no NetworkOnMainThread in logcat.

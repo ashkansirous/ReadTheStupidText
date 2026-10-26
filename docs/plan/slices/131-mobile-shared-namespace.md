@@ -34,11 +34,14 @@ Run it **alone, between waves**: it touches usings in nearly every mobile file.
 
 *Verified at build:* 0 errors on RTST Mobile Android, Dino Android, Dino Windows head (Release build), RTST Mobile iOS compile, Dino iOS compile and RTST app x64; both test suites pass.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-26)
 
 - Apps that use Mobile.Shared need `using ReadTheStupidText.Mobile.Shared;`; its namespace is no longer `ReadTheStupidText.Mobile`, which stays the RTST phone app's. Already written in `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md` and `src/ReadTheStupidText.Mobile/CLAUDE.md` (Slice 131: docs/plan/slices/131-mobile-shared-namespace.md).
 
+#### Verified
+
+- Emulator 2026-10-26 PASS for both apps: RTST main, settings, voice picker and read aloud; Dino gallery, reader play with the screen kept on, cast page, Version card and usage switch. No type-load, Mobile.Shared or NetworkOnMainThread errors in logcat.
+
 #### Not yet verified
 
-- Emulator launch of RTST Mobile and Dino (Shell routes, DI resolve).
 - macOS CI iOS build after merge.

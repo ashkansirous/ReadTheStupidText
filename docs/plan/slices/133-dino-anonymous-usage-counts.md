@@ -84,3 +84,5 @@ Frames 62 (counts switch) and 63 (first-run line), lines 76 and 96 of `docs/desi
 - Play Data safety and App Store privacy answers once the sending release ships (human).
 - No rate limit or origin check on `/api/events`: a hostile client can inflate counts (accepted for now).
 - Native read of the new strings (machine drafts).
+
+*Verified 2026-10-26 (emulator):* the usage switch is present in Dino settings.
