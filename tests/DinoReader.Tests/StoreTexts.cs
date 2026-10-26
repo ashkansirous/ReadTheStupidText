@@ -35,7 +35,7 @@ internal static class StoreTexts
     [
         new(LionAndMouseId, "The Lion and the Mouse", "lion-and-mouse", LionAndMouse, 1, RetoldAesop, 4, 7, "Aesop", ["Lion", "Mouse"], 5, AddedDate),
         new(GoldilocksId, "Goldilocks and the Three Bears", "goldilocks", Goldilocks, 3, RetoldTraditional, 3, 6, Traditional, ["Goldilocks", "Papa Bear", "Mama Bear", "Baby Bear"], 3, AddedDate),
-        new(RedRidingHoodId, "Little Red Riding Hood", "red-riding-hood", RedRidingHood, 3, RetoldTraditional, 4, 7, Traditional, ["Red Riding Hood", "Mother", "Wolf", "Grandmother", "Woodcutter"], 3, AddedDate),
+        new(RedRidingHoodId, "Little Red Riding Hood", "red-riding-hood", RedRidingHood, 3, RetoldTraditional, 4, 7, Traditional, ["Red Riding Hood", "Mother", "Wolf", "Grandma", "Woodcutter"], 4, AddedDate),
         new(UglyDucklingId, "The Ugly Duckling", "ugly-duckling", UglyDuckling, 0, "Retold from Andersen · free to share", 5, 8, "Hans Christian Andersen", ["Mother Duck", "Duckling", "Dilly", "Hen", "Swan"], 5, AddedDate),
         new(RedHenId, "The Little Red Hen", "little-red-hen", RedHen, 3, RetoldTraditional, 3, 6, Traditional, ["Hen", "Dog", "Cat", "Duck"], 4, AddedDate),
         new(BillyGoatsId, "The Three Billy Goats Gruff", "billy-goats-gruff", BillyGoats, 0, RetoldTraditional, 4, 7, Traditional, ["Little Billy", "Middle Billy", "Big Billy", "Troll"], 6, AddedDate),
@@ -161,55 +161,97 @@ Goldilocks woke up and saw the three bears. "Oh dear!" said Goldilocks. She jump
 """;
 
     public const string RedRidingHood = """
-Once upon a time a little girl lived near a big green wood. She always wore a bright red hood that her grandmother had made, so everyone called her Red Riding Hood.
+Once upon a time a little girl lived with her mother at the edge of a big green wood. Her grandma had made her a bright red hood, and she wore it every single day. So everyone called her Red Riding Hood.
 
-One morning her mother packed a basket of cakes and honey.
+Her little white puppy, Button, went everywhere with her.
 ---
-"Take this basket to your grandmother, who is not feeling well," said Mother. "Go straight along the path, and do not talk to strangers."
+One morning Mother packed a basket of honey cakes and apples for Grandma's birthday.
 
-"I will be careful," said Red Riding Hood, and off she went.
+"Stay on the path all the way," said Mother. "If a stranger asks you to leave the path, say no, thank you, and tell a grown-up you know."
+
+"I stay on the path, all the way to Grandma's!" said Red Riding Hood.
 ---
-In the wood Red Riding Hood met a big grey Wolf. He had a sly smile and a bushy tail.
+Red Riding Hood waved goodbye, and off she went, with the basket on her arm and Button at her heels.
 
-"Good morning, little girl," said Wolf. "Where are you going so early?"
-
-"I am taking cakes and honey to my grandmother," said Red Riding Hood. "She lives in the cottage by the old oak tree."
+Tip, tap, tip, tap, went her little red boots along the path.
 ---
-"What a lovely idea," said Wolf. "Why not pick some flowers for her too? There are pretty ones in that meadow."
+In the middle of the wood, a big grey Wolf was sitting on a log by the path. He looked lost, and his tummy was rumbling. Rumble, rumble, rumble!
 
-Red Riding Hood stopped to pick flowers. Meanwhile the Wolf ran as fast as he could to the cottage by the old oak tree.
+"Hello," said Wolf. "I'm new in this wood, and I can't find my way."
 ---
-Knock, knock! The Wolf knocked on the door. "Who is there?" said Grandmother.
+"Will you come and pick blackberries with me, over there in the trees?" said Wolf. "I'm so hungry, and I've got nobody to play with."
 
-"It is Red Riding Hood," said Wolf in a soft little voice. Grandmother opened the door, and the Wolf jumped inside. Grandmother hid in the big wardrobe, and the Wolf put on her nightcap and climbed into her bed.
+"No, thank you," said Red Riding Hood. "I stay on the path, all the way to Grandma's!"
+
+"Oh, all right," said Wolf, and his ears drooped a little.
 ---
-Soon Red Riding Hood came to the cottage with her flowers. She went in and walked up to the bed.
+Tip, tap, tip, tap, went her little red boots along the path.
 
-"Grandmother, what big ears you have!" said Red Riding Hood.
+Soon she met the Woodcutter, Grandma's friend, stacking logs by the path.
 
-"All the better to hear you with," said Wolf.
+"A Wolf I don't know asked me to leave the path, so I said no, thank you," said Red Riding Hood.
 
-"Grandmother, what big eyes you have!" said Red Riding Hood.
-
-"All the better to see you with," said Wolf.
+"Well done for staying on the path and telling me," said Woodcutter.
 ---
-"Grandmother, what big teeth you have!" said Red Riding Hood.
+The Woodcutter put down his logs. He took Red Riding Hood's hand, and they went back to see if the Wolf needed help.
 
-"All the better to surprise you with!" said Wolf, and he jumped out of the bed.
+"Hello, Wolf. Are you all right?" said Woodcutter.
 
-"Oh!" cried Red Riding Hood, and she ran out of the door.
+"I'm lost, and I'm hungry, and I haven't got a single friend," said Wolf.
+
+His tummy rumbled again. Rumble, rumble, rumble!
 ---
-A Woodcutter was working nearby. He heard the shout and came running.
+"It's Grandma's birthday today. Come to her party with us!" said Woodcutter. "She always says there's room for one more."
 
-"Stop right there, Wolf!" said Woodcutter. "That is no way to treat a little girl."
+So they all walked along the path together, and the Wolf wagged his tail.
 
-The Wolf took one look at the Woodcutter, and he ran away into the wood as fast as his legs could carry him. He never came back.
+"I stay on the path, all the way to Grandma's!" sang Red Riding Hood.
 ---
-The Woodcutter opened the wardrobe, and out came Grandmother, quite safe. "Thank you, dear Woodcutter," said Grandmother. "And thank you for coming, my little Red Riding Hood."
+Knock! Knock! Knock!
 
-"I will never talk to strangers again," said Red Riding Hood.
+"Who's there?" said Grandma.
 
-They all sat down together and ate the cakes and honey.
+"It's me, Red Riding Hood, and I've brought some friends!" said Red Riding Hood.
+
+Grandma opened the door wide. "Come in, come in! There's always room for one more!" said Grandma.
+---
+Everyone sat round Grandma's little table, and they shared the honey cakes and apples from the basket.
+
+"Happy birthday, Grandma!" said Red Riding Hood.
+
+The Wolf ate three honey cakes. "Mmm! Yum, yum, yum!" said Wolf. "This is the best cake in the whole wood!"
+---
+Grandma's spare glasses were lying on the table. "Can I try them on?" said Wolf. "Of course!" said Grandma. The Wolf put them on, and his eyes looked big and round!
+
+"Wolf, what big eyes you have!" said Red Riding Hood.
+
+"All the better to see you with!" said Wolf.
+
+Ha, ha, ha! Hee, hee, hee! Everybody laughed.
+---
+Next the Wolf tried on Grandma's fluffy pink earmuffs from the peg by the door. They were much too small for his big pointy ears!
+
+"Wolf, what big ears you have!" said Red Riding Hood.
+
+"All the better to hear you with!" said Wolf.
+
+Ha, ha, ha! Hee, hee, hee! Everybody laughed.
+---
+Then the Wolf smiled the biggest, happiest smile of all.
+
+"Wolf, what a big smile you have!" said Red Riding Hood.
+
+"That's because I'm not lost any more," said Wolf. "I've found some friends!"
+
+And Grandma gave him a big, warm hug.
+---
+That night, tucked up in bed, Red Riding Hood told Mother all about her day.
+
+"I stayed on the path, and I told a grown-up," said Red Riding Hood.
+
+"Well done, my love," said Mother, and she kissed her goodnight. Button was already fast asleep at her feet.
+
+From that day on, the Wolf came to Grandma's for honey cake every Sunday.
 """;
 
     public const string UglyDuckling = """
