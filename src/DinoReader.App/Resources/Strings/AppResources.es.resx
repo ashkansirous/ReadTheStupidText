@@ -183,6 +183,9 @@
   <data name="Update_Button" xml:space="preserve"><value>Actualizar Dino</value></data>
   <data name="Version_NewReady" xml:space="preserve"><value>Hay una versión nueva</value></data>
   <data name="Version_Title" xml:space="preserve"><value>Versión</value></data>
+  <data name="Usage_Title" xml:space="preserve"><value>Ayuda a mejorar Dino</value></data>
+  <data name="Usage_Helper" xml:space="preserve"><value>Envía recuentos como "se terminó un libro de la tienda". Sin nombres, sin identificadores, nada de lo que escribiste.</value></data>
+  <data name="FirstRun_Usage" xml:space="preserve"><value>Dino cuenta qué libros se leen, sin nombres ni identificadores. Puedes desactivarlo en Ajustes.</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Tu narrador ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
   <data name="Storyteller_Failed" xml:space="preserve"><value>No se pudieron descargar las voces narradoras</value></data>

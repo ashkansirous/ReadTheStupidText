@@ -44,6 +44,9 @@ public static class AppResources
 	public static string Update_Button => Get();
 	public static string Version_NewReady => Get();
 	public static string Version_Title => Get();
+	public static string Usage_Title => Get();
+	public static string Usage_Helper => Get();
+	public static string FirstRun_Usage => Get();
 	public static string Storyteller_YourNarrator => Get();
 	public static string Storyteller_Size => Get();
 	public static string Storyteller_Failed => Get();

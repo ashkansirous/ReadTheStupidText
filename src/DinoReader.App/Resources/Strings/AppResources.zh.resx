@@ -183,6 +183,9 @@
   <data name="Update_Button" xml:space="preserve"><value>更新恐龙</value></data>
   <data name="Version_NewReady" xml:space="preserve"><value>有新版本了</value></data>
   <data name="Version_Title" xml:space="preserve"><value>版本</value></data>
+  <data name="Usage_Title" xml:space="preserve"><value>帮助改进 Dino</value></data>
+  <data name="Usage_Helper" xml:space="preserve"><value>只发送次数，例如“商店里的一本书读完了”。没有名字，没有编号，也不含你输入的任何内容。</value></data>
+  <data name="FirstRun_Usage" xml:space="preserve"><value>Dino 会统计哪些书被读过，不含名字或编号。你可以在设置中关闭。</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>你的{0}旁白</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
   <data name="Storyteller_Failed" xml:space="preserve"><value>无法下载讲故事的声音</value></data>
