@@ -47,7 +47,7 @@ Changed while building:
 
 From review: 142-high (14 applied), 142-medium (9 applied).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-26)
 
 - Windows early start lives in `ReadAloudService.EarlyStart.cs`: coordinator calls happen under `_earlyGate`, never await under it, and CTS cancels are deferred until outside the gate. (`src/ReadTheStupidText.App/CLAUDE.md`; Slice 142: docs/plan/slices/142-rtst-windows-early-start.md)
 
