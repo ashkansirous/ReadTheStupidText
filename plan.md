@@ -14,22 +14,20 @@ this plan turns it into ordered, shippable vertical slices.
 
 ## Status
 
-Open slices only. Finished slices (132 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
+Open slices only. Finished slices (134 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
 | 121 | Dino: pictures for the ten store stories | in progress | #350 (Billy Goats) | | [121-dino-illustrate-store-stories.md](docs/plan/slices/121-dino-illustrate-store-stories.md) |
-| 130 | A version and a release per product | in progress | #367 | | [130-per-product-versions-and-releases.md](docs/plan/slices/130-per-product-versions-and-releases.md) |
 | 131 | Mobile.Shared gets its own namespace | planned | | | [131-mobile-shared-namespace.md](docs/plan/slices/131-mobile-shared-namespace.md) |
-| 134 | Dino: the rest of the usage events, and a report | in progress | #368 | | [134-dino-usage-events-and-report.md](docs/plan/slices/134-dino-usage-events-and-report.md) |
 
 Batch 25 (119-123; 119, 120, 122, 123 built, 121 in progress: Billy Goats done, nine books left; planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
 
 Batch 26 (124-125, planned 2026-10-25, the Batch 25 mock and the animal-identity follow-up of Slice 117): 124 first (small; matches the words panel and switch card to the mock), then 125 (both edit `CastRows`/`CastPage` and the strings). 125 also merges after PR #336 (the pigs retell, `StarterBuilder`/`StarterTexts`). Decision 132. Slice 136 (the cast page drops the Animal line; Decision 132 changed) is built.
 
-Batch 27 (127-131, planned 2026-10-25, after Dino work kept resubmitting Read The Stupid Text to the Store): keep one repo, stop one product shipping the other. 127 (small CI fixes), 128 and 129 are built; 130 is in progress (draft PR #367; it edits `release.yml` and `ship-targets.mjs`); 131 remains and runs alone between waves (it touches usings everywhere). Decisions 133-137.
+Batch 27 (127-131, planned 2026-10-25, after Dino work kept resubmitting Read The Stupid Text to the Store): keep one repo, stop one product shipping the other. 127 (small CI fixes), 128, 129 and 130 (a version and release per product, PR #367) are built; 131 is in progress (draft PR #371) and runs alone between waves (it touches usings everywhere). Decisions 133-137.
 
-Batch 28 (132-134, planned 2026-10-25, which books families like and how parents use the app): 132 (the remote config the counts are switched by, and the forced update) and 133 (first events, privacy texts and store forms) are built; 134 is in progress (draft PR #368). All three edit `worker/` and Dino's `MauiProgram`, so one at a time. Decisions 138-142.
+Batch 28 (132-134, planned 2026-10-25, which books families like and how parents use the app): 132 (the remote config the counts are switched by, and the forced update) and 133 (first events, privacy texts and store forms) and 134 (the rest of the events and the report, PR #368) are built, so the batch is done. All three edit `worker/` and Dino's `MauiProgram`, so one at a time. Decisions 138-142.
 
 ### Notes
 
@@ -85,6 +83,8 @@ Built but not verified (details in each slice file):
 - Slice 129: emulator Dino story with flavoured voices (Small, Whisper, animal sounds) sounds the same, by ear; Windows head flavoured character reads; RTST phone read unchanged ([slice](docs/plan/slices/129-dino-voice-features-out-of-shared-engine.md)).
 - Slice 133: human enables Analytics Engine, then emulator read shows rows in `dino_usage` and settings off sends nothing; Play Data safety and App Store privacy answers once the sending release ships; no rate limit or origin check on `/api/events` (accepted); native read of the new strings ([slice](docs/plan/slices/133-dino-anonymous-usage-counts.md)).
 - Slice 132: seed R2 `config.json` after merge; emulator: Version card and "A new version is ready" row PASS; forced-update `UpdatePage`, the gate and Play page fallback not run on a device (needs a temporary `minVersion` change in the live config); Windows head and iOS builds; Play in-app update needs a Play-installed build with a higher versionCode; native read of the 5 new strings ([slice](docs/plan/slices/132-dino-remote-config-and-force-update.md)).
+- Slice 130: `actionlint` on the changed workflows; first release run after merge (bootstrap tags created, both versions continue from the last shared version, right targets build, RTST release is latest and Dino's is not); the `gittools` `configFilePath` input on the real runner ([slice](docs/plan/slices/130-per-product-versions-and-releases.md)).
+- Slice 134: everything live waits on switching telemetry on (human: enable Analytics Engine, add the binding, set `telemetry.enabled`), then `tools/dino-usage-report.ps1`; emulator smoke of each event; Play Data safety and App Store privacy answers for the new events; `own_book_added` not wired for backup restore or `.dino` import ([slice](docs/plan/slices/134-dino-usage-events-and-report.md)).
 - Slice 136: emulator: cast page PASS in English and Farsi (matches frame 59, no Animal line); sounds (oink, Wolf growls) and recasting Pip to a non-animal going silent need a listen, not verifiable by adb ([slice](docs/plan/slices/136-dino-animal-from-character.md)).
 - Slice 106: Norwegian on a Windows head via `MarianEngine` (third-party conversion, never run); en to da/fi/sv/nl/nb and back on Windows; the Norwegian packs are about 390 MB each ([slice](docs/plan/slices/106-windows-nordic-dutch-translation-packs.md)).
 - Windows has no `en-ja` translation pack (`TranslationPacks.FromEnglish` and `packs.yml` lack it), so English cannot be translated into Japanese offline on Windows; found while planning Slice 106, not yet scheduled.
