@@ -32,6 +32,9 @@ public sealed class WaitController
     /// <summary>Raised with true when a wait begins and false when it ends (the page can ignore touches meanwhile, even before the overlay shows).</summary>
     public event Action<bool>? ActiveChanged;
 
+    /// <summary>Raised with true when the overlay actually appears (after 500 ms) and false when it goes, so a page can dim itself only for a wait the user sees.</summary>
+    public event Action<bool>? ShownChanged;
+
     public bool IsActive => _gate.IsActive;
 
     public WaitStage Stage => _gate.Stage;
@@ -83,7 +86,13 @@ public sealed class WaitController
         _cancellation = null;
         bool wasActive = _gate.IsActive;
         TimeSpan? shown = _gate.End(_clock.GetUtcNow());
+        bool wasShown = _overlay.IsVisible;
         _overlay.Hide();
+        if (wasShown)
+        {
+            ShownChanged?.Invoke(false);
+        }
+
         if (wasActive)
         {
             ActiveChanged?.Invoke(false);
@@ -139,6 +148,7 @@ public sealed class WaitController
         if (announce)
         {
             SemanticScreenReader.Announce(_line);
+            ShownChanged?.Invoke(true);
         }
     }
 }

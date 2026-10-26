@@ -71,7 +71,10 @@
   <data name="Review_LooksLike" xml:space="preserve"><value>This text looks like {0}</value></data>
   <data name="Review_TranslateAndRead" xml:space="preserve"><value>Translate and read</value></data>
   <data name="Review_Read" xml:space="preserve"><value>Read</value></data>
-  <data name="Review_GettingTranslator" xml:space="preserve"><value>Getting the {0} translator…</value></data>
+  <data name="Wait_DownloadingModel" xml:space="preserve"><value>Downloading {0}…</value></data>
+  <data name="Wait_Translating" xml:space="preserve"><value>Translating…</value></data>
+  <data name="Wait_PreparingVoice" xml:space="preserve"><value>Preparing the voice…</value></data>
+  <data name="Wait_ReadingFile" xml:space="preserve"><value>Reading the file…</value></data>
   <data name="Review_FirstTimeOnly" xml:space="preserve"><value>Only the first time. Translation happens on this phone.</value></data>
   <data name="Review_ShowOriginal" xml:space="preserve"><value>Show original</value></data>
   <data name="Review_FailedOne" xml:space="preserve"><value>Page {0} couldn’t be read.</value></data>

@@ -86,6 +86,7 @@ public partial class ReaderPage : ContentPage
         TextEditor.FlowDirection = TextFlow.ContentDirection(TextEditor.Text);
         draft.RegisterRebuildHook(PrepareForRebuild);
         ApplyStaticTexts();
+        InitWait();
         InitTranslation(detector);
         InitHeadStart();
         RenderReading();
@@ -185,6 +186,7 @@ public partial class ReaderPage : ContentPage
     /// </summary>
     public void DetachHandlers()
     {
+        _waitTheme.Detach();
         _reader.StateChanged -= OnReaderStateChanged;
         _reader.ProgressChanged -= OnReaderProgressChanged;
         _reader.TimingChanged -= OnReaderTimingChanged;
@@ -256,9 +258,9 @@ public partial class ReaderPage : ContentPage
 
     private async void OnFileTapped(object? sender, TappedEventArgs e)
     {
-        if (_inputBusy)
+        if (_inputBusy || _wait.IsActive)
         {
-            return;
+            return; // a read still preparing owns the wait overlay; importing now would end it
         }
 
         SetInputBusy(true);
@@ -294,12 +296,11 @@ public partial class ReaderPage : ContentPage
             return; // user cancelled the picker, or the page was replaced meanwhile
         }
 
-        BusyIndicator.IsRunning = true;
-        BusyIndicator.IsVisible = true;
         string? extracted = null;
         try
         {
-            extracted = await _documentExtractor.ExtractTextAsync(file.FullPath);
+            extracted = await _wait.RunAsync(WaitStage.GettingFile, AppResources.Wait_ReadingFile, canCancel: false,
+                _ => _documentExtractor.ExtractTextAsync(file.FullPath));
         }
         catch (DocumentTooLargeException ex)
         {
@@ -308,11 +309,6 @@ public partial class ReaderPage : ContentPage
         catch (Exception)
         {
             await AlertAsync(AppResources.Reader_FileUnreadableTitle, AppResources.Reader_FileUnreadableMessage);
-        }
-        finally
-        {
-            BusyIndicator.IsRunning = false;
-            BusyIndicator.IsVisible = false;
         }
 
         if (extracted is not null)
@@ -593,11 +589,19 @@ public partial class ReaderPage : ContentPage
         SetPlayLoading(true);
     }
 
+    // The wait overlay (Slice 138) stands for the play button's old spinner: it shows after 500 ms and ends with the pending read.
     private void SetPlayLoading(bool loading)
     {
-        PlayLoadingIndicator.IsRunning = loading;
-        PlayLoadingIndicator.IsVisible = loading;
-        PlayPauseIcon.IsVisible = !loading;
+        if (loading)
+        {
+            BeginPreparingWait();
+            return;
+        }
+
+        if (_wait.Stage == WaitStage.PreparingVoice)
+        {
+            _wait.End();
+        }
     }
 
     private async void OnSkipBackTapped(object? sender, TappedEventArgs e) => await _reader.SkipBackward();
@@ -800,8 +804,9 @@ public partial class ReaderPage : ContentPage
     // The empty player is dimmed: a grey Play circle, grey skip buttons, and nothing to tap.
     private void RenderEmptyPlayer(bool empty)
     {
-        PlayerCard.Opacity = empty ? 0.5 : 1;
-        PlayerCard.InputTransparent = empty;
+        bool dimmed = empty || PlayerDimmedByWait;
+        PlayerCard.Opacity = dimmed ? DimmedPlayerOpacity : 1;
+        PlayerCard.InputTransparent = dimmed;
         _playButtonBackground ??= PlayButton.Background;
         PlayButton.Background = empty ? new SolidColorBrush(Color.FromArgb("#C9CBD6")) : _playButtonBackground;
         Color skipFill = empty ? Color.FromArgb("#0F000000") : Color.FromArgb("#1A5B57E8");

@@ -1,9 +1,9 @@
 # Slice 138 — RTST phone: a wait indicator after 500 ms
 
-*In progress (wave 2026-10-26), draft PR.*
+*Built 2026-10-26 (wave PR #390); emulator checks passed 2026-10-26.*
 
 **Batch:** 29 (Decisions 143-148)
-**Touches:** `src/ReadTheStupidText.Mobile.Shared/Waiting/**` (the shared overlay, Decision 149; built here or by Slice 143, whichever goes first), `src/ReadTheStupidText.Mobile/ReaderPage.xaml`, `src/ReadTheStupidText.Mobile/ReaderPage*.cs`, `src/ReadTheStupidText.Mobile/ReviewPage.xaml`, `src/ReadTheStupidText.Mobile/ReviewPage.xaml.cs`, `src/ReadTheStupidText.Application/Reading/WaitStage.cs` (new), `src/ReadTheStupidText.Application/Usage/**`, `src/ReadTheStupidText.Mobile/Resources/Strings/*.resx`, `tests/ReadTheStupidText.Tests/**`
+**Touches:** `src/ReadTheStupidText.Mobile.Shared/Waiting/**` (the shared overlay, Decision 149; built here or by Slice 143, whichever goes first), `src/ReadTheStupidText.Mobile/ReaderPage.xaml`, `src/ReadTheStupidText.Mobile/ReaderPage*.cs`, `src/ReadTheStupidText.Mobile/ReviewPage.xaml`, `src/ReadTheStupidText.Mobile/ReviewPage.xaml.cs`, `src/ReadTheStupidText.Application/Reading/WaitStage.cs` (new), `src/ReadTheStupidText.Application/Usage/**`, `src/ReadTheStupidText.Mobile/Resources/Strings/*.resx`, `src/ReadTheStupidText.Mobile/SettingsPage.xaml*` (dark speed-chip contrast), `tests/ReadTheStupidText.Tests/**`
 
 ## Why
 
@@ -38,20 +38,50 @@ Two frames in `docs/design/rtst-phone/RTST Batch 29.dc.html` (R8 line 42, R9 lin
 
 ## Work
 
-- [ ] `WaitStage` enum and a pure "show after 500 ms, hide on first audio or cancel" timer model in
+- [x] `WaitStage` enum and a pure "show after 500 ms, hide on first audio or cancel" timer model in
       Application, unit-tested.
-- [ ] Wire the stages: ML Kit model download (with progress where ML Kit gives it, else
+- [ ] (partly: download, translate, preparing the voice, file; mid-read stall NOT wired, needs a reader signal outside Touches) Wire the stages: ML Kit model download (with progress where ML Kit gives it, else
       indeterminate), translate, synthesis of the first chunk, and mid-read stalls when the next chunk
       is not ready. Cancel stops the work and returns to the text.
-- [ ] Check the ReviewPage "Translate and read" path never blocks the UI thread (the grounding pass
+- [x] Check the ReviewPage "Translate and read" path never blocks the UI thread (the grounding pass
       did not read it); fix it if it does.
-- [ ] Replace the separate `BusyIndicator` / `PlayLoadingIndicator` uses that this overlay covers.
+- [x] Replace the separate `BusyIndicator` / `PlayLoadingIndicator` uses that this overlay covers.
 - [ ] Usage: `wait_shown` (stage, duration bucket) and `wait_cancelled` (stage), added to the
       Slice 137 closed set, the Worker `EVENT_RULES` and the privacy texts.
-- [ ] Strings in every RTST locale.
+- [x] Strings in every RTST locale.
+
+## Deferred to a follow-up slice (with Dino's stall and wait_shown from Slice 143)
+
+- Usage counts `wait_shown` / `wait_cancelled`: need `worker/events.ts` (`RTST_EVENT_RULES`), `PRIVACY.md`, `site/privacy.html`, which Slice 140 owns now.
+- Mid-read stall wait: `ISpeechReader` has no "next chunk not ready" signal.
+- Dimming the text behind the veil (rgba(0,0,0,.45)) is skipped: the .9 veil already hides it.
 
 ## Verification
 
 - Unit tests of the timer model.
 - Emulator: first translation to a new language shows "Downloading…" then "Translating…", Cancel
   works; a short text that starts within 500 ms shows nothing; TalkBack announces the stage.
+
+## Changed while building
+
+- Reuses Slice 143's `Mobile.Shared/Waiting` overlay with an RTST style (`ReaderPage.Wait.cs`, `WaitThemeFollower`, `ThemeColors.cs`); `WaitOverlayStyle` gained Cancel radius and padding fields (Dino defaults unchanged) and `WaitController` gained `ShownChanged`.
+- Main page: voice-prep wait with Cancel and the player greyed. Review page: the download/translate overlay replaces the R7 card; an abandoned call is ignored after Cancel.
+- File read shows the wait without Cancel (the extractor takes no token).
+- ML Kit reports no percentage, so there is no progress bar.
+- Dark-mode speed chips made readable.
+- 4 `Wait_` strings in 14 resx files (drafts).
+
+## From review
+
+- 138-high: 6 findings applied.
+- 138-medium: 8 applied, 8 skipped.
+
+#### For CLAUDE.md
+
+- RTST waits use `Mobile.Shared/Waiting` through `ReaderPage.Wait.cs`; colours live in `Colors.xaml` / `ThemeColors.cs`, no hex literals. Goes in `src/ReadTheStupidText.Mobile/CLAUDE.md`. (Slice 138: docs/plan/slices/138-rtst-phone-wait-indicator.md)
+
+#### Not yet verified
+
+- Emulator (AVD RTST_Test, 2026-10-26): PASS for the voice overlay + Cancel + greyed player, translate download/translating overlays + Cancel + retry, file read overlay (none under 500 ms), dark mode and a theme switch with the overlay up. Not seen: a sub-500 ms play start, an ML Kit progress %. Found in passing (pre-existing): a 36 MB text file crashes ReviewPage with OutOfMemoryError in `EditText.setText` (follow-up).
+- Native-speaker read of the 4 `Wait_` strings in 14 locales.
+- iOS.
