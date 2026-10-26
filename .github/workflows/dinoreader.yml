@@ -18,6 +18,7 @@ on:
       - 'global.json'
       - 'Directory.Build.props'
       - 'GitVersion.yml'
+      - 'GitVersion.dino.yml'
       - '*.slnx'
       - '.gitattributes'
       - '.github/workflows/release.yml'

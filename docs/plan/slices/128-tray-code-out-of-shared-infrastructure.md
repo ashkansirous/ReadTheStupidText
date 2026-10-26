@@ -46,7 +46,7 @@ whenever `dinowin` is true (`release.yml` 163-167), so every Dino change runs RT
 
 *Checks:* slnx x64 build, RTST 1103 tests pass, Dino Windows head publish, scripts tests 92 pass.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-26)
 
 - Tray-only Windows code (global hotkey, UIA selection monitor, clipboard listener, selection copier, foreground probe, startup task) lives in `src/ReadTheStupidText.Windows.Tray`, referenced only by `ReadTheStupidText.App`; do not put it back in shared `Infrastructure`, which Dino's Windows head ships. Interfaces and `Activity` stay in Application/Domain. (Slice 128: docs/plan/slices/128-tray-code-out-of-shared-infrastructure.md)
 - Tests run per product: `tests.yml` is the RTST suite (`windows|android|ios`), `dinoreader.yml` is the Dino suite and gates the Dino build and release-draft jobs. Keep the path lists in `windows.yml`, `tests.yml` and `dinoreader.yml` in step with `ship-targets.mjs` (the parity test enforces it). (Slice 128: docs/plan/slices/128-tray-code-out-of-shared-infrastructure.md)

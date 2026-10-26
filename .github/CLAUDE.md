@@ -13,6 +13,22 @@ Loaded when you edit workflows or scripts. Complements the root `CLAUDE.md`.
 > (`tests.yml`) -> release-draft -> `windows.yml` / `android.yml` / `ios.yml` (reusable;
 > they also run on their own PR paths, never signing or uploading on PRs) ->
 > release-publish -> store-submit, play-submit, testflight-submit, publish-downloads.
+> **One version and release per product (Slice 130, Decision 137):** Read The Stupid Text is `rtst-v<x.y.z>`
+> (`GitVersion.yml`), Dino Reader `dino-v<x.y.z>` (`GitVersion.dino.yml`; keep the two files identical except
+> `tag-prefix`). `release.yml` runs two GitVersion steps and has a draft, publish and submit chain per product
+> (`release-draft-rtst`/`-dino`, `release-publish-rtst`/`-dino`). `ship-targets.mjs` measures each product's
+> changes from its own newest tag (`PRODUCTS`), so a Dino-only change cuts no RTST release and the reverse; a
+> core change cuts both; a major bump or `force_all` applies per product. A release carries only its own
+> product's files; carry-forward stays inside the product (`find-release.sh` takes a tag regex; the first
+> `rtst-v`/`dino-v` release also falls back to the old shared `v*` releases). RTST tests gate only the RTST
+> chain, `dinoreader.yml` only the Dino one. Only the RTST release is marked latest (README, `releases/latest`).
+> The version job bootstraps a missing `rtst-v*`/`dino-v*` baseline itself (`bootstrap-baseline-tags.sh`
+> tags the newest legacy `v*` release commit and pushes it, so versions continue and never restart at
+> 0.1.0; it fails only if no legacy tag exists). `GitVersion.dino.yml` is a path of every Dino target and
+> must stay identical to `GitVersion.yml` except `tag-prefix`.
+> The Worker is unaffected: it resolves "latest" per product from the R2 manifest, not from tags.
+> (Slice 130: docs/plan/slices/130-per-product-versions-and-releases.md)
+
 > `ship-targets.mjs` holds the path -> platform mapping (`Mobile/Platforms/Android` ->
 > Android, `Mobile/Platforms/iOS` -> iOS, rest of `Mobile` -> both; `App`/`Infrastructure`
 > -> Windows; core paths -> all; a major bump -> all). `ship-targets.test.mjs` checks
@@ -72,7 +88,7 @@ msstore CLI) once the Partner Center secrets are set.
 
 ## Packs releases
 
-`packs-<n>` releases hold packs + `packs.json`, published by the manual `packs.yml` with `--latest=false`. Every app-release tag scan (`release.yml` release-publish, `.github/scripts/find-release.sh`) must filter to `^v[0-9]+\.[0-9]+\.[0-9]+$`. (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
+`packs-<n>` releases hold packs + `packs.json`, published by the manual `packs.yml` with `--latest=false`. Every app-release tag scan (`release.yml` release-publish-*, `.github/scripts/find-release.sh`) must filter to the product's `^rtst-v`/`^dino-v` (or legacy `^v`) tags, never to `packs-<n>`. (Slice 50: docs/plan/slices/50-voice-packs-first-run-language.md)
 
 A new translation pair in `packs.yml` needs its `TRANSLATION_PAIRS` entry, an 11-column table row (layout and per-pair licence) and a matching `TranslationPacks` leg; a test ties the three together, and `maxLength` must resolve (`max_position_embeddings` fallback) or the job fails. New packs reach users only after a `packs.yml` run and the `PackConstants` pin bump. (Slice 106: docs/plan/slices/106-windows-nordic-dutch-translation-packs.md)
 
@@ -80,8 +96,8 @@ A new translation pair in `packs.yml` needs its `TRANSLATION_PAIRS` entry, an 11
 
 Dino Reader has its own path-filter target (`dinoapp` in `ship-targets`, with
 `dinoreader-android.yml`; assets `DinoReader-<v>.aab`/`.apk`; `DINOREADER_*` secrets,
-never the RTST ones; without all five a Dino-only change cuts no release). One shared
-version (`v<x.y.z>`) covers both products.
+never the RTST ones; without all five a Dino-only change cuts no release). Its releases are
+`dino-v<x.y.z>` (Slice 130).
 
 Dino Reader on iOS (Slice 67) is the `dinoios` target: `dinoreader-ios.yml` (a twin of `ios.yml`
 for `src/DinoReader.App`, asset `DinoReader-<v>.ipa`) and `testflight-submit-dino` in `release.yml`.

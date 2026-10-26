@@ -25,7 +25,8 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		ApplyRightToLeftFonts();
 		_services = services;
 		_config = config;
-		_config.Changed += (_, _) => MainThread.BeginInvokeOnMainThread(ShowUpdateIfRequired);
+		// Contract: AppConfigClient raises Changed only on the main thread, so this handler may touch UI directly.
+		_config.Changed += (_, _) => ShowUpdateIfRequired();
 		PageAppearing += (_, page) => SystemBarIcons.ForPage(page);
 		_ = startup.RunAsync();
 	}

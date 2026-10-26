@@ -8,7 +8,12 @@
 #   +semver: major   (or "breaking") -> bump the major
 #   +semver: none    (or "skip")     -> no bump
 # (commit-message bumping is enabled by default in this preset.)
+#
+# One version per product (Slice 130, Decision 137): this file is Read The Stupid Text's
+# (tags rtst-v<x.y.z>); GitVersion.dino.yml is Dino Reader's (tags dino-v<x.y.z>). They differ
+# only in `tag-prefix`, so keep every other line identical. The old v<x.y.z> tags are ignored.
 workflow: GitHubFlow/v1
+tag-prefix: 'rtst-v'
 branches:
   main:
     label: null        # null (not '') -> stable versions, no pre-release suffix

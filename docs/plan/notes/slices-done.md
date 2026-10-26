@@ -132,7 +132,10 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 135 | Dino: every pig a piglet, and the emulator fixes for Slices 124-125 | built | #352 | | [135-dino-animal-voices-fixes.md](../slices/135-dino-animal-voices-fixes.md) |
 | 126 | Dino: keep the screen awake while a book is playing | built | #357 | | [126-dino-keep-screen-awake.md](../slices/126-dino-keep-screen-awake.md) |
 | 127 | Release safety: Dino iOS .ipa gap and the Store id fallback | built | #358 | | [127-release-safety-fixes.md](../slices/127-release-safety-fixes.md) |
+| 128 | Tray code out of the shared Infrastructure, and tests per product | built | #363 | | [128-tray-code-out-of-shared-infrastructure.md](../slices/128-tray-code-out-of-shared-infrastructure.md) |
+| 129 | Dino voice features out of the shared speech engine | built | #364 | | [129-dino-voice-features-out-of-shared-engine.md](../slices/129-dino-voice-features-out-of-shared-engine.md) |
 | 132 | Dino: a remote switchboard and a forced update | built | #359 | | [132-dino-remote-config-and-force-update.md](../slices/132-dino-remote-config-and-force-update.md) |
+| 133 | Dino: anonymous usage counts, first event end to end | built | #365 | | [133-dino-anonymous-usage-counts.md](../slices/133-dino-anonymous-usage-counts.md) |
 | 136 | Dino: the animal comes from the picked character (no Animal line) | built | #360 | | [136-dino-animal-from-character.md](../slices/136-dino-animal-from-character.md) |
 
 ## Batch ordering notes

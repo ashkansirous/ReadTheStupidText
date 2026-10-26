@@ -13,8 +13,9 @@ at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
 
 **Two more products share this repo.** The same RTST app ships on **Android** (and iOS) via
 **.NET MAUI**, reusing `Domain`/`Application` unchanged. **Dino Reader** is a second MAUI app (a
-kids' book reader with a voice per character) sharing the Mobile.Shared platform code. One shared
-version (`v<x.y.z>`) covers both products.
+kids' book reader with a voice per character) sharing the Mobile.Shared platform code. Each product has
+its own version, tag and GitHub Release: `rtst-v<x.y.z>` and `dino-v<x.y.z>` (Decision 137; the old shared
+`v<x.y.z>` tags are history).
 
 > **Stacked PRs:** open them against `main`, or retarget each one after its base
 > merges (PRs #154-#156 once merged into each other instead). (Decisions 45-51;
@@ -138,6 +139,7 @@ record: delete it first (wrangler has no DNS scope). Privacy policy edits touch 
 `site/privacy.html`. Don't add `docs/CNAME` or a GitHub Actions deploy. See `docs/DEPLOYING.md`.
 The Worker also serves `dinoreader.sirous.uk` -> `site/dino/` (workers.dev: `/dino/` prefix); host routing is in `worker/downloads.ts` (`resolveSite`), every `run_worker_first` path needs its `/dino` twin (`check-configs` enforces), and the Dino site makes no third-party requests (kids' app).
 Usage counts (`POST /api/events`, `worker/events.ts`, Slice 133) write to Analytics Engine through a `USAGE` binding that is **not** in the wrangler configs, because a deploy fails if Analytics Engine is not enabled on the account. Without it the endpoint answers 204 and writes nothing while telemetry is off, 503 while it is on. To switch counting on: (1) enable Analytics Engine in the Cloudflare dashboard (Workers & Pages > Analytics Engine); (2) add this block to both `wrangler.jsonc` and `wrangler.workers-dev.jsonc` (next to `r2_buckets`): `"analytics_engine_datasets": [{ "binding": "USAGE", "dataset": "dino_usage" }],`; (3) deploy (merge to `main`); (4) set `telemetry.enabled` (and `sampleRate`) in `dinoreader/config.json`.
+Usage events carry only closed-list fields, never an id, typed text or own-book title; `source` is `shelf`+id only for starter/store books, else `own`. Count with `SUM(double1)`, not `COUNT(*)`, because of sampling. (Slice 133: docs/plan/slices/133-dino-anonymous-usage-counts.md)
 The Dino host also serves the free story store (Slice 92): `GET /api/stories`, `/api/stories/<id>/cover` and `/api/stories/<id>/download[?v=n]` (`worker/stories.ts`, Dino only; `/api/stories` and `/api/stories/*` plus their `/dino` twins are in `run_worker_first`). Store stories are built with `DINO_BUILD_STORE=1 dotnet test tests/DinoReader.Tests` (to `artifacts/store/<id>/`) and uploaded with `tools/upload-store-story.ps1 <id>` to `dinoreader/stories/<id>/{meta.json, cover.jpg, story-v<n>.dino}` in the downloads bucket, `meta.json` last: a folder is listed only with `meta.json` and a package, and `meta.json` carries `schemaVersion` (the `.dino` format), `title`, `language`, `pageCount`, `minutes`, optional `version`/`added`/`credits`, `ageMin`/`ageMax` (both or neither; integers 0-18, min <= max, else both dropped) and `author` (trimmed, max 100; Slice 112) (`worker/stories.ts` trims `credits` and caps it at 200 characters; Slice 102). The story id is the package id; upload a new `story-v<n+1>.dino` rather than overwriting a version (`?v=` is cached for a day).
 The Dino host also serves the remote config (Slice 132): `GET /api/app-config` (`worker/appconfig.ts`, Dino only, `/api/app-config` and its `/dino` twin in `run_worker_first`, read from R2 on every request so a changed file takes effect at once) from the R2 object `dinoreader/config.json` in the downloads bucket: `{"android":{"minVersion":"1.2.0","latestVersion":"1.3.0"},"ios":{...},"windows":{...},"telemetry":{"enabled":false,"sampleRate":0}}`. Change it with `wrangler r2 object put readthestupidtext-downloads/dinoreader/config.json --file config.json --remote`; a missing or bad file (or field) means no forced update and telemetry off. To force an update set that platform's `minVersion` above the oldest build you still allow.
 (Slice 68: docs/plan/slices/68-landing-site-on-worker.md; Slice 74: docs/plan/slices/74-dino-reader-site.md; Slice 92: docs/plan/slices/92-dino-story-store.md)
@@ -184,12 +186,16 @@ so a failing test blocks the release.
   single `release.yml` run does it all: GitVersion computes the next SemVer, the
   MSIX is packaged with that version stamped into `Package.appxmanifest`
   `Version` (`x.y.z.0` — the Store needs revision `0`) **at build time** (not
-  committed), then a `v<x.y.z>` tag + GitHub Release are cut at the merge commit.
-  No PAT, no commit-back. **`main` defaults to a patch bump.** To bump higher,
+  committed), then a `rtst-v<x.y.z>` tag + GitHub Release are cut at the merge commit. **Per
+  product (Slice 130, Decision 137):** `GitVersion.yml` (tag prefix `rtst-v`) is Read The Stupid Text's,
+  `GitVersion.dino.yml` (`dino-v`) is Dino Reader's; a release carries only its own product's files, so a
+  Dino-only change cuts `dino-v…` and no RTST release, and a core change cuts both. Both continue from the
+  old shared version (neither number or Android `versionCode` goes backwards). No PAT, no commit-back. **`main` defaults to a patch bump.** To bump higher,
   put a token in a commit message (highest since the last tag wins): **`+semver:
   minor`** for a feature, **`+semver: major`** for a breaking change, `+semver:
   none` to skip. Config: `GitVersion.yml`. So: write a normal commit and add
-  `+semver: minor`/`major` when the change warrants it; otherwise it's a patch.
+  `+semver: minor`/`major` when the change warrants it; otherwise it's a patch. A token bumps whichever
+  product(s) the run cuts, since both read the same commit messages since their own last tag.
 - **Signing:** CI stays **unsigned**; the Microsoft Store re-signs on publish
   (Decision 18). A domain (e.g. `sirous.uk`) cannot sign code. **Azure Trusted
   Signing** is the documented upgrade for trusted sideloaded MSIX — see

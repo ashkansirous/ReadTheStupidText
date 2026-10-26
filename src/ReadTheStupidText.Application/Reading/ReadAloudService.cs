@@ -47,6 +47,15 @@ public sealed partial class ReadAloudService : IDisposable
     // wait and only the final text is synthesized.
     private const int HeadStartStableMs = 80;
 
+    // The lone-select settle in effect; tests lengthen it to make "prepare runs before the read" deterministic.
+    internal int LoneSelectSettleMs
+    {
+        get => _loneSelectSettleMs;
+        set => _loneSelectSettleMs = Math.Max(0, value);
+    }
+
+    private int _loneSelectSettleMs = SettleBaselineMs;
+
     private readonly ISpeechReader _reader;
     private readonly IClipboardReader _clipboard;
     private readonly IHotkeyService _hotkey;
@@ -620,7 +629,7 @@ public sealed partial class ReadAloudService : IDisposable
         long now = Environment.TickCount64;
         bool dragging = now - _lastAutoReadTick < BurstGapMs;
         _lastAutoReadTick = now;
-        return dragging ? SettleDraggingMs : SettleBaselineMs;
+        return dragging ? SettleDraggingMs : LoneSelectSettleMs;
     }
 
     private async Task ReadAfterDebounceAsync(ActivityEntry entry, string text, int settleMs, CancellationToken token)

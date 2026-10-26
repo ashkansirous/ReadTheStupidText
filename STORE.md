@@ -24,8 +24,8 @@ the four Partner Center secrets (the `STORE_PRODUCT_ID` variable is already set)
 Verified end-to-end and **live**:
 
 - ✅ **Versioning → build → release** runs in `release.yml` (GitVersion →
-  `windows.yml` per-arch MSIX → `v<x.y.z>` tag + GitHub Release). It has cut real releases
-  (`v0.1.0` … `v0.4.0`), staying in `0.x` as intended — **not** forced to `v1.0.0`.
+  `windows.yml` per-arch MSIX → `rtst-v<x.y.z>` tag + GitHub Release). It cut `v0.1.0` … `v0.4.0` as the
+  one shared version; since Slice 130 RTST and Dino Reader each have their own tag and release.
 - ✅ **Tests gate the release** — a `test` job runs the unit suite and blocks
   `build`/`release` on failure (Slice 15b).
 - ✅ **Store identity** wired into the manifest (Slice 16 / Decision 23) and
@@ -54,7 +54,7 @@ merges don't resubmit to the Store), with no manual step. To force a manual re-s
 failure, or resubmitting an older tag), it's still just:
 
 ```bash
-gh workflow run store-submit -f tag=v<x.y.z>
+gh workflow run store-submit -f tag=rtst-v<x.y.z>
 ```
 
 **One-time Partner Center setup — done, kept because it is the non-obvious part.**
@@ -431,13 +431,15 @@ Versioning is fully automatic and lives **entirely inside `release.yml`** — on
 workflow run does version → build → release, with no PAT and no commit-back
 (Decision 17 / Slice 14). **Git tags are the source of truth.**
 
-1. The `version` job runs **GitVersion** (`GitVersion.yml`, GitHub Flow preset),
-   which reads git history and computes the next SemVer. `main` defaults to a
-   **Patch** bump over the last `v*` tag.
+1. The `version` job runs **GitVersion** once per product (Slice 130, Decision 137):
+   `GitVersion.yml` (GitHub Flow preset, tag prefix `rtst-v`) for Read The Stupid Text and
+   `GitVersion.dino.yml` (`dino-v`) for Dino Reader. It reads git history and computes the next
+   SemVer. `main` defaults to a **Patch** bump over that product's last tag; the old shared `v*`
+   tags are ignored.
 2. The `build` job stamps that version (`x.y.z.0` — the Store needs revision `0`)
    into the manifest **at build time** and packages the MSIX. Nothing is
    committed back.
-3. On a push to `main`, the `release` job creates the **`v<x.y.z>` tag** at the
+3. On a push to `main`, the `release-publish-rtst` job creates the **`rtst-v<x.y.z>` tag** at the
    merge commit and a **GitHub Release** with both `.msix` assets — same run, so
    a plain `GITHUB_TOKEN` is enough (no second workflow to trigger).
 
@@ -463,9 +465,10 @@ Distribution uses **GitHub Releases**. They are also CI's only output store,
 because Release assets don't count toward the Actions storage quota. Every push
 to `main` that touches app code cuts one (see *Versioning* above). It is created
 as a **draft**, each platform build uploads into it, and it is published (which
-creates the `v*` tag) only once every affected build succeeded. When a change
+creates the `rtst-v*` tag) only once every affected build succeeded. When a change
 touched only one platform, the other platform's assets are **carried forward**
-from its last release, so `releases/latest` always has the MSIX and the APK. The packages get **stable URLs** under
+from the product's last release, so `releases/latest` (always the RTST release; Dino Reader's
+`dino-v*` releases are published not-latest) has the MSIX and the APK. The packages get **stable URLs** under
 `…/releases/latest`, linked from the README, and serve as the hosted source the
 Store-submission step pulls from.
 
