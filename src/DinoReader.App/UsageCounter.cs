@@ -1,4 +1,7 @@
 using DinoReader.Core;
+using UsageBuckets = ReadTheStupidText.Application.Usage.UsageBuckets;
+using UsageWaitStage = ReadTheStupidText.Application.Usage.UsageWaitStage;
+using ReadTheStupidText.Mobile.Shared.Waiting;
 using ReadTheStupidText.Mobile.Shared.Usage;
 
 namespace DinoReader;
@@ -28,6 +31,19 @@ public sealed class UsageCounter
 			() => (config.Current.Telemetry.Enabled, config.Current.Telemetry.SampleRate),
 			() => config.HasCopy,
 			UsageBatch.ToJson, UsageBatch.ParseQueue, UsageBatch.QueueToJson));
+		WaitController.Finished -= RecordWait; // guarded: a second counter must not stay subscribed twice
+		WaitController.Finished += RecordWait;
+	}
+
+	// Slice 148: every wait overlay that showed, and every Cancel on one, with its stage and a coarse duration. About no book.
+	private void RecordWait(WaitFinish finish)
+	{
+		string detail = UsageDetail.Wait(UsageWaitStage.Of(finish.Stage), UsageBuckets.Duration(finish.Shown));
+		RecordGeneral(UsageEventName.WaitShown, UsageEvent.NoLanguage, detail);
+		if (finish.Cancelled)
+		{
+			RecordGeneral(UsageEventName.WaitCancelled, UsageEvent.NoLanguage, detail);
+		}
 	}
 
 	/// <summary>Whether counts may be sent at all; turning it off also forgets what was waiting.</summary>

@@ -54,7 +54,7 @@ public class SpeechTextChunkerTests
     }
 
     [Fact]
-    public void First_chunk_of_a_long_read_is_just_the_leading_sentence()
+    public void First_chunk_of_a_long_read_is_just_the_leading_sentences()
     {
         // One paragraph of several sentences, over SingleChunkMax so it splits.
         string text = "First short sentence. " +
@@ -63,16 +63,26 @@ public class SpeechTextChunkerTests
         IReadOnlyList<string> chunks = SpeechTextChunker.Split(text);
 
         Assert.True(chunks.Count > 1, "long text should split");
-        Assert.Equal("First short sentence.", chunks[0]);
+        Assert.Equal("First short sentence. Then more padding sentence here.", chunks[0]);
     }
 
     [Fact]
-    public void Default_head_is_one_sentence_even_when_two_would_fit_the_cached_cap()
+    public void Default_head_is_two_sentences_when_they_fit_its_cap()
     {
-        string text = "One short sentence. Two short sentence. " +
+        string text = "One short sentence. Two short sentence. Three short sentence. " +
             string.Concat(Enumerable.Repeat("Then more padding sentence here. ", 8));
 
-        Assert.Equal("One short sentence.", SpeechTextChunker.Split(text)[0]);
+        Assert.Equal("One short sentence. Two short sentence.", SpeechTextChunker.Split(text)[0]);
+    }
+
+    [Fact]
+    public void Default_head_is_one_sentence_when_two_would_pass_its_cap()
+    {
+        string first = string.Concat(Enumerable.Repeat("alpha ", 12)).Trim() + "."; // ~72 chars
+        string second = string.Concat(Enumerable.Repeat("beta ", 12)).Trim() + "."; // ~59 chars
+        string text = $"{first} {second} " + string.Concat(Enumerable.Repeat("Then more padding sentence here. ", 8));
+
+        Assert.Equal(first, SpeechTextChunker.Split(text)[0]);
     }
 
     [Fact]

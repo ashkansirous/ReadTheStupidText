@@ -231,6 +231,7 @@
   <data name="Wizard_NoText" xml:space="preserve"><value>No text found on this page</value></data>
   <data name="Wizard_Reading" xml:space="preserve"><value>Reading page {0} of {1}</value></data>
   <data name="Wait_GettingVoices" xml:space="preserve"><value>Getting the voices ready…</value></data>
+  <data name="Wait_Stalled" xml:space="preserve"><value>Still getting the voice ready…</value></data>
   <data name="Wait_ReadingPictures" xml:space="preserve"><value>Reading the pictures…</value></data>
   <data name="Wait_PageOf" xml:space="preserve"><value>Page {0} of {1}</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>Translating…</value></data>

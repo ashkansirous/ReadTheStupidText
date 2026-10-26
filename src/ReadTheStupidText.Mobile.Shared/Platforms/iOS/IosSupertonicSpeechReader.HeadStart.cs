@@ -21,37 +21,35 @@ public sealed partial class IosSupertonicSpeechReader
     {
         if (string.IsNullOrWhiteSpace(text))
         {
-            return Task.CompletedTask;
+            return HeadStartRun.Skipped;
         }
 
         // The token is taken here, synchronously and in call order, so a later call always
         // supersedes an earlier one and CancelPrepare reaches a prepare still queued on the pool.
         return BeginPrepare() is { } token
-            ? Task.Run(() => PrepareOffCallerAsync(text, token))
-            : Task.CompletedTask;
+            ? Task.Run(() => HeadStartRun.CompleteAsync(token, t => PrepareOffCallerAsync(text, t)))
+            : HeadStartRun.Skipped;
     }
 
     // Runs on the thread pool, so acquiring the engine (which may build the model), planning the
     // chunks and indexing the cache never block the UI thread that asked.
-    private async Task PrepareOffCallerAsync(string text, CancellationToken token)
+    private async Task<bool> PrepareOffCallerAsync(string text, CancellationToken token)
     {
         if (token.IsCancellationRequested || AcquireEngine() is not { } engine)
         {
-            return;
+            return false;
         }
 
         try
         {
             token.ThrowIfCancellationRequested();
             await PrepareChunksAsync(engine, text, token);
+            return true;
         }
-        catch (OperationCanceledException)
-        {
-            // Superseded or cancelled: nothing to clean up.
-        }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _log.Warning("head start failed", error: ex);
+            return false;
         }
         finally
         {
@@ -61,14 +59,24 @@ public sealed partial class IosSupertonicSpeechReader
 
     private async Task PrepareChunksAsync(IosBuiltEngine engine, string text, CancellationToken token)
     {
-        VoiceInfo voice = ResolveVoice(engine, Volatile.Read(ref _voiceId));
+        string? voiceId = Volatile.Read(ref _voiceId);
+        VoiceInfo voice = ResolveVoice(engine, voiceId);
         string prefix = TrimToSentenceBoundary(text);
         IEnumerable<string> sentences = SpeechChunkPlanner.ForText(prefix, HeadPolicy)
             .Take(PrepareMaxChunks)
             .SelectMany(chunk => SentenceUnits.Split(chunk.Text));
 
         await Task.WhenAll(sentences.Select(s => GetSentenceAsync(engine, s, voice, null, token)));
+        _hints.Remember(text, FirstChunkHints.ScopeOf(voiceId, null), HeadPolicy); // only now that the units are stored
     }
+
+    // The early start's prepared heads (Slice 139): this reader's own.
+    private readonly FirstChunkHints _hints = new();
+
+    // The head the early start prepared for this voice, if the text starts with it; consumed by this read.
+    private IReadOnlyList<SpeechChunkPlan> PlanText(string text) =>
+        SpeechChunkPlanner.ForText(
+            text, HeadPolicy, firstChunkHint: _hints.Take(text, FirstChunkHints.ScopeOf(Volatile.Read(ref _voiceId), null)));
 
     // The first PrepareMaxChars characters, cut back to the last sentence end so a sentence is never
     // synthesized half-way (it would be cached under a key no read ever asks for). With no boundary

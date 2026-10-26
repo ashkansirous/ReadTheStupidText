@@ -7,7 +7,8 @@ namespace DinoReader.Tests;
 public sealed class StoreStoryTests : IDisposable
 {
     private const int MinPages = 8;
-    private const int MaxPages = 15;
+    private const int MaxPages = 18; // the user's limit for a store book (2026-10-26, X Marks the Treasure!)
+    private const int StoryCount = 11;
 
     private readonly string _root = Path.Combine(Path.GetTempPath(), "dino-store-test-" + Guid.NewGuid().ToString("N"));
 
@@ -42,11 +43,11 @@ public sealed class StoreStoryTests : IDisposable
     }
 
     [Fact]
-    public void TheStore_HasTenStories_WithFixedUniqueIds()
+    public void TheStore_HasEveryStory_WithFixedUniqueIds()
     {
-        Assert.Equal(10, StoreTexts.All.Count);
-        Assert.Equal(10, StoreTexts.All.Select(s => s.Id).Distinct().Count());
-        Assert.Equal(10, StoreTexts.All.Select(s => s.Stem).Distinct().Count());
+        Assert.Equal(StoryCount, StoreTexts.All.Count);
+        Assert.Equal(StoryCount, StoreTexts.All.Select(s => s.Id).Distinct().Count());
+        Assert.Equal(StoryCount, StoreTexts.All.Select(s => s.Stem).Distinct().Count());
         Assert.All(StoreTexts.All, s => Assert.True(StoryIds.IsValid(s.Id), s.Title));
         Assert.Empty(StoreTexts.All.Select(s => s.Id).Intersect(StarterBuilder.Starters.Select(s => s.Id).Append(StarterBuilder.GoodEnoughId)));
     }
@@ -93,29 +94,23 @@ public sealed class StoreStoryTests : IDisposable
     [MemberData(nameof(Languages))]
     public void TheUglyDuckling_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
     {
-        Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.UglyDucklingId));
-        IReadOnlyList<CastMember> stored = language == story.Language
-            ? story.Cast
-            : story.Cast.Where(m => m.HasAnimalSetting).Select(m => m with { VoiceId = string.Empty }).ToList();
-        List<Character> characters = story.Cast.Select(m => new Character(m.CharacterId, m.Name, m.Gender, 1)).ToList();
-        IReadOnlyDictionary<string, AnimalKind> animals = AnimalSounds.Resolve(characters, story.Language, stored, story.Text);
-        IReadOnlyList<StorytellerCharacter> speakers = CharacterRoster.Speakers(language);
-        string narrator = CharacterRoster.Narrators(language)[0].VoiceId;
-
-        VoiceCast cast = CastCharacters.Cast(
-            characters, CharacterRoster.Choices(speakers, narrator), CharacterRoster.For(language), narrator, c => FlavourGuess.Guess(c.Name, LanguageRules.English),
-            StoryCast.PinnedCharacters(stored), animalOf: c => animals.TryGetValue(c.Id, out AnimalKind kind) ? AnimalCharacters.HintFor(kind, c.Name, story.Language) : null);
-
-        var expected = new Dictionary<string, Gender>
+        AssertEachIsPlayedByTheirGender(StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.UglyDucklingId)), language, new Dictionary<string, Gender>
         {
             ["Mother Duck"] = Gender.Female, ["Dilly"] = Gender.Female, ["Hen"] = Gender.Female, ["Duckling"] = Gender.Male, ["Swan"] = Gender.Male,
-        };
-        foreach (Character character in characters)
+        });
+    }
+
+    // Every roster's bear voices (bear, big bear, cub) are men's, so the builder stores Mama Bear as no animal (StarterAnimals): she is cast by gender, a woman's voice.
+    // Papa Bear and Baby Bear keep their bear voices and growl; Baby Bear is a boy cub ("he forgot to shut the door").
+    // Mum has no line, so the cast is exactly these four (the helper fails on any other character).
+    [Theory]
+    [MemberData(nameof(Languages))]
+    public void Goldilocks_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
+    {
+        AssertEachIsPlayedByTheirGender(StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.GoldilocksId)), language, new Dictionary<string, Gender>
         {
-            Assert.True(expected.ContainsKey(character.Name), $"{language}: the cast has {character.Name}, which this test has no expected gender for");
-            StorytellerCharacter? played = CharacterRoster.Nearest(speakers, cast.VoiceFor(character.Id)!, cast.Flavours![character.Id], character.Gender);
-            Assert.True(played?.Gender == expected[character.Name], $"{language}: {character.Name} is played by {played?.Name} ({played?.Gender})");
-        }
+            ["Goldilocks"] = Gender.Female, ["Mama Bear"] = Gender.Female, ["Papa Bear"] = Gender.Male, ["Baby Bear"] = Gender.Male,
+        });
     }
 
     // The Little Red Hen (Slice 121): the roster's kitten and duckling voices are girls in most languages but boys in Farsi, Spanish and Portuguese, so the builder
@@ -130,6 +125,54 @@ public sealed class StoreStoryTests : IDisposable
         };
 
         Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.RedHenId));
+        AssertEachIsPlayedByTheirGender(story, language, expected);
+    }
+
+    // The Town Mouse and the Country Mouse (Slice 121): Town Mouse is "she" and Country Mouse "he", so the two friends sound different in every language (the
+    // stored English genders are checked too, since every other language is cast from them).
+    [Theory]
+    [MemberData(nameof(Languages))]
+    public void TheTownMouseAndTheCountryMouse_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
+    {
+        Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.TownMouseId));
+        var expected = new Dictionary<string, Gender>
+        {
+            ["Town Mouse"] = Gender.Female, ["Country Mouse"] = Gender.Male,
+        };
+
+        Assert.Equal(expected.Keys.Order(), story.Cast.Select(m => m.Name).Order());
+        Assert.All(story.Cast, m => Assert.True(m.Gender == expected[m.Name], $"{m.Name} is stored as {m.Gender}"));
+        AssertEachIsPlayedByTheirGender(story, language, expected);
+    }
+
+    // The Tale of Peter Rabbit (Slice 121): Mrs. Rabbit and Flopsy are "she", Peter, Mr. McGregor and Robin "he". The roster's bunny voice is a girl in most
+    // languages, so the builder stores Peter as no animal (StarterAnimals) and he is cast as a boy; Mrs. Rabbit is grown, which no bunny voice plays.
+    [Theory]
+    [MemberData(nameof(Languages))]
+    public void TheTaleOfPeterRabbit_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
+    {
+        var expected = new Dictionary<string, Gender>
+        {
+            ["Mrs. Rabbit"] = Gender.Female, ["Flopsy"] = Gender.Female, ["Peter"] = Gender.Male, ["Mr. McGregor"] = Gender.Male, ["Robin"] = Gender.Male,
+        };
+
+        Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.PeterRabbitId));
+        Assert.Equal(expected.Keys.Order(), story.Cast.Select(m => m.Name).Order());
+        Assert.All(story.Cast, m => Assert.True(m.Gender == expected[m.Name], $"{m.Name} is stored as {m.Gender}"));
+        AssertEachIsPlayedByTheirGender(story, language, expected);
+    }
+
+    // X Marks the Treasure! (Slice 121): Kaatrin, Izzy and Pancake Polly are girls, the Seagull is a "she" with no animal word the guesser knows, Billy is a boy.
+    [Theory]
+    [MemberData(nameof(Languages))]
+    public void XMarksTheTreasure_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
+    {
+        var expected = new Dictionary<string, Gender>
+        {
+            ["Kaatrin"] = Gender.Female, ["Izzy"] = Gender.Female, ["Pancake Polly"] = Gender.Female, ["Seagull"] = Gender.Female, ["Billy"] = Gender.Male,
+        };
+
+        Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.TreasureId));
         AssertEachIsPlayedByTheirGender(story, language, expected);
     }
 
@@ -281,7 +324,18 @@ public sealed class StoreStoryTests : IDisposable
     [Fact]
     public void EveryStoreTitle_FitsTheCoverFont()
     {
-        Assert.All(StoreTexts.All, s => Assert.All(StoreCover.Wrap(s.Title), l => Assert.True(l.Length <= 10 && l.All(c => c is ' ' or (>= 'A' and <= 'Z')), l)));
+        Assert.All(StoreTexts.All, s => Assert.All(StoreCover.Wrap(s.Title), l => Assert.True(l.Length <= 10 && l.All(c => c is ' ' or '!' or (>= 'A' and <= 'Z')), l)));
+    }
+
+    [Fact]
+    public void TheCover_RendersATitleWithAnExclamationMark()
+    {
+        IReadOnlyList<string> wrapped = StoreCover.Wrap("X Marks the Treasure!");
+        byte[] jpeg = StoreCover.Render("X Marks the Treasure!", CoverPalette.ColourAt(0));
+
+        Assert.Contains(wrapped, l => l.EndsWith('!'));
+        Assert.Equal([0xFF, 0xD8], jpeg[..2]);
+        Assert.Equal([0xFF, 0xD9], jpeg[^2..]);
     }
 
     [Fact]

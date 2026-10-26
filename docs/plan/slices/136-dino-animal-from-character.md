@@ -1,5 +1,7 @@
 # Slice 136 — Dino: the animal comes from the picked character (no Animal line)
 
+*Reversed by Slice 152 (Decision 157, planned 2026-10-26): the animal comes from the book again, never from the picked character.*
+
 *Built 2026-10-25 (PR #360), not yet verified on the emulator.* Dino Reader only; RTST is not touched.
 
 **Batch:** 26 (Batch 25 mock follow-ups)

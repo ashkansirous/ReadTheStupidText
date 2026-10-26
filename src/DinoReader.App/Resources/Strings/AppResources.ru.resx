@@ -230,6 +230,7 @@
   <data name="Wizard_NoText" xml:space="preserve"><value>На этой странице текст не найден</value></data>
   <data name="Wizard_Reading" xml:space="preserve"><value>Чтение страницы {0} из {1}</value></data>
   <data name="Wait_GettingVoices" xml:space="preserve"><value>Готовим голоса…</value></data>
+  <data name="Wait_Stalled" xml:space="preserve"><value>Всё ещё готовим голос…</value></data>
   <data name="Wait_ReadingPictures" xml:space="preserve"><value>Читаем картинки…</value></data>
   <data name="Wait_PageOf" xml:space="preserve"><value>Страница {0} из {1}</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>Переводим…</value></data>

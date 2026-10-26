@@ -1,5 +1,8 @@
 using System.Text.RegularExpressions;
 using DinoReader.Core;
+using ReadTheStupidText.Application.Reading;
+using UsageBuckets = ReadTheStupidText.Application.Usage.UsageBuckets;
+using UsageWaitStage = ReadTheStupidText.Application.Usage.UsageWaitStage;
 
 namespace DinoReader.Tests;
 
@@ -140,6 +143,27 @@ public class UsageEventTests
         const string old = """[{"name":"book_opened","book":"own","language":"en","source":"own","hasRecording":false,"version":"1.0","platform":"android","day":"2026-10-25","sampleRate":1}]""";
 
         Assert.Equal(string.Empty, Assert.Single(UsageBatch.ParseQueue(old)).Detail);
+    }
+
+    [Fact]
+    public void A_wait_count_is_about_no_book_and_carries_stage_and_bucket_in_its_detail()
+    {
+        string detail = UsageDetail.Wait(UsageWaitStage.Of(WaitStage.Stalled), UsageBuckets.Duration(TimeSpan.FromSeconds(3)));
+        UsageEvent count = UsageEvent.ForNoBook(UsageEventName.WaitShown, UsageEvent.NoLanguage, detail, 1, "1.0", AppPlatform.Android, Now);
+
+        Assert.Equal(("wait_shown", "none", "none", "stalled:2-5"), (count.Name, count.Book, count.Source, count.Detail));
+        Assert.Equal("und", count.Language);
+    }
+
+    [Fact]
+    public void The_Worker_lists_exactly_the_waits_the_app_can_name()
+    {
+        string source = File.ReadAllText(Path.Combine(RepoRoot(), "worker", "events.ts"));
+        Match list = Regex.Match(source, @"WAIT_STAGES = \[(?<names>[^\]]*)\]");
+
+        Assert.True(list.Success);
+        string[] inWorker = Regex.Matches(list.Groups["names"].Value, "\"(?<name>[a-z_]+)\"").Select(m => m.Groups["name"].Value).ToArray();
+        Assert.Equal(UsageWaitStage.All.Order(), inWorker.Order());
     }
 
     [Fact]

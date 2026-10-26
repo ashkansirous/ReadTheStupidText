@@ -24,14 +24,20 @@ One item per book: art record, Gemini chat, pictures through the prepare script 
 
 - [x] Three Billy Goats Gruff (Little, Middle and Big Billy, Troll)
 - [x] The Lion and the Mouse (Lion, Mouse)
-- [ ] Goldilocks and the Three Bears (Goldilocks, Papa, Mama and Baby Bear)
-- [ ] Little Red Riding Hood (Red Riding Hood, Mother, Wolf, Grandmother, Woodcutter)
+- [x] Goldilocks and the Three Bears (Goldilocks, Papa, Mama and Baby Bear)
+- [x] Little Red Riding Hood (Red Riding Hood, Mother, Wolf, Grandma, Woodcutter, Button)
 - [x] The Ugly Duckling (Mother Duck, Duckling, Hen, Swan)
 - [x] The Little Red Hen (Hen, Dog, Cat, Duck)
-- [ ] Jack and the Beanstalk (Jack, Mother, Giant, Peddler)
+- [x] Jack and the Beanstalk (Jack, Mother, Giant, Peddler)
 - [ ] The Elves and the Shoemaker (Hans, Greta, Nib, Nob)
-- [ ] The Town Mouse and the Country Mouse (Town Mouse, Country Mouse)
-- [ ] Peter Rabbit (Mrs. Rabbit, Peter, Mr. McGregor); new pictures, not Potter's, in the house style
+- [x] The Town Mouse and the Country Mouse (Town Mouse, Country Mouse)
+- [x] Peter Rabbit (Mrs. Rabbit, Peter, Mr. McGregor, Robin, Flopsy); new pictures, not Potter's, in the house style
+
+## X Marks the Treasure! (2026-10-26)
+
+An original store book, the first of the user's "Captain Kaatrin and Seagull" series (cast: Kaatrin, Seagull, Izzy, Pancake Polly, Billy; 17 pages, author Ashkan Sirous, art record `docs/design/story-art/x-marks-the-treasure.md`). It is the first store book above 16 pages, so `StoreStoryTests.MaxPages` is now 18 and the page-count guidance in the dino skills and agents says 10-18. The captain is spelled "Kaatrin" so the English voices say KAA-trin (reasons in the art record).
+
+**Touches:** `tests/DinoReader.Tests/StoreTexts.cs`, `tests/DinoReader.Tests/StoreBuilder.cs`, `tests/DinoReader.Tests/StoreStoryTests.cs`, `tests/DinoReader.Tests/Store/x-marks-the-treasure/**`, `tests/DinoReader.Tests/Starters/translations/x-marks-the-treasure.*.json`, `docs/design/story-art/x-marks-the-treasure*`, `.claude/skills/create-dino-story/**`, `.claude/skills/dino-storytelling/**`, `.claude/agents/dino-story-*.md`
 
 ## Verification
 

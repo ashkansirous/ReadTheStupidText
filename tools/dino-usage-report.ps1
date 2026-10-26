@@ -82,6 +82,16 @@ SELECT blob9 AS from_language, blob3 AS to_language, $Weighted AS changes
 FROM $Dataset WHERE blob1 = 'reading_language_changed' AND $Window
 GROUP BY from_language, to_language $Enough ORDER BY changes DESC
 "@
+    'Waits the overlay showed (blob9 detail is "stage:duration bucket")' = @"
+SELECT blob9 AS wait_and_duration, blob7 AS platform, $Weighted AS shown
+FROM $Dataset WHERE blob1 = 'wait_shown' AND $Window
+GROUP BY wait_and_duration, platform $Enough ORDER BY shown DESC
+"@
+    'Waits cancelled (blob9 detail is "stage:duration bucket")' = @"
+SELECT blob9 AS wait_and_duration, blob7 AS platform, $Weighted AS cancelled
+FROM $Dataset WHERE blob1 = 'wait_cancelled' AND $Window
+GROUP BY wait_and_duration, platform $Enough ORDER BY cancelled DESC
+"@
     'App opens by version, platform and screen language' = @"
 SELECT blob6 AS version, blob7 AS platform, blob3 AS language, $Weighted AS opens
 FROM $Dataset WHERE blob1 = 'app_opened' AND $Window

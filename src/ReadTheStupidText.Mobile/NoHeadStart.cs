@@ -7,7 +7,7 @@ internal sealed class NoHeadStart : IHeadStart
 {
     public bool ReadInProgress => false;
 
-    public Task PrepareAsync(string text) => Task.CompletedTask;
+    public Task PrepareAsync(string text) => HeadStartRun.Skipped;
 
     public void CancelPrepare()
     {
