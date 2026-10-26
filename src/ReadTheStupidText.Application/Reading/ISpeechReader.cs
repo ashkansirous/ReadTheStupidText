@@ -34,6 +34,15 @@ public interface ISpeechReader
     /// must marshal to it themselves.</summary>
     event EventHandler<ReadChunk>? ChunkChanged;
 
+    /// <summary>Raised with true when a read that had started has to wait for its next chunk of audio (the sentence is still being
+    /// synthesized, or a second model is loading for a word) and with false when that wait ends (Slice 148). Raised on any thread. A reader
+    /// that cannot know (the phone's own voice, which buffers inside the OS) never raises it, which is the default.</summary>
+    event EventHandler<bool>? StallChanged
+    {
+        add { }
+        remove { }
+    }
+
     PlaybackState State { get; }
 
     /// <summary>

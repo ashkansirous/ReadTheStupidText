@@ -1,6 +1,6 @@
 ---
 name: dino-storytelling
-description: Write or retell a Dino Reader picture-book story for ages 3-9 - one action per page so every page gets its own picture, 10-16 pages, gentle endings, speaker-tagged dialogue for voices, repetition children can join in with, and a page-by-page picture plan. Use before illustrating any Dino book, when the user says "write a story", "retell <tale>", "split the story into pages", "more pages", or a book has pages that hold two actions. Then hand over to create-dino-story for the pictures.
+description: Write or retell a Dino Reader picture-book story for ages 3-9 - one action per page so every page gets its own picture, 10-18 pages, gentle endings, speaker-tagged dialogue for voices, repetition children can join in with, and a page-by-page picture plan. Use before illustrating any Dino book, when the user says "write a story", "retell <tale>", "split the story into pages", "more pages", or a book has pages that hold two actions. Then hand over to create-dino-story for the pictures.
 ---
 
 # Telling a Dino Reader story
@@ -28,7 +28,7 @@ and Decision 130. Read them first: they beat the classic tale.
 
 ## 2. Length and rhythm
 
-- **10-16 pages** for a classic tale; never fewer than 8. A page holds 1-4 short sentences, about 15-60
+- **10-18 pages** for a classic tale; never fewer than 8. A page holds 1-4 short sentences, about 15-60
   words. A page over ~60 words is two pages.
 - With the phone upright the words sit in a panel over the bottom of the picture (at most 30%,
   Slice 122), so short pages keep it small.

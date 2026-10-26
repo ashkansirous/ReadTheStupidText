@@ -64,15 +64,25 @@ public static class UsageEvents
             : null;
 
     /// <summary>A timed wait. The language pair is optional (a model download or the first sound may not know both).</summary>
-    public static UsageEvent Timing(UsageContext context, string stage, string outcome, TimeSpan elapsed, string? sourceLanguage = null, string? language = null) =>
+    public static UsageEvent Timing(UsageContext context, string stage, string outcome, TimeSpan elapsed, string? sourceLanguage = null, string? language = null, bool early = false) =>
         Make(context, UsageEventName.Timing) with
         {
             Stage = stage,
             Outcome = outcome,
             DurationBucket = UsageBuckets.Duration(elapsed),
+            Early = early ? true : null,
             SourceLanguage = Language(sourceLanguage),
             Language = Language(language),
         };
+
+    /// <summary>The wait overlay showed for <paramref name="shown"/> (Slice 148); only its stage and a coarse duration are counted.</summary>
+    public static UsageEvent WaitShown(UsageContext context, WaitStage stage, TimeSpan shown) => Wait(context, UsageEventName.WaitShown, stage, shown);
+
+    /// <summary>The person tapped Cancel on the wait overlay after it had shown for <paramref name="shown"/> (Slice 148).</summary>
+    public static UsageEvent WaitCancelled(UsageContext context, WaitStage stage, TimeSpan shown) => Wait(context, UsageEventName.WaitCancelled, stage, shown);
+
+    private static UsageEvent Wait(UsageContext context, string name, WaitStage stage, TimeSpan shown) =>
+        Make(context, name) with { WaitStage = UsageWaitStage.Of(stage), DurationBucket = UsageBuckets.Duration(shown) };
 
     /// <summary>The primary language code in lower case ("fa" for "fa-IR"), or null when <paramref name="code"/> is not a 2-3 letter language.</summary>
     public static string? Language(string? code)

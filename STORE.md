@@ -394,7 +394,7 @@ Store forms (Claude drafts and fills them in the signed-in browser; the user rev
   (next to `r2_buckets`), deploy, then put `{"telemetry": {"enabled": true, "sampleRate": 1}}` in `readthestupidtext/config.json`
   (`wrangler r2 object put readthestupidtext-downloads/readthestupidtext/config.json --file config.json --remote`).
 - Each point's double is the count's weight (1 / the sample rate it was counted at), so query with `SUM(double1)`, never `COUNT(*)`; blobs are
-  `name, version, platform, day, language, sourceLanguage, mode, engine, voiceDefault, lengthBucket, osMajor, stage, outcome, durationBucket`.
+  `name, version, platform, day, language, sourceLanguage, mode, engine, voiceDefault, lengthBucket, osMajor, stage, outcome, durationBucket, source, early` (`source` on Windows reads only; `early` on timing counts only, `yes` when the first sentences were prepared while the person decided, Slice 139).
   `tools/rtst-usage-report.ps1` hides groups of fewer than 10 events. That floor counts events, not households (there is no install id), so it
   is a noise filter and not an anonymity guarantee: say "no identifiers, counts only", never "cannot be traced".
 

@@ -36,6 +36,7 @@ public partial class ReadingPage : ContentPage
 	private readonly WaitOverlay _waitOverlay = DinoWait.OverPicture();
 	private readonly WaitController _wait;
 	private bool _loadingSeen;
+	private readonly ReadWaitOwner _waitOwner = new();
 	private bool _firstLoadDone; // the first Loading is the book opening; later ones are restarts the reader triggered
 	private readonly SemaphoreSlim _saveLock = new(1, 1); // the cast save and the mode save each read-modify-write _story: one at a time
 	private Story? _story;
@@ -344,7 +345,7 @@ public partial class ReadingPage : ContentPage
 			if (!Navigation.NavigationStack.Contains(this))
 			{
 				_onStack = false;
-				EndWait();
+				EndOwnedWait();
 				ApplyScreenAwake();
 				CancelDisplay();
 				Unsubscribe();
@@ -504,18 +505,51 @@ public partial class ReadingPage : ContentPage
 
 	private void ApplyWait()
 	{
-		if (_session.State != SessionState.Loading)
+		bool loading = _session.State == SessionState.Loading;
+		if (loading)
 		{
-			_firstLoadDone |= _loadingSeen; // only a Loading that has ended is the book opening; an Idle before it is not
-			EndWait();
+			_loadingSeen = true;
 		}
 		else
 		{
-			_loadingSeen = true;
-			bool translating = IsTranslating();
-			WaitStage stage = translating ? WaitStage.Translating : WaitStage.PreparingVoice;
-			_wait.Begin(stage, translating ? AppResources.Wait_Translating : AppResources.Wait_GettingVoices, canCancel: true); // while a wait runs this re-words it
+			_firstLoadDone |= _loadingSeen; // only a Loading that has ended is the book opening; an Idle before it is not
 		}
+
+		// Slice 148: this page ends the one wait it began (loading or stalled) as soon as the read no longer needs it; a wait it did not begin (save, import) is left alone.
+		ReadWaitAction action = _waitOwner.Next(loading, _session.Stalled, ForeignWaitActive());
+		if (action == ReadWaitAction.End)
+		{
+			EndWait();
+		}
+		else if (action == ReadWaitAction.Begin)
+		{
+			BeginReadWait(loading);
+		}
+	}
+
+	private bool ForeignWaitActive()
+	{
+		return _wait.IsActive && !_waitOwner.Owns;
+	}
+
+	private void BeginReadWait(bool loading)
+	{
+		if (!loading)
+		{
+			_wait.Begin(WaitStage.Stalled, AppResources.Wait_Stalled, canCancel: true);
+			return;
+		}
+
+		bool translating = IsTranslating();
+		WaitStage stage = translating ? WaitStage.Translating : WaitStage.PreparingVoice;
+		_wait.Begin(stage, translating ? AppResources.Wait_Translating : AppResources.Wait_GettingVoices, canCancel: true); // while a wait runs this re-words it
+	}
+
+	// Cancel, or the page leaving: the overlay goes whichever wait showed, and the page owns none.
+	private void EndOwnedWait()
+	{
+		_waitOwner.Cancelled();
+		EndWait();
 	}
 
 	private void EndWait()
@@ -537,6 +571,7 @@ public partial class ReadingPage : ContentPage
 		bool opening = !_firstLoadDone;
 		try
 		{
+			EndOwnedWait();
 			_session.Stop();
 			if (opening)
 			{

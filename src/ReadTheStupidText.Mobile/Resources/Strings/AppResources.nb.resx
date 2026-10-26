@@ -73,10 +73,12 @@
   <data name="Wait_DownloadingModel" xml:space="preserve"><value>Laster ned {0}…</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>Oversetter…</value></data>
   <data name="Wait_PreparingVoice" xml:space="preserve"><value>Gjør stemmen klar…</value></data>
+  <data name="Wait_Stalled" xml:space="preserve"><value>Gjør fortsatt stemmen klar…</value></data>
   <data name="Wait_ReadingFile" xml:space="preserve"><value>Leser filen…</value></data>
   <data name="Review_FirstTimeOnly" xml:space="preserve"><value>Bare første gang. Oversettelsen skjer på denne telefonen.</value></data>
   <data name="Review_ShowOriginal" xml:space="preserve"><value>Vis original</value></data>
   <data name="Review_FailedOne" xml:space="preserve"><value>Kunne ikke lese side {0}.</value></data>
+  <data name="Review_TextCut" xml:space="preserve"><value>Teksten er veldig lang, så bare de første {0} tegnene vises.</value></data>
   <data name="Review_FailedMany" xml:space="preserve"><value>Kunne ikke lese sidene {0}.</value></data>
   <data name="Review_HereOne" xml:space="preserve"><value>Side {0} er her.</value></data>
   <data name="Review_HereMany" xml:space="preserve"><value>Sidene {0} er her.</value></data>

@@ -466,6 +466,76 @@ public class ReadAloudServiceGeneratingTests
         await spoken.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
     }
 
+    [Fact]
+    public async Task A_read_of_the_text_auto_read_prepared_reuses_the_early_translation()
+    {
+        var translator = new FakeTranslator("bonjour");
+        var harness = new Harness(settings => new ReadTranslator(translator, new FakeDetector("fr"), settings, new SilentLog()));
+        harness.Settings.Language = "en";
+        harness.Settings.TranslateEnabled = true;
+        harness.Service.FirstAudioGrace = TimeSpan.FromMilliseconds(20);
+        harness.Reader.Streaming = true;
+        harness.DocumentText = LongText;
+        harness.Service.LoneSelectSettleMs = 30_000; // the auto-read itself must not start; only its early work
+
+        harness.Monitor.RaiseChanged(LongText);
+        await WaitForAsync(() => translator.Calls >= 1 && harness.HeadStart.Prepared.Count >= 1);
+        await harness.Service.ReadFileAsync("a.txt");
+
+        // The early call translated the first block; the read translated only the rest (two calls in all, not three).
+        Assert.Equal(2, translator.Calls);
+        harness.Service.Dispose();
+    }
+
+    [Fact]
+    public async Task With_translate_on_the_early_original_voicing_prepares_only_the_head()
+    {
+        var translator = new FakeTranslator("bonjour");
+        var harness = new Harness(settings => new ReadTranslator(translator, new FakeDetector("fr"), settings, new SilentLog()));
+        harness.Settings.Language = "en";
+        harness.Settings.TranslateEnabled = true;
+        harness.Service.LoneSelectSettleMs = 30_000;
+
+        harness.Monitor.RaiseChanged(LongText);
+        await WaitForAsync(() => translator.Calls >= 1);
+
+        Assert.NotEmpty(harness.HeadStart.Prepared);
+        Assert.Equal(EarlyStartPlan.OriginalHead(LongText), harness.HeadStart.Prepared[0]);
+        Assert.True(LongText.Length > harness.HeadStart.Prepared[0].Length);
+        harness.Service.Dispose();
+    }
+
+    [Fact]
+    public async Task A_read_of_other_text_drops_the_early_translation()
+    {
+        var translator = new FakeTranslator("bonjour");
+        var harness = new Harness(settings => new ReadTranslator(translator, new FakeDetector("fr"), settings, new SilentLog()));
+        harness.Settings.Language = "en";
+        harness.Settings.TranslateEnabled = true;
+        harness.Service.FirstAudioGrace = TimeSpan.FromMilliseconds(20);
+        harness.Reader.Streaming = true;
+        harness.DocumentText = LongText;
+        harness.Service.LoneSelectSettleMs = 30_000; // the auto-read itself must not start; only its early work
+
+        harness.Monitor.RaiseChanged("Another text. It has two sentences. And three. And four.");
+        await WaitForAsync(() => translator.Calls >= 1);
+        await harness.Service.ReadFileAsync("a.txt");
+
+        Assert.Equal(3, translator.Calls); // the early one, then the read's two blocks
+        harness.Service.Dispose();
+    }
+
+    private static async Task WaitForAsync(Func<bool> condition)
+    {
+        DateTime end = DateTime.UtcNow.AddSeconds(5);
+        while (!condition() && DateTime.UtcNow < end)
+        {
+            await Task.Delay(10, TestContext.Current.CancellationToken);
+        }
+
+        Assert.True(condition());
+    }
+
     private const string LongText = "One is first. Two is second. Three is third. Four is fourth. Five is fifth.";
 
     [Fact]

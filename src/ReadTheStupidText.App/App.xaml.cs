@@ -95,6 +95,7 @@ public partial class App : Application
             sp.GetRequiredService<IVoicePackService>().GetInstalledPath));
         services.AddSingleton<TranslationPackInstaller>();
         services.AddSingleton<ILanguageDetector, ScriptLanguageDetector>();
+        services.AddSingleton<IPackUpdateNetwork, ReadTheStupidText.Infrastructure.Translation.WindowsPackUpdateNetwork>();
         services.AddSingleton<ReadTranslator>();
 
         // Anonymous usage counts (Slice 140): one service, also the IUsageRecorder the read service and the panel's switch use.

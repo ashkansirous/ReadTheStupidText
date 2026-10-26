@@ -1,4 +1,5 @@
 using ReadTheStupidText.Application.Usage;
+using ReadTheStupidText.Mobile.Shared.Waiting;
 
 namespace ReadTheStupidText.Mobile.Shared.Usage;
 
@@ -30,6 +31,7 @@ public sealed class RtstUsage
 
     private readonly UsageQueueSender<UsageEvent> _sender;
     private int _flushScheduled;
+    private Func<UsageContext, UsageEvent?>? _skippedOpened; // this session's launch count, held while the switch was off
 
     public RtstUsage()
     {
@@ -42,7 +44,16 @@ public sealed class RtstUsage
     public bool Enabled
     {
         get => _sender.Enabled;
-        set => _sender.Enabled = value;
+        set
+        {
+            bool turnedOn = value && !_sender.Enabled;
+            _sender.Enabled = value;
+            if (turnedOn)
+            {
+                Func<UsageContext, UsageEvent?>? opened = Interlocked.Exchange(ref _skippedOpened, null);
+                _ = FetchConfigAndFlushAsync(opened); // switched on mid-session: StartAsync made no fetch while it was off
+            }
+        }
     }
 
     /// <summary>
@@ -55,6 +66,22 @@ public sealed class RtstUsage
         if (queued)
         {
             ScheduleFlush();
+        }
+    }
+
+    /// <summary>Counts every wait overlay that showed (<c>wait_shown</c>) and every Cancel on one (<c>wait_cancelled</c>), Slice 148. Call once at start-up.</summary>
+    public void CountWaits()
+    {
+        WaitController.Finished -= RecordWait;
+        WaitController.Finished += RecordWait;
+    }
+
+    private void RecordWait(WaitFinish finish)
+    {
+        Record(context => UsageEvents.WaitShown(context, finish.Stage, finish.Shown));
+        if (finish.Cancelled)
+        {
+            Record(context => UsageEvents.WaitCancelled(context, finish.Stage, finish.Shown));
         }
     }
 
@@ -80,11 +107,39 @@ public sealed class RtstUsage
     /// <summary>
     /// Fetches the remote config, counts the launch with <paramref name="opened"/> (only once a config is held: before that the default is
     /// off and the count would be dropped; if the fetch failed, the count waits for the config's first arrival), then sends what is queued.
-    /// Never throws; run it at app start.
+    /// Does nothing while the switch is off. Never throws; run it at app start.
     /// </summary>
     public async Task StartAsync(Func<UsageContext, UsageEvent?> opened)
     {
-        await _config.RefreshAsync().ConfigureAwait(false);
+        if (!Enabled)
+        {
+            _skippedOpened = opened; // the switch is off: no config fetch, no count, no send (Slice 148); kept so turning it on counts this session's launch once
+            return;
+        }
+
+        await FetchConfigAndFlushAsync(opened).ConfigureAwait(false);
+    }
+
+    private async Task FetchConfigAndFlushAsync(Func<UsageContext, UsageEvent?>? opened)
+    {
+        try
+        {
+            await _config.RefreshAsync().ConfigureAwait(false);
+            if (opened is not null)
+            {
+                RecordLaunch(opened);
+            }
+
+            await _sender.FlushAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Usage start failed: {ex.Message}"); // counting must never change what the app does
+        }
+    }
+
+    private void RecordLaunch(Func<UsageContext, UsageEvent?> opened)
+    {
         if (_config.HasCopy)
         {
             Record(opened);
@@ -93,8 +148,6 @@ public sealed class RtstUsage
         {
             RecordWhenConfigArrives(opened);
         }
-
-        await _sender.FlushAsync().ConfigureAwait(false);
     }
 
     // The fetch failed (offline cold start) and its retries run on their own: count the launch when one finally brings a config (a Changed
