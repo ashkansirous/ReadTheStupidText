@@ -104,6 +104,7 @@ public sealed partial class ControlPanelWindow : Window
         LoadVoices();
         InitLanguageAndTranslation();
         InitUsageSwitch();
+        InitWaitRow();
 
         RootGrid.Loaded += OnRootLoaded;
 
@@ -191,9 +192,14 @@ public sealed partial class ControlPanelWindow : Window
         PositionPanel();
         AppWindow.Show();
         Activate();
+        OnPanelVisibilityChanged();
     }
 
-    private void Hide() => AppWindow.Hide();
+    private void Hide()
+    {
+        AppWindow.Hide();
+        OnPanelVisibilityChanged();
+    }
 
     // Once the content has laid out we know its true height; remember it and
     // re-fit the window so nothing is clipped (the overflow fix).
@@ -392,7 +398,16 @@ public sealed partial class ControlPanelWindow : Window
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => Hide();
 
-    private void OnPlayPauseClick(object sender, RoutedEventArgs e) => _ = _readAloud.PlayPauseOrReadAsync();
+    private void OnPlayPauseClick(object sender, RoutedEventArgs e)
+    {
+        if (_wait?.Current is { CanCancel: true }) // during a wait the button is Cancel (Batch 29 W2)
+        {
+            _wait.CancelRead?.Invoke();
+            return;
+        }
+
+        _ = _readAloud.PlayPauseOrReadAsync();
+    }
 
     private void OnSkipBackClick(object sender, RoutedEventArgs e) => _ = _readAloud.SkipBackwardAsync();
 
@@ -566,9 +581,12 @@ public sealed partial class ControlPanelWindow : Window
     // first audio (Slice 46). The flag lives in ReadAloudService; this only mirrors it.
     private void SetGenerating(bool generating)
     {
-        PlayPauseRing.IsActive = generating;
-        PlayPauseRing.Visibility = generating ? Visibility.Visible : Visibility.Collapsed;
-        PlayPauseIcon.Visibility = generating ? Visibility.Collapsed : Visibility.Visible;
+        bool waiting = _wait?.Current is not null; // the wait shows in this same slot, with Cancel (Batch 29 W2)
+        bool ring = generating || waiting;
+        PlayPauseRing.IsActive = ring;
+        PlayPauseRing.Visibility = ring ? Visibility.Visible : Visibility.Collapsed;
+        PlayPauseIcon.Visibility = ring ? Visibility.Collapsed : Visibility.Visible;
+        PlayPauseCancelIcon.Visibility = waiting && _wait!.Current!.CanCancel ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void OnPlaybackStateChanged(object? sender, PlaybackState state) =>
@@ -580,7 +598,7 @@ public sealed partial class ControlPanelWindow : Window
     private void ApplyPlaybackState(PlaybackState state)
     {
         PlayPauseIcon.Glyph = state == PlaybackState.Playing ? PauseGlyph : PlayGlyph;
-        TextFlow.ForUi(StatusText, DescribeStatus(state));
+        TextFlow.ForUi(StatusText, _wait?.Current?.Line ?? DescribeStatus(state));
         SetWaveformPlaying(state == PlaybackState.Playing);
         if (state == PlaybackState.Idle)
         {
