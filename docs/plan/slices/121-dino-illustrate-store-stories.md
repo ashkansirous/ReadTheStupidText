@@ -31,7 +31,7 @@ One item per book: art record, Gemini chat, pictures through the prepare script 
 - [x] Jack and the Beanstalk (Jack, Mother, Giant, Peddler)
 - [ ] The Elves and the Shoemaker (Hans, Greta, Nib, Nob)
 - [ ] The Town Mouse and the Country Mouse (Town Mouse, Country Mouse)
-- [ ] Peter Rabbit (Mrs. Rabbit, Peter, Mr. McGregor); new pictures, not Potter's, in the house style
+- [x] Peter Rabbit (Mrs. Rabbit, Peter, Mr. McGregor, Robin, Flopsy); new pictures, not Potter's, in the house style
 
 ## X Marks the Treasure! (2026-10-26)
 

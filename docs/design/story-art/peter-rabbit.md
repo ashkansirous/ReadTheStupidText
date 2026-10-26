@@ -2,7 +2,7 @@
 
 Store story (`StoreTexts.PeterRabbit`, stem `peter-rabbit`, version 6). Retold as 15 pages with one action each
 (`dino-storytelling` skill, Slice 121). Beatrix Potter's 1902 text is public domain; this retelling changes the plot a
-lot, so the credit is now `Beatrix Potter, 1902 (retold)`. **Art status (2026-10-26): cover and all 15 pictures drawn and accepted (Gemini 3.5 Flash-Lite, 1792x2400 originals, first picture about 20:30).** The
+lot, so the credit is now `Beatrix Potter, 1902 (retold)`. **Art status (2026-10-26): cover and all 15 pictures drawn and accepted, full review PASS on 2026-10-26 (Gemini 3.5 Flash-Lite, 1792x2400 originals, first picture about 20:30).** The
 cover and all 15 pages are new; the text-only version 5 had none.
 
 **Gentle retelling (Decision 130):** in Potter, Peter's father "was put in a pie by Mrs. McGregor", Mr. McGregor chases
@@ -92,7 +92,7 @@ rounded shapes, no text or letters anywhere. Portrait 3:4.
 
 - **Peter (the little rabbit boy):** the smallest rabbit in the book; soft warm sandy-brown fur, cream tummy, a white
   fluffy tail, long ears with pink insides, big dark eyes. **Cover and pages 1-5:** a **grass-green jacket with three round
-  yellow buttons** and **little red shoes**; nothing else (no trousers, no hat, no scarf). **Pages 6-9 and 11-15: no jacket
+  yellow buttons** and **little red shoes**; nothing else (no trousers, no hat, no scarf). **Pages 6-15 (page 10 included): no jacket
   and no shoes**, just his fur. In bed on page 15 he is under a quilt. The only rabbit boy.
 - **Mrs. Rabbit (the mother rabbit):** the biggest rabbit, about twice Peter's height; soft grey-brown fur, darker than
   Peter's; a **plum-purple dress** to her ankles; outdoors (pages 1, 2, 14) a **straw sun hat with a yellow ribbon**; her
@@ -138,7 +138,7 @@ There are no other characters: no father rabbit, no cat, no Mrs. McGregor, no go
 Every page: the whole scene sits in the top 70% of the picture; the bottom 30% is plain earth, grass, path or floor with
 nothing important in it. No text, letters, words, sound effects or writing anywhere ("Lippity", "Wiggle", "Munch",
 "Creak", "Grumble", "Tweet" are never drawn in). Every page has **three or more characters** (Gemini refuses some 1-2
-character scenes). Every picture is **new** (no pictures exist).
+character scenes). Every picture is **new** (the pictures now exist; see the art status above).
 
 | Page | One action (who, count, where, when) | Picture |
 | --- | --- | --- |
