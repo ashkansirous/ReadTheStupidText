@@ -51,6 +51,16 @@ overlay.
 
 From review: s148-high (7 applied), s148-medium (7 applied, finding 8 not a bug).
 
+#### Design (Dino Reader Batch 31 mock, screen 71, added 2026-10-26)
+
+Source: `docs/design/dino-reader/Dino Reader Batch 31.dc.html`, screen 71 (lines 156-183). One frame at 360x760, real UI. The mock agrees with the built slice (Cancel stops the read and stays on the page) and corrects the note on Batch 30 frame 65, which said a mid-read stall has "no Cancel".
+
+- **Frame.** The reading page (Picture + text, page 3 of 6) with the Batch 30 overlay laid over the picture only, so the title and back button stay put. Overlay fill `rgba(255,246,230,.86)`, radius 18, padding 20, content centred, gap 14. The hopping dino in a 130x130 box (96x120 dino, 84 px icon, radius 22, `dinoHop` 1.1 s). Line "Still getting the voice ready…" 16/600. **Cancel** pill: height 44, padding 0/22, radius 22, fill `#fff`, 2 px border `#e3dccd`, text 15/600 `#5a5470`. The play controls are dimmed to opacity .4.
+- **Timing and behaviour.** Shows 500 ms after the next part fails to arrive, hides on the next sound. It also covers a Farsi rescue while the second voice loads (Slice 149). **Cancel stops the read and stays on the page.** Read The Stupid Text shows the same line in its own overlay (R8, Batch 29).
+- **Strings.** "Still getting the voice ready…" is the existing `Wait_Stalled`; "Cancel" exists. No new strings.
+
+**Open point: Batch 30's "no Cancel" note.** `docs/design/dino-reader/Dino Reader Batch 30.dc.html` (note under screen 65, line 49) says a mid-read stall looks the same "but with no Cancel". The slice text and the built code (Built notes) give the stall a Cancel that stops the read. **Default:** the slice and the Batch 31 mock win; treat the Batch 30 sentence as superseded. No code change.
+
 #### For CLAUDE.md (lifted 2026-10-26)
 
 - Readers raise `ISpeechReader.StallChanged` through `StallReporter` (per-watch tickets, overlapping watches counted); wait usage is counted only through `WaitController.Finished`. (`src/ReadTheStupidText.Mobile.Shared/CLAUDE.md`; Slice 148: docs/plan/slices/148-phone-wait-followups.md)

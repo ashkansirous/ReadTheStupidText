@@ -40,3 +40,13 @@ question.
 
 - The listening verdict recorded here.
 - Emulator: a Farsi and an Arabic starter read aloud, with the marks shown and the highlight still lined up.
+
+#### Design (Dino Reader Batch 31 mock, screen 72, added 2026-10-26)
+
+Source: `docs/design/dino-reader/Dino Reader Batch 31.dc.html`, screen 72 (lines 186-212). One frame at 360x760, real UI, headed "only if the listening test passes". The Farsi sample is a draft; the mock says a native speaker needs to check it.
+
+- **Frame.** Picture + text view of The Three Little Pigs, right to left (the whole layout flips). Title "سه بچه‌خوکِ کوچولو" in Vazirmatn 20/600, line-height 1.4. Words panel as in Slice 151 frame 66 but `dir="rtl"`, Vazirmatn 21, **line-height 1.9** (up from 1.5 so marks above and below do not clip); `max-height: calc(30% - 8px)` still applies. Sample text: "گُرگ از دودکِش سُر خورد و شَلَپ! اُفتاد تویِ آبِ سَرد." then the highlighted "«هاپ‌چی!»", then "عَطسه کَرد.". Spoken text `#8a8399`, highlight `#FFE27A`; the highlight covers the whole marked word.
+- **Behaviour (note).** Full vowel marks on screen, as children's books in Farsi and Arabic print them. If a voice reads worse with marks, they stay on screen and are removed only before that voice speaks (the plan's per-voice strip).
+- **Strings.** None.
+
+**Settled by the mock (the plan left open).** Line height 1.9 and font Vazirmatn for marked text, with the 30% cap kept. **Default:** use 1.9 for Farsi and Arabic books only; other scripts keep 1.5.

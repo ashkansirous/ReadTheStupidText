@@ -359,3 +359,46 @@ Also read these files the selection imports:
 
 Implement: the selected files
 ```
+
+## Batch 31 mock — `Dino Reader Batch 31.dc.html`
+
+- **Source:** Claude Design project `90615641-f298-4e21-8c50-ca2efbeaaebc`, file `Dino Reader Batch 31.dc.html`
+  (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+31.dc.html>).
+- **Copied:** 2026-10-26, verbatim from `DesignSync get_file`. The dino is `icons/ios/AppIcon-1024-light.png`. The two story pictures it shows (`assets/three-little-pigs/3.jpg`, `5.jpg`) are copied from the starter book `tests/DinoReader.Tests/Starters/three-little-pigs/pictures/` (DesignSync caps files at 256 KiB, so its copies were truncated).
+- **Covers:** Batch 31 (Slices 150-154) and Slice 148. Screens 66-68 (three view modes, Slice 151) replace the words-over switch of frames 57-58 (Batch 25); 69 (cast page without merge or animal, Slices 151-152) supersedes frame 59 (Batch 26-28); 70 (Reading speed and app-wide Animal sounds, Slices 150/152); 71 (mid-read stall, Slice 148, Batch 30 overlay with Cancel); 72 (Farsi vowel marks, Slice 154). Slice 153 has no screens.
+
+Open it in a text editor (`support.js` is not copied). Each screen is headed by a caption
+`N · Title` with its behaviour in the note underneath; the hopping dino is built in the
+`<script>` block at the end.
+
+| # | Screen | Line |
+|---|---|---|
+| — | **Three view modes · Slice 151 · Decision 156** (group) | 23 |
+| 66 | Picture + text (default for picture books) | 28 |
+| 67 | Picture only | 54 |
+| 68 | Text only | 77 |
+| — | **Cast page and settings · Slices 151, 152, 150 · Decisions 155–157** (group) | 100 |
+| 69 | Who's speaking · no merge, no animal | 105 |
+| 70 | Grown-up settings · Reading speed, Animal sounds | 122 |
+| — | **Mid-read stall · Slice 148 · Vowel marks · Slice 154** (group) | 151 |
+| 71 | Mid-read · next part not voiced yet | 156 |
+| 72 | Farsi · words with vowel marks | 186 |
+
+To refresh: fetch the file again with `DesignSync get_file` and overwrite this copy, then
+regenerate this table. Never call `DesignSync` to read visual values; read this copy.
+
+Import prompt (verbatim):
+
+```
+Use the claude_design MCP (https://api.anthropic.com/v1/design/mcp, auth via /design-login) to import this project:
+https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+31.dc.html
+
+Focus on these files (the whole project is readable):
+- `Dino Reader Batch 31.dc.html`
+
+Also read these files the selection imports:
+- `assets/three-little-pigs/3.jpg`
+- `assets/three-little-pigs/5.jpg`
+
+Implement: `Dino Reader Batch 31.dc.html`
+```

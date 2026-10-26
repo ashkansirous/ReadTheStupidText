@@ -35,3 +35,7 @@ robotic" as not yet verified. Which roster slots sound robotic is a judgement ma
 
 - The user's second listen: no flagged line still sounds robotic.
 - Emulator: the Ugly Duckling with Mother Duck recast, on an upgraded install.
+
+#### Design (Dino Reader Batch 31 mock, no screens, added 2026-10-26)
+
+Batch 31 (`docs/design/dino-reader/Dino Reader Batch 31.dc.html`) has no screen for this slice. The listening page it builds is a dev tool, not app UI. Nothing to implement from the mock.
