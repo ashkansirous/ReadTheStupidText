@@ -102,7 +102,7 @@ Prompt templates: [prompts.md](prompts.md).
 - In a fresh chat the first `ctrl+v` after clicking the prompt box often pastes nothing: click the box
   twice, then paste, and check the thumbnail appeared. Wait for the page to finish loading before any click.
 - The free-tier image limit is shared with every other session drawing in this Chrome profile, and so are
-  the clipboard and the `Downloads` folder. Check the open tabs first; if another Gemini drawing chat is busy, tell the caller.
+  the clipboard and the `Downloads` folder. Check the open tabs first; another book's illustrator drawing in its own tab is normal (at most four): carry on, and use `gemini-lock.ps1` around the clipboard and download moments.
 - **Keep the display on while drawing** (2026-10-26): with the screen merely off (not locked) Chrome stops rendering, so Gemini
   never finishes loading, pastes do nothing and screenshots time out. The caller starts
   `pwsh gemini-keep-awake.ps1 -Hours <n>` in the background before any illustrator runs (a temporary Windows request, no
@@ -166,15 +166,16 @@ Record each pass in the art record table (page, attempt number, why earlier atte
 - **Save through the download, not the clipboard** (2026-10-26): inject `gemini-grab.js` with
   `javascript_tool` (once per page load; again after a reload or new chat), run `await window.__grab(1)` (clicks
   the newest picture's button), then
-  `pwsh .claude/skills/create-dino-story/gemini-take-download.ps1 <working folder>/cand-<page>.jpg -Bytes <n>`, with `<n>` the
-  size `__grab` printed (other sessions' Gemini downloads land in the same folder; 2026-10-26 a pirate book's picture was
+  `pwsh .claude/skills/create-dino-story/gemini-take-download.ps1 <working folder>/cand-<page>.jpg -Bytes <n>`, with `<n>` every size
+  `__grab` printed, comma-separated if it printed several (`-Bytes 123,456`; other sessions' Gemini downloads land in the same folder; 2026-10-26 a pirate book's picture was
   picked up twice without it; if no download of that exact size arrives, run it once without `-Bytes` and check the
   saved picture is the one you asked for). It waits up to
   30 s for a `Gemini_Generated_Image_*` written in the last two minutes, saves it as JPEG quality 95, prints
   `WxH` (a WARNING line means it isn't 3:4) and moves it out of `Downloads`, so the next call can't pick it up
   again. No clipboard and no real click, so it works while the PC is locked and can't collide with a paste.
 - Fallback, only if no download arrives (Chrome dropped downloads silently on 2026-10-25): after `__grab`,
-  one real `computer` click on the newest picture itself (its `find` ref) makes the grabber copy the blob to the
+  run `await window.__grab(1, { clipboard: true })` (the clipboard write is armed only with that flag), then one real
+  `computer` click on the newest picture itself (its `find` ref) makes the grabber copy the blob to the
   clipboard; poll `window.__clipResult` until it is `WxH`, then
   `pwsh -STA .claude/skills/create-dino-story/gemini-clipboard.ps1 Save <working folder>/cand-<page>.jpg`.
   Delete the stray download afterwards if it turns up late.

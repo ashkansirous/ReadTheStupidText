@@ -3,8 +3,8 @@
 Bundled starter (`StarterTexts.Gingerbread`, stem `gingerbread-man`, version 4 in `StarterBuilder.StarterVersions`), also a
 store book under the same id (`StoreBuilder.StarterEntries`). Retold in Slice 121 as 14 pages with one action each
 (`dino-storytelling` skill); the earlier 6-page text shipped as versions 2 and 3, and its page hash is in
-`StarterUpdate.EarlierPageTextHashes`, so unedited installed copies update. **Art status (2026-10-26): text only, no pictures
-yet.** The cover and all 14 pages are new.
+`StarterUpdate.EarlierPageTextHashes`, so unedited installed copies update. **Art status (2026-10-26): all pictures accepted; the full
+`dino-story-reviewer` review PASSED on 2026-10-26 after the redraws (the flags below are accepted by the reviewer).** The cover and all 14 pages are new.
 
 **Starter, not store:** the pictures go to `tests/DinoReader.Tests/Starters/gingerbread-man/` (`pictures/1..14.jpg`,
 `cover.jpg`, `cover-thumb.jpg`), not `Store/`. Rebuild with `DINO_BUILD_STARTERS=1` and put the other three starters' `.dino`
@@ -46,9 +46,9 @@ purpose: `"Run, run, as fast as you can! You can catch me, I'm the Gingerbread M
 
 **Cast and voices:** six speakers, genders chosen to give three of each: Granny (she), Grandpa (he), Gingerbread Man (he, a
 boy's part: always a male voice), Cow (she), Horse (she, a mare), Fox (he). The builder casts Granny F1, Gingerbread Man M2,
-Grandpa M4, Cow F2, Horse F3, Fox M3 (narrator M1). English rules know "Grandpa" as a male title but have no "Granny", so
-Granny's gender comes from her pronouns: the page-2 line "and she could not believe her eyes" and "her big book" on page 14
-keep her female; the Cow and the Horse get "her tail"/"her mane ... as fast as she could". Reword those lines only with the
+Grandpa M4, Cow F2, Horse F3, Fox M3 (narrator M1). English rules know "Grandpa" as a male title and "Granny"/"Nana" as female titles (added in this slice), so
+Granny's gender comes from her title, and her pronouns agree: the page-2 line "and she could not believe her eyes" and "her big book" on page 14
+back it up; the Cow and the Horse get "her tail"/"her mane ... as fast as she could". Reword those lines only with the
 test below running. The Cow and the Horse are animals found from their names (moo and neigh); the Fox has no animal sound, but
 his name gives him the quiet "sly" voice flavour, whose roster character (Sly Fox) is male. `StoreStoryTests.TheGingerbreadMan_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster` checks
 the stored genders and every language's roster. Translations keep the genders: the Horse is a mare (fr la Jument, es la
@@ -218,3 +218,7 @@ Redraws from scratch of 7 (line-up pasted) were refused or copied the line-up (a
 - **12** (edit; `old4-12.jpg`): the willow's branches now hang over the four on our bank; the grey rock and buttercups sit across the water. Fox with neckerchief and boy with three buttons small mid-water.
 Gemini rate/refusal: edits were refused twice before passing on 8 and 11 (Try again). Two saves picked up another illustrator's finished picture from Downloads (a pirate character sheet and a pirate harbour scene); I put both back in Downloads under their original names (re-encoded JPEG).
 Prepared, `gingerbread-man.dino` rebuilt, contact sheet remade.
+
+### Review result (2026-10-26)
+
+Full `dino-story-reviewer` review PASSED after the redraws: all 14 pictures and the cover accepted. The flags recorded in the runs above (page 7 brook-like line, page 8 Grandpa without a cap, page 9 four figures low on the page, page 11 boy seen from behind, page 14 window, the second Horse bow on 11 and 13, the Cow's horn nubs) are accepted by the reviewer.

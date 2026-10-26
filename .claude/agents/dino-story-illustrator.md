@@ -1,6 +1,6 @@
 ---
 name: dino-story-illustrator
-description: Draw a Dino Reader book's cover and page pictures (all, or named pages) by driving the Gemini web app in the user's Chrome - character sheets and line-up, a fresh chat every 3 pictures, a full-size check of every picture, saving, preparing them into the repo and a contact sheet for the caller - without committing. Use PROACTIVELY once the book's text and picture plan are settled (dino-story-writer), instead of driving Gemini from the main thread, where screenshots and pictures flood the context. Only one may run at a time.
+description: Draw a Dino Reader book's cover and page pictures (all, or named pages) by driving the Gemini web app in the user's Chrome - character sheets and line-up, a fresh chat every 3 pictures, a full-size check of every picture, saving, preparing them into the repo and a contact sheet for the caller - without committing. Use PROACTIVELY once the book's text and picture plan are settled (dino-story-writer), instead of driving Gemini from the main thread, where screenshots and pictures flood the context. At most four may run at once, each on its own book.
 model: sonnet
 effort: medium
 ---

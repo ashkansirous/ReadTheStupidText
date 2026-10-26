@@ -69,6 +69,7 @@ Soggy and soapy, he climbed out, ran all the way home, and he never blew down a 
 And the three little pigs lived happily in the house of bricks for ever after.
 """;
 
+    // Page 13 says "You can catch me" (not "can't") on purpose: it is the story's twist, so keep it.
     public const string Gingerbread = """
 Once upon a time Granny and Grandpa lived in a little house at the edge of a wood. They had no children, and they were often lonely.
 

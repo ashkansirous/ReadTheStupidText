@@ -18,7 +18,9 @@ $displayRequired = [uint32]'0x00000002'
 $stopFile = Join-Path $env:USERPROFILE 'Downloads\.gemini-keep-awake.stop'
 $until = (Get-Date).AddHours($Hours)
 
-Remove-Item -LiteralPath $stopFile -ErrorAction SilentlyContinue
+$started = Get-Date
+# A stop file already there before this start is leftover; one written after it is a stop request for this run.
+if ((Test-Path -LiteralPath $stopFile) -and (Get-Item -LiteralPath $stopFile).LastWriteTime -lt $started) { Remove-Item -LiteralPath $stopFile -ErrorAction SilentlyContinue }
 Write-Host "Keeping the display awake until $($until.ToString('HH:mm'))"
 try {
   while ((Get-Date) -lt $until -and -not (Test-Path -LiteralPath $stopFile)) {
