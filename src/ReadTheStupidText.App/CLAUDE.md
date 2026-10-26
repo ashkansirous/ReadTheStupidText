@@ -26,6 +26,10 @@ UI copy is in `Strings/<tag>/Resources.resw` (en-US, fa, fr, es, pt, zh-Hans, ar
 
 Windows sends the phone's counts (`Application/Usage/`: `UsageEvents`, `UsageBatch`, plus `UsageService` over `IUsageStore`/`IUsageTransport`; `Infrastructure/Usage/` has the file store, HTTP transport and `WindowsUsage.Create`). `ReadAloudService.Usage.cs` records reads, voice changes, the translate switch and the translate, pack-download and first-audio timings through `IUsageRecorder`, which never throws and never blocks the caller. The panel's last row (`ControlPanelWindow.Usage.cs`) is the user's switch: on by default, off clears the queue. Queue and config files live in `LocalFolder/usage/`; sends run on the pool, and the last one at `ProcessExit` waits at most 2 s and uses the held config (no new request), so it can fall short; what it misses stays queued for the next launch. With the switch off the app makes no config request at all. Rules: no id and no text in a count; the queue is cleared only on an explicit off (the switch, or a config really fetched or kept), never while no config has been seen; the Worker's lists (`worker/events.ts`, guarded by `UsageEventsTests`) must grow with `UsageEngine`/`UsageSource`; counting stays off until the remote config says on (Decision 145). (Slice 140: docs/plan/slices/140-rtst-windows-usage-counts.md)
 
+## Windows waits (Slice 141)
+
+- Windows waits go through `WaitFlyoutController` (500 ms `WaitGate`); the flyout (`WaitFlyoutWindow`) must stay no-activate so a hotkey read never steals focus. (Slice 141: docs/plan/slices/141-rtst-windows-wait-indicator.md)
+
 ## Release packaging
 
 The **Release** MSIX is
