@@ -33,6 +33,12 @@ One item per book: art record, Gemini chat, pictures through the prepare script 
 - [ ] The Town Mouse and the Country Mouse (Town Mouse, Country Mouse)
 - [ ] Peter Rabbit (Mrs. Rabbit, Peter, Mr. McGregor); new pictures, not Potter's, in the house style
 
+## X Marks the Treasure! (2026-10-26)
+
+An original store book, the first of the user's "Captain Kaatrin and Seagull" series (cast: Kaatrin, Seagull, Izzy, Pancake Polly, Billy; 17 pages, author Ashkan Sirous, art record `docs/design/story-art/x-marks-the-treasure.md`). It is the first store book above 16 pages, so `StoreStoryTests.MaxPages` is now 18 and the page-count guidance in the dino skills and agents says 10-18. The captain is spelled "Kaatrin" so the English voices say KAA-trin (reasons in the art record).
+
+**Touches:** `tests/DinoReader.Tests/StoreTexts.cs`, `tests/DinoReader.Tests/StoreBuilder.cs`, `tests/DinoReader.Tests/StoreStoryTests.cs`, `tests/DinoReader.Tests/Store/x-marks-the-treasure/**`, `tests/DinoReader.Tests/Starters/translations/x-marks-the-treasure.*.json`, `docs/design/story-art/x-marks-the-treasure*`, `.claude/skills/create-dino-story/**`, `.claude/skills/dino-storytelling/**`, `.claude/agents/dino-story-*.md`
+
 ## Verification
 
 - Tests green; each book's `GET /api/stories/<id>/download?v=<version>` returns a package with N pictures.
