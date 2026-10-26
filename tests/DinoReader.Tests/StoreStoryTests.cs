@@ -118,6 +118,21 @@ public sealed class StoreStoryTests : IDisposable
         }
     }
 
+    // The Little Red Hen (Slice 121): the roster's kitten and duckling voices are girls in most languages but boys in Farsi, Spanish and Portuguese, so the builder
+    // stores Cat and Duck as no animal (StarterAnimals) and they are cast by gender; Hen keeps the hen and Dog the puppy, which are one gender everywhere.
+    [Theory]
+    [MemberData(nameof(Languages))]
+    public void TheLittleRedHen_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
+    {
+        var expected = new Dictionary<string, Gender>
+        {
+            ["Hen"] = Gender.Female, ["Dog"] = Gender.Male, ["Cat"] = Gender.Female, ["Duck"] = Gender.Male,
+        };
+
+        Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.RedHenId));
+        AssertEachIsPlayedByTheirGender(story, language, expected);
+    }
+
     // The Gingerbread Man starter (also a store story) is a boy, so he must get a male voice in every language; Granny, the Cow and the Horse are "she",
     // Grandpa and the Fox "he" (the stored English genders are checked too, since every other language is cast from them).
     [Theory]
@@ -170,6 +185,7 @@ public sealed class StoreStoryTests : IDisposable
 
         foreach (Character character in characters)
         {
+            Assert.True(expected.ContainsKey(character.Name), $"{language}: the cast has {character.Name}, which this test has no expected gender for");
             StorytellerCharacter? played = CharacterRoster.Nearest(speakers, cast.VoiceFor(character.Id)!, cast.Flavours![character.Id], character.Gender);
             Assert.True(played?.Gender == expected[character.Name], $"{language}: {character.Name} is played by {played?.Name} ({played?.Gender})");
         }
