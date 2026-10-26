@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
+using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Mobile.Shared.Waiting;
 
 namespace DinoReader;
 
@@ -18,6 +20,8 @@ public sealed class RecordPage : ContentPage, IGrownUpPage
 	private readonly IRecordingPlayer _player;
 	private readonly UsageCounter _usage;
 	private readonly BusyGuard _busy = new();
+	private readonly WaitOverlay _waitOverlay = DinoWait.OverPage();
+	private readonly WaitController _wait;
 	private Label _time = NewTimeLabel();
 	private readonly Stopwatch _clock = new();
 	private readonly Grid _root = new() { RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto)] };
@@ -39,7 +43,8 @@ public sealed class RecordPage : ContentPage, IGrownUpPage
 		NavigationPage.SetHasNavigationBar(this, false);
 		SafeAreaEdges = new SafeAreaEdges(SafeAreaRegions.Container);
 		BackgroundColor = DinoTokens.Get(DinoTokens.Sand);
-		Content = _root;
+		_wait = new WaitController(_waitOverlay);
+		Content = new Grid { Children = { _root, _waitOverlay } };
 	}
 
 	/// <summary>Opens the screen on the first page of <paramref name="story"/>.</summary>
@@ -299,7 +304,7 @@ public sealed class RecordPage : ContentPage, IGrownUpPage
 		try
 		{
 			TimeSpan length = await _recorder.StopAsync();
-			await SaveRecordingAsync(temp!, length);
+			await SaveWithWaitAsync(temp!, length);
 		}
 		catch (Exception ex)
 		{
@@ -310,6 +315,20 @@ public sealed class RecordPage : ContentPage, IGrownUpPage
 		{
 			TryDelete(temp);
 			Render();
+		}
+	}
+
+	// Slice 143: saving shows the wait overlay if it takes over 500 ms; there is no Cancel, a half-saved recording is worse than waiting.
+	private async Task SaveWithWaitAsync(string temp, TimeSpan length)
+	{
+		_wait.Begin(WaitStage.Saving, AppResources.Wait_Saving, canCancel: false);
+		try
+		{
+			await SaveRecordingAsync(temp, length);
+		}
+		finally
+		{
+			_wait.End();
 		}
 	}
 

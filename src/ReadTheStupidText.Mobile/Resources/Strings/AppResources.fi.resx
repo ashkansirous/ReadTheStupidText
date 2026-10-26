@@ -16,6 +16,11 @@
   <data name="Reader_EmptyHint" xml:space="preserve"><value>Lisää luettavaa napauttamalla alla olevaa painiketta</value></data>
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>Sovelluksen kieli</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Lukunopeus</value></data>
+  <data name="Settings_CountsTitle" xml:space="preserve"><value>Auta parantamaan sovellusta</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>Lähettää laskureita kuten ”ranskankielinen teksti luettiin”. Ei nimiä, ei tunnisteita, ei mitään lukemastasi.</value></data>
+  <data name="Settings_CountsOn" xml:space="preserve"><value>Päällä</value></data>
+  <data name="Settings_CountsOff" xml:space="preserve"><value>Pois</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>Sovellus laskee asioita, kuten mitä kieliä luetaan, ilman nimiä tai tunnisteita. Voit poistaa tämän käytöstä Asetuksissa.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Takaisin</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>Edellinen lause</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>Seuraava lause</value></data>
@@ -65,7 +70,10 @@
   <data name="Review_LooksLike" xml:space="preserve"><value>Teksti näyttää olevan kieltä {0}</value></data>
   <data name="Review_TranslateAndRead" xml:space="preserve"><value>Käännä ja lue</value></data>
   <data name="Review_Read" xml:space="preserve"><value>Lue</value></data>
-  <data name="Review_GettingTranslator" xml:space="preserve"><value>Haetaan {0}-kääntäjää…</value></data>
+  <data name="Wait_DownloadingModel" xml:space="preserve"><value>Ladataan kieltä {0}…</value></data>
+  <data name="Wait_Translating" xml:space="preserve"><value>Käännetään…</value></data>
+  <data name="Wait_PreparingVoice" xml:space="preserve"><value>Valmistellaan ääntä…</value></data>
+  <data name="Wait_ReadingFile" xml:space="preserve"><value>Luetaan tiedostoa…</value></data>
   <data name="Review_FirstTimeOnly" xml:space="preserve"><value>Vain ensimmäisellä kerralla. Käännös tehdään tällä puhelimella.</value></data>
   <data name="Review_ShowOriginal" xml:space="preserve"><value>Näytä alkuperäinen</value></data>
   <data name="Review_FailedOne" xml:space="preserve"><value>Sivua {0} ei voitu lukea.</value></data>

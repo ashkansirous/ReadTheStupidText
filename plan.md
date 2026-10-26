@@ -14,21 +14,18 @@ this plan turns it into ordered, shippable vertical slices.
 
 ## Status
 
-Open slices only. Finished slices (135 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
+Open slices only. Finished slices (137 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
 | 121 | Dino: pictures for the ten store stories | in progress | #350 (Billy Goats) | | [121-dino-illustrate-store-stories.md](docs/plan/slices/121-dino-illustrate-store-stories.md) |
-| 137 | RTST phone: anonymous usage counts and timings | planned | | | [137-rtst-phone-usage-counts.md](docs/plan/slices/137-rtst-phone-usage-counts.md) |
-| 138 | RTST phone: a wait indicator after 500 ms | planned | | | [138-rtst-phone-wait-indicator.md](docs/plan/slices/138-rtst-phone-wait-indicator.md) |
-| 139 | RTST phone: start translating and voicing before the tap | planned | | | [139-rtst-phone-early-start.md](docs/plan/slices/139-rtst-phone-early-start.md) |
-| 140 | RTST Windows: the same usage counts and timings | planned | | | [140-rtst-windows-usage-counts.md](docs/plan/slices/140-rtst-windows-usage-counts.md) |
-| 141 | RTST Windows: a wait indicator after 500 ms | planned | | | [141-rtst-windows-wait-indicator.md](docs/plan/slices/141-rtst-windows-wait-indicator.md) |
+| 139 | RTST phone: start translating and voicing before the tap | in progress | | | [139-rtst-phone-early-start.md](docs/plan/slices/139-rtst-phone-early-start.md) |
+| 141 | RTST Windows: a wait indicator after 500 ms | in progress | | | [141-rtst-windows-wait-indicator.md](docs/plan/slices/141-rtst-windows-wait-indicator.md) |
 | 142 | RTST Windows: early translate and voice in the control panel | planned | | | [142-rtst-windows-early-start.md](docs/plan/slices/142-rtst-windows-early-start.md) |
-| 143 | One shared wait overlay; Dino shows it on every wait | planned | | | [143-shared-wait-overlay-dino-loading.md](docs/plan/slices/143-shared-wait-overlay-dino-loading.md) |
-| 144 | Farsi: the female voice is the default | planned | | | [144-farsi-default-female-voice.md](docs/plan/slices/144-farsi-default-female-voice.md) |
 | 145 | Which sound-word spellings sound right aloud | planned | | | [145-sound-words-aloud-test.md](docs/plan/slices/145-sound-words-aloud-test.md) |
 | 146 | Rewrite every Dino book in spoken, kid-friendly language | planned | | | [146-dino-books-kid-friendly-language.md](docs/plan/slices/146-dino-books-kid-friendly-language.md) |
+| 148 | Phone apps: mid-read stalls, wait counts and wave leftovers | planned | | | [148-phone-wait-followups.md](docs/plan/slices/148-phone-wait-followups.md) |
+| 149 | Never drop a short word: catch silent output from the voices | planned | | | [149-never-drop-a-short-word.md](docs/plan/slices/149-never-drop-a-short-word.md) |
 
 Batch 25 (119-123; 119, 120, 122, 123 built, 121 in progress: Billy Goats done, nine books left; planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
 
@@ -38,9 +35,9 @@ Batch 27 (127-131, planned 2026-10-25, after Dino work kept resubmitting Read Th
 
 Batch 28 (132-134, planned 2026-10-25, which books families like and how parents use the app): 132 (the remote config the counts are switched by, and the forced update) and 133 (first events, privacy texts and store forms) and 134 (the rest of the events and the report, PR #368) are built, so the batch is done. All three edit `worker/` and Dino's `MauiProgram`, so one at a time. Decisions 138-142.
 
-Batch 29 (137-142, planned 2026-10-26, RTST usage counts, waiting and early start): which languages people use, whether they translate or change the voice, and how long translation and the first sound take (a user reported a "hang" on Translate). Phone first, one at a time (all three edit ReaderPage/ReviewPage): 137, 138, 139; then Windows 140, 141, 142. 137 reuses Dino's Batch 28 pipe and edits `worker/` and Dino's `UsageCounter`/`AppConfigClient`. Decisions 143-148.
+Batch 29 (137-142, planned 2026-10-26, RTST usage counts, waiting and early start): which languages people use, whether they translate or change the voice, and how long translation and the first sound take (a user reported a "hang" on Translate). Phone first, one at a time (all three edit ReaderPage/ReviewPage): 137, 138 (built), 139 (in progress); then Windows 140 (built), 141 (in progress), 142. 137 reuses Dino's Batch 28 pipe and edits `worker/` and Dino's `UsageCounter`/`AppConfigClient`. Decisions 143-148.
 
-Batch 30 (143-146, planned 2026-10-26, Dino loading, Farsi voice and kid-friendly language): 143 builds the shared wait overlay (RTST 138 reuses it; whichever goes first builds it, so they run one after the other), 144 is small and independent, 145 measures sound-word spellings before 146 rewrites every book (one PR per book: Farsi, then English, then the rest). Decisions 149-153.
+Batch 30 (143-146, planned 2026-10-26, Dino loading, Farsi voice and kid-friendly language): 143 builds the shared wait overlay (RTST 138 reuses it; whichever goes first builds it, so they run one after the other), 144 is small and independent, 145 measures sound-word spellings before 146 rewrites every book (one PR per book: Farsi, then English, then the rest). 143 and 144 are built. 143's Deferred items (mid-read stall wait, `wait_shown` event, extractor-level PDF cancel) await a follow-up slice. Decisions 149-153.
 
 ### Notes
 
@@ -60,7 +57,7 @@ Batch 30 (143-146, planned 2026-10-26, Dino loading, Farsi voice and kid-friendl
 
 **Store privacy declarations (legal; gates all usage counts, Decision 145).** No `telemetry.enabled` is set to `true` for an app until its rows are ticked. Claude drafts the answers and fills the forms in the user's signed-in Chrome; the user reviews and presses Submit/Publish.
 
-- [ ] RTST repo texts: `PRIVACY.md`, `site/privacy.html` (deployed), `STORE.md`, iOS `PrivacyInfo.xcprivacy` (Slice 137; Windows sources in Slice 140). Claude.
+- [x] RTST repo texts: `PRIVACY.md`, `site/privacy.html` (deployed), `STORE.md`, iOS `PrivacyInfo.xcprivacy` (Slice 137; Windows sources in Slice 140; checked 2026-10-26: phone and Windows covered). Claude.
 - [ ] RTST Google Play Console: Data safety (app activity and app info/performance, not linked to the user, not shared, optional to turn off). User submits.
 - [ ] RTST Apple App Store Connect: App Privacy (usage data and diagnostics, not linked, no tracking). User publishes.
 - [ ] RTST Microsoft Partner Center: privacy policy URL and the data-collection answers. User submits.
@@ -69,6 +66,11 @@ Batch 30 (143-146, planned 2026-10-26, Dino loading, Farsi voice and kid-friendl
 
 Built but not verified (details in each slice file):
 
+- Slice 137: rows in `rtst_usage` once Analytics Engine is on and the binding is added; iOS compile; emulator pass done 2026-10-26 (unselected speed-button labels low-contrast in dark mode, pre-existing) ([slice](docs/plan/slices/137-rtst-phone-usage-counts.md)).
+- Slice 138: emulator PASS 2026-10-26; not seen: a sub-500 ms play start, an ML Kit progress %. Native-speaker read of the 4 `Wait_` strings in 14 locales; iOS. Mid-read stall wait and `wait_shown`/`wait_cancelled` events deferred. Pre-existing: a 36 MB text file crashes ReviewPage with OutOfMemoryError ([slice](docs/plan/slices/138-rtst-phone-wait-indicator.md)).
+- Slice 140: queue file under `LocalFolder/usage` not exercised (needs `telemetry.enabled` on); Microsoft Store data-collection answers; rows in `rtst_usage` once Analytics Engine is on ([slice](docs/plan/slices/140-rtst-windows-usage-counts.md)).
+- Slice 143: not exercised on emulator: photos, scan, own-book translate; native read of the new strings (14 locales, Claude drafts); Windows head overlay; reduce-motion static dino ([slice](docs/plan/slices/143-shared-wait-overlay-dino-loading.md)).
+- Slice 144: listen to every moved Farsi character and the five new flavours (distinct enough?); Farsi read with `mana` narrating on emulator/phone; RTST Farsi default on phone and Windows ([slice](docs/plan/slices/144-farsi-default-female-voice.md)).
 - Slice 96: emulator in Farsi and Arabic (gallery, gate, wizard, store, backup, reader, swipe direction, highlight on RTL lines); Windows head gallery and reader ([slice](docs/plan/slices/96-dino-layout-never-mirrors.md)).
 - Slice 97: Windows head: the AddBook icon rendering and the gate opening; native-speaker read of the `Gallery_AddBook` strings ([slice](docs/plan/slices/97-dino-add-book-button.md)).
 - Slice 99: the RTST phone highlight covers a whole 3-sentence `SpeechTextChunker` chunk, not one sentence; full TalkBack walk-through; iOS device run; Settings voice name does not refresh after a pack installs ([slice](docs/plan/slices/99-rtst-mobile-minimal-main-page.md)).

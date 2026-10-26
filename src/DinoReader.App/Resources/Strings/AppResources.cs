@@ -228,6 +228,14 @@ public static class AppResources
 	public static string Wizard_NoTextShort => Get();
 	public static string Wizard_NoText => Get();
 	public static string Wizard_Reading => Get();
+	public static string Wait_GettingVoices => Get();
+	public static string Wait_ReadingPictures => Get();
+	public static string Wait_PageOf => Get();
+	public static string Wait_Translating => Get();
+	public static string Wait_Saving => Get();
+	public static string Wait_GettingBook => Get();
+	public static string Wait_BackingUp => Get();
+	public static string Wait_Restoring => Get();
 	public static string Wizard_ReadFailedTitle => Get();
 	public static string Wizard_ReadFailedBody => Get();
 	public static string Pictures_NoneTitle => Get();

@@ -59,15 +59,18 @@ public sealed record VoiceModelPaths(
         return mappedId is null ? null : AvailableVoices.FirstOrDefault(v => v.Id == mappedId);
     }
 
-    // The Supertonic default when this is a Supertonic model that still lists it, else the
-    // first listed voice; a model that lists none (a malformed pack) reads as speaker 0
+    // The Supertonic default when this is a Supertonic model that still lists it, the Persian
+    // default (Slice 144) when this is the Persian Piper pack and lists mana, else the first listed voice; a model that lists none (a malformed pack) reads as speaker 0
     // rather than throwing.
     private VoiceInfo DefaultVoice()
     {
         IReadOnlyList<VoiceInfo> voices = AvailableVoices;
-        VoiceInfo? preferred = Kind == VoiceEngineKind.Supertonic
-            ? voices.FirstOrDefault(v => v.SpeakerId == SupertonicVoiceTable.DefaultSpeakerId)
-            : null;
+        VoiceInfo? preferred = Kind switch
+        {
+            VoiceEngineKind.Supertonic => voices.FirstOrDefault(v => v.SpeakerId == SupertonicVoiceTable.DefaultSpeakerId),
+            VoiceEngineKind.Vits when Language == VoiceChoices.PersianLanguageCode => voices.FirstOrDefault(v => v.Id == VoiceChoices.PersianDefaultVoiceId),
+            _ => null,
+        };
         return preferred ?? voices.FirstOrDefault() ?? new VoiceInfo(string.Empty, string.Empty, Language, Kind);
     }
 }

@@ -228,6 +228,14 @@
   <data name="Wizard_NoTextShort" xml:space="preserve"><value>Ei tekstiä</value></data>
   <data name="Wizard_NoText" xml:space="preserve"><value>Tältä sivulta ei löytynyt tekstiä</value></data>
   <data name="Wizard_Reading" xml:space="preserve"><value>Luetaan sivua {0}/{1}</value></data>
+  <data name="Wait_GettingVoices" xml:space="preserve"><value>Valmistellaan ääniä…</value></data>
+  <data name="Wait_ReadingPictures" xml:space="preserve"><value>Luetaan kuvia…</value></data>
+  <data name="Wait_PageOf" xml:space="preserve"><value>Sivu {0} / {1}</value></data>
+  <data name="Wait_Translating" xml:space="preserve"><value>Käännetään…</value></data>
+  <data name="Wait_Saving" xml:space="preserve"><value>Tallennetaan…</value></data>
+  <data name="Wait_GettingBook" xml:space="preserve"><value>Haetaan kirjaa…</value></data>
+  <data name="Wait_BackingUp" xml:space="preserve"><value>Varmuuskopioidaan kirjoja…</value></data>
+  <data name="Wait_Restoring" xml:space="preserve"><value>Palautetaan kirjoja…</value></data>
   <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>Joitakin sivuja ei luettu</value></data>
   <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>{0} sivua ei voitu lukea. Ne säilytetään kuvina ilman tekstiä.</value></data>
   <data name="Pictures_NoneTitle" xml:space="preserve"><value>Tiedostossa on sanoja mutta ei kuvia</value></data>

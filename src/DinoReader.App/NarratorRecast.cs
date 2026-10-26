@@ -11,20 +11,23 @@ namespace DinoReader;
 internal static class NarratorRecast
 {
 	/// <summary>The story with every language's clashing characters re-cast, or null when no cast has the narrator's voice (or its language has no voices yet). On a worker thread.</summary>
-	public static async Task<Story?> TryRecastAsync(StoryVoicing voicing, Story story)
+	public static async Task<Story?> TryRecastAsync(StoryVoicing voicing, Story story, CancellationToken cancellation = default)
 	{
 		Story changed = story;
 		foreach (string language in LanguagesOf(story))
 		{
+			cancellation.ThrowIfCancellationRequested();
 			IReadOnlyList<CastMember> stored = story.CastIn(language);
 			string narrator = voicing.NarratorOf(language);
 			IReadOnlyList<VoiceOption> pool = voicing.VoicesFor(language);
-			if (!CastEditor.UsesVoice(stored, narrator) && !CastEditor.HasVoiceOutside(stored, pool))
+			bool retired = CastEditor.UsesRetiredVoice(stored, language);
+			if (!retired && !CastEditor.ClashesWithNarrator(stored, narrator, language) && !CastEditor.HasVoiceOutside(stored, pool))
 			{
 				continue;
 			}
 
-			IReadOnlyList<CastMember> recast = await voicing.CastForAsync(story.Language, language, story.Text, stored, story.Merges, story.BreakMap());
+			IReadOnlyList<CastMember> recast = await voicing.CastForAsync(story.Language, language, story.Text, retired ? CastEditor.WithoutRetiredVoices(stored, language) : stored, story.Merges, story.BreakMap());
+			cancellation.ThrowIfCancellationRequested();
 			if (recast.Count > 0)
 			{
 				IReadOnlyList<CastMember> kept = CastEditor.KeepExplicitPicks(stored, recast, pool, narrator);

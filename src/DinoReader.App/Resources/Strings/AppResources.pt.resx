@@ -229,6 +229,14 @@
   <data name="Wizard_NoTextShort" xml:space="preserve"><value>Sem texto</value></data>
   <data name="Wizard_NoText" xml:space="preserve"><value>Nenhum texto encontrado nesta página</value></data>
   <data name="Wizard_Reading" xml:space="preserve"><value>Lendo a página {0} de {1}</value></data>
+  <data name="Wait_GettingVoices" xml:space="preserve"><value>Preparando as vozes…</value></data>
+  <data name="Wait_ReadingPictures" xml:space="preserve"><value>Lendo as imagens…</value></data>
+  <data name="Wait_PageOf" xml:space="preserve"><value>Página {0} de {1}</value></data>
+  <data name="Wait_Translating" xml:space="preserve"><value>Traduzindo…</value></data>
+  <data name="Wait_Saving" xml:space="preserve"><value>Salvando…</value></data>
+  <data name="Wait_GettingBook" xml:space="preserve"><value>Preparando o livro…</value></data>
+  <data name="Wait_BackingUp" xml:space="preserve"><value>A fazer cópia dos livros…</value></data>
+  <data name="Wait_Restoring" xml:space="preserve"><value>A restaurar os livros…</value></data>
   <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>Algumas páginas não foram lidas</value></data>
   <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>Não foi possível ler {0} páginas. Elas ficam como imagens sem texto.</value></data>
   <data name="Pictures_NoneTitle" xml:space="preserve"><value>Este arquivo tem texto, mas não tem imagens</value></data>

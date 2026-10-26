@@ -89,6 +89,8 @@
 		<MauiFont Include="Resources\Fonts\*" />
 		<!-- The gallery's top-bar app icon (copied from docs/design/dino-reader/icons/android/play-store-512.png). -->
 		<MauiImage Include="Resources\Images\dino_icon.png" BaseSize="40,40" />
+		<!-- Slice 143: the app icon at the wait overlay's 84 size (dino_icon is a 40 base and would blur). -->
+		<MauiImage Include="Resources\Images\dino_wait.png" BaseSize="84,84" />
 		<!-- The bundled starter stories (Slice 91): .dino packages opened with FileSystem.OpenAppPackageFileAsync("<name>.dino"); flat names, because the Windows package drops the folder. -->
 		<MauiAsset Include="Resources\Raw\starters\*.dino" LogicalName="%(Filename)%(Extension)" />
 	</ItemGroup>

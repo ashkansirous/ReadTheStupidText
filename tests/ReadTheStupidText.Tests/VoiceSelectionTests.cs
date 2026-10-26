@@ -171,11 +171,11 @@ public class VoiceSelectionTests
         var installed = new InstalledVoicePack("/packs/piper-fa", manifest);
 
         VoiceModelPaths paths = InstalledVoiceCatalog.Resolve([installed], "fa")!;
-        VoiceInfo mana = paths.AvailableVoices.Single(v => v.Id == "piper:fa-mana");
+        VoiceInfo adabi = paths.AvailableVoices.Single(v => v.Id == "piper:fa-ganji-adabi");
 
-        Assert.Equal("voices/ganji_adabi", paths.ModelDir);
-        Assert.Equal(Path.Combine("/packs/piper-fa", "voices/mana"), paths.ForVoice(mana).ModelFolder);
-        Assert.Equal("/packs/piper-fa", paths.ForVoice(mana).RootDir);
+        Assert.Equal("voices/mana", paths.ModelDir);
+        Assert.Equal(Path.Combine("/packs/piper-fa", "voices/ganji_adabi"), paths.ForVoice(adabi).ModelFolder);
+        Assert.Equal("/packs/piper-fa", paths.ForVoice(adabi).RootDir);
         Assert.Same(paths, paths.ForVoice(paths.ResolveVoice(null)));
     }
 

@@ -2,7 +2,9 @@ using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Extensions.DependencyInjection;
 using ReadTheStupidText.Application.Images;
+using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Mobile.Shared;
+using ReadTheStupidText.Mobile.Shared.Waiting;
 
 namespace DinoReader;
 
@@ -71,11 +73,51 @@ public sealed class WizardSession
 
 	public bool LanguageDetected { get; set; }
 
-	/// <summary>Raised to show the wizard's progress card with a text (empty for just the spinner), or hide it (null). While it is up
-	/// the Pages step ignores touches.</summary>
-	public event Action<string?>? ProgressChanged;
+	private WaitController? _wait;
 
-	public void ShowProgress(string? text) => ProgressChanged?.Invoke(text);
+	/// <summary>Cancelled when Cancel is tapped on the wait in progress; none when no wait runs.</summary>
+	public CancellationToken WaitToken => _wait?.Token ?? CancellationToken.None;
+
+	/// <summary>Hands the session the page's wait overlay (Slice 143).</summary>
+	public void AttachWait(WaitController wait)
+	{
+		_wait = wait;
+	}
+
+	/// <summary>Starts a wait behind the page's overlay (shown after 500 ms, over the whole page); the token is cancelled by its Cancel button.</summary>
+	public CancellationToken BeginWait(WaitStage stage, string line)
+	{
+		return _wait?.BeginCancellable(stage, line) ?? CancellationToken.None;
+	}
+
+	/// <summary>Counts the pages read so far: the overlay's second line ("Page 3 of 8").</summary>
+	public void ReportWait(int current, int total)
+	{
+		_wait?.Report(AppResources.Format(AppResources.Wait_PageOf, current, total));
+	}
+
+	public void EndWait()
+	{
+		_wait?.End();
+	}
+
+	/// <summary>The PDF import's wait (Pages step): the reading line (with Cancel, see <see cref="WaitToken"/>), then the step's own count as the second line.
+	/// Empty text starts the wait, other text is the second line, null ends it.</summary>
+	public void ShowProgress(string? text)
+	{
+		if (text is null)
+		{
+			EndWait();
+		}
+		else if (_wait is { IsActive: true })
+		{
+			_wait.Report(text);
+		}
+		else
+		{
+			BeginWait(WaitStage.ReadingPictures, AppResources.Wait_ReadingPictures);
+		}
+	}
 
 	/// <summary>Raised when the pages changed, so a step that shows them can rebuild.</summary>
 	public event Action? PagesChanged;
@@ -177,10 +219,16 @@ public partial class StoryWizardPage : ContentPage, IGrownUpPage
 	private WizardSession? _session;
 	private int _step;
 	private int _shownVersion = -1;
+	private readonly WaitController _wait;
 
 	public StoryWizardPage(IStoryLibrary library, IServiceProvider services)
 	{
 		InitializeComponent();
+		WaitOverlay overlay = DinoWait.OverPage();
+		Grid.SetRowSpan(overlay, WizardRoot.RowDefinitions.Count);
+		WizardRoot.Children.Add(overlay);
+		_wait = new WaitController(overlay);
+		_wait.ActiveChanged += active => PagesView.InputTransparent = active; // from Begin, not from when the overlay shows
 		_library = library;
 		_services = services;
 		BuildStepBar();
@@ -193,7 +241,7 @@ public partial class StoryWizardPage : ContentPage, IGrownUpPage
 		Story story = existing ?? await NewStoryAsync();
 		var draft = new StoryDraft(story);
 		_session = new WizardSession(draft, isNew, _library, _services, this);
-		_session.ProgressChanged += OnProgressChanged;
+		_session.AttachWait(_wait);
 		if (!isNew)
 		{
 			draft.LoadPageDrafts(ExistingPicture(story));
@@ -421,18 +469,22 @@ public partial class StoryWizardPage : ContentPage, IGrownUpPage
 	private async Task<ReadResult?> ReadPagesWithProgressAsync(WizardSession session)
 	{
 		var pages = new List<PageDraft>();
-		session.ShowProgress(string.Empty);
+		CancellationToken cancel = session.BeginWait(WaitStage.ReadingPictures, AppResources.Wait_ReadingPictures);
 		try
 		{
 			foreach (PageDraft page in session.Draft.PageDrafts)
 			{
+				cancel.ThrowIfCancellationRequested();
 				pages.Add(KeepPictureText(session, await session.RenderAsync(page)));
 			}
 
 			var ocr = _services.GetRequiredService<OcrPositionedTextExtractor>();
-			var progress = new Progress<ReadProgress>(p =>
-				session.ShowProgress(AppResources.Format(AppResources.Wizard_Reading, p.Current, p.Total)));
-			return await StoryImport.ReadPagesAsync(ocr, pages, progress, CancellationToken.None);
+			var progress = new Progress<ReadProgress>(p => session.ReportWait(p.Current, p.Total));
+			return await StoryImport.ReadPagesAsync(ocr, pages, progress, cancel);
+		}
+		catch (OperationCanceledException)
+		{
+			return null; // Cancel in the overlay: nothing is kept, the Pages step stays as it was
 		}
 		catch (Exception ex)
 		{
@@ -442,16 +494,8 @@ public partial class StoryWizardPage : ContentPage, IGrownUpPage
 		}
 		finally
 		{
-			session.ShowProgress(null);
+			session.EndWait();
 		}
-	}
-
-	private void OnProgressChanged(string? text)
-	{
-		bool visible = text is not null;
-		ProgressCard.IsVisible = visible;
-		ProgressLabel.Text = text ?? string.Empty;
-		PagesView.InputTransparent = visible;
 	}
 
 	private async Task SaveAsync()

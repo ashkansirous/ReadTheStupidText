@@ -6,6 +6,7 @@ using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Application.Sanitizing;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Application.Translation;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Domain.Activity;
 using ReadTheStupidText.Domain.Reading;
 
@@ -139,7 +140,8 @@ public sealed partial class ReadAloudService : IDisposable
         ITextSanitizer sanitizer,
         ISystemLog systemLog,
         IHeadStart? headStart = null,
-        ReadTranslator? translation = null)
+        ReadTranslator? translation = null,
+        IUsageRecorder? usage = null)
     {
         _reader = reader;
         _clipboard = clipboard;
@@ -157,6 +159,7 @@ public sealed partial class ReadAloudService : IDisposable
         _systemLog = systemLog;
         _headStart = headStart;
         _translation = translation;
+        _usage = usage;
 
         _reader.SetSpeed(_settings.Speed);
         ApplyPersistedVoice();
@@ -171,6 +174,7 @@ public sealed partial class ReadAloudService : IDisposable
         // installed one and marks itself ready, then we apply the voice and refresh the UI.
         _voiceModel.ReadyChanged += OnVoiceModelReady;
         _ = _voiceModel.InitializeAsync();
+        StartUsageTracking();
 
         if (_settings.AutoReadOnSelection)
         {
@@ -284,6 +288,7 @@ public sealed partial class ReadAloudService : IDisposable
             if (value)
             {
                 _translation?.StartTargetPackDownload();
+                CountTranslateSwitchedOn();
             }
 
             TranslateEnabledChanged?.Invoke(this, value);
@@ -445,10 +450,15 @@ public sealed partial class ReadAloudService : IDisposable
     /// <summary>Selects and persists the narrator voice; applies to the next read.</summary>
     public void SetVoice(string voiceId)
     {
+        bool changed = _settings.VoiceId != voiceId;
         _settings.VoiceId = voiceId;
         _reader.SetVoice(voiceId);
         _systemLog.Info($"voice set to {voiceId}");
         VoiceChanged?.Invoke(this, voiceId);
+        if (changed)
+        {
+            CountVoiceChanged(voiceId);
+        }
     }
 
     private void ApplyPersistedVoice()
@@ -693,6 +703,11 @@ public sealed partial class ReadAloudService : IDisposable
         }
         else if (active.State is ActivityState.GeneratingAudio or ActivityState.Reading)
         {
+            if (active.State == ActivityState.GeneratingAudio)
+            {
+                EndFirstAudioCount(active, UsageOutcome.Cancelled);
+            }
+
             // Stop (not Pause) so the superseded synthesis/playback is cancelled —
             // otherwise a slow long read could still play after this point.
             _reader.Stop();
@@ -709,6 +724,7 @@ public sealed partial class ReadAloudService : IDisposable
             // first Playing transition flips it to Reading (OnReaderStateChanged),
             // natural completion → Read (OnReaderCompleted), errors → catch below.
             _synthStartTicks = Stopwatch.GetTimestamp();
+            BeginFirstAudioCount(entry);
             _log.SetState(entry, ActivityState.GeneratingAudio);
             PublishGenerating();
             _systemLog.Debug("generating audio", entry.Id);
@@ -717,12 +733,14 @@ public sealed partial class ReadAloudService : IDisposable
                 return;
             }
 
-            ReadText spoken = await TextToSpeakAsync(entry, text);
+            (ReadText spoken, ReadTranslationResult? translation) = await TextToSpeakAsync(entry, text);
             if (!ReferenceEquals(_activeEntry, entry))
             {
                 PublishGenerating(); // the superseding read (or a stop) may have left the flag stale
                 return; // superseded while translating: Supersede already finalized the entry
             }
+
+            CountReadStarted(entry, text.Length, translation?.Source, spoken.Translated, translation?.Target);
 
             DropHeadStartIfTranslated(spoken);
             ReadTextChanged?.Invoke(this, spoken);
@@ -733,6 +751,7 @@ public sealed partial class ReadAloudService : IDisposable
         {
             _log.SetState(entry, ActivityState.Failed, ActivityReason.Error);
             _systemLog.Error("read failed during synthesis/playback", entry.Id, ex);
+            EndFirstAudioCount(entry, UsageOutcome.Failed);
             ClearIfActive(entry);
         }
     }
@@ -740,15 +759,16 @@ public sealed partial class ReadAloudService : IDisposable
     // Slice 57: every read path funnels through ReadEntryAsync, so translation happens here, once, before
     // the reader sees the text. The reading text box and the chunk source ranges then refer to the text
     // actually spoken. A timeout, a missing pack or a failure reads the original (see ReadTranslator).
-    private async Task<ReadText> TextToSpeakAsync(ActivityEntry entry, string text)
+    private async Task<(ReadText Spoken, ReadTranslationResult? Translation)> TextToSpeakAsync(ActivityEntry entry, string text)
     {
         if (_translation is null || !TranslateEnabled)
         {
-            return new ReadText(text, false);
+            return (new ReadText(text, false), null);
         }
 
         var cts = new CancellationTokenSource();
         CancelWithoutDispose(Interlocked.Exchange(ref _translationCts, cts));
+        long started = Stopwatch.GetTimestamp();
         try
         {
             ReadTranslationResult result = await _translation.PrepareAsync(text, entry.Id, cts.Token);
@@ -757,11 +777,13 @@ public sealed partial class ReadAloudService : IDisposable
                 TranslationFinished?.Invoke(this, result);
             }
 
-            return new ReadText(result.Text, result.Outcome == TranslationOutcome.Translated);
+            CountTranslationTiming(entry, result, Stopwatch.GetElapsedTime(started));
+            return (new ReadText(result.Text, result.Outcome == TranslationOutcome.Translated), result);
         }
         catch (OperationCanceledException) when (cts.IsCancellationRequested)
         {
-            return new ReadText(text, false); // superseded: the caller sees the entry is no longer active
+            CountTiming(UsageStage.Translate, UsageOutcome.Cancelled, Stopwatch.GetElapsedTime(started), null, null);
+            return (new ReadText(text, false), null); // superseded: the caller sees the entry is no longer active
         }
         finally
         {
@@ -810,6 +832,7 @@ public sealed partial class ReadAloudService : IDisposable
         {
             _log.SetState(entry, ActivityState.Failed, ActivityReason.Error);
             _systemLog.Warning("reader never played audio within the grace window", entry.Id);
+            EndFirstAudioCount(entry, UsageOutcome.Failed);
             ClearIfActive(entry);
         }
     }
@@ -830,6 +853,7 @@ public sealed partial class ReadAloudService : IDisposable
             TimeSpan firstAudio = Stopwatch.GetElapsedTime(_activeReadStartTicks);
             TimeSpan synth = Stopwatch.GetElapsedTime(_synthStartTicks);
             _log.RecordTiming(entry, firstAudio, synth);
+            EndFirstAudioCount(entry, UsageOutcome.Done);
             _log.SetState(entry, ActivityState.Reading);
             CancelGrace();
             PublishGenerating();
@@ -845,6 +869,7 @@ public sealed partial class ReadAloudService : IDisposable
     {
         if (_activeEntry is { State: ActivityState.GeneratingAudio or ActivityState.Reading } entry)
         {
+            EndFirstAudioCount(entry, UsageOutcome.Done); // a read too short to be seen Playing still had its wait
             _log.SetState(entry, ActivityState.Read);
             _systemLog.Info("read complete", entry.Id);
             _activeEntry = null;
@@ -895,5 +920,6 @@ public sealed partial class ReadAloudService : IDisposable
         _selectionCts?.Dispose();
         CancelWithoutDispose(Interlocked.Exchange(ref _translationCts, null));
         CancelPendingPrepare(Interlocked.Exchange(ref _prepareCts, null));
+        StopUsageTracking();
     }
 }

@@ -271,6 +271,15 @@
   <data name="Pack_Failed" xml:space="preserve">
     <value>The download failed. Retry to try again.</value>
   </data>
+  <data name="CountsTitle.Text" xml:space="preserve">
+    <value>Help improve the app</value>
+  </data>
+  <data name="CountsCaption.Text" xml:space="preserve">
+    <value>Sends counts like “a French text was read”. No names, no ids, nothing you read.</value>
+  </data>
+  <data name="CountsSwitch.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Help improve the app</value>
+  </data>
   <data name="Translate_AutoDetect" xml:space="preserve">
     <value>Auto-detect</value>
   </data>

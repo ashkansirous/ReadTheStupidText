@@ -228,6 +228,14 @@
   <data name="Wizard_NoTextShort" xml:space="preserve"><value>Geen tekst</value></data>
   <data name="Wizard_NoText" xml:space="preserve"><value>Geen tekst gevonden op deze pagina</value></data>
   <data name="Wizard_Reading" xml:space="preserve"><value>Pagina {0} van {1} wordt gelezen</value></data>
+  <data name="Wait_GettingVoices" xml:space="preserve"><value>De stemmen worden klaargezet…</value></data>
+  <data name="Wait_ReadingPictures" xml:space="preserve"><value>De plaatjes worden gelezen…</value></data>
+  <data name="Wait_PageOf" xml:space="preserve"><value>Pagina {0} van {1}</value></data>
+  <data name="Wait_Translating" xml:space="preserve"><value>Vertalen…</value></data>
+  <data name="Wait_Saving" xml:space="preserve"><value>Opslaan…</value></data>
+  <data name="Wait_GettingBook" xml:space="preserve"><value>Het boek wordt opgehaald…</value></data>
+  <data name="Wait_BackingUp" xml:space="preserve"><value>Back-up van de boeken maken…</value></data>
+  <data name="Wait_Restoring" xml:space="preserve"><value>De boeken terugzetten…</value></data>
   <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>Sommige pagina’s zijn niet gelezen</value></data>
   <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>{0} pagina’s konden niet worden gelezen. Ze worden bewaard als plaatjes zonder tekst.</value></data>
   <data name="Pictures_NoneTitle" xml:space="preserve"><value>Dit bestand heeft woorden maar geen plaatjes</value></data>

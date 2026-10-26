@@ -82,8 +82,8 @@ public static class AnimalCharacters
 
         return FlavourGuess.Guess(name, rules) switch
         {
-            VoiceFlavour.Small or VoiceFlavour.Squeaky or VoiceFlavour.Bouncy => true,
-            VoiceFlavour.Big or VoiceFlavour.Giant or VoiceFlavour.Grumpy or VoiceFlavour.Sleepy => false,
+            VoiceFlavour.Small or VoiceFlavour.Squeaky or VoiceFlavour.Bouncy or VoiceFlavour.Chirpy or VoiceFlavour.Perky => true,
+            VoiceFlavour.Big or VoiceFlavour.Giant or VoiceFlavour.Grumpy or VoiceFlavour.Sleepy or VoiceFlavour.Mellow => false,
             _ => null,
         };
     }

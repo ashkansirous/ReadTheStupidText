@@ -40,6 +40,7 @@ public sealed class ReadingSession
 	private IReadOnlyList<int> _pageStarts = [];
 	private (int First, int Last)[] _pageSentences = [];
 	private RecordedPlay _recorded;
+	private readonly HashSet<string> _recastChecked = []; // books whose cast was checked against the narrator this session (Slice 144)
 	private readonly HashSet<int> _unplayable = []; // pages whose recording failed to play this session: read in the generated voice
 	private (int ReadId, int Sentence)? _continueRead; // a generated read cut short before a recorded page: where the read goes on once it ends
 	private Func<Story, Task>? _saveCast;
@@ -378,6 +379,7 @@ public sealed class ReadingSession
 
 	private async Task<bool> StartVoicedReadAsync(Story story, int fromPosition, int id, CancellationToken cancellation)
 	{
+		story = await RecastClashesAsync(story, cancellation);
 		story = await KeepNewCastAsync(story);
 		IReadOnlyList<VoicedSegment> segments = await _voicing.VoiceAsync(story, fromPosition, cancellation,
 			() => TranslationSkipped?.Invoke(this, EventArgs.Empty));
@@ -414,6 +416,40 @@ public sealed class ReadingSession
 		return segments.Where(s => s.SourceEnd <= boundary).ToList(); // a segment running over the break is left to the recording, so its words are not heard twice
 	}
 
+	// A stored cast that gives a character the narrator's voice (or a voice the language dropped) is re-cast and saved (Slice 144: Farsi's default narrator became mana).
+	// A book already checked this session is not checked again: a cast that cannot move (the one woman's voice is both narrator and mum) would otherwise be rebuilt on every read.
+	private async Task<Story> RecastClashesAsync(Story story, CancellationToken cancellation)
+	{
+		if (_saveCast is null || _recastChecked.Contains(story.Id))
+		{
+			return story;
+		}
+
+		Story? recast = await NarratorRecast.TryRecastAsync(_voicing, story, cancellation);
+		if (recast is not null || _voicing.VoicesFor(_voicing.ReadingLanguage(story)).Count > 0)
+		{
+			_recastChecked.Add(story.Id); // only once the language has voices: a pack still installing is checked again on the next read
+		}
+
+		return recast is null ? story : await PersistCastAsync(recast);
+	}
+
+	// Keeps the story with its new cast in memory and tries to store it. A failed save only costs that: the next successful save stores it.
+	private async Task<Story> PersistCastAsync(Story withCast)
+	{
+		try
+		{
+			await _saveCast!(withCast);
+		}
+		catch (Exception)
+		{
+			// The cast stays in memory for this session, so every later read keeps the same voices.
+		}
+
+		_story = withCast;
+		return withCast;
+	}
+
 	// The first read in a language with no cast stores the one it makes, so its voices stay put (Slice 108). A failed save only costs that.
 	private async Task<Story> KeepNewCastAsync(Story story)
 	{
@@ -429,18 +465,7 @@ public sealed class ReadingSession
 			return story; // no voices or characters yet: asked again on the next read, once a pack has installed
 		}
 
-		Story withCast = story.WithCastIn(made.Language, made.Members);
-		try
-		{
-			await _saveCast(withCast);
-		}
-		catch (Exception)
-		{
-			// The cast stays in memory for this session, so every later read keeps the same voices; the next successful save stores it.
-		}
-
-		_story = withCast;
-		return withCast;
+		return await PersistCastAsync(story.WithCastIn(made.Language, made.Members));
 	}
 
 	private CancellationToken BeginReadCancellation()

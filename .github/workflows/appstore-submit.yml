@@ -1,0 +1,48 @@
+name: appstore-submit
+
+# Manual: attaches an iOS app's newest processed build to its editable App Store version (renamed to
+# the build's marketing version, or a new version when the last is live) and submits it for review,
+# release type "after approval". One review waiting per app, never cancels (Decision 154, Slice 147).
+# The first submission's listing (screenshots, privacy, age rating) is filled in App Store Connect by
+# hand; until then the job fails and prints what Apple says is missing.
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: 'Which app to submit to the App Store.'
+        required: true
+        type: choice
+        options: [rtst, dino, both]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: appstore-submit
+  cancel-in-progress: false
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      APPS: ${{ github.event.inputs.app == 'both' && 'rtst dino' || github.event.inputs.app }}
+      ASC_API_KEY_P8_BASE64: ${{ secrets.ASC_API_KEY_P8_BASE64 }}
+      ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+      ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Submit the newest build for App Store review
+        run: |
+          read -ra app_keys <<< "$APPS"
+          node .github/scripts/ios-review-cadence.mjs appstore "${app_keys[@]}"
