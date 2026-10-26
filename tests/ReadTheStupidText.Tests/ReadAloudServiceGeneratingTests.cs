@@ -33,6 +33,84 @@ public class ReadAloudServiceGeneratingTests
     }
 
     [Fact]
+    public async Task CancelRead_stops_a_read_still_waiting_for_its_first_audio()
+    {
+        var harness = new Harness();
+        var gate = new TaskCompletionSource();
+        harness.Speak = (_, _) => gate.Task;
+
+        Task read = harness.Service.ReadFileAsync("a.txt");
+        await Task.Delay(30, TestContext.Current.CancellationToken);
+        Assert.True(harness.Service.IsGeneratingAudio);
+
+        harness.Service.CancelRead();
+
+        Assert.False(harness.Service.IsGeneratingAudio);
+        Assert.Equal(ActivityState.Interrupted, Assert.Single(harness.Log.Entries).State);
+        gate.SetResult();
+        await read;
+    }
+
+    [Fact]
+    public async Task A_read_replaced_during_its_start_does_not_stop_the_newer_read()
+    {
+        var harness = new Harness();
+        var gate = new TaskCompletionSource();
+        int stopsAfterReplace = -1;
+        Task? second = null;
+        int calls = 0;
+        harness.Speak = (_, _) =>
+        {
+            if (++calls == 1)
+            {
+                second = harness.Service.ReadFileAsync("b.txt"); // the newer read takes over while the first is starting
+                stopsAfterReplace = harness.Reader.Stops;
+            }
+
+            return gate.Task;
+        };
+
+        Task first = harness.Service.ReadFileAsync("a.txt");
+        await Task.Delay(50, TestContext.Current.CancellationToken);
+
+        Assert.True(stopsAfterReplace >= 0);
+        Assert.Equal(stopsAfterReplace, harness.Reader.Stops);
+        gate.SetResult();
+        await first;
+        await second!;
+    }
+
+    [Fact]
+    public async Task A_cancelled_read_stops_the_reader_once_it_starts_speaking()
+    {
+        var harness = new Harness();
+        var gate = new TaskCompletionSource();
+        harness.Speak = (_, _) =>
+        {
+            harness.Service.CancelRead();
+            return gate.Task;
+        };
+
+        Task read = harness.Service.ReadFileAsync("a.txt");
+        await Task.Delay(50, TestContext.Current.CancellationToken);
+
+        Assert.True(harness.Reader.Stops >= 2);
+        gate.SetResult();
+        await read;
+    }
+
+    [Fact]
+    public void CancelRead_with_nothing_active_does_nothing()
+    {
+        var harness = new Harness();
+
+        harness.Service.CancelRead();
+
+        Assert.False(harness.Service.IsGeneratingAudio);
+        Assert.Empty(harness.Log.Entries);
+    }
+
+    [Fact]
     public async Task Reader_that_returns_early_then_plays_within_the_grace_is_not_failed()
     {
         var harness = new Harness();
@@ -787,7 +865,8 @@ public class ReadAloudServiceGeneratingTests
         public Task WarmUpAsync() => Task.CompletedTask;
         public void Pause() { }
         public void Resume() { }
-        public void Stop() { }
+        public void Stop() => Stops++;
+        public int Stops { get; private set; }
         public void SetSpeed(PlaybackRate speed) { }
         public void SetVoice(string voiceId) { }
         public Task SkipForward() => Task.CompletedTask;
