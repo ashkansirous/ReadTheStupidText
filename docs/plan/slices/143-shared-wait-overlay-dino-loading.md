@@ -75,7 +75,7 @@ Two frames in `docs/design/dino-reader/Dino Reader Batch 30.dc.html`, plus the `
 
 *From review:* `143-high`: all 12 findings applied. `143-medium`: 7 applied; findings 2 and 8 skipped; finding 3 judged not a bug.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-26)
 
 - `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md`: every blocking wait in a MAUI app goes through `Waiting/WaitController` (500 ms gate, `WaitStage`/`WaitGate`); do not add a per-page spinner. (Slice 143: docs/plan/slices/143-shared-wait-overlay-dino-loading.md)
 - `src/DinoReader.App/CLAUDE.md`: Dino's wait look lives in `DinoWait.cs`; change it there, not in the shared overlay. (Slice 143: docs/plan/slices/143-shared-wait-overlay-dino-loading.md)

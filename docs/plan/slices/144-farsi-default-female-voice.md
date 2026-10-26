@@ -48,7 +48,7 @@ No screens. The Batch 30 mock intro says 144 changes no screens (it makes **mana
 
 *From review:* 144-high: 9 findings applied, 6 skipped. 144-medium: 8 applied, findings 3 and 7 skipped by design.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-26)
 
 Target `src/DinoReader.App/CLAUDE.md`:
 
