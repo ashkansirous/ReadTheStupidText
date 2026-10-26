@@ -36,7 +36,7 @@ internal static class StoreTexts
         new(GoldilocksId, "Goldilocks and the Three Bears", "goldilocks", Goldilocks, 3, RetoldTraditional, 3, 6, Traditional, ["Goldilocks", "Papa Bear", "Mama Bear", "Baby Bear"], 3, AddedDate),
         new(RedRidingHoodId, "Little Red Riding Hood", "red-riding-hood", RedRidingHood, 3, RetoldTraditional, 4, 7, Traditional, ["Red Riding Hood", "Mother", "Wolf", "Grandmother", "Woodcutter"], 3, AddedDate),
         new(UglyDucklingId, "The Ugly Duckling", "ugly-duckling", UglyDuckling, 0, "Retold from Andersen · free to share", 5, 8, "Hans Christian Andersen", ["Mother Duck", "Duckling", "Dilly", "Hen", "Swan"], 5, AddedDate),
-        new(RedHenId, "The Little Red Hen", "little-red-hen", RedHen, 3, RetoldTraditional, 3, 6, Traditional, ["Hen", "Dog", "Cat", "Duck"], 3, AddedDate),
+        new(RedHenId, "The Little Red Hen", "little-red-hen", RedHen, 3, RetoldTraditional, 3, 6, Traditional, ["Hen", "Dog", "Cat", "Duck"], 4, AddedDate),
         new(BillyGoatsId, "The Three Billy Goats Gruff", "billy-goats-gruff", BillyGoats, 0, RetoldTraditional, 4, 7, Traditional, ["Little Billy", "Middle Billy", "Big Billy", "Troll"], 6, AddedDate),
         new(BeanstalkId, "Jack and the Beanstalk", "jack-and-the-beanstalk", Beanstalk, 2, RetoldTraditional, 5, 8, Traditional, ["Jack", "Mother", "Giant", "Peddler"], 3, AddedDate),
         new(ElvesId, "The Elves and the Shoemaker", "elves-and-shoemaker", Elves, 1, "Retold from the Brothers Grimm · free to share", 5, 8, "Brothers Grimm", ["Hans", "Greta", "Nib", "Nob"], 4, AddedDate),
@@ -290,71 +290,87 @@ That evening the sun went down, pink and gold. Dilly and the other ducklings rod
 """;
 
     public const string RedHen = """
-Once upon a time a little red Hen lived on a farm. She shared her house with a lazy Dog, a sleepy Cat and a noisy Duck. The Hen worked hard every day, but the others did nothing at all.
+Once upon a time a little red Hen lived on a farm with her three friends, Dog, Cat and Duck.
+
+Dog liked to snooze in the sun with his nose on his paws. Cat liked to sit on the fence and lick her paws. Duck liked to splash in his puddle.
+
+But Hen was always busy, busy, busy!
 ---
-One morning Hen found some grains of wheat. "Who will help me plant this wheat?" said Hen.
+One morning Hen found some grains of wheat in the yard. "Who will help me plant this wheat?" said Hen.
 
-"Not I," said Dog.
+"Not me!" said Dog. "Not me!" said Cat. "Not me!" said Duck.
 
-"Not I," said Cat.
-
-"Not I," said Duck.
-
-"Then I will do it myself," said Hen. And she did.
+"Then I'll do it myself," said Hen.
 ---
-The wheat grew tall and golden. "Who will help me cut the wheat?" said Hen.
+So she did it all by herself. Hen dug a long, straight row in the field and dropped in the grains, one by one.
 
-"Not I," said Dog.
+Dig, dig, pat! Dig, dig, pat!
 
-"Not I," said Cat.
-
-"Not I," said Duck.
-
-"Then I will do it myself," said Hen. And she did.
+Over by the fence, Dog, Cat and Duck were fast asleep.
 ---
-Next it was time to take the wheat to the mill. "Who will help me grind the wheat into flour?" said Hen.
+All summer long the sun shone and the rain fell, and the wheat grew tall and golden. "Who will help me cut the wheat?" said Hen.
 
-"Not I," said Dog.
+"Not me!" said Dog. "Not me!" said Cat. "Not me!" said Duck.
 
-"Not I," said Cat.
-
-"Not I," said Duck.
-
-"Then I will do it myself," said Hen. And she did.
+"Then I'll do it myself," said Hen.
 ---
-Hen took the flour home. "Who will help me bake the bread?" said Hen.
+So she did it all by herself. Snip, snip, snip! Snip, snip, snip! Hen cut the wheat and tied it up in neat golden bundles.
 
-"Not I," said Dog.
-
-"Not I," said Cat.
-
-"Not I," said Duck.
-
-"Then I will do it myself," said Hen. And she did.
+Dog, Cat and Duck watched from the shade of the apple tree.
 ---
-Soon the little house smelled of warm, fresh bread. The Dog, the Cat and the Duck came running into the kitchen.
+Hen piled the bundles into her little red cart. "Who will help me take the wheat to the mill?" said Hen.
+
+"Not me!" said Dog. "Not me!" said Cat. "Not me!" said Duck.
+
+"Then I'll do it myself," said Hen.
 ---
+So she did it all by herself. Hen pulled her cart up the hill to the windmill.
+
+Whoosh, whoosh, whoosh, went the big sails, and soon Hen had a sack of soft white flour.
+---
+Hen brought the flour home to her cosy kitchen. "Who will help me bake the bread?" said Hen.
+
+"Not me!" said Dog. "Not me!" said Cat. "Not me!" said Duck.
+
+"Then I'll do it myself," said Hen.
+---
+So she did it all by herself. Hen mixed the flour with water and squished it into a big round loaf.
+
+Mix, mix, squish! Mix, mix, squish!
+
+Dog, Cat and Duck snoozed on the rug in a sleepy heap.
+---
+At last the bread was ready, round and golden. Sniff, sniff, sniff! The smell of warm, fresh bread floated across the farm, and Dog, Cat and Duck woke up and ran to the table.
+
 "Who will help me eat the bread?" said Hen.
 
-"I will!" said Dog.
-
-"I will!" said Cat.
-
-"I will!" said Duck.
+"I will!" said Dog. "I will!" said Cat. "I will!" said Duck.
 ---
-"No, you will not," said Hen. "I planted the wheat, I cut it, I ground it and I baked the bread. Now I will eat it myself, with my little chicks."
+Then Dog looked at the bread, and he looked at Hen. "You did all the work by yourself," said Dog.
 
-Dog, Cat and Duck hung their heads. They had not helped at all.
+"And we didn't help you at all," said Cat.
+
+"We're sorry, Hen," said Duck. "Next time we'll help. We promise!"
 ---
-The next day Hen found more wheat. "Who will help me plant this wheat?" said Hen.
+Hen gave them a big smile. "Thank you for saying sorry," said Hen. "Bread is yummier when we share it."
 
-"I will!" said Dog.
+She broke the loaf into four pieces, and they had a picnic under the apple tree. Munch, munch, munch! Mmm, yum!
+---
+After the picnic there was a big pile of cups and plates. This time everyone wanted to help!
 
-"I will!" said Cat.
+Dog washed, Cat dried, and Duck splashed in the bubbles. Splish, splash, splosh! Hen laughed and laughed.
 
-"I will!" said Duck.
+"Washing-up is fun when we do it together!" said Duck.
+---
+The next spring Hen found some more grains of wheat. "Who will help me plant this wheat?" said Hen.
 
-And this time they did, and they shared the bread together.
+"I will!" said Dog. "I will!" said Cat. "I will!" said Duck.
+
+They already had their little spades ready.
+---
+So the four friends planted the wheat together, side by side. Dig, dig, pat! Dig, dig, pat! They dug and planted and laughed until the sun went down.
+
+"Helping is more fun together," said Hen. And Dog, Cat and Duck all agreed.
 """;
 
     public const string BillyGoats = """

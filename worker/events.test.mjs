@@ -202,7 +202,7 @@ test("a phone read count is written with its fields in the fixed blob order", as
   assert.deepEqual(env.points, [
     {
       indexes: ["read_started"],
-      blobs: ["read_started", "1.4.0", "android", "2026-10-26", "fr", "fr", "original", "supertonic", "yes", "200-1000", "", "", "", "", ""],
+      blobs: ["read_started", "1.4.0", "android", "2026-10-26", "fr", "fr", "original", "supertonic", "yes", "200-1000", "", "", "", "", "", ""],
       doubles: [2],
     },
   ]);
@@ -212,8 +212,17 @@ test("a Windows read count carries its source as the last blob (Slice 140)", asy
   const env = rtstRecorder();
   const windowsRead = { ...rtst("read_started", { language: "en", mode: "translation", engine: "windows", voiceDefault: true, lengthBucket: "<200", sourceLanguage: "fr", source: "hotkey" }), platform: "windows" };
   assert.equal((await handleRtstEvents(rtstPost([windowsRead]), env, on)).status, 204);
-  assert.deepEqual(env.points[0].blobs.slice(3), ["2026-10-26", "en", "fr", "translation", "windows", "yes", "<200", "", "", "", "", "hotkey"]);
+  assert.deepEqual(env.points[0].blobs.slice(3), ["2026-10-26", "en", "fr", "translation", "windows", "yes", "<200", "", "", "", "", "hotkey", ""]);
   assert.equal(env.points[0].blobs[2], "windows");
+});
+
+test("a timing count carries whether the head start had run, as the last blob (Slice 139)", async () => {
+  const env = rtstRecorder();
+  const timing = rtst("timing", { stage: "first_audio", outcome: "done", durationBucket: "0.5-1", language: "en", early: true });
+  assert.equal((await handleRtstEvents(rtstPost([timing]), env, on)).status, 204);
+  assert.equal(env.points[0].blobs.at(-1), "yes");
+  assert.equal(parseRtstEvent(rtst("timing", { stage: "first_audio", outcome: "done", durationBucket: "0.5-1", early: "yes" })), null);
+  assert.equal(parseRtstEvent({ ...readStarted, early: true }), null);
 });
 
 test("the Windows translate switch count needs no source language, but a source outside the list drops a read", () => {

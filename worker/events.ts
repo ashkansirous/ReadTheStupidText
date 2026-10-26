@@ -247,8 +247,8 @@ const RTST_DURATION_BUCKETS = ["<0.5", "0.5-1", "1-2", "2-5", "5-10", "10-20", "
 const MIN_OS_MAJOR = 1;
 const MAX_OS_MAJOR = 99;
 
-/** The blob order of a count after its envelope; a field a count does not carry is an empty blob. New fields are only ever appended (Slice 140 added `source`). */
-export const RTST_FIELDS = ["language", "sourceLanguage", "mode", "engine", "voiceDefault", "lengthBucket", "osMajor", "stage", "outcome", "durationBucket", "source"] as const;
+/** The blob order of a count after its envelope; a field a count does not carry is an empty blob. New fields are only ever appended (Slice 140 added `source`, Slice 139 `early`). */
+export const RTST_FIELDS = ["language", "sourceLanguage", "mode", "engine", "voiceDefault", "lengthBucket", "osMajor", "stage", "outcome", "durationBucket", "source", "early"] as const;
 type RtstField = (typeof RTST_FIELDS)[number];
 type FieldValue = string | number | boolean;
 
@@ -266,6 +266,7 @@ const RTST_VALIDATORS: Readonly<Record<RtstField, (value: unknown) => boolean>> 
   outcome: (value) => oneOf(RTST_OUTCOMES, value),
   durationBucket: (value) => oneOf(RTST_DURATION_BUCKETS, value),
   source: (value) => oneOf(RTST_SOURCES, value),
+  early: (value) => typeof value === "boolean",
 };
 
 interface RtstRule {
@@ -279,7 +280,7 @@ const RTST_EVENT_RULES: Readonly<Record<string, RtstRule>> = {
   translate_offered: { required: ["sourceLanguage", "language"], optional: [] },
   translate_chosen: { required: ["language"], optional: ["sourceLanguage"] },
   voice_changed: { required: ["language", "engine"], optional: [] },
-  timing: { required: ["stage", "outcome", "durationBucket"], optional: ["sourceLanguage", "language"] },
+  timing: { required: ["stage", "outcome", "durationBucket"], optional: ["sourceLanguage", "language", "early"] },
 };
 
 /** A phone count that passed every check: the envelope plus the closed fields its event allows. */

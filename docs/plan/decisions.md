@@ -1194,7 +1194,7 @@
 
 146. **Any wait over 500 ms shows a stage indicator with Cancel (Batch 29).** An overlay over the reading area (a tray flyout for windowless Windows reads) naming the stage and progress; nothing shows under 500 ms; no Lottie for now. (Slices 138, 141)
 
-147. **Early start translates and voices the head before the tap (Batch 29).** Original: first 2 sentences (else ~120 characters at a word boundary). Translation, only when the detected language differs from the user's: translate the first 3 sentences, voice the first 2. The tap cancels the other side; a missing translation model downloads early only on an unmetered network. Supersedes the one-vs-two-sentence mismatch of Decision 66 and `HeadPolicy.Default`. (Slices 139, 142)
+147. **Early start translates and voices the head before the tap (Batch 29).** Original: first 2 sentences (else ~120 characters at a word boundary). Translation, only when the detected language differs from the user's: translate the first 3 sentences, voice the first 2. The tap cancels the other side; a missing translation model downloads early only on an unmetered network. Supersedes the one-vs-two-sentence mismatch of Decision 66 and `HeadPolicy.Default`: both now say two sentences (`Default` is two sentences, at most 120 characters; `Cached` stays two, at most 200). The phone's early start (Slice 139) keeps the translated head and translates only the rest, serializes the two voice preparations (the reader holds one at a time) and counts nothing itself. (Slices 139, 142)
 
 148. **Batch 29 order: phone first, then Windows (Batch 29).** 137 (counts) -> 138 (wait indicator) -> 139 (early start) on Android/iOS, then 140-142 on Windows; iOS has no translation, so it gets counts and the indicator only. (Slices 137-142)
 

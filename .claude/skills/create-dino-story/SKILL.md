@@ -25,8 +25,13 @@ context free of screenshots, pictures and 13 translation files.
 2. **`dino-story-reviewer`** (Opus, high effort), **text** mode: safety, story quality for the age, one
    action per page, the picture plan. Failed pages go back to the writer, then review again, before any
    picture is drawn, since pictures cost Gemini quota.
-3. **`dino-story-illustrator`** (Sonnet, medium effort): steps 3-6. **One at a time across the machine**
-   (one Chrome, one clipboard). It ends with `contact-sheet.jpg`, every picture on one sheet.
+3. **`dino-story-illustrator`** (Sonnet, medium effort): steps 3-6. **One at a time across the machine.** Two or more were
+   tried on 2026-10-26 (the user asked for two, then four, to use more of the usage window) and failed in practice:
+   the shared Chrome extension recreated the tab group about five times an hour, keystrokes and pastes landed in the
+   other illustrator's tab, Gemini answered sends with "Something went wrong (1095)" and once with a Google bot check,
+   while a single illustrator drew pages 4-10 of a book cleanly. The usage window was never the limit (42% used).
+   Run the books one after another; writers and reviewers (no Chrome) can still run alongside. `gemini-lock.ps1`
+   stays as a guard against another session drawing in the same Chrome. It ends with `contact-sheet.jpg`, every picture on one sheet.
 4. **`dino-story-reviewer`**, **full** mode: every picture at full size against its page and the line-up,
    and characters, places and time of day consistent across the book. Failed pages go back to the
    illustrator (or the writer), then review again until `PASS`. The coordinator may glance at the contact
@@ -38,8 +43,9 @@ the illustrator's own step 5 check still runs on every candidate.
 Version bump: the writer bumps it when the text changes; the illustrator bumps it when only pictures change
 (`StarterBuilder.StarterVersions` for a starter, the story's `Version` for a store book; no text hash needed).
 
-Helpers in this folder: `gemini-grab.js` (step 6), `gemini-clipboard.ps1` (paste the line-up, save a
-picture) and `contact-sheet.ps1`.
+Helpers in this folder: `gemini-grab.js` and `gemini-take-download.ps1` (step 6, save a picture),
+`gemini-clipboard.ps1` (paste the line-up; saving through it is only the fallback), `gemini-lock.ps1` (two
+illustrators sharing the clipboard and Downloads), `gemini-keep-awake.ps1` (screen on while drawing) and `contact-sheet.ps1`.
 
 ## 1. Text
 
@@ -94,14 +100,20 @@ Prompt templates: [prompts.md](prompts.md).
 - **No coordinate clicks on a new chat page.** Its suggestion chips sit right under the prompt box, and a
   click on one sends a prompt you didn't write (three stray chats so far: "Script Doctor Refusal", "The Art of
   Doing Nothing", a film-history quiz). Click only through `find` refs (prompt box, Upload & tools, Create
-  image, Aspect ratio, 3:4). Coordinate (`computer`) clicks are banned, with one exception: the grabber's
-  single real click, made on the newest picture itself (its `find` ref, clicked with `computer`), which already sits in the chat and sends nothing. If a stray prompt goes out anyway, say so in the
-  report.
+  image, Aspect ratio, 3:4). Coordinate (`computer`) clicks are banned (saving needs no real click any more: step 6).
+  If a stray prompt goes out anyway, say so in the report.
 - In a fresh chat the first `ctrl+v` after clicking the prompt box often pastes nothing: click the box
   twice, then paste, and check the thumbnail appeared. Wait for the page to finish loading before any click.
-- The free-tier image limit is shared with every other session drawing in this Chrome profile, and so is
-  the clipboard. Check the open tabs first; if another Gemini drawing chat is busy, tell the caller.
-- **The Windows clipboard fails while the PC is locked** (`Requested Clipboard operation did not succeed`, HRESULT 0x800401D0; Lion and the Mouse, 2026-10-26 00:15). Gemini still draws, but nothing can be pasted or saved. Check first: if `LogonUI` is running, stop and report; the caller rechecks hourly until the user unlocks.
+- The free-tier image limit is shared with every other session drawing in this Chrome profile, and so are
+  the clipboard and the `Downloads` folder. Check the open tabs first; another book's illustrator drawing in its own tab is normal (at most four): carry on, and use `gemini-lock.ps1` around the clipboard and download moments.
+- **Keep the display on while drawing** (2026-10-26): with the screen merely off (not locked) Chrome stops rendering, so Gemini
+  never finishes loading, pastes do nothing and screenshots time out. The caller starts
+  `pwsh gemini-keep-awake.ps1 -Hours <n>` in the background before any illustrator runs (a temporary Windows request, no
+  setting changed) and stops it afterwards by creating `Downloads\.gemini-keep-awake.stop`. An illustrator whose Gemini tab
+  hangs stops and reports it rather than retrying.
+- **The Windows clipboard fails while the PC is locked** (`Requested Clipboard operation did not succeed`, HRESULT 0x800401D0; Lion and the Mouse, 2026-10-26 00:15). Gemini still draws and saving through the download (step 6) still works, but the line-up can't be pasted into a new chat. Check first: if `LogonUI` is running, stop before the next paste and report; the caller rechecks every 15 minutes until the user unlocks. (Uploading the line-up as a file was tried, 2026-10-26: a file can be put into the page without the clipboard, but Gemini ignores synthetic paste and drop events, so pasting stays.)
+- **Gemini refuses some well-known character names** ("third-party content providers"; Gingerbread Man, 2026-10-26): describe the character instead of naming it ("the biscuit boy, a small boy-shaped biscuit figure ..."). The filter is also flaky: a scene that passed once was refused three times in a row afterwards; wait and retry later rather than rewording the plan.
+- **Refusal tips (Gingerbread Man, 2026-10-26):** scenes with only one or two characters were refused far more than scenes with three or more, so add small background characters to a one- or two-character scene (pages 7-10 gained the four chasers); call water "a calm stretch of water", never "river"; on a refusal use "Try again" from the Redo menu under the answer (up to twice) before rewording; pasting no line-up and describing every look in words also got through when pasted-line-up chats were refused.
 - Usage limit: write the time of the first picture of each session in the art record (the 5-hour window
   runs from when usage started, not from when the limit hits). When Gemini says the limit is reached, stop,
   write where you got to, and report the reset time it shows (the message, or Settings > Usage Limits).
@@ -152,18 +164,24 @@ Record each pass in the art record table (page, attempt number, why earlier atte
 ## 6. Save the pictures
 
 - Each picture has a "Download full size image" button (aria-label); the newest picture is the last
-  button (Gemini lazy-loads older ones). Clicking it fetches the full-size JPEG
-  (`lh3.googleusercontent.com/rd-gg/...`), but Chrome often drops the file silently, so don't rely on
-  `%USERPROFILE%\Downloads`.
-- What works (2026-10-25): inject `gemini-grab.js` (this folder) with `javascript_tool`. It wraps
-  `window.fetch` to keep the image blob of any `rd-gg` response. Run `await window.__grab(1)` (clicks the
-  newest picture's button), then make one real `computer` click on empty page space: its click handler
-  copies the blob to the clipboard as PNG (needs a real click; the user granted gemini.google.com clipboard
-  access). `window.__clipResult` then reads the picture size (`WxH`). Save it with
-  `pwsh -STA .claude/skills/create-dino-story/gemini-clipboard.ps1 Save <working folder>/cand-<page>.jpg`
-  (JPEG quality 95). `__clipResult` can take 1-2 s after the click: poll it until it is a size like `WxH` (any 3:4 size;
-  the Pro plan gives 1792x2400), not ERR or null, before saving; a `Save` that finds no picture is fixed by grabbing again. Re-inject the script after any
-  reload or new chat.
+  button (Gemini lazy-loads older ones). Clicking it writes the full-size JPEG to `%USERPROFILE%\Downloads`
+  as `Gemini_Generated_Image_*.jpg` (every picture of 2026-10-26 arrived, 1792x2400).
+- **Save through the download, not the clipboard** (2026-10-26): inject `gemini-grab.js` with
+  `javascript_tool` (once per page load; again after a reload or new chat), run `await window.__grab(1)` (clicks
+  the newest picture's button), then
+  `pwsh .claude/skills/create-dino-story/gemini-take-download.ps1 <working folder>/cand-<page>.jpg -Bytes <n>`, with `<n>` every size
+  `__grab` printed, comma-separated if it printed several (`-Bytes 123,456`; other sessions' Gemini downloads land in the same folder; 2026-10-26 a pirate book's picture was
+  picked up twice without it; if no download of that exact size arrives, run it once without `-Bytes` and check the
+  saved picture is the one you asked for). It waits up to
+  30 s for a `Gemini_Generated_Image_*` written in the last two minutes, saves it as JPEG quality 95, prints
+  `WxH` (a WARNING line means it isn't 3:4) and moves it out of `Downloads`, so the next call can't pick it up
+  again. No clipboard and no real click, so it works while the PC is locked and can't collide with a paste.
+- Fallback, only if no download arrives (Chrome dropped downloads silently on 2026-10-25): after `__grab`,
+  run `await window.__grab(1, { clipboard: true })` (the clipboard write is armed only with that flag), then one real
+  `computer` click on the newest picture itself (its `find` ref) makes the grabber copy the blob to the
+  clipboard; poll `window.__clipResult` until it is `WxH`, then
+  `pwsh -STA .claude/skills/create-dino-story/gemini-clipboard.ps1 Save <working folder>/cand-<page>.jpg`.
+  Delete the stray download afterwards if it turns up late.
 - Save each picture under a candidate name (`cand-5.jpg`), check it (step 5) by reading the file, and
   only then rename it to `cover.jpg`, `1.jpg`... Delete rejected candidates.
 - Then run `pwsh tools/prepare-story-pictures.ps1 <working folder> <target folder> <pageCount>` with the full target
