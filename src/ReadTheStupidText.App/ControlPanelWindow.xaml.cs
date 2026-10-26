@@ -103,6 +103,7 @@ public sealed partial class ControlPanelWindow : Window
         ConfigurePresenter();
         LoadVoices();
         InitLanguageAndTranslation();
+        InitUsageSwitch();
 
         RootGrid.Loaded += OnRootLoaded;
 

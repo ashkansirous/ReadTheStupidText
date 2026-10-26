@@ -755,6 +755,35 @@
                     </Border>
                 </StackPanel>
             </Grid>
+
+            <Border Height="1" Background="{ThemeResource PanelStroke}" Margin="10,4,10,0" />
+
+            <!-- Anonymous usage counts (Slice 140, Batch 29 frame W2): the last row, on by default. -->
+            <Grid x:Name="CountsRow" ColumnSpacing="12" Padding="10,12,10,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Spacing="2">
+                    <TextBlock x:Uid="CountsTitle" FontSize="13" TextWrapping="Wrap" Foreground="{ThemeResource PanelText}" />
+                    <TextBlock x:Uid="CountsCaption" FontSize="11.5" LineHeight="15.5" TextWrapping="Wrap" Foreground="{ThemeResource PanelText2}" />
+                </StackPanel>
+                <ToggleSwitch
+                    x:Name="CountsSwitch"
+                    x:Uid="CountsSwitch"
+                    Grid.Column="1"
+                    MinWidth="0"
+                    VerticalAlignment="Center"
+                    OnContent=""
+                    OffContent=""
+                    Toggled="OnCountsToggled">
+                    <ToggleSwitch.Resources>
+                        <SolidColorBrush x:Key="ToggleSwitchFillOn" Color="#3B6FE3" />
+                        <SolidColorBrush x:Key="ToggleSwitchFillOnPointerOver" Color="#3B6FE3" />
+                        <SolidColorBrush x:Key="ToggleSwitchFillOnPressed" Color="#3B6FE3" />
+                    </ToggleSwitch.Resources>
+                </ToggleSwitch>
+            </Grid>
         </StackPanel>
     </Grid>
 </Window>

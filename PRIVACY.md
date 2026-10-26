@@ -11,9 +11,9 @@ handles your data on **all** platforms.
 **Read The Stupid Text does not collect, store, transmit, or share any personal
 data.** It has no accounts and no advertising, and what you read, scan or type
 never leaves your device: everything the app does with it happens **locally**.
-The Windows app sends nothing at all. The Android and iPhone apps send only
-small **anonymous counts** (no names, no identifiers, nothing you read) that
-you can switch off in Settings; see *Anonymous usage counts* below.
+The Windows, Android and iPhone apps send only small **anonymous counts** (no
+names, no identifiers, nothing you read) that you can switch off (in the control
+panel on Windows, in Settings on the phones); see *Anonymous usage counts* below.
 
 ## What the app processes, and where
 
@@ -59,14 +59,14 @@ you can switch off in Settings; see *Anonymous usage counts* below.
 
 ## Network use
 
-**Language packs only.** The Android, iPhone and Windows apps download the natural-voice
+**Language packs, and the optional counts.** The Android, iPhone and Windows apps download the natural-voice
 language pack for the language you choose on first launch (about 145 MB, so a
 Wi-Fi connection is advisable). The Android and iPhone apps also download the text-recognition
 pack for that language (up to about 85 MB, depending on the language). The download is a plain file request to this
 project's public GitHub Releases page: no account, no identifier and none of
-your text, images or scans is sent. (The phone apps' separate, optional usage counts
-are described in *Anonymous usage counts*.)
-Once a pack is installed the app works fully offline and makes no network requests at all (it does not even re-check the catalog). Until it arrives, and if
+your text, images or scans is sent. (The apps' separate, optional usage counts,
+which you can switch off, are described in *Anonymous usage counts*.)
+Once a pack is installed the app works fully offline for reading and makes no network requests for the pack (it does not even re-check the catalog); the only other requests are the usage counts and the small settings file they ask for, and none if you switch them off. Until it arrives, and if
 you are offline, your device's own built-in voice reads instead (the Windows voice on
 Windows, the phone's voice on Android and iPhone).
 
@@ -87,26 +87,30 @@ offline. If a model cannot be downloaded the app reads the original text.
 Your text, images, scans and documents are never transmitted anywhere; reading
 and text recognition happen on the device.
 
-## Anonymous usage counts (Android and iPhone)
+## Anonymous usage counts (Windows, Android and iPhone)
 
-The Android and iPhone apps send small anonymous counts so the project can see which
+The Windows, Android and iPhone apps send small anonymous counts so the project can see which
 languages are read, whether translation is noticed and used, whether voices are changed,
 and how long waits such as the first translation take. This is **on by default**, and you
-can turn it off at any time with **Settings > Help improve the app**: when it is off, nothing
-is queued or sent, and anything waiting is deleted. The first-run language screen says so
-once; an app updated from an older version says so once on its first start. The Windows app sends no counts.
+can turn it off at any time with **Settings > Help improve the app** on the phones, or the
+**Help improve the app** switch at the bottom of the control panel on Windows: when it is off,
+nothing is queued or sent, and anything waiting is deleted. The phones' first-run language screen
+says so once; an app updated from an older version says so once on its first start. On Windows
+the switch's own text says what is sent.
 
 A count is a name plus a few values from fixed lists:
 
-- `app_opened`: the platform (Android or iPhone), the operating system's major version,
+- `app_opened`: the platform (Windows, Android or iPhone), the operating system's major version,
   the app version and the language of the app's words.
 - `read_started`: the language detected in the text (when the app could tell), the language
   it was read in, whether it was read as written or as a translation, which kind of voice
-  read it (the phone's own voice or one of the app's voice engines), whether you still use
+  read it (the phone's own voice, the Windows voice or one of the app's voice engines), whether you still use
   the default voice, and the text's length as a coarse bucket (under 200, 200 to 1000,
-  1000 to 5000, or over 5000 characters).
+  1000 to 5000, or over 5000 characters). On Windows it also says what started the read: a
+  selection, a copy, the hotkey or the control panel (never the name of the app or window).
 - `translate_offered` and `translate_chosen`: the language pair, when the app offered
-  to translate a text and when you chose to.
+  to translate a text and when you chose to. On Windows, `translate_chosen` is sent when you
+  turn translation on, with the language you picked.
 - `voice_changed`: the language and the kind of voice, when you pick a voice.
 - `timing`: which wait it was (getting a translation model, translating, or the time until
   the first sound), the language pair when known, how it ended (finished, cancelled or failed)
@@ -132,8 +136,8 @@ tracking.
 system-tray icon, register a global hotkey, read selected/copied text from
 other apps (via UI Automation and the Windows clipboard), and run its
 on-device text-to-speech engine. It also declares the standard **Internet** (`internetClient`)
-capability, used only to download language voice packs (see *Network use*). It is not used to
-collect or transmit data.
+capability, used to download language voice packs and to send the anonymous usage counts you can switch off
+(see *Network use* and *Anonymous usage counts*). It is not used to send anything else.
 
 **Android** declares the **Internet** and **Network state** permissions, used
 only to download language voice packs and to tell "offline" from a failed
