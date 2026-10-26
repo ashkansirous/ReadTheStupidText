@@ -649,6 +649,11 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     {
         long started = Stopwatch.GetTimestamp();
         IReadOnlyList<string> units = SentenceUnits.Split(chunk);
+        if (index == 0)
+        {
+            LogFirstUnit("read", units, voice);
+        }
+
         byte[] wav = await JoinSentencesAsync(engine, units, voice, transform, slots, token);
         RecordChunkDuration(index, WavFile.TryGetDuration(wav) ?? TimeSpan.Zero);
         _log.Debug($"chunk {index} ({chunk.Length} chars, {units.Count} sentence(s)) ready in " +
@@ -1270,6 +1275,13 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         }
     }
 
+    // So an emulator run can match the early voice's first cache key with the read's: the unit's first 30 characters.
+    private void LogFirstUnit(string path, IReadOnlyList<string> units, VoiceInfo voice)
+    {
+        string text = units.Count > 0 ? SentenceCacheKey.Normalize(units[0]) : string.Empty;
+        _log.Debug($"first unit ({path}, voice {voice.Id}): {text[..Math.Min(30, text.Length)]}");
+    }
+
     private async Task PrepareChunksAsync(BuiltEngine engine, string text, CancellationToken token)
     {
         VoiceInfo voice = ResolveVoice(engine, Volatile.Read(ref _voiceId));
@@ -1278,7 +1290,9 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
             .Take(PrepareMaxChunks)
             .SelectMany(chunk => SentenceUnits.Split(chunk.Text));
 
-        await Task.WhenAll(sentences.Select(s => GetSentenceAsync(engine, s, voice, null, _slots, token)));
+        List<string> list = sentences.ToList();
+        LogFirstUnit("early", list, voice);
+        await Task.WhenAll(list.Select(s => GetSentenceAsync(engine, s, voice, null, _slots, token)));
     }
 
     public void CancelPrepare()

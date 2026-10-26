@@ -45,31 +45,72 @@ public class EarlyStartKeyTests
 
 public class EarlyStartKeyFuzz
 {
-    [Fact]
-    public void Fuzz()
+    private static readonly string[] Words = ["the", "cat", "sat", "on", "a", "mat", "and", "went", "home", "quickly", "happily", "okay"];
+
+    private static string RandomText(Random rnd, bool paragraphs)
+    {
+        var sb = new System.Text.StringBuilder();
+        int sentences = rnd.Next(2, 12);
+        for (int s = 0; s < sentences; s++)
+        {
+            int n = rnd.Next(1, 30);
+            for (int w = 0; w < n; w++)
+            {
+                string word = Words[rnd.Next(Words.Length)];
+                sb.Append(w == 0 ? char.ToUpper(word[0]) + word[1..] : word).Append(' ');
+            }
+
+            sb.Length--;
+            sb.Append(rnd.Next(10) == 0 ? "?" : "!");
+            sb.Append(paragraphs && rnd.Next(4) == 0 ? "\n\n" : " ");
+        }
+
+        return sb.ToString();
+    }
+
+    private static List<string> Units(string text) =>
+        SpeechChunkPlanner.ForText(text, SpeechTextChunker.HeadPolicy.Cached).Take(4)
+            .SelectMany(c => SentenceUnits.Split(c.Text)).Select(SentenceCacheKey.Normalize).ToList();
+
+    private static string? Mismatch(string head, string full)
+    {
+        List<string> early = Units(head);
+        string read = Units(full)[0];
+        return head.Length > 0 && early.Count > 0 && early[0] != read ? $"{early[0]}  ||  {read}  ||  text=[{full}]" : null;
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void The_original_head_keys_its_first_sentence_as_the_read_does(bool paragraphs)
     {
         var rnd = new Random(7);
-        string[] words = ["the", "cat", "sat", "on", "a", "mat", "and", "went", "home", "quickly", "happily", "okay"];
+        List<string> bad = Enumerable.Range(0, 4000).Select(_ => RandomText(rnd, paragraphs))
+            .Select(t => Mismatch(EarlyStartPlan.OriginalHead(t), t)).OfType<string>().ToList();
+
+        Assert.True(bad.Count == 0, Describe(bad));
+    }
+
+    private static string Describe(List<string> bad) => bad.Count + " mismatches, e.g. " + string.Join(Environment.NewLine, bad.Take(5));
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void The_voiced_translated_head_keys_its_first_sentence_as_the_read_of_the_whole_translation_does(bool paragraphs)
+    {
+        var rnd = new Random(11);
         var bad = new List<string>();
         for (int i = 0; i < 4000; i++)
         {
-            var sb = new System.Text.StringBuilder();
-            int sentences = rnd.Next(2, 12);
-            for (int s = 0; s < sentences; s++)
+            string text = RandomText(rnd, paragraphs);
+            EarlySplit split = EarlyStartPlan.TranslationSpan(text); // the translation is taken to be the text itself
+            string full = EarlyStartPlan.Join(split.Head, split.Remainder, split.Gap);
+            if (Mismatch(EarlyStartPlan.VoicedTranslation(split.Head, split.Remainder.Length > 0), full) is { } m)
             {
-                int n = rnd.Next(1, 30);
-                for (int w = 0; w < n; w++) { string word = words[rnd.Next(words.Length)]; sb.Append(w == 0 ? char.ToUpper(word[0]) + word[1..] : word).Append(' '); }
-                sb.Length--;
-                sb.Append(rnd.Next(10) == 0 ? "? " : "! ");
+                bad.Add(m);
             }
-            string text = sb.ToString();
-            var chunks = SpeechChunkPlanner.ForText(text, SpeechTextChunker.HeadPolicy.Cached);
-            var read = SentenceUnits.Split(chunks[0].Text).Select(ReadTheStupidText.Application.Reading.SentenceCacheKey.Normalize).ToList();
-            string head = EarlyStartPlan.OriginalHead(text);
-            var early = SpeechChunkPlanner.ForText(head, SpeechTextChunker.HeadPolicy.Cached).Take(4)
-                .SelectMany(c => SentenceUnits.Split(c.Text)).Select(ReadTheStupidText.Application.Reading.SentenceCacheKey.Normalize).ToList();
-            if (early.Count > 0 && early[0] != read[0]) { bad.Add($"{early[0]}  ||  {read[0]}  ||  len={text.Length} head=[{head}] text=[{text}]"); }
         }
-        Assert.True(bad.Count == 0, bad.Count + " mismatches, e.g.\n" + string.Join("\n", bad.Take(8)));
+
+        Assert.True(bad.Count == 0, Describe(bad));
     }
 }

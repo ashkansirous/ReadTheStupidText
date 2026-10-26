@@ -7,7 +7,7 @@ public class EarlyStartPlanTests
     [Fact]
     public void Original_head_is_the_first_two_sentences()
     {
-        Assert.Equal("The first one is here. The second one follows.", EarlyStartPlan.OriginalHead("The first one is here. The second one follows. The third one. The fourth one."));
+        Assert.Equal("The first one is here. The second one follows.", EarlyStartPlan.OriginalHead("The first one is here. The second one follows. The third one is here. The fourth one."));
     }
 
     [Fact]
@@ -137,7 +137,7 @@ public class EarlyStartPlanTests
     [Fact]
     public void Voiced_translation_is_the_first_two_sentences()
     {
-        Assert.Equal("One. Two.", EarlyStartPlan.VoicedTranslation("One. Two. Three."));
+        Assert.Equal("One is here today. Two is here too.", EarlyStartPlan.VoicedTranslation("One is here today. Two is here too. Three is here too."));
     }
 
     [Fact]
@@ -183,7 +183,7 @@ public class EarlyStartCoordinatorTests
             {
                 TranslationToken = token;
                 Translated.Add(split.Head);
-                return Task.FromResult<string?>("Translated head. Second.");
+                return Task.FromResult<string?>("The translated head is here. The second one is here. The third one is here.");
             }
             : null,
             (text, _) =>
@@ -208,7 +208,7 @@ public class EarlyStartCoordinatorTests
         Assert.True(result!.Matches(French, "fr", "en"));
         Assert.False(result.Matches(French + "!", "fr", "en"));
         Assert.Equal("Quatre.", result.Split.Remainder);
-        Assert.Equal("Translated head. Second. Quatre en.", result.Joined("Quatre en."));
+        Assert.Equal("The translated head is here. The second one is here. The third one is here. Quatre en.", result.Joined("Quatre en."));
     }
 
     [Fact]
@@ -237,7 +237,7 @@ public class EarlyStartCoordinatorTests
         CancellationToken voiceToken = default;
         var jobs = new EarlyStartJobs(
             (_, _) => Task.CompletedTask,
-            (_, _) => Task.FromResult<string?>("Translated head. Second."),
+            (_, _) => Task.FromResult<string?>("The translated head is here. The second one is here. The third one is here."),
             async (_, token) =>
             {
                 voiceToken = token;
@@ -320,7 +320,7 @@ public class EarlyStartCoordinatorTests
 
         Assert.True(probe.OriginalToken.IsCancellationRequested);
         Assert.NotNull(result);
-        Assert.Equal(["Translated head. Second."], probe.VoicedTranslated);
+        Assert.Equal(["The translated head is here. The second one is here."], probe.VoicedTranslated);
     }
 
     [Fact]
@@ -336,7 +336,7 @@ public class EarlyStartCoordinatorTests
         probe.OriginalGate.SetResult();
         await Task.Delay(50);
 
-        Assert.Equal(["Translated head. Second."], probe.VoicedTranslated);
+        Assert.Equal(["The translated head is here. The second one is here."], probe.VoicedTranslated);
     }
 
     [Fact]
