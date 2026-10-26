@@ -1,3 +1,4 @@
+using DinoReader.Core;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Domain.Reading;
 
@@ -29,7 +30,7 @@ internal sealed class VoicePreview(ISpeechReader reader)
 	public async Task PlayAsync(string line, string voiceId, VoiceFlavour flavour = VoiceFlavour.Normal)
 	{
 		Stop();
-		var segment = new VoicedSegment(line, voiceId, 0, line.Length, 0, flavour);
+		var segment = new VoicedSegment(line, voiceId, 0, line.Length, 0, FlavourTransform.For(flavour));
 		try
 		{
 			_previewing = true;

@@ -1,7 +1,8 @@
 using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Domain.Reading;
 
-namespace ReadTheStupidText.Tests;
+namespace DinoReader.Tests;
+
+using DinoReader.Core;
 
 public class PitchShifterTests
 {
@@ -194,32 +195,13 @@ public class VoiceFlavourTests
     }
 
     [Fact]
-    public void A_voiced_segment_carries_its_flavour_into_every_chunk_of_the_plan()
+    public void A_flavour_transform_carries_the_shape_and_a_cache_tag_normal_has_none()
     {
-        var segment = new VoicedSegment("Hello there little one.", "M1", 0, 23, 0, VoiceFlavour.Small);
-
-        IReadOnlyList<SpeechChunkPlan> plan = SpeechChunkPlanner.ForSegments([segment]);
-
-        Assert.NotEmpty(plan);
-        Assert.All(plan, chunk => Assert.Equal(VoiceFlavour.Small, chunk.Flavour));
-    }
-
-    [Fact]
-    public void A_segment_made_without_a_flavour_is_normal()
-    {
-        Assert.Equal(VoiceFlavour.Normal, new VoicedSegment("Hi.", "M1", 0, 3, 0).Flavour);
-    }
-
-    [Fact]
-    public void A_flavour_changes_the_cache_key_but_normal_keeps_the_old_id()
-    {
-        var normal = new SentenceCacheKey("Hello.", VoiceEngineKind.Supertonic, "en", "M1", "model", "v1");
-        var small = normal with { Flavour = VoiceFlavour.Small };
-        var big = normal with { Flavour = VoiceFlavour.Big };
-
-        Assert.NotEqual(normal.Id, small.Id);
-        Assert.NotEqual(small.Id, big.Id);
-        Assert.Equal(normal.Id, (normal with { Flavour = VoiceFlavour.Normal }).Id);
-        Assert.Equal(normal.TextHash, small.TextHash);
+        Assert.Null(FlavourTransform.For(VoiceFlavour.Normal));
+        IVoicedAudioTransform small = FlavourTransform.For(VoiceFlavour.Small)!;
+        Assert.Equal("Small", small.CacheTag);
+        Assert.Equal(VoiceFlavours.ShapeOf(VoiceFlavour.Small).Pace, small.Pace);
+        Assert.Equal(VoiceFlavours.ShapeOf(VoiceFlavour.Small).SentenceGap, small.SentenceGap);
+        Assert.Same(small, FlavourTransform.For(VoiceFlavour.Small));
     }
 }
