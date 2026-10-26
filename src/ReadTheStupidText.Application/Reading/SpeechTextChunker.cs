@@ -37,6 +37,30 @@ internal static partial class SpeechTextChunker
     public static IReadOnlyList<string> Split(string text, bool biasFirstChunk = true, HeadPolicy? head = null)
     {
         string trimmed = LineReflow.ReflowText(text).Trim();
+        if (EarlyFirstChunks.Match(trimmed) is { } first)
+        {
+            return SplitAfterFirst(first, trimmed, head);
+        }
+
+        return SplitPlain(trimmed, biasFirstChunk, head);
+    }
+
+    // The early start voiced this head (Slice 139): it is the first chunk, so the first units are the prepared ones; the rest
+    // is chunked on its own and is not biased (the listener no longer waits on it).
+    private static IReadOnlyList<string> SplitAfterFirst(string first, string trimmed, HeadPolicy? head)
+    {
+        var chunks = new List<string> { first };
+        string rest = trimmed[first.Length..].Trim();
+        if (rest.Length > 0)
+        {
+            chunks.AddRange(SplitPlain(rest, biasFirstChunk: false, head));
+        }
+
+        return chunks;
+    }
+
+    private static IReadOnlyList<string> SplitPlain(string trimmed, bool biasFirstChunk, HeadPolicy? head)
+    {
         if (trimmed.Length <= SingleChunkMax)
         {
             return new[] { trimmed };

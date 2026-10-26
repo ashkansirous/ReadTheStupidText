@@ -5,19 +5,31 @@ namespace ReadTheStupidText.Tests;
 // Slice 139: the early voice and the read must key the first sentence identically, or the head start is wasted.
 public class EarlyStartKeyTests
 {
-    private static string? FirstUnit(string text)
-    {
-        var chunks = SpeechChunkPlanner.ForText(text, SpeechTextChunker.HeadPolicy.Cached);
-        return SentenceUnits.Split(chunks[0].Text)[0];
-    }
-
-    // What the early voice prepares: the units of the planned head, as PrepareChunksAsync splits them.
-    private static List<string> EarlyUnits(string text)
-    {
-        string head = EarlyStartPlan.OriginalHead(text);
-        string prefix = head.Length > 2000 ? head[..2000] : head;
-        return SpeechChunkPlanner.ForText(prefix, SpeechTextChunker.HeadPolicy.Cached).Take(4)
+    // The units the sentence cache is asked for, in order, normalized as the cache keys them.
+    internal static List<string> Units(string text) =>
+        SpeechChunkPlanner.ForText(text, SpeechTextChunker.HeadPolicy.Cached).Take(4)
             .SelectMany(c => SentenceUnits.Split(c.Text)).Select(SentenceCacheKey.Normalize).ToList();
+
+    // The early voice stores the units of the head it voiced (registering it first, as EarlyStartVoice does); the read of the
+    // whole text then starts with the same head as its first chunk, so its first units are exactly those.
+    internal static string? Mismatch(string head, string full)
+    {
+        if (head.Length == 0)
+        {
+            return null;
+        }
+
+        EarlyFirstChunks.Register(head);
+        try
+        {
+            List<string> early = Units(head);
+            List<string> read = Units(full).Take(early.Count).ToList();
+            return early.SequenceEqual(read) ? null : $"[{string.Join(" | ", early)}]  ||  [{string.Join(" | ", read)}]  ||  text=[{full}]";
+        }
+        finally
+        {
+            EarlyFirstChunks.Remove(head);
+        }
     }
 
     public static IEnumerable<object[]> Texts()
@@ -32,14 +44,46 @@ public class EarlyStartKeyTests
         yield return [$"Line one of a wrapped\nparagraph that goes on. Second sentence here.{filler}{filler}"];
         yield return [$"Is it? Yes! Really.{filler}{filler}"];
         yield return [$"A first sentence of about eighty characters is right here to test things, ok. Then a second sentence that is long enough to push the total beyond two hundred characters in all.{filler}"];
+        yield return ["Je suis allee a Paris et j'ai vu la tour Eiffel hier soir avec ma soeur. Oui! Nous avons mange des crepes. Puis nous sommes rentrees a la maison tres tard dans la nuit, fatiguees mais contentes. Fin."];
     }
 
     [Theory]
     [MemberData(nameof(Texts))]
-    public void The_first_sentence_has_the_same_cache_text_in_the_early_voice_and_the_read(string text)
+    public void The_early_voice_units_are_the_first_units_of_the_read(string text)
     {
-        string read = SentenceCacheKey.Normalize(FirstUnit(text)!);
-        Assert.Equal(read, EarlyUnits(text)[0]);
+        Assert.Null(Mismatch(EarlyStartPlan.OriginalHead(text), text));
+    }
+
+    [Fact]
+    public void A_registered_head_is_the_first_chunk_of_a_read_that_starts_with_it()
+    {
+        const string head = "Je suis allee a Paris hier soir avec ma soeur. Oui!";
+        string text = head + " Nous avons mange des crepes tres bonnes. Puis nous sommes rentrees a la maison tres tard dans la nuit, fatiguees mais contentes. Fin.";
+        EarlyFirstChunks.Register(head);
+        try
+        {
+            Assert.Equal(head, SpeechChunkPlanner.ForText(text, SpeechTextChunker.HeadPolicy.Cached)[0].Text);
+        }
+        finally
+        {
+            EarlyFirstChunks.Remove(head);
+        }
+    }
+
+    [Fact]
+    public void A_head_that_is_not_a_whole_word_prefix_changes_nothing()
+    {
+        const string text = "Alphabet soup is nice today. Another sentence here that is long enough to matter at all, honestly.";
+        List<string> without = SpeechTextChunker.Split(text).ToList();
+        EarlyFirstChunks.Register("Alphabet soup is nice tod");
+        try
+        {
+            Assert.Equal(without, SpeechTextChunker.Split(text).ToList());
+        }
+        finally
+        {
+            EarlyFirstChunks.Remove("Alphabet soup is nice tod");
+        }
     }
 }
 
@@ -68,35 +112,24 @@ public class EarlyStartKeyFuzz
         return sb.ToString();
     }
 
-    private static List<string> Units(string text) =>
-        SpeechChunkPlanner.ForText(text, SpeechTextChunker.HeadPolicy.Cached).Take(4)
-            .SelectMany(c => SentenceUnits.Split(c.Text)).Select(SentenceCacheKey.Normalize).ToList();
-
-    private static string? Mismatch(string head, string full)
-    {
-        List<string> early = Units(head);
-        string read = Units(full)[0];
-        return head.Length > 0 && early.Count > 0 && early[0] != read ? $"{early[0]}  ||  {read}  ||  text=[{full}]" : null;
-    }
-
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void The_original_head_keys_its_first_sentence_as_the_read_does(bool paragraphs)
-    {
-        var rnd = new Random(7);
-        List<string> bad = Enumerable.Range(0, 4000).Select(_ => RandomText(rnd, paragraphs))
-            .Select(t => Mismatch(EarlyStartPlan.OriginalHead(t), t)).OfType<string>().ToList();
-
-        Assert.True(bad.Count == 0, Describe(bad));
-    }
-
     private static string Describe(List<string> bad) => bad.Count + " mismatches, e.g. " + string.Join(Environment.NewLine, bad.Take(5));
 
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void The_voiced_translated_head_keys_its_first_sentence_as_the_read_of_the_whole_translation_does(bool paragraphs)
+    public void The_original_head_units_are_the_first_units_of_the_read(bool paragraphs)
+    {
+        var rnd = new Random(7);
+        List<string> bad = Enumerable.Range(0, 4000).Select(_ => RandomText(rnd, paragraphs))
+            .Select(t => EarlyStartKeyTests.Mismatch(EarlyStartPlan.OriginalHead(t), t)).OfType<string>().ToList();
+
+        Assert.True(bad.Count == 0, Describe(bad));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void The_voiced_translated_head_units_are_the_first_units_of_the_read_of_the_whole_translation(bool paragraphs)
     {
         var rnd = new Random(11);
         var bad = new List<string>();
@@ -105,7 +138,7 @@ public class EarlyStartKeyFuzz
             string text = RandomText(rnd, paragraphs);
             EarlySplit split = EarlyStartPlan.TranslationSpan(text); // the translation is taken to be the text itself
             string full = EarlyStartPlan.Join(split.Head, split.Remainder, split.Gap);
-            if (Mismatch(EarlyStartPlan.VoicedTranslation(split.Head, split.Remainder.Length > 0), full) is { } m)
+            if (EarlyStartKeyTests.Mismatch(EarlyStartPlan.VoicedTranslation(split.Head), full) is { } m)
             {
                 bad.Add(m);
             }

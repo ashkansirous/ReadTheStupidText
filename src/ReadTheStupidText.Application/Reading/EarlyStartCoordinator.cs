@@ -192,7 +192,7 @@ public sealed class EarlyStartCoordinator
                 return null;
             }
 
-            run.VoiceTask = VoiceTranslatedAsync(translated, split.Remainder.Length > 0, jobs, run, token);
+            run.VoiceTask = VoiceTranslatedAsync(translated, jobs, run, token);
             return new EarlyTranslation(text, source, target, split, translated);
         }
         catch (Exception)
@@ -202,12 +202,12 @@ public sealed class EarlyStartCoordinator
     }
 
     // One preparation at a time on the reader: the translated head waits for the original's to end (or be cancelled by the tap).
-    private static async Task VoiceTranslatedAsync(string translatedHead, bool moreFollows, EarlyStartJobs jobs, Run run, CancellationToken token)
+    private static async Task VoiceTranslatedAsync(string translatedHead, EarlyStartJobs jobs, Run run, CancellationToken token)
     {
         try
         {
             await run.OriginalTask;
-            string voiced = EarlyStartPlan.VoicedTranslation(translatedHead, moreFollows);
+            string voiced = EarlyStartPlan.VoicedTranslation(translatedHead);
             if (jobs.VoiceTranslated is { } voice && voiced.Length > 0)
             {
                 await voice(voiced, token);

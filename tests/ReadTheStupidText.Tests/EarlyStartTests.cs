@@ -202,7 +202,7 @@ public class EarlyStartCoordinatorTests
         early.Restart(French, "fr", "en", probe.Jobs(), TimeSpan.Zero);
         EarlyTranslation? result = await early.ChooseTranslate();
 
-        Assert.Equal(["Un. Deux. Trois. Quatre."], probe.VoicedOriginal); // short sentences: the read closes its first unit only there
+        Assert.Equal(["Un. Deux."], probe.VoicedOriginal); // two sentences: the read takes them as its first chunk
         Assert.Equal(["Un. Deux. Trois."], probe.Translated);
         Assert.NotNull(result);
         Assert.True(result!.Matches(French, "fr", "en"));
@@ -277,7 +277,7 @@ public class EarlyStartCoordinatorTests
         early.ChooseRead();
         await early.SettleChosenAsync().WaitAsync(TimeSpan.FromSeconds(5));
 
-        Assert.Equal(["Un. Deux. Trois. Quatre."], probe.VoicedOriginal); // short sentences: the read closes its first unit only there
+        Assert.Equal(["Un. Deux."], probe.VoicedOriginal); // two sentences: the read takes them as its first chunk
     }
 
     [Fact]

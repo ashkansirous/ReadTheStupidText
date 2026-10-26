@@ -30,28 +30,14 @@ public static partial class EarlyStartPlan
     private static partial Regex ParagraphBreak();
 
     /// <summary>The part of the original the head start voices.</summary>
-    public static string OriginalHead(string text) => Cut(text, OriginalSentences, OriginalMaxChars, FallbackChars, wholeFirstSentence: false, alignUnits: true).Head;
+    public static string OriginalHead(string text) => Cut(text, OriginalSentences, OriginalMaxChars, FallbackChars, wholeFirstSentence: false).Head;
 
     /// <summary>The span to translate early, and what is left of the text after it.</summary>
-    public static EarlySplit TranslationSpan(string text) => Cut(text, TranslateSentences, TranslateMaxChars, TranslateMaxChars, wholeFirstSentence: true, alignUnits: false);
+    public static EarlySplit TranslationSpan(string text) => Cut(text, TranslateSentences, TranslateMaxChars, TranslateMaxChars, wholeFirstSentence: true);
 
-    /// <summary>
-    /// The part of an early translation the head start voices. When <paramref name="moreFollows"/> (the rest of the text is
-    /// translated later) the read's units after this head are not known, so only the units that no later text can change are
-    /// voiced (see <see cref="StableTranslationEnd"/>); that can be nothing.
-    /// </summary>
-    public static string VoicedTranslation(string translatedHead, bool moreFollows = false)
-    {
-        if (!moreFollows)
-        {
-            return Cut(translatedHead, VoicedTranslationSentences, OriginalMaxChars, FallbackChars, wholeFirstSentence: false, alignUnits: true).Head;
-        }
-
-        string trimmed = (translatedHead ?? string.Empty).TrimStart();
-        List<int> ends = TerminatedEnds(trimmed);
-        int end = StableTranslationEnd(trimmed, ends);
-        return end <= 0 ? string.Empty : trimmed[..end].TrimEnd();
-    }
+    /// <summary>The part of an early translation the head start voices (the read of the whole translation starts with it as its first chunk).</summary>
+    public static string VoicedTranslation(string translatedHead) =>
+        Cut(translatedHead, VoicedTranslationSentences, OriginalMaxChars, FallbackChars, wholeFirstSentence: false).Head;
 
     /// <summary>The translation of a text from the translation of its head and of the rest, keeping the break between them.</summary>
     public static string Join(string translatedHead, string translatedRemainder, string gap)
@@ -68,7 +54,7 @@ public static partial class EarlyStartPlan
     // Whole sentences while their count and total length fit, cut where the speech chunker cuts. A first sentence that is too
     // long, or text with no sentence ending at all, is cut at a word boundary for voicing; for translating it is kept whole,
     // because a sentence cut mid-clause translates badly (wholeFirstSentence).
-    private static EarlySplit Cut(string text, int maxSentences, int maxChars, int fallbackChars, bool wholeFirstSentence, bool alignUnits)
+    private static EarlySplit Cut(string text, int maxSentences, int maxChars, int fallbackChars, bool wholeFirstSentence)
     {
         string trimmed = (text ?? string.Empty).TrimStart();
         if (trimmed.Length == 0)
@@ -85,10 +71,6 @@ public static partial class EarlyStartPlan
         {
             end = wholeFirstSentence ? WholeFirst(region, ends) : WordCut(region, fallbackChars);
         }
-        else if (alignUnits)
-        {
-            end = ToUnitBoundary(trimmed, ends, end);
-        }
 
         return Split(trimmed, end);
     }
@@ -103,74 +85,6 @@ public static partial class EarlyStartPlan
         }
 
         return end;
-    }
-
-    // The sentence cache keys a unit (SentenceUnits): a sentence shorter than a unit joins the next one, or the previous one
-    // when its chunk ends. A head cut after two sentences can end in a short unit that the read's first chunk builds
-    // differently (it has the next sentence after it, or peels its head at the same two), and the first unit then keys
-    // differently: a cache miss on the first sentence at Play. So the head ends where the read's own first chunk closes a
-    // unit at or after the cut: it is then made of the read's exact units.
-    private static int ToUnitBoundary(string trimmed, List<int> ends, int end)
-    {
-        int sentences = ends.IndexOf(end) + 1;
-        IReadOnlyList<SpeechChunkPlan> chunks = SpeechChunkPlanner.ForText(trimmed, SpeechTextChunker.HeadPolicy.Cached);
-        List<int> all = TerminatedEnds(trimmed);
-        int covered = 0;
-        foreach (int count in SentenceUnits.SentenceCounts(chunks[0].Text))
-        {
-            covered += count;
-            if (covered >= sentences)
-            {
-                // The read's unit may run past a paragraph break (a short paragraph merges into its chunk): the head follows it.
-                return covered <= all.Count ? all[covered - 1] : end;
-            }
-        }
-
-        return end;
-    }
-
-    // The sentence cache joins a short sentence to the next one, or to the previous one when its chunk ends, so with text
-    // still to come only a unit followed by another closed unit is certain to be the read's unit: a short tail can still be
-    // absorbed by the last closed one. A read that peels its head at two sentences also absorbs a short second sentence into
-    // a first unit that ends at sentence 1. Returns the end of the leading certain units (at most two sentences), or 0.
-    private static int StableTranslationEnd(string trimmed, List<int> ends)
-    {
-        var closedAt = new List<int>();
-        int pending = 0;
-        int previous = 0;
-        for (int i = 0; i < ends.Count; i++)
-        {
-            int length = trimmed[previous..ends[i]].Trim().Length;
-            previous = ends[i];
-            pending = pending == 0 ? length : pending + 1 + length;
-            if (pending >= SentenceUnits.MinUnitLength)
-            {
-                closedAt.Add(i + 1);
-                pending = 0;
-            }
-        }
-
-        int stable = 0;
-        foreach (int sentences in closedAt.Take(Math.Max(closedAt.Count - 1, 0)).TakeWhile(c => stable == 0 || c <= VoicedTranslationSentences))
-        {
-            bool absorbed = sentences == 1 && ends.Count > 1 && trimmed[ends[0]..ends[1]].Trim().Length < SentenceUnits.MinUnitLength;
-            if (absorbed)
-            {
-                break;
-            }
-
-            stable = sentences;
-        }
-
-        return stable == 0 ? 0 : ends[stable - 1];
-    }
-
-    // The sentence ends of the whole text, without a last sentence that has no terminator (still being typed).
-    private static List<int> TerminatedEnds(string trimmed)
-    {
-        List<int> all = SpeechTextChunker.SentenceEnds(trimmed);
-        DropUnfinishedSentence(trimmed, all);
-        return all;
     }
 
     // A last sentence with no terminator may still be typed or cut: it is never part of a head (a region with no sentence

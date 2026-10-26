@@ -20,7 +20,11 @@ public sealed class EarlyStartVoice
     private readonly List<(string Text, string Language)> _preparedHeads = [];
 
     /// <summary>Forgets what was prepared: the text it was prepared for has changed.</summary>
-    public void Reset() => _preparedHeads.Clear();
+    public void Reset()
+    {
+        _preparedHeads.Clear();
+        EarlyFirstChunks.Clear();
+    }
 
     /// <summary>Stops using <paramref name="handler"/> (its page is gone); another page's handler stays.</summary>
     public void Clear(Func<string, string, CancellationToken, Task<bool>> handler)
@@ -40,6 +44,7 @@ public sealed class EarlyStartVoice
         }
 
         Debug.WriteLine($"{LogTag} voice start ({language}, {text.Length} chars)");
+        EarlyFirstChunks.Register(text); // a read of this text starts with exactly this head as its first chunk
         bool prepared = await RunHandlerAsync(handler, text, language, cancellationToken);
         if (cancellationToken.IsCancellationRequested)
         {
