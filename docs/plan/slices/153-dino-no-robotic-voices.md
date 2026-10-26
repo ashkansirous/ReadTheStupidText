@@ -1,6 +1,6 @@
 # Slice 153 — Dino: no robotic-sounding character voices
 
-*Planned 2026-10-26.* Dino Reader only. **Waits on the user's listening flags** for its second half.
+*In progress (wave 2026-10-26b), draft PR.* Dino Reader only. **Waits on the user's listening flags** for its second half.
 
 **Batch:** 31 (tester review, 2026-10-26; Decision 158)
 **Touches:** `tools/voice-listen/**` (new), `src/DinoReader.Core/VoiceFlavour.cs`, `src/DinoReader.Core/FlavourTransform.cs`, `src/DinoReader.Core/CharacterRoster*.cs`, `src/DinoReader.Core/StarterUpdate.cs`, `tests/DinoReader.Tests/**`, `src/DinoReader.Core/CLAUDE.md`
