@@ -82,7 +82,8 @@ public sealed partial class ReadAloudService
     {
         try
         {
-            return await _translation!.PlanStreamAsync(text, entry.Id, token);
+            EarlyTranslation? early = await TakeEarlyTranslationAsync(text, token);
+            return await _translation!.PlanStreamAsync(text, entry.Id, token, early);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

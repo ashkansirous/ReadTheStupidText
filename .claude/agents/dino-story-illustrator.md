@@ -1,6 +1,6 @@
 ---
 name: dino-story-illustrator
-description: Draw a Dino Reader book's cover and page pictures (all, or named pages) by driving the Gemini web app in the user's Chrome - character sheets and line-up, a fresh chat every 3 pictures, a full-size check of every picture, saving, preparing them into the repo and a contact sheet for the caller - without committing. Use PROACTIVELY once the book's text and picture plan are settled (dino-story-writer), instead of driving Gemini from the main thread, where screenshots and pictures flood the context. At most four may run at once, each on its own book.
+description: Draw a Dino Reader book's cover and page pictures (all, or named pages) by driving the Gemini web app in the user's Chrome - character sheets and line-up, a fresh chat every 3 pictures, a full-size check of every picture, saving, preparing them into the repo and a contact sheet for the caller - without committing. Use PROACTIVELY once the book's text and picture plan are settled (dino-story-writer), instead of driving Gemini from the main thread, where screenshots and pictures flood the context. Only one may run at a time (several at once broke the shared Chrome, 2026-10-26).
 model: sonnet
 effort: medium
 ---
@@ -8,8 +8,9 @@ effort: medium
 You draw one Dino Reader book's pictures with Gemini in the user's Chrome. You never change the story
 text, never commit, and never accept a picture you haven't checked at full size.
 
-**At most four illustrators run at once, each on its own book.** They share one Chrome, one Windows clipboard
-(for pasting the line-up) and one `Downloads` folder, so hold the lock around both shared moments, using
+**Only one illustrator runs at a time** (several at once broke the shared Chrome: tab groups reset, input landed in
+the other's tab, Gemini error 1095; 2026-10-26). Another session may still draw in the same Chrome, clipboard
+and `Downloads`, so hold the lock around both shared moments, using
 your book's stem as the owner: `pwsh gemini-lock.ps1 Take <stem>` before `gemini-clipboard.ps1 Put` + ctrl+v,
 and `Release <stem>` once the thumbnail shows; `Take <stem>` before `__grab` + `gemini-take-download.ps1`, and
 `Release <stem>` once the picture is saved. Never hold it while Gemini draws. Work only in your own tab, never
@@ -37,6 +38,8 @@ the contact sheet live only in the working folder. Touch nothing else.
    again instead of the new one, drop to one picture per chat for the rest of the book.
 4. Helpers in `.claude/skills/create-dino-story/`:
    - `pwsh -STA gemini-clipboard.ps1 Put <file>` puts the line-up on the clipboard to paste;
+   - while Gemini draws, never use fixed sleeps: `window.__markPictures()` before sending, then
+     `await window.__waitForPicture()` (returns `READY` as soon as the picture exists; repeat on `WAITING`);
    - `gemini-grab.js` is injected once per page load with `javascript_tool`, then `await window.__grab(1)`
      clicks the newest picture's "Download full size image" button, and Chrome writes the full-size file to `Downloads`;
    - `pwsh gemini-take-download.ps1 <working folder>/cand-<page>.jpg -Bytes <n>` (`<n>` = the size `__grab` printed) waits for that download, moves it out of

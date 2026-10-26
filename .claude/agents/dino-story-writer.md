@@ -22,7 +22,7 @@ the task (new story, retelling, re-split, a fix) and any notes from the user. Wo
 2. Write the text. Then check every page against both skills and rewrite what fails:
    - one action per page, a picture you can describe in one sentence with one verb;
    - rule 1 of `.claude/skills/create-dino-story/SKILL.md`, applied word for word to every page; the ending is calm;
-   - 10-16 pages, each about 15-60 words; refrains identical every time;
+   - 10-18 pages, each about 15-60 words; refrains identical every time;
    - every speaker named and spelled the same everywhere.
 3. Write or update the art record: the house style line, one line per character (species, relative size,
    outfit and colours, one prop, the detail that tells look-alikes apart) and the picture plan, one line per

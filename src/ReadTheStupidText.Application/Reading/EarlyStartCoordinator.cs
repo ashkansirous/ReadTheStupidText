@@ -70,15 +70,21 @@ public sealed class EarlyStartCoordinator
     }
 
     /// <summary>Cancels what was running and starts both jobs for <paramref name="text"/> after <paramref name="delay"/>.</summary>
-    public void Restart(string text, string? source, string? target, EarlyStartJobs jobs, TimeSpan delay)
+    public void Restart(string text, string? source, string? target, EarlyStartJobs jobs, TimeSpan delay) =>
+        RestartDeferred(text, source, target, jobs, delay)();
+
+    /// <summary>
+    /// As <see cref="Restart"/>, but the cancelling of the previous work is returned instead of run: cancelling runs registered
+    /// callbacks (and maybe continuations) inline, so a caller holding a lock runs it after releasing the lock.
+    /// </summary>
+    public Action RestartDeferred(string text, string? source, string? target, EarlyStartJobs jobs, TimeSpan delay)
     {
         if (_run is { } chosen && KeepsChoice(chosen, text))
         {
-            return; // the tap already chose a side for this very text: a late detection or toggle must not replace the chosen work
+            return NoOp; // the tap already chose a side for this very text: a late detection or toggle must not replace the chosen work
         }
 
-        Cancel(_run, force: true);
-        _run?.DisposeWhenDone();
+        Action cancelPrevious = CancelAndDispose(_run);
         var run = new Run { Text = text };
         _run = run;
         run.OriginalTask = RunOriginalAsync(text, jobs, delay, run);
@@ -86,7 +92,22 @@ public sealed class EarlyStartCoordinator
         {
             run.TranslationTask = RunTranslationAsync(text, source, target, jobs, delay, run);
         }
+
+        return cancelPrevious;
     }
+
+    private static void NoOp()
+    {
+    }
+
+    private static Action CancelAndDispose(Run? run) =>
+        run is null
+            ? NoOp
+            : () =>
+            {
+                Cancel(run, force: true);
+                run.DisposeWhenDone();
+            };
 
     // A side the tap chose, still running for the same text, is the work the read waits for and reuses: restarting would drop it.
     private static bool KeepsChoice(Run run, string text) =>
@@ -99,6 +120,13 @@ public sealed class EarlyStartCoordinator
 
     /// <summary>Stops every job, chosen or not: the text changed, so nothing prepared for the old one is wanted.</summary>
     public void Discard() => Cancel(_run, force: true);
+
+    /// <summary>As <see cref="Discard"/>, but the cancelling is returned for the caller to run outside its lock (see <see cref="RestartDeferred"/>).</summary>
+    public Action DiscardDeferred()
+    {
+        Run? run = _run;
+        return () => Cancel(run, force: true);
+    }
 
     /// <summary>The person chose Translate and read: the original's work stops now. Returns the early translation, null if there is none.</summary>
     public Task<EarlyTranslation?> ChooseTranslate()

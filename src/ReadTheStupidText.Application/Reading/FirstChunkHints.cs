@@ -74,6 +74,24 @@ internal sealed class FirstChunkHints
         return null;
     }
 
+    /// <summary>
+    /// The <paramref name="hint"/> only when it is exactly the first chunk a plain plan of <paramref name="text"/> would make; a head
+    /// remembered from a cut prefix may split differently from the full text, and is then ignored (null). A text that a plain plan keeps
+    /// as one chunk (a short translated block) also takes a shorter hint that ends on a sentence boundary: the first audio then waits
+    /// only for the prepared head, not for the whole block (Slice 142).
+    /// </summary>
+    public static string? ConfirmedBy(string text, string? hint, SpeechTextChunker.HeadPolicy policy)
+    {
+        IReadOnlyList<string> plain = SpeechTextChunker.Split(text, true, policy);
+        if (hint is null || plain.Count == 0)
+        {
+            return null;
+        }
+
+        bool oneChunk = plain.Count == 1 && SpeechTextChunker.AcceptsHint(Normalize(text), hint, policy);
+        return plain[0] == hint || oneChunk ? hint : null;
+    }
+
     private void Forget(Entry taken)
     {
         lock (_gate)
