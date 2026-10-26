@@ -34,7 +34,7 @@ internal static class StoreTexts
         new(LionAndMouseId, "The Lion and the Mouse", "lion-and-mouse", LionAndMouse, 1, RetoldAesop, 4, 7, "Aesop", ["Lion", "Mouse"], 3, AddedDate),
         new(GoldilocksId, "Goldilocks and the Three Bears", "goldilocks", Goldilocks, 3, RetoldTraditional, 3, 6, Traditional, ["Goldilocks", "Papa Bear", "Mama Bear", "Baby Bear"], 3, AddedDate),
         new(RedRidingHoodId, "Little Red Riding Hood", "red-riding-hood", RedRidingHood, 3, RetoldTraditional, 4, 7, Traditional, ["Red Riding Hood", "Mother", "Wolf", "Grandmother", "Woodcutter"], 3, AddedDate),
-        new(UglyDucklingId, "The Ugly Duckling", "ugly-duckling", UglyDuckling, 0, "Retold from Andersen · free to share", 5, 8, "Hans Christian Andersen", ["Mother Duck", "Duckling", "Hen", "Swan"], 3, AddedDate),
+        new(UglyDucklingId, "The Ugly Duckling", "ugly-duckling", UglyDuckling, 0, "Retold from Andersen · free to share", 5, 8, "Hans Christian Andersen", ["Mother Duck", "Duckling", "Dilly", "Hen", "Swan"], 4, AddedDate),
         new(RedHenId, "The Little Red Hen", "little-red-hen", RedHen, 3, RetoldTraditional, 3, 6, Traditional, ["Hen", "Dog", "Cat", "Duck"], 3, AddedDate),
         new(BillyGoatsId, "The Three Billy Goats Gruff", "billy-goats-gruff", BillyGoats, 0, RetoldTraditional, 4, 7, Traditional, ["Little Billy", "Middle Billy", "Big Billy", "Troll"], 5, AddedDate),
         new(BeanstalkId, "Jack and the Beanstalk", "jack-and-the-beanstalk", Beanstalk, 2, RetoldTraditional, 5, 8, Traditional, ["Jack", "Mother", "Giant", "Peddler"], 3, AddedDate),
@@ -172,37 +172,81 @@ They all sat down together and ate the cakes and honey.
 """;
 
     public const string UglyDuckling = """
-One sunny summer, in a nest by the pond, a mother duck sat on her eggs. One by one the eggs cracked open, and out popped fluffy yellow ducklings. But the biggest egg was still there.
+One sunny summer morning, Mother Duck sat on her nest by the pond. Crack, crack, crack! Out popped three fluffy yellow ducklings.
+
+But the biggest egg did not crack at all.
 ---
-At last the big egg cracked, and out came a big grey bird with a long neck. "Oh my," said Mother Duck. "He does not look like my other babies. But he swims very well, so he must be mine."
+At last the big egg went crack! Out came a big grey duckling with a long neck and big flat feet.
 
-The other ducklings looked surprised. "You look different!" said Duckling's brothers.
+"Oh my, what a big baby!" said Mother Duck, and she tucked him under her wing.
+
+"Big or small, I love you all," said Mother Duck.
 ---
-Every day he felt a little more left out. The ducks paddled off, the hens were busy, and nobody asked him to play. "Not today," said Hen.
+The next morning Mother Duck led her babies down to the pond, one behind the other.
 
-The little grey duckling felt sad. One night he set off to look for friends, across the fields and over the marsh.
+Paddle, paddle, splish, splash! The big grey duckling swam the fastest of all.
 ---
-He wandered for a long time. In the autumn the leaves turned brown and the wind grew cold. He found a little cottage and went in, but a sleepy cat lived there.
+On the bank the yellow ducklings looked at their big grey brother. Dilly, the smallest, began to giggle.
 
-"Can you purr?" said Cat. "Can you catch mice? No? Then I think your home is somewhere else."
+"Your neck is so long, and your feet are so big!" said Dilly. "You do not look like a duck at all."
+
+The big grey duckling looked down at his feet. He felt a little sad.
 ---
-The winter was long and hard. The duckling hid in the reeds by a frozen pond. He was cold, and he missed having friends. "Will I ever find my family?" said Duckling.
+Mother Duck put her wing around him. "Dilly, that was not kind," said Mother Duck. "Everyone is different, and that is a good thing."
 
-But he did not give up, and slowly the snow melted.
+"Big or small, I love you all," said Mother Duck.
+
+Dilly hung her head. "Sorry, big brother," said Dilly. "You are the best swimmer of us all."
 ---
-At last it was spring. The sun was warm and the birds were singing. The duckling lifted his wings, and they were big and strong. Whoosh! He flew up into the air.
+"But if I do not look like a duck, what kind of bird am I?" said Duckling.
 
-Below him, on a clear lake, floated three beautiful white swans.
+"Go and look around the farm, and you may find out," said Mother Duck. "Be home in time for supper."
+
+So off he waddled across the meadow, waving goodbye.
 ---
-"I will fly down to them," said Duckling. "Perhaps they will not want to play, but I would like to say hello."
+In the farmyard a plump brown Hen was scratching for corn.
 
-He bent his head to the water. In the lake he saw not a grey bird, but a white swan with a long, graceful neck.
+"Am I a hen like you?" said Duckling.
+
+"Cluck, cluck! Can you lay an egg?" said Hen. Duckling shook his head.
+
+"Then you are not a hen," said Hen, and she smiled. "But you are a very polite little bird. Now run home for your supper."
 ---
-The three swans swam up to him. "Welcome, friend," said Swan. "Come and swim with us."
+Soon it was autumn, and the leaves turned red and gold. One day three big white birds with long necks like his flew high over the pond. "Those are swans," said Mother Duck.
 
-"I am not a plain grey bird after all," said Duckling softly. "I was a swan all the time!"
+"Am I a swan like you?" called Duckling. But the swans were too high to hear him, and they flew far away.
+---
+Then winter came. Snow fell softly, and the pond turned to ice.
 
-And the young swan spread his shining wings. He was happier than he had ever dreamed.
+Hen fluffed up her feathers at the barn door. "Come inside, all of you!" said Hen. "It is warm and dry in the barn."
+
+So the ducks waddled through the snow, one behind the other, into the barn.
+---
+All winter long the ducks and Hen snuggled together in the soft, warm straw. Duckling slept between Mother Duck and Dilly.
+
+"Big or small, I love you all," whispered Mother Duck.
+---
+At last spring came, and the ice melted away. Duckling had grown big over the winter. He went down to the pond and looked into the water.
+
+There he saw a beautiful white bird with a long, graceful neck. "Is that really me?" said Duckling.
+---
+Swoosh! Three white swans glided down onto the pond and swam up to him.
+
+"Am I a swan like you?" said Duckling.
+
+"Yes, you are!" said Swan, and he bowed his long neck. "You are a young swan, and a fine one. Welcome, friend!"
+---
+Mother Duck and the ducklings came paddling out to see. "Will you swim with my family too?" said Duckling.
+
+"Of course," said Swan. "The pond is big enough for everyone."
+
+Paddle, paddle, splish, splash! Ducks and swans swam round the pond together.
+---
+That evening the sun went down, pink and gold. Dilly and the other ducklings rode home on their big brother's back.
+
+"You are a swan, and you are still our brother," said Dilly.
+
+"Big or small, I love you all," said Mother Duck. And Duckling was happier than he had ever been.
 """;
 
     public const string RedHen = """
