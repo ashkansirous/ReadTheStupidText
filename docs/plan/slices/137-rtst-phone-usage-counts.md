@@ -76,7 +76,7 @@ Two frames in `docs/design/rtst-phone/RTST Batch 29.dc.html` (R10 line 93, R11 l
 
 *From review:* 137-high: 12 applied, 13 not applicable. 137-medium: 6 applied; 5, 7, 8 and 10 skipped.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-26)
 
 - Root, Landing site paragraph: the RTST host also serves `/api/events` and `/api/app-config` from `readthestupidtext/config.json`; the `RTST_USAGE` binding (dataset `rtst_usage`) is added to both wrangler configs only when switching on, with the same four steps as Dino. (Slice 137: docs/plan/slices/137-rtst-phone-usage-counts.md)
 - `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md`: both apps' usage counts go through `Usage/UsageQueueSender` and `RemoteConfigClient`; Dino's `UsageCounter` and `AppConfigClient` only add their own `Record*` methods. (Slice 137: docs/plan/slices/137-rtst-phone-usage-counts.md)
