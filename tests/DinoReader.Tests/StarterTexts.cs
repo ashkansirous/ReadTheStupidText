@@ -69,87 +69,176 @@ Soggy and soapy, he climbed out, ran all the way home, and he never blew down a 
 And the three little pigs lived happily in the house of bricks for ever after.
 """;
 
+    // Page 13 says "You can catch me" (not "can't") on purpose: it is the story's twist, so keep it.
     public const string Gingerbread = """
 Once upon a time Granny and Grandpa lived in a little house at the edge of a wood. They had no children, and they were often lonely.
 
 One morning Granny made a gingerbread man. She gave him two raisin eyes, a smiling mouth and three candy buttons. Then she laid him on a tray by the window.
 ---
-After a while Granny came back to the tray. Up jumped the Gingerbread Man, and he ran across the kitchen floor.
+After a while Granny came back to the tray, and she could not believe her eyes. Up jumped the Gingerbread Man! He blinked and waved.
 
-"Stop!" Granny said. "Come back here!"
-
-"Run, run, as fast as you can," Gingerbread Man said. "You can't catch me, I'm the Gingerbread Man!"
-
-Granny and Grandpa ran after him, but they could not catch him.
+"Oh my!" said Granny. "Grandpa, come and see!"
 ---
-The Gingerbread Man ran on until he met a Cow in a green field.
+The Gingerbread Man hopped off the tray and ran across the kitchen floor. Running was such fun!
 
-"Stop, Gingerbread Man!" Cow said. "Come and play with me!" She swished her tail and set off after him.
+"Stop!" said Granny. "Come back and give me a cuddle!"
 
-"I have run away from Granny and Grandpa," Gingerbread Man said. "Run, run, as fast as you can. You can't catch me, I'm the Gingerbread Man!"
+"Run, run, as fast as you can! You can't catch me, I'm the Gingerbread Man!" said Gingerbread Man.
+---
+Out of the door and down the lane he ran. Granny and Grandpa hurried after him, puffing and laughing.
 
-The Cow ran after him, but she could not catch him.
+"Wait for us, little one!" said Grandpa.
+
+But they could not catch him.
+---
+Soon the Gingerbread Man met a Cow in a green field.
+
+"Stop, Gingerbread Man!" said Cow. "Come and play with me!"
+
+"Run, run, as fast as you can! You can't catch me, I'm the Gingerbread Man!" said Gingerbread Man.
+
+The Cow swished her tail and trotted after him as fast as she could. But she could not catch him.
 ---
 Next the Gingerbread Man met a Horse by the fence.
 
-"Stop, Gingerbread Man!" Horse said. "Come and play with me!"
+"Stop, Gingerbread Man!" said Horse. "Come and play with me!"
 
-"I have run away from Granny, Grandpa and a cow," Gingerbread Man said. "Run, run, as fast as you can. You can't catch me, I'm the Gingerbread Man!"
+"Run, run, as fast as you can! You can't catch me, I'm the Gingerbread Man!" said Gingerbread Man.
 
-The Horse galloped after him, but he could not catch him either.
+The Horse tossed her mane and galloped after him as fast as she could. But she could not catch him either.
 ---
-Then the Gingerbread Man came to a river. He could not swim, and he did not know what to do. A clever Fox was sitting on the bank.
+Then the Gingerbread Man came to a river. He stopped on the grass, well back from the water.
 
-"I will help you," Fox said in a kind voice. "Jump on my tail and I will carry you across."
+He could not swim, and he did not know what to do.
 
-"Thank you, Fox," Gingerbread Man said, and he jumped on the Fox's tail.
+"Oh dear," said Gingerbread Man. "How will I get across?"
 ---
-The water grew deeper. "You are getting wet," Fox said. "Jump on my back."
+A friendly Fox with a bushy red tail was sitting on the bank.
 
-"Thank you, Fox," Gingerbread Man said, and he jumped on the Fox's back.
+"I can swim," said Fox. "Hop on my back, and I will carry you across."
 
-The water grew deeper still. "You are too heavy," Fox said. "Jump on my nose, and you will be safe."
+"Thank you, Fox," said Gingerbread Man, and he climbed onto the Fox's back.
+---
+The Fox swam across the river. Splish, splosh, went his paws. The Gingerbread Man held on tight and stayed nice and dry.
 
-"Thank you, Fox," Gingerbread Man said, and he jumped on the Fox's nose.
+"This is fun!" said Gingerbread Man.
+---
+On the far bank the Fox set him down.
 
-Fox swam across and set him down on the far bank. "Now go home to Granny and Grandpa," Fox said with a smile. "They miss you." So the Gingerbread Man went home, and they all sat together for a bedtime story.
+"There you are," said Fox. "Where are you running to?"
+
+The Gingerbread Man opened his mouth. Then he shut it again. He did not know!
+---
+He looked back across the river. Granny, Grandpa, the Cow and the Horse had followed all the way. Now they stood on the other bank, puffing and waving.
+
+"I ran away from everyone who wanted to play with me," said Gingerbread Man. "Now I am far away, and I miss them."
+
+"Then let's go back," said Fox.
+---
+So the Fox swam back across the river, with the Gingerbread Man on his back.
+
+"Will you be my friend, Fox?" said Gingerbread Man.
+
+"I already am," said Fox.
+---
+The Gingerbread Man hopped down and ran to Granny as fast as he could.
+
+"Run, run, as fast as you can! You can catch me, I'm the Gingerbread Man!" said Gingerbread Man.
+
+And Granny caught him in a big, soft cuddle.
+
+"I'm sorry I ran away," said Gingerbread Man.
+
+"We missed you, little one," said Granny.
+---
+That evening Granny and Grandpa sat by the open window with the Gingerbread Man and the Fox. The Cow and the Horse looked in from the garden.
+
+Granny read them all a bedtime story from her big book, and nobody in the little house was lonely any more.
+
+"Goodnight, everybody," said Gingerbread Man with a yawn.
 """;
 
     public const string Tortoise = """
-Once upon a time there was a Hare who loved to run. He ran faster than anyone in the whole forest, and he never stopped telling everybody about it.
+Once upon a time there was a Hare who loved to run. Zoom! Zoom! Zoom! Round and round the meadow he went, faster than anyone in the whole wood.
 
-"I am the fastest animal in the world," Hare said. "Nobody can ever beat me."
+Squirrel, Hedgehog and Frog sat on a log and watched.
 
-One day he met a Tortoise who was walking slowly down the path.
+"I'm the fastest animal in the world!" said Hare. "Nobody can ever beat me!"
 ---
-"You walk so slowly," Hare said with a laugh. "You would take all day to cross a meadow."
+Just then the Tortoise came along the path. She walked very slowly, one little step at a time.
 
-"Perhaps I would," Tortoise said calmly. "But I will race you, if you like."
+"Slow and steady, step by step," said Tortoise.
 
-"Race me?" Hare said. "That is the funniest thing I have ever heard. Very well, let us race to the old oak tree on the hill."
-
-The animals gathered to watch. The Owl stood at the start and raised her wing. "Ready, steady, go!" Owl said.
+"Hello, Tortoise!" said Hare. "Look how fast I am! I could run to the old oak tree and back before you get to the end of this path!"
 ---
-The Hare shot off like the wind. In a moment he was far ahead, and he could hardly see the Tortoise at all. The Tortoise did not hurry. He kept walking, one slow step after another.
+"Shall we have a race, then?" said Tortoise with a smile. "To the old oak tree on the hill?"
 
-"This is too easy," Hare said to himself. "I have time for a little rest in the shade."
+"A race? With me?" said Hare. "Yes, please! This will be easy!"
 
-The Hare lay down under a tree and shut his eyes. Soon he was fast asleep.
+"A race! A race!" said Squirrel, and she jumped up and down on the log.
 ---
-The Tortoise kept on walking, slow and steady. He walked past the Hare. He walked up the hill. The animals began to cheer.
+Along came wise old Owl. "I'll be the judge!" said Owl, and he drew a line across the path with his stick.
 
-"Go, Tortoise, go!" Owl said. "You are nearly there!"
-
-At last the Hare woke up with a start. He looked around and could not see the Tortoise anywhere. "I had better run," Hare said. He raced up the hill as fast as he could.
+The Hare and the Tortoise stood side by side on the line. Squirrel, Hedgehog and Frog clapped and cheered.
 ---
-But it was too late. The Tortoise had already reached the old oak tree, and the animals were cheering his name.
+"Ready... steady... GO!" said Owl.
 
-"I won!" Tortoise said, smiling.
+Off went the Hare like the wind. Zoom! Zoom! Zoom!
 
-The Hare hung his head. "You were right to keep going," Hare said. "I was too proud, and I did not even try my best."
+Off went the Tortoise too, one little step at a time, and her three friends walked along beside her to cheer her on.
 
-"Slow and steady wins the race," Tortoise said kindly. "Next time, we can run it together."
+"Slow and steady, step by step," said Tortoise.
+---
+The Hare ran so fast that soon he was far, far ahead. He stopped and looked back. The Tortoise and her friends were tiny dots, far down the path.
 
-And the Hare and the Tortoise became the best of friends.
+"This is too easy!" said Hare. "I've got time for a little nap."
+---
+The Hare lay down in the cool shade of a big tree. He shut his eyes, and soon he was fast asleep.
+
+Snore... snore... snore...
+---
+The Tortoise kept on walking. Past the pond and round the bend she went, one little step at a time.
+
+"Slow and steady, step by step," said Tortoise.
+
+"Go, Tortoise, go!" said Frog, and she did a happy hop. "Ribbit! Ribbit!"
+---
+Soon they came to the big tree where the Hare lay fast asleep.
+
+"Wake up, Hare!" said Tortoise. "We're still racing!"
+
+Her friends called too.
+
+But the Hare just rolled over and went on snoring. Snore... snore... snore...
+---
+Up, up, up the hill went the Tortoise. Owl had flown on ahead, and he was waiting by the finish line under the old oak tree.
+
+"Slow and steady, step by step," said Tortoise.
+
+"Go, Tortoise, go!" said Squirrel, and she waved her bushy tail. "You're nearly there!"
+---
+Down below, the Hare woke up with a great big yawn. He looked up the hill, and he saw the Tortoise near the top!
+
+"Uh-oh! The race!" said Hare.
+---
+The Hare ran as fast as he could. Zoom! Zoom! Zoom! But the Tortoise took one more little step, and she was over the finish line.
+
+"The Tortoise wins!" said Owl.
+
+"Hooray! Hooray! Hooray!" said Hedgehog, and he clapped his little paws.
+---
+The Hare puffed up to the old oak tree. He was out of breath, but he smiled and held out his paw.
+
+"Well done, Tortoise!" said Hare. "You won, fair and square. I'm sorry I boasted."
+
+"Thank you, Hare," said Tortoise. "You're still the fastest runner I know!"
+---
+That evening everyone sat together under the old oak tree and watched the sun go down.
+
+"Slow and steady wins the race," said Owl.
+
+"Slow and steady, step by step," said Hare with a smile. "Tomorrow let's go for a walk together, Tortoise."
+
+And from that day on, the Hare and the Tortoise were the best of friends.
 """;
 }

@@ -4,7 +4,7 @@
 
 **Batch:** 25 (story illustrations)
 **Depends on:** Slice 119 (user checked the pigs on their phone), Slice 120 (the skill)
-**Touches:** `tests/DinoReader.Tests/Store/<stem>/**`, `tests/DinoReader.Tests/StoreBuilder.cs`, `tests/DinoReader.Tests/StoreTexts.cs`, `tests/DinoReader.Tests/Store*Tests.cs`, `docs/design/story-art/**`, `.claude/skills/create-dino-story/**`, `.claude/agents/dino-story-*.md`
+**Touches:** `tests/DinoReader.Tests/Store/<stem>/**`, `tests/DinoReader.Tests/StoreBuilder.cs`, `tests/DinoReader.Tests/StoreTexts.cs`, `tests/DinoReader.Tests/Store*Tests.cs`, `docs/design/story-art/**`, `.claude/skills/create-dino-story/**`, `.claude/agents/dino-story-*.md`; starter books (the Gingerbread Man): `tests/DinoReader.Tests/StarterTexts.cs`, `tests/DinoReader.Tests/StarterBuilder.cs`, `src/DinoReader.Core/StarterUpdate.cs`, `tests/DinoReader.Tests/StarterUpdateTests.cs`, `src/DinoReader.App/Resources/Raw/starters/*.dino`, `tests/DinoReader.Tests/Starters/<stem>/**`, `tests/DinoReader.Tests/Starters/translations/<stem>.*.json`, `src/DinoReader.Core/EnglishRules.cs`, `tests/DinoReader.Tests/GenderGuesserTests.cs`
 
 ## Why
 
@@ -27,7 +27,7 @@ One item per book: art record, Gemini chat, pictures through the prepare script 
 - [ ] Goldilocks and the Three Bears (Goldilocks, Papa, Mama and Baby Bear)
 - [ ] Little Red Riding Hood (Red Riding Hood, Mother, Wolf, Grandmother, Woodcutter)
 - [x] The Ugly Duckling (Mother Duck, Duckling, Hen, Swan)
-- [ ] The Little Red Hen (Hen, Dog, Cat, Duck)
+- [x] The Little Red Hen (Hen, Dog, Cat, Duck)
 - [ ] Jack and the Beanstalk (Jack, Mother, Giant, Peddler)
 - [ ] The Elves and the Shoemaker (Hans, Greta, Nib, Nob)
 - [ ] The Town Mouse and the Country Mouse (Town Mouse, Country Mouse)

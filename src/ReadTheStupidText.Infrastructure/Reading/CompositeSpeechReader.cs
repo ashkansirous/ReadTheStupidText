@@ -135,7 +135,7 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IDisposab
 
     // Slice 47/56: only the neural engine has audio worth preparing, and only when it would be the one
     // to read; otherwise there is nothing to do.
-    public Task PrepareAsync(string text) => UseNeural ? _neural.PrepareAsync(text) : Task.CompletedTask;
+    public Task PrepareAsync(string text) => UseNeural ? _neural.PrepareAsync(text) : HeadStartRun.Skipped;
 
     public bool ReadInProgress => _neural.ReadInProgress;
 

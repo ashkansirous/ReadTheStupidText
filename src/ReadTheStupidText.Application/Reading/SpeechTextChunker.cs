@@ -10,8 +10,8 @@ namespace ReadTheStupidText.Application.Reading;
 /// Text at or under <see cref="SingleChunkMax"/> stays whole; longer text is split
 /// on paragraph boundaries, then on sentences, then — only for a single oversized
 /// sentence — on word boundaries, so no chunk greatly exceeds <see cref="TargetChunkMax"/>.
-/// The very first chunk is biased to a short head (a <see cref="HeadPolicy"/>: by default one
-/// sentence and at most 120 characters) so playback starts after a short first synthesis
+/// The very first chunk is biased to a short head (a <see cref="HeadPolicy"/>: by default two
+/// sentences and at most 120 characters) so playback starts after a short first synthesis
 /// rather than a whole paragraph (time-to-first-audio).
 /// </summary>
 internal static partial class SpeechTextChunker
@@ -25,17 +25,71 @@ internal static partial class SpeechTextChunker
     /// ahead and passes <see cref="Cached"/>.</summary>
     public readonly record struct HeadPolicy(int MaxSentences, int MaxChars)
     {
-        /// <summary>One sentence, at most 120 characters (the reader without a cache).</summary>
-        public static HeadPolicy Default { get; } = new(1, 120);
+        /// <summary>Two sentences, at most 120 characters (the reader without a cache): Decision 147 settles
+        /// the earlier one-versus-two mismatch with Decision 66 at two.</summary>
+        public static HeadPolicy Default { get; } = new(2, 120);
 
         /// <summary>Two sentences, at most 200 characters: the head is split back into
         /// sentences for the cache, which is prepared ahead.</summary>
         public static HeadPolicy Cached { get; } = new(2, 200);
     }
 
-    public static IReadOnlyList<string> Split(string text, bool biasFirstChunk = true, HeadPolicy? head = null)
+    /// <summary>
+    /// Splits <paramref name="text"/> into chunks. A <paramref name="firstChunkHint"/> (the early start's prepared head, Slice 139)
+    /// becomes the first chunk only when <see cref="AcceptsHint"/> allows it; without one, or when it is not accepted, the
+    /// result is exactly the plain split.
+    /// </summary>
+    public static IReadOnlyList<string> Split(
+        string text, bool biasFirstChunk = true, HeadPolicy? head = null, string? firstChunkHint = null)
     {
         string trimmed = LineReflow.ReflowText(text).Trim();
+        if (firstChunkHint is not null && AcceptsHint(trimmed, firstChunkHint, head ?? HeadPolicy.Default))
+        {
+            return SplitAfterFirst(firstChunkHint, trimmed, head);
+        }
+
+        return SplitPlain(trimmed, biasFirstChunk, head);
+    }
+
+    /// <summary>
+    /// Whether <paramref name="hint"/> may be the first chunk of <paramref name="trimmed"/> (reflowed and trimmed): a prefix of it
+    /// that ends exactly at a sentence boundary, within the policy's sentence count and character cap.
+    /// </summary>
+    internal static bool AcceptsHint(string trimmed, string hint, HeadPolicy policy)
+    {
+        if (hint.Length == 0 || hint.Length > policy.MaxChars || !trimmed.StartsWith(hint, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        int stop = hint.Length;
+        while (stop < trimmed.Length && char.IsWhiteSpace(trimmed[stop]))
+        {
+            stop++;
+        }
+
+        // Look one visible character past the hint, so a hint cut inside a sentence is not mistaken for a sentence end.
+        List<int> ends = SentenceEnds(trimmed[..Math.Min(trimmed.Length, stop + 1)]);
+        int index = ends.IndexOf(hint.Length);
+        return index >= 0 && index < policy.MaxSentences;
+    }
+
+    // The early start prepared this head (Slice 139): it is the first chunk, so the first units are the prepared ones; the rest
+    // is chunked on its own and is not biased (the listener no longer waits on it).
+    private static IReadOnlyList<string> SplitAfterFirst(string first, string trimmed, HeadPolicy? head)
+    {
+        var chunks = new List<string> { first };
+        string rest = trimmed[first.Length..].Trim();
+        if (rest.Length > 0)
+        {
+            chunks.AddRange(SplitPlain(rest, biasFirstChunk: false, head));
+        }
+
+        return chunks;
+    }
+
+    private static IReadOnlyList<string> SplitPlain(string trimmed, bool biasFirstChunk, HeadPolicy? head)
+    {
         if (trimmed.Length <= SingleChunkMax)
         {
             return new[] { trimmed };
@@ -77,9 +131,9 @@ internal static partial class SpeechTextChunker
     /// (and risking) Split's own, already-tuned boundary logic.
     /// </summary>
     public static IReadOnlyList<TextChunk> SplitWithRanges(
-        string text, bool biasFirstChunk = true, HeadPolicy? head = null)
+        string text, bool biasFirstChunk = true, HeadPolicy? head = null, string? firstChunkHint = null)
     {
-        IReadOnlyList<string> chunks = Split(text, biasFirstChunk, head);
+        IReadOnlyList<string> chunks = Split(text, biasFirstChunk, head, firstChunkHint);
         var result = new List<TextChunk>(chunks.Count);
         IReadOnlySet<int> hyphenDrops = LineReflow.BreakMap(text).DroppedHyphenBreaks;
         int cursor = 0;
@@ -292,6 +346,35 @@ internal static partial class SpeechTextChunker
             {
                 yield return sentence;
             }
+        }
+    }
+
+    /// <summary>Where each sentence of <paramref name="text"/> ends (an offset into it, after the last non-blank character), cut exactly as <see cref="SplitSentences"/> does; the early start (Slice 139) uses it so its head matches the first chunk.</summary>
+    internal static List<int> SentenceEnds(string text)
+    {
+        var ends = new List<int>();
+        int start = 0;
+        foreach (Match match in SentenceBreak().Matches(text))
+        {
+            AddSentenceEnd(text, start, match.Index, ends);
+            start = match.Index + match.Length;
+        }
+
+        AddSentenceEnd(text, start, text.Length, ends);
+        return ends;
+    }
+
+    private static void AddSentenceEnd(string text, int start, int end, List<int> ends)
+    {
+        int last = end;
+        while (last > start && char.IsWhiteSpace(text[last - 1]))
+        {
+            last--;
+        }
+
+        if (last > start)
+        {
+            ends.Add(last);
         }
     }
 

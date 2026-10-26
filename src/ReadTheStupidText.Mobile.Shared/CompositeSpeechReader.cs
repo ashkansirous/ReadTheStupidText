@@ -193,12 +193,12 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
     public Task PrepareAsync(string text) =>
         _model.IsReady && !_useSystemVoice && _neural is IHeadStart neural
             ? neural.PrepareAsync(text)
-            : Task.CompletedTask;
+            : HeadStartRun.Skipped;
 
     public Task PrepareAsync(string text, ReadVoiceScope scope) =>
         !scope.PhoneVoice && scope.Model is { } model && _neural is IModelScopedReader scoped
             ? scoped.PrepareAsync(text, model)
-            : Task.CompletedTask;
+            : HeadStartRun.Skipped;
 
     public bool ReadInProgress => (_neural as IHeadStart)?.ReadInProgress ?? false;
 

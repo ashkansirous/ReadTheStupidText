@@ -163,7 +163,7 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
     }
 
     public Task SpeakAsync(string text, int? activityId = null) =>
-        StartReadAsync(SpeechChunkPlanner.ForText(text, HeadPolicy));
+        StartReadAsync(PlanText(text));
 
     // Slice 60: each segment is chunked on its own and each chunk is synthesized in its
     // segment's voice, so a character keeps one voice for the whole read.

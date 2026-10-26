@@ -33,6 +33,14 @@ public partial class ReviewPage : ContentPage
     private readonly ITranslator? _translator;
     private readonly ILanguageDetector? _detector;
     private readonly RtstUsage _usage;
+    private readonly EarlyStartVoice _earlyVoice;
+    private readonly IPackUpdateNetwork _network;
+
+    // Early start (Slice 139): the head of the text is voiced, and translated when it is foreign, while the person decides.
+    // Typing waits for one second of quiet in all: the detection's own wait, then this rest.
+    private static readonly TimeSpan EarlyIdleAfterDetection = TimeSpan.FromMilliseconds(400);
+    private readonly EarlyStartCoordinator _early = new();
+    private TimeSpan _earlyDelay;
 
     // The pair the translate offer was last counted for on this text, so typing does not count it again (Slice 137).
     private string? _offeredPair;
@@ -46,6 +54,11 @@ public partial class ReviewPage : ContentPage
     private bool _ticked = true;
     private bool _translating;
     private bool _leaving;
+    private bool _finishing; // waiting for the chosen side's early voice before handing the text over
+    private bool _handedOver; // the text went to the main page: the chosen early work lives on there
+    private bool _settleLeft; // the page was left (Back) while it waited, as opposed to Cancel on the overlay
+    private CancellationTokenSource? _settleCts;
+    private static readonly TimeSpan EarlySettleLimit = TimeSpan.FromSeconds(10);
     private bool _settingText;
     private CancellationTokenSource? _detectCts;
     private CancellationTokenSource? _translateCts;
@@ -53,24 +66,40 @@ public partial class ReviewPage : ContentPage
     private readonly WaitOverlay _overlay;
     private readonly WaitThemeFollower _overlayTheme;
     private Task? _inFlightCall; // the platform call a Cancel abandoned (or the one running now): a new translate waits for it
+    private Task? _earlyCall; // the same for the early translation's calls, kept apart so neither flow overwrites the other's
+    private bool _earlyStale; // the page was left: its early work was stopped, and a return without a new request starts it over
 
-    public ReviewPage(ReviewHandOff handOff, ISettingsStore settings, RtstUsage usage, ITranslator? translator = null, ILanguageDetector? detector = null)
+    public ReviewPage(ReviewHandOff handOff, ISettingsStore settings, RtstUsage usage, EarlyStartVoice earlyVoice, IPackUpdateNetwork network, ITranslator? translator = null, ILanguageDetector? detector = null)
     {
         InitializeComponent();
         FlowDirection = FlowDirection.LeftToRight;
         _handOff = handOff;
         _settings = settings;
         _usage = usage;
+        _earlyVoice = earlyVoice;
+        _network = network;
         _translator = translator;
         _detector = detector;
         _overlay = ReaderPage.CreateWaitOverlay();
         TextBoxContent.Children.Add(_overlay);
         _wait = new WaitController(_overlay);
         _overlayTheme = new WaitThemeFollower(_wait, _overlay);
-        _wait.CancelRequested += () => _translateCts?.Cancel();
+        _wait.CancelRequested += OnWaitCancelRequested;
         ApplyStaticTexts();
         RenderTick();
         RenderReadButton();
+    }
+
+    // Cancel on the overlay: while waiting for the voice it abandons the read and stays on the page, else it stops the translation.
+    private void OnWaitCancelRequested()
+    {
+        if (_finishing)
+        {
+            _settleCts?.Cancel();
+            return;
+        }
+
+        _translateCts?.Cancel();
     }
 
     private string TargetCode() => AppLanguages.Code(AppLanguageSetting.Current(_settings));
@@ -92,6 +121,13 @@ public partial class ReviewPage : ContentPage
         {
             ApplyRequest(request);
         }
+        else if (_earlyStale && !_leaving)
+        {
+            RestartEarlyWork(); // back on this page with the same text: what the tap chose or the leaving stopped starts over
+        }
+
+        _earlyStale = false;
+        _handedOver = false;
     }
 
     protected override void OnDisappearing()
@@ -107,6 +143,17 @@ public partial class ReviewPage : ContentPage
         base.OnNavigatedFrom(args);
         _detectCts?.Cancel();
         _translateCts?.Cancel();
+        AbortSettle();
+        if (_handedOver)
+        {
+            _early.CancelAll(); // the text was handed over: a side the tap chose keeps going for the read
+        }
+        else
+        {
+            _early.Discard(); // left without reading: nothing prepared is wanted, and it must not hold the translator or the voice
+        }
+
+        _earlyStale = true;
     }
 
     private void ApplyRequest(ReviewRequest request)
@@ -178,10 +225,14 @@ public partial class ReviewPage : ContentPage
     private void ScheduleDetection(string text, TimeSpan delay)
     {
         _detectCts?.Cancel();
+        _early.Discard();
+        _earlyVoice.Reset();
+        _earlyDelay = delay > TimeSpan.Zero ? EarlyIdleAfterDetection : TimeSpan.Zero;
         RefreshTranslateOption();
         if (_detector is null || string.IsNullOrWhiteSpace(text))
         {
             _detected = null;
+            StartEarlyWork();
             return;
         }
 
@@ -217,6 +268,7 @@ public partial class ReviewPage : ContentPage
 
         _detected = detected;
         RefreshTranslateOption();
+        StartEarlyWork();
     });
 
     private void RefreshTranslateOption()
@@ -252,7 +304,7 @@ public partial class ReviewPage : ContentPage
 
     private void OnTranslateRowTapped(object? sender, TappedEventArgs e)
     {
-        if (_translating)
+        if (_translating || _finishing)
         {
             return;
         }
@@ -291,12 +343,13 @@ public partial class ReviewPage : ContentPage
 
         _leaving = true;
         _translateCts?.Cancel();
+        AbortSettle();
         await Shell.Current.GoToAsync(AppShell.BackRoute);
     }
 
     private async void OnPasteTapped(object? sender, TappedEventArgs e)
     {
-        if (_translating)
+        if (_translating || _finishing)
         {
             return;
         }
@@ -317,7 +370,7 @@ public partial class ReviewPage : ContentPage
 
     private void OnShowOriginalTapped(object? sender, TappedEventArgs e)
     {
-        if (!_translating && _state.HasOriginal)
+        if (!_translating && !_finishing && _state.HasOriginal)
         {
             SetState(_state.ShowOriginal(), TimeSpan.Zero);
         }
@@ -327,7 +380,7 @@ public partial class ReviewPage : ContentPage
 
     private async void OnReadTapped(object? sender, TappedEventArgs e)
     {
-        if (_translating || _leaving || string.IsNullOrWhiteSpace(_state.Text))
+        if (_translating || _leaving || _finishing || string.IsNullOrWhiteSpace(_state.Text))
         {
             return;
         }
@@ -337,6 +390,8 @@ public partial class ReviewPage : ContentPage
             await TranslateAndFinishAsync();
             return;
         }
+
+        _early.ChooseRead();
 
         // A text that reads as foreign again (option shown) is no longer the translation its Original came from.
         await FinishAsync(_state.Text, _optionShown ? null : _state.Original, ReviewDecisions.ReadLanguage(false, _detected, TargetCode()));
@@ -350,24 +405,36 @@ public partial class ReviewPage : ContentPage
         _translateCts = new CancellationTokenSource();
         CancellationToken token = _translateCts.Token;
         CountTranslateChosen(source, target);
+        ReviewTextState before = _state;
+        Task<EarlyTranslation?> earlyTask = _early.ChooseTranslate();
         SetTranslating(true);
         try
         {
-            string translated = await TranslateAsync(source, target, token);
+            string translated = await TranslateAsync(source, target, earlyTask, token);
             if (!token.IsCancellationRequested)
             {
                 _state = _state.Translated(translated);
                 _wait.End(); // the page is about to leave: no "Translating..." with a live Cancel meanwhile
-                await FinishAsync(translated, _state.Original, ReviewDecisions.ReadLanguage(true, source, target));
+                await FinishAsync(translated, _state.Original, ReviewDecisions.ReadLanguage(true, source, target), before);
             }
         }
         catch (OperationCanceledException)
         {
+            if (!_leaving)
+            {
+                RestartEarlyWork(); // Cancel on the wait overlay: the original text stays, so its early work starts over
+            }
+
             return; // left the page, or Cancel on the wait overlay: the original text stays
         }
         catch (Exception)
         {
             _wait.End(); // gone before the alert, not behind it
+            if (!_leaving)
+            {
+                RestartEarlyWork(); // the translation choice is withdrawn: nothing of it keeps running
+            }
+
             await ReadOriginalAfterFailureAsync(source, target);
         }
         finally
@@ -379,10 +446,29 @@ public partial class ReviewPage : ContentPage
     // The wait overlay names the stage: the download whenever the model is not on the phone yet. Cancel returns at once
     // (WaitAsync), even when the platform call does not look at the token; that call is remembered, so a new translate
     // waits for it to settle instead of starting a second download or translation of the same pair beside it.
-    private async Task<string> TranslateAsync(string source, string target, CancellationToken token)
+    private async Task<string> TranslateAsync(string source, string target, Task<EarlyTranslation?> earlyTask, CancellationToken token)
+    {
+        string text = _state.Text;
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        EarlyTranslation? early = await AwaitEarlyTranslationAsync(source, target, text, earlyTask, token);
+        if (early is null)
+        {
+            return await TranslateTextAsync(text, source, target, early: false, token);
+        }
+
+        string rest = early.Split.Remainder;
+        if (rest.Length == 0)
+        {
+            CountTiming(UsageStage.Translate, UsageOutcome.Done, clock.Elapsed, source, target, early: true); // the early work was all of it
+            return early.TranslatedHead;
+        }
+
+        return early.Joined(await TranslateTextAsync(rest, source, target, early: true, token));
+    }
+
+    private async Task<string> TranslateTextAsync(string text, string source, string target, bool early, CancellationToken token)
     {
         ITranslator translator = _translator!;
-        string text = _state.Text;
         _wait.Begin(WaitStage.Translating, AppResources.Wait_Translating, canCancel: true);
         await SettleAbandonedCallAsync(token);
         bool downloading = !await Tracked(translator.IsModelReadyAsync(source, target), token);
@@ -397,7 +483,7 @@ public partial class ReviewPage : ContentPage
             _wait.Begin(WaitStage.Translating, AppResources.Wait_Translating, canCancel: true);
         }
 
-        string translated = await TimedAsync(UsageStage.Translate, source, target, () => Tracked(TranslationFlow.TranslateAsync(translator, text, source, target, token), token));
+        string translated = await TimedAsync(UsageStage.Translate, source, target, early, () => Tracked(TranslationFlow.TranslateAsync(translator, text, source, target, token), token));
         return string.IsNullOrWhiteSpace(translated)
             ? throw new TranslationModelUnavailableException("The translation was empty.")
             : translated;
@@ -410,6 +496,12 @@ public partial class ReviewPage : ContentPage
         return call.WaitAsync(token);
     }
 
+    private Task<T> TrackedEarly<T>(Task<T> call, CancellationToken token)
+    {
+        _earlyCall = call;
+        return call.WaitAsync(token);
+    }
+
     private Task Tracked(Task call, CancellationToken token)
     {
         _inFlightCall = call;
@@ -419,7 +511,12 @@ public partial class ReviewPage : ContentPage
     // A call Cancel abandoned may still be downloading; its result is ignored, but a new one starts only after it ends.
     private async Task SettleAbandonedCallAsync(CancellationToken token)
     {
-        Task? abandoned = _inFlightCall;
+        await SettleAsync(_inFlightCall, token);
+        await SettleAsync(_earlyCall, token);
+    }
+
+    private static async Task SettleAsync(Task? abandoned, CancellationToken token)
+    {
         if (abandoned is null || abandoned.IsCompleted)
         {
             return;
@@ -444,13 +541,172 @@ public partial class ReviewPage : ContentPage
         }
 
         await DisplayAlertAsync(AppResources.Review_Title, AppResources.Review_TranslateFailed, AppResources.Common_Ok, FlowDirection.LeftToRight);
+        _early.ChooseRead(); // the original is read: its early work keeps going after the page is left
         await FinishAsync(_state.Text, null, ReviewDecisions.ReadLanguage(false, source, target));
     }
 
-    private async Task FinishAsync(string text, string? original, string? language)
+    // The chosen side's early work is awaited, never dropped: the reader's own start cancels a preparation still running,
+    // so the read would begin cold. What ended is in the sentence cache.
+    // False when the wait was abandoned (Cancel on the overlay, or the page was left): the text is not handed over.
+    private async Task<bool> SettleChosenEarlyWorkAsync()
     {
+        Task chosen = _early.SettleChosenAsync();
+        if (chosen.IsCompleted)
+        {
+            return true;
+        }
+
+        _finishing = true;
+        _settleLeft = false;
+        TextEditor.IsReadOnly = true; // the text on screen is the text being handed over
+        _settleCts = new CancellationTokenSource();
+        _wait.Begin(WaitStage.PreparingVoice, AppResources.Wait_PreparingVoice, canCancel: true);
+        try
+        {
+            await chosen.WaitAsync(EarlySettleLimit, _settleCts.Token);
+            return true;
+        }
+        catch (TimeoutException)
+        {
+            return true; // slow engine: read now rather than keep the person waiting
+        }
+        catch (OperationCanceledException)
+        {
+            return false;
+        }
+        finally
+        {
+            _wait.End();
+            _finishing = false;
+            TextEditor.IsReadOnly = false;
+            _settleCts.Dispose();
+            _settleCts = null;
+        }
+    }
+
+    // Back (or the system back) while waiting: the page is left, so the wait ends and nothing is handed over.
+    private void AbortSettle()
+    {
+        if (!_finishing)
+        {
+            return;
+        }
+
+        _settleLeft = true;
+        _settleCts?.Cancel();
+    }
+
+    private async Task<bool> FinishAsync(string text, string? original, string? language, ReviewTextState? undo = null)
+    {
+        if (!await SettleChosenEarlyWorkAsync() || _leaving || _settleLeft)
+        {
+            AbandonFinish(undo);
+            return false;
+        }
+
+        _handedOver = true;
         _handOff.Finish(new ReviewResult(text, original, language));
         await LeaveAsync();
+        return true;
+    }
+
+    // Cancel on the wait overlay stays on the page with the text it had; the side the tap chose is withdrawn, so both start over.
+    private void AbandonFinish(ReviewTextState? undo)
+    {
+        if (undo is not null)
+        {
+            _state = undo;
+        }
+
+        if (!_leaving && !_settleLeft)
+        {
+            RestartEarlyWork();
+        }
+    }
+
+    // ---- Early start (Slice 139) ------------------------------------------------------------
+
+    // Voices the head of the text, and translates then voices the head of its translation when the checkbox is offered, so
+    // the first sound and the first translation are already done when the person taps. The tap picks a side (Read or
+    // Translate and read) and the other side stops. None of it is counted: only what the tap starts is.
+    // The early work starts over at once (no idle rest) after a Translate and read that was cancelled or failed.
+    private void RestartEarlyWork()
+    {
+        _early.Discard();
+        _earlyDelay = TimeSpan.Zero;
+        StartEarlyWork();
+    }
+
+    private void StartEarlyWork()
+    {
+        string text = _state.Text;
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            _early.Discard();
+            return;
+        }
+
+        string target = TargetCode();
+        string? source = _optionShown ? _detected : null;
+        string language = VoiceRouting.ReadingLanguage(false, target, _settings.TranslateSourceLanguage, _detected, text);
+        var jobs = new EarlyStartJobs(
+            (head, token) => _earlyVoice.VoiceAsync(head, language, token),
+            source is null || _translator is null ? null : (span, token) => TranslateHeadEarlyAsync(source, target, span, token),
+            (voiced, token) => _earlyVoice.VoiceAsync(voiced, target, token));
+        _early.Restart(text, source, target, jobs, _earlyDelay);
+    }
+
+    // A model that is not on the phone downloads early only on an unmetered network; on mobile data it waits for the tap,
+    // whose wait overlay then names the download.
+    private async Task<string?> TranslateHeadEarlyAsync(string source, string target, EarlySplit span, CancellationToken token)
+    {
+        ITranslator translator = _translator!;
+        await SettleAbandonedCallAsync(token); // never beside a call that was abandoned for the same pair
+        bool ready = await TrackedEarly(translator.IsModelReadyAsync(source, target), token);
+        if (!ready && !_network.AllowsAutomaticUpdate)
+        {
+            return null;
+        }
+
+        System.Diagnostics.Debug.WriteLine($"{EarlyStartVoice.LogTag} translate start ({source}->{target}, {span.Head.Length} chars)");
+        string? translated = await TrackedEarly(TranslationFlow.TranslateAsync(translator, span.Head, source, target, token), token);
+        System.Diagnostics.Debug.WriteLine($"{EarlyStartVoice.LogTag} translate done ({source}->{target}, ok={translated is not null}, cancelled={token.IsCancellationRequested})");
+        return translated;
+    }
+
+    // The early translation of this very text and pair, joined in if it finished or is still running; null when there is none,
+    // so the whole text is translated as before. A download still running behind it is named by the overlay.
+    private async Task<EarlyTranslation?> AwaitEarlyTranslationAsync(string source, string target, string text, Task<EarlyTranslation?> earlyTask, CancellationToken token)
+    {
+        if (!earlyTask.IsCompleted)
+        {
+            await ShowStageWhileEarlyRunsAsync(source, target, token);
+        }
+
+        EarlyTranslation? early = await Tracked(earlyTask, token);
+        return early is not null && early.Matches(text, source, target) ? early : null;
+    }
+
+    private async Task ShowStageWhileEarlyRunsAsync(string source, string target, CancellationToken token)
+    {
+        bool downloading;
+        try
+        {
+            downloading = !await Tracked(_translator!.IsModelReadyAsync(source, target), token);
+        }
+        catch (Exception) when (!token.IsCancellationRequested)
+        {
+            return; // the early work is only an optimization: no stage named, the wait overlay stays as it is
+        }
+
+        if (downloading)
+        {
+            _wait.Begin(WaitStage.DownloadingModel, AppResources.Format(AppResources.Wait_DownloadingModel, LanguageName(source)), canCancel: true, AppResources.Review_FirstTimeOnly);
+        }
+        else
+        {
+            _wait.Begin(WaitStage.Translating, AppResources.Wait_Translating, canCancel: true);
+        }
     }
 
     // ---- Anonymous counts (Slice 137) -------------------------------------------------------
@@ -485,7 +741,7 @@ public partial class ReviewPage : ContentPage
     {
         if (translator is IModelPreparer preparer)
         {
-            await TimedAsync(UsageStage.ModelDownload, source, target, async () =>
+            await TimedAsync(UsageStage.ModelDownload, source, target, early: false, async () =>
             {
                 await Tracked(preparer.EnsureModelAsync(source, target, token), token);
                 return true;
@@ -494,29 +750,29 @@ public partial class ReviewPage : ContentPage
     }
 
     // Times one wait and counts it with how it ended, then lets the result or the error through unchanged.
-    private async Task<T> TimedAsync<T>(string stage, string source, string target, Func<Task<T>> work)
+    private async Task<T> TimedAsync<T>(string stage, string source, string target, bool early, Func<Task<T>> work)
     {
         var clock = System.Diagnostics.Stopwatch.StartNew();
         try
         {
             T result = await work();
-            CountTiming(stage, UsageOutcome.Done, clock.Elapsed, source, target);
+            CountTiming(stage, UsageOutcome.Done, clock.Elapsed, source, target, early);
             return result;
         }
         catch (OperationCanceledException)
         {
-            CountTiming(stage, UsageOutcome.Cancelled, clock.Elapsed, source, target);
+            CountTiming(stage, UsageOutcome.Cancelled, clock.Elapsed, source, target, early);
             throw;
         }
         catch (Exception)
         {
-            CountTiming(stage, UsageOutcome.Failed, clock.Elapsed, source, target);
+            CountTiming(stage, UsageOutcome.Failed, clock.Elapsed, source, target, early);
             throw;
         }
     }
 
-    private void CountTiming(string stage, string outcome, TimeSpan elapsed, string source, string target) =>
-        _usage.Record(context => UsageEvents.Timing(context, stage, outcome, elapsed, source, target));
+    private void CountTiming(string stage, string outcome, TimeSpan elapsed, string source, string target, bool early) =>
+        _usage.Record(context => UsageEvents.Timing(context, stage, outcome, elapsed, source, target, early));
 
     // ---- The translating look (R7) ----------------------------------------------------------
 

@@ -117,7 +117,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
         _model = model;
         _systemLog = systemLog;
         _audioPaths = audioPaths;
-        _sentences = new NeuralSentenceSource(audioPaths.SentenceFolder, systemLog, MaxSynthesisConcurrency);
+        _sentences = new NeuralSentenceSource(audioPaths.SentenceFolder, systemLog, MaxSynthesisConcurrency, paths => _engines.Acquire(paths));
         _player.MediaOpened += OnMediaOpened;
         _player.MediaEnded += OnMediaEnded;
         _player.PlaybackSession.PlaybackStateChanged += OnPlaybackStateChanged;
@@ -1019,44 +1019,38 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
     {
         if (string.IsNullOrWhiteSpace(text))
         {
-            return Task.CompletedTask;
+            return HeadStartRun.Skipped;
         }
 
         // The token is taken here, synchronously and in call order, so a later call always supersedes an
-        // earlier one and CancelPrepare reaches a prepare still queued on the pool.
+        // earlier one and CancelPrepare reaches a prepare still queued on the pool. The task completes
+        // normally only when the clips are stored (HeadStartRun).
         return BeginPrepare() is { } token
-            ? Task.Run(() => PrepareOffCallerAsync(text, token))
-            : Task.CompletedTask;
+            ? Task.Run(() => HeadStartRun.CompleteAsync(token, t => PrepareOffCallerAsync(text, t)))
+            : HeadStartRun.Skipped;
     }
 
     // Runs on the thread pool, so acquiring the engine (which may build the model), planning the chunks
     // and indexing the cache never block the thread that asked.
-    private async Task PrepareOffCallerAsync(string text, CancellationToken token)
+    private async Task<bool> PrepareOffCallerAsync(string text, CancellationToken token)
     {
-        if (token.IsCancellationRequested)
-        {
-            return;
-        }
-
         BuiltEngine? engine = null;
         try
         {
             engine = AcquireEngine();
             if (engine is null)
             {
-                return;
+                return false;
             }
 
             token.ThrowIfCancellationRequested();
             await PrepareChunksAsync(engine, text, token);
+            return true;
         }
-        catch (OperationCanceledException)
-        {
-            // Superseded or cancelled: nothing to clean up.
-        }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _systemLog.Warning("head start failed", null, ex);
+            return false;
         }
         finally
         {

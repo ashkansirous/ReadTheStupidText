@@ -607,7 +607,7 @@ public sealed partial class ReadAloudService : IDisposable
         }
         catch (OperationCanceledException)
         {
-            // Superseded while waiting: nothing was started.
+            // Superseded while waiting, or the preparation stored nothing (skipped, failed): the result is unused here.
         }
         catch (Exception ex)
         {
