@@ -58,6 +58,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
     private readonly AudioChunkPaths _audioPaths;
     private readonly NeuralSentenceSource _sentences;
     private readonly ReadTimingTracker _timing = new();
+    private readonly StallReporter _stall;
     private readonly MediaPlayer _player = new() { AutoPlay = false };
 
     // Serializes the generation counter / synthesis-cancellation swap and the read/prepare bookkeeping.
@@ -114,6 +115,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
 
     public SupertonicSpeechReader(IVoiceModelService model, ISystemLog systemLog, AudioChunkPaths audioPaths)
     {
+        _stall = new StallReporter(this);
         _model = model;
         _systemLog = systemLog;
         _audioPaths = audioPaths;
@@ -133,6 +135,13 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
     public event EventHandler<ReadTiming>? TimingChanged;
 
     public event EventHandler<ReadChunk>? ChunkChanged;
+
+    // Raised while the read waits for the next chunk's audio (Slice 148); the UI shows its "still getting the voice ready" overlay.
+    public event EventHandler<bool>? StallChanged
+    {
+        add => _stall.Changed += value;
+        remove => _stall.Changed -= value;
+    }
 
     public PlaybackState State => _state;
 
@@ -701,7 +710,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
         string path;
         try
         {
-            path = await generated;
+            path = await _stall.WatchAsync(generated);
         }
         catch (OperationCanceledException)
         {

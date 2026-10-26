@@ -57,6 +57,7 @@ public static partial class MauiProgram
 	{
 		var usage = services.GetRequiredService<RtstUsage>();
 		var settings = services.GetRequiredService<ISettingsStore>();
+		usage.CountWaits();
 		string language = AppLanguages.Code(AppLanguageSetting.Current(settings));
 		_ = usage.StartAsync(context => UsageEvents.AppOpened(context, language, UsageEnvironment.OsMajor));
 	}

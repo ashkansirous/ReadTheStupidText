@@ -75,6 +75,15 @@ public static class UsageEvents
             Language = Language(language),
         };
 
+    /// <summary>The wait overlay showed for <paramref name="shown"/> (Slice 148); only its stage and a coarse duration are counted.</summary>
+    public static UsageEvent WaitShown(UsageContext context, WaitStage stage, TimeSpan shown) => Wait(context, UsageEventName.WaitShown, stage, shown);
+
+    /// <summary>The person tapped Cancel on the wait overlay after it had shown for <paramref name="shown"/> (Slice 148).</summary>
+    public static UsageEvent WaitCancelled(UsageContext context, WaitStage stage, TimeSpan shown) => Wait(context, UsageEventName.WaitCancelled, stage, shown);
+
+    private static UsageEvent Wait(UsageContext context, string name, WaitStage stage, TimeSpan shown) =>
+        Make(context, name) with { WaitStage = UsageWaitStage.Of(stage), DurationBucket = UsageBuckets.Duration(shown) };
+
     /// <summary>The primary language code in lower case ("fa" for "fa-IR"), or null when <paramref name="code"/> is not a 2-3 letter language.</summary>
     public static string? Language(string? code)
     {

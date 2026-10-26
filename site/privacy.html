@@ -142,6 +142,9 @@
     <li><code>timing</code>: which wait it was (getting a translation model, translating, or the time until the
       first sound), the language pair when known, how it ended (finished, cancelled or failed) and how long it
       took as a coarse bucket (under 0.5 s, 0.5 to 1, 1 to 2, 2 to 5, 5 to 10, 10 to 20, or over 20 seconds).</li>
+    <li><code>wait_shown</code> and <code>wait_cancelled</code>: when a &ldquo;please wait&rdquo; panel appeared (for example
+      &ldquo;Preparing the voice&rdquo; or &ldquo;Still getting the voice ready&rdquo;), and when you tapped Cancel on it: which
+      wait it was (from a fixed list) and how long the panel showed as a coarse bucket, with no text and no language.</li>
   </ul>
   <p>Every count also carries the app version, the platform and the UTC date (no time of day). Counts never
   contain the text you read, file names, scanned images, names, or any install, device, account or advertising

@@ -229,6 +229,7 @@
   <data name="Wizard_NoText" xml:space="preserve"><value>Tältä sivulta ei löytynyt tekstiä</value></data>
   <data name="Wizard_Reading" xml:space="preserve"><value>Luetaan sivua {0}/{1}</value></data>
   <data name="Wait_GettingVoices" xml:space="preserve"><value>Valmistellaan ääniä…</value></data>
+  <data name="Wait_Stalled" xml:space="preserve"><value>Ääntä valmistellaan vielä…</value></data>
   <data name="Wait_ReadingPictures" xml:space="preserve"><value>Luetaan kuvia…</value></data>
   <data name="Wait_PageOf" xml:space="preserve"><value>Sivu {0} / {1}</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>Käännetään…</value></data>

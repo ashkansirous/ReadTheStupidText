@@ -127,6 +127,7 @@ public partial class ReaderPage : ContentPage
         _reader.ProgressChanged += OnReaderProgressChanged;
         _reader.TimingChanged += OnReaderTimingChanged;
         _reader.ChunkChanged += OnReaderChunkChanged;
+        _reader.StallChanged += OnReaderStallChanged;
         _installer.Changed += OnInstallerChanged;
         _model.ReadyChanged += OnInstallerChanged;
 
@@ -196,6 +197,8 @@ public partial class ReaderPage : ContentPage
         _reader.ProgressChanged -= OnReaderProgressChanged;
         _reader.TimingChanged -= OnReaderTimingChanged;
         _reader.ChunkChanged -= OnReaderChunkChanged;
+        _reader.StallChanged -= OnReaderStallChanged;
+        EndStallWait(); // nobody is left to hear the end of the stall: a late chunk would leave the overlay up over a playing read
         _installer.Changed -= OnInstallerChanged;
         _model.ReadyChanged -= OnInstallerChanged;
     }
@@ -628,6 +631,7 @@ public partial class ReaderPage : ContentPage
         if (state == PlaybackState.Idle)
         {
             ClearHighlight();
+            EndStallWait();
         }
 
         // The dimmed, untouchable player is for an idle page only: a read still playing keeps its controls.

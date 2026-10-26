@@ -83,6 +83,9 @@ public sealed class ReadingSession
 
 	public void ClearFinished() => Finished = false;
 
+	/// <summary>True while a read that had started waits for its next chunk of audio (Slice 148): the page shows "Still getting the voice ready".</summary>
+	public bool Stalled { get; private set; }
+
 	public event EventHandler<int>? SentenceChanged;
 
 	public event EventHandler? StateChanged;
@@ -182,6 +185,7 @@ public sealed class ReadingSession
 		_reader.StateChanged += OnReaderStateChanged;
 		_reader.ChunkChanged += OnChunkChanged;
 		_reader.Completed += OnCompleted;
+		_reader.StallChanged += OnReaderStallChanged;
 	}
 
 	public void Detach()
@@ -189,6 +193,7 @@ public sealed class ReadingSession
 		_reader.StateChanged -= OnReaderStateChanged;
 		_reader.ChunkChanged -= OnChunkChanged;
 		_reader.Completed -= OnCompleted;
+		_reader.StallChanged -= OnReaderStallChanged;
 	}
 
 	/// <summary>Moves the current sentence without reading (a skip while nothing plays).</summary>
@@ -241,6 +246,7 @@ public sealed class ReadingSession
 		_reader.Stop();
 		_activeReadId = 0;
 		_playingReadId = 0;
+		Stalled = false;
 		ClearPending();
 	}
 
@@ -545,6 +551,25 @@ public sealed class ReadingSession
 			return;
 		}
 
+		StateChanged?.Invoke(this, EventArgs.Empty);
+	}
+
+	private void OnReaderStallChanged(object? sender, bool stalled)
+	{
+		int id = Volatile.Read(ref _activeReadId);
+		MainThread.BeginInvokeOnMainThread(() => ApplyStall(stalled, id));
+	}
+
+	// Only the active generated read can stall; a stall of a replaced or stopped read, or one that ends, is dropped or cleared.
+	private void ApplyStall(bool stalled, int id)
+	{
+		bool next = stalled && id != 0 && id == _activeReadId && _recorded == RecordedPlay.None;
+		if (next == Stalled)
+		{
+			return;
+		}
+
+		Stalled = next;
 		StateChanged?.Invoke(this, EventArgs.Empty);
 	}
 
