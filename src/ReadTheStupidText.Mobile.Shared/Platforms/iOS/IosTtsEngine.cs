@@ -2,7 +2,7 @@ using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Domain.Reading;
 using SherpaOnnx;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// An <see cref="OfflineTts"/> disposed when its last holder releases it (Slice 55, the iOS

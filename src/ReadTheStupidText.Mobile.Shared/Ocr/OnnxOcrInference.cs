@@ -1,7 +1,7 @@
 using Microsoft.ML.OnnxRuntime;
 using ReadTheStupidText.Application.Images;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// Runs PaddleOCR's detection and recognition models on onnxruntime (Slice 52). The native

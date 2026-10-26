@@ -3,7 +3,7 @@ using Foundation;
 using ReadTheStupidText.Application.Images;
 using UIKit;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 public static partial class ImageTransform
 {

@@ -1,6 +1,6 @@
 using ReadTheStupidText.Application.Logging;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// iOS's <see cref="ISystemLog"/> (Slice 55): lines go to the unified log (visible in Console.app

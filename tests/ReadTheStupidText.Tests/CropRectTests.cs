@@ -1,4 +1,5 @@
 using ReadTheStupidText.Mobile;
+using ReadTheStupidText.Mobile.Shared;
 
 namespace ReadTheStupidText.Tests;
 

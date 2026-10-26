@@ -1,4 +1,4 @@
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// Thrown by an <see cref="ReadTheStupidText.Application.Images.IImageTextExtractor"/> that has

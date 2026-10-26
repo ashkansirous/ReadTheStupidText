@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>Composes the user-facing voice-pack status line from the installer state (UI copy lives here, not in the services).</summary>
 public static class PackStatusText

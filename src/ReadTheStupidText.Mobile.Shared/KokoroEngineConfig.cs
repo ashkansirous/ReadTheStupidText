@@ -1,7 +1,7 @@
 using ReadTheStupidText.Domain.Reading;
 using SherpaOnnx;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// The sherpa-onnx configuration of the Kokoro storyteller pack (Slice 114), shared by the Android and iOS engines so a

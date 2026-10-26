@@ -1,6 +1,6 @@
 using Windows.Graphics.Imaging;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// The one scaling rule for Windows page pictures (Slice 67): the OCR bitmap and the kept picture

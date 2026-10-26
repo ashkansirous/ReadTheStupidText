@@ -2,7 +2,7 @@ using Android.Graphics;
 using AndroidNet = Android.Net;
 using ReadTheStupidText.Application.Images;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// Reads an image given by a location string (Slice 63): a plain path, a <c>file://</c> uri or a

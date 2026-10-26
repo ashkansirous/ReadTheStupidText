@@ -5,7 +5,7 @@ using Windows.Media.Ocr;
 using Windows.Storage;
 using Windows.Storage.Streams;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// OCR with line boxes on Windows (Slice 67) over <c>Windows.Media.Ocr</c>: the engine of the

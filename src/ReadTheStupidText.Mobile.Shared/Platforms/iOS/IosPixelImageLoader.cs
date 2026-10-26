@@ -3,7 +3,7 @@ using Foundation;
 using ImageIO;
 using ReadTheStupidText.Application.Images;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// Opens a scanned page for the OCR engine on iOS (Slice 55). ImageIO decodes the file upright

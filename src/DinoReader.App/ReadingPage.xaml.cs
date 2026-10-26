@@ -2,7 +2,7 @@ using System.Diagnostics;
 using DinoReader.Core;
 using Microsoft.Extensions.DependencyInjection;
 using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Mobile;
+using ReadTheStupidText.Mobile.Shared;
 using DinoReader.Resources.Strings;
 
 namespace DinoReader;

@@ -2,7 +2,7 @@ using Foundation;
 using UIKit;
 using VisionKit;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// <see cref="IDocumentScanner"/> over iOS's own document camera

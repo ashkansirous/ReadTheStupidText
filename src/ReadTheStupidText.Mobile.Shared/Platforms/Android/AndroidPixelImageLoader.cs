@@ -1,7 +1,7 @@
 using Android.Graphics;
 using ReadTheStupidText.Application.Images;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// Opens a scanned page for the OCR engine (Slice 52). The detection image is decoded with

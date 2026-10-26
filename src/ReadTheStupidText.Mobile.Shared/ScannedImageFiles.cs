@@ -1,6 +1,6 @@
 using ReadTheStupidText.Application.Images;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// Removes a scanned or photographed page image once its text has been extracted, so page images

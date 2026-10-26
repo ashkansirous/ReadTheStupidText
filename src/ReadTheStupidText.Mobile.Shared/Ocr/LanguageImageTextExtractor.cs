@@ -5,7 +5,7 @@ using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// The image reader on Android and iOS (Slice 52, Decision 65; shared in Slice 55). The page's script

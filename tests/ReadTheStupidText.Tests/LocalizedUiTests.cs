@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Mobile;
+using ReadTheStupidText.Mobile.Shared;
 
 namespace ReadTheStupidText.Tests;
 
@@ -162,7 +163,7 @@ public class LocalizedPackStatusTests
     [MemberData(nameof(AllStates))]
     public void Every_state_is_null_or_non_null_exactly_like_the_shared_status_text(PackInstallState state)
     {
-        string? shared = ReadTheStupidText.Mobile.PackStatusText.Compose(state, 0.5);
+        string? shared = ReadTheStupidText.Mobile.Shared.PackStatusText.Compose(state, 0.5);
         string? localized = LocalizedPackStatus.Compose(state, 0.5);
 
         Assert.Equal(shared is null, localized is null);

@@ -1,7 +1,7 @@
 using CoreGraphics;
 using ReadTheStupidText.Application.Images;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// A <see cref="CGImage"/> drawn to the B, G, R bytes the OCR models expect (Slice 55), scaled to

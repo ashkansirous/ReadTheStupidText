@@ -1,6 +1,6 @@
 using Foundation;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// Keeps downloaded language packs out of the iCloud and iTunes backup (Slice 55). A pack can be

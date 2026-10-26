@@ -1,5 +1,6 @@
 using System.Globalization;
 using ReadTheStupidText.Mobile.Resources.Strings;
+using ReadTheStupidText.Mobile.Shared;
 
 namespace ReadTheStupidText.Mobile;
 

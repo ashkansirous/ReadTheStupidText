@@ -2,7 +2,7 @@ using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Domain.Reading;
 using ReadTheStupidText.Infrastructure.Reading;
 
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// The Windows neural engine for the MAUI apps (Slice 67): Infrastructure's sherpa-onnx
@@ -67,7 +67,7 @@ public sealed class WindowsNeuralReader : ISpeechReader, IDisposable
 		}
 		catch (ReadTheStupidText.Infrastructure.Reading.NeuralEngineUnavailableException)
 		{
-			throw new ReadTheStupidText.Mobile.NeuralEngineUnavailableException();
+			throw new ReadTheStupidText.Mobile.Shared.NeuralEngineUnavailableException();
 		}
 	}
 }

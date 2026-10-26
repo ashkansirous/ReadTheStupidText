@@ -1,4 +1,4 @@
-namespace ReadTheStupidText.Mobile;
+namespace ReadTheStupidText.Mobile.Shared;
 
 /// <summary>
 /// A crop rectangle in fractions of the picture (all values 0..1, origin top-left), like <c>NormalizedRect</c>, so it is valid

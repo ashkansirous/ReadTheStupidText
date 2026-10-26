@@ -4,6 +4,7 @@ using ReadTheStupidText.Application.Documents;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Translation;
 using ReadTheStupidText.Documents;
+using ReadTheStupidText.Mobile.Shared;
 
 namespace ReadTheStupidText.Mobile;
 
