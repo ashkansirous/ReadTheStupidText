@@ -43,7 +43,7 @@ No screens. The Batch 30 mock intro says 145 (the sound-words test) changes no s
 
 *From review:* 145-high (15 findings applied), 145-medium (14 findings applied).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-26)
 
 - Sound words in Dino books: use repetition with punctuation ("Dang! Dang! Dang!", "Whoosh… whoosh!"); do not stretch letters ("Daaannng"), which helps little and can hurt on some voices. (Slice 145: docs/plan/slices/145-sound-words-aloud-test.md)
 

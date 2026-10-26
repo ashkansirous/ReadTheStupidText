@@ -48,7 +48,7 @@ glued). The mid-read wait while a second model loads is Slice 148's stall overla
 
 *From review:* high pass (`149-high`): 9 applied, 8 deferred. Medium pass (`149-medium`): 9 applied, 10 deferred to Slice 148.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-26)
 
 Already added by the build in `src/ReadTheStupidText.Infrastructure/CLAUDE.md` (silent output guard rule, with the Slice 149 link).
 
