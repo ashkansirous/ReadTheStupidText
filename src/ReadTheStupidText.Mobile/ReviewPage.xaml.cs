@@ -4,7 +4,9 @@ using ReadTheStupidText.Application.Images;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Application.Translation;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Mobile.Resources.Strings;
+using ReadTheStupidText.Mobile.Shared.Usage;
 using AndroidPlatform = Microsoft.Maui.Controls.PlatformConfiguration.Android;
 
 namespace ReadTheStupidText.Mobile;
@@ -32,6 +34,13 @@ public partial class ReviewPage : ContentPage
     private readonly ISettingsStore _settings;
     private readonly ITranslator? _translator;
     private readonly ILanguageDetector? _detector;
+    private readonly RtstUsage _usage;
+
+    // The pair the translate offer was last counted for on this text, so typing does not count it again (Slice 137).
+    private string? _offeredPair;
+
+    // The pair translate_chosen was last counted for on this text, so a retry after a failed translation is still one decision.
+    private string? _chosenPair;
 
     private ReviewTextState _state = new(string.Empty);
     private string? _detected;
@@ -43,12 +52,13 @@ public partial class ReviewPage : ContentPage
     private CancellationTokenSource? _detectCts;
     private CancellationTokenSource? _translateCts;
 
-    public ReviewPage(ReviewHandOff handOff, ISettingsStore settings, ITranslator? translator = null, ILanguageDetector? detector = null)
+    public ReviewPage(ReviewHandOff handOff, ISettingsStore settings, RtstUsage usage, ITranslator? translator = null, ILanguageDetector? detector = null)
     {
         InitializeComponent();
         FlowDirection = FlowDirection.LeftToRight;
         _handOff = handOff;
         _settings = settings;
+        _usage = usage;
         _translator = translator;
         _detector = detector;
         ApplyStaticTexts();
@@ -136,6 +146,8 @@ public partial class ReviewPage : ContentPage
         ShowOriginalLink.IsVisible = state.HasOriginal;
         FailedBanner.IsVisible = false;
         _detected = null;
+        _offeredPair = null;
+        _chosenPair = null;
         ScheduleDetection(state.Text, detectDelay);
     }
 
@@ -208,6 +220,7 @@ public partial class ReviewPage : ContentPage
         TranslateRow.IsVisible = _optionShown;
         if (_optionShown)
         {
+            CountTranslateOffered(_detected!, target);
             TextFlow.ForUi(TranslateTitle, AppResources.Format(AppResources.Review_TranslateTo, LanguageName(target)));
             TextFlow.ForUi(TranslateCaption, AppResources.Format(AppResources.Review_LooksLike, LanguageName(_detected!)));
             SemanticProperties.SetDescription(TranslateRow, TranslateTitle.Text);
@@ -329,6 +342,7 @@ public partial class ReviewPage : ContentPage
         _detectCts?.Cancel();
         _translateCts = new CancellationTokenSource();
         CancellationToken token = _translateCts.Token;
+        CountTranslateChosen(source, target);
         SetTranslating(true);
         try
         {
@@ -361,9 +375,10 @@ public partial class ReviewPage : ContentPage
         if (!await translator.IsModelReadyAsync(source, target))
         {
             ShowDownloadCard(source);
+            await FetchModelTimedAsync(translator, source, target, token);
         }
 
-        string translated = await TranslationFlow.TranslateAsync(translator, text, source, target, token);
+        string translated = await TimedAsync(UsageStage.Translate, source, target, () => TranslationFlow.TranslateAsync(translator, text, source, target, token));
         return string.IsNullOrWhiteSpace(translated)
             ? throw new TranslationModelUnavailableException("The translation was empty.")
             : translated;
@@ -386,6 +401,71 @@ public partial class ReviewPage : ContentPage
         _handOff.Finish(new ReviewResult(text, original, language));
         await LeaveAsync();
     }
+
+    // ---- Anonymous counts (Slice 137) -------------------------------------------------------
+
+    // Once per loaded text and pair: the checkbox appearing, not every re-detection while the person types.
+    private void CountTranslateOffered(string source, string target)
+    {
+        string pair = $"{source}>{target}";
+        if (_offeredPair == pair)
+        {
+            return;
+        }
+
+        _offeredPair = pair;
+        _usage.Record(context => UsageEvents.TranslateOffered(context, source, target));
+    }
+
+    private void CountTranslateChosen(string source, string target)
+    {
+        string pair = $"{source}>{target}";
+        if (_chosenPair == pair)
+        {
+            return;
+        }
+
+        _chosenPair = pair;
+        _usage.Record(context => UsageEvents.TranslateChosen(context, source, target));
+    }
+
+    // The wait for the ML Kit model on its own, when the translator can fetch it apart from translating; otherwise the download is part of the translate stage.
+    private async Task FetchModelTimedAsync(ITranslator translator, string source, string target, CancellationToken token)
+    {
+        if (translator is IModelPreparer preparer)
+        {
+            await TimedAsync(UsageStage.ModelDownload, source, target, async () =>
+            {
+                await preparer.EnsureModelAsync(source, target, token);
+                return true;
+            });
+        }
+    }
+
+    // Times one wait and counts it with how it ended, then lets the result or the error through unchanged.
+    private async Task<T> TimedAsync<T>(string stage, string source, string target, Func<Task<T>> work)
+    {
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        try
+        {
+            T result = await work();
+            CountTiming(stage, UsageOutcome.Done, clock.Elapsed, source, target);
+            return result;
+        }
+        catch (OperationCanceledException)
+        {
+            CountTiming(stage, UsageOutcome.Cancelled, clock.Elapsed, source, target);
+            throw;
+        }
+        catch (Exception)
+        {
+            CountTiming(stage, UsageOutcome.Failed, clock.Elapsed, source, target);
+            throw;
+        }
+    }
+
+    private void CountTiming(string stage, string outcome, TimeSpan elapsed, string source, string target) =>
+        _usage.Record(context => UsageEvents.Timing(context, stage, outcome, elapsed, source, target));
 
     // ---- The translating look (R7) ----------------------------------------------------------
 

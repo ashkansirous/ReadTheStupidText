@@ -37,6 +37,11 @@ public static class AppResources
     public static string Reader_EmptyHint => Get();
     public static string Settings_LanguageCaption => Get();
     public static string Settings_ReadingSpeed => Get();
+    public static string Settings_CountsTitle => Get();
+    public static string Settings_CountsCaption => Get();
+    public static string Settings_CountsOn => Get();
+    public static string Settings_CountsOff => Get();
+    public static string Language_CountsNote => Get();
     public static string Common_Back => Get();
     public static string Reader_SkipBack => Get();
     public static string Reader_SkipForward => Get();

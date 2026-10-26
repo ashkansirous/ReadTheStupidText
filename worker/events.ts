@@ -140,11 +140,6 @@ export function parseEvent(raw: unknown): UsageEvent | null {
   return valid ? { name, book, language, source, hasRecording, version, platform, day, sampleRate, detail } : null;
 }
 
-/** Every valid count in `events`, in order; invalid ones are dropped one by one. */
-export function validEvents(events: readonly unknown[]): UsageEvent[] {
-  return events.map(parseEvent).filter((event): event is UsageEvent => event !== null);
-}
-
 /** The Analytics Engine data point for a count: the name is the sampling index, every field a blob, and the double is the count's weight (1 / the sample rate the app counted at), so SUM(double) estimates the true total. */
 export function toDataPoint(event: UsageEvent): AnalyticsEngineDataPoint {
   return {
@@ -197,8 +192,11 @@ export function isEventsPath(pathname: string): boolean {
   return pathname === EVENTS_PATH;
 }
 
-/** Answers POST /api/events: 204 when taken or deliberately dropped, 400/413 for a body that is not a batch of counts. */
-export async function handleEvents(request: Request, env: EventsEnv, telemetryEnabled: TelemetryCheck): Promise<Response> {
+/** Turns one raw count into a data point; null when the count is invalid. */
+type PointMaker = (raw: unknown) => AnalyticsEngineDataPoint | null;
+
+// The shared request handling (method, telemetry switch, binding, size caps, batch limit); the two products differ only in the dataset and in what a valid count is.
+async function handleBatch(request: Request, dataset: AnalyticsEngineDataset | undefined, telemetryEnabled: TelemetryCheck, makePoint: PointMaker): Promise<Response> {
   if (request.method !== "POST") {
     return new Response(null, { status: 405, headers: { Allow: ALLOWED_METHODS } });
   }
@@ -206,12 +204,147 @@ export async function handleEvents(request: Request, env: EventsEnv, telemetryEn
   const enabled = await telemetryEnabled().catch(() => null);
   if (enabled === null) return reply(503, ErrorCode.Unavailable);
   if (!enabled) return reply(204);
-  if (!env.USAGE) return reply(503, ErrorCode.Unavailable);
+  if (!dataset) return reply(503, ErrorCode.Unavailable);
   const body = await readBody(request);
   if (body === "too-large") return reply(413, ErrorCode.TooLarge);
   const events = isRecord(body) ? body["events"] : undefined;
   if (body === "invalid" || !Array.isArray(events)) return reply(400, ErrorCode.BadRequest);
   if (events.length > MAX_EVENTS_PER_REQUEST) return reply(413, ErrorCode.TooMany);
-  for (const event of validEvents(events)) env.USAGE.writeDataPoint(toDataPoint(event));
+  for (const raw of events) {
+    const point = makePoint(raw);
+    if (point !== null) dataset.writeDataPoint(point);
+  }
   return reply(204);
+}
+
+/** Answers POST /api/events: 204 when taken or deliberately dropped, 400/413 for a body that is not a batch of counts. */
+export function handleEvents(request: Request, env: EventsEnv, telemetryEnabled: TelemetryCheck): Promise<Response> {
+  return handleBatch(request, env.USAGE, telemetryEnabled, (raw) => {
+    const event = parseEvent(raw);
+    return event === null ? null : toDataPoint(event);
+  });
+}
+
+// ---- Read The Stupid Text's phone counts (Slice 137, Decisions 143-145) -------------------------------------------------
+// The same pipe as Dino's, its own dataset (`rtst_usage`, binding RTST_USAGE) and its own closed event set. A count is a name
+// plus closed-list fields; no free text, no id, nothing finer than the day. Each event names the fields it requires and the
+// ones it may carry; any other field, or a value outside its list or pattern, drops the whole count.
+
+/** The Analytics Engine binding for the phone's counts; not in the wrangler configs until Analytics Engine is enabled on the account. */
+export interface RtstEventsEnv {
+  readonly RTST_USAGE?: AnalyticsEngineDataset;
+}
+
+const YES = "yes";
+const NO = "no";
+const RTST_MODES = ["original", "translation"] as const;
+const RTST_ENGINES = ["phone", "supertonic", "piper", "melo", "kokoro"] as const;
+const RTST_LENGTH_BUCKETS = ["<200", "200-1000", "1000-5000", ">5000"] as const;
+const RTST_STAGES = ["model_download", "translate", "first_audio"] as const;
+const RTST_OUTCOMES = ["done", "cancelled", "failed"] as const;
+const RTST_DURATION_BUCKETS = ["<0.5", "0.5-1", "1-2", "2-5", "5-10", "10-20", ">20"] as const;
+const MIN_OS_MAJOR = 1;
+const MAX_OS_MAJOR = 99;
+
+/** The blob order of a phone count after its envelope; a field a count does not carry is an empty blob. */
+export const RTST_FIELDS = ["language", "sourceLanguage", "mode", "engine", "voiceDefault", "lengthBucket", "osMajor", "stage", "outcome", "durationBucket"] as const;
+type RtstField = (typeof RTST_FIELDS)[number];
+type FieldValue = string | number | boolean;
+
+const isOsMajor = (value: unknown): boolean => Number.isInteger(value) && (value as number) >= MIN_OS_MAJOR && (value as number) <= MAX_OS_MAJOR;
+
+const RTST_VALIDATORS: Readonly<Record<RtstField, (value: unknown) => boolean>> = {
+  language: (value) => matches(LANGUAGE_PATTERN, value),
+  sourceLanguage: (value) => matches(LANGUAGE_PATTERN, value),
+  mode: (value) => oneOf(RTST_MODES, value),
+  engine: (value) => oneOf(RTST_ENGINES, value),
+  voiceDefault: (value) => typeof value === "boolean",
+  lengthBucket: (value) => oneOf(RTST_LENGTH_BUCKETS, value),
+  osMajor: isOsMajor,
+  stage: (value) => oneOf(RTST_STAGES, value),
+  outcome: (value) => oneOf(RTST_OUTCOMES, value),
+  durationBucket: (value) => oneOf(RTST_DURATION_BUCKETS, value),
+};
+
+interface RtstRule {
+  readonly required: readonly RtstField[];
+  readonly optional: readonly RtstField[];
+}
+
+const RTST_EVENT_RULES: Readonly<Record<string, RtstRule>> = {
+  app_opened: { required: ["language", "osMajor"], optional: [] },
+  read_started: { required: ["language", "mode", "engine", "voiceDefault", "lengthBucket"], optional: ["sourceLanguage"] },
+  translate_offered: { required: ["sourceLanguage", "language"], optional: [] },
+  translate_chosen: { required: ["sourceLanguage", "language"], optional: [] },
+  voice_changed: { required: ["language", "engine"], optional: [] },
+  timing: { required: ["stage", "outcome", "durationBucket"], optional: ["sourceLanguage", "language"] },
+};
+
+/** A phone count that passed every check: the envelope plus the closed fields its event allows. */
+export interface RtstEvent {
+  readonly name: string;
+  readonly version: string;
+  readonly platform: string;
+  readonly day: string;
+  readonly sampleRate: number;
+  readonly fields: Readonly<Partial<Record<RtstField, FieldValue>>>;
+}
+
+function rtstRuleFor(name: unknown): RtstRule | null {
+  return typeof name === "string" && Object.hasOwn(RTST_EVENT_RULES, name) ? RTST_EVENT_RULES[name]! : null;
+}
+
+function hasValidEnvelope(raw: Record<string, unknown>): boolean {
+  const { version, platform, day, sampleRate } = raw;
+  return (
+    matches(VERSION_PATTERN, version) &&
+    oneOf(PLATFORMS, platform) &&
+    isRealDay(day) &&
+    typeof sampleRate === "number" &&
+    sampleRate >= MIN_SAMPLE_RATE &&
+    sampleRate <= 1
+  );
+}
+
+// The event's fields, or null when one is missing, invalid or not allowed for this event.
+function rtstFieldsOf(raw: Record<string, unknown>, rule: RtstRule): RtstEvent["fields"] | null {
+  const allowed: readonly RtstField[] = [...rule.required, ...rule.optional];
+  const present = RTST_FIELDS.filter((field) => raw[field] !== undefined);
+  if (present.some((field) => !allowed.includes(field))) return null;
+  if (rule.required.some((field) => raw[field] === undefined)) return null;
+  if (present.some((field) => !RTST_VALIDATORS[field](raw[field]))) return null;
+  return Object.fromEntries(present.map((field) => [field, raw[field] as FieldValue]));
+}
+
+/** The checked phone count in `raw`, or null when anything about it is outside the closed lists. */
+export function parseRtstEvent(raw: unknown): RtstEvent | null {
+  if (!isRecord(raw)) return null;
+  const rule = rtstRuleFor(raw["name"]);
+  if (rule === null || !hasValidEnvelope(raw)) return null;
+  const fields = rtstFieldsOf(raw, rule);
+  if (fields === null) return null;
+  return { name: raw["name"] as string, version: raw["version"] as string, platform: raw["platform"] as string, day: raw["day"] as string, sampleRate: raw["sampleRate"] as number, fields };
+}
+
+function rtstBlob(value: FieldValue | undefined): string {
+  if (value === undefined) return "";
+  if (typeof value === "boolean") return value ? YES : NO;
+  return String(value);
+}
+
+/** The data point of a phone count: the name is the sampling index, the envelope and fields are blobs, the double is the count's weight (1 / sampleRate). */
+export function toRtstDataPoint(event: RtstEvent): AnalyticsEngineDataPoint {
+  return {
+    indexes: [event.name],
+    blobs: [event.name, event.version, event.platform, event.day, ...RTST_FIELDS.map((field) => rtstBlob(event.fields[field]))],
+    doubles: [1 / event.sampleRate],
+  };
+}
+
+/** Answers POST /api/events on Read The Stupid Text's host: the phone's closed event set into the RTST_USAGE dataset. */
+export function handleRtstEvents(request: Request, env: RtstEventsEnv, telemetryEnabled: TelemetryCheck): Promise<Response> {
+  return handleBatch(request, env.RTST_USAGE, telemetryEnabled, (raw) => {
+    const event = parseRtstEvent(raw);
+    return event === null ? null : toRtstDataPoint(event);
+  });
 }

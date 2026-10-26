@@ -5,8 +5,8 @@
 // line; `telemetry` holds the usage-count switch and sample rate (Slices 133-134). A missing
 // file, or any field in it that fails its check, falls back to the safe default (no forced update, telemetry
 // off), so a typo in the file can never lock anybody out; an unparseable file answers 503 so phones keep their
-// last good copy. Nothing about the caller is read or stored. Only
-// Dino Reader's host and its /dino/ prefix on workers.dev route here (index.ts). Like stories.ts this file
+// last good copy. Nothing about the caller is read or stored. Dino
+// Reader's host (`dinoreader/config.json`) and, since Slice 137, Read The Stupid Text's (`readthestupidtext/config.json`) route here (index.ts). Like stories.ts this file
 // imports values only from download-keys.mjs so worker/appconfig.test.mjs can run it under node's type
 // stripping: keep it free of enums and parameter properties.
 
@@ -14,6 +14,8 @@ import { JSON_CONTENT_TYPE, NO_CACHE } from "./download-keys.mjs";
 
 export const APP_CONFIG_PATH = "/api/app-config";
 export const APP_CONFIG_KEY = "dinoreader/config.json";
+/** Read The Stupid Text's own config object (Slice 137): same shape, served on its host. */
+export const RTST_APP_CONFIG_KEY = "readthestupidtext/config.json";
 
 /** The response format; the app reads the fields it knows and ignores the rest. */
 export const APP_CONFIG_SCHEMA_VERSION = 1;
@@ -95,8 +97,8 @@ function jsonResponse(body: unknown, status: number, cacheControl: string): Resp
 
 // A missing object means defaults (the file is not seeded yet). Unparseable JSON, a body that is not an object, or a failed
 // R2 read throws and becomes a 503, which the app answers with its last good copy (Slice 132 review).
-async function readConfig(bucket: R2Bucket): Promise<AppConfig> {
-  const object = await bucket.get(APP_CONFIG_KEY);
+async function readConfig(bucket: R2Bucket, key: string): Promise<AppConfig> {
+  const object = await bucket.get(key);
   if (!object) return DEFAULT_CONFIG;
   const parsed: unknown = await object.json();
   if (!isRecord(parsed)) throw new Error("config.json is not a JSON object");
@@ -108,15 +110,15 @@ export function isAppConfigPath(pathname: string): boolean {
   return pathname === APP_CONFIG_PATH;
 }
 
-/** Answers GET and HEAD /api/app-config. */
-export async function handleAppConfig(request: Request, env: { DOWNLOADS?: R2Bucket }): Promise<Response> {
+/** Answers GET and HEAD /api/app-config from the R2 object `key` (Dino Reader's by default). */
+export async function handleAppConfig(request: Request, env: { DOWNLOADS?: R2Bucket }, key: string = APP_CONFIG_KEY): Promise<Response> {
   if (request.method !== "GET" && request.method !== "HEAD") {
     return new Response(null, { status: 405, headers: { Allow: ALLOWED_METHODS } });
   }
   if (!env.DOWNLOADS) return jsonResponse({ code: ErrorCode.Unavailable }, 503, NO_CACHE);
   let response: Response;
   try {
-    response = jsonResponse(await readConfig(env.DOWNLOADS), 200, CONFIG_CACHE_CONTROL);
+    response = jsonResponse(await readConfig(env.DOWNLOADS, key), 200, CONFIG_CACHE_CONTROL);
   } catch {
     response = jsonResponse({ code: ErrorCode.Unavailable }, 503, NO_CACHE);
   }

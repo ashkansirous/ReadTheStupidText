@@ -4,6 +4,7 @@ using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Domain.Reading;
 using ReadTheStupidText.Mobile.Resources.Strings;
 using ReadTheStupidText.Mobile.Shared;
+using ReadTheStupidText.Mobile.Shared.Usage;
 
 namespace ReadTheStupidText.Mobile;
 
@@ -13,12 +14,16 @@ namespace ReadTheStupidText.Mobile;
 /// </summary>
 public partial class SettingsPage : ContentPage
 {
+    private const string CountsSwitchOffLight = "#33000000";
+    private const string CountsSwitchOffDark = "#4DFFFFFF";
+
     private readonly ISettingsStore _settings;
     private readonly ISpeechReader _reader;
     private readonly IVoiceModelService _model;
     private readonly EditorDraft _draft;
+    private readonly RtstUsage _usage;
 
-    public SettingsPage(ISettingsStore settings, ISpeechReader reader, IVoiceModelService model, EditorDraft draft)
+    public SettingsPage(ISettingsStore settings, ISpeechReader reader, IVoiceModelService model, EditorDraft draft, RtstUsage usage)
     {
         InitializeComponent();
         FlowDirection = FlowDirection.LeftToRight;
@@ -26,6 +31,7 @@ public partial class SettingsPage : ContentPage
         _reader = reader;
         _model = model;
         _draft = draft;
+        _usage = usage;
         ApplyStaticTexts();
     }
 
@@ -36,6 +42,20 @@ public partial class SettingsPage : ContentPage
         // The voice picker may have changed the voice while this page was off-stack.
         RenderValues();
         UpdateSpeedHighlight();
+        RenderCountsSwitch();
+        Microsoft.Maui.Controls.Application.Current!.RequestedThemeChanged += OnThemeChanged;
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        Microsoft.Maui.Controls.Application.Current!.RequestedThemeChanged -= OnThemeChanged;
+    }
+
+    // The off track is coloured in code, so it follows a theme change made while this page is open.
+    private void OnThemeChanged(object? sender, AppThemeChangedEventArgs e)
+    {
+        MainThread.BeginInvokeOnMainThread(RenderCountsSwitch);
     }
 
     private void ApplyStaticTexts()
@@ -45,6 +65,8 @@ public partial class SettingsPage : ContentPage
         TextFlow.ForUi(LanguageCaption, AppResources.Settings_LanguageCaption);
         TextFlow.ForUi(VoiceTitle, AppResources.Common_Voice);
         TextFlow.ForUi(SpeedTitle, AppResources.Settings_ReadingSpeed);
+        TextFlow.ForUi(CountsTitle, AppResources.Settings_CountsTitle);
+        TextFlow.ForUi(CountsCaption, AppResources.Settings_CountsCaption);
         SemanticProperties.SetDescription(BackButton, AppResources.Common_Back);
     }
 
@@ -63,6 +85,24 @@ public partial class SettingsPage : ContentPage
     }
 
     private async void OnBackTapped(object? sender, TappedEventArgs e) => await Shell.Current.GoToAsync("..");
+
+    // The "Help improve the app" card (Slice 137, Decision 143): on by default; off sends and keeps nothing.
+    private void OnCountsTapped(object? sender, TappedEventArgs e)
+    {
+        _usage.Enabled = !_usage.Enabled;
+        RenderCountsSwitch();
+    }
+
+    private void RenderCountsSwitch()
+    {
+        bool on = _usage.Enabled;
+        bool isDark = Microsoft.Maui.Controls.Application.Current!.RequestedTheme == AppTheme.Dark;
+        CountsSwitch.BackgroundColor = on
+            ? (Color)Microsoft.Maui.Controls.Application.Current!.Resources["Primary"]
+            : Color.FromArgb(isDark ? CountsSwitchOffDark : CountsSwitchOffLight);
+        CountsKnob.HorizontalOptions = on ? LayoutOptions.End : LayoutOptions.Start;
+        SemanticProperties.SetDescription(CountsCard, $"{AppResources.Settings_CountsTitle}, {(on ? AppResources.Settings_CountsOn : AppResources.Settings_CountsOff)}");
+    }
 
     private async void OnLanguageRowTapped(object? sender, TappedEventArgs e) =>
         await LanguageChooser.ChooseAsync(this, _settings, _draft.PrepareForRebuild);

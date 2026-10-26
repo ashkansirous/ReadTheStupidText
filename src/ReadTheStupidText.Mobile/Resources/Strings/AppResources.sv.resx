@@ -16,6 +16,11 @@
   <data name="Reader_EmptyHint" xml:space="preserve"><value>Tryck på en knapp nedan för att lägga till något att läsa</value></data>
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>Språket för appens text</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Uppläsningshastighet</value></data>
+  <data name="Settings_CountsTitle" xml:space="preserve"><value>Hjälp till att förbättra appen</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>Skickar räkningar som ”en fransk text lästes”. Inga namn, inga id:n, inget av det du läser.</value></data>
+  <data name="Settings_CountsOn" xml:space="preserve"><value>På</value></data>
+  <data name="Settings_CountsOff" xml:space="preserve"><value>Av</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>Appen räknar saker som vilka språk som läses, utan namn eller id:n. Du kan stänga av detta i Inställningar.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Tillbaka</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>Föregående mening</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>Nästa mening</value></data>

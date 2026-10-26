@@ -330,7 +330,8 @@ stays framework-dependent so it remains fast.
 
 ## Privacy & diagnostics
 
-The app **collects and transmits nothing**. The read-latency timing diagnostics
+The Windows app **collects and transmits nothing** (the phone apps send only anonymous counts, see
+"Phone apps: anonymous usage counts" below). The read-latency timing diagnostics
 added in Slice 19 (time-to-first-audio and synthesis duration per read) live only in
 the in-memory activity log — shown in the activity-log window, capped, and cleared on
 every restart. There is no third-party analytics SDK and no on-disk telemetry. Since
@@ -362,6 +363,39 @@ Aspire dashboard** (an OTLP viewer on the developer's own machine). This is **no
 part of the shipped MSIX** and exports nothing off the device. Full .NET Aspire was
 evaluated and rejected as a shipped mechanism — it orchestrates *distributed* apps at
 dev time and is not a redistributable runtime (Decision 26 in `docs/plan/decisions.md`).
+
+## Phone apps: anonymous usage counts (Slice 137, Decisions 143-145)
+
+The Android and iPhone apps send anonymous counts to the Worker (`POST readthestupidtext.sirous.uk/api/events`, `worker/events.ts`, stored in
+the Workers Analytics Engine dataset `rtst_usage`, 3 months). Each count is a name plus closed-list values: `app_opened` (platform, OS major
+version, app version, app language), `read_started` (detected source language, read language, `original`/`translation`, voice engine
+`phone`/`supertonic`/`piper`/`melo`/`kokoro`, whether the voice is the default, text length bucket), `translate_offered` and
+`translate_chosen` (language pair), `voice_changed` (language, engine) and `timing` (stage `model_download`/`translate`/`first_audio`, language pair,
+outcome `done`/`cancelled`/`failed`, duration bucket <0.5, 0.5-1, 1-2, 2-5, 5-10, 10-20, >20 s), plus app version, platform and the UTC date. No install,
+device or advertising id, no read text, no file names, no time of day. The server sees the caller's IP while it answers but reads and stores
+none of it with the counts. On by default, with a "Help improve the app" switch in Settings and one line on the first-run language screen; no
+consent prompt (Decision 143). The remote config (`readthestupidtext/config.json`, `telemetry.enabled`, `sampleRate`) is **off until every row of
+the Store privacy declarations checklist in `plan.md` is ticked** (Decision 145). Windows sends nothing yet (Slices 140-141).
+Store forms (Claude drafts and fills them in the signed-in browser; the user reviews and submits):
+
+- **Google Play Data safety (RTST):** "Data collected: yes", **App activity > App interactions** and **App info and performance > Diagnostics**,
+  collected, **not shared**, **processed ephemerally: no**, optional (the user can turn it off), purpose **Analytics**; no personal info, no device
+  or other ids. Encrypted in transit: yes. Deletion request: not applicable (nothing ties data to a person). This replaces the "no data
+  collected" answers of Slice 50 above once counting is switched on.
+- **App Store privacy (RTST):** **Usage Data > Product Interaction** and **Diagnostics > Performance Data**, **not linked to the user**, **not used
+  for tracking**, purpose **Analytics**. `PrivacyInfo.xcprivacy` declares the same (`NSPrivacyCollectedDataTypeProductInteraction` and
+  `NSPrivacyCollectedDataTypePerformanceData`, linked false, tracking false).
+- **Microsoft Store (RTST):** no data-collection question beyond the privacy policy URL, which must point at the updated `site/privacy.html`
+  (the Windows app still sends nothing).
+- Cloudflare Analytics Engine is the processor. The `RTST_USAGE` binding is **not** in the wrangler configs until Analytics Engine is enabled on
+  the account (a deploy fails otherwise); until then `/api/events` on the RTST host answers 204 while telemetry is off. To switch on: enable
+  Analytics Engine, add `"analytics_engine_datasets": [{ "binding": "RTST_USAGE", "dataset": "rtst_usage" }]` to both wrangler configs
+  (next to `r2_buckets`), deploy, then put `{"telemetry": {"enabled": true, "sampleRate": 1}}` in `readthestupidtext/config.json`
+  (`wrangler r2 object put readthestupidtext-downloads/readthestupidtext/config.json --file config.json --remote`).
+- Each point's double is the count's weight (1 / the sample rate it was counted at), so query with `SUM(double1)`, never `COUNT(*)`; blobs are
+  `name, version, platform, day, language, sourceLanguage, mode, engine, voiceDefault, lengthBucket, osMajor, stage, outcome, durationBucket`.
+  `tools/rtst-usage-report.ps1` hides groups of fewer than 10 events. That floor counts events, not households (there is no install id), so it
+  is a noise filter and not an anonymity guarantee: say "no identifiers, counts only", never "cannot be traced".
 
 ## Third-party components and licenses
 
