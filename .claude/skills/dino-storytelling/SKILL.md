@@ -42,8 +42,8 @@ and Decision 130. Read them first: they beat the classic tale.
 - Short sentences, everyday words, past tense. One idea per sentence.
 - **Spoken, not written (Decision 152).** Write the way a parent talks to a 4-6-year-old at bedtime, in
   every language: colloquial forms, diminutives, exclamations, contractions. Never literary, old or
-  written-only forms. Farsi is the worst offender: «خوک کوچولو! خوک کوچولو! بزار بیام تو!», never
-  «بچه خوک بچه خوک بگذار بیایم تو» (spoken verb forms: بزار، بیام، میخوام، نمیشه; کوچولو, not بچه‌ی).
+  written-only forms. Farsi is the worst offender: «خوک کوچولو! خوک کوچولو! بذار بیام تو!», never
+  «بچه خوک بچه خوک بگذار بیایم تو» (spoken verb forms: بذار، بیام، میخوام، نمیشه; کوچولو, not بچه‌ی).
   English: "Little pig, little pig, let me come in!", "Uh-oh!", "Yay!", not "Pray let me enter".
 - **Sounds are read aloud by a voice, so make them long enough to hear (Decision 151).** Never a single short "Bang!".
   Measured only in English, Spanish, Chinese and Farsi, by length and a weak speech-recognition check, **not yet confirmed by a

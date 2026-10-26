@@ -283,6 +283,21 @@
   <data name="Translate_AutoDetect" xml:space="preserve">
     <value>Auto-detect</value>
   </data>
+  <data name="Wait_DownloadingPercent" xml:space="preserve">
+    <value>Downloading {0}… {1}%</value>
+  </data>
+  <data name="Wait_Translating" xml:space="preserve">
+    <value>Translating…</value>
+  </data>
+  <data name="Wait_PreparingVoice" xml:space="preserve">
+    <value>Preparing the voice…</value>
+  </data>
+  <data name="Wait_Pair" xml:space="preserve">
+    <value>{0} to {1}</value>
+  </data>
+  <data name="Wait_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
   <data name="Translate_Note_Default" xml:space="preserve">
     <value>Machine translation, on this device. Quality varies.</value>
   </data>
