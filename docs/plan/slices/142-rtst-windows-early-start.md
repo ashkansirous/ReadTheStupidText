@@ -1,6 +1,6 @@
 # Slice 142 — RTST Windows: early translate and voice in the control panel
 
-*Planned. Starts after Slices 139 and 141.*
+*In progress (wave 2026-10-26), draft PR. Starts after Slices 139 and 141.*
 
 **Batch:** 29 (Decisions 143-148)
 **Touches:** `src/ReadTheStupidText.Application/ReadAloudService*.cs`, `src/ReadTheStupidText.Application/Translation/ReadTranslator.cs`, `src/ReadTheStupidText.Application/Reading/EarlyStart*`, `src/ReadTheStupidText.Infrastructure/Translation/**`, `src/ReadTheStupidText.App/ControlPanelWindow*.cs`, `tests/ReadTheStupidText.Tests/**`
