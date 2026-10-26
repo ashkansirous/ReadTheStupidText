@@ -45,25 +45,62 @@ public sealed class UsageCounter(AppConfigClient config)
 		get => Preferences.Default.Get(EnabledKey, true);
 		set
 		{
-			Preferences.Default.Set(EnabledKey, value);
-			if (!value)
+			try
 			{
-				Clear();
+				Preferences.Default.Set(EnabledKey, value);
+				if (!value)
+				{
+					Clear();
+				}
+			}
+			catch (Exception ex)
+			{
+				Debug.WriteLine($"Dino Reader could not change the counts switch: {ex.Message}");
 			}
 		}
 	}
 
 	/// <summary>Queues the count <paramref name="name"/> (a <see cref="UsageEventName"/>) about <paramref name="story"/>, unless counting is off for this launch.</summary>
-	public void Record(string name, Story story)
+	public void Record(string name, Story story, string detail = "") =>
+		Enqueue((telemetry, now) =>
+		{
+			bool fromCatalogue = UsageEvent.ShelfId(story.SourceId) is { } id && StarterStories.IsCatalogueId(id);
+			return UsageEvent.For(name, story, fromCatalogue, telemetry.SampleRate, AppConfigClient.InstalledVersion, AppConfigClient.ThisPlatform, now, detail);
+		});
+
+	/// <summary>Queues a count about no book (a voice change, a launch, a language change); <paramref name="language"/> is the one the count is about.</summary>
+	public void RecordGeneral(string name, string language, string detail = "") =>
+		Enqueue((telemetry, now) =>
+			UsageEvent.ForNoBook(name, language, detail, telemetry.SampleRate, AppConfigClient.InstalledVersion, AppConfigClient.ThisPlatform, now));
+
+	/// <summary>Queues a count about a store story (by its id, never its title) with the store filters in use.</summary>
+	public void RecordStoreDownload(StoreItem item, bool ageFilterSet, bool authorFilterSet) =>
+		Enqueue((telemetry, now) => UsageEvent.ForShelfBook(
+			UsageEventName.StoreDownload, item.Id, item.Language, UsageDetail.StoreFilters(ageFilterSet, authorFilterSet),
+			telemetry.SampleRate, AppConfigClient.InstalledVersion, AppConfigClient.ThisPlatform, now));
+
+	// Counting must never change what a grown-up's action does: every failure here is logged and swallowed.
+	private void Enqueue(Func<TelemetryConfig, DateTimeOffset, UsageEvent?> make)
+	{
+		try
+		{
+			EnqueueCore(make);
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader could not queue a count: {ex.Message}");
+		}
+	}
+
+	private void EnqueueCore(Func<TelemetryConfig, DateTimeOffset, UsageEvent?> make)
 	{
 		TelemetryConfig telemetry = config.Current.Telemetry;
-		if (!Enabled || !UsageBatch.Samples(telemetry, _roll))
+		if (!Enabled || !UsageBatch.Samples(telemetry, _roll) || make(telemetry, DateTimeOffset.UtcNow) is not { } count)
 		{
 			return;
 		}
 
-		bool fromCatalogue = UsageEvent.ShelfId(story.SourceId) is { } id && StarterStories.IsCatalogueId(id);
-		var count = UsageEvent.For(name, story, fromCatalogue, telemetry.SampleRate, AppConfigClient.InstalledVersion, AppConfigClient.ThisPlatform, DateTimeOffset.UtcNow);
+		bool full;
 		lock (_queueLock)
 		{
 			List<UsageEvent> queue = Queue();
@@ -74,6 +111,13 @@ public sealed class UsageCounter(AppConfigClient config)
 			}
 
 			Save(queue);
+			// Only the count that first fills a batch starts a send: while a send keeps failing the queue stays full and must not spawn one per count.
+			full = queue.Count == UsageBatch.MaxEvents;
+		}
+
+		if (full)
+		{
+			_ = FlushAsync();
 		}
 	}
 

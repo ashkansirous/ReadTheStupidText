@@ -766,9 +766,9 @@ CLI then pushes updates. The first submission is manual; after it, set the repos
 ## Dino Book Reader: anonymous usage counts (Slice 133, Decisions 140-142)
 
 Dino sends anonymous counts to its own Worker (`POST dinoreader.sirous.uk/api/events`, `worker/events.ts`, stored in the Workers
-Analytics Engine dataset `dino_usage`, 3 months). Each count is: its name (`book_opened` / `book_finished`), the book (a shelf book's
-package id for a starter or store story only, or `own` for any other book, never a title), the language, shelf or own, whether a parent recording exists, app version, platform and the UTC
-date. No install, device or advertising id, no typed text, no time of day. On by default, with a grown-up's switch ("Help make Dino
+Analytics Engine dataset `dino_usage`, 3 months). Each count is: its name (`book_opened`, `book_finished`, `store_download`, `own_book_added`, `recording_made`, `voice_changed`, `reading_language_changed`, `app_opened`; Slice 134), the book (a shelf book's
+package id for a starter or store story only, or `own` for any other book, never a title), the language, shelf or own, whether a parent recording exists, one closed extra value (`detail`: store filters set or not, own-book kind photo/pdf/scan/typed, recorded-pages bucket, what voice part changed, or the language changed from), app version, platform and the UTC
+date. Counts about no book (voice, language, app opened) name `none` as book and source. No install, device or advertising id, no typed text, no time of day. On by default, with a grown-up's switch ("Help make Dino
 better") in Settings and one line on the first-run ready screen; the remote config (`telemetry.enabled`, `sampleRate`) turns it down
 without a release. Store forms (the owner or Claude in the signed-in browser, after the release that first sends events ships):
 
@@ -783,4 +783,5 @@ without a release. Store forms (the owner or Claude in the signed-in browser, af
   the account (see "Landing site" in `CLAUDE.md` for the switch-on steps); without it `/api/events` answers 204 and writes nothing. Each
   point's double is the count's weight (1 / the sample rate it was counted at), so query with
   `SELECT blob1 AS name, blob2 AS book, SUM(double1) FROM dino_usage GROUP BY name, book`.
+- `tools/dino-usage-report.ps1` hides groups of fewer than 10 events. That floor counts events, not households (there is no install id), so it is a noise filter and not an anonymity guarantee: say "no identifiers, counts only", never "cannot be traced".
 - Switch counting on with `telemetry` in `dinoreader/config.json` (`{"enabled": true, "sampleRate": 1}`); it is off until then.

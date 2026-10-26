@@ -36,7 +36,7 @@ test("a batch of valid counts is written, one data point each, and answered with
   assert.equal(env.points.length, 2);
   assert.deepEqual(env.points[0], {
     indexes: ["book_opened"],
-    blobs: ["book_opened", BOOK, "en", "shelf", "no", "1.42.0", "android", "2026-10-25"],
+    blobs: ["book_opened", BOOK, "en", "shelf", "no", "1.42.0", "android", "2026-10-25", ""],
     doubles: [2],
   });
   assert.equal(env.points[1].blobs[4], "yes");
@@ -84,7 +84,7 @@ test("invalid counts are dropped one by one and unknown fields never reach the d
   const response = await handleEvents(post({ events: [...bad, extra] }), env, on);
   assert.equal(response.status, 204);
   assert.equal(env.points.length, 1);
-  assert.equal(env.points[0].blobs.length, 8);
+  assert.equal(env.points[0].blobs.length, 9);
   assert.ok(!JSON.stringify(env.points[0]).includes("secret"));
 });
 
@@ -132,7 +132,53 @@ test("only POST is answered", async () => {
 test("the path check and the parser agree on the shapes they accept", () => {
   assert.ok(isEventsPath("/api/events"));
   assert.ok(!isEventsPath("/api/events/"));
-  assert.deepEqual(parseEvent(shelfEvent), shelfEvent);
+  assert.deepEqual(parseEvent(shelfEvent), { ...shelfEvent, detail: "" });
   assert.equal(parseEvent({ ...shelfEvent, language: "pt-BR" })?.language, "pt-BR");
   assert.equal(toDataPoint(shelfEvent).indexes.length, 1);
+});
+
+const noBook = { ...shelfEvent, book: "none", source: "none" };
+const valid134 = [
+  { ...shelfEvent, name: "store_download", detail: "age+author" },
+  { ...ownEvent, name: "own_book_added", detail: "pdf", hasRecording: false },
+  { ...shelfEvent, name: "recording_made", detail: "2-5" },
+  { ...ownEvent, name: "recording_made", detail: "11+" },
+  { ...noBook, name: "voice_changed", detail: "flavour" },
+  { ...noBook, name: "reading_language_changed", language: "nb", detail: "en" },
+  { ...noBook, name: "app_opened" },
+];
+
+test("each Slice 134 event is accepted with its own detail and carries it as the last blob", async () => {
+  const env = recorder();
+  assert.equal((await handleEvents(post({ events: valid134 }), env, on)).status, 204);
+  assert.equal(env.points.length, valid134.length);
+  assert.deepEqual(env.points.map((p) => p.blobs[8]), ["age+author", "pdf", "2-5", "11+", "flavour", "en", ""]);
+  assert.equal(env.points[4].blobs[1], "none");
+  assert.equal(env.points[5].blobs[2], "nb");
+});
+
+test("a Slice 134 event with a wrong detail, source or book is dropped, and free text never gets through", () => {
+  const bad = [
+    { ...shelfEvent, name: "store_download", detail: "Dinosaurs" },
+    { ...shelfEvent, name: "store_download" },
+    { ...ownEvent, name: "store_download", detail: "none" },
+    { ...shelfEvent, name: "own_book_added", detail: "photo" },
+    { ...ownEvent, name: "own_book_added", detail: "My diary" },
+    { ...shelfEvent, name: "recording_made", detail: "7" },
+    { ...noBook, name: "voice_changed", detail: "Fred's voice" },
+    { ...shelfEvent, name: "voice_changed", detail: "narrator" },
+    { ...noBook, name: "voice_changed", book: BOOK },
+    { ...noBook, name: "reading_language_changed", detail: "english please" },
+    { ...noBook, name: "reading_language_changed", detail: "xyz" },
+    { ...noBook, name: "reading_language_changed" },
+    { ...noBook, name: "app_opened", detail: "extra" },
+    { ...shelfEvent, detail: "age" },
+    { ...shelfEvent, name: "constructor" },
+    { ...shelfEvent, name: "__proto__" },
+  ];
+  for (const event of bad) assert.equal(parseEvent(event), null, JSON.stringify(event));
+});
+
+test("an older client's reader events, which have no detail, are still taken", () => {
+  assert.equal(parseEvent(ownEvent)?.detail, "");
 });

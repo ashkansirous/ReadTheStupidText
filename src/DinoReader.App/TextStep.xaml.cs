@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Extensions.DependencyInjection;
@@ -305,6 +306,24 @@ public partial class TextStep : ContentView
 	private string TitleOrSuggestion() =>
 		string.IsNullOrWhiteSpace(TitleEntry.Text) ? SuggestTitle(Draft) : TitleEntry.Text.Trim();
 
+	// A new book is counted once, after it is saved: how it came in (photo, pdf, scan, else typed) and its language, nothing the grown-up wrote (Slice 134).
+	// Counting never decides whether the save worked: it has its own catch and runs after the save's.
+	private void CountNewOwnBook(WizardSession session)
+	{
+		try
+		{
+			if (session.IsNew && session.TryMarkCounted())
+			{
+				Story own = Draft.Original with { Language = Draft.Language, SourceId = null };
+				session.Services.GetRequiredService<UsageCounter>().Record(UsageEventName.OwnBookAdded, own, session.OwnBookKind ?? UsageDetail.KindTyped);
+			}
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader could not count a new book: {ex.Message}");
+		}
+	}
+
 	/// <summary>Saves the story. False (with the reason shown) when there is nothing to read yet or the save failed.</summary>
 	public async Task<bool> SaveAsync()
 	{
@@ -316,6 +335,17 @@ public partial class TextStep : ContentView
 		}
 
 		_analysis?.Cancel();
+		if (!await TrySaveAsync(session))
+		{
+			return false;
+		}
+
+		CountNewOwnBook(session);
+		return true;
+	}
+
+	private async Task<bool> TrySaveAsync(WizardSession session)
+	{
 		try
 		{
 			var saver = new StorySaver(session.Store, session.Services.GetRequiredService<IPageImageKeeper>(), _voicing!);

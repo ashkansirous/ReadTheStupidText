@@ -1,5 +1,5 @@
 // Dino Reader's anonymous usage counts (Slice 133, Decisions 140-142). The app batches a session's counts into one
-//   POST /api/events    { "schemaVersion": 1, "events": [ { name, book, language, source, hasRecording, version, platform, day, sampleRate } ] }
+//   POST /api/events    { "schemaVersion": 1, "events": [ { name, book, language, source, hasRecording, version, platform, day, sampleRate, detail? } ] }
 // and this writes each valid one to the Workers Analytics Engine dataset bound as USAGE (`dino_usage`). Nothing about the
 // caller is read, stored or written: no IP, no user agent, no id; the only fields kept are the ones named below, each checked
 // against a closed list or a strict pattern, so a changed or hostile client can add no free text. When the remote config
@@ -22,9 +22,37 @@ const MAX_BODY_BYTES = 32 * 1024;
 const ALLOWED_METHODS = "POST";
 const OWN_BOOK = "own";
 const SHELF_SOURCE = "shelf";
+const NO_BOOK = "none";
 const PLATFORMS = ["android", "ios", "windows"] as const;
-const EVENT_NAMES = ["book_opened", "book_finished"] as const;
-const SOURCES = [SHELF_SOURCE, OWN_BOOK] as const;
+const BOOK_SOURCES = [SHELF_SOURCE, OWN_BOOK] as const;
+const NO_DETAIL = "";
+const STORE_FILTERS = ["none", "age", "author", "age+author"] as const;
+const OWN_BOOK_KINDS = ["photo", "pdf", "scan", "typed"] as const;
+const PAGE_BUCKETS = ["1", "2-5", "6-10", "11+"] as const;
+// The app's supported reading languages (UiLanguage.Supported in DinoReader.Core); UsageEventTests fails when this list and the app's drift apart.
+const READING_LANGUAGES = ["en", "fa", "fr", "es", "pt", "zh", "ar", "ru", "ja", "da", "fi", "sv", "nb", "nl"] as const;
+const VOICE_CHANGES = ["character_voice", "flavour", "narrator"] as const;
+
+/** What an event name allows: the sources it may come from and the one extra value (`detail`) it carries. */
+interface EventRule {
+  readonly sources: readonly string[];
+  readonly detail: (value: unknown) => boolean;
+}
+
+const emptyDetail = (value: unknown): boolean => value === undefined || value === NO_DETAIL;
+const detailIn = (list: readonly string[]) => (value: unknown): boolean => oneOf(list, value);
+
+// Slice 133 events carry no detail; Slice 134 added the rest. Anything not named here is dropped.
+const EVENT_RULES: Readonly<Record<string, EventRule>> = {
+  book_opened: { sources: BOOK_SOURCES, detail: emptyDetail },
+  book_finished: { sources: BOOK_SOURCES, detail: emptyDetail },
+  store_download: { sources: [SHELF_SOURCE], detail: detailIn(STORE_FILTERS) },
+  own_book_added: { sources: [OWN_BOOK], detail: detailIn(OWN_BOOK_KINDS) },
+  recording_made: { sources: BOOK_SOURCES, detail: detailIn(PAGE_BUCKETS) },
+  voice_changed: { sources: [NO_BOOK], detail: detailIn(VOICE_CHANGES) },
+  reading_language_changed: { sources: [NO_BOOK], detail: detailIn(READING_LANGUAGES) },
+  app_opened: { sources: [NO_BOOK], detail: emptyDetail },
+};
 const LANGUAGE_PATTERN = /^[a-z]{2,3}(-[A-Za-z]{2,4})?$/;
 const VERSION_PATTERN = /^\d{1,6}(\.\d{1,6}){1,3}$/;
 const MIN_SAMPLE_RATE = 0.001;
@@ -47,6 +75,8 @@ export interface UsageEvent {
   readonly platform: string;
   readonly day: string;
   readonly sampleRate: number;
+  /** The event's one extra closed value (see EVENT_RULES); empty for the reader events. */
+  readonly detail: string;
 }
 
 /** What this module needs from the Worker's bindings (`USAGE` is declared in wrangler.jsonc). */
@@ -77,18 +107,27 @@ function isRealDay(value: unknown): value is string {
   return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
 }
 
-// A shelf book is named by its package id; an own book never carries one, so the source and the book must agree.
+// A shelf book is named by its package id; an own book never carries one, and a count about no book names none, so the source and the book must agree.
 function bookMatchesSource(book: unknown, source: unknown): book is string {
-  return source === OWN_BOOK ? book === OWN_BOOK : matches(STORY_ID_PATTERN, book);
+  if (source === OWN_BOOK) return book === OWN_BOOK;
+  if (source === NO_BOOK) return book === NO_BOOK;
+  return matches(STORY_ID_PATTERN, book);
+}
+
+function ruleFor(name: unknown): EventRule | null {
+  return typeof name === "string" && Object.hasOwn(EVENT_RULES, name) ? EVENT_RULES[name]! : null;
 }
 
 /** The checked count in `raw`, or null when any field is missing, of the wrong type or outside its list or pattern. */
 export function parseEvent(raw: unknown): UsageEvent | null {
   if (!isRecord(raw)) return null;
   const { name, book, language, source, hasRecording, version, platform, day, sampleRate } = raw;
+  const rule = ruleFor(name);
+  if (rule === null || !rule.detail(raw["detail"])) return null;
+  const detail = typeof raw["detail"] === "string" ? raw["detail"] : NO_DETAIL;
   const valid =
-    oneOf(EVENT_NAMES, name) &&
-    oneOf(SOURCES, source) &&
+    typeof name === "string" &&
+    oneOf(rule.sources, source) &&
     bookMatchesSource(book, source) &&
     matches(LANGUAGE_PATTERN, language) &&
     typeof hasRecording === "boolean" &&
@@ -98,7 +137,7 @@ export function parseEvent(raw: unknown): UsageEvent | null {
     typeof sampleRate === "number" &&
     sampleRate >= MIN_SAMPLE_RATE &&
     sampleRate <= 1;
-  return valid ? { name, book, language, source, hasRecording, version, platform, day, sampleRate } : null;
+  return valid ? { name, book, language, source, hasRecording, version, platform, day, sampleRate, detail } : null;
 }
 
 /** Every valid count in `events`, in order; invalid ones are dropped one by one. */
@@ -110,7 +149,7 @@ export function validEvents(events: readonly unknown[]): UsageEvent[] {
 export function toDataPoint(event: UsageEvent): AnalyticsEngineDataPoint {
   return {
     indexes: [event.name],
-    blobs: [event.name, event.book, event.language, event.source, event.hasRecording ? "yes" : "no", event.version, event.platform, event.day],
+    blobs: [event.name, event.book, event.language, event.source, event.hasRecording ? "yes" : "no", event.version, event.platform, event.day, event.detail],
     doubles: [1 / event.sampleRate],
   };
 }

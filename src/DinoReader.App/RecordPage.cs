@@ -16,6 +16,7 @@ public sealed class RecordPage : ContentPage, IGrownUpPage
 	private readonly IStoryLibrary _library;
 	private readonly IMicRecorder _recorder;
 	private readonly IRecordingPlayer _player;
+	private readonly UsageCounter _usage;
 	private readonly BusyGuard _busy = new();
 	private Label _time = NewTimeLabel();
 	private readonly Stopwatch _clock = new();
@@ -29,8 +30,9 @@ public sealed class RecordPage : ContentPage, IGrownUpPage
 	private string? _tempPath;
 	private IDispatcherTimer? _timer;
 
-	public RecordPage(IStoryLibrary library, IMicRecorder recorder, IRecordingPlayer player)
+	public RecordPage(IStoryLibrary library, IMicRecorder recorder, IRecordingPlayer player, UsageCounter usage)
 	{
+		_usage = usage;
 		_library = library;
 		_recorder = recorder;
 		_player = player;
@@ -334,6 +336,11 @@ public sealed class RecordPage : ContentPage, IGrownUpPage
 		}
 
 		_story = updated;
+		// Which kind of book and how many of its pages are recorded, as a bucket (Slice 134); a re-recorded page is not counted again.
+		if (StoryRecordings.Of(latest, _page) is null)
+		{
+			_usage.Record(UsageEventName.RecordingMade, updated, UsageDetail.PagesBucket(StoryRecordings.Count(updated)));
+		}
 	}
 
 	private async Task DiscardRecordingAsync()
