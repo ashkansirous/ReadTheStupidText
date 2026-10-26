@@ -48,7 +48,8 @@ if (!window.__grabReady) {
     .filter(b => (b.getAttribute('aria-label') || '') === 'Download full size image').length;
   // Call before sending a prompt: remembers how many pictures the chat already has.
   window.__markPictures = () => { window.__picturesBefore = pictureCount(); return window.__picturesBefore; };
-  // Call right after sending: returns 'READY <n>' the moment a new picture exists, or 'WAITING <n>' after
+  // Call right after sending: returns 'READY <n>' the moment a new picture exists, 'CAPTCHA' or 'HUNG: ...' the moment the
+  // page health check fails (checked every 1.5 s, including the sidebar chat list), or 'WAITING <n>' after
   // maxMs (call it again). Never use fixed sleeps while Gemini draws; they waste up to a minute per picture.
   window.__waitForPicture = async (maxMs = 40000) => {
     const before = window.__picturesBefore ?? 0;
@@ -56,6 +57,8 @@ if (!window.__grabReady) {
     let count = pictureCount();
     while (count <= before && Date.now() - start < maxMs) {
       await new Promise(resolve => setTimeout(resolve, 1500));
+      const health = window.__geminiHealth();
+      if (health !== 'OK') return health;
       count = pictureCount();
     }
     return (count > before ? 'READY ' : 'WAITING ') + count;

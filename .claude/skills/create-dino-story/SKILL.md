@@ -171,7 +171,11 @@ Record each pass in the art record table (page, attempt number, why earlier atte
   20 s of every navigation or reload, read the tab URL and run `window.__geminiHealth()` (gemini-grab.js; returns `OK`,
   `CAPTCHA` or `HUNG: ...`; if the script can't be injected, the page is hung). `CAPTCHA`: stop at once and report it; only
   the user can solve it, and every other illustrator in this Chrome will hit it too. `HUNG`: reload once and check again;
-  still not `OK`, stop and report. Run the same check when `__waitForPicture` returns `WAITING` three times in a row.
+  still not `OK`, stop and report. `__waitForPicture` runs the same check every 1.5 s and returns `CAPTCHA` or `HUNG: ...`
+  the moment the sidebar menu stops loading, so the page is watched all the time, not just after a load; on `HUNG`
+  reload at once rather than waiting. Run `__geminiHealth()` before every send too.
+  Claude never solves a CAPTCHA (not allowed, even on the user's own account). The coordinator alerts the user with a
+  push notification the moment an illustrator reports `CAPTCHA`, and resumes once the user says it is solved.
 - **Poll, never sleep, while Gemini draws** (2026-10-26: fixed `computer wait` sleeps left each finished picture
   idle for up to a minute). Inject `gemini-grab.js`, run `window.__markPictures()` just before sending, then
   `await window.__waitForPicture()` right after: it returns `READY <n>` the moment the new picture exists (call it again
