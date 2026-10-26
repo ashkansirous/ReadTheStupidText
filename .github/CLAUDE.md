@@ -119,6 +119,10 @@ Mobile.Shared's `.pdb` twice, APPX1101). The RTST Store submit matches only `Rea
 `store-submit.yml` has no default Store id: `product_id` is required (RTST passes `vars.STORE_PRODUCT_ID`, Dino `vars.DINOREADER_STORE_APP_ID`) and a guard step fails when the package and id belong to different apps or `STORE_PRODUCT_ID` is unset. (Slice 127: docs/plan/slices/127-release-safety-fixes.md)
 Never pipe a producer into `grep -q` under `pipefail` (`release.yml`, `.github/scripts`): capture the output first, or here-string it into grep. (Slice 127)
 
+## iOS review cadence
+
+`ios-review-cadence.mjs` is the only code that sends a build to Apple's reviews: `testflight-external.yml` (daily 06:00 UTC + manual) adds the newest processed build to the external group "Rofagha" and submits it for Beta App Review; `appstore-submit.yml` (manual, `app` = rtst|dino|both) does the App Store. Never add a step that cancels a waiting review or expires a build, and never submit while one is waiting (starvation: each cancel goes to the back of Apple's queue). A new iOS app needs its row in the script's `APPS` table. (Decision 154, Slice 147: docs/plan/slices/147-ios-review-cadence.md)
+
 ## Android downloads
 
 The Worker serves `/download`, `/download/android/latest` and
