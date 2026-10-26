@@ -91,7 +91,10 @@ public static class AppResources
     public static string Review_LooksLike => Get();
     public static string Review_TranslateAndRead => Get();
     public static string Review_Read => Get();
-    public static string Review_GettingTranslator => Get();
+    public static string Wait_DownloadingModel => Get();
+    public static string Wait_Translating => Get();
+    public static string Wait_PreparingVoice => Get();
+    public static string Wait_ReadingFile => Get();
     public static string Review_FirstTimeOnly => Get();
     public static string Review_ShowOriginal => Get();
     public static string Review_FailedOne => Get();

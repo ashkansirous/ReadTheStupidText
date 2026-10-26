@@ -96,7 +96,7 @@ public partial class SettingsPage : ContentPage
     private void RenderCountsSwitch()
     {
         bool on = _usage.Enabled;
-        bool isDark = Microsoft.Maui.Controls.Application.Current!.RequestedTheme == AppTheme.Dark;
+        bool isDark = ThemeColors.IsDark();
         CountsSwitch.BackgroundColor = on
             ? (Color)Microsoft.Maui.Controls.Application.Current!.Resources["Primary"]
             : Color.FromArgb(isDark ? CountsSwitchOffDark : CountsSwitchOffLight);
@@ -123,11 +123,12 @@ public partial class SettingsPage : ContentPage
         UpdateSpeedHighlight();
     }
 
+    // Unselected speed chips read in near-white on the dark card; the 64% white secondary text was too faint there.
     private void UpdateSpeedHighlight()
     {
         bool isDark = Microsoft.Maui.Controls.Application.Current!.RequestedTheme == AppTheme.Dark;
         var unselectedBackground = (Color)Microsoft.Maui.Controls.Application.Current!.Resources[isDark ? "ChipBackgroundDark" : "ChipBackgroundLight"];
-        var unselectedText = (Color)Microsoft.Maui.Controls.Application.Current!.Resources[isDark ? "TextSecondaryDark" : "TextSecondaryLight"];
+        var unselectedText = ThemeColors.Get(isDark ? ThemeColors.TextPrimaryDarkKey : ThemeColors.TextSecondaryLightKey);
         var selectedBackground = (Color)Microsoft.Maui.Controls.Application.Current!.Resources["Primary"];
         double current = _settings.Speed.Value;
 

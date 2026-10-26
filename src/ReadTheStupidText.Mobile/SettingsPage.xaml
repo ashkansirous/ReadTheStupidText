@@ -57,7 +57,7 @@
         </Style>
         <Style x:Key="SpeedChip" TargetType="Button">
             <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource ChipBackgroundLight}, Dark={StaticResource ChipBackgroundDark}}" />
-            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextPrimaryDark}}" />
             <Setter Property="FontSize" Value="15" />
             <Setter Property="FontAttributes" Value="Bold" />
             <Setter Property="CornerRadius" Value="12" />
