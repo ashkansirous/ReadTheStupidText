@@ -1,6 +1,6 @@
 # Slice 150 — Dino: slower reading by default, and a grown-up speed setting
 
-*Planned 2026-10-26.* Dino Reader only; RTST is not touched.
+*In progress (wave 2026-10-26b), draft PR.* Dino Reader only; RTST is not touched.
 
 **Batch:** 31 (tester review, 2026-10-26; Decision 155)
 **Touches:** `src/DinoReader.App/SpeechStartup.cs`, `src/DinoReader.App/SettingsRows.cs`, `src/DinoReader.App/GrownUpMode.cs`, `src/DinoReader.Core/ReadingSpeed.cs` (new), `src/DinoReader.App/Resources/Strings/*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`
@@ -23,8 +23,8 @@ screen ever writes it, so parents cannot change it.
 ## Work
 
 - [ ] `ReadingSpeed` (Core): Min 0.5, Max 1.2, Default 0.8, Step 0.05, `Clamp`, built on `PlaybackRate`. Unit tests.
-- [ ] `SpeechStartup` uses Dino's own default when nothing is stored. Check `MobilePreferencesSettingsStore.cs:18`'s
-      fallback: a stored 1.0 written by nobody must not exist, but a missing value must give 0.8. A stored
+- [ ] `SpeechStartup` uses Dino's own default when nothing is stored. The fallback is `src/ReadTheStupidText.Mobile.Shared/MobilePreferencesSettingsStore.cs:37-38`
+      (a missing value returns `PlaybackRate.Default`); give Dino 0.8 there or in `SpeechStartup.cs:33`: a stored 1.0 written by nobody must not exist, but a missing value must give 0.8. A stored
       value above 1.2 is clamped.
 - [ ] A "Reading speed" row in grown-up settings (`SettingsRows`): a slider with the current value ("0.8x"), plus
       a play button that reads a sample sentence at that speed. The new speed applies to the next sentence read.
