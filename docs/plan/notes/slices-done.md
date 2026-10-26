@@ -148,6 +148,9 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 141 | RTST Windows: a wait indicator after 500 ms | built | #397 | | [141-rtst-windows-wait-indicator.md](../slices/141-rtst-windows-wait-indicator.md) |
 | 145 | Which sound-word spellings sound right aloud | built | #385 | | [145-sound-words-aloud-test.md](../slices/145-sound-words-aloud-test.md) |
 | 149 | Never drop a short word: catch silent output from the voices | built | #401 | | [149-never-drop-a-short-word.md](../slices/149-never-drop-a-short-word.md) |
+| 139 | RTST phone: start translating and voicing before the tap | built | #398 | | [139-rtst-phone-early-start.md](../slices/139-rtst-phone-early-start.md) |
+| 142 | RTST Windows: early translate and voice in the control panel | built | #408 | | [142-rtst-windows-early-start.md](../slices/142-rtst-windows-early-start.md) |
+| 148 | Phone apps: mid-read stalls, wait counts and wave leftovers | built | #416 | | [148-phone-wait-followups.md](../slices/148-phone-wait-followups.md) |
 
 ## Batch ordering notes
 
@@ -178,3 +181,5 @@ Batch 22 (107-112, planned 2026-10-24, from the phone scope "translated text on 
 Batch 23 (113-114, planned 2026-10-24, the voices sound too grown up for children's stories): 113 after 108 (flavours live on each language's cast), then 114 (the Kokoro English pack; flavours apply on top). 113 edits `StoryVoicing` and the cast page, so it does not run beside 109-111. Decisions 117-119.
 
 Batch 24 (115-118, planned 2026-10-25, Dino stuck on the old voices; storyteller characters for every language and animal sounds): one at a time in order 115, 116, 117, 118 (all built). All four edit `StoryVoicing`, the cast page or the voice tables. Dino only; RTST unchanged. Decisions 120-124.
+
+Batch 29 (137-142, planned 2026-10-26, RTST usage counts, waiting and early start): which languages people use, whether they translate or change the voice, and how long translation and the first sound take (a user reported a "hang" on Translate). Phone first, one at a time (all three edit ReaderPage/ReviewPage): 137, 138 (built), 139 (built); then Windows 140 and 141 (built), 142 (built), so the batch is done. 137 reuses Dino's Batch 28 pipe and edits `worker/` and Dino's `UsageCounter`/`AppConfigClient`. Decisions 143-148.

@@ -84,7 +84,7 @@ No screens. The Batch 29 mock intro says the early start "has no screen of its o
 - Late review 139-late: 10 findings applied.
 - 139-redesign: 11 findings applied.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-26)
 
 In `src/ReadTheStupidText.Mobile/CLAUDE.md`:
 

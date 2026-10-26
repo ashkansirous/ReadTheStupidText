@@ -51,7 +51,7 @@ overlay.
 
 From review: s148-high (7 applied), s148-medium (7 applied, finding 8 not a bug).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-26)
 
 - Readers raise `ISpeechReader.StallChanged` through `StallReporter` (per-watch tickets, overlapping watches counted); wait usage is counted only through `WaitController.Finished`. (`src/ReadTheStupidText.Mobile.Shared/CLAUDE.md`; Slice 148: docs/plan/slices/148-phone-wait-followups.md)
 
