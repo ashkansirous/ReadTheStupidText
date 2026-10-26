@@ -64,3 +64,47 @@ Implement: the selected files
 The prompt also named the Dino mocks (copied to `docs/design/dino-reader/`) and the icon,
 tray-panel and store-listing files; those were already imported for earlier slices or feed no
 planned slice, so they were not re-copied.
+
+## Batch 29 mock — `RTST Batch 29.dc.html`
+
+- **Source:** Claude Design project `90615641-f298-4e21-8c50-ca2efbeaaebc`, file `RTST Batch 29.dc.html`
+  (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=RTST+Batch+29.dc.html>).
+- **Copied:** 2026-10-26, verbatim from `DesignSync get_file`. Its images are `assets/glyph.png` (the tray glyph), `assets/app-tile.png` (the control-panel tile) and `design_handoff_tray_panel/assets/glyph.png` (the header watermark), at the same relative paths.
+- **Covers:** Batch 29, Slices 137-142 (wait overlay R8-R9, counts switch R10, first-run line R11, Windows flyout W1 and control panel W2).
+
+Open it in a text editor (`support.js` is not copied). Each screen is headed by a caption
+`N · Title` with its behaviour in the note underneath; the spinners and the hopping dino are
+built in the `<script>` block at the end (sizes, colours, the `dinoHop`/`rtstSpin` keyframes).
+
+| # | Screen | Line |
+|---|---|---|
+| — | **Phone · wait overlay · Slice 138 · Decision 146** (group) | 21 |
+| R8 | Main page · getting the translator | 25 |
+| R9 | Main page · preparing the voice | 58 |
+| — | **Phone · usage counts · Slice 137 · Decisions 143–145** (group) | 89 |
+| R10 | Settings · counts switch | 93 |
+| R11 | First run · language, with the counts line | 124 |
+| — | **Windows · wait flyout and counts switch · Slices 140–141** (group) | 146 |
+| W1 | Hotkey read · flyout by the tray | 150 |
+| W2 | Control panel · waiting, counts switch | 172 |
+
+To refresh: fetch the file again with `DesignSync get_file` and overwrite this copy, then
+regenerate this table. Never call `DesignSync` to read visual values; read this copy.
+
+Import prompt (verbatim):
+
+```
+Use the claude_design MCP (https://api.anthropic.com/v1/design/mcp, auth via /design-login) to import this project:
+https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=RTST+Batch+29.dc.html
+
+Focus on these files (the whole project is readable):
+- `RTST Batch 29.dc.html`
+- `Dino Reader Batch 30.dc.html`
+
+Also read these files the selection imports:
+- `assets/app-tile.png`
+- `assets/glyph.png`
+- `design_handoff_tray_panel/assets/glyph.png`
+
+Implement: the selected files
+```

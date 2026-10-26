@@ -229,6 +229,14 @@
   <data name="Wizard_NoTextShort" xml:space="preserve"><value>بلا نص</value></data>
   <data name="Wizard_NoText" xml:space="preserve"><value>لم يُعثر على نص في هذه الصفحة</value></data>
   <data name="Wizard_Reading" xml:space="preserve"><value>جارٍ قراءة الصفحة {0} من {1}</value></data>
+  <data name="Wait_GettingVoices" xml:space="preserve"><value>جارٍ تجهيز الأصوات…</value></data>
+  <data name="Wait_ReadingPictures" xml:space="preserve"><value>جارٍ قراءة الصور…</value></data>
+  <data name="Wait_PageOf" xml:space="preserve"><value>الصفحة {0} من {1}</value></data>
+  <data name="Wait_Translating" xml:space="preserve"><value>جارٍ الترجمة…</value></data>
+  <data name="Wait_Saving" xml:space="preserve"><value>جارٍ الحفظ…</value></data>
+  <data name="Wait_GettingBook" xml:space="preserve"><value>جارٍ تحضير الكتاب…</value></data>
+  <data name="Wait_BackingUp" xml:space="preserve"><value>جارٍ نسخ الكتب احتياطيًا…</value></data>
+  <data name="Wait_Restoring" xml:space="preserve"><value>جارٍ استعادة الكتب…</value></data>
   <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>تعذّرت قراءة بعض الصفحات</value></data>
   <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>تعذّرت قراءة {0} من الصفحات. ستبقى كصور بلا نص.</value></data>
   <data name="Pictures_NoneTitle" xml:space="preserve"><value>يحتوي هذا الملف على كلمات بلا صور</value></data>

@@ -31,8 +31,10 @@ the task (new story, retelling, re-split, a fix) and any notes from the user. Wo
    If pictures already exist, mark which pages keep their picture and which need a new one.
 4. Translations: dump the pieces (`DINO_DUMP_PIECES=1 dotnet test tests/DinoReader.Tests`) and translate
    every new or reworded piece into all 13 languages. Keep each language's own conventions (Brazilian
-   Portuguese, no spaces in Japanese, the right script direction and plural forms). Don't touch pieces
-   whose English didn't change.
+   Portuguese, no spaces in Japanese, the right script direction and plural forms). Translate into the
+   spoken, kid-friendly register of dino-storytelling section 3 (never literary: Farsi «بذار بیام تو», not
+   «بگذار بیایم تو»), with that language's own sound words, repeated so a voice reads them long enough.
+   Don't touch pieces whose English didn't change.
 5. Changing an existing book's text: bump its version (`StarterBuilder.StarterVersions` for a starter, the
    store story's `Version` for a store book; if only pictures change the illustrator bumps it), and for a starter add the shipped text's page hash to
    `StarterUpdate.EarlierPageTextHashes` (computed from the shipped `.dino` before any rebuild, recipe in

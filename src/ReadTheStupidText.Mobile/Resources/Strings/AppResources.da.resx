@@ -16,6 +16,11 @@
   <data name="Reader_EmptyHint" xml:space="preserve"><value>Tryk på en knap nedenfor for at tilføje noget at læse</value></data>
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>Sproget for appens tekster</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Læsehastighed</value></data>
+  <data name="Settings_CountsTitle" xml:space="preserve"><value>Hjælp med at forbedre appen</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>Sender tællinger som “en fransk tekst blev læst”. Ingen navne, ingen id’er, intet af det, du læser.</value></data>
+  <data name="Settings_CountsOn" xml:space="preserve"><value>Til</value></data>
+  <data name="Settings_CountsOff" xml:space="preserve"><value>Fra</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>Appen tæller ting som, hvilke sprog der læses, uden navne eller id’er. Du kan slå det fra i Indstillinger.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Tilbage</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>Forrige sætning</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>Næste sætning</value></data>
@@ -65,7 +70,10 @@
   <data name="Review_LooksLike" xml:space="preserve"><value>Teksten ligner {0}</value></data>
   <data name="Review_TranslateAndRead" xml:space="preserve"><value>Oversæt og læs</value></data>
   <data name="Review_Read" xml:space="preserve"><value>Læs</value></data>
-  <data name="Review_GettingTranslator" xml:space="preserve"><value>Henter {0}-oversætteren…</value></data>
+  <data name="Wait_DownloadingModel" xml:space="preserve"><value>Henter {0}…</value></data>
+  <data name="Wait_Translating" xml:space="preserve"><value>Oversætter…</value></data>
+  <data name="Wait_PreparingVoice" xml:space="preserve"><value>Gør stemmen klar…</value></data>
+  <data name="Wait_ReadingFile" xml:space="preserve"><value>Læser filen…</value></data>
   <data name="Review_FirstTimeOnly" xml:space="preserve"><value>Kun første gang. Oversættelsen sker på denne telefon.</value></data>
   <data name="Review_ShowOriginal" xml:space="preserve"><value>Vis original</value></data>
   <data name="Review_FailedOne" xml:space="preserve"><value>Kunne ikke læse side {0}.</value></data>

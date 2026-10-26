@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { APP_CONFIG_KEY, DEFAULT_CONFIG, handleAppConfig, isAppConfigPath, parseAppConfig } from "./appconfig.ts";
+import { APP_CONFIG_KEY, DEFAULT_CONFIG, RTST_APP_CONFIG_KEY, handleAppConfig, isAppConfigPath, parseAppConfig } from "./appconfig.ts";
 import { resolveSite, Product } from "./downloads.ts";
 
 function bucketWith(text) {
@@ -85,4 +85,14 @@ test("the path routes for the Dino host and its workers.dev prefix only", () => 
   assert.equal(dev.product, Product.DinoReader);
   assert.equal(isAppConfigPath(dev.path), true);
   assert.equal(resolveSite("readthestupidtext.sirous.uk", "/api/app-config").product, Product.ReadTheStupidText);
+});
+
+test("Read The Stupid Text reads its own config object, never Dino's", async () => {
+  const objects = { [APP_CONFIG_KEY]: { telemetry: { enabled: true, sampleRate: 1 } }, [RTST_APP_CONFIG_KEY]: { telemetry: { enabled: false, sampleRate: 0 } } };
+  const bucket = { get: async (key) => (objects[key] ? { json: async () => objects[key] } : null) };
+  const rtst = await handleAppConfig(get(), { DOWNLOADS: bucket }, RTST_APP_CONFIG_KEY);
+  assert.deepEqual((await rtst.json()).telemetry, { enabled: false, sampleRate: 0 });
+  const dino = await handleAppConfig(get(), { DOWNLOADS: bucket });
+  assert.deepEqual((await dino.json()).telemetry, { enabled: true, sampleRate: 1 });
+  assert.equal(RTST_APP_CONFIG_KEY, "readthestupidtext/config.json");
 });

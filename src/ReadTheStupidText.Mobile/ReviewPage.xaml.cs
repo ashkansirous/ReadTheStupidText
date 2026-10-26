@@ -4,7 +4,10 @@ using ReadTheStupidText.Application.Images;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Application.Translation;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Mobile.Resources.Strings;
+using ReadTheStupidText.Mobile.Shared.Usage;
+using ReadTheStupidText.Mobile.Shared.Waiting;
 using AndroidPlatform = Microsoft.Maui.Controls.PlatformConfiguration.Android;
 
 namespace ReadTheStupidText.Mobile;
@@ -18,20 +21,24 @@ namespace ReadTheStupidText.Mobile;
 /// </summary>
 public partial class ReviewPage : ContentPage
 {
-    private static readonly TimeSpan SweepDuration = TimeSpan.FromMilliseconds(1100);
     private const double TranslatingOpacity = 0.55;
     private const double DisabledOpacity = 0.45;
     private const double TranslatingTextAlpha = 0.45;
     private const string DisabledBorder = "#1C000000";
     private const string UntickedBorder = "#59000000";
-    private const string DarkEditorText = "#E6E6EA";
     private const string LightEditorText = "#1F2027";
-    private const string SweepAnimationName = "ReviewDownloadSweep";
 
     private readonly ReviewHandOff _handOff;
     private readonly ISettingsStore _settings;
     private readonly ITranslator? _translator;
     private readonly ILanguageDetector? _detector;
+    private readonly RtstUsage _usage;
+
+    // The pair the translate offer was last counted for on this text, so typing does not count it again (Slice 137).
+    private string? _offeredPair;
+
+    // The pair translate_chosen was last counted for on this text, so a retry after a failed translation is still one decision.
+    private string? _chosenPair;
 
     private ReviewTextState _state = new(string.Empty);
     private string? _detected;
@@ -42,15 +49,25 @@ public partial class ReviewPage : ContentPage
     private bool _settingText;
     private CancellationTokenSource? _detectCts;
     private CancellationTokenSource? _translateCts;
+    private readonly WaitController _wait;
+    private readonly WaitOverlay _overlay;
+    private readonly WaitThemeFollower _overlayTheme;
+    private Task? _inFlightCall; // the platform call a Cancel abandoned (or the one running now): a new translate waits for it
 
-    public ReviewPage(ReviewHandOff handOff, ISettingsStore settings, ITranslator? translator = null, ILanguageDetector? detector = null)
+    public ReviewPage(ReviewHandOff handOff, ISettingsStore settings, RtstUsage usage, ITranslator? translator = null, ILanguageDetector? detector = null)
     {
         InitializeComponent();
         FlowDirection = FlowDirection.LeftToRight;
         _handOff = handOff;
         _settings = settings;
+        _usage = usage;
         _translator = translator;
         _detector = detector;
+        _overlay = ReaderPage.CreateWaitOverlay();
+        TextBoxContent.Children.Add(_overlay);
+        _wait = new WaitController(_overlay);
+        _overlayTheme = new WaitThemeFollower(_wait, _overlay);
+        _wait.CancelRequested += () => _translateCts?.Cancel();
         ApplyStaticTexts();
         RenderTick();
         RenderReadButton();
@@ -63,7 +80,6 @@ public partial class ReviewPage : ContentPage
         TextFlow.ForUi(TitleLabel, AppResources.Review_Title);
         TextFlow.ForUi(PasteLabel, AppResources.Reader_PasteButton);
         TextFlow.ForUi(ShowOriginalLink, AppResources.Review_ShowOriginal);
-        TextFlow.ForUi(ProgressNote, AppResources.Review_FirstTimeOnly);
         SemanticProperties.SetDescription(BackButton, AppResources.Common_Back);
         SemanticProperties.SetDescription(PasteButton, AppResources.Reader_PasteButton);
     }
@@ -82,6 +98,7 @@ public partial class ReviewPage : ContentPage
     {
         base.OnDisappearing();
         Microsoft.Maui.Controls.Application.Current!.On<AndroidPlatform>().UseWindowSoftInputModeAdjust(WindowSoftInputModeAdjust.Pan);
+        _overlayTheme.Detach();
     }
 
     // Cancels only when the page is really left (Back, hardware back, Read), not when the app goes to the background.
@@ -136,6 +153,8 @@ public partial class ReviewPage : ContentPage
         ShowOriginalLink.IsVisible = state.HasOriginal;
         FailedBanner.IsVisible = false;
         _detected = null;
+        _offeredPair = null;
+        _chosenPair = null;
         ScheduleDetection(state.Text, detectDelay);
     }
 
@@ -208,6 +227,7 @@ public partial class ReviewPage : ContentPage
         TranslateRow.IsVisible = _optionShown;
         if (_optionShown)
         {
+            CountTranslateOffered(_detected!, target);
             TextFlow.ForUi(TranslateTitle, AppResources.Format(AppResources.Review_TranslateTo, LanguageName(target)));
             TextFlow.ForUi(TranslateCaption, AppResources.Format(AppResources.Review_LooksLike, LanguageName(_detected!)));
             SemanticProperties.SetDescription(TranslateRow, TranslateTitle.Text);
@@ -329,6 +349,7 @@ public partial class ReviewPage : ContentPage
         _detectCts?.Cancel();
         _translateCts = new CancellationTokenSource();
         CancellationToken token = _translateCts.Token;
+        CountTranslateChosen(source, target);
         SetTranslating(true);
         try
         {
@@ -336,15 +357,17 @@ public partial class ReviewPage : ContentPage
             if (!token.IsCancellationRequested)
             {
                 _state = _state.Translated(translated);
+                _wait.End(); // the page is about to leave: no "Translating..." with a live Cancel meanwhile
                 await FinishAsync(translated, _state.Original, ReviewDecisions.ReadLanguage(true, source, target));
             }
         }
         catch (OperationCanceledException)
         {
-            return; // left the page
+            return; // left the page, or Cancel on the wait overlay: the original text stays
         }
         catch (Exception)
         {
+            _wait.End(); // gone before the alert, not behind it
             await ReadOriginalAfterFailureAsync(source, target);
         }
         finally
@@ -353,20 +376,63 @@ public partial class ReviewPage : ContentPage
         }
     }
 
-    // Shows the download card only when the model is not on the phone yet.
+    // The wait overlay names the stage: the download whenever the model is not on the phone yet. Cancel returns at once
+    // (WaitAsync), even when the platform call does not look at the token; that call is remembered, so a new translate
+    // waits for it to settle instead of starting a second download or translation of the same pair beside it.
     private async Task<string> TranslateAsync(string source, string target, CancellationToken token)
     {
         ITranslator translator = _translator!;
         string text = _state.Text;
-        if (!await translator.IsModelReadyAsync(source, target))
+        _wait.Begin(WaitStage.Translating, AppResources.Wait_Translating, canCancel: true);
+        await SettleAbandonedCallAsync(token);
+        bool downloading = !await Tracked(translator.IsModelReadyAsync(source, target), token);
+        if (downloading)
         {
-            ShowDownloadCard(source);
+            _wait.Begin(WaitStage.DownloadingModel, AppResources.Format(AppResources.Wait_DownloadingModel, LanguageName(source)), canCancel: true, AppResources.Review_FirstTimeOnly);
+            await FetchModelTimedAsync(translator, source, target, token);
         }
 
-        string translated = await TranslationFlow.TranslateAsync(translator, text, source, target, token);
+        if (!downloading || translator is IModelPreparer)
+        {
+            _wait.Begin(WaitStage.Translating, AppResources.Wait_Translating, canCancel: true);
+        }
+
+        string translated = await TimedAsync(UsageStage.Translate, source, target, () => Tracked(TranslationFlow.TranslateAsync(translator, text, source, target, token), token));
         return string.IsNullOrWhiteSpace(translated)
             ? throw new TranslationModelUnavailableException("The translation was empty.")
             : translated;
+    }
+
+    // Remembers the platform call and returns a task that gives up when Cancel is tapped, leaving the call itself running.
+    private Task<T> Tracked<T>(Task<T> call, CancellationToken token)
+    {
+        _inFlightCall = call;
+        return call.WaitAsync(token);
+    }
+
+    private Task Tracked(Task call, CancellationToken token)
+    {
+        _inFlightCall = call;
+        return call.WaitAsync(token);
+    }
+
+    // A call Cancel abandoned may still be downloading; its result is ignored, but a new one starts only after it ends.
+    private async Task SettleAbandonedCallAsync(CancellationToken token)
+    {
+        Task? abandoned = _inFlightCall;
+        if (abandoned is null || abandoned.IsCompleted)
+        {
+            return;
+        }
+
+        try
+        {
+            await abandoned.WaitAsync(token);
+        }
+        catch (Exception) when (!token.IsCancellationRequested)
+        {
+            // the abandoned call failed or was cancelled: it has settled, which is all this wait needed
+        }
     }
 
     // The translator could not be fetched or failed: the original is read, with one short line saying why.
@@ -387,6 +453,71 @@ public partial class ReviewPage : ContentPage
         await LeaveAsync();
     }
 
+    // ---- Anonymous counts (Slice 137) -------------------------------------------------------
+
+    // Once per loaded text and pair: the checkbox appearing, not every re-detection while the person types.
+    private void CountTranslateOffered(string source, string target)
+    {
+        string pair = $"{source}>{target}";
+        if (_offeredPair == pair)
+        {
+            return;
+        }
+
+        _offeredPair = pair;
+        _usage.Record(context => UsageEvents.TranslateOffered(context, source, target));
+    }
+
+    private void CountTranslateChosen(string source, string target)
+    {
+        string pair = $"{source}>{target}";
+        if (_chosenPair == pair)
+        {
+            return;
+        }
+
+        _chosenPair = pair;
+        _usage.Record(context => UsageEvents.TranslateChosen(context, source, target));
+    }
+
+    // The wait for the ML Kit model on its own, when the translator can fetch it apart from translating; otherwise the download is part of the translate stage.
+    private async Task FetchModelTimedAsync(ITranslator translator, string source, string target, CancellationToken token)
+    {
+        if (translator is IModelPreparer preparer)
+        {
+            await TimedAsync(UsageStage.ModelDownload, source, target, async () =>
+            {
+                await Tracked(preparer.EnsureModelAsync(source, target, token), token);
+                return true;
+            });
+        }
+    }
+
+    // Times one wait and counts it with how it ended, then lets the result or the error through unchanged.
+    private async Task<T> TimedAsync<T>(string stage, string source, string target, Func<Task<T>> work)
+    {
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        try
+        {
+            T result = await work();
+            CountTiming(stage, UsageOutcome.Done, clock.Elapsed, source, target);
+            return result;
+        }
+        catch (OperationCanceledException)
+        {
+            CountTiming(stage, UsageOutcome.Cancelled, clock.Elapsed, source, target);
+            throw;
+        }
+        catch (Exception)
+        {
+            CountTiming(stage, UsageOutcome.Failed, clock.Elapsed, source, target);
+            throw;
+        }
+    }
+
+    private void CountTiming(string stage, string outcome, TimeSpan elapsed, string source, string target) =>
+        _usage.Record(context => UsageEvents.Timing(context, stage, outcome, elapsed, source, target));
+
     // ---- The translating look (R7) ----------------------------------------------------------
 
     private void SetTranslating(bool translating)
@@ -404,7 +535,7 @@ public partial class ReviewPage : ContentPage
         ReadButton.InputTransparent = translating;
         if (!translating)
         {
-            HideDownloadCard();
+            _wait.End();
             RenderReadButton();
         }
     }
@@ -412,28 +543,5 @@ public partial class ReviewPage : ContentPage
     private static Color Brand() => (Color)Microsoft.Maui.Controls.Application.Current!.Resources["Primary"];
 
     private static Color EditorTextColor() =>
-        Microsoft.Maui.Controls.Application.Current!.RequestedTheme == AppTheme.Dark ? Color.FromArgb(DarkEditorText) : Color.FromArgb(LightEditorText);
-
-    private void ShowDownloadCard(string source)
-    {
-        TextFlow.ForUi(ProgressTitle, AppResources.Format(AppResources.Review_GettingTranslator, LanguageName(source)));
-        ProgressCard.IsVisible = true;
-        ReadButton.IsVisible = false;
-        StartSweep();
-    }
-
-    private void HideDownloadCard()
-    {
-        this.AbortAnimation(SweepAnimationName);
-        ProgressCard.IsVisible = false;
-        ReadButton.IsVisible = true;
-        ProgressBar.Progress = 0;
-    }
-
-    // ML Kit reports no download percentage, so one repeating animation sweeps the bar while the model comes down.
-    private void StartSweep()
-    {
-        var sweep = new Animation(value => ProgressBar.Progress = value, 0, 1);
-        sweep.Commit(this, SweepAnimationName, length: (uint)SweepDuration.TotalMilliseconds, easing: Easing.Linear, repeat: () => true);
-    }
+        ThemeColors.IsDark() ? ThemeColors.Get(ThemeColors.TextPrimaryDarkKey) : Color.FromArgb(LightEditorText);
 }

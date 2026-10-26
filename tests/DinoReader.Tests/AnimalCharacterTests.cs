@@ -355,7 +355,7 @@ public class AnimalCharacterTests
     public void Young_animals_sound_young_and_grown_ones_sound_grown(string language)
     {
         var roster = CharacterRoster.For(language);
-        VoiceFlavour[] young = [VoiceFlavour.Small, VoiceFlavour.Squeaky, VoiceFlavour.Bouncy];
+        VoiceFlavour[] young = [VoiceFlavour.Small, VoiceFlavour.Squeaky, VoiceFlavour.Bouncy, VoiceFlavour.Chirpy, VoiceFlavour.Perky]; // Slice 144 added Chirpy and Perky as young-sounding
         VoiceFlavour[] grown = [VoiceFlavour.Big, VoiceFlavour.Giant, VoiceFlavour.Grumpy, VoiceFlavour.Sleepy];
 
         foreach (string id in new[] { "lamb", "puppy", "kitten", "duckling", "cub" })

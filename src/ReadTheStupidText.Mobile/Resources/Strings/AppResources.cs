@@ -37,6 +37,11 @@ public static class AppResources
     public static string Reader_EmptyHint => Get();
     public static string Settings_LanguageCaption => Get();
     public static string Settings_ReadingSpeed => Get();
+    public static string Settings_CountsTitle => Get();
+    public static string Settings_CountsCaption => Get();
+    public static string Settings_CountsOn => Get();
+    public static string Settings_CountsOff => Get();
+    public static string Language_CountsNote => Get();
     public static string Common_Back => Get();
     public static string Reader_SkipBack => Get();
     public static string Reader_SkipForward => Get();
@@ -86,7 +91,10 @@ public static class AppResources
     public static string Review_LooksLike => Get();
     public static string Review_TranslateAndRead => Get();
     public static string Review_Read => Get();
-    public static string Review_GettingTranslator => Get();
+    public static string Wait_DownloadingModel => Get();
+    public static string Wait_Translating => Get();
+    public static string Wait_PreparingVoice => Get();
+    public static string Wait_ReadingFile => Get();
     public static string Review_FirstTimeOnly => Get();
     public static string Review_ShowOriginal => Get();
     public static string Review_FailedOne => Get();

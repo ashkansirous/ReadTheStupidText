@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<style>html,body{margin:0;padding:0;background:#eceef4;}*{box-sizing:border-box;}a{color:#4A46D6;}a:hover{color:#3833b8;}@keyframes rtstSpin{to{transform:rotate(360deg)}}</style>
+</helmet>
+<section style="padding:48px 56px 80px;font-family:'Segoe UI Variable Display','Segoe UI',system-ui,sans-serif;color:#1f2027">
+ <div style="max-width:1200px">
+  <div style="font-size:12px;font-weight:700;letter-spacing:2px;color:#4A46D6;text-transform:uppercase">Read The Stupid Text · Phone + Windows · Batch 29 (Slices 137–142) · Decisions 143–148</div>
+  <div style="font-size:32px;font-weight:600;margin-top:6px">Show that it’s working, and count what people use</div>
+  <div style="font-size:15px;color:rgba(0,0,0,.6);margin-top:10px;line-height:1.55;max-width:980px;text-wrap:pretty">A user thought the app froze after tapping Translate. Any wait over <b>500 ms</b> now shows what the app is doing, with a <b>Cancel</b> button (Slices 138, 141). Anonymous counts get an <b>off switch</b> and one first-run line (Slices 137, 140). The early start (Slices 139, 142) has no screen of its own: it just makes these waits shorter or skips them. Dino uses the same overlay with its own animation (<a href="Dino%20Reader%20Batch%2030.dc.html">Batch 30</a>).</div>
+ </div>
+
+ <div style="font-size:12px;font-weight:700;letter-spacing:1.6px;color:rgba(0,0,0,.45);text-transform:uppercase;margin-top:36px">Phone · wait overlay · Slice 138 · Decision 146</div>
+ <div style="display:flex;flex-wrap:wrap;gap:40px;margin-top:14px;align-items:flex-start">
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#33333a">R8 · Main page · getting the translator</div>
+   <div data-screen-label="R8 Wait downloading" style="width:360px;height:760px;border-radius:26px;overflow:hidden;background:#f4f5f9;box-shadow:0 18px 50px rgba(20,30,60,.22);border:1px solid rgba(0,0,0,.10);display:flex;flex-direction:column">
+    <div style="height:30px;background:#5B57E8;display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:#fff;font-size:11px;font-weight:600;flex-shrink:0"><span>9:41</span><span>100%</span></div>
+    <div style="background:linear-gradient(135deg,#5B57E8,#3B82F6);padding:8px 8px 8px 18px;color:#fff;flex-shrink:0;position:relative;overflow:hidden;display:flex;align-items:center"><img src="design_handoff_tray_panel/assets/glyph.png" style="position:absolute;right:40px;top:-18px;width:100px;height:100px;filter:brightness(0) invert(1);opacity:.12;transform:rotate(-8deg)"><span style="position:relative;flex:1;font-size:17px;font-weight:600">Read The Stupid Text</span><div style="position:relative;width:48px;height:48px;border-radius:24px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"></path></svg></div></div>
+    <div style="flex:1;min-height:0;padding:14px 14px 12px;display:flex;flex-direction:column;gap:12px">
+     <div style="flex:1;min-height:0;position:relative;background:#fff;border:1px solid rgba(0,0,0,.11);border-radius:16px;overflow:hidden">
+      <div style="padding:16px;font-size:19px;line-height:1.6;color:rgba(0,0,0,.45);text-wrap:pretty">Madame, Monsieur, la réunion est déplacée à jeudi à dix heures, dans la salle du deuxième étage. Apportez le budget imprimé et la liste des participants.</div>
+      <div style="position:absolute;inset:0;background:rgba(255,255,255,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center">
+       {{ spinA }}
+       <span style="font-size:18px;font-weight:600">Downloading French… 40%</span>
+       <div style="width:200px;height:8px;border-radius:4px;background:rgba(0,0,0,.10);overflow:hidden"><div style="width:40%;height:100%;background:#5B57E8;border-radius:4px"></div></div>
+       <span style="font-size:13.5px;color:rgba(0,0,0,.58);max-width:240px;line-height:1.4">Only the first time. Translation happens on this phone.</span>
+       <div style="height:48px;padding:0 28px;border-radius:14px;background:rgba(91,87,232,.10);color:#4A46D6;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;margin-top:4px">Cancel</div>
+      </div>
+     </div>
+     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;flex-shrink:0;opacity:.5">
+      <div style="height:92px;border-radius:16px;background:#fff;border:1px solid rgba(0,0,0,.11);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:15.5px;font-weight:600;text-align:center;line-height:1.2"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4A46D6" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 012-2h1.5l1.2-2h6.6l1.2 2H20a2 2 0 012 2v9a2 2 0 01-2 2H6a2 2 0 01-2-2V8z"></path><circle cx="13" cy="12.5" r="3.4"></circle></svg>Text from pictures</div>
+      <div style="height:92px;border-radius:16px;background:#fff;border:1px solid rgba(0,0,0,.11);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:15.5px;font-weight:600;text-align:center;line-height:1.2"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4A46D6" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8l-5-5z"></path><path d="M14 3v5h5"></path></svg>Text from a file</div>
+     </div>
+     <div style="background:#fff;border:1px solid rgba(0,0,0,.11);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:12px;flex-shrink:0;opacity:.5">
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="height:6px;border-radius:3px;background:rgba(0,0,0,.10)"></div><div style="display:flex;justify-content:space-between;font-size:12.5px;color:rgba(0,0,0,.58)"><span>0:00</span><span>--:--</span></div></div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:28px">
+       <div style="width:52px;height:52px;border-radius:50%;background:rgba(0,0,0,.06)"></div>
+       <div style="width:72px;height:72px;border-radius:50%;background:#c9cbd6;display:flex;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 16 16"><path d="M5 3.4c0-.6.7-1 1.2-.6l5.4 4.1c.4.3.4 1 0 1.3l-5.4 4.1c-.5.4-1.2 0-1.2-.6z" fill="#fff"></path></svg></div>
+       <div style="width:52px;height:52px;border-radius:50%;background:rgba(0,0,0,.06)"></div>
+      </div>
+     </div>
+    </div>
+   </div>
+   <div style="width:360px;font-size:12.5px;color:rgba(0,0,0,.6);line-height:1.5;text-wrap:pretty">This is what happens after <b>Translate and read</b> (R6) when the French translator isn’t on the phone yet. The overlay sits <b>over the text box only</b>, not on a new page. It uses the phone’s own spinner, the stage and Cancel. It shows the percentage only when ML Kit reports progress. Otherwise there’s no bar. This replaces the R7 progress card. <b>Cancel</b> stops the work and shows the original text. On mobile data, the download starts at the tap, never before it (Decision 147).</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#33333a">R9 · Main page · preparing the voice</div>
+   <div data-screen-label="R9 Wait preparing" style="width:360px;height:760px;border-radius:26px;overflow:hidden;background:#f4f5f9;box-shadow:0 18px 50px rgba(20,30,60,.22);border:1px solid rgba(0,0,0,.10);display:flex;flex-direction:column">
+    <div style="height:30px;background:#5B57E8;display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:#fff;font-size:11px;font-weight:600;flex-shrink:0"><span>9:41</span><span>100%</span></div>
+    <div style="background:linear-gradient(135deg,#5B57E8,#3B82F6);padding:8px 8px 8px 18px;color:#fff;flex-shrink:0;position:relative;overflow:hidden;display:flex;align-items:center"><img src="design_handoff_tray_panel/assets/glyph.png" style="position:absolute;right:40px;top:-18px;width:100px;height:100px;filter:brightness(0) invert(1);opacity:.12;transform:rotate(-8deg)"><span style="position:relative;flex:1;font-size:17px;font-weight:600">Read The Stupid Text</span><div style="position:relative;width:48px;height:48px;border-radius:24px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"></path></svg></div></div>
+    <div style="flex:1;min-height:0;padding:14px 14px 12px;display:flex;flex-direction:column;gap:12px">
+     <div style="flex:1;min-height:0;position:relative;background:#fff;border:1px solid rgba(0,0,0,.11);border-radius:16px;overflow:hidden">
+      <div style="padding:16px;font-size:19px;line-height:1.6;color:rgba(0,0,0,.45);text-wrap:pretty">Dear Sir or Madam, the meeting has moved to Thursday at ten o’clock, in the room on the second floor. Please bring the printed budget and the list of participants.</div>
+      <div style="position:absolute;inset:0;background:rgba(255,255,255,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center">
+       {{ spinB }}
+       <span style="font-size:18px;font-weight:600">Preparing the voice…</span>
+       <div style="height:48px;padding:0 28px;border-radius:14px;background:rgba(91,87,232,.10);color:#4A46D6;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;margin-top:4px">Cancel</div>
+      </div>
+     </div>
+     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;flex-shrink:0;opacity:.5">
+      <div style="height:92px;border-radius:16px;background:#fff;border:1px solid rgba(0,0,0,.11);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:15.5px;font-weight:600;text-align:center;line-height:1.2"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4A46D6" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 012-2h1.5l1.2-2h6.6l1.2 2H20a2 2 0 012 2v9a2 2 0 01-2 2H6a2 2 0 01-2-2V8z"></path><circle cx="13" cy="12.5" r="3.4"></circle></svg>Text from pictures</div>
+      <div style="height:92px;border-radius:16px;background:#fff;border:1px solid rgba(0,0,0,.11);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:15.5px;font-weight:600;text-align:center;line-height:1.2"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4A46D6" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8l-5-5z"></path><path d="M14 3v5h5"></path></svg>Text from a file</div>
+     </div>
+     <div style="background:#fff;border:1px solid rgba(0,0,0,.11);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:12px;flex-shrink:0;opacity:.5">
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="height:6px;border-radius:3px;background:rgba(0,0,0,.10)"></div><div style="display:flex;justify-content:space-between;font-size:12.5px;color:rgba(0,0,0,.58)"><span>0:00</span><span>--:--</span></div></div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:28px">
+       <div style="width:52px;height:52px;border-radius:50%;background:rgba(0,0,0,.06)"></div>
+       <div style="width:72px;height:72px;border-radius:50%;background:#c9cbd6;display:flex;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 16 16"><path d="M5 3.4c0-.6.7-1 1.2-.6l5.4 4.1c.4.3.4 1 0 1.3l-5.4 4.1c-.5.4-1.2 0-1.2-.6z" fill="#fff"></path></svg></div>
+       <div style="width:52px;height:52px;border-radius:50%;background:rgba(0,0,0,.06)"></div>
+      </div>
+     </div>
+    </div>
+   </div>
+   <div style="width:360px;font-size:12.5px;color:rgba(0,0,0,.6);line-height:1.5;text-wrap:pretty">Other stages use the same layout: <b>Translating…</b>, <b>Preparing the voice…</b>, and a mid-read stall when the next part isn’t voiced yet. No bar shows when progress isn’t known. The overlay goes away the moment audio starts. If the text starts within 500 ms, nothing shows. This replaces <code>BusyIndicator</code> and <code>PlayLoadingIndicator</code>. TalkBack and VoiceOver read the stage. The copy is a draft.</div>
+  </div>
+ </div>
+
+ <div style="font-size:12px;font-weight:700;letter-spacing:1.6px;color:rgba(0,0,0,.45);text-transform:uppercase;margin-top:48px">Phone · usage counts · Slice 137 · Decisions 143–145</div>
+ <div style="display:flex;flex-wrap:wrap;gap:40px;margin-top:14px;align-items:flex-start">
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#33333a">R10 · Settings · counts switch</div>
+   <div data-screen-label="R10 Settings counts" style="width:360px;height:760px;border-radius:26px;overflow:hidden;background:#f4f5f9;box-shadow:0 18px 50px rgba(20,30,60,.22);border:1px solid rgba(0,0,0,.10);display:flex;flex-direction:column">
+    <div style="height:30px;background:#5B57E8;display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:#fff;font-size:11px;font-weight:600;flex-shrink:0"><span>9:41</span><span>100%</span></div>
+    <div style="background:linear-gradient(135deg,#5B57E8,#3B82F6);padding:8px 18px 8px 4px;color:#fff;flex-shrink:0;display:flex;align-items:center;gap:2px"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></div><span style="font-size:18px;font-weight:600">Settings</span></div>
+    <div style="flex:1;min-height:0;padding:16px 14px;display:flex;flex-direction:column;gap:10px">
+     <div style="background:#fff;border:1px solid rgba(0,0,0,.11);border-radius:16px;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:12px;min-height:64px;padding:0 16px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4A46D6" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18"></path><path d="M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"></path></svg><div style="flex:1;display:flex;flex-direction:column"><span style="font-size:16.5px;font-weight:600">Language</span><span style="font-size:13px;color:rgba(0,0,0,.58)">The app’s words, and what text is translated into</span></div><span style="font-size:15px;font-weight:600;color:rgba(0,0,0,.6)">English</span><svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M4.5 2.5L8 6L4.5 9.5" stroke="rgba(0,0,0,.45)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+      <div style="display:flex;align-items:center;gap:12px;min-height:64px;padding:0 16px;border-top:1px solid rgba(0,0,0,.08)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4A46D6" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H3v6h3l5 4V5z"></path><path d="M15.5 8.5a5 5 0 010 7"></path><path d="M18.5 5.5a9 9 0 010 13"></path></svg><span style="flex:1;font-size:16.5px;font-weight:600">Voice</span><span style="font-size:15px;font-weight:600;color:rgba(0,0,0,.6)">Amy</span><svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M4.5 2.5L8 6L4.5 9.5" stroke="rgba(0,0,0,.45)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+     </div>
+     <div style="background:#fff;border:1px solid rgba(0,0,0,.11);border-radius:16px;padding:14px 16px 16px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;gap:12px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4A46D6" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14l4-4"></path><path d="M3.3 17a9 9 0 1117.4 0"></path></svg><span style="font-size:16.5px;font-weight:600">Reading speed</span></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+       <div style="height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:rgba(0,0,0,.6);background:rgba(91,87,232,.10)">0.5×</div>
+       <div style="height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;background:#5B57E8">1×</div>
+       <div style="height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:rgba(0,0,0,.6);background:rgba(91,87,232,.10)">1.25×</div>
+       <div style="height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:rgba(0,0,0,.6);background:rgba(91,87,232,.10)">1.5×</div>
+       <div style="height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:rgba(0,0,0,.6);background:rgba(91,87,232,.10)">1.75×</div>
+       <div style="height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:rgba(0,0,0,.6);background:rgba(91,87,232,.10)">2×</div>
+      </div>
+     </div>
+     <div style="background:#fff;border:1px solid rgba(0,0,0,.11);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;min-height:72px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4A46D6" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M4 20V10"></path><path d="M10 20V4"></path><path d="M16 20v-7"></path><path d="M22 20H2"></path></svg>
+      <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:16.5px;font-weight:600">Help improve the app</span><span style="font-size:13px;color:rgba(0,0,0,.58);line-height:1.4;text-wrap:pretty">Sends counts like “a French text was read”. No names, no ids, nothing you read.</span></div>
+      <div style="width:52px;height:32px;border-radius:16px;background:#5B57E8;position:relative;flex-shrink:0"><div style="position:absolute;right:3px;top:3px;width:26px;height:26px;border-radius:50%;background:#fff"></div></div>
+     </div>
+    </div>
+   </div>
+   <div style="width:360px;font-size:12.5px;color:rgba(0,0,0,.6);line-height:1.5;text-wrap:pretty">R3 with <b>one added card</b> at the bottom. The switch is <b>on by default</b>, and turning it off means nothing is sent. Until the store privacy declarations match, the remote config keeps sending off whatever this switch says (Decision 145). The helper copy is from Slice 137.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#33333a">R11 · First run · language, with the counts line</div>
+   <div data-screen-label="R11 First run counts" style="width:360px;height:760px;border-radius:26px;overflow:hidden;background:#f4f5f9;box-shadow:0 18px 50px rgba(20,30,60,.22);border:1px solid rgba(0,0,0,.10);display:flex;flex-direction:column">
+    <div style="height:30px;background:#5B57E8;display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:#fff;font-size:11px;font-weight:600;flex-shrink:0"><span>9:41</span><span>100%</span></div>
+    <div style="background:linear-gradient(135deg,#5B57E8,#3B82F6);padding:14px 18px;color:#fff;flex-shrink:0;position:relative;overflow:hidden;display:flex;flex-direction:column;gap:2px"><img src="design_handoff_tray_panel/assets/glyph.png" style="position:absolute;right:20px;top:-14px;width:100px;height:100px;filter:brightness(0) invert(1);opacity:.12;transform:rotate(-8deg)"><span style="position:relative;font-size:20px;font-weight:600">Choose your language</span><span style="position:relative;font-size:13.5px;opacity:.85">For the app’s words and translations</span></div>
+    <div style="flex:1;min-height:0;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px">
+     <div style="background:#fff;border:1px solid rgba(0,0,0,.11);border-radius:16px;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:12px;min-height:60px;padding:0 16px;background:rgba(91,87,232,.08)"><span style="flex:1;font-size:16.5px;font-weight:600">English</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5B57E8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"></path></svg></div>
+      <div style="display:flex;align-items:center;min-height:60px;padding:0 16px;border-top:1px solid rgba(0,0,0,.08);font-size:16.5px">Français</div>
+      <div style="display:flex;align-items:center;min-height:60px;padding:0 16px;border-top:1px solid rgba(0,0,0,.08);font-size:16.5px">Español</div>
+      <div style="display:flex;align-items:center;min-height:60px;padding:0 16px;border-top:1px solid rgba(0,0,0,.08);font-size:16.5px">Deutsch</div>
+      <div style="display:flex;align-items:center;justify-content:flex-end;min-height:60px;padding:0 16px;border-top:1px solid rgba(0,0,0,.08);font-size:16.5px">فارسی</div>
+     </div>
+     <div style="margin-top:auto;display:flex;flex-direction:column;gap:12px">
+      <span style="font-size:13.5px;color:rgba(0,0,0,.6);line-height:1.45;text-align:center;text-wrap:pretty;padding:0 8px">The app counts things like which languages are read, with no names or ids. You can turn this off in Settings.</span>
+      <div style="height:60px;border-radius:16px;background:linear-gradient(135deg,#5B57E8,#3B82F6);color:#fff;font-size:17px;font-weight:600;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(91,87,232,.32)">Continue</div>
+     </div>
+    </div>
+   </div>
+   <div style="width:360px;font-size:12.5px;color:rgba(0,0,0,.6);line-height:1.5;text-wrap:pretty">One line above the button, with nothing to tap and no consent prompt (Decision 143). “Settings” refers to R10. <b>This screen is a stand-in:</b> there’s no Batch 19-style mock of the first-run language page yet, so this only shows where the line goes. <code>PRIVACY.md</code>, <code>site/privacy.html</code> and <code>STORE.md</code> change in the same release. The copy is a draft.</div>
+  </div>
+ </div>
+
+ <div style="font-size:12px;font-weight:700;letter-spacing:1.6px;color:rgba(0,0,0,.45);text-transform:uppercase;margin-top:48px">Windows · wait flyout and counts switch · Slices 140–141</div>
+ <div style="display:flex;flex-wrap:wrap;gap:40px;margin-top:14px;align-items:flex-start">
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#33333a">W1 · Hotkey read · flyout by the tray</div>
+   <div data-screen-label="W1 Tray wait flyout" style="width:520px;height:360px;border-radius:10px;overflow:hidden;position:relative;box-shadow:0 1px 3px rgba(0,0,0,.10);background:radial-gradient(130% 120% at 78% 8%,#d4e2ff 0%,rgba(212,226,255,0) 46%),radial-gradient(120% 120% at 12% 92%,#ecddff 0%,rgba(236,221,255,0) 52%),linear-gradient(150deg,#b9c6ef 0%,#cdd8f6 55%,#dfe6fb 100%)">
+    <div style="position:absolute;left:0;right:0;bottom:0;height:48px;background:rgba(236,238,243,.80);border-top:1px solid rgba(0,0,0,.06);display:flex;align-items:center;justify-content:center">
+     <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;width:18px;height:18px"><div style="background:#3a86d6;border-radius:1px"></div><div style="background:#3a86d6;border-radius:1px"></div><div style="background:#3a86d6;border-radius:1px"></div><div style="background:#3a86d6;border-radius:1px"></div></div>
+     <div style="position:absolute;right:10px;top:0;bottom:0;display:flex;align-items:center;gap:3px">
+      <div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:5px;background:rgba(0,0,0,.06);box-shadow:inset 0 0 0 1px rgba(0,0,0,.10)"><img src="assets/glyph.png" style="width:17px;height:17px;display:block"></div>
+      <div style="text-align:right;line-height:1.25;padding:0 4px 0 8px;color:rgba(0,0,0,.89)"><div style="font-size:12px">9:41 AM</div><div style="font-size:11px">10/26/2026</div></div>
+     </div>
+    </div>
+    <div style="position:absolute;right:16px;bottom:60px;width:320px;border-radius:8px;background:rgba(251,251,253,.92);border:1px solid rgba(0,0,0,.10);box-shadow:0 18px 50px rgba(20,30,60,.30);padding:14px 16px;display:flex;flex-direction:column;gap:12px">
+     <div style="display:flex;align-items:center;gap:12px">
+      {{ spinW1 }}
+      <div style="flex:1;display:flex;flex-direction:column"><span style="font-size:13px;font-weight:600;color:rgba(0,0,0,.89)">Downloading French… 40%</span><span style="font-size:12px;color:rgba(0,0,0,.56)">ReadTheStupidText</span></div>
+     </div>
+     <div style="height:4px;border-radius:2px;background:rgba(0,0,0,.10);overflow:hidden"><div style="width:40%;height:100%;background:#3B6FE3;border-radius:2px"></div></div>
+     <div style="display:flex;justify-content:flex-end"><div style="height:32px;padding:0 18px;border-radius:5px;background:rgba(255,255,255,.72);border:1px solid rgba(0,0,0,.10);font-size:13px;color:rgba(0,0,0,.89);display:flex;align-items:center">Cancel</div></div>
+    </div>
+   </div>
+   <div style="width:520px;font-size:12.5px;color:rgba(0,0,0,.6);line-height:1.5;text-wrap:pretty">A hotkey or selection read has no window, so a <b>small flyout</b> opens by the tray clock, in the same spot as the control panel. It shows after 500 ms with the stage, a bar when the pack download reports progress, and Cancel. It closes when audio starts. The stages are <b>Downloading &lt;language&gt;…</b>, <b>Translating…</b>, <b>Preparing the voice…</b> and a mid-read stall. Placement is the plan’s default for an open question.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#33333a">W2 · Control panel · waiting, counts switch</div>
+   <div data-screen-label="W2 Control panel wait and counts" style="width:380px;padding:18px;border-radius:10px;background:linear-gradient(150deg,#b9c6ef 0%,#cdd8f6 55%,#dfe6fb 100%)">
+    <div style="width:344px;border-radius:8px;background:rgba(251,251,253,.94);border:1px solid rgba(0,0,0,.10);box-shadow:0 18px 50px rgba(20,30,60,.30);padding:16px;display:flex;flex-direction:column;gap:14px">
+     <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:10px"><img src="assets/app-tile.png" style="width:24px;height:24px;border-radius:6px;display:block"><div style="display:flex;flex-direction:column"><span style="font-size:13px;font-weight:600;color:rgba(0,0,0,.89);line-height:1.2">ReadTheStupidText</span><span style="font-size:11px;color:rgba(0,0,0,.56);line-height:1.3">Translating…</span></div></div>
+      <div style="width:28px;height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,.56);background:rgba(0,0,0,.06)"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1L10 10M10 1L1 10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"></path></svg></div>
+     </div>
+     <div style="display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:8px;background:rgba(255,255,255,.6);border:1px solid rgba(0,0,0,.08)">
+      <div style="width:42px;height:42px;display:flex;align-items:center;justify-content:center;flex-shrink:0">{{ spinW2 }}</div>
+      <div style="display:flex;flex-direction:column;flex:1"><span style="font-size:13px;font-weight:600;color:rgba(0,0,0,.89)">Translating…</span><span style="font-size:12px;color:rgba(0,0,0,.56)">French to English</span></div>
+      <div style="height:30px;padding:0 12px;border-radius:5px;background:rgba(255,255,255,.72);border:1px solid rgba(0,0,0,.10);font-size:12.5px;color:rgba(0,0,0,.89);display:flex;align-items:center">Cancel</div>
+     </div>
+     <div style="display:flex;align-items:center;gap:12px;padding-top:12px;border-top:1px solid rgba(0,0,0,.08)">
+      <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:13px;color:rgba(0,0,0,.89)">Help improve the app</span><span style="font-size:11.5px;color:rgba(0,0,0,.56);line-height:1.35;text-wrap:pretty">Sends counts like “a French text was read”. No names, no ids, nothing you read.</span></div>
+      <div style="width:40px;height:20px;border-radius:10px;background:#3B6FE3;position:relative;flex-shrink:0"><div style="position:absolute;right:4px;top:4px;width:12px;height:12px;border-radius:50%;background:#fff"></div></div>
+     </div>
+    </div>
+   </div>
+   <div style="width:380px;font-size:12.5px;color:rgba(0,0,0,.6);line-height:1.5;text-wrap:pretty">When the panel is open, the <b>play button turns into the ProgressRing</b>, with the stage and Cancel beside it. No flyout shows on top. The counts switch sits <b>last, after the existing toggles</b>, which are left out here. Same copy as R10, on by default. The first-run window gets the same one line as R11. Only the parts that change are shown.</div>
+  </div>
+ </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  spin(key, size, color, stroke) {
+    const h = React.createElement;
+    return h('svg', { key, width: size, height: size, viewBox: '0 0 24 24', fill: 'none', style: { display: 'block', flexShrink: 0, animation: 'rtstSpin .9s linear infinite' } },
+      h('circle', { cx: 12, cy: 12, r: 9, stroke: 'rgba(0,0,0,.10)', strokeWidth: stroke }),
+      h('path', { d: 'M12 3a9 9 0 019 9', stroke: color, strokeWidth: stroke, strokeLinecap: 'round' })
+    );
+  }
+  renderVals() {
+    return {
+      spinA: this.spin('a', 44, '#5B57E8', 2.6),
+      spinB: this.spin('b', 44, '#5B57E8', 2.6),
+      spinW1: this.spin('w1', 24, '#3B6FE3', 2.4),
+      spinW2: this.spin('w2', 32, '#3B6FE3', 2.4)
+    };
+  }
+}
+</script>
+</body>
+</html>

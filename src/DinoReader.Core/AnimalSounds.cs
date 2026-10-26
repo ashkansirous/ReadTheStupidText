@@ -280,7 +280,7 @@ public static partial class AnimalSounds
     /// <summary>How the sound is voiced: the character's voice, a faint wobble (bleat) for a sheep or goat, higher for a lamb or kid, deeper and slower for the big animals (a grown-up deeper than a baby).</summary>
     public static VoiceFlavour FlavourFor(AnimalKind kind, VoiceFlavour lineFlavour)
     {
-        bool baby = lineFlavour is VoiceFlavour.Small or VoiceFlavour.Squeaky;
+        bool baby = lineFlavour is VoiceFlavour.Small or VoiceFlavour.Squeaky or VoiceFlavour.Chirpy or VoiceFlavour.Perky;
         if (kind is AnimalKind.Sheep or AnimalKind.Goat)
         {
             return baby ? VoiceFlavour.BleatLamb : VoiceFlavour.Bleat;

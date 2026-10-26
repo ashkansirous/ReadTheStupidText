@@ -698,35 +698,29 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         CancellationToken token)
     {
         SentenceCacheKey key = KeyFor(engine, sentence, voice, transform);
-        return _sentences.GetAsync(
-            key, t => SynthesizeSentenceAsync(engine, sentence, voice.SpeakerId, transform, slots, t), token);
+        return _sentences.GetClipAsync(
+            key, t => SynthesizeSentenceAsync(engine, sentence, voice, transform, slots, t), token);
     }
 
     private static SentenceCacheKey KeyFor(BuiltEngine engine, string sentence, VoiceInfo voice, IVoicedAudioTransform? transform) =>
-        new(sentence, engine.Model.Kind, engine.Model.Language, voice.Id, engine.Model.RootDir, engine.Model.PackVersion, VoicedAudio.TagOf(transform));
+        new(sentence, engine.Model.Kind, engine.Model.Language, voice.Id, engine.Model.RootDir, engine.Model.PackVersion, SiblingVoice.CacheTag(voice, transform));
 
     // The native Generate call cannot be interrupted, and its result may be wanted by another
     // caller that joined this synthesis, so a cancelled caller only stops waiting for a slot;
     // a call already running finishes and its audio goes to whoever is still waiting.
-    private static async Task<byte[]> SynthesizeSentenceAsync(
-        BuiltEngine engine, string sentence, int speakerId, IVoicedAudioTransform? transform, SemaphoreSlim slots,
+    private async Task<SentenceClip> SynthesizeSentenceAsync(
+        BuiltEngine engine, string sentence, VoiceInfo voice, IVoicedAudioTransform? transform, SemaphoreSlim slots,
         CancellationToken token)
     {
-        float[] raw;
-        int sampleRate;
+        RescueResult rescue;
         await slots.WaitAsync(token);
         try
         {
-            OfflineTtsGeneratedAudio audio = await GenerateGuardedAsync(engine, sentence, speakerId, VoicedAudio.PaceOf(transform));
-            try
-            {
-                raw = audio.Samples;
-                sampleRate = audio.SampleRate;
-            }
-            finally
-            {
-                audio.Dispose();
-            }
+            float pace = VoicedAudio.PaceOf(transform);
+            token.ThrowIfCancellationRequested(); // superseded while queued: never start the native call
+            rescue = await SilentOutputGuard.RescueUnitAsync(
+                sentence, voice.Id, pace, SiblingVoice.IsDropProne(voice), phrase => TakeAsync(engine, phrase, voice.SpeakerId, pace),
+                message => _log.Warning(message), token, phrase => SiblingTakeAsync(engine, phrase, voice, pace, slots, token));
         }
         finally
         {
@@ -734,7 +728,32 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         }
 
         // The product's voice transform is plain DSP: it runs after the slot is released so the next sentence can start synthesising.
-        return WavFile.Encode(VoicedAudio.Apply(transform, raw, sampleRate), sampleRate);
+        // A take the guard gave up on is played this once but never cached, so the next read tries again.
+        SpokenTake take = rescue.Take;
+        return new SentenceClip(WavFile.Encode(VoicedAudio.Apply(transform, take.Samples, take.SampleRate), take.SampleRate), !rescue.GaveUp);
+    }
+
+    // The pack's other voice speaks the unit when this one stays silent (Slice 149; shared logic in SiblingRescue).
+    private Task<SpokenTake?> SiblingTakeAsync(BuiltEngine engine, string text, VoiceInfo voice, float pace, SemaphoreSlim slots, CancellationToken token) =>
+        SiblingRescue.TakeAsync(
+            engine, engine.Model, voice, text,
+            new SiblingEngineOps<BuiltEngine>(
+                paths => _engines.Acquire(paths), e => e.Release(), (e, speakerId) => TakeAsync(e, text, speakerId, pace), slots,
+                (m, e) => _log.Warning(m, error: e)),
+            token);
+
+    // One take of the voice, copied out so the native audio is released at once (Slice 149).
+    private static async Task<SpokenTake> TakeAsync(BuiltEngine engine, string text, int speakerId, float pace)
+    {
+        OfflineTtsGeneratedAudio audio = await GenerateGuardedAsync(engine, text, speakerId, pace);
+        try
+        {
+            return new SpokenTake(audio.Samples, audio.SampleRate);
+        }
+        finally
+        {
+            audio.Dispose();
+        }
     }
 
     // The native Generate call keeps running after its caller is cancelled, so it holds its

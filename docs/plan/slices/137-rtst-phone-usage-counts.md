@@ -1,6 +1,6 @@
 # Slice 137 — RTST phone: anonymous usage counts and timings
 
-*Planned.*
+*Built 2026-10-26 (wave PR #382), not yet verified on a device or in Analytics Engine.*
 
 **Batch:** 29 (RTST usage, waiting and early start, Decisions 143-148)
 **Touches:** `worker/events.ts`, `worker/appconfig.ts`, `worker/index.ts`, `worker/downloads.ts`, `worker/*.test.mjs`, `wrangler.jsonc`, `wrangler.workers-dev.jsonc`, `tools/rtst-usage-report.ps1` (new), `src/ReadTheStupidText.Mobile.Shared/Usage/**` (new), `src/DinoReader.App/AppConfigClient.cs`, `src/DinoReader.App/UsageCounter.cs`, `src/DinoReader.App/MauiProgram.cs`, `src/ReadTheStupidText.Application/Usage/**` (new), `src/ReadTheStupidText.Mobile/MauiProgram.cs`, `src/ReadTheStupidText.Mobile/ReaderPage*.cs`, `src/ReadTheStupidText.Mobile/ReviewPage.xaml.cs`, `src/ReadTheStupidText.Mobile/VoicePickerPage.xaml.cs`, `src/ReadTheStupidText.Mobile/SettingsPage.xaml`, `src/ReadTheStupidText.Mobile/SettingsPage.xaml.cs`, `src/ReadTheStupidText.Mobile/LanguagePage.xaml*`, `src/ReadTheStupidText.Mobile/Resources/Strings/*.resx`, `src/ReadTheStupidText.Mobile/Platforms/iOS/Resources/PrivacyInfo.xcprivacy`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/MlKitTranslator.cs`, `PRIVACY.md`, `site/privacy.html`, `STORE.md`, `tests/ReadTheStupidText.Tests/**`, `src/ReadTheStupidText.Mobile/CLAUDE.md`
@@ -27,17 +27,28 @@ likely cause). Today Read The Stupid Text sends nothing and `PRIVACY.md`, `site/
   texts ship in this slice, but `telemetry.enabled` in `readthestupidtext/config.json` stays `false`
   until every row of the *Store privacy declarations* checklist in `plan.md` is ticked.
 
+#### Design (RTST Batch 29 mock, frames R10 and R11, added 2026-10-26)
+
+Two frames in `docs/design/rtst-phone/RTST Batch 29.dc.html` (R10 line 93, R11 line 124). The mock agrees with the plan. R11 is a stand-in (see the open point).
+
+- **Counts switch (R10, Settings).** R3 plus one card at the bottom: white, 1px `rgba(0,0,0,.11)` border, radius 16, padding 14x16, min height 72, gap 12. Title "Help improve the app" (16.5px, 600). Helper "Sends counts like "a French text was read". No names, no ids, nothing you read." (13px, `rgba(0,0,0,.58)`, line 1.4). Switch 52x32, radius 16, on state `#5B57E8`, white 26px knob 3px from the right. On by default; off sends nothing. While the store declarations are open the remote config keeps sending off whatever the switch says (Decision 145).
+- **First-run line (R11, language page).** One non-tappable line above Continue: "The app counts things like which languages are read, with no names or ids. You can turn this off in Settings." (13.5px, `rgba(0,0,0,.6)`, line 1.45, centred, 8px side padding). No consent prompt (Decision 143). Continue is 60px high, radius 16, gradient `#5B57E8` to `#3B82F6`, 17px 600.
+
+**New strings (all RTST locales):** the switch title, its helper, the first-run line.
+
+**Open point: First-run screen is a stand-in.** The mock says there is no real mock of the first-run language page yet, so R11 only shows where the line goes (header "Choose your language", sub "For the app's words and translations", rows English, Francais, Espanol, Deutsch, Farsi). **Default:** put the line above the existing Continue and change nothing else on that page.
+
 ## Work
 
-- [ ] Shared client: move the queue/batch/flush/sample logic out of `DinoReader.App/UsageCounter.cs`
+- [x] Shared client: move the queue/batch/flush/sample logic out of `DinoReader.App/UsageCounter.cs`
       and the fetch/cache logic out of `DinoReader.App/AppConfigClient.cs` into
       `Mobile.Shared/Usage/`, parameterised by host and preference keys. Dino keeps its own
       `Record*` methods on top; its behaviour and keys do not change (its tests stay green).
-- [ ] Worker: serve `/api/app-config` and `/api/events` on the RTST host too (today Dino only),
+- [x] Worker: serve `/api/app-config` and `/api/events` on the RTST host too (today Dino only),
       reading `readthestupidtext/config.json` and writing to `RTST_USAGE`; a closed RTST `EVENT_RULES`
       set. Like Slice 133 the binding is **not** added to the wrangler configs until Analytics Engine
       is confirmed enabled (a failed deploy takes the site down); until then the route returns 204.
-- [ ] Events (closed set, `Application/Usage/`, pure and unit-tested):
+- [x] Events (closed set, `Application/Usage/`, pure and unit-tested):
   - `app_opened`: platform, OS major version, app version, UI language.
   - `read_started`: source language (detected), read language, mode (`original`/`translation`),
     voice engine (closed list), voice is default (bool), text length bucket.
@@ -45,14 +56,14 @@ likely cause). Today Read The Stupid Text sends nothing and `PRIVACY.md`, `site/
   - `voice_changed`: language, engine.
   - `timing`: stage (`model_download`, `translate`, `first_audio`), language pair, duration bucket
     (<0.5, 0.5-1, 1-2, 2-5, 5-10, 10-20, >20 s), outcome (`done`, `cancelled`, `failed`).
-- [ ] Settings switch "Help improve the app" with helper "Sends counts like "a French text was read".
+- [x] Settings switch "Help improve the app" with helper "Sends counts like "a French text was read".
       No names, no ids, nothing you read."; one line on the first-run screen; strings in every RTST locale.
-- [ ] Privacy texts: `PRIVACY.md`, `site/privacy.html`, `STORE.md` name every event and field, the off
+- [x] Privacy texts: `PRIVACY.md`, `site/privacy.html`, `STORE.md` name every event and field, the off
       switch, Cloudflare as processor, that the IP is seen by the server but not stored with counts;
       iOS `PrivacyInfo.xcprivacy` (product interaction and performance data, not linked, no tracking).
-- [ ] `tools/rtst-usage-report.ps1`: languages, translate offered vs chosen, original vs translation,
+- [x] `tools/rtst-usage-report.ps1`: languages, translate offered vs chosen, original vs translation,
       voice changes, timing distributions per stage and platform; suppress groups under 10.
-- [ ] Seed `readthestupidtext/config.json` with telemetry **off** after merge.
+- [x] Seed `readthestupidtext/config.json` with telemetry **off** after merge. Not needed: a missing object already means telemetry off (`worker/appconfig.ts`).
 
 ## Verification
 
@@ -60,3 +71,19 @@ likely cause). Today Read The Stupid Text sends nothing and `PRIVACY.md`, `site/
 - Emulator (once Analytics Engine is on and the switch is flipped for a test): read, translate,
   change voice; rows appear in `rtst_usage`; Settings off sends nothing; config off, Worker writes nothing.
 - Human gate: the *Store privacy declarations* checklist in `plan.md` before `telemetry.enabled` is set.
+
+*Changed while building:* the Worker serves `/api/events` and `/api/app-config` on the RTST host from `readthestupidtext/config.json`; the `RTST_USAGE` binding (dataset `rtst_usage`) is NOT in the wrangler configs, so the route answers 204 while telemetry is off. Shared `UsageQueueSender<T>` and `RemoteConfigClient<T>` live in `Mobile.Shared/Usage`; Dino's `UsageCounter` and `AppConfigClient` are now thin wrappers over them. The flush now runs off the UI thread, and the queue is cleared only on an explicit off (Dino too). `IModelPreparer` times `model_download` apart from `translate`. A one-time upgrade notice shows on `ReaderPage` (flag `rtst.usage.noticeSeen`, set by `LanguagePage.OnAppearing`). Privacy texts updated; `site/privacy.html` deploys on merge. Report script: `tools/rtst-usage-report.ps1`.
+
+*From review:* 137-high: 12 applied, 13 not applicable. 137-medium: 6 applied; 5, 7, 8 and 10 skipped.
+
+#### For CLAUDE.md (lifted 2026-10-26)
+
+- Root, Landing site paragraph: the RTST host also serves `/api/events` and `/api/app-config` from `readthestupidtext/config.json`; the `RTST_USAGE` binding (dataset `rtst_usage`) is added to both wrangler configs only when switching on, with the same four steps as Dino. (Slice 137: docs/plan/slices/137-rtst-phone-usage-counts.md)
+- `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md`: both apps' usage counts go through `Usage/UsageQueueSender` and `RemoteConfigClient`; Dino's `UsageCounter` and `AppConfigClient` only add their own `Record*` methods. (Slice 137: docs/plan/slices/137-rtst-phone-usage-counts.md)
+
+#### Not yet verified
+
+- Emulator (AVD RTST_Test, 2026-10-26): PASS for the first-run counts line (no upgrade alert on a fresh install), the Settings switch (persists across restart, TalkBack reads its state), read/translate/voice change, no crash or network call while off, dark mode readable. Seen in passing (pre-existing, not this slice): unselected speed-button labels are low-contrast in dark mode.
+- Rows appear in `rtst_usage` once Analytics Engine is on and the binding is added.
+- iOS compile.
+- Store privacy declarations (checklist in `plan.md`).

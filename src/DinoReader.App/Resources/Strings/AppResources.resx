@@ -230,6 +230,14 @@
   <data name="Wizard_NoTextShort" xml:space="preserve"><value>No text</value></data>
   <data name="Wizard_NoText" xml:space="preserve"><value>No text found on this page</value></data>
   <data name="Wizard_Reading" xml:space="preserve"><value>Reading page {0} of {1}</value></data>
+  <data name="Wait_GettingVoices" xml:space="preserve"><value>Getting the voices ready…</value></data>
+  <data name="Wait_ReadingPictures" xml:space="preserve"><value>Reading the pictures…</value></data>
+  <data name="Wait_PageOf" xml:space="preserve"><value>Page {0} of {1}</value></data>
+  <data name="Wait_Translating" xml:space="preserve"><value>Translating…</value></data>
+  <data name="Wait_Saving" xml:space="preserve"><value>Saving…</value></data>
+  <data name="Wait_GettingBook" xml:space="preserve"><value>Getting the book…</value></data>
+  <data name="Wait_BackingUp" xml:space="preserve"><value>Backing up the books…</value></data>
+  <data name="Wait_Restoring" xml:space="preserve"><value>Putting the books back…</value></data>
   <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>Some pages weren’t read</value></data>
   <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>{0} pages could not be read. They are kept as pictures without text.</value></data>
   <data name="Pictures_NoneTitle" xml:space="preserve"><value>This file has words but no pictures</value></data>

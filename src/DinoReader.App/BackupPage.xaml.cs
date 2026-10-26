@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
+using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Mobile.Shared.Waiting;
 using RoundRectangle = Microsoft.Maui.Controls.Shapes.RoundRectangle;
 
 namespace DinoReader;
@@ -29,6 +31,7 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 	private readonly ExternalActivityGuard _external;
 	private readonly GrownUpMode _mode;
 	private readonly BusyGuard _busy = new();
+	private readonly WaitController _wait;
 	private int _count;
 
 	public BackupPage(IStoryLibrary library, ExternalActivityGuard external, GrownUpMode mode)
@@ -37,6 +40,10 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 		_library = library;
 		_external = external;
 		_mode = mode;
+		WaitOverlay overlay = DinoWait.OverPage();
+		Grid.SetRowSpan(overlay, BackupRoot.RowDefinitions.Count);
+		BackupRoot.Children.Add(overlay);
+		_wait = new WaitController(overlay);
 	}
 
 	protected override async void OnAppearing()
@@ -57,14 +64,13 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 
 	private async void OnSeeStoriesClicked(object? sender, EventArgs e) => await _busy.RunAsync(() => Navigation.PopAsync());
 
-	private async void OnSaveClicked(object? sender, EventArgs e) => await _busy.RunAsync(() => WorkingAsync(SaveAsync));
+	private async void OnSaveClicked(object? sender, EventArgs e) => await _busy.RunAsync(() => GuardedAsync(SaveAsync));
 
-	private async void OnRestoreClicked(object? sender, EventArgs e) => await _busy.RunAsync(() => WorkingAsync(RestoreAsync));
+	private async void OnRestoreClicked(object? sender, EventArgs e) => await _busy.RunAsync(() => GuardedAsync(RestoreAsync));
 
-	// The indicator shows while the file is written or read; a failure the code below did not name ends in the calm "didn't work" alert.
-	private async Task WorkingAsync(Func<Task> work)
+	// A failure the code below did not name ends in the calm "didn't work" alert.
+	private async Task GuardedAsync(Func<Task> work)
 	{
-		WorkingIndicator.IsVisible = WorkingIndicator.IsRunning = true;
 		try
 		{
 			await work();
@@ -74,11 +80,10 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 			Debug.WriteLine($"Dino Reader backup failed: {ex}");
 			await DisplayAlertAsync(AppResources.Backup_Title, AppResources.Backup_Failed, AppResources.Common_Ok);
 		}
-		finally
-		{
-			WorkingIndicator.IsVisible = WorkingIndicator.IsRunning = false;
-		}
 	}
+
+	// The wait overlay (Slice 143, no Cancel: a half-restored library is worse than waiting) covers only the file work, never the picker, the share sheet or an alert.
+	private Task<T> WaitingAsync<T>(string line, Func<Task<T>> work) => _wait.RunAsync(WaitStage.GettingFile, line, canCancel: false, _ => work());
 
 	private static async Task TryAsync(Func<Task> work)
 	{
@@ -100,7 +105,7 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 			return;
 		}
 
-		(string path, int skipped) = await WriteBackupAsync(stories);
+		(string path, int skipped) = await WaitingAsync(AppResources.Wait_BackingUp, () => WriteBackupAsync(stories));
 		await _external.RunAsync(() => DeliverAsync(path));
 		if (skipped > 0)
 		{
@@ -205,13 +210,18 @@ public partial class BackupPage : ContentPage, IGrownUpPage
 		}
 	}
 
+	private async Task<StoryRestoreResult> CopyAndRestoreAsync(FileResult picked, string path)
+	{
+		await CopyPickedAsync(picked, path);
+		await using FileStream file = File.OpenRead(path);
+		return await StoryBackupReader.RestoreAsync(file, _library);
+	}
+
 	private async Task RestoreFromAsync(FileResult picked, string path)
 	{
 		try
 		{
-			await CopyPickedAsync(picked, path);
-			await using FileStream file = File.OpenRead(path);
-			ShowResult(await StoryBackupReader.RestoreAsync(file, _library));
+			ShowResult(await WaitingAsync(AppResources.Wait_Restoring, () => CopyAndRestoreAsync(picked, path)));
 			await TryAsync(CountStoriesAsync);
 		}
 		catch (StoryBackupNewerException)

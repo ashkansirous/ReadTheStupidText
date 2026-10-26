@@ -1,6 +1,7 @@
 using Android.Runtime;
 using Android.Gms.Extensions;
 using ReadTheStupidText.Application.Translation;
+using ReadTheStupidText.Application.Usage;
 using Xamarin.Google.MLKit.Common.Model;
 using Xamarin.Google.MLKit.NL.Translate;
 using MlKitClient = Xamarin.Google.MLKit.NL.Translate.ITranslator;
@@ -14,7 +15,7 @@ namespace ReadTheStupidText.Mobile.Shared;
 /// on-device model manager; the text itself is never sent anywhere. The last language pair's
 /// translator is kept open so a long text's chunks reuse it.
 /// </summary>
-public sealed class MlKitTranslator : AppTranslator, IDisposable
+public sealed class MlKitTranslator : AppTranslator, IModelPreparer, IDisposable
 {
     // The model is only fetched when the user turns translation on and plays, so the download is
     // on demand; requiring Wi-Fi would make that tap fail silently on mobile data.
@@ -64,6 +65,13 @@ public sealed class MlKitTranslator : AppTranslator, IDisposable
                 return translated;
             }
         }
+    }
+
+    /// <summary>Fetches the models for the pair on their own, so the wait for a download is timed apart from the translation (Slice 137).</summary>
+    public async Task EnsureModelAsync(string source, string target, CancellationToken cancellationToken)
+    {
+        Opening opening = await StartOrJoinOpeningAsync(EngineLanguageCodes.ToEngine(source), EngineLanguageCodes.ToEngine(target), cancellationToken);
+        await AwaitDownloadAsync(opening, cancellationToken);
     }
 
     public void Dispose()

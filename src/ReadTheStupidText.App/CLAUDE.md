@@ -5,6 +5,8 @@ neural reader are in `src/ReadTheStupidText.Infrastructure/CLAUDE.md`. (This fol
 a generic WinUI template and is separate from these rules.)
 The tray's Win32/UIA services (hotkey, selection monitor, clipboard listener, selection copier, foreground probe, startup task) live in `src/ReadTheStupidText.Windows.Tray`, referenced only by this project (Slice 128).
 
+The Batch 29 tray wait flyout and control-panel counts switch (Slices 140-141) are screens W1-W2 of `docs/design/rtst-phone/RTST Batch 29.dc.html` (index in that folder's README): read visual values from it, never guess them, never call `DesignSync` for them.
+
 Keep `App.xaml.cs` thin: provider/DI wiring and window bootstrap only. Real
 logic lives in Application/Infrastructure; XAML views stay free of business
 logic.
@@ -19,6 +21,14 @@ logic.
 ## Localization and translation (Slice 57)
 
 UI copy is in `Strings/<tag>/Resources.resw` (en-US, fa, fr, es, pt, zh-Hans, ar, ru, ja, da, fi, sv, nb, nl; tags from `UiLanguageTag`, listed in `Package.appxmanifest`). XAML uses `x:Uid` (`Uid.Property` keys; attached properties as `Uid.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip`), code uses `UiStrings.Get/Format`; never hard-code a UI string. A new key goes into all fourteen files (the resource-coverage tests fail otherwise). `UiStrings.ApplyLanguage` runs in `App()` before any window; `x:Uid` text is applied once per window, so the panel's language picker restarts the app (`AppInstance.Restart`). The layout never mirrors (Slice 88): each window's `RootGrid` is fixed `LeftToRight`, and only text takes a direction through `TextFlow` (`ContentDirection` for read/activity text by first strong letter, `ForUi` for localised strings by UI language). Translation runs in `ReadAloudService.ReadEntryAsync` through `ReadTranslator` (time budget, falls back to the original with a `TranslationOutcome`); the engine is `PackTranslator`, which has no inference engine yet. (Slice 57: docs/plan/slices/57-windows-localization-translation.md)
+
+## Anonymous usage counts (Slice 140)
+
+Windows sends the phone's counts (`Application/Usage/`: `UsageEvents`, `UsageBatch`, plus `UsageService` over `IUsageStore`/`IUsageTransport`; `Infrastructure/Usage/` has the file store, HTTP transport and `WindowsUsage.Create`). `ReadAloudService.Usage.cs` records reads, voice changes, the translate switch and the translate, pack-download and first-audio timings through `IUsageRecorder`, which never throws and never blocks the caller. The panel's last row (`ControlPanelWindow.Usage.cs`) is the user's switch: on by default, off clears the queue. Queue and config files live in `LocalFolder/usage/`; sends run on the pool, and the last one at `ProcessExit` waits at most 2 s and uses the held config (no new request), so it can fall short; what it misses stays queued for the next launch. With the switch off the app makes no config request at all. Rules: no id and no text in a count; the queue is cleared only on an explicit off (the switch, or a config really fetched or kept), never while no config has been seen; the Worker's lists (`worker/events.ts`, guarded by `UsageEventsTests`) must grow with `UsageEngine`/`UsageSource`; counting stays off until the remote config says on (Decision 145). (Slice 140: docs/plan/slices/140-rtst-windows-usage-counts.md)
+
+## Windows waits (Slice 141)
+
+- Windows waits go through `WaitFlyoutController` (500 ms `WaitGate`); the flyout (`WaitFlyoutWindow`) must stay no-activate so a hotkey read never steals focus. (Slice 141: docs/plan/slices/141-rtst-windows-wait-indicator.md)
 
 ## Release packaging
 

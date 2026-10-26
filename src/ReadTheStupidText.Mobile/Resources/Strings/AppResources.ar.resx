@@ -16,6 +16,11 @@
   <data name="Reader_EmptyHint" xml:space="preserve"><value>اضغط على زر في الأسفل لإضافة شيء للقراءة</value></data>
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>لغة كلمات التطبيق</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>سرعة القراءة</value></data>
+  <data name="Settings_CountsTitle" xml:space="preserve"><value>ساعد في تحسين التطبيق</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>يرسل أعدادًا مثل «تمت قراءة نص فرنسي». لا أسماء ولا معرّفات ولا شيء مما تقرؤه.</value></data>
+  <data name="Settings_CountsOn" xml:space="preserve"><value>مفعّل</value></data>
+  <data name="Settings_CountsOff" xml:space="preserve"><value>متوقف</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>يحسب التطبيق أشياء مثل اللغات التي تُقرأ، دون أسماء أو معرّفات. يمكنك إيقاف ذلك من الإعدادات.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>رجوع</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>الجملة السابقة</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>الجملة التالية</value></data>
@@ -65,7 +70,10 @@
   <data name="Review_LooksLike" xml:space="preserve"><value>يبدو أن هذا النص بلغة {0}</value></data>
   <data name="Review_TranslateAndRead" xml:space="preserve"><value>ترجمة وقراءة</value></data>
   <data name="Review_Read" xml:space="preserve"><value>قراءة</value></data>
-  <data name="Review_GettingTranslator" xml:space="preserve"><value>جارٍ تنزيل مترجم {0}…</value></data>
+  <data name="Wait_DownloadingModel" xml:space="preserve"><value>جارٍ تنزيل {0}…</value></data>
+  <data name="Wait_Translating" xml:space="preserve"><value>جارٍ الترجمة…</value></data>
+  <data name="Wait_PreparingVoice" xml:space="preserve"><value>جارٍ تجهيز الصوت…</value></data>
+  <data name="Wait_ReadingFile" xml:space="preserve"><value>جارٍ قراءة الملف…</value></data>
   <data name="Review_FirstTimeOnly" xml:space="preserve"><value>في المرة الأولى فقط. تتم الترجمة على هذا الهاتف.</value></data>
   <data name="Review_ShowOriginal" xml:space="preserve"><value>عرض الأصل</value></data>
   <data name="Review_FailedOne" xml:space="preserve"><value>تعذّرت قراءة الصفحة {0}.</value></data>

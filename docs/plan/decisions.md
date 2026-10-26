@@ -1197,3 +1197,15 @@
 147. **Early start translates and voices the head before the tap (Batch 29).** Original: first 2 sentences (else ~120 characters at a word boundary). Translation, only when the detected language differs from the user's: translate the first 3 sentences, voice the first 2. The tap cancels the other side; a missing translation model downloads early only on an unmetered network. Supersedes the one-vs-two-sentence mismatch of Decision 66 and `HeadPolicy.Default`. (Slices 139, 142)
 
 148. **Batch 29 order: phone first, then Windows (Batch 29).** 137 (counts) -> 138 (wait indicator) -> 139 (early start) on Android/iOS, then 140-142 on Windows; iOS has no translation, so it gets counts and the indicator only. (Slices 137-142)
+
+149. **One shared wait overlay for both MAUI apps; Dino shows it on every wait over 500 ms (Batch 30).** `Mobile.Shared/Waiting/`, driven by the `WaitStage` timer model; Dino's look is a bouncing dino drawn with MAUI animation (static under reduce-motion) and one grown-up line; no Lottie. (Slices 138, 143)
+
+150. **Farsi's default voice is `mana` (female) in both apps; `ganji_adabi` leaves the cast (Batch 30).** Characters on it move to `ganji`/`gyro`; it stays selectable; grown-ups' picks are kept; the default changes in code, not in `packs.yml`. (Slice 144)
+
+151. **Sound-word spellings are measured per voice before any book is rewritten (Batch 30).** Until the list exists, sound words use repetition with punctuation. (Slice 145)
+
+152. **Dino books are written in spoken, kid-friendly language in every language (Batch 30).** The way a parent talks to a 4-6-year-old: colloquial forms, diminutives, exclamations; never literary or written-only forms. (Slice 146)
+
+153. **All existing Dino books are rewritten to Decision 152, one PR per book: Farsi first, then English, then the other languages (Batch 30).** (Slice 146)
+
+154. **iOS reviews follow one cadence for every app (Pipeline).** Never cancel a waiting review or expire a build; at most one review waiting per app; always the newest processed (`VALID`, unexpired) build. External TestFlight testers (group "Rofagha"): daily and automatic (`testflight-external.yml`). App Store: a manual button (`appstore-submit.yml`, release type after approval; the first listing is filled in App Store Connect by hand). Internal "Family" testers are unchanged (every merge, no review). Supersedes Decision 70's manual tester-group step. (Slice 147: docs/plan/slices/147-ios-review-cadence.md)

@@ -4,9 +4,11 @@ using ReadTheStupidText.Application.Images;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Application.Translation;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Domain.Reading;
 using ReadTheStupidText.Mobile.Resources.Strings;
 using ReadTheStupidText.Mobile.Shared;
+using ReadTheStupidText.Mobile.Shared.Usage;
 
 namespace ReadTheStupidText.Mobile;
 
@@ -36,6 +38,7 @@ public partial class ReaderPage : ContentPage
     private readonly IHeadStart _headStart;
     private readonly EditorDraft _draft;
     private readonly ReviewHandOff _review;
+    private readonly RtstUsage _usage;
     private string? _lastSpokenText;
 
     // The text a translation on the screen came from, so Edit can offer "Show original" (Slice 101).
@@ -61,7 +64,7 @@ public partial class ReaderPage : ContentPage
     // started (system TTS returns as soon as the utterance is queued).
     private static readonly TimeSpan FirstAudioGrace = TimeSpan.FromSeconds(8);
 
-    public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, IVoiceModelService model, VoicePackInstaller installer, IPlatformServices platform, EditorDraft draft, ReviewHandOff review, IHeadStart headStart, IDocumentScanner? scanner = null, ILanguageDetector? detector = null)
+    public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, IVoiceModelService model, VoicePackInstaller installer, IPlatformServices platform, EditorDraft draft, ReviewHandOff review, IHeadStart headStart, RtstUsage usage, IDocumentScanner? scanner = null, ILanguageDetector? detector = null)
     {
         InitializeComponent();
         FlowDirection = FlowDirection.LeftToRight;
@@ -77,11 +80,13 @@ public partial class ReaderPage : ContentPage
         _platform = platform;
         _draft = draft;
         _review = review;
+        _usage = usage;
         TextEditor.Text = draft.Take();
         _original = draft.TakeOriginal();
         TextEditor.FlowDirection = TextFlow.ContentDirection(TextEditor.Text);
         draft.RegisterRebuildHook(PrepareForRebuild);
         ApplyStaticTexts();
+        InitWait();
         InitTranslation(detector);
         InitHeadStart();
         RenderReading();
@@ -129,6 +134,7 @@ public partial class ReaderPage : ContentPage
         RestorePendingReadSpinner();
         PrepareScannerOnce();
         TakeReviewResult();
+        _ = ShowCountsNoticeOnceAsync();
     }
 
     // The review page's Read leaves the checked (or translated) text here; it is shown and read at once (Slice 101).
@@ -180,6 +186,7 @@ public partial class ReaderPage : ContentPage
     /// </summary>
     public void DetachHandlers()
     {
+        _waitTheme.Detach();
         _reader.StateChanged -= OnReaderStateChanged;
         _reader.ProgressChanged -= OnReaderProgressChanged;
         _reader.TimingChanged -= OnReaderTimingChanged;
@@ -197,6 +204,7 @@ public partial class ReaderPage : ContentPage
         _retired = true;
         CancelDetection();
         _reader.Stop();
+        EndFirstAudioClock(UsageOutcome.Cancelled);
         _draft.Store(TextEditor.Text, _original);
         DetachHandlers();
     }
@@ -250,9 +258,9 @@ public partial class ReaderPage : ContentPage
 
     private async void OnFileTapped(object? sender, TappedEventArgs e)
     {
-        if (_inputBusy)
+        if (_inputBusy || _wait.IsActive)
         {
-            return;
+            return; // a read still preparing owns the wait overlay; importing now would end it
         }
 
         SetInputBusy(true);
@@ -288,12 +296,11 @@ public partial class ReaderPage : ContentPage
             return; // user cancelled the picker, or the page was replaced meanwhile
         }
 
-        BusyIndicator.IsRunning = true;
-        BusyIndicator.IsVisible = true;
         string? extracted = null;
         try
         {
-            extracted = await _documentExtractor.ExtractTextAsync(file.FullPath);
+            extracted = await _wait.RunAsync(WaitStage.GettingFile, AppResources.Wait_ReadingFile, canCancel: false,
+                _ => _documentExtractor.ExtractTextAsync(file.FullPath));
         }
         catch (DocumentTooLargeException ex)
         {
@@ -302,11 +309,6 @@ public partial class ReaderPage : ContentPage
         catch (Exception)
         {
             await AlertAsync(AppResources.Reader_FileUnreadableTitle, AppResources.Reader_FileUnreadableMessage);
-        }
-        finally
-        {
-            BusyIndicator.IsRunning = false;
-            BusyIndicator.IsVisible = false;
         }
 
         if (extracted is not null)
@@ -351,6 +353,7 @@ public partial class ReaderPage : ContentPage
     {
         CancelHeadStart();
         _reader.Stop();
+        EndFirstAudioClock(UsageOutcome.Cancelled); // replaced by a new read; no-op when the first sound already played
         ClearPendingRead();
         if (string.IsNullOrWhiteSpace(text))
         {
@@ -372,6 +375,7 @@ public partial class ReaderPage : ContentPage
         _pendingReadId = id;
         _pendingReadText = text;
         SetPlayLoading(true);
+        StartFirstAudioClock();
         try
         {
             // The text on screen is what is read: a translation was made on the review page (Slice 101).
@@ -381,11 +385,18 @@ public partial class ReaderPage : ContentPage
                 return;
             }
 
+            CountReadStarted(text, plan);
             await SpeakPlannedAsync(text, plan);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             bool wasCurrent = id == _pendingReadId;
+            if (wasCurrent)
+            {
+                // a superseded read's error must not end the newer read's clock
+                EndFirstAudioClock(ex is OperationCanceledException ? UsageOutcome.Cancelled : UsageOutcome.Failed);
+            }
+
             ClearPendingReadIfCurrent(id);
             if (wasCurrent)
             {
@@ -503,6 +514,7 @@ public partial class ReaderPage : ContentPage
             return true;
         }
 
+        _firstAudioClock = null; // a blocked read never had a first sound to wait for
         ClearPendingReadIfCurrent(id);
         string message = plan.Route == VoiceRoute.Downloading ? AppResources.Reader_VoiceDownloadingMessage : AppResources.Reader_NoVoiceMessage;
         await AlertAsync(AppResources.Reader_VoiceUnavailableTitle, AppResources.Format(message, ReadingLanguageName(plan.Language)));
@@ -577,11 +589,19 @@ public partial class ReaderPage : ContentPage
         SetPlayLoading(true);
     }
 
+    // The wait overlay (Slice 138) stands for the play button's old spinner: it shows after 500 ms and ends with the pending read.
     private void SetPlayLoading(bool loading)
     {
-        PlayLoadingIndicator.IsRunning = loading;
-        PlayLoadingIndicator.IsVisible = loading;
-        PlayPauseIcon.IsVisible = !loading;
+        if (loading)
+        {
+            BeginPreparingWait();
+            return;
+        }
+
+        if (_wait.Stage == WaitStage.PreparingVoice)
+        {
+            _wait.End();
+        }
     }
 
     private async void OnSkipBackTapped(object? sender, TappedEventArgs e) => await _reader.SkipBackward();
@@ -611,6 +631,8 @@ public partial class ReaderPage : ContentPage
             && _pendingReadId != 0 && _pendingReadId == _returnedReadId;
         if (state == PlaybackState.Playing || idleAfterReturn)
         {
+            // Idle straight after the return means a short text played before the Playing event was handled; a late Playing still counts as done.
+            EndFirstAudioClock(UsageOutcome.Done);
             ClearPendingRead();
         }
     }
@@ -782,8 +804,9 @@ public partial class ReaderPage : ContentPage
     // The empty player is dimmed: a grey Play circle, grey skip buttons, and nothing to tap.
     private void RenderEmptyPlayer(bool empty)
     {
-        PlayerCard.Opacity = empty ? 0.5 : 1;
-        PlayerCard.InputTransparent = empty;
+        bool dimmed = empty || PlayerDimmedByWait;
+        PlayerCard.Opacity = dimmed ? DimmedPlayerOpacity : 1;
+        PlayerCard.InputTransparent = dimmed;
         _playButtonBackground ??= PlayButton.Background;
         PlayButton.Background = empty ? new SolidColorBrush(Color.FromArgb("#C9CBD6")) : _playButtonBackground;
         Color skipFill = empty ? Color.FromArgb("#0F000000") : Color.FromArgb("#1A5B57E8");
