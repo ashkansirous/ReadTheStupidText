@@ -28,7 +28,7 @@ One item per book: art record, Gemini chat, pictures through the prepare script 
 - [x] Little Red Riding Hood (Red Riding Hood, Mother, Wolf, Grandma, Woodcutter, Button)
 - [x] The Ugly Duckling (Mother Duck, Duckling, Hen, Swan)
 - [x] The Little Red Hen (Hen, Dog, Cat, Duck)
-- [ ] Jack and the Beanstalk (Jack, Mother, Giant, Peddler)
+- [x] Jack and the Beanstalk (Jack, Mother, Giant, Peddler)
 - [ ] The Elves and the Shoemaker (Hans, Greta, Nib, Nob)
 - [ ] The Town Mouse and the Country Mouse (Town Mouse, Country Mouse)
 - [ ] Peter Rabbit (Mrs. Rabbit, Peter, Mr. McGregor); new pictures, not Potter's, in the house style
