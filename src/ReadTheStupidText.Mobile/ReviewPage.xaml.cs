@@ -49,6 +49,8 @@ public partial class ReviewPage : ContentPage
     private string? _chosenPair;
 
     private ReviewTextState _state = new(string.Empty);
+    private string _failedBannerText = string.Empty;
+    private bool _originalCut; // the original (Show original) was cut to the editor limit too
     private string? _detected;
     private bool _optionShown;
     private bool _ticked = true;
@@ -158,12 +160,28 @@ public partial class ReviewPage : ContentPage
 
     private void ApplyRequest(ReviewRequest request)
     {
-        SetState(new ReviewTextState(request.Text, request.Original), TimeSpan.Zero);
+        (string text, bool cut) = EditorTextLimit.Cap(request.Text);
+        (string? original, _originalCut) = request.Original is null ? (null, false) : EditorTextLimit.Cap(request.Original); // Show original sets the editor too
+        SetState(new ReviewTextState(text, original), TimeSpan.Zero);
         ShowFailedBanner(request.FailedPages, request.ReadPages);
+        ShowCutBanner(cut);
         if (string.IsNullOrEmpty(request.Text))
         {
             TextEditor.Focus();
         }
+    }
+
+    // Slice 148: a text too long for the native editor is cut and the page says so, in the same note the failed pages use.
+    private void ShowCutBanner(bool cut)
+    {
+        if (!cut)
+        {
+            return;
+        }
+
+        string cutText = AppResources.Format(AppResources.Review_TextCut, EditorTextLimit.MaxCharacters.ToString("N0", CultureInfo.CurrentCulture));
+        TextFlow.ForUi(FailedLabel, string.IsNullOrEmpty(_failedBannerText) ? cutText : $"{_failedBannerText} {cutText}");
+        FailedBanner.IsVisible = true;
     }
 
     private void ShowFailedBanner(IReadOnlyList<int>? failed, IReadOnlyList<int>? read)
@@ -174,7 +192,8 @@ public partial class ReviewPage : ContentPage
         }
 
         string failedText = AppResources.Format(failed.Count == 1 ? AppResources.Review_FailedOne : AppResources.Review_FailedMany, ScannedText.FormatPageNumbers(failed));
-        TextFlow.ForUi(FailedLabel, $"{failedText} {HereText(read)}".TrimEnd());
+        _failedBannerText = $"{failedText} {HereText(read)}".TrimEnd();
+        TextFlow.ForUi(FailedLabel, _failedBannerText);
         FailedBanner.IsVisible = true;
     }
 
@@ -199,6 +218,7 @@ public partial class ReviewPage : ContentPage
         TextEditor.FlowDirection = TextFlow.ContentDirection(state.Text);
         ShowOriginalLink.IsVisible = state.HasOriginal;
         FailedBanner.IsVisible = false;
+        _failedBannerText = string.Empty; // the banner is rebuilt from this, never appended to what is on screen
         _detected = null;
         _offeredPair = null;
         _chosenPair = null;
@@ -359,7 +379,10 @@ public partial class ReviewPage : ContentPage
             string? text = await Clipboard.Default.GetTextAsync();
             if (!string.IsNullOrWhiteSpace(text))
             {
-                SetState(new ReviewTextState(text), TimeSpan.Zero);
+                (string capped, bool cut) = EditorTextLimit.Cap(text);
+                _originalCut = false;
+                SetState(new ReviewTextState(capped), TimeSpan.Zero);
+                ShowCutBanner(cut);
             }
         }
         catch (Exception)
@@ -373,6 +396,7 @@ public partial class ReviewPage : ContentPage
         if (!_translating && !_finishing && _state.HasOriginal)
         {
             SetState(_state.ShowOriginal(), TimeSpan.Zero);
+            ShowCutBanner(_originalCut); // the editor holds the capped original: keep telling the person
         }
     }
 
