@@ -230,6 +230,7 @@ public partial class FirstRunPage : ContentPage
 			: AppResources.Format(AppResources.FirstRun_ReadyBody, StarterStories.Count);
 		HelloLabel.Text = AppResources.FirstRun_HearHello;
 		SetUpButton.Text = AppResources.FirstRun_SetUp;
+		ReadyUsage.Text = AppResources.FirstRun_Usage;
 	}
 
 	private void OnInstallerChanged(object? sender, EventArgs e) => Refresh();

@@ -2,13 +2,29 @@
 <!--
 The MAUI template's minimum privacy manifest (File timestamp, boot time, disk space),
 plus UserDefaults (CA92.1): MobilePreferencesSettingsStore and CompositeSpeechReader
-use the Preferences API. The app collects no data and does no tracking.
+use the Preferences API. Slice 133: Dino sends anonymous product-interaction counts (a book was opened or finished) to
+its own server: no identifier, not linked to the user, not used for tracking, purpose analytics; a grown-up can switch it off.
 -->
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
     <key>NSPrivacyTracking</key>
     <false/>
+    <key>NSPrivacyCollectedDataTypes</key>
+    <array>
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypeProductInteraction</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
+            </array>
+        </dict>
+    </array>
     <key>NSPrivacyAccessedAPITypes</key>
     <array>
         <dict>

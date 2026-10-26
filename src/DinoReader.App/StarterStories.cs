@@ -19,6 +19,9 @@ public sealed class StarterStories(IStoryLibrary library, StoryVoicing voicing)
 	// Set once a starter's stored copy has taken the bundled translations (Slice 95; v2 key, Slice 105: the five Nordic and Dutch tables): earlier versions installed the starters without them.
 	private const string TranslationsAdoptedKeyPrefix = "dino.starter.translations.v2.";
 
+	// Set for every starter and every store story kept on the shelf (Slice 133): a book with this mark, a starter record or a recorded content version came from the catalogue, not from a grown-up.
+	private const string CatalogueKeyPrefix = "dino.catalogue.";
+
 	// The content version a starter was installed or refreshed at; none recorded means the first release (StarterUpdate.LegacyInstalledVersion).
 	private const string VersionKeyPrefix = "dino.starter.version.";
 
@@ -64,6 +67,12 @@ public sealed class StarterStories(IStoryLibrary library, StoryVoicing voicing)
 
 	private async Task<HashSet<string>> PresentIdsAsync() =>
 		(await library.ListAsync()).Select(s => s.SourceId).OfType<string>().ToHashSet();
+
+	/// <summary>Whether <paramref name="packageId"/> is a starter or a story the store gave (Slice 133): only such books are counted by id in the usage counts.</summary>
+	public static bool IsCatalogueId(string packageId) =>
+		Preferences.Default.Get(CatalogueKeyPrefix + packageId, false) || IsRecorded(packageId) || InstalledVersion(packageId) is not null;
+
+	private static void MarkCatalogue(string packageId) => Preferences.Default.Set(CatalogueKeyPrefix + packageId, true);
 
 	private static bool IsRecorded(string packageId) => Preferences.Default.Get(InstalledKeyPrefix + packageId, false);
 
@@ -317,6 +326,7 @@ public sealed class StarterStories(IStoryLibrary library, StoryVoicing voicing)
 		using var copy = new MemoryStream();
 		await package.CopyToAsync(copy);
 		StoryPackageManifest manifest = await ManifestAsync(copy);
+		MarkCatalogue(manifest.Id);
 		if (manifest.Version is { } version)
 		{
 			RecordVersion(manifest.Id, version);

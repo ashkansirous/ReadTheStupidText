@@ -65,7 +65,7 @@
         </Grid>
 
         <!-- Screen 18: ready. -->
-        <Grid x:Name="ReadyPanel" RowDefinitions="*,Auto" Padding="22,0,22,22" IsVisible="False">
+        <Grid x:Name="ReadyPanel" RowDefinitions="*,Auto,Auto" Padding="22,0,22,22" IsVisible="False">
             <VerticalStackLayout Spacing="14" Padding="0,56,0,0">
                 <Border WidthRequest="92" HeightRequest="92" StrokeThickness="0" HorizontalOptions="Center">
                     <Border.StrokeShape>
@@ -93,7 +93,10 @@
                     </Border.GestureRecognizers>
                 </Border>
             </VerticalStackLayout>
-            <local:CoralButton Grid.Row="1" x:Name="SetUpButton" Clicked="OnSetUpClicked" />
+            <!-- Slice 133 (mock frame 63): the one line about anonymous counts, set in code after the pick. -->
+            <Label Grid.Row="1" x:Name="ReadyUsage" FontSize="12.5" TextColor="{StaticResource Body}" HorizontalTextAlignment="Center"
+                   HorizontalOptions="Center" MaximumWidthRequest="290" Margin="0,0,0,14" />
+            <local:CoralButton Grid.Row="2" x:Name="SetUpButton" Clicked="OnSetUpClicked" />
         </Grid>
     </Grid>
 </ContentPage>

@@ -185,6 +185,9 @@
   <data name="Update_Button" xml:space="preserve"><value>Päivitä Dino</value></data>
   <data name="Version_NewReady" xml:space="preserve"><value>Uusi versio on valmis</value></data>
   <data name="Version_Title" xml:space="preserve"><value>Versio</value></data>
+  <data name="Usage_Title" xml:space="preserve"><value>Auta tekemään Dinosta parempi</value></data>
+  <data name="Usage_Helper" xml:space="preserve"><value>Lähettää määriä, kuten "kaupan kirja luettiin loppuun". Ei nimiä, ei tunnisteita, ei mitään kirjoittamaasi.</value></data>
+  <data name="FirstRun_Usage" xml:space="preserve"><value>Dino laskee, mitä kirjoja luetaan, ilman nimiä tai tunnisteita. Voit poistaa tämän käytöstä Asetuksissa.</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Kertojasi ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} Mt</value></data>
   <data name="Storyteller_Failed" xml:space="preserve"><value>Tarinankertojan äänien lataus epäonnistui</value></data>

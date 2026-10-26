@@ -186,6 +186,9 @@
   <data name="Update_Button" xml:space="preserve"><value>Update Dino</value></data>
   <data name="Version_NewReady" xml:space="preserve"><value>A new version is ready</value></data>
   <data name="Version_Title" xml:space="preserve"><value>Version</value></data>
+  <data name="Usage_Title" xml:space="preserve"><value>Help make Dino better</value></data>
+  <data name="Usage_Helper" xml:space="preserve"><value>Sends counts like "a store book was finished". No names, no ids, nothing you typed.</value></data>
+  <data name="FirstRun_Usage" xml:space="preserve"><value>Dino counts which books get read, with no names or ids. You can turn this off in Settings.</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Your {0} narrator</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
   <data name="Storyteller_Failed" xml:space="preserve"><value>Couldn't get the storyteller voices</value></data>
