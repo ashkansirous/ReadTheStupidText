@@ -10,8 +10,8 @@ namespace ReadTheStupidText.Application.Reading;
 /// Text at or under <see cref="SingleChunkMax"/> stays whole; longer text is split
 /// on paragraph boundaries, then on sentences, then — only for a single oversized
 /// sentence — on word boundaries, so no chunk greatly exceeds <see cref="TargetChunkMax"/>.
-/// The very first chunk is biased to a short head (a <see cref="HeadPolicy"/>: by default one
-/// sentence and at most 120 characters) so playback starts after a short first synthesis
+/// The very first chunk is biased to a short head (a <see cref="HeadPolicy"/>: by default two
+/// sentences and at most 120 characters) so playback starts after a short first synthesis
 /// rather than a whole paragraph (time-to-first-audio).
 /// </summary>
 internal static partial class SpeechTextChunker
@@ -25,8 +25,9 @@ internal static partial class SpeechTextChunker
     /// ahead and passes <see cref="Cached"/>.</summary>
     public readonly record struct HeadPolicy(int MaxSentences, int MaxChars)
     {
-        /// <summary>One sentence, at most 120 characters (the reader without a cache).</summary>
-        public static HeadPolicy Default { get; } = new(1, 120);
+        /// <summary>Two sentences, at most 120 characters (the reader without a cache): Decision 147 settles
+        /// the earlier one-versus-two mismatch with Decision 66 at two.</summary>
+        public static HeadPolicy Default { get; } = new(2, 120);
 
         /// <summary>Two sentences, at most 200 characters: the head is split back into
         /// sentences for the cache, which is prepared ahead.</summary>
@@ -292,6 +293,35 @@ internal static partial class SpeechTextChunker
             {
                 yield return sentence;
             }
+        }
+    }
+
+    /// <summary>Where each sentence of <paramref name="text"/> ends (an offset into it, after the last non-blank character), cut exactly as <see cref="SplitSentences"/> does; the early start (Slice 139) uses it so its head matches the first chunk.</summary>
+    internal static List<int> SentenceEnds(string text)
+    {
+        var ends = new List<int>();
+        int start = 0;
+        foreach (Match match in SentenceBreak().Matches(text))
+        {
+            AddSentenceEnd(text, start, match.Index, ends);
+            start = match.Index + match.Length;
+        }
+
+        AddSentenceEnd(text, start, text.Length, ends);
+        return ends;
+    }
+
+    private static void AddSentenceEnd(string text, int start, int end, List<int> ends)
+    {
+        int last = end;
+        while (last > start && char.IsWhiteSpace(text[last - 1]))
+        {
+            last--;
+        }
+
+        if (last > start)
+        {
+            ends.Add(last);
         }
     }
 

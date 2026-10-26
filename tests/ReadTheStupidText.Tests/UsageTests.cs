@@ -150,6 +150,18 @@ public class UsageEventsTests
     }
 
     [Fact]
+    public void A_timing_carries_early_only_when_the_head_start_had_run()
+    {
+        UsageEvent plain = UsageEvents.Timing(Context, UsageStage.FirstAudio, UsageOutcome.Done, TimeSpan.FromSeconds(1), null, "en");
+        UsageEvent early = UsageEvents.Timing(Context, UsageStage.FirstAudio, UsageOutcome.Done, TimeSpan.FromSeconds(1), null, "en", early: true);
+
+        Assert.Null(plain.Early);
+        Assert.True(early.Early);
+        Assert.DoesNotContain("early", UsageBatch.QueueToJson([plain]));
+        Assert.Contains("\"early\":true", UsageBatch.QueueToJson([early]));
+    }
+
+    [Fact]
     public void Every_event_name_used_is_one_the_Worker_knows()
     {
         string source = File.ReadAllText(Path.Combine(RepoRoot(), "worker", "events.ts"));

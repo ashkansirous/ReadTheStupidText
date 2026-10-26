@@ -21,37 +21,35 @@ public sealed partial class IosSupertonicSpeechReader
     {
         if (string.IsNullOrWhiteSpace(text))
         {
-            return Task.CompletedTask;
+            return HeadStartRun.Skipped;
         }
 
         // The token is taken here, synchronously and in call order, so a later call always
         // supersedes an earlier one and CancelPrepare reaches a prepare still queued on the pool.
         return BeginPrepare() is { } token
-            ? Task.Run(() => PrepareOffCallerAsync(text, token))
-            : Task.CompletedTask;
+            ? Task.Run(() => HeadStartRun.CompleteAsync(token, t => PrepareOffCallerAsync(text, t)))
+            : HeadStartRun.Skipped;
     }
 
     // Runs on the thread pool, so acquiring the engine (which may build the model), planning the
     // chunks and indexing the cache never block the UI thread that asked.
-    private async Task PrepareOffCallerAsync(string text, CancellationToken token)
+    private async Task<bool> PrepareOffCallerAsync(string text, CancellationToken token)
     {
         if (token.IsCancellationRequested || AcquireEngine() is not { } engine)
         {
-            return;
+            return false;
         }
 
         try
         {
             token.ThrowIfCancellationRequested();
             await PrepareChunksAsync(engine, text, token);
+            return true;
         }
-        catch (OperationCanceledException)
-        {
-            // Superseded or cancelled: nothing to clean up.
-        }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _log.Warning("head start failed", error: ex);
+            return false;
         }
         finally
         {

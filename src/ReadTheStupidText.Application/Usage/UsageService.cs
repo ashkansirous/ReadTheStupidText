@@ -77,7 +77,7 @@ public sealed class UsageService : IUsageRecorder
                 }
                 else
                 {
-                    _ = FlushAsync(); // switched on mid-session: fetch the config now (if due) so held and new counts are decided
+                    FlushInBackground(); // switched on mid-session: fetch the config now (if due) so held and new counts are decided
                 }
             }
             catch (Exception ex)
@@ -98,7 +98,7 @@ public sealed class UsageService : IUsageRecorder
             switch (Enqueue(make))
             {
                 case Queued.BatchFull:
-                    _ = FlushAsync();
+                    FlushInBackground();
                     break;
                 case Queued.Yes:
                     ScheduleFlush();
@@ -171,7 +171,7 @@ public sealed class UsageService : IUsageRecorder
             RecordCore(pending);
         }
 
-        await FlushOnPoolAsync(true).ConfigureAwait(false);
+        await FlushOnPoolAsync(true, waitForTurn: false).ConfigureAwait(false);
     });
 
     private Func<UsageContext, UsageEvent?>? TakePendingOpened()
@@ -185,18 +185,22 @@ public sealed class UsageService : IUsageRecorder
     }
 
     /// <summary>Sends what is queued, a batch at a time, off the caller's thread. Never throws; a batch that could not be delivered stays queued and is tried again after a growing pause. Calls overlap safely.</summary>
-    public Task FlushAsync() => Task.Run(() => FlushOnPoolAsync(true));
+    // Waits its turn behind a send already running, so what it returns for is a queue every earlier count has been offered to.
+    public Task FlushAsync() => Task.Run(() => FlushOnPoolAsync(true, waitForTurn: true));
+
+    // The fire-and-forget starts (a full batch, the switch turned on) ask a running send to look again instead of waiting.
+    private void FlushInBackground() => _ = Task.Run(() => FlushOnPoolAsync(true, waitForTurn: false));
 
     /// <summary>A last send when the app quits: waits no longer than <paramref name="wait"/>, so quitting is never held up by the network.</summary>
     public async Task FlushForExitAsync(TimeSpan wait)
     {
-        Task flush = Task.Run(() => FlushOnPoolAsync(false)); // the held config is used: a slow config request must not eat the wait
+        Task flush = Task.Run(() => FlushOnPoolAsync(false, waitForTurn: false)); // the held config is used: a slow config request must not eat the wait
         await Task.WhenAny(flush, Task.Delay(wait)).ConfigureAwait(false);
     }
 
-    private async Task FlushOnPoolAsync(bool refreshConfig)
+    private async Task FlushOnPoolAsync(bool refreshConfig, bool waitForTurn)
     {
-        if (!await _sending.WaitAsync(0).ConfigureAwait(false))
+        if (!await _sending.WaitAsync(waitForTurn ? Timeout.Infinite : 0).ConfigureAwait(false))
         {
             // A send is running and may already have passed its last look at the queue: ask it to look once more.
             Interlocked.Exchange(ref _flushRequested, 1);
@@ -214,7 +218,7 @@ public sealed class UsageService : IUsageRecorder
 
         if (Interlocked.Exchange(ref _flushRequested, 0) == 1)
         {
-            await FlushOnPoolAsync(refreshConfig).ConfigureAwait(false);
+            await FlushOnPoolAsync(refreshConfig, waitForTurn: false).ConfigureAwait(false);
         }
     }
 
@@ -314,7 +318,7 @@ public sealed class UsageService : IUsageRecorder
     {
         await Task.Delay(FlushDelay, _clock).ConfigureAwait(false);
         Interlocked.Exchange(ref _flushScheduled, 0);
-        await FlushOnPoolAsync(true).ConfigureAwait(false);
+        await FlushOnPoolAsync(true, waitForTurn: false).ConfigureAwait(false);
     }
 
     // ---- remote config ------------------------------------------------------------------------------------------------

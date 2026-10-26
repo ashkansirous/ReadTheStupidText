@@ -33,6 +33,7 @@ public static partial class MauiProgram
 		builder.Services.AddSingleton<IDocumentTextExtractor, CompositeDocumentTextExtractor>();
 		builder.Services.AddSingleton<EditorDraft>();
 		builder.Services.AddSingleton<ReviewHandOff>();
+		builder.Services.AddSingleton<EarlyStartVoice>();
 		builder.Services.AddSingleton<RtstUsage>();
 		builder.Services.AddTransient<LanguagePage>();
 		builder.Services.AddTransient<ReaderPage>();

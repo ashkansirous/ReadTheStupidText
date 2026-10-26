@@ -1,9 +1,9 @@
 # Slice 139 — RTST phone: start translating and voicing before the tap
 
-*In progress (wave 2026-10-26), draft PR.*
+*Built 2026-10-26 (wave PR #398), not yet verified on the emulator or iOS.*
 
 **Batch:** 29 (Decisions 143-148)
-**Touches:** `src/ReadTheStupidText.Application/Reading/SpeechTextChunker.cs`, `src/ReadTheStupidText.Application/Translation/**`, `src/ReadTheStupidText.Application/Reading/EarlyStart*` (new), `src/ReadTheStupidText.Mobile/ReaderPage*.cs`, `src/ReadTheStupidText.Mobile/ReviewPage.xaml.cs`, `src/ReadTheStupidText.Mobile/MauiProgram.cs`, `src/ReadTheStupidText.Mobile.Shared/CompositeSpeechReader.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/MlKitTranslator.cs`, `src/ReadTheStupidText.Mobile.Shared/MauiPackUpdateNetwork.cs`, `tests/ReadTheStupidText.Tests/**`, `docs/plan/decisions.md`
+**Touches:** `src/ReadTheStupidText.Application/Reading/SpeechTextChunker.cs`, `src/ReadTheStupidText.Application/Translation/**`, `src/ReadTheStupidText.Application/Reading/EarlyStart*` (new), `src/ReadTheStupidText.Mobile/ReaderPage*.cs`, `src/ReadTheStupidText.Mobile/ReviewPage.xaml.cs`, `src/ReadTheStupidText.Mobile/MauiProgram.cs`, `src/ReadTheStupidText.Mobile.Shared/CompositeSpeechReader.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/MlKitTranslator.cs`, `src/ReadTheStupidText.Mobile.Shared/MauiPackUpdateNetwork.cs`, `tests/ReadTheStupidText.Tests/**`, `docs/plan/decisions.md`, `src/ReadTheStupidText.Application/Usage/**`, `src/ReadTheStupidText.Mobile/ReaderPage*.cs`, `worker/events.ts`, `worker/events.test.mjs`
 
 ## Why
 
@@ -38,15 +38,15 @@ No screens. The Batch 29 mock intro says the early start "has no screen of its o
 
 ## Work
 
-- [ ] Pure `EarlyStartPlan` in Application: head sentences for the original, the translation span
+- [x] Pure `EarlyStartPlan` in Application: head sentences for the original, the translation span
       and the voiced part of it, the no-punctuation fallback; unit-tested for Latin, CJK and Farsi
       punctuation.
-- [ ] Fix `HeadPolicy.Default` / Decision 66 to two sentences.
-- [ ] A small coordinator on the phone that runs both early jobs, cancels the loser on the tap,
+- [x] Fix `HeadPolicy.Default` / Decision 66 to two sentences.
+- [x] A small coordinator on the phone that runs both early jobs, cancels the loser on the tap,
       hands over the translated head to the read, and restarts on text change.
-- [ ] The translated head must be reused by the full translation (no translating it twice) and its
+- [x] The translated head must be reused by the full translation (no translating it twice) and its
       audio must hit the existing sentence cache.
-- [ ] Usage (Slice 137): `timing` gains `early` (bool) so the report shows the gain.
+- [x] Usage (Slice 137): `timing` gains `early` (bool) so the report shows the gain.
 
 ## Verification
 
@@ -54,3 +54,37 @@ No screens. The Batch 29 mock intro says the early start "has no screen of its o
 - Emulator: paste French text with an English UI, wait 2 s, tap Translate and read: first audio
   within the cached time, logcat shows no second translation of the head; tap Read instead: the
   translation job is cancelled; mobile data: no model download before the tap.
+
+## Known gap
+
+- Text with no sentence ending is voiced early as its first ~120 characters, but the Android reader's `HeadPolicy.Cached` peels about 200 characters for the real read, so that one case misses the sentence cache (punctuated text matches). `HeadPolicy.Cached` is left alone: its file overlaps Slice 149's readers.
+
+## Review notes (medium pass)
+
+- `HeadPolicy.Default` is now two sentences for every reader, so the Windows and Dino readers (no sentence cache) also get a first chunk of up to two short sentences. Decision 147 intends the shared head; time-to-first-audio there was not measured.
+- Not done: a cache of early work keyed by the head text, so an edit past the head would keep the finished translation and voicing instead of restarting. Later improvement.
+
+## Changed while building
+
+- `EarlyStartPlan`, `EarlyStartCoordinator` and `EarlyStartVoice` live in `Application/Reading`; the phone side is `ReaderPage.EarlyStart.cs`.
+- ReviewPage translates early too: after 600 + 400 ms idle when the user types, never for paste, file or scan. The call is tracked in `_earlyCall`, and the full translation reuses the translated head.
+- `HeadPolicy.Default` is now 2 sentences / 120 chars (Decision 147); the Windows and Dino readers use it too.
+- Usage `early` field (blob16) added in `worker/`, the report and `STORE.md`.
+- `UsageService.FlushAsync` now waits behind a running send, which fixed the flaky batches test.
+
+## From review
+
+- 139-high: 10 findings applied.
+- 139-medium: 8 findings applied; 5 and 8 skipped (see the medium-pass notes above).
+
+#### For CLAUDE.md
+
+In `src/ReadTheStupidText.Mobile/CLAUDE.md`:
+
+- Early start (`ReaderPage.EarlyStart.cs`, `ReviewPage.xaml.cs`) records no usage of its own and shows no overlay. It may only cancel preparations it started itself. (Slice 139: docs/plan/slices/139-rtst-phone-early-start.md)
+
+#### Not yet verified
+
+- Emulator run (French text, English UI: tap Translate, tap Read, mobile data) is pending; result placeholder.
+- Unpunctuated text misses the sentence cache (`HeadPolicy.Cached` peels about 200 characters, early voices about 120).
+- iOS.

@@ -39,7 +39,9 @@ public partial class ReaderPage : ContentPage
     private readonly EditorDraft _draft;
     private readonly ReviewHandOff _review;
     private readonly RtstUsage _usage;
+    private readonly EarlyStartVoice _earlyVoice;
     private string? _lastSpokenText;
+    private int _ownPreparations; // this page's own head-start preparations running now (the early start must not cancel them)
 
     // The text a translation on the screen came from, so Edit can offer "Show original" (Slice 101).
     private string? _original;
@@ -64,7 +66,7 @@ public partial class ReaderPage : ContentPage
     // started (system TTS returns as soon as the utterance is queued).
     private static readonly TimeSpan FirstAudioGrace = TimeSpan.FromSeconds(8);
 
-    public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, IVoiceModelService model, VoicePackInstaller installer, IPlatformServices platform, EditorDraft draft, ReviewHandOff review, IHeadStart headStart, RtstUsage usage, IDocumentScanner? scanner = null, ILanguageDetector? detector = null)
+    public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, IVoiceModelService model, VoicePackInstaller installer, IPlatformServices platform, EditorDraft draft, ReviewHandOff review, IHeadStart headStart, RtstUsage usage, EarlyStartVoice earlyVoice, IDocumentScanner? scanner = null, ILanguageDetector? detector = null)
     {
         InitializeComponent();
         FlowDirection = FlowDirection.LeftToRight;
@@ -81,6 +83,7 @@ public partial class ReaderPage : ContentPage
         _draft = draft;
         _review = review;
         _usage = usage;
+        _earlyVoice = earlyVoice;
         TextEditor.Text = draft.Take();
         _original = draft.TakeOriginal();
         TextEditor.FlowDirection = TextFlow.ContentDirection(TextEditor.Text);
@@ -89,6 +92,7 @@ public partial class ReaderPage : ContentPage
         InitWait();
         InitTranslation(detector);
         InitHeadStart();
+        earlyVoice.Handler = VoiceEarlyAsync;
         RenderReading();
     }
 
@@ -116,6 +120,7 @@ public partial class ReaderPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
+        _earlyVoice.Handler = VoiceEarlyAsync; // idempotent; keeps early voicing alive across a Review round trip
         TextEditor.FlowDirection = TextFlow.ContentDirection(TextEditor.Text); // an empty editor follows the UI language as it is now
         RenderReading();
         _reader.StateChanged += OnReaderStateChanged;
@@ -206,6 +211,7 @@ public partial class ReaderPage : ContentPage
         _reader.Stop();
         EndFirstAudioClock(UsageOutcome.Cancelled);
         _draft.Store(TextEditor.Text, _original);
+        _earlyVoice.Clear(VoiceEarlyAsync); // only a retired page gives up early voicing; Review sitting on top must still reach it
         DetachHandlers();
     }
 
@@ -375,7 +381,7 @@ public partial class ReaderPage : ContentPage
         _pendingReadId = id;
         _pendingReadText = text;
         SetPlayLoading(true);
-        StartFirstAudioClock();
+        StartFirstAudioClock(text);
         try
         {
             // The text on screen is what is read: a translation was made on the review page (Slice 101).
@@ -964,7 +970,15 @@ public partial class ReaderPage : ContentPage
 
             if (!string.IsNullOrWhiteSpace(text) && !_headStart.ReadInProgress)
             {
-                await PrepareInReadingLanguageAsync(text, token);
+                _ownPreparations++;
+                try
+                {
+                    await PrepareInReadingLanguageAsync(text, token);
+                }
+                finally
+                {
+                    _ownPreparations--;
+                }
             }
         }
         catch (OperationCanceledException)
@@ -979,18 +993,32 @@ public partial class ReaderPage : ContentPage
 
     // Slice 90: prepared with the pack and voice the read will use, so the cached sentences hit at Play;
     // when the phone voice would read there is nothing to prepare.
-    private async Task PrepareInReadingLanguageAsync(string text, CancellationToken token)
+    private Task PrepareInReadingLanguageAsync(string text, CancellationToken token) =>
+        PrepareInLanguageAsync(text, ReadingLanguageFor(text), token);
+
+    // Whether a preparation was started (false when the phone voice reads, so there is nothing to cache).
+    private async Task<bool> PrepareInLanguageAsync(string text, string language, CancellationToken token)
     {
-        VoicePlan plan = await PlanVoiceAsync(ReadingLanguageFor(text), atPlay: false);
+        VoicePlan plan = await PlanVoiceAsync(language, atPlay: false);
         token.ThrowIfCancellationRequested();
+        if (plan.PhoneReads)
+        {
+            return false;
+        }
+
         if (plan.Scope is null)
         {
             await Task.Run(() => _headStart.PrepareAsync(text), token);
+            return true;
         }
-        else if (_headStart is IReadScoped scoped)
+
+        if (_headStart is not IReadScoped scoped)
         {
-            await Task.Run(() => scoped.PrepareAsync(text, plan.Scope), token);
+            return false;
         }
+
+        await Task.Run(() => scoped.PrepareAsync(text, plan.Scope), token);
+        return true;
     }
 
     private void CancelHeadStart()
