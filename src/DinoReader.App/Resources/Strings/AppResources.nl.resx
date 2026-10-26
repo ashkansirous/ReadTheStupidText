@@ -185,6 +185,9 @@
   <data name="Update_Button" xml:space="preserve"><value>Dino bijwerken</value></data>
   <data name="Version_NewReady" xml:space="preserve"><value>Er is een nieuwe versie</value></data>
   <data name="Version_Title" xml:space="preserve"><value>Versie</value></data>
+  <data name="Usage_Title" xml:space="preserve"><value>Help Dino beter te maken</value></data>
+  <data name="Usage_Helper" xml:space="preserve"><value>Verstuurt aantallen zoals "een boek uit de winkel is uitgelezen". Geen namen, geen id's, niets wat je hebt getypt.</value></data>
+  <data name="FirstRun_Usage" xml:space="preserve"><value>Dino telt welke boeken worden gelezen, zonder namen of id's. Je kunt dit uitzetten in Instellingen.</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Jouw verteller ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
   <data name="Storyteller_Failed" xml:space="preserve"><value>De verteller-stemmen konden niet worden opgehaald</value></data>

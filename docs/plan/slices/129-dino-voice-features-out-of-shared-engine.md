@@ -64,7 +64,7 @@ no-flavour cache id. Cache ids are unchanged (tests pin tag == flavour name). Ou
 *Built and checked:* RTST tests 1085 (2 skipped), Dino tests 1148; clean builds of RTST x64, Dino Android,
 Dino Windows head, RTST Mobile Android and the Dino iOS compile.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-26)
 
 - The shared speech engine (`NeuralSentenceSource`, `SupertonicSpeechReader`, the Android/iOS readers) must not
   name a Dino flavour, pitch or effect. Dino voice features live in `DinoReader.Core` and reach the engine only

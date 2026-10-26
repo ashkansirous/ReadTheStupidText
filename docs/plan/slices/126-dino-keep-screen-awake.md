@@ -39,3 +39,7 @@
 - Real Android phone: a whole book plays with the screen on.
 - iPhone (TestFlight): a whole book plays with Auto-Lock at 30 s, and paused it locks again.
 - Windows head: not built or run.
+
+#### Emulator result (2026-10-26)
+
+PASS: the screen stays on while a book plays and sleeps after pause and at the end of the book. Real phone, iPhone and Windows head are still open.

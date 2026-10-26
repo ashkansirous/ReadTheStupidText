@@ -185,6 +185,9 @@
   <data name="Update_Button" xml:space="preserve"><value>Oppdater Dino</value></data>
   <data name="Version_NewReady" xml:space="preserve"><value>En ny versjon er klar</value></data>
   <data name="Version_Title" xml:space="preserve"><value>Versjon</value></data>
+  <data name="Usage_Title" xml:space="preserve"><value>Hjelp oss å gjøre Dino bedre</value></data>
+  <data name="Usage_Helper" xml:space="preserve"><value>Sender tall som «en bok fra butikken ble lest ferdig». Ingen navn, ingen id-er, ingenting du har skrevet.</value></data>
+  <data name="FirstRun_Usage" xml:space="preserve"><value>Dino teller hvilke bøker som blir lest, uten navn eller id-er. Du kan slå dette av i Innstillinger.</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Din forteller ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
   <data name="Storyteller_Failed" xml:space="preserve"><value>Kunne ikke hente fortellerstemmene</value></data>

@@ -83,7 +83,7 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 	private string? _pending;
 	private bool _changed;
 
-	public LanguagePage(SpokenLanguage spoken, VoicePackInstaller installer, IVoicePackService packs, ISettingsStore settings, AppConfigClient config)
+	public LanguagePage(SpokenLanguage spoken, VoicePackInstaller installer, IVoicePackService packs, ISettingsStore settings, AppConfigClient config, UsageCounter usage)
 	{
 		InitializeComponent();
 		_spoken = spoken;
@@ -91,6 +91,8 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 		_packs = packs;
 		_settings = settings;
 		_config = config;
+		// Slice 133: the counts switch sits above the Version card, which OnAppearing adds last.
+		Cards.Children.Add(UsageCountsCard.Build(usage));
 	}
 
 	// Slice 132: the Version card closes the page (a quiet "A new version is ready" row below latestVersion); it is built again
@@ -108,7 +110,7 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 		Cards.Children.Insert(index, _versionCard);
 	}
 
-	private void OnConfigChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(ShowVersionCard);
+	private void OnConfigChanged(object? sender, EventArgs e) => ShowVersionCard();
 
 	protected override void OnAppearing()
 	{

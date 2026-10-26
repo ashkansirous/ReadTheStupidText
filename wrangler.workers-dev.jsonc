@@ -19,10 +19,13 @@
       "/api/stories", "/api/stories/*",
       // Slice 132: Dino Reader's remote config (worker/appconfig.ts).
       "/api/app-config",
+      // Slice 133: Dino Reader's anonymous usage counts (worker/events.ts).
+      "/api/events",
       // The Dino Reader site on *.workers.dev, under /dino/ (worker/downloads.ts resolveSite).
       "/dino", "/dino/", "/dino/index.html", "/dino/privacy", "/dino/privacy/", "/dino/privacy.html", "/dino/download", "/dino/download/*",
       "/dino/api/stories", "/dino/api/stories/*",
-      "/dino/api/app-config"
+      "/dino/api/app-config",
+      "/dino/api/events"
     ]
   },
   "r2_buckets": [{ "binding": "DOWNLOADS", "bucket_name": "readthestupidtext-downloads" }],

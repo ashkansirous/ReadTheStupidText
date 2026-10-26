@@ -27,15 +27,49 @@ public sealed class AppConfigClient
 	// A failed fetch (offline, 503, a body that is not a config) is tried again after this short back-off, not on every resume.
 	private static readonly TimeSpan RetryInterval = TimeSpan.FromMinutes(1);
 
+	// A fetch that never reached the server (the network is not up yet at launch) is tried again sooner than a server-side failure:
+	// after these waits in turn, then the normal one-minute rule. A success starts the list again.
+	private static readonly TimeSpan[] ConnectBackoff = [TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60)];
+
+	// The fetch runs on the pool while the UI thread reads Current and calls RefreshAsync, so all three fields below are guarded by this lock.
+	private readonly object _gate = new();
 	private AppConfig? _current;
 	private Task? _inFlight;
 	private DateTimeOffset _notBefore = DateTimeOffset.MinValue;
+	private int _connectFailures;
 
-	/// <summary>Raised on the calling thread of <see cref="RefreshAsync"/> when a fetch brought a config that differs from the one held.</summary>
+	/// <summary>
+	/// Raised when a fetch brought a config that differs from the one held. Always raised on the main thread (by the client's own
+	/// dispatch, never directly from the pool), so subscribers may touch UI; a caller awaiting <see cref="RefreshAsync"/> cannot assume handlers have run yet.
+	/// </summary>
 	public event EventHandler? Changed;
 
 	/// <summary>The config in force: the last good copy, else the safe default.</summary>
-	public AppConfig Current => _current ??= AppConfig.Parse(ReadCache());
+	public AppConfig Current
+	{
+		get
+		{
+			return Held();
+		}
+	}
+
+	// Preferences I/O stays outside the lock (the UI thread reads Current while the pool writes the cache); only the field swap is locked.
+	private AppConfig Held()
+	{
+		lock (_gate)
+		{
+			if (_current is not null)
+			{
+				return _current;
+			}
+		}
+
+		AppConfig fromCache = AppConfig.Parse(ReadCache());
+		lock (_gate)
+		{
+			return _current ??= fromCache;
+		}
+	}
 
 	/// <summary>The version this build reports (<c>ApplicationDisplayVersion</c>, set from the release version in CI).</summary>
 	public static string InstalledVersion => AppInfo.Current.VersionString;
@@ -57,17 +91,21 @@ public sealed class AppConfigClient
 	/// </summary>
 	public Task RefreshAsync(CancellationToken cancel = default)
 	{
-		if (_inFlight is { IsCompleted: false } running)
+		lock (_gate)
 		{
-			return running;
-		}
+			if (_inFlight is { IsCompleted: false } running)
+			{
+				return running;
+			}
 
-		if (DateTimeOffset.UtcNow < _notBefore)
-		{
-			return Task.CompletedTask;
-		}
+			if (DateTimeOffset.UtcNow < _notBefore)
+			{
+				return Task.CompletedTask;
+			}
 
-		return _inFlight = FetchAndApplyAsync(cancel);
+			// The HTTP call must not run on the UI thread (Android throws NetworkOnMainThreadException), so the whole fetch is moved to the pool.
+			return _inFlight = Task.Run(() => FetchAndApplyAsync(cancel), CancellationToken.None);
+		}
 	}
 
 	private async Task FetchAndApplyAsync(CancellationToken cancel)
@@ -78,26 +116,101 @@ public sealed class AppConfigClient
 			if (!AppConfig.TryParseServed(json, out AppConfig fetched))
 			{
 				Debug.WriteLine("Dino Reader ignored a remote config body that is not a config.");
-				_notBefore = DateTimeOffset.UtcNow + RetryInterval;
+				SetNotBefore(RetryInterval);
 				return;
 			}
 
-			// Compare before the cache is written: Current reads the cache when nothing is held yet.
-			bool changed = fetched != Current;
-			StoreCache(json);
-			_notBefore = DateTimeOffset.UtcNow + MinInterval;
-			if (changed)
-			{
-				_current = fetched;
-				Changed?.Invoke(this, EventArgs.Empty);
-			}
+			ApplyFetched(json, fetched);
+		}
+		catch (OperationCanceledException) when (cancel.IsCancellationRequested)
+		{
+			// The caller gave up (shutdown): that is not a failed load, so no back-off and no retry.
+			Debug.WriteLine("Dino Reader: the remote config fetch was cancelled by the caller.");
 		}
 		catch (Exception ex)
 		{
-			// Whatever went wrong (network, parsing, a Changed handler), the copy in force stays and the fire-and-forget task never faults.
+			// Whatever went wrong (network, timeout, parsing), the copy in force stays and the fire-and-forget task never faults.
 			Debug.WriteLine($"Dino Reader could not load the remote config: {ex.Message}");
-			_notBefore = DateTimeOffset.UtcNow + RetryInterval;
+			HandleFailure(ex);
 		}
+	}
+
+	private void ApplyFetched(string json, AppConfig fetched)
+	{
+		// Load what is held before the cache is overwritten: Current reads the cache when nothing is held yet.
+		Held();
+		StoreCache(json);
+		bool changed;
+		lock (_gate)
+		{
+			changed = fetched != _current;
+			_notBefore = DateTimeOffset.UtcNow + MinInterval;
+			_connectFailures = 0;
+			if (changed)
+			{
+				_current = fetched;
+			}
+		}
+
+		if (changed)
+		{
+			MainThread.BeginInvokeOnMainThread(RaiseChanged);
+		}
+	}
+
+	// A handler that throws must not escape into the main-thread dispatcher (that would crash the app).
+	private void RaiseChanged()
+	{
+		try
+		{
+			Changed?.Invoke(this, EventArgs.Empty);
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader: a remote config change handler failed: {ex.Message}");
+		}
+	}
+
+	private void SetNotBefore(TimeSpan wait)
+	{
+		lock (_gate)
+		{
+			_notBefore = DateTimeOffset.UtcNow + wait;
+		}
+	}
+
+	// "Never reached the server" (no connection, DNS, TLS, timeout) is retried sooner than a server-side failure.
+	private static bool NeverReachedServer(Exception ex) =>
+		ex is HttpRequestException { StatusCode: null } or OperationCanceledException;
+
+	// The network is often not up yet at cold start and nothing else would call RefreshAsync again, so the client retries itself
+	// after 10 s, 30 s and 60 s; after that the normal one-minute rule applies and the next resume asks again.
+	private void HandleFailure(Exception ex)
+	{
+		TimeSpan wait = RetryInterval;
+		bool retryItself = false;
+		lock (_gate)
+		{
+			if (NeverReachedServer(ex))
+			{
+				retryItself = _connectFailures < ConnectBackoff.Length;
+				wait = retryItself ? ConnectBackoff[_connectFailures] : RetryInterval;
+				_connectFailures++;
+			}
+
+			_notBefore = DateTimeOffset.UtcNow + wait;
+		}
+
+		if (retryItself)
+		{
+			_ = Task.Run(() => RetryAfterDelayAsync(wait));
+		}
+	}
+
+	private async Task RetryAfterDelayAsync(TimeSpan wait)
+	{
+		await Task.Delay(wait);
+		await RefreshAsync();
 	}
 
 	private static async Task<string> FetchAsync(CancellationToken cancel)
