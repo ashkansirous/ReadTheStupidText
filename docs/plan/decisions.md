@@ -1185,3 +1185,15 @@
 141. **Usage counts are on by default with a grown-up off switch and a line in the first-run screens (Batch 28).** (Slice 133)
 
 142. **Usage events go to Workers Analytics Engine, batched per session, switched and sampled by the remote config (Batch 28).** Reports suppress counts under 10. (Slices 133-134)
+
+143. **Read The Stupid Text usage data is anonymous counts with context, never an install, device or advertising id (Batch 29).** No read text, no file names, nothing finer than the hour; durations in buckets. On by default with an off switch in Settings (control panel on Windows) and one line on first run; no consent prompt. (Slices 137, 140)
+
+144. **RTST reuses Dino's usage pipe (Batch 29).** The same Worker `POST /api/events` and `GET /api/app-config`, served on the RTST host, with RTST's own Analytics Engine dataset `rtst_usage` and config object `readthestupidtext/config.json`; the phone client is shared from `Mobile.Shared`. (Slice 137)
+
+145. **No usage event is sent for an app until every store privacy declaration for it matches (Batch 29).** The remote `telemetry.enabled` stays `false` until the *Store privacy declarations* checklist in `plan.md` is ticked for that app; this also covers Dino's pending Play and App Store answers. (Slices 133, 137, 140)
+
+146. **Any wait over 500 ms shows a stage indicator with Cancel (Batch 29).** An overlay over the reading area (a tray flyout for windowless Windows reads) naming the stage and progress; nothing shows under 500 ms; no Lottie for now. (Slices 138, 141)
+
+147. **Early start translates and voices the head before the tap (Batch 29).** Original: first 2 sentences (else ~120 characters at a word boundary). Translation, only when the detected language differs from the user's: translate the first 3 sentences, voice the first 2. The tap cancels the other side; a missing translation model downloads early only on an unmetered network. Supersedes the one-vs-two-sentence mismatch of Decision 66 and `HeadPolicy.Default`. (Slices 139, 142)
+
+148. **Batch 29 order: phone first, then Windows (Batch 29).** 137 (counts) -> 138 (wait indicator) -> 139 (early start) on Android/iOS, then 140-142 on Windows; iOS has no translation, so it gets counts and the indicator only. (Slices 137-142)
