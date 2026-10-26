@@ -231,6 +231,44 @@ public class EarlyStartCoordinatorTests
     }
 
     [Fact]
+    public async Task A_restart_after_the_read_tap_keeps_the_chosen_voice_and_settling_waits_for_it()
+    {
+        var probe = new Probe { HoldOriginal = true };
+        var early = new EarlyStartCoordinator();
+        early.Restart(French, "fr", "en", probe.Jobs(), TimeSpan.FromMinutes(1));
+        early.ChooseRead(); // the voice starts at once, the idle rest is skipped
+
+        early.Restart(French, "fr", "en", probe.Jobs(), TimeSpan.Zero); // a late detection or toggle restarts the early work
+        Task settled = early.SettleChosenAsync();
+        await Task.Delay(50);
+
+        Assert.Equal(["Un. Deux."], probe.VoicedOriginal); // one voicing, not cancelled and started again
+        Assert.False(probe.OriginalToken.IsCancellationRequested);
+        Assert.False(settled.IsCompleted);
+        probe.OriginalGate.SetResult();
+        await settled;
+    }
+
+    [Fact]
+    public async Task A_restart_before_the_read_tap_then_a_read_during_the_restarted_voice_waits_for_it()
+    {
+        var probe = new Probe { HoldOriginal = true };
+        var early = new EarlyStartCoordinator();
+        early.Restart(French, "fr", "en", probe.Jobs(), TimeSpan.Zero);
+        early.Restart(French, "fr", "en", probe.Jobs(), TimeSpan.Zero); // the toggle restarts the early work
+        await Task.Delay(20);
+
+        early.ChooseRead(); // the restarted voice is in flight
+        Task settled = early.SettleChosenAsync();
+        await Task.Delay(50);
+
+        Assert.False(probe.OriginalToken.IsCancellationRequested);
+        Assert.False(settled.IsCompleted);
+        probe.OriginalGate.SetResult();
+        await settled;
+    }
+
+    [Fact]
     public async Task A_tap_on_translate_settles_after_the_translated_voice_and_never_cancels_it()
     {
         var voiceGate = new TaskCompletionSource();
@@ -444,6 +482,7 @@ public class EarlyStartCoordinatorTests
         early.Restart(French, "fr", "en", probe.Jobs(), TimeSpan.Zero);
         early.ChooseRead();
 
+        early.Discard(); // the page withdrew the choice (Cancel on the wait overlay) before starting over
         early.Restart(French, "fr", "en", probe.Jobs(), TimeSpan.Zero);
 
         Assert.NotNull(await early.ChooseTranslate());

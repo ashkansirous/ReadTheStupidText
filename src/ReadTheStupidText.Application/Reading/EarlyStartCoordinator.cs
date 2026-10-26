@@ -33,6 +33,8 @@ public sealed class EarlyStartCoordinator
 
     private sealed class Run
     {
+        public string Text { get; init; } = string.Empty;
+
         public CancellationTokenSource OriginalCts { get; } = new();
 
         public CancellationTokenSource TranslationCts { get; } = new();
@@ -70,9 +72,14 @@ public sealed class EarlyStartCoordinator
     /// <summary>Cancels what was running and starts both jobs for <paramref name="text"/> after <paramref name="delay"/>.</summary>
     public void Restart(string text, string? source, string? target, EarlyStartJobs jobs, TimeSpan delay)
     {
+        if (_run is { } chosen && KeepsChoice(chosen, text))
+        {
+            return; // the tap already chose a side for this very text: a late detection or toggle must not replace the chosen work
+        }
+
         Cancel(_run, force: true);
         _run?.DisposeWhenDone();
-        var run = new Run();
+        var run = new Run { Text = text };
         _run = run;
         run.OriginalTask = RunOriginalAsync(text, jobs, delay, run);
         if (jobs.TranslateHead is not null && source is not null && target is not null)
@@ -80,6 +87,12 @@ public sealed class EarlyStartCoordinator
             run.TranslationTask = RunTranslationAsync(text, source, target, jobs, delay, run);
         }
     }
+
+    // A side the tap chose, still running for the same text, is the work the read waits for and reuses: restarting would drop it.
+    private static bool KeepsChoice(Run run, string text) =>
+        run.Text == text
+        && ((run.OriginalCommitted && !run.OriginalCts.IsCancellationRequested)
+            || (run.TranslationCommitted && !run.TranslationCts.IsCancellationRequested));
 
     /// <summary>Stops every job that no tap has chosen (the page was left without choosing).</summary>
     public void CancelAll() => Cancel(_run, force: false);
