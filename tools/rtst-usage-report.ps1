@@ -7,7 +7,7 @@
   Reads the dataset `rtst_usage` that worker/events.ts (handleRtstEvents) writes (needs the RTST_USAGE binding to be switched on first, see
   STORE.md, "Phone apps: anonymous usage counts"). Blob layout, one data point per count: blob1 name, blob2 app version, blob3 platform,
   blob4 UTC day, blob5 language, blob6 source language, blob7 mode (original | translation), blob8 voice engine, blob9 voice is default (yes | no),
-  blob10 text length bucket, blob11 OS major version, blob12 stage, blob13 outcome, blob14 duration bucket; a field an event does not carry is
+  blob10 text length bucket, blob11 OS major version, blob12 stage, blob13 outcome, blob14 duration bucket, blob15 source (Windows reads only: selection | clipboard | hotkey | panel); a field an event does not carry is
   empty. double1 is the count's weight (1 / the app's sample rate). Every sum is SUM(_sample_interval * double1): _sample_interval is Analytics
   Engine's own sampling, double1 the app's.
 
@@ -52,11 +52,16 @@ SELECT blob6 AS detected_language, $Weighted AS reads
 FROM $Dataset WHERE blob1 = 'read_started' AND $Window
 GROUP BY detected_language $Enough ORDER BY reads DESC
 "@
-    'Translate offered vs chosen (language pair)' = @"
+    'Windows reads by source (what started the read)' = @"
+SELECT blob15 AS source, $Weighted AS reads
+FROM $Dataset WHERE blob1 = 'read_started' AND blob3 = 'windows' AND $Window
+GROUP BY source $Enough ORDER BY reads DESC
+"@
+    'Translate offered vs chosen (language pair; phone only: on Windows translate_chosen means the switch was turned on)' = @"
 SELECT blob6 AS from_language, blob5 AS to_language,
   SUM(IF(blob1 = 'translate_offered', _sample_interval * double1, 0)) AS offered,
   SUM(IF(blob1 = 'translate_chosen', _sample_interval * double1, 0)) AS chosen
-FROM $Dataset WHERE blob1 IN ('translate_offered', 'translate_chosen') AND $Window
+FROM $Dataset WHERE blob1 IN ('translate_offered', 'translate_chosen') AND blob3 <> 'windows' AND $Window
 GROUP BY from_language, to_language $Enough ORDER BY offered DESC LIMIT 200
 "@
     'Original vs translation reads' = @"

@@ -271,6 +271,15 @@
   <data name="Pack_Failed" xml:space="preserve">
     <value>Hentningen mislykkedes. Prøv igen.</value>
   </data>
+  <data name="CountsTitle.Text" xml:space="preserve">
+    <value>Hjælp med at forbedre appen</value>
+  </data>
+  <data name="CountsCaption.Text" xml:space="preserve">
+    <value>Sender tællinger som “en fransk tekst blev læst”. Ingen navne, ingen id’er, intet af det, du læser.</value>
+  </data>
+  <data name="CountsSwitch.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Hjælp med at forbedre appen</value>
+  </data>
   <data name="Translate_AutoDetect" xml:space="preserve">
     <value>Registrer automatisk</value>
   </data>

@@ -20,6 +20,7 @@ namespace ReadTheStupidText.Application.Usage;
 /// <param name="Stage">A <see cref="UsageStage"/>.</param>
 /// <param name="Outcome">A <see cref="UsageOutcome"/>.</param>
 /// <param name="DurationBucket">A <see cref="UsageBuckets.Duration"/> value.</param>
+/// <param name="Source">A <see cref="UsageSource"/>: what started a Windows read (Slice 140); the phone sends none.</param>
 public sealed record UsageEvent(
     string Name,
     string Version,
@@ -35,7 +36,8 @@ public sealed record UsageEvent(
     int? OsMajor = null,
     string? Stage = null,
     string? Outcome = null,
-    string? DurationBucket = null);
+    string? DurationBucket = null,
+    string? Source = null);
 
 /// <summary>The closed set of counts (the Worker's <c>RTST_EVENT_RULES</c> must match).</summary>
 public static class UsageEventName
@@ -63,6 +65,18 @@ public static class UsageEngine
     public const string Piper = "piper";
     public const string Melo = "melo";
     public const string Kokoro = "kokoro";
+
+    /// <summary>The Windows speech voice that reads before a pack is installed, or by choice (Slice 140).</summary>
+    public const string Windows = "windows";
+}
+
+/// <summary>What started a Windows read (Slice 140, Decision 143): the closed set, never a window title or an app name.</summary>
+public static class UsageSource
+{
+    public const string Selection = "selection";
+    public const string Clipboard = "clipboard";
+    public const string Hotkey = "hotkey";
+    public const string Panel = "panel";
 }
 
 /// <summary>The waits that are timed.</summary>
