@@ -5,10 +5,10 @@ namespace DinoReader.Tests;
 internal sealed record StoreStorySpec(string Id, string Title, string Stem, string Text, int ColourIndex, string Credits, int AgeMin, int AgeMax, string Author, IReadOnlyList<string> Characters, int Version, string Added);
 
 /// <summary>
-/// The free store stories (Slice 102, Decision 106): ten public-domain tales retold in plain words for ages 3 to 8, and original Dino Reader books, with a named
+/// The free store stories (Slice 102, Decision 106): public-domain tales retold in plain words for ages 3 to 8, and original Dino Reader books, with a named
 /// speaker on every line so the caster gives each character a voice (the starter rule: <c>said Name</c> or <c>Name said</c>, a bare
 /// capitalised name). Pages are separated by a line holding only "---". The retellings are original to this repo (MIT); Peter Rabbit
-/// is Beatrix Potter's 1902 text, shortened to fit fifteen pages (a few speech tags added). The ids never change: "Downloaded" and updates match on them.
+/// is Beatrix Potter's 1902 text, shortened to fit its page count (a few speech tags added). The ids never change: "Downloaded" and updates match on them.
 /// <see cref="StoreBuilder"/> turns them into the files that go up to R2.
 /// </summary>
 internal static class StoreTexts
@@ -26,6 +26,7 @@ internal static class StoreTexts
     public const string TreasureId = "a02c0731b7ac475a896e9184f3575e7b";
 
     private const string AddedDate = "2026-10-24";
+    private const string TreasureAddedDate = "2026-10-26";
     private const string RetoldAesop = "Retold from Aesop · free to share";
     private const string Traditional = "Traditional";
     private const string RetoldTraditional = "Retold traditional tale · free to share";
@@ -42,7 +43,7 @@ internal static class StoreTexts
         new(ElvesId, "The Elves and the Shoemaker", "elves-and-shoemaker", Elves, 1, "Retold from the Brothers Grimm · free to share", 5, 8, "Brothers Grimm", ["Hans", "Greta", "Nib", "Nob"], 4, AddedDate),
         new(TownMouseId, "The Town Mouse and the Country Mouse", "town-mouse-country-mouse", TownMouse, 2, RetoldAesop, 4, 7, "Aesop", ["Town Mouse", "Country Mouse"], 4, AddedDate),
         new(PeterRabbitId, "The Tale of Peter Rabbit", "peter-rabbit", PeterRabbit, 3, "Beatrix Potter, 1902 (shortened)", 3, 6, "Beatrix Potter", ["Mrs. Rabbit", "Peter", "Mr. McGregor"], 5, AddedDate),
-        new(TreasureId, "X Marks the Treasure!", "x-marks-the-treasure", Treasure, 0, "A Dino Reader picture book · free to share", 3, 6, "Ashkan Sirous", ["Kaatrin", "Seagull", "Izzy", "Pancake Polly", "Billy"], 1, "2026-10-26"),
+        new(TreasureId, "X Marks the Treasure!", "x-marks-the-treasure", Treasure, 0, StoreBuilder.DinoReaderCredit, 3, 6, "Ashkan Sirous", ["Kaatrin", "Seagull", "Izzy", "Pancake Polly", "Billy"], 1, TreasureAddedDate),
     ];
 
     public const string LionAndMouse = """

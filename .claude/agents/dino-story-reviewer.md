@@ -23,7 +23,7 @@ Read first, in full: `.claude/skills/create-dino-story/SKILL.md` (rule 1 and the
   comfort, mean without a sorry, or worth copying badly (hitting, lying that pays off, running off alone).
 - **A good story for the age.** It makes sense to a 3-year-old, with a clear start, a build-up and a calm
   ending. Nothing is left unexplained. Characters act for reasons. It is worth reading twice.
-- **One action per page**, 10-16 pages, 15-60 words a page, identical refrains, every speaker named the same.
+- **One action per page**, 10-18 pages, 15-60 words a page, identical refrains, every speaker named the same.
 - **Words.** Short sentences, no word a 5-year-old wouldn't know without a reason, no awkward phrasing aloud.
 - **Register, every language (Decision 152).** Fail any literary, old or written-only form (Farsi
   «بگذار»، «بیایم»، «می‌باشد» where a parent says «بذار»، «بیام»، «هست»), and any sound word that is a

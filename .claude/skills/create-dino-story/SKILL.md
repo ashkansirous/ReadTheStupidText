@@ -50,7 +50,7 @@ illustrators sharing the clipboard and Downloads), `gemini-keep-awake.ps1` (scre
 ## 1. Text
 
 - Store story: a constant in `tests/DinoReader.Tests/StoreTexts.cs`. Starter (bundled): `StarterTexts.cs`.
-- **Write or retell the text with the `dino-storytelling` skill first**: one action per page, 10-16
+- **Write or retell the text with the `dino-storytelling` skill first**: one action per page, 10-18
   pages, split on lines holding only `---`, dialogue as `"...," said <Name>.` so speaker attribution
   casts voices.
 - Read every page against rule 1 before anything else. Rewrite what fails.

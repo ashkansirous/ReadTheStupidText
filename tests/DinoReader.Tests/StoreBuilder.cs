@@ -20,6 +20,7 @@ internal static class StoreBuilder
 
     private const int WordsPerMinute = 110;
     public const string StarterAdded = "2026-10-25";
+    public const string DinoReaderCredit = "A Dino Reader picture book · free to share";
     private const string RetoldAesop = "Retold from Aesop · free to share";
     private const string RetoldTraditional = "Retold traditional tale · free to share";
     private const string Traditional = "Traditional";
@@ -33,7 +34,7 @@ internal static class StoreBuilder
     /// <summary>The store entries of the four bundled starters (Decision 128), by package file name: the same ids as the bundled files, so a deleted starter can be downloaded again.</summary>
     public static IReadOnlyDictionary<string, StoreEntry> StarterEntries { get; } = new Dictionary<string, StoreEntry>
     {
-        [StarterBuilder.GoodEnoughFile] = new("Good Enough", StarterBuilder.GoodEnoughId, StarterBuilder.GoodEnoughColourIndex, "A Dino Reader picture book · free to share", 5, 8, "Ashkan Sirous"),
+        [StarterBuilder.GoodEnoughFile] = new("Good Enough", StarterBuilder.GoodEnoughId, StarterBuilder.GoodEnoughColourIndex, DinoReaderCredit, 5, 8, "Ashkan Sirous"),
         ["three-little-pigs.dino"] = new("The Three Little Pigs", StarterTexts.PigsId, 3, RetoldTraditional, 3, 6, Traditional),
         ["gingerbread-man.dino"] = new("The Gingerbread Man", StarterTexts.GingerbreadId, 1, RetoldTraditional, 3, 6, Traditional),
         ["tortoise-and-hare.dino"] = new("The Tortoise and the Hare", StarterTexts.TortoiseId, 0, RetoldAesop, 4, 7, "Aesop"),

@@ -7,7 +7,7 @@ author Ashkan Sirous, credit "A Dino Reader picture book · free to share". An o
 Keep every character line below for the later books, so the cast looks the same across the series.
 
 **17 pages** (one action each, `dino-storytelling` skill). The user's limit for this book is 16-18 pages, which overrides the
-skill's 10-16; `StoreStoryTests.MaxPages` is 18. **Art status: cover and all 17 pictures drawn and accepted by the illustrator (2026-10-26), prepared into `tests/DinoReader.Tests/Store/x-marks-the-treasure`; awaiting the full-mode reviewer pass.** Saved line-up and Kaatrin's sheet: `docs/design/story-art/x-marks-the-treasure/characters/` (`lineup.jpg`, `kaatrin.jpg`).
+skill's 10-18; `StoreStoryTests.MaxPages` is 18. **Art status: cover and all 17 pictures drawn and accepted by the illustrator (2026-10-26), prepared into `tests/DinoReader.Tests/Store/x-marks-the-treasure`; the full-mode reviewer passed (2026-10-26), after redraws of pages 6, 7, 8, 11, 13, 16 and 17 and a second redraw of page 6.** Known non-blocking variances to fix in the next book of the series: the crow's nest is a solid tub on pages 7 and 13 but a low wicker basket on pages 9 and 12; the distant ship on page 14 has several masts and a different hull; the cover has a second small cross. Saved line-up and Kaatrin's sheet: `docs/design/story-art/x-marks-the-treasure/characters/` (`lineup.jpg`, `kaatrin.jpg`).
 
 **The captain's name is spelled "Kaatrin"** so the English voices say KAA-trin. English runs on Kokoro, which looks a word up
 in `lexicon-us-en.txt` and otherwise uses espeak en-us: "Katrin" is not in the lexicon and comes out /kˈætɹɪn/ (KAT-rin, a as

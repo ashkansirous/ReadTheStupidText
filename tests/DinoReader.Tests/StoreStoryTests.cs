@@ -43,7 +43,7 @@ public sealed class StoreStoryTests : IDisposable
     }
 
     [Fact]
-    public void TheStore_HasElevenStories_WithFixedUniqueIds()
+    public void TheStore_HasEveryStory_WithFixedUniqueIds()
     {
         Assert.Equal(StoryCount, StoreTexts.All.Count);
         Assert.Equal(StoryCount, StoreTexts.All.Select(s => s.Id).Distinct().Count());
@@ -131,6 +131,20 @@ public sealed class StoreStoryTests : IDisposable
         };
 
         Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.RedHenId));
+        AssertEachIsPlayedByTheirGender(story, language, expected);
+    }
+
+    // X Marks the Treasure! (Slice 121): Kaatrin, Izzy and Pancake Polly are girls, the Seagull is a "she" with no animal word the guesser knows, Billy is a boy.
+    [Theory]
+    [MemberData(nameof(Languages))]
+    public void XMarksTheTreasure_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
+    {
+        var expected = new Dictionary<string, Gender>
+        {
+            ["Kaatrin"] = Gender.Female, ["Izzy"] = Gender.Female, ["Pancake Polly"] = Gender.Female, ["Seagull"] = Gender.Female, ["Billy"] = Gender.Male,
+        };
+
+        Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.TreasureId));
         AssertEachIsPlayedByTheirGender(story, language, expected);
     }
 
@@ -266,6 +280,17 @@ public sealed class StoreStoryTests : IDisposable
     public void EveryStoreTitle_FitsTheCoverFont()
     {
         Assert.All(StoreTexts.All, s => Assert.All(StoreCover.Wrap(s.Title), l => Assert.True(l.Length <= 10 && l.All(c => c is ' ' or '!' or (>= 'A' and <= 'Z')), l)));
+    }
+
+    [Fact]
+    public void TheCover_RendersATitleWithAnExclamationMark()
+    {
+        IReadOnlyList<string> wrapped = StoreCover.Wrap("X Marks the Treasure!");
+        byte[] jpeg = StoreCover.Render("X Marks the Treasure!", CoverPalette.ColourAt(0));
+
+        Assert.Contains(wrapped, l => l.EndsWith('!'));
+        Assert.Equal([0xFF, 0xD8], jpeg[..2]);
+        Assert.Equal([0xFF, 0xD9], jpeg[^2..]);
     }
 
     [Fact]
