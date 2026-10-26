@@ -108,7 +108,7 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 		Cards.Children.Insert(index, _versionCard);
 	}
 
-	private void OnConfigChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(ShowVersionCard);
+	private void OnConfigChanged(object? sender, EventArgs e) => ShowVersionCard();
 
 	protected override void OnAppearing()
 	{

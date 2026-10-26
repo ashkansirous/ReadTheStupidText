@@ -80,3 +80,7 @@ Frames 61 and 62 (bottom row, line 58 and 76 of `docs/design/dino-reader/Dino Re
 - Windows head and iOS builds after the last fixes.
 - Play in-app update needs a Play-installed build with a higher versionCode.
 - Native-speaker read of the 5 new strings.
+
+#### Follow-up fix (2026-10-26)
+
+The emulator run found the resume refresh fetching on the UI thread (`NetworkOnMainThreadException`, Android). `AppConfigClient` now fetches on the thread pool under one lock, raises `Changed` on the main thread, and retries a no-connection failure after 10 s, 30 s and 60 s. Emulator: Version card and "A new version is ready" row PASS (D:/ReadTheStupidText-worktrees/reviews/132-device.md). Still not verified: the forced-update page on a device (needs a temporary `minVersion` change in the live config).
