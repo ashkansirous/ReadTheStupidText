@@ -24,7 +24,7 @@ One item per book: art record, Gemini chat, pictures through the prepare script 
 
 - [x] Three Billy Goats Gruff (Little, Middle and Big Billy, Troll)
 - [x] The Lion and the Mouse (Lion, Mouse)
-- [ ] Goldilocks and the Three Bears (Goldilocks, Papa, Mama and Baby Bear)
+- [x] Goldilocks and the Three Bears (Goldilocks, Papa, Mama and Baby Bear)
 - [x] Little Red Riding Hood (Red Riding Hood, Mother, Wolf, Grandma, Woodcutter, Button)
 - [x] The Ugly Duckling (Mother Duck, Duckling, Hen, Swan)
 - [x] The Little Red Hen (Hen, Dog, Cat, Duck)

@@ -94,29 +94,23 @@ public sealed class StoreStoryTests : IDisposable
     [MemberData(nameof(Languages))]
     public void TheUglyDuckling_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
     {
-        Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.UglyDucklingId));
-        IReadOnlyList<CastMember> stored = language == story.Language
-            ? story.Cast
-            : story.Cast.Where(m => m.HasAnimalSetting).Select(m => m with { VoiceId = string.Empty }).ToList();
-        List<Character> characters = story.Cast.Select(m => new Character(m.CharacterId, m.Name, m.Gender, 1)).ToList();
-        IReadOnlyDictionary<string, AnimalKind> animals = AnimalSounds.Resolve(characters, story.Language, stored, story.Text);
-        IReadOnlyList<StorytellerCharacter> speakers = CharacterRoster.Speakers(language);
-        string narrator = CharacterRoster.Narrators(language)[0].VoiceId;
-
-        VoiceCast cast = CastCharacters.Cast(
-            characters, CharacterRoster.Choices(speakers, narrator), CharacterRoster.For(language), narrator, c => FlavourGuess.Guess(c.Name, LanguageRules.English),
-            StoryCast.PinnedCharacters(stored), animalOf: c => animals.TryGetValue(c.Id, out AnimalKind kind) ? AnimalCharacters.HintFor(kind, c.Name, story.Language) : null);
-
-        var expected = new Dictionary<string, Gender>
+        AssertEachIsPlayedByTheirGender(StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.UglyDucklingId)), language, new Dictionary<string, Gender>
         {
             ["Mother Duck"] = Gender.Female, ["Dilly"] = Gender.Female, ["Hen"] = Gender.Female, ["Duckling"] = Gender.Male, ["Swan"] = Gender.Male,
-        };
-        foreach (Character character in characters)
+        });
+    }
+
+    // Every roster's bear voices (bear, big bear, cub) are men's, so the builder stores Mama Bear as no animal (StarterAnimals): she is cast by gender, a woman's voice.
+    // Papa Bear and Baby Bear keep their bear voices and growl; Baby Bear is a boy cub ("he forgot to shut the door").
+    // Mum has no line, so the cast is exactly these four (the helper fails on any other character).
+    [Theory]
+    [MemberData(nameof(Languages))]
+    public void Goldilocks_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
+    {
+        AssertEachIsPlayedByTheirGender(StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.GoldilocksId)), language, new Dictionary<string, Gender>
         {
-            Assert.True(expected.ContainsKey(character.Name), $"{language}: the cast has {character.Name}, which this test has no expected gender for");
-            StorytellerCharacter? played = CharacterRoster.Nearest(speakers, cast.VoiceFor(character.Id)!, cast.Flavours![character.Id], character.Gender);
-            Assert.True(played?.Gender == expected[character.Name], $"{language}: {character.Name} is played by {played?.Name} ({played?.Gender})");
-        }
+            ["Goldilocks"] = Gender.Female, ["Mama Bear"] = Gender.Female, ["Papa Bear"] = Gender.Male, ["Baby Bear"] = Gender.Male,
+        });
     }
 
     // The Little Red Hen (Slice 121): the roster's kitten and duckling voices are girls in most languages but boys in Farsi, Spanish and Portuguese, so the builder
