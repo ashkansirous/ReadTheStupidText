@@ -1,6 +1,6 @@
 # Slice 149 — Never drop a short word: catch silent output from the voices
 
-*Planned (2026-10-26, from Slice 145's measurements).*
+*In progress (wave 2026-10-26), draft PR.*
 
 **Batch:** 30 (Decisions 150-151; no new decision)
 **Touches:** `src/ReadTheStupidText.Infrastructure/Reading/SherpaEngineFactory.cs`, `src/ReadTheStupidText.Infrastructure/Reading/NeuralSentenceSource.cs`, `src/ReadTheStupidText.Infrastructure/Reading/SupertonicSpeechReader.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/AndroidSupertonicSpeechReader.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/IosTtsEngine.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/IosSupertonicSpeechReader.Synthesis.cs`, `src/ReadTheStupidText.Application/Reading/SilentOutputGuard.cs` (new), `tests/ReadTheStupidText.Tests/**`, `src/ReadTheStupidText.Infrastructure/CLAUDE.md`
