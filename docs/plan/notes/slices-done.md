@@ -139,6 +139,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 136 | Dino: the animal comes from the picked character (no Animal line) | built | #360 | | [136-dino-animal-from-character.md](../slices/136-dino-animal-from-character.md) |
 | 130 | A version and a release per product | built | #367 | | [130-per-product-versions-and-releases.md](../slices/130-per-product-versions-and-releases.md) |
 | 134 | Dino: the rest of the usage events, and a report | built | #368 | | [134-dino-usage-events-and-report.md](../slices/134-dino-usage-events-and-report.md) |
+| 131 | Mobile.Shared gets its own namespace | built | #371 | | [131-mobile-shared-namespace.md](../slices/131-mobile-shared-namespace.md) |
 
 ## Batch ordering notes
 

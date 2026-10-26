@@ -1,6 +1,6 @@
 # Slice 130 — A version and a release per product
 
-*Built 2026-10-26 (PR #367), not yet verified: actionlint and the first release run after merge.*
+*Built 2026-10-26 (PR #367), verified 2026-10-26: actionlint passed in PR CI; first release run 40253931851 succeeded.*
 
 **Batch:** 27 (product separation, Decisions 133-137)
 **Touches:** `GitVersion.yml`, `.github/workflows/release.yml`, `.github/scripts/ship-targets.mjs`, `.github/workflows/release-scripts.yml`, `.github/workflows/windows.yml`, `.github/workflows/android.yml`, `.github/workflows/ios.yml`, `.github/workflows/dinoreader-*.yml`, `worker/downloads.ts`, `worker/**` tests, `site/**` (download links only), `.github/CLAUDE.md`, `CLAUDE.md`, `STORE.md`
@@ -51,8 +51,10 @@ always runs, so every Dino change cuts a release.
 
 - The release badge is filtered to `rtst-v` tags (already edited on the branch).
 
+#### Verified
+
+- 2026-10-26: first per-product release run 40253931851 succeeded. Bootstrap created `rtst-v1.53.0` and `dino-v1.53.0` from `v1.53.0`; the drafts became `rtst-v1.54.0` (Latest) and `dino-v1.54.0` (not latest); all store, Play and TestFlight jobs green. This also covers the `gittools` `configFilePath` input on the real runner.
+
 #### Not yet verified
 
-- `actionlint` on the changed workflows (runs in CI).
-- First release run after merge: bootstrap tags are created, both versions continue from the last shared version, the right targets build, the RTST release is latest and the Dino release is not.
-- The `gittools` `configFilePath` input on the real runner.
+- ~~`actionlint` on the changed workflows~~ passed in PR #367 CI.
