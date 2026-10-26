@@ -133,6 +133,23 @@ public sealed class StoreStoryTests : IDisposable
         AssertEachIsPlayedByTheirGender(story, language, expected);
     }
 
+    // The Town Mouse and the Country Mouse (Slice 121): Town Mouse is "she" and Country Mouse "he", so the two friends sound different in every language (the
+    // stored English genders are checked too, since every other language is cast from them).
+    [Theory]
+    [MemberData(nameof(Languages))]
+    public void TheTownMouseAndTheCountryMouse_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
+    {
+        Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.TownMouseId));
+        var expected = new Dictionary<string, Gender>
+        {
+            ["Town Mouse"] = Gender.Female, ["Country Mouse"] = Gender.Male,
+        };
+
+        Assert.Equal(expected.Keys.Order(), story.Cast.Select(m => m.Name).Order());
+        Assert.All(story.Cast, m => Assert.True(m.Gender == expected[m.Name], $"{m.Name} is stored as {m.Gender}"));
+        AssertEachIsPlayedByTheirGender(story, language, expected);
+    }
+
     // The Gingerbread Man starter (also a store story) is a boy, so he must get a male voice in every language; Granny, the Cow and the Horse are "she",
     // Grandpa and the Fox "he" (the stored English genders are checked too, since every other language is cast from them).
     [Theory]
