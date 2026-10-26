@@ -1,6 +1,6 @@
 # Slice 134 — Dino: the rest of the usage events, and a report
 
-*Planned 2026-10-25.*
+*In progress (wave 2026-10-26 C), draft PR.*
 
 **Batch:** 28 (Dino usage insights, Decisions 138-142)
 **Touches:** `src/DinoReader.Core/UsageEvent.cs`, `src/DinoReader.App/StorePage.xaml.cs`, `src/DinoReader.App/StoryImport.cs`, `src/DinoReader.App/RecordPage.cs`, `src/DinoReader.App/CastPage.cs`, `src/DinoReader.App/CastFlavourMenu.cs`, `src/DinoReader.App/NarratorPage.cs`, `src/DinoReader.App/LanguagePage.xaml.cs`, `src/DinoReader.App/App.xaml.cs`, `worker/events.ts`, `worker/*.test.ts`, `tools/dino-usage-report.ps1` (new), `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`
