@@ -1,6 +1,6 @@
 # Slice 137 — RTST phone: anonymous usage counts and timings
 
-*Planned.*
+*In progress (wave 2026-10-26), draft PR.*
 
 **Batch:** 29 (RTST usage, waiting and early start, Decisions 143-148)
 **Touches:** `worker/events.ts`, `worker/appconfig.ts`, `worker/index.ts`, `worker/downloads.ts`, `worker/*.test.mjs`, `wrangler.jsonc`, `wrangler.workers-dev.jsonc`, `tools/rtst-usage-report.ps1` (new), `src/ReadTheStupidText.Mobile.Shared/Usage/**` (new), `src/DinoReader.App/AppConfigClient.cs`, `src/DinoReader.App/UsageCounter.cs`, `src/DinoReader.App/MauiProgram.cs`, `src/ReadTheStupidText.Application/Usage/**` (new), `src/ReadTheStupidText.Mobile/MauiProgram.cs`, `src/ReadTheStupidText.Mobile/ReaderPage*.cs`, `src/ReadTheStupidText.Mobile/ReviewPage.xaml.cs`, `src/ReadTheStupidText.Mobile/VoicePickerPage.xaml.cs`, `src/ReadTheStupidText.Mobile/SettingsPage.xaml`, `src/ReadTheStupidText.Mobile/SettingsPage.xaml.cs`, `src/ReadTheStupidText.Mobile/LanguagePage.xaml*`, `src/ReadTheStupidText.Mobile/Resources/Strings/*.resx`, `src/ReadTheStupidText.Mobile/Platforms/iOS/Resources/PrivacyInfo.xcprivacy`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/MlKitTranslator.cs`, `PRIVACY.md`, `site/privacy.html`, `STORE.md`, `tests/ReadTheStupidText.Tests/**`, `src/ReadTheStupidText.Mobile/CLAUDE.md`
