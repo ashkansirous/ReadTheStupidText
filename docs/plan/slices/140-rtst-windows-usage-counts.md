@@ -1,6 +1,6 @@
 # Slice 140 — RTST Windows: the same usage counts and timings
 
-*Planned. Starts after Slices 137-139.*
+*In progress (wave 2026-10-26), draft PR. Starts after Slices 137-139.*
 
 **Batch:** 29 (Decisions 143-148)
 **Touches:** `src/ReadTheStupidText.Infrastructure/Usage/**` (new), `src/ReadTheStupidText.App/App.xaml.cs`, `src/ReadTheStupidText.App/ControlPanelWindow*.cs`, `src/ReadTheStupidText.App/ControlPanelWindow.xaml`, `src/ReadTheStupidText.App/Strings/**`, `src/ReadTheStupidText.Application/ReadAloudService*.cs`, `src/ReadTheStupidText.Application/Usage/**`, `worker/events.ts`, `PRIVACY.md`, `site/privacy.html`, `STORE.md`, `tests/ReadTheStupidText.Tests/**`, `src/ReadTheStupidText.App/CLAUDE.md`
