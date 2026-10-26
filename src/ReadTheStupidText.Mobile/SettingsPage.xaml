@@ -14,6 +14,7 @@
         <x:String x:Key="IconGlobe">M 3 12 A 9 9 0 1 0 21 12 A 9 9 0 1 0 3 12 M 3 12 h 18 M 12 3 c 2.5 2.7 3.8 5.7 3.8 9 s -1.3 6.3 -3.8 9 c -2.5 -2.7 -3.8 -5.7 -3.8 -9 S 9.5 5.7 12 3 Z</x:String>
         <x:String x:Key="IconSpeaker">M 11 5 L 6 9 H 3 v 6 h 3 l 5 4 V 5 Z M 15.5 8.5 a 5 5 0 0 1 0 7 M 18.5 5.5 a 9 9 0 0 1 0 13</x:String>
         <x:String x:Key="IconGauge">M 12 14 l 4 -4 M 3.3 17 a 9 9 0 1 1 17.4 0</x:String>
+        <x:String x:Key="IconBars">M 4 20 V 10 M 10 20 V 4 M 16 20 v -7 M 22 20 H 2</x:String>
         <x:String x:Key="IconRowChevron">M 4.5 2.5 L 8 6 L 4.5 9.5</x:String>
         <SolidColorBrush x:Key="IconBrushLight" Color="#4A46D6" />
         <SolidColorBrush x:Key="IconBrushDark" Color="{StaticResource PrimaryDark}" />
@@ -129,6 +130,25 @@
                         <Button Grid.Row="1" Grid.Column="2" Text="2×" ClassId="2.0" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedChip}" />
                     </Grid>
                 </VerticalStackLayout>
+            </Border>
+
+            <!-- Batch 29 R10 (Slice 137): the counts switch. 52x32 track, 26 knob 3 from the edge; on = brand colour. -->
+            <Border x:Name="CountsCard" Style="{StaticResource SettingsCard}" Padding="16,14" MinimumHeightRequest="72">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnCountsTapped" />
+                </Border.GestureRecognizers>
+                <Grid ColumnDefinitions="32,*,52" ColumnSpacing="12">
+                    <Path Grid.Column="0" Data="{StaticResource IconBars}" Style="{StaticResource IconPath}" />
+                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                        <Label x:Name="CountsTitle" Style="{StaticResource SettingsRowTitle}" />
+                        <Label x:Name="CountsCaption" FontSize="13" LineHeight="1.4"
+                               TextColor="{AppThemeBinding Light=#94000000, Dark={StaticResource TextSecondaryDark}}" />
+                    </VerticalStackLayout>
+                    <Border x:Name="CountsSwitch" Grid.Column="2" WidthRequest="52" HeightRequest="32" VerticalOptions="Center"
+                            StrokeShape="RoundRectangle 16" StrokeThickness="0">
+                        <Ellipse x:Name="CountsKnob" WidthRequest="26" HeightRequest="26" Margin="3" Fill="White" VerticalOptions="Center" />
+                    </Border>
+                </Grid>
             </Border>
 
         </VerticalStackLayout>

@@ -4,9 +4,11 @@ using ReadTheStupidText.Application.Images;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Application.Translation;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Domain.Reading;
 using ReadTheStupidText.Mobile.Resources.Strings;
 using ReadTheStupidText.Mobile.Shared;
+using ReadTheStupidText.Mobile.Shared.Usage;
 
 namespace ReadTheStupidText.Mobile;
 
@@ -36,6 +38,7 @@ public partial class ReaderPage : ContentPage
     private readonly IHeadStart _headStart;
     private readonly EditorDraft _draft;
     private readonly ReviewHandOff _review;
+    private readonly RtstUsage _usage;
     private string? _lastSpokenText;
 
     // The text a translation on the screen came from, so Edit can offer "Show original" (Slice 101).
@@ -61,7 +64,7 @@ public partial class ReaderPage : ContentPage
     // started (system TTS returns as soon as the utterance is queued).
     private static readonly TimeSpan FirstAudioGrace = TimeSpan.FromSeconds(8);
 
-    public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, IVoiceModelService model, VoicePackInstaller installer, IPlatformServices platform, EditorDraft draft, ReviewHandOff review, IHeadStart headStart, IDocumentScanner? scanner = null, ILanguageDetector? detector = null)
+    public ReaderPage(ISpeechReader reader, ISettingsStore settings, IDocumentTextExtractor documentExtractor, IVoiceModelService model, VoicePackInstaller installer, IPlatformServices platform, EditorDraft draft, ReviewHandOff review, IHeadStart headStart, RtstUsage usage, IDocumentScanner? scanner = null, ILanguageDetector? detector = null)
     {
         InitializeComponent();
         FlowDirection = FlowDirection.LeftToRight;
@@ -77,6 +80,7 @@ public partial class ReaderPage : ContentPage
         _platform = platform;
         _draft = draft;
         _review = review;
+        _usage = usage;
         TextEditor.Text = draft.Take();
         _original = draft.TakeOriginal();
         TextEditor.FlowDirection = TextFlow.ContentDirection(TextEditor.Text);
@@ -129,6 +133,7 @@ public partial class ReaderPage : ContentPage
         RestorePendingReadSpinner();
         PrepareScannerOnce();
         TakeReviewResult();
+        _ = ShowCountsNoticeOnceAsync();
     }
 
     // The review page's Read leaves the checked (or translated) text here; it is shown and read at once (Slice 101).
@@ -197,6 +202,7 @@ public partial class ReaderPage : ContentPage
         _retired = true;
         CancelDetection();
         _reader.Stop();
+        EndFirstAudioClock(UsageOutcome.Cancelled);
         _draft.Store(TextEditor.Text, _original);
         DetachHandlers();
     }
@@ -351,6 +357,7 @@ public partial class ReaderPage : ContentPage
     {
         CancelHeadStart();
         _reader.Stop();
+        EndFirstAudioClock(UsageOutcome.Cancelled); // replaced by a new read; no-op when the first sound already played
         ClearPendingRead();
         if (string.IsNullOrWhiteSpace(text))
         {
@@ -372,6 +379,7 @@ public partial class ReaderPage : ContentPage
         _pendingReadId = id;
         _pendingReadText = text;
         SetPlayLoading(true);
+        StartFirstAudioClock();
         try
         {
             // The text on screen is what is read: a translation was made on the review page (Slice 101).
@@ -381,11 +389,18 @@ public partial class ReaderPage : ContentPage
                 return;
             }
 
+            CountReadStarted(text, plan);
             await SpeakPlannedAsync(text, plan);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             bool wasCurrent = id == _pendingReadId;
+            if (wasCurrent)
+            {
+                // a superseded read's error must not end the newer read's clock
+                EndFirstAudioClock(ex is OperationCanceledException ? UsageOutcome.Cancelled : UsageOutcome.Failed);
+            }
+
             ClearPendingReadIfCurrent(id);
             if (wasCurrent)
             {
@@ -503,6 +518,7 @@ public partial class ReaderPage : ContentPage
             return true;
         }
 
+        _firstAudioClock = null; // a blocked read never had a first sound to wait for
         ClearPendingReadIfCurrent(id);
         string message = plan.Route == VoiceRoute.Downloading ? AppResources.Reader_VoiceDownloadingMessage : AppResources.Reader_NoVoiceMessage;
         await AlertAsync(AppResources.Reader_VoiceUnavailableTitle, AppResources.Format(message, ReadingLanguageName(plan.Language)));
@@ -611,6 +627,8 @@ public partial class ReaderPage : ContentPage
             && _pendingReadId != 0 && _pendingReadId == _returnedReadId;
         if (state == PlaybackState.Playing || idleAfterReturn)
         {
+            // Idle straight after the return means a short text played before the Playing event was handled; a late Playing still counts as done.
+            EndFirstAudioClock(UsageOutcome.Done);
             ClearPendingRead();
         }
     }

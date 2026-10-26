@@ -2,6 +2,7 @@ using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Mobile.Resources.Strings;
 using ReadTheStupidText.Mobile.Shared;
+using ReadTheStupidText.Mobile.Shared.Usage;
 
 namespace ReadTheStupidText.Mobile;
 
@@ -39,6 +40,7 @@ public partial class LanguagePage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
+        Preferences.Default.Set(RtstUsage.NoticeSeenKey, true); // the notice is on screen now, so the one-time alert is not for this install
         _installer.Changed -= OnInstallerChanged; // never double-subscribe
         _installer.Changed += OnInstallerChanged;
     }
@@ -115,6 +117,7 @@ public partial class LanguagePage : ContentPage
         Title = AppResources.Common_Language;
         TextFlow.ForUi(AppNameLabel, AppResources.App_Name);
         TextFlow.ForUi(IntroLabel, AppResources.Language_Intro);
+        TextFlow.ForUi(CountsNoteLabel, AppResources.Language_CountsNote);
         RetryButton.Text = AppResources.Language_Retry;
         TextFlow.ForUi(RetryButton);
         TextFlow.ForUi(ContinueButton);

@@ -1,6 +1,6 @@
 # Privacy Policy — Read The Stupid Text
 
-**Effective date:** 3 September 2026
+**Effective date:** 26 October 2026
 
 Read The Stupid Text ("the app") reads text aloud. It ships as a Windows tray
 utility, an Android app and an iPhone app. This policy explains how the app
@@ -9,8 +9,11 @@ handles your data on **all** platforms.
 ## The short version
 
 **Read The Stupid Text does not collect, store, transmit, or share any personal
-data.** It has no accounts, no analytics, no advertising, and no telemetry
-that leaves your device. Everything the app does happens **locally**.
+data.** It has no accounts and no advertising, and what you read, scan or type
+never leaves your device: everything the app does with it happens **locally**.
+The Windows app sends nothing at all. The Android and iPhone apps send only
+small **anonymous counts** (no names, no identifiers, nothing you read) that
+you can switch off in Settings; see *Anonymous usage counts* below.
 
 ## What the app processes, and where
 
@@ -61,7 +64,8 @@ language pack for the language you choose on first launch (about 145 MB, so a
 Wi-Fi connection is advisable). The Android and iPhone apps also download the text-recognition
 pack for that language (up to about 85 MB, depending on the language). The download is a plain file request to this
 project's public GitHub Releases page: no account, no identifier and none of
-your text, images or scans is sent, and the app has no analytics or telemetry.
+your text, images or scans is sent. (The phone apps' separate, optional usage counts
+are described in *Anonymous usage counts*.)
 Once a pack is installed the app works fully offline and makes no network requests at all (it does not even re-check the catalog). Until it arrives, and if
 you are offline, your device's own built-in voice reads instead (the Windows voice on
 Windows, the phone's voice on Android and iPhone).
@@ -82,6 +86,45 @@ offline. If a model cannot be downloaded the app reads the original text.
 
 Your text, images, scans and documents are never transmitted anywhere; reading
 and text recognition happen on the device.
+
+## Anonymous usage counts (Android and iPhone)
+
+The Android and iPhone apps send small anonymous counts so the project can see which
+languages are read, whether translation is noticed and used, whether voices are changed,
+and how long waits such as the first translation take. This is **on by default**, and you
+can turn it off at any time with **Settings > Help improve the app**: when it is off, nothing
+is queued or sent, and anything waiting is deleted. The first-run language screen says so
+once; an app updated from an older version says so once on its first start. The Windows app sends no counts.
+
+A count is a name plus a few values from fixed lists:
+
+- `app_opened`: the platform (Android or iPhone), the operating system's major version,
+  the app version and the language of the app's words.
+- `read_started`: the language detected in the text (when the app could tell), the language
+  it was read in, whether it was read as written or as a translation, which kind of voice
+  read it (the phone's own voice or one of the app's voice engines), whether you still use
+  the default voice, and the text's length as a coarse bucket (under 200, 200 to 1000,
+  1000 to 5000, or over 5000 characters).
+- `translate_offered` and `translate_chosen`: the language pair, when the app offered
+  to translate a text and when you chose to.
+- `voice_changed`: the language and the kind of voice, when you pick a voice.
+- `timing`: which wait it was (getting a translation model, translating, or the time until
+  the first sound), the language pair when known, how it ended (finished, cancelled or failed)
+  and how long it took as a coarse bucket (under 0.5 s, 0.5 to 1, 1 to 2, 2 to 5, 5 to 10,
+  10 to 20, or over 20 seconds).
+
+Every count also carries the app version, the platform and the UTC date (no time of day).
+Counts never contain the text you read, file names, scanned images, names, or any install,
+device, account or advertising identifier, so they cannot be put together into a history of
+one person. Only a share of launches may count at all, as set by the project.
+
+Counts are sent in small batches to this project's own server
+(`readthestupidtext.sirous.uk`) and stored in Cloudflare's Workers Analytics Engine
+(Cloudflare is the processor) for about three months, then deleted. As with any web request,
+the server sees your IP address while the request is handled; it is not stored with the
+counts and is not used for anything. The project can also switch counting off for everyone
+from the server. Counts are not shared with anyone else and are not used for advertising or
+tracking.
 
 ## Permissions
 
@@ -113,6 +156,9 @@ The app uses a small set of open-source, on-device components that never
 transmit data (the Supertonic voice model is downloaded as a
 language pack on every platform rather than bundled):
 
+- **Cloudflare** (Workers and Analytics Engine) — hosts this project's website and
+  receives the anonymous usage counts described above on the phone apps; it is a
+  processor for the project, and no count holds anything that identifies you.
 - **sherpa-onnx** and the **Supertonic** voice model — the offline neural
   text-to-speech engine, used on every platform.
 - **Piper** (Persian voice) with **espeak-ng** data, and **MeloTTS** (Chinese
@@ -135,7 +181,8 @@ language pack on every platform rather than bundled):
 
 ## Children's privacy
 
-The app collects no personal information from anyone, including children.
+The app collects no personal information from anyone, including children. The
+anonymous counts hold no name, identifier or text, and can be switched off in Settings.
 
 ## Changes to this policy
 

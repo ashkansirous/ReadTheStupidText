@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { MAX_EVENTS_PER_REQUEST, handleEvents, isEventsPath, parseEvent, toDataPoint } from "./events.ts";
+import { MAX_EVENTS_PER_REQUEST, handleEvents, handleRtstEvents, isEventsPath, parseEvent, parseRtstEvent, toDataPoint } from "./events.ts";
 
 const BOOK = "0123456789abcdef0123456789abcdef";
 const shelfEvent = {
@@ -181,4 +181,95 @@ test("a Slice 134 event with a wrong detail, source or book is dropped, and free
 
 test("an older client's reader events, which have no detail, are still taken", () => {
   assert.equal(parseEvent(ownEvent)?.detail, "");
+});
+
+// ---- Read The Stupid Text's phone counts (Slice 137) ----------------------------------------------------------------
+
+const rtst = (name, fields) => ({ name, version: "1.4.0", platform: "android", day: "2026-10-26", sampleRate: 0.5, ...fields });
+const rtstPost = (events) =>
+  new Request("https://readthestupidtext.sirous.uk/api/events", { method: "POST", body: JSON.stringify({ schemaVersion: 1, events }) });
+const rtstRecorder = () => {
+  const points = [];
+  return { points, RTST_USAGE: { writeDataPoint: (point) => points.push(point) } };
+};
+
+const readStarted = rtst("read_started", { language: "fr", sourceLanguage: "fr", mode: "original", engine: "supertonic", voiceDefault: true, lengthBucket: "200-1000" });
+
+test("a phone read count is written with its fields in the fixed blob order", async () => {
+  const env = rtstRecorder();
+  const response = await handleRtstEvents(rtstPost([readStarted]), env, on);
+  assert.equal(response.status, 204);
+  assert.deepEqual(env.points, [
+    {
+      indexes: ["read_started"],
+      blobs: ["read_started", "1.4.0", "android", "2026-10-26", "fr", "fr", "original", "supertonic", "yes", "200-1000", "", "", "", ""],
+      doubles: [2],
+    },
+  ]);
+});
+
+test("every phone event name is taken with its required fields", () => {
+  const good = [
+    rtst("app_opened", { language: "en", osMajor: 15 }),
+    readStarted,
+    rtst("translate_offered", { sourceLanguage: "fr", language: "en" }),
+    rtst("translate_chosen", { sourceLanguage: "fr", language: "en" }),
+    rtst("voice_changed", { language: "en", engine: "phone" }),
+    rtst("timing", { stage: "translate", outcome: "done", durationBucket: "1-2", sourceLanguage: "fr", language: "en" }),
+    rtst("timing", { stage: "first_audio", outcome: "cancelled", durationBucket: ">20", language: "en" }),
+  ];
+  for (const event of good) assert.notEqual(parseRtstEvent(event), null, event.name);
+});
+
+test("an unknown field is ignored and never reaches the dataset", () => {
+  const event = parseRtstEvent(rtst("app_opened", { language: "en", osMajor: 15, text: "hello", deviceId: "abc" }));
+  assert.deepEqual(event.fields, { language: "en", osMajor: 15 });
+});
+
+test("a phone count with a missing, extra or out-of-list field is dropped whole", () => {
+  const bad = [
+    rtst("app_opened", { language: "en" }),
+    rtst("app_opened", { language: "en", osMajor: 0 }),
+    rtst("app_opened", { language: "en", osMajor: 15.5 }),
+    rtst("app_opened", { language: "en", osMajor: 15, mode: "original" }),
+    { ...readStarted, mode: "both" },
+    { ...readStarted, engine: "neural" },
+    { ...readStarted, voiceDefault: "yes" },
+    { ...readStarted, lengthBucket: "long" },
+    { ...readStarted, language: "french please" },
+    rtst("translate_offered", { language: "en" }),
+    rtst("voice_changed", { language: "en", engine: "phone", mode: "original" }),
+    rtst("timing", { stage: "download", outcome: "done", durationBucket: "1-2" }),
+    rtst("timing", { stage: "translate", outcome: "slow", durationBucket: "1-2" }),
+    rtst("timing", { stage: "translate", outcome: "done", durationBucket: "3-4" }),
+    rtst("book_opened", { language: "en" }),
+    { ...readStarted, platform: "tv" },
+    { ...readStarted, day: "2026-10-26T10:00:00Z" },
+    { ...readStarted, version: "1.x" },
+    { ...readStarted, sampleRate: 0 },
+    "not an event",
+    null,
+  ];
+  for (const event of bad) assert.equal(parseRtstEvent(event), null, JSON.stringify(event));
+});
+
+test("with telemetry off the phone endpoint writes nothing and answers 204; with it on and no binding it is a 503", async () => {
+  const env = rtstRecorder();
+  assert.equal((await handleRtstEvents(rtstPost([readStarted]), env, off)).status, 204);
+  assert.equal(env.points.length, 0);
+  assert.equal((await handleRtstEvents(rtstPost([readStarted]), {}, off)).status, 204);
+  assert.equal((await handleRtstEvents(rtstPost([readStarted]), {}, on)).status, 503);
+});
+
+test("only valid phone counts of a batch reach the dataset, and Dino's dataset is never used", async () => {
+  const env = { ...rtstRecorder(), USAGE: { writeDataPoint: () => assert.fail("Dino's dataset must not be written") } };
+  await handleRtstEvents(rtstPost([readStarted, { ...readStarted, mode: "x" }, "junk"]), env, on);
+  assert.equal(env.points.length, 1);
+});
+
+test("a phone batch over the limit is refused and a GET is a 405", async () => {
+  const events = Array.from({ length: MAX_EVENTS_PER_REQUEST + 1 }, () => readStarted);
+  assert.equal((await handleRtstEvents(rtstPost(events), rtstRecorder(), on)).status, 413);
+  const get = new Request("https://readthestupidtext.sirous.uk/api/events");
+  assert.equal((await handleRtstEvents(get, rtstRecorder(), on)).status, 405);
 });

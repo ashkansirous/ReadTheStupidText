@@ -1,9 +1,11 @@
 using Microsoft.Maui.Controls.Shapes;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Domain.Reading;
 using ReadTheStupidText.Mobile.Resources.Strings;
 using ReadTheStupidText.Mobile.Shared;
+using ReadTheStupidText.Mobile.Shared.Usage;
 
 namespace ReadTheStupidText.Mobile;
 
@@ -28,7 +30,9 @@ public partial class VoicePickerPage : ContentPage
     private readonly ISettingsStore _settings;
     private readonly IPlatformServices _platform;
     private readonly IVoiceModelService _model;
+    private VoiceEngineKind? _listedKind;
     private readonly VoicePackInstaller _installer;
+    private readonly RtstUsage _usage;
     private readonly Dictionary<string, Border> _rowsByVoiceId = new();
     private Label? _statusLabel;
     private PackInstallState _statusState;
@@ -41,7 +45,8 @@ public partial class VoicePickerPage : ContentPage
         ISettingsStore settings,
         IPlatformServices platform,
         IVoiceModelService model,
-        VoicePackInstaller installer)
+        VoicePackInstaller installer,
+        RtstUsage usage)
     {
         InitializeComponent();
         FlowDirection = FlowDirection.LeftToRight;
@@ -51,6 +56,7 @@ public partial class VoicePickerPage : ContentPage
         _platform = platform;
         _model = model;
         _installer = installer;
+        _usage = usage;
     }
 
     // The voices on offer follow the installed packs and the language, which can change while
@@ -147,6 +153,7 @@ public partial class VoicePickerPage : ContentPage
 
         VoiceModelPaths? paths = _platform.SupportsNeuralVoice ? _model.Paths : null;
         NeuralVoiceSections.IsVisible = paths is not null;
+        _listedKind = paths?.Kind; // the engine of the voices on screen, whatever the model service answers by the time one is tapped
         if (paths is null)
         {
             AddFallbackReason();
@@ -322,13 +329,28 @@ public partial class VoicePickerPage : ContentPage
 
     private void SelectVoice(VoiceInfo voice)
     {
+        bool changed = _settings.VoiceId != voice.Id;
         _settings.VoiceId = voice.Id;
         _reader.SetVoice(voice.Id);
+        if (changed)
+        {
+            CountVoiceChange(voice);
+        }
+
         UpdateSelection(voice.Id);
         if (VoicePreviewPolicy.ShouldPreview(_reader.State))
         {
             _ = _reader.SpeakAsync(VoiceLabel.For(voice));
         }
+    }
+
+    // An anonymous count of an actual change (Slice 137): the language it is for and which engine speaks it (the engine of the pack the voice
+    // belongs to; this page lists only the app language's pack and the phone voice), never the voice's name.
+    private void CountVoiceChange(VoiceInfo voice)
+    {
+        string engine = UsageEvents.EngineFor(voice.Id == SystemVoice.Id, _listedKind);
+        string language = AppLanguages.Code(AppLanguageSetting.Current(_settings));
+        _usage.Record(context => UsageEvents.VoiceChanged(context, language, engine));
     }
 
     private void UpdateSelection(string selectedVoiceId)

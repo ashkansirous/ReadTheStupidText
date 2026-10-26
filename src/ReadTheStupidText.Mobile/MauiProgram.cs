@@ -2,9 +2,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ReadTheStupidText.Application.Documents;
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Application.Translation;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Documents;
 using ReadTheStupidText.Mobile.Shared;
+using ReadTheStupidText.Mobile.Shared.Usage;
 
 namespace ReadTheStupidText.Mobile;
 
@@ -30,6 +33,7 @@ public static partial class MauiProgram
 		builder.Services.AddSingleton<IDocumentTextExtractor, CompositeDocumentTextExtractor>();
 		builder.Services.AddSingleton<EditorDraft>();
 		builder.Services.AddSingleton<ReviewHandOff>();
+		builder.Services.AddSingleton<RtstUsage>();
 		builder.Services.AddTransient<LanguagePage>();
 		builder.Services.AddTransient<ReaderPage>();
 		builder.Services.AddTransient<VoicePickerPage>();
@@ -41,7 +45,19 @@ public static partial class MauiProgram
 		builder.Logging.AddDebug();
 #endif
 
-		return builder.Build();
+		MauiApp app = builder.Build();
+		StartUsageCounts(app.Services);
+		return app;
+	}
+
+	// Anonymous counts (Slice 137): the config fetch, then one app_opened per launch and whatever an earlier session left queued.
+	// RtstUsage does nothing while the Settings switch or the remote config says off.
+	private static void StartUsageCounts(IServiceProvider services)
+	{
+		var usage = services.GetRequiredService<RtstUsage>();
+		var settings = services.GetRequiredService<ISettingsStore>();
+		string language = AppLanguages.Code(AppLanguageSetting.Current(settings));
+		_ = usage.StartAsync(context => UsageEvents.AppOpened(context, language, UsageEnvironment.OsMajor));
 	}
 
 	// Each platform's Platforms/<OS>/ folder implements this for the services only this app
