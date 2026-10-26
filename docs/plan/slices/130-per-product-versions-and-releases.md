@@ -42,12 +42,12 @@ always runs, so every Dino change cuts a release.
 
 *Tests:* ship-targets 86, bootstrap 4, publish-downloads 15.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-26)
 
 - Versions and tags are per product: `rtst-v<x.y.z>` (`GitVersion.yml`) and `dino-v<x.y.z>` (`GitVersion.dino.yml`); the old `v*` tags are history only. A release carries only its own product's files, and carry-forward (`find-release.sh` with a tag regex) never crosses products. Only the RTST release is marked latest. A major token bumps only the product(s) whose paths the commit touches (core = both). (Slice 130: docs/plan/slices/130-per-product-versions-and-releases.md)
 - `.github/scripts/bootstrap-baseline-tags.sh` seeds `rtst-v`/`dino-v` from the newest legacy `v*` tag on the first run; do not hand-create baseline tags. (Slice 130: docs/plan/slices/130-per-product-versions-and-releases.md)
 
-#### For README.md
+#### For README.md (lifted 2026-10-26)
 
 - The release badge is filtered to `rtst-v` tags (already edited on the branch).
 

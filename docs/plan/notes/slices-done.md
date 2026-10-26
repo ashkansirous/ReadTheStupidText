@@ -137,6 +137,8 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 132 | Dino: a remote switchboard and a forced update | built | #359 | | [132-dino-remote-config-and-force-update.md](../slices/132-dino-remote-config-and-force-update.md) |
 | 133 | Dino: anonymous usage counts, first event end to end | built | #365 | | [133-dino-anonymous-usage-counts.md](../slices/133-dino-anonymous-usage-counts.md) |
 | 136 | Dino: the animal comes from the picked character (no Animal line) | built | #360 | | [136-dino-animal-from-character.md](../slices/136-dino-animal-from-character.md) |
+| 130 | A version and a release per product | built | #367 | | [130-per-product-versions-and-releases.md](../slices/130-per-product-versions-and-releases.md) |
+| 134 | Dino: the rest of the usage events, and a report | built | #368 | | [134-dino-usage-events-and-report.md](../slices/134-dino-usage-events-and-report.md) |
 
 ## Batch ordering notes
 

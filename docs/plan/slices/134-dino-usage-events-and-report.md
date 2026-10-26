@@ -39,7 +39,7 @@ Slice 133 proves the pipe with the reader events. This adds the rest of the user
 - Not wired: `own_book_added` for backup restore and `.dino` import.
 - Tests: worker 73, Dino 1180, Android build.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-26)
 
 - Dino usage events are a closed set: a new event needs an entry in worker `EVENT_RULES`, a `UsageDetail` value, and a line in `site/dino/privacy.html` and `STORE.md` naming it and its fields. No ids and no typed text. `UsageCounter` must never throw. The reading-language list in the worker is kept in sync with the app's by a test. (Slice 134: docs/plan/slices/134-dino-usage-events-and-report.md)
 - `tools/dino-usage-report.ps1` hides groups under 10 events; that is a noise floor, not anonymity. (Slice 134: docs/plan/slices/134-dino-usage-events-and-report.md)
