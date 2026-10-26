@@ -44,8 +44,8 @@ internal static class SherpaEngineFactory
     }
 
     /// <summary>
-    /// Generates speech for the model the read captured at <paramref name="pace"/> (1 unless a voice flavour
-    /// speeds it up or slows it down, Slice 113; the player applies the listener's rate on top).
+    /// Generates speech for the model the read captured at <paramref name="pace"/> (1 unless a product voice transform
+    /// speeds it up or slows it down, Slice 113/129; the player applies the listener's rate on top).
     /// </summary>
     public static OfflineTtsGeneratedAudio Generate(BuiltEngine engine, string text, int speakerId, float pace = 1.0f)
     {

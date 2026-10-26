@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- Pure, framework-free library (Slice 59): no package references; the project references are the
-       library-free Application (AppLanguage, Slice 66) and Domain (VoiceFlavour, Slice 113).
+       library-free Application (AppLanguage, Slice 66) and Domain (VoiceEngineKind etc.; VoiceFlavour lives here since Slice 129).
        Rule-based dialogue segmenting, speaker attribution and voice casting. -->
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
