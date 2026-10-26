@@ -25,6 +25,7 @@ Open slices only. Finished slices (143 rows) are in [slices-done](docs/plan/note
 | 153 | Dino: no robotic-sounding character voices | planned | | | [153-dino-no-robotic-voices.md](docs/plan/slices/153-dino-no-robotic-voices.md) |
 | 154 | Dino: vowel marks in Farsi and Arabic books | planned | | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
 | 155 | Dino: a first-run intro wizard for the four things Dino does | planned | | | [155-dino-first-run-intro-wizard.md](docs/plan/slices/155-dino-first-run-intro-wizard.md) |
+| 156 | Dino: the book chooses each character's voice, not the app | planned | | | [156-dino-authored-character-voices.md](docs/plan/slices/156-dino-authored-character-voices.md) |
 
 Batch 25 (119-123; 119, 120, 122, 123 built, 121 built; planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
 
@@ -39,6 +40,8 @@ Batch 30 (143-146 and 148, planned 2026-10-26, Dino loading, Farsi voice and kid
 Batch 31 (150-154, planned 2026-10-26, from a tester review of Dino Reader): 150 (speed) and 151 (view modes, no merge) go first and can run together (150 edits settings, 151 the reading page and cast page). 152 follows 151 (both edit `CastPage`/`CastRows`/`StoryVoicing`). 153 starts with a listening page and waits on the user's flags. 154 starts with a listening test, then adds vowel marks book by book after each book's Slice 146 rewrite and open illustration PR merge. Decisions 155-159 (157 reverses 132).
 
 Batch 32 (155, planned 2026-10-26, Dino onboarding): one slice, mock first, then step 1 end to end, then steps 2-4, resume, the replay row, strings and privacy texts. It edits the first-run, gallery and usage-event code, which Batch 31 doesn't, so it can run alongside 150-154. Decision 160.
+
+Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure book's Seagull): each book stores every character's traits and a suggested voice, chosen by the story writer; the app uses the suggestion and falls back to the traits. It follows Slice 152 (shares `Story.cs`/`StoryCast.cs`/`CastCharacters.cs`/`CastRows.cs` and reuses its `Animal` field as the "kind" trait) and Slice 153 (both edit `CharacterRoster*.cs`). The Treasure book first, then the fallback, then every book. Decision 161.
 
 ### Notes
 
