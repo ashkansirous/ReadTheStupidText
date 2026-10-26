@@ -167,13 +167,10 @@ Record each pass in the art record table (page, attempt number, why earlier atte
   button (Gemini lazy-loads older ones). Clicking it writes the full-size JPEG to `%USERPROFILE%\Downloads`
   as `Gemini_Generated_Image_*.jpg` (every picture of 2026-10-26 arrived, 1792x2400).
 - **Check the page is alive; never wait for a hung one** (2026-10-26): a Gemini tab can hang with no error, where the
-  sidebar chat list never loads, and on reload it turns out to be Google's CAPTCHA (`google.com/sorry`). Within about
-  20 s of every navigation or reload, read the tab URL and run `window.__geminiHealth()` (gemini-grab.js; returns `OK`,
-  `CAPTCHA` or `HUNG: ...`; if the script can't be injected, the page is hung). `CAPTCHA`: stop at once and report it; only
-  the user can solve it, and every other illustrator in this Chrome will hit it too. `HUNG`: reload once and check again;
-  still not `OK`, stop and report. `__waitForPicture` runs the same check every 1.5 s and returns `CAPTCHA` or `HUNG: ...`
-  the moment the sidebar menu stops loading, so the page is watched all the time, not just after a load; on `HUNG`
-  reload at once rather than waiting. Run `__geminiHealth()` before every send too.
+  left menu (the sidebar chat list) never loads, and on reload it turns out to be Google's CAPTCHA (`google.com/sorry`).
+  The left menu loads once, when the page loads, so check once: 5 s after opening or reloading the tab, read the tab URL
+  and run `window.__geminiHealth()` (gemini-grab.js; `OK`, `CAPTCHA` or `HUNG: ...`; a script that can't be injected also
+  means hung). Not `OK`: reload once and check again 5 s later; still not `OK`, stop and report (`CAPTCHA` stops at once).
   Claude never solves a CAPTCHA (not allowed, even on the user's own account). The coordinator alerts the user with a
   push notification the moment an illustrator reports `CAPTCHA`, and resumes once the user says it is solved.
 - **Poll, never sleep, while Gemini draws** (2026-10-26: fixed `computer wait` sleeps left each finished picture
