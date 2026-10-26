@@ -1,6 +1,6 @@
 # Slice 141 — RTST Windows: a wait indicator after 500 ms
 
-*Planned. Starts after Slice 140.*
+*In progress (wave 2026-10-26), draft PR. Starts after Slice 140.*
 
 **Batch:** 29 (Decisions 143-148)
 **Touches:** `src/ReadTheStupidText.App/WaitFlyout*` (new), `src/ReadTheStupidText.App/ControlPanelWindow.xaml`, `src/ReadTheStupidText.App/ControlPanelWindow*.cs`, `src/ReadTheStupidText.App/Tray*`, `src/ReadTheStupidText.App/Strings/**`, `src/ReadTheStupidText.Application/Reading/WaitStage.cs`, `tests/ReadTheStupidText.Tests/**`
