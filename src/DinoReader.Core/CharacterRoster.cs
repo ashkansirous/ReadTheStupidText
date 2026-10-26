@@ -141,9 +141,9 @@ public static partial class CharacterRoster
 
     private static int FamilyOf(VoiceFlavour flavour) => flavour switch
     {
-        VoiceFlavour.Small or VoiceFlavour.Squeaky or VoiceFlavour.Bouncy => 1,
+        VoiceFlavour.Small or VoiceFlavour.Squeaky or VoiceFlavour.Bouncy or VoiceFlavour.Chirpy or VoiceFlavour.Perky => 1,
         VoiceFlavour.Big or VoiceFlavour.Giant or VoiceFlavour.Grumpy => 2,
-        VoiceFlavour.Sleepy or VoiceFlavour.Whisper => 3,
+        VoiceFlavour.Sleepy or VoiceFlavour.Whisper or VoiceFlavour.Mellow or VoiceFlavour.Hushed => 3,
         VoiceFlavour.Storyteller => 4,
         _ => 0,
     };
