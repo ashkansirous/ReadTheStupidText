@@ -1,6 +1,6 @@
 # Slice 143 — One shared wait overlay; Dino shows it on every wait
 
-*Planned.*
+*In progress (wave 2026-10-26), draft PR.*
 
 **Batch:** 30 (Dino loading, Farsi voice, kid-friendly language, Decisions 149-153)
 **Touches:** `src/ReadTheStupidText.Mobile.Shared/Waiting/**` (new), `src/ReadTheStupidText.Application/Reading/WaitStage.cs` (new, shared with Slice 138), `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/StoryWizardPage*`, `src/DinoReader.App/PageEditorPage*`, `src/DinoReader.App/ScanPages.cs`, `src/DinoReader.App/StoryImport.cs`, `src/DinoReader.App/StoryTranslator.cs`, `src/DinoReader.App/RecordPage.cs`, `src/DinoReader.App/BackupPage*`, `src/DinoReader.App/StorePage*`, `src/DinoReader.App/Resources/Strings/*.resx`, `tests/DinoReader.Tests/**`, `tests/ReadTheStupidText.Tests/**`, `src/DinoReader.App/CLAUDE.md`
