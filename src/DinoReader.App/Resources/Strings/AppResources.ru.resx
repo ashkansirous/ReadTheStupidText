@@ -229,6 +229,14 @@
   <data name="Wizard_NoTextShort" xml:space="preserve"><value>Нет текста</value></data>
   <data name="Wizard_NoText" xml:space="preserve"><value>На этой странице текст не найден</value></data>
   <data name="Wizard_Reading" xml:space="preserve"><value>Чтение страницы {0} из {1}</value></data>
+  <data name="Wait_GettingVoices" xml:space="preserve"><value>Готовим голоса…</value></data>
+  <data name="Wait_ReadingPictures" xml:space="preserve"><value>Читаем картинки…</value></data>
+  <data name="Wait_PageOf" xml:space="preserve"><value>Страница {0} из {1}</value></data>
+  <data name="Wait_Translating" xml:space="preserve"><value>Переводим…</value></data>
+  <data name="Wait_Saving" xml:space="preserve"><value>Сохраняем…</value></data>
+  <data name="Wait_GettingBook" xml:space="preserve"><value>Готовим книгу…</value></data>
+  <data name="Wait_BackingUp" xml:space="preserve"><value>Сохраняем книги в резервную копию…</value></data>
+  <data name="Wait_Restoring" xml:space="preserve"><value>Восстанавливаем книги…</value></data>
   <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>Некоторые страницы не прочитаны</value></data>
   <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>Не удалось прочитать страниц: {0}. Они сохранятся как картинки без текста.</value></data>
   <data name="Pictures_NoneTitle" xml:space="preserve"><value>В этом файле есть текст, но нет картинок</value></data>

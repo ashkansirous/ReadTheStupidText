@@ -621,10 +621,12 @@ public partial class PagesStep : ContentView
 	{
 		var rendered = new List<string>();
 		_session!.ShowProgress(string.Empty);
+		CancellationToken cancel = _session.WaitToken;
 		try
 		{
 			var pdf = _session!.Services.GetRequiredService<RenderedPdfTextExtractor>();
 			IReadOnlyList<PositionedPage> pages = await pdf.ExtractPagesAsync(path);
+			cancel.ThrowIfCancellationRequested();
 			if (pages.Count == 0)
 			{
 				return false;
@@ -632,7 +634,8 @@ public partial class PagesStep : ContentView
 
 			IReadOnlyList<string>? pageTexts = await FlowingPageTextsAsync(path, pages);
 			IReadOnlyDictionary<int, string> renders = await pdf.RenderPagesAsync(path, pages.Where(p => p.ImagePath is null).Select(p => p.Index).ToList());
-			List<PageDraft> drafts = await PdfDraftsAsync(pages, renders, pageTexts, rendered);
+			cancel.ThrowIfCancellationRequested();
+			List<PageDraft> drafts = await PdfDraftsAsync(pages, renders, pageTexts, rendered, cancel);
 			UseTitleIfBlank(title);
 			_session.FileName = Path.GetFileName(path);
 			Draft.AddPageDrafts(drafts);
@@ -641,7 +644,11 @@ public partial class PagesStep : ContentView
 			Refresh();
 			return true;
 		}
-		catch (Exception ex) when (ex is not OperationCanceledException)
+		catch (OperationCanceledException) when (cancel.IsCancellationRequested)
+		{
+			return true; // Cancel in the wait overlay: nothing is kept, and the plain-text fallback must not run
+		}
+		catch (Exception ex)
 		{
 			DinoLog.Error(_session!.Services, "import failed", ex);
 			return false;
@@ -654,10 +661,28 @@ public partial class PagesStep : ContentView
 	}
 
 	private async Task<List<PageDraft>> PdfDraftsAsync(
-		IReadOnlyList<PositionedPage> pages, IReadOnlyDictionary<int, string> renders, IReadOnlyList<string>? pageTexts, List<string> rendered)
+		IReadOnlyList<PositionedPage> pages, IReadOnlyDictionary<int, string> renders, IReadOnlyList<string>? pageTexts, List<string> rendered, CancellationToken cancel)
+	{
+		var drafts = new List<PageDraft>();
+		var copies = new List<string>();
+		try
+		{
+			await AddPdfDraftsAsync(pages, renders, pageTexts, rendered, cancel, drafts, copies);
+		}
+		catch (OperationCanceledException)
+		{
+			StoryImport.DeleteLocations(copies); // Cancel: the picture copies made so far are not kept
+			throw;
+		}
+
+		return drafts;
+	}
+
+	private async Task AddPdfDraftsAsync(
+		IReadOnlyList<PositionedPage> pages, IReadOnlyDictionary<int, string> renders, IReadOnlyList<string>? pageTexts, List<string> rendered,
+		CancellationToken cancel, List<PageDraft> drafts, List<string> copies)
 	{
 		var import = _session!.Services.GetRequiredService<StoryImport>();
-		var drafts = new List<PageDraft>();
 		for (int i = 0; i < pages.Count; i++)
 		{
 			string? image = pages[i].ImagePath ?? renders.GetValueOrDefault(pages[i].Index);
@@ -668,13 +693,13 @@ public partial class PagesStep : ContentView
 			}
 
 			rendered.Add(image);
+			cancel.ThrowIfCancellationRequested();
 			_session.ShowProgress(AppResources.Format(AppResources.Wizard_Reading, i + 1, pages.Count));
 			string copy = await import.CopyIntoAsync(image, _session.WorkFolder);
+			copies.Add(copy);
 			int at = i;
 			drafts.Add(await Task.Run(() => StoryImport.DraftFromPositioned(pages[at], copy, pageTexts?[at])));
 		}
-
-		return drafts;
 	}
 
 	// A text-layer PDF reads as the document's own paragraphs, cut per page by where each page's lines sit in it. A PDF with any
