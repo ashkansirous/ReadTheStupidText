@@ -48,6 +48,7 @@ public sealed class WaitFlyoutController
             int? readId = _readAloud.CurrentReadId; // taken now, on the raising read: a queued call must not mark a newer read's text ready
             _dispatcher.TryEnqueue(() => OnReadText(readId));
         };
+        _readAloud.WaitingOnEarlyVoiceChanged += (_, _) => _dispatcher.TryEnqueue(Refresh); // translation is done: the voice is what is left (Slice 142)
         _readAloud.TranslationPackProgress += (_, progress) => _dispatcher.TryEnqueue(() => OnPackProgress(progress));
     }
 
@@ -146,7 +147,7 @@ public sealed class WaitFlyoutController
     }
 
     private WaitStage CurrentStage() =>
-        ReadWaitStages.Pick(DownloadForThisRead() is not null, _readAloud.TranslateEnabled && !_textReady);
+        ReadWaitStages.Pick(DownloadForThisRead() is not null, _readAloud.TranslateEnabled && !_textReady && !_readAloud.WaitingOnEarlyVoice);
 
     // A read does not wait for a pack download: it reads the original at once and the pack arrives in the background. The download
     // stage therefore shows only for a download of this read's own pair while the read is still resolving its text, never for another

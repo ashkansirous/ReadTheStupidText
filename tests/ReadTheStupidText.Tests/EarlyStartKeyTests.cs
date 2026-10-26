@@ -140,6 +140,29 @@ public class EarlyStartKeyTests
     }
 
     [Fact]
+    public void A_hint_is_used_only_when_the_full_text_plans_the_same_first_chunk()
+    {
+        const string head = "Hello there my friend. How are you today?";
+        string text = head + Filler + Filler;
+
+        Assert.Equal(head, FirstChunkHints.ConfirmedBy(text, head, Cached));
+        Assert.Null(FirstChunkHints.ConfirmedBy(text, "Hello there my friend.", Cached)); // a shorter cut than the plain plan makes
+        Assert.Null(FirstChunkHints.ConfirmedBy(text, null, Cached));
+    }
+
+    [Fact]
+    public void A_short_block_that_plans_as_one_chunk_takes_the_prepared_head_as_its_first_chunk()
+    {
+        const string head = "Bonjour mon ami. Comment vas-tu aujourd'hui?";
+        string block = head + " Je suis ravi de te voir ici. Passons une belle journee ensemble.";
+
+        Assert.True(block.Length <= 200);
+        Assert.Equal(head, FirstChunkHints.ConfirmedBy(block, head, Cached));
+        Assert.Null(FirstChunkHints.ConfirmedBy(block, "Bonjour mon ami. Comment vas", Cached)); // not a sentence boundary
+        Assert.Equal([head, "Je suis ravi de te voir ici. Passons une belle journee ensemble."], SpeechTextChunker.Split(block, true, Cached, head));
+    }
+
+    [Fact]
     public void A_language_pack_is_part_of_the_scope()
     {
         var english = new VoiceModelPaths("root", Language: "en");

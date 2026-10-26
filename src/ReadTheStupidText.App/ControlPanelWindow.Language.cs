@@ -181,6 +181,7 @@ public sealed partial class ControlPanelWindow
         }
 
         _settings.TranslateSourceLanguage = choice.Code;
+        _readAloud.NotifyTranslateSettingsChanged(); // early work for the old pick is dropped (Slice 142)
         TextFlow.ForUi(TranslateNote, TranslationNoteText.Default);
     }
 
