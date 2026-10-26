@@ -1,6 +1,6 @@
 # Slice 144 — Farsi: the female voice is the default, the literary voice leaves the cast
 
-*Planned.*
+*In progress (wave 2026-10-26), draft PR.*
 
 **Batch:** 30 (Decisions 149-153)
 **Touches:** `src/DinoReader.App/StoryVoicing.cs`, `src/DinoReader.App/CharacterRoster*.cs`, `src/DinoReader.App/NarratorRecast.cs`, `src/ReadTheStupidText.Mobile.Shared/**`, `src/ReadTheStupidText.Infrastructure/Speech/**`, `src/ReadTheStupidText.Application/Reading/**`, `tests/DinoReader.Tests/**`, `tests/ReadTheStupidText.Tests/**`, `src/DinoReader.App/CLAUDE.md`
