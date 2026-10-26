@@ -94,3 +94,32 @@ public sealed class WaitGate
         return shown >= TimeSpan.Zero ? shown : null;
     }
 }
+
+/// <summary>
+/// The pure rules of the Windows wait indicator (Slice 141): which stage a read that has not yet made a sound is in, and the
+/// percentage a pack download shows. The windows only compose the words.
+/// </summary>
+public static class ReadWaitStages
+{
+    /// <summary>A pack download comes first, then the translation; once the text to speak is ready only the voice is left.</summary>
+    public static WaitStage Pick(bool downloadingPack, bool translating)
+    {
+        if (downloadingPack)
+        {
+            return WaitStage.DownloadingModel;
+        }
+
+        return translating ? WaitStage.Translating : WaitStage.PreparingVoice;
+    }
+
+    /// <summary>A download's 0..1 fraction as a whole percent, clamped to 0..100; NaN counts as 0.</summary>
+    public static int Percent(double fraction)
+    {
+        if (double.IsNaN(fraction))
+        {
+            return 0;
+        }
+
+        return (int)Math.Round(Math.Clamp(fraction, 0, 1) * 100);
+    }
+}

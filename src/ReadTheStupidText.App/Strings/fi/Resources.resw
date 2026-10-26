@@ -283,6 +283,21 @@
   <data name="Translate_AutoDetect" xml:space="preserve">
     <value>Tunnista automaattisesti</value>
   </data>
+  <data name="Wait_DownloadingPercent" xml:space="preserve">
+    <value>Ladataan: {0}… {1} %</value>
+  </data>
+  <data name="Wait_Translating" xml:space="preserve">
+    <value>Käännetään…</value>
+  </data>
+  <data name="Wait_PreparingVoice" xml:space="preserve">
+    <value>Valmistellaan ääntä…</value>
+  </data>
+  <data name="Wait_Pair" xml:space="preserve">
+    <value>{0} → {1}</value>
+  </data>
+  <data name="Wait_Cancel" xml:space="preserve">
+    <value>Peruuta</value>
+  </data>
   <data name="Translate_Note_Default" xml:space="preserve">
     <value>Konekäännös, tällä laitteella. Laatu vaihtelee.</value>
   </data>

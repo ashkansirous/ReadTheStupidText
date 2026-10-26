@@ -416,6 +416,12 @@
                                     IsActive="False"
                                     Visibility="Collapsed"
                                     Foreground="{StaticResource HeaderText}" />
+                                <FontIcon
+                                    x:Name="PlayPauseCancelIcon"
+                                    FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                    Glyph="&#xE711;"
+                                    FontSize="9"
+                                    Visibility="Collapsed" />
                             </Grid>
                         </Button>
 
