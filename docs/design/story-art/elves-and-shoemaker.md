@@ -1,7 +1,7 @@
 # The Elves and the Shoemaker: art record
 
 Store story (`StoreTexts.Elves`, stem `elves-and-shoemaker`, version 5). Retold as 15 pages with one action each
-(`dino-storytelling` skill, Slice 121). **Art status (2026-10-26): all 16 pictures drawn and prepared, awaiting the full-size review.** The cover and all
+(`dino-storytelling` skill, Slice 121). **Art status (2026-10-26): all 16 pictures drawn and prepared; full review PASSED on 2026-10-26.** The age range went from 5-8 to 4-8 because the reviewer advised it for the gentler text. The cover and all
 15 pages are new; the text-only version 4 had none.
 
 **Gentle retelling (Decision 130):** in the Grimms' tale the shoemaker is so poor he has leather for one last pair
