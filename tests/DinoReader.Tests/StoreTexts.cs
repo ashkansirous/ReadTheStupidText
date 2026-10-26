@@ -42,7 +42,7 @@ internal static class StoreTexts
         new(BillyGoatsId, "The Three Billy Goats Gruff", "billy-goats-gruff", BillyGoats, 0, RetoldTraditional, 4, 7, Traditional, ["Little Billy", "Middle Billy", "Big Billy", "Troll"], 6, AddedDate),
         new(BeanstalkId, "Jack and the Beanstalk", "jack-and-the-beanstalk", Beanstalk, 2, RetoldTraditional, 5, 8, Traditional, ["Jack", "Mother", "Giant", "Peddler"], 4, AddedDate),
         new(ElvesId, "The Elves and the Shoemaker", "elves-and-shoemaker", Elves, 1, "Retold from the Brothers Grimm · free to share", 5, 8, "Brothers Grimm", ["Hans", "Greta", "Nib", "Nob"], 4, AddedDate),
-        new(TownMouseId, "The Town Mouse and the Country Mouse", "town-mouse-country-mouse", TownMouse, 2, RetoldAesop, 4, 7, "Aesop", ["Town Mouse", "Country Mouse"], 4, AddedDate),
+        new(TownMouseId, "The Town Mouse and the Country Mouse", "town-mouse-country-mouse", TownMouse, 2, RetoldAesop, 4, 7, "Aesop", ["Town Mouse", "Country Mouse"], 5, AddedDate),
         new(PeterRabbitId, "The Tale of Peter Rabbit", "peter-rabbit", PeterRabbit, 3, "Beatrix Potter, 1902 (retold)", 3, 6, "Beatrix Potter", ["Mrs. Rabbit", "Peter", "Mr. McGregor", "Robin", "Flopsy"], 6, AddedDate),
         new(TreasureId, "X Marks the Treasure!", "x-marks-the-treasure", Treasure, 0, StoreBuilder.DinoReaderCredit, 3, 6, "Ashkan Sirous", ["Kaatrin", "Seagull", "Izzy", "Pancake Polly", "Billy"], 1, TreasureAddedDate),
     ];
@@ -650,39 +650,83 @@ On Christmas Eve they laid the gifts on the table. At midnight the elves came sk
 """;
 
     public const string TownMouse = """
-Once upon a time two mice were cousins. Town Mouse lived in a big house in the city, and Country Mouse lived in a cosy hole in a field.
+Once upon a time, Country Mouse lived in a cosy hole under an old oak tree, at the edge of a quiet field. His best friend, Town Mouse, lived far away in a big, busy town.
 
-One day Town Mouse came to visit. Country Mouse was so pleased that he gave her the best food he had.
+Every morning Country Mouse sat in the sunshine and listened to the birds. Tweet, tweet, tweet!
 ---
-Country Mouse brought out barley, a few nuts and a little bit of cheese. "Please eat, dear cousin," said Country Mouse.
+One sunny morning, Town Mouse came to visit. She skipped across the field with her little pink bag.
 
-Town Mouse nibbled a nut and wrinkled her nose. "Is this all you have to eat?" said Town Mouse. "You must come and see how I live."
+Country Mouse ran out and gave her a big hug. "Welcome to my home!" said Country Mouse.
 ---
-So the two mice set off to the city. When they reached the big house, Town Mouse led Country Mouse into the dining room. There was a long table with cakes, jelly, fruit and cheese.
+Country Mouse set out lunch on a flat stone: seeds, sweet blackberries and a crunchy hazelnut.
 
-"Help yourself," said Town Mouse.
+Town Mouse had never tasted a blackberry before. "Yum, yum, yum!" said Town Mouse.
 ---
-Country Mouse had never seen so much food. "What a feast!" said Country Mouse. "You are so lucky to live here."
+After lunch, the two friends lay in the long grass and watched the clouds float by. Swish, swish, swish, went the wind in the grass.
 
-He was just about to take a bite of cake when the door burst open. In came a big, curious Cat.
+Town Mouse wriggled and wriggled. "It's so quiet here!" said Town Mouse.
+
+"Isn't it lovely?" said Country Mouse.
 ---
-"Run!" said Town Mouse. The two mice dashed under the table and hid behind a cupboard. They held very still, and their little noses twitched.
+That evening the sun went down, pink and gold. Chirp, chirp, chirp, sang the crickets.
 
-The cat padded away at last.
+"Your home is lovely, but I love mine," said Town Mouse. "It's a bit too quiet for me. Come and stay at my house tomorrow!"
+
+"Yes, please!" said Country Mouse.
 ---
-"Is it always like this?" said Country Mouse.
+The next morning, the two friends rode to town on the back of the farmer's hay cart, snug in the soft hay.
 
-"Oh, yes," said Town Mouse. "There is always a cat or a dog or a broom. But the food is so good that it is worth it."
-
-They crept out, but the door opened again, and in came a big, barking Dog.
+The big brown horse pulled them all the way. Clip-clop, clip-clop, clip-clop!
 ---
-Country Mouse had seen enough. "Thank you for the feast, cousin," said Country Mouse. "But I would rather have a nut in peace than a cake in a fuss."
+Town Mouse lived in a tall house in the middle of the town. Her home was a tiny room behind the kitchen wall, with a round red door just her size.
 
-"Then go home, dear cousin," said Town Mouse. "I will stay here."
+"Welcome to my home!" said Town Mouse.
 ---
-Country Mouse hurried back to his quiet field, and he was very glad to be home. He ate his barley and nuts under the warm sun, and he had never tasted anything so good.
+The family had just finished breakfast. Town Mouse led Country Mouse up onto the big kitchen table. There were crumbs of cake, bits of cheese and a few juicy grapes.
 
-Simple food in peace is better than a feast in a fuss.
+"Help yourself!" said Town Mouse.
+
+"Yum, yum, yum!" said Country Mouse.
+---
+Clatter, clatter, clatter, went the plates in the sink. The cook was washing up and humming a happy song.
+
+Country Mouse jumped. "What's that noise?" said Country Mouse.
+
+"It's only the plates," said Town Mouse. "Town is always busy!"
+---
+Then the two friends went into the hall. Vroom, vroom, vroom! A big round hoover rolled past them, all by itself.
+
+Country Mouse put his paws over his ears. "What's that noise?" said Country Mouse.
+
+"It's only the hoover," said Town Mouse. "Town is always busy!"
+---
+Bang, bang, bang! The wind was banging the big front door. Country Mouse jumped so high that his straw hat flew off his head.
+
+"It's only the door," said Town Mouse. "Town is always busy!"
+
+Country Mouse began to giggle. "Town is a bit too busy for me!" said Country Mouse.
+---
+That evening, the two friends sat on the kitchen windowsill and watched the town lights twinkle.
+
+"Your home is lovely, but I love mine," said Country Mouse. "I like it nice and quiet."
+
+"And I like it nice and busy!" said Town Mouse. Then the two friends laughed and laughed.
+---
+The next morning, Country Mouse rode home on the farmer's hay cart. Clip-clop, clip-clop, clip-clop!
+
+Town Mouse waved from the doorstep. "Come back soon!" said Town Mouse.
+
+"You come and visit me too!" said Country Mouse.
+---
+That night, Country Mouse curled up in his cosy bed under the old oak tree. Swish, swish, swish, went the wind in the grass.
+
+"Home, sweet home," said Country Mouse. He smiled a sleepy smile and closed his eyes.
+---
+Far away in the busy town, Town Mouse snuggled into her own little bed. Hum, hum, hum, went the town outside her window.
+
+"Home, sweet home," said Town Mouse.
+
+Every summer and every winter, the two friends visited each other. And they stayed best friends for ever and ever.
 """;
 
     public const string PeterRabbit = """
