@@ -283,6 +283,21 @@
   <data name="Translate_AutoDetect" xml:space="preserve">
     <value>Finn automatisk</value>
   </data>
+  <data name="Wait_DownloadingPercent" xml:space="preserve">
+    <value>Laster ned {0}… {1} %</value>
+  </data>
+  <data name="Wait_Translating" xml:space="preserve">
+    <value>Oversetter…</value>
+  </data>
+  <data name="Wait_PreparingVoice" xml:space="preserve">
+    <value>Gjør stemmen klar…</value>
+  </data>
+  <data name="Wait_Pair" xml:space="preserve">
+    <value>{0} til {1}</value>
+  </data>
+  <data name="Wait_Cancel" xml:space="preserve">
+    <value>Avbryt</value>
+  </data>
   <data name="Translate_Note_Default" xml:space="preserve">
     <value>Maskinoversettelse, på denne enheten. Kvaliteten varierer.</value>
   </data>
