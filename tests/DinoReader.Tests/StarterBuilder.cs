@@ -152,7 +152,8 @@ internal static class StarterBuilder
         var rules = LanguageRules.English;
         AttributionResult attribution = new SpeakerAttributor(rules).Attribute(story.Text, new StorySegmenter(rules).Split(story.Text, story.BreakMap()));
         VoiceCast cast = new VoiceCaster().Cast(attribution.Characters, Voices, NarratorVoice);
-        return StoryCast.ToMembers(attribution.Characters, cast, rules, animals: StarterAnimals.For(story.Id, attribution.Characters));
+        IReadOnlyList<CastMember> members = StoryCast.ToMembers(attribution.Characters, cast, rules, animals: StarterAnimals.For(story.Id, attribution.Characters));
+        return StarterAnimals.WithNotAnimals(story.Id, members);
     }
 
     public static async Task WriteAllAsync()

@@ -85,6 +85,39 @@ public sealed class StoreStoryTests : IDisposable
         }
     }
 
+    public static TheoryData<string> Languages() => new(UiLanguage.Supported);
+
+    // The roster's duckling voices are one gender per language and an animal takes its own animal's voice before its gender, so the builder stores Duckling and Dilly
+    // as no animal (StarterAnimals). The app casts a language other than the story's afresh, carrying only the animal settings; the story's language keeps its cast.
+    [Theory]
+    [MemberData(nameof(Languages))]
+    public void TheUglyDuckling_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
+    {
+        Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.UglyDucklingId));
+        IReadOnlyList<CastMember> stored = language == story.Language
+            ? story.Cast
+            : story.Cast.Where(m => m.HasAnimalSetting).Select(m => m with { VoiceId = string.Empty }).ToList();
+        List<Character> characters = story.Cast.Select(m => new Character(m.CharacterId, m.Name, m.Gender, 1)).ToList();
+        IReadOnlyDictionary<string, AnimalKind> animals = AnimalSounds.Resolve(characters, story.Language, stored, story.Text);
+        IReadOnlyList<StorytellerCharacter> speakers = CharacterRoster.Speakers(language);
+        string narrator = CharacterRoster.Narrators(language)[0].VoiceId;
+
+        VoiceCast cast = CastCharacters.Cast(
+            characters, CharacterRoster.Choices(speakers, narrator), CharacterRoster.For(language), narrator, c => FlavourGuess.Guess(c.Name, LanguageRules.English),
+            StoryCast.PinnedCharacters(stored), animalOf: c => animals.TryGetValue(c.Id, out AnimalKind kind) ? AnimalCharacters.HintFor(kind, c.Name, story.Language) : null);
+
+        var expected = new Dictionary<string, Gender>
+        {
+            ["Mother Duck"] = Gender.Female, ["Dilly"] = Gender.Female, ["Hen"] = Gender.Female, ["Duckling"] = Gender.Male, ["Swan"] = Gender.Male,
+        };
+        foreach (Character character in characters)
+        {
+            Assert.True(expected.ContainsKey(character.Name), $"{language}: the cast has {character.Name}, which this test has no expected gender for");
+            StorytellerCharacter? played = CharacterRoster.Nearest(speakers, cast.VoiceFor(character.Id)!, cast.Flavours![character.Id], character.Gender);
+            Assert.True(played?.Gender == expected[character.Name], $"{language}: {character.Name} is played by {played?.Name} ({played?.Gender})");
+        }
+    }
+
     [Fact]
     public void EveryStoreStory_HasAllTheOtherLanguagesTranslated_ForEveryPiece()
     {
