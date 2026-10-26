@@ -51,7 +51,10 @@ whenever `dinowin` is true (`release.yml` 163-167), so every Dino change runs RT
 - Tray-only Windows code (global hotkey, UIA selection monitor, clipboard listener, selection copier, foreground probe, startup task) lives in `src/ReadTheStupidText.Windows.Tray`, referenced only by `ReadTheStupidText.App`; do not put it back in shared `Infrastructure`, which Dino's Windows head ships. Interfaces and `Activity` stay in Application/Domain. (Slice 128: docs/plan/slices/128-tray-code-out-of-shared-infrastructure.md)
 - Tests run per product: `tests.yml` is the RTST suite (`windows|android|ios`), `dinoreader.yml` is the Dino suite and gates the Dino build and release-draft jobs. Keep the path lists in `windows.yml`, `tests.yml` and `dinoreader.yml` in step with `ship-targets.mjs` (the parity test enforces it). (Slice 128: docs/plan/slices/128-tray-code-out-of-shared-infrastructure.md)
 
-#### Not yet verified
+#### Verified (2026-10-26)
 
-- Desktop acceptance of the packaged RTST app: hotkey read, auto-read on selection, start-at-login toggle.
-- First release run after the merge selects the right targets and the Dino test gate behaves.
+- Desktop, packaged Debug x64 from origin/main 181f7c9: tray icon, Ctrl+Win+R hotkey read in Notepad, auto-read on selection (also after a restart), start-at-login toggle Off/On/Off, activity log rows: all PASS (D:/ReadTheStupidText-worktrees/reviews/128-device.md).
+- Release runs 40253931851 and 40260030973 selected per-product targets and the Dino test gate correctly; both succeeded.
+
+#### Not yet verified (none left)
+
