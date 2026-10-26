@@ -25,10 +25,13 @@ context free of screenshots, pictures and 13 translation files.
 2. **`dino-story-reviewer`** (Opus, high effort), **text** mode: safety, story quality for the age, one
    action per page, the picture plan. Failed pages go back to the writer, then review again, before any
    picture is drawn, since pictures cost Gemini quota.
-3. **`dino-story-illustrator`** (Sonnet, medium effort): steps 3-6. **At most four at a time across the machine,
-   each on a different book** (one Chrome, one clipboard, one `Downloads`): each holds `gemini-lock.ps1` around
-   pasting the line-up and around saving a picture, never while Gemini draws (the user asked for two books in
-   parallel, then four, 2026-10-26, to use more of the usage window). It ends with `contact-sheet.jpg`, every picture on one sheet.
+3. **`dino-story-illustrator`** (Sonnet, medium effort): steps 3-6. **One at a time across the machine.** Two or more were
+   tried on 2026-10-26 (the user asked for two, then four, to use more of the usage window) and failed in practice:
+   the shared Chrome extension recreated the tab group about five times an hour, keystrokes and pastes landed in the
+   other illustrator's tab, Gemini answered sends with "Something went wrong (1095)" and once with a Google bot check,
+   while a single illustrator drew pages 4-10 of a book cleanly. The usage window was never the limit (42% used).
+   Run the books one after another; writers and reviewers (no Chrome) can still run alongside. `gemini-lock.ps1`
+   stays as a guard against another session drawing in the same Chrome. It ends with `contact-sheet.jpg`, every picture on one sheet.
 4. **`dino-story-reviewer`**, **full** mode: every picture at full size against its page and the line-up,
    and characters, places and time of day consistent across the book. Failed pages go back to the
    illustrator (or the writer), then review again until `PASS`. The coordinator may glance at the contact
