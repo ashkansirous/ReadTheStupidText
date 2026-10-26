@@ -15,12 +15,12 @@ public sealed partial class IosSupertonicSpeechReader
     // synthesize at once. Every file written is recorded in `files` so the generation's drain
     // can delete it.
     private async Task<string> GenerateChunkAsync(
-        IosBuiltEngine engine, string chunk, int index, VoiceInfo voice, VoiceFlavour flavour,
+        IosBuiltEngine engine, string chunk, int index, VoiceInfo voice, IVoicedAudioTransform? transform,
         ConcurrentQueue<string> files, CancellationToken token)
     {
         long started = Stopwatch.GetTimestamp();
         IReadOnlyList<string> units = SentenceUnits.Split(chunk);
-        byte[] wav = await JoinSentencesAsync(engine, units, voice, flavour, token);
+        byte[] wav = await JoinSentencesAsync(engine, units, voice, transform, token);
         token.ThrowIfCancellationRequested();
         RecordChunkDuration(index, WavFile.TryGetDuration(wav) ?? TimeSpan.Zero);
         _log.Debug($"chunk {index} ({chunk.Length} chars, {units.Count} sentence(s)) ready in " +
@@ -34,33 +34,33 @@ public sealed partial class IosSupertonicSpeechReader
     // a different sample rate) is a miss, not a failed read: the chunk's cached clips are dropped
     // and synthesized afresh. A second failure is real and propagates.
     private async Task<byte[]> JoinSentencesAsync(
-        IosBuiltEngine engine, IReadOnlyList<string> units, VoiceInfo voice, VoiceFlavour flavour,
+        IosBuiltEngine engine, IReadOnlyList<string> units, VoiceInfo voice, IVoicedAudioTransform? transform,
         CancellationToken token)
     {
-        byte[][] clips = await GetClipsAsync(engine, units, voice, flavour, token);
+        byte[][] clips = await GetClipsAsync(engine, units, voice, transform, token);
         try
         {
-            return JoinClips(clips, flavour);
+            return JoinClips(clips, transform);
         }
         catch (InvalidDataException ex)
         {
             _log.Warning("cached sentence audio would not join; resynthesizing the chunk", error: ex);
-            units.ToList().ForEach(u => _sentences.Invalidate(KeyFor(engine, u, voice, flavour)));
-            return JoinClips(await GetClipsAsync(engine, units, voice, flavour, token), flavour);
+            units.ToList().ForEach(u => _sentences.Invalidate(KeyFor(engine, u, voice, transform)));
+            return JoinClips(await GetClipsAsync(engine, units, voice, transform, token), transform);
         }
     }
 
     private async Task<byte[][]> GetClipsAsync(
-        IosBuiltEngine engine, IReadOnlyList<string> units, VoiceInfo voice, VoiceFlavour flavour,
+        IosBuiltEngine engine, IReadOnlyList<string> units, VoiceInfo voice, IVoicedAudioTransform? transform,
         CancellationToken token)
     {
-        byte[][] clips = await Task.WhenAll(units.Select(u => GetSentenceAsync(engine, u, voice, flavour, token)));
+        byte[][] clips = await Task.WhenAll(units.Select(u => GetSentenceAsync(engine, u, voice, transform, token)));
         token.ThrowIfCancellationRequested();
         return clips;
     }
 
-    private static byte[] JoinClips(byte[][] clips, VoiceFlavour flavour) =>
-        clips.Length == 1 ? ValidClip(clips[0]) : WavFile.Concat(clips, VoiceFlavours.ShapeOf(flavour).SentenceGap);
+    private static byte[] JoinClips(byte[][] clips, IVoicedAudioTransform? transform) =>
+        clips.Length == 1 ? ValidClip(clips[0]) : WavFile.Concat(clips, VoicedAudio.GapOf(transform));
 
     private static byte[] ValidClip(byte[] clip) =>
         WavFile.IsComplete(clip, clip.LongLength) ? clip : throw new InvalidDataException("Not a WAV written by this app.");
@@ -68,30 +68,28 @@ public sealed partial class IosSupertonicSpeechReader
     // The key carries the voice, engine, language and model, so audio is never reused across
     // them; the engine and voice come from the read's own captured model.
     private Task<byte[]> GetSentenceAsync(
-        IosBuiltEngine engine, string sentence, VoiceInfo voice, VoiceFlavour flavour, CancellationToken token)
+        IosBuiltEngine engine, string sentence, VoiceInfo voice, IVoicedAudioTransform? transform, CancellationToken token)
     {
-        SentenceCacheKey key = KeyFor(engine, sentence, voice, flavour);
+        SentenceCacheKey key = KeyFor(engine, sentence, voice, transform);
         return _sentences.GetAsync(
-            key, t => SynthesizeSentenceAsync(engine, sentence, voice.SpeakerId, flavour, t), token);
+            key, t => SynthesizeSentenceAsync(engine, sentence, voice.SpeakerId, transform, t), token);
     }
 
-    private static SentenceCacheKey KeyFor(IosBuiltEngine engine, string sentence, VoiceInfo voice, VoiceFlavour flavour) =>
-        new(sentence, engine.Model.Kind, engine.Model.Language, voice.Id, engine.Model.RootDir, engine.Model.PackVersion, flavour);
+    private static SentenceCacheKey KeyFor(IosBuiltEngine engine, string sentence, VoiceInfo voice, IVoicedAudioTransform? transform) =>
+        new(sentence, engine.Model.Kind, engine.Model.Language, voice.Id, engine.Model.RootDir, engine.Model.PackVersion, VoicedAudio.TagOf(transform));
 
     // The native Generate call cannot be interrupted, and its result may be wanted by another
     // caller that joined this synthesis, so a cancelled caller only stops waiting for a slot; a
     // call already running finishes and its audio goes to whoever is still waiting.
     private async Task<byte[]> SynthesizeSentenceAsync(
-        IosBuiltEngine engine, string sentence, int speakerId, VoiceFlavour flavour, CancellationToken token)
+        IosBuiltEngine engine, string sentence, int speakerId, IVoicedAudioTransform? transform, CancellationToken token)
     {
         float[] raw;
         int sampleRate;
-        FlavourShape shape;
         await _slots.WaitAsync(token);
         try
         {
-            shape = VoiceFlavours.ShapeOf(flavour);
-            OfflineTtsGeneratedAudio audio = await GenerateGuardedAsync(engine, sentence, speakerId, shape.Pace);
+            OfflineTtsGeneratedAudio audio = await GenerateGuardedAsync(engine, sentence, speakerId, VoicedAudio.PaceOf(transform));
             try
             {
                 raw = audio.Samples;
@@ -107,8 +105,8 @@ public sealed partial class IosSupertonicSpeechReader
             _slots.Release();
         }
 
-        // The pitch shift and wobble are plain DSP: it runs after the slot is released so the next sentence can start synthesising.
-        return WavFile.Encode(PitchShifter.Apply(raw, sampleRate, shape), sampleRate);
+        // The product's voice transform is plain DSP: it runs after the slot is released so the next sentence can start synthesising.
+        return WavFile.Encode(VoicedAudio.Apply(transform, raw, sampleRate), sampleRate);
     }
 
     // The native Generate call keeps running after its caller is cancelled, so it holds its own

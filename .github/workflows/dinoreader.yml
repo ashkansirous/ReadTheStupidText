@@ -1,17 +1,51 @@
 name: dinoreader
 
-# Dino Reader's pure Core (Story Reader parser). Slice 70: split out of
+# Dino Reader's own suite (tests/DinoReader.Tests; Story Reader parser). Slice 128: it runs for every Dino
+# target (dinoapp, dinoios, dinowin), RTST's suite (tests.yml) does not. Slice 70: split out of
 # build.yml's `test-dinoreader`. Standalone: it references no ReadTheStupidText
-# project, so it runs on its own cheap Linux runner and is deliberately NOT in
-# the needs of release-publish or any submit job - a Dino-only push tests but
-# never versions or releases.
+# project, so it runs on its own cheap Linux runner. It gates build-dinoapp/-dinoios/-dinowin
+# (success or skipped) but is not in the needs of release-publish: a Dino-only push tests but
+# never versions or releases. Its PR paths are the union of every Dino target (a few, e.g.
+# Infrastructure, cannot change what the suite covers; that redundancy is accepted).
 
 on:
   pull_request:
     branches: [main]
     paths:
+      - 'src/ReadTheStupidText.Domain/**'
+      - 'src/ReadTheStupidText.Application/**'
+      - 'src/ReadTheStupidText.Documents/**'
+      - 'global.json'
+      - 'Directory.Build.props'
+      - 'GitVersion.yml'
+      - '*.slnx'
+      - '.gitattributes'
+      - '.github/workflows/release.yml'
+      - '.github/workflows/tests.yml'
+      - '.github/scripts/find-release.sh'
+      - '.github/scripts/ship-targets.mjs'
       - 'src/DinoReader.Core/**'
       - 'tests/DinoReader.Tests/**'
+      - 'src/DinoReader.App/**'
+      - 'src/ReadTheStupidText.Mobile.Shared/**'
+      - '!src/ReadTheStupidText.Mobile.Shared/Platforms/**'
+      - 'src/ReadTheStupidText.Mobile.Shared/Platforms/Android/**'
+      - 'src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/**'
+      - 'src/ReadTheStupidText.Mobile.Shared/Platforms/Windows/**'
+      - 'src/ReadTheStupidText.Mobile.Shared/IosSherpaPackaging.props'
+      - 'src/ReadTheStupidText.Infrastructure/**'
+      - 'src/AndroidSherpaPackaging.props'
+      - 'src/AndroidRelease.props'
+      - 'src/AndroidProguard.cfg'
+      - '.github/scripts/stage-android-package.sh'
+      - '.github/scripts/check-android-natives.sh'
+      - '.github/scripts/ios-signing.sh'
+      - '.github/scripts/testflight-upload.sh'
+      - '.github/scripts/check-ios-bundle.sh'
+      - '.github/workflows/store-submit.yml'
+      - '.github/workflows/dinoreader-android.yml'
+      - '.github/workflows/dinoreader-ios.yml'
+      - '.github/workflows/dinoreader-windows.yml'
       - '.github/workflows/dinoreader.yml'
       - '!**/*.md'
   workflow_dispatch:

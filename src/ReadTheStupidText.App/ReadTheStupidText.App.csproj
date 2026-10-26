@@ -63,6 +63,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ReadTheStupidText.Application\ReadTheStupidText.Application.csproj" />
     <ProjectReference Include="..\ReadTheStupidText.Infrastructure\ReadTheStupidText.Infrastructure.csproj" />
+    <ProjectReference Include="..\ReadTheStupidText.Windows.Tray\ReadTheStupidText.Windows.Tray.csproj" />
   </ItemGroup>
 
   <!--

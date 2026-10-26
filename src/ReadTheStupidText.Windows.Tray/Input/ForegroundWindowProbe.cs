@@ -3,7 +3,7 @@ using System.Text;
 using ReadTheStupidText.Application.Input;
 using ReadTheStupidText.Domain.Activity;
 
-namespace ReadTheStupidText.Infrastructure.Input;
+namespace ReadTheStupidText.Windows.Tray.Input;
 
 /// <summary>
 /// Reads the foreground window's owning process and title via Win32, mapping them

@@ -6,7 +6,8 @@
  * The mapping is exactly the one Slices 44/48 settled (Decision 69):
  *   - core (Domain/Application/Documents/solution/pipeline)       -> windows + android + ios
  *   - tests/ReadTheStupidText.Tests                               -> nothing (tests.yml runs it on PRs)
- *   - App / Infrastructure / store-submit.yml / windows.yml       -> windows + windowsstore (the Store submission)
+ *   - App / Windows.Tray / Infrastructure / store-submit.yml / windows.yml -> windows + windowsstore (the Store submission)
+ *   - Windows.Tray (Slice 128, tray-only code) maps to no dino* target: only App references it
  *   - Mobile/Platforms/Android/**                                 -> android
  *   - Mobile/Platforms/iOS/**                                     -> ios
  *   - the rest of Mobile/** (the RTST app's MAUI root)            -> android + ios
@@ -79,6 +80,7 @@ export const GROUPS = {
     windows: {
         include: [
             'src/ReadTheStupidText.App/',
+            'src/ReadTheStupidText.Windows.Tray/',
             'src/ReadTheStupidText.Infrastructure/',
             '.github/workflows/store-submit.yml',
             '.github/workflows/windows.yml',

@@ -57,6 +57,7 @@ and their GitHub issue numbers. Tick slices off in `plan.md` as they complete. T
 ```
 App  →  Application  →  Domain
 Infrastructure  →  Application / Domain
+Windows.Tray    →  Application / Domain   (referenced only by App)
 Mobile  →  Application / Domain / Documents
 Mobile.Shared (Windows target only)  →  Infrastructure
 Documents  →  Application
@@ -89,6 +90,11 @@ DinoReader.Core → Application, Domain
   all played through `MediaPlayer`; every platform downloads its voice as a pack
   (Slice 50; Windows since Slice 56, no model in the MSIX).
   Clipboard, UI Automation, startup task, OS integration.
+- **Windows.Tray** (`src/ReadTheStupidText.Windows.Tray`, `net10.0-windows`, Slice 128, Decision 135) — tray-only
+  Win32/UIA code: global hotkey, UIA selection monitor, clipboard listener, selection copier, foreground probe and
+  the startup task. Only `App` references it, so a tray edit does not rebuild or ship Dino Reader (which shares
+  Infrastructure). Their interfaces (`IHotkeyService`, ...) and the activity log stay in Application/Domain, used by
+  `ReadAloudService`. (Slice 128: docs/plan/slices/128-tray-code-out-of-shared-infrastructure.md)
 - **App** (`net10.0-windows`, WinUI single-project MSIX) — UI, tray, DI wiring.
 - **Mobile** (`src/ReadTheStupidText.Mobile`, .NET MAUI, Decision 37) and **`src/DinoReader.App`** — the
   MAUI apps, sharing `src/ReadTheStupidText.Mobile.Shared`; see their own files. Dino Reader also has a

@@ -28,6 +28,7 @@ on:
       - '.github/scripts/find-release.sh'
       - '.github/scripts/ship-targets.mjs'
       - 'src/ReadTheStupidText.App/**'
+      - 'src/ReadTheStupidText.Windows.Tray/**'
       - 'src/ReadTheStupidText.Infrastructure/**'
       - '.github/workflows/store-submit.yml'
       - '.github/workflows/windows.yml'

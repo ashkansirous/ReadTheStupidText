@@ -33,19 +33,19 @@ internal sealed class NeuralSentenceSource
     /// </summary>
     public async Task<byte[]> JoinChunkAsync(
         BuiltEngine engine, string chunk, VoiceInfo voice, int? activityId, CancellationToken token,
-        VoiceFlavour flavour = VoiceFlavour.Normal)
+        IVoicedAudioTransform? transform = null)
     {
         IReadOnlyList<string> units = SentenceUnits.Split(chunk);
-        byte[][] clips = await GetClipsAsync(engine, units, voice, activityId, token, flavour);
+        byte[][] clips = await GetClipsAsync(engine, units, voice, activityId, token, transform);
         try
         {
-            return JoinClips(clips, flavour);
+            return JoinClips(clips, transform);
         }
         catch (InvalidDataException ex)
         {
             _log.Warning("cached sentence audio would not join; resynthesizing the chunk", activityId, ex);
-            units.ToList().ForEach(u => _sentences.Invalidate(KeyFor(engine, u, voice, flavour)));
-            return JoinClips(await GetClipsAsync(engine, units, voice, activityId, token, flavour), flavour);
+            units.ToList().ForEach(u => _sentences.Invalidate(KeyFor(engine, u, voice, transform)));
+            return JoinClips(await GetClipsAsync(engine, units, voice, activityId, token, transform), transform);
         }
     }
 
@@ -53,25 +53,25 @@ internal sealed class NeuralSentenceSource
     public void LoadIndex() => _sentences.LoadIndex();
 
     /// <summary>True when every sentence already has cached audio for this engine and voice.</summary>
-    public bool AreCached(BuiltEngine engine, IEnumerable<string> sentences, VoiceInfo voice, VoiceFlavour flavour) =>
-        sentences.All(s => _sentences.IsCached(KeyFor(engine, s, voice, flavour)));
+    public bool AreCached(BuiltEngine engine, IEnumerable<string> sentences, VoiceInfo voice, IVoicedAudioTransform? transform) =>
+        sentences.All(s => _sentences.IsCached(KeyFor(engine, s, voice, transform)));
 
     /// <summary>Synthesizes the given sentences into the cache without playing them (head start).</summary>
     public Task PrepareAsync(
-        BuiltEngine engine, IEnumerable<string> sentences, VoiceInfo voice, VoiceFlavour flavour, CancellationToken token) =>
-        Task.WhenAll(sentences.Select(s => GetSentenceAsync(engine, s, voice, null, token, flavour)));
+        BuiltEngine engine, IEnumerable<string> sentences, VoiceInfo voice, IVoicedAudioTransform? transform, CancellationToken token) =>
+        Task.WhenAll(sentences.Select(s => GetSentenceAsync(engine, s, voice, null, token, transform)));
 
     private async Task<byte[][]> GetClipsAsync(
         BuiltEngine engine, IReadOnlyList<string> units, VoiceInfo voice, int? activityId, CancellationToken token,
-        VoiceFlavour flavour)
+        IVoicedAudioTransform? transform)
     {
-        byte[][] clips = await Task.WhenAll(units.Select(u => GetSentenceAsync(engine, u, voice, activityId, token, flavour)));
+        byte[][] clips = await Task.WhenAll(units.Select(u => GetSentenceAsync(engine, u, voice, activityId, token, transform)));
         token.ThrowIfCancellationRequested();
         return clips;
     }
 
-    private static byte[] JoinClips(byte[][] clips, VoiceFlavour flavour) =>
-        clips.Length == 1 ? ValidClip(clips[0]) : WavFile.Concat(clips, VoiceFlavours.ShapeOf(flavour).SentenceGap);
+    private static byte[] JoinClips(byte[][] clips, IVoicedAudioTransform? transform) =>
+        clips.Length == 1 ? ValidClip(clips[0]) : WavFile.Concat(clips, VoicedAudio.GapOf(transform));
 
     private static byte[] ValidClip(byte[] clip) =>
         WavFile.IsComplete(clip, clip.LongLength) ? clip : throw new InvalidDataException("Not a WAV written by this app.");
@@ -80,30 +80,28 @@ internal sealed class NeuralSentenceSource
     // engine and voice come from the read's own captured model.
     private Task<byte[]> GetSentenceAsync(
         BuiltEngine engine, string sentence, VoiceInfo voice, int? activityId, CancellationToken token,
-        VoiceFlavour flavour)
+        IVoicedAudioTransform? transform)
     {
-        SentenceCacheKey key = KeyFor(engine, sentence, voice, flavour);
-        return _sentences.GetAsync(key, t => SynthesizeAsync(engine, sentence, voice.SpeakerId, flavour, t), token, activityId);
+        SentenceCacheKey key = KeyFor(engine, sentence, voice, transform);
+        return _sentences.GetAsync(key, t => SynthesizeAsync(engine, sentence, voice.SpeakerId, transform, t), token, activityId);
     }
 
-    private static SentenceCacheKey KeyFor(BuiltEngine engine, string sentence, VoiceInfo voice, VoiceFlavour flavour) =>
-        new(sentence, engine.Model.Kind, engine.Model.Language, voice.Id, engine.Model.RootDir, engine.Model.PackVersion, flavour);
+    private static SentenceCacheKey KeyFor(BuiltEngine engine, string sentence, VoiceInfo voice, IVoicedAudioTransform? transform) =>
+        new(sentence, engine.Model.Kind, engine.Model.Language, voice.Id, engine.Model.RootDir, engine.Model.PackVersion, VoicedAudio.TagOf(transform));
 
     // The native Generate call cannot be interrupted, and its result may be wanted by another caller
     // that joined this synthesis, so a cancelled caller only stops waiting for a slot; a call already
     // running finishes and its audio goes to whoever is still waiting.
     private async Task<byte[]> SynthesizeAsync(
-        BuiltEngine engine, string sentence, int speakerId, VoiceFlavour flavour, CancellationToken token)
+        BuiltEngine engine, string sentence, int speakerId, IVoicedAudioTransform? transform, CancellationToken token)
     {
         float[] raw;
         int sampleRate;
-        FlavourShape shape;
         await _slots.WaitAsync(token);
         try
         {
             token.ThrowIfCancellationRequested(); // superseded while queued: never start the native call
-            shape = VoiceFlavours.ShapeOf(flavour);
-            OfflineTtsGeneratedAudio audio = await GenerateGuardedAsync(engine, sentence, speakerId, shape.Pace);
+            OfflineTtsGeneratedAudio audio = await GenerateGuardedAsync(engine, sentence, speakerId, VoicedAudio.PaceOf(transform));
             try
             {
                 raw = audio.Samples;
@@ -119,8 +117,8 @@ internal sealed class NeuralSentenceSource
             _slots.Release();
         }
 
-        // The pitch shift and wobble are plain DSP: it runs after the slot is released so the next sentence can start synthesising.
-        return WavFile.Encode(PitchShifter.Apply(raw, sampleRate, shape), sampleRate);
+        // The product's voice transform is plain DSP: it runs after the slot is released so the next sentence can start synthesising.
+        return WavFile.Encode(VoicedAudio.Apply(transform, raw, sampleRate), sampleRate);
     }
 
     // The native call keeps running after its caller is cancelled, so it holds its own reference on the

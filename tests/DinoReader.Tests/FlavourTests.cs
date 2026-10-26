@@ -268,3 +268,37 @@ public class StoredFarsiPigsTests
         Assert.Equal("موش کوچولو", names[1]);
     }
 }
+
+public class FlavourTransformCacheTests
+{
+    [Fact]
+    public void For_returns_one_instance_per_flavour()
+    {
+        foreach (VoiceFlavour flavour in Enum.GetValues<VoiceFlavour>().Where(f => f != VoiceFlavour.Normal))
+        {
+            Assert.Same(FlavourTransform.For(flavour), FlavourTransform.For(flavour));
+        }
+    }
+
+    [Fact]
+    public void Every_flavour_keeps_its_pre_slice_129_cache_tag()
+    {
+        foreach (VoiceFlavour flavour in Enum.GetValues<VoiceFlavour>())
+        {
+            var transform = FlavourTransform.For(flavour);
+            if (flavour == VoiceFlavour.Normal)
+            {
+                Assert.Null(transform);
+                continue;
+            }
+
+            Assert.Equal(flavour.ToString(), transform!.CacheTag);
+        }
+    }
+
+    [Fact]
+    public void Normal_gap_matches_the_engine_default()
+    {
+        Assert.Equal(ReadTheStupidText.Application.Reading.VoicedAudio.DefaultSentenceGap, VoiceFlavours.ShapeOf(VoiceFlavour.Normal).SentenceGap);
+    }
+}

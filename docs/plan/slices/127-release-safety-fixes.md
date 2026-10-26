@@ -51,7 +51,7 @@ found two small release problems:
   explicitly and `store-submit-dino` still skipped while `DINOREADER_STORE_APP_ID` is unset.
 - The 43e2ef1 root cause is written in this file with the run id.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-25)
 
 For `.github/CLAUDE.md`:
 
