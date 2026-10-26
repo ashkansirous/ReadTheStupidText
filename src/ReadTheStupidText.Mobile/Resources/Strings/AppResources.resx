@@ -17,6 +17,11 @@
   <data name="Reader_EmptyHint" xml:space="preserve"><value>Tap a button below to add something to read</value></data>
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>The language of the app’s words</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Reading speed</value></data>
+  <data name="Settings_CountsTitle" xml:space="preserve"><value>Help improve the app</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>Sends counts like “a French text was read”. No names, no ids, nothing you read.</value></data>
+  <data name="Settings_CountsOn" xml:space="preserve"><value>On</value></data>
+  <data name="Settings_CountsOff" xml:space="preserve"><value>Off</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>The app counts things like which languages are read, with no names or ids. You can turn this off in Settings.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Back</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>Previous sentence</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>Next sentence</value></data>
@@ -66,7 +71,10 @@
   <data name="Review_LooksLike" xml:space="preserve"><value>This text looks like {0}</value></data>
   <data name="Review_TranslateAndRead" xml:space="preserve"><value>Translate and read</value></data>
   <data name="Review_Read" xml:space="preserve"><value>Read</value></data>
-  <data name="Review_GettingTranslator" xml:space="preserve"><value>Getting the {0} translator…</value></data>
+  <data name="Wait_DownloadingModel" xml:space="preserve"><value>Downloading {0}…</value></data>
+  <data name="Wait_Translating" xml:space="preserve"><value>Translating…</value></data>
+  <data name="Wait_PreparingVoice" xml:space="preserve"><value>Preparing the voice…</value></data>
+  <data name="Wait_ReadingFile" xml:space="preserve"><value>Reading the file…</value></data>
   <data name="Review_FirstTimeOnly" xml:space="preserve"><value>Only the first time. Translation happens on this phone.</value></data>
   <data name="Review_ShowOriginal" xml:space="preserve"><value>Show original</value></data>
   <data name="Review_FailedOne" xml:space="preserve"><value>Page {0} couldn’t be read.</value></data>

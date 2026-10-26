@@ -4,7 +4,8 @@
 // the Read The Stupid Text site. On *.workers.dev (the pre-cut-over check) the
 // Dino site is reached under a `/dino/` prefix. The free story store API
 // (/api/stories, worker/stories.ts, Slice 92) and its remote config (/api/app-config,
-// worker/appconfig.ts, Slice 132) and its anonymous usage counts (/api/events, worker/events.ts, Slice 133) are Dino Reader's only.
+// worker/appconfig.ts, Slice 132) and its anonymous usage counts (/api/events, worker/events.ts, Slice 133) are Dino Reader's;
+// Read The Stupid Text answers those two as well since Slice 137 (its own config object and dataset).
 // Static files are answered by the assets layer without invoking this Worker;
 // only the paths listed in wrangler.jsonc's `assets.run_worker_first` come
 // here, to be mapped onto a file and to get the security headers below. `Env`
@@ -13,9 +14,9 @@
 
 import { DINO_PATH_PREFIX, Product, assetPageFor, canonicalRedirect, handleDownload, isDownloadPath, isHiddenDinoPath, resolveSite, serveObject } from "./downloads";
 import type { ResolvedSite } from "./downloads";
-import { APP_CONFIG_KEY, handleAppConfig, isAppConfigPath, parseAppConfig } from "./appconfig";
-import { handleEvents, isEventsPath } from "./events";
-import type { EventsEnv } from "./events";
+import { APP_CONFIG_KEY, RTST_APP_CONFIG_KEY, handleAppConfig, isAppConfigPath, parseAppConfig } from "./appconfig";
+import { handleEvents, handleRtstEvents, isEventsPath } from "./events";
+import type { EventsEnv, RtstEventsEnv } from "./events";
 import { handleStories, isStoryPath } from "./stories";
 
 const SECURITY_HEADERS: Readonly<Record<string, string>> = {
@@ -45,35 +46,42 @@ function serveStories(request: Request, url: URL, env: Env, site: ResolvedSite):
   return handleStories(withPath(request, url, site.path), env, pathPrefix, serveObject);
 }
 
+// Each product has its own config object in the downloads bucket (Slice 137 added Read The Stupid Text's).
+function configKeyFor(site: ResolvedSite): string {
+  return site.product === Product.DinoReader ? APP_CONFIG_KEY : RTST_APP_CONFIG_KEY;
+}
+
 function serveAppConfig(request: Request, env: Env, site: ResolvedSite): Promise<Response> | Response {
-  if (site.product !== Product.DinoReader) return new Response("Not found", { status: 404 });
-  return handleAppConfig(request, env);
+  return handleAppConfig(request, env, configKeyFor(site));
 }
 
 // Slice 133: a missing config means telemetry is off, so counts are dropped. An R2 read error is not "off": it throws, handleEvents
 // answers 503 (the app retries later) and nothing is cached. The answer is kept briefly per isolate so a flood of requests does not
 // turn into a flood of R2 reads.
 const TELEMETRY_CACHE_MS = 60_000;
-let telemetryCache: { readonly enabled: boolean; readonly at: number } | null = null;
+const telemetryCache = new Map<string, { readonly enabled: boolean; readonly at: number }>();
 
-async function readTelemetryFlag(env: Env): Promise<boolean> {
-  const object = await env.DOWNLOADS.get(APP_CONFIG_KEY);
+async function readTelemetryFlag(env: Env, key: string): Promise<boolean> {
+  const object = await env.DOWNLOADS.get(key);
   return object ? parseAppConfig(await object.json()).telemetry.enabled : false;
 }
 
-function telemetryCheck(env: Env): () => Promise<boolean> {
+function telemetryCheck(env: Env, key: string): () => Promise<boolean> {
   return async () => {
     const now = Date.now();
-    if (telemetryCache !== null && now - telemetryCache.at < TELEMETRY_CACHE_MS) return telemetryCache.enabled;
-    const enabled = await readTelemetryFlag(env);
-    telemetryCache = { enabled, at: now };
+    const cached = telemetryCache.get(key);
+    if (cached !== undefined && now - cached.at < TELEMETRY_CACHE_MS) return cached.enabled;
+    const enabled = await readTelemetryFlag(env, key);
+    telemetryCache.set(key, { enabled, at: now });
     return enabled;
   };
 }
 
-function serveEvents(request: Request, env: Env & EventsEnv, site: ResolvedSite): Promise<Response> | Response {
-  if (site.product !== Product.DinoReader) return new Response("Not found", { status: 404 });
-  return handleEvents(request, env, telemetryCheck(env));
+// Slice 137: Read The Stupid Text's phone counts take the same road with their own config object and dataset (RTST_USAGE is not in the
+// wrangler configs yet, so the route answers 204 while telemetry is off).
+function serveEvents(request: Request, env: Env & EventsEnv & RtstEventsEnv, site: ResolvedSite): Promise<Response> | Response {
+  const check = telemetryCheck(env, configKeyFor(site));
+  return site.product === Product.DinoReader ? handleEvents(request, env, check) : handleRtstEvents(request, env, check);
 }
 
 async function serveAsset(request: Request, env: Env): Promise<Response> {

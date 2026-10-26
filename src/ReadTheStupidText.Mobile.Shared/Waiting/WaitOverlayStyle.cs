@@ -32,6 +32,12 @@ public sealed record WaitOverlayStyle
 
     public double CancelSize { get; init; } = 15;
 
+    /// <summary>Corner radius of Cancel; null makes it a pill (half its height).</summary>
+    public double? CancelCornerRadius { get; init; }
+
+    /// <summary>Space left and right of the Cancel text.</summary>
+    public double CancelSidePadding { get; init; } = 22;
+
     /// <summary>Makes the app's own animation; null shows the platform spinner. The view should implement <see cref="IWaitAnimation"/>.</summary>
     public Func<View>? CreateAnimation { get; init; }
 }

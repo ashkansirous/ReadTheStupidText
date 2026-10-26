@@ -271,8 +271,32 @@
   <data name="Pack_Failed" xml:space="preserve">
     <value>Hentningen mislykkedes. Prøv igen.</value>
   </data>
+  <data name="CountsTitle.Text" xml:space="preserve">
+    <value>Hjælp med at forbedre appen</value>
+  </data>
+  <data name="CountsCaption.Text" xml:space="preserve">
+    <value>Sender tællinger som “en fransk tekst blev læst”. Ingen navne, ingen id’er, intet af det, du læser.</value>
+  </data>
+  <data name="CountsSwitch.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Hjælp med at forbedre appen</value>
+  </data>
   <data name="Translate_AutoDetect" xml:space="preserve">
     <value>Registrer automatisk</value>
+  </data>
+  <data name="Wait_DownloadingPercent" xml:space="preserve">
+    <value>Henter {0}… {1} %</value>
+  </data>
+  <data name="Wait_Translating" xml:space="preserve">
+    <value>Oversætter…</value>
+  </data>
+  <data name="Wait_PreparingVoice" xml:space="preserve">
+    <value>Gør stemmen klar…</value>
+  </data>
+  <data name="Wait_Pair" xml:space="preserve">
+    <value>{0} til {1}</value>
+  </data>
+  <data name="Wait_Cancel" xml:space="preserve">
+    <value>Annuller</value>
   </data>
   <data name="Translate_Note_Default" xml:space="preserve">
     <value>Maskinoversættelse, på denne enhed. Kvaliteten varierer.</value>

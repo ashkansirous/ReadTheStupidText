@@ -16,6 +16,11 @@
   <data name="Reader_EmptyHint" xml:space="preserve"><value>Touchez un bouton ci-dessous pour ajouter un texte à lire</value></data>
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>La langue des textes de l’appli</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Vitesse de lecture</value></data>
+  <data name="Settings_CountsTitle" xml:space="preserve"><value>Aider à améliorer l’appli</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>Envoie des comptes comme « un texte français a été lu ». Aucun nom, aucun identifiant, rien de ce que vous lisez.</value></data>
+  <data name="Settings_CountsOn" xml:space="preserve"><value>Activé</value></data>
+  <data name="Settings_CountsOff" xml:space="preserve"><value>Désactivé</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>L’appli compte des choses comme les langues lues, sans noms ni identifiants. Vous pouvez désactiver cela dans les Réglages.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Retour</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>Phrase précédente</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>Phrase suivante</value></data>
@@ -65,7 +70,10 @@
   <data name="Review_LooksLike" xml:space="preserve"><value>Ce texte semble être en {0}</value></data>
   <data name="Review_TranslateAndRead" xml:space="preserve"><value>Traduire et lire</value></data>
   <data name="Review_Read" xml:space="preserve"><value>Lire</value></data>
-  <data name="Review_GettingTranslator" xml:space="preserve"><value>Téléchargement du traducteur {0}…</value></data>
+  <data name="Wait_DownloadingModel" xml:space="preserve"><value>Téléchargement : {0}…</value></data>
+  <data name="Wait_Translating" xml:space="preserve"><value>Traduction en cours…</value></data>
+  <data name="Wait_PreparingVoice" xml:space="preserve"><value>Préparation de la voix…</value></data>
+  <data name="Wait_ReadingFile" xml:space="preserve"><value>Lecture du fichier…</value></data>
   <data name="Review_FirstTimeOnly" xml:space="preserve"><value>Uniquement la première fois. La traduction se fait sur ce téléphone.</value></data>
   <data name="Review_ShowOriginal" xml:space="preserve"><value>Voir l’original</value></data>
   <data name="Review_FailedOne" xml:space="preserve"><value>Impossible de lire la page {0}.</value></data>

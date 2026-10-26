@@ -1,3 +1,4 @@
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Translation;
 
@@ -71,6 +72,7 @@ public partial class ReaderPage
     {
         // Whatever is playing (or generating) belongs to the old text.
         _reader.Stop();
+        EndFirstAudioClock(UsageOutcome.Cancelled);
         ClearPendingRead();
 
         if (_detector is not null)

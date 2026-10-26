@@ -16,6 +16,11 @@
   <data name="Reader_EmptyHint" xml:space="preserve"><value>برای افزودن چیزی برای خواندن، یکی از دکمه‌های زیر را بزنید</value></data>
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>زبان متن‌های برنامه</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>سرعت خواندن</value></data>
+  <data name="Settings_CountsTitle" xml:space="preserve"><value>به بهتر شدن برنامه کمک کنید</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>شمارش‌هایی مانند «یک متن فرانسوی خوانده شد» ارسال می‌کند. بدون نام، بدون شناسه، و بدون هیچ‌چیز از آنچه می‌خوانید.</value></data>
+  <data name="Settings_CountsOn" xml:space="preserve"><value>روشن</value></data>
+  <data name="Settings_CountsOff" xml:space="preserve"><value>خاموش</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>برنامه مواردی مانند زبان‌هایی که خوانده می‌شوند را می‌شمارد، بدون نام و شناسه. می‌توانید این را در تنظیمات خاموش کنید.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>بازگشت</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>جمله قبلی</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>جمله بعدی</value></data>
@@ -65,7 +70,10 @@
   <data name="Review_LooksLike" xml:space="preserve"><value>این متن شبیه {0} است</value></data>
   <data name="Review_TranslateAndRead" xml:space="preserve"><value>ترجمه و خواندن</value></data>
   <data name="Review_Read" xml:space="preserve"><value>خواندن</value></data>
-  <data name="Review_GettingTranslator" xml:space="preserve"><value>در حال دریافت مترجم {0}…</value></data>
+  <data name="Wait_DownloadingModel" xml:space="preserve"><value>در حال دریافت {0}…</value></data>
+  <data name="Wait_Translating" xml:space="preserve"><value>در حال ترجمه…</value></data>
+  <data name="Wait_PreparingVoice" xml:space="preserve"><value>در حال آماده‌سازی صدا…</value></data>
+  <data name="Wait_ReadingFile" xml:space="preserve"><value>در حال خواندن فایل…</value></data>
   <data name="Review_FirstTimeOnly" xml:space="preserve"><value>فقط بار اول. ترجمه روی همین گوشی انجام می‌شود.</value></data>
   <data name="Review_ShowOriginal" xml:space="preserve"><value>نمایش متن اصلی</value></data>
   <data name="Review_FailedOne" xml:space="preserve"><value>صفحهٔ {0} خوانده نشد.</value></data>

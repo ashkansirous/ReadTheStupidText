@@ -153,9 +153,10 @@ The landing page and privacy policy live in `site/` and are served by a Cloudfla
 
 ## Privacy
 
-Read The Stupid Text collects **no data** — no accounts, no telemetry. Your text,
-files and scans never leave the device. The only network use is the Android app
-downloading its voice pack once; after that it runs fully offline. See
+Read The Stupid Text has no accounts, and your text, files and scans never leave
+the device. Network use is the voice pack download and small anonymous counts
+(like "a French text was read": no names, no ids, nothing you read), which you can
+switch off in the app's settings (the control panel on Windows). See
 [`PRIVACY.md`](PRIVACY.md).
 
 ## License
