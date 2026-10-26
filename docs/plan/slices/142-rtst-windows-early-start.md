@@ -19,6 +19,10 @@ start at once), so this applies Decision 147 there.
   (`NetworkInformation` cost), and only when the pack is missing.
 - A hotkey or selection read uses whatever early work already matches its text, and none otherwise.
 
+#### Design (RTST Batch 29 mock, added 2026-10-26)
+
+No screens. The Batch 29 mock intro says the early start has no screen of its own. Nothing to build from the mock.
+
 ## Work
 
 - [ ] Early translate + voice in `ReadAloudService.PrepareWhenStableAsync`, reusing `EarlyStartPlan`.

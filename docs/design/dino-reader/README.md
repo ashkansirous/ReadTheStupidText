@@ -321,3 +321,41 @@ Also read these files the selection imports:
 
 Implement: `Dino Reader Batch 26-28.dc.html`
 ```
+
+## Batch 30 mock — `Dino Reader Batch 30.dc.html`
+
+- **Source:** Claude Design project `90615641-f298-4e21-8c50-ca2efbeaaebc`, file `Dino Reader Batch 30.dc.html`
+  (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+30.dc.html>).
+- **Copied:** 2026-10-26, verbatim from `DesignSync get_file`. The dino is `dino_reader_icons/ios/AppIcon-1024-light.png`, already here as `icons/ios/AppIcon-1024-light.png`; the background pictures (`assets/three-little-pigs/3.jpg`, `assets/good-enough/*.jpg`) are story pictures, not copied.
+- **Covers:** Batch 30, Slice 143 (screens 64-65, the shared wait overlay with the hopping dino). Slices 144-146 have no screens.
+
+Open it in a text editor (`support.js` is not copied). Each screen is headed by a caption
+`N · Title` with its behaviour in the note underneath; the spinners and the hopping dino are
+built in the `<script>` block at the end (sizes, colours, the `dinoHop`/`rtstSpin` keyframes).
+
+| # | Screen | Line |
+|---|---|---|
+| — | **Shared wait overlay · Slice 143 · Decisions 146, 149** (group) | 23 |
+| 64 | Opening a book · first audio not ready | 27 |
+| 65 | Own book · reading the pictures | 48 |
+
+To refresh: fetch the file again with `DesignSync get_file` and overwrite this copy, then
+regenerate this table. Never call `DesignSync` to read visual values; read this copy.
+
+Import prompt (verbatim):
+
+```
+Use the claude_design MCP (https://api.anthropic.com/v1/design/mcp, auth via /design-login) to import this project:
+https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=RTST+Batch+29.dc.html
+
+Focus on these files (the whole project is readable):
+- `RTST Batch 29.dc.html`
+- `Dino Reader Batch 30.dc.html`
+
+Also read these files the selection imports:
+- `assets/app-tile.png`
+- `assets/glyph.png`
+- `design_handoff_tray_panel/assets/glyph.png`
+
+Implement: the selected files
+```

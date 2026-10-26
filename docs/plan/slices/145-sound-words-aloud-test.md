@@ -18,6 +18,10 @@ letters; whether each voice stretches, shortens or garbles them is unknown and d
   sound-word list in `dino-storytelling`; until then the skill uses repetition with punctuation
   ("Dang! Dang! Dang!", "Whoosh… whoosh!"), which every engine reads reliably.
 
+#### Design (Dino Reader Batch 30 mock, added 2026-10-26)
+
+No screens. The Batch 30 mock intro says 145 (the sound-words test) changes no screens. Nothing to build from the mock.
+
 ## Work
 
 - [ ] A small offline harness (desktop sherpa-onnx with the same models and settings as the apps) that

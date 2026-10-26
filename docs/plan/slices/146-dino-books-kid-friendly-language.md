@@ -21,6 +21,10 @@ The texts are read aloud by the voices, so sound words must also be long enough 
   Starters and store stories alike; each bumps its version (`StarterVersions` +
   `EarlierPageTextHashes`, or the store `Version` and a new `story-v<n+1>.dino` upload).
 
+#### Design (Dino Reader Batch 30 mock, added 2026-10-26)
+
+No screens. The Batch 30 mock intro says 146 (books rewritten in everyday spoken language) changes no screens. Nothing to build from the mock.
+
 ## Work
 
 - [ ] Wave A: Farsi for the 4 starters, then each store story.
