@@ -13,8 +13,9 @@ at 1x–2x speed. It is a **WinUI 3 + Windows App SDK** desktop app, packaged as
 
 **Two more products share this repo.** The same RTST app ships on **Android** (and iOS) via
 **.NET MAUI**, reusing `Domain`/`Application` unchanged. **Dino Reader** is a second MAUI app (a
-kids' book reader with a voice per character) sharing the Mobile.Shared platform code. One shared
-version (`v<x.y.z>`) covers both products.
+kids' book reader with a voice per character) sharing the Mobile.Shared platform code. Each product has
+its own version, tag and GitHub Release: `rtst-v<x.y.z>` and `dino-v<x.y.z>` (Decision 137; the old shared
+`v<x.y.z>` tags are history).
 
 > **Stacked PRs:** open them against `main`, or retarget each one after its base
 > merges (PRs #154-#156 once merged into each other instead). (Decisions 45-51;
@@ -183,12 +184,16 @@ so a failing test blocks the release.
   single `release.yml` run does it all: GitVersion computes the next SemVer, the
   MSIX is packaged with that version stamped into `Package.appxmanifest`
   `Version` (`x.y.z.0` — the Store needs revision `0`) **at build time** (not
-  committed), then a `v<x.y.z>` tag + GitHub Release are cut at the merge commit.
-  No PAT, no commit-back. **`main` defaults to a patch bump.** To bump higher,
+  committed), then a `rtst-v<x.y.z>` tag + GitHub Release are cut at the merge commit. **Per
+  product (Slice 130, Decision 137):** `GitVersion.yml` (tag prefix `rtst-v`) is Read The Stupid Text's,
+  `GitVersion.dino.yml` (`dino-v`) is Dino Reader's; a release carries only its own product's files, so a
+  Dino-only change cuts `dino-v…` and no RTST release, and a core change cuts both. Both continue from the
+  old shared version (neither number or Android `versionCode` goes backwards). No PAT, no commit-back. **`main` defaults to a patch bump.** To bump higher,
   put a token in a commit message (highest since the last tag wins): **`+semver:
   minor`** for a feature, **`+semver: major`** for a breaking change, `+semver:
   none` to skip. Config: `GitVersion.yml`. So: write a normal commit and add
-  `+semver: minor`/`major` when the change warrants it; otherwise it's a patch.
+  `+semver: minor`/`major` when the change warrants it; otherwise it's a patch. A token bumps whichever
+  product(s) the run cuts, since both read the same commit messages since their own last tag.
 - **Signing:** CI stays **unsigned**; the Microsoft Store re-signs on publish
   (Decision 18). A domain (e.g. `sirous.uk`) cannot sign code. **Azure Trusted
   Signing** is the documented upgrade for trusted sideloaded MSIX — see

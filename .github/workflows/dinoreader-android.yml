@@ -21,6 +21,7 @@ on:
       - 'global.json'
       - 'Directory.Build.props'
       - 'GitVersion.yml'
+      - 'GitVersion.dino.yml'
       - '*.slnx'
       - '.gitattributes'
       - '.github/workflows/release.yml'
@@ -170,4 +171,4 @@ jobs:
         if: ${{ env.SIGN_RELEASE == 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "v${VERSION}" dist/* --repo "${{ github.repository }}" --clobber
+        run: gh release upload "dino-v${VERSION}" dist/* --repo "${{ github.repository }}" --clobber
