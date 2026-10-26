@@ -1,6 +1,6 @@
 # Slice 154 — Dino: vowel marks in Farsi and Arabic books
 
-*Planned 2026-10-26.* Dino Reader only. Starts with a listening test, which decides whether the text work goes ahead.
+*In progress (wave 2026-10-26b), draft PR.* Dino Reader only. Starts with a listening test, which decides whether the text work goes ahead.
 
 **Batch:** 31 (tester review, 2026-10-26; Decision 159)
 **Touches:** `tools/sound-words-test/**`, `tests/DinoReader.Tests/Starters/translations/*.fa.json`, `tests/DinoReader.Tests/Starters/translations/*.ar.json`, `tests/DinoReader.Tests/StarterTexts.cs`, `tests/DinoReader.Tests/StoreTexts.cs`, `tests/DinoReader.Tests/**`, `src/DinoReader.Core/LanguageRules.cs`, `src/DinoReader.Core/FarsiRules.cs`, `src/DinoReader.Core/ArabicRules.cs`, `.claude/agents/dino-story-writer.md`, `.claude/skills/create-dino-story/SKILL.md`, `src/DinoReader.App/CLAUDE.md`
