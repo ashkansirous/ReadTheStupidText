@@ -21,6 +21,7 @@ namespace ReadTheStupidText.Application.Usage;
 /// <param name="Outcome">A <see cref="UsageOutcome"/>.</param>
 /// <param name="DurationBucket">A <see cref="UsageBuckets.Duration"/> value.</param>
 /// <param name="Source">A <see cref="UsageSource"/>: what started a Windows read (Slice 140); the phone sends none.</param>
+/// <param name="Early">Whether the wait had a head start before the tap (Slice 139): the first translation or first sound was prepared while the person decided.</param>
 public sealed record UsageEvent(
     string Name,
     string Version,
@@ -37,7 +38,8 @@ public sealed record UsageEvent(
     string? Stage = null,
     string? Outcome = null,
     string? DurationBucket = null,
-    string? Source = null);
+    string? Source = null,
+    bool? Early = null);
 
 /// <summary>The closed set of counts (the Worker's <c>RTST_EVENT_RULES</c> must match).</summary>
 public static class UsageEventName

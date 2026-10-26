@@ -64,12 +64,13 @@ public static class UsageEvents
             : null;
 
     /// <summary>A timed wait. The language pair is optional (a model download or the first sound may not know both).</summary>
-    public static UsageEvent Timing(UsageContext context, string stage, string outcome, TimeSpan elapsed, string? sourceLanguage = null, string? language = null) =>
+    public static UsageEvent Timing(UsageContext context, string stage, string outcome, TimeSpan elapsed, string? sourceLanguage = null, string? language = null, bool early = false) =>
         Make(context, UsageEventName.Timing) with
         {
             Stage = stage,
             Outcome = outcome,
             DurationBucket = UsageBuckets.Duration(elapsed),
+            Early = early ? true : null,
             SourceLanguage = Language(sourceLanguage),
             Language = Language(language),
         };
