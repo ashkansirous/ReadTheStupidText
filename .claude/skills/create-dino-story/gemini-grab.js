@@ -34,6 +34,22 @@ if (!window.__grabReady) {
     window.__wantClip = false;
     try { window.__clipResult = await window.__toClipboard(); } catch (e) { window.__clipResult = 'ERR ' + e.message; }
   }, true);
+  const pictureCount = () => [...document.querySelectorAll('button')]
+    .filter(b => (b.getAttribute('aria-label') || '') === 'Download full size image').length;
+  // Call before sending a prompt: remembers how many pictures the chat already has.
+  window.__markPictures = () => { window.__picturesBefore = pictureCount(); return window.__picturesBefore; };
+  // Call right after sending: returns 'READY <n>' the moment a new picture exists, or 'WAITING <n>' after
+  // maxMs (call it again). Never use fixed sleeps while Gemini draws; they waste up to a minute per picture.
+  window.__waitForPicture = async (maxMs = 40000) => {
+    const before = window.__picturesBefore ?? 0;
+    const start = Date.now();
+    let count = pictureCount();
+    while (count <= before && Date.now() - start < maxMs) {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      count = pictureCount();
+    }
+    return (count > before ? 'READY ' : 'WAITING ') + count;
+  };
   window.__grab = async (indexFromEnd, options) => {
     window.__blobs = [];
     window.__wantClip = false;

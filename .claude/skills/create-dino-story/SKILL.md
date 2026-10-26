@@ -166,6 +166,11 @@ Record each pass in the art record table (page, attempt number, why earlier atte
 - Each picture has a "Download full size image" button (aria-label); the newest picture is the last
   button (Gemini lazy-loads older ones). Clicking it writes the full-size JPEG to `%USERPROFILE%\Downloads`
   as `Gemini_Generated_Image_*.jpg` (every picture of 2026-10-26 arrived, 1792x2400).
+- **Poll, never sleep, while Gemini draws** (2026-10-26: fixed `computer wait` sleeps left each finished picture
+  idle for up to a minute). Inject `gemini-grab.js`, run `window.__markPictures()` just before sending, then
+  `await window.__waitForPicture()` right after: it returns `READY <n>` the moment the new picture exists (call it again
+  on `WAITING`). Grab and save at once. Wait for anything else the same way (a thumbnail after a paste, a menu): check
+  for it in a short loop, don't sleep a fixed time.
 - **Save through the download, not the clipboard** (2026-10-26): inject `gemini-grab.js` with
   `javascript_tool` (once per page load; again after a reload or new chat), run `await window.__grab(1)` (clicks
   the newest picture's button), then
