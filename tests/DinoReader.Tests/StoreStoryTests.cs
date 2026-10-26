@@ -118,6 +118,46 @@ public sealed class StoreStoryTests : IDisposable
         }
     }
 
+    // The Tortoise and the Hare starter (also a store story): the Hare, Owl and Hedgehog are "he", the Tortoise, Squirrel and Frog "she", three of each, and each
+    // must get a voice of that gender in every language (the stored English genders are checked too, since every other language is cast from them).
+    [Theory]
+    [MemberData(nameof(Languages))]
+    public void TheTortoiseAndTheHare_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
+    {
+        Story story = StarterBuilder.Build(StarterTexts.TortoiseId, "The Tortoise and the Hare", StarterTexts.Tortoise, 0);
+        var expected = new Dictionary<string, Gender>
+        {
+            ["Hare"] = Gender.Male, ["Tortoise"] = Gender.Female, ["Owl"] = Gender.Male, ["Squirrel"] = Gender.Female, ["Hedgehog"] = Gender.Male, ["Frog"] = Gender.Female,
+        };
+
+        Assert.Equal(expected.Keys.Order(), story.Cast.Select(m => m.Name).Order());
+        Assert.All(story.Cast, m => Assert.True(m.Gender == expected[m.Name], $"{m.Name} is stored as {m.Gender}"));
+        AssertEachIsPlayedByTheirGender(story, language, expected);
+    }
+
+    // Casts the story the way the app does in that language (a language other than the story's is cast afresh, carrying only the animal settings; the story's
+    // language keeps its cast) and checks that each character's roster character has the expected gender.
+    private static void AssertEachIsPlayedByTheirGender(Story story, string language, IReadOnlyDictionary<string, Gender> expected)
+    {
+        IReadOnlyList<CastMember> stored = language == story.Language
+            ? story.Cast
+            : story.Cast.Where(m => m.HasAnimalSetting).Select(m => m with { VoiceId = string.Empty }).ToList();
+        List<Character> characters = story.Cast.Select(m => new Character(m.CharacterId, m.Name, m.Gender, 1)).ToList();
+        IReadOnlyDictionary<string, AnimalKind> animals = AnimalSounds.Resolve(characters, story.Language, stored, story.Text);
+        IReadOnlyList<StorytellerCharacter> speakers = CharacterRoster.Speakers(language);
+        string narrator = CharacterRoster.Narrators(language)[0].VoiceId;
+
+        VoiceCast cast = CastCharacters.Cast(
+            characters, CharacterRoster.Choices(speakers, narrator), CharacterRoster.For(language), narrator, c => FlavourGuess.Guess(c.Name, LanguageRules.English),
+            StoryCast.PinnedCharacters(stored), animalOf: c => animals.TryGetValue(c.Id, out AnimalKind kind) ? AnimalCharacters.HintFor(kind, c.Name, story.Language) : null);
+
+        foreach (Character character in characters)
+        {
+            StorytellerCharacter? played = CharacterRoster.Nearest(speakers, cast.VoiceFor(character.Id)!, cast.Flavours![character.Id], character.Gender);
+            Assert.True(played?.Gender == expected[character.Name], $"{language}: {character.Name} is played by {played?.Name} ({played?.Gender})");
+        }
+    }
+
     [Fact]
     public void EveryStoreStory_HasAllTheOtherLanguagesTranslated_ForEveryPiece()
     {
