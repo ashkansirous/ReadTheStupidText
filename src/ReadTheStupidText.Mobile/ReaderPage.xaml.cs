@@ -970,15 +970,7 @@ public partial class ReaderPage : ContentPage
 
             if (!string.IsNullOrWhiteSpace(text) && !_headStart.ReadInProgress)
             {
-                _ownPreparations++;
-                try
-                {
-                    await PrepareInReadingLanguageAsync(text, token);
-                }
-                finally
-                {
-                    _ownPreparations--;
-                }
+                await PrepareInReadingLanguageAsync(text, token);
             }
         }
         catch (OperationCanceledException)
@@ -994,10 +986,12 @@ public partial class ReaderPage : ContentPage
     // Slice 90: prepared with the pack and voice the read will use, so the cached sentences hit at Play;
     // when the phone voice would read there is nothing to prepare.
     private Task PrepareInReadingLanguageAsync(string text, CancellationToken token) =>
-        PrepareInLanguageAsync(text, ReadingLanguageFor(text), token);
+        PrepareInLanguageAsync(text, ReadingLanguageFor(text), token, own: true);
 
     // Whether a preparation was started (false when the phone voice reads, so there is nothing to cache).
-    private async Task<bool> PrepareInLanguageAsync(string text, string language, CancellationToken token)
+    // An own preparation counts in _ownPreparations only once it holds the reader's slot (after the plan), so an early
+    // cancel never spares an abandoned early synthesis because an own one is still planning.
+    private async Task<bool> PrepareInLanguageAsync(string text, string language, CancellationToken token, bool own = false)
     {
         VoicePlan plan = await PlanVoiceAsync(language, atPlay: false);
         token.ThrowIfCancellationRequested();
@@ -1006,6 +1000,26 @@ public partial class ReaderPage : ContentPage
             return false;
         }
 
+        if (own)
+        {
+            _ownPreparations++;
+        }
+
+        try
+        {
+            return await PrepareWithPlanAsync(text, plan, token);
+        }
+        finally
+        {
+            if (own)
+            {
+                _ownPreparations--;
+            }
+        }
+    }
+
+    private async Task<bool> PrepareWithPlanAsync(string text, VoicePlan plan, CancellationToken token)
+    {
         if (plan.Scope is null)
         {
             await Task.Run(() => _headStart.PrepareAsync(text), token);

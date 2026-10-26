@@ -268,6 +268,34 @@ public class EarlyStartCoordinatorTests
     }
 
     [Fact]
+    public async Task Choosing_read_does_not_wait_for_the_idle_rest_of_the_original()
+    {
+        var probe = new Probe();
+        var early = new EarlyStartCoordinator();
+        early.Restart(French, "fr", "en", probe.Jobs(), TimeSpan.FromSeconds(30));
+
+        early.ChooseRead();
+        await early.SettleChosenAsync().WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.Equal(["Un. Deux."], probe.VoicedOriginal);
+    }
+
+    [Fact]
+    public async Task Discarding_after_a_choice_stops_the_chosen_side_too()
+    {
+        var probe = new Probe { HoldOriginal = true };
+        var early = new EarlyStartCoordinator();
+        early.Restart(French, "fr", "en", probe.Jobs(), TimeSpan.Zero);
+        await Task.Delay(50);
+        early.ChooseRead();
+
+        early.Discard();
+
+        Assert.True(probe.OriginalToken.IsCancellationRequested);
+        await early.SettleChosenAsync().WaitAsync(TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
     public async Task Choosing_translate_does_not_wait_for_the_idle_rest()
     {
         var probe = new Probe();

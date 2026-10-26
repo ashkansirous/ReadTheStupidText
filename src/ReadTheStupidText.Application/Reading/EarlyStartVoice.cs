@@ -9,6 +9,9 @@ namespace ReadTheStupidText.Application.Reading;
 /// </summary>
 public sealed class EarlyStartVoice
 {
+    /// <summary>The prefix of every early-start debug line.</summary>
+    public const string LogTag = "[EarlyStart]";
+
     /// <summary>Voices <c>text</c> in <c>language</c> without playing it; cancelling the token stops the preparation. Returns
     /// whether something was prepared (false when it did nothing: no neural voice, a read running, the page gone).</summary>
     public Func<string, string, CancellationToken, Task<bool>>? Handler { get; set; }
@@ -32,19 +35,19 @@ public sealed class EarlyStartVoice
     {
         if (Handler is not { } handler)
         {
-            Debug.WriteLine($"[EarlyStart] voice skipped ({language}): no handler registered");
+            Debug.WriteLine($"{LogTag} voice skipped ({language}): no handler registered");
             return;
         }
 
-        Debug.WriteLine($"[EarlyStart] voice start ({language}, {text.Length} chars)");
+        Debug.WriteLine($"{LogTag} voice start ({language}, {text.Length} chars)");
         bool prepared = await RunHandlerAsync(handler, text, language, cancellationToken);
         if (cancellationToken.IsCancellationRequested)
         {
-            Debug.WriteLine($"[EarlyStart] voice cancel ({language}, prepared={prepared})");
+            Debug.WriteLine($"{LogTag} voice cancel ({language}, prepared={prepared})");
             return;
         }
 
-        Debug.WriteLine($"[EarlyStart] voice done ({language}, prepared={prepared})");
+        Debug.WriteLine($"{LogTag} voice done ({language}, prepared={prepared})");
         if (prepared)
         {
             _preparedHeads.Add((text, language));

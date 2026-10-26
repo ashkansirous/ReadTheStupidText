@@ -18,16 +18,25 @@ public class HeadStartRunTests
     }
 
     [Fact]
-    public async Task A_preparation_cancelled_while_it_ran_ends_cancelled_even_if_it_returned_true()
+    public async Task A_preparation_that_stored_its_clips_completes_even_if_cancelled_just_after()
     {
         using var cts = new CancellationTokenSource();
 
+        await HeadStartRun.CompleteAsync(cts.Token, _ =>
+        {
+            cts.Cancel(); // a read started right after the clips were stored
+            return Task.FromResult(true);
+        });
+    }
+
+    [Fact]
+    public async Task A_preparation_cancelled_before_it_started_ends_cancelled()
+    {
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
-            () => HeadStartRun.CompleteAsync(cts.Token, _ =>
-            {
-                cts.Cancel(); // a read started: BeginRead cancels the prepare
-                return Task.FromResult(true);
-            }));
+            () => HeadStartRun.CompleteAsync(cts.Token, _ => Task.FromResult(true)));
     }
 
     [Fact]

@@ -11,12 +11,11 @@ public static class HeadStartRun
     public static Task Skipped => Task.FromCanceled(new CancellationToken(canceled: true));
 
     /// <summary>Runs <paramref name="prepare"/> (true when it stored the clips) and throws
-    /// <see cref="OperationCanceledException"/> unless it did, or when <paramref name="token"/> was cancelled meanwhile.</summary>
+    /// <see cref="OperationCanceledException"/> unless it did (clips already stored stay prepared even if the token was cancelled just after).</summary>
     public static async Task CompleteAsync(CancellationToken token, Func<CancellationToken, Task<bool>> prepare)
     {
         token.ThrowIfCancellationRequested();
         bool stored = await prepare(token);
-        token.ThrowIfCancellationRequested();
         if (!stored)
         {
             throw new OperationCanceledException(token);

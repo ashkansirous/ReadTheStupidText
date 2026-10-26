@@ -40,6 +40,9 @@ public sealed class EarlyStartCoordinator
         /// <summary>Cancelled by the tap on Translate and read: the translation no longer waits for the typing to rest.</summary>
         public CancellationTokenSource SkipTranslationDelay { get; } = new();
 
+        /// <summary>Cancelled by the tap on Read: the original's voicing no longer waits for the typing to rest.</summary>
+        public CancellationTokenSource SkipOriginalDelay { get; } = new();
+
         public Task OriginalTask { get; set; } = Task.CompletedTask;
 
         public Task<EarlyTranslation?> TranslationTask { get; set; } = Task.FromResult<EarlyTranslation?>(null);
@@ -60,6 +63,7 @@ public sealed class EarlyStartCoordinator
             OriginalCts.Dispose();
             TranslationCts.Dispose();
             SkipTranslationDelay.Dispose();
+            SkipOriginalDelay.Dispose();
         }
     }
 
@@ -70,7 +74,7 @@ public sealed class EarlyStartCoordinator
         _run?.DisposeWhenDone();
         var run = new Run();
         _run = run;
-        run.OriginalTask = RunOriginalAsync(text, jobs, delay, run.OriginalCts.Token);
+        run.OriginalTask = RunOriginalAsync(text, jobs, delay, run);
         if (jobs.TranslateHead is not null && source is not null && target is not null)
         {
             run.TranslationTask = RunTranslationAsync(text, source, target, jobs, delay, run);
@@ -111,6 +115,7 @@ public sealed class EarlyStartCoordinator
         }
 
         run.OriginalCommitted = true;
+        run.SkipOriginalDelay.Cancel();
         run.TranslationCts.Cancel();
     }
 
@@ -156,11 +161,12 @@ public sealed class EarlyStartCoordinator
         }
     }
 
-    private static async Task RunOriginalAsync(string text, EarlyStartJobs jobs, TimeSpan delay, CancellationToken token)
+    private static async Task RunOriginalAsync(string text, EarlyStartJobs jobs, TimeSpan delay, Run run)
     {
+        CancellationToken token = run.OriginalCts.Token;
         try
         {
-            await WaitAsync(delay, token);
+            await WaitUnlessChosenAsync(delay, run.SkipOriginalDelay.Token, token);
             string head = EarlyStartPlan.OriginalHead(text);
             if (head.Length > 0)
             {
@@ -213,7 +219,7 @@ public sealed class EarlyStartCoordinator
         }
     }
 
-    // The idle rest, ended early (not failed) by the tap; a cancel of the job itself still throws.
+    // The idle rest, ended early (not failed) by the tap on that side; a cancel of the job itself still throws.
     private static async Task WaitUnlessChosenAsync(TimeSpan delay, CancellationToken skip, CancellationToken token)
     {
         try
@@ -223,7 +229,7 @@ public sealed class EarlyStartCoordinator
         }
         catch (OperationCanceledException) when (skip.IsCancellationRequested && !token.IsCancellationRequested)
         {
-            // The person tapped Translate and read: start now.
+            // The person tapped this side: start now.
         }
     }
 
