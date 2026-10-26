@@ -436,6 +436,29 @@ public sealed class StarterUpdateTests : IDisposable
         Assert.Equal(1, StarterUpdate.Refresh(stored, bundled).CoverPageIndex);
     }
 
+    // The 5-page Tortoise and the Hare shipped as v2 and v3 (same text); the 14-page retelling is v4, so an unedited v3 copy must still count as unedited.
+    [Fact]
+    public void AnUneditedV3TortoiseCopy_WithTheOldFivePageText_IsNotEdited_AndIsRefreshedToTheFourteenPageRetelling()
+    {
+        Story stored = Paged(OldTortoisePages) with { SourceId = StarterTexts.TortoiseId, Recordings = new Dictionary<int, PageRecording> { [0] = new("en", 1) }, UseRecordings = true };
+        Story bundled = Paged("One.", "Two.", "Three.") with { Id = "new" };
+
+        Assert.True(StarterUpdate.NeedsUpdate(3, 4));
+        Assert.False(StarterUpdate.IsEdited(StarterTexts.TortoiseId, stored, bundled));
+        Assert.Equal(bundled.Pages.Select(p => p.Text), StarterUpdate.Refresh(stored, bundled).Pages.Select(p => p.Text));
+        Assert.True(StarterUpdate.IsEdited(StarterTexts.TortoiseId, Paged("My own words."), bundled));
+    }
+
+    // The 5-page text shipped as v2 and v3 (identical), taken from StarterTexts at commit 74f5738.
+    private static readonly string[] OldTortoisePages =
+    [
+        "Once upon a time there was a Hare who loved to run. He ran faster than anyone in the whole forest, and he never stopped telling everybody about it.\n\n\"I am the fastest animal in the world,\" Hare said. \"Nobody can ever beat me.\"\n\nOne day he met a Tortoise who was walking slowly down the path.",
+        "\"You walk so slowly,\" Hare said with a laugh. \"You would take all day to cross a meadow.\"\n\n\"Perhaps I would,\" Tortoise said calmly. \"But I will race you, if you like.\"\n\n\"Race me?\" Hare said. \"That is the funniest thing I have ever heard. Very well, let us race to the old oak tree on the hill.\"\n\nThe animals gathered to watch. The Owl stood at the start and raised her wing. \"Ready, steady, go!\" Owl said.",
+        "The Hare shot off like the wind. In a moment he was far ahead, and he could hardly see the Tortoise at all. The Tortoise did not hurry. He kept walking, one slow step after another.\n\n\"This is too easy,\" Hare said to himself. \"I have time for a little rest in the shade.\"\n\nThe Hare lay down under a tree and shut his eyes. Soon he was fast asleep.",
+        "The Tortoise kept on walking, slow and steady. He walked past the Hare. He walked up the hill. The animals began to cheer.\n\n\"Go, Tortoise, go!\" Owl said. \"You are nearly there!\"\n\nAt last the Hare woke up with a start. He looked around and could not see the Tortoise anywhere. \"I had better run,\" Hare said. He raced up the hill as fast as he could.",
+        "But it was too late. The Tortoise had already reached the old oak tree, and the animals were cheering his name.\n\n\"I won!\" Tortoise said, smiling.\n\nThe Hare hung his head. \"You were right to keep going,\" Hare said. \"I was too proud, and I did not even try my best.\"\n\n\"Slow and steady wins the race,\" Tortoise said kindly. \"Next time, we can run it together.\"\n\nAnd the Hare and the Tortoise became the best of friends.",
+    ];
+
     [Fact]
     public void EarlierPageTextHashes_HoldTheShippedV3PigsText()
     {
