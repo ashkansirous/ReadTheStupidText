@@ -1,6 +1,6 @@
 # Slice 145 — Which sound-word spellings sound right when read aloud
 
-*Planned. Runs before Slice 146.*
+*In progress (wave 2026-10-26), draft PR. Runs before Slice 146.*
 
 **Batch:** 30 (Decisions 149-153)
 **Touches:** `tools/sound-words-test/**` (new), `docs/plan/notes/2026-10-26-sound-words-aloud.md` (new), `.claude/skills/dino-storytelling/SKILL.md`
