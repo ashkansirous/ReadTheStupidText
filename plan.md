@@ -20,6 +20,11 @@ Open slices only. Finished slices (143 rows) are in [slices-done](docs/plan/note
 | --- | --- | --- | --- | --- | --- |
 | 121 | Dino: pictures for the ten store stories | in progress | #350 (Billy Goats) | | [121-dino-illustrate-store-stories.md](docs/plan/slices/121-dino-illustrate-store-stories.md) |
 | 146 | Rewrite every Dino book in spoken, kid-friendly language | in progress | | | [146-dino-books-kid-friendly-language.md](docs/plan/slices/146-dino-books-kid-friendly-language.md) |
+| 150 | Dino: slower reading by default (0.8x), grown-up speed 0.5-1.2x | planned | | | [150-dino-slower-reading-speed.md](docs/plan/slices/150-dino-slower-reading-speed.md) |
+| 151 | Dino: three view modes, no merging of characters | planned | | | [151-dino-three-view-modes.md](docs/plan/slices/151-dino-three-view-modes.md) |
+| 152 | Dino: a character's animal comes from the book, never its voice | planned | | | [152-dino-animal-from-the-book.md](docs/plan/slices/152-dino-animal-from-the-book.md) |
+| 153 | Dino: no robotic-sounding character voices | planned | | | [153-dino-no-robotic-voices.md](docs/plan/slices/153-dino-no-robotic-voices.md) |
+| 154 | Dino: vowel marks in Farsi and Arabic books | planned | | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
 
 Batch 25 (119-123; 119, 120, 122, 123 built, 121 in progress: Billy Goats done, nine books left; planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
 
@@ -30,6 +35,8 @@ Batch 27 (127-131, planned 2026-10-25, after Dino work kept resubmitting Read Th
 Batch 28 (132-134, planned 2026-10-25, which books families like and how parents use the app): 132 (the remote config the counts are switched by, and the forced update) and 133 (first events, privacy texts and store forms) and 134 (the rest of the events and the report, PR #368) are built, so the batch is done. All three edit `worker/` and Dino's `MauiProgram`, so one at a time. Decisions 138-142.
 
 Batch 30 (143-146 and 148, planned 2026-10-26, Dino loading, Farsi voice and kid-friendly language): 143 builds the shared wait overlay (RTST 138 reuses it), 144 is small and independent, 145 measures sound-word spellings before 146 rewrites every book (one PR per book: Farsi, then English, then the rest). 143, 144, 145 and 148 (the stall and wait-count follow-ups, PR #416) are built; 146 is in progress: Farsi wave A (8 books) is merged, 6 more Farsi books wait for the other tab's PRs, and English and the other languages are to come. Decisions 149-153.
+
+Batch 31 (150-154, planned 2026-10-26, from a tester review of Dino Reader): 150 (speed) and 151 (view modes, no merge) go first and can run together (150 edits settings, 151 the reading page and cast page). 152 follows 151 (both edit `CastPage`/`CastRows`/`StoryVoicing`). 153 starts with a listening page and waits on the user's flags. 154 starts with a listening test, then adds vowel marks book by book after each book's Slice 146 rewrite and open illustration PR merge. Decisions 155-159 (157 reverses 132).
 
 ### Notes
 
@@ -114,6 +121,7 @@ Built but not verified (details in each slice file):
 
 ## Out of Scope
 
+- **(Batch 31)** Animals and sounds for parent-provided books (photos, PDFs, typed: unchanged); robotic-voice checks beyond English unless English shows flavours are the cause; reading speeds above 1.2x in Dino; vowel marks for languages other than Farsi and Arabic.
 - **(Batch 28)** Any install, device or advertising id; per-family profiles or parental-consent flows; third-party analytics SDKs; analytics in RTST; remote config for RTST.
 - **(Batch 27)** Splitting into two repos or publishing the shared code as NuGet packages; renaming the shared projects or their namespaces beyond Mobile.Shared; a commit flag that skips one product's release.
 
