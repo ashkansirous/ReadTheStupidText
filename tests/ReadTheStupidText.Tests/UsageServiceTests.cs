@@ -90,6 +90,39 @@ public class UsageServiceTests
     }
 
     [Fact]
+    public async Task A_flush_waits_behind_a_send_that_is_running_and_then_sends_what_was_queued_meanwhile()
+    {
+        var store = new FakeStore { Config = ConfigOn };
+        var transport = new FakeTransport { Gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously) };
+        var service = Service(store, transport);
+        await service.RecordAsync(Read);
+        Task running = service.FlushAsync();
+        await WaitUntilAsync(() => transport.Batches.Count == 1);
+        await service.RecordAsync(Read);
+
+        Task waiting = service.FlushAsync();
+        await Task.Delay(150);
+
+        Assert.False(waiting.IsCompleted);
+
+        transport.Gate.SetResult();
+        await Task.WhenAll(running, waiting).WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.Equal(2, transport.Batches.Sum(CountEvents));
+        Assert.Equal(0, service.QueuedCount);
+    }
+
+    private static async Task WaitUntilAsync(Func<bool> condition)
+    {
+        for (int i = 0; i < 100 && !condition(); i++)
+        {
+            await Task.Delay(20);
+        }
+
+        Assert.True(condition());
+    }
+
+    [Fact]
     public async Task A_flush_sends_the_queue_in_batches_of_fifty_and_empties_it()
     {
         var store = new FakeStore { Config = ConfigOn };
@@ -321,6 +354,7 @@ public class UsageServiceTests
         public string? ConfigBody { get; set; }
         public bool ConfigFails { get; set; }
         public bool Hang { get; set; }
+        public TaskCompletionSource? Gate { get; set; }
         public int ConfigFetches { get; private set; }
 
         public Task<string> FetchConfigAsync(CancellationToken cancellationToken)
@@ -332,6 +366,11 @@ public class UsageServiceTests
         public async Task<UsageSendResult> PostEventsAsync(string json, CancellationToken cancellationToken)
         {
             Batches.Add(json);
+            if (Gate is { } gate)
+            {
+                await gate.Task;
+            }
+
             if (Hang)
             {
                 await Task.Delay(Timeout.Infinite, cancellationToken);

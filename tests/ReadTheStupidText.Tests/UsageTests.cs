@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Domain.Reading;
 
@@ -150,6 +151,18 @@ public class UsageEventsTests
     }
 
     [Fact]
+    public void A_timing_carries_early_only_when_the_head_start_had_run()
+    {
+        UsageEvent plain = UsageEvents.Timing(Context, UsageStage.FirstAudio, UsageOutcome.Done, TimeSpan.FromSeconds(1), null, "en");
+        UsageEvent early = UsageEvents.Timing(Context, UsageStage.FirstAudio, UsageOutcome.Done, TimeSpan.FromSeconds(1), null, "en", early: true);
+
+        Assert.Null(plain.Early);
+        Assert.True(early.Early);
+        Assert.DoesNotContain("early", UsageBatch.QueueToJson([plain]));
+        Assert.Contains("\"early\":true", UsageBatch.QueueToJson([early]));
+    }
+
+    [Fact]
     public void Every_event_name_used_is_one_the_Worker_knows()
     {
         string source = File.ReadAllText(Path.Combine(RepoRoot(), "worker", "events.ts"));
@@ -157,7 +170,7 @@ public class UsageEventsTests
         Assert.True(rules.Success);
         string[] inWorker = Regex.Matches(rules.Groups["body"].Value, @"^\s{2}(?<name>[a-z_]+):", RegexOptions.Multiline).Select(m => m.Groups["name"].Value).ToArray();
 
-        string[] inApp = [UsageEventName.AppOpened, UsageEventName.ReadStarted, UsageEventName.TranslateOffered, UsageEventName.TranslateChosen, UsageEventName.VoiceChanged, UsageEventName.Timing];
+        string[] inApp = [UsageEventName.AppOpened, UsageEventName.ReadStarted, UsageEventName.TranslateOffered, UsageEventName.TranslateChosen, UsageEventName.VoiceChanged, UsageEventName.Timing, UsageEventName.WaitShown, UsageEventName.WaitCancelled];
         Assert.Equal(inApp.Order(), inWorker.Order());
     }
 
@@ -180,6 +193,34 @@ public class UsageEventsTests
         AssertListed(source, "RTST_OUTCOMES", outcomes);
         AssertListed(source, "RTST_MODES", modes);
         AssertListed(source, "RTST_SOURCES", sources);
+        AssertListed(source, "WAIT_STAGES", UsageWaitStage.All.ToArray());
+    }
+
+    [Fact]
+    public void Every_wait_stage_has_its_own_wire_name()
+    {
+        string[] names = Enum.GetValues<WaitStage>().Select(UsageWaitStage.Of).ToArray();
+
+        Assert.Equal(names.Distinct().Count(), names.Length);
+        Assert.Equal(UsageWaitStage.All.Order(), names.Order());
+    }
+
+    [Fact]
+    public void A_wait_stage_with_no_wire_name_throws_instead_of_counting_as_a_file_wait()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => UsageWaitStage.Of((WaitStage)999));
+    }
+
+    [Fact]
+    public void A_wait_count_carries_only_its_stage_and_a_coarse_duration()
+    {
+        UsageEvent shown = UsageEvents.WaitShown(Context, WaitStage.Stalled, TimeSpan.FromMilliseconds(2500));
+        UsageEvent cancelled = UsageEvents.WaitCancelled(Context, WaitStage.PreparingVoice, TimeSpan.FromMilliseconds(100));
+
+        Assert.Equal(("wait_shown", "stalled", "2-5"), (shown.Name, shown.WaitStage, shown.DurationBucket));
+        Assert.Equal(("wait_cancelled", "preparing_voice", "<0.5"), (cancelled.Name, cancelled.WaitStage, cancelled.DurationBucket));
+        Assert.Null(shown.Language);
+        Assert.Contains("\"waitStage\":\"stalled\"", UsageBatch.QueueToJson([shown]));
     }
 
     private static void AssertListed(string source, string list, string[] inApp)

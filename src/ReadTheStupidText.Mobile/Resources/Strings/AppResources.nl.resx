@@ -73,10 +73,12 @@
   <data name="Wait_DownloadingModel" xml:space="preserve"><value>{0} downloaden…</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>Vertalen…</value></data>
   <data name="Wait_PreparingVoice" xml:space="preserve"><value>De stem voorbereiden…</value></data>
+  <data name="Wait_Stalled" xml:space="preserve"><value>De stem wordt nog klaargemaakt…</value></data>
   <data name="Wait_ReadingFile" xml:space="preserve"><value>Het bestand lezen…</value></data>
   <data name="Review_FirstTimeOnly" xml:space="preserve"><value>Alleen de eerste keer. Vertalen gebeurt op deze telefoon.</value></data>
   <data name="Review_ShowOriginal" xml:space="preserve"><value>Origineel tonen</value></data>
   <data name="Review_FailedOne" xml:space="preserve"><value>Pagina {0} kon niet worden gelezen.</value></data>
+  <data name="Review_TextCut" xml:space="preserve"><value>De tekst is erg lang, daarom worden alleen de eerste {0} tekens getoond.</value></data>
   <data name="Review_FailedMany" xml:space="preserve"><value>Pagina’s {0} konden niet worden gelezen.</value></data>
   <data name="Review_HereOne" xml:space="preserve"><value>Pagina {0} staat hier.</value></data>
   <data name="Review_HereMany" xml:space="preserve"><value>Pagina’s {0} staan hier.</value></data>

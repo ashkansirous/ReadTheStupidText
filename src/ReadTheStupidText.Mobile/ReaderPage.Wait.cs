@@ -75,10 +75,44 @@ public partial class ReaderPage
 
     private bool PlayerDimmedByWait => _waitOverlay.IsVisible && _wait.Stage == WaitStage.PreparingVoice;
 
+    // Slice 148: a read that had started waits for its next chunk. The same overlay says so ("Still getting the voice ready...") after 500 ms
+    // and goes with the next sound; the preparing wait and the file import keep the overlay when they own it. The signal comes from any thread.
+    private void OnReaderStallChanged(object? sender, bool stalled)
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            if (stalled)
+            {
+                BeginStallWait();
+            }
+            else
+            {
+                EndStallWait();
+            }
+        });
+    }
+
+    private void BeginStallWait()
+    {
+        if (!_wait.IsActive)
+        {
+            _wait.Begin(WaitStage.Stalled, AppResources.Wait_Stalled, canCancel: true);
+        }
+    }
+
+    private void EndStallWait()
+    {
+        if (_wait.IsActive && _wait.Stage == WaitStage.Stalled)
+        {
+            _wait.End();
+        }
+    }
+
     // Cancel: whatever is generating stops, the text stays, and nothing is counted as a failure.
     private void OnWaitCancelled()
     {
         _reader.Stop();
+        EndStallWait();
         EndFirstAudioClock(UsageOutcome.Cancelled);
         ClearPendingRead();
     }

@@ -22,12 +22,14 @@ public partial class ReaderPage
     private Stopwatch? _firstAudioClock;
     private string? _firstAudioSource;
     private string? _firstAudioLanguage;
+    private bool _firstAudioEarly;
 
-    private void StartFirstAudioClock()
+    private void StartFirstAudioClock(string text)
     {
         _firstAudioClock = Stopwatch.StartNew();
         _firstAudioSource = null;
         _firstAudioLanguage = null;
+        _firstAudioEarly = _earlyVoice.TakeEarly(text, ReadingLanguageFor(text)); // the head was prepared while the person decided (Slice 139)
     }
 
     // A text read as the translation made on the review page says nothing here about the language it came from (that count is translate_chosen).
@@ -55,6 +57,7 @@ public partial class ReaderPage
         TimeSpan elapsed = clock.Elapsed;
         string? source = _firstAudioSource;
         string? language = _firstAudioLanguage;
-        _usage.Record(context => UsageEvents.Timing(context, UsageStage.FirstAudio, outcome, elapsed, source, language));
+        bool early = _firstAudioEarly;
+        _usage.Record(context => UsageEvents.Timing(context, UsageStage.FirstAudio, outcome, elapsed, source, language, early));
     }
 }

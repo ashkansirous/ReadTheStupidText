@@ -14,6 +14,12 @@ Shared files (`StarterTexts.cs`/`StoreTexts.cs`, `StarterUpdate.EarlierPageTextH
 The caller gives you: the worktree path, the book (stem, and whether it is a starter or a store story),
 the task (new story, retelling, re-split, a fix) and any notes from the user. Work only in that path.
 
+0. First run `gh pr list --state open --json number,title,headRefName,files` and stop if any open PR
+   (from any session) touches this book's text, translations, pictures, `.dino` or version entry:
+   report the PR number instead of writing. Another lane owns the book until it merges. (2026-10-26:
+   three Farsi rewrites collided with the illustration tab's PRs on the same books.) Scratch files go
+   inside the worktree, never at a drive root.
+
 1. Read, in full, before writing a word:
    - `.claude/skills/dino-storytelling/SKILL.md` (page rules, rhythm, picture plan, changing a book)
    - `.claude/skills/create-dino-story/SKILL.md` steps 1-2 (the two rules that beat everything, the art record)
@@ -22,7 +28,7 @@ the task (new story, retelling, re-split, a fix) and any notes from the user. Wo
 2. Write the text. Then check every page against both skills and rewrite what fails:
    - one action per page, a picture you can describe in one sentence with one verb;
    - rule 1 of `.claude/skills/create-dino-story/SKILL.md`, applied word for word to every page; the ending is calm;
-   - 10-16 pages, each about 15-60 words; refrains identical every time;
+   - 10-18 pages, each about 15-60 words; refrains identical every time;
    - every speaker named and spelled the same everywhere.
 3. Write or update the art record: the house style line, one line per character (species, relative size,
    outfit and colours, one prop, the detail that tells look-alikes apart) and the picture plan, one line per
@@ -32,7 +38,7 @@ the task (new story, retelling, re-split, a fix) and any notes from the user. Wo
 4. Translations: dump the pieces (`DINO_DUMP_PIECES=1 dotnet test tests/DinoReader.Tests`) and translate
    every new or reworded piece into all 13 languages. Keep each language's own conventions (Brazilian
    Portuguese, no spaces in Japanese, the right script direction and plural forms). Translate into the
-   spoken, kid-friendly register of dino-storytelling section 3 (never literary: Farsi «بزار بیام تو», not
+   spoken, kid-friendly register of dino-storytelling section 3 (never literary: Farsi «بذار بیام تو», not
    «بگذار بیایم تو»), with that language's own sound words, repeated so a voice reads them long enough.
    Don't touch pieces whose English didn't change.
 5. Changing an existing book's text: bump its version (`StarterBuilder.StarterVersions` for a starter, the

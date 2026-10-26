@@ -116,6 +116,10 @@ A count is a name plus a few values from fixed lists:
   the first sound), the language pair when known, how it ended (finished, cancelled or failed)
   and how long it took as a coarse bucket (under 0.5 s, 0.5 to 1, 1 to 2, 2 to 5, 5 to 10,
   10 to 20, or over 20 seconds).
+- `wait_shown` and `wait_cancelled`: when a "please wait" panel appeared (for example "Preparing
+  the voice" or "Still getting the voice ready"), and when you tapped Cancel on it: which wait it
+  was (from a fixed list) and how long the panel showed as a coarse bucket, with no text and no
+  language.
 
 Every count also carries the app version, the platform and the UTC date (no time of day).
 Counts never contain the text you read, file names, scanned images, names, or any install,

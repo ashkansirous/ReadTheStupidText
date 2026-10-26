@@ -14,18 +14,17 @@ this plan turns it into ordered, shippable vertical slices.
 
 ## Status
 
-Open slices only. Finished slices (137 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
+Open slices only. Finished slices (143 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
 | 121 | Dino: pictures for the ten store stories | in progress | #350 (Billy Goats) | | [121-dino-illustrate-store-stories.md](docs/plan/slices/121-dino-illustrate-store-stories.md) |
-| 139 | RTST phone: start translating and voicing before the tap | in progress | | | [139-rtst-phone-early-start.md](docs/plan/slices/139-rtst-phone-early-start.md) |
-| 141 | RTST Windows: a wait indicator after 500 ms | in progress | | | [141-rtst-windows-wait-indicator.md](docs/plan/slices/141-rtst-windows-wait-indicator.md) |
-| 142 | RTST Windows: early translate and voice in the control panel | planned | | | [142-rtst-windows-early-start.md](docs/plan/slices/142-rtst-windows-early-start.md) |
-| 145 | Which sound-word spellings sound right aloud | planned | | | [145-sound-words-aloud-test.md](docs/plan/slices/145-sound-words-aloud-test.md) |
-| 146 | Rewrite every Dino book in spoken, kid-friendly language | planned | | | [146-dino-books-kid-friendly-language.md](docs/plan/slices/146-dino-books-kid-friendly-language.md) |
-| 148 | Phone apps: mid-read stalls, wait counts and wave leftovers | planned | | | [148-phone-wait-followups.md](docs/plan/slices/148-phone-wait-followups.md) |
-| 149 | Never drop a short word: catch silent output from the voices | planned | | | [149-never-drop-a-short-word.md](docs/plan/slices/149-never-drop-a-short-word.md) |
+| 146 | Rewrite every Dino book in spoken, kid-friendly language | in progress | | | [146-dino-books-kid-friendly-language.md](docs/plan/slices/146-dino-books-kid-friendly-language.md) |
+| 150 | Dino: slower reading by default (0.8x), grown-up speed 0.5-1.2x | planned | | | [150-dino-slower-reading-speed.md](docs/plan/slices/150-dino-slower-reading-speed.md) |
+| 151 | Dino: three view modes, no merging of characters | planned | | | [151-dino-three-view-modes.md](docs/plan/slices/151-dino-three-view-modes.md) |
+| 152 | Dino: a character's animal comes from the book, never its voice | planned | | | [152-dino-animal-from-the-book.md](docs/plan/slices/152-dino-animal-from-the-book.md) |
+| 153 | Dino: no robotic-sounding character voices | planned | | | [153-dino-no-robotic-voices.md](docs/plan/slices/153-dino-no-robotic-voices.md) |
+| 154 | Dino: vowel marks in Farsi and Arabic books | planned | | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
 
 Batch 25 (119-123; 119, 120, 122, 123 built, 121 in progress: Billy Goats done, nine books left; planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
 
@@ -35,9 +34,9 @@ Batch 27 (127-131, planned 2026-10-25, after Dino work kept resubmitting Read Th
 
 Batch 28 (132-134, planned 2026-10-25, which books families like and how parents use the app): 132 (the remote config the counts are switched by, and the forced update) and 133 (first events, privacy texts and store forms) and 134 (the rest of the events and the report, PR #368) are built, so the batch is done. All three edit `worker/` and Dino's `MauiProgram`, so one at a time. Decisions 138-142.
 
-Batch 29 (137-142, planned 2026-10-26, RTST usage counts, waiting and early start): which languages people use, whether they translate or change the voice, and how long translation and the first sound take (a user reported a "hang" on Translate). Phone first, one at a time (all three edit ReaderPage/ReviewPage): 137, 138 (built), 139 (in progress); then Windows 140 (built), 141 (in progress), 142. 137 reuses Dino's Batch 28 pipe and edits `worker/` and Dino's `UsageCounter`/`AppConfigClient`. Decisions 143-148.
+Batch 30 (143-146 and 148, planned 2026-10-26, Dino loading, Farsi voice and kid-friendly language): 143 builds the shared wait overlay (RTST 138 reuses it), 144 is small and independent, 145 measures sound-word spellings before 146 rewrites every book (one PR per book: Farsi, then English, then the rest). 143, 144, 145 and 148 (the stall and wait-count follow-ups, PR #416) are built; 146 is in progress: Farsi wave A (8 books) is merged, 6 more Farsi books wait for the other tab's PRs, and English and the other languages are to come. Decisions 149-153.
 
-Batch 30 (143-146, planned 2026-10-26, Dino loading, Farsi voice and kid-friendly language): 143 builds the shared wait overlay (RTST 138 reuses it; whichever goes first builds it, so they run one after the other), 144 is small and independent, 145 measures sound-word spellings before 146 rewrites every book (one PR per book: Farsi, then English, then the rest). 143 and 144 are built. 143's Deferred items (mid-read stall wait, `wait_shown` event, extractor-level PDF cancel) await a follow-up slice. Decisions 149-153.
+Batch 31 (150-154, planned 2026-10-26, from a tester review of Dino Reader): 150 (speed) and 151 (view modes, no merge) go first and can run together (150 edits settings, 151 the reading page and cast page). 152 follows 151 (both edit `CastPage`/`CastRows`/`StoryVoicing`). 153 starts with a listening page and waits on the user's flags. 154 starts with a listening test, then adds vowel marks book by book after each book's Slice 146 rewrite and open illustration PR merge. Decisions 155-159 (157 reverses 132).
 
 ### Notes
 
@@ -71,6 +70,13 @@ Built but not verified (details in each slice file):
 - Slice 140: queue file under `LocalFolder/usage` not exercised (needs `telemetry.enabled` on); Microsoft Store data-collection answers; rows in `rtst_usage` once Analytics Engine is on ([slice](docs/plan/slices/140-rtst-windows-usage-counts.md)).
 - Slice 143: not exercised on emulator: photos, scan, own-book translate; native read of the new strings (14 locales, Claude drafts); Windows head overlay; reduce-motion static dino ([slice](docs/plan/slices/143-shared-wait-overlay-dino-loading.md)).
 - Slice 144: listen to every moved Farsi character and the five new flavours (distinct enough?); Farsi read with `mana` narrating on emulator/phone; RTST Farsi default on phone and Windows ([slice](docs/plan/slices/144-farsi-default-female-voice.md)).
+- Slice 141: the panel ring (Play becomes the ring with Cancel) re-check on the desktop; native-speaker read of the 5 `Wait_` strings in 14 locales; one unconfirmed `CoreMessagingXP` `0xc000027b` crash on a hotkey read 0.7 s after an auto-read ([slice](docs/plan/slices/141-rtst-windows-wait-indicator.md)).
+- Slice 145: a human listen of the `sound-words-listen` set (Farsi and Chinese especially; Farsi whoosh and cat picks provisional); German, French and Portuguese untested ([slice](docs/plan/slices/145-sound-words-aloud-test.md)).
+- Slice 149: emulator Farsi read passed by logs only, not heard; iOS compile of `IosSupertonicSpeechReader.Synthesis.cs` and `SiblingRescue`; a listen to joined `mana` phrases (150/90 ms joins) ([slice](docs/plan/slices/149-never-drop-a-short-word.md)).
+- Slice 139: emulator 2026-10-26 (swapping AVD): early work finished gives first audio in 396-749 ms with a cache hit on sentence 1, but in-flight races (a Read tapped ~0.3 s after unticking Translate, or Translate-and-read before the early voice is stored) still read cold; re-test on a real phone and follow up in the read path (`OnReadTapped`/`EarlyStartCoordinator` settle after a restart). Known limits: no early work before language detection + 0.4 s idle; unpunctuated text misses the sentence cache; iOS ([slice](docs/plan/slices/139-rtst-phone-early-start.md)).
+- Slice 142: packaged desktop run done 2026-10-26 on a CPU-saturated host; re-check first-audio timing on a quiet machine; prompt tray exit not verified ([slice](docs/plan/slices/142-rtst-windows-early-start.md)).
+- Slice 148: emulator PASS 2026-10-26 (timings not representative). Not done: Windows stall overlay on a packaged run; native read of `Wait_Stalled` and `Review_TextCut`; re-run the 300k-character repeated-text read on a 2 GB AVD to confirm the 8-chunk `GenerationWindow`; iOS and Windows neural readers not checked ([slice](docs/plan/slices/148-phone-wait-followups.md)).
+- Slice 146 (in progress): upload the six rewritten store books (`tools/upload-store-story.ps1`; user OK needed) ([slice](docs/plan/slices/146-dino-books-kid-friendly-language.md)).
 - Slice 96: emulator in Farsi and Arabic (gallery, gate, wizard, store, backup, reader, swipe direction, highlight on RTL lines); Windows head gallery and reader ([slice](docs/plan/slices/96-dino-layout-never-mirrors.md)).
 - Slice 97: Windows head: the AddBook icon rendering and the gate opening; native-speaker read of the `Gallery_AddBook` strings ([slice](docs/plan/slices/97-dino-add-book-button.md)).
 - Slice 99: the RTST phone highlight covers a whole 3-sentence `SpeechTextChunker` chunk, not one sentence; full TalkBack walk-through; iOS device run; Settings voice name does not refresh after a pack installs ([slice](docs/plan/slices/99-rtst-mobile-minimal-main-page.md)).
@@ -115,6 +121,7 @@ Built but not verified (details in each slice file):
 
 ## Out of Scope
 
+- **(Batch 31)** Animals and sounds for parent-provided books (photos, PDFs, typed: unchanged); robotic-voice checks beyond English unless English shows flavours are the cause; reading speeds above 1.2x in Dino; vowel marks for languages other than Farsi and Arabic.
 - **(Batch 28)** Any install, device or advertising id; per-family profiles or parental-consent flows; third-party analytics SDKs; analytics in RTST; remote config for RTST.
 - **(Batch 27)** Splitting into two repos or publishing the shared code as NuGet packages; renaming the shared projects or their namespaces beyond Mobile.Shared; a commit flag that skips one product's release.
 

@@ -33,6 +33,84 @@ public class ReadAloudServiceGeneratingTests
     }
 
     [Fact]
+    public async Task CancelRead_stops_a_read_still_waiting_for_its_first_audio()
+    {
+        var harness = new Harness();
+        var gate = new TaskCompletionSource();
+        harness.Speak = (_, _) => gate.Task;
+
+        Task read = harness.Service.ReadFileAsync("a.txt");
+        await Task.Delay(30, TestContext.Current.CancellationToken);
+        Assert.True(harness.Service.IsGeneratingAudio);
+
+        harness.Service.CancelRead();
+
+        Assert.False(harness.Service.IsGeneratingAudio);
+        Assert.Equal(ActivityState.Interrupted, Assert.Single(harness.Log.Entries).State);
+        gate.SetResult();
+        await read;
+    }
+
+    [Fact]
+    public async Task A_read_replaced_during_its_start_does_not_stop_the_newer_read()
+    {
+        var harness = new Harness();
+        var gate = new TaskCompletionSource();
+        int stopsAfterReplace = -1;
+        Task? second = null;
+        int calls = 0;
+        harness.Speak = (_, _) =>
+        {
+            if (++calls == 1)
+            {
+                second = harness.Service.ReadFileAsync("b.txt"); // the newer read takes over while the first is starting
+                stopsAfterReplace = harness.Reader.Stops;
+            }
+
+            return gate.Task;
+        };
+
+        Task first = harness.Service.ReadFileAsync("a.txt");
+        await Task.Delay(50, TestContext.Current.CancellationToken);
+
+        Assert.True(stopsAfterReplace >= 0);
+        Assert.Equal(stopsAfterReplace, harness.Reader.Stops);
+        gate.SetResult();
+        await first;
+        await second!;
+    }
+
+    [Fact]
+    public async Task A_cancelled_read_stops_the_reader_once_it_starts_speaking()
+    {
+        var harness = new Harness();
+        var gate = new TaskCompletionSource();
+        harness.Speak = (_, _) =>
+        {
+            harness.Service.CancelRead();
+            return gate.Task;
+        };
+
+        Task read = harness.Service.ReadFileAsync("a.txt");
+        await Task.Delay(50, TestContext.Current.CancellationToken);
+
+        Assert.True(harness.Reader.Stops >= 2);
+        gate.SetResult();
+        await read;
+    }
+
+    [Fact]
+    public void CancelRead_with_nothing_active_does_nothing()
+    {
+        var harness = new Harness();
+
+        harness.Service.CancelRead();
+
+        Assert.False(harness.Service.IsGeneratingAudio);
+        Assert.Empty(harness.Log.Entries);
+    }
+
+    [Fact]
     public async Task Reader_that_returns_early_then_plays_within_the_grace_is_not_failed()
     {
         var harness = new Harness();
@@ -386,6 +464,76 @@ public class ReadAloudServiceGeneratingTests
         harness.Monitor.RaiseChanged("Some selected text.");
 
         await spoken.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task A_read_of_the_text_auto_read_prepared_reuses_the_early_translation()
+    {
+        var translator = new FakeTranslator("bonjour");
+        var harness = new Harness(settings => new ReadTranslator(translator, new FakeDetector("fr"), settings, new SilentLog()));
+        harness.Settings.Language = "en";
+        harness.Settings.TranslateEnabled = true;
+        harness.Service.FirstAudioGrace = TimeSpan.FromMilliseconds(20);
+        harness.Reader.Streaming = true;
+        harness.DocumentText = LongText;
+        harness.Service.LoneSelectSettleMs = 30_000; // the auto-read itself must not start; only its early work
+
+        harness.Monitor.RaiseChanged(LongText);
+        await WaitForAsync(() => translator.Calls >= 1 && harness.HeadStart.Prepared.Count >= 1);
+        await harness.Service.ReadFileAsync("a.txt");
+
+        // The early call translated the first block; the read translated only the rest (two calls in all, not three).
+        Assert.Equal(2, translator.Calls);
+        harness.Service.Dispose();
+    }
+
+    [Fact]
+    public async Task With_translate_on_the_early_original_voicing_prepares_only_the_head()
+    {
+        var translator = new FakeTranslator("bonjour");
+        var harness = new Harness(settings => new ReadTranslator(translator, new FakeDetector("fr"), settings, new SilentLog()));
+        harness.Settings.Language = "en";
+        harness.Settings.TranslateEnabled = true;
+        harness.Service.LoneSelectSettleMs = 30_000;
+
+        harness.Monitor.RaiseChanged(LongText);
+        await WaitForAsync(() => translator.Calls >= 1);
+
+        Assert.NotEmpty(harness.HeadStart.Prepared);
+        Assert.Equal(EarlyStartPlan.OriginalHead(LongText), harness.HeadStart.Prepared[0]);
+        Assert.True(LongText.Length > harness.HeadStart.Prepared[0].Length);
+        harness.Service.Dispose();
+    }
+
+    [Fact]
+    public async Task A_read_of_other_text_drops_the_early_translation()
+    {
+        var translator = new FakeTranslator("bonjour");
+        var harness = new Harness(settings => new ReadTranslator(translator, new FakeDetector("fr"), settings, new SilentLog()));
+        harness.Settings.Language = "en";
+        harness.Settings.TranslateEnabled = true;
+        harness.Service.FirstAudioGrace = TimeSpan.FromMilliseconds(20);
+        harness.Reader.Streaming = true;
+        harness.DocumentText = LongText;
+        harness.Service.LoneSelectSettleMs = 30_000; // the auto-read itself must not start; only its early work
+
+        harness.Monitor.RaiseChanged("Another text. It has two sentences. And three. And four.");
+        await WaitForAsync(() => translator.Calls >= 1);
+        await harness.Service.ReadFileAsync("a.txt");
+
+        Assert.Equal(3, translator.Calls); // the early one, then the read's two blocks
+        harness.Service.Dispose();
+    }
+
+    private static async Task WaitForAsync(Func<bool> condition)
+    {
+        DateTime end = DateTime.UtcNow.AddSeconds(5);
+        while (!condition() && DateTime.UtcNow < end)
+        {
+            await Task.Delay(10, TestContext.Current.CancellationToken);
+        }
+
+        Assert.True(condition());
     }
 
     private const string LongText = "One is first. Two is second. Three is third. Four is fourth. Five is fifth.";
@@ -787,7 +935,8 @@ public class ReadAloudServiceGeneratingTests
         public Task WarmUpAsync() => Task.CompletedTask;
         public void Pause() { }
         public void Resume() { }
-        public void Stop() { }
+        public void Stop() => Stops++;
+        public int Stops { get; private set; }
         public void SetSpeed(PlaybackRate speed) { }
         public void SetVoice(string voiceId) { }
         public Task SkipForward() => Task.CompletedTask;

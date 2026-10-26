@@ -82,7 +82,8 @@ public sealed partial class ReadAloudService
     {
         try
         {
-            return await _translation!.PlanStreamAsync(text, entry.Id, token);
+            EarlyTranslation? early = await TakeEarlyTranslationAsync(text, token);
+            return await _translation!.PlanStreamAsync(text, entry.Id, token, early);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -107,7 +108,9 @@ public sealed partial class ReadAloudService
 
         CountReadStarted(entry, originalLength, terminal.Source, false, null);
         ReadTextChanged?.Invoke(this, new ReadText(terminal.Text, false));
-        await _reader.SpeakAsync(terminal.Text, entry.Id);
+        Task speak = _reader.SpeakAsync(terminal.Text, entry.Id);
+        StopIfSuperseded(entry);
+        await speak;
         await FailIfNeverPlayedAsync(entry);
     }
 
@@ -130,6 +133,7 @@ public sealed partial class ReadAloudService
         ReadTextChanged?.Invoke(this, firstRead);
 
         Task speak = _reader.SpeakStreamAsync(first, entry.Id);
+        StopIfSuperseded(entry);
         Task pump = PumpBlocksAsync(entry, stream, blocks, spoken, pumpCts.Token);
         try
         {

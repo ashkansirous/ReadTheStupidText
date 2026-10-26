@@ -283,6 +283,24 @@
   <data name="Translate_AutoDetect" xml:space="preserve">
     <value>自动检测</value>
   </data>
+  <data name="Wait_DownloadingPercent" xml:space="preserve">
+    <value>正在下载{0}… {1}%</value>
+  </data>
+  <data name="Wait_Translating" xml:space="preserve">
+    <value>正在翻译…</value>
+  </data>
+  <data name="Wait_PreparingVoice" xml:space="preserve">
+    <value>正在准备语音…</value>
+  </data>
+  <data name="Wait_Stalled" xml:space="preserve">
+    <value>仍在准备语音…</value>
+  </data>
+  <data name="Wait_Pair" xml:space="preserve">
+    <value>{0}到{1}</value>
+  </data>
+  <data name="Wait_Cancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
   <data name="Translate_Note_Default" xml:space="preserve">
     <value>在此设备上进行机器翻译，质量可能有所不同。</value>
   </data>

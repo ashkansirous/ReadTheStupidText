@@ -3,6 +3,9 @@ using ReadTheStupidText.Application.Logging;
 
 namespace ReadTheStupidText.Application.Reading;
 
+/// <summary>A synthesized clip; <paramref name="Store"/> false keeps it out of the cache (Slice 149: a give-up take).</summary>
+internal sealed record SentenceClip(byte[] Wav, bool Store = true);
+
 /// <summary>
 /// Hands out the audio for one sentence: from the <see cref="SentenceAudioCache"/> when it
 /// has it, otherwise from the engine (Slice 47, Decision 66). Two callers asking for the same
@@ -28,8 +31,17 @@ internal sealed class SentenceAudioSource
     /// of <see cref="WavFile"/>. Throws <see cref="OperationCanceledException"/> when
     /// <paramref name="token"/> is cancelled.
     /// </summary>
-    public async Task<byte[]> GetAsync(
+    public Task<byte[]> GetAsync(
         SentenceCacheKey key, Func<CancellationToken, Task<byte[]>> synthesize, CancellationToken token,
+        int? activityId = null) =>
+        GetClipAsync(key, async t => new SentenceClip(await synthesize(t)), token, activityId);
+
+    /// <summary>
+    /// As <see cref="GetAsync"/>, for a synthesis that can mark its clip "do not store" (a take the silent-output
+    /// guard gave up on): the caller still gets the clip, but the next request tries again.
+    /// </summary>
+    public async Task<byte[]> GetClipAsync(
+        SentenceCacheKey key, Func<CancellationToken, Task<SentenceClip>> synthesize, CancellationToken token,
         int? activityId = null)
     {
         token.ThrowIfCancellationRequested();
@@ -84,7 +96,7 @@ internal sealed class SentenceAudioSource
     // this caller starts a fresh one, so one caller's cancel never fails another's read. The
     // retry is bounded by the caller's own token.
     private async Task<byte[]> SynthesizeSharedAsync(
-        SentenceCacheKey key, Func<CancellationToken, Task<byte[]>> synthesize, CancellationToken token,
+        SentenceCacheKey key, Func<CancellationToken, Task<SentenceClip>> synthesize, CancellationToken token,
         int? activityId)
     {
         while (true)
@@ -112,7 +124,7 @@ internal sealed class SentenceAudioSource
     // still waiting (or none): the clip is content-addressed, so it can never be stale, and a
     // native synthesis that ran to the end is not wasted because its starter was cancelled.
     private Task<byte[]> StartShared(
-        SentenceCacheKey key, Func<CancellationToken, Task<byte[]>> synthesize, CancellationToken token,
+        SentenceCacheKey key, Func<CancellationToken, Task<SentenceClip>> synthesize, CancellationToken token,
         int? activityId)
     {
         Task<byte[]> task = SynthesizeAndStoreAsync(key, synthesize, token, activityId);
@@ -121,7 +133,7 @@ internal sealed class SentenceAudioSource
     }
 
     private async Task<byte[]> SynthesizeAndStoreAsync(
-        SentenceCacheKey key, Func<CancellationToken, Task<byte[]>> synthesize, CancellationToken token,
+        SentenceCacheKey key, Func<CancellationToken, Task<SentenceClip>> synthesize, CancellationToken token,
         int? activityId)
     {
         // Re-checked here: a clip stored between the caller's cache miss and this task starting
@@ -131,9 +143,13 @@ internal sealed class SentenceAudioSource
             return cached;
         }
 
-        byte[] wav = await synthesize(token);
-        await TryStoreAsync(key, wav, activityId);
-        return wav;
+        SentenceClip clip = await synthesize(token);
+        if (clip.Store)
+        {
+            await TryStoreAsync(key, clip.Wav, activityId);
+        }
+
+        return clip.Wav;
     }
 
     // The finished synthesis leaves the in-flight map, and a fault nobody was left waiting on

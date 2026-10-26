@@ -16,6 +16,28 @@ public class TranslationStreamingTests
         Assert.Equal("Three. Four.", blocks[1]);
     }
 
+    [Theory]
+    [InlineData("One. Two. Three. Four. Five.")]
+    [InlineData("Un.\n\nDeux. Trois.")]
+    [InlineData("Premiere phrase. Seconde phrase. Troisieme phrase. Quatrieme sans fin")]
+    public void With_early_work_the_first_block_is_the_early_span(string text)
+    {
+        EarlySplit split = EarlyStartPlan.TranslationSpan(text);
+        var early = new EarlyTranslation(text, "fr", "en", split, "translated");
+
+        IReadOnlyList<string> blocks = TranslationBlocks.Plan(text, early);
+
+        Assert.Equal(split.Head, blocks[0]);
+    }
+
+    [Fact]
+    public void Early_work_for_other_text_does_not_change_the_plan()
+    {
+        var early = new EarlyTranslation("Other text. Here.", "fr", "en", EarlyStartPlan.TranslationSpan("Other text. Here."), "x");
+
+        Assert.Equal(TranslationBlocks.Plan("One. Two. Three. Four."), TranslationBlocks.Plan("One. Two. Three. Four.", early));
+    }
+
     [Fact]
     public void A_long_first_sentence_stands_alone()
     {
