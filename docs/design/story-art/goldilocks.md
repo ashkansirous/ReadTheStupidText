@@ -1,7 +1,7 @@
 # Goldilocks and the Three Bears: art record
 
 Store story (`StoreTexts.Goldilocks`, stem `goldilocks`, version 4). Retold as 14 pages with one action each
-(`dino-storytelling` skill, Slice 121). **Art status (2026-10-26): text only, no pictures yet.** The cover and all
+(`dino-storytelling` skill, Slice 121). **Art status (2026-10-26): pictures accepted, full review PASS (2026-10-26); shipped in `Store/goldilocks/`.** The cover and all
 14 pages are new; the old 9-page text had no pictures, so nothing is kept. Text review: the first pass failed pages 3,
 4, 11 and 14 (`reviews/goldilocks-text.md`); all four are rewritten as asked.
 
@@ -192,11 +192,9 @@ Notes for the illustrator:
 
 ## Check results
 
-No page pictures yet.
-
 | Page | Attempts | Size | Why earlier attempts failed |
 | --- | --- | --- | --- |
-| Line-up | 2 (1st: Gemini error, Redo drew it) | 1792x2400 | accepted; Mama Bear has a blue flower behind each ear (two), not one |
+| Line-up | 2 (1st: Gemini error, Redo drew it) | 896x1200 (not shipped) | accepted; Mama Bear has a blue flower behind each ear (two), not one |
 
 ## Illustrator run 2026-10-26 (stopped: Gemini tab hung)
 
@@ -210,31 +208,29 @@ No page pictures yet.
 - Model 3.5 Flash-Lite, Images tool, 3:4 confirmed by zoom, line-up pasted (chat "Porridge with the Bears", my own).
 - Cover attempt 1: rejected, five people (Mum from the line-up drawn in). Attempt 2 ("Mum must NOT be in this picture"): looks right (Goldilocks + 3 bears, props correct) but faces small and Papa Bear turned away; not checked at full size because it could not be saved.
 - Saving failed: "Download full size image" gave the toast "Couldn't download image." three times (JS click and real click by ref; no file reached Downloads). Reloading the chat then redirected to `google.com/sorry` (Google's automated-traffic check; other illustrators' tabs hit it too). A CAPTCHA is not to be solved by the agent.
-- Nothing accepted. Resume: the user clears the check in Chrome, then redraw the cover in a fresh chat (line-up pasted, "Mum is not in this picture"), and pages 1-14. Pages 3-5 still to try with the refusal tips. No pictures prepared; `Store/goldilocks/` untouched.
+- Nothing accepted in this run (superseded by the third run below, which finished the book).
 
 ## Illustrator run 2026-10-26 (third, complete)
 
-- Model 3.5 Flash-Lite, Images tool, 3:4 confirmed by zoom in every chat. Cover and pages 1-14 accepted; every picture saved at 1792x2400 through the download route; prepared into `Store/goldilocks/` (cover, cover-thumb, pictures 1-14). Usage meter not read at the end (shared with the other illustrators).
+- Model 3.5 Flash-Lite, Images tool, 3:4 confirmed by zoom in every chat. Cover and pages 1-14 accepted; every picture saved through the download route and prepared into `Store/goldilocks/` (cover, cover-thumb, pictures 1-14) at 896x1200. Usage meter not read at the end (shared with the other illustrators).
 - Chats that repeated an earlier scene (page 6's four-bear window, page 12's attic) were redone in a fresh chat.
 
 | Page | Attempts | Size | Why earlier attempts failed |
 | --- | --- | --- | --- |
-| Cover | 1 | 1792x2400 | accepted; toy teddies on a shelf are decor; Mum absent |
-| 1, 2, 4, 7, 9, 10, 11, 13, 14 | 1 each | 1792x2400 | accepted (page 13 shows five bowls for four people) |
-| 3 | 3 | 1792x2400 | 1st chat: refused twice, then drawn with the word "hello!" and a white border; same picture without the word still framed with a different cottage; 3rd (fresh chat, cottage described like page 1): accepted |
-| 5 | 1 | 1792x2400 | accepted; the little chair is an upturned stool with a snapped leg beside it |
-| 6 | 3 | 1792x2400 | two tries drew four bears in the window; fresh chat with Baby Bear holding Mama's paw: three bears. Window is two open casements |
-| 8 | 2 | 1792x2400 | first chat answered with text only twice; fresh chat drew it |
-| 12 | 3 | 1792x2400 | attic ceiling and bedpost, Mama's flowers missing; then flowers fixed but still the attic; fresh chat: downstairs room |
+| Cover | 1 | 896x1200 shipped | accepted; toy teddies on a shelf are decor; Mum absent |
+| 1, 2, 4, 7, 9, 10, 11, 13, 14 | 1 each | 896x1200 shipped | accepted (page 13 was later redrawn to exactly four bowls) |
+| 3 | 3 | 896x1200 shipped | 1st chat: refused twice, then drawn with the word "hello!" and a white border; same picture without the word still framed with a different cottage; 3rd (fresh chat, cottage described like page 1): accepted |
+| 5 | 1 | 896x1200 shipped | accepted; the little chair is an upturned stool with a snapped leg beside it |
+| 6 | 3 | 896x1200 shipped | two tries drew four bears in the window; fresh chat with Baby Bear holding Mama's paw: three bears. Window is two open casements |
+| 8 | 2 | 896x1200 shipped | first chat answered with text only twice; fresh chat drew it |
+| 12 | 3 | 896x1200 shipped | attic ceiling and bedpost, Mama's flowers missing; then flowers fixed but still the attic; fresh chat: downstairs room |
 
 Two saves picked up another illustrator's finished picture from `Downloads` (a pirate book) because its download landed in the same two-minute window; both were put back into `Downloads` as `Gemini_Generated_Image_returned*_from_goldilocks.jpg`. After that each save waited 15 s for its own file. Every saved picture was looked at before acceptance.
 
 ## Redraw after the full review (2026-10-26, same day)
 
-The full review failed cover, 5, 7, 10 and 13 (`reviews/goldilocks-full.md`). All five were redrawn, each in a fresh chat with the line-up pasted (an edit in the old chat only repeated the old picture for 10 and 13): cover (page 13's honey-plank room, four wooden bowls, no shelf, armchair or toys), 5 (small spindle-back chair upturned, its leg on the rug), 7 (all three bears standing, wooden bowls, Baby Bear holds up his empty one), 10 (Mama Bear's whole apron white with red dots; Gemini refused it twice, a retry drew it; the scene is a hard strip, with a thin white line above the plain floor at 71%), 13 (exactly four wooden bowls). Page 5 came out at 896x1200, the rest at 1792x2400. Saves now use `-Bytes`.
+The full review failed cover, 5, 7, 10 and 13 (`reviews/goldilocks-full.md`). All five were redrawn, each in a fresh chat with the line-up pasted (an edit in the old chat only repeated the old picture for 10 and 13): cover (page 13's honey-plank room, four wooden bowls, no shelf, armchair or toys), 5 (small spindle-back chair upturned, its leg on the rug), 7 (all three bears standing, wooden bowls, Baby Bear holds up his empty one), 10 (Mama Bear's whole apron white with red dots; Gemini refused it twice, a retry drew it; the scene is a hard strip, with a thin white line above the plain floor at 71%), 13 (exactly four wooden bowls). Pictures were saved at 1792x2400 (page 5 at 896x1200) and shipped at 896x1200. Saves now use `-Bytes`.
 
-Page 5 is 896x1200 (3:4); every other picture in this book is 1792x2400.
+Shipped sizes: every picture in `Store/goldilocks/` is 896x1200 (cover-thumb 288x384).
 
-Page 10, third redraw (2026-10-26, stopped): the review failed the apron version for four beds and a hard white line at 71%. Two fresh chats with the line-up and the page 9 picture pasted both drew the girl twice (the sleeping girl from page 9 stayed in the little bed and a second one knelt on the middle bed); a line-up-only attempt could not be sent: Gemini returned "Something went wrong (1095)" on every send (three tries, 2 minutes apart), after the browser tab group was recreated twice. Not retried further. Resume: a fresh chat with the line-up pasted only (not page 9), the shorter three-bed prompt (exactly three beds, one girl in the little bed, the floor running to the bottom edge, Mama Bear's white apron with red dots), then save with `-Bytes`. `Store/goldilocks/pictures/10.jpg` is still the apron version with four beds.
-
-Page 10, fourth redraw (2026-10-26): accepted. Fresh chat, line-up pasted only, short three-bed prompt inserted and sent with JS: exactly three beds, one girl sitting up in the little patchwork bed with a sorry face, Mama Bear's white apron with red dots, surprised bears, the floor runs to the bottom edge with no line. 1792x2400. This replaces the "stopped" note above; `pictures/10.jpg` is now this picture.
+Page 10, fourth redraw (2026-10-26): accepted. Fresh chat, line-up pasted only, short three-bed prompt inserted and sent with JS: exactly three beds, one girl sitting up in the little patchwork bed with a sorry face, Mama Bear's white apron with red dots, surprised bears, the floor runs to the bottom edge with no line. `pictures/10.jpg` is now this picture.
