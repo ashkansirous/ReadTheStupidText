@@ -10,13 +10,13 @@ Built as a WinUI 3 packaged (MSIX) app for distribution through the Microsoft St
 ## Download
 
 [![Get it from the Microsoft Store](https://img.shields.io/badge/Microsoft%20Store-Read%20The%20Stupid%20Text-0078D4?logo=microsoft-store&logoColor=white)](https://apps.microsoft.com/detail/9NGT1BN1H92V)
-[![Latest release](https://img.shields.io/github/v/release/ashkansirous/ReadTheStupidText?sort=semver&label=latest%20release)](https://github.com/ashkansirous/ReadTheStupidText/releases/latest)
+[![Latest release](https://img.shields.io/github/v/release/ashkansirous/ReadTheStupidText?filter=rtst-v*&sort=semver&label=latest%20release)](https://github.com/ashkansirous/ReadTheStupidText/releases/latest)
 
 **[Microsoft Store →](https://apps.microsoft.com/detail/9NGT1BN1H92V)** is the recommended install (the Store signs and updates it for you). The GitHub release MSIX below is for testing/sideload.
 
-Grab the MSIX from the **[latest release](https://github.com/ashkansirous/ReadTheStupidText/releases/latest)** — `…-x64.msix` for most PCs, `…-ARM64.msix` for Arm devices. Each release is produced by CI from a `v*` tag.
+Grab the MSIX from the **[latest release](https://github.com/ashkansirous/ReadTheStupidText/releases/latest)** — `…-x64.msix` for most PCs, `…-ARM64.msix` for Arm devices. Each release is produced by CI and tagged `rtst-v<x.y.z>` (Dino Reader's are `dino-v<x.y.z>`).
 
-> These packages are **unsigned** (the Microsoft Store signs on publish), so the **[Store install](https://apps.microsoft.com/detail/9NGT1BN1H92V)** is the recommended path. To sideload a release `.msix` instead, a trusted certificate is required — see [`STORE.md`](STORE.md). Every merge to `main` that changes app code cuts a new `v*` release automatically.
+> These packages are **unsigned** (the Microsoft Store signs on publish), so the **[Store install](https://apps.microsoft.com/detail/9NGT1BN1H92V)** is the recommended path. To sideload a release `.msix` instead, a trusted certificate is required — see [`STORE.md`](STORE.md). Every merge to `main` that changes app code cuts a new `rtst-v*` release automatically.
 
 **Android direct download:** the latest APK is at <https://readthestupidtext.sirous.uk/download> (sideloading must be allowed). Windows is Store-only.
 

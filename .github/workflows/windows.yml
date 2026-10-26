@@ -150,7 +150,7 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: v${{ inputs.version || needs.version.outputs.version }}
+          TAG: rtst-v${{ inputs.version || needs.version.outputs.version }}
         run: |
           set -euo pipefail
           mapfile -t msix < <(find AppPackages -name 'ReadTheStupidText.App_*.msix')

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-import { GROUPS, IGNORED_PATTERNS, bumpKind, matchesPattern, newestAppTag, shipTargets } from './ship-targets.mjs';
+import { GROUPS, IGNORED_PATTERNS, PRODUCTS, bumpKind, matchesPattern, newestAppTag, parseCommits, productBump, shipTargets, shipTargetsPerProduct } from './ship-targets.mjs';
 
 const M = 'src/ReadTheStupidText.Mobile';
 const S = 'src/ReadTheStupidText.Mobile.Shared';
@@ -36,6 +36,7 @@ const CASES = [
     ['global.json', ['global.json'], ALL3],
     ['Directory.Build.props', ['Directory.Build.props'], ALL3],
     ['GitVersion.yml', ['GitVersion.yml'], ALL3],
+    ['GitVersion.dino.yml', ['GitVersion.dino.yml'], { dinoreader: true, dinoapp: true, dinoios: true, dinowin: true }],
     ['.gitattributes', ['.gitattributes'], ALL3],
     ['release workflow (the pipeline itself)', ['.github/workflows/release.yml'], ALL3],
     ['find-release script', ['.github/scripts/find-release.sh'], ALL3],
@@ -141,16 +142,54 @@ test('matchesPattern: folder, single-segment glob and exact file', () => {
 });
 
 test('newestAppTag sorts numerically and ignores non-app tags', () => {
-    assert.equal(newestAppTag(['v1.0.9', 'v1.0.10', 'v1.0.2', 'packs-3', 'v1.0.11-rc', '']), 'v1.0.10');
-    assert.equal(newestAppTag(['packs-1']), null);
-    assert.equal(newestAppTag(['v2.0.0', 'v10.0.0', 'v9.9.9']), 'v10.0.0');
+    assert.equal(newestAppTag(['v1.0.9', 'v1.0.10', 'v1.0.2', 'packs-3', 'v1.0.11-rc', ''], 'v'), 'v1.0.10');
+    assert.equal(newestAppTag(['packs-1'], 'v'), null);
+    assert.equal(newestAppTag(['v2.0.0', 'v10.0.0', 'v9.9.9'], 'v'), 'v10.0.0');
 });
 
 test('bumpKind: higher major is major, same major is other, no tag is major', () => {
-    assert.equal(bumpKind('v1.4.2', '2.0.0'), 'major');
-    assert.equal(bumpKind('v1.4.2', '1.4.3'), 'other');
-    assert.equal(bumpKind('v1.4.2', '1.5.0'), 'other');
-    assert.equal(bumpKind(null, '1.0.0'), 'major');
+    assert.equal(bumpKind('rtst-v1.4.2', '2.0.0', PRODUCTS.rtst.prefix), 'major');
+    assert.equal(bumpKind('rtst-v1.4.2', '1.4.3', PRODUCTS.rtst.prefix), 'other');
+    assert.equal(bumpKind('rtst-v1.4.2', '1.5.0', PRODUCTS.rtst.prefix), 'other');
+    assert.equal(bumpKind(null, '1.0.0', PRODUCTS.rtst.prefix), 'major');
+});
+
+test('newestAppTag and bumpKind only see their own product prefix (Slice 130)', () => {
+    const tags = ['v1.52.0', 'rtst-v1.53.0', 'dino-v1.70.1', 'rtst-v1.9.0', 'dino-v1.9.0', 'packs-7'];
+    assert.equal(newestAppTag(tags, PRODUCTS.rtst.prefix), 'rtst-v1.53.0');
+    assert.equal(newestAppTag(tags, PRODUCTS.dino.prefix), 'dino-v1.70.1');
+    assert.equal(newestAppTag(['v1.52.0', 'dino-v1.1.0'], PRODUCTS.rtst.prefix), null);
+    assert.equal(bumpKind('dino-v1.70.1', '2.0.0', PRODUCTS.dino.prefix), 'major');
+    assert.equal(bumpKind('v1.70.1', '1.70.2', PRODUCTS.dino.prefix), 'major', 'a legacy tag is not a dino base');
+});
+
+const NO_RTST = { windows: false, windowsstore: false, android: false, ios: false };
+const NO_DINO = { dinoreader: false, dinoapp: false, dinoios: false, dinowin: false };
+const plan = (rtstFiles, dinoFiles) => ({ rtst: { changedFiles: rtstFiles, bump: 'other' }, dino: { changedFiles: dinoFiles, bump: 'other' } });
+
+test('per product: each product reads only the changes since its own tag', () => {
+    const dinoOnly = ['src/DinoReader.App/App.xaml'];
+    const rtstOnly = ['src/ReadTheStupidText.App/App.xaml.cs'];
+    // RTST was tagged after the Dino change, Dino after the RTST one: each sees only its own.
+    assert.deepEqual(shipTargetsPerProduct({ plans: plan([], dinoOnly) }), { ...NO_RTST, ...NO_DINO, dinoapp: true, dinoios: true, dinowin: true });
+    assert.deepEqual(shipTargetsPerProduct({ plans: plan(rtstOnly, []) }), { ...NO_RTST, ...NO_DINO, windows: true, windowsstore: true });
+});
+
+test('per product: a core change cuts both, a Dino-only change leaves RTST untouched', () => {
+    const core = ['src/ReadTheStupidText.Application/X.cs'];
+    const both = shipTargetsPerProduct({ plans: plan(core, core) });
+    assert.deepEqual([both.windows, both.android, both.ios, both.dinoapp, both.dinoios, both.dinowin], [true, true, true, true, true, true]);
+    const dino = shipTargetsPerProduct({ plans: plan([], ['src/DinoReader.Core/Parser.cs']) });
+    assert.deepEqual([dino.windows, dino.android, dino.ios, dino.windowsstore], [false, false, false, false]);
+});
+
+test('per product: a major bump or force_all builds that product (or both) only', () => {
+    const plans = plan([], []);
+    plans.dino.bump = 'major';
+    const majorDino = shipTargetsPerProduct({ plans });
+    assert.deepEqual([majorDino.windows, majorDino.dinoapp, majorDino.dinoreader], [false, true, true]);
+    assert.equal(shipTargetsPerProduct({ plans: plan([], []), forceAll: true }).windowsstore, true);
+    assert.equal(Object.keys(shipTargetsPerProduct({ plans: plan([], []) })).length, 8);
 });
 
 // ---- pull_request.paths parity: each workflow mirrors its GROUPS rows ----
@@ -271,4 +310,35 @@ test('the Markdown ignore is case-sensitive, like GitHub paths globs', () => {
 
 test('Markdown mixed with code still builds the code targets', () => {
     assert.deepEqual(targetsOf([`${M}/CLAUDE.md`, `${M}/Platforms/iOS/AppDelegate.cs`]), { ...NONE, ios: true });
+});
+
+// ---- Slice 130: a major-bump token only bumps the product whose paths its commit touches ----
+
+const MAJOR_MESSAGE = ['feat: x', '', '+' + 'semver: major'].join('\n');
+const dinoCommit = { message: MAJOR_MESSAGE, files: ['src/DinoReader.App/App.xaml'] };
+const coreCommit = { message: MAJOR_MESSAGE, files: ['src/ReadTheStupidText.Domain/X.cs'] };
+const bumpOf = (name, version, commits) => productBump({
+    baseTag: `${PRODUCTS[name].prefix}1.0.0`, version, prefix: PRODUCTS[name].prefix, commits, targets: PRODUCTS[name].targets,
+});
+
+test('productBump: a major token on a Dino-only commit bumps Dino but not RTST', () => {
+    assert.equal(bumpOf('dino', '2.0.0', [dinoCommit]), 'major');
+    assert.equal(bumpOf('rtst', '2.0.0', [dinoCommit]), 'other');
+});
+
+test('productBump: a major token on a core commit bumps both products', () => {
+    assert.equal(bumpOf('dino', '2.0.0', [coreCommit]), 'major');
+    assert.equal(bumpOf('rtst', '2.0.0', [coreCommit]), 'major');
+});
+
+test('productBump: no major version move, or no token, is not a major', () => {
+    assert.equal(bumpOf('dino', '1.0.1', [dinoCommit]), 'other');
+    assert.equal(bumpOf('dino', '2.0.0', [{ message: 'fix: y', files: dinoCommit.files }]), 'other');
+    assert.equal(productBump({ baseTag: null, version: '1.0.0', prefix: 'dino-v', commits: [], targets: PRODUCTS.dino.targets }), 'major');
+});
+
+test('parseCommits splits messages from their changed files', () => {
+    const raw = '\u0001fix: a\n\u0002\n\nsrc/a.cs\nsrc/b.cs\n\u0001fix: b\n\u0002\n\nsrc/c.cs\n';
+    const commits = parseCommits(raw);
+    assert.deepEqual(commits.map((c) => c.files), [['src/a.cs', 'src/b.cs'], ['src/c.cs']]);
 });

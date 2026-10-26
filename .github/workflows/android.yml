@@ -172,4 +172,4 @@ jobs:
         if: ${{ env.SIGN_RELEASE == 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "v${VERSION}" dist/* --repo "${{ github.repository }}" --clobber
+        run: gh release upload "rtst-v${VERSION}" dist/* --repo "${{ github.repository }}" --clobber
