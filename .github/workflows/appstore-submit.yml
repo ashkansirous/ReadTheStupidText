@@ -43,4 +43,6 @@ jobs:
           node-version: 22
 
       - name: Submit the newest build for App Store review
-        run: node .github/scripts/ios-review-cadence.mjs appstore $APPS
+        run: |
+          read -ra apps <<< "$APPS"
+          node .github/scripts/ios-review-cadence.mjs appstore "${apps[@]}"
