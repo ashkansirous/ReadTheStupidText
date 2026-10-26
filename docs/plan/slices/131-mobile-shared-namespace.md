@@ -1,6 +1,6 @@
 # Slice 131 — Mobile.Shared gets its own namespace
 
-*Planned 2026-10-25.*
+*In progress (wave 2026-10-26 D), draft PR.*
 
 **Batch:** 27 (product separation, Decisions 133-137)
 **Touches:** `src/ReadTheStupidText.Mobile.Shared/**`, `src/ReadTheStupidText.Mobile/**` (usings), `src/DinoReader.App/**` (usings), `tests/**` (usings), `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md`
