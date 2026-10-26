@@ -30,14 +30,14 @@ public static partial class EarlyStartPlan
     private static partial Regex ParagraphBreak();
 
     /// <summary>The part of the original the head start voices.</summary>
-    public static string OriginalHead(string text) => Cut(text, OriginalSentences, OriginalMaxChars, FallbackChars, wholeFirstSentence: false).Head;
+    public static string OriginalHead(string text) => Cut(text, OriginalSentences, OriginalMaxChars, FallbackChars, wholeFirstSentence: false, alignUnits: true).Head;
 
     /// <summary>The span to translate early, and what is left of the text after it.</summary>
-    public static EarlySplit TranslationSpan(string text) => Cut(text, TranslateSentences, TranslateMaxChars, TranslateMaxChars, wholeFirstSentence: true);
+    public static EarlySplit TranslationSpan(string text) => Cut(text, TranslateSentences, TranslateMaxChars, TranslateMaxChars, wholeFirstSentence: true, alignUnits: false);
 
     /// <summary>The part of an early translation the head start voices.</summary>
     public static string VoicedTranslation(string translatedHead) =>
-        Cut(translatedHead, VoicedTranslationSentences, OriginalMaxChars, FallbackChars, wholeFirstSentence: false).Head;
+        Cut(translatedHead, VoicedTranslationSentences, OriginalMaxChars, FallbackChars, wholeFirstSentence: false, alignUnits: false).Head;
 
     /// <summary>The translation of a text from the translation of its head and of the rest, keeping the break between them.</summary>
     public static string Join(string translatedHead, string translatedRemainder, string gap)
@@ -54,7 +54,7 @@ public static partial class EarlyStartPlan
     // Whole sentences while their count and total length fit, cut where the speech chunker cuts. A first sentence that is too
     // long, or text with no sentence ending at all, is cut at a word boundary for voicing; for translating it is kept whole,
     // because a sentence cut mid-clause translates badly (wholeFirstSentence).
-    private static EarlySplit Cut(string text, int maxSentences, int maxChars, int fallbackChars, bool wholeFirstSentence)
+    private static EarlySplit Cut(string text, int maxSentences, int maxChars, int fallbackChars, bool wholeFirstSentence, bool alignUnits)
     {
         string trimmed = (text ?? string.Empty).TrimStart();
         if (trimmed.Length == 0)
@@ -71,6 +71,10 @@ public static partial class EarlyStartPlan
         {
             end = wholeFirstSentence ? WholeFirst(region, ends) : WordCut(region, fallbackChars);
         }
+        else if (alignUnits)
+        {
+            end = ToUnitBoundary(trimmed, ends, end);
+        }
 
         return Split(trimmed, end);
     }
@@ -82,6 +86,28 @@ public static partial class EarlyStartPlan
         for (int count = 0; count < ends.Count && count < maxSentences && ends[count] <= maxChars; count++)
         {
             end = ends[count];
+        }
+
+        return end;
+    }
+
+    // The sentence cache keys a unit (SentenceUnits): a sentence shorter than a unit joins the next one, or the previous one
+    // when its chunk ends. A head cut after two sentences can end in a short unit that the read's first chunk builds
+    // differently (it has the next sentence after it, or peels its head at the same two), and the first unit then keys
+    // differently: a cache miss on the first sentence at Play. So the head ends where the read's own first chunk closes a
+    // unit at or after the cut: it is then made of the read's exact units.
+    private static int ToUnitBoundary(string trimmed, List<int> ends, int end)
+    {
+        int sentences = ends.IndexOf(end) + 1;
+        IReadOnlyList<SpeechChunkPlan> chunks = SpeechChunkPlanner.ForText(trimmed, SpeechTextChunker.HeadPolicy.Cached);
+        int covered = 0;
+        foreach (int count in SentenceUnits.SentenceCounts(chunks[0].Text))
+        {
+            covered += count;
+            if (covered >= sentences)
+            {
+                return covered <= ends.Count ? ends[covered - 1] : end;
+            }
         }
 
         return end;

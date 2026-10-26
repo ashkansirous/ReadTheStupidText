@@ -8,38 +8,51 @@ namespace ReadTheStupidText.Application.Reading;
 /// </summary>
 internal static class SentenceUnits
 {
-    private const int MinUnitLength = 15;
+    internal const int MinUnitLength = 15;
 
     public static IReadOnlyList<string> Split(string chunk)
     {
-        var units = new List<string>();
-        string pending = string.Empty;
+        List<List<string>> groups = Group(chunk);
+        return groups.Count > 0 ? groups.Select(g => string.Join(' ', g)).ToList() : [chunk.Trim()];
+    }
+
+    /// <summary>How many sentences each unit of <paramref name="chunk"/> holds, in order (the early start ends its head on a unit).</summary>
+    public static IReadOnlyList<int> SentenceCounts(string chunk) => Group(chunk).Select(g => g.Count).ToList();
+
+    private static List<List<string>> Group(string chunk)
+    {
+        var units = new List<List<string>>();
+        var pending = new List<string>();
         foreach (string sentence in SpeechTextChunker.SplitSentences(chunk))
         {
-            pending = pending.Length == 0 ? sentence : $"{pending} {sentence}";
-            if (pending.Length >= MinUnitLength)
+            pending.Add(sentence);
+            if (string.Join(' ', pending).Length >= MinUnitLength)
             {
                 units.Add(pending);
-                pending = string.Empty;
+                pending = [];
             }
         }
 
-        return AppendRemainder(units, pending, chunk);
+        AppendRemainder(units, pending);
+        return units;
     }
 
     // A short tail has no next unit to join, so it joins the previous one; a chunk that is
-    // short throughout stays one unit (and an empty chunk stays a single empty-safe unit).
-    private static IReadOnlyList<string> AppendRemainder(List<string> units, string pending, string chunk)
+    // short throughout stays one unit.
+    private static void AppendRemainder(List<List<string>> units, List<string> pending)
     {
-        if (pending.Length > 0 && units.Count > 0)
+        if (pending.Count == 0)
         {
-            units[^1] = $"{units[^1]} {pending}";
+            return;
         }
-        else if (pending.Length > 0)
+
+        if (units.Count > 0)
+        {
+            units[^1].AddRange(pending);
+        }
+        else
         {
             units.Add(pending);
         }
-
-        return units.Count > 0 ? units : [chunk.Trim()];
     }
 }

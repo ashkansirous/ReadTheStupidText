@@ -7,7 +7,7 @@ public class EarlyStartPlanTests
     [Fact]
     public void Original_head_is_the_first_two_sentences()
     {
-        Assert.Equal("One. Two.", EarlyStartPlan.OriginalHead("One. Two. Three. Four."));
+        Assert.Equal("The first one is here. The second one follows.", EarlyStartPlan.OriginalHead("The first one is here. The second one follows. The third one. The fourth one."));
     }
 
     [Fact]
@@ -54,7 +54,7 @@ public class EarlyStartPlanTests
     [Fact]
     public void Chinese_sentences_split_at_the_ideographic_full_stop_without_spaces()
     {
-        Assert.Equal("今天天气很好。我们去公园。", EarlyStartPlan.OriginalHead("今天天气很好。我们去公园。然后回家。"));
+        Assert.Equal("今天天气非常好，我们一起去公园玩耍。我们在公园里开心地跑步和唱歌。", EarlyStartPlan.OriginalHead("今天天气非常好，我们一起去公园玩耍。我们在公园里开心地跑步和唱歌。然后我们一起回家吃好吃的晚饭。"));
     }
 
     [Fact]
@@ -68,7 +68,7 @@ public class EarlyStartPlanTests
     [Fact]
     public void Persian_sentences_split_at_the_question_mark_and_the_full_stop()
     {
-        Assert.Equal("سلام، حال شما چطور است؟ من خوبم.", EarlyStartPlan.OriginalHead("سلام، حال شما چطور است؟ من خوبم. امروز هوا خوب است."));
+        Assert.Equal("سلام، حال شما چطور است؟ من خوبم، ممنون از شما.", EarlyStartPlan.OriginalHead("سلام، حال شما چطور است؟ من خوبم، ممنون از شما. امروز هوا خوب است."));
     }
 
     [Fact]
@@ -104,7 +104,7 @@ public class EarlyStartPlanTests
     [Fact]
     public void A_decimal_point_and_a_missing_space_are_not_sentence_ends_just_as_for_the_chunker()
     {
-        Assert.Equal("Version 3.14 is out. See Dr.Smith.", EarlyStartPlan.OriginalHead("Version 3.14 is out. See Dr.Smith. Third."));
+        Assert.Equal("Version 3.14 is out. See Dr.Smith for the details.", EarlyStartPlan.OriginalHead("Version 3.14 is out. See Dr.Smith for the details. A third sentence follows here."));
     }
 
     [Fact]
@@ -202,7 +202,7 @@ public class EarlyStartCoordinatorTests
         early.Restart(French, "fr", "en", probe.Jobs(), TimeSpan.Zero);
         EarlyTranslation? result = await early.ChooseTranslate();
 
-        Assert.Equal(["Un. Deux."], probe.VoicedOriginal);
+        Assert.Equal(["Un. Deux. Trois. Quatre."], probe.VoicedOriginal); // short sentences: the read closes its first unit only there
         Assert.Equal(["Un. Deux. Trois."], probe.Translated);
         Assert.NotNull(result);
         Assert.True(result!.Matches(French, "fr", "en"));
@@ -277,7 +277,7 @@ public class EarlyStartCoordinatorTests
         early.ChooseRead();
         await early.SettleChosenAsync().WaitAsync(TimeSpan.FromSeconds(5));
 
-        Assert.Equal(["Un. Deux."], probe.VoicedOriginal);
+        Assert.Equal(["Un. Deux. Trois. Quatre."], probe.VoicedOriginal); // short sentences: the read closes its first unit only there
     }
 
     [Fact]
