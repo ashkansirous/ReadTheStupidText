@@ -228,6 +228,14 @@
   <data name="Wizard_NoTextShort" xml:space="preserve"><value>Ingen tekst</value></data>
   <data name="Wizard_NoText" xml:space="preserve"><value>Ingen tekst fundet på denne side</value></data>
   <data name="Wizard_Reading" xml:space="preserve"><value>Læser side {0} af {1}</value></data>
+  <data name="Wait_GettingVoices" xml:space="preserve"><value>Gør stemmerne klar…</value></data>
+  <data name="Wait_ReadingPictures" xml:space="preserve"><value>Læser billederne…</value></data>
+  <data name="Wait_PageOf" xml:space="preserve"><value>Side {0} af {1}</value></data>
+  <data name="Wait_Translating" xml:space="preserve"><value>Oversætter…</value></data>
+  <data name="Wait_Saving" xml:space="preserve"><value>Gemmer…</value></data>
+  <data name="Wait_GettingBook" xml:space="preserve"><value>Henter bogen…</value></data>
+  <data name="Wait_BackingUp" xml:space="preserve"><value>Sikkerhedskopierer bøgerne…</value></data>
+  <data name="Wait_Restoring" xml:space="preserve"><value>Henter bøgerne tilbage…</value></data>
   <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>Nogle sider blev ikke læst</value></data>
   <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>{0} sider kunne ikke læses. De beholdes som billeder uden tekst.</value></data>
   <data name="Pictures_NoneTitle" xml:space="preserve"><value>Denne fil har ord, men ingen billeder</value></data>

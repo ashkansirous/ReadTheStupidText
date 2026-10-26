@@ -1,9 +1,9 @@
 # Slice 143 — One shared wait overlay; Dino shows it on every wait
 
-*In progress (wave 2026-10-26), draft PR.*
+*Built 2026-10-26 (wave PR #383); emulator checks passed 2026-10-26.*
 
 **Batch:** 30 (Dino loading, Farsi voice, kid-friendly language, Decisions 149-153)
-**Touches:** `src/ReadTheStupidText.Mobile.Shared/Waiting/**` (new), `src/ReadTheStupidText.Application/Reading/WaitStage.cs` (new, shared with Slice 138), `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/StoryWizardPage*`, `src/DinoReader.App/PageEditorPage*`, `src/DinoReader.App/ScanPages.cs`, `src/DinoReader.App/StoryImport.cs`, `src/DinoReader.App/StoryTranslator.cs`, `src/DinoReader.App/RecordPage.cs`, `src/DinoReader.App/BackupPage*`, `src/DinoReader.App/StorePage*`, `src/DinoReader.App/Resources/Strings/*.resx`, `tests/DinoReader.Tests/**`, `tests/ReadTheStupidText.Tests/**`, `src/DinoReader.App/CLAUDE.md`
+**Touches:** `src/ReadTheStupidText.Mobile.Shared/Waiting/**` (new), `src/ReadTheStupidText.Application/Reading/WaitStage.cs` (new, shared with Slice 138), `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/StoryWizardPage*`, `src/DinoReader.App/PageEditorPage*`, `src/DinoReader.App/ScanPages.cs`, `src/DinoReader.App/StoryImport.cs`, `src/DinoReader.App/StoryTranslator.cs`, `src/DinoReader.App/RecordPage.cs`, `src/DinoReader.App/BackupPage*`, `src/DinoReader.App/StorePage*`, `src/DinoReader.App/Resources/Strings/*.resx`, `tests/DinoReader.Tests/**`, `tests/ReadTheStupidText.Tests/**`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.App/DinoWait.cs`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `src/DinoReader.App/PagesStep.xaml.cs`, `src/DinoReader.App/DinoReader.App.csproj`, `src/DinoReader.App/Resources/Images/dino_wait.png`
 
 ## Why
 
@@ -50,15 +50,39 @@ Two frames in `docs/design/dino-reader/Dino Reader Batch 30.dc.html`, plus the `
 
 ## Work
 
-- [ ] `WaitStage` + timer model (Application), unit-tested; shared overlay control in Mobile.Shared
+- [x] `WaitStage` + `WaitGate` timer model (Application), unit-tested; shared overlay control in Mobile.Shared
       with a slot for an app's own animation.
-- [ ] Dino bouncing-dino animation and stage strings in all 14 locales.
-- [ ] Wire each wait listed above; Cancel stops book loading (back to the gallery) and imports.
+- [x] Dino bouncing-dino animation and stage strings in all 14 locales.
+- [ ] (partly: book open, picture/PDF import and page reading, recording save, backup/restore wired; PDF Cancel done; mid-read stall deferred, see below; own-book translation has no wait of its own) Wire each wait listed above; Cancel stops book loading (back to the gallery) and imports.
 - [ ] Usage: `wait_shown` (stage, duration bucket) as a Dino event too (Slice 134 rules: `EVENT_RULES`,
       `UsageDetail`, privacy texts).
+
+## Deferred to a follow-up slice (after 137 and 144 merge)
+
+- Mid-read stall overlay (no Cancel): needs a stall state in `ReadingSession.cs`, which Slice 144 owns now.
+- Cancel for the PDF import's extract and render steps: `ExtractPagesAsync`, `FlowingPageTextsAsync`, `RenderPagesAsync` and `CopyIntoAsync` take no token, so Cancel is honoured only between steps; needs a token on the shared extractor interfaces (review finding, out of scope here).
+- `wait_shown` usage event (stage, duration bucket): `worker/events.ts` `EVENT_RULES` belongs to Slice 137 (plus `UsageEventName`, `UsageDetail`, privacy texts). `WaitGate.End` already returns the shown duration.
 
 ## Verification
 
 - Unit tests of the timer model.
 - Emulator: open a long book with a fresh voice (the dino shows, then goes when audio starts), a short
   cached book (nothing flashes), import a PDF, translate an own book; TalkBack reads the stage.
+
+## Built
+
+*Changed while building:* `WaitStage`/`WaitGate` (pure timer model, unit-tested) are in `Application/Reading`; the overlay, `WaitController` and a style type are in `Mobile.Shared/Waiting`. RTST Slice 138 can use it with its own `WaitOverlayStyle`. Dino's look (hopping dino, cream fill, white Cancel) lives in `DinoWait.cs`. Wired: book open, wizard reading, PDF import (Cancel honoured between stages), recording save, backup/restore (file work only, no Cancel). Own-book translation has no wait of its own. The new strings in all 14 resx files are Claude drafts.
+
+*From review:* `143-high`: all 12 findings applied. `143-medium`: 7 applied; findings 2 and 8 skipped; finding 3 judged not a bug.
+
+#### For CLAUDE.md
+
+- `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md`: every blocking wait in a MAUI app goes through `Waiting/WaitController` (500 ms gate, `WaitStage`/`WaitGate`); do not add a per-page spinner. (Slice 143: docs/plan/slices/143-shared-wait-overlay-dino-loading.md)
+- `src/DinoReader.App/CLAUDE.md`: Dino's wait look lives in `DinoWait.cs`; change it there, not in the shared overlay. (Slice 143: docs/plan/slices/143-shared-wait-overlay-dino-loading.md)
+
+#### Not yet verified
+
+- Emulator (AVD RTST_Test, 2026-10-26): PASS for book open + Cancel to shelf, hide on first audio, PDF import with Cancel (nothing kept), backup overlay only around file work, no crash in logcat. Not exercised: photos, scan, own-book translate. Dino forces the light theme, so there is no dark overlay to check.
+- Native read of the new strings (14 locales, Claude drafts).
+- Windows head overlay.
+- Reduce-motion static dino.

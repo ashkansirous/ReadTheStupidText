@@ -3,6 +3,7 @@ using DinoReader.Core;
 using Microsoft.Extensions.DependencyInjection;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Mobile.Shared;
+using ReadTheStupidText.Mobile.Shared.Waiting;
 using DinoReader.Resources.Strings;
 
 namespace DinoReader;
@@ -17,6 +18,8 @@ public partial class ReadingPage : ContentPage
 {
 	private const double CompactTitleSize = 17;
 	private const double FullTitleSize = 20;
+	private const double WaitCornerRadius = 18; // the picture box's corner (frame 64)
+	private const double TransportWhileWaiting = 0.4; // the player row is dimmed while the wait overlay shows (frame 64)
 
 	private readonly ReadingSession _session;
 	private readonly IStoryLibrary _library;
@@ -30,6 +33,10 @@ public partial class ReadingPage : ContentPage
 	private bool _openCounted;
 	private readonly PageFollower _follower = new();
 	private readonly BusyGuard _busy = new();
+	private readonly WaitOverlay _waitOverlay = DinoWait.OverPicture();
+	private readonly WaitController _wait;
+	private bool _loadingSeen;
+	private bool _firstLoadDone; // the first Loading is the book opening; later ones are restarts the reader triggered
 	private readonly SemaphoreSlim _saveLock = new(1, 1); // the cast save and the mode save each read-modify-write _story: one at a time
 	private Story? _story;
 	private IReadOnlyList<SentenceSpan> _sentences = [];
@@ -63,6 +70,7 @@ public partial class ReadingPage : ContentPage
 		_model = model;
 		_session.SentenceChanged += OnSentenceChanged;
 		_session.StateChanged += OnSessionStateChanged;
+		_wait = BuildWait();
 		_session.Failed += OnReadFailed;
 		_session.TranslationSkipped += (_, _) => _spoken.Use(_story?.Language ?? UiLanguage.English);
 		BookInfo.OriginalChanged += SaveShowOriginalAsync;
@@ -336,6 +344,7 @@ public partial class ReadingPage : ContentPage
 			if (!Navigation.NavigationStack.Contains(this))
 			{
 				_onStack = false;
+				EndWait();
 				ApplyScreenAwake();
 				CancelDisplay();
 				Unsubscribe();
@@ -470,6 +479,74 @@ public partial class ReadingPage : ContentPage
 		CountFinish();
 		RenderChrome();
 		ApplyScreenAwake();
+		ApplyWait();
+	}
+
+	// Slice 143: a read that is waiting for its first audio (the voice, or the translation it needs) shows the wait overlay after 500 ms
+	// and hides it the moment audio plays, or the read stops or fails. Cancel stops the read and goes back to the shelf.
+	private WaitController BuildWait()
+	{
+		SurfaceHost.Children.Add(_waitOverlay);
+		_waitOverlay.PropertyChanged += (_, e) =>
+		{
+			if (e.PropertyName == VisualElement.IsVisibleProperty.PropertyName)
+			{
+				Transport.Opacity = _waitOverlay.IsVisible ? TransportWhileWaiting : 1;
+				Transport.InputTransparent = _waitOverlay.IsVisible;
+			}
+		};
+		_waitOverlay.SizeChanged += (_, _) =>
+			_waitOverlay.Clip = new Microsoft.Maui.Controls.Shapes.RoundRectangleGeometry(WaitCornerRadius, new Rect(0, 0, _waitOverlay.Width, _waitOverlay.Height));
+		var wait = new WaitController(_waitOverlay);
+		wait.CancelRequested += OnWaitCancelled;
+		return wait;
+	}
+
+	private void ApplyWait()
+	{
+		if (_session.State != SessionState.Loading)
+		{
+			_firstLoadDone |= _loadingSeen; // only a Loading that has ended is the book opening; an Idle before it is not
+			EndWait();
+		}
+		else
+		{
+			_loadingSeen = true;
+			bool translating = IsTranslating();
+			WaitStage stage = translating ? WaitStage.Translating : WaitStage.PreparingVoice;
+			_wait.Begin(stage, translating ? AppResources.Wait_Translating : AppResources.Wait_GettingVoices, canCancel: true); // while a wait runs this re-words it
+		}
+	}
+
+	private void EndWait()
+	{
+		if (_wait.IsActive)
+		{
+			_wait.End();
+		}
+	}
+
+	private bool IsTranslating()
+	{
+		return _story is { } story && _services.GetRequiredService<StoryTranslator>().Applies(story);
+	}
+
+	// Cancel always stops the read; only the wait of opening the book (the first load) also goes back to the shelf. A mid-book restart stays on the page.
+	private async void OnWaitCancelled()
+	{
+		bool opening = !_firstLoadDone;
+		try
+		{
+			_session.Stop();
+			if (opening)
+			{
+				await _busy.RunAsync(() => Navigation.PopAsync());
+			}
+		}
+		catch (Exception ex) when (ex is not OperationCanceledException)
+		{
+			Debug.WriteLine($"Dino Reader could not leave the page after Cancel: {ex}"); // async void: a throw here would crash the app
+		}
 	}
 
 	// Slice 133: a book counts as opened once, when its page first shows (not when it is built, so a push that fails counts nothing).

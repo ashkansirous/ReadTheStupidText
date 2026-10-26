@@ -229,6 +229,14 @@
   <data name="Wizard_NoTextShort" xml:space="preserve"><value>بدون متن</value></data>
   <data name="Wizard_NoText" xml:space="preserve"><value>متنی در این صفحه پیدا نشد</value></data>
   <data name="Wizard_Reading" xml:space="preserve"><value>در حال خواندن صفحه {0} از {1}</value></data>
+  <data name="Wait_GettingVoices" xml:space="preserve"><value>در حال آماده‌سازی صداها…</value></data>
+  <data name="Wait_ReadingPictures" xml:space="preserve"><value>در حال خواندن تصاویر…</value></data>
+  <data name="Wait_PageOf" xml:space="preserve"><value>صفحهٔ {0} از {1}</value></data>
+  <data name="Wait_Translating" xml:space="preserve"><value>در حال ترجمه…</value></data>
+  <data name="Wait_Saving" xml:space="preserve"><value>در حال ذخیره…</value></data>
+  <data name="Wait_GettingBook" xml:space="preserve"><value>در حال آماده‌سازی کتاب…</value></data>
+  <data name="Wait_BackingUp" xml:space="preserve"><value>در حال پشتیبان‌گیری از کتاب‌ها…</value></data>
+  <data name="Wait_Restoring" xml:space="preserve"><value>در حال بازیابی کتاب‌ها…</value></data>
   <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>برخی صفحه‌ها خوانده نشدند</value></data>
   <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>خواندن {0} صفحه ممکن نشد. این صفحه‌ها به‌صورت تصویر و بدون متن نگه داشته می‌شوند.</value></data>
   <data name="Pictures_NoneTitle" xml:space="preserve"><value>این فایل کلمه دارد اما تصویر ندارد</value></data>
