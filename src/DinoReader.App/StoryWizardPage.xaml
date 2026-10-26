@@ -11,7 +11,7 @@
 
     <!-- Add or edit a story in three steps (Slice 78): Pages, Cover, Text. One StoryDraft is shared by the steps;
          nothing is saved until the last step's Save. The step names carry their number from code. -->
-    <Grid RowDefinitions="Auto,Auto,*,Auto">
+    <Grid x:Name="WizardRoot" RowDefinitions="Auto,Auto,*,Auto">
         <Grid x:Name="Header" ColumnDefinitions="Auto,*" Padding="8,10,16,6">
             <Border WidthRequest="44" HeightRequest="44" BackgroundColor="Transparent" StrokeThickness="0"
                     SemanticProperties.Description="{x:Static res:AppResources.Common_Back}">
@@ -32,17 +32,6 @@
             <local:PagesStep x:Name="PagesView" />
             <local:CoverStep x:Name="CoverView" IsVisible="False" />
             <local:TextStep x:Name="TextView" IsVisible="False" />
-
-            <Border x:Name="ProgressCard" IsVisible="False" BackgroundColor="{StaticResource Ink}" StrokeThickness="0"
-                    VerticalOptions="Center" HorizontalOptions="Center" Padding="22,18">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="18" />
-                </Border.StrokeShape>
-                <VerticalStackLayout Spacing="10">
-                    <ActivityIndicator IsRunning="True" Color="White" />
-                    <Label x:Name="ProgressLabel" FontSize="14.5" FontAttributes="Bold" TextColor="White" HorizontalTextAlignment="Center" />
-                </VerticalStackLayout>
-            </Border>
         </Grid>
 
         <Grid Grid.Row="3" ColumnDefinitions="*,*" ColumnSpacing="10" Margin="14,4,14,14">

@@ -59,6 +59,14 @@ public static class CastEditor
     /// <summary>Whether any character of <paramref name="cast"/> has <paramref name="voiceId"/>: a cast that must be recast once that voice is the narrator's.</summary>
     public static bool UsesVoice(IReadOnlyList<CastMember> cast, string voiceId) => cast.Any(m => m.VoiceId == voiceId);
 
+    /// <summary>Whether a character of <paramref name="cast"/> would really sound like the narrator (Slice 144): it has <paramref name="narratorVoiceId"/> and not a flavour the language's roster
+    /// deliberately plays on that voice (Farsi's mana is the narrator and also the mum, dragon and fairy, told apart by flavour), so a cast like that is not recast on every read.</summary>
+    public static bool ClashesWithNarrator(IReadOnlyList<CastMember> cast, string narratorVoiceId, string language)
+    {
+        var shared = CharacterRoster.Speakers(language).Where(c => c.VoiceId == narratorVoiceId).Select(c => c.Flavour).ToHashSet();
+        return cast.Any(m => m.VoiceId == narratorVoiceId && (m.Flavour is not { } flavour || !shared.Contains(flavour)));
+    }
+
     /// <summary>Whether any character of <paramref name="cast"/> has a voice that is not in <paramref name="pool"/> and is not an explicit pick that stays (Slice 114):
     /// the language's voices changed under it (a storyteller pack was installed or removed), so the cast is recast from the pool it has now.
     /// Only that switch counts: the pool and the cast voice must both be Supertonic or Kokoro ones, so a renamed or momentarily different pack voice list of any
@@ -83,6 +91,16 @@ public static class CastEditor
         recast
             .Select(m => before.FirstOrDefault(b => b.CharacterId == m.CharacterId) is { } old && old.VoiceId != narratorVoiceId && StaysPicked(old, pool) ? old : m)
             .ToList();
+
+    /// <summary>Whether any character the grown-up did not pick has a voice its language's roster no longer uses (Slice 144: Farsi's literary voice left the cast), so the cast is recast.</summary>
+    public static bool UsesRetiredVoice(IReadOnlyList<CastMember> cast, string language) => cast.Any(m => IsRetired(m, language));
+
+    /// <summary>The cast without the characters of <see cref="UsesRetiredVoice"/>, so a recast gives them a voice the roster uses; picked characters stay.</summary>
+    public static IReadOnlyList<CastMember> WithoutRetiredVoices(IReadOnlyList<CastMember> cast, string language) =>
+        cast.Where(m => !IsRetired(m, language)).ToList();
+
+    private static bool IsRetired(CastMember member, string language) =>
+        !member.Edited && RuleSets.PrimaryCode(language) == VoiceChoices.PersianLanguageCode && member.VoiceId == VoiceChoices.PersianLiteraryVoiceId && CharacterRoster.For(language).All(c => c.VoiceId != member.VoiceId);
 
     private static bool IsOutside(CastMember member, IReadOnlyList<VoiceOption> pool) => pool.All(v => v.Id != member.VoiceId);
 

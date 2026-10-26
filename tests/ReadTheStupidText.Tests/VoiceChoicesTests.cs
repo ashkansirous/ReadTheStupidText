@@ -50,4 +50,25 @@ public class VoiceChoicesTests
         Assert.Equal(SupertonicVoiceTable.Default.Id, VoiceChoices.Resolve(English, "piper:fa-ganji-adabi", null).Id);
         Assert.Equal("piper:fa-ganji-adabi", VoiceChoices.Resolve(Persian, "supertonic:M2").Id);
     }
+
+    [Fact]
+    public void The_persian_pack_defaults_to_mana_whatever_its_listing_order()
+    {
+        var model = new VoiceModelPaths(
+            "/packs/piper-fa", VoiceEngineKind.Vits, "fa",
+            [new VoiceInfo("piper:fa-ganji-adabi", "Ganji Adabi", "fa", VoiceEngineKind.Vits, 0), new VoiceInfo("piper:fa-mana", "Mana", "fa", VoiceEngineKind.Vits, 0)]);
+
+        Assert.Equal("piper:fa-mana", model.ResolveVoice(null).Id);
+        Assert.Equal("piper:fa-ganji-adabi", VoiceChoices.Resolve(model, "piper:fa-ganji-adabi").Id);
+    }
+
+    [Fact]
+    public void A_piper_pack_of_another_language_keeps_its_first_voice_as_default()
+    {
+        var model = new VoiceModelPaths(
+            "/packs/piper-nb", VoiceEngineKind.Vits, "nb",
+            [new VoiceInfo("piper:nb-talesyntese", "Talesyntese", "nb", VoiceEngineKind.Vits, 0), new VoiceInfo("piper:fa-mana", "Mana", "nb", VoiceEngineKind.Vits, 0)]);
+
+        Assert.Equal("piper:nb-talesyntese", model.ResolveVoice(null).Id);
+    }
 }

@@ -228,6 +228,14 @@
   <data name="Wizard_NoTextShort" xml:space="preserve"><value>Ingen tekst</value></data>
   <data name="Wizard_NoText" xml:space="preserve"><value>Fant ingen tekst på denne siden</value></data>
   <data name="Wizard_Reading" xml:space="preserve"><value>Leser side {0} av {1}</value></data>
+  <data name="Wait_GettingVoices" xml:space="preserve"><value>Gjør stemmene klare…</value></data>
+  <data name="Wait_ReadingPictures" xml:space="preserve"><value>Leser bildene…</value></data>
+  <data name="Wait_PageOf" xml:space="preserve"><value>Side {0} av {1}</value></data>
+  <data name="Wait_Translating" xml:space="preserve"><value>Oversetter…</value></data>
+  <data name="Wait_Saving" xml:space="preserve"><value>Lagrer…</value></data>
+  <data name="Wait_GettingBook" xml:space="preserve"><value>Henter boken…</value></data>
+  <data name="Wait_BackingUp" xml:space="preserve"><value>Sikkerhetskopierer bøkene…</value></data>
+  <data name="Wait_Restoring" xml:space="preserve"><value>Henter bøkene tilbake…</value></data>
   <data name="Wizard_ReadFailedTitle" xml:space="preserve"><value>Noen sider ble ikke lest</value></data>
   <data name="Wizard_ReadFailedBody" xml:space="preserve"><value>{0} sider kunne ikke leses. De beholdes som bilder uten tekst.</value></data>
   <data name="Pictures_NoneTitle" xml:space="preserve"><value>Filen har ord, men ingen bilder</value></data>
