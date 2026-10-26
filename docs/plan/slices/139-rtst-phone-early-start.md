@@ -1,6 +1,6 @@
 # Slice 139 — RTST phone: start translating and voicing before the tap
 
-*Planned.*
+*In progress (wave 2026-10-26), draft PR.*
 
 **Batch:** 29 (Decisions 143-148)
 **Touches:** `src/ReadTheStupidText.Application/Reading/SpeechTextChunker.cs`, `src/ReadTheStupidText.Application/Translation/**`, `src/ReadTheStupidText.Application/Reading/EarlyStart*` (new), `src/ReadTheStupidText.Mobile/ReaderPage*.cs`, `src/ReadTheStupidText.Mobile/ReviewPage.xaml.cs`, `src/ReadTheStupidText.Mobile/MauiProgram.cs`, `src/ReadTheStupidText.Mobile.Shared/CompositeSpeechReader.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/MlKitTranslator.cs`, `src/ReadTheStupidText.Mobile.Shared/MauiPackUpdateNetwork.cs`, `tests/ReadTheStupidText.Tests/**`, `docs/plan/decisions.md`
