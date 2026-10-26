@@ -285,6 +285,7 @@ public sealed partial class ReadAloudService : IDisposable
             }
 
             _settings.TranslateEnabled = value;
+            DiscardEarlyWork();
             if (value)
             {
                 _translation?.StartTargetPackDownload();
@@ -603,7 +604,7 @@ public sealed partial class ReadAloudService : IDisposable
         try
         {
             await Task.Delay(HeadStartStableMs, token);
-            await headStart.PrepareAsync(text);
+            await StartEarlyWorkAsync(headStart, text, requirePending: true, TimeSpan.Zero, token);
         }
         catch (OperationCanceledException)
         {
@@ -674,6 +675,7 @@ public sealed partial class ReadAloudService : IDisposable
         selection?.Dispose();
         CancelPendingPrepare(Interlocked.Exchange(ref _prepareCts, null));
         _headStart?.CancelPrepare();
+        DiscardEarlyWork();
         Supersede(ActivityReason.Deselected);
     }
 
@@ -687,6 +689,7 @@ public sealed partial class ReadAloudService : IDisposable
     // uploaded file's name).
     private ActivityEntry StartEntry(ActivityTrigger trigger, WindowSource? window, string text)
     {
+        DiscardEarlyWorkUnlessFor(text);
         Supersede(ActivityReason.NewSelection);
         _lastTriggeredText = text;
         ActivityEntry entry = _log.Add(trigger, window, text);
@@ -795,7 +798,8 @@ public sealed partial class ReadAloudService : IDisposable
         long started = Stopwatch.GetTimestamp();
         try
         {
-            ReadTranslationResult result = await _translation.PrepareAsync(text, entry.Id, cts.Token);
+            EarlyTranslation? early = await TakeEarlyTranslationAsync(text, cts.Token);
+            ReadTranslationResult result = await _translation.PrepareAsync(text, entry.Id, cts.Token, early);
             if (!cts.IsCancellationRequested && result.IsNotable)
             {
                 TranslationFinished?.Invoke(this, result);
@@ -945,6 +949,7 @@ public sealed partial class ReadAloudService : IDisposable
         selection?.Dispose();
         CancelWithoutDispose(Interlocked.Exchange(ref _translationCts, null));
         CancelPendingPrepare(Interlocked.Exchange(ref _prepareCts, null));
+        DiscardEarlyWork();
         StopUsageTracking();
     }
 }
