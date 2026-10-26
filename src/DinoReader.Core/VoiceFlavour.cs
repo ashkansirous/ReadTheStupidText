@@ -23,6 +23,21 @@ public enum VoiceFlavour
 
     /// <summary>A lamb's or kid's bleat: <see cref="Bleat"/>, higher.</summary>
     BleatLamb,
+
+    /// <summary>Slice 144: a bright, quick voice a little above normal. Only the Farsi roster uses it, to give its few voices more distinct characters; never picked from the menu.</summary>
+    Chirpy,
+
+    /// <summary>Slice 144: a soft, slightly lifted, unhurried voice for a whispery little one (Farsi roster only; never picked from the menu).</summary>
+    Hushed,
+
+    /// <summary>Slice 144: a slightly low, easy voice for a calm, sleepy animal (Farsi roster only; not a young-sounding one).</summary>
+    Mellow,
+
+    /// <summary>Slice 144: a lifted, lively voice (Farsi roster only).</summary>
+    Perky,
+
+    /// <summary>Slice 144: a gentle, simple voice a touch above normal and unhurried, for a calm little one (Farsi roster only; not counted as young-sounding).</summary>
+    Gentle,
 }
 
 /// <summary>The pitch (semitones), pace (engine speed, above 1 is quicker) and sentence gap of a flavour.</summary>
@@ -41,7 +56,7 @@ public static class VoiceFlavours
 
     /// <summary>Every flavour a storyteller character may carry and a stored cast may hold (Slice 116): all but the narrator's own Storyteller.</summary>
     public static IReadOnlyList<VoiceFlavour> Assignable { get; } =
-        [.. Pickable, VoiceFlavour.Squeaky, VoiceFlavour.Grumpy, VoiceFlavour.Whisper, VoiceFlavour.Giant];
+        [.. Pickable, VoiceFlavour.Squeaky, VoiceFlavour.Grumpy, VoiceFlavour.Whisper, VoiceFlavour.Giant, VoiceFlavour.Chirpy, VoiceFlavour.Hushed, VoiceFlavour.Mellow, VoiceFlavour.Perky, VoiceFlavour.Gentle];
 
     public static FlavourShape ShapeOf(VoiceFlavour flavour) => flavour switch
     {
@@ -53,6 +68,11 @@ public static class VoiceFlavours
         VoiceFlavour.Grumpy => new FlavourShape(-2.5, 0.95f, NormalGap),
         VoiceFlavour.Whisper => new FlavourShape(-0.5, 0.88f, StorytellerGap),
         VoiceFlavour.Giant => new FlavourShape(-4.0, 0.86f, StorytellerGap),
+        VoiceFlavour.Chirpy => new FlavourShape(2.0, 1.22f, NormalGap),
+        VoiceFlavour.Hushed => new FlavourShape(1.5, 0.9f, StorytellerGap),
+        VoiceFlavour.Mellow => new FlavourShape(-1.0, 1.05f, NormalGap),
+        VoiceFlavour.Perky => new FlavourShape(2.5, 1.08f, NormalGap),
+        VoiceFlavour.Gentle => new FlavourShape(1.0, 0.97f, NormalGap),
         VoiceFlavour.Bleat => new FlavourShape(2.0, 1.0f, NormalGap, BleatWobble),
         VoiceFlavour.BleatLamb => new FlavourShape(3.5, 1.05f, NormalGap, BleatWobble),
         VoiceFlavour.Storyteller => new FlavourShape(0.0, 0.94f, StorytellerGap),

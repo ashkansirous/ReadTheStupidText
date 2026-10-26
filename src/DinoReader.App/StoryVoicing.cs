@@ -207,7 +207,7 @@ public sealed class StoryVoicing
 	private string OnNarratorRoster(string language, string voiceId)
 	{
 		IReadOnlyList<StorytellerCharacter> narrators = NarratorsFor(language);
-		if (narrators.Count == 0 || narrators.Any(n => n.VoiceId == voiceId))
+		if (narrators.Count == 0 || narrators.Any(n => n.VoiceId == voiceId) || voiceId == VoiceChoices.PersianLiteraryVoiceId)
 		{
 			return voiceId;
 		}
@@ -282,6 +282,12 @@ public sealed class StoryVoicing
 		if (pool.Count == 0)
 		{
 			return UiLanguage.Resolve(language) == NorwegianLanguageCode ? NorwegianVoices.DefaultId : SupertonicVoiceTable.Default.Id;
+		}
+
+		// Farsi starts with mana, the female storyteller (Slice 144, Decision 150), whatever order the pack lists its voices in.
+		if (pool.Any(v => v.Id == VoiceChoices.PersianDefaultVoiceId))
+		{
+			return VoiceChoices.PersianDefaultVoiceId;
 		}
 
 		return pool.Any(v => v.Id == SupertonicVoiceTable.Default.Id) ? SupertonicVoiceTable.Default.Id : pool[0].Id;

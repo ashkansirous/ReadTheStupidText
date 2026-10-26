@@ -13,6 +13,14 @@ public static class VoiceChoices
     public const string MeloIdPrefix = "melo:";
     public const string KokoroIdPrefix = KokoroVoiceTable.IdPrefix;
 
+    /// <summary>The Persian pack's literary voice: no longer Dino's default or in its cast, but still a voice a grown-up can have picked (Slice 144).</summary>
+    public const string PersianLiteraryVoiceId = PiperIdPrefix + "fa-ganji-adabi";
+
+    public const string PersianLanguageCode = "fa";
+
+    /// <summary>The Persian pack's default voice (Slice 144, Decision 150): the female storyteller, chosen in code so the pack's listing order stays as released.</summary>
+    public const string PersianDefaultVoiceId = PiperIdPrefix + "fa-mana";
+
     /// <summary>The engine family a voice id belongs to, or null for an id of no known family
     /// (the "Phone voice" id, or garbage).</summary>
     public static VoiceEngineKind? KindOf(string? voiceId)

@@ -28,10 +28,10 @@ public static class CastCharacters
     // any cost, so no number of reuses can make another animal cheaper. A reused character gets a flavour it has not sounded with yet, so two story characters of one kind
     // sound different.
     private const int AnimalGenderRelief = 10;
-    private static readonly VoiceFlavour[] ReuseFlavours = [VoiceFlavour.Small, VoiceFlavour.Squeaky, VoiceFlavour.Bouncy, VoiceFlavour.Normal, VoiceFlavour.Whisper, VoiceFlavour.Sleepy, VoiceFlavour.Big];
+    private static readonly VoiceFlavour[] ReuseFlavours = [VoiceFlavour.Small, VoiceFlavour.Squeaky, VoiceFlavour.Bouncy, VoiceFlavour.Chirpy, VoiceFlavour.Perky, VoiceFlavour.Normal, VoiceFlavour.Whisper, VoiceFlavour.Sleepy, VoiceFlavour.Big];
 
     // A reused young animal (piglet, lamb, duckling) never gets a flavour that sounds grown: it would turn into a deep bear.
-    private static readonly HashSet<VoiceFlavour> OldSounding = [VoiceFlavour.Big, VoiceFlavour.Sleepy, VoiceFlavour.Giant, VoiceFlavour.Grumpy];
+    private static readonly HashSet<VoiceFlavour> OldSounding = [VoiceFlavour.Big, VoiceFlavour.Sleepy, VoiceFlavour.Giant, VoiceFlavour.Grumpy, VoiceFlavour.Mellow];
 
     private enum AnimalTier
     {
