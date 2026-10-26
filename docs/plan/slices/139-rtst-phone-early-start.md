@@ -71,20 +71,29 @@ No screens. The Batch 29 mock intro says the early start "has no screen of its o
 - `HeadPolicy.Default` is now 2 sentences / 120 chars (Decision 147); the Windows and Dino readers use it too.
 - Usage `early` field (blob16) added in `worker/`, the report and `STORE.md`.
 - `UsageService.FlushAsync` now waits behind a running send, which fixed the flaky batches test.
+- The early-voice handler survives ReviewPage on top and is cleared only on retire.
+- `SettleChosenAsync` waits for the chosen side (10 s cap) behind an overlay with Cancel; Back and Cancel hand nothing over, and the editor is read-only meanwhile.
+- `HeadStartRun` (Application): a head start completes normally only when clips are stored. The Windows, Android and iOS readers use it.
+- First-chunk hint: the early voice's exact head becomes the read's first chunk, through an optional `firstChunkHint` on `SpeechTextChunker.Split` / `SpeechChunkPlanner.ForText`, owned per reader by the Android and iOS `FirstChunkHints`. Windows and Dino are unchanged (golden test).
+- Merged origin/main with Slice 149 cleanly.
 
 ## From review
 
 - 139-high: 10 findings applied.
 - 139-medium: 8 findings applied; 5 and 8 skipped (see the medium-pass notes above).
+- Late review 139-late: 10 findings applied.
+- 139-redesign: 11 findings applied.
 
 #### For CLAUDE.md
 
 In `src/ReadTheStupidText.Mobile/CLAUDE.md`:
 
 - Early start (`ReaderPage.EarlyStart.cs`, `ReviewPage.xaml.cs`) records no usage of its own and shows no overlay. It may only cancel preparations it started itself. (Slice 139: docs/plan/slices/139-rtst-phone-early-start.md)
+- A head start completes normally only when its clips are stored (`HeadStartRun`); the read's first chunk follows the early head through `FirstChunkHints`, never global state. (Slice 139: docs/plan/slices/139-rtst-phone-early-start.md)
 
 #### Not yet verified
 
-- Emulator run (French text, English UI: tap Translate, tap Read, mobile data) is pending; result placeholder.
+- Emulator on 5c90243/6a58a43 (2026-10-26, heavily swapping AVD): early work finished -> first audio 396-749 ms with a cache hit on sentence 1 (fac0a49: 254 / 185 ms). In-flight races are NOT reliably reused yet: a Read tapped ~0.3 s after unticking Translate (restart), or a Translate-and-read before the early voice is stored, still reads cold (12-24 s on that emulator) — no worse than without early start, but no gain. Re-test on a real phone; if it reproduces, follow up in the read path (OnReadTapped / EarlyStartCoordinator settle after a restart).
+- Known limit: a tap before language detection + 0.4 s idle starts no early work; a tap during a cold engine load waits up to the 10 s settle cap.
 - Unpunctuated text misses the sentence cache (`HeadPolicy.Cached` peels about 200 characters, early voices about 120).
 - iOS.
