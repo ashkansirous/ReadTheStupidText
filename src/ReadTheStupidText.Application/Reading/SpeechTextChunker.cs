@@ -34,18 +34,47 @@ internal static partial class SpeechTextChunker
         public static HeadPolicy Cached { get; } = new(2, 200);
     }
 
-    public static IReadOnlyList<string> Split(string text, bool biasFirstChunk = true, HeadPolicy? head = null)
+    /// <summary>
+    /// Splits <paramref name="text"/> into chunks. A <paramref name="firstChunkHint"/> (the early start's prepared head, Slice 139)
+    /// becomes the first chunk only when <see cref="AcceptsHint"/> allows it; without one, or when it is not accepted, the
+    /// result is exactly the plain split.
+    /// </summary>
+    public static IReadOnlyList<string> Split(
+        string text, bool biasFirstChunk = true, HeadPolicy? head = null, string? firstChunkHint = null)
     {
         string trimmed = LineReflow.ReflowText(text).Trim();
-        if (EarlyFirstChunks.Match(trimmed) is { } first)
+        if (firstChunkHint is not null && AcceptsHint(trimmed, firstChunkHint, head ?? HeadPolicy.Default))
         {
-            return SplitAfterFirst(first, trimmed, head);
+            return SplitAfterFirst(firstChunkHint, trimmed, head);
         }
 
         return SplitPlain(trimmed, biasFirstChunk, head);
     }
 
-    // The early start voiced this head (Slice 139): it is the first chunk, so the first units are the prepared ones; the rest
+    /// <summary>
+    /// Whether <paramref name="hint"/> may be the first chunk of <paramref name="trimmed"/> (reflowed and trimmed): a prefix of it
+    /// that ends exactly at a sentence boundary, within the policy's sentence count and character cap.
+    /// </summary>
+    internal static bool AcceptsHint(string trimmed, string hint, HeadPolicy policy)
+    {
+        if (hint.Length == 0 || hint.Length > policy.MaxChars || !trimmed.StartsWith(hint, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        int stop = hint.Length;
+        while (stop < trimmed.Length && char.IsWhiteSpace(trimmed[stop]))
+        {
+            stop++;
+        }
+
+        // Look one visible character past the hint, so a hint cut inside a sentence is not mistaken for a sentence end.
+        List<int> ends = SentenceEnds(trimmed[..Math.Min(trimmed.Length, stop + 1)]);
+        int index = ends.IndexOf(hint.Length);
+        return index >= 0 && index < policy.MaxSentences;
+    }
+
+    // The early start prepared this head (Slice 139): it is the first chunk, so the first units are the prepared ones; the rest
     // is chunked on its own and is not biased (the listener no longer waits on it).
     private static IReadOnlyList<string> SplitAfterFirst(string first, string trimmed, HeadPolicy? head)
     {
@@ -102,9 +131,9 @@ internal static partial class SpeechTextChunker
     /// (and risking) Split's own, already-tuned boundary logic.
     /// </summary>
     public static IReadOnlyList<TextChunk> SplitWithRanges(
-        string text, bool biasFirstChunk = true, HeadPolicy? head = null)
+        string text, bool biasFirstChunk = true, HeadPolicy? head = null, string? firstChunkHint = null)
     {
-        IReadOnlyList<string> chunks = Split(text, biasFirstChunk, head);
+        IReadOnlyList<string> chunks = Split(text, biasFirstChunk, head, firstChunkHint);
         var result = new List<TextChunk>(chunks.Count);
         IReadOnlySet<int> hyphenDrops = LineReflow.BreakMap(text).DroppedHyphenBreaks;
         int cursor = 0;

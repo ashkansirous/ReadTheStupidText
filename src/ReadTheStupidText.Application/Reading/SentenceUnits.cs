@@ -23,13 +23,16 @@ internal static class SentenceUnits
     {
         var units = new List<List<string>>();
         var pending = new List<string>();
+        int joinedLength = 0; // what string.Join(' ', pending).Length would be, kept running
         foreach (string sentence in SpeechTextChunker.SplitSentences(chunk))
         {
+            joinedLength += (pending.Count > 0 ? 1 : 0) + sentence.Length;
             pending.Add(sentence);
-            if (string.Join(' ', pending).Length >= MinUnitLength)
+            if (joinedLength >= MinUnitLength)
             {
                 units.Add(pending);
                 pending = [];
+                joinedLength = 0;
             }
         }
 
