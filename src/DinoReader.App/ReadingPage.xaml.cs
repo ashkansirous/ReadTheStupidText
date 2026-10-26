@@ -25,6 +25,9 @@ public partial class ReadingPage : ContentPage
 	private readonly VoicePackInstaller _installer;
 	private readonly IVoiceModelService _model;
 	private readonly SpokenLanguage _spoken;
+	private readonly UsageCounter _usage;
+	private bool _finishCounted;
+	private bool _openCounted;
 	private readonly PageFollower _follower = new();
 	private readonly BusyGuard _busy = new();
 	private readonly SemaphoreSlim _saveLock = new(1, 1); // the cast save and the mode save each read-modify-write _story: one at a time
@@ -47,10 +50,11 @@ public partial class ReadingPage : ContentPage
 	private (SessionState State, int Sentence)? _sheetResume; // what the story was doing when the book sheet opened
 
 	public ReadingPage(ReadingSession session, IStoryLibrary library, GrownUpGate gate, IServiceProvider services,
-		VoicePackInstaller installer, IVoiceModelService model, SpokenLanguage spoken)
+		VoicePackInstaller installer, IVoiceModelService model, SpokenLanguage spoken, UsageCounter usage)
 	{
 		InitializeComponent();
 		_spoken = spoken;
+		_usage = usage;
 		_session = session;
 		_library = library;
 		_gate = gate;
@@ -303,6 +307,7 @@ public partial class ReadingPage : ContentPage
 	protected override void OnAppearing()
 	{
 		base.OnAppearing();
+		CountOpen();
 		_visible = true;
 		_onStack = true;
 		ApplyScreenAwake();
@@ -336,6 +341,7 @@ public partial class ReadingPage : ContentPage
 				Unsubscribe();
 				_session.Detach();
 				_session.Stop();
+				_ = _usage.FlushAsync();
 			}
 		});
 	}
@@ -461,8 +467,36 @@ public partial class ReadingPage : ContentPage
 
 	private void OnSessionStateChanged(object? sender, EventArgs e)
 	{
+		CountFinish();
 		RenderChrome();
 		ApplyScreenAwake();
+	}
+
+	// Slice 133: a book counts as opened once, when its page first shows (not when it is built, so a push that fails counts nothing).
+	private void CountOpen()
+	{
+		if (_openCounted || _story is not { } story)
+		{
+			return;
+		}
+
+		_openCounted = true;
+		_usage.Record(UsageEventName.BookOpened, story);
+	}
+
+	// Slice 133: a book counts as finished once per read to its end; reading on from a swipe or a new Play starts a new count.
+	private void CountFinish()
+	{
+		if (_session.Finished == _finishCounted)
+		{
+			return;
+		}
+
+		_finishCounted = _session.Finished;
+		if (_finishCounted && _story is { } story)
+		{
+			_usage.Record(UsageEventName.BookFinished, story);
+		}
 	}
 
 	// One rule for the screen: on while the book plays and the page is still on the navigation stack (a gate or
@@ -477,7 +511,11 @@ public partial class ReadingPage : ContentPage
 
 	// While the window is stopped the screen is released (audio can keep running and change state in the
 	// background); coming back to the front sets it again, since iOS and a recreated Android window drop it.
-	private void OnWindowStoppedReleaseScreen(object? sender, EventArgs e) => ScreenAwake.Suspend(true);
+	private void OnWindowStoppedReleaseScreen(object? sender, EventArgs e)
+	{
+		ScreenAwake.Suspend(true);
+		_ = _usage.FlushAsync();
+	}
 
 	private void OnWindowResumedKeepScreen(object? sender, EventArgs e) => ScreenAwake.Suspend(false);
 

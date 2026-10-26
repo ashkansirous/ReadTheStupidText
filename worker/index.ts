@@ -4,7 +4,7 @@
 // the Read The Stupid Text site. On *.workers.dev (the pre-cut-over check) the
 // Dino site is reached under a `/dino/` prefix. The free story store API
 // (/api/stories, worker/stories.ts, Slice 92) and its remote config (/api/app-config,
-// worker/appconfig.ts, Slice 132) are Dino Reader's only.
+// worker/appconfig.ts, Slice 132) and its anonymous usage counts (/api/events, worker/events.ts, Slice 133) are Dino Reader's only.
 // Static files are answered by the assets layer without invoking this Worker;
 // only the paths listed in wrangler.jsonc's `assets.run_worker_first` come
 // here, to be mapped onto a file and to get the security headers below. `Env`
@@ -13,7 +13,9 @@
 
 import { DINO_PATH_PREFIX, Product, assetPageFor, canonicalRedirect, handleDownload, isDownloadPath, isHiddenDinoPath, resolveSite, serveObject } from "./downloads";
 import type { ResolvedSite } from "./downloads";
-import { handleAppConfig, isAppConfigPath } from "./appconfig";
+import { APP_CONFIG_KEY, handleAppConfig, isAppConfigPath, parseAppConfig } from "./appconfig";
+import { handleEvents, isEventsPath } from "./events";
+import type { EventsEnv } from "./events";
 import { handleStories, isStoryPath } from "./stories";
 
 const SECURITY_HEADERS: Readonly<Record<string, string>> = {
@@ -48,6 +50,32 @@ function serveAppConfig(request: Request, env: Env, site: ResolvedSite): Promise
   return handleAppConfig(request, env);
 }
 
+// Slice 133: a missing config means telemetry is off, so counts are dropped. An R2 read error is not "off": it throws, handleEvents
+// answers 503 (the app retries later) and nothing is cached. The answer is kept briefly per isolate so a flood of requests does not
+// turn into a flood of R2 reads.
+const TELEMETRY_CACHE_MS = 60_000;
+let telemetryCache: { readonly enabled: boolean; readonly at: number } | null = null;
+
+async function readTelemetryFlag(env: Env): Promise<boolean> {
+  const object = await env.DOWNLOADS.get(APP_CONFIG_KEY);
+  return object ? parseAppConfig(await object.json()).telemetry.enabled : false;
+}
+
+function telemetryCheck(env: Env): () => Promise<boolean> {
+  return async () => {
+    const now = Date.now();
+    if (telemetryCache !== null && now - telemetryCache.at < TELEMETRY_CACHE_MS) return telemetryCache.enabled;
+    const enabled = await readTelemetryFlag(env);
+    telemetryCache = { enabled, at: now };
+    return enabled;
+  };
+}
+
+function serveEvents(request: Request, env: Env & EventsEnv, site: ResolvedSite): Promise<Response> | Response {
+  if (site.product !== Product.DinoReader) return new Response("Not found", { status: 404 });
+  return handleEvents(request, env, telemetryCheck(env));
+}
+
 async function serveAsset(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
   if (isHiddenDinoPath(url.hostname, url.pathname)) return new Response("Not found", { status: 404 });
@@ -56,6 +84,7 @@ async function serveAsset(request: Request, env: Env): Promise<Response> {
   const site = resolveSite(url.hostname, url.pathname);
   if (isStoryPath(site.path)) return serveStories(request, url, env, site);
   if (isAppConfigPath(site.path)) return serveAppConfig(request, env, site);
+  if (isEventsPath(site.path)) return serveEvents(request, env, site);
   if (isDownloadPath(site.path)) {
     return handleDownload(withPath(request, url, site.path), env, site.product, site.home);
   }

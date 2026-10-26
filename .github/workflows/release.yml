@@ -160,17 +160,18 @@ jobs:
           FORCE_ALL: ${{ inputs.force_all && 'true' || 'false' }}
         run: node .github/scripts/ship-targets.mjs
 
-  # Pure-logic unit tests. Gates every Windows/Android build and so every release.
+  # RTST's pure-logic unit tests (Slice 128). Gates every Windows/Android/iOS build and so every release;
+  # a Dino-only change skips them.
   test:
     needs: version
-    if: needs.version.outputs.windows == 'true' || needs.version.outputs.android == 'true' || needs.version.outputs.dinowin == 'true'
+    if: needs.version.outputs.windows == 'true' || needs.version.outputs.android == 'true' || needs.version.outputs.ios == 'true'
     uses: ./.github/workflows/tests.yml
 
-  # Dino Reader's pure Core. Standalone: a Dino-only push tests but never
+  # Dino Reader's suite (Slice 128: every Dino target runs it). Standalone: a Dino-only push tests but never
   # versions or releases.
   dinoreader:
     needs: version
-    if: needs.version.outputs.dinoreader == 'true'
+    if: needs.version.outputs.dinoreader == 'true' || needs.version.outputs.dinoapp == 'true' || needs.version.outputs.dinoios == 'true' || needs.version.outputs.dinowin == 'true'
     uses: ./.github/workflows/dinoreader.yml
 
   # Standalone, like dinoreader: the downloads Worker's checks are in no job's
@@ -187,8 +188,8 @@ jobs:
   # version steady until the next tag, so consecutive pushes can resolve to the
   # same one. Skipped outright when no app platform was selected (docs, DinoReader).
   release-draft:
-    needs: [version, test]
-    # `test` is skipped (not failed) when only iOS changed, so a bare `needs`
+    needs: [version, test, dinoreader]
+    # `test` is skipped (not failed) when only Dino changed, so a bare `needs`
     # would skip this job: !cancelled() plus explicit results instead.
     if: >-
       !cancelled()
@@ -196,6 +197,7 @@ jobs:
       && needs.version.result == 'success'
       && (needs.version.outputs.windows == 'true' || needs.version.outputs.android == 'true' || needs.version.outputs.ios == 'true' || needs.version.outputs.dinoapp == 'true' || needs.version.outputs.dinoios == 'true' || needs.version.outputs.dinowin == 'true')
       && (needs.test.result == 'success' || needs.test.result == 'skipped')
+      && (needs.dinoreader.result == 'success' || needs.dinoreader.result == 'skipped')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -378,12 +380,13 @@ jobs:
   # the unsigned compile runs whenever the app (or code it shares) changed; the signed
   # .aab/.apk is built only when cutting a release and once its four secrets exist.
   build-dinoapp:
-    needs: [version, test, release-draft]
+    needs: [version, test, dinoreader, release-draft]
     if: >-
       !cancelled()
       && needs.version.outputs.dinoapp == 'true'
       && needs.version.result == 'success'
       && (needs.test.result == 'success' || needs.test.result == 'skipped')
+      && (needs.dinoreader.result == 'success' || needs.dinoreader.result == 'skipped')
       && (needs.release-draft.result == 'success' || needs.release-draft.result == 'skipped')
     permissions:
       contents: write   # gh release upload
@@ -397,12 +400,13 @@ jobs:
   # Dino Reader on iOS (Slice 67): the twin of build-ios for `src/DinoReader.App` (uk.sirous.dinoreader).
   # The signed .ipa needs the five team-wide iOS secrets plus its own provisioning profile.
   build-dinoios:
-    needs: [version, test, release-draft]
+    needs: [version, test, dinoreader, release-draft]
     if: >-
       !cancelled()
       && needs.version.outputs.dinoios == 'true'
       && needs.version.result == 'success'
       && (needs.test.result == 'success' || needs.test.result == 'skipped')
+      && (needs.dinoreader.result == 'success' || needs.dinoreader.result == 'skipped')
       && (needs.release-draft.result == 'success' || needs.release-draft.result == 'skipped')
     permissions:
       contents: write   # gh release upload
@@ -415,13 +419,14 @@ jobs:
   # Dino Reader on Windows (Slice 67): the twin of build-windows for `src/DinoReader.App`. Unsigned
   # MSIX x64 + ARM64, so it needs no secrets and always uploads into the draft.
   build-dinowin:
-    needs: [version, test, release-draft]
+    needs: [version, test, dinoreader, release-draft]
     if: >-
       !cancelled()
       && needs.version.outputs.dinowin == 'true'
       && needs.release-draft.outputs.proceed == 'true'
       && needs.version.result == 'success'
-      && needs.test.result == 'success'
+      && (needs.test.result == 'success' || needs.test.result == 'skipped')
+      && (needs.dinoreader.result == 'success' || needs.dinoreader.result == 'skipped')
       && (needs.release-draft.result == 'success' || needs.release-draft.result == 'skipped')
     permissions:
       contents: write   # gh release upload

@@ -1,6 +1,4 @@
-using ReadTheStupidText.Domain.Reading;
-
-namespace ReadTheStupidText.Application.Reading;
+namespace DinoReader.Core;
 
 /// <summary>
 /// Shifts the pitch of mono speech samples by a number of semitones and keeps its length (Slice 113). Pure C#, so
@@ -20,7 +18,7 @@ internal static class PitchShifter
     private const double WobbleHertz = 7.0;
     private const double TremoloShare = 4.0;
 
-    /// <summary>A flavour's pitch shift and, for a bleat, its faint wobble (Slice 117); the three readers call this one step.</summary>
+    /// <summary>A flavour's pitch shift and, for a bleat, its faint wobble (Slice 117); <see cref="FlavourTransform"/> calls this one step.</summary>
     public static float[] Apply(float[] samples, int sampleRate, FlavourShape shape)
     {
         float[] shifted = Shift(samples, sampleRate, shape.Semitones);

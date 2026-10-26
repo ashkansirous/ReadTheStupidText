@@ -1,6 +1,6 @@
 using ReadTheStupidText.Application.Input;
 
-namespace ReadTheStupidText.Infrastructure.Input;
+namespace ReadTheStupidText.Windows.Tray.Input;
 
 /// <summary>
 /// Registers the default global hotkey (Ctrl+Win+R) against a host window and

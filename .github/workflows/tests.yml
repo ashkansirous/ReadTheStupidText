@@ -1,9 +1,10 @@
 name: tests
 
-# Pure-logic unit tests (net10.0-windows: they reference Infrastructure).
+# RTST's pure-logic unit tests (net10.0-windows: they reference Infrastructure). Slice 128: they run for
+# RTST targets only (windows, android, ios); Dino Reader's suite is dinoreader.yml.
 # Slice 70: split out of build.yml. Runs on its own PRs (when anything that
 # build-windows or build-android compiles changes), by hand, and as the `test`
-# job of release.yml, where it gates every Windows/Android/Dino Reader Windows build and so every
+# job of release.yml, where it gates every Windows/Android/iOS build and so every
 # release. No LFS: the tests don't load the voice model.
 
 on:
@@ -24,25 +25,27 @@ on:
       - '.github/scripts/find-release.sh'
       - '.github/scripts/ship-targets.mjs'
       - 'src/ReadTheStupidText.App/**'
+      - 'src/ReadTheStupidText.Windows.Tray/**'
       - 'src/ReadTheStupidText.Infrastructure/**'
       - '.github/workflows/store-submit.yml'
       - '.github/workflows/windows.yml'
       - 'src/ReadTheStupidText.Mobile/**'
       - '!src/ReadTheStupidText.Mobile/Platforms/**'
       - 'src/ReadTheStupidText.Mobile/Platforms/Android/**'
+      - 'src/ReadTheStupidText.Mobile/Platforms/iOS/**'
       - 'src/ReadTheStupidText.Mobile.Shared/**'
       - '!src/ReadTheStupidText.Mobile.Shared/Platforms/**'
       - 'src/ReadTheStupidText.Mobile.Shared/Platforms/Android/**'
-      - 'src/ReadTheStupidText.Mobile.Shared/Platforms/Windows/**'
-      - 'src/DinoReader.App/**'
-      - 'src/DinoReader.Core/**'
+      - 'src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/**'
       - 'src/AndroidSherpaPackaging.props'
       - 'src/AndroidRelease.props'
       - 'src/AndroidProguard.cfg'
       - '.github/scripts/stage-android-package.sh'
       - '.github/scripts/check-android-natives.sh'
       - '.github/workflows/android.yml'
-      - '.github/workflows/dinoreader-windows.yml'
+      - '.github/scripts/ios-signing.sh'
+      - '.github/scripts/testflight-upload.sh'
+      - '.github/workflows/ios.yml'
       - '!**/*.md'
   workflow_dispatch:
   workflow_call:

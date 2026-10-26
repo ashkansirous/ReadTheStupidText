@@ -4,7 +4,7 @@ using System.Windows.Automation.Text;
 using ReadTheStupidText.Application.Input;
 using ReadTheStupidText.Application.Logging;
 
-namespace ReadTheStupidText.Infrastructure.Input;
+namespace ReadTheStupidText.Windows.Tray.Input;
 
 /// <summary>
 /// Detects text-selection changes across the desktop using UI Automation's

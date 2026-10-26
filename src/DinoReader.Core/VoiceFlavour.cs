@@ -1,9 +1,9 @@
-namespace ReadTheStupidText.Domain.Reading;
+namespace DinoReader.Core;
 
 /// <summary>
 /// How a character's voice is shaped on top of the voice that speaks it (Slice 113, Decision 117): a fixed
 /// pitch shift and pace. A closed set (Slice 116 added Squeaky, Grumpy, Whisper and Giant for the storyteller characters). <see cref="Storyteller"/> is the narrator's own flavour: never guessed
-/// or offered to a parent as a choice for a character. RTST always plays <see cref="Normal"/>.
+/// or offered to a parent as a choice for a character. RTST never uses flavours (Slice 129: they live here, and reach the shared engine as an <c>IVoicedAudioTransform</c>).
 /// </summary>
 public enum VoiceFlavour
 {
@@ -31,7 +31,7 @@ public readonly record struct FlavourShape(double Semitones, float Pace, TimeSpa
 /// <summary>The shape table for <see cref="VoiceFlavour"/>. Pitch stays within about +-4 semitones so voices don't turn into chipmunks.</summary>
 public static class VoiceFlavours
 {
-    private static readonly TimeSpan NormalGap = TimeSpan.FromMilliseconds(150);
+    private static readonly TimeSpan NormalGap = ReadTheStupidText.Application.Reading.VoicedAudio.DefaultSentenceGap;
     private const double BleatWobble = 0.03;
     private static readonly TimeSpan StorytellerGap = TimeSpan.FromMilliseconds(260);
 

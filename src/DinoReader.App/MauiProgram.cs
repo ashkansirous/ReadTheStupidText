@@ -52,6 +52,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<StarterStories>();
 		builder.Services.AddSingleton<StoreClient>();
 		builder.Services.AddSingleton<AppConfigClient>();
+		builder.Services.AddSingleton<UsageCounter>();
 		AddDocumentExtractors(builder.Services);
 		AddPages(builder.Services);
 
@@ -62,6 +63,8 @@ public static class MauiProgram
 		MauiApp app = builder.Build();
 		// Stories still carry their language's narrator on disk, for older builds that require the field (Slice 109).
 		StoryJson.LegacyNarratorOf = language => app.Services.GetRequiredService<StoryVoicing>().LegacyNarratorOf(language);
+		// Counts left from an earlier session go out now (Slice 133); the counter does nothing when counting is off.
+		_ = app.Services.GetRequiredService<UsageCounter>().FlushAsync();
 		return app;
 	}
 

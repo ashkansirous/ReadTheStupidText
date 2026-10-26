@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Tray-only Windows code (Slice 128, Decision 135): global hotkey, UI Automation selection
+       monitor, clipboard listener, selection copier, foreground probe and the startup task.
+       Referenced only by ReadTheStupidText.App, so Dino Reader (which shares Infrastructure) neither
+       rebuilds nor ships it. -->
+  <ItemGroup>
+    <ProjectReference Include="..\ReadTheStupidText.Application\ReadTheStupidText.Application.csproj" />
+    <ProjectReference Include="..\ReadTheStupidText.Domain\ReadTheStupidText.Domain.csproj" />
+  </ItemGroup>
+
+  <!-- Managed UI Automation client (System.Windows.Automation) lives in the Windows Desktop runtime
+       pack, as in Infrastructure. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.WindowsDesktop.App" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

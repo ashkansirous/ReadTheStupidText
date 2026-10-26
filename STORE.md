@@ -759,3 +759,25 @@ secrets as Read The Stupid Text (they belong to the developer account). The very
 brand-new listing (age rating, pricing, store listing text) is done once by hand in Partner Center; the
 CLI then pushes updates. The first submission is manual; after it, set the repository variable
 `DINOREADER_STORE_APP_ID=9N9VHRLCZXN5` to turn on `store-submit-dino`.
+
+## Dino Book Reader: anonymous usage counts (Slice 133, Decisions 140-142)
+
+Dino sends anonymous counts to its own Worker (`POST dinoreader.sirous.uk/api/events`, `worker/events.ts`, stored in the Workers
+Analytics Engine dataset `dino_usage`, 3 months). Each count is: its name (`book_opened` / `book_finished`), the book (a shelf book's
+package id for a starter or store story only, or `own` for any other book, never a title), the language, shelf or own, whether a parent recording exists, app version, platform and the UTC
+date. No install, device or advertising id, no typed text, no time of day. On by default, with a grown-up's switch ("Help make Dino
+better") in Settings and one line on the first-run ready screen; the remote config (`telemetry.enabled`, `sampleRate`) turns it down
+without a release. Store forms (the owner or Claude in the signed-in browser, after the release that first sends events ships):
+
+- **Google Play Data safety (Dino):** "Data collected: yes", type **App activity > App interactions**,
+  collected, **not shared**, **processed ephemerally: no**, optional (the user can turn it off), purpose **Analytics**; no
+  personal info, no device or other ids. Encrypted in transit: yes. Deletion request: not applicable (no way to tie data to a person).
+  Families policy: no advertising id, no third-party SDK for the counts (first-party call to our own server).
+- **App Store privacy (Dino):** data type **Usage Data > Product Interaction**, **not linked to the user**, **not used for tracking**,
+  purpose **Analytics**. `PrivacyInfo.xcprivacy` declares the same (`NSPrivacyCollectedDataTypeProductInteraction`, linked false, tracking false).
+- **Microsoft Store (Dino):** no data-collection question beyond the privacy policy URL; it must point at the updated `site/dino/privacy.html`.
+- Cloudflare Analytics Engine is the processor. The `USAGE` binding is not in the wrangler configs until Analytics Engine is enabled on
+  the account (see "Landing site" in `CLAUDE.md` for the switch-on steps); without it `/api/events` answers 204 and writes nothing. Each
+  point's double is the count's weight (1 / the sample rate it was counted at), so query with
+  `SELECT blob1 AS name, blob2 AS book, SUM(double1) FROM dino_usage GROUP BY name, book`.
+- Switch counting on with `telemetry` in `dinoreader/config.json` (`{"enabled": true, "sampleRate": 1}`); it is off until then.

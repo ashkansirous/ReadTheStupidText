@@ -1,7 +1,7 @@
 using ReadTheStupidText.Application.Startup;
 using Windows.ApplicationModel;
 
-namespace ReadTheStupidText.Infrastructure.Startup;
+namespace ReadTheStupidText.Windows.Tray.Startup;
 
 /// <summary>
 /// Implements launch-at-startup with the packaged <see cref="StartupTask"/> API.

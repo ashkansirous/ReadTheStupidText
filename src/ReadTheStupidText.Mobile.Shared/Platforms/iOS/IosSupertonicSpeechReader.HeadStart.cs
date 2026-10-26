@@ -67,7 +67,7 @@ public sealed partial class IosSupertonicSpeechReader
             .Take(PrepareMaxChunks)
             .SelectMany(chunk => SentenceUnits.Split(chunk.Text));
 
-        await Task.WhenAll(sentences.Select(s => GetSentenceAsync(engine, s, voice, VoiceFlavour.Normal, token)));
+        await Task.WhenAll(sentences.Select(s => GetSentenceAsync(engine, s, voice, null, token)));
     }
 
     // The first PrepareMaxChars characters, cut back to the last sentence end so a sentence is never
