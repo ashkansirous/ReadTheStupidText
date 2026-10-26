@@ -41,7 +41,7 @@ internal static class StoreTexts
         new(RedHenId, "The Little Red Hen", "little-red-hen", RedHen, 3, RetoldTraditional, 3, 6, Traditional, ["Hen", "Dog", "Cat", "Duck"], 4, AddedDate),
         new(BillyGoatsId, "The Three Billy Goats Gruff", "billy-goats-gruff", BillyGoats, 0, RetoldTraditional, 4, 7, Traditional, ["Little Billy", "Middle Billy", "Big Billy", "Troll"], 6, AddedDate),
         new(BeanstalkId, "Jack and the Beanstalk", "jack-and-the-beanstalk", Beanstalk, 2, RetoldTraditional, 5, 8, Traditional, ["Jack", "Mother", "Giant", "Peddler"], 4, AddedDate),
-        new(ElvesId, "The Elves and the Shoemaker", "elves-and-shoemaker", Elves, 1, "Retold from the Brothers Grimm · free to share", 5, 8, "Brothers Grimm", ["Hans", "Greta", "Nib", "Nob"], 4, AddedDate),
+        new(ElvesId, "The Elves and the Shoemaker", "elves-and-shoemaker", Elves, 1, "Retold from the Brothers Grimm · free to share", 4, 8, "Brothers Grimm", ["Hans", "Greta", "Nib", "Nob"], 5, AddedDate),
         new(TownMouseId, "The Town Mouse and the Country Mouse", "town-mouse-country-mouse", TownMouse, 2, RetoldAesop, 4, 7, "Aesop", ["Town Mouse", "Country Mouse"], 5, AddedDate),
         new(PeterRabbitId, "The Tale of Peter Rabbit", "peter-rabbit", PeterRabbit, 3, "Beatrix Potter, 1902 (retold)", 3, 6, "Beatrix Potter", ["Mrs. Rabbit", "Peter", "Mr. McGregor", "Robin", "Flopsy"], 6, AddedDate),
         new(TreasureId, "X Marks the Treasure!", "x-marks-the-treasure", Treasure, 0, StoreBuilder.DinoReaderCredit, 3, 6, "Ashkan Sirous", ["Kaatrin", "Seagull", "Izzy", "Pancake Polly", "Billy"], 1, TreasureAddedDate),
@@ -616,37 +616,85 @@ That night Mother tucked Jack into bed and kissed him goodnight. From high up in
 """;
 
     public const string Elves = """
-Once upon a time there was a kind Shoemaker named Hans. He made good shoes, but he was very poor. One evening he had leather for only one more pair of shoes.
+Once upon a time a shoemaker called Hans lived with his wife Greta above their little shoe shop. A sleepy ginger cat dozed by the door.
 
-"I will cut the leather tonight and sew it in the morning," said Hans, and he went to bed.
+Hans and Greta made good, strong shoes, and they were kind to everyone who came in.
 ---
-In the morning Hans came into his workshop. On the table stood a pair of shoes, neatly stitched. "Look, Greta," said Hans. "Who could have made them?"
+One snowy evening Hans and Greta were very tired, and there was only enough leather left for one more pair of shoes.
 
-"They are the finest shoes I have ever seen," said Greta.
+Hans cut it out and laid the pieces on the workbench. "We'll sew them in the morning," said Hans, with a great big yawn.
 ---
-That very day a rich man came into the shop. He liked the shoes so much that he paid more than the usual price. Now Hans had enough money to buy leather for two more pairs of shoes.
+That night, while Hans and Greta were fast asleep upstairs, a happy little sound came from the workshop below.
 
-He cut out the leather and left it on the table.
+Tap, tap, tap! Stitch, stitch, stitch!
 ---
-Again the next morning the shoes were ready, sewn with tiny, perfect stitches. Again they sold at once, and Hans bought leather for four pairs. Night after night the shoes appeared, and soon the shop was full of happy customers.
+In the morning Hans came downstairs. On the workbench stood a pair of shiny new shoes, sewn with tiny, perfect stitches.
+
+"Greta, come and look!" said Hans. "Who made these?"
+
+"Oh, what beautiful shoes!" said Greta.
 ---
-Just before Christmas Hans spoke to his wife. "Greta, let us stay up tonight and see who is helping us," said Hans.
+That very morning a lady in a purple coat came into the shop. She tried on the new shoes, and they fit just right.
 
-"What a good idea," said Greta. They hid behind a curtain and waited.
+She loved them so much that she paid a very good price. Now Hans could buy leather for two more pairs!
 ---
-At midnight two tiny elves came skipping in. They had no clothes, only ragged scraps. They sat at the table and began to stitch and hammer, quick as lightning.
+After that, every evening Hans cut out more leather and left it on the workbench. And every night the happy little sound came back. Tap, tap, tap! Stitch, stitch, stitch!
 
-"Tap, tap, tap!" said Nib.
-
-"Stitch, stitch, stitch!" said Nob.
+Every morning there were more new shoes, and soon the little shop was full of happy customers.
 ---
-When all the shoes were finished, the elves ran away. "Those elves have made us rich," said Greta. "Let us make them something to say thank you. I will sew them little shirts and trousers."
+One evening Greta looked at the new leather on the workbench, all cut out and ready.
 
-"And I will make them each a pair of tiny shoes," said Hans.
+"Somebody is being very kind to us," said Greta. "Let's stay up tonight and see who it is, so we can say thank you."
+
+"What a lovely idea," said Hans.
 ---
-On Christmas Eve they laid the gifts on the table. At midnight the elves came skipping in, and they found the clothes. "Oh, how fine we look!" said Nib.
+So that night Hans and Greta didn't go to bed. They snuggled under a blanket in the big armchair in the corner of the workshop, with the cat on their laps.
 
-"Now we need not work any more," said Nob. They danced out of the door and never came back, but Hans and Greta were happy for the rest of their lives.
+The moon shone in on the workbench. They waited and waited, and Hans tried very hard not to yawn.
+---
+At midnight two tiny elves came skipping in through the cat flap. Nib wore a pointy red hat, and Nob wore a pointy green hat.
+
+Their little feet were bare, and their tunics were thin and patched.
+---
+Nib and Nob hopped up onto the workbench and got to work, quick as a wink.
+
+"Tap, tap, tap!" sang Nib, with her tiny hammer.
+
+"Stitch, stitch, stitch!" sang Nob, with his tiny needle.
+
+Hans and Greta watched from the armchair and smiled.
+---
+When the last shoe was finished, Hans and Greta came over to the workbench.
+
+"Thank you, little friends," said Greta. "You've helped us so much!"
+
+Nib and Nob looked up and giggled. "We love making shoes for kind people," said Nib.
+
+"See you tomorrow night!" said Nob, and he waved.
+---
+The next day Greta sewed two tiny warm coats and two woolly scarves. Hans made two pairs of tiny boots, the smallest he had ever made.
+
+"Now their little toes will be warm and cosy," said Greta.
+
+"It's our turn to help them," said Hans.
+---
+That night the presents sat waiting on the workbench. Hans and Greta waited in the armchair. At midnight Nib and Nob came skipping in through the cat flap.
+
+"Look, Nob! Presents!" said Nib.
+
+"Are they for us?" said Nob.
+
+"Yes, they're all for you!" said Greta.
+---
+Nib twirled round in her new red coat, and Nob stamped his tiny new boots. They danced round and round on the workbench.
+
+"Our toes are warm and cosy!" said Nib. "Thank you, Hans! Thank you, Greta!" said Nob.
+---
+"Now we're warm, we can go and help other kind people too," said Nib. "Goodbye, Hans! Goodbye, Greta!" said Nob.
+
+Hans and Greta waved from the door as the elves skipped away over the moonlit snow.
+
+"Goodbye, little friends!" said Greta. "When someone is kind to you, you can be kind to someone else."
 """;
 
     public const string TownMouse = """

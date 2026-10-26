@@ -176,6 +176,23 @@ public sealed class StoreStoryTests : IDisposable
         AssertEachIsPlayedByTheirGender(story, language, expected);
     }
 
+    // The Elves and the Shoemaker (Slice 121): two and two, the shoemaker Hans and the elf Nob are "he", his wife Greta and the elf Nib "she"; none is an
+    // animal, so each is cast by the gender the English pronouns give them (checked too, since every other language is cast from them).
+    [Theory]
+    [MemberData(nameof(Languages))]
+    public void TheElvesAndTheShoemaker_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
+    {
+        var expected = new Dictionary<string, Gender>
+        {
+            ["Hans"] = Gender.Male, ["Greta"] = Gender.Female, ["Nib"] = Gender.Female, ["Nob"] = Gender.Male,
+        };
+
+        Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.ElvesId));
+        Assert.Equal(expected.Keys.Order(), story.Cast.Select(m => m.Name).Order());
+        Assert.All(story.Cast, m => Assert.True(m.Gender == expected[m.Name], $"{m.Name} is stored as {m.Gender}"));
+        AssertEachIsPlayedByTheirGender(story, language, expected);
+    }
+
     // The Gingerbread Man starter (also a store story) is a boy, so he must get a male voice in every language; Granny, the Cow and the Horse are "she",
     // Grandpa and the Fox "he" (the stored English genders are checked too, since every other language is cast from them).
     [Theory]
