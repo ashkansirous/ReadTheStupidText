@@ -1,9 +1,9 @@
 # Slice 140 — RTST Windows: the same usage counts and timings
 
-*In progress (wave 2026-10-26), draft PR. Starts after Slices 137-139.*
+*Built 2026-10-26 (wave PR #391); packaged desktop run passed 2026-10-26 (queue file needs telemetry on).*
 
 **Batch:** 29 (Decisions 143-148)
-**Touches:** `src/ReadTheStupidText.Infrastructure/Usage/**` (new), `src/ReadTheStupidText.App/App.xaml.cs`, `src/ReadTheStupidText.App/ControlPanelWindow*.cs`, `src/ReadTheStupidText.App/ControlPanelWindow.xaml`, `src/ReadTheStupidText.App/Strings/**`, `src/ReadTheStupidText.Application/ReadAloudService*.cs`, `src/ReadTheStupidText.Application/Usage/**`, `worker/events.ts`, `PRIVACY.md`, `site/privacy.html`, `STORE.md`, `tests/ReadTheStupidText.Tests/**`, `src/ReadTheStupidText.App/CLAUDE.md`
+**Touches:** `src/ReadTheStupidText.Infrastructure/Usage/**` (new), `src/ReadTheStupidText.App/App.xaml.cs`, `src/ReadTheStupidText.App/ControlPanelWindow*.cs`, `src/ReadTheStupidText.App/ControlPanelWindow.xaml`, `src/ReadTheStupidText.App/Strings/**`, `src/ReadTheStupidText.Application/ReadAloudService*.cs`, `src/ReadTheStupidText.Application/Usage/**`, `worker/events.ts`, `PRIVACY.md`, `site/privacy.html`, `STORE.md`, `README.md`, `site/index.html`, `tools/rtst-usage-report.ps1`, `tests/ReadTheStupidText.Tests/**`, `src/ReadTheStupidText.App/CLAUDE.md`
 
 ## Why
 
@@ -31,13 +31,27 @@ One frame, W2 (line 172 of `docs/design/rtst-phone/RTST Batch 29.dc.html`), shar
 
 ## Work
 
-- [ ] Windows sender, queue persistence, flush on exit and next launch.
-- [ ] Events from `ReadAloudService` (read source, mode, voice, timings: pack download, translate,
+- [x] Windows sender, queue persistence, flush on exit and next launch.
+- [x] Events from `ReadAloudService` (read source, mode, voice, timings: pack download, translate,
       first audio) and the control panel (translate toggle, voice change).
-- [ ] Switch and one line in the control panel; strings.
-- [ ] Privacy texts and `STORE.md` gain the Windows sources; Microsoft Store row of the checklist.
+- [x] Switch and one line in the control panel; strings.
+- [x] Privacy texts and `STORE.md` gain the Windows sources; Microsoft Store row of the checklist.
 
 ## Verification
 
 - Unit tests; packaged dev run (`device-test`): a hotkey read and a translated read send one batch;
   the switch off sends nothing.
+
+*Changed while building:* the sender and queue are not in local settings: `Infrastructure/Usage/` keeps a file queue and the config under `LocalFolder/usage/` with an HTTP transport, over `UsageService` (with `IUsageRecorder`/`IUsageStore`/`IUsageTransport`) in `Application/Usage/`, mirroring Slice 137 semantics. Events come from `ReadAloudService.Usage.cs`; `app_opened` from `App.xaml.cs`. The last flush runs on `ProcessExit`, waits at most 2 s and uses the held config; a batch is dequeued before the POST (loss over double count). With the switch off the app fetches no config; counts are held unstamped until a config arrives. Worker: `source` is blob 15, a `windows` engine was added, and `translate_chosen` `sourceLanguage` is optional. `tools/rtst-usage-report.ps1` updated; `PRIVACY.md`, `site/privacy.html`, `STORE.md`, `README.md` and `site/index.html` now describe counts on every platform. No first-run window (the open point's default).
+
+*From review:* 140-high: 13 findings applied, 6 left by design. 140-medium: 6 applied, 5 not a bug, 8 skipped.
+
+#### For CLAUDE.md
+
+Already added by the build as "Anonymous usage counts (Slice 140)" in `src/ReadTheStupidText.App/CLAUDE.md` (queue cleared only on an explicit off, never while no config has been seen; Worker lists must grow with `UsageEngine`/`UsageSource`; counting stays off until the remote config says on). Index pass: do not lift it again.
+
+#### Not yet verified
+
+- Packaged desktop run (x64 dev build, 2026-10-26): PASS for the switch (on by default, persists), clipboard/hotkey/translated reads, no crash with telemetry off, tray Quit in 0.6 s. Not exercised: the `LocalFolder/usage` queue file (needs `telemetry.enabled` on; covered by `UsageServiceTests`).
+- Microsoft Store data-collection answers (the `plan.md` checklist row).
+- Rows appear in `rtst_usage` once Analytics Engine is switched on.
