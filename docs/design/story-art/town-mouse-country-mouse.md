@@ -1,7 +1,7 @@
 # The Town Mouse and the Country Mouse: art record
 
 Store story (`StoreTexts.TownMouse`, stem `town-mouse-country-mouse`, version 5). Retold as 15 pages with one action each
-(`dino-storytelling` skill, Slice 121). **Art status (2026-10-26): cover and 15 pictures accepted by the illustrator (pending the reviewer).** The cover and all 15 pages are new; the
+(`dino-storytelling` skill, Slice 121). **Art status (2026-10-26): cover and 15 pictures accepted by the illustrator and the full review passed on 2026-10-26 (fixes: zh hoover sound 嗡嗡嗡, fr bedtime sound Vrrr, ja shared line neutral and evening word).** The cover and all 15 pages are new; the
 text-only version 4 had none.
 
 **Gentle retelling (Decision 130):** in Aesop the Town Mouse sneers at the country food, and in town a cat and then a barking
@@ -48,7 +48,7 @@ languages. Everyone else is silent and never named in a speech tag. Translations
 (La Fontaine's names, kept from version 4); Spanish la Ratona de ciudad / el Ratón de campo; Portuguese a Ratinha da cidade /
 o Rato do campo; Japanese Town Mouse says わたし, Country Mouse ぼく, and the shared refrains are neutral. Pieces said by both
 (welcome, "Your home is lovely") are written addressee-neutral in Spanish and Portuguese («¡Pasa, pasa, esta es mi casa!»).
-Sound words in every language but en/es/zh/fa are the repeat form and untested aloud: flag the ru, ar, ja and Nordic sounds (and the rest) for a listen. Chinese «砰砰砰！» and Farsi «بوم بوم بوم!» / «ووم‌ووم‌ووم!» follow the text review (2026-10-26).
+Sound words in every language but en/es/zh/fa are the repeat form and untested aloud: flag the ru, ar, ja and Nordic sounds (and the rest) for a listen. Chinese «砰砰砰！» and «嗡嗡嗡！» and Farsi «بوم بوم بوم!» / «ووم‌ووم‌ووم!» follow the text review (2026-10-26).
 
 **Style:** Children's picture book illustration, soft watercolour and coloured pencil, warm gentle colours, simple rounded
 shapes, no text or letters anywhere. Portrait 3:4.
