@@ -8,7 +8,7 @@ internal sealed record StoreStorySpec(string Id, string Title, string Stem, stri
 /// The ten free store stories (Slice 102, Decision 106): public-domain tales retold in plain words for ages 3 to 8, with a named
 /// speaker on every line so the caster gives each character a voice (the starter rule: <c>said Name</c> or <c>Name said</c>, a bare
 /// capitalised name). Pages are separated by a line holding only "---". The retellings are original to this repo (MIT); Peter Rabbit
-/// is Beatrix Potter's 1902 text, shortened to fit fifteen pages (a few speech tags added). The ids never change: "Downloaded" and updates match on them.
+/// is retold from Beatrix Potter's 1902 text in fifteen gentle pages (Slice 121). The ids never change: "Downloaded" and updates match on them.
 /// <see cref="StoreBuilder"/> turns them into the files that go up to R2.
 /// </summary>
 internal static class StoreTexts
@@ -40,7 +40,7 @@ internal static class StoreTexts
         new(BeanstalkId, "Jack and the Beanstalk", "jack-and-the-beanstalk", Beanstalk, 2, RetoldTraditional, 5, 8, Traditional, ["Jack", "Mother", "Giant", "Peddler"], 3, AddedDate),
         new(ElvesId, "The Elves and the Shoemaker", "elves-and-shoemaker", Elves, 1, "Retold from the Brothers Grimm · free to share", 5, 8, "Brothers Grimm", ["Hans", "Greta", "Nib", "Nob"], 4, AddedDate),
         new(TownMouseId, "The Town Mouse and the Country Mouse", "town-mouse-country-mouse", TownMouse, 2, RetoldAesop, 4, 7, "Aesop", ["Town Mouse", "Country Mouse"], 4, AddedDate),
-        new(PeterRabbitId, "The Tale of Peter Rabbit", "peter-rabbit", PeterRabbit, 3, "Beatrix Potter, 1902 (shortened)", 3, 6, "Beatrix Potter", ["Mrs. Rabbit", "Peter", "Mr. McGregor"], 5, AddedDate),
+        new(PeterRabbitId, "The Tale of Peter Rabbit", "peter-rabbit", PeterRabbit, 3, "Beatrix Potter, 1902 (retold)", 3, 6, "Beatrix Potter", ["Mrs. Rabbit", "Peter", "Mr. McGregor", "Robin", "Flopsy"], 6, AddedDate),
     ];
 
     public const string LionAndMouse = """
@@ -556,52 +556,80 @@ Simple food in peace is better than a feast in a fuss.
 """;
 
     public const string PeterRabbit = """
-Once upon a time there were four little Rabbits, and their names were Flopsy, Mopsy, Cotton-tail and Peter. They lived with their Mother in a sand-bank, underneath the root of a very big fir-tree.
----
-"Now, my dears," said Mrs. Rabbit one morning, "you may go into the fields or down the lane, but don't go into Mr. McGregor's garden. Mr. McGregor is a grumpy gardener, and he does not like rabbits in his garden."
+Once upon a time there were four little rabbits, and their names were Flopsy, Mopsy, Cotton-tail and Peter. They lived with their mum, Mrs. Rabbit, in a cosy burrow under a big fir tree.
 
-"Now run along, and don't get into mischief. I am going out," said Mrs. Rabbit.
+Peter was the littlest. He had a brand-new green jacket and two little red shoes.
 ---
-Then old Mrs. Rabbit took a basket and her umbrella, and went through the wood to the baker's. Flopsy, Mopsy and Cotton-tail, who were good little bunnies, went down the lane to gather blackberries.
+One morning Mrs. Rabbit picked up her basket. "I'm going to the shops," said Mrs. Rabbit. "You can play in the field, or pick blackberries down the lane."
 
-But Peter, who was very naughty, ran straight away to Mr. McGregor's garden, and squeezed under the gate!
+"But stay out of Mr. McGregor's garden!" said Mrs. Rabbit. "It's his garden, not ours."
 ---
-First he ate some lettuces and some French beans, and then he ate some radishes. And then, feeling rather full, he went to look for some parsley.
+As soon as their mum had gone, Flopsy, Mopsy and Cotton-tail ran down the lane to pick blackberries.
 
-But round the end of a cucumber frame, whom should he meet but Mr. McGregor!
+But Peter didn't go with them. He wanted the yummy vegetables! He hopped the other way, straight to Mr. McGregor's garden. Lippity, lippity, lippity!
 ---
-Mr. McGregor was on his hands and knees planting out young cabbages, but he jumped up and ran after Peter, waving his arms. "Stop thief!" said Mr. McGregor.
+Mr. McGregor's garden had a big green gate, with a little gap underneath. Peter squeezed under it. Wiggle, wiggle, wiggle!
 
-Peter was in a great hurry. He scampered all over the garden, for he had forgotten the way back to the gate. He lost one of his shoes among the cabbages, and the other shoe amongst the potatoes.
+On the gate post, two little sparrows shook their heads. But Peter didn't look back.
 ---
-Peter felt lost. But some friendly sparrows saw him, and flew to him in great excitement, and cheered him on. "Come along, Peter! You can do it!" they chirped.
+The garden was full of yummy things. Munch, munch, munch! First Peter ate some lettuce. Then he ate some crunchy beans. Then he ate some radishes, one, two, three!
 
-Mr. McGregor came hurrying up with a rake. But Peter wriggled out of his little jacket just in time, leaving it behind him.
+"Yum, yum, yum!" said Peter.
 ---
-And he rushed into the tool-shed, and jumped into a can. It would have been a beautiful thing to hide in, if it had not had so much water in it.
+Soon Peter's tummy felt very full, and very funny. "Ooh, my tummy," said Peter. "I ate too much!"
 
-Presently Peter sneezed. "Kertyschoo!" said Peter. Mr. McGregor was after him in no time, but Peter jumped out of a window, upsetting three plants. The window was too small for Mr. McGregor, and he was tired of running after Peter. He went back to his work.
+He felt very hot, so he hung his jacket on a bean pole and put his shoes beside it. Then he lay down for a rest in the cool shade of a big rhubarb leaf.
 ---
-Peter sat down to rest. He was out of breath, and he had not the least idea which way to go. Also he was very damp with sitting in that can.
+After his rest, Peter hopped off to find the gate, and he forgot all about his jacket and shoes. But the bean plants were taller than Peter, and every path looked the same.
 
-After a time he began to wander about, going lippity, lippity, not very fast, and looking all around.
+"Which way is the gate?" said Peter. A little mouse ran by with a big pea in her mouth. She couldn't say a word, so she just shook her head.
 ---
-He went back towards the tool-shed, but suddenly, quite close to him, he heard the noise of a hoe, scr-r-ritch, scratch, scratch, scritch. Peter scuttered underneath the bushes. But presently, as nothing happened, he came out, and climbed upon a wheelbarrow and peeped over.
+Peter sat down beside a watering can. He felt very small, and a little bit lost. Then he remembered what his mum had said that morning.
 
-The first thing he saw was Mr. McGregor hoeing onions. His back was turned towards Peter, and beyond him was the gate!
----
-Peter got down very quietly off the wheelbarrow, and started running as fast as he could go, along a straight walk behind some black-currant bushes.
+"But stay out of Mr. McGregor's garden!" said Mrs. Rabbit.
 
-Mr. McGregor caught sight of him at the corner, but Peter did not care. He slipped underneath the gate, and was safe at last in the wood outside the garden.
+"Oh dear," said Peter. "I should have listened to my mum."
 ---
-Mr. McGregor hung up the little jacket and the shoes for a scare-crow.
+Creak, creak, creak! Along the path came Mr. McGregor with his wheelbarrow.
 
-Peter never stopped running or looked behind him till he got home to the big fir-tree. He was so tired that he flopped down upon the nice soft sand on the floor of the rabbit-hole, and shut his eyes.
----
-His mother was busy cooking. She wondered what he had done with his clothes. It was the second little jacket and pair of shoes that Peter had lost in a fortnight!
+"Who's been nibbling my lettuces?" said Mr. McGregor. "Grumble, grumble, grumble!"
 
-I am sorry to say that Peter was not very well during the evening. His mother put him to bed, and made some camomile tea. "One table-spoonful to be taken at bedtime," said Mrs. Rabbit.
+Peter hid behind a big cabbage and kept as still as a stone.
 ---
-But Flopsy, Mopsy, and Cotton-tail had bread and milk and blackberries for supper.
+By the bean poles, Mr. McGregor found a little green jacket and two little red shoes.
+
+"Well, well, well!" said Mr. McGregor. "Just the right size for my scarecrow!"
+
+So he dressed his scarecrow in them. And for the first time all day, Mr. McGregor smiled.
+---
+When Mr. McGregor had gone in for his lunch, a robin with a round red tummy hopped down beside Peter.
+
+"Please, can you help me find the gate?" said Peter.
+
+"Tweet, tweet, tweet! Of course I can," said Robin. "Follow me. I know the way!"
+---
+Robin flew from bush to bush, and Peter hopped along behind him. Lippity, lippity, lippity!
+
+They went past the carrots, past the onions, and past the scarecrow in its little green jacket. But the scarecrow was much too tall, and Peter was much too small.
+
+"Bye-bye, jacket! Bye-bye, shoes!" said Peter.
+---
+At last, there was the big green gate! Peter squeezed under it. Wiggle, wiggle, wiggle!
+
+"Thank you, Robin!" said Peter.
+
+"Hop straight home now," said Robin, and he waved his wing.
+---
+Peter hopped all the way home to the big fir tree. Lippity, lippity, lippity! Mrs. Rabbit gave him a big hug.
+
+"Peter! Where are your jacket and shoes?" said Mrs. Rabbit.
+
+"I went into Mr. McGregor's garden," said Peter. "I'm sorry, Mum. Next time I'll listen."
+---
+Peter's tummy still felt funny, so Mrs. Rabbit tucked him into bed with a little cup of camomile tea.
+
+Flopsy, Mopsy and Cotton-tail had bread and milk and blackberries for supper. "We saved you some blackberries for tomorrow, Peter," said Flopsy.
+
+"Goodnight, my little bunnies," said Mrs. Rabbit. And soon Peter was fast asleep.
 """;
 }

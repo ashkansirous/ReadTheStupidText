@@ -7,7 +7,7 @@ namespace DinoReader.Tests;
 /// and are cast as piglets. A character whose name has an animal word (Wolf, Papa Bear, Mrs. Rabbit) is found from the name and needs no entry here.
 /// A character stored as no animal (<see cref="CastMember.NotAnimal"/>) is cast by gender like a person in every language: the Ugly Duckling (really a swan) and his
 /// sister Dilly, whose rosters' duckling voices are one gender per language and would otherwise give him a girl's voice or her a boy's; and the Little Red
-/// Hen's Cat (she) and Duck (he), for the same reason with the kitten and duckling voices. The cost is that they make no meow or quack.
+/// Hen's Cat (she) and Duck (he), for the same reason with the kitten and duckling voices, and Peter Rabbit (he), with the bunny voice. The cost is that they make no meow or quack.
 /// </summary>
 internal static class StarterAnimals
 {
@@ -15,13 +15,13 @@ internal static class StarterAnimals
     {
         [StarterTexts.PigsId] = Named(AnimalKind.Pig, "Pip", "Pop", "Pim"),
         [StoreTexts.BillyGoatsId] = Named(AnimalKind.Goat, "Little Billy", "Middle Billy", "Big Billy"),
-        [StoreTexts.PeterRabbitId] = Named(AnimalKind.Rabbit, "Peter"),
     };
 
     private static readonly IReadOnlyDictionary<string, IReadOnlySet<string>> NotAnimalsByStory = new Dictionary<string, IReadOnlySet<string>>
     {
         [StoreTexts.UglyDucklingId] = new HashSet<string> { "Duckling", "Dilly" },
         [StoreTexts.RedHenId] = new HashSet<string> { "Cat", "Duck" }, // kitten and duckling voices are girls in most languages, boys in fa/es/pt; Duck is a boy (Slice 121)
+        [StoreTexts.PeterRabbitId] = new HashSet<string> { "Peter" }, // the bunny voice is a girl in most languages and Peter is a boy (Slice 121)
     };
 
     private static IReadOnlyDictionary<string, AnimalKind> Named(AnimalKind kind, params string[] names) => names.ToDictionary(n => n, _ => kind);

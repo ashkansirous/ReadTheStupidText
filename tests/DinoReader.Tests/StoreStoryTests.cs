@@ -133,6 +133,23 @@ public sealed class StoreStoryTests : IDisposable
         AssertEachIsPlayedByTheirGender(story, language, expected);
     }
 
+    // The Tale of Peter Rabbit (Slice 121): Mrs. Rabbit and Flopsy are "she", Peter, Mr. McGregor and Robin "he". The roster's bunny voice is a girl in most
+    // languages, so the builder stores Peter as no animal (StarterAnimals) and he is cast as a boy; Mrs. Rabbit is grown, which no bunny voice plays.
+    [Theory]
+    [MemberData(nameof(Languages))]
+    public void TheTaleOfPeterRabbit_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
+    {
+        var expected = new Dictionary<string, Gender>
+        {
+            ["Mrs. Rabbit"] = Gender.Female, ["Flopsy"] = Gender.Female, ["Peter"] = Gender.Male, ["Mr. McGregor"] = Gender.Male, ["Robin"] = Gender.Male,
+        };
+
+        Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.PeterRabbitId));
+        Assert.Equal(expected.Keys.Order(), story.Cast.Select(m => m.Name).Order());
+        Assert.All(story.Cast, m => Assert.True(m.Gender == expected[m.Name], $"{m.Name} is stored as {m.Gender}"));
+        AssertEachIsPlayedByTheirGender(story, language, expected);
+    }
+
     // The Gingerbread Man starter (also a store story) is a boy, so he must get a male voice in every language; Granny, the Cow and the Horse are "she",
     // Grandpa and the Fox "he" (the stored English genders are checked too, since every other language is cast from them).
     [Theory]
