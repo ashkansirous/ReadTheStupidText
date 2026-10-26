@@ -1,7 +1,7 @@
 # The Lion and the Mouse: art record
 
-Store story (`StoreTexts.LionAndMouse`, stem `lion-and-mouse`, version 4). Retold as 15 pages with one
-action each (`dino-storytelling` skill). **Art status (2026-10-26): cover and all 15 pages drawn, checked at full size and prepared** into `tests/DinoReader.Tests/Store/lion-and-mouse/` (full review PASS 2026-10-26 after the p7, p8 and p14 redraws).
+Store story (`StoreTexts.LionAndMouse`, stem `lion-and-mouse`, version 5). Retold as 15 pages with one
+action each (`dino-storytelling` skill). Version 5 (Slice 146 Wave A, 2026-10-26): Farsi rewritten in spoken Farsi, sound words as plain triples; English, page breaks and every picture unchanged. **Art status (2026-10-26): cover and all 15 pages drawn, checked at full size and prepared** into `tests/DinoReader.Tests/Store/lion-and-mouse/` (full review PASS 2026-10-26 after the p7, p8 and p14 redraws).
 
 **Gentle retelling (Decision 130):** in Aesop the Lion is caught in a hunters' net and roars in fear. Here
 there are no hunters, no trap and nobody in danger: an old fishing net hangs between two trees by the

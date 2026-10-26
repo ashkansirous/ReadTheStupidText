@@ -271,8 +271,32 @@
   <data name="Pack_Failed" xml:space="preserve">
     <value>De download is mislukt. Probeer het opnieuw.</value>
   </data>
+  <data name="CountsTitle.Text" xml:space="preserve">
+    <value>Help de app verbeteren</value>
+  </data>
+  <data name="CountsCaption.Text" xml:space="preserve">
+    <value>Stuurt tellingen zoals “er is een Franse tekst gelezen”. Geen namen, geen id’s, niets van wat je leest.</value>
+  </data>
+  <data name="CountsSwitch.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Help de app verbeteren</value>
+  </data>
   <data name="Translate_AutoDetect" xml:space="preserve">
     <value>Automatisch herkennen</value>
+  </data>
+  <data name="Wait_DownloadingPercent" xml:space="preserve">
+    <value>{0} downloaden… {1}%</value>
+  </data>
+  <data name="Wait_Translating" xml:space="preserve">
+    <value>Vertalen…</value>
+  </data>
+  <data name="Wait_PreparingVoice" xml:space="preserve">
+    <value>De stem voorbereiden…</value>
+  </data>
+  <data name="Wait_Pair" xml:space="preserve">
+    <value>{0} naar {1}</value>
+  </data>
+  <data name="Wait_Cancel" xml:space="preserve">
+    <value>Annuleren</value>
   </data>
   <data name="Translate_Note_Default" xml:space="preserve">
     <value>Automatische vertaling, op dit apparaat. De kwaliteit kan wisselen.</value>

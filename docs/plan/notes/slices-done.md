@@ -143,6 +143,11 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 137 | RTST phone: anonymous usage counts and timings | built | #382 | | [137-rtst-phone-usage-counts.md](../slices/137-rtst-phone-usage-counts.md) |
 | 143 | One shared wait overlay; Dino shows it on every wait | built | #383 | | [143-shared-wait-overlay-dino-loading.md](../slices/143-shared-wait-overlay-dino-loading.md) |
 | 144 | Farsi: the female voice is the default | built | #384 | | [144-farsi-default-female-voice.md](../slices/144-farsi-default-female-voice.md) |
+| 138 | RTST phone: a wait indicator after 500 ms | built | #390 | | [138-rtst-phone-wait-indicator.md](../slices/138-rtst-phone-wait-indicator.md) |
+| 140 | RTST Windows: the same usage counts and timings | built | #391 | | [140-rtst-windows-usage-counts.md](../slices/140-rtst-windows-usage-counts.md) |
+| 141 | RTST Windows: a wait indicator after 500 ms | built | #397 | | [141-rtst-windows-wait-indicator.md](../slices/141-rtst-windows-wait-indicator.md) |
+| 145 | Which sound-word spellings sound right aloud | built | #385 | | [145-sound-words-aloud-test.md](../slices/145-sound-words-aloud-test.md) |
+| 149 | Never drop a short word: catch silent output from the voices | built | #401 | | [149-never-drop-a-short-word.md](../slices/149-never-drop-a-short-word.md) |
 
 ## Batch ordering notes
 

@@ -129,14 +129,48 @@ public sealed class StoreStoryTests : IDisposable
             ["Hen"] = Gender.Female, ["Dog"] = Gender.Male, ["Cat"] = Gender.Female, ["Duck"] = Gender.Male,
         };
 
-        AssertEachCharacterIsPlayedByTheirGender(StoreTexts.RedHenId, language, expected);
+        Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.RedHenId));
+        AssertEachIsPlayedByTheirGender(story, language, expected);
     }
 
-    // Casts the store story's characters the way the app does in <language> (the story's own language keeps its stored cast; another language is cast afresh,
-    // carrying only the animal settings) and checks each is played by a roster character of the expected gender.
-    private static void AssertEachCharacterIsPlayedByTheirGender(string storyId, string language, IReadOnlyDictionary<string, Gender> expected)
+    // The Gingerbread Man starter (also a store story) is a boy, so he must get a male voice in every language; Granny, the Cow and the Horse are "she",
+    // Grandpa and the Fox "he" (the stored English genders are checked too, since every other language is cast from them).
+    [Theory]
+    [MemberData(nameof(Languages))]
+    public void TheGingerbreadMan_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
     {
-        Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == storyId));
+        Story story = StarterBuilder.Build(StarterTexts.GingerbreadId, "The Gingerbread Man", StarterTexts.Gingerbread, 1);
+        var expected = new Dictionary<string, Gender>
+        {
+            ["Granny"] = Gender.Female, ["Grandpa"] = Gender.Male, ["Gingerbread Man"] = Gender.Male, ["Cow"] = Gender.Female, ["Horse"] = Gender.Female, ["Fox"] = Gender.Male,
+        };
+
+        Assert.Equal(expected.Keys.Order(), story.Cast.Select(m => m.Name).Order());
+        Assert.All(story.Cast, m => Assert.True(m.Gender == expected[m.Name], $"{m.Name} is stored as {m.Gender}"));
+        AssertEachIsPlayedByTheirGender(story, language, expected);
+    }
+
+    // The Tortoise and the Hare starter (also a store story): the Hare, Owl and Hedgehog are "he", the Tortoise, Squirrel and Frog "she", three of each, and each
+    // must get a voice of that gender in every language (the stored English genders are checked too, since every other language is cast from them).
+    [Theory]
+    [MemberData(nameof(Languages))]
+    public void TheTortoiseAndTheHare_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
+    {
+        Story story = StarterBuilder.Build(StarterTexts.TortoiseId, "The Tortoise and the Hare", StarterTexts.Tortoise, 0);
+        var expected = new Dictionary<string, Gender>
+        {
+            ["Hare"] = Gender.Male, ["Tortoise"] = Gender.Female, ["Owl"] = Gender.Male, ["Squirrel"] = Gender.Female, ["Hedgehog"] = Gender.Male, ["Frog"] = Gender.Female,
+        };
+
+        Assert.Equal(expected.Keys.Order(), story.Cast.Select(m => m.Name).Order());
+        Assert.All(story.Cast, m => Assert.True(m.Gender == expected[m.Name], $"{m.Name} is stored as {m.Gender}"));
+        AssertEachIsPlayedByTheirGender(story, language, expected);
+    }
+
+    // Casts the story the way the app does in that language (a language other than the story's is cast afresh, carrying only the animal settings; the story's
+    // language keeps its cast) and checks that each character's roster character has the expected gender.
+    private static void AssertEachIsPlayedByTheirGender(Story story, string language, IReadOnlyDictionary<string, Gender> expected)
+    {
         IReadOnlyList<CastMember> stored = language == story.Language
             ? story.Cast
             : story.Cast.Where(m => m.HasAnimalSetting).Select(m => m with { VoiceId = string.Empty }).ToList();

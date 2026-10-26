@@ -1,4 +1,6 @@
 using System.Globalization;
+using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Domain.Activity;
 using ReadTheStupidText.Domain.Reading;
 
 namespace ReadTheStupidText.Application.Usage;
@@ -26,7 +28,7 @@ public static class UsageEvents
             : null;
 
     /// <summary>A read started: the text's detected language (null when unsure), the language it is read in, and which voice reads it.</summary>
-    public static UsageEvent? ReadStarted(UsageContext context, string? sourceLanguage, string? readLanguage, bool translated, string engine, bool voiceDefault, int textLength) =>
+    public static UsageEvent? ReadStarted(UsageContext context, string? sourceLanguage, string? readLanguage, bool translated, string engine, bool voiceDefault, int textLength, string? source = null) =>
         Language(readLanguage) is { } language
             ? Make(context, UsageEventName.ReadStarted) with
             {
@@ -36,6 +38,7 @@ public static class UsageEvents
                 Engine = engine,
                 VoiceDefault = voiceDefault,
                 LengthBucket = UsageBuckets.TextLength(textLength),
+                Source = source,
             }
             : null;
 
@@ -44,6 +47,15 @@ public static class UsageEvents
 
     /// <summary>The offer was taken: the checkbox was ticked when Read was tapped.</summary>
     public static UsageEvent? TranslateChosen(UsageContext context, string? source, string? target) => Pair(context, UsageEventName.TranslateChosen, source, target);
+
+    /// <summary>
+    /// The translate switch was turned on (Windows, Slice 140), into <paramref name="target"/>. The text's language is not known yet, so
+    /// <paramref name="source"/> is only the one the person picked, else null.
+    /// </summary>
+    public static UsageEvent? TranslateSwitchedOn(UsageContext context, string? source, string? target) =>
+        Language(target) is { } to
+            ? Make(context, UsageEventName.TranslateChosen) with { SourceLanguage = Language(source), Language = to }
+            : null;
 
     /// <summary>A voice was picked for <paramref name="language"/>.</summary>
     public static UsageEvent? VoiceChanged(UsageContext context, string? language, string engine) =>
@@ -78,6 +90,21 @@ public static class UsageEvents
         VoiceEngineKind.Melo => UsageEngine.Melo,
         VoiceEngineKind.Kokoro => UsageEngine.Kokoro,
         _ => UsageEngine.Phone,
+    };
+
+    /// <summary>The count's engine name for a Windows voice: the Windows speech voice (null, or the "system" entry), else the pack's engine.</summary>
+    public static string EngineOf(VoiceInfo? voice) =>
+        voice is null || voice.Id == SystemVoice.Id ? UsageEngine.Windows : EngineFor(false, voice.Engine);
+
+    /// <summary>What started a read, as the closed <see cref="UsageSource"/> value.</summary>
+    public static string SourceOf(ActivityTrigger trigger) => trigger switch
+    {
+        ActivityTrigger.AutoRead => UsageSource.Selection,
+        ActivityTrigger.Clipboard => UsageSource.Clipboard,
+        ActivityTrigger.Hotkey => UsageSource.Hotkey,
+        ActivityTrigger.Manual => UsageSource.Panel,
+        ActivityTrigger.FileUpload => UsageSource.Panel, // the closed set has no "file": a picked file is read from the panel's or tray's file picker
+        _ => UsageSource.Panel,
     };
 
     /// <summary>True while the person never picked a voice (nothing stored) or picked the one the model starts with.</summary>

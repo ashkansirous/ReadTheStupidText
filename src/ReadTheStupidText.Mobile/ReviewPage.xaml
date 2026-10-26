@@ -66,9 +66,12 @@
         <Grid Grid.Row="1" Padding="14" RowSpacing="10" RowDefinitions="*,Auto" SafeAreaEdges="Container,SoftInput">
 
             <Border x:Name="TextBox" Grid.Row="0" StrokeShape="RoundRectangle 16" Stroke="{StaticResource Primary}" StrokeThickness="2"
-                    Padding="16,14" BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}">
-                <Editor x:Name="TextEditor" FontSize="18" BackgroundColor="Transparent" TextChanged="OnEditorTextChanged"
-                        TextColor="{AppThemeBinding Light=#1f2027, Dark=#E6E6EA}" Placeholder="{x:Static res:AppResources.Reader_EditorHint}" />
+                    Padding="0" BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}">
+                <!-- The wait overlay (Slice 138) is added last in code, so it covers the whole box while translating. -->
+                <Grid x:Name="TextBoxContent">
+                    <Editor x:Name="TextEditor" Margin="16,14" FontSize="18" BackgroundColor="Transparent" TextChanged="OnEditorTextChanged"
+                            TextColor="{AppThemeBinding Light=#1f2027, Dark=#E6E6EA}" Placeholder="{x:Static res:AppResources.Reader_EditorHint}" />
+                </Grid>
             </Border>
 
             <VerticalStackLayout Grid.Row="1" Spacing="10">
@@ -125,16 +128,6 @@
                               Scale="1.375" HorizontalOptions="Center" VerticalOptions="Center" />
                         <Label x:Name="ReadLabel" TextColor="White" FontSize="18" FontAttributes="Bold" VerticalOptions="Center" />
                     </HorizontalStackLayout>
-                </Border>
-
-                <!-- R7: while a missing translation model downloads. -->
-                <Border x:Name="ProgressCard" IsVisible="False" Style="{StaticResource CardStyle}" StrokeShape="RoundRectangle 16" Padding="16,14">
-                    <VerticalStackLayout Spacing="10">
-                        <Label x:Name="ProgressTitle" FontSize="15" FontAttributes="Bold" />
-                        <ProgressBar x:Name="ProgressBar" Progress="0" HeightRequest="8" ProgressColor="{StaticResource Primary}" />
-                        <Label x:Name="ProgressNote" FontSize="13"
-                               TextColor="{AppThemeBinding Light=#94000000, Dark={StaticResource TextSecondaryDark}}" />
-                    </VerticalStackLayout>
                 </Border>
 
             </VerticalStackLayout>

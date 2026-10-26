@@ -7,15 +7,18 @@ using ReadTheStupidText.Application.Sanitizing;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Application.Startup;
 using ReadTheStupidText.Application.Translation;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Documents;
 using ReadTheStupidText.Infrastructure.Logging;
 using ReadTheStupidText.Infrastructure.Reading;
 using ReadTheStupidText.Infrastructure.Sanitizing;
 using ReadTheStupidText.Infrastructure.Settings;
 using ReadTheStupidText.Infrastructure.Translation;
+using ReadTheStupidText.Infrastructure.Usage;
 using ReadTheStupidText.Windows.Tray.Input;
 using ReadTheStupidText.Windows.Tray.Startup;
 using Microsoft.Extensions.DependencyInjection;
+using System.Globalization;
 using System.Net.NetworkInformation;
 using Microsoft.UI.Xaml;
 
@@ -94,6 +97,10 @@ public partial class App : Application
         services.AddSingleton<ILanguageDetector, ScriptLanguageDetector>();
         services.AddSingleton<ReadTranslator>();
 
+        // Anonymous usage counts (Slice 140): one service, also the IUsageRecorder the read service and the panel's switch use.
+        services.AddSingleton(_ => WindowsUsage.Create());
+        services.AddSingleton<IUsageRecorder>(sp => sp.GetRequiredService<UsageService>());
+
         services.AddSingleton<IActivityLog, ActivityLog>();
         services.AddSingleton<ReadAloudService>();
         return services.BuildServiceProvider();
@@ -113,6 +120,9 @@ public partial class App : Application
     // app was killed mid-read); a normal read cleans up its own folder when done.
     private static readonly TimeSpan AudioChunkRetention = TimeSpan.FromDays(1);
 
+    // The longest the exit waits for the last usage send; quitting is never held up by the network.
+    private static readonly TimeSpan UsageExitWait = TimeSpan.FromSeconds(2);
+
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
         StartLogging();
@@ -128,6 +138,16 @@ public partial class App : Application
             Services.GetRequiredService<VoicePackSetup>(),
             Services.GetRequiredService<ISystemLog>());
         StartVoicePackSetup();
+        StartUsageCounts();
+    }
+
+    // Counts the launch and sends what the last run left queued, off the UI thread; a last send runs as the process exits (Slice 140).
+    private void StartUsageCounts()
+    {
+        var usage = Services.GetRequiredService<UsageService>();
+        string? language = UiLanguageTag.Effective(Services.GetRequiredService<ISettingsStore>().Language, CultureInfo.CurrentUICulture.Name);
+        _ = usage.StartAsync(context => UsageEvents.AppOpened(context, language, usage.OsMajor));
+        AppDomain.CurrentDomain.ProcessExit += (_, _) => usage.FlushForExitAsync(UsageExitWait).GetAwaiter().GetResult();
     }
 
     // First run (no stored language) asks for one in the language window, which starts the download.

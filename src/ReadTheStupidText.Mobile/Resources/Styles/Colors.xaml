@@ -20,6 +20,12 @@
     <Color x:Key="CardBorder">#17000000</Color>
     <Color x:Key="TextSecondaryLight">#80000000</Color>
     <Color x:Key="TextSecondaryDark">#A3FFFFFF</Color>
+    <Color x:Key="TextPrimaryDark">#E6E6EA</Color>
+    <Color x:Key="WaitFillLight">#E6FFFFFF</Color>
+    <Color x:Key="WaitFillDark">#E61F1F1F</Color>
+    <Color x:Key="WaitDetailDark">#A3FFFFFF</Color>
+    <Color x:Key="WaitCancelFillDark">#338B87F0</Color>
+    <Color x:Key="WaitCancelTextDark">#C9C7FA</Color>
     <Color x:Key="ChipBackgroundLight">#0D000000</Color>
     <Color x:Key="ChipBackgroundDark">#1AFFFFFF</Color>
 

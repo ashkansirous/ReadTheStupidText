@@ -1,5 +1,7 @@
 using System.Text;
+using System.Diagnostics;
 using ReadTheStupidText.Application.Translation;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Domain.Activity;
 
 namespace ReadTheStupidText.Application.Reading;
@@ -38,6 +40,7 @@ public sealed partial class ReadAloudService
 
         var cts = new CancellationTokenSource();
         CancelPendingPrepare(Interlocked.Exchange(ref _translationCts, cts));
+        long started = Stopwatch.GetTimestamp();
         try
         {
             TranslationStreamStart? start = await PlanStreamAsync(entry, text, cts.Token);
@@ -48,11 +51,11 @@ public sealed partial class ReadAloudService
 
             if (start.Terminal is { } terminal)
             {
-                await ReadOriginalAsync(entry, terminal, cts);
+                await ReadOriginalAsync(entry, terminal, cts, text.Length);
                 return true;
             }
 
-            await ReadStreamAsync(entry, start.Stream!, cts.Token);
+            await ReadStreamAsync(entry, start.Stream!, cts.Token, text.Length, started);
             return true;
         }
         catch (StreamingUnavailableException ex)
@@ -62,6 +65,7 @@ public sealed partial class ReadAloudService
         }
         catch (OperationCanceledException) when (cts.IsCancellationRequested)
         {
+            CountTiming(UsageStage.Translate, UsageOutcome.Cancelled, Stopwatch.GetElapsedTime(started), null, null);
             return true; // superseded: the entry was finalized by Supersede
         }
         finally
@@ -88,7 +92,7 @@ public sealed partial class ReadAloudService
     }
 
     // Translation could not run for this text (same language, pack downloading, ...): say why, read the original.
-    private async Task ReadOriginalAsync(ActivityEntry entry, ReadTranslationResult terminal, CancellationTokenSource cts)
+    private async Task ReadOriginalAsync(ActivityEntry entry, ReadTranslationResult terminal, CancellationTokenSource cts, int originalLength)
     {
         if (!cts.IsCancellationRequested && terminal.IsNotable)
         {
@@ -101,12 +105,15 @@ public sealed partial class ReadAloudService
             return;
         }
 
+        CountReadStarted(entry, originalLength, terminal.Source, false, null);
         ReadTextChanged?.Invoke(this, new ReadText(terminal.Text, false));
-        await _reader.SpeakAsync(terminal.Text, entry.Id);
+        Task speak = _reader.SpeakAsync(terminal.Text, entry.Id);
+        StopIfSuperseded(entry);
+        await speak;
         await FailIfNeverPlayedAsync(entry);
     }
 
-    private async Task ReadStreamAsync(ActivityEntry entry, TranslationStream stream, CancellationToken token)
+    private async Task ReadStreamAsync(ActivityEntry entry, TranslationStream stream, CancellationToken token, int originalLength, long translateStarted)
     {
         // Cancelling pumpCts also cancels a translation still running when the read ends or fails.
         using var pumpCts = CancellationTokenSource.CreateLinkedTokenSource(token);
@@ -120,10 +127,12 @@ public sealed partial class ReadAloudService
         string first = blocks.Current;
         var spoken = new StringBuilder(first);
         var firstRead = new ReadText(first, stream.Outcome == TranslationOutcome.Translated);
+        CountStreamStarted(entry, stream, originalLength, translateStarted);
         DropHeadStartIfTranslated(firstRead);
         ReadTextChanged?.Invoke(this, firstRead);
 
         Task speak = _reader.SpeakStreamAsync(first, entry.Id);
+        StopIfSuperseded(entry);
         Task pump = PumpBlocksAsync(entry, stream, blocks, spoken, pumpCts.Token);
         try
         {

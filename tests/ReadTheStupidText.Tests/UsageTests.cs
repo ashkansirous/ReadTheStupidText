@@ -167,7 +167,8 @@ public class UsageEventsTests
         string source = File.ReadAllText(Path.Combine(RepoRoot(), "worker", "events.ts"));
         string[] durations = Enumerable.Range(0, 7).Select(i => UsageBuckets.Duration(TimeSpan.FromSeconds(new[] { 0.1, 0.6, 1.5, 3, 7, 15, 30 }[i]))).ToArray();
         string[] lengths = [UsageBuckets.TextLength(0), UsageBuckets.TextLength(200), UsageBuckets.TextLength(1000), UsageBuckets.TextLength(5000)];
-        string[] engines = [UsageEngine.Phone, UsageEngine.Supertonic, UsageEngine.Piper, UsageEngine.Melo, UsageEngine.Kokoro];
+        string[] engines = [UsageEngine.Phone, UsageEngine.Supertonic, UsageEngine.Piper, UsageEngine.Melo, UsageEngine.Kokoro, UsageEngine.Windows];
+        string[] sources = [UsageSource.Selection, UsageSource.Clipboard, UsageSource.Hotkey, UsageSource.Panel];
         string[] stages = [UsageStage.ModelDownload, UsageStage.Translate, UsageStage.FirstAudio];
         string[] outcomes = [UsageOutcome.Done, UsageOutcome.Cancelled, UsageOutcome.Failed];
         string[] modes = [UsageMode.Original, UsageMode.Translation];
@@ -178,6 +179,7 @@ public class UsageEventsTests
         AssertListed(source, "RTST_STAGES", stages);
         AssertListed(source, "RTST_OUTCOMES", outcomes);
         AssertListed(source, "RTST_MODES", modes);
+        AssertListed(source, "RTST_SOURCES", sources);
     }
 
     private static void AssertListed(string source, string list, string[] inApp)

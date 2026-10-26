@@ -238,7 +238,8 @@ export interface RtstEventsEnv {
 const YES = "yes";
 const NO = "no";
 const RTST_MODES = ["original", "translation"] as const;
-const RTST_ENGINES = ["phone", "supertonic", "piper", "melo", "kokoro"] as const;
+const RTST_ENGINES = ["phone", "supertonic", "piper", "melo", "kokoro", "windows"] as const;
+const RTST_SOURCES = ["selection", "clipboard", "hotkey", "panel"] as const;
 const RTST_LENGTH_BUCKETS = ["<200", "200-1000", "1000-5000", ">5000"] as const;
 const RTST_STAGES = ["model_download", "translate", "first_audio"] as const;
 const RTST_OUTCOMES = ["done", "cancelled", "failed"] as const;
@@ -246,8 +247,8 @@ const RTST_DURATION_BUCKETS = ["<0.5", "0.5-1", "1-2", "2-5", "5-10", "10-20", "
 const MIN_OS_MAJOR = 1;
 const MAX_OS_MAJOR = 99;
 
-/** The blob order of a phone count after its envelope; a field a count does not carry is an empty blob. */
-export const RTST_FIELDS = ["language", "sourceLanguage", "mode", "engine", "voiceDefault", "lengthBucket", "osMajor", "stage", "outcome", "durationBucket"] as const;
+/** The blob order of a count after its envelope; a field a count does not carry is an empty blob. New fields are only ever appended (Slice 140 added `source`). */
+export const RTST_FIELDS = ["language", "sourceLanguage", "mode", "engine", "voiceDefault", "lengthBucket", "osMajor", "stage", "outcome", "durationBucket", "source"] as const;
 type RtstField = (typeof RTST_FIELDS)[number];
 type FieldValue = string | number | boolean;
 
@@ -264,6 +265,7 @@ const RTST_VALIDATORS: Readonly<Record<RtstField, (value: unknown) => boolean>> 
   stage: (value) => oneOf(RTST_STAGES, value),
   outcome: (value) => oneOf(RTST_OUTCOMES, value),
   durationBucket: (value) => oneOf(RTST_DURATION_BUCKETS, value),
+  source: (value) => oneOf(RTST_SOURCES, value),
 };
 
 interface RtstRule {
@@ -273,9 +275,9 @@ interface RtstRule {
 
 const RTST_EVENT_RULES: Readonly<Record<string, RtstRule>> = {
   app_opened: { required: ["language", "osMajor"], optional: [] },
-  read_started: { required: ["language", "mode", "engine", "voiceDefault", "lengthBucket"], optional: ["sourceLanguage"] },
+  read_started: { required: ["language", "mode", "engine", "voiceDefault", "lengthBucket"], optional: ["sourceLanguage", "source"] },
   translate_offered: { required: ["sourceLanguage", "language"], optional: [] },
-  translate_chosen: { required: ["sourceLanguage", "language"], optional: [] },
+  translate_chosen: { required: ["language"], optional: ["sourceLanguage"] },
   voice_changed: { required: ["language", "engine"], optional: [] },
   timing: { required: ["stage", "outcome", "durationBucket"], optional: ["sourceLanguage", "language"] },
 };

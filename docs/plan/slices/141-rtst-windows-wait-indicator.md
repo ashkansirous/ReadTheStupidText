@@ -1,9 +1,9 @@
 # Slice 141 — RTST Windows: a wait indicator after 500 ms
 
-*Planned. Starts after Slice 140.*
+*Built 2026-10-26 (wave PR #397); packaged desktop run 2026-10-26: flyout, Cancel and focus passed; the panel ring re-check is pending.*
 
 **Batch:** 29 (Decisions 143-148)
-**Touches:** `src/ReadTheStupidText.App/WaitFlyout*` (new), `src/ReadTheStupidText.App/ControlPanelWindow.xaml`, `src/ReadTheStupidText.App/ControlPanelWindow*.cs`, `src/ReadTheStupidText.App/Tray*`, `src/ReadTheStupidText.App/Strings/**`, `src/ReadTheStupidText.Application/Reading/WaitStage.cs`, `tests/ReadTheStupidText.Tests/**`
+**Touches:** `src/ReadTheStupidText.App/WaitFlyout*` (new), `src/ReadTheStupidText.App/ControlPanelWindow.xaml`, `src/ReadTheStupidText.App/ControlPanelWindow*.cs`, `src/ReadTheStupidText.App/Tray*`, `src/ReadTheStupidText.App/Strings/**`, `src/ReadTheStupidText.Application/Reading/WaitStage.cs`, `src/ReadTheStupidText.Application/Reading/ReadAloudService.cs` (public `CancelRead`), `tests/ReadTheStupidText.Tests/**`
 
 ## Why
 
@@ -32,11 +32,47 @@ Two frames in `docs/design/rtst-phone/RTST Batch 29.dc.html` (W1 line 150, W2 li
 
 ## Work
 
-- [ ] Flyout by the tray with stage, progress and Cancel; the control panel shows the same state.
-- [ ] Stages: translation-pack download, translate, first synthesis, mid-read stall.
-- [ ] `wait_shown` / `wait_cancelled` events (Slice 138 set) from Windows.
+- [x] Flyout by the tray with stage, progress and Cancel; the control panel shows the same state.
+- [x] Stages: translation-pack download, translate, first synthesis (mid-read stall: deferred to Slice 148).
+- [ ] `wait_shown` / `wait_cancelled` events from Windows (deferred to Slice 148).
 
 ## Verification
 
-- Packaged dev run (`device-test`): first translation to a language without its pack shows the
-  download stage and Cancel stops it; a quick read shows nothing.
+- Packaged dev run (`device-test`): a read that waits shows the stage and Cancel stops the read (a pack
+  download it triggered may finish in the background); a quick read shows nothing. Hotkey read with a
+  slow voice: the foreground window does not change when the flyout appears or hides.
+
+## Built notes (review pass 1)
+
+- The download stage shows only for a download of the read's own pair while the read is still resolving
+  its text. A read never waits for a pack (it reads the original at once), so this stage is rare; Cancel
+  stops the read, not the download.
+- W2: the wait row's ring replaces the play button's own ring while the wait shows, and the header
+  subtitle reads the stage, as the mock does (the mock and the plan default agree).
+- The flyout window is no-activate and tool-window, and hides instead of closing.
+
+## Deferred to Slice 148
+
+- The mid-read stall stage (the service exposes no stall signal).
+- `wait_shown` / `wait_cancelled` counts from Windows (needs `Application/Usage` and `worker/events.ts`).
+
+## Changed while building
+
+- `WaitFlyoutWindow` (no-activate tool window, bottom-right, hides on Alt+F4) and `WaitFlyoutController` reuse `WaitGate` (500 ms). `ControlPanelWindow.Wait.cs` holds the panel side: the ring replaces Play, the subtitle shows the stage, and when the panel is visible the wait moves from the flyout to the panel.
+- `ReadWaitStages` is pure logic with tests. "Downloading" shows only when this read waits on its own pair's pack (reads never wait on packs; the original text plays at once).
+- `ReadAloudService.CancelRead` swaps the cts and calls `StopIfSuperseded` only when no read is active; `CurrentReadId` is exposed.
+- 5 `Wait_` strings in the 14 resw files (drafts).
+
+## From review
+
+- `141-high`: 6 findings applied. `141-medium`: 7 applied, 4 judged not a bug.
+
+#### For CLAUDE.md (lifted 2026-10-26)
+
+- Windows waits go through `WaitFlyoutController` (500 ms `WaitGate`); the flyout (`WaitFlyoutWindow`) must stay no-activate so a hotkey read never steals focus. Rule goes in `src/ReadTheStupidText.App/CLAUDE.md`. (Slice 141: docs/plan/slices/141-rtst-windows-wait-indicator.md)
+
+#### Not yet verified
+
+- Packaged desktop run (x64 dev build, 2026-10-26): PASS for the flyout after ~500 ms with the foreground window unchanged, Cancel then a normal next read, "Translating…" then "Preparing the voice…", and WM_CLOSE on the flyout then another read. After that run the panel was changed to match W2 (the Play button becomes the ring with Cancel): re-check it on the desktop.
+- Native-speaker read of the 5 `Wait_` strings in the 14 resw files (drafts).
+- One unconfirmed `CoreMessagingXP` `0xc000027b` crash when a hotkey read arrived 0.7 s after a running auto-read (not reproduced in ~15 runs).

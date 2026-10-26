@@ -6,6 +6,7 @@ using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Sanitizing;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Application.Translation;
+using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Domain.Activity;
 using ReadTheStupidText.Domain.Reading;
 using ReadTheStupidText.Domain.Sanitizing;
@@ -32,6 +33,84 @@ public class ReadAloudServiceGeneratingTests
     }
 
     [Fact]
+    public async Task CancelRead_stops_a_read_still_waiting_for_its_first_audio()
+    {
+        var harness = new Harness();
+        var gate = new TaskCompletionSource();
+        harness.Speak = (_, _) => gate.Task;
+
+        Task read = harness.Service.ReadFileAsync("a.txt");
+        await Task.Delay(30, TestContext.Current.CancellationToken);
+        Assert.True(harness.Service.IsGeneratingAudio);
+
+        harness.Service.CancelRead();
+
+        Assert.False(harness.Service.IsGeneratingAudio);
+        Assert.Equal(ActivityState.Interrupted, Assert.Single(harness.Log.Entries).State);
+        gate.SetResult();
+        await read;
+    }
+
+    [Fact]
+    public async Task A_read_replaced_during_its_start_does_not_stop_the_newer_read()
+    {
+        var harness = new Harness();
+        var gate = new TaskCompletionSource();
+        int stopsAfterReplace = -1;
+        Task? second = null;
+        int calls = 0;
+        harness.Speak = (_, _) =>
+        {
+            if (++calls == 1)
+            {
+                second = harness.Service.ReadFileAsync("b.txt"); // the newer read takes over while the first is starting
+                stopsAfterReplace = harness.Reader.Stops;
+            }
+
+            return gate.Task;
+        };
+
+        Task first = harness.Service.ReadFileAsync("a.txt");
+        await Task.Delay(50, TestContext.Current.CancellationToken);
+
+        Assert.True(stopsAfterReplace >= 0);
+        Assert.Equal(stopsAfterReplace, harness.Reader.Stops);
+        gate.SetResult();
+        await first;
+        await second!;
+    }
+
+    [Fact]
+    public async Task A_cancelled_read_stops_the_reader_once_it_starts_speaking()
+    {
+        var harness = new Harness();
+        var gate = new TaskCompletionSource();
+        harness.Speak = (_, _) =>
+        {
+            harness.Service.CancelRead();
+            return gate.Task;
+        };
+
+        Task read = harness.Service.ReadFileAsync("a.txt");
+        await Task.Delay(50, TestContext.Current.CancellationToken);
+
+        Assert.True(harness.Reader.Stops >= 2);
+        gate.SetResult();
+        await read;
+    }
+
+    [Fact]
+    public void CancelRead_with_nothing_active_does_nothing()
+    {
+        var harness = new Harness();
+
+        harness.Service.CancelRead();
+
+        Assert.False(harness.Service.IsGeneratingAudio);
+        Assert.Empty(harness.Log.Entries);
+    }
+
+    [Fact]
     public async Task Reader_that_returns_early_then_plays_within_the_grace_is_not_failed()
     {
         var harness = new Harness();
@@ -49,6 +128,89 @@ public class ReadAloudServiceGeneratingTests
 
         Assert.Equal(ActivityState.Reading, Assert.Single(harness.Log.Entries).State);
         Assert.False(harness.Service.IsGeneratingAudio);
+    }
+
+    [Fact]
+    public async Task A_read_counts_its_source_voice_and_first_audio_without_the_text()
+    {
+        var usage = new RecordingUsage();
+        var harness = new Harness(usage: usage);
+        harness.Settings.Language = "en";
+        harness.Speak = (_, _) =>
+        {
+            harness.Reader.RaiseState(PlaybackState.Playing);
+            return Task.CompletedTask;
+        };
+
+        await harness.Service.ReadFileAsync("a.txt");
+
+        UsageEvent started = Assert.Single(usage.Events, e => e.Name == UsageEventName.ReadStarted);
+        Assert.Equal(UsageSource.Panel, started.Source);
+        Assert.Equal(UsageMode.Original, started.Mode);
+        Assert.Equal(UsageEngine.Windows, started.Engine);
+        Assert.Equal("en", started.Language);
+        Assert.Equal("<200", started.LengthBucket);
+        Assert.True(started.VoiceDefault);
+        UsageEvent timing = Assert.Single(usage.Events, e => e.Name == UsageEventName.Timing);
+        Assert.Equal(UsageStage.FirstAudio, timing.Stage);
+        Assert.Equal(UsageOutcome.Done, timing.Outcome);
+        Assert.DoesNotContain(usage.Events, e => e.Name != UsageEventName.ReadStarted && e.Name != UsageEventName.Timing);
+    }
+
+    [Fact]
+    public async Task A_read_that_never_plays_counts_a_failed_first_audio_once()
+    {
+        var usage = new RecordingUsage();
+        var harness = new Harness(usage: usage);
+        harness.Settings.Language = "en";
+        harness.Service.FirstAudioGrace = TimeSpan.FromMilliseconds(30);
+
+        await harness.Service.ReadFileAsync("a.txt");
+
+        UsageEvent timing = Assert.Single(usage.Events, e => e.Name == UsageEventName.Timing);
+        Assert.Equal(UsageStage.FirstAudio, timing.Stage);
+        Assert.Equal(UsageOutcome.Failed, timing.Outcome);
+    }
+
+    [Fact]
+    public async Task A_read_replaced_while_it_waits_counts_a_cancelled_first_audio()
+    {
+        var usage = new RecordingUsage();
+        var harness = new Harness(usage: usage);
+        harness.Settings.Language = "en";
+        harness.Service.FirstAudioGrace = TimeSpan.FromSeconds(10);
+        var firstWaiting = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        harness.Speak = (_, _) =>
+        {
+            firstWaiting.TrySetResult();
+            return Task.CompletedTask;
+        };
+
+        Task first = harness.Service.ReadFileAsync("a.txt");
+        await firstWaiting.Task;
+        harness.Monitor.RaiseCleared();
+        await first;
+
+        UsageEvent timing = Assert.Single(usage.Events, e => e.Name == UsageEventName.Timing);
+        Assert.Equal(UsageOutcome.Cancelled, timing.Outcome);
+    }
+
+    [Fact]
+    public void Picking_a_voice_counts_a_voice_change_in_the_voice_language()
+    {
+        var usage = new RecordingUsage();
+        var harness = new Harness(usage: usage);
+        harness.Settings.Language = "fr";
+
+        harness.Service.SetVoice("not-installed");
+        Assert.Empty(usage.Events);
+
+        harness.Service.SetVoice(SystemVoice.Id);
+
+        UsageEvent changed = Assert.Single(usage.Events);
+        Assert.Equal(UsageEventName.VoiceChanged, changed.Name);
+        Assert.Equal("fr", changed.Language);
+        Assert.Equal(UsageEngine.Windows, changed.Engine);
     }
 
     [Fact]
@@ -618,13 +780,34 @@ public class ReadAloudServiceGeneratingTests
 
         public string DocumentText { get; set; } = "some text to read";
 
-        public Harness(Func<TestSettings, ReadTranslator>? translation = null)
+        public Harness(Func<TestSettings, ReadTranslator>? translation = null, IUsageRecorder? usage = null)
         {
             Reader = new FakeReader(this);
             Service = new ReadAloudService(
                 Reader, Clipboard, new FakeHotkey(), new FakeCopier(), Monitor,
                 new FakeClipboardMonitor(), new FakeForeground(), new FakeVoices(), new FakeModel(),
-                new FakeDocuments(this), Log, Settings, new FakeSanitizer(), new SilentLog(), HeadStart, translation?.Invoke(Settings));
+                new FakeDocuments(this), Log, Settings, new FakeSanitizer(), new SilentLog(), HeadStart, translation?.Invoke(Settings), usage);
+        }
+    }
+
+    // Runs each count's builder at once with a fixed context, so a test reads what would have been queued.
+    private sealed class RecordingUsage : IUsageRecorder
+    {
+        private static readonly UsageContext Context = new("1.4.0", "windows", 1, new DateTimeOffset(2026, 10, 26, 12, 0, 0, TimeSpan.Zero));
+
+        public List<UsageEvent> Events { get; } = [];
+
+        public bool Enabled { get; set; } = true;
+
+        public void Record(Func<UsageContext, UsageEvent?> make)
+        {
+            if (make(Context) is { } count)
+            {
+                lock (Events)
+                {
+                    Events.Add(count);
+                }
+            }
         }
     }
 
@@ -682,7 +865,8 @@ public class ReadAloudServiceGeneratingTests
         public Task WarmUpAsync() => Task.CompletedTask;
         public void Pause() { }
         public void Resume() { }
-        public void Stop() { }
+        public void Stop() => Stops++;
+        public int Stops { get; private set; }
         public void SetSpeed(PlaybackRate speed) { }
         public void SetVoice(string voiceId) { }
         public Task SkipForward() => Task.CompletedTask;
@@ -741,7 +925,7 @@ public class ReadAloudServiceGeneratingTests
 
     private sealed class FakeVoices : IVoiceCatalog
     {
-        public IReadOnlyList<VoiceInfo> InstalledVoices => [];
+        public IReadOnlyList<VoiceInfo> InstalledVoices { get; } = [new VoiceInfo(SystemVoice.Id, "Windows voice", string.Empty)];
         public VoiceInfo? DefaultVoice => null;
     }
 
