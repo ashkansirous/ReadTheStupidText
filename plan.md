@@ -51,7 +51,7 @@ Batch 35 (159, built, PR #473, so the batch is done; planned 2026-10-27, the use
 
 - [Finished slices](docs/plan/notes/slices-done.md): the status rows of every built or verified slice, and the finished batches' lane-order paragraphs.
 - [Out of scope, earlier batches](docs/plan/notes/out-of-scope-history.md): every earlier batch's out-of-scope lines, moved verbatim.
-- [Decisions 1-99](docs/plan/decisions.md): the full numbered decision list, moved verbatim.
+- [Decisions 1-99](docs/plan/notes/decisions-001-099.md): the archived numbered decisions, moved verbatim (100 onward: docs/plan/decisions.md).
 - [2026-10-25 Dino usage insights](docs/plan/notes/2026-10-25-dino-usage-insights.md): what Play, Apple, COPPA and the UK Children's code allow for analytics in a kids' app, and the Cloudflare cost (Batch 28).
 - [2026-10-25 Product separation](docs/plan/notes/2026-10-25-product-separation.md): how much RTST and Dino share, and which changes ship the other product (Batch 27).
 - [2026-10-20 Android minSdk 28](docs/plan/notes/2026-10-20-android-min-sdk-28.md): why the Android floor is 28 (Decision 82).
