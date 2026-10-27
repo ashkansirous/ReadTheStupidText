@@ -1,6 +1,6 @@
 # Jack and the Beanstalk: art record
 
-Store story (`StoreTexts.Beanstalk`, stem `jack-and-the-beanstalk`, id `e2fb7f5de4ab4c4eb8bd2bb97c91accc`, version 4).
+Store story (`StoreTexts.Beanstalk`, stem `jack-and-the-beanstalk`, id `e2fb7f5de4ab4c4eb8bd2bb97c91accc`, version 6). Version 6 (Slice 146 Wave A, 2026-10-27): Farsi rewritten in spoken Farsi, sound words as plain triples with no commas and no vowel marks (each of the three English "Boom!" pieces is «گرومب گرومب!», six steps on page 8). **Wave B note:** make the English "Boom, boom, boom!" one piece, so its Farsi can be a single plain triple; English, page breaks and every picture unchanged, so every page keeps its picture.
 Retold as 15 pages with one action each (`dino-storytelling` skill, Slice 121). **Art status (2026-10-26): illustrated,
 all 16 pictures accepted; the full review PASSED on 2026-10-26 after the redraws.** The old 9-page version was text only.
 
