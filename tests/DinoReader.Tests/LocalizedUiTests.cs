@@ -34,6 +34,22 @@ public partial class LocalizedUiTests
     }
 
     [Fact]
+    public void The_animal_sounds_strings_are_translated_in_every_language()
+    {
+        Dictionary<string, string> neutral = Load(NeutralFile);
+
+        foreach (string file in LanguageFiles())
+        {
+            Dictionary<string, string> translated = Load(file);
+            foreach (string key in new[] { "Settings_AnimalSounds_Title", "Settings_AnimalSounds_Sub" })
+            {
+                Assert.True(translated.ContainsKey(key), $"{file}: {key} missing");
+                Assert.NotEqual(neutral[key], translated[key]);
+            }
+        }
+    }
+
+    [Fact]
     public void There_is_a_file_for_each_non_english_language()
     {
         string[] expected = UiLanguage.Supported.Where(c => c != UiLanguage.English).Order().ToArray();

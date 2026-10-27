@@ -89,8 +89,13 @@ public static partial class AnimalSounds
         return animals;
     }
 
+    /// <summary>The animals (or planned sounds) that sound at all: none when the grown-up's app-wide "Animal sounds" setting is off (Slice 152), whatever the book.</summary>
+    public static IReadOnlyDictionary<TKey, AnimalKind> Audible<TKey>(IReadOnlyDictionary<TKey, AnimalKind> animals, bool soundsOn)
+        where TKey : notnull =>
+        soundsOn ? animals : new Dictionary<TKey, AnimalKind>();
+
     /// <summary>
-    /// The animal each story character plays now (Slice 136, Decision 132). A character no grown-up has recast (<see cref="CastMember.Edited"/> is false) keeps the animal
+    /// The animal each story character plays now (Slice 136, Decision 132; changed per member, Slice 152, Decision 157: a member the book gives an animal setting, or none, plays that whatever its voice). A character no grown-up has recast (<see cref="CastMember.Edited"/> is false) keeps the animal
     /// <see cref="Resolve"/> finds (a Cow with no cow character still moos, a duck cast as a piglet still quacks). Once a grown-up has changed the character, the animal is
     /// the cast character's own (found exactly by its voice and flavour among <paramref name="speakers"/>; Brave Knight is none, so it is silent). A character with no cast
     /// voice, or one whose voice and flavour are not a roster character, keeps the resolved animal. Animals with no sound are included (<see cref="WithSound"/> drops them).
@@ -105,6 +110,17 @@ public static partial class AnimalSounds
         foreach (Character character in characters)
         {
             CastMember? member = cast?.FirstOrDefault(m => m.CharacterId == character.Id);
+            if (member is { HasAnimalSetting: true })
+            {
+                // The book decided this character (Slice 152, Decision 157): its stored animal or none, whatever voice it plays.
+                if (member.Animal is { } stored)
+                {
+                    animals[character.Id] = stored;
+                }
+
+                continue;
+            }
+
             AnimalKind? taken = resolved.TryGetValue(character.Id, out AnimalKind found) ? found : null;
             if (PlayedKind(member, taken, speakers, rules) is { } animal)
             {

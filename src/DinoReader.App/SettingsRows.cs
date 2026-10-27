@@ -76,6 +76,80 @@ public static class SettingsRows
 	}
 }
 
+/// <summary>The grown-up's app-wide "Animal sounds" switch (Slice 152, Decision 157): on when nothing is stored. The per-book <c>Story.AnimalSoundsOn</c> is kept in the format but ignored.</summary>
+public static class AnimalSoundsPreference
+{
+	private const string Key = "dino.animal.sounds";
+
+	public static bool Load()
+	{
+		try
+		{
+			return Preferences.Default.Get(Key, true);
+		}
+		catch (Exception)
+		{
+			// A value of another type under this key, or a preferences store that cannot be read: treat it as missing (on).
+			return true;
+		}
+	}
+
+	public static void Save(bool on) => Preferences.Default.Set(Key, on);
+}
+
+/// <summary>
+/// The "Animal sounds" card of the grown-up settings (Slice 152, mock Batch 31 frame 70): a title, a helper line and a switch, on by default,
+/// between the Reading speed and "Help make Dino better" cards. One setting for every book.
+/// </summary>
+public static class AnimalSoundsCard
+{
+	private const double CardRadius = 18;
+	private const double CardMinHeight = 64;
+	private const double CardPadding = 14;
+	private const double TitleSize = 15;
+	private const double HelperSize = 12.5;
+
+	private static void SaveQuietly(bool on)
+	{
+		try
+		{
+			AnimalSoundsPreference.Save(on);
+		}
+		catch (Exception)
+		{
+			// The switch still shows the grown-up's choice; it is saved again on the next change.
+		}
+	}
+
+	public static Border Build()
+	{
+		var toggle = new ToggleSwitch { IsOn = AnimalSoundsPreference.Load(), AccessibleName = AppResources.Settings_AnimalSounds_Title, VerticalOptions = LayoutOptions.Center };
+		toggle.Toggled += (_, _) => SaveQuietly(toggle.IsOn);
+		var text = new VerticalStackLayout
+		{
+			Spacing = 2,
+			VerticalOptions = LayoutOptions.Center,
+			Children =
+			{
+				CastText.InOwnScript(new Label { Text = AppResources.Settings_AnimalSounds_Title, FontSize = TitleSize, FontAttributes = FontAttributes.Bold }),
+				CastText.InOwnScript(new Label { Text = AppResources.Settings_AnimalSounds_Sub, FontSize = HelperSize, TextColor = DinoTokens.Get(DinoTokens.Body) }),
+			},
+		};
+		var row = new Grid { ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)], ColumnSpacing = 12 };
+		row.Add(text, 0);
+		row.Add(toggle, 1);
+		return new Border
+		{
+			BackgroundColor = Colors.White,
+			StrokeThickness = 0,
+			StrokeShape = new RoundRectangle { CornerRadius = CardRadius },
+			MinimumHeightRequest = CardMinHeight,
+			Padding = CardPadding,
+			Content = row,
+		};
+	}
+}
+
 /// <summary>
 /// The "Help make Dino better" card of the grown-up settings (Slice 133, Decision 141, mock frame 62): its own white card with a title, a
 /// helper line saying what is counted, and the usage-counts switch. On by default; off sends nothing. A grown-up page puts it in its column of cards.

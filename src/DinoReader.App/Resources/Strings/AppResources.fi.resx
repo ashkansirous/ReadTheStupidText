@@ -315,8 +315,7 @@
   <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} riviä</value></data>
   <data name="Cast_UsesNarrator" xml:space="preserve"><value>käyttää kertojan ääntä</value></data>
   <data name="Cast_Hear" xml:space="preserve"><value>Kuuntele: {0}</value></data>
-  <data name="Cast_AnimalSounds_Title" xml:space="preserve"><value>Eläinten äänet</value></data>
-  <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>Eläimet sanovat välillä “Röh!” tai “Mää!”</value></data>
-  <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>Tässä tarinassa ei ole eläimiä, jotka päästävät ääniä</value></data>
+  <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Eläinten äänet</value></data>
+  <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Eläimet sanovat välillä “Röh!” tai “Mää!”, kaikissa kirjoissa</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Tässä kirjassa on enemmän hahmoja kuin käytettävissä olevia {0} kertojahahmoa, joten jotkin kuulostavat samalta. Kertojaa ei koskaan anneta hahmolle.</value></data>
 </root>

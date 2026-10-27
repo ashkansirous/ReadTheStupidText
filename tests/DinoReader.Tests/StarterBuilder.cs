@@ -23,7 +23,7 @@ internal static class StarterBuilder
     public const int GoodEnoughColourIndex = 2;
     private const string LinesFile = "lines.json";
     private const string PiecesSuffix = ".pieces.json";
-    private const string StoryLanguage = "en";
+    internal const string StoryLanguage = "en";
     private const string PicturesDirectory = "pictures";
     private const string PictureExtension = ".jpg";
     private const string CoverPictureFile = "cover" + PictureExtension;
@@ -45,10 +45,10 @@ internal static class StarterBuilder
     /// Raise it whenever a starter's text or pictures change, so installed copies are refreshed (<see cref="StarterUpdate"/>).</summary>
     public static IReadOnlyDictionary<string, int> StarterVersions { get; } = new Dictionary<string, int>
     {
-        [GoodEnoughFile] = 2,
-        ["three-little-pigs.dino"] = 8,
-        ["gingerbread-man.dino"] = 4,
-        ["tortoise-and-hare.dino"] = 4,
+        [GoodEnoughFile] = 3,
+        ["three-little-pigs.dino"] = 9,
+        ["gingerbread-man.dino"] = 5,
+        ["tortoise-and-hare.dino"] = 5,
     };
 
     /// <summary>The package file name of every shipped starter, the picture one first (shelf order).</summary>
@@ -153,7 +153,7 @@ internal static class StarterBuilder
         AttributionResult attribution = new SpeakerAttributor(rules).Attribute(story.Text, new StorySegmenter(rules).Split(story.Text, story.BreakMap()));
         VoiceCast cast = new VoiceCaster().Cast(attribution.Characters, Voices, NarratorVoice);
         IReadOnlyList<CastMember> members = StoryCast.ToMembers(attribution.Characters, cast, rules, animals: StarterAnimals.For(story.Id, attribution.Characters));
-        return StarterAnimals.WithNotAnimals(story.Id, members);
+        return StarterAnimals.Explicit(story.Id, story.Text, attribution.Characters, StarterAnimals.WithNotAnimals(story.Id, members));
     }
 
     public static async Task WriteAllAsync()

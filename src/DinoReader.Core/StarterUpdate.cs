@@ -89,12 +89,12 @@ public static class StarterUpdate
         });
     }
 
-    // A kept cast member with no animal decided yet takes the bundled one (Slice 125), so an installed starter that gains animals still gets them;
-    // an animal the grown-up set (or "not an animal") stays.
+    // A kept cast member takes the bundled book's explicit animal (Slice 152, Decision 157): the animal is book data, never a grown-up edit, so a stale stored one
+    // (an old name guess) is replaced; a member the bundled book says nothing about keeps what it has.
     // Matched by character id alone: a story's character ids are shared by all its language casts (the speakers come from the story's own language), so a language cast
     // that has no bundled cast of its own can take the animals of the base cast; a name check would only fail where the languages translate the names (Slice 135).
     private static IReadOnlyList<CastMember> WithBundledAnimals(IReadOnlyList<CastMember> kept, IReadOnlyList<CastMember> bundled) =>
-        kept.Select(m => !m.HasAnimalSetting && bundled.FirstOrDefault(b => b.CharacterId == m.CharacterId) is { HasAnimalSetting: true } b
+        kept.Select(m => bundled.FirstOrDefault(b => b.CharacterId == m.CharacterId) is { HasAnimalSetting: true } b
             ? m with { Animal = b.Animal, NotAnimal = b.NotAnimal }
             : m).ToList();
 

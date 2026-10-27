@@ -30,7 +30,6 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	private Story? _story;
 	private Func<Story, Task>? _persist;
 	private AttributionResult? _resolved;
-	private (IReadOnlyList<CastMember> Cast, AttributionResult Resolved, string Language, bool HasAnimals)? _animalCache;
 	private string _castLanguage = string.Empty;
 	private readonly VoicePreview _preview;
 	private bool _returningFromNarrator;
@@ -207,7 +206,6 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 
 		_body.Children.Add(NarratorCard());
 		_body.Children.Add(CharacterCard(sheet));
-		_body.Children.Add(SwitchesCard());
 	}
 
 	private View NarratorCard()
@@ -230,47 +228,6 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		Border card = CastViews.Card();
 		card.Content = rows;
 		return card;
-	}
-
-	// Whether the story has a character that plays a sounding animal (Slice 136). Keyed on the cast, the resolved characters and the language (all replaced, never changed),
-	// not the story, so a switch toggle does not repeat the whole-book animal guess.
-	private bool HasSoundingAnimal()
-	{
-		if (_resolved is null)
-		{
-			return false;
-		}
-
-		IReadOnlyList<CastMember> cast = _story!.CastIn(_castLanguage);
-		if (_animalCache is { } cached && ReferenceEquals(cached.Cast, cast) && ReferenceEquals(cached.Resolved, _resolved) && cached.Language == _castLanguage)
-		{
-			return cached.HasAnimals;
-		}
-
-		bool has = AnimalSounds.WithSound(_voicing.AnimalsOf(_story, _resolved.Characters, _castLanguage), _story.Language).Count > 0;
-		_animalCache = (cast, _resolved, _castLanguage, has);
-		return has;
-	}
-
-	// The switches card (Slice 124; the words-over-pictures switch left it in Slice 151, which made the view a choice on the reading screen).
-	private View SwitchesCard() => CastRows.SwitchesCard(AnimalSoundsRow());
-
-	// The per-story switch is saved with the story (Slice 117); a story with no sounding animal shows it dimmed and keeps the value.
-	private View AnimalSoundsRow()
-	{
-		bool hasAnimals = HasSoundingAnimal();
-		return CastRows.AnimalSoundsRow(hasAnimals, _story!.AnimalSoundsOn, on => _ = _busy.RunAsync(() => SetAnimalSoundsAsync(on)));
-	}
-
-	private async Task SetAnimalSoundsAsync(bool on)
-	{
-		Story previous = _story!;
-		_story = previous with { AnimalSoundsOn = on };
-		if (!await SaveAsync())
-		{
-			_story = previous;
-			Render();
-		}
 	}
 
 	// Edits go into the reading language's cast.
