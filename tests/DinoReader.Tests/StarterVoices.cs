@@ -10,7 +10,7 @@ internal sealed record AuthoredCharacter(string Name, string Voice, Gender Gende
 /// The voice choices that books carry (Slice 156, Decision 161): for each character, a suggested roster id (<see cref="CharacterRoster"/>, the same in every language) and its traits, written
 /// into the book's cast by <see cref="StarterBuilder.Build"/> instead of leaving the choice to the app's picker. An animal's kind is not here: it is the book's animal
 /// (<see cref="StarterAnimals"/>, Slice 152), which is why a person-trait is null for an animal. A book carries a suggestion and traits only once a writer has really chosen them for its
-/// characters: X Marks the Treasure! was chosen by hand and is the only <see cref="AuthoredBooks"/> entry so far; the <c>dino-story-writer</c> pass adds the others one by one (Slice 156, "Every book"),
+/// characters: X Marks the Treasure! was chosen by hand first, then Good Enough; the <c>dino-story-writer</c> pass adds the others to <see cref="AuthoredBooks"/> one by one (Slice 156, "Every book"),
 /// and <c>AuthoredVoiceTests</c> then requires every character of an authored book to have traits and a known suggestion. Every other book's characters are cast by the app as before.
 /// </summary>
 internal static class StarterVoices
@@ -25,6 +25,12 @@ internal static class StarterVoices
             new("Izzy", "fairy", Gender.Female, CharacterAge.Young, CharacterBeing.Pirate, [VoiceQuality.Bright, VoiceQuality.Bouncy]),
             new("Billy", "puppy2", Gender.Male, CharacterAge.Child, CharacterBeing.Pirate, [VoiceQuality.Bouncy, VoiceQuality.Warm]),
             new("Pancake Polly", "mummy", Gender.Female, CharacterAge.Adult, CharacterBeing.Pirate, [VoiceQuality.Warm, VoiceQuality.Bouncy]),
+        ],
+
+        // Good Enough: Hazelnut, the squirrel best friend who says the last line (a squirrel has no animal sound, so no kind).
+        [StarterBuilder.GoodEnoughId] =
+        [
+            new("Hazelnut", "bee", Gender.Female, CharacterAge.Young, null, [VoiceQuality.Bright, VoiceQuality.Warm]),
         ],
     };
 
