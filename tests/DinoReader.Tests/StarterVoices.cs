@@ -60,6 +60,18 @@ internal static class StarterVoices
             new("Hazelnut", "bee", Gender.Female, CharacterAge.Young, null, [VoiceQuality.Bright, VoiceQuality.Warm]),
         ],
 
+        // The Tortoise and the Hare: three boys and three girls, as the text's pronouns say. Owl and Frog are animals with a sound (their kind is the book's animal); the Hare, Tortoise,
+        // Squirrel and Hedgehog have no sound word, so no kind either. Owl is Grandpa Bear, not the Sleepy Owl: only en and fa have an owl, and elsewhere the trait match ranks a
+        // bird kind above age and gave the wise old Owl the young Chick; Grandpa Bear (old, deep and kind, sleepy) is in every roster, and Owl still hoots (his animal is the book's).
+        [StarterTexts.TortoiseId] =
+        [
+            new("Hare", "puppy", Gender.Male, CharacterAge.Young, null, [VoiceQuality.Bouncy, VoiceQuality.Bold]),
+            new("Tortoise", "hen", Gender.Female, CharacterAge.Adult, null, [VoiceQuality.Sleepy, VoiceQuality.Warm]),
+            new("Owl", "bear", Gender.Male, CharacterAge.Old, null, [VoiceQuality.Sleepy, VoiceQuality.Warm]),
+            new("Squirrel", "bee", Gender.Female, CharacterAge.Young, null, [VoiceQuality.Bouncy, VoiceQuality.Bright]),
+            new("Hedgehog", "piglet", Gender.Male, CharacterAge.Young, null, [VoiceQuality.Bouncy, VoiceQuality.Warm]),
+            new("Frog", "lamb2", Gender.Female, CharacterAge.Young, null, [VoiceQuality.Bouncy, VoiceQuality.Squeaky]),
+        ],
         // The Little Red Hen: four farm animals with their own animal (and sound), Hen and Cat "she", Dog and Duck "he". A kitten is a boy in fa/es/pt and a duckling a girl in
         // most rosters, so Cat suggests the kitten and Duck the jolly jester (English only): where those don't fit, the traits give Cat a girl's voice and Duck a boy bird's.
         [StoreTexts.RedHenId] =
