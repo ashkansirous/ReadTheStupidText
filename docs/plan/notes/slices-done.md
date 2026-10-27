@@ -200,3 +200,7 @@ Batch 30 (143-146 and 148, planned 2026-10-26, Dino loading, Farsi voice and kid
 
 Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure book's Seagull): each book stores every character's traits and a suggested voice, chosen by the story writer; the app uses the suggestion and falls back to the traits. It follows Slice 152 (shares `Story.cs`/`StoryCast.cs`/`CastCharacters.cs`/`CastRows.cs` and reuses its `Animal` field as the "kind" trait) and Slice 153 (both edit `CharacterRoster*.cs`). The code is built (PR #438); the "Every book" writer pass is still to do. Decision 161.
 | 157 | Dino: book content and the book builder out of the test project | built | #475 | | [157-dino-book-content-out-of-tests.md](../slices/157-dino-book-content-out-of-tests.md) |
+| 162 | Fast tests: Maestro flows and Debug-only test hooks (both apps) | built | #490 | | [162-scripted-device-flows.md](../slices/162-scripted-device-flows.md) |
+| 164 | Fast tests: move more logic out of UI code into unit tests | built | #491 | | [164-more-logic-in-unit-tests.md](../slices/164-more-logic-in-unit-tests.md) |
+| 166 | Usage counts: country, OS version, form factor and hardware buckets (both apps) | built | #492 | | [166-usage-device-context.md](../slices/166-usage-device-context.md) |
+| 167 | Usage counts: don't count test devices (both apps) | built | #497 | | [167-no-test-device-counts.md](../slices/167-no-test-device-counts.md) |

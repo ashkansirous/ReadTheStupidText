@@ -4,33 +4,24 @@ import assert from "node:assert/strict";
 
 import { readFileSync } from "node:fs";
 import { redundantPaths, stripJsonc } from "./jsonc-run-first.mjs";
-import * as publisher from "../.github/scripts/publish-downloads.mjs";
 import {
   DINO_PATH_PREFIX,
   Host,
   Product,
-  apkKey,
   assetPageFor,
   canonicalRedirect,
-  compareVersionsDescending,
   handleDownload,
   ifNoneMatchHits,
   ifRangeAllowsRange,
   isDownloadPath,
   isForwardableRange,
   isHiddenDinoPath,
-  manifestKey,
-  newestVersion,
   parseRange,
-  renderDownloadPage,
   resolveSite,
-  versionFromManifestKey,
   serveObject,
 } from "./downloads.ts";
 import { completeIds, groupFolders, handleStories, isStoryPath, offeredVersion, packageVersionOf, parseMeta, parseStoryKey } from "./stories.ts";
 import { storyCoverKey, storyMetaKey, storyPackageKey } from "./download-keys.mjs";
-
-const APK_BYTES = Buffer.from("0123456789");
 
 // A just-enough R2 bucket: list by prefix, get (with a single Range header), head.
 function fakeBucket(objects) {
@@ -59,30 +50,9 @@ function fakeBucket(objects) {
   };
 }
 
-function bucketWith(versions) {
-  const objects = new Map();
-  for (const version of versions) {
-    objects.set(apkKey(version), APK_BYTES);
-    objects.set(manifestKey(version), Buffer.from(JSON.stringify({ version, sizeBytes: 10 })));
-  }
-  return fakeBucket(objects);
-}
-
 function get(path, init) {
   return new Request(`https://example.test${path}`, init);
 }
-
-test("orders versions numerically, not as text", () => {
-  assert.deepEqual(["1.9.0", "1.10.0", "1.2.0"].sort(compareVersionsDescending), ["1.10.0", "1.9.0", "1.2.0"]);
-});
-
-test("reads versions out of manifest keys and ignores other keys", () => {
-  assert.equal(versionFromManifestKey("manifests/android/1.4.0.json"), "1.4.0");
-  assert.equal(versionFromManifestKey("manifests/android/latest.json"), null);
-  assert.equal(versionFromManifestKey("android/1.4.0/x.apk"), null);
-  assert.equal(newestVersion(["manifests/android/1.9.0.json", "manifests/android/1.10.0.json", "junk"]), "1.10.0");
-  assert.equal(newestVersion([]), null);
-});
 
 test("parses a single byte range", () => {
   assert.deepEqual(parseRange("bytes=2-5", 10), { offset: 2, length: 4 });
@@ -93,129 +63,44 @@ test("parses a single byte range", () => {
   assert.equal(parseRange(null, 10), null);
 });
 
+const REDIRECTED_PATHS = ["/download", "/download/", "/download/android", "/download/android/latest", "/download/android/1.4.0", "/download/android/not-a-version"];
+
+test("every download path redirects to the platforms section of the RTST site, for GET and HEAD", () => {
+  for (const method of ["GET", "HEAD"]) {
+    for (const path of REDIRECTED_PATHS) {
+      const response = handleDownload(get(path, { method }));
+      assert.equal(response.status, 302, `${method} ${path}`);
+      assert.equal(response.headers.get("location"), "https://example.test/#platforms", `${method} ${path}`);
+    }
+  }
+});
+
+test("both landing pages still have the #platforms section the download redirect targets", () => {
+  for (const page of ["../site/index.html", "../site/dino/index.html"]) {
+    const html = readFileSync(new URL(page, import.meta.url), "utf8");
+    assert.match(html, /id="platforms"/, page);
+  }
+});
+
+test("the Dino host and its workers.dev /dino/ prefix redirect to the Dino platforms section", () => {
+  for (const path of REDIRECTED_PATHS) {
+    assert.equal(handleDownload(get(path), resolveSite(Host.DinoReader, path).home).headers.get("location"), "https://example.test/#platforms", path);
+    const prefixed = `${DINO_PATH_PREFIX}${path}`;
+    const site = resolveSite("x.workers.dev", prefixed);
+    assert.ok(isDownloadPath(site.path), prefixed);
+    assert.equal(handleDownload(get(prefixed), site.home).headers.get("location"), "https://example.test/dino/#platforms", prefixed);
+  }
+});
+
 test("routes only the download paths", () => {
   for (const path of ["/download", "/download/", "/download/android", "/download/android/latest", "/download/android/1.2.3"]) assert.ok(isDownloadPath(path));
   for (const path of ["/", "/downloads"]) assert.ok(!isDownloadPath(path));
-});
-
-test("the page names the newest version and escapes it", () => {
-  const html = renderDownloadPage({ version: "1.4.0", sizeBytes: 12_300_000 });
-  assert.match(html, /href="\/download\/android\/latest"/);
-  assert.match(html, /Version 1\.4\.0 \(12\.3 MB\)/);
-  assert.ok(!renderDownloadPage({ version: null, sizeBytes: null }).includes("/download/android/latest"));
-  assert.ok(!renderDownloadPage({ version: "<b>", sizeBytes: null }).includes("<b>"));
-});
-
-test("/download lists the newest version from the manifests", async () => {
-  const response = await handleDownload(get("/download"), { DOWNLOADS: bucketWith(["1.3.0", "1.10.0"]) });
-  assert.equal(response.status, 200);
-  assert.match(await response.text(), /Version 1\.10\.0/);
-});
-
-test("latest streams the newest APK with install headers", async () => {
-  const response = await handleDownload(get("/download/android/latest"), { DOWNLOADS: bucketWith(["1.3.0", "1.4.0"]) });
-  assert.equal(response.status, 200);
-  assert.equal(response.headers.get("content-type"), "application/vnd.android.package-archive");
-  assert.equal(response.headers.get("content-disposition"), 'attachment; filename="ReadTheStupidText-1.4.0.apk"');
-  assert.equal(response.headers.get("cache-control"), "no-cache");
-  assert.equal(response.headers.get("content-length"), "10");
-  assert.equal(await response.text(), "0123456789");
-});
-
-test("a Range request is answered 206 with Content-Range", async () => {
-  const response = await handleDownload(get("/download/android/1.4.0", { headers: { Range: "bytes=2-5" } }), { DOWNLOADS: bucketWith(["1.4.0"]) });
-  assert.equal(response.status, 206);
-  assert.equal(response.headers.get("content-range"), "bytes 2-5/10");
-  assert.equal(await response.text(), "2345");
-});
-
-test("HEAD returns the headers and no body", async () => {
-  const response = await handleDownload(get("/download/android/1.4.0", { method: "HEAD" }), { DOWNLOADS: bucketWith(["1.4.0"]) });
-  assert.equal(response.status, 200);
-  assert.equal(response.headers.get("content-length"), "10");
-  assert.equal(await response.text(), "");
-});
-
-test("a missing version, a malformed version and an empty bucket are 404", async () => {
-  const env = { DOWNLOADS: bucketWith(["1.4.0"]) };
-  assert.equal((await handleDownload(get("/download/android/9.9.9"), env)).status, 404);
-  assert.equal((await handleDownload(get("/download/android/not-a-version"), env)).status, 404);
-  assert.equal((await handleDownload(get("/download/android/latest"), { DOWNLOADS: fakeBucket(new Map()) })).status, 404);
-});
-
-test("a missing binding or an unreadable bucket is 503, and other methods 405", async () => {
-  assert.equal((await handleDownload(get("/download"), {})).status, 503);
-  const broken = { list: async () => { throw new Error("down"); } };
-  assert.equal((await handleDownload(get("/download"), { DOWNLOADS: broken })).status, 503);
-  assert.equal((await handleDownload(get("/download", { method: "POST" }), { DOWNLOADS: bucketWith([]) })).status, 405);
-});
-
-test("the Worker and the publisher share one key layout", () => {
-  for (const version of ["0.0.1", "1.4.0", "12.34.567"]) {
-    assert.equal(apkKey(version), publisher.apkKey(version));
-    assert.equal(manifestKey(version), publisher.manifestKey(version));
-    assert.equal(versionFromManifestKey(manifestKey(version)), version);
-  }
 });
 
 test("only a valid single range is forwarded to R2", () => {
   for (const ok of ["bytes=0-1", "bytes=5-5", "bytes=7-", "bytes=-3", "bytes=99-"]) assert.equal(isForwardableRange(ok), true, ok);
   for (const bad of ["bytes=-", "bytes=5-2", "bytes=-0", "bytes=0-1,4-5", "items=0-1", "junk"]) assert.equal(isForwardableRange(bad), false, bad);
   assert.equal(parseRange("bytes=5-2", 3), null);
-});
-
-test("an invalid Range is ignored and the whole file is served", async () => {
-  for (const range of ["bytes=-", "bytes=5-2"]) {
-    const response = await handleDownload(get("/download/android/1.4.0", { headers: { Range: range } }), { DOWNLOADS: bucketWith(["1.4.0"]) });
-    assert.equal(response.status, 200, range);
-    assert.equal(await response.text(), "0123456789");
-  }
-});
-
-test("/download still offers the version and button when the manifest cannot be read", async () => {
-  const bucket = bucketWith(["1.4.0"]);
-  const failing = { ...bucket, list: bucket.list, get: async () => { throw new Error("boom"); } };
-  const html = await (await handleDownload(get("/download"), { DOWNLOADS: failing })).text();
-  assert.match(html, /Version 1\.4\.0\./);
-  assert.match(html, /Download the Android beta \(APK\)/);
-  assert.doesNotMatch(html, /MB/);
-});
-
-test("a ranged get that comes back without a range is served whole as 200, not 502", async () => {
-  const bucket = bucketWith(["1.4.0"]);
-  const omitsRange = { ...bucket, get: async (key) => ({ ...(await bucket.get(key)), range: undefined }) };
-  const response = await handleDownload(get("/download/android/1.4.0", { headers: { Range: "bytes=2-5" } }), { DOWNLOADS: omitsRange });
-  assert.equal(response.status, 200);
-  assert.equal(await response.text(), "0123456789");
-});
-
-test("If-None-Match: a matching ETag is 304 for latest and versioned, a stale one is 200", async () => {
-  const env = { DOWNLOADS: bucketWith(["1.4.0"]) };
-  for (const path of ["/download/android/latest", "/download/android/1.4.0"]) {
-    for (const header of ['"etag"', 'W/"etag"', '"x", "etag"', "*"]) {
-      const response = await handleDownload(get(path, { headers: { "If-None-Match": header } }), env);
-      assert.equal(response.status, 304, `${path} ${header}`);
-      assert.equal(response.headers.get("etag"), '"etag"');
-      assert.equal(await response.text(), "");
-    }
-    assert.equal((await handleDownload(get(path, { headers: { "If-None-Match": '"other"' } }), env)).status, 200);
-  }
-});
-
-test("If-None-Match on a missing version is still 404", async () => {
-  const response = await handleDownload(get("/download/android/9.9.9", { headers: { "If-None-Match": "*" } }), { DOWNLOADS: bucketWith(["1.4.0"]) });
-  assert.equal(response.status, 404);
-});
-
-test("If-Range: a matching ETag keeps the range, anything else serves the whole file", async () => {
-  const env = { DOWNLOADS: bucketWith(["1.4.0"]) };
-  const ranged = (ifRange) => get("/download/android/1.4.0", { headers: { Range: "bytes=2-5", "If-Range": ifRange } });
-  assert.equal((await handleDownload(ranged('"etag"'), env)).status, 206);
-  for (const stale of ['"old"', 'W/"etag"', "Wed, 21 Oct 2026 07:28:00 GMT"]) {
-    const response = await handleDownload(ranged(stale), env);
-    assert.equal(response.status, 200, stale);
-    assert.equal(await response.text(), "0123456789");
-  }
 });
 
 test("the conditional matchers follow weak (If-None-Match) and strong (If-Range) comparison", () => {
@@ -225,39 +110,9 @@ test("the conditional matchers follow weak (If-None-Match) and strong (If-Range)
   assert.equal(ifRangeAllowsRange('W/"a"', 'W/"a"'), false);
 });
 
-test("error responses to HEAD carry no body", async () => {
-  const env = { DOWNLOADS: bucketWith(["1.4.0"]) };
-  const missing = await handleDownload(get("/download/android/9.9.9", { method: "HEAD" }), env);
-  assert.equal(missing.status, 404);
-  assert.equal(await missing.text(), "");
-  const down = await handleDownload(get("/download", { method: "HEAD" }), {});
-  assert.equal(down.status, 503);
-  assert.equal(await down.text(), "");
-  const getMissing = await handleDownload(get("/download/android/9.9.9"), env);
-  assert.match(await getMissing.text(), /not-found/);
-});
-
 // ---- Slice 74: Dino Reader on its own host ----
 
 const DINO = Product.DinoReader;
-
-function dinoBucketWith(versions) {
-  const objects = new Map();
-  for (const version of versions) {
-    objects.set(apkKey(version, DINO), APK_BYTES);
-    objects.set(manifestKey(version, DINO), Buffer.from(JSON.stringify({ version, sizeBytes: 10 })));
-  }
-  return fakeBucket(objects);
-}
-
-test("Dino Reader keys live under their own prefix, next to the existing layout", () => {
-  assert.equal(apkKey("1.4.0", DINO), "dinoreader/android/1.4.0/DinoReader-1.4.0.apk");
-  assert.equal(manifestKey("1.4.0", DINO), "dinoreader/manifests/android/1.4.0.json");
-  assert.equal(apkKey("1.4.0"), "android/1.4.0/ReadTheStupidText-1.4.0.apk");
-  assert.equal(versionFromManifestKey("dinoreader/manifests/android/1.4.0.json", DINO), "1.4.0");
-  assert.equal(versionFromManifestKey("dinoreader/manifests/android/1.4.0.json"), null);
-  assert.equal(versionFromManifestKey("manifests/android/1.4.0.json", DINO), null);
-});
 
 test("the host picks the site; an unknown host gets Read The Stupid Text", () => {
   assert.deepEqual(resolveSite(Host.DinoReader, "/privacy"), { product: DINO, path: "/privacy", home: "/" });
@@ -348,52 +203,6 @@ test("redundantPaths flags entries a trailing glob already covers, and passes a 
   assert.deepEqual(redundantPaths(config(["/download/*", "/dino/download/*", "/", "/privacy"])), []);
   assert.deepEqual(redundantPaths(config(["/a/*", "/a/*"])), []);
   assert.deepEqual(redundantPaths({}), []);
-});
-
-test("a failed listing read is not cached: the next request retries and succeeds", async () => {
-  const objects = new Map([[manifestKey("1.0.0", DINO), Buffer.from(JSON.stringify({ version: "1.0.0", sizeBytes: 10 }))], [apkKey("1.0.0", DINO), APK_BYTES]]);
-  const inner = fakeBucket(objects);
-  let fail = true;
-  const bucket = Object.create(inner);
-  bucket.list = async (options) => {
-    if (fail) throw new Error("r2 down");
-    return inner.list(options);
-  };
-  assert.equal((await handleDownload(get("/download/android"), { DOWNLOADS: bucket }, DINO)).status >= 500, true);
-  fail = false;
-  assert.equal((await handleDownload(get("/download/android"), { DOWNLOADS: bucket }, DINO)).status, 200);
-});
-
-test("Dino latest streams the newest Dino APK from /download/android and /latest", async () => {
-  for (const path of ["/download/android", "/download/android/latest"]) {
-    const response = await handleDownload(get(path), { DOWNLOADS: dinoBucketWith(["1.3.0", "1.10.0"]) }, DINO);
-    assert.equal(response.status, 200, path);
-    assert.equal(response.headers.get("content-disposition"), 'attachment; filename="DinoReader-1.10.0.apk"');
-    assert.equal(response.headers.get("cache-control"), "no-cache");
-    assert.equal(await response.text(), "0123456789");
-  }
-});
-
-test("Dino serves a specific version and ignores Read The Stupid Text builds", async () => {
-  const bucket = dinoBucketWith(["1.4.0"]);
-  const response = await handleDownload(get("/download/android/1.4.0"), { DOWNLOADS: bucket }, DINO);
-  assert.equal(response.status, 200);
-  assert.equal(response.headers.get("content-disposition"), 'attachment; filename="DinoReader-1.4.0.apk"');
-  const rtstOnly = await handleDownload(get("/download/android/latest"), { DOWNLOADS: bucketWith(["2.0.0"]) }, DINO);
-  assert.equal(rtstOnly.status, 404);
-  const dinoOnly = await handleDownload(get("/download/android/latest"), { DOWNLOADS: dinoBucketWith(["2.0.0"]) });
-  assert.equal(dinoOnly.status, 404);
-});
-
-test("Dino's /download goes to its landing page (under the prefix too); /download/android is the latest for both", async () => {
-  const redirect = await handleDownload(get("/download"), { DOWNLOADS: dinoBucketWith([]) }, DINO);
-  assert.equal(redirect.status, 302);
-  assert.equal(redirect.headers.get("location"), "https://example.test/");
-  const prefixed = await handleDownload(get("/download"), { DOWNLOADS: dinoBucketWith([]) }, DINO, "/dino/");
-  assert.equal(prefixed.headers.get("location"), "https://example.test/dino/");
-  const rtst = await handleDownload(get("/download/android"), { DOWNLOADS: bucketWith(["1.4.0"]) });
-  assert.equal(rtst.status, 200);
-  assert.equal(rtst.headers.get("content-disposition"), 'attachment; filename="ReadTheStupidText-1.4.0.apk"');
 });
 
 // ---- Slice 92: the free Dino story store (worker/stories.ts) ----

@@ -18,7 +18,7 @@ Grab the MSIX from the **[latest release](https://github.com/ashkansirous/ReadTh
 
 > These packages are **unsigned** (the Microsoft Store signs on publish), so the **[Store install](https://apps.microsoft.com/detail/9NGT1BN1H92V)** is the recommended path. To sideload a release `.msix` instead, a trusted certificate is required — see [`STORE.md`](STORE.md). Every merge to `main` that changes app code cuts a new `rtst-v*` release automatically.
 
-**Android direct download:** the latest APK is at <https://readthestupidtext.sirous.uk/download> (sideloading must be allowed). Windows is Store-only.
+**Android and iPhone/iPad:** Android is in beta on Google Play (testers) and iPhone/iPad on TestFlight; there is no direct APK download. Windows is Store-only.
 
 **Android first launch:** the app asks for a language and downloads the ~145 MB voice pack (Wi-Fi advised). The phone's own voice reads until it arrives, and the app works offline afterwards.
 
