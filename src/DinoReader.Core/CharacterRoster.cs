@@ -14,6 +14,8 @@ namespace DinoReader.Core;
 /// </summary>
 public static partial class CharacterRoster
 {
+    private const string CubId = "cub";
+    private static readonly VoiceFlavour[] YoungPlaces = [VoiceFlavour.Chirpy, VoiceFlavour.Perky];
     private static readonly ConcurrentDictionary<AppLanguage, IReadOnlyList<StorytellerCharacter>> Cache = new();
 
     /// <summary>The whole roster of <paramref name="language"/>, narrators first; English for an unknown code.</summary>
@@ -89,7 +91,27 @@ public static partial class CharacterRoster
         }
 
         var left = others.Select(c => c.Gender).ToHashSet();
-        return speakers.Where(c => c.VoiceId != narratorVoiceId || !left.Contains(c.Gender)).ToList();
+        return speakers.Select(c => CubOffNarrator(c, speakers, narratorVoiceId)).Where(c => c.VoiceId != narratorVoiceId || !left.Contains(c.Gender)).ToList();
+    }
+
+    // The cub is never lost to the narrator: when its place is on the narrator's voice (the three-voice roster puts it on M1) it takes the next young place of another voice of its gender.
+    private static StorytellerCharacter CubOffNarrator(StorytellerCharacter place, IReadOnlyList<StorytellerCharacter> speakers, string narratorVoiceId)
+    {
+        if (place.Id != CubId || place.VoiceId != narratorVoiceId)
+        {
+            return place;
+        }
+
+        var taken = speakers.Select(c => (c.VoiceId, c.Flavour)).ToHashSet();
+        foreach (string voiceId in speakers.Where(c => c.Gender == place.Gender && c.VoiceId != narratorVoiceId).Select(c => c.VoiceId).Distinct())
+        {
+            foreach (VoiceFlavour flavour in YoungPlaces.Where(f => !taken.Contains((voiceId, f))))
+            {
+                return place with { VoiceId = voiceId, Flavour = flavour };
+            }
+        }
+
+        return place;
     }
 
     /// <summary>

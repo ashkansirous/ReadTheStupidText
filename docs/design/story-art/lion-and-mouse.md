@@ -1,7 +1,21 @@
 # The Lion and the Mouse: art record
 
-Store story (`StoreTexts.LionAndMouse`, stem `lion-and-mouse`, version 5). Retold as 15 pages with one
+Store story (`StoreTexts.LionAndMouse`, stem `lion-and-mouse`, version 7). Retold as 15 pages with one
 action each (`dino-storytelling` skill). Version 5 (Slice 146 Wave A, 2026-10-26): Farsi rewritten in spoken Farsi, sound words as plain triples; English, page breaks and every picture unchanged. **Art status (2026-10-26): cover and all 15 pages drawn, checked at full size and prepared** into `tests/DinoReader.Tests/Store/lion-and-mouse/` (full review PASS 2026-10-26 after the p7, p8 and p14 redraws).
+
+Version 7 (Slice 146 Waves B+C and Slice 156, 2026-10-27): English reworded in the spoken register (contractions, "a great big Lion
+was fast asleep", "teeny-tiny", "whoops", "Hey! Who woke me up? I'm the king of all the animals!" for "Who dares to wake the king of the
+beasts?", "Please, please let me go, Mister Lion", "Run along home", "Just you wait and see", "Night-night"), and every sound word its own
+triple piece: "Pitter-patter, pitter-patter, pitter-patter" (the refrain, pages 1, 5 and 10), "Ha, ha, ha!" (page 4, new), "Boing, boing,
+boing!" (page 7, for the single "Bump!": he bounces into the sagging net), "Grr, grr, grr!" (page 8, now its own piece before "This is no
+fun at all!"), "Nibble, nibble, nibble! Snip, snip, snip!" (page 12, for "Nibble, nibble, snip!" twice) and "Hip, hip, hooray!" (page 13,
+for "Hooray!"). The Mouse's teeth are no longer "sharp". Same 15 page breaks and the same one action per page: **every page keeps its
+picture** (checked against the pictures on 2026-10-27; page 7 still shows him caught in the net with surprised eyes, page 13 the Mouse
+cheering with both arms up). The 12 other languages were redone for every piece in the same register with their own triples (French in
+the passé composé, tags "a dit le Lion"; Japanese in hiragana with the tags in hiragana; Brazilian Portuguese "pra", "tô"; Finnish
+dialogue in puhekieli, "Öitä"); Farsi changed only where the meaning moved (the third tip-tap, whoops, the Lion's new first line, please
+please, ha ha ha, the bounce, grr as its own piece, the nibble and snip triples, a big hole, hooray, no sharp teeth). Sound words not yet
+heard aloud in the untested languages (ar, da, fi, fr, ja, nb, nl, pt, ru, sv): flag for a listen.
 
 **Gentle retelling (Decision 130):** in Aesop the Lion is caught in a hunters' net and roars in fear. Here
 there are no hunters, no trap and nobody in danger: an old fishing net hangs between two trees by the
@@ -15,11 +29,20 @@ she can't run on, and nobody threatens to eat anyone.
 does not see him; the Lion is grumpy because she woke him; he lets her go because she is sorry and he is
 a kind king, and laughs because her promise sounds so funny from someone so small; he runs into the net
 because he is chasing a butterfly; the Mouse comes because she hears his grumpy roar, knows it, and
-remembers her promise ("He sounds stuck! Now it is my turn to be kind to him"); she can help because her little teeth can
+remembers her promise ("He sounds stuck! Now it's my turn to be kind to him"); she can help because her little teeth can
 nibble rope; the Lion says sorry for laughing at her, and the Mouse answers "Kind friends help each other"; the ending pays the opening back (she ran over his nose, now she sleeps on his paw).
 
-**Refrain:** "Pitter, patter, pitter, patter, went her little feet." on pages 1, 5 and 10 (running home,
-running home again, running to help), identical every time. "Nibble, nibble, snip!" twice on page 12.
+**Refrain (since v7):** "Pitter-patter, pitter-patter, pitter-patter, went her little feet." on pages 1, 5 and 10 (running home,
+running home again, running to help), identical every time. "Nibble, nibble, nibble! Snip, snip, snip!" on page 12.
+
+**Cast and voices (Slice 156, the book's own choices, `StarterVoices.cs`):** Lion (man, adult lion; booming and warm, a big kind king)
+suggests `giant` (the Friendly Giant: big, deep and slow); Mouse (woman, young mouse, "her supper"; squeaky and bright) suggests `mouse`.
+Both keep their animals (he roars, she squeaks). The `mouse` voice is a boy's in English and Farsi, so there her suggestion clashes on
+gender and her traits pick a girl's young squeaky voice. Real casts dumped for every language on 2026-10-27 (no shared voice and flavour,
+no whisper flavour, every gender right): en am_santa Giant / bf_lily Squeaky (Tiny Fairy); fa gyro Giant / mana Squeaky (fairy); zh
+yunjian Giant / xiaoyi Squeaky; es and pt santa Giant / dora Squeaky; fr, ar, ru, ja, da, fi, sv, nl Supertonic M5 Giant / F4 Squeaky;
+nb mnv Giant / kmn Squeaky. `StoreStoryTests.TheLionAndTheMouse_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster` checks
+all 14 languages. Pronouns: Lion "he", Mouse "she" (Arabic قالت الفأرة, Russian сказала Мышка, Spanish la Ratoncita, Portuguese a Ratinha).
 
 **Style:** Children's picture book illustration, soft watercolour and coloured pencil, warm gentle
 colours, simple rounded shapes, no text or letters anywhere. Portrait 3:4.
@@ -59,26 +82,26 @@ butterfly.
 
 Every page: the whole scene sits in the top 70% of the picture; the bottom 30% is plain grass, ground or
 riverbank with nothing important in it. No text, letters, words, sound effects or writing anywhere ("Bump!",
-"Grr!", "Pitter, patter" and "snip" are never drawn in). Every page is **new** (no pictures exist).
+"Grr, grr, grr", "Pitter-patter", "Boing", "Ha, ha, ha", "Hip, hip, hooray" and "snip" are never drawn in). Every page has its accepted picture; v7 keeps all 15 (last column).
 
-| Page | One action (who, count, where, when) | Picture |
+| Page | One action (who, count, where, when) | Picture (v7) |
 | --- | --- | --- |
-| Cover | The Lion (1) lies in the grass under his tree smiling, the Mouse (1) sitting on his front paw, both looking at the viewer; sunny afternoon | new |
-| 1 | Hot afternoon: the Mouse (1), red berry in her arms, scampers right across the nose of the sleeping Lion (1), who lies in the shade of his tree, eyes closed | new |
-| 2 | Hot afternoon, under the tree: the Lion (1), just awake, head up and frowning, puts one big paw down on the grass right beside the Mouse (1), who stops short, surprised, holding her berry | new |
-| 3 | Hot afternoon, under the tree: the Lion (1) lies on his front, head low and listening, one big front paw still flat on the grass right beside the Mouse; the Mouse (1) stands on her back legs with her paws held together, pleading up at him, her berry on the grass at her feet | new |
-| 4 | Hot afternoon, under the tree: the Lion (1) lies on his front, head thrown back, eyes squeezed shut, laughing, tummy shaking, crown askew, mouth open with no teeth showing, one paw still flat beside the Mouse; the Mouse (1) watches with her hands on her hips, her berry on the grass beside her. Must look different from page 3 (head low, listening) and page 5 (paw lifted) | new |
-| 5 | Hot afternoon, under the tree: the Lion (1) lifts his paw high with a kind smile; the Mouse (1) scampers off into the long grass towards home, berry in her arms, waving back | new |
-| 6 | Some days later, morning, on the riverbank: the Lion (1) bounces happily after a yellow butterfly (1) fluttering just ahead of his nose; the two trees with the hanging net in the distance ahead of him; no Mouse | new |
-| 7 | Morning, on the riverbank between the two trees: the Lion (1) bumps into the hanging net, which wraps loosely around him from nose to tail, his eyes wide with surprise; exactly two trees, the net tied to both; no Mouse | new |
-| 8 | Late morning, between the two trees: the Lion (1) sits in a loose tangle of net, a paw caught in it, string in his mane, crown tilted, frowning and roaring a round toothless "O"; not hurt, just stuck and cross; the same two trees, the net slipped down into a heap around him with rope ends on the trunks; no Mouse | new |
-| 9 | Late morning: the Mouse (1) sits up in her grass nest among the bush roots, ears up, listening, one paw cupped to her ear; no Lion (the river and the Lion are far away, not shown) | new |
-| 10 | Late morning: the Mouse (1) races through the long golden grass towards the river, tail streaming behind her; no Lion | new |
-| 11 | Noon, between the two trees: the Mouse (1) stands at the edge of the net, looking up; the tangled Lion (1) peers down at her, surprised and doubtful | new |
-| 12 | Noon, between the two trees: the Mouse (1) nibbles a rope of the net near the Lion's paw; a couple of ropes already hang loose; the Lion (1) watches over his shoulder | new |
-| 13 | Early afternoon, between the two trees: the Lion (1) steps out through a big hole in the net, shaking his mane so bits of string fly; the Mouse (1) cheers with both arms up | new |
-| 14 | Afternoon, on the riverbank: the Lion (1) lies down in the grass, nose to nose with the Mouse (1), both smiling; the net lies crumpled on the grass behind them with a ragged hole, two bare trunks far back with rope ends | new |
-| 15 | Evening, golden-pink sunset, under the Lion's tree: the Lion (1) lies sleepily under the tree, eyes half closed; the Mouse (1) curls up asleep on his big front paw | new |
+| Cover | The Lion (1) lies in the grass under his tree smiling, the Mouse (1) sitting on his front paw, both looking at the viewer; sunny afternoon | keep |
+| 1 | Hot afternoon: the Mouse (1), red berry in her arms, scampers right across the nose of the sleeping Lion (1), who lies in the shade of his tree, eyes closed | keep |
+| 2 | Hot afternoon, under the tree: the Lion (1), just awake, head up and frowning, puts one big paw down on the grass right beside the Mouse (1), who stops short, surprised, holding her berry | keep |
+| 3 | Hot afternoon, under the tree: the Lion (1) lies on his front, head low and listening, one big front paw still flat on the grass right beside the Mouse; the Mouse (1) stands on her back legs with her paws held together, pleading up at him, her berry on the grass at her feet | keep |
+| 4 | Hot afternoon, under the tree: the Lion (1) lies on his front, head thrown back, eyes squeezed shut, laughing, tummy shaking, crown askew, mouth open with no teeth showing, one paw still flat beside the Mouse; the Mouse (1) watches with her hands on her hips, her berry on the grass beside her. Must look different from page 3 (head low, listening) and page 5 (paw lifted) | keep |
+| 5 | Hot afternoon, under the tree: the Lion (1) lifts his paw high with a kind smile; the Mouse (1) scampers off into the long grass towards home, berry in her arms, waving back | keep |
+| 6 | Some days later, morning, on the riverbank: the Lion (1) bounces happily after a yellow butterfly (1) fluttering just ahead of his nose; the two trees with the hanging net in the distance ahead of him; no Mouse | keep |
+| 7 | Morning, on the riverbank between the two trees: the Lion (1) bumps into the hanging net, which wraps loosely around him from nose to tail, his eyes wide with surprise; exactly two trees, the net tied to both; no Mouse | keep |
+| 8 | Late morning, between the two trees: the Lion (1) sits in a loose tangle of net, a paw caught in it, string in his mane, crown tilted, frowning and roaring a round toothless "O"; not hurt, just stuck and cross; the same two trees, the net slipped down into a heap around him with rope ends on the trunks; no Mouse | keep |
+| 9 | Late morning: the Mouse (1) sits up in her grass nest among the bush roots, ears up, listening, one paw cupped to her ear; no Lion (the river and the Lion are far away, not shown) | keep |
+| 10 | Late morning: the Mouse (1) races through the long golden grass towards the river, tail streaming behind her; no Lion | keep |
+| 11 | Noon, between the two trees: the Mouse (1) stands at the edge of the net, looking up; the tangled Lion (1) peers down at her, surprised and doubtful | keep |
+| 12 | Noon, between the two trees: the Mouse (1) nibbles a rope of the net near the Lion's paw; a couple of ropes already hang loose; the Lion (1) watches over his shoulder | keep |
+| 13 | Early afternoon, between the two trees: the Lion (1) steps out through a big hole in the net, shaking his mane so bits of string fly; the Mouse (1) cheers with both arms up | keep |
+| 14 | Afternoon, on the riverbank: the Lion (1) lies down in the grass, nose to nose with the Mouse (1), both smiling; the net lies crumpled on the grass behind them with a ragged hole, two bare trunks far back with rope ends | keep |
+| 15 | Evening, golden-pink sunset, under the Lion's tree: the Lion (1) lies sleepily under the tree, eyes half closed; the Mouse (1) curls up asleep on his big front paw | keep |
 
 Check (dino-storytelling section 4):
 

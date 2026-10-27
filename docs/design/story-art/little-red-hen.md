@@ -1,10 +1,18 @@
 # The Little Red Hen: art record
 
-Store story (`StoreTexts.RedHen`, stem `little-red-hen`, version 6). Retold as 15 pages with one action each
+Store story (`StoreTexts.RedHen`, stem `little-red-hen`, version 7). Retold as 15 pages with one action each
 (`dino-storytelling` skill, Slice 121). **Art status (2026-10-26): cover and pages 1-15 drawn and accepted; full review PASS 2026-10-26.** The cover
 and all 15 pages are new; the text-only version 3 had none. Version 6 (Slice 146 Wave A, 2026-10-27): Farsi
 rewritten in spoken Farsi, sound words as plain triples without commas or vowel marks; English, page breaks
 and every picture unchanged.
+Version 7 (Slice 146 Waves B+C and Slice 156, 2026-10-27): English checked in the spoken register; two changes only,
+both on pages 10 and 12: the long page-10 sentence is split ("The smell of warm, fresh bread floated all over the
+farm. Dog, Cat and Duck woke up and ran to the table.") and "Mmm, yum!" is the triple "Yum, yum, yum!". The 12
+other languages got the new pieces plus a spoken pass (stretched whooshes such as «ووووش», "Vuuush", "Ву-у-ух" made
+plain triples; "Prometido!" / "Lupaamme!" in their everyday forms; Arabic "make the bread", not «خبز الخبز»); Farsi
+only the new pieces. The book now chooses every voice (below), and Cat and Duck have their animals back. **Page
+breaks and the action of every page are unchanged, so all 15 pictures and the cover keep their picture; none needs
+a new one.**
 
 **Gentle retelling (Decision 130):** in the classic the Hen's three neighbours are "lazy", she says "No, you will
 not!" at the end and eats the bread alone with her chicks while the others watch, hungry. Nobody is shut out here:
@@ -47,12 +55,23 @@ not!" at the end and eats the bread alone with her chicks while the others watch
 
 **Cast and voices:** Hen, Dog, Cat, Duck (`StoreTexts` spec list). Genders are chosen, two and two: **Hen and Cat
 are "she", Dog and Duck are "he"** (the pronouns in the text set them: her friends / his nose / her paws / his
-puddle / he looked). The app casts an animal character with its own animal's roster voice before its gender: the
-hen voice is a woman and the puppy voices are boys in every language, so Hen and Dog keep their animal (Dog says
-"Woof" now and then). The kitten and duckling voices are girls in most languages but boys in Farsi, Spanish and
-Portuguese, so the builder stores **Cat and Duck as no animal** (`StarterAnimals.cs`, `NotAnimal`): they are cast
-by gender in every language, at the cost of no meow or quack. `StoreStoryTests.TheLittleRedHen_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster`
-checks all 14 languages. Translations keep each gender: Russian Пёс and Утёнок with сказал, Кошка and Курочка with
+puddle / he looked). All four are their own animal (Hen, Dog, Cat, Duck), so each makes its sound now and then.
+Since version 7 the book chooses each voice (`StarterVoices.cs`, Slice 156; one roster id for every language, the
+traits decide where the id is missing or of the other gender):
+
+- **Hen:** `mummy` (Kind Mummy), she, adult, bright, bouncy and warm (busy, kind, never cross). Not `hen`: Granny Hen is a slow, sleepy
+  voice, wrong for a "busy, busy, busy" hen (coordinator's call, 2026-10-27). She still clucks: her animal is Hen.
+- **Dog:** `puppy` (Playful Puppy), he, young, bouncy and warm (`puppy2` was not used: it is a whisper flavour in Farsi).
+- **Cat:** `kitten` (Curious Kitten), she, young, soft. The kitten is a boy in fa/es/pt, so there the traits give her a girl's voice.
+- **Duck:** `jester` (Jolly Jester, "bubbly and bright"; English only), he, young, squawky and squeaky. Elsewhere the traits give him a boy bird (chick or duckling): a duckling is a girl in most rosters.
+
+The real cast with the default narrator (checked 2026-10-27; no two on one voice and flavour, no whisper, every
+gender right): en mummy / puppy / kitten / jester; fa mummy / puppy / chick (Bouncy) / duckling; es and pt mummy /
+puppy / bunny (Small) / chick; zh mummy / puppy / kitten / chick (Dog and Duck share the yunxia voice in different
+flavours); fr, ar, ru, ja, da, fi, sv, nl, nb mummy / puppy / kitten / chick. In fa, es and pt every girl's voice is
+the narrator's own voice (one female voice there), so Hen and Cat speak on it in the Normal and Bouncy/Small flavours,
+as Hen did before (chick / Granny Hen); Hen's Normal flavour is the closest to the narrator's Storyteller: worth a listen.
+`StoreStoryTests.TheLittleRedHen_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster` checks all 14 languages. Translations keep each gender: Russian Пёс and Утёнок with сказал, Кошка and Курочка with
 сказала; Arabic البطّ with قال; Spanish and Portuguese la Gata / a Gata; French calls the Cat "la chatte Minette",
 then "Minette" (avoiding "la Chatte"). Japanese "Not me!" and "I will!" are one piece each for boys and girls, so
 they are neutral (やらないよ！, やる、やる！); Cat says わたしたち, Duck ぼくたち.
@@ -98,27 +117,27 @@ Every page: the whole scene sits in the top 70% of the picture; the bottom 30% i
 with nothing important in it. No text, letters, words, sound effects or writing anywhere ("Dig, dig, pat", "Snip",
 "Whoosh", "Sniff", "Munch" and "Splish, splash, splosh" are never drawn in). Nobody pecks, pushes, points at or
 turns away from anyone. Every page has **three or more characters** (Gemini refuses some 1-2 character scenes); on
-pages where the three friends do not help, they are in the picture doing their favourite thing. Every picture is
-**new** (no pictures exist).
+pages where the three friends do not help, they are in the picture doing their favourite thing. Version 7 keeps
+every picture (the Picture column; drawn new for version 6, 2026-10-26).
 
 | Page | One action (who, count, where, when) | Picture |
 | --- | --- | --- |
-| Cover | Sunny spring morning in the farmyard: Hen (1) stands in front holding up a few grains of wheat with a happy smile; behind her Dog (1), Cat (1) and Duck (1) stand side by side smiling, the apple tree and the red farmhouse behind them. Exactly four animals | new |
-| 1 | Spring morning, the farmyard: Hen (1) sweeps the yard with a small broom, busy; Dog (1) snoozes in the sun with his nose on his paws; Cat (1) sits on the fence licking a white paw; Duck (1) splashes in the round puddle | new |
-| 2 | Spring morning, the farmyard: Hen (1) holds out a few grains of wheat in her wing, asking; Dog (1) lying down, Cat (1) on the fence and Duck (1) in his puddle each shake their heads, relaxed and smiling. Nobody looks cross | new |
-| 3 | Spring, late morning, the bare brown field: Hen (1) plants grains in a long straight row, patting the earth with her foot, a little bag of grains at her side; in the background by the fence Dog (1), Cat (1) and Duck (1) are fast asleep in a heap | new |
-| 4 | Late-summer afternoon, at the edge of the field of tall golden wheat (taller than Hen): Hen (1) stands holding small garden shears, asking; Dog (1), Cat (1) and Duck (1) lounge in the grass beside the field, shaking their heads | new |
-| 5 | Late-summer afternoon, the wheat field: Hen (1) snips the wheat with small round-tipped garden shears; a few neat tied golden bundles stand beside her; under the apple tree at the field's edge Dog (1), Cat (1) and Duck (1) sit in the shade watching | new |
-| 6 | Late-summer morning, the farmyard: Hen (1) stands beside her little red wooden cart piled with golden wheat bundles, asking; Dog (1), Cat (1) and Duck (1) lie in a row against the fence, shaking their heads | new |
-| 7 | Late-summer midday, the hilltop: Hen (1) stands beside her little red cart, now holding one full white sack of flour, in front of the white windmill whose four big sails are turning. Far off to one side at mid-height (never in the bottom 30%), small, the red farmhouse with Dog (1), Cat (1) and Duck (1) dozing in the farmyard. No miller, no people | new |
-| 8 | Afternoon, the kitchen: Hen (1) stands by the wooden table with the white flour sack and a big mixing bowl, asking; Dog (1) lies on the rug, Cat (1) sits on the window sill, Duck (1) sits on a kitchen chair, each shaking their heads. No oven or stove anywhere | new |
-| 9 | Afternoon, the kitchen: Hen (1) at the wooden table squishes a big round ball of dough with both wings, flour dusting the table, the mixing bowl beside her; on the rug Dog (1), Cat (1) and Duck (1) are asleep together in a cosy heap. No oven or stove | new |
-| 10 | Late afternoon, the kitchen: a big round golden loaf sits on a wooden board on the table; Hen (1) stands beside it, smiling; Dog (1), Cat (1) and Duck (1) have just jumped up from the rug and hurry to the table, noses up, eager. No oven, stove or steam | new |
-| 11 | Late afternoon, the kitchen: Dog (1), Cat (1) and Duck (1) stand in a row by the table, heads a little bowed, looking sorry (Dog's ears down, Duck with a wing on his chest promising); Hen (1) faces them by the loaf, listening kindly. Nobody cries | new |
-| 12 | Late afternoon, on the grass under the apple tree: a picnic: Hen (1), Dog (1), Cat (1) and Duck (1) sit in a circle on a red-and-white checked blanket with cups and plates on it, each holding a piece of bread, munching and smiling | new |
-| 13 | Early evening, the farmyard by the green kitchen door: a big wooden tub of white bubbles on a low bench, a pile of cups and plates beside it; Dog (1) washes a plate, Cat (1) dries a cup with a tea towel, Duck (1) splashes in the bubbles; Hen (1) laughs, wings up. No steam | new |
-| 14 | The next spring, morning, the farmyard at the edge of the bare field: Hen (1) holds out a few grains of wheat; Dog (1), Cat (1) and Duck (1) jump up eagerly, each holding a little spade. Exactly four animals and three spades | new |
-| 15 | Spring sunset, pink and gold sky, the field: Hen (1), Dog (1), Cat (1) and Duck (1) work side by side in a row, digging and planting, each with their own little spade (four spades, Hen's too), all smiling; the apple tree and the farmhouse behind them | new |
+| Cover | Sunny spring morning in the farmyard: Hen (1) stands in front holding up a few grains of wheat with a happy smile; behind her Dog (1), Cat (1) and Duck (1) stand side by side smiling, the apple tree and the red farmhouse behind them. Exactly four animals | keep |
+| 1 | Spring morning, the farmyard: Hen (1) sweeps the yard with a small broom, busy; Dog (1) snoozes in the sun with his nose on his paws; Cat (1) sits on the fence licking a white paw; Duck (1) splashes in the round puddle | keep |
+| 2 | Spring morning, the farmyard: Hen (1) holds out a few grains of wheat in her wing, asking; Dog (1) lying down, Cat (1) on the fence and Duck (1) in his puddle each shake their heads, relaxed and smiling. Nobody looks cross | keep |
+| 3 | Spring, late morning, the bare brown field: Hen (1) plants grains in a long straight row, patting the earth with her foot, a little bag of grains at her side; in the background by the fence Dog (1), Cat (1) and Duck (1) are fast asleep in a heap | keep |
+| 4 | Late-summer afternoon, at the edge of the field of tall golden wheat (taller than Hen): Hen (1) stands holding small garden shears, asking; Dog (1), Cat (1) and Duck (1) lounge in the grass beside the field, shaking their heads | keep |
+| 5 | Late-summer afternoon, the wheat field: Hen (1) snips the wheat with small round-tipped garden shears; a few neat tied golden bundles stand beside her; under the apple tree at the field's edge Dog (1), Cat (1) and Duck (1) sit in the shade watching | keep |
+| 6 | Late-summer morning, the farmyard: Hen (1) stands beside her little red wooden cart piled with golden wheat bundles, asking; Dog (1), Cat (1) and Duck (1) lie in a row against the fence, shaking their heads | keep |
+| 7 | Late-summer midday, the hilltop: Hen (1) stands beside her little red cart, now holding one full white sack of flour, in front of the white windmill whose four big sails are turning. Far off to one side at mid-height (never in the bottom 30%), small, the red farmhouse with Dog (1), Cat (1) and Duck (1) dozing in the farmyard. No miller, no people | keep |
+| 8 | Afternoon, the kitchen: Hen (1) stands by the wooden table with the white flour sack and a big mixing bowl, asking; Dog (1) lies on the rug, Cat (1) sits on the window sill, Duck (1) sits on a kitchen chair, each shaking their heads. No oven or stove anywhere | keep |
+| 9 | Afternoon, the kitchen: Hen (1) at the wooden table squishes a big round ball of dough with both wings, flour dusting the table, the mixing bowl beside her; on the rug Dog (1), Cat (1) and Duck (1) are asleep together in a cosy heap. No oven or stove | keep |
+| 10 | Late afternoon, the kitchen: a big round golden loaf sits on a wooden board on the table; Hen (1) stands beside it, smiling; Dog (1), Cat (1) and Duck (1) have just jumped up from the rug and hurry to the table, noses up, eager. No oven, stove or steam | keep |
+| 11 | Late afternoon, the kitchen: Dog (1), Cat (1) and Duck (1) stand in a row by the table, heads a little bowed, looking sorry (Dog's ears down, Duck with a wing on his chest promising); Hen (1) faces them by the loaf, listening kindly. Nobody cries | keep |
+| 12 | Late afternoon, on the grass under the apple tree: a picnic: Hen (1), Dog (1), Cat (1) and Duck (1) sit in a circle on a red-and-white checked blanket with cups and plates on it, each holding a piece of bread, munching and smiling | keep |
+| 13 | Early evening, the farmyard by the green kitchen door: a big wooden tub of white bubbles on a low bench, a pile of cups and plates beside it; Dog (1) washes a plate, Cat (1) dries a cup with a tea towel, Duck (1) splashes in the bubbles; Hen (1) laughs, wings up. No steam | keep |
+| 14 | The next spring, morning, the farmyard at the edge of the bare field: Hen (1) holds out a few grains of wheat; Dog (1), Cat (1) and Duck (1) jump up eagerly, each holding a little spade. Exactly four animals and three spades | keep |
+| 15 | Spring sunset, pink and gold sky, the field: Hen (1), Dog (1), Cat (1) and Duck (1) work side by side in a row, digging and planting, each with their own little spade (four spades, Hen's too), all smiling; the apple tree and the farmhouse behind them | keep |
 
 Check (dino-storytelling section 4):
 

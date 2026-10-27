@@ -88,8 +88,20 @@ public sealed class StoreStoryTests : IDisposable
 
     public static TheoryData<string> Languages() => new(UiLanguage.Supported);
 
-    // The roster's duckling voices are one gender per language and an animal takes its own animal's voice before its gender, so the builder stores Duckling and Dilly
-    // as no animal (StarterAnimals). The app casts a language other than the story's afresh, carrying only the animal settings; the story's language keeps its cast.
+    // The Lion and the Mouse (Slice 156): the book suggests the Friendly Giant for the Lion and the Squeaky Mouse for the Mouse ("her supper"). The mouse voice is a boy in
+    // English and Farsi, so there the suggestion clashes on gender and her traits pick a girl's young, squeaky voice instead.
+    [Theory]
+    [MemberData(nameof(Languages))]
+    public void TheLionAndTheMouse_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
+    {
+        AssertEachIsPlayedByTheirGender(StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.LionAndMouseId)), language, new Dictionary<string, Gender>
+        {
+            ["Lion"] = Gender.Male, ["Mouse"] = Gender.Female,
+        });
+    }
+
+    // The roster's duckling voices are one gender per language, so the book chooses each voice (StarterVoices, Slice 156: mummy, piglet, bunny, bee, knight) with the gender, and Duckling
+    // and Dilly are ducks again. The app casts a language other than the story's afresh, carrying the animal settings and the book's choices; the story's language keeps its cast.
     [Theory]
     [MemberData(nameof(Languages))]
     public void TheUglyDuckling_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
@@ -113,8 +125,8 @@ public sealed class StoreStoryTests : IDisposable
         });
     }
 
-    // The Little Red Hen (Slice 121): the roster's kitten and duckling voices are girls in most languages but boys in Farsi, Spanish and Portuguese, so the builder
-    // stores Cat and Duck as no animal (StarterAnimals) and they are cast by gender; Hen keeps the hen and Dog the puppy, which are one gender everywhere.
+    // The Little Red Hen (Slices 121, 156): the roster's kitten and duckling voices are girls in most languages but boys in Farsi, Spanish and Portuguese. The book
+    // chooses each voice (StarterVoices: mummy, puppy, kitten, jester) with the gender, so Cat and Duck keep their animals and a suggestion of the wrong gender falls to the traits.
     [Theory]
     [MemberData(nameof(Languages))]
     public void TheLittleRedHen_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
@@ -129,7 +141,7 @@ public sealed class StoreStoryTests : IDisposable
     }
 
     // The Town Mouse and the Country Mouse (Slice 121): Town Mouse is "she" and Country Mouse "he", so the two friends sound different in every language (the
-    // stored English genders are checked too, since every other language is cast from them).
+    // stored English genders are checked too, since every other language is cast from them). Both are mice again since Slice 156: the book suggests bee and piglet.
     [Theory]
     [MemberData(nameof(Languages))]
     public void TheTownMouseAndTheCountryMouse_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
@@ -177,7 +189,8 @@ public sealed class StoreStoryTests : IDisposable
     }
 
     // The Elves and the Shoemaker (Slice 121): two and two, the shoemaker Hans and the elf Nob are "he", his wife Greta and the elf Nib "she"; none is an
-    // animal, so each is cast by the gender the English pronouns give them (checked too, since every other language is cast from them).
+    // animal. The book suggests knight, mummy, bee and piglet (Slice 156), which every language's roster has, so each keeps a voice of their gender (the stored
+    // English genders are checked too, since every other language is cast from them).
     [Theory]
     [MemberData(nameof(Languages))]
     public void TheElvesAndTheShoemaker_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
