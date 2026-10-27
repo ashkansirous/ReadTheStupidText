@@ -40,7 +40,7 @@ internal static class StoreTexts
         new(UglyDucklingId, "The Ugly Duckling", "ugly-duckling", UglyDuckling, 0, "Retold from Andersen · free to share", 5, 8, "Hans Christian Andersen", ["Mother Duck", "Duckling", "Dilly", "Hen", "Swan"], 6, AddedDate),
         new(RedHenId, "The Little Red Hen", "little-red-hen", RedHen, 3, RetoldTraditional, 3, 6, Traditional, ["Hen", "Dog", "Cat", "Duck"], 6, AddedDate),
         new(BillyGoatsId, "The Three Billy Goats Gruff", "billy-goats-gruff", BillyGoats, 0, RetoldTraditional, 4, 7, Traditional, ["Little Billy", "Middle Billy", "Big Billy", "Troll"], 8, AddedDate),
-        new(BeanstalkId, "Jack and the Beanstalk", "jack-and-the-beanstalk", Beanstalk, 2, RetoldTraditional, 5, 8, Traditional, ["Jack", "Mother", "Giant", "Peddler"], 6, AddedDate),
+        new(BeanstalkId, "Jack and the Beanstalk", "jack-and-the-beanstalk", Beanstalk, 2, RetoldTraditional, 5, 8, Traditional, ["Jack", "Mother", "Giant", "Peddler"], 7, AddedDate),
         new(ElvesId, "The Elves and the Shoemaker", "elves-and-shoemaker", Elves, 1, "Retold from the Brothers Grimm · free to share", 4, 8, "Brothers Grimm", ["Hans", "Greta", "Nib", "Nob"], 6, AddedDate),
         new(TownMouseId, "The Town Mouse and the Country Mouse", "town-mouse-country-mouse", TownMouse, 2, RetoldAesop, 4, 7, "Aesop", ["Town Mouse", "Country Mouse"], 6, AddedDate),
         new(PeterRabbitId, "The Tale of Peter Rabbit", "peter-rabbit", PeterRabbit, 3, "Beatrix Potter, 1902 (retold)", 3, 6, "Beatrix Potter", ["Mrs. Rabbit", "Peter", "Mr. McGregor", "Robin", "Flopsy"], 7, AddedDate),
@@ -530,35 +530,35 @@ Snip, snap, snout, this tale's told out.
 """;
 
     public const string Beanstalk = """
-Once upon a time a boy called Jack lived in a little cottage with his mother and their old cow, Milky-White. They didn't have much, and the cupboard was nearly empty.
+Once upon a time, a boy called Jack lived in a little cottage with his mum and their old cow, Milky-White. They didn't have much, and the cupboard was nearly empty.
 
-"Here's our last coin, Jack," said Mother. "Please take it to the market and buy some seeds for our garden."
+"Here's our very last coin, Jack," said Mother. "Can you take it to the market and get some seeds for our garden?"
 ---
-At the market Jack met a funny little Peddler. She had a cart full of seeds and a sleepy grey donkey.
+At the market, Jack met a funny little Peddler. She had a cart full of seeds and a sleepy grey donkey.
 
-"I've got something better than seeds," said Peddler. "Five magic beans! Plant them tonight, and look out of your window in the morning."
+"I've got something even better than seeds," said Peddler. "Five magic beans! Plant them tonight, and peek out of your window in the morning."
 
 So Jack gave her his coin, and she gave him the beans.
 ---
-That evening Jack showed his mother the five beans.
+That evening, Jack showed his mum the five beans.
 
 "Only five beans?" said Mother, and she laughed. "Well, beans are seeds too. Let's plant them and see!"
 
 So they planted the beans under the kitchen window: one, two, three, four, five. Milky-White watched over the fence.
 ---
-In the morning Jack and his mother ran out into the garden. "Wow!" said Jack.
+In the morning, Jack and his mum ran out into the garden. "Wow, look at that!" said Jack.
 
 A great big beanstalk had grown in the night. It went up, up, up, right into the clouds!
 
-Even Milky-White looked up. Moo, moo, moooo!
+Even Milky-White looked up. Moo, moo, moo!
 ---
-Then the leaves began to rustle. Rustle, rustle, rustle! Down the beanstalk, leaf by leaf, came a plump little hen with shiny golden feathers.
+Then the leaves started to rustle. Rustle, rustle, rustle! Down the beanstalk, leaf by leaf, came a fluffy little hen with shiny golden feathers.
 
 She hopped onto Jack's arm. Cluck, cluck, cluck!
 
 "Hello, little hen," said Jack. "Are you lost?"
 ---
-"I think she lives up in the clouds," said Jack. "Somebody up there must be missing her. Mother, may I take her home?"
+"I think she lives up in the clouds," said Jack. "Somebody up there must be missing her. Mum, can I take her home?"
 
 "Let's take her home together," said Mother. She tied a basket onto Jack's back and tucked the little hen inside.
 
@@ -566,29 +566,29 @@ She hopped onto Jack's arm. Cluck, cluck, cluck!
 ---
 Jack held on to the beanstalk with both hands, and Mother climbed right behind him.
 
-"Hold on with both hands, one step at a time, Mother," said Jack. Up and up they climbed, slowly and carefully, past the treetops and the birds, right into the soft white clouds.
+"Hold on with both hands, one step at a time, Mum," said Jack. Up, up, up they climbed, nice and slow, past the treetops and the birds, right into the soft white clouds.
 
 The little hen peeked out of the basket. Cluck, cluck, cluck!
 ---
-At the top, a road of soft white cloud led to a huge castle. Boom! Boom! Boom! Out came a Giant with a big, round, friendly face.
+At the top, a fluffy cloud road led to a great big castle. Boom, boom, boom! Out stomped a Giant with a big, round, friendly face.
 
-"Fee, fi, fo, fum! Hello, hello, everyone!" sang Giant, so loudly that the birds flew away. Jack giggled and put his fingers in his ears. So did Mother.
+"Fee, fi, fo, fum! Hello, hello, everyone!" sang Giant, so loud that all the birds flew away. Jack giggled and put his fingers in his ears. So did Mother.
 ---
-Then the Giant saw the little hen in Jack's basket. "Goldie!" said Giant. "My Goldie! I looked for you everywhere!"
+Then the Giant saw the little hen in Jack's basket. "Goldie!" said Giant. "My Goldie! I've been looking for you everywhere!"
 
 Jack lifted Goldie out, and she fluttered up into the Giant's big hands. Cluck, cluck, cluck!
 
-"Thank you, thank you!" said Giant. His happy voice was so loud that the castle windows rattled.
+"Thank you, thank you!" said Giant. His happy voice was so loud that the castle windows went rattle, rattle, rattle!
 ---
-The Giant sat down on his castle step and gave a great big sigh. Whoosh... whoosh! The sigh blew Jack's cap right off his head.
+The Giant sat down on his castle step and let out a great big sigh. Whoosh, whoosh, whoosh! The sigh blew Jack's cap right off his head.
 
 "Oops, sorry!" said Giant, and he caught the cap between two fingers. "Everything about me is too big and too loud. When I say hello, the birds fly away, and nobody ever comes to play."
 ---
-"I can help," said Jack. "Put a finger on your lips, like this, and sing as softly as a mouse."
+"I can help!" said Jack. "Put a finger on your lips, like this, and sing as softly as a mouse."
 
 The Giant put a finger on his lips. "Fee, fi, fo, fum! Hello, hello, everyone!" whispered Giant.
 
-This time the birds didn't fly away. Two little bluebirds flew down and sat on his shoulder.
+This time the birds didn't fly away. Two little bluebirds flew down and sat right on his shoulder.
 ---
 "Thank you, Jack," said Giant. "You brought Goldie home, and you taught me to sing softly. Goldie lays a golden egg every morning, and I'd like to share."
 
@@ -596,23 +596,23 @@ Very gently, the Giant put a shiny golden egg into Jack's basket.
 
 "Come and visit me every Sunday, both of you," said Giant.
 ---
-Jack and Mother waved goodbye and began to climb down.
+Jack and Mother waved bye-bye and started to climb down.
 
-"Hold on with both hands, one step at a time, Mother," said Jack. Down and down they went, slowly and carefully, with the golden egg safe in his basket.
+"Hold on with both hands, one step at a time, Mum," said Jack. Down, down, down they went, nice and slow, with the golden egg safe and snug in his basket.
 
-"Goodbye, my friends!" whispered Giant, and he waved from the edge of the cloud.
+"Bye-bye, my friends!" whispered Giant, and he waved from the edge of the cloud.
 ---
-Jack and Mother stepped off the last leaf. The Peddler was waiting at the bottom.
+Jack and Mother stepped off the very last leaf. The Peddler was waiting at the bottom.
 
 Jack held up the golden egg. "It's a present from our new friend, the Giant," said Jack. "Now we can buy seeds for the whole garden!"
 
-"I told you they were magic beans," said Peddler, and she winked. Mother gave Jack a big hug.
+"I told you they were magic beans," said Peddler, and she gave a wink. Mother gave Jack a great big hug.
 ---
-That night Mother tucked Jack into bed and kissed him goodnight. From high up in the clouds came a soft little song.
+That night, Mother tucked Jack into bed and kissed him goodnight. From high up in the clouds came a soft little song.
 
 "Fee, fi, fo, fum! Goodnight, goodnight, everyone!" sang Giant, as softly as a mouse.
 
-"Goodnight, Giant," whispered Jack, and soon he was fast asleep. From that day on, Jack and the Giant were the best of friends.
+"Night-night, Giant," whispered Jack, and soon he was fast asleep. And from that day on, Jack and the Giant were best friends.
 """;
 
     public const string Elves = """

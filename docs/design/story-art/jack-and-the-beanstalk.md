@@ -1,6 +1,6 @@
 # Jack and the Beanstalk: art record
 
-Store story (`StoreTexts.Beanstalk`, stem `jack-and-the-beanstalk`, id `e2fb7f5de4ab4c4eb8bd2bb97c91accc`, version 6). Version 6 (Slice 146 Wave A, 2026-10-27): Farsi rewritten in spoken Farsi, sound words as plain triples with no commas and no vowel marks (each of the three English "Boom!" pieces is «گرومب گرومب!», six steps on page 8). **Wave B note:** make the English "Boom, boom, boom!" one piece, so its Farsi can be a single plain triple; English, page breaks and every picture unchanged, so every page keeps its picture.
+Store story (`StoreTexts.Beanstalk`, stem `jack-and-the-beanstalk`, id `e2fb7f5de4ab4c4eb8bd2bb97c91accc`, version 7). **Version 7 (Slice 146 Waves B+C and Slice 156, 2026-10-27):** English rewritten in spoken bedtime English ("Mum, can I take her home?", "nice and slow", "Wow, look at that!", "Night-night, Giant"), the same 15 page breaks and the same one action per page, so **every page keeps its picture** (cover and 1-15, nothing redrawn; the only new detail, the windows going "rattle, rattle, rattle" on page 9, is a sound, not a picture). Every sound word is now one piece read as a triple: `Moo, moo, moo!`, `Rustle, rustle, rustle!`, `Boom, boom, boom!` (one piece, was three `Boom!`), `Whoosh, whoosh, whoosh!` (one piece, was `Whoosh...` + `whoosh!`) and the new `rattle, rattle, rattle!`; no letter stretching (`moooo` is gone). The 12 other languages were redone for every reworded piece in the same spoken register with their own sound triples; Farsi changed only where the meaning moved (`گرومب گرومب گرومب!`، `تلق تلق تلق`، `ووش ووش ووش!`، «می‌تونی ببریش بازار...؟»). The voices are the book's own (below). Version 6 (Slice 146 Wave A, 2026-10-27): Farsi rewritten in spoken Farsi, sound words as plain triples with no commas and no vowel marks (each of the three English "Boom!" pieces is «گرومب گرومب!», six steps on page 8). (Wave B note, done in version 7: the English "Boom, boom, boom!" is one piece, and its Farsi a single plain triple.)
 Retold as 15 pages with one action each (`dino-storytelling` skill, Slice 121). **Art status (2026-10-26): illustrated,
 all 16 pictures accepted; the full review PASSED on 2026-10-26 after the redraws.** The old 9-page version was text only.
 
@@ -44,35 +44,44 @@ bedtime: the Giant sings a soft goodnight from the clouds.
   scenes. The cow is never sold.
 
 **Refrains (identical every time):**
-- `"Hold on with both hands, one step at a time," said <Mother/Jack>.` on pages 6 (Mother), 7 (Jack, going
+- `"Hold on with both hands, one step at a time," said Mother.` on page 6, and Jack's `"Hold on with both hands, one step at a time, Mum," said Jack.` on pages 7 (going
   up, Mother right behind him) and 13 (Jack, going down with Mother). The safety model of the book.
 - `Cluck, cluck, cluck!` (Goldie) on pages 5, 7 and 9.
 - The Giant's song: `"Fee, fi, fo, fum! Hello, hello, everyone!"` loud on page 8 (the birds fly away),
   whispered on page 11 (the birds come back), and the different last step on page 15,
   `"Fee, fi, fo, fum! Goodnight, goodnight, everyone!"`, sung "as softly as a mouse" (the phrase Jack taught him
   on page 11). No "I smell a boy" and nothing about bones.
-- Sounds made long enough to hear: `Moo, moo, moooo!`, `Rustle, rustle, rustle!`, `Boom! Boom! Boom!` (his
-  footsteps, page 8 only), `Whoosh... whoosh!` (his sigh, page 10; every translation repeats the sound too).
+- Sounds made long enough to hear, each one piece and a triple (Decision 151): `Moo, moo, moo!`, `Rustle, rustle, rustle!`, `Boom, boom, boom!` (his
+  footsteps, page 8 only), `rattle, rattle, rattle!` (the windows, page 9), `Whoosh, whoosh, whoosh!` (his sigh, page 10). Every translation
+  repeats each sound three times too (French «Boum, boum, boum !», Russian «Бум! Бум! Бум!», Japanese «ドシン、ドシン、ドシン！», Chinese «咚，咚，咚！»).
+  Untested aloud outside English, Spanish, Chinese and Farsi: flag the new rattle triples and the non-measured languages for a listen.
 
-**Cast and voices:** Jack, Mother, Giant, Peddler (`StoreTexts` spec list). Genders, chosen on purpose: Jack and
-the Giant are male; Mother and the Peddler are female (the Peddler is a woman so the book has two of each,
-and her pronoun cue comes straight after her name: "a funny little Peddler. She had a cart"). The caster reads
-"Mother" as a title and the Giant from "his". The Giant guesses the Big flavour from his name, so every roster
-casts him a deep, low voice: the roster's Friendly Giant or Rumbly Dragon voice in English and the Kokoro
-languages; in Farsi the men's Giant and Grumpy characters share the deep gyro voice and tie on cost, so he gets
-the Grumpy gardener there (same voice, a rougher pitch; a caster tie-break, not the text).
+**Cast and voices (Slice 156, the book's own choice, `StarterVoices` entry `StoreTexts.BeanstalkId`):** Jack, Mother, Giant, Peddler
+(`StoreTexts` spec list). Genders, chosen on purpose: Jack and the Giant are male; Mother and the Peddler are female (the Peddler is a
+woman so the book has two of each, and her pronoun cue comes straight after her name: "a funny little Peddler. She had a cart").
+
+- **Jack:** suggested `piglet` (Cheeky Piglet, small and quick). Traits: male, child, person; bright, bouncy. A boy of seven, not a grown man.
+- **Mother:** suggested `mummy` (Kind Mummy, warm and kind). Traits: female, adult, person; warm, soft.
+- **Giant:** suggested `giant` (Friendly Giant, big, deep and slow). Traits: male, adult, giant; booming, warm. Big and kind, never gruff.
+- **Peddler:** suggested `bee` (Busy Bee, bubbly and quick). Traits: female, old, person; bouncy, bright. A funny little old seed-seller who winks.
+
+The picker had made Jack the Brave Knight (a grown man), the Giant the Rumbly Dragon and the Peddler the Brave Princess, whose slot is a
+whisper in Spanish, Portuguese and Farsi. The real cast was dumped for all 14 languages (the `StoryVoicing.CastIn` path): every
+suggestion is kept in every language, everyone gets their own gender, no two characters share a voice and flavour, nobody is on a
+whisper flavour, and the Giant is on the Giant flavour everywhere. Farsi has three voices, so Jack (gyro, Chirpy) and the Giant (gyro,
+Giant) share a voice with different flavours, and Mother and the Peddler share mana with the narrator (Normal, Small, Storyteller).
 `BeanstalkStoryTests.JackAndTheBeanstalk_GivesEachCharacterAVoiceOfTheirGender_AndTheGiantADeepOne_InEveryLanguagesRoster`
 checks all 14 languages. Goldie, Milky-White, the donkey and the birds never speak, so they are not in the cast.
 
 **Translations (Decision 152 register):** all 13 languages written fresh for this text in the spoken,
-kid-friendly register: Farsi colloquial forms throughout (می‌تونم، بکارشون، گم شدی؟، شامم خونه باش، باشه؟; the
+kid-friendly register (version 7 redid every reworded piece; Jack says "Mum" in every language: Maman, mamá, mãe, mama, mor, mamma, äiti, мам, ماما, お母さん, 妈妈): Farsi colloquial forms throughout (می‌تونم، بکارشون، گم شدی؟، شامم خونه باش، باشه؟; the
 Peddler is «خانم فروشنده», Sunday is «جمعه»), French in the passé composé with "a dit" tags, Brazilian Portuguese
-(pra, tá, a gente, "o Jack"), Spanish from Spain ("habichuelas mágicas", "porfa"), Japanese and Chinese with no
+(pra, tá, a gente, "o Jack"), Spanish from Spain ("habichuelas mágicas", "monedita", "despacito"), Japanese and Chinese with no
 spaces, Arabic with قال for Jack and the Giant and قالت for Mother and the Peddler, Russian сказал/сказала. The
 Peddler is a woman in every language (la Marchande, la Vendedora, a Vendedora, het Marktvrouwtje, Kræmmerkonen,
 Försäljerskan, Markedskona, kauppiasmummo, Торговка, البائعة, 物売りのおばあさん, 小贩奶奶). Each language uses its own
-sound words, repeated (Farsi «قد قد قدا! قد قد قدا!»، «ماااا، ماااا، ماااااا!»; French «Cot, cot, codet !»,
-«Meuh, meuh, meuuuh !»; Dutch «Boe, boe, boeoeoe!»; Japanese «コッコッコッ！», «モー、モー、モーーー！»), never a
+sound words, repeated (Farsi «قد قد قدا!»، «ماع ماع ماع!»; French «Cot, cot, codet !»,
+«Meuh, meuh, meuh !»; Dutch «Boe, boe, boe!»; Japanese «コッコッコッ！», «モー、モー、モー！»; no letter stretching since version 7), never a
 growl word for the Giant (his footsteps are Boum/Bum/ドシン/咚, his sigh a whoosh). "Fee, fi, fo, fum" stays a
 nonsense song in every language, spelled for that script (Chinese «咿呀咿呀哟！»). Goldie is a name in each language
 (طلایی، ذهبية، Златка, Dorette, Dorada, Dourada, Goudje, Guldi, Guldis, Gulla, Kultsi, ゴールディ, 金金), and so is
@@ -135,26 +144,26 @@ Roald Dahl BFG with huge ears and a waistcoat, no Studio Ghibli cloud castle).
 Every page: the whole scene sits in the top 70% of the picture; the bottom 30% is plain ground, grass, cloud,
 floor or quilt with nothing important in it. No text, letters, words, sound effects or writing anywhere ("Boom",
 "Cluck", "Whoosh", "Fee fi fo fum" are never drawn in; no music notes). Nobody looks scared. Every page is **new**
-(all pictures drawn and accepted). Every picture has at least three characters (page 15: the Giant is tiny, far away in the clouds).
+(all pictures drawn and accepted; version 7 changed words only, so every picture is kept). Every picture has at least three characters (page 15: the Giant is tiny, far away in the clouds).
 
-| Page | One action (who, count, where, when) | Picture |
+| Page | One action (who, count, where, when) | Picture (v7) |
 | --- | --- | --- |
-| Cover | Sunny morning in the cloud land: the Giant (1) sits on his castle step smiling, Goldie (1) on his open palm; Jack (1) stands on the cloud road waving up at him, the top of the beanstalk curling up beside the clouds; the two bluebirds (2) on the Giant's shoulder | new |
-| 1 | Morning, by the cottage gate: Mother (1) puts one coin into Jack's (1) hand; Milky-White (1) looks over the gate | new |
-| 2 | Late morning, the market square: the Peddler (1) drops five beans into Jack's (1) open hand beside her cart; the donkey (1) dozes in front of the cart | new |
-| 3 | Evening (sunset), the vegetable patch under the kitchen window: Jack (1) kneels and presses a bean into the soil, Mother (1) waters with the small green can, both smiling; Milky-White (1) watches over the fence | new |
-| 4 | Next morning, the garden: Jack (1) and Mother (1) stand side by side looking up, mouths open in surprise, at the huge beanstalk rising into the clouds; Milky-White (1) looks up too | new |
-| 5 | Morning, the foot of the beanstalk: Goldie (1) hops off the lowest leaf onto Jack's (1) outstretched arm; Mother (1) watches smiling | new |
-| 6 | Morning, the foot of the beanstalk: Mother (1), sleeves rolled up and ready to climb, ties the basket onto Jack's (1) back; Goldie (1) peeks out of the basket. 3 characters | new |
-| 7 | Morning, high on the beanstalk: Jack (1) climbs, both hands holding the stalk, one foot on a big leaf; Mother (1) climbs just below him, both hands on the stalk, smiling up at him; Goldie (1) peeks out of the basket on his back; the two bluebirds (2) fly past; treetops and the cottage roof small below. 5 characters | new |
-| 8 | Midday, the cloud road in front of the castle: the Giant (1) strides out of the big door with his arms wide, mouth open in a round "O", singing; Jack (1) and Mother (1) side by side on the cloud road, giggling with their fingers in their ears; Goldie (1) in the basket; the two bluebirds (2) fly away. 6 characters | new |
-| 9 | Midday, in front of the castle: the Giant (1) kneels, beaming, holding out his huge cupped hands; Goldie (1) flutters up into them from the basket Jack (1) holds up; Mother (1) beside Jack, smiling. 4 characters | new |
-| 10 | Afternoon, the castle step: the Giant (1) sits on the step holding Jack's red cap between finger and thumb, holding it out to him, a sorry smile; Jack (1), cap-less, hair blown up, laughs; Mother (1) beside Jack, laughing too, one hand holding her headscarf on; Goldie (1) sits on the Giant's knee. 4 characters | new |
-| 11 | Afternoon, the castle step: the Giant (1), sitting, and Jack (1), standing beside him, both hold a finger to their lips; Mother (1) watches smiling a step behind Jack; the two bluebirds (2) land on the Giant's shoulder; Goldie (1) on his knee. 6 characters | new |
-| 12 | Afternoon, the castle step: the Giant (1) bends down and very gently places a shiny golden egg into the basket Jack (1) holds in front of him; Mother (1) stands beside Jack with a hand on his shoulder; Goldie (1) watches from the step. 4 characters | new |
-| 13 | Late afternoon, the edge of the cloud: the view from the top: the Giant (1) lies on his tummy at the cloud's edge and waves, Goldie (1) beside his hand; below, Jack (1) climbs down the beanstalk with both hands holding the stalk, the basket on his back, and Mother (1) climbs down just below him, both hands on the stalk. 4 characters | new |
-| 14 | Evening, the garden at the foot of the beanstalk: Mother (1) hugs Jack (1) from the side while he holds up the golden egg in both hands; the Peddler (1) winks beside her cart at the foot of the stalk; the donkey (1) beside her. 4 characters | new |
-| 15 | Night, Jack's bedroom, moonlight: Jack (1) in bed under the patchwork quilt, smiling, eyes nearly closed; Mother (1) sits on the edge of the bed and kisses his forehead; through the one wide single-pane window, the beanstalk rises into silvery clouds where the Giant (1), tiny and far away, leans over the cloud's edge beside his little castle, singing softly. No lamp, candle or flame | new |
+| Cover | Sunny morning in the cloud land: the Giant (1) sits on his castle step smiling, Goldie (1) on his open palm; Jack (1) stands on the cloud road waving up at him, the top of the beanstalk curling up beside the clouds; the two bluebirds (2) on the Giant's shoulder | keep |
+| 1 | Morning, by the cottage gate: Mother (1) puts one coin into Jack's (1) hand; Milky-White (1) looks over the gate | keep |
+| 2 | Late morning, the market square: the Peddler (1) drops five beans into Jack's (1) open hand beside her cart; the donkey (1) dozes in front of the cart | keep |
+| 3 | Evening (sunset), the vegetable patch under the kitchen window: Jack (1) kneels and presses a bean into the soil, Mother (1) waters with the small green can, both smiling; Milky-White (1) watches over the fence | keep |
+| 4 | Next morning, the garden: Jack (1) and Mother (1) stand side by side looking up, mouths open in surprise, at the huge beanstalk rising into the clouds; Milky-White (1) looks up too | keep |
+| 5 | Morning, the foot of the beanstalk: Goldie (1) hops off the lowest leaf onto Jack's (1) outstretched arm; Mother (1) watches smiling | keep |
+| 6 | Morning, the foot of the beanstalk: Mother (1), sleeves rolled up and ready to climb, ties the basket onto Jack's (1) back; Goldie (1) peeks out of the basket. 3 characters | keep |
+| 7 | Morning, high on the beanstalk: Jack (1) climbs, both hands holding the stalk, one foot on a big leaf; Mother (1) climbs just below him, both hands on the stalk, smiling up at him; Goldie (1) peeks out of the basket on his back; the two bluebirds (2) fly past; treetops and the cottage roof small below. 5 characters | keep |
+| 8 | Midday, the cloud road in front of the castle: the Giant (1) strides out of the big door with his arms wide, mouth open in a round "O", singing; Jack (1) and Mother (1) side by side on the cloud road, giggling with their fingers in their ears; Goldie (1) in the basket; the two bluebirds (2) fly away. 6 characters | keep |
+| 9 | Midday, in front of the castle: the Giant (1) kneels, beaming, holding out his huge cupped hands; Goldie (1) flutters up into them from the basket Jack (1) holds up; Mother (1) beside Jack, smiling. 4 characters | keep |
+| 10 | Afternoon, the castle step: the Giant (1) sits on the step holding Jack's red cap between finger and thumb, holding it out to him, a sorry smile; Jack (1), cap-less, hair blown up, laughs; Mother (1) beside Jack, laughing too, one hand holding her headscarf on; Goldie (1) sits on the Giant's knee. 4 characters | keep |
+| 11 | Afternoon, the castle step: the Giant (1), sitting, and Jack (1), standing beside him, both hold a finger to their lips; Mother (1) watches smiling a step behind Jack; the two bluebirds (2) land on the Giant's shoulder; Goldie (1) on his knee. 6 characters | keep |
+| 12 | Afternoon, the castle step: the Giant (1) bends down and very gently places a shiny golden egg into the basket Jack (1) holds in front of him; Mother (1) stands beside Jack with a hand on his shoulder; Goldie (1) watches from the step. 4 characters | keep |
+| 13 | Late afternoon, the edge of the cloud: the view from the top: the Giant (1) lies on his tummy at the cloud's edge and waves, Goldie (1) beside his hand; below, Jack (1) climbs down the beanstalk with both hands holding the stalk, the basket on his back, and Mother (1) climbs down just below him, both hands on the stalk. 4 characters | keep |
+| 14 | Evening, the garden at the foot of the beanstalk: Mother (1) hugs Jack (1) from the side while he holds up the golden egg in both hands; the Peddler (1) winks beside her cart at the foot of the stalk; the donkey (1) beside her. 4 characters | keep |
+| 15 | Night, Jack's bedroom, moonlight: Jack (1) in bed under the patchwork quilt, smiling, eyes nearly closed; Mother (1) sits on the edge of the bed and kisses his forehead; through the one wide single-pane window, the beanstalk rises into silvery clouds where the Giant (1), tiny and far away, leans over the cloud's edge beside his little castle, singing softly. No lamp, candle or flame | keep |
 
 Check (dino-storytelling section 4):
 
