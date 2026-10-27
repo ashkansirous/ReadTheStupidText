@@ -69,7 +69,16 @@ public static class CharacterTraitMatch
 {
     private const int KindMiss = 40;
     private const int AgeStep = 12;
+    // Old against Young, Child or Baby is a different kind of voice (an old owl sounding like a chick), so it counts more than a kind miss: 2 * AgeStep + this is above KindMiss.
+    private const int OldYoungExtra = 20;
     private const int QualityMiss = 3;
+    // A place whose flavour is the opposite of a wanted quality (a sleepy ewe for a bold girl) is worse than the wrong kind.
+    private const int ContradictionMiss = 50;
+    private static readonly (VoiceQuality[] Wanted, VoiceFlavour[] Flavours)[] Contradictions =
+    [
+        ([VoiceQuality.Bold, VoiceQuality.Bright], [VoiceFlavour.Sleepy, VoiceFlavour.Hushed]),
+        ([VoiceQuality.Booming, VoiceQuality.Gruff], [VoiceFlavour.Squeaky, VoiceFlavour.Small]),
+    ];
 
     private sealed record Roster(CharacterAge Age, CharacterBeing? Being, VoiceQuality[] Qualities);
 
@@ -140,10 +149,21 @@ public static class CharacterTraitMatch
         int cost = CharacterRoster.GenderMisfit(candidate.Gender, gender) + KindCost(candidate, traits, animal);
         if (traits.Age is { } wanted && AgeOf(candidate.Id) is { } has)
         {
-            cost += Math.Abs((int)wanted - (int)has) * AgeStep;
+            cost += AgeCost(wanted, has);
         }
 
+        cost += Contradicts(candidate, traits) ? ContradictionMiss : 0;
         return cost + (traits.Qualities ?? []).Count(q => !QualitiesOf(candidate.Id).Contains(q)) * QualityMiss;
+    }
+
+    private static bool Contradicts(StorytellerCharacter candidate, CharacterTraits traits) =>
+        Contradictions.Any(c => c.Flavours.Contains(candidate.Flavour) && (traits.Qualities ?? []).Any(c.Wanted.Contains));
+
+    private static int AgeCost(CharacterAge wanted, CharacterAge has)
+    {
+        int cost = Math.Abs((int)wanted - (int)has) * AgeStep;
+        bool oldAgainstYoung = (wanted == CharacterAge.Old && has <= CharacterAge.Young) || (has == CharacterAge.Old && wanted <= CharacterAge.Young);
+        return oldAgainstYoung ? cost + OldYoungExtra : cost;
     }
 
     private static int KindCost(StorytellerCharacter candidate, CharacterTraits traits, AnimalKind? animal)
