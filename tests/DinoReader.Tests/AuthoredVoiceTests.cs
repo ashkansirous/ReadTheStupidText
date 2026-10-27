@@ -343,9 +343,9 @@ public class AuthoredVoiceTests
     }
 
     [Fact]
-    public void Only_the_treasure_book_has_traits_so_far()
+    public void The_authored_books_are_the_treasure_book_and_the_pigs_and_no_other_store_book_has_traits()
     {
-        Assert.Equal([StoreTexts.TreasureId], StarterVoices.AuthoredBooks);
+        Assert.Equal([StoreTexts.TreasureId, StarterTexts.PigsId], StarterVoices.AuthoredBooks);
         Assert.All(StoreTexts.All.Where(s => s.Id != StoreTexts.TreasureId).Select(StoreBuilder.Build).SelectMany(b => b.Cast), m => Assert.Null(m.Traits));
     }
 
