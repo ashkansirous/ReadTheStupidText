@@ -1,7 +1,7 @@
 # Little Red Riding Hood: art record
 
-Store story (`StoreTexts.RedRidingHood`, stem `red-riding-hood`, id `1f0f0cb207b244368b7aef26028f4ac5`, version 4).
-Retold as 14 pages with one action each (`dino-storytelling` skill, Slice 121). **Art status (2026-10-26): cover and
+Store story (`StoreTexts.RedRidingHood`, stem `red-riding-hood`, id `1f0f0cb207b244368b7aef26028f4ac5`, version 6).
+Retold as 14 pages with one action each (`dino-storytelling` skill, Slice 121). Version 5 (Slice 152): each character's animal set in the book. Version 6 (Slice 146 Wave A, 2026-10-27): Farsi reworded in spoken Farsi (20 pieces), sound words as glued triples («تق تق تق!», «ها ها ها!», «به به به!»); English, page breaks and every picture unchanged, so all 14 pages keep their picture. **Art status (2026-10-26): cover and
 pages 1-14 drawn and accepted; full review PASS 2026-10-26.** The old 9-page text-only version had none.
 
 **Gentle retelling (Decision 130):** in the classic the Wolf tricks Red Riding Hood into leaving the path, runs

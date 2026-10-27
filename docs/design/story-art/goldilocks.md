@@ -1,7 +1,8 @@
 # Goldilocks and the Three Bears: art record
 
-Store story (`StoreTexts.Goldilocks`, stem `goldilocks`, version 4). Retold as 14 pages with one action each
-(`dino-storytelling` skill, Slice 121). **Art status (2026-10-26): pictures accepted, full review PASS (2026-10-26); shipped in `Store/goldilocks/`.** The cover and all
+Store story (`StoreTexts.Goldilocks`, stem `goldilocks`, version 6). Retold as 14 pages with one action each
+(`dino-storytelling` skill, Slice 121). Version 6 (Slice 146 Wave A, 2026-10-27): Farsi rewritten in spoken Farsi, sound words as
+plain repeats, no vowel marks; English, page breaks and every picture unchanged (all 14 pages keep their picture). **Art status (2026-10-26): pictures accepted, full review PASS (2026-10-26); shipped in `Store/goldilocks/`.** The cover and all
 14 pages are new; the old 9-page text had no pictures, so nothing is kept. Text review: the first pass failed pages 3,
 4, 11 and 14 (`reviews/goldilocks-text.md`); all four are rewritten as asked.
 
