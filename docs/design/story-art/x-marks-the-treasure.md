@@ -1,7 +1,9 @@
 # X Marks the Treasure!: art record
 
-Store story (`StoreTexts.Treasure`, id `TreasureId`, stem `x-marks-the-treasure`, version 1, added 2026-10-26), ages 3-6,
+Store story (`StoreTexts.Treasure`, id `TreasureId`, stem `x-marks-the-treasure`, version 5, added 2026-10-26), ages 3-6,
 author Ashkan Sirous, credit "A Dino Reader picture book · free to share". An original story, not a retelling.
+
+**Version 5 (Slice 146 Waves A+B+C, 2026-10-27):** the English is reworded in spoken bedtime language (Decision 152: "Look!", "Ooh", "Hmm", "Land ahoy!", "Up with the sail!", "Everybody's hungry!", "Ooh, look!" on the chest) and every one of the 13 translations is redone in the same register. Page breaks, page count (17) and each page's one action are unchanged, so **every page and the cover keep their picture**. Farsi: spoken forms («کاپیتان کاترین», «فرمون کشتی», «ملوانا»), sound words as plain triples with no commas and no vowel marks («قاق قاق قاق», «ووش ووش ووش» for the sail, «قار و قور» three times, «هام هام هام», «شالاپ شالاپ شالاپ», «خش خش خش» for the digging; «پَت» and «به به» dropped because they need a mark). Arabic stays simple Modern Standard (no dialect) and carries no vowel marks yet (Slice 154 decides). Japanese is kana-heavy with no spaces; Portuguese is Brazilian; Spanish Latin American ("pancita", "jaló"). Not yet listened to by a native speaker in any language.
 
 **Series: Captain Kathryn and Seagull** (the user's own series about a pirate captain and her seagull friend). This is book 1.
 Keep every character line below for the later books, so the cast looks the same across the series.
@@ -42,8 +44,7 @@ on page 1, merged with "Kathryn"), Seagull, Izzy, Pancake Polly, Billy. Kathryn,
 ("seagull" is not in the bird list), so no "Tweet tweet!" is added after her lines; she says her own "Squawk!".
 
 **Voices** (Slice 156, `StarterVoices.cs`): Seagull = `duckling2` (Splashy Duckling: the user's pick, a bouncy, squawky bird voice), Billy = `puppy2` (Wiggly Puppy, the user's pick),
-Kathryn = `princess` (bold and clear, the captain), Izzy = `fairy` (young and bright), Pancake Polly = `mummy` (warm). Kathryn, Izzy, Polly and Billy are pirates. Kathryn, Izzy and Polly are
-chosen by the builder pass, not yet by the writer: the writer should revisit them.
+Kathryn = `princess` (bold and clear, the captain), Izzy = `fairy` (young and bright), Pancake Polly = `bee` (Busy Bee, bubbly; moved from `mummy` on 2026-10-27). Kathryn, Izzy, Polly and Billy are pirates. Re-checked by the writer (2026-10-27): Kathryn = `princess` (af_bella, clear and bright) and Izzy = `fairy` (bf_lily, small and twinkly) fit and stay. Polly moved from `mummy` to `bee` (coordinator's decision), because `mummy` is bf_emma in English, the same base voice as Seagull's `duckling2`, and they talk back to back on page 10. Cast per language after the move (base voice): English Seagull bf_emma, Polly af_sky; Chinese Seagull xiaobei, Polly xiaoni; the eight Supertonic languages Seagull F4, Polly F5; Norwegian Seagull kmn, Polly knv. Farsi, Spanish and Portuguese have only one woman's voice, so every woman shares it (flavours differ) and nothing can fix that. **Still open:** in the eight Supertonic languages and Norwegian, Kathryn (`princess`, F4 Normal) shares Seagull's F4 base voice (pages 2 and 17). No other bold grown-up woman sits on a free voice there, so moving one of them would mean changing the user's Seagull pick or giving Kathryn a sleepy or squeaky voice: left for the user. **Also open (needs a Core change):** in Farsi, Spanish and Portuguese the `princess` place is the Whisper flavour (`CharacterRosterPackVoices.cs`, `ThreeVoiceSlots`), so Kathryn whispers there; no other English-fitting suggestion avoids it. Seagull is never on a man's voice: Farsi `duckling2` is a man (fa-gyro), so the gender guard drops it and she gets fa-mana Normal.
 
 **Style:** Children's picture book illustration, soft watercolour and coloured pencil, warm gentle colours, simple rounded
 shapes, no text or letters anywhere. Portrait 3:4.
@@ -91,7 +92,7 @@ There are no other characters: no other people, pirates, birds or animals in any
 
 Every page: the whole scene sits in the top 70% of the picture; the bottom 30% is plain deck, sand, sea or floor with nothing
 important in it. No text, letters, words, sound effects or writing anywhere ("Squawk!", "Flap", "Yo ho" and "rumble" are never
-drawn in). Every page is **new** (no pictures exist).
+drawn in). The "Picture" column was written before any picture existed; since version 5 every page and the cover **keep** their accepted picture (the actions did not change).
 
 | Page | One action (who, count, where, when) | Picture |
 | --- | --- | --- |

@@ -189,7 +189,8 @@ public sealed class StoreStoryTests : IDisposable
     }
 
     // The Elves and the Shoemaker (Slice 121): two and two, the shoemaker Hans and the elf Nob are "he", his wife Greta and the elf Nib "she"; none is an
-    // animal, so each is cast by the gender the English pronouns give them (checked too, since every other language is cast from them).
+    // animal. The book suggests knight, mummy, bee and piglet (Slice 156), which every language's roster has, so each keeps a voice of their gender (the stored
+    // English genders are checked too, since every other language is cast from them).
     [Theory]
     [MemberData(nameof(Languages))]
     public void TheElvesAndTheShoemaker_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
