@@ -5,7 +5,7 @@ name: release-scripts
 # then stop every release after merge.
 #   * test: every .github/scripts/*.test.mjs (ship-targets decides what a
 #     release builds and its test also checks each platform workflow's PR
-#     paths; publish-downloads copies the APK to R2). Node's own runner, no
+#     paths; r2-wrangler is the R2 helper publish-store-books uses). Node's own runner, no
 #     dependencies. This workflow is the only place these tests run; release.yml
 #     relies on it having passed on the PR.
 #   * ios-review-cadence.test.mjs guards the daily TestFlight / manual App Store review

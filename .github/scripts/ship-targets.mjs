@@ -35,8 +35,7 @@
  * means building more, never less. A product with no tag builds everything (release.yml's version
  * job creates the baseline tags first, so this only happens if that is skipped).
  *
- * Known gap: changes to publish-downloads.mjs or the download-keys don't map to any target, so they trigger no re-publish. Run release.yml with force_all if
- * the downloads copy needs refreshing.
+ * Known gap: changes to worker/download-keys.mjs don't map to any target, so they trigger no re-publish.
  *
  * Each platform workflow's own `pull_request.paths` mirrors its rows below (plus a
  * trailing "not Markdown" negation, the Markdown rule above);
@@ -178,6 +177,7 @@ export const GROUPS = {
             'tools/DinoReader.BookBuilder/',
             'tools/upload-store-story.ps1',
             '.github/scripts/publish-store-books.mjs',
+            '.github/scripts/r2-wrangler.mjs',
         ],
     },
     dinoreader: {
