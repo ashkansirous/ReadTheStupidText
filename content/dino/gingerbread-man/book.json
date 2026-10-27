@@ -2,7 +2,7 @@
   "kind": "Starter",
   "id": "bee62232085d4c1ab50cdf574530f473",
   "title": "The Gingerbread Man",
-  "version": 8,
+  "version": 9,
   "ageMin": 3,
   "ageMax": 6,
   "author": "Traditional",
@@ -80,5 +80,5 @@
     "Grandpa",
     "Granny"
   ],
-  "contentHash": "0a59a3af24bd87e2f3064c91efc34444908a2767a923d463e91a60be511ba008"
+  "contentHash": "b1f5c5e145ea6109090f0fd9abcd8f18f70b90c6d5de8e84cf0ca0e2fa132c9d"
 }

@@ -2,7 +2,7 @@
   "kind": "Store",
   "id": "32d04b935a5649088293314cc648c825",
   "title": "The Three Billy Goats Gruff",
-  "version": 9,
+  "version": 10,
   "ageMin": 4,
   "ageMax": 7,
   "author": "Traditional",
@@ -63,5 +63,5 @@
     "Middle Billy": "Goat",
     "Big Billy": "Goat"
   },
-  "contentHash": "19476114067c411d61dca52bd8c122b39afc77062d576c8ba424885b9c215a7e"
+  "contentHash": "ae262750d81611ba66785e8f86749450c374627df1035f5e9b323087552a8c69"
 }
