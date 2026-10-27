@@ -1,6 +1,6 @@
 # Slice 157 — Dino: book content and the book builder out of the test project
 
-*In progress (wave 2026-10-27d), draft PR.* Dino Reader only. Runs **alone**, between waves: it moves every book's files.
+*Built 2026-10-27 (PR #475), not yet verified on `main`.* Dino Reader only. Runs **alone**, between waves: it moves every book's files.
 
 **Batch:** 34 (store plumbing, 2026-10-27; Decision 162)
 **Touches:** `content/dino/**` (new), `tools/DinoReader.BookBuilder/**` (new), `ReadTheStupidText.slnx`,
@@ -121,7 +121,7 @@ All 15 store books built by the tool are byte-identical (`meta.json`, `cover.jpg
 
 Two passes fixed: version-bump bypass, stale docs in `art.md` and the App `CLAUDE.md`, needless bumps from stray files, silent skip of bad folders, `JsonException` crashes, Windows/Linux hash mismatch, git pipe deadlock, silent version-check skip on PRs.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-27)
 
 - Root store paragraph: books live in `content/dino/<stem>/`; build with `dotnet run --project tools/DinoReader.BookBuilder -- build`; bump with `stamp <stem>`; `check` gates PRs. (Slice 157: docs/plan/slices/157-dino-book-content-out-of-tests.md) Already edited in the branch's `CLAUDE.md`.
 
@@ -129,4 +129,4 @@ Two passes fixed: version-bump bypass, stale docs in `art.md` and the App `CLAUD
 
 - First main run of `publish-store` with the new builder.
 - `ShippedTitles` edits do not reach live `meta.json` until a version bump.
-- `docs/plan/decisions.md:1157` still names `docs/design/story-art`.
+- ~~`docs/plan/decisions.md:1157` still names `docs/design/story-art`~~ fixed in the index pass 2026-10-27.
