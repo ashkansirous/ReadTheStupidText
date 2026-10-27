@@ -5,7 +5,10 @@ namespace DinoReader;
 /// <summary>What the gallery grid binds to for one story: its cover, labels and the mode the overlay follows.</summary>
 public sealed record StoryTile(Story Story, Color CoverColour, string? CoverImagePath, GrownUpMode Mode)
 {
-	public string Title => Story.Title;
+	/// <summary>The title in the app language when the book has one (Slice 159); the story's own otherwise.</summary>
+	public string? DisplayTitle { get; init; }
+
+	public string Title => DisplayTitle ?? Story.Title;
 
 	public bool HasImage => CoverImagePath is not null;
 
@@ -44,10 +47,10 @@ public sealed record StoryTile(Story Story, Color CoverColour, string? CoverImag
 
 	public string ExportHint => GalleryText.ExportStory(Title);
 
-	public static StoryTile From(Story story, IStoryLibrary library, GrownUpMode mode)
+	public static StoryTile From(Story story, IStoryLibrary library, GrownUpMode mode, string? displayTitle = null)
 	{
 		string? image = library.TryResolveFile(story.Id, story.CoverImageFile);
-		return new StoryTile(story, Color.FromArgb(CoverPalette.ColourAt(story.CoverColourIndex)), image, mode);
+		return new StoryTile(story, Color.FromArgb(CoverPalette.ColourAt(story.CoverColourIndex)), image, mode) { DisplayTitle = displayTitle };
 	}
 }
 
@@ -64,9 +67,9 @@ public sealed class AddStoryEntry
 /// <summary>Maps the Core layout (<see cref="GalleryLayout"/>) onto the grid's items.</summary>
 public static class GalleryItems
 {
-	public static List<object> Build(IReadOnlyList<Story> stories, IStoryLibrary library, GrownUpMode mode) =>
+	public static List<object> Build(IReadOnlyList<Story> stories, IStoryLibrary library, GrownUpMode mode, Func<Story, string>? titleOf = null) =>
 		GalleryLayout.Build(stories, mode.IsGrownUp)
-			.Select(e => e.Kind == GalleryEntryKind.AddStory ? (object)AddStoryEntry.Instance : StoryTile.From(e.Story!, library, mode))
+			.Select(e => e.Kind == GalleryEntryKind.AddStory ? (object)AddStoryEntry.Instance : StoryTile.From(e.Story!, library, mode, titleOf?.Invoke(e.Story!)))
 			.ToList();
 }
 

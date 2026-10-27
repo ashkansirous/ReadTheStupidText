@@ -68,6 +68,36 @@ public sealed class StoreStoryTests : IDisposable
         }
     }
 
+    // Slice 159: the store shows each title in the app language, so meta.json carries it for every language the book is translated into.
+    [Fact]
+    public void EveryStoreStory_WritesItsTitleInEveryOtherLanguage_IntoMetaJson()
+    {
+        foreach (StoreStorySpec spec in StoreTexts.All)
+        {
+            using JsonDocument meta = JsonDocument.Parse(StoreBuilder.MetaJson(spec, StoreBuilder.Build(spec)));
+            JsonElement titles = meta.RootElement.GetProperty("titles");
+
+            string[] expected = UiLanguage.Supported.Where(l => l != UiLanguage.English).Order().ToArray();
+            Assert.Equal(expected, titles.EnumerateObject().Select(t => t.Name).Order().ToArray());
+            Assert.All(titles.EnumerateObject(), t => Assert.False(string.IsNullOrWhiteSpace(t.Value.GetString()), $"{spec.Title}: {t.Name}"));
+        }
+    }
+
+    [Fact]
+    public void EveryShippedBook_HasATitleInEveryOtherLanguage()
+    {
+        string[] others = UiLanguage.Supported.Where(l => l != UiLanguage.English).Order().ToArray();
+        IEnumerable<string> titles = StoreTexts.All.Select(s => s.Title).Concat(StarterBuilder.Starters.Select(s => s.Title)).Append(StarterBuilder.GoodEnoughTitle);
+
+        foreach (string title in titles)
+        {
+            Assert.Equal(others, ShippedTitles.AllFor(title).Keys.Order().ToArray());
+            Assert.All(ShippedTitles.AllFor(title).Values, v => Assert.False(string.IsNullOrWhiteSpace(v), title));
+        }
+
+        Assert.Equal(titles.Count(), ShippedTitles.Titles.Count);
+    }
+
     [Fact]
     public void EveryStoreStory_CastsItsNamedCharacters_EachWithAVoiceOfTheirOwn()
     {

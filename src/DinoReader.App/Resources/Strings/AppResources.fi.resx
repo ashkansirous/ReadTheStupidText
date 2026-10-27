@@ -319,4 +319,10 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Eläinten äänet</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Eläimet sanovat välillä “Röh!” tai “Mää!”, kaikissa kirjoissa</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Tässä kirjassa on enemmän hahmoja kuin käytettävissä olevia {0} kertojahahmoa, joten jotkin kuulostavat samalta. Kertojaa ei koskaan anneta hahmolle.</value></data>
+  <data name="TranslationPack_Title" xml:space="preserve"><value>Ladataanko {0}-käännöspaketti?</value></data>
+  <data name="TranslationPack_Body" xml:space="preserve"><value>Jotta kirja voidaan näyttää ja lukea kielellä {0}, Dino Reader tarvitsee noin 30 Mt:n käännöspaketin. Se pysyy tällä laitteella. Jos ohitat sen, kirja pysyy omalla kielellään.</value></data>
+  <data name="TranslationPack_Download" xml:space="preserve"><value>Lataa</value></data>
+  <data name="TranslationPack_Keep" xml:space="preserve"><value>Säilytä alkuperäinen</value></data>
+  <data name="TranslationPack_Failed" xml:space="preserve"><value>Käännöspakettia ei saatu ladattua. Kirja pysyy omalla kielellään.</value></data>
+  <data name="Wait_DownloadingPack" xml:space="preserve"><value>Ladataan {0}-käännöspakettia…</value></data>
 </root>

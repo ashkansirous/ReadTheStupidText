@@ -143,7 +143,12 @@ internal static class StoreBuilder
             ["ageMin"] = spec.AgeMin,
             ["ageMax"] = spec.AgeMax,
             ["author"] = spec.Author,
+            ["titles"] = TitlesOf(story),
         }, MetaOptions);
+
+    /// <summary>Slice 159: the book's title in every other language (<see cref="ShippedTitles"/>); the store shows the chosen language's.</summary>
+    public static SortedDictionary<string, string> TitlesOf(Story story) =>
+        new(ShippedTitles.AllFor(story.Title).ToDictionary(t => t.Key, t => t.Value), StringComparer.Ordinal);
 
     /// <summary>Reading time in whole minutes at a child's pace, never below one.</summary>
     public static int Minutes(string text)

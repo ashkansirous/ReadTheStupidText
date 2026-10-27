@@ -320,4 +320,10 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Звуки животных</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Животные иногда говорят «Хрю!» или «Бе-е!» в каждой книге</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>В этой книге больше персонажей, чем есть рассказчиков ({0}), поэтому некоторые звучат одинаково. Рассказчик персонажам не выдаётся.</value></data>
+  <data name="TranslationPack_Title" xml:space="preserve"><value>Скачать пакет перевода на язык: {0}?</value></data>
+  <data name="TranslationPack_Body" xml:space="preserve"><value>Чтобы показывать и читать эту книгу на языке «{0}», Dino Reader нужен пакет перевода примерно в 30 МБ. Он остаётся на этом устройстве. Если пропустить, книга останется на своём языке.</value></data>
+  <data name="TranslationPack_Download" xml:space="preserve"><value>Скачать</value></data>
+  <data name="TranslationPack_Keep" xml:space="preserve"><value>Оставить оригинал</value></data>
+  <data name="TranslationPack_Failed" xml:space="preserve"><value>Не удалось получить пакет перевода. Книга остаётся на своём языке.</value></data>
+  <data name="Wait_DownloadingPack" xml:space="preserve"><value>Скачиваем пакет перевода: {0}…</value></data>
 </root>

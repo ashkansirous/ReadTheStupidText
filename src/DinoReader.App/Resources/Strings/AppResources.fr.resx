@@ -320,4 +320,10 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Cris des animaux</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Les animaux disent « Groin ! » ou « Bêê ! » de temps en temps, dans tous les livres</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Ce livre compte plus de personnages que les {0} personnages conteurs disponibles ; certains ont donc la même voix. Le narrateur n’est jamais donné à un personnage.</value></data>
+  <data name="TranslationPack_Title" xml:space="preserve"><value>Télécharger le pack de traduction vers {0} ?</value></data>
+  <data name="TranslationPack_Body" xml:space="preserve"><value>Pour afficher et lire ce livre en {0}, Dino Reader a besoin d'un pack de traduction d'environ 30 Mo. Il reste sur cet appareil. Si vous passez, le livre reste dans sa langue.</value></data>
+  <data name="TranslationPack_Download" xml:space="preserve"><value>Télécharger</value></data>
+  <data name="TranslationPack_Keep" xml:space="preserve"><value>Garder l'original</value></data>
+  <data name="TranslationPack_Failed" xml:space="preserve"><value>Impossible d'obtenir le pack de traduction. Le livre reste dans sa langue.</value></data>
+  <data name="Wait_DownloadingPack" xml:space="preserve"><value>Téléchargement du pack de traduction vers {0}…</value></data>
 </root>

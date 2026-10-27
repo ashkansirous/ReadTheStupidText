@@ -5,8 +5,12 @@ namespace DinoReader.Core;
 /// <summary>One free story the store lists (Slice 92): the list line from <c>GET /api/stories</c>, checked.</summary>
 public sealed record StoreItem(
     string Id, string Title, string Language, int SchemaVersion, int Version, int? PageCount, int? Minutes, string? CoverUrl, string DownloadUrl, string? Credits = null,
-    int? AgeMin = null, int? AgeMax = null, string? Author = null)
+    int? AgeMin = null, int? AgeMax = null, string? Author = null, IReadOnlyDictionary<string, string>? Titles = null)
 {
+    /// <summary>The title in <paramref name="language"/> from the listing's <c>titles</c> (Slice 159), or null when the listing has none for it.</summary>
+    public string? TitleIn(string language) =>
+        Titles is not null && Titles.TryGetValue(UiLanguage.Resolve(language), out string? title) ? title : null;
+
     /// <summary>False for a story packed in a newer format than this app reads: such a story is hidden, not greyed out.</summary>
     public bool IsReadable => SchemaVersion <= StoryPackageManifest.CurrentSchemaVersion;
 }
@@ -18,6 +22,8 @@ public static class StoreCatalog
     private const int MaxCreditsLength = 200;
     private const int MaxAuthorLength = 100;
     private const int MaxAge = 18;
+    private const int MaxTitleLength = 200;
+    private const int MaxTitleLanguages = 20;
 
     private static readonly JsonSerializerOptions Options = new() { PropertyNameCaseInsensitive = true };
 
@@ -62,7 +68,7 @@ public static class StoreCatalog
         (int? ageMin, int? ageMax) = AgeRangeOf(dto);
         return valid
             ? new StoreItem(dto.Id!, dto.Title!, dto.Language!, dto.SchemaVersion, dto.Version, dto.PageCount, dto.Minutes, dto.CoverUrl, dto.DownloadUrl!, CreditsOf(dto.Credits),
-                ageMin, ageMax, AuthorOf(dto.Author))
+                ageMin, ageMax, AuthorOf(dto.Author), TitlesOf(dto.Titles))
             : null;
     }
 
@@ -92,8 +98,31 @@ public static class StoreCatalog
     private static string? AuthorOf(string? author) =>
         string.IsNullOrWhiteSpace(author) || author.Trim().Length > MaxAuthorLength ? null : author.Trim();
 
+    // Slice 159: language code to title, as the Worker passes it through; a wrong-typed field, a blank or over-long title and a code that is no language are dropped.
+    private static IReadOnlyDictionary<string, string>? TitlesOf(JsonElement? titles)
+    {
+        if (titles is not { ValueKind: JsonValueKind.Object } map)
+        {
+            return null;
+        }
+
+        var kept = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (JsonProperty property in map.EnumerateObject().Take(MaxTitleLanguages))
+        {
+            string? title = property.Value.ValueKind == JsonValueKind.String ? property.Value.GetString()?.Trim() : null;
+            if (!string.IsNullOrEmpty(title) && title.Length <= MaxTitleLength && UiLanguage.IsSupported(property.Name))
+            {
+                kept[UiLanguage.Resolve(property.Name)] = title;
+            }
+        }
+
+        return kept.Count > 0 ? kept : null;
+    }
+
     private sealed class ItemDto
     {
+        public JsonElement? Titles { get; set; }
+
         public string? Id { get; set; }
 
         public string? Title { get; set; }

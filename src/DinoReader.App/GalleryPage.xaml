@@ -84,10 +84,10 @@
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="11" />
                 </Border.StrokeShape>
-                <Image Source="dino_icon" Aspect="AspectFill" SemanticProperties.Description="{x:Static res:AppResources.App_Name}" />
+                <Image x:Name="AppIcon" Source="dino_icon" Aspect="AspectFill" SemanticProperties.Description="{x:Static res:AppResources.App_Name}" />
             </Border>
             <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                <Label Text="{x:Static res:AppResources.Gallery_Title}" FontSize="22" FontAttributes="Bold" SemanticProperties.HeadingLevel="Level1">
+                <Label x:Name="TitleLabel" Text="{x:Static res:AppResources.Gallery_Title}" FontSize="22" FontAttributes="Bold" SemanticProperties.HeadingLevel="Level1">
                     <Label.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnTitleTapped" />
                     </Label.GestureRecognizers>
@@ -132,7 +132,7 @@
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="3" VerticalOptions="Center" HorizontalOptions="Center">
                     <local:IconView Kind="Book" Color="{StaticResource Brand}" Size="20" StrokeWidth="2.2" HorizontalOptions="Center" />
-                    <Label Text="{x:Static res:AppResources.Store_Title}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Brand}" HorizontalTextAlignment="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+                    <Label x:Name="StoreLabel" Text="{x:Static res:AppResources.Store_Title}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Brand}" HorizontalTextAlignment="Center" LineBreakMode="TailTruncation" MaxLines="1" />
                 </VerticalStackLayout>
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnStoreTapped" />
@@ -145,7 +145,7 @@
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="3" VerticalOptions="Center" HorizontalOptions="Center">
                     <local:IconView Kind="Narrator" Color="{StaticResource Brand}" Size="20" StrokeWidth="2.2" HorizontalOptions="Center" />
-                    <Label Text="{x:Static res:AppResources.Narrator_Title}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Brand}" HorizontalTextAlignment="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+                    <Label x:Name="NarratorLabel" Text="{x:Static res:AppResources.Narrator_Title}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Brand}" HorizontalTextAlignment="Center" LineBreakMode="TailTruncation" MaxLines="1" />
                 </VerticalStackLayout>
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnNarratorTapped" />
@@ -158,7 +158,7 @@
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="3" VerticalOptions="Center" HorizontalOptions="Center">
                     <local:IconView Kind="File" Color="{StaticResource Brand}" Size="20" StrokeWidth="2.2" HorizontalOptions="Center" />
-                    <Label Text="{x:Static res:AppResources.Backup_Title}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Brand}" HorizontalTextAlignment="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+                    <Label x:Name="BackupLabel" Text="{x:Static res:AppResources.Backup_Title}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Brand}" HorizontalTextAlignment="Center" LineBreakMode="TailTruncation" MaxLines="1" />
                 </VerticalStackLayout>
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnBackupTapped" />

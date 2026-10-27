@@ -257,7 +257,7 @@ public partial class FirstRunPage : ContentPage
 		bool failed = _installer.CanRetry || state == PackInstallState.InvalidPack;
 		double progress = state == PackInstallState.Downloading ? Math.Clamp(_installer.Progress, 0, 1) : 0;
 		Bar.Progress = progress;
-		DownloadPercent.Text = string.Create(CultureInfo.CurrentUICulture, $"{(int)(progress * PercentScale)}%");
+		DownloadPercent.Text = string.Create(AppResources.Culture, $"{(int)(progress * PercentScale)}%");
 		DownloadProblem.IsVisible = failed;
 		PhoneVoice.IsVisible = failed;
 		DownloadProblem.Text = failed ? LocalizedPackStatus.Compose(state, progress) : null;

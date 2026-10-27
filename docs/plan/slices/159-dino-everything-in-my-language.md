@@ -67,35 +67,35 @@ Grounding (origin/main f1083c9):
 ## Work
 
 Sub-slice A: the language sticks (smallest end-to-end fix; ship first if the slice runs long)
-- [ ] Emulator, Farsi: confirm the wizard flip (Store round trip) and the English parents-page buttons; log the culture
+- [x] Emulator, Farsi: confirm the wizard flip (Store round trip) and the English parents-page buttons; log the culture
       `Render()` sees.
-- [ ] `AppResources`: one app-wide culture from `LanguageChoice`, set at startup and on change; `Get` uses it, never the
+- [x] `AppResources`: one app-wide culture from `LanguageChoice`, set at startup and on change; `Get` uses it, never the
       thread's culture. `UiCulture.Apply` stops assigning `CurrentUICulture` per thread; fix its stale "no picker" comment.
       Number/percent formatting (`StorePage.xaml.cs:63`, `FirstRunPage.xaml.cs:260`) uses the same culture.
-- [ ] Unit test: switch the language, then resolve strings on a fresh thread and after an `await` on another flow; all in
+- [x] Unit test: switch the language, then resolve strings on a fresh thread and after an `await` on another flow; all in
       the new language.
 
 Sub-slice B: shipped books' titles
-- [ ] Shelf (`GalleryPage`/`GalleryText`): show `StoryTranslator`'s title for the chosen language (bundled table, synchronous)
+- [x] Shelf (`GalleryPage`/`GalleryText`): show `StoryTranslator`'s title for the chosen language (bundled table, synchronous)
       for every shipped book.
-- [ ] Store: store builder writes `titles` into `meta.json`; `worker/stories.ts` passes it through (validation + tests);
+- [x] Store: store builder writes `titles` into `meta.json`; `worker/stories.ts` passes it through (validation + tests);
       `StoreClient`/`StorePage` show the chosen language's title, fallback `title`. Re-upload all store books (Slice 158's
       job, or `tools/upload-store-story.ps1`).
 
 Sub-slice C: own books, on request
-- [ ] `ITranslationPacks` (new, Mobile.Shared; implemented by `MlKitTranslator`): `IsPackReadyAsync(language)`, `DownloadPackAsync(language, progress, cancel)`; `MlKitTranslator` never
+- [x] `ITranslationPacks` (new, Mobile.Shared; implemented by `MlKitTranslator`): `IsPackReadyAsync(language)`, `DownloadPackAsync(language, progress, cancel)`; `MlKitTranslator` never
       downloads inside `TranslateAsync` (missing pack = not translated). RTST Mobile keeps its current behaviour through
       its own call path (it is out of scope here).
-- [ ] Translation pack prompt (resx in all 14 languages): size, Download with progress and Cancel, decline keeps the
+- [x] Translation pack prompt (resx in all 14 languages): size, Download with progress and Cancel, decline keeps the
       original; shown when a parent turns translation on (book's language card, new-book wizard) and the pack is missing.
-- [ ] Save the translated title and text in the own book after the first translation; shelf, grown-up screens and reader use
+- [x] Save the translated title and text in the own book after the first translation; shelf, grown-up screens and reader use
       it; re-translate when the book's text or the app language changes.
-- [ ] iOS check: is there a maintained .NET binding for ML Kit Translate? Record the answer here. If none: the "not
+- [x] iOS check: is there a maintained .NET binding for ML Kit Translate? Record the answer here. If none: the "not
       available on this device" note on iOS and Windows.
 
 Sub-slice D: guards
-- [ ] Test that fails on any user-visible string literal assigned in Dino XAML or C# (Text/Title/Placeholder, alerts).
-- [ ] Scripted headless emulator run in Farsi: intro wizard with a Store round trip, shelf, store, parents page, reader,
+- [x] Test that fails on any user-visible string literal assigned in Dino XAML or C# (Text/Title/Placeholder, alerts).
+- [~] Scripted headless emulator run in Farsi: intro wizard with a Store round trip, shelf, store, parents page, reader,
       an own English book with the pack prompt; a screenshot of each screen in the slice's review notes.
 
 ## Verification
@@ -108,3 +108,30 @@ Sub-slice D: guards
 
 **Parallel note:** `StoryTranslator.cs` has an uncommitted edit in the `s154b` worktree (Slice 154); sequence sub-slice B/C
 after it merges or rebase onto it.
+
+*Changed while building:*
+- Shipped `.dino` tables carried no titles (the plan's premise was wrong), so titles live in the new `ShippedTitles.cs` (15 titles x 13 languages, machine-drafted, unreviewed), matched by `SourceId` only; shelf, reader and store rows read it. Store builder writes `titles` into `meta.json`; `worker/stories.ts` validates and passes it (new `worker/stories.test.mjs`); `StoreCatalog`/`StoreItem.Titles`. Fixed the Tortoise-and-Hare zh title. Live `meta.json` gets `titles` only at each book's next version bump, so the re-upload item is open and the app reads `ShippedTitles` meanwhile.
+- A: percents use `AppResources.Culture`; `GalleryPage` re-applies all texts (`ApplyTexts`) and titles on a language change; `StorytellerStatusLine.Invalidate`.
+- C: `ITranslationPacks` implemented by `MlKitTranslator` (RTST unchanged: `AutoDownload` defaults true; `StoryTranslator` sets false). `TranslationPackPrompt` (resx in 14 languages, overlay with Cancel, indeterminate because ML Kit gives no byte progress). `OwnBookTranslation` saves the translated title and text in the book; the reader offers the pack once per open. Decline or cancel never writes the story back; a cancelled pack download is deleted after it lands unless it was already there or wanted again.
+- iOS check: binding `EngageSolutionsGroup.Apple.MLKitTranslate` 8.1.0 exists but is not wired; iOS and Windows still have no engine (a follow-up).
+- D: `NoHardCodedUiTextTests` guard, plus culture, own-book and titles tests. Emulator screenshots for the review notes were not recorded (item marked `[~]`).
+
+*From review (two passes), fixed:* stale-story overwrite of translations, silent re-translation without a wait, existing books never prompted, cancel not cancelling, title match by English title, cancelled offer throwing on restarts, decline turning the switch off, deleting shared packs, iOS/Windows null translator, double `endWait`, stale shelf titles.
+
+*Checks:* DinoReader.Tests 1546, RTST Tests 1357, worker 94, typecheck clean, both Android builds. Emulator in Farsi: wizard, titles, pack decline/cancel/accept, persistence after restart, language switch updates shelf chrome; no crash.
+
+#### For CLAUDE.md
+
+In `src/DinoReader.App/CLAUDE.md`:
+- UI text comes from `AppResources` with the app-wide culture (`LanguageChoice`), never `CurrentUICulture`; cached pages re-apply their text on a language change. (Slice 159: docs/plan/slices/159-dino-everything-in-my-language.md)
+- Own-book translation never downloads silently: go through `ITranslationPacks` and `TranslationPackPrompt`. (Slice 159: docs/plan/slices/159-dino-everything-in-my-language.md)
+
+#### Not yet verified
+
+- Native-speaker review of `ShippedTitles` and the 7 new resx keys in 13 languages.
+- Store credit line is still English (single string in `meta.json`).
+- X Marks the Treasure! bundled translations are English copies (content bug).
+- Live `meta.json` gets `titles` only at each book's next version bump.
+- iOS ML Kit binding not wired; iOS/Windows have no translation engine.
+- Airplane mode (no pack keeps the book in English, no download) untested.
+- Debug `-t:Install` crash-loops on a missing sherpa-onnx native lib; use the embedded arm64 APK.
