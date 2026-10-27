@@ -26,6 +26,17 @@ internal static class StarterVoices
             new("Baby Bear", "cub", Gender.Male, CharacterAge.Child, null, [VoiceQuality.Soft, VoiceQuality.Bouncy]),
         ],
 
+        // The Tale of Peter Rabbit: kind, warm Mrs. Rabbit; Peter the littlest, cheeky and bouncy (a rabbit again, on a boy's voice in every language); grumbly, kind old Mr. McGregor
+        // (no troll in Farsi: the traits pick its grumpy gardener); Robin a bright, cheerful little bird; Flopsy the eldest sister, bright and warm.
+        [StoreTexts.PeterRabbitId] =
+        [
+            new("Mrs. Rabbit", "mummy", Gender.Female, CharacterAge.Adult, null, [VoiceQuality.Warm, VoiceQuality.Soft]),
+            new("Peter", "piglet", Gender.Male, CharacterAge.Child, null, [VoiceQuality.Bouncy, VoiceQuality.Bright]),
+            new("Mr. McGregor", "troll", Gender.Male, CharacterAge.Old, CharacterBeing.Person, [VoiceQuality.Gruff, VoiceQuality.Warm]),
+            new("Robin", "jester", Gender.Male, CharacterAge.Young, null, [VoiceQuality.Bright, VoiceQuality.Bouncy]),
+            new("Flopsy", "bee", Gender.Female, CharacterAge.Young, null, [VoiceQuality.Bright, VoiceQuality.Warm]),
+        ],
+
         // X Marks the Treasure!
         [StoreTexts.TreasureId] =
         [
