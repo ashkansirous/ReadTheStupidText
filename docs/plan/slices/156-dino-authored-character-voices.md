@@ -1,6 +1,6 @@
 # Slice 156 — Dino: the book chooses each character's voice, not the app
 
-*Planned 2026-10-26.* Dino Reader only.
+*In progress (wave 2026-10-27), draft PR.* Dino Reader only.
 
 **Batch:** 33 (2026-10-26; Decision 161)
 **Touches:** `src/DinoReader.Core/Story.cs`, `src/DinoReader.Core/StoryCast.cs`, `src/DinoReader.Core/CastCharacters.cs`, `src/DinoReader.Core/CastEditor.cs`, `src/DinoReader.Core/CharacterTraits.cs` (new), `src/DinoReader.Core/CharacterRoster*.cs`, `src/DinoReader.Core/StoryPackage*.cs`, `src/DinoReader.Core/StarterUpdate.cs`, `src/DinoReader.App/CastPage.cs`, `src/DinoReader.App/CastRows.cs`, `src/DinoReader.App/Resources/Strings/*.resx`, `tests/DinoReader.Tests/StoreTexts.cs`, `tests/DinoReader.Tests/StoreBuilder.cs`, `tests/DinoReader.Tests/StarterTexts.cs`, `tests/DinoReader.Tests/StarterBuilder.cs`, `tests/DinoReader.Tests/**`, `docs/design/story-art/*.md`, `src/DinoReader.Core/CLAUDE.md`, `src/DinoReader.App/CLAUDE.md`, `.claude/agents/dino-story-writer.md`, `.claude/agents/dino-story-reviewer.md`, `.claude/skills/create-dino-story/SKILL.md`
