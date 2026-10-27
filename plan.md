@@ -26,6 +26,7 @@ Open slices only. Finished slices (150 rows) are in [slices-done](docs/plan/note
 | 163 | Fast tests: Windows desktop tests in a headless Hyper-V VM | planned | | | [163-desktop-tests-in-hyperv-vm.md](docs/plan/slices/163-desktop-tests-in-hyperv-vm.md) |
 | 164 | Fast tests: move more logic out of UI code into unit tests | planned | | | [164-more-logic-in-unit-tests.md](docs/plan/slices/164-more-logic-in-unit-tests.md) |
 | 165 | Fast tests: audio and timing on the real phone over wireless adb | planned | | | [165-real-phone-audio-timing-checks.md](docs/plan/slices/165-real-phone-audio-timing-checks.md) |
+| 166 | Usage counts: country, OS version, form factor and hardware buckets (both apps) | planned | | | [166-usage-device-context.md](docs/plan/slices/166-usage-device-context.md) |
 
 Batch 25 (119-123; 119, 120, 122, 123 built, 121 built; planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
 
