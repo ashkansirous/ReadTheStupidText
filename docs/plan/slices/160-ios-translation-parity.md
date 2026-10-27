@@ -1,6 +1,6 @@
 # Slice 160 — Translation on iOS (Android and iOS parity)
 
-*Planned.* RTST Mobile and Dino Reader, iOS.
+*In progress (wave 2026-10-27), draft PR.* RTST Mobile and Dino Reader, iOS.
 
 **Touches:** `src/ReadTheStupidText.Mobile.Shared/ReadTheStupidText.Mobile.Shared.csproj`,
 `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/**` (new `MlKitTranslator.cs`, translation packs),
