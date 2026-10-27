@@ -39,6 +39,16 @@ internal static class StarterVoices
             new("Baby Bear", "cub", Gender.Male, CharacterAge.Child, null, [VoiceQuality.Soft, VoiceQuality.Bouncy]),
         ],
 
+        // The Tale of Peter Rabbit: kind, warm Mrs. Rabbit; Peter the littlest, cheeky and bouncy (a rabbit again, on a boy's voice in every language); grumbly, kind old Mr. McGregor
+        // (no troll in Farsi: the traits pick its grumpy gardener); Robin a bright, cheerful little bird; Flopsy the eldest sister, bright and warm.
+        [StoreTexts.PeterRabbitId] =
+        [
+            new("Mrs. Rabbit", "mummy", Gender.Female, CharacterAge.Adult, null, [VoiceQuality.Warm, VoiceQuality.Soft]),
+            new("Peter", "piglet", Gender.Male, CharacterAge.Child, null, [VoiceQuality.Bouncy, VoiceQuality.Bright]),
+            new("Mr. McGregor", "troll", Gender.Male, CharacterAge.Old, CharacterBeing.Person, [VoiceQuality.Gruff, VoiceQuality.Warm]),
+            new("Robin", "jester", Gender.Male, CharacterAge.Young, null, [VoiceQuality.Bright, VoiceQuality.Bouncy]),
+            new("Flopsy", "bee", Gender.Female, CharacterAge.Young, null, [VoiceQuality.Bright, VoiceQuality.Warm]),
+        ],
         // The Ugly Duckling: warm Mother Duck (the kind mummy); the Duckling, a gentle, curious boy (a boy's young voice in every language, so he is a duck again); Dilly, the giggly
         // littlest sister (the little bunny, small and light; the duckling voices are a boy's in some languages); kind, cheery Hen (the busy bee, bright and bouncy, not the slow Granny Hen;
         // the rosters have no adult woman's bright place but the mummy); and Swan, a big, warm, welcoming grown-up.

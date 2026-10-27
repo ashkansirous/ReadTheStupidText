@@ -158,7 +158,7 @@ public sealed class StoreStoryTests : IDisposable
     }
 
     // The Tale of Peter Rabbit (Slice 121): Mrs. Rabbit and Flopsy are "she", Peter, Mr. McGregor and Robin "he". The roster's bunny voice is a girl in most
-    // languages, so the builder stores Peter as no animal (StarterAnimals) and he is cast as a boy; Mrs. Rabbit is grown, which no bunny voice plays.
+    // languages, so Peter's book suggests a boy's voice (piglet) and Flopsy's a girl's (bee); both are rabbits again (Slice 156). Mrs. Rabbit suggests the mummy voice.
     [Theory]
     [MemberData(nameof(Languages))]
     public void TheTaleOfPeterRabbit_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)

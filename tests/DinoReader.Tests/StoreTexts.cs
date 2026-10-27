@@ -43,7 +43,7 @@ internal static class StoreTexts
         new(BeanstalkId, "Jack and the Beanstalk", "jack-and-the-beanstalk", Beanstalk, 2, RetoldTraditional, 5, 8, Traditional, ["Jack", "Mother", "Giant", "Peddler"], 7, AddedDate),
         new(TownMouseId, "The Town Mouse and the Country Mouse", "town-mouse-country-mouse", TownMouse, 2, RetoldAesop, 4, 7, "Aesop", ["Town Mouse", "Country Mouse"], 7, AddedDate),
         new(ElvesId, "The Elves and the Shoemaker", "elves-and-shoemaker", Elves, 1, "Retold from the Brothers Grimm · free to share", 4, 8, "Brothers Grimm", ["Hans", "Greta", "Nib", "Nob"], 7, AddedDate),
-        new(PeterRabbitId, "The Tale of Peter Rabbit", "peter-rabbit", PeterRabbit, 3, "Beatrix Potter, 1902 (retold)", 3, 6, "Beatrix Potter", ["Mrs. Rabbit", "Peter", "Mr. McGregor", "Robin", "Flopsy"], 7, AddedDate),
+        new(PeterRabbitId, "The Tale of Peter Rabbit", "peter-rabbit", PeterRabbit, 3, "Beatrix Potter, 1902 (retold)", 3, 6, "Beatrix Potter", ["Mrs. Rabbit", "Peter", "Mr. McGregor", "Robin", "Flopsy"], 8, AddedDate),
         new(TreasureId, "X Marks the Treasure!", "x-marks-the-treasure", Treasure, 0, StoreBuilder.DinoReaderCredit, 3, 6, "Ashkan Sirous", ["Kathryn", "Seagull", "Izzy", "Pancake Polly", "Billy"], 5, TreasureAddedDate),
     ];
 
@@ -778,57 +778,57 @@ Every summer and every winter, the two friends visited each other. And they stay
 """;
 
     public const string PeterRabbit = """
-Once upon a time there were four little rabbits, and their names were Flopsy, Mopsy, Cotton-tail and Peter. They lived with their mum, Mrs. Rabbit, in a cosy burrow under a big fir tree.
+Once upon a time there were four little rabbits, and their names were Flopsy, Mopsy, Cotton-tail and Peter. They lived with their mum, Mrs. Rabbit, in a cosy little burrow under a big fir tree.
 
-Peter was the littlest. He had a brand-new green jacket and two little red shoes.
+Peter was the littlest one. He had a brand-new green jacket and two little red shoes. Mrs. Rabbit gave his cheek a little pat.
 ---
-One morning Mrs. Rabbit picked up her basket. "I'm going to the shops," said Mrs. Rabbit. "You can play in the field, or pick blackberries down the lane."
+One morning Mrs. Rabbit picked up her basket. "I'm off to the shops," said Mrs. Rabbit. "You can play in the field, or go and pick blackberries down the lane."
 
-"But stay out of Mr. McGregor's garden!" said Mrs. Rabbit. "It's his garden, not ours."
+"But stay out of Mr. McGregor's garden!" said Mrs. Rabbit. "It's his garden, not ours. Okay?"
 ---
-As soon as their mum had gone, Flopsy, Mopsy and Cotton-tail ran down the lane to pick blackberries.
+As soon as Mum was gone, off ran Flopsy, Mopsy and Cotton-tail down the lane to pick blackberries.
 
-But Peter didn't go with them. He wanted the yummy vegetables! He hopped the other way, straight to Mr. McGregor's garden. Lippity, lippity, lippity!
+But Peter didn't go with them. He wanted yummy vegetables! So he hopped the other way, straight to Mr. McGregor's garden. Lippity, lippity, lippity!
 ---
-Mr. McGregor's garden had a big green gate, with a little gap underneath. Peter squeezed under it. Wiggle, wiggle, wiggle!
+Mr. McGregor's garden had a big green gate, with a little gap at the bottom. Peter squeezed under it. Wiggle, wiggle, wiggle!
 
-On the gate post, two little sparrows shook their heads. But Peter didn't look back.
+Up on the gate post, two little sparrows shook their heads. But Peter didn't look back.
 ---
-The garden was full of yummy things. Munch, munch, munch! First Peter ate some lettuce. Then he ate some crunchy beans. Then he ate some radishes, one, two, three!
+The garden was full of yummy things. Munch, munch, munch! First Peter ate some lettuce. Then he ate some crunchy beans. And then he ate some radishes, one, two, three!
 
 "Yum, yum, yum!" said Peter.
 ---
-Soon Peter's tummy felt very full, and very funny. "Ooh, my tummy," said Peter. "I ate too much!"
+Uh-oh! Soon Peter's tummy felt very, very full, and a bit funny. "Ooh, my tummy," said Peter. "I ate way too much!"
 
-He felt very hot, so he hung his jacket on a bean pole and put his shoes beside it. Then he lay down for a rest in the cool shade of a big rhubarb leaf.
+He was so hot! So he hung his jacket on a bean pole and put his shoes down next to it. Then he lay down for a little rest in the cool shade of a big rhubarb leaf.
 ---
-After his rest, Peter hopped off to find the gate, and he forgot all about his jacket and shoes. But the bean plants were taller than Peter, and every path looked the same.
+After his rest, Peter hopped off to find the gate. He forgot his jacket and shoes! But the bean plants were taller than Peter, and every path looked the same.
 
 "Which way is the gate?" said Peter. A little mouse ran by with a big pea in her mouth. She couldn't say a word, so she just shook her head.
 ---
-Peter sat down beside a watering can. He felt very small, and a little bit lost. Then he remembered what his mum had said that morning.
+Peter sat down next to a watering can. He felt very small, and a little bit lost. Then he remembered what Mum said that morning.
 
 "But stay out of Mr. McGregor's garden!" said Mrs. Rabbit.
 
-"Oh dear," said Peter. "I should have listened to my mum."
+"Oh dear," said Peter. "I should've listened to my mum."
 ---
 Creak, creak, creak! Along the path came Mr. McGregor with his wheelbarrow.
 
 "Who's been nibbling my lettuces?" said Mr. McGregor. "Grumble, grumble, grumble!"
 
-Peter hid behind a big cabbage and kept as still as a stone.
+Peter hid behind a big cabbage and stayed as still as a stone.
 ---
 By the bean poles, Mr. McGregor found a little green jacket and two little red shoes.
 
 "Well, well, well!" said Mr. McGregor. "Just the right size for my scarecrow!"
 
-So he dressed his scarecrow in them. And for the first time all day, Mr. McGregor smiled.
+So he dressed up his scarecrow in them. And for the first time all day, Mr. McGregor smiled.
 ---
-When Mr. McGregor had gone in for his lunch, a robin with a round red tummy hopped down beside Peter.
+When Mr. McGregor went in for his lunch, a robin with a round red tummy hopped down next to Peter.
 
 "Please, can you help me find the gate?" said Peter.
 
-"Tweet, tweet, tweet! Of course I can," said Robin. "Follow me. I know the way!"
+"Tweet, tweet, tweet!" said Robin. "Of course I can! Follow me. I know the way!"
 ---
 Robin flew from bush to bush, and Peter hopped along behind him. Lippity, lippity, lippity!
 
@@ -836,23 +836,23 @@ They went past the carrots, past the onions, and past the scarecrow in its littl
 
 "Bye-bye, jacket! Bye-bye, shoes!" said Peter.
 ---
-At last, there was the big green gate! Peter squeezed under it. Wiggle, wiggle, wiggle!
+And there it was, the big green gate! Peter squeezed under it. Wiggle, wiggle, wiggle!
 
 "Thank you, Robin!" said Peter.
 
-"Hop straight home now," said Robin, and he waved his wing.
+"Now hop straight home!" said Robin, and he waved his wing.
 ---
-Peter hopped all the way home to the big fir tree. Lippity, lippity, lippity! Mrs. Rabbit gave him a big hug.
+Peter hopped all the way home to the big fir tree. Lippity, lippity, lippity! Mrs. Rabbit gave him a great big hug.
 
 "Peter! Where are your jacket and shoes?" said Mrs. Rabbit.
 
-"I went into Mr. McGregor's garden," said Peter. "I'm sorry, Mum. Next time I'll listen."
+"I went into Mr. McGregor's garden," said Peter. "I'm really sorry, Mum. Next time, I'll listen. I promise!"
 ---
 Peter's tummy still felt funny, so Mrs. Rabbit tucked him into bed with a little cup of camomile tea.
 
 Flopsy, Mopsy and Cotton-tail had bread and milk and blackberries for supper. "We saved you some blackberries for tomorrow, Peter," said Flopsy.
 
-"Goodnight, my little bunnies," said Mrs. Rabbit. And soon Peter was fast asleep.
+"Night-night, my little bunnies," said Mrs. Rabbit. And soon Peter was fast asleep.
 """;
 
     // Book 1 of the Captain Kathryn and Seagull series, an original story. The captain is spelled "Kathryn" so the English voices say
