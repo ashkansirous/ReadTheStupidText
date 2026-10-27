@@ -95,6 +95,20 @@ public class AuthoredVoiceTests
 
     [Theory]
     [MemberData(nameof(Languages))]
+    public void Three_pigs_matched_by_traits_never_sound_alike_in_any_language(string language)
+    {
+        var pigTraits = new CharacterTraits(CharacterAge.Young, null, [VoiceQuality.Bouncy]);
+        var pigs = new[] { C("p1", "Pip", Gender.Male), C("p2", "Pop", Gender.Male), C("p3", "Pup", Gender.Male) };
+        var pinned = pigs.ToDictionary(p => p.Id, p => new PinnedCharacter(string.Empty, null, false, "no-such-voice", pigTraits));
+
+        VoiceCast cast = Cast(language, pigs, pinned, _ => new AnimalHint(AnimalKind.Pig, null));
+
+        var sounds = pigs.Select(p => (cast.VoiceFor(p.Id), cast.Flavours![p.Id])).ToList();
+        Assert.Equal(3, sounds.Distinct().Count());
+    }
+
+    [Theory]
+    [MemberData(nameof(Languages))]
     public void The_book_of_treasure_opens_in_every_language_with_voices_for_everyone(string language)
     {
         var people = new[] { C("k", "Kathryn", Gender.Female), C("i", "Izzy", Gender.Female), C("p", "Polly", Gender.Female), C("b", "Billy", Gender.Male), C("gull", "Seagull", Gender.Female) };
