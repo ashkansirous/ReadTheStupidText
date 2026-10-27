@@ -21,6 +21,7 @@ Open slices only. Finished slices (150 rows) are in [slices-done](docs/plan/note
 | 153 | Dino: no robotic-sounding character voices | planned | | | [153-dino-no-robotic-voices.md](docs/plan/slices/153-dino-no-robotic-voices.md) |
 | 154 | Dino: vowel marks in Farsi and Arabic books | in progress | #470 | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
 | 157 | Dino: book content and the book builder out of the test project | planned | | | [157-dino-book-content-out-of-tests.md](docs/plan/slices/157-dino-book-content-out-of-tests.md) |
+| 160 | Translation on iOS (Android and iOS parity) | planned | | | [160-ios-translation-parity.md](docs/plan/slices/160-ios-translation-parity.md) |
 
 Batch 25 (119-123; 119, 120, 122, 123 built, 121 built; planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
 
