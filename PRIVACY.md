@@ -141,7 +141,7 @@ Counts are sent in small batches to this project's own server
 the server sees your IP address while the request is handled; it is not stored with the
 counts and is not used for anything (only the country it maps to, as described above). The project can also switch counting off for everyone
 from the server. Counts are not shared with anyone else and are not used for advertising or
-tracking.
+tracking. Test and development builds, and the test devices store review tools use, send no counts.
 
 ## Permissions
 

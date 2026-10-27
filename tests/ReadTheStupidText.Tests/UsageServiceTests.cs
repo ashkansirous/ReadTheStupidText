@@ -62,6 +62,19 @@ public class UsageServiceTests
     }
 
     [Fact]
+    public async Task A_test_build_builds_its_batches_but_never_posts_them()
+    {
+        var transport = new FakeTransport { ConfigBody = ConfigOn };
+        var service = new UsageService(new FakeStore(), transport, Build with { NotCounted = UsageSkipReason.DebugBuild }, new FixedClock(), 0);
+        await service.RecordAsync(Read);
+
+        await service.FlushAsync();
+
+        Assert.Empty(transport.Batches);
+        Assert.Equal(0, service.QueuedCount);
+    }
+
+    [Fact]
     public async Task Held_counts_are_forgotten_when_the_config_arrives_and_this_launch_is_not_sampled()
     {
         var transport = new FakeTransport { ConfigBody = ConfigHalf };
