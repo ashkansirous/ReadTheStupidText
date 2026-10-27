@@ -205,3 +205,6 @@ Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure 
 | 166 | Usage counts: country, OS version, form factor and hardware buckets (both apps) | built | #492 | | [166-usage-device-context.md](../slices/166-usage-device-context.md) |
 | 167 | Usage counts: don't count test devices (both apps) | built | #497 | | [167-no-test-device-counts.md](../slices/167-no-test-device-counts.md) |
 | 168 | German in both apps (UI, voice, detection, translation, Dino rules) | built | #495 | | [168-german-in-both-apps.md](../slices/168-german-in-both-apps.md) |
+| 169 | German translations for all 15 Dino books | built | #503 | | [169-german-dino-books.md](../slices/169-german-dino-books.md) |
+| 170 | Tray panel: every Controls button fits | built | #505 | | [170-tray-panel-controls-row-fits.md](../slices/170-tray-panel-controls-row-fits.md) |
+| 171 | Dino: the text card scrolls with the reading | built | #506 | | [171-dino-text-card-shows-whole-page.md](../slices/171-dino-text-card-shows-whole-page.md) |

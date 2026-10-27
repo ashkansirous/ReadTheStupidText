@@ -48,3 +48,7 @@ hidden line.
 ## Not yet verified
 
 - iOS line reader (`IosTextLineSource`, TextKit rebuilt to match UILabel) and the card's scroll on a real iPhone: Latin, Farsi (RTL) and a CJK page. Compile-checked only.
+
+#### For CLAUDE.md (lifted 2026-10-27)
+
+- Dino text card (Slice 171): line positions come from the label's real layout through `ITextLineSource` (per-platform), never from `Mark`/measured guesses; the card scrolls to the spoken sentence from those lines. (Slice 171: docs/plan/slices/171-dino-text-card-shows-whole-page.md)

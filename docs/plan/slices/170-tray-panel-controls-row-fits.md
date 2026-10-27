@@ -43,3 +43,7 @@ laid out wider than the window, or the window ends up narrower than the layout e
 
 - Device check at 100% and 150% scale, idle and reading, English and Finnish: all five toggles and the wait flyout fully visible.
 - Retake `site/img/control-panel.webp` (open work item above), and the redesign rule at 200% scale with the Translate column hidden.
+
+#### For CLAUDE.md (lifted 2026-10-27)
+
+- Tray panel and flyout placement goes through `WindowPlacer` with `ResizeClient` (client-area sizing), never by sizing the outer window. (Slice 170: docs/plan/slices/170-tray-panel-controls-row-fits.md)
