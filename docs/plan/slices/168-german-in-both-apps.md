@@ -1,6 +1,6 @@
 # Slice 168 — German in both apps (UI, voice, detection, translation, Dino rules)
 
-*Planned.* Read The Stupid Text (Windows, Android, iOS) and Dino Book Reader (Android, iOS, Windows). Slice 169 (German books) builds on it.
+*In progress (wave 2026-10-27), draft PR.* Read The Stupid Text (Windows, Android, iOS) and Dino Book Reader (Android, iOS, Windows). Slice 169 (German books) builds on it.
 
 **Touches:** `src/ReadTheStupidText.Application/Reading/AppLanguage.cs`,
 `src/ReadTheStupidText.Domain/Reading/SupertonicVoiceTable.cs`, `src/ReadTheStupidText.Application/**/PackConstants.cs`,
