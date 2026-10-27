@@ -1,6 +1,6 @@
 # Slice 156 — Dino: the book chooses each character's voice, not the app
 
-*In progress: code built and merged in PR #438 (2026-10-27); the Every book writer pass is still to do.* Dino Reader only.
+*Built 2026-10-27: code in PR #438; follow-ups #447, #455, #465; every book authored in its writer-pass PR.* Dino Reader only.
 
 **Batch:** 33 (2026-10-26; Decision 161)
 **Touches:** `src/DinoReader.Core/Story.cs`, `src/DinoReader.Core/StoryCast.cs`, `src/DinoReader.Core/CastCharacters.cs`, `src/DinoReader.Core/CastEditor.cs`, `src/DinoReader.Core/CharacterTraits.cs` (new), `src/DinoReader.Core/CharacterRoster*.cs`, `src/DinoReader.Core/StoryPackage*.cs`, `src/DinoReader.Core/StarterUpdate.cs`, `src/DinoReader.App/CastPage.cs`, `src/DinoReader.App/CastRows.cs`, `src/DinoReader.App/Resources/Strings/*.resx`, `tests/DinoReader.Tests/StoreTexts.cs`, `tests/DinoReader.Tests/StoreBuilder.cs`, `tests/DinoReader.Tests/StarterTexts.cs`, `tests/DinoReader.Tests/StarterBuilder.cs`, `tests/DinoReader.Tests/**`, `docs/design/story-art/*.md`, `src/DinoReader.Core/CLAUDE.md`, `src/DinoReader.App/CLAUDE.md`, `.claude/agents/dino-story-writer.md`, `.claude/agents/dino-story-reviewer.md`, `.claude/skills/create-dino-story/SKILL.md`
@@ -55,7 +55,7 @@ sound. Store books are cast at build time by the same picker (`tests/DinoReader.
       the app's picker. A test fails any store or starter character without traits or with an unknown suggestion.
       `dino-story-writer` must give every character traits and a suggestion (recorded in the book's art record);
       `dino-story-reviewer` checks the choices fit the character.
-- [ ] **Every book.** Writer pass over all starter and store books (one PR per few books, skipping books with open PRs
+- [x] **Every book.** Writer pass over all starter and store books (one PR per few books, skipping books with open PRs
       and picking them up after they merge). Bump each version. Rebuild the starters. Re-upload the store books after
       the user's OK, then compare each `meta.json` with `/api/stories`.
 - [x] Docs: the casting rules in `src/DinoReader.Core/CLAUDE.md` and `src/DinoReader.App/CLAUDE.md`.
@@ -102,3 +102,5 @@ sound. Store books are cast at build time by the same picker (`tests/DinoReader.
   Change the Seagull's voice; it stays changed after reopening; "Back to the book's voice" restores Splashy Duckling.
 - Emulator, Chinese: the same book opens with trait-matched voices and no error.
 - The user listens to two or three updated books on the phone and confirms the voices fit.
+
+*Follow-ups after #438:* #447 (a reused animal voice gets a fresh flavour), #455 (fallback fits: no stray whispers, old stays old, es/pt cub), #465 (edited casts keep book voices in other languages; packages store the resolved voices). The writer-pass items above ("still to do", "Treasure only") are superseded: every book was authored in its own writer-pass PR.
