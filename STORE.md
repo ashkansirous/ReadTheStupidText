@@ -743,13 +743,7 @@ plain HTTPS from GitHub Releases, so no App Transport Security exception and no 
 needed (Decision 60); the packs folder is excluded from iCloud backup.
 `ITSAppUsesNonExemptEncryption` is `false` (HTTPS only).
 
-**Known gap, translation (Slice 55).** The iPhone app has no "Translate to my language" yet
-(the card is hidden). Apple's Translation framework (iOS 18+) is Swift-only with no .NET binding
-and needs a SwiftUI view to download a language, and it has no Farsi; ML Kit's iOS translator has
-no .NET binding we could verify without a Mac. The decision: ship iOS without translation and
-revisit with a small Swift wrapper (Apple's framework, gated to iOS 18, Farsi hidden) or a
-verified ML Kit binding. Language identification (`NLLanguageRecognizer`) is already in place.
-The store listing for iOS must not mention translation until then.
+**Translation on iOS (Slice 160).** Translation (ML Kit) now runs on Android and iPhone, on device after a one-time model download. Apple's Translation framework was not used (Swift-only, no Farsi). iOS simulator builds have no translator (the MLKitTranslate xcframework has no simulator slice), so the card hides there.
 
 ## Dino Book Reader on Windows (Slice 67)
 
