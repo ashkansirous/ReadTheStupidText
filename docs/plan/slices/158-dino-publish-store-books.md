@@ -1,6 +1,6 @@
 # Slice 158 — Dino: publish store books on every merge
 
-*Planned 2026-10-27.* Dino Reader only. Small, CI only; can run beside other work (it touches no book content).
+*In progress (wave 2026-10-27c), draft PR.* Dino Reader only. Small, CI only; can run beside other work (it touches no book content).
 
 **Batch:** 34 (store plumbing, 2026-10-27; Decision 163)
 **Touches:** `.github/workflows/release.yml`, `.github/scripts/ship-targets.mjs`, `.github/scripts/ship-targets.test.mjs`,
