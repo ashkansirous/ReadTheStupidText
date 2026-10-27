@@ -37,7 +37,7 @@ public sealed class RtstUsage
     {
         _sender = new UsageQueueSender<UsageEvent>(new UsageQueueOptions<UsageEvent>(
             BaseAddress, EnabledKey, QueueKey, LogName, UsageBatch.MaxEvents, CurrentTelemetry, () => _config.HasCopy,
-            UsageBatch.ToJson, UsageBatch.ParseQueue, UsageBatch.QueueToJson));
+            events => UsageBatch.ToJson(events, DeviceProbe.Current), UsageBatch.ParseQueue, UsageBatch.QueueToJson));
     }
 
     /// <summary>Whether counts may be sent at all; turning it off also forgets what was waiting.</summary>

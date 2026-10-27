@@ -17,10 +17,10 @@
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>La langue des textes de l’appli</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Vitesse de lecture</value></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>Aider à améliorer l’appli</value></data>
-  <data name="Settings_CountsCaption" xml:space="preserve"><value>Envoie des comptes comme « un texte français a été lu ». Aucun nom, aucun identifiant, rien de ce que vous lisez.</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>Envoie des comptes comme « un texte français a été lu ». Aucun nom, aucun identifiant, rien de ce que vous lisez. Il ajoute aussi votre pays et un type d’appareil approximatif (téléphone ou tablette, plage de mémoire).</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>Activé</value></data>
   <data name="Settings_CountsOff" xml:space="preserve"><value>Désactivé</value></data>
-  <data name="Language_CountsNote" xml:space="preserve"><value>L’appli compte des choses comme les langues lues, sans noms ni identifiants. Vous pouvez désactiver cela dans les Réglages.</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>L’appli compte des choses comme les langues lues, sans noms ni identifiants. Vous pouvez désactiver cela dans les Réglages. Il ajoute aussi votre pays et un type d’appareil approximatif (téléphone ou tablette, plage de mémoire).</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Retour</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>Phrase précédente</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>Phrase suivante</value></data>

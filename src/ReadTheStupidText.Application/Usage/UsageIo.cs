@@ -36,5 +36,5 @@ public interface IUsageTransport
     Task<UsageSendResult> PostEventsAsync(string json, CancellationToken cancellationToken);
 }
 
-/// <summary>What every count says about the build: the app version, the platform and the operating system's major version.</summary>
-public sealed record UsageBuild(string Version, string Platform, int OsMajor);
+/// <summary>What every count says about the build: the app version, the platform and the operating system's major version; <paramref name="Device"/> (Slice 166) is the coarse device description sent once per batch, or null to send none.</summary>
+public sealed record UsageBuild(string Version, string Platform, int OsMajor, DeviceContext? Device = null);

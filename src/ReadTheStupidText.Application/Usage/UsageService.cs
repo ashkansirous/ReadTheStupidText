@@ -293,7 +293,7 @@ public sealed class UsageService : IUsageRecorder
     private async Task<UsageSendResult> PostAsync(IReadOnlyList<UsageEvent> batch)
     {
         using var timeout = new CancellationTokenSource(SendTimeout);
-        return await _transport.PostEventsAsync(UsageBatch.ToJson(batch), timeout.Token).ConfigureAwait(false);
+        return await _transport.PostEventsAsync(UsageBatch.ToJson(batch, _build.Device), timeout.Token).ConfigureAwait(false);
     }
 
     private void BackOff()

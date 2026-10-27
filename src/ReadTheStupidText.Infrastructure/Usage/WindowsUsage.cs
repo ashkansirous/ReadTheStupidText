@@ -17,7 +17,20 @@ public static class WindowsUsage
 
     /// <summary>The running counts service; the app registers it as the one <see cref="IUsageRecorder"/>.</summary>
     public static UsageService Create() =>
-        new(new UsageFileStore(), new UsageHttpTransport(), new UsageBuild(InstalledVersion(), PlatformName, OsMajor(Environment.OSVersion.Version.Build)));
+        new(new UsageFileStore(), new UsageHttpTransport(), new UsageBuild(InstalledVersion(), PlatformName, OsMajor(Environment.OSVersion.Version.Build), ReadDevice()));
+
+    // A machine that will not describe itself sends no device object (Slice 166); the counts still go.
+    private static DeviceContext? ReadDevice()
+    {
+        try
+        {
+            return WindowsDeviceProbe.Read();
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
 
     /// <summary>The package version without its trailing revision (the Store keeps it 0): "1.4.2" for 1.4.2.0. A build with no package identity reports "0.0.0".</summary>
     internal static string InstalledVersion()

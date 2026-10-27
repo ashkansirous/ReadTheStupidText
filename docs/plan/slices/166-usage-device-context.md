@@ -1,6 +1,6 @@
 ### Slice 166 — Usage counts: country, OS version, form factor and hardware buckets (both apps)
 
-*Planned.*
+*Built 2026-10-27.* Not yet verified: the Windows heads were only compiled (no desktop run of the RTST tray app or Dino's Windows head); iOS compiled only (no simulator); first live rows with the new fields to be checked in the Analytics Engine studio after deploy.
 
 **Touches:** `worker/events.ts`, `worker/events.test.mjs`, `worker/index.ts`, `src/DinoReader.Core/UsageEvent.cs`, `src/DinoReader.App/UsageCounter.cs`, `src/ReadTheStupidText.Mobile.Shared/Usage/*`, `src/ReadTheStupidText.Application/Usage/*`, `src/ReadTheStupidText.Infrastructure/Usage/*`, `src/ReadTheStupidText.Mobile/MauiProgram.cs`, `tests/DinoReader.Tests/UsageEventTests.cs`, `tests/ReadTheStupidText.Tests/UsageTests.cs`, `tests/ReadTheStupidText.Tests/UsageServiceTests.cs`, `tools/dino-usage-report.ps1`, `tools/rtst-usage-report.ps1`, `PRIVACY.md`, `site/privacy.html`, `site/dino/privacy.html`, `STORE.md`, `src/DinoReader.App/Platforms/iOS/Resources/PrivacyInfo.xcprivacy`, `src/ReadTheStupidText.Mobile/Platforms/iOS/Resources/PrivacyInfo.xcprivacy`
 
@@ -39,26 +39,26 @@ problem, and whether people read on tablets (picture layout).
 
 **Work**
 
-- [ ] **Worker, end to end for Dino first:** accept the optional `device` object, read `request.cf.country`, write the
+- [x] **Worker, end to end for Dino first:** accept the optional `device` object, read `request.cf.country`, write the
   new blobs; old-shape batches still written. Tests in `worker/events.test.mjs`: new shape, old shape (no `device`),
   invalid values become empty, `XX`/`T1` become `none`, no country header.
-- [ ] Worker for RTST: same envelope, blob18-20 and double2-3; `osMajor` from `device` on every event (fall back to the
+- [x] Worker for RTST: same envelope, blob18-20 and double2-3; `osMajor` from `device` on every event (fall back to the
   `app_opened` field for old builds).
-- [ ] Shared client: one `DeviceContext` (pure bucketing in Application/Core, unit-tested: boundaries of each bucket,
+- [x] Shared client: one `DeviceContext` (pure bucketing in Application/Core, unit-tested: boundaries of each bucket,
   unknown arch to `other`) plus a platform probe per head.
-- [ ] **Android:** probe (Idiom, arch, cores, `ActivityManager` RAM) for Dino and RTST phone. Emulator run: one batch
+- [x] **Android:** probe (Idiom, arch, cores, `ActivityManager` RAM) for Dino and RTST phone. Emulator run: one batch
   shows the `device` object in logcat/HTTP and a row in each dataset with every new field filled.
-- [ ] **iOS:** probe (Idiom, arch, cores, `NSProcessInfo.PhysicalMemory`) for Dino and RTST phone. iOS compile on CI;
+- [x] **iOS:** probe (Idiom, arch, cores, `NSProcessInfo.PhysicalMemory`) for Dino and RTST phone. iOS compile on CI;
   simulator if available.
 - [ ] **Windows:** Dino Windows head (MAUI probe, `desktop`) and RTST tray app (`WindowsUsage.cs`, `desktop`, physical
   memory). Desktop run: a batch reaches the Worker with the device object.
-- [ ] Report scripts: group-by options for country, OS major, form factor, arch, cores and RAM, still behind the
+- [x] Report scripts: group-by options for country, OS major, form factor, arch, cores and RAM, still behind the
   10-event floor; header documents the new layout.
-- [ ] Privacy texts: `PRIVACY.md`, `site/privacy.html`, `site/dino/privacy.html` (name each new field and that country
+- [x] Privacy texts: `PRIVACY.md`, `site/privacy.html`, `site/dino/privacy.html` (name each new field and that country
   comes from the connection, not GPS, and the IP itself is never stored), `STORE.md` answers below, both
   `PrivacyInfo.xcprivacy` (add `NSPrivacyCollectedDataTypeCoarseLocation` and `NSPrivacyCollectedDataTypeOtherDiagnosticData`,
   linked false, tracking false, purpose analytics).
-- [ ] Store forms (Claude fills them in the user's Chrome; the user presses Submit/Publish), **before the merge**:
+- [x] Store forms (Claude fills them in the user's Chrome; the user presses Submit/Publish), **before the merge**:
   - Google Play Data safety, both apps: add **Location > Approximate location** (collected, not shared, not
     ephemeral, optional, Analytics). Diagnostics is already declared on both.
   - Apple App Privacy, both apps: add **Coarse Location** and **Other Diagnostic Data** (not linked, no tracking,
@@ -75,3 +75,5 @@ problem, and whether people read on tablets (picture layout).
 - Android emulator (both apps), iOS compile (both apps), Windows desktop (Dino head and RTST tray): one batch each with
   the `device` object, and the matching row in `dino_usage` / `rtst_usage` via the Analytics Engine studio.
 - Live store pages show approximate/coarse location and the extra diagnostics after the user publishes.
+
+**Built notes (2026-10-27):** RAM bucket rounds total memory up to whole GiB first, so an advertised 4 GB phone lands in 4-6. RTST rows from builds without a `device` object write -1 to double2/double3; report scripts filter older rows (blob19 empty). Store forms published by the user before merge: Play Approximate location (both apps), Apple Coarse Location and Other Diagnostic Data (both apps). In-app consent strings (Dino `Usage_Helper`, `FirstRun_Usage`; RTST `Settings_CountsCaption`, `Language_CountsNote`) mention country and device ranges in all 13 languages (machine translations, need a native check). RTST Settings now scrolls (the longer caption was cut off on a 320x570 screen). Android emulator: both apps sent a batch with all five device fields.

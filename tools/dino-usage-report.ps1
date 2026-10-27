@@ -6,7 +6,10 @@
 .DESCRIPTION
   Reads the dataset `dino_usage` that worker/events.ts writes (needs telemetry switched on in dinoreader/config.json, see "Landing site" in CLAUDE.md).
   Blob layout, one data point per count: blob1 name, blob2 book (package id | own | none), blob3 language, blob4 source (shelf | own | none),
-  blob5 has recording (yes | no), blob6 app version, blob7 platform, blob8 UTC day, blob9 detail; double1 is the count's weight (1 / the app's
+  blob5 has recording (yes | no), blob6 app version, blob7 platform, blob8 UTC day, blob9 detail; and, since Slice 166, the batch's device context
+  (empty for builds that send none): blob10 country (two capital letters from the connection, never the IP; none when unknown), blob11 OS major version,
+  blob12 form factor (phone | tablet | desktop | other), blob13 CPU architecture (arm64 | x64 | x86 | arm | other), blob14 core bucket (1-4 | 5-8 | 9+),
+  blob15 RAM bucket in GB (<3 | 3-4 | 4-6 | 6-8 | 8+; total memory rounded up to whole GiB first, so a 4 GB phone is 4-6); double1 is the count's weight (1 / the app's
   sample rate). Every sum is SUM(_sample_interval * double1): _sample_interval is Analytics Engine's own sampling, double1 the app's.
 
   Privacy: every query ends in HAVING SUM(_sample_interval) >= $MinEvents, so a group with fewer than 10 recorded events (a rare language,
@@ -111,6 +114,41 @@ GROUP BY ended, platform $Enough ORDER BY ends DESC
 SELECT blob6 AS version, blob7 AS platform, blob3 AS language, $Weighted AS opens
 FROM $Dataset WHERE blob1 = 'app_opened' AND $Window
 GROUP BY version, platform, language $Enough ORDER BY opens DESC
+"@
+    'App opens by country (blob10; none = no country, XX or Tor)' = @"
+SELECT blob10 AS country, $Weighted AS opens
+FROM $Dataset WHERE blob1 = 'app_opened' AND $Window
+GROUP BY country $Enough ORDER BY opens DESC
+"@
+    'App opens by OS major version and platform (blob11; empty = an older build)' = @"
+SELECT blob11 AS os_major, blob7 AS platform, $Weighted AS opens
+FROM $Dataset WHERE blob1 = 'app_opened' AND $Window
+GROUP BY os_major, platform $Enough ORDER BY opens DESC
+"@
+    'App opens by form factor (blob12: phone | tablet | desktop | other)' = @"
+SELECT blob12 AS form_factor, $Weighted AS opens
+FROM $Dataset WHERE blob1 = 'app_opened' AND $Window
+GROUP BY form_factor $Enough ORDER BY opens DESC
+"@
+    'App opens by CPU architecture (blob13: arm64 | x64 | x86 | arm | other)' = @"
+SELECT blob13 AS arch, $Weighted AS opens
+FROM $Dataset WHERE blob1 = 'app_opened' AND $Window
+GROUP BY arch $Enough ORDER BY opens DESC
+"@
+    'App opens by CPU core bucket (blob14: 1-4 | 5-8 | 9+)' = @"
+SELECT blob14 AS cores, $Weighted AS opens
+FROM $Dataset WHERE blob1 = 'app_opened' AND $Window
+GROUP BY cores $Enough ORDER BY opens DESC
+"@
+    'App opens by RAM bucket in GB (blob15: <3 | 3-4 | 4-6 | 6-8 | 8+)' = @"
+SELECT blob15 AS ram_gb, $Weighted AS opens
+FROM $Dataset WHERE blob1 = 'app_opened' AND $Window
+GROUP BY ram_gb $Enough ORDER BY opens DESC
+"@
+    'Waits by form factor and RAM bucket (are slow waits a low-end problem?)' = @"
+SELECT blob12 AS form_factor, blob15 AS ram_gb, blob9 AS wait_and_duration, $Weighted AS shown
+FROM $Dataset WHERE blob1 = 'wait_shown' AND $Window
+GROUP BY form_factor, ram_gb, wait_and_duration $Enough ORDER BY shown DESC LIMIT 200
 "@
 }
 
