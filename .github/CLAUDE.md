@@ -99,6 +99,15 @@ Dino Reader has its own path-filter target (`dinoapp` in `ship-targets`, with
 never the RTST ones; without all five a Dino-only change cuts no release). Its releases are
 `dino-v<x.y.z>` (Slice 130).
 
+Store books publish from `release.yml`'s `publish-store` job (Slice 158, Decision 163; supersedes Decision 162's separate
+`dino-store.yml`): every run on `main` starts it (not tag-relative, so a failed or skipped publish can never be lost behind a later `dino-v` tag; the live comparison makes a no-op run upload nothing; 30-minute timeout). It builds `artifacts/store` (`dotnet test --project tests/DinoReader.Tests/DinoReader.Tests.csproj
+--filter-method "*BuildStore*"` with `DINO_BUILD_STORE=1`), then `publish-store-books.mjs` compares with the LIVE `/api/stories` (never the
+diff) and uploads each book whose built version is higher, cover and package first, `meta.json` last, never overwriting an existing
+`story-v<n>.dino`, never uploading a lower version; `--verify` then fails the job if any built book is still behind. It reuses
+`CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID` (a missing token on `main` fails the job), has its own `concurrency` group and `dinostore` alone never
+cuts an app release (`CONTENT_ONLY_TARGETS` keeps it out of the major-bump check). One failing book no longer blocks the rest: the job fails at the end listing every failed book.
+(Slice 158: docs/plan/slices/158-dino-publish-store-books.md)
+
 Dino Reader on iOS (Slice 67) is the `dinoios` target: `dinoreader-ios.yml` (a twin of `ios.yml`
 for `src/DinoReader.App`, asset `DinoReader-<v>.ipa`) and `testflight-submit-dino` in `release.yml`.
 It reuses the team-wide `ASC_API_*` and `IOS_DIST_CERT_P12_*` secrets and has its own

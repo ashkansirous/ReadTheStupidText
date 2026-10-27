@@ -74,6 +74,8 @@ name: release
 # release-publish-rtst / release-publish-dino (only if every affected build of that product succeeded;
 # the tag is created here, so a failed run leaves no tag) ->
 # store-submit / play-submit / testflight-submit / publish-downloads and the -dino twins.
+# `publish-store` (Slice 158, `dinostore` target) uploads the Dino store books that are behind the live store; it
+# needs only `version` and the Dino suite and never cuts a release.
 # `dinoreader` and `site-checks` are standalone: in no job's needs, so an
 # outage there can never block a build or a release.
 #
@@ -124,6 +126,7 @@ jobs:
       dinoapp: ${{ steps.targets.outputs.dinoapp }}
       dinoios: ${{ steps.targets.outputs.dinoios }}
       dinowin: ${{ steps.targets.outputs.dinowin }}
+      dinostore: ${{ steps.targets.outputs.dinostore }}
     steps:
       # workflow_dispatch can be started on any branch; only main may release.
       - name: Refuse to run off main
@@ -750,6 +753,57 @@ jobs:
           fi
           node .github/scripts/publish-downloads.mjs
           echo "Copied ${STEM}-${VERSION}.apk to the downloads bucket (or it was already there)." >> "$GITHUB_STEP_SUMMARY"
+
+  # Free Dino store books (Slice 158, Decision 163): every run on main compares with the live list and uploads the books whose
+  # built version is higher than the live one (compared with the live list on every run, so a cancelled run is
+  # caught by the next). `dinostore` alone never cuts an app release. The version job must have succeeded and the suite must
+  # not have failed (skipped is accepted only because the dinoreader path filter skipped it). Its own
+  # concurrency group keeps two runs from uploading at once; no Actions artifacts (the books stay on the runner).
+  publish-store:
+    needs: [version, dinoreader]
+    if: >-
+      !cancelled()
+      && github.ref == 'refs/heads/main'
+      && needs.version.result == 'success'
+      && (needs.dinoreader.result == 'success' || needs.dinoreader.result == 'skipped')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    concurrency:
+      group: dino-store-publish
+      cancel-in-progress: false
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build the store books
+        env:
+          DINO_BUILD_STORE: '1'
+        run: dotnet test --project tests/DinoReader.Tests/DinoReader.Tests.csproj --configuration Release --filter-method "*BuildStore*"
+
+      - name: Install wrangler
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Upload the books that are behind the live store
+        run: node .github/scripts/publish-store-books.mjs
+
+      - name: Check that no built book is still behind
+        run: |
+          node .github/scripts/publish-store-books.mjs --verify
 
   # Microsoft Store submission (Decision 44) — only when Windows-specific paths changed
   # (`windowsstore`), not for a core-only change.

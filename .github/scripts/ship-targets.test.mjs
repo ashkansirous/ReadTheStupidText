@@ -7,10 +7,10 @@ import { GROUPS, IGNORED_PATTERNS, PRODUCTS, bumpKind, matchesPattern, newestApp
 
 const M = 'src/ReadTheStupidText.Mobile';
 const S = 'src/ReadTheStupidText.Mobile.Shared';
-const NONE = { windows: false, windowsstore: false, android: false, ios: false, dinoreader: false, dinoapp: false, dinoios: false, dinowin: false };
+const NONE = { windows: false, windowsstore: false, android: false, ios: false, dinoreader: false, dinoapp: false, dinoios: false, dinowin: false, dinostore: false };
 // Core changes rebuild every app platform, Dino Reader's app included (its tests are separate).
 const ALL3 = { windows: true, android: true, ios: true, dinoapp: true, dinoios: true, dinowin: true };
-const EVERYTHING = { ...ALL3, dinoreader: true, windowsstore: true };
+const EVERYTHING = { ...ALL3, dinoreader: true, windowsstore: true, dinostore: true };
 
 function targetsOf(changedFiles, extra = {}) {
     return shipTargets({ changedFiles, bump: 'other', ...extra });
@@ -46,10 +46,15 @@ const CASES = [
     ['store-submit workflow', ['.github/workflows/store-submit.yml'], { windows: true, windowsstore: true, dinowin: true }],
     ['Dino Reader Windows workflow', ['.github/workflows/dinoreader-windows.yml'], { dinowin: true }],
     ['docs only', ['CLAUDE.md', 'docs/plan/decisions.md', 'plan.md'], {}],
-    ['DinoReader only', ['src/DinoReader.Core/Parser.cs'], { dinoreader: true, dinoapp: true, dinoios: true, dinowin: true }],
+    ['DinoReader only', ['src/DinoReader.Core/Parser.cs'], { dinoreader: true, dinoapp: true, dinoios: true, dinowin: true, dinostore: true }],
+    ['store book text', ['tests/DinoReader.Tests/StoreTexts.cs'], { dinoreader: true, dinostore: true }],
+    ['store book picture', ['tests/DinoReader.Tests/Store/x-marks-the-treasure/page-1.jpg'], { dinoreader: true, dinostore: true }],
+    ['starter translations', ['tests/DinoReader.Tests/Starters/translations/a.json'], { dinoreader: true, dinostore: true }],
+    ['store upload script', ['tools/upload-store-story.ps1'], { dinostore: true }],
+    ['store publish script', ['.github/scripts/publish-store-books.mjs'], { dinostore: true }],
     ['DinoReader tests only', ['tests/DinoReader.Tests/ParserTests.cs'], { dinoreader: true }],
     ['Android + iOS platform files', [`${M}/Platforms/Android/a.cs`, `${M}/Platforms/iOS/b.cs`], { android: true, ios: true }],
-    ['Windows + DinoReader', ['src/ReadTheStupidText.App/a.cs', 'src/DinoReader.Core/b.cs'], { windows: true, windowsstore: true, dinoreader: true, dinoapp: true, dinoios: true, dinowin: true }],
+    ['Windows + DinoReader', ['src/ReadTheStupidText.App/a.cs', 'src/DinoReader.Core/b.cs'], { windows: true, windowsstore: true, dinoreader: true, dinoapp: true, dinoios: true, dinowin: true, dinostore: true }],
     // Slice 58: the shared MAUI library and the Dino Reader app.
     ['Dino Reader app only', ['src/DinoReader.App/MainPage.xaml.cs'], { dinoapp: true, dinoios: true, dinowin: true }],
     ['Dino Reader app csproj', ['src/DinoReader.App/DinoReader.App.csproj'], { dinoapp: true, dinoios: true, dinowin: true }],
@@ -118,6 +123,16 @@ test('DinoReader.Core builds the Dino Reader app (Slice 60) but no RTST platform
     assert.deepEqual([t.windows, t.android, t.ios, t.dinoapp], [false, false, false, true]);
 });
 
+test('a store-book change publishes books but ships no app (Slice 158)', () => {
+    const t = targetsOf(['tests/DinoReader.Tests/StoreTexts.cs']);
+    assert.deepEqual([t.dinostore, t.dinoapp, t.dinoios, t.dinowin, t.windows, t.android, t.ios], [true, false, false, false, false, false, false]);
+});
+
+test('a store-book change cannot make a major bump rebuild the product (dinostore is content-only)', () => {
+    const commits = [{ message: ['x', '+', 'semver: major'].join(''), files: ['tools/upload-store-story.ps1'] }];
+    assert.equal(productBump({ baseTag: 'dino-v1.0.0', version: '2.0.0', prefix: 'dino-v', commits, targets: PRODUCTS.dino.targets.filter((t) => t !== 'dinostore') }), 'other');
+});
+
 test('a Dino Reader app change builds nothing else (Windows, RTST Android, iOS)', () => {
     const t = targetsOf(['src/DinoReader.App/App.xaml']);
     assert.deepEqual([t.windows, t.android, t.ios], [false, false, false]);
@@ -164,7 +179,7 @@ test('newestAppTag and bumpKind only see their own product prefix (Slice 130)', 
 });
 
 const NO_RTST = { windows: false, windowsstore: false, android: false, ios: false };
-const NO_DINO = { dinoreader: false, dinoapp: false, dinoios: false, dinowin: false };
+const NO_DINO = { dinoreader: false, dinoapp: false, dinoios: false, dinowin: false, dinostore: false };
 const plan = (rtstFiles, dinoFiles) => ({ rtst: { changedFiles: rtstFiles, bump: 'other' }, dino: { changedFiles: dinoFiles, bump: 'other' } });
 
 test('per product: each product reads only the changes since its own tag', () => {
@@ -189,7 +204,7 @@ test('per product: a major bump or force_all builds that product (or both) only'
     const majorDino = shipTargetsPerProduct({ plans });
     assert.deepEqual([majorDino.windows, majorDino.dinoapp, majorDino.dinoreader], [false, true, true]);
     assert.equal(shipTargetsPerProduct({ plans: plan([], []), forceAll: true }).windowsstore, true);
-    assert.equal(Object.keys(shipTargetsPerProduct({ plans: plan([], []) })).length, 8);
+    assert.equal(Object.keys(shipTargetsPerProduct({ plans: plan([], []) })).length, 9);
 });
 
 // ---- pull_request.paths parity: each workflow mirrors its GROUPS rows ----

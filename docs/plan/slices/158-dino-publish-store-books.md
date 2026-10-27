@@ -36,18 +36,18 @@ is needed. The store builder runs on Linux (`dinoreader.yml` already runs `tests
 
 ## Work
 
-- [ ] `publish-store-books.mjs`: reads `artifacts/store/*/meta.json`, fetches `/api/stories`, and returns the ids whose
+- [x] `publish-store-books.mjs`: reads `artifacts/store/*/meta.json`, fetches `/api/stories`, and returns the ids whose
       built version is higher than live (pure function, plus a small runner that calls `wrangler r2 object put` in the
       upload order). A `--dry-run` that prints the plan. Unit tests for the comparison (new book, behind, equal, live
       newer, bad meta).
-- [ ] `ship-targets.mjs`: `dinostore` target and its paths; tests in `ship-targets.test.mjs`.
-- [ ] `release.yml`: `publish-store` job on ubuntu, `needs: [version, dinoreader]`, runs on `main` when `dinostore` (or
+- [x] `ship-targets.mjs`: `dinostore` target and its paths; tests in `ship-targets.test.mjs`.
+- [x] `release.yml`: `publish-store` job on ubuntu, `needs: [version, dinoreader]`, runs on `main` when `dinostore` (or
       `force_all`); builds with `DINO_BUILD_STORE=1 dotnet test tests/DinoReader.Tests --filter BuildStore`, installs
       wrangler (`npm ci --ignore-scripts`), runs the script, then re-reads `/api/stories` and fails if any built book is
       still behind. Writes the uploaded ids and versions to the step summary. Its own `concurrency` group, so two runs
       never upload at once. actionlint clean.
-- [ ] `tools/upload-store-story.ps1` stays for manual use; note in its header that CI does this on merge.
-- [ ] Docs: `.github/CLAUDE.md` (the job, its trigger, the order rule), root `CLAUDE.md` store paragraph (uploads are
+- [x] `tools/upload-store-story.ps1` stays for manual use; note in its header that CI does this on merge.
+- [x] Docs: `.github/CLAUDE.md` (the job, its trigger, the order rule), root `CLAUDE.md` store paragraph (uploads are
       automatic on merge; the manual script is a fallback).
 - [ ] First run: after the merge, `release.yml` (or a `workflow_dispatch`) uploads all 15 lagging books; compare
       `/api/stories` with `StoreTexts.cs`/`StarterVersions` and confirm none lag; X Marks the Treasure reads "Kathryn".
@@ -58,10 +58,35 @@ is needed. The store builder runs on Linux (`dinoreader.yml` already runs `tests
 - On the merge run: the job lists the lagging books, uploads them, and the final check passes. A second run (dispatch)
   uploads nothing.
 - `/api/stories` shows every book at its `main` version; the downloaded X Marks the Treasure package says "Kathryn".
-- A docs-only merge does not start the job.
+- A docs-only merge also starts the job (release.yml has no path filter); it finds no book behind and uploads nothing.
 
 ## Out of scope
 
 - Moving book content out of the test project (Slice 157).
 - A content-hash guard against a missed version bump (Slice 157).
 - Deleting old `story-v<n>.dino` versions from R2.
+
+## Changed while building
+
+- `dinostore` is a content-only target (`CONTENT_ONLY_TARGETS` in `ship-targets.mjs`), kept out of the major-bump check.
+- The job runs on every `main` run, not only when `dinostore` changed (the live comparison makes a no-op run upload nothing).
+- Needs `version` success and `dinoreader` success-or-skipped. A missing Cloudflare token on `main` fails the job (not a warning). 30-minute timeout; own concurrency group `dino-store-publish`.
+- `publish-store-books.mjs` reuses the `publish-downloads.mjs` wrangler helpers; the package existence check downloads to a temp file. Folders that are not story ids are skipped; the job fails if no books were built.
+- One book's failure no longer stops the rest: the job fails at the end listing every failed book, then `--verify` (7 tries, since the list is cached about 60 s).
+
+## From review
+
+Two passes. Fixed: ENOBUFS on the package existence check, a failed upload hidden by a later `dino-v` tag, abort on the first failure, a silent missing token, no timeout; then publish running after a failed `version` job, stray non-id folders, and an empty build passing.
+
+## Verified
+
+`node --test .github/scripts` 153/153. A dry run against the live store listed all 15 books as behind; nothing was uploaded.
+
+#### For CLAUDE.md
+
+Already written into `.github/CLAUDE.md` and the root store paragraph by the slice branch (Slice 158: docs/plan/slices/158-dino-publish-store-books.md).
+
+#### Not yet verified
+
+- The first `main` run uploads the 15 lagging books and `--verify` passes.
+- `actionlint` on `release.yml` (runs in CI).
