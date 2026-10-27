@@ -1,3 +1,4 @@
+using DinoReader.BookBuilder;
 using DinoReader.Core;
 using ReadTheStupidText.Domain.Reading;
 using Xunit;
@@ -119,8 +120,8 @@ public class AnimalFromBookTests
     [Fact]
     public void The_billy_goats_and_the_pigs_keep_their_animals_in_the_book()
     {
-        Story goats = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.BillyGoatsId));
-        Story pigs = StarterBuilder.Build(StarterTexts.PigsId, "The Three Little Pigs", StarterTexts.Pigs, 3);
+        Story goats = StoreBuilder.Build(Books.SpecOf("billy-goats-gruff"));
+        Story pigs = StarterBuilder.Build(Books.IdOf("three-little-pigs"), "The Three Little Pigs", Books.Folder("three-little-pigs").Text!, 3);
 
         Assert.All(goats.Cast.Where(m => m.Name.EndsWith("Billy")), m => Assert.Equal(AnimalKind.Goat, m.Animal));
         Assert.All(pigs.Cast.Where(m => m.Name is "Pip" or "Pop" or "Pim"), m => Assert.Equal(AnimalKind.Pig, m.Animal));
@@ -128,5 +129,5 @@ public class AnimalFromBookTests
 
     private static IEnumerable<Story> AllShippedBooks() =>
         StarterBuilder.Starters.Select(s => StarterBuilder.Build(s.Id, s.Title, s.Text, s.ColourIndex))
-            .Concat(StoreTexts.All.Select(StoreBuilder.Build));
+            .Concat(Books.Store.Select(StoreBuilder.Build));
 }

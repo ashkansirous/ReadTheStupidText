@@ -1,0 +1,78 @@
+{
+  "kind": "Store",
+  "id": "18cab2f1fec84aad831ba12dccad5336",
+  "title": "The Tale of Peter Rabbit",
+  "version": 9,
+  "ageMin": 3,
+  "ageMax": 6,
+  "author": "Beatrix Potter",
+  "credits": "Beatrix Potter, 1902 (retold)",
+  "colour": 3,
+  "added": "2026-10-24",
+  "order": 9,
+  "characters": [
+    "Mrs. Rabbit",
+    "Peter",
+    "Mr. McGregor",
+    "Robin",
+    "Flopsy"
+  ],
+  "cast": [
+    {
+      "name": "Mrs. Rabbit",
+      "voice": "mummy",
+      "gender": "Female",
+      "age": "Adult",
+      "qualities": [
+        "Warm",
+        "Soft"
+      ]
+    },
+    {
+      "name": "Peter",
+      "voice": "piglet",
+      "gender": "Male",
+      "age": "Child",
+      "qualities": [
+        "Bouncy",
+        "Bright"
+      ]
+    },
+    {
+      "name": "Mr. McGregor",
+      "voice": "troll",
+      "gender": "Male",
+      "age": "Old",
+      "being": "Person",
+      "qualities": [
+        "Gruff",
+        "Warm"
+      ]
+    },
+    {
+      "name": "Robin",
+      "voice": "jester",
+      "gender": "Male",
+      "age": "Young",
+      "qualities": [
+        "Bright",
+        "Bouncy"
+      ]
+    },
+    {
+      "name": "Flopsy",
+      "voice": "bee",
+      "gender": "Female",
+      "age": "Young",
+      "qualities": [
+        "Bright",
+        "Warm"
+      ]
+    }
+  ],
+  "animals": {
+    "Peter": "Rabbit",
+    "Flopsy": "Rabbit"
+  },
+  "contentHash": "3f10254bc779d99f37578344a21e0e562c40c45f7f376f148a01ab506c5d8a1d"
+}

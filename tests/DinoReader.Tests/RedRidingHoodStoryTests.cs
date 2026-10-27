@@ -1,3 +1,4 @@
+using DinoReader.BookBuilder;
 using DinoReader.Core;
 
 namespace DinoReader.Tests;
@@ -18,7 +19,7 @@ public sealed class RedRidingHoodStoryTests
     [MemberData(nameof(Languages))]
     public void LittleRedRidingHood_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
     {
-        Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.RedRidingHoodId));
+        Story story = StoreBuilder.Build(Books.SpecOf("red-riding-hood"));
         Assert.All(story.Cast, m => Assert.True(m.Gender == ExpectedGenders[m.Name], $"{m.Name} is stored as {m.Gender}"));
         IReadOnlyList<CastMember> stored = language == story.Language
             ? story.Cast

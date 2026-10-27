@@ -1,3 +1,4 @@
+using DinoReader.BookBuilder;
 using DinoReader.Core;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Domain.Reading;
@@ -112,7 +113,7 @@ public class AuthoredVoiceTests
     public void The_book_of_treasure_opens_in_every_language_with_voices_for_everyone(string language)
     {
         var people = new[] { C("k", "Kathryn", Gender.Female), C("i", "Izzy", Gender.Female), C("p", "Polly", Gender.Female), C("b", "Billy", Gender.Male), C("gull", "Seagull", Gender.Female) };
-        var pinned = StarterVoices.For(StoreTexts.TreasureId, people.Select(p => p with { Name = p.Name == "Polly" ? "Pancake Polly" : p.Name }).ToList())
+        var pinned = StarterVoices.For(Books.IdOf("x-marks-the-treasure"), people.Select(p => p with { Name = p.Name == "Polly" ? "Pancake Polly" : p.Name }).ToList())
             .ToDictionary(a => a.Key, a => new PinnedCharacter(string.Empty, null, false, a.Value.SuggestedVoice, a.Value.Traits));
 
         VoiceCast cast = Cast(language, people, pinned, c => c.Id == "gull" ? new AnimalHint(AnimalKind.Bird, null) : null);
@@ -124,7 +125,7 @@ public class AuthoredVoiceTests
     public void The_treasure_books_seagull_and_billy_speak_as_the_duckling_and_the_puppy()
     {
         var people = new[] { C("b", "Billy", Gender.Male), C("gull", "Seagull", Gender.Female) };
-        var pinned = StarterVoices.For(StoreTexts.TreasureId, people)
+        var pinned = StarterVoices.For(Books.IdOf("x-marks-the-treasure"), people)
             .ToDictionary(a => a.Key, a => new PinnedCharacter(string.Empty, null, false, a.Value.SuggestedVoice, a.Value.Traits));
 
         VoiceCast cast = Cast("en", people, pinned, c => c.Id == "gull" ? new AnimalHint(AnimalKind.Bird, null) : null);
@@ -359,9 +360,9 @@ public class AuthoredVoiceTests
     [Fact]
     public void Only_the_authored_books_have_traits()
     {
-        Assert.Contains(StoreTexts.TreasureId, StarterVoices.AuthoredBooks);
-        Assert.Contains(StarterTexts.PigsId, StarterVoices.AuthoredBooks);
-        Assert.All(StoreTexts.All.Where(s => !StarterVoices.AuthoredBooks.Contains(s.Id)).Select(StoreBuilder.Build).SelectMany(b => b.Cast), m => Assert.Null(m.Traits));
+        Assert.Contains(Books.IdOf("x-marks-the-treasure"), StarterVoices.AuthoredBooks);
+        Assert.Contains(Books.IdOf("three-little-pigs"), StarterVoices.AuthoredBooks);
+        Assert.All(Books.Store.Where(s => !StarterVoices.AuthoredBooks.Contains(s.Id)).Select(StoreBuilder.Build).SelectMany(b => b.Cast), m => Assert.Null(m.Traits));
     }
 
     [Fact]
@@ -423,10 +424,10 @@ public class AuthoredVoiceTests
     }
 
     private static IEnumerable<Story> AuthoredBooks() =>
-        StoreTexts.All.Where(s => StarterVoices.AuthoredBooks.Contains(s.Id)).Select(StoreBuilder.Build)
+        Books.Store.Where(s => StarterVoices.AuthoredBooks.Contains(s.Id)).Select(StoreBuilder.Build)
             .Concat(StarterBuilder.Starters.Where(s => StarterVoices.AuthoredBooks.Contains(s.Id)).Select(s => StarterBuilder.Build(s.Id, s.Title, s.Text, s.ColourIndex)));
 
     private static IEnumerable<Story> AllBooks() =>
-        StoreTexts.All.Select(StoreBuilder.Build)
+        Books.Store.Select(StoreBuilder.Build)
             .Concat(StarterBuilder.Starters.Select(s => StarterBuilder.Build(s.Id, s.Title, s.Text, s.ColourIndex)));
 }

@@ -1,0 +1,61 @@
+{
+  "kind": "Starter",
+  "id": "966400017c494fb5b045786f53852c9e",
+  "title": "The Three Little Pigs",
+  "version": 11,
+  "ageMin": 3,
+  "ageMax": 6,
+  "author": "Traditional",
+  "credits": "Retold traditional tale · free to share",
+  "colour": 3,
+  "added": "2026-10-25",
+  "order": 1,
+  "cast": [
+    {
+      "name": "Pip",
+      "voice": "piglet",
+      "gender": "Male",
+      "age": "Young",
+      "qualities": [
+        "Bouncy",
+        "Squeaky"
+      ]
+    },
+    {
+      "name": "Pop",
+      "voice": "piglet3",
+      "gender": "Male",
+      "age": "Young",
+      "qualities": [
+        "Bright",
+        "Bouncy"
+      ]
+    },
+    {
+      "name": "Pim",
+      "voice": "piglet2",
+      "gender": "Male",
+      "age": "Young",
+      "qualities": [
+        "Soft",
+        "Warm"
+      ]
+    },
+    {
+      "name": "Wolf",
+      "voice": "wolf",
+      "gender": "Male",
+      "age": "Adult",
+      "qualities": [
+        "Gruff",
+        "Booming"
+      ]
+    }
+  ],
+  "animals": {
+    "Pip": "Pig",
+    "Pop": "Pig",
+    "Pim": "Pig"
+  },
+  "contentHash": "065060e46f0fe60937726b340696758038b6569c2aaadfb8ed452a4eb5bb534d"
+}

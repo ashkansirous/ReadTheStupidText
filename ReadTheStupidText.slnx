@@ -26,6 +26,9 @@
     <Project Path="src/DinoReader.App/DinoReader.App.csproj" />
     <Project Path="src/DinoReader.Core/DinoReader.Core.csproj" />
   </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/DinoReader.BookBuilder/DinoReader.BookBuilder.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/ReadTheStupidText.Tests/ReadTheStupidText.Tests.csproj" />
     <Project Path="tests/DinoReader.Tests/DinoReader.Tests.csproj" />

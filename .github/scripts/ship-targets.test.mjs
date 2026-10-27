@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-import { GROUPS, IGNORED_PATTERNS, PRODUCTS, bumpKind, matchesPattern, newestAppTag, parseCommits, productBump, shipTargets, shipTargetsPerProduct } from './ship-targets.mjs';
+import { CONTENT_MARKDOWN, GROUPS, IGNORED_PATTERNS, PRODUCTS, bumpKind, matchesPattern, newestAppTag, parseCommits, productBump, shipTargets, shipTargetsPerProduct } from './ship-targets.mjs';
 
 const M = 'src/ReadTheStupidText.Mobile';
 const S = 'src/ReadTheStupidText.Mobile.Shared';
@@ -47,9 +47,12 @@ const CASES = [
     ['Dino Reader Windows workflow', ['.github/workflows/dinoreader-windows.yml'], { dinowin: true }],
     ['docs only', ['CLAUDE.md', 'docs/plan/decisions.md', 'plan.md'], {}],
     ['DinoReader only', ['src/DinoReader.Core/Parser.cs'], { dinoreader: true, dinoapp: true, dinoios: true, dinowin: true, dinostore: true }],
-    ['store book text', ['tests/DinoReader.Tests/StoreTexts.cs'], { dinoreader: true, dinostore: true }],
-    ['store book picture', ['tests/DinoReader.Tests/Store/x-marks-the-treasure/page-1.jpg'], { dinoreader: true, dinostore: true }],
-    ['starter translations', ['tests/DinoReader.Tests/Starters/translations/a.json'], { dinoreader: true, dinostore: true }],
+    ['store book text', ['content/dino/x-marks-the-treasure/story.md'], { dinoreader: true, dinostore: true }],
+    ['store book data', ['content/dino/x-marks-the-treasure/book.json'], { dinoreader: true, dinostore: true }],
+    ['store book picture', ['content/dino/x-marks-the-treasure/pictures/1.jpg'], { dinoreader: true, dinostore: true }],
+    ['starter translations', ['content/dino/three-little-pigs/translations/fa.json'], { dinoreader: true, dinostore: true }],
+    ['book art record is documentation', ['content/dino/x-marks-the-treasure/art.md'], {}],
+    ['book builder', ['tools/DinoReader.BookBuilder/Program.cs'], { dinoreader: true, dinostore: true }],
     ['store upload script', ['tools/upload-store-story.ps1'], { dinostore: true }],
     ['store publish script', ['.github/scripts/publish-store-books.mjs'], { dinostore: true }],
     ['DinoReader tests only', ['tests/DinoReader.Tests/ParserTests.cs'], { dinoreader: true }],
@@ -124,7 +127,7 @@ test('DinoReader.Core builds the Dino Reader app (Slice 60) but no RTST platform
 });
 
 test('a store-book change publishes books but ships no app (Slice 158)', () => {
-    const t = targetsOf(['tests/DinoReader.Tests/StoreTexts.cs']);
+    const t = targetsOf(['content/dino/x-marks-the-treasure/story.md']);
     assert.deepEqual([t.dinostore, t.dinoapp, t.dinoios, t.dinowin, t.windows, t.android, t.ios], [true, false, false, false, false, false, false]);
 });
 
@@ -276,6 +279,7 @@ for (const [file, groups] of Object.entries(PR_TARGETS)) {
         const expected = derivedPaths(groups);
         expected.add(own); // a workflow always re-runs on its own edits
         IGNORED_PATTERNS.forEach((pattern) => expected.add(`!${pattern}`));
+        if (file === 'dinoreader.yml') CONTENT_MARKDOWN.forEach((pattern) => expected.add(pattern)); // a book's text is Markdown that must still run its suite
         assert.equal(new Set(actual).size, actual.length, `${file}: duplicate path entries`);
         assert.deepEqual([...new Set(actual)].sort(), [...expected].sort());
     });
@@ -298,7 +302,8 @@ test('a negated path follows its root glob and precedes the Platforms re-include
 
 test('every pull_request.paths list ends with the Markdown negation', () => {
     for (const file of [...Object.keys(PR_TARGETS), 'release-scripts.yml']) {
-        const tail = readPullRequestPaths(file).slice(-IGNORED_PATTERNS.length);
+        const paths = readPullRequestPaths(file).filter((path) => !CONTENT_MARKDOWN.includes(path)); // re-includes of content Markdown follow the negation
+        const tail = paths.slice(-IGNORED_PATTERNS.length);
         assert.deepEqual(tail, IGNORED_PATTERNS.map((pattern) => `!${pattern}`), `${file}: ignore negations must be last`);
     }
 });

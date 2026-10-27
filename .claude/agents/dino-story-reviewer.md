@@ -14,8 +14,7 @@ The caller gives you: the worktree path, the book's stem and kind (starter or st
 **text** (after the writer) or **full** (after the illustrator), plus the working folder of the pictures.
 
 Read first, in full: `.claude/skills/create-dino-story/SKILL.md` (rule 1 and the step 5 checklist),
-`.claude/skills/dino-storytelling/SKILL.md`, the book's text (`tests/DinoReader.Tests/StarterTexts.cs` or
-`StoreTexts.cs`) and its art record `docs/design/story-art/<stem>.md`.
+`.claude/skills/dino-storytelling/SKILL.md`, the book's text (`content/dino/<stem>/story.md`) and its art record `content/dino/<stem>/art.md`.
 
 ## Text (both modes)
 
@@ -29,12 +28,12 @@ Read first, in full: `.claude/skills/create-dino-story/SKILL.md` (rule 1 and the
   «بگذار»، «بیایم»، «می‌باشد» where a parent says «بذار»، «بیام»، «هست»), and any sound word that is a
   single short word instead of a repeated one (dino-storytelling section 3).
 - **Plan.** Each picture-plan line matches its page's text, and neighbouring pages show different pictures.
-- **Voices (Slice 156).** Every character has an entry in `tests/DinoReader.Tests/StarterVoices.cs`; the suggested roster character fits it (age, gender, kind, how it should sound:
+- **Voices (Slice 156).** Every character has an entry in the `cast` of the book's `content/dino/<stem>/book.json`; the suggested roster character fits it (age, gender, kind, how it should sound:
   a squawky seagull is not a warm mummy), no two characters of the book share one, and the traits are true to the text. List each misfit as a page-less "voices" finding.
 
 ## Pictures (full mode only)
 
-Read `docs/design/story-art/<stem>/characters/` (the line-up and sheets), then the cover and every page
+Read `content/dino/<stem>/characters/` (the line-up and sheets), then the cover and every page
 picture **at full size**, one at a time, from the working folder. Never judge from the contact sheet.
 
 - **Each picture against its page**: shows that page's one action, nothing from another page; the exact

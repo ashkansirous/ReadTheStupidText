@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Slice 157 (Decision 162): builds every Dino book (starters and store) from content/dino/<stem>/ into the .dino packages and
+       artifacts/store/<id>/ folders, and checks that the committed starters and the content hashes are current.
+       Commands: build, check, stamp, dump-pieces, dump-voices, voice-listen. Plain .NET, runs on any OS. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>DinoReader.BookBuilder</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The shipped titles are plain .NET (no MAUI), so the store builder reads the app's own file for meta.json (Slice 159). -->
+    <Compile Include="..\..\src\DinoReader.App\ShippedTitles.cs" Link="Linked\ShippedTitles.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DinoReader.Core\DinoReader.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="DinoReader.Tests" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,65 @@
+{
+  "kind": "Store",
+  "id": "34efea95400343ac998e9ed99158d370",
+  "title": "The Elves and the Shoemaker",
+  "version": 8,
+  "ageMin": 4,
+  "ageMax": 8,
+  "author": "Brothers Grimm",
+  "credits": "Retold from the Brothers Grimm · free to share",
+  "colour": 1,
+  "added": "2026-10-24",
+  "order": 8,
+  "characters": [
+    "Hans",
+    "Greta",
+    "Nib",
+    "Nob"
+  ],
+  "cast": [
+    {
+      "name": "Hans",
+      "voice": "knight",
+      "gender": "Male",
+      "age": "Old",
+      "being": "Person",
+      "qualities": [
+        "Warm"
+      ]
+    },
+    {
+      "name": "Greta",
+      "voice": "mummy",
+      "gender": "Female",
+      "age": "Old",
+      "being": "Person",
+      "qualities": [
+        "Warm",
+        "Soft"
+      ]
+    },
+    {
+      "name": "Nib",
+      "voice": "bee",
+      "gender": "Female",
+      "age": "Young",
+      "being": "Fairy",
+      "qualities": [
+        "Bright",
+        "Bouncy"
+      ]
+    },
+    {
+      "name": "Nob",
+      "voice": "piglet",
+      "gender": "Male",
+      "age": "Young",
+      "being": "Fairy",
+      "qualities": [
+        "Bouncy",
+        "Squeaky"
+      ]
+    }
+  ],
+  "contentHash": "81717e69de2f8acda5d79377e9f1bf127fb7f4da2bdaa38692208a5a42705fce"
+}

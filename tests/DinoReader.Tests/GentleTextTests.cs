@@ -1,3 +1,4 @@
+using DinoReader.BookBuilder;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -18,10 +19,12 @@ public sealed class GentleTextTests
 
     public static IEnumerable<object[]> Stories()
     {
-        yield return [nameof(StarterTexts.Pigs), StarterTexts.Pigs];
-        yield return [nameof(StarterTexts.Gingerbread), StarterTexts.Gingerbread];
-        yield return [nameof(StarterTexts.Tortoise), StarterTexts.Tortoise];
-        foreach (StoreStorySpec spec in StoreTexts.All)
+        foreach (BookFolder book in Books.Starters.Where(b => b.Text is not null))
+        {
+            yield return [book.Info.Title, book.Text!];
+        }
+
+        foreach (StoreStorySpec spec in Books.Store)
         {
             yield return [spec.Title, spec.Text];
         }
@@ -47,7 +50,7 @@ public sealed class GentleTextTests
 
     private static string GoodEnoughText()
     {
-        string path = Path.Combine(StarterBuilder.GoodEnoughFolder(), "lines.json");
+        string path = Path.Combine(Books.Folder("good-enough").Dir, "lines.json");
         using JsonDocument doc = JsonDocument.Parse(File.ReadAllText(path));
         return string.Join("\n", TextsOf(doc.RootElement));
     }

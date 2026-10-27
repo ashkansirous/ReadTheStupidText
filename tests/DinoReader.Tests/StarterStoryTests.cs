@@ -1,3 +1,4 @@
+using DinoReader.BookBuilder;
 using ReadTheStupidText.Domain.Reading;
 using DinoReader.Core;
 
@@ -13,28 +14,6 @@ public sealed class StarterStoryTests : IDisposable
         {
             Directory.Delete(_root, recursive: true);
         }
-    }
-
-    [Fact]
-    public async Task BuildStarters_WhenAskedByTheEnvironment_RewritesTheBundledFiles()
-    {
-        if (Environment.GetEnvironmentVariable(StarterBuilder.BuildSwitch) != "1")
-        {
-            return;
-        }
-
-        await StarterBuilder.WriteAllAsync();
-    }
-
-    [Fact]
-    public async Task DumpPieces_WhenAskedByTheEnvironment_WritesThePieceFiles()
-    {
-        if (Environment.GetEnvironmentVariable(StarterBuilder.DumpSwitch) != "1")
-        {
-            return;
-        }
-
-        await StarterBuilder.DumpPiecesAsync();
     }
 
     [Fact]

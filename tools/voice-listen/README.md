@@ -5,8 +5,8 @@ as cast, and again untouched) and the Ugly Duckling's stored Supertonic cast, th
 git-ignored; nothing is published.
 
 ```bash
-# 1. roster + Ugly Duckling cast, from the code (does nothing without the variable)
-DINO_VOICE_LISTEN_OUT=<abs>/tools/voice-listen/out/roster.json dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj --filter-class DinoReader.Tests.VoiceListenExport
+# 1. roster + Ugly Duckling cast, from the code (the book builder's voice-listen command, Slice 157)
+dotnet run --project tools/DinoReader.BookBuilder -- voice-listen --out <abs>/tools/voice-listen/out/roster.json
 # 2. venv and packs as in tools/sound-words-test/README.md (supertonic-3-3, kokoro-en-2); then
 python tools/voice-listen/render.py --packs <packs> --roster tools/voice-listen/out/roster.json --out tools/voice-listen/out
 ```

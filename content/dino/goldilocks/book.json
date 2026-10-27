@@ -1,0 +1,63 @@
+{
+  "kind": "Store",
+  "id": "67695905c10a46bd81aa498beab9609e",
+  "title": "Goldilocks and the Three Bears",
+  "version": 9,
+  "ageMin": 3,
+  "ageMax": 6,
+  "author": "Traditional",
+  "credits": "Retold traditional tale · free to share",
+  "colour": 3,
+  "added": "2026-10-24",
+  "order": 1,
+  "characters": [
+    "Goldilocks",
+    "Papa Bear",
+    "Mama Bear",
+    "Baby Bear"
+  ],
+  "cast": [
+    {
+      "name": "Goldilocks",
+      "voice": "bee",
+      "gender": "Female",
+      "age": "Child",
+      "being": "Person",
+      "qualities": [
+        "Bright",
+        "Bouncy"
+      ]
+    },
+    {
+      "name": "Papa Bear",
+      "voice": "bigbear",
+      "gender": "Male",
+      "age": "Adult",
+      "qualities": [
+        "Booming",
+        "Warm"
+      ]
+    },
+    {
+      "name": "Mama Bear",
+      "voice": "mummy",
+      "gender": "Female",
+      "age": "Adult",
+      "qualities": [
+        "Warm",
+        "Soft"
+      ]
+    },
+    {
+      "name": "Baby Bear",
+      "voice": "cub",
+      "gender": "Male",
+      "age": "Child",
+      "qualities": [
+        "Soft",
+        "Bouncy"
+      ]
+    }
+  ],
+  "contentHash": "3f14f8257845c2e08a824ea4e24303d64ddfa9180de137fc8a27c7ae4a2ee0d4"
+}

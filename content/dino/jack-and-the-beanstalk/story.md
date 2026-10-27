@@ -1,0 +1,83 @@
+Once upon a time, a boy called Jack lived in a little cottage with his mum and their old cow, Milky-White. They didn't have much, and the cupboard was nearly empty.
+
+"Here's our very last coin, Jack," said Mother. "Can you take it to the market and get some seeds for our garden?"
+---
+At the market, Jack met a funny little Peddler. She had a cart full of seeds and a sleepy grey donkey.
+
+"I've got something even better than seeds," said Peddler. "Five magic beans! Plant them tonight, and peek out of your window in the morning."
+
+So Jack gave her his coin, and she gave him the beans.
+---
+That evening, Jack showed his mum the five beans.
+
+"Only five beans?" said Mother, and she laughed. "Well, beans are seeds too. Let's plant them and see!"
+
+So they planted the beans under the kitchen window: one, two, three, four, five. Milky-White watched over the fence.
+---
+In the morning, Jack and his mum ran out into the garden. "Wow, look at that!" said Jack.
+
+A great big beanstalk had grown in the night. It went up, up, up, right into the clouds!
+
+Even Milky-White looked up. Moo, moo, moo!
+---
+Then the leaves started to rustle. Rustle, rustle, rustle! Down the beanstalk, leaf by leaf, came a fluffy little hen with shiny golden feathers.
+
+She hopped onto Jack's arm. Cluck, cluck, cluck!
+
+"Hello, little hen," said Jack. "Are you lost?"
+---
+"I think she lives up in the clouds," said Jack. "Somebody up there must be missing her. Mum, can I take her home?"
+
+"Let's take her home together," said Mother. She tied a basket onto Jack's back and tucked the little hen inside.
+
+"Hold on with both hands, one step at a time," said Mother.
+---
+Jack held on to the beanstalk with both hands, and Mother climbed right behind him.
+
+"Hold on with both hands, one step at a time, Mum," said Jack. Up, up, up they climbed, nice and slow, past the treetops and the birds, right into the soft white clouds.
+
+The little hen peeked out of the basket. Cluck, cluck, cluck!
+---
+At the top, a fluffy cloud road led to a great big castle. Boom, boom, boom! Out stomped a Giant with a big, round, friendly face.
+
+"Fee, fi, fo, fum! Hello, hello, everyone!" sang Giant, so loud that all the birds flew away. Jack giggled and put his fingers in his ears. So did Mother.
+---
+Then the Giant saw the little hen in Jack's basket. "Goldie!" said Giant. "My Goldie! I've been looking for you everywhere!"
+
+Jack lifted Goldie out, and she fluttered up into the Giant's big hands. Cluck, cluck, cluck!
+
+"Thank you, thank you!" said Giant. His happy voice was so loud that the castle windows went rattle, rattle, rattle!
+---
+The Giant sat down on his castle step and let out a great big sigh. Whoosh, whoosh, whoosh! The sigh blew Jack's cap right off his head.
+
+"Oops, sorry!" said Giant, and he caught the cap between two fingers. "Everything about me is too big and too loud. When I say hello, the birds fly away, and nobody ever comes to play."
+---
+"I can help!" said Jack. "Put a finger on your lips, like this, and sing as softly as a mouse."
+
+The Giant put a finger on his lips. "Fee, fi, fo, fum! Hello, hello, everyone!" whispered Giant.
+
+This time the birds didn't fly away. Two little bluebirds flew down and sat right on his shoulder.
+---
+"Thank you, Jack," said Giant. "You brought Goldie home, and you taught me to sing softly. Goldie lays a golden egg every morning, and I'd like to share."
+
+Very gently, the Giant put a shiny golden egg into Jack's basket.
+
+"Come and visit me every Sunday, both of you," said Giant.
+---
+Jack and Mother waved bye-bye and started to climb down.
+
+"Hold on with both hands, one step at a time, Mum," said Jack. Down, down, down they went, nice and slow, with the golden egg safe and snug in his basket.
+
+"Bye-bye, my friends!" whispered Giant, and he waved from the edge of the cloud.
+---
+Jack and Mother stepped off the very last leaf. The Peddler was waiting at the bottom.
+
+Jack held up the golden egg. "It's a present from our new friend, the Giant," said Jack. "Now we can buy seeds for the whole garden!"
+
+"I told you they were magic beans," said Peddler, and she gave a wink. Mother gave Jack a great big hug.
+---
+That night, Mother tucked Jack into bed and kissed him goodnight. From high up in the clouds came a soft little song.
+
+"Fee, fi, fo, fum! Goodnight, goodnight, everyone!" sang Giant, as softly as a mouse.
+
+"Night-night, Giant," whispered Jack, and soon he was fast asleep. And from that day on, Jack and the Giant were best friends.

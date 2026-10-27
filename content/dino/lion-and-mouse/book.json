@@ -1,0 +1,40 @@
+{
+  "kind": "Store",
+  "id": "1ca50c6936cc44788b992726784e8132",
+  "title": "The Lion and the Mouse",
+  "version": 8,
+  "ageMin": 4,
+  "ageMax": 7,
+  "author": "Aesop",
+  "credits": "Retold from Aesop · free to share",
+  "colour": 1,
+  "added": "2026-10-24",
+  "order": 0,
+  "characters": [
+    "Lion",
+    "Mouse"
+  ],
+  "cast": [
+    {
+      "name": "Lion",
+      "voice": "giant",
+      "gender": "Male",
+      "age": "Adult",
+      "qualities": [
+        "Booming",
+        "Warm"
+      ]
+    },
+    {
+      "name": "Mouse",
+      "voice": "mouse",
+      "gender": "Female",
+      "age": "Young",
+      "qualities": [
+        "Squeaky",
+        "Bright"
+      ]
+    }
+  ],
+  "contentHash": "b44fb3fdb2f2d8c5f0dd72234ec9081092fb6ed73c2db142b9e8de73c577e348"
+}

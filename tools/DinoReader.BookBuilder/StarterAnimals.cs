@@ -1,0 +1,66 @@
+using DinoReader.Core;
+
+namespace DinoReader.BookBuilder;
+
+/// <summary>
+/// The animals of the characters whose names do not say it (Slice 125, Decision 132): the builders store them in the book's cast, so the pigs Pip, Pop and Pim oink
+/// and are cast as piglets. A character whose name has an animal word (Wolf, Papa Bear, Mrs. Rabbit) is found from the name and needs no entry here.
+/// The data is in each book's <c>book.json</c> (Slice 157): <c>animals</c> (name to kind) and <c>notAnimals</c>.
+/// A character stored as no animal (<see cref="CastMember.NotAnimal"/>) is cast by gender like a person in every language: the Ugly Duckling (really a swan) and his
+/// sister Dilly, whose rosters' duckling voices are one gender per language and would otherwise give him a girl's voice or her a boy's; and the Little Red
+/// Hen's Cat (she) and Duck (he), for the same reason with the kitten and duckling voices, and Town Mouse (she) and Country Mouse (he), with the mouse voice (the cost is that they make
+/// no meow, quack, squeak or rabbit sounds). (Goldilocks' Mama Bear is a bear again: her book suggests the mummy voice, a woman's in every language, Slice 156; so are Peter Rabbit and Flopsy, on the piglet and bee voices.) The stored animal also picks the voice, so giving them back their animal
+/// would put a man's or the wrong-gender voice on them (56 gender tests fail): a separate "cast as a person" field is needed first (Slice 152 review).
+/// A book whose writer chose each voice (<see cref="StarterVoices"/>, Slice 156) needs none of this: the Little Red Hen's Cat and Duck and the Ugly Duckling and his sister Dilly have their animals back, and their gender comes from the book.
+/// </summary>
+internal static class StarterAnimals
+{
+    /// <summary>
+    /// The decided animal of each of <paramref name="characters"/> of the story <paramref name="storyId"/>, by character id: the ones named here, else the ones the name says
+    /// (<see cref="AnimalSounds.Resolve"/>, never a guess from the text: Grandpa is not the Cow). Slice 152 stores the result in the book so nothing is guessed at read time.
+    /// </summary>
+    public static IReadOnlyDictionary<string, AnimalKind> For(string storyId, IReadOnlyList<Character> characters)
+    {
+        var decided = new Dictionary<string, AnimalKind>(AnimalSounds.Resolve(characters, StarterBuilder.StoryLanguage));
+        if (Books.InfoOfId(storyId)?.Animals is not { } names)
+        {
+            return decided;
+        }
+
+        foreach (Character character in characters.Where(c => names.ContainsKey(c.Name)))
+        {
+            decided[character.Id] = names[character.Name];
+        }
+
+        return decided;
+    }
+
+    /// <summary>
+    /// Every member carries an explicit animal or "none" (Slice 152, Decision 157). A member with no animal decided is stored as none, but the build fails when the story text
+    /// suggests it is an animal (<see cref="AnimalGuess"/>, e.g. "Pip the pig") and the writer left it out of the book's <c>animals</c> (<c>book.json</c>): list it there, or in <c>notAnimals</c> when it is deliberately none.
+    /// </summary>
+    public static IReadOnlyList<CastMember> Explicit(string storyId, string text, IReadOnlyList<Character> characters, IReadOnlyList<CastMember> members)
+    {
+        var undecided = members.Where(m => !m.HasAnimalSetting).ToList();
+        var ids = undecided.Select(m => m.CharacterId).ToHashSet();
+        var suspects = AnimalSounds.Resolve(characters.Where(c => ids.Contains(c.Id)).ToList(), StarterBuilder.StoryLanguage, text: text);
+        if (suspects.Count > 0)
+        {
+            string names = string.Join(", ", undecided.Where(m => suspects.ContainsKey(m.CharacterId)).Select(m => m.Name));
+            throw new InvalidOperationException($"{storyId}: {names} look like an animal in the text but have none decided; add them to the animals in the book's book.json, or to its notAnimals if they are none.");
+        }
+
+        return members.Select(m => m.HasAnimalSetting ? m : m with { NotAnimal = true }).ToList();
+    }
+
+    /// <summary>The cast members of the story <paramref name="storyId"/>, those named here as no animal marked so.</summary>
+    public static IReadOnlyList<CastMember> WithNotAnimals(string storyId, IReadOnlyList<CastMember> members)
+    {
+        if (Books.InfoOfId(storyId)?.NotAnimals is not { } names)
+        {
+            return members;
+        }
+
+        return members.Select(m => names.Contains(m.Name) ? m with { Animal = null, NotAnimal = true } : m).ToList();
+    }
+}

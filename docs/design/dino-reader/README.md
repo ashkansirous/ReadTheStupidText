@@ -166,7 +166,7 @@ project when its slice runs; don't redraw or regenerate them.
 - **Covers:** Slices 107-114 (Decisions 111-119). Frames continue from Batch 17-18 (36). Frame 41
   supersedes the frame 28 note "nothing on screen changes": the translated text is shown.
 - **Images it imports:** `assets/good-enough/2.jpg` and `assets/good-enough/cover.jpg` are the Good
-  Enough starter's pictures (`tests/DinoReader.Tests/Starters/good-enough/`);
+  Enough starter's pictures (`content/dino/good-enough/pictures/`);
   `dino_reader_icons/ios/AppIcon-1024-light.png` is `icons/ios/AppIcon-1024-light.png`.
   Read it the same way as the v2 file.
 
@@ -259,7 +259,7 @@ Implement: `Dino Reader Batch 24.dc.html`
 - **Covers:** Batch 25, Slice 122 (Decision 127). **Supersedes frame 34** (58% panel cap) of the
   Batch 17-18 mock. Slices 119-121 change no screens.
 - Imports: `assets/three-little-pigs/3.jpg` and `5.jpg` are the starter's page pictures, already in
-  the repo at `tests/DinoReader.Tests/Starters/three-little-pigs/pictures/` (not copied again).
+  the repo at `content/dino/three-little-pigs/pictures/` (not copied again).
 
 | # | Screen | Line |
 |---|---|---|
@@ -364,7 +364,7 @@ Implement: the selected files
 
 - **Source:** Claude Design project `90615641-f298-4e21-8c50-ca2efbeaaebc`, file `Dino Reader Batch 31.dc.html`
   (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+31.dc.html>).
-- **Copied:** 2026-10-26, verbatim from `DesignSync get_file`. The dino is `icons/ios/AppIcon-1024-light.png`. The two story pictures it shows (`assets/three-little-pigs/3.jpg`, `5.jpg`) are copied from the starter book `tests/DinoReader.Tests/Starters/three-little-pigs/pictures/` (DesignSync caps files at 256 KiB, so its copies were truncated).
+- **Copied:** 2026-10-26, verbatim from `DesignSync get_file`. The dino is `icons/ios/AppIcon-1024-light.png`. The two story pictures it shows (`assets/three-little-pigs/3.jpg`, `5.jpg`) are copied from the starter book `content/dino/three-little-pigs/pictures/` (DesignSync caps files at 256 KiB, so its copies were truncated).
 - **Covers:** Batch 31 (Slices 150-154) and Slice 148. Screens 66-68 (three view modes, Slice 151) replace the words-over switch of frames 57-58 (Batch 25); 69 (cast page without merge or animal, Slices 151-152) supersedes frame 59 (Batch 26-28); 70 (Reading speed and app-wide Animal sounds, Slices 150/152); 71 (mid-read stall, Slice 148, Batch 30 overlay with Cancel); 72 (Farsi vowel marks, Slice 154). Slice 153 has no screens.
 
 Open it in a text editor (`support.js` is not copied). Each screen is headed by a caption
@@ -407,7 +407,7 @@ Implement: `Dino Reader Batch 31.dc.html`
 
 - **Source:** Claude Design project `90615641-f298-4e21-8c50-ca2efbeaaebc`, file `Dino Reader Batch 32.dc.html`
   (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+32.dc.html>).
-- **Copied:** 2026-10-26, verbatim from `DesignSync get_file`. The dino is `icons/ios/AppIcon-1024-light.png`. The story pictures (`assets/good-enough/1.jpg`, `2.jpg`, `3.jpg`, `cover.jpg`, `assets/three-little-pigs/5.jpg`) are copied from the starter books under `tests/DinoReader.Tests/Starters/` (DesignSync truncates files over 256 KiB).
+- **Copied:** 2026-10-26, verbatim from `DesignSync get_file`. The dino is `icons/ios/AppIcon-1024-light.png`. The story pictures (`assets/good-enough/1.jpg`, `2.jpg`, `3.jpg`, `cover.jpg`, `assets/three-little-pigs/5.jpg`) are copied from the starter books under `content/dino/` (DesignSync truncates files over 256 KiB).
 - **Covers:** Batch 32, Slice 155 (first-run intro: screens 73-77). Frame 73 is Batch 16's frame 18 with a new bottom; 77 extends frame 70 (Batch 31).
 
 Open it in a text editor (`support.js` is not copied). Each screen is headed by a caption

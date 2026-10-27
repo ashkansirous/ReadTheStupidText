@@ -61,7 +61,7 @@ and Decision 130. Read them first: they beat the classic tale.
 
 ## 4. Picture plan (one line per page)
 
-Before any picture, write the plan into the book's art record (`docs/design/story-art/<stem>.md`): page
+Before any picture, write the plan into the book's art record (`content/dino/<stem>/art.md`): page
 number, the one action, who is in it with a count, where, and time of day. Then check it:
 
 - [ ] Every page's picture differs from its neighbours (place, action or who is there).
@@ -73,12 +73,12 @@ number, the one action, who is in it with a count, where, and time of day. Then 
 
 - The translations are keyed by sentence (piece). **Moving page breaks or splitting a paragraph keeps
   every existing translation**; only new or reworded sentences need translating into all 13 languages
-  (`tests/DinoReader.Tests/Starters/translations/<stem>.<lang>.json`; dump the pieces with
-  `DINO_DUMP_PIECES=1`).
+  (`content/dino/<stem>/translations/<lang>.json`; dump the pieces with
+  `dotnet run --project tools/DinoReader.BookBuilder -- dump-pieces <stem>`).
 - Reword a sentence only when it must change, since each reworded sentence costs 13 translations.
 - A new page count needs one picture per page. Reuse an earlier picture only when it shows exactly that
   page's one action. Otherwise draw it again.
-- Bump the version (`StarterBuilder.StarterVersions` or the store `Version`) and add the old text's page
+- Raise the version with `dotnet run --project tools/DinoReader.BookBuilder -- stamp <stem>` (`book.json`'s `version` and content hash) and add the old text's page
   hashes to `StarterUpdate.EarlierPageTextHashes` for a starter, so installed copies update.
   Get the old hash before rebuilding: `StarterUpdate.PageTextHash` is SHA-256 over the page texts joined
   with `"\n\n"` (two newline characters, `Story.PageSeparator`). Compute it from the currently shipped .dino's `story.json` (`Pages[].Text`).

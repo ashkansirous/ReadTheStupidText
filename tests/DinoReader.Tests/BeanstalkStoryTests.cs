@@ -1,3 +1,4 @@
+using DinoReader.BookBuilder;
 using DinoReader.Core;
 using ReadTheStupidText.Domain.Reading;
 
@@ -25,7 +26,7 @@ public sealed class BeanstalkStoryTests
     [MemberData(nameof(Languages))]
     public void JackAndTheBeanstalk_GivesEachCharacterAVoiceOfTheirGender_AndTheGiantADeepOne_InEveryLanguagesRoster(string language)
     {
-        Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.BeanstalkId));
+        Story story = StoreBuilder.Build(Books.SpecOf("jack-and-the-beanstalk"));
         IReadOnlyList<CastMember> stored = language == story.Language
             ? story.Cast
             : StoryCast.SeedForOtherLanguage(story.Cast);

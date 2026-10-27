@@ -1,0 +1,77 @@
+Once upon a time, Country Mouse lived in a cosy little hole under an old oak tree, at the edge of a quiet field. His best friend, Town Mouse, lived far, far away in a big, busy town.
+
+Every morning, Country Mouse sat in the sunshine and listened to the birds. Tweet, tweet, tweet!
+---
+One sunny morning, guess who came to visit? Town Mouse! She skipped across the field with her little pink bag.
+
+Country Mouse ran out and gave her a big hug. "Welcome to my home!" said Country Mouse.
+---
+Country Mouse set out lunch on a flat stone: seeds, sweet blackberries and a crunchy hazelnut.
+
+Town Mouse had never ever tasted a blackberry before. "Yum, yum, yum!" said Town Mouse.
+---
+After lunch, the two friends lay in the long grass and watched the clouds float by. The wind blew in the grass. Swish, swish, swish!
+
+But Town Mouse wriggled and wriggled. "It's so quiet here!" said Town Mouse.
+
+"Isn't it lovely?" said Country Mouse.
+---
+That evening, the sun went down, all pink and gold. The crickets sang. Chirp, chirp, chirp!
+
+"Your home is lovely, but I love mine," said Town Mouse. "It's a bit too quiet for me. Come and stay at my house tomorrow!"
+
+"Yes, please!" said Country Mouse.
+---
+The next morning, the two friends rode to town on the back of the farmer's hay cart, all snug in the soft hay.
+
+The big brown horse pulled them all the way. Clip-clop, clip-clop, clip-clop!
+---
+Town Mouse lived in a tall house, right in the middle of the town. Her home was a teeny-tiny room behind the kitchen wall, with a round red door just her size.
+
+"Welcome to my home!" said Town Mouse.
+---
+The family had just finished breakfast. Town Mouse took Country Mouse up onto the big kitchen table. Wow! There were cake crumbs, bits of cheese and some juicy grapes.
+
+"Help yourself!" said Town Mouse.
+
+"Yum, yum, yum!" said Country Mouse.
+---
+Clatter, clatter, clatter! The plates rattled in the sink. The cook was washing up and humming a happy song.
+
+Country Mouse jumped. "What's that noise?" said Country Mouse.
+
+"It's only the plates," said Town Mouse. "Town is always busy!"
+---
+Then the two friends went into the hall. Vroom, vroom, vroom! A big round hoover rolled right past them, all by itself.
+
+Country Mouse put his paws over his ears. "What's that noise?" said Country Mouse.
+
+"It's only the hoover," said Town Mouse. "Town is always busy!"
+---
+Bang, bang, bang! The wind was banging the big front door. Country Mouse jumped so high that his straw hat flew right off his head!
+
+"It's only the door," said Town Mouse. "Town is always busy!"
+
+Country Mouse started to giggle. "Town is a bit too busy for me!" said Country Mouse.
+---
+That evening, the two friends sat on the kitchen windowsill and watched the town lights twinkle.
+
+"Your home is lovely, but I love mine," said Country Mouse. "I like it nice and quiet."
+
+"And I like it nice and busy!" said Town Mouse. Then the two friends laughed and laughed. Ha, ha, ha!
+---
+The next morning, Country Mouse rode home on the farmer's hay cart. Clip-clop, clip-clop, clip-clop!
+
+Town Mouse waved from the doorstep. "Bye-bye! Come back soon!" said Town Mouse.
+
+"You come and visit me too, okay?" said Country Mouse.
+---
+That night, Country Mouse curled up in his cosy bed under the old oak tree. The wind blew in the grass. Swish, swish, swish!
+
+"Home, sweet home," said Country Mouse. He smiled a sleepy smile and closed his eyes.
+---
+Far away in the busy town, Town Mouse snuggled into her own little bed. Outside her window, the town hummed. Hum, hum, hum!
+
+"Home, sweet home," said Town Mouse.
+
+Every summer and every winter, the two friends visited each other. And they stayed best friends for ever and ever.

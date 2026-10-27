@@ -19,8 +19,9 @@
  *   - the rest of Mobile.Shared/** (platform code both apps use)  -> android + ios + dinoapp
  *   - DinoReader.App/**, DinoReader.Core/**                       -> dinoapp (Slice 58/60; ships only with its own signing secrets)
  *   - DinoReader.Core / tests/DinoReader.Tests                    -> dinoreader (its tests; Core also rebuilds dinoapp)
- *   - store books (Slice 158): Core, the store/starter texts, voices, pictures and translations, the builders, the upload scripts -> dinostore (publish-store only; never ships an app)
- *   - Markdown anywhere (IGNORED_PATTERNS, case-sensitive like GitHub's `paths`) -> nothing (ignored before matching)
+ *   - store books (Slice 158, Slice 157): Core, content/dino/** (every book's text, voices, pictures and translations), the book builder, the upload scripts -> dinostore (publish-store only; never ships an app)
+ *     and dinoreader (its suite runs `BookBuilder check`); a starter's rebuilt .dino sits under DinoReader.App/** and ships the app
+ *   - Markdown anywhere (IGNORED_PATTERNS, case-sensitive like GitHub's `paths`) -> nothing (ignored before matching), except a book's text (CONTENT_MARKDOWN: content/dino/<stem>/story.md)
  *   - docs and anything else                                      -> nothing
  * `windowsstore` is true only for the Windows group's own paths (a core-only change sets `windows`,
  * so the MSIX is rebuilt for the GitHub release, but is not submitted to the Store).
@@ -63,6 +64,8 @@ const CONTENT_ONLY_TARGETS = ['dinostore'];
 
 /** Changed files matching any of these never trigger a build (mirrored as trailing `!` entries in each workflow's `paths`). */
 export const IGNORED_PATTERNS = ['**/*.md'];
+/** Markdown that is content, not documentation (Slice 157): a book's text. Not ignored; the workflows re-include it after the Markdown negation. */
+export const CONTENT_MARKDOWN = ['content/dino/*/story.md'];
 
 /** Changes that rebuild every app platform (Windows, Android, iOS and Dino Reader). */
 export const CORE_PATHS = [
@@ -171,20 +174,14 @@ export const GROUPS = {
     dinostore: {
         include: [
             'src/DinoReader.Core/',
-            'tests/DinoReader.Tests/Store/',
-            'tests/DinoReader.Tests/Starters/',
-            'tests/DinoReader.Tests/StoreTexts.cs',
-            'tests/DinoReader.Tests/StoreBuilder.cs',
-            'tests/DinoReader.Tests/StarterTexts.cs',
-            'tests/DinoReader.Tests/StarterVoices.cs',
-            'tests/DinoReader.Tests/StarterAnimals.cs',
-            'tests/DinoReader.Tests/StarterBuilder.cs',
+            'content/dino/',
+            'tools/DinoReader.BookBuilder/',
             'tools/upload-store-story.ps1',
             '.github/scripts/publish-store-books.mjs',
         ],
     },
     dinoreader: {
-        include: [DINO_VERSION_CONFIG, 'src/DinoReader.Core/', 'tests/DinoReader.Tests/', '.github/workflows/dinoreader.yml'],
+        include: [DINO_VERSION_CONFIG, 'src/DinoReader.Core/', 'tests/DinoReader.Tests/', 'content/dino/', 'tools/DinoReader.BookBuilder/', '.github/workflows/dinoreader.yml'],
     },
 };
 
@@ -205,8 +202,12 @@ function groupTouched(changedFiles, { include, exclude = [] }) {
     return changedFiles.some((file) => hit(file, include) && !hit(file, exclude));
 }
 
+function isIgnored(file) {
+    return IGNORED_PATTERNS.some((pattern) => matchesPattern(file, pattern)) && !CONTENT_MARKDOWN.some((pattern) => matchesPattern(file, pattern));
+}
+
 function touchedGroups(changedFiles) {
-    const relevant = changedFiles.filter((file) => !IGNORED_PATTERNS.some((pattern) => matchesPattern(file, pattern)));
+    const relevant = changedFiles.filter((file) => !isIgnored(file));
     return Object.fromEntries(Object.entries(GROUPS).map(([name, group]) => [name, groupTouched(relevant, group)]));
 }
 

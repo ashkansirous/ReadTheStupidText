@@ -1,0 +1,77 @@
+{
+  "kind": "Store",
+  "id": "a02c0731b7ac475a896e9184f3575e7b",
+  "title": "X Marks the Treasure!",
+  "version": 6,
+  "ageMin": 3,
+  "ageMax": 6,
+  "author": "Ashkan Sirous",
+  "credits": "A Dino Reader picture book · free to share",
+  "colour": 0,
+  "added": "2026-10-26",
+  "order": 10,
+  "characters": [
+    "Kathryn",
+    "Seagull",
+    "Izzy",
+    "Pancake Polly",
+    "Billy"
+  ],
+  "cast": [
+    {
+      "name": "Seagull",
+      "voice": "duckling2",
+      "gender": "Female",
+      "age": "Adult",
+      "qualities": [
+        "Squawky",
+        "Bouncy"
+      ]
+    },
+    {
+      "name": "Kathryn",
+      "voice": "princess",
+      "gender": "Female",
+      "age": "Adult",
+      "being": "Pirate",
+      "qualities": [
+        "Bold",
+        "Bright"
+      ]
+    },
+    {
+      "name": "Izzy",
+      "voice": "fairy",
+      "gender": "Female",
+      "age": "Young",
+      "being": "Pirate",
+      "qualities": [
+        "Bright",
+        "Bouncy"
+      ]
+    },
+    {
+      "name": "Billy",
+      "voice": "puppy2",
+      "gender": "Male",
+      "age": "Child",
+      "being": "Pirate",
+      "qualities": [
+        "Bouncy",
+        "Warm"
+      ]
+    },
+    {
+      "name": "Pancake Polly",
+      "voice": "bee",
+      "gender": "Female",
+      "age": "Adult",
+      "being": "Pirate",
+      "qualities": [
+        "Warm",
+        "Bouncy"
+      ]
+    }
+  ],
+  "contentHash": "6f38a4442f26aa574185874e5875ad4686f8c137f007ae90e80cd70d5caca94a"
+}

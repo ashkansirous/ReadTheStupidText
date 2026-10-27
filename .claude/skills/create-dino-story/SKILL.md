@@ -13,7 +13,8 @@ the classic tale and Gemini's output (Decision 130, Slice 119):
    gently: cold bubbly water, a fright that turns into a laugh, a sorry, running home, a new friend.
 2. **No picture is accepted without the full-size check** (step 5). A rejected picture is never kept: candidates are saved only to be checked, and rejected ones are deleted.
 
-Per-book prompts, cast and check results live in `docs/design/story-art/<stem>.md`.
+Every book is one folder, `content/dino/<stem>/` (Slice 157): `story.md`, `book.json`, `pictures/`, `cover.jpg`, `cover-thumb.jpg`, `translations/`, `art.md` and `characters/`.
+Per-book prompts, cast and check results live in `content/dino/<stem>/art.md`.
 
 ## Who does what
 
@@ -41,7 +42,7 @@ The reviewer never reviews its own work and changes nothing. Its pass is require
 the illustrator's own step 5 check still runs on every candidate.
 
 Version bump: the writer bumps it when the text changes; the illustrator bumps it when only pictures change
-(`StarterBuilder.StarterVersions` for a starter, the story's `Version` for a store book; no text hash needed).
+(`dotnet run --project tools/DinoReader.BookBuilder -- stamp <stem>` raises `version` in the book's `book.json` and stores its content hash; CI's `check` fails when a book changed without it).
 
 Helpers in this folder: `gemini-grab.js` and `gemini-take-download.ps1` (step 6, save a picture),
 `gemini-clipboard.ps1` (paste the line-up; saving through it is only the fallback), `gemini-lock.ps1` (two
@@ -49,19 +50,19 @@ illustrators sharing the clipboard and Downloads), `gemini-keep-awake.ps1` (scre
 
 ## 1. Text
 
-- Store story: a constant in `tests/DinoReader.Tests/StoreTexts.cs`. Starter (bundled): `StarterTexts.cs`.
+- The text is `content/dino/<stem>/story.md`; `book.json` says whether the book is a `starter` (bundled) or a `store` book.
 - **Write or retell the text with the `dino-storytelling` skill first**: one action per page, 10-18
   pages, split on lines holding only `---`, dialogue as `"...," said <Name>.` so speaker attribution
   casts voices.
 - Read every page against rule 1 before anything else. Rewrite what fails.
-- Give every character a voice choice in `tests/DinoReader.Tests/StarterVoices.cs` (Slice 156): a suggested roster id, gender, age, what it is and voice qualities; record them in the art record.
-- Translations: `DINO_DUMP_PIECES=1 dotnet test tests/DinoReader.Tests` writes the pieces;
-  translate into `tests/DinoReader.Tests/Starters/translations/<stem>.<lang>.json` (all 13 languages).
+- Give every character a voice choice in the `cast` of the book's `book.json` (Slice 156; `dotnet run --project tools/DinoReader.BookBuilder -- dump-voices` prints a mechanical starting point): a suggested roster id, gender, age, what it is and voice qualities; record them in the art record.
+- Translations: `dotnet run --project tools/DinoReader.BookBuilder -- dump-pieces <stem>` writes `translations/pieces.json`;
+  translate into `content/dino/<stem>/translations/<lang>.json` (all 13 languages).
 - Never move a `---` once pictures exist: the build fails when picture and page counts differ.
 
 ## 2. Art record
 
-Create `docs/design/story-art/<stem>.md` with:
+Create `content/dino/<stem>/art.md` with:
 - The house style line (Decision 126): `Children's picture book illustration, soft watercolour and
   coloured pencil, warm gentle colours, simple rounded shapes, no text or letters anywhere.`
 - One line per character: species, size relative to the others, clothes and colours, one prop.
@@ -77,7 +78,7 @@ Prompt templates: [prompts.md](prompts.md).
 - **Gemini mixes scenes and outfits from earlier pictures in the same chat** (2026-10-25 pigs pilot: a
   page-3 wolf in page 5's bathroom, trousers appearing on pigs, a 4th pig). Never draw a book in one chat:
   - **Character chat** (one per book): one reference sheet per character, then a line-up of the whole
-    cast. Save the accepted line-up and sheets to `docs/design/story-art/<stem>/characters/`; they are
+    cast. Save the accepted line-up and sheets to `content/dino/<stem>/characters/`; they are
     the reference every page chat gets. Still being tried: whether sheets stay more consistent in one
     chat or with a new chat every 2-3 characters. Note in the art record which you did and how it went,
     and update this line once it is clear.
@@ -94,7 +95,7 @@ Prompt templates: [prompts.md](prompts.md).
   - The art record's character lines are the canonical outfits, written from the accepted line-up,
     not from the first prompt (the pilot asked for a "red cap" but the line-up drew a knitted beanie;
     later prompts must follow the picture).
-- **Image model: default to 3.5 Flash-Lite in the text-model picker** (a measured default, not a law; usage numbers and the failed Flash attempts are in `docs/design/story-art/lion-and-mouse.md`). The Images tool has no model menu; the text picker decides what draws. Flash-Lite cost about 0.3% of the 5-hour window per picture against +4% on 3.8 Flash, same 1792x2400 size and quality, and 3.8 Flash refused pictures with a pasted line-up. Set the picker before the first prompt (it persists across chats); keep 3.8 Flash for text-only prompts. If Flash-Lite gets the same picture wrong twice in a row, try 3.1 Pro for that picture and note its cost. Re-measure at each book and record each picture's size in the art record. The limit is compute-based (5-hour window plus a weekly cap, Settings > Usage Limits).
+- **Image model: default to 3.5 Flash-Lite in the text-model picker** (a measured default, not a law; usage numbers and the failed Flash attempts are in `content/dino/lion-and-mouse/art.md`). The Images tool has no model menu; the text picker decides what draws. Flash-Lite cost about 0.3% of the 5-hour window per picture against +4% on 3.8 Flash, same 1792x2400 size and quality, and 3.8 Flash refused pictures with a pasted line-up. Set the picker before the first prompt (it persists across chats); keep 3.8 Flash for text-only prompts. If Flash-Lite gets the same picture wrong twice in a row, try 3.1 Pro for that picture and note its cost. Re-measure at each book and record each picture's size in the art record. The limit is compute-based (5-hour window plus a weekly cap, Settings > Usage Limits).
 - Set **Aspect ratio 3:4** with the button under the prompt box in every new chat. Pictures come out
   896x1200 (1792x2400 on the Pro plan). Paste the line-up first: the menu moves once a picture is attached, so open it after the paste
   and take a screenshot before clicking 3:4 (Billy Goats: a misplaced click gave a 4:3 picture).
@@ -201,7 +202,7 @@ Record each pass in the art record table (page, attempt number, why earlier atte
 - Save each picture under a candidate name (`cand-5.jpg`), check it (step 5) by reading the file, and
   only then rename it to `cover.jpg`, `1.jpg`... Delete rejected candidates.
 - Then run `pwsh tools/prepare-story-pictures.ps1 <working folder> <target folder> <pageCount>` with the full target
-  path: `tests/DinoReader.Tests/Starters/<stem>` (starter) or `tests/DinoReader.Tests/Store/<stem>` (store). It checks the
+  path: `content/dino/<stem>`. It checks the
   count, makes every picture 3:4 at most 896x1200 (never upscaled), JPEG quality 85, and writes `<target>/pictures/1..N.jpg`,
   `<target>/cover.jpg` and `<target>/cover-thumb.jpg` (288x384, the small cover the store list fetches).
 - Last, `pwsh .claude/skills/create-dino-story/contact-sheet.ps1 <working folder> <pageCount> <working folder>/contact-sheet.jpg`
@@ -209,16 +210,13 @@ Record each pass in the art record table (page, attempt number, why earlier atte
 
 ## 7. Build, test, upload
 
-- Starter: `DINO_BUILD_STARTERS=1 dotnet test tests/DinoReader.Tests` rewrites
-  `src/DinoReader.App/Resources/Raw/starters/<stem>.dino`. Whenever its text or pictures change, bump its version in
-  `StarterBuilder.StarterVersions` (and add the old text's page hashes to `StarterUpdate.EarlierPageTextHashes` if
-  the text changed), or installed copies never update. A rebuild rewrites all four starters: `git checkout` the
-  other starters' `.dino` files.
-- Store: `DINO_BUILD_STORE=1 dotnet test tests/DinoReader.Tests` writes `artifacts/store/<id>/`; bump the
-  story's `Version` whenever text or pictures change.
+- `dotnet run --project tools/DinoReader.BookBuilder -- build <stem>` writes `artifacts/store/<id>/` and, for a starter, rewrites
+  `src/DinoReader.App/Resources/Raw/starters/<stem>.dino` (only when its content changed, so the other starters stay untouched). Whenever a book's text or pictures change, run
+  `dotnet run --project tools/DinoReader.BookBuilder -- stamp <stem>` (raises its version and stores the content hash; for a starter also add the old text's page hashes to
+  `StarterUpdate.EarlierPageTextHashes` if the text changed), or installed copies never update; `dotnet run --project tools/DinoReader.BookBuilder -- check` fails otherwise and runs in CI.
 - `dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj` green.
 - Code goes through the repo's two-pass review gate and a PR (global CLAUDE.md).
-- After merge, upload store books with `tools/upload-store-story.ps1 <id>` (new `story-v<n>.dino`,
+- After merge, `release.yml`'s `publish-store` job uploads every book whose version is above the live one (Slice 158; `tools/upload-store-story.ps1 <id>` is the manual fallback: new `story-v<n>.dino`,
   `meta.json` last; never overwrite a version).
 
 ## 8. Check in the app

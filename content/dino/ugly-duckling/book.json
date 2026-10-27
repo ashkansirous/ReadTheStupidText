@@ -1,0 +1,77 @@
+{
+  "kind": "Store",
+  "id": "6f592017f08446eeae7adafa22318660",
+  "title": "The Ugly Duckling",
+  "version": 8,
+  "ageMin": 5,
+  "ageMax": 8,
+  "author": "Hans Christian Andersen",
+  "credits": "Retold from Andersen · free to share",
+  "colour": 0,
+  "added": "2026-10-24",
+  "order": 3,
+  "characters": [
+    "Mother Duck",
+    "Duckling",
+    "Dilly",
+    "Hen",
+    "Swan"
+  ],
+  "cast": [
+    {
+      "name": "Mother Duck",
+      "voice": "mummy",
+      "gender": "Female",
+      "age": "Adult",
+      "qualities": [
+        "Warm",
+        "Soft"
+      ]
+    },
+    {
+      "name": "Duckling",
+      "voice": "piglet",
+      "gender": "Male",
+      "age": "Child",
+      "qualities": [
+        "Soft",
+        "Warm"
+      ]
+    },
+    {
+      "name": "Dilly",
+      "voice": "bunny",
+      "gender": "Female",
+      "age": "Child",
+      "qualities": [
+        "Bouncy",
+        "Bright"
+      ]
+    },
+    {
+      "name": "Hen",
+      "voice": "bee",
+      "gender": "Female",
+      "age": "Adult",
+      "qualities": [
+        "Warm",
+        "Bright"
+      ]
+    },
+    {
+      "name": "Swan",
+      "voice": "knight",
+      "gender": "Male",
+      "age": "Adult",
+      "qualities": [
+        "Warm",
+        "Bold"
+      ]
+    }
+  ],
+  "animals": {
+    "Duckling": "Duck",
+    "Dilly": "Duck"
+  },
+  "contentHash": "f0576144e28972c74690cf2354e86f1f595f1cd7c39a4ef22c441023da140f0f"
+}

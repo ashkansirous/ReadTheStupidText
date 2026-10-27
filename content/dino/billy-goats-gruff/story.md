@@ -1,0 +1,73 @@
+Once upon a time, three Billy Goats lived on a hill. They were the Billy Goats Gruff. Little Billy was the smallest, Middle Billy was a bit bigger, and Big Billy was the biggest of all.
+
+Uh-oh! The grass on their hill was nearly all gone. But across the river there was a meadow full of yummy green grass.
+---
+To get to the meadow, the goats had to cross a little wooden bridge. And under the bridge lived a grumpy Troll, with eyes as big as saucers and a nose as long as a carrot.
+
+He sat there all by himself, day after day.
+---
+Little Billy went first. Trip, trap, trip, trap, went his little hooves on the bridge.
+
+"Who's that trip-trapping over my bridge?" said Troll.
+
+"It's only me, Little Billy Goat Gruff," said Little Billy in a teeny-tiny voice. "I'm going to the meadow to munch some grass."
+---
+"Nobody crosses my bridge without a stamping match!" said Troll.
+
+"Oh, please let me cross," said Little Billy. "I'm too little to stamp. Wait for my big brother. He's much bigger than me!"
+
+"Oh, all right then, off you go!" said Troll. And Little Billy skipped across the bridge to the meadow.
+---
+Next came Middle Billy. Trip, trap, trip, trap, went his hooves on the bridge.
+
+"Who's that trip-trapping over my bridge?" said Troll.
+
+"It's only me, Middle Billy Goat Gruff," said Middle Billy. "I'm going to the meadow to munch some grass."
+---
+"Nobody crosses my bridge without a stamping match!" said Troll.
+
+"Oh, please let me cross," said Middle Billy. "I'm too little to stamp. Wait for my big brother. He's much bigger than me!"
+
+"Oh, all right then, off you go!" said Troll. And Middle Billy trotted across the bridge to the meadow.
+---
+Last of all came Big Billy. TRIP, TRAP, TRIP, TRAP, went his big hooves on the bridge. The whole bridge shook and shook!
+
+"Who's that trip-trapping over my bridge?" said Troll.
+
+"It's me, Big Billy Goat Gruff," said Big Billy in a big, deep voice.
+---
+"Nobody crosses my bridge without a stamping match!" said Troll, and he stomped up onto the bridge.
+
+Stamp, stamp, stamp, went his big bare feet. Big Billy stood very still and waited for his turn.
+---
+But the old boards were wet and slippery. Whoops! The Troll wibbled and wobbled, this way and that way.
+
+Splash, splash, splash! He slid off the low bridge and sat down in the shallow river.
+---
+"Are you okay?" said Big Billy.
+
+The water was nice and cool, and it only came up to the Troll's tummy. A little fish tickled his toes, and he started to giggle.
+
+"Ho, ho, ho! That tickles!" said Troll. And the three Billy Goats laughed too.
+---
+The soggy Troll climbed out onto the bank at the bottom of the hill and sat down. Big Billy came down off the bridge and sat next to him.
+
+"Why are you so grumpy?" said Big Billy. "I think you're just lonely."
+
+"Nobody ever asks me to come along," said Troll.
+---
+"Come across with us and try the yummy green grass," said Big Billy.
+
+So Big Billy and the Troll walked across the bridge, side by side, to the other goats in the meadow.
+---
+The Troll nibbled a little bit of grass. Mmm, mmm, mmm! It was so yummy that he gave a great big, happy smile.
+
+"Thank you, Billy Goats," said Troll. "This is the best day ever!"
+---
+After that, the three Billy Goats Gruff and their new friend munched yummy green grass all summer long.
+
+Every evening the goats went trip, trap, trip, trap, home over the bridge, and the Troll waved goodnight.
+
+"Come back tomorrow!" said Troll.
+
+Snip, snap, snout, this tale's told out.
