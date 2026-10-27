@@ -1,6 +1,6 @@
 # Slice 164 — Move more logic out of UI code into unit tests
 
-*Planned.* Batch 36 (fast device tests), RTST (Windows and Mobile) and Dino Reader. Decision 165.
+*In progress (wave 2026-10-27), draft PR.* Batch 36 (fast device tests), RTST (Windows and Mobile) and Dino Reader. Decision 165.
 
 **Touches:** decided by the audit (first task), expected: `src/ReadTheStupidText.App/**/*.xaml.cs`,
 `src/ReadTheStupidText.Windows.Tray/**`, `src/ReadTheStupidText.Mobile/**/*.xaml.cs`,
