@@ -1,6 +1,6 @@
 # Slice 170 — Tray panel: every Controls button fits
 
-*Planned.* Read The Stupid Text, Windows tray control panel only (no Android/iOS surface: the phone app has no Controls row).
+*In progress (wave 2026-10-27), draft PR.* Read The Stupid Text, Windows tray control panel only (no Android/iOS surface: the phone app has no Controls row).
 
 **Touches:** `src/ReadTheStupidText.App/ControlPanelWindow.xaml`, `src/ReadTheStupidText.App/ControlPanelWindow.xaml.cs`,
 `site/img/control-panel.webp`
