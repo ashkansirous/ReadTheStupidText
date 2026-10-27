@@ -360,6 +360,7 @@ public class AuthoredVoiceTests
     public void Only_the_authored_books_have_traits()
     {
         Assert.Contains(StoreTexts.TreasureId, StarterVoices.AuthoredBooks);
+        Assert.Contains(StarterTexts.PigsId, StarterVoices.AuthoredBooks);
         Assert.All(StoreTexts.All.Where(s => !StarterVoices.AuthoredBooks.Contains(s.Id)).Select(StoreBuilder.Build).SelectMany(b => b.Cast), m => Assert.Null(m.Traits));
     }
 

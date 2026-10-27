@@ -27,6 +27,15 @@ internal static class StarterVoices
             new("Pancake Polly", "mummy", Gender.Female, CharacterAge.Adult, CharacterBeing.Pirate, [VoiceQuality.Warm, VoiceQuality.Bouncy]),
         ],
 
+        // The Three Little Pigs: Pip is the hasty one (Cheeky Piglet, small and quick), Pop the playful one (Curly Piglet, bright and squeaky), Pim the careful builder (Snuffly
+        // Piglet, tiny and snorty: the voice left once the quick and the bright ones are taken); the Wolf is silly and huffy, never scary.
+        [StarterTexts.PigsId] =
+        [
+            new("Pip", "piglet", Gender.Male, CharacterAge.Young, null, [VoiceQuality.Bouncy, VoiceQuality.Squeaky]),
+            new("Pop", "piglet3", Gender.Male, CharacterAge.Young, null, [VoiceQuality.Bright, VoiceQuality.Bouncy]),
+            new("Pim", "piglet2", Gender.Male, CharacterAge.Young, null, [VoiceQuality.Soft, VoiceQuality.Warm]),
+            new("Wolf", "wolf", Gender.Male, CharacterAge.Adult, null, [VoiceQuality.Gruff, VoiceQuality.Booming]),
+        ],
         // The Three Billy Goats Gruff: three brothers ("his hooves"), so boys' voices rising in size; the bleat comes from their book animal (Goat), not the voice.
         // The picker gave the Troll the Rumbly Dragon and the brothers girls' lamb and sheep voices (Big Billy, "a big, deep voice", the sleepy sheep). Farsi has no troll: its trait match picks.
         [StoreTexts.BillyGoatsId] =
