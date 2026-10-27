@@ -22,10 +22,6 @@ public static class CastText
 	public static string Edited => AppResources.Cast_Edited;
 	public static string SharedVoice => AppResources.Cast_SharedVoice;
 	public static string UnknownSpeaker => AppResources.Cast_UnknownSpeaker;
-	public static string MergeButton => AppResources.Cast_MergeButton;
-	public static string MergeTitle => AppResources.Cast_MergeTitle;
-	public static string MergeBody => AppResources.Cast_MergeBody;
-	public static string KeepName => AppResources.Cast_KeepName;
 	public static string Cancel => AppResources.Common_Cancel;
 	public static string SaveFailedTitle => AppResources.Cast_SaveFailedTitle;
 	public static string SaveFailedBody => AppResources.Cast_SaveFailedBody;
@@ -50,8 +46,6 @@ public static class CastText
 		+ NameAndVoiceSeparator + AppResources.Cast_UsesNarrator;
 
 	public static string HearName(string name) => AppResources.Format(AppResources.Cast_Hear, name);
-
-	public static string MergeInto(string name) => AppResources.Format(AppResources.Cast_MergeInto, name);
 
 	/// <summary>"Little Pig · Cheeky Piglet": a story character and the storyteller character playing it (Slice 116).</summary>
 	public static string NameAndCharacter(string name, string voiceId, VoiceFlavour flavour, string language) =>

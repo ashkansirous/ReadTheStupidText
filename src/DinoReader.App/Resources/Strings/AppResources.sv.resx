@@ -265,8 +265,10 @@
   <data name="Editor_RotateLeft" xml:space="preserve"><value>Rotera åt vänster</value></data>
   <data name="Editor_RotateRight" xml:space="preserve"><value>Rotera åt höger</value></data>
   <data name="Editor_ResetCrop" xml:space="preserve"><value>Återställ beskärning</value></data>
-  <data name="Reading_TextMode" xml:space="preserve"><value>Textläge</value></data>
-  <data name="Reading_PictureMode" xml:space="preserve"><value>Bildläge</value></data>
+  <data name="Reading_Mode_PictureOnly" xml:space="preserve"><value>Bara bilder</value></data>
+  <data name="Reading_Mode_PictureAndText" xml:space="preserve"><value>Bilder + text</value></data>
+  <data name="Reading_Mode_TextOnly" xml:space="preserve"><value>Bara text</value></data>
+  <data name="Reading_Mode_Selected" xml:space="preserve"><value>vald</value></data>
   <data name="Reading_Play" xml:space="preserve"><value>Spela</value></data>
   <data name="Reading_Pause" xml:space="preserve"><value>Pausa</value></data>
   <data name="Reading_Previous" xml:space="preserve"><value>Föregående mening</value></data>
@@ -282,10 +284,6 @@
   <data name="Cast_Edited" xml:space="preserve"><value>ÄNDRAD</value></data>
   <data name="Cast_SharedVoice" xml:space="preserve"><value>Delad röst</value></data>
   <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>Okänd talare</value></data>
-  <data name="Cast_MergeButton" xml:space="preserve"><value>Slå ihop två figurer</value></data>
-  <data name="Cast_MergeTitle" xml:space="preserve"><value>Slå ihop figurer</value></data>
-  <data name="Cast_MergeBody" xml:space="preserve"><value>Välj de två namn som är samma figur. Replikerna slås ihop under ett namn och en röst.</value></data>
-  <data name="Cast_KeepName" xml:space="preserve"><value>Behåll namnet</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>Hej! Så här låter jag när jag läser din saga.</value></data>
   <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>Det gick inte att spara ändringen</value></data>
   <data name="Cast_SaveFailedBody" xml:space="preserve"><value>Rollbesättningen sparades inte. Försök igen om en stund.</value></data>
@@ -298,13 +296,8 @@
   <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} repliker</value></data>
   <data name="Cast_UsesNarrator" xml:space="preserve"><value>använder berättarens röst</value></data>
   <data name="Cast_Hear" xml:space="preserve"><value>Hör {0}</value></data>
-  <data name="Cast_MergeInto" xml:space="preserve"><value>Slå ihop med {0}</value></data>
   <data name="Cast_AnimalSounds_Title" xml:space="preserve"><value>Djurläten</value></data>
   <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>Djuren säger då och då “Nöff!” eller “Bää!”</value></data>
   <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>Inga djur som låter i den här berättelsen</value></data>
-  <data name="Cast_WordsOverPictures_Title" xml:space="preserve"><value>Visa orden över bilderna</value></data>
-  <data name="Cast_WordsOverPictures_HintOn" xml:space="preserve"><value>Orden visas i en panel längst ned</value></data>
-  <data name="Cast_WordsOverPictures_HintOff" xml:space="preserve"><value>Av eftersom bilderna redan har orden i sig</value></data>
-  <data name="Cast_WordsOverPictures_HintOffPlain" xml:space="preserve"><value>Bara bilderna visas</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Det finns fler figurer i boken än de {0} berättarfigurer vi har, så vissa låter lika. Berättaren ges aldrig till en figur.</value></data>
 </root>

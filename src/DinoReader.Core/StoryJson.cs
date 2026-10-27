@@ -61,13 +61,11 @@ public static class StoryJson
         PreferredMode = s.PreferredMode is { } mode ? JsonSerializer.SerializeToElement(mode.ToString()) : null,
         Pages = s.Pages.Select(p => new PageFile { Text = p.Text, ImageFile = p.ImageFile, Lines = ToLineFiles(p.Lines), Regions = ToRegionFiles(p.Regions) }).ToList(),
         Cast = ToCastFiles(s.Cast),
-        Merges = s.Merges.Count == 0 ? null : s.Merges.ToDictionary(m => m.Key, m => m.Value),
         Translate = s.TranslateToMyLanguage,
         ShowOriginal = s.ShowOriginalText ? true : null,
         Recordings = ToRecordingFiles(s.Recordings, s.Pages.Count),
         UseRecordings = s.UseRecordings && s.Recordings is { Count: > 0 } ? true : null,
         AnimalSounds = s.AnimalSoundsOn ? null : false,
-        WordsOverPictures = s.WordsOverPictures,
         SourceId = s.SourceId,
         Translations = ToTranslationFiles(s.Translations),
         LanguageCasts = ToLanguageCastFiles(s.LanguageCasts),
@@ -85,10 +83,10 @@ public static class StoryJson
             f.Id, f.Title, f.Language, f.Created,
             f.Pages.Select(p => ToPage(p)).ToList(),
             f.Cast.Select(ToMember).ToList(),
-            f.CoverStyle, f.CoverColourIndex, f.NarratorVoiceId ?? string.Empty, ParseMode(f.PreferredMode), CleanMerges(f.Merges), f.Translate,
+            f.CoverStyle, f.CoverColourIndex, f.NarratorVoiceId ?? string.Empty, ParseMode(f.PreferredMode, f.WordsOverPictures), f.Translate,
             f.CoverFile, f.CoverPageIndex, StoryIds.IsValid(f.SourceId) ? f.SourceId : null, CleanTranslations(f.Translations),
             CleanLanguageCasts(f.LanguageCasts, f.Language), f.ShowOriginal == true,
-            CleanRecordings(f.Recordings, f.Pages.Count, f.Language), f.UseRecordings == true, f.AnimalSounds != false, f.WordsOverPictures);
+            CleanRecordings(f.Recordings, f.Pages.Count, f.Language), f.UseRecordings == true, f.AnimalSounds != false);
     }
 
     private static List<RecordingFile>? ToRecordingFiles(IReadOnlyDictionary<int, PageRecording>? recordings, int pageCount)
@@ -246,13 +244,28 @@ public static class StoryJson
         return width > 0 && height > 0 ? new NormalizedRect(x, y, width, height) : null;
     }
 
+    // The name an older file saved for the picture view, which showed the words too (Slice 151): it reads as picture and text.
+    private const string LegacyPictureMode = "Picture";
+
     // A reading mode this app does not know (a newer version, a hand edit, a number) must not make
     // the whole story unreadable: it reads as "no choice" and the default applies.
-    private static ReadingMode? ParseMode(JsonElement? value)
+    private static ReadingMode? ParseMode(JsonElement? value, bool? wordsOverPictures)
+    {
+        ReadingMode? mode = ParseModeName(value);
+        bool wordsWereOff = wordsOverPictures == false;
+        return wordsWereOff && mode is null or ReadingMode.PictureAndText ? ReadingMode.PictureOnly : mode;
+    }
+
+    private static ReadingMode? ParseModeName(JsonElement? value)
     {
         if (value is not { ValueKind: JsonValueKind.String } element)
         {
             return null;
+        }
+
+        if (string.Equals(element.GetString(), LegacyPictureMode, StringComparison.OrdinalIgnoreCase))
+        {
+            return ReadingMode.PictureAndText;
         }
 
         bool known = Enum.TryParse(element.GetString(), ignoreCase: true, out ReadingMode mode)
@@ -297,10 +310,6 @@ public static class StoryJson
         }
     }
 
-    // A merge entry with a null or empty side (a hand edit) is dropped rather than failing the whole story.
-    private static Dictionary<string, string>? CleanMerges(Dictionary<string, string>? merges) =>
-        merges?.Where(m => !string.IsNullOrEmpty(m.Key) && !string.IsNullOrEmpty(m.Value)).ToDictionary(m => m.Key, m => m.Value);
-
     // JSON null overwrites the property defaults, so a hand-edited or corrupt file can still
     // carry nulls; refuse it as a format error rather than failing later with a NullReference.
     private static void RequireFields(StoryFile f)
@@ -329,9 +338,12 @@ public static class StoryJson
         /// <summary>Written for older builds only (<see cref="LegacyNarratorOf"/>); the narrator is one per language now (Slice 109), so reading ignores it.</summary>
         public string? NarratorVoiceId { get; set; }
         public JsonElement? PreferredMode { get; set; }
+
+        /// <summary>Read only, for files older than Slice 151: false meant the words were off, which now reads as the picture-only mode. Never written.</summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? WordsOverPictures { get; set; }
         public List<PageFile> Pages { get; set; } = [];
         public List<CastFile> Cast { get; set; } = [];
-        public Dictionary<string, string>? Merges { get; set; }
         public bool Translate { get; set; }
 
         /// <summary>The grown-up's per-story "Show original text" switch (Slice 110); absent when off.</summary>
@@ -345,10 +357,6 @@ public static class StoryJson
 
         /// <summary>The per-story "Animal sounds" switch (Slice 117); absent when on (the default).</summary>
         public bool? AnimalSounds { get; set; }
-
-        /// <summary>The per-book "Show the words over the pictures" switch (Slice 122); absent when never set.</summary>
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public bool? WordsOverPictures { get; set; }
 
         public string? SourceId { get; set; }
         public Dictionary<string, Dictionary<string, string>>? Translations { get; set; }

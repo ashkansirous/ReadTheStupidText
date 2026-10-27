@@ -265,8 +265,10 @@
   <data name="Editor_RotateLeft" xml:space="preserve"><value>Käännä vasemmalle</value></data>
   <data name="Editor_RotateRight" xml:space="preserve"><value>Käännä oikealle</value></data>
   <data name="Editor_ResetCrop" xml:space="preserve"><value>Palauta rajaus</value></data>
-  <data name="Reading_TextMode" xml:space="preserve"><value>Tekstitila</value></data>
-  <data name="Reading_PictureMode" xml:space="preserve"><value>Kuvatila</value></data>
+  <data name="Reading_Mode_PictureOnly" xml:space="preserve"><value>Vain kuvat</value></data>
+  <data name="Reading_Mode_PictureAndText" xml:space="preserve"><value>Kuvat + teksti</value></data>
+  <data name="Reading_Mode_TextOnly" xml:space="preserve"><value>Vain teksti</value></data>
+  <data name="Reading_Mode_Selected" xml:space="preserve"><value>valittu</value></data>
   <data name="Reading_Play" xml:space="preserve"><value>Toista</value></data>
   <data name="Reading_Pause" xml:space="preserve"><value>Tauko</value></data>
   <data name="Reading_Previous" xml:space="preserve"><value>Edellinen lause</value></data>
@@ -282,10 +284,6 @@
   <data name="Cast_Edited" xml:space="preserve"><value>MUOKATTU</value></data>
   <data name="Cast_SharedVoice" xml:space="preserve"><value>Jaettu ääni</value></data>
   <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>Tuntematon puhuja</value></data>
-  <data name="Cast_MergeButton" xml:space="preserve"><value>Yhdistä kaksi hahmoa</value></data>
-  <data name="Cast_MergeTitle" xml:space="preserve"><value>Yhdistä hahmot</value></data>
-  <data name="Cast_MergeBody" xml:space="preserve"><value>Valitse kaksi nimeä, jotka ovat sama hahmo. Heidän repliikkinsä yhdistetään yhden nimen ja yhden äänen alle.</value></data>
-  <data name="Cast_KeepName" xml:space="preserve"><value>Säilytä nimi</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>Hei! Tältä kuulostan, kun luen tarinaasi.</value></data>
   <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>Muutosta ei voitu tallentaa</value></data>
   <data name="Cast_SaveFailedBody" xml:space="preserve"><value>Hahmoja ei tallennettu. Yritä hetken kuluttua uudelleen.</value></data>
@@ -298,13 +296,8 @@
   <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} riviä</value></data>
   <data name="Cast_UsesNarrator" xml:space="preserve"><value>käyttää kertojan ääntä</value></data>
   <data name="Cast_Hear" xml:space="preserve"><value>Kuuntele: {0}</value></data>
-  <data name="Cast_MergeInto" xml:space="preserve"><value>Yhdistä hahmoon {0}</value></data>
   <data name="Cast_AnimalSounds_Title" xml:space="preserve"><value>Eläinten äänet</value></data>
   <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>Eläimet sanovat välillä “Röh!” tai “Mää!”</value></data>
   <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>Tässä tarinassa ei ole eläimiä, jotka päästävät ääniä</value></data>
-  <data name="Cast_WordsOverPictures_Title" xml:space="preserve"><value>Näytä sanat kuvien päällä</value></data>
-  <data name="Cast_WordsOverPictures_HintOn" xml:space="preserve"><value>Sanat näkyvät paneelissa alareunassa</value></data>
-  <data name="Cast_WordsOverPictures_HintOff" xml:space="preserve"><value>Pois päältä, koska kuvissa on jo sanat</value></data>
-  <data name="Cast_WordsOverPictures_HintOffPlain" xml:space="preserve"><value>Vain kuvat näkyvät</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Tässä kirjassa on enemmän hahmoja kuin käytettävissä olevia {0} kertojahahmoa, joten jotkin kuulostavat samalta. Kertojaa ei koskaan anneta hahmolle.</value></data>
 </root>

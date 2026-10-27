@@ -37,7 +37,6 @@ public static class DinoTokens
 	public const string NightMuted = "NightMuted";
 	public const string NightFill = "NightFill";
 	public const string NightBrand = "NightBrand";
-	public const string NightBrandEdge = "NightBrandEdge";
 	public const string NightBoxFill = "NightBoxFill";
 	public const string NightBoxStroke = "NightBoxStroke";
 	public const string NightDot = "NightDot";

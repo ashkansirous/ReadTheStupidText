@@ -43,19 +43,17 @@ public sealed class StoryDraft(Story original)
 
 	public bool LanguageChanged => Language != Original.Language;
 
-	/// <summary>The cast and merges as the cast screen last left them (Slice 65); written with Save.</summary>
-	public IReadOnlyList<CastMember> Cast { get; set; } = original.Cast;
+	/// <summary>The view the book opens in; null keeps the default (Slice 151).</summary>
+	public ReadingMode? PreferredMode { get; set; } = original.PreferredMode;
 
-	public IReadOnlyDictionary<string, string> Merges { get; set; } = original.Merges;
+	/// <summary>Records that pages were built from camera photos, gallery photos of pages or PDF pages: their words are already in the pictures, so the book opens picture only. A choice already made stays; the reader can still switch.</summary>
+	public void MarkPicturesAsPages() => PreferredMode ??= ReadingMode.PictureOnly;
+
+	/// <summary>The cast as the cast screen last left them (Slice 65); written with Save.</summary>
+	public IReadOnlyList<CastMember> Cast { get; set; } = original.Cast;
 
 	/// <summary>Whether animals make their sounds in the reading (Slice 117), set on the cast page.</summary>
 	public bool AnimalSoundsOn { get; set; } = original.AnimalSoundsOn;
-
-	/// <summary>The grown-up's choice to show the words over the pictures (Slice 122); null keeps the default for the book.</summary>
-	public bool? WordsOverPictures { get; set; } = original.WordsOverPictures;
-
-	/// <summary>Records that pages were built from camera photos, gallery photos of pages or PDF pages (Slice 122): their words are already in the pictures, so words over pictures defaults off. A choice the grown-up already made stays.</summary>
-	public void MarkPicturesAsPages() => WordsOverPictures ??= false;
 
 	/// <summary>The casts of the other reading languages as the cast screen last left them (Slice 108); written with Save.</summary>
 	public IReadOnlyDictionary<string, IReadOnlyList<CastMember>>? LanguageCasts { get; set; } = original.LanguageCasts;
@@ -219,9 +217,8 @@ public sealed class StoryDraft(Story original)
 		Pages = Pages.ToList(),
 		Cast = Cast,
 		LanguageCasts = RecastNeeded ? null : LanguageCasts,
-		CharacterMerges = Merges,
 		AnimalSoundsOn = AnimalSoundsOn,
-		WordsOverPictures = WordsOverPictures,
+		PreferredMode = PreferredMode,
 	};
 
 	public bool HasPageImages => Pages.Any(p => p.ImageFile is not null);

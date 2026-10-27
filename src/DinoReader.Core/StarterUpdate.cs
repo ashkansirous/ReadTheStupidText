@@ -82,12 +82,10 @@ public static class StarterUpdate
             Title = stored.Title,
             Cast = sameCast ? WithBundledAnimals(stored.Cast, bundled.Cast) : bundled.Cast,
             LanguageCasts = sameCast ? KeptLanguageCasts(stored, bundled) : bundled.LanguageCasts,
-            CharacterMerges = sameCast ? stored.CharacterMerges : bundled.CharacterMerges,
             PreferredMode = stored.PreferredMode,
             TranslateToMyLanguage = stored.TranslateToMyLanguage,
             ShowOriginalText = stored.ShowOriginalText,
             AnimalSoundsOn = stored.AnimalSoundsOn,
-            WordsOverPictures = stored.WordsOverPictures,
         });
     }
 

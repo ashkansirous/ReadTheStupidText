@@ -373,7 +373,7 @@ public partial class StorytellerCharacterTests
     [Fact]
     public void Setting_a_character_pins_its_voice_and_flavour_together()
     {
-        var state = new CastEdit([new CastMember("wolf", "The Wolf", Gender.Male, "kokoro:am_liam", false, VoiceFlavour.Big)], new Dictionary<string, string>());
+        var state = new CastEdit([new CastMember("wolf", "The Wolf", Gender.Male, "kokoro:am_liam", false, VoiceFlavour.Big)]);
         StorytellerCharacter troll = CharacterRoster.Speakers("en").Single(c => c.Id == "troll");
 
         CastMember member = CastEditor.SetCharacter(state, "wolf", troll).Cast.Single();
@@ -384,7 +384,7 @@ public partial class StorytellerCharacterTests
     [Fact]
     public void A_narrator_cannot_be_given_to_a_story_character()
     {
-        var state = new CastEdit([new CastMember("wolf", "The Wolf", Gender.Male, "kokoro:am_liam")], new Dictionary<string, string>());
+        var state = new CastEdit([new CastMember("wolf", "The Wolf", Gender.Male, "kokoro:am_liam")]);
 
         Assert.Same(state, CastEditor.SetCharacter(state, "wolf", CharacterRoster.Narrators("en")[0]));
     }
@@ -442,7 +442,7 @@ public partial class StorytellerCharacterTests
         var flavour = Enum.Parse<VoiceFlavour>(name);
         var member = new CastMember("pig", "Little Pig", Gender.Male, "kokoro:am_puck", true, flavour);
         var story = new Story(
-            StoryIds.New(), "Title", "en", DateTimeOffset.UnixEpoch, [new StoryPage("Text")], [member], CoverStyle.Colour, 0, "M1", null, null);
+            StoryIds.New(), "Title", "en", DateTimeOffset.UnixEpoch, [new StoryPage("Text")], [member], CoverStyle.Colour, 0, "M1");
 
         Story back = StoryJson.Deserialize(StoryJson.Serialize(story));
 

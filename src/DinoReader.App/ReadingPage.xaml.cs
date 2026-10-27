@@ -92,7 +92,9 @@ public partial class ReadingPage : ContentPage
 		_session.Open(story, _sentences, SaveCastAsync);
 		_theme = CurrentTheme();
 		_mode = story.Mode;
-		Modes.Set(story.Mode, _theme);
+		_shownPages = story.Pages;
+		SyncModeSwitch();
+		Modes.IsVisible = story.HasPictures; // a book without pictures has only the text view
 		ApplyTheme();
 		_ = ShowStoryAsync();
 		if (_sentences.Count > 0)
@@ -218,9 +220,22 @@ public partial class ReadingPage : ContentPage
 		_translatedDisplay = true;
 		_shownPages = translated.Pages;
 		ApplyTitle(title, mine);
-		var scans = story.HasPictures ? new ScanSource(translated.Pages, file => _library.TryResolveFile(story.Id, file), PictureTextBook.ShowsWordsOverPictures(story)) : null;
+		var scans = story.HasPictures ? new ScanSource(translated.Pages, file => _library.TryResolveFile(story.Id, file)) : null;
 		var content = new ReadingContent(translated.Text, translated.Sentences, DinoFonts.ReadingFor(mine), DinoFonts.IsRightToLeft(mine), scans);
 		ShowContent(content, story);
+	}
+
+	// The switch offers picture + text only when the pages on screen differ with the words (the original or the translation); a mode the switch cannot offer is folded to picture only here, so the screen and the switch agree.
+	private void SyncModeSwitch()
+	{
+		bool offers = PictureTextBook.IsPictureTextBook(_shownPages);
+		Modes.OffersPictureAndText = offers;
+		if (!offers && _mode == ReadingMode.PictureAndText)
+		{
+			_mode = ReadingMode.PictureOnly;
+		}
+
+		Modes.Set(_mode, _theme);
 	}
 
 	// The title is set in the language it is shown in: right to left for Farsi and Arabic, with the page itself not mirrored (Slice 96).
@@ -232,6 +247,7 @@ public partial class ReadingPage : ContentPage
 
 	private void ShowContent(ReadingContent content, Story story)
 	{
+		SyncModeSwitch();
 		Surface.Show(content, _mode, _theme);
 		_surfaceShown = true;
 		if (_session.CurrentSentence >= 0)
@@ -260,7 +276,7 @@ public partial class ReadingPage : ContentPage
 
 	// A story with pictures draws its real pages in picture mode; one without keeps the generated pages.
 	private ScanSource? ScansOf(Story story) =>
-		story.HasPictures ? new ScanSource(story.Pages, file => _library.TryResolveFile(story.Id, file), PictureTextBook.ShowsWordsOverPictures(story)) : null;
+		story.HasPictures ? new ScanSource(story.Pages, file => _library.TryResolveFile(story.Id, file)) : null;
 
 	// Slice 98 (mock screen 35): a picture + text book held sideways has the title on the top bar beside the back button
 	// (one line, ellipsis) and no page dots, to save height.
@@ -273,7 +289,7 @@ public partial class ReadingPage : ContentPage
 	private void UpdateHeaderLayout(double width, double height)
 	{
 		bool compact = width > 0 && width > height && PictureTextBook.IsPictureTextBook(_shownPages);
-		bool sideControls = compact && Surface.Mode == ReadingMode.Picture;
+		bool sideControls = compact && Surface.Mode != ReadingMode.Text;
 		if (compact != _compactHeader || sideControls != _sideControls)
 		{
 			_compactHeader = compact;

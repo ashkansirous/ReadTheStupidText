@@ -13,7 +13,6 @@ public sealed record ReadingTheme(
     Color ControlFill,
     Color ControlIcon,
     Color SwitchActive,
-    Color SwitchEdge,
     Color SwitchActiveIcon,
     Color TextCard,
     Color ReadText,
@@ -46,7 +45,7 @@ public sealed record ReadingTheme(
         return new ReadingTheme(
             Page: Get(DinoTokens.Cream), Ink: Get(DinoTokens.Ink), BackIcon: Get(DinoTokens.Ink),
             ControlFill: Get(DinoTokens.ControlFill), ControlIcon: Get(DinoTokens.Muted),
-            SwitchActive: Get(DinoTokens.Brand), SwitchEdge: Get(DinoTokens.BrandEdge), SwitchActiveIcon: Colors.White,
+            SwitchActive: Get(DinoTokens.Brand), SwitchActiveIcon: Colors.White,
             TextCard: Colors.White, ReadText: Get(DinoTokens.ReadDim), TextHighlight: Get(DinoTokens.SentenceFill), PageHighlight: Get(DinoTokens.PageHighlight),
             BoxFill: Get(DinoTokens.BoxFill), BoxStroke: Get(DinoTokens.BoxStroke), ScanCard: Get(DinoTokens.ScanCard),
             DotIdle: Get(DinoTokens.DotIdle), DotCurrent: Get(DinoTokens.Brand),
@@ -61,7 +60,7 @@ public sealed record ReadingTheme(
         return new ReadingTheme(
             Page: Get(DinoTokens.NightPage), Ink: Get(DinoTokens.NightInk), BackIcon: Get(DinoTokens.NightSoft),
             ControlFill: Get(DinoTokens.NightFill), ControlIcon: Get(DinoTokens.NightMuted),
-            SwitchActive: Get(DinoTokens.NightBrand), SwitchEdge: Get(DinoTokens.NightBrandEdge),
+            SwitchActive: Get(DinoTokens.NightBrand),
             SwitchActiveIcon: Get(DinoTokens.NightPage),
             TextCard: Get(DinoTokens.NightCard), ReadText: Get(DinoTokens.NightMuted), TextHighlight: Get(DinoTokens.NightBoxFill), PageHighlight: Get(DinoTokens.NightPageHighlight),
             BoxFill: Get(DinoTokens.NightBoxFill), BoxStroke: Get(DinoTokens.NightBoxStroke), ScanCard: Get(DinoTokens.NightCard),

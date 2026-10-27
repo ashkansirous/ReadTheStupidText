@@ -33,8 +33,7 @@ public sealed class LanguageCastTests : IDisposable
 
     private static Story Make() => new(
         StoryIds.New(), "Peter Rabbit", "en", new DateTimeOffset(2026, 10, 1, 0, 0, 0, TimeSpan.Zero),
-        [new StoryPage("\"Hello,\" said Peter.")], English, CoverStyle.Colour, 1, "supertonic:M3",
-        CharacterMerges: new Dictionary<string, string> { ["rabbit"] = "peter" });
+        [new StoryPage("\"Hello,\" said Peter.")], English, CoverStyle.Colour, 1, "supertonic:M3");
 
     [Fact]
     public void HasCastIn_TreatsAnEmptyStoredCastAsNone()
@@ -87,19 +86,6 @@ public sealed class LanguageCastTests : IDisposable
         Assert.True(mum.Edited);
         Assert.Equal("piper-fa:other", mum.VoiceId);
         Assert.Equal(English, saved.CastIn("en"));
-    }
-
-    [Fact]
-    public void Merges_AreSharedByEveryLanguage()
-    {
-        Story story = Make().WithCastIn("fa", Farsi);
-
-        Story saved = CastEditor.Close(story, "fa", CastEditor.Merge(CastEditor.Open(story, "fa"), "peter", "mum"));
-
-        Assert.Equal("peter", saved.Merges["mum"]);
-        Assert.Single(saved.CastIn("fa"));
-        Assert.Equal(2, saved.CastIn("en").Count);
-        Assert.Equal("peter", saved.Merges["mum"]);
     }
 
     [Fact]

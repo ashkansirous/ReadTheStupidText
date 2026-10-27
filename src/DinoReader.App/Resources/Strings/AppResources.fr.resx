@@ -266,8 +266,10 @@
   <data name="Editor_RotateLeft" xml:space="preserve"><value>Pivoter à gauche</value></data>
   <data name="Editor_RotateRight" xml:space="preserve"><value>Pivoter à droite</value></data>
   <data name="Editor_ResetCrop" xml:space="preserve"><value>Réinitialiser le rognage</value></data>
-  <data name="Reading_TextMode" xml:space="preserve"><value>Mode texte</value></data>
-  <data name="Reading_PictureMode" xml:space="preserve"><value>Mode image</value></data>
+  <data name="Reading_Mode_PictureOnly" xml:space="preserve"><value>Images seulement</value></data>
+  <data name="Reading_Mode_PictureAndText" xml:space="preserve"><value>Images + texte</value></data>
+  <data name="Reading_Mode_TextOnly" xml:space="preserve"><value>Texte seulement</value></data>
+  <data name="Reading_Mode_Selected" xml:space="preserve"><value>sélectionné</value></data>
   <data name="Reading_Play" xml:space="preserve"><value>Lecture</value></data>
   <data name="Reading_Pause" xml:space="preserve"><value>Pause</value></data>
   <data name="Reading_Previous" xml:space="preserve"><value>Phrase précédente</value></data>
@@ -283,10 +285,6 @@
   <data name="Cast_Edited" xml:space="preserve"><value>MODIFIÉ</value></data>
   <data name="Cast_SharedVoice" xml:space="preserve"><value>Voix partagée</value></data>
   <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>Locuteur inconnu</value></data>
-  <data name="Cast_MergeButton" xml:space="preserve"><value>Fusionner deux personnages</value></data>
-  <data name="Cast_MergeTitle" xml:space="preserve"><value>Fusionner des personnages</value></data>
-  <data name="Cast_MergeBody" xml:space="preserve"><value>Choisissez les deux noms qui désignent le même personnage. Leurs répliques seront réunies sous un seul nom et une seule voix.</value></data>
-  <data name="Cast_KeepName" xml:space="preserve"><value>Garder le nom</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>Bonjour ! Voilà ma voix quand je lis votre histoire.</value></data>
   <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>Impossible d’enregistrer ce changement</value></data>
   <data name="Cast_SaveFailedBody" xml:space="preserve"><value>Les rôles n’ont pas été enregistrés. Réessayez dans un instant.</value></data>
@@ -299,13 +297,8 @@
   <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} répliques</value></data>
   <data name="Cast_UsesNarrator" xml:space="preserve"><value>utilise la voix du narrateur</value></data>
   <data name="Cast_Hear" xml:space="preserve"><value>Écouter {0}</value></data>
-  <data name="Cast_MergeInto" xml:space="preserve"><value>Fusionner avec {0}</value></data>
   <data name="Cast_AnimalSounds_Title" xml:space="preserve"><value>Cris des animaux</value></data>
   <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>Les animaux disent « Groin ! » ou « Bêê ! » de temps en temps</value></data>
   <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>Aucun animal qui fait du bruit dans cette histoire</value></data>
-  <data name="Cast_WordsOverPictures_Title" xml:space="preserve"><value>Afficher les mots sur les images</value></data>
-  <data name="Cast_WordsOverPictures_HintOn" xml:space="preserve"><value>Les mots s’affichent dans un panneau en bas</value></data>
-  <data name="Cast_WordsOverPictures_HintOff" xml:space="preserve"><value>Désactivé car ces images contiennent déjà les mots</value></data>
-  <data name="Cast_WordsOverPictures_HintOffPlain" xml:space="preserve"><value>Seules les images s’affichent</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Ce livre compte plus de personnages que les {0} personnages conteurs disponibles ; certains ont donc la même voix. Le narrateur n’est jamais donné à un personnage.</value></data>
 </root>
