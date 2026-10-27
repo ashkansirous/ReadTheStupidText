@@ -361,9 +361,7 @@ public class AnimalCharacterTests
 
         foreach (string id in new[] { "lamb", "puppy", "kitten", "duckling", "cub" })
         {
-            // Spanish and Portuguese have too few free young places on their three voices: the cub's deep voice stays Normal.
-            VoiceFlavour[] allowed = language is "es" or "pt" && id == "cub" ? young.Append(VoiceFlavour.Normal).ToArray() : young;
-            Assert.Contains(roster.Single(c => c.Id == id).Flavour, allowed);
+            Assert.Contains(roster.Single(c => c.Id == id).Flavour, young);
         }
 
         foreach (string id in new[] { "bigbear", "wolf", "ewe" })

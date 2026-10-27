@@ -10,7 +10,7 @@ namespace DinoReader.Tests;
 /// Hen's Cat (she) and Duck (he), for the same reason with the kitten and duckling voices, and Town Mouse (she) and Country Mouse (he), with the mouse voice (the cost is that they make
 /// no meow, quack, squeak or rabbit sounds). (Goldilocks' Mama Bear is a bear again: her book suggests the mummy voice, a woman's in every language, Slice 156; so are Peter Rabbit and Flopsy, on the piglet and bee voices.) The stored animal also picks the voice, so giving them back their animal
 /// would put a man's or the wrong-gender voice on them (56 gender tests fail): a separate "cast as a person" field is needed first (Slice 152 review).
-/// A book whose writer chose each voice (<see cref="StarterVoices"/>, Slice 156) needs none of this: the Little Red Hen's Cat and Duck have their animals back, and their gender comes from the book.
+/// A book whose writer chose each voice (<see cref="StarterVoices"/>, Slice 156) needs none of this: the Little Red Hen's Cat and Duck and the Ugly Duckling and his sister Dilly have their animals back, and their gender comes from the book.
 /// </summary>
 internal static class StarterAnimals
 {
@@ -19,13 +19,12 @@ internal static class StarterAnimals
         [StarterTexts.PigsId] = Named(AnimalKind.Pig, "Pip", "Pop", "Pim"),
         [StoreTexts.BillyGoatsId] = Named(AnimalKind.Goat, "Little Billy", "Middle Billy", "Big Billy"),
         [StoreTexts.PeterRabbitId] = Named(AnimalKind.Rabbit, "Peter", "Flopsy"), // rabbits again: the book suggests a boy's voice for Peter and a girl's for Flopsy in every language (Slice 156)
+        [StoreTexts.UglyDucklingId] = Named(AnimalKind.Duck, "Duckling", "Dilly"), // ducks again: their book chooses a voice of their gender (StarterVoices, Slice 156)
     };
 
     private static readonly IReadOnlyDictionary<string, IReadOnlySet<string>> NotAnimalsByStory = new Dictionary<string, IReadOnlySet<string>>
     {
         [StarterTexts.GingerbreadId] = new HashSet<string> { "Grandpa", "Granny" }, // the text guesses animals from "Grandpa ... the cow"; they are people
-        [StoreTexts.UglyDucklingId] = new HashSet<string> { "Duckling", "Dilly" },
-        [StoreTexts.TownMouseId] = new HashSet<string> { "Town Mouse", "Country Mouse" }, // the mouse voice is a boy in en/fa, a girl elsewhere; she and he (Slice 121)
     };
 
     private static IReadOnlyDictionary<string, AnimalKind> Named(AnimalKind kind, params string[] names) => names.ToDictionary(n => n, _ => kind);
