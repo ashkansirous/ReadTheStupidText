@@ -26,14 +26,14 @@ its own version, tag and GitHub Release: `rtst-v<x.y.z>` and `dino-v<x.y.z>` (De
 > and window titles. The **repo, package id (`ReadTheStupidText`), namespaces, assembly,
 > and the StartupTask `TaskId`** are internal identifiers and stay `ReadTheStupidText`
 > — do not "rename" those. Store identity (ID `9NGT1BN1H92V`) is wired into
-> `Package.appxmanifest`; see Decision 23 in `docs/plan/decisions.md` and `STORE.md`.
+> `Package.appxmanifest`; see Decision 23 in `docs/plan/notes/decisions-001-099.md` and `STORE.md`.
 
 > **Naming:** the user-facing product display name is **"Dino Book Reader"** (manifest, store listing,
 > app title, UI strings, site). Package ids (`uk.sirous.dinoreader`, `AshkanSirous.DinoReader`), namespaces,
 > projects, the `.dino` format and the domain `dinoreader.sirous.uk` stay "DinoReader": do not rename those.
 
 Read [`plan.md`](plan.md) before starting work — it defines the vertical slices
-and their GitHub issue numbers. Tick slices off in `plan.md` as they complete. The numbered **Decisions** live in `docs/plan/decisions.md` ("Decision NN" anywhere in these files refers to it); each slice's full record is under `docs/plan/slices/`.
+and their GitHub issue numbers. Tick slices off in `plan.md` as they complete. The numbered **Decisions** live in `docs/plan/decisions.md` (1-99 archived in `docs/plan/notes/decisions-001-099.md`; "Decision NN" anywhere in these files refers to it); each slice's full record is under `docs/plan/slices/`.
 
 ## Where the rules live
 
@@ -171,7 +171,7 @@ so a failing test blocks the release.
 
 ## Versioning, license & releases (Batch 2 — Slices 11–16)
 
-- **License is MIT** (Decision 16 in `docs/plan/decisions.md`). Anyone may use/extend/sell it
+- **License is MIT** (Decision 16 in `docs/plan/notes/decisions-001-099.md`). Anyone may use/extend/sell it
   provided the copyright notice is kept. Do **not** add GPL/LGPL components (the
   Supertonic/sherpa stack was chosen to keep this clean — see `STORE.md`). The one
   **scoped exception**: espeak-ng data (GPL-3.0) lives only inside the downloaded `piper-fa`,
