@@ -1,6 +1,6 @@
 # Slice 161 — One warm headless x86_64 emulator, with an x86_64 Debug build
 
-*Planned.* Batch 36 (fast device tests), RTST Mobile and Dino Reader, Android. Decision 165.
+*In progress (wave 2026-10-27), draft PR.* Batch 36 (fast device tests), RTST Mobile and Dino Reader, Android. Decision 165.
 
 **Touches:** `tools/emulator/**` (new: `start-warm.ps1`, `install-debug.ps1`, `stop.ps1`, `README.md`),
 `src/AndroidSherpaPackaging.props`, `src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj`,
