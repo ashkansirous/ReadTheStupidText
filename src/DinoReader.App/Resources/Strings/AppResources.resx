@@ -272,8 +272,10 @@
   <data name="Editor_RotateLeft" xml:space="preserve"><value>Rotate left</value></data>
   <data name="Editor_RotateRight" xml:space="preserve"><value>Rotate right</value></data>
   <data name="Editor_ResetCrop" xml:space="preserve"><value>Reset crop</value></data>
-  <data name="Reading_TextMode" xml:space="preserve"><value>Text mode</value></data>
-  <data name="Reading_PictureMode" xml:space="preserve"><value>Picture mode</value></data>
+  <data name="Reading_Mode_PictureOnly" xml:space="preserve"><value>Picture only</value></data>
+  <data name="Reading_Mode_PictureAndText" xml:space="preserve"><value>Picture + text</value></data>
+  <data name="Reading_Mode_TextOnly" xml:space="preserve"><value>Text only</value></data>
+  <data name="Reading_Mode_Selected" xml:space="preserve"><value>Selected</value></data>
   <data name="Reading_Play" xml:space="preserve"><value>Play</value></data>
   <data name="Reading_Pause" xml:space="preserve"><value>Pause</value></data>
   <data name="Reading_Previous" xml:space="preserve"><value>Previous sentence</value></data>
@@ -289,10 +291,6 @@
   <data name="Cast_Edited" xml:space="preserve"><value>EDITED</value></data>
   <data name="Cast_SharedVoice" xml:space="preserve"><value>Shared voice</value></data>
   <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>Unknown speaker</value></data>
-  <data name="Cast_MergeButton" xml:space="preserve"><value>Merge two characters</value></data>
-  <data name="Cast_MergeTitle" xml:space="preserve"><value>Merge characters</value></data>
-  <data name="Cast_MergeBody" xml:space="preserve"><value>Pick the two names that are the same character. Their lines join up under one name and one voice.</value></data>
-  <data name="Cast_KeepName" xml:space="preserve"><value>Keep the name</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>Hello! This is how I sound when I read your story.</value></data>
   <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>Couldn’t save that change</value></data>
   <data name="Cast_SaveFailedBody" xml:space="preserve"><value>The cast was not saved. Try again in a moment.</value></data>
@@ -305,13 +303,8 @@
   <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} lines</value></data>
   <data name="Cast_UsesNarrator" xml:space="preserve"><value>uses the narrator’s voice</value></data>
   <data name="Cast_Hear" xml:space="preserve"><value>Hear {0}</value></data>
-  <data name="Cast_MergeInto" xml:space="preserve"><value>Merge into {0}</value></data>
   <data name="Cast_AnimalSounds_Title" xml:space="preserve"><value>Animal sounds</value></data>
   <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>Animals say “Oink!” or “Baa!” now and then</value></data>
   <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>No animals that make a sound in this story</value></data>
-  <data name="Cast_WordsOverPictures_Title" xml:space="preserve"><value>Show the words over the pictures</value></data>
-  <data name="Cast_WordsOverPictures_HintOn" xml:space="preserve"><value>The words show in a panel at the bottom</value></data>
-  <data name="Cast_WordsOverPictures_HintOff" xml:space="preserve"><value>Off because these pictures already have the words in them</value></data>
-  <data name="Cast_WordsOverPictures_HintOffPlain" xml:space="preserve"><value>Only the pictures show</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>This book has more characters than the {0} storyteller characters there are, so some of them sound alike. The narrator is never given to a character.</value></data>
 </root>

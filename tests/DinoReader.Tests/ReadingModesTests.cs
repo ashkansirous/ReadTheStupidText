@@ -293,19 +293,83 @@ public class ReadingModesTests
     }
 
     [Fact]
-    public void Mode_defaults_to_pictures_when_the_story_has_them_else_text()
+    public void Mode_is_picture_and_text_when_the_story_has_pictures_else_text_only()
     {
         Assert.Equal(ReadingMode.Text, Make([new StoryPage("a")], null).Mode);
-        Assert.Equal(ReadingMode.Picture, Make([new StoryPage("a", "page-01.jpg")], null).Mode);
+        Assert.Equal(ReadingMode.PictureAndText, Make([new StoryPage("a", "page-01.jpg")], null).Mode);
         Assert.Equal(ReadingMode.Text, Make([new StoryPage("a", "page-01.jpg")], ReadingMode.Text).Mode);
-        Assert.Equal(ReadingMode.Picture, Make([new StoryPage("a")], ReadingMode.Picture).Mode);
+        Assert.Equal(ReadingMode.PictureOnly, Make([new StoryPage("a", "page-01.jpg")], ReadingMode.PictureOnly).Mode);
+        Assert.Equal(ReadingMode.Text, Make([new StoryPage("a")], ReadingMode.PictureOnly).Mode);
+        Assert.Equal(ReadingMode.Text, Make([new StoryPage("a")], ReadingMode.PictureAndText).Mode);
+    }
+
+    [Theory]
+    [InlineData("Picture", ReadingMode.PictureAndText)]
+    [InlineData("picture", ReadingMode.PictureAndText)]
+    [InlineData("Text", ReadingMode.Text)]
+    [InlineData("PictureOnly", ReadingMode.PictureOnly)]
+    [InlineData("PictureAndText", ReadingMode.PictureAndText)]
+    public void A_story_file_saved_before_the_three_modes_reads_its_picture_choice_as_picture_and_text(string stored, ReadingMode expected)
+    {
+        string json = StoryJson.Serialize(Make([new StoryPage("a", "page-01.jpg")], ReadingMode.Text)).Replace("\"Text\",", $"\"{stored}\",");
+        Assert.Contains($"\"{stored}\"", json);
+
+        Assert.Equal(expected, StoryJson.Deserialize(json).PreferredMode);
+    }
+
+    [Theory]
+    [InlineData("\"Picture\"", ReadingMode.PictureOnly)]
+    [InlineData("null", ReadingMode.PictureOnly)]
+    [InlineData("\"Text\"", ReadingMode.Text)]
+    [InlineData("\"PictureOnly\"", ReadingMode.PictureOnly)]
+    public void A_book_saved_with_the_words_off_opens_picture_only_unless_the_grown_up_chose_text(string stored, ReadingMode expected)
+    {
+        string json = StoryJson.Serialize(Make([new StoryPage("a", "page-01.jpg")], ReadingMode.Text))
+            .Replace("\"PreferredMode\": \"Text\",", $"\"PreferredMode\": {stored}, \"WordsOverPictures\": false,");
+        Assert.Contains("\"WordsOverPictures\"", json);
+
+        Story back = StoryJson.Deserialize(json);
+
+        Assert.Equal(expected, back.PreferredMode);
+        Assert.DoesNotContain("WordsOverPictures", StoryJson.Serialize(back));
+    }
+
+    [Fact]
+    public void A_book_saved_with_the_words_on_keeps_its_picture_and_text_view()
+    {
+        string json = StoryJson.Serialize(Make([new StoryPage("a", "page-01.jpg")], ReadingMode.Text))
+            .Replace("\"PreferredMode\": \"Text\",", "\"PreferredMode\": \"Picture\", \"WordsOverPictures\": true,");
+
+        Assert.Equal(ReadingMode.PictureAndText, StoryJson.Deserialize(json).PreferredMode);
+    }
+
+    [Fact]
+    public void A_drafts_picture_only_choice_survives_a_save_without_pictures_and_applies_again_when_they_return()
+    {
+        var withPictures = Make([new StoryPage("a", "page-01.jpg")], ReadingMode.PictureOnly);
+        var draft = new StoryDraft(withPictures);
+
+        Story noPictures = draft.Current with { Pages = [new StoryPage("a", null)] };
+        Assert.Equal(ReadingMode.Text, noPictures.Mode);
+
+        Assert.Equal(ReadingMode.PictureOnly, (noPictures with { Pages = withPictures.Pages }).Mode);
+    }
+
+    [Fact]
+    public void Picture_only_is_written_under_its_own_name_so_it_is_not_taken_for_the_old_picture_choice()
+    {
+        Story story = Make([new StoryPage("a", "page-01.jpg")], ReadingMode.PictureOnly);
+        string json = StoryJson.Serialize(story);
+
+        Assert.Contains("\"PictureOnly\"", json);
+        Assert.Equal(ReadingMode.PictureOnly, StoryJson.Deserialize(json).PreferredMode);
     }
 
     [Fact]
     public void The_reading_mode_survives_a_story_json_round_trip_and_an_old_file_has_none()
     {
-        Story story = Make([new StoryPage("a")], ReadingMode.Picture);
-        Assert.Equal(ReadingMode.Picture, StoryJson.Deserialize(StoryJson.Serialize(story)).PreferredMode);
+        Story story = Make([new StoryPage("a")], ReadingMode.PictureAndText);
+        Assert.Equal(ReadingMode.PictureAndText, StoryJson.Deserialize(StoryJson.Serialize(story)).PreferredMode);
 
         string old = StoryJson.Serialize(story with { PreferredMode = null });
         Assert.Null(StoryJson.Deserialize(old).PreferredMode);
@@ -420,17 +484,17 @@ public class ReadingModesTests
     [Fact]
     public void An_unknown_reading_mode_in_a_story_file_keeps_the_story_readable()
     {
-        string json = StoryJson.Serialize(Make([new StoryPage("a")], ReadingMode.Picture));
-        string unknown = json.Replace("\"Picture\"", "\"Hologram\"");
+        string json = StoryJson.Serialize(Make([new StoryPage("a")], ReadingMode.PictureOnly));
+        string unknown = json.Replace("\"PictureOnly\"", "\"Hologram\"");
         Assert.NotEqual(json, unknown);
         Story story = StoryJson.Deserialize(unknown);
         Assert.Null(story.PreferredMode);
         Assert.Equal("a", story.Text);
 
-        string numeric = json.Replace("\"Picture\"", "7");
+        string numeric = json.Replace("\"PictureOnly\"", "7");
         Assert.Null(StoryJson.Deserialize(numeric).PreferredMode);
-        Assert.Null(StoryJson.Deserialize(json.Replace("\"Picture\"", "\"1\"")).PreferredMode);
-        Assert.Equal(ReadingMode.Text, StoryJson.Deserialize(json.Replace("\"Picture\"", "\"text\"")).PreferredMode);
+        Assert.Null(StoryJson.Deserialize(json.Replace("\"PictureOnly\"", "\"1\"")).PreferredMode);
+        Assert.Equal(ReadingMode.Text, StoryJson.Deserialize(json.Replace("\"PictureOnly\"", "\"text\"")).PreferredMode);
     }
 
     [Fact]
@@ -521,6 +585,19 @@ public class ReadingModesTests
         Assert.Equal(new SkipPlan(9, true), SkipPlanner.Plan(9, 1, 10, true));
         Assert.Equal(new SkipPlan(0, false), SkipPlanner.Plan(-1, 0, 10, false));
         Assert.Equal(new SkipPlan(-1, false), SkipPlanner.Plan(0, 1, 0, true));
+    }
+
+    [Fact]
+    public void MarkingPicturesAsPages_OpensPictureOnly_UnlessAChoiceWasMade()
+    {
+        Story story = Story.NewOwnBook(Guid.NewGuid().ToString("N"), "en", DateTimeOffset.UnixEpoch, 0);
+        var draft = new StoryDraft(story);
+        draft.MarkPicturesAsPages();
+        Assert.Equal(ReadingMode.PictureOnly, draft.Current.PreferredMode);
+
+        var chosen = new StoryDraft(story with { PreferredMode = ReadingMode.Text });
+        chosen.MarkPicturesAsPages();
+        Assert.Equal(ReadingMode.Text, chosen.Current.PreferredMode);
     }
 
     private static Story Make(IReadOnlyList<StoryPage> pages, ReadingMode? mode) =>

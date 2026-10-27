@@ -47,17 +47,15 @@ public static class StoryCast
         stored?.Any(m => m.CharacterId == characterId && m.Edited) == true;
 
     /// <summary>
-    /// The attribution as the story reads it: the grown-up's merges applied, and an edited character's
-    /// stored gender in place of the guessed one, so a recast keeps it.
+    /// The attribution as the story reads it: an edited character's stored gender in place of the guessed one, so a recast keeps it.
+    /// Merges a book saved before Slice 151 are ignored: those names have their own voices again.
     /// </summary>
-    public static AttributionResult Resolve(
-        AttributionResult raw, IReadOnlyDictionary<string, string> merges, IReadOnlyList<CastMember> stored)
+    public static AttributionResult Resolve(AttributionResult raw, IReadOnlyList<CastMember> stored)
     {
-        AttributionResult merged = CastMerges.Apply(raw, merges);
         var edited = stored.Where(m => m.Edited).DistinctBy(m => m.CharacterId).ToDictionary(m => m.CharacterId, m => m.Gender);
-        return merged with
+        return raw with
         {
-            Characters = merged.Characters.Select(c => edited.TryGetValue(c.Id, out Gender g) ? c with { Gender = g } : c).ToList(),
+            Characters = raw.Characters.Select(c => edited.TryGetValue(c.Id, out Gender g) ? c with { Gender = g } : c).ToList(),
         };
     }
 

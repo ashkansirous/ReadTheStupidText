@@ -26,7 +26,7 @@ internal static class NarratorRecast
 				continue;
 			}
 
-			IReadOnlyList<CastMember> recast = await voicing.CastForAsync(story.Language, language, story.Text, retired ? CastEditor.WithoutRetiredVoices(stored, language) : stored, story.Merges, story.BreakMap());
+			IReadOnlyList<CastMember> recast = await voicing.CastForAsync(story.Language, language, story.Text, retired ? CastEditor.WithoutRetiredVoices(stored, language) : stored, story.BreakMap());
 			cancellation.ThrowIfCancellationRequested();
 			if (recast.Count > 0)
 			{

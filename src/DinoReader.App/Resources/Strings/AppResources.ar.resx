@@ -271,8 +271,10 @@
   <data name="Editor_RotateLeft" xml:space="preserve"><value>تدوير لليسار</value></data>
   <data name="Editor_RotateRight" xml:space="preserve"><value>تدوير لليمين</value></data>
   <data name="Editor_ResetCrop" xml:space="preserve"><value>إعادة الاقتصاص</value></data>
-  <data name="Reading_TextMode" xml:space="preserve"><value>وضع النص</value></data>
-  <data name="Reading_PictureMode" xml:space="preserve"><value>وضع الصور</value></data>
+  <data name="Reading_Mode_PictureOnly" xml:space="preserve"><value>الصور فقط</value></data>
+  <data name="Reading_Mode_PictureAndText" xml:space="preserve"><value>الصور مع النص</value></data>
+  <data name="Reading_Mode_TextOnly" xml:space="preserve"><value>النص فقط</value></data>
+  <data name="Reading_Mode_Selected" xml:space="preserve"><value>محدد</value></data>
   <data name="Reading_Play" xml:space="preserve"><value>تشغيل</value></data>
   <data name="Reading_Pause" xml:space="preserve"><value>إيقاف مؤقت</value></data>
   <data name="Reading_Previous" xml:space="preserve"><value>الجملة السابقة</value></data>
@@ -288,10 +290,6 @@
   <data name="Cast_Edited" xml:space="preserve"><value>معدَّل</value></data>
   <data name="Cast_SharedVoice" xml:space="preserve"><value>صوت مشترك</value></data>
   <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>متحدث مجهول</value></data>
-  <data name="Cast_MergeButton" xml:space="preserve"><value>دمج شخصيتين</value></data>
-  <data name="Cast_MergeTitle" xml:space="preserve"><value>دمج الشخصيات</value></data>
-  <data name="Cast_MergeBody" xml:space="preserve"><value>اختر الاسمين اللذين يعودان إلى الشخصية نفسها. تُدمَج جملهما تحت اسم واحد وصوت واحد.</value></data>
-  <data name="Cast_KeepName" xml:space="preserve"><value>إبقاء الاسم</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>مرحبًا! هكذا يبدو صوتي حين أقرأ قصتك.</value></data>
   <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>تعذّر حفظ هذا التغيير</value></data>
   <data name="Cast_SaveFailedBody" xml:space="preserve"><value>لم تُحفَظ الشخصيات. حاول مرة أخرى بعد قليل.</value></data>
@@ -304,13 +302,8 @@
   <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} أسطر</value></data>
   <data name="Cast_UsesNarrator" xml:space="preserve"><value>تستخدم صوت الراوي</value></data>
   <data name="Cast_Hear" xml:space="preserve"><value>استمع إلى {0}</value></data>
-  <data name="Cast_MergeInto" xml:space="preserve"><value>دمج في {0}</value></data>
   <data name="Cast_AnimalSounds_Title" xml:space="preserve"><value>أصوات الحيوانات</value></data>
   <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>الحيوانات تقول أحيانًا «غرغر!» أو «ماع!»</value></data>
   <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>لا توجد حيوانات تُصدر أصواتًا في هذه القصة</value></data>
-  <data name="Cast_WordsOverPictures_Title" xml:space="preserve"><value>إظهار الكلمات فوق الصور</value></data>
-  <data name="Cast_WordsOverPictures_HintOn" xml:space="preserve"><value>تظهر الكلمات في لوحة أسفل الصورة</value></data>
-  <data name="Cast_WordsOverPictures_HintOff" xml:space="preserve"><value>متوقف لأن هذه الصور فيها الكلمات أصلًا</value></data>
-  <data name="Cast_WordsOverPictures_HintOffPlain" xml:space="preserve"><value>تظهر الصور فقط</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>عدد الشخصيات في هذا الكتاب أكبر من عدد الشخصيات الراوية المتاحة وهو {0}، لذا يتشابه صوت بعضها. لا يُمنح الراوي لأي شخصية.</value></data>
 </root>

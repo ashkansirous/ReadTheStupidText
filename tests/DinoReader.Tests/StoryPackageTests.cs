@@ -23,7 +23,7 @@ public sealed class StoryPackageTests : IDisposable
         [new StoryPage("\"Hello,\" said the wolf.", "page-1.jpg"), new StoryPage("Page two.")],
         [new CastMember("wolf", "Wolf", Gender.Male, "supertonic:M3", Edited: true), new CastMember("pig", "Pig", Gender.Female, "supertonic:F2")],
         CoverStyle.Picture, 2, "supertonic:M1",
-        CharacterMerges: new Dictionary<string, string> { ["big-bad-wolf"] = "wolf" }, CoverFile: "cover-ab12cd34.jpg");
+        CoverFile: "cover-ab12cd34.jpg");
 
     private static async Task<byte[]> ExportAsync(Story story, IStoryLibrary library)
     {
@@ -60,7 +60,7 @@ public sealed class StoryPackageTests : IDisposable
     }
 
     [Fact]
-    public async Task RoundTrip_KeepsCastMergesAndPinnedVoices_UnderANewId()
+    public async Task RoundTrip_KeepsPinnedVoices_UnderANewId()
     {
         (FileStoryLibrary source, Story story) = await StoredAsync();
         byte[] package = await ExportAsync(story, source);
@@ -74,7 +74,6 @@ public sealed class StoryPackageTests : IDisposable
         Assert.NotNull(stored);
         Assert.Equal(story.Cast, stored.Cast);
         Assert.True(stored.Cast[0].Edited);
-        Assert.Equal("wolf", stored.Merges["big-bad-wolf"]);
         Assert.Equal(story.Pages.Select(p => p.Text), stored.Pages.Select(p => p.Text));
         Assert.Equal("page-bytes", await File.ReadAllTextAsync(target.TryResolveFile(imported.Id, "page-1.jpg")!));
         Assert.Equal("cover-bytes", await File.ReadAllTextAsync(target.TryResolveFile(imported.Id, "cover-ab12cd34.jpg")!));

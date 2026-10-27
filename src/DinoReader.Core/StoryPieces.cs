@@ -37,7 +37,7 @@ public static class StoryPieces
         LanguageRules rules = LanguageRules.For(UiLanguage.Resolve(story.Language));
         LineBreakMap breaks = story.BreakMap();
         AttributionResult attribution = new SpeakerAttributor(rules).Attribute(story.Text, new StorySegmenter(rules).Split(story.Text, breaks));
-        AttributionResult resolved = StoryCast.Resolve(attribution, story.Merges, story.Cast);
+        AttributionResult resolved = StoryCast.Resolve(attribution, story.Cast);
         return Split(story, resolved, StorySentences.Build(story.Text, rules, breaks), 0);
     }
 

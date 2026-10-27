@@ -197,7 +197,7 @@ public class FlavourCastTests
     }
 
     private static Story Sample(CastMember member) => new(
-        StoryIds.New(), "Title", "en", DateTimeOffset.UnixEpoch, [new StoryPage("Text")], [member], CoverStyle.Colour, 0, "M1", null, null);
+        StoryIds.New(), "Title", "en", DateTimeOffset.UnixEpoch, [new StoryPage("Text")], [member], CoverStyle.Colour, 0, "M1");
 
     [Fact]
     public void A_flavour_survives_a_round_trip_through_story_json()

@@ -23,8 +23,7 @@ public class CastEditorTests
             new CastMember("peter", "Peter", Gender.Male, "M1"),
             new CastMember("cotton", "Cotton Tail", Gender.Male, "M2"),
             new CastMember("mum", "Mum", Gender.Female, "F1"),
-        ],
-        new Dictionary<string, string>());
+        ]);
 
     private static CastMember Of(CastEdit state, string id) => state.Cast.Single(m => m.CharacterId == id);
 
@@ -70,40 +69,6 @@ public class CastEditorTests
     }
 
     [Fact]
-    public void Merge_LeavesOneEntryWithTheKeptVoice()
-    {
-        CastEdit merged = CastEditor.Merge(Start(), "peter", "cotton");
-
-        Assert.Equal(["peter", "mum"], merged.Cast.Select(m => m.CharacterId));
-        Assert.Equal("M1", Of(merged, "peter").VoiceId);
-        Assert.False(Of(merged, "peter").Edited);
-        Assert.Equal("peter", merged.Merges["cotton"]);
-    }
-
-    [Fact]
-    public void Merge_KeepsAnEditedFlagTheKeptCharacterAlreadyHad()
-    {
-        CastEdit pinned = Pinned(Start(), "peter", "M3");
-
-        Assert.True(Of(CastEditor.Merge(pinned, "peter", "cotton"), "peter").Edited);
-    }
-
-    [Fact]
-    public void Merge_TakesAKnownGenderOverUnknown_AndKeepsTheKeptOneOnAConflict()
-    {
-        var state = new CastEdit(
-            [
-                new CastMember("a", "A", Gender.Unknown, "M1"), new CastMember("b", "B", Gender.Female, "F1"),
-                new CastMember("c", "C", Gender.Male, "M2"),
-            ],
-            new Dictionary<string, string>());
-
-        Assert.Equal(Gender.Female, Of(CastEditor.Merge(state, "a", "b"), "a").Gender);
-        Assert.Equal(Gender.Male, Of(CastEditor.Merge(state, "c", "b"), "c").Gender);
-        Assert.Equal(Gender.Female, Of(CastEditor.Merge(state, "b", "a"), "b").Gender);
-    }
-
-    [Fact]
     public void NarratorTakingAPinnedVoice_UnpinsThatCharacter()
     {
         var before = new CastMember[] { new("peter", "Peter", Gender.Male, "M1", true), new("mum", "Mum", Gender.Female, "F1", true) };
@@ -112,28 +77,9 @@ public class CastEditorTests
         Assert.False(unpinned[0].Edited);
         Assert.True(unpinned[1].Edited);
     }
-
-    [Fact]
-    public void Merge_CanKeepTheSecondName_AndKeepsItsVoice()
-    {
-        CastEdit merged = CastEditor.Merge(Start(), "cotton", "peter");
-
-        Assert.Equal("M2", Of(merged, "cotton").VoiceId);
-        Assert.DoesNotContain(merged.Cast, m => m.CharacterId == "peter");
-    }
-
-    [Fact]
-    public void Merge_OfACharacterIntoItselfOrAnUnknownOne_ChangesNothing()
-    {
-        CastEdit state = Start();
-
-        Assert.Same(state, CastEditor.Merge(state, "peter", "peter"));
-        Assert.Same(state, CastEditor.Merge(state, "peter", "nobody"));
-    }
-
 }
 
-public class CastMergesTests
+public class StoryCastResolveTests
 {
     private static Segment Quote(string? who, int start) => new(SegmentKind.Quote, "Hi", start, start + 4, who);
 
@@ -146,80 +92,6 @@ public class CastMergesTests
         ]);
 
     [Fact]
-    public void Apply_ReAttributesTheMergedLines_AndAddsTheirWords()
-    {
-        var merged = CastMerges.Apply(Sample(), new Dictionary<string, string> { ["rabbit"] = "peter" });
-
-        Assert.Equal(["peter", "peter", "mum", null], merged.Segments.Select(s => s.CharacterId));
-        Assert.Equal(["peter", "mum"], merged.Characters.Select(c => c.Id));
-        Assert.Equal(252, merged.Characters[0].WordCount);
-        Assert.Equal("Peter", merged.Characters[0].Name);
-    }
-
-    [Fact]
-    public void Apply_GivesTheMergedCharacterTheBetterKnownGender()
-    {
-        var intoRabbit = CastMerges.Apply(Sample(), new Dictionary<string, string> { ["peter"] = "rabbit" });
-        var intoPeter = CastMerges.Apply(Sample(), new Dictionary<string, string> { ["mum"] = "peter" });
-
-        Assert.Equal(Gender.Male, intoRabbit.Characters.Single(c => c.Id == "rabbit").Gender);
-        Assert.Equal(Gender.Male, intoPeter.Characters.Single(c => c.Id == "peter").Gender);
-    }
-
-    [Fact]
-    public void Apply_FollowsAChainOfMerges()
-    {
-        var merges = new Dictionary<string, string> { ["rabbit"] = "mum", ["mum"] = "peter" };
-
-        var merged = CastMerges.Apply(Sample(), merges);
-
-        Assert.Equal(["peter"], merged.Characters.Select(c => c.Id));
-        Assert.All(merged.Segments.Where(s => s.CharacterId is not null), s => Assert.Equal("peter", s.CharacterId));
-        Assert.Equal(283, merged.Characters[0].WordCount);
-    }
-
-    [Fact]
-    public void Apply_IgnoresAMergeWhoseCharacterIsGone()
-    {
-        var merges = new Dictionary<string, string> { ["ghost"] = "peter", ["rabbit"] = "gone" };
-
-        var merged = CastMerges.Apply(Sample(), merges);
-
-        Assert.Equal(3, merged.Characters.Count);
-        Assert.Equal("rabbit", merged.Segments[1].CharacterId);
-    }
-
-    [Fact]
-    public void Apply_SurvivesACycle()
-    {
-        var merges = new Dictionary<string, string> { ["peter"] = "rabbit", ["rabbit"] = "peter" };
-
-        var merged = CastMerges.Apply(Sample(), merges);
-
-        Assert.Equal(["peter", "rabbit", "mum"], merged.Characters.Select(c => c.Id));
-        Assert.Equal(["peter", "rabbit", "mum", null], merged.Segments.Select(s => s.CharacterId));
-    }
-
-    [Fact]
-    public void Apply_WithNoMerges_ReturnsTheSameResult()
-    {
-        var sample = Sample();
-
-        Assert.Same(sample, CastMerges.Apply(sample, new Dictionary<string, string>()));
-    }
-
-    [Fact]
-    public void Add_RepointsEarlierMergesIntoTheMergedAwayCharacter()
-    {
-        var first = CastMerges.Add(new Dictionary<string, string>(), "rabbit", "bunny");
-
-        var second = CastMerges.Add(first, "peter", "rabbit");
-
-        Assert.Equal("peter", second["rabbit"]);
-        Assert.Equal("peter", second["bunny"]);
-    }
-
-    [Fact]
     public void Resolve_TakesAnEditedCharactersStoredGender()
     {
         CastMember[] stored =
@@ -228,10 +100,19 @@ public class CastMergesTests
             new("mum", "Mum", Gender.Male, "M1"),
         ];
 
-        var resolved = StoryCast.Resolve(Sample(), new Dictionary<string, string>(), stored);
+        var resolved = StoryCast.Resolve(Sample(), stored);
 
         Assert.Equal(Gender.Female, resolved.Characters.Single(c => c.Id == "peter").Gender);
         Assert.Equal(Gender.Female, resolved.Characters.Single(c => c.Id == "mum").Gender);
+    }
+
+    [Fact]
+    public void Resolve_KeepsEveryCharacterAndLineSeparate()
+    {
+        var resolved = StoryCast.Resolve(Sample(), []);
+
+        Assert.Equal(["peter", "rabbit", "mum"], resolved.Characters.Select(c => c.Id));
+        Assert.Equal(["peter", "rabbit", "mum", null], resolved.Segments.Select(s => s.CharacterId));
     }
 }
 
@@ -278,41 +159,41 @@ public class CastSheetTests
 
 public class CastStorageTests
 {
-    private static Story Sample(IReadOnlyDictionary<string, string>? merges = null) => new(
+    private static Story Sample() => new(
         StoryIds.New(), "Title", "en", DateTimeOffset.UnixEpoch, [new StoryPage("Text")],
         [new CastMember("peter", "Peter", Gender.Female, "F1", true), new CastMember("mum", "Mum", Gender.Female, "F2")],
-        CoverStyle.Colour, 0, "M1", null, merges);
+        CoverStyle.Colour, 0, "M1");
 
     [Fact]
-    public void RoundTrip_KeepsTheEditedFlagsAndTheMerges()
+    public void RoundTrip_KeepsTheEditedFlags()
     {
-        Story story = Sample(new Dictionary<string, string> { ["rabbit"] = "peter" });
+        Story story = Sample();
 
         Story back = StoryJson.Deserialize(StoryJson.Serialize(story));
 
         Assert.Equal(story.Cast, back.Cast);
-        Assert.Equal("peter", back.Merges["rabbit"]);
     }
 
     [Fact]
-    public void AFileWrittenBeforeSlice65_ReadsAsNothingEditedAndNoMerges()
+    public void AFileWrittenBeforeSlice65_ReadsAsNothingEdited()
     {
         string json = StoryJson.Serialize(Sample()).Replace("\"Edited\": true", "\"Other\": 1");
 
         Story back = StoryJson.Deserialize(json);
 
         Assert.All(back.Cast, m => Assert.False(m.Edited));
-        Assert.Empty(back.Merges);
     }
 
     [Fact]
-    public void NoMerges_AreNotWritten_AndAnEmptyMergeEntryIsDropped()
+    public void AFileWithMergesAndWordsOverPictures_StillOpens_AndWritesNeitherAgain()
     {
-        string plain = StoryJson.Serialize(Sample());
-        string json = StoryJson.Serialize(Sample(new Dictionary<string, string> { ["a"] = "b" })).Replace("\"a\"", "\"\"");
+        string json = StoryJson.Serialize(Sample()).Insert(1, "\"Merges\": { \"rabbit\": \"peter\" }, \"WordsOverPictures\": false,");
+        Assert.Contains("\"Merges\"", json);
 
-        Assert.DoesNotContain("\"Merges\": {", plain);
-        Assert.Empty(StoryJson.Deserialize(json).Merges);
+        string rewritten = StoryJson.Serialize(StoryJson.Deserialize(json));
+
+        Assert.DoesNotContain("Merges", rewritten);
+        Assert.DoesNotContain("WordsOverPictures", rewritten);
     }
 }
 
@@ -336,66 +217,5 @@ public class UnknownSpeakerRuleTests
         Assert.Equal("#9AA5B8", AvatarPalette.ColourAt(-1));
         Assert.Equal("T", AvatarPalette.InitialOf("the rabbit"));
         Assert.Equal("?", AvatarPalette.InitialOf("  "));
-    }
-}
-
-public class MergeSelectionTests
-{
-    [Fact]
-    public void TwoTicks_Complete_AndTheFirstTickedKeepsTheName()
-    {
-        var selection = new MergeSelection();
-
-        selection.Toggle("peter");
-        Assert.False(selection.IsComplete);
-        Assert.Null(selection.KeepId);
-        selection.Toggle("rabbit");
-
-        Assert.True(selection.IsComplete);
-        Assert.Equal("peter", selection.KeepId);
-        Assert.Equal("rabbit", selection.DropId);
-    }
-
-    [Fact]
-    public void AThirdTick_ReplacesTheOldest()
-    {
-        var selection = new MergeSelection();
-        selection.Toggle("a");
-        selection.Toggle("b");
-
-        selection.Toggle("c");
-
-        Assert.Equal(["b", "c"], selection.Picked);
-        Assert.Equal("b", selection.KeepId);
-    }
-
-    [Fact]
-    public void Keep_ChoosesTheOtherName_AndIsForgottenWhenThatCharacterIsUnticked()
-    {
-        var selection = new MergeSelection();
-        selection.Toggle("a");
-        selection.Toggle("b");
-
-        selection.Keep("b");
-        Assert.Equal("b", selection.KeepId);
-        Assert.Equal("a", selection.DropId);
-
-        selection.Toggle("b");
-        selection.Toggle("c");
-        Assert.Equal("a", selection.KeepId);
-        selection.Keep("zzz");
-        Assert.Equal("a", selection.KeepId);
-    }
-
-    [Fact]
-    public void TickingATickedCharacter_UnticksIt()
-    {
-        var selection = new MergeSelection();
-        selection.Toggle("a");
-
-        selection.Toggle("a");
-
-        Assert.Empty(selection.Picked);
-        Assert.False(selection.Contains("a"));
     }
 }

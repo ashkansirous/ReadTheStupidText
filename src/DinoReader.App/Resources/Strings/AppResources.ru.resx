@@ -271,8 +271,10 @@
   <data name="Editor_RotateLeft" xml:space="preserve"><value>Повернуть влево</value></data>
   <data name="Editor_RotateRight" xml:space="preserve"><value>Повернуть вправо</value></data>
   <data name="Editor_ResetCrop" xml:space="preserve"><value>Сбросить обрезку</value></data>
-  <data name="Reading_TextMode" xml:space="preserve"><value>Текстовый режим</value></data>
-  <data name="Reading_PictureMode" xml:space="preserve"><value>Режим картинок</value></data>
+  <data name="Reading_Mode_PictureOnly" xml:space="preserve"><value>Только картинки</value></data>
+  <data name="Reading_Mode_PictureAndText" xml:space="preserve"><value>Картинки + текст</value></data>
+  <data name="Reading_Mode_TextOnly" xml:space="preserve"><value>Только текст</value></data>
+  <data name="Reading_Mode_Selected" xml:space="preserve"><value>выбрано</value></data>
   <data name="Reading_Play" xml:space="preserve"><value>Играть</value></data>
   <data name="Reading_Pause" xml:space="preserve"><value>Пауза</value></data>
   <data name="Reading_Previous" xml:space="preserve"><value>Предыдущее предложение</value></data>
@@ -288,10 +290,6 @@
   <data name="Cast_Edited" xml:space="preserve"><value>ИЗМЕНЕНО</value></data>
   <data name="Cast_SharedVoice" xml:space="preserve"><value>Общий голос</value></data>
   <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>Неизвестный говорящий</value></data>
-  <data name="Cast_MergeButton" xml:space="preserve"><value>Объединить двух персонажей</value></data>
-  <data name="Cast_MergeTitle" xml:space="preserve"><value>Объединение персонажей</value></data>
-  <data name="Cast_MergeBody" xml:space="preserve"><value>Выберите два имени одного и того же персонажа. Их реплики объединятся под одним именем и одним голосом.</value></data>
-  <data name="Cast_KeepName" xml:space="preserve"><value>Оставить имя</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>Привет! Вот так я звучу, когда читаю вашу историю.</value></data>
   <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>Не удалось сохранить изменение</value></data>
   <data name="Cast_SaveFailedBody" xml:space="preserve"><value>Роли не сохранены. Попробуйте чуть позже.</value></data>
@@ -304,13 +302,8 @@
   <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>Реплик: {0}</value></data>
   <data name="Cast_UsesNarrator" xml:space="preserve"><value>читает рассказчик</value></data>
   <data name="Cast_Hear" xml:space="preserve"><value>Послушать: {0}</value></data>
-  <data name="Cast_MergeInto" xml:space="preserve"><value>Объединить с {0}</value></data>
   <data name="Cast_AnimalSounds_Title" xml:space="preserve"><value>Звуки животных</value></data>
   <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>Животные иногда говорят «Хрю!» или «Бе-е!»</value></data>
   <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>В этой истории нет животных, которые подают голос</value></data>
-  <data name="Cast_WordsOverPictures_Title" xml:space="preserve"><value>Показывать слова поверх картинок</value></data>
-  <data name="Cast_WordsOverPictures_HintOn" xml:space="preserve"><value>Слова показываются на панели внизу</value></data>
-  <data name="Cast_WordsOverPictures_HintOff" xml:space="preserve"><value>Выключено: на этих картинках слова уже есть</value></data>
-  <data name="Cast_WordsOverPictures_HintOffPlain" xml:space="preserve"><value>Показываются только картинки</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>В этой книге больше персонажей, чем есть рассказчиков ({0}), поэтому некоторые звучат одинаково. Рассказчик персонажам не выдаётся.</value></data>
 </root>

@@ -210,8 +210,7 @@ public sealed class StarterUpdateTests : IDisposable
         Story stored = StoryWith("old", Member("pig", "supertonic:F3", edited: true), Member("wolf", "supertonic:M2")) with
         {
             Created = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
-            CharacterMerges = new Dictionary<string, string> { ["big-wolf"] = "wolf" },
-            PreferredMode = ReadingMode.Text,
+            PreferredMode = ReadingMode.PictureOnly,
             TranslateToMyLanguage = false,
             ShowOriginalText = true,
             AnimalSoundsOn = false,
@@ -231,8 +230,7 @@ public sealed class StarterUpdateTests : IDisposable
         Assert.Equal("Gentle page.", refreshed.Pages[0].Text);
         Assert.Equal(stored.Created, refreshed.Created);
         Assert.Equal(stored.Cast, refreshed.Cast);
-        Assert.Equal(stored.CharacterMerges, refreshed.CharacterMerges);
-        Assert.Equal(ReadingMode.Text, refreshed.PreferredMode);
+        Assert.Equal(ReadingMode.PictureOnly, refreshed.PreferredMode);
         Assert.False(refreshed.TranslateToMyLanguage);
         Assert.True(refreshed.ShowOriginalText);
         Assert.False(refreshed.AnimalSoundsOn);
