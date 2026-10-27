@@ -103,7 +103,7 @@ public sealed class StarterStoryTests : IDisposable
         Assert.All(story.Pages.Skip(7), p => Assert.Null(p.Lines));
     }
 
-    // Only Hazelnut speaks ("says Hazelnut", page 10); Carrot has no quoted line, so the caster finds no Carrot character (reported in Slice 94).
+    // Only Hazelnut speaks ("says Hazelnut", page 10); Carrot has no quoted line, so the caster finds no Carrot character (reported in Slice 94). The book suggests her voice (Slice 156).
     [Fact]
     public async Task GoodEnough_HazelnutIsACharacterWithAVoiceOfHerOwn()
     {
@@ -111,6 +111,9 @@ public sealed class StarterStoryTests : IDisposable
 
         CastMember hazelnut = story.Cast.Single(c => c.Name == "Hazelnut");
         Assert.NotEqual(SupertonicVoiceTable.Default.Id, hazelnut.VoiceId);
+        Assert.Equal(Gender.Female, hazelnut.Gender);
+        Assert.Equal("bee", hazelnut.SuggestedVoice);
+        Assert.NotNull(hazelnut.Traits);
     }
 
     [Fact]
