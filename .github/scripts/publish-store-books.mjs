@@ -3,8 +3,8 @@
  * Publishes the free Dino Reader store books (Slice 158, Decision 163) to the downloads R2 bucket, so a merged
  * version bump reaches `dinoreader.sirous.uk/api/stories` without anyone running tools/upload-store-story.ps1.
  *
- * It compares the built folders (`artifacts/store/<id>/meta.json`, built by `DINO_BUILD_STORE=1 dotnet test
- * tests/DinoReader.Tests --filter BuildStore`) with the LIVE list every run, not with the git diff: a cancelled
+ * It compares the built folders (`artifacts/store/<id>/meta.json`, built by `dotnet run --project
+ * tools/DinoReader.BookBuilder -- build` from `content/dino/`) with the LIVE list every run, not with the git diff: a cancelled
  * run or a missed book is caught by the next one. A book is uploaded only when its built version is higher than
  * the live one (or it is not live at all).
  *
@@ -86,7 +86,7 @@ function isStoryFolder(name) {
 /** Reads every `<root>/<id>/meta.json` as `[{ id, version }]`; a folder whose name is not a story id is ignored with a warning; a folder with unreadable meta gets version null (reported as invalid). */
 export function readBuilt(root) {
     const books = listBuilt(root);
-    if (books.length === 0) throw new Error(`No built store books found in ${root}; the build step (dotnet test with DINO_BUILD_STORE=1) produced nothing, so nothing was published.`);
+    if (books.length === 0) throw new Error(`No built store books found in ${root}; the build step (dotnet run --project tools/DinoReader.BookBuilder -- build) produced nothing, so nothing was published.`);
     return books;
 }
 

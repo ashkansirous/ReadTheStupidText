@@ -1,6 +1,6 @@
 # Run once, by hand, in Windows PowerShell 5.1 (Windows.Media.Ocr is not reachable from pwsh 7): `powershell -File tools/ocr-starter-pages.ps1 <folder>`.
 # It OCRs pages 1.jpg-10.jpg of a picture starter and prints lines with 0..1 boxes. The output is proofread by hand into
-# tests/DinoReader.Tests/Starters/good-enough/lines.json (Slice 94); the build never runs OCR.
+# content/dino/good-enough/lines.json (Slice 94; the pictures are in its pictures/ folder); the build never runs OCR.
 param([string]$Folder)
 Add-Type -AssemblyName System.Runtime.WindowsRuntime
 $null = [Windows.Storage.StorageFile, Windows.Storage, ContentType = WindowsRuntime]

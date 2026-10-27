@@ -1,0 +1,75 @@
+One sunny summer morning, Mother Duck was sitting on her nest by the pond. Crack, crack, crack! Out popped three fluffy yellow ducklings.
+
+But the biggest egg didn't crack at all. Not even a tiny bit!
+---
+At last the big egg wobbled. Crack, crack, crack! Out came a big grey duckling with a long neck and great big flat feet.
+
+"Oh my, what a great big baby!" said Mother Duck, and she tucked him in under her wing.
+
+"Big or small, I love you all," said Mother Duck.
+---
+The next morning, Mother Duck took her babies down to the pond, all in a row.
+
+Splish-splash, splish-splash, splish-splash! And guess who swam the fastest? The big grey duckling!
+---
+Up on the bank, the yellow ducklings looked at their big grey brother. Dilly, the littlest one, started to giggle.
+
+"Your neck's so long, and your feet are so big!" said Dilly. "You don't look like a duck at all!"
+
+The big grey duckling looked down at his feet. He felt a little bit sad.
+---
+Mother Duck put her wing around him. "Dilly, that wasn't very kind," said Mother Duck. "Everyone's different, and that's a good thing!"
+
+"Big or small, I love you all," said Mother Duck.
+
+Dilly hung her head. "Sorry, big brother," said Dilly. "You're the best swimmer of all of us!"
+---
+"But if I don't look like a duck, what kind of bird am I?" said Duckling.
+
+"Go and have a look around the farm, and maybe you'll find out," said Mother Duck. "But be home in time for supper, okay?"
+
+So off he waddled across the meadow, waving bye-bye.
+---
+In the farmyard, a round brown Hen was scratching for corn. Scratch, scratch, scratch!
+
+"Am I a hen like you?" said Duckling.
+
+"Cluck, cluck, cluck! Can you lay an egg?" said Hen. Duckling shook his head.
+
+"Then you're not a hen," said Hen, and she smiled. "But you're a very polite little bird. Now off you go, home for supper!"
+---
+Soon it was autumn, and the leaves turned red and gold. One day, three big white birds with long necks just like his flew high over the pond. "Look, those are swans!" said Mother Duck.
+
+"Am I a swan like you?" called Duckling. But the swans were too high up to hear him, and away they flew, far, far away.
+---
+Then winter came. The snow fell softly, and the pond froze into ice.
+
+Hen fluffed up her feathers at the barn door. "Come on in, all of you!" said Hen. "It's nice and warm and dry in the barn."
+
+So the ducks waddled through the snow, all in a row, into the barn. Waddle, waddle, waddle!
+---
+All winter long, the ducks and Hen snuggled up together in the soft, warm straw. Duckling slept right in between Mother Duck and Dilly.
+
+"Big or small, I love you all," whispered Mother Duck.
+---
+At last spring came, and the ice melted away. Duckling had grown big over the winter! He went down to the pond and peeked into the water.
+
+And there he saw a beautiful white bird with a long, lovely neck. "Wow! Is that really me?" said Duckling.
+---
+Swoosh, swoosh, swoosh! Three white swans glided down onto the pond and swam right up to him.
+
+"Am I a swan like you?" said Duckling.
+
+"Yes, you are!" said Swan, and he bowed his long neck. "You're a young swan, and a really fine one. Welcome, friend!"
+---
+Mother Duck and the ducklings came paddling out to see. "Can my family swim with us too?" said Duckling.
+
+"Of course they can!" said Swan. "The pond's big enough for everyone."
+
+Splish-splash, splish-splash, splish-splash! Ducks and swans swam round and round the pond together.
+---
+That evening, the sun went down, all pink and gold. Dilly and the other ducklings rode home on their big brother's back.
+
+"You're a swan, and you're still our brother!" said Dilly.
+
+"Big or small, I love you all," said Mother Duck. And Duckling was happier than he'd ever been.

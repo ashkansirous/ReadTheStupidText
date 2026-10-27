@@ -1,6 +1,6 @@
 # CI does this on every merge (Slice 158: release.yml `publish-store`, .github/scripts/publish-store-books.mjs); this script is the manual fallback.
 # Uploads one built store story (Slice 102) to the downloads bucket: `pwsh tools/upload-store-story.ps1 <story id> [-Root <store folder>]` (from any folder; Root defaults to the repo's artifacts/store).
-# Build the folder first with `DINO_BUILD_STORE=1 dotnet test tests/DinoReader.Tests`. The cover and every package go up first and meta.json
+# Build the folder first with `dotnet run --project tools/DinoReader.BookBuilder -- build` (from content/dino/, Slice 157). The cover and every package go up first and meta.json
 # LAST, so a half-finished upload is never listed (worker/stories.ts offers a folder only when meta.json and a package are both there).
 # -MetaOnly re-uploads just meta.json (Slice 112: new age/author fields on a story whose package is unchanged; the folder must still hold the package).
 # wrangler must already be logged in; --remote writes to the real bucket, not the local simulator.

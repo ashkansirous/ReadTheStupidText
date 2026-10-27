@@ -1,3 +1,4 @@
+using DinoReader.BookBuilder;
 using DinoReader.Core;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Domain.Reading;
@@ -215,7 +216,7 @@ public class CastFallbackFitTests
     [Fact]
     public void Grandma_in_farsi_takes_the_narrators_voice_in_normal_not_the_whispering_princess()
     {
-        Story story = StoreBuilder.Build(StoreTexts.All.Single(t => t.Title == "Little Red Riding Hood"));
+        Story story = StoreBuilder.Build(Books.Store.Single(t => t.Title == "Little Red Riding Hood"));
         List<Character> characters = story.Cast.Select(m => new Character(m.CharacterId, m.Name, m.Gender, 1)).ToList();
         IReadOnlyDictionary<string, AnimalKind> animals = AnimalSounds.Resolve(characters, story.Language, story.Cast.Select(m => m with { VoiceId = string.Empty }).ToList(), story.Text);
         var roster = CharacterRoster.For("fa");

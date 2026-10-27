@@ -1,7 +1,7 @@
 # Prepares a story's generated pictures for the repo (Slice 119): `pwsh tools/prepare-story-pictures.ps1 <sourceFolder> <targetFolder> <pageCount>`.
 # The source holds cover.jpg and 1.jpg..N.jpg (the originals, kept outside the repo). Each is centre-cropped to 3:4, shrunk to 896x1200
 # (never enlarged: a smaller source keeps its cropped size) and saved as JPEG quality 85. Writes <targetFolder>/cover.jpg and
-# <targetFolder>/pictures/1.jpg..N.jpg, e.g. tests/DinoReader.Tests/Starters/three-little-pigs or tests/DinoReader.Tests/Store/<stem>.
+# <targetFolder>/pictures/1.jpg..N.jpg, e.g. content/dino/<stem> (starters and store books alike, Slice 157).
 # Also writes <targetFolder>/cover-thumb.jpg (288x384, quality 80): the small cover the store list fetches (the full cover stays in the package).
 # Fails, writing nothing, when a picture is missing or the folder holds more pages than <pageCount>.
 param(

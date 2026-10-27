@@ -1,3 +1,4 @@
+using DinoReader.BookBuilder;
 using DinoReader.Core;
 using System.Security.Cryptography;
 using System.Text;
@@ -28,14 +29,14 @@ public partial class FarsiMarksTests
 
     private static MarksFile LoadMarks() =>
         JsonSerializer.Deserialize<MarksFile>(
-            File.ReadAllText(Path.Combine(StarterBuilder.TranslationsFolder(), $"{PigsStem}.fa.marks.json")), new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+            File.ReadAllText(Path.Combine(StarterBuilder.TranslationsFolder(PigsStem), "fa.marks.json")), new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
 
     private static string UndoReplacements(string text, MarksFile file) =>
         file.Spoken.Aggregate(text, (current, s) => current.Replace(s.Text, s.Replaces));
 
     private static Dictionary<string, string> Load(string suffix) =>
         JsonSerializer.Deserialize<Dictionary<string, string>>(
-            File.ReadAllText(Path.Combine(StarterBuilder.TranslationsFolder(), $"{PigsStem}.{suffix}")))!;
+            File.ReadAllText(Path.Combine(StarterBuilder.TranslationsFolder(PigsStem), suffix)))!;
 
     [Fact]
     public void The_shown_pigs_text_carries_no_marks_but_the_one_tanwin()

@@ -25,12 +25,13 @@
   <ItemGroup>
     <!-- The app's string holder is plain .NET (no MAUI), so the culture rule is tested on the real file (Slice 159). -->
     <Compile Include="..\..\src\DinoReader.App\Resources\Strings\AppResources.cs" Link="Linked\AppResources.cs" />
-    <Compile Include="..\..\src\DinoReader.App\ShippedTitles.cs" Link="Linked\ShippedTitles.cs" />
     <Compile Include="..\..\src\DinoReader.App\OwnBookTranslation.cs" Link="Linked\OwnBookTranslation.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\DinoReader.Core\DinoReader.Core.csproj" />
+    <!-- The book builder (Slice 157) holds the book loader and the starter and store builders the validation tests use; it also compiles ShippedTitles. -->
+    <ProjectReference Include="..\..\tools\DinoReader.BookBuilder\DinoReader.BookBuilder.csproj" />
   </ItemGroup>
 
 </Project>

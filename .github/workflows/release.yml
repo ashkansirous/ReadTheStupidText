@@ -791,9 +791,7 @@ jobs:
           node-version: 22
 
       - name: Build the store books
-        env:
-          DINO_BUILD_STORE: '1'
-        run: dotnet test --project tests/DinoReader.Tests/DinoReader.Tests.csproj --configuration Release --filter-method "*BuildStore*"
+        run: dotnet run --project tools/DinoReader.BookBuilder --configuration Release -- build
 
       - name: Install wrangler
         run: npm ci --ignore-scripts --no-audit --no-fund

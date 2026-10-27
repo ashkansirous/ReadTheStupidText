@@ -1,0 +1,76 @@
+{
+  "kind": "Starter",
+  "id": "0fa29ae0d09643a9a16a5e586e8c7119",
+  "title": "The Tortoise and the Hare",
+  "version": 9,
+  "ageMin": 4,
+  "ageMax": 7,
+  "author": "Aesop",
+  "credits": "Retold from Aesop · free to share",
+  "colour": 0,
+  "added": "2026-10-25",
+  "order": 3,
+  "cast": [
+    {
+      "name": "Hare",
+      "voice": "puppy",
+      "gender": "Male",
+      "age": "Young",
+      "qualities": [
+        "Bouncy",
+        "Bold"
+      ]
+    },
+    {
+      "name": "Tortoise",
+      "voice": "hen",
+      "gender": "Female",
+      "age": "Adult",
+      "qualities": [
+        "Sleepy",
+        "Warm"
+      ]
+    },
+    {
+      "name": "Owl",
+      "voice": "bear",
+      "gender": "Male",
+      "age": "Old",
+      "qualities": [
+        "Sleepy",
+        "Warm"
+      ]
+    },
+    {
+      "name": "Squirrel",
+      "voice": "bee",
+      "gender": "Female",
+      "age": "Young",
+      "qualities": [
+        "Bouncy",
+        "Bright"
+      ]
+    },
+    {
+      "name": "Hedgehog",
+      "voice": "piglet",
+      "gender": "Male",
+      "age": "Young",
+      "qualities": [
+        "Bouncy",
+        "Warm"
+      ]
+    },
+    {
+      "name": "Frog",
+      "voice": "lamb2",
+      "gender": "Female",
+      "age": "Young",
+      "qualities": [
+        "Bouncy",
+        "Squeaky"
+      ]
+    }
+  ],
+  "contentHash": "5bde4edd65c0d42e61afd1b625d270d7c95214f0b9249911c4b91dc459f3cea2"
+}

@@ -3,8 +3,8 @@ Ugly Duckling cast as the store book stores it, and writes a listening page. Loc
 
   python tools/voice-listen/render.py --packs <packs> --roster <roster.json> --out tools/voice-listen/out
 
-roster.json comes from (the VoiceListenExport test; no variable, no file):
-  DINO_VOICE_LISTEN_OUT=<file> dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj --filter-class DinoReader.Tests.VoiceListenExport
+roster.json comes from (the book builder's voice-listen command, Slice 157):
+  dotnet run --project tools/DinoReader.BookBuilder -- voice-listen --out <file>
 Packs and venv as in tools/sound-words-test/README.md (supertonic-3-3 and kokoro-en-2 unzipped into <packs>/<zip name>/)."""
 import argparse
 import html

@@ -1,0 +1,84 @@
+{
+  "kind": "Starter",
+  "id": "bee62232085d4c1ab50cdf574530f473",
+  "title": "The Gingerbread Man",
+  "version": 8,
+  "ageMin": 3,
+  "ageMax": 6,
+  "author": "Traditional",
+  "credits": "Retold traditional tale · free to share",
+  "colour": 1,
+  "added": "2026-10-25",
+  "order": 2,
+  "cast": [
+    {
+      "name": "Granny",
+      "voice": "hen",
+      "gender": "Female",
+      "age": "Old",
+      "being": "Person",
+      "qualities": [
+        "Warm",
+        "Soft"
+      ]
+    },
+    {
+      "name": "Grandpa",
+      "voice": "bear",
+      "gender": "Male",
+      "age": "Old",
+      "being": "Person",
+      "qualities": [
+        "Warm",
+        "Booming"
+      ]
+    },
+    {
+      "name": "Gingerbread Man",
+      "voice": "piglet",
+      "gender": "Male",
+      "age": "Child",
+      "being": "Person",
+      "qualities": [
+        "Bouncy",
+        "Bright"
+      ]
+    },
+    {
+      "name": "Cow",
+      "voice": "ewe",
+      "gender": "Female",
+      "age": "Adult",
+      "qualities": [
+        "Soft",
+        "Warm"
+      ]
+    },
+    {
+      "name": "Horse",
+      "voice": "bee",
+      "gender": "Female",
+      "age": "Adult",
+      "qualities": [
+        "Bouncy",
+        "Bright"
+      ]
+    },
+    {
+      "name": "Fox",
+      "voice": "knight",
+      "gender": "Male",
+      "age": "Adult",
+      "being": "Fox",
+      "qualities": [
+        "Warm",
+        "Bold"
+      ]
+    }
+  ],
+  "notAnimals": [
+    "Grandpa",
+    "Granny"
+  ],
+  "contentHash": "0a59a3af24bd87e2f3064c91efc34444908a2767a923d463e91a60be511ba008"
+}

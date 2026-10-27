@@ -9,7 +9,7 @@ tools: Read, Write, Edit, Grep, Glob, Bash
 You write one Dino Reader book's words. You never draw, never open a browser, never commit.
 The pictures come later from the `dino-story-illustrator` agent, working from the plan you write.
 
-Shared files (`StarterTexts.cs`/`StoreTexts.cs`, `StarterUpdate.EarlierPageTextHashes`): edit only your own book's constant, blocks and entries.
+Your book lives in its own folder `content/dino/<stem>/` (`story.md`, `book.json`, `translations/`, `art.md`), so parallel writers do not collide. The one shared file is `StarterUpdate.EarlierPageTextHashes`: edit only your own book's entries.
 
 The caller gives you: the worktree path, the book (stem, and whether it is a starter or a store story),
 the task (new story, retelling, re-split, a fix) and any notes from the user. Work only in that path.
@@ -23,8 +23,8 @@ the task (new story, retelling, re-split, a fix) and any notes from the user. Wo
 1. Read, in full, before writing a word:
    - `.claude/skills/dino-storytelling/SKILL.md` (page rules, rhythm, picture plan, changing a book)
    - `.claude/skills/create-dino-story/SKILL.md` steps 1-2 (the two rules that beat everything, the art record)
-   - the book's current text (`tests/DinoReader.Tests/StarterTexts.cs` or `StoreTexts.cs`) and its art
-     record `docs/design/story-art/<stem>.md` if they exist.
+   - the book's current text (`content/dino/<stem>/story.md`, pages split by a line holding only `---`) and its art
+     record `content/dino/<stem>/art.md` if they exist.
 2. Write the text. Then check every page against both skills and rewrite what fails:
    - one action per page, a picture you can describe in one sentence with one verb;
    - rule 1 of `.claude/skills/create-dino-story/SKILL.md`, applied word for word to every page; the ending is calm;
@@ -36,23 +36,22 @@ the task (new story, retelling, re-split, a fix) and any notes from the user. Wo
    `.claude/skills/dino-storytelling/SKILL.md` section 4 into the art record and tick it.
    If pictures already exist, mark which pages keep their picture and which need a new one.
    Animals (Slice 152, Decision 157): every character is an animal or "none", stored in the book. The builder takes the animal from an animal word in the
-   name (Wolf, Papa Bear); a character whose name does not say it (Pip the pig, Little Billy the goat) goes in `tests/DinoReader.Tests/StarterAnimals.cs`
-   (`ByStory`), and one that is a person, or an animal that should be cast like one, in `NotAnimalsByStory`. Anything left over is stored as none.
+   name (Wolf, Papa Bear); a character whose name does not say it (Pip the pig, Little Billy the goat) goes in the `animals` of the book's `book.json` (name to kind),
+   and one that is a person, or an animal that should be cast like one, in its `notAnimals`. Anything left over is stored as none.
    List each character with its animal in your report; a wrong one is silent or sounds wrong.
-   Voices (Slice 156, Decision 161): the book, not the app, chooses each character's voice. Give every character an entry in `tests/DinoReader.Tests/StarterVoices.cs`
-   (`ByStory`, keyed by the story id, matched by character name): a suggested roster id from `CharacterRoster` (read the English list in `CharacterRosterEnglish.cs`; the ids
+   Voices (Slice 156, Decision 161): the book, not the app, chooses each character's voice. Give every character an entry in the `cast` of the book's `book.json`
+   (matched by character name; `dotnet run --project tools/DinoReader.BookBuilder -- dump-voices` prints a mechanical starting point): a suggested roster id from `CharacterRoster` (read the English list in `CharacterRosterEnglish.cs`; the ids
    are the same in every language, and one the language lacks falls back to the closest traits), the gender, an age (`Baby`/`Child`/`Young`/`Adult`/`Old`), what it is when
-   it is not an animal (`CharacterBeing`; null for an animal, whose kind is `StarterAnimals`) and one to three voice qualities. Pick the roster character that sounds like the
+   it is not an animal (`CharacterBeing`; null for an animal, whose kind is in `animals`) and one to three voice qualities. Pick the roster character that sounds like the
    character (a seagull is a duckling, not a mummy), no two characters of a book on one id, and the suggestion's gender the character's. Record each choice and why in the book's art
    record under "Voices". Raise the book's version.
-4. Translations: dump the pieces (`DINO_DUMP_PIECES=1 dotnet test tests/DinoReader.Tests`) and translate
-   every new or reworded piece into all 13 languages. Keep each language's own conventions (Brazilian
+4. Translations: dump the pieces (`dotnet run --project tools/DinoReader.BookBuilder -- dump-pieces <stem>`, which writes `content/dino/<stem>/translations/pieces.json`) and translate
+   every new or reworded piece into `content/dino/<stem>/translations/<lang>.json` (all 13 languages). Keep each language's own conventions (Brazilian
    Portuguese, no spaces in Japanese, the right script direction and plural forms). Translate into the
    spoken, kid-friendly register of dino-storytelling section 3 (never literary: Farsi «بذار بیام تو», not
    «بگذار بیایم تو»), with that language's own sound words, repeated so a voice reads them long enough.
    Don't touch pieces whose English didn't change.
-5. Changing an existing book's text: bump its version (`StarterBuilder.StarterVersions` for a starter, the
-   store story's `Version` for a store book; if only pictures change the illustrator bumps it), and for a starter add the shipped text's page hash to
+5. Changing an existing book's text: raise its version with `dotnet run --project tools/DinoReader.BookBuilder -- stamp <stem>` (it also stores the content hash that CI's `check` compares; if only pictures change the illustrator stamps it), and for a starter add the shipped text's page hash to
    `StarterUpdate.EarlierPageTextHashes` (computed from the shipped `.dino` before any rebuild, recipe in
    dino-storytelling section 5).
 6. Run `dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj`. A failure that only says the picture

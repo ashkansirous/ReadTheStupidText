@@ -1,3 +1,4 @@
+using DinoReader.BookBuilder;
 using DinoReader.Core;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Domain.Reading;
@@ -98,7 +99,7 @@ public class AnimalCharacterTests
     [Fact]
     public void The_pigs_starter_cast_as_piglets_oink_and_the_wolf_growls()
     {
-        Story story = StarterBuilder.Build(StarterTexts.PigsId, "The Three Little Pigs", StarterTexts.Pigs, 3);
+        Story story = StarterBuilder.Build(Books.IdOf("three-little-pigs"), "The Three Little Pigs", Books.Folder("three-little-pigs").Text!, 3);
         var characters = story.Cast.Select(m => C(m.CharacterId, m.Name)).ToList();
 
         var animals = AnimalSounds.OfCast(characters, "en", CastAsRoster(characters, story.Text, "en"), CharacterRoster.Speakers("en"), story.Text);
@@ -204,7 +205,7 @@ public class AnimalCharacterTests
     [Fact]
     public void The_story_text_alone_finds_the_pigs_in_the_pigs_starter()
     {
-        Story story = StarterBuilder.Build(StarterTexts.PigsId, "The Three Little Pigs", StarterTexts.Pigs, 3);
+        Story story = StarterBuilder.Build(Books.IdOf("three-little-pigs"), "The Three Little Pigs", Books.Folder("three-little-pigs").Text!, 3);
         var characters = story.Cast.Select(m => C(m.CharacterId, m.Name)).ToList();
 
         var animals = AnimalSounds.Resolve(characters, "en", [], story.Text);
@@ -324,7 +325,7 @@ public class AnimalCharacterTests
     [Fact]
     public void Every_store_and_starter_text_guess_is_gentle_and_never_gives_a_person_an_animal()
     {
-        foreach (StoreStorySpec spec in StoreTexts.All)
+        foreach (StoreStorySpec spec in Books.Store)
         {
             Story story = StarterBuilder.Build(spec.Id, spec.Title, spec.Text, spec.ColourIndex);
             var people = story.Cast.Where(m => m.Name is "Jack" or "Goldilocks" or "Hans" or "Greta" or "Red Riding Hood").Select(m => C(m.CharacterId, m.Name)).ToList();

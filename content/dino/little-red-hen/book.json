@@ -1,0 +1,62 @@
+{
+  "kind": "Store",
+  "id": "6eff8d779a9542fcafa76ae58ba1e96b",
+  "title": "The Little Red Hen",
+  "version": 8,
+  "ageMin": 3,
+  "ageMax": 6,
+  "author": "Traditional",
+  "credits": "Retold traditional tale · free to share",
+  "colour": 3,
+  "added": "2026-10-24",
+  "order": 4,
+  "characters": [
+    "Hen",
+    "Dog",
+    "Cat",
+    "Duck"
+  ],
+  "cast": [
+    {
+      "name": "Hen",
+      "voice": "mummy",
+      "gender": "Female",
+      "age": "Adult",
+      "qualities": [
+        "Bright",
+        "Bouncy",
+        "Warm"
+      ]
+    },
+    {
+      "name": "Dog",
+      "voice": "puppy",
+      "gender": "Male",
+      "age": "Young",
+      "qualities": [
+        "Bouncy",
+        "Warm"
+      ]
+    },
+    {
+      "name": "Cat",
+      "voice": "kitten",
+      "gender": "Female",
+      "age": "Young",
+      "qualities": [
+        "Soft"
+      ]
+    },
+    {
+      "name": "Duck",
+      "voice": "jester",
+      "gender": "Male",
+      "age": "Young",
+      "qualities": [
+        "Squawky",
+        "Squeaky"
+      ]
+    }
+  ],
+  "contentHash": "891333603c9568ef1bab9acdc87b0cded4ad2fed62be7399ba814f6c88fc9dd3"
+}

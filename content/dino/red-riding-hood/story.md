@@ -1,0 +1,91 @@
+Once upon a time, a little girl lived with her mum at the edge of a big green wood. Her grandma had made her a bright red hood, and she wore it every single day. So everybody called her Red Riding Hood.
+
+Her little white puppy, Button, went everywhere with her.
+---
+One morning, Mum packed a basket of honey cakes and apples for Grandma's birthday.
+
+"Stay on the path all the way, okay?" said Mum. "If a stranger asks you to leave the path, just say no, thank you, and tell a grown-up you know."
+
+"I stay on the path, all the way to Grandma's!" said Red Riding Hood.
+---
+Red Riding Hood waved bye-bye, and off she went, with the basket on her arm and Button trotting along beside her.
+
+Tip, tap, tip, tap, went her little red boots along the path.
+---
+In the middle of the wood, a big grey Wolf was sitting on a log by the path. He looked lost, and his tummy was rumbling. Rumble, rumble, rumble!
+
+"Hello," said Wolf. "I'm new in this wood, and I can't find my way."
+---
+"Do you want to come and pick blackberries with me, over there in the trees?" said Wolf. "I'm so hungry, and I've got nobody to play with."
+
+"No, thank you," said Red Riding Hood. "I stay on the path, all the way to Grandma's!"
+
+"Oh, okay," said Wolf, and his ears drooped a little.
+---
+Tip, tap, tip, tap, went her little red boots along the path.
+
+Soon she met the Woodcutter, Grandma's friend, stacking logs by the path.
+
+"A Wolf I don't know asked me to leave the path, so I said no, thank you," said Red Riding Hood.
+
+"Well done, you! You stayed on the path, and you told me," said Woodcutter.
+---
+The Woodcutter put down his logs. He took Red Riding Hood's hand, and they went back to see if the Wolf needed help.
+
+"Hello, Wolf. Are you okay?" said Woodcutter.
+
+"I'm lost, and I'm hungry, and I haven't got a single friend," said Wolf.
+
+His tummy rumbled again. Rumble, rumble, rumble!
+---
+"It's Grandma's birthday today. Come to her party with us!" said Woodcutter. "She always says there's room for one more."
+
+So they all walked along the path together, and the Wolf wagged and wagged his tail.
+
+"I stay on the path, all the way to Grandma's!" sang Red Riding Hood.
+---
+Knock! Knock! Knock!
+
+"Who's there?" said Grandma.
+
+"It's me, Red Riding Hood, and I've brought some friends!" said Red Riding Hood.
+
+Grandma opened the door wide. "Come in, come in! There's always room for one more!" said Grandma.
+---
+Everybody sat round Grandma's little table, and they shared the honey cakes and apples from the basket.
+
+"Happy birthday, Grandma!" said Red Riding Hood.
+
+The Wolf munched three honey cakes. "Mmm! Yum, yum, yum!" said Wolf. "This is the yummiest cake in the whole wood!"
+---
+Grandma's spare glasses were lying on the table. "Can I try them on?" said Wolf. "Of course you can!" said Grandma. The Wolf put them on, and his eyes looked big and round!
+
+"Wolf, what big eyes you have!" said Red Riding Hood.
+
+"All the better to see you with!" said Wolf.
+
+Ha, ha, ha! Hee, hee, hee! Everybody laughed.
+---
+Next, the Wolf tried on Grandma's fluffy pink earmuffs from the peg by the door. They were way too small for his big pointy ears!
+
+"Wolf, what big ears you have!" said Red Riding Hood.
+
+"All the better to hear you with!" said Wolf.
+
+Ha, ha, ha! Hee, hee, hee! Everybody laughed.
+---
+Then the Wolf smiled the biggest, happiest smile of all.
+
+"Wolf, what a big smile you have!" said Red Riding Hood.
+
+"That's because I'm not lost any more," said Wolf. "I've got friends now!"
+
+And Grandma gave him a great big, warm hug.
+---
+That night, snuggled up in bed, Red Riding Hood told Mum all about her day.
+
+"I stayed on the path, and I told a grown-up," said Red Riding Hood.
+
+"Well done, sweetheart," said Mum, and she kissed her goodnight. Button was fast asleep at her feet.
+
+From that day on, the Wolf came to Grandma's for honey cake every Sunday.

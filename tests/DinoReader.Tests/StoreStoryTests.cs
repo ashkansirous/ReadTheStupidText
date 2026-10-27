@@ -1,3 +1,4 @@
+using DinoReader.BookBuilder;
 using ReadTheStupidText.Domain.Reading;
 using System.Text.Json;
 using DinoReader.Core;
@@ -21,41 +22,19 @@ public sealed class StoreStoryTests : IDisposable
     }
 
     [Fact]
-    public async Task BuildStore_WhenAskedByTheEnvironment_WritesTheStoreFolders()
-    {
-        if (Environment.GetEnvironmentVariable(StoreBuilder.BuildSwitch) != "1")
-        {
-            return;
-        }
-
-        await StoreBuilder.WriteAllAsync();
-    }
-
-    [Fact]
-    public async Task DumpPieces_WhenAskedByTheEnvironment_WritesThePieceFilesOfTheStoreStories()
-    {
-        if (Environment.GetEnvironmentVariable(StarterBuilder.DumpSwitch) != "1")
-        {
-            return;
-        }
-
-        await StoreBuilder.DumpPiecesAsync();
-    }
-
-    [Fact]
     public void TheStore_HasEveryStory_WithFixedUniqueIds()
     {
-        Assert.Equal(StoryCount, StoreTexts.All.Count);
-        Assert.Equal(StoryCount, StoreTexts.All.Select(s => s.Id).Distinct().Count());
-        Assert.Equal(StoryCount, StoreTexts.All.Select(s => s.Stem).Distinct().Count());
-        Assert.All(StoreTexts.All, s => Assert.True(StoryIds.IsValid(s.Id), s.Title));
-        Assert.Empty(StoreTexts.All.Select(s => s.Id).Intersect(StarterBuilder.Starters.Select(s => s.Id).Append(StarterBuilder.GoodEnoughId)));
+        Assert.Equal(StoryCount, Books.Store.Count);
+        Assert.Equal(StoryCount, Books.Store.Select(s => s.Id).Distinct().Count());
+        Assert.Equal(StoryCount, Books.Store.Select(s => s.Stem).Distinct().Count());
+        Assert.All(Books.Store, s => Assert.True(StoryIds.IsValid(s.Id), s.Title));
+        Assert.Empty(Books.Store.Select(s => s.Id).Intersect(StarterBuilder.Starters.Select(s => s.Id).Append(StarterBuilder.GoodEnoughId)));
     }
 
     [Fact]
     public void EveryStoreStory_IsShortAndHasAMeaningfulCredit()
     {
-        foreach (StoreStorySpec spec in StoreTexts.All)
+        foreach (StoreStorySpec spec in Books.Store)
         {
             Story story = StoreBuilder.Build(spec);
 
@@ -72,7 +51,7 @@ public sealed class StoreStoryTests : IDisposable
     [Fact]
     public void EveryStoreStory_WritesItsTitleInEveryOtherLanguage_IntoMetaJson()
     {
-        foreach (StoreStorySpec spec in StoreTexts.All)
+        foreach (StoreStorySpec spec in Books.Store)
         {
             using JsonDocument meta = JsonDocument.Parse(StoreBuilder.MetaJson(spec, StoreBuilder.Build(spec)));
             JsonElement titles = meta.RootElement.GetProperty("titles");
@@ -87,7 +66,7 @@ public sealed class StoreStoryTests : IDisposable
     public void EveryShippedBook_HasATitleInEveryOtherLanguage()
     {
         string[] others = UiLanguage.Supported.Where(l => l != UiLanguage.English).Order().ToArray();
-        IEnumerable<string> titles = StoreTexts.All.Select(s => s.Title).Concat(StarterBuilder.Starters.Select(s => s.Title)).Append(StarterBuilder.GoodEnoughTitle);
+        IEnumerable<string> titles = Books.Store.Select(s => s.Title).Concat(StarterBuilder.Starters.Select(s => s.Title)).Append(StarterBuilder.GoodEnoughTitle);
 
         foreach (string title in titles)
         {
@@ -101,7 +80,7 @@ public sealed class StoreStoryTests : IDisposable
     [Fact]
     public void EveryStoreStory_CastsItsNamedCharacters_EachWithAVoiceOfTheirOwn()
     {
-        foreach (StoreStorySpec spec in StoreTexts.All)
+        foreach (StoreStorySpec spec in Books.Store)
         {
             Story story = StoreBuilder.Build(spec);
             IReadOnlyList<string> found = story.Cast.Select(c => c.Name).ToList();
@@ -126,7 +105,7 @@ public sealed class StoreStoryTests : IDisposable
     [MemberData(nameof(Languages))]
     public void TheLionAndTheMouse_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
     {
-        AssertEachIsPlayedByTheirGender(StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.LionAndMouseId)), language, new Dictionary<string, Gender>
+        AssertEachIsPlayedByTheirGender(StoreBuilder.Build(Books.SpecOf("lion-and-mouse")), language, new Dictionary<string, Gender>
         {
             ["Lion"] = Gender.Male, ["Mouse"] = Gender.Female,
         });
@@ -138,7 +117,7 @@ public sealed class StoreStoryTests : IDisposable
     [MemberData(nameof(Languages))]
     public void TheUglyDuckling_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
     {
-        AssertEachIsPlayedByTheirGender(StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.UglyDucklingId)), language, new Dictionary<string, Gender>
+        AssertEachIsPlayedByTheirGender(StoreBuilder.Build(Books.SpecOf("ugly-duckling")), language, new Dictionary<string, Gender>
         {
             ["Mother Duck"] = Gender.Female, ["Dilly"] = Gender.Female, ["Hen"] = Gender.Female, ["Duckling"] = Gender.Male, ["Swan"] = Gender.Male,
         });
@@ -151,7 +130,7 @@ public sealed class StoreStoryTests : IDisposable
     [MemberData(nameof(Languages))]
     public void Goldilocks_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
     {
-        AssertEachIsPlayedByTheirGender(StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.GoldilocksId)), language, new Dictionary<string, Gender>
+        AssertEachIsPlayedByTheirGender(StoreBuilder.Build(Books.SpecOf("goldilocks")), language, new Dictionary<string, Gender>
         {
             ["Goldilocks"] = Gender.Female, ["Mama Bear"] = Gender.Female, ["Papa Bear"] = Gender.Male, ["Baby Bear"] = Gender.Male,
         });
@@ -168,7 +147,7 @@ public sealed class StoreStoryTests : IDisposable
             ["Hen"] = Gender.Female, ["Dog"] = Gender.Male, ["Cat"] = Gender.Female, ["Duck"] = Gender.Male,
         };
 
-        Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.RedHenId));
+        Story story = StoreBuilder.Build(Books.SpecOf("little-red-hen"));
         AssertEachIsPlayedByTheirGender(story, language, expected);
     }
 
@@ -178,7 +157,7 @@ public sealed class StoreStoryTests : IDisposable
     [MemberData(nameof(Languages))]
     public void TheTownMouseAndTheCountryMouse_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
     {
-        Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.TownMouseId));
+        Story story = StoreBuilder.Build(Books.SpecOf("town-mouse-country-mouse"));
         var expected = new Dictionary<string, Gender>
         {
             ["Town Mouse"] = Gender.Female, ["Country Mouse"] = Gender.Male,
@@ -200,7 +179,7 @@ public sealed class StoreStoryTests : IDisposable
             ["Mrs. Rabbit"] = Gender.Female, ["Flopsy"] = Gender.Female, ["Peter"] = Gender.Male, ["Mr. McGregor"] = Gender.Male, ["Robin"] = Gender.Male,
         };
 
-        Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.PeterRabbitId));
+        Story story = StoreBuilder.Build(Books.SpecOf("peter-rabbit"));
         Assert.Equal(expected.Keys.Order(), story.Cast.Select(m => m.Name).Order());
         Assert.All(story.Cast, m => Assert.True(m.Gender == expected[m.Name], $"{m.Name} is stored as {m.Gender}"));
         AssertEachIsPlayedByTheirGender(story, language, expected);
@@ -216,7 +195,7 @@ public sealed class StoreStoryTests : IDisposable
             ["Kathryn"] = Gender.Female, ["Izzy"] = Gender.Female, ["Pancake Polly"] = Gender.Female, ["Seagull"] = Gender.Female, ["Billy"] = Gender.Male,
         };
 
-        Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.TreasureId));
+        Story story = StoreBuilder.Build(Books.SpecOf("x-marks-the-treasure"));
         AssertEachIsPlayedByTheirGender(story, language, expected);
     }
 
@@ -232,7 +211,7 @@ public sealed class StoreStoryTests : IDisposable
             ["Hans"] = Gender.Male, ["Greta"] = Gender.Female, ["Nib"] = Gender.Female, ["Nob"] = Gender.Male,
         };
 
-        Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.ElvesId));
+        Story story = StoreBuilder.Build(Books.SpecOf("elves-and-shoemaker"));
         Assert.Equal(expected.Keys.Order(), story.Cast.Select(m => m.Name).Order());
         Assert.All(story.Cast, m => Assert.True(m.Gender == expected[m.Name], $"{m.Name} is stored as {m.Gender}"));
         AssertEachIsPlayedByTheirGender(story, language, expected);
@@ -249,7 +228,7 @@ public sealed class StoreStoryTests : IDisposable
             ["Little Billy"] = Gender.Male, ["Middle Billy"] = Gender.Male, ["Big Billy"] = Gender.Male, ["Troll"] = Gender.Male,
         };
 
-        Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.BillyGoatsId));
+        Story story = StoreBuilder.Build(Books.SpecOf("billy-goats-gruff"));
         Assert.Equal(expected.Keys.Order(), story.Cast.Select(m => m.Name).Order());
         Assert.All(story.Cast, m => Assert.True(m.Gender == expected[m.Name], $"{m.Name} is stored as {m.Gender}"));
         AssertEachIsPlayedByTheirGender(story, language, expected);
@@ -261,7 +240,7 @@ public sealed class StoreStoryTests : IDisposable
     [MemberData(nameof(Languages))]
     public void TheGingerbreadMan_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
     {
-        Story story = StarterBuilder.Build(StarterTexts.GingerbreadId, "The Gingerbread Man", StarterTexts.Gingerbread, 1);
+        Story story = StarterBuilder.Build(Books.IdOf("gingerbread-man"), "The Gingerbread Man", Books.Folder("gingerbread-man").Text!, 1);
         var expected = new Dictionary<string, Gender>
         {
             ["Granny"] = Gender.Female, ["Grandpa"] = Gender.Male, ["Gingerbread Man"] = Gender.Male, ["Cow"] = Gender.Female, ["Horse"] = Gender.Female, ["Fox"] = Gender.Male,
@@ -278,7 +257,7 @@ public sealed class StoreStoryTests : IDisposable
     [MemberData(nameof(Languages))]
     public void TheTortoiseAndTheHare_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
     {
-        Story story = StarterBuilder.Build(StarterTexts.TortoiseId, "The Tortoise and the Hare", StarterTexts.Tortoise, 0);
+        Story story = StarterBuilder.Build(Books.IdOf("tortoise-and-hare"), "The Tortoise and the Hare", Books.Folder("tortoise-and-hare").Text!, 0);
         var expected = new Dictionary<string, Gender>
         {
             ["Hare"] = Gender.Male, ["Tortoise"] = Gender.Female, ["Owl"] = Gender.Male, ["Squirrel"] = Gender.Female, ["Hedgehog"] = Gender.Male, ["Frog"] = Gender.Female,
@@ -316,7 +295,7 @@ public sealed class StoreStoryTests : IDisposable
     [Fact]
     public void EveryStoreStory_HasAllTheOtherLanguagesTranslated_ForEveryPiece()
     {
-        foreach (StoreStorySpec spec in StoreTexts.All)
+        foreach (StoreStorySpec spec in Books.Store)
         {
             Story story = StoreBuilder.Build(spec);
             IReadOnlyList<string> pieces = StoryPieces.TranslatablePieceTexts(story);
@@ -332,7 +311,7 @@ public sealed class StoreStoryTests : IDisposable
     [Fact]
     public async Task APackedStoreStory_ImportsWithItsStoreId_AndItsTranslations()
     {
-        StoreStorySpec spec = StoreTexts.All[0];
+        StoreStorySpec spec = Books.Store[0];
         var library = new FileStoryLibrary(_root);
         Story built = StoreBuilder.Build(spec);
         await library.AddAsync(built);
@@ -352,7 +331,7 @@ public sealed class StoreStoryTests : IDisposable
     [Fact]
     public void TheMeta_HoldsWhatTheWorkerChecks_AndTheCredit()
     {
-        StoreStorySpec spec = StoreTexts.All[0];
+        StoreStorySpec spec = Books.Store[0];
         Story story = StoreBuilder.Build(spec);
 
         using JsonDocument meta = JsonDocument.Parse(StoreBuilder.MetaJson(spec, story));
@@ -386,7 +365,7 @@ public sealed class StoreStoryTests : IDisposable
     [Fact]
     public void EveryStoreTitle_FitsTheCoverFont()
     {
-        Assert.All(StoreTexts.All, s => Assert.All(StoreCover.Wrap(s.Title), l => Assert.True(l.Length <= 10 && l.All(c => c is ' ' or '!' or (>= 'A' and <= 'Z')), l)));
+        Assert.All(Books.Store, s => Assert.All(StoreCover.Wrap(s.Title), l => Assert.True(l.Length <= 10 && l.All(c => c is ' ' or '!' or (>= 'A' and <= 'Z')), l)));
     }
 
     [Fact]
@@ -455,7 +434,7 @@ public sealed class StoreStoryTests : IDisposable
     public async Task APictureCover_IsStoredAsTheCoverPhoto_AndBecomesTheStoreCover()
     {
         var library = new FileStoryLibrary(_root);
-        StoreStorySpec spec = StoreTexts.All[0];
+        StoreStorySpec spec = Books.Store[0];
         Story story = StoreBuilder.Build(spec);
         await library.AddAsync(story);
         string source = Path.Combine(_root, "source-cover.jpg");
@@ -476,7 +455,7 @@ public sealed class StoreStoryTests : IDisposable
     [Fact]
     public void PicturesOfTheWrongCount_FailTheBuild()
     {
-        Story story = StoreBuilder.Build(StoreTexts.All[0]);
+        Story story = StoreBuilder.Build(Books.Store[0]);
         string[] tooFew = Enumerable.Range(1, story.Pages.Count - 1).Select(i => $"{i}.jpg").ToArray();
 
         Assert.Throws<InvalidOperationException>(() => StarterBuilder.WithPictures(story, tooFew));

@@ -1,0 +1,40 @@
+{
+  "kind": "Store",
+  "id": "67dfb7db7c1c418c811cfed88876327f",
+  "title": "The Town Mouse and the Country Mouse",
+  "version": 7,
+  "ageMin": 4,
+  "ageMax": 7,
+  "author": "Aesop",
+  "credits": "Retold from Aesop · free to share",
+  "colour": 2,
+  "added": "2026-10-24",
+  "order": 7,
+  "characters": [
+    "Town Mouse",
+    "Country Mouse"
+  ],
+  "cast": [
+    {
+      "name": "Town Mouse",
+      "voice": "bee",
+      "gender": "Female",
+      "age": "Young",
+      "qualities": [
+        "Bright",
+        "Bouncy"
+      ]
+    },
+    {
+      "name": "Country Mouse",
+      "voice": "piglet",
+      "gender": "Male",
+      "age": "Young",
+      "qualities": [
+        "Soft",
+        "Warm"
+      ]
+    }
+  ],
+  "contentHash": "0f2f4e8bac59ff757954b9677e12318624849c088f439d2354a0f5d29774f525"
+}

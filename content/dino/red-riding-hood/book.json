@@ -1,0 +1,77 @@
+{
+  "kind": "Store",
+  "id": "1f0f0cb207b244368b7aef26028f4ac5",
+  "title": "Little Red Riding Hood",
+  "version": 8,
+  "ageMin": 4,
+  "ageMax": 7,
+  "author": "Traditional",
+  "credits": "Retold traditional tale · free to share",
+  "colour": 3,
+  "added": "2026-10-24",
+  "order": 2,
+  "characters": [
+    "Red Riding Hood",
+    "Mum",
+    "Wolf",
+    "Grandma",
+    "Woodcutter"
+  ],
+  "cast": [
+    {
+      "name": "Red Riding Hood",
+      "voice": "bee",
+      "gender": "Female",
+      "age": "Child",
+      "being": "Person",
+      "qualities": [
+        "Bright",
+        "Bouncy"
+      ]
+    },
+    {
+      "name": "Mum",
+      "voice": "mummy",
+      "gender": "Female",
+      "age": "Adult",
+      "being": "Person",
+      "qualities": [
+        "Warm",
+        "Soft"
+      ]
+    },
+    {
+      "name": "Wolf",
+      "voice": "puppy",
+      "gender": "Male",
+      "age": "Young",
+      "qualities": [
+        "Bouncy",
+        "Warm"
+      ]
+    },
+    {
+      "name": "Grandma",
+      "voice": "hen",
+      "gender": "Female",
+      "age": "Old",
+      "being": "Person",
+      "qualities": [
+        "Warm",
+        "Soft"
+      ]
+    },
+    {
+      "name": "Woodcutter",
+      "voice": "giant",
+      "gender": "Male",
+      "age": "Adult",
+      "being": "Person",
+      "qualities": [
+        "Booming",
+        "Warm"
+      ]
+    }
+  ],
+  "contentHash": "04d1be41f35bd80ea6b815cc100b400216c3fc67191f61a880bb452883703563"
+}

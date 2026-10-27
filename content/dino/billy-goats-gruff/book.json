@@ -1,0 +1,67 @@
+{
+  "kind": "Store",
+  "id": "32d04b935a5649088293314cc648c825",
+  "title": "The Three Billy Goats Gruff",
+  "version": 9,
+  "ageMin": 4,
+  "ageMax": 7,
+  "author": "Traditional",
+  "credits": "Retold traditional tale · free to share",
+  "colour": 0,
+  "added": "2026-10-24",
+  "order": 5,
+  "characters": [
+    "Little Billy",
+    "Middle Billy",
+    "Big Billy",
+    "Troll"
+  ],
+  "cast": [
+    {
+      "name": "Little Billy",
+      "voice": "piglet",
+      "gender": "Male",
+      "age": "Child",
+      "qualities": [
+        "Squeaky",
+        "Bright"
+      ]
+    },
+    {
+      "name": "Middle Billy",
+      "voice": "knight",
+      "gender": "Male",
+      "age": "Young",
+      "qualities": [
+        "Bold",
+        "Bright"
+      ]
+    },
+    {
+      "name": "Big Billy",
+      "voice": "giant",
+      "gender": "Male",
+      "age": "Adult",
+      "qualities": [
+        "Booming",
+        "Warm"
+      ]
+    },
+    {
+      "name": "Troll",
+      "voice": "troll",
+      "gender": "Male",
+      "age": "Adult",
+      "being": "Troll",
+      "qualities": [
+        "Gruff"
+      ]
+    }
+  ],
+  "animals": {
+    "Little Billy": "Goat",
+    "Middle Billy": "Goat",
+    "Big Billy": "Goat"
+  },
+  "contentHash": "19476114067c411d61dca52bd8c122b39afc77062d576c8ba424885b9c215a7e"
+}
