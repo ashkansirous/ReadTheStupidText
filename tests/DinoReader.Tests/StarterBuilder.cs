@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using DinoReader.Core;
@@ -21,6 +22,7 @@ internal static class StarterBuilder
     public const string GoodEnoughTitle = "Good Enough";
     public const string GoodEnoughFile = "good-enough.dino";
     public const int GoodEnoughColourIndex = 2;
+    private const int ContentNameLength = 12;
     private const string LinesFile = "lines.json";
     private const string PiecesSuffix = ".pieces.json";
     internal const string StoryLanguage = "en";
@@ -113,9 +115,19 @@ internal static class StarterBuilder
             return story;
         }
 
-        string cover = await library.StoreFileAsync(story.Id, Story.CoverFilePrefix, Story.CoverFileExtension,
+        string stored = await library.StoreFileAsync(story.Id, Story.CoverFilePrefix, Story.CoverFileExtension,
             target => { File.Copy(coverSource, target, overwrite: true); return Task.CompletedTask; });
-        return story with { CoverStyle = CoverStyle.Picture, CoverFile = cover };
+        return story with { CoverStyle = CoverStyle.Picture, CoverFile = RenameToContentName(story.Id, stored, library) };
+    }
+
+    // The library names a cover at random; a shipped package names it by its bytes, so rebuilding unchanged pictures changes nothing in story.json.
+    private static string RenameToContentName(string storyId, string stored, FileStoryLibrary library)
+    {
+        string path = library.TryResolveFile(storyId, stored)!;
+        string hash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path)))[..ContentNameLength].ToLowerInvariant();
+        string name = $"{Story.CoverFilePrefix}-{hash}{Story.CoverFileExtension}";
+        File.Move(path, library.TryResolveFile(storyId, name)!, overwrite: true);
+        return name;
     }
 
     public static void CopyPictures(Story story, IReadOnlyList<string> pictures, FileStoryLibrary library)
@@ -154,7 +166,41 @@ internal static class StarterBuilder
         VoiceCast cast = new VoiceCaster().Cast(attribution.Characters, Voices, NarratorVoice);
         IReadOnlyList<CastMember> members = StoryCast.ToMembers(
             attribution.Characters, cast, rules, animals: StarterAnimals.For(story.Id, attribution.Characters), authored: StarterVoices.For(story.Id, attribution.Characters));
-        return StarterAnimals.Explicit(story.Id, story.Text, attribution.Characters, StarterAnimals.WithNotAnimals(story.Id, StarterVoices.WithGenders(story.Id, members)));
+        IReadOnlyList<CastMember> withGenders = StarterVoices.WithGenders(story.Id, members);
+        IReadOnlyList<CastMember> withAnimals = StarterAnimals.WithNotAnimals(story.Id, withGenders);
+        return StarterAnimals.Explicit(story.Id, story.Text, attribution.Characters, BookVoices(withAnimals, rules));
+    }
+
+    /// <summary>Gives each member whose book chose its voice (Slice 156) the engine voice and flavour that choice resolves to in English, in place of the plain caster's, so an app
+    /// build that ignores <see cref="CastMember.SuggestedVoice"/> plays the chosen voice too.</summary>
+    internal static IReadOnlyList<CastMember> BookVoices(IReadOnlyList<CastMember> members, LanguageRules rules)
+    {
+        if (!members.Any(m => m.HasAuthoredVoice))
+        {
+            return members;
+        }
+
+        var characters = members.Select(m => new Character(m.CharacterId, m.Name, m.Gender, 1)).ToList();
+        IReadOnlyDictionary<string, AnimalKind> animals = AnimalSounds.Resolve(characters, StoryLanguage, members);
+        IReadOnlyList<StorytellerCharacter> speakers = CharacterRoster.Speakers(StoryLanguage);
+        IReadOnlyDictionary<string, PinnedCharacter> pinned = BookPins(members);
+        VoiceCast cast = CastCharacters.Cast(
+            characters, CharacterRoster.Choices(speakers, NarratorVoice), CharacterRoster.For(StoryLanguage), NarratorVoice, c => FlavourGuess.Guess(c.Name, rules), pinned,
+            animalOf: c => animals.TryGetValue(c.Id, out AnimalKind kind) ? AnimalCharacters.HintFor(kind, c.Name, StoryLanguage) : null);
+        return members.Select(m => m.HasAuthoredVoice && cast.VoiceFor(m.CharacterId) is { } voice ? m with { VoiceId = voice, Flavour = cast.Flavours is not null && cast.Flavours.TryGetValue(m.CharacterId, out VoiceFlavour flavour) ? flavour : m.Flavour } : m).ToList();
+    }
+
+    // What the build pins before casting: every member the book decided something for, with its voice left for the roster to resolve; every other member keeps the voice
+    // the plain caster gave it (held as a pick), so a book-chosen voice never lands on a sound a plain member already has.
+    private static IReadOnlyDictionary<string, PinnedCharacter> BookPins(IReadOnlyList<CastMember> members)
+    {
+        var pins = StoryCast.PinnedCharacters(members.Where(m => m.Edited || m.HasAnimalSetting || m.HasAuthoredVoice).Select(m => m with { VoiceId = string.Empty }).ToList()).ToDictionary(p => p.Key, p => p.Value);
+        foreach (CastMember plain in members.Where(m => !pins.ContainsKey(m.CharacterId)))
+        {
+            pins[plain.CharacterId] = new PinnedCharacter(plain.VoiceId, plain.Flavour, true, null, null);
+        }
+
+        return pins;
     }
 
     public static async Task WriteAllAsync()

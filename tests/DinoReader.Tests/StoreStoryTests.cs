@@ -101,7 +101,7 @@ public sealed class StoreStoryTests : IDisposable
     }
 
     // The roster's duckling voices are one gender per language and an animal takes its own animal's voice before its gender, so the builder stores Duckling and Dilly
-    // as no animal (StarterAnimals). The app casts a language other than the story's afresh, carrying only the animal settings; the story's language keeps its cast.
+    // as no animal (StarterAnimals). The app casts a language other than the story's afresh, carrying the animal settings, edits and the book's voice choices; the story's language keeps its cast.
     [Theory]
     [MemberData(nameof(Languages))]
     public void TheUglyDuckling_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
@@ -257,13 +257,13 @@ public sealed class StoreStoryTests : IDisposable
         AssertEachIsPlayedByTheirGender(story, language, expected);
     }
 
-    // Casts the story the way the app does in that language (a language other than the story's is cast afresh, carrying only the animal settings; the story's
+    // Casts the story the way the app does in that language (a language other than the story's is cast afresh, carrying the animal settings, edits and the book's voice choices; the story's
     // language keeps its cast) and checks that each character's roster character has the expected gender.
     private static void AssertEachIsPlayedByTheirGender(Story story, string language, IReadOnlyDictionary<string, Gender> expected)
     {
         IReadOnlyList<CastMember> stored = language == story.Language
             ? story.Cast
-            : story.Cast.Where(m => m.HasAnimalSetting).Select(m => m with { VoiceId = string.Empty }).ToList();
+            : StoryCast.SeedForOtherLanguage(story.Cast);
         List<Character> characters = story.Cast.Select(m => new Character(m.CharacterId, m.Name, m.Gender, 1)).ToList();
         IReadOnlyDictionary<string, AnimalKind> animals = AnimalSounds.Resolve(characters, story.Language, stored, story.Text);
         IReadOnlyList<StorytellerCharacter> speakers = CharacterRoster.Speakers(language);

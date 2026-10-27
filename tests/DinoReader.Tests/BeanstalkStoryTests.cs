@@ -27,7 +27,7 @@ public sealed class BeanstalkStoryTests
         Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.BeanstalkId));
         IReadOnlyList<CastMember> stored = language == story.Language
             ? story.Cast
-            : story.Cast.Where(m => m.HasAnimalSetting).Select(m => m with { VoiceId = string.Empty }).ToList();
+            : StoryCast.SeedForOtherLanguage(story.Cast);
         List<Character> characters = story.Cast.Select(m => new Character(m.CharacterId, m.Name, m.Gender, 1)).ToList();
         IReadOnlyDictionary<string, AnimalKind> animals = AnimalSounds.Resolve(characters, story.Language, stored, story.Text);
         IReadOnlyList<StorytellerCharacter> speakers = CharacterRoster.Speakers(language);
