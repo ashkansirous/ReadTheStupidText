@@ -100,8 +100,8 @@ public sealed class StoreStoryTests : IDisposable
         });
     }
 
-    // The roster's duckling voices are one gender per language and an animal takes its own animal's voice before its gender, so the builder stores Duckling and Dilly
-    // as no animal (StarterAnimals). The app casts a language other than the story's afresh, carrying only the animal settings; the story's language keeps its cast.
+    // The roster's duckling voices are one gender per language, so the book chooses each voice (StarterVoices, Slice 156: mummy, piglet, bunny, bee, knight) with the gender, and Duckling
+    // and Dilly are ducks again. The app casts a language other than the story's afresh, carrying the animal settings and the book's choices; the story's language keeps its cast.
     [Theory]
     [MemberData(nameof(Languages))]
     public void TheUglyDuckling_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
@@ -141,7 +141,7 @@ public sealed class StoreStoryTests : IDisposable
     }
 
     // The Town Mouse and the Country Mouse (Slice 121): Town Mouse is "she" and Country Mouse "he", so the two friends sound different in every language (the
-    // stored English genders are checked too, since every other language is cast from them).
+    // stored English genders are checked too, since every other language is cast from them). Both are mice again since Slice 156: the book suggests bee and piglet.
     [Theory]
     [MemberData(nameof(Languages))]
     public void TheTownMouseAndTheCountryMouse_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
@@ -158,7 +158,7 @@ public sealed class StoreStoryTests : IDisposable
     }
 
     // The Tale of Peter Rabbit (Slice 121): Mrs. Rabbit and Flopsy are "she", Peter, Mr. McGregor and Robin "he". The roster's bunny voice is a girl in most
-    // languages, so the builder stores Peter as no animal (StarterAnimals) and he is cast as a boy; Mrs. Rabbit is grown, which no bunny voice plays.
+    // languages, so Peter's book suggests a boy's voice (piglet) and Flopsy's a girl's (bee); both are rabbits again (Slice 156). Mrs. Rabbit suggests the mummy voice.
     [Theory]
     [MemberData(nameof(Languages))]
     public void TheTaleOfPeterRabbit_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
