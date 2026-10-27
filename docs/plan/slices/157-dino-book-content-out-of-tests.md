@@ -1,6 +1,6 @@
 # Slice 157 — Dino: book content and the book builder out of the test project
 
-*Planned 2026-10-27.* Dino Reader only. Runs **alone**, between waves: it moves every book's files.
+*In progress (wave 2026-10-27d), draft PR.* Dino Reader only. Runs **alone**, between waves: it moves every book's files.
 
 **Batch:** 34 (store plumbing, 2026-10-27; Decision 162)
 **Touches:** `content/dino/**` (new), `tools/DinoReader.BookBuilder/**` (new), `ReadTheStupidText.slnx`,
@@ -8,7 +8,9 @@
 `tools/upload-store-story.ps1`, `tools/prepare-story-pictures.ps1`, `tools/ocr-starter-pages.ps1`,
 `.github/workflows/dinoreader.yml`, `.github/workflows/release.yml`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/ship-targets.mjs`,
 `.github/CLAUDE.md`, `.claude/agents/dino-story-*.md`, `.claude/skills/create-dino-story/**`,
-`.claude/skills/dino-storytelling/**`, `src/DinoReader.App/CLAUDE.md`, `CLAUDE.md`, `docs/design/dino-reader/README.md`
+`.claude/skills/dino-storytelling/**`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.Core/CLAUDE.md`, `tools/voice-listen/**`, `CLAUDE.md`, `docs/design/dino-reader/README.md`
+
+**Grounding (2026-10-27, before claim):** repoint `release.yml:795-796` (the `BuildStore` filter), `publish-store-books.mjs:6-7,89` (comments and error text), `ship-targets.mjs:21-22,170-182` (hard-coded test paths for the `dinostore` target) and `.github/CLAUDE.md:102-109`; `tools/voice-listen` (`DINO_VOICE_LISTEN_OUT`) runs through the test project too; `StoreCover`/`JpegWriter` live inside `StoreBuilder.cs`; art records are per-book `.md` plus `<book>/characters/lineup.jpg`; the writer/skill docs that use `DINO_DUMP_PIECES` change with the `dump-pieces` command. `tools/sound-words-test` does not read the test project.
 
 ## Why
 
