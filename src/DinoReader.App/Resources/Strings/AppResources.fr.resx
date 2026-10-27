@@ -185,6 +185,11 @@
   <data name="Version_Title" xml:space="preserve"><value>Version</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Aidez à améliorer Dino</value></data>
   <data name="Usage_Helper" xml:space="preserve"><value>Envoie des comptes comme « un livre de la boutique a été terminé ». Aucun nom, aucun identifiant, rien de ce que vous avez saisi.</value></data>
+  <data name="Speed_Title" xml:space="preserve"><value>Vitesse de lecture</value></data>
+  <data name="Speed_Sub" xml:space="preserve"><value>Plus lentement, c’est plus facile pour les petits</value></data>
+  <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · lent</value></data>
+  <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
+  <data name="Speed_Play" xml:space="preserve"><value>Écouter cette vitesse</value></data>
   <data name="FirstRun_Usage" xml:space="preserve"><value>Dino compte quels livres sont lus, sans noms ni identifiants. Vous pouvez le désactiver dans les Réglages.</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Votre narrateur ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} Mo</value></data>

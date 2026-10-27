@@ -188,6 +188,11 @@
   <data name="Version_Title" xml:space="preserve"><value>Version</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Help make Dino better</value></data>
   <data name="Usage_Helper" xml:space="preserve"><value>Sends counts like "a store book was finished". No names, no ids, nothing you typed.</value></data>
+  <data name="Speed_Title" xml:space="preserve"><value>Reading speed</value></data>
+  <data name="Speed_Sub" xml:space="preserve"><value>Slower is easier for little ones</value></data>
+  <data name="Speed_EndSlow" xml:space="preserve"><value>0.5x · slow</value></data>
+  <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
+  <data name="Speed_Play" xml:space="preserve"><value>Hear this speed</value></data>
   <data name="FirstRun_Usage" xml:space="preserve"><value>Dino counts which books get read, with no names or ids. You can turn this off in Settings.</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Your {0} narrator</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>

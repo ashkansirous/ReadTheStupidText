@@ -1,6 +1,7 @@
 using System.Diagnostics;
+using DinoReader.Core;
 using ReadTheStupidText.Application.Reading;
-using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Domain.Reading;
 using ReadTheStupidText.Mobile.Shared;
 
 namespace DinoReader;
@@ -13,15 +14,13 @@ namespace DinoReader;
 /// </summary>
 public sealed class SpeechStartup
 {
-	private readonly ISettingsStore _settings;
 	private readonly ISpeechReader _reader;
 	private readonly VoicePackInstaller _installer;
 	private readonly StorytellerDefault _storyteller;
 
-	public SpeechStartup(ISettingsStore settings, ISpeechReader reader, VoicePackInstaller installer, StorytellerDefault storyteller)
+	public SpeechStartup(ISpeechReader reader, VoicePackInstaller installer, StorytellerDefault storyteller)
 	{
 		_storyteller = storyteller;
-		_settings = settings;
 		_reader = reader;
 		_installer = installer;
 	}
@@ -30,7 +29,7 @@ public sealed class SpeechStartup
 	{
 		try
 		{
-			_reader.SetSpeed(_settings.Speed);
+			_reader.SetSpeed(ReadingSpeedPreference.Load());
 			// The storyteller pack is Dino's default voice (Slice 115): fetched on Wi-Fi when missing, never throws. Started first so a slow or failing installer cannot hold it back.
 			_ = _storyteller.StartAsync();
 			await _installer.StartAsync();
@@ -43,4 +42,28 @@ public sealed class SpeechStartup
 			_installer.ReportFailed();
 		}
 	}
+}
+
+/// <summary>
+/// The grown-up's reading speed (Slice 150, Decision 155), kept under Dino's own key because the shared store cannot tell a missing
+/// value from a stored one: nothing stored gives 0.8x, a stored value is clamped to 0.5x-1.2x.
+/// </summary>
+public static class ReadingSpeedPreference
+{
+	private const string Key = "dino.reading.speed";
+
+	public static PlaybackRate Load()
+	{
+		try
+		{
+			return ReadingSpeed.Clamp(Preferences.Default.Get(Key, ReadingSpeed.Default));
+		}
+		catch (InvalidCastException)
+		{
+			// A value of another type under this key: treat it as missing.
+			return ReadingSpeed.DefaultRate;
+		}
+	}
+
+	public static void Save(PlaybackRate speed) => Preferences.Default.Set(Key, speed.Value);
 }

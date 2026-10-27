@@ -185,6 +185,11 @@
   <data name="Version_Title" xml:space="preserve"><value>الإصدار</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>ساعد في تحسين دينو</value></data>
   <data name="Usage_Helper" xml:space="preserve"><value>يرسل أعدادًا مثل «تم إنهاء كتاب من المتجر». بلا أسماء ولا معرّفات ولا شيء كتبته.</value></data>
+  <data name="Speed_Title" xml:space="preserve"><value>سرعة القراءة</value></data>
+  <data name="Speed_Sub" xml:space="preserve"><value>الأبطأ أسهل على الصغار</value></data>
+  <data name="Speed_EndSlow" xml:space="preserve"><value>0.5x · بطيء</value></data>
+  <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
+  <data name="Speed_Play" xml:space="preserve"><value>استمع بهذه السرعة</value></data>
   <data name="FirstRun_Usage" xml:space="preserve"><value>يعدّ دينو الكتب التي تُقرأ، بلا أسماء ولا معرّفات. يمكنك إيقاف ذلك من الإعدادات.</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>الراوي الخاص بك ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} ميغابايت</value></data>

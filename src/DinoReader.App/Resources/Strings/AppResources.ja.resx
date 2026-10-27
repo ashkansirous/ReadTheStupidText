@@ -185,6 +185,11 @@
   <data name="Version_Title" xml:space="preserve"><value>バージョン</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Dino をよくするために協力する</value></data>
   <data name="Usage_Helper" xml:space="preserve"><value>「ストアの本が読み終わった」のような回数だけを送ります。名前も ID も、入力した内容も送りません。</value></data>
+  <data name="Speed_Title" xml:space="preserve"><value>読み上げの速さ</value></data>
+  <data name="Speed_Sub" xml:space="preserve"><value>ゆっくりのほうが小さな子には聞きやすいです</value></data>
+  <data name="Speed_EndSlow" xml:space="preserve"><value>0.5x · ゆっくり</value></data>
+  <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
+  <data name="Speed_Play" xml:space="preserve"><value>この速さで聞く</value></data>
   <data name="FirstRun_Usage" xml:space="preserve"><value>Dino はどの本が読まれたかを、名前や ID なしで数えます。設定でオフにできます。</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>あなたのナレーター（{0}）</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
