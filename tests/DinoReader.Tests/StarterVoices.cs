@@ -17,6 +17,15 @@ internal static class StarterVoices
 {
     private static readonly IReadOnlyDictionary<string, AuthoredCharacter[]> ByStory = new Dictionary<string, AuthoredCharacter[]>
     {
+        // Goldilocks and the Three Bears: a bright, bouncy girl; big booming Papa Bear; warm Mama Bear (a bear again, with a woman's voice in every language); soft little Baby Bear.
+        [StoreTexts.GoldilocksId] =
+        [
+            new("Goldilocks", "bee", Gender.Female, CharacterAge.Child, CharacterBeing.Person, [VoiceQuality.Bright, VoiceQuality.Bouncy]),
+            new("Papa Bear", "bigbear", Gender.Male, CharacterAge.Adult, null, [VoiceQuality.Booming, VoiceQuality.Warm]),
+            new("Mama Bear", "mummy", Gender.Female, CharacterAge.Adult, null, [VoiceQuality.Warm, VoiceQuality.Soft]),
+            new("Baby Bear", "cub", Gender.Male, CharacterAge.Child, null, [VoiceQuality.Soft, VoiceQuality.Bouncy]),
+        ],
+
         // X Marks the Treasure!
         [StoreTexts.TreasureId] =
         [
@@ -27,6 +36,15 @@ internal static class StarterVoices
             new("Pancake Polly", "mummy", Gender.Female, CharacterAge.Adult, CharacterBeing.Pirate, [VoiceQuality.Warm, VoiceQuality.Bouncy]),
         ],
 
+        // The Three Little Pigs: Pip is the hasty one (Cheeky Piglet, small and quick), Pop the playful one (Curly Piglet, bright and squeaky), Pim the careful builder (Snuffly
+        // Piglet, tiny and snorty: the voice left once the quick and the bright ones are taken); the Wolf is silly and huffy, never scary.
+        [StarterTexts.PigsId] =
+        [
+            new("Pip", "piglet", Gender.Male, CharacterAge.Young, null, [VoiceQuality.Bouncy, VoiceQuality.Squeaky]),
+            new("Pop", "piglet3", Gender.Male, CharacterAge.Young, null, [VoiceQuality.Bright, VoiceQuality.Bouncy]),
+            new("Pim", "piglet2", Gender.Male, CharacterAge.Young, null, [VoiceQuality.Soft, VoiceQuality.Warm]),
+            new("Wolf", "wolf", Gender.Male, CharacterAge.Adult, null, [VoiceQuality.Gruff, VoiceQuality.Booming]),
+        ],
         // The Three Billy Goats Gruff: three brothers ("his hooves"), so boys' voices rising in size; the bleat comes from their book animal (Goat), not the voice.
         // The picker gave the Troll the Rumbly Dragon and the brothers girls' lamb and sheep voices (Big Billy, "a big, deep voice", the sleepy sheep). Farsi has no troll: its trait match picks.
         [StoreTexts.BillyGoatsId] =
@@ -50,6 +68,28 @@ internal static class StarterVoices
         [StarterBuilder.GoodEnoughId] =
         [
             new("Hazelnut", "bee", Gender.Female, CharacterAge.Young, null, [VoiceQuality.Bright, VoiceQuality.Warm]),
+        ],
+
+        // The Tortoise and the Hare: three boys and three girls, as the text's pronouns say. Owl and Frog are animals with a sound (their kind is the book's animal); the Hare, Tortoise,
+        // Squirrel and Hedgehog have no sound word, so no kind either. Owl is Grandpa Bear, not the Sleepy Owl: only en and fa have an owl, and elsewhere the trait match ranks a
+        // bird kind above age and gave the wise old Owl the young Chick; Grandpa Bear (old, deep and kind, sleepy) is in every roster, and Owl still hoots (his animal is the book's).
+        [StarterTexts.TortoiseId] =
+        [
+            new("Hare", "puppy", Gender.Male, CharacterAge.Young, null, [VoiceQuality.Bouncy, VoiceQuality.Bold]),
+            new("Tortoise", "hen", Gender.Female, CharacterAge.Adult, null, [VoiceQuality.Sleepy, VoiceQuality.Warm]),
+            new("Owl", "bear", Gender.Male, CharacterAge.Old, null, [VoiceQuality.Sleepy, VoiceQuality.Warm]),
+            new("Squirrel", "bee", Gender.Female, CharacterAge.Young, null, [VoiceQuality.Bouncy, VoiceQuality.Bright]),
+            new("Hedgehog", "piglet", Gender.Male, CharacterAge.Young, null, [VoiceQuality.Bouncy, VoiceQuality.Warm]),
+            new("Frog", "lamb2", Gender.Female, CharacterAge.Young, null, [VoiceQuality.Bouncy, VoiceQuality.Squeaky]),
+        ],
+        // The Little Red Hen: four farm animals with their own animal (and sound), Hen and Cat "she", Dog and Duck "he". A kitten is a boy in fa/es/pt and a duckling a girl in
+        // most rosters, so Cat suggests the kitten and Duck the jolly jester (English only): where those don't fit, the traits give Cat a girl's voice and Duck a boy bird's.
+        [StoreTexts.RedHenId] =
+        [
+            new("Hen", "mummy", Gender.Female, CharacterAge.Adult, null, [VoiceQuality.Bright, VoiceQuality.Bouncy, VoiceQuality.Warm]),
+            new("Dog", "puppy", Gender.Male, CharacterAge.Young, null, [VoiceQuality.Bouncy, VoiceQuality.Warm]),
+            new("Cat", "kitten", Gender.Female, CharacterAge.Young, null, [VoiceQuality.Soft]),
+            new("Duck", "jester", Gender.Male, CharacterAge.Young, null, [VoiceQuality.Squawky, VoiceQuality.Squeaky]),
         ],
     };
 

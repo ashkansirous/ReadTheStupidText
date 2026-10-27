@@ -113,8 +113,8 @@ public sealed class StoreStoryTests : IDisposable
         });
     }
 
-    // The Little Red Hen (Slice 121): the roster's kitten and duckling voices are girls in most languages but boys in Farsi, Spanish and Portuguese, so the builder
-    // stores Cat and Duck as no animal (StarterAnimals) and they are cast by gender; Hen keeps the hen and Dog the puppy, which are one gender everywhere.
+    // The Little Red Hen (Slices 121, 156): the roster's kitten and duckling voices are girls in most languages but boys in Farsi, Spanish and Portuguese. The book
+    // chooses each voice (StarterVoices: mummy, puppy, kitten, jester) with the gender, so Cat and Duck keep their animals and a suggestion of the wrong gender falls to the traits.
     [Theory]
     [MemberData(nameof(Languages))]
     public void TheLittleRedHen_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
