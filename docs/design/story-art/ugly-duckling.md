@@ -1,7 +1,19 @@
 # The Ugly Duckling: art record
 
-Store story (`StoreTexts.UglyDuckling`, stem `ugly-duckling`, version 4). Retold as 14 pages with one
-action each (`dino-storytelling` skill). **Art status (2026-10-26): cover and pages 1-14 drawn and accepted; full review PASS on 2026-10-26.** The
+Store story (`StoreTexts.UglyDuckling`, stem `ugly-duckling`, version 7). Retold as 14 pages with one
+action each (`dino-storytelling` skill).
+
+Version 7 (Slice 146 Waves B+C and Slice 156, 2026-10-27): English reworded in the spoken register (contractions such as
+"didn't", "Everyone's different", "You're the best swimmer of all of us!", "okay?", "And guess who swam the fastest?",
+"Not even a tiny bit!", "Wow!", "Of course they can!") and every sound word one triple piece ("Crack, crack, crack!" now also
+on page 2 after "the big egg wobbled", "Splish-splash, splish-splash, splish-splash!" for "Paddle, paddle, splish, splash!",
+"Scratch, scratch, scratch!" and "Cluck, cluck, cluck!" on page 7 (where "a round brown Hen" keeps the page under 60 words), "Waddle, waddle, waddle!" on page 9, "Swoosh, swoosh, swoosh!"
+on page 12). Same 14 page breaks and the same one action per page: **every page keeps its picture** (all 14 opened and checked
+against the new text on 2026-10-27). The 12 other languages were redone for every piece in the same register with their own
+triples (French tags now in the passé composé, "a dit Maman Cane"; Japanese in the v6 kanji and kana mix, no spaces, since
+all-hiragana makes the voices read the particle は as "ha"; Finnish uses one pronoun, hän, for the Duckling); Farsi changed only where the
+meaning moved (not even a tiny bit, wobbled, the splash triple, guess who, okay, the scratch triple, look, waddle, wow, can my
+family, they can, round and round) and keeps its Wave A text everywhere else. **Art status (2026-10-26): cover and pages 1-14 drawn and accepted; full review PASS on 2026-10-26.** The
 cover and all 14 pages are new; nothing from the text-only version is kept.
 
 **Gentle retelling (Decision 130):** in Andersen the duckling is pecked, bitten and chased by the ducks
@@ -36,15 +48,30 @@ his back at sunset.
   swans), so nothing magic happens: he simply grows up over the winter.
 
 **Refrains (identical every time):** `"Big or small, I love you all," said Mother Duck.` on pages 2, 5 and 14
-(`whispered Mother Duck` on page 10; the refrain words are the same piece). `Paddle, paddle, splish, splash!`
-on pages 3 and 13. The question `"Am I a ___ like you?" said Duckling.` makes the three-step build-up: a hen
+(`whispered Mother Duck` on page 10; the refrain words are the same piece). `Splish-splash, splish-splash, splish-splash!`
+on pages 3 and 13; `Crack, crack, crack!` on pages 1 and 2. The question `"Am I a ___ like you?" said Duckling.` makes the three-step build-up: a hen
 (page 7, no), the autumn swans (page 8, too high to hear), the spring swans (page 12, yes).
 
-**Cast and voices:** Mother Duck, Duckling, Dilly, Hen, Swan (`StoreTexts` spec list). The app casts an animal
-character with its own animal's roster character before its gender, and each language's duckling voices are one
-gender (English and Chinese: girls, Spanish and Portuguese: one boy), so the builder stores **Duckling and Dilly as
-no animal** (`StarterAnimals.cs`, `NotAnimal`): they are cast by gender in every language, at the cost of no quack.
-Mother Duck plays the kind-mummy character and Hen the hen; Swan has no animal word, so a plain male character.
+**Cast and voices (Slice 156, the book's own choices, `StarterVoices.cs`):** Mother Duck, Duckling, Dilly, Hen, Swan
+(`StoreTexts` spec list).
+- **Mother Duck:** woman, adult duck; warm and soft. Suggests `mummy` (Kind Mummy).
+- **Duckling:** boy, child duck (the cygnet, later the young swan); soft and warm, gentle and curious. Suggests `piglet`
+  (Cheeky Piglet, the small young boy's voice): the roster's duckling voices are a girl's in most languages, and `piglet` is a
+  boy's young voice in all 14.
+- **Dilly:** girl, child duck, the giggly littlest sister; bouncy and bright. Suggests `bunny` (Little Bunny, small and light), a
+  girl's voice everywhere but Farsi, where her traits pick the chick (`duckling` is a boy's in Spanish, Portuguese and Farsi).
+- **Hen:** woman, adult hen; warm and bright. Suggests `bee` (Busy Bee, bright and bouncy), not the slow, sleepy Granny Hen (review,
+  2026-10-27): no roster has an adult woman's bright place other than the mummy, which Mother Duck plays.
+- **Swan:** man, adult swan (no animal sound word, so no kind); warm and bold. Suggests `knight` (Brave Knight, clear and kind).
+Since the suggestions keep every gender right in every language, **Duckling and Dilly are ducks again** (`StarterAnimals.ByStory`,
+no longer `NotAnimal`). Real casts dumped for every language on 2026-10-27 (Mother Duck / Duckling / Dilly / Hen / Swan): every suggestion is kept
+everywhere except Farsi's Dilly (trait match: chick); no two characters share a voice and flavour; no whisper or hushed flavour;
+every gender right. en bf_emma Normal / am_puck Small / af_nova Small / af_sky Bouncy / am_liam Normal; fa mana Normal / gyro
+Chirpy / mana Bouncy (chick) / mana Small / gyro Normal; zh xiaobei Normal / yunxia Small / xiaoni Small / xiaoni Bouncy / yunxi
+Normal; es and pt dora Normal / alex Small / dora Small / dora Bouncy / alex Normal; the ten-voice languages (fr, ar, ru, ja, da,
+fi, sv, nb, nl) F2 Normal / M2 Small / F5 Small / F5 Bouncy / M5 Normal. Dilly and Hen share a voice with two flavours in zh and the
+ten-voice languages (a roster limit: the other girl places fall back to Granny Hen in Spanish and Portuguese). Before v7 the app's picker gave Spanish and Portuguese Dilly the
+whispering princess, Farsi Dilly the dragon and every language's Swan the grumpy troll.
 `StoreStoryTests.TheUglyDuckling_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster` checks all 14
 languages. Pronouns cast the voices: Mother Duck, Dilly and Hen are "she", Duckling and Swan are "he". Translations
 keep each character's gender (Swan masculine: Arabic البجع with قال, Russian Лебедь with сказал; Hen feminine
@@ -94,26 +121,27 @@ There are no other characters: no people, no farmer, no cat, no dog, no fox, no 
 
 Every page: the whole scene sits in the top 70% of the picture; the bottom 30% is plain grass, water, snow,
 earth or straw with nothing important in it. No text, letters, words, sound effects or writing anywhere
-("Crack", "Paddle, paddle, splish, splash", "Cluck" and "Swoosh" are never drawn in). Nobody bites, pecks,
-pushes or chases anyone. Every page is **new**; the pictures below are drawn, accepted and passed the full review on 2026-10-26.
+("Crack", "Splish-splash", "Scratch", "Cluck", "Waddle" and "Swoosh" are never drawn in). Nobody bites, pecks,
+pushes or chases anyone. Every page is **new**; the pictures below are drawn, accepted and passed the full review on 2026-10-26. Version 7
+keeps all 14 (the Picture column says `keep`).
 
 | Page | One action (who, count, where, when) | Picture |
 | --- | --- | --- |
-| Cover | On the pond in the morning sun, Mother Duck (1) swims ahead with Dilly and the two yellow ducklings (3) in a line behind her, and the big grey Duckling (1) paddles at the end of the line, looking up curiously; the willow behind | new |
-| 1 | Summer morning, the nest under the willow by the pond: Mother Duck (1) sits on the nest, smiling down as three fluffy yellow ducklings (3, Dilly with her daisy among them) pop out of cracked eggshells; one big whole egg (twice the size of the others) still lies in the nest. No grey duckling yet | new |
-| 2 | Summer morning, the same nest: the big egg has split in two, and the big grey Duckling (1) stands among the shell halves, blinking; Mother Duck (1) tucks him under her wing with a loving smile; the three yellow ducklings (3) peek round her, surprised | new |
-| 3 | The next morning, on the pond: Mother Duck (1) leads a line through the water: the three yellow ducklings (3) behind her, little splashes at their feet, and the grey Duckling (1) gliding fastest, about to pass them | new |
-| 4 | Late morning, on the grassy bank: the three yellow ducklings (3) stand together; Dilly, in front, giggles with a wing over her beak; the grey Duckling (1) stands a little apart, looking down at his big flat feet, a little sad. No Mother Duck | new |
-| 5 | Late morning, the same bank: Mother Duck (1) has one wing around the grey Duckling (1); Dilly (1) stands in front of them, head bowed, saying sorry; the two other yellow ducklings (2) watch from beside her | new |
-| 6 | Midday, the edge of the pond where the meadow path begins: Mother Duck (1) stands on the bank close beside him, smiling and waving a wing; the grey Duckling (1) has just stepped onto the path into the buttercups and looks back at her, waving; the red barn is small in the distance. No yellow ducklings | new |
-| 7 | Afternoon, the farmyard: Hen (1), in her checked apron, stands among scattered corn, head tilted, smiling and asking her question; the grey Duckling (1) stands in front of her, looking up politely. Nobody else | new |
-| 8 | Autumn afternoon, the pond with red and gold leaves on the willow and the water: Mother Duck (1), the three yellow ducklings (3) and the grey Duckling (1) float together, all looking up; high in the sky three big white swans (3) with long necks fly past in a line, wings spread; the grey Duckling stretches his long neck up towards them (the text: "birds with long necks like his") | new |
-| 9 | Winter afternoon, the farmyard in snow, gentle snowflakes falling: Hen (1) stands in the open barn door, fluffed up, waving them in with a wing; Mother Duck (1), the grey Duckling (1) and the three yellow ducklings (3) waddle towards her in a line through the snow. The pond is not shown | new |
-| 10 | Winter night inside the barn, moonlight through the one-pane window: Mother Duck (1), the grey Duckling (1), Dilly and the two yellow ducklings (3) and Hen (1) snuggle together asleep in a heap of golden straw; the grey Duckling sleeps between Mother Duck and Dilly; Mother Duck's eyes are half open, whispering. No lantern, candle or fire | new |
-| 11 | Spring morning, the pond edge, the willow green again and a few flowers on the bank: the grown Duckling, now a young white swan with the one grey tuft on top of his head (1), bends his long neck over the still water and sees his own white reflection, surprised. Nobody else. His reflection is directly under him, not a second bird, and both stay above the 70% line | new |
-| 12 | Spring morning, on the pond: three adult white swans (3) glide down onto the water with wings still half open, Swan (the biggest) in front, smiling and bowing his neck to the young white swan (1, the Duckling, with the one grey tuft on top of his head), who faces them, hopeful. The duck family is not shown | new |
-| 13 | Spring midday, on the pond: the young white swan (1, the Duckling, with the one grey tuft on top of his head) and the three adult swans (3, no tufts) swim together in a loose circle while Mother Duck (1) and the three yellow ducklings (3) paddle out to join them, little splashes at their feet, everyone smiling | new |
-| 14 | Sunset, pink and gold sky, on the pond near the nest under the willow: the young white swan (1, the Duckling, with the one grey tuft on top of his head) glides home with Dilly and the two yellow ducklings (3) riding on his back, nestled between his wings; Mother Duck (1) swims beside him, smiling up at them. The adult swans are not shown | new |
+| Cover | On the pond in the morning sun, Mother Duck (1) swims ahead with Dilly and the two yellow ducklings (3) in a line behind her, and the big grey Duckling (1) paddles at the end of the line, looking up curiously; the willow behind | keep (v7) |
+| 1 | Summer morning, the nest under the willow by the pond: Mother Duck (1) sits on the nest, smiling down as three fluffy yellow ducklings (3, Dilly with her daisy among them) pop out of cracked eggshells; one big whole egg (twice the size of the others) still lies in the nest. No grey duckling yet | keep (v7) |
+| 2 | Summer morning, the same nest: the big egg has split in two, and the big grey Duckling (1) stands among the shell halves, blinking; Mother Duck (1) tucks him under her wing with a loving smile; the three yellow ducklings (3) peek round her, surprised | keep (v7) |
+| 3 | The next morning, on the pond: Mother Duck (1) leads a line through the water: the three yellow ducklings (3) behind her, little splashes at their feet, and the grey Duckling (1) gliding fastest, about to pass them | keep (v7) |
+| 4 | Late morning, on the grassy bank: the three yellow ducklings (3) stand together; Dilly, in front, giggles with a wing over her beak; the grey Duckling (1) stands a little apart, looking down at his big flat feet, a little sad. No Mother Duck | keep (v7) |
+| 5 | Late morning, the same bank: Mother Duck (1) has one wing around the grey Duckling (1); Dilly (1) stands in front of them, head bowed, saying sorry; the two other yellow ducklings (2) watch from beside her | keep (v7) |
+| 6 | Midday, the edge of the pond where the meadow path begins: Mother Duck (1) stands on the bank close beside him, smiling and waving a wing; the grey Duckling (1) has just stepped onto the path into the buttercups and looks back at her, waving; the red barn is small in the distance. No yellow ducklings | keep (v7) |
+| 7 | Afternoon, the farmyard: Hen (1), in her checked apron, stands among scattered corn, head tilted, smiling and asking her question; the grey Duckling (1) stands in front of her, looking up politely. Nobody else | keep (v7) |
+| 8 | Autumn afternoon, the pond with red and gold leaves on the willow and the water: Mother Duck (1), the three yellow ducklings (3) and the grey Duckling (1) float together, all looking up; high in the sky three big white swans (3) with long necks fly past in a line, wings spread; the grey Duckling stretches his long neck up towards them (the text: "birds with long necks like his") | keep (v7) |
+| 9 | Winter afternoon, the farmyard in snow, gentle snowflakes falling: Hen (1) stands in the open barn door, fluffed up, waving them in with a wing; Mother Duck (1), the grey Duckling (1) and the three yellow ducklings (3) waddle towards her in a line through the snow. The pond is not shown | keep (v7) |
+| 10 | Winter night inside the barn, moonlight through the one-pane window: Mother Duck (1), the grey Duckling (1), Dilly and the two yellow ducklings (3) and Hen (1) snuggle together asleep in a heap of golden straw; the grey Duckling sleeps between Mother Duck and Dilly; Mother Duck's eyes are half open, whispering. No lantern, candle or fire | keep (v7) |
+| 11 | Spring morning, the pond edge, the willow green again and a few flowers on the bank: the grown Duckling, now a young white swan with the one grey tuft on top of his head (1), bends his long neck over the still water and sees his own white reflection, surprised. Nobody else. His reflection is directly under him, not a second bird, and both stay above the 70% line | keep (v7) |
+| 12 | Spring morning, on the pond: three adult white swans (3) glide down onto the water with wings still half open, Swan (the biggest) in front, smiling and bowing his neck to the young white swan (1, the Duckling, with the one grey tuft on top of his head), who faces them, hopeful. The duck family is not shown | keep (v7) |
+| 13 | Spring midday, on the pond: the young white swan (1, the Duckling, with the one grey tuft on top of his head) and the three adult swans (3, no tufts) swim together in a loose circle while Mother Duck (1) and the three yellow ducklings (3) paddle out to join them, little splashes at their feet, everyone smiling | keep (v7) |
+| 14 | Sunset, pink and gold sky, on the pond near the nest under the willow: the young white swan (1, the Duckling, with the one grey tuft on top of his head) glides home with Dilly and the two yellow ducklings (3) riding on his back, nestled between his wings; Mother Duck (1) swims beside him, smiling up at them. The adult swans are not shown | keep (v7) |
 
 Check (dino-storytelling section 4):
 
