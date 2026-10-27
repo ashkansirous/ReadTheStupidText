@@ -48,7 +48,7 @@ internal static class StarterBuilder
         [GoodEnoughFile] = 3,
         ["three-little-pigs.dino"] = 9,
         ["gingerbread-man.dino"] = 5,
-        ["tortoise-and-hare.dino"] = 5,
+        ["tortoise-and-hare.dino"] = 6,
     };
 
     /// <summary>The package file name of every shipped starter, the picture one first (shelf order).</summary>

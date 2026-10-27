@@ -1,9 +1,11 @@
 # The Tortoise and the Hare: art record
 
-Bundled starter (`StarterTexts.Tortoise`, stem `tortoise-and-hare`, version 4 in `StarterBuilder.StarterVersions`), also a
+Bundled starter (`StarterTexts.Tortoise`, stem `tortoise-and-hare`, version 6 in `StarterBuilder.StarterVersions`), also a
 store book under the same id (`StoreBuilder.StarterEntries`). Retold in Slice 121 as 14 pages with one action each
 (`dino-storytelling` skill); the earlier 5-page text shipped as versions 2 and 3, and its page hash
-(`C0E318F0...C1405A`) is in `StarterUpdate.EarlierPageTextHashes`, so unedited installed copies update. **Art status
+(`C0E318F0...C1405A`) is in `StarterUpdate.EarlierPageTextHashes`, so unedited installed copies update. Version 6
+(Slice 146 Wave A, 2026-10-27): Farsi rewritten in spoken Farsi (no vowel marks); English, page breaks and every picture
+unchanged, so every page keeps its picture and no page hash is added. **Art status
 (2026-10-26): cover and pages 1-14 drawn and accepted; full review PASS 2026-10-26.**
 
 **Starter, not store:** the pictures go to `tests/DinoReader.Tests/Starters/tortoise-and-hare/` (`pictures/1..14.jpg`,
