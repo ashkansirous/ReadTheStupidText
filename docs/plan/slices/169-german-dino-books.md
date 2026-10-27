@@ -1,9 +1,9 @@
 # Slice 169 — German translations for all 15 Dino books
 
-*Planned.* Dino Book Reader, Android, iOS and Windows. After Slice 168 merges (needs the German rule set, roster and voice).
+*Built 2026-10-27; German not yet heard aloud.* Dino Book Reader, Android, iOS and Windows. After Slice 168 merges (needs the German rule set, roster and voice).
 
 **Touches:** `content/dino/*/translations/de.json` (new, one per book), `content/dino/*/book.json` (version bumps),
-`src/DinoReader.App/Resources/Raw/starters/*.dino` (rebuilt starters), `src/DinoReader.Core/ShippedTitles.cs`,
+`src/DinoReader.App/Resources/Raw/starters/*.dino` (rebuilt starters), `src/DinoReader.App/ShippedTitles.cs`,
 `tests/DinoReader.Tests/**` (per-book expectations only)
 
 ## Why
@@ -21,10 +21,17 @@ in-app starters always stay on the same latest versions (user rule), and CI uplo
 
 ## Work
 
-- [ ] 1. **First book end to end:** Three Little Pigs `de.json` by `dino-story-writer`, reviewer pass, version bump, rebuild the
+- [x] 1. **First book end to end:** Three Little Pigs `de.json` by `dino-story-writer`, reviewer pass, version bump, rebuild the
   starter, tests, PR, merge; CI uploads it and `/api/stories` lists the German title.
-- [ ] 2. The other 14 books, the same way, one PR each.
+- [x] 2. The other 14 books, the same way, one PR each.
+  Changed: all 15 books ship in this one PR, because every book edits the shared ShippedTitles.cs and the test pending-list; separate PRs would conflict.
 - [ ] 3. End-of-batch check: every book's `meta.json` on `/api/stories` matches `main`'s version; upload any laggard.
+
+## Not yet verified
+
+- German sound words and pages heard aloud on a phone.
+- A German book on iOS (TestFlight).
+- End-of-batch check that /api/stories matches main (CI publish-store).
 
 ## Verification
 

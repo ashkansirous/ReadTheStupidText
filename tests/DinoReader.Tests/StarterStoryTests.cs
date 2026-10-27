@@ -106,7 +106,7 @@ public sealed class StarterStoryTests : IDisposable
             Assert.True(story.TranslateToMyLanguage, fileName);
             IReadOnlyList<string> pieces = StoryPieces.TranslatablePieceTexts(story);
 
-            foreach (string language in GermanBooksPending.BookLanguages.Where(l => l != UiLanguage.Resolve(story.Language)))
+            foreach (string language in UiLanguage.Supported.Where(l => l != UiLanguage.Resolve(story.Language)))
             {
                 IEnumerable<string> missing = pieces.Where(p => string.IsNullOrWhiteSpace(BundledTranslations.Lookup(story, language, p)));
                 Assert.True(!missing.Any(), $"{fileName} has no {language} translation for: {string.Join(" | ", missing.Take(3))}");
@@ -115,7 +115,7 @@ public sealed class StarterStoryTests : IDisposable
     }
 
     [Fact]
-    public async Task GermanUi_OpensEveryShippedStarterInItsOwnLanguage_WithItsNormalCast()
+    public async Task GermanUi_OpensEveryShippedStarterInGerman_WithItsNormalCast()
     {
         var library = new FileStoryLibrary(_root);
         foreach (string fileName in StarterBuilder.AllFileNames)
@@ -123,11 +123,12 @@ public sealed class StarterStoryTests : IDisposable
             await using FileStream file = File.OpenRead(Path.Combine(StarterBuilder.StartersFolder(), fileName));
             Story story = await StoryPackageReader.ImportAsync(file, library);
             string text = StoryPieces.TranslatablePieceTexts(story).First(t => t.Any(char.IsLetter));
+            string german = BundledTranslations.Lookup(story, "de", text)!;
 
-            Assert.False(BundledTranslations.Has(story, "de"), fileName);
-            Assert.False(BundledTranslations.Applies(story, "de", null), fileName);
-            Assert.False(BundledTranslations.CanTranslate(story, "de", null), fileName);
-            Assert.Equal(text, await BundledTranslations.Compose(story, "de", null)(text, CancellationToken.None));
+            Assert.True(BundledTranslations.Has(story, "de"), fileName);
+            Assert.True(BundledTranslations.Applies(story, "de", null), fileName);
+            Assert.True(BundledTranslations.CanTranslate(story, "de", null), fileName);
+            Assert.Equal(german, await BundledTranslations.Compose(story, "de", null)(text, CancellationToken.None));
             Assert.NotEmpty(story.Cast);
             Assert.All(story.Cast, c => Assert.False(string.IsNullOrWhiteSpace(c.VoiceId), fileName));
         }

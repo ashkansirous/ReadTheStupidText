@@ -2,7 +2,7 @@
   "kind": "Store",
   "id": "18cab2f1fec84aad831ba12dccad5336",
   "title": "The Tale of Peter Rabbit",
-  "version": 9,
+  "version": 10,
   "ageMin": 3,
   "ageMax": 6,
   "author": "Beatrix Potter",
@@ -74,5 +74,5 @@
     "Peter": "Rabbit",
     "Flopsy": "Rabbit"
   },
-  "contentHash": "3f10254bc779d99f37578344a21e0e562c40c45f7f376f148a01ab506c5d8a1d"
+  "contentHash": "e4e99e537315ce159894065b9bfa49b472bbf04193ebf02a6e40fc7f57554630"
 }
