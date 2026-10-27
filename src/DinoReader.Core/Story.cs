@@ -23,10 +23,24 @@ public enum CoverStyle
 /// </summary>
 public sealed record CastMember(
     string CharacterId, string Name, Gender Gender, string VoiceId, bool Edited = false, VoiceFlavour? Flavour = null,
-    AnimalKind? Animal = null, bool NotAnimal = false)
+    AnimalKind? Animal = null, bool NotAnimal = false, string? SuggestedVoice = null, CharacterTraits? Traits = null)
 {
     /// <summary>Whether the animal was decided (an animal or "not an animal") rather than left to the guess.</summary>
     public bool HasAnimalSetting => Animal is not null || NotAnimal;
+
+    /// <summary>Whether the book's author chose this character's voice (Slice 156): a suggested roster id or traits came with the book.</summary>
+    public bool HasAuthoredVoice => !string.IsNullOrEmpty(SuggestedVoice) || Traits is not null;
+
+    /// <summary>Who chose the voice (Slice 156): a grown-up's pick (<see cref="Edited"/>, which is what an older package's flag means), else the book's suggestion, else the app's picker.</summary>
+    public VoiceSource Source => Edited ? VoiceSource.Grownup : HasAuthoredVoice ? VoiceSource.Book : VoiceSource.App;
+}
+
+/// <summary>Who chose a character's voice (Slice 156, Decision 161). The runtime picker never recasts a <see cref="Book"/> voice (while its roster id exists in the language); a <see cref="Grownup"/>'s change always wins.</summary>
+public enum VoiceSource
+{
+    App,
+    Book,
+    Grownup,
 }
 
 /// <summary>One recognised line of a scanned page: its text and where it sits on the page image (0..1 across its width and height).</summary>

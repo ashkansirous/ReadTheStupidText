@@ -94,9 +94,20 @@ public static class StarterUpdate
     // Matched by character id alone: a story's character ids are shared by all its language casts (the speakers come from the story's own language), so a language cast
     // that has no bundled cast of its own can take the animals of the base cast; a name check would only fail where the languages translate the names (Slice 135).
     private static IReadOnlyList<CastMember> WithBundledAnimals(IReadOnlyList<CastMember> kept, IReadOnlyList<CastMember> bundled) =>
-        kept.Select(m => bundled.FirstOrDefault(b => b.CharacterId == m.CharacterId) is { HasAnimalSetting: true } b
-            ? m with { Animal = b.Animal, NotAnimal = b.NotAnimal }
-            : m).ToList();
+        kept.Select(m => bundled.FirstOrDefault(b => b.CharacterId == m.CharacterId) is { } b ? WithBundledBookData(m, b) : m).ToList();
+
+    // The animal and the book's voice choice (Slice 156) are book data: the bundled copy's replace the stored ones, and the author's gender comes with them.
+    private static CastMember WithBundledBookData(CastMember member, CastMember bundled)
+    {
+        CastMember withAnimal = bundled.HasAnimalSetting ? member with { Animal = bundled.Animal, NotAnimal = bundled.NotAnimal } : member;
+        if (!bundled.HasAuthoredVoice)
+        {
+            // A later version that no longer chooses this voice takes the stale choice away too.
+            return withAnimal with { SuggestedVoice = null, Traits = null };
+        }
+
+        return withAnimal with { SuggestedVoice = bundled.SuggestedVoice, Traits = bundled.Traits, Gender = member.Edited ? member.Gender : bundled.Gender };
+    }
 
     /// <summary>The kept cast members whose voice the grown-up did not choose by hand and whose character is not the one for their animal, as (cast language, character id):
     /// each needs its voice picked again from its animal (the caller does it the way the cast screen does, <c>StoryVoicing.RecastCharacters</c>). The animal is the resolved one
@@ -115,17 +126,30 @@ public static class StarterUpdate
         var casts = new List<(string Language, IReadOnlyList<CastMember> Members)> { (refreshed.Language, refreshed.Cast) };
         casts.AddRange((refreshed.LanguageCasts ?? new Dictionary<string, IReadOnlyList<CastMember>>()).Select(c => (c.Key, c.Value)));
         return casts
-            .SelectMany(c => MembersWithOtherAnimal(c.Members, (speakersFor ?? CharacterRoster.Speakers)(c.Language), refreshed).Select(id => (c.Language, id)))
+            .SelectMany(c => MembersWithOtherAnimal(c.Members, (speakersFor ?? CharacterRoster.Speakers)(c.Language), refreshed)
+                .Concat(MembersWithNewBookData(c.Members, StoredMembers(stored, c.Language, refreshed.Language)))
+                .Select(id => (c.Language, id)))
             .Distinct()
             .ToList();
     }
+
+    private static IReadOnlyList<CastMember> StoredMembers(Story stored, string language, string storyLanguage) =>
+        language == storyLanguage ? stored.Cast : stored.LanguageCasts?.GetValueOrDefault(language) ?? [];
+
+    // A kept member whose book voice choice (Slice 156) is new or changed by the refresh still holds its old automatic voice: it is recast so the cast screen shows what the story reads.
+    // A grown-up's pick (Edited, so not a Book source) stays.
+    private static IEnumerable<string> MembersWithNewBookData(IReadOnlyList<CastMember> members, IReadOnlyList<CastMember> stored) =>
+        members
+            .Where(m => m.Source == VoiceSource.Book && stored.FirstOrDefault(o => o.CharacterId == m.CharacterId) is { } o
+                && (o.SuggestedVoice != m.SuggestedVoice || o.Traits != m.Traits))
+            .Select(m => m.CharacterId);
 
     private static IEnumerable<string> MembersWithOtherAnimal(IReadOnlyList<CastMember> members, IReadOnlyList<StorytellerCharacter> roster, Story story)
     {
         var characters = members.Select(m => new Character(m.CharacterId, m.Name, m.Gender, 0)).ToList();
         IReadOnlyDictionary<string, AnimalKind> wanted = AnimalSounds.Resolve(characters, story.Language, members, story.Text);
         return members
-            .Where(m => !m.Edited && PlaysOtherAnimal(m, wanted.TryGetValue(m.CharacterId, out AnimalKind kind) ? AnimalCharacters.HintFor(kind, m.Name, story.Language) : null, roster))
+            .Where(m => m.Source == VoiceSource.App && PlaysOtherAnimal(m, wanted.TryGetValue(m.CharacterId, out AnimalKind kind) ? AnimalCharacters.HintFor(kind, m.Name, story.Language) : null, roster))
             .Select(m => m.CharacterId);
     }
 

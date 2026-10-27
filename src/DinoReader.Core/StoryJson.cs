@@ -118,6 +118,7 @@ public static class StoryJson
         {
             CharacterId = c.CharacterId, Name = c.Name, Gender = c.Gender, VoiceId = c.VoiceId, Edited = c.Edited,
             Flavour = c.Flavour?.ToString(), Animal = AnimalText(c),
+            SuggestedVoice = string.IsNullOrEmpty(c.SuggestedVoice) ? null : c.SuggestedVoice, Traits = TraitsFile.From(c.Traits),
         }).ToList();
 
     // The animal is a kind's name, or "none" for "not an animal"; absent means guess. A value this build does not know (a newer app's) reads as absent.
@@ -137,7 +138,8 @@ public static class StoryJson
     private static CastMember ToMember(CastFile c)
     {
         (AnimalKind? animal, bool notAnimal) = ParseAnimal(c.Animal);
-        return new CastMember(c.CharacterId, c.Name, c.Gender, c.VoiceId, c.Edited, ParseFlavour(c.Flavour), animal, notAnimal);
+        string? suggested = string.IsNullOrWhiteSpace(c.SuggestedVoice) ? null : c.SuggestedVoice.Trim();
+        return new CastMember(c.CharacterId, c.Name, c.Gender, c.VoiceId, c.Edited, ParseFlavour(c.Flavour), animal, notAnimal, suggested, c.Traits?.ToTraits());
     }
 
     private static VoiceFlavour? ParseFlavour(string? name) =>
@@ -404,6 +406,40 @@ public static class StoryJson
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Animal { get; set; }
+
+        // Slice 156: the book author's suggested roster id and traits; both optional, so the schema stays 1 and an older app ignores them.
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? SuggestedVoice { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public TraitsFile? Traits { get; set; }
+    }
+
+    // Names in the file; a value this build does not know (a newer app's) reads as absent, and a traits object with nothing known in it reads as no traits.
+    private sealed class TraitsFile
+    {
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? Age { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? Being { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<string>? Qualities { get; set; }
+
+        public static TraitsFile? From(CharacterTraits? traits) => traits is null ? null : new TraitsFile
+        {
+            Age = traits.Age?.ToString(), Being = traits.Being?.ToString(), Qualities = traits.Qualities?.Select(q => q.ToString()).ToList(),
+        };
+
+        public CharacterTraits? ToTraits()
+        {
+            CharacterAge? age = Enum.TryParse(Age, ignoreCase: true, out CharacterAge a) && Enum.IsDefined(a) ? a : null;
+            CharacterBeing? being = Enum.TryParse(Being, ignoreCase: true, out CharacterBeing b) && Enum.IsDefined(b) ? b : null;
+            var qualities = (Qualities ?? []).Select(q => Enum.TryParse(q, ignoreCase: true, out VoiceQuality v) && Enum.IsDefined(v) ? (VoiceQuality?)v : null)
+                .OfType<VoiceQuality>().ToList();
+            return age is null && being is null && qualities.Count == 0 ? null : new CharacterTraits(age, being, qualities.Count == 0 ? null : qualities);
+        }
     }
 
     private sealed class LineFile

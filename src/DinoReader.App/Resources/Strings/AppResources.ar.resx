@@ -302,6 +302,7 @@
   <data name="Cast_Narrator" xml:space="preserve"><value>الراوي</value></data>
   <data name="Cast_Main" xml:space="preserve"><value>رئيسي</value></data>
   <data name="Cast_Edited" xml:space="preserve"><value>معدَّل</value></data>
+  <data name="Cast_BackToBookVoice" xml:space="preserve"><value>العودة إلى صوت الكتاب</value></data>
   <data name="Cast_SharedVoice" xml:space="preserve"><value>صوت مشترك</value></data>
   <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>متحدث مجهول</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>مرحبًا! هكذا يبدو صوتي حين أقرأ قصتك.</value></data>

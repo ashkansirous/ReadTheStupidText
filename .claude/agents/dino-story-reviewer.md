@@ -29,6 +29,8 @@ Read first, in full: `.claude/skills/create-dino-story/SKILL.md` (rule 1 and the
   «بگذار»، «بیایم»، «می‌باشد» where a parent says «بذار»، «بیام»، «هست»), and any sound word that is a
   single short word instead of a repeated one (dino-storytelling section 3).
 - **Plan.** Each picture-plan line matches its page's text, and neighbouring pages show different pictures.
+- **Voices (Slice 156).** Every character has an entry in `tests/DinoReader.Tests/StarterVoices.cs`; the suggested roster character fits it (age, gender, kind, how it should sound:
+  a squawky seagull is not a warm mummy), no two characters of the book share one, and the traits are true to the text. List each misfit as a page-less "voices" finding.
 
 ## Pictures (full mode only)
 

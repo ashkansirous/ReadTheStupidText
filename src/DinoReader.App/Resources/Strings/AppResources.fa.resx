@@ -302,6 +302,7 @@
   <data name="Cast_Narrator" xml:space="preserve"><value>راوی</value></data>
   <data name="Cast_Main" xml:space="preserve"><value>اصلی</value></data>
   <data name="Cast_Edited" xml:space="preserve"><value>ویرایش‌شده</value></data>
+  <data name="Cast_BackToBookVoice" xml:space="preserve"><value>بازگشت به صدای کتاب</value></data>
   <data name="Cast_SharedVoice" xml:space="preserve"><value>صدای مشترک</value></data>
   <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>گوینده نامشخص</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>سلام! صدای من وقتی داستان شما را می‌خوانم این‌طوری است.</value></data>

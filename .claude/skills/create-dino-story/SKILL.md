@@ -54,6 +54,7 @@ illustrators sharing the clipboard and Downloads), `gemini-keep-awake.ps1` (scre
   pages, split on lines holding only `---`, dialogue as `"...," said <Name>.` so speaker attribution
   casts voices.
 - Read every page against rule 1 before anything else. Rewrite what fails.
+- Give every character a voice choice in `tests/DinoReader.Tests/StarterVoices.cs` (Slice 156): a suggested roster id, gender, age, what it is and voice qualities; record them in the art record.
 - Translations: `DINO_DUMP_PIECES=1 dotnet test tests/DinoReader.Tests` writes the pieces;
   translate into `tests/DinoReader.Tests/Starters/translations/<stem>.<lang>.json` (all 13 languages).
 - Never move a `---` once pictures exist: the build fails when picture and page counts differ.

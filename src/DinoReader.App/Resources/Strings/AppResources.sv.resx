@@ -301,6 +301,7 @@
   <data name="Cast_Narrator" xml:space="preserve"><value>Berättare</value></data>
   <data name="Cast_Main" xml:space="preserve"><value>HUVUDROLL</value></data>
   <data name="Cast_Edited" xml:space="preserve"><value>ÄNDRAD</value></data>
+  <data name="Cast_BackToBookVoice" xml:space="preserve"><value>Tillbaka till bokens röst</value></data>
   <data name="Cast_SharedVoice" xml:space="preserve"><value>Delad röst</value></data>
   <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>Okänd talare</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>Hej! Så här låter jag när jag läser din saga.</value></data>

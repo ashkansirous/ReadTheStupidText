@@ -20,6 +20,7 @@ public static class CastText
 	public static string ChangeForAll => AppResources.Cast_ChangeForAll;
 	public static string Main => AppResources.Cast_Main;
 	public static string Edited => AppResources.Cast_Edited;
+	public static string BackToBookVoice => AppResources.Cast_BackToBookVoice;
 	public static string SharedVoice => AppResources.Cast_SharedVoice;
 	public static string UnknownSpeaker => AppResources.Cast_UnknownSpeaker;
 	public static string Cancel => AppResources.Common_Cancel;

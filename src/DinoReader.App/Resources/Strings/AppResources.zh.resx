@@ -302,6 +302,7 @@
   <data name="Cast_Narrator" xml:space="preserve"><value>旁白</value></data>
   <data name="Cast_Main" xml:space="preserve"><value>主角</value></data>
   <data name="Cast_Edited" xml:space="preserve"><value>已编辑</value></data>
+  <data name="Cast_BackToBookVoice" xml:space="preserve"><value>恢复书中的声音</value></data>
   <data name="Cast_SharedVoice" xml:space="preserve"><value>共用声音</value></data>
   <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>未知说话者</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>你好！这就是我朗读你的故事时的声音。</value></data>
