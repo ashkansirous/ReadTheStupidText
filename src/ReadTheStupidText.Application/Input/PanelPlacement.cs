@@ -14,4 +14,20 @@ public static class PanelPlacement
         int maxY = Math.Max(work.Y, work.Y + work.Height - height);
         return (Math.Clamp(x, work.X, maxX), Math.Clamp(y, work.Y, maxY));
     }
+
+    /// <summary>The scale factor for a monitor DPI (96 = 1.0); a missing or zero DPI counts as 100%.</summary>
+    public static double ScaleForDpi(uint dpi) => dpi == 0 ? 1.0 : dpi / 96.0;
+
+    /// <summary>The device-pixel client size for a logical size: each side rounded up so nothing is clipped.
+    /// A width that is not finite or not above zero (e.g. an Auto or removed XAML width is NaN) uses the design width.</summary>
+    public static (int Width, int Height) DeviceSize(double logicalWidth, double logicalHeight, double designWidth, double scale)
+    {
+        double width = double.IsFinite(logicalWidth) && logicalWidth > 0 ? logicalWidth : designWidth;
+        double height = double.IsFinite(logicalHeight) && logicalHeight > 0 ? logicalHeight : 1;
+        return ((int)Math.Ceiling(width * scale), (int)Math.Ceiling(height * scale));
+    }
+
+    /// <summary>The top-left that pins a window of the given size to the bottom-right of the work area, inset by the margin.</summary>
+    public static (int X, int Y) CornerPin(int width, int height, int margin, WorkArea work) =>
+        ClampToWorkArea(work.X + work.Width - width - margin, work.Y + work.Height - height - margin, width, height, work);
 }

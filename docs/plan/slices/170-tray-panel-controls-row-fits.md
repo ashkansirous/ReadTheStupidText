@@ -1,8 +1,8 @@
 # Slice 170 — Tray panel: every Controls button fits
 
-*In progress (wave 2026-10-27), draft PR.* Read The Stupid Text, Windows tray control panel only (no Android/iOS surface: the phone app has no Controls row).
+*Built 2026-10-27, not yet verified on the desktop (no screen tests until Slice 163).* Read The Stupid Text, Windows tray control panel only (no Android/iOS surface: the phone app has no Controls row).
 
-**Touches:** `src/ReadTheStupidText.App/ControlPanelWindow.xaml`, `src/ReadTheStupidText.App/ControlPanelWindow.xaml.cs`,
+**Touches:** `src/ReadTheStupidText.App/ControlPanelWindow.xaml`, `src/ReadTheStupidText.App/ControlPanelWindow.xaml.cs`, `src/ReadTheStupidText.App/WaitFlyoutWindow.xaml.cs`,
 `site/img/control-panel.webp`
 
 ## Why
@@ -25,10 +25,12 @@ laid out wider than the window, or the window ends up narrower than the layout e
 
 ## Work
 
-- [ ] Reproduce: run the packaged dev build, open the panel, measure the window client width and the Controls grid's
-      `ActualWidth` at 100% and 150% scale; write the cause in this file.
-- [ ] Fix the cause so the panel content and the window agree on width.
+- [x] Cause (from code and the 362 vs 376 px capture; no desktop run yet): `AppWindow.Resize` sets the OUTER window size, so the
+      frame (about 7 px a side at 100%) shrank the client below the 376 DIP root and clipped the last toggle. Not yet measured at
+      100/125/150% (Not yet verified).
+- [x] Fix the cause: one placement routine (`WindowPlacer`, pure parts in `PanelPlacement`) used by the panel and `WaitFlyoutWindow`: target point (saved, else the primary work area corner), that monitor's DPI, `ResizeClient` to the rounded-up logical size (width guarded, else the 376 design width), clamp to that work area, one Move only if the position changes.
 - [ ] Make the Controls row fit by design (rule above), including when the Translate column is hidden.
+      Follow-up, still open: the window-size fix above does not measure or assert that the row fits within 376 DIP (long labels, hidden Translate column).
 - [ ] Retake the website picture (`site/img/control-panel.webp`, the reading panel, window only) once it fits.
 
 ## Verification
@@ -36,3 +38,8 @@ laid out wider than the window, or the window ends up narrower than the layout e
 - `dotnet build src/ReadTheStupidText.App/ReadTheStupidText.App.csproj -p:Platform=x64`
 - `device-test` on the Windows desktop: panel idle and reading, at 100% and 150% scale, English and Finnish: all five toggles
   and the close button fully visible, nothing clipped at any edge (screenshots of the window only).
+
+## Not yet verified
+
+- Device check at 100% and 150% scale, idle and reading, English and Finnish: all five toggles and the wait flyout fully visible.
+- Retake `site/img/control-panel.webp` (open work item above), and the redesign rule at 200% scale with the Translate column hidden.

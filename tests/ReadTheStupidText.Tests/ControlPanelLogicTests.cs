@@ -65,6 +65,32 @@ public class ControlPanelLogicTests
     }
 
     [Theory]
+    [InlineData(96u, 1.0)]
+    [InlineData(144u, 1.5)]
+    [InlineData(0u, 1.0)]
+    public void Scale_comes_from_dpi(uint dpi, double scale)
+    {
+        Assert.Equal(scale, PanelPlacement.ScaleForDpi(dpi));
+    }
+
+    [Fact]
+    public void Device_size_rounds_up_and_guards_the_width()
+    {
+        Assert.Equal((564, 780), PanelPlacement.DeviceSize(376, 520, 376, 1.5));
+        Assert.Equal((470, 8), PanelPlacement.DeviceSize(376, 6.2, 376, 1.25));
+        Assert.Equal((376, 520), PanelPlacement.DeviceSize(double.NaN, 520, 376, 1.0));
+        Assert.Equal((376, 520), PanelPlacement.DeviceSize(0, 520, 376, 1.0));
+        Assert.Equal((376, 520), PanelPlacement.DeviceSize(double.PositiveInfinity, 520, 376, 1.0));
+    }
+
+    [Fact]
+    public void Corner_pin_insets_by_the_margin_and_stays_on_screen()
+    {
+        Assert.Equal((680, 330), PanelPlacement.CornerPin(300, 400, 20, new WorkArea(0, 0, 1000, 750)));
+        Assert.Equal((10, 20), PanelPlacement.CornerPin(900, 900, 20, new WorkArea(10, 20, 400, 400)));
+    }
+
+    [Theory]
     [InlineData(PlaybackState.Playing, 0, 0, true)]
     [InlineData(PlaybackState.Playing, 3, 9, true)]
     [InlineData(PlaybackState.Idle, 3, 3, true)]
