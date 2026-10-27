@@ -16,6 +16,9 @@ public static class UsageEventName
     public const string AppOpened = "app_opened";
     public const string WaitShown = "wait_shown";
     public const string WaitCancelled = "wait_cancelled";
+    public const string IntroStarted = "intro_started";
+    public const string IntroStep = "intro_step";
+    public const string IntroEnded = "intro_ended";
 }
 
 /// <summary>Where a counted book came from: Dino's own shelf (a starter or a store story) or a grown-up's own book.</summary>
@@ -53,6 +56,13 @@ public static class UsageDetail
     public const string ChangeFlavour = "flavour";
     public const string ChangeNarrator = "narrator";
 
+    public const string IntroFirstRun = "first_run";
+    public const string IntroReplay = "replay";
+    public const string IntroFinished = "finished";
+    public const string IntroSkippedAll = "skipped_all";
+    public const string IntroTried = "tried";
+    public const string IntroSkipped = "skipped";
+
     /// <summary>Separates a wait count's stage from its duration bucket in <c>detail</c> (Slice 148): <c>stalled:2-5</c>.</summary>
     public const char WaitSeparator = ':';
 
@@ -72,6 +82,9 @@ public static class UsageDetail
     /// <summary>The detail of a wait count: the wait's stage (a <c>UsageWaitStage</c> name) and how long its overlay showed (a <c>UsageBuckets.Duration</c> bucket).</summary>
     public static string Wait(string stage, string durationBucket) => string.Concat(stage, WaitSeparator, durationBucket);
 
+    /// <summary>The detail of an intro step count (Slice 155): the step (an <see cref="IntroSteps"/> name) and the action (<c>tried</c> or <c>skipped</c>), like <c>store:tried</c>.</summary>
+    public static string IntroStepAction(string step, bool tried) => string.Concat(step, WaitSeparator, tried ? IntroTried : IntroSkipped);
+
     /// <summary>How many pages of a book have a parent recording, as a bucket (never the exact count).</summary>
     public static string PagesBucket(int recordedPages) => recordedPages switch
     {
@@ -80,6 +93,24 @@ public static class UsageDetail
         <= TenPages => PagesSixToTen,
         _ => PagesMore,
     };
+}
+
+/// <summary>The first-run intro's steps in order (Slice 155, Decision 160): the store, recording a book, adding an own book. The index is what is saved, so a restart resumes at the same step.</summary>
+public static class IntroSteps
+{
+    public const string Store = "store";
+    public const string Record = "record";
+    public const string Add = "add";
+
+    private static readonly string[] Order = [Store, Record, Add];
+
+    public static int Count => Order.Length;
+
+    /// <summary>The name of step <paramref name="index"/> (0-based), or null outside the list.</summary>
+    public static string? NameAt(int index) => index >= 0 && index < Order.Length ? Order[index] : null;
+
+    /// <summary>True while <paramref name="index"/> names a step; a saved value outside the list means the intro is not running.</summary>
+    public static bool IsStep(int index) => NameAt(index) is not null;
 }
 
 /// <summary>

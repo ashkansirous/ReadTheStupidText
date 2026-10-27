@@ -97,7 +97,21 @@
   <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>每个角色都有自己的声音。书架上有1个故事。</value></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>听 Dino 打招呼</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>你好！我是 Dino。我们一起读故事吧。</value></data>
-  <data name="FirstRun_SetUp" xml:space="preserve"><value>设置故事</value></data>
+  <data name="Intro_SeeWhat" xml:space="preserve"><value>看看 Dino 能做什么</value></data>
+  <data name="Intro_SkipStart" xml:space="preserve"><value>跳过，开始阅读</value></data>
+  <data name="Intro_SkipAll" xml:space="preserve"><value>全部跳过</value></data>
+  <data name="Intro_TryIt" xml:space="preserve"><value>试一试</value></data>
+  <data name="Intro_Skip" xml:space="preserve"><value>跳过</value></data>
+  <data name="Intro_Counter" xml:space="preserve"><value>第 {0} 步，共 {1} 步</value></data>
+  <data name="Intro_StoreTitle" xml:space="preserve"><value>获取更多图书</value></data>
+  <data name="Intro_StoreLine" xml:space="preserve"><value>免费商店里有更多故事，可随时下载。</value></data>
+  <data name="Intro_RecordTitle" xml:space="preserve"><value>用你的声音朗读</value></data>
+  <data name="Intro_RecordLine" xml:space="preserve"><value>一页一页地录下你朗读故事的声音。孩子可以随时播放。</value></data>
+  <data name="Intro_AddTitle" xml:space="preserve"><value>添加你自己的书</value></data>
+  <data name="Intro_AddLine" xml:space="preserve"><value>拍下书的每一页，或选择一个 PDF。Dino 会把它读出来。</value></data>
+  <data name="Intro_AddTitleWindows" xml:space="preserve"><value>添加照片或 PDF</value></data>
+  <data name="Intro_AddLineWindows" xml:space="preserve"><value>选择书页的照片或一个 PDF。Dino 会把它读出来。</value></data>
+  <data name="Intro_ShowAgain" xml:space="preserve"><value>再看一次介绍</value></data>
   <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>使用手机语音继续</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>交给孩子</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>家长模式</value></data>

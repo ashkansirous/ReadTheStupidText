@@ -97,7 +97,21 @@
   <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>Cada personaje tiene su propia voz. Hay un cuento en la estantería.</value></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>Oír a Dino saludar</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>¡Hola! Soy Dino. Vamos a leer un cuento juntos.</value></data>
-  <data name="FirstRun_SetUp" xml:space="preserve"><value>Preparar los cuentos</value></data>
+  <data name="Intro_SeeWhat" xml:space="preserve"><value>Descubre lo que hace Dino</value></data>
+  <data name="Intro_SkipStart" xml:space="preserve"><value>Omitir, empezar a leer</value></data>
+  <data name="Intro_SkipAll" xml:space="preserve"><value>Omitir todo</value></data>
+  <data name="Intro_TryIt" xml:space="preserve"><value>Probar</value></data>
+  <data name="Intro_Skip" xml:space="preserve"><value>Omitir</value></data>
+  <data name="Intro_Counter" xml:space="preserve"><value>{0} de {1}</value></data>
+  <data name="Intro_StoreTitle" xml:space="preserve"><value>Consigue más libros</value></data>
+  <data name="Intro_StoreLine" xml:space="preserve"><value>La tienda gratuita tiene más cuentos, listos para descargar.</value></data>
+  <data name="Intro_RecordTitle" xml:space="preserve"><value>Léelo con tu voz</value></data>
+  <data name="Intro_RecordLine" xml:space="preserve"><value>Grábate leyendo un cuento, página por página. Tu hijo puede escucharlo cuando quiera.</value></data>
+  <data name="Intro_AddTitle" xml:space="preserve"><value>Añade tu propio libro</value></data>
+  <data name="Intro_AddLine" xml:space="preserve"><value>Haz fotos de las páginas de un libro o elige un PDF. Dino lo lee en voz alta.</value></data>
+  <data name="Intro_AddTitleWindows" xml:space="preserve"><value>Añade fotos o un PDF</value></data>
+  <data name="Intro_AddLineWindows" xml:space="preserve"><value>Elige fotos de las páginas de un libro o un PDF. Dino lo lee en voz alta.</value></data>
+  <data name="Intro_ShowAgain" xml:space="preserve"><value>Ver la introducción otra vez</value></data>
   <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>Continuar con la voz del teléfono</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Listo para mi peque</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Modo adultos</value></data>

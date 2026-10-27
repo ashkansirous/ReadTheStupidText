@@ -139,9 +139,16 @@ public static class VersionCard
 {
 	private const double CardRadius = 18;
 
-	public static Border Build(AppConfigClient config, BusyGuard busy)
+	public static Border Build(AppConfigClient config, BusyGuard busy, View? introRow = null)
 	{
 		var rows = new VerticalStackLayout();
+		if (introRow is not null)
+		{
+			// Slice 155 (mock frame 77): "Show the intro again" is the card's first row, above Version.
+			rows.Children.Add(introRow);
+			rows.Children.Add(SettingsRows.Divider());
+		}
+
 		rows.Children.Add(SettingsRows.Row(AppResources.Version_Title, SettingsRows.ValueLabel(AppConfigClient.InstalledVersion), null, busy));
 		if (config.NewerVersionExists)
 		{

@@ -18,6 +18,8 @@ public partial class GalleryPage : ContentPage
 
 	private readonly IStoryLibrary _library;
 	private readonly GrownUpGate _gate;
+	private bool _introOpening;
+	private bool _introGateDeclined;
 	private readonly GrownUpMode _mode;
 	private readonly StoryActions _actions;
 	private readonly StarterStories _starters;
@@ -58,11 +60,18 @@ public partial class GalleryPage : ContentPage
 		store.LibraryChanged -= OnLibraryChanged;
 		store.LibraryChanged += OnLibraryChanged;
 		ApplyMode();
+		if (Window is { } window)
+		{
+			window.Resumed -= OnWindowResumed;
+			window.Resumed += OnWindowResumed;
+		}
+
 		try
 		{
 			// The starters are on the shelf before the first list is read (Slice 91); a later call is a no-op.
 			await _starters.InstallOnceAsync();
 			await RefreshAsync();
+			await ResumeIntroAsync();
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 		{
@@ -70,9 +79,56 @@ public partial class GalleryPage : ContentPage
 		}
 	}
 
+	// The first-run intro (Slice 155) opens on top of the gallery: right after "See what Dino can do", after a restart mid-intro (its step is
+	// saved), and after leaving the app popped it. It is not pushed twice.
+	private async Task ResumeIntroAsync()
+	{
+		if (!IntroState.InProgress || _introOpening || _introGateDeclined || Navigation.ModalStack.Any(p => p is NavigationPage { RootPage: IntroWizardPage }))
+		{
+			return;
+		}
+
+		_introOpening = true;
+		try
+		{
+			// A fresh start comes from the first-run page, which already entered grown-up mode. Kids' mode here means the app was
+			// left mid-intro and reopened, so a child may be holding it: the gate comes first.
+			if (!_mode.IsGrownUp && !await _gate.RequestAsync(Navigation))
+			{
+				_introGateDeclined = true;
+				return;
+			}
+
+			var intro = _services.GetRequiredService<IntroWizardPage>();
+			await intro.PresentAsync(Navigation, firstRun: true);
+		}
+		catch (Exception ex)
+		{
+			// A bad saved step must never crash-loop the app: drop it and carry on with the gallery.
+			Debug.WriteLine($"Dino Reader could not resume the intro: {ex}");
+			IntroState.Clear();
+		}
+		finally
+		{
+			_introOpening = false;
+		}
+	}
+
+	// A declined gate asks again only after the app comes back (not when the gate's own modal closes, which re-fires OnAppearing).
+	private void OnWindowResumed(object? sender, EventArgs e)
+	{
+		_introGateDeclined = false;
+		_ = ResumeIntroAsync();
+	}
+
 	protected override void OnDisappearing()
 	{
 		base.OnDisappearing();
+		if (Window is { } window)
+		{
+			window.Resumed -= OnWindowResumed;
+		}
+
 		_mode.PropertyChanged -= OnModeChanged;
 		_storyteller.Changed -= OnStorytellerChanged;
 		_preview.Detach();
@@ -93,7 +149,16 @@ public partial class GalleryPage : ContentPage
 	});
 
 	// The tiles follow the mode through their binding; only the Add entry and the chrome change here.
-	private void OnModeChanged(object? sender, PropertyChangedEventArgs e) => MainThread.BeginInvokeOnMainThread(ApplyMode);
+	private void OnModeChanged(object? sender, PropertyChangedEventArgs e) => MainThread.BeginInvokeOnMainThread(() =>
+	{
+		ApplyMode();
+		if (_mode.IsGrownUp)
+		{
+			// A grown-up got in (settings gate): the saved intro may be offered again.
+			_introGateDeclined = false;
+			_ = ResumeIntroAsync();
+		}
+	});
 
 	private void ApplyMode()
 	{

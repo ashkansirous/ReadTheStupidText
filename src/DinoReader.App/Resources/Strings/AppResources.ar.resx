@@ -97,7 +97,21 @@
   <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>لكل شخصية صوتها الخاص. هناك قصة واحدة على الرف.</value></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>اسمع Dino يقول مرحبًا</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>مرحبًا! أنا Dino. لنقرأ قصة معًا.</value></data>
-  <data name="FirstRun_SetUp" xml:space="preserve"><value>تجهيز القصص</value></data>
+  <data name="Intro_SeeWhat" xml:space="preserve"><value>اكتشف ما يستطيع دينو فعله</value></data>
+  <data name="Intro_SkipStart" xml:space="preserve"><value>تخطَّ وابدأ القراءة</value></data>
+  <data name="Intro_SkipAll" xml:space="preserve"><value>تخطي الكل</value></data>
+  <data name="Intro_TryIt" xml:space="preserve"><value>جرّبه</value></data>
+  <data name="Intro_Skip" xml:space="preserve"><value>تخطي</value></data>
+  <data name="Intro_Counter" xml:space="preserve"><value>{0} من {1}</value></data>
+  <data name="Intro_StoreTitle" xml:space="preserve"><value>احصل على المزيد من الكتب</value></data>
+  <data name="Intro_StoreLine" xml:space="preserve"><value>في المتجر المجاني المزيد من القصص الجاهزة للتنزيل.</value></data>
+  <data name="Intro_RecordTitle" xml:space="preserve"><value>اقرأها بصوتك</value></data>
+  <data name="Intro_RecordLine" xml:space="preserve"><value>سجّل نفسك وأنت تقرأ قصة، صفحة بصفحة. يمكن لطفلك تشغيلها في أي وقت.</value></data>
+  <data name="Intro_AddTitle" xml:space="preserve"><value>أضف كتابك الخاص</value></data>
+  <data name="Intro_AddLine" xml:space="preserve"><value>صوّر صفحات كتاب أو اختر ملف PDF. دينو يقرأه بصوت عالٍ.</value></data>
+  <data name="Intro_AddTitleWindows" xml:space="preserve"><value>أضف صورًا أو ملف PDF</value></data>
+  <data name="Intro_AddLineWindows" xml:space="preserve"><value>اختر صور صفحات كتاب أو ملف PDF. دينو يقرأه بصوت عالٍ.</value></data>
+  <data name="Intro_ShowAgain" xml:space="preserve"><value>عرض المقدمة مرة أخرى</value></data>
   <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>المتابعة بصوت الهاتف</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>جاهز لطفلي</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>وضع البالغين</value></data>

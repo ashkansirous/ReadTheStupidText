@@ -801,7 +801,7 @@ CLI then pushes updates. The first submission is manual; after it, set the repos
 ## Dino Book Reader: anonymous usage counts (Slice 133, Decisions 140-142)
 
 Dino sends anonymous counts to its own Worker (`POST dinoreader.sirous.uk/api/events`, `worker/events.ts`, stored in the Workers
-Analytics Engine dataset `dino_usage`, 3 months). Each count is: its name (`book_opened`, `book_finished`, `store_download`, `own_book_added`, `recording_made`, `voice_changed`, `reading_language_changed`, `app_opened`; Slice 134), the book (a shelf book's
+Analytics Engine dataset `dino_usage`, 3 months). Each count is: its name (`book_opened`, `book_finished`, `store_download`, `own_book_added`, `recording_made`, `voice_changed`, `reading_language_changed`, `app_opened`; Slice 134; `intro_started`, `intro_step`, `intro_ended` for the first-run intro, Slice 155: detail `first_run`/`replay`, `store`/`record`/`add` + `:tried`/`skipped`, `finished`/`skipped_all`), the book (a shelf book's
 package id for a starter or store story only, or `own` for any other book, never a title), the language, shelf or own, whether a parent recording exists, one closed extra value (`detail`: store filters set or not, own-book kind photo/pdf/scan/typed, recorded-pages bucket, what voice part changed, or the language changed from), app version, platform and the UTC
 date. Counts about no book (voice, language, app opened) name `none` as book and source. No install, device or advertising id, no typed text, no time of day. On by default, with a grown-up's switch ("Help make Dino
 better") in Settings and one line on the first-run ready screen; the remote config (`telemetry.enabled`, `sampleRate`) turns it down
