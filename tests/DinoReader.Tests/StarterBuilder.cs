@@ -47,7 +47,7 @@ internal static class StarterBuilder
     {
         [GoodEnoughFile] = 3,
         ["three-little-pigs.dino"] = 9,
-        ["gingerbread-man.dino"] = 6,
+        ["gingerbread-man.dino"] = 7,
         ["tortoise-and-hare.dino"] = 6,
     };
 
