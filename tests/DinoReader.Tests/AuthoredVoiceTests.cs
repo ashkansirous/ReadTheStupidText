@@ -95,6 +95,20 @@ public class AuthoredVoiceTests
 
     [Theory]
     [MemberData(nameof(Languages))]
+    public void Three_pigs_matched_by_traits_never_sound_alike_in_any_language(string language)
+    {
+        var pigTraits = new CharacterTraits(CharacterAge.Young, null, [VoiceQuality.Bouncy]);
+        var pigs = new[] { C("p1", "Pip", Gender.Male), C("p2", "Pop", Gender.Male), C("p3", "Pup", Gender.Male) };
+        var pinned = pigs.ToDictionary(p => p.Id, p => new PinnedCharacter(string.Empty, null, false, "no-such-voice", pigTraits));
+
+        VoiceCast cast = Cast(language, pigs, pinned, _ => new AnimalHint(AnimalKind.Pig, null));
+
+        var sounds = pigs.Select(p => (cast.VoiceFor(p.Id), cast.Flavours![p.Id])).ToList();
+        Assert.Equal(3, sounds.Distinct().Count());
+    }
+
+    [Theory]
+    [MemberData(nameof(Languages))]
     public void The_book_of_treasure_opens_in_every_language_with_voices_for_everyone(string language)
     {
         var people = new[] { C("k", "Kathryn", Gender.Female), C("i", "Izzy", Gender.Female), C("p", "Polly", Gender.Female), C("b", "Billy", Gender.Male), C("gull", "Seagull", Gender.Female) };
@@ -343,10 +357,11 @@ public class AuthoredVoiceTests
     }
 
     [Fact]
-    public void The_authored_books_are_the_treasure_book_and_the_pigs_and_no_other_store_book_has_traits()
+    public void Only_the_authored_books_have_traits()
     {
-        Assert.Equal([StoreTexts.TreasureId, StarterTexts.PigsId], StarterVoices.AuthoredBooks);
-        Assert.All(StoreTexts.All.Where(s => s.Id != StoreTexts.TreasureId).Select(StoreBuilder.Build).SelectMany(b => b.Cast), m => Assert.Null(m.Traits));
+        Assert.Contains(StoreTexts.TreasureId, StarterVoices.AuthoredBooks);
+        Assert.Contains(StarterTexts.PigsId, StarterVoices.AuthoredBooks);
+        Assert.All(StoreTexts.All.Where(s => !StarterVoices.AuthoredBooks.Contains(s.Id)).Select(StoreBuilder.Build).SelectMany(b => b.Cast), m => Assert.Null(m.Traits));
     }
 
     [Fact]
