@@ -67,6 +67,7 @@ Source: `docs/design/dino-reader/Dino Reader Batch 31.dc.html`, screen 72 (lines
 - **Hidden marks.** Kids see plain Farsi; the marked text is a `speak:fa` table in `Story.Translations` (`BundledTranslations.SpeakKey`/`LookupSpoken`/`ComposeSpoken`). `StoryTranslator.TranslateAsync(forSpeech)` and `StoryVoicing` (`forSpeech: true`) speak it if present, else the plain text. Highlight follows the source ranges. `.dino` `schemaVersion` unchanged. `ArabicMarks.Strip`; `AnimalSounds.SaysIt` strips marks.
 - **Review tooling.** The user checked every word on a review page (Finglish input to `tools/sound-words-test/finglish_to_marks.py`, 28 tests); `build_marks_list.py`, `apply_marks.py`, `regen_review_audio.py`. Data: `tests/DinoReader.Tests/Starters/translations/three-little-pigs.fa.marks.json` and `.fa.speak.json`. Ezafe applied per occurrence only. Exclamations `piper-fa` mana drops get spoken-only replacements, e.g. p2 «آخ جون آخ جون آخ جون!».
 - **Versions.** Pigs starter v10 to v11; adopted flag key v3.
+- **Sound-word picks (2026-10-27, pigs v12):** the user chose spoken-only replacements on the review page: p5 «تَقْ تَقْ تَقْ!», p14 «شلپ شلپ شلپ!» and «آپچی، آپچی، آپچی!», p15 «چک چک چک!», p2 unchanged; shown text unchanged.
 - **From review:** both passes done, fixes applied. `DinoReader.Tests` 1527/1527; Android build clean.
 - **Device (emulator, headless):** shown text has no marks; spoken text marked on p1, p2 and ezafe lines; highlight follows; English unchanged; no crash; v9 to v11 upgrade kept Created/SourceId.
 

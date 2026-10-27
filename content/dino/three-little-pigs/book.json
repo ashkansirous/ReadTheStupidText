@@ -2,7 +2,7 @@
   "kind": "Starter",
   "id": "966400017c494fb5b045786f53852c9e",
   "title": "The Three Little Pigs",
-  "version": 11,
+  "version": 12,
   "ageMin": 3,
   "ageMax": 6,
   "author": "Traditional",
@@ -57,5 +57,5 @@
     "Pop": "Pig",
     "Pim": "Pig"
   },
-  "contentHash": "065060e46f0fe60937726b340696758038b6569c2aaadfb8ed452a4eb5bb534d"
+  "contentHash": "a8ba1b017d159543791d4dbdbce66170d655da06e5ee10c55bc55ee5f0ecb935"
 }

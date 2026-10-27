@@ -72,7 +72,7 @@ public partial class FarsiMarksTests
         {
             var plainWords = Words().Matches(text).Select(m => m.Value).ToList();
             var spokenWords = Words().Matches(spoken[piece]).Select(m => m.Value).ToList();
-            if (plainWords.Count != spokenWords.Count)
+            if (plainWords.Count != spokenWords.Count || file.Spoken.Any(r => text.Contains(r.Replaces)))
             {
                 continue; // a piece with one of the user's spoken replacements
             }
@@ -125,7 +125,7 @@ public partial class FarsiMarksTests
         string spoken = Marks().Replace(string.Join("\n", Load("fa.speak.json").Values), "");
 
         Assert.NotEmpty(file.Spoken);
-        Assert.All(file.Spoken, s => Assert.True(shown.Contains(s.Replaces) && spoken.Contains(s.Text), s.Replaces));
+        Assert.All(file.Spoken, s => Assert.True(shown.Contains(s.Replaces) && spoken.Contains(Marks().Replace(s.Text, "")), s.Replaces));
     }
 
     [Fact]
