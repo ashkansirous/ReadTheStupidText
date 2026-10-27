@@ -17,6 +17,15 @@ internal static class StarterVoices
 {
     private static readonly IReadOnlyDictionary<string, AuthoredCharacter[]> ByStory = new Dictionary<string, AuthoredCharacter[]>
     {
+        // Goldilocks and the Three Bears: a bright, bouncy girl; big booming Papa Bear; warm Mama Bear (a bear again, with a woman's voice in every language); soft little Baby Bear.
+        [StoreTexts.GoldilocksId] =
+        [
+            new("Goldilocks", "bee", Gender.Female, CharacterAge.Child, CharacterBeing.Person, [VoiceQuality.Bright, VoiceQuality.Bouncy]),
+            new("Papa Bear", "bigbear", Gender.Male, CharacterAge.Adult, null, [VoiceQuality.Booming, VoiceQuality.Warm]),
+            new("Mama Bear", "mummy", Gender.Female, CharacterAge.Adult, null, [VoiceQuality.Warm, VoiceQuality.Soft]),
+            new("Baby Bear", "cub", Gender.Male, CharacterAge.Child, null, [VoiceQuality.Soft, VoiceQuality.Bouncy]),
+        ],
+
         // X Marks the Treasure!
         [StoreTexts.TreasureId] =
         [

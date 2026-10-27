@@ -1,8 +1,16 @@
 # Goldilocks and the Three Bears: art record
 
-Store story (`StoreTexts.Goldilocks`, stem `goldilocks`, version 6). Retold as 14 pages with one action each
+Store story (`StoreTexts.Goldilocks`, stem `goldilocks`, version 7). Retold as 14 pages with one action each
 (`dino-storytelling` skill, Slice 121). Version 6 (Slice 146 Wave A, 2026-10-27): Farsi rewritten in spoken Farsi, sound words as
-plain repeats, no vowel marks; English, page breaks and every picture unchanged (all 14 pages keep their picture). **Art status (2026-10-26): pictures accepted, full review PASS (2026-10-26); shipped in `Store/goldilocks/`.** The cover and all
+plain repeats, no vowel marks; English, page breaks and every picture unchanged (all 14 pages keep their picture).
+
+Version 7 (Slice 146 Waves B+C and Slice 156, 2026-10-27): English reworded in the spoken register (contractions such as
+"Somebody's been eating my porridge!", "oops", "Uh-oh!", "And guess what?", "never ever", "fix" for "mend") and every
+sound word a triple ("Pitter-patter, pitter-patter, pitter-patter!", "Drip, drip, drip!", "Creak, creak, crack", "Dab, dab, dab!",
+and a new "Ha, ha, ha!" on page 11). Same 14 page breaks and the same one action per page: **every page keeps its picture**
+(checked against the pictures on 2026-10-27; page 3's longer line still shows her calling at the open door, page 11 the hug and
+the laugh). The 12 other languages were redone for every reworded piece in the same register with their own triples; Farsi
+changed only where the meaning moved (oops, the split rain sentence, uh-oh, opened her eyes, never ever, okay, ha ha ha, guess what). **Art status (2026-10-26): pictures accepted, full review PASS (2026-10-26); shipped in `Store/goldilocks/`.** The cover and all
 14 pages are new; the old 9-page text had no pictures, so nothing is kept. Text review: the first pass failed pages 3,
 4, 11 and 14 (`reviews/goldilocks-text.md`); all four are rewritten as asked.
 
@@ -11,7 +19,7 @@ breaks a chair, sleeps, then wakes to three bears, is frightened and jumps out o
 says sorry. None of that is here:
 - **She is not where she should be, and the text says so.** She has wandered too far from her mum's garden picking
   flowers when a rain shower catches her. She finds a house with its door wide open (Baby Bear forgot to shut it on
-  page 1), calls "Hello? Is anybody home?", hears nothing, and "knew she should wait outside". "But she stepped
+  page 1), calls "Hello? Is anybody home?", hears nothing, and "knew she should wait outside". "But she went
   inside to keep dry": the text marks going in as wrong at the moment she does it. She still does the naughty
   classic things (eats Baby Bear's porridge, sits in the chairs, sleeps in his bed), and later says she should have
   asked first.
@@ -19,14 +27,14 @@ says sorry. None of that is here:
   or is hurt.
 - **Nobody is frightened.** The bears find her asleep and are *surprised*; she wakes and says "Oh!", surprised too.
   No running, no window, no chase.
-- **She owns up and says sorry** for everything, unprompted: "I ate your porridge, and I broke your chair. I should
-  have asked first."
+- **She owns up and says sorry** for everything, unprompted: "I ate your porridge, and I broke your chair. I
+  should've asked first."
 - **The bears are kind.** Mama Bear hugs her and thanks her for telling the truth, then gives her the safety rule
-  kindly, a rule that never depends on a stranger inviting her in: "Next time, never go into a house you don't
-  know. Find your grown-up first." Baby Bear owns his part with a laugh ("And next time, I'll shut the door!").
-  Goldilocks helps mend the chair, and they share Papa Bear's porridge, which has cooled to just right.
+  kindly, a rule that never depends on a stranger inviting her in: "But next time, never ever go into a house you
+  don't know. Find your grown-up first, okay?" Baby Bear owns his part with a laugh ("And next time, I'll shut the door!").
+  Goldilocks helps fix the chair, and they share Papa Bear's porridge, which has cooled to just right.
 - **The ending is calm and safe:** the sun and a rainbow come out, the three bears walk her home to her mum, who is
-  waiting at the garden gate, and she promises: "Next time, I'll stay with my mum, and I'll never go into a house I
+  waiting at the garden gate, and she promises: "Next time, I'll stay with my mum, and I'll never ever go into a house I
   don't know." Baby Bear's "Come back soon, with your mum!" keeps the friendship without inviting her back alone.
 - No fire, stove, steam or hot water anywhere: "too hot" is only the porridge's temperature (allowed by
   `GentleTextTests`), and no picture shows a stove, fireplace, candle or steam.
@@ -49,25 +57,30 @@ says sorry. None of that is here:
 - **The bears walk her home** because she is small and far from her mum, and **Mum** is waiting at the gate because
   she has been looking for her.
 
-**Refrains (identical every time):** `"Oh, this porridge is too hot!"`, `"Oh, this porridge is too cold!"`,
+**Refrains (identical every time; since v7 with "Somebody's"):** `"Oh, this porridge is too hot!"`, `"Oh, this porridge is too cold!"`,
 `"Mmm, this porridge is just right!"` (page 4, and Papa Bear on page 13); `"This chair is too hard!"`,
-`"This chair is too soft!"`, `"This chair is just right!"` (page 5, and Baby Bear on his mended chair on page 13).
-The beds use the same pattern in narration (page 6). The bears' three-step build-up: `"Somebody has been eating my
+`"This chair is too soft!"`, `"This chair is just right!"` (page 5, and Baby Bear on his fixed-up chair on page 13).
+The beds use the same pattern in narration (page 6). The bears' three-step build-up: `"Somebody's been eating my
 porridge!"` (page 7), `"...sitting in my chair!"` (page 8), `"...sleeping in my bed!"` (page 9), Papa and Mama
 identical, Baby Bear's line different each time. "Next time" closes the story: Mama Bear's rule, Baby Bear's door,
-and Goldilocks' promise ("I'll never go into a house I don't know" answers "never go into a house you don't know").
+and Goldilocks' promise ("I'll never ever go into a house I don't know" answers "never ever go into a house you don't know").
 
 **Page shape note for the reviewer:** the three bowls are one page and the three chairs one page (each picture shows
 the moment that ends the trio: eating the little bowl, sitting on the rug by the little chair), not a page per bowl.
 A page per bowl, chair and bed would need 9 pages and push the sorry, the mending and the walk home past the store's
 15-page limit (`StoreStoryTests.MaxPages`). The text review accepted this.
 
-**Cast and voices:** Goldilocks (girl), Papa Bear (man), Mama Bear (woman), Baby Bear (boy), and Goldilocks' **Mum**
-(woman), who appears only on page 14 and has no line, so the caster has no Mum to voice; the voice-gender test still
-lists her as a woman in case a later rewording makes her speak. Every language's bear voices (`bear`, `bigbear`,
-`cub`) are men's, and an animal is cast to its own animal before its gender, so Mama Bear would get Grandpa Bear's
-voice; the builder stores **Mama Bear as no animal** (`StarterAnimals.cs`, `NotAnimal`): she is cast by gender in
-every language, at the cost of no growl. Papa Bear keeps a grown bear voice and Baby Bear the bear cub's.
+**Cast and voices (Slice 156, the book's own choices, `StarterVoices.cs`):** Goldilocks (girl, child, a person; bright and
+bouncy) suggests `bee`; Papa Bear (man, adult bear; booming and warm) `bigbear`; Mama Bear (woman, adult bear; warm and soft)
+`mummy`; Baby Bear (boy, child bear; soft and bouncy) `cub`. All four ids are the right gender in every language, so **Mama Bear is
+a bear again** (`StarterAnimals.cs` no longer stores her as no animal): the suggestion keeps her on a woman's voice while she
+growls like the other bears. Goldilocks' **Mum** appears only on page 14 and has no line, so the caster has no Mum to voice; the
+voice-gender test still lists her as a woman. Real casts dumped for every language on 2026-10-27 (each suggestion is kept
+everywhere; no two characters share a voice and flavour; no whisper flavour; every gender right): en am_michael Big / af_sky
+Bouncy / bf_emma Normal / bm_daniel Small; fa gyro Big / mana Small / mana Normal / gyro Small; zh yunxi Big / xiaoni Bouncy /
+xiaobei Normal / yunxi Small; es and pt alex Big / dora Bouncy / dora Normal / **santa Normal**. That last one is a roster
+limit, not a clash: the Spanish and Portuguese `cub` sits on Santa (the deep voice) with no flavour, so Baby Bear sounds deeper
+than Papa Bear there; only a Core roster change (moving `cub` in `ThreeVoiceSlots` to `M1` with a free young flavour) fixes it.
 `StoreStoryTests.Goldilocks_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster` checks all 14 languages.
 Pronouns: Goldilocks and Mama Bear "she", Papa Bear and Baby Bear "he". Translations keep each gender (Arabic قالت
 for Goldilocks and Mama Bear, قال for Papa Bear and دبدوب; Russian сказала / сказал; Portuguese "Obrigada" from both
@@ -75,7 +88,7 @@ females).
 
 **Translations:** all 13 written for this text in the spoken register (Decision 152). French narrates in the passé
 composé ("Boucle d'or est entrée", tags "a dit Boucle d'or"); Farsi spoken forms (خونه، می‌کردن، داغه، بازم بیا) with
-the refrain «خوبِ خوب»; Brazilian Portuguese ("pra", "a gente"); Finnish Goldilocks speaks colloquially ("Mä söin
+the refrain «اندازه‌ست»; Brazilian Portuguese ("pra", "a gente"); Finnish Goldilocks speaks colloquially ("Mä söin
 sun puuron"); Japanese hiragana, no spaces, with Goldilocks' mum as ママ to keep her apart from おかあさんぐま; the
 rain is gentle (ja パラパラ, zh 淅沥沥). "Find your grown-up" is "your mum or dad" in each language (Japanese
 おうちのひと). French and Spanish say soup (soupe, sopa), the word those tellings use; every other language says its
@@ -134,8 +147,8 @@ is not needed; leave them out so counts stay exact).
 ## Picture plan
 
 Every page: the whole scene sits in the top 70% of the picture; the bottom 30% is plain grass, path, floor or rug
-with nothing important in it. No text, letters, words, sound effects or writing anywhere ("Pitter, patter",
-"creak, crack", "Drip, drop", "Dab, dab, dab" are never drawn in). Nobody is frightened, cries or runs away.
+with nothing important in it. No text, letters, words, sound effects or writing anywhere ("Pitter-patter",
+"creak, crack", "Drip, drip", "Dab, dab, dab", "Ha, ha, ha" are never drawn in). Nobody is frightened, cries or runs away.
 
 **Pages 3, 4 and 5 are 1-character pages** (Goldilocks alone; the coordinator accepted this). The bears are far away
 deep in the woods, so they are not shown at all: a child who saw them nearby would ask why she didn't see them or

@@ -35,7 +35,7 @@ internal static class StoreTexts
     public static IReadOnlyList<StoreStorySpec> All { get; } =
     [
         new(LionAndMouseId, "The Lion and the Mouse", "lion-and-mouse", LionAndMouse, 1, RetoldAesop, 4, 7, "Aesop", ["Lion", "Mouse"], 6, AddedDate),
-        new(GoldilocksId, "Goldilocks and the Three Bears", "goldilocks", Goldilocks, 3, RetoldTraditional, 3, 6, Traditional, ["Goldilocks", "Papa Bear", "Mama Bear", "Baby Bear"], 6, AddedDate),
+        new(GoldilocksId, "Goldilocks and the Three Bears", "goldilocks", Goldilocks, 3, RetoldTraditional, 3, 6, Traditional, ["Goldilocks", "Papa Bear", "Mama Bear", "Baby Bear"], 7, AddedDate),
         new(RedRidingHoodId, "Little Red Riding Hood", "red-riding-hood", RedRidingHood, 3, RetoldTraditional, 4, 7, Traditional, ["Red Riding Hood", "Mother", "Wolf", "Grandma", "Woodcutter"], 6, AddedDate),
         new(UglyDucklingId, "The Ugly Duckling", "ugly-duckling", UglyDuckling, 0, "Retold from Andersen · free to share", 5, 8, "Hans Christian Andersen", ["Mother Duck", "Duckling", "Dilly", "Hen", "Swan"], 6, AddedDate),
         new(RedHenId, "The Little Red Hen", "little-red-hen", RedHen, 3, RetoldTraditional, 3, 6, Traditional, ["Hen", "Dog", "Cat", "Duck"], 6, AddedDate),
@@ -116,23 +116,23 @@ From that day on, the Lion and the Mouse were the best of friends.
     public const string Goldilocks = """
 Once upon a time three bears lived in a little house in the woods. There was big Papa Bear, middle-sized Mama Bear and little Baby Bear.
 
-One morning their porridge was too hot to eat, so they went for a walk while it cooled. Baby Bear skipped out last, and he forgot to shut the door.
+One morning their porridge was too hot to eat, so off they went for a walk while it cooled down. Baby Bear skipped out last and, oops, he forgot to shut the door!
 ---
-Pitter, patter, pitter, patter! Down came the rain.
+Pitter-patter, pitter-patter, pitter-patter! Down came the rain.
 
-"Quick, under this big tree!" said Papa Bear. So the three bears snuggled up together under the leaves, to wait until the rain stopped.
+"Quick, under this big tree!" said Papa Bear. So the three bears snuggled up close under the leaves and waited for the rain to stop.
 ---
-A little girl called Goldilocks had wandered too far from her mum's garden, picking flowers, and the rain caught her too. She came to a little house, and its door was wide open.
+A little girl called Goldilocks was picking flowers, and she wandered much too far from her mum's garden. Then the rain caught her too! She came to a little house, and its door was wide open.
 
 "Hello? Is anybody home?" called Goldilocks. But nobody answered. Goldilocks knew she should wait outside.
 ---
-But she stepped inside to keep dry. On the table stood three bowls of porridge.
+But she went inside to keep dry. On the table there were three bowls of porridge.
 
 She tried the big bowl. "Oh, this porridge is too hot!" said Goldilocks.
 
 She tried the middle bowl. "Oh, this porridge is too cold!" said Goldilocks.
 
-She tried the little bowl. "Mmm, this porridge is just right!" said Goldilocks. And she ate it all up.
+She tried the little bowl. "Mmm, this porridge is just right!" said Goldilocks. And she gobbled it all up!
 ---
 Then Goldilocks saw three chairs.
 
@@ -140,59 +140,59 @@ She sat in the big chair. "This chair is too hard!" said Goldilocks.
 
 She sat in the middle chair. "This chair is too soft!" said Goldilocks.
 
-She sat in the little chair. "This chair is just right!" said Goldilocks. But creak, creak, crack! One leg came off, and she slid down onto the soft rug.
+She sat in the little chair. "This chair is just right!" said Goldilocks. But creak, creak, crack! Uh-oh! One leg came off, and down she slid onto the soft rug.
 ---
 Goldilocks felt sleepy, so she went upstairs. The big bed was too high. The middle bed was too lumpy. But the little bed was just right, and soon she was fast asleep.
 
-Outside, the rain stopped. Drip, drop, drip, drop. The three bears set off for home.
+Outside, the rain stopped. Drip, drip, drip! The three bears set off for home.
 ---
 The three bears came home and looked at the table.
 
-"Somebody has been eating my porridge!" said Papa Bear.
+"Somebody's been eating my porridge!" said Papa Bear.
 
-"Somebody has been eating my porridge!" said Mama Bear.
+"Somebody's been eating my porridge!" said Mama Bear.
 
-"Somebody has been eating my porridge, and it's all gone!" said Baby Bear.
+"Somebody's been eating my porridge, and it's all gone!" said Baby Bear.
 ---
 Then the three bears looked at the chairs.
 
-"Somebody has been sitting in my chair!" said Papa Bear.
+"Somebody's been sitting in my chair!" said Papa Bear.
 
-"Somebody has been sitting in my chair!" said Mama Bear.
+"Somebody's been sitting in my chair!" said Mama Bear.
 
-"Somebody has been sitting in my chair, and its leg came off!" said Baby Bear.
+"Somebody's been sitting in my chair, and its leg came off!" said Baby Bear.
 ---
 The three bears tiptoed upstairs.
 
-"Somebody has been sleeping in my bed!" said Papa Bear.
+"Somebody's been sleeping in my bed!" said Papa Bear.
 
-"Somebody has been sleeping in my bed!" said Mama Bear.
+"Somebody's been sleeping in my bed!" said Mama Bear.
 
-"Somebody is sleeping in my bed, and here she is!" said Baby Bear.
+"Somebody's sleeping in my bed, and here she is!" said Baby Bear.
 ---
-Goldilocks woke up and saw three surprised bears looking at her. "Oh!" said Goldilocks, and she sat up.
+Goldilocks opened her eyes, and there were three surprised bears looking at her. "Oh!" said Goldilocks, and she sat up.
 
-"I'm so sorry," said Goldilocks. "The rain caught me, and your door was open. I ate your porridge, and I broke your chair. I should have asked first."
+"I'm so, so sorry," said Goldilocks. "I got caught in the rain, and your door was open. I ate your porridge, and I broke your chair. I should've asked first."
 ---
-The bears looked at each other. Then Mama Bear gave Goldilocks a big, soft hug.
+The bears looked at each other. Then Mama Bear gave Goldilocks a big, soft bear hug.
 
-"Thank you for telling us the truth," said Mama Bear. "Next time, never go into a house you don't know. Find your grown-up first."
+"Thank you for telling us the truth," said Mama Bear. "But next time, never ever go into a house you don't know. Find your grown-up first, okay?"
 
-"And next time, I'll shut the door!" said Baby Bear. Everyone laughed.
+"And next time, I'll shut the door!" said Baby Bear. Everyone laughed. Ha, ha, ha!
 ---
-Downstairs, Goldilocks picked up the little chair. "Can I help mend it?" said Goldilocks.
+Downstairs, Goldilocks picked up the little chair. "Can I help fix it?" said Goldilocks.
 
-Papa Bear fetched a pot of glue. Goldilocks held the chair steady, Baby Bear held the leg, and Papa Bear stuck them together. Dab, dab, dab!
+Papa Bear got a pot of glue. Goldilocks held the chair steady, Baby Bear held the leg, and Papa Bear stuck them together. Dab, dab, dab!
 ---
-Papa Bear's porridge had cooled down at last. "Mmm, this porridge is just right!" said Papa Bear.
+And guess what? Papa Bear's porridge had cooled down at last. "Mmm, this porridge is just right!" said Papa Bear.
 
 So Mama Bear shared it out into four little bowls, and they all sat down to eat together.
 
-Baby Bear sat on his mended chair. "This chair is just right!" said Baby Bear.
+Baby Bear sat on his fixed-up chair. "This chair is just right!" said Baby Bear.
 ---
 Soon the sun came out, and a rainbow shone over the woods. So the three bears walked Goldilocks home, where her mum was waiting at the garden gate.
 
-"Thank you, bears!" said Goldilocks. "Next time, I'll stay with my mum, and I'll never go into a house I don't know."
+"Thank you, bears!" said Goldilocks. "Next time, I'll stay with my mum, and I'll never ever go into a house I don't know."
 
 "Come back soon, with your mum!" said Baby Bear.
 """;

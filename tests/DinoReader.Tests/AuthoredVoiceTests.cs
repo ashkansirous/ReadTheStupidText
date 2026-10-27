@@ -343,10 +343,10 @@ public class AuthoredVoiceTests
     }
 
     [Fact]
-    public void Only_the_treasure_book_has_traits_so_far()
+    public void Only_the_authored_books_have_traits()
     {
-        Assert.Equal([StoreTexts.TreasureId], StarterVoices.AuthoredBooks);
-        Assert.All(StoreTexts.All.Where(s => s.Id != StoreTexts.TreasureId).Select(StoreBuilder.Build).SelectMany(b => b.Cast), m => Assert.Null(m.Traits));
+        Assert.Contains(StoreTexts.TreasureId, StarterVoices.AuthoredBooks);
+        Assert.All(StoreTexts.All.Where(s => !StarterVoices.AuthoredBooks.Contains(s.Id)).Select(StoreBuilder.Build).SelectMany(b => b.Cast), m => Assert.Null(m.Traits));
     }
 
     [Fact]
