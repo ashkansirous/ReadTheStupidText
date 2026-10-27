@@ -14,15 +14,13 @@ this plan turns it into ordered, shippable vertical slices.
 
 ## Status
 
-Open slices only. Finished slices (148 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
+Open slices only. Finished slices (150 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
 | 153 | Dino: no robotic-sounding character voices | planned | | | [153-dino-no-robotic-voices.md](docs/plan/slices/153-dino-no-robotic-voices.md) |
 | 154 | Dino: vowel marks in Farsi and Arabic books | in progress | #470 | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
 | 157 | Dino: book content and the book builder out of the test project | planned | | | [157-dino-book-content-out-of-tests.md](docs/plan/slices/157-dino-book-content-out-of-tests.md) |
-| 158 | Dino: publish store books on every merge | planned | | | [158-dino-publish-store-books.md](docs/plan/slices/158-dino-publish-store-books.md) |
-| 159 | Dino: everything in the chosen language | planned | | | [159-dino-everything-in-my-language.md](docs/plan/slices/159-dino-everything-in-my-language.md) |
 
 Batch 25 (119-123; 119, 120, 122, 123 built, 121 built; planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
 
@@ -37,9 +35,9 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 
 Batch 32 (155, planned 2026-10-26, Dino onboarding): Slice 155 (the first-run intro wizard, PR #432) is built, so the batch is done. Decision 160.
 
-Batch 34 (157-158, planned 2026-10-27, after all 15 store books fell behind `main`): 158 first (small, CI only: a `publish-store` job in `release.yml` uploads every book behind the live store, Decision 163); it can run beside other work. Then 157 moves book content to `content/dino/<book>/` with a console builder and repoints the job; 157 runs alone between waves, after the open per-book PRs merge, because it moves every book's files. Decisions 162-163.
+Batch 34 (157-158; 158 built, PR #472; planned 2026-10-27, after all 15 store books fell behind `main`): 158 first (small, CI only: a `publish-store` job in `release.yml` uploads every book behind the live store, Decision 163); it can run beside other work. Then 157 moves book content to `content/dino/<book>/` with a console builder and repoints the job; 157 runs alone between waves, after the open per-book PRs merge, because it moves every book's files. Decisions 162-163.
 
-Batch 35 (159, planned 2026-10-27, the user found English all over Dino in Farsi): one slice in four parts: A (strings follow the stored language pick; fixes the intro wizard flipping to English after the store) ships first, then B (shipped titles on the shelf and store), C (own books translate on the phone, pack downloaded only when a parent asks) and D (guards). Decision 164.
+Batch 35 (159, built, PR #473, so the batch is done; planned 2026-10-27, the user found English all over Dino in Farsi): one slice in four parts: A (strings follow the stored language pick; fixes the intro wizard flipping to English after the store) ships first, then B (shipped titles on the shelf and store), C (own books translate on the phone, pack downloaded only when a parent asks) and D (guards). Decision 164.
 
 
 ### Notes
@@ -85,6 +83,8 @@ Built but not verified (details in each slice file):
 - Slice 152: Billy Goats store book on device; hearing a recast animal by ear; Windows head and iOS; native read of the `Settings_AnimalSounds_*` strings; upload and live check of the 11 bumped store books (needs the user's OK) ([slice](docs/plan/slices/152-dino-animal-from-the-book.md)).
 - Slice 156: device listen of each book's cast in en/fa/es/pt/zh; fa/es/pt roster limits (few voices per gender, narrator voice shared; see each art record); Chinese Treasure on device; Windows head and iOS; store upload (user's OK) ([slice](docs/plan/slices/156-dino-authored-character-voices.md)).
 - Slice 154 (Three Little Pigs Farsi part, PR #470): recordings surviving the starter refresh (none existed in the test); p5 تق تق تق, p14 شالاپ/آپچی and p15 چیک replacements await the user's pick; Farsi review of the other 14 books; Arabic diacritizer and its listen test ([slice](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md)).
+- Slice 158: `actionlint` on `release.yml` (runs in CI). The first `main` run (run 40500814826) uploaded all 15 books and `--verify` passed, so that item is done ([slice](docs/plan/slices/158-dino-publish-store-books.md)).
+- Slice 159: native-speaker review of `ShippedTitles` and the 7 new resx keys in 13 languages; store credit line still English; X Marks the Treasure! bundled translations are English copies; live `meta.json` gets `titles` only at each book's next version bump; iOS ML Kit binding not wired (iOS/Windows have no translation engine); airplane mode (no pack: book stays English, no download) untested; Debug `-t:Install` crash-loops on a missing sherpa-onnx native lib (use the embedded arm64 APK) ([slice](docs/plan/slices/159-dino-everything-in-my-language.md)).
 - Slice 96: emulator in Farsi and Arabic (gallery, gate, wizard, store, backup, reader, swipe direction, highlight on RTL lines); Windows head gallery and reader ([slice](docs/plan/slices/96-dino-layout-never-mirrors.md)).
 - Slice 97: Windows head: the AddBook icon rendering and the gate opening; native-speaker read of the `Gallery_AddBook` strings ([slice](docs/plan/slices/97-dino-add-book-button.md)).
 - Slice 99: the RTST phone highlight covers a whole 3-sentence `SpeechTextChunker` chunk, not one sentence; full TalkBack walk-through; iOS device run; Settings voice name does not refresh after a pack installs ([slice](docs/plan/slices/99-rtst-mobile-minimal-main-page.md)).

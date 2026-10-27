@@ -158,6 +158,8 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 152 | Dino: a character's animal comes from the book, never its voice | built | #436 | — | [152-dino-animal-from-the-book.md](../slices/152-dino-animal-from-the-book.md) |
 | 146 | Rewrite every Dino book in spoken, kid-friendly language | built | #403-#411, #439-#444, #446, #448, #449, #451-#454, #456-#464 | | [146-dino-books-kid-friendly-language.md](../slices/146-dino-books-kid-friendly-language.md) |
 | 156 | Dino: the book chooses each character's voice, not the app | built | #438, #447, #455, #465 | | [156-dino-authored-character-voices.md](../slices/156-dino-authored-character-voices.md) |
+| 158 | Dino: publish store books on every merge | built | #472 | | [158-dino-publish-store-books.md](../slices/158-dino-publish-store-books.md) |
+| 159 | Dino: everything in the chosen language | built | #473 | | [159-dino-everything-in-my-language.md](../slices/159-dino-everything-in-my-language.md) |
 
 ## Batch ordering notes
 
