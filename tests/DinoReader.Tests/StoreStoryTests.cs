@@ -193,6 +193,23 @@ public sealed class StoreStoryTests : IDisposable
         AssertEachIsPlayedByTheirGender(story, language, expected);
     }
 
+    // The Three Billy Goats Gruff (Slice 156): the three brothers and the Troll are all "he", so each gets a man's or boy's voice in every language (the book suggests
+    // piglet, knight, giant and troll; Farsi has no troll, so its Troll is matched by traits). The stored English genders are checked too.
+    [Theory]
+    [MemberData(nameof(Languages))]
+    public void TheThreeBillyGoatsGruff_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
+    {
+        var expected = new Dictionary<string, Gender>
+        {
+            ["Little Billy"] = Gender.Male, ["Middle Billy"] = Gender.Male, ["Big Billy"] = Gender.Male, ["Troll"] = Gender.Male,
+        };
+
+        Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.BillyGoatsId));
+        Assert.Equal(expected.Keys.Order(), story.Cast.Select(m => m.Name).Order());
+        Assert.All(story.Cast, m => Assert.True(m.Gender == expected[m.Name], $"{m.Name} is stored as {m.Gender}"));
+        AssertEachIsPlayedByTheirGender(story, language, expected);
+    }
+
     // The Gingerbread Man starter (also a store story) is a boy, so he must get a male voice in every language; Granny, the Cow and the Horse are "she",
     // Grandpa and the Fox "he" (the stored English genders are checked too, since every other language is cast from them).
     [Theory]

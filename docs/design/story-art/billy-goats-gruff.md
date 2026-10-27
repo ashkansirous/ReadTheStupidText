@@ -1,6 +1,6 @@
 # The Three Billy Goats Gruff: art record
 
-Store story (`StoreTexts.BillyGoats`, stem `billy-goats-gruff`, version 5). Retold as 14 pages with one
+Store story (`StoreTexts.BillyGoats`, stem `billy-goats-gruff`, version 8; v8 is the spoken-language rewrite and the book's own voices, Slices 146 and 156). Retold as 14 pages with one
 action each (`dino-storytelling` skill). **Art status (2026-10-25): all 14 pages and the cover drawn and prepared into the repo. Pages 10, 11, 13 and 14 redrawn or drawn after the Google AI Pro upgrade; the cover re-roll was tried and rejected, so the current cover is kept. The book is complete and passed the full-mode review.** Pages 8-9 show a rope rail (accepted by the reviewer); every other page has the wooden post-and-rail.
 
 **Gentle ending (Decision 130):** in the classic tale Big Billy butts the Troll into the river and he is
@@ -38,6 +38,29 @@ Line-up: [`billy-goats-gruff/characters/lineup.jpg`](billy-goats-gruff/character
 - **The river:** shallow, clear and slow, with round pebbles; never deep, fast or foaming.
 - **The meadow:** a bright green meadow full of long grass and small flowers on the far side.
 
+## Spoken-language rewrite (v8, 2026-10-27, Slices 146 and 156)
+
+The English was rewritten in spoken, bedtime words (Decision 152): contractions ("Who's that trip-trapping over my bridge?", "It's only me"),
+"Uh-oh!", "Whoops!", "yummy green grass", "teeny-tiny voice", "Oh, all right then, off you go!" (now the same both times), and the lone
+"Splash!" became "Splash, splash, splash!" (Decision 151; one piece, so no language reads a lone short sound). Page breaks and each page's
+one action are unchanged, so **every page and the cover keep their picture** (none needs redrawing). The other 12 languages were redone in
+the same register with their own traditional names and endings (Bukkene Bruse, Bockarna Bruse, Kolme pukkia, 山妖 and 嘎啦嘎啦 in Chinese,
+colorín colorado, cric crac, Вот и сказке конец, وتوتة توتة خلصت الحدوتة, めでたし); Farsi kept its Wave A text and changed only the
+pieces whose meaning changed. Sounds in the untested languages (all but en, es, zh, fa) use the repeat form and want a listen.
+
+## Voices (Slice 156: the book's own picks, `StarterVoices`)
+
+The picker had cast the Troll as the Rumbly Dragon and the three brothers as girls' lamb and sheep voices (Big Billy, "in a big, deep
+voice", was the sleepy sheep). The book now suggests:
+
+- **Little Billy:** `piglet` (Cheeky Piglet, small and quick); boy, child, squeaky and bright. Goat (bleats from the book animal).
+- **Middle Billy:** `knight` (Brave Knight, bold and clear, the Normal flavour); boy, young, bold and bright. Goat.
+- **Big Billy:** `giant` (Friendly Giant, big, deep and slow); male, adult, booming and warm. Goat.
+- **Troll:** `troll` (Grumpy Troll, gruff and low); male, adult, a troll, gruff. Not an animal. Farsi has no troll character, so its
+  trait match picks (today the wolf voice).
+
+Every language plays all four with a male voice (`TheThreeBillyGoatsGruff_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster`).
+
 ## Picture plan (attempts filled in)
 
 Every page: the whole scene sits in the top 70% of the picture; the bottom 30% is plain grass, water or
@@ -61,7 +84,7 @@ riverbank with nothing important in it.
 | 13 | Afternoon: in the meadow, the Troll (1) nibbles a tuft of grass with a big, happy smile; the three goats (3) graze around him | new | 2 | Original (1792x2400) failed the independent review: short round clown nose, three waistcoat buttons. Redraw (fresh chat, line-up + 14.jpg pasted, 'long carrot nose', 'two buttons', river and bridge glimpse added): accepted, 4 characters, long nose, two buttons, bare legs, closed-mouth smile, 1792x2400 |
 | 14 | Sunset: the three goats (3) walk home over the bridge towards the hill; the Troll (1) stands on the hill-side pebbly bank by his stone under the near end of the bridge and waves goodnight | new | 4 | 1: Troll standing on the bridge planks, goats facing right, Middle Billy waving; 2 (same chat, asked to fix): Gemini replied with text only; 3: same chat, goats still face right and Troll on planks; 4: fresh chat with explicit left/right layout, OK (the grey stone is not visible; hill grass looks orange in the sunset) |
 
-Check (dino-storytelling section 4):
+Check (dino-storytelling section 4; rechecked for the v8 text, every picture kept):
 
 - [x] Every page's picture differs from its neighbours (place, action or who is there).
 - [x] No page needs two pictures.
