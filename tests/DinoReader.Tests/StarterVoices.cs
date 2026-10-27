@@ -26,6 +26,16 @@ internal static class StarterVoices
             new("Billy", "puppy2", Gender.Male, CharacterAge.Child, CharacterBeing.Pirate, [VoiceQuality.Bouncy, VoiceQuality.Warm]),
             new("Pancake Polly", "mummy", Gender.Female, CharacterAge.Adult, CharacterBeing.Pirate, [VoiceQuality.Warm, VoiceQuality.Bouncy]),
         ],
+
+        // The Three Billy Goats Gruff: three brothers ("his hooves"), so boys' voices rising in size; the bleat comes from their book animal (Goat), not the voice.
+        // The picker gave the Troll the Rumbly Dragon and the brothers girls' lamb and sheep voices (Big Billy, "a big, deep voice", the sleepy sheep). Farsi has no troll: its trait match picks.
+        [StoreTexts.BillyGoatsId] =
+        [
+            new("Little Billy", "piglet", Gender.Male, CharacterAge.Child, null, [VoiceQuality.Squeaky, VoiceQuality.Bright]),
+            new("Middle Billy", "knight", Gender.Male, CharacterAge.Young, null, [VoiceQuality.Bold, VoiceQuality.Bright]),
+            new("Big Billy", "giant", Gender.Male, CharacterAge.Adult, null, [VoiceQuality.Booming, VoiceQuality.Warm]),
+            new("Troll", "troll", Gender.Male, CharacterAge.Adult, CharacterBeing.Troll, [VoiceQuality.Gruff]),
+        ],
     };
 
     /// <summary>The books whose characters a writer has chosen voices for: each character has traits and a known suggestion no one else in the book shares.</summary>
