@@ -321,4 +321,10 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Animal sounds</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Animals say “Oink!” or “Baa!” now and then, in every book</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>This book has more characters than the {0} storyteller characters there are, so some of them sound alike. The narrator is never given to a character.</value></data>
+  <data name="TranslationPack_Title" xml:space="preserve"><value>Download the {0} translation pack?</value></data>
+  <data name="TranslationPack_Body" xml:space="preserve"><value>To show and read this book in {0}, Dino Reader needs a translation pack of about 30 MB. It stays on this device. If you skip it, the book stays in its own language.</value></data>
+  <data name="TranslationPack_Download" xml:space="preserve"><value>Download</value></data>
+  <data name="TranslationPack_Keep" xml:space="preserve"><value>Keep the original</value></data>
+  <data name="TranslationPack_Failed" xml:space="preserve"><value>Couldn't get the translation pack. The book stays in its own language.</value></data>
+  <data name="Wait_DownloadingPack" xml:space="preserve"><value>Getting the {0} translation pack…</value></data>
 </root>

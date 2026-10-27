@@ -15,7 +15,7 @@ namespace ReadTheStupidText.Mobile.Shared;
 /// on-device model manager; the text itself is never sent anywhere. The last language pair's
 /// translator is kept open so a long text's chunks reuse it.
 /// </summary>
-public sealed class MlKitTranslator : AppTranslator, IModelPreparer, IDisposable
+public sealed class MlKitTranslator : AppTranslator, IModelPreparer, ITranslationPacks, IDisposable
 {
     // The model is only fetched when the user turns translation on and plays, so the download is
     // on demand; requiring Wi-Fi would make that tap fail silently on mobile data.
@@ -29,6 +29,9 @@ public sealed class MlKitTranslator : AppTranslator, IModelPreparer, IDisposable
 
     private sealed record Opening((string Source, string Target) Pair, MlKitClient Client, Task Download);
 
+    /// <inheritdoc />
+    public bool AutoDownload { get; set; } = true;
+
     public IReadOnlyList<string> SupportedLanguages { get; } = TranslateLanguage.AllLanguages!.Select(EngineLanguageCodes.FromEngine).ToArray();
 
     public async Task<bool> IsModelReadyAsync(string source, string target)
@@ -39,6 +42,89 @@ public sealed class MlKitTranslator : AppTranslator, IModelPreparer, IDisposable
         HashSet<string> languages = DownloadedLanguages(downloaded);
         return RequiredModels(source, target).All(languages.Contains);
     }
+
+    /// <inheritdoc />
+    public async Task<bool> IsPackReadyAsync(string language)
+    {
+        Java.Lang.Object? downloaded = await RemoteModelManager.Instance.GetDownloadedModels(Java.Lang.Class.FromType(typeof(TranslateRemoteModel)));
+        return DownloadedLanguages(downloaded).Contains(EngineLanguageCodes.ToEngine(language));
+    }
+
+    /// <inheritdoc />
+    /// <remarks>ML Kit reports no byte progress for a model download, so <paramref name="progress"/> only gets the final 1. ML Kit cannot abort a download either:
+    /// on Cancel the caller returns at once and, when the pack was not on the device before, it is deleted again as soon as the download lands, so a cancelled
+    /// pack never installs behind the caller's back.</remarks>
+    public async Task DownloadPackAsync(string language, IProgress<double>? progress, CancellationToken cancellationToken)
+    {
+        string code = EngineLanguageCodes.ToEngine(language);
+        ReclaimCancelledDownload(code); // an earlier cancelled download of this pack is wanted again: it is kept, not deleted, and nothing waits for it
+        bool wasReady = await IsPackReadyAsync(language);
+        TranslateRemoteModel model = new TranslateRemoteModel.Builder(code).Build();
+        Task download = DownloadPackModelAsync(model);
+        try
+        {
+            await download.WaitAsync(cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            if (!wasReady)
+            {
+                var abandoned = new CancelledDownload();
+                _cancelledDownloads[code] = abandoned;
+                _ = DeleteWhenDoneAsync(download, model, code, abandoned);
+            }
+
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new TranslationModelUnavailableException("The translation pack could not be downloaded.", ex);
+        }
+
+        progress?.Report(1);
+    }
+
+    private sealed class CancelledDownload
+    {
+        public volatile bool Reclaimed;
+    }
+
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, CancelledDownload> _cancelledDownloads = new();
+
+    private void ReclaimCancelledDownload(string code)
+    {
+        if (_cancelledDownloads.TryRemove(code, out CancelledDownload? abandoned))
+        {
+            abandoned.Reclaimed = true;
+        }
+    }
+
+    // The pack is deleted only when nobody wants it any more: not when a later request for it began, when the RTST path (AutoDownload) may rely on it,
+    // or when the open translator pair needs it. Never throws: it runs unobserved once the caller has gone.
+    private async Task DeleteWhenDoneAsync(Task download, TranslateRemoteModel model, string code, CancelledDownload abandoned)
+    {
+        try
+        {
+            await download;
+            if (abandoned.Reclaimed || AutoDownload || IsNeededByOpenPair(code))
+            {
+                return;
+            }
+
+            _cancelledDownloads.TryRemove(new KeyValuePair<string, CancelledDownload>(code, abandoned));
+            await RemoteModelManager.Instance.DeleteDownloadedModel(model);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"A cancelled translation pack could not be removed: {ex.Message}");
+        }
+    }
+
+    private bool IsNeededByOpenPair(string code) =>
+        _opening is { } open && RequiredModels(open.Pair.Source, open.Pair.Target).Contains(code);
+
+    private static async Task DownloadPackModelAsync(TranslateRemoteModel model) =>
+        await RemoteModelManager.Instance.Download(model, new DownloadConditions.Builder().Build());
 
     // ML Kit pivots through English, so a pair with neither side English needs the English model too.
     private static IEnumerable<string> RequiredModels(string source, string target)
@@ -55,6 +141,11 @@ public sealed class MlKitTranslator : AppTranslator, IModelPreparer, IDisposable
     {
         source = EngineLanguageCodes.ToEngine(source);
         target = EngineLanguageCodes.ToEngine(target);
+        if (!AutoDownload && !await IsModelReadyAsync(source, target))
+        {
+            throw new TranslationModelUnavailableException("The translation pack is not on this device.");
+        }
+
         while (true)
         {
             Opening opening = await StartOrJoinOpeningAsync(source, target, cancellationToken);

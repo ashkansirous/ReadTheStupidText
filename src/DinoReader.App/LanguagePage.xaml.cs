@@ -31,16 +31,16 @@ public static class LanguageChoice
 	{
 		try
 		{
-			return Preferences.Default.Get(UiLanguageKey, (string?)null) is { } code ? CultureInfo.GetCultureInfo(UiLanguage.Resolve(code)) : CultureInfo.CurrentUICulture;
+			return Preferences.Default.Get(UiLanguageKey, (string?)null) is { } code ? CultureInfo.GetCultureInfo(UiLanguage.Resolve(code)) : AppResources.Culture;
 		}
 		catch (Exception ex) when (ex is InvalidOperationException or PlatformNotSupportedException)
 		{
-			return CultureInfo.CurrentUICulture;
+			return AppResources.Culture;
 		}
 	}
 
 	/// <summary>The language the grown-up picked, else the one the screens speak.</summary>
-	public static string Current() => UiLanguage.Resolve(Preferences.Default.Get(UiLanguageKey, (string?)null) ?? CultureInfo.CurrentUICulture.Name);
+	public static string Current() => UiLanguage.Resolve(Preferences.Default.Get(UiLanguageKey, (string?)null) ?? AppResources.Culture.Name);
 
 	/// <summary>The language the voice speaks: the stored one, else <see cref="Current()"/> (a fresh install that has not picked yet).</summary>
 	public static string Current(ISettingsStore settings) => settings.Language is { } stored ? UiLanguage.Resolve(stored) : Current();

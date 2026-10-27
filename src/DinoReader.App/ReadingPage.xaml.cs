@@ -40,6 +40,10 @@ public partial class ReadingPage : ContentPage
 	private bool _firstLoadDone; // the first Loading is the book opening; later ones are restarts the reader triggered
 	private readonly SemaphoreSlim _saveLock = new(1, 1); // the cast save and the mode save each read-modify-write _story: one at a time
 	private Story? _story;
+	private Task? _offer; // the one translation offer of this open (see OwnTranslationOfferedAsync)
+	private bool _offerKeptOriginal; // the parent declined or cancelled the pack: this open shows the book in its own language
+	private bool _offering; // the offer's wait is on screen: its Cancel is not the read's
+	private readonly TaskCompletionSource _appeared = new(TaskCreationOptions.RunContinuationsAsynchronously);
 	private IReadOnlyList<SentenceSpan> _sentences = [];
 	private ReadingTheme _theme = ReadingTheme.For(false);
 	private bool _visible;
@@ -143,10 +147,53 @@ public partial class ReadingPage : ContentPage
 			ShowSource(story);
 		}
 
+		if (translator.NeedsOwnTranslation(story))
+		{
+			await OwnTranslationOfferedAsync(story, translator).WaitAsync(cancellation);
+			story = _story ?? story;
+			if (version != _displayVersion || _offerKeptOriginal || !translator.Applies(story))
+			{
+				return; // declined or cancelled: the book is shown in its own language this time
+			}
+		}
+
 		(TranslatedStory? translated, string title) = await TranslateForScreenAsync(story, translator, cancellation);
 		if (translated is not null && version == _displayVersion && !cancellation.IsCancellationRequested)
 		{
 			ShowTranslation(story, translated, title);
+		}
+	}
+
+	// A parent's own book that has the switch on but no table (say the app language changed) is offered its translation once per open (Slice 159, Decision 164):
+	// the pack question, the download and the translation run behind the page's wait with Cancel, and the table is saved inside the book. Nothing downloads unasked.
+	// The display awaits this one offer, however often it restarts.
+	private Task OwnTranslationOfferedAsync(Story story, StoryTranslator translator) => _offer ??= OfferOwnTranslationAsync(story, translator);
+
+	private async Task OfferOwnTranslationAsync(Story story, StoryTranslator translator)
+	{
+		await _appeared.Task; // the question needs a page that is on screen
+		await _saveLock.WaitAsync(); // the cast and mode saves must not write a stale copy over the table
+		_offering = true;
+		try
+		{
+			var prompt = new TranslationPackPrompt(translator, _library);
+			OwnTranslationOutcome outcome = await prompt.OfferAsync(this, story.Id, (stage, line) => _wait.BeginCancellable(stage, line), EndWait);
+			_offerKeptOriginal = outcome == OwnTranslationOutcome.KeptOriginal;
+			if (await _library.GetAsync(story.Id) is { } latest && _story is { } shown)
+			{
+				_story = shown with { Translations = latest.Translations, TranslateToMyLanguage = latest.TranslateToMyLanguage };
+			}
+		}
+		catch (Exception ex)
+		{
+			// Never faults or cancels: the one cached offer is awaited by every display restart of this open.
+			_offerKeptOriginal = true;
+			Debug.WriteLine($"Dino Reader could not offer the translation: {ex.Message}");
+		}
+		finally
+		{
+			_offering = false;
+			_saveLock.Release();
 		}
 	}
 
@@ -332,6 +379,7 @@ public partial class ReadingPage : ContentPage
 	protected override void OnAppearing()
 	{
 		base.OnAppearing();
+		_appeared.TrySetResult();
 		CountOpen();
 		_visible = true;
 		_onStack = true;
@@ -584,6 +632,11 @@ public partial class ReadingPage : ContentPage
 	// Cancel always stops the read; only the wait of opening the book (the first load) also goes back to the shelf. A mid-book restart stays on the page.
 	private async void OnWaitCancelled()
 	{
+		if (_offering)
+		{
+			return; // the translation offer's own Cancel: its token stops it, the read and the page stay
+		}
+
 		bool opening = !_firstLoadDone;
 		try
 		{

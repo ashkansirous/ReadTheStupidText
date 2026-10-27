@@ -320,4 +320,10 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>أصوات الحيوانات</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>الحيوانات تقول أحيانًا «غرغر!» أو «ماع!» في كل كتاب</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>عدد الشخصيات في هذا الكتاب أكبر من عدد الشخصيات الراوية المتاحة وهو {0}، لذا يتشابه صوت بعضها. لا يُمنح الراوي لأي شخصية.</value></data>
+  <data name="TranslationPack_Title" xml:space="preserve"><value>تنزيل حزمة الترجمة إلى {0}؟</value></data>
+  <data name="TranslationPack_Body" xml:space="preserve"><value>لعرض هذا الكتاب وقراءته باللغة {0} يحتاج Dino Reader إلى حزمة ترجمة بحجم 30 ميغابايت تقريباً. تبقى الحزمة على هذا الجهاز. إذا تخطيتها يبقى الكتاب بلغته الأصلية.</value></data>
+  <data name="TranslationPack_Download" xml:space="preserve"><value>تنزيل</value></data>
+  <data name="TranslationPack_Keep" xml:space="preserve"><value>إبقاء الأصل</value></data>
+  <data name="TranslationPack_Failed" xml:space="preserve"><value>تعذّر الحصول على حزمة الترجمة. يبقى الكتاب بلغته الأصلية.</value></data>
+  <data name="Wait_DownloadingPack" xml:space="preserve"><value>جارٍ تنزيل حزمة الترجمة إلى {0}…</value></data>
 </root>

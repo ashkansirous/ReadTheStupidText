@@ -319,4 +319,10 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Dyrelyder</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Dyrene sier av og til «Nøff!» eller «Bæ!», i alle bøker</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Det er flere figurer i boken enn de {0} fortellerfigurene vi har, så noen høres like ut. Fortelleren blir aldri gitt til en figur.</value></data>
+  <data name="TranslationPack_Title" xml:space="preserve"><value>Laste ned oversettelsespakken for {0}?</value></data>
+  <data name="TranslationPack_Body" xml:space="preserve"><value>For å vise og lese denne boka på {0} trenger Dino Reader en oversettelsespakke på omtrent 30 MB. Den blir på denne enheten. Hopper du over, blir boka på sitt eget språk.</value></data>
+  <data name="TranslationPack_Download" xml:space="preserve"><value>Last ned</value></data>
+  <data name="TranslationPack_Keep" xml:space="preserve"><value>Behold originalen</value></data>
+  <data name="TranslationPack_Failed" xml:space="preserve"><value>Fikk ikke tak i oversettelsespakken. Boka blir på sitt eget språk.</value></data>
+  <data name="Wait_DownloadingPack" xml:space="preserve"><value>Henter oversettelsespakken for {0}…</value></data>
 </root>

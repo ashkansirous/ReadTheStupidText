@@ -34,6 +34,29 @@ public class StoreCatalogTests
     }
 
     [Fact]
+    public void Parse_ReadsTheTitlesMap_DroppingBadLanguagesAndBlankTitles()
+    {
+        string json = $$"""{"stories":[{{Entry().Replace("\"minutes\"", "\"titles\":{\"fa\":\" خرس \",\"xx\":\"No\",\"de\":\"  \",\"ja\":7},\"minutes\"")}}]}""";
+        StoreItem item = Assert.Single(StoreCatalog.Parse(json));
+        Assert.Equal("خرس", item.TitleIn("fa"));
+        Assert.Null(item.TitleIn("de"));
+        Assert.Null(item.TitleIn("ja"));
+    }
+
+    [Fact]
+    public void TheStoreRow_ShowsTheChosenLanguagesTitle_FromTheListingThenTheTable_ElseTheTitle()
+    {
+        StoreItem listed = Assert.Single(StoreCatalog.Parse($$"""{"stories":[{{Entry(title: "The Lion and the Mouse").Replace("\"minutes\"", "\"titles\":{\"fa\":\"از لیست\"},\"minutes\"")}}]}"""));
+        StoreItem old = Assert.Single(StoreCatalog.Parse($$"""{"stories":[{{Entry(title: "The Lion and the Mouse")}}]}"""));
+        StoreItem unknown = Assert.Single(StoreCatalog.Parse($$"""{"stories":[{{Entry(title: "Some New Book")}}]}"""));
+
+        Assert.Equal("از لیست", ShippedTitles.ShownInStore(listed, "fa"));
+        Assert.Equal("شیر و موش", ShippedTitles.ShownInStore(old, "fa"));
+        Assert.Equal("Some New Book", ShippedTitles.ShownInStore(unknown, "fa"));
+        Assert.Equal("The Lion and the Mouse", ShippedTitles.ShownInStore(old, "en"));
+    }
+
+    [Fact]
     public void Parse_ReadsAgeRangeAndAuthor()
     {
         string json = $$"""{"stories":[{{Entry().Replace("\"minutes\"", "\"ageMin\":3,\"ageMax\":6,\"author\":\" Beatrix Potter \",\"minutes\"")}}]}""";
@@ -108,5 +131,18 @@ public class StoreCatalogTests
         var items = StoreCatalog.Parse($$"""{"stories":[{{Entry(schema: StoryPackageManifest.CurrentSchemaVersion + 1)}},{{Entry(schema: StoryPackageManifest.CurrentSchemaVersion)}}]}""");
         Assert.Equal(2, items.Count);
         Assert.Single(StoreCatalog.Readable(items));
+    }
+}
+
+public class ShippedTitlesForBookTests
+{
+    private static Story Book(string title, string? sourceId) =>
+        new(StoryIds.New(), title, "en", DateTimeOffset.UnixEpoch, [], [], CoverStyle.Picture, 0, "", SourceId: sourceId);
+
+    [Fact]
+    public void ForBook_TranslatesAShippedBook_ButNotAnOwnBookWithTheSameTitle()
+    {
+        Assert.Null(ShippedTitles.ForBook(Book("The Three Little Pigs", null), "es"));
+        Assert.Equal("Los tres cerditos", ShippedTitles.ForBook(Book("The Three Little Pigs", "pigs"), "es"));
     }
 }

@@ -1,4 +1,3 @@
-using System.Globalization;
 using DinoReader.Resources.Strings;
 using ReadTheStupidText.Mobile.Shared;
 
@@ -14,7 +13,7 @@ public static class LocalizedPackStatus
 	public static string? Compose(PackInstallState state, double progress) => state switch
 	{
 		PackInstallState.Resolving => AppResources.PackStatus_Resolving,
-		PackInstallState.Downloading => AppResources.Format(AppResources.PackStatus_Downloading, progress.ToString("P0", CultureInfo.CurrentUICulture)),
+		PackInstallState.Downloading => AppResources.Format(AppResources.PackStatus_Downloading, progress.ToString("P0", AppResources.Culture)),
 		PackInstallState.Offline => AppResources.PackStatus_Offline,
 		PackInstallState.HashMismatch => AppResources.PackStatus_HashMismatch,
 		PackInstallState.InvalidPack => AppResources.PackStatus_InvalidPack,

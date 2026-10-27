@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using DinoReader.Core;
 using ReadTheStupidText.Application.Translation;
+using ReadTheStupidText.Mobile.Shared;
 
 namespace DinoReader;
 
@@ -16,12 +17,20 @@ namespace DinoReader;
 public sealed class StoryTranslator
 {
 	private readonly ITranslator? _engine;
+	private readonly ITranslationPacks? _packs;
+	private readonly IServiceProvider _services;
 	private readonly ConcurrentDictionary<(string Text, string Source, string Target), string> _cache = new();
 	private readonly SharedWork<(string Text, string Source, string Target), string> _inFlight = new(); // the screen and the voice translate the same pieces (Slice 110)
 
 	public StoryTranslator(IServiceProvider services)
 	{
+		_services = services;
 		_engine = services.GetService(typeof(ITranslator)) as ITranslator;
+		_packs = _engine as ITranslationPacks;
+		if (_packs is not null)
+		{
+			_packs.AutoDownload = false; // Dino asks before a language pack downloads (Slice 159, Decision 164); a missing pack means "not translated"
+		}
 	}
 
 	/// <summary>Whether this build has a live translation engine (for a story being typed or scanned; a shipped story brings its own table).</summary>
@@ -85,6 +94,24 @@ public sealed class StoryTranslator
 		}
 	}
 
+	/// <summary>
+	/// The title the shelf shows (Slice 159): in the grown-up's language, from the book's own table (which holds the title an own book was
+	/// translated with) or the shipped-titles table, else the title as it is. Synchronous and offline; the switch and the language pair decide, as for the text.
+	/// </summary>
+	public string ShelfTitle(Story story)
+	{
+		string target = MyLanguage;
+		string source = UiLanguage.Resolve(story.Language);
+		if (!TranslationFlow.ShouldTranslate(story.TranslateToMyLanguage, source, target))
+		{
+			return story.Title;
+		}
+
+		return BundledTranslations.Lookup(story, target, story.Title)
+			?? (source == UiLanguage.English ? ShippedTitles.ForBook(story, target) : null)
+			?? story.Title;
+	}
+
 	/// <summary>The story's title in the grown-up's language for the reading screen (Slice 110): the bundled table's entry, else the engine's, else the title as it is.</summary>
 	public async Task<string> TitleAsync(Story story, CancellationToken cancellationToken)
 	{
@@ -92,6 +119,11 @@ public sealed class StoryTranslator
 		if (BundledTranslations.Lookup(story, target, story.Title) is { } bundled)
 		{
 			return bundled;
+		}
+
+		if (UiLanguage.Resolve(story.Language) == UiLanguage.English && ShippedTitles.ForBook(story, target) is { } shipped)
+		{
+			return shipped;
 		}
 
 		if (_engine is null || !story.Title.Any(char.IsLetter))
@@ -108,6 +140,94 @@ public sealed class StoryTranslator
 		{
 			return story.Title;
 		}
+	}
+
+	/// <summary>
+	/// Whether <paramref name="story"/> should be translated on the phone but is not yet: the switch is on, its language differs from mine, the book has no full
+	/// table, and this build has an engine that covers the pair (none on iOS and Windows: such a book stays in its own language).
+	/// </summary>
+	public bool NeedsOwnTranslation(Story story)
+	{
+		string mine = MyLanguage;
+		string source = UiLanguage.Resolve(story.Language);
+		return _engine is not null && _packs is not null
+			&& TranslationFlow.ShouldTranslate(story.TranslateToMyLanguage, source, mine)
+			&& TranslationFlow.IsPairSupported([.. _engine.SupportedLanguages], source, mine)
+			&& OwnBookTranslation.Missing(story, mine).Count > 0;
+	}
+
+	/// <summary>The language packs this translation needs that are not on the device yet (none when they all are).</summary>
+	public async Task<IReadOnlyList<string>> MissingPacksAsync(Story story)
+	{
+		if (_packs is null)
+		{
+			return [];
+		}
+
+		var missing = new List<string>();
+		foreach (string language in OwnBookTranslation.PackLanguages(UiLanguage.Resolve(story.Language), MyLanguage))
+		{
+			if (!await _packs.IsPackReadyAsync(language))
+			{
+				missing.Add(language);
+			}
+		}
+
+		return missing;
+	}
+
+	/// <summary>Downloads the given packs one by one; <paramref name="progress"/> gets 0..1 across them. Throws <see cref="TranslationModelUnavailableException"/> on a failure.</summary>
+	public async Task DownloadPacksAsync(IReadOnlyList<string> languages, IProgress<double>? progress, CancellationToken cancellationToken)
+	{
+		for (int i = 0; i < languages.Count; i++)
+		{
+			await _packs!.DownloadPackAsync(languages[i], null, cancellationToken);
+			progress?.Report((i + 1) / (double)languages.Count);
+		}
+	}
+
+	/// <summary>
+	/// Translates what <paramref name="story"/> misses in my language (text and title) and saves it inside the book, so the shelf and the reader show it offline afterwards.
+	/// False when nothing could be translated (the pack is missing); the book is then left as it was.
+	/// </summary>
+	public async Task<bool> SaveOwnTranslationAsync(Story story, CancellationToken cancellationToken)
+	{
+		string mine = MyLanguage;
+		string source = UiLanguage.Resolve(story.Language);
+		IStoryLibrary? library = _services.GetService(typeof(IStoryLibrary)) as IStoryLibrary;
+		if (_engine is null || library is null)
+		{
+			return false;
+		}
+
+		var table = new Dictionary<string, string>(BundledTranslations.TableFor(story, mine) ?? new Dictionary<string, string>(), StringComparer.Ordinal);
+		try
+		{
+			foreach (string text in OwnBookTranslation.Missing(story, mine))
+			{
+				string translated = (await PieceAsync(text, source, mine, cancellationToken)).Trim();
+				table[text] = translated.Length > 0 ? translated : text;
+			}
+		}
+		catch (TranslationModelUnavailableException ex)
+		{
+			Debug.WriteLine($"Dino Reader could not save a translation, language model missing: {ex.Message}");
+			return false;
+		}
+
+		return await StoreTableAsync(library, story.Id, mine, table);
+	}
+
+	// Applied to the book as it is on disk now, so an edit saved meanwhile is kept; only the language's table changes.
+	private static async Task<bool> StoreTableAsync(IStoryLibrary library, string id, string language, IReadOnlyDictionary<string, string> table)
+	{
+		if (await library.GetAsync(id) is not { } current)
+		{
+			return false;
+		}
+
+		await library.UpdateAsync(OwnBookTranslation.WithTable(current, language, table));
+		return true;
 	}
 
 	private async Task<string> PieceAsync(string text, string source, string target, CancellationToken cancellationToken)

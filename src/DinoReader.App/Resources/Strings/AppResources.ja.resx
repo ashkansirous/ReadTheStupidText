@@ -320,4 +320,10 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>どうぶつのこえ</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>どうぶつが ときどき「ブーブー!」や「メェー!」と いいます。どの ほんでも</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>この本には、用意されている {0} 人の語り手キャラクターより多くの登場人物がいるため、同じように聞こえるキャラクターがいます。ナレーターはキャラクターには使われません。</value></data>
+  <data name="TranslationPack_Title" xml:space="preserve"><value>{0}の翻訳パックをダウンロードしますか？</value></data>
+  <data name="TranslationPack_Body" xml:space="preserve"><value>この本を{0}で表示して読み上げるには、約30MBの翻訳パックが必要です。パックはこの端末に保存されます。スキップすると、本は元の言語のままです。</value></data>
+  <data name="TranslationPack_Download" xml:space="preserve"><value>ダウンロード</value></data>
+  <data name="TranslationPack_Keep" xml:space="preserve"><value>元のままにする</value></data>
+  <data name="TranslationPack_Failed" xml:space="preserve"><value>翻訳パックを取得できませんでした。本は元の言語のままです。</value></data>
+  <data name="Wait_DownloadingPack" xml:space="preserve"><value>{0}の翻訳パックを取得中…</value></data>
 </root>

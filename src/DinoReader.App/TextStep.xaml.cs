@@ -339,7 +339,28 @@ public partial class TextStep : ContentView
 		}
 
 		CountNewOwnBook(session);
+		await OfferTranslationAsync(session);
 		return true;
+	}
+
+	// The saved book is translated on the phone when the parent wants it and this build can (Slice 159): the pack question, the download and the translation
+	// run behind the page's wait with Cancel, and a failure never undoes the save.
+	private async Task OfferTranslationAsync(WizardSession session)
+	{
+		if (_translator is null)
+		{
+			return; // iOS and Windows have no engine yet
+		}
+
+		try
+		{
+			var prompt = new TranslationPackPrompt(_translator, session.Store);
+			await prompt.OfferAsync(session.Host, Draft.Original.Id, session.BeginWait, session.EndWait);
+		}
+		catch (Exception ex) when (ex is not OperationCanceledException)
+		{
+			DinoLog.Error(session.Services, "translating the saved book failed", ex);
+		}
 	}
 
 	private async Task<bool> TrySaveAsync(WizardSession session)

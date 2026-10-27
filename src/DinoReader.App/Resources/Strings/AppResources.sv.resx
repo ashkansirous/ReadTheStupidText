@@ -319,4 +319,10 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Djurläten</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Djuren säger då och då “Nöff!” eller “Bää!”, i alla böcker</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Det finns fler figurer i boken än de {0} berättarfigurer vi har, så vissa låter lika. Berättaren ges aldrig till en figur.</value></data>
+  <data name="TranslationPack_Title" xml:space="preserve"><value>Ladda ner översättningspaketet för {0}?</value></data>
+  <data name="TranslationPack_Body" xml:space="preserve"><value>För att visa och läsa boken på {0} behöver Dino Reader ett översättningspaket på cirka 30 MB. Det stannar på den här enheten. Hoppar du över det stannar boken på sitt eget språk.</value></data>
+  <data name="TranslationPack_Download" xml:space="preserve"><value>Ladda ner</value></data>
+  <data name="TranslationPack_Keep" xml:space="preserve"><value>Behåll originalet</value></data>
+  <data name="TranslationPack_Failed" xml:space="preserve"><value>Det gick inte att hämta översättningspaketet. Boken stannar på sitt eget språk.</value></data>
+  <data name="Wait_DownloadingPack" xml:space="preserve"><value>Hämtar översättningspaketet för {0}…</value></data>
 </root>

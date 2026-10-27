@@ -1,13 +1,14 @@
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using DinoReader.Core;
+using DinoReader.Resources.Strings;
 using Microsoft.Maui.Handlers;
 
 namespace DinoReader;
 
 /// <summary>
-/// Picks and applies the culture the screens speak (Slice 66, Decision 74): the device language when it is one
-/// of the fourteen, else English. Dino Reader has no in-app UI language picker: a child's device already has one.
+/// Picks and applies the culture the screens speak (Slice 66, Decision 74; Slice 159): the grown-up's stored pick, else the
+/// device language when it is one of the fourteen, else English.
 /// </summary>
 public static class UiCulture
 {
@@ -15,16 +16,16 @@ public static class UiCulture
 	public static CultureInfo Resolve(CultureInfo device) => CultureInfo.GetCultureInfo(UiLanguage.Resolve(device.Name));
 
 	/// <summary>
-	/// Makes <paramref name="culture"/> the UI culture of every thread. Only the process-wide default is set (the per-flow
-	/// <c>CurrentUICulture</c> is undone when an async continuation returns), and number and date formats stay the device's.
+	/// Makes <paramref name="culture"/> the language of every string (<see cref="AppResources.UseCulture"/>, read on any thread).
+	/// <c>CurrentUICulture</c> is never assigned: it is flowed per async context, which is what flipped the wizard back to English.
 	/// </summary>
 	public static void Apply(CultureInfo culture)
 	{
+		AppResources.UseCulture(culture);
 		CultureInfo.DefaultThreadCurrentUICulture = culture;
-		CultureInfo.CurrentUICulture = culture;
 	}
 
-	public static bool IsRightToLeft => UiLanguage.IsRightToLeft(CultureInfo.CurrentUICulture.Name);
+	public static bool IsRightToLeft => UiLanguage.IsRightToLeft(AppResources.Culture.Name);
 }
 
 /// <summary>

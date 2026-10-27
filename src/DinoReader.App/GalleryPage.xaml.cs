@@ -162,6 +162,13 @@ public partial class GalleryPage : ContentPage
 
 	private void ApplyMode()
 	{
+		if (_shelfLanguage is not null && _shelfLanguage != LanguageChoice.Current())
+		{
+			_ = RefreshShelfAsync(); // the app language changed: the shelf titles (and the Add tile, rebuilt with them) follow it
+		}
+
+		ApplyTexts();
+
 		bool grownUp = _mode.IsGrownUp;
 		bool hasAdd = _items.Count > 0 && _items[0] is AddStoryEntry;
 		if (grownUp && !hasAdd)
@@ -176,11 +183,58 @@ public partial class GalleryPage : ContentPage
 		ApplyModeChrome(grownUp);
 	}
 
+	private string? _textLanguage; // the app language the fixed labels were set in
+
+	// The labels are x:Static (bound once on this cached page), so a language change re-applies them here.
+	private void ApplyTexts()
+	{
+		string language = LanguageChoice.Current();
+		if (_textLanguage == language)
+		{
+			return;
+		}
+
+		_textLanguage = language;
+		TitleLabel.Text = AppResources.Gallery_Title;
+		ModeLabel.Text = AppResources.Gallery_GrownUpMode;
+		AppIcon.SetValue(SemanticProperties.DescriptionProperty, AppResources.App_Name);
+		LanguagePill.SetValue(SemanticProperties.HintProperty, AppResources.Language_Title);
+		AddBookButton.SetValue(SemanticProperties.DescriptionProperty, AppResources.Gallery_AddBook);
+		AddBookButton.SetValue(ToolTipProperties.TextProperty, AppResources.Gallery_AddBook);
+		AddBookButton.SetValue(SemanticProperties.HintProperty, AppResources.Gallery_OpensGateHint);
+		DoneButton.Text = AppResources.Common_Done;
+		ApplyShortcutText(StoreButton, StoreLabel, AppResources.Store_Title);
+		ApplyShortcutText(NarratorButton, NarratorLabel, AppResources.Narrator_Title);
+		ApplyShortcutText(BackupButton, BackupLabel, AppResources.Backup_Title);
+		StorytellerLine.Invalidate();
+	}
+
+	private static void ApplyShortcutText(Border button, Label label, string text)
+	{
+		label.Text = text;
+		button.SetValue(SemanticProperties.DescriptionProperty, text);
+	}
+
+	private string? _shelfLanguage; // the app language the shelf titles were built in
+
+	private async Task RefreshShelfAsync()
+	{
+		try
+		{
+			await RefreshAsync();
+		}
+		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+		{
+			Debug.WriteLine($"Dino Reader gallery refresh failed: {ex}");
+		}
+	}
+
 	private async Task RefreshAsync()
 	{
 		IReadOnlyList<Story> stories = await _library.ListAsync();
+		_shelfLanguage = LanguageChoice.Current();
 		_items.Clear();
-		foreach (object item in GalleryItems.Build(stories, _library, _mode))
+		foreach (object item in GalleryItems.Build(stories, _library, _mode, _services.GetRequiredService<StoryTranslator>().ShelfTitle))
 		{
 			_items.Add(item);
 		}

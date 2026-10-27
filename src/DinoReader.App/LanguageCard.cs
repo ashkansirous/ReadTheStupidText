@@ -113,7 +113,7 @@ public sealed class LanguageCard : Border
 	{
 		bool rtl = TextDirection.StartsRightToLeft(name);
 		string shown = rtl ? RtlIsolate + name + PopDirection : name;
-		string full = string.Format(CultureInfo.CurrentUICulture, template, shown);
+		string full = string.Format(AppResources.Culture, template, shown);
 		int at = full.IndexOf(shown, StringComparison.Ordinal);
 		if (at < 0)
 		{

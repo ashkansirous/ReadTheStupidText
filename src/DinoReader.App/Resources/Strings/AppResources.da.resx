@@ -319,4 +319,10 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Dyrelyde</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Dyrene siger af og til “Øf!” eller “Mæh!”, i alle bøger</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Der er flere figurer i bogen end de {0} fortællerfigurer, vi har, så nogle lyder ens. Fortælleren gives aldrig til en figur.</value></data>
+  <data name="TranslationPack_Title" xml:space="preserve"><value>Hent oversættelsespakken til {0}?</value></data>
+  <data name="TranslationPack_Body" xml:space="preserve"><value>For at vise og læse bogen på {0} skal Dino Reader bruge en oversættelsespakke på ca. 30 MB. Den bliver på denne enhed. Hvis du springer over, forbliver bogen på sit eget sprog.</value></data>
+  <data name="TranslationPack_Download" xml:space="preserve"><value>Hent</value></data>
+  <data name="TranslationPack_Keep" xml:space="preserve"><value>Behold originalen</value></data>
+  <data name="TranslationPack_Failed" xml:space="preserve"><value>Oversættelsespakken kunne ikke hentes. Bogen forbliver på sit eget sprog.</value></data>
+  <data name="Wait_DownloadingPack" xml:space="preserve"><value>Henter oversættelsespakken til {0}…</value></data>
 </root>

@@ -319,4 +319,10 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Dierengeluiden</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>De dieren zeggen af en toe “Knor!” of “Mê!”, in elk boek</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Dit boek heeft meer personages dan de {0} vertelfiguren die er zijn, dus sommige klinken hetzelfde. De verteller wordt nooit aan een personage gegeven.</value></data>
+  <data name="TranslationPack_Title" xml:space="preserve"><value>Het vertaalpakket voor {0} downloaden?</value></data>
+  <data name="TranslationPack_Body" xml:space="preserve"><value>Om dit boek in het {0} te tonen en voor te lezen heeft Dino Reader een vertaalpakket van ongeveer 30 MB nodig. Het blijft op dit apparaat. Sla je het over, dan blijft het boek in zijn eigen taal.</value></data>
+  <data name="TranslationPack_Download" xml:space="preserve"><value>Downloaden</value></data>
+  <data name="TranslationPack_Keep" xml:space="preserve"><value>Origineel houden</value></data>
+  <data name="TranslationPack_Failed" xml:space="preserve"><value>Het vertaalpakket kon niet worden opgehaald. Het boek blijft in zijn eigen taal.</value></data>
+  <data name="Wait_DownloadingPack" xml:space="preserve"><value>Vertaalpakket voor {0} ophalen…</value></data>
 </root>

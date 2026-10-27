@@ -320,4 +320,10 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>صدای حیوان‌ها</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>حیوان‌ها گاهی «خرخر!» یا «بع بع!» می‌گویند، در همهٔ کتاب‌ها</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>این کتاب شخصیت‌های بیشتری از {0} شخصیت قصه‌گوی موجود دارد، پس بعضی‌ها یک‌جور صدا می‌دهند. راوی هیچ‌وقت به شخصیتی داده نمی‌شود.</value></data>
+  <data name="TranslationPack_Title" xml:space="preserve"><value>بسته‌ی ترجمه به {0} دانلود شود؟</value></data>
+  <data name="TranslationPack_Body" xml:space="preserve"><value>برای نشان دادن و خواندن این کتاب به {0}، Dino Reader به یک بسته‌ی ترجمه حدود ۳۰ مگابایتی نیاز دارد. این بسته روی همین دستگاه می‌ماند. اگر رد کنید، کتاب به زبان خودش می‌ماند.</value></data>
+  <data name="TranslationPack_Download" xml:space="preserve"><value>دانلود</value></data>
+  <data name="TranslationPack_Keep" xml:space="preserve"><value>نگه داشتن اصل کتاب</value></data>
+  <data name="TranslationPack_Failed" xml:space="preserve"><value>بسته‌ی ترجمه گرفته نشد. کتاب به زبان خودش می‌ماند.</value></data>
+  <data name="Wait_DownloadingPack" xml:space="preserve"><value>در حال گرفتن بسته‌ی ترجمه به {0}…</value></data>
 </root>

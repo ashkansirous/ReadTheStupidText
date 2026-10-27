@@ -9,7 +9,7 @@ public static class PackStatusText
     public static string? Compose(PackInstallState state, double progress) => state switch
     {
         PackInstallState.Resolving => "Checking for natural voices…",
-        PackInstallState.Downloading => string.Create(CultureInfo.CurrentCulture, $"Downloading natural voices… {progress:P0}"),
+        PackInstallState.Downloading => string.Create(CultureInfo.InvariantCulture, $"Downloading natural voices… {progress:P0}"),
         PackInstallState.Offline => "No connection. Reading with the phone voice. Tap to retry the voice download.",
         PackInstallState.HashMismatch => "The voice download was corrupted. Reading with the phone voice. Tap to retry.",
         PackInstallState.InvalidPack => "The natural voices pack is unusable. Reading with the phone voice.",

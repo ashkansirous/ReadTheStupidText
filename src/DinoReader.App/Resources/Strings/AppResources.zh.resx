@@ -320,4 +320,10 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>动物叫声</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>动物会不时说“哼哼!”或“咩!”,每本书都一样</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>这本书的角色比现有的 {0} 个讲故事角色还多，所以有些角色听起来会一样。旁白不会分给任何角色。</value></data>
+  <data name="TranslationPack_Title" xml:space="preserve"><value>下载{0}翻译包？</value></data>
+  <data name="TranslationPack_Body" xml:space="preserve"><value>要用{0}显示和朗读这本书，Dino Reader 需要一个约 30 MB 的翻译包。它只保存在这台设备上。如果跳过，这本书会保持原来的语言。</value></data>
+  <data name="TranslationPack_Download" xml:space="preserve"><value>下载</value></data>
+  <data name="TranslationPack_Keep" xml:space="preserve"><value>保留原文</value></data>
+  <data name="TranslationPack_Failed" xml:space="preserve"><value>无法获取翻译包。这本书会保持原来的语言。</value></data>
+  <data name="Wait_DownloadingPack" xml:space="preserve"><value>正在获取{0}翻译包…</value></data>
 </root>

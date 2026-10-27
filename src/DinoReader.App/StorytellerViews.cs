@@ -1,4 +1,4 @@
-using System.Globalization;
+using DinoReader.Resources.Strings;
 using Microsoft.Maui.Controls.Shapes;
 using Path = Microsoft.Maui.Controls.Shapes.Path;
 
@@ -37,6 +37,13 @@ internal sealed class StorytellerStatusLine : ContentView
 	/// <summary>What "Try again" does; set by the page.</summary>
 	public Func<Task> Retry { get; set; } = () => Task.CompletedTask;
 
+	/// <summary>Forgets what was built, so the next <see cref="Apply"/> rebuilds the text (the app language changed).</summary>
+	public void Invalidate()
+	{
+		_built = StorytellerPhase.Idle;
+		_builtMegabytes = -1;
+	}
+
 	/// <summary>Draws <paramref name="status"/>; the line shows only in grown-up mode and while there is something to say. A download's progress only moves the bar and the percentage.</summary>
 	public void Apply(StorytellerStatus status, bool grownUp)
 	{
@@ -66,7 +73,7 @@ internal sealed class StorytellerStatusLine : ContentView
 	private void ShowProgress(double progress)
 	{
 		double done = Math.Clamp(progress, 0, 1);
-		_percent.Text = done.ToString("P0", CultureInfo.CurrentUICulture);
+		_percent.Text = done.ToString("P0", AppResources.Culture);
 		_done.Width = new GridLength(Math.Max(done, MinStar), GridUnitType.Star);
 		_left.Width = new GridLength(Math.Max(1 - done, MinStar), GridUnitType.Star);
 		SemanticProperties.SetDescription(this, CastText.StorytellerGetting + " " + _percent.Text);

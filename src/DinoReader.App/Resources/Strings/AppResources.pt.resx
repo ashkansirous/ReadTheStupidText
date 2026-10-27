@@ -320,4 +320,10 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Sons de animais</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Os animais dizem “Oinc!” ou “Béé!” de vez em quando, em todos os livros</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Este livro tem mais personagens do que os {0} personagens narradores disponíveis, então alguns soam iguais. O narrador nunca é dado a um personagem.</value></data>
+  <data name="TranslationPack_Title" xml:space="preserve"><value>Baixar o pacote de tradução para {0}?</value></data>
+  <data name="TranslationPack_Body" xml:space="preserve"><value>Para mostrar e ler este livro em {0}, o Dino Reader precisa de um pacote de tradução de cerca de 30 MB. Ele fica neste aparelho. Se você pular, o livro continua no idioma original.</value></data>
+  <data name="TranslationPack_Download" xml:space="preserve"><value>Baixar</value></data>
+  <data name="TranslationPack_Keep" xml:space="preserve"><value>Manter o original</value></data>
+  <data name="TranslationPack_Failed" xml:space="preserve"><value>Não foi possível obter o pacote de tradução. O livro continua no idioma original.</value></data>
+  <data name="Wait_DownloadingPack" xml:space="preserve"><value>Baixando o pacote de tradução para {0}…</value></data>
 </root>

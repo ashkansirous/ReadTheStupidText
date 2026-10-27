@@ -31,10 +31,11 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 
 	public StoreItem Item { get; } = item;
 
-	public string Title => Item.Title;
+	/// <summary>The title in the app language (Slice 159): the listing's <c>titles</c>, else the shipped-titles table, else the listing's own title.</summary>
+	public string Title => ShippedTitles.ShownInStore(Item, LanguageChoice.Current());
 
 	/// <summary>Titles in Farsi and Arabic are set in Vazirmatn and run right to left, as the mock's Farsi row does.</summary>
-	public string TitleFont => DinoFonts.IsRightToLeft(Item.Language) ? DinoFonts.Persian : DinoFonts.Ui;
+	public string TitleFont => TextDirection.StartsRightToLeft(Title) ? DinoFonts.Persian : DinoFonts.Ui;
 
 	/// <summary>The detail line, "Ages 5–8 · 14 pages · 7 min": the age range leads the length (each part is left out when the server gave none).</summary>
 	public string Detail => StoreText.Detail(Item);
@@ -45,9 +46,9 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 	public bool HasDetail => Detail.Length > 0;
 	public bool HasCredits => Credits.Length > 0;
 
-	public string GetHint => StoreText.GetHint(Item.Title);
+	public string GetHint => StoreText.GetHint(Title);
 
-	public string ProgressHint => StoreText.ProgressHint(Item.Title, ProgressText);
+	public string ProgressHint => StoreText.ProgressHint(Title, ProgressText);
 
 	/// <summary>The Get pill also stands for a failed download, labelled "Try again".</summary>
 	public bool IsGet => _state is StoreRowState.Get or StoreRowState.Failed;
@@ -60,7 +61,7 @@ public sealed class StoreRow(StoreItem item, bool onShelf) : INotifyPropertyChan
 
 	public double FillWidth => PillWidth * _progress;
 
-	public string ProgressText => string.Create(CultureInfo.CurrentCulture, $"{(int)(_progress * PercentScale)}%");
+	public string ProgressText => string.Create(AppResources.Culture, $"{(int)(_progress * PercentScale)}%");
 
 	public ImageSource? Cover
 	{

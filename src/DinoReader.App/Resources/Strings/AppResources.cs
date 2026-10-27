@@ -14,15 +14,26 @@ public static class AppResources
 {
 	private static readonly ResourceManager Manager = new(typeof(AppResources));
 
-	/// <summary>The string for <paramref name="key"/> in the current UI culture, falling back to English.</summary>
-	public static string Get([CallerMemberName] string key = "") => For(key, CultureInfo.CurrentUICulture);
+	private static volatile CultureInfo _culture = CultureInfo.CurrentUICulture;
+
+	/// <summary>
+	/// The one culture the whole app speaks (Slice 159, Decision 164): set from the stored language pick, never read from a
+	/// thread's <c>CurrentUICulture</c>, which an async flow loses.
+	/// </summary>
+	public static CultureInfo Culture => _culture;
+
+	/// <summary>Makes <paramref name="culture"/> the language of every string, on every thread.</summary>
+	public static void UseCulture(CultureInfo culture) => _culture = culture;
+
+	/// <summary>The string for <paramref name="key"/> in the app culture, falling back to English.</summary>
+	public static string Get([CallerMemberName] string key = "") => For(key, _culture);
 
 	/// <summary>The string for <paramref name="key"/> in <paramref name="culture"/> (a story's language, say), falling back to English.</summary>
 	public static string For(string key, CultureInfo culture) => Manager.GetString(key, culture) ?? key;
 
-	/// <summary>Formats <paramref name="template"/> with <paramref name="args"/> in the current UI culture.</summary>
+	/// <summary>Formats <paramref name="template"/> with <paramref name="args"/> in the app culture.</summary>
 	public static string Format(string template, params object[] args) =>
-		string.Format(CultureInfo.CurrentUICulture, template, args);
+		string.Format(_culture, template, args);
 
 	public static string App_Name => Get();
 	public static string Add_FileSub => Get();
@@ -325,4 +336,10 @@ public static class AppResources
 	public static string Settings_AnimalSounds_Title => Get();
 	public static string Settings_AnimalSounds_Sub => Get();
 	public static string Cast_SharedNote => Get();
+	public static string TranslationPack_Title => Get();
+	public static string TranslationPack_Body => Get();
+	public static string TranslationPack_Download => Get();
+	public static string TranslationPack_Keep => Get();
+	public static string TranslationPack_Failed => Get();
+	public static string Wait_DownloadingPack => Get();
 }
