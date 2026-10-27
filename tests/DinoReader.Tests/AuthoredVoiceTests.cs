@@ -376,6 +376,52 @@ public class AuthoredVoiceTests
         Assert.Contains(("en", "a"), recast);
     }
 
+    [Fact]
+    public void Another_language_seed_carries_the_books_voice_choice_of_a_character_that_is_no_animal()
+    {
+        var plain = new CastMember("g", "Goldilocks", Gender.Female, "supertonic:F1", SuggestedVoice: "bee", Traits: new CharacterTraits(CharacterAge.Young));
+
+        CastMember seeded = StoryCast.SeedForOtherLanguage([plain]).Single();
+
+        Assert.Equal("bee", seeded.SuggestedVoice);
+        Assert.NotNull(seeded.Traits);
+        Assert.Equal(string.Empty, seeded.VoiceId);
+    }
+
+    [Fact]
+    public void An_authored_book_stores_the_voice_its_suggestion_resolves_to()
+    {
+        var bookable = CastCharacters.BookableSpeakers(CharacterRoster.Speakers("en"), StarterBuilder.NarratorVoice);
+        foreach (Story book in AuthoredBooks())
+        {
+            var sounds = new HashSet<(string, VoiceFlavour)>();
+            int checks = 0;
+            foreach (CastMember m in book.Cast)
+            {
+                StorytellerCharacter? chosen = bookable.FirstOrDefault(s => s.Id == m.SuggestedVoice && !CharacterRoster.OppositeGender(s.Gender, m.Gender) && !CastCharacters.SwapsInWhisper(s, m.Traits));
+                if (chosen is null || !sounds.Add((chosen.VoiceId, chosen.Flavour)))
+                {
+                    continue;
+                }
+
+                checks++;
+                Assert.True(m.VoiceId == chosen.VoiceId && m.Flavour == chosen.Flavour, $"{book.Title}/{m.Name} stores {m.VoiceId} {m.Flavour}, the book chose {chosen.Id} ({chosen.VoiceId} {chosen.Flavour})");
+            }
+
+            Assert.True(checks > 0, $"{book.Title}: no member's suggestion resolved, so nothing was checked");
+        }
+    }
+
+    [Fact]
+    public void An_authored_book_stores_no_two_characters_with_the_same_sound()
+    {
+        foreach (Story book in AuthoredBooks())
+        {
+            var clashes = book.Cast.Where(m => m.VoiceId != StarterBuilder.NarratorVoice).GroupBy(m => (m.VoiceId, m.Flavour)).Where(g => g.Count() > 1).Select(g => string.Join("+", g.Select(m => m.Name))).ToList();
+            Assert.True(clashes.Count == 0, $"{book.Title}: same stored sound for {string.Join(", ", clashes)}");
+        }
+    }
+
     private static IEnumerable<Story> AuthoredBooks() =>
         StoreTexts.All.Where(s => StarterVoices.AuthoredBooks.Contains(s.Id)).Select(StoreBuilder.Build)
             .Concat(StarterBuilder.Starters.Where(s => StarterVoices.AuthoredBooks.Contains(s.Id)).Select(s => StarterBuilder.Build(s.Id, s.Title, s.Text, s.ColourIndex)));

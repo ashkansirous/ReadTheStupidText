@@ -22,7 +22,7 @@ public sealed class RedRidingHoodStoryTests
         Assert.All(story.Cast, m => Assert.True(m.Gender == ExpectedGenders[m.Name], $"{m.Name} is stored as {m.Gender}"));
         IReadOnlyList<CastMember> stored = language == story.Language
             ? story.Cast
-            : story.Cast.Where(m => m.HasAnimalSetting).Select(m => m with { VoiceId = string.Empty }).ToList();
+            : StoryCast.SeedForOtherLanguage(story.Cast);
         List<Character> characters = story.Cast.Select(m => new Character(m.CharacterId, m.Name, m.Gender, 1)).ToList();
         IReadOnlyDictionary<string, AnimalKind> animals = AnimalSounds.Resolve(characters, story.Language, stored, story.Text);
         IReadOnlyList<StorytellerCharacter> speakers = CharacterRoster.Speakers(language);

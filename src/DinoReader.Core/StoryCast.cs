@@ -80,6 +80,14 @@ public static class StoryCast
     public static IReadOnlyDictionary<string, string> Pinned(IReadOnlyList<CastMember> stored) =>
         stored.DistinctBy(m => m.CharacterId).ToDictionary(m => m.CharacterId, m => m.VoiceId);
 
+    /// <summary>
+    /// What a language with no cast of its own starts from: the corrected genders, the animal settings (Slice 125) and the book's own voice choice (Slice 156, for every member, animal or not),
+    /// never the voices, which belong to the story language's pack. An <c>Edited</c> member stays edited with its voice cleared, so a grown-up's pick is not kept as a voice in the other language
+    /// (only the gender it corrected carries over).
+    /// </summary>
+    public static IReadOnlyList<CastMember> SeedForOtherLanguage(IReadOnlyList<CastMember> cast) =>
+        cast.Where(m => m.Edited || m.HasAnimalSetting || m.HasAuthoredVoice).Select(m => m with { VoiceId = string.Empty }).ToList();
+
     /// <summary>The stored voice and flavour of every character, for <see cref="CastCharacters.Cast"/> to keep (Slice 116).</summary>
     public static IReadOnlyDictionary<string, PinnedCharacter> PinnedCharacters(IReadOnlyList<CastMember> stored) =>
         stored.DistinctBy(m => m.CharacterId).ToDictionary(m => m.CharacterId, m => new PinnedCharacter(m.VoiceId, m.Flavour, m.Edited, m.SuggestedVoice, m.Traits));

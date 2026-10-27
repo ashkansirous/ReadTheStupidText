@@ -245,8 +245,8 @@ public sealed class StoryVoicing
 			return null;
 		}
 
-		// Only the corrected genders carry over, never the voices: those belong to the story language's pack.
-		IReadOnlyList<CastMember> members = CastFor(story.Language, language, story.Text, EditedSeed(story), story.BreakMap());
+		// The corrected genders, animals and the book's voice choices carry over, never the voices: those belong to the story language's pack.
+		IReadOnlyList<CastMember> members = CastFor(story.Language, language, story.Text, StoryCast.SeedForOtherLanguage(story.Cast), story.BreakMap());
 		return members.Count == 0 ? null : new NewCast(language, members);
 	}
 
@@ -407,16 +407,12 @@ public sealed class StoryVoicing
 		bool hasCast = story.HasCastIn(language);
 		// A language with no cast yet (its voices are missing, or the save failed) is cast like a fresh one: the story's corrected genders carry over,
 		// and while its own pack has no voices the story language's pool is used, so characters do not all fall to the narrator. The next read tries again.
-		IReadOnlyList<CastMember> stored = hasCast ? story.CastIn(language) : EditedSeed(story);
+		IReadOnlyList<CastMember> stored = hasCast ? story.CastIn(language) : StoryCast.SeedForOtherLanguage(story.Cast);
 		IReadOnlyList<VoiceOption> pool = hasCast || VoicesFor(language).Count > 0 ? VoicesFor(language) : VoicesFor(story.Language);
 		AttributionResult resolved = StoryCast.Resolve(prepared.Analysis.Attribution, stored);
 		// Names are in the story's language, so its rules guess the flavours; the stored voice and flavour (a grown-up's pick included) win (Slices 113, 116).
 		return CastWithRoster(resolved.Characters, language, pool, stored, story.Language, story.Text);
 	}
-
-	// Only the corrected genders and the animal settings (Slice 125) carry over to another language, never the voices: those belong to the story language's pack.
-	private static IReadOnlyList<CastMember> EditedSeed(Story story) =>
-		story.Cast.Where(m => m.Edited || m.HasAnimalSetting).Select(m => m with { VoiceId = string.Empty }).ToList();
 
 	private VoiceCast Cast(string language, AttributionResult attribution, IReadOnlyList<CastMember> stored, string storyLanguage, string text, IReadOnlySet<string>? heldIds = null) =>
 		CastWithRoster(attribution.Characters, language, VoicesFor(language), stored, storyLanguage, text, heldIds);
