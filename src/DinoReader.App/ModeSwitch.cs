@@ -4,19 +4,30 @@ using Microsoft.Maui.Controls.Shapes;
 namespace DinoReader;
 
 /// <summary>
-/// The big two-icon switch of the reading screen (mock screen 3): open book for text mode, picture
-/// frame for picture mode, always visible. The active cell is filled with a hard under-edge.
+/// The three-way view switch of the reading screen (Slice 151, mock Batch 31 screens 66-68): picture only, picture and
+/// text, text only, always in that order, each a 44 x 40 segment named for TalkBack and VoiceOver. The chosen one is lifted
+/// on a white (by night, brand) fill. A book without pictures has only text, so the page hides the switch for it.
 /// </summary>
 public sealed class ModeSwitch : Border
 {
-	private const double CellWidth = 52;
-	private const double CellHeight = 44;
-	private const double CellCorner = 12;
-	private const double EdgeDrop = 2;
-	private const double IconSize = 24;
+	private const double CellWidth = 44;
+	private const double CellHeight = 40;
+	private const double CellCorner = 13;
+	private const double IconSize = 22;
 	private const double IconStroke = 2.2;
 	private const double TrackCorner = 16;
-	private const double TrackPadding = 4;
+	private const double TrackPadding = 3;
+	private const double TrackGap = 2;
+	private const float ShadowOpacity = 0.16f;
+	private const float ShadowRadius = 4;
+	private const float ShadowOffsetY = 1;
+
+	private static readonly PathGeometryConverter Converter = new();
+
+	// Path data copied from the mock's inline SVGs (rects rewritten as arcs).
+	private const string PictureOnlyPath = "M6.5 4.5h11a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3h-11a3 3 0 0 1-3-3v-9a3 3 0 0 1 3-3z M7.2 10a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0-3.6 0 M4 17l5-4.5 4 3.5 3-2.5 4 3.5";
+	private const string PictureAndTextPath = "M6 3.5h12a2.5 2.5 0 0 1 2.5 2.5v5a2.5 2.5 0 0 1-2.5 2.5H6a2.5 2.5 0 0 1-2.5-2.5V6A2.5 2.5 0 0 1 6 3.5z M6 17h12 M6 20.5h8";
+	private const string TextOnlyPath = "M5 6h14 M5 10.5h14 M5 15h14 M5 19.5h9";
 
 	private ReadingTheme _theme = ReadingTheme.For(false);
 
@@ -28,7 +39,10 @@ public sealed class ModeSwitch : Border
 		Render();
 	}
 
-	public ReadingMode Mode { get; private set; } = ReadingMode.Text;
+	public ReadingMode Mode { get; private set; } = ReadingMode.PictureAndText;
+
+	/// <summary>False for a book whose pages the reader draws the same with or without words (scanned pages with line boxes): the picture + text segment is left out, and that mode shows as picture only.</summary>
+	public bool OffersPictureAndText { get; set; } = true;
 
 	public event EventHandler<ReadingMode>? ModeChanged;
 
@@ -39,45 +53,67 @@ public sealed class ModeSwitch : Border
 		Render();
 	}
 
+	private ReadingMode ShownMode => !OffersPictureAndText && Mode == ReadingMode.PictureAndText ? ReadingMode.PictureOnly : Mode;
+
 	private void Render()
 	{
 		BackgroundColor = _theme.ControlFill;
 		Content = new HorizontalStackLayout
 		{
-			Spacing = TrackPadding,
-			Children = { Cell(ReadingMode.Text, IconKind.Book, ReadingText.TextMode), Cell(ReadingMode.Picture, IconKind.Picture, ReadingText.PictureMode) },
+			Spacing = TrackGap,
 		};
+		AddCells((HorizontalStackLayout)Content);
 	}
 
-	private View Cell(ReadingMode mode, IconKind icon, string label)
+	private void AddCells(HorizontalStackLayout row)
 	{
-		bool active = Mode == mode;
-		var cell = new Grid { WidthRequest = CellWidth, HeightRequest = CellHeight + EdgeDrop };
-		if (active)
+		row.Children.Add(Cell(ReadingMode.PictureOnly, PictureOnlyPath, ReadingText.PictureOnlyMode));
+		if (OffersPictureAndText)
 		{
-			cell.Children.Add(Face(_theme.SwitchEdge, EdgeDrop));
+			row.Children.Add(Cell(ReadingMode.PictureAndText, PictureAndTextPath, ReadingText.PictureAndTextMode));
 		}
 
-		cell.Children.Add(Face(active ? _theme.SwitchActive : Colors.Transparent, 0));
-		cell.Children.Add(new IconView
+		row.Children.Add(Cell(ReadingMode.Text, TextOnlyPath, ReadingText.TextOnlyMode));
+	}
+
+	private View Cell(ReadingMode mode, string icon, string label)
+	{
+		bool active = ShownMode == mode;
+		var cell = new Border
 		{
-			Kind = icon, Size = IconSize, StrokeWidth = IconStroke, VerticalOptions = LayoutOptions.Start,
-			Margin = new Thickness(0, (CellHeight - IconSize) / 2, 0, 0),
-			Color = active ? _theme.SwitchActiveIcon : _theme.ControlIcon,
-		});
+			WidthRequest = CellWidth,
+			HeightRequest = CellHeight,
+			StrokeThickness = 0,
+			BackgroundColor = active ? ActiveFill() : Colors.Transparent,
+			StrokeShape = new RoundRectangle { CornerRadius = CellCorner },
+			Shadow = active ? new Shadow { Brush = Brush.Black, Opacity = ShadowOpacity, Radius = ShadowRadius, Offset = new Point(0, ShadowOffsetY) } : null,
+			Content = Glyph(icon, active ? ActiveIcon() : _theme.ControlIcon),
+		};
 		SemanticProperties.SetDescription(cell, label);
+		SemanticProperties.SetHint(cell, active ? ReadingText.ModeSelected : null);
 		cell.GestureRecognizers.Add(Tap(mode));
 		return cell;
 	}
 
-	private static Border Face(Color colour, double top) => new()
+	// By day the chosen segment is white with a brand icon; by night the brand fill with its own icon colour.
+	private Color ActiveFill() => _theme.IsBedtime ? _theme.SwitchActive : Colors.White;
+
+	private Color ActiveIcon() => _theme.IsBedtime ? _theme.SwitchActiveIcon : _theme.SwitchActive;
+
+	private static Microsoft.Maui.Controls.Shapes.Path Glyph(string data, Color colour) => new()
 	{
-		BackgroundColor = colour,
-		StrokeThickness = 0,
-		HeightRequest = CellHeight,
-		VerticalOptions = LayoutOptions.Start,
-		Margin = new Thickness(0, top, 0, 0),
-		StrokeShape = new RoundRectangle { CornerRadius = CellCorner },
+		Data = (Geometry)Converter.ConvertFromInvariantString(data)!,
+		Stroke = new SolidColorBrush(colour),
+		Fill = Brush.Transparent,
+		StrokeThickness = IconStroke,
+		StrokeLineCap = PenLineCap.Round,
+		StrokeLineJoin = PenLineJoin.Round,
+		Aspect = Stretch.Uniform,
+		WidthRequest = IconSize,
+		HeightRequest = IconSize,
+		HorizontalOptions = LayoutOptions.Center,
+		VerticalOptions = LayoutOptions.Center,
+		InputTransparent = true,
 	};
 
 	private TapGestureRecognizer Tap(ReadingMode mode)
@@ -89,7 +125,7 @@ public sealed class ModeSwitch : Border
 
 	private void Choose(ReadingMode mode)
 	{
-		if (mode == Mode)
+		if (mode == ShownMode)
 		{
 			return;
 		}

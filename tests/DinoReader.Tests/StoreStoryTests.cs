@@ -162,14 +162,14 @@ public sealed class StoreStoryTests : IDisposable
         AssertEachIsPlayedByTheirGender(story, language, expected);
     }
 
-    // X Marks the Treasure! (Slice 121): Kaatrin, Izzy and Pancake Polly are girls, the Seagull is a "she" with no animal word the guesser knows, Billy is a boy.
+    // X Marks the Treasure! (Slice 121): Kathryn, Izzy and Pancake Polly are girls, the Seagull is a "she" with no animal word the guesser knows, Billy is a boy.
     [Theory]
     [MemberData(nameof(Languages))]
     public void XMarksTheTreasure_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
     {
         var expected = new Dictionary<string, Gender>
         {
-            ["Kaatrin"] = Gender.Female, ["Izzy"] = Gender.Female, ["Pancake Polly"] = Gender.Female, ["Seagull"] = Gender.Female, ["Billy"] = Gender.Male,
+            ["Kathryn"] = Gender.Female, ["Izzy"] = Gender.Female, ["Pancake Polly"] = Gender.Female, ["Seagull"] = Gender.Female, ["Billy"] = Gender.Male,
         };
 
         Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.TreasureId));

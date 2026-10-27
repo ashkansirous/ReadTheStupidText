@@ -64,10 +64,6 @@ public static partial class PictureTextBook
         return new PanelPlacement(panelMargin + band, max);
     }
 
-    /// <summary>Whether the words are drawn over the pictures (Slice 122): the stored value, on when none is stored. An import
-    /// from camera photos, gallery photos of pages or PDF pages stores false (their words are already in the pictures).</summary>
-    public static bool ShowsWordsOverPictures(Story story) => story.WordsOverPictures ?? true;
-
     [GeneratedRegex(@"\d+")]
     private static partial Regex DigitRun();
 

@@ -162,7 +162,7 @@ public class BundledTranslationsTests
     public void The_stored_copy_of_a_starter_without_translations_takes_the_bundled_ones_and_keeps_its_edits()
     {
         Story bundled = StoryWith(Farsi, translate: true);
-        Story stored = StoryWith(null, translate: false) with { Title = "Mine", CoverColourIndex = 3, CharacterMerges = new Dictionary<string, string> { ["a"] = "b" } };
+        Story stored = StoryWith(null, translate: false) with { Title = "Mine", CoverColourIndex = 3 };
 
         Story adopted = BundledTranslations.Adopt(stored, bundled);
 
@@ -170,7 +170,6 @@ public class BundledTranslationsTests
         Assert.True(adopted.TranslateToMyLanguage);
         Assert.Equal("Mine", adopted.Title);
         Assert.Equal(3, adopted.CoverColourIndex);
-        Assert.Equal("b", adopted.Merges["a"]);
     }
 
     [Fact]

@@ -201,6 +201,11 @@
   <data name="Version_Title" xml:space="preserve"><value>Version</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Hjælp med at gøre Dino bedre</value></data>
   <data name="Usage_Helper" xml:space="preserve"><value>Sender tal som "en bog fra butikken blev læst færdig". Ingen navne, ingen id'er, intet du har skrevet.</value></data>
+  <data name="Speed_Title" xml:space="preserve"><value>Læsehastighed</value></data>
+  <data name="Speed_Sub" xml:space="preserve"><value>Langsommere er nemmere for de små</value></data>
+  <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · langsom</value></data>
+  <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
+  <data name="Speed_Play" xml:space="preserve"><value>Hør denne hastighed</value></data>
   <data name="FirstRun_Usage" xml:space="preserve"><value>Dino tæller, hvilke bøger der bliver læst, uden navne eller id'er. Du kan slå det fra i Indstillinger.</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Din fortæller ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
@@ -279,8 +284,10 @@
   <data name="Editor_RotateLeft" xml:space="preserve"><value>Drej til venstre</value></data>
   <data name="Editor_RotateRight" xml:space="preserve"><value>Drej til højre</value></data>
   <data name="Editor_ResetCrop" xml:space="preserve"><value>Nulstil beskæring</value></data>
-  <data name="Reading_TextMode" xml:space="preserve"><value>Teksttilstand</value></data>
-  <data name="Reading_PictureMode" xml:space="preserve"><value>Billedtilstand</value></data>
+  <data name="Reading_Mode_PictureOnly" xml:space="preserve"><value>Kun billeder</value></data>
+  <data name="Reading_Mode_PictureAndText" xml:space="preserve"><value>Billeder + tekst</value></data>
+  <data name="Reading_Mode_TextOnly" xml:space="preserve"><value>Kun tekst</value></data>
+  <data name="Reading_Mode_Selected" xml:space="preserve"><value>valgt</value></data>
   <data name="Reading_Play" xml:space="preserve"><value>Afspil</value></data>
   <data name="Reading_Pause" xml:space="preserve"><value>Pause</value></data>
   <data name="Reading_Previous" xml:space="preserve"><value>Forrige sætning</value></data>
@@ -296,10 +303,6 @@
   <data name="Cast_Edited" xml:space="preserve"><value>RETTET</value></data>
   <data name="Cast_SharedVoice" xml:space="preserve"><value>Delt stemme</value></data>
   <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>Ukendt taler</value></data>
-  <data name="Cast_MergeButton" xml:space="preserve"><value>Slå to figurer sammen</value></data>
-  <data name="Cast_MergeTitle" xml:space="preserve"><value>Slå figurer sammen</value></data>
-  <data name="Cast_MergeBody" xml:space="preserve"><value>Vælg de to navne, der er den samme figur. Deres replikker samles under ét navn og én stemme.</value></data>
-  <data name="Cast_KeepName" xml:space="preserve"><value>Behold navnet</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>Hej! Sådan lyder jeg, når jeg læser din historie.</value></data>
   <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>Kunne ikke gemme den ændring</value></data>
   <data name="Cast_SaveFailedBody" xml:space="preserve"><value>Rollerne blev ikke gemt. Prøv igen om lidt.</value></data>
@@ -312,13 +315,8 @@
   <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} replikker</value></data>
   <data name="Cast_UsesNarrator" xml:space="preserve"><value>bruger fortællerens stemme</value></data>
   <data name="Cast_Hear" xml:space="preserve"><value>Hør {0}</value></data>
-  <data name="Cast_MergeInto" xml:space="preserve"><value>Slå sammen med {0}</value></data>
   <data name="Cast_AnimalSounds_Title" xml:space="preserve"><value>Dyrelyde</value></data>
   <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>Dyrene siger af og til “Øf!” eller “Mæh!”</value></data>
   <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>Ingen dyr i denne historie, der laver lyde</value></data>
-  <data name="Cast_WordsOverPictures_Title" xml:space="preserve"><value>Vis ordene over billederne</value></data>
-  <data name="Cast_WordsOverPictures_HintOn" xml:space="preserve"><value>Ordene vises i et felt nederst</value></data>
-  <data name="Cast_WordsOverPictures_HintOff" xml:space="preserve"><value>Slået fra, fordi billederne allerede har ordene i sig</value></data>
-  <data name="Cast_WordsOverPictures_HintOffPlain" xml:space="preserve"><value>Kun billederne vises</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Der er flere figurer i bogen end de {0} fortællerfigurer, vi har, så nogle lyder ens. Fortælleren gives aldrig til en figur.</value></data>
 </root>

@@ -199,6 +199,11 @@
   <data name="Version_Title" xml:space="preserve"><value>Versão</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Ajude a melhorar o Dino</value></data>
   <data name="Usage_Helper" xml:space="preserve"><value>Envia contagens como "um livro da loja foi terminado". Sem nomes, sem identificadores, nada do que você digitou.</value></data>
+  <data name="Speed_Title" xml:space="preserve"><value>Velocidade de leitura</value></data>
+  <data name="Speed_Sub" xml:space="preserve"><value>Mais devagar é mais fácil para os pequenos</value></data>
+  <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · lento</value></data>
+  <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
+  <data name="Speed_Play" xml:space="preserve"><value>Ouvir esta velocidade</value></data>
   <data name="FirstRun_Usage" xml:space="preserve"><value>O Dino conta quais livros são lidos, sem nomes nem identificadores. Você pode desativar isto em Configurações.</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Seu narrador ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
@@ -280,8 +285,10 @@
   <data name="Editor_RotateLeft" xml:space="preserve"><value>Girar para a esquerda</value></data>
   <data name="Editor_RotateRight" xml:space="preserve"><value>Girar para a direita</value></data>
   <data name="Editor_ResetCrop" xml:space="preserve"><value>Redefinir corte</value></data>
-  <data name="Reading_TextMode" xml:space="preserve"><value>Modo texto</value></data>
-  <data name="Reading_PictureMode" xml:space="preserve"><value>Modo imagem</value></data>
+  <data name="Reading_Mode_PictureOnly" xml:space="preserve"><value>Só imagens</value></data>
+  <data name="Reading_Mode_PictureAndText" xml:space="preserve"><value>Imagens + texto</value></data>
+  <data name="Reading_Mode_TextOnly" xml:space="preserve"><value>Só texto</value></data>
+  <data name="Reading_Mode_Selected" xml:space="preserve"><value>selecionado</value></data>
   <data name="Reading_Play" xml:space="preserve"><value>Reproduzir</value></data>
   <data name="Reading_Pause" xml:space="preserve"><value>Pausar</value></data>
   <data name="Reading_Previous" xml:space="preserve"><value>Frase anterior</value></data>
@@ -297,10 +304,6 @@
   <data name="Cast_Edited" xml:space="preserve"><value>EDITADO</value></data>
   <data name="Cast_SharedVoice" xml:space="preserve"><value>Voz compartilhada</value></data>
   <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>Falante desconhecido</value></data>
-  <data name="Cast_MergeButton" xml:space="preserve"><value>Mesclar dois personagens</value></data>
-  <data name="Cast_MergeTitle" xml:space="preserve"><value>Mesclar personagens</value></data>
-  <data name="Cast_MergeBody" xml:space="preserve"><value>Escolha os dois nomes que são o mesmo personagem. As falas deles se juntam sob um único nome e uma única voz.</value></data>
-  <data name="Cast_KeepName" xml:space="preserve"><value>Manter o nome</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>Olá! É assim que eu soo quando leio a sua história.</value></data>
   <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>Não foi possível salvar a alteração</value></data>
   <data name="Cast_SaveFailedBody" xml:space="preserve"><value>O elenco não foi salvo. Tente novamente em instantes.</value></data>
@@ -313,13 +316,8 @@
   <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} falas</value></data>
   <data name="Cast_UsesNarrator" xml:space="preserve"><value>usa a voz do narrador</value></data>
   <data name="Cast_Hear" xml:space="preserve"><value>Ouvir {0}</value></data>
-  <data name="Cast_MergeInto" xml:space="preserve"><value>Mesclar com {0}</value></data>
   <data name="Cast_AnimalSounds_Title" xml:space="preserve"><value>Sons de animais</value></data>
   <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>Os animais dizem “Oinc!” ou “Béé!” de vez em quando</value></data>
   <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>Nenhum animal que faça sons nesta história</value></data>
-  <data name="Cast_WordsOverPictures_Title" xml:space="preserve"><value>Mostrar as palavras sobre as imagens</value></data>
-  <data name="Cast_WordsOverPictures_HintOn" xml:space="preserve"><value>As palavras aparecem num painel na parte de baixo</value></data>
-  <data name="Cast_WordsOverPictures_HintOff" xml:space="preserve"><value>Desligado porque estas imagens já têm as palavras</value></data>
-  <data name="Cast_WordsOverPictures_HintOffPlain" xml:space="preserve"><value>Só as imagens aparecem</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Este livro tem mais personagens do que os {0} personagens narradores disponíveis, então alguns soam iguais. O narrador nunca é dado a um personagem.</value></data>
 </root>

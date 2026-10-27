@@ -72,10 +72,6 @@ internal static class CastRows
 	public static View AnimalSoundsRow(bool hasAnimals, bool on, Action<bool> changed) =>
 		SwitchRow(AppResources.Cast_AnimalSounds_Title, hasAnimals ? AppResources.Cast_AnimalSounds_Hint : AppResources.Cast_AnimalSounds_None, on: on, enabled: hasAnimals, changed: changed);
 
-	/// <summary>The "Show the words over the pictures" row (Slice 122, mock frames 56-58), for a book with pictures. Its sub-line follows the switch.</summary>
-	public static View WordsOverPicturesRow(bool on, bool picturesHaveWords, Action<bool> changed) =>
-		SwitchRow(AppResources.Cast_WordsOverPictures_Title, WordsHint(on, picturesHaveWords), on: on, enabled: AlwaysEnabled, changed: changed);
-
 	/// <summary>One white card holding the switch rows, a hairline between them (Slice 124).</summary>
 	public static View SwitchesCard(params View[] rows)
 	{
@@ -94,13 +90,6 @@ internal static class CastRows
 		card.Content = stack;
 		return card;
 	}
-
-	private const bool AlwaysEnabled = true;
-
-	// Off reads "already have the words" only for a book of photos, scans or PDF pages; any other book says just what is shown.
-	private static string WordsHint(bool on, bool picturesHaveWords) =>
-		on ? AppResources.Cast_WordsOverPictures_HintOn
-			: picturesHaveWords ? AppResources.Cast_WordsOverPictures_HintOff : AppResources.Cast_WordsOverPictures_HintOffPlain;
 
 	private static View SwitchRow(string title, string hintText, bool on, bool enabled, Action<bool> changed)
 	{

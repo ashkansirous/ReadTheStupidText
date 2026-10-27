@@ -71,14 +71,14 @@ public sealed class StoryActions(IStoryLibrary library, IServiceProvider service
 		}
 	}
 
-	/// <summary>Saves the casts (every language's) and merges of <paramref name="edited"/> onto the stored story, leaving
+	/// <summary>Saves the casts (every language's) of <paramref name="edited"/> onto the stored story, leaving
 	/// everything else in the stored file (its reading mode, say) as it is.</summary>
 	public async Task SaveCastAsync(Story edited)
 	{
 		Story current = await library.GetAsync(edited.Id) ?? throw new InvalidOperationException("The story is no longer saved.");
 		await library.UpdateAsync(current with
 		{
-			Cast = edited.Cast, LanguageCasts = edited.LanguageCasts, CharacterMerges = edited.Merges, AnimalSoundsOn = edited.AnimalSoundsOn, WordsOverPictures = edited.WordsOverPictures,
+			Cast = edited.Cast, LanguageCasts = edited.LanguageCasts, AnimalSoundsOn = edited.AnimalSoundsOn,
 		});
 	}
 

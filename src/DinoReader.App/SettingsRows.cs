@@ -1,5 +1,8 @@
+using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using Microsoft.Maui.Controls.Shapes;
+using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Domain.Reading;
 
 namespace DinoReader;
 
@@ -111,5 +114,230 @@ public static class UsageCountsCard
 			Padding = CardPadding,
 			Content = row,
 		};
+	}
+}
+
+/// <summary>
+/// The "Reading speed" card of the grown-up settings (Slice 150, Decision 155, mock frame 70): a title, the chosen speed, a Play button that
+/// reads a sample sentence at it, and a slider from 0.5x to 1.2x in 0.05 steps. One setting for the whole app; the reader takes a change from
+/// the next sentence. A page puts it in its column of cards and supplies <c>playSample</c> (it knows the voice).
+/// </summary>
+public static class ReadingSpeedCard
+{
+	private const double CardRadius = 18;
+	private const double CardPadding = 14;
+	private const double TitleSize = 15;
+	private const double HelperSize = 12.5;
+	private const double ValueSize = 17;
+	private const double ValueMinWidth = 44;
+	private const double PlaySize = 44;
+	private const double SpinnerSize = 22;
+	private const double SliderHeight = 44;
+	private const double EndLabelSize = 12;
+	private const double StepsPerUnit = 1 / ReadingSpeed.Step;
+	private const double SnapTolerance = 1e-9;
+	private const int SpinnerDelayMs = 500;
+
+	public static Border Build(ISpeechReader reader, Func<Task> playSample, Action stopSample)
+	{
+		double current = ReadingSpeedPreference.Load().Value;
+		Label value = ValueLabel(current);
+		var column = new VerticalStackLayout { Spacing = 10, Children = { TopRow(value, PlayButton(reader, playSample, stopSample)), Slider(current, value, reader), EndsRow() } };
+		return new Border
+		{
+			BackgroundColor = Colors.White,
+			StrokeThickness = 0,
+			StrokeShape = new RoundRectangle { CornerRadius = CardRadius },
+			Padding = CardPadding,
+			Content = column,
+		};
+	}
+
+	private static Label ValueLabel(double current) => new()
+	{
+		Text = Display(current),
+		FontSize = ValueSize,
+		FontAttributes = FontAttributes.Bold,
+		TextColor = DinoTokens.Get(DinoTokens.Brand),
+		MinimumWidthRequest = ValueMinWidth,
+		HorizontalTextAlignment = TextAlignment.End,
+		VerticalOptions = LayoutOptions.Center,
+	};
+
+	private static Grid TopRow(Label value, Border play)
+	{
+		var top = new Grid { ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Auto)], ColumnSpacing = 10 };
+		top.Add(TitleBlock(), 0);
+		top.Add(value, 1);
+		top.Add(play, 2);
+		return top;
+	}
+
+	private static Grid EndsRow()
+	{
+		var ends = new Grid { ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)] };
+		ends.Add(EndLabel(AppResources.Speed_EndSlow), 0);
+		ends.Add(EndLabel(AppResources.Format(AppResources.Speed_Value, ReadingSpeed.Max)), 1);
+		return ends;
+	}
+
+	private static string Display(double speed) => AppResources.Format(AppResources.Speed_Value, speed);
+
+	private static VerticalStackLayout TitleBlock() => new()
+	{
+		Spacing = 2,
+		VerticalOptions = LayoutOptions.Center,
+		Children =
+		{
+			new Label { Text = AppResources.Speed_Title, FontSize = TitleSize, FontAttributes = FontAttributes.Bold },
+			new Label { Text = AppResources.Speed_Sub, FontSize = HelperSize, TextColor = DinoTokens.Get(DinoTokens.Body) },
+		},
+	};
+
+	private static Label EndLabel(string text) => new() { Text = text, FontSize = EndLabelSize, TextColor = DinoTokens.Get(DinoTokens.Muted) };
+
+	private static Slider Slider(double current, Label value, ISpeechReader reader)
+	{
+		var slider = new Slider
+		{
+			Minimum = ReadingSpeed.Min,
+			Maximum = ReadingSpeed.Max,
+			Value = current,
+			HeightRequest = SliderHeight,
+			MinimumTrackColor = DinoTokens.Get(DinoTokens.Brand),
+			MaximumTrackColor = DinoTokens.Get(DinoTokens.BrandTint),
+			ThumbColor = DinoTokens.Get(DinoTokens.Brand),
+		};
+		SemanticProperties.SetDescription(slider, Described(current));
+		WireSlider(slider, value, reader);
+		return slider;
+	}
+
+	// A drag commits once when it ends; any other change (TalkBack, keyboard) commits at once. A drag that never reports its end
+	// (page torn down) is closed on Unloaded so the flag cannot stay set.
+	private static void WireSlider(Slider slider, Label value, ISpeechReader reader)
+	{
+		bool dragging = false;
+		slider.DragStarted += (_, _) => dragging = true;
+		slider.DragCompleted += (_, _) =>
+		{
+			dragging = false;
+			Commit(slider, reader);
+		};
+		slider.Unloaded += (_, _) =>
+		{
+			if (dragging)
+			{
+				dragging = false;
+				Commit(slider, reader);
+			}
+		};
+		slider.ValueChanged += (_, e) =>
+		{
+			if (!Snap(slider, e.NewValue))
+			{
+				return;
+			}
+
+			value.Text = Display(slider.Value);
+			SemanticProperties.SetDescription(slider, Described(slider.Value));
+			if (!dragging)
+			{
+				Commit(slider, reader);
+			}
+		};
+	}
+
+	// The title plus the spoken value, so a screen reader says "Reading speed, 0.8x" rather than a raw percentage.
+	private static string Described(double speed) => $"{AppResources.Speed_Title}, {Display(speed)}";
+
+	// Puts the thumb on a step; false when it had to move (the move raises ValueChanged again).
+	private static bool Snap(Slider slider, double raw)
+	{
+		PlaybackRate rate = ReadingSpeed.Clamp(Math.Round(raw * StepsPerUnit) / StepsPerUnit);
+		if (Math.Abs(slider.Value - rate.Value) <= SnapTolerance)
+		{
+			return true;
+		}
+
+		slider.Value = rate.Value;
+		return false;
+	}
+
+	// Saves and applies the speed once the thumb settles, not on every tick of a drag (the reader takes it from the next sentence).
+	private static void Commit(Slider slider, ISpeechReader reader)
+	{
+		PlaybackRate rate = ReadingSpeed.Clamp(slider.Value);
+		ReadingSpeedPreference.Save(rate);
+		reader.SetSpeed(rate);
+	}
+
+	// Slice 150 review: the play icon becomes a spinner only when the sample takes over 500 ms (no flash on a fast one).
+	private static async Task PlayWithSpinnerAsync(Border button, Func<Task> playSample)
+	{
+		View icon = button.Content;
+		using var fast = new CancellationTokenSource();
+		_ = ShowSpinnerAfterDelayAsync(button, fast.Token);
+		try
+		{
+			await playSample();
+		}
+		finally
+		{
+			fast.Cancel();
+			button.Content = icon;
+		}
+	}
+
+	private static async Task ShowSpinnerAfterDelayAsync(Border button, CancellationToken token)
+	{
+		try
+		{
+			await Task.Delay(SpinnerDelayMs, token);
+		}
+		catch (OperationCanceledException)
+		{
+			return;
+		}
+
+		button.Content = new ActivityIndicator { IsRunning = true, Color = DinoTokens.Get(DinoTokens.Brand), WidthRequest = SpinnerSize, HeightRequest = SpinnerSize, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center };
+	}
+
+	private static Border PlayButton(ISpeechReader reader, Func<Task> playSample, Action stopSample)
+	{
+		var button = new Border
+		{
+			WidthRequest = PlaySize,
+			HeightRequest = PlaySize,
+			StrokeThickness = 0,
+			BackgroundColor = DinoTokens.Get(DinoTokens.BrandTint),
+			StrokeShape = new RoundRectangle { CornerRadius = PlaySize / 2 },
+			VerticalOptions = LayoutOptions.Center,
+			Content = new IconView { Kind = IconKind.Play, Color = DinoTokens.Get(DinoTokens.Brand), Filled = true, Size = 16 },
+		};
+		SemanticProperties.SetDescription(button, AppResources.Speed_Play);
+		bool starting = false;
+		var tap = new TapGestureRecognizer();
+		tap.Tapped += async (_, _) =>
+		{
+			// A tap while the sample is preparing or playing stops it (the Cancel).
+			if (starting || reader.State != PlaybackState.Idle)
+			{
+				stopSample();
+				return;
+			}
+
+			starting = true;
+			try
+			{
+				await PlayWithSpinnerAsync(button, playSample);
+			}
+			finally
+			{
+				starting = false;
+			}
+		};
+		button.GestureRecognizers.Add(tap);
+		return button;
 	}
 }

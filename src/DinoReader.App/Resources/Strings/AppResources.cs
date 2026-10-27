@@ -46,6 +46,11 @@ public static class AppResources
 	public static string Version_Title => Get();
 	public static string Usage_Title => Get();
 	public static string Usage_Helper => Get();
+	public static string Speed_Title => Get();
+	public static string Speed_Sub => Get();
+	public static string Speed_EndSlow => Get();
+	public static string Speed_Value => Get();
+	public static string Speed_Play => Get();
 	public static string FirstRun_Usage => Get();
 	public static string Storyteller_YourNarrator => Get();
 	public static string Storyteller_Size => Get();
@@ -279,8 +284,10 @@ public static class AppResources
 	public static string Editor_RotateLeft => Get();
 	public static string Editor_RotateRight => Get();
 	public static string Editor_ResetCrop => Get();
-	public static string Reading_TextMode => Get();
-	public static string Reading_PictureMode => Get();
+	public static string Reading_Mode_PictureOnly => Get();
+	public static string Reading_Mode_PictureAndText => Get();
+	public static string Reading_Mode_TextOnly => Get();
+	public static string Reading_Mode_Selected => Get();
 	public static string Reading_Play => Get();
 	public static string Reading_Pause => Get();
 	public static string Reading_Previous => Get();
@@ -302,10 +309,6 @@ public static class AppResources
 	public static string Cast_FilterEveryone => Get();
 	public static string Cast_SharedVoice => Get();
 	public static string Cast_UnknownSpeaker => Get();
-	public static string Cast_MergeButton => Get();
-	public static string Cast_MergeTitle => Get();
-	public static string Cast_MergeBody => Get();
-	public static string Cast_KeepName => Get();
 	public static string Cast_PreviewLine => Get();
 	public static string Cast_SaveFailedTitle => Get();
 	public static string Cast_SaveFailedBody => Get();
@@ -318,13 +321,8 @@ public static class AppResources
 	public static string Cast_UnknownLines_Other => Get();
 	public static string Cast_UsesNarrator => Get();
 	public static string Cast_Hear => Get();
-	public static string Cast_MergeInto => Get();
 	public static string Cast_AnimalSounds_Title => Get();
 	public static string Cast_AnimalSounds_Hint => Get();
 	public static string Cast_AnimalSounds_None => Get();
-	public static string Cast_WordsOverPictures_Title => Get();
-	public static string Cast_WordsOverPictures_HintOn => Get();
-	public static string Cast_WordsOverPictures_HintOff => Get();
-	public static string Cast_WordsOverPictures_HintOffPlain => Get();
 	public static string Cast_SharedNote => Get();
 }
