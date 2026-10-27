@@ -12,6 +12,8 @@ public static partial class PictureTextBook
 {
     public const string PageSeparator = "---";
 
+    private const double LineEpsilon = 0.01;
+
     [GeneratedRegex(@"^[ \t]*---[ \t]*$", RegexOptions.Multiline)]
     private static partial Regex SeparatorLine();
 
@@ -62,6 +64,89 @@ public static partial class PictureTextBook
         double band = LetterboxBelow(cardWidth, cardHeight, pictureAspect, areaTop, areaSide);
         double max = Math.Max(0, PanelMaxHeight(cardWidth, cardHeight, pictureAspect, panelMargin, areaTop, areaSide) - band);
         return new PanelPlacement(panelMargin + band, max);
+    }
+
+    /// <summary>The text card's height snapped down to a whole number of lines (Slice 171): <paramref name="verticalPadding"/> (the space above the first line; none is kept below) is kept, and at least one line always fits. A card shorter than a line (or an unknown line height) is returned as it is.</summary>
+    public static double SnapPanelHeight(double maxHeight, double lineHeight, double verticalPadding)
+    {
+        if (lineHeight <= 0 || maxHeight <= 0)
+        {
+            return maxHeight;
+        }
+
+        int lines = Math.Max(1, VisibleLines(maxHeight, lineHeight, verticalPadding));
+        return verticalPadding + lines * lineHeight;
+    }
+
+    /// <summary>How many whole lines fit in a card of <paramref name="viewportHeight"/> with <paramref name="verticalPadding"/> of space above the first one.</summary>
+    public static int VisibleLines(double viewportHeight, double lineHeight, double verticalPadding)
+    {
+        if (lineHeight <= 0)
+        {
+            return 0;
+        }
+
+        return (int)Math.Floor((viewportHeight - verticalPadding) / lineHeight + LineEpsilon);
+    }
+
+    /// <summary>How many whole lines of the measured text fit a viewport of <paramref name="viewportHeight"/> with <paramref name="verticalPadding"/> above the first, whichever line is first (the tallest run of lines
+    /// counts, so every window fits); at least one.</summary>
+    public static int FitLines(TextLines lines, double viewportHeight, double verticalPadding)
+    {
+        int fit = 1;
+        while (fit < lines.Count && verticalPadding + lines.TallestRun(fit + 1) <= viewportHeight + LineEpsilon)
+        {
+            fit++;
+        }
+
+        return fit;
+    }
+
+    /// <summary>The card height for the measured text (Slice 171): <paramref name="verticalPadding"/> above the first line plus a whole number of real lines, the most that fit under <paramref name="maxHeight"/>.
+    /// A page whose lines all fit keeps the cap (the card sizes to its text).</summary>
+    public static double SnapPanelHeight(double maxHeight, TextLines lines, double verticalPadding)
+    {
+        if (lines.Count == 0 || maxHeight <= 0)
+        {
+            return maxHeight;
+        }
+
+        int fit = FitLines(lines, maxHeight, verticalPadding);
+        return fit >= lines.Count ? maxHeight : verticalPadding + lines.TallestRun(fit);
+    }
+
+    /// <summary>The first line the card shows so that the sentence starting on <paramref name="startLine"/> is in view (Slice 171): that line at the top, but never so far down that the card is left
+    /// part empty at the end of the text. A sentence longer than the card keeps its start in view.</summary>
+    public static int TopLineFor(int startLine, int totalLines, int visibleLines)
+    {
+        int lastTop = Math.Max(0, totalLines - Math.Max(1, visibleLines));
+        return Math.Clamp(startLine, 0, lastTop);
+    }
+
+    /// <summary>Where the scroll should go (dp from the top of the text) to show the sentence that begins at <paramref name="startOffset"/> of the text: the Y of its first line, which puts that line
+    /// <paramref name="verticalPadding"/> below the top of the viewport (the label's own margin), so the line above is out of view apart from its trailing space. The first word counts, not leading blanks.</summary>
+    public static double ScrollTargetFor(TextLines lines, string text, int startOffset, double viewportHeight, double verticalPadding)
+    {
+        if (lines.Count == 0)
+        {
+            return 0;
+        }
+
+        int startLine = lines.LineOf(FirstInk(text, startOffset));
+        int visible = FitLines(lines, viewportHeight, verticalPadding);
+        return lines.Top(TopLineFor(startLine, lines.Count, visible));
+    }
+
+    /// <summary>The offset of the first character at or after <paramref name="from"/> that is not white space (a sentence that starts with a space or a line break begins at its first word).</summary>
+    public static int FirstInk(string text, int from)
+    {
+        int at = Math.Clamp(from, 0, text.Length);
+        while (at < text.Length && char.IsWhiteSpace(text[at]))
+        {
+            at++;
+        }
+
+        return at < text.Length ? at : Math.Clamp(from, 0, Math.Max(0, text.Length - 1));
     }
 
     [GeneratedRegex(@"\d+")]

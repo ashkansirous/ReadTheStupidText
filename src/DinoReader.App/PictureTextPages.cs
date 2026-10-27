@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using DinoReader.Core;
 using Microsoft.Maui.Controls.Shapes;
 
@@ -21,9 +22,14 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 	private const double UprightPanelCorner = 16;
 	private const double SidewaysPanelCorner = 22;
 	private const double PanelMargin = 8;
+	private const long UserScrollQuietMs = 500;
+	private const int MeasureRetries = 5;
+	private const int MeasureRetryMs = 60;
 	private static readonly Thickness UprightPanelPadding = new(14, 10);
-	private const double FadeHeight = 22;
+	// The fade is as tall as the label's top margin, so it never covers the first visible line (that line sits one margin below the top of the viewport).
+	private const double FadeHeight = 10;
 	private const float FadeAlpha = 0.95f;
+	private const float FadeSolidUntil = 0.6f;
 	private const double SidewaysGap = 6;
 	private const double UprightPictureTop = 6;
 	private const double UprightPictureSide = 14;
@@ -35,7 +41,21 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 	private List<Slot> _slots = [];
 	private Size _card;
 	private Label? _label;
+	private ScrollView? _scroll;
+	private double _scrollPad;
 	private int _drawnPage = -1;
+	private string _pageText = "";
+
+	// Slice 171: the card's line table, read from the label's own native layout once per page and width (never on Mark), and the pitch last seen per font, which sizes a new card before its first read so it does not jump.
+	private static readonly Dictionary<string, double> KnownPitch = [];
+	private TextLines? _lines;
+	private double _linesWidth;
+	private bool _measureQueued;
+	private Action? _replace;
+	private int _current = -1;
+	private int _appScrollHolds;
+	private double _appTargetY = -1;
+	private long _userScrollTick = long.MinValue / 2;
 
 	public int PageCount => _slots.Count;
 
@@ -85,6 +105,15 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		layers.Boxes.Children.Clear();
 		layers.Text.Children.Clear();
 		_label = null;
+		_scroll = null;
+		_lines = null;
+		_replace = null;
+		_measureQueued = false;
+		_current = -1;
+		_appScrollHolds = 0;
+		_appTargetY = -1;
+		_userScrollTick = long.MinValue / 2;
+		_pageText = "";
 		_drawnPage = page;
 		// Only the scrolling text panel takes touches; the picture and the card leave taps and swipes to the surface.
 		layers.Boxes.InputTransparent = false;
@@ -94,6 +123,7 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 			return;
 		}
 
+		_pageText = text[_layout.PageStart(_slots[page].StoryPage).._layout.PageEnd(_slots[page].StoryPage)];
 		View content = Sideways ? SidewaysPage(_slots[page]) : UprightPage(_slots[page]);
 		AbsoluteLayout.SetLayoutBounds(content, new Rect(0, 0, _card.Width, _card.Height));
 		layers.Boxes.Children.Add(content);
@@ -108,6 +138,8 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		}
 
 		_label.FormattedText = TextOf(_slots[page].StoryPage, sentence, whole: false);
+		_current = sentence;
+		ScrollToCurrent(animated: true);
 	}
 
 	/// <summary>The whole page's text on one soft highlight (a page read from a parent's recording, Slice 111).</summary>
@@ -119,6 +151,138 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		}
 
 		_label.FormattedText = TextOf(_slots[page].StoryPage, -1, whole: true);
+		_current = first;
+		ScrollToCurrent(animated: true);
+	}
+
+	// Slice 171: the card keeps the spoken sentence in view. Where its first word sits comes from the label's own native layout (Android TextView.Layout, iOS TextKit),
+	// so wrapping, scripts and fallback fonts are the screen's own; the choice of line is Core's. A sentence longer than the card keeps its start in view. A card the child is
+	// dragging or flinging is left alone until the next sentence, and a redrawn page is brought back to the current sentence once its lines are known.
+	private void ScrollToCurrent(bool animated)
+	{
+		if (_current < 0 || !InRange(_drawnPage) || _label is not { Width: > 0 } || _scroll is not { Height: > 0 } scroll)
+		{
+			return;
+		}
+
+		if (_lines is null)
+		{
+			// Mark never reads the native layout; QueueMeasure does, and then scrolls to the current sentence.
+			return;
+		}
+
+		int storyPage = _slots[_drawnPage].StoryPage;
+		(int first, int last) = _layout.SentencesOnPage(storyPage);
+		if (_current < first || _current > last || UserIsScrolling())
+		{
+			return;
+		}
+
+		int start = _layout.PageStart(storyPage);
+		int from = Math.Clamp(sentences[_current].Start, start, _layout.PageEnd(storyPage)) - start;
+		double target = PictureTextBook.ScrollTargetFor(_lines!, _pageText, from, scroll.Height, _scrollPad);
+		if (Math.Abs(target - scroll.ScrollY) >= 1)
+		{
+			_ = ScrollAsync(scroll, target, animated);
+		}
+	}
+
+	private async Task ScrollAsync(ScrollView scroll, double y, bool animated)
+	{
+		HoldAppScroll();
+		_appTargetY = y;
+		try
+		{
+			await scroll.ScrollToAsync(0, y, animated);
+		}
+		catch (Exception ex)
+		{
+			// The page was turned or redrawn while the card was scrolling: nothing left to scroll.
+			Debug.WriteLine($"Dino Reader: text card scroll ended early: {ex.Message}");
+		}
+		finally
+		{
+			ReleaseAppScroll();
+		}
+	}
+
+	// A scroll the app did not ask for is the child's finger (or its fling); events keep coming while it lasts. The app's own scrolls and resizes are tagged (held) so they never start the pause;
+	// the hold is released a dispatch later, after the events they queued. After a resize the scroll target is worked out again with the new viewport.
+	private void WatchScroll(ScrollView scroll)
+	{
+		scroll.Scrolled += (_, _) =>
+		{
+			if (_appScrollHolds == 0 && Math.Abs(scroll.ScrollY - _appTargetY) >= 1)
+			{
+				_userScrollTick = Environment.TickCount64;
+			}
+		};
+		scroll.SizeChanged += (_, _) =>
+		{
+			if (_lines is not null)
+			{
+				ScrollToCurrent(animated: false);
+			}
+		};
+	}
+
+	private void HoldAppScroll() => _appScrollHolds++;
+
+	private void ReleaseAppScroll()
+	{
+		if (_label?.Dispatcher is { } dispatcher)
+		{
+			dispatcher.Dispatch(() => _appScrollHolds = Math.Max(0, _appScrollHolds - 1));
+			return;
+		}
+
+		_appScrollHolds = Math.Max(0, _appScrollHolds - 1);
+	}
+
+	private bool UserIsScrolling() => Environment.TickCount64 - _userScrollTick < UserScrollQuietMs;
+
+	// The label's lines are read once its native view has laid the text out, and again only if its width changes. Done after the layout pass, not inside it; a native layout not built yet
+	// for the label's width (null) is tried again a few times a moment later.
+	private void QueueMeasure(int attempt = 0)
+	{
+		if ((_measureQueued && attempt == 0) || _label is not { Width: > 0 } label || (_lines is not null && Math.Abs(_linesWidth - label.Width) < 0.5))
+		{
+			return;
+		}
+
+		_measureQueued = true;
+		label.Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(attempt == 0 ? 0 : MeasureRetryMs), () =>
+		{
+			if (!ReferenceEquals(label, _label))
+			{
+				return;
+			}
+
+			_measureQueued = false;
+			if (ReadLines())
+			{
+				// The card may have been resized to whole lines; scroll once that has applied, with the new viewport.
+				label.Dispatcher.Dispatch(() => ScrollToCurrent(animated: false));
+			}
+			else if (attempt < MeasureRetries)
+			{
+				QueueMeasure(attempt + 1);
+			}
+		});
+	}
+
+	private bool ReadLines()
+	{
+		if (_label is not { Width: > 0 } label || TextLineSources.Platform.Read(label) is not { Count: > 0 } read)
+		{
+			return false;
+		}
+
+		_lines = read;
+		_linesWidth = label.Width;
+		KnownPitch[font] = read.Pitch;
+		_replace?.Invoke();
+		return true;
 	}
 
 	// Taps on the text are handled by each sentence's own span (the label takes touches, so they reach the spans), so the
@@ -141,7 +305,15 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 			panel.VerticalOptions = LayoutOptions.End;
 			panel.Margin = new Thickness(PanelMargin);
 			PlacePanel(panel, _card, slot.Aspect);
-			grid.SizeChanged += (_, _) => PlacePanel(panel, new Size(grid.Width, grid.Height), slot.Aspect);
+			// Placed again when the card is resized and once the real lines are known (the card then holds whole lines).
+			Action replace = () =>
+			{
+				HoldAppScroll();
+				PlacePanel(panel, new Size(grid.Width, grid.Height), slot.Aspect);
+				ReleaseAppScroll();
+			};
+			_replace = replace;
+			grid.SizeChanged += (_, _) => replace();
 			panel.Shadow = new Shadow { Brush = new SolidColorBrush(Color.FromRgb(43, 37, 64)), Opacity = 0.16f, Radius = 12, Offset = new Point(0, 4) };
 			grid.Add(panel);
 		}
@@ -151,15 +323,21 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 
 	// The panel sits inside the visible picture (Decision 131, Slice 135): the placement (Core) puts its bottom edge a margin above the picture's, not the card's, so a picture
 	// letterboxed in a tall card does not leave the panel hanging below it. A card with no size yet leaves the panel as it is; it is placed again once the page has been laid out.
-	private static void PlacePanel(Border panel, Size card, double aspect)
+	private void PlacePanel(Border panel, Size card, double aspect)
 	{
 		if (card.Width > 0 && card.Height > 0)
 		{
 			PictureTextBook.PanelPlacement place = PictureTextBook.PlacePanel(card.Width, card.Height, aspect, PanelMargin, UprightPictureTop, UprightPictureSide);
 			panel.Margin = new Thickness(PanelMargin, PanelMargin, PanelMargin, place.BottomMargin);
-			panel.MaximumHeightRequest = place.MaxHeight;
+			panel.MaximumHeightRequest = WholeLines(place.MaxHeight);
 		}
 	}
+
+	// The cap snapped down to whole lines: the page's real lines when known, else the pitch last seen for this font, else the cap as it is (no guessed pitch, so no jump).
+	private double WholeLines(double max) =>
+		_lines is { } lines ? PictureTextBook.SnapPanelHeight(max, lines, UprightPanelPadding.Top)
+		: KnownPitch.TryGetValue(font, out double pitch) ? PictureTextBook.SnapPanelHeight(max, pitch, UprightPanelPadding.Top)
+		: max;
 
 	private View SidewaysPage(Slot slot)
 	{
@@ -237,9 +415,13 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		else
 		{
 			panel.Padding = padding;
-			panel.Content = new ScrollView { Content = _label };
+			_scrollPad = 0;
+			_scroll = new ScrollView { Content = _label };
+			WatchScroll(_scroll);
+			panel.Content = _scroll;
 		}
 
+		_label.SizeChanged += (_, _) => QueueMeasure();
 		panel.GestureRecognizers.Add(PanelSwipe(SwipeDirection.Left));
 		panel.GestureRecognizers.Add(PanelSwipe(SwipeDirection.Right));
 		return panel;
@@ -251,7 +433,10 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 	private View PanelContent(Thickness padding)
 	{
 		_label!.Margin = padding;
+		_scrollPad = padding.Top;
 		var scroll = new ScrollView { Content = _label, VerticalOptions = LayoutOptions.End };
+		_scroll = scroll;
+		WatchScroll(scroll);
 		BoxView top = TopFade();
 		scroll.Scrolled += (_, _) => ShowFadeWhenScrolled(top, scroll);
 		scroll.SizeChanged += (_, _) => ShowFadeWhenScrolled(top, scroll);
@@ -274,7 +459,7 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		IsVisible = false,
 		InputTransparent = true,
 		Background = new LinearGradientBrush(
-			[new GradientStop(_theme.TextCard.WithAlpha(FadeAlpha), 0f), new GradientStop(_theme.TextCard.WithAlpha(0f), 1f)],
+			[new GradientStop(_theme.TextCard.WithAlpha(FadeAlpha), 0f), new GradientStop(_theme.TextCard.WithAlpha(FadeAlpha), FadeSolidUntil), new GradientStop(_theme.TextCard.WithAlpha(0f), 1f)],
 			new Point(0, 0), new Point(0, 1)),
 	};
 
