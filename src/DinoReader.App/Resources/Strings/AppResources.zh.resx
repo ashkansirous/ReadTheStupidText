@@ -302,8 +302,7 @@
   <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} 句台词</value></data>
   <data name="Cast_UsesNarrator" xml:space="preserve"><value>使用旁白的声音</value></data>
   <data name="Cast_Hear" xml:space="preserve"><value>听 {0} 的声音</value></data>
-  <data name="Cast_AnimalSounds_Title" xml:space="preserve"><value>动物叫声</value></data>
-  <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>动物会不时说“哼哼!”或“咩!”</value></data>
-  <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>这个故事里没有会叫的动物</value></data>
+  <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>动物叫声</value></data>
+  <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>动物会不时说“哼哼!”或“咩!”,每本书都一样</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>这本书的角色比现有的 {0} 个讲故事角色还多，所以有些角色听起来会一样。旁白不会分给任何角色。</value></data>
 </root>

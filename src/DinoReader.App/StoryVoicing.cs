@@ -139,12 +139,8 @@ public sealed class StoryVoicing
 
 	private IReadOnlyList<AnimalSounds.Placement> AnimalSoundPlacements(Story story, Prepared prepared, IReadOnlyList<SplitSegment> pieces, string spokenLanguage)
 	{
-		if (!story.AnimalSoundsOn)
-		{
-			return [];
-		}
-
-		IReadOnlyDictionary<int, AnimalKind> plan = AnimalPlan(story, prepared, spokenLanguage);
+		// The grown-up's one app-wide switch (Slice 152); read at every read, never cached with the plan.
+		IReadOnlyDictionary<int, AnimalKind> plan = AnimalSounds.Audible(AnimalPlan(story, prepared, spokenLanguage), AnimalSoundsPreference.Load());
 		return plan.Count == 0 ? [] : AnimalSounds.Placements(pieces, plan, prepared.Analysis.Sentences.Value);
 	}
 
@@ -293,7 +289,8 @@ public sealed class StoryVoicing
 
 	/// <summary>
 	/// The animal each story character plays in <paramref name="castLanguage"/>'s cast (Slice 136): the one place the cast screen and a read both ask, so the card and the sounds agree.
-	/// A character no grown-up has recast keeps its animal from the story; one a grown-up recast plays its character's. Animals with no sound are included.
+	/// A member the book gives an animal (or none) keeps it whatever voice a grown-up picks (Slice 152, Decision 157); any other member keeps the old rule: a character
+	/// no grown-up has recast keeps its animal from the story, one a grown-up recast plays its character's. Animals with no sound are included.
 	/// </summary>
 	public IReadOnlyDictionary<string, AnimalKind> AnimalsOf(Story story, IReadOnlyList<Character> characters, string castLanguage)
 	{

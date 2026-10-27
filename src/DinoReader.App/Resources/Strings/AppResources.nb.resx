@@ -301,8 +301,7 @@
   <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} replikker</value></data>
   <data name="Cast_UsesNarrator" xml:space="preserve"><value>bruker fortellerens stemme</value></data>
   <data name="Cast_Hear" xml:space="preserve"><value>Hør {0}</value></data>
-  <data name="Cast_AnimalSounds_Title" xml:space="preserve"><value>Dyrelyder</value></data>
-  <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>Dyrene sier av og til «Nøff!» eller «Bæ!»</value></data>
-  <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>Ingen dyr som lager lyder i denne historien</value></data>
+  <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Dyrelyder</value></data>
+  <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Dyrene sier av og til «Nøff!» eller «Bæ!», i alle bøker</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Det er flere figurer i boken enn de {0} fortellerfigurene vi har, så noen høres like ut. Fortelleren blir aldri gitt til en figur.</value></data>
 </root>

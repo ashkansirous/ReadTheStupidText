@@ -102,6 +102,7 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 		_openedWith = UiLanguage.Resolve(LanguageChoice.Current(settings));
 		// Slice 133: the counts switch sits above the Version card, which OnAppearing adds last.
 		Cards.Children.Add(ReadingSpeedCard.Build(reader, SampleAsync, _preview.Stop));
+		Cards.Children.Add(AnimalSoundsCard.Build());
 		Cards.Children.Add(UsageCountsCard.Build(usage));
 	}
 

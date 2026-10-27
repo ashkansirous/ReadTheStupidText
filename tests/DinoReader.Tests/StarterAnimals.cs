@@ -8,7 +8,8 @@ namespace DinoReader.Tests;
 /// A character stored as no animal (<see cref="CastMember.NotAnimal"/>) is cast by gender like a person in every language: the Ugly Duckling (really a swan) and his
 /// sister Dilly, whose rosters' duckling voices are one gender per language and would otherwise give him a girl's voice or her a boy's; and the Little Red
 /// Hen's Cat (she) and Duck (he), for the same reason with the kitten and duckling voices, Peter Rabbit (he), with the bunny voice, and Town Mouse (she) and Country Mouse (he), with the mouse voice (the cost is that they make
-/// no meow, quack, squeak or rabbit sounds); and Goldilocks' Mama Bear, since every roster's bear voices are men's.
+/// no meow, quack, squeak or rabbit sounds); and Goldilocks' Mama Bear, since every roster's bear voices are men's. The stored animal also picks the voice, so giving them back their animal
+/// would put a man's or the wrong-gender voice on them (56 gender tests fail): a separate "cast as a person" field is needed first (Slice 152 review).
 /// </summary>
 internal static class StarterAnimals
 {
@@ -20,6 +21,7 @@ internal static class StarterAnimals
 
     private static readonly IReadOnlyDictionary<string, IReadOnlySet<string>> NotAnimalsByStory = new Dictionary<string, IReadOnlySet<string>>
     {
+        [StarterTexts.GingerbreadId] = new HashSet<string> { "Grandpa", "Granny" }, // the text guesses animals from "Grandpa ... the cow"; they are people
         [StoreTexts.UglyDucklingId] = new HashSet<string> { "Duckling", "Dilly" },
         [StoreTexts.GoldilocksId] = new HashSet<string> { "Mama Bear" },
         [StoreTexts.RedHenId] = new HashSet<string> { "Cat", "Duck" }, // kitten and duckling voices are girls in most languages, boys in fa/es/pt; Duck is a boy (Slice 121)
@@ -29,10 +31,13 @@ internal static class StarterAnimals
 
     private static IReadOnlyDictionary<string, AnimalKind> Named(AnimalKind kind, params string[] names) => names.ToDictionary(n => n, _ => kind);
 
-    /// <summary>The decided animal of each of <paramref name="characters"/> of the story <paramref name="storyId"/>, by character id.</summary>
+    /// <summary>
+    /// The decided animal of each of <paramref name="characters"/> of the story <paramref name="storyId"/>, by character id: the ones named here, else the ones the name says
+    /// (<see cref="AnimalSounds.Resolve"/>, never a guess from the text: Grandpa is not the Cow). Slice 152 stores the result in the book so nothing is guessed at read time.
+    /// </summary>
     public static IReadOnlyDictionary<string, AnimalKind> For(string storyId, IReadOnlyList<Character> characters)
     {
-        var decided = new Dictionary<string, AnimalKind>();
+        var decided = new Dictionary<string, AnimalKind>(AnimalSounds.Resolve(characters, StarterBuilder.StoryLanguage));
         if (!ByStory.TryGetValue(storyId, out IReadOnlyDictionary<string, AnimalKind>? names))
         {
             return decided;
@@ -44,6 +49,24 @@ internal static class StarterAnimals
         }
 
         return decided;
+    }
+
+    /// <summary>
+    /// Every member carries an explicit animal or "none" (Slice 152, Decision 157). A member with no animal decided is stored as none, but the build fails when the story text
+    /// suggests it is an animal (<see cref="AnimalGuess"/>, e.g. "Pip the pig") and the writer left it out of <c>ByStory</c>: list it there, or in <c>NotAnimalsByStory</c> when it is deliberately none.
+    /// </summary>
+    public static IReadOnlyList<CastMember> Explicit(string storyId, string text, IReadOnlyList<Character> characters, IReadOnlyList<CastMember> members)
+    {
+        var undecided = members.Where(m => !m.HasAnimalSetting).ToList();
+        var ids = undecided.Select(m => m.CharacterId).ToHashSet();
+        var suspects = AnimalSounds.Resolve(characters.Where(c => ids.Contains(c.Id)).ToList(), StarterBuilder.StoryLanguage, text: text);
+        if (suspects.Count > 0)
+        {
+            string names = string.Join(", ", undecided.Where(m => suspects.ContainsKey(m.CharacterId)).Select(m => m.Name));
+            throw new InvalidOperationException($"{storyId}: {names} look like an animal in the text but have none decided; add them to StarterAnimals.ByStory, or to NotAnimalsByStory if they are none.");
+        }
+
+        return members.Select(m => m.HasAnimalSetting ? m : m with { NotAnimal = true }).ToList();
     }
 
     /// <summary>The cast members of the story <paramref name="storyId"/>, those named here as no animal marked so.</summary>

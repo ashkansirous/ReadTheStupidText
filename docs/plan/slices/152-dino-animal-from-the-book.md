@@ -1,6 +1,6 @@
 # Slice 152 — Dino: a character's animal comes from the book, never from its voice
 
-*In progress (wave 2026-10-26b), draft PR.* Dino Reader only.
+*Built 2026-10-27, PR #436, not yet verified on device (see Not yet verified).* Dino Reader only.
 
 **Batch:** 31 (tester review, 2026-10-26; Decision 157, reverses Decision 132)
 **Touches:** `src/DinoReader.Core/AnimalSound*.cs`, `src/DinoReader.Core/CastCharacters.cs`, `src/DinoReader.Core/StoryCast.cs`, `src/DinoReader.Core/Story.cs`, `src/DinoReader.App/StoryVoicing.cs`, `src/DinoReader.App/CastPage.cs`, `src/DinoReader.App/CastRows.cs`, `src/DinoReader.App/SettingsRows.cs` (shared with Slice 150: sequence them), `src/DinoReader.App/Resources/Strings/*.resx`, `tests/DinoReader.Tests/StarterAnimals.cs`, `tests/DinoReader.Tests/StoreTexts.cs`, `tests/DinoReader.Tests/StarterBuilder.cs`, `tests/DinoReader.Tests/**`, `src/DinoReader.Core/CLAUDE.md`, `src/DinoReader.App/CLAUDE.md`, `.claude/agents/dino-story-writer.md`
@@ -29,18 +29,18 @@ not of the voice.
 
 ## Work
 
-- [ ] `AnimalSounds.OfCast`: for books with an explicit animal on every member, use the stored animal only and
+- [x] `AnimalSounds.OfCast`: for books with an explicit animal on every member, use the stored animal only and
       ignore `Edited` and `AnimalCharacters.Of`. Other books keep today's code path. Tests: recasting a goat to the
       Brave Knight still bleats; recasting a pig to the wolf still oinks.
-- [ ] Builders write an explicit `Animal` (kind or `none`) for every character of every starter and store book
+- [x] Builders write an explicit `Animal` (kind or `none`) for every character of every starter and store book
       (`StarterAnimals.cs`, and the store equivalent). A test fails a starter or store book with a member that has no animal.
-- [ ] Rebuild the 15 starters (the version bump makes installed copies update). Store books: bump and re-upload
+- [x] Rebuild the 15 starters (the version bump makes installed copies update). Store books: bump and re-upload
       after the user's OK (memory: store uploads need approval). The books in open illustration PRs (#393, #394, #402,
       #413, #414, #415) get it when they merge.
-- [ ] Cast page: no animal text anywhere, and no Animal sounds card (`CastPage.cs`).
-- [ ] App-wide `AnimalSounds` preference (default on) in grown-up settings, below Reading speed (frame 70); `StoryVoicing`
+- [x] Cast page: no animal text anywhere, and no Animal sounds card (`CastPage.cs`).
+- [x] App-wide `AnimalSounds` preference (default on) in grown-up settings, below Reading speed (frame 70); `StoryVoicing`
       reads it instead of `Story.AnimalSoundsOn` (kept in the format, ignored). Strings in all 14 locales. Test: off silences every book.
-- [ ] Docs: replace the "Which animal makes sounds (Slice 136)" sentence in `src/DinoReader.Core/CLAUDE.md`. The
+- [x] Docs: replace the "Which animal makes sounds (Slice 136)" sentence in `src/DinoReader.Core/CLAUDE.md`. The
       writer agent must give every character an animal or `none`.
 
 ## Verification
@@ -58,3 +58,40 @@ Source: `docs/design/dino-reader/Dino Reader Batch 31.dc.html`, screen 69 (lines
 - **New strings (14 locales).** "Animal sounds" (title) and the sub-line above (a draft in the mock).
 
 **Decided (2026-10-26): Animal sounds is app-wide.** The user asked for the plan to follow the Batch 31 mock, so the per-book switch on the cast page (`CastPage.cs:302`, read in `StoryVoicing.cs:142`) is replaced by one grown-up setting, on by default; the stored per-book value is ignored, as Slice 151 does for `WordsOverPictures`.
+
+#### Review notes (high pass)
+
+- The animal is decided per member, not per book: a member with a stored animal or `none` keeps it, an undecided member (or a character the cast does not list) follows the old voice rule. Installed older store books and edited starters therefore still gain from their stored animals.
+- Accepted loss: a grown-up's per-book "Animal sounds off" (`Story.AnimalSoundsOn` false) is ignored and sounds are on again until the app-wide switch is turned off. No migration.
+- Cat, Duck, Duckling, Dilly, Mama Bear and the two mice stay stored as `none`: the stored animal also picks the voice, and giving it back puts a bear, duckling, kitten or mouse voice of the wrong gender on them (56 gender tests fail). A "cast as a person" field would be needed to let them sound.
+- The builder fails a member the story text suggests is an animal (`AnimalGuess`) but has no animal decided; deliberate people are listed in `StarterAnimals.NotAnimalsByStory`.
+
+
+#### Changed while building
+
+- Per member: an explicit animal or `none` from the book wins over voice, flavour and recast; undecided members (parent-made books) keep the old rule. `StarterAnimals.Explicit` stamps every starter and store member and throws if the text suggests an undecided animal; `NotAnimalsByStory` holds deliberate people (Grandpa, Granny).
+- Animal sounds is one app-wide switch (`AnimalSoundsPreference`, default on) on `LanguagePage` between Reading speed and usage; `Story.AnimalSoundsOn` is ignored (per-book off values dropped, accepted). The cast page animal switch rows are removed.
+- Starter update: the bundled explicit animal replaces the stored one for kept members; recordings are unaffected (page text unchanged). Starters rebuilt: Good Enough v3, Pigs v9, Gingerbread v5, Tortoise v5.
+- Store: all 11 store books bumped by 1, packages in `artifacts/store/<id>/`; NOT uploaded (needs the user's OK).
+- Cat, Duck, Duckling, Dilly, Mama Bear and the mice stay mute until Slice 156 (the book picks the voice).
+
+#### From review
+
+- High pass (`reviews\152-high.md`): findings 1, 2, 4, 7, 9 fixed. Medium pass (`reviews\s152-medium.md`): 3, 4, 6, 10 fixed. See the review notes above.
+
+#### Verified
+
+- Emulator 2026-10-27, headless: the Animal sounds card toggles and persists; recasting a pig to a non-animal voice keeps its sounds planned; switch off gives none; no crash.
+
+#### Not yet verified
+
+- Billy Goats store book on device.
+- Hearing a recast animal by ear.
+- Windows head and iOS.
+- Native read of the `Settings_AnimalSounds_*` strings.
+- Store upload and live check of the 11 books.
+
+#### For CLAUDE.md
+
+- `src/DinoReader.Core/AnimalSounds.cs`: a member's explicit animal (kind or `none`) from the book wins over voice, flavour and recast; only undecided members use the old voice rule. `StarterAnimals.Explicit` must stamp every starter and store member; deliberate people go in `NotAnimalsByStory`. (Slice 152: docs/plan/slices/152-dino-animal-from-the-book.md)
+- `src/DinoReader.App/StoryVoicing.cs`: animal sounds read the app-wide `AnimalSoundsPreference`, never `Story.AnimalSoundsOn` (ignored). (Slice 152: docs/plan/slices/152-dino-animal-from-the-book.md)

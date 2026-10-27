@@ -112,17 +112,18 @@ public class AnimalCharacterTests
     [Fact]
     public void A_pig_cast_as_a_plain_character_is_silent_and_another_stays_a_pig()
     {
+        // A parent-made book (Slice 152 leaves it on the voice rule): neither member has an animal decided, so both follow the voice rule.
         var characters = new[] { C("pip", "Pip"), C("pop", "Pop") };
         var speakers = CharacterRoster.Speakers("en");
         StorytellerCharacter plain = speakers.First(c => AnimalCharacters.Of(c.Id) is null && c.Gender == Gender.Male);
         StorytellerCharacter piglet = speakers.First(c => c.Id == "piglet");
         var cast = new[]
         {
-            new CastMember("pip", "Pip", Gender.Male, plain.VoiceId, true, plain.Flavour, Animal: AnimalKind.Pig),
-            new CastMember("pop", "Pop", Gender.Male, piglet.VoiceId, true, piglet.Flavour, Animal: AnimalKind.Cat),
+            new CastMember("pip", "Pip", Gender.Male, plain.VoiceId, true, plain.Flavour),
+            new CastMember("pop", "Pop", Gender.Male, piglet.VoiceId, true, piglet.Flavour),
         };
 
-        var animals = AnimalSounds.OfCast(characters, "en", cast, speakers);
+        var animals = AnimalSounds.OfCast(characters, "en", cast, speakers, "Pip the pig lived by the sea.");
 
         Assert.False(animals.ContainsKey("pip"));
         Assert.Equal(AnimalKind.Pig, animals["pop"]);

@@ -302,8 +302,7 @@
   <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} líneas</value></data>
   <data name="Cast_UsesNarrator" xml:space="preserve"><value>usa la voz del narrador</value></data>
   <data name="Cast_Hear" xml:space="preserve"><value>Escuchar a {0}</value></data>
-  <data name="Cast_AnimalSounds_Title" xml:space="preserve"><value>Sonidos de animales</value></data>
-  <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>Los animales dicen «¡Oink!» o «¡Beee!» de vez en cuando</value></data>
-  <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>Ningún animal que haga sonidos en este cuento</value></data>
+  <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Sonidos de animales</value></data>
+  <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Los animales dicen «¡Oink!» o «¡Beee!» de vez en cuando, en todos los cuentos</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Este libro tiene más personajes que los {0} personajes narradores disponibles, así que algunos suenan igual. El narrador nunca se da a un personaje.</value></data>
 </root>

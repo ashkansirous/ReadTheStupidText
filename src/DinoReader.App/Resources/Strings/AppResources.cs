@@ -307,8 +307,7 @@ public static class AppResources
 	public static string Cast_UnknownLines_Other => Get();
 	public static string Cast_UsesNarrator => Get();
 	public static string Cast_Hear => Get();
-	public static string Cast_AnimalSounds_Title => Get();
-	public static string Cast_AnimalSounds_Hint => Get();
-	public static string Cast_AnimalSounds_None => Get();
+	public static string Settings_AnimalSounds_Title => Get();
+	public static string Settings_AnimalSounds_Sub => Get();
 	public static string Cast_SharedNote => Get();
 }

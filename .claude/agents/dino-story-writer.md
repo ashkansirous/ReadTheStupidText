@@ -35,6 +35,10 @@ the task (new story, retelling, re-split, a fix) and any notes from the user. Wo
    page (the one action, who is in it with a count, where, time of day). Copy the picture-plan checklist from
    `.claude/skills/dino-storytelling/SKILL.md` section 4 into the art record and tick it.
    If pictures already exist, mark which pages keep their picture and which need a new one.
+   Animals (Slice 152, Decision 157): every character is an animal or "none", stored in the book. The builder takes the animal from an animal word in the
+   name (Wolf, Papa Bear); a character whose name does not say it (Pip the pig, Little Billy the goat) goes in `tests/DinoReader.Tests/StarterAnimals.cs`
+   (`ByStory`), and one that is a person, or an animal that should be cast like one, in `NotAnimalsByStory`. Anything left over is stored as none.
+   List each character with its animal in your report; a wrong one is silent or sounds wrong.
 4. Translations: dump the pieces (`DINO_DUMP_PIECES=1 dotnet test tests/DinoReader.Tests`) and translate
    every new or reworded piece into all 13 languages. Keep each language's own conventions (Brazilian
    Portuguese, no spaces in Japanese, the right script direction and plural forms). Translate into the
