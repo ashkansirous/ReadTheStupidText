@@ -6,7 +6,7 @@
 **Touches:** `content/dino/**` (new), `tools/DinoReader.BookBuilder/**` (new), `ReadTheStupidText.slnx`,
 `tests/DinoReader.Tests/**`, `src/DinoReader.App/Resources/Raw/starters/*.dino`, `docs/design/story-art/**`,
 `tools/upload-store-story.ps1`, `tools/prepare-story-pictures.ps1`, `tools/ocr-starter-pages.ps1`,
-`.github/workflows/dinoreader.yml`, `.github/workflows/dino-store.yml` (new), `.github/scripts/ship-targets.mjs`,
+`.github/workflows/dinoreader.yml`, `.github/workflows/release.yml`, `.github/scripts/publish-store-books.mjs`, `.github/scripts/ship-targets.mjs`,
 `.github/CLAUDE.md`, `.claude/agents/dino-story-*.md`, `.claude/skills/create-dino-story/**`,
 `.claude/skills/dino-storytelling/**`, `src/DinoReader.App/CLAUDE.md`, `CLAUDE.md`, `docs/design/dino-reader/README.md`
 
@@ -41,11 +41,8 @@ without a version bump.
 4. **Forgetting a version bump fails CI.** `book.json` stores a hash of the book's content (text, pictures, covers,
    translations, cast). `check` fails with "raise the version of <stem>" when the content hash differs from the
    stored one; `stamp` raises the version and refreshes the hash.
-5. **Merging to `main` uploads bumped books to the live store** (replaces the "store upload needs the user's OK"
-   practice). A `dino-store.yml` job on pushes to `main` that touch `content/dino/**` builds every book whose
-   version is above the one `/api/stories` reports, and uploads it to `dinoreader/stories/<id>/` with `meta.json`
-   last, never overwriting an existing `story-v<n>.dino`. It uses its own Cloudflare token limited to R2 object
-   write on the downloads bucket. No Actions artifacts (quota rule).
+5. **Merging to `main` uploads bumped books to the live store.** Built first by Slice 158 (Decision 163): the
+   `publish-store` job in `release.yml`. This slice only repoints it at `content/dino/` and `BookBuilder build`.
 6. **One PR** moves everything and updates every reference. The validation tests stay in `tests/DinoReader.Tests`
    and read `content/dino/` through a shared loader.
 
@@ -75,15 +72,13 @@ catching up. The first sub-slice still ends in something that works end to end (
       minus those, all green.
 - [ ] **CI.** `dinoreader.yml` runs `BookBuilder check`. `ship-targets.mjs` treats `content/dino/**` as a Dino
       trigger (starter changes ship the app; store-only changes ship nothing but the store job).
-      New `dino-store.yml`: on push to `main` with `content/dino/**`, build bumped store books and upload them.
-      Needs secret `DINO_STORE_R2_TOKEN` (store it with `manage-secrets`; creating the scoped token in the
-      Cloudflare dashboard is the user's step, and the job skips with a warning while the secret is unset).
-      `tools/upload-store-story.ps1` stays for manual use and reads from the new paths.
+      Repoint Slice 158's `publish-store` job and the `dinostore` ship target at `content/dino/**` and
+      `BookBuilder build`. `tools/upload-store-story.ps1` reads from the new paths.
 - [ ] **References.** Update the Dino agents (`dino-story-writer`, `-illustrator`, `-reviewer`), the
       `create-dino-story` and `dino-storytelling` skills, `tools/prepare-story-pictures.ps1`,
       `tools/ocr-starter-pages.ps1`, `src/DinoReader.App/CLAUDE.md`, root `CLAUDE.md` (store paragraph),
       `.github/CLAUDE.md`, `docs/design/dino-reader/README.md`. Old slice files keep their historical paths.
-- [ ] **Catch the store up.** After the first green `dino-store.yml` run on `main`, compare every `book.json`
+- [ ] **Catch the store up.** After the first green `publish-store` run after this merge on `main`, compare every `book.json`
       version with `/api/stories` and confirm none lag (X Marks the Treasure v5 among them).
 
 ## Verification
@@ -93,7 +88,7 @@ catching up. The first sub-slice still ends in something that works end to end (
 - `dotnet test tests/DinoReader.Tests` green; no test reads `Store/`, `Starters/`, `StoreTexts` or `StarterTexts`.
 - The four committed starters rebuild unchanged; the app's starter install (Slice 91/`StarterUpdate`) still sees
   the same ids and versions.
-- `dino-store.yml` on the merge: uploads only bumped books, `meta.json` last; `/api/stories` then lists every
+- `publish-store` on the merge: uploads only bumped books, `meta.json` last; `/api/stories` then lists every
   store book at its `book.json` version; a re-run uploads nothing.
 - `git grep -n "tests/DinoReader.Tests/Store\|DINO_BUILD_STORE\|DINO_BUILD_STARTERS"` finds only old slice and
   note files.
