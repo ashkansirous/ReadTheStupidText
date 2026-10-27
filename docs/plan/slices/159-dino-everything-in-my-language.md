@@ -1,6 +1,6 @@
 # Slice 159 — Dino: everything in the chosen language
 
-*Planned 2026-10-27.* Dino Reader only.
+*In progress (wave 2026-10-27c), draft PR.* Dino Reader only.
 
 **Batch:** 35 (Dino language, 2026-10-27; Decision 164)
 **Touches:** `src/DinoReader.App/UiCulture.cs`, `src/DinoReader.App/Resources/Strings/AppResources.cs`,
@@ -10,8 +10,8 @@
 `src/DinoReader.App/StorePage.xaml.cs`, `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/StoryTranslator.cs`,
 `src/DinoReader.App/LanguageCard.cs`, `src/DinoReader.App/StoryWizardPage*.cs`, `src/DinoReader.App/ReadingPage.xaml.cs`,
 `src/DinoReader.App/TranslationPackPrompt*` (new), `src/DinoReader.Core/Story.cs`, `src/DinoReader.Core/StoryJson.cs`,
-`src/ReadTheStupidText.Mobile.Shared/ITranslator.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/MlKitTranslator.cs`,
-`worker/stories.ts`, `worker/stories.test.ts`, `tools/upload-store-story.ps1`, `tests/DinoReader.Tests/**`,
+`src/ReadTheStupidText.Mobile.Shared/ITranslationPacks.cs` (new; pack checks stay off `Application/Translation/ITranslator.cs` so RTST does not rebuild), `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/MlKitTranslator.cs`,
+`worker/stories.ts`, `worker/stories.test.mjs` (new), `tests/DinoReader.Tests/**`,
 `src/DinoReader.App/CLAUDE.md`
 
 ## Why
@@ -83,7 +83,7 @@ Sub-slice B: shipped books' titles
       job, or `tools/upload-store-story.ps1`).
 
 Sub-slice C: own books, on request
-- [ ] `ITranslator`: `IsPackReadyAsync(language)`, `DownloadPackAsync(language, progress, cancel)`; `MlKitTranslator` never
+- [ ] `ITranslationPacks` (new, Mobile.Shared; implemented by `MlKitTranslator`): `IsPackReadyAsync(language)`, `DownloadPackAsync(language, progress, cancel)`; `MlKitTranslator` never
       downloads inside `TranslateAsync` (missing pack = not translated). RTST Mobile keeps its current behaviour through
       its own call path (it is out of scope here).
 - [ ] Translation pack prompt (resx in all 14 languages): size, Download with progress and Cancel, decline keeps the
