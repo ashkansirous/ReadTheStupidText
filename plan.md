@@ -14,17 +14,14 @@ this plan turns it into ordered, shippable vertical slices.
 
 ## Status
 
-Open slices only. Finished slices (143 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
+Open slices only. Finished slices (146 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
 | 146 | Rewrite every Dino book in spoken, kid-friendly language | in progress | | | [146-dino-books-kid-friendly-language.md](docs/plan/slices/146-dino-books-kid-friendly-language.md) |
-| 150 | Dino: slower reading by default (0.8x), grown-up speed 0.5-1.2x | planned | | | [150-dino-slower-reading-speed.md](docs/plan/slices/150-dino-slower-reading-speed.md) |
-| 151 | Dino: three view modes, no merging of characters | planned | | | [151-dino-three-view-modes.md](docs/plan/slices/151-dino-three-view-modes.md) |
 | 152 | Dino: a character's animal comes from the book, never its voice | planned | | | [152-dino-animal-from-the-book.md](docs/plan/slices/152-dino-animal-from-the-book.md) |
 | 153 | Dino: no robotic-sounding character voices | planned | | | [153-dino-no-robotic-voices.md](docs/plan/slices/153-dino-no-robotic-voices.md) |
 | 154 | Dino: vowel marks in Farsi and Arabic books | planned | | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
-| 155 | Dino: a first-run intro wizard for the four things Dino does | planned | | | [155-dino-first-run-intro-wizard.md](docs/plan/slices/155-dino-first-run-intro-wizard.md) |
 | 156 | Dino: the book chooses each character's voice, not the app | planned | | | [156-dino-authored-character-voices.md](docs/plan/slices/156-dino-authored-character-voices.md) |
 
 Batch 25 (119-123; 119, 120, 122, 123 built, 121 built; planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
@@ -37,9 +34,9 @@ Batch 28 (132-134, planned 2026-10-25, which books families like and how parents
 
 Batch 30 (143-146 and 148, planned 2026-10-26, Dino loading, Farsi voice and kid-friendly language): 143 builds the shared wait overlay (RTST 138 reuses it), 144 is small and independent, 145 measures sound-word spellings before 146 rewrites every book (one PR per book: Farsi, then English, then the rest). 143, 144, 145 and 148 (the stall and wait-count follow-ups, PR #416) are built; 146 is in progress: Farsi wave A (8 books) is merged, 6 more Farsi books wait for the other tab's PRs, and English and the other languages are to come. Decisions 149-153.
 
-Batch 31 (150-154, planned 2026-10-26, from a tester review of Dino Reader): 150 (speed) and 151 (view modes, no merge) go first and can run together (150 edits settings, 151 the reading page and cast page). 152 follows 151 (both edit `CastPage`/`CastRows`/`StoryVoicing`). 153 starts with a listening page and waits on the user's flags. 154 starts with a listening test, then adds vowel marks book by book after each book's Slice 146 rewrite and open illustration PR merge. Decisions 155-159 (157 reverses 132).
+Batch 31 (150-154, planned 2026-10-26, from a tester review of Dino Reader): 150 (speed, PR #429) and 151 (view modes, no merge, PR #430) are built. 152 follows 151 and is in progress (PR #436) (both edit `CastPage`/`CastRows`/`StoryVoicing`). 153 starts with a listening page and waits on the user's listening verdicts. 154 starts with a listening test, then adds vowel marks book by book (it also waits on the user's listening verdicts) after each book's Slice 146 rewrite and open illustration PR merge. Decisions 155-159 (157 reverses 132).
 
-Batch 32 (155, planned 2026-10-26, Dino onboarding): one slice, mock first, then step 1 end to end, then steps 2-4, resume, the replay row, strings and privacy texts. It edits the first-run, gallery and usage-event code, which Batch 31 doesn't, so it can run alongside 150-154. Decision 160.
+Batch 32 (155, planned 2026-10-26, Dino onboarding): Slice 155 (the first-run intro wizard, PR #432) is built, so the batch is done. Decision 160.
 
 Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure book's Seagull): each book stores every character's traits and a suggested voice, chosen by the story writer; the app uses the suggestion and falls back to the traits. It follows Slice 152 (shares `Story.cs`/`StoryCast.cs`/`CastCharacters.cs`/`CastRows.cs` and reuses its `Animal` field as the "kind" trait) and Slice 153 (both edit `CharacterRoster*.cs`). The Treasure book first, then the fallback, then every book. Decision 161.
 
@@ -123,6 +120,9 @@ Built but not verified (details in each slice file):
 - Slice 136: emulator: cast page PASS in English and Farsi (matches frame 59, no Animal line); sounds (oink, Wolf growls) and recasting Pip to a non-animal going silent need a listen, not verifiable by adb ([slice](docs/plan/slices/136-dino-animal-from-character.md)).
 - Slice 106: Norwegian on a Windows head via `MarianEngine` (third-party conversion, never run); en to da/fi/sv/nl/nb and back on Windows; the Norwegian packs are about 390 MB each ([slice](docs/plan/slices/106-windows-nordic-dutch-translation-packs.md)).
 - Windows has no `en-ja` translation pack (`TranslationPacks.FromEnglish` and `packs.yml` lack it), so English cannot be translated into Japanese offline on Windows; found while planning Slice 106, not yet scheduled.
+- Slice 150: a mid-book speed change heard on a real phone; Windows head and iOS readers apply `SetSpeed` on the next sentence; native-speaker read of the `Speed_*` strings (13 drafts) ([slice](docs/plan/slices/150-dino-slower-reading-speed.md)).
+- Slice 151: photo import opening in Picture only (needs a camera); Windows head and iOS; native read of the new strings (13 drafts); night-theme segment colours unchanged ([slice](docs/plan/slices/151-dino-three-view-modes.md)).
+- Slice 155: offline store step; microphone prompt on the Record step; Windows variant (title, Picture badge); iOS modal presentation; large-font layout; native read of the 15 Intro strings (13 drafts); Play Data safety and App Store privacy answers cover the 3 new events ([slice](docs/plan/slices/155-dino-first-run-intro-wizard.md)).
 - Older unverified items (Slices 43-95 and a flaky-test note), moved verbatim: [outstanding-older](docs/plan/notes/2026-10-25-outstanding-older.md). Still open until verified.
 
 ## Out of Scope
