@@ -156,6 +156,35 @@ public class UsageEventTests
     }
 
     [Fact]
+    public void An_intro_step_count_is_about_no_book_and_names_the_step_and_what_was_done()
+    {
+        string detail = UsageDetail.IntroStepAction(IntroSteps.Record, tried: true);
+        UsageEvent count = UsageEvent.ForNoBook(UsageEventName.IntroStep, "en", detail, 1, "1.0", AppPlatform.Android, Now);
+
+        Assert.Equal(("intro_step", "none", "none", "record:tried"), (count.Name, count.Book, count.Source, count.Detail));
+        Assert.Equal("add:skipped", UsageDetail.IntroStepAction(IntroSteps.Add, tried: false));
+    }
+
+    [Fact]
+    public void The_intro_has_three_steps_in_order_and_a_saved_index_outside_them_means_it_is_not_running()
+    {
+        Assert.Equal(["store", "record", "add"], Enumerable.Range(0, IntroSteps.Count).Select(IntroSteps.NameAt));
+        Assert.False(IntroSteps.IsStep(-1));
+        Assert.False(IntroSteps.IsStep(IntroSteps.Count));
+        Assert.True(IntroSteps.IsStep(IntroSteps.Count - 1));
+    }
+
+    [Fact]
+    public void The_Worker_lists_exactly_the_intro_steps_the_app_can_name()
+    {
+        string source = File.ReadAllText(Path.Combine(RepoRoot(), "worker", "events.ts"));
+        Match list = Regex.Match(source, @"INTRO_STEPS = \[(?<names>[^\]]*)\]");
+        string[] worker = Regex.Matches(list.Groups["names"].Value, "\"([a-z_]+)\"").Select(m => m.Groups[1].Value).ToArray();
+
+        Assert.Equal(Enumerable.Range(0, IntroSteps.Count).Select(i => IntroSteps.NameAt(i)!).Order(), worker.Order());
+    }
+
+    [Fact]
     public void The_Worker_lists_exactly_the_waits_the_app_can_name()
     {
         string source = File.ReadAllText(Path.Combine(RepoRoot(), "worker", "events.ts"));

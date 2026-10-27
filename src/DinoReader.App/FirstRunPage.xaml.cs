@@ -19,7 +19,7 @@ public static class FirstRunState
 	/// before this slice stored one at launch, so none of them sees the first run.</summary>
 	public static bool IsNeeded(ISettingsStore settings) => settings.Language is null;
 
-	/// <summary>True from "Set up the stories" until the grown-up first hands the phone to the child ("Ready for my child").</summary>
+	/// <summary>True from "See what Dino can do" (or "Skip, start reading") until the grown-up first hands the phone to the child ("Ready for my child").</summary>
 	public static bool HandoverPending
 	{
 		get => Preferences.Default.Get(HandoverPendingKey, false);
@@ -108,6 +108,7 @@ public partial class FirstRunPage : ContentPage
 	private readonly StarterStories _starters;
 	private readonly IStoryLibrary _library;
 	private readonly GrownUpMode _mode;
+	private readonly UsageCounter _usage;
 	private readonly IServiceProvider _services;
 	private readonly BusyGuard _busy = new();
 	private readonly Dictionary<string, Border> _buttons = [];
@@ -116,7 +117,7 @@ public partial class FirstRunPage : ContentPage
 	private bool _shelfLoaded;
 
 	public FirstRunPage(ISettingsStore settings, SpokenLanguage spoken, VoicePackInstaller installer, IVoicePackService packs, ISpeechReader reader,
-		StarterStories starters, IStoryLibrary library, GrownUpMode mode, IServiceProvider services)
+		StarterStories starters, IStoryLibrary library, GrownUpMode mode, UsageCounter usage, IServiceProvider services)
 	{
 		InitializeComponent();
 		_selected = LanguageChoice.Current(settings);
@@ -127,6 +128,7 @@ public partial class FirstRunPage : ContentPage
 		_starters = starters;
 		_library = library;
 		_mode = mode;
+		_usage = usage;
 		_services = services;
 		BuildLanguageButtons();
 	}
@@ -229,7 +231,8 @@ public partial class FirstRunPage : ContentPage
 			? AppResources.FirstRun_ReadyBodyOne
 			: AppResources.Format(AppResources.FirstRun_ReadyBody, StarterStories.Count);
 		HelloLabel.Text = AppResources.FirstRun_HearHello;
-		SetUpButton.Text = AppResources.FirstRun_SetUp;
+		SetUpButton.Text = AppResources.Intro_SeeWhat;
+		SkipIntroLabel.Text = AppResources.Intro_SkipStart;
 		ReadyUsage.Text = AppResources.FirstRun_Usage;
 	}
 
@@ -317,10 +320,28 @@ public partial class FirstRunPage : ContentPage
 		}
 	}
 
-	// The hand-over goes to grown-up mode (mock 19), not the kids' shelf: a fresh root (in the chosen language and flow direction) replaces this page.
-	private async void OnSetUpClicked(object? sender, EventArgs e) => await _busy.RunAsync(SetUpAsync);
+	// "See what Dino can do" (Slice 155, mock 73) starts the intro: a fresh root (in the chosen language and flow direction) replaces this page, and the
+	// gallery opens the saved intro step on top of itself (GalleryPage.OnAppearing), the same way it resumes after a restart.
+	private async void OnSeeWhatClicked(object? sender, EventArgs e) => await _busy.RunAsync(StartIntroAsync);
 
-	private async Task SetUpAsync()
+	private Task StartIntroAsync()
+	{
+		_usage.RecordGeneral(UsageEventName.IntroStarted, _chosen, UsageDetail.IntroFirstRun);
+		IntroState.Start();
+		return HandOverAsync();
+	}
+
+	// "Skip, start reading" works like Skip all: straight to "Ready for my child", which is grown-up mode (mock 19), not the kids' shelf.
+	private async void OnSkipIntroTapped(object? sender, EventArgs e) => await _busy.RunAsync(SkipIntroAsync);
+
+	private Task SkipIntroAsync()
+	{
+		_usage.RecordGeneral(UsageEventName.IntroEnded, _chosen, UsageDetail.IntroSkippedAll);
+		IntroState.Clear();
+		return HandOverAsync();
+	}
+
+	private async Task HandOverAsync()
 	{
 		FirstRunState.HandoverPending = true;
 		_mode.Enter();

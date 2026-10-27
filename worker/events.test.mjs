@@ -254,6 +254,22 @@ test("Dino takes wait counts about no book, with a stage:bucket detail from the 
   assert.equal(parseEvent({ ...wait, language: "en" }), null); // a wait count carries no language
 });
 
+test("Dino takes the intro counts about no book, with a closed detail (Slice 155)", () => {
+  const intro = { ...shelfEvent, book: "none", source: "none", language: "en" };
+  assert.notEqual(parseEvent({ ...intro, name: "intro_started", detail: "first_run" }), null);
+  assert.notEqual(parseEvent({ ...intro, name: "intro_started", detail: "replay" }), null);
+  assert.notEqual(parseEvent({ ...intro, name: "intro_step", detail: "store:tried" }), null);
+  assert.notEqual(parseEvent({ ...intro, name: "intro_step", detail: "add:skipped" }), null);
+  assert.notEqual(parseEvent({ ...intro, name: "intro_ended", detail: "skipped_all" }), null);
+  assert.notEqual(parseEvent({ ...intro, name: "intro_ended", detail: "finished" }), null);
+  for (const detail of ["", "read:tried", "store", "store:done", "store:tried:x", ":tried"]) {
+    assert.equal(parseEvent({ ...intro, name: "intro_step", detail }), null, detail);
+  }
+  assert.equal(parseEvent({ ...intro, name: "intro_started", detail: "finished" }), null);
+  assert.equal(parseEvent({ ...intro, name: "intro_ended", detail: "replay" }), null);
+  assert.equal(parseEvent({ ...intro, name: "intro_ended", detail: "finished", book: BOOK, source: "shelf" }), null);
+});
+
 test("the Windows translate switch count needs no source language, but a source outside the list drops a read", () => {
   assert.notEqual(parseRtstEvent(rtst("translate_chosen", { language: "en" })), null);
   assert.equal(parseRtstEvent({ ...readStarted, source: "window title" }), null);

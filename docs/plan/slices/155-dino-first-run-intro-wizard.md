@@ -1,9 +1,9 @@
 # Slice 155 — Dino: a first-run intro wizard for the four things Dino does
 
-*In progress (wave 2026-10-26b), draft PR.* Dino Reader only.
+*Built 2026-10-27 (PR #432), not yet verified on a real device, Windows or iOS.* Dino Reader only.
 
 **Batch:** 32 (Dino onboarding, 2026-10-26; Decision 160)
-**Touches:** `src/DinoReader.App/FirstRunPage.xaml`, `src/DinoReader.App/FirstRunPage.xaml.cs`, `src/DinoReader.App/FirstRunState.cs` (new: `FirstRunState` is a static class in `FirstRunPage.xaml.cs:14` today; move it out or leave it), `src/DinoReader.App/IntroWizardPage*.cs` (new), `src/DinoReader.App/IntroState.cs` (new), `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/StoryActions.cs`, `src/DinoReader.App/RecordPage.cs`, `src/DinoReader.App/StoryWizardPage.xaml.cs`, `src/DinoReader.App/PagesStep.xaml.cs`, `src/DinoReader.App/SettingsRows.cs`, `src/DinoReader.App/UsageCounter.cs`, `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/Resources/Strings/*.resx`, `src/DinoReader.App/Resources/Images/**` (step pictures, if not already bundled), `src/DinoReader.Core/UsageEvent.cs`, `worker/events.ts`, `worker/*.test.ts`, `tools/dino-usage-report.ps1`, `site/dino/privacy.html`, `STORE.md`, `tests/DinoReader.Tests/**`, `docs/design/dino-reader/**`, `src/DinoReader.App/CLAUDE.md`
+**Touches:** `src/DinoReader.App/FirstRunPage.xaml`, `src/DinoReader.App/FirstRunPage.xaml.cs`, `src/DinoReader.App/FirstRunState.cs` (new: `FirstRunState` is a static class in `FirstRunPage.xaml.cs:14` today; move it out or leave it), `src/DinoReader.App/IntroWizardPage*.cs` (new), `src/DinoReader.App/IntroState.cs` (new), `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/StoryActions.cs`, `src/DinoReader.App/RecordPage.cs`, `src/DinoReader.App/StoryWizardPage.xaml.cs`, `src/DinoReader.App/PagesStep.xaml.cs`, `src/DinoReader.App/SettingsRows.cs`, `src/DinoReader.App/UsageCounter.cs`, `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/Resources/Strings/*.resx`, `src/DinoReader.App/Resources/Images/**` (step pictures, if not already bundled), `src/DinoReader.Core/UsageEvent.cs`, `worker/events.ts`, `worker/*.test.ts`, `tools/dino-usage-report.ps1`, `site/dino/privacy.html`, `STORE.md`, `tests/DinoReader.Tests/**`, `docs/design/dino-reader/**`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.App/UpdatePage.cs` (`VersionCard.Build` only), `src/DinoReader.App/LanguagePage.xaml.cs` (`ShowVersionCard` only), `src/DinoReader.App/Resources/Strings/AppResources.cs`
 
 ## Why
 
@@ -84,21 +84,21 @@ Checked, no conflict: no gate in the intro, the step is saved and resumes after 
 - [x] **Mock** (Batch 32, see Design above). Was: draw the four step screens and the replay row in the Dino Reader Claude Design project in the same
   style as the Batch 16 first-run screens (16-19). Copy it into `docs/design/dino-reader/` and write its Design
   subsection here (`design-to-plan`).
-- [ ] **Ready to read and step 1, the store (the smallest thing that works).** `IntroState` (current step, saved in settings under a
+- [x] **Ready to read and step 1, the store (the smallest thing that works).** `IntroState` (current step, saved in settings under a
   named key; finished/skipped). `IntroWizardPage` with the counter, message, picture, **Try it**, **Skip**, **Skip
   all**. "Ready to read!" gets **See what Dino can do** (into the wizard) and **Skip, start reading** (to the hand-over). Step 1 opens `StorePage`;
   coming back advances. Skip all and the last step land on the hand-over. Events
   `intro_started`, `intro_step`, `intro_ended`: a name in `UsageEventName`, details in `UsageDetail`, a rule in
   `worker/events.ts` `EVENT_RULES`, the `UsageCounter` calls, and tests on both sides.
-- [ ] **Steps 2-3.** Record on the shortest starter, Add pages, each opened
+- [x] **Steps 2-3.** Record on the shortest starter, Add pages, each opened
   without the gate and returning to the wizard. The Windows text for step 3. Offline, the store shows its offline screen as today.
-- [ ] **Resume.** A launch with a saved step mid-wizard opens the wizard at that step.
-- [ ] **Show the intro again** row in grown-up mode (`SettingsRows`); it sits above Version, starts at step 1 with
+- [x] **Resume.** A launch with a saved step mid-wizard opens the wizard at that step.
+- [x] **Show the intro again** row in grown-up mode (`SettingsRows`); it sits above Version, starts at step 1 with
   `intro_started:replay` and ends back in grown-up mode, not at the hand-over.
-- [ ] **Strings** in every Dino locale. **Privacy texts:** one line naming the three new events and their fields in
+- [x] **Strings** in every Dino locale. **Privacy texts:** one line naming the three new events and their fields in
   `site/dino/privacy.html` and `STORE.md`. Add the new events to `tools/dino-usage-report.ps1` (a step funnel:
   tried/skipped per step, finished vs skipped all).
-- [ ] Rule in `src/DinoReader.App/CLAUDE.md`: the intro is a wizard of real actions; no coach-marks, tips or
+- [x] Rule in `src/DinoReader.App/CLAUDE.md`: the intro is a wizard of real actions; no coach-marks, tips or
   what's-new screens.
 
 ## Verification
@@ -111,3 +111,27 @@ Checked, no conflict: no gate in the intro, the step is saved and resumes after 
   never sees the wizard; **Show the intro again** replays it. On Windows, step 3 has no camera wording.
 - With the counts switch on, a debug log of the batched events shows `intro_started:first_run`, one `intro_step`
   per step and `intro_ended`; with it off, nothing is queued.
+
+
+## Built
+
+*Changed while building:* three steps (store, record, add) per the Batch 32 mock, so no read step and no `read` event value. `IntroWizardPage` is pushed modally in its own `NavigationPage` over the gallery (so no iOS per-page swipe-back switch). A step advances by construction: `_launchedStep` is set right before a step screen is pushed. Android back means Skip all. `GalleryPage.OnAppearing` resumes a saved step; a resumed intro asks for the grown-up gate first, and a declined gate retries on window resume or on entering grown-up mode, never in a loop. Backgrounding closes the intro modal (`App.CloseGrownUpPagesAsync`) and keeps the step. The replay row "Show the intro again" is the first row of the Version card (`UpdatePage.VersionCard.Build`, optional first row) and never clears first-run hand-over state. The Record step hides Try when no book can be recorded. A failed step open is logged, stays on the step and counts nothing. Waits over 500 ms use the shared `WaitController` overlay. Step art comes from the shelf's starter pictures at run time (nothing bundled). Counter string is "{0} of {1}"; `FirstRun_SetUp` was removed; `FirstRunState` stays in `FirstRunPage.xaml.cs`. Events `intro_started` / `intro_step` / `intro_ended` are in `worker/events.ts`, `UsageEvent.cs` and the `tools/dino-usage-report.ps1` funnel queries; the privacy line is in `site/dino/privacy.html` and `STORE.md`.
+
+*From review:* `reviewsm-high.md` (findings 1, 2, 4, 7, 8, 10), `155-medium.md` (1, 2, 3, 4, 6, 8, 10; 1 and 4 redesigned), `155-third.md` (1, 2, 3).
+
+*Verified 2026-10-27 on the Android emulator (headless):* first run, three steps, Ready for my child; Android back; kill and resume with the gate; declined gate does not loop; Home then gate; replay; an existing install skips the wizard.
+
+#### For CLAUDE.md
+
+- The intro is a wizard of real actions: `IntroWizardPage` is pushed modally in its own `NavigationPage`; a step advances only because `_launchedStep` was set right before its screen was pushed; Android back is Skip all; a resumed intro asks for the grown-up gate first and a declined gate must never loop; replay never clears first-run hand-over state (`src/DinoReader.App/IntroWizardPage.cs`, `IntroState.cs`). (Slice 155: docs/plan/slices/155-dino-first-run-intro-wizard.md)
+- New Dino usage events need a name in `UsageEvent.cs`, a rule in `worker/events.ts` `EVENT_RULES`, tests on both sides, a line in `site/dino/privacy.html` and `STORE.md`, and a query in `tools/dino-usage-report.ps1`. (Slice 155: docs/plan/slices/155-dino-first-run-intro-wizard.md)
+
+#### Not yet verified
+
+- Offline store step.
+- Microphone permission prompt on the Record step.
+- Windows variant (title, Picture badge).
+- iOS modal presentation.
+- Large-font layout.
+- Native read of the 15 Intro strings (13 are drafts).
+- Play Data safety and App Store privacy answers cover the 3 new events.

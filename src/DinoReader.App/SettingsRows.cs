@@ -54,6 +54,23 @@ public static class SettingsRows
 	}
 
 	public static BoxView Divider() => new() { HeightRequest = 1, Color = DinoTokens.Get(DinoTokens.Hairline) };
+
+	/// <summary>
+	/// The "Show the intro again" row (Slice 155, mock frame 77): brand-coloured and bold, it replays the intro's three steps on top of
+	/// <paramref name="navigation"/> and ends back there (never the language page or the voice download). The card that holds the Version
+	/// row puts it first, above Version, followed by a <see cref="Divider"/>.
+	/// </summary>
+	public static Grid IntroReplayRow(INavigation navigation, IServiceProvider services, BusyGuard busy)
+	{
+		Grid row = Row(AppResources.Intro_ShowAgain, new BoxView { WidthRequest = 0, Color = Colors.Transparent }, () => IntroWizardPage.ReplayAsync(navigation, services), busy);
+		if (row.Children.OfType<Label>().FirstOrDefault() is { } title)
+		{
+			title.FontAttributes = FontAttributes.Bold;
+			title.TextColor = DinoTokens.Get(DinoTokens.Brand);
+		}
+
+		return row;
+	}
 }
 
 /// <summary>

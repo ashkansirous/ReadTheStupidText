@@ -99,7 +99,21 @@
   <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>Jokainen hahmo saa oman äänensä. Hyllyssä on yksi tarina.</value></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>Kuule, kun Dino sanoo hei</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>Hei! Olen Dino. Luetaan yhdessä tarina.</value></data>
-  <data name="FirstRun_SetUp" xml:space="preserve"><value>Valmistele tarinat</value></data>
+  <data name="Intro_SeeWhat" xml:space="preserve"><value>Katso, mitä Dino osaa</value></data>
+  <data name="Intro_SkipStart" xml:space="preserve"><value>Ohita, aloita lukeminen</value></data>
+  <data name="Intro_SkipAll" xml:space="preserve"><value>Ohita kaikki</value></data>
+  <data name="Intro_TryIt" xml:space="preserve"><value>Kokeile</value></data>
+  <data name="Intro_Skip" xml:space="preserve"><value>Ohita</value></data>
+  <data name="Intro_Counter" xml:space="preserve"><value>{0}/{1}</value></data>
+  <data name="Intro_StoreTitle" xml:space="preserve"><value>Hae lisää kirjoja</value></data>
+  <data name="Intro_StoreLine" xml:space="preserve"><value>Ilmaisessa kaupassa on lisää tarinoita, valmiina ladattaviksi.</value></data>
+  <data name="Intro_RecordTitle" xml:space="preserve"><value>Lue se omalla äänelläsi</value></data>
+  <data name="Intro_RecordLine" xml:space="preserve"><value>Äänitä itsesi lukemassa tarinaa sivu sivulta. Lapsesi voi kuunnella sen milloin tahansa.</value></data>
+  <data name="Intro_AddTitle" xml:space="preserve"><value>Lisää oma kirjasi</value></data>
+  <data name="Intro_AddLine" xml:space="preserve"><value>Ota kuvia kirjan sivuista tai valitse PDF. Dino lukee sen ääneen.</value></data>
+  <data name="Intro_AddTitleWindows" xml:space="preserve"><value>Lisää kuvia tai PDF</value></data>
+  <data name="Intro_AddLineWindows" xml:space="preserve"><value>Valitse kuvia kirjan sivuista tai PDF. Dino lukee sen ääneen.</value></data>
+  <data name="Intro_ShowAgain" xml:space="preserve"><value>Näytä esittely uudelleen</value></data>
   <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>Jatka puhelimen äänellä</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Valmis lapselleni</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Aikuisten tila</value></data>

@@ -110,7 +110,9 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 			Cards.Children.RemoveAt(index);
 		}
 
-		_versionCard = VersionCard.Build(_config, _busy);
+		IServiceProvider? services = IPlatformApplication.Current?.Services;
+		View? introRow = services is null ? null : SettingsRows.IntroReplayRow(Navigation, services, _busy);
+		_versionCard = VersionCard.Build(_config, _busy, introRow);
 		Cards.Children.Insert(index, _versionCard);
 	}
 

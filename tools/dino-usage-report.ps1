@@ -92,6 +92,21 @@ SELECT blob9 AS wait_and_duration, blob7 AS platform, $Weighted AS cancelled
 FROM $Dataset WHERE blob1 = 'wait_cancelled' AND $Window
 GROUP BY wait_and_duration, platform $Enough ORDER BY cancelled DESC
 "@
+    'Intro starts (blob9 detail: first_run or replay)' = @"
+SELECT blob9 AS started_from, blob7 AS platform, $Weighted AS starts
+FROM $Dataset WHERE blob1 = 'intro_started' AND $Window
+GROUP BY started_from, platform $Enough ORDER BY starts DESC
+"@
+    'Intro step funnel (blob9 detail is "step:tried" or "step:skipped")' = @"
+SELECT blob9 AS step_and_action, blob7 AS platform, $Weighted AS taps
+FROM $Dataset WHERE blob1 = 'intro_step' AND $Window
+GROUP BY step_and_action, platform $Enough ORDER BY step_and_action
+"@
+    'Intro ends (finished vs skipped all)' = @"
+SELECT blob9 AS ended, blob7 AS platform, $Weighted AS ends
+FROM $Dataset WHERE blob1 = 'intro_ended' AND $Window
+GROUP BY ended, platform $Enough ORDER BY ends DESC
+"@
     'App opens by version, platform and screen language' = @"
 SELECT blob6 AS version, blob7 AS platform, blob3 AS language, $Weighted AS opens
 FROM $Dataset WHERE blob1 = 'app_opened' AND $Window
