@@ -1,9 +1,9 @@
 # Slice 169 — German translations for all 15 Dino books
 
-*Planned.* Dino Book Reader, Android, iOS and Windows. After Slice 168 merges (needs the German rule set, roster and voice).
+*In progress (wave 2026-10-27), draft PR.* Dino Book Reader, Android, iOS and Windows. After Slice 168 merges (needs the German rule set, roster and voice).
 
 **Touches:** `content/dino/*/translations/de.json` (new, one per book), `content/dino/*/book.json` (version bumps),
-`src/DinoReader.App/Resources/Raw/starters/*.dino` (rebuilt starters), `src/DinoReader.Core/ShippedTitles.cs`,
+`src/DinoReader.App/Resources/Raw/starters/*.dino` (rebuilt starters), `src/DinoReader.App/ShippedTitles.cs`,
 `tests/DinoReader.Tests/**` (per-book expectations only)
 
 ## Why
