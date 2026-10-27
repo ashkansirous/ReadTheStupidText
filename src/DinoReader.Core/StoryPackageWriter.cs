@@ -33,8 +33,11 @@ public static class StoryPackageWriter
     {
         ZipArchiveEntry entry = zip.CreateEntry(name, CompressionLevel.Optimal);
         await using Stream stream = entry.Open();
-        await stream.WriteAsync(new UTF8Encoding(false).GetBytes(text));
+        await stream.WriteAsync(new UTF8Encoding(false).GetBytes(WithPackageLineEnding(text)));
     }
+
+    /// <summary>The indented JSON uses the OS line ending, so one build gave different bytes on Windows and Linux; every package text is written with CRLF (what the shipped starters and store books already hold), whichever OS builds it.</summary>
+    private static string WithPackageLineEnding(string text) => text.Replace("\r\n", "\n").Replace("\n", "\r\n");
 
     private static async Task AddPictureAsync(ZipArchive zip, string? path, string name)
     {
