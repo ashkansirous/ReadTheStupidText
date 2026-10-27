@@ -1,8 +1,10 @@
 # The Little Red Hen: art record
 
-Store story (`StoreTexts.RedHen`, stem `little-red-hen`, version 4). Retold as 15 pages with one action each
+Store story (`StoreTexts.RedHen`, stem `little-red-hen`, version 6). Retold as 15 pages with one action each
 (`dino-storytelling` skill, Slice 121). **Art status (2026-10-26): cover and pages 1-15 drawn and accepted; full review PASS 2026-10-26.** The cover
-and all 15 pages are new; the text-only version 3 had none.
+and all 15 pages are new; the text-only version 3 had none. Version 6 (Slice 146 Wave A, 2026-10-27): Farsi
+rewritten in spoken Farsi, sound words as plain triples without commas or vowel marks; English, page breaks
+and every picture unchanged.
 
 **Gentle retelling (Decision 130):** in the classic the Hen's three neighbours are "lazy", she says "No, you will
 not!" at the end and eats the bread alone with her chicks while the others watch, hungry. Nobody is shut out here:
