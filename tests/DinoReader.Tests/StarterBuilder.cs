@@ -45,8 +45,8 @@ internal static class StarterBuilder
     /// Raise it whenever a starter's text or pictures change, so installed copies are refreshed (<see cref="StarterUpdate"/>).</summary>
     public static IReadOnlyDictionary<string, int> StarterVersions { get; } = new Dictionary<string, int>
     {
-        [GoodEnoughFile] = 3,
-        ["three-little-pigs.dino"] = 9,
+        ["three-little-pigs.dino"] = 10,
+        [GoodEnoughFile] = 4,
         ["gingerbread-man.dino"] = 6,
         ["tortoise-and-hare.dino"] = 6,
     };

@@ -10,6 +10,7 @@ namespace DinoReader.Tests;
 /// Hen's Cat (she) and Duck (he), for the same reason with the kitten and duckling voices, Peter Rabbit (he), with the bunny voice, and Town Mouse (she) and Country Mouse (he), with the mouse voice (the cost is that they make
 /// no meow, quack, squeak or rabbit sounds). (Goldilocks' Mama Bear is a bear again: her book suggests the mummy voice, a woman's in every language, Slice 156.) The stored animal also picks the voice, so giving them back their animal
 /// would put a man's or the wrong-gender voice on them (56 gender tests fail): a separate "cast as a person" field is needed first (Slice 152 review).
+/// A book whose writer chose each voice (<see cref="StarterVoices"/>, Slice 156) needs none of this: the Little Red Hen's Cat and Duck have their animals back, and their gender comes from the book.
 /// </summary>
 internal static class StarterAnimals
 {
@@ -23,7 +24,6 @@ internal static class StarterAnimals
     {
         [StarterTexts.GingerbreadId] = new HashSet<string> { "Grandpa", "Granny" }, // the text guesses animals from "Grandpa ... the cow"; they are people
         [StoreTexts.UglyDucklingId] = new HashSet<string> { "Duckling", "Dilly" },
-        [StoreTexts.RedHenId] = new HashSet<string> { "Cat", "Duck" }, // kitten and duckling voices are girls in most languages, boys in fa/es/pt; Duck is a boy (Slice 121)
         [StoreTexts.PeterRabbitId] = new HashSet<string> { "Peter" }, // the bunny voice is a girl in most languages and Peter is a boy (Slice 121)
         [StoreTexts.TownMouseId] = new HashSet<string> { "Town Mouse", "Country Mouse" }, // the mouse voice is a boy in en/fa, a girl elsewhere; she and he (Slice 121)
     };

@@ -235,7 +235,7 @@ public static class CastCharacters
         {
             if (wantedOf(character) is { } byTraits)
             {
-                return PickByTraits(character, byTraits, animalOf?.Invoke(character) is not null);
+                return PickByTraits(character, byTraits, animalOf?.Invoke(character));
             }
 
             AnimalHint? hint = animalOf?.Invoke(character);
@@ -249,17 +249,25 @@ public static class CastCharacters
                 .ThenBy(x => x.Order)
                 .Select(x => x.Character)
                 .FirstOrDefault();
-            return pick is not null && hint is not null && Tier(pick, hint) == AnimalTier.Own ? Distinct(pick) : pick;
+            return Reuse(pick, hint);
         }
 
+        // One rule for both pick paths: a pick that is the story animal's own character (an exact fit) is made to sound unlike an earlier use of the same sound.
+        private StorytellerCharacter? Reuse(StorytellerCharacter? pick, AnimalHint? hint) =>
+            pick is not null && hint is not null && Tier(pick, hint) == AnimalTier.Own ? Distinct(pick) : pick;
+
         // A character the book described but whose suggested voice the language lacks (Slice 156): the closest roster character by traits, avoiding repeats as the picker does.
-        private StorytellerCharacter? PickByTraits(Character character, WantedTraits wanted, bool isAnimal) =>
-            (isAnimal ? choices.Concat(narratorVoiceAnimals) : choices)
+        // A reused animal character gets a flavour its voice has not sounded with, as the picker does, so two of the same animal sound alike only when no fresh flavour is left.
+        private StorytellerCharacter? PickByTraits(Character character, WantedTraits wanted, AnimalHint? hint)
+        {
+            StorytellerCharacter? pick = (hint is not null ? choices.Concat(narratorVoiceAnimals) : choices)
                 .Select((c, order) => (Character: c, Order: order, Cost: TraitPickCost(c, character, wanted)))
                 .OrderBy(x => x.Cost)
                 .ThenBy(x => x.Order)
                 .Select(x => x.Character)
                 .FirstOrDefault();
+            return Reuse(pick, hint);
+        }
 
         private int TraitPickCost(StorytellerCharacter candidate, Character character, WantedTraits wanted) =>
             CharacterTraitMatch.Cost(candidate, character.Gender, wanted.Traits, wanted.Animal)
@@ -287,12 +295,12 @@ public static class CastCharacters
             };
         }
 
-        // A reused animal character takes the first flavour that its voice has not sounded with yet, so the reuse sounds different; none left, it stays as it is.
+        // An animal character whose (voice, flavour) sound is already taken, by any roster character, takes the first flavour its voice has not sounded with yet; none left, it stays as it is.
         // A flavour the cast screen would name another animal is skipped (Farsi, Slice 135: a third pig shown as the bear cub); a reuse with no such free flavour shares the
         // sound it has, which the cast screen flags.
         private StorytellerCharacter Distinct(StorytellerCharacter pick)
         {
-            if (!_used.ContainsKey(pick.Id) || !_sounds.Contains((pick.VoiceId, pick.Flavour)))
+            if (!_sounds.Contains((pick.VoiceId, pick.Flavour)))
             {
                 return pick;
             }

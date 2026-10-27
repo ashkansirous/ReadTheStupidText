@@ -60,3 +60,38 @@ composed for the 30% words panel (Slice 122): action in the top 70%, bottom 30% 
 | 16 | Sunset: the three pigs dance in a circle by the brick house | Slice 119 page 6 | | |
 
 Chats: pages 1-3 in one, pages 4 and 6 (and the rejected 7) in a second, pages 7 and 9 (and the rejected 10) in a third, pages 10, 11 and the tub page in a fourth, the Wolf-at-the-ladder and soggy-Wolf pages in a fifth (added after review split the roof and the run home onto their own pages), the line-up pasted into each. Three pictures per chat kept every outfit right. The fails were text drawn into a scene and a 4-pane window that multiplied the pigs.
+
+## Slices 146 and 156: spoken English, every language redone, voices chosen by the book (v10)
+
+The English was rewritten in spoken, kid-friendly words (Decision 152): contractions, "Yay!", "Uh-oh!",
+"No, no, no!", and sound words as repeated triples ("Knock, knock, knock!", "Splash, splash, splash!",
+"Achoo! Achoo! Achoo!", "Drip, drip, drip!"). Page breaks and each page's action are unchanged.
+Page 12 now says what its picture shows (the Wolf folds his arms and looks up at the chimney), page 9
+says Pim opens the door wide, and page 16's sorry ("I'm sorry I was in such a hurry") answers page 2
+instead of a laugh the story never showed. The 12 non-Farsi languages were redone in the same spoken
+register; Farsi kept its Wave A wording except where the English meaning moved (the knocks split out of
+the knock sentences, "Yay!", "one by one", Pop's and Pim's houses named, the door wide open, the folded
+arms, the cold tub, the drips, the new sorry, the big smile, and "But right now, let's all play!", which fits page 16's sunset picture where "tonight" did not).
+
+**Every page keeps its picture** (pages 1-16 and the cover): no page's action changed.
+
+### Picture-plan check (dino-storytelling section 4)
+
+- [x] Every page's picture differs from its neighbours (place, action or who is there).
+- [x] No page needs two pictures.
+- [x] Characters' faces and the action fit in the top 70% of a 3:4 portrait picture.
+- [x] Each character's look is fixed in the line-up, not invented per page.
+
+### Voices (Slice 156, `tests/DinoReader.Tests/StarterVoices.cs`)
+
+Started from `StarterVoicesDump` (Pip `piglet2`, Pop `piglet3`, Pim `piglet`, Wolf `wolf`); Pip and Pim
+swapped, because the "Cheeky Piglet, small and quick" voice is the hasty Pip, not the careful Pim.
+
+- **Pip** (pig, male, young; bouncy, squeaky): `piglet`, Cheeky Piglet. He is the one in a hurry.
+- **Pop** (pig, male, young; bright, bouncy): `piglet3`, Curly Piglet ("bright and squeaky"; in Farsi the calm, kind piglet). Playful Pop, who wants to play too: today's voice, kept.
+- **Pim** (pig, male, young; soft, warm): `piglet2`, Snuffly Piglet ("tiny and snorty"). Not a perfect fit for the calm builder: it is the piglet left once Pip takes the quick one and Pop keeps the bright one. The traits say soft and warm, so a fallback leans calm.
+- **Wolf** (wolf, male, adult; gruff, booming): `wolf`, Hungry Wolf. Huffy and silly, never scary.
+
+Spanish and Portuguese have no `piglet3`, so Pop falls back by traits there; the fallback currently
+lands on Pip's exact sound (see the writer's report: `CastCharacters` trait fallback does not vary the
+flavour of a reused animal the way the app's picker does).
