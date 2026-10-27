@@ -21,6 +21,7 @@ public sealed record PinnedCharacter(string VoiceId, VoiceFlavour? Flavour, bool
 /// </summary>
 public static class CastCharacters
 {
+    private const string HomeLanguage = "en";
     private const int UsedAlready = 30;
     private const int VoiceUsedAlready = 3;
     private const int NotAnAnimalCharacter = 25;
@@ -53,7 +54,7 @@ public static class CastCharacters
         Func<Character, AnimalHint?>? animalOf = null)
     {
         IReadOnlyList<StorytellerCharacter> narratorVoiceAnimals = NarratorVoiceAnimals(choices, roster, narratorVoiceId);
-        var state = new State(choices, narratorVoiceAnimals, roster.Where(c => c.Kind == CharacterKind.Speaker).ToList(), animalOf, WantedBy(pinned, animalOf));
+        var state = new State(choices, narratorVoiceAnimals, roster.Where(c => c.Kind == CharacterKind.Speaker).ToList(), animalOf, WantedBy(pinned, animalOf), narratorVoiceId);
         var picks = new List<(int Order, Character Character, string VoiceId, VoiceFlavour Flavour)>();
         var kept = Kept(characters, choices, narratorVoiceAnimals, roster, narratorVoiceId, guess, pinned, animalOf);
         foreach ((Character character, int order) in characters.Select((c, i) => (c, i)).Where(x => kept.ContainsKey(x.c.Id)))
@@ -92,8 +93,22 @@ public static class CastCharacters
         }
 
         StorytellerCharacter? suggested = speakers.FirstOrDefault(s => s.Id == id);
-        return suggested is not null && !CharacterRoster.OppositeGender(suggested.Gender, character.Gender) ? suggested : null;
+        bool fits = suggested is not null && !CharacterRoster.OppositeGender(suggested.Gender, character.Gender) && !SwapsInWhisper(suggested, stored.Traits);
+        return fits ? suggested : null;
     }
+
+    /// <summary>Whether a book's suggestion is dropped for its whisper (Slice 156): the place is not whispery in English (the roster the books are written against, so the author never chose a whisper) but is
+    /// in this language, and the book does not describe the character as whispery. Such a character falls back to its traits; a place that is whispery in English (a sly fox) stays in every language.</summary>
+    public static bool SwapsInWhisper(StorytellerCharacter suggested, CharacterTraits? traits) =>
+        SoundsWhispered(suggested) && !IsWhispery(traits) && !WhisperedAtHome(suggested.Id);
+
+    private static bool WhisperedAtHome(string id) =>
+        CharacterRoster.Speakers(HomeLanguage).FirstOrDefault(c => c.Id == id) is { } home && SoundsWhispered(home);
+
+    // A whispered place (Whisper, Hushed) is only for a character the book describes as whispery.
+    private static bool SoundsWhispered(StorytellerCharacter candidate) => candidate.Flavour is VoiceFlavour.Whisper or VoiceFlavour.Hushed;
+
+    private static bool IsWhispery(CharacterTraits? traits) => traits?.Qualities?.Contains(VoiceQuality.Whispery) == true;
 
     // The narrator's voice is left out of the choices so no character sounds like the narrator, but an animal's own characters on it (Farsi, Slice 135: two of the three
     // piglets sit on the narrator's voice) are still offered to animal story characters when their flavour is not the narrator's, which the pitch and pace tell apart.
@@ -183,6 +198,7 @@ public static class CastCharacters
     private static List<StorytellerCharacter> BookableSpeakers(
         IReadOnlyList<StorytellerCharacter> roster, IReadOnlyList<StorytellerCharacter> choices, IReadOnlyList<StorytellerCharacter> narratorVoiceAnimals, string narratorVoiceId) =>
         roster.Where(c => c.Kind == CharacterKind.Speaker)
+            .Select(c => choices.FirstOrDefault(o => o.Id == c.Id) ?? c)
             .Where(c => c.VoiceId != narratorVoiceId || choices.Any(o => o.Id == c.Id) || narratorVoiceAnimals.Any(o => o.Id == c.Id))
             .ToList();
 
@@ -213,7 +229,7 @@ public static class CastCharacters
     /// <summary>Running state of one casting pass: which roster characters and voices are taken.</summary>
     private sealed class State(
         IReadOnlyList<StorytellerCharacter> choices, IReadOnlyList<StorytellerCharacter> narratorVoiceAnimals, IReadOnlyList<StorytellerCharacter> speakers,
-        Func<Character, AnimalHint?>? animalOf, Func<Character, WantedTraits?> wantedOf)
+        Func<Character, AnimalHint?>? animalOf, Func<Character, WantedTraits?> wantedOf, string narratorVoiceId)
     {
         private readonly Dictionary<(string CharacterId, string VoiceId, Gender Gender, VoiceFlavour Flavour), bool> _foreignSounds = [];
         private readonly Dictionary<string, int> _used = [];
@@ -249,7 +265,24 @@ public static class CastCharacters
                 .ThenBy(x => x.Order)
                 .Select(x => x.Character)
                 .FirstOrDefault();
-            return Reuse(pick, hint);
+            return Reuse(NotWhispered(pick, hint, wanted is VoiceFlavour.Whisper or VoiceFlavour.Hushed), hint);
+        }
+
+        // A person who is not whispery never ends on a whispered place of the narrator's voice (a language with one woman's voice has only that): they take that voice in a Normal
+        // flavour, else its nearest calm one, else the nearest calm place of another voice; a whisper is the very last resort. They may share a sound with an earlier character.
+        private StorytellerCharacter? NotWhispered(StorytellerCharacter? pick, AnimalHint? hint, bool whispery)
+        {
+            if (pick is null || hint is not null || whispery || !SoundsWhispered(pick) || pick.VoiceId != narratorVoiceId)
+            {
+                return pick;
+            }
+
+            return choices
+                .Where(c => !SoundsWhispered(c))
+                .OrderBy(c => c.VoiceId == pick.VoiceId ? 0 : 1)
+                .ThenBy(c => CharacterRoster.GenderMisfit(c.Gender, pick.Gender))
+                .ThenBy(c => CharacterRoster.FlavourDistance(c.Flavour, VoiceFlavour.Normal))
+                .FirstOrDefault() ?? pick;
         }
 
         // One rule for both pick paths: a pick that is the story animal's own character (an exact fit) is made to sound unlike an earlier use of the same sound.
@@ -260,13 +293,21 @@ public static class CastCharacters
         // A reused animal character gets a flavour its voice has not sounded with, as the picker does, so two of the same animal sound alike only when no fresh flavour is left.
         private StorytellerCharacter? PickByTraits(Character character, WantedTraits wanted, AnimalHint? hint)
         {
-            StorytellerCharacter? pick = (hint is not null ? choices.Concat(narratorVoiceAnimals) : choices)
+            StorytellerCharacter? pick = AvoidingWhispers(hint is not null ? choices.Concat(narratorVoiceAnimals) : choices, wanted.Traits)
                 .Select((c, order) => (Character: c, Order: order, Cost: TraitPickCost(c, character, wanted)))
                 .OrderBy(x => x.Cost)
                 .ThenBy(x => x.Order)
                 .Select(x => x.Character)
                 .FirstOrDefault();
-            return Reuse(pick, hint);
+            return Reuse(NotWhispered(pick, hint, IsWhispery(wanted.Traits)), hint);
+        }
+
+        // A character that is not whispery keeps off the whispered places while any other place is left (the roster of a language with few voices has some).
+        private static List<StorytellerCharacter> AvoidingWhispers(IEnumerable<StorytellerCharacter> candidates, CharacterTraits traits)
+        {
+            var all = candidates.ToList();
+            var calm = all.Where(c => !SwapsInWhisper(c, traits)).ToList();
+            return calm.Count == 0 ? all : calm;
         }
 
         private int TraitPickCost(StorytellerCharacter candidate, Character character, WantedTraits wanted) =>

@@ -1,6 +1,6 @@
 # The Gingerbread Man: art record
 
-Bundled starter (`StarterTexts.Gingerbread`, stem `gingerbread-man`, version 4 in `StarterBuilder.StarterVersions`), also a
+Bundled starter (`StarterTexts.Gingerbread`, stem `gingerbread-man`, version 7 in `StarterBuilder.StarterVersions`), also a
 store book under the same id (`StoreBuilder.StarterEntries`). Retold in Slice 121 as 14 pages with one action each
 (`dino-storytelling` skill); the earlier 6-page text shipped as versions 2 and 3, and its page hash is in
 `StarterUpdate.EarlierPageTextHashes`, so unedited installed copies update. **Art status (2026-10-26): all pictures accepted; the full
@@ -44,13 +44,38 @@ play with me!"` on pages 5 and 6. The build-up has three steps, each ending in "
 (page 4), the Cow (page 5), the Horse (page 6); the fourth, the river, is different. On page 13 the refrain turns round on
 purpose: `"Run, run, as fast as you can! You can catch me, I'm the Gingerbread Man!"`, the one line that changes.
 
-**Cast and voices:** six speakers, genders chosen to give three of each: Granny (she), Grandpa (he), Gingerbread Man (he, a
+**Spoken rewrite (Slice 146 Waves B and C, version 7, 2026-10-27):** the English is reworded the way a parent reads aloud
+(contractions, "Oh my, oh my, oh my!", "Uh-oh", "Night-night") with the same 14 page breaks and the same one action per page, so
+**every picture is kept; no page needs a new picture.** New sound words, each a triple so a voice reads them long enough:
+"Pitter-pat, pitter-pat, pitter-pat!" (page 3), "Swish, swish, swish!" (5), "Clip-clop, clip-clop,
+clip-clop!" (6), "Splish-splosh" three times (9), "Whee, whee, whee!" (9), "Hmm, hmm, hmm..." (10); every language uses its own
+sound words, repeated three times. The twelve non-Farsi languages are redone in the same spoken register (Spanish "Hombrecito de
+Jengibre", Brazilian Portuguese "Homenzinho de Gengibre" and "Pocotó", French "Cataclop", Danish/Finnish/Swedish no longer say
+"baked"); Farsi keeps every piece whose meaning did not move and gains only the new sounds and exclamations. The earlier text's
+page hash (versions 4-6) is in `StarterUpdate.EarlierPageTextHashes`. Page 8 now says the Fox "came along the bank" (the picture shows him walking, the boy already on his back). Not yet listened to: the new sound words in every language
+(only en, es, zh and fa forms were ever measured, Slice 145), and the native-speaker read of all twelve languages.
+
+**Voice choices (Slice 156, `StarterVoices`):** one roster id per character for every language, with traits for the fallback.
+
+- Granny: `hen` (Granny Hen, slow and cosy); she, old, person, warm and soft. Farsi has no hen, so the traits give her Kind Mummy (mana, Normal).
+- Grandpa: `bear` (Grandpa Bear, deep and kind); he, old, person, warm and booming.
+- Gingerbread Man: `piglet` (Cheeky Piglet, small and quick); he, a child, person, bouncy and bright. Never an oink: his animal is none.
+- Cow: `ewe` (Woolly Sheep, soft and slow); she, adult, animal cow, soft and warm. In Spanish and Portuguese the sheep is a man's voice, so the traits give her Kind Mummy.
+- Horse: `bee` (Busy Bee, bubbly and quick), for the galloping mare; she, adult, animal horse, bouncy and bright.
+- Fox: `knight` (Brave Knight, plain and clear); he, adult, a fox, warm and bold. Not the roster's Sly Fox: that voice whispers, and this fox is kind from his first line.
+
+Checked on the real cast in fa, es, pt and zh (and every other language): every character on their own gender's voice, no two
+on the same voice and flavour, no whisper flavour. The stored build-time cast still carries the old app guess for the Fox
+(`supertonic:M3`, flavour Whisper) next to the suggestion; the app plays the suggestion, but the builder does not yet replace the
+stored flavour (shared `StarterBuilder`/`StoryCast.ToMembers` behaviour, reported, not changed here).
+
+**Cast and voices (before Slice 156):** six speakers, genders chosen to give three of each: Granny (she), Grandpa (he), Gingerbread Man (he, a
 boy's part: always a male voice), Cow (she), Horse (she, a mare), Fox (he). The builder casts Granny F1, Gingerbread Man M2,
 Grandpa M4, Cow F2, Horse F3, Fox M3 (narrator M1). English rules know "Grandpa" as a male title and "Granny"/"Nana" as female titles (added in this slice), so
 Granny's gender comes from her title, and her pronouns agree: the page-2 line "and she could not believe her eyes" and "her big book" on page 14
 back it up; the Cow and the Horse get "her tail"/"her mane ... as fast as she could". Reword those lines only with the
 test below running. The Cow and the Horse are animals found from their names (moo and neigh); the Fox has no animal sound, but
-his name gives him the quiet "sly" voice flavour, whose roster character (Sly Fox) is male. `StoreStoryTests.TheGingerbreadMan_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster` checks
+his name gave him the quiet "sly" voice flavour (Sly Fox) until the book chose the Brave Knight for him (Slice 156). `StoreStoryTests.TheGingerbreadMan_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster` checks
 the stored genders and every language's roster. Translations keep the genders: the Horse is a mare (fr la Jument, es la
 Yegua, pt a Égua, ru Лошадь, ar الفرس with قالت), the Fox is male (ru Лис, not the folk-tale Лиса; pt o Raposo, not a Raposa).
 
@@ -97,25 +122,25 @@ There are no other characters: no farmer, no other animals, no people anywhere e
 
 Every page: the whole scene sits in the top 70% of the picture; the bottom 30% is plain floor, lane, grass or water with
 nothing important in it. No text, letters, words, sound effects or writing anywhere ("Splish, splosh" and the refrain are
-never drawn in). Nobody eats, bites, licks or grabs anyone. Every page is **new** (no pictures exist).
+never drawn in). Nobody eats, bites, licks or grabs anyone. **Version 7 (spoken rewrite): every page and the cover keep their picture**; the page breaks and actions did not move.
 
 | Page | One action (who, count, where, when) | Picture |
 | --- | --- | --- |
-| Cover | Morning on the lane: the Gingerbread Man (1) runs towards the viewer, arms out, smiling; the cottage small behind him. Nobody else | new |
-| 1 | Morning, the kitchen: Granny (1) lays the finished Gingerbread Man (1, lying flat and still, smiling) on the tray on the table by the window. No Grandpa (he first comes in on page 3) | new |
-| 2 | Morning, the kitchen: the Gingerbread Man (1) springs up and stands on the tray, blinking and waving; Granny (1) stands back with her hands on her cheeks, amazed and delighted. No Grandpa | new |
-| 3 | Morning, the kitchen: the Gingerbread Man (1) runs across the floor towards the open back door, laughing; Granny (1) holds her arms out, calling; Grandpa (1) has just come in behind her | new |
-| 4 | Morning, the lane: the Gingerbread Man (1) runs ahead down the lane; Granny and Grandpa (2) hurry after him, puffing and laughing; the cottage behind them | new |
-| 5 | Late morning, the daisy field: the Cow (1) swishes her tail and trots after the Gingerbread Man (1), who runs past her, laughing. Nobody else | new |
-| 6 | Midday, beside the wooden fence: the Horse (1) tosses her mane and gallops after the Gingerbread Man (1), who runs along the fence. Nobody else | new |
-| 7 | Afternoon, the home bank (willow): the Gingerbread Man (1) stands alone on the grass in front, a good step back from the water (never at the edge), looking at the water, one hand on his head, puzzled. Far up the meadow behind him, small, Granny, Grandpa, the Cow and the Horse (4) hurry after him (changed 2026-10-26: the extra four get the picture past Gemini's filter and fit page 11 "had followed all the way") | new |
-| 8 | Afternoon, the home bank: the Fox (1) crouches low in the grass, smiling; the Gingerbread Man (1) climbs onto his back. The same four (4) are small, further up the meadow, coming closer (changed 2026-10-26) | new |
-| 9 | Afternoon, crossing a calm stretch of water, seen from the home bank (willow): in front, seen from behind or three-quarters, Granny, Grandpa, the Cow and the Horse (4) stand watching and pointing; small in the middle of the water the Fox (1) swims with his head and back above the water and the Gingerbread Man (1) sits on his back, laughing, dry (changed 2026-10-26 after repeated refusals) | new |
-| 10 | Afternoon, the far bank (rock, buttercups): the Gingerbread Man (1) stands on the grass where the Fox has just set him down, mouth open, finger on his chin, puzzled; the Fox (1) sits beside him, head tilted, smiling. The four (4) are small across the water on the home bank, catching their breath (changed 2026-10-26) | new |
-| 11 | Afternoon, the far bank: the Gingerbread Man (1) and the Fox (1) in the front, turned three-quarters so their faces show, look back across the river; on the home bank by the willow, smaller, Granny, Grandpa, the Cow and the Horse (4) stand in a row, waving | new |
-| 12 | Afternoon, seen from the home bank (willow): in front, seen from behind or three-quarters, Granny, Grandpa, the Cow and the Horse (4) stand waving and cheering; small in the middle of a calm stretch of water the Fox (1) swims back towards them with the little biscuit figure (1) on his back, both smiling (changed 2026-10-26 after repeated refusals) | new |
-| 13 | Afternoon, the home bank (willow): Granny (1) kneels and catches the Gingerbread Man (1) in her cupped hands, holding him to her cheek in a gentle cuddle; Grandpa (1), the Cow (1), the Horse (1) and the Fox (1) stand round them, smiling | new |
-| 14 | Evening, the sitting room, pink-and-gold sunset through the open window: Granny (1) reads a big book in her armchair; the Gingerbread Man (1) sits on the arm of her chair, yawning; Grandpa (1) in the other armchair; the Fox (1) curled up on the rug; the heads of the Cow and the Horse (2) looking in through the open window | new |
+| Cover | Morning on the lane: the Gingerbread Man (1) runs towards the viewer, arms out, smiling; the cottage small behind him. Nobody else | keep (v7) |
+| 1 | Morning, the kitchen: Granny (1) lays the finished Gingerbread Man (1, lying flat and still, smiling) on the tray on the table by the window. No Grandpa (he first comes in on page 3) | keep (v7) |
+| 2 | Morning, the kitchen: the Gingerbread Man (1) springs up and stands on the tray, blinking and waving; Granny (1) stands back with her hands on her cheeks, amazed and delighted. No Grandpa | keep (v7) |
+| 3 | Morning, the kitchen: the Gingerbread Man (1) runs across the floor towards the open back door, laughing; Granny (1) holds her arms out, calling; Grandpa (1) has just come in behind her | keep (v7) |
+| 4 | Morning, the lane: the Gingerbread Man (1) runs ahead down the lane; Granny and Grandpa (2) hurry after him, puffing and laughing; the cottage behind them | keep (v7) |
+| 5 | Late morning, the daisy field: the Cow (1) swishes her tail and trots after the Gingerbread Man (1), who runs past her, laughing. Nobody else | keep (v7) |
+| 6 | Midday, beside the wooden fence: the Horse (1) tosses her mane and gallops after the Gingerbread Man (1), who runs along the fence. Nobody else | keep (v7) |
+| 7 | Afternoon, the home bank (willow): the Gingerbread Man (1) stands alone on the grass in front, a good step back from the water (never at the edge), looking at the water, one hand on his head, puzzled. Far up the meadow behind him, small, Granny, Grandpa, the Cow and the Horse (4) hurry after him (changed 2026-10-26: the extra four get the picture past Gemini's filter and fit page 11 "had followed all the way") | keep (v7) |
+| 8 | Afternoon, the home bank: the Fox (1) crouches low in the grass, smiling; the Gingerbread Man (1) climbs onto his back. The same four (4) are small, further up the meadow, coming closer (changed 2026-10-26) | keep (v7) |
+| 9 | Afternoon, crossing a calm stretch of water, seen from the home bank (willow): in front, seen from behind or three-quarters, Granny, Grandpa, the Cow and the Horse (4) stand watching and pointing; small in the middle of the water the Fox (1) swims with his head and back above the water and the Gingerbread Man (1) sits on his back, laughing, dry (changed 2026-10-26 after repeated refusals) | keep (v7) |
+| 10 | Afternoon, the far bank (rock, buttercups): the Gingerbread Man (1) stands on the grass where the Fox has just set him down, mouth open, finger on his chin, puzzled; the Fox (1) sits beside him, head tilted, smiling. The four (4) are small across the water on the home bank, catching their breath (changed 2026-10-26) | keep (v7) |
+| 11 | Afternoon, the far bank: the Gingerbread Man (1) and the Fox (1) in the front, turned three-quarters so their faces show, look back across the river; on the home bank by the willow, smaller, Granny, Grandpa, the Cow and the Horse (4) stand in a row, waving | keep (v7) |
+| 12 | Afternoon, seen from the home bank (willow): in front, seen from behind or three-quarters, Granny, Grandpa, the Cow and the Horse (4) stand waving and cheering; small in the middle of a calm stretch of water the Fox (1) swims back towards them with the little biscuit figure (1) on his back, both smiling (changed 2026-10-26 after repeated refusals) | keep (v7) |
+| 13 | Afternoon, the home bank (willow): Granny (1) kneels and catches the Gingerbread Man (1) in her cupped hands, holding him to her cheek in a gentle cuddle; Grandpa (1), the Cow (1), the Horse (1) and the Fox (1) stand round them, smiling | keep (v7) |
+| 14 | Evening, the sitting room, pink-and-gold sunset through the open window: Granny (1) reads a big book in her armchair; the Gingerbread Man (1) sits on the arm of her chair, yawning; Grandpa (1) in the other armchair; the Fox (1) curled up on the rug; the heads of the Cow and the Horse (2) looking in through the open window | keep (v7) |
 
 Check (dino-storytelling section 4):
 
