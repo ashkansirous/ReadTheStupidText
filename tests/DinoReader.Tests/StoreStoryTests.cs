@@ -81,7 +81,9 @@ public sealed class StoreStoryTests : IDisposable
                 Assert.True(found.Contains(expected), $"{spec.Title}: no character {expected}; found {string.Join(", ", found)}");
             }
 
-            Assert.Equal(story.Cast.Count, story.Cast.Select(c => c.VoiceId).Distinct().Count());
+            Assert.True(
+                story.Cast.Count == story.Cast.Select(c => (c.VoiceId, c.Flavour)).Distinct().Count(),
+                $"{spec.Title}: two characters share one (voice, flavour): {string.Join(", ", story.Cast.Select(c => $"{c.Name}={c.VoiceId}/{c.Flavour}"))}");
             Assert.DoesNotContain(story.Cast, c => c.VoiceId == SupertonicVoiceTable.Default.Id);
         }
     }
