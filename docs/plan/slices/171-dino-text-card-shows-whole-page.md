@@ -1,6 +1,6 @@
 # Slice 171 — Dino: the text card scrolls with the reading
 
-*Planned.* Dino Book Reader, picture + text mode, on Android, iOS and the Windows head (shared MAUI code; each platform verified).
+*In progress (wave 2026-10-27), draft PR.* Dino Book Reader, picture + text mode, on Android, iOS and the Windows head (shared MAUI code; each platform verified).
 
 **Touches:** `src/DinoReader.App/PictureTextPages.cs`, `src/DinoReader.Core/PictureTextBook.cs`,
 `tests/DinoReader.Tests/**` (PictureTextBook placement tests), `site/dino/reading-screen.webp`
