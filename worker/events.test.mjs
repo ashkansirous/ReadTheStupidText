@@ -183,6 +183,16 @@ test("an older client's reader events, which have no detail, are still taken", (
   assert.equal(parseEvent(ownEvent)?.detail, "");
 });
 
+test("a count from an unstamped desk build (version 1.0) is dropped for both apps (Slice 167)", () => {
+  for (const version of ["1.0", "1.0.0", "1.0.0.0", "0.0.0", "0.0.0.0"]) {
+    assert.equal(parseEvent({ ...shelfEvent, version }), null, version);
+    assert.equal(parseRtstEvent({ ...readStarted, version }), null, version);
+  }
+  assert.notEqual(parseEvent({ ...shelfEvent, version: "1.0.1" }), null);
+  assert.equal(parseRtstEvent({ ...readStarted, version: "1.0" }), null);
+  assert.notEqual(parseRtstEvent({ ...readStarted, version: "1.0.1" }), null);
+});
+
 // ---- Read The Stupid Text's phone counts (Slice 137) ----------------------------------------------------------------
 
 const rtst = (name, fields) => ({ name, version: "1.4.0", platform: "android", day: "2026-10-26", sampleRate: 0.5, ...fields });

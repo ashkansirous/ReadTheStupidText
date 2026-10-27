@@ -17,7 +17,24 @@ public static class WindowsUsage
 
     /// <summary>The running counts service; the app registers it as the one <see cref="IUsageRecorder"/>.</summary>
     public static UsageService Create() =>
-        new(new UsageFileStore(), new UsageHttpTransport(), new UsageBuild(InstalledVersion(), PlatformName, OsMajor(Environment.OSVersion.Version.Build), ReadDevice()));
+        new(new UsageFileStore(), new UsageHttpTransport(), CurrentBuild());
+
+    private static UsageBuild CurrentBuild()
+    {
+        string version = InstalledVersion();
+        return new UsageBuild(version, PlatformName, OsMajor(Environment.OSVersion.Version.Build), ReadDevice(), UsageEligibility.Check(Facts(version)));
+    }
+
+    // Slice 167: a debug build or one whose package version was never stamped by CI counts nothing (a dry run). No emulator or test lab on a desktop.
+    internal static UsageFacts Facts(string version)
+    {
+#if DEBUG
+        const bool isDebug = true;
+#else
+        const bool isDebug = false;
+#endif
+        return new UsageFacts(isDebug, version, false, false);
+    }
 
     // A machine that will not describe itself sends no device object (Slice 166); the counts still go.
     private static DeviceContext? ReadDevice()

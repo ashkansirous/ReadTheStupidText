@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Net;
 using System.Text;
+using ReadTheStupidText.Application.Usage;
 
 namespace ReadTheStupidText.Mobile.Shared.Usage;
 
@@ -228,6 +229,17 @@ public sealed class UsageQueueSender<TEvent>(UsageQueueOptions<TEvent> options)
     {
         using var timeout = new CancellationTokenSource(Timeout);
         string json = options.ToJson(batch);
+        UsageSkipReason skip = UsageGate.Reason;
+        if (skip != UsageSkipReason.None)
+        {
+            // Dry run (Slice 167): a test build or device builds the batch but never posts it. The line holds no id or text.
+            Trace.WriteLine($"{options.LogName} usage batch of {batch.Count} not sent: {skip}");
+#if DEBUG
+            Debug.WriteLine($"{options.LogName} usage batch of {batch.Count} not sent: {skip}: {json}");
+#endif
+            return SendResult.Sent;
+        }
+
 #if DEBUG
         Debug.WriteLine($"{options.LogName} usage batch of {batch.Count}: {json}"); // counts hold no id or text, so the body is safe to log in a debug build
 #endif

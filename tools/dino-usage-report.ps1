@@ -17,7 +17,7 @@
   alone (many voice changes, many opens). It keeps tiny groups out of the report; it is not an anonymity guarantee. A group is dropped, not rounded.
 
   Token: a Cloudflare API token with "Account Analytics: Read". Keep it in the secrets store (the manage-secrets skill, D:\secrets), never in the repo;
-  pass it as -Token or set CLOUDFLARE_API_TOKEN. The account id is the one that owns the Worker (-AccountId or CLOUDFLARE_ACCOUNT_ID).
+  pass it as -Token or set CLOUDFLARE_API_TOKEN; without either, CF_ANALYTICS_READ_TOKEN is read from D:\secrets\readthestupidtext\secrets.env. The account id is the one that owns the Worker (-AccountId or CLOUDFLARE_ACCOUNT_ID; defaults to 985d711340bd2cf7bf5d71f04a7e84c9).
   Nothing here writes anywhere; use -DryRun to print the SQL without calling the API.
 
 .EXAMPLE
@@ -26,7 +26,7 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$AccountId = $env:CLOUDFLARE_ACCOUNT_ID,
+    [string]$AccountId = $(if ($env:CLOUDFLARE_ACCOUNT_ID) { $env:CLOUDFLARE_ACCOUNT_ID } else { '985d711340bd2cf7bf5d71f04a7e84c9' }),
     [string]$Token = $env:CLOUDFLARE_API_TOKEN,
     [int]$Days = 30,
     [int]$MinEvents = 10,
@@ -36,9 +36,20 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+# Slice 167: with no -Token and no CLOUDFLARE_API_TOKEN, read the read-only analytics token from the secrets store.
+$SecretsEnv = 'D:\secrets\readthestupidtext\secrets.env'
+if (-not $Token -and -not $DryRun -and (Test-Path $SecretsEnv)) {
+    $line = Get-Content $SecretsEnv | Where-Object { $_ -match '^\s*CF_ANALYTICS_READ_TOKEN\s*=' } | Select-Object -First 1
+    if ($line) { $Token = ($line -replace '^[^=]*=', '').Trim().Trim('"').Trim("'") }
+}
+
 $Dataset = 'dino_usage'
 $Weighted = 'SUM(_sample_interval * double1)'
-$Window = "timestamp > NOW() - INTERVAL '$Days' DAY"
+# Slice 167: leave out rows already stored from test builds: version 1.0 / 1.0.0 / 0.0.0 (built on a desk) and Android x64 (only emulators are x64 Android).
+# Analytics Engine cannot delete rows, so the report filters them. Builds from Slice 167 on send no test counts at all.
+# The x64 filter applies only to rows before the app gate shipped; after it, x64 Android is a real device (Chromebook, Intel tablet).
+$AppGateShipped = '2026-10-28 00:00:00'
+$Window = "timestamp > NOW() - INTERVAL '$Days' DAY AND blob6 NOT IN ('1.0','1.0.0','1.0.0.0','0.0.0','0.0.0.0') AND NOT (blob7 = 'android' AND blob13 = 'x64' AND timestamp < toDateTime('$AppGateShipped'))"
 $Enough = "HAVING SUM(_sample_interval) >= $MinEvents"
 
 # Each question: a title and the SQL that answers it. Counts are estimates of the true totals (sampling-weighted).
@@ -50,8 +61,8 @@ GROUP BY language, book $Enough ORDER BY language, opened DESC LIMIT 200
 "@
     'Finished vs opened per book' = @"
 SELECT blob2 AS book, blob3 AS language,
-  SUM(IF(blob1 = 'book_opened', _sample_interval * double1, 0)) AS opened,
-  SUM(IF(blob1 = 'book_finished', _sample_interval * double1, 0)) AS finished
+  SUM(IF(blob1 = 'book_opened', _sample_interval * double1, 0.0)) AS opened,
+  SUM(IF(blob1 = 'book_finished', _sample_interval * double1, 0.0)) AS finished
 FROM $Dataset WHERE blob1 IN ('book_opened', 'book_finished') AND blob4 = 'shelf' AND $Window
 GROUP BY book, language $Enough ORDER BY opened DESC LIMIT 200
 "@

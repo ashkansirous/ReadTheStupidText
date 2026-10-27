@@ -1,8 +1,8 @@
 ### Slice 167 — Usage counts: don't count test devices (both apps)
 
-*Planned.*
+*Built 2026-10-27.* Not yet verified: Release build on an emulator (crashed at startup in MAUI before any usage code, x64 only; store builds are arm64), the emulator and Test Lab rules on a device (unit tests only), the RTST tray on the desktop, an iOS simulator run; the first store rollout showing no test rows (query via the API).
 
-**Touches:** `src/ReadTheStupidText.Mobile.Shared/Usage/*`, `src/ReadTheStupidText.Application/Usage/*`, `src/ReadTheStupidText.Infrastructure/Usage/*`, `src/DinoReader.App/UsageCounter.cs`, `src/ReadTheStupidText.Mobile/MauiProgram.cs`, `src/DinoReader.App/MauiProgram.cs`, `tests/ReadTheStupidText.Tests/UsageServiceTests.cs`, `tests/ReadTheStupidText.Tests/UsageTests.cs`, `tools/dino-usage-report.ps1`, `tools/rtst-usage-report.ps1`, `PRIVACY.md`, `site/privacy.html`, `site/dino/privacy.html`
+**Touches:** `src/ReadTheStupidText.Mobile.Shared/Usage/*`, `src/ReadTheStupidText.Application/Usage/*`, `src/ReadTheStupidText.Infrastructure/Usage/*`, `src/DinoReader.App/UsageCounter.cs`, `src/ReadTheStupidText.Mobile/MauiProgram.cs`, `src/DinoReader.App/MauiProgram.cs`, `tests/ReadTheStupidText.Tests/UsageServiceTests.cs`, `tests/ReadTheStupidText.Tests/UsageTests.cs`, `worker/events.ts`, `worker/events.test.mjs`, `tools/dino-usage-report.ps1`, `tools/rtst-usage-report.ps1`, `PRIVACY.md`, `site/privacy.html`, `site/dino/privacy.html`
 
 Planned 2026-10-27, the evening counting with device context (Slice 166) went live. On its first day `dino_usage`
 held about 450 counts and none came from a real user: Google Play's pre-launch report robot (country US, versions
@@ -21,6 +21,10 @@ counting: no debug check, no emulator check, and the remote switch is on for eve
   4. **Android Firebase Test Lab** (what Play's pre-launch report runs on): the system setting
      `firebase.test.lab` is `"true"` (Google's documented check; confirm via library-docs/web before coding). iOS
      has no pre-launch robot, so there is no twin to build; (3) covers the simulator.
+     The Test Lab check is Android-only because iOS has no pre-launch robot; the simulator check covers iOS.
+  5. The emulator rule applies on Android and iOS only, never Windows (a real user in a Windows VM counts).
+     Unstamped means blank, `1.0`, `1.0.0`, `1.0.0.0`, `0.0.0`, `0.0.0.0` in the app, the Worker and both reports.
+     A gate fact that cannot be read means not counted, except the Test Lab setting (absent is normal: not a test).
 - **Dry run instead of silence:** on a test build or device the sender still builds each batch but writes it to
   the debug log (the existing DEBUG batch line, marked `not sent: <reason>`) instead of posting it, so device tests
   can still check what a batch would hold. Nothing reaches `/api/events`.
@@ -29,7 +33,9 @@ counting: no debug check, no emulator check, and the remote switch is on for eve
 - One pure decision, unit-tested: `UsageEligibility` (Application) takes the facts (is debug, display version,
   is virtual, is test lab) and answers counted / not counted with the reason. Each head gathers the facts once at
   start. The reason goes to a Debug line only.
-- The Worker is not changed (it cannot tell a test device from a real one).
+- The Worker is a backstop only (new global rule, analytics record real production users): it drops, and does not write, any count whose
+  app version is exactly the unstamped default `1.0`, on both the Dino and RTST paths. It cannot tell an emulator from a phone, so the apps
+  carry the rest.
 - Report scripts leave out rows already stored from test builds: version `1.0`, and Android `x64` rows (only
   emulators are x64 Android). Analytics Engine cannot delete rows.
 - The scripts read the token from the secrets store entry `CF_ANALYTICS_READ_TOKEN`
@@ -39,13 +45,13 @@ counting: no debug check, no emulator check, and the remote switch is on for eve
 
 **Work:**
 
-- [ ] `UsageEligibility` in `src/ReadTheStupidText.Application/Usage/` plus unit tests for each rule and their mix.
-- [ ] Android: facts gathered in Mobile.Shared (Test Lab setting read through `Android.Provider.Settings.System`),
+- [x] `UsageEligibility` in `src/ReadTheStupidText.Application/Usage/` plus unit tests for each rule and their mix.
+- [x] Android: facts gathered in Mobile.Shared (Test Lab setting read through `Android.Provider.Settings.System`),
       the shared queue sender (`UsageQueueSender`) refuses to queue or send when not counted. Both apps.
-- [ ] iOS twin: the same facts (debug, version, simulator) through the same Mobile.Shared code path. Both apps.
-- [ ] Windows: RTST tray (`UsageService`) and Dino's Windows head skip counting for debug and unstamped builds.
-- [ ] Report scripts: test-row filter, token from the secrets store, default account id.
-- [ ] `PRIVACY.md`, `site/privacy.html`, `site/dino/privacy.html`: the one sentence.
+- [x] iOS twin: the same facts (debug, version, simulator) through the same Mobile.Shared code path. Both apps.
+- [x] Windows: RTST tray (`UsageService`) and Dino's Windows head skip counting for debug and unstamped builds.
+- [x] Report scripts: test-row filter, token from the secrets store, default account id.
+- [x] `PRIVACY.md`, `site/privacy.html`, `site/dino/privacy.html`: the one sentence.
 
 **Verification:**
 

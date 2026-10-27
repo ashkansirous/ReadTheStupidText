@@ -162,6 +162,9 @@ const EVENT_RULES: Readonly<Record<string, EventRule>> = {
 };
 const LANGUAGE_PATTERN = /^[a-z]{2,3}(-[A-Za-z]{2,4})?$/;
 const VERSION_PATTERN = /^\d{1,6}(\.\d{1,6}){1,3}$/;
+// Slice 167: the project default version of a build never stamped by CI, i.e. built on a desk. A backstop for the apps' own test-build gate:
+// such a count is dropped, not written, in both datasets.
+const UNSTAMPED_VERSIONS: readonly string[] = ["1.0", "1.0.0", "1.0.0.0", "0.0.0", "0.0.0.0"];
 const MIN_SAMPLE_RATE = 0.001;
 const DAY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 const ErrorCode = {
@@ -240,6 +243,7 @@ export function parseEvent(raw: unknown): UsageEvent | null {
     (rule.language === undefined || language === rule.language) &&
     typeof hasRecording === "boolean" &&
     matches(VERSION_PATTERN, version) &&
+    !UNSTAMPED_VERSIONS.includes(version as string) &&
     oneOf(PLATFORMS, platform) &&
     isRealDay(day) &&
     typeof sampleRate === "number" &&
@@ -423,6 +427,7 @@ function hasValidEnvelope(raw: Record<string, unknown>): boolean {
   const { version, platform, day, sampleRate } = raw;
   return (
     matches(VERSION_PATTERN, version) &&
+    !UNSTAMPED_VERSIONS.includes(version as string) &&
     oneOf(PLATFORMS, platform) &&
     isRealDay(day) &&
     typeof sampleRate === "number" &&
