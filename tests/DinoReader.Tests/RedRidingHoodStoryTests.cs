@@ -4,12 +4,12 @@ namespace DinoReader.Tests;
 
 /// <summary>Little Red Riding Hood's cast (Slice 121): the girls and women get women's voices and the Wolf and the Woodcutter men's, in every language's roster,
 /// cast the way <see cref="StoreStoryTests.TheUglyDuckling_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster"/> casts the Ugly Duckling.
-/// Button the puppy never speaks, so Button is not in the cast.</summary>
+/// Button the puppy never speaks, so Button is not in the cast. Since Slice 156 the book suggests each voice (bee, mummy, puppy, hen, giant; <see cref="StarterVoices"/>) and the stored genders are the book's.</summary>
 public sealed class RedRidingHoodStoryTests
 {
     private static readonly IReadOnlyDictionary<string, Gender> ExpectedGenders = new Dictionary<string, Gender>
     {
-        ["Red Riding Hood"] = Gender.Female, ["Mother"] = Gender.Female, ["Grandma"] = Gender.Female, ["Wolf"] = Gender.Male, ["Woodcutter"] = Gender.Male,
+        ["Red Riding Hood"] = Gender.Female, ["Mum"] = Gender.Female, ["Grandma"] = Gender.Female, ["Wolf"] = Gender.Male, ["Woodcutter"] = Gender.Male,
     };
 
     public static TheoryData<string> Languages() => new(UiLanguage.Supported);
@@ -19,6 +19,7 @@ public sealed class RedRidingHoodStoryTests
     public void LittleRedRidingHood_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
     {
         Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.RedRidingHoodId));
+        Assert.All(story.Cast, m => Assert.True(m.Gender == ExpectedGenders[m.Name], $"{m.Name} is stored as {m.Gender}"));
         IReadOnlyList<CastMember> stored = language == story.Language
             ? story.Cast
             : story.Cast.Where(m => m.HasAnimalSetting).Select(m => m with { VoiceId = string.Empty }).ToList();

@@ -93,6 +93,18 @@ internal static class StarterVoices
             new("Big Billy", "giant", Gender.Male, CharacterAge.Adult, null, [VoiceQuality.Booming, VoiceQuality.Warm]),
             new("Troll", "troll", Gender.Male, CharacterAge.Adult, CharacterBeing.Troll, [VoiceQuality.Gruff]),
         ],
+
+        // Little Red Riding Hood: a cheerful girl of about six (Busy Bee), her mum, a friendly young wolf who is lost and wags his tail (Playful Puppy, never the growly Hungry Wolf
+        // the picker gave him), a big kind woodcutter (Friendly Giant) and a cosy grandma (Granny Hen). These five are female or male in every roster and never a whisper flavour,
+        // except Farsi, which has no hen: its Grandma is matched by traits and lands on the whispering princess, the only free woman's voice (reported, a roster gap). The Wolf is a wolf in the book (Slice 152), so his traits name no second kind.
+        [StoreTexts.RedRidingHoodId] =
+        [
+            new("Red Riding Hood", "bee", Gender.Female, CharacterAge.Child, CharacterBeing.Person, [VoiceQuality.Bright, VoiceQuality.Bouncy]),
+            new("Mum", "mummy", Gender.Female, CharacterAge.Adult, CharacterBeing.Person, [VoiceQuality.Warm, VoiceQuality.Soft]),
+            new("Wolf", "puppy", Gender.Male, CharacterAge.Young, null, [VoiceQuality.Bouncy, VoiceQuality.Warm]),
+            new("Grandma", "hen", Gender.Female, CharacterAge.Old, CharacterBeing.Person, [VoiceQuality.Warm, VoiceQuality.Soft]),
+            new("Woodcutter", "giant", Gender.Male, CharacterAge.Adult, CharacterBeing.Person, [VoiceQuality.Booming, VoiceQuality.Warm]),
+        ],
         // The Elves and the Shoemaker: an elderly, kind shoemaker and his wife in plain everyday voices, and two tiny, giggly elves (a girl and a boy) in small, bouncy ones.
         // The picker gave Nob the Grumpy Troll in most languages, Nib the whispering princess in Spanish and Portuguese and the Big dragon in Farsi. No roster has an elf, so they are fairy-kind.
         [StoreTexts.ElvesId] =
