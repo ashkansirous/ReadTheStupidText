@@ -20,6 +20,7 @@ Open slices only. Finished slices (148 rows) are in [slices-done](docs/plan/note
 | --- | --- | --- | --- | --- | --- |
 | 153 | Dino: no robotic-sounding character voices | planned | | | [153-dino-no-robotic-voices.md](docs/plan/slices/153-dino-no-robotic-voices.md) |
 | 154 | Dino: vowel marks in Farsi and Arabic books | planned | | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
+| 157 | Dino: book content and the book builder out of the test project | planned | | | [157-dino-book-content-out-of-tests.md](docs/plan/slices/157-dino-book-content-out-of-tests.md) |
 
 Batch 25 (119-123; 119, 120, 122, 123 built, 121 built; planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
 
@@ -33,6 +34,8 @@ Batch 28 (132-134, planned 2026-10-25, which books families like and how parents
 M3 starts with a listening page and waits on the user's listening verdicts. 154 starts with a listening test, then adds vowel marks book by book (it also waits on the user's listening verdicts; draft PR #435) after each book's Slice 146 rewrite and open illustration PR merge. Decisions 155-159 (157 reverses 132).
 
 Batch 32 (155, planned 2026-10-26, Dino onboarding): Slice 155 (the first-run intro wizard, PR #432) is built, so the batch is done. Decision 160.
+
+Batch 34 (157, planned 2026-10-27, after the store fell four versions behind `main`): book content moves to `content/dino/<book>/`, a console tool builds it, and a merged version bump uploads it. Runs alone between waves, after the open per-book PRs merge, because it moves every book's files. Decision 162.
 
 
 ### Notes
