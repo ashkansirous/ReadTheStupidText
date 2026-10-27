@@ -50,6 +50,16 @@ internal static class StarterVoices
         [
             new("Hazelnut", "bee", Gender.Female, CharacterAge.Young, null, [VoiceQuality.Bright, VoiceQuality.Warm]),
         ],
+
+        // The Little Red Hen: four farm animals with their own animal (and sound), Hen and Cat "she", Dog and Duck "he". A kitten is a boy in fa/es/pt and a duckling a girl in
+        // most rosters, so Cat suggests the kitten and Duck the jolly jester (English only): where those don't fit, the traits give Cat a girl's voice and Duck a boy bird's.
+        [StoreTexts.RedHenId] =
+        [
+            new("Hen", "mummy", Gender.Female, CharacterAge.Adult, null, [VoiceQuality.Bright, VoiceQuality.Bouncy, VoiceQuality.Warm]),
+            new("Dog", "puppy", Gender.Male, CharacterAge.Young, null, [VoiceQuality.Bouncy, VoiceQuality.Warm]),
+            new("Cat", "kitten", Gender.Female, CharacterAge.Young, null, [VoiceQuality.Soft]),
+            new("Duck", "jester", Gender.Male, CharacterAge.Young, null, [VoiceQuality.Squawky, VoiceQuality.Squeaky]),
+        ],
     };
 
     /// <summary>The books whose characters a writer has chosen voices for: each character has traits and a known suggestion no one else in the book shares.</summary>
