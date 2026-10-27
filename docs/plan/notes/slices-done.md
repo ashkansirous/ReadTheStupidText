@@ -156,6 +156,8 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 151 | Dino: three view modes, no merging of characters | built | #430 | | [151-dino-three-view-modes.md](../slices/151-dino-three-view-modes.md) |
 | 155 | Dino: a first-run intro wizard for three things | built | #432 | | [155-dino-first-run-intro-wizard.md](../slices/155-dino-first-run-intro-wizard.md) |
 | 152 | Dino: a character's animal comes from the book, never its voice | built | #436 | — | [152-dino-animal-from-the-book.md](../slices/152-dino-animal-from-the-book.md) |
+| 146 | Rewrite every Dino book in spoken, kid-friendly language | built | #403-#411, #439-#444, #446, #448, #449, #451-#454, #456-#464 | | [146-dino-books-kid-friendly-language.md](../slices/146-dino-books-kid-friendly-language.md) |
+| 156 | Dino: the book chooses each character's voice, not the app | built | #438, #447, #455, #465 | | [156-dino-authored-character-voices.md](../slices/156-dino-authored-character-voices.md) |
 
 ## Batch ordering notes
 
@@ -188,3 +190,7 @@ Batch 23 (113-114, planned 2026-10-24, the voices sound too grown up for childre
 Batch 24 (115-118, planned 2026-10-25, Dino stuck on the old voices; storyteller characters for every language and animal sounds): one at a time in order 115, 116, 117, 118 (all built). All four edit `StoryVoicing`, the cast page or the voice tables. Dino only; RTST unchanged. Decisions 120-124.
 
 Batch 29 (137-142, planned 2026-10-26, RTST usage counts, waiting and early start): which languages people use, whether they translate or change the voice, and how long translation and the first sound take (a user reported a "hang" on Translate). Phone first, one at a time (all three edit ReaderPage/ReviewPage): 137, 138 (built), 139 (built); then Windows 140 and 141 (built), 142 (built), so the batch is done. 137 reuses Dino's Batch 28 pipe and edits `worker/` and Dino's `UsageCounter`/`AppConfigClient`. Decisions 143-148.
+
+Batch 30 (143-146 and 148, planned 2026-10-26, Dino loading, Farsi voice and kid-friendly language): 143 builds the shared wait overlay (RTST 138 reuses it), 144 is small and independent, 145 measures sound-word spellings before 146 rewrites every book (one PR per book: Farsi, then English, then the rest). 143, 144, 145 and 148 (the stall and wait-count follow-ups, PR #416) are built; 146 is in progress: Farsi wave A is merged (PRs #403-#411, #439-#444; x-marks-the-treasure not yet), and English and the other languages (waves B and C) now run together per book, one PR per book, with Slice 156's voice choices. Decisions 149-153.
+
+Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure book's Seagull): each book stores every character's traits and a suggested voice, chosen by the story writer; the app uses the suggestion and falls back to the traits. It follows Slice 152 (shares `Story.cs`/`StoryCast.cs`/`CastCharacters.cs`/`CastRows.cs` and reuses its `Animal` field as the "kind" trait) and Slice 153 (both edit `CharacterRoster*.cs`). The code is built (PR #438); the "Every book" writer pass is still to do. Decision 161.

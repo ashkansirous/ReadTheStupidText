@@ -1,6 +1,6 @@
 # Slice 146 — Rewrite every Dino book in spoken, kid-friendly language
 
-*In progress (Wave A, Farsi). Slice 145 is built.*
+*Built 2026-10-27, not yet verified by a native read or on upload. Slice 145 is built.*
 
 **Batch:** 30 (Decisions 149-153)
 **Touches:** `tests/DinoReader.Tests/StarterTexts.cs`, `tests/DinoReader.Tests/StoreTexts.cs`, `tests/DinoReader.Tests/Starters/translations/**`, `tests/DinoReader.Tests/Store/**`, `tests/DinoReader.Tests/StarterBuilder*.cs`, `src/DinoReader.App/StarterUpdate*.cs`, `src/DinoReader.App/Resources/Raw/starters/*.dino`
@@ -28,12 +28,21 @@ No screens. The Batch 30 mock intro says 146 (books rewritten in everyday spoken
 ## Work
 
 - [x] Wave A (all but x-marks-the-treasure): Farsi for the 4 starters, then each store story. Farsi done and merged for: good-enough (#403), three-little-pigs (#404), elves-and-shoemaker (#405, store v4), lion-and-mouse (#406, v5), billy-goats-gruff (#407, v6), town-mouse-country-mouse (#409, v4), peter-rabbit (#410, v5), ugly-duckling (#411, v5), and the later Farsi PRs #439-#444. The store packages are NOT yet uploaded (upload needs the user's OK). Remaining Farsi books wait for the other tab's open PRs: tortoise-and-hare (#389), goldilocks (#393), red-riding-hood (#394), little-red-hen (#395), jack-and-the-beanstalk (#402), gingerbread-man (#379).
-- [ ] Waves B and C now run together, one PR per book, using Slice 156's voice choices. Wave B: English for every book (reworded English pieces need their 13 translations redone in
+- [x] Waves B and C ran together, one PR per book, using Slice 156's voice choices. Wave B: English for every book (reworded English pieces need their 13 translations redone in
       the new register).
-- [ ] Wave C: the other 12 languages for every book.
-- [ ] Each book: version bump, rebuild, reviewer pass, upload (store), store copies checked live.
+- [x] Wave C: the other 12 languages for every book.
+- [x] Each book: version bump, rebuild, reviewer pass. Upload (store) and the live check are NOT done (needs the user's OK).
 
 ## Verification
 
 - `dotnet test tests/DinoReader.Tests` (coverage, gentle-text and speech-tag tests) per book.
 - Native read by the user for Farsi; installed copies update and keep recordings on unchanged pages.
+
+*Built 2026-10-27.* Wave A (Farsi, all 15 books): PRs #403-#411, #439-#444, Treasure in #456. Waves B and C (English and the 12 other languages), one PR per book: #446, #448, #449, #451-#454, #456-#463; the Japanese kanji were restored in #464.
+
+#### Not yet verified
+
+- Native read of all 13 translations per book.
+- A listen to the new sound-word triples in ar, da, fi, fr, ja, nb, nl, pt, ru, sv.
+- Upload of every rewritten store book to R2 (needs the user's OK; packages are built with `DINO_BUILD_STORE=1`, latest versions in `StoreTexts.cs`), then compare `/api/stories`.
+- Good Enough pages 1-7 keep words printed in the pictures (a redraw is the user's call).
