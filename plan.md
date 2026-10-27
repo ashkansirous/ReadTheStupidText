@@ -18,11 +18,10 @@ Open slices only. Finished slices (146 rows) are in [slices-done](docs/plan/note
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
-| 146 | Rewrite every Dino book in spoken, kid-friendly language | in progress | | | [146-dino-books-kid-friendly-language.md](docs/plan/slices/146-dino-books-kid-friendly-language.md) |
-| 152 | Dino: a character's animal comes from the book, never its voice | planned | | | [152-dino-animal-from-the-book.md](docs/plan/slices/152-dino-animal-from-the-book.md) |
+| 146 | Rewrite every Dino book in spoken, kid-friendly language | in progress | #403-#411, #439-#444 (Farsi) | | [146-dino-books-kid-friendly-language.md](docs/plan/slices/146-dino-books-kid-friendly-language.md) |
 | 153 | Dino: no robotic-sounding character voices | planned | | | [153-dino-no-robotic-voices.md](docs/plan/slices/153-dino-no-robotic-voices.md) |
 | 154 | Dino: vowel marks in Farsi and Arabic books | planned | | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
-| 156 | Dino: the book chooses each character's voice, not the app | planned | | | [156-dino-authored-character-voices.md](docs/plan/slices/156-dino-authored-character-voices.md) |
+| 156 | Dino: the book chooses each character's voice, not the app | in progress | #438 | | [156-dino-authored-character-voices.md](docs/plan/slices/156-dino-authored-character-voices.md) |
 
 Batch 25 (119-123; 119, 120, 122, 123 built, 121 built; planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
 
@@ -32,13 +31,13 @@ Batch 27 (127-131, planned 2026-10-25, after Dino work kept resubmitting Read Th
 
 Batch 28 (132-134, planned 2026-10-25, which books families like and how parents use the app): 132 (the remote config the counts are switched by, and the forced update) and 133 (first events, privacy texts and store forms) and 134 (the rest of the events and the report, PR #368) are built, so the batch is done. All three edit `worker/` and Dino's `MauiProgram`, so one at a time. Decisions 138-142.
 
-Batch 30 (143-146 and 148, planned 2026-10-26, Dino loading, Farsi voice and kid-friendly language): 143 builds the shared wait overlay (RTST 138 reuses it), 144 is small and independent, 145 measures sound-word spellings before 146 rewrites every book (one PR per book: Farsi, then English, then the rest). 143, 144, 145 and 148 (the stall and wait-count follow-ups, PR #416) are built; 146 is in progress: Farsi wave A (8 books) is merged, 6 more Farsi books wait for the other tab's PRs, and English and the other languages are to come. Decisions 149-153.
+Batch 30 (143-146 and 148, planned 2026-10-26, Dino loading, Farsi voice and kid-friendly language): 143 builds the shared wait overlay (RTST 138 reuses it), 144 is small and independent, 145 measures sound-word spellings before 146 rewrites every book (one PR per book: Farsi, then English, then the rest). 143, 144, 145 and 148 (the stall and wait-count follow-ups, PR #416) are built; 146 is in progress: Farsi wave A is merged (PRs #403-#411, #439-#444; x-marks-the-treasure not yet), and English and the other languages (waves B and C) now run together per book, one PR per book, with Slice 156's voice choices. Decisions 149-153.
 
-Batch 31 (150-154, planned 2026-10-26, from a tester review of Dino Reader): 150 (speed, PR #429) and 151 (view modes, no merge, PR #430) are built. 152 follows 151 and is in progress (PR #436) (both edit `CastPage`/`CastRows`/`StoryVoicing`). 153 starts with a listening page and waits on the user's listening verdicts. 154 starts with a listening test, then adds vowel marks book by book (it also waits on the user's listening verdicts) after each book's Slice 146 rewrite and open illustration PR merge. Decisions 155-159 (157 reverses 132).
+Batch 31 (150-154, planned 2026-10-26, from a tester review of Dino Reader): 150 (speed, PR #429) and 151 (view modes, no merge, PR #430) are built. 152 (PR #436) is built; it followed 151 (both edit `CastPage`/`CastRows`/`StoryVoicing`). 153 starts with a listening page and waits on the user's listening verdicts. 154 starts with a listening test, then adds vowel marks book by book (it also waits on the user's listening verdicts) after each book's Slice 146 rewrite and open illustration PR merge. Decisions 155-159 (157 reverses 132).
 
 Batch 32 (155, planned 2026-10-26, Dino onboarding): Slice 155 (the first-run intro wizard, PR #432) is built, so the batch is done. Decision 160.
 
-Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure book's Seagull): each book stores every character's traits and a suggested voice, chosen by the story writer; the app uses the suggestion and falls back to the traits. It follows Slice 152 (shares `Story.cs`/`StoryCast.cs`/`CastCharacters.cs`/`CastRows.cs` and reuses its `Animal` field as the "kind" trait) and Slice 153 (both edit `CharacterRoster*.cs`). The Treasure book first, then the fallback, then every book. Decision 161.
+Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure book's Seagull): each book stores every character's traits and a suggested voice, chosen by the story writer; the app uses the suggestion and falls back to the traits. It follows Slice 152 (shares `Story.cs`/`StoryCast.cs`/`CastCharacters.cs`/`CastRows.cs` and reuses its `Animal` field as the "kind" trait) and Slice 153 (both edit `CharacterRoster*.cs`). The code is built (PR #438); the "Every book" writer pass is still to do. Decision 161.
 
 ### Notes
 
@@ -79,7 +78,9 @@ Built but not verified (details in each slice file):
 - Slice 142: packaged desktop run done 2026-10-26 on a CPU-saturated host; re-check first-audio timing on a quiet machine; prompt tray exit not verified ([slice](docs/plan/slices/142-rtst-windows-early-start.md)).
 - Slice 148: emulator PASS 2026-10-26 (timings not representative). Not done: Windows stall overlay on a packaged run; native read of `Wait_Stalled` and `Review_TextCut`; re-run the 300k-character repeated-text read on a 2 GB AVD to confirm the 8-chunk `GenerationWindow`; iOS and Windows neural readers not checked ([slice](docs/plan/slices/148-phone-wait-followups.md)).
 - Slice 121: check the illustrated books on a phone (pictures, text panel, voices) ([slice](docs/plan/slices/121-dino-illustrate-store-stories.md)).
-- Slice 146 (in progress): upload the six rewritten store books (`tools/upload-store-story.ps1`; user OK needed) ([slice](docs/plan/slices/146-dino-books-kid-friendly-language.md)).
+- Slice 146 (in progress): upload every rewritten store book (`tools/upload-store-story.ps1`; waiting on the user's OK) ([slice](docs/plan/slices/146-dino-books-kid-friendly-language.md)).
+- Slice 152: Billy Goats store book on device; hearing a recast animal by ear; Windows head and iOS; native read of the `Settings_AnimalSounds_*` strings; upload and live check of the 11 bumped store books (needs the user's OK) ([slice](docs/plan/slices/152-dino-animal-from-the-book.md)).
+- Slice 156 (code built, PR #438; writer pass for every book still to do): Chinese Treasure book on device; Windows head and iOS; native read of "Back to the book's voice"; upload of Treasure v4 (user's OK); an older build saving an edit drops the suggestion and traits (accepted) ([slice](docs/plan/slices/156-dino-authored-character-voices.md)).
 - Slice 96: emulator in Farsi and Arabic (gallery, gate, wizard, store, backup, reader, swipe direction, highlight on RTL lines); Windows head gallery and reader ([slice](docs/plan/slices/96-dino-layout-never-mirrors.md)).
 - Slice 97: Windows head: the AddBook icon rendering and the gate opening; native-speaker read of the `Gallery_AddBook` strings ([slice](docs/plan/slices/97-dino-add-book-button.md)).
 - Slice 99: the RTST phone highlight covers a whole 3-sentence `SpeechTextChunker` chunk, not one sentence; full TalkBack walk-through; iOS device run; Settings voice name does not refresh after a pack installs ([slice](docs/plan/slices/99-rtst-mobile-minimal-main-page.md)).

@@ -155,6 +155,7 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 150 | Dino: slower reading by default (0.8x), grown-up speed 0.5-1.2x | built | #429 | | [150-dino-slower-reading-speed.md](../slices/150-dino-slower-reading-speed.md) |
 | 151 | Dino: three view modes, no merging of characters | built | #430 | | [151-dino-three-view-modes.md](../slices/151-dino-three-view-modes.md) |
 | 155 | Dino: a first-run intro wizard for three things | built | #432 | | [155-dino-first-run-intro-wizard.md](../slices/155-dino-first-run-intro-wizard.md) |
+| 152 | Dino: a character's animal comes from the book, never its voice | built | #436 | — | [152-dino-animal-from-the-book.md](../slices/152-dino-animal-from-the-book.md) |
 
 ## Batch ordering notes
 

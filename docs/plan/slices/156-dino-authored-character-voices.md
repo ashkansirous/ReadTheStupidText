@@ -82,7 +82,7 @@ sound. Store books are cast at build time by the same picker (`tests/DinoReader.
 
 *Verified 2026-10-27, emulator headless:* Treasure Seagull/Billy voices, change and back to the book's voice, persistence; starters unchanged and show no link: PASS. Code-level compare: every non-Treasure cast identical in 14 languages.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-27)
 
 - Dino casting: a book's `SuggestedVoice` is one roster id for all languages, so a book enters `StarterVoices.AuthoredBooks` only after a writer pass gives every character traits and a known, unshared suggestion that keeps gender-matched voices in every language (`src/DinoReader.Core/CLAUDE.md`). (Slice 156: docs/plan/slices/156-dino-authored-character-voices.md)
 - A `Book`-sourced cast member is never recast by the picker and never takes the narrator's voice; `Edited` reads as `Grownup` (`src/DinoReader.Core/CastCharacters.cs`). (Slice 156: docs/plan/slices/156-dino-authored-character-voices.md)

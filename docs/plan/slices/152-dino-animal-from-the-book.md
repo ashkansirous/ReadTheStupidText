@@ -1,6 +1,6 @@
 # Slice 152 — Dino: a character's animal comes from the book, never from its voice
 
-*Built 2026-10-27, PR #436, not yet verified on device (see Not yet verified).* Dino Reader only.
+*Built 2026-10-27, PR #436 (merged), not yet verified on device (see Not yet verified).* Dino Reader only.
 
 **Batch:** 31 (tester review, 2026-10-26; Decision 157, reverses Decision 132)
 **Touches:** `src/DinoReader.Core/AnimalSound*.cs`, `src/DinoReader.Core/CastCharacters.cs`, `src/DinoReader.Core/StoryCast.cs`, `src/DinoReader.Core/Story.cs`, `src/DinoReader.App/StoryVoicing.cs`, `src/DinoReader.App/CastPage.cs`, `src/DinoReader.App/CastRows.cs`, `src/DinoReader.App/SettingsRows.cs` (shared with Slice 150: sequence them), `src/DinoReader.App/Resources/Strings/*.resx`, `tests/DinoReader.Tests/StarterAnimals.cs`, `tests/DinoReader.Tests/StoreTexts.cs`, `tests/DinoReader.Tests/StarterBuilder.cs`, `tests/DinoReader.Tests/**`, `src/DinoReader.Core/CLAUDE.md`, `src/DinoReader.App/CLAUDE.md`, `.claude/agents/dino-story-writer.md`
@@ -91,7 +91,7 @@ Source: `docs/design/dino-reader/Dino Reader Batch 31.dc.html`, screen 69 (lines
 - Native read of the `Settings_AnimalSounds_*` strings.
 - Store upload and live check of the 11 books.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-27)
 
 - `src/DinoReader.Core/AnimalSounds.cs`: a member's explicit animal (kind or `none`) from the book wins over voice, flavour and recast; only undecided members use the old voice rule. `StarterAnimals.Explicit` must stamp every starter and store member; deliberate people go in `NotAnimalsByStory`. (Slice 152: docs/plan/slices/152-dino-animal-from-the-book.md)
 - `src/DinoReader.App/StoryVoicing.cs`: animal sounds read the app-wide `AnimalSoundsPreference`, never `Story.AnimalSoundsOn` (ignored). (Slice 152: docs/plan/slices/152-dino-animal-from-the-book.md)
