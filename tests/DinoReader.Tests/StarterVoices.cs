@@ -33,6 +33,13 @@ internal static class StarterVoices
             new("Town Mouse", "bee", Gender.Female, CharacterAge.Young, null, [VoiceQuality.Bright, VoiceQuality.Bouncy]),
             new("Country Mouse", "piglet", Gender.Male, CharacterAge.Young, null, [VoiceQuality.Soft, VoiceQuality.Warm]),
         ],
+        // The Lion and the Mouse: a big, booming but kind king of a Lion (the Friendly Giant: big, deep and slow); a tiny, quick, squeaky girl Mouse. The mouse voice is a boy in
+        // English and Farsi, so there her suggestion clashes on gender and the traits give her a girl's young, squeaky voice; everywhere else she is the Squeaky Mouse.
+        [StoreTexts.LionAndMouseId] =
+        [
+            new("Lion", "giant", Gender.Male, CharacterAge.Adult, null, [VoiceQuality.Booming, VoiceQuality.Warm]),
+            new("Mouse", "mouse", Gender.Female, CharacterAge.Young, null, [VoiceQuality.Squeaky, VoiceQuality.Bright]),
+        ],
 
         // X Marks the Treasure!
         [StoreTexts.TreasureId] =
@@ -41,7 +48,7 @@ internal static class StarterVoices
             new("Kathryn", "princess", Gender.Female, CharacterAge.Adult, CharacterBeing.Pirate, [VoiceQuality.Bold, VoiceQuality.Bright]),
             new("Izzy", "fairy", Gender.Female, CharacterAge.Young, CharacterBeing.Pirate, [VoiceQuality.Bright, VoiceQuality.Bouncy]),
             new("Billy", "puppy2", Gender.Male, CharacterAge.Child, CharacterBeing.Pirate, [VoiceQuality.Bouncy, VoiceQuality.Warm]),
-            new("Pancake Polly", "mummy", Gender.Female, CharacterAge.Adult, CharacterBeing.Pirate, [VoiceQuality.Warm, VoiceQuality.Bouncy]),
+            new("Pancake Polly", "bee", Gender.Female, CharacterAge.Adult, CharacterBeing.Pirate, [VoiceQuality.Warm, VoiceQuality.Bouncy]),
         ],
 
         // The Three Little Pigs: Pip is the hasty one (Cheeky Piglet, small and quick), Pop the playful one (Curly Piglet, bright and squeaky), Pim the careful builder (Snuffly
@@ -62,12 +69,34 @@ internal static class StarterVoices
             new("Big Billy", "giant", Gender.Male, CharacterAge.Adult, null, [VoiceQuality.Booming, VoiceQuality.Warm]),
             new("Troll", "troll", Gender.Male, CharacterAge.Adult, CharacterBeing.Troll, [VoiceQuality.Gruff]),
         ],
+        // The Elves and the Shoemaker: an elderly, kind shoemaker and his wife in plain everyday voices, and two tiny, giggly elves (a girl and a boy) in small, bouncy ones.
+        // The picker gave Nob the Grumpy Troll in most languages, Nib the whispering princess in Spanish and Portuguese and the Big dragon in Farsi. No roster has an elf, so they are fairy-kind.
+        [StoreTexts.ElvesId] =
+        [
+            new("Hans", "knight", Gender.Male, CharacterAge.Old, CharacterBeing.Person, [VoiceQuality.Warm]),
+            new("Greta", "mummy", Gender.Female, CharacterAge.Old, CharacterBeing.Person, [VoiceQuality.Warm, VoiceQuality.Soft]),
+            new("Nib", "bee", Gender.Female, CharacterAge.Young, CharacterBeing.Fairy, [VoiceQuality.Bright, VoiceQuality.Bouncy]),
+            new("Nob", "piglet", Gender.Male, CharacterAge.Young, CharacterBeing.Fairy, [VoiceQuality.Bouncy, VoiceQuality.Squeaky]),
+        ],
+
         // Good Enough: Hazelnut, the squirrel best friend who says the last line (a squirrel has no animal sound, so no kind).
         [StarterBuilder.GoodEnoughId] =
         [
             new("Hazelnut", "bee", Gender.Female, CharacterAge.Young, null, [VoiceQuality.Bright, VoiceQuality.Warm]),
         ],
 
+        // The Tortoise and the Hare: three boys and three girls, as the text's pronouns say. Owl and Frog are animals with a sound (their kind is the book's animal); the Hare, Tortoise,
+        // Squirrel and Hedgehog have no sound word, so no kind either. Owl is Grandpa Bear, not the Sleepy Owl: only en and fa have an owl, and elsewhere the trait match ranks a
+        // bird kind above age and gave the wise old Owl the young Chick; Grandpa Bear (old, deep and kind, sleepy) is in every roster, and Owl still hoots (his animal is the book's).
+        [StarterTexts.TortoiseId] =
+        [
+            new("Hare", "puppy", Gender.Male, CharacterAge.Young, null, [VoiceQuality.Bouncy, VoiceQuality.Bold]),
+            new("Tortoise", "hen", Gender.Female, CharacterAge.Adult, null, [VoiceQuality.Sleepy, VoiceQuality.Warm]),
+            new("Owl", "bear", Gender.Male, CharacterAge.Old, null, [VoiceQuality.Sleepy, VoiceQuality.Warm]),
+            new("Squirrel", "bee", Gender.Female, CharacterAge.Young, null, [VoiceQuality.Bouncy, VoiceQuality.Bright]),
+            new("Hedgehog", "piglet", Gender.Male, CharacterAge.Young, null, [VoiceQuality.Bouncy, VoiceQuality.Warm]),
+            new("Frog", "lamb2", Gender.Female, CharacterAge.Young, null, [VoiceQuality.Bouncy, VoiceQuality.Squeaky]),
+        ],
         // The Little Red Hen: four farm animals with their own animal (and sound), Hen and Cat "she", Dog and Duck "he". A kitten is a boy in fa/es/pt and a duckling a girl in
         // most rosters, so Cat suggests the kitten and Duck the jolly jester (English only): where those don't fit, the traits give Cat a girl's voice and Duck a boy bird's.
         [StoreTexts.RedHenId] =
