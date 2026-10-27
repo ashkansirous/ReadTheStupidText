@@ -66,6 +66,8 @@ on CI (Slice 48).
 
 *Measured:* cold boot 118 s; warm start after stop 6.3-7.1 s (target < 20 s); `install-debug` 88 s to about 3 min (mostly build). A neural read played on the emulator (`supertonic:M1`). The Dino APK has x86_64 libs and launches.
 
+*Superseded in Slice 162:* warm start via snapshot was dropped (snapshots broke flows); start is a ~45 s cold boot, reused while the emulator runs.
+
 *Changed while building:* the AVD `config.ini` is not edited (it lives in `~/.android`); the tuning is passed as emulator flags instead.
 
 *From review:* high pass 10 findings (applied 1-6, 9, 10; skipped 7, 8); medium pass 10 (applied 1, 2, 4, 5, 7, 8; skipped 3, 6, 9; 10 already covered).

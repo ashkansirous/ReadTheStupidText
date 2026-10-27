@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
   Stops only the emulator start-warm.ps1 started (pid in <worktrees>\.emulator\state.json).
-  Saves the quick-boot snapshot first (adb emu kill), so the next start is a warm resume.
+  No snapshot is saved (start-warm.ps1 boots with -no-snapshot-save).
 #>
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'common.ps1')
@@ -11,7 +11,7 @@ function Stop-RecordedEmulator($state) {
     $proc = Get-Process -Id $state.pid -ErrorAction SilentlyContinue
     $owner = Get-EmulatorPortOwnerPid  # the VM may outlive the launcher pid
     if (-not $proc -and -not $owner) { Write-Host 'Recorded emulator is not running.'; return $true }
-    # `emu kill` saves the quick-boot snapshot on exit (an explicit `emu avd snapshot save` hangs headless).
+    # `emu kill` asks the emulator to exit cleanly; no snapshot is written.
     & $script:Adb -s $state.serial emu kill 2>$null | Out-Null
     $deadline = (Get-Date).AddSeconds(60)
     while ((Get-Date) -lt $deadline -and ((Get-Process -Id $state.pid -ErrorAction SilentlyContinue) -or (Get-EmulatorPortOwnerPid))) { Start-Sleep -Milliseconds 500 }

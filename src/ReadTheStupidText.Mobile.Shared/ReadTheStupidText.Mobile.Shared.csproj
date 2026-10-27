@@ -133,6 +133,16 @@
 
 	<Import Project="..\AndroidSherpaPackaging.props" />
 
+	<!-- Slice 162: the scripted-flow test hooks exist in Debug only. Every file is also inside #if DEBUG; this drops the files
+	     themselves from any other configuration. Removed in a target because the MAUI SDK adds Platforms\ files late. -->
+	<Target Name="DropTestHooksOutsideDebug" BeforeTargets="CoreCompile;XamarinPreBuild;BeforeCompile" Condition="'$(Configuration)' != 'Debug'">
+		<ItemGroup>
+			<Compile Remove="Testing\**" />
+			<Compile Remove="Platforms\Android\Testing\**" />
+			<Compile Remove="Platforms\iOS\Testing\**" />
+		</ItemGroup>
+	</Target>
+
 	<!-- Fail early and clearly instead of restoring a project with no target framework. -->
 	<Target Name="EnsureATargetFramework" BeforeTargets="_CheckForUnsupportedTargetFramework;Restore;CollectPackageReferences" Condition="'$(TargetFrameworks)' == '' And '$(TargetFramework)' == ''">
 		<Error Text="ReadTheStupidText.Mobile.Shared has no target framework: -p:IncludeAndroid=false removed Android and iOS is only added on macOS or with -p:IncludeIos=true. Pass -p:IncludeIos=true, or drop -p:IncludeAndroid=false." />

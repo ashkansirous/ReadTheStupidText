@@ -31,14 +31,14 @@
         <DataTemplate x:Key="StoryTemplate" x:DataType="local:StoryTile">
             <VerticalStackLayout Spacing="{StaticResource TileSpacing}" HorizontalOptions="Fill">
                 <Grid>
-                    <local:StoryCover>
+                    <local:StoryCover AutomationId="StoryTile">
                         <local:StoryCover.GestureRecognizers>
                             <TapGestureRecognizer Tapped="OnStoryTapped" />
                         </local:StoryCover.GestureRecognizers>
                     </local:StoryCover>
                     <local:TileOverlay EditRequested="OnEditRequested" CastRequested="OnCastRequested" RecordRequested="OnRecordRequested" DeleteRequested="OnDeleteRequested" ExportRequested="OnExportRequested" />
                 </Grid>
-                <Label Style="{StaticResource TileTitle}" Text="{Binding Title}">
+                <Label Style="{StaticResource TileTitle}" Text="{Binding Title}" AutomationId="StoryTileTitle">
                     <Label.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnStoryTapped" />
                     </Label.GestureRecognizers>
@@ -87,7 +87,7 @@
                 <Image x:Name="AppIcon" Source="dino_icon" Aspect="AspectFill" SemanticProperties.Description="{x:Static res:AppResources.App_Name}" />
             </Border>
             <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                <Label x:Name="TitleLabel" Text="{x:Static res:AppResources.Gallery_Title}" FontSize="22" FontAttributes="Bold" SemanticProperties.HeadingLevel="Level1">
+                <Label x:Name="TitleLabel" AutomationId="GalleryTitle" Text="{x:Static res:AppResources.Gallery_Title}" FontSize="22" FontAttributes="Bold" SemanticProperties.HeadingLevel="Level1">
                     <Label.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnTitleTapped" />
                     </Label.GestureRecognizers>
@@ -95,7 +95,7 @@
                 <Label x:Name="ModeLabel" Text="{x:Static res:AppResources.Gallery_GrownUpMode}" FontSize="12.5" TextColor="{StaticResource Brand}" IsVisible="False" />
             </VerticalStackLayout>
             <!-- Language pill (mock 19): the current language, opens the Language page. Grown-up mode only. -->
-            <Border Grid.Column="2" x:Name="LanguagePill" HeightRequest="44" Padding="12,0,14,0" BackgroundColor="White" Stroke="{StaticResource MergeBorder}"
+            <Border Grid.Column="2" x:Name="LanguagePill" AutomationId="GalleryLanguage" HeightRequest="44" Padding="12,0,14,0" BackgroundColor="White" Stroke="{StaticResource MergeBorder}"
                     StrokeThickness="2" IsVisible="False" VerticalOptions="Center" SemanticProperties.Hint="{x:Static res:AppResources.Language_Title}">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="22" />
@@ -108,7 +108,7 @@
                     <TapGestureRecognizer Tapped="OnLanguageTapped" />
                 </Border.GestureRecognizers>
             </Border>
-            <Border Grid.Column="3" x:Name="AddBookButton" WidthRequest="44" HeightRequest="44" BackgroundColor="{StaticResource ControlFill}"
+            <Border Grid.Column="3" x:Name="AddBookButton" AutomationId="GalleryAddBook" WidthRequest="44" HeightRequest="44" BackgroundColor="{StaticResource ControlFill}"
                     StrokeThickness="0" SemanticProperties.Description="{x:Static res:AppResources.Gallery_AddBook}" ToolTipProperties.Text="{x:Static res:AppResources.Gallery_AddBook}" SemanticProperties.Hint="{x:Static res:AppResources.Gallery_OpensGateHint}">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="14" />
@@ -169,7 +169,7 @@
         <local:StorytellerStatusLine x:Name="StorytellerLine" />
         </VerticalStackLayout>
 
-        <CollectionView Grid.Row="2" x:Name="StoryList" SelectionMode="None" Margin="14,0" ItemTemplate="{StaticResource Selector}">
+        <CollectionView Grid.Row="2" x:Name="StoryList" AutomationId="GalleryStories" SelectionMode="None" Margin="14,0" ItemTemplate="{StaticResource Selector}">
             <CollectionView.ItemsLayout>
                 <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="12" VerticalItemSpacing="12" />
             </CollectionView.ItemsLayout>

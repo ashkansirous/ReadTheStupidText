@@ -76,7 +76,7 @@
                     </Label.GestureRecognizers>
                 </Label>
             </VerticalStackLayout>
-            <Grid x:Name="SettingsButton" Grid.Column="1" WidthRequest="48" HeightRequest="48">
+            <Grid x:Name="SettingsButton" AutomationId="SettingsButton" Grid.Column="1" WidthRequest="48" HeightRequest="48">
                 <Grid.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnSettingsTapped" />
                 </Grid.GestureRecognizers>
@@ -94,12 +94,12 @@
                             <ScrollView.Behaviors>
                                 <local:LongPressBehavior LongPressed="OnTextLongPressed" />
                             </ScrollView.Behaviors>
-                            <Label x:Name="ReadingLabel" FontSize="19" LineHeight="1.6"
+                            <Label x:Name="ReadingLabel" AutomationId="ReadingText" FontSize="19" LineHeight="1.6"
                                    TextColor="{AppThemeBinding Light=#1f2027, Dark=#E6E6EA}" />
                         </ScrollView>
                         <Editor x:Name="TextEditor" IsVisible="False" TextChanged="OnEditorTextChanged" FontSize="19"
                                 Placeholder="{x:Static res:AppResources.Reader_EditorHint}" />
-                        <VerticalStackLayout x:Name="EmptyHint" IsVisible="False" Spacing="10" MaximumWidthRequest="240"
+                        <VerticalStackLayout x:Name="EmptyHint" AutomationId="EmptyHint" IsVisible="False" Spacing="10" MaximumWidthRequest="240"
                                              HorizontalOptions="Center" VerticalOptions="Center">
                             <Path Data="{StaticResource IconDownArrow}" Style="{StaticResource IconPath}" Stroke="#59000000" StrokeThickness="1.6" Scale="1.6667" Margin="8" />
                             <Label x:Name="EmptyHintLabel" FontSize="19" LineHeight="1.45" HorizontalTextAlignment="Center"
@@ -107,7 +107,7 @@
                         </VerticalStackLayout>
                     </Grid>
                 </Border>
-                <Grid x:Name="EditLink" Grid.Row="1" HeightRequest="40" HorizontalOptions="End" ColumnDefinitions="Auto,Auto" ColumnSpacing="6">
+                <Grid x:Name="EditLink" AutomationId="EditLink" Grid.Row="1" HeightRequest="40" HorizontalOptions="End" ColumnDefinitions="Auto,Auto" ColumnSpacing="6">
                     <Grid.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnEditTapped" />
                     </Grid.GestureRecognizers>
@@ -120,7 +120,7 @@
 
             <!-- The two ways to add text. -->
             <Grid x:Name="ActionRow" Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="10">
-                <Border x:Name="ScanButton" Grid.Column="0" Style="{StaticResource BigButtonBorderStyle}">
+                <Border x:Name="ScanButton" AutomationId="ScanButton" Grid.Column="0" Style="{StaticResource BigButtonBorderStyle}">
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnScanTapped" />
                     </Border.GestureRecognizers>
@@ -129,7 +129,7 @@
                         <Label x:Name="ScanLabel" Style="{StaticResource BigButtonLabelStyle}" />
                     </VerticalStackLayout>
                 </Border>
-                <Border x:Name="FileButton" Grid.Column="1" Style="{StaticResource BigButtonBorderStyle}">
+                <Border x:Name="FileButton" AutomationId="FileButton" Grid.Column="1" Style="{StaticResource BigButtonBorderStyle}">
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnFileTapped" />
                     </Border.GestureRecognizers>
@@ -154,7 +154,7 @@
                     </VerticalStackLayout>
 
                     <HorizontalStackLayout Spacing="28" HorizontalOptions="Center">
-                        <Border x:Name="SkipBackButton" WidthRequest="52" HeightRequest="52" Padding="0" VerticalOptions="Center"
+                        <Border x:Name="SkipBackButton" AutomationId="SkipBackButton" WidthRequest="52" HeightRequest="52" Padding="0" VerticalOptions="Center"
                                 StrokeShape="RoundRectangle 26" Stroke="Transparent" BackgroundColor="#1A5B57E8">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Tapped="OnSkipBackTapped" />
@@ -162,7 +162,7 @@
                             <Path x:Name="SkipBackIcon" Data="{StaticResource IconChevronsLeft}" Style="{StaticResource IconPath}" Scale="0.9167" StrokeThickness="2.2" />
                         </Border>
 
-                        <Border x:Name="PlayButton" WidthRequest="72" HeightRequest="72" Padding="0"
+                        <Border x:Name="PlayButton" AutomationId="PlayButton" WidthRequest="72" HeightRequest="72" Padding="0"
                                 StrokeShape="RoundRectangle 36" Stroke="Transparent">
                             <Border.Shadow>
                                 <Shadow Brush="#5B57E8" Opacity="0.38" Radius="14" Offset="0,4" />
@@ -188,7 +188,7 @@
                             </Grid>
                         </Border>
 
-                        <Border x:Name="SkipForwardButton" WidthRequest="52" HeightRequest="52" Padding="0" VerticalOptions="Center"
+                        <Border x:Name="SkipForwardButton" AutomationId="SkipForwardButton" WidthRequest="52" HeightRequest="52" Padding="0" VerticalOptions="Center"
                                 StrokeShape="RoundRectangle 26" Stroke="Transparent" BackgroundColor="#1A5B57E8">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Tapped="OnSkipForwardTapped" />

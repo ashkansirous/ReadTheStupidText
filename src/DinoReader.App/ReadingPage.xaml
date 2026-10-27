@@ -15,7 +15,7 @@
     <Grid x:Name="Root" RowDefinitions="Auto,*,Auto,Auto,Auto">
         <Grid x:Name="Header" ColumnDefinitions="Auto,*,Auto,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="2"
               Padding="8,8,12,4">
-            <Border x:Name="BackButton" WidthRequest="44" HeightRequest="44" BackgroundColor="Transparent" StrokeThickness="0"
+            <Border x:Name="BackButton" AutomationId="ReadingBack" WidthRequest="44" HeightRequest="44" BackgroundColor="Transparent" StrokeThickness="0"
                     SemanticProperties.Description="{x:Static res:AppResources.Common_Back}">
                 <local:IconView x:Name="BackIcon" Kind="Back" Color="{StaticResource Ink}" Size="22" StrokeWidth="2.6" />
                 <Border.GestureRecognizers>
@@ -33,13 +33,13 @@
                     <TapGestureRecognizer Tapped="OnLockTapped" />
                 </Border.GestureRecognizers>
             </Border>
-            <local:ModeSwitch x:Name="Modes" Grid.Column="3" VerticalOptions="Center" ModeChanged="OnModeChanged" />
+            <local:ModeSwitch x:Name="Modes" AutomationId="ReadingModes" Grid.Column="3" VerticalOptions="Center" ModeChanged="OnModeChanged" />
             <Label x:Name="TitleLabel" Grid.Row="1" Grid.ColumnSpan="4" Padding="8,0" FontSize="20" FontAttributes="Bold"
                    LineHeight="1.25" SemanticProperties.HeadingLevel="Level1" />
         </Grid>
 
         <Grid x:Name="SurfaceHost" Grid.Row="1" Margin="14,6,14,0">
-            <local:ReadingSurface x:Name="Surface" PageSwiped="OnPageSwiped" SentenceTapped="OnSentenceTapped"
+            <local:ReadingSurface x:Name="Surface" AutomationId="ReadingSurface" PageSwiped="OnPageSwiped" SentenceTapped="OnSentenceTapped"
                                   LaidOut="OnLaidOut" />
             <Border x:Name="WanderPill" IsVisible="False" HorizontalOptions="Center" VerticalOptions="Start" Margin="0,18,0,0"
                     Padding="14,8" StrokeThickness="0" InputTransparent="True">
@@ -67,8 +67,8 @@
             </Label.GestureRecognizers>
         </Label>
 
-        <local:PagerDots x:Name="Dots" Grid.Row="3" />
-        <local:TransportRow x:Name="Transport" Grid.Row="4" VerticalOptions="End" PreviousTapped="OnPreviousTapped" PlayTapped="OnPlayTapped"
+        <local:PagerDots x:Name="Dots" AutomationId="ReadingDots" Grid.Row="3" />
+        <local:TransportRow x:Name="Transport" AutomationId="ReadingTransport" Grid.Row="4" VerticalOptions="End" PreviousTapped="OnPreviousTapped" PlayTapped="OnPlayTapped"
                             NextTapped="OnNextTapped" />
         <local:BookSheet x:Name="BookInfo" Grid.RowSpan="5" Grid.ColumnSpan="2" />
     </Grid>

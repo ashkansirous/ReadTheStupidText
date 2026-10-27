@@ -29,7 +29,7 @@ $apk = Get-ChildItem $apkDir -Filter '*-Signed.apk' -Recurse |
 if (-not $apk) { throw 'Signed APK not found.' }
 Write-Host ("Built in {0:n1} s: {1}" -f $sw.Elapsed.TotalSeconds, $apk.FullName)
 
-& $script:Adb -s $script:Serial install -r $apk.FullName
+& $script:Adb -s $script:Serial install --no-incremental -r $apk.FullName
 if ($LASTEXITCODE -ne 0) { throw 'adb install failed.' }
 $ErrorActionPreference = 'Continue'  # monkey writes its banner to stderr
 & $script:Adb -s $script:Serial shell monkey -p $cfg.Package -c android.intent.category.LAUNCHER 1 2>&1 | Out-Null
