@@ -8,8 +8,7 @@ name: android
 #     the signed .aab/.apk and uploads them to the draft release.
 # CI signs with an upload key; Google Play App Signing re-signs for
 # distribution, so no release-signing secret leaves CI (Decisions 18/42).
-# The R2 copy of the APK (Slice 69) runs after the publish, so it is release.yml's
-# `publish-downloads` job, not a job here: the APK must be on the published release.
+# The APK stays on the GitHub Release only; /download on the landing sites redirects to #platforms.
 # Zero Actions artifacts (Batch 8): don't add actions/upload-artifact for build outputs.
 
 on:

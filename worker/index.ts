@@ -94,7 +94,7 @@ async function serveAsset(request: Request, env: Env): Promise<Response> {
   if (isAppConfigPath(site.path)) return serveAppConfig(request, env, site);
   if (isEventsPath(site.path)) return serveEvents(request, env, site);
   if (isDownloadPath(site.path)) {
-    return handleDownload(withPath(request, url, site.path), env, site.product, site.home);
+    return handleDownload(withPath(request, url, site.path), site.home);
   }
   const page = assetPageFor(site);
   return env.ASSETS.fetch(page === null ? request : withPath(request, url, page));

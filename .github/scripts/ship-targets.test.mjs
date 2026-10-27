@@ -55,6 +55,7 @@ const CASES = [
     ['book builder', ['tools/DinoReader.BookBuilder/Program.cs'], { dinoreader: true, dinostore: true }],
     ['store upload script', ['tools/upload-store-story.ps1'], { dinostore: true }],
     ['store publish script', ['.github/scripts/publish-store-books.mjs'], { dinostore: true }],
+    ['R2 wrangler helper', ['.github/scripts/r2-wrangler.mjs'], { dinostore: true }],
     ['DinoReader tests only', ['tests/DinoReader.Tests/ParserTests.cs'], { dinoreader: true }],
     ['Android + iOS platform files', [`${M}/Platforms/Android/a.cs`, `${M}/Platforms/iOS/b.cs`], { android: true, ios: true }],
     ['Windows + DinoReader', ['src/ReadTheStupidText.App/a.cs', 'src/DinoReader.Core/b.cs'], { windows: true, windowsstore: true, dinoreader: true, dinoapp: true, dinoios: true, dinowin: true, dinostore: true }],

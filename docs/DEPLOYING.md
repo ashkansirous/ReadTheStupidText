@@ -2,15 +2,13 @@
 
 `https://readthestupidtext.sirous.uk/` is a Cloudflare Worker (`readthestupidtext`)
 that serves the static files in `site/` (Slice 68). The Windows and Android apps are
-unaffected: the landing page, the privacy page and the Android APK downloads live here.
+unaffected: the landing page and the privacy page live here. APKs are not served from here; they stay on GitHub Releases, and `/download` redirects to the platforms section.
 
 | URL | Served from |
 | --- | --- |
 | `/`, `/index.html` | `site/index.html` |
 | `/privacy`, `/privacy.html` | `site/privacy.html` |
-| `/download` | page: newest Android version, "Download for Android", Store link (Slice 69) |
-| `/download/android/latest` | the newest APK, streamed from R2 (Range supported) |
-| `/download/android/<x.y.z>` | that version's APK; 404 if it was never published |
+| `/download`, `/download/*` | 302 to `/#platforms` (the Play, TestFlight and Store links) |
 | anything else | plain 404 |
 
 `/privacy.html` stays a real, non-redirecting URL because the Store listings link it.
@@ -26,18 +24,15 @@ are constants (`Host` in `worker/downloads.ts`, routing in `resolveSite`).
 | --- | --- |
 | `/`, `/index.html` | `site/dino/index.html` |
 | `/privacy`, `/privacy.html` | `site/dino/privacy.html` (the Play Console privacy policy URL) |
-| `/download/android`, `/download/android/latest` | the newest Dino Reader APK, from R2 |
-| `/download/android/<x.y.z>` | that version's APK |
-| `/download` | redirects to `/` |
+| `/download`, `/download/*` | 302 to `/#platforms` |
 | `/dino/icon.png` | `site/dino/icon.png` (the "Book hug" icon, copied from `docs/design/dino-reader/icons/android/play-store-512.png`) |
 | `/img/control-panel.webp` (on `readthestupidtext.sirous.uk`) | `site/img/control-panel.webp` (the hero screenshot of the Windows control panel) |
 | `/dino/reading-screen.webp` (on `dinoreader.sirous.uk`) | `site/dino/reading-screen.webp` (the hero screenshot of the reading screen) |
 
 **Check it on `workers.dev` first.** There the Dino site is under a `/dino/` prefix:
 `https://readthestupidtext.<account-subdomain>.workers.dev/dino/`, `/dino/privacy` and
-`/dino/download/android` (only on `*.workers.dev`; on the real hosts the prefix is not
-special). `/dino/download` redirects to `/`, which on `workers.dev` is the Read The Stupid
-Text page. Locally, `npm run dev` and `curl -H "Host: dinoreader.sirous.uk" localhost:8787/`
+`/dino/download` (only on `*.workers.dev`; on the real hosts the prefix is not
+special). `/dino/download` redirects to `/dino/#platforms`. Locally, `npm run dev` and `curl -H "Host: dinoreader.sirous.uk" localhost:8787/`
 shows the Dino pages. Both `wrangler*.jsonc` files list the `/dino/...` paths in
 `assets.run_worker_first`; `npm run typecheck` fails if either lacks them.
 
@@ -80,49 +75,19 @@ Worker runs for the paths in `assets.run_worker_first` (`/`, `/index.html`, `/pr
 `/nope` are answered by the assets layer as a plain 404 without those headers; that does
 not matter because a 404 carries no content.
 
-## The Android downloads bucket (Slice 69)
+## The downloads bucket
 
-Every signed release APK is copied to the private R2 bucket `readthestupidtext-downloads`;
-the Worker (`worker/downloads.ts`, binding `DOWNLOADS`) is the only reader and never talks
-to GitHub. Windows stays Store-only (an MSIX needs a trusted certificate to sideload).
-GitHub Releases remain the build store; R2 is an extra public copy.
-
-Layout (`worker/download-keys.mjs` is the one source; the Worker and
-`.github/scripts/publish-downloads.mjs` both import it):
-`android/<version>/ReadTheStupidText-<version>.apk` and `manifests/android/<version>.json`
-(`{version, fileName, sizeBytes, publishedAt}`). Dino Reader uses the same bucket under a
-`dinoreader/` prefix: `dinoreader/android/<version>/DinoReader-<version>.apk` and
-`dinoreader/manifests/android/<version>.json`. The Dino leg of the `publish-downloads` matrix in
-`release.yml` uploads it (`PRODUCT=dinoreader`) when the Dino app shipped; a run that did not
-ship it leaves the previous Dino APK in the bucket, which stays "latest". CI uploads the APK, then the manifest
-last; the Worker offers a version only once its manifest exists, and "latest" is the
-highest manifest version, so re-running an old build never moves the pointer back.
-Nothing prunes old versions.
-
-One-time setup (the order matters: `wrangler deploy` refuses a binding to a bucket that
-does not exist, so create the bucket **before** the deploy that adds the binding):
-
-1. `npx wrangler r2 bucket create readthestupidtext-downloads` (needs `wrangler login`;
-   leave public access off).
-2. Create a Cloudflare API token with **Account > Workers R2 Storage > Edit** (nothing
-   else), store it through the `manage-secrets` skill, and set two GitHub Actions secrets
-   (not Worker secrets): `gh secret set CLOUDFLARE_API_TOKEN` and
-   `gh secret set CLOUDFLARE_ACCOUNT_ID`.
-3. Deploy the Worker (`npm run deploy`, or merge to `main` with Workers Builds connected).
-
-`release.yml`'s `publish-downloads` job runs `.github/scripts/publish-downloads.mjs` after
-`release-publish` has published the GitHub Release (so only on `main`, and only when
-Android was rebuilt). It reads the signed APK back from that published release, so it holds
-no signing secrets, and nothing lists it in `needs`, so a bucket or token problem shows up
-red there without blocking `store-submit`, `play-submit` or `testflight-submit`. Without
-`CLOUDFLARE_API_TOKEN` it logs "skipped" and exits 0. A version already in the bucket is
-never overwritten ("already published"). Check a release at `/download` (the new version
-shows within a minute: the Worker caches the bucket listing) and by installing
-`/download/android/latest` on a phone. Tests: `node --test .github/scripts/publish-downloads.test.mjs`
-runs in `release-scripts.yml` (with every other `.github/scripts/*.test.mjs`) and
-`node --test worker/downloads.test.mjs` in `site-checks.yml`; neither is in any job's `needs`.
-
-Limits: `wrangler r2 object put` caps an upload at 300 MiB; the APK must stay under that.
+The private R2 bucket `readthestupidtext-downloads` (binding `DOWNLOADS`) holds the Dino story
+store, the remote config files and the usage-count flag (`worker/stories.ts`, `appconfig.ts`,
+`events.ts`; key layout in `worker/download-keys.mjs`). It is no longer written with APKs: CI does not copy
+them and the Worker answers `/download` and
+`/download/*` with a 302 to `#platforms`. Release APKs are on the GitHub Release. Old `android/` and `dinoreader/android/` APKs and `manifests/android/*.json` remain in the bucket, but nothing serves them. `wrangler deploy`
+refuses a binding to a bucket that does not exist, so create it before the deploy that adds the
+binding: `npx wrangler r2 bucket create readthestupidtext-downloads` (needs `wrangler login`; leave
+public access off). The `publish-store` job in `release.yml` writes to it with the GitHub secrets
+`CLOUDFLARE_API_TOKEN` (Account > Workers R2 Storage > Edit) and `CLOUDFLARE_ACCOUNT_ID`.
+Tests: `node --test .github/scripts/*.test.mjs` runs in `release-scripts.yml` and
+`node --test worker/*.test.mjs` in `site-checks.yml`.
 
 ## Two configs
 

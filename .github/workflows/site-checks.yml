@@ -1,6 +1,6 @@
 name: site-checks
 
-# Slice 69's checks on the downloads Worker (formerly build.yml's
+# Slice 69's checks on the landing-site Worker (formerly build.yml's
 # `test-downloads`): typecheck the Worker and its configs, check the site
 # files' line endings, test the Worker. The R2 publisher's tests live in
 # release-scripts.yml with every other .github/scripts test. Runs on every PR
