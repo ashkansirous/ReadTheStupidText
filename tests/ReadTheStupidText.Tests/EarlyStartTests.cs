@@ -155,25 +155,74 @@ public class EarlyStartCoordinatorTests
 
     private sealed class Probe
     {
-        public List<string> VoicedOriginal { get; } = [];
+        private static readonly TimeSpan SignalTimeout = TimeSpan.FromSeconds(10);
 
-        public List<string> VoicedTranslated { get; } = [];
+        private readonly object _gate = new();
 
-        public List<string> Translated { get; } = [];
+        private readonly List<string> _voicedOriginal = [];
 
-        public CancellationToken OriginalToken { get; private set; }
+        private readonly List<string> _voicedTranslated = [];
 
-        public CancellationToken TranslationToken { get; private set; }
+        private readonly List<string> _translated = [];
+
+        private CancellationToken _originalToken;
+
+        private CancellationToken _translationToken;
+
+        public string[] VoicedOriginal => Snapshot(_voicedOriginal);
+
+        public string[] VoicedTranslated => Snapshot(_voicedTranslated);
+
+        public string[] Translated => Snapshot(_translated);
+
+        public CancellationToken OriginalToken { get { lock (_gate) { return _originalToken; } } }
+
+        public CancellationToken TranslationToken { get { lock (_gate) { return _translationToken; } } }
 
         public TaskCompletionSource OriginalGate { get; set; } = new();
 
         public bool HoldOriginal { get; set; }
 
+        private readonly SemaphoreSlim _originalStarts = new(0);
+
+        private readonly SemaphoreSlim _translationStarts = new(0);
+
+        private readonly SemaphoreSlim _translatedVoiced = new(0);
+
+        /// <summary>Ends once the original job has started one more time (its token is set by then); fails the test on timeout.</summary>
+        public Task OriginalStartedAsync() => WaitForAsync(_originalStarts, "The original job");
+
+        /// <summary>Ends once the translation job has started one more time (its token is set by then); fails the test on timeout.</summary>
+        public Task TranslationStartedAsync() => WaitForAsync(_translationStarts, "The translation job");
+
+        /// <summary>Ends once the translated head has been voiced one more time; fails the test on timeout.</summary>
+        public Task TranslatedVoicedAsync() => WaitForAsync(_translatedVoiced, "The translated voicing");
+
+        private static async Task WaitForAsync(SemaphoreSlim signal, string what)
+        {
+            if (!await signal.WaitAsync(SignalTimeout))
+            {
+                Assert.Fail($"{what} did not start within {SignalTimeout.TotalSeconds:0} s.");
+            }
+        }
+
+        private string[] Snapshot(List<string> list)
+        {
+            lock (_gate)
+            {
+                return [.. list];
+            }
+        }
+
         public EarlyStartJobs Jobs(bool translate = true) => new(
             async (text, token) =>
             {
-                OriginalToken = token;
-                VoicedOriginal.Add(text);
+                lock (_gate)
+                {
+                    _originalToken = token;
+                    _voicedOriginal.Add(text);
+                }
+                _originalStarts.Release();
                 if (HoldOriginal)
                 {
                     await OriginalGate.Task.WaitAsync(token);
@@ -181,14 +230,22 @@ public class EarlyStartCoordinatorTests
             },
             translate ? (split, token) =>
             {
-                TranslationToken = token;
-                Translated.Add(split.Head);
+                lock (_gate)
+                {
+                    _translationToken = token;
+                    _translated.Add(split.Head);
+                }
+                _translationStarts.Release();
                 return Task.FromResult<string?>("The translated head is here. The second one is here. The third one is here.");
             }
             : null,
             (text, _) =>
             {
-                VoicedTranslated.Add(text);
+                lock (_gate)
+                {
+                    _voicedTranslated.Add(text);
+                }
+                _translatedVoiced.Release();
                 return Task.CompletedTask;
             });
     }
@@ -221,7 +278,7 @@ public class EarlyStartCoordinatorTests
         early.ChooseRead();
         early.CancelAll(); // the page is left
         Task settled = early.SettleChosenAsync();
-        await Task.Delay(50);
+        await probe.OriginalStartedAsync();
 
         Assert.False(probe.OriginalToken.IsCancellationRequested);
         Assert.False(settled.IsCompleted);
@@ -240,7 +297,7 @@ public class EarlyStartCoordinatorTests
 
         early.Restart(French, "fr", "en", probe.Jobs(), TimeSpan.Zero); // a late detection or toggle restarts the early work
         Task settled = early.SettleChosenAsync();
-        await Task.Delay(50);
+        await probe.OriginalStartedAsync();
 
         Assert.Equal(["Un. Deux."], probe.VoicedOriginal); // one voicing, not cancelled and started again
         Assert.False(probe.OriginalToken.IsCancellationRequested);
@@ -256,11 +313,11 @@ public class EarlyStartCoordinatorTests
         var early = new EarlyStartCoordinator();
         early.Restart(French, "fr", "en", probe.Jobs(), TimeSpan.Zero);
         early.Restart(French, "fr", "en", probe.Jobs(), TimeSpan.Zero); // the toggle restarts the early work
-        await Task.Delay(20);
+        await probe.OriginalStartedAsync();
+        await probe.OriginalStartedAsync();
 
         early.ChooseRead(); // the restarted voice is in flight
         Task settled = early.SettleChosenAsync();
-        await Task.Delay(50);
 
         Assert.False(probe.OriginalToken.IsCancellationRequested);
         Assert.False(settled.IsCompleted);
@@ -273,12 +330,14 @@ public class EarlyStartCoordinatorTests
     {
         var voiceGate = new TaskCompletionSource();
         CancellationToken voiceToken = default;
+        var voiceStarted = new TaskCompletionSource();
         var jobs = new EarlyStartJobs(
             (_, _) => Task.CompletedTask,
             (_, _) => Task.FromResult<string?>("The translated head is here. The second one is here. The third one is here."),
             async (_, token) =>
             {
                 voiceToken = token;
+                voiceStarted.TrySetResult();
                 await voiceGate.Task.WaitAsync(token);
             });
         var early = new EarlyStartCoordinator();
@@ -287,7 +346,7 @@ public class EarlyStartCoordinatorTests
         await early.ChooseTranslate();
         early.CancelAll();
         Task settled = early.SettleChosenAsync();
-        await Task.Delay(50);
+        await voiceStarted.Task.WaitAsync(TimeSpan.FromSeconds(10));
 
         Assert.False(settled.IsCompleted);
         Assert.False(voiceToken.IsCancellationRequested);
@@ -324,7 +383,7 @@ public class EarlyStartCoordinatorTests
         var probe = new Probe { HoldOriginal = true };
         var early = new EarlyStartCoordinator();
         early.Restart(French, "fr", "en", probe.Jobs(), TimeSpan.Zero);
-        await Task.Delay(50);
+        await probe.OriginalStartedAsync();
         early.ChooseRead();
 
         early.Discard();
@@ -354,7 +413,8 @@ public class EarlyStartCoordinatorTests
         early.Restart(French, "fr", "en", probe.Jobs(), TimeSpan.Zero);
 
         EarlyTranslation? result = await early.ChooseTranslate();
-        await Task.Delay(50);
+        await probe.OriginalStartedAsync();
+        await probe.TranslatedVoicedAsync();
 
         Assert.True(probe.OriginalToken.IsCancellationRequested);
         Assert.NotNull(result);
@@ -367,12 +427,13 @@ public class EarlyStartCoordinatorTests
         var probe = new Probe { HoldOriginal = true };
         var early = new EarlyStartCoordinator();
         early.Restart(French, "fr", "en", probe.Jobs(), TimeSpan.Zero);
-        await Task.Delay(50);
+        await probe.OriginalStartedAsync();
+        await probe.TranslationStartedAsync();
 
         Assert.Empty(probe.VoicedTranslated);
 
         probe.OriginalGate.SetResult();
-        await Task.Delay(50);
+        await probe.TranslatedVoicedAsync();
 
         Assert.Equal(["The translated head is here. The second one is here."], probe.VoicedTranslated);
     }
@@ -382,8 +443,9 @@ public class EarlyStartCoordinatorTests
     {
         var probe = new Probe { HoldOriginal = true };
         var early = new EarlyStartCoordinator();
-        early.Restart(French, "fr", "en", probe.Jobs(), TimeSpan.FromMilliseconds(1));
-        await Task.Delay(50);
+        early.Restart(French, "fr", "en", probe.Jobs(), TimeSpan.Zero);
+        await probe.OriginalStartedAsync();
+        await probe.TranslationStartedAsync();
 
         early.ChooseRead();
         early.CancelAll(); // the page is left after Read: the chosen side is not stopped
@@ -397,8 +459,9 @@ public class EarlyStartCoordinatorTests
     {
         var probe = new Probe { HoldOriginal = true };
         var early = new EarlyStartCoordinator();
-        early.Restart(French, "fr", "en", probe.Jobs(), TimeSpan.FromMilliseconds(1));
-        await Task.Delay(50);
+        early.Restart(French, "fr", "en", probe.Jobs(), TimeSpan.Zero);
+        await probe.OriginalStartedAsync();
+        await probe.TranslationStartedAsync();
 
         early.CancelAll();
 
@@ -411,13 +474,13 @@ public class EarlyStartCoordinatorTests
     {
         var probe = new Probe { HoldOriginal = true };
         var early = new EarlyStartCoordinator();
-        early.Restart(French, "fr", "en", probe.Jobs(), TimeSpan.FromMilliseconds(1));
-        await Task.Delay(50);
+        early.Restart(French, "fr", "en", probe.Jobs(), TimeSpan.Zero);
+        await probe.OriginalStartedAsync();
         early.ChooseRead();
         CancellationToken first = probe.OriginalToken;
 
         early.Restart("Autre texte. Fin.", "fr", "en", probe.Jobs(), TimeSpan.Zero);
-        await Task.Delay(50);
+        await probe.OriginalStartedAsync();
 
         Assert.True(first.IsCancellationRequested);
         Assert.Contains("Autre texte. Fin.", probe.VoicedOriginal);
@@ -486,7 +549,7 @@ public class EarlyStartCoordinatorTests
         early.Restart(French, "fr", "en", probe.Jobs(), TimeSpan.Zero);
 
         Assert.NotNull(await early.ChooseTranslate());
-        Assert.Equal(2, probe.VoicedOriginal.Count);
+        Assert.Equal(2, probe.VoicedOriginal.Length);
     }
 
     [Fact]
