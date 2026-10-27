@@ -37,6 +37,11 @@ const VOICE_CHANGES = ["character_voice", "flavour", "narrator"] as const;
 /** The waits the phone apps' overlay can show (WaitStage in the app, Slice 148); both products count them, and a test keeps this list and the app's `UsageWaitStage` the same. */
 const WAIT_STAGES = ["preparing_voice", "stalled", "downloading_model", "translating", "reading_pictures", "saving", "getting_file"] as const;
 const WAIT_DETAIL_SEPARATOR = ":";
+// The first-run intro (Slice 155): three steps (no read step), each tried or skipped; it starts from the first run or a replay and ends finished or skipped all.
+const INTRO_STEPS = ["store", "record", "add"] as const;
+const INTRO_ACTIONS = ["tried", "skipped"] as const;
+const INTRO_STARTS = ["first_run", "replay"] as const;
+const INTRO_ENDS = ["finished", "skipped_all"] as const;
 
 /** What an event name allows: the sources it may come from and the one extra value (`detail`) it carries. */
 interface EventRule {
@@ -55,6 +60,12 @@ const waitDetail = (value: unknown): boolean => {
   return parts.length === 2 && oneOf(WAIT_STAGES, parts[0]) && oneOf(RTST_DURATION_BUCKETS, parts[1]);
 };
 
+// An intro step count's detail is "<step>:<action>", like "store:tried" (Slice 155): both halves come from closed lists.
+const introStepDetail = (value: unknown): boolean => {
+  const parts = typeof value === "string" ? value.split(WAIT_DETAIL_SEPARATOR) : [];
+  return parts.length === 2 && oneOf(INTRO_STEPS, parts[0]) && oneOf(INTRO_ACTIONS, parts[1]);
+};
+
 // Slice 133 events carry no detail; Slice 134 added the rest. Anything not named here is dropped.
 const EVENT_RULES: Readonly<Record<string, EventRule>> = {
   book_opened: { sources: BOOK_SOURCES, detail: emptyDetail },
@@ -67,6 +78,9 @@ const EVENT_RULES: Readonly<Record<string, EventRule>> = {
   app_opened: { sources: [NO_BOOK], detail: emptyDetail },
   wait_shown: { sources: [NO_BOOK], detail: waitDetail, language: NO_LANGUAGE },
   wait_cancelled: { sources: [NO_BOOK], detail: waitDetail, language: NO_LANGUAGE },
+  intro_started: { sources: [NO_BOOK], detail: detailIn(INTRO_STARTS) },
+  intro_step: { sources: [NO_BOOK], detail: introStepDetail },
+  intro_ended: { sources: [NO_BOOK], detail: detailIn(INTRO_ENDS) },
 };
 const LANGUAGE_PATTERN = /^[a-z]{2,3}(-[A-Za-z]{2,4})?$/;
 const VERSION_PATTERN = /^\d{1,6}(\.\d{1,6}){1,3}$/;

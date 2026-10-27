@@ -66,37 +66,44 @@
 
         <!-- Screen 18: ready. -->
         <Grid x:Name="ReadyPanel" RowDefinitions="*,Auto,Auto" Padding="22,0,22,22" IsVisible="False">
+            <ScrollView Grid.Row="0">
             <VerticalStackLayout Spacing="14" Padding="0,56,0,0">
-                <Border WidthRequest="92" HeightRequest="92" StrokeThickness="0" HorizontalOptions="Center">
-                    <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="24" />
-                    </Border.StrokeShape>
-                    <Image Source="dino_icon" Aspect="AspectFill" />
-                </Border>
-                <Label x:Name="ReadyTitle" FontSize="24" FontAttributes="Bold" HorizontalTextAlignment="Center" SemanticProperties.HeadingLevel="Level1" />
-                <Label x:Name="ReadyBody" FontSize="14" LineHeight="1.4" TextColor="{StaticResource Body}" HorizontalTextAlignment="Center" />
-                <Border x:Name="HelloPill" HeightRequest="48" BackgroundColor="{StaticResource BrandTint}" StrokeThickness="0" HorizontalOptions="Center" Padding="7,0,18,0">
-                    <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="24" />
-                    </Border.StrokeShape>
-                    <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
-                        <Border WidthRequest="34" HeightRequest="34" BackgroundColor="{StaticResource Brand}" StrokeThickness="0">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="17" />
-                            </Border.StrokeShape>
-                            <local:IconView Kind="Play" Color="White" Size="16" HorizontalOptions="Center" VerticalOptions="Center" />
-                        </Border>
-                        <Label x:Name="HelloLabel" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource Brand}" VerticalOptions="Center" />
-                    </HorizontalStackLayout>
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnHelloTapped" />
-                    </Border.GestureRecognizers>
-                </Border>
-            </VerticalStackLayout>
+                    <Border WidthRequest="92" HeightRequest="92" StrokeThickness="0" HorizontalOptions="Center">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="24" />
+                        </Border.StrokeShape>
+                        <Image Source="dino_icon" Aspect="AspectFill" />
+                    </Border>
+                    <Label x:Name="ReadyTitle" FontSize="24" FontAttributes="Bold" HorizontalTextAlignment="Center" SemanticProperties.HeadingLevel="Level1" />
+                    <Label x:Name="ReadyBody" FontSize="14" LineHeight="1.4" TextColor="{StaticResource Body}" HorizontalTextAlignment="Center" />
+                    <Border x:Name="HelloPill" HeightRequest="48" BackgroundColor="{StaticResource BrandTint}" StrokeThickness="0" HorizontalOptions="Center" Padding="7,0,18,0">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="24" />
+                        </Border.StrokeShape>
+                        <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                            <Border WidthRequest="34" HeightRequest="34" BackgroundColor="{StaticResource Brand}" StrokeThickness="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="17" />
+                                </Border.StrokeShape>
+                                <local:IconView Kind="Play" Color="White" Size="16" HorizontalOptions="Center" VerticalOptions="Center" />
+                            </Border>
+                            <Label x:Name="HelloLabel" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource Brand}" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnHelloTapped" />
+                        </Border.GestureRecognizers>
+                    </Border>
+                </VerticalStackLayout>
+            </ScrollView>
             <!-- Slice 133 (mock frame 63): the one line about anonymous counts, set in code after the pick. -->
             <Label Grid.Row="1" x:Name="ReadyUsage" FontSize="12.5" TextColor="{StaticResource Body}" HorizontalTextAlignment="Center"
                    HorizontalOptions="Center" MaximumWidthRequest="290" Margin="0,0,0,14" />
-            <local:CoralButton Grid.Row="2" x:Name="SetUpButton" Clicked="OnSetUpClicked" />
+            <!-- Slice 155 (mock frame 73): the intro starts here, or the grown-up skips straight to the hand-over. -->
+            <VerticalStackLayout Grid.Row="2" Spacing="4">
+                <local:CoralButton x:Name="SetUpButton" Clicked="OnSeeWhatClicked" />
+                <Button x:Name="SkipIntroLabel" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource Brand}" BackgroundColor="Transparent" Padding="12,0" MinimumHeightRequest="44" BorderWidth="0"
+                        Clicked="OnSkipIntroTapped" />
+            </VerticalStackLayout>
         </Grid>
     </Grid>
 </ContentPage>

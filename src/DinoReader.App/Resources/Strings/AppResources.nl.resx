@@ -99,7 +99,21 @@
   <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>Elk personage krijgt een eigen stem. Er staat één verhaal op de plank.</value></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>Hoor Dino hallo zeggen</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>Hallo! Ik ben Dino. Laten we samen een verhaal lezen.</value></data>
-  <data name="FirstRun_SetUp" xml:space="preserve"><value>De verhalen instellen</value></data>
+  <data name="Intro_SeeWhat" xml:space="preserve"><value>Ontdek wat Dino kan</value></data>
+  <data name="Intro_SkipStart" xml:space="preserve"><value>Overslaan, begin met lezen</value></data>
+  <data name="Intro_SkipAll" xml:space="preserve"><value>Alles overslaan</value></data>
+  <data name="Intro_TryIt" xml:space="preserve"><value>Proberen</value></data>
+  <data name="Intro_Skip" xml:space="preserve"><value>Overslaan</value></data>
+  <data name="Intro_Counter" xml:space="preserve"><value>{0} van {1}</value></data>
+  <data name="Intro_StoreTitle" xml:space="preserve"><value>Haal meer boeken</value></data>
+  <data name="Intro_StoreLine" xml:space="preserve"><value>De gratis winkel heeft meer verhalen, klaar om te downloaden.</value></data>
+  <data name="Intro_RecordTitle" xml:space="preserve"><value>Lees het met je eigen stem</value></data>
+  <data name="Intro_RecordLine" xml:space="preserve"><value>Neem jezelf op terwijl je een verhaal voorleest, pagina voor pagina. Je kind kan het altijd afspelen.</value></data>
+  <data name="Intro_AddTitle" xml:space="preserve"><value>Voeg je eigen boek toe</value></data>
+  <data name="Intro_AddLine" xml:space="preserve"><value>Maak foto’s van de pagina’s van een boek, of kies een pdf. Dino leest het voor.</value></data>
+  <data name="Intro_AddTitleWindows" xml:space="preserve"><value>Voeg foto’s of een pdf toe</value></data>
+  <data name="Intro_AddLineWindows" xml:space="preserve"><value>Kies foto’s van de pagina’s van een boek, of een pdf. Dino leest het voor.</value></data>
+  <data name="Intro_ShowAgain" xml:space="preserve"><value>Introductie opnieuw bekijken</value></data>
   <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>Doorgaan met de telefoonstem</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Klaar voor mijn kind</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Volwassenenmodus</value></data>

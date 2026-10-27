@@ -99,7 +99,21 @@
   <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>Varje figur får sin egen röst. En saga finns på hyllan.</value></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>Hör Dino säga hej</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>Hej! Jag är Dino. Nu läser vi en saga tillsammans.</value></data>
-  <data name="FirstRun_SetUp" xml:space="preserve"><value>Ställ in sagorna</value></data>
+  <data name="Intro_SeeWhat" xml:space="preserve"><value>Se vad Dino kan</value></data>
+  <data name="Intro_SkipStart" xml:space="preserve"><value>Hoppa över, börja läsa</value></data>
+  <data name="Intro_SkipAll" xml:space="preserve"><value>Hoppa över allt</value></data>
+  <data name="Intro_TryIt" xml:space="preserve"><value>Prova</value></data>
+  <data name="Intro_Skip" xml:space="preserve"><value>Hoppa över</value></data>
+  <data name="Intro_Counter" xml:space="preserve"><value>{0} av {1}</value></data>
+  <data name="Intro_StoreTitle" xml:space="preserve"><value>Hämta fler böcker</value></data>
+  <data name="Intro_StoreLine" xml:space="preserve"><value>Den kostnadsfria butiken har fler sagor, redo att laddas ner.</value></data>
+  <data name="Intro_RecordTitle" xml:space="preserve"><value>Läs den med din röst</value></data>
+  <data name="Intro_RecordLine" xml:space="preserve"><value>Spela in dig själv när du läser en saga, sida för sida. Ditt barn kan spela upp den när som helst.</value></data>
+  <data name="Intro_AddTitle" xml:space="preserve"><value>Lägg till din egen bok</value></data>
+  <data name="Intro_AddLine" xml:space="preserve"><value>Ta bilder på bokens sidor eller välj en PDF. Dino läser den högt.</value></data>
+  <data name="Intro_AddTitleWindows" xml:space="preserve"><value>Lägg till bilder eller en PDF</value></data>
+  <data name="Intro_AddLineWindows" xml:space="preserve"><value>Välj bilder på bokens sidor eller en PDF. Dino läser den högt.</value></data>
+  <data name="Intro_ShowAgain" xml:space="preserve"><value>Visa introt igen</value></data>
   <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>Fortsätt med telefonens röst</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Klart för mitt barn</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Vuxenläge</value></data>

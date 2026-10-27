@@ -152,6 +152,9 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 142 | RTST Windows: early translate and voice in the control panel | built | #408 | | [142-rtst-windows-early-start.md](../slices/142-rtst-windows-early-start.md) |
 | 148 | Phone apps: mid-read stalls, wait counts and wave leftovers | built | #416 | | [148-phone-wait-followups.md](../slices/148-phone-wait-followups.md) |
 | 121 | Dino: pictures for the ten store stories | built | #350 and following (see slice file) | — | [121-dino-illustrate-store-stories.md](../slices/121-dino-illustrate-store-stories.md) |
+| 150 | Dino: slower reading by default (0.8x), grown-up speed 0.5-1.2x | built | #429 | | [150-dino-slower-reading-speed.md](../slices/150-dino-slower-reading-speed.md) |
+| 151 | Dino: three view modes, no merging of characters | built | #430 | | [151-dino-three-view-modes.md](../slices/151-dino-three-view-modes.md) |
+| 155 | Dino: a first-run intro wizard for three things | built | #432 | | [155-dino-first-run-intro-wizard.md](../slices/155-dino-first-run-intro-wizard.md) |
 
 ## Batch ordering notes
 

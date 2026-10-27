@@ -97,7 +97,21 @@
   <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>どのキャラクターにもそれぞれの声があります。本棚には1冊の物語があります。</value></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>Dino のあいさつを聞く</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>こんにちは！ぼくは Dino。いっしょに物語を読もう。</value></data>
-  <data name="FirstRun_SetUp" xml:space="preserve"><value>物語を設定する</value></data>
+  <data name="Intro_SeeWhat" xml:space="preserve"><value>Dinoでできること</value></data>
+  <data name="Intro_SkipStart" xml:space="preserve"><value>スキップして読み始める</value></data>
+  <data name="Intro_SkipAll" xml:space="preserve"><value>すべてスキップ</value></data>
+  <data name="Intro_TryIt" xml:space="preserve"><value>試してみる</value></data>
+  <data name="Intro_Skip" xml:space="preserve"><value>スキップ</value></data>
+  <data name="Intro_Counter" xml:space="preserve"><value>{0} / {1}</value></data>
+  <data name="Intro_StoreTitle" xml:space="preserve"><value>本をもっと入手</value></data>
+  <data name="Intro_StoreLine" xml:space="preserve"><value>無料ストアには、ダウンロードできる物語がまだあります。</value></data>
+  <data name="Intro_RecordTitle" xml:space="preserve"><value>あなたの声で読む</value></data>
+  <data name="Intro_RecordLine" xml:space="preserve"><value>物語を1ページずつ読んで録音しましょう。お子さまはいつでも再生できます。</value></data>
+  <data name="Intro_AddTitle" xml:space="preserve"><value>自分の本を追加</value></data>
+  <data name="Intro_AddLine" xml:space="preserve"><value>本のページを撮影するか、PDFを選びます。Dinoが読み上げます。</value></data>
+  <data name="Intro_AddTitleWindows" xml:space="preserve"><value>写真またはPDFを追加</value></data>
+  <data name="Intro_AddLineWindows" xml:space="preserve"><value>本のページの写真かPDFを選びます。Dinoが読み上げます。</value></data>
+  <data name="Intro_ShowAgain" xml:space="preserve"><value>はじめの案内をもう一度見る</value></data>
   <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>スマホの声で続ける</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>子どもに渡す</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>保護者モード</value></data>
