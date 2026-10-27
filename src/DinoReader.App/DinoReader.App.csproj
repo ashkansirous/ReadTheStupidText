@@ -124,7 +124,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\ReadTheStupidText.Domain\ReadTheStupidText.Domain.csproj" />
 		<ProjectReference Include="..\ReadTheStupidText.Application\ReadTheStupidText.Application.csproj" />
-		<ProjectReference Include="..\ReadTheStupidText.Mobile.Shared\ReadTheStupidText.Mobile.Shared.csproj" />
+		<ProjectReference Include="..\ReadTheStupidText.Mobile.Shared\ReadTheStupidText.Mobile.Shared.csproj" AdditionalProperties="IosSimulatorBuild=$(RuntimeIdentifier.StartsWith('iossimulator'))" /> <!-- a global RuntimeIdentifier does not reach Mobile.Shared; it needs to know about a simulator build (no ML Kit there) -->
 		<ProjectReference Include="..\ReadTheStupidText.Documents\ReadTheStupidText.Documents.csproj" />
 		<ProjectReference Include="..\DinoReader.Core\DinoReader.Core.csproj" />
 	</ItemGroup>

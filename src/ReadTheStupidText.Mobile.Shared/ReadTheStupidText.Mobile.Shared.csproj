@@ -109,9 +109,20 @@
 	<!-- Slice 160: ML Kit Translate on iOS (Platforms/iOS/MlKitTranslator.cs), the twin of the Android package above.
 	     The binding embeds TranslateMLKit.xcframework (ML Kit's own floor is iOS 15.5); it is built for net9.0-ios18.0.
 	     A model per language (~30 MB) is downloaded by ML Kit on first use. -->
-	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+	<!-- The xcframework has no simulator slice, so the CI simulator compile check (iossimulator-*) leaves it out; the apps pass IosSimulatorBuild because a global RuntimeIdentifier does not reach this project. -->
+	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' And ($(RuntimeIdentifier.StartsWith('iossimulator')) Or '$(IosSimulatorBuild)' == 'true')">
+		<DefineConstants>$(DefineConstants);IOS_SIMULATOR_NO_MLKIT</DefineConstants>
+		<IosSimulatorNoMlKit>true</IosSimulatorNoMlKit>
+	</PropertyGroup>
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' And !$(RuntimeIdentifier.StartsWith('iossimulator')) And '$(IosSimulatorBuild)' != 'true'">
 		<PackageReference Include="EngageSolutionsGroup.Apple.MLKitTranslate" Version="8.1.0" />
 	</ItemGroup>
+	<!-- Removed in a target because the MAUI SDK adds the Platforms/iOS files after this point. -->
+	<Target Name="DropMlKitTranslatorOnSimulator" BeforeTargets="CoreCompile;XamarinPreBuild;BeforeCompile" Condition="'$(IosSimulatorNoMlKit)' == 'true'">
+		<ItemGroup>
+			<Compile Remove="Platforms\iOS\MlKitTranslator.cs" />
+		</ItemGroup>
+	</Target>
 
 	<!-- Slice 67: on Windows the neural voice and the WinRT fallback voice are Infrastructure's readers
 	     (sherpa-onnx through the Windows MediaPlayer), so the Windows head reads exactly as Read The

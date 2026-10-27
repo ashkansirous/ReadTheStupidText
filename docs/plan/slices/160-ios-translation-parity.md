@@ -98,3 +98,4 @@ Grounding (origin/main 9c4ec2a):
 - TestFlight: Dino typed own book translated into Farsi.
 - TestFlight: VoiceOver switch role/state on iOS below 17 and on 17+.
 - CI iOS job: the MLKitTranslate xcframework links.
+- iOS simulator builds (`iossimulator-*`) have no translator, because the MLKitTranslate xcframework has no simulator slice; the translate card hides there.
