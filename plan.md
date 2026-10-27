@@ -14,14 +14,11 @@ this plan turns it into ordered, shippable vertical slices.
 
 ## Status
 
-Open slices only. Finished slices (150 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
+Open slices only. Finished slices (153 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
-| 153 | Dino: no robotic-sounding character voices | planned | | | [153-dino-no-robotic-voices.md](docs/plan/slices/153-dino-no-robotic-voices.md) |
-| 154 | Dino: vowel marks in Farsi and Arabic books | in progress | #470 | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
-| 160 | Translation on iOS (Android and iOS parity) | planned | | | [160-ios-translation-parity.md](docs/plan/slices/160-ios-translation-parity.md) |
-| 161 | Fast tests: one warm headless x86_64 emulator, x86_64 Debug build | planned | | | [161-warm-headless-x64-emulator.md](docs/plan/slices/161-warm-headless-x64-emulator.md) |
+| 154 | Dino: vowel marks in Farsi and Arabic books (Farsi only: Arabic left as is; marks are a hidden "how to read" text, Decision 166) | in progress | #470 | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
 | 162 | Fast tests: Maestro flows and Debug-only test hooks (both apps) | planned | | | [162-scripted-device-flows.md](docs/plan/slices/162-scripted-device-flows.md) |
 | 163 | Fast tests: Windows desktop tests in a headless Hyper-V VM | planned | | | [163-desktop-tests-in-hyperv-vm.md](docs/plan/slices/163-desktop-tests-in-hyperv-vm.md) |
 | 164 | Fast tests: move more logic out of UI code into unit tests | planned | | | [164-more-logic-in-unit-tests.md](docs/plan/slices/164-more-logic-in-unit-tests.md) |
@@ -77,6 +74,9 @@ Batch 35 (159, built, PR #473, so the batch is done; planned 2026-10-27, the use
 
 Built but not verified (details in each slice file):
 
+- Slice 160 (PR #486): TestFlight translate English to Farsi on iOS, model download progress and Cancel, offline translate after download, Dino typed own book into Farsi, VoiceOver switch role/state (iOS below 17 and 17+); CI iOS job links the MLKitTranslate xcframework; simulator builds have no translator by design ([slice](docs/plan/slices/160-ios-translation-parity.md)).
+- Slice 160, user (App Store Connect): add Diagnostics > Other Diagnostic Data (not linked to the user, not tracking, analytics) to the privacy labels of both iOS apps; and confirm Google Data Transport logging is acceptable for Dino (kids category).
+- Slice 161 (PR #485): arm64-vs-x64 launch-and-read timing not compared; a Dino story read on the x64 emulator; version-mismatch guard, bump guard and concurrent-build paths reviewed only, not run. Follow-ups: the ClaudeSkills `device-test` agent should use the `tools/emulator` scripts (separate ClaudeSkills PR); RTST first-run language page: Continue downloads the pack but does not move on (seen on emulator) ([slice](docs/plan/slices/161-warm-headless-x64-emulator.md)).
 - Slice 137: rows in `rtst_usage` once Analytics Engine is on and the binding is added; iOS compile; emulator pass done 2026-10-26 (unselected speed-button labels low-contrast in dark mode, pre-existing) ([slice](docs/plan/slices/137-rtst-phone-usage-counts.md)).
 - Slice 138: emulator PASS 2026-10-26; not seen: a sub-500 ms play start, an ML Kit progress %. Native-speaker read of the 4 `Wait_` strings in 14 locales; iOS. Mid-read stall wait and `wait_shown`/`wait_cancelled` events deferred. Pre-existing: a 36 MB text file crashes ReviewPage with OutOfMemoryError ([slice](docs/plan/slices/138-rtst-phone-wait-indicator.md)).
 - Slice 140: queue file under `LocalFolder/usage` not exercised (needs `telemetry.enabled` on); Microsoft Store data-collection answers; rows in `rtst_usage` once Analytics Engine is on ([slice](docs/plan/slices/140-rtst-windows-usage-counts.md)).

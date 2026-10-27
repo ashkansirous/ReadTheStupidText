@@ -60,6 +60,11 @@ Source: `docs/design/dino-reader/Dino Reader Batch 31.dc.html`, screen 72 (lines
 - Tests: `FarsiMarksTests` (shown text has no marks, spoken text stripped equals shown for every piece, every marked word is in the list, plain text hash), `BundledTranslationsTests.LookupSpoken`. Pigs starter bumped to v11.
 - **Ezafe is per occurrence (review fix):** the user wrote each word's Finglish looking at ONE sentence, so a trailing e / ye the plain word does not spell belongs to that occurrence only. `marks` holds the word without it (applies everywhere); `ezafe` holds the with-ezafe form for that sentence and word position (10 of them). "گرگ گفت" is spoken without ezafe. `Adopt` gives an already-adopted or edited copy the speak table only for pieces whose shown translation still equals the bundled one (adopted flag key bumped to v3).
 
+## Scope change (user, 2026-10-27, Decision 166)
+
+- **Arabic vowel marks are out of scope:** leave Arabic as it is. The Arabic diacritizer and its listen test below are dropped.
+- **The marks are a hidden "how to read" text** kids never see (`speak:<lang>`), not shown on screen. This supersedes the earlier "shown on screen" decision (159).
+
 ## Built, Three Little Pigs Farsi part (2026-10-27)
 
 *Built 2026-10-27; emulator-checked, not fully verified (see below).* Supersedes Decision 159's "marks shown on screen" (user, 2026-10-27).

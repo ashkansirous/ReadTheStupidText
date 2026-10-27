@@ -160,6 +160,9 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 156 | Dino: the book chooses each character's voice, not the app | built | #438, #447, #455, #465 | | [156-dino-authored-character-voices.md](../slices/156-dino-authored-character-voices.md) |
 | 158 | Dino: publish store books on every merge | built | #472 | | [158-dino-publish-store-books.md](../slices/158-dino-publish-store-books.md) |
 | 159 | Dino: everything in the chosen language | built | #473 | | [159-dino-everything-in-my-language.md](../slices/159-dino-everything-in-my-language.md) |
+| 153 | Dino: no robotic-sounding character voices | verified | | | [153-dino-no-robotic-voices.md](../slices/153-dino-no-robotic-voices.md) |
+| 160 | Translation on iOS (Android and iOS parity) | built | #486 | | [160-ios-translation-parity.md](../slices/160-ios-translation-parity.md) |
+| 161 | Fast tests: one warm headless x86_64 emulator, x86_64 Debug build | built | #485 | | [161-warm-headless-x64-emulator.md](../slices/161-warm-headless-x64-emulator.md) |
 
 ## Batch ordering notes
 
