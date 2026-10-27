@@ -29,5 +29,9 @@
     ]
   },
   "r2_buckets": [{ "binding": "DOWNLOADS", "bucket_name": "readthestupidtext-downloads" }],
+  "analytics_engine_datasets": [
+    { "binding": "DINO_USAGE", "dataset": "dino_usage" },
+    { "binding": "RTST_USAGE", "dataset": "rtst_usage" }
+  ],
   "observability": { "enabled": true }
 }
