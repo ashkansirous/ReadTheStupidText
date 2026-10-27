@@ -23,7 +23,7 @@ const post = (body, headers = {}) =>
 
 function recorder() {
   const points = [];
-  return { points, USAGE: { writeDataPoint: (point) => points.push(point) } };
+  return { points, DINO_USAGE: { writeDataPoint: (point) => points.push(point) } };
 }
 
 const on = async () => true;
@@ -330,7 +330,7 @@ test("with telemetry off the phone endpoint writes nothing and answers 204; with
 });
 
 test("only valid phone counts of a batch reach the dataset, and Dino's dataset is never used", async () => {
-  const env = { ...rtstRecorder(), USAGE: { writeDataPoint: () => assert.fail("Dino's dataset must not be written") } };
+  const env = { ...rtstRecorder(), DINO_USAGE: { writeDataPoint: () => assert.fail("Dino's dataset must not be written") } };
   await handleRtstEvents(rtstPost([readStarted, { ...readStarted, mode: "x" }, "junk"]), env, on);
   assert.equal(env.points.length, 1);
 });

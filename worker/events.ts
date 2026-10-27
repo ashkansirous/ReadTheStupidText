@@ -1,6 +1,6 @@
 // Dino Reader's anonymous usage counts (Slice 133, Decisions 140-142). The app batches a session's counts into one
 //   POST /api/events    { "schemaVersion": 1, "events": [ { name, book, language, source, hasRecording, version, platform, day, sampleRate, detail? } ] }
-// and this writes each valid one to the Workers Analytics Engine dataset bound as USAGE (`dino_usage`). Nothing about the
+// and this writes each valid one to the Workers Analytics Engine dataset bound as DINO_USAGE (`dino_usage`). Nothing about the
 // caller is read, stored or written: no IP, no user agent, no id; the only fields kept are the ones named below, each checked
 // against a closed list or a strict pattern, so a changed or hostile client can add no free text. When the remote config
 // (Slice 132) has telemetry off or missing, the request is answered like a success and nothing is written. Only Dino Reader's
@@ -108,9 +108,9 @@ export interface UsageEvent {
   readonly detail: string;
 }
 
-/** What this module needs from the Worker's bindings (`USAGE` is declared in wrangler.jsonc). */
+/** What this module needs from the Worker's bindings (`DINO_USAGE` is declared in wrangler.jsonc). */
 export interface EventsEnv {
-  readonly USAGE?: AnalyticsEngineDataset;
+  readonly DINO_USAGE?: AnalyticsEngineDataset;
 }
 
 /** True while the remote config has telemetry on; false when it is off or missing. Rejects when the config cannot be read (answered 503, so the app retries). */
@@ -249,7 +249,7 @@ async function handleBatch(request: Request, dataset: AnalyticsEngineDataset | u
 
 /** Answers POST /api/events: 204 when taken or deliberately dropped, 400/413 for a body that is not a batch of counts. */
 export function handleEvents(request: Request, env: EventsEnv, telemetryEnabled: TelemetryCheck): Promise<Response> {
-  return handleBatch(request, env.USAGE, telemetryEnabled, (raw) => {
+  return handleBatch(request, env.DINO_USAGE, telemetryEnabled, (raw) => {
     const event = parseEvent(raw);
     return event === null ? null : toDataPoint(event);
   });
@@ -260,7 +260,7 @@ export function handleEvents(request: Request, env: EventsEnv, telemetryEnabled:
 // plus closed-list fields; no free text, no id, nothing finer than the day. Each event names the fields it requires and the
 // ones it may carry; any other field, or a value outside its list or pattern, drops the whole count.
 
-/** The Analytics Engine binding for the phone's counts; not in the wrangler configs until Analytics Engine is enabled on the account. */
+/** The Analytics Engine binding for the phone's counts (`rtst_usage`, declared in both wrangler configs). */
 export interface RtstEventsEnv {
   readonly RTST_USAGE?: AnalyticsEngineDataset;
 }
