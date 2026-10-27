@@ -37,6 +37,13 @@ internal static class StarterVoices
             new("Hen", "bee", Gender.Female, CharacterAge.Adult, null, [VoiceQuality.Warm, VoiceQuality.Bright]),
             new("Swan", "knight", Gender.Male, CharacterAge.Adult, null, [VoiceQuality.Warm, VoiceQuality.Bold]),
         ],
+        // The Town Mouse and the Country Mouse: lively, chatty Town Mouse (she) and soft, gentle Country Mouse (he). Both are mice again (they squeak); the roster's mouse voice is a boy in
+        // en/fa and a girl elsewhere, so they suggest voices with the right gender in every language: Busy Bee for her, Cheeky Piglet (small and light, a mouse-sized boy) for him.
+        [StoreTexts.TownMouseId] =
+        [
+            new("Town Mouse", "bee", Gender.Female, CharacterAge.Young, null, [VoiceQuality.Bright, VoiceQuality.Bouncy]),
+            new("Country Mouse", "piglet", Gender.Male, CharacterAge.Young, null, [VoiceQuality.Soft, VoiceQuality.Warm]),
+        ],
         // The Lion and the Mouse: a big, booming but kind king of a Lion (the Friendly Giant: big, deep and slow); a tiny, quick, squeaky girl Mouse. The mouse voice is a boy in
         // English and Farsi, so there her suggestion clashes on gender and the traits give her a girl's young, squeaky voice; everywhere else she is the Squeaky Mouse.
         [StoreTexts.LionAndMouseId] =

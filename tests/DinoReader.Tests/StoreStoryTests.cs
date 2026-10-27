@@ -141,7 +141,7 @@ public sealed class StoreStoryTests : IDisposable
     }
 
     // The Town Mouse and the Country Mouse (Slice 121): Town Mouse is "she" and Country Mouse "he", so the two friends sound different in every language (the
-    // stored English genders are checked too, since every other language is cast from them).
+    // stored English genders are checked too, since every other language is cast from them). Both are mice again since Slice 156: the book suggests bee and piglet.
     [Theory]
     [MemberData(nameof(Languages))]
     public void TheTownMouseAndTheCountryMouse_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)

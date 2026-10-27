@@ -24,7 +24,6 @@ internal static class StarterAnimals
     {
         [StarterTexts.GingerbreadId] = new HashSet<string> { "Grandpa", "Granny" }, // the text guesses animals from "Grandpa ... the cow"; they are people
         [StoreTexts.PeterRabbitId] = new HashSet<string> { "Peter" }, // the bunny voice is a girl in most languages and Peter is a boy (Slice 121)
-        [StoreTexts.TownMouseId] = new HashSet<string> { "Town Mouse", "Country Mouse" }, // the mouse voice is a boy in en/fa, a girl elsewhere; she and he (Slice 121)
     };
 
     private static IReadOnlyDictionary<string, AnimalKind> Named(AnimalKind kind, params string[] names) => names.ToDictionary(n => n, _ => kind);
