@@ -1,6 +1,6 @@
 # Slice 152 — Dino: a character's animal comes from the book, never from its voice
 
-*Planned 2026-10-26.* Dino Reader only.
+*In progress (wave 2026-10-26b), draft PR.* Dino Reader only.
 
 **Batch:** 31 (tester review, 2026-10-26; Decision 157, reverses Decision 132)
 **Touches:** `src/DinoReader.Core/AnimalSound*.cs`, `src/DinoReader.Core/CastCharacters.cs`, `src/DinoReader.Core/StoryCast.cs`, `src/DinoReader.Core/Story.cs`, `src/DinoReader.App/StoryVoicing.cs`, `src/DinoReader.App/CastPage.cs`, `src/DinoReader.App/CastRows.cs`, `src/DinoReader.App/SettingsRows.cs` (shared with Slice 150: sequence them), `src/DinoReader.App/Resources/Strings/*.resx`, `tests/DinoReader.Tests/StarterAnimals.cs`, `tests/DinoReader.Tests/StoreTexts.cs`, `tests/DinoReader.Tests/StarterBuilder.cs`, `tests/DinoReader.Tests/**`, `src/DinoReader.Core/CLAUDE.md`, `src/DinoReader.App/CLAUDE.md`, `.claude/agents/dino-story-writer.md`
