@@ -6,8 +6,10 @@ namespace DinoReader;
 public static class ReadingText
 {
 	public static string ForGrownUps => AppResources.Gallery_ForGrownUps;
-	public static string TextMode => AppResources.Reading_TextMode;
-	public static string PictureMode => AppResources.Reading_PictureMode;
+	public static string PictureOnlyMode => AppResources.Reading_Mode_PictureOnly;
+	public static string PictureAndTextMode => AppResources.Reading_Mode_PictureAndText;
+	public static string TextOnlyMode => AppResources.Reading_Mode_TextOnly;
+	public static string ModeSelected => AppResources.Reading_Mode_Selected;
 	public static string Back => AppResources.Common_Back;
 	public static string Play => AppResources.Reading_Play;
 	public static string Pause => AppResources.Reading_Pause;

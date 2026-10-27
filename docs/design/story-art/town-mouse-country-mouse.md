@@ -1,7 +1,17 @@
 # The Town Mouse and the Country Mouse: art record
 
-Store story (`StoreTexts.TownMouse`, stem `town-mouse-country-mouse`, version 5). Retold as 15 pages with one action each
-(`dino-storytelling` skill, Slice 121). **Art status (2026-10-26): cover and 15 pictures accepted by the illustrator and the full review passed on 2026-10-26 (fixes: zh hoover sound 嗡嗡嗡, fr bedtime sound Vrrr, ja shared line neutral and evening word).** The cover and all 15 pages are new; the
+Store story (`StoreTexts.TownMouse`, stem `town-mouse-country-mouse`, version 7). Retold as 15 pages with one action each
+(`dino-storytelling` skill, Slice 121).
+
+Version 7 (Slice 146 Waves B+C and Slice 156, 2026-10-27): English reworded in the spoken register ("far, far away", "guess who
+came to visit? Town Mouse!", "never ever", "Wow!", "teeny-tiny", "right past", "started to giggle", "Bye-bye!", "okay?") and every
+sound word is now its own triple piece: "The wind blew in the grass. Swish, swish, swish!" (pages 4 and 14), "The crickets sang. Chirp,
+chirp, chirp!", "Clatter, clatter, clatter! The plates rattled in the sink.", "Outside her window, the town hummed. Hum, hum, hum!", and a
+new "Ha, ha, ha!" on page 12. Same 15 page breaks and the same one action per page: **every page keeps its picture** (checked against
+pages 2, 12, 13 and 15 on 2026-10-27: the hug, the two laughing on the sill, the wave from the step, her bedtime). The 12 other
+languages were redone for every reworded piece in the same register with their own triples (French tags now "a dit", Finnish
+dialogue colloquial: mä, sun, tuu, vaan); Farsi changed only where the meaning moved (the split sound sentences, guess who, never,
+teeny-tiny, wow, ha ha ha, bye-bye, okay). **Art status (2026-10-26): cover and 15 pictures accepted by the illustrator and the full review passed on 2026-10-26 (fixes: zh hoover sound 嗡嗡嗡, fr bedtime sound Vrrr, ja shared line neutral and evening word).** The cover and all 15 pages are new; the
 text-only version 4 had none.
 
 **Gentle retelling (Decision 130):** in Aesop the Town Mouse sneers at the country food, and in town a cat and then a barking
@@ -35,20 +45,29 @@ dog burst in, so the mice flee and hide while the guest decides "better a nut in
 - `"Your home is lovely, but I love mine," said Town Mouse.` (page 5) / `said Country Mouse.` (page 12).
 - The three-step build-up, pages 9-11: `"What's that noise?" said Country Mouse.` (pages 9 and 10) and `"It's only the plates /
   hoover / door," said Town Mouse. "Town is always busy!"` The third is different: no question, Country Mouse giggles instead.
-- `Swish, swish, swish, went the wind in the grass.` (pages 4 and 14). `Clip-clop, clip-clop, clip-clop!` (pages 6 and 13).
+- `The wind blew in the grass. Swish, swish, swish!` (pages 4 and 14). `Clip-clop, clip-clop, clip-clop!` (pages 6 and 13).
 - `"Home, sweet home," said Country Mouse.` (page 14) / `said Town Mouse.` (page 15).
 
-**Cast and voices:** Town Mouse and Country Mouse (`StoreTexts` spec list), the only speakers. Genders are chosen: **Town Mouse is
-"she", Country Mouse is "he"** (as in version 4's text and every translation, so the two friends sound different). The roster's
-mouse voice is a boy in English and Farsi and a girl elsewhere, so the builder stores **both mice as no animal**
-(`StarterAnimals.cs`, `NotAnimal`): they are cast by gender in every language, at the cost of no squeak.
+**Cast and voices (Slice 156, the book's own choices, `StarterVoices.cs`):** Town Mouse and Country Mouse (`StoreTexts` spec list),
+the only speakers. Genders are chosen: **Town Mouse is "she", Country Mouse is "he"** (as in version 4's text and every translation,
+so the two friends sound different).
+- **Town Mouse:** female, young, a mouse (book animal); bright and bouncy (lively, used to bustle). Suggests `bee` (Busy Bee, "bubbly and quick").
+- **Country Mouse:** male, young, a mouse (book animal); soft and warm (gentle, loves the quiet). Suggests `piglet` (Cheeky Piglet,
+  "small and quick": the small boy's voice nearest to a mouse; in English it is the mouse's own voice, am_puck, one flavour over).
+The roster's `mouse` voice is a boy in English and Farsi and a girl elsewhere, so neither mouse can suggest it; `bee` is a girl and
+`piglet` a boy in every language, so **both are mice again** (`StarterAnimals.cs` no longer stores them as no animal) and squeak.
+Real casts dumped for every language and all three narrators on 2026-10-27 (each suggestion kept everywhere; no shared voice and
+flavour; no whisper flavour; every gender right): en am_puck Small / af_sky Bouncy; fa gyro Chirpy / mana Small; zh yunxia Small /
+xiaoni Bouncy; es and pt alex Small / dora Bouncy; nb mnn Small / knv Bouncy; the eight Supertonic languages M2 Small / F5 Bouncy.
+Farsi has one woman's voice (mana), so with the default night narrator Town Mouse shares mana a flavour apart, and with the
+"storyteller" narrator Country Mouse shares gyro a flavour apart: a voice-count limit, as in every Farsi book, not a clash.
 `StoreStoryTests.TheTownMouseAndTheCountryMouse_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster` checks all 14
 languages. Everyone else is silent and never named in a speech tag. Translations keep each gender: Russian городская мышка
 (сказала) and деревенский мышонок (сказал); Arabic فأرة المدينة and فأر الريف; French la Souris des villes and le Rat des champs
 (La Fontaine's names, kept from version 4); Spanish la Ratona de ciudad / el Ratón de campo; Portuguese a Ratinha da cidade /
 o Rato do campo; Japanese Town Mouse says わたし, Country Mouse ぼく, and the shared refrains are neutral. Pieces said by both
 (welcome, "Your home is lovely") are written addressee-neutral in Spanish and Portuguese («¡Pasa, pasa, esta es mi casa!»).
-Sound words in every language but en/es/zh/fa are the repeat form and untested aloud: flag the ru, ar, ja and Nordic sounds (and the rest) for a listen. Chinese «砰砰砰！» and «嗡嗡嗡！» and Farsi «بوم بوم بوم!» / «ووم‌ووم‌ووم!» follow the text review (2026-10-26).
+Sound words in every language but en/es/zh/fa are the repeat form and untested aloud: flag the ru, ar, ja and Nordic sounds (and the rest) for a listen. Chinese «砰砰砰！» and «嗡嗡嗡！» and Farsi «بوم بوم بوم!» / «ووم‌ووم‌ووم!» follow the text review (2026-10-26). Version 7 adds plain Farsi triples «خش خش خش!», «ها ها ها!» and «وز وز وز!» (no lone sound word; «وای» only inside «وای، چقدر خوراکی!»), Chinese «哇！太棒了！» for "Wow!" (no lone character) and «哈哈哈！»; the new "Ha, ha, ha!", "Hum, hum, hum!" and the split sounds need the same listen in every language.
 
 **Style:** Children's picture book illustration, soft watercolour and coloured pencil, warm gentle colours, simple rounded
 shapes, no text or letters anywhere. Portrait 3:4.
@@ -94,27 +113,27 @@ There is **no cat, no dog and no other animal or person** anywhere in the book.
 
 Every page: the whole scene sits in the top 70% of the picture; the bottom 30% is plain grass, lane, floor tiles or wood with nothing
 important in it. No text, letters, words, sound effects, music notes or writing anywhere ("Tweet", "Clatter", "Vroom", "Bang",
-"Clip-clop", "Swish" and "Hum" are never drawn in). Every page has **three or more characters** (Gemini refuses some 1-2 character
-scenes): silent extras fill the scenes with only the mice. Every picture is **new** (no pictures exist).
+"Clip-clop", "Swish", "Hum" and "Ha, ha, ha" are never drawn in). Every page has **three or more characters** (Gemini refuses some 1-2 character
+scenes): silent extras fill the scenes with only the mice. Version 7 keeps every picture (same actions; column "Picture" says keep).
 
 | Page | One action (who, count, where, when) | Picture |
 | --- | --- | --- |
-| Cover | Sunny afternoon, on a wooden stile where the field meets the lane: Country Mouse (1) and Town Mouse (1) sit side by side, arm in arm, smiling at the viewer; Hedgehog (1) at the foot of the stile, two robins (2) on the top rail; far behind, the oak on one side and the town's rooftops on the other | new |
-| 1 | Morning, the oak: Country Mouse (1) sits on the flat stone outside his hole in the sunshine, eyes closed, listening, a happy smile; two robins (2) sing on the low branch above; Hedgehog (1) sits nearby in the grass | new |
-| 2 | Sunny morning, in front of the hole: Country Mouse (1) hugs Town Mouse (1), who has just arrived with her pink bag; Hedgehog (1) and two robins (2) watch, smiling | new |
-| 3 | Midday, at the flat stone: lunch is laid out (seeds, blackberries, one hazelnut); Town Mouse (1) tastes a big blackberry, eyes closed with delight; Country Mouse (1) watches, pleased; Hedgehog (1) and two robins (2) look on | new |
-| 4 | Afternoon, in the long grass: Country Mouse (1) lies on his back, paws behind his head, watching the clouds; Town Mouse (1) lies beside him, wriggling, legs kicking, restless; one robin (1) on a grass stalk, Hedgehog (1) dozing nearby | new |
-| 5 | Sunset, pink and gold, in front of the hole: Town Mouse (1), pink bag on, points towards the far-off town rooftops on the horizon, inviting; Country Mouse (1) nods happily; Hedgehog (1) and two robins (2) on their branch | new |
-| 6 | Morning, the country lane: the big brown horse (1) pulls the hay cart; the farmer (1) at the front, seen from behind; Country Mouse (1) and Town Mouse (1) peep out of the hay at the back, smiling | new |
-| 7 | Morning, the kitchen, mouse-eye view low by the wall: Town Mouse (1) holds open the tiny round red door, welcoming; Country Mouse (1) looks at it, amazed; above them, three sparrows (3) on the outside sill of the wide window | new |
-| 8 | Morning, on the kitchen table among breakfast crumbs, cheese bits and grapes: Country Mouse (1) holds a grape, munching happily; Town Mouse (1) spreads her paws, "help yourself"; three sparrows (3) on the outside sill. No people | new |
-| 9 | Morning, the kitchen: the cook (1) at the sink, seen from behind, washing plates, no steam; on the table Country Mouse (1) jumps in the air, surprised; Town Mouse (1) beside him, calm and smiling | new |
-| 10 | Morning, the hall: the round grey robot hoover (no face) rolls along the floor past the stairs; on the bottom step Country Mouse (1) covers his ears with his paws; Town Mouse (1) smiles; three sparrows (3) on the hall window sill outside | new |
-| 11 | Late morning, the hall: the big blue front door swings in the wind, a few leaves blowing in; Country Mouse (1) giggles mid-jump, his straw hat flying in the air above him; Town Mouse (1) laughs beside him; three sparrows (3) at the hall window | new |
-| 12 | Evening, the kitchen windowsill (inside the single pane): Country Mouse (1), straw hat back on his head, and Town Mouse (1) sit side by side laughing; outside, dusk, town house windows lit warm yellow; three sparrows (3) sleepy on a ledge outside | new |
-| 13 | Morning, the street in front of the tall house: the horse (1) and the farmer (1) drive the hay cart away; Country Mouse (1), straw hat back on his head, waves from the hay at the back; Town Mouse (1) waves from the top step by the big blue door | new |
-| 14 | Night, moon and stars, the oak in cutaway: Country Mouse (1) in his moss bed under a leaf blanket, smiling sleepily, eyes closing, straw hat on a peg; outside by the roots Hedgehog (1) curled up asleep; two robins (2) asleep on their branch | new |
-| 15 | Night, Town Mouse's room: Town Mouse (1) snuggled in her little bed under the patchwork blanket, smiling, pink bag on its hook; through the small round window the town at night, windows lit; three sparrows (3) asleep on the ledge outside her window | new |
+| Cover | Sunny afternoon, on a wooden stile where the field meets the lane: Country Mouse (1) and Town Mouse (1) sit side by side, arm in arm, smiling at the viewer; Hedgehog (1) at the foot of the stile, two robins (2) on the top rail; far behind, the oak on one side and the town's rooftops on the other | keep (v7) |
+| 1 | Morning, the oak: Country Mouse (1) sits on the flat stone outside his hole in the sunshine, eyes closed, listening, a happy smile; two robins (2) sing on the low branch above; Hedgehog (1) sits nearby in the grass | keep (v7) |
+| 2 | Sunny morning, in front of the hole: Country Mouse (1) hugs Town Mouse (1), who has just arrived with her pink bag; Hedgehog (1) and two robins (2) watch, smiling | keep (v7) |
+| 3 | Midday, at the flat stone: lunch is laid out (seeds, blackberries, one hazelnut); Town Mouse (1) tastes a big blackberry, eyes closed with delight; Country Mouse (1) watches, pleased; Hedgehog (1) and two robins (2) look on | keep (v7) |
+| 4 | Afternoon, in the long grass: Country Mouse (1) lies on his back, paws behind his head, watching the clouds; Town Mouse (1) lies beside him, wriggling, legs kicking, restless; one robin (1) on a grass stalk, Hedgehog (1) dozing nearby | keep (v7) |
+| 5 | Sunset, pink and gold, in front of the hole: Town Mouse (1), pink bag on, points towards the far-off town rooftops on the horizon, inviting; Country Mouse (1) nods happily; Hedgehog (1) and two robins (2) on their branch | keep (v7) |
+| 6 | Morning, the country lane: the big brown horse (1) pulls the hay cart; the farmer (1) at the front, seen from behind; Country Mouse (1) and Town Mouse (1) peep out of the hay at the back, smiling | keep (v7) |
+| 7 | Morning, the kitchen, mouse-eye view low by the wall: Town Mouse (1) holds open the tiny round red door, welcoming; Country Mouse (1) looks at it, amazed; above them, three sparrows (3) on the outside sill of the wide window | keep (v7) |
+| 8 | Morning, on the kitchen table among breakfast crumbs, cheese bits and grapes: Country Mouse (1) holds a grape, munching happily; Town Mouse (1) spreads her paws, "help yourself"; three sparrows (3) on the outside sill. No people | keep (v7) |
+| 9 | Morning, the kitchen: the cook (1) at the sink, seen from behind, washing plates, no steam; on the table Country Mouse (1) jumps in the air, surprised; Town Mouse (1) beside him, calm and smiling | keep (v7) |
+| 10 | Morning, the hall: the round grey robot hoover (no face) rolls along the floor past the stairs; on the bottom step Country Mouse (1) covers his ears with his paws; Town Mouse (1) smiles; three sparrows (3) on the hall window sill outside | keep (v7) |
+| 11 | Late morning, the hall: the big blue front door swings in the wind, a few leaves blowing in; Country Mouse (1) giggles mid-jump, his straw hat flying in the air above him; Town Mouse (1) laughs beside him; three sparrows (3) at the hall window | keep (v7) |
+| 12 | Evening, the kitchen windowsill (inside the single pane): Country Mouse (1), straw hat back on his head, and Town Mouse (1) sit side by side laughing; outside, dusk, town house windows lit warm yellow; three sparrows (3) sleepy on a ledge outside | keep (v7) |
+| 13 | Morning, the street in front of the tall house: the horse (1) and the farmer (1) drive the hay cart away; Country Mouse (1), straw hat back on his head, waves from the hay at the back; Town Mouse (1) waves from the top step by the big blue door | keep (v7) |
+| 14 | Night, moon and stars, the oak in cutaway: Country Mouse (1) in his moss bed under a leaf blanket, smiling sleepily, eyes closing, straw hat on a peg; outside by the roots Hedgehog (1) curled up asleep; two robins (2) asleep on their branch | keep (v7) |
+| 15 | Night, Town Mouse's room: Town Mouse (1) snuggled in her little bed under the patchwork blanket, smiling, pink bag on its hook; through the small round window the town at night, windows lit; three sparrows (3) asleep on the ledge outside her window | keep (v7) |
 
 Check (dino-storytelling section 4):
 

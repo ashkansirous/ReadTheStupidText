@@ -1,9 +1,9 @@
 # Slice 151 — Dino: three view modes, and no merging of characters
 
-*Planned 2026-10-26.* Dino Reader only.
+*Built 2026-10-27 (PR #430), not yet verified on photo import, the Windows head or iOS.* Dino Reader only.
 
 **Batch:** 31 (tester review, 2026-10-26; Decision 156)
-**Touches:** `src/DinoReader.Core/ReadingMode.cs`, `src/DinoReader.Core/Story.cs`, `src/DinoReader.Core/StoryCast.cs`, `src/DinoReader.Core/CastMerges.cs` (deleted), `src/DinoReader.Core/MergeSelection.cs` (deleted), `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/ReadingSurface.cs`, `src/DinoReader.App/PicturePages.cs`, `src/DinoReader.App/PictureTextPages.cs`, `src/DinoReader.App/CastPage.cs`, `src/DinoReader.App/CastRows.cs`, `src/DinoReader.App/CastMergeSheet.cs` (deleted), `src/DinoReader.App/StoryVoicing.cs`, `src/DinoReader.App/Resources/Strings/*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.Core/CLAUDE.md`
+**Touches:** `src/DinoReader.Core/ReadingMode.cs`, `src/DinoReader.Core/Story.cs`, `src/DinoReader.Core/StoryCast.cs`, `src/DinoReader.Core/CastMerges.cs` (deleted), `src/DinoReader.Core/MergeSelection.cs` (deleted), `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/ReadingSurface.cs`, `src/DinoReader.App/PicturePages.cs`, `src/DinoReader.App/PictureTextPages.cs`, `src/DinoReader.App/CastPage.cs`, `src/DinoReader.App/CastRows.cs`, `src/DinoReader.App/CastMergeSheet.cs` (deleted), `src/DinoReader.App/StoryVoicing.cs`, `src/DinoReader.App/Resources/Strings/*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`, `src/DinoReader.Core/CLAUDE.md`, `CastEditor`, `StoryDraft`, `StoryJson`, `StarterUpdate`, `PictureTextBook`, `StoryPieces`, `StoryActions`, `StoryImport`, `TextStep`, `NarratorRecast`, `PagesStep`, `CastText`, `ModeSwitch`, `ReadingTheme`, `site/dino/index.html`
 
 ## Why
 
@@ -23,20 +23,20 @@ From the tester review (2026-10-26):
 - The **"Words over pictures" switch is removed** (`Story.WordsOverPictures` is ignored when read, and no longer
   written).
 - **"Merge two characters" is removed**: the button, the sheet, `CastMerges`/`MergeSelection` and
-  `Story.Merges`. Merges already saved in a book are ignored, so those names get their own voices again.
+  `Story.Merges` (stored field `CharacterMerges`, `Story.cs:74,102`). Merges already saved in a book are ignored, so those names get their own voices again.
 - "Show original text" (translated books, Slice 110) stays.
 - The `.dino` schema version does not change: the old fields are read and ignored, so older files still open.
 
 ## Work
 
-- [ ] `ReadingMode`: `Picture`, `Text`, `PictureAndText`. Migration in the `story.json` read: an old `Picture`
+- [x] `ReadingMode`: `Picture`, `Text`, `PictureAndText`. Migration in the `story.json` read: an old `Picture`
       (with either `WordsOverPictures` value) becomes `PictureAndText`. Unit tests for old files.
-- [ ] Reading top bar: a three-icon switch saved per book, as today. Picture only hides the words panel. The
+- [x] Reading top bar: a three-icon switch saved per book, as today. Picture only hides the words panel. The
       highlight and page turns still follow the read.
-- [ ] Remove the Words over pictures row from the cast page.
-- [ ] Remove the merge button, the sheet, the merge model and `StoryCast.Resolve`'s merge step. Tests updated or deleted.
-- [ ] Strings: add the three mode names (14 locales) and remove the merge and words-over strings.
-- [ ] CLAUDE.md lines: replace the Slice 98/122 view rule and the Slice 65 merge rule.
+- [x] Remove the Words over pictures row from the cast page.
+- [x] Remove the merge button, the sheet, the merge model and `StoryCast.Resolve`'s merge step. Tests updated or deleted.
+- [x] Strings: add the three mode names (14 locales) and remove the merge and words-over strings.
+- [x] CLAUDE.md lines: replace the Slice 98/122 view rule and the Slice 65 merge rule.
 
 ## Verification
 
@@ -63,3 +63,20 @@ Source: `docs/design/dino-reader/Dino Reader Batch 31.dc.html`, screens 66 (line
 **Open point: Segment order and icons.** The plan lists the modes as "Picture only, Text only, Picture + text". The mock orders them Picture only, Picture + text, Text only, and calls the order and icons a proposal. **Default:** use the mock's order and icons.
 
 **Open point: Cast page frame is a draft.** The mock marks the book (Billy Goats Gruff) and the voice picks as drafts. **Default:** take only the layout and the removals from it; the real rows come from `CastRows`.
+
+*Changed while building:* `ReadingMode` is `Text`, `PictureOnly`, `PictureAndText`. An old stored `Picture` reads as `PictureAndText`; legacy `WordsOverPictures=false` (with `Picture` or no mode) reads as `PictureOnly`. The field is read only, never written. Old `Merges` are read and ignored (Decision 156); older builds read the new names as "no choice". Also removed: `MarkPicturesAsPages`'s old meaning. Photo, scan and PDF imports default to `PictureOnly` via `StoryDraft.PreferredMode` (Claude's decision: the words are in the picture). Scanned books with line boxes offer two segments only (`SyncModeSwitch` on load and after translation). Files outside the original Touches are now listed in it. Site copy (`site/dino/index.html`) changed, so it deploys on merge.
+
+*From review:* `reviews/151-high.md` (applied 1, 2, 3, 4, 6, 7, 9) and `reviews/151-medium.md` (applied 1, 2, 3, 4, 7; 5 is not a bug).
+
+*Verified 2026-10-27 (emulator, headless scripted):* three modes in portrait and landscape, persistence, cast page without merge or switch, legacy `story.json` migration, selected-segment hint: pass.
+
+#### For CLAUDE.md (lifted 2026-10-27)
+
+- A story's view is `ReadingMode` (`Text`, `PictureOnly`, `PictureAndText`) in `src/DinoReader.Core/ReadingMode.cs`. Old `Picture` reads as `PictureAndText`; legacy `WordsOverPictures=false` reads as `PictureOnly`; those fields are read only, never written. Old `Merges` are read and ignored, so characters are never merged. Scanned books with line boxes offer two segments only (`ModeSwitch.SyncModeSwitch`). (Slice 151: docs/plan/slices/151-dino-three-view-modes.md)
+
+#### Not yet verified
+
+- Photo import opening in Picture only (needs a camera).
+- Windows head and iOS.
+- Native read of the new strings (13 drafts).
+- Night-theme segment colours unchanged from before.

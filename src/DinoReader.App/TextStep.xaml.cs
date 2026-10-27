@@ -249,7 +249,7 @@ public partial class TextStep : ContentView
 		}
 
 		string key = AnalysisKey();
-		IReadOnlyList<CastMember> cast = await _voicing!.CastAsync(Draft.Language, text, Draft.Cast, Draft.Merges, Story.BreakMapOf(Draft.Pages));
+		IReadOnlyList<CastMember> cast = await _voicing!.CastAsync(Draft.Language, text, Draft.Cast, Story.BreakMapOf(Draft.Pages));
 		token.ThrowIfCancellationRequested();
 		_analysedKey = key;
 		Draft.Cast = cast;
@@ -295,9 +295,7 @@ public partial class TextStep : ContentView
 		{
 			Draft.Cast = story.Cast;
 			Draft.LanguageCasts = story.LanguageCasts;
-			Draft.Merges = story.Merges;
 			Draft.AnimalSoundsOn = story.AnimalSoundsOn;
-			Draft.WordsOverPictures = story.WordsOverPictures;
 			return Task.CompletedTask;
 		});
 		await _session.Host.Navigation.PushAsync(page);

@@ -1,9 +1,15 @@
 # Slice 150 — Dino: slower reading by default, and a grown-up speed setting
 
-*Planned 2026-10-26.* Dino Reader only; RTST is not touched.
+*Built 2026-10-26 (PR #429), not yet verified on a real phone.* Dino Reader only; RTST is not touched.
+
+*Changed while building:* Dino stores its own key `dino.reading.speed` instead of the shared `ISettingsStore.Speed`, because the shared store cannot tell a missing value from a stored one. `SpeechStartup` loads and clamps it; any read failure falls back to 0.8. The card is a stock MAUI `Slider` styled to fit, not the mock's 28 px thumb. The Reading speed card sits on `LanguagePage` (grown-up settings) before the usage card. The label updates while dragging; the value is saved and `SetSpeed` called on release. "Hear this speed" reuses `Cast_PreviewLine` in the preview language, shows a spinner after 500 ms, and a second tap stops it.
+
+*From review:* two passes (`D:\ReadTheStupidText-worktrees\reviews\150-high.md`, `150-medium.md`). Applied high 1, 2, 3, 6 and medium 1, 2, 3, 4, 7, 8, 9.
+
+*Verified (emulator, headless, 2026-10-26):* 0.8 default, slider ends, steps, persistence, sample play/stop all pass; no crash.
 
 **Batch:** 31 (tester review, 2026-10-26; Decision 155)
-**Touches:** `src/DinoReader.App/SpeechStartup.cs`, `src/DinoReader.App/SettingsRows.cs`, `src/DinoReader.App/GrownUpMode.cs`, `src/DinoReader.Core/ReadingSpeed.cs` (new), `src/DinoReader.App/Resources/Strings/*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`
+**Touches:** `src/DinoReader.App/SpeechStartup.cs`, `src/DinoReader.App/SettingsRows.cs`, `src/DinoReader.App/GrownUpMode.cs`, `src/DinoReader.App/LanguagePage.xaml.cs`, `src/DinoReader.Core/ReadingSpeed.cs` (new), `src/DinoReader.App/Resources/Strings/*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`
 
 ## Why
 
@@ -22,14 +28,14 @@ screen ever writes it, so parents cannot change it.
 
 ## Work
 
-- [ ] `ReadingSpeed` (Core): Min 0.5, Max 1.2, Default 0.8, Step 0.05, `Clamp`, built on `PlaybackRate`. Unit tests.
-- [ ] `SpeechStartup` uses Dino's own default when nothing is stored. Check `MobilePreferencesSettingsStore.cs:18`'s
-      fallback: a stored 1.0 written by nobody must not exist, but a missing value must give 0.8. A stored
+- [x] `ReadingSpeed` (Core): Min 0.5, Max 1.2, Default 0.8, Step 0.05, `Clamp`, built on `PlaybackRate`. Unit tests.
+- [x] `SpeechStartup` uses Dino's own default when nothing is stored. The fallback is `src/ReadTheStupidText.Mobile.Shared/MobilePreferencesSettingsStore.cs:37-38`
+      (a missing value returns `PlaybackRate.Default`); give Dino 0.8 there or in `SpeechStartup.cs:33`: a stored 1.0 written by nobody must not exist, but a missing value must give 0.8. A stored
       value above 1.2 is clamped.
-- [ ] A "Reading speed" row in grown-up settings (`SettingsRows`): a slider with the current value ("0.8x"), plus
+- [x] A "Reading speed" row in grown-up settings (`SettingsRows`): a slider with the current value ("0.8x"), plus
       a play button that reads a sample sentence at that speed. The new speed applies to the next sentence read.
-- [ ] Strings in all 14 locales.
-- [ ] Rule line in `src/DinoReader.App/CLAUDE.md`.
+- [x] Strings in all 14 locales.
+- [x] Rule line in `src/DinoReader.App/CLAUDE.md`.
 
 ## Verification
 
@@ -48,3 +54,13 @@ Source: `docs/design/dino-reader/Dino Reader Batch 31.dc.html`, screen 70 (lines
 - **New strings (14 locales).** "Reading speed", "Slower is easier for little ones" (draft), "0.5x · slow", the value format "0.8x", and the accessible value "0.8 times". The mock does not give the sample sentence.
 
 **Settled by the mock (the plan left open).** The row is a card of its own, the value sits left of the Play button, and the left end label says "slow". Still open: the sample sentence. **Default:** a short sentence from a starter book, translated per locale.
+
+#### For CLAUDE.md (lifted 2026-10-27)
+
+None to add: `src/DinoReader.App/CLAUDE.md` already has the rule line for this slice (keep it).
+
+#### Not yet verified
+
+- A mid-book speed change heard on a real phone.
+- Windows head and iOS readers apply `SetSpeed` on the next sentence.
+- Native-speaker read of the `Speed_*` strings (13 machine drafts).

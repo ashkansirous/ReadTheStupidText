@@ -23,10 +23,24 @@ public enum CoverStyle
 /// </summary>
 public sealed record CastMember(
     string CharacterId, string Name, Gender Gender, string VoiceId, bool Edited = false, VoiceFlavour? Flavour = null,
-    AnimalKind? Animal = null, bool NotAnimal = false)
+    AnimalKind? Animal = null, bool NotAnimal = false, string? SuggestedVoice = null, CharacterTraits? Traits = null)
 {
     /// <summary>Whether the animal was decided (an animal or "not an animal") rather than left to the guess.</summary>
     public bool HasAnimalSetting => Animal is not null || NotAnimal;
+
+    /// <summary>Whether the book's author chose this character's voice (Slice 156): a suggested roster id or traits came with the book.</summary>
+    public bool HasAuthoredVoice => !string.IsNullOrEmpty(SuggestedVoice) || Traits is not null;
+
+    /// <summary>Who chose the voice (Slice 156): a grown-up's pick (<see cref="Edited"/>, which is what an older package's flag means), else the book's suggestion, else the app's picker.</summary>
+    public VoiceSource Source => Edited ? VoiceSource.Grownup : HasAuthoredVoice ? VoiceSource.Book : VoiceSource.App;
+}
+
+/// <summary>Who chose a character's voice (Slice 156, Decision 161). The runtime picker never recasts a <see cref="Book"/> voice (while its roster id exists in the language); a <see cref="Grownup"/>'s change always wins.</summary>
+public enum VoiceSource
+{
+    App,
+    Book,
+    Grownup,
 }
 
 /// <summary>One recognised line of a scanned page: its text and where it sits on the page image (0..1 across its width and height).</summary>
@@ -71,7 +85,6 @@ public sealed record Story(
     int CoverColourIndex,
     string NarratorVoiceId,
     ReadingMode? PreferredMode = null,
-    IReadOnlyDictionary<string, string>? CharacterMerges = null,
     bool TranslateToMyLanguage = false,
     string? CoverFile = null,
     int? CoverPageIndex = null,
@@ -81,8 +94,7 @@ public sealed record Story(
     bool ShowOriginalText = false,
     IReadOnlyDictionary<int, PageRecording>? Recordings = null,
     bool UseRecordings = false,
-    bool AnimalSoundsOn = true,
-    bool? WordsOverPictures = null)
+    bool AnimalSoundsOn = true)
 {
     public const string PageSeparator = "\n\n";
 
@@ -94,15 +106,8 @@ public sealed record Story(
     public static Story NewOwnBook(string id, string language, DateTimeOffset created, int coverColourIndex) =>
         new(id, string.Empty, language, created, [], [], CoverStyle.FirstPage, coverColourIndex, string.Empty, TranslateToMyLanguage: true);
 
-    /// <summary>The one shared "no merges" map.</summary>
-    public static readonly IReadOnlyDictionary<string, string> NoMerges = new Dictionary<string, string>();
-
-    /// <summary>Characters a grown-up merged (Slice 65): merged-away character id to the id it joined.
-    /// Applied to the attribution every time the story is read, so the fix is remembered with the story.</summary>
-    public IReadOnlyDictionary<string, string> Merges => CharacterMerges ?? NoMerges;
-
     /// <summary>The cast of the story's own language (<see cref="Cast"/>) or of another language it has been read in (Slice 108, Decision 113):
-    /// each language has its own voices and pins; merges are shared. Empty when that language has no cast yet.</summary>
+    /// each language has its own voices and pins. Empty when that language has no cast yet.</summary>
     public IReadOnlyList<CastMember> CastIn(string language) =>
         IsOwnLanguage(language) ? Cast : OtherCast(language) ?? [];
 
@@ -155,9 +160,9 @@ public sealed record Story(
     /// <summary>Whether any page carries a picture (a scanned or photographed page).</summary>
     public bool HasPictures => Pages.Any(p => p.ImageFile is not null);
 
-    /// <summary>The mode the reading screen opens in: the child's saved choice, else pictures when
-    /// the story has them, else text.</summary>
-    public ReadingMode Mode => PreferredMode ?? (HasPictures ? ReadingMode.Picture : ReadingMode.Text);
+    /// <summary>The mode the reading screen opens in (Slice 151): a book without pictures has only text; a book with pictures opens in
+    /// the child's saved choice, else picture and text.</summary>
+    public ReadingMode Mode => HasPictures ? PreferredMode ?? ReadingMode.PictureAndText : ReadingMode.Text;
 
     public static string JoinPages(IEnumerable<StoryPage> pages) =>
         string.Join(PageSeparator, pages.Select(p => p.Text));

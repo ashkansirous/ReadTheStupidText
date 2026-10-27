@@ -1,7 +1,13 @@
 # Little Red Riding Hood: art record
 
-Store story (`StoreTexts.RedRidingHood`, stem `red-riding-hood`, id `1f0f0cb207b244368b7aef26028f4ac5`, version 4).
-Retold as 14 pages with one action each (`dino-storytelling` skill, Slice 121). **Art status (2026-10-26): cover and
+Store story (`StoreTexts.RedRidingHood`, stem `red-riding-hood`, id `1f0f0cb207b244368b7aef26028f4ac5`, version 7).
+Retold as 14 pages with one action each (`dino-storytelling` skill, Slice 121). Version 5 (Slice 152): each character's animal set in the book. Version 6 (Slice 146 Wave A, 2026-10-27): Farsi reworded in spoken Farsi (20 pieces), sound words as glued triples («تق تق تق!», «ها ها ها!», «به به به!»); English, page breaks and every picture unchanged, so all 14 pages keep their picture. Version 7 (Slice 146 Waves B+C and Slice 156, 2026-10-27): the English in spoken, kid-friendly words
+(Decision 152): "Mother" is now **"Mum"** (the speaker and the narration), contractions and spoken forms ("okay?", "bye-bye",
+"Well done, you!", "Of course you can!", "way too small", "I've got friends now!", "snuggled up", "sweetheart", Button "trotting along beside her"); 24 pieces
+reworded, the same 14 page breaks and the same one action per page, so **all 14 pages and the cover keep their picture**
+(checked against the contact sheet: page 14 still shows Mum leaning in to her in bed, Button curled on the quilt). The 12
+non-Farsi languages got the 24 pieces in the same register; Farsi changed only «باشه؟» on "Stay on the path all the way, okay?"
+(every other reworded piece kept its Wave A Farsi, its meaning unchanged). The book now chooses every voice (Slice 156, below). **Art status (2026-10-26): cover and
 pages 1-14 drawn and accepted; full review PASS 2026-10-26.** The old 9-page text-only version had none.
 
 **Gentle retelling (Decision 130):** in the classic the Wolf tricks Red Riding Hood into leaving the path, runs
@@ -18,11 +24,11 @@ the Wolf asks to try on Grandma's spare glasses (big eyes), then tries her fluff
 by the door, much too small for his ears (big ears). **"What big teeth you have!" is dropped**; the third step is "What a big smile you have!",
 answered "That's because I'm not lost any more. I've found some friends!" The Woodcutter never holds an axe
 or any tool (he stacks logs), and nothing in the cottage burns or steams: no fireplace, candles or teapot.
-The ending is bedtime: Red Riding Hood tells Mother she stayed on the path and told a grown-up, and the Wolf
+The ending is bedtime: Red Riding Hood tells Mum she stayed on the path and told a grown-up, and the Wolf
 comes to Grandma's for honey cake every Sunday.
 
 **Why everyone does what they do:**
-- **Mother** packs the basket because it is Grandma's birthday. She asks Red Riding Hood to stay on the path
+- **Mum** packs the basket because it is Grandma's birthday. She asks Red Riding Hood to stay on the path
   and gives her the rule for strangers (say "no, thank you" and tell a grown-up you know), because the wood is
   big and she wants her to get there the right way.
 - **Red Riding Hood** says her rule back as a happy chant ("I stay on the path, all the way to Grandma's!"),
@@ -52,14 +58,26 @@ comes to Grandma's for honey cake every Sunday.
   the different last step `"Wolf, what a big smile you have!"` (page 13). Pages 11 and 12 end with the same
   `Ha, ha, ha! Hee, hee, hee! Everybody laughed.`
 
-**Cast and voices:** Red Riding Hood, Mother, Wolf, Grandma, Woodcutter (`StoreTexts` spec list). Genders,
-chosen on purpose: Red Riding Hood, Mother and Grandma are female; the Wolf and the Woodcutter are male. The
-caster reads them from the titles ("Mother", "Grandma"), the pronouns after the names ("she", "his"), and the
-Wolf's name, which casts the roster's wolf. The Woodcutter's pronoun cue is page 7 ("The Woodcutter put down
-his logs. He took Red Riding Hood's hand"); an earlier draft ("took her hand, and he went back with her")
-counted more "her" than "he" and gave him a witch's voice in every language. Button never speaks, so is not
-in the cast. `RedRidingHoodStoryTests.LittleRedRidingHood_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster`
-checks all 14 languages. Translations keep the genders: Arabic قالت for the girls and women, قال for the Wolf
+**Cast and voices:** Red Riding Hood, Mum, Wolf, Grandma, Woodcutter (`StoreTexts` spec list). Genders,
+chosen on purpose: Red Riding Hood, Mum and Grandma are female; the Wolf and the Woodcutter are male. Since version 7
+the book states them itself (`StarterVoices`, Slice 156) with a suggested roster voice and traits for each:
+
+- **Red Riding Hood:** `bee` (Busy Bee, bubbly and quick); female, child, person; bright, bouncy. A cheerful six-year-old who chants her rule.
+- **Mum:** `mummy` (Kind Mummy, warm and kind); female, adult, person; warm, soft.
+- **Wolf:** `puppy` (Playful Puppy, bouncy and bright); male, young; bouncy, warm. A friendly young wolf who wags his tail; never the growly
+  Hungry Wolf the app's picker gave him. His kind is his book animal (Wolf), so no second kind in his traits.
+- **Grandma:** `hen` (Granny Hen, slow and cosy); female, old, person; warm, soft.
+- **Woodcutter:** `giant` (Friendly Giant, big, deep and slow); male, adult, person; booming, warm. The biggest, kindest grown-up.
+
+Real cast dumped for all 14 languages (2026-10-27): every character gets their gender, no two share a voice and flavour, and nobody
+whispers, except **Farsi**, which has no `hen`: its Grandma is matched by traits onto «شاهزاده خانم شجاع» (`princess`, fa-mana
+Whisper), the only woman's voice left (Mum has `mummy`, Red Riding Hood `bee`). Reported as a roster gap (Core not changed):
+Farsi needs an old woman's speaker or a non-whisper princess. Chinese Grandma plays `hen` on zf_xiaoxiao, the narrator's voice,
+in its Sleepy flavour (allowed for an animal roster character; the narrator reads in Storyteller). Earlier choices tried:
+`princess` for Red Riding Hood (a whisper in fa, es and pt) and `puppy2` for the Wolf (a whisper in fa, missing in es and pt,
+where the growly wolf took over). Button never speaks, so is not in the cast.
+`RedRidingHoodStoryTests.LittleRedRidingHood_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster` checks all 14
+languages and the stored genders. Translations keep the genders: Arabic قالت for the girls and women, قال for the Wolf
 and the Woodcutter, feminine imperatives to Red Riding Hood; Russian сказала / сказал, and Пуговка is a
 feminine «собачка» so her verbs agree; French "le Petit Chaperon rouge" takes "elle" and "tu es restée".
 
@@ -69,9 +87,12 @@ the passé composé with "a dit" tags, Brazilian Portuguese (tô, pra, a gente),
 store books: "¡Pasad, pasad!"), Japanese and Chinese with no spaces. Each language uses its own name for the
 heroine (شنل قرمزی, ذات الرداء الأحمر, Красная Шапочка, le Petit Chaperon rouge, Caperucita Roja, Chapeuzinho
 Vermelho, Roodkapje, Rødhætte, Rödluvan, Rødhette, Punahilkka, 赤ずきんちゃん, 小红帽) and its own sound words
-(تق!, Тук!, Toc !, Klop!, Knack!, Kop!, トン！, 咚！ for the knock; قار و قور, Урр, Gargouille, Ronc, Kurr,
+(the knock is one piece said three times in a row, so every language reads a triple: «تق تق تق!» (Farsi makes each piece a triple itself), Тук!, Toc !, Klop!, Knack!, Kop!, トン！, 咚！; قار و قور, Урр, Gargouille, Ronc, Kurr,
 グー, 咕噜, Gruuu, Rommel for the tummy; never a growl word like "Grrr" or "Grommel", which would make the Wolf sound menacing). Button is translated as a name (دکمه, زُرَير, Пуговка, Bouton, Botón, Botão,
-Knoopje, Knap, Knappen, Nappi, ボタン, 纽扣).
+Knoopje, Knap, Knappen, Nappi, ボタン, 纽扣). Version 7 adds the spoken touches of the new English in each language's own way: a tag question on Mum's
+rule (¿vale?, d'accord ?, tá bom?, oké?, okay?, jooko?, okej?, ok?, хорошо?, اتّفقنا؟, いい？, 好不好？, باشه؟), doubled verbs for the
+wagging tail (movía y movía, remuait, remuait, 摇呀摇，摇呀摇, ふりふり、ふりふり), and pet names at bedtime (cariño, ma puce, gumman,
+солнышко, 我的宝贝). Sound words still a triple everywhere; the non-English ones (other than es, zh, fa) are untested aloud (Slice 145).
 
 **Style:** Children's picture book illustration, soft watercolour and coloured pencil, warm gentle
 colours, simple rounded shapes, no text or letters anywhere. Portrait 3:4.
@@ -86,7 +107,7 @@ patched trousers and hat, no Tex Avery wolf in a suit, no Shrek wolf in a nightg
   outdoors, down indoors), over a **yellow dress with small white dots**, and **little red boots**. Her prop:
   a wicker basket with a **blue-and-white checked cloth** (pages 2-10). In bed (page 14) a plain white
   nightdress; the red cape hangs on a hook by the bed.
-- **Mother:** a slim young woman, a head and a half taller than Red Riding Hood; the same dark brown curly
+- **Mum:** a slim young woman, a head and a half taller than Red Riding Hood; the same dark brown curly
   hair, in a bun tied with a green ribbon; a **sage-green dress** with a **white apron with one small red heart
   on the pocket**. No other props.
 - **Wolf:** a young grey wolf, big and soft-looking: sitting, his head is level with Red Riding Hood's head;
@@ -128,26 +149,26 @@ There are no other characters: no hunters, no other wolves, no other animals wit
 
 Every page: the whole scene sits in the top 70% of the picture; the bottom 30% is plain path, grass, garden
 or floor with nothing important in it. No text, letters, words, sound effects or writing anywhere ("Tip, tap",
-"Rumble", "Knock", "Yum" and "Ha, ha" are never drawn in, and no music notes). Nobody looks scared. Every page
-is **new** (no pictures exist). Every picture has at least three characters.
+"Rumble", "Knock", "Yum" and "Ha, ha" are never drawn in, and no music notes). Nobody looks scared. Every picture
+has at least three characters. **Version 7: every page keeps its picture** (the words changed, the actions did not).
 
 | Page | One action (who, count, where, when) | Picture |
 | --- | --- | --- |
-| Cover | Autumn morning on the path through the wood: Red Riding Hood (1) skips along holding the Woodcutter's (1) hand, Button (1) trots in front, the Wolf (1) walks beside them wagging his tail; all smiling; Grandma's cottage under the oak small in the distance | new |
-| 1 | Morning, the garden in front of the white cottage: Red Riding Hood (1) twirls in her red cape, the cape flaring out; Button (1) jumps up beside her; Mother (1) smiles from the open red door | new |
-| 2 | Morning, the kitchen: Mother (1) hands Red Riding Hood (1) the basket (honey cakes and apples under the checked cloth), one finger raised kindly; Red Riding Hood nods; Button (1) sits looking up at them | new |
-| 3 | Morning, the garden gate: Red Riding Hood (1) steps onto the path into the wood, basket on her arm, waving back; Button (1) trots at her heels; Mother (1) waves from the gate | new |
-| 4 | Late morning, the middle of the wood: the Wolf (1) sits on the fallen log by the path, ears down, a paw on his tummy, looking lost; Red Riding Hood (1) has stopped on the path a few steps away, surprised, holding her basket; Button (1) beside her, head tilted | new |
-| 5 | Late morning, the same place: the Wolf (1) stands on four legs beside the log, nose pointing hopefully at the blackberry bushes among the trees; Red Riding Hood (1), both feet on the path, shakes her head politely with a smile; Button (1) at her feet. Must differ from page 4: the Wolf standing and pointing, the girl shaking her head | new |
-| 6 | Late morning, further along the path: the Woodcutter (1), an armful of logs, bends down by his log pile to listen; Red Riding Hood (1) points back along the path as she tells him; Button (1) beside her | new |
-| 7 | Late morning, back at the fallen log: the Woodcutter (1) crouches to talk kindly to the Wolf (1), who sits on the log looking hopeful; Red Riding Hood (1) holds the Woodcutter's hand; Button (1) sniffs the Wolf's paw, tail wagging | new |
-| 8 | Midday, the path: everyone walks towards Grandma's: the Woodcutter (1) holding Red Riding Hood's (1) hand, Red Riding Hood singing, the Wolf (1) trotting beside them with his tail up and wagging, Button (1) in front | new |
-| 9 | Midday, Grandma's cottage under the oak: Grandma (1) opens the blue door wide, arms open; Red Riding Hood (1) on the doorstep with the basket; the Woodcutter (1) and the Wolf (1) just behind her; Button (1) at her feet. Exactly five characters, each appearing once | new |
-| 10 | Afternoon, inside Grandma's cottage: Grandma (1), Red Riding Hood (1), the Woodcutter (1) and the Wolf (1) sit round the little table sharing honey cakes and apples from the open basket; the Wolf, on a chair, munches a honey cake with his eyes closed happily; Button (1) sits on the little stool right beside Red Riding Hood's chair. Exactly five characters, each appearing once | new |
-| 11 | Afternoon, the same table: the Wolf (1) wears Grandma's big round red-framed spare glasses (he asked first; Grandma said yes), his eyes looking huge; Red Riding Hood (1) points and laughs; Grandma (1, her own gold glasses on) and the Woodcutter (1) laugh; Button (1) on the same stool beside Red Riding Hood. Exactly five characters, each appearing once | new |
-| 12 | Afternoon, the same room: the Wolf (1) stands by the peg next to the blue door, Grandma's tiny fluffy pink earmuffs perched on top of his big pointy ears, much too small; no glasses on him now; Red Riding Hood (1), Grandma (1) and the Woodcutter (1) laugh at the table; Button (1) on the same stool beside Red Riding Hood. Exactly five characters, each appearing once | new |
-| 13 | Afternoon, beside the table: Grandma (1) gives the Wolf (1) a big warm hug; the Wolf smiles his biggest closed-mouth smile, eyes shut happily, no glasses or earmuffs; Red Riding Hood (1) and the Woodcutter (1) watch, smiling; Button (1) on the same stool beside Red Riding Hood. Exactly five characters, each appearing once | new |
-| 14 | Night, Red Riding Hood's bedroom at home, moonlight through the single-pane window: Red Riding Hood (1) in bed under the patchwork quilt, smiling up; Mother (1) sits on the edge of the bed and leans in to kiss her goodnight; Button (1) asleep, curled at the foot of the bed. No lamp, candle or flame | new |
+| Cover | Autumn morning on the path through the wood: Red Riding Hood (1) skips along holding the Woodcutter's (1) hand, Button (1) trots in front, the Wolf (1) walks beside them wagging his tail; all smiling; Grandma's cottage under the oak small in the distance | keep (v7) |
+| 1 | Morning, the garden in front of the white cottage: Red Riding Hood (1) twirls in her red cape, the cape flaring out; Button (1) jumps up beside her; Mum (1) smiles from the open red door | keep (v7) |
+| 2 | Morning, the kitchen: Mum (1) hands Red Riding Hood (1) the basket (honey cakes and apples under the checked cloth), one finger raised kindly; Red Riding Hood nods; Button (1) sits looking up at them | keep (v7) |
+| 3 | Morning, the garden gate: Red Riding Hood (1) steps onto the path into the wood, basket on her arm, waving back; Button (1) trots at her heels; Mum (1) waves from the gate | keep (v7) |
+| 4 | Late morning, the middle of the wood: the Wolf (1) sits on the fallen log by the path, ears down, a paw on his tummy, looking lost; Red Riding Hood (1) has stopped on the path a few steps away, surprised, holding her basket; Button (1) beside her, head tilted | keep (v7) |
+| 5 | Late morning, the same place: the Wolf (1) stands on four legs beside the log, nose pointing hopefully at the blackberry bushes among the trees; Red Riding Hood (1), both feet on the path, shakes her head politely with a smile; Button (1) at her feet. Must differ from page 4: the Wolf standing and pointing, the girl shaking her head | keep (v7) |
+| 6 | Late morning, further along the path: the Woodcutter (1), an armful of logs, bends down by his log pile to listen; Red Riding Hood (1) points back along the path as she tells him; Button (1) beside her | keep (v7) |
+| 7 | Late morning, back at the fallen log: the Woodcutter (1) crouches to talk kindly to the Wolf (1), who sits on the log looking hopeful; Red Riding Hood (1) holds the Woodcutter's hand; Button (1) sniffs the Wolf's paw, tail wagging | keep (v7) |
+| 8 | Midday, the path: everyone walks towards Grandma's: the Woodcutter (1) holding Red Riding Hood's (1) hand, Red Riding Hood singing, the Wolf (1) trotting beside them with his tail up and wagging, Button (1) in front | keep (v7) |
+| 9 | Midday, Grandma's cottage under the oak: Grandma (1) opens the blue door wide, arms open; Red Riding Hood (1) on the doorstep with the basket; the Woodcutter (1) and the Wolf (1) just behind her; Button (1) at her feet. Exactly five characters, each appearing once | keep (v7) |
+| 10 | Afternoon, inside Grandma's cottage: Grandma (1), Red Riding Hood (1), the Woodcutter (1) and the Wolf (1) sit round the little table sharing honey cakes and apples from the open basket; the Wolf, on a chair, munches a honey cake with his eyes closed happily; Button (1) sits on the little stool right beside Red Riding Hood's chair. Exactly five characters, each appearing once | keep (v7) |
+| 11 | Afternoon, the same table: the Wolf (1) wears Grandma's big round red-framed spare glasses (he asked first; Grandma said yes), his eyes looking huge; Red Riding Hood (1) points and laughs; Grandma (1, her own gold glasses on) and the Woodcutter (1) laugh; Button (1) on the same stool beside Red Riding Hood. Exactly five characters, each appearing once | keep (v7) |
+| 12 | Afternoon, the same room: the Wolf (1) stands by the peg next to the blue door, Grandma's tiny fluffy pink earmuffs perched on top of his big pointy ears, much too small; no glasses on him now; Red Riding Hood (1), Grandma (1) and the Woodcutter (1) laugh at the table; Button (1) on the same stool beside Red Riding Hood. Exactly five characters, each appearing once | keep (v7) |
+| 13 | Afternoon, beside the table: Grandma (1) gives the Wolf (1) a big warm hug; the Wolf smiles his biggest closed-mouth smile, eyes shut happily, no glasses or earmuffs; Red Riding Hood (1) and the Woodcutter (1) watch, smiling; Button (1) on the same stool beside Red Riding Hood. Exactly five characters, each appearing once | keep (v7) |
+| 14 | Night, Red Riding Hood's bedroom at home, moonlight through the single-pane window: Red Riding Hood (1) in bed under the patchwork quilt, smiling up; Mum (1) sits on the edge of the bed and leans in to kiss her goodnight; Button (1) asleep, curled at the foot of the bed. No lamp, candle or flame | keep (v7) |
 
 Check (dino-storytelling section 4):
 

@@ -81,15 +81,29 @@ public sealed class StoreStoryTests : IDisposable
                 Assert.True(found.Contains(expected), $"{spec.Title}: no character {expected}; found {string.Join(", ", found)}");
             }
 
-            Assert.Equal(story.Cast.Count, story.Cast.Select(c => c.VoiceId).Distinct().Count());
+            Assert.True(
+                story.Cast.Count == story.Cast.Select(c => (c.VoiceId, c.Flavour)).Distinct().Count(),
+                $"{spec.Title}: two characters share one (voice, flavour): {string.Join(", ", story.Cast.Select(c => $"{c.Name}={c.VoiceId}/{c.Flavour}"))}");
             Assert.DoesNotContain(story.Cast, c => c.VoiceId == SupertonicVoiceTable.Default.Id);
         }
     }
 
     public static TheoryData<string> Languages() => new(UiLanguage.Supported);
 
-    // The roster's duckling voices are one gender per language and an animal takes its own animal's voice before its gender, so the builder stores Duckling and Dilly
-    // as no animal (StarterAnimals). The app casts a language other than the story's afresh, carrying only the animal settings; the story's language keeps its cast.
+    // The Lion and the Mouse (Slice 156): the book suggests the Friendly Giant for the Lion and the Squeaky Mouse for the Mouse ("her supper"). The mouse voice is a boy in
+    // English and Farsi, so there the suggestion clashes on gender and her traits pick a girl's young, squeaky voice instead.
+    [Theory]
+    [MemberData(nameof(Languages))]
+    public void TheLionAndTheMouse_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
+    {
+        AssertEachIsPlayedByTheirGender(StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.LionAndMouseId)), language, new Dictionary<string, Gender>
+        {
+            ["Lion"] = Gender.Male, ["Mouse"] = Gender.Female,
+        });
+    }
+
+    // The roster's duckling voices are one gender per language, so the book chooses each voice (StarterVoices, Slice 156: mummy, piglet, bunny, bee, knight) with the gender, and Duckling
+    // and Dilly are ducks again. The app casts a language other than the story's afresh, carrying the animal settings and the book's choices; the story's language keeps its cast.
     [Theory]
     [MemberData(nameof(Languages))]
     public void TheUglyDuckling_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
@@ -113,8 +127,8 @@ public sealed class StoreStoryTests : IDisposable
         });
     }
 
-    // The Little Red Hen (Slice 121): the roster's kitten and duckling voices are girls in most languages but boys in Farsi, Spanish and Portuguese, so the builder
-    // stores Cat and Duck as no animal (StarterAnimals) and they are cast by gender; Hen keeps the hen and Dog the puppy, which are one gender everywhere.
+    // The Little Red Hen (Slices 121, 156): the roster's kitten and duckling voices are girls in most languages but boys in Farsi, Spanish and Portuguese. The book
+    // chooses each voice (StarterVoices: mummy, puppy, kitten, jester) with the gender, so Cat and Duck keep their animals and a suggestion of the wrong gender falls to the traits.
     [Theory]
     [MemberData(nameof(Languages))]
     public void TheLittleRedHen_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
@@ -129,7 +143,7 @@ public sealed class StoreStoryTests : IDisposable
     }
 
     // The Town Mouse and the Country Mouse (Slice 121): Town Mouse is "she" and Country Mouse "he", so the two friends sound different in every language (the
-    // stored English genders are checked too, since every other language is cast from them).
+    // stored English genders are checked too, since every other language is cast from them). Both are mice again since Slice 156: the book suggests bee and piglet.
     [Theory]
     [MemberData(nameof(Languages))]
     public void TheTownMouseAndTheCountryMouse_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
@@ -146,7 +160,7 @@ public sealed class StoreStoryTests : IDisposable
     }
 
     // The Tale of Peter Rabbit (Slice 121): Mrs. Rabbit and Flopsy are "she", Peter, Mr. McGregor and Robin "he". The roster's bunny voice is a girl in most
-    // languages, so the builder stores Peter as no animal (StarterAnimals) and he is cast as a boy; Mrs. Rabbit is grown, which no bunny voice plays.
+    // languages, so Peter's book suggests a boy's voice (piglet) and Flopsy's a girl's (bee); both are rabbits again (Slice 156). Mrs. Rabbit suggests the mummy voice.
     [Theory]
     [MemberData(nameof(Languages))]
     public void TheTaleOfPeterRabbit_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
@@ -162,14 +176,14 @@ public sealed class StoreStoryTests : IDisposable
         AssertEachIsPlayedByTheirGender(story, language, expected);
     }
 
-    // X Marks the Treasure! (Slice 121): Kaatrin, Izzy and Pancake Polly are girls, the Seagull is a "she" with no animal word the guesser knows, Billy is a boy.
+    // X Marks the Treasure! (Slice 121): Kathryn, Izzy and Pancake Polly are girls, the Seagull is a "she" with no animal word the guesser knows, Billy is a boy.
     [Theory]
     [MemberData(nameof(Languages))]
     public void XMarksTheTreasure_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
     {
         var expected = new Dictionary<string, Gender>
         {
-            ["Kaatrin"] = Gender.Female, ["Izzy"] = Gender.Female, ["Pancake Polly"] = Gender.Female, ["Seagull"] = Gender.Female, ["Billy"] = Gender.Male,
+            ["Kathryn"] = Gender.Female, ["Izzy"] = Gender.Female, ["Pancake Polly"] = Gender.Female, ["Seagull"] = Gender.Female, ["Billy"] = Gender.Male,
         };
 
         Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.TreasureId));
@@ -177,7 +191,8 @@ public sealed class StoreStoryTests : IDisposable
     }
 
     // The Elves and the Shoemaker (Slice 121): two and two, the shoemaker Hans and the elf Nob are "he", his wife Greta and the elf Nib "she"; none is an
-    // animal, so each is cast by the gender the English pronouns give them (checked too, since every other language is cast from them).
+    // animal. The book suggests knight, mummy, bee and piglet (Slice 156), which every language's roster has, so each keeps a voice of their gender (the stored
+    // English genders are checked too, since every other language is cast from them).
     [Theory]
     [MemberData(nameof(Languages))]
     public void TheElvesAndTheShoemaker_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
@@ -188,6 +203,23 @@ public sealed class StoreStoryTests : IDisposable
         };
 
         Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.ElvesId));
+        Assert.Equal(expected.Keys.Order(), story.Cast.Select(m => m.Name).Order());
+        Assert.All(story.Cast, m => Assert.True(m.Gender == expected[m.Name], $"{m.Name} is stored as {m.Gender}"));
+        AssertEachIsPlayedByTheirGender(story, language, expected);
+    }
+
+    // The Three Billy Goats Gruff (Slice 156): the three brothers and the Troll are all "he", so each gets a man's or boy's voice in every language (the book suggests
+    // piglet, knight, giant and troll; Farsi has no troll, so its Troll is matched by traits). The stored English genders are checked too.
+    [Theory]
+    [MemberData(nameof(Languages))]
+    public void TheThreeBillyGoatsGruff_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)
+    {
+        var expected = new Dictionary<string, Gender>
+        {
+            ["Little Billy"] = Gender.Male, ["Middle Billy"] = Gender.Male, ["Big Billy"] = Gender.Male, ["Troll"] = Gender.Male,
+        };
+
+        Story story = StoreBuilder.Build(StoreTexts.All.Single(s => s.Id == StoreTexts.BillyGoatsId));
         Assert.Equal(expected.Keys.Order(), story.Cast.Select(m => m.Name).Order());
         Assert.All(story.Cast, m => Assert.True(m.Gender == expected[m.Name], $"{m.Name} is stored as {m.Gender}"));
         AssertEachIsPlayedByTheirGender(story, language, expected);
@@ -227,13 +259,13 @@ public sealed class StoreStoryTests : IDisposable
         AssertEachIsPlayedByTheirGender(story, language, expected);
     }
 
-    // Casts the story the way the app does in that language (a language other than the story's is cast afresh, carrying only the animal settings; the story's
+    // Casts the story the way the app does in that language (a language other than the story's is cast afresh, carrying the animal settings, edits and the book's voice choices; the story's
     // language keeps its cast) and checks that each character's roster character has the expected gender.
     private static void AssertEachIsPlayedByTheirGender(Story story, string language, IReadOnlyDictionary<string, Gender> expected)
     {
         IReadOnlyList<CastMember> stored = language == story.Language
             ? story.Cast
-            : story.Cast.Where(m => m.HasAnimalSetting).Select(m => m with { VoiceId = string.Empty }).ToList();
+            : StoryCast.SeedForOtherLanguage(story.Cast);
         List<Character> characters = story.Cast.Select(m => new Character(m.CharacterId, m.Name, m.Gender, 1)).ToList();
         IReadOnlyDictionary<string, AnimalKind> animals = AnimalSounds.Resolve(characters, story.Language, stored, story.Text);
         IReadOnlyList<StorytellerCharacter> speakers = CharacterRoster.Speakers(language);

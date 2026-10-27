@@ -3,8 +3,8 @@ using ReadTheStupidText.Domain.Reading;
 
 namespace DinoReader.Core;
 
-/// <summary>The cast a grown-up is editing: the stored members and the merges made so far.</summary>
-public sealed record CastEdit(IReadOnlyList<CastMember> Cast, IReadOnlyDictionary<string, string> Merges);
+/// <summary>The cast a grown-up is editing: the stored members.</summary>
+public sealed record CastEdit(IReadOnlyList<CastMember> Cast);
 
 /// <summary>
 /// The grown-up's edits on the cast screen (Slice 65), as pure functions. Every edit marks the
@@ -14,12 +14,12 @@ public sealed record CastEdit(IReadOnlyList<CastMember> Cast, IReadOnlyDictionar
 /// </summary>
 public static class CastEditor
 {
-    /// <summary>The edit state for one reading language (Slice 108): that language's cast and the story's merges, which every language shares.</summary>
-    public static CastEdit Open(Story story, string language) => new(story.CastIn(language), story.Merges);
+    /// <summary>The edit state for one reading language (Slice 108): that language's cast.</summary>
+    public static CastEdit Open(Story story, string language) => new(story.CastIn(language));
 
     /// <summary>The story with <paramref name="edit"/> saved into <paramref name="language"/>'s cast; other languages' casts keep their pins.</summary>
     public static Story Close(Story story, string language, CastEdit edit) =>
-        story.WithCastIn(language, edit.Cast) with { CharacterMerges = edit.Merges };
+        story.WithCastIn(language, edit.Cast);
 
     /// <summary>Gives a character a storyteller character (Slice 116): its voice and flavour, pinned together so recasting keeps them. A narrator is refused (nothing changes);
     /// the picker only lists characters whose voice is not the narrator's (<see cref="CharacterRoster.Choices"/>), except in a language whose only voice
@@ -34,26 +34,27 @@ public static class CastEditor
         return state with { Cast = Replace(state.Cast, characterId, m => m with { VoiceId = character.VoiceId, Flavour = character.Flavour, Edited = true }) };
     }
 
-    /// <summary>
-    /// Merges <paramref name="dropId"/> into <paramref name="keepId"/>: one entry is left, with the kept
-    /// character's name and voice; the other's lines are re-attributed by <see cref="CastMerges"/>. The kept
-    /// character's gender is the better-known one. A merge is stored in the merges, so it does not pin the
-    /// kept character (<see cref="CastMember.Edited"/> is left as it was).
-    /// </summary>
-    public static CastEdit Merge(CastEdit state, string keepId, string dropId)
+    /// <summary>"Back to the book's voice" (Slice 156): the character is no longer a grown-up's pick, so the caster gives it the voice its book chose again (the caller recasts it,
+    /// <c>StoryVoicing.RecastCharacter</c>). A character whose book chose nothing is left as it is.</summary>
+    public static CastEdit UseBookVoice(CastEdit state, string characterId) =>
+        state with { Cast = Replace(state.Cast, characterId, m => m.HasAuthoredVoice ? m with { Edited = false } : m) };
+
+    /// <summary>Whether the "Back to the book's voice" link is worth showing (Slice 156): a grown-up's pick on a character whose book chose a voice or traits, where the book's
+    /// suggestion is usable in this language (in the roster, gender not opposite) and sounds different from the pick, or, with no usable suggestion, the closest traits may.</summary>
+    public static bool OffersBookVoice(CastMember member, VoiceFlavour flavour, IReadOnlyList<StorytellerCharacter> speakers)
     {
-        bool known = state.Cast.Any(m => m.CharacterId == keepId) && state.Cast.Any(m => m.CharacterId == dropId);
-        if (keepId == dropId || !known)
+        if (!member.Edited || !member.HasAuthoredVoice)
         {
-            return state;
+            return false;
         }
 
-        CastMember dropped = state.Cast.First(m => m.CharacterId == dropId);
-        var cast = state.Cast
-            .Where(m => m.CharacterId != dropId)
-            .Select(m => m.CharacterId == keepId ? m with { Gender = CastMerges.BetterGender(m.Gender, dropped.Gender) } : m)
-            .ToList();
-        return new CastEdit(cast, CastMerges.Add(state.Merges, keepId, dropId));
+        StorytellerCharacter? suggested = member.SuggestedVoice is { Length: > 0 } id ? speakers.FirstOrDefault(c => c.Id == id) : null;
+        if (suggested is not null && !CharacterRoster.OppositeGender(suggested.Gender, member.Gender) && !CastCharacters.SwapsInWhisper(suggested, member.Traits))
+        {
+            return suggested.VoiceId != member.VoiceId || suggested.Flavour != flavour;
+        }
+
+        return member.Traits is not null;
     }
 
     /// <summary>Whether any character of <paramref name="cast"/> has <paramref name="voiceId"/>: a cast that must be recast once that voice is the narrator's.</summary>

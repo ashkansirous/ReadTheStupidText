@@ -18,9 +18,9 @@ public static class StarterUpdate
     // A stored copy whose text matches none of these (nor the bundled text) was edited by the grown-up, so a refresh would overwrite their work.
     private static readonly IReadOnlyDictionary<string, string[]> EarlierPageTextHashes = new Dictionary<string, string[]>
     {
-        ["966400017c494fb5b045786f53852c9e"] = ["ABD1A8864145C962A41879303519F1BB98A1CF3E85D78CECFDBF8C299D38482B", "8C1DD87C17BFC3A1386D16CEF384F13FD3C04DEDA8FD2A7D514FC90130F1CC3D"],
-        ["bee62232085d4c1ab50cdf574530f473"] = ["4884F000A3C51474F02A4B4209EF16D50FA24EFFC0EA6F682460B99CD419FA65", "8620E996ACD6233280E3BC6A8B23C96E0DAF60E79DD4A73A7115FB23A89D7A1B"],
-        ["0fa29ae0d09643a9a16a5e586e8c7119"] = ["86147AB77F14E5F15887D4FC67235CFF06020CD242986082122C685E78ED356C", "C0E318F0E1C12A38D918A0AE52430A2E0336D5EC57E858125F2079AF14C1405A"],
+        ["966400017c494fb5b045786f53852c9e"] = ["ABD1A8864145C962A41879303519F1BB98A1CF3E85D78CECFDBF8C299D38482B", "8C1DD87C17BFC3A1386D16CEF384F13FD3C04DEDA8FD2A7D514FC90130F1CC3D", "A187F049FE0E7AF5CD43C45E570949B9EDC0F042A63D959C0F51CD33A8A39D8A"],
+        ["bee62232085d4c1ab50cdf574530f473"] = ["4884F000A3C51474F02A4B4209EF16D50FA24EFFC0EA6F682460B99CD419FA65", "8620E996ACD6233280E3BC6A8B23C96E0DAF60E79DD4A73A7115FB23A89D7A1B", "4FE634538D48B8B8385F85000845FD2690DD3AF3D14DBC8083A7BF8D636C8402"],
+        ["0fa29ae0d09643a9a16a5e586e8c7119"] = ["86147AB77F14E5F15887D4FC67235CFF06020CD242986082122C685E78ED356C", "C0E318F0E1C12A38D918A0AE52430A2E0336D5EC57E858125F2079AF14C1405A", "DC2816E48A1449942C50E043C75E229B0B47BC582652CD5585542F9C581F4085"],
         ["61bb25b8f132413c82a4208827c7563b"] = ["F6CB92153C1C9713DBDBA7F3AFA6072A78DB84C8FE124CF005A194D5D5E10AF5"],
     };
 
@@ -82,23 +82,32 @@ public static class StarterUpdate
             Title = stored.Title,
             Cast = sameCast ? WithBundledAnimals(stored.Cast, bundled.Cast) : bundled.Cast,
             LanguageCasts = sameCast ? KeptLanguageCasts(stored, bundled) : bundled.LanguageCasts,
-            CharacterMerges = sameCast ? stored.CharacterMerges : bundled.CharacterMerges,
             PreferredMode = stored.PreferredMode,
             TranslateToMyLanguage = stored.TranslateToMyLanguage,
             ShowOriginalText = stored.ShowOriginalText,
             AnimalSoundsOn = stored.AnimalSoundsOn,
-            WordsOverPictures = stored.WordsOverPictures,
         });
     }
 
-    // A kept cast member with no animal decided yet takes the bundled one (Slice 125), so an installed starter that gains animals still gets them;
-    // an animal the grown-up set (or "not an animal") stays.
+    // A kept cast member takes the bundled book's explicit animal (Slice 152, Decision 157): the animal is book data, never a grown-up edit, so a stale stored one
+    // (an old name guess) is replaced; a member the bundled book says nothing about keeps what it has.
     // Matched by character id alone: a story's character ids are shared by all its language casts (the speakers come from the story's own language), so a language cast
     // that has no bundled cast of its own can take the animals of the base cast; a name check would only fail where the languages translate the names (Slice 135).
     private static IReadOnlyList<CastMember> WithBundledAnimals(IReadOnlyList<CastMember> kept, IReadOnlyList<CastMember> bundled) =>
-        kept.Select(m => !m.HasAnimalSetting && bundled.FirstOrDefault(b => b.CharacterId == m.CharacterId) is { HasAnimalSetting: true } b
-            ? m with { Animal = b.Animal, NotAnimal = b.NotAnimal }
-            : m).ToList();
+        kept.Select(m => bundled.FirstOrDefault(b => b.CharacterId == m.CharacterId) is { } b ? WithBundledBookData(m, b) : m).ToList();
+
+    // The animal and the book's voice choice (Slice 156) are book data: the bundled copy's replace the stored ones, and the author's gender comes with them.
+    private static CastMember WithBundledBookData(CastMember member, CastMember bundled)
+    {
+        CastMember withAnimal = bundled.HasAnimalSetting ? member with { Animal = bundled.Animal, NotAnimal = bundled.NotAnimal } : member;
+        if (!bundled.HasAuthoredVoice)
+        {
+            // A later version that no longer chooses this voice takes the stale choice away too.
+            return withAnimal with { SuggestedVoice = null, Traits = null };
+        }
+
+        return withAnimal with { SuggestedVoice = bundled.SuggestedVoice, Traits = bundled.Traits, Gender = member.Edited ? member.Gender : bundled.Gender };
+    }
 
     /// <summary>The kept cast members whose voice the grown-up did not choose by hand and whose character is not the one for their animal, as (cast language, character id):
     /// each needs its voice picked again from its animal (the caller does it the way the cast screen does, <c>StoryVoicing.RecastCharacters</c>). The animal is the resolved one
@@ -117,17 +126,30 @@ public static class StarterUpdate
         var casts = new List<(string Language, IReadOnlyList<CastMember> Members)> { (refreshed.Language, refreshed.Cast) };
         casts.AddRange((refreshed.LanguageCasts ?? new Dictionary<string, IReadOnlyList<CastMember>>()).Select(c => (c.Key, c.Value)));
         return casts
-            .SelectMany(c => MembersWithOtherAnimal(c.Members, (speakersFor ?? CharacterRoster.Speakers)(c.Language), refreshed).Select(id => (c.Language, id)))
+            .SelectMany(c => MembersWithOtherAnimal(c.Members, (speakersFor ?? CharacterRoster.Speakers)(c.Language), refreshed)
+                .Concat(MembersWithNewBookData(c.Members, StoredMembers(stored, c.Language, refreshed.Language)))
+                .Select(id => (c.Language, id)))
             .Distinct()
             .ToList();
     }
+
+    private static IReadOnlyList<CastMember> StoredMembers(Story stored, string language, string storyLanguage) =>
+        language == storyLanguage ? stored.Cast : stored.LanguageCasts?.GetValueOrDefault(language) ?? [];
+
+    // A kept member whose book voice choice (Slice 156) is new or changed by the refresh still holds its old automatic voice: it is recast so the cast screen shows what the story reads.
+    // A grown-up's pick (Edited, so not a Book source) stays.
+    private static IEnumerable<string> MembersWithNewBookData(IReadOnlyList<CastMember> members, IReadOnlyList<CastMember> stored) =>
+        members
+            .Where(m => m.Source == VoiceSource.Book && stored.FirstOrDefault(o => o.CharacterId == m.CharacterId) is { } o
+                && (o.SuggestedVoice != m.SuggestedVoice || o.Traits != m.Traits))
+            .Select(m => m.CharacterId);
 
     private static IEnumerable<string> MembersWithOtherAnimal(IReadOnlyList<CastMember> members, IReadOnlyList<StorytellerCharacter> roster, Story story)
     {
         var characters = members.Select(m => new Character(m.CharacterId, m.Name, m.Gender, 0)).ToList();
         IReadOnlyDictionary<string, AnimalKind> wanted = AnimalSounds.Resolve(characters, story.Language, members, story.Text);
         return members
-            .Where(m => !m.Edited && PlaysOtherAnimal(m, wanted.TryGetValue(m.CharacterId, out AnimalKind kind) ? AnimalCharacters.HintFor(kind, m.Name, story.Language) : null, roster))
+            .Where(m => m.Source == VoiceSource.App && PlaysOtherAnimal(m, wanted.TryGetValue(m.CharacterId, out AnimalKind kind) ? AnimalCharacters.HintFor(kind, m.Name, story.Language) : null, roster))
             .Select(m => m.CharacterId);
     }
 

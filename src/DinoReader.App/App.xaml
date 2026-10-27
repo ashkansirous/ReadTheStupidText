@@ -43,7 +43,6 @@
         <Color x:Key="NightMuted">#8e86a8</Color>
         <Color x:Key="NightFill">#14FFFFFF</Color>
         <Color x:Key="NightBrand">#A9A2FF</Color>
-        <Color x:Key="NightBrandEdge">#7c74d9</Color>
         <Color x:Key="NightBoxFill">#38FFD678</Color>
         <Color x:Key="NightBoxStroke">#C9A54A</Color>
         <Color x:Key="NightDot">#4a4463</Color>

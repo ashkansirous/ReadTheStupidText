@@ -8,7 +8,7 @@ namespace DinoReader;
 
 /// <summary>
 /// "Who's speaking" (mock screens 10, 11, 15 and, since Slice 116, frames 52-53), behind the gate: the narrator, each story character's
-/// storyteller character with a preview and a picker sheet, and a merge for two names that are one character. Every edit is
+/// storyteller character with a preview and a picker sheet. Every edit is
 /// pinned (EDITED) and saved at once through the callback the opener gave <see cref="Load"/>: the
 /// library for a saved story, the edit draft or the add screen otherwise. Reading picks the cast up
 /// at its next start; the gate always stops the story first, so no read is live while this is open.
@@ -22,19 +22,14 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	private readonly BusyGuard _busy = new();
 	private readonly VerticalStackLayout _body = new() { Padding = new Thickness(14, 0, 14, 14), Spacing = 10 };
 	private readonly Label _subtitle = new() { FontSize = 12, TextColor = DinoTokens.Get(DinoTokens.Muted) };
-	private readonly Border _mergeButton = new();
 	private readonly ContentView _languageChip = new() { Margin = new Thickness(14, 0, 14, 10) };
-	private readonly CastMergeSheet _sheet = new();
 	private readonly CastCharacterPicker _picker = new();
 	private readonly CastRowActions _actions;
 	private readonly StorytellerDefault _storyteller;
 	private readonly Grid _root = new();
 	private Story? _story;
-	// A book opened with the words already off is taken as photos, scans or PDF pages (the Pages step stores that default); a switch turned off here is not.
-	private bool _wordsStoredOffAtOpen;
 	private Func<Story, Task>? _persist;
 	private AttributionResult? _resolved;
-	private (IReadOnlyList<CastMember> Cast, AttributionResult Resolved, string Language, bool HasAnimals)? _animalCache;
 	private string _castLanguage = string.Empty;
 	private readonly VoicePreview _preview;
 	private bool _returningFromNarrator;
@@ -49,12 +44,11 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		_spoken = spoken;
 		_actions = new CastRowActions(
 			row => _busy.RunAsync(() => PreviewAsync(row.Member.VoiceId, row.Flavour)),
-			row => _busy.RunAsync(() => PickCharacterAsync(row)));
+			row => _busy.RunAsync(() => PickCharacterAsync(row)),
+			row => _busy.RunAsync(() => BackToBookVoiceAsync(row)));
 		NavigationPage.SetHasNavigationBar(this, false);
 		SafeAreaEdges = new SafeAreaEdges(SafeAreaRegions.Container);
 		BackgroundColor = DinoTokens.Get(DinoTokens.Sand);
-		_sheet.ChooseKeep = labels => ChooseIndexAsync(CastText.KeepName, labels);
-		_sheet.Confirmed += (keep, drop) => _busy.RunAsync(() => ApplyAsync(edit => CastEditor.Merge(edit, keep, drop)));
 		Content = BuildLayout();
 	}
 
@@ -62,7 +56,6 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	public void Load(Story story, Func<Story, Task> persist)
 	{
 		_story = story;
-		_wordsStoredOffAtOpen = story.WordsOverPictures == false;
 		_persist = persist;
 		_subtitle.Text = story.Title;
 	}
@@ -130,13 +123,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 			return true;
 		}
 
-		if (!_sheet.IsVisible)
-		{
-			return base.OnBackButtonPressed();
-		}
-
-		_sheet.Hide();
-		return true;
+		return base.OnBackButtonPressed();
 	}
 
 	private Grid BuildLayout()
@@ -144,13 +131,11 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		var scroll = new ScrollView { Content = _body };
 		var column = new Grid
 		{
-			RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto)],
+			RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star)],
 		};
 		column.Add(new VerticalStackLayout { Children = { BuildHeader(), _languageChip } }, 0, 0);
 		column.Add(scroll, 0, 1);
-		column.Add(new VerticalStackLayout { Children = { BuildMergeButton() } }, 0, 2);
 		_root.Add(column);
-		_root.Add(_sheet);
 		_root.Add(_picker);
 		return _root;
 	}
@@ -176,25 +161,6 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		header.Add(back, 0);
 		header.Add(new VerticalStackLayout { VerticalOptions = LayoutOptions.Center, Children = { title, _subtitle } }, 1);
 		return header;
-	}
-
-	private Border BuildMergeButton()
-	{
-		_mergeButton.IsVisible = false;
-		_mergeButton.HeightRequest = 48;
-		_mergeButton.Margin = new Thickness(14, 0, 14, 14);
-		_mergeButton.BackgroundColor = Colors.Transparent;
-		_mergeButton.Stroke = DinoTokens.Get(DinoTokens.MergeBorder);
-		_mergeButton.StrokeThickness = 2;
-		_mergeButton.StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 24 };
-		_mergeButton.Content = new Label
-		{
-			Text = CastText.MergeButton, FontSize = 15, FontAttributes = FontAttributes.Bold,
-			TextColor = DinoTokens.Get(DinoTokens.Brand), HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center,
-		};
-		SemanticProperties.SetDescription(_mergeButton, CastText.MergeButton);
-		CastViews.AddTap(_mergeButton, () => { _sheet.Show(Sheet().Rows, _castLanguage); return Task.CompletedTask; });
-		return _mergeButton;
 	}
 
 	// The housekeeping (a missing cast, a clash with the narrator) is only needed when the page opens or the narrator may have changed, not after each edit.
@@ -241,9 +207,6 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 
 		_body.Children.Add(NarratorCard());
 		_body.Children.Add(CharacterCard(sheet));
-		_body.Children.Add(SwitchesCard());
-
-		_mergeButton.IsVisible = sheet.Rows.Count >= 2;
 	}
 
 	private View NarratorCard()
@@ -256,9 +219,11 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	private View CharacterCard(CastSheet sheet)
 	{
 		var rows = new VerticalStackLayout();
+		IReadOnlyList<StorytellerCharacter> speakers = CastCharacters.BookableSpeakers(_voicing.RosterFor(_castLanguage), _voicing.NarratorOf(_castLanguage));
 		for (int i = 0; i < sheet.Rows.Count; i++)
 		{
-			rows.Children.Add(CastRows.Character(sheet.Rows[i], i, _actions, _castLanguage));
+			CastRow row = sheet.Rows[i];
+			rows.Children.Add(CastRows.Character(row, i, _actions, _castLanguage, CastEditor.OffersBookVoice(row.Member, row.Flavour, speakers)));
 			rows.Children.Add(CastViews.Divider());
 		}
 
@@ -268,74 +233,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		return card;
 	}
 
-	// Whether the story has a character that plays a sounding animal (Slice 136). Keyed on the cast, the resolved characters and the language (all replaced, never changed),
-	// not the story, so a switch toggle does not repeat the whole-book animal guess.
-	private bool HasSoundingAnimal()
-	{
-		if (_resolved is null)
-		{
-			return false;
-		}
-
-		IReadOnlyList<CastMember> cast = _story!.CastIn(_castLanguage);
-		if (_animalCache is { } cached && ReferenceEquals(cached.Cast, cast) && ReferenceEquals(cached.Resolved, _resolved) && cached.Language == _castLanguage)
-		{
-			return cached.HasAnimals;
-		}
-
-		bool has = AnimalSounds.WithSound(_voicing.AnimalsOf(_story, _resolved.Characters, _castLanguage), _story.Language).Count > 0;
-		_animalCache = (cast, _resolved, _castLanguage, has);
-		return has;
-	}
-
-	// Animal sounds, then (for a picture + text book) the words switch, in one card (Slice 124).
-	private View SwitchesCard()
-	{
-		View animals = AnimalSoundsRow();
-		return PictureTextBook.IsPictureTextBook(_story!.Pages) ? CastRows.SwitchesCard(animals, WordsOverPicturesRow()) : CastRows.SwitchesCard(animals);
-	}
-
-	// The per-story switch is saved with the story (Slice 117); a story with no sounding animal shows it dimmed and keeps the value.
-	private View AnimalSoundsRow()
-	{
-		bool hasAnimals = HasSoundingAnimal();
-		return CastRows.AnimalSoundsRow(hasAnimals, _story!.AnimalSoundsOn, on => _ = _busy.RunAsync(() => SetAnimalSoundsAsync(on)));
-	}
-
-	// Saved with the story (Slice 122); the reading screen follows the next time the book is opened.
-	private View WordsOverPicturesRow() =>
-		CastRows.WordsOverPicturesRow(PictureTextBook.ShowsWordsOverPictures(_story!), _wordsStoredOffAtOpen, on => _ = SetWordsAndRenderAsync(on));
-
-	// The row is rebuilt from the story afterwards, so the switch and its hint show what is stored even when the save failed or the page was busy.
-	private async Task SetWordsAndRenderAsync(bool on)
-	{
-		await _busy.RunAsync(() => SetWordsOverPicturesAsync(on));
-		Render();
-	}
-
-	private async Task SetWordsOverPicturesAsync(bool on)
-	{
-		Story previous = _story!;
-		_story = previous with { WordsOverPictures = on };
-		if (!await SaveAsync())
-		{
-			_story = previous;
-			Render();
-		}
-	}
-
-	private async Task SetAnimalSoundsAsync(bool on)
-	{
-		Story previous = _story!;
-		_story = previous with { AnimalSoundsOn = on };
-		if (!await SaveAsync())
-		{
-			_story = previous;
-			Render();
-		}
-	}
-
-	// Edits go into the reading language's cast; merges are the story's, shared by every language.
+	// Edits go into the reading language's cast.
 	private async Task<bool> ApplyAsync(Func<CastEdit, CastEdit> change)
 	{
 		Story previous = _story!;
@@ -412,6 +310,16 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		}
 	}
 
+	// "Back to the book's voice" (Slice 156): the grown-up's pick is dropped and the character is cast again, which gives it the book's suggestion (or its closest traits).
+	private async Task BackToBookVoiceAsync(CastRow row)
+	{
+		Story previous = _story!;
+		CastEdit released = CastEditor.UseBookVoice(CastEditor.Open(previous, _castLanguage), row.Member.CharacterId);
+		IReadOnlyList<CastMember> recast = await Task.Run(() => _voicing.RecastCharacter(previous, _castLanguage, released.Cast, row.Member.CharacterId));
+		_story = CastEditor.Close(previous, _castLanguage, new CastEdit(recast));
+		await SaveOrRollBackAsync(previous);
+	}
+
 	private void CountVoiceChange(string kind)
 	{
 		try
@@ -472,13 +380,6 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 			// Housekeeping only: the cast screen still opens, with the stored voices as they are.
 			Debug.WriteLine($"Dino Reader narrator recast failed: {ex}");
 		}
-	}
-
-	// The index of the picked label, or -1 when cancelled; two voices can share a display name, so never map by text.
-	private async Task<int> ChooseIndexAsync(string title, IReadOnlyList<string> labels)
-	{
-		string picked = await DisplayActionSheetAsync(title, CastText.Cancel, null, labels.ToArray());
-		return picked is null || picked == CastText.Cancel ? -1 : labels.ToList().IndexOf(picked);
 	}
 
 	private async Task PreviewAsync(string voiceId, VoiceFlavour flavour)

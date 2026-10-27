@@ -99,7 +99,21 @@
   <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>Jokainen hahmo saa oman äänensä. Hyllyssä on yksi tarina.</value></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>Kuule, kun Dino sanoo hei</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>Hei! Olen Dino. Luetaan yhdessä tarina.</value></data>
-  <data name="FirstRun_SetUp" xml:space="preserve"><value>Valmistele tarinat</value></data>
+  <data name="Intro_SeeWhat" xml:space="preserve"><value>Katso, mitä Dino osaa</value></data>
+  <data name="Intro_SkipStart" xml:space="preserve"><value>Ohita, aloita lukeminen</value></data>
+  <data name="Intro_SkipAll" xml:space="preserve"><value>Ohita kaikki</value></data>
+  <data name="Intro_TryIt" xml:space="preserve"><value>Kokeile</value></data>
+  <data name="Intro_Skip" xml:space="preserve"><value>Ohita</value></data>
+  <data name="Intro_Counter" xml:space="preserve"><value>{0}/{1}</value></data>
+  <data name="Intro_StoreTitle" xml:space="preserve"><value>Hae lisää kirjoja</value></data>
+  <data name="Intro_StoreLine" xml:space="preserve"><value>Ilmaisessa kaupassa on lisää tarinoita, valmiina ladattaviksi.</value></data>
+  <data name="Intro_RecordTitle" xml:space="preserve"><value>Lue se omalla äänelläsi</value></data>
+  <data name="Intro_RecordLine" xml:space="preserve"><value>Äänitä itsesi lukemassa tarinaa sivu sivulta. Lapsesi voi kuunnella sen milloin tahansa.</value></data>
+  <data name="Intro_AddTitle" xml:space="preserve"><value>Lisää oma kirjasi</value></data>
+  <data name="Intro_AddLine" xml:space="preserve"><value>Ota kuvia kirjan sivuista tai valitse PDF. Dino lukee sen ääneen.</value></data>
+  <data name="Intro_AddTitleWindows" xml:space="preserve"><value>Lisää kuvia tai PDF</value></data>
+  <data name="Intro_AddLineWindows" xml:space="preserve"><value>Valitse kuvia kirjan sivuista tai PDF. Dino lukee sen ääneen.</value></data>
+  <data name="Intro_ShowAgain" xml:space="preserve"><value>Näytä esittely uudelleen</value></data>
   <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>Jatka puhelimen äänellä</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>Valmis lapselleni</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Aikuisten tila</value></data>
@@ -187,6 +201,11 @@
   <data name="Version_Title" xml:space="preserve"><value>Versio</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Auta tekemään Dinosta parempi</value></data>
   <data name="Usage_Helper" xml:space="preserve"><value>Lähettää määriä, kuten "kaupan kirja luettiin loppuun". Ei nimiä, ei tunnisteita, ei mitään kirjoittamaasi.</value></data>
+  <data name="Speed_Title" xml:space="preserve"><value>Lukunopeus</value></data>
+  <data name="Speed_Sub" xml:space="preserve"><value>Hitaampi on helpompaa pienille</value></data>
+  <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · hidas</value></data>
+  <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
+  <data name="Speed_Play" xml:space="preserve"><value>Kuuntele tämä nopeus</value></data>
   <data name="FirstRun_Usage" xml:space="preserve"><value>Dino laskee, mitä kirjoja luetaan, ilman nimiä tai tunnisteita. Voit poistaa tämän käytöstä Asetuksissa.</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Kertojasi ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} Mt</value></data>
@@ -265,8 +284,10 @@
   <data name="Editor_RotateLeft" xml:space="preserve"><value>Käännä vasemmalle</value></data>
   <data name="Editor_RotateRight" xml:space="preserve"><value>Käännä oikealle</value></data>
   <data name="Editor_ResetCrop" xml:space="preserve"><value>Palauta rajaus</value></data>
-  <data name="Reading_TextMode" xml:space="preserve"><value>Tekstitila</value></data>
-  <data name="Reading_PictureMode" xml:space="preserve"><value>Kuvatila</value></data>
+  <data name="Reading_Mode_PictureOnly" xml:space="preserve"><value>Vain kuvat</value></data>
+  <data name="Reading_Mode_PictureAndText" xml:space="preserve"><value>Kuvat + teksti</value></data>
+  <data name="Reading_Mode_TextOnly" xml:space="preserve"><value>Vain teksti</value></data>
+  <data name="Reading_Mode_Selected" xml:space="preserve"><value>valittu</value></data>
   <data name="Reading_Play" xml:space="preserve"><value>Toista</value></data>
   <data name="Reading_Pause" xml:space="preserve"><value>Tauko</value></data>
   <data name="Reading_Previous" xml:space="preserve"><value>Edellinen lause</value></data>
@@ -280,12 +301,9 @@
   <data name="Cast_Narrator" xml:space="preserve"><value>Kertoja</value></data>
   <data name="Cast_Main" xml:space="preserve"><value>PÄÄHAHMO</value></data>
   <data name="Cast_Edited" xml:space="preserve"><value>MUOKATTU</value></data>
+  <data name="Cast_BackToBookVoice" xml:space="preserve"><value>Takaisin kirjan ääneen</value></data>
   <data name="Cast_SharedVoice" xml:space="preserve"><value>Jaettu ääni</value></data>
   <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>Tuntematon puhuja</value></data>
-  <data name="Cast_MergeButton" xml:space="preserve"><value>Yhdistä kaksi hahmoa</value></data>
-  <data name="Cast_MergeTitle" xml:space="preserve"><value>Yhdistä hahmot</value></data>
-  <data name="Cast_MergeBody" xml:space="preserve"><value>Valitse kaksi nimeä, jotka ovat sama hahmo. Heidän repliikkinsä yhdistetään yhden nimen ja yhden äänen alle.</value></data>
-  <data name="Cast_KeepName" xml:space="preserve"><value>Säilytä nimi</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>Hei! Tältä kuulostan, kun luen tarinaasi.</value></data>
   <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>Muutosta ei voitu tallentaa</value></data>
   <data name="Cast_SaveFailedBody" xml:space="preserve"><value>Hahmoja ei tallennettu. Yritä hetken kuluttua uudelleen.</value></data>
@@ -298,13 +316,7 @@
   <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} riviä</value></data>
   <data name="Cast_UsesNarrator" xml:space="preserve"><value>käyttää kertojan ääntä</value></data>
   <data name="Cast_Hear" xml:space="preserve"><value>Kuuntele: {0}</value></data>
-  <data name="Cast_MergeInto" xml:space="preserve"><value>Yhdistä hahmoon {0}</value></data>
-  <data name="Cast_AnimalSounds_Title" xml:space="preserve"><value>Eläinten äänet</value></data>
-  <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>Eläimet sanovat välillä “Röh!” tai “Mää!”</value></data>
-  <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>Tässä tarinassa ei ole eläimiä, jotka päästävät ääniä</value></data>
-  <data name="Cast_WordsOverPictures_Title" xml:space="preserve"><value>Näytä sanat kuvien päällä</value></data>
-  <data name="Cast_WordsOverPictures_HintOn" xml:space="preserve"><value>Sanat näkyvät paneelissa alareunassa</value></data>
-  <data name="Cast_WordsOverPictures_HintOff" xml:space="preserve"><value>Pois päältä, koska kuvissa on jo sanat</value></data>
-  <data name="Cast_WordsOverPictures_HintOffPlain" xml:space="preserve"><value>Vain kuvat näkyvät</value></data>
+  <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Eläinten äänet</value></data>
+  <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Eläimet sanovat välillä “Röh!” tai “Mää!”, kaikissa kirjoissa</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Tässä kirjassa on enemmän hahmoja kuin käytettävissä olevia {0} kertojahahmoa, joten jotkin kuulostavat samalta. Kertojaa ei koskaan anneta hahmolle.</value></data>
 </root>

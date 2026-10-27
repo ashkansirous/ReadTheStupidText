@@ -97,7 +97,21 @@
   <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>每个角色都有自己的声音。书架上有1个故事。</value></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>听 Dino 打招呼</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>你好！我是 Dino。我们一起读故事吧。</value></data>
-  <data name="FirstRun_SetUp" xml:space="preserve"><value>设置故事</value></data>
+  <data name="Intro_SeeWhat" xml:space="preserve"><value>看看 Dino 能做什么</value></data>
+  <data name="Intro_SkipStart" xml:space="preserve"><value>跳过，开始阅读</value></data>
+  <data name="Intro_SkipAll" xml:space="preserve"><value>全部跳过</value></data>
+  <data name="Intro_TryIt" xml:space="preserve"><value>试一试</value></data>
+  <data name="Intro_Skip" xml:space="preserve"><value>跳过</value></data>
+  <data name="Intro_Counter" xml:space="preserve"><value>第 {0} 步，共 {1} 步</value></data>
+  <data name="Intro_StoreTitle" xml:space="preserve"><value>获取更多图书</value></data>
+  <data name="Intro_StoreLine" xml:space="preserve"><value>免费商店里有更多故事，可随时下载。</value></data>
+  <data name="Intro_RecordTitle" xml:space="preserve"><value>用你的声音朗读</value></data>
+  <data name="Intro_RecordLine" xml:space="preserve"><value>一页一页地录下你朗读故事的声音。孩子可以随时播放。</value></data>
+  <data name="Intro_AddTitle" xml:space="preserve"><value>添加你自己的书</value></data>
+  <data name="Intro_AddLine" xml:space="preserve"><value>拍下书的每一页，或选择一个 PDF。Dino 会把它读出来。</value></data>
+  <data name="Intro_AddTitleWindows" xml:space="preserve"><value>添加照片或 PDF</value></data>
+  <data name="Intro_AddLineWindows" xml:space="preserve"><value>选择书页的照片或一个 PDF。Dino 会把它读出来。</value></data>
+  <data name="Intro_ShowAgain" xml:space="preserve"><value>再看一次介绍</value></data>
   <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>使用手机语音继续</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>交给孩子</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>家长模式</value></data>
@@ -185,6 +199,11 @@
   <data name="Version_Title" xml:space="preserve"><value>版本</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>帮助改进 Dino</value></data>
   <data name="Usage_Helper" xml:space="preserve"><value>只发送次数，例如“商店里的一本书读完了”。没有名字，没有编号，也不含你输入的任何内容。</value></data>
+  <data name="Speed_Title" xml:space="preserve"><value>朗读速度</value></data>
+  <data name="Speed_Sub" xml:space="preserve"><value>慢一点，小朋友更容易听懂</value></data>
+  <data name="Speed_EndSlow" xml:space="preserve"><value>0.5x · 慢</value></data>
+  <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
+  <data name="Speed_Play" xml:space="preserve"><value>试听这个速度</value></data>
   <data name="FirstRun_Usage" xml:space="preserve"><value>Dino 会统计哪些书被读过，不含名字或编号。你可以在设置中关闭。</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>你的{0}旁白</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
@@ -266,8 +285,10 @@
   <data name="Editor_RotateLeft" xml:space="preserve"><value>向左旋转</value></data>
   <data name="Editor_RotateRight" xml:space="preserve"><value>向右旋转</value></data>
   <data name="Editor_ResetCrop" xml:space="preserve"><value>重置裁剪</value></data>
-  <data name="Reading_TextMode" xml:space="preserve"><value>文字模式</value></data>
-  <data name="Reading_PictureMode" xml:space="preserve"><value>图片模式</value></data>
+  <data name="Reading_Mode_PictureOnly" xml:space="preserve"><value>仅图片</value></data>
+  <data name="Reading_Mode_PictureAndText" xml:space="preserve"><value>图片 + 文字</value></data>
+  <data name="Reading_Mode_TextOnly" xml:space="preserve"><value>仅文字</value></data>
+  <data name="Reading_Mode_Selected" xml:space="preserve"><value>已选择</value></data>
   <data name="Reading_Play" xml:space="preserve"><value>播放</value></data>
   <data name="Reading_Pause" xml:space="preserve"><value>暂停</value></data>
   <data name="Reading_Previous" xml:space="preserve"><value>上一句</value></data>
@@ -281,12 +302,9 @@
   <data name="Cast_Narrator" xml:space="preserve"><value>旁白</value></data>
   <data name="Cast_Main" xml:space="preserve"><value>主角</value></data>
   <data name="Cast_Edited" xml:space="preserve"><value>已编辑</value></data>
+  <data name="Cast_BackToBookVoice" xml:space="preserve"><value>恢复书中的声音</value></data>
   <data name="Cast_SharedVoice" xml:space="preserve"><value>共用声音</value></data>
   <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>未知说话者</value></data>
-  <data name="Cast_MergeButton" xml:space="preserve"><value>合并两个角色</value></data>
-  <data name="Cast_MergeTitle" xml:space="preserve"><value>合并角色</value></data>
-  <data name="Cast_MergeBody" xml:space="preserve"><value>选出指同一个角色的两个名字。他们的台词会合并到一个名字和一种声音下。</value></data>
-  <data name="Cast_KeepName" xml:space="preserve"><value>保留名字</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>你好！这就是我朗读你的故事时的声音。</value></data>
   <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>无法保存这项更改</value></data>
   <data name="Cast_SaveFailedBody" xml:space="preserve"><value>角色未保存。请稍后再试。</value></data>
@@ -299,13 +317,7 @@
   <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} 句台词</value></data>
   <data name="Cast_UsesNarrator" xml:space="preserve"><value>使用旁白的声音</value></data>
   <data name="Cast_Hear" xml:space="preserve"><value>听 {0} 的声音</value></data>
-  <data name="Cast_MergeInto" xml:space="preserve"><value>合并到 {0}</value></data>
-  <data name="Cast_AnimalSounds_Title" xml:space="preserve"><value>动物叫声</value></data>
-  <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>动物会不时说“哼哼!”或“咩!”</value></data>
-  <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>这个故事里没有会叫的动物</value></data>
-  <data name="Cast_WordsOverPictures_Title" xml:space="preserve"><value>在图片上显示文字</value></data>
-  <data name="Cast_WordsOverPictures_HintOn" xml:space="preserve"><value>文字显示在底部的面板中</value></data>
-  <data name="Cast_WordsOverPictures_HintOff" xml:space="preserve"><value>已关闭，因为这些图片本身已经有文字</value></data>
-  <data name="Cast_WordsOverPictures_HintOffPlain" xml:space="preserve"><value>只显示图片</value></data>
+  <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>动物叫声</value></data>
+  <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>动物会不时说“哼哼!”或“咩!”,每本书都一样</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>这本书的角色比现有的 {0} 个讲故事角色还多，所以有些角色听起来会一样。旁白不会分给任何角色。</value></data>
 </root>

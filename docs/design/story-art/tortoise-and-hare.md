@@ -1,9 +1,16 @@
 # The Tortoise and the Hare: art record
 
-Bundled starter (`StarterTexts.Tortoise`, stem `tortoise-and-hare`, version 4 in `StarterBuilder.StarterVersions`), also a
+Bundled starter (`StarterTexts.Tortoise`, stem `tortoise-and-hare`, version 7 in `StarterBuilder.StarterVersions`), also a
 store book under the same id (`StoreBuilder.StarterEntries`). Retold in Slice 121 as 14 pages with one action each
 (`dino-storytelling` skill); the earlier 5-page text shipped as versions 2 and 3, and its page hash
-(`C0E318F0...C1405A`) is in `StarterUpdate.EarlierPageTextHashes`, so unedited installed copies update. **Art status
+(`C0E318F0...C1405A`) is in `StarterUpdate.EarlierPageTextHashes`, so unedited installed copies update. Version 6
+(Slice 146 Wave A, 2026-10-27): Farsi rewritten in spoken Farsi (no vowel marks); English, page breaks and every picture
+unchanged, so every page keeps its picture and no page hash is added. Version 7 (Slice 146 Waves B+C and Slice 156,
+2026-10-27): English reworded in spoken, kid-friendly words ("How about a race, then?", "Ooh, yes! This'll be easy-peasy!",
+"I'm sorry I was such a show-off.", "Puff! Puff! Puff!" on page 13, "Ribbit! Ribbit! Ribbit!" as a triple), the other 12
+languages in the same register (Farsi changed only where the English meaning moved), and each character's suggested voice and
+traits (below). Page breaks and every page's one action are unchanged, so **all 14 pages and the cover keep their pictures**
+(checked against the contact sheet); the v6 page hash `DC2816E4...1F4085` is in `StarterUpdate.EarlierPageTextHashes`. **Art status
 (2026-10-26): cover and pages 1-14 drawn and accepted; full review PASS 2026-10-26.**
 
 **Starter, not store:** the pictures go to `tests/DinoReader.Tests/Starters/tortoise-and-hare/` (`pictures/1..14.jpg`,
@@ -35,7 +42,7 @@ for tomorrow, best friends.
 
 **Refrains (identical every time):** `"Slow and steady, step by step," said Tortoise.` on pages 2, 5, 8 and 10, and the same
 words from the Hare on page 14 (`said Hare with a smile.`), one piece in every translation. `"Go, Tortoise, go!"` from Frog
-(page 8) and Squirrel (page 10). `Zoom! Zoom! Zoom!` for the Hare running (pages 1, 5, 12). `Snore... snore... snore...` for
+(page 8) and Squirrel (page 10). `Zoom! Zoom! Zoom!` for the Hare running (pages 1, 5, 12), `Ribbit! Ribbit! Ribbit!` from Frog (page 8), `Puff! Puff! Puff!` for the out-of-breath Hare (page 13). `Snore... snore... snore...` for
 the nap (pages 7 and 9). The lesson, `"Slow and steady wins the race,"`, comes once, from Owl on page 14. The build-up has
 three cheering steps (Frog by the pond, Squirrel on the hill, Hedgehog at the finish).
 
@@ -51,6 +58,16 @@ Tortoise's "her". Reword those lines only with the test below running.
 `StoreStoryTests.TheTortoiseAndTheHare_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster` checks the stored
 genders and every language's roster. Owl and Tortoise get the slow "sleepy" voice flavour from their names; Squirrel the small
 one; Frog says "Ribbit!" as an animal.
+
+**Suggested voices (Slice 156, `StarterVoices`):** Hare `puppy` (Playful Puppy: young, bouncy, bold), Tortoise `hen` (Granny Hen:
+slow and cosy; adult, sleepy, warm), Owl `bear` (Grandpa Bear: old, deep and kind, sleepy), Squirrel `bee` (Busy Bee: young,
+bouncy, bright), Hedgehog `piglet` (Cheeky Piglet: young, bouncy, warm), Frog `lamb2` (Fluffy Lamb, "light and fluffy", a voice of her own in every roster: young,
+bouncy, squeaky). Owl is not the Sleepy Owl on purpose: only en and fa have an `owl`, and in the other 12 languages the trait
+fallback ranks the bird kind above age and gave the wise old Owl the young Chick; Grandpa Bear is in every roster (Owl still
+hoots: his animal is the book's). Real cast checked in all 14 languages: every gender right, no whisper flavour, no two
+characters on one voice and flavour. fa has no `hen` (Tortoise gets Kind Mummy) and its `lamb2` is a boy (Frog gets the Chick by
+traits); es/pt have no `lamb2` (Frog gets the Squeaky Mouse). es/pt have only two male voices, so the Hare (`puppy`) and Owl (`bear`) share one voice with different flavours; zh
+Hare and Hedgehog share zm_yunxia the same way; Frog is on `lamb2` so she no longer shares the Squirrel's voice in zh and the Supertonic languages.
 
 **Translation names (for the reviewer):** es and pt call the Hare **el Conejo / o Coelho** (rabbit), as many Latin American
 and Brazilian tellings do ("La tortuga y el conejo"), because liebre/lebre are feminine nouns and he is a he; ja, zh and fa

@@ -23,7 +23,7 @@ public sealed class StoryBackupTests : IDisposable
         [new StoryPage("\"Hello,\" said the wolf.", "page-1.jpg"), new StoryPage("Page two.")],
         [new CastMember("wolf", "Wolf", Gender.Male, "supertonic:M3", Edited: true)],
         CoverStyle.Picture, 2, "supertonic:M1",
-        CharacterMerges: new Dictionary<string, string> { ["big-bad-wolf"] = "wolf" }, SourceId: sourceId);
+        SourceId: sourceId);
 
     private static async Task<Story> StoreAsync(FileStoryLibrary library, Story story)
     {
@@ -73,7 +73,6 @@ public sealed class StoryBackupTests : IDisposable
         Story restored = (await target.GetAsync(a.Id))!;
         Assert.Equal(a.Cast, restored.Cast);
         Assert.True(restored.Cast[0].Edited);
-        Assert.Equal("wolf", restored.Merges["big-bad-wolf"]);
         Assert.Equal(a.Created, restored.Created);
         Assert.Null(restored.SourceId);
         Assert.Equal(b.SourceId, (await target.GetAsync(b.Id))!.SourceId);

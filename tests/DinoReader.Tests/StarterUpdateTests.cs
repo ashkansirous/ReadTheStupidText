@@ -37,7 +37,7 @@ public sealed class StarterUpdateTests : IDisposable
         new(id, "Title", "en", DateTimeOffset.UnixEpoch, [new StoryPage("Page.")], cast, CoverStyle.Picture, 1, "narrator", CoverFile: "cover-x.jpg");
 
     [Fact]
-    public void Refresh_FillsAnimalsFromTheBundledCopy_ForKeptMembersWithNone_ButNeverOverridesTheGrownUp()
+    public void Refresh_TakesTheBundledBooksExplicitAnimalForEveryKeptMember()
     {
         Story stored = StoryWith("old", Member("pip", "v1"), Member("pop", "v2") with { NotAnimal = true }, Member("pim", "v3") with { Animal = AnimalKind.Cat }) with
         {
@@ -52,9 +52,9 @@ public sealed class StarterUpdateTests : IDisposable
 
         Assert.Equal(AnimalKind.Pig, refreshed.Cast[0].Animal);
         Assert.Equal("v1", refreshed.Cast[0].VoiceId);
-        Assert.True(refreshed.Cast[1].NotAnimal);
-        Assert.Null(refreshed.Cast[1].Animal);
-        Assert.Equal(AnimalKind.Cat, refreshed.Cast[2].Animal);
+        Assert.False(refreshed.Cast[1].NotAnimal);
+        Assert.Equal(AnimalKind.Pig, refreshed.Cast[1].Animal);
+        Assert.Equal(AnimalKind.Pig, refreshed.Cast[2].Animal);
         Assert.Equal(AnimalKind.Pig, refreshed.LanguageCasts!["fr"][0].Animal);
     }
 
@@ -73,7 +73,7 @@ public sealed class StarterUpdateTests : IDisposable
         Story refreshed = StarterUpdate.Refresh(stored, bundled);
         var recast = StarterUpdate.AnimalVoicesToRecast(stored, refreshed, _ => CharacterRoster.Speakers("en"));
 
-        Assert.Equal([("en", "pip"), ("fr", "pip")], recast.OrderBy(r => r.Language, StringComparer.Ordinal));
+        Assert.Equal([("en", "pip"), ("en", "pup"), ("fr", "pip"), ("fr", "pup")], recast.OrderBy(r => r.Language, StringComparer.Ordinal).ThenBy(r => r.CharacterId, StringComparer.Ordinal));
     }
 
     [Fact]
@@ -89,8 +89,8 @@ public sealed class StarterUpdateTests : IDisposable
         Story refreshed = StarterUpdate.Refresh(stored, bundled);
 
         Assert.Equal(AnimalKind.Pig, refreshed.LanguageCasts!["fa"][0].Animal);
-        Assert.True(refreshed.LanguageCasts["fa"][1].NotAnimal);
-        Assert.Equal([("en", "pip"), ("en", "pop"), ("fa", "pip")], StarterUpdate.AnimalVoicesToRecast(stored, refreshed, _ => CharacterRoster.Speakers("en")).OrderBy(r => r.Language, StringComparer.Ordinal).ThenBy(r => r.CharacterId, StringComparer.Ordinal));
+        Assert.Equal(AnimalKind.Pig, refreshed.LanguageCasts["fa"][1].Animal);
+        Assert.Equal([("en", "pip"), ("en", "pop"), ("fa", "pip"), ("fa", "pop")], StarterUpdate.AnimalVoicesToRecast(stored, refreshed, _ => CharacterRoster.Speakers("en")).OrderBy(r => r.Language, StringComparer.Ordinal).ThenBy(r => r.CharacterId, StringComparer.Ordinal));
     }
 
     [Fact]
@@ -210,8 +210,7 @@ public sealed class StarterUpdateTests : IDisposable
         Story stored = StoryWith("old", Member("pig", "supertonic:F3", edited: true), Member("wolf", "supertonic:M2")) with
         {
             Created = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
-            CharacterMerges = new Dictionary<string, string> { ["big-wolf"] = "wolf" },
-            PreferredMode = ReadingMode.Text,
+            PreferredMode = ReadingMode.PictureOnly,
             TranslateToMyLanguage = false,
             ShowOriginalText = true,
             AnimalSoundsOn = false,
@@ -231,8 +230,7 @@ public sealed class StarterUpdateTests : IDisposable
         Assert.Equal("Gentle page.", refreshed.Pages[0].Text);
         Assert.Equal(stored.Created, refreshed.Created);
         Assert.Equal(stored.Cast, refreshed.Cast);
-        Assert.Equal(stored.CharacterMerges, refreshed.CharacterMerges);
-        Assert.Equal(ReadingMode.Text, refreshed.PreferredMode);
+        Assert.Equal(ReadingMode.PictureOnly, refreshed.PreferredMode);
         Assert.False(refreshed.TranslateToMyLanguage);
         Assert.True(refreshed.ShowOriginalText);
         Assert.False(refreshed.AnimalSoundsOn);

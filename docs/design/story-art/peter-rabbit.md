@@ -1,9 +1,21 @@
 # The Tale of Peter Rabbit: art record
 
-Store story (`StoreTexts.PeterRabbit`, stem `peter-rabbit`, version 6). Retold as 15 pages with one action each
+Store story (`StoreTexts.PeterRabbit`, stem `peter-rabbit`, version 8). Retold as 15 pages with one action each
 (`dino-storytelling` skill, Slice 121). Beatrix Potter's 1902 text is public domain; this retelling changes the plot a
 lot, so the credit is now `Beatrix Potter, 1902 (retold)`. **Art status (2026-10-26): cover and all 15 pictures drawn and accepted, full review PASS on 2026-10-26 (Gemini 3.5 Flash-Lite, 1792x2400 originals, first picture about 20:30).** The
 cover and all 15 pages are new; the text-only version 5 had none.
+
+Version 8 (Slice 146 Waves B+C and Slice 156, 2026-10-27): English reworded in the spoken register ("I'm off to the shops",
+"Okay?", "off ran Flopsy...", "Uh-oh!", "way too much", "He was so hot!", "I should've listened", "dressed up his scarecrow",
+"And there it was", "I'm really sorry, Mum. Next time, I'll listen. I promise!", "Night-night") and every sound word its own
+triple piece (Robin's line is now `"Tweet, tweet, tweet!" said Robin. "Of course I can! ..."`, so the tweet is no longer glued
+to "Of course I can"). Page 1 gains "Mrs. Rabbit gave his cheek a little pat." (her hand at his face in the existing picture; the reviewer chose it over "did up his top button"). Same 15 page
+breaks and the same one action per page: **every page keeps its picture** (checked against the contact sheet on 2026-10-27).
+Pages are 31-60 words (page 7 trimmed: "He forgot his jacket and shoes!"). The 12 other languages were redone for every reworded piece in the same
+register with their own triples (French tags now `a dit ...` in the passé composé, Finnish dialogue in spoken `mä`/`sä`
+forms, Chinese hopping `蹦蹦跳` and grumbling `嘟囔` instead of lone characters, Japanese robin `ピーチク`); Farsi changed only
+where the meaning moved (no vowel marks; `وای وای وای` for uh-oh, `قول می‌دم`, `می‌دونی چی شد؟` was dropped with the English
+"And guess what?").
 
 **Gentle retelling (Decision 130):** in Potter, Peter's father "was put in a pie by Mrs. McGregor", Mr. McGregor chases
 Peter with a rake shouting "Stop thief!", Peter is caught by his buttons in a gooseberry net, Mr. McGregor tries to trap
@@ -53,23 +65,40 @@ goldfish pond. None of that is here:
   hopping home.
 - `Wiggle, wiggle, wiggle!` on page 4 (under the gate, in) and page 13 (under the gate, out).
 - Other sound words are triples too (Decision 151): `Munch, munch, munch!`, `Yum, yum, yum!`, `Creak, creak, creak!`,
-  `Grumble, grumble, grumble!`, `Well, well, well!`, `Tweet, tweet, tweet!`. Languages other than en/es/zh/fa are untested
-  for length: flag the sound words for a listen.
+  `Grumble, grumble, grumble!`, `Well, well, well!`, `Tweet, tweet, tweet!`, each its own piece (since version 8 the tweet is
+  Robin's first line on its own). Languages other than en/es/zh/fa are untested for length: flag the sound words for a listen.
 
-**Cast and voices:** Mrs. Rabbit, Peter, Mr. McGregor, Robin, Flopsy (`StoreTexts` spec list; Mopsy and Cotton-tail never
-speak, so they are not in the cast). Genders are chosen: **Mrs. Rabbit and Flopsy are "she"; Peter, Mr. McGregor and
-Robin are "he"** (pronouns in the text: her basket, his mum, behind him, he waved his wing). The roster's bunny voice is
-a girl in English, Russian, Portuguese, Danish, Norwegian and Finnish (the test failed there with Peter as a Rabbit) and a boy in Farsi, so the
-builder now stores **Peter as no animal** (`StarterAnimals.cs`, `NotAnimal`; until version 5 he was a Rabbit) and he is
-cast as a boy in every language. Mrs. Rabbit is a rabbit by her name but "Mrs." makes her grown, which no bunny voice
-plays, so she is cast as a woman. Robin and Flopsy have no animal word and are cast by gender.
-`StoreStoryTests.TheTaleOfPeterRabbit_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster` checks the stored
-cast and genders and all 14 languages. Translations keep each gender: Robin is masculine everywhere (Arabic أبو الحنّاء
-with قال, Russian Робин with сказал, Spanish Petirrojo, French Rouge-Gorge, Brazilian Portuguese Sabiá, Dutch
-Roodborstje with hij); Flopsy is feminine (сказала, قالت). The old Spanish, French, Portuguese, Russian and Chinese tags
-for Mr. McGregor said "shouted" (gritó, cria, gritou, закричал, 喊道); they now say "said", since he never shouts.
-Localised names kept from version 5: Pekka (fi), Pelle (sv), Pieter (nl); the sisters as before (Hippu, Hoppu,
-Tupsuhäntä in Finnish).
+**Cast and voices (Slice 156, the book's own choices, `StarterVoices.cs`):** Mrs. Rabbit, Peter, Mr. McGregor, Robin, Flopsy
+(`StoreTexts` spec list; Mopsy and Cotton-tail never speak, so they are not in the cast). **Mrs. Rabbit and Flopsy are "she";
+Peter, Mr. McGregor and Robin are "he"** (her basket, his mum, behind him, he waved his wing).
+- **Mrs. Rabbit** (woman, adult rabbit; warm and soft) suggests `mummy`.
+- **Peter** (boy, child rabbit; bouncy and bright, the cheeky one) suggests `piglet` (Cheeky Piglet).
+- **Mr. McGregor** (man, old, a person; gruff but warm) suggests `troll` (Grumpy Troll); Farsi has no troll, so its traits pick
+  the grumpy gardener (باغبان اخمو).
+- **Robin** (boy, young bird; bright and bouncy) suggests `jester` (Jolly Jester, English only); every other language matches
+  him by traits, which gives the chick (Poussin Piou, Pollito Pío...), lamb2 in Farsi and piglet3 in Chinese. `puppy` was tried
+  and dropped: it put little Robin on the deep Santa voice in Spanish and Portuguese, worse than sharing am_puck with Peter in
+  English (Bouncy against Peter's Small).
+- **Flopsy** (girl, young rabbit; bright and warm) suggests `bee`.
+
+**Peter and Flopsy are rabbits again** (`StarterAnimals.cs` `ByStory`; Peter was stored as no animal since version 5 because the
+bunny voice is a girl in most languages): each suggestion is the right gender in every language, so the book keeps them on a
+boy's and a girl's voice. A rabbit has no sound word, so nothing new is heard. Robin stays no animal (a Bird would add "Tweet
+tweet!" to his lines on top of his own triple). Real casts dumped for all 14 languages on 2026-10-27, the app's way (stored
+cast in English, the animal-setting seed elsewhere): no two characters share a voice and flavour, no whisper flavour, every
+gender right. en bf_emma Normal / am_puck Small / am_michael Grumpy / am_puck Bouncy / af_sky Bouncy; fa mana Normal / gyro
+Chirpy / gyro Grumpy (gardener) / ganji Normal / mana Small; es and pt dora Normal / alex Small / santa Grumpy / alex Bouncy /
+dora Bouncy; zh xiaobei Normal / yunxia Small / yunjian Grumpy / yunxi Bouncy / xiaoni Bouncy; the Supertonic languages (fr, ar,
+ru, ja, da, fi, sv, nl) F2 Normal / M2 Small / M3 Grumpy / M4 Bouncy / F5 Bouncy; nb ksv / mnn / msv / mon / knv.
+**Roster limit, not a clash:** in English Peter and Robin share am_puck (Small, Bouncy), accepted over a Santa-voiced Robin in
+Spanish and Portuguese, which have only two male voices. Before this
+version Mrs. Rabbit had the Little Bunny's child voice and Robin the Sly Fox's whisper in the Supertonic languages.
+In Spanish and Portuguese Mrs. Rabbit (dora Normal) shares the narrator's voice, as every woman does there (one female voice).
+`StoreStoryTests.TheTaleOfPeterRabbit_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster` checks all 14 languages.
+Translations keep each gender: Robin is masculine everywhere (Arabic أبو الحنّاء with قال, Russian Робин with сказал, Spanish
+Petirrojo, French Rouge-Gorge, Brazilian Portuguese Sabiá, Dutch Roodborstje with hij); Flopsy is feminine (сказала, قالت).
+Mr. McGregor's tags say "said" in every language, since he never shouts. Localised names kept from version 5: Pekka (fi), Pelle
+(sv), Pieter (nl); the sisters as before (Hippu, Hoppu, Tupsuhäntä in Finnish).
 
 **Style:** Children's picture book illustration, soft watercolour and coloured pencil, warm gentle colours, simple
 rounded shapes, no text or letters anywhere. Portrait 3:4.
@@ -138,26 +167,26 @@ There are no other characters: no father rabbit, no cat, no Mrs. McGregor, no go
 Every page: the whole scene sits in the top 70% of the picture; the bottom 30% is plain earth, grass, path or floor with
 nothing important in it. No text, letters, words, sound effects or writing anywhere ("Lippity", "Wiggle", "Munch",
 "Creak", "Grumble", "Tweet" are never drawn in). Every page has **three or more characters** (Gemini refuses some 1-2
-character scenes). Every picture is **new** (the pictures now exist; see the art status above).
+character scenes). The pictures exist (see the art status above); **version 8 keeps every one** (the Picture column).
 
-| Page | One action (who, count, where, when) | Picture |
+| Page | One action (who, count, where, when) | Picture (v8) |
 | --- | --- | --- |
-| Cover | Sunny morning at the green garden gate seen from the lane: Peter (1) in his green jacket and red shoes peeks through the gap under the gate at the vegetable rows; Robin (1) sits on top of the gate; two sparrows (2) on the gate post. Exactly one rabbit | new |
-| 1 | Morning, outside the burrow under the big fir tree: Mrs. Rabbit (1, hat on) bends to do up the top yellow button of Peter's (1) new green jacket; Flopsy, Mopsy and Cotton-tail (3) stand in a row beside them, smiling. Exactly five rabbits | new |
-| 2 | Morning, same place: Mrs. Rabbit (1) in her straw hat, basket on her arm, talks kindly to her four children (4) lined up in front of her, listening; far off down the hill, small, a red-brick wall with a green gate. Exactly five rabbits | new |
-| 3 | Morning, the lane: Flopsy, Mopsy and Cotton-tail (3) pick blackberries from the hedge into their baskets on the left; on the right Peter (1) hops away along the lane towards the distant red-brick wall and green gate, his back half turned. Exactly four rabbits | new |
-| 4 | Morning, inside the garden by the green gate: Peter (1, jacket and shoes) wriggles in through the gap under the gate, his head and front paws already inside, ears flat; two sparrows (2) on the gate post shake their heads | new |
-| 5 | Late morning, among the vegetable rows: Peter (1, jacket and shoes) sits between the lettuces munching a radish, a nibbled lettuce and two radish tops beside him; the mouse (1) peeks from behind a lettuce; one sparrow (1) on a bean pole | new |
-| 6 | Late morning, under a huge rhubarb leaf: Peter (1, no jacket, no shoes) lies on his back in the cool shade, both paws on his round full tummy, eyes half closed; beside him his green jacket hangs on a bean pole with his red shoes on the ground under it; the mouse (1) and one sparrow (1) watch | new |
-| 7 | Midday, deep among the tall bean poles and big cabbages: Peter (1, no clothes) stands small on a gravel path, the bean plants towering over him, looking left and right, puzzled; the mouse (1) with a big green pea in her mouth shakes her head at him; one sparrow (1) on a bean pole. No jacket or shoes in view | new |
-| 8 | Midday, beside the green watering can: Peter (1) sits leaning against the can, ears drooping, looking sorry and thoughtful (no tears); two sparrows (2) perch on the can's handle, looking at him kindly | new |
-| 9 | Midday, a gravel path between cabbage rows: Mr. McGregor (1) pushes his wooden wheelbarrow of cabbages along the path, frowning, mouth closed, looking at a nibbled lettuce; in the foreground at one side Peter (1) peeks from behind a big cabbage, very still, unseen by him; two sparrows (2) on the wheelbarrow's edge | new |
-| 10 | Midday, by the bean poles: Mr. McGregor (1) buttons the little green jacket onto the smiling straw scarecrow, the two red shoes already hanging from its stick arms, and he smiles a small smile; far off between the cabbages Peter (1) peeks out; two sparrows (2) sit on the scarecrow's straw hat | new |
-| 11 | Early afternoon, a quiet corner of the garden by a low bush: Robin (1) has just hopped down onto an upturned flowerpot beside Peter (1), head tilted, friendly; Peter looks up at him with his paws together, politely asking for help; the mouse (1) peeks from under the bush. No gardener | new |
-| 12 | Early afternoon, along a garden path: Robin (1) flies ahead from a bush; Peter (1, no clothes) hops behind him, waving a paw up at the scarecrow, which towers far above him by the path (at least three times his height) wearing his green jacket with the red shoes on its arms; the mouse (1) waves from the carrot tops | new |
-| 13 | Early afternoon, seen from the lane outside the garden wall: Peter (1, no clothes) wriggles out through the gap under the green gate onto the lane; Robin (1) on top of the gate waves a wing; two sparrows (2) on the gate post | new |
-| 14 | Late afternoon, golden light, outside the burrow under the fir tree: Mrs. Rabbit (1, hat on, basket set down) kneels and hugs Peter (1, no clothes) tight; behind them Flopsy, Mopsy and Cotton-tail (3) come up the path with baskets full of blackberries. Exactly five rabbits | new |
-| 15 | Evening, inside the cosy burrow: Peter (1) is tucked into his little bed under the patchwork quilt, holding a small cup of camomile tea (no steam); Mrs. Rabbit (1, no hat) sits on the edge of the bed; at the little round table nearby Flopsy, Mopsy and Cotton-tail (3) eat bread and milk and blackberries; dusk sky in the round window. No fireplace, candle or flame | new |
+| Cover | Sunny morning at the green garden gate seen from the lane: Peter (1) in his green jacket and red shoes peeks through the gap under the gate at the vegetable rows; Robin (1) sits on top of the gate; two sparrows (2) on the gate post. Exactly one rabbit | keep |
+| 1 | Morning, outside the burrow under the big fir tree: Mrs. Rabbit (1, hat on) bends to give Peter (1), in his new green jacket, a little pat on the cheek; Flopsy, Mopsy and Cotton-tail (3) stand in a row beside them, smiling. Exactly five rabbits | keep |
+| 2 | Morning, same place: Mrs. Rabbit (1) in her straw hat, basket on her arm, talks kindly to her four children (4) lined up in front of her, listening; far off down the hill, small, a red-brick wall with a green gate. Exactly five rabbits | keep |
+| 3 | Morning, the lane: Flopsy, Mopsy and Cotton-tail (3) pick blackberries from the hedge into their baskets on the left; on the right Peter (1) hops away along the lane towards the distant red-brick wall and green gate, his back half turned. Exactly four rabbits | keep |
+| 4 | Morning, inside the garden by the green gate: Peter (1, jacket and shoes) wriggles in through the gap under the gate, his head and front paws already inside, ears flat; two sparrows (2) on the gate post shake their heads | keep |
+| 5 | Late morning, among the vegetable rows: Peter (1, jacket and shoes) sits between the lettuces munching a radish, a nibbled lettuce and two radish tops beside him; the mouse (1) peeks from behind a lettuce; one sparrow (1) on a bean pole | keep |
+| 6 | Late morning, under a huge rhubarb leaf: Peter (1, no jacket, no shoes) lies on his back in the cool shade, both paws on his round full tummy, eyes half closed; beside him his green jacket hangs on a bean pole with his red shoes on the ground under it; the mouse (1) and one sparrow (1) watch | keep |
+| 7 | Midday, deep among the tall bean poles and big cabbages: Peter (1, no clothes) stands small on a gravel path, the bean plants towering over him, looking left and right, puzzled; the mouse (1) with a big green pea in her mouth shakes her head at him; one sparrow (1) on a bean pole. No jacket or shoes in view | keep |
+| 8 | Midday, beside the green watering can: Peter (1) sits leaning against the can, ears drooping, looking sorry and thoughtful (no tears); two sparrows (2) perch on the can's handle, looking at him kindly | keep |
+| 9 | Midday, a gravel path between cabbage rows: Mr. McGregor (1) pushes his wooden wheelbarrow of cabbages along the path, frowning, mouth closed, looking at a nibbled lettuce; in the foreground at one side Peter (1) peeks from behind a big cabbage, very still, unseen by him; two sparrows (2) on the wheelbarrow's edge | keep |
+| 10 | Midday, by the bean poles: Mr. McGregor (1) buttons the little green jacket onto the smiling straw scarecrow, the two red shoes already hanging from its stick arms, and he smiles a small smile; far off between the cabbages Peter (1) peeks out; two sparrows (2) sit on the scarecrow's straw hat | keep |
+| 11 | Early afternoon, a quiet corner of the garden by a low bush: Robin (1) has just hopped down onto an upturned flowerpot beside Peter (1), head tilted, friendly; Peter looks up at him with his paws together, politely asking for help; the mouse (1) peeks from under the bush. No gardener | keep |
+| 12 | Early afternoon, along a garden path: Robin (1) flies ahead from a bush; Peter (1, no clothes) hops behind him, waving a paw up at the scarecrow, which towers far above him by the path (at least three times his height) wearing his green jacket with the red shoes on its arms; the mouse (1) waves from the carrot tops | keep |
+| 13 | Early afternoon, seen from the lane outside the garden wall: Peter (1, no clothes) wriggles out through the gap under the green gate onto the lane; Robin (1) on top of the gate waves a wing; two sparrows (2) on the gate post | keep |
+| 14 | Late afternoon, golden light, outside the burrow under the fir tree: Mrs. Rabbit (1, hat on, basket set down) kneels and hugs Peter (1, no clothes) tight; behind them Flopsy, Mopsy and Cotton-tail (3) come up the path with baskets full of blackberries. Exactly five rabbits | keep |
+| 15 | Evening, inside the cosy burrow: Peter (1) is tucked into his little bed under the patchwork quilt, holding a small cup of camomile tea (no steam); Mrs. Rabbit (1, no hat) sits on the edge of the bed; at the little round table nearby Flopsy, Mopsy and Cotton-tail (3) eat bread and milk and blackberries; dusk sky in the round window. No fireplace, candle or flame | keep |
 
 Check (dino-storytelling section 4):
 

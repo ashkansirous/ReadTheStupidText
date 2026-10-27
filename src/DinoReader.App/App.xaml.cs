@@ -245,6 +245,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		// First and synchronous: kids' mode must hold whatever the navigation steps below do.
 		_services.GetRequiredService<GrownUpMode>().Leave();
 		await TryAsync(() => DismissGatesAsync(navigation));
+		await TryAsync(() => DismissIntroAsync(navigation));
 		await TryAsync(() => PopGrownUpPagesAsync(navigation));
 	}
 
@@ -253,6 +254,16 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		foreach (GatePage gate in navigation.Navigation.ModalStack.OfType<GatePage>().ToList())
 		{
 			await TryAsync(gate.DismissAsync);
+		}
+	}
+
+	// The intro (Slice 155) is a modal of its own: it closes with the app, but a first run keeps its saved step, so coming back goes through the gate.
+	private static async Task DismissIntroAsync(NavigationPage navigation)
+	{
+		bool IsIntro(Page p) => p is NavigationPage { RootPage: IntroWizardPage };
+		for (int guard = navigation.Navigation.ModalStack.Count; guard > 0 && navigation.Navigation.ModalStack.Any(IsIntro); guard--)
+		{
+			await navigation.Navigation.PopModalAsync(animated: false);
 		}
 	}
 

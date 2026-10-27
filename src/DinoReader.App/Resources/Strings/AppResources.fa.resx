@@ -97,7 +97,21 @@
   <data name="FirstRun_ReadyBodyOne" xml:space="preserve"><value>هر شخصیت صدای خودش را دارد. یک داستان روی قفسه است.</value></data>
   <data name="FirstRun_HearHello" xml:space="preserve"><value>شنیدن سلام Dino</value></data>
   <data name="FirstRun_HelloLine" xml:space="preserve"><value>سلام! من Dino هستم. بیا با هم داستان بخوانیم.</value></data>
-  <data name="FirstRun_SetUp" xml:space="preserve"><value>تنظیم داستان‌ها</value></data>
+  <data name="Intro_SeeWhat" xml:space="preserve"><value>ببینید دینو چه کارهایی می‌کند</value></data>
+  <data name="Intro_SkipStart" xml:space="preserve"><value>رد کردن و شروع خواندن</value></data>
+  <data name="Intro_SkipAll" xml:space="preserve"><value>رد کردن همه</value></data>
+  <data name="Intro_TryIt" xml:space="preserve"><value>امتحان کنید</value></data>
+  <data name="Intro_Skip" xml:space="preserve"><value>رد کردن</value></data>
+  <data name="Intro_Counter" xml:space="preserve"><value>{0} از {1}</value></data>
+  <data name="Intro_StoreTitle" xml:space="preserve"><value>کتاب‌های بیشتر بگیرید</value></data>
+  <data name="Intro_StoreLine" xml:space="preserve"><value>فروشگاه رایگان داستان‌های بیشتری دارد که آمادهٔ دانلود هستند.</value></data>
+  <data name="Intro_RecordTitle" xml:space="preserve"><value>با صدای خودتان بخوانید</value></data>
+  <data name="Intro_RecordLine" xml:space="preserve"><value>خودتان را هنگام خواندن یک داستان، صفحه به صفحه، ضبط کنید. فرزندتان هر وقت بخواهد می‌تواند آن را پخش کند.</value></data>
+  <data name="Intro_AddTitle" xml:space="preserve"><value>کتاب خودتان را اضافه کنید</value></data>
+  <data name="Intro_AddLine" xml:space="preserve"><value>از صفحه‌های یک کتاب عکس بگیرید یا یک فایل PDF انتخاب کنید. دینو آن را بلند می‌خواند.</value></data>
+  <data name="Intro_AddTitleWindows" xml:space="preserve"><value>عکس یا PDF اضافه کنید</value></data>
+  <data name="Intro_AddLineWindows" xml:space="preserve"><value>عکس صفحه‌های یک کتاب یا یک فایل PDF انتخاب کنید. دینو آن را بلند می‌خواند.</value></data>
+  <data name="Intro_ShowAgain" xml:space="preserve"><value>نمایش دوبارهٔ معرفی</value></data>
   <data name="FirstRun_PhoneVoice" xml:space="preserve"><value>ادامه با صدای تلفن</value></data>
   <data name="Gallery_ReadyForChild" xml:space="preserve"><value>آماده برای فرزندم</value></data>
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>حالت بزرگسال</value></data>
@@ -185,6 +199,11 @@
   <data name="Version_Title" xml:space="preserve"><value>نسخه</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>به بهتر شدن دینو کمک کنید</value></data>
   <data name="Usage_Helper" xml:space="preserve"><value>شمارش‌هایی مثل «یک کتاب فروشگاه تمام شد» می‌فرستد. بدون نام، بدون شناسه، بدون چیزی که شما نوشته‌اید.</value></data>
+  <data name="Speed_Title" xml:space="preserve"><value>سرعت خواندن</value></data>
+  <data name="Speed_Sub" xml:space="preserve"><value>آهسته‌تر برای کوچولوها آسان‌تر است</value></data>
+  <data name="Speed_EndSlow" xml:space="preserve"><value>۰٫۵x · آهسته</value></data>
+  <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
+  <data name="Speed_Play" xml:space="preserve"><value>شنیدن این سرعت</value></data>
   <data name="FirstRun_Usage" xml:space="preserve"><value>دینو می‌شمارد کدام کتاب‌ها خوانده می‌شوند، بدون نام و شناسه. می‌توانید این را در تنظیمات خاموش کنید.</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>قصه‌گوی شما ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} مگابایت</value></data>
@@ -266,8 +285,10 @@
   <data name="Editor_RotateLeft" xml:space="preserve"><value>چرخش به چپ</value></data>
   <data name="Editor_RotateRight" xml:space="preserve"><value>چرخش به راست</value></data>
   <data name="Editor_ResetCrop" xml:space="preserve"><value>بازنشانی برش</value></data>
-  <data name="Reading_TextMode" xml:space="preserve"><value>حالت متن</value></data>
-  <data name="Reading_PictureMode" xml:space="preserve"><value>حالت تصویر</value></data>
+  <data name="Reading_Mode_PictureOnly" xml:space="preserve"><value>فقط تصویر</value></data>
+  <data name="Reading_Mode_PictureAndText" xml:space="preserve"><value>تصویر + متن</value></data>
+  <data name="Reading_Mode_TextOnly" xml:space="preserve"><value>فقط متن</value></data>
+  <data name="Reading_Mode_Selected" xml:space="preserve"><value>انتخاب‌شده</value></data>
   <data name="Reading_Play" xml:space="preserve"><value>پخش</value></data>
   <data name="Reading_Pause" xml:space="preserve"><value>توقف</value></data>
   <data name="Reading_Previous" xml:space="preserve"><value>جملهٔ قبلی</value></data>
@@ -281,12 +302,9 @@
   <data name="Cast_Narrator" xml:space="preserve"><value>راوی</value></data>
   <data name="Cast_Main" xml:space="preserve"><value>اصلی</value></data>
   <data name="Cast_Edited" xml:space="preserve"><value>ویرایش‌شده</value></data>
+  <data name="Cast_BackToBookVoice" xml:space="preserve"><value>بازگشت به صدای کتاب</value></data>
   <data name="Cast_SharedVoice" xml:space="preserve"><value>صدای مشترک</value></data>
   <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>گوینده نامشخص</value></data>
-  <data name="Cast_MergeButton" xml:space="preserve"><value>ادغام دو شخصیت</value></data>
-  <data name="Cast_MergeTitle" xml:space="preserve"><value>ادغام شخصیت‌ها</value></data>
-  <data name="Cast_MergeBody" xml:space="preserve"><value>دو نامی را که یک شخصیت هستند انتخاب کنید. جمله‌هایشان زیر یک نام و یک صدا یکی می‌شود.</value></data>
-  <data name="Cast_KeepName" xml:space="preserve"><value>نام را نگه دار</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>سلام! صدای من وقتی داستان شما را می‌خوانم این‌طوری است.</value></data>
   <data name="Cast_SaveFailedTitle" xml:space="preserve"><value>ذخیرهٔ این تغییر ممکن نشد</value></data>
   <data name="Cast_SaveFailedBody" xml:space="preserve"><value>بازیگران ذخیره نشدند. کمی بعد دوباره امتحان کنید.</value></data>
@@ -299,13 +317,7 @@
   <data name="Cast_UnknownLines_Other" xml:space="preserve"><value>{0} جمله</value></data>
   <data name="Cast_UsesNarrator" xml:space="preserve"><value>با صدای راوی خوانده می‌شود</value></data>
   <data name="Cast_Hear" xml:space="preserve"><value>شنیدن صدای {0}</value></data>
-  <data name="Cast_MergeInto" xml:space="preserve"><value>ادغام در {0}</value></data>
-  <data name="Cast_AnimalSounds_Title" xml:space="preserve"><value>صدای حیوان‌ها</value></data>
-  <data name="Cast_AnimalSounds_Hint" xml:space="preserve"><value>حیوان‌ها گاهی «خرخر!» یا «بع بع!» می‌گویند</value></data>
-  <data name="Cast_AnimalSounds_None" xml:space="preserve"><value>در این داستان حیوانی که صدا دربیاورد نیست</value></data>
-  <data name="Cast_WordsOverPictures_Title" xml:space="preserve"><value>نمایش کلمات روی تصویرها</value></data>
-  <data name="Cast_WordsOverPictures_HintOn" xml:space="preserve"><value>کلمات در یک پنل پایین تصویر نشان داده می‌شوند</value></data>
-  <data name="Cast_WordsOverPictures_HintOff" xml:space="preserve"><value>خاموش است چون این تصاویر از قبل کلمات را دارند</value></data>
-  <data name="Cast_WordsOverPictures_HintOffPlain" xml:space="preserve"><value>فقط تصاویر نشان داده می‌شوند</value></data>
+  <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>صدای حیوان‌ها</value></data>
+  <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>حیوان‌ها گاهی «خرخر!» یا «بع بع!» می‌گویند، در همهٔ کتاب‌ها</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>این کتاب شخصیت‌های بیشتری از {0} شخصیت قصه‌گوی موجود دارد، پس بعضی‌ها یک‌جور صدا می‌دهند. راوی هیچ‌وقت به شخصیتی داده نمی‌شود.</value></data>
 </root>
