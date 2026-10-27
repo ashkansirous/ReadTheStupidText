@@ -75,6 +75,11 @@ on:
         required: true
         default: '2'
         type: string
+      kokoro_carry_over_from:
+        description: 'Release tag (e.g. packs-7) to carry the unchanged Kokoro pack over from, byte for byte, instead of rebuilding it from the upstream archive; leave empty to build. Needs kokoro_pack_version to be that release''s version.'
+        required: false
+        default: ''
+        type: string
       ocr_pack_version:
         description: 'Version stamped into the four PaddleOCR packs (bump when any model or dictionary changes)'
         required: true
@@ -166,6 +171,7 @@ jobs:
       NORWEGIAN_VERSION: ${{ inputs.norwegian_pack_version }}
       CHINESE_VERSION: ${{ inputs.melo_pack_version }}
       KOKORO_VERSION: ${{ inputs.kokoro_pack_version }}
+      KOKORO_CARRY_OVER_FROM: ${{ inputs.kokoro_carry_over_from }}
       OCR_VERSION: ${{ inputs.ocr_pack_version }}
       TRANSLATION_VERSION: ${{ inputs.translation_pack_version }}
     steps:
@@ -249,7 +255,9 @@ jobs:
           fetch "$PERSIAN_RELEASE_URL/vits-piper-fa_IR-ganji-medium-int8.tar.bz2" "$GANJI_SHA256" src-models/fa-ganji
           fetch "$PERSIAN_RELEASE_URL/vits-piper-fa_IR-gyro-medium-int8.tar.bz2" "$GYRO_SHA256" src-models/fa-gyro
           fetch "$CHINESE_URL" "$CHINESE_SHA256" src-models/melo-zh-en
-          fetch "$KOKORO_URL" "$KOKORO_SHA256" src-models/kokoro
+          if [ -z "$KOKORO_CARRY_OVER_FROM" ]; then
+            fetch "$KOKORO_URL" "$KOKORO_SHA256" src-models/kokoro
+          fi
 
       # Mana (MahtaFetrat/Mana-Persian-Piper, MIT, CC0 data) has no sherpa-onnx build. Do what sherpa's
       # piper export does (scripts/piper/generate.sh.in): write tokens.txt from the phoneme map and add
@@ -476,6 +484,7 @@ jobs:
       # Spanish and Portuguese need only espeak-ng's es and pt data, which the data folder already has.
       # No voices are listed in pack.json: they live in KokoroVoiceTable.cs with their speaker ids.
       - name: Build the Kokoro (storyteller) pack zip
+        if: inputs.kokoro_carry_over_from == ''
         run: |
           set -euo pipefail
           src="src-models/kokoro"
@@ -539,6 +548,7 @@ jobs:
       # (Heart narrates, Puck speaks; speaker ids from KokoroVoiceTable.cs). It sits next to the zip on the release as
       # <id>-<version>-sample.wav (StorytellerOffer.SampleFileName), is not in the catalog and is not part of the pack.
       - name: Make the Kokoro voice sample
+        if: inputs.kokoro_carry_over_from == ''
         run: |
           set -euo pipefail
           python -m pip install --quiet "sherpa-onnx==1.13.3"
@@ -755,12 +765,45 @@ jobs:
           done
           ls -l out
 
+      # A pack whose upstream source changed but whose content must not (so users keep their install) is carried over
+      # from an earlier packs release instead of being rebuilt: its zip (and sample, when it has one) are downloaded
+      # from that release, checked against the digest GitHub recorded for the asset and against the sha256 and
+      # version in that release's packs.json, and its catalog entry is kept (only the url moves to this release).
+      # Today only Kokoro has an input for it (kokoro_carry_over_from); add another pack by calling carry_over.
+      - name: Carry over unchanged packs from an earlier release
+        run: |
+          set -euo pipefail
+          mkdir -p out carried
+          carry_over() {
+            local id="$1" version="$2" from="$3" sample="$4"
+            local zip="$id-$version.zip" assets name want
+            if ! [[ "$from" =~ ^packs-[0-9]+$ ]]; then echo "::error::carry-over source '$from' must look like packs-<number>"; exit 1; fi
+            assets=$(gh release view "$from" --repo "${{ github.repository }}" --json assets)
+            names=("$zip")
+            if [ "$sample" = sample ]; then names+=("$id-$version-sample.wav"); fi
+            for name in "${names[@]}"; do
+              want=$(jq -r --arg n "$name" '.assets[] | select(.name == $n) | .digest // empty' <<<"$assets")
+              if [ -z "$want" ]; then echo "::error::$from has no asset $name with a recorded digest"; exit 1; fi
+              gh release download "$from" --repo "${{ github.repository }}" --pattern "$name" --dir out --clobber
+              echo "${want#sha256:}  out/$name" | sha256sum -c -
+            done
+            gh release download "$from" --repo "${{ github.repository }}" --pattern packs.json --dir carried --clobber
+            jq -e --arg id "$id" --arg version "$version" --arg sha "$(sha256sum "out/$zip" | cut -d' ' -f1)"                   --argjson size "$(stat -c %s "out/$zip")"               '[.[] | select(.id == $id)] | length == 1 and .[0].version == $version and .[0].sha256 == $sha and .[0].sizeBytes == $size'               carried/packs.json > /dev/null               || { echo "::error::$from packs.json does not describe $zip (id, version, sha256, size)"; exit 1; }
+            jq --arg id "$id" --arg url "https://github.com/${{ github.repository }}/releases/download/$TAG/$zip"               '.[] | select(.id == $id) | .url = $url' carried/packs.json > "carried/$id.json"
+            echo "Carried $zip over from $from"
+          }
+          if [ -n "$KOKORO_CARRY_OVER_FROM" ]; then
+            carry_over "$KOKORO_ID" "$KOKORO_VERSION" "$KOKORO_CARRY_OVER_FROM" sample
+          fi
+          ls -l out
+
       - name: Write packs.json
         run: |
           set -euo pipefail
           entry() {
             local id="$1" language="$2" version="$3" license="$4" kind="${5:-voice}"
             local zip="out/$id-$version.zip"
+            if [ -f "carried/$id.json" ]; then cat "carried/$id.json"; return; fi
             local size sha url
             size=$(stat -c %s "$zip")
             sha=$(sha256sum "$zip" | cut -d' ' -f1)
