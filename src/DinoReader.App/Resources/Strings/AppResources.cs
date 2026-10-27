@@ -301,6 +301,7 @@ public static class AppResources
 	public static string Cast_Narrator => Get();
 	public static string Cast_Main => Get();
 	public static string Cast_Edited => Get();
+	public static string Cast_BackToBookVoice => Get();
 	public static string Cast_Pair => Get();
 	public static string Cast_PickTitle => Get();
 	public static string Cast_PickSubtitle => Get();

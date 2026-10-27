@@ -34,6 +34,29 @@ public static class CastEditor
         return state with { Cast = Replace(state.Cast, characterId, m => m with { VoiceId = character.VoiceId, Flavour = character.Flavour, Edited = true }) };
     }
 
+    /// <summary>"Back to the book's voice" (Slice 156): the character is no longer a grown-up's pick, so the caster gives it the voice its book chose again (the caller recasts it,
+    /// <c>StoryVoicing.RecastCharacter</c>). A character whose book chose nothing is left as it is.</summary>
+    public static CastEdit UseBookVoice(CastEdit state, string characterId) =>
+        state with { Cast = Replace(state.Cast, characterId, m => m.HasAuthoredVoice ? m with { Edited = false } : m) };
+
+    /// <summary>Whether the "Back to the book's voice" link is worth showing (Slice 156): a grown-up's pick on a character whose book chose a voice or traits, where the book's
+    /// suggestion is usable in this language (in the roster, gender not opposite) and sounds different from the pick, or, with no usable suggestion, the closest traits may.</summary>
+    public static bool OffersBookVoice(CastMember member, VoiceFlavour flavour, IReadOnlyList<StorytellerCharacter> speakers)
+    {
+        if (!member.Edited || !member.HasAuthoredVoice)
+        {
+            return false;
+        }
+
+        StorytellerCharacter? suggested = member.SuggestedVoice is { Length: > 0 } id ? speakers.FirstOrDefault(c => c.Id == id) : null;
+        if (suggested is not null && !CharacterRoster.OppositeGender(suggested.Gender, member.Gender))
+        {
+            return suggested.VoiceId != member.VoiceId || suggested.Flavour != flavour;
+        }
+
+        return member.Traits is not null;
+    }
+
     /// <summary>Whether any character of <paramref name="cast"/> has <paramref name="voiceId"/>: a cast that must be recast once that voice is the narrator's.</summary>
     public static bool UsesVoice(IReadOnlyList<CastMember> cast, string voiceId) => cast.Any(m => m.VoiceId == voiceId);
 

@@ -41,6 +41,10 @@ on page 1, merged with "Kathryn"), Seagull, Izzy, Pancake Polly, Billy. Kathryn,
 (from "she"/"her" after their names), Billy male (name table). Seagull's name has no animal word the guess knows
 ("seagull" is not in the bird list), so no "Tweet tweet!" is added after her lines; she says her own "Squawk!".
 
+**Voices** (Slice 156, `StarterVoices.cs`): Seagull = `duckling2` (Splashy Duckling: the user's pick, a bouncy, squawky bird voice), Billy = `puppy2` (Wiggly Puppy, the user's pick),
+Kathryn = `princess` (bold and clear, the captain), Izzy = `fairy` (young and bright), Pancake Polly = `mummy` (warm). Kathryn, Izzy, Polly and Billy are pirates. Kathryn, Izzy and Polly are
+chosen by the builder pass, not yet by the writer: the writer should revisit them.
+
 **Style:** Children's picture book illustration, soft watercolour and coloured pencil, warm gentle colours, simple rounded
 shapes, no text or letters anywhere. Portrait 3:4.
 

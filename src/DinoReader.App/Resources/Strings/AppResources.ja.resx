@@ -302,6 +302,7 @@
   <data name="Cast_Narrator" xml:space="preserve"><value>ナレーター</value></data>
   <data name="Cast_Main" xml:space="preserve"><value>主役</value></data>
   <data name="Cast_Edited" xml:space="preserve"><value>編集済み</value></data>
+  <data name="Cast_BackToBookVoice" xml:space="preserve"><value>本の声にもどす</value></data>
   <data name="Cast_SharedVoice" xml:space="preserve"><value>共有の声</value></data>
   <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>不明な話し手</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>こんにちは！あなたのおはなしを読むときの声はこんな感じです。</value></data>

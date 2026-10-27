@@ -4,7 +4,7 @@ using DinoReader.Resources.Strings;
 namespace DinoReader;
 
 /// <summary>What a tap on a cast row does; the page supplies it (every one runs behind the page's <see cref="BusyGuard"/>).</summary>
-internal sealed record CastRowActions(Func<CastRow, Task> Preview, Func<CastRow, Task> PickCharacter);
+internal sealed record CastRowActions(Func<CastRow, Task> Preview, Func<CastRow, Task> PickCharacter, Func<CastRow, Task> BookVoice);
 
 /// <summary>Builds the rows of the cast screen: the narrator, a character, the unknown speaker and the shared-voice note.</summary>
 internal static class CastRows
@@ -47,11 +47,16 @@ internal static class CastRows
 	}
 
 	/// <summary>A story character (mock frame 52, Slice 116): its initial, name and word count, and under them the storyteller character playing it (a picker) with a play button; nothing else (Slice 136: the character names the animal).</summary>
-	public static View Character(CastRow row, int index, CastRowActions actions, string language)
+	public static View Character(CastRow row, int index, CastRowActions actions, string language, bool offerBookVoice)
 	{
 		var body = new VerticalStackLayout { Padding = new Thickness(14, 12), Spacing = 9 };
 		body.Add(TopLine(row, index));
 		body.Add(PickerLine(row, actions, language));
+		if (offerBookVoice)
+		{
+			body.Add(BookVoiceLink(row, actions));
+		}
+
 		return body;
 	}
 
@@ -151,6 +156,19 @@ internal static class CastRows
 		line.Add(picker, 0);
 		line.Add(play, 1);
 		return line;
+	}
+
+	// A grown-up's pick on a character whose book chose a voice (Slice 156): one tap gives the book's voice back.
+	private static Label BookVoiceLink(CastRow row, CastRowActions actions)
+	{
+		var link = new Label
+		{
+			Text = CastText.BackToBookVoice, FontSize = 13, FontAttributes = FontAttributes.Bold, TextColor = DinoTokens.Get(DinoTokens.Brand),
+			Margin = new Thickness(TextIndent, 0, 0, 0), MinimumHeightRequest = LinkMinHeight, VerticalTextAlignment = TextAlignment.Center,
+		};
+		SemanticProperties.SetDescription(link, CastText.Pair(row.Member.Name, CastText.BackToBookVoice));
+		CastViews.AddTap(link, () => actions.BookVoice(row));
+		return link;
 	}
 
 	private static Border Play(CastRow row, CastRowActions actions)

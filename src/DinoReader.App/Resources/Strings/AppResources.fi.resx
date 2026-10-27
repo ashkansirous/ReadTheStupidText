@@ -301,6 +301,7 @@
   <data name="Cast_Narrator" xml:space="preserve"><value>Kertoja</value></data>
   <data name="Cast_Main" xml:space="preserve"><value>PÄÄHAHMO</value></data>
   <data name="Cast_Edited" xml:space="preserve"><value>MUOKATTU</value></data>
+  <data name="Cast_BackToBookVoice" xml:space="preserve"><value>Takaisin kirjan ääneen</value></data>
   <data name="Cast_SharedVoice" xml:space="preserve"><value>Jaettu ääni</value></data>
   <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>Tuntematon puhuja</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>Hei! Tältä kuulostan, kun luen tarinaasi.</value></data>

@@ -301,6 +301,7 @@
   <data name="Cast_Narrator" xml:space="preserve"><value>Fortæller</value></data>
   <data name="Cast_Main" xml:space="preserve"><value>HOVED</value></data>
   <data name="Cast_Edited" xml:space="preserve"><value>RETTET</value></data>
+  <data name="Cast_BackToBookVoice" xml:space="preserve"><value>Tilbage til bogens stemme</value></data>
   <data name="Cast_SharedVoice" xml:space="preserve"><value>Delt stemme</value></data>
   <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>Ukendt taler</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>Hej! Sådan lyder jeg, når jeg læser din historie.</value></data>

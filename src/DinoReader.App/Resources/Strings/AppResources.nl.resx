@@ -301,6 +301,7 @@
   <data name="Cast_Narrator" xml:space="preserve"><value>Verteller</value></data>
   <data name="Cast_Main" xml:space="preserve"><value>HOOFDROL</value></data>
   <data name="Cast_Edited" xml:space="preserve"><value>AANGEPAST</value></data>
+  <data name="Cast_BackToBookVoice" xml:space="preserve"><value>Terug naar de stem van het boek</value></data>
   <data name="Cast_SharedVoice" xml:space="preserve"><value>Gedeelde stem</value></data>
   <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>Onbekende spreker</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>Hallo! Zo klink ik als ik jouw verhaal voorlees.</value></data>

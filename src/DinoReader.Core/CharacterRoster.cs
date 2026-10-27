@@ -139,6 +139,9 @@ public static partial class CharacterRoster
         return has == Gender.Unknown || wanted == Gender.Unknown ? GenderUnsure : GenderMiss;
     }
 
+    /// <summary>Whether a character of <paramref name="has"/> gender is the opposite of what a story character of <paramref name="wanted"/> gender needs (both known and different).</summary>
+    public static bool OppositeGender(Gender has, Gender wanted) => GenderMisfit(has, wanted) >= GenderMiss;
+
     private static int FamilyOf(VoiceFlavour flavour) => flavour switch
     {
         VoiceFlavour.Small or VoiceFlavour.Squeaky or VoiceFlavour.Bouncy or VoiceFlavour.Chirpy or VoiceFlavour.Perky => 1,

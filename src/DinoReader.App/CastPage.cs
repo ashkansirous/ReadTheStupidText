@@ -44,7 +44,8 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		_spoken = spoken;
 		_actions = new CastRowActions(
 			row => _busy.RunAsync(() => PreviewAsync(row.Member.VoiceId, row.Flavour)),
-			row => _busy.RunAsync(() => PickCharacterAsync(row)));
+			row => _busy.RunAsync(() => PickCharacterAsync(row)),
+			row => _busy.RunAsync(() => BackToBookVoiceAsync(row)));
 		NavigationPage.SetHasNavigationBar(this, false);
 		SafeAreaEdges = new SafeAreaEdges(SafeAreaRegions.Container);
 		BackgroundColor = DinoTokens.Get(DinoTokens.Sand);
@@ -218,9 +219,11 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	private View CharacterCard(CastSheet sheet)
 	{
 		var rows = new VerticalStackLayout();
+		IReadOnlyList<StorytellerCharacter> speakers = CastCharacters.BookableSpeakers(_voicing.RosterFor(_castLanguage), _voicing.NarratorOf(_castLanguage));
 		for (int i = 0; i < sheet.Rows.Count; i++)
 		{
-			rows.Children.Add(CastRows.Character(sheet.Rows[i], i, _actions, _castLanguage));
+			CastRow row = sheet.Rows[i];
+			rows.Children.Add(CastRows.Character(row, i, _actions, _castLanguage, CastEditor.OffersBookVoice(row.Member, row.Flavour, speakers)));
 			rows.Children.Add(CastViews.Divider());
 		}
 
@@ -305,6 +308,16 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 				}
 			}
 		}
+	}
+
+	// "Back to the book's voice" (Slice 156): the grown-up's pick is dropped and the character is cast again, which gives it the book's suggestion (or its closest traits).
+	private async Task BackToBookVoiceAsync(CastRow row)
+	{
+		Story previous = _story!;
+		CastEdit released = CastEditor.UseBookVoice(CastEditor.Open(previous, _castLanguage), row.Member.CharacterId);
+		IReadOnlyList<CastMember> recast = await Task.Run(() => _voicing.RecastCharacter(previous, _castLanguage, released.Cast, row.Member.CharacterId));
+		_story = CastEditor.Close(previous, _castLanguage, new CastEdit(recast));
+		await SaveOrRollBackAsync(previous);
 	}
 
 	private void CountVoiceChange(string kind)

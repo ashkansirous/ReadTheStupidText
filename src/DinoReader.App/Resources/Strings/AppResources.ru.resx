@@ -302,6 +302,7 @@
   <data name="Cast_Narrator" xml:space="preserve"><value>Рассказчик</value></data>
   <data name="Cast_Main" xml:space="preserve"><value>ГЛАВНЫЙ</value></data>
   <data name="Cast_Edited" xml:space="preserve"><value>ИЗМЕНЕНО</value></data>
+  <data name="Cast_BackToBookVoice" xml:space="preserve"><value>Вернуть голос из книги</value></data>
   <data name="Cast_SharedVoice" xml:space="preserve"><value>Общий голос</value></data>
   <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>Неизвестный говорящий</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>Привет! Вот так я звучу, когда читаю вашу историю.</value></data>

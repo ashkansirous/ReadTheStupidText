@@ -302,6 +302,7 @@
   <data name="Cast_Narrator" xml:space="preserve"><value>Narrador</value></data>
   <data name="Cast_Main" xml:space="preserve"><value>PRINCIPAL</value></data>
   <data name="Cast_Edited" xml:space="preserve"><value>EDITADO</value></data>
+  <data name="Cast_BackToBookVoice" xml:space="preserve"><value>Voltar à voz do livro</value></data>
   <data name="Cast_SharedVoice" xml:space="preserve"><value>Voz compartilhada</value></data>
   <data name="Cast_UnknownSpeaker" xml:space="preserve"><value>Falante desconhecido</value></data>
   <data name="Cast_PreviewLine" xml:space="preserve"><value>Olá! É assim que eu soo quando leio a sua história.</value></data>

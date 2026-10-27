@@ -2,6 +2,9 @@ using ReadTheStupidText.Domain.Reading;
 
 namespace DinoReader.Core;
 
+/// <summary>What a book's author decided for a character (Slice 156): the suggested roster id and the traits.</summary>
+public sealed record AuthoredVoice(string? SuggestedVoice, CharacterTraits? Traits);
+
 /// <summary>Turns a caster result into stored cast members and keeps stored voices stable when a story is recast.</summary>
 public static class StoryCast
 {
@@ -13,14 +16,23 @@ public static class StoryCast
     /// </summary>
     public static IReadOnlyList<CastMember> ToMembers(
         IReadOnlyList<Character> characters, VoiceCast cast, LanguageRules rules, IReadOnlyList<CastMember>? stored = null,
-        IReadOnlyDictionary<string, AnimalKind>? animals = null) =>
+        IReadOnlyDictionary<string, AnimalKind>? animals = null,
+        IReadOnlyDictionary<string, AuthoredVoice>? authored = null) =>
         characters
             .Select(c => (Character: c, Voice: cast.VoiceFor(c.Id)))
             .Where(x => x.Voice is not null)
-            .Select(x => new CastMember(
-                x.Character.Id, x.Character.Name, x.Character.Gender, x.Voice!, WasEdited(stored, x.Character.Id),
+            .Select(x => (new CastMember(
+                x.Character.Id, x.Character.Name, x.Character.Gender, x.Voice!, WasEdited(stored, x.Character.Id, x.Voice!),
                 FlavourOf(cast, stored, x.Character, rules)) with { Animal = AnimalOf(stored, animals, x.Character.Id), NotAnimal = NotAnimalIn(stored, x.Character.Id) })
+                .WithAuthored(StoredAuthored(stored, x.Character.Id) ?? (authored is not null && authored.TryGetValue(x.Character.Id, out AuthoredVoice? a) ? a : null)))
             .ToList();
+
+    // The book's suggestion and traits stay with the member whatever voice the caster gave it (Slice 156): they are book data, like the animal.
+    private static AuthoredVoice? StoredAuthored(IReadOnlyList<CastMember>? stored, string characterId) =>
+        stored?.FirstOrDefault(m => m.CharacterId == characterId) is { HasAuthoredVoice: true } m ? new AuthoredVoice(m.SuggestedVoice, m.Traits) : null;
+
+    private static CastMember WithAuthored(this CastMember member, AuthoredVoice? authored) =>
+        authored is null ? member : member with { SuggestedVoice = authored.SuggestedVoice, Traits = authored.Traits };
 
     private static AnimalKind? AnimalOf(IReadOnlyList<CastMember>? stored, IReadOnlyDictionary<string, AnimalKind>? animals, string characterId)
     {
@@ -43,16 +55,18 @@ public static class StoryCast
         return (pickStands ? pick!.Flavour : null) ?? castFlavour ?? FlavourGuess.Guess(character.Name, rules);
     }
 
-    private static bool WasEdited(IReadOnlyList<CastMember>? stored, string characterId) =>
-        stored?.Any(m => m.CharacterId == characterId && m.Edited) == true;
+    // A pick that no longer stands was replaced by the book's voice (Slice 156), so the member is no longer the grown-up's.
+    private static bool WasEdited(IReadOnlyList<CastMember>? stored, string characterId, string voiceId) =>
+        stored?.Any(m => m.CharacterId == characterId && m.Edited && !(m.HasAuthoredVoice && m.VoiceId != voiceId)) == true;
 
     /// <summary>
-    /// The attribution as the story reads it: an edited character's stored gender in place of the guessed one, so a recast keeps it.
+    /// The attribution as the story reads it: an edited character's stored gender in place of the guessed one, so a recast keeps it. So does a character whose book described it (traits, Slice 156) with a known gender: that
+    /// is the author's decision. A bare voice suggestion decides nothing about gender.
     /// Merges a book saved before Slice 151 are ignored: those names have their own voices again.
     /// </summary>
     public static AttributionResult Resolve(AttributionResult raw, IReadOnlyList<CastMember> stored)
     {
-        var edited = stored.Where(m => m.Edited).DistinctBy(m => m.CharacterId).ToDictionary(m => m.CharacterId, m => m.Gender);
+        var edited = stored.Where(m => m.Edited || (m.Traits is not null && m.Gender != Gender.Unknown)).DistinctBy(m => m.CharacterId).ToDictionary(m => m.CharacterId, m => m.Gender);
         return raw with
         {
             Characters = raw.Characters.Select(c => edited.TryGetValue(c.Id, out Gender g) ? c with { Gender = g } : c).ToList(),
@@ -68,5 +82,5 @@ public static class StoryCast
 
     /// <summary>The stored voice and flavour of every character, for <see cref="CastCharacters.Cast"/> to keep (Slice 116).</summary>
     public static IReadOnlyDictionary<string, PinnedCharacter> PinnedCharacters(IReadOnlyList<CastMember> stored) =>
-        stored.DistinctBy(m => m.CharacterId).ToDictionary(m => m.CharacterId, m => new PinnedCharacter(m.VoiceId, m.Flavour, m.Edited));
+        stored.DistinctBy(m => m.CharacterId).ToDictionary(m => m.CharacterId, m => new PinnedCharacter(m.VoiceId, m.Flavour, m.Edited, m.SuggestedVoice, m.Traits));
 }

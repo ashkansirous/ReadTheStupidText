@@ -39,6 +39,12 @@ the task (new story, retelling, re-split, a fix) and any notes from the user. Wo
    name (Wolf, Papa Bear); a character whose name does not say it (Pip the pig, Little Billy the goat) goes in `tests/DinoReader.Tests/StarterAnimals.cs`
    (`ByStory`), and one that is a person, or an animal that should be cast like one, in `NotAnimalsByStory`. Anything left over is stored as none.
    List each character with its animal in your report; a wrong one is silent or sounds wrong.
+   Voices (Slice 156, Decision 161): the book, not the app, chooses each character's voice. Give every character an entry in `tests/DinoReader.Tests/StarterVoices.cs`
+   (`ByStory`, keyed by the story id, matched by character name): a suggested roster id from `CharacterRoster` (read the English list in `CharacterRosterEnglish.cs`; the ids
+   are the same in every language, and one the language lacks falls back to the closest traits), the gender, an age (`Baby`/`Child`/`Young`/`Adult`/`Old`), what it is when
+   it is not an animal (`CharacterBeing`; null for an animal, whose kind is `StarterAnimals`) and one to three voice qualities. Pick the roster character that sounds like the
+   character (a seagull is a duckling, not a mummy), no two characters of a book on one id, and the suggestion's gender the character's. Record each choice and why in the book's art
+   record under "Voices". Raise the book's version.
 4. Translations: dump the pieces (`DINO_DUMP_PIECES=1 dotnet test tests/DinoReader.Tests`) and translate
    every new or reworded piece into all 13 languages. Keep each language's own conventions (Brazilian
    Portuguese, no spaces in Japanese, the right script direction and plural forms). Translate into the
