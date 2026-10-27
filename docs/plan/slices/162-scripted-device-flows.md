@@ -1,6 +1,6 @@
 # Slice 162 — Scripted device flows: Maestro plus Debug-only test hooks
 
-*Planned.* Batch 36 (fast device tests), RTST Mobile and Dino Reader, Android and iOS. Decision 165. After Slice 161.
+*In progress (wave 2026-10-27), draft PR.* Batch 36 (fast device tests), RTST Mobile and Dino Reader, Android and iOS. Decision 165. After Slice 161.
 
 **Touches:** `.maestro/rtst/**`, `.maestro/dino/**`, `.maestro/README.md` (all new),
 `src/ReadTheStupidText.Mobile.Shared/Testing/**` (new, Debug only),
@@ -9,7 +9,7 @@
 `src/ReadTheStupidText.Mobile.Shared/ReadTheStupidText.Mobile.Shared.csproj`,
 `src/ReadTheStupidText.Mobile/MauiProgram.cs`, `src/DinoReader.App/MauiProgram.cs`,
 `src/ReadTheStupidText.Mobile/**/*.xaml`, `src/DinoReader.App/**/*.xaml` (`AutomationId`s only),
-`tools/emulator/run-flows.ps1`, `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md`
+`tools/emulator/run-flows.ps1` (new), `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md`
 
 ## Why
 
