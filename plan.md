@@ -21,6 +21,12 @@ Open slices only. Finished slices (150 rows) are in [slices-done](docs/plan/note
 | 153 | Dino: no robotic-sounding character voices | planned | | | [153-dino-no-robotic-voices.md](docs/plan/slices/153-dino-no-robotic-voices.md) |
 | 154 | Dino: vowel marks in Farsi and Arabic books | in progress | #470 | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
 | 157 | Dino: book content and the book builder out of the test project | planned | | | [157-dino-book-content-out-of-tests.md](docs/plan/slices/157-dino-book-content-out-of-tests.md) |
+| 160 | Translation on iOS (Android and iOS parity) | planned | | | [160-ios-translation-parity.md](docs/plan/slices/160-ios-translation-parity.md) |
+| 161 | Fast tests: one warm headless x86_64 emulator, x86_64 Debug build | planned | | | [161-warm-headless-x64-emulator.md](docs/plan/slices/161-warm-headless-x64-emulator.md) |
+| 162 | Fast tests: Maestro flows and Debug-only test hooks (both apps) | planned | | | [162-scripted-device-flows.md](docs/plan/slices/162-scripted-device-flows.md) |
+| 163 | Fast tests: Windows desktop tests in a headless Hyper-V VM | planned | | | [163-desktop-tests-in-hyperv-vm.md](docs/plan/slices/163-desktop-tests-in-hyperv-vm.md) |
+| 164 | Fast tests: move more logic out of UI code into unit tests | planned | | | [164-more-logic-in-unit-tests.md](docs/plan/slices/164-more-logic-in-unit-tests.md) |
+| 165 | Fast tests: audio and timing on the real phone over wireless adb | planned | | | [165-real-phone-audio-timing-checks.md](docs/plan/slices/165-real-phone-audio-timing-checks.md) |
 
 Batch 25 (119-123; 119, 120, 122, 123 built, 121 built; planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
 
@@ -34,6 +40,8 @@ Batch 28 (132-134, planned 2026-10-25, which books families like and how parents
 M3 starts with a listening page and waits on the user's listening verdicts. 154 starts with a listening test, then adds vowel marks book by book (it also waits on the user's listening verdicts; draft PR #435) after each book's Slice 146 rewrite and open illustration PR merge. The Three Little Pigs Farsi part is built (PR #470): the marks are hidden, so kids see plain Farsi and only the speech uses the marked text (this supersedes Decision 159's "marks shown on screen" in part); the other books and Arabic are still open. Decisions 155-159 (157 reverses 132).
 
 Batch 32 (155, planned 2026-10-26, Dino onboarding): Slice 155 (the first-run intro wizard, PR #432) is built, so the batch is done. Decision 160.
+
+Batch 36 (161-165, planned 2026-10-27, device tests too slow): 161 first (warm headless x86_64 emulator), then 162 (Maestro flows and hooks, needs 161), then 165 (phone audio/timing, reuses 162's hooks). 163 (Hyper-V VM; waits on the user turning on Hyper-V) and 164 (unit-test push-down, one sub-PR per item) can run beside them. Tooling only, no app behaviour change; Touches don't overlap the open Dino PRs. Decision 165.
 
 Batch 34 (157-158; 158 built, PR #472; planned 2026-10-27, after all 15 store books fell behind `main`): 158 first (small, CI only: a `publish-store` job in `release.yml` uploads every book behind the live store, Decision 163); it can run beside other work. Then 157 moves book content to `content/dino/<book>/` with a console builder and repoints the job; 157 runs alone between waves, after the open per-book PRs merge, because it moves every book's files. Decisions 162-163.
 
@@ -55,6 +63,8 @@ Batch 35 (159, built, PR #473, so the batch is done; planned 2026-10-27, the use
 - [CLAUDE.md history](docs/plan/notes/claude-md-history.md): the Batch 6-10 narrative blockquotes moved out of `CLAUDE.md` (2026-10-20).
 
 ## Outstanding work
+
+**Turn on Hyper-V (user, admin and a reboot; blocks Slice 163).** A one-time step, guided one step at a time when 163 starts. ([163](docs/plan/slices/163-desktop-tests-in-hyperv-vm.md))
 
 **Store privacy declarations (legal; gates all usage counts, Decision 145).** No `telemetry.enabled` is set to `true` for an app until its rows are ticked. Claude drafts the answers and fills the forms in the user's signed-in Chrome; the user reviews and presses Submit/Publish.
 
