@@ -35,11 +35,11 @@ internal static class StoreTexts
     public static IReadOnlyList<StoreStorySpec> All { get; } =
     [
         new(LionAndMouseId, "The Lion and the Mouse", "lion-and-mouse", LionAndMouse, 1, RetoldAesop, 4, 7, "Aesop", ["Lion", "Mouse"], 6, AddedDate),
-        new(GoldilocksId, "Goldilocks and the Three Bears", "goldilocks", Goldilocks, 3, RetoldTraditional, 3, 6, Traditional, ["Goldilocks", "Papa Bear", "Mama Bear", "Baby Bear"], 6, AddedDate),
+        new(GoldilocksId, "Goldilocks and the Three Bears", "goldilocks", Goldilocks, 3, RetoldTraditional, 3, 6, Traditional, ["Goldilocks", "Papa Bear", "Mama Bear", "Baby Bear"], 7, AddedDate),
         new(RedRidingHoodId, "Little Red Riding Hood", "red-riding-hood", RedRidingHood, 3, RetoldTraditional, 4, 7, Traditional, ["Red Riding Hood", "Mother", "Wolf", "Grandma", "Woodcutter"], 6, AddedDate),
         new(UglyDucklingId, "The Ugly Duckling", "ugly-duckling", UglyDuckling, 0, "Retold from Andersen · free to share", 5, 8, "Hans Christian Andersen", ["Mother Duck", "Duckling", "Dilly", "Hen", "Swan"], 6, AddedDate),
-        new(RedHenId, "The Little Red Hen", "little-red-hen", RedHen, 3, RetoldTraditional, 3, 6, Traditional, ["Hen", "Dog", "Cat", "Duck"], 6, AddedDate),
-        new(BillyGoatsId, "The Three Billy Goats Gruff", "billy-goats-gruff", BillyGoats, 0, RetoldTraditional, 4, 7, Traditional, ["Little Billy", "Middle Billy", "Big Billy", "Troll"], 7, AddedDate),
+        new(RedHenId, "The Little Red Hen", "little-red-hen", RedHen, 3, RetoldTraditional, 3, 6, Traditional, ["Hen", "Dog", "Cat", "Duck"], 7, AddedDate),
+        new(BillyGoatsId, "The Three Billy Goats Gruff", "billy-goats-gruff", BillyGoats, 0, RetoldTraditional, 4, 7, Traditional, ["Little Billy", "Middle Billy", "Big Billy", "Troll"], 8, AddedDate),
         new(BeanstalkId, "Jack and the Beanstalk", "jack-and-the-beanstalk", Beanstalk, 2, RetoldTraditional, 5, 8, Traditional, ["Jack", "Mother", "Giant", "Peddler"], 6, AddedDate),
         new(ElvesId, "The Elves and the Shoemaker", "elves-and-shoemaker", Elves, 1, "Retold from the Brothers Grimm · free to share", 4, 8, "Brothers Grimm", ["Hans", "Greta", "Nib", "Nob"], 6, AddedDate),
         new(TownMouseId, "The Town Mouse and the Country Mouse", "town-mouse-country-mouse", TownMouse, 2, RetoldAesop, 4, 7, "Aesop", ["Town Mouse", "Country Mouse"], 6, AddedDate),
@@ -116,23 +116,23 @@ From that day on, the Lion and the Mouse were the best of friends.
     public const string Goldilocks = """
 Once upon a time three bears lived in a little house in the woods. There was big Papa Bear, middle-sized Mama Bear and little Baby Bear.
 
-One morning their porridge was too hot to eat, so they went for a walk while it cooled. Baby Bear skipped out last, and he forgot to shut the door.
+One morning their porridge was too hot to eat, so off they went for a walk while it cooled down. Baby Bear skipped out last and, oops, he forgot to shut the door!
 ---
-Pitter, patter, pitter, patter! Down came the rain.
+Pitter-patter, pitter-patter, pitter-patter! Down came the rain.
 
-"Quick, under this big tree!" said Papa Bear. So the three bears snuggled up together under the leaves, to wait until the rain stopped.
+"Quick, under this big tree!" said Papa Bear. So the three bears snuggled up close under the leaves and waited for the rain to stop.
 ---
-A little girl called Goldilocks had wandered too far from her mum's garden, picking flowers, and the rain caught her too. She came to a little house, and its door was wide open.
+A little girl called Goldilocks was picking flowers, and she wandered much too far from her mum's garden. Then the rain caught her too! She came to a little house, and its door was wide open.
 
 "Hello? Is anybody home?" called Goldilocks. But nobody answered. Goldilocks knew she should wait outside.
 ---
-But she stepped inside to keep dry. On the table stood three bowls of porridge.
+But she went inside to keep dry. On the table there were three bowls of porridge.
 
 She tried the big bowl. "Oh, this porridge is too hot!" said Goldilocks.
 
 She tried the middle bowl. "Oh, this porridge is too cold!" said Goldilocks.
 
-She tried the little bowl. "Mmm, this porridge is just right!" said Goldilocks. And she ate it all up.
+She tried the little bowl. "Mmm, this porridge is just right!" said Goldilocks. And she gobbled it all up!
 ---
 Then Goldilocks saw three chairs.
 
@@ -140,59 +140,59 @@ She sat in the big chair. "This chair is too hard!" said Goldilocks.
 
 She sat in the middle chair. "This chair is too soft!" said Goldilocks.
 
-She sat in the little chair. "This chair is just right!" said Goldilocks. But creak, creak, crack! One leg came off, and she slid down onto the soft rug.
+She sat in the little chair. "This chair is just right!" said Goldilocks. But creak, creak, crack! Uh-oh! One leg came off, and down she slid onto the soft rug.
 ---
 Goldilocks felt sleepy, so she went upstairs. The big bed was too high. The middle bed was too lumpy. But the little bed was just right, and soon she was fast asleep.
 
-Outside, the rain stopped. Drip, drop, drip, drop. The three bears set off for home.
+Outside, the rain stopped. Drip, drip, drip! The three bears set off for home.
 ---
 The three bears came home and looked at the table.
 
-"Somebody has been eating my porridge!" said Papa Bear.
+"Somebody's been eating my porridge!" said Papa Bear.
 
-"Somebody has been eating my porridge!" said Mama Bear.
+"Somebody's been eating my porridge!" said Mama Bear.
 
-"Somebody has been eating my porridge, and it's all gone!" said Baby Bear.
+"Somebody's been eating my porridge, and it's all gone!" said Baby Bear.
 ---
 Then the three bears looked at the chairs.
 
-"Somebody has been sitting in my chair!" said Papa Bear.
+"Somebody's been sitting in my chair!" said Papa Bear.
 
-"Somebody has been sitting in my chair!" said Mama Bear.
+"Somebody's been sitting in my chair!" said Mama Bear.
 
-"Somebody has been sitting in my chair, and its leg came off!" said Baby Bear.
+"Somebody's been sitting in my chair, and its leg came off!" said Baby Bear.
 ---
 The three bears tiptoed upstairs.
 
-"Somebody has been sleeping in my bed!" said Papa Bear.
+"Somebody's been sleeping in my bed!" said Papa Bear.
 
-"Somebody has been sleeping in my bed!" said Mama Bear.
+"Somebody's been sleeping in my bed!" said Mama Bear.
 
-"Somebody is sleeping in my bed, and here she is!" said Baby Bear.
+"Somebody's sleeping in my bed, and here she is!" said Baby Bear.
 ---
-Goldilocks woke up and saw three surprised bears looking at her. "Oh!" said Goldilocks, and she sat up.
+Goldilocks opened her eyes, and there were three surprised bears looking at her. "Oh!" said Goldilocks, and she sat up.
 
-"I'm so sorry," said Goldilocks. "The rain caught me, and your door was open. I ate your porridge, and I broke your chair. I should have asked first."
+"I'm so, so sorry," said Goldilocks. "I got caught in the rain, and your door was open. I ate your porridge, and I broke your chair. I should've asked first."
 ---
-The bears looked at each other. Then Mama Bear gave Goldilocks a big, soft hug.
+The bears looked at each other. Then Mama Bear gave Goldilocks a big, soft bear hug.
 
-"Thank you for telling us the truth," said Mama Bear. "Next time, never go into a house you don't know. Find your grown-up first."
+"Thank you for telling us the truth," said Mama Bear. "But next time, never ever go into a house you don't know. Find your grown-up first, okay?"
 
-"And next time, I'll shut the door!" said Baby Bear. Everyone laughed.
+"And next time, I'll shut the door!" said Baby Bear. Everyone laughed. Ha, ha, ha!
 ---
-Downstairs, Goldilocks picked up the little chair. "Can I help mend it?" said Goldilocks.
+Downstairs, Goldilocks picked up the little chair. "Can I help fix it?" said Goldilocks.
 
-Papa Bear fetched a pot of glue. Goldilocks held the chair steady, Baby Bear held the leg, and Papa Bear stuck them together. Dab, dab, dab!
+Papa Bear got a pot of glue. Goldilocks held the chair steady, Baby Bear held the leg, and Papa Bear stuck them together. Dab, dab, dab!
 ---
-Papa Bear's porridge had cooled down at last. "Mmm, this porridge is just right!" said Papa Bear.
+And guess what? Papa Bear's porridge had cooled down at last. "Mmm, this porridge is just right!" said Papa Bear.
 
 So Mama Bear shared it out into four little bowls, and they all sat down to eat together.
 
-Baby Bear sat on his mended chair. "This chair is just right!" said Baby Bear.
+Baby Bear sat on his fixed-up chair. "This chair is just right!" said Baby Bear.
 ---
 Soon the sun came out, and a rainbow shone over the woods. So the three bears walked Goldilocks home, where her mum was waiting at the garden gate.
 
-"Thank you, bears!" said Goldilocks. "Next time, I'll stay with my mum, and I'll never go into a house I don't know."
+"Thank you, bears!" said Goldilocks. "Next time, I'll stay with my mum, and I'll never ever go into a house I don't know."
 
 "Come back soon, with your mum!" said Baby Bear.
 """;
@@ -420,7 +420,7 @@ Mix, mix, squish! Mix, mix, squish!
 
 Dog, Cat and Duck snoozed on the rug in a sleepy heap.
 ---
-At last the bread was ready, round and golden. Sniff, sniff, sniff! The smell of warm, fresh bread floated across the farm, and Dog, Cat and Duck woke up and ran to the table.
+At last the bread was ready, round and golden. Sniff, sniff, sniff! The smell of warm, fresh bread floated all over the farm. Dog, Cat and Duck woke up and ran to the table.
 
 "Who will help me eat the bread?" said Hen.
 
@@ -434,7 +434,7 @@ Then Dog looked at the bread, and he looked at Hen. "You did all the work by you
 ---
 Hen gave them a big smile. "Thank you for saying sorry," said Hen. "Bread is yummier when we share it."
 
-She broke the loaf into four pieces, and they had a picnic under the apple tree. Munch, munch, munch! Mmm, yum!
+She broke the loaf into four pieces, and they had a picnic under the apple tree. Munch, munch, munch! Yum, yum, yum!
 ---
 After the picnic there was a big pile of cups and plates. This time everyone wanted to help!
 
@@ -454,75 +454,75 @@ So the four friends planted the wheat together, side by side. Dig, dig, pat! Dig
 """;
 
     public const string BillyGoats = """
-Once upon a time three Billy Goats lived on a hill. Their name was Gruff. Little Billy was the smallest, Middle Billy was a bit bigger, and Big Billy was the biggest of all.
+Once upon a time, three Billy Goats lived on a hill. They were the Billy Goats Gruff. Little Billy was the smallest, Middle Billy was a bit bigger, and Big Billy was the biggest of all.
 
-The grass on their hill was getting short. Across the river there was a meadow full of sweet green grass.
+Uh-oh! The grass on their hill was nearly all gone. But across the river there was a meadow full of yummy green grass.
 ---
-To get to the meadow, the goats had to cross a wooden bridge. And under the bridge lived a grumpy Troll, with eyes like saucers and a nose as long as a carrot.
+To get to the meadow, the goats had to cross a little wooden bridge. And under the bridge lived a grumpy Troll, with eyes as big as saucers and a nose as long as a carrot.
 
-He sat there all alone, day after day.
+He sat there all by himself, day after day.
 ---
 Little Billy went first. Trip, trap, trip, trap, went his little hooves on the bridge.
 
-"Who is that trip-trapping over my bridge?" said Troll.
+"Who's that trip-trapping over my bridge?" said Troll.
 
-"It is only me, Little Billy Goat Gruff," said Little Billy in a tiny voice. "I am going to the meadow to eat grass."
+"It's only me, Little Billy Goat Gruff," said Little Billy in a teeny-tiny voice. "I'm going to the meadow to munch some grass."
 ---
 "Nobody crosses my bridge without a stamping match!" said Troll.
 
-"Oh, please let me cross," said Little Billy. "I am too small to stamp. Wait for my brother, who is much bigger than me."
+"Oh, please let me cross," said Little Billy. "I'm too little to stamp. Wait for my big brother. He's much bigger than me!"
 
-"Well, be off with you," said Troll. And Little Billy skipped across the bridge to the meadow.
+"Oh, all right then, off you go!" said Troll. And Little Billy skipped across the bridge to the meadow.
 ---
-Then Middle Billy came. Trip, trap, trip, trap, went his hooves on the bridge.
+Next came Middle Billy. Trip, trap, trip, trap, went his hooves on the bridge.
 
-"Who is that trip-trapping over my bridge?" said Troll.
+"Who's that trip-trapping over my bridge?" said Troll.
 
-"It is only me, Middle Billy Goat Gruff," said Middle Billy. "I am going to the meadow to eat grass."
+"It's only me, Middle Billy Goat Gruff," said Middle Billy. "I'm going to the meadow to munch some grass."
 ---
 "Nobody crosses my bridge without a stamping match!" said Troll.
 
-"Oh, please let me cross," said Middle Billy. "I am too small to stamp. Wait for my brother, who is much bigger than me."
+"Oh, please let me cross," said Middle Billy. "I'm too little to stamp. Wait for my big brother. He's much bigger than me!"
 
-"Very well, be off with you," said Troll. And Middle Billy trotted across the bridge to the meadow.
+"Oh, all right then, off you go!" said Troll. And Middle Billy trotted across the bridge to the meadow.
 ---
-At last Big Billy came. TRIP, TRAP, TRIP, TRAP, went his big hooves on the bridge. The whole bridge shook.
+Last of all came Big Billy. TRIP, TRAP, TRIP, TRAP, went his big hooves on the bridge. The whole bridge shook and shook!
 
-"Who is that trip-trapping over my bridge?" said Troll.
+"Who's that trip-trapping over my bridge?" said Troll.
 
-"It is me, Big Billy Goat Gruff," said Big Billy in a deep, loud voice.
+"It's me, Big Billy Goat Gruff," said Big Billy in a big, deep voice.
 ---
-"Nobody crosses my bridge without a stamping match!" said Troll, and he stamped onto the bridge.
+"Nobody crosses my bridge without a stamping match!" said Troll, and he stomped up onto the bridge.
 
-Stamp, stamp, stamp, went his big feet. Big Billy stood still and waited for his turn.
+Stamp, stamp, stamp, went his big bare feet. Big Billy stood very still and waited for his turn.
 ---
-But the old boards were wet and slippery. The Troll wobbled this way and that way.
+But the old boards were wet and slippery. Whoops! The Troll wibbled and wobbled, this way and that way.
 
-Splash! He slid off the low bridge and sat down in the shallow river.
+Splash, splash, splash! He slid off the low bridge and sat down in the shallow river.
 ---
-"Are you all right?" said Big Billy.
+"Are you okay?" said Big Billy.
 
-The water was shallow and cool, and it only came up to the Troll's tummy. A little fish tickled his toes, and he began to laugh.
+The water was nice and cool, and it only came up to the Troll's tummy. A little fish tickled his toes, and he started to giggle.
 
 "Ho, ho, ho! That tickles!" said Troll. And the three Billy Goats laughed too.
 ---
-The soggy Troll climbed out onto the bank below the hill and sat down. Big Billy came down from the bridge and sat beside him.
+The soggy Troll climbed out onto the bank at the bottom of the hill and sat down. Big Billy came down off the bridge and sat next to him.
 
-"Why are you so grumpy?" said Big Billy. "I think you are just lonely."
+"Why are you so grumpy?" said Big Billy. "I think you're just lonely."
 
 "Nobody ever asks me to come along," said Troll.
 ---
-"Come across with us and taste the sweet green grass," said Big Billy.
+"Come across with us and try the yummy green grass," said Big Billy.
 
-Big Billy and the Troll crossed the bridge to join the other goats in the meadow.
+So Big Billy and the Troll walked across the bridge, side by side, to the other goats in the meadow.
 ---
-The Troll nibbled a little grass, and it was so good that he gave a big, happy smile.
+The Troll nibbled a little bit of grass. Mmm, mmm, mmm! It was so yummy that he gave a great big, happy smile.
 
-"Thank you, Billy Goats," said Troll. "This is the best day I have ever had."
+"Thank you, Billy Goats," said Troll. "This is the best day ever!"
 ---
-The three Billy Goats Gruff and their new friend ate sweet green grass all summer long.
+After that, the three Billy Goats Gruff and their new friend munched yummy green grass all summer long.
 
-Every evening the goats went trip, trap, home over the bridge, and the Troll waved goodnight.
+Every evening the goats went trip, trap, trip, trap, home over the bridge, and the Troll waved goodnight.
 
 "Come back tomorrow!" said Troll.
 
