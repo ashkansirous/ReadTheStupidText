@@ -27,6 +27,9 @@ public static class KokoroVoiceTable
         ("af_nicole", "Nicole", 6),
         ("af_sky", "Sky", 10),
         ("af_nova", "Nova", 7),
+        ("af_sarah", "Sarah", 9),
+        ("af_kore", "Kore", 5),
+        ("af_aoede", "Aoede", 1),
         ("bf_emma", "Emma", 21),
         ("bf_lily", "Lily", 23),
         ("bf_alice", "Alice", 20),
@@ -75,6 +78,9 @@ public static class KokoroVoiceTable
 
     /// <summary>Whether the storyteller voices speak <paramref name="language"/>: English, Spanish, Portuguese and Chinese.</summary>
     public static bool Serves(string language) => ByLanguage.ContainsKey(language);
+
+    /// <summary>The languages the storyteller voices serve (English, Spanish, Portuguese, Chinese).</summary>
+    public static IEnumerable<string> Languages => ByLanguage.Keys;
 
     /// <summary>The English voices (the default narrator first); <see cref="VoicesFor"/> gives another language's.</summary>
     public static IReadOnlyList<VoiceInfo> Voices { get; } = ByLanguage[EnglishCode];

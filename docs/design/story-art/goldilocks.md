@@ -77,7 +77,7 @@ a bear again** (`StarterAnimals.cs` no longer stores her as no animal): the sugg
 growls like the other bears. Goldilocks' **Mum** appears only on page 14 and has no line, so the caster has no Mum to voice; the
 voice-gender test still lists her as a woman. Real casts dumped for every language on 2026-10-27 (each suggestion is kept
 everywhere; no two characters share a voice and flavour; no whisper flavour; every gender right): en am_michael Big / af_sky
-Bouncy / bf_emma Normal / bm_daniel Small; fa gyro Big / mana Small / mana Normal / gyro Small; zh yunxi Big / xiaoni Bouncy /
+Bouncy / af_sarah Normal / bm_daniel Small; fa gyro Big / mana Small / mana Normal / gyro Small; zh yunxi Big / xiaoni Bouncy /
 xiaobei Normal / yunxi Small; es and pt alex Big / dora Bouncy / dora Normal / **santa Normal**. That last one is a roster
 limit, not a clash: the Spanish and Portuguese `cub` sits on Santa (the deep voice) with no flavour, so Baby Bear sounds deeper
 than Papa Bear there; only a Core roster change (moving `cub` in `ThreeVoiceSlots` to `M1` with a free young flavour) fixes it.

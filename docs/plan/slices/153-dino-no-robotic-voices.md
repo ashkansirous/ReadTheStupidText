@@ -1,6 +1,6 @@
 # Slice 153 — Dino: no robotic-sounding character voices
 
-*Planned 2026-10-26.* Dino Reader only. **Waits on the user's listening flags** for its second half.
+*In progress (wave 2026-10-26b), draft PR.* Dino Reader only. **Waits on the user's listening flags** for its second half.
 
 **Batch:** 31 (tester review, 2026-10-26; Decision 158)
 **Touches:** `tools/voice-listen/**` (new), `src/DinoReader.Core/VoiceFlavour.cs`, `src/DinoReader.Core/FlavourTransform.cs`, `src/DinoReader.Core/CharacterRoster*.cs`, `src/DinoReader.Core/StarterUpdate.cs`, `tests/DinoReader.Tests/**`, `src/DinoReader.Core/CLAUDE.md`
@@ -29,7 +29,7 @@ robotic" as not yet verified. Which roster slots sound robotic is a judgement ma
 - [ ] Ask the user for flags (blocker: user listen).
 - [ ] Apply: change the flavour transforms or roster slots. The roster tests (`StorytellerCharacterTests`) stay green.
 - [ ] Re-render the flagged lines for a second listen.
-- [ ] Rule in `src/DinoReader.Core/CLAUDE.md`: the flavours' pitch limits.
+- [x] Pitch-limits rule in `src/DinoReader.Core/CLAUDE.md`: dropped, the listen showed the base voice (`bf_emma`), not the flavours, was the cause.
 
 ## Verification
 
@@ -39,3 +39,10 @@ robotic" as not yet verified. Which roster slots sound robotic is a judgement ma
 #### Design (Dino Reader Batch 31 mock, no screens, added 2026-10-26)
 
 Batch 31 (`docs/design/dino-reader/Dino Reader Batch 31.dc.html`) has no screen for this slice. The listening page it builds is a dev tool, not app UI. Nothing to implement from the mock.
+
+## User verdict and fix (2026-10-27)
+
+The user listened: "Splashy Duckling" (`duckling2`) and "Kind Mummy" (`mummy`) are robotic both as cast and with no flavour, so the base voice `bf_emma` is the problem, not the flavours. Everything else, including the five Ugly Duckling voices, is fine.
+- English roster: `mummy`, `hen` (the third `bf_emma` place) and `duckling2` moved off `bf_emma` to the best-graded unused Kokoro English girls (VOICES.md, all C+): `mummy` -> `af_sarah` (sid 9), `hen` -> `af_aoede` (sid 1), `duckling2` -> `af_kore` (sid 5). `bf_emma` stays in the storyteller picker (`KokoroVoiceTable`) but no roster place uses it; a grown-up's Edited pick of it is kept (tested), an un-edited one is re-picked. An Edited pick stands only in the Kokoro language it was made for (the book's choices share that language's voice pool); an edited English voice left on a Spanish book is re-picked (tested).
+- Recast: books whose authored cast names those places got a version bump so installed copies refresh. Starters: Gingerbread Man 7 -> 8, Tortoise and Hare 8 -> 9 (`.dino` rebuilt). Store (built with `DINO_BUILD_STORE=1`, not uploaded): Goldilocks 9, Peter Rabbit 9, Red Riding Hood 8, Ugly Duckling 8, Little Red Hen 8, Jack and the Beanstalk 8, Elves and the Shoemaker 8, X Marks the Treasure! 6.
+- [ ] The user's second listen of the moved places (`tools/voice-listen/out/index.html`).

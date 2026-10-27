@@ -142,7 +142,7 @@ public static class CastCharacters
         foreach (Character character in characters.OrderBy(c => KeepRank(c, pinned, bookable)))
         {
             pinned.TryGetValue(character.Id, out PinnedCharacter? stored);
-            bool standing = stored is not null && standingVoices.For(animalOf?.Invoke(character) is not null).Contains(stored.VoiceId);
+            bool standing = stored is not null && (standingVoices.For(animalOf?.Invoke(character) is not null).Contains(stored.VoiceId) || IsEditedEnginePick(stored, voices));
             if (KeepBookPick(character, stored, standing, bookable, sounds) is { } book)
             {
                 result[character.Id] = (book.VoiceId, book.Flavour, book);
@@ -155,6 +155,15 @@ public static class CastCharacters
 
         return result;
     }
+
+    // The voice ids of each Kokoro language, taken from the voice table once.
+    private static readonly IReadOnlyList<HashSet<string>> KokoroPools =
+        KokoroVoiceTable.Languages.Select(l => KokoroVoiceTable.VoicesFor(l).Select(v => v.Id).ToHashSet()).ToList();
+
+    // A grown-up's own pick stays while its voice is in the Kokoro language of the book's choices, even when no roster place uses it any more (bf_emma, Slice 153). It stands only in the
+    // language it was made for: an edited pick from another Kokoro language (an English voice left on a Spanish book) is not kept and is re-picked.
+    private static bool IsEditedEnginePick(PinnedCharacter stored, HashSet<string> choiceVoices) =>
+        stored.Edited && KokoroPools.Any(pool => pool.Contains(stored.VoiceId) && pool.Overlaps(choiceVoices));
 
     // The voices a stored pick may stand on: the choices' voices, plus the narrator-voice animals' for an animal character.
     private sealed record StandingVoices(HashSet<string> Plain, HashSet<string> WithAnimals)

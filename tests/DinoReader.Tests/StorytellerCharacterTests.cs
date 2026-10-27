@@ -140,8 +140,51 @@ public partial class StorytellerCharacterTests
 
         Assert.Equal("kokoro:am_puck", cast.VoiceFor("pig"));
         Assert.Equal(VoiceFlavour.Small, cast.Flavours!["pig"]);
-        Assert.Equal("kokoro:bf_emma", cast.VoiceFor("mother"));
+        Assert.Equal("kokoro:af_sarah", cast.VoiceFor("mother"));
         Assert.Equal(VoiceFlavour.Normal, cast.Flavours["mother"]);
+    }
+
+    [Fact]
+    public void No_english_roster_place_uses_the_robotic_bf_emma_and_the_three_moved_places_sit_on_their_new_girls()
+    {
+        var roster = CharacterRoster.For("en");
+
+        Assert.DoesNotContain(roster, c => c.VoiceId == "kokoro:bf_emma");
+        Assert.Equal("kokoro:af_sarah", roster.Single(c => c.Id == "mummy").VoiceId);
+        Assert.Equal("kokoro:af_aoede", roster.Single(c => c.Id == "hen").VoiceId);
+        Assert.Equal("kokoro:af_kore", roster.Single(c => c.Id == "duckling2").VoiceId);
+    }
+
+    [Fact]
+    public void A_grown_ups_edited_pick_of_bf_emma_is_never_re_picked_but_an_unedited_one_is()
+    {
+        var characters = new[] { C("gran", "Grandma", Gender.Female, 40) };
+        var roster = CharacterRoster.For("en");
+        string narrator = CharacterRoster.Narrators("en")[0].VoiceId;
+        var choices = CharacterRoster.Choices(CharacterRoster.Speakers("en"), narrator);
+
+        VoiceCast edited = CastCharacters.Cast(
+            characters, choices, roster, narrator, Guess, new Dictionary<string, PinnedCharacter> { ["gran"] = new("kokoro:bf_emma", VoiceFlavour.Sleepy, Edited: true) });
+        VoiceCast automatic = CastCharacters.Cast(
+            characters, choices, roster, narrator, Guess, new Dictionary<string, PinnedCharacter> { ["gran"] = new("kokoro:bf_emma", VoiceFlavour.Sleepy, Edited: false) });
+
+        Assert.Equal("kokoro:bf_emma", edited.VoiceFor("gran"));
+        Assert.Equal(VoiceFlavour.Sleepy, edited.Flavours!["gran"]);
+        Assert.NotEqual("kokoro:bf_emma", automatic.VoiceFor("gran"));
+    }
+
+    [Fact]
+    public void An_edited_english_pick_does_not_stand_on_a_spanish_book()
+    {
+        var characters = new[] { C("gran", "Grandma", Gender.Female, 40) };
+        var roster = CharacterRoster.For("es");
+        string narrator = CharacterRoster.Narrators("es")[0].VoiceId;
+        var choices = CharacterRoster.Choices(CharacterRoster.Speakers("es"), narrator);
+
+        VoiceCast cast = CastCharacters.Cast(
+            characters, choices, roster, narrator, Guess, new Dictionary<string, PinnedCharacter> { ["gran"] = new("kokoro:bf_emma", VoiceFlavour.Sleepy, Edited: true) });
+
+        Assert.NotEqual("kokoro:bf_emma", cast.VoiceFor("gran"));
     }
 
     [Fact]
