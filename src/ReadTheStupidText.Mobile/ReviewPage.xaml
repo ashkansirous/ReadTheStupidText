@@ -43,14 +43,14 @@
                     <GradientStop Color="{StaticResource BrandEnd}" Offset="1.0" />
                 </LinearGradientBrush>
             </Grid.Background>
-            <Grid x:Name="BackButton" Grid.Column="0" WidthRequest="48" HeightRequest="48">
+            <Grid x:Name="BackButton" AutomationId="ReviewBack" Grid.Column="0" WidthRequest="48" HeightRequest="48">
                 <Grid.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnBackTapped" />
                 </Grid.GestureRecognizers>
                 <Path Data="{StaticResource IconBack}" Style="{StaticResource IconPath}" Stroke="White" StrokeThickness="2.4" Scale="0.9167" />
             </Grid>
             <Label x:Name="TitleLabel" Grid.Column="1" TextColor="White" FontSize="18" FontAttributes="Bold" VerticalOptions="Center" />
-            <Border x:Name="PasteButton" Grid.Column="2" HeightRequest="40" Padding="14,0" StrokeShape="RoundRectangle 20"
+            <Border x:Name="PasteButton" AutomationId="ReviewPaste" Grid.Column="2" HeightRequest="40" Padding="14,0" StrokeShape="RoundRectangle 20"
                     Stroke="Transparent" BackgroundColor="#2EFFFFFF" VerticalOptions="Center">
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnPasteTapped" />
@@ -69,7 +69,7 @@
                     Padding="0" BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}">
                 <!-- The wait overlay (Slice 138) is added last in code, so it covers the whole box while translating. -->
                 <Grid x:Name="TextBoxContent">
-                    <Editor x:Name="TextEditor" Margin="16,14" FontSize="18" BackgroundColor="Transparent" TextChanged="OnEditorTextChanged"
+                    <Editor x:Name="TextEditor" AutomationId="ReviewEditor" Margin="16,14" FontSize="18" BackgroundColor="Transparent" TextChanged="OnEditorTextChanged"
                             TextColor="{AppThemeBinding Light=#1f2027, Dark=#E6E6EA}" Placeholder="{x:Static res:AppResources.Reader_EditorHint}" />
                 </Grid>
             </Border>
@@ -110,7 +110,7 @@
                 </Border>
 
                 <!-- The one big button: "Translate and read", or "Read" when unticked or nothing to translate. -->
-                <Border x:Name="ReadButton" HeightRequest="62" StrokeShape="RoundRectangle 16" Stroke="Transparent">
+                <Border x:Name="ReadButton" AutomationId="ReviewRead" HeightRequest="62" StrokeShape="RoundRectangle 16" Stroke="Transparent">
                     <Border.Shadow>
                         <Shadow Brush="#5B57E8" Opacity="0.32" Radius="14" Offset="0,4" />
                     </Border.Shadow>

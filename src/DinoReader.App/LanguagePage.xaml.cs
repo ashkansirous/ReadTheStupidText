@@ -48,10 +48,17 @@ public static class LanguageChoice
 	/// <summary>Switches the voice, the screens' words and the translation language to <paramref name="code"/>.</summary>
 	public static void Apply(string code, SpokenLanguage spoken)
 	{
+		string language = ApplyScreens(code);
+		spoken.Use(language);
+	}
+
+	/// <summary>Switches the words on the screens (and the translation language) to <paramref name="code"/>; the voice is left as it is.</summary>
+	public static string ApplyScreens(string code)
+	{
 		string language = UiLanguage.Resolve(code);
 		Preferences.Default.Set(UiLanguageKey, language);
 		UiCulture.Apply(CultureInfo.GetCultureInfo(language));
-		spoken.Use(language);
+		return language;
 	}
 
 	/// <summary>Whether a voice pack for <paramref name="code"/> is installed.</summary>

@@ -124,6 +124,27 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		window.Page = _navigation = BuildNavigation(root);
 	}
 
+#if DEBUG
+	/// <summary>
+	/// Debug test hook (Slice 162): finishes first run for <paramref name="code"/> like the first-run page (screen language, voice language, no
+	/// intro, a fresh gallery root); false when there is no window. Differences, on purpose: it stays in kids' mode with no hand-over
+	/// (flows tap the shelf's tiles), and it does not start the voice pack (SpokenLanguage.Use crashes the Debug x86_64 emulator build, see the slice file).
+	/// </summary>
+	public bool CompleteFirstRun(string code)
+	{
+		// Acts only while the first-run page is showing: before that (no window, page not built yet) the caller retries, after it main is up and there is nothing to do.
+		if (Windows.FirstOrDefault()?.Page is not NavigationPage { RootPage: FirstRunPage })
+		{
+			return false;
+		}
+
+		_services.GetRequiredService<ISettingsStore>().Language = LanguageChoice.ApplyScreens(code);
+		IntroState.Clear();
+		RebuildRoot();
+		return true;
+	}
+#endif
+
 	// A build below the config's minVersion opens on the "Please update" page and nothing else (Slice 132); a fresh install opens
 	// on the first-run language page (Slice 93); every later start opens on the kids' gallery.
 	private Page RootPage()

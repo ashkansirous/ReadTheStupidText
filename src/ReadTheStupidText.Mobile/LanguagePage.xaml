@@ -25,7 +25,7 @@
             <VerticalStackLayout Padding="14" Spacing="14">
                 <Border Padding="0" StrokeShape="RoundRectangle 14" Stroke="{StaticResource CardBorder}"
                         BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource OffBlack}}">
-                    <VerticalStackLayout x:Name="LanguageList" />
+                    <VerticalStackLayout x:Name="LanguageList" AutomationId="LanguageList" />
                 </Border>
 
                 <VerticalStackLayout x:Name="ProgressSection" Spacing="8" IsVisible="False">
@@ -41,7 +41,7 @@
             <!-- Batch 29 R11 (Slice 137): one line about the anonymous counts; nothing to tap, no consent prompt (Decision 143). -->
             <Label x:Name="CountsNoteLabel" Margin="22,0,22,0" FontSize="13.5" LineHeight="1.45" HorizontalTextAlignment="Center"
                    TextColor="{AppThemeBinding Light=#99000000, Dark={StaticResource TextSecondaryDark}}" />
-            <Button x:Name="ContinueButton" Margin="14,12,14,14" IsEnabled="False" Clicked="OnContinueClicked" />
+            <Button x:Name="ContinueButton" AutomationId="LanguageContinue" Margin="14,12,14,14" IsEnabled="False" Clicked="OnContinueClicked" />
         </VerticalStackLayout>
     </Grid>
 </ContentPage>

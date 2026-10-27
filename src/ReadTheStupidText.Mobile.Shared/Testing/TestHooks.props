@@ -1,0 +1,10 @@
+<Project>
+	<!-- Slice 162: the iOS URL scheme of the Debug-only test hooks, merged into the app's Info.plist in Debug builds only.
+	     An app imports this file and sets TestHookPlist to TestHooks.Rtst.plist or TestHooks.Dino.plist first:
+	       <PropertyGroup><TestHookPlist>TestHooks.Rtst.plist</TestHookPlist></PropertyGroup>
+	       <Import Project="..\ReadTheStupidText.Mobile.Shared\Testing\TestHooks.props" />
+	     Release builds get no scheme. -->
+	<ItemGroup Condition="'$(Configuration)' == 'Debug' And '$(TestHookPlist)' != '' And $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+		<PartialAppManifest Include="$(MSBuildThisFileDirectory)$(TestHookPlist)" />
+	</ItemGroup>
+</Project>

@@ -6,6 +6,9 @@ using ReadTheStupidText.Application.Images;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Documents;
 using ReadTheStupidText.Mobile.Shared;
+#if DEBUG
+using ReadTheStupidText.Mobile.Shared.Testing;
+#endif
 
 namespace DinoReader;
 
@@ -16,6 +19,11 @@ public static class MauiProgram
 
 	// Rendered PDF pages wait here (cache) until a story keeps them.
 	private const string PdfPagesFolder = "pdf-pages";
+
+#if DEBUG
+	// Slice 162: the iOS URL scheme of the Debug-only scripted-flow hooks (Android listens for a broadcast instead).
+	private const string TestHookScheme = "dino-test";
+#endif
 
 	public static MauiApp CreateMauiApp()
 	{
@@ -58,6 +66,7 @@ public static class MauiProgram
 
 #if DEBUG
 		builder.Logging.AddDebug();
+		builder.AddTestHooks(TestHookScheme);
 #endif
 
 		MauiApp app = builder.Build();
@@ -65,6 +74,9 @@ public static class MauiProgram
 		StoryJson.LegacyNarratorOf = language => app.Services.GetRequiredService<StoryVoicing>().LegacyNarratorOf(language);
 		// Counts left from an earlier session go out now (Slice 133); the counter does nothing when counting is off.
 		_ = app.Services.GetRequiredService<UsageCounter>().FlushAsync();
+#if DEBUG
+		TestHooks.Install(app.Services, TestHookScheme, code => (Microsoft.Maui.Controls.Application.Current as DinoApp)?.CompleteFirstRun(code) ?? false);
+#endif
 		return app;
 	}
 

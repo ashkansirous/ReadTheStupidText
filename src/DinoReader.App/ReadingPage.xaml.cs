@@ -735,6 +735,9 @@ public partial class ReadingPage : ContentPage
 	// After a finished read a swipe also means "from here": Play then starts at the shown page.
 	private void OnPageSwiped(object? sender, int page)
 	{
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"{ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.PagePrefix} {page}");
+#endif
 		_session.ClearFinished();
 		_follower.Swiped(page);
 		RenderChrome();

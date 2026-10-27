@@ -1,0 +1,34 @@
+# Slice 162: pick 1.5x in Settings; the state hook (a relaunch with cmd: state) then reports speed=1.5.
+# expect-log: STATE language=en reader=Idle speed=1.5
+appId: uk.sirous.readthestupidtext
+name: Speed change
+---
+- launchApp:
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: SettingsButton
+    timeout: 20000
+- tapOn:
+    id: SettingsButton
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: SpeedPresets
+    timeout: 10000
+- tapOn:
+    id: Speed_1.5
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: SettingsBack
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: PlayButton
+    timeout: 10000
+- launchApp:
+    arguments:
+      cmd: state

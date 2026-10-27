@@ -1,0 +1,34 @@
+# Slice 162: skip first run, put text in the review page, Read, and let the reader start and finish.
+# expect-log: READ_START
+# expect-log: READ_END
+appId: uk.sirous.readthestupidtext
+name: Paste text and read it
+---
+- launchApp:
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: EditLink
+    timeout: 20000
+- tapOn:
+    id: EditLink
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: ReviewEditor
+    timeout: 10000
+- tapOn:
+    id: ReviewEditor
+    waitToSettleTimeoutMs: 300
+- inputText: "One short sentence to read."
+- hideKeyboard
+- tapOn:
+    id: ReviewRead
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: ReadingText
+    timeout: 15000

@@ -1,7 +1,9 @@
 <#
 .SYNOPSIS
   Starts the RTST_Test AVD headless (no window) on fixed port 5554, or reuses a running one.
-  Quick-boot snapshots make every start after the first a warm resume. RAM and GPU come from
+  Always a cold boot (~45 s) with -no-snapshot-load -no-snapshot-save: a resumed snapshot carried stale
+  app/system state and broke Maestro flows (Slice 162), so none is ever loaded or written. "Warm" means an
+  already-running emulator is reused. RAM and GPU come from
   command-line flags, so the AVD's config.ini (outside the repo) is never edited.
   A machine-wide mutex serialises concurrent callers; state lives in <worktrees>\.emulator\.
 #>
@@ -33,7 +35,8 @@ function Start-Emulator {
     $null = New-Item -ItemType Directory -Force $script:StateDir
     $sw = [Diagnostics.Stopwatch]::StartNew()
     $emulatorArgs = @('-avd', $script:AvdName, '-port', $script:Port, '-no-window', '-no-boot-anim', '-no-audio',
-                      '-gpu', $Gpu, '-memory', $MemoryMb, '-no-metrics')
+                      '-gpu', $Gpu, '-memory', $MemoryMb, '-no-metrics',
+                      '-no-snapshot-load', '-no-snapshot-save')
     $proc = Start-Process -FilePath $script:EmulatorExe -ArgumentList $emulatorArgs -WindowStyle Hidden -PassThru
     @{ pid = $proc.Id; port = $script:Port; serial = $script:Serial } | ConvertTo-Json | Set-Content $script:StateFile
     if (-not (Wait-BootCompleted $TimeoutSeconds $proc)) {

@@ -14,7 +14,7 @@
          texts are set in code, after the pick, so they speak the language just chosen. -->
     <Grid>
         <!-- Screen 16: language. -->
-        <Grid x:Name="LanguagePanel" RowDefinitions="*,Auto" Padding="22,0,22,22">
+        <Grid x:Name="LanguagePanel" AutomationId="FirstRunLanguage" RowDefinitions="*,Auto" Padding="22,0,22,22">
             <ScrollView>
                 <VerticalStackLayout Spacing="14" Padding="0,28,0,16">
                     <Border WidthRequest="92" HeightRequest="92" StrokeThickness="0" HorizontalOptions="Center">
@@ -34,7 +34,7 @@
         </Grid>
 
         <!-- Screen 17: the voice downloads. -->
-        <Grid x:Name="DownloadPanel" RowDefinitions="*,Auto" Padding="22,0,22,22" IsVisible="False">
+        <Grid x:Name="DownloadPanel" AutomationId="FirstRunDownload" RowDefinitions="*,Auto" Padding="22,0,22,22" IsVisible="False">
             <VerticalStackLayout Spacing="14" Padding="0,56,0,0">
                 <Label x:Name="DownloadTitle" FontSize="22" FontAttributes="Bold" HorizontalTextAlignment="Center" SemanticProperties.HeadingLevel="Level1" />
                 <Label x:Name="DownloadSub" FontSize="14" TextColor="{StaticResource Body}" HorizontalTextAlignment="Center" />
@@ -65,7 +65,7 @@
         </Grid>
 
         <!-- Screen 18: ready. -->
-        <Grid x:Name="ReadyPanel" RowDefinitions="*,Auto,Auto" Padding="22,0,22,22" IsVisible="False">
+        <Grid x:Name="ReadyPanel" AutomationId="FirstRunReady" RowDefinitions="*,Auto,Auto" Padding="22,0,22,22" IsVisible="False">
             <ScrollView Grid.Row="0">
             <VerticalStackLayout Spacing="14" Padding="0,56,0,0">
                     <Border WidthRequest="92" HeightRequest="92" StrokeThickness="0" HorizontalOptions="Center">
