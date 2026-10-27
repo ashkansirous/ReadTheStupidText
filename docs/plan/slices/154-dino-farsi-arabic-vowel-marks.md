@@ -70,7 +70,7 @@ Source: `docs/design/dino-reader/Dino Reader Batch 31.dc.html`, screen 72 (lines
 - **From review:** both passes done, fixes applied. `DinoReader.Tests` 1527/1527; Android build clean.
 - **Device (emulator, headless):** shown text has no marks; spoken text marked on p1, p2 and ezafe lines; highlight follows; English unchanged; no crash; v9 to v11 upgrade kept Created/SourceId.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-27)
 
 - The `speak:<lang>` convention is already in `src/DinoReader.Core/CLAUDE.md` (Slice 154); nothing further to add.
 

@@ -19,7 +19,7 @@ Open slices only. Finished slices (148 rows) are in [slices-done](docs/plan/note
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
 | 153 | Dino: no robotic-sounding character voices | planned | | | [153-dino-no-robotic-voices.md](docs/plan/slices/153-dino-no-robotic-voices.md) |
-| 154 | Dino: vowel marks in Farsi and Arabic books | planned | | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
+| 154 | Dino: vowel marks in Farsi and Arabic books | in progress | #470 | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
 | 157 | Dino: book content and the book builder out of the test project | planned | | | [157-dino-book-content-out-of-tests.md](docs/plan/slices/157-dino-book-content-out-of-tests.md) |
 | 158 | Dino: publish store books on every merge | planned | | | [158-dino-publish-store-books.md](docs/plan/slices/158-dino-publish-store-books.md) |
 | 159 | Dino: everything in the chosen language | planned | | | [159-dino-everything-in-my-language.md](docs/plan/slices/159-dino-everything-in-my-language.md) |
@@ -33,7 +33,7 @@ Batch 27 (127-131, planned 2026-10-25, after Dino work kept resubmitting Read Th
 Batch 28 (132-134, planned 2026-10-25, which books families like and how parents use the app): 132 (the remote config the counts are switched by, and the forced update) and 133 (first events, privacy texts and store forms) and 134 (the rest of the events and the report, PR #368) are built, so the batch is done. All three edit `worker/` and Dino's `MauiProgram`, so one at a time. Decisions 138-142.
 
 
-M3 starts with a listening page and waits on the user's listening verdicts. 154 starts with a listening test, then adds vowel marks book by book (it also waits on the user's listening verdicts; draft PR #435) after each book's Slice 146 rewrite and open illustration PR merge. Decisions 155-159 (157 reverses 132).
+M3 starts with a listening page and waits on the user's listening verdicts. 154 starts with a listening test, then adds vowel marks book by book (it also waits on the user's listening verdicts; draft PR #435) after each book's Slice 146 rewrite and open illustration PR merge. The Three Little Pigs Farsi part is built (PR #470): the marks are hidden, so kids see plain Farsi and only the speech uses the marked text (this supersedes Decision 159's "marks shown on screen" in part); the other books and Arabic are still open. Decisions 155-159 (157 reverses 132).
 
 Batch 32 (155, planned 2026-10-26, Dino onboarding): Slice 155 (the first-run intro wizard, PR #432) is built, so the batch is done. Decision 160.
 
@@ -84,6 +84,7 @@ Built but not verified (details in each slice file):
 - Slice 146: native read of all 13 translations per book; a listen to the new sound-word triples in ar, da, fi, fr, ja, nb, nl, pt, ru, sv; upload of every rewritten store book (`tools/upload-store-story.ps1`; needs the user's OK) then compare `/api/stories`; Good Enough pages 1-7 keep words printed in the pictures (redraw is the user's call) ([slice](docs/plan/slices/146-dino-books-kid-friendly-language.md)).
 - Slice 152: Billy Goats store book on device; hearing a recast animal by ear; Windows head and iOS; native read of the `Settings_AnimalSounds_*` strings; upload and live check of the 11 bumped store books (needs the user's OK) ([slice](docs/plan/slices/152-dino-animal-from-the-book.md)).
 - Slice 156: device listen of each book's cast in en/fa/es/pt/zh; fa/es/pt roster limits (few voices per gender, narrator voice shared; see each art record); Chinese Treasure on device; Windows head and iOS; store upload (user's OK) ([slice](docs/plan/slices/156-dino-authored-character-voices.md)).
+- Slice 154 (Three Little Pigs Farsi part, PR #470): recordings surviving the starter refresh (none existed in the test); p5 تق تق تق, p14 شالاپ/آپچی and p15 چیک replacements await the user's pick; Farsi review of the other 14 books; Arabic diacritizer and its listen test ([slice](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md)).
 - Slice 96: emulator in Farsi and Arabic (gallery, gate, wizard, store, backup, reader, swipe direction, highlight on RTL lines); Windows head gallery and reader ([slice](docs/plan/slices/96-dino-layout-never-mirrors.md)).
 - Slice 97: Windows head: the AddBook icon rendering and the gate opening; native-speaker read of the `Gallery_AddBook` strings ([slice](docs/plan/slices/97-dino-add-book-button.md)).
 - Slice 99: the RTST phone highlight covers a whole 3-sentence `SpeechTextChunker` chunk, not one sentence; full TalkBack walk-through; iOS device run; Settings voice name does not refresh after a pack installs ([slice](docs/plan/slices/99-rtst-mobile-minimal-main-page.md)).
