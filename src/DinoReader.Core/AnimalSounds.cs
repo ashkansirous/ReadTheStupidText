@@ -167,6 +167,8 @@ public static partial class AnimalSounds
             return false;
         }
 
+        // A spoken Farsi or Arabic line carries vowel marks (Slice 154); the stems are plain.
+        text = ArabicMarks.Strip(text);
         if (LanguageRules.For(language).Script == ScriptStyle.Unspaced)
         {
             return entry.Stems.Any(stem => SaysUnspaced(text, stem));

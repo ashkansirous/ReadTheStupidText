@@ -48,7 +48,7 @@ internal static class StarterBuilder
     public static IReadOnlyDictionary<string, int> StarterVersions { get; } = new Dictionary<string, int>
     {
         [GoodEnoughFile] = 4,
-        ["three-little-pigs.dino"] = 10,
+        ["three-little-pigs.dino"] = 11,
         ["gingerbread-man.dino"] = 8,
         ["tortoise-and-hare.dino"] = 9,
     };
@@ -259,6 +259,12 @@ internal static class StarterBuilder
             if (File.Exists(path))
             {
                 tables[language] = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(path)) ?? [];
+            }
+
+            string speakPath = Path.Combine(TranslationsFolder(), $"{stem}.{language}.speak.json");
+            if (File.Exists(speakPath))
+            {
+                tables[BundledTranslations.SpeakKey(language)] = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(speakPath)) ?? [];
             }
         }
 

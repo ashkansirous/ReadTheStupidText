@@ -60,7 +60,7 @@ public sealed class StoryTranslator
 
 	/// <summary>The pieces with their text translated; a missing language model leaves the story as it was.</summary>
 	public async Task<Outcome> TranslateAsync(
-		Story story, IReadOnlyList<SplitSegment> pieces, CancellationToken cancellationToken)
+		Story story, IReadOnlyList<SplitSegment> pieces, CancellationToken cancellationToken, bool forSpeech = false)
 	{
 		string source = UiLanguage.Resolve(story.Language);
 		string target = MyLanguage;
@@ -73,7 +73,9 @@ public sealed class StoryTranslator
 		PieceTranslator engine = (text, token) => PieceAsync(text, source, target, token);
 		try
 		{
-			var translated = await StoryTranslation.TranslateAsync(pieces, BundledTranslations.Compose(story, target, _engine is null ? null : engine), cancellationToken);
+			PieceTranslator? fallback = _engine is null ? null : engine;
+			PieceTranslator table = forSpeech ? BundledTranslations.ComposeSpoken(story, target, fallback) : BundledTranslations.Compose(story, target, fallback);
+			var translated = await StoryTranslation.TranslateAsync(pieces, table, cancellationToken);
 			return new Outcome(translated, true);
 		}
 		catch (TranslationModelUnavailableException ex)

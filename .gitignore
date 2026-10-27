@@ -79,6 +79,9 @@ $RECYCLE.BIN/
 node_modules/
 .wrangler/
 
+# Scratch work folder (Slice 154: venv, audio, review answers); never committed
+/tmp/
+
 # Python tooling (Slice 145: tools/sound-words-test)
 __pycache__/
 *.pyc

@@ -75,7 +75,7 @@ public sealed class StoryVoicing
 			return await Task.Run(() => VoicedInOwnLanguage(story, prepared), cancellationToken);
 		}
 
-		StoryTranslator.Outcome outcome = await _translator.TranslateAsync(story, prepared.Pieces, cancellationToken);
+		StoryTranslator.Outcome outcome = await _translator.TranslateAsync(story, prepared.Pieces, cancellationToken, forSpeech: true);
 		if (!outcome.Translated)
 		{
 			// The story is read as written, in its own language and voices, so the spoken pack goes back to its language too.

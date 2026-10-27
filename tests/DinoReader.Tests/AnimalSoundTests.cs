@@ -186,6 +186,20 @@ public class AnimalSoundTests
         Assert.Equal(says, AnimalSounds.SaysIt(text, AnimalKind.Sheep, "en"));
 
     [Fact]
+    public void A_spoken_line_with_vowel_marks_still_says_the_sound()
+    {
+        Assert.True(AnimalSounds.SaysIt("گُرْگْ گُفْتْ: عُوعُو", AnimalKind.Wolf, "fa"));
+        Assert.False(AnimalSounds.SaysIt("گُرْگْ گُفْتْ", AnimalKind.Wolf, "fa"));
+    }
+
+    [Fact]
+    public void A_spoken_line_with_dagger_alef_tatweel_or_quranic_marks_still_says_the_sound()
+    {
+        Assert.True(AnimalSounds.SaysIt("گرگ گفت: عـوٰعو", AnimalKind.Wolf, "fa"));
+        Assert.True(AnimalSounds.SaysIt("گرگ گفت: عوۖعوۭ", AnimalKind.Wolf, "fa"));
+    }
+
+    [Fact]
     public void An_everyday_meh_is_not_a_bleat_but_a_stretched_one_is()
     {
         Assert.False(AnimalSounds.SaysIt("Meh, whatever", AnimalKind.Goat, "en"));
