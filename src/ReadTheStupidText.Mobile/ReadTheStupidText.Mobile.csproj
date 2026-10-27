@@ -43,8 +43,8 @@
 		     devices. Do not lower it. -->
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">28.0</SupportedOSPlatformVersion>
 
-		<!-- iOS 15 is the MAUI 10 minimum for iOS; it covers every iPhone back to the 6s. -->
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
+		<!-- iOS 15.5 is ML Kit Translate's own floor (Slice 160); MAUI 10's is 15.0. It still covers every iPhone back to the 6s. -->
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.5</SupportedOSPlatformVersion>
 	</PropertyGroup>
 
 	<ItemGroup>

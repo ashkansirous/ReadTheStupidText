@@ -35,9 +35,9 @@
   <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>无法启动扫描仪</value></data>
   <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>无法启动扫描仪——请重试。</value></data>
   <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>扫描仪正在准备</value></data>
-  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Google Play 服务仍在准备文档扫描仪，请稍后再试。</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>文档扫描仪仍在准备中，请稍后再试。</value></data>
   <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>扫描仪不可用</value></data>
-  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>文档扫描仪需要 Google Play 服务。请改为拍摄一张照片。</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>此设备无法使用文档扫描仪。请改为拍摄一张照片。</value></data>
   <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>需要相机权限</value></data>
   <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>请在“设置”中授予相机权限以拍摄文字。</value></data>
   <data name="Reader_NoCameraTitle" xml:space="preserve"><value>没有相机</value></data>

@@ -32,7 +32,7 @@
 
 		<!-- Same floors as the apps (Decision 82 for Android). -->
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">28.0</SupportedOSPlatformVersion>
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.5</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 	</PropertyGroup>
 
@@ -104,6 +104,13 @@
 		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-arm64" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
 		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-x64" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
 		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-x86" Version="$(SherpaIosVersion)" ExcludeAssets="all" />
+	</ItemGroup>
+
+	<!-- Slice 160: ML Kit Translate on iOS (Platforms/iOS/MlKitTranslator.cs), the twin of the Android package above.
+	     The binding embeds TranslateMLKit.xcframework (ML Kit's own floor is iOS 15.5); it is built for net9.0-ios18.0.
+	     A model per language (~30 MB) is downloaded by ML Kit on first use. -->
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+		<PackageReference Include="EngageSolutionsGroup.Apple.MLKitTranslate" Version="8.1.0" />
 	</ItemGroup>
 
 	<!-- Slice 67: on Windows the neural voice and the WinRT fallback voice are Infrastructure's readers

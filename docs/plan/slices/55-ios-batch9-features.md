@@ -101,7 +101,7 @@ on-device translation and the sentence head start.
   photo add and microphone prompts; `zh` is `zh-Hans.lproj`) and `CFBundleLocalizations` plus
   `CFBundleDevelopmentRegion` in `Info.plist`. The translations are mine and have not been reviewed by a
   native speaker. RTL mirroring on iOS is unverified (device item).
-- **Translation: not shipped on iOS.** Research: Apple's Translation framework (iOS 18+; the programmatic
+- **Translation: not shipped on iOS.** *(Reversed by Slice 160, 2026-10-27: iOS now ships ML Kit Translate through the binding below; the text that follows is the history.)* Research: Apple's Translation framework (iOS 18+; the programmatic
   `TranslationSession(installedSource:target:)` is newer) is Swift-only, with no Objective-C header and no
   binding in `dotnet/macios`, and its supported pairs have no Farsi; language packs download through a
   SwiftUI `translationTask`. The only .NET ML Kit iOS binding on NuGet is a single-maintainer package
