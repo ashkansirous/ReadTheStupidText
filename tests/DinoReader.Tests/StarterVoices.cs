@@ -27,6 +27,15 @@ internal static class StarterVoices
             new("Pancake Polly", "mummy", Gender.Female, CharacterAge.Adult, CharacterBeing.Pirate, [VoiceQuality.Warm, VoiceQuality.Bouncy]),
         ],
 
+        // The Three Billy Goats Gruff: three brothers ("his hooves"), so boys' voices rising in size; the bleat comes from their book animal (Goat), not the voice.
+        // The picker gave the Troll the Rumbly Dragon and the brothers girls' lamb and sheep voices (Big Billy, "a big, deep voice", the sleepy sheep). Farsi has no troll: its trait match picks.
+        [StoreTexts.BillyGoatsId] =
+        [
+            new("Little Billy", "piglet", Gender.Male, CharacterAge.Child, null, [VoiceQuality.Squeaky, VoiceQuality.Bright]),
+            new("Middle Billy", "knight", Gender.Male, CharacterAge.Young, null, [VoiceQuality.Bold, VoiceQuality.Bright]),
+            new("Big Billy", "giant", Gender.Male, CharacterAge.Adult, null, [VoiceQuality.Booming, VoiceQuality.Warm]),
+            new("Troll", "troll", Gender.Male, CharacterAge.Adult, CharacterBeing.Troll, [VoiceQuality.Gruff]),
+        ],
         // Good Enough: Hazelnut, the squirrel best friend who says the last line (a squirrel has no animal sound, so no kind).
         [StarterBuilder.GoodEnoughId] =
         [
