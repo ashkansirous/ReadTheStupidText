@@ -35,9 +35,9 @@
   <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>تعذّر تشغيل الماسح</value></data>
   <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>تعذّر تشغيل الماسح — حاول مرة أخرى.</value></data>
   <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>الماسح قيد التجهيز</value></data>
-  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>لا تزال خدمات Google Play تجهّز ماسح المستندات. حاول مرة أخرى بعد قليل.</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>لا يزال ماسح المستندات قيد التجهيز. حاول مرة أخرى بعد قليل.</value></data>
   <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>الماسح غير متاح</value></data>
-  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>يحتاج ماسح المستندات إلى خدمات Google Play. التقط صورة واحدة بدلاً من ذلك.</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>ماسح المستندات غير متاح على هذا الجهاز. التقط صورة واحدة بدلاً من ذلك.</value></data>
   <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>الوصول إلى الكاميرا مطلوب</value></data>
   <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>امنح إذن الكاميرا من الإعدادات لتصوير النص.</value></data>
   <data name="Reader_NoCameraTitle" xml:space="preserve"><value>لا توجد كاميرا</value></data>

@@ -4,7 +4,7 @@
   docs/plan/slices/137-rtst-phone-usage-counts.md and prints one table per question.
 
 .DESCRIPTION
-  Reads the dataset `rtst_usage` that worker/events.ts (handleRtstEvents) writes (needs the RTST_USAGE binding to be switched on first, see
+  Reads the dataset `rtst_usage` that worker/events.ts (handleRtstEvents) writes (needs telemetry switched on in readthestupidtext/config.json, see
   STORE.md, "Phone apps: anonymous usage counts"). Blob layout, one data point per count: blob1 name, blob2 app version, blob3 platform,
   blob4 UTC day, blob5 language, blob6 source language, blob7 mode (original | translation), blob8 voice engine, blob9 voice is default (yes | no),
   blob10 text length bucket, blob11 OS major version, blob12 stage, blob13 outcome, blob14 duration bucket, blob15 source (Windows reads only: selection | clipboard | hotkey | panel), blob16 early (timing counts only: yes when the head was prepared before the tap, Slice 139), blob17 wait stage (wait_shown and wait_cancelled only, Slice 148: preparing_voice | stalled | downloading_model | translating | reading_pictures | saving | getting_file; blob14 is how long the overlay showed); a field an event does not carry is

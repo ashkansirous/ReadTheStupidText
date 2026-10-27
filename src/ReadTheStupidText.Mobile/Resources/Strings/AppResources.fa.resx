@@ -35,9 +35,9 @@
   <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>اسکنر راه‌اندازی نشد</value></data>
   <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>اسکنر راه‌اندازی نشد — دوباره تلاش کنید.</value></data>
   <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>اسکنر در حال آماده‌سازی است</value></data>
-  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>خدمات Google Play هنوز اسکنر سند را آماده می‌کند. چند لحظه دیگر دوباره تلاش کنید.</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>اسکنر سند هنوز در حال آماده‌سازی است. چند لحظه دیگر دوباره تلاش کنید.</value></data>
   <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>اسکنر در دسترس نیست</value></data>
-  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>اسکنر سند به خدمات Google Play نیاز دارد. به‌جای آن یک عکس بگیرید.</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>اسکنر سند در این دستگاه در دسترس نیست. به‌جای آن یک عکس بگیرید.</value></data>
   <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>دسترسی به دوربین لازم است</value></data>
   <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>برای عکس گرفتن از متن، در تنظیمات اجازهٔ دسترسی به دوربین را بدهید.</value></data>
   <data name="Reader_NoCameraTitle" xml:space="preserve"><value>دوربین موجود نیست</value></data>

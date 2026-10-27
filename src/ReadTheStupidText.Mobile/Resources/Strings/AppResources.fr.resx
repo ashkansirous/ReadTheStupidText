@@ -35,9 +35,9 @@
   <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>Impossible de démarrer le scanner</value></data>
   <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>Impossible de démarrer le scanner — réessayez.</value></data>
   <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>Le scanner se prépare</value></data>
-  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Google Play Services prépare encore le scanner de documents. Réessayez dans un instant.</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Le scanner de documents se prépare encore. Réessayez dans un instant.</value></data>
   <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>Scanner indisponible</value></data>
-  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>Le scanner de documents nécessite Google Play Services. Prenez plutôt une seule photo.</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>Le scanner de documents n'est pas disponible sur cet appareil. Prenez plutôt une seule photo.</value></data>
   <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>Accès à l'appareil photo requis</value></data>
   <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>Autorisez l'accès à l'appareil photo dans les Réglages pour photographier du texte.</value></data>
   <data name="Reader_NoCameraTitle" xml:space="preserve"><value>Aucun appareil photo</value></data>

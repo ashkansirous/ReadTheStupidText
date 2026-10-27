@@ -35,9 +35,9 @@
   <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>Skanneria ei voitu käynnistää</value></data>
   <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>Skanneria ei voitu käynnistää — yritä uudelleen.</value></data>
   <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>Skanneri valmistautuu</value></data>
-  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Google Play -palvelut valmistelee vielä asiakirjaskanneria. Yritä hetken kuluttua uudelleen.</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Asiakirjaskanneri on vielä valmistumassa. Yritä hetken kuluttua uudelleen.</value></data>
   <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>Skanneri ei ole käytettävissä</value></data>
-  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>Asiakirjaskanneri tarvitsee Google Play -palvelut. Ota sen sijaan yksittäinen kuva.</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>Asiakirjaskanneri ei ole käytettävissä tällä laitteella. Ota sen sijaan yksittäinen kuva.</value></data>
   <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>Kameran käyttöoikeus tarvitaan</value></data>
   <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>Salli kameran käyttö Asetuksissa, jotta voit kuvata tekstiä.</value></data>
   <data name="Reader_NoCameraTitle" xml:space="preserve"><value>Ei kameraa</value></data>
