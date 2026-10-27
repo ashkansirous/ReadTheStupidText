@@ -24,7 +24,7 @@ internal static class StarterVoices
             new("Kathryn", "princess", Gender.Female, CharacterAge.Adult, CharacterBeing.Pirate, [VoiceQuality.Bold, VoiceQuality.Bright]),
             new("Izzy", "fairy", Gender.Female, CharacterAge.Young, CharacterBeing.Pirate, [VoiceQuality.Bright, VoiceQuality.Bouncy]),
             new("Billy", "puppy2", Gender.Male, CharacterAge.Child, CharacterBeing.Pirate, [VoiceQuality.Bouncy, VoiceQuality.Warm]),
-            new("Pancake Polly", "mummy", Gender.Female, CharacterAge.Adult, CharacterBeing.Pirate, [VoiceQuality.Warm, VoiceQuality.Bouncy]),
+            new("Pancake Polly", "bee", Gender.Female, CharacterAge.Adult, CharacterBeing.Pirate, [VoiceQuality.Warm, VoiceQuality.Bouncy]),
         ],
     };
 

@@ -44,7 +44,7 @@ internal static class StoreTexts
         new(ElvesId, "The Elves and the Shoemaker", "elves-and-shoemaker", Elves, 1, "Retold from the Brothers Grimm · free to share", 4, 8, "Brothers Grimm", ["Hans", "Greta", "Nib", "Nob"], 6, AddedDate),
         new(TownMouseId, "The Town Mouse and the Country Mouse", "town-mouse-country-mouse", TownMouse, 2, RetoldAesop, 4, 7, "Aesop", ["Town Mouse", "Country Mouse"], 6, AddedDate),
         new(PeterRabbitId, "The Tale of Peter Rabbit", "peter-rabbit", PeterRabbit, 3, "Beatrix Potter, 1902 (retold)", 3, 6, "Beatrix Potter", ["Mrs. Rabbit", "Peter", "Mr. McGregor", "Robin", "Flopsy"], 7, AddedDate),
-        new(TreasureId, "X Marks the Treasure!", "x-marks-the-treasure", Treasure, 0, StoreBuilder.DinoReaderCredit, 3, 6, "Ashkan Sirous", ["Kathryn", "Seagull", "Izzy", "Pancake Polly", "Billy"], 4, TreasureAddedDate),
+        new(TreasureId, "X Marks the Treasure!", "x-marks-the-treasure", Treasure, 0, StoreBuilder.DinoReaderCredit, 3, 6, "Ashkan Sirous", ["Kathryn", "Seagull", "Izzy", "Pancake Polly", "Billy"], 5, TreasureAddedDate),
     ];
 
     public const string LionAndMouse = """
@@ -859,25 +859,25 @@ Flopsy, Mopsy and Cotton-tail had bread and milk and blackberries for supper. "W
     // KATH-rin: Kokoro has no lexicon entry for it and espeak en-us reads it /kˈæθɹɪn/ ("Kaatrin", the old spelling, came out KAA-trin), and the possessive /kˈæθɹɪnz/.
     // Art record: docs/design/story-art/x-marks-the-treasure.md.
     public const string Treasure = """
-Seagull flew high over the sea. She looked down at the little boats, the sandy beach and the sunny harbour.
+Seagull flew high, high up over the sea. Down below she could see little boats, a sandy beach and a sunny harbour.
 
-Then she saw a big pirate hat she knew. Captain Kathryn was running to her ship, waving a piece of paper. She looked very happy!
+Then she spotted a big pirate hat she knew. It was Captain Kathryn! She was running to her ship, waving a piece of paper. She looked so happy!
 ---
-Seagull swooped down, down, down, and she landed right on top of Kathryn's big hat.
+Down, down, down swooped Seagull, and she landed right on top of Kathryn's big hat.
 
 "Squawk! Squawk! Squawk! What's up, Kathryn?" said Seagull.
 
-Kathryn held up an old map with a little island on it and a big red X. "I've found the map to the lost treasure!" said Kathryn. "X marks the treasure!"
+Kathryn held up an old map. It had a little island on it and a big red X. "Look! I've found the map to the lost treasure!" said Kathryn. "X marks the treasure!"
 ---
-Kathryn ran up onto her ship. "Ahoy, pirates! Hoist the sail! We're going to find the lost treasure!" said Kathryn.
+Kathryn ran up onto her ship. "Ahoy, pirates! Up with the sail! We're going to find the lost treasure!" said Kathryn.
 
-Her crew came running. Izzy looked after the map and the compass. Pancake Polly made the yummiest pancakes. Billy could climb all the way up the mast.
+Her crew came running. Izzy looked after the map and the compass. Pancake Polly made the yummiest pancakes ever. And Billy could climb right up to the top of the mast.
 ---
-Seagull flapped her wings. "A treasure hunt? I love treasure hunts! I'm coming too!" said Seagull.
+Seagull flapped her wings. "A treasure hunt? Ooh, I love treasure hunts! Can I come too?" said Seagull.
 
-"Hooray! Then sit on my hat until we find the treasure," said Kathryn.
+"Hooray! Of course you can! Sit on my hat till we find the treasure," said Kathryn.
 ---
-Izzy, Pancake Polly and Billy danced a happy pirate dance across the deck.
+Izzy, Pancake Polly and Billy danced a happy pirate dance all across the deck.
 
 "Yo ho, yo ho!" sang Izzy.
 
@@ -885,35 +885,35 @@ Izzy, Pancake Polly and Billy danced a happy pirate dance across the deck.
 
 "We're going to find the lost treasure!" sang Pancake Polly.
 ---
-Billy pulled the rope, and up went the big sail. Flap, flap, flap!
+Billy pulled and pulled on the rope, and up went the big sail. Flap, flap, flap!
 
-Kathryn turned the ship's big wheel. "Off we go to Treasure Island!" said Kathryn. And away they sailed, far across the sea.
+Kathryn turned the ship's big wheel. "Off we go to Treasure Island!" said Kathryn. And away they sailed, far, far across the sea.
 ---
-The trip was long, long, long. Soon everyone on deck felt slow and grumbly, and nobody knew why.
+The trip was long, long, long. After a while, everyone on deck felt slow and grumbly, and nobody knew why.
 
 "Billy, can you see an island?" said Kathryn.
 
-Billy sat in the basket at the top of the mast, but he was too hungry to answer. He just gave a big yawn. His tummy went rumble, rumble, rumble!
+Billy was up in the basket at the top of the mast. He was too hungry to answer, so he just gave a big yawn. His tummy went rumble, rumble, rumble!
 ---
 "Izzy, can you check the map with your compass?" said Kathryn.
 
-Izzy sat on a barrel with the map on her lap, but she was hungry too, and she didn't answer. She just gave a big sigh. Her tummy went rumble, rumble, rumble!
+Izzy sat on a barrel with the map on her lap. But she was hungry too, so she didn't answer. She just gave a big sigh. Her tummy went rumble, rumble, rumble!
 ---
-"Let me go and see what's wrong!" said Seagull, and she flew all around the ship.
+"Hmm, I'll go and see what's wrong!" said Seagull, and she flew all around the ship.
 
-Every tummy went rumble, rumble, rumble! Even Kathryn's tummy! "Squawk! Squawk! Squawk! I know! Everyone is hungry!" said Seagull.
+Every tummy went rumble, rumble, rumble! Even Kathryn's tummy! "Squawk! Squawk! Squawk! I know! Everybody's hungry!" said Seagull.
 ---
-Seagull flew down the steps to the ship's kitchen. There was Pancake Polly, stirring pancake mix in her big blue bowl.
+Seagull flew down the steps to the ship's kitchen. And there was Pancake Polly, stirring pancake mix in her big blue bowl.
 
-"Polly, Polly! Everyone is too hungry to find the treasure!" said Seagull.
+"Polly, Polly! Everybody's too hungry to find the treasure!" said Seagull.
 
 "Hungry pirates? Then it's pancake time!" said Pancake Polly.
 ---
-Up came Pancake Polly with a big pile of plates. There were pancakes with banana, strawberries and honey for everyone!
+Up came Pancake Polly with a great big pile of plates. Pancakes with banana, strawberries and honey for everyone!
 
 The pirates ate and ate, and Seagull had a pancake too. "Yum, yum, yum!" said Seagull.
 ---
-Now everyone was full of pancakes and full of energy! Izzy and Pancake Polly danced across the deck, and Billy sang from the top of the mast.
+Now everyone's tummy was full, and they all felt happy and bouncy again! Izzy and Pancake Polly danced across the deck, and Billy sang from the top of the mast.
 
 "Yo ho, yo ho!" sang Izzy.
 
@@ -921,19 +921,19 @@ Now everyone was full of pancakes and full of energy! Izzy and Pancake Polly dan
 
 "We're going to find the lost treasure!" sang Pancake Polly.
 ---
-"I spot an island!" said Billy, and he pointed far across the sea.
+"Land ahoy! I can see an island!" said Billy, and he pointed far across the sea.
 
 Everyone cheered. Kathryn looked through her telescope. "There it is! Treasure Island!" said Kathryn.
 ---
-The ship stopped near the island, and Seagull flew ahead to the sandy beach.
+The ship stopped near the island, and Seagull flew on ahead to the sandy beach.
 
-There in the sand lay two long sticks in a big X. "Squawk! Squawk! Squawk! I found it! X marks the treasure!" said Seagull.
+And there in the sand were two long sticks, crossed in a big X. "Squawk! Squawk! Squawk! I found it! X marks the treasure!" said Seagull.
 
-Splish, splash, splosh! Behind her, the pirates waded to the beach with their spades.
+Splish, splash, splosh! Behind her, the pirates came through the water with their spades.
 ---
-Dig, dig, dig! The pirates dug at the X. Up came an old wooden treasure chest.
+Dig, dig, dig! The pirates dug and dug at the X. And up came an old wooden treasure chest!
 ---
-Kathryn lifted the lid. Inside were gold coins, sparkly jewels and shiny pearls, enough for everyone!
+Kathryn lifted the lid. Ooh, look! Gold coins, sparkly jewels and shiny pearls, enough for everyone!
 
 "Yo ho, yo ho!" sang Izzy.
 
@@ -943,7 +943,7 @@ Kathryn lifted the lid. Inside were gold coins, sparkly jewels and shiny pearls,
 ---
 That evening, as the sun went down, the pirates had a treasure party on the beach, with music and dancing.
 
-Kathryn gave Seagull a big hug. "Thank you, Seagull. You're the best friend a pirate could have!" said Kathryn.
+Kathryn gave Seagull a big, gentle hug. "Thank you, Seagull. You're the best friend a pirate could ever have!" said Kathryn.
 
 "Squawk, squawk, squawk," said Seagull softly, and she snuggled down on Kathryn's big hat.
 """;
