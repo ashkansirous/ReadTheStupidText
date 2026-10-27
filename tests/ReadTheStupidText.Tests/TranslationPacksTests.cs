@@ -37,6 +37,7 @@ public class TranslationPacksTests : IDisposable
     [InlineData("sv")]
     [InlineData("nb")]
     [InlineData("nl")]
+    [InlineData("de")]
     public void The_nordic_and_dutch_languages_have_a_pack_each_way(string language)
     {
         Assert.Equal([$"translation-{language}-en"], TranslationPacks.RequiredPackIds(language, "en"));
@@ -49,6 +50,7 @@ public class TranslationPacksTests : IDisposable
     [InlineData("sv", "nl", "translation-sv-en,translation-en-nl")]
     [InlineData("nb", "fr", "translation-nb-en,translation-en-fr")]
     [InlineData("ja", "da", "translation-ja-en,translation-en-da")]
+    [InlineData("de", "fr", "translation-de-en,translation-en-fr")]
     public void A_pair_of_new_and_old_languages_pivots_through_english(string source, string target, string expected) =>
         Assert.Equal(expected.Split(','), TranslationPacks.RequiredPackIds(source, target));
 

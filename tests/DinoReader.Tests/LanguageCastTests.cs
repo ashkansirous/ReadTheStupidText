@@ -46,7 +46,7 @@ public sealed class LanguageCastTests : IDisposable
     [Fact]
     public void CastIn_TreatsAnUnsupportedStoryLanguageAsEnglish()
     {
-        Story story = Make() with { Language = "de" };
+        Story story = Make() with { Language = "it" };
 
         Assert.True(story.HasCastIn("en"));
         Assert.Same(story.Cast, story.CastIn("en"));
@@ -128,7 +128,7 @@ public sealed class LanguageCastTests : IDisposable
     [Fact]
     public void AnEntryForTheLanguageAnUnsupportedStoryResolvesTo_IsDropped()
     {
-        Story story = Make() with { Language = "de" };
+        Story story = Make() with { Language = "it" };
         JsonNode json = JsonNode.Parse(StoryJson.Serialize(story.WithCastIn("fa", Farsi)))!;
         json["LanguageCasts"]!.AsObject()["en"] = json["LanguageCasts"]!["fa"]!.DeepClone();
 

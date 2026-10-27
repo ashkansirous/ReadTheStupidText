@@ -45,6 +45,7 @@
     <Resource Language="sv" />
     <Resource Language="nb" />
     <Resource Language="nl" />
+    <Resource Language="de" />
   </Resources>
 
   <Applications>

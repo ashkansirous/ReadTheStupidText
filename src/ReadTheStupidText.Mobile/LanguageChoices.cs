@@ -3,7 +3,7 @@ using ReadTheStupidText.Application.Reading;
 namespace ReadTheStupidText.Mobile;
 
 /// <summary>
-/// The fourteen languages, each named in itself (endonyms) so a user can find theirs whatever
+/// The fifteen languages, each named in itself (endonyms) so a user can find theirs whatever
 /// language the UI is in. Endonyms are data, not translatable UI copy.
 /// </summary>
 public static class LanguageChoices
@@ -24,6 +24,7 @@ public static class LanguageChoices
         (AppLanguage.Swedish, "Svenska"),
         (AppLanguage.Norwegian, "Norsk"),
         (AppLanguage.Dutch, "Nederlands"),
+        (AppLanguage.German, "Deutsch"),
     ];
 
     public static string NativeName(AppLanguage language) => All.First(c => c.Language == language).NativeName;

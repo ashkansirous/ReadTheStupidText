@@ -88,10 +88,11 @@ public sealed class StorySegmenter(LanguageRules rules)
 
     private QuoteEnd FindQuoteEnd(string text, int from)
     {
+        char? closer = from > 0 ? rules.CloserOf(text[from - 1]) : null;
         for (int i = from; i < text.Length; i++)
         {
             char c = text[i];
-            if (rules.IsClosingQuote(c)) return new QuoteEnd(i, true);
+            if (closer is { } own ? c == own : rules.IsClosingQuote(c)) return new QuoteEnd(i, true);
             if (rules.IsOpeningNonStraight(c)) return new QuoteEnd(TrimEnd(text, from, i), false);
             if (ParagraphBreak.IsAt(text, i))
                 return new QuoteEnd(TrimEnd(text, from, i), false);

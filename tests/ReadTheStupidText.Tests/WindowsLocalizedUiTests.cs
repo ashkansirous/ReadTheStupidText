@@ -94,6 +94,7 @@ public partial class WindowsLocalizedUiTests
     [InlineData("xx", "fa", true)]
     [InlineData(null, "de", false)]
     [InlineData(null, "de-DE", false)]
+    [InlineData(null, "it-IT", false)]
     public void Right_to_left_follows_the_stored_language_then_the_device(string? stored, string device, bool expected)
     {
         Assert.Equal(expected, UiLanguageTag.IsRightToLeft(stored, device));
@@ -107,7 +108,8 @@ public partial class WindowsLocalizedUiTests
     [InlineData("nb-NO", "nb")]
     [InlineData("nl-NL", "nl")]
     [InlineData("da-DK", "da")]
-    [InlineData("de-DE", null)]
+    [InlineData("de-DE", "de")]
+    [InlineData("it-IT", null)]
     public void Match_resolves_a_device_tag_to_a_shipped_folder(string deviceTag, string? expected)
     {
         Assert.Equal(expected, UiLanguageTag.Match(deviceTag));
@@ -119,7 +121,8 @@ public partial class WindowsLocalizedUiTests
     [InlineData("ja", "ja")]
     [InlineData("fi", "fi")]
     [InlineData("SV", "sv")]
-    [InlineData("de", null)]
+    [InlineData("de", "de")]
+    [InlineData("it", null)]
     [InlineData(null, null)]
     public void Tag_maps_a_stored_code_to_its_resource_folder(string? code, string? expected)
     {

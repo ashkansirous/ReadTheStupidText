@@ -3,7 +3,7 @@ using DinoReader.Resources.Strings;
 
 namespace DinoReader;
 
-/// <summary>Asks which of the fourteen languages a story is in, listed by their own names (an action sheet, like the cast screen's pickers).</summary>
+/// <summary>Asks which of the fifteen languages a story is in, listed by their own names (an action sheet, like the cast screen's pickers).</summary>
 public static class LanguageChooser
 {
 	/// <summary>The picked language code, or null when the grown-up cancelled.</summary>

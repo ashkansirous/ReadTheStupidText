@@ -38,7 +38,7 @@ public sealed class StoryTranslator
 
 	private readonly ConditionalWeakTable<Story, ConcurrentDictionary<string, bool>> _complete = new();
 
-	/// <summary>"My language": the grown-up's stored pick, else the device language when it is one of the fourteen. Not <c>CurrentUICulture</c>,
+	/// <summary>"My language": the grown-up's stored pick, else the device language when it is one of the fifteen. Not <c>CurrentUICulture</c>,
 	/// which a language pick only changes for the screens opened afterwards and the reading screen can still see the startup culture.</summary>
 	public static string MyLanguage => LanguageChoice.Current();
 

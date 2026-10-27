@@ -38,6 +38,7 @@ internal static class RuleSets
         AppLanguage.Swedish => SwedishRules.Create(),
         AppLanguage.Norwegian => NorwegianRules.Create(),
         AppLanguage.Dutch => DutchRules.Create(),
+        AppLanguage.German => GermanRules.Create(),
         _ => LanguageRules.English,
     };
 

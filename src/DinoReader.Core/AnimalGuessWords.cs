@@ -12,6 +12,7 @@ internal static class AnimalGuessWords
 {
     private static readonly string[] EnglishEndings = ["s", "es"];
     private static readonly string[] OtherEndings = ["s", "es", "en", "er", "ar", "ne", "n", "ner"];
+    private static readonly string[] GermanEndings = ["e", "en", "n", "er", "s", "nen"];
 
     // Plural forms English does not make with an ending, and the animal each belongs to.
     private static readonly Dictionary<string, AnimalKind> EnglishIrregularPlurals = new(StringComparer.OrdinalIgnoreCase)
@@ -38,7 +39,8 @@ internal static class AnimalGuessWords
     /// <summary>The endings that make an animal word a plural in <paramref name="language"/>.</summary>
     public static string[] PluralEndings(string? language)
     {
-        return Which(language) == AppLanguage.English ? EnglishEndings : OtherEndings;
+        AppLanguage which = Which(language);
+        return which == AppLanguage.English ? EnglishEndings : which == AppLanguage.German ? GermanEndings : OtherEndings;
     }
 
     /// <summary>Whether the endings only ever make a plural (English "pigs"); elsewhere they can be a definite singular too (Swedish "grisen").</summary>
@@ -62,6 +64,7 @@ internal static class AnimalGuessWords
             AppLanguage.Spanish => "el la los las un una llamado llamada",
             AppLanguage.Portuguese => "o a os as um uma chamado chamada",
             AppLanguage.Dutch => "de het een genaamd",
+            AppLanguage.German => "der die das den dem ein eine einen namens genannt",
             AppLanguage.Danish => "en et den det kaldet",
             AppLanguage.Swedish => "en ett den det kallad",
             AppLanguage.Norwegian => "en et den det kalt",
@@ -79,6 +82,7 @@ internal static class AnimalGuessWords
             AppLanguage.Spanish => "llamados llamadas llamaban eran son nombres",
             AppLanguage.Portuguese => "chamados chamadas chamavam eram são nomes",
             AppLanguage.Dutch => "heetten heten genaamd waren zijn namen",
+            AppLanguage.German => "hießen heißen genannt waren sind namen namens",
             AppLanguage.Danish => "hed hedder kaldet var navne",
             AppLanguage.Swedish => "hette heter kallade var namn",
             AppLanguage.Norwegian => "het heter kalt var navn",
@@ -96,6 +100,7 @@ internal static class AnimalGuessWords
             AppLanguage.Spanish => "y e o u",
             AppLanguage.Portuguese => "e ou",
             AppLanguage.Dutch => "en of",
+            AppLanguage.German => "und oder",
             AppLanguage.Danish => "og eller",
             AppLanguage.Swedish => "och eller",
             AppLanguage.Norwegian => "og eller",
@@ -113,6 +118,7 @@ internal static class AnimalGuessWords
             AppLanguage.Spanish => "cerca con sin de del en sobre bajo por para contra",
             AppLanguage.Portuguese => "perto com sem de do da em sobre sob por para contra",
             AppLanguage.Dutch => "bij met zonder van in op onder door voor tegen naast",
+            AppLanguage.German => "bei mit ohne von in auf unter durch für gegen neben nahe",
             AppLanguage.Danish => "ved med uden af i på under af for mod nær",
             AppLanguage.Swedish => "vid med utan av i på under av för mot nära",
             AppLanguage.Norwegian => "ved med uten av i på under for mot nær",

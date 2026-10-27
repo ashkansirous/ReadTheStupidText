@@ -35,7 +35,7 @@ public static class SupertonicVoiceTable
     public const string EnglishCode = "en";
 
     /// <summary>The languages the Supertonic-3 pack declares (keep equal to SUPERTONIC_LANGUAGES in packs.yml).</summary>
-    private static readonly HashSet<string> ServedLanguages = ["en", "fr", "es", "pt", "ru", "ja", "ar", "da", "fi", "sv", "nl"];
+    private static readonly HashSet<string> ServedLanguages = ["en", "fr", "es", "pt", "ru", "ja", "ar", "da", "fi", "sv", "nl", "de"];
 
     /// <summary>Whether Supertonic-3 speaks <paramref name="language"/>; a language it does not serve (Norwegian) has no Supertonic voices to fall back to.</summary>
     public static bool Serves(string language) => ServedLanguages.Contains(language);

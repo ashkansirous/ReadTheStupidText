@@ -23,6 +23,7 @@ internal static class AnimalSoundTables
         AppLanguage.Swedish => Swedish,
         AppLanguage.Norwegian => Norwegian,
         AppLanguage.Dutch => Dutch,
+        AppLanguage.German => German,
         _ => English,
     };
 
@@ -332,5 +333,27 @@ internal static class AnimalSoundTables
         Bird|vogel, vogeltje, mus, mees, roodborstje|Tjilp!|tsjilp
         Rabbit|konijn, konijntje, haas|
         Bear|beer, berenjong, beertje|Grr!|grr, brom
+        """;
+
+    private const string German = """
+        Owl|eule, uhu, käuzchen, waldkauz|Uhu!|uhu, schuhu
+        Rooster|hahn, gockel, güggel|Kikeriki!|kikeriki
+        Goat|ziege, zicklein, geiß, ziegenbock, bock|Mäh!|meh, mä
+        Sheep|schaf, lamm, lämmchen, widder, schäfchen|Mäh!|bäh, määh
+        Cow|kuh, kalb, stier, ochse, bulle, kälbchen|Muh!|muh
+        Cat|katze, kater, kätzchen, mieze, miezekatze|Miau!|miau, maunz
+        Dog|hund, welpe, hündchen, wauwau|Wau wau!|wau, wuff
+        Duck|ente, entchen, erpel, entlein|Quak!|quak, quack
+        Pig|schwein, ferkel, schweinchen, sau, borstentier|Grunz!|grunz, oink
+        Hen|huhn, henne, küken, hühnchen|Gack gack!|gack, glucks
+        Horse|pferd, pony, fohlen, stute, hengst|Wieher!|wieher, iah
+        Frog|frosch, kröte, fröschlein, laubfrosch|Quak!|quak, quaak
+        Mouse|maus, mäuschen, mäuse|Piep!|piep, quiek
+        Lion|löwe, löwin, löwenkind|Brüll!|brüll, grr
+        Bee|biene, hummel, bienchen|Summ!|summ, bzz
+        Wolf|wolf, wölfe|Auuu!|auu, uhuu
+        Bird|vogel, vögelchen, spatz, meise, rotkehlchen|Piep piep!|piep, zwitscher, tschilp
+        Rabbit|hase, kaninchen, häschen, häsin|
+        Bear|bär, bärenkind, teddy, bärchen|Brumm!|brumm, grr
         """;
 }

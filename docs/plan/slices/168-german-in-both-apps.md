@@ -1,6 +1,6 @@
 # Slice 168 — German in both apps (UI, voice, detection, translation, Dino rules)
 
-*Planned.* Read The Stupid Text (Windows, Android, iOS) and Dino Book Reader (Android, iOS, Windows). Slice 169 (German books) builds on it.
+*Built 2026-10-27, not yet verified (German heard on devices waits on packs-8).* Read The Stupid Text (Windows, Android, iOS) and Dino Book Reader (Android, iOS, Windows). Slice 169 (German books) builds on it.
 
 **Touches:** `src/ReadTheStupidText.Application/Reading/AppLanguage.cs`,
 `src/ReadTheStupidText.Domain/Reading/SupertonicVoiceTable.cs`, `src/ReadTheStupidText.Application/**/PackConstants.cs`,
@@ -17,6 +17,7 @@
 `src/DinoReader.Core/LanguageNames.cs`, `src/DinoReader.Core/ScriptLanguageGuesser.cs`, `src/DinoReader.Core/ShippedTitles.cs`,
 `src/DinoReader.Core/CharacterRoster*.cs`, `src/ReadTheStupidText.Mobile.Shared/**/MlKitTranslator.cs` (language lists, both platforms),
 `tests/ReadTheStupidText.Tests/**`, `tests/DinoReader.Tests/**` (not `content/dino/**`),
+`src/ReadTheStupidText.App/Strings/de/Resources.resw` (new), `src/ReadTheStupidText.Mobile/Platforms/iOS/Resources/de.lproj/InfoPlist.strings` (new), `src/ReadTheStupidText.Mobile/Platforms/iOS/Info.plist`, `src/ReadTheStupidText.Mobile/ReadTheStupidText.Mobile.csproj`, `worker/events.ts` (the `READING_LANGUAGES` entry only),
 `site/index.html`, `site/dino/index.html`, `STORE.md`, `src/ReadTheStupidText.Mobile/CLAUDE.md`, `src/DinoReader.Core/CLAUDE.md`
 
 ## Why
@@ -41,19 +42,19 @@ on Windows, no detection stop words, no Dino rule set and no resx files today.
 
 ## Work
 
-- [ ] 1. **Smallest end-to-end: RTST reads German.** Add `AppLanguage.German` (`de`), enable `de` in Supertonic
+- [x] 1. **Smallest end-to-end: RTST reads German.** Add `AppLanguage.German` (`de`), enable `de` in Supertonic
   (`SupertonicVoiceTable`, `packs.yml` language list), publish a new packs release and point `PackConstants` at it. Language
   picker entry on Windows and Mobile. Detection: German stop words in `ScriptLanguageDetector` and `ScriptDetector`'s Latin list.
   A German paragraph pasted on Windows, Android and iOS is detected as German and read with a German Supertonic voice.
-- [ ] 2. **RTST UI in German:** `AppResources.de.resx`, `UiLanguageTag`/`UiCulture`, `<Resource Language="de">` in the Windows
+- [x] 2. **RTST UI in German:** `AppResources.de.resx`, `UiLanguageTag`/`UiCulture`, `<Resource Language="de">` in the Windows
   manifest. The count of 14 becomes 15 in `AppLanguage`'s comment and the tests.
-- [ ] 3. **Translation:** `de` in the ML Kit lists (Android and iOS); Windows `de-en` and `en-de` Opus-MT packs in `packs.yml`
+- [x] 3. **Translation:** `de` in the ML Kit lists (Android and iOS); Windows `de-en` and `en-de` Opus-MT packs in `packs.yml`
   and `TranslationPacks`. The review page offers German to English and English to German on all three platforms.
-- [ ] 4. **Dino UI and reading in German:** `RuleSets` entry and `GermanRules.cs` (like `DutchRules`), `UiLanguage`,
+- [x] 4. **Dino UI and reading in German:** `RuleSets` entry and `GermanRules.cs` (like `DutchRules`), `UiLanguage`,
   `LanguageNames`, `ScriptLanguageGuesser` stop words, animal tables (`AnimalSoundTables`, `AnimalGuessWords`, `AnimalGuessAge`),
   ten-voice German roster in `CharacterRoster*`, `AppResources.de.resx`, Windows manifest. A typed own book in German reads with
   distinct character voices, and own-book translation offers German.
-- [ ] 5. **Site and store text:** German in `site/index.html` and the Dino site's language list; German listings in `STORE.md`.
+- [x] 5. **Site and store text:** German in `site/index.html` and the Dino site's language list; German listings in `STORE.md`.
 
 ## Verification
 
@@ -63,3 +64,23 @@ on Windows, no detection stop words, no Dino rule set and no resx files today.
 - iOS: compile both apps; on TestFlight, a German read and German to English translation in each app.
 - Windows: desktop read of German text with the Supertonic pack; German to English translation with the new pack.
 - Listen: one German page in RTST and one Dino character line (user, phone).
+
+*Changed while building:* 15 languages (`AppLanguage.German`). Supertonic `de` enabled (real model files map ss-sharp and umlauts via NFKD; sherpa lists de). `packs.yml` gains `de` in Supertonic plus Opus-MT `de-en` (Apache-2.0) and `en-de` (CC-BY-4.0), Xenova revisions and sha256 pinned, licence check case-insensitive. `PackConstants` now points at packs-8 (pack_version 4): existing Supertonic users re-download about 145 MB because `pack.json` carries the language list. ML Kit lists already had `de`. RTST: resx, Windows resw, iOS `de.lproj/InfoPlist.strings` and `CFBundleLocalizations`, manifests, pickers, detection (German-only stop words; der/die/den left out to avoid Dutch/Danish). Dino: `GermanRules` (quote pairs, `CloserOf`; `sie` female only next to a singular speech verb), `RuleSets`, animal tables, ten-voice roster, resx. `worker/events.ts` `READING_LANGUAGES` gains `de`. Sites and a German RTST listing in `STORE.md` (Dino listing not drafted). `GermanBooksPending.cs` skips `de` in 5 book checks until Slice 169. Run 40588343892 failed because upstream re-uploaded the Kokoro archive on 2026-10-26 (new sha256 72c34723..., the pin 4c3052ab... is the file packs-7 was built from); the kokoro-en pack must stay byte-identical (version 2), so `packs.yml` gained the input `kokoro_carry_over_from` (run packs-8 with `packs-7`): it skips the upstream fetch, build and sample, downloads the zip and sample from that release, checks them against the asset digests and that release's `packs.json` (id, version, sha256, size), and keeps the catalog entry with only its url moved to the new tag. The generic `carry_over` function can serve other packs. The pin is deliberately not changed.
+
+*From review:* high pass 9 findings (applied 2, 3, 5, 7, 8, 9 plus a test for 4; 1 handled by order: publish packs-8 first; 6 skipped). Medium pass 8 findings (applied 1, 3, 4, 5, 8; 2 verified correct; 6, 7 skipped).
+
+*Checks:* Dino 1602 pass, RTST 1438 pass (2 skip); Android and iOS compile both apps; Windows x64 both.
+
+**Merge precondition:** run `packs.yml` from this branch with release_number=8, pack_version=4, translation_pack_version=1 and confirm the packs-8 release exists with all assets.
+
+#### For CLAUDE.md
+
+None beyond what the diff already changed.
+
+#### Not yet verified
+
+- German heard on Android, iOS (TestFlight) and Windows (waits on packs-8).
+- Windows `de-en` / `en-de` translation.
+- Dino German own book with distinct character voices.
+- Native German speaker read of all German text (machine-written).
+- Dino German store listing not drafted.

@@ -102,12 +102,23 @@ public sealed class GenderGuesser
     private (int Male, int Female) CountInWords(string window)
     {
         int male = 0, female = 0;
-        foreach (Match w in Regex.Matches(window, @"[\p{L}‌]+"))
+        var words = Regex.Matches(window, @"[\p{L}‌]+");
+        for (int i = 0; i < words.Count; i++)
         {
-            if (_rules.MalePronouns.Contains(w.Value) || _rules.GenderedMaleVerbs.Contains(w.Value)) male++;
-            else if (_rules.FemalePronouns.Contains(w.Value) || _rules.GenderedFemaleVerbs.Contains(w.Value)) female++;
+            string word = words[i].Value;
+            if (_rules.MalePronouns.Contains(word) || _rules.GenderedMaleVerbs.Contains(word)) male++;
+            else if (IsSingularFemaleCue(words, i)) female++;
         }
         return (male, female);
+    }
+
+    // A female pronoun that is also "they" (German "sie") counts only when the next word is not a plural verb ("sie lachten").
+    private bool IsSingularFemaleCue(MatchCollection words, int i)
+    {
+        string word = words[i].Value;
+        if (_rules.GenderedFemaleVerbs.Contains(word)) return true;
+        if (!_rules.FemalePronouns.Contains(word)) return false;
+        return i + 1 >= words.Count || !_rules.IsPluralVerb(words[i + 1].Value);
     }
 
     // No spaces: count the female forms first and take them out, so Japanese "彼女" is not also read as "彼".

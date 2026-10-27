@@ -2,10 +2,10 @@ using ReadTheStupidText.Application.Reading;
 
 namespace ReadTheStupidText_App;
 
-/// <summary>One language of the fourteen, named in itself (Decision 68). Names are data, not translatable copy.</summary>
+/// <summary>One language of the fifteen, named in itself (Decision 68). Names are data, not translatable copy.</summary>
 public sealed record LanguageChoice(AppLanguage Language, string NativeName);
 
-/// <summary>The fourteen app languages in picker order, shared by the first-run window and the control panel.</summary>
+/// <summary>The fifteen app languages in picker order, shared by the first-run window and the control panel.</summary>
 public static class LanguageChoices
 {
     public static IReadOnlyList<LanguageChoice> All { get; } =
@@ -24,9 +24,10 @@ public static class LanguageChoices
         new(AppLanguage.Swedish, "Svenska"),
         new(AppLanguage.Norwegian, "Norsk"),
         new(AppLanguage.Dutch, "Nederlands"),
+        new(AppLanguage.German, "Deutsch"),
     ];
 
-    /// <summary>The native name of a language code, or the code itself when it is not one of the fourteen.</summary>
+    /// <summary>The native name of a language code, or the code itself when it is not one of the fifteen.</summary>
     public static string NativeName(string code) =>
         AppLanguages.TryParse(code, out AppLanguage language) ? All.First(c => c.Language == language).NativeName : code;
 }

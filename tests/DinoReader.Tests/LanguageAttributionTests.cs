@@ -21,6 +21,7 @@ public class LanguageAttributionTests
         { "sv", "Peter sa: ”Vart ska du?”\n”Ut i trädgården”, svarade Maria.\n”Kom snart tillbaka!” ropade Peter.", "Peter", "Maria" },
         { "nb", "Peter sa: «Hvor skal du?»\n«Ut i hagen,» svarte Maria.\n«Kom snart tilbake!» ropte Peter.", "Peter", "Maria" },
         { "nl", "Peter zei: “Waar ga je heen?”\n“Naar de tuin,” antwoordde Maria.\n“Kom snel terug!” riep Peter.", "Peter", "Maria" },
+        { "de", "Peter sagte: „Wohin gehst du?“\n„In den Garten“, antwortete Maria.\n„Komm bald zurück!“, rief Peter.", "Peter", "Maria" },
     };
 
     private static AttributionResult Run(string language, string text)
@@ -172,6 +173,65 @@ public class LanguageAttributionTests
         Assert.NotNull(Run("nl", "“Kom mee,” riepen Peter.").Segments.Single(s => s.Kind == SegmentKind.Quote).CharacterId);
         Assert.NotNull(Run("fi", "”Tule”, huusivat Pekka.").Segments.Single(s => s.Kind == SegmentKind.Quote).CharacterId);
         Assert.Equal("Peter", Run("da", "«Hej,» sagde Peter.").Segments.Single(s => s.Kind == SegmentKind.Quote).CharacterId);
+    }
+
+    [Fact]
+    public void German_guillemets_and_names_are_read()
+    {
+        AttributionResult result = Run("de", "»Hallo«, sagte Anna. »Wie geht es dir?«, fragte sie.\n»Gut«, sagte Peter.");
+
+        Assert.Equal(Gender.Female, result.Characters.Single(c => c.Id == "Anna").Gender);
+        Assert.Equal(Gender.Male, result.Characters.Single(c => c.Id == "Peter").Gender);
+        Assert.Equal(3, result.Segments.Count(s => s.Kind == SegmentKind.Quote));
+    }
+
+    [Fact]
+    public void German_english_style_curly_quotes_are_read_as_quotes_with_speakers()
+    {
+        AttributionResult result = Run("de", "“Hallo,” sagte Peter. “Wie geht’s?” fragte Anna.");
+
+        Assert.Equal(2, result.Segments.Count(s => s.Kind == SegmentKind.Quote));
+        Assert.Contains(result.Characters, c => c.Id == "Peter");
+        Assert.Contains(result.Characters, c => c.Id == "Anna");
+    }
+
+    [Fact]
+    public void German_quote_styles_each_close_with_their_own_pair_and_never_swap_roles()
+    {
+        // „…“ closes with “, which also opens the English “…”: a paragraph mixing both keeps narration out of every quote.
+        AttributionResult result = Run("de", "„Hallo“, sagte Peter. Er ging heim. “Tschüss,” sagte Anna. Es war still. »Gut«, sagte Peter.");
+
+        var quotes = result.Segments.Where(s => s.Kind == SegmentKind.Quote).ToList();
+        Assert.Equal(["Hallo", "Tschüss,", "Gut"], quotes.Select(q => q.Text).ToArray());
+        Assert.Equal(["Peter", "Anna", "Peter"], quotes.Select(q => q.CharacterId).ToArray());
+        Assert.Contains(result.Segments, s => s.Kind == SegmentKind.Narration && s.Text.Contains("Es war still"));
+    }
+
+    [Fact]
+    public void German_sie_with_a_singular_speech_verb_is_the_one_woman()
+    {
+        AttributionResult result = Run("de", "Anna ging heim. Sie lachte. „Hallo“, sagte sie.");
+
+        Assert.Equal("Anna", result.Segments.Single(s => s.Kind == SegmentKind.Quote).CharacterId);
+    }
+
+    [Theory]
+    [InlineData("sagten")]
+    [InlineData("fragten")]
+    [InlineData("riefen")]
+    public void German_sie_with_a_plural_speech_verb_is_a_group(string verb)
+    {
+        AttributionResult result = Run("de", $"Peter und Anna gingen heim. „Hallo“, {verb} sie.");
+
+        Assert.NotEqual("Anna", result.Segments.Single(s => s.Kind == SegmentKind.Quote).CharacterId);
+    }
+
+    [Fact]
+    public void German_sie_after_a_pair_is_a_group_not_the_last_woman()
+    {
+        AttributionResult result = Run("de", "Peter und Anna gingen heim. Sie lachten. „Hallo“, sagten sie.");
+
+        Assert.NotEqual("Anna", result.Segments.Single(s => s.Kind == SegmentKind.Quote).CharacterId);
     }
 
     [Fact]
