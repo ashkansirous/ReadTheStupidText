@@ -4,7 +4,7 @@
   docs/plan/slices/134-dino-usage-events-and-report.md and prints one table per question.
 
 .DESCRIPTION
-  Reads the dataset `dino_usage` that worker/events.ts writes (needs the USAGE binding to be switched on first, see "Landing site" in CLAUDE.md).
+  Reads the dataset `dino_usage` that worker/events.ts writes (needs telemetry switched on in dinoreader/config.json, see "Landing site" in CLAUDE.md).
   Blob layout, one data point per count: blob1 name, blob2 book (package id | own | none), blob3 language, blob4 source (shelf | own | none),
   blob5 has recording (yes | no), blob6 app version, blob7 platform, blob8 UTC day, blob9 detail; double1 is the count's weight (1 / the app's
   sample rate). Every sum is SUM(_sample_interval * double1): _sample_interval is Analytics Engine's own sampling, double1 the app's.

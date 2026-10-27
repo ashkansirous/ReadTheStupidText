@@ -77,8 +77,8 @@ function telemetryCheck(env: Env, key: string): () => Promise<boolean> {
   };
 }
 
-// Slice 137: Read The Stupid Text's phone counts take the same road with their own config object and dataset (RTST_USAGE is not in the
-// wrangler configs yet, so the route answers 204 while telemetry is off).
+// Slice 137: Read The Stupid Text's phone counts take the same road with their own config object and dataset (RTST_USAGE, dataset
+// rtst_usage).
 function serveEvents(request: Request, env: Env & EventsEnv & RtstEventsEnv, site: ResolvedSite): Promise<Response> | Response {
   const check = telemetryCheck(env, configKeyFor(site));
   return site.product === Product.DinoReader ? handleEvents(request, env, check) : handleRtstEvents(request, env, check);

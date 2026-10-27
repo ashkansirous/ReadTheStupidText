@@ -388,10 +388,8 @@ Store forms (Claude drafts and fills them in the signed-in browser; the user rev
   `NSPrivacyCollectedDataTypePerformanceData`, linked false, tracking false).
 - **Microsoft Store (RTST):** no data-collection question beyond the privacy policy URL, which must point at the updated `site/privacy.html`
   (the Windows app sends the same counts once switched on; the switch is the last row of the control panel).
-- Cloudflare Analytics Engine is the processor. The `RTST_USAGE` binding is **not** in the wrangler configs until Analytics Engine is enabled on
-  the account (a deploy fails otherwise); until then `/api/events` on the RTST host answers 204 while telemetry is off. To switch on: enable
-  Analytics Engine, add `"analytics_engine_datasets": [{ "binding": "RTST_USAGE", "dataset": "rtst_usage" }]` to both wrangler configs
-  (next to `r2_buckets`), deploy, then put `{"telemetry": {"enabled": true, "sampleRate": 1}}` in `readthestupidtext/config.json`
+- Cloudflare Analytics Engine is the processor. The `RTST_USAGE` binding (dataset `rtst_usage`) is in both wrangler configs. To switch counting on,
+  put `{"telemetry": {"enabled": true, "sampleRate": 1}}` in `readthestupidtext/config.json`
   (`wrangler r2 object put readthestupidtext-downloads/readthestupidtext/config.json --file config.json --remote`).
 - Each point's double is the count's weight (1 / the sample rate it was counted at), so query with `SUM(double1)`, never `COUNT(*)`; blobs are
   `name, version, platform, day, language, sourceLanguage, mode, engine, voiceDefault, lengthBucket, osMajor, stage, outcome, durationBucket, source, early` (`source` on Windows reads only; `early` on timing counts only, `yes` when the first sentences were prepared while the person decided, Slice 139).
@@ -814,8 +812,8 @@ without a release. Store forms (the owner or Claude in the signed-in browser, af
 - **App Store privacy (Dino):** data type **Usage Data > Product Interaction**, **not linked to the user**, **not used for tracking**,
   purpose **Analytics**. `PrivacyInfo.xcprivacy` declares the same (`NSPrivacyCollectedDataTypeProductInteraction`, linked false, tracking false).
 - **Microsoft Store (Dino):** no data-collection question beyond the privacy policy URL; it must point at the updated `site/dino/privacy.html`.
-- Cloudflare Analytics Engine is the processor. The `USAGE` binding is not in the wrangler configs until Analytics Engine is enabled on
-  the account (see "Landing site" in `CLAUDE.md` for the switch-on steps); without it `/api/events` answers 204 and writes nothing. Each
+- Cloudflare Analytics Engine is the processor. The `DINO_USAGE` binding (dataset `dino_usage`) is in both wrangler configs;
+  `telemetry.enabled` in `dinoreader/config.json` switches counting (see "Landing site" in `CLAUDE.md`). Each
   point's double is the count's weight (1 / the sample rate it was counted at), so query with
   `SELECT blob1 AS name, blob2 AS book, SUM(double1) FROM dino_usage GROUP BY name, book`.
 - `tools/dino-usage-report.ps1` hides groups of fewer than 10 events. That floor counts events, not households (there is no install id), so it is a noise filter and not an anonymity guarantee: say "no identifiers, counts only", never "cannot be traced".
