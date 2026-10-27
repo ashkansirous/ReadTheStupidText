@@ -11,10 +11,9 @@ namespace DinoReader;
 /// </summary>
 public partial class GatePage : ContentPage
 {
-	private const int MaxAnswerDigits = 2;
 	private const int KeyRows = 4;
-	private const string BackspaceKey = "⌫";
-	private const string OkKey = "OK";
+	private const string BackspaceKey = GateKeypad.BackspaceKey;
+	private const string OkKey = GateKeypad.OkKey;
 	private static readonly TimeSpan TickInterval = TimeSpan.FromMilliseconds(33);
 
 	private readonly GateChallenge _challenge = new();
@@ -137,19 +136,13 @@ public partial class GatePage : ContentPage
 
 	private void OnKey(string key)
 	{
-		switch (key)
+		if (GateKeypad.IsSubmit(key))
 		{
-			case OkKey:
-				Submit();
-				return;
-			case BackspaceKey:
-				_answer = _answer.Length > 0 ? _answer[..^1] : _answer;
-				break;
-			default:
-				_answer = _answer.Length < MaxAnswerDigits ? _answer + key : _answer;
-				break;
+			Submit();
+			return;
 		}
 
+		_answer = GateKeypad.Press(_answer, key);
 		AnswerLabel.Text = _answer;
 	}
 

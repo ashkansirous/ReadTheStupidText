@@ -351,13 +351,7 @@ public partial class StorePage : ContentPage, IGrownUpPage
 
 	private static string UniqueLabel(string author, Dictionary<string, string?> taken)
 	{
-		string label = author;
-		for (int n = 2; taken.ContainsKey(label) || label == AppResources.Common_Cancel; n++)
-		{
-			label = $"{author} ({n})";
-		}
-
-		return label;
+		return ChoiceLabels.Unique(author, taken.Keys, AppResources.Common_Cancel);
 	}
 
 	// Covers arrive a few at a time after the list is on screen; a cover that cannot be fetched leaves the plain placeholder.
