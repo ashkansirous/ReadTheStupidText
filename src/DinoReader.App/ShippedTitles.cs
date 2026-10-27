@@ -16,6 +16,7 @@ public static class ShippedTitles
 		{
 			["ar"] = "الخنازير الثلاثة الصغيرة",
 			["da"] = "De tre små grise",
+			["de"] = "Die drei kleinen Schweinchen",
 			["es"] = "Los tres cerditos",
 			["fa"] = "سه بچه خوک کوچولو",
 			["fi"] = "Kolme pientä porsasta",
@@ -32,6 +33,7 @@ public static class ShippedTitles
 		{
 			["ar"] = "رجل الزنجبيل",
 			["da"] = "Pebernøddemanden",
+			["de"] = "Der Lebkuchenmann",
 			["es"] = "El hombre de jengibre",
 			["fa"] = "آدمک نان‌زنجبیلی",
 			["fi"] = "Piparkakkumies",
@@ -48,6 +50,7 @@ public static class ShippedTitles
 		{
 			["ar"] = "السلحفاة والأرنب",
 			["da"] = "Skildpadden og Haren",
+			["de"] = "Der Hase und die Schildkröte",
 			["es"] = "La tortuga y la liebre",
 			["fa"] = "لاک‌پشت و خرگوش",
 			["fi"] = "Kilpikonna ja jänis",
@@ -64,6 +67,7 @@ public static class ShippedTitles
 		{
 			["ar"] = "جيد بما يكفي",
 			["da"] = "Godt nok",
+			["de"] = "Gut genug",
 			["es"] = "Lo bastante bueno",
 			["fa"] = "به اندازه‌ی کافی خوب",
 			["fi"] = "Riittävän hyvä",
@@ -80,6 +84,7 @@ public static class ShippedTitles
 		{
 			["ar"] = "الأسد والفأر",
 			["da"] = "Løven og musen",
+			["de"] = "Der Löwe und die Maus",
 			["es"] = "El león y el ratón",
 			["fa"] = "شیر و موش",
 			["fi"] = "Leijona ja hiiri",
@@ -96,6 +101,7 @@ public static class ShippedTitles
 		{
 			["ar"] = "ذات الشعر الذهبي والدببة الثلاثة",
 			["da"] = "Guldlok og de tre bjørne",
+			["de"] = "Goldlöckchen und die drei Bären",
 			["es"] = "Ricitos de Oro y los tres osos",
 			["fa"] = "مو طلایی و سه خرس",
 			["fi"] = "Kultakutri ja kolme karhua",
@@ -112,6 +118,7 @@ public static class ShippedTitles
 		{
 			["ar"] = "ذات الرداء الأحمر",
 			["da"] = "Rødhætte",
+			["de"] = "Rotkäppchen",
 			["es"] = "Caperucita Roja",
 			["fa"] = "شنل قرمزی",
 			["fi"] = "Punahilkka",
@@ -128,6 +135,7 @@ public static class ShippedTitles
 		{
 			["ar"] = "البطة القبيحة",
 			["da"] = "Den grimme ælling",
+			["de"] = "Das hässliche Entlein",
 			["es"] = "El patito feo",
 			["fa"] = "جوجه اردک زشت",
 			["fi"] = "Ruma ankanpoikanen",
@@ -144,6 +152,7 @@ public static class ShippedTitles
 		{
 			["ar"] = "الدجاجة الحمراء الصغيرة",
 			["da"] = "Den lille røde høne",
+			["de"] = "Die kleine rote Henne",
 			["es"] = "La gallinita roja",
 			["fa"] = "مرغ سرخ کوچولو",
 			["fi"] = "Pieni punainen kana",
@@ -160,6 +169,7 @@ public static class ShippedTitles
 		{
 			["ar"] = "الماعز الثلاثة غراف",
 			["da"] = "De tre bukkebruse",
+			["de"] = "Die drei Ziegenböcke Gruff",
 			["es"] = "Los tres cabritos Gruff",
 			["fa"] = "سه بز کوهی گراف",
 			["fi"] = "Kolme Pukkivuohta",
@@ -176,6 +186,7 @@ public static class ShippedTitles
 		{
 			["ar"] = "جاك وساق الفاصولياء",
 			["da"] = "Jens og bønnestagen",
+			["de"] = "Jack und die Bohnenranke",
 			["es"] = "Jack y las habichuelas mágicas",
 			["fa"] = "جک و ساقه‌ی لوبیا",
 			["fi"] = "Jaakko ja pavunvarsi",
@@ -192,6 +203,7 @@ public static class ShippedTitles
 		{
 			["ar"] = "فأر المدينة وفأر الريف",
 			["da"] = "Bymusen og landmusen",
+			["de"] = "Die Stadtmaus und die Feldmaus",
 			["es"] = "El ratón de ciudad y el ratón de campo",
 			["fa"] = "موش شهری و موش روستایی",
 			["fi"] = "Kaupunkihiiri ja maalaishiiri",
@@ -208,6 +220,7 @@ public static class ShippedTitles
 		{
 			["ar"] = "الجنيّات وصانع الأحذية",
 			["da"] = "Nisserne og skomageren",
+			["de"] = "Die Wichtel und der Schuster",
 			["es"] = "Los duendes y el zapatero",
 			["fa"] = "جن‌های کوچولو و کفاش",
 			["fi"] = "Tontut ja suutari",
@@ -224,6 +237,7 @@ public static class ShippedTitles
 		{
 			["ar"] = "حكاية بيتر الأرنب",
 			["da"] = "Fortællingen om Peter Kanin",
+			["de"] = "Die Geschichte von Peter Hase",
 			["es"] = "El cuento de Pedro Conejo",
 			["fa"] = "قصه‌ی پیتر خرگوشه",
 			["fi"] = "Tarina Pekka Kaniinista",
@@ -240,6 +254,7 @@ public static class ShippedTitles
 		{
 			["ar"] = "الكنز عند علامة X!",
 			["da"] = "X markerer skatten!",
+			["de"] = "Beim X liegt der Schatz!",
 			["es"] = "¡La X marca el tesoro!",
 			["fa"] = "ایکس یعنی گنج!",
 			["fi"] = "X merkitsee aarteen paikan!",

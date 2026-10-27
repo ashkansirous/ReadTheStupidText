@@ -204,3 +204,4 @@ Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure 
 | 164 | Fast tests: move more logic out of UI code into unit tests | built | #491 | | [164-more-logic-in-unit-tests.md](../slices/164-more-logic-in-unit-tests.md) |
 | 166 | Usage counts: country, OS version, form factor and hardware buckets (both apps) | built | #492 | | [166-usage-device-context.md](../slices/166-usage-device-context.md) |
 | 167 | Usage counts: don't count test devices (both apps) | built | #497 | | [167-no-test-device-counts.md](../slices/167-no-test-device-counts.md) |
+| 168 | German in both apps (UI, voice, detection, translation, Dino rules) | built | #495 | | [168-german-in-both-apps.md](../slices/168-german-in-both-apps.md) |

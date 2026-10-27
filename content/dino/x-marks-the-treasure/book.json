@@ -2,7 +2,7 @@
   "kind": "Store",
   "id": "a02c0731b7ac475a896e9184f3575e7b",
   "title": "X Marks the Treasure!",
-  "version": 6,
+  "version": 7,
   "ageMin": 3,
   "ageMax": 6,
   "author": "Ashkan Sirous",
@@ -73,5 +73,5 @@
       ]
     }
   ],
-  "contentHash": "6f38a4442f26aa574185874e5875ad4686f8c137f007ae90e80cd70d5caca94a"
+  "contentHash": "d66dff877ed8835eb890d0b5a42d7d7ce544d9d55ac9631d68fa68b038998d3e"
 }
