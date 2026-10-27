@@ -49,7 +49,7 @@ public static class CastEditor
         }
 
         StorytellerCharacter? suggested = member.SuggestedVoice is { Length: > 0 } id ? speakers.FirstOrDefault(c => c.Id == id) : null;
-        if (suggested is not null && !CharacterRoster.OppositeGender(suggested.Gender, member.Gender))
+        if (suggested is not null && !CharacterRoster.OppositeGender(suggested.Gender, member.Gender) && !CastCharacters.SwapsInWhisper(suggested, member.Traits))
         {
             return suggested.VoiceId != member.VoiceId || suggested.Flavour != flavour;
         }
