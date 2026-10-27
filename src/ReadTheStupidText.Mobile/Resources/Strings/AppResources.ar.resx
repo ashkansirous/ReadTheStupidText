@@ -17,10 +17,10 @@
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>لغة كلمات التطبيق</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>سرعة القراءة</value></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>ساعد في تحسين التطبيق</value></data>
-  <data name="Settings_CountsCaption" xml:space="preserve"><value>يرسل أعدادًا مثل «تمت قراءة نص فرنسي». لا أسماء ولا معرّفات ولا شيء مما تقرؤه.</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>يرسل أعدادًا مثل «تمت قراءة نص فرنسي». لا أسماء ولا معرّفات ولا شيء مما تقرؤه. ويضيف أيضًا بلدك ونوع جهازك التقريبي (هاتف أو جهاز لوحي، ونطاق الذاكرة).</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>مفعّل</value></data>
   <data name="Settings_CountsOff" xml:space="preserve"><value>متوقف</value></data>
-  <data name="Language_CountsNote" xml:space="preserve"><value>يحسب التطبيق أشياء مثل اللغات التي تُقرأ، دون أسماء أو معرّفات. يمكنك إيقاف ذلك من الإعدادات.</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>يحسب التطبيق أشياء مثل اللغات التي تُقرأ، دون أسماء أو معرّفات. يمكنك إيقاف ذلك من الإعدادات. ويضيف أيضًا بلدك ونوع جهازك التقريبي (هاتف أو جهاز لوحي، ونطاق الذاكرة).</value></data>
   <data name="Common_Back" xml:space="preserve"><value>رجوع</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>الجملة السابقة</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>الجملة التالية</value></data>

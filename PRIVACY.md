@@ -90,7 +90,7 @@ and text recognition happen on the device.
 ## Anonymous usage counts (Windows, Android and iPhone)
 
 The Windows, Android and iPhone apps send small anonymous counts so the project can see which
-languages are read, whether translation is noticed and used, whether voices are changed,
+languages are read, in which countries, whether translation is noticed and used, whether voices are changed,
 and how long waits such as the first translation take. This is **on by default**, and you
 can turn it off at any time with **Settings > Help improve the app** on the phones, or the
 **Help improve the app** switch at the bottom of the control panel on Windows: when it is off,
@@ -126,11 +126,20 @@ Counts never contain the text you read, file names, scanned images, names, or an
 device, account or advertising identifier, so they cannot be put together into a history of
 one person. Only a share of launches may count at all, as set by the project.
 
+Each batch of counts also says a few coarse things about the device, as fixed lists and ranges: the form
+factor (phone, tablet, desktop or other), the operating system's major version, the processor type (arm64, x64,
+x86, arm or other), the number of processor cores as a range (1 to 4, 5 to 8, or 9 or more) and the memory as a
+range in GB (under 3, 3 to 4, 4 to 6, 6 to 8, or 8 or more). Never the device's model or maker, the exact chip,
+exact memory or core numbers, the full system build, or any identifier. The server also records the **country** of
+the request as a two-letter code (such as GB), which Cloudflare works out from the connection. It is approximate,
+not your GPS position: the app never asks for location permission, never sends a location, and the IP address
+itself is not stored. These are coarse ranges, not exact values, and nothing here is a name, an account, a device model or an identifier. They are not a guarantee of anonymity on their own, though: in a small country a rare combination of ranges could stand out, so they are used only to see the overall picture.
+
 Counts are sent in small batches to this project's own server
 (`readthestupidtext.sirous.uk`) and stored in Cloudflare's Workers Analytics Engine
 (Cloudflare is the processor) for about three months, then deleted. As with any web request,
 the server sees your IP address while the request is handled; it is not stored with the
-counts and is not used for anything. The project can also switch counting off for everyone
+counts and is not used for anything (only the country it maps to, as described above). The project can also switch counting off for everyone
 from the server. Counts are not shared with anyone else and are not used for advertising or
 tracking.
 

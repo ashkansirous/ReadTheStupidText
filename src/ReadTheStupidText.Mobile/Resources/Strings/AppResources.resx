@@ -18,10 +18,10 @@
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>The language of the app’s words</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Reading speed</value></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>Help improve the app</value></data>
-  <data name="Settings_CountsCaption" xml:space="preserve"><value>Sends counts like “a French text was read”. No names, no ids, nothing you read.</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>Sends counts like “a French text was read”. No names, no ids, nothing you read. It also adds your country and a rough device type (phone or tablet, memory range).</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>On</value></data>
   <data name="Settings_CountsOff" xml:space="preserve"><value>Off</value></data>
-  <data name="Language_CountsNote" xml:space="preserve"><value>The app counts things like which languages are read, with no names or ids. You can turn this off in Settings.</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>The app counts things like which languages are read, with no names or ids. You can turn this off in Settings. It also adds your country and a rough device type (phone or tablet, memory range).</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Back</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>Previous sentence</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>Next sentence</value></data>

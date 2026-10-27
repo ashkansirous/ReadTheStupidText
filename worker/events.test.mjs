@@ -36,7 +36,7 @@ test("a batch of valid counts is written, one data point each, and answered with
   assert.equal(env.points.length, 2);
   assert.deepEqual(env.points[0], {
     indexes: ["book_opened"],
-    blobs: ["book_opened", BOOK, "en", "shelf", "no", "1.42.0", "android", "2026-10-25", ""],
+    blobs: ["book_opened", BOOK, "en", "shelf", "no", "1.42.0", "android", "2026-10-25", "", "none", "", "", "", "", ""],
     doubles: [2],
   });
   assert.equal(env.points[1].blobs[4], "yes");
@@ -84,7 +84,7 @@ test("invalid counts are dropped one by one and unknown fields never reach the d
   const response = await handleEvents(post({ events: [...bad, extra] }), env, on);
   assert.equal(response.status, 204);
   assert.equal(env.points.length, 1);
-  assert.equal(env.points[0].blobs.length, 9);
+  assert.equal(env.points[0].blobs.length, 15);
   assert.ok(!JSON.stringify(env.points[0]).includes("secret"));
 });
 
@@ -202,8 +202,8 @@ test("a phone read count is written with its fields in the fixed blob order", as
   assert.deepEqual(env.points, [
     {
       indexes: ["read_started"],
-      blobs: ["read_started", "1.4.0", "android", "2026-10-26", "fr", "fr", "original", "supertonic", "yes", "200-1000", "", "", "", "", "", "", ""],
-      doubles: [2],
+      blobs: ["read_started", "1.4.0", "android", "2026-10-26", "fr", "fr", "original", "supertonic", "yes", "200-1000", "", "", "", "", "", "", "", "none", "", ""],
+      doubles: [2, -1, -1],
     },
   ]);
 });
@@ -212,7 +212,7 @@ test("a Windows read count carries its source as a blob (Slice 140)", async () =
   const env = rtstRecorder();
   const windowsRead = { ...rtst("read_started", { language: "en", mode: "translation", engine: "windows", voiceDefault: true, lengthBucket: "<200", sourceLanguage: "fr", source: "hotkey" }), platform: "windows" };
   assert.equal((await handleRtstEvents(rtstPost([windowsRead]), env, on)).status, 204);
-  assert.deepEqual(env.points[0].blobs.slice(3), ["2026-10-26", "en", "fr", "translation", "windows", "yes", "<200", "", "", "", "", "hotkey", "", ""]);
+  assert.deepEqual(env.points[0].blobs.slice(3), ["2026-10-26", "en", "fr", "translation", "windows", "yes", "<200", "", "", "", "", "hotkey", "", "", "none", "", ""]);
   assert.equal(env.points[0].blobs[2], "windows");
 });
 
@@ -220,7 +220,7 @@ test("a timing count carries whether the head start had run, as the blob before 
   const env = rtstRecorder();
   const timing = rtst("timing", { stage: "first_audio", outcome: "done", durationBucket: "0.5-1", language: "en", early: true });
   assert.equal((await handleRtstEvents(rtstPost([timing]), env, on)).status, 204);
-  assert.equal(env.points[0].blobs.at(-2), "yes");
+  assert.equal(env.points[0].blobs.at(-5), "yes");
   assert.equal(parseRtstEvent(rtst("timing", { stage: "first_audio", outcome: "done", durationBucket: "0.5-1", early: "yes" })), null);
   assert.equal(parseRtstEvent({ ...readStarted, early: true }), null);
 });
@@ -231,8 +231,8 @@ test("a phone wait count carries its stage and duration, and the stage is the la
   const cancelled = { ...rtst("wait_cancelled", { waitStage: "preparing_voice", durationBucket: "<0.5" }), platform: "windows" };
   assert.equal((await handleRtstEvents(rtstPost([shown, cancelled]), env, on)).status, 204);
   assert.equal(env.points.length, 2);
-  assert.equal(env.points[0].blobs.at(-1), "stalled");
-  assert.equal(env.points[0].blobs.at(-4), "2-5");
+  assert.equal(env.points[0].blobs.at(-4), "stalled");
+  assert.equal(env.points[0].blobs.at(-7), "2-5");
 });
 
 test("a phone wait count with an unknown stage, a missing duration or an extra field is dropped", () => {
@@ -340,4 +340,91 @@ test("a phone batch over the limit is refused and a GET is a 405", async () => {
   assert.equal((await handleRtstEvents(rtstPost(events), rtstRecorder(), on)).status, 413);
   const get = new Request("https://readthestupidtext.sirous.uk/api/events");
   assert.equal((await handleRtstEvents(get, rtstRecorder(), on)).status, 405);
+});
+
+// ---- Device context and country (Slice 166) --------------------------------------------------------------------------
+
+const device = { osMajor: 15, formFactor: "tablet", arch: "arm64", cores: "5-8", ram: "4-6" };
+const withCountry = (request, country) => Object.defineProperty(request, "cf", { value: { country } });
+const dinoPost = (body, country) => withCountry(post(body), country);
+
+test("Dino stamps the batch's country and device facts on every point as blob10-blob15", async () => {
+  const env = recorder();
+  const response = await handleEvents(dinoPost({ schemaVersion: 1, device, events: [shelfEvent, ownEvent] }, "GB"), env, on);
+  assert.equal(response.status, 204);
+  for (const point of env.points) assert.deepEqual(point.blobs.slice(9), ["GB", "15", "tablet", "arm64", "5-8", "4-6"]);
+  assert.deepEqual(env.points[0].doubles, [2]);
+});
+
+test("a batch with no device object is still written, with the device fields empty (an older build)", async () => {
+  const env = recorder();
+  assert.equal((await handleEvents(dinoPost({ events: [shelfEvent] }, "DE"), env, on)).status, 204);
+  assert.deepEqual(env.points[0].blobs.slice(9), ["DE", "", "", "", "", ""]);
+  const nulled = recorder();
+  assert.equal((await handleEvents(dinoPost({ events: [shelfEvent], device: null }, "DE"), nulled, on)).status, 204);
+  assert.deepEqual(nulled.points[0].blobs.slice(10), ["", "", "", "", ""]);
+});
+
+test("an invalid device field becomes empty and never drops the count", async () => {
+  const env = recorder();
+  const badDevice = { osMajor: 150, formFactor: "fridge", arch: "mips", cores: "12", ram: "512GB", model: "Pixel 9" };
+  assert.equal((await handleEvents(dinoPost({ events: [shelfEvent], device: badDevice }, "FR"), env, on)).status, 204);
+  assert.deepEqual(env.points[0].blobs.slice(9), ["FR", "", "", "", "", ""]);
+  assert.ok(!JSON.stringify(env.points[0]).includes("Pixel"));
+  const partial = recorder();
+  await handleEvents(dinoPost({ events: [shelfEvent], device: { ...device, osMajor: "15", cores: "9+" } }, "FR"), partial, on);
+  assert.deepEqual(partial.points[0].blobs.slice(10), ["", "tablet", "arm64", "9+", "4-6"]);
+});
+
+test("the country is none for XX, T1, lower case, the wrong length, a non-string or no cf at all", async () => {
+  for (const country of ["XX", "T1", "gb", "GBR", "G", "", 5, null, undefined]) {
+    const env = recorder();
+    await handleEvents(dinoPost({ events: [shelfEvent] }, country), env, on);
+    assert.equal(env.points[0].blobs[9], "none", String(country));
+  }
+  const bare = recorder();
+  await handleEvents(post({ events: [shelfEvent] }), bare, on);
+  assert.equal(bare.points[0].blobs[9], "none");
+});
+
+test("the RTST phone count gets country, form factor and arch as blob18-blob20 and the bucket bounds as doubles", async () => {
+  const env = rtstRecorder();
+  const request = withCountry(new Request("https://readthestupidtext.sirous.uk/api/events", { method: "POST", body: JSON.stringify({ schemaVersion: 1, device, events: [readStarted] }) }), "SE");
+  assert.equal((await handleRtstEvents(request, env, on)).status, 204);
+  const point = env.points[0];
+  assert.equal(point.blobs.length, 20);
+  assert.deepEqual(point.blobs.slice(17), ["SE", "tablet", "arm64"]);
+  assert.equal(point.blobs[10], "15", "osMajor (blob11) is filled on every event from the device object");
+  assert.deepEqual(point.doubles, [2, 5, 4]);
+});
+
+test("the RTST bucket doubles cover every bucket, and -1 means the build sent none", async () => {
+  const cases = [["1-4", "<3", 1, 0], ["5-8", "3-4", 5, 3], ["9+", "4-6", 9, 4], ["1-4", "6-8", 1, 6], ["9+", "8+", 9, 8]];
+  for (const [cores, ram, coreBound, ramBound] of cases) {
+    const env = rtstRecorder();
+    const request = new Request("https://readthestupidtext.sirous.uk/api/events", { method: "POST", body: JSON.stringify({ device: { ...device, cores, ram }, events: [readStarted] }) });
+    await handleRtstEvents(request, env, on);
+    assert.deepEqual(env.points[0].doubles.slice(1), [coreBound, ramBound], `${cores} ${ram}`);
+  }
+  const old = rtstRecorder();
+  await handleRtstEvents(rtstPost([readStarted]), old, on);
+  assert.deepEqual(old.points[0].doubles, [2, -1, -1]);
+});
+
+test("an old RTST build keeps its own osMajor on app_opened, and the event's value wins over the device's", async () => {
+  const env = rtstRecorder();
+  const opened = rtst("app_opened", { language: "en", osMajor: 14 });
+  const request = new Request("https://readthestupidtext.sirous.uk/api/events", { method: "POST", body: JSON.stringify({ device, events: [opened] }) });
+  await handleRtstEvents(request, env, on);
+  assert.equal(env.points[0].blobs[10], "14");
+  const old = rtstRecorder();
+  await handleRtstEvents(rtstPost([opened]), old, on);
+  assert.deepEqual([old.points[0].blobs[10], old.points[0].blobs[17]], ["14", "none"]);
+});
+
+test("an RTST batch with an invalid device object is still written with empty device fields", async () => {
+  const env = rtstRecorder();
+  const request = new Request("https://readthestupidtext.sirous.uk/api/events", { method: "POST", body: JSON.stringify({ device: "phone", events: [readStarted] }) });
+  assert.equal((await handleRtstEvents(request, env, on)).status, 204);
+  assert.deepEqual(env.points[0].blobs.slice(17), ["none", "", ""]);
 });
