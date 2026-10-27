@@ -26,6 +26,17 @@ internal static class StarterVoices
             new("Baby Bear", "cub", Gender.Male, CharacterAge.Child, null, [VoiceQuality.Soft, VoiceQuality.Bouncy]),
         ],
 
+        // The Ugly Duckling: warm Mother Duck (the kind mummy); the Duckling, a gentle, curious boy (a boy's young voice in every language, so he is a duck again); Dilly, the giggly
+        // littlest sister (the little bunny, small and light; the duckling voices are a boy's in some languages); kind, cheery Hen (the busy bee, bright and bouncy, not the slow Granny Hen;
+        // the rosters have no adult woman's bright place but the mummy); and Swan, a big, warm, welcoming grown-up.
+        [StoreTexts.UglyDucklingId] =
+        [
+            new("Mother Duck", "mummy", Gender.Female, CharacterAge.Adult, null, [VoiceQuality.Warm, VoiceQuality.Soft]),
+            new("Duckling", "piglet", Gender.Male, CharacterAge.Child, null, [VoiceQuality.Soft, VoiceQuality.Warm]),
+            new("Dilly", "bunny", Gender.Female, CharacterAge.Child, null, [VoiceQuality.Bouncy, VoiceQuality.Bright]),
+            new("Hen", "bee", Gender.Female, CharacterAge.Adult, null, [VoiceQuality.Warm, VoiceQuality.Bright]),
+            new("Swan", "knight", Gender.Male, CharacterAge.Adult, null, [VoiceQuality.Warm, VoiceQuality.Bold]),
+        ],
         // The Town Mouse and the Country Mouse: lively, chatty Town Mouse (she) and soft, gentle Country Mouse (he). Both are mice again (they squeak); the roster's mouse voice is a boy in
         // en/fa and a girl elsewhere, so they suggest voices with the right gender in every language: Busy Bee for her, Cheeky Piglet (small and light, a mouse-sized boy) for him.
         [StoreTexts.TownMouseId] =

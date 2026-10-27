@@ -100,8 +100,8 @@ public sealed class StoreStoryTests : IDisposable
         });
     }
 
-    // The roster's duckling voices are one gender per language and an animal takes its own animal's voice before its gender, so the builder stores Duckling and Dilly
-    // as no animal (StarterAnimals). The app casts a language other than the story's afresh, carrying only the animal settings; the story's language keeps its cast.
+    // The roster's duckling voices are one gender per language, so the book chooses each voice (StarterVoices, Slice 156: mummy, piglet, bunny, bee, knight) with the gender, and Duckling
+    // and Dilly are ducks again. The app casts a language other than the story's afresh, carrying the animal settings and the book's choices; the story's language keeps its cast.
     [Theory]
     [MemberData(nameof(Languages))]
     public void TheUglyDuckling_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster(string language)

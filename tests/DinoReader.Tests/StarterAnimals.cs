@@ -5,12 +5,11 @@ namespace DinoReader.Tests;
 /// <summary>
 /// The animals of the characters whose names do not say it (Slice 125, Decision 132): the builders store them in the book's cast, so the pigs Pip, Pop and Pim oink
 /// and are cast as piglets. A character whose name has an animal word (Wolf, Papa Bear, Mrs. Rabbit) is found from the name and needs no entry here.
-/// A character stored as no animal (<see cref="CastMember.NotAnimal"/>) is cast by gender like a person in every language: the Ugly Duckling (really a swan) and his
-/// sister Dilly, whose rosters' duckling voices are one gender per language and would otherwise give him a girl's voice or her a boy's; and the Little Red
-/// Hen's Cat (she) and Duck (he), for the same reason with the kitten and duckling voices, Peter Rabbit (he), with the bunny voice (the cost is that they make
-/// no meow, quack or rabbit sounds). (Goldilocks' Mama Bear is a bear again: her book suggests the mummy voice, a woman's in every language, Slice 156.) The stored animal also picks the voice, so giving them back their animal
+/// A character stored as no animal (<see cref="CastMember.NotAnimal"/>) is cast by gender like a person in every language: the Little Red
+/// Hen's Cat (she) and Duck (he), whose rosters' kitten and duckling voices are one gender per language, Peter Rabbit (he), with the bunny voice, and Town Mouse (she) and Country Mouse (he), with the mouse voice (the cost is that they make
+/// no meow, quack, squeak or rabbit sounds). (Goldilocks' Mama Bear is a bear again: her book suggests the mummy voice, a woman's in every language, Slice 156.) The stored animal also picks the voice, so giving them back their animal
 /// would put a man's or the wrong-gender voice on them (56 gender tests fail): a separate "cast as a person" field is needed first (Slice 152 review).
-/// A book whose writer chose each voice (<see cref="StarterVoices"/>, Slice 156) needs none of this: the Little Red Hen's Cat and Duck and the Town and Country Mice have their animals back, and their gender comes from the book.
+/// A book whose writer chose each voice (<see cref="StarterVoices"/>, Slice 156) needs none of this: the Little Red Hen's Cat and Duck and the Ugly Duckling and his sister Dilly have their animals back, and their gender comes from the book.
 /// </summary>
 internal static class StarterAnimals
 {
@@ -18,12 +17,12 @@ internal static class StarterAnimals
     {
         [StarterTexts.PigsId] = Named(AnimalKind.Pig, "Pip", "Pop", "Pim"),
         [StoreTexts.BillyGoatsId] = Named(AnimalKind.Goat, "Little Billy", "Middle Billy", "Big Billy"),
+        [StoreTexts.UglyDucklingId] = Named(AnimalKind.Duck, "Duckling", "Dilly"), // ducks again: their book chooses a voice of their gender (StarterVoices, Slice 156)
     };
 
     private static readonly IReadOnlyDictionary<string, IReadOnlySet<string>> NotAnimalsByStory = new Dictionary<string, IReadOnlySet<string>>
     {
         [StarterTexts.GingerbreadId] = new HashSet<string> { "Grandpa", "Granny" }, // the text guesses animals from "Grandpa ... the cow"; they are people
-        [StoreTexts.UglyDucklingId] = new HashSet<string> { "Duckling", "Dilly" },
         [StoreTexts.PeterRabbitId] = new HashSet<string> { "Peter" }, // the bunny voice is a girl in most languages and Peter is a boy (Slice 121)
     };
 
