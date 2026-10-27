@@ -33,7 +33,7 @@ const STORE_FILTERS = ["none", "age", "author", "age+author"] as const;
 const OWN_BOOK_KINDS = ["photo", "pdf", "scan", "typed"] as const;
 const PAGE_BUCKETS = ["1", "2-5", "6-10", "11+"] as const;
 // The app's supported reading languages (UiLanguage.Supported in DinoReader.Core); UsageEventTests fails when this list and the app's drift apart.
-const READING_LANGUAGES = ["en", "fa", "fr", "es", "pt", "zh", "ar", "ru", "ja", "da", "fi", "sv", "nb", "nl"] as const;
+const READING_LANGUAGES = ["en", "fa", "fr", "es", "pt", "zh", "ar", "ru", "ja", "da", "fi", "sv", "nb", "nl", "de"] as const;
 const VOICE_CHANGES = ["character_voice", "flavour", "narrator"] as const;
 /** The waits the phone apps' overlay can show (WaitStage in the app, Slice 148); both products count them, and a test keeps this list and the app's `UsageWaitStage` the same. */
 const WAIT_STAGES = ["preparing_voice", "stalled", "downloading_model", "translating", "reading_pictures", "saving", "getting_file"] as const;

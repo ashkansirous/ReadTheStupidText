@@ -9,7 +9,7 @@
     NavigationPage.HasNavigationBar="False"
     SafeAreaEdges="Container">
 
-    <!-- Language (mock screen 26), opened from the pill in the grown-up gallery. The fourteen rows are built in code-behind. -->
+    <!-- Language (mock screen 26), opened from the pill in the grown-up gallery. The fifteen rows are built in code-behind. -->
     <Grid RowDefinitions="Auto,*">
         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6" Padding="6,8,14,10">
             <Border WidthRequest="44" HeightRequest="44" StrokeThickness="0" BackgroundColor="Transparent"

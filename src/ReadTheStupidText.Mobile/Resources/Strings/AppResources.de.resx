@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="App_Name" xml:space="preserve"><value>Read The Stupid Text</value></data>
+  <data name="Shell_ReaderTitle" xml:space="preserve"><value>Vorleser</value></data>
+  <data name="Common_Ok" xml:space="preserve"><value>OK</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>Abbrechen</value></data>
+  <data name="Common_Voice" xml:space="preserve"><value>Stimme</value></data>
+  <data name="Common_Language" xml:space="preserve"><value>Sprache</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>Einstellungen</value></data>
+  <data name="Reader_EditLink" xml:space="preserve"><value>Bearbeiten</value></data>
+  <data name="Reader_TextFromPictures" xml:space="preserve"><value>Text aus Fotos</value></data>
+  <data name="Reader_TextFromFile" xml:space="preserve"><value>Text aus einer Datei</value></data>
+  <data name="Reader_EmptyHint" xml:space="preserve"><value>Tippe unten auf eine Taste, um etwas zum Vorlesen hinzuzufügen</value></data>
+  <data name="Settings_LanguageCaption" xml:space="preserve"><value>Die Sprache der App-Texte</value></data>
+  <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Lesetempo</value></data>
+  <data name="Settings_CountsTitle" xml:space="preserve"><value>Hilf mit, die App zu verbessern</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>Sendet Zählungen wie „ein französischer Text wurde gelesen“. Keine Namen, keine Kennungen, nichts von dem, was du liest. Dazu kommen dein Land und eine grobe Geräteart (Handy oder Tablet, Speichergröße).</value></data>
+  <data name="Settings_CountsOn" xml:space="preserve"><value>An</value></data>
+  <data name="Settings_CountsOff" xml:space="preserve"><value>Aus</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>Die App zählt zum Beispiel, welche Sprachen gelesen werden, ohne Namen oder Kennungen. Du kannst das in den Einstellungen ausschalten. Dazu kommen dein Land und eine grobe Geräteart (Handy oder Tablet, Speichergröße).</value></data>
+  <data name="Common_Back" xml:space="preserve"><value>Zurück</value></data>
+  <data name="Reader_SkipBack" xml:space="preserve"><value>Voriger Satz</value></data>
+  <data name="Reader_SkipForward" xml:space="preserve"><value>Nächster Satz</value></data>
+  <data name="Reader_Play" xml:space="preserve"><value>Abspielen</value></data>
+  <data name="Reader_Pause" xml:space="preserve"><value>Pause</value></data>
+  <data name="Reader_PasteButton" xml:space="preserve"><value>Einfügen</value></data>
+  <data name="Reader_EditorHint" xml:space="preserve"><value>Text hier eintippen oder einfügen</value></data>
+  <data name="Reader_PasteFailedTitle" xml:space="preserve"><value>Einfügen nicht möglich</value></data>
+  <data name="Reader_PasteFailedMessage" xml:space="preserve"><value>Die Zwischenablage konnte nicht gelesen werden. Kopiere den Text noch einmal.</value></data>
+  <data name="Reader_ScanFailedTitle" xml:space="preserve"><value>Scannen nicht möglich</value></data>
+  <data name="Reader_ScanFailedMessage" xml:space="preserve"><value>Beim Scannen ist etwas schiefgegangen. Bitte versuche es noch einmal.</value></data>
+  <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>Der Scanner ließ sich nicht starten</value></data>
+  <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>Der Scanner ließ sich nicht starten. Versuche es noch einmal.</value></data>
+  <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>Scanner wird vorbereitet</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Der Dokumentenscanner wird noch vorbereitet. Versuche es gleich noch einmal.</value></data>
+  <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>Scanner nicht verfügbar</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>Der Dokumentenscanner ist auf diesem Gerät nicht verfügbar. Mach stattdessen ein einzelnes Foto.</value></data>
+  <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>Kamerazugriff nötig</value></data>
+  <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>Erlaube in den Einstellungen den Kamerazugriff, um Text zu fotografieren.</value></data>
+  <data name="Reader_NoCameraTitle" xml:space="preserve"><value>Keine Kamera</value></data>
+  <data name="Reader_NoCameraMessage" xml:space="preserve"><value>Zum Fotografieren von Text wird eine Kamera gebraucht, und dieses Gerät hat keine.</value></data>
+  <data name="Reader_ScanUnavailableTitle" xml:space="preserve"><value>Scannen nicht verfügbar</value></data>
+  <data name="Reader_ScanUnavailableMessage" xml:space="preserve"><value>Text aus Fotos zu lesen ist auf diesem Gerät noch nicht möglich.</value></data>
+  <data name="Reader_ScanUnreadableTitle" xml:space="preserve"><value>Dieser Scan ließ sich nicht lesen</value></data>
+  <data name="Reader_ScanUnreadableMessage" xml:space="preserve"><value>Scanne den Text noch einmal, mit besserem Licht oder schärferem Bild.</value></data>
+  <data name="Reader_NoTextFoundTitle" xml:space="preserve"><value>Kein Text gefunden</value></data>
+  <data name="Reader_NoTextFoundMessage" xml:space="preserve"><value>Scanne noch einmal, mit besserem Licht oder schärferem Bild.</value></data>
+  <data name="Capture_Title" xml:space="preserve"><value>Fotografiere jede Seite</value></data>
+  <data name="Capture_Hint" xml:space="preserve"><value>Füge eine Seite nach der anderen hinzu. Tippe auf „{0}“, wenn du alle hast.</value></data>
+  <data name="Capture_HintDone" xml:space="preserve"><value>Fertig</value></data>
+  <data name="Capture_PageLabel" xml:space="preserve"><value>Seite {0}</value></data>
+  <data name="Capture_Reading" xml:space="preserve"><value>wird gelesen …</value></data>
+  <data name="Capture_AddPage" xml:space="preserve"><value>Weitere Seite hinzufügen</value></data>
+  <data name="Capture_Done" xml:space="preserve"><value>Fertig – Text anzeigen</value></data>
+  <data name="Capture_ChoosePhotos" xml:space="preserve"><value>Aus Fotos wählen</value></data>
+  <data name="Capture_DiscardTitle" xml:space="preserve"><value>Diese Seiten verwerfen?</value></data>
+  <data name="Capture_DiscardMessage" xml:space="preserve"><value>Du hast {0} Seiten fotografiert. Sie werden nicht gespeichert, wenn du zurückgehst.</value></data>
+  <data name="Capture_DiscardMessageOne" xml:space="preserve"><value>Du hast 1 Seite fotografiert. Sie wird nicht gespeichert, wenn du zurückgehst.</value></data>
+  <data name="Capture_PageLimit" xml:space="preserve"><value>Du kannst bis zu {0} Seiten auf einmal hinzufügen. Die übrigen wurden nicht hinzugefügt.</value></data>
+  <data name="Capture_KeepTaking" xml:space="preserve"><value>Weiter fotografieren</value></data>
+  <data name="Capture_Discard" xml:space="preserve"><value>Verwerfen und zurück</value></data>
+  <data name="Capture_RemovePage" xml:space="preserve"><value>Diese Seite entfernen</value></data>
+  <data name="Capture_CouldntRead" xml:space="preserve"><value>Nicht lesbar</value></data>
+  <data name="Capture_ClosePreview" xml:space="preserve"><value>Schließen</value></data>
+  <data name="Review_Title" xml:space="preserve"><value>Text prüfen</value></data>
+  <data name="Review_TranslateTo" xml:space="preserve"><value>Nach {0} übersetzen</value></data>
+  <data name="Review_LooksLike" xml:space="preserve"><value>Dieser Text sieht aus wie {0}</value></data>
+  <data name="Review_TranslateAndRead" xml:space="preserve"><value>Übersetzen und vorlesen</value></data>
+  <data name="Review_Read" xml:space="preserve"><value>Vorlesen</value></data>
+  <data name="Wait_DownloadingModel" xml:space="preserve"><value>{0} wird heruntergeladen …</value></data>
+  <data name="Wait_Translating" xml:space="preserve"><value>Wird übersetzt …</value></data>
+  <data name="Wait_PreparingVoice" xml:space="preserve"><value>Die Stimme wird vorbereitet …</value></data>
+  <data name="Wait_Stalled" xml:space="preserve"><value>Die Stimme wird noch vorbereitet …</value></data>
+  <data name="Wait_ReadingFile" xml:space="preserve"><value>Die Datei wird gelesen …</value></data>
+  <data name="Review_FirstTimeOnly" xml:space="preserve"><value>Nur beim ersten Mal. Die Übersetzung passiert auf diesem Handy.</value></data>
+  <data name="Review_ShowOriginal" xml:space="preserve"><value>Original anzeigen</value></data>
+  <data name="Review_FailedOne" xml:space="preserve"><value>Seite {0} ließ sich nicht lesen.</value></data>
+  <data name="Review_TextCut" xml:space="preserve"><value>Dieser Text ist sehr lang, deshalb werden nur die ersten {0} Zeichen gezeigt.</value></data>
+  <data name="Review_FailedMany" xml:space="preserve"><value>Die Seiten {0} ließen sich nicht lesen.</value></data>
+  <data name="Review_HereOne" xml:space="preserve"><value>Seite {0} ist hier.</value></data>
+  <data name="Review_HereMany" xml:space="preserve"><value>Die Seiten {0} sind hier.</value></data>
+  <data name="Review_TranslateFailed" xml:space="preserve"><value>Die Übersetzung hat nicht geklappt, deshalb wird der Originaltext gelesen.</value></data>
+  <data name="Reader_PageLanguageTitle" xml:space="preserve"><value>In welcher Sprache ist diese Seite?</value></data>
+  <data name="Reader_OcrDownloading" xml:space="preserve"><value>Der Leser für {0} wird heruntergeladen … {1} %</value></data>
+  <data name="Reader_OcrDownloadFailedTitle" xml:space="preserve"><value>Der Leser ließ sich nicht herunterladen</value></data>
+  <data name="Reader_OcrDownloadFailedMessage" xml:space="preserve"><value>Der Leser für {0} ließ sich nicht herunterladen. Prüfe deine Verbindung und versuche es noch einmal.</value></data>
+  <data name="Reader_OcrOfflineMessage" xml:space="preserve"><value>Für diese Seite muss ein Leser heruntergeladen werden. Verbinde dich mit dem Internet und versuche es noch einmal.</value></data>
+  <data name="Reader_OcrFailedMessage" xml:space="preserve"><value>Der Leser für {0} ließ sich nicht einrichten. Versuche es später noch einmal.</value></data>
+  <data name="Reader_OcrUnreadableMessage" xml:space="preserve"><value>Diese Seite ließ sich nicht lesen.</value></data>
+  <data name="Reader_FilePickerTitle" xml:space="preserve"><value>Wähle eine .txt-, .pdf- oder .docx-Datei</value></data>
+  <data name="Reader_FilePermissionTitle" xml:space="preserve"><value>Berechtigung nötig</value></data>
+  <data name="Reader_FilePermissionMessage" xml:space="preserve"><value>Erlaube den Dateizugriff, um ein Dokument zu lesen.</value></data>
+  <data name="Reader_FileTooLargeTitle" xml:space="preserve"><value>Datei zu groß</value></data>
+  <data name="Reader_FileTooLargeMessage" xml:space="preserve"><value>Diese Datei hat {0} Seiten, erlaubt sind {1}.</value></data>
+  <data name="Reader_FileUnreadableTitle" xml:space="preserve"><value>Diese Datei ließ sich nicht lesen</value></data>
+  <data name="Reader_FileUnreadableMessage" xml:space="preserve"><value>Die Datei ist vielleicht beschädigt oder hat ein nicht unterstütztes Format.</value></data>
+  <data name="Reader_ReadFailedTitle" xml:space="preserve"><value>Dieser Text ließ sich nicht lesen</value></data>
+  <data name="Reader_ReadFailedMessage" xml:space="preserve"><value>Beim Lesen ist etwas schiefgegangen.</value></data>
+  <data name="Reader_VoiceUnavailableTitle" xml:space="preserve"><value>Vorlesen nicht möglich</value></data>
+  <data name="Reader_VoiceDownloadingMessage" xml:space="preserve"><value>Die natürliche Stimme für {0} wird noch heruntergeladen. Versuche es noch einmal, wenn sie fertig ist.</value></data>
+  <data name="Reader_NoVoiceMessage" xml:space="preserve"><value>Dieses Handy hat keine Stimme für {0}.</value></data>
+  <data name="PackStatus_Resolving" xml:space="preserve"><value>Natürliche Stimmen werden gesucht …</value></data>
+  <data name="PackStatus_Downloading" xml:space="preserve"><value>Natürliche Stimmen werden heruntergeladen … {0}</value></data>
+  <data name="PackStatus_Offline" xml:space="preserve"><value>Keine Verbindung. Es liest die Handy-Stimme. Tippe, um den Download der Stimme zu wiederholen.</value></data>
+  <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Der Download der Stimme war beschädigt. Es liest die Handy-Stimme. Tippe, um es noch einmal zu versuchen.</value></data>
+  <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Das Paket mit den natürlichen Stimmen ist unbrauchbar. Es liest die Handy-Stimme.</value></data>
+  <data name="PackStatus_Failed" xml:space="preserve"><value>Die natürlichen Stimmen ließen sich nicht herunterladen. Es liest die Handy-Stimme. Tippe, um es noch einmal zu versuchen.</value></data>
+  <data name="PackStatus_Unavailable" xml:space="preserve"><value>Für deine Sprache gibt es noch keine natürliche Stimme. Es liest die Handy-Stimme.</value></data>
+  <data name="VoicePicker_Heading" xml:space="preserve"><value>Stimme wählen</value></data>
+  <data name="VoicePicker_Subtitle" xml:space="preserve"><value>Natürliche Stimmen werden nur einmal heruntergeladen · dein Text bleibt auf dem Handy</value></data>
+  <data name="VoicePicker_SectionPhone" xml:space="preserve"><value>HANDY</value></data>
+  <data name="VoicePicker_SectionMale" xml:space="preserve"><value>MÄNNLICH</value></data>
+  <data name="VoicePicker_SectionFemale" xml:space="preserve"><value>WEIBLICH</value></data>
+  <data name="VoicePicker_Hint" xml:space="preserve"><value>Tippe auf eine Stimme, um sie zu hören und auszuwählen. Wenn du die Stimme mitten im Lesen wechselst, wird der aktuelle Satz noch mit der alten Stimme zu Ende gelesen.</value></data>
+  <data name="VoicePicker_PhoneVoiceName" xml:space="preserve"><value>Handy-Stimme</value></data>
+  <data name="VoicePicker_EngineSupertonic" xml:space="preserve"><value>SUPERTONIC</value></data>
+  <data name="VoicePicker_EnginePiper" xml:space="preserve"><value>PIPER</value></data>
+  <data name="VoicePicker_EngineMelo" xml:space="preserve"><value>MELOTTS</value></data>
+  <data name="VoicePicker_ReasonPackNotInstalled" xml:space="preserve"><value>Die natürliche Stimme für deine Sprache ist noch nicht installiert, deshalb liest die Handy-Stimme.</value></data>
+  <data name="VoicePicker_ReasonNoNeuralEngine" xml:space="preserve"><value>Natürliche Stimmen sind auf diesem Gerät noch nicht verfügbar, deshalb liest die Handy-Stimme.</value></data>
+  <data name="Language_Intro" xml:space="preserve"><value>Wähle deine Sprache. Wir laden eine natürliche Stimme dafür herunter; bis sie da ist, liest die Stimme deines Handys.</value></data>
+  <data name="Language_Retry" xml:space="preserve"><value>Download wiederholen</value></data>
+  <data name="Language_Continue" xml:space="preserve"><value>Weiter</value></data>
+  <data name="Language_StartReading" xml:space="preserve"><value>Mit dem Lesen beginnen</value></data>
+  <data name="Voice_NbWoman" xml:space="preserve"><value>Stimme {0} (Frau)</value></data>
+  <data name="Voice_NbMan" xml:space="preserve"><value>Stimme {0} (Mann)</value></data>
+</root>

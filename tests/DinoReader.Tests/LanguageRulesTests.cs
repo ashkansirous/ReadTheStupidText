@@ -9,6 +9,7 @@ public class LanguageRulesTests
     [InlineData("pt-BR", "«")]
     [InlineData("RU", "«")]
     [InlineData("zh", "“")]
+    [InlineData("de", "„")]
     [InlineData("ja", "「")]
     public void For_picks_the_rules_by_the_primary_language_subtag(string language, string opening)
     {
@@ -20,7 +21,7 @@ public class LanguageRulesTests
     [InlineData("")]
     [InlineData("en")]
     [InlineData("en-GB")]
-    [InlineData("de")]
+    [InlineData("it")]
     public void For_falls_back_to_english(string? language)
     {
         Assert.Same(LanguageRules.English, LanguageRules.For(language));
@@ -130,7 +131,7 @@ public class LanguageRulesTests
     [Theory]
     [InlineData("pt-BR", "pt")]
     [InlineData("fa_IR", "fa")]
-    [InlineData("de", "en")]
+    [InlineData("it", "en")]
     [InlineData(null, "en")]
     public void Ui_language_resolves_to_one_of_the_nine(string? language, string expected)
     {

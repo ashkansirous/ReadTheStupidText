@@ -194,7 +194,7 @@ accordingly.
 - Google Play: Play Console -> Grow -> Store presence -> Main store listing ->
   Manage translations, then fill the short and full description per language.
 
-### Listing texts for Danish, Finnish, Swedish, Norwegian and Dutch (Slice 103, Decision 107)
+### Listing texts for Danish, Finnish, Swedish, Norwegian, Dutch and German (Slice 103, Decision 107; German Slice 168)
 
 Written by Claude from `docs/store-listings/en.md`: the same blocks (7 search terms, short description, long
 description) plus the Google Play download note. **Not pasted into any store yet** (the apps are not public)
@@ -308,6 +308,31 @@ Op Android kun je tekst plakken of typen, een .txt-, .pdf- of .docx-bestand open
 - Geen account en geen analyse
 
 Google Play, downloadnotitie (toevoegen aan de volledige beschrijving): De eerste keer dat je de app op Android start, downloadt hij een stempakket van ongeveer 145 MB, dus er is één keer een internetverbinding nodig (wifi aanbevolen). Tot de download klaar is, leest de app voor met de ingebouwde stem van je telefoon. Alleen het stempakket wordt gedownload. Je tekst, bestanden en scans blijven op je apparaat en zodra de stem is geïnstalleerd, gebruikt de app het netwerk niet.
+
+#### German (`de`)
+
+Slice 168. Written by Claude from `docs/store-listings/en.md`, like the other non-English texts: it needs a native read before submission and is **not pasted into any store yet** (the apps are not public).
+
+Search terms: 1. vorlesen, 2. text zu sprache, 3. tts, 4. text laut lesen, 5. markierten text lesen, 6. pdf vorlesen, 7. natürliche stimmen offline
+
+Short description: Liest Text mit natürlichen Offline-Stimmen vor, mit 0,5- bis 2-facher Geschwindigkeit.
+
+Long description:
+
+Read The Stupid Text liest jeden Text laut vor, damit du zuhören kannst, statt auf einen Bildschirm zu starren.
+
+Unter Windows sitzt die App im Infobereich. Markiere Text in fast jeder App oder kopiere ihn, und er wird sofort vorgelesen. Drücke Strg+Win+R, um das Kopierte vorzulesen. (Terminals melden keine Auswahl, kopiere den Text dort also.)
+
+Auf Android kannst du Text einfügen oder tippen, eine .txt-, .pdf- oder .docx-Datei öffnen oder eine Seite mit der Kamera scannen und dann auf Abspielen tippen.
+
+- Natürlich klingende Stimmen, die auf deinem Gerät laufen
+- Lesetempo von 0,5x bis 2x
+- Funktioniert offline (Android lädt seine Stimme beim ersten Start einmal herunter). Dein Text, deine Dateien und deine Scans verlassen dein Gerät nie
+- Kein Konto und keine Analyse
+
+Google Play, Download-Hinweis (zur vollen Beschreibung hinzufügen): Beim ersten Start der App auf Android lädt sie ein Stimmpaket von etwa 145 MB herunter und braucht dafür einmal eine Internetverbindung (WLAN empfohlen). Bis der Download fertig ist, liest die App mit der eingebauten Stimme deines Handys vor. Es wird nur das Stimmpaket heruntergeladen. Dein Text, deine Dateien und deine Scans bleiben auf deinem Gerät, und sobald die Stimme installiert ist, nutzt die App das Netzwerk nicht.
+
+German uses the Supertonic-3 pack (`supertonic-3` lists `de` from pack version 4), so the "natural voices" claims stand once the pinned catalogue (`packs-8`) is published.
 
 ## Runtime deployment (.NET self-contained)
 
@@ -744,7 +769,7 @@ build cannot ship).
 
 **Batch 9 features on iOS (Slice 55).** The neural voice (sherpa-onnx 1.13.8, Supertonic, Piper
 and Melo packs with the sentence head start), language and OCR packs, PaddleOCR with Apple
-Vision as the fallback, the fourteen localized UI languages (right-to-left for Farsi and Arabic) and
+Vision as the fallback, the fifteen localized UI languages (right-to-left for Farsi and Arabic) and
 localized camera and photo permission prompts (`InfoPlist.strings`) are on iOS. Packs download over
 plain HTTPS from GitHub Releases, so no App Transport Security exception and no entitlement is
 needed (Decision 60); the packs folder is excluded from iCloud backup.

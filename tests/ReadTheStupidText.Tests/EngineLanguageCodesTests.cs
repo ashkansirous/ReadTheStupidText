@@ -9,6 +9,7 @@ public class EngineLanguageCodesTests
     [InlineData("NB", "no")]
     [InlineData("sv", "sv")]
     [InlineData("nl", "nl")]
+    [InlineData("de", "de")]
     [InlineData("en", "en")]
     public void ToEngine_maps_norwegian_and_leaves_the_rest(string app, string engine)
     {

@@ -27,6 +27,7 @@ public static class ScriptLanguageGuesser
         [AppLanguage.Swedish] = Words("och att det som är på för med inte jag var han de en av något vad från hennes också hon"),
         [AppLanguage.Norwegian] = Words("og at det som er på for med ikke jeg var han de en av meg noe hva ikkje henne seg etter også hun"),
         [AppLanguage.Dutch] = Words("de en is dat het een van niet naar zijn ook maar voor met ik was hij zij waren"),
+        [AppLanguage.German] = Words("und das ist nicht eine ich sich mit von zu dem auch auf für wir nur aber im"),
     };
 
     // Letters only Farsi uses (peh, tcheh, jeh, gaf) and the Farsi forms of kaf and yeh, against the Arabic ones.

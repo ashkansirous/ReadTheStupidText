@@ -7,7 +7,7 @@ namespace ReadTheStupidText.Mobile;
 public sealed record TranslationLanguageChoice(string Code, string Name);
 
 /// <summary>
-/// Builds the source-language picker's entries (Slice 54): the fourteen app languages first, named in
+/// Builds the source-language picker's entries (Slice 54): the fifteen app languages first, named in
 /// themselves like the language chooser, then every other language the translator supports, named by
 /// the system in its own language. Names are data from the platform, not translatable UI copy.
 /// </summary>

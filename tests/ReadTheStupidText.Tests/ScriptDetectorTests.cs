@@ -78,6 +78,7 @@ public class ScriptDetectorTests
     [InlineData("sv", TextScript.Latin)]
     [InlineData("nb", TextScript.Latin)]
     [InlineData("nl", TextScript.Latin)]
+    [InlineData("de", TextScript.Latin)]
     [InlineData("ko", TextScript.Hangul)]
     [InlineData("he", TextScript.Hebrew)]
     [InlineData("hi", TextScript.Devanagari)]

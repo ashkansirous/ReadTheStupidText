@@ -3,7 +3,7 @@ using ReadTheStupidText.Application.Reading;
 namespace ReadTheStupidText_App;
 
 /// <summary>
-/// Maps the stored language code (one of the fourteen, Decisions 68 and 107) to the BCP-47 tag of its
+/// Maps the stored language code (one of the fifteen, Decisions 68 and 107) to the BCP-47 tag of its
 /// <c>Strings\&lt;tag&gt;\Resources.resw</c> folder, and says which are right-to-left (Slice 57).
 /// Pure BCL, so the unit tests compile this file directly.
 /// </summary>
@@ -27,6 +27,7 @@ internal static class UiLanguageTag
         ["sv"] = "sv",
         ["nb"] = "nb",
         ["nl"] = "nl",
+        ["de"] = "de",
     };
 
     private static readonly HashSet<string> RightToLeft = new(StringComparer.OrdinalIgnoreCase) { "fa", "ar" };
@@ -34,7 +35,7 @@ internal static class UiLanguageTag
     /// <summary>Every resource folder the app ships, in manifest order (English first, the default).</summary>
     public static IReadOnlyCollection<string> AllTags => Tags.Values;
 
-    /// <summary>The resource tag for a stored language code, or null when the code is not one of the fourteen.</summary>
+    /// <summary>The resource tag for a stored language code, or null when the code is not one of the fifteen.</summary>
     public static string? For(string? code) =>
         code is not null && Tags.TryGetValue(code, out string? tag) ? tag : null;
 

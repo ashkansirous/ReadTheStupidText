@@ -1,6 +1,6 @@
 namespace ReadTheStupidText.Application.Reading;
 
-/// <summary>The fourteen app languages (Decisions 68 and 107).</summary>
+/// <summary>The fifteen app languages (Decisions 68 and 107; German joined in Slice 168).</summary>
 public enum AppLanguage
 {
     English,
@@ -17,6 +17,7 @@ public enum AppLanguage
     Swedish,
     Norwegian,
     Dutch,
+    German,
 }
 
 /// <summary>Maps <see cref="AppLanguage"/> to the language codes stored in settings and used by the catalog.</summary>
@@ -38,6 +39,7 @@ public static class AppLanguages
         [AppLanguage.Swedish] = "sv",
         [AppLanguage.Norwegian] = "nb",
         [AppLanguage.Dutch] = "nl",
+        [AppLanguage.German] = "de",
     };
 
     public static string Code(AppLanguage language) => Codes[language];

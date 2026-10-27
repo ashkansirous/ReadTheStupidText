@@ -18,6 +18,23 @@ public class NordicLanguageTests
     }
 
     [Theory]
+    [InlineData("Ik denk dat die man het niet weet.")]
+    [InlineData("Die jongen was ook met ons naar het huis.")]
+    [InlineData("Der er en mand, der ikke ved det.")]
+    [InlineData("Jag tror att den där mannen inte vet det.")]
+    [InlineData("Jeg tror at den mannen ikke vet det.")]
+    public void ShortDutchDanishSwedishAndNorwegianSamplesAreNotGerman(string text)
+    {
+        Assert.NotEqual("de", ScriptLanguageDetector.Detect(text)?.Tag);
+    }
+
+    [Fact]
+    public void AClearGermanSentenceIsGerman()
+    {
+        Assert.Equal("de", ScriptLanguageDetector.Detect("Ich habe nicht gesehen, dass der Hund auch mit dem Ball spielt, aber er ist nur müde.")?.Tag);
+    }
+
+    [Theory]
     [InlineData("no")]
     [InlineData("nn")]
     [InlineData("NO")]

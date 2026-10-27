@@ -51,7 +51,7 @@ public partial class StorytellerCharacterTests
     [Fact]
     public void Every_language_has_a_roster()
     {
-        Assert.Equal(14, UiLanguage.Supported.Count);
+        Assert.Equal(15, UiLanguage.Supported.Count);
         Assert.All(UiLanguage.Supported, code => Assert.NotEmpty(CharacterRoster.For(code)));
     }
 

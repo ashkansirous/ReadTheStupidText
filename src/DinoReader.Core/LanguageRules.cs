@@ -50,7 +50,9 @@ public sealed record LanguageRules(
     string NameLead = "",
     string ExtraNamePattern = "",
     bool DashTagAfterQuote = false,
-    FlavourWords? Flavours = null)
+    FlavourWords? Flavours = null,
+    string QuotePairs = "",
+    string PluralVerbSuffix = "")
 {
     private static readonly IReadOnlySet<string> NoWords = new HashSet<string>();
     private static readonly IReadOnlyList<string> NoEndings = [];
@@ -77,6 +79,25 @@ public sealed record LanguageRules(
 
     /// <summary>An opening mark that cannot also close (every opening mark but the straight quote).</summary>
     public bool IsOpeningNonStraight(char c) => c == CurlyOpenQuote || ExtraOpenQuotes.Contains(c);
+
+    /// <summary>
+    /// The mark that closes a quote opened by <paramref name="open"/> when the language lists its quote styles as open/close pairs
+    /// (<see cref="QuotePairs"/>: "open1 close1 open2 close2 ..."), so a mark that is the close of one pair and the open of another
+    /// (German “) is read by the pair that is open, never both ways. Null for an unpaired language or a mark that is not a pair opener.
+    /// </summary>
+    public char? CloserOf(char open)
+    {
+        for (int i = 0; i + 1 < QuotePairs.Length; i += 2)
+            if (QuotePairs[i] == open) return QuotePairs[i + 1];
+        return null;
+    }
+
+    /// <summary>
+    /// Whether a verb form is plural by its ending (German "sagten"/"riefen" end in "en", "sagte"/"rief" do not), so a pronoun that is both
+    /// "she" and "they" (German "sie") is read by the verb next to it. False for a language with no <see cref="PluralVerbSuffix"/>.
+    /// </summary>
+    public bool IsPluralVerb(string word) =>
+        PluralVerbSuffix.Length > 0 && word.EndsWith(PluralVerbSuffix, StringComparison.OrdinalIgnoreCase);
 
     public bool IsDialogueDash(char c) => DialogueDashes.Contains(c);
 

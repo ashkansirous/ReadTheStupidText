@@ -8,11 +8,11 @@ namespace DinoReader;
 
 /// <summary>
 /// Picks and applies the culture the screens speak (Slice 66, Decision 74; Slice 159): the grown-up's stored pick, else the
-/// device language when it is one of the fourteen, else English.
+/// device language when it is one of the fifteen, else English.
 /// </summary>
 public static class UiCulture
 {
-	/// <summary>The culture for a device culture: one of the fourteen languages, English when the device speaks another.</summary>
+	/// <summary>The culture for a device culture: one of the fifteen languages, English when the device speaks another.</summary>
 	public static CultureInfo Resolve(CultureInfo device) => CultureInfo.GetCultureInfo(UiLanguage.Resolve(device.Name));
 
 	/// <summary>

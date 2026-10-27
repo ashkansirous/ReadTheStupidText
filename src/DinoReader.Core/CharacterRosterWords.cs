@@ -184,4 +184,19 @@ public static partial class CharacterRoster
         ("Hongerige Wolf", "laag en grommend"), ("Wollig Schaap", "zacht en langzaam"),
         ("Snuffelend Biggetje", "klein en snuivend"), ("Krullend Biggetje", "levendig en helder"), ("Pluizig Lammetje", "licht en zacht"), ("Plassend Eendje", "bruisend en spetterend"), ("Kwispelend Hondje", "blij en warm"), ("Lief Katje", "klein en lief"),
     ];
+
+    private static (string Name, string Hint)[] GermanWords() =>
+    [
+        ("Märchenoma", "warm und weich"), ("Märchenopa", "tief und gemütlich"), ("Gutenacht-Flüsterer", "sanft und langsam"),
+        ("Liebe Mama", "warm und freundlich"), ("Winziges Mäuschen", "ganz klein und hoch"), ("Hüpfhäschen", "weich und hüpfend"),
+        ("Mutige Prinzessin", "klar und hell"), ("Summende Biene", "sprudelnd und schnell"), ("Mürrische Hexe", "heiser und schlau"),
+        ("Oma Henne", "langsam und gemütlich"), ("Brummiger Troll", "rau und tief"), ("Freundlicher Riese", "groß, tief und langsam"),
+        ("Opa Bär", "tief und lieb"), ("Schlauer Fuchs", "schnell und flüsternd"), ("Tapferer Ritter", "mutig und deutlich"),
+        ("Freches Ferkel", "klein und schnell"), ("Piepsendes Küken", "fröhlich und zwitschernd"), ("Rumpelnder Drache", "dröhnend und laut"),
+        ("Wolliges Lämmchen", "weich und meckernd"), ("Verspielter Welpe", "munter und froh"),
+        ("Neugieriges Kätzchen", "klein und schnurrend"), ("Kleines Entchen", "klein und piepsend"),
+        ("Bärenkind", "klein und weich"), ("Großer Brauner Bär", "tief und langsam"),
+        ("Hungriger Wolf", "tief und knurrend"), ("Wolliges Schaf", "weich und langsam"),
+        ("Schnüffelndes Ferkel", "klein und schnaufend"), ("Ringelschwänzchen", "munter und hell"), ("Flauschiges Lamm", "leicht und weich"), ("Platschendes Entchen", "sprudelnd und spritzig"), ("Schwanzwedelnder Welpe", "froh und warm"), ("Liebes Kätzchen", "klein und lieb"),
+    ];
 }

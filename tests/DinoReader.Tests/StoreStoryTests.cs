@@ -56,7 +56,7 @@ public sealed class StoreStoryTests : IDisposable
             using JsonDocument meta = JsonDocument.Parse(StoreBuilder.MetaJson(spec, StoreBuilder.Build(spec)));
             JsonElement titles = meta.RootElement.GetProperty("titles");
 
-            string[] expected = UiLanguage.Supported.Where(l => l != UiLanguage.English).Order().ToArray();
+            string[] expected = GermanBooksPending.BookLanguages.Where(l => l != UiLanguage.English).Order().ToArray();
             Assert.Equal(expected, titles.EnumerateObject().Select(t => t.Name).Order().ToArray());
             Assert.All(titles.EnumerateObject(), t => Assert.False(string.IsNullOrWhiteSpace(t.Value.GetString()), $"{spec.Title}: {t.Name}"));
         }
@@ -65,7 +65,7 @@ public sealed class StoreStoryTests : IDisposable
     [Fact]
     public void EveryShippedBook_HasATitleInEveryOtherLanguage()
     {
-        string[] others = UiLanguage.Supported.Where(l => l != UiLanguage.English).Order().ToArray();
+        string[] others = GermanBooksPending.BookLanguages.Where(l => l != UiLanguage.English).Order().ToArray();
         IEnumerable<string> titles = Books.Store.Select(s => s.Title).Concat(StarterBuilder.Starters.Select(s => s.Title)).Append(StarterBuilder.GoodEnoughTitle);
 
         foreach (string title in titles)
@@ -300,7 +300,7 @@ public sealed class StoreStoryTests : IDisposable
             Story story = StoreBuilder.Build(spec);
             IReadOnlyList<string> pieces = StoryPieces.TranslatablePieceTexts(story);
 
-            foreach (string language in UiLanguage.Supported.Where(l => l != UiLanguage.Resolve(story.Language)))
+            foreach (string language in GermanBooksPending.BookLanguages.Where(l => l != UiLanguage.Resolve(story.Language)))
             {
                 IEnumerable<string> missing = pieces.Where(p => string.IsNullOrWhiteSpace(BundledTranslations.Lookup(story, language, p)));
                 Assert.True(!missing.Any(), $"{spec.Stem} has no {language} translation for: {string.Join(" | ", missing.Take(3))}");
@@ -325,7 +325,7 @@ public sealed class StoreStoryTests : IDisposable
         Assert.Equal(spec.Title, imported.Title);
         Assert.Equal(built.Cast, imported.Cast);
         Assert.True(imported.TranslateToMyLanguage);
-        Assert.Equal(UiLanguage.Supported.Count - 1, imported.Translations!.Count);
+        Assert.Equal(GermanBooksPending.BookLanguages.Count() - 1, imported.Translations!.Count);
     }
 
     [Fact]

@@ -80,6 +80,7 @@ public static partial class CharacterRoster
         AppLanguage.Swedish => SwedishWords(),
         AppLanguage.Finnish => FinnishWords(),
         AppLanguage.Dutch => DutchWords(),
+        AppLanguage.German => GermanWords(),
         _ => throw new ArgumentOutOfRangeException(nameof(language), language, "No ten-voice roster for this language."),
     };
 }

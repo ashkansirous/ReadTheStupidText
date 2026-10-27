@@ -207,6 +207,7 @@ public static class StorySentences
 
         private static int FindClose(string text, int open, LanguageRules rules, IReadOnlySet<int> lineBreaks)
         {
+            char? closer = rules.CloserOf(text[open]);
             for (int k = open + 1; k < text.Length; k++)
             {
                 if (text[k] == '\n' && lineBreaks.Contains(k))
@@ -214,7 +215,7 @@ public static class StorySentences
                     return -1;
                 }
 
-                if (IsClosingQuote(text[k], rules))
+                if (closer is { } own ? text[k] == own : IsClosingQuote(text[k], rules))
                 {
                     return k;
                 }

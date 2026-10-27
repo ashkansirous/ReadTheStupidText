@@ -44,6 +44,7 @@ public sealed class ScriptLanguageDetector : ILanguageDetector
         [AppLanguage.Swedish] = Words("och att det som är på för med inte jag var han de en av något vad från hennes också hon"),
         [AppLanguage.Norwegian] = Words("og at det som er på for med ikke jeg var han de en av meg noe hva ikkje henne seg etter også hun"),
         [AppLanguage.Dutch] = Words("de en is dat het een van niet naar zijn ook maar voor met ik was hij zij waren"),
+        [AppLanguage.German] = Words("und das ist nicht ein eine ich sie mit von zu dem auch auf für hat wir nur aber"),
     };
 
     public Task<DetectedLanguage?> DetectAsync(string text, CancellationToken cancellationToken) =>
