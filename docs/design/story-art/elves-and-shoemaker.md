@@ -1,8 +1,17 @@
 # The Elves and the Shoemaker: art record
 
-Store story (`StoreTexts.Elves`, stem `elves-and-shoemaker`, version 5). Retold as 15 pages with one action each
+Store story (`StoreTexts.Elves`, stem `elves-and-shoemaker`, version 7). Retold as 15 pages with one action each
 (`dino-storytelling` skill, Slice 121). **Art status (2026-10-26): all 16 pictures drawn and prepared; full review PASSED on 2026-10-26.** The age range went from 5-8 to 4-8 because the reviewer advised it for the gentler text. The cover and all
 15 pages are new; the text-only version 4 had none.
+
+**Version 7 (2026-10-27, Slices 146 and 156):** the English is rewritten in spoken, bedtime words (Decision 152): "Oh dear",
+"Oh, wow!", "Someone's being so kind to us", "They waited, and waited, and waited", "clothes ... full of patches" for "tunics ...
+patched", "the snow in the moonlight" for "the moonlit snow", and a new sound triple on page 14 (`Stamp, stamp, stamp!`, as Nob
+stamps his boots). The page breaks and each page's one action are unchanged, so **every picture is kept** (cover and pages 1-15).
+The other 12 languages got the 21 new pieces in the same spoken register, plus a few register touch-ups (Arabic drops «لقد»,
+Russian «вырезал» for «раскроил», Swedish «Dagen efter»); Farsi (done in Wave A) changed only where the English meaning moved.
+The stamp is a plain triple in every language («تاپ تاپ تاپ!», «¡Pum! ¡Pum! ¡Pum!», 踏，踏，踏！, "Töm, töm, töm!" ...); only the
+English, Spanish, Chinese and Farsi forms follow measured rules, the rest need a listen (dino-storytelling section 3).
 
 **Gentle retelling (Decision 130):** in the Grimms' tale the shoemaker is so poor he has leather for one last pair
 and nothing else; the couple hide behind a curtain at night to spy on the elves, who are naked; when the elves find
@@ -45,13 +54,29 @@ sung by the elves as they work). Finnish uses `Tikki, tikki, tikki!` for the sti
 (page 5), then more and more (page 6).
 
 **Cast and voices:** Hans, Greta, Nib, Nob (`StoreTexts` spec list). Genders are chosen two and two: **Hans and Nob
-are "he", Greta and Nib are "she"** (set by the pronouns: "Hans lived with his wife", "the smallest he had ever made",
+are "he", Greta and Nib are "she"** (set by the pronouns: "Hans lived with his wife", "the smallest boots he'd ever made",
 "sang Nib, with her tiny hammer", "Nib twirled round in her new red coat", "sang Nob, with his tiny needle", "said
-Nob, and he waved", "Nob stamped his tiny new boots"). None of them has an animal word, so no `StarterAnimals` entry is
-needed: each is cast by gender. `StoreStoryTests.TheElvesAndTheShoemaker_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster`
-checks the stored genders and all 14 languages. The cat and the lady never speak, so they get no voice. Translations
-keep each gender: Russian сказал Ганс / сказала Грета / сказала Нибб / сказал Ноб; Arabic قال هانس / قالت غريتا /
-قالت نيب / قال نوب; Finnish Nipsu and Nopsu, Norwegian Nipp and Napp, Dutch Greet (names kept from version 4).
+Nob, and he waved", "Nob stamped his tiny new boots"). None of them is an animal (no `StarterAnimals` entry). The cat and the lady
+never speak, so they get no voice. Translations keep each gender: Russian сказал Ганс / сказала Грета / сказала Нибб / сказал Ноб;
+Arabic قال هانس / قالت غريتا / قالت نيب / قال نوب; Finnish Nipsu and Nopsu, Norwegian Nipp and Napp, Dutch Greet (names kept from
+version 4).
+
+**The book's voices (Slice 156, `StarterVoices`, chosen 2026-10-27).** One roster id for every language; all four ids exist in all 14
+rosters, so no language falls back to traits:
+
+- **Hans**: `knight` (an ordinary man's voice, Normal flavour); male, old, person, warm. The kind shoemaker talks plainly, so no
+  flavour.
+- **Greta**: `mummy` (a woman's voice, Normal); female, old, person, warm and soft.
+- **Nib**: `bee` (a woman's voice, Bouncy; Small in Farsi); female, young, fairy-kind (no roster has an elf), bright and bouncy.
+- **Nob**: `piglet` (a man's voice, Small; Chirpy in Farsi); male, young, fairy-kind, bouncy and squeaky. Nob is no animal, so he
+  never oinks: the sound comes only from a book animal.
+
+Real cast dumped in all 14 languages (before: the picker gave Nob the Grumpy Troll in 12 languages and the grumpy gardener in Farsi,
+Nib the whispering princess in Spanish and Portuguese and the Big dragon in Farsi). Now every character has their own gender, no two
+share a voice and flavour, and none whispers. Same base voice, a flavour apart (only two or three men's voices exist there): Hans
+and Nob in Spanish (em_alex), Portuguese (pm_alex) and Farsi (gyro); Greta and Nib in Spanish, Portuguese and Farsi (one woman's
+voice). `StoreStoryTests.TheElvesAndTheShoemaker_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster` checks the genders in
+all 14 languages, `AuthoredVoiceTests` the traits and suggestions.
 
 **Style:** Children's picture book illustration, soft watercolour and coloured pencil, warm gentle colours, simple
 rounded shapes, no text or letters anywhere. Portrait 3:4.
@@ -100,26 +125,26 @@ Every page: the whole scene sits in the top 70% of the picture; the bottom 30% i
 nothing important in it. No text, letters, words, sound effects or writing anywhere ("Tap, tap, tap", "Stitch" are
 never drawn in; no shop sign with letters). Every page has **three or more characters** (Gemini refuses some 1-2
 character scenes): the cat is in every indoor picture. The elves are tiny: always draw them on the workbench, the
-floor near the cat flap or the doorstep, never as big as the cat. Every picture is **new** (no pictures exist).
+floor near the cat flap or the doorstep, never as big as the cat. Every picture exists and is kept in version 7 (text-only change).
 
-| Page | One action (who, count, where, when) | Picture |
+| Page | One action (who, count, where, when) | Picture (v7) |
 | --- | --- | --- |
-| Cover | Night in the moonlit workshop: Nib (1) and Nob (1) stand on the workbench beside a pair of shiny new shoes, waving; Hans (1) and Greta (1) smile at them from behind the bench; the cat (1) peeks over the edge. Exactly two people, two elves, one cat. Elves in their thin tunics | new |
-| 1 | Winter daytime, the shop: Hans (1) taps a shoe on the workbench with his hammer while Greta (1) beside him threads a needle, both smiling; the ginger cat (1) dozes by the door; snowy street in the window | new |
-| 2 | Winter evening, blue dusk, the workshop: Hans (1) lays the last few cut leather pieces on the workbench, the big scissors beside them, yawning a big yawn; Greta (1) yawns too beside him; the cat (1) stretches on the floor | new |
-| 3 | Night, the bedroom upstairs: Hans (1) and Greta (1) fast asleep in the wooden bed under the patchwork quilt in their nightcaps; the cat (1) curled up at their feet; moon and falling snow in the little window. No elves | new |
-| 4 | Winter morning, the workshop: Hans (1) and Greta (1) lean over the workbench, amazed and delighted, looking at one pair of shiny new shoes; the cat (1) sniffs the shoes. No elves | new |
-| 5 | Winter morning, the shop: the lady (1) in the purple coat sits on a stool trying on the new shoes, smiling; Hans (1) kneels holding the shoe box; Greta (1) smiles beside them; the cat (1) watches | new |
-| 6 | Winter afternoon, the busy shop: shelves full of shoes; three customers (one a small child) try on shoes; Hans (1) and Greta (1) help them, smiling; the cat (1) on the window sill. No elves | new |
-| 7 | Evening, blue dusk, the workshop: Greta (1) stands by the workbench with its neat piles of cut-out leather, one finger up, telling Hans her idea with a happy smile; Hans (1) nods; the cat (1) sits on the bench | new |
-| 8 | Night, moonlight, the workshop: Hans (1) and Greta (1) sit snuggled together in the big armchair in the corner under the patchwork blanket, wide awake, the cat (1) on their laps; moonlight on the empty workbench with cut leather. Hans holds back a yawn. Nobody hides | new |
-| 9 | Midnight, moonlight, the workshop: Nib (1) and Nob (1), in thin patched tunics and bare feet, skip in through the cat flap at the bottom of the door, cheerful; Hans (1) and Greta (1) watch smiling from the armchair; the cat (1) sits up, ears pricked, curious | new |
-| 10 | Midnight, moonlight, on the workbench: Nib (1) taps a shoe with her tiny hammer and Nob (1) sews with his tiny needle, both singing, among new shoes; in the background Hans (1) and Greta (1) watch from the armchair, smiling; the cat (1) watches from the floor | new |
-| 11 | Late night, moonlight, the workbench: rows of finished shoes; Hans (1) and Greta (1) bend down to the bench, smiling and thanking; Nib (1) giggles with her hands to her mouth and Nob (1) waves up at them; the cat (1) beside the bench | new |
-| 12 | Next day, pale winter daylight, the workshop: Greta (1) sews a tiny red coat at the workbench, a tiny green coat and two small scarves (one yellow, one blue) beside her; Hans (1) holds up a tiny brown boot, the smallest he has made, a second pair beside him; the cat (1) plays with a ball of wool. No elves | new |
-| 13 | Midnight, moonlight, the workbench: Nib (1) and Nob (1), still in their thin tunics and bare feet, find the presents (two tiny coats, two scarves, two pairs of tiny boots) laid out on the bench, hands up in surprise and delight; Hans (1) and Greta (1) wait and smile from the armchair; the cat (1) watches | new |
-| 14 | Midnight, moonlight, on the workbench: Nib (1) in her red coat, yellow scarf and boots twirls round, and Nob (1) in his green coat, blue scarf and boots stamps his feet, both dancing round and round on top of the workbench; Hans (1) and Greta (1) laugh and clap beside the bench; the cat (1) watches | new |
-| 15 | Night, full moon, the snowy street: Nib (1) and Nob (1), in their new coats, scarves and boots, skip away over the snow, waving back; Hans (1) and Greta (1) wave goodbye from the open shop door in the moonlight, smiling, in their day clothes (shawl and apron); the cat (1) on the doorstep. Little elf footprints in the snow. The book's calm last picture | new |
+| Cover | Night in the moonlit workshop: Nib (1) and Nob (1) stand on the workbench beside a pair of shiny new shoes, waving; Hans (1) and Greta (1) smile at them from behind the bench; the cat (1) peeks over the edge. Exactly two people, two elves, one cat. Elves in their thin tunics | keep |
+| 1 | Winter daytime, the shop: Hans (1) taps a shoe on the workbench with his hammer while Greta (1) beside him threads a needle, both smiling; the ginger cat (1) dozes by the door; snowy street in the window | keep |
+| 2 | Winter evening, blue dusk, the workshop: Hans (1) lays the last few cut leather pieces on the workbench, the big scissors beside them, yawning a big yawn; Greta (1) yawns too beside him; the cat (1) stretches on the floor | keep |
+| 3 | Night, the bedroom upstairs: Hans (1) and Greta (1) fast asleep in the wooden bed under the patchwork quilt in their nightcaps; the cat (1) curled up at their feet; moon and falling snow in the little window. No elves | keep |
+| 4 | Winter morning, the workshop: Hans (1) and Greta (1) lean over the workbench, amazed and delighted, looking at one pair of shiny new shoes; the cat (1) sniffs the shoes. No elves | keep |
+| 5 | Winter morning, the shop: the lady (1) in the purple coat sits on a stool trying on the new shoes, smiling; Hans (1) kneels holding the shoe box; Greta (1) smiles beside them; the cat (1) watches | keep |
+| 6 | Winter afternoon, the busy shop: shelves full of shoes; three customers (one a small child) try on shoes; Hans (1) and Greta (1) help them, smiling; the cat (1) on the window sill. No elves | keep |
+| 7 | Evening, blue dusk, the workshop: Greta (1) stands by the workbench with its neat piles of cut-out leather, one finger up, telling Hans her idea with a happy smile; Hans (1) nods; the cat (1) sits on the bench | keep |
+| 8 | Night, moonlight, the workshop: Hans (1) and Greta (1) sit snuggled together in the big armchair in the corner under the patchwork blanket, wide awake, the cat (1) on their laps; moonlight on the empty workbench with cut leather. Hans holds back a yawn. Nobody hides | keep |
+| 9 | Midnight, moonlight, the workshop: Nib (1) and Nob (1), in thin patched tunics ("clothes ... full of patches" in the text) and bare feet, skip in through the cat flap at the bottom of the door, cheerful; Hans (1) and Greta (1) watch smiling from the armchair; the cat (1) sits up, ears pricked, curious | keep |
+| 10 | Midnight, moonlight, on the workbench: Nib (1) taps a shoe with her tiny hammer and Nob (1) sews with his tiny needle, both singing, among new shoes; in the background Hans (1) and Greta (1) watch from the armchair, smiling; the cat (1) watches from the floor | keep |
+| 11 | Late night, moonlight, the workbench: rows of finished shoes; Hans (1) and Greta (1) bend down to the bench, smiling and thanking; Nib (1) giggles with her hands to her mouth and Nob (1) waves up at them; the cat (1) beside the bench | keep |
+| 12 | Next day, pale winter daylight, the workshop: Greta (1) sews a tiny red coat at the workbench, a tiny green coat and two small scarves (one yellow, one blue) beside her; Hans (1) holds up a tiny brown boot, the smallest he has made, a second pair beside him; the cat (1) plays with a ball of wool. No elves | keep |
+| 13 | Midnight, moonlight, the workbench: Nib (1) and Nob (1), still in their thin tunics and bare feet, find the presents (two tiny coats, two scarves, two pairs of tiny boots) laid out on the bench, hands up in surprise and delight; Hans (1) and Greta (1) wait and smile from the armchair; the cat (1) watches | keep |
+| 14 | Midnight, moonlight, on the workbench: Nib (1) in her red coat, yellow scarf and boots twirls round, and Nob (1) in his green coat, blue scarf and boots stamps his feet ("Stamp, stamp, stamp!", never drawn as text), both dancing round and round on top of the workbench; Hans (1) and Greta (1) laugh and clap beside the bench; the cat (1) watches | keep |
+| 15 | Night, full moon, the snowy street: Nib (1) and Nob (1), in their new coats, scarves and boots, skip away over the snow, waving back; Hans (1) and Greta (1) wave goodbye from the open shop door in the moonlight, smiling, in their day clothes (shawl and apron); the cat (1) on the doorstep. Little elf footprints in the snow. The book's calm last picture | keep |
 
 Check (dino-storytelling section 4):
 
