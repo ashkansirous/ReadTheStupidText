@@ -66,7 +66,7 @@ on pages 3 and 13; `Crack, crack, crack!` on pages 1 and 2. The question `"Am I 
 Since the suggestions keep every gender right in every language, **Duckling and Dilly are ducks again** (`StarterAnimals.ByStory`,
 no longer `NotAnimal`). Real casts dumped for every language on 2026-10-27 (Mother Duck / Duckling / Dilly / Hen / Swan): every suggestion is kept
 everywhere except Farsi's Dilly (trait match: chick); no two characters share a voice and flavour; no whisper or hushed flavour;
-every gender right. en bf_emma Normal / am_puck Small / af_nova Small / af_sky Bouncy / am_liam Normal; fa mana Normal / gyro
+every gender right. en af_sarah Normal / am_puck Small / af_nova Small / af_sky Bouncy / am_liam Normal; fa mana Normal / gyro
 Chirpy / mana Bouncy (chick) / mana Small / gyro Normal; zh xiaobei Normal / yunxia Small / xiaoni Small / xiaoni Bouncy / yunxi
 Normal; es and pt dora Normal / alex Small / dora Small / dora Bouncy / alex Normal; the ten-voice languages (fr, ar, ru, ja, da,
 fi, sv, nb, nl) F2 Normal / M2 Small / F5 Small / F5 Bouncy / M5 Normal. Dilly and Hen share a voice with two flavours in zh and the

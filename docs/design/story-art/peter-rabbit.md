@@ -86,7 +86,7 @@ bunny voice is a girl in most languages): each suggestion is the right gender in
 boy's and a girl's voice. A rabbit has no sound word, so nothing new is heard. Robin stays no animal (a Bird would add "Tweet
 tweet!" to his lines on top of his own triple). Real casts dumped for all 14 languages on 2026-10-27, the app's way (stored
 cast in English, the animal-setting seed elsewhere): no two characters share a voice and flavour, no whisper flavour, every
-gender right. en bf_emma Normal / am_puck Small / am_michael Grumpy / am_puck Bouncy / af_sky Bouncy; fa mana Normal / gyro
+gender right. en af_sarah Normal / am_puck Small / am_michael Grumpy / am_puck Bouncy / af_sky Bouncy; fa mana Normal / gyro
 Chirpy / gyro Grumpy (gardener) / ganji Normal / mana Small; es and pt dora Normal / alex Small / santa Grumpy / alex Bouncy /
 dora Bouncy; zh xiaobei Normal / yunxia Small / yunjian Grumpy / yunxi Bouncy / xiaoni Bouncy; the Supertonic languages (fr, ar,
 ru, ja, da, fi, sv, nl) F2 Normal / M2 Small / M3 Grumpy / M4 Bouncy / F5 Bouncy; nb ksv / mnn / msv / mon / knv.
