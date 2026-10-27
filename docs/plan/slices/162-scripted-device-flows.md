@@ -72,7 +72,7 @@ uses a lot of tokens. A scripted flow runs the same checks in seconds and only r
 
 - Document open (system file picker), Scan's photo fallback (camera), a fake pack-ready hook, Dino's intro wizard and the Dino store list (grown-up gate).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-27)
 
 - Device acceptance for the MAUI apps starts with `tools/emulator/run-flows.ps1 -App rtst|dino` (Maestro flows in `.maestro/`), not hand-tapping; new screens get `AutomationId`s and hooks stay Debug-only. The emulator always cold-boots (~45 s, reused while running); never rely on snapshots. (Slice 162: docs/plan/slices/162-scripted-device-flows.md)
 - Follow-up (ClaudeSkills): the `device-test` agent should run the flows first.

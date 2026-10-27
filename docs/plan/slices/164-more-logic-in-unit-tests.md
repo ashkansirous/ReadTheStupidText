@@ -55,7 +55,7 @@ Seven moves into pure classes with thin callers: `ReadStatusLine`, `PlayButtonFa
 
 *From review:* high pass 7 findings, all low (skipped: style/simplification); medium pass 6 findings (applied 6: line endings restored; the rest low, skipped).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-27)
 
 - `src/DinoReader.Core/CLAUDE.md`: Core now also holds small pure UI-decision helpers (`GateKeypad`, `ChoiceLabels`), not only dialogue. (Slice 164: docs/plan/slices/164-more-logic-in-unit-tests.md)
 
