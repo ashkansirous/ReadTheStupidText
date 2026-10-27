@@ -26,6 +26,14 @@ internal static class StarterVoices
             new("Baby Bear", "cub", Gender.Male, CharacterAge.Child, null, [VoiceQuality.Soft, VoiceQuality.Bouncy]),
         ],
 
+        // The Lion and the Mouse: a big, booming but kind king of a Lion (the Friendly Giant: big, deep and slow); a tiny, quick, squeaky girl Mouse. The mouse voice is a boy in
+        // English and Farsi, so there her suggestion clashes on gender and the traits give her a girl's young, squeaky voice; everywhere else she is the Squeaky Mouse.
+        [StoreTexts.LionAndMouseId] =
+        [
+            new("Lion", "giant", Gender.Male, CharacterAge.Adult, null, [VoiceQuality.Booming, VoiceQuality.Warm]),
+            new("Mouse", "mouse", Gender.Female, CharacterAge.Young, null, [VoiceQuality.Squeaky, VoiceQuality.Bright]),
+        ],
+
         // X Marks the Treasure!
         [StoreTexts.TreasureId] =
         [

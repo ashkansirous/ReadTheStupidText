@@ -34,7 +34,7 @@ internal static class StoreTexts
 
     public static IReadOnlyList<StoreStorySpec> All { get; } =
     [
-        new(LionAndMouseId, "The Lion and the Mouse", "lion-and-mouse", LionAndMouse, 1, RetoldAesop, 4, 7, "Aesop", ["Lion", "Mouse"], 6, AddedDate),
+        new(LionAndMouseId, "The Lion and the Mouse", "lion-and-mouse", LionAndMouse, 1, RetoldAesop, 4, 7, "Aesop", ["Lion", "Mouse"], 7, AddedDate),
         new(GoldilocksId, "Goldilocks and the Three Bears", "goldilocks", Goldilocks, 3, RetoldTraditional, 3, 6, Traditional, ["Goldilocks", "Papa Bear", "Mama Bear", "Baby Bear"], 7, AddedDate),
         new(RedRidingHoodId, "Little Red Riding Hood", "red-riding-hood", RedRidingHood, 3, RetoldTraditional, 4, 7, Traditional, ["Red Riding Hood", "Mother", "Wolf", "Grandma", "Woodcutter"], 6, AddedDate),
         new(UglyDucklingId, "The Ugly Duckling", "ugly-duckling", UglyDuckling, 0, "Retold from Andersen · free to share", 5, 8, "Hans Christian Andersen", ["Mother Duck", "Duckling", "Dilly", "Hen", "Swan"], 6, AddedDate),
@@ -48,69 +48,69 @@ internal static class StoreTexts
     ];
 
     public const string LionAndMouse = """
-One hot afternoon a great Lion lay asleep in the shade of a tree. A tiny Mouse was running home through the grass with a berry for her supper.
+One hot afternoon, a great big Lion was fast asleep in the shade of a tree. A teeny-tiny Mouse was hurrying home through the grass with a berry for her supper.
 
-Pitter, patter, pitter, patter, went her little feet. She did not see the Lion, and she ran right over his nose.
+Pitter-patter, pitter-patter, pitter-patter, went her little feet. She didn't see the Lion, and whoops, she ran right over his nose!
 ---
-The Lion woke up with a roar. He put his big paw down beside the little Mouse.
+The Lion woke up with a great big roar. He put his big paw down, right next to the little Mouse.
 
-"Who dares to wake the king of the beasts?" said Lion. "You gave me such a fright!"
+"Hey! Who woke me up?" said Lion. "I'm the king of all the animals! You gave me such a fright!"
 ---
 The Mouse stood up on her back legs and held her paws together.
 
-"Please let me go, great Lion," said Mouse. "I did not mean to wake you. If you are kind to me today, I will be kind to you one day."
+"Please, please let me go, Mister Lion," said Mouse. "I didn't mean to wake you up. If you're kind to me today, I'll be kind to you one day, too!"
 ---
-The Lion laughed so hard that his tummy shook. "You, help me?" said Lion. "You are far too small to help a lion!"
+The Lion laughed so hard that his tummy wobbled. "Ha, ha, ha!" said Lion. "You want to help me? You're way too small to help a lion!"
 ---
-But he was a kind king, and he lifted his paw. "Run home, little Mouse," said Lion.
+But he was a kind king, so he lifted up his paw. "Run along home, little Mouse," said Lion.
 
-Pitter, patter, pitter, patter, went her little feet.
+Pitter-patter, pitter-patter, pitter-patter, went her little feet.
 ---
-Some days later the Lion went for a walk by the river. A yellow butterfly fluttered past his nose, and he bounced after it.
+A few days later, the Lion went for a walk by the river. A yellow butterfly fluttered past his nose, and off he bounced after it.
 
-He was having so much fun that he did not look where he was going.
+He was having so much fun that he didn't look where he was going.
 ---
-An old fishing net hung between two trees, drying in the sun. Bump! The Lion ran right into it.
+An old fishing net was hanging between two trees, drying in the sun. Boing, boing, boing! The Lion bounced right into it.
 
-The net wrapped all around him, from his nose to the tip of his tail.
+The net wrapped all around him, from his nose all the way to the tip of his tail.
 ---
-The Lion wriggled this way and that way. But the more he wriggled, the more tangled he got.
+The Lion wiggled this way and that way. But the more he wiggled, the more tangled up he got!
 
-"Grr! This is no fun at all!" said Lion. Then he gave a big, grumpy roar.
+"Grr, grr, grr!" said Lion. "This is no fun at all!" Then he let out a big, grumpy roar.
 ---
-The Mouse heard the roar from far away. She sat up in her little nest and listened.
+Far away, the Mouse heard the roar. She sat up in her cosy little nest and listened.
 
-"That is the kind Lion," said Mouse. "He sounds stuck! Now it is my turn to be kind to him."
+"That's the kind Lion!" said Mouse. "He sounds stuck! Now it's my turn to be kind to him."
 ---
-She ran through the grass as fast as her legs could go. Pitter, patter, pitter, patter, went her little feet.
+She ran through the grass as fast as her little legs could go. Pitter-patter, pitter-patter, pitter-patter, went her little feet.
 
-"Do not worry, great Lion," said Mouse. "I am coming!"
+"Don't worry, Mister Lion," said Mouse. "I'm coming!"
 ---
-The Mouse stood beside the net and looked up at the Lion.
+The Mouse stood next to the net and looked up at the Lion.
 
-"You came!" said Lion. "But you are so small. How can you help me?"
+"You came!" said Lion. "But you're so small. How can you help me?"
 
-"Just wait and see," said Mouse.
+"Just you wait and see," said Mouse.
 ---
-The Mouse began to nibble the ropes with her sharp little teeth. Nibble, nibble, snip! Nibble, nibble, snip!
+The Mouse started to nibble the ropes with her little teeth. Nibble, nibble, nibble! Snip, snip, snip!
 
-She nibbled and nibbled, and one by one the ropes came apart.
+She nibbled and nibbled, and one by one, the ropes came apart.
 ---
-Soon there was a hole in the net, and the Lion stepped out. He shook his mane, and bits of string flew everywhere.
+Soon there was a big hole in the net, and the Lion stepped out. He shook his mane, and bits of string flew everywhere.
 
-"Hooray!" said Mouse.
+"Hip, hip, hooray!" said Mouse.
 ---
 The Lion lay down in the grass, nose to nose with the little Mouse.
 
-"Thank you, little friend," said Lion. "I am sorry I laughed at you. Now I know that even a small friend can be a great friend."
+"Thank you, little friend," said Lion. "I'm sorry I laughed at you. Now I know that even a small friend can be a great big friend."
 
 "Kind friends help each other," said Mouse with a smile.
 ---
-That evening the Lion lay down under his shady tree, and the Mouse curled up on his big soft paw.
+That evening, the Lion lay down under his shady tree, and the Mouse curled up on his big, soft paw.
 
-"Goodnight, little friend," said Lion. "Goodnight, great friend," said Mouse.
+"Night-night, little friend," said Lion. "Night-night, big friend," said Mouse.
 
-From that day on, the Lion and the Mouse were the best of friends.
+From that day on, the Lion and the Mouse were best friends.
 """;
 
     public const string Goldilocks = """
