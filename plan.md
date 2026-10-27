@@ -24,7 +24,7 @@ Open slices only. Finished slices (153 rows) are in [slices-done](docs/plan/note
 | 168 | German in both apps (UI, voice, detection, translation, Dino rules) | planned | | | [168-german-in-both-apps.md](docs/plan/slices/168-german-in-both-apps.md) |
 | 169 | German translations for all 15 Dino books | planned | | | [169-german-dino-books.md](docs/plan/slices/169-german-dino-books.md) |
 | 170 | Tray panel: every Controls button fits | planned | | | [170-tray-panel-controls-row-fits.md](docs/plan/slices/170-tray-panel-controls-row-fits.md) |
-| 171 | Dino: the text card shows the whole page | planned | | | [171-dino-text-card-shows-whole-page.md](docs/plan/slices/171-dino-text-card-shows-whole-page.md) |
+| 171 | Dino: the text card scrolls with the reading | planned | | | [171-dino-text-card-shows-whole-page.md](docs/plan/slices/171-dino-text-card-shows-whole-page.md) |
 
 Batch 25 (119-123; 119, 120, 122, 123 built, 121 built; planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
 
