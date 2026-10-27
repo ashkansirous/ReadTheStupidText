@@ -16,8 +16,10 @@ Arabic is out of scope (user, 2026-10-27).
   Only words never answered before show under "To check". "95% of the time they're pronounced the same; don't waste my time."
 - **Never accept a misaligned spelling.** A Finglish answer counts as checked only when `finglish_to_marks` lines it up with
   the word's letters. A misaligned one stays under "To check" with the problem shown.
-- **No guesses you can't stand behind.** Leave `guess` empty rather than offer a literary or wrong reading
-  (e.g. informal درو = "dar ro", not "dero").
+- **Every word gets a suggestion.** Write a Finglish `guess` for every word not prefilled, in everyday spoken (Tehran)
+  Farsi, not literary (informal درو = "daro" for "dar ro", not "dero"), and check each one with `finglish_to_marks` before
+  seeding; a guess that doesn't line up is rewritten, never seeded. An empty box is not acceptable (user, 2026-10-27:
+  "it does not have any suggestions"). Write the guesses yourself or, for many words, hand the list to an Opus subagent.
 - **Sound words the voice drops** (short repeated exclamations; `mana` drops short words) get 2-3 spoken-only options with
   audio. Kids still see the original text. The page must show unanswered option boxes under "To check".
 - **Quiet.** Report only the page link, a question you cannot settle, and "merged". No status lines.
@@ -39,7 +41,9 @@ Add a row when you publish a page and update it when its book merges (same PR as
    with `capabilities {"assets":{}, "db":{"rules":[{"path":"words","write":"admin"},{"path":"pages","write":"admin"}]}, "user":{}}`.
    DB: `words` (word, page, order, count, guess), `pages` (p<n>: page, text, audioUrl, version), `answers`, `alternatives`
    (page, group, order, replaces, text, audioUrl), `choices` (doc `p<page>-<group>`), `requests/regen`, `requests/status`.
-3. **Seed** words, pages, prefilled answers (step "Prefill" above; note "from <book>"), page audio and alternatives.
+3. **Seed** words (with guesses), pages, prefilled answers (step "Prefill" above; note "from <book>"), page audio and
+   alternatives. Seed and check the page in the order the user sees it, and only hand over the link once every word has a
+   guess or a prefilled answer.
    Audio: `tools/sound-words-test` (`engines.build_piper`, `regen_review_audio.render_webm`), voice `mana`, webm only,
    uploaded as artifact assets in one publish. Find dropped words with `regen_review_audio.py --probe`-style loudness checks.
 4. **Hand the link** to the caller with the count of new words to check.
@@ -59,4 +63,5 @@ Add a row when you publish a page and update it when its book merges (same PR as
 - Python venv with numpy and the engines: `D:\ReadTheStupidText-worktrees\s154b\tmp\venv\Scripts\python`
   (else `python -m venv` + `pip install -r tools/sound-words-test/requirements.txt`). Run scripts with `-I` and the tool dir on `sys.path`.
 - piper-fa pack: `D:/ReadTheStupidText-worktrees/s145-tmp/packs/x/piper-fa-2/piper-fa` (or `RTST_PIPER_FA_ROOT`).
-- Review data and audio go in the book's worktree `tmp/` (gitignored), never in a temp folder that can be cleaned.
+- Review data and audio go in the book's worktree `tmp/` (gitignored), never in a temp folder that can be cleaned, and never
+  anywhere outside the worktree (no drive-root folders or junctions, not even to shorten paths).
