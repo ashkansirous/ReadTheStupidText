@@ -50,3 +50,33 @@ Source: `docs/design/dino-reader/Dino Reader Batch 31.dc.html`, screen 72 (lines
 - **Strings.** None.
 
 **Settled by the mock (the plan left open).** Line height 1.9 and font Vazirmatn for marked text, with the 30% cap kept. **Default:** use 1.9 for Farsi and Arabic books only; other scripts keep 1.5.
+
+## Verdict and approach (2026-10-27)
+
+- **User verdict from the review page:** correct marks help the voice, wrong marks hurt. So marks come only from words the user approved by ear, never from a guess.
+- **Review page approach:** each distinct word of the Pigs Farsi text got a clip with the voice's own guess and the user's Finglish; the user chose "mine" or "guess" per word (`tmp/answers-final`). `tools/sound-words-test/finglish_to_marks.py` aligns the Finglish to the letters and adds the marks (a silent word-final ع/ء and an ezafe on a final ی are handled); `build_marks_list.py` turns the answers into the list; `apply_marks.py` builds the "how to read" table. One word, کوچولوم (user typo `kuchulm`), stays unmarked.
+- **Approved list (data):** `tests/DinoReader.Tests/Starters/translations/three-little-pigs.fa.marks.json` (`{marks: {plain word -> marked word}, ezafe: [{page, sentence, word index, plain, marked}], spoken: [{page, sentence, replaces, text}]}`: 182 words, plus the user's spoken replacements for phrases the voice leaves silent, e.g. "آخ جون!"; they apply to the spoken text only, before the marks; `build_marks_list.py` reads them from `tmp/choices`).
+- **Design change from the user:** marks are NOT shown to kids. `three-little-pigs.fa.json` stays plain; `three-little-pigs.fa.speak.json` holds the marked "how to read" text per piece. It rides in the story's `Translations` under the key `speak:<lang>` (`BundledTranslations.SpeakKey`), so the `.dino` format (schemaVersion 1) is unchanged and older apps ignore it. `StoryVoicing.VoiceAsync` speaks it (`StoryTranslator.TranslateAsync(forSpeech: true)`); the on-screen text and highlight use the normal translation and source ranges, so they stay aligned.
+- Tests: `FarsiMarksTests` (shown text has no marks, spoken text stripped equals shown for every piece, every marked word is in the list, plain text hash), `BundledTranslationsTests.LookupSpoken`. Pigs starter bumped to v11.
+- **Ezafe is per occurrence (review fix):** the user wrote each word's Finglish looking at ONE sentence, so a trailing e / ye the plain word does not spell belongs to that occurrence only. `marks` holds the word without it (applies everywhere); `ezafe` holds the with-ezafe form for that sentence and word position (10 of them). "گرگ گفت" is spoken without ezafe. `Adopt` gives an already-adopted or edited copy the speak table only for pieces whose shown translation still equals the bundled one (adopted flag key bumped to v3).
+
+## Built, Three Little Pigs Farsi part (2026-10-27)
+
+*Built 2026-10-27; emulator-checked, not fully verified (see below).* Supersedes Decision 159's "marks shown on screen" (user, 2026-10-27).
+
+- **Hidden marks.** Kids see plain Farsi; the marked text is a `speak:fa` table in `Story.Translations` (`BundledTranslations.SpeakKey`/`LookupSpoken`/`ComposeSpoken`). `StoryTranslator.TranslateAsync(forSpeech)` and `StoryVoicing` (`forSpeech: true`) speak it if present, else the plain text. Highlight follows the source ranges. `.dino` `schemaVersion` unchanged. `ArabicMarks.Strip`; `AnimalSounds.SaysIt` strips marks.
+- **Review tooling.** The user checked every word on a review page (Finglish input to `tools/sound-words-test/finglish_to_marks.py`, 28 tests); `build_marks_list.py`, `apply_marks.py`, `regen_review_audio.py`. Data: `tests/DinoReader.Tests/Starters/translations/three-little-pigs.fa.marks.json` and `.fa.speak.json`. Ezafe applied per occurrence only. Exclamations `piper-fa` mana drops get spoken-only replacements, e.g. p2 «آخ جون آخ جون آخ جون!».
+- **Versions.** Pigs starter v10 to v11; adopted flag key v3.
+- **From review:** both passes done, fixes applied. `DinoReader.Tests` 1527/1527; Android build clean.
+- **Device (emulator, headless):** shown text has no marks; spoken text marked on p1, p2 and ezafe lines; highlight follows; English unchanged; no crash; v9 to v11 upgrade kept Created/SourceId.
+
+#### For CLAUDE.md
+
+- The `speak:<lang>` convention is already in `src/DinoReader.Core/CLAUDE.md` (Slice 154); nothing further to add.
+
+#### Not yet verified
+
+- Recordings surviving the starter refresh (none existed in the test; the story dir id changes on refresh).
+- p5 تق تق تق, p14 شالاپ/آپچی and p15 چیک replacements await the user's pick.
+- Farsi review of the other 14 books.
+- Arabic diacritizer and its listen test.

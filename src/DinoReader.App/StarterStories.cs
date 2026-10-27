@@ -16,8 +16,8 @@ public sealed class StarterStories(IStoryLibrary library, StoryVoicing voicing)
 {
 	private const string InstalledKeyPrefix = "dino.starter.installed.";
 
-	// Set once a starter's stored copy has taken the bundled translations (Slice 95; v2 key, Slice 105: the five Nordic and Dutch tables): earlier versions installed the starters without them.
-	private const string TranslationsAdoptedKeyPrefix = "dino.starter.translations.v2.";
+	// Set once a starter's stored copy has taken the bundled translations (Slice 95; v2 key, Slice 105: the five Nordic and Dutch tables; v3 key, Slice 154: the "how to read" tables, added to copies that already adopted): earlier versions installed the starters without them.
+	private const string TranslationsAdoptedKeyPrefix = "dino.starter.translations.v3.";
 
 	// Set for every starter and every store story kept on the shelf (Slice 133): a book with this mark, a starter record or a recorded content version came from the catalogue, not from a grown-up.
 	private const string CatalogueKeyPrefix = "dino.catalogue.";

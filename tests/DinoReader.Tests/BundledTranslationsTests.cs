@@ -9,6 +9,22 @@ public class BundledTranslationsTests
         new("0123456789abcdef0123456789abcdef", "T", language, DateTimeOffset.UnixEpoch, [new StoryPage("Hello there.")], [], CoverStyle.Colour, 0, "v",
             TranslateToMyLanguage: translate, Translations: translations);
 
+    [Fact]
+    public void LookupSpoken_PrefersTheHowToReadText_AndKeepsTheShownTranslationAsIs()
+    {
+        var tables = new Dictionary<string, IReadOnlyDictionary<string, string>>
+        {
+            ["fa"] = new Dictionary<string, string> { ["Hello there."] = "سلام", ["Bye."] = "خداحافظ" },
+            [BundledTranslations.SpeakKey("fa")] = new Dictionary<string, string> { ["Hello there."] = "سَلام" },
+        };
+        Story story = StoryWith(tables);
+
+        Assert.Equal("سَلام", BundledTranslations.LookupSpoken(story, "fa", "Hello there."));
+        Assert.Equal("خداحافظ", BundledTranslations.LookupSpoken(story, "fa", "Bye."));
+        Assert.Equal("سلام", BundledTranslations.Lookup(story, "fa", "Hello there."));
+        Assert.False(BundledTranslations.Has(StoryWith(new Dictionary<string, IReadOnlyDictionary<string, string>> { [BundledTranslations.SpeakKey("fa")] = tables["fa"] }), "fa"));
+    }
+
     private static readonly IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> Farsi =
         new Dictionary<string, IReadOnlyDictionary<string, string>> { ["fa"] = new Dictionary<string, string> { ["Hello there."] = "salam." } };
 
@@ -191,6 +207,78 @@ public class BundledTranslationsTests
         Assert.Equal("hallo.", BundledTranslations.Lookup(adopted, "nl", "Hello there."));
         Assert.False(adopted.TranslateToMyLanguage);
         Assert.Equal("Mine", adopted.Title);
+    }
+
+    [Fact]
+    public void A_copy_with_every_language_gains_the_how_to_read_text_only_for_pieces_whose_shown_text_is_unchanged()
+    {
+        var bundled = new Dictionary<string, IReadOnlyDictionary<string, string>>
+        {
+            ["fa"] = new Dictionary<string, string> { ["Hello there."] = "salam.", ["Bye."] = "khoda." },
+            [BundledTranslations.SpeakKey("fa")] = new Dictionary<string, string> { ["Hello there."] = "salAm.", ["Bye."] = "khodA." },
+        };
+        var edited = new Dictionary<string, IReadOnlyDictionary<string, string>>
+        {
+            ["fa"] = new Dictionary<string, string> { ["Hello there."] = "salam.", ["Bye."] = "my own bye" },
+        };
+
+        Story adopted = BundledTranslations.Adopt(StoryWith(edited), StoryWith(bundled));
+
+        Assert.Equal("salAm.", BundledTranslations.LookupSpoken(adopted, "fa", "Hello there."));
+        Assert.Equal("my own bye", BundledTranslations.LookupSpoken(adopted, "fa", "Bye."));
+        Assert.Equal("my own bye", BundledTranslations.Lookup(adopted, "fa", "Bye."));
+    }
+
+    [Fact]
+    public void A_newly_gained_language_brings_its_how_to_read_table_along()
+    {
+        var bundled = new Dictionary<string, IReadOnlyDictionary<string, string>>
+        {
+            ["sv"] = new Dictionary<string, string> { ["Hello there."] = "hej." },
+            ["fa"] = new Dictionary<string, string> { ["Hello there."] = "salam." },
+            [BundledTranslations.SpeakKey("fa")] = new Dictionary<string, string> { ["Hello there."] = "salAm." },
+        };
+        Story stored = StoryWith(new Dictionary<string, IReadOnlyDictionary<string, string>> { ["sv"] = new Dictionary<string, string> { ["Hello there."] = "hej." } });
+
+        Story adopted = BundledTranslations.Adopt(stored, StoryWith(bundled));
+
+        Assert.Equal("salam.", BundledTranslations.Lookup(adopted, "fa", "Hello there."));
+        Assert.Equal("salAm.", BundledTranslations.LookupSpoken(adopted, "fa", "Hello there."));
+    }
+
+    [Fact]
+    public void A_partial_how_to_read_table_is_refreshed_per_piece()
+    {
+        var shown = new Dictionary<string, string> { ["Hello there."] = "salam.", ["Bye."] = "khoda.", ["Yes."] = "bale." };
+        var bundled = new Dictionary<string, IReadOnlyDictionary<string, string>>
+        {
+            ["fa"] = shown,
+            [BundledTranslations.SpeakKey("fa")] = new Dictionary<string, string> { ["Hello there."] = "salAm.", ["Bye."] = "khodA.", ["Yes."] = "balE." },
+        };
+        var stored = StoryWith(new Dictionary<string, IReadOnlyDictionary<string, string>>
+        {
+            ["fa"] = new Dictionary<string, string> { ["Hello there."] = "salam.", ["Bye."] = "khoda.", ["Yes."] = "mine" },
+            [BundledTranslations.SpeakKey("fa")] = new Dictionary<string, string> { ["Hello there."] = "old", ["Yes."] = "mine spoken" },
+        });
+
+        Story adopted = BundledTranslations.Adopt(stored, StoryWith(bundled));
+
+        Assert.Equal("salAm.", BundledTranslations.LookupSpoken(adopted, "fa", "Hello there."));
+        Assert.Equal("khodA.", BundledTranslations.LookupSpoken(adopted, "fa", "Bye."));
+        Assert.Equal("mine spoken", BundledTranslations.LookupSpoken(adopted, "fa", "Yes."));
+    }
+
+    [Fact]
+    public void A_copy_whose_shown_text_changed_everywhere_gets_no_how_to_read_table()
+    {
+        var bundled = new Dictionary<string, IReadOnlyDictionary<string, string>>
+        {
+            ["fa"] = new Dictionary<string, string> { ["Hello there."] = "salam." },
+            [BundledTranslations.SpeakKey("fa")] = new Dictionary<string, string> { ["Hello there."] = "salAm." },
+        };
+        Story stored = StoryWith(new Dictionary<string, IReadOnlyDictionary<string, string>> { ["fa"] = new Dictionary<string, string> { ["Hello there."] = "edited" } });
+
+        Assert.Same(stored, BundledTranslations.Adopt(stored, StoryWith(bundled)));
     }
 
     [Fact]

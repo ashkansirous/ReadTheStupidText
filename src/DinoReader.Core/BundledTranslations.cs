@@ -44,20 +44,53 @@ public static class BundledTranslations
         }
 
         var have = stored.Translations.Keys.Select(Key).ToHashSet();
-        var missing = bundled.Translations.Where(t => !have.Contains(Key(t.Key))).ToList();
-        if (missing.Count == 0)
-        {
-            return stored;
-        }
-
         var merged = new Dictionary<string, IReadOnlyDictionary<string, string>>(stored.Translations);
-        foreach (var table in missing)
+        foreach (var table in bundled.Translations.Where(t => !IsSpeakKey(t.Key) && !have.Contains(Key(t.Key))))
         {
             merged[table.Key] = table.Value;
         }
 
-        return stored with { Translations = merged };
+        bool changed = merged.Count != stored.Translations.Count;
+        foreach (var table in bundled.Translations.Where(t => IsSpeakKey(t.Key)))
+        {
+            changed |= MergeSpoken(merged, bundled, table);
+        }
+
+        return changed ? stored with { Translations = merged } : stored;
     }
+
+    // Merges one bundled "how to read" table into <paramref name="merged"/> per piece (Slice 154): a piece takes the bundled spoken text where the shown translation in the copy
+    // (its own or one just gained) is still the bundled one; a copy whose text or translation the grown-up changed is not read with marks made for the old text.
+    // Pieces the copy's speak table already has are refreshed the same way; the rest of its table stays. True when anything changed.
+    private static bool MergeSpoken(Dictionary<string, IReadOnlyDictionary<string, string>> merged, Story bundled, KeyValuePair<string, IReadOnlyDictionary<string, string>> table)
+    {
+        string language = table.Key[SpeakPrefix.Length..];
+        string wanted = Key(table.Key);
+        IReadOnlyDictionary<string, string>? shown = merged.FirstOrDefault(t => Key(t.Key) == Key(language) && t.Value.Count > 0).Value;
+        IReadOnlyDictionary<string, string>? bundledShown = TableFor(bundled, language);
+        if (shown is null || bundledShown is null)
+        {
+            return false;
+        }
+
+        var own = merged.FirstOrDefault(t => Key(t.Key) == wanted);
+        var result = own.Value is null ? new Dictionary<string, string>() : new Dictionary<string, string>(own.Value);
+        bool changed = false;
+        foreach (var piece in table.Value.Where(p => shown.TryGetValue(p.Key, out string? seen) && seen == bundledShown.GetValueOrDefault(p.Key)))
+        {
+            changed |= !result.TryGetValue(piece.Key, out string? current) || current != piece.Value;
+            result[piece.Key] = piece.Value;
+        }
+
+        if (changed)
+        {
+            merged[own.Key ?? table.Key] = result;
+        }
+
+        return changed;
+    }
+
+    private static bool IsSpeakKey(string key) => key.StartsWith(SpeakPrefix, StringComparison.Ordinal);
 
     /// <summary>Whether the story carries a table for <paramref name="language"/>.</summary>
     public static bool Has(Story story, string language) => TableFor(story, language) is not null;
@@ -85,6 +118,21 @@ public static class BundledTranslations
             || (Has(story, myLanguage) && (engineLanguages is not null || IsComplete(story, myLanguage)))
             || (engineLanguages is not null && TranslationFlow.IsPairSupported(engineLanguages, source, myLanguage));
     }
+
+    /// <summary>The table key of the "how to read" texts for <paramref name="language"/> (Slice 154): same piece keys as the language's own table, values spoken in place
+    /// of the displayed translation (a Farsi sentence with its vowel marks). Not a language code, so it never resolves to a language.</summary>
+    public static string SpeakKey(string language) => SpeakPrefix + Key(language);
+
+    private const string SpeakPrefix = "speak:";
+
+    /// <summary>The text the voice speaks for <paramref name="pieceText"/>: the "how to read" form when the story has one, else the displayed translation, else null.</summary>
+    public static string? LookupSpoken(Story story, string language, string pieceText) =>
+        TableFor(story, SpeakKey(language)) is { } table && table.TryGetValue(pieceText, out string? spoken) ? spoken : Lookup(story, language, pieceText);
+
+    /// <summary>The per-piece translator for speech: <see cref="LookupSpoken"/> first, then <paramref name="engine"/> (null for none), else the source text.</summary>
+    public static PieceTranslator ComposeSpoken(Story story, string myLanguage, PieceTranslator? engine) =>
+        async (text, cancellationToken) =>
+            LookupSpoken(story, myLanguage, text) ?? (engine is null ? text : await engine(text, cancellationToken));
 
     /// <summary>The per-piece translator: the bundled table first, then <paramref name="engine"/> (null for none), else the source text.</summary>
     public static PieceTranslator Compose(Story story, string myLanguage, PieceTranslator? engine) =>
