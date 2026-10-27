@@ -34,11 +34,11 @@ public static partial class CharacterRoster
         new("puppy", "M2", VoiceFlavour.Bouncy, CharacterKind.Speaker),
         new("kitten", "M2", VoiceFlavour.Squeaky, CharacterKind.Speaker),
         new("duckling", "M2", VoiceFlavour.Small, CharacterKind.Speaker),
-        new("cub", "M2", VoiceFlavour.Normal, CharacterKind.Speaker),
+        new("cub", "M1", VoiceFlavour.Chirpy, CharacterKind.Speaker),
         new("bigbear", "M1", VoiceFlavour.Big, CharacterKind.Speaker),
         new("wolf", "M1", VoiceFlavour.Grumpy, CharacterKind.Speaker),
         new("ewe", "M1", VoiceFlavour.Sleepy, CharacterKind.Speaker),
-        // Slice 135: three voices leave one young-sounding place free (every other young flavour is taken), so only a second piglet is added.
+        // Slice 135: three voices leave one young-sounding place free (the cub's M1/Chirpy; when M1 narrates, CharacterRoster.Choices moves the cub to the next young male place), so only a second piglet is added.
         new("piglet2", "M2", VoiceFlavour.Whisper, CharacterKind.Speaker),
     ];
 
