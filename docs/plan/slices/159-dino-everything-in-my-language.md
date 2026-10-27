@@ -1,6 +1,6 @@
 # Slice 159 — Dino: everything in the chosen language
 
-*In progress (wave 2026-10-27c), draft PR.* Dino Reader only.
+*Built 2026-10-27 (PR #473).* Dino Reader only.
 
 **Batch:** 35 (Dino language, 2026-10-27; Decision 164)
 **Touches:** `src/DinoReader.App/UiCulture.cs`, `src/DinoReader.App/Resources/Strings/AppResources.cs`,
@@ -120,7 +120,7 @@ after it merges or rebase onto it.
 
 *Checks:* DinoReader.Tests 1546, RTST Tests 1357, worker 94, typecheck clean, both Android builds. Emulator in Farsi: wizard, titles, pack decline/cancel/accept, persistence after restart, language switch updates shelf chrome; no crash.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-27)
 
 In `src/DinoReader.App/CLAUDE.md`:
 - UI text comes from `AppResources` with the app-wide culture (`LanguageChoice`), never `CurrentUICulture`; cached pages re-apply their text on a language change. (Slice 159: docs/plan/slices/159-dino-everything-in-my-language.md)

@@ -1,6 +1,6 @@
 # Slice 158 — Dino: publish store books on every merge
 
-*In progress (wave 2026-10-27c), draft PR.* Dino Reader only. Small, CI only; can run beside other work (it touches no book content).
+*Built 2026-10-27 (PR #472).* Dino Reader only. Small, CI only; can run beside other work (it touches no book content).
 
 **Batch:** 34 (store plumbing, 2026-10-27; Decision 163)
 **Touches:** `.github/workflows/release.yml`, `.github/scripts/ship-targets.mjs`, `.github/scripts/ship-targets.test.mjs`,
@@ -49,7 +49,7 @@ is needed. The store builder runs on Linux (`dinoreader.yml` already runs `tests
 - [x] `tools/upload-store-story.ps1` stays for manual use; note in its header that CI does this on merge.
 - [x] Docs: `.github/CLAUDE.md` (the job, its trigger, the order rule), root `CLAUDE.md` store paragraph (uploads are
       automatic on merge; the manual script is a fallback).
-- [ ] First run: after the merge, `release.yml` (or a `workflow_dispatch`) uploads all 15 lagging books; compare
+- [x] First run (main run 40500814826 uploaded all 15 books, verify passed): after the merge, `release.yml` (or a `workflow_dispatch`) uploads all 15 lagging books; compare
       `/api/stories` with `StoreTexts.cs`/`StarterVersions` and confirm none lag; X Marks the Treasure reads "Kathryn".
 
 ## Verification
@@ -82,11 +82,11 @@ Two passes. Fixed: ENOBUFS on the package existence check, a failed upload hidde
 
 `node --test .github/scripts` 153/153. A dry run against the live store listed all 15 books as behind; nothing was uploaded.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-27)
 
 Already written into `.github/CLAUDE.md` and the root store paragraph by the slice branch (Slice 158: docs/plan/slices/158-dino-publish-store-books.md).
 
 #### Not yet verified
 
-- The first `main` run uploads the 15 lagging books and `--verify` passes.
+- (Done: the first `main` run, 40500814826, uploaded all 15 books and `--verify` passed.)
 - `actionlint` on `release.yml` (runs in CI).
