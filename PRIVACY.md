@@ -29,7 +29,7 @@ panel on Windows, in Settings on the phones); see *Anonymous usage counts* below
   on iPhone while that pack is not installed. The photo is processed to extract
   text and is not uploaded, saved permanently, or shared — it exists only to be
   read aloud.
-- **Translation** (Android only for now, off by default): when you turn on "Translate to my
+- **Translation** (Android and iPhone, off by default): when you turn on "Translate to my
   language", the app identifies the language of your text with Google's
   on-device ML Kit language identification and translates it with ML Kit's
   on-device translation, then reads the result. Both run entirely on your
@@ -76,11 +76,11 @@ French to Russian needs two) from the same public GitHub Releases page, as a pla
 that carries none of your text. Once installed, translating works fully offline. If a pack is
 missing the app reads the original text.
 
-**Translation models (Android).** The first time you translate to or from a
+**Translation models (Android and iPhone).** The first time you translate to or from a
 language, Google's ML Kit downloads that language's translation model (about
 30 MB each; English is used as a go-between for most pairs) from Google's
-servers, using ML Kit's own on-device model download (it may use Google Play
-services). This is a request for a model file, not for your text: none of your
+servers, using ML Kit's own on-device model download (on Android it may use Google Play
+services on Android). This is a request for a model file, not for your text: none of your
 text, images or scans is sent. Once a model is on the phone, translating works
 offline. If a model cannot be downloaded the app reads the original text.
 
@@ -181,7 +181,7 @@ language pack on every platform rather than bundled):
   downloaded once per language as a recognition pack, run locally, and nothing you
   scan is sent anywhere.
 
-- **Google ML Kit Language Identification and Translation** (Android only) —
+- **Google ML Kit Language Identification and Translation** (Android; on iPhone ML Kit Translation only, with Apple's on-device language recognition) —
   the on-device models used to detect the language of your text and translate
   it. They run locally; nothing you type, paste or scan is sent to Google or
   anyone else. Only the translation model files are downloaded (see *Network

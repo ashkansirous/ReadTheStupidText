@@ -10,8 +10,8 @@ namespace DinoReader;
 /// <summary>
 /// Translates a story's sentences into the grown-up's language after the speakers were worked out in
 /// the story's own language (Slice 66, Decision 74). Each piece is looked up in the story's bundled
-/// <see cref="Story.Translations"/> first, then the on-device engine (<see cref="ITranslator"/>, ML Kit on Android from
-/// Mobile.Shared; none on Windows and iOS), else it is left as it is (Slice 95). A story with a full bundled table therefore
+/// <see cref="Story.Translations"/> first, then the on-device engine (<see cref="ITranslator"/>, ML Kit on Android and iOS from
+/// Mobile.Shared; none on Windows), else it is left as it is (Slice 95). A story with a full bundled table therefore
 /// translates on every platform with no engine. A missing engine model never blocks reading.
 /// </summary>
 public sealed class StoryTranslator
@@ -144,7 +144,7 @@ public sealed class StoryTranslator
 
 	/// <summary>
 	/// Whether <paramref name="story"/> should be translated on the phone but is not yet: the switch is on, its language differs from mine, the book has no full
-	/// table, and this build has an engine that covers the pair (none on iOS and Windows: such a book stays in its own language).
+	/// table, and this build has an engine that covers the pair (none on Windows: such a book stays in its own language).
 	/// </summary>
 	public bool NeedsOwnTranslation(Story story)
 	{

@@ -37,7 +37,7 @@ Grounding (origin/main f1083c9):
   carries the title in all languages (`Story.Translations`, Slice 95).
 - **Own books translate only on Android, and the pack downloads silently, over mobile data**
   (`Mobile.Shared/Platforms/Android/MlKitTranslator.cs`: `DownloadModelIfNeeded` on first use, `RequireWifi = false`).
-  The shelf never shows an own book's translated title. iOS and Windows register no `ITranslator`.
+  The shelf never shows an own book's translated title. iOS and Windows register no `ITranslator`. *(Slice 160 reverses the iOS part: `MlKitTranslator` on iOS is registered and implements `ITranslationPacks` too.)*
 
 ## Decisions (Decision 164, settled with the user 2026-10-27)
 
@@ -58,7 +58,7 @@ Grounding (origin/main f1083c9):
    Cancel; declining leaves the book in its own language. Packs are per language, not per pair (en->fa needs fa; whether
    `en` must also download is checked on the emulator). The translation (text and title) is saved inside the book once, so
    the shelf, grown-up screens and reader show it offline afterwards.
-6. **iOS and Windows:** no on-device translator today (Windows has none for ordinary PCs; ML Kit exists on iOS but no .NET
+6. **iOS and Windows:** *(iOS reversed by Slice 160, 2026-10-27: ML Kit Translate on iOS, same engine and languages as Android; Windows stays as written.)* no on-device translator today (Windows has none for ordinary PCs; ML Kit exists on iOS but no .NET
    binding is known). A short check looks for an iOS ML Kit Translate binding; if none, own books on iOS and Windows stay in
    their own language with a one-line note in the book's language card saying translation is not available on this device.
    A follow-up slice covers iOS if a binding turns up.

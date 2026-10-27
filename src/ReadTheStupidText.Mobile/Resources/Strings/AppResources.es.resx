@@ -35,9 +35,9 @@
   <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>No se pudo iniciar el escáner</value></data>
   <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>No se pudo iniciar el escáner. Inténtalo de nuevo.</value></data>
   <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>El escáner se está preparando</value></data>
-  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Google Play Services aún está preparando el escáner de documentos. Inténtalo de nuevo en un momento.</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>El escáner de documentos aún se está preparando. Inténtalo de nuevo en un momento.</value></data>
   <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>Escáner no disponible</value></data>
-  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>El escáner de documentos necesita Google Play Services. Haz una sola foto en su lugar.</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>El escáner de documentos no está disponible en este dispositivo. Haz una sola foto en su lugar.</value></data>
   <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>Se necesita acceso a la cámara</value></data>
   <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>Concede acceso a la cámara en Ajustes para fotografiar texto.</value></data>
   <data name="Reader_NoCameraTitle" xml:space="preserve"><value>Sin cámara</value></data>

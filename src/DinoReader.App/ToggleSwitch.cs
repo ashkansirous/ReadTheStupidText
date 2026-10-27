@@ -43,11 +43,14 @@ public sealed class ToggleSwitch : Border
 			if (IsEnabled)
 			{
 				IsOn = !IsOn;
+#if IOS
+				ToggleSwitchAccessibility.Announce(this);
+#endif
 			}
 		};
 		GestureRecognizers.Add(tap);
 		Apply();
-#if ANDROID
+#if ANDROID || IOS
 		ToggleSwitchAccessibility.Attach(this);
 #endif
 	}
@@ -97,6 +100,8 @@ public sealed class ToggleSwitch : Border
 		SemanticProperties.SetDescription(this, _accessibleName);
 #if ANDROID
 		ToggleSwitchAccessibility.Announce(this);
+#elif IOS
+		ToggleSwitchAccessibility.Refresh(this); // the re-read is posted only for a tap (below), never for a programmatic change
 #endif
 	}
 

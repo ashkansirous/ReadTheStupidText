@@ -35,9 +35,9 @@
   <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>Kunne ikke starte scanneren</value></data>
   <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>Kunne ikke starte scanneren — prøv igen.</value></data>
   <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>Scanneren gør sig klar</value></data>
-  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Google Play-tjenester er stadig ved at forberede dokumentscanneren. Prøv igen om lidt.</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Dokumentscanneren er stadig ved at blive klargjort. Prøv igen om lidt.</value></data>
   <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>Scanner ikke tilgængelig</value></data>
-  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>Dokumentscanneren kræver Google Play-tjenester. Tag i stedet et enkelt foto.</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>Dokumentscanneren er ikke tilgængelig på denne enhed. Tag i stedet et enkelt foto.</value></data>
   <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>Kameraadgang påkrævet</value></data>
   <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>Giv adgang til kameraet i Indstillinger for at fotografere tekst.</value></data>
   <data name="Reader_NoCameraTitle" xml:space="preserve"><value>Intet kamera</value></data>

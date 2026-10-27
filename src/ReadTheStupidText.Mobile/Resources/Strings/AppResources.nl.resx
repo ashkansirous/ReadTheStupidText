@@ -35,9 +35,9 @@
   <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>De scanner kon niet starten</value></data>
   <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>De scanner kon niet starten — probeer het opnieuw.</value></data>
   <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>Scanner wordt voorbereid</value></data>
-  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Google Play-services is de documentscanner nog aan het voorbereiden. Probeer het over een moment opnieuw.</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>De documentscanner wordt nog voorbereid. Probeer het over een moment opnieuw.</value></data>
   <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>Scanner niet beschikbaar</value></data>
-  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>De documentscanner heeft Google Play-services nodig. Maak in plaats daarvan één foto.</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>De documentscanner is niet beschikbaar op dit apparaat. Maak in plaats daarvan één foto.</value></data>
   <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>Cameratoegang nodig</value></data>
   <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>Geef in Instellingen toegang tot de camera om tekst te fotograferen.</value></data>
   <data name="Reader_NoCameraTitle" xml:space="preserve"><value>Geen camera</value></data>

@@ -35,9 +35,9 @@
   <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>Не удалось запустить сканер</value></data>
   <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>Не удалось запустить сканер — повторите попытку.</value></data>
   <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>Сканер подготавливается</value></data>
-  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Сервисы Google Play ещё готовят сканер документов. Повторите попытку чуть позже.</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Сканер документов ещё готовится. Повторите попытку чуть позже.</value></data>
   <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>Сканер недоступен</value></data>
-  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>Сканеру документов нужны сервисы Google Play. Сделайте одно фото.</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>Сканер документов недоступен на этом устройстве. Сделайте одно фото.</value></data>
   <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>Нужен доступ к камере</value></data>
   <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>Разрешите доступ к камере в настройках, чтобы фотографировать текст.</value></data>
   <data name="Reader_NoCameraTitle" xml:space="preserve"><value>Нет камеры</value></data>

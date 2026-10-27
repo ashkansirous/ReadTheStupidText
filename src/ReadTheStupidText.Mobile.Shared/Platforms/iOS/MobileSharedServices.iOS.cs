@@ -4,6 +4,7 @@ using ReadTheStupidText.Application.Images;
 using ReadTheStupidText.Application.Logging;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Application.Translation;
 
 namespace ReadTheStupidText.Mobile.Shared;
 
@@ -14,6 +15,10 @@ public static partial class MobileSharedServices
 		services.AddSingleton<IPlatformServices, IOSPlatformServices>();
 		RegisterScanAndOcr(services);
 		RegisterNeuralReader(services);
+		// Slice 160: ML Kit translation for both apps, the twin of the Android registration (a model is downloaded on first use).
+#if !IOS_SIMULATOR_NO_MLKIT // the simulator build has no ML Kit (no simulator slice), so no translator and the card hides
+		services.AddSingleton<ITranslator, MlKitTranslator>();
+#endif
 	}
 
 	// Slice 55 and 67: PaddleOCR from the language's OCR pack with Apple Vision as the fallback,

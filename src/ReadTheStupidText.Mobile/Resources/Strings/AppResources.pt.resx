@@ -35,9 +35,9 @@
   <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>Não foi possível iniciar o scanner</value></data>
   <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>Não foi possível iniciar o scanner — tente novamente.</value></data>
   <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>Scanner em preparação</value></data>
-  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Os serviços do Google Play ainda estão preparando o scanner de documentos. Tente novamente em instantes.</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>O scanner de documentos ainda está sendo preparado. Tente novamente em instantes.</value></data>
   <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>Scanner indisponível</value></data>
-  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>O scanner de documentos precisa dos serviços do Google Play. Tire uma única foto.</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>O scanner de documentos não está disponível neste dispositivo. Tire uma única foto.</value></data>
   <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>Acesso à câmera necessário</value></data>
   <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>Conceda acesso à câmera nas Configurações para fotografar texto.</value></data>
   <data name="Reader_NoCameraTitle" xml:space="preserve"><value>Sem câmera</value></data>

@@ -8,8 +8,7 @@ namespace ReadTheStupidText.Mobile;
 /// Identifies a text's language with Apple's Natural Language framework
 /// (<see cref="NLLanguageRecognizer"/>, Slice 55): on the device, no network, available on every iOS
 /// version the app supports. It is the iOS counterpart of Android's ML Kit language identification
-/// and only becomes visible once an <c>ITranslator</c> is registered too; see the Slice 55 decisions
-/// for why none is on iOS yet.
+/// and is paired with the on-device ML Kit translator on iOS (Slice 160).
 /// </summary>
 public sealed class NlLanguageDetector : ILanguageDetector
 {

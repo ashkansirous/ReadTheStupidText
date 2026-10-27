@@ -35,9 +35,9 @@
   <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>スキャナーを起動できませんでした</value></data>
   <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>スキャナーを起動できませんでした。もう一度お試しください。</value></data>
   <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>スキャナーを準備中です</value></data>
-  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Google Play 開発者サービスがドキュメントスキャナーをまだ準備しています。しばらくしてからもう一度お試しください。</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>ドキュメントスキャナーはまだ準備中です。しばらくしてからもう一度お試しください。</value></data>
   <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>スキャナーを利用できません</value></data>
-  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>ドキュメントスキャナーには Google Play 開発者サービスが必要です。代わりに写真を1枚撮影してください。</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>このデバイスではドキュメントスキャナーを利用できません。代わりに写真を1枚撮影してください。</value></data>
   <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>カメラへのアクセスが必要です</value></data>
   <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>テキストを撮影するには、設定でカメラへのアクセスを許可してください。</value></data>
   <data name="Reader_NoCameraTitle" xml:space="preserve"><value>カメラがありません</value></data>
