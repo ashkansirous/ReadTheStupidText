@@ -258,5 +258,146 @@ public class PictureTextBookTests
         Assert.True(PictureTextBook.PanelMaxHeight(400, 800, 0, 10) > 0);
     }
 
+    // Slice 171: the card holds whole lines and scrolls with the reading. Line height 37 and padding 10 are close to the 21 pt, 1.5 line-height card.
+    [Theory]
+    [InlineData(100, 84)]  // two lines fit (10 above, none below)
+    [InlineData(84, 84)]
+    [InlineData(60, 47)]   // less than a line still gets one
+    [InlineData(0, 0)]
+    public void SnapPanelHeight_IsWholeLinesPlusPadding(double max, double expected) =>
+        Assert.Equal(expected, PictureTextBook.SnapPanelHeight(max, 37, 10), 6);
+
+    [Theory]
+    [InlineData(1080, 2400)]
+    [InlineData(1600, 2560)]
+    public void SnapPanelHeight_OnPhoneAndTablet_NeverCutsALine(double width, double height)
+    {
+        double dpWidth = width / 2.75;
+        double dpHeight = height / 2.75;
+        double max = PictureTextBook.PlacePanel(dpWidth, dpHeight, 1.0, 8, 6, 14).MaxHeight;
+        double snapped = PictureTextBook.SnapPanelHeight(max, 31.5, 10);
+
+        int lines = PictureTextBook.VisibleLines(snapped, 31.5, 10);
+        Assert.True(lines >= 1);
+        Assert.Equal(10 + lines * 31.5, snapped, 6);
+        Assert.True(snapped <= max || lines == 1);
+    }
+
+    // Lines as a platform lays them out: a 21 pt font at 1.5 gives 31.5 dp lines; a line with a fallback-font glyph (CJK, Farsi) is taller.
+    private static TextLines Uniform(int count, double pitch = 31.5, int width = 20) =>
+        new(Enumerable.Range(0, count).Select(i => i * pitch).ToList(), Enumerable.Range(1, count).Select(i => i * pitch).ToList(),
+            Enumerable.Range(0, count).Select(i => i * width).ToList());
+
+    private static TextLines Mixed() => new([0, 30, 70, 100, 130], [30, 70, 100, 130, 160], [0, 20, 40, 60, 80]);
+
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(19, 0)]
+    [InlineData(20, 1)]
+    [InlineData(79, 3)]
+    [InlineData(80, 4)]
+    [InlineData(500, 4)]
+    public void LineOf_FindsTheLineHoldingTheCharacter(int offset, int expected) =>
+        Assert.Equal(expected, Uniform(5).LineOf(offset));
+
+    [Fact]
+    public void TextLines_ReportHeightPitchAndTallestRun()
+    {
+        TextLines lines = Mixed();
+        Assert.Equal(160, lines.Height);
+        Assert.Equal(32, lines.Pitch);
+        Assert.Equal(40, lines.TallestRun(1));
+        Assert.Equal(70, lines.TallestRun(2));
+        Assert.Equal(160, lines.TallestRun(99));
+    }
+
+    [Theory]
+    [InlineData(10, 31.5, 1)]    // less than a line still shows one
+    [InlineData(41.5, 10, 1)]
+    [InlineData(73.0, 10, 2)]
+    [InlineData(104.5, 10, 3)]
+    [InlineData(1000, 10, 8)]
+    public void FitLines_CountsWholeLines(double viewport, double padding, int expected) =>
+        Assert.Equal(expected, PictureTextBook.FitLines(Uniform(8), viewport, padding));
+
+    [Fact]
+    public void FitLines_UsesTheTallestRunSoEveryWindowFits()
+    {
+        // Two lines starting at line 2 are 60 dp tall, so 10 + 60 must fit before the card is called a two-line card.
+        Assert.Equal(1, PictureTextBook.FitLines(Mixed(), 65, 10));
+        Assert.Equal(2, PictureTextBook.FitLines(Mixed(), 80, 10));
+    }
+
+    [Theory]
+    [InlineData(100, 73.0)]   // 8 lines: 10 + two lines
+    [InlineData(73, 73.0)]
+    [InlineData(60, 41.5)]    // less than two lines: one
+    [InlineData(1000, 1000)]  // every line fits: the cap is kept
+    [InlineData(0, 0)]
+    public void SnapPanelHeight_OnMeasuredLines_IsWholeLinesPlusPadding(double max, double expected) =>
+        Assert.Equal(expected, PictureTextBook.SnapPanelHeight(max, Uniform(8), 10), 6);
+
+    [Theory]
+    [InlineData(1080, 2400)]
+    [InlineData(1600, 2560)]
+    public void SnapPanelHeight_OnMeasuredLines_NeverCutsALine(double width, double height)
+    {
+        double max = PictureTextBook.PlacePanel(width / 2.75, height / 2.75, 1.0, 8, 6, 14).MaxHeight;
+        TextLines lines = Uniform(12, 37);
+        double snapped = PictureTextBook.SnapPanelHeight(max, lines, 10);
+
+        int fit = PictureTextBook.FitLines(lines, snapped, 10);
+        Assert.True(snapped <= max);
+        Assert.Equal(10 + fit * 37, snapped, 6);
+        Assert.True(fit < PictureTextBook.FitLines(lines, snapped + 37, 10));
+    }
+
+    [Theory]
+    [InlineData(0, 5, 2, 0)]
+    [InlineData(1, 5, 2, 1)]
+    [InlineData(4, 5, 2, 3)]     // the last line: the card is filled, not left half empty
+    [InlineData(4, 2, 2, 0)]     // two-line page: always the top
+    [InlineData(3, 8, 0, 3)]     // unknown visible lines is treated as one
+    [InlineData(-1, 8, 2, 0)]
+    public void TopLineFor_PutsTheSentenceStartAtTop_AndFillsTheCard(int start, int total, int visible, int expected) =>
+        Assert.Equal(expected, PictureTextBook.TopLineFor(start, total, visible));
+
+    [Theory]
+    [InlineData("Once upon a time. Then", 0, 0)]
+    [InlineData("Once upon a time. Then", 18, 18)]
+    [InlineData("Once.  \n  Then", 5, 10)]       // leading blanks and a line break are skipped
+    [InlineData("Once.   ", 5, 5)]                // only blanks left: stay where it was
+    [InlineData("", 3, 0)]
+    public void FirstInk_SkipsBlanksToTheFirstWord(string text, int from, int expected) =>
+        Assert.Equal(expected, PictureTextBook.FirstInk(text, from));
+
+    [Fact]
+    public void ScrollTargetFor_IsTheTopOfTheSentencesFirstLine_NotAnEstimate()
+    {
+        // Mixed lines: tops 0, 30, 70, 100, 130; starts 0, 20, 40, 60, 80. A 3-line card (10 + 100 fits 110, a run of 3 is 100 at most).
+        string text = new('x', 100);
+        Assert.Equal(70, PictureTextBook.ScrollTargetFor(Mixed(), text, 45, 110, 10), 6);
+        Assert.Equal(0, PictureTextBook.ScrollTargetFor(Mixed(), text, 5, 110, 10), 6);
+        Assert.Equal(70, PictureTextBook.ScrollTargetFor(Mixed(), text, 95, 110, 10), 6);   // last window: the card stays full
+        Assert.Equal(0, PictureTextBook.ScrollTargetFor(new TextLines([], [], []), text, 45, 110, 10));
+    }
+
+    [Fact]
+    public void ScrollTargetFor_AfterTheCardIsResized_UsesTheNewViewport()
+    {
+        // The card is snapped to whole lines after the first read, so the same sentence needs a new target for the new height.
+        string text = new('x', 100);
+        Assert.Equal(70, PictureTextBook.ScrollTargetFor(Mixed(), text, 95, 110, 10), 6);
+        Assert.Equal(0, PictureTextBook.ScrollTargetFor(Mixed(), text, 95, 190, 10), 6);
+    }
+
+    [Fact]
+    public void ScrollTargetFor_ASentenceThatStartsOnAWrappedWord_IsOnTheLineItReallyStartsOn()
+    {
+        // The sentence "begins" at offset 19 (a space at the end of line 0); its first word is at 20, on line 1.
+        string text = new string('x', 19) + " " + new string('y', 80);
+        Assert.Equal(31.5, PictureTextBook.ScrollTargetFor(Uniform(5), text, 19, 41.5, 10), 6);
+    }
+
     private static Story Original() => new("0123456789abcdef0123456789abcdef", "Title", "en", DateTimeOffset.UnixEpoch, [], [], CoverStyle.Colour, 0, "supertonic:M1");
 }

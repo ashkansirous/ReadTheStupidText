@@ -1,6 +1,6 @@
 # Slice 171 — Dino: the text card scrolls with the reading
 
-*In progress (wave 2026-10-27), draft PR.* Dino Book Reader, picture + text mode, on Android, iOS and the Windows head (shared MAUI code; each platform verified).
+*Built 2026-10-27; Android checked on the emulator (English, Chinese, rotation, hand scroll), iOS and Farsi RTL not yet verified.* Dino Book Reader, picture + text mode, on Android, iOS and the Windows head (shared MAUI code; each platform verified).
 
 **Touches:** `src/DinoReader.App/PictureTextPages.cs`, `src/DinoReader.Core/PictureTextBook.cs`,
 `tests/DinoReader.Tests/**` (PictureTextBook placement tests), `site/dino/reading-screen.webp`
@@ -44,3 +44,7 @@ hidden line.
 - `device-test` on the Android emulator (1080x2400 and a tablet AVD): every page of Tortoise and the Hare and Three Little Pigs,
   picture + text mode: every spoken sentence scrolls fully into view, no half-cut line at rest, text size unchanged.
 - iOS: same check on the simulator or the next TestFlight build (record which); Windows head: same pages.
+
+## Not yet verified
+
+- iOS line reader (`IosTextLineSource`, TextKit rebuilt to match UILabel) and the card's scroll on a real iPhone: Latin, Farsi (RTL) and a CJK page. Compile-checked only.
