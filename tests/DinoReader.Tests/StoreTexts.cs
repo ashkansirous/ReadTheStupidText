@@ -34,83 +34,83 @@ internal static class StoreTexts
 
     public static IReadOnlyList<StoreStorySpec> All { get; } =
     [
-        new(LionAndMouseId, "The Lion and the Mouse", "lion-and-mouse", LionAndMouse, 1, RetoldAesop, 4, 7, "Aesop", ["Lion", "Mouse"], 6, AddedDate),
+        new(LionAndMouseId, "The Lion and the Mouse", "lion-and-mouse", LionAndMouse, 1, RetoldAesop, 4, 7, "Aesop", ["Lion", "Mouse"], 7, AddedDate),
         new(GoldilocksId, "Goldilocks and the Three Bears", "goldilocks", Goldilocks, 3, RetoldTraditional, 3, 6, Traditional, ["Goldilocks", "Papa Bear", "Mama Bear", "Baby Bear"], 7, AddedDate),
         new(RedRidingHoodId, "Little Red Riding Hood", "red-riding-hood", RedRidingHood, 3, RetoldTraditional, 4, 7, Traditional, ["Red Riding Hood", "Mother", "Wolf", "Grandma", "Woodcutter"], 6, AddedDate),
         new(UglyDucklingId, "The Ugly Duckling", "ugly-duckling", UglyDuckling, 0, "Retold from Andersen · free to share", 5, 8, "Hans Christian Andersen", ["Mother Duck", "Duckling", "Dilly", "Hen", "Swan"], 7, AddedDate),
         new(RedHenId, "The Little Red Hen", "little-red-hen", RedHen, 3, RetoldTraditional, 3, 6, Traditional, ["Hen", "Dog", "Cat", "Duck"], 7, AddedDate),
         new(BillyGoatsId, "The Three Billy Goats Gruff", "billy-goats-gruff", BillyGoats, 0, RetoldTraditional, 4, 7, Traditional, ["Little Billy", "Middle Billy", "Big Billy", "Troll"], 8, AddedDate),
         new(BeanstalkId, "Jack and the Beanstalk", "jack-and-the-beanstalk", Beanstalk, 2, RetoldTraditional, 5, 8, Traditional, ["Jack", "Mother", "Giant", "Peddler"], 6, AddedDate),
-        new(ElvesId, "The Elves and the Shoemaker", "elves-and-shoemaker", Elves, 1, "Retold from the Brothers Grimm · free to share", 4, 8, "Brothers Grimm", ["Hans", "Greta", "Nib", "Nob"], 6, AddedDate),
+        new(ElvesId, "The Elves and the Shoemaker", "elves-and-shoemaker", Elves, 1, "Retold from the Brothers Grimm · free to share", 4, 8, "Brothers Grimm", ["Hans", "Greta", "Nib", "Nob"], 7, AddedDate),
         new(TownMouseId, "The Town Mouse and the Country Mouse", "town-mouse-country-mouse", TownMouse, 2, RetoldAesop, 4, 7, "Aesop", ["Town Mouse", "Country Mouse"], 6, AddedDate),
         new(PeterRabbitId, "The Tale of Peter Rabbit", "peter-rabbit", PeterRabbit, 3, "Beatrix Potter, 1902 (retold)", 3, 6, "Beatrix Potter", ["Mrs. Rabbit", "Peter", "Mr. McGregor", "Robin", "Flopsy"], 7, AddedDate),
-        new(TreasureId, "X Marks the Treasure!", "x-marks-the-treasure", Treasure, 0, StoreBuilder.DinoReaderCredit, 3, 6, "Ashkan Sirous", ["Kathryn", "Seagull", "Izzy", "Pancake Polly", "Billy"], 4, TreasureAddedDate),
+        new(TreasureId, "X Marks the Treasure!", "x-marks-the-treasure", Treasure, 0, StoreBuilder.DinoReaderCredit, 3, 6, "Ashkan Sirous", ["Kathryn", "Seagull", "Izzy", "Pancake Polly", "Billy"], 5, TreasureAddedDate),
     ];
 
     public const string LionAndMouse = """
-One hot afternoon a great Lion lay asleep in the shade of a tree. A tiny Mouse was running home through the grass with a berry for her supper.
+One hot afternoon, a great big Lion was fast asleep in the shade of a tree. A teeny-tiny Mouse was hurrying home through the grass with a berry for her supper.
 
-Pitter, patter, pitter, patter, went her little feet. She did not see the Lion, and she ran right over his nose.
+Pitter-patter, pitter-patter, pitter-patter, went her little feet. She didn't see the Lion, and whoops, she ran right over his nose!
 ---
-The Lion woke up with a roar. He put his big paw down beside the little Mouse.
+The Lion woke up with a great big roar. He put his big paw down, right next to the little Mouse.
 
-"Who dares to wake the king of the beasts?" said Lion. "You gave me such a fright!"
+"Hey! Who woke me up?" said Lion. "I'm the king of all the animals! You gave me such a fright!"
 ---
 The Mouse stood up on her back legs and held her paws together.
 
-"Please let me go, great Lion," said Mouse. "I did not mean to wake you. If you are kind to me today, I will be kind to you one day."
+"Please, please let me go, Mister Lion," said Mouse. "I didn't mean to wake you up. If you're kind to me today, I'll be kind to you one day, too!"
 ---
-The Lion laughed so hard that his tummy shook. "You, help me?" said Lion. "You are far too small to help a lion!"
+The Lion laughed so hard that his tummy wobbled. "Ha, ha, ha!" said Lion. "You want to help me? You're way too small to help a lion!"
 ---
-But he was a kind king, and he lifted his paw. "Run home, little Mouse," said Lion.
+But he was a kind king, so he lifted up his paw. "Run along home, little Mouse," said Lion.
 
-Pitter, patter, pitter, patter, went her little feet.
+Pitter-patter, pitter-patter, pitter-patter, went her little feet.
 ---
-Some days later the Lion went for a walk by the river. A yellow butterfly fluttered past his nose, and he bounced after it.
+A few days later, the Lion went for a walk by the river. A yellow butterfly fluttered past his nose, and off he bounced after it.
 
-He was having so much fun that he did not look where he was going.
+He was having so much fun that he didn't look where he was going.
 ---
-An old fishing net hung between two trees, drying in the sun. Bump! The Lion ran right into it.
+An old fishing net was hanging between two trees, drying in the sun. Boing, boing, boing! The Lion bounced right into it.
 
-The net wrapped all around him, from his nose to the tip of his tail.
+The net wrapped all around him, from his nose all the way to the tip of his tail.
 ---
-The Lion wriggled this way and that way. But the more he wriggled, the more tangled he got.
+The Lion wiggled this way and that way. But the more he wiggled, the more tangled up he got!
 
-"Grr! This is no fun at all!" said Lion. Then he gave a big, grumpy roar.
+"Grr, grr, grr!" said Lion. "This is no fun at all!" Then he let out a big, grumpy roar.
 ---
-The Mouse heard the roar from far away. She sat up in her little nest and listened.
+Far away, the Mouse heard the roar. She sat up in her cosy little nest and listened.
 
-"That is the kind Lion," said Mouse. "He sounds stuck! Now it is my turn to be kind to him."
+"That's the kind Lion!" said Mouse. "He sounds stuck! Now it's my turn to be kind to him."
 ---
-She ran through the grass as fast as her legs could go. Pitter, patter, pitter, patter, went her little feet.
+She ran through the grass as fast as her little legs could go. Pitter-patter, pitter-patter, pitter-patter, went her little feet.
 
-"Do not worry, great Lion," said Mouse. "I am coming!"
+"Don't worry, Mister Lion," said Mouse. "I'm coming!"
 ---
-The Mouse stood beside the net and looked up at the Lion.
+The Mouse stood next to the net and looked up at the Lion.
 
-"You came!" said Lion. "But you are so small. How can you help me?"
+"You came!" said Lion. "But you're so small. How can you help me?"
 
-"Just wait and see," said Mouse.
+"Just you wait and see," said Mouse.
 ---
-The Mouse began to nibble the ropes with her sharp little teeth. Nibble, nibble, snip! Nibble, nibble, snip!
+The Mouse started to nibble the ropes with her little teeth. Nibble, nibble, nibble! Snip, snip, snip!
 
-She nibbled and nibbled, and one by one the ropes came apart.
+She nibbled and nibbled, and one by one, the ropes came apart.
 ---
-Soon there was a hole in the net, and the Lion stepped out. He shook his mane, and bits of string flew everywhere.
+Soon there was a big hole in the net, and the Lion stepped out. He shook his mane, and bits of string flew everywhere.
 
-"Hooray!" said Mouse.
+"Hip, hip, hooray!" said Mouse.
 ---
 The Lion lay down in the grass, nose to nose with the little Mouse.
 
-"Thank you, little friend," said Lion. "I am sorry I laughed at you. Now I know that even a small friend can be a great friend."
+"Thank you, little friend," said Lion. "I'm sorry I laughed at you. Now I know that even a small friend can be a great big friend."
 
 "Kind friends help each other," said Mouse with a smile.
 ---
-That evening the Lion lay down under his shady tree, and the Mouse curled up on his big soft paw.
+That evening, the Lion lay down under his shady tree, and the Mouse curled up on his big, soft paw.
 
-"Goodnight, little friend," said Lion. "Goodnight, great friend," said Mouse.
+"Night-night, little friend," said Lion. "Night-night, big friend," said Mouse.
 
-From that day on, the Lion and the Mouse were the best of friends.
+From that day on, the Lion and the Mouse were best friends.
 """;
 
     public const string Goldilocks = """
@@ -616,27 +616,27 @@ That night Mother tucked Jack into bed and kissed him goodnight. From high up in
 """;
 
     public const string Elves = """
-Once upon a time a shoemaker called Hans lived with his wife Greta above their little shoe shop. A sleepy ginger cat dozed by the door.
+Once upon a time, a shoemaker called Hans lived with his wife Greta, right above their little shoe shop. A sleepy ginger cat snoozed by the door.
 
 Hans and Greta made good, strong shoes, and they were kind to everyone who came in.
 ---
-One snowy evening Hans and Greta were very tired, and there was only enough leather left for one more pair of shoes.
+One snowy evening, Hans and Greta were very, very tired. Oh dear, there was only enough leather left for one more pair of shoes.
 
-Hans cut it out and laid the pieces on the workbench. "We'll sew them in the morning," said Hans, with a great big yawn.
+Hans cut it out and put the pieces on the workbench. "We'll sew them in the morning," said Hans, with a great big yawn.
 ---
-That night, while Hans and Greta were fast asleep upstairs, a happy little sound came from the workshop below.
+That night, while Hans and Greta were fast asleep upstairs, a happy little sound came from the workshop downstairs.
 
 Tap, tap, tap! Stitch, stitch, stitch!
 ---
-In the morning Hans came downstairs. On the workbench stood a pair of shiny new shoes, sewn with tiny, perfect stitches.
+In the morning Hans came downstairs. And there on the workbench was a pair of shiny new shoes, with teeny-tiny, perfect stitches!
 
 "Greta, come and look!" said Hans. "Who made these?"
 
-"Oh, what beautiful shoes!" said Greta.
+"Oh, wow! What beautiful shoes!" said Greta.
 ---
-That very morning a lady in a purple coat came into the shop. She tried on the new shoes, and they fit just right.
+That same morning, a lady in a purple coat came into the shop. She tried on the new shoes, and they fit just right.
 
-She loved them so much that she paid a very good price. Now Hans could buy leather for two more pairs!
+She loved them so much, she paid a really good price for them. Now Hans could buy leather for two more pairs!
 ---
 After that, every evening Hans cut out more leather and left it on the workbench. And every night the happy little sound came back. Tap, tap, tap! Stitch, stitch, stitch!
 
@@ -644,17 +644,17 @@ Every morning there were more new shoes, and soon the little shop was full of ha
 ---
 One evening Greta looked at the new leather on the workbench, all cut out and ready.
 
-"Somebody is being very kind to us," said Greta. "Let's stay up tonight and see who it is, so we can say thank you."
+"Someone's being so kind to us," said Greta. "Let's stay up tonight and see who it is. Then we can say thank you!"
 
 "What a lovely idea," said Hans.
 ---
-So that night Hans and Greta didn't go to bed. They snuggled under a blanket in the big armchair in the corner of the workshop, with the cat on their laps.
+So that night Hans and Greta didn't go to bed. They snuggled up under a blanket in the big, comfy armchair in the corner, with the cat on their laps.
 
-The moon shone in on the workbench. They waited and waited, and Hans tried very hard not to yawn.
+The moon shone in on the workbench. They waited, and waited, and waited. Hans tried really hard not to yawn.
 ---
 At midnight two tiny elves came skipping in through the cat flap. Nib wore a pointy red hat, and Nob wore a pointy green hat.
 
-Their little feet were bare, and their tunics were thin and patched.
+Their little feet were bare, and their clothes were thin and full of patches.
 ---
 Nib and Nob hopped up onto the workbench and got to work, quick as a wink.
 
@@ -664,7 +664,7 @@ Nib and Nob hopped up onto the workbench and got to work, quick as a wink.
 
 Hans and Greta watched from the armchair and smiled.
 ---
-When the last shoe was finished, Hans and Greta came over to the workbench.
+When the very last shoe was done, Hans and Greta came over to the workbench.
 
 "Thank you, little friends," said Greta. "You've helped us so much!"
 
@@ -672,7 +672,7 @@ Nib and Nob looked up and giggled. "We love making shoes for kind people," said 
 
 "See you tomorrow night!" said Nob, and he waved.
 ---
-The next day Greta sewed two tiny warm coats and two woolly scarves. Hans made two pairs of tiny boots, the smallest he had ever made.
+The next day Greta sewed two tiny warm coats and two woolly scarves. Hans made two pairs of tiny boots, the smallest boots he'd ever made!
 
 "Now their little toes will be warm and cosy," said Greta.
 
@@ -686,13 +686,13 @@ That night the presents sat waiting on the workbench. Hans and Greta waited in t
 
 "Yes, they're all for you!" said Greta.
 ---
-Nib twirled round in her new red coat, and Nob stamped his tiny new boots. They danced round and round on the workbench.
+Nib twirled round in her new red coat, and Nob stamped his tiny new boots. Stamp, stamp, stamp! They danced round and round on the workbench.
 
 "Our toes are warm and cosy!" said Nib. "Thank you, Hans! Thank you, Greta!" said Nob.
 ---
 "Now we're warm, we can go and help other kind people too," said Nib. "Goodbye, Hans! Goodbye, Greta!" said Nob.
 
-Hans and Greta waved from the door as the elves skipped away over the moonlit snow.
+Hans and Greta waved from the door, and the elves skipped away over the snow in the moonlight.
 
 "Goodbye, little friends!" said Greta. "When someone is kind to you, you can be kind to someone else."
 """;
@@ -859,25 +859,25 @@ Flopsy, Mopsy and Cotton-tail had bread and milk and blackberries for supper. "W
     // KATH-rin: Kokoro has no lexicon entry for it and espeak en-us reads it /kˈæθɹɪn/ ("Kaatrin", the old spelling, came out KAA-trin), and the possessive /kˈæθɹɪnz/.
     // Art record: docs/design/story-art/x-marks-the-treasure.md.
     public const string Treasure = """
-Seagull flew high over the sea. She looked down at the little boats, the sandy beach and the sunny harbour.
+Seagull flew high, high up over the sea. Down below she could see little boats, a sandy beach and a sunny harbour.
 
-Then she saw a big pirate hat she knew. Captain Kathryn was running to her ship, waving a piece of paper. She looked very happy!
+Then she spotted a big pirate hat she knew. It was Captain Kathryn! She was running to her ship, waving a piece of paper. She looked so happy!
 ---
-Seagull swooped down, down, down, and she landed right on top of Kathryn's big hat.
+Down, down, down swooped Seagull, and she landed right on top of Kathryn's big hat.
 
 "Squawk! Squawk! Squawk! What's up, Kathryn?" said Seagull.
 
-Kathryn held up an old map with a little island on it and a big red X. "I've found the map to the lost treasure!" said Kathryn. "X marks the treasure!"
+Kathryn held up an old map. It had a little island on it and a big red X. "Look! I've found the map to the lost treasure!" said Kathryn. "X marks the treasure!"
 ---
-Kathryn ran up onto her ship. "Ahoy, pirates! Hoist the sail! We're going to find the lost treasure!" said Kathryn.
+Kathryn ran up onto her ship. "Ahoy, pirates! Up with the sail! We're going to find the lost treasure!" said Kathryn.
 
-Her crew came running. Izzy looked after the map and the compass. Pancake Polly made the yummiest pancakes. Billy could climb all the way up the mast.
+Her crew came running. Izzy looked after the map and the compass. Pancake Polly made the yummiest pancakes ever. And Billy could climb right up to the top of the mast.
 ---
-Seagull flapped her wings. "A treasure hunt? I love treasure hunts! I'm coming too!" said Seagull.
+Seagull flapped her wings. "A treasure hunt? Ooh, I love treasure hunts! Can I come too?" said Seagull.
 
-"Hooray! Then sit on my hat until we find the treasure," said Kathryn.
+"Hooray! Of course you can! Sit on my hat till we find the treasure," said Kathryn.
 ---
-Izzy, Pancake Polly and Billy danced a happy pirate dance across the deck.
+Izzy, Pancake Polly and Billy danced a happy pirate dance all across the deck.
 
 "Yo ho, yo ho!" sang Izzy.
 
@@ -885,35 +885,35 @@ Izzy, Pancake Polly and Billy danced a happy pirate dance across the deck.
 
 "We're going to find the lost treasure!" sang Pancake Polly.
 ---
-Billy pulled the rope, and up went the big sail. Flap, flap, flap!
+Billy pulled and pulled on the rope, and up went the big sail. Flap, flap, flap!
 
-Kathryn turned the ship's big wheel. "Off we go to Treasure Island!" said Kathryn. And away they sailed, far across the sea.
+Kathryn turned the ship's big wheel. "Off we go to Treasure Island!" said Kathryn. And away they sailed, far, far across the sea.
 ---
-The trip was long, long, long. Soon everyone on deck felt slow and grumbly, and nobody knew why.
+The trip was long, long, long. After a while, everyone on deck felt slow and grumbly, and nobody knew why.
 
 "Billy, can you see an island?" said Kathryn.
 
-Billy sat in the basket at the top of the mast, but he was too hungry to answer. He just gave a big yawn. His tummy went rumble, rumble, rumble!
+Billy was up in the basket at the top of the mast. He was too hungry to answer, so he just gave a big yawn. His tummy went rumble, rumble, rumble!
 ---
 "Izzy, can you check the map with your compass?" said Kathryn.
 
-Izzy sat on a barrel with the map on her lap, but she was hungry too, and she didn't answer. She just gave a big sigh. Her tummy went rumble, rumble, rumble!
+Izzy sat on a barrel with the map on her lap. But she was hungry too, so she didn't answer. She just gave a big sigh. Her tummy went rumble, rumble, rumble!
 ---
-"Let me go and see what's wrong!" said Seagull, and she flew all around the ship.
+"Hmm, I'll go and see what's wrong!" said Seagull, and she flew all around the ship.
 
-Every tummy went rumble, rumble, rumble! Even Kathryn's tummy! "Squawk! Squawk! Squawk! I know! Everyone is hungry!" said Seagull.
+Every tummy went rumble, rumble, rumble! Even Kathryn's tummy! "Squawk! Squawk! Squawk! I know! Everybody's hungry!" said Seagull.
 ---
-Seagull flew down the steps to the ship's kitchen. There was Pancake Polly, stirring pancake mix in her big blue bowl.
+Seagull flew down the steps to the ship's kitchen. And there was Pancake Polly, stirring pancake mix in her big blue bowl.
 
-"Polly, Polly! Everyone is too hungry to find the treasure!" said Seagull.
+"Polly, Polly! Everybody's too hungry to find the treasure!" said Seagull.
 
 "Hungry pirates? Then it's pancake time!" said Pancake Polly.
 ---
-Up came Pancake Polly with a big pile of plates. There were pancakes with banana, strawberries and honey for everyone!
+Up came Pancake Polly with a great big pile of plates. Pancakes with banana, strawberries and honey for everyone!
 
 The pirates ate and ate, and Seagull had a pancake too. "Yum, yum, yum!" said Seagull.
 ---
-Now everyone was full of pancakes and full of energy! Izzy and Pancake Polly danced across the deck, and Billy sang from the top of the mast.
+Now everyone's tummy was full, and they all felt happy and bouncy again! Izzy and Pancake Polly danced across the deck, and Billy sang from the top of the mast.
 
 "Yo ho, yo ho!" sang Izzy.
 
@@ -921,19 +921,19 @@ Now everyone was full of pancakes and full of energy! Izzy and Pancake Polly dan
 
 "We're going to find the lost treasure!" sang Pancake Polly.
 ---
-"I spot an island!" said Billy, and he pointed far across the sea.
+"Land ahoy! I can see an island!" said Billy, and he pointed far across the sea.
 
 Everyone cheered. Kathryn looked through her telescope. "There it is! Treasure Island!" said Kathryn.
 ---
-The ship stopped near the island, and Seagull flew ahead to the sandy beach.
+The ship stopped near the island, and Seagull flew on ahead to the sandy beach.
 
-There in the sand lay two long sticks in a big X. "Squawk! Squawk! Squawk! I found it! X marks the treasure!" said Seagull.
+And there in the sand were two long sticks, crossed in a big X. "Squawk! Squawk! Squawk! I found it! X marks the treasure!" said Seagull.
 
-Splish, splash, splosh! Behind her, the pirates waded to the beach with their spades.
+Splish, splash, splosh! Behind her, the pirates came through the water with their spades.
 ---
-Dig, dig, dig! The pirates dug at the X. Up came an old wooden treasure chest.
+Dig, dig, dig! The pirates dug and dug at the X. And up came an old wooden treasure chest!
 ---
-Kathryn lifted the lid. Inside were gold coins, sparkly jewels and shiny pearls, enough for everyone!
+Kathryn lifted the lid. Ooh, look! Gold coins, sparkly jewels and shiny pearls, enough for everyone!
 
 "Yo ho, yo ho!" sang Izzy.
 
@@ -943,7 +943,7 @@ Kathryn lifted the lid. Inside were gold coins, sparkly jewels and shiny pearls,
 ---
 That evening, as the sun went down, the pirates had a treasure party on the beach, with music and dancing.
 
-Kathryn gave Seagull a big hug. "Thank you, Seagull. You're the best friend a pirate could have!" said Kathryn.
+Kathryn gave Seagull a big, gentle hug. "Thank you, Seagull. You're the best friend a pirate could ever have!" said Kathryn.
 
 "Squawk, squawk, squawk," said Seagull softly, and she snuggled down on Kathryn's big hat.
 """;
