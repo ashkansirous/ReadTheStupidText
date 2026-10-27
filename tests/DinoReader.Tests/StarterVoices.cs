@@ -17,6 +17,19 @@ internal static class StarterVoices
 {
     private static readonly IReadOnlyDictionary<string, AuthoredCharacter[]> ByStory = new Dictionary<string, AuthoredCharacter[]>
     {
+        // The Gingerbread Man: Granny the slow, cosy hen voice, Grandpa the deep, kind bear, the runaway biscuit boy the small, quick piglet, the big gentle Cow the soft, slow
+        // sheep, the galloping Horse the bubbly bee, and the friendly Fox the plain, clear knight (never the whispery Sly Fox: this fox is kind from his first line). Granny, the Cow and
+        // the Horse are she, the boy, Grandpa and the Fox he; where a language's roster lacks the id or has it in the other gender (hen in Farsi, the sheep in Spanish and
+        // Portuguese) the traits pick a woman's voice that is not a whisper.
+        [StarterTexts.GingerbreadId] =
+        [
+            new("Granny", "hen", Gender.Female, CharacterAge.Old, CharacterBeing.Person, [VoiceQuality.Warm, VoiceQuality.Soft]),
+            new("Grandpa", "bear", Gender.Male, CharacterAge.Old, CharacterBeing.Person, [VoiceQuality.Warm, VoiceQuality.Booming]),
+            new("Gingerbread Man", "piglet", Gender.Male, CharacterAge.Child, CharacterBeing.Person, [VoiceQuality.Bouncy, VoiceQuality.Bright]),
+            new("Cow", "ewe", Gender.Female, CharacterAge.Adult, null, [VoiceQuality.Soft, VoiceQuality.Warm]),
+            new("Horse", "bee", Gender.Female, CharacterAge.Adult, null, [VoiceQuality.Bouncy, VoiceQuality.Bright]),
+            new("Fox", "knight", Gender.Male, CharacterAge.Adult, CharacterBeing.Fox, [VoiceQuality.Warm, VoiceQuality.Bold]),
+        ],
         // Goldilocks and the Three Bears: a bright, bouncy girl; big booming Papa Bear; warm Mama Bear (a bear again, with a woman's voice in every language); soft little Baby Bear.
         [StoreTexts.GoldilocksId] =
         [
