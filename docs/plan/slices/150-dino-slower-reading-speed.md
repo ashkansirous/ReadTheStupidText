@@ -55,7 +55,7 @@ Source: `docs/design/dino-reader/Dino Reader Batch 31.dc.html`, screen 70 (lines
 
 **Settled by the mock (the plan left open).** The row is a card of its own, the value sits left of the Play button, and the left end label says "slow". Still open: the sample sentence. **Default:** a short sentence from a starter book, translated per locale.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-27)
 
 None to add: `src/DinoReader.App/CLAUDE.md` already has the rule line for this slice (keep it).
 

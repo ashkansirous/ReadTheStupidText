@@ -70,7 +70,7 @@ Source: `docs/design/dino-reader/Dino Reader Batch 31.dc.html`, screens 66 (line
 
 *Verified 2026-10-27 (emulator, headless scripted):* three modes in portrait and landscape, persistence, cast page without merge or switch, legacy `story.json` migration, selected-segment hint: pass.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-27)
 
 - A story's view is `ReadingMode` (`Text`, `PictureOnly`, `PictureAndText`) in `src/DinoReader.Core/ReadingMode.cs`. Old `Picture` reads as `PictureAndText`; legacy `WordsOverPictures=false` reads as `PictureOnly`; those fields are read only, never written. Old `Merges` are read and ignored, so characters are never merged. Scanned books with line boxes offer two segments only (`ModeSwitch.SyncModeSwitch`). (Slice 151: docs/plan/slices/151-dino-three-view-modes.md)
 

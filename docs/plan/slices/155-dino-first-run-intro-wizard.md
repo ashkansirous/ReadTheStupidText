@@ -1,4 +1,4 @@
-# Slice 155 — Dino: a first-run intro wizard for the four things Dino does
+# Slice 155 — Dino: a first-run intro wizard for three things
 
 *Built 2026-10-27 (PR #432), not yet verified on a real device, Windows or iOS.* Dino Reader only.
 
@@ -121,7 +121,7 @@ Checked, no conflict: no gate in the intro, the step is saved and resumes after 
 
 *Verified 2026-10-27 on the Android emulator (headless):* first run, three steps, Ready for my child; Android back; kill and resume with the gate; declined gate does not loop; Home then gate; replay; an existing install skips the wizard.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-27)
 
 - The intro is a wizard of real actions: `IntroWizardPage` is pushed modally in its own `NavigationPage`; a step advances only because `_launchedStep` was set right before its screen was pushed; Android back is Skip all; a resumed intro asks for the grown-up gate first and a declined gate must never loop; replay never clears first-run hand-over state (`src/DinoReader.App/IntroWizardPage.cs`, `IntroState.cs`). (Slice 155: docs/plan/slices/155-dino-first-run-intro-wizard.md)
 - New Dino usage events need a name in `UsageEvent.cs`, a rule in `worker/events.ts` `EVENT_RULES`, tests on both sides, a line in `site/dino/privacy.html` and `STORE.md`, and a query in `tools/dino-usage-report.ps1`. (Slice 155: docs/plan/slices/155-dino-first-run-intro-wizard.md)
