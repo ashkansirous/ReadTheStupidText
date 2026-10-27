@@ -19,6 +19,7 @@
  *   - the rest of Mobile.Shared/** (platform code both apps use)  -> android + ios + dinoapp
  *   - DinoReader.App/**, DinoReader.Core/**                       -> dinoapp (Slice 58/60; ships only with its own signing secrets)
  *   - DinoReader.Core / tests/DinoReader.Tests                    -> dinoreader (its tests; Core also rebuilds dinoapp)
+ *   - store books (Slice 158): Core, the store/starter texts, voices, pictures and translations, the builders, the upload scripts -> dinostore (publish-store only; never ships an app)
  *   - Markdown anywhere (IGNORED_PATTERNS, case-sensitive like GitHub's `paths`) -> nothing (ignored before matching)
  *   - docs and anything else                                      -> nothing
  * `windowsstore` is true only for the Windows group's own paths (a core-only change sets `windows`,
@@ -54,8 +55,11 @@ const DINO_VERSION_CONFIG = 'GitVersion.dino.yml';
 /** Each product's tag prefix (also its GitVersion tag-prefix) and the targets its release carries. */
 export const PRODUCTS = {
     rtst: { prefix: 'rtst-v', targets: ['windows', 'windowsstore', 'android', 'ios'] },
-    dino: { prefix: 'dino-v', targets: ['dinoreader', 'dinoapp', 'dinoios', 'dinowin'] },
+    dino: { prefix: 'dino-v', targets: ['dinoreader', 'dinoapp', 'dinoios', 'dinowin', 'dinostore'] },
 };
+
+/** Targets that publish content and never cut a release, so a major-bump token on their files must not rebuild the product (Slice 158). */
+const CONTENT_ONLY_TARGETS = ['dinostore'];
 
 /** Changed files matching any of these never trigger a build (mirrored as trailing `!` entries in each workflow's `paths`). */
 export const IGNORED_PATTERNS = ['**/*.md'];
@@ -162,6 +166,23 @@ export const GROUPS = {
     mobileshared: { include: [MOBILE], exclude: [`${MOBILE}Platforms/`] },
     // Mobile.Shared's platform-neutral root: used by RTST on both OSes and by Dino Reader.
     sharedroot: { include: [SHARED], exclude: [`${SHARED}Platforms/`] },
+    // Free store books (Slice 158, Decision 163): the texts, voices, pictures, translations, builders, the .dino format
+    // and the upload scripts. Starts release.yml's publish-store job; never cuts an app release by itself.
+    dinostore: {
+        include: [
+            'src/DinoReader.Core/',
+            'tests/DinoReader.Tests/Store/',
+            'tests/DinoReader.Tests/Starters/',
+            'tests/DinoReader.Tests/StoreTexts.cs',
+            'tests/DinoReader.Tests/StoreBuilder.cs',
+            'tests/DinoReader.Tests/StarterTexts.cs',
+            'tests/DinoReader.Tests/StarterVoices.cs',
+            'tests/DinoReader.Tests/StarterAnimals.cs',
+            'tests/DinoReader.Tests/StarterBuilder.cs',
+            'tools/upload-store-story.ps1',
+            '.github/scripts/publish-store-books.mjs',
+        ],
+    },
     dinoreader: {
         include: [DINO_VERSION_CONFIG, 'src/DinoReader.Core/', 'tests/DinoReader.Tests/', '.github/workflows/dinoreader.yml'],
     },
@@ -205,10 +226,11 @@ export function shipTargets({ changedFiles, bump, forceAll = false }) {
     const dinoapp = everything || g.core || g.dinoapp || g.sharedroot;
     const dinoios = everything || g.core || g.dinoios || g.sharedroot;
     const dinowin = everything || g.core || g.dinowin || g.sharedroot;
+    const dinostore = everything || g.dinostore;
     // The Microsoft Store only gets a submission for Windows-specific changes: a core-only change
     // rebuilds the MSIX (windows) for the GitHub release but is not worth a Store review.
     const windowsstore = everything || g.windows;
-    return { windows, windowsstore, android, ios, dinoreader, dinoapp, dinoios, dinowin };
+    return { windows, windowsstore, android, ios, dinoreader, dinoapp, dinoios, dinowin, dinostore };
 }
 
 const appTagPattern = (prefix) => new RegExp(`^${prefix}(\\d+)\\.(\\d+)\\.(\\d+)$`);
@@ -320,7 +342,8 @@ export function shipTargetsPerProduct({ plans, forceAll = false }) {
 }
 
 function planFor(name, versionEnv) {
-    const { prefix, targets } = PRODUCTS[name];
+    const { prefix } = PRODUCTS[name];
+    const targets = PRODUCTS[name].targets.filter((target) => !CONTENT_ONLY_TARGETS.includes(target));
     const base = previousReleaseTag(prefix);
     console.log(base ? `ship-targets (${name}): changes since ${base}` : `ship-targets (${name}): no earlier ${prefix}* tag, building everything.`);
     const bump = productBump({ baseTag: base, version: process.env[versionEnv], prefix, commits: commitsSince(base), targets });
