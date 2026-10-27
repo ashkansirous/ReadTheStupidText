@@ -4,7 +4,7 @@ namespace DinoReader.Core;
 
 public static partial class CharacterRoster
 {
-    // English runs on the Kokoro storyteller voices (Slice 114). Three narrators, then ten boys and seven girls (the voice's gender).
+    // English runs on the Kokoro storyteller voices (Slice 114). Three narrators, then seventeen boys and fourteen girls (the voice's gender; Slice 153: no voice is bf_emma, which sounded robotic; mummy, hen and duckling2 use the next-best unused Kokoro girls, af_sarah, af_aoede and af_kore, all graded C+).
     private static IReadOnlyList<StorytellerCharacter> English() =>
     [
         Kokoro("granny", "af_heart", VoiceFlavour.Storyteller, Gender.Female, CharacterKind.Narrator, "Story Granny", "warm and gentle"),
@@ -20,13 +20,13 @@ public static partial class CharacterRoster
         Kokoro("mouse", "am_puck", VoiceFlavour.Squeaky, Gender.Male, CharacterKind.Speaker, "Squeaky Mouse", "tiny and high"),
         Kokoro("jester", "am_puck", VoiceFlavour.Bouncy, Gender.Male, CharacterKind.Speaker, "Jolly Jester", "bubbly and bright"),
         Kokoro("dragon", "am_santa", VoiceFlavour.Big, Gender.Male, CharacterKind.Speaker, "Rumbly Dragon", "rumbly and loud"),
-        Kokoro("mummy", "bf_emma", VoiceFlavour.Normal, Gender.Female, CharacterKind.Speaker, "Kind Mummy", "warm and kind"),
+        Kokoro("mummy", "af_sarah", VoiceFlavour.Normal, Gender.Female, CharacterKind.Speaker, "Kind Mummy", "warm and kind"),
         Kokoro("bunny", "af_nova", VoiceFlavour.Small, Gender.Female, CharacterKind.Speaker, "Little Bunny", "soft and hoppy"),
         Kokoro("bee", "af_sky", VoiceFlavour.Bouncy, Gender.Female, CharacterKind.Speaker, "Busy Bee", "bubbly and quick"),
         Kokoro("princess", "af_bella", VoiceFlavour.Normal, Gender.Female, CharacterKind.Speaker, "Brave Princess", "clear and bright"),
         Kokoro("witch", "bf_alice", VoiceFlavour.Grumpy, Gender.Female, CharacterKind.Speaker, "Crafty Witch", "croaky and sly"),
         Kokoro("fairy", "bf_lily", VoiceFlavour.Squeaky, Gender.Female, CharacterKind.Speaker, "Tiny Fairy", "tiny and twinkly"),
-        Kokoro("hen", "bf_emma", VoiceFlavour.Sleepy, Gender.Female, CharacterKind.Speaker, "Granny Hen", "slow and cosy"),
+        Kokoro("hen", "af_aoede", VoiceFlavour.Sleepy, Gender.Female, CharacterKind.Speaker, "Granny Hen", "slow and cosy"),
         Kokoro("lamb", "af_nova", VoiceFlavour.Squeaky, Gender.Female, CharacterKind.Speaker, "Woolly Lamb", "soft and bleaty"),
         Kokoro("puppy", "am_liam", VoiceFlavour.Bouncy, Gender.Male, CharacterKind.Speaker, "Playful Puppy", "bouncy and bright"),
         Kokoro("kitten", "bf_lily", VoiceFlavour.Small, Gender.Female, CharacterKind.Speaker, "Curious Kitten", "tiny and purry"),
@@ -39,7 +39,7 @@ public static partial class CharacterRoster
         Kokoro("piglet2", "am_liam", VoiceFlavour.Small, Gender.Male, CharacterKind.Speaker, "Snuffly Piglet", "tiny and snorty"),
         Kokoro("piglet3", "bm_daniel", VoiceFlavour.Squeaky, Gender.Male, CharacterKind.Speaker, "Curly Piglet", "bright and squeaky"),
         Kokoro("lamb2", "af_bella", VoiceFlavour.Small, Gender.Female, CharacterKind.Speaker, "Fluffy Lamb", "light and fluffy"),
-        Kokoro("duckling2", "bf_emma", VoiceFlavour.Bouncy, Gender.Female, CharacterKind.Speaker, "Splashy Duckling", "bubbly and splashy"),
+        Kokoro("duckling2", "af_kore", VoiceFlavour.Bouncy, Gender.Female, CharacterKind.Speaker, "Splashy Duckling", "bubbly and splashy"),
         Kokoro("puppy2", "am_michael", VoiceFlavour.Bouncy, Gender.Male, CharacterKind.Speaker, "Wiggly Puppy", "wagging and warm"),
         Kokoro("kitten2", "bf_alice", VoiceFlavour.Small, Gender.Female, CharacterKind.Speaker, "Sweet Kitten", "tiny and sweet"),
     ];

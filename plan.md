@@ -20,6 +20,9 @@ Open slices only. Finished slices (148 rows) are in [slices-done](docs/plan/note
 | --- | --- | --- | --- | --- | --- |
 | 153 | Dino: no robotic-sounding character voices | planned | | | [153-dino-no-robotic-voices.md](docs/plan/slices/153-dino-no-robotic-voices.md) |
 | 154 | Dino: vowel marks in Farsi and Arabic books | planned | | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
+| 157 | Dino: book content and the book builder out of the test project | planned | | | [157-dino-book-content-out-of-tests.md](docs/plan/slices/157-dino-book-content-out-of-tests.md) |
+| 158 | Dino: publish store books on every merge | planned | | | [158-dino-publish-store-books.md](docs/plan/slices/158-dino-publish-store-books.md) |
+| 159 | Dino: everything in the chosen language | planned | | | [159-dino-everything-in-my-language.md](docs/plan/slices/159-dino-everything-in-my-language.md) |
 
 Batch 25 (119-123; 119, 120, 122, 123 built, 121 built; planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
 
@@ -33,6 +36,10 @@ Batch 28 (132-134, planned 2026-10-25, which books families like and how parents
 M3 starts with a listening page and waits on the user's listening verdicts. 154 starts with a listening test, then adds vowel marks book by book (it also waits on the user's listening verdicts; draft PR #435) after each book's Slice 146 rewrite and open illustration PR merge. Decisions 155-159 (157 reverses 132).
 
 Batch 32 (155, planned 2026-10-26, Dino onboarding): Slice 155 (the first-run intro wizard, PR #432) is built, so the batch is done. Decision 160.
+
+Batch 34 (157-158, planned 2026-10-27, after all 15 store books fell behind `main`): 158 first (small, CI only: a `publish-store` job in `release.yml` uploads every book behind the live store, Decision 163); it can run beside other work. Then 157 moves book content to `content/dino/<book>/` with a console builder and repoints the job; 157 runs alone between waves, after the open per-book PRs merge, because it moves every book's files. Decisions 162-163.
+
+Batch 35 (159, planned 2026-10-27, the user found English all over Dino in Farsi): one slice in four parts: A (strings follow the stored language pick; fixes the intro wizard flipping to English after the store) ships first, then B (shipped titles on the shelf and store), C (own books translate on the phone, pack downloaded only when a parent asks) and D (guards). Decision 164.
 
 
 ### Notes
