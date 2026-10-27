@@ -34,16 +34,16 @@ internal static class StoreTexts
 
     public static IReadOnlyList<StoreStorySpec> All { get; } =
     [
-        new(LionAndMouseId, "The Lion and the Mouse", "lion-and-mouse", LionAndMouse, 1, RetoldAesop, 4, 7, "Aesop", ["Lion", "Mouse"], 7, AddedDate),
-        new(GoldilocksId, "Goldilocks and the Three Bears", "goldilocks", Goldilocks, 3, RetoldTraditional, 3, 6, Traditional, ["Goldilocks", "Papa Bear", "Mama Bear", "Baby Bear"], 7, AddedDate),
-        new(RedRidingHoodId, "Little Red Riding Hood", "red-riding-hood", RedRidingHood, 3, RetoldTraditional, 4, 7, Traditional, ["Red Riding Hood", "Mother", "Wolf", "Grandma", "Woodcutter"], 6, AddedDate),
-        new(UglyDucklingId, "The Ugly Duckling", "ugly-duckling", UglyDuckling, 0, "Retold from Andersen · free to share", 5, 8, "Hans Christian Andersen", ["Mother Duck", "Duckling", "Dilly", "Hen", "Swan"], 6, AddedDate),
+        new(LionAndMouseId, "The Lion and the Mouse", "lion-and-mouse", LionAndMouse, 1, RetoldAesop, 4, 7, "Aesop", ["Lion", "Mouse"], 8, AddedDate),
+        new(GoldilocksId, "Goldilocks and the Three Bears", "goldilocks", Goldilocks, 3, RetoldTraditional, 3, 6, Traditional, ["Goldilocks", "Papa Bear", "Mama Bear", "Baby Bear"], 8, AddedDate),
+        new(RedRidingHoodId, "Little Red Riding Hood", "red-riding-hood", RedRidingHood, 3, RetoldTraditional, 4, 7, Traditional, ["Red Riding Hood", "Mum", "Wolf", "Grandma", "Woodcutter"], 7, AddedDate),
+        new(UglyDucklingId, "The Ugly Duckling", "ugly-duckling", UglyDuckling, 0, "Retold from Andersen · free to share", 5, 8, "Hans Christian Andersen", ["Mother Duck", "Duckling", "Dilly", "Hen", "Swan"], 7, AddedDate),
         new(RedHenId, "The Little Red Hen", "little-red-hen", RedHen, 3, RetoldTraditional, 3, 6, Traditional, ["Hen", "Dog", "Cat", "Duck"], 7, AddedDate),
-        new(BillyGoatsId, "The Three Billy Goats Gruff", "billy-goats-gruff", BillyGoats, 0, RetoldTraditional, 4, 7, Traditional, ["Little Billy", "Middle Billy", "Big Billy", "Troll"], 8, AddedDate),
-        new(BeanstalkId, "Jack and the Beanstalk", "jack-and-the-beanstalk", Beanstalk, 2, RetoldTraditional, 5, 8, Traditional, ["Jack", "Mother", "Giant", "Peddler"], 6, AddedDate),
+        new(BillyGoatsId, "The Three Billy Goats Gruff", "billy-goats-gruff", BillyGoats, 0, RetoldTraditional, 4, 7, Traditional, ["Little Billy", "Middle Billy", "Big Billy", "Troll"], 9, AddedDate),
+        new(BeanstalkId, "Jack and the Beanstalk", "jack-and-the-beanstalk", Beanstalk, 2, RetoldTraditional, 5, 8, Traditional, ["Jack", "Mother", "Giant", "Peddler"], 7, AddedDate),
+        new(TownMouseId, "The Town Mouse and the Country Mouse", "town-mouse-country-mouse", TownMouse, 2, RetoldAesop, 4, 7, "Aesop", ["Town Mouse", "Country Mouse"], 7, AddedDate),
         new(ElvesId, "The Elves and the Shoemaker", "elves-and-shoemaker", Elves, 1, "Retold from the Brothers Grimm · free to share", 4, 8, "Brothers Grimm", ["Hans", "Greta", "Nib", "Nob"], 7, AddedDate),
-        new(TownMouseId, "The Town Mouse and the Country Mouse", "town-mouse-country-mouse", TownMouse, 2, RetoldAesop, 4, 7, "Aesop", ["Town Mouse", "Country Mouse"], 6, AddedDate),
-        new(PeterRabbitId, "The Tale of Peter Rabbit", "peter-rabbit", PeterRabbit, 3, "Beatrix Potter, 1902 (retold)", 3, 6, "Beatrix Potter", ["Mrs. Rabbit", "Peter", "Mr. McGregor", "Robin", "Flopsy"], 7, AddedDate),
+        new(PeterRabbitId, "The Tale of Peter Rabbit", "peter-rabbit", PeterRabbit, 3, "Beatrix Potter, 1902 (retold)", 3, 6, "Beatrix Potter", ["Mrs. Rabbit", "Peter", "Mr. McGregor", "Robin", "Flopsy"], 8, AddedDate),
         new(TreasureId, "X Marks the Treasure!", "x-marks-the-treasure", Treasure, 0, StoreBuilder.DinoReaderCredit, 3, 6, "Ashkan Sirous", ["Kathryn", "Seagull", "Izzy", "Pancake Polly", "Billy"], 5, TreasureAddedDate),
     ];
 
@@ -198,17 +198,17 @@ Soon the sun came out, and a rainbow shone over the woods. So the three bears wa
 """;
 
     public const string RedRidingHood = """
-Once upon a time a little girl lived with her mother at the edge of a big green wood. Her grandma had made her a bright red hood, and she wore it every single day. So everyone called her Red Riding Hood.
+Once upon a time, a little girl lived with her mum at the edge of a big green wood. Her grandma had made her a bright red hood, and she wore it every single day. So everybody called her Red Riding Hood.
 
 Her little white puppy, Button, went everywhere with her.
 ---
-One morning Mother packed a basket of honey cakes and apples for Grandma's birthday.
+One morning, Mum packed a basket of honey cakes and apples for Grandma's birthday.
 
-"Stay on the path all the way," said Mother. "If a stranger asks you to leave the path, say no, thank you, and tell a grown-up you know."
+"Stay on the path all the way, okay?" said Mum. "If a stranger asks you to leave the path, just say no, thank you, and tell a grown-up you know."
 
 "I stay on the path, all the way to Grandma's!" said Red Riding Hood.
 ---
-Red Riding Hood waved goodbye, and off she went, with the basket on her arm and Button at her heels.
+Red Riding Hood waved bye-bye, and off she went, with the basket on her arm and Button trotting along beside her.
 
 Tip, tap, tip, tap, went her little red boots along the path.
 ---
@@ -216,11 +216,11 @@ In the middle of the wood, a big grey Wolf was sitting on a log by the path. He 
 
 "Hello," said Wolf. "I'm new in this wood, and I can't find my way."
 ---
-"Will you come and pick blackberries with me, over there in the trees?" said Wolf. "I'm so hungry, and I've got nobody to play with."
+"Do you want to come and pick blackberries with me, over there in the trees?" said Wolf. "I'm so hungry, and I've got nobody to play with."
 
 "No, thank you," said Red Riding Hood. "I stay on the path, all the way to Grandma's!"
 
-"Oh, all right," said Wolf, and his ears drooped a little.
+"Oh, okay," said Wolf, and his ears drooped a little.
 ---
 Tip, tap, tip, tap, went her little red boots along the path.
 
@@ -228,11 +228,11 @@ Soon she met the Woodcutter, Grandma's friend, stacking logs by the path.
 
 "A Wolf I don't know asked me to leave the path, so I said no, thank you," said Red Riding Hood.
 
-"Well done for staying on the path and telling me," said Woodcutter.
+"Well done, you! You stayed on the path, and you told me," said Woodcutter.
 ---
 The Woodcutter put down his logs. He took Red Riding Hood's hand, and they went back to see if the Wolf needed help.
 
-"Hello, Wolf. Are you all right?" said Woodcutter.
+"Hello, Wolf. Are you okay?" said Woodcutter.
 
 "I'm lost, and I'm hungry, and I haven't got a single friend," said Wolf.
 
@@ -240,7 +240,7 @@ His tummy rumbled again. Rumble, rumble, rumble!
 ---
 "It's Grandma's birthday today. Come to her party with us!" said Woodcutter. "She always says there's room for one more."
 
-So they all walked along the path together, and the Wolf wagged his tail.
+So they all walked along the path together, and the Wolf wagged and wagged his tail.
 
 "I stay on the path, all the way to Grandma's!" sang Red Riding Hood.
 ---
@@ -252,13 +252,13 @@ Knock! Knock! Knock!
 
 Grandma opened the door wide. "Come in, come in! There's always room for one more!" said Grandma.
 ---
-Everyone sat round Grandma's little table, and they shared the honey cakes and apples from the basket.
+Everybody sat round Grandma's little table, and they shared the honey cakes and apples from the basket.
 
 "Happy birthday, Grandma!" said Red Riding Hood.
 
-The Wolf ate three honey cakes. "Mmm! Yum, yum, yum!" said Wolf. "This is the best cake in the whole wood!"
+The Wolf munched three honey cakes. "Mmm! Yum, yum, yum!" said Wolf. "This is the yummiest cake in the whole wood!"
 ---
-Grandma's spare glasses were lying on the table. "Can I try them on?" said Wolf. "Of course!" said Grandma. The Wolf put them on, and his eyes looked big and round!
+Grandma's spare glasses were lying on the table. "Can I try them on?" said Wolf. "Of course you can!" said Grandma. The Wolf put them on, and his eyes looked big and round!
 
 "Wolf, what big eyes you have!" said Red Riding Hood.
 
@@ -266,7 +266,7 @@ Grandma's spare glasses were lying on the table. "Can I try them on?" said Wolf.
 
 Ha, ha, ha! Hee, hee, hee! Everybody laughed.
 ---
-Next the Wolf tried on Grandma's fluffy pink earmuffs from the peg by the door. They were much too small for his big pointy ears!
+Next, the Wolf tried on Grandma's fluffy pink earmuffs from the peg by the door. They were way too small for his big pointy ears!
 
 "Wolf, what big ears you have!" said Red Riding Hood.
 
@@ -278,95 +278,95 @@ Then the Wolf smiled the biggest, happiest smile of all.
 
 "Wolf, what a big smile you have!" said Red Riding Hood.
 
-"That's because I'm not lost any more," said Wolf. "I've found some friends!"
+"That's because I'm not lost any more," said Wolf. "I've got friends now!"
 
-And Grandma gave him a big, warm hug.
+And Grandma gave him a great big, warm hug.
 ---
-That night, tucked up in bed, Red Riding Hood told Mother all about her day.
+That night, snuggled up in bed, Red Riding Hood told Mum all about her day.
 
 "I stayed on the path, and I told a grown-up," said Red Riding Hood.
 
-"Well done, my love," said Mother, and she kissed her goodnight. Button was already fast asleep at her feet.
+"Well done, sweetheart," said Mum, and she kissed her goodnight. Button was fast asleep at her feet.
 
 From that day on, the Wolf came to Grandma's for honey cake every Sunday.
 """;
 
     public const string UglyDuckling = """
-One sunny summer morning, Mother Duck sat on her nest by the pond. Crack, crack, crack! Out popped three fluffy yellow ducklings.
+One sunny summer morning, Mother Duck was sitting on her nest by the pond. Crack, crack, crack! Out popped three fluffy yellow ducklings.
 
-But the biggest egg did not crack at all.
+But the biggest egg didn't crack at all. Not even a tiny bit!
 ---
-At last the big egg went crack! Out came a big grey duckling with a long neck and big flat feet.
+At last the big egg wobbled. Crack, crack, crack! Out came a big grey duckling with a long neck and great big flat feet.
 
-"Oh my, what a big baby!" said Mother Duck, and she tucked him under her wing.
+"Oh my, what a great big baby!" said Mother Duck, and she tucked him in under her wing.
 
 "Big or small, I love you all," said Mother Duck.
 ---
-The next morning Mother Duck led her babies down to the pond, one behind the other.
+The next morning, Mother Duck took her babies down to the pond, all in a row.
 
-Paddle, paddle, splish, splash! The big grey duckling swam the fastest of all.
+Splish-splash, splish-splash, splish-splash! And guess who swam the fastest? The big grey duckling!
 ---
-On the bank the yellow ducklings looked at their big grey brother. Dilly, the smallest, began to giggle.
+Up on the bank, the yellow ducklings looked at their big grey brother. Dilly, the littlest one, started to giggle.
 
-"Your neck is so long, and your feet are so big!" said Dilly. "You do not look like a duck at all."
+"Your neck's so long, and your feet are so big!" said Dilly. "You don't look like a duck at all!"
 
-The big grey duckling looked down at his feet. He felt a little sad.
+The big grey duckling looked down at his feet. He felt a little bit sad.
 ---
-Mother Duck put her wing around him. "Dilly, that was not kind," said Mother Duck. "Everyone is different, and that is a good thing."
+Mother Duck put her wing around him. "Dilly, that wasn't very kind," said Mother Duck. "Everyone's different, and that's a good thing!"
 
 "Big or small, I love you all," said Mother Duck.
 
-Dilly hung her head. "Sorry, big brother," said Dilly. "You are the best swimmer of us all."
+Dilly hung her head. "Sorry, big brother," said Dilly. "You're the best swimmer of all of us!"
 ---
-"But if I do not look like a duck, what kind of bird am I?" said Duckling.
+"But if I don't look like a duck, what kind of bird am I?" said Duckling.
 
-"Go and look around the farm, and you may find out," said Mother Duck. "Be home in time for supper."
+"Go and have a look around the farm, and maybe you'll find out," said Mother Duck. "But be home in time for supper, okay?"
 
-So off he waddled across the meadow, waving goodbye.
+So off he waddled across the meadow, waving bye-bye.
 ---
-In the farmyard a plump brown Hen was scratching for corn.
+In the farmyard, a round brown Hen was scratching for corn. Scratch, scratch, scratch!
 
 "Am I a hen like you?" said Duckling.
 
-"Cluck, cluck! Can you lay an egg?" said Hen. Duckling shook his head.
+"Cluck, cluck, cluck! Can you lay an egg?" said Hen. Duckling shook his head.
 
-"Then you are not a hen," said Hen, and she smiled. "But you are a very polite little bird. Now run home for your supper."
+"Then you're not a hen," said Hen, and she smiled. "But you're a very polite little bird. Now off you go, home for supper!"
 ---
-Soon it was autumn, and the leaves turned red and gold. One day three big white birds with long necks like his flew high over the pond. "Those are swans," said Mother Duck.
+Soon it was autumn, and the leaves turned red and gold. One day, three big white birds with long necks just like his flew high over the pond. "Look, those are swans!" said Mother Duck.
 
-"Am I a swan like you?" called Duckling. But the swans were too high to hear him, and they flew far away.
+"Am I a swan like you?" called Duckling. But the swans were too high up to hear him, and away they flew, far, far away.
 ---
-Then winter came. Snow fell softly, and the pond turned to ice.
+Then winter came. The snow fell softly, and the pond froze into ice.
 
-Hen fluffed up her feathers at the barn door. "Come inside, all of you!" said Hen. "It is warm and dry in the barn."
+Hen fluffed up her feathers at the barn door. "Come on in, all of you!" said Hen. "It's nice and warm and dry in the barn."
 
-So the ducks waddled through the snow, one behind the other, into the barn.
+So the ducks waddled through the snow, all in a row, into the barn. Waddle, waddle, waddle!
 ---
-All winter long the ducks and Hen snuggled together in the soft, warm straw. Duckling slept between Mother Duck and Dilly.
+All winter long, the ducks and Hen snuggled up together in the soft, warm straw. Duckling slept right in between Mother Duck and Dilly.
 
 "Big or small, I love you all," whispered Mother Duck.
 ---
-At last spring came, and the ice melted away. Duckling had grown big over the winter. He went down to the pond and looked into the water.
+At last spring came, and the ice melted away. Duckling had grown big over the winter! He went down to the pond and peeked into the water.
 
-There he saw a beautiful white bird with a long, graceful neck. "Is that really me?" said Duckling.
+And there he saw a beautiful white bird with a long, lovely neck. "Wow! Is that really me?" said Duckling.
 ---
-Swoosh! Three white swans glided down onto the pond and swam up to him.
+Swoosh, swoosh, swoosh! Three white swans glided down onto the pond and swam right up to him.
 
 "Am I a swan like you?" said Duckling.
 
-"Yes, you are!" said Swan, and he bowed his long neck. "You are a young swan, and a fine one. Welcome, friend!"
+"Yes, you are!" said Swan, and he bowed his long neck. "You're a young swan, and a really fine one. Welcome, friend!"
 ---
-Mother Duck and the ducklings came paddling out to see. "Will you swim with my family too?" said Duckling.
+Mother Duck and the ducklings came paddling out to see. "Can my family swim with us too?" said Duckling.
 
-"Of course," said Swan. "The pond is big enough for everyone."
+"Of course they can!" said Swan. "The pond's big enough for everyone."
 
-Paddle, paddle, splish, splash! Ducks and swans swam round the pond together.
+Splish-splash, splish-splash, splish-splash! Ducks and swans swam round and round the pond together.
 ---
-That evening the sun went down, pink and gold. Dilly and the other ducklings rode home on their big brother's back.
+That evening, the sun went down, all pink and gold. Dilly and the other ducklings rode home on their big brother's back.
 
-"You are a swan, and you are still our brother," said Dilly.
+"You're a swan, and you're still our brother!" said Dilly.
 
-"Big or small, I love you all," said Mother Duck. And Duckling was happier than he had ever been.
+"Big or small, I love you all," said Mother Duck. And Duckling was happier than he'd ever been.
 """;
 
     public const string RedHen = """
@@ -530,35 +530,35 @@ Snip, snap, snout, this tale's told out.
 """;
 
     public const string Beanstalk = """
-Once upon a time a boy called Jack lived in a little cottage with his mother and their old cow, Milky-White. They didn't have much, and the cupboard was nearly empty.
+Once upon a time, a boy called Jack lived in a little cottage with his mum and their old cow, Milky-White. They didn't have much, and the cupboard was nearly empty.
 
-"Here's our last coin, Jack," said Mother. "Please take it to the market and buy some seeds for our garden."
+"Here's our very last coin, Jack," said Mother. "Can you take it to the market and get some seeds for our garden?"
 ---
-At the market Jack met a funny little Peddler. She had a cart full of seeds and a sleepy grey donkey.
+At the market, Jack met a funny little Peddler. She had a cart full of seeds and a sleepy grey donkey.
 
-"I've got something better than seeds," said Peddler. "Five magic beans! Plant them tonight, and look out of your window in the morning."
+"I've got something even better than seeds," said Peddler. "Five magic beans! Plant them tonight, and peek out of your window in the morning."
 
 So Jack gave her his coin, and she gave him the beans.
 ---
-That evening Jack showed his mother the five beans.
+That evening, Jack showed his mum the five beans.
 
 "Only five beans?" said Mother, and she laughed. "Well, beans are seeds too. Let's plant them and see!"
 
 So they planted the beans under the kitchen window: one, two, three, four, five. Milky-White watched over the fence.
 ---
-In the morning Jack and his mother ran out into the garden. "Wow!" said Jack.
+In the morning, Jack and his mum ran out into the garden. "Wow, look at that!" said Jack.
 
 A great big beanstalk had grown in the night. It went up, up, up, right into the clouds!
 
-Even Milky-White looked up. Moo, moo, moooo!
+Even Milky-White looked up. Moo, moo, moo!
 ---
-Then the leaves began to rustle. Rustle, rustle, rustle! Down the beanstalk, leaf by leaf, came a plump little hen with shiny golden feathers.
+Then the leaves started to rustle. Rustle, rustle, rustle! Down the beanstalk, leaf by leaf, came a fluffy little hen with shiny golden feathers.
 
 She hopped onto Jack's arm. Cluck, cluck, cluck!
 
 "Hello, little hen," said Jack. "Are you lost?"
 ---
-"I think she lives up in the clouds," said Jack. "Somebody up there must be missing her. Mother, may I take her home?"
+"I think she lives up in the clouds," said Jack. "Somebody up there must be missing her. Mum, can I take her home?"
 
 "Let's take her home together," said Mother. She tied a basket onto Jack's back and tucked the little hen inside.
 
@@ -566,29 +566,29 @@ She hopped onto Jack's arm. Cluck, cluck, cluck!
 ---
 Jack held on to the beanstalk with both hands, and Mother climbed right behind him.
 
-"Hold on with both hands, one step at a time, Mother," said Jack. Up and up they climbed, slowly and carefully, past the treetops and the birds, right into the soft white clouds.
+"Hold on with both hands, one step at a time, Mum," said Jack. Up, up, up they climbed, nice and slow, past the treetops and the birds, right into the soft white clouds.
 
 The little hen peeked out of the basket. Cluck, cluck, cluck!
 ---
-At the top, a road of soft white cloud led to a huge castle. Boom! Boom! Boom! Out came a Giant with a big, round, friendly face.
+At the top, a fluffy cloud road led to a great big castle. Boom, boom, boom! Out stomped a Giant with a big, round, friendly face.
 
-"Fee, fi, fo, fum! Hello, hello, everyone!" sang Giant, so loudly that the birds flew away. Jack giggled and put his fingers in his ears. So did Mother.
+"Fee, fi, fo, fum! Hello, hello, everyone!" sang Giant, so loud that all the birds flew away. Jack giggled and put his fingers in his ears. So did Mother.
 ---
-Then the Giant saw the little hen in Jack's basket. "Goldie!" said Giant. "My Goldie! I looked for you everywhere!"
+Then the Giant saw the little hen in Jack's basket. "Goldie!" said Giant. "My Goldie! I've been looking for you everywhere!"
 
 Jack lifted Goldie out, and she fluttered up into the Giant's big hands. Cluck, cluck, cluck!
 
-"Thank you, thank you!" said Giant. His happy voice was so loud that the castle windows rattled.
+"Thank you, thank you!" said Giant. His happy voice was so loud that the castle windows went rattle, rattle, rattle!
 ---
-The Giant sat down on his castle step and gave a great big sigh. Whoosh... whoosh! The sigh blew Jack's cap right off his head.
+The Giant sat down on his castle step and let out a great big sigh. Whoosh, whoosh, whoosh! The sigh blew Jack's cap right off his head.
 
 "Oops, sorry!" said Giant, and he caught the cap between two fingers. "Everything about me is too big and too loud. When I say hello, the birds fly away, and nobody ever comes to play."
 ---
-"I can help," said Jack. "Put a finger on your lips, like this, and sing as softly as a mouse."
+"I can help!" said Jack. "Put a finger on your lips, like this, and sing as softly as a mouse."
 
 The Giant put a finger on his lips. "Fee, fi, fo, fum! Hello, hello, everyone!" whispered Giant.
 
-This time the birds didn't fly away. Two little bluebirds flew down and sat on his shoulder.
+This time the birds didn't fly away. Two little bluebirds flew down and sat right on his shoulder.
 ---
 "Thank you, Jack," said Giant. "You brought Goldie home, and you taught me to sing softly. Goldie lays a golden egg every morning, and I'd like to share."
 
@@ -596,23 +596,23 @@ Very gently, the Giant put a shiny golden egg into Jack's basket.
 
 "Come and visit me every Sunday, both of you," said Giant.
 ---
-Jack and Mother waved goodbye and began to climb down.
+Jack and Mother waved bye-bye and started to climb down.
 
-"Hold on with both hands, one step at a time, Mother," said Jack. Down and down they went, slowly and carefully, with the golden egg safe in his basket.
+"Hold on with both hands, one step at a time, Mum," said Jack. Down, down, down they went, nice and slow, with the golden egg safe and snug in his basket.
 
-"Goodbye, my friends!" whispered Giant, and he waved from the edge of the cloud.
+"Bye-bye, my friends!" whispered Giant, and he waved from the edge of the cloud.
 ---
-Jack and Mother stepped off the last leaf. The Peddler was waiting at the bottom.
+Jack and Mother stepped off the very last leaf. The Peddler was waiting at the bottom.
 
 Jack held up the golden egg. "It's a present from our new friend, the Giant," said Jack. "Now we can buy seeds for the whole garden!"
 
-"I told you they were magic beans," said Peddler, and she winked. Mother gave Jack a big hug.
+"I told you they were magic beans," said Peddler, and she gave a wink. Mother gave Jack a great big hug.
 ---
-That night Mother tucked Jack into bed and kissed him goodnight. From high up in the clouds came a soft little song.
+That night, Mother tucked Jack into bed and kissed him goodnight. From high up in the clouds came a soft little song.
 
 "Fee, fi, fo, fum! Goodnight, goodnight, everyone!" sang Giant, as softly as a mouse.
 
-"Goodnight, Giant," whispered Jack, and soon he was fast asleep. From that day on, Jack and the Giant were the best of friends.
+"Night-night, Giant," whispered Jack, and soon he was fast asleep. And from that day on, Jack and the Giant were best friends.
 """;
 
     public const string Elves = """
@@ -698,79 +698,79 @@ Hans and Greta waved from the door, and the elves skipped away over the snow in 
 """;
 
     public const string TownMouse = """
-Once upon a time, Country Mouse lived in a cosy hole under an old oak tree, at the edge of a quiet field. His best friend, Town Mouse, lived far away in a big, busy town.
+Once upon a time, Country Mouse lived in a cosy little hole under an old oak tree, at the edge of a quiet field. His best friend, Town Mouse, lived far, far away in a big, busy town.
 
-Every morning Country Mouse sat in the sunshine and listened to the birds. Tweet, tweet, tweet!
+Every morning, Country Mouse sat in the sunshine and listened to the birds. Tweet, tweet, tweet!
 ---
-One sunny morning, Town Mouse came to visit. She skipped across the field with her little pink bag.
+One sunny morning, guess who came to visit? Town Mouse! She skipped across the field with her little pink bag.
 
 Country Mouse ran out and gave her a big hug. "Welcome to my home!" said Country Mouse.
 ---
 Country Mouse set out lunch on a flat stone: seeds, sweet blackberries and a crunchy hazelnut.
 
-Town Mouse had never tasted a blackberry before. "Yum, yum, yum!" said Town Mouse.
+Town Mouse had never ever tasted a blackberry before. "Yum, yum, yum!" said Town Mouse.
 ---
-After lunch, the two friends lay in the long grass and watched the clouds float by. Swish, swish, swish, went the wind in the grass.
+After lunch, the two friends lay in the long grass and watched the clouds float by. The wind blew in the grass. Swish, swish, swish!
 
-Town Mouse wriggled and wriggled. "It's so quiet here!" said Town Mouse.
+But Town Mouse wriggled and wriggled. "It's so quiet here!" said Town Mouse.
 
 "Isn't it lovely?" said Country Mouse.
 ---
-That evening the sun went down, pink and gold. Chirp, chirp, chirp, sang the crickets.
+That evening, the sun went down, all pink and gold. The crickets sang. Chirp, chirp, chirp!
 
 "Your home is lovely, but I love mine," said Town Mouse. "It's a bit too quiet for me. Come and stay at my house tomorrow!"
 
 "Yes, please!" said Country Mouse.
 ---
-The next morning, the two friends rode to town on the back of the farmer's hay cart, snug in the soft hay.
+The next morning, the two friends rode to town on the back of the farmer's hay cart, all snug in the soft hay.
 
 The big brown horse pulled them all the way. Clip-clop, clip-clop, clip-clop!
 ---
-Town Mouse lived in a tall house in the middle of the town. Her home was a tiny room behind the kitchen wall, with a round red door just her size.
+Town Mouse lived in a tall house, right in the middle of the town. Her home was a teeny-tiny room behind the kitchen wall, with a round red door just her size.
 
 "Welcome to my home!" said Town Mouse.
 ---
-The family had just finished breakfast. Town Mouse led Country Mouse up onto the big kitchen table. There were crumbs of cake, bits of cheese and a few juicy grapes.
+The family had just finished breakfast. Town Mouse took Country Mouse up onto the big kitchen table. Wow! There were cake crumbs, bits of cheese and some juicy grapes.
 
 "Help yourself!" said Town Mouse.
 
 "Yum, yum, yum!" said Country Mouse.
 ---
-Clatter, clatter, clatter, went the plates in the sink. The cook was washing up and humming a happy song.
+Clatter, clatter, clatter! The plates rattled in the sink. The cook was washing up and humming a happy song.
 
 Country Mouse jumped. "What's that noise?" said Country Mouse.
 
 "It's only the plates," said Town Mouse. "Town is always busy!"
 ---
-Then the two friends went into the hall. Vroom, vroom, vroom! A big round hoover rolled past them, all by itself.
+Then the two friends went into the hall. Vroom, vroom, vroom! A big round hoover rolled right past them, all by itself.
 
 Country Mouse put his paws over his ears. "What's that noise?" said Country Mouse.
 
 "It's only the hoover," said Town Mouse. "Town is always busy!"
 ---
-Bang, bang, bang! The wind was banging the big front door. Country Mouse jumped so high that his straw hat flew off his head.
+Bang, bang, bang! The wind was banging the big front door. Country Mouse jumped so high that his straw hat flew right off his head!
 
 "It's only the door," said Town Mouse. "Town is always busy!"
 
-Country Mouse began to giggle. "Town is a bit too busy for me!" said Country Mouse.
+Country Mouse started to giggle. "Town is a bit too busy for me!" said Country Mouse.
 ---
 That evening, the two friends sat on the kitchen windowsill and watched the town lights twinkle.
 
 "Your home is lovely, but I love mine," said Country Mouse. "I like it nice and quiet."
 
-"And I like it nice and busy!" said Town Mouse. Then the two friends laughed and laughed.
+"And I like it nice and busy!" said Town Mouse. Then the two friends laughed and laughed. Ha, ha, ha!
 ---
 The next morning, Country Mouse rode home on the farmer's hay cart. Clip-clop, clip-clop, clip-clop!
 
-Town Mouse waved from the doorstep. "Come back soon!" said Town Mouse.
+Town Mouse waved from the doorstep. "Bye-bye! Come back soon!" said Town Mouse.
 
-"You come and visit me too!" said Country Mouse.
+"You come and visit me too, okay?" said Country Mouse.
 ---
-That night, Country Mouse curled up in his cosy bed under the old oak tree. Swish, swish, swish, went the wind in the grass.
+That night, Country Mouse curled up in his cosy bed under the old oak tree. The wind blew in the grass. Swish, swish, swish!
 
 "Home, sweet home," said Country Mouse. He smiled a sleepy smile and closed his eyes.
 ---
-Far away in the busy town, Town Mouse snuggled into her own little bed. Hum, hum, hum, went the town outside her window.
+Far away in the busy town, Town Mouse snuggled into her own little bed. Outside her window, the town hummed. Hum, hum, hum!
 
 "Home, sweet home," said Town Mouse.
 
@@ -778,57 +778,57 @@ Every summer and every winter, the two friends visited each other. And they stay
 """;
 
     public const string PeterRabbit = """
-Once upon a time there were four little rabbits, and their names were Flopsy, Mopsy, Cotton-tail and Peter. They lived with their mum, Mrs. Rabbit, in a cosy burrow under a big fir tree.
+Once upon a time there were four little rabbits, and their names were Flopsy, Mopsy, Cotton-tail and Peter. They lived with their mum, Mrs. Rabbit, in a cosy little burrow under a big fir tree.
 
-Peter was the littlest. He had a brand-new green jacket and two little red shoes.
+Peter was the littlest one. He had a brand-new green jacket and two little red shoes. Mrs. Rabbit gave his cheek a little pat.
 ---
-One morning Mrs. Rabbit picked up her basket. "I'm going to the shops," said Mrs. Rabbit. "You can play in the field, or pick blackberries down the lane."
+One morning Mrs. Rabbit picked up her basket. "I'm off to the shops," said Mrs. Rabbit. "You can play in the field, or go and pick blackberries down the lane."
 
-"But stay out of Mr. McGregor's garden!" said Mrs. Rabbit. "It's his garden, not ours."
+"But stay out of Mr. McGregor's garden!" said Mrs. Rabbit. "It's his garden, not ours. Okay?"
 ---
-As soon as their mum had gone, Flopsy, Mopsy and Cotton-tail ran down the lane to pick blackberries.
+As soon as Mum was gone, off ran Flopsy, Mopsy and Cotton-tail down the lane to pick blackberries.
 
-But Peter didn't go with them. He wanted the yummy vegetables! He hopped the other way, straight to Mr. McGregor's garden. Lippity, lippity, lippity!
+But Peter didn't go with them. He wanted yummy vegetables! So he hopped the other way, straight to Mr. McGregor's garden. Lippity, lippity, lippity!
 ---
-Mr. McGregor's garden had a big green gate, with a little gap underneath. Peter squeezed under it. Wiggle, wiggle, wiggle!
+Mr. McGregor's garden had a big green gate, with a little gap at the bottom. Peter squeezed under it. Wiggle, wiggle, wiggle!
 
-On the gate post, two little sparrows shook their heads. But Peter didn't look back.
+Up on the gate post, two little sparrows shook their heads. But Peter didn't look back.
 ---
-The garden was full of yummy things. Munch, munch, munch! First Peter ate some lettuce. Then he ate some crunchy beans. Then he ate some radishes, one, two, three!
+The garden was full of yummy things. Munch, munch, munch! First Peter ate some lettuce. Then he ate some crunchy beans. And then he ate some radishes, one, two, three!
 
 "Yum, yum, yum!" said Peter.
 ---
-Soon Peter's tummy felt very full, and very funny. "Ooh, my tummy," said Peter. "I ate too much!"
+Uh-oh! Soon Peter's tummy felt very, very full, and a bit funny. "Ooh, my tummy," said Peter. "I ate way too much!"
 
-He felt very hot, so he hung his jacket on a bean pole and put his shoes beside it. Then he lay down for a rest in the cool shade of a big rhubarb leaf.
+He was so hot! So he hung his jacket on a bean pole and put his shoes down next to it. Then he lay down for a little rest in the cool shade of a big rhubarb leaf.
 ---
-After his rest, Peter hopped off to find the gate, and he forgot all about his jacket and shoes. But the bean plants were taller than Peter, and every path looked the same.
+After his rest, Peter hopped off to find the gate. He forgot his jacket and shoes! But the bean plants were taller than Peter, and every path looked the same.
 
 "Which way is the gate?" said Peter. A little mouse ran by with a big pea in her mouth. She couldn't say a word, so she just shook her head.
 ---
-Peter sat down beside a watering can. He felt very small, and a little bit lost. Then he remembered what his mum had said that morning.
+Peter sat down next to a watering can. He felt very small, and a little bit lost. Then he remembered what Mum said that morning.
 
 "But stay out of Mr. McGregor's garden!" said Mrs. Rabbit.
 
-"Oh dear," said Peter. "I should have listened to my mum."
+"Oh dear," said Peter. "I should've listened to my mum."
 ---
 Creak, creak, creak! Along the path came Mr. McGregor with his wheelbarrow.
 
 "Who's been nibbling my lettuces?" said Mr. McGregor. "Grumble, grumble, grumble!"
 
-Peter hid behind a big cabbage and kept as still as a stone.
+Peter hid behind a big cabbage and stayed as still as a stone.
 ---
 By the bean poles, Mr. McGregor found a little green jacket and two little red shoes.
 
 "Well, well, well!" said Mr. McGregor. "Just the right size for my scarecrow!"
 
-So he dressed his scarecrow in them. And for the first time all day, Mr. McGregor smiled.
+So he dressed up his scarecrow in them. And for the first time all day, Mr. McGregor smiled.
 ---
-When Mr. McGregor had gone in for his lunch, a robin with a round red tummy hopped down beside Peter.
+When Mr. McGregor went in for his lunch, a robin with a round red tummy hopped down next to Peter.
 
 "Please, can you help me find the gate?" said Peter.
 
-"Tweet, tweet, tweet! Of course I can," said Robin. "Follow me. I know the way!"
+"Tweet, tweet, tweet!" said Robin. "Of course I can! Follow me. I know the way!"
 ---
 Robin flew from bush to bush, and Peter hopped along behind him. Lippity, lippity, lippity!
 
@@ -836,23 +836,23 @@ They went past the carrots, past the onions, and past the scarecrow in its littl
 
 "Bye-bye, jacket! Bye-bye, shoes!" said Peter.
 ---
-At last, there was the big green gate! Peter squeezed under it. Wiggle, wiggle, wiggle!
+And there it was, the big green gate! Peter squeezed under it. Wiggle, wiggle, wiggle!
 
 "Thank you, Robin!" said Peter.
 
-"Hop straight home now," said Robin, and he waved his wing.
+"Now hop straight home!" said Robin, and he waved his wing.
 ---
-Peter hopped all the way home to the big fir tree. Lippity, lippity, lippity! Mrs. Rabbit gave him a big hug.
+Peter hopped all the way home to the big fir tree. Lippity, lippity, lippity! Mrs. Rabbit gave him a great big hug.
 
 "Peter! Where are your jacket and shoes?" said Mrs. Rabbit.
 
-"I went into Mr. McGregor's garden," said Peter. "I'm sorry, Mum. Next time I'll listen."
+"I went into Mr. McGregor's garden," said Peter. "I'm really sorry, Mum. Next time, I'll listen. I promise!"
 ---
 Peter's tummy still felt funny, so Mrs. Rabbit tucked him into bed with a little cup of camomile tea.
 
 Flopsy, Mopsy and Cotton-tail had bread and milk and blackberries for supper. "We saved you some blackberries for tomorrow, Peter," said Flopsy.
 
-"Goodnight, my little bunnies," said Mrs. Rabbit. And soon Peter was fast asleep.
+"Night-night, my little bunnies," said Mrs. Rabbit. And soon Peter was fast asleep.
 """;
 
     // Book 1 of the Captain Kathryn and Seagull series, an original story. The captain is spelled "Kathryn" so the English voices say
