@@ -74,7 +74,7 @@ on CI (Slice 48).
 
 *Follow-ups:* the ClaudeSkills `device-test` agent should use the `tools/emulator` scripts (separate ClaudeSkills PR). RTST first-run language page: Continue downloads the pack but does not navigate on (seen on the emulator).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-27)
 
 Already written to `src/ReadTheStupidText.Mobile/CLAUDE.md` in this slice's diff; nothing more to lift.
 

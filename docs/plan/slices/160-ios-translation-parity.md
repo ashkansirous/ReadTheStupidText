@@ -85,7 +85,7 @@ Grounding (origin/main 9c4ec2a):
 
 *User items:* in App Store Connect add Diagnostics > Other Diagnostic Data (not linked to the user, not tracking, analytics) to the privacy labels of both iOS apps. Dino is in the kids category: confirm Google Data Transport logging is acceptable.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-27)
 
 - `src/ReadTheStupidText.Mobile/CLAUDE.md`: the Slice 54/101 bullets saying the review translate checkbox is Android-only are wrong; translation (`MlKitTranslator`) exists on both platforms. (Slice 160: docs/plan/slices/160-ios-translation-parity.md)
 - `STORE.md`: mentions of translation should say both platforms.

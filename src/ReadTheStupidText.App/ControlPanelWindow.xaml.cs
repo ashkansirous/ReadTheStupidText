@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using ReadTheStupidText.Application.Input;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Application.Startup;
@@ -243,9 +244,9 @@ public sealed partial class ControlPanelWindow : Window
     // on-screen (e.g. after the panel grew, or a monitor was removed/rearranged).
     private static PointInt32 ClampToWorkArea(int x, int y, int width, int height, RectInt32 work)
     {
-        int maxX = Math.Max(work.X, work.X + work.Width - width);
-        int maxY = Math.Max(work.Y, work.Y + work.Height - height);
-        return new PointInt32(Math.Clamp(x, work.X, maxX), Math.Clamp(y, work.Y, maxY));
+        (int clampedX, int clampedY) = PanelPlacement.ClampToWorkArea(
+            x, y, width, height, new WorkArea(work.X, work.Y, work.Width, work.Height));
+        return new PointInt32(clampedX, clampedY);
     }
 
     // Header pointer-drag (Slice 24, Decision 31): drag the borderless panel by its
@@ -582,11 +583,11 @@ public sealed partial class ControlPanelWindow : Window
     private void SetGenerating(bool generating)
     {
         bool waiting = _wait?.Current is not null; // the wait shows in this same slot, with Cancel (Batch 29 W2)
-        bool ring = generating || waiting;
-        PlayPauseRing.IsActive = ring;
-        PlayPauseRing.Visibility = ring ? Visibility.Visible : Visibility.Collapsed;
-        PlayPauseIcon.Visibility = ring ? Visibility.Collapsed : Visibility.Visible;
-        PlayPauseCancelIcon.Visibility = waiting && _wait!.Current!.CanCancel ? Visibility.Visible : Visibility.Collapsed;
+        var face = PlayButtonFace.For(generating, waiting, _wait?.Current?.CanCancel == true);
+        PlayPauseRing.IsActive = face.ShowSpinner;
+        PlayPauseRing.Visibility = face.ShowSpinner ? Visibility.Visible : Visibility.Collapsed;
+        PlayPauseIcon.Visibility = face.ShowPlayPause ? Visibility.Visible : Visibility.Collapsed;
+        PlayPauseCancelIcon.Visibility = face.ShowCancel ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void OnPlaybackStateChanged(object? sender, PlaybackState state) =>
@@ -612,25 +613,16 @@ public sealed partial class ControlPanelWindow : Window
     // name the foreground app when known.
     private string DescribeStatus(PlaybackState state)
     {
-        if (state == PlaybackState.Paused)
+        var line = ReadStatusLine.For(
+            state, _readAloud.CurrentReadTrigger == ActivityTrigger.Clipboard, _readAloud.CurrentReadWindow?.App);
+        return line.Kind switch
         {
-            return UiStrings.Get("Status_Paused");
-        }
-
-        if (state != PlaybackState.Playing)
-        {
-            return UiStrings.Get("Status_Ready");
-        }
-
-        if (_readAloud.CurrentReadTrigger == ActivityTrigger.Clipboard)
-        {
-            return UiStrings.Get("Status_ReadingClipboard");
-        }
-
-        string? app = _readAloud.CurrentReadWindow?.App;
-        return string.IsNullOrWhiteSpace(app)
-            ? UiStrings.Get("Status_ReadingSelection")
-            : UiStrings.Format("Status_ReadingSelectionFrom", app);
+            ReadStatusKind.Paused => UiStrings.Get("Status_Paused"),
+            ReadStatusKind.ReadingClipboard => UiStrings.Get("Status_ReadingClipboard"),
+            ReadStatusKind.ReadingSelection => UiStrings.Get("Status_ReadingSelection"),
+            ReadStatusKind.ReadingSelectionFrom => UiStrings.Format("Status_ReadingSelectionFrom", line.App!),
+            _ => UiStrings.Get("Status_Ready"),
+        };
     }
 
     private void SetWaveformPlaying(bool playing)

@@ -307,6 +307,27 @@ public class UsageServiceTests
         Assert.Single(transport.Batches);
     }
 
+    [Fact]
+    public async Task A_batch_carries_the_device_object_from_the_build_and_none_without_one()
+    {
+        var withDevice = new FakeTransport { ConfigBody = ConfigOn };
+        var build = Build with { Device = DeviceBuckets.Build(11, DeviceFormFactor.Desktop, System.Runtime.InteropServices.Architecture.X64, 12, 16L * 1024 * 1024 * 1024) };
+        var service = new UsageService(new FakeStore { Config = ConfigOn }, withDevice, build, new FixedClock(), 0);
+        await service.RecordAsync(Read);
+        await service.FlushAsync();
+        string body = Assert.Single(withDevice.Batches);
+        System.Text.Json.JsonElement device = System.Text.Json.JsonDocument.Parse(body).RootElement.GetProperty("device");
+        Assert.Equal(
+            ["11", "desktop", "x64", "9+", "8+"],
+            new[] { "osMajor", "formFactor", "arch", "cores", "ram" }.Select(name => device.GetProperty(name).ToString()));
+
+        var without = new FakeTransport { ConfigBody = ConfigOn };
+        var plain = Service(new FakeStore { Config = ConfigOn }, without);
+        await plain.RecordAsync(Read);
+        await plain.FlushAsync();
+        Assert.DoesNotContain("device", Assert.Single(without.Batches));
+    }
+
     private static UsageService Service(FakeStore store, FakeTransport transport, double roll = 0) =>
         new(store, transport, Build, new FixedClock(), roll);
 

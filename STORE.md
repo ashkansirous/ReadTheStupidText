@@ -386,13 +386,20 @@ Store forms (Claude drafts and fills them in the signed-in browser; the user rev
 - **App Store privacy (RTST):** **Usage Data > Product Interaction** and **Diagnostics > Performance Data**, **not linked to the user**, **not used
   for tracking**, purpose **Analytics**. `PrivacyInfo.xcprivacy` declares the same (`NSPrivacyCollectedDataTypeProductInteraction` and
   `NSPrivacyCollectedDataTypePerformanceData`, linked false, tracking false).
+- **Slice 166 additions (both apps, same wording for Dino below):** each batch carries a `device` object (`osMajor`, `formFactor` phone/tablet/desktop/other,
+  `arch` arm64/x64/x86/arm/other, `cores` 1-4/5-8/9+, `ram` GB bucket <3/3-4/4-6/6-8/8+ (total rounded up to whole GiB first); never a model, maker, exact chip, exact memory/core number or id) and the
+  Worker adds the **country** from `request.cf.country` (`XX`/`T1`/invalid become `none`; the IP is not stored). Form answers to add **before the Worker change
+  merges**: **Google Play Data safety:** Location > **Approximate location**, collected, not shared, not ephemeral, optional, Analytics (Diagnostics is already declared);
+  **App Store privacy:** **Coarse Location** and **Other Diagnostic Data**, not linked, no tracking, Analytics (`PrivacyInfo.xcprivacy` of both apps declares
+  `NSPrivacyCollectedDataTypeCoarseLocation` and `NSPrivacyCollectedDataTypeOtherDiagnosticData`); **Microsoft Store:** nothing beyond the policy URL. Check Google Play's
+  Families policy wording on approximate location for Dino before submitting. (Slice 166: docs/plan/slices/166-usage-device-context.md)
 - **Microsoft Store (RTST):** no data-collection question beyond the privacy policy URL, which must point at the updated `site/privacy.html`
   (the Windows app sends the same counts once switched on; the switch is the last row of the control panel).
 - Cloudflare Analytics Engine is the processor. The `RTST_USAGE` binding (dataset `rtst_usage`) is in both wrangler configs. To switch counting on,
   put `{"telemetry": {"enabled": true, "sampleRate": 1}}` in `readthestupidtext/config.json`
   (`wrangler r2 object put readthestupidtext-downloads/readthestupidtext/config.json --file config.json --remote`).
 - Each point's double is the count's weight (1 / the sample rate it was counted at), so query with `SUM(double1)`, never `COUNT(*)`; blobs are
-  `name, version, platform, day, language, sourceLanguage, mode, engine, voiceDefault, lengthBucket, osMajor, stage, outcome, durationBucket, source, early` (`source` on Windows reads only; `early` on timing counts only, `yes` when the first sentences were prepared while the person decided, Slice 139).
+  `name, version, platform, day, language, sourceLanguage, mode, engine, voiceDefault, lengthBucket, osMajor, stage, outcome, durationBucket, source, early, waitStage` (`source` on Windows reads only; `early` on timing counts only, `yes` when the first sentences were prepared while the person decided, Slice 139), then blob18 country, blob19 form factor, blob20 CPU architecture (Slice 166); double2 is the core bucket's lower bound (1/5/9) and double3 the RAM bucket's lower bound in GB (0/3/4/6/8), -1 when a build sent none, and blob11 `osMajor` is filled on every count.
   `tools/rtst-usage-report.ps1` hides groups of fewer than 10 events. That floor counts events, not households (there is no install id), so it
   is a noise filter and not an anonymity guarantee: say "no identifiers, counts only", never "cannot be traced".
 
@@ -743,13 +750,7 @@ plain HTTPS from GitHub Releases, so no App Transport Security exception and no 
 needed (Decision 60); the packs folder is excluded from iCloud backup.
 `ITSAppUsesNonExemptEncryption` is `false` (HTTPS only).
 
-**Known gap, translation (Slice 55).** The iPhone app has no "Translate to my language" yet
-(the card is hidden). Apple's Translation framework (iOS 18+) is Swift-only with no .NET binding
-and needs a SwiftUI view to download a language, and it has no Farsi; ML Kit's iOS translator has
-no .NET binding we could verify without a Mac. The decision: ship iOS without translation and
-revisit with a small Swift wrapper (Apple's framework, gated to iOS 18, Farsi hidden) or a
-verified ML Kit binding. Language identification (`NLLanguageRecognizer`) is already in place.
-The store listing for iOS must not mention translation until then.
+**Translation on iOS (Slice 160).** Translation (ML Kit) now runs on Android and iPhone, on device after a one-time model download. Apple's Translation framework was not used (Swift-only, no Farsi). iOS simulator builds have no translator (the MLKitTranslate xcframework has no simulator slice), so the card hides there.
 
 ## Dino Book Reader on Windows (Slice 67)
 
@@ -816,5 +817,6 @@ without a release. Store forms (the owner or Claude in the signed-in browser, af
   `telemetry.enabled` in `dinoreader/config.json` switches counting (see "Landing site" in `CLAUDE.md`). Each
   point's double is the count's weight (1 / the sample rate it was counted at), so query with
   `SELECT blob1 AS name, blob2 AS book, SUM(double1) FROM dino_usage GROUP BY name, book`.
+- Slice 166 adds blob10 country, blob11 OS major, blob12 form factor, blob13 CPU architecture, blob14 core bucket and blob15 RAM bucket (empty for builds that send no `device` object); the store-form additions are listed under "Slice 166 additions" in the RTST section above.
 - `tools/dino-usage-report.ps1` hides groups of fewer than 10 events. That floor counts events, not households (there is no install id), so it is a noise filter and not an anonymity guarantee: say "no identifiers, counts only", never "cannot be traced".
 - Switch counting on with `telemetry` in `dinoreader/config.json` (`{"enabled": true, "sampleRate": 1}`); it is off until then.

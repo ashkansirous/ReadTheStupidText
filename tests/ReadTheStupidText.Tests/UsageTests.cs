@@ -243,6 +243,79 @@ public class UsageEventsTests
     }
 }
 
+public class DeviceBucketsTests
+{
+    private const long Gb = 1024L * 1024 * 1024;
+
+    [Theory]
+    [InlineData(1, "1-4")]
+    [InlineData(4, "1-4")]
+    [InlineData(5, "5-8")]
+    [InlineData(8, "5-8")]
+    [InlineData(9, "9+")]
+    [InlineData(32, "9+")]
+    public void Cores_fall_into_their_bucket_at_each_boundary(int cores, string expected)
+    {
+        Assert.Equal(expected, DeviceBuckets.Cores(cores));
+    }
+
+    [Fact]
+    public void An_unreadable_core_count_is_the_lowest_bucket()
+    {
+        Assert.Equal("1-4", DeviceBuckets.Cores(0));
+    }
+
+    [Theory]
+    [InlineData(1L, "<3")]
+    [InlineData(2 * Gb, "<3")]
+    [InlineData(2 * Gb + 1, "3-4")]
+    [InlineData(3 * Gb, "3-4")]
+    [InlineData(3 * Gb + 1, "4-6")]
+    [InlineData(4 * Gb, "4-6")]
+    [InlineData(5 * Gb, "4-6")]
+    [InlineData(5 * Gb + 1, "6-8")]
+    [InlineData(8 * Gb, "8+")]
+    [InlineData(7 * Gb + 1, "8+")]
+    [InlineData(64 * Gb, "8+")]
+    [InlineData(2_900_000_000L, "3-4")]
+    [InlineData(3_970_000_000L, "4-6")]
+    [InlineData(6_000_000_000L, "6-8")]
+    [InlineData(8_000_000_000L, "8+")]
+    public void Memory_falls_into_its_bucket_at_each_boundary(long bytes, string expected)
+    {
+        Assert.Equal(expected, DeviceBuckets.Ram(bytes));
+    }
+
+    [Theory]
+    [InlineData(0L)]
+    [InlineData(-5L)]
+    public void An_unreadable_memory_size_has_no_bucket(long bytes)
+    {
+        Assert.Null(DeviceBuckets.Ram(bytes));
+    }
+
+    [Theory]
+    [InlineData(System.Runtime.InteropServices.Architecture.Arm64, "arm64")]
+    [InlineData(System.Runtime.InteropServices.Architecture.X64, "x64")]
+    [InlineData(System.Runtime.InteropServices.Architecture.X86, "x86")]
+    [InlineData(System.Runtime.InteropServices.Architecture.Arm, "arm")]
+    [InlineData(System.Runtime.InteropServices.Architecture.Wasm, "other")]
+    [InlineData(System.Runtime.InteropServices.Architecture.RiscV64, "other")]
+    [InlineData((System.Runtime.InteropServices.Architecture)999, "other")]
+    public void An_architecture_off_the_list_is_other(System.Runtime.InteropServices.Architecture architecture, string expected)
+    {
+        Assert.Equal(expected, DeviceBuckets.Arch(architecture));
+    }
+
+    [Fact]
+    public void A_context_with_unreadable_memory_has_an_empty_ram_field()
+    {
+        DeviceContext context = DeviceBuckets.Build(15, DeviceFormFactor.Phone, System.Runtime.InteropServices.Architecture.Arm64, 8, 0);
+
+        Assert.Equal(new DeviceContext(15, "phone", "arm64", "5-8", string.Empty), context);
+    }
+}
+
 public class UsageBatchTests
 {
     private static readonly UsageContext Context = new("1.4.0", "android", 1, new DateTimeOffset(2026, 10, 26, 10, 0, 0, TimeSpan.Zero));
@@ -259,6 +332,21 @@ public class UsageBatchTests
         JsonElement only = document.RootElement.GetProperty("events")[0];
         string[] names = only.EnumerateObject().Select(p => p.Name).Order().ToArray();
         Assert.Equal(["day", "language", "name", "osMajor", "platform", "sampleRate", "version"], names);
+    }
+
+    [Fact]
+    public void The_device_object_sits_next_to_the_events_and_is_left_out_when_there_is_none()
+    {
+        UsageEvent opened = UsageEvents.AppOpened(Context, "en", 15)!;
+        var device = new DeviceContext(15, DeviceFormFactor.Tablet, DeviceArch.Arm64, "5-8", "4-6");
+
+        using JsonDocument with = JsonDocument.Parse(UsageBatch.ToJson([opened], device));
+        JsonElement sent = with.RootElement.GetProperty("device");
+        Assert.Equal(["arch", "cores", "formFactor", "osMajor", "ram"], sent.EnumerateObject().Select(p => p.Name).Order().ToArray());
+        Assert.Equal("tablet", sent.GetProperty("formFactor").GetString());
+
+        using JsonDocument without = JsonDocument.Parse(UsageBatch.ToJson([opened]));
+        Assert.False(without.RootElement.TryGetProperty("device", out _));
     }
 
     [Fact]

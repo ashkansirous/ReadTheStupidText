@@ -57,6 +57,20 @@ public class UsageEventTests
     }
 
     [Fact]
+    public void The_batch_body_carries_the_device_object_when_given_and_nothing_about_a_model()
+    {
+        UsageEvent count = UsageEvent.For(UsageEventName.BookOpened, StoryWith(PackageId), true, 0.5, "1.42.0", AppPlatform.Android, Now);
+        var device = new ReadTheStupidText.Application.Usage.DeviceContext(15, "phone", "arm64", "5-8", "<3");
+
+        string json = UsageBatch.ToJson([count], device);
+
+        using var document = System.Text.Json.JsonDocument.Parse(json);
+        System.Text.Json.JsonElement sent = document.RootElement.GetProperty("device");
+        Assert.Equal(["15", "phone", "arm64", "5-8", "<3"], new[] { "osMajor", "formFactor", "arch", "cores", "ram" }.Select(name => sent.GetProperty(name).ToString()));
+        Assert.DoesNotContain("model", json, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void The_batch_body_carries_only_the_named_fields_in_camel_case()
     {
         UsageEvent count = UsageEvent.For(UsageEventName.BookOpened, StoryWith(PackageId), true, 0.5, "1.42.0", AppPlatform.Android, Now);

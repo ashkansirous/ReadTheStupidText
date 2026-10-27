@@ -198,13 +198,13 @@
   <data name="Version_NewReady" xml:space="preserve"><value>نسخهٔ تازه آماده است</value></data>
   <data name="Version_Title" xml:space="preserve"><value>نسخه</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>به بهتر شدن دینو کمک کنید</value></data>
-  <data name="Usage_Helper" xml:space="preserve"><value>شمارش‌هایی مثل «یک کتاب فروشگاه تمام شد» می‌فرستد. بدون نام، بدون شناسه، بدون چیزی که شما نوشته‌اید.</value></data>
+  <data name="Usage_Helper" xml:space="preserve"><value>شمارش‌هایی مثل «یک کتاب فروشگاه تمام شد» می‌فرستد. بدون نام، بدون شناسه، بدون چیزی که شما نوشته‌اید. همچنین کشور شما و نوع تقریبی دستگاه (گوشی یا تبلت، محدودهٔ حافظه) را اضافه می‌کند.</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>سرعت خواندن</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>آهسته‌تر برای کوچولوها آسان‌تر است</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>۰٫۵x · آهسته</value></data>
   <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
   <data name="Speed_Play" xml:space="preserve"><value>شنیدن این سرعت</value></data>
-  <data name="FirstRun_Usage" xml:space="preserve"><value>دینو می‌شمارد کدام کتاب‌ها خوانده می‌شوند، بدون نام و شناسه. می‌توانید این را در تنظیمات خاموش کنید.</value></data>
+  <data name="FirstRun_Usage" xml:space="preserve"><value>دینو می‌شمارد کدام کتاب‌ها خوانده می‌شوند، بدون نام و شناسه. می‌توانید این را در تنظیمات خاموش کنید. همچنین کشور شما و نوع تقریبی دستگاه (گوشی یا تبلت، محدودهٔ حافظه) را اضافه می‌کند.</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>قصه‌گوی شما ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} مگابایت</value></data>
   <data name="Storyteller_Failed" xml:space="preserve"><value>دریافت صداهای قصه‌گو ممکن نشد</value></data>

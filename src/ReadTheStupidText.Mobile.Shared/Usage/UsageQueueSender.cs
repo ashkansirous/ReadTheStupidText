@@ -227,7 +227,11 @@ public sealed class UsageQueueSender<TEvent>(UsageQueueOptions<TEvent> options)
     private async Task<SendResult> PostAsync(IReadOnlyList<TEvent> batch)
     {
         using var timeout = new CancellationTokenSource(Timeout);
-        using var body = new StringContent(options.ToJson(batch), Encoding.UTF8, "application/json");
+        string json = options.ToJson(batch);
+#if DEBUG
+        Debug.WriteLine($"{options.LogName} usage batch of {batch.Count}: {json}"); // counts hold no id or text, so the body is safe to log in a debug build
+#endif
+        using var body = new StringContent(json, Encoding.UTF8, "application/json");
         using HttpResponseMessage response = await Http.PostAsync(new Uri(new Uri(options.BaseAddress), EventsPath), body, timeout.Token);
         return Classify(response.StatusCode);
     }

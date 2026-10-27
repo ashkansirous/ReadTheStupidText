@@ -8,7 +8,7 @@
   STORE.md, "Phone apps: anonymous usage counts"). Blob layout, one data point per count: blob1 name, blob2 app version, blob3 platform,
   blob4 UTC day, blob5 language, blob6 source language, blob7 mode (original | translation), blob8 voice engine, blob9 voice is default (yes | no),
   blob10 text length bucket, blob11 OS major version, blob12 stage, blob13 outcome, blob14 duration bucket, blob15 source (Windows reads only: selection | clipboard | hotkey | panel), blob16 early (timing counts only: yes when the head was prepared before the tap, Slice 139), blob17 wait stage (wait_shown and wait_cancelled only, Slice 148: preparing_voice | stalled | downloading_model | translating | reading_pictures | saving | getting_file; blob14 is how long the overlay showed); a field an event does not carry is
-  empty. double1 is the count's weight (1 / the app's sample rate). Every sum is SUM(_sample_interval * double1): _sample_interval is Analytics
+  empty. Since Slice 166 every count also carries the batch's device context (empty or -1 for builds that send none): blob18 country (two capital letters from the connection, never the IP; none when unknown), blob19 form factor (phone | tablet | desktop | other), blob20 CPU architecture (arm64 | x64 | x86 | arm | other), and blob11 OS major version is now filled on every count; double2 is the CPU core bucket's lower bound (1 | 5 | 9) and double3 the RAM bucket's lower bound in GB (0 | 3 | 4 | 6 | 8), -1 when not sent (rows written before this layout read 0, so the double queries keep only rows with a form factor in blob19). The RAM bucket is taken after rounding the total up to whole GiB (a phone sold as 4 GB reports about 3.7 GiB and counts as 4-6). double1 is the count's weight (1 / the app's sample rate). Every sum is SUM(_sample_interval * double1): _sample_interval is Analytics
   Engine's own sampling, double1 the app's.
 
   Privacy: every query ends in HAVING SUM(_sample_interval) >= $MinEvents, so a group with fewer than 10 recorded events (a rare language,
@@ -109,6 +109,41 @@ GROUP BY length_bucket $Enough ORDER BY reads DESC
 SELECT blob2 AS version, blob3 AS platform, blob11 AS os_major, blob5 AS app_language, $Weighted AS opens
 FROM $Dataset WHERE blob1 = 'app_opened' AND $Window
 GROUP BY version, platform, os_major, app_language $Enough ORDER BY opens DESC
+"@
+    'App opens by country (blob18; none = no country, XX or Tor)' = @"
+SELECT blob18 AS country, $Weighted AS opens
+FROM $Dataset WHERE blob1 = 'app_opened' AND $Window
+GROUP BY country $Enough ORDER BY opens DESC
+"@
+    'App opens by OS major version and platform (blob11)' = @"
+SELECT blob11 AS os_major, blob3 AS platform, $Weighted AS opens
+FROM $Dataset WHERE blob1 = 'app_opened' AND $Window
+GROUP BY os_major, platform $Enough ORDER BY opens DESC
+"@
+    'App opens by form factor (blob19: phone | tablet | desktop | other)' = @"
+SELECT blob19 AS form_factor, $Weighted AS opens
+FROM $Dataset WHERE blob1 = 'app_opened' AND $Window
+GROUP BY form_factor $Enough ORDER BY opens DESC
+"@
+    'App opens by CPU architecture (blob20: arm64 | x64 | x86 | arm | other)' = @"
+SELECT blob20 AS arch, $Weighted AS opens
+FROM $Dataset WHERE blob1 = 'app_opened' AND $Window
+GROUP BY arch $Enough ORDER BY opens DESC
+"@
+    'App opens by CPU core bucket (double2: lower bound 1 | 5 | 9; older builds are left out: their unwritten doubles read 0)' = @"
+SELECT double2 AS cores_from, $Weighted AS opens
+FROM $Dataset WHERE blob1 = 'app_opened' AND blob19 <> '' AND $Window
+GROUP BY cores_from $Enough ORDER BY opens DESC
+"@
+    'App opens by RAM bucket (double3: lower bound in GB 0 | 3 | 4 | 6 | 8; older builds are left out: their unwritten doubles read 0)' = @"
+SELECT double3 AS ram_gb_from, $Weighted AS opens
+FROM $Dataset WHERE blob1 = 'app_opened' AND blob19 <> '' AND $Window
+GROUP BY ram_gb_from $Enough ORDER BY opens DESC
+"@
+    'Timing: first-audio waits by RAM bucket (are slow reads a low-end problem?)' = @"
+SELECT double3 AS ram_gb_from, blob14 AS duration, $Weighted AS waits
+FROM $Dataset WHERE blob1 = 'timing' AND blob12 = 'first_audio' AND blob19 <> '' AND $Window
+GROUP BY ram_gb_from, duration $Enough ORDER BY ram_gb_from, waits DESC
 "@
 }
 

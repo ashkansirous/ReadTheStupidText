@@ -150,10 +150,18 @@
   contain the text you read, file names, scanned images, names, or any install, device, account or advertising
   identifier, so they cannot be put together into a history of one person. Only a share of launches may count at
   all, as set by the project.</p>
+  <p>Each batch of counts also says a few coarse things about the device, as fixed lists and ranges: the form factor
+  (phone, tablet, desktop or other), the operating system&rsquo;s major version, the processor type (arm64, x64, x86,
+  arm or other), the number of processor cores as a range (1 to 4, 5 to 8, or 9 or more) and the memory as a range in
+  GB (under 3, 3 to 4, 4 to 6, 6 to 8, or 8 or more). Never the device&rsquo;s model or maker, the exact chip, exact
+  memory or core numbers, the full system build, or any identifier. The server also records the <strong>country</strong>
+  of the request as a two-letter code (such as GB), which Cloudflare works out from the connection. It is approximate,
+  not your GPS position: the app never asks for location permission, never sends a location, and the IP address itself
+  is not stored. These are coarse ranges, not exact values, and nothing here is a name, an account, a device model or an identifier. They are not a guarantee of anonymity on their own, though: in a small country a rare combination of ranges could stand out, so they are used only to see the overall picture.</p>
   <p>Counts are sent in small batches to this project&rsquo;s own server (<code>readthestupidtext.sirous.uk</code>)
   and stored in Cloudflare&rsquo;s Workers Analytics Engine (Cloudflare is the processor) for about three months,
   then deleted. As with any web request, the server sees your IP address while the request is handled; it is not
-  stored with the counts and is not used for anything. The project can also switch counting off for everyone from
+  stored with the counts and is not used for anything (only the country it maps to, as described above). The project can also switch counting off for everyone from
   the server. Counts are not shared with anyone else and are not used for advertising or tracking.</p>
 
   <h2>Third-party components</h2>

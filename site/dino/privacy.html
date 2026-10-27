@@ -88,9 +88,18 @@
   &ldquo;own&rdquo; for a book a grown-up added, never its title or text; the language; the one extra fact named
   above (such as the kind of source or the page range); whether a parent recording is on the book; the app version;
   the platform (Android, iPhone or Windows); and the date, with no time of day.
-  There is no name, account, advertising or device identifier, no install identifier, no IP address kept by the app, and
+  </p>
+  <p>Each batch of counts also says a few coarse things about the device, as fixed lists and ranges: the form factor
+  (phone, tablet, desktop or other), the operating system&rsquo;s major version, the processor type (arm64, x64, x86,
+  arm or other), the number of processor cores as a range (1 to 4, 5 to 8, or 9 or more) and the memory as a range in
+  GB (under 3, 3 to 4, 4 to 6, 6 to 8, or 8 or more). Never the device&rsquo;s model or maker, the exact chip, exact
+  memory or core numbers, the full system build, or any identifier. The server also records the <strong>country</strong>
+  of the request as a two-letter code (such as GB), which Cloudflare works out from the connection. It is approximate,
+  not a location: the app never asks for location permission and never sends one, and the IP address itself is not
+  stored. These are coarse ranges, not exact values, and nothing here is a name, an account, a device model or an identifier. They are not a guarantee of anonymity on their own, though: in a small country a rare combination of ranges could stand out, so they are used only to see the overall picture.</p>
+  <p>  There is no name, account, advertising or device identifier, no install identifier, no IP address kept by the app, and
   nothing a child typed, so a count carries nothing that names a child, a family or a device. The server (like any web
-  server) may see the IP address of the request, which the project does not read or store with the counts. The counts are
+  server) may see the IP address of the request, which the project does not read or store with the counts (only the approximate country it maps to, as described above). The counts are
   stored with Cloudflare (our processor) for about three months and read only as totals. The project can turn counting down or
   off from the server without an update. A grown-up can switch it off at any time under &ldquo;Help make Dino
   better&rdquo; in Settings (behind the grown-ups gate); when it is off, nothing is sent.</p>
