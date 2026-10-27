@@ -6,7 +6,8 @@ namespace DinoReader.Tests;
 /// <summary>Jack and the Beanstalk's cast (Slice 121): Jack and the Giant get men's voices and Mother and the Peddler women's, in every language's roster,
 /// cast the way <see cref="StoreStoryTests.TheUglyDuckling_GivesEachCharacterAVoiceOfTheirGender_InEveryLanguagesRoster"/> casts the Ugly Duckling.
 /// The Giant also gets one of the roster's deep, low voices: the Big, Giant or Grumpy flavour, the family <see cref="CharacterRoster.FlavourDistance"/> counts as one
-/// (Farsi's men's Giant and Grumpy characters share the gyro voice and tie on cost, so the roster order gives him the Grumpy gardener there). Goldie the hen, Milky-White the cow, the donkey and the birds never speak, so they are not in the cast.</summary>
+/// (since Slice 156 the book suggests the Friendly Giant, which every language's roster has; Jack is the Cheeky Piglet, Mother the Kind Mummy and the Peddler the Busy Bee,
+/// see <see cref="StarterVoices"/>). Goldie the hen, Milky-White the cow, the donkey and the birds never speak, so they are not in the cast.</summary>
 public sealed class BeanstalkStoryTests
 {
     private const string GiantName = "Giant";

@@ -120,6 +120,16 @@ internal static class StarterVoices
         [
             new("Hazelnut", "bee", Gender.Female, CharacterAge.Young, null, [VoiceQuality.Bright, VoiceQuality.Warm]),
         ],
+        // Jack and the Beanstalk: Jack is a boy of about seven (Cheeky Piglet, small and quick), Mother the warm grown-up who climbs with him, the Giant big, kind and far too
+        // loud (Friendly Giant), the Peddler a funny little old seed-seller who winks (Busy Bee, bubbly and quick). The picker made Jack a grown man (knight), the Giant the
+        // Rumbly Dragon and the Peddler the princess, which whispers in Spanish, Portuguese and Farsi.
+        [StoreTexts.BeanstalkId] =
+        [
+            new("Jack", "piglet", Gender.Male, CharacterAge.Child, CharacterBeing.Person, [VoiceQuality.Bright, VoiceQuality.Bouncy]),
+            new("Mother", "mummy", Gender.Female, CharacterAge.Adult, CharacterBeing.Person, [VoiceQuality.Warm, VoiceQuality.Soft]),
+            new("Giant", "giant", Gender.Male, CharacterAge.Adult, CharacterBeing.Giant, [VoiceQuality.Booming, VoiceQuality.Warm]),
+            new("Peddler", "bee", Gender.Female, CharacterAge.Old, CharacterBeing.Person, [VoiceQuality.Bouncy, VoiceQuality.Bright]),
+        ],
 
         // The Tortoise and the Hare: three boys and three girls, as the text's pronouns say. Owl and Frog are animals with a sound (their kind is the book's animal); the Hare, Tortoise,
         // Squirrel and Hedgehog have no sound word, so no kind either. Owl is Grandpa Bear, not the Sleepy Owl: only en and fa have an owl, and elsewhere the trait match ranks a
