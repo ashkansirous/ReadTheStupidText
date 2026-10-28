@@ -359,6 +359,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	private async Task OpenNarratorPageAsync()
 	{
 		var page = _services.GetRequiredService<NarratorPage>();
+		page.Language = _castLanguage;
 		_returningFromNarrator = true;
 		await Navigation.PushAsync(page);
 	}

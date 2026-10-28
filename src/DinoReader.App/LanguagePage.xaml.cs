@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Globalization;
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.Controls.Shapes;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
@@ -72,6 +73,7 @@ public static class LanguageChoice
 /// </summary>
 public partial class LanguagePage : ContentPage, IGrownUpPage
 {
+	private const int LoadWaitMilliseconds = 2000;
 	private const double RowMinHeight = 54;
 	private const double CheckSize = 26;
 	private const double BarHeight = 8;
@@ -86,77 +88,28 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 	private readonly Dictionary<string, LanguageVoiceState> _shown = [];
 	private readonly Dictionary<string, ProgressBar> _bars = [];
 	private readonly Dictionary<string, Label> _statuses = [];
-	private readonly AppConfigClient _config;
 	private readonly UsageCounter _usage;
-	private readonly StoryVoicing _voicing;
-	private readonly VoicePreview _preview;
+	private readonly IServiceProvider _services;
 	private readonly string _openedWith;
-	private View? _versionCard;
 	private string? _pending;
 	private bool _changed;
 
-	public LanguagePage(SpokenLanguage spoken, VoicePackInstaller installer, IVoicePackService packs, ISettingsStore settings, AppConfigClient config, UsageCounter usage, StoryVoicing voicing, ISpeechReader reader)
+	public LanguagePage(SpokenLanguage spoken, VoicePackInstaller installer, IVoicePackService packs, ISettingsStore settings, UsageCounter usage, IServiceProvider services)
 	{
 		InitializeComponent();
 		_spoken = spoken;
 		_installer = installer;
 		_packs = packs;
 		_settings = settings;
-		_config = config;
 		_usage = usage;
-		_voicing = voicing;
-		_preview = new VoicePreview(reader);
+		_services = services;
 		_openedWith = UiLanguage.Resolve(LanguageChoice.Current(settings));
-		// Slice 133: the counts switch sits above the Version card, which OnAppearing adds last.
-		Cards.Children.Add(ReadingSpeedCard.Build(reader, SampleAsync, _preview.Stop));
-		Cards.Children.Add(AnimalSoundsCard.Build());
-		Cards.Children.Add(UsageCountsCard.Build(usage));
-	}
-
-	// Slice 132: the Version card closes the page (a quiet "A new version is ready" row below latestVersion); it is built again
-	// whenever the page appears or a fetched config changes, so the row follows the config while the page is open.
-	private void ShowVersionCard()
-	{
-		int index = Cards.Children.Count;
-		if (_versionCard is not null)
-		{
-			index = Cards.Children.IndexOf(_versionCard);
-			Cards.Children.RemoveAt(index);
-		}
-
-		IServiceProvider? services = IPlatformApplication.Current?.Services;
-		View? introRow = services is null ? null : SettingsRows.IntroReplayRow(Navigation, services, _busy);
-		_versionCard = VersionCard.Build(_config, _busy, introRow);
-		Cards.Children.Insert(index, _versionCard);
-	}
-
-	private void OnConfigChanged(object? sender, EventArgs e) => ShowVersionCard();
-
-	// Slice 150: the Reading speed card's Play button reads the preview line in the narrator's voice at the chosen speed.
-	private async Task SampleAsync()
-	{
-		// The UI language's voice only when its pack is installed, else the language the voice speaks now (the voice and the line always match).
-		string language = _voicing.PreviewLanguage(LanguageChoice.Current(_settings), _spoken.Current);
-		string line = CastText.PreviewLineFor(language);
-		try
-		{
-			await _preview.PlayAsync(line, _voicing.NarratorOf(language), VoiceFlavour.Storyteller);
-		}
-		catch (Exception ex)
-		{
-			Debug.WriteLine($"Dino Reader speed sample failed: {ex}");
-			// Not awaited: the alert would keep the spinner up until it is dismissed.
-			_ = DisplayAlertAsync(CastText.Title, CastText.PreviewFailedBody, CastText.Ok);
-		}
 	}
 
 	protected override void OnAppearing()
 	{
 		base.OnAppearing();
 		_installer.Changed += OnInstallerChanged;
-		_preview.Attach();
-		_config.Changed += OnConfigChanged;
-		ShowVersionCard();
 		Rebuild();
 	}
 
@@ -164,8 +117,6 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 	{
 		base.OnDisappearing();
 		_installer.Changed -= OnInstallerChanged;
-		_preview.Detach();
-		_config.Changed -= OnConfigChanged;
 	}
 
 	// A progress tick only moves the downloading row's bar and percentage; any change of state rebuilds the rows.
@@ -315,7 +266,7 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 		return Task.CompletedTask;
 	}
 
-	// A changed language rebuilds the root, so the gallery the grown-up returns to (and every page after it) speaks the new language.
+	// A changed language rebuilds the root, so the shelf and Settings the grown-up returns to (and every page after them) speak the new language.
 	private async void OnBackTapped(object? sender, TappedEventArgs e) => await _busy.RunAsync(BackAsync);
 
 	// Counted once, when the grown-up leaves with a language different from the one the page opened with (not for every tap while browsing).
@@ -333,10 +284,56 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 		if (_changed)
 		{
 			CountLanguageChange();
-			((DinoApp)Microsoft.Maui.Controls.Application.Current!).RebuildRoot();
+			_installer.Changed -= OnInstallerChanged;
+			await RebuildAndReturnToSettingsAsync();
 			return;
 		}
 
 		await Navigation.PopAsync();
+	}
+
+	// The new language is read when a page is built, so the whole stack is rebuilt in it. Settings is reopened on the new shelf only when the new root is
+	// the shelf (never over the forced-update page), and only once the new root is on screen, so the push has a handler to land on.
+	private async Task RebuildAndReturnToSettingsAsync()
+	{
+		var app = (DinoApp)Microsoft.Maui.Controls.Application.Current!;
+		app.RebuildRoot();
+		if (app.Windows.FirstOrDefault()?.Page is not NavigationPage { RootPage: GalleryPage } navigation)
+		{
+			return;
+		}
+
+		try
+		{
+			if (await WhenLoadedAsync(navigation) && navigation.RootPage is GalleryPage && navigation.CurrentPage is not SettingsPage)
+			{
+				await navigation.PushAsync(_services.GetRequiredService<SettingsPage>());
+			}
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader could not reopen Settings after a language change: {ex}");
+		}
+	}
+
+	// True when the new root is on screen; false when the wait ran out, so no push lands on a page without a handler.
+	private static async Task<bool> WhenLoadedAsync(NavigationPage navigation)
+	{
+		if (navigation.IsLoaded)
+		{
+			return true;
+		}
+
+		var loaded = new TaskCompletionSource();
+		void OnLoaded(object? sender, EventArgs e) => loaded.TrySetResult();
+		navigation.Loaded += OnLoaded;
+		try
+		{
+			return await Task.WhenAny(loaded.Task, Task.Delay(LoadWaitMilliseconds)) == loaded.Task;
+		}
+		finally
+		{
+			navigation.Loaded -= OnLoaded;
+		}
 	}
 }

@@ -39,6 +39,7 @@ public sealed class IntroWizardPage : ContentPage
 	private readonly WaitController _wait;
 	private int _step;
 	private bool _replay;
+	private bool _restoreKidsMode;
 	private bool _launchedStep;
 	private bool _canRecord;
 	private bool _ended;
@@ -67,6 +68,7 @@ public sealed class IntroWizardPage : ContentPage
 		_step = firstRun && IntroState.InProgress ? IntroState.Step : 0;
 		_launchedStep = false;
 		_ended = false;
+		_restoreKidsMode = _replay && !_mode.IsGrownUp; // a replay from Settings (gate passed) must not leave the shelf in grown-up mode
 		_mode.Enter();
 		await navigation.PushModalAsync(new NavigationPage(this) { BarBackgroundColor = Colors.Transparent }, animated: false);
 		await LoadPicturesAsync();
@@ -363,7 +365,15 @@ public sealed class IntroWizardPage : ContentPage
 			FirstRunState.HandoverPending = true;
 		}
 
-		_mode.Enter();
+		if (_restoreKidsMode)
+		{
+			_mode.Leave();
+		}
+		else
+		{
+			_mode.Enter();
+		}
+
 		return true;
 	}
 }

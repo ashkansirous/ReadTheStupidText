@@ -42,14 +42,14 @@
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>Slett {0}</value></data>
   <data name="Gallery_ExportStory" xml:space="preserve"><value>Eksporter historie</value></data>
   <data name="Gallery_CastButton" xml:space="preserve"><value>Roller</value></data>
-  <data name="Store_Title" xml:space="preserve"><value>Gratis historier</value></data>
+  <data name="Store_Title" xml:space="preserve"><value>Butikk</value></data>
   <data name="Store_Subtitle" xml:space="preserve"><value>Valgt ut og rollebesatt for Dino</value></data>
   <data name="Store_Get" xml:space="preserve"><value>Hent</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>Lastet ned</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0} sider · {1} min</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Gratis og uten konto. Ingenting om deg eller barnet ditt sendes.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Du er frakoblet</value></data>
-  <data name="Store_OfflineBody" xml:space="preserve"><value>De gratis historiene trenger internett. Historier som allerede står i hyllen, kan fortsatt leses uten.</value></data>
+  <data name="Store_OfflineBody" xml:space="preserve"><value>Butikken trenger internett. Historier som allerede står i hylla, kan fortsatt leses uten.</value></data>
   <data name="Store_TryAgain" xml:space="preserve"><value>Prøv igjen</value></data>
   <data name="Store_EmptyTitle" xml:space="preserve"><value>Ingen nye historier ennå</value></data>
   <data name="Store_EmptyBody" xml:space="preserve"><value>Nye historier legges til av og til. Kom tilbake snart.</value></data>
@@ -106,7 +106,7 @@
   <data name="Intro_Skip" xml:space="preserve"><value>Hopp over</value></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} av {1}</value></data>
   <data name="Intro_StoreTitle" xml:space="preserve"><value>Hent flere bøker</value></data>
-  <data name="Intro_StoreLine" xml:space="preserve"><value>Den gratis butikken har flere historier, klare til nedlasting.</value></data>
+  <data name="Intro_StoreLine" xml:space="preserve"><value>Butikken har flere historier, klare til nedlasting.</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Les den med din stemme</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>Ta opp deg selv mens du leser en historie, side for side. Barnet ditt kan spille den av når som helst.</value></data>
   <data name="Intro_AddTitle" xml:space="preserve"><value>Legg til din egen bok</value></data>
@@ -119,6 +119,26 @@
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Voksenmodus</value></data>
   <data name="Language_Title" xml:space="preserve"><value>Språk</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>Dino leser og oversetter til dette</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>Innstillinger</value></data>
+  <data name="Settings_Books" xml:space="preserve"><value>Bøker</value></data>
+  <data name="Settings_BooksValue" xml:space="preserve"><value>Legg til, rediger, Butikk</value></data>
+  <data name="Settings_GroupReading" xml:space="preserve"><value>Lesing</value></data>
+  <data name="Settings_GroupPhone" xml:space="preserve"><value>Denne telefonen</value></data>
+  <data name="Settings_NewVersion" xml:space="preserve"><value>Ny versjon</value></data>
+  <data name="Settings_GearLabel" xml:space="preserve"><value>Innstillinger (voksne)</value></data>
+  <data name="Settings_About" xml:space="preserve"><value>Om og oppdateringer</value></data>
+  <data name="Settings_NarratorVoice" xml:space="preserve"><value>Fortellerstemme</value></data>
+  <data name="Settings_On" xml:space="preserve"><value>På</value></data>
+  <data name="Settings_Off" xml:space="preserve"><value>Av</value></data>
+  <data name="Language_PageSub" xml:space="preserve"><value>Innstillinger, butikken og hylla</value></data>
+  <data name="Narrator_ListIntro" xml:space="preserve"><value>Hvert historiespråk har sin egen forteller.</value></data>
+  <data name="Narrator_OneIntro" xml:space="preserve"><value>Hvem som leser delene mellom figurene i hver {0}-bok.</value></data>
+  <data name="Narrator_TitleFor" xml:space="preserve"><value>Fortellerstemme ({0})</value></data>
+  <data name="Narrator_NoVoiceValue" xml:space="preserve"><value>Ikke lastet ned</value></data>
+  <data name="Narrator_NoVoiceHint" xml:space="preserve"><value>Stemmene for {0} er ikke på denne telefonen ennå. Gå tilbake, åpne Språk, velg {0} og last den ned, og velg så forteller her.</value></data>
+  <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Voksne</value></data>
+  <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Legg til og rediger bøker</value></data>
+  <data name="Gallery_AddFromBooks" xml:space="preserve"><value>Legg til fra dine egne bøker</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>Klar</value></data>
   <data name="Language_Download" xml:space="preserve"><value>Last ned</value></data>
   <data name="Language_Downloading" xml:space="preserve"><value>Laster ned {0} %</value></data>

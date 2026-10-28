@@ -1,6 +1,6 @@
 # Slice 172 — Dino: one gear for all grown-up settings
 
-*Planned 2026-10-28.* Dino Reader only (Android, iOS and the Windows head).
+*Built 2026-10-28 (wave 2026-10-28b), draft PR; Windows Settings flow past the gate and iOS run not yet verified.* Dino Reader only (Android, iOS and the Windows head).
 
 **Batch:** 37 (Dino settings, 2026-10-28; Decision 167)
 **Touches:** `src/DinoReader.App/SettingsPage.cs` (new), `src/DinoReader.App/ReadingSpeedPage.cs` (new), `src/DinoReader.App/AnimalSoundsPage.cs` (new), `src/DinoReader.App/UsageCountsPage.cs` (new), `src/DinoReader.App/AboutPage.cs` (new), `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/LanguagePage.xaml`, `src/DinoReader.App/LanguagePage.xaml.cs`, `src/DinoReader.App/NarratorPage.cs`, `src/DinoReader.App/SettingsRows.cs`, `src/DinoReader.App/UpdatePage.cs` (`VersionCard` host only), `src/DinoReader.App/GrownUpGate.cs`, `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/Resources/Strings/*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `src/DinoReader.App/Resources/Images/**` (gear icon), `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`
@@ -56,21 +56,21 @@ New strings (14 languages): `Settings_Title`, "Books", "Add, edit, Store", group
 
 ## Work
 
-- [ ] **First end-to-end piece:** the gear on the shelf, the gate, a `SettingsPage` with the Language and
+- [x] **First end-to-end piece:** the gear on the shelf, the gate, a `SettingsPage` with the Language and
       Narrator rows opening the existing pages. Works on Android, iOS and Windows.
-- [ ] Move Reading speed, Animal sounds and Usage counts off `LanguagePage` onto their own sub-pages,
+- [x] Move Reading speed, Animal sounds and Usage counts off `LanguagePage` onto their own sub-pages,
       reusing `ReadingSpeedCard`, `AnimalSoundsCard` and `UsageCountsCard` as they are.
-- [ ] About & updates sub-page: `VersionCard` plus the replay-intro row (moved from `LanguagePage.ShowVersionCard`,
+- [x] About & updates sub-page: `VersionCard` plus the replay-intro row (moved from `LanguagePage.ShowVersionCard`,
       still refreshing on remote-config change).
-- [ ] Backup row opens `BackupPage`. Remove the Narrator and Backup shortcut buttons and the Language pill
+- [x] Backup row opens `BackupPage`. Remove the Narrator and Backup shortcut buttons and the Language pill
       from the shelf; keep the store button (grown-up mode).
-- [ ] `NarratorPage`: only the current UI language's card, the title with the language name.
-- [ ] Strings: `Settings_Title` and one label per row (14 languages, 13 as drafts for a native read);
+- [x] `NarratorPage`: only the current UI language's card, the title with the language name.
+- [x] Strings: `Settings_Title` and one label per row (14 languages, 13 as drafts for a native read);
       `Store_Title` -> "More stories", `Store_OfflineBody` and `Intro_StoreLine` without "free".
-- [ ] The shelf's accessibility labels: the gear reads "Settings" (`SemanticProperties.Description`), 48 dp touch target.
-- [ ] Unit test (DinoReader.Tests): the narrator pick for one language survives saving another language's
+- [x] The shelf's accessibility labels: the gear reads "Settings" (`SemanticProperties.Description`), 48 dp touch target.
+- [x] Unit test (DinoReader.Tests): the narrator pick for one language survives saving another language's
       pick (pure part of `NarratorChoice`, if not already covered).
-- [ ] Update `src/DinoReader.App/CLAUDE.md`: settings live under the gear, one sub-page per setting;
+- [x] Update `src/DinoReader.App/CLAUDE.md`: settings live under the gear, one sub-page per setting;
       `LanguagePage` holds only languages; the store is never a settings row.
 
 ## Verification
@@ -84,3 +84,25 @@ New strings (14 languages): `Settings_Title`, "Books", "Add, edit, Store", group
   on a simulator or TestFlight build.
 - Windows head: the gear and Settings page on the desktop build.
 - A 13-language native read of the new strings goes to Outstanding work.
+
+## Built
+
+*Changed while building:* Built per the Batch 37 mock (frames 79-87), defaults of the open points followed. Shelf gear (48 dp, visible in kids' mode) -> gate -> Settings (Books row; "Reading" and "This phone" groups; Story languages row hidden until Slice 173). Sub-pages: Language, Narrator voice (middle page, then per language; every UI language listed, "Not downloaded" for no pack), Reading speed, Animal sounds, Usage counts, Backup, About & updates (version card, replay intro). Grown-up mode = "Add from your own books" + Store; Android Back from grown-up mode goes to the kids' shelf (Decision 169, frame 94). "Store" replaces "Free stories"; "free" dropped from `Store_OfflineBody` and `Intro_StoreLine`. 20 new strings in 15 resx; the 13 non-English ones are drafts. Deviations: narrator rows have no flags (no flag assets); `AddStoryEntry` is filtered out of the shelf, not deleted (`StoryTile.cs` is outside Touches); the kid's story-language button on the shelf is left for Slice 173.
+
+*From review* (`reviews/172-review1.md`, `172-review2.md`): intro replay never leaves grown-up mode on without the gate; Cast's narrator edits the book's language; after a language change Settings reopens only over the shelf root (guarded push); Back from grown-up mode clears `HandoverPending`; "New version" in the screen-reader text; `NarratorPage` wait overlay with Cancel after 500 ms (`SettingsSubPage.AddOverlay`); `NavValue` truncates; `StoryVoicing.NarratorLanguages`/`AllLanguages`; `LanguagePage` unsubscribes `installer.Changed`; `LocalizedUiTests` `SameAsEnglishAllowed` set.
+
+*Verified:* Dino tests 1645; Android, iOS compile and Windows head builds. Emulator: gear, gate, Settings, every sub-page and Back, narrator per language, language change reopens Settings, replay ends in kids' mode, Books row -> Add + Store, Back -> kids' shelf, narrator page opened 3x, truncation. Windows VM: launch, open book and page turn pass, gear visible, gate shown.
+
+#### For CLAUDE.md
+
+Already written into `src/DinoReader.App/CLAUDE.md` by the build (the "Dino settings" rule, the changed grown-up mode and AddBook rules), each linked to this slice. Nothing further to lift.
+
+#### Not yet verified
+
+- Windows Settings flow past the gate in the VM (scripted hold didn't pass the 3 s hold); re-run `D:\ReadTheStupidText-worktrees\_desktop-vm\adhoc-s172\checks\dino-settings.ps1` when the VM has a clean checkpoint.
+- Narrator sample Cancel overlay (sample returned under 500 ms on the emulator).
+- Cast narrator language on a device.
+- iOS run (no Mac).
+- Native read of the 13 draft translations.
+
+Follow-up: make `dino-settings.ps1` a permanent VM check (needs a way to pass the hold gate in UIA).
