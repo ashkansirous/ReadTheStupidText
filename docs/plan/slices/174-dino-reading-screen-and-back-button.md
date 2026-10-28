@@ -110,7 +110,7 @@ New strings (14 languages): "Close Dino Book Reader?", "Stay", "Close".
 
 Dino tests 1651; Android, iOS compile and Windows head build. Emulator: portrait, landscape picture + text and text only, Farsi with the translation pack at 1x and 1.2x (the speed slider tops out at 1.2x), rotation mid-read keeps the sentence, a picture-less own book, back twice on the shelf, the Close question. Windows VM: launch, open book, no parents' button, flat controls, landscape and portrait layouts, Back never asks to close.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-28)
 
 Already written into `src/DinoReader.App/CLAUDE.md` ("Back button and reading-screen layout", plus the "This book" sheet and picture + text rules) by the builder; nothing further to lift. (Slice 174: docs/plan/slices/174-dino-reading-screen-and-back-button.md)
 

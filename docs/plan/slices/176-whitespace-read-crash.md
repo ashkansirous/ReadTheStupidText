@@ -48,6 +48,6 @@ text that is only whitespace slips past that check and fails further in.
 - iOS run (no Mac); the iOS change is compile-verified only.
 - The two `CompositeSpeechReader` classes have no unit tests (they need MAUI Preferences / real engines).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-28)
 
 - Application (`src/ReadTheStupidText.Application/Reading/`): blank text is `BlankText.IsBlank` (whitespace plus format/control characters), never `string.IsNullOrWhiteSpace`; a blank speak on a `CompositeSpeechReader` still raises `Completed`. (Slice 176: docs/plan/slices/176-whitespace-read-crash.md)

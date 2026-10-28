@@ -439,6 +439,7 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 	{
 		_label = new Label
 		{
+			AutomationId = ReadingMetrics.StoryTextId,
 			FontFamily = font,
 			FontSize = FontSize,
 			LineHeight = PanelLineHeight,
