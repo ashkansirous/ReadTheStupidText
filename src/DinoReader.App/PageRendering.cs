@@ -79,8 +79,12 @@ public static class ReadingMetrics
 	// than it measured still fits instead of being clipped.
 	public const double WrapSlack = 0.96;
 
+	/// <summary>The AutomationId of every label that shows story text, so UI tests find it by identity.</summary>
+	public const string StoryTextId = "StoryText";
+
 	public static Label LineLabel(string font, double height, double width) => new()
 	{
+		AutomationId = StoryTextId,
 		FontFamily = font,
 		FontSize = FontSize,
 		FontAutoScalingEnabled = false,
