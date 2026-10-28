@@ -1,6 +1,6 @@
 # Slice 173 — Dino: up to three story languages, switched by the kid
 
-*Planned 2026-10-28.* Dino Reader only (Android, iOS and the Windows head).
+*In progress (wave 2026-10-28c), draft PR (planned 2026-10-28).* Dino Reader only (Android, iOS and the Windows head).
 
 **Batch:** 37 (Dino settings, 2026-10-28; Decision 168). Builds **after Slice 172** (it needs the Settings page).
 **Touches:** `src/DinoReader.App/StoryLanguages.cs` (new), `src/DinoReader.App/StoryLanguagesPage.cs` (new), `src/DinoReader.App/StoryLanguageButton.cs` (new), `src/DinoReader.App/IntroWizardPage.cs`, `src/DinoReader.App/IntroWizardPage.Art.cs`, `src/DinoReader.App/SettingsPage.cs`, `src/DinoReader.App/LanguagePage.xaml.cs`, `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/StoryTranslator.cs`, `src/DinoReader.App/GalleryPage.xaml.cs` (titles stay in the main language), `src/DinoReader.App/UsageCounter.cs`, `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/Resources/Strings/*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `src/DinoReader.Core/UsageEvent.cs`, `src/DinoReader.Core/StoryLanguageSet.cs` (new, pure rules), `worker/events.ts`, `worker/*.test.ts`, `tools/dino-usage-report.ps1`, `site/dino/privacy.html`, `STORE.md`, `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`
