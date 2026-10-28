@@ -21,6 +21,7 @@ Open slices only. Finished slices (155 rows) are in [slices-done](docs/plan/note
 | 154 | Dino: vowel marks in Farsi and Arabic books (Farsi only: Arabic left as is; marks are a hidden "how to read" text, Decision 166) | in progress | #470 | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
 | 172 | Dino: one gear for all grown-up settings (sub-page per setting; "Free stories" -> "More stories") | planned | | | [172-dino-settings-gear.md](docs/plan/slices/172-dino-settings-gear.md) |
 | 173 | Dino: up to three story languages, switched by the kid (after 172) | planned | | | [173-dino-kid-story-languages.md](docs/plan/slices/173-dino-kid-story-languages.md) |
+| 174 | Dino: a cleaner reading screen (waits on the user's Claude Design mock) and a back button that never surprises (after 172) | planned | | | [174-dino-reading-screen-and-back-button.md](docs/plan/slices/174-dino-reading-screen-and-back-button.md) |
 
 Batch 25 (119-123; 119, 120, 122, 123 built, 121 built; planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
 
