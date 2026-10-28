@@ -1,11 +1,9 @@
 # Slice 177 — Dino: slow speech for the first reads after the app starts
 
-*Planned.* Batch 38 (test gaps found 2026-10-28), Dino Reader (Android and iOS). After Slice 175 (it needs the
+*In progress (wave 2026-10-28c), draft PR.* Batch 38 (test gaps found 2026-10-28), Dino Reader (Android and iOS). After Slice 175 (it needs the
 `ENGINE_READY` and `CHUNK_SYNTH` markers).
 
-**Touches:** `src/DinoReader.App/**` (its reading/speech start-up), `src/ReadTheStupidText.Mobile.Shared/**` (the
-shared neural readers and pack start-up, if the fix is there), `tools/phone/**` (a `-Release` run mode),
-`docs/plan/slices/177-dino-cold-start-synthesis.md`
+**Touches:** `src/ReadTheStupidText.Mobile.Shared/**` except `Testing/**` (the shared neural readers and pack start-up), `src/DinoReader.App/**` except the Slice 174 files (`ReadingPage.*`, `TransportRow.cs`, `ReadingTheme.cs`, `PictureTextPages.cs`, `TextPages.cs`, `ReadingSurface.cs`, `ModeSwitch.cs`, `GalleryPage.*`, `GrownUpMode.cs`, `SettingsPage.cs`, `App.xaml.cs`, `CloseQuestionPage.cs`, `Platforms/Android/MainActivity.cs`, `Resources/Strings/**`), `tools/phone/**`, `tools/emulator/**`, `tests/DinoReader.Tests/**` (new test files only), `docs/plan/slices/177-dino-cold-start-synthesis.md`
 
 ## Why
 
