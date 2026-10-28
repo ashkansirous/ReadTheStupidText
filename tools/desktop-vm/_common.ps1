@@ -152,7 +152,8 @@ function Restore-CleanCheckpoint {
     param([switch] $Start, [switch] $Quiet)
     $vm = Get-VM -Name $script:VmName -ErrorAction Stop
     if ($vm.State -notin 'Off', 'Saved') { Stop-VM -Name $script:VmName -TurnOff -Force }
-    $snap = Get-VMCheckpoint -VMName $script:VmName -Name $script:CheckpointName -ErrorAction Stop
+    $snap = Get-VMCheckpoint -VMName $script:VmName -Name $script:CheckpointName -ErrorAction SilentlyContinue
+    if (-not $snap) { throw "Checkpoint '$($script:CheckpointName)' not found. If a refresh was interrupted, run New-TestVm.ps1 -UpdateOnly: it repairs the checkpoint names. Otherwise rebuild with New-TestVm.ps1 -Force." }
     Restore-VMCheckpoint -VMCheckpoint $snap -Confirm:$false
     if ($Start) { Start-VM -Name $script:VmName | Out-Null }
     if (-not $Quiet) { Write-Host "VM restored to checkpoint '$($script:CheckpointName)'." }
