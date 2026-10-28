@@ -59,7 +59,8 @@ public static class ReadingMetrics
 	public const double PictureOutset = 6;
 	public const double PictureCorner = 24;
 	public const double TextPadding = 22;
-	public const double TextLineHeight = FontSize * 1.6;
+	public const double TextLineSpacing = 1.6;
+	public const double TextLineHeight = FontSize * TextLineSpacing;
 	public const double TextCorner = 26;
 	public const double BoxCorner = 9;
 	public const double BoxStrokeWidth = 2;

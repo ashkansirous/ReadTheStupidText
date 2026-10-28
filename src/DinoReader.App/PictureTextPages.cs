@@ -5,10 +5,9 @@ using Microsoft.Maui.Controls.Shapes;
 namespace DinoReader;
 
 /// <summary>
-/// Picture mode for a picture + text book (Slice 98, Decision 102, mock screens 34 and 35): each story page is one page of the
-/// reader, its picture fitted without cropping and its text beside it. Held sideways the picture is the left half and the text card
-/// the right half with the transport row under it; held upright the picture fills the page and the text sits on a 92% white panel over its lower part (up to 30% of
-/// the visible picture, Slice 122) that scrolls when the text is long. The spoken sentence has the highlight behind its words; a tap on a sentence
+/// Picture mode for a picture + text book (Slice 98, Decision 102; Slice 174, mock Batch 37 frames 91 and 92): each story page is one page of the reader, its picture covering its area and cropped from the top
+/// (the art keeps its bottom free for words). Held sideways the picture is the left 40% and the text card the right 60% at full height; held upright the picture fills the page and the text sits on a 92% white
+/// card over its lower part, five whole lines tall, that scrolls when the text is longer. The spoken sentence has the highlight behind its words and the card scrolls to keep it in view; a tap on a sentence
 /// reads from it. With the words switched off (<c>wordsOver</c>, Slice 122) only the picture is drawn: upright it fills the page; sideways a tall picture keeps the left half and a wide one spans both halves above the transport row. A page with only a picture shows the picture, a page with only text shows the text card.
 /// </summary>
 public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> storyPages, IReadOnlyList<SentenceSpan> sentences,
@@ -17,6 +16,10 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 {
 	private const float PanelAlpha = 0.92f;
 	private const double PanelFontSize = 21;
+	private const double SidewaysFontSize = 23;
+	private const int UprightLines = 5;
+	private const double SidewaysPictureShare = 2;
+	private const double SidewaysTextShare = 3;
 	private const double PanelLineHeight = 1.5;
 	private const double PictureCorner = 18;
 	private const double UprightPanelCorner = 16;
@@ -280,7 +283,7 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 
 		_lines = read;
 		_linesWidth = label.Width;
-		KnownPitch[font] = read.Pitch;
+		KnownPitch[PitchKey] = read.Pitch;
 		_replace?.Invoke();
 		return true;
 	}
@@ -296,7 +299,8 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		var grid = new Grid();
 		if (slot.Image is not null)
 		{
-			grid.Add(PictureCard(slot.Image, new Thickness(UprightPictureSide, UprightPictureTop, UprightPictureSide, 0)));
+			var margin = new Thickness(UprightPictureSide, UprightPictureTop, UprightPictureSide, 0);
+			grid.Add(wordsOver ? CoverPicture(slot.Image, slot.Aspect, margin) : PictureCard(slot.Image, margin));
 		}
 
 		if (HasText(slot))
@@ -304,12 +308,12 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 			Border panel = TextPanel(UprightPanelCorner, UprightPanelPadding, PanelAlpha, fade: true);
 			panel.VerticalOptions = LayoutOptions.End;
 			panel.Margin = new Thickness(PanelMargin);
-			PlacePanel(panel, _card, slot.Aspect);
-			// Placed again when the card is resized and once the real lines are known (the card then holds whole lines).
+			PlacePanel(panel);
+			// Placed again once the real lines are known (the card then holds five whole lines).
 			Action replace = () =>
 			{
 				HoldAppScroll();
-				PlacePanel(panel, new Size(grid.Width, grid.Height), slot.Aspect);
+				PlacePanel(panel);
 				ReleaseAppScroll();
 			};
 			_replace = replace;
@@ -321,27 +325,46 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		return grid;
 	}
 
-	// The panel sits inside the visible picture (Decision 131, Slice 135): the placement (Core) puts its bottom edge a margin above the picture's, not the card's, so a picture
-	// letterboxed in a tall card does not leave the panel hanging below it. A card with no size yet leaves the panel as it is; it is placed again once the page has been laid out.
-	private void PlacePanel(Border panel, Size card, double aspect)
+	// Mock Batch 37 frame 91: the picture fills the area and is cropped from the top, so the panel sits on its lower part, a margin above the controls, and holds five whole lines.
+	private void PlacePanel(Border panel)
 	{
-		if (card.Width > 0 && card.Height > 0)
-		{
-			PictureTextBook.PanelPlacement place = PictureTextBook.PlacePanel(card.Width, card.Height, aspect, PanelMargin, UprightPictureTop, UprightPictureSide);
-			panel.Margin = new Thickness(PanelMargin, PanelMargin, PanelMargin, place.BottomMargin);
-			panel.MaximumHeightRequest = WholeLines(place.MaxHeight);
-		}
+		double pitch = KnownPitch.TryGetValue(PitchKey, out double known) ? known : PanelFontSize * PanelLineHeight;
+		panel.Margin = new Thickness(PanelMargin);
+		panel.MaximumHeightRequest = PictureTextBook.CardHeightFor(UprightLines, _lines, pitch, UprightPanelPadding.Top);
 	}
-
-	// The cap snapped down to whole lines: the page's real lines when known, else the pitch last seen for this font, else the cap as it is (no guessed pitch, so no jump).
-	private double WholeLines(double max) =>
-		_lines is { } lines ? PictureTextBook.SnapPanelHeight(max, lines, UprightPanelPadding.Top)
-		: KnownPitch.TryGetValue(font, out double pitch) ? PictureTextBook.SnapPanelHeight(max, pitch, UprightPanelPadding.Top)
-		: max;
 
 	private View SidewaysPage(Slot slot)
 	{
-		if (!wordsOver && slot.Image is not null && IsWide(slot))
+		if (!wordsOver)
+		{
+			return SidewaysPictureOnly(slot);
+		}
+
+		// Mock Batch 37 frame 92: the picture is the left 40%, cropped from the top, with the controls floating over its bottom; the text takes the other 60% at full height.
+		var grid = new Grid { ColumnDefinitions = [new ColumnDefinition(new GridLength(SidewaysPictureShare, GridUnitType.Star)), new ColumnDefinition(new GridLength(SidewaysTextShare, GridUnitType.Star))] };
+		if (slot.Image is not null)
+		{
+			grid.Add(CoverPicture(slot.Image, slot.Aspect, new Thickness(0, 0, SidewaysGap, 0)), 0);
+		}
+
+		if (HasText(slot))
+		{
+			Border card = TextPanel(SidewaysPanelCorner, new Thickness(18, 14), 1f, fade: false);
+			card.Margin = new Thickness(slot.Image is null ? 0 : SidewaysGap, 0, 0, 0);
+			grid.Add(card, slot.Image is null ? 0 : 1);
+			if (slot.Image is null)
+			{
+				Grid.SetColumnSpan(card, 2);
+			}
+		}
+
+		return grid;
+	}
+
+	// Picture only, held sideways: the old halves layout with the controls under the right half (a wide picture spans both above them).
+	private View SidewaysPictureOnly(Slot slot)
+	{
+		if (slot.Image is not null && IsWide(slot))
 		{
 			return WidePicture(slot.Image);
 		}
@@ -350,14 +373,6 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		if (slot.Image is not null)
 		{
 			grid.Add(PictureCard(slot.Image, new Thickness(SidewaysGap)), 0);
-		}
-
-		if (HasText(slot))
-		{
-			Border card = TextPanel(SidewaysPanelCorner, new Thickness(18, 14), 1f, fade: false);
-			// The transport row sits under the text card, in the bottom of this half (mock screen 35).
-			card.Margin = new Thickness(SidewaysGap, SidewaysGap, SidewaysGap, SidewaysGap + TransportRow.SidewaysHeight);
-			grid.Add(card, 1);
 		}
 
 		return grid;
@@ -391,12 +406,41 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		Content = new Image { Source = ImageSource.FromFile(file), Aspect = Aspect.AspectFit, InputTransparent = true },
 	};
 
+	// The picture covers its area and is cropped from the bottom (Slice 174): the image is sized to the cover frame and clipped by the rounded border. Unknown shape: filled as it is.
+	private static Border CoverPicture(string file, double aspect, Thickness margin)
+	{
+		// Until the area has a size the picture fills it, cropped (never stretched or at native size); then the exact cover frame replaces that.
+		var image = new Image { Source = ImageSource.FromFile(file), Aspect = Aspect.AspectFill, InputTransparent = true };
+		AbsoluteLayout.SetLayoutFlags(image, Microsoft.Maui.Layouts.AbsoluteLayoutFlags.All);
+		AbsoluteLayout.SetLayoutBounds(image, new Rect(0, 0, 1, 1));
+		var host = new AbsoluteLayout { InputTransparent = true, Children = { image } };
+		host.SizeChanged += (_, _) =>
+		{
+			AbsoluteLayout.SetLayoutFlags(image, Microsoft.Maui.Layouts.AbsoluteLayoutFlags.None);
+			var frame = PictureTextBook.CoverFromTop(host.Width, host.Height, aspect);
+			AbsoluteLayout.SetLayoutBounds(image, new Rect(frame.X, frame.Y, frame.Width, frame.Height));
+			image.Aspect = aspect > 0 ? Aspect.Fill : Aspect.AspectFill;
+		};
+		return new Border
+		{
+			Margin = margin,
+			StrokeThickness = 0,
+			StrokeShape = new RoundRectangle { CornerRadius = PictureCorner },
+			InputTransparent = true,
+			Content = host,
+		};
+	}
+
+	private double FontSize => Sideways ? SidewaysFontSize : PanelFontSize;
+
+	private string PitchKey => $"{font}:{FontSize}";
+
 	private Border TextPanel(double corner, Thickness padding, float alpha, bool fade)
 	{
 		_label = new Label
 		{
 			FontFamily = font,
-			FontSize = PanelFontSize,
+			FontSize = FontSize,
 			LineHeight = PanelLineHeight,
 			FontAutoScalingEnabled = false,
 			TextColor = _theme.Ink,
@@ -496,7 +540,7 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 
 	private Span SpanOf(string piece, int sentence, int current, bool whole)
 	{
-		var span = new Span { Text = piece, TextColor = _theme.Ink, FontFamily = font, FontSize = PanelFontSize };
+		var span = new Span { Text = piece, TextColor = _theme.Ink, FontFamily = font, FontSize = FontSize };
 		if (whole)
 		{
 			span.BackgroundColor = _theme.PageHighlight;

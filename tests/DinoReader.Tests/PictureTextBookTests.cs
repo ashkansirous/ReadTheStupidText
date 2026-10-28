@@ -283,6 +283,50 @@ public class PictureTextBookTests
         Assert.True(snapped <= max || lines == 1);
     }
 
+    [Fact]
+    public void CoverFromTop_WideAreaFillsTheWidthAndCropsTheBottom()
+    {
+        var frame = PictureTextBook.CoverFromTop(400, 300, 1.0);
+
+        Assert.Equal((0.0, 0.0, 400.0, 400.0), frame);
+    }
+
+    [Fact]
+    public void CoverFromTop_TallAreaFillsTheHeightAndCentresSideways()
+    {
+        var frame = PictureTextBook.CoverFromTop(200, 400, 1.0);
+
+        Assert.Equal((-100.0, 0.0, 400.0, 400.0), frame);
+    }
+
+    [Fact]
+    public void CoverFromTop_UnknownShapeFillsTheArea()
+    {
+        Assert.Equal((0.0, 0.0, 300.0, 200.0), PictureTextBook.CoverFromTop(300, 200, 0));
+    }
+
+    [Fact]
+    public void CardHeightFor_MeasuredLinesGiveFiveWholeLines()
+    {
+        TextLines lines = Uniform(12, 30);
+
+        Assert.Equal(10 + 150, PictureTextBook.CardHeightFor(5, lines, 99, 10), 3);
+    }
+
+    [Fact]
+    public void CardHeightFor_ShortTextIsAsTallAsItsLines()
+    {
+        TextLines lines = Uniform(2, 30);
+
+        Assert.Equal(10 + 60, PictureTextBook.CardHeightFor(5, lines, 99, 10), 3);
+    }
+
+    [Fact]
+    public void CardHeightFor_UnmeasuredUsesTheEstimatedPitch()
+    {
+        Assert.Equal(10 + 5 * 31.5, PictureTextBook.CardHeightFor(5, null, 31.5, 10), 3);
+    }
+
     // Lines as a platform lays them out: a 21 pt font at 1.5 gives 31.5 dp lines; a line with a fallback-font glyph (CJK, Farsi) is taller.
     private static TextLines Uniform(int count, double pitch = 31.5, int width = 20) =>
         new(Enumerable.Range(0, count).Select(i => i * pitch).ToList(), Enumerable.Range(1, count).Select(i => i * pitch).ToList(),

@@ -16,6 +16,9 @@
   <data name="Common_Back" xml:space="preserve"><value>返回</value></data>
   <data name="Common_Save" xml:space="preserve"><value>保存</value></data>
   <data name="Common_Done" xml:space="preserve"><value>完成</value></data>
+  <data name="Close_Question" xml:space="preserve"><value>关闭 Dino Book Reader？</value></data>
+  <data name="Common_Stay" xml:space="preserve"><value>留下</value></data>
+  <data name="Common_Close" xml:space="preserve"><value>关闭</value></data>
   <data name="Common_Delete" xml:space="preserve"><value>删除</value></data>
   <data name="Common_Keep" xml:space="preserve"><value>保留</value></data>
   <data name="Common_Edit" xml:space="preserve"><value>编辑</value></data>

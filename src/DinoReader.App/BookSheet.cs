@@ -3,10 +3,10 @@ using Microsoft.Maui.Controls.Shapes;
 namespace DinoReader;
 
 /// <summary>
-/// The "This book" sheet of the reading screen (Slice 110, mock frame 43): a white bottom sheet over the dimmed page, opened from the add-book button
-/// behind the grown-up gate. It holds the per-book "Show original text" switch (Decision 112), "Read with my voice" once a page is recorded (Slice 111, Decision 115),
+/// The "This book" sheet (Slice 110, mock frame 43): a white bottom sheet over the dimmed shelf, opened from a book's tile in grown-up mode (Slice 174; the reading screen has no
+/// grown-ups button any more). It holds the per-book "Show original text" switch (Decision 112), "Read with my voice" once a page is recorded (Slice 111, Decision 115),
 /// the Record and Cast pills and "Back to the story".
-/// It lives inside the reading page rather than on the navigation stack, so leaving the app cannot strand it.
+/// It lives inside the shelf page rather than on the navigation stack, so leaving the app cannot strand it.
 /// </summary>
 internal sealed class BookSheet : Grid
 {

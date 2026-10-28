@@ -16,6 +16,9 @@
   <data name="Common_Back" xml:space="preserve"><value>Retour</value></data>
   <data name="Common_Save" xml:space="preserve"><value>Enregistrer</value></data>
   <data name="Common_Done" xml:space="preserve"><value>Terminé</value></data>
+  <data name="Close_Question" xml:space="preserve"><value>Fermer Dino Book Reader ?</value></data>
+  <data name="Common_Stay" xml:space="preserve"><value>Rester</value></data>
+  <data name="Common_Close" xml:space="preserve"><value>Fermer</value></data>
   <data name="Common_Delete" xml:space="preserve"><value>Supprimer</value></data>
   <data name="Common_Keep" xml:space="preserve"><value>Garder</value></data>
   <data name="Common_Edit" xml:space="preserve"><value>Modifier</value></data>
