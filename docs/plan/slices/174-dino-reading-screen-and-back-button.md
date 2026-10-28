@@ -1,6 +1,6 @@
 # Slice 174 — Dino: a cleaner reading screen, and a back button that never surprises
 
-*Planned 2026-10-28.* Dino Reader only (Android, iOS and the Windows head). The Claude Design mock arrived (Batch 37,
+*In progress (wave 2026-10-28c), draft PR (planned 2026-10-28).* Dino Reader only (Android, iOS and the Windows head). The Claude Design mock arrived (Batch 37,
 frames 91-94; see Design).
 
 **Batch:** 37 (Dino settings, 2026-10-28; Decision 169). Builds **after Slice 172** (both edit the shelf page).
