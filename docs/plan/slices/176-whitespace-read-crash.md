@@ -1,6 +1,6 @@
 # Slice 176 — Reading text that is only spaces must not throw
 
-*Planned.* Batch 38 (test gaps found 2026-10-28), both apps, Android and iOS (and the Windows reader, if it
+*In progress (wave 2026-10-28b), draft PR.* Batch 38 (test gaps found 2026-10-28), both apps, Android and iOS (and the Windows reader, if it
 shares the cause).
 
 **Touches:** `src/ReadTheStupidText.Application/**` except `Reading/ReadTimingTracker.cs` (the read path and
