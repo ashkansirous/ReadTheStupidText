@@ -13,6 +13,16 @@ $script:SessionTimeoutSec = 600
 $script:CertBackdateDays = 90
 $script:LockName = 'Global\rtst-desktop-test-vm'
 $script:LicenseWarnDays = 14
+# A wait with no sign of progress for this long is a stuck screen nobody can answer: screenshot and throw (see Step-StallWatch).
+$script:StallMin = 10
+$script:ActiveVmRoot = $script:DefaultVmRoot
+$script:ScreenshotWidth = 1024
+$script:ScreenshotHeight = 768
+$script:ScreenshotCimClass = 'Msvm_VirtualSystemManagementService'
+$script:VirtualizationNamespace = 'root\virtualization\v2'
+$script:VhdProgressBucketBytes = 16MB
+# A guest using more CPU than this (percent, from Hyper-V) is working even if the disk is not growing (offline servicing, "Working on updates").
+$script:BusyCpuPercent = 5
 
 function Get-VmCredential {
     $password = $env:RTST_VM_PASSWORD
@@ -31,6 +41,88 @@ function Get-VmPassword {
     return $cred.GetNetworkCredential().Password
 }
 
+function Get-VmThumbnail {
+    # Asks the host (no guest session needed) for the VM's screen as raw RGB565 bytes.
+    $cs = Get-CimInstance -Namespace $script:VirtualizationNamespace -ClassName Msvm_ComputerSystem -Filter "ElementName='$($script:VmName)'"
+    $svc = Get-CimInstance -Namespace $script:VirtualizationNamespace -ClassName $script:ScreenshotCimClass
+    $out = Invoke-CimMethod -InputObject $svc -MethodName GetVirtualSystemThumbnailImage -Arguments @{
+        TargetSystem = $cs; WidthPixels = [uint16]$script:ScreenshotWidth; HeightPixels = [uint16]$script:ScreenshotHeight }
+    $pixelBytes = $script:ScreenshotWidth * $script:ScreenshotHeight * 2
+    if (-not $out.ImageData -or $out.ImageData.Length -lt $pixelBytes) { throw 'No screen image returned (is the VM running?).' }
+    # The data carries a short header (4 bytes seen) before the pixels; the pixels are the last width*height*2 bytes.
+    return [byte[]]$out.ImageData[($out.ImageData.Length - $pixelBytes)..($out.ImageData.Length - 1)]
+}
+
+function ConvertTo-Png {
+    param([byte[]] $Rgb565, [string] $Path)
+    Add-Type -AssemblyName System.Drawing
+    $w = $script:ScreenshotWidth
+    $h = $script:ScreenshotHeight
+    $bmp = New-Object System.Drawing.Bitmap($w, $h, [System.Drawing.Imaging.PixelFormat]::Format16bppRgb565)
+    try {
+        $rect = New-Object System.Drawing.Rectangle(0, 0, $w, $h)
+        $bits = $bmp.LockBits($rect, [System.Drawing.Imaging.ImageLockMode]::WriteOnly, $bmp.PixelFormat)
+        for ($y = 0; $y -lt $h; $y++) { [Runtime.InteropServices.Marshal]::Copy($Rgb565, $y * $w * 2, [IntPtr]($bits.Scan0.ToInt64() + $y * $bits.Stride), $w * 2) }
+        $bmp.UnlockBits($bits)
+        $bmp.Save($Path, [System.Drawing.Imaging.ImageFormat]::Png)
+    } finally { $bmp.Dispose() }
+}
+
+function Save-VmScreenshot {
+    # Saves the VM screen as <VmRoot>\screens\<time>-<reason>.png and returns the path; $null (with a warning) when it cannot.
+    param([string] $Reason = 'screen')
+    try {
+        $dir = Join-Path $script:ActiveVmRoot 'screens'
+        New-Item -ItemType Directory -Force -Path $dir | Out-Null
+        $safe = $Reason -replace '[^A-Za-z0-9_-]', '-'
+        $path = Join-Path $dir ("{0}-{1}.png" -f (Get-Date -Format 'yyyyMMdd-HHmmss'), $safe)
+        ConvertTo-Png -Rgb565 (Get-VmThumbnail) -Path $path
+        return $path
+    } catch {
+        Write-Warning "Could not save a screenshot: $($_.Exception.Message)"
+        return $null
+    }
+}
+
+function Get-ScreenText {
+    # The screenshot path for a message, or a plain note when none could be saved.
+    param([string] $Path)
+    if ($Path) { return $Path }
+    return '(screenshot unavailable)'
+}
+
+function Get-VmProgressToken {
+    # Something that changes while the VM is working: power state, heartbeat, and the disk growing (an installing Windows writes to it).
+    try {
+        $vm = Get-VM -Name $script:VmName -ErrorAction Stop
+        $disk = (Get-VMHardDiskDrive -VMName $script:VmName | Select-Object -First 1).Path
+        $bucket = [long]((Get-Item $disk).Length / $script:VhdProgressBucketBytes)
+        return "$($vm.State)|$($vm.Heartbeat)|$bucket"
+    } catch { return 'unknown' }
+}
+
+function Test-VmBusy {
+    try { return ((Get-VM -Name $script:VmName -ErrorAction Stop).CPUUsage -ge $script:BusyCpuPercent) } catch { return $false }
+}
+
+function New-StallWatch {
+    # $LimitMin 0 means the shared $script:StallMin; reboot waits pass a longer limit.
+    param([Parameter(Mandatory)] [string] $What, [int] $LimitMin = 0)
+    $limit = if ($LimitMin -gt 0) { $LimitMin } else { $script:StallMin }
+    return [pscustomobject]@{ What = $What; Token = $null; Since = Get-Date; LimitMin = $limit }
+}
+
+function Step-StallWatch {
+    # Call on every poll with a token that changes when anything moves. No change for StallMin minutes: screenshot and throw.
+    param([Parameter(Mandatory)] $Watch, [string] $Token = '')
+    $full = "$(Get-VmProgressToken)|$Token"
+    if ($full -ne $Watch.Token) { $Watch.Token = $full; $Watch.Since = Get-Date; return }
+    if (Test-VmBusy) { $Watch.Since = Get-Date; return }
+    if (((Get-Date) - $Watch.Since).TotalMinutes -lt $Watch.LimitMin) { return }
+    $png = Save-VmScreenshot -Reason 'stalled'
+    throw "stalled: $($Watch.What) (no progress for $($Watch.LimitMin) min); screen: $png"
+}
+
 function New-VmSession {
     # Opens a PowerShell Direct session, retrying until the guest is up (heartbeat, logon and WinRM-less channel).
     param([Parameter(Mandatory)] [pscredential] $Credential, [int] $TimeoutSec = $script:SessionTimeoutSec)
@@ -38,6 +130,7 @@ function New-VmSession {
     $lastError = $null
     $started = Get-Date
     $nextNote = $started.AddSeconds(30)
+    $watch = New-StallWatch -What 'a PowerShell Direct session to the VM'
     while ((Get-Date) -lt $deadline) {
         try {
             return New-PSSession -VMName $script:VmName -Credential $Credential -ErrorAction Stop
@@ -47,10 +140,12 @@ function New-VmSession {
                 Write-Host ("  waiting for the VM to accept a session, {0:N0} s" -f ((Get-Date) - $started).TotalSeconds)
                 $nextNote = (Get-Date).AddSeconds(30)
             }
+            Step-StallWatch -Watch $watch
             Start-Sleep -Seconds 5
         }
     }
-    throw "No PowerShell Direct session to $($script:VmName) within $TimeoutSec s. Last error: $lastError"
+    $png = Save-VmScreenshot -Reason 'no-session'
+    throw "No PowerShell Direct session to $($script:VmName) within $TimeoutSec s. Last error: $lastError; screen: $png"
 }
 
 function Restore-CleanCheckpoint {
@@ -93,7 +188,7 @@ function Invoke-InteractiveScript {
         $lastResult = (Get-ScheduledTaskInfo -TaskName $name -ErrorAction SilentlyContinue).LastTaskResult
         Stop-ScheduledTask -TaskName $name -ErrorAction SilentlyContinue
         Unregister-ScheduledTask -TaskName $name -Confirm:$false -ErrorAction SilentlyContinue
-        if (-not (Test-Path $resultFile)) { return [pscustomobject]@{ pass = $false; message = "no result within $timeout s (script crashed or hung; its task was stopped; LastTaskResult=$lastResult)" } }
+        if (-not (Test-Path $resultFile)) { return [pscustomobject]@{ pass = $false; noResult = $true; message = "no result within $timeout s (script crashed or hung; its task was stopped; LastTaskResult=$lastResult)" } }
         return Get-Content $resultFile -Raw | ConvertFrom-Json
     }
 }
