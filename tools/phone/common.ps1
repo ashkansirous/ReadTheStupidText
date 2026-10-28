@@ -3,6 +3,7 @@ $script:SdkRoot = if ($env:ANDROID_HOME) { $env:ANDROID_HOME } else { $env:ANDRO
 if (-not $script:SdkRoot) { throw 'ANDROID_HOME (or ANDROID_SDK_ROOT) is not set.' }
 $script:Adb = Join-Path $script:SdkRoot 'platform-tools\adb.exe'
 $script:RepoRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..')
+. (Join-Path $PSScriptRoot 'quoting.ps1')
 # Wireless debugging shows up as `adb-<serial>-<suffix>._adb-tls-connect._tcp` or `<ip>:<port>`; emulators and USB serials never do.
 $script:WirelessPattern = '^(adb-.+_adb-tls-connect\._tcp|(?!127\.)\d{1,3}(\.\d{1,3}){3}:\d+)$'
 
@@ -33,15 +34,23 @@ function Write-PairingAsk {
 # install, pull and push move whole files, so they get the long limit.
 $script:AdbTimeoutSeconds = 30
 $script:AdbTransferTimeoutSeconds = 300
+# Kill(bool) (the process tree) exists only in .NET Core; Windows PowerShell 5.1 has Kill() alone. A kill that fails is said, never swallowed.
+function Stop-HungProcess([Diagnostics.Process]$Process) {
+    try { $Process.Kill($true); return } catch [System.Management.Automation.MethodException] { }
+    try { $Process.Kill() } catch { Write-Warning "Could not stop the hung adb process (id $($Process.Id)): $($_.Exception.Message)" }
+}
+
 function Invoke-Adb([string]$Serial, [string[]]$Arguments, [int]$TimeoutSeconds = 0) {
     if ($TimeoutSeconds -le 0) { $TimeoutSeconds = if ($Arguments[0] -in 'install', 'pull', 'push') { $script:AdbTransferTimeoutSeconds } else { $script:AdbTimeoutSeconds } }
     $info = New-Object Diagnostics.ProcessStartInfo $script:Adb
-    foreach ($a in (@('-s', $Serial) + $Arguments)) { $info.ArgumentList.Add($a) }
+    # Windows PowerShell 5.1 (.NET Framework) has no ArgumentList: there the arguments go in one quoted string.
+    if ($null -ne $info.ArgumentList) { foreach ($a in (@('-s', $Serial) + $Arguments)) { $info.ArgumentList.Add($a) } }
+    else { $info.Arguments = (@('-s', $Serial) + $Arguments | ForEach-Object { ConvertTo-WindowsArgument $_ }) -join ' ' }
     $info.RedirectStandardOutput = $true; $info.RedirectStandardError = $true; $info.UseShellExecute = $false; $info.CreateNoWindow = $true
     $proc = [Diagnostics.Process]::Start($info)
     $out = $proc.StandardOutput.ReadToEndAsync(); $err = $proc.StandardError.ReadToEndAsync()
     if (-not $proc.WaitForExit($TimeoutSeconds * 1000)) {
-        try { $proc.Kill($true) } catch { }
+        Stop-HungProcess $proc
         throw "Phone not responding over adb: 'adb -s $Serial $($Arguments -join ' ')' did not finish in $TimeoutSeconds s."
     }
     $proc.WaitForExit()
@@ -51,9 +60,13 @@ function Invoke-Adb([string]$Serial, [string[]]$Arguments, [int]$TimeoutSeconds 
 
 # Sends a Debug test hook to the running dev build; returns the phone's clock just before the send (one shell call, so adb latency sits in neither).
 # Values are single-quoted for the phone's shell, with any single quote escaped.
+# The broadcast action of the app with this test scheme: uk.sirous.rtst-test.TEST_HOOK or uk.sirous.dino-test.TEST_HOOK. A wrong action fails silently
+# (no error, no log line), so the scripts name it when no HOOK line arrives.
+$script:HookActionFormat = 'uk.sirous.{0}.TEST_HOOK'
+
 function Send-TimedHook([string]$Serial, [string]$Scheme, [string]$Command, [hashtable]$HookArgs) {
     $extras = ($HookArgs.GetEnumerator() | ForEach-Object { $quoted = $_.Value.Replace("'", "'\''"); "--es $($_.Key) '$quoted'" }) -join ' '
-    $out = Invoke-Adb $Serial @('shell', "date +%s.%N; am broadcast -a uk.sirous.$Scheme.TEST_HOOK --es cmd $Command $extras")
+    $out = Invoke-Adb $Serial @('shell', "date +%s.%N; am broadcast -a $($script:HookActionFormat -f $Scheme) --es cmd $Command $extras")
     return [double]("$(@($out)[0])".Trim())
 }
 

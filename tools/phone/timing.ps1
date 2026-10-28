@@ -70,3 +70,22 @@ function Write-TimingTable([string]$Title, $Timing, [int]$GapLimitMs) {
     }
     Write-Host ("   total read {0} ms against {1} ms of audio at this rate; gaps flagged: {2}" -f $Timing.TotalMs, $Timing.ExpectedMs, $Timing.FlaggedGaps)
 }
+
+# Process ids of the RTST-TEST marker lines in a logcat (-v epoch) capture, distinct, in order of first appearance.
+function Get-MarkerPids([string[]]$Lines) {
+    $seen = New-Object 'System.Collections.Generic.List[string]'
+    foreach ($line in $Lines) {
+        if ($line -match '^\s*\d+\.\d+\s+(?<pid>\d+)\s+\d+\s+\w\s+RTST-TEST\s*:' -and -not $seen.Contains($Matches.pid)) { $seen.Add($Matches.pid) }
+    }
+    return @($seen)
+}
+
+# One read must come from one app process. Fails naming every pid when the marker lines mix processes (an old process still reading
+# while a new one started); with -RunPid, only that pid is allowed.
+function Assert-SingleAppPid([string[]]$Lines, [string]$RunPid = '') {
+    $pids = @(Get-MarkerPids $Lines)
+    $foreign = @($pids | Where-Object { $RunPid -and $_ -ne $RunPid })
+    if ($foreign.Count -gt 0 -or (-not $RunPid -and $pids.Count -gt 1)) {
+        throw ("RTST-TEST lines from more than one app process (pids: {0}{1}): an earlier run's process was still alive. Rerun; the table would mix two processes." -f ($pids -join ', '), $(if ($RunPid) { "; this run launched $RunPid" } else { '' }))
+    }
+}

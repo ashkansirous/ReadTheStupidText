@@ -24,6 +24,8 @@ param(
     [string]$Book = 'three-little-pigs',
     [int]$Page = 1,
     [switch]$SkipInstall,
+    # Slice 180 follow-up: build even when the cache holds the APK for the current build inputs.
+    [switch]$Rebuild,
     # Slice 177: proxy for a machine with no phone: the headless emulator (x86_64); -Serial picks the device (default emulator-5554).
     [switch]$Emulator,
     # Slice 177: AOT-compile the Debug build like Release is. The test hooks (skip-first-run, PACK_READY, read, open-book, chunk markers) exist only in Debug
@@ -50,6 +52,7 @@ param(
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'common.ps1')
 . (Join-Path $PSScriptRoot 'timing.ps1')
+. (Join-Path $PSScriptRoot '..\emulator\build-cache.ps1')
 
 $apps = @{
     rtst = @{ Project = 'src\ReadTheStupidText.Mobile\ReadTheStupidText.Mobile.csproj'; Id = 'uk.sirous.readthestupidtext'; Scheme = 'rtst-test'
@@ -64,43 +67,72 @@ $passage = 'The little dinosaur walked down to the river every morning. She watc
     'Then she climbed the tall hill behind the trees and looked at the whole green valley below her. ' +
     'When the sun went down she walked home slowly, humming a quiet song to herself, and fell asleep before the first star came out.'
 
-function Build-AndInstall([string]$Phone) {
-    $config = 'Debug'
-    $rid = if ($Emulator) { 'android-x64' } else { 'android-arm64' }
-    Write-Host "   building $App ($rid $config$(if ($Aot) { ' + AOT' })) and installing $package; this takes a few minutes..."
+# Slice 180 follow-up: the phone's builds use the same cache as install-debug.ps1 (build-cache.ps1). The platform part of the cache name carries what
+# makes the APK different from the emulator's x86_64 one: the dev package id (.dbg), the ABI and the AOT flag, so a cached APK is never installed
+# on the wrong target. The key is the hash of the build inputs, as in install-debug.
+$script:PhoneRid = if ($Emulator) { 'android-x64' } else { 'android-arm64' }
+$script:PhonePlatform = 'android-dbg-' + ($script:PhoneRid -replace '^android-', '') + $(if ($Aot) { '-aot' } else { '' })
+$script:ApkFilter = '*-Signed.apk'
+
+# Debug build for the phone's ABI (AOT when asked) into the project's bin folder, copied into a temp folder that is renamed into the cache folder
+# once the metadata file is in it. The caller holds the build locks.
+function Build-PhoneApk([string]$Dir, [string]$Key) {
     $project = Join-Path $script:RepoRoot $cfg.Project
-    $apkDir = Join-Path (Split-Path $project) "bin\$config\net10.0-android\$rid"
-    Get-ChildItem $apkDir -Filter '*-Signed.apk' -ErrorAction SilentlyContinue | Remove-Item -Force
+    $apkDir = Join-Path (Split-Path $project) "bin\Debug\net10.0-android\$($script:PhoneRid)"
+    Get-ChildItem $apkDir -Filter $script:ApkFilter -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force
     $extra = @()
     if ($Aot) { $extra += '-p:RunAOTCompilation=true', '-p:AndroidEnableProfiledAot=false' }
-    dotnet build $project -f net10.0-android -c $config "-p:RuntimeIdentifier=$rid" -p:EmbedAssembliesIntoApk=true `
+    dotnet build $project -f net10.0-android -c Debug "-p:RuntimeIdentifier=$($script:PhoneRid)" -p:EmbedAssembliesIntoApk=true `
         -p:IncludeWindows=false -p:AndroidPackageFormat=apk "-p:ApplicationId=$package" @extra
     if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
-    $apk = Get-ChildItem $apkDir -Filter '*-Signed.apk' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-    if (-not $apk) { throw 'Signed APK not found.' }
-    $result = "$(Invoke-Adb $Phone @('install', '-r', $apk.FullName))"
-    if ($result -notmatch 'Success') { throw "adb install of $package failed: $result" }
-    Set-Content -LiteralPath "$($apk.FullName).build" -Value (Get-BuildStamp $rid)
+    $built = Get-ChildItem $apkDir -Filter $script:ApkFilter -Recurse | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    if (-not $built) { throw 'Signed APK not found.' }
+    $temp = New-BuildTempDir $Dir
+    try {
+        Copy-Item $built.FullName $temp
+        Save-BuildMeta $temp $App $script:PhonePlatform $Key
+        Publish-BuildDir $temp $Dir
+    } finally { Remove-Item $temp -Recurse -Force -ErrorAction SilentlyContinue }
+    Remove-OldBuilds $App $script:PhonePlatform
 }
 
-# What a build of this run's flags is stamped as, so a later -SkipInstall can tell whether the installed APK is the right kind.
-function Get-BuildStamp([string]$Rid) { return "$Rid|aot=$([bool]$Aot)" }
+# The cached APK for the current inputs, building it (BelowNormal priority, under the build locks, outside the quiet-machine lock) when there is none
+# or -Rebuild. The key is read again once the locks are held, because the files may have changed while this run waited.
+function Get-PhoneApk {
+    $key = Get-BuildKey
+    $dir = Get-BuildDir $App $script:PhonePlatform $key
+    $cached = if ($Rebuild) { $null } else { Find-CachedBuild $dir $script:ApkFilter }
+    if ($cached) { Write-Host "Reusing cached $App APK (key $key, $($script:PhonePlatform)): $($cached.FullName)"; return $cached }
+    $activity = Start-Activity "build-$App-$($script:PhonePlatform)"
+    try {
+        $locks = Enter-BuildLocks $App $script:PhonePlatform $key
+        try {
+            $key = Get-BuildKey
+            $dir = Get-BuildDir $App $script:PhonePlatform $key
+            $cached = if ($Rebuild) { $null } else { Find-CachedBuild $dir $script:ApkFilter }
+            if ($cached) { Write-Host "Reusing cached $App APK (key $key, $($script:PhonePlatform)): built meanwhile by another agent."; return $cached }
+            Write-Host "Building $App APK (key $key, $($script:PhonePlatform)); this takes a few minutes..."
+            $priority = Set-BuildPriority
+            try { Build-PhoneApk $dir $key | Out-Host } finally { Restore-ProcessPriority $priority }
+        } finally { Exit-BuildLocks $locks }
+    } finally { Stop-Activity $activity }
+    return Find-CachedBuild $dir $script:ApkFilter
+}
 
-# Slice 177: with -SkipInstall under -Emulator or -Aot the installed APK must be the build this run asks for (right ABI, AOT or not):
-# it is pulled and compared with the newest local signed APK and that APK's build stamp; otherwise the build is made and installed.
-function Test-InstalledMatches([string]$Phone) {
-    $rid = if ($Emulator) { 'android-x64' } else { 'android-arm64' }
-    $project = Join-Path $script:RepoRoot $cfg.Project
-    $apkDir = Join-Path (Split-Path $project) "bin\Debug\net10.0-android\$rid"
-    $local = Get-ChildItem $apkDir -Filter '*-Signed.apk' -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-    if (-not $local) { return $false }
-    $stamp = "$($local.FullName).build"
-    if (-not (Test-Path -LiteralPath $stamp) -or (Get-Content -LiteralPath $stamp -Raw).Trim() -ne (Get-BuildStamp $rid)) { return $false }
+function Install-PhoneApk([string]$Phone, $Apk) {
+    $result = "$(Invoke-Adb $Phone @('install', '-r', $Apk.FullName))"
+    if ($result -notmatch 'Success') { throw "adb install of $package failed: $result" }
+}
+
+# With -SkipInstall the installed APK must still be the cached build for the current inputs (right ABI, AOT or not): it is pulled and compared with
+# the cached APK; $false when there is no cached build or the installed one differs.
+function Test-InstalledMatches([string]$Phone, $Apk) {
+    if (-not $Apk) { return $false }
     $installed = "$(Invoke-Adb $Phone @('shell', 'pm', 'path', $package))" -replace '^\s*package:', '' | ForEach-Object { $_.Trim() }
     if (-not $installed) { return $false }
     $pulled = Join-Path $script:OutDir 'installed-check.apk'
     Invoke-Adb $Phone @('pull', ($installed -split '\s+')[0], $pulled) | Out-Null
-    $same = (Test-Path $pulled) -and ((Get-FileHash $pulled).Hash -eq (Get-FileHash $local.FullName).Hash)
+    $same = (Test-Path $pulled) -and ((Get-FileHash $pulled).Hash -eq (Get-FileHash $Apk.FullName).Hash)
     Remove-Item $pulled -Force -ErrorAction SilentlyContinue
     return $same
 }
@@ -133,16 +165,44 @@ function Get-AppPid([string]$Phone) {
     return $script:CachedPid
 }
 
+# The process this run launched (set by Start-AppWithHook after the relaunch); only its lines are kept. An RTST-TEST line from any other pid
+# means an earlier process is still alive and reading: the run fails naming both, instead of mixing two processes in one table.
+$script:RunPid = ''
 function Get-AppLog([string]$Phone) {
-    foreach ($line in (Invoke-Adb $Phone @('logcat', '-d', '-v', 'epoch', 'RTST-TEST:I', 'DOTNET:I', '*:S'))) {
-        Add-SeenLine "$line"
-    }
+    $lines = @(Invoke-Adb $Phone @('logcat', '-d', '-v', 'epoch', 'RTST-TEST:I', 'DOTNET:I', '*:S'))
     # Slice 180: the app's own process, every tag (a tag filter alone missed the first lines of a cold start).
-    $appPid = Get-AppPid $Phone
-    if ($appPid) {
-        foreach ($line in (Invoke-Adb $Phone @('logcat', '-d', '-v', 'epoch', "--pid=$appPid"))) { Add-SeenLine "$line" }
+    if ($script:RunPid) { $lines += @(Invoke-Adb $Phone @('logcat', '-d', '-v', 'epoch', "--pid=$($script:RunPid)")) }
+    $lines = @($lines | ForEach-Object { "$_" })
+    Assert-SingleAppPid $lines $script:RunPid
+    foreach ($line in $lines) {
+        if (-not $script:RunPid -or $line -match ('^\s*\d+\.\d+\s+' + $script:RunPid + '\s')) { Add-SeenLine $line }
     }
     return $script:SeenLines.ToArray()
+}
+
+# Stops the dev app (never the Play package: $package is the .dbg id) and waits until no process of it is left, so a still-running
+# earlier process cannot log into the next read.
+function Stop-AppAndWait([string]$Phone) {
+    $deadline = (Get-Date).AddSeconds(10)
+    do {
+        Invoke-Adb $Phone @('shell', 'am', 'force-stop', $package) | Out-Null
+        Start-Sleep -Milliseconds 500
+        $script:CachedPidAt = [datetime]::MinValue
+        if (-not (Get-AppPid $Phone)) { return }
+    } while ((Get-Date) -lt $deadline)
+    throw "$package is still running (pid $(Get-AppPid $Phone)) 10 s after am force-stop."
+}
+
+# Waits for the launched process and remembers its pid; it must differ from the previous run's pid.
+function Wait-NewAppPid([string]$Phone, [string]$OldPid) {
+    $deadline = (Get-Date).AddSeconds(30)
+    do {
+        $script:CachedPidAt = [datetime]::MinValue
+        $found = Get-AppPid $Phone
+        if ($found -and $found -ne $OldPid) { $script:RunPid = "$found"; return }
+        Start-Sleep -Milliseconds 300
+    } while ((Get-Date) -lt $deadline)
+    throw "$package did not start a new process within 30 s of the launch."
 }
 
 function Get-LauncherActivity([string]$Phone) {
@@ -154,11 +214,13 @@ function Get-LauncherActivity([string]$Phone) {
 
 function Start-AppWithHook([string]$Phone, [string]$Hook) {
     Write-Host "   starting $package..."
-    Invoke-Adb $Phone @('shell', 'am', 'force-stop', $package) | Out-Null
-    Start-Sleep -Milliseconds 800
+    $oldPid = $script:RunPid
+    $script:RunPid = ''
+    Stop-AppAndWait $Phone
     Invoke-Adb $Phone @('logcat', '-c') | Out-Null
     $script:Seen.Clear(); $script:SeenLines.Clear(); $script:LastNewAt = Get-Date; $script:LastNewLine = ''
     Invoke-Adb $Phone @('shell', 'am', 'start', '-n', (Get-LauncherActivity $Phone), '--es', 'cmd', $Hook, '--es', 'lang', $AppLanguage) | Out-Null
+    Wait-NewAppPid $Phone $oldPid
 }
 
 # $After: only a marker line stamped at or after this phone time counts (a stopped earlier read can still log READ_END).
@@ -264,7 +326,7 @@ function Start-Reading([string]$Phone, [double]$Rate) {
     if ($App -eq 'dino') { $hookName = 'open-book'; $hookArgs = @{ id = $Book; page = "$Page"; play = 'page'; speed = $speed } }
     $sent = Send-TimedHook $Phone $cfg.Scheme $hookName $hookArgs
     $answer = Wait-Marker $Phone 'RTST-TEST\s*:\s*HOOK (read (start|failed)|open-book (failed|fault))' 30 $sent 'waiting for the app to accept the read'
-    if (-not $answer) { throw 'The read hook got no answer: is the dev build running and Debug?' }
+    if (-not $answer) { throw "The read hook got no HOOK line within 30 s. Sent broadcast action $($script:HookActionFormat -f $cfg.Scheme) (a wrong action fails silently). Is the dev build running and Debug?" }
     if ($answer.Line -match 'HOOK read failed') { throw 'The app refused the read hook (empty text or a bad speed).' }
     if ($answer.Line -match 'HOOK open-book failed no book') { throw "No such book '$Book': give a starter book's id or title slug. ($($answer.Line))" }
     if ($answer.Line -match 'HOOK open-book') { throw "The app could not open the book: $($answer.Line)" }
@@ -302,6 +364,7 @@ function Invoke-OneRead([string]$Phone, [double]$Rate) {
 
 if ($LogFile) {
     # One read per file; the rate is the first of -Rates (pass -Rates 2 for a 2x log). Time zero is its `HOOK read start` line.
+    Assert-SingleAppPid @(Get-Content $LogFile)
     $events = @(ConvertFrom-TimingLog (Get-Content $LogFile))
     $hook = $events | Where-Object { $_.Kind -eq 'hook' -and $_.Outcome -eq 'start' } | Select-Object -First 1
     if (-not $hook) { Write-Host "== $App (saved log)"; Write-Host '   incomplete: no HOOK read start line in the log'; exit 0 }
@@ -314,20 +377,36 @@ if (-not $phone) { Write-PairingAsk; exit 2 }
 # Raw logs go to the shared worktrees folder, not into the repo.
 $script:OutDir = Join-Path (Split-Path $script:RepoRoot -Parent) '.phone'
 $null = New-Item -ItemType Directory -Force $script:OutDir
-# Slice 180: a timing run needs a quiet machine: wait for builds, flows runs and VM runs to end, and hold new ones off until this run is done.
-. (Join-Path $PSScriptRoot '..\emulator\activity.ps1')
-Write-Host 'Waiting for a quiet machine (no builds, emulator flows or VM runs)...'
-$quiet = Enter-QuietMachine
+# Slice 180 follow-up: the build (or the cache lookup) comes first and holds no quiet-machine lock, as in install-debug.ps1; only the install and the timing
+# run inside it. -SkipInstall never builds or installs: it checks that the installed APK is the cached build for the current inputs on this
+# platform (right ABI and AOT) and fails with a message when it is not, so the flag never silently replaces the installed app.
+$apk = $null
+$needsInstall = -not $SkipInstall
+if ($needsInstall) { $apk = Get-PhoneApk }
+else {
+    $currentDir = Get-BuildDir $App $script:PhonePlatform (Get-BuildKey)
+    $current = Find-CachedBuild $currentDir $script:ApkFilter
+    if (-not (Test-InstalledMatches $phone $current)) {
+        throw "-SkipInstall: the installed $package is not the cached $App build for the current inputs on $($script:PhonePlatform) (wrong ABI, AOT or code, or nothing cached). Run again without -SkipInstall to build and install it."
+    }
+}
+# The copy is named per run, so two runs of the same app never share or delete each other's file.
+$held = $null
+if ($apk) { $held = Join-Path $script:OutDir "install-$App-$($script:PhonePlatform)-$PID-$([guid]::NewGuid().ToString('N').Substring(0, 8)).apk" }
+$quiet = $null
 $awake = $null
 try {
+    if ($apk) {
+        # The cached file can be pruned or replaced (-Rebuild, another build) while this run waits for the quiet machine, so install from a copy.
+        Copy-Item $apk.FullName $held -Force
+        $apk = Get-Item $held
+    }
+    # Slice 180: a timing run needs a quiet machine: wait for builds, flows runs and VM runs to end, and hold new ones off until this run is done.
+    Write-Host 'Waiting for a quiet machine (no builds, emulator flows or VM runs)...'
+    $quiet = Enter-QuietMachine
     $power = Write-PowerState $phone
     $awake = Start-KeepAwake $phone  # always on: harmless while charging, and it covers an unplug mid-run
-    $needsInstall = -not $SkipInstall
-    if ($SkipInstall -and ($Emulator -or $Aot) -and -not (Test-InstalledMatches $phone)) {
-        Write-Host '   the installed build is not the one this run asks for (ABI or AOT); building and installing it.'
-        $needsInstall = $true
-    }
-    if ($needsInstall) { Build-AndInstall $phone }
+    if ($needsInstall) { Write-Host "   installing $package..."; Install-PhoneApk $phone $apk }
     foreach ($rate in $Rates) {
         $read = Invoke-OneRead $phone $rate
         $events = @(ConvertFrom-TimingLog $read.Lines)
@@ -346,6 +425,7 @@ try {
 }
 finally {
     Stop-KeepAwake $awake
+    if ($held) { Remove-Item $held -Force -ErrorAction SilentlyContinue }
     Invoke-Adb $phone @('shell', 'am', 'force-stop', $package) | Out-Null
-    Exit-QuietMachine $quiet
+    if ($quiet) { Exit-QuietMachine $quiet }
 }

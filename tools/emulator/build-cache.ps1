@@ -114,9 +114,27 @@ function Remove-OldBuilds([string]$App, [string]$Platform) {
     $root = Join-Path (Get-WorktreesRoot) '_builds'
     if (-not (Test-Path $root)) { return }
     $mine = Split-Path $script:ToolsRepoRoot -Leaf
-    $old = Get-ChildItem $root -Directory -Filter "$App-$Platform-*" | Where-Object {
+    # The exact prefix: platform "android" must not match "android-dbg-arm64-..." and "android-dbg-arm64" must not match "...-aot-...".
+    $prefix = [regex]::Escape("$App-$Platform-") + "[0-9a-f]{$($script:BuildKeyLength)}"
+    $dirs = @(Get-ChildItem $root -Directory)
+    $old = $dirs | Where-Object { $_.Name -match "^$prefix$" } | Where-Object {
         $meta = Join-Path $_.FullName $script:BuildMetaFile
         (Test-Path $meta) -and ((Get-Content $meta -Raw | ConvertFrom-Json).worktree -eq $mine)
     } | Sort-Object LastWriteTime -Descending | Select-Object -Skip $script:KeepBuildsPerWorktree
-    foreach ($dir in $old) { Remove-Item $dir.FullName -Recurse -Force -ErrorAction SilentlyContinue }
+    # A build killed half way leaves its temp folder behind (an APK or MSIX each); an hour is longer than any build.
+    $stale = $dirs | Where-Object { $_.Name -match "^$prefix\.building-" -and $_.LastWriteTime -lt (Get-Date).AddHours(-1) }
+    foreach ($dir in @($old) + @($stale) | Where-Object { $_ }) { Remove-Item $dir.FullName -Recurse -Force -ErrorAction SilentlyContinue }
+}
+
+# The newest cached build of this app and platform (any key), or $null. For callers that must not make a build when the current inputs have none.
+function Find-NewestCachedBuild([string]$App, [string]$Platform, [string]$Filter) {
+    $root = Join-Path (Get-WorktreesRoot) '_builds'
+    if (-not (Test-Path $root)) { return $null }
+    $prefix = [regex]::Escape("$App-$Platform-") + "[0-9a-f]{$($script:BuildKeyLength)}"
+    $newest = Get-ChildItem $root -Directory | Where-Object { $_.Name -match "^$prefix$" } | Sort-Object LastWriteTime -Descending
+    foreach ($dir in $newest) {
+        $found = Find-CachedBuild $dir.FullName $Filter
+        if ($found) { return $found }
+    }
+    return $null
 }
