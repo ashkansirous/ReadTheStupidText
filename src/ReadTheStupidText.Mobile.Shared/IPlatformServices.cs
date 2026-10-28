@@ -136,6 +136,16 @@ public interface IModelScopedReader
     Task PrepareAsync(string text, VoiceModelPaths? model);
 }
 
+/// <summary>A neural engine that can read voiced segments with a pack named per call (Slice 173: Dino Reader's child reads in a language other than the stored one).</summary>
+public interface IModelScopedSegmentReader
+{
+    /// <summary>Reads <paramref name="segments"/> in their voices with <paramref name="model"/> instead of the app-language model.</summary>
+    Task SpeakSegmentsAsync(IReadOnlyList<VoicedSegment> segments, VoiceModelPaths model, int? activityId = null);
+
+    /// <summary>Warms the engine of <paramref name="model"/> in the background (Slice 177's rules: never evicts an engine in use), so the first read in that pack starts fast.</summary>
+    Task WarmUpAsync(VoiceModelPaths model);
+}
+
 /// <summary>
 /// A reader that can read, and prepare a head start, in the text's language (Slice 90). The scope is an
 /// argument of the one read it belongs to, never state on the reader, so it cannot leak into or be
@@ -151,6 +161,15 @@ public interface IReadScoped
 
     /// <summary>Reads <paramref name="text"/> the way <paramref name="scope"/> says, for this read only.</summary>
     Task SpeakScopedAsync(string text, ReadVoiceScope scope, int? activityId = null);
+
+    /// <summary>Warms the engine of <paramref name="model"/> (the child's pick, Slice 173) ahead of the first read in it; nothing when the engine cannot take a named pack.</summary>
+    Task WarmUpScopedAsync(VoiceModelPaths model);
+
+    /// <summary>
+    /// Reads <paramref name="segments"/> in their voices the way <paramref name="scope"/> says, for this read only (Slice 173): with the scope's pack when the
+    /// engine can, else with the phone voice in the scope's language.
+    /// </summary>
+    Task SpeakSegmentsScopedAsync(IReadOnlyList<VoicedSegment> segments, ReadVoiceScope scope, int? activityId = null);
 
     /// <summary>Prepares the head start the way <paramref name="scope"/> would read.</summary>
     Task PrepareAsync(string text, ReadVoiceScope scope);

@@ -230,21 +230,27 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
     public bool SupportsSegments => true;
 
     public Task SpeakSegmentsAsync(IReadOnlyList<VoicedSegment> segments, int? activityId = null) =>
+        SpeakSegmentsAsync(segments, null, activityId);
+
+    // Slice 173: voiced segments in the pack the caller names (Dino Reader's child reads in a story language other than the stored one),
+    // the app-language model untouched. A null model is the app-language model.
+    public Task SpeakSegmentsAsync(IReadOnlyList<VoicedSegment> segments, VoiceModelPaths? model, int? activityId = null) =>
         ReadAsync(activityId, open: false, (_, _) =>
         {
             IReadOnlyList<SpeechChunkPlan> plan = SpeechChunkPlanner.ForSegments(segments, SpeechTextChunker.HeadPolicy.Default);
             return Task.FromResult((plan, plan.Count == 0 ? 0 : plan[^1].SourceEnd));
-        });
+        }, model);
 
     // The read lifecycle every entry point shares: take the engine, make this the current read, plan its
     // chunks (the planner runs after the generation starts, so a Stop during planning cancels the read)
     // and play them.
     private async Task ReadAsync(
         int? activityId, bool open,
-        Func<BuiltEngine, string?, Task<(IReadOnlyList<SpeechChunkPlan> Chunks, int TextLength)>> plan)
+        Func<BuiltEngine, string?, Task<(IReadOnlyList<SpeechChunkPlan> Chunks, int TextLength)>> plan,
+        VoiceModelPaths? model = null)
     {
         // A cold model build takes seconds: never on the caller's (UI) thread.
-        BuiltEngine? owned = await Task.Run(() => AcquireEngine()) ?? throw new NeuralEngineUnavailableException();
+        BuiltEngine? owned = await Task.Run(() => AcquireEngine(model)) ?? throw new NeuralEngineUnavailableException();
         BuiltEngine engine = owned;
         ActiveRead read = BeginRead(engine);
         try
@@ -651,7 +657,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
         private async Task<BuiltEngine?> ExtraEngineAsync(string? chunkVoiceId)
         {
             VoiceInfo wanted = _owner.PickVoice(_engine.Model, chunkVoiceId, _voiceId);
-            return wanted.ModelDir == _engine.Model.ModelDir ? null : await _owner.LoadVoiceEngineAsync(wanted.Id);
+            return wanted.ModelDir == _engine.Model.ModelDir ? null : await _owner.LoadVoiceEngineAsync(_engine.Model, wanted.Id);
         }
 
         // Ends the run. The pump and later StartPending calls do nothing from here on; generations still
@@ -702,9 +708,9 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
 
     // Loads, off the caller's thread and under no gate, the engine for a voice in another model folder of the
     // pack, with a reference for the caller; null (with a warning) when it cannot.
-    private async Task<BuiltEngine?> LoadVoiceEngineAsync(string voiceId)
+    private async Task<BuiltEngine?> LoadVoiceEngineAsync(VoiceModelPaths model, string voiceId)
     {
-        BuiltEngine? built = await Task.Run(() => TryAcquireForVoice(voiceId));
+        BuiltEngine? built = await Task.Run(() => TryAcquireForVoice(model, voiceId));
         if (built is null)
         {
             _systemLog.Warning($"voice {voiceId} could not be loaded; its lines use the read's voice");
@@ -771,7 +777,7 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
         BuiltEngine next = engine;
         if (target.ModelDir != engine.Model.ModelDir)
         {
-            next = await Task.Run(() => TryAcquireForVoice(selected)) ?? engine;
+            next = await Task.Run(() => TryAcquireForVoice(engine.Model, selected)) ?? engine;
         }
 
         if (!IsCurrent(generation))
@@ -796,11 +802,11 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
         }
     }
 
-    private BuiltEngine? TryAcquireForVoice(string? voiceId)
+    private BuiltEngine? TryAcquireForVoice(VoiceModelPaths model, string? voiceId)
     {
         try
         {
-            return AcquireEngine(voiceId);
+            return AcquireEngine(model, voiceId);
         }
         catch (NeuralEngineUnavailableException)
         {
@@ -847,6 +853,19 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
     // the first real read is near-instant. Idempotent; best-effort, with AcquireEngine in SpeakAsync as
     // the fallback. Called again whenever a pack becomes ready (ReadAloudService.OnVoiceModelReady).
     public Task WarmUpAsync() => Task.Run(WarmUp);
+
+    // Slice 173: builds the engine of a named model (Dino Reader's child pick) ahead of its first read; best-effort.
+    public Task WarmUpAsync(VoiceModelPaths model) => Task.Run(() =>
+    {
+        try
+        {
+            AcquireEngine(model)?.Release();
+        }
+        catch
+        {
+            // Best-effort: the read builds the engine itself.
+        }
+    });
 
     private void WarmUp()
     {
@@ -978,9 +997,9 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
     // must Release() it. A different pack folder, version or engine kind is another engine (a pack update
     // is a new folder, so it is picked up here); the same folder under another language reuses the model (a Kokoro pack excepted: each language has an engine of its own).
     // An engine nobody asks for any more is disposed once the last read or generation holding it lets go.
-    private BuiltEngine? AcquireEngine(string? voiceId = null)
+    private BuiltEngine? AcquireEngine(VoiceModelPaths? model = null, string? voiceId = null)
     {
-        VoiceModelPaths? paths = SelectedPaths(voiceId);
+        VoiceModelPaths? paths = SelectedPaths(model, voiceId);
         if (paths is not null && ModelKey(paths) == Volatile.Read(ref _failedModelKey))
         {
             // This exact model already failed to load: don't retry the multi-hundred-MB build on every
@@ -1014,8 +1033,8 @@ public sealed class SupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposa
 
     // The language's current model aimed at the voice that will speak (the given id, else the selected
     // one): voices of one pack can each have their own model folder (Slice 89).
-    private VoiceModelPaths? SelectedPaths(string? voiceId) =>
-        _model.Paths is { } paths ? paths.ForVoice(PickVoice(paths, voiceId)) : null;
+    private VoiceModelPaths? SelectedPaths(VoiceModelPaths? model, string? voiceId) =>
+        (model ?? _model.Paths) is { } paths ? paths.ForVoice(PickVoice(paths, voiceId)) : null;
 
     private void RefreshModelInBackground() =>
         _ = _model.InitializeAsync().ContinueWith(

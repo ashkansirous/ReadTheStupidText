@@ -342,10 +342,29 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Dierengeluiden</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>De dieren zeggen af en toe “Knor!” of “Mê!”, in elk boek</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Dit boek heeft meer personages dan de {0} vertelfiguren die er zijn, dus sommige klinken hetzelfde. De verteller wordt nooit aan een personage gegeven.</value></data>
-  <data name="TranslationPack_Title" xml:space="preserve"><value>Het vertaalpakket voor {0} downloaden?</value></data>
-  <data name="TranslationPack_Body" xml:space="preserve"><value>Om dit boek in het {0} te tonen en voor te lezen heeft Dino Reader een vertaalpakket van ongeveer 30 MB nodig. Het blijft op dit apparaat. Sla je het over, dan blijft het boek in zijn eigen taal.</value></data>
+  <data name="TranslationPack_TitleNamed" xml:space="preserve"><value>Vertaalpakketten downloaden?</value></data>
+  <data name="TranslationPack_BodyNamed" xml:space="preserve"><value>Om dit boek in {0} te tonen en voor te lezen, heeft Dino Reader deze vertaalpakketten nodig: {1}. Ze blijven op dit apparaat. Als je ze overslaat, blijft het boek in zijn eigen taal.</value></data>
   <data name="TranslationPack_Download" xml:space="preserve"><value>Downloaden</value></data>
   <data name="TranslationPack_Keep" xml:space="preserve"><value>Origineel houden</value></data>
   <data name="TranslationPack_Failed" xml:space="preserve"><value>Het vertaalpakket kon niet worden opgehaald. Het boek blijft in zijn eigen taal.</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>Vertaalpakket voor {0} ophalen…</value></data>
+  <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>In welke talen moeten de verhalen zijn?</value></data>
+  <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>Kies er maximaal twee extra. Je kind kan tijdens het lezen wisselen.</value></data>
+  <data name="StoryLanguages_AppLanguage" xml:space="preserve"><value>App-taal</value></data>
+  <data name="StoryLanguages_SkipOnly" xml:space="preserve"><value>Overslaan, alleen {0}</value></data>
+  <data name="StoryLanguages_Getting" xml:space="preserve"><value>Stem wordt klaargezet · {0}%</value></data>
+  <data name="StoryLanguages_Full" xml:space="preserve"><value>Drie gekozen. Haal er één weg om een andere te kiezen.</value></data>
+  <data name="StoryLanguages_SettingsTitle" xml:space="preserve"><value>Verhaaltalen</value></data>
+  <data name="StoryLanguages_SettingsLine" xml:space="preserve"><value>Je kind kan tijdens het lezen tussen deze talen wisselen. Maximaal drie.</value></data>
+  <data name="StoryLanguages_DropTitle" xml:space="preserve"><value>{0} is nu de app-taal</value></data>
+  <data name="StoryLanguages_DropBody" xml:space="preserve"><value>Verhalen kunnen in hooguit drie talen zijn. Welke moet eraf?</value></data>
+  <data name="StoryLanguages_Remove" xml:space="preserve"><value>{0} verwijderen</value></data>
+  <data name="StoryLanguages_WasApp" xml:space="preserve"><value>Was de app-taal</value></data>
+  <data name="StoryLanguages_ButtonLabel" xml:space="preserve"><value>Verhaaltaal: {0}</value></data>
+  <data name="StoryLanguages_Failed" xml:space="preserve"><value>De stem kon niet worden opgehaald. Tik om het opnieuw te proberen.</value></data>
+  <data name="StoryLanguages_WifiTitle" xml:space="preserve"><value>Downloaden via mobiele data?</value></data>
+  <data name="StoryLanguages_WifiBody" xml:space="preserve"><value>Je bent niet op wifi. {0} wordt gedownload via mobiele data.</value></data>
+  <data name="StoryLanguages_WifiNow" xml:space="preserve"><value>Nu downloaden</value></data>
+  <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>Wachten op wifi</value></data>
+  <data name="StoryLanguages_WifiWaiting" xml:space="preserve"><value>Wachten op wifi</value></data>
 </root>

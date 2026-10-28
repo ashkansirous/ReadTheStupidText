@@ -11,8 +11,8 @@ public partial class LocalizedUiTests
     private static readonly string AppFolder = Path.Combine("src", "DinoReader.App");
     private static readonly string ResourcesFolder = Path.Combine(AppFolder, "Resources", "Strings");
 
-    // Keys whose value is deliberately inherited from English: the product name, file extensions and the unknown-gender mark.
-    private static readonly HashSet<string> MayInherit = ["App_Name", "Add_FileSub", "Cast_UnknownGender"];
+    // Keys whose value is deliberately inherited from English: the product name, file extensions, the unknown-gender mark and the flag map (country codes, Slice 173).
+    private static readonly HashSet<string> MayInherit = ["App_Name", "Add_FileSub", "Cast_UnknownGender", "StoryLanguages_FlagMap"];
 
     [Fact]
     public void Every_language_file_has_exactly_the_neutral_keys_with_the_same_placeholders()

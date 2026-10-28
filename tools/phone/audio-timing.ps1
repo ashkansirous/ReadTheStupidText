@@ -3,7 +3,7 @@
   Reads a fixed passage (RTST's reader, or Dino's reader) at 1x and 2x on the user's real phone and prints the timing table (Slice 165).
 .DESCRIPTION
   Wireless adb only (connect.ps1 explains how to pair). Builds and installs the arm64 Debug build under a second package
-  id (<app id>.dbg), so the store install, its data and signature are never touched; nothing is ever uninstalled or cleared.
+  id (<app id>.dbg), so the store install, its data and signature are never touched; nothing is ever uninstalled, and data is cleared only with -FreshInstall (the dev package's own).
   Debug builds send no analytics (UsageGate). The Slice 162 test hooks skip first run and read the fixed text at the given speed
   (`read` hook; nothing is stored), so no taps are needed and the phone may stay locked. Time zero is the app's own `HOOK read start` log line.
   The volume is never changed.
@@ -22,6 +22,20 @@ param(
     [string]$Book = 'three-little-pigs',
     [int]$Page = 1,
     [switch]$SkipInstall,
+    # Slice 177: proxy for a machine with no phone: the headless emulator (x86_64); -Serial picks the device (default emulator-5554).
+    [switch]$Emulator,
+    # Slice 177: AOT-compile the Debug build like Release is. The test hooks (skip-first-run, PACK_READY, read, open-book, chunk markers) exist only in Debug
+    # builds, so this is how Release speed is measured: AOT like the store build, hooks kept. Compare against the same run without -Aot.
+    [switch]$Aot,
+    # Slice 177: after each cold read (fresh process) read again in the same process and print that warm table too.
+    [switch]$Warm,
+    # Slice 177: take the process cold by clearing the dev package's data (`pm clear`) before every run: it wipes the dev app's data and the voice pack
+    # downloads again each time (up to -PackTimeoutSeconds). Only the .dbg package is cleared, never the store install.
+    [switch]$FreshInstall,
+    # Slice 177: seconds to wait after the voice pack is ready before the read (a child takes a moment to press Play; the background warm-up runs meanwhile).
+    [int]$SettleSeconds = 0,
+    # Slice 177: the app language the first-run skip sets (its pack is downloaded), e.g. fa to check that language's engine is warmed.
+    [string]$AppLanguage = 'en',
     [switch]$VoiceChanged,
     [int]$ReadTimeoutSeconds = 240,
     [int]$PackTimeoutSeconds = 1200,
@@ -45,17 +59,44 @@ $passage = 'The little dinosaur walked down to the river every morning. She watc
     'When the sun went down she walked home slowly, humming a quiet song to herself, and fell asleep before the first star came out.'
 
 function Build-AndInstall([string]$Phone) {
-    Write-Host "   building $App (arm64 Debug) and installing $package on the phone; this takes a few minutes..."
+    $config = 'Debug'
+    $rid = if ($Emulator) { 'android-x64' } else { 'android-arm64' }
+    Write-Host "   building $App ($rid $config$(if ($Aot) { ' + AOT' })) and installing $package; this takes a few minutes..."
     $project = Join-Path $script:RepoRoot $cfg.Project
-    $apkDir = Join-Path (Split-Path $project) 'bin\Debug\net10.0-android\android-arm64'
+    $apkDir = Join-Path (Split-Path $project) "bin\$config\net10.0-android\$rid"
     Get-ChildItem $apkDir -Filter '*-Signed.apk' -ErrorAction SilentlyContinue | Remove-Item -Force
-    dotnet build $project -f net10.0-android -c Debug -p:RuntimeIdentifier=android-arm64 -p:EmbedAssembliesIntoApk=true `
-        -p:IncludeWindows=false -p:AndroidPackageFormat=apk "-p:ApplicationId=$package"
+    $extra = @()
+    if ($Aot) { $extra += '-p:RunAOTCompilation=true', '-p:AndroidEnableProfiledAot=false' }
+    dotnet build $project -f net10.0-android -c $config "-p:RuntimeIdentifier=$rid" -p:EmbedAssembliesIntoApk=true `
+        -p:IncludeWindows=false -p:AndroidPackageFormat=apk "-p:ApplicationId=$package" @extra
     if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
     $apk = Get-ChildItem $apkDir -Filter '*-Signed.apk' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
     if (-not $apk) { throw 'Signed APK not found.' }
     $result = "$(Invoke-Adb $Phone @('install', '-r', $apk.FullName))"
     if ($result -notmatch 'Success') { throw "adb install of $package failed: $result" }
+    Set-Content -LiteralPath "$($apk.FullName).build" -Value (Get-BuildStamp $rid)
+}
+
+# What a build of this run's flags is stamped as, so a later -SkipInstall can tell whether the installed APK is the right kind.
+function Get-BuildStamp([string]$Rid) { return "$Rid|aot=$([bool]$Aot)" }
+
+# Slice 177: with -SkipInstall under -Emulator or -Aot the installed APK must be the build this run asks for (right ABI, AOT or not):
+# it is pulled and compared with the newest local signed APK and that APK's build stamp; otherwise the build is made and installed.
+function Test-InstalledMatches([string]$Phone) {
+    $rid = if ($Emulator) { 'android-x64' } else { 'android-arm64' }
+    $project = Join-Path $script:RepoRoot $cfg.Project
+    $apkDir = Join-Path (Split-Path $project) "bin\Debug\net10.0-android\$rid"
+    $local = Get-ChildItem $apkDir -Filter '*-Signed.apk' -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    if (-not $local) { return $false }
+    $stamp = "$($local.FullName).build"
+    if (-not (Test-Path -LiteralPath $stamp) -or (Get-Content -LiteralPath $stamp -Raw).Trim() -ne (Get-BuildStamp $rid)) { return $false }
+    $installed = "$(Invoke-Adb $Phone @('shell', 'pm', 'path', $package))" -replace '^\s*package:', '' | ForEach-Object { $_.Trim() }
+    if (-not $installed) { return $false }
+    $pulled = Join-Path $script:OutDir 'installed-check.apk'
+    Invoke-Adb $Phone @('pull', ($installed -split '\s+')[0], $pulled) | Out-Null
+    $same = (Test-Path $pulled) -and ((Get-FileHash $pulled).Hash -eq (Get-FileHash $local.FullName).Hash)
+    Remove-Item $pulled -Force -ErrorAction SilentlyContinue
+    return $same
 }
 
 # Only the dev app's own lines: the RTST-TEST markers and the .NET runtime tag; never the rest of the phone's log.
@@ -82,7 +123,7 @@ function Start-AppWithHook([string]$Phone, [string]$Hook) {
     Start-Sleep -Milliseconds 800
     Invoke-Adb $Phone @('logcat', '-c') | Out-Null
     $script:Seen.Clear(); $script:SeenLines.Clear()
-    Invoke-Adb $Phone @('shell', 'am', 'start', '-n', (Get-LauncherActivity $Phone), '--es', 'cmd', $Hook, '--es', 'lang', 'en') | Out-Null
+    Invoke-Adb $Phone @('shell', 'am', 'start', '-n', (Get-LauncherActivity $Phone), '--es', 'cmd', $Hook, '--es', 'lang', $AppLanguage) | Out-Null
 }
 
 # $After: only a marker line stamped at or after this phone time counts (a stopped earlier read can still log READ_END).
@@ -126,16 +167,32 @@ function Start-Reading([string]$Phone, [double]$Rate) {
     return $answer.Time
 }
 
+# Slice 177: a second read in the same process (warm). The log is cleared first so chunk numbers do not mix with the cold read.
+function Invoke-WarmRead([string]$Phone, [double]$Rate) {
+    Invoke-Adb $Phone @('logcat', '-c') | Out-Null
+    $script:Seen.Clear(); $script:SeenLines.Clear()
+    Start-Sleep -Milliseconds 500
+    $tap = Start-Reading $Phone $Rate
+    if (-not (Wait-Marker $Phone 'RTST-TEST\s*:\s*READ_END' $ReadTimeoutSeconds $tap 'reading (warm)')) { Write-Host '   (READ_END not seen in time)' }
+    $log = Get-AppLog $Phone
+    $file = Join-Path $script:OutDir ("{0}-{1}x-warm-{2}.log" -f $App, $Rate, (Get-Date -Format 'HHmmss'))
+    $log | Set-Content $file
+    return @{ Tap = $tap; Lines = $log; File = $file }
+}
+
 function Invoke-OneRead([string]$Phone, [double]$Rate) {
+    if ($FreshInstall) { Invoke-Adb $Phone @('shell', 'pm', 'clear', $package) | Out-Null }
     Start-AppWithHook $Phone 'skip-first-run'
     if (-not (Wait-Marker $Phone 'HOOK skip-first-run ok' 60 0 'waiting for the app to skip first run')) { throw 'The skip-first-run hook did not report ok.' }
     if (-not (Wait-Marker $Phone 'RTST-TEST\s*:\s*PACK_READY' $PackTimeoutSeconds 0 'waiting for the voice pack download')) { throw "The voice pack did not become ready in $PackTimeoutSeconds s." }
+    if ($SettleSeconds -gt 0) { Write-Host "   settling $SettleSeconds s after the pack is ready..."; Start-Sleep -Seconds $SettleSeconds }
     $tap = Start-Reading $Phone $Rate
-    if (-not (Wait-Marker $Phone 'RTST-TEST\s*:\s*READ_END' $ReadTimeoutSeconds $tap 'reading')) { Write-Host '   (READ_END not seen in time)' }
+    $ended = [bool](Wait-Marker $Phone 'RTST-TEST\s*:\s*READ_END' $ReadTimeoutSeconds $tap 'reading')
+    if (-not $ended) { Write-Host '   (READ_END not seen in time)' }
     $log = Get-AppLog $Phone
     $file = Join-Path $script:OutDir ("{0}-{1}x-{2}.log" -f $App, $Rate, (Get-Date -Format 'HHmmss'))
     $log | Set-Content $file
-    return @{ Tap = $tap; Lines = $log; File = $file }
+    return @{ Tap = $tap; Lines = $log; File = $file; Ended = $ended }
 }
 
 if ($LogFile) {
@@ -147,12 +204,17 @@ if ($LogFile) {
     exit 0
 }
 
-$phone = Find-WirelessPhone $Serial
+$phone = if ($Emulator) { if ($Serial) { $Serial } else { 'emulator-5554' } } else { Find-WirelessPhone $Serial }
 if (-not $phone) { Write-PairingAsk; exit 2 }
 # Raw logs go to the shared worktrees folder, not into the repo.
 $script:OutDir = Join-Path (Split-Path $script:RepoRoot -Parent) '.phone'
 $null = New-Item -ItemType Directory -Force $script:OutDir
-if (-not $SkipInstall) { Build-AndInstall $phone }
+$needsInstall = -not $SkipInstall
+if ($SkipInstall -and ($Emulator -or $Aot) -and -not (Test-InstalledMatches $phone)) {
+    Write-Host '   the installed build is not the one this run asks for (ABI or AOT); building and installing it.'
+    $needsInstall = $true
+}
+if ($needsInstall) { Build-AndInstall $phone }
 
 try {
     foreach ($rate in $Rates) {
@@ -160,6 +222,14 @@ try {
         $events = @(ConvertFrom-TimingLog $read.Lines)
         Write-TimingTable "$App at $($rate)x" (Get-ReadTimings $events $read.Tap $rate $GapLimitMs ($App -eq 'dino')) $GapLimitMs
         Write-Host "   raw log: $($read.File)"
+        if ($Warm -and -not $read.Ended) {
+            Write-Host '   skipping the warm read: the cold read never ended, and a second read would overlap it.'
+        }
+        elseif ($Warm) {
+            $w = Invoke-WarmRead $phone $rate
+            Write-TimingTable "$App at $($rate)x WARM" (Get-ReadTimings @(ConvertFrom-TimingLog $w.Lines) $w.Tap $rate $GapLimitMs ($App -eq 'dino')) $GapLimitMs
+            Write-Host "   raw log: $($w.File)"
+        }
     }
     if ($VoiceChanged) { Write-Host "listen now: $($cfg.Listen)" }
 }

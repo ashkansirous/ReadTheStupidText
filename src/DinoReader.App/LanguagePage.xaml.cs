@@ -92,6 +92,7 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 	private readonly IServiceProvider _services;
 	private readonly string _openedWith;
 	private string? _pending;
+	private StoryLanguageSet? _sides; // the story languages as the taps so far leave them; saved only when the page is left with a changed language
 	private bool _changed;
 
 	public LanguagePage(SpokenLanguage spoken, VoicePackInstaller installer, IVoicePackService packs, ISettingsStore settings, UsageCounter usage, IServiceProvider services)
@@ -117,6 +118,7 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 	{
 		base.OnDisappearing();
 		_installer.Changed -= OnInstallerChanged;
+		CommitSides();
 	}
 
 	// A progress tick only moves the downloading row's bar and percentage; any change of state rebuilds the rows.
@@ -257,13 +259,47 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 		_ => AppResources.Language_Download,
 	};
 
-	private Task PickAsync(string code)
+	private async Task PickAsync(string code)
 	{
+		if (!await KeepStoryLanguagesAsync(code))
+		{
+			return; // the grown-up cancelled the "which one goes" question: the app language stays as it was
+		}
+
 		_pending = code;
 		_changed = true;
 		LanguageChoice.Apply(code, _spoken);
 		Rebuild();
-		return Task.CompletedTask;
+	}
+
+	// The new app language is always a story language (Slice 173, Decision 168): a side language swaps places with the old one, a new one takes the old one's
+	// place as a side when there is room, and with both sides taken the grown-up says which of the three goes. Kept in memory per tap and saved when the page is
+	// left (BackAsync); Cancel on the question, or never changing the language, saves nothing.
+	private async Task<bool> KeepStoryLanguagesAsync(string code)
+	{
+		StoryLanguageSet current = _sides ?? StoryLanguages.Current();
+		MainLanguageChange change = current.ChangeMain(code);
+		if (change.Set is { } set)
+		{
+			_sides = set;
+			return true;
+		}
+
+		string? dropped = await DropLanguageSheet.AskAsync(Navigation, UiLanguage.Resolve(code), current.Main, change.DropChoices);
+		if (dropped is null)
+		{
+			return false;
+		}
+
+		_sides = current.ChangeMainDropping(code, dropped);
+		return true;
+	}
+
+	// Hardware back is the same as the Back button: a changed language is committed (with its story languages) and the root rebuilt.
+	protected override bool OnBackButtonPressed()
+	{
+		_ = _busy.RunAsync(BackAsync);
+		return true;
 	}
 
 	// A changed language rebuilds the root, so the shelf and Settings the grown-up returns to (and every page after them) speak the new language.
@@ -279,10 +315,20 @@ public partial class LanguagePage : ContentPage, IGrownUpPage
 		}
 	}
 
+	// The story languages go with the app language, which applies per tap: saved whenever the page is left (Back, a swipe back, the sheet over it), so no way out loses the choice.
+	private void CommitSides()
+	{
+		if (_changed && _sides is { } sides)
+		{
+			StoryLanguages.SaveSides(sides);
+		}
+	}
+
 	private async Task BackAsync()
 	{
 		if (_changed)
 		{
+			CommitSides();
 			CountLanguageChange();
 			_installer.Changed -= OnInstallerChanged;
 			await RebuildAndReturnToSettingsAsync();

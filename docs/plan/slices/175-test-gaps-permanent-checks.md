@@ -1,6 +1,6 @@
 # Slice 175 — Close the test gaps: permanent checks, a Dino page hook, finer timing, the VM image
 
-*In progress (wave 2026-10-28b), draft PR.* Batch 38 (test gaps found 2026-10-28), tooling for both apps; Debug-only hooks on Android and iOS.
+*Built 2026-10-28 (PR #517); VM items done by PR #523, phone timing not yet verified.* Batch 38 (test gaps found 2026-10-28), tooling for both apps; Debug-only hooks on Android and iOS.
 After Slices 163 and 165.
 
 **Touches:** `tools/desktop-vm/**`, `tools/phone/**`, `src/ReadTheStupidText.Mobile.Shared/Testing/**`,
@@ -71,7 +71,7 @@ someone rewriting them:
 
 *Verified:* RTST 1459 and Dino 1642 unit tests; Android and iOS Debug compiles of both apps; emulator: Dino Maestro flows 3x in a row (last from a cold reinstall), RTST flows, a bad id fails fast, a single `ENGINE_READY`.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-28)
 
 - Mobile.Shared `Testing`: launch-argument keys come only from `TestHookDispatcher.LaunchKeys`; never keep a key list in a platform file. (Slice 175: docs/plan/slices/175-test-gaps-permanent-checks.md)
 

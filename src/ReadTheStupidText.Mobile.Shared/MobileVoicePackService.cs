@@ -172,6 +172,7 @@ public sealed class MobileVoicePackService : IVoicePackService
 
     public async Task<PackDownloadResult> DownloadAsync(string packId, IProgress<double>? progress, CancellationToken cancellationToken)
     {
+        using IDisposable gate = await PackDownloadGate.EnterAsync(packId, cancellationToken).ConfigureAwait(false); // one run per pack (Slice 173)
         if (LoadInstalled(packId) is { } installed && !UpgradeAvailable(installed))
         {
             progress?.Report(1);

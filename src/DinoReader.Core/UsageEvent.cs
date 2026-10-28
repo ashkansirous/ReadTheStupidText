@@ -21,6 +21,10 @@ public static class UsageEventName
     public const string IntroStarted = "intro_started";
     public const string IntroStep = "intro_step";
     public const string IntroEnded = "intro_ended";
+    public const string StoryLanguagesSet = "story_languages_set";
+    public const string StoryLanguageAdded = "story_language_added";
+    public const string StoryLanguageSwitched = "story_language_switched";
+    public const string VoicePackDownload = "voice_pack_download";
 }
 
 /// <summary>Where a counted book came from: Dino's own shelf (a starter or a store story) or a grown-up's own book.</summary>
@@ -65,6 +69,13 @@ public static class UsageDetail
     public const string IntroTried = "tried";
     public const string IntroSkipped = "skipped";
 
+    public const string LanguagesFromIntro = "intro";
+    public const string LanguagesFromSettings = "settings";
+
+    public const string PackDone = "done";
+    public const string PackFailed = "failed";
+    public const string PackCancelled = "cancelled";
+
     /// <summary>Separates a wait count's stage from its duration bucket in <c>detail</c> (Slice 148): <c>stalled:2-5</c>.</summary>
     public const char WaitSeparator = ':';
 
@@ -87,6 +98,9 @@ public static class UsageDetail
     /// <summary>The detail of an intro step count (Slice 155): the step (an <see cref="IntroSteps"/> name) and the action (<c>tried</c> or <c>skipped</c>), like <c>store:tried</c>.</summary>
     public static string IntroStepAction(string step, bool tried) => string.Concat(step, WaitSeparator, tried ? IntroTried : IntroSkipped);
 
+    /// <summary>The detail of a story-languages count (Slice 173): how many story languages there are now (1 to 3) and where the parent set them (<see cref="LanguagesFromIntro"/> or <see cref="LanguagesFromSettings"/>), like <c>2:settings</c>.</summary>
+    public static string StoryLanguages(int count, string where) => string.Concat(count.ToString(CultureInfo.InvariantCulture), WaitSeparator, where);
+
     /// <summary>How many pages of a book have a parent recording, as a bucket (never the exact count).</summary>
     public static string PagesBucket(int recordedPages) => recordedPages switch
     {
@@ -97,14 +111,15 @@ public static class UsageDetail
     };
 }
 
-/// <summary>The first-run intro's steps in order (Slice 155, Decision 160): the store, recording a book, adding an own book. The index is what is saved, so a restart resumes at the same step.</summary>
+/// <summary>The first-run intro's steps in order (Slice 155, Decision 160): the store, recording a book, adding an own book, and (Slice 173) the story languages. The index is what is saved, so a restart resumes at the same step.</summary>
 public static class IntroSteps
 {
     public const string Store = "store";
     public const string Record = "record";
     public const string Add = "add";
+    public const string Languages = "languages";
 
-    private static readonly string[] Order = [Store, Record, Add];
+    private static readonly string[] Order = [Store, Record, Add, Languages];
 
     public static int Count => Order.Length;
 
@@ -127,16 +142,16 @@ public sealed record UsageEvent(string Name, string Book, string Language, strin
     private const string DayFormat = "yyyy-MM-dd";
 
     /// <summary>
-    /// The count for <paramref name="name"/> about <paramref name="story"/>. Only a book that came from the starters or the store
+    /// The count for <paramref name="name"/> about <paramref name="story"/>; <paramref name="language"/> is the language it was read in (Slice 173), the book's own when null. Only a book that came from the starters or the store
     /// (<paramref name="fromCatalogue"/>) with a usable package id is a shelf book; any other book, a re-imported own one included, counts as the grown-up's own.
     /// </summary>
-    public static UsageEvent For(string name, Story story, bool fromCatalogue, double sampleRate, string version, AppPlatform platform, DateTimeOffset now, string detail = "")
+    public static UsageEvent For(string name, Story story, bool fromCatalogue, double sampleRate, string version, AppPlatform platform, DateTimeOffset now, string detail = "", string? language = null)
     {
         string? shelfId = fromCatalogue ? ShelfId(story.SourceId) : null;
         return new UsageEvent(
             name,
             shelfId ?? UsageSource.Own,
-            story.Language,
+            language ?? story.Language,
             shelfId is null ? UsageSource.Own : UsageSource.Shelf,
             StoryRecordings.Count(story) > 0,
             version,

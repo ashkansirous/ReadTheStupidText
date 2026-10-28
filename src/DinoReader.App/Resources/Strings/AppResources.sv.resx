@@ -342,10 +342,29 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Djurläten</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Djuren säger då och då “Nöff!” eller “Bää!”, i alla böcker</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Det finns fler figurer i boken än de {0} berättarfigurer vi har, så vissa låter lika. Berättaren ges aldrig till en figur.</value></data>
-  <data name="TranslationPack_Title" xml:space="preserve"><value>Ladda ner översättningspaketet för {0}?</value></data>
-  <data name="TranslationPack_Body" xml:space="preserve"><value>För att visa och läsa boken på {0} behöver Dino Reader ett översättningspaket på cirka 30 MB. Det stannar på den här enheten. Hoppar du över det stannar boken på sitt eget språk.</value></data>
+  <data name="TranslationPack_TitleNamed" xml:space="preserve"><value>Ladda ner översättningspaket?</value></data>
+  <data name="TranslationPack_BodyNamed" xml:space="preserve"><value>För att visa och läsa den här boken på {0} behöver Dino Reader dessa översättningspaket: {1}. De stannar på den här enheten. Om du hoppar över dem förblir boken på sitt eget språk.</value></data>
   <data name="TranslationPack_Download" xml:space="preserve"><value>Ladda ner</value></data>
   <data name="TranslationPack_Keep" xml:space="preserve"><value>Behåll originalet</value></data>
   <data name="TranslationPack_Failed" xml:space="preserve"><value>Det gick inte att hämta översättningspaketet. Boken stannar på sitt eget språk.</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>Hämtar översättningspaketet för {0}…</value></data>
+  <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>På vilka språk ska sagorna vara?</value></data>
+  <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>Välj upp till två till. Ditt barn kan byta medan det läser.</value></data>
+  <data name="StoryLanguages_AppLanguage" xml:space="preserve"><value>Appens språk</value></data>
+  <data name="StoryLanguages_SkipOnly" xml:space="preserve"><value>Hoppa över, bara {0}</value></data>
+  <data name="StoryLanguages_Getting" xml:space="preserve"><value>Förbereder rösten · {0} %</value></data>
+  <data name="StoryLanguages_Full" xml:space="preserve"><value>Tre valda. Avmarkera ett för att välja ett annat.</value></data>
+  <data name="StoryLanguages_SettingsTitle" xml:space="preserve"><value>Sagospråk</value></data>
+  <data name="StoryLanguages_SettingsLine" xml:space="preserve"><value>Ditt barn kan växla mellan dessa medan det läser. Högst tre.</value></data>
+  <data name="StoryLanguages_DropTitle" xml:space="preserve"><value>{0} är nu appens språk</value></data>
+  <data name="StoryLanguages_DropBody" xml:space="preserve"><value>Sagor kan vara på högst tre språk. Vilket ska tas bort?</value></data>
+  <data name="StoryLanguages_Remove" xml:space="preserve"><value>Ta bort {0}</value></data>
+  <data name="StoryLanguages_WasApp" xml:space="preserve"><value>Var appens språk</value></data>
+  <data name="StoryLanguages_ButtonLabel" xml:space="preserve"><value>Sagospråk: {0}</value></data>
+  <data name="StoryLanguages_Failed" xml:space="preserve"><value>Det gick inte att hämta rösten. Tryck för att försöka igen.</value></data>
+  <data name="StoryLanguages_WifiTitle" xml:space="preserve"><value>Ladda ner via mobildata?</value></data>
+  <data name="StoryLanguages_WifiBody" xml:space="preserve"><value>Du är inte på Wi-Fi. {0} laddas ner via mobildata.</value></data>
+  <data name="StoryLanguages_WifiNow" xml:space="preserve"><value>Ladda ner nu</value></data>
+  <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>Vänta på Wi-Fi</value></data>
+  <data name="StoryLanguages_WifiWaiting" xml:space="preserve"><value>Väntar på Wi-Fi</value></data>
 </root>

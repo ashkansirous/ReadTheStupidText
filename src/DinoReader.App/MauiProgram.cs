@@ -61,6 +61,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<StoreClient>();
 		builder.Services.AddSingleton<AppConfigClient>();
 		builder.Services.AddSingleton<UsageCounter>();
+		builder.Services.AddSingleton<StoryLanguagePacks>();
 		AddDocumentExtractors(builder.Services);
 		AddPages(builder.Services);
 
@@ -104,6 +105,7 @@ public static class MauiProgram
 		services.AddTransient<NarratorPage>();
 		services.AddTransient<NarratorLanguagesPage>();
 		services.AddTransient<SettingsPage>();
+		services.AddTransient<StoryLanguagesPage>();
 		services.AddTransient<ReadingSpeedPage>();
 		services.AddTransient<AnimalSoundsPage>();
 		services.AddTransient<UsageCountsPage>();

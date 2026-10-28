@@ -38,6 +38,7 @@ and their GitHub issue numbers. Tick slices off in `plan.md` as they complete. T
 ## Where the rules live
 
 - `src/ReadTheStupidText.App/CLAUDE.md` — Windows tray, control panel, activity log, read paths, console/UIA limitation, self-contained Release, onnxruntime dedupe.
+- `src/ReadTheStupidText.Application/CLAUDE.md` — shared read path: blank text (`BlankText`), chunking.
 - `src/ReadTheStupidText.Infrastructure/CLAUDE.md` — Windows speech engines, narrator voice and licence choices, Windows packs and head start, the neural reader.
 - `src/ReadTheStupidText.Mobile/CLAUDE.md` — MAUI Android/iOS: namespace and `Application` gotchas, sherpa-onnx native `.so` packaging, voice packs, Scan, emulator and iOS compile notes.
 - `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md` — scanner/OCR stack shared by every MAUI app.

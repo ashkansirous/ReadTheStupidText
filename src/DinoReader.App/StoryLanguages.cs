@@ -1,0 +1,471 @@
+using System.Diagnostics;
+using DinoReader.Core;
+using DinoReader.Resources.Strings;
+using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Mobile.Shared;
+using ReadTheStupidText.Mobile.Shared.Waiting;
+
+namespace DinoReader;
+
+/// <summary>
+/// The languages the child's stories can be in (Slice 173, Decision 168): the app language plus up to two side languages the parent picked
+/// (<see cref="StoryLanguageSet"/> holds the rules), and the one language the child reads in. The side languages and the child's pick are kept in
+/// preferences; the app language is <see cref="LanguageChoice.Current()"/>. The child's pick reaches the reading screen only, which holds its reading
+/// language itself and passes it to everything a read uses; no grown-up screen or shelf title sees it. The usage events of a book that was read (open, finish, a switch)
+/// do carry the language it was read in, a closed-list value like the app language.
+/// </summary>
+public static class StoryLanguages
+{
+	private const string SidesKey = "dino.story.sides";
+	private const string PickKey = "dino.story.reading";
+	private const string NoPackKey = "dino.story.nopack";
+	private const string WantedKey = "dino.story.wanted";
+	private const char PairSeparator = ',';
+	private const char FlagSeparator = ':';
+
+	/// <summary>Raised after the side languages were saved (from Settings, the app-language swap or the intro), with the set now in force: whatever waited for a language that left it can stop.</summary>
+	public static event Action<StoryLanguageSet>? SidesSaved;
+
+	/// <summary>The languages the catalogue has no voice pack for (kept so they stay choosable after a restart; the phone's own voice reads them).</summary>
+	public static IEnumerable<string> LoadNoPack() => StoryLanguageSet.Split(Preferences.Default.Get(NoPackKey, (string?)null));
+
+	public static void SaveNoPack(IEnumerable<string> languages) => Preferences.Default.Set(NoPackKey, StoryLanguageSet.Join(languages));
+
+	/// <summary>
+	/// Remembers that a book in <paramref name="language"/> was read with the phone's voice because that language's pack is not installed (Slice 173): Settings > Story
+	/// languages then shows the pack as missing, with its Download. Nothing on the child's side says or offers anything.
+	/// </summary>
+	public static void NoteWanted(string language)
+	{
+		string code = UiLanguage.Resolve(language);
+		List<string> wanted = [.. StoryLanguageSet.Split(Preferences.Default.Get(WantedKey, (string?)null))];
+		if (!wanted.Contains(code))
+		{
+			wanted.Add(code);
+			Preferences.Default.Set(WantedKey, StoryLanguageSet.Join(wanted));
+		}
+	}
+
+	/// <summary>Whether a book in <paramref name="language"/> was read with the phone's voice for want of a pack (see <see cref="NoteWanted"/>).</summary>
+	public static bool IsWanted(string language) =>
+		StoryLanguageSet.Split(Preferences.Default.Get(WantedKey, (string?)null)).Contains(UiLanguage.Resolve(language));
+
+	/// <summary>The app language and the saved side languages.</summary>
+	public static StoryLanguageSet Current() => StoryLanguageSet.Create(LanguageChoice.Current(), StoryLanguageSet.Split(Preferences.Default.Get(SidesKey, (string?)null)));
+
+	/// <summary>Saves the side languages of <paramref name="set"/> (its app language is the app's own pick). The child's pick is forgotten when it left the set.</summary>
+	public static void SaveSides(StoryLanguageSet set)
+	{
+		Preferences.Default.Set(SidesKey, StoryLanguageSet.Join(set.Sides));
+		if (!set.Contains(Preferences.Default.Get(PickKey, (string?)null)))
+		{
+			Preferences.Default.Remove(PickKey);
+		}
+
+		SidesSaved?.Invoke(set);
+	}
+
+	/// <summary>The language the child picked (remembered across books and restarts), the app language when none or when it left the set.</summary>
+	public static string Pick() => Current().Reading(Preferences.Default.Get(PickKey, (string?)null));
+
+	public static void SetPick(string language) => Preferences.Default.Set(PickKey, UiLanguage.Resolve(language));
+
+	/// <summary>The country code whose flag stands for <paramref name="language"/> (one fixed flag per language, kept in the strings file so it can change); empty when none.</summary>
+	public static string FlagOf(string language)
+	{
+		string code = UiLanguage.Resolve(language);
+		foreach (string pair in AppResources.StoryLanguages_FlagMap.Split(PairSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+		{
+			string[] parts = pair.Split(FlagSeparator);
+			if (parts.Length == 2 && parts[0] == code)
+			{
+				return parts[1];
+			}
+		}
+
+		return string.Empty;
+	}
+
+	/// <summary>The languages in <paramref name="languages"/> by their names in their own script, like "English, فارسی".</summary>
+	public static string Names(IEnumerable<string> languages) => string.Join(", ", languages.Select(LanguageNames.NativeName));
+}
+
+/// <summary>
+/// Downloads the voice packs of the story languages (Slice 173), one run per language and on its own: the app's spoken-language setting is not touched, so a
+/// side language's voice arrives while the child keeps reading in another. A singleton, so a download started in the intro keeps going and its progress shows
+/// in Settings. The reader switches to the language's voice itself when the child picks it (<see cref="SpokenLanguage"/>). Each run's end is counted
+/// (<see cref="UsageEventName.VoicePackDownload"/>).
+/// </summary>
+public sealed class StoryLanguagePacks
+{
+	private const int PercentScale = 100;
+	private static readonly TimeSpan CatalogTimeout = TimeSpan.FromSeconds(8);
+
+	private readonly IVoicePackService _packs;
+	private readonly IPlatformServices _platform;
+	private readonly UsageCounter _usage;
+	private readonly object _gate = new();
+	private readonly Dictionary<string, CancellationTokenSource> _runs = [];
+	private readonly Dictionary<string, double> _progress = [];
+	private readonly HashSet<string> _failed = [];
+	private readonly HashSet<string> _noPack = [.. StoryLanguages.LoadNoPack()]; // persisted: a language without a pack must stay pickable after a restart
+	private readonly HashSet<string> _waiting = [];
+	private int _watchingNetwork;
+
+	public StoryLanguagePacks(IVoicePackService packs, IPlatformServices platform, UsageCounter usage)
+	{
+		_packs = packs;
+		_platform = platform;
+		_usage = usage;
+		StoryLanguages.SidesSaved += DropWaitingOutside; // a language that left the set (Settings, the app-language swap, the intro) no longer waits for Wi-Fi
+	}
+
+	/// <summary>Raised on the main thread whenever a run starts, moves on or ends.</summary>
+	public event EventHandler? Changed;
+
+	/// <summary>Where <paramref name="language"/>'s voice stands: installed (or not needed here), on its way, or not fetched.</summary>
+	public LanguageVoiceState StateOf(string language)
+	{
+		string code = UiLanguage.Resolve(language);
+		lock (_gate)
+		{
+			if (_runs.ContainsKey(code))
+			{
+				return LanguageVoiceState.Downloading;
+			}
+
+			if (_noPack.Contains(code) || !_platform.SupportsNeuralVoice)
+			{
+				return LanguageVoiceState.Ready;
+			}
+		}
+
+		return LanguageChoice.IsInstalled(_packs, code) ? LanguageVoiceState.Ready : LanguageVoiceState.NotInstalled;
+	}
+
+	/// <summary>The download's progress, 0 to 1, while <see cref="StateOf"/> says Downloading.</summary>
+	public double ProgressOf(string language)
+	{
+		lock (_gate)
+		{
+			return _progress.GetValueOrDefault(UiLanguage.Resolve(language));
+		}
+	}
+
+	/// <summary>Whether <paramref name="language"/> is ticked but waits for Wi-Fi (the grown-up chose "Wait for Wi-Fi" on mobile data).</summary>
+	public bool IsWaitingForWifi(string language)
+	{
+		lock (_gate)
+		{
+			return _waiting.Contains(UiLanguage.Resolve(language));
+		}
+	}
+
+	/// <summary>Whether the last run for <paramref name="language"/> failed (offline, a bad file).</summary>
+	public bool HasFailed(string language)
+	{
+		lock (_gate)
+		{
+			return _failed.Contains(UiLanguage.Resolve(language));
+		}
+	}
+
+	/// <summary>
+	/// Gets the voices of <paramref name="languages"/> that are missing. On mobile data (Android and iOS) the grown-up is asked first, naming each language
+	/// with its size: "Download now" starts them, "Wait for Wi-Fi" starts them when Wi-Fi is there. Windows and Wi-Fi start at once. Only a grown-up screen calls this.
+	/// The sizes come from the catalogue, fetched behind <paramref name="wait"/> (shown after 500 ms, with Cancel, which drops the whole request) and given up after a
+	/// timeout, when the names are shown without sizes.
+	/// </summary>
+	public async Task RequestAsync(Page? host, IEnumerable<string> languages, WaitController? wait = null)
+	{
+		List<string> missing = [.. languages.Select(UiLanguage.Resolve).Distinct().Where(code => StateOf(code) == LanguageVoiceState.NotInstalled)];
+		if (missing.Count == 0)
+		{
+			return;
+		}
+
+		if (!OnMobileDataOnly())
+		{
+			missing.ForEach(Start);
+			return;
+		}
+
+		string? described = await DescribeAsync(missing, wait);
+		if (described is null)
+		{
+			return; // Cancel on the wait: nothing starts, nothing waits
+		}
+
+		bool now = host is not null && await host.DisplayAlertAsync(
+			AppResources.StoryLanguages_WifiTitle, AppResources.Format(AppResources.StoryLanguages_WifiBody, described),
+			AppResources.StoryLanguages_WifiNow, AppResources.StoryLanguages_WifiWait);
+		if (now)
+		{
+			missing.ForEach(Start);
+			return;
+		}
+
+		WaitForWifi(missing);
+	}
+
+	// Cellular is all there is (offline is not asked about: the download would only fail).
+	private static bool OnMobileDataOnly() =>
+		(OperatingSystem.IsAndroid() || OperatingSystem.IsIOS()) && Connectivity.Current.ConnectionProfiles.Any() && !StorytellerDefault.WifiCapable();
+
+	// "فارسی (62 MB), Svenska (58 MB)": each language the question is about, with its size when the catalogue says. Null when the grown-up cancelled the wait.
+	private async Task<string?> DescribeAsync(IReadOnlyList<string> codes, WaitController? wait)
+	{
+		CancellationToken cancel = wait?.BeginCancellable(WaitStage.PreparingVoice, AppResources.Wait_GettingVoices) ?? CancellationToken.None;
+		try
+		{
+			PackCatalogResult catalog = await TryCatalogAsync(cancel);
+			return string.Join(", ", codes.Select(code => Described(code, catalog)));
+		}
+		catch (OperationCanceledException) when (cancel.IsCancellationRequested)
+		{
+			return null;
+		}
+		finally
+		{
+			wait?.End();
+		}
+	}
+
+	private static string Described(string code, PackCatalogResult catalog)
+	{
+		string name = LanguageNames.NativeName(code);
+		PackInfo? pack = catalog.Status == PackDownloadResult.Ok ? VoicePackSelector.Select(catalog.Packs, code) : null;
+		return pack is null ? name : $"{name} ({StorytellerOffer.Megabytes(pack.SizeBytes)} MB)";
+	}
+
+	// A catalogue that takes longer than the timeout is given up on (the names show without sizes); only the grown-up's own Cancel is passed on.
+	private async Task<PackCatalogResult> TryCatalogAsync(CancellationToken userCancel)
+	{
+		using var limit = CancellationTokenSource.CreateLinkedTokenSource(userCancel);
+		limit.CancelAfter(CatalogTimeout);
+		try
+		{
+			return await _packs.GetCatalogAsync(limit.Token);
+		}
+		catch (Exception ex) when (!userCancel.IsCancellationRequested)
+		{
+			Debug.WriteLine($"Dino Reader could not read the voice catalogue: {ex.Message}");
+			return new PackCatalogResult(PackDownloadResult.Failed, []);
+		}
+	}
+
+	private void DropWaitingOutside(StoryLanguageSet set)
+	{
+		bool dropped;
+		lock (_gate)
+		{
+			dropped = _waiting.RemoveWhere(code => !set.Contains(code)) > 0;
+		}
+
+		if (dropped)
+		{
+			RaiseChanged();
+		}
+	}
+
+	private void WaitForWifi(IEnumerable<string> codes)
+	{
+		lock (_gate)
+		{
+			_waiting.UnionWith(codes);
+		}
+
+		if (Interlocked.Exchange(ref _watchingNetwork, 1) == 0)
+		{
+			Connectivity.Current.ConnectivityChanged += (_, _) => StartWaiting();
+		}
+
+		RaiseChanged();
+	}
+
+	// A phone that joins Wi-Fi starts the languages that waited for it.
+	private void StartWaiting()
+	{
+		if (!StorytellerDefault.WifiCapable())
+		{
+			return;
+		}
+
+		StoryLanguageSet current = StoryLanguages.Current();
+		string[] ready;
+		lock (_gate)
+		{
+			_waiting.RemoveWhere(code => !current.Contains(code)); // never fetch a language the grown-up no longer has
+			ready = [.. _waiting];
+		}
+
+		Array.ForEach(ready, Start);
+	}
+
+	/// <summary>Starts the download unless the voice is there or a run is already going.</summary>
+	public void Start(string language)
+	{
+		string code = UiLanguage.Resolve(language);
+		lock (_gate)
+		{
+			_waiting.Remove(code);
+		}
+
+		if (StateOf(code) != LanguageVoiceState.NotInstalled)
+		{
+			return;
+		}
+
+		var cancel = new CancellationTokenSource();
+		lock (_gate)
+		{
+			if (!_runs.TryAdd(code, cancel))
+			{
+				cancel.Dispose();
+				return;
+			}
+
+			_failed.Remove(code);
+			_progress[code] = 0;
+		}
+
+		RaiseChanged();
+		_ = Task.Run(() => RunAsync(code, cancel));
+	}
+
+	/// <summary>
+	/// Stops the download of <paramref name="language"/>; a partial file is kept for next time. The run is let go of at once, so a tick right after starts a fresh one
+	/// even while the old one is still unwinding.
+	/// </summary>
+	public void Cancel(string language)
+	{
+		string code = UiLanguage.Resolve(language);
+		CancellationTokenSource? cancel;
+		lock (_gate)
+		{
+			_waiting.Remove(code);
+			if (_runs.Remove(code, out cancel))
+			{
+				_progress.Remove(code);
+			}
+		}
+
+		RaiseChanged();
+
+		try
+		{
+			cancel?.Cancel();
+		}
+		catch (ObjectDisposedException)
+		{
+			// The run just ended.
+		}
+	}
+
+	private async Task RunAsync(string code, CancellationTokenSource cancel)
+	{
+		string? outcome; // null: another run (the first-run installer) fetched the pack while this one waited for it, so this one fetched nothing and counts nothing
+		try
+		{
+			outcome = await DownloadAsync(code, cancel);
+		}
+		catch (OperationCanceledException)
+		{
+			outcome = UsageDetail.PackCancelled;
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader could not get the {code} voice: {ex}");
+			outcome = UsageDetail.PackFailed;
+		}
+
+		lock (_gate)
+		{
+			if (IsCurrent(code, cancel))
+			{
+				_runs.Remove(code);
+				_progress.Remove(code);
+				if (outcome == UsageDetail.PackFailed)
+				{
+					_failed.Add(code);
+				}
+			}
+		}
+
+		cancel.Dispose();
+		if (outcome is not null)
+		{
+			_usage.RecordGeneral(UsageEventName.VoicePackDownload, code, outcome);
+		}
+
+		RaiseChanged();
+	}
+
+	private bool IsCurrent(string code, CancellationTokenSource run) => _runs.TryGetValue(code, out CancellationTokenSource? current) && ReferenceEquals(current, run);
+
+	private async Task<string?> DownloadAsync(string code, CancellationTokenSource run)
+	{
+		CancellationToken token = run.Token;
+		PackCatalogResult catalog = await _packs.GetCatalogAsync(token);
+		if (catalog.Status != PackDownloadResult.Ok)
+		{
+			return UsageDetail.PackFailed;
+		}
+
+		PackInfo? pack = VoicePackSelector.Select(catalog.Packs, code);
+		if (pack is null)
+		{
+			lock (_gate)
+			{
+				_noPack.Add(code); // no voice pack for this language: the phone's own voice reads it
+				StoryLanguages.SaveNoPack(_noPack);
+			}
+
+			return UsageDetail.PackDone;
+		}
+
+		if (await FetchedByAnotherRunAsync(pack.Id, code, token))
+		{
+			return null;
+		}
+
+		var progress = new InlineProgress(value => Report(code, run, value));
+		PackDownloadResult result = await _packs.DownloadAsync(pack.Id, progress, token);
+		return result == PackDownloadResult.Ok ? UsageDetail.PackDone : UsageDetail.PackFailed;
+	}
+
+	// A download of the same pack in flight (the voice installer's) holds the gate: wait for it, and when the voice is there afterwards this run has nothing to fetch.
+	private async Task<bool> FetchedByAnotherRunAsync(string packId, string code, CancellationToken token)
+	{
+		using IDisposable gate = await PackDownloadGate.EnterAsync(packId, token);
+		return LanguageChoice.IsInstalled(_packs, code);
+	}
+
+	private void Report(string code, CancellationTokenSource run, double value)
+	{
+		lock (_gate)
+		{
+			if (!IsCurrent(code, run))
+			{
+				return;
+			}
+
+			double clamped = Math.Clamp(value, 0, 1);
+			if ((int)(clamped * PercentScale) == (int)(_progress.GetValueOrDefault(code) * PercentScale))
+			{
+				return; // a tick inside the same percent changes nothing on screen
+			}
+
+			_progress[code] = clamped;
+		}
+
+		RaiseChanged();
+	}
+
+	private void RaiseChanged() => MainThread.BeginInvokeOnMainThread(() => Changed?.Invoke(this, EventArgs.Empty));
+
+	private sealed class InlineProgress(Action<double> report) : IProgress<double>
+	{
+		public void Report(double value) => report(value);
+	}
+}

@@ -25,57 +25,85 @@ public enum OwnTranslationOutcome
 /// <summary>
 /// Offers the translation of a parent's own book on the phone (Slice 159, Decision 164): nothing downloads on its own. When the language pack is missing the
 /// parent is told it is about 30 MB and asked; Download waits behind the page's overlay with Cancel; declining shows the book in its own language this time and changes nothing saved. Once the
-/// pack is there the text and title are translated and saved inside the book.
+/// pack is there the text and title are translated and saved inside the book. Only a grown-up screen offers it (the book save, Settings > Story languages);
+/// the child's reading screen never starts or offers a download (Slice 173).
 /// </summary>
 public sealed class TranslationPackPrompt(StoryTranslator translator, IStoryLibrary library)
 {
+	private const int PackMegabytes = 30;
+
 	/// <param name="host">The page the question is shown on.</param>
 	/// <param name="beginWait">Starts the page's cancellable wait (the token is cancelled by its Cancel button).</param>
 	/// <param name="endWait">Ends that wait.</param>
-	public async Task<OwnTranslationOutcome> OfferAsync(Page host, string storyId, Func<WaitStage, string, CancellationToken> beginWait, Action endWait)
+	/// <param name="only">The story languages to translate into (Settings asks for the one just ticked); null means every story language (the parent's save).</param>
+	public async Task<OwnTranslationOutcome> OfferAsync(
+		Page host, string storyId, Func<WaitStage, string, CancellationToken> beginWait, Action endWait, IReadOnlyCollection<string>? only = null)
 	{
-		if (await library.GetAsync(storyId) is not { } story || !translator.NeedsOwnTranslation(story))
+		if (await library.GetAsync(storyId) is not { } story || !translator.NeedsOwnTranslation(story, only))
 		{
 			return OwnTranslationOutcome.NotNeeded;
 		}
 
-		IReadOnlyList<string> missing = await translator.MissingPacksAsync(story);
-		if (missing.Count > 0 && !await DownloadAsync(host, story, missing, beginWait, endWait))
+		IReadOnlyList<string> missing = await translator.MissingPacksAsync(story, only);
+		if (missing.Count > 0 && !await DownloadAsync(host, story, missing, only, beginWait, endWait))
 		{
 			return OwnTranslationOutcome.KeptOriginal;
 		}
 
-		return await TranslateAsync(story, beginWait, endWait) ? OwnTranslationOutcome.Saved : OwnTranslationOutcome.Stopped;
+		IReadOnlyList<string> ready = await translator.TranslatableTargetsAsync(story, only);
+		return await TranslateAsync(story, ready, beginWait, endWait) ? OwnTranslationOutcome.Saved : OwnTranslationOutcome.Stopped;
 	}
 
-	private async Task<bool> DownloadAsync(Page host, Story story, IReadOnlyList<string> missing, Func<WaitStage, string, CancellationToken> beginWait, Action endWait)
+	/// <summary>
+	/// Offers every own book that is still missing its table for <paramref name="language"/> (a language the grown-up just ticked) the pack and the translation. The pack
+	/// question is asked once (the first book that needs it); once declined the other books are left alone.
+	/// </summary>
+	public async Task OfferForLanguageAsync(Page host, string language, Func<WaitStage, string, CancellationToken> beginWait, Action endWait)
 	{
-		string name = LanguageNames.NativeName(StoryTranslator.MyLanguage);
+		IReadOnlyList<Story> stories = await library.ListAsync();
+		foreach (Story story in stories.Where(story => translator.NeedsOwnTranslationIn(story, language)))
+		{
+			OwnTranslationOutcome outcome = await OfferAsync(host, story.Id, beginWait, endWait, [UiLanguage.Resolve(language)]);
+			if (outcome is OwnTranslationOutcome.KeptOriginal or OwnTranslationOutcome.Stopped) // a Cancel on the wait ends the whole offer, not just this book
+			{
+				return;
+			}
+		}
+	}
+
+	// "English (30 MB), فارسی (30 MB)": every pack that will download, each with its size.
+	private static string Described(IEnumerable<string> languages) =>
+		string.Join(", ", languages.Select(language => $"{LanguageNames.NativeName(language)} ({PackMegabytes} MB)"));
+
+	private async Task<bool> DownloadAsync(
+		Page host, Story story, IReadOnlyList<string> missing, IReadOnlyCollection<string>? only, Func<WaitStage, string, CancellationToken> beginWait, Action endWait)
+	{
+		string targets = string.Join(", ", (only ?? StoryLanguages.Current().All).Select(LanguageNames.NativeName));
 		bool agreed = await host.DisplayAlertAsync(
-			AppResources.Format(AppResources.TranslationPack_Title, name), AppResources.Format(AppResources.TranslationPack_Body, name),
+			AppResources.TranslationPack_TitleNamed, AppResources.Format(AppResources.TranslationPack_BodyNamed, targets, Described(missing)),
 			AppResources.TranslationPack_Download, AppResources.TranslationPack_Keep);
 		if (!agreed)
 		{
 			return false;
 		}
 
-		CancellationToken cancel = beginWait(WaitStage.DownloadingModel, AppResources.Format(AppResources.Wait_DownloadingPack, name));
+		CancellationToken cancel = beginWait(WaitStage.DownloadingModel, AppResources.Format(AppResources.Wait_DownloadingPack, string.Join(", ", missing.Select(LanguageNames.NativeName))));
 		bool ended = false;
 		try
 		{
-			await translator.DownloadPacksAsync(missing, null, cancel);
-			return true;
-		}
-		catch (OperationCanceledException)
-		{
-			return false;
-		}
-		catch (TranslationModelUnavailableException ex)
-		{
-			Debug.WriteLine($"Dino Reader could not get the translation pack: {ex.Message}");
+			IReadOnlyList<string> failed = await translator.DownloadPacksAsync(missing, null, cancel);
+			if (failed.Count == 0 || (await translator.TranslatableTargetsAsync(story, only)).Count > 0)
+			{
+				return true; // a pack that failed only costs the languages that need it; the others carry on
+			}
+
 			endWait(); // the alert needs the overlay gone; the finally must not end a wait another screen began meanwhile
 			ended = true;
 			await host.DisplayAlertAsync(AppResources.App_Name, AppResources.TranslationPack_Failed, AppResources.Common_Ok);
+			return false;
+		}
+		catch (OperationCanceledException)
+		{
 			return false;
 		}
 		finally
@@ -87,12 +115,12 @@ public sealed class TranslationPackPrompt(StoryTranslator translator, IStoryLibr
 		}
 	}
 
-	private async Task<bool> TranslateAsync(Story story, Func<WaitStage, string, CancellationToken> beginWait, Action endWait)
+	private async Task<bool> TranslateAsync(Story story, IReadOnlyList<string> targets, Func<WaitStage, string, CancellationToken> beginWait, Action endWait)
 	{
 		CancellationToken cancel = beginWait(WaitStage.Translating, AppResources.Wait_Translating);
 		try
 		{
-			return await translator.SaveOwnTranslationAsync(story, cancel);
+			return await translator.SaveOwnTranslationAsync(story, targets, cancel);
 		}
 		catch (OperationCanceledException)
 		{

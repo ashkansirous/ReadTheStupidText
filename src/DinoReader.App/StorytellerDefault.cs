@@ -383,7 +383,7 @@ public sealed class StorytellerDefault
 	}
 
 	// Wi-Fi or Ethernet among the active links is enough, even with mobile data also listed (Android reports both); only a cellular-only phone waits.
-	private static bool WifiCapable() => StorytellerNetworkPolicy.AllowsAutomaticDownload(Connectivity.Current.ConnectionProfiles.Select(ToProfile));
+	internal static bool WifiCapable() => StorytellerNetworkPolicy.AllowsAutomaticDownload(Connectivity.Current.ConnectionProfiles.Select(ToProfile));
 
 	private static NetworkProfile ToProfile(ConnectionProfile profile) => profile switch
 	{

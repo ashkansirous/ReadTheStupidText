@@ -93,7 +93,7 @@ New strings (14 languages): `Settings_Title`, "Books", "Add, edit, Store", group
 
 *Verified:* Dino tests 1645; Android, iOS compile and Windows head builds. Emulator: gear, gate, Settings, every sub-page and Back, narrator per language, language change reopens Settings, replay ends in kids' mode, Books row -> Add + Store, Back -> kids' shelf, narrator page opened 3x, truncation. Windows VM: launch, open book and page turn pass, gear visible, gate shown.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-28)
 
 Already written into `src/DinoReader.App/CLAUDE.md` by the build (the "Dino settings" rule, the changed grown-up mode and AddBook rules), each linked to this slice. Nothing further to lift.
 

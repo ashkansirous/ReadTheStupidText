@@ -1,6 +1,6 @@
 # Slice 173 — Dino: up to three story languages, switched by the kid
 
-*In progress (wave 2026-10-28c), draft PR (planned 2026-10-28).* Dino Reader only (Android, iOS and the Windows head).
+*Built 2026-10-28 (wave 2026-10-28c), not yet verified on iOS or a phone; planned 2026-10-28.* Dino Reader only (Android, iOS and the Windows head).
 
 **Batch:** 37 (Dino settings, 2026-10-28; Decision 168). Builds **after Slice 172** (it needs the Settings page).
 **Touches:** `src/DinoReader.App/StoryLanguages.cs` (new), `src/DinoReader.App/StoryLanguagesPage.cs` (new), `src/DinoReader.App/StoryLanguageButton.cs` (new), `src/DinoReader.App/IntroWizardPage.cs`, `src/DinoReader.App/IntroWizardPage.Art.cs`, `src/DinoReader.App/SettingsPage.cs`, `src/DinoReader.App/LanguagePage.xaml.cs`, `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/StoryTranslator.cs`, `src/DinoReader.App/GalleryPage.xaml.cs` (titles stay in the main language), `src/DinoReader.App/UsageCounter.cs`, `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/Resources/Strings/*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `src/DinoReader.Core/UsageEvent.cs`, `src/DinoReader.Core/StoryLanguageSet.cs` (new, pure rules), `worker/events.ts`, `worker/*.test.ts`, `tools/dino-usage-report.ps1`, `site/dino/privacy.html`, `STORE.md`, `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`
@@ -68,21 +68,25 @@ New strings (14 languages): the step title and sub-line, "App language", "Skip, 
 
 ## Work
 
-- [ ] **First end-to-end piece:** pure `StoryLanguageSet` (main + up to two sides, the swap/ask rules) with unit tests;
+- [x] **First end-to-end piece:** pure `StoryLanguageSet` (main + up to two sides, the swap/ask rules) with unit tests;
       a Story languages row in Settings that lets the parent tick side languages (voice pack downloads with progress);
       the reading-page flag button switching text, voice and title for starter/store books. Android and iOS.
-- [ ] Intro wizard: a final "Story languages" step before the hand-over, with Skip (Skip = main only).
-- [ ] Hide the button for recorded books, "Show original text" books and own books on Windows.
-- [ ] Own books: `TranslationPackPrompt` offers every story language's pack; the reader falls back to the book's own
+- [x] Intro wizard: a final "Story languages" step before the hand-over, with Skip (Skip = main only).
+- [x] Hide the button for recorded books, "Show original text" books and own books on Windows.
+- [x] Own books: `TranslationPackPrompt` offers every story language's pack; the reader falls back to the book's own
       language (button hidden for the missing language) when a pack isn't there.
-- [ ] Main-language change in Settings: swap, or ask which side to drop.
-- [ ] Telemetry: the four events above in `UsageEvent.cs`, `UsageCounter`, `worker/events.ts` (+ tests), the report
+- [x] Main-language change in Settings: swap, or ask which side to drop.
+- [x] Telemetry: the four events above in `UsageEvent.cs`, `UsageCounter`, `worker/events.ts` (+ tests), the report
       script, `site/dino/privacy.html`, `STORE.md` notes for Play Data safety / App Store privacy.
-- [ ] Strings (14 languages, 13 drafts): wizard step, Settings row and page, the "which one to drop" question, the
+- [x] Strings (14 languages, 13 drafts): wizard step, Settings row and page, the "which one to drop" question, the
       button's accessibility label.
-- [ ] Windows head: the Settings row and the button for starter/store books.
-- [ ] `src/DinoReader.App/CLAUDE.md`: story languages vs the app language; grown-up screens and store never follow the
+- [x] Windows head: the Settings row and the button for starter/store books.
+- [x] `src/DinoReader.App/CLAUDE.md`: story languages vs the app language; grown-up screens and store never follow the
       kid's pick.
+
+*Built per mock frames 79, 86-90:* `StoryLanguageSet` (Core: app language plus up to two sides); the kid's story-language button on the shelf (2-3 installed languages) and on the Slice 174 reading screen; Settings > Story languages (download with progress and Cancel; on Android/iOS a mobile-data "Wait for Wi-Fi / Download now" prompt; own-book translation packs offered when a language is ticked); intro step 4; the "which one goes" sheet on an app-language change; four usage events (closed-list fields, production-only gate) in `UsageEvent.cs`, `worker/events.ts` (+ tests), the report script, the privacy page and `STORE.md`.
+
+*Changed while building / from review (two review rounds, third pass in `reviews/173-review3.md`):* the child's pick is a reading-session language held by `ReadingSession` and passed explicitly to translation, voicing and a scoped speak call (`IReadScoped` / `IModelScopedSegmentReader` on Android, iOS and Windows); the stored language is never changed from the child side. The child sees only languages whose voice (and, for own books, translation pack) is installed, and nothing on the child side starts or offers a download. A picked language's engine is warmed in the background (Slice 177's warm-up). A foreign book read with the phone voice for want of a pack shows that pack as Download in Settings; the no-pack state persists (`dino.story.nopack`). Sides commit on page disappearing too.
 
 ## Verification
 
@@ -96,3 +100,23 @@ New strings (14 languages): the step title and sub-line, "App language", "Skip, 
 - Windows head: Settings row, button on a starter book, no button on an own book.
 - Telemetry: the new events reach the dev endpoint only from a production build path; tests block the endpoint.
 - Native read of the new strings (13 drafts) and the store privacy forms go to Outstanding work.
+
+*Verified 2026-10-28:* dotnet tests 1485 (+2 skipped) and 1666; worker 87 tests + typecheck; Android, iOS compile and Windows head builds. Emulator: shelf and reading buttons, Farsi read from the pack, pick survives restart, grown-up pages keep the stored language, swipe-back keeps the choice, Settings download with progress/Cancel and re-tick, intro step 4, which-one-goes sheet Cancel, a side without a voice ignored silently, own-book pack offered on tick.
+
+#### For CLAUDE.md
+
+- Story languages (`src/DinoReader.App/CLAUDE.md`): the child's pick is a reading-session language held by `ReadingSession` and passed explicitly to translation, voicing and the scoped speak call (`IReadScoped` / `IModelScopedSegmentReader`); never write it to the stored story language, and grown-up screens and the store never follow it. The child side lists only languages whose voice (and for own books the translation pack) is installed and never starts or offers a download. (Slice 173: docs/plan/slices/173-dino-kid-story-languages.md)
+
+#### For README.md
+
+None.
+
+#### Not yet verified
+
+- The mobile-data "Wait for Wi-Fi / Download now" prompt (the emulator has Wi-Fi).
+- A persisted no-pack language (`dino.story.nopack`) after restart (Farsi had a pack).
+- The translation-pack size is a fixed "30 MB" (ML Kit has no catalogue size).
+- iOS run (no Mac) and the real phone.
+- Windows VM check: result pending.
+- Native read of the new strings in 13 languages.
+- Store privacy forms for the new events (user's lane).

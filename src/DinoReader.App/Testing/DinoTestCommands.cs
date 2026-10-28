@@ -113,7 +113,7 @@ internal static class DinoTestCommands
 			return;
 		}
 
-		ReadingPage? reading = await MainThread.InvokeOnMainThreadAsync(() => OpenReadingAsync(services, root, story));
+		ReadingPage? reading = await MainThread.InvokeOnMainThreadAsync(() => ReadingForAsync(services, root, story));
 		if (reading is null)
 		{
 			Log($"{Name} failed no reading screen");
@@ -136,7 +136,7 @@ internal static class DinoTestCommands
 		return root.Navigation.NavigationStack.LastOrDefault() as ReadingPage;
 	}
 
-	// The states in which a child cannot open a book from the gallery: grown-up mode (a tap edits), the intro wizard over the gallery, a reading screen already open.
+	// The states in which a child cannot open a book from the gallery: grown-up mode (a tap edits), the intro wizard over the gallery (a reading screen already open is reused).
 	private static string? Refusal(NavigationPage root, GrownUpMode mode)
 	{
 		if (mode.IsGrownUp)
@@ -149,7 +149,25 @@ internal static class DinoTestCommands
 			return "intro";
 		}
 
-		return root.Navigation.NavigationStack.Any(p => p is ReadingPage) ? "reading open" : null;
+		return null;
+	}
+
+	// Slice 177: the reading screen on top of the stack is reused only when it is a ReadingPage loaded for this same book (a second read in the same
+	// process, the warm timing run). Any other ReadingPage in the stack (under another page, or for another book) is closed first by going back to the
+	// gallery, so a second reading screen is never pushed. On the UI thread, which owns the navigation stack.
+	private static async Task<ReadingPage?> ReadingForAsync(IServiceProvider services, NavigationPage root, Story story)
+	{
+		if (root.Navigation.NavigationStack.LastOrDefault() is ReadingPage top && top.LoadedStoryId == story.Id)
+		{
+			return top;
+		}
+
+		if (root.Navigation.NavigationStack.Any(p => p is ReadingPage))
+		{
+			await root.Navigation.PopToRootAsync();
+		}
+
+		return await OpenReadingAsync(services, root, story);
 	}
 
 	// The gallery is the root of the window's navigation once first run is done; before that there is nothing to open a book from.

@@ -342,10 +342,29 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Dyrelyder</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Dyrene sier av og til «Nøff!» eller «Bæ!», i alle bøker</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Det er flere figurer i boken enn de {0} fortellerfigurene vi har, så noen høres like ut. Fortelleren blir aldri gitt til en figur.</value></data>
-  <data name="TranslationPack_Title" xml:space="preserve"><value>Laste ned oversettelsespakken for {0}?</value></data>
-  <data name="TranslationPack_Body" xml:space="preserve"><value>For å vise og lese denne boka på {0} trenger Dino Reader en oversettelsespakke på omtrent 30 MB. Den blir på denne enheten. Hopper du over, blir boka på sitt eget språk.</value></data>
+  <data name="TranslationPack_TitleNamed" xml:space="preserve"><value>Laste ned oversettelsespakker?</value></data>
+  <data name="TranslationPack_BodyNamed" xml:space="preserve"><value>For å vise og lese denne boken på {0} trenger Dino Reader disse oversettelsespakkene: {1}. De blir på denne enheten. Hvis du hopper over dem, forblir boken på sitt eget språk.</value></data>
   <data name="TranslationPack_Download" xml:space="preserve"><value>Last ned</value></data>
   <data name="TranslationPack_Keep" xml:space="preserve"><value>Behold originalen</value></data>
   <data name="TranslationPack_Failed" xml:space="preserve"><value>Fikk ikke tak i oversettelsespakken. Boka blir på sitt eget språk.</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>Henter oversettelsespakken for {0}…</value></data>
+  <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>Hvilke språk skal historiene være på?</value></data>
+  <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>Velg opptil to til. Barnet ditt kan bytte mens det leser.</value></data>
+  <data name="StoryLanguages_AppLanguage" xml:space="preserve"><value>Appspråk</value></data>
+  <data name="StoryLanguages_SkipOnly" xml:space="preserve"><value>Hopp over, bare {0}</value></data>
+  <data name="StoryLanguages_Getting" xml:space="preserve"><value>Gjør stemmen klar · {0} %</value></data>
+  <data name="StoryLanguages_Full" xml:space="preserve"><value>Tre valgt. Fjern en hake for å velge en annen.</value></data>
+  <data name="StoryLanguages_SettingsTitle" xml:space="preserve"><value>Historiespråk</value></data>
+  <data name="StoryLanguages_SettingsLine" xml:space="preserve"><value>Barnet ditt kan bytte mellom disse mens det leser. Opptil tre.</value></data>
+  <data name="StoryLanguages_DropTitle" xml:space="preserve"><value>{0} er nå appspråket</value></data>
+  <data name="StoryLanguages_DropBody" xml:space="preserve"><value>Historier kan være på høyst tre språk. Hvilket skal fjernes?</value></data>
+  <data name="StoryLanguages_Remove" xml:space="preserve"><value>Fjern {0}</value></data>
+  <data name="StoryLanguages_WasApp" xml:space="preserve"><value>Var appspråket</value></data>
+  <data name="StoryLanguages_ButtonLabel" xml:space="preserve"><value>Historiespråk: {0}</value></data>
+  <data name="StoryLanguages_Failed" xml:space="preserve"><value>Kunne ikke hente stemmen. Trykk for å prøve igjen.</value></data>
+  <data name="StoryLanguages_WifiTitle" xml:space="preserve"><value>Laste ned med mobildata?</value></data>
+  <data name="StoryLanguages_WifiBody" xml:space="preserve"><value>Du er ikke på Wi-Fi. {0} lastes ned med mobildata.</value></data>
+  <data name="StoryLanguages_WifiNow" xml:space="preserve"><value>Last ned nå</value></data>
+  <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>Vent på Wi-Fi</value></data>
+  <data name="StoryLanguages_WifiWaiting" xml:space="preserve"><value>Venter på Wi-Fi</value></data>
 </root>

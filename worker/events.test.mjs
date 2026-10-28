@@ -280,6 +280,38 @@ test("Dino takes the intro counts about no book, with a closed detail (Slice 155
   assert.equal(parseEvent({ ...intro, name: "intro_ended", detail: "finished", book: BOOK, source: "shelf" }), null);
 });
 
+test("Dino takes the story-language counts with closed details (Slice 173)", () => {
+  const noBook = { ...shelfEvent, book: "none", source: "none", language: "fa" };
+  assert.notEqual(parseEvent({ ...noBook, name: "story_languages_set", detail: "2:settings" }), null);
+  assert.notEqual(parseEvent({ ...noBook, name: "story_languages_set", detail: "1:intro" }), null);
+  for (const detail of ["", "2", "4:intro", "2:store", "2:intro:x", ":intro", "two:intro"]) {
+    assert.equal(parseEvent({ ...noBook, name: "story_languages_set", detail }), null, detail);
+  }
+  assert.notEqual(parseEvent({ ...noBook, name: "story_language_added" }), null);
+  assert.equal(parseEvent({ ...noBook, name: "story_language_added", detail: "fa" }), null);
+  for (const detail of ["done", "failed", "cancelled"]) {
+    assert.notEqual(parseEvent({ ...noBook, name: "voice_pack_download", detail }), null, detail);
+  }
+  for (const detail of ["", "ok", "done:x"]) {
+    assert.equal(parseEvent({ ...noBook, name: "voice_pack_download", detail }), null, detail);
+  }
+});
+
+test("a story-language switch is about a shelf book, an own book or no book (the shelf button), never a book id for the wrong source", () => {
+  const switched = { ...shelfEvent, name: "story_language_switched", language: "fa" };
+  assert.notEqual(parseEvent(switched), null);
+  assert.notEqual(parseEvent({ ...switched, book: "own", source: "own" }), null);
+  assert.notEqual(parseEvent({ ...switched, book: "none", source: "none" }), null);
+  assert.equal(parseEvent({ ...switched, book: "own", source: "shelf" }), null);
+  assert.equal(parseEvent({ ...switched, detail: "fa" }), null);
+});
+
+test("the intro counts take the story-languages step (Slice 173)", () => {
+  const intro = { ...shelfEvent, book: "none", source: "none", language: "en", name: "intro_step" };
+  assert.notEqual(parseEvent({ ...intro, detail: "languages:tried" }), null);
+  assert.notEqual(parseEvent({ ...intro, detail: "languages:skipped" }), null);
+});
+
 test("the Windows translate switch count needs no source language, but a source outside the list drops a read", () => {
   assert.notEqual(parseRtstEvent(rtst("translate_chosen", { language: "en" })), null);
   assert.equal(parseRtstEvent({ ...readStarted, source: "window title" }), null);

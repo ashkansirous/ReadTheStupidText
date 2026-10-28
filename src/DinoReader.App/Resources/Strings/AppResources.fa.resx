@@ -343,10 +343,29 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>صدای حیوان‌ها</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>حیوان‌ها گاهی «خرخر!» یا «بع بع!» می‌گویند، در همهٔ کتاب‌ها</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>این کتاب شخصیت‌های بیشتری از {0} شخصیت قصه‌گوی موجود دارد، پس بعضی‌ها یک‌جور صدا می‌دهند. راوی هیچ‌وقت به شخصیتی داده نمی‌شود.</value></data>
-  <data name="TranslationPack_Title" xml:space="preserve"><value>بسته‌ی ترجمه به {0} دانلود شود؟</value></data>
-  <data name="TranslationPack_Body" xml:space="preserve"><value>برای نشان دادن و خواندن این کتاب به {0}، Dino Reader به یک بسته‌ی ترجمه حدود ۳۰ مگابایتی نیاز دارد. این بسته روی همین دستگاه می‌ماند. اگر رد کنید، کتاب به زبان خودش می‌ماند.</value></data>
+  <data name="TranslationPack_TitleNamed" xml:space="preserve"><value>بسته‌های ترجمه دانلود شوند؟</value></data>
+  <data name="TranslationPack_BodyNamed" xml:space="preserve"><value>برای نشان دادن و خواندن این کتاب به {0}، Dino Reader به این بسته‌های ترجمه نیاز دارد: {1}. آن‌ها روی همین دستگاه می‌مانند. اگر رد کنید، کتاب به زبان خودش می‌ماند.</value></data>
   <data name="TranslationPack_Download" xml:space="preserve"><value>دانلود</value></data>
   <data name="TranslationPack_Keep" xml:space="preserve"><value>نگه داشتن اصل کتاب</value></data>
   <data name="TranslationPack_Failed" xml:space="preserve"><value>بسته‌ی ترجمه گرفته نشد. کتاب به زبان خودش می‌ماند.</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>در حال گرفتن بسته‌ی ترجمه به {0}…</value></data>
+  <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>قصه‌ها به چه زبان‌هایی باشند؟</value></data>
+  <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>تا دو زبان دیگر انتخاب کنید. فرزندتان می‌تواند هنگام خواندن زبان را عوض کند.</value></data>
+  <data name="StoryLanguages_AppLanguage" xml:space="preserve"><value>زبان برنامه</value></data>
+  <data name="StoryLanguages_SkipOnly" xml:space="preserve"><value>رد شدن، فقط {0}</value></data>
+  <data name="StoryLanguages_Getting" xml:space="preserve"><value>در حال آماده‌سازی صدا · {0}%</value></data>
+  <data name="StoryLanguages_Full" xml:space="preserve"><value>سه زبان انتخاب شده است. برای انتخاب زبانی دیگر، یکی را بردارید.</value></data>
+  <data name="StoryLanguages_SettingsTitle" xml:space="preserve"><value>زبان‌های قصه</value></data>
+  <data name="StoryLanguages_SettingsLine" xml:space="preserve"><value>فرزندتان می‌تواند هنگام خواندن میان این زبان‌ها جابه‌جا شود. حداکثر سه زبان.</value></data>
+  <data name="StoryLanguages_DropTitle" xml:space="preserve"><value>{0} اکنون زبان برنامه است</value></data>
+  <data name="StoryLanguages_DropBody" xml:space="preserve"><value>قصه‌ها حداکثر می‌توانند به سه زبان باشند. کدام حذف شود؟</value></data>
+  <data name="StoryLanguages_Remove" xml:space="preserve"><value>حذف {0}</value></data>
+  <data name="StoryLanguages_WasApp" xml:space="preserve"><value>زبان قبلی برنامه</value></data>
+  <data name="StoryLanguages_ButtonLabel" xml:space="preserve"><value>زبان قصه: {0}</value></data>
+  <data name="StoryLanguages_Failed" xml:space="preserve"><value>صدا دریافت نشد. برای تلاش دوباره ضربه بزنید.</value></data>
+  <data name="StoryLanguages_WifiTitle" xml:space="preserve"><value>با داده تلفن همراه دانلود شود؟</value></data>
+  <data name="StoryLanguages_WifiBody" xml:space="preserve"><value>به Wi-Fi وصل نیستید. {0} با داده تلفن همراه دانلود می‌شود.</value></data>
+  <data name="StoryLanguages_WifiNow" xml:space="preserve"><value>همین حالا دانلود کن</value></data>
+  <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>منتظر Wi-Fi بمان</value></data>
+  <data name="StoryLanguages_WifiWaiting" xml:space="preserve"><value>در انتظار Wi-Fi</value></data>
 </root>

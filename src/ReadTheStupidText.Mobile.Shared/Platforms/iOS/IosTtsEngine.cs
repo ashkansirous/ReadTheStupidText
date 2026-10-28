@@ -12,8 +12,48 @@ namespace ReadTheStupidText.Mobile.Shared;
 internal sealed class IosRefCountedTts(OfflineTts tts)
 {
     private int _references = 1;
+    private readonly object _warmLock = new();
+    private bool _synthesized;
+    private int _active;
 
     public OfflineTts Tts { get; } = tts;
+
+    /// <summary>Slice 177: a read is about to synthesise here; waits for a warm-up in progress, and keeps a new warm-up off the engine until <see cref="EndSynthesis"/>.</summary>
+    public void BeginSynthesis()
+    {
+        lock (_warmLock)
+        {
+            _active++;
+        }
+    }
+
+    /// <summary>A synthesis begun with <see cref="BeginSynthesis"/> ended; only one that completed makes the engine warm.</summary>
+    public void EndSynthesis(bool completed)
+    {
+        lock (_warmLock)
+        {
+            _active--;
+            _synthesized |= completed;
+        }
+    }
+
+    /// <summary>Runs <paramref name="synthesize"/> only if nothing has synthesised on this engine yet and no read is synthesising on it; the engine counts as warm once it completes.</summary>
+    public void WarmOnce(Action synthesize)
+    {
+        lock (_warmLock)
+        {
+            if (_synthesized || _active > 0)
+            {
+                return;
+            }
+
+            synthesize();
+            _synthesized = true;
+        }
+    }
+
+    /// <summary>References held right now, the cache's own included.</summary>
+    public int References => Volatile.Read(ref _references);
 
     public bool IsAlive => Volatile.Read(ref _references) > 0;
 
@@ -51,6 +91,9 @@ internal sealed record IosBuiltEngine(IosRefCountedTts Tts, VoiceModelPaths Mode
     public bool TryAcquire() => Tts.TryAcquire();
 
     public void Release() => Tts.Release();
+
+    // The cache holds one reference; any more is a read or generation.
+    public bool InUse => Tts.References > 1;
 }
 
 /// <summary>
@@ -98,6 +141,23 @@ internal static class IosTtsEngine
         var config = new OfflineTtsGenerationConfig { Sid = speakerId, Speed = pace };
         config.Extra[SupertonicLanguageKey] = model.Language;
         return engine.Tts.Tts.GenerateWithConfig(text, config, KeepGenerating);
+    }
+
+    /// <summary>Slice 177: <see cref="Generate"/> for a read: waits for a warm-up in progress and marks the engine warm only once it has completed.</summary>
+    public static OfflineTtsGeneratedAudio GenerateTracked(IosBuiltEngine engine, string text, int speakerId, float pace)
+    {
+        engine.Tts.BeginSynthesis();
+        bool completed = false;
+        try
+        {
+            OfflineTtsGeneratedAudio audio = Generate(engine, text, speakerId, pace);
+            completed = true;
+            return audio;
+        }
+        finally
+        {
+            engine.Tts.EndSynthesis(completed);
+        }
     }
 
     // Returning 1 tells sherpa-onnx to keep generating (0 would stop early).

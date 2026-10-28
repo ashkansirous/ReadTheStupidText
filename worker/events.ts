@@ -38,11 +38,15 @@ const VOICE_CHANGES = ["character_voice", "flavour", "narrator"] as const;
 /** The waits the phone apps' overlay can show (WaitStage in the app, Slice 148); both products count them, and a test keeps this list and the app's `UsageWaitStage` the same. */
 const WAIT_STAGES = ["preparing_voice", "stalled", "downloading_model", "translating", "reading_pictures", "saving", "getting_file"] as const;
 const WAIT_DETAIL_SEPARATOR = ":";
-// The first-run intro (Slice 155): three steps (no read step), each tried or skipped; it starts from the first run or a replay and ends finished or skipped all.
-const INTRO_STEPS = ["store", "record", "add"] as const;
+// The first-run intro (Slice 155; Slice 173 added the story languages step): four steps (no read step), each tried or skipped; it starts from the first run or a replay and ends finished or skipped all.
+const INTRO_STEPS = ["store", "record", "add", "languages"] as const;
 const INTRO_ACTIONS = ["tried", "skipped"] as const;
 const INTRO_STARTS = ["first_run", "replay"] as const;
 const INTRO_ENDS = ["finished", "skipped_all"] as const;
+// Story languages (Slice 173): the set saved at "<count of story languages>:<where>", and a voice pack download's outcome.
+const STORY_LANGUAGE_COUNTS = ["1", "2", "3"] as const;
+const STORY_LANGUAGE_WHERE = ["intro", "settings"] as const;
+const PACK_OUTCOMES = ["done", "failed", "cancelled"] as const;
 
 // ---- Device context (Slice 166) ------------------------------------------------------------------------------------------
 // Both apps send the coarse device facts once per batch in an optional `device` object; the Worker checks each field against a closed
@@ -144,6 +148,12 @@ const introStepDetail = (value: unknown): boolean => {
   return parts.length === 2 && oneOf(INTRO_STEPS, parts[0]) && oneOf(INTRO_ACTIONS, parts[1]);
 };
 
+// A story-languages count's detail is "<count>:<where>", like "2:settings" (Slice 173): both halves come from closed lists.
+const storyLanguagesDetail = (value: unknown): boolean => {
+  const parts = typeof value === "string" ? value.split(WAIT_DETAIL_SEPARATOR) : [];
+  return parts.length === 2 && oneOf(STORY_LANGUAGE_COUNTS, parts[0]) && oneOf(STORY_LANGUAGE_WHERE, parts[1]);
+};
+
 // Slice 133 events carry no detail; Slice 134 added the rest. Anything not named here is dropped.
 const EVENT_RULES: Readonly<Record<string, EventRule>> = {
   book_opened: { sources: BOOK_SOURCES, detail: emptyDetail },
@@ -159,6 +169,10 @@ const EVENT_RULES: Readonly<Record<string, EventRule>> = {
   intro_started: { sources: [NO_BOOK], detail: detailIn(INTRO_STARTS) },
   intro_step: { sources: [NO_BOOK], detail: introStepDetail },
   intro_ended: { sources: [NO_BOOK], detail: detailIn(INTRO_ENDS) },
+  story_languages_set: { sources: [NO_BOOK], detail: storyLanguagesDetail },
+  story_language_added: { sources: [NO_BOOK], detail: emptyDetail },
+  story_language_switched: { sources: [...BOOK_SOURCES, NO_BOOK], detail: emptyDetail },
+  voice_pack_download: { sources: [NO_BOOK], detail: detailIn(PACK_OUTCOMES) },
 };
 const LANGUAGE_PATTERN = /^[a-z]{2,3}(-[A-Za-z]{2,4})?$/;
 const VERSION_PATTERN = /^\d{1,6}(\.\d{1,6}){1,3}$/;

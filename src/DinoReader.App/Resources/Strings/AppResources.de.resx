@@ -344,10 +344,29 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Tierlaute</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Tiere sagen ab und zu „Grunz!“ oder „Mäh!“, in jedem Buch</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Dieses Buch hat mehr Figuren als die {0} Erzählerfiguren, die es gibt, deshalb klingen manche gleich. Der Erzähler wird nie an eine Figur vergeben.</value></data>
-  <data name="TranslationPack_Title" xml:space="preserve"><value>Das Übersetzungspaket für {0} herunterladen?</value></data>
-  <data name="TranslationPack_Body" xml:space="preserve"><value>Um dieses Buch auf {0} zu zeigen und zu lesen, braucht Dino Reader ein Übersetzungspaket von etwa 30 MB. Es bleibt auf diesem Gerät. Wenn du es überspringst, bleibt das Buch in seiner eigenen Sprache.</value></data>
+  <data name="TranslationPack_TitleNamed" xml:space="preserve"><value>Übersetzungspakete herunterladen?</value></data>
+  <data name="TranslationPack_BodyNamed" xml:space="preserve"><value>Um dieses Buch auf {0} anzuzeigen und vorzulesen, braucht Dino Reader diese Übersetzungspakete: {1}. Sie bleiben auf diesem Gerät. Wenn du sie überspringst, bleibt das Buch in seiner eigenen Sprache.</value></data>
   <data name="TranslationPack_Download" xml:space="preserve"><value>Herunterladen</value></data>
   <data name="TranslationPack_Keep" xml:space="preserve"><value>Original behalten</value></data>
   <data name="TranslationPack_Failed" xml:space="preserve"><value>Das Übersetzungspaket ließ sich nicht holen. Das Buch bleibt in seiner eigenen Sprache.</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>Das Übersetzungspaket für {0} wird geholt …</value></data>
+  <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>In welchen Sprachen sollen die Geschichten sein?</value></data>
+  <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>Wähle bis zu zwei weitere. Dein Kind kann beim Lesen wechseln.</value></data>
+  <data name="StoryLanguages_AppLanguage" xml:space="preserve"><value>App-Sprache</value></data>
+  <data name="StoryLanguages_SkipOnly" xml:space="preserve"><value>Überspringen, nur {0}</value></data>
+  <data name="StoryLanguages_Getting" xml:space="preserve"><value>Stimme wird vorbereitet · {0} %</value></data>
+  <data name="StoryLanguages_Full" xml:space="preserve"><value>Drei gewählt. Entferne eine, um eine andere zu wählen.</value></data>
+  <data name="StoryLanguages_SettingsTitle" xml:space="preserve"><value>Geschichtensprachen</value></data>
+  <data name="StoryLanguages_SettingsLine" xml:space="preserve"><value>Dein Kind kann beim Lesen zwischen diesen wechseln. Bis zu drei.</value></data>
+  <data name="StoryLanguages_DropTitle" xml:space="preserve"><value>{0} ist jetzt die App-Sprache</value></data>
+  <data name="StoryLanguages_DropBody" xml:space="preserve"><value>Geschichten können in höchstens drei Sprachen sein. Welche soll entfernt werden?</value></data>
+  <data name="StoryLanguages_Remove" xml:space="preserve"><value>{0} entfernen</value></data>
+  <data name="StoryLanguages_WasApp" xml:space="preserve"><value>War die App-Sprache</value></data>
+  <data name="StoryLanguages_ButtonLabel" xml:space="preserve"><value>Geschichtensprache: {0}</value></data>
+  <data name="StoryLanguages_Failed" xml:space="preserve"><value>Die Stimme konnte nicht geladen werden. Tippe, um es erneut zu versuchen.</value></data>
+  <data name="StoryLanguages_WifiTitle" xml:space="preserve"><value>Über mobile Daten herunterladen?</value></data>
+  <data name="StoryLanguages_WifiBody" xml:space="preserve"><value>Du bist nicht im WLAN. {0} wird über mobile Daten heruntergeladen.</value></data>
+  <data name="StoryLanguages_WifiNow" xml:space="preserve"><value>Jetzt herunterladen</value></data>
+  <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>Auf WLAN warten</value></data>
+  <data name="StoryLanguages_WifiWaiting" xml:space="preserve"><value>Warte auf WLAN</value></data>
 </root>

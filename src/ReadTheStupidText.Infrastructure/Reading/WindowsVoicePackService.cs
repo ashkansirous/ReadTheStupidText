@@ -114,6 +114,7 @@ public sealed class WindowsVoicePackService : IVoicePackService
     // that cannot be fetched leaves the installed pack in place.
     public async Task<PackDownloadResult> DownloadAsync(string packId, IProgress<double>? progress, CancellationToken cancellationToken)
     {
+        using IDisposable gate = await PackDownloadGate.EnterAsync(packId, cancellationToken).ConfigureAwait(false); // one run per pack (Slice 173)
         InstalledVoicePack? installed = LoadInstalled(packId);
 
         // Hash, extract and copy are heavy: keep all of it off the calling (UI) thread.

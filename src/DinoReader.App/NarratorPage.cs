@@ -12,7 +12,7 @@ namespace DinoReader;
 
 /// <summary>
 /// The middle Narrator page (Slice 172, mock 82a): one row per story language with that language's narrator, opening its voice list
-/// (<see cref="NarratorPage"/>). Every UI language is listed, the app's own first.
+/// (<see cref="NarratorPage"/>). Every UI language is listed, the story languages first.
 /// </summary>
 public sealed class NarratorLanguagesPage : SettingsSubPage
 {
@@ -41,7 +41,7 @@ public sealed class NarratorLanguagesPage : SettingsSubPage
 		Body.Children.Add(new Label { Text = AppResources.Narrator_ListIntro, FontSize = 13.5, LineHeight = 1.45, TextColor = DinoTokens.Get(DinoTokens.Body), Margin = new Thickness(4, 0) });
 		string mine = LanguageChoice.Current(_settings);
 		IReadOnlyList<string> installed = _voicing.InstalledLanguages(mine);
-		Body.Children.Add(SettingsRows.RowsCard(StoryVoicing.AllLanguages(mine).Select(language => Row(language, installed.Contains(language)))));
+		Body.Children.Add(SettingsRows.RowsCard(StoryVoicing.AllLanguages(StoryLanguages.Current().All).Select(language => Row(language, installed.Contains(language)))));
 	}
 
 	// A language with no voice pack shows "Not downloaded" and still opens, to the page that says how to get it.

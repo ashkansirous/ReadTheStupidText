@@ -9,9 +9,10 @@ using ReadTheStupidText.Mobile.Shared.Waiting;
 namespace DinoReader;
 
 /// <summary>
-/// The first-run intro (Slice 155, Decision 160, Batch 32 mock frames 74-76): three steps of real actions (the free store, recording a book,
+/// The first-run intro (Slice 155, Decision 160, Batch 32 mock frames 74-76): three steps of real actions (the store, recording a book,
 /// adding an own book), each with a picture, one line, <b>Try it</b> (opens the real screen, no gate: the person installing is the grown-up)
-/// and <b>Skip</b>; coming back from the screen moves on to the next step. <b>Skip all</b> ends it at once. A first-run intro ends on the
+/// and <b>Skip</b>; coming back from the screen moves on to the next step. A fourth step (Slice 173, mock frame 86) asks which story languages the
+/// child's books should be in, with <b>Done</b> and <b>Skip</b>. <b>Skip all</b> ends it at once. A first-run intro ends on the
 /// "Ready for my child" hand-over and saves its step so a restart resumes it; a replay (from grown-up settings) is not saved and ends back
 /// where it was opened. No coach-marks, tips or what's-new screens.
 /// </summary>
@@ -37,6 +38,7 @@ public sealed class IntroWizardPage : ContentPage
 	private IntroPictures _pictures = IntroPictures.None;
 	private readonly WaitOverlay _waitOverlay = DinoWait.OverPage();
 	private readonly WaitController _wait;
+	private StoryLanguagePicker? _languagePicker; // the picks of the story-languages step, kept while it shows
 	private int _step;
 	private bool _replay;
 	private bool _restoreKidsMode;
@@ -68,6 +70,7 @@ public sealed class IntroWizardPage : ContentPage
 		_step = firstRun && IntroState.InProgress ? IntroState.Step : 0;
 		_launchedStep = false;
 		_ended = false;
+		_languagePicker = null;
 		_restoreKidsMode = _replay && !_mode.IsGrownUp; // a replay from Settings (gate passed) must not leave the shelf in grown-up mode
 		_mode.Enter();
 		await navigation.PushModalAsync(new NavigationPage(this) { BarBackgroundColor = Colors.Transparent }, animated: false);
@@ -168,6 +171,11 @@ public sealed class IntroWizardPage : ContentPage
 
 	private Grid BuildBody()
 	{
+		if (IntroSteps.NameAt(_step) == IntroSteps.Languages)
+		{
+			return BuildLanguagesBody();
+		}
+
 		bool windows = DeviceInfo.Platform == DevicePlatform.WinUI;
 		(string title, string line) = _step switch
 		{
@@ -195,6 +203,42 @@ public sealed class IntroWizardPage : ContentPage
 		grid.Add(text, 0, 0);
 		grid.Add(buttons, 0, 1);
 		return grid;
+	}
+
+	// The fourth step (mock 86): the app language is ticked and locked, up to two more can be ticked; Done saves them and starts their voices, Skip keeps the app language only.
+	private Grid BuildLanguagesBody()
+	{
+		var heading = new Label { Text = AppResources.StoryLanguages_IntroTitle, FontSize = TitleSize, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center, Margin = new Thickness(0, 10, 0, 0) };
+		SemanticProperties.SetHeadingLevel(heading, SemanticHeadingLevel.Level1);
+		var line = new Label { Text = AppResources.StoryLanguages_IntroLine, FontSize = LineSize, LineHeight = 1.35, TextColor = DinoTokens.Get(DinoTokens.Body), HorizontalTextAlignment = TextAlignment.Center };
+		_languagePicker ??= new StoryLanguagePicker(StoryLanguages.Current(), null);
+		var done = new CoralButton { Text = AppResources.Common_Done };
+		done.Clicked += async (_, _) => await _busy.RunAsync(DoneLanguagesAsync);
+		StoryLanguageSet saved = StoryLanguages.Current();
+		string skip = saved.Sides.Count == 0 ? AppResources.Format(AppResources.StoryLanguages_SkipOnly, LanguageNames.NativeName(saved.Main)) : AppResources.Intro_Skip; // Skip changes nothing, so it only says "only X" when X is all there is
+		var buttons = new VerticalStackLayout { Spacing = 4, Children = { done, TextButton(skip, () => _busy.RunAsync(SkipAsync), SkipHeight, DinoTokens.Body) } };
+		var top = new VerticalStackLayout { Spacing = 12, Children = { heading, line } };
+		var grid = new Grid { Padding = new Thickness(BodyPadding, 0, BodyPadding, 26), RowSpacing = 12, RowDefinitions = [new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto)] };
+		grid.Add(top, 0, 0);
+		grid.Add(new ScrollView { Content = _languagePicker }, 0, 1);
+		grid.Add(buttons, 0, 2);
+		return grid;
+	}
+
+	// Saves the ticked languages, starts the voice of each (they keep downloading behind the next screens; Settings shows their progress) and counts the set.
+	private async Task DoneLanguagesAsync()
+	{
+		StoryLanguageSet before = StoryLanguages.Current();
+		StoryLanguageSet set = _languagePicker?.Set ?? before;
+		StoryLanguages.SaveSides(set);
+		await _services.GetRequiredService<StoryLanguagePacks>().RequestAsync(this, set.Sides, _wait); // on mobile data the grown-up is asked first
+		if (!set.Sides.SequenceEqual(before.Sides))
+		{
+			StoryLanguageCounts.RecordSet(_usage, set, UsageDetail.LanguagesFromIntro, set.Sides.Except(before.Sides)); // only languages new to this phone count as added
+		}
+
+		CountStep(tried: set.Sides.Count > 0); // nothing ticked is a Skip in effect
+		await AdvanceAsync();
 	}
 
 	/// <summary>A plain text button (frames 73-76): brand-coloured unless <paramref name="colourKey"/> says otherwise.</summary>

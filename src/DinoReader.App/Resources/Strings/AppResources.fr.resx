@@ -343,10 +343,29 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Cris des animaux</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Les animaux disent « Groin ! » ou « Bêê ! » de temps en temps, dans tous les livres</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Ce livre compte plus de personnages que les {0} personnages conteurs disponibles ; certains ont donc la même voix. Le narrateur n’est jamais donné à un personnage.</value></data>
-  <data name="TranslationPack_Title" xml:space="preserve"><value>Télécharger le pack de traduction vers {0} ?</value></data>
-  <data name="TranslationPack_Body" xml:space="preserve"><value>Pour afficher et lire ce livre en {0}, Dino Reader a besoin d'un pack de traduction d'environ 30 Mo. Il reste sur cet appareil. Si vous passez, le livre reste dans sa langue.</value></data>
+  <data name="TranslationPack_TitleNamed" xml:space="preserve"><value>Télécharger les packs de traduction ?</value></data>
+  <data name="TranslationPack_BodyNamed" xml:space="preserve"><value>Pour afficher et lire ce livre en {0}, Dino Reader a besoin de ces packs de traduction : {1}. Ils restent sur cet appareil. Si vous les ignorez, le livre reste dans sa propre langue.</value></data>
   <data name="TranslationPack_Download" xml:space="preserve"><value>Télécharger</value></data>
   <data name="TranslationPack_Keep" xml:space="preserve"><value>Garder l'original</value></data>
   <data name="TranslationPack_Failed" xml:space="preserve"><value>Impossible d'obtenir le pack de traduction. Le livre reste dans sa langue.</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>Téléchargement du pack de traduction vers {0}…</value></data>
+  <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>Dans quelles langues les histoires doivent-elles être ?</value></data>
+  <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>Choisissez-en jusqu’à deux autres. Votre enfant pourra changer pendant la lecture.</value></data>
+  <data name="StoryLanguages_AppLanguage" xml:space="preserve"><value>Langue de l’appli</value></data>
+  <data name="StoryLanguages_SkipOnly" xml:space="preserve"><value>Passer, seulement {0}</value></data>
+  <data name="StoryLanguages_Getting" xml:space="preserve"><value>Préparation de la voix · {0} %</value></data>
+  <data name="StoryLanguages_Full" xml:space="preserve"><value>Trois choisies. Décochez-en une pour en choisir une autre.</value></data>
+  <data name="StoryLanguages_SettingsTitle" xml:space="preserve"><value>Langues des histoires</value></data>
+  <data name="StoryLanguages_SettingsLine" xml:space="preserve"><value>Votre enfant peut passer de l’une à l’autre pendant la lecture. Trois au maximum.</value></data>
+  <data name="StoryLanguages_DropTitle" xml:space="preserve"><value>{0} est maintenant la langue de l’appli</value></data>
+  <data name="StoryLanguages_DropBody" xml:space="preserve"><value>Les histoires peuvent être dans trois langues au maximum. Laquelle faut-il retirer ?</value></data>
+  <data name="StoryLanguages_Remove" xml:space="preserve"><value>Retirer {0}</value></data>
+  <data name="StoryLanguages_WasApp" xml:space="preserve"><value>Était la langue de l’appli</value></data>
+  <data name="StoryLanguages_ButtonLabel" xml:space="preserve"><value>Langue de l’histoire : {0}</value></data>
+  <data name="StoryLanguages_Failed" xml:space="preserve"><value>Impossible d’obtenir la voix. Touchez pour réessayer.</value></data>
+  <data name="StoryLanguages_WifiTitle" xml:space="preserve"><value>Télécharger avec les données mobiles ?</value></data>
+  <data name="StoryLanguages_WifiBody" xml:space="preserve"><value>Vous n’êtes pas en Wi-Fi. {0} sera téléchargé avec les données mobiles.</value></data>
+  <data name="StoryLanguages_WifiNow" xml:space="preserve"><value>Télécharger maintenant</value></data>
+  <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>Attendre le Wi-Fi</value></data>
+  <data name="StoryLanguages_WifiWaiting" xml:space="preserve"><value>En attente du Wi-Fi</value></data>
 </root>

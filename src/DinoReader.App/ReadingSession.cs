@@ -1,6 +1,8 @@
 using DinoReader.Core;
 using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Domain.Reading;
+using ReadTheStupidText.Mobile.Shared;
 
 namespace DinoReader;
 
@@ -36,7 +38,10 @@ public sealed class ReadingSession
 	private readonly StoryVoicing _voicing;
 	private readonly IRecordingPlayer _player;
 	private readonly IStoryLibrary _library;
+	private readonly ISettingsStore _settings;
+	private readonly IVoiceModelService _model;
 	private Story? _story;
+	private string _reading = UiLanguage.English; // the language this screen reads in (the child's pick, Slice 173): passed to everything the read uses, never stored
 	private IReadOnlyList<int> _pageStarts = [];
 	private (int First, int Last)[] _pageSentences = [];
 	private RecordedPlay _recorded;
@@ -59,15 +64,48 @@ public sealed class ReadingSession
 	// Cancelled when the read is stopped or superseded, so a translation still running for it is abandoned.
 	private CancellationTokenSource? _readCancellation;
 
-	/// <summary>Raised (off the main thread) when a read turns out not to be translated, so the voice should speak the story's own language.</summary>
-	public event EventHandler? TranslationSkipped;
-
-	public ReadingSession(ISpeechReader reader, StoryVoicing voicing, IRecordingPlayer player, IStoryLibrary library)
+	public ReadingSession(ISpeechReader reader, StoryVoicing voicing, IRecordingPlayer player, IStoryLibrary library, ISettingsStore settings, IVoiceModelService model)
 	{
 		_reader = reader;
 		_voicing = voicing;
 		_player = player;
 		_library = library;
+		_settings = settings;
+		_model = model;
+		if (reader is CompositeSpeechReader composite)
+		{
+			composite.AppLanguage ??= () => LanguageChoice.Current(settings); // where the phone voice returns after a read in the child's pick (Slice 173)
+		}
+	}
+
+	/// <summary>The language this screen reads in (Slice 173). It belongs to this session alone: the stored voice and app language are never changed or shadowed by it.</summary>
+	public string ReadingLanguage => _reading;
+
+	/// <summary>Reads in <paramref name="language"/> from the next read on.</summary>
+	public void SetReadingLanguage(string language)
+	{
+		string resolved = UiLanguage.Resolve(language);
+		bool changed = !string.Equals(_reading, resolved, StringComparison.Ordinal);
+		_reading = resolved;
+		if (changed)
+		{
+			_ = WarmUpLanguageAsync(resolved); // the model of a pick other than the stored language is built before its first read, not during it (Slice 177's warm-up)
+		}
+	}
+
+	private async Task WarmUpLanguageAsync(string language)
+	{
+		try
+		{
+			if (_reader is IReadScoped scoped && !IsStoredVoiceLanguage(language) && _model is IReadingModelResolver resolver && await resolver.ModelForAsync(language) is { } pack)
+			{
+				await scoped.WarmUpScopedAsync(pack);
+			}
+		}
+		catch (Exception)
+		{
+			// Best-effort: the read resolves and builds the pack itself.
+		}
 	}
 
 	/// <summary>The sentence being spoken, or the last one spoken; -1 before the first.</summary>
@@ -385,10 +423,11 @@ public sealed class ReadingSession
 
 	private async Task<bool> StartVoicedReadAsync(Story story, int fromPosition, int id, CancellationToken cancellation)
 	{
-		story = await RecastClashesAsync(story, cancellation);
-		story = await KeepNewCastAsync(story);
-		IReadOnlyList<VoicedSegment> segments = await _voicing.VoiceAsync(story, fromPosition, cancellation,
-			() => TranslationSkipped?.Invoke(this, EventArgs.Empty));
+		string reading = _reading; // this read keeps the language it started in, whatever the screen switches to meanwhile
+		story = await RecastClashesAsync(story, reading, cancellation);
+		story = await KeepNewCastAsync(story, reading);
+		bool untranslated = false;
+		IReadOnlyList<VoicedSegment> segments = await _voicing.VoiceAsync(story, reading, fromPosition, cancellation, () => untranslated = true);
 		if (id != _pendingReadId)
 		{
 			return false;
@@ -403,9 +442,32 @@ public sealed class ReadingSession
 		}
 
 		_readOrigin = segments.Count > 0 ? segments[0].SourceStart : fromPosition;
-		await _reader.SpeakSegmentsAsync(segments);
+		await SpeakAsync(segments, untranslated ? UiLanguage.Resolve(story.Language) : _voicing.ReadingLanguage(story, reading)); // a translation that was skipped leaves the story's own voices
 		return true;
 	}
+
+	// The voices of the segments belong to the pack of the language they are spoken in. That is the stored voice language for most reads (the plain read, head start
+	// and all); a read in another language names its pack for this read only (Slice 173), so the stored language, the installer and the active model stay as they were.
+	// A language whose pack is not on the phone (or an engine that cannot take a named pack) is read by the phone voice in that language; nothing is ever fetched here.
+	private async Task SpeakAsync(IReadOnlyList<VoicedSegment> segments, string spoken)
+	{
+		if (_reader is not IReadScoped scoped || IsStoredVoiceLanguage(spoken))
+		{
+			await _reader.SpeakSegmentsAsync(segments);
+			return;
+		}
+
+		VoiceModelPaths? pack = _model is IReadingModelResolver resolver ? await resolver.ModelForAsync(spoken) : null;
+		if (pack is null)
+		{
+			StoryLanguages.NoteWanted(spoken); // read by the phone voice for want of a pack: Settings > Story languages shows it as missing, the child sees nothing
+		}
+
+		await scoped.SpeakSegmentsScopedAsync(segments, new ReadVoiceScope(pack, pack is null, spoken));
+	}
+
+	private bool IsStoredVoiceLanguage(string language) =>
+		string.Equals(VoiceAvailability.Primary(language), VoiceAvailability.Primary(LanguageChoice.Current(_settings)), StringComparison.OrdinalIgnoreCase);
 
 	// A generated read ends where the next page with a parent's recording begins, and goes on there with the recording (Slice 111).
 	private IReadOnlyList<VoicedSegment> StopBeforeRecordedPage(Story story, IReadOnlyList<VoicedSegment> segments, int fromPosition, int id)
@@ -424,7 +486,7 @@ public sealed class ReadingSession
 
 	// A stored cast that gives a character the narrator's voice (or a voice the language dropped) is re-cast and saved (Slice 144: Farsi's default narrator became mana).
 	// A book already checked this session is not checked again: a cast that cannot move (the one woman's voice is both narrator and mum) would otherwise be rebuilt on every read.
-	private async Task<Story> RecastClashesAsync(Story story, CancellationToken cancellation)
+	private async Task<Story> RecastClashesAsync(Story story, string reading, CancellationToken cancellation)
 	{
 		if (_saveCast is null || _recastChecked.Contains(story.Id))
 		{
@@ -432,7 +494,7 @@ public sealed class ReadingSession
 		}
 
 		Story? recast = await NarratorRecast.TryRecastAsync(_voicing, story, cancellation);
-		if (recast is not null || _voicing.VoicesFor(_voicing.ReadingLanguage(story)).Count > 0)
+		if (recast is not null || _voicing.VoicesFor(_voicing.ReadingLanguage(story, reading)).Count > 0)
 		{
 			_recastChecked.Add(story.Id); // only once the language has voices: a pack still installing is checked again on the next read
 		}
@@ -457,15 +519,15 @@ public sealed class ReadingSession
 	}
 
 	// The first read in a language with no cast stores the one it makes, so its voices stay put (Slice 108). A failed save only costs that.
-	private async Task<Story> KeepNewCastAsync(Story story)
+	private async Task<Story> KeepNewCastAsync(Story story, string reading)
 	{
-		string language = _voicing.ReadingLanguage(story);
+		string language = _voicing.ReadingLanguage(story, reading);
 		if (_saveCast is null || story.HasCastIn(language))
 		{
 			return story;
 		}
 
-		StoryVoicing.NewCast? made = await _voicing.NewCastForReadingAsync(story);
+		StoryVoicing.NewCast? made = await _voicing.NewCastForReadingAsync(story, reading);
 		if (made is null)
 		{
 			return story; // no voices or characters yet: asked again on the next read, once a pack has installed

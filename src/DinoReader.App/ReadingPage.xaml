@@ -22,7 +22,10 @@
                     <TapGestureRecognizer Tapped="OnBackTapped" />
                 </Border.GestureRecognizers>
             </Border>
-            <local:ModeSwitch x:Name="Modes" AutomationId="ReadingModes" Grid.Column="2" VerticalOptions="Center" ModeChanged="OnModeChanged" />
+            <!-- Slice 173 (mock 88): the story-language button is added in code, left of the view switch, only with two or three story languages. -->
+            <HorizontalStackLayout x:Name="HeaderControls" Grid.Column="2" Spacing="8" VerticalOptions="Center">
+                <local:ModeSwitch x:Name="Modes" AutomationId="ReadingModes" VerticalOptions="Center" ModeChanged="OnModeChanged" />
+            </HorizontalStackLayout>
             <Label x:Name="TitleLabel" Grid.Row="1" Grid.ColumnSpan="3" Padding="8,0" FontSize="20" FontAttributes="Bold"
                    LineHeight="1.25" SemanticProperties.HeadingLevel="Level1" />
         </Grid>

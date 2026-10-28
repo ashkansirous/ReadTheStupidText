@@ -342,10 +342,29 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Eläinten äänet</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Eläimet sanovat välillä “Röh!” tai “Mää!”, kaikissa kirjoissa</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Tässä kirjassa on enemmän hahmoja kuin käytettävissä olevia {0} kertojahahmoa, joten jotkin kuulostavat samalta. Kertojaa ei koskaan anneta hahmolle.</value></data>
-  <data name="TranslationPack_Title" xml:space="preserve"><value>Ladataanko {0}-käännöspaketti?</value></data>
-  <data name="TranslationPack_Body" xml:space="preserve"><value>Jotta kirja voidaan näyttää ja lukea kielellä {0}, Dino Reader tarvitsee noin 30 Mt:n käännöspaketin. Se pysyy tällä laitteella. Jos ohitat sen, kirja pysyy omalla kielellään.</value></data>
+  <data name="TranslationPack_TitleNamed" xml:space="preserve"><value>Ladataanko käännöspaketit?</value></data>
+  <data name="TranslationPack_BodyNamed" xml:space="preserve"><value>Näyttääkseen ja lukeakseen tämän kirjan kielellä {0} Dino Reader tarvitsee nämä käännöspaketit: {1}. Ne pysyvät tällä laitteella. Jos ohitat ne, kirja pysyy omalla kielellään.</value></data>
   <data name="TranslationPack_Download" xml:space="preserve"><value>Lataa</value></data>
   <data name="TranslationPack_Keep" xml:space="preserve"><value>Säilytä alkuperäinen</value></data>
   <data name="TranslationPack_Failed" xml:space="preserve"><value>Käännöspakettia ei saatu ladattua. Kirja pysyy omalla kielellään.</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>Ladataan {0}-käännöspakettia…</value></data>
+  <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>Millä kielillä tarinoiden pitäisi olla?</value></data>
+  <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>Valitse enintään kaksi lisää. Lapsesi voi vaihtaa kieltä lukiessaan.</value></data>
+  <data name="StoryLanguages_AppLanguage" xml:space="preserve"><value>Sovelluksen kieli</value></data>
+  <data name="StoryLanguages_SkipOnly" xml:space="preserve"><value>Ohita, vain {0}</value></data>
+  <data name="StoryLanguages_Getting" xml:space="preserve"><value>Valmistellaan ääntä · {0} %</value></data>
+  <data name="StoryLanguages_Full" xml:space="preserve"><value>Kolme valittu. Poista yksi valinta, jos haluat valita toisen.</value></data>
+  <data name="StoryLanguages_SettingsTitle" xml:space="preserve"><value>Tarinoiden kielet</value></data>
+  <data name="StoryLanguages_SettingsLine" xml:space="preserve"><value>Lapsesi voi vaihtaa näiden välillä lukiessaan. Enintään kolme.</value></data>
+  <data name="StoryLanguages_DropTitle" xml:space="preserve"><value>{0} on nyt sovelluksen kieli</value></data>
+  <data name="StoryLanguages_DropBody" xml:space="preserve"><value>Tarinat voivat olla enintään kolmella kielellä. Mikä poistetaan?</value></data>
+  <data name="StoryLanguages_Remove" xml:space="preserve"><value>Poista {0}</value></data>
+  <data name="StoryLanguages_WasApp" xml:space="preserve"><value>Oli sovelluksen kieli</value></data>
+  <data name="StoryLanguages_ButtonLabel" xml:space="preserve"><value>Tarinan kieli: {0}</value></data>
+  <data name="StoryLanguages_Failed" xml:space="preserve"><value>Ääntä ei saatu ladattua. Yritä uudelleen napauttamalla.</value></data>
+  <data name="StoryLanguages_WifiTitle" xml:space="preserve"><value>Ladataanko mobiilidatalla?</value></data>
+  <data name="StoryLanguages_WifiBody" xml:space="preserve"><value>Et ole Wi-Fi-yhteydessä. {0} ladataan mobiilidatalla.</value></data>
+  <data name="StoryLanguages_WifiNow" xml:space="preserve"><value>Lataa nyt</value></data>
+  <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>Odota Wi-Fi-yhteyttä</value></data>
+  <data name="StoryLanguages_WifiWaiting" xml:space="preserve"><value>Odotetaan Wi-Fi-yhteyttä</value></data>
 </root>
