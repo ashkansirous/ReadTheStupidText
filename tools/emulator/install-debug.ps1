@@ -105,6 +105,12 @@ Remove-InstalledKey $App  # until the install succeeds, the device holds no know
 & $script:Adb -s $script:Serial install --no-incremental -r $apk.FullName
 if ($LASTEXITCODE -ne 0) { throw 'adb install failed.' }
 Save-InstalledKey $App $key
+# Slice 179: counting off for every harness run, even a Release build. The app reads this marker in its external files folder (UsageEligibility.NoUsageMarkerFile).
+$ErrorActionPreference = 'Continue'
+$filesDir = "/sdcard/Android/data/$($cfg.Package)/files"
+& $script:Adb -s $script:Serial shell "mkdir -p $filesDir && touch $filesDir/no-usage" 2>&1 | Out-Null
+$markerListing = "$(& $script:Adb -s $script:Serial shell "ls $filesDir/no-usage" 2>&1)"
+if ($markerListing -notmatch 'no-usage' -or $markerListing -match 'No such file|denied') { throw "Could not write the no-usage marker $filesDir/no-usage ($markerListing)." }
 $ErrorActionPreference = 'Continue'  # monkey writes its banner to stderr
 & $script:Adb -s $script:Serial shell monkey -p $cfg.Package -c android.intent.category.LAUNCHER 1 2>&1 | Out-Null
 $abi = & $script:Adb -s $script:Serial shell getprop ro.product.cpu.abi

@@ -4,7 +4,7 @@
 // caller is stored or written except the country (Slice 166: the two-letter code Cloudflare derives from the connection, `request.cf.country`;
 // never the IP, never sent by the app) and the optional `device` object's coarse closed values: no user agent, no id; the only fields kept are the ones named below, each checked
 // against a closed list or a strict pattern, so a changed or hostile client can add no free text. When the remote config
-// (Slice 132) has telemetry off or missing, the request is answered like a success and nothing is written. Only Dino Reader's
+// (Slice 132) has telemetry off or missing, the request is answered like a success and nothing is written. Likewise (Slice 179) an android or ios event whose device.arch is x64 or x86 is dropped with the same 204: real phones are ARM, so it is a robot or emulator. Only Dino Reader's
 // host and its /dino/ prefix on workers.dev route here (index.ts), which also supplies the telemetry check (it reads the
 // config object). Like appconfig.ts this file imports values only from download-keys.mjs so worker/events.test.mjs can run it
 // under node's type stripping: keep it free of enums and parameter properties.
@@ -65,6 +65,9 @@ const RAM_LOWER_BOUNDS = [0, 3, 4, 6, 8] as const;
 /** The double a bucket gets when the build sent none (a real lower bound is never negative), so "no data" never reads as "<3 GB". */
 const NO_BUCKET_BOUND = -1;
 const NO_DEVICE_FIELD = "";
+// Slice 179: real phones and tablets are ARM, so an Android or iOS batch from an Intel device is Play's pre-launch robot or an emulator (the app's own gate misses some); it is answered like a success and nothing is written.
+const PHONE_PLATFORMS = ["android", "ios"] as const;
+const NON_PHONE_ARCHES = ["x64", "x86"] as const;
 const MIN_DEVICE_OS_MAJOR = 1;
 const MAX_DEVICE_OS_MAJOR = 99;
 
@@ -107,6 +110,11 @@ export function parseDevice(raw: unknown): DeviceContext {
     cores: listedOrEmpty(DEVICE_CORES, raw["cores"]),
     ram: listedOrEmpty(DEVICE_RAM, raw["ram"]),
   };
+}
+
+/** True for a count from an Android or iOS build on an Intel (x64/x86) device: a robot or emulator, never a real phone (Slice 179). */
+export function isRobotCount(raw: unknown, device: DeviceContext): boolean {
+  return isRecord(raw) && oneOf(PHONE_PLATFORMS, raw["platform"]) && oneOf(NON_PHONE_ARCHES, device.arch);
 }
 
 /** The country to record: two capital letters other than the "unknown" and Tor codes, else `none`. */
@@ -347,6 +355,7 @@ async function handleBatch(request: Request, dataset: AnalyticsEngineDataset | u
   if (events.length > MAX_EVENTS_PER_REQUEST) return reply(413, ErrorCode.TooMany);
   const context = { country: countryOf(requestCountry(request)), device: parseDevice(isRecord(body) ? body["device"] : undefined) };
   for (const raw of events) {
+    if (isRobotCount(raw, context.device)) continue;
     const point = makePoint(raw, context);
     if (point !== null) dataset.writeDataPoint(point);
   }
