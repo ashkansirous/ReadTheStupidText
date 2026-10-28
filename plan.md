@@ -23,6 +23,12 @@ Open slices only. Finished slices (157 rows) are in [slices-done](docs/plan/note
 | 179 | No Play robot, VM or own-machine runs in the usage counts (Worker drops ARM-less phones, Store-only Windows, harness off switch) | planned | | | [179-no-robot-or-own-machine-counts.md](docs/plan/slices/179-no-robot-or-own-machine-counts.md) |
 | 180 | Faster device tests: only the touched apps, build once per commit, Android and Windows side by side, a second emulator (tooling only; after `feat/vm-update-only`) | planned | | | [180-faster-device-tests.md](docs/plan/slices/180-faster-device-tests.md) |
 | 181 | Dino: books on the device update themselves from the store on app open, at most every 7 days (unedited copies only, any network, silent) | planned | | | [181-dino-books-update-from-store.md](docs/plan/slices/181-dino-books-update-from-store.md) |
+| 182 | A pack download that stopped "offline" resumes by itself when the network or the app comes back (both apps, all big packs, mobile-data rule kept) | planned | | | [182-pack-download-resumes-by-itself.md](docs/plan/slices/182-pack-download-resumes-by-itself.md) |
+| 183 | Big pack downloads keep going when the phone is locked or the app is in the background (Android foreground service with a progress notification, iOS background URLSession; after 182) | planned | | | [183-pack-downloads-keep-going-when-locked.md](docs/plan/slices/183-pack-downloads-keep-going-when-locked.md) |
+| 184 | Windows: an English-to-Japanese translation pack | planned | | | [184-windows-english-to-japanese-pack.md](docs/plan/slices/184-windows-english-to-japanese-pack.md) |
+| 185 | Confirm and close three old gaps: Dino first run on the x64 emulator, RTST language-page Continue, the 36 MB ReviewPage crash (fix only what still fails) | planned | | | [185-close-three-old-gaps.md](docs/plan/slices/185-close-three-old-gaps.md) |
+
+Batch 39 (182-185, planned 2026-10-28, from the night's phone runs and the unowned gaps): 182 then 183 (both edit the pack downloader); 184 (Windows packs, CI) and 185 (emulator checks) can run beside them.
 
 Batch 25 (119-123; 119, 120, 122, 123 built, 121 built; planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
 
