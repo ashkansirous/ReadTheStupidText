@@ -40,14 +40,14 @@
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>حذف {0}</value></data>
   <data name="Gallery_ExportStory" xml:space="preserve"><value>تصدير القصة</value></data>
   <data name="Gallery_CastButton" xml:space="preserve"><value>الشخصيات</value></data>
-  <data name="Store_Title" xml:space="preserve"><value>قصص مجانية</value></data>
+  <data name="Store_Title" xml:space="preserve"><value>المتجر</value></data>
   <data name="Store_Subtitle" xml:space="preserve"><value>مختارة وموزّعة الأدوار من أجل دينو</value></data>
   <data name="Store_Get" xml:space="preserve"><value>تنزيل</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>تم التنزيل</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0} صفحات · {1} دقيقة</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>مجانية وبلا حساب. لا يُرسَل أي شيء عنك أو عن طفلك.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>أنت غير متصل بالإنترنت</value></data>
-  <data name="Store_OfflineBody" xml:space="preserve"><value>تحتاج القصص المجانية إلى الإنترنت. القصص الموجودة على الرف تُقرأ بدونه.</value></data>
+  <data name="Store_OfflineBody" xml:space="preserve"><value>يحتاج المتجر إلى الإنترنت. القصص الموجودة على الرف تُقرأ بدونه.</value></data>
   <data name="Store_TryAgain" xml:space="preserve"><value>حاول مرة أخرى</value></data>
   <data name="Store_EmptyTitle" xml:space="preserve"><value>لا قصص جديدة بعد</value></data>
   <data name="Store_EmptyBody" xml:space="preserve"><value>تُضاف قصص جديدة من وقت لآخر. عُد قريبًا.</value></data>
@@ -104,7 +104,7 @@
   <data name="Intro_Skip" xml:space="preserve"><value>تخطي</value></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} من {1}</value></data>
   <data name="Intro_StoreTitle" xml:space="preserve"><value>احصل على المزيد من الكتب</value></data>
-  <data name="Intro_StoreLine" xml:space="preserve"><value>في المتجر المجاني المزيد من القصص الجاهزة للتنزيل.</value></data>
+  <data name="Intro_StoreLine" xml:space="preserve"><value>في المتجر المزيد من القصص الجاهزة للتنزيل.</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>اقرأها بصوتك</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>سجّل نفسك وأنت تقرأ قصة، صفحة بصفحة. يمكن لطفلك تشغيلها في أي وقت.</value></data>
   <data name="Intro_AddTitle" xml:space="preserve"><value>أضف كتابك الخاص</value></data>
@@ -117,6 +117,26 @@
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>وضع البالغين</value></data>
   <data name="Language_Title" xml:space="preserve"><value>اللغة</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>يقرأ Dino ويترجم إلى هذه اللغة</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>الإعدادات</value></data>
+  <data name="Settings_Books" xml:space="preserve"><value>الكتب</value></data>
+  <data name="Settings_BooksValue" xml:space="preserve"><value>إضافة وتعديل والمتجر</value></data>
+  <data name="Settings_GroupReading" xml:space="preserve"><value>القراءة</value></data>
+  <data name="Settings_GroupPhone" xml:space="preserve"><value>هذا الهاتف</value></data>
+  <data name="Settings_NewVersion" xml:space="preserve"><value>إصدار جديد</value></data>
+  <data name="Settings_GearLabel" xml:space="preserve"><value>الإعدادات (للكبار)</value></data>
+  <data name="Settings_About" xml:space="preserve"><value>حول التطبيق والتحديثات</value></data>
+  <data name="Settings_NarratorVoice" xml:space="preserve"><value>صوت الراوي</value></data>
+  <data name="Settings_On" xml:space="preserve"><value>يعمل</value></data>
+  <data name="Settings_Off" xml:space="preserve"><value>متوقف</value></data>
+  <data name="Language_PageSub" xml:space="preserve"><value>الإعدادات والمتجر والرف</value></data>
+  <data name="Narrator_ListIntro" xml:space="preserve"><value>لكل لغة قصص راوٍ خاص بها.</value></data>
+  <data name="Narrator_OneIntro" xml:space="preserve"><value>من يقرأ الأجزاء بين الشخصيات في كل كتاب بـ{0}.</value></data>
+  <data name="Narrator_TitleFor" xml:space="preserve"><value>صوت الراوي ({0})</value></data>
+  <data name="Narrator_NoVoiceValue" xml:space="preserve"><value>لم يتم التنزيل</value></data>
+  <data name="Narrator_NoVoiceHint" xml:space="preserve"><value>أصوات {0} غير موجودة على هذا الهاتف بعد. ارجع وافتح «اللغة» واختر {0} ونزّل صوتها، ثم اختر الراوي هنا.</value></data>
+  <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>الكبار</value></data>
+  <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>إضافة الكتب وتعديلها</value></data>
+  <data name="Gallery_AddFromBooks" xml:space="preserve"><value>أضف من كتبك</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>جاهز</value></data>
   <data name="Language_Download" xml:space="preserve"><value>تنزيل</value></data>
   <data name="Language_Downloading" xml:space="preserve"><value>جارٍ التنزيل {0}%</value></data>

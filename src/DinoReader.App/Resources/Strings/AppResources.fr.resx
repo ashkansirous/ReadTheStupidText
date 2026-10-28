@@ -40,14 +40,14 @@
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>Supprimer {0}</value></data>
   <data name="Gallery_ExportStory" xml:space="preserve"><value>Exporter l'histoire</value></data>
   <data name="Gallery_CastButton" xml:space="preserve"><value>Distribution</value></data>
-  <data name="Store_Title" xml:space="preserve"><value>Histoires gratuites</value></data>
+  <data name="Store_Title" xml:space="preserve"><value>Boutique</value></data>
   <data name="Store_Subtitle" xml:space="preserve"><value>Choisies et distribuées pour Dino</value></data>
   <data name="Store_Get" xml:space="preserve"><value>Obtenir</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>Téléchargée</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0} pages · {1} min</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Gratuit, sans compte. Rien sur vous ni sur votre enfant n'est envoyé.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Vous êtes hors ligne</value></data>
-  <data name="Store_OfflineBody" xml:space="preserve"><value>Les histoires gratuites ont besoin d'internet. Celles déjà sur l'étagère se lisent sans connexion.</value></data>
+  <data name="Store_OfflineBody" xml:space="preserve"><value>La boutique a besoin d’internet. Les histoires déjà sur l’étagère se lisent sans connexion.</value></data>
   <data name="Store_TryAgain" xml:space="preserve"><value>Réessayer</value></data>
   <data name="Store_EmptyTitle" xml:space="preserve"><value>Pas encore de nouvelles histoires</value></data>
   <data name="Store_EmptyBody" xml:space="preserve"><value>De nouvelles histoires sont ajoutées de temps en temps. Revenez bientôt.</value></data>
@@ -104,7 +104,7 @@
   <data name="Intro_Skip" xml:space="preserve"><value>Passer</value></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} sur {1}</value></data>
   <data name="Intro_StoreTitle" xml:space="preserve"><value>Obtenir plus de livres</value></data>
-  <data name="Intro_StoreLine" xml:space="preserve"><value>La boutique gratuite propose d’autres histoires, prêtes à télécharger.</value></data>
+  <data name="Intro_StoreLine" xml:space="preserve"><value>La boutique propose d’autres histoires, prêtes à télécharger.</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Lisez-le avec votre voix</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>Enregistrez-vous en train de lire une histoire, page par page. Votre enfant peut l’écouter quand il veut.</value></data>
   <data name="Intro_AddTitle" xml:space="preserve"><value>Ajouter votre propre livre</value></data>
@@ -117,6 +117,26 @@
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Mode adulte</value></data>
   <data name="Language_Title" xml:space="preserve"><value>Langue</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>Dino lit et traduit dans cette langue</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>Réglages</value></data>
+  <data name="Settings_Books" xml:space="preserve"><value>Livres</value></data>
+  <data name="Settings_BooksValue" xml:space="preserve"><value>Ajouter, modifier, Boutique</value></data>
+  <data name="Settings_GroupReading" xml:space="preserve"><value>Lecture</value></data>
+  <data name="Settings_GroupPhone" xml:space="preserve"><value>Ce téléphone</value></data>
+  <data name="Settings_NewVersion" xml:space="preserve"><value>Nouvelle version</value></data>
+  <data name="Settings_GearLabel" xml:space="preserve"><value>Réglages (adultes)</value></data>
+  <data name="Settings_About" xml:space="preserve"><value>À propos et mises à jour</value></data>
+  <data name="Settings_NarratorVoice" xml:space="preserve"><value>Voix du narrateur</value></data>
+  <data name="Settings_On" xml:space="preserve"><value>Activé</value></data>
+  <data name="Settings_Off" xml:space="preserve"><value>Désactivé</value></data>
+  <data name="Language_PageSub" xml:space="preserve"><value>Réglages, la boutique et l’étagère</value></data>
+  <data name="Narrator_ListIntro" xml:space="preserve"><value>Chaque langue d’histoires a son propre narrateur.</value></data>
+  <data name="Narrator_OneIntro" xml:space="preserve"><value>Qui lit les passages entre les personnages, dans chaque livre en {0}.</value></data>
+  <data name="Narrator_TitleFor" xml:space="preserve"><value>Voix du narrateur ({0})</value></data>
+  <data name="Narrator_NoVoiceValue" xml:space="preserve"><value>Non téléchargée</value></data>
+  <data name="Narrator_NoVoiceHint" xml:space="preserve"><value>Les voix pour {0} ne sont pas encore sur ce téléphone. Reviens en arrière, ouvre Langue, choisis {0}, télécharge-la, puis choisis le narrateur ici.</value></data>
+  <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Adultes</value></data>
+  <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Ajouter et modifier des livres</value></data>
+  <data name="Gallery_AddFromBooks" xml:space="preserve"><value>Ajouter depuis vos propres livres</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>Prêt</value></data>
   <data name="Language_Download" xml:space="preserve"><value>Télécharger</value></data>
   <data name="Language_Downloading" xml:space="preserve"><value>Téléchargement {0} %</value></data>

@@ -397,7 +397,7 @@ public sealed partial class ReadAloudService : IDisposable
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(text))
+        if (BlankText.IsBlank(text))
         {
             return;
         }
@@ -519,7 +519,7 @@ public sealed partial class ReadAloudService : IDisposable
             _copyingForRead = false;
         }
 
-        if (string.IsNullOrWhiteSpace(text))
+        if (BlankText.IsBlank(text))
         {
             return;
         }
@@ -531,8 +531,16 @@ public sealed partial class ReadAloudService : IDisposable
 
     // Auto-read from a UI Automation selection change. The text is sanitized here
     // so what gets read, de-duped and logged is always the redacted form.
-    private void OnSelectionChanged(object? sender, string text) =>
+    private void OnSelectionChanged(object? sender, string text)
+    {
+        if (BlankText.IsBlank(text))
+        {
+            CancelPendingAutoRead(); // nothing to read; it only drops an auto-read still waiting to start (Slice 176)
+            return;
+        }
+
         BeginAutoRead(ActivityTrigger.AutoRead, _sanitizer.Sanitize(text));
+    }
 
     // Auto-read from a clipboard copy — the path for the console and other apps
     // that expose no UIA selection. Skipped while we're copying for a hotkey/manual
@@ -546,7 +554,7 @@ public sealed partial class ReadAloudService : IDisposable
         }
 
         string? text = await _clipboard.GetTextAsync();
-        if (string.IsNullOrWhiteSpace(text))
+        if (BlankText.IsBlank(text))
         {
             return;
         }
@@ -658,6 +666,18 @@ public sealed partial class ReadAloudService : IDisposable
         }
 
         await ReadEntryAsync(entry, text);
+    }
+
+    // A blank selection replaces the one a debounced auto-read was waiting on, so that read is dropped. It never stops a
+    // read already generating or speaking (hotkey, clipboard or auto): that is only a deselect's job (Slice 176).
+    private void CancelPendingAutoRead()
+    {
+        ActivityEntry? active = _activeEntry;
+        bool pendingAuto = active is { State: ActivityState.Pending, Trigger: ActivityTrigger.AutoRead or ActivityTrigger.Clipboard };
+        if (pendingAuto)
+        {
+            CancelRead();
+        }
     }
 
     // A deselect stops a read in progress (and drops a still-pending one).

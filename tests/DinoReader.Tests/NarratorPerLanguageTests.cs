@@ -25,6 +25,17 @@ public class NarratorPerLanguageTests
         Assert.Equal("M1", NarratorSetting.Resolve("gone", Voices, "M1"));
     }
 
+    // Slice 172: the Narrator page shows one language, and a pick made for another stays: each language resolves from its own stored value.
+    [Fact]
+    public void Resolve_KeepsEachLanguagesOwnPick_WhateverAnotherLanguageStored()
+    {
+        Dictionary<string, string> stored = new() { ["en"] = "M2" };
+        stored["sv"] = "F1";
+
+        Assert.Equal("M2", NarratorSetting.Resolve(stored["en"], Voices, "M1"));
+        Assert.Equal("F1", NarratorSetting.Resolve(stored["sv"], Voices, "M1"));
+    }
+
     [Fact]
     public void Resolve_KeepsTheStoredPick_WhileThePackIsNotInstalled()
     {
