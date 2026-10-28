@@ -1,6 +1,6 @@
 # Slice 165 — Audio and timing checks on the real phone over wireless adb
 
-*Planned.* Batch 36 (fast device tests), RTST Mobile and Dino Reader, Android. Decision 165. After Slice 162 (it
+*In progress (wave 2026-10-28), draft PR.* Batch 36 (fast device tests), RTST Mobile and Dino Reader, Android. Decision 165. After Slice 162 (it
 reuses the hooks and the `RTST-TEST` logcat markers).
 
 **Touches:** `tools/phone/**` (new: `connect.ps1`, `audio-timing.ps1`, `README.md`),
