@@ -30,7 +30,7 @@ signed copy sits in `<VmRoot>\sign` and is deleted in a `finally`. Runs take a h
 
 ## Files
 
-- `New-TestVm.ps1` builds the VM from nothing (`-Force` rebuilds). `Reset-TestVm.ps1 [-Start]` restores `clean`.
+- `New-TestVm.ps1` builds the VM from nothing (`-Force` rebuilds, `-UpdateOnly` refreshes). `Reset-TestVm.ps1 [-Start]` restores `clean`.
 - `Invoke-DesktopTest.ps1` is the runner; `_common.ps1` holds the shared code; `autounattend.template.xml` is the answer file.
 - `checks/*.ps1` run inside the VM in the signed-in desktop session (a PowerShell Direct session is a separate,
   non-interactive logon, so each check runs as a one-shot scheduled task). Each writes `{pass,message}`; `_lib.ps1` has
@@ -48,8 +48,16 @@ Needs Hyper-V on and your user in *Hyper-V Administrators*; no elevation, and no
 
 ## Rebuild: when and how
 
+**Monthly refresh: `New-TestVm.ps1 -UpdateOnly`** (about 15 minutes, no ISO, VM kept). It restores `clean`, lifts the Windows
+Update freeze for that run, installs the pending updates exactly like a full build, freezes again, takes `clean-new` and
+only then swaps the names (`clean` to `clean-prev`, `clean-new` to `clean`, both instant) and deletes `clean-prev` last, so a usable
+`clean` always exists; any failure or Ctrl+C before the swap restores the old `clean`, and it refuses to publish when the guest
+got no network or `-UpdateTimeoutMin` ran out. A failed update or exhausted rounds still publish (the image is better than the old one) but print a warning in the final summary. An interrupted swap is repaired by the next run of `-UpdateOnly`; until then `Reset-TestVm.ps1` and the tests say so when `clean` is missing.
+It does not extend the 90-day evaluation (the licence days are printed at the end), and cannot be combined with `-Force`, `-IsoPath`
+or `-SkipUpdates`; `-KeepIso` and `-InstallTimeoutMin` have no effect with it. Use `-Force` only when the licence runs out or the VM is damaged.
+
 The VM runs the Windows 11 Enterprise **evaluation** (90 days; the host fetches the current ISO from the Microsoft Evaluation
-Center page). `Invoke-DesktopTest.ps1` prints the days left and warns under 14 days, or when the licence is not counting, with the rebuild command. Rebuild with `New-TestVm.ps1 -Force` (15-30 minutes, unattended) when: the evaluation lapses (Windows shows
+Center page). `Invoke-DesktopTest.ps1` prints the days left and warns under 14 days, or when the licence is not counting, with the rebuild command. Rebuild with `New-TestVm.ps1 -Force` (about 55 minutes, unattended) only when: the evaluation lapses (Windows shows
 "license expired"; short runs still work, but it begins shutting the VM down hourly), Windows asks for something the
 checks cannot answer, or the VM is damaged.
 

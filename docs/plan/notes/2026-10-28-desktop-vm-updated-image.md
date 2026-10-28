@@ -62,3 +62,17 @@ prompt in Hyper-V Manager (it happened once before, too: clicking Install by han
   Parse-check every script (`[System.Management.Automation.Language.Parser]::ParseFile`) and dot-source `New-TestVm.ps1`
   (it returns early when dot-sourced) to prove it loads.
 - Confirm the WUA COM API and `GetVirtualSystemThumbnailImage` shapes from Microsoft Learn before coding (library-docs / web).
+
+## Follow-up: update-only mode (`New-TestVm.ps1 -UpdateOnly`)
+
+*Built 2026-10-28.* A monthly refresh must not rebuild from scratch (~55 min). `-UpdateOnly` brings the existing `clean` image up to date in ~15 minutes; a full rebuild (`-Force`) is needed only when the 90-day evaluation runs out.
+
+1. Under the VM lock. Fail before touching anything when the VM or its `clean` checkpoint is missing ("run without -UpdateOnly").
+2. Restore `clean`, start the VM, wait until the guest answers and the desktop is up.
+3. Unfreeze for this step only: remove the `WindowsUpdate` policy values the freeze sets, set `wuauserv` (and `UsoSvc`) to Manual and start `wuauserv`.
+4. `Invoke-OnlineBuild` as in a full build: attach `BuildOnly`, activate, update rounds with graceful restarts, adapter removed in `finally`.
+5. `Disable-GuestWindowsUpdate`, the settling reboot and `Assert-WindowsUpdateOff`, exactly as a full build.
+6. Replace the snapshot without ever losing the last good one: checkpoint as `clean-new`; only after that exists swap the names (rename `clean` to `clean-prev`, `clean-new` to `clean`) and remove `clean-prev` last, so a usable `clean` always exists. On any failure or Ctrl+C before the swap, the old `clean` is untouched (the VM is restored to it); a swap interrupted halfway is repaired by the next run (no `clean` with `clean-prev` and `clean-new`: finish the swap, the new image is complete; with only `clean-prev`: rename it back), and `Restore-CleanCheckpoint` names `-UpdateOnly` as the repair when `clean` is missing. Update failures or exhausted rounds do not stop the publish (a partly updated, verified image beats the old one) but are repeated as warnings in the final summary. `-UpdateOnly` also rejects `-SkipUpdates`; `-KeepIso` and `-InstallTimeoutMin` are ignored. `-UpdateOnly` refuses to publish when the guest got no network, the Default Switch is missing, or the update deadline passed.
+7. Print the Windows version and the licence days (`Get-GuestLicense` / `Write-LicenseNote`); updating does not extend the evaluation.
+
+Found while testing it: a search with exactly one pending update reported "found ," and installed nothing, because returning the one-item COM collection unrolled it to a bare update with no `Count`. `Search-Updates` now returns the search result. The full build of 2026-10-28 hit this in round 3; the update it missed was a Defender definitions update (KB2267602), installed by the first `-UpdateOnly` run.
