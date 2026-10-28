@@ -328,18 +328,24 @@ public sealed class MobileVoicePackService : IVoicePackService
             return; // body already complete; only verification is left
         }
 
-        using var request = new HttpRequestMessage(HttpMethod.Get, pack.Url);
+        using GuardedResponse response = await StallGuardedRead.SendAsync(Http, () => BuildBodyRequest(pack, offset), StallGuardedRead.HeaderTimeout(StallTimeout), cancellationToken).ConfigureAwait(false);
+        await StreamBodyAsync(response, pack, partial, offset, progress, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static HttpRequestMessage BuildBodyRequest(PackInfo pack, long offset)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, pack.Url);
         if (offset > 0)
         {
             request.Headers.Range = new RangeHeaderValue(offset, null);
         }
 
-        using HttpResponseMessage response = await Http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
-        await StreamBodyAsync(response, pack, partial, offset, progress, cancellationToken).ConfigureAwait(false);
+        return request;
     }
 
-    private static async Task StreamBodyAsync(HttpResponseMessage response, PackInfo pack, string partial, long offset, IProgress<double>? progress, CancellationToken cancellationToken)
+    private static async Task StreamBodyAsync(GuardedResponse guarded, PackInfo pack, string partial, long offset, IProgress<double>? progress, CancellationToken cancellationToken)
     {
+        HttpResponseMessage response = guarded.Message;
         if (response.StatusCode == HttpStatusCode.RequestedRangeNotSatisfiable)
         {
             File.Delete(partial); // stale partial: the next attempt starts clean
@@ -349,7 +355,7 @@ public sealed class MobileVoicePackService : IVoicePackService
         response.EnsureSuccessStatusCode();
         bool resumed = response.StatusCode == HttpStatusCode.PartialContent;
         long written = resumed ? offset : 0; // a 200 means the server ignored Range: restart
-        await using Stream body = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+        await using Stream body = await guarded.OpenBodyAsync(StallTimeout, cancellationToken).ConfigureAwait(false);
         await using var file = new FileStream(partial, resumed ? FileMode.Append : FileMode.Create, FileAccess.Write, FileShare.None, FileBufferBytes, useAsync: true);
         await CopyWithStallGuardAsync(body, file, pack.SizeBytes, written, progress, cancellationToken).ConfigureAwait(false);
     }
@@ -357,12 +363,10 @@ public sealed class MobileVoicePackService : IVoicePackService
     private static async Task CopyWithStallGuardAsync(Stream source, Stream destination, long totalBytes, long written, IProgress<double>? progress, CancellationToken cancellationToken)
     {
         byte[] buffer = new byte[CopyBufferBytes];
-        using var stall = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         int lastPercent = -1;
         while (true)
         {
-            stall.CancelAfter(StallTimeout); // re-arms the one stall timer for this read
-            int read = await source.ReadAsync(buffer, stall.Token).ConfigureAwait(false);
+            int read = await source.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
             if (read == 0)
             {
                 return;

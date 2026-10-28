@@ -70,6 +70,23 @@ public sealed class WindowsVoicePackServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task Download_whose_body_hangs_times_out_then_resumes_with_a_range_from_the_partial_length()
+    {
+        byte[] zip = BuildZip();
+        int hangAfter = zip.Length / 3;
+        var server = new FakeServer(CatalogJson(zip), zip) { HangFirstPackBodyAfterBytes = hangAfter };
+        var service = new WindowsVoicePackService(_root.FullName, new HttpClient(server), () => true, CatalogUrl,
+            stallTimeout: TimeSpan.FromMilliseconds(1000), backoff: _ => TimeSpan.Zero);
+
+        PackDownloadResult result = await service.DownloadAsync(PackId, null, CancellationToken.None);
+
+        Assert.Equal(PackDownloadResult.Ok, result);
+        Assert.Equal(2, server.PackRequests);
+        Assert.Equal(hangAfter, server.LastRangeStart);
+        Assert.NotNull(service.GetInstalledPath(PackId));
+    }
+
+    [Fact]
     public async Task Download_resumes_a_partial_file_with_a_range_request()
     {
         byte[] zip = BuildZip();
@@ -297,12 +314,42 @@ public sealed class WindowsVoicePackServiceTests : IDisposable
         public void Report(double value) => Values.Add(value);
     }
 
+    // Serves its bytes, then blocks forever ignoring the token, like a Java read on a dead socket.
+    private sealed class HangingStream(byte[] head) : Stream
+    {
+        private readonly MemoryStream _head = new(head);
+        private readonly TaskCompletionSource<int> _never = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => throw new NotSupportedException();
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+        public override void Flush() { }
+        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            int read = _head.Read(buffer.Span);
+            return read > 0 ? new(read) : new(_never.Task);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            _never.TrySetException(new IOException("closed"));
+            base.Dispose(disposing);
+        }
+    }
+
     private sealed class FakeServer(string catalog, byte[] zip) : HttpMessageHandler
     {
         public bool HonourRange { get; set; } = true;
         public bool FailCatalog { get; set; }
         public bool MisplacedContentRange { get; set; }
         public int FailFirstPackRequests { get; set; }
+        public int? HangFirstPackBodyAfterBytes { get; set; }
         public int PackRequests { get; private set; }
         public int TotalRequests { get; private set; }
         public long? LastRangeStart { get; private set; }
@@ -319,6 +366,12 @@ public sealed class WindowsVoicePackServiceTests : IDisposable
             if (PackRequests <= FailFirstPackRequests)
             {
                 return Task.FromResult(new HttpResponseMessage(HttpStatusCode.InternalServerError));
+            }
+
+            if (PackRequests == 1 && HangFirstPackBodyAfterBytes is int hangAfter)
+            {
+                var hanging = new HangingStream(zip[..hangAfter]);
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StreamContent(hanging) });
             }
 
             return Task.FromResult(ServePack(request));
