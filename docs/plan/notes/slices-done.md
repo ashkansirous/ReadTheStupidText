@@ -210,3 +210,7 @@ Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure 
 | 171 | Dino: the text card scrolls with the reading | built | #506 | | [171-dino-text-card-shows-whole-page.md](../slices/171-dino-text-card-shows-whole-page.md) |
 | 163 | Fast tests: Windows desktop tests in a headless Hyper-V VM | built | #508 | | [163-desktop-tests-in-hyperv-vm.md](../slices/163-desktop-tests-in-hyperv-vm.md) |
 | 165 | Fast tests: audio and timing on the real phone over wireless adb | built | #510 | | [165-real-phone-audio-timing-checks.md](../slices/165-real-phone-audio-timing-checks.md) |
+| 172 | Dino: one gear for all grown-up settings (sub-page per setting; "Free stories" -> "More stories") | built | #519 | | [172-dino-settings-gear.md](../slices/172-dino-settings-gear.md) |
+| 174 | Dino: a cleaner reading screen (waits on the user's Claude Design mock) and a back button that never surprises (after 172) | built | #521 | | [174-dino-reading-screen-and-back-button.md](../slices/174-dino-reading-screen-and-back-button.md) |
+| 175 | Close the test gaps: permanent VM selection+hotkey check, Debug Dino page hook, engine/synthesis markers, ISO cleanup, VM licence check | built | #517 | | [175-test-gaps-permanent-checks.md](../slices/175-test-gaps-permanent-checks.md) |
+| 176 | Reading text that is only spaces must not throw (NullReferenceException found on the phone) | built | #518 | | [176-whitespace-read-crash.md](../slices/176-whitespace-read-crash.md) |
