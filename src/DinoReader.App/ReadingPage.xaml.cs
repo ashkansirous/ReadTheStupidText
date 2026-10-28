@@ -16,6 +16,8 @@ namespace DinoReader;
 /// </summary>
 public partial class ReadingPage : ContentPage
 {
+	private const double LanguageButtonHeight = 46;
+	private const double MenuGap = 6;
 	private const double CompactTitleSize = 17;
 	private const double FullTitleSize = 20;
 	private const double BackChipSize = 44;
@@ -41,7 +43,6 @@ public partial class ReadingPage : ContentPage
 	private readonly IServiceProvider _services;
 	private readonly VoicePackInstaller _installer;
 	private readonly IVoiceModelService _model;
-	private readonly SpokenLanguage _spoken;
 	private readonly UsageCounter _usage;
 	private bool _finishCounted;
 	private bool _openCounted;
@@ -54,10 +55,8 @@ public partial class ReadingPage : ContentPage
 	private bool _firstLoadDone; // the first Loading is the book opening; later ones are restarts the reader triggered
 	private readonly SemaphoreSlim _saveLock = new(1, 1); // the cast save and the mode save each read-modify-write _story: one at a time
 	private Story? _story;
-	private Task? _offer; // the one translation offer of this open (see OwnTranslationOfferedAsync)
-	private bool _offerKeptOriginal; // the parent declined or cancelled the pack: this open shows the book in its own language
-	private bool _offering; // the offer's wait is on screen: its Cancel is not the read's
 	private readonly TaskCompletionSource _appeared = new(TaskCreationOptions.RunContinuationsAsynchronously);
+	private Task _languageReady = Task.CompletedTask; // the first work-out of the book's story languages (Slice 173)
 	private IReadOnlyList<SentenceSpan> _sentences = [];
 	private ReadingTheme _theme = ReadingTheme.For(false);
 	private bool _visible;
@@ -71,12 +70,14 @@ public partial class ReadingPage : ContentPage
 	private int _displayVersion;
 	private CancellationTokenSource? _displayCancellation; // the screen's translation: stopped when a newer one starts or the page goes away
 	private ReadingMode _mode = ReadingMode.Text; // the mode on screen now, which a translation that arrives late must not undo
+	private readonly StoryLanguageButton _languageButton; // Slice 173: the child's story-language button, shown only when this book can be read in two or more story languages
+	private string _packStates = string.Empty; // the side languages' voice states the list was worked out with
+	private IReadOnlyList<string> _readable = []; // the story languages this book can be read in right now (with nothing to download)
 
 	public ReadingPage(ReadingSession session, IStoryLibrary library, IServiceProvider services,
-		VoicePackInstaller installer, IVoiceModelService model, SpokenLanguage spoken, UsageCounter usage)
+		VoicePackInstaller installer, IVoiceModelService model, UsageCounter usage)
 	{
 		InitializeComponent();
-		_spoken = spoken;
 		_usage = usage;
 		_session = session;
 		_library = library;
@@ -87,7 +88,8 @@ public partial class ReadingPage : ContentPage
 		_session.StateChanged += OnSessionStateChanged;
 		_wait = BuildWait();
 		_session.Failed += OnReadFailed;
-		_session.TranslationSkipped += (_, _) => _spoken.Use(_story?.Language ?? UiLanguage.English);
+		_languageButton = new StoryLanguageButton(LanguageButtonHeight, OnLanguageTappedAsync) { IsVisible = false, AutomationId = "ReadingLanguage" };
+		HeaderControls.Children.Insert(0, _languageButton);
 		ShowPackStatus();
 	}
 
@@ -98,8 +100,8 @@ public partial class ReadingPage : ContentPage
 	public void Load(Story story)
 	{
 		_story = story;
+		_session.SetReadingLanguage(StoryLanguages.Current().Main); // the app language until the book says it can be read in the child's pick (OpenWithLanguagesAsync)
 		TitleLabel.Text = story.Title;
-		_spoken.Use(story);
 		_sentences = StorySentences.Build(story.Text, LanguageRules.For(story.Language), story.BreakMap());
 		_session.Open(story, _sentences, SaveCastAsync);
 		_theme = CurrentTheme();
@@ -108,10 +110,210 @@ public partial class ReadingPage : ContentPage
 		SyncModeSwitch();
 		Modes.IsVisible = story.HasPictures; // a book without pictures has only the text view
 		ApplyTheme();
-		_ = ShowStoryAsync();
+		_ = OpenWithLanguagesAsync();
 		if (_sentences.Count > 0)
 		{
 			_session.MoveTo(0);
+		}
+	}
+
+	// Slice 173: which story languages this book can be read in is settled first, so the screen and the voice start in the right one and the count names it.
+	private async Task OpenWithLanguagesAsync()
+	{
+		_languageReady = SettleLanguagesAsync();
+		await _languageReady;
+		_ = CountOpenWhenShownAsync();
+		await ShowStoryAsync();
+	}
+
+	private async Task SettleLanguagesAsync()
+	{
+		try
+		{
+			await RefreshLanguageButtonAsync();
+		}
+		catch (Exception ex) when (ex is not OperationCanceledException)
+		{
+			Debug.WriteLine($"Dino Reader could not work out the story languages: {ex}");
+		}
+	}
+
+	// A read never starts before the book's reading language is settled: Play tapped at once would otherwise read in the app language while the button shows the pick.
+	private async Task StartReadAtAsync(int sentence)
+	{
+		await _languageReady;
+		await _session.StartAtAsync(sentence);
+	}
+
+	private async Task CountOpenWhenShownAsync()
+	{
+		await _appeared.Task;
+		CountOpen();
+	}
+
+	// A book that can only be read one way (a recorded book, "Show original text", an own book on Windows or without its pack) has no button and reads in the app
+	// language; otherwise the child's pick applies, as long as this book can be read in it.
+	private async Task RefreshLanguageButtonAsync()
+	{
+		if (_story is not { } story)
+		{
+			return;
+		}
+
+		StoryLanguageSet set = StoryLanguages.Current();
+		var translator = _services.GetRequiredService<StoryTranslator>();
+		bool switchable = set.HasChoice && !story.ShowOriginalText && StoryRecordings.Count(story) == 0;
+		_readable = switchable ? await ReadableLanguagesAsync(story, set, translator) : [];
+		_packStates = PackStates(set);
+		string effective = EffectiveLanguage(set);
+		_session.SetReadingLanguage(effective);
+		_languageButton.SetLanguage(effective);
+		_languageButton.IsVisible = _readable.Count >= 2;
+		ApplyLanguageChrome();
+	}
+
+	// The child's pick when the book can be read in it (its voice, and for an own book its translation pack, are on the phone); else the app language, or when that is not on the list either the list's first language, so the button
+	// never shows a flag that is not in its own list. With no choice to offer the book reads in the app language.
+	private string EffectiveLanguage(StoryLanguageSet set)
+	{
+		if (_readable.Count < 2)
+		{
+			return set.Main;
+		}
+
+		string pick = StoryLanguages.Pick();
+		if (_readable.Contains(pick))
+		{
+			return pick;
+		}
+
+		return _readable.Contains(set.Main) ? set.Main : _readable[0];
+	}
+
+	// The languages the child may switch to (Slice 173, Decision 2): the book can be read in it with nothing to download, and its voice is already on the phone.
+	// The child can never start a download; the voices come from Settings or the intro, behind the gate.
+	private async Task<IReadOnlyList<string>> ReadableLanguagesAsync(Story story, StoryLanguageSet set, StoryTranslator translator)
+	{
+		var packs = _services.GetRequiredService<StoryLanguagePacks>();
+		var readable = new List<string>();
+		foreach (string language in set.All)
+		{
+			bool voiceThere = language == set.Main || packs.StateOf(language) == LanguageVoiceState.Ready;
+			if (voiceThere && await translator.CanReadInAsync(story, language))
+			{
+				readable.Add(language);
+			}
+		}
+
+		return readable;
+	}
+
+	// A pack that finished, or an own book that just got its table, changes what the child can switch to; the list and the button are worked out again then.
+	private async Task UpdateLanguageButtonAsync()
+	{
+		if (_story is not { } story || !_onStack)
+		{
+			return;
+		}
+
+		StoryLanguageSet set = StoryLanguages.Current();
+		var translator = _services.GetRequiredService<StoryTranslator>();
+		bool switchable = set.HasChoice && !story.ShowOriginalText && StoryRecordings.Count(story) == 0;
+		IReadOnlyList<string> readable = switchable ? await ReadableLanguagesAsync(story, set, translator) : [];
+		if (!readable.SequenceEqual(_readable))
+		{
+			StoryLanguageMenu.DismissOpen(Root); // a list open over the old choices closes (its Back path resumes the read) rather than staying orphaned
+		}
+
+		_readable = readable;
+		_languageButton.IsVisible = _readable.Count >= 2;
+		string shown = _readable.Count >= 2 && _readable.Contains(_session.ReadingLanguage) ? _session.ReadingLanguage : EffectiveLanguage(set);
+		bool moved = shown != _session.ReadingLanguage;
+		_session.SetReadingLanguage(shown); // the flag and the reads (and usage counts) always name the same language
+		_languageButton.SetLanguage(shown);
+		_packStates = PackStates(set);
+		if (moved)
+		{
+			await ShowStoryAsync();
+		}
+	}
+
+	private string PackStates(StoryLanguageSet set)
+	{
+		var packs = _services.GetRequiredService<StoryLanguagePacks>();
+		return string.Join(',', set.Sides.Select(side => packs.StateOf(side)));
+	}
+
+	private void OnLanguagePacksChanged(object? sender, EventArgs e)
+	{
+		if (PackStates(StoryLanguages.Current()) != _packStates)
+		{
+			_ = UpdateLanguageButtonSafeAsync();
+		}
+	}
+
+	private async Task UpdateLanguageButtonSafeAsync()
+	{
+		try
+		{
+			await UpdateLanguageButtonAsync();
+		}
+		catch (Exception ex) when (ex is not OperationCanceledException)
+		{
+			Debug.WriteLine($"Dino Reader could not refresh the story languages: {ex}");
+		}
+	}
+
+	// The button sits on the same quiet fill as the view switch, and on the white chip when it floats over a picture.
+	private void ApplyLanguageChrome()
+	{
+		_languageButton.Colour(_theme.ControlFill, _theme.BackIcon);
+		_languageButton.SetOnPicture(FloatingHeader, _theme.TextCard);
+	}
+
+	// Reading pauses while the list is open; the pick restarts the sentence in the new voice (mock 89), the same language carries on.
+	private async Task OnLanguageTappedAsync()
+	{
+		if (_story is not { } story || _readable.Count < 2)
+		{
+			return;
+		}
+
+		SessionState before = _session.State;
+		bool wasActive = before is SessionState.Playing or SessionState.Loading;
+		if (wasActive)
+		{
+			_session.Pause();
+		}
+
+		_languageButton.SetOpen(true);
+		string? picked = await StoryLanguageMenu.PickAsync(Root, _languageButton, _readable, _session.ReadingLanguage, MenuGap);
+		_languageButton.SetOpen(false);
+		if (picked is null || picked == _session.ReadingLanguage)
+		{
+			if (wasActive && _session.State == SessionState.Paused)
+			{
+				_session.Resume();
+			}
+
+			return;
+		}
+
+		await SwitchLanguageAsync(_story ?? story, picked, wasActive);
+	}
+
+	private async Task SwitchLanguageAsync(Story story, string language, bool restart)
+	{
+		int sentence = Math.Max(0, _session.CurrentSentence);
+		StoryLanguages.SetPick(language);
+		_session.Stop();
+		_session.SetReadingLanguage(language);
+		_languageButton.SetLanguage(language);
+		_usage.Record(UsageEventName.StoryLanguageSwitched, story, language: language);
+		await ShowStoryAsync();
+		if (restart)
+		{
+			await _session.StartAtAsync(sentence);
 		}
 	}
 
@@ -144,7 +346,8 @@ public partial class ReadingPage : ContentPage
 		int version = ++_displayVersion;
 		CancellationToken cancellation = RestartDisplayCancellation();
 		var translator = _services.GetRequiredService<StoryTranslator>();
-		if (story.ShowOriginalText || !translator.Applies(story))
+		string reading = _session.ReadingLanguage;
+		if (story.ShowOriginalText || !translator.Applies(story, reading))
 		{
 			ShowSource(story);
 			return;
@@ -155,53 +358,10 @@ public partial class ReadingPage : ContentPage
 			ShowSource(story);
 		}
 
-		if (translator.NeedsOwnTranslation(story))
-		{
-			await OwnTranslationOfferedAsync(story, translator).WaitAsync(cancellation);
-			story = _story ?? story;
-			if (version != _displayVersion || _offerKeptOriginal || !translator.Applies(story))
-			{
-				return; // declined or cancelled: the book is shown in its own language this time
-			}
-		}
-
-		(TranslatedStory? translated, string title) = await TranslateForScreenAsync(story, translator, cancellation);
+		(TranslatedStory? translated, string title) = await TranslateForScreenAsync(story, translator, reading, cancellation);
 		if (translated is not null && version == _displayVersion && !cancellation.IsCancellationRequested)
 		{
 			ShowTranslation(story, translated, title);
-		}
-	}
-
-	// A parent's own book that has the switch on but no table (say the app language changed) is offered its translation once per open (Slice 159, Decision 164):
-	// the pack question, the download and the translation run behind the page's wait with Cancel, and the table is saved inside the book. Nothing downloads unasked.
-	// The display awaits this one offer, however often it restarts.
-	private Task OwnTranslationOfferedAsync(Story story, StoryTranslator translator) => _offer ??= OfferOwnTranslationAsync(story, translator);
-
-	private async Task OfferOwnTranslationAsync(Story story, StoryTranslator translator)
-	{
-		await _appeared.Task; // the question needs a page that is on screen
-		await _saveLock.WaitAsync(); // the cast and mode saves must not write a stale copy over the table
-		_offering = true;
-		try
-		{
-			var prompt = new TranslationPackPrompt(translator, _library);
-			OwnTranslationOutcome outcome = await prompt.OfferAsync(this, story.Id, (stage, line) => _wait.BeginCancellable(stage, line), EndWait);
-			_offerKeptOriginal = outcome == OwnTranslationOutcome.KeptOriginal;
-			if (await _library.GetAsync(story.Id) is { } latest && _story is { } shown)
-			{
-				_story = shown with { Translations = latest.Translations, TranslateToMyLanguage = latest.TranslateToMyLanguage };
-			}
-		}
-		catch (Exception ex)
-		{
-			// Never faults or cancels: the one cached offer is awaited by every display restart of this open.
-			_offerKeptOriginal = true;
-			Debug.WriteLine($"Dino Reader could not offer the translation: {ex.Message}");
-		}
-		finally
-		{
-			_offering = false;
-			_saveLock.Release();
 		}
 	}
 
@@ -229,13 +389,13 @@ public partial class ReadingPage : ContentPage
 
 	// The title and the text translate side by side; the voice shares the engine's pieces with the text (StoryTranslator), so none is translated twice.
 	private async Task<(TranslatedStory? Translated, string Title)> TranslateForScreenAsync(
-		Story story, StoryTranslator translator, CancellationToken cancellation)
+		Story story, StoryTranslator translator, string reading, CancellationToken cancellation)
 	{
 		try
 		{
 			var voicing = _services.GetRequiredService<StoryVoicing>();
-			Task<string> title = TitleOrSourceAsync(story, translator, cancellation);
-			TranslatedStory? translated = await voicing.TranslatedDisplayAsync(story, _sentences, cancellation);
+			Task<string> title = TitleOrSourceAsync(story, translator, reading, cancellation);
+			TranslatedStory? translated = await voicing.TranslatedDisplayAsync(story, _sentences, reading, cancellation);
 			return (translated, translated is null ? story.Title : await title);
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException)
@@ -246,11 +406,11 @@ public partial class ReadingPage : ContentPage
 	}
 
 	// The title is cosmetic: any failure of its own leaves the source title and never costs the translated text.
-	private static async Task<string> TitleOrSourceAsync(Story story, StoryTranslator translator, CancellationToken cancellation)
+	private static async Task<string> TitleOrSourceAsync(Story story, StoryTranslator translator, string reading, CancellationToken cancellation)
 	{
 		try
 		{
-			return await translator.TitleAsync(story, cancellation);
+			return await translator.TitleAsync(story, reading, cancellation);
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException)
 		{
@@ -271,7 +431,7 @@ public partial class ReadingPage : ContentPage
 
 	private void ShowTranslation(Story story, TranslatedStory translated, string title)
 	{
-		string mine = StoryTranslator.MyLanguage;
+		string mine = _session.ReadingLanguage;
 		_translatedDisplay = true;
 		_shownPages = translated.Pages;
 		ApplyTitle(title, mine);
@@ -475,13 +635,16 @@ public partial class ReadingPage : ContentPage
 		BackButton.BackgroundColor = FloatingHeader ? _theme.TextCard.WithAlpha(ChipAlpha) : Colors.Transparent;
 		BackButton.StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = BackChipSize / 2 };
 		BackButton.Shadow = FloatingHeader ? new Shadow { Brush = Brush.Black, Opacity = 0.18f, Radius = 6, Offset = new Point(0, 2) } : null;
+		ApplyLanguageChrome();
 	}
+
+	// Back closes the language list first; only then does it leave the book.
+	protected override bool OnBackButtonPressed() => StoryLanguageMenu.DismissOpen(Root) || base.OnBackButtonPressed();
 
 	protected override void OnAppearing()
 	{
 		base.OnAppearing();
 		_appeared.TrySetResult();
-		CountOpen();
 		_visible = true;
 		_onStack = true;
 		ApplyScreenAwake();
@@ -490,6 +653,7 @@ public partial class ReadingPage : ContentPage
 		_installer.Changed += OnInstallerChanged;
 		_model.ReadyChanged += OnInstallerChanged;
 		SystemTheme.Changed += OnThemeChanged;
+		_services.GetRequiredService<StoryLanguagePacks>().Changed += OnLanguagePacksChanged;
 		ShowPackStatus();
 		if (CurrentTheme() != _theme)
 		{
@@ -526,6 +690,7 @@ public partial class ReadingPage : ContentPage
 		_installer.Changed -= OnInstallerChanged;
 		_model.ReadyChanged -= OnInstallerChanged;
 		SystemTheme.Changed -= OnThemeChanged;
+		_services.GetRequiredService<StoryLanguagePacks>().Changed -= OnLanguagePacksChanged;
 	}
 
 	// The app pins UserAppTheme to Light (kids' palette), so RequestedTheme is always Light and MAUI raises no
@@ -724,17 +889,12 @@ public partial class ReadingPage : ContentPage
 
 	private bool IsTranslating()
 	{
-		return _story is { } story && _services.GetRequiredService<StoryTranslator>().Applies(story);
+		return _story is { } story && _services.GetRequiredService<StoryTranslator>().Applies(story, _session.ReadingLanguage);
 	}
 
 	// Cancel always stops the read; only the wait of opening the book (the first load) also goes back to the shelf. A mid-book restart stays on the page.
 	private async void OnWaitCancelled()
 	{
-		if (_offering)
-		{
-			return; // the translation offer's own Cancel: its token stops it, the read and the page stay
-		}
-
 		bool opening = !_firstLoadDone;
 		try
 		{
@@ -760,8 +920,11 @@ public partial class ReadingPage : ContentPage
 		}
 
 		_openCounted = true;
-		_usage.Record(UsageEventName.BookOpened, story);
+		_usage.Record(UsageEventName.BookOpened, story, language: ReadIn(story));
 	}
+
+	// Slice 173: a book counts in the language it was read in (the child's pick), not the book's own.
+	private string ReadIn(Story story) => _services.GetRequiredService<StoryTranslator>().SpokenLanguage(story, _session.ReadingLanguage);
 
 	// Slice 133: a book counts as finished once per read to its end; reading on from a swipe or a new Play starts a new count.
 	private void CountFinish()
@@ -774,7 +937,7 @@ public partial class ReadingPage : ContentPage
 		_finishCounted = _session.Finished;
 		if (_finishCounted && _story is { } story)
 		{
-			_usage.Record(UsageEventName.BookFinished, story);
+			_usage.Record(UsageEventName.BookFinished, story, language: ReadIn(story));
 		}
 	}
 
@@ -923,7 +1086,7 @@ public partial class ReadingPage : ContentPage
 	private void OnSentenceTapped(object? sender, int sentence)
 	{
 		_follower.ResumeAt(Surface.CurrentPage);
-		_ = _session.StartAtAsync(sentence);
+		_ = StartReadAtAsync(sentence);
 	}
 
 	private async void OnPlayTapped(object? sender, EventArgs e)
@@ -964,7 +1127,7 @@ public partial class ReadingPage : ContentPage
 			: _follower.IsWandering ? Surface.FirstSentenceOnPage(_follower.ShownPage)
 			: Math.Max(0, _session.CurrentSentence);
 		_follower.ResumeAt(Math.Max(0, Surface.PageOfSentence(sentence)));
-		await _session.StartAtAsync(sentence);
+		await StartReadAtAsync(sentence);
 	}
 
 	private async void OnPreviousTapped(object? sender, EventArgs e) => await SkipAsync(-1);
@@ -986,7 +1149,7 @@ public partial class ReadingPage : ContentPage
 		_follower.ResumeAt(Math.Max(0, Surface.PageOfSentence(plan.Target)));
 		if (plan.StartsAudio)
 		{
-			await _session.StartAtAsync(plan.Target);
+			await StartReadAtAsync(plan.Target);
 			return;
 		}
 

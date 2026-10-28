@@ -343,10 +343,29 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>どうぶつのこえ</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>どうぶつが ときどき「ブーブー!」や「メェー!」と いいます。どの ほんでも</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>この本には、用意されている {0} 人の語り手キャラクターより多くの登場人物がいるため、同じように聞こえるキャラクターがいます。ナレーターはキャラクターには使われません。</value></data>
-  <data name="TranslationPack_Title" xml:space="preserve"><value>{0}の翻訳パックをダウンロードしますか？</value></data>
-  <data name="TranslationPack_Body" xml:space="preserve"><value>この本を{0}で表示して読み上げるには、約30MBの翻訳パックが必要です。パックはこの端末に保存されます。スキップすると、本は元の言語のままです。</value></data>
+  <data name="TranslationPack_TitleNamed" xml:space="preserve"><value>翻訳パックをダウンロードしますか？</value></data>
+  <data name="TranslationPack_BodyNamed" xml:space="preserve"><value>この本を{0}で表示して読み上げるには、Dino Readerに次の翻訳パックが必要です：{1}。この端末に保存されます。スキップすると、本は元の言語のままです。</value></data>
   <data name="TranslationPack_Download" xml:space="preserve"><value>ダウンロード</value></data>
   <data name="TranslationPack_Keep" xml:space="preserve"><value>元のままにする</value></data>
   <data name="TranslationPack_Failed" xml:space="preserve"><value>翻訳パックを取得できませんでした。本は元の言語のままです。</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>{0}の翻訳パックを取得中…</value></data>
+  <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>おはなしは何語にしますか？</value></data>
+  <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>あと2つまで選べます。お子さまは読みながら切り替えられます。</value></data>
+  <data name="StoryLanguages_AppLanguage" xml:space="preserve"><value>アプリの言語</value></data>
+  <data name="StoryLanguages_SkipOnly" xml:space="preserve"><value>スキップ（{0}のみ）</value></data>
+  <data name="StoryLanguages_Getting" xml:space="preserve"><value>声を準備中 · {0}%</value></data>
+  <data name="StoryLanguages_Full" xml:space="preserve"><value>3つ選びました。別の言語を選ぶには、1つ外してください。</value></data>
+  <data name="StoryLanguages_SettingsTitle" xml:space="preserve"><value>おはなしの言語</value></data>
+  <data name="StoryLanguages_SettingsLine" xml:space="preserve"><value>お子さまは読みながらこれらを切り替えられます。最大3つまで。</value></data>
+  <data name="StoryLanguages_DropTitle" xml:space="preserve"><value>{0}がアプリの言語になりました</value></data>
+  <data name="StoryLanguages_DropBody" xml:space="preserve"><value>おはなしの言語は最大3つまでです。どれを外しますか？</value></data>
+  <data name="StoryLanguages_Remove" xml:space="preserve"><value>{0}を外す</value></data>
+  <data name="StoryLanguages_WasApp" xml:space="preserve"><value>以前のアプリの言語</value></data>
+  <data name="StoryLanguages_ButtonLabel" xml:space="preserve"><value>おはなしの言語：{0}</value></data>
+  <data name="StoryLanguages_Failed" xml:space="preserve"><value>声を取得できませんでした。タップして再試行。</value></data>
+  <data name="StoryLanguages_WifiTitle" xml:space="preserve"><value>モバイルデータでダウンロードしますか？</value></data>
+  <data name="StoryLanguages_WifiBody" xml:space="preserve"><value>Wi-Fiに接続されていません。{0}をモバイルデータでダウンロードします。</value></data>
+  <data name="StoryLanguages_WifiNow" xml:space="preserve"><value>今すぐダウンロード</value></data>
+  <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>Wi-Fiを待つ</value></data>
+  <data name="StoryLanguages_WifiWaiting" xml:space="preserve"><value>Wi-Fi待ち</value></data>
 </root>

@@ -19,6 +19,10 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
     private ISpeechReader _active;
     private bool _useSystemVoice;
     private string? _appReadingLanguage;
+    private bool _fallbackScoped; // a scoped read pointed the phone voice at another language (Slice 173): the next unscoped read must put it back
+
+    /// <summary>The app's language for an app that never calls <see cref="SetReadingLanguage"/> (Dino Reader): where the phone voice returns after a scoped read in another language.</summary>
+    public Func<string?>? AppLanguage { get; set; }
 
     public CompositeSpeechReader(ISpeechReader neural, ISpeechReader fallback, IVoiceModelService model)
     {
@@ -96,6 +100,9 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
 
     public bool SupportsModelScope => _neural is IModelScopedReader;
 
+    public Task WarmUpScopedAsync(VoiceModelPaths model) =>
+        !_useSystemVoice && _neural is IModelScopedSegmentReader scoped ? scoped.WarmUpAsync(model) : Task.CompletedTask;
+
     // Slice 90: a read in the text's own language. The page decided who reads (the phone voice, or the
     // natural pack for that language); the app-language model and the stored voice choice are untouched,
     // and the phone voice's language is the app's again at the next unscoped read (the reader may still
@@ -123,7 +130,38 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
         }
 
         _active = _fallback;
-        (_fallback as IReadingLanguage)?.SetReadingLanguage(scope.Language);
+        ScopeFallbackTo(scope.Language);
+        await _fallback.SpeakAsync(text, activityId);
+    }
+
+    // Slice 173: a read of voiced segments in a language other than the stored one (Dino Reader's child picked it). The caller names the pack, so the stored
+    // language, the active model and the installer stay as they are; the voices of the segments belong to that pack. Where the engine cannot read with a named
+    // pack, or the pack is not there, the phone voice reads the joined text in the scope's language.
+    public async Task SpeakSegmentsScopedAsync(IReadOnlyList<VoicedSegment> segments, ReadVoiceScope scope, int? activityId = null)
+    {
+        string text = VoicedSegment.JoinText(segments);
+        if (IsNothingToRead(text))
+        {
+            FinishNothingToRead();
+            return;
+        }
+
+        if (!scope.PhoneVoice && !_useSystemVoice && scope.Model is { } model && _neural is IModelScopedSegmentReader scoped)
+        {
+            _active = _neural;
+            try
+            {
+                await scoped.SpeakSegmentsAsync(segments, model, activityId);
+                return;
+            }
+            catch (NeuralEngineUnavailableException)
+            {
+                // The model went away after the page resolved it: read with the phone voice.
+            }
+        }
+
+        _active = _fallback;
+        ScopeFallbackTo(scope.Language);
         await _fallback.SpeakAsync(text, activityId);
     }
 
@@ -139,9 +177,18 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
 
     private static bool IsNothingToRead(string text) => BlankText.IsBlank(text);
 
+    private void ScopeFallbackTo(string language)
+    {
+        _fallbackScoped = true;
+        (_fallback as IReadingLanguage)?.SetReadingLanguage(language);
+    }
+
+    // The language the phone voice had before a scoped read: the one the app set, else the app's own (Dino), else it was never changed.
     private void RestoreAppReadingLanguage()
     {
-        if (_appReadingLanguage is { } language)
+        string? language = _appReadingLanguage ?? (_fallbackScoped ? AppLanguage?.Invoke() : null);
+        _fallbackScoped = false;
+        if (language is not null)
         {
             (_fallback as IReadingLanguage)?.SetReadingLanguage(language);
         }
@@ -176,6 +223,7 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
             }
         }
 
+        RestoreAppReadingLanguage(); // an earlier scoped read (Slice 173) may have pointed the phone voice at another language
         _active = _fallback;
         await _fallback.SpeakAsync(VoicedSegment.JoinText(segments), activityId);
     }

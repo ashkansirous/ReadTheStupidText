@@ -80,7 +80,7 @@ public abstract class SettingsSubPage : ContentPage, IGrownUpPage
 /// <summary>
 /// The Settings page (Slice 172, mock frames 80 and 87): opened from the gear on the shelf, after the gate. A Books row on top (grown-up mode),
 /// then "Reading" (Language, Narrator voice, Reading speed, Animal sounds) and "This phone" (Backup, Usage counts, About &amp; updates), each row
-/// showing its current value and opening its own page. The store is never a row (Decision 167). The Story languages row waits for Slice 173.
+/// showing its current value and opening its own page. The store is never a row (Decision 167). The Story languages row (Slice 173) sits under Language.
 /// </summary>
 public sealed class SettingsPage : SettingsSubPage
 {
@@ -128,7 +128,7 @@ public sealed class SettingsPage : SettingsSubPage
 		Body.Children.Clear();
 		Body.Children.Add(SettingsRows.RowsCard([BooksRow()]));
 		Body.Children.Add(SettingsRows.GroupHeading(AppResources.Settings_GroupReading));
-		Body.Children.Add(SettingsRows.RowsCard([LanguageRow(), NarratorRow(), SpeedRow(), AnimalRow()]));
+		Body.Children.Add(SettingsRows.RowsCard([LanguageRow(), StoryLanguagesRow(), NarratorRow(), SpeedRow(), AnimalRow()]));
 		Body.Children.Add(SettingsRows.GroupHeading(AppResources.Settings_GroupPhone));
 		Body.Children.Add(SettingsRows.RowsCard([BackupRow(), UsageRow(), AboutRow()]));
 	}
@@ -143,7 +143,11 @@ public sealed class SettingsPage : SettingsSubPage
 	}
 
 	private Grid LanguageRow() =>
-		SettingsRows.NavRow(AppResources.Language_Title, LanguageNames.NativeName(LanguageChoice.Current(_settings)), OpenAsync<LanguagePage>, Busy);
+		SettingsRows.NavRow(AppResources.Language_Title, LanguageNames.NativeName(LanguageChoice.Current()), OpenAsync<LanguagePage>, Busy);
+
+	// The app language and the side languages the child can switch between (Slice 173), like "English, فارسی".
+	private Grid StoryLanguagesRow() =>
+		SettingsRows.NavRow(AppResources.StoryLanguages_SettingsTitle, StoryLanguages.Names(StoryLanguages.Current().All), OpenAsync<StoryLanguagesPage>, Busy);
 
 	private Grid NarratorRow() =>
 		SettingsRows.NavRow(AppResources.Settings_NarratorVoice, NarratorSummary(), OpenAsync<NarratorLanguagesPage>, Busy);
@@ -172,7 +176,7 @@ public sealed class SettingsPage : SettingsSubPage
 	// "Story Granny" for one language, "Story Granny (EN), Mana (FA)" for several; past SummaryLanguages the rest is "+n" (the value is one short line).
 	private string NarratorSummary()
 	{
-		IReadOnlyList<string> languages = _voicing.NarratorLanguages(LanguageChoice.Current(_settings));
+		IReadOnlyList<string> languages = _voicing.NarratorLanguages();
 		if (languages.Count == 1)
 		{
 			return CastText.VoiceName(_voicing.NarratorOf(languages[0]), languages[0]);

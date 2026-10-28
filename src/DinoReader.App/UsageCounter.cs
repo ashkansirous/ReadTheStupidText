@@ -53,12 +53,15 @@ public sealed class UsageCounter
 		set => _sender.Enabled = value;
 	}
 
-	/// <summary>Queues the count <paramref name="name"/> (a <see cref="UsageEventName"/>) about <paramref name="story"/>, unless counting is off for this launch.</summary>
-	public void Record(string name, Story story, string detail = "") =>
+	/// <summary>
+	/// Queues the count <paramref name="name"/> (a <see cref="UsageEventName"/>) about <paramref name="story"/>, unless counting is off for this launch.
+	/// <paramref name="language"/> is the language it was read in (Slice 173); null counts the book's own language.
+	/// </summary>
+	public void Record(string name, Story story, string detail = "", string? language = null) =>
 		_sender.Enqueue((sampleRate, now) =>
 		{
 			bool fromCatalogue = UsageEvent.ShelfId(story.SourceId) is { } id && StarterStories.IsCatalogueId(id);
-			return UsageEvent.For(name, story, fromCatalogue, sampleRate, AppConfigClient.InstalledVersion, AppConfigClient.ThisPlatform, now, detail);
+			return UsageEvent.For(name, story, fromCatalogue, sampleRate, AppConfigClient.InstalledVersion, AppConfigClient.ThisPlatform, now, detail, language);
 		});
 
 	/// <summary>Queues a count about no book (a voice change, a launch, a language change); <paramref name="language"/> is the one the count is about.</summary>

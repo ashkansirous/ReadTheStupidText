@@ -24,7 +24,7 @@ namespace ReadTheStupidText.Mobile.Shared;
 /// happen on the main thread (AVFoundation delivers its callbacks there). The playback half is in
 /// <c>IosSupertonicSpeechReader.Playback.cs</c>, the head start in <c>...HeadStart.cs</c>.
 /// </remarks>
-public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStart, IDisposable
+public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStart, IModelScopedSegmentReader, IDisposable
 {
     private static readonly int MaxSynthesisConcurrency = IosTtsEngine.MaxSynthesisConcurrency;
 
@@ -179,10 +179,14 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
     public Task SpeakSegmentsAsync(IReadOnlyList<VoicedSegment> segments, int? activityId = null) =>
         StartReadAsync(SpeechChunkPlanner.ForSegments(segments, HeadPolicy));
 
-    private async Task StartReadAsync(IReadOnlyList<SpeechChunkPlan> chunks)
+    // Slice 173: voiced segments in the pack the caller names (the child's story language), the app-language model untouched.
+    public Task SpeakSegmentsAsync(IReadOnlyList<VoicedSegment> segments, VoiceModelPaths model, int? activityId = null) =>
+        StartReadAsync(SpeechChunkPlanner.ForSegments(segments, HeadPolicy), model);
+
+    private async Task StartReadAsync(IReadOnlyList<SpeechChunkPlan> chunks, VoiceModelPaths? model = null)
     {
         // A cold model build takes seconds: never on the caller's (UI) thread.
-        IosBuiltEngine? owned = await Task.Run(() => AcquireEngine()) ?? throw new NeuralEngineUnavailableException();
+        IosBuiltEngine? owned = await Task.Run(() => AcquireEngine(model: model)) ?? throw new NeuralEngineUnavailableException();
         IosBuiltEngine engine = owned;
 
         ActiveRead? read = null;
@@ -482,7 +486,7 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
             return null;
         }
 
-        IosBuiltEngine? built = await Task.Run(() => TryAcquireForVoice(wanted.Id));
+        IosBuiltEngine? built = await Task.Run(() => TryAcquireForVoice(engine.Model, wanted.Id));
         if (built is null)
         {
             _log.Warning($"voice {wanted.Id} could not be loaded; its lines use the read's voice");
@@ -547,7 +551,7 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
         IosBuiltEngine next = engine;
         if (target.ModelDir != engine.Model.ModelDir)
         {
-            next = await Task.Run(() => TryAcquireForVoice(selected)) ?? engine;
+            next = await Task.Run(() => TryAcquireForVoice(engine.Model, selected)) ?? engine;
         }
 
         if (!IsCurrent(generation))
@@ -569,11 +573,12 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
         }
     }
 
-    private IosBuiltEngine? TryAcquireForVoice(string? voiceId)
+    // Built from the read's own model (Slice 173 reads name their pack), not the app-language one.
+    private IosBuiltEngine? TryAcquireForVoice(VoiceModelPaths model, string? voiceId)
     {
         try
         {
-            return AcquireEngine(voiceId);
+            return AcquireEngine(voiceId, model);
         }
         catch (NeuralEngineUnavailableException)
         {
@@ -624,11 +629,17 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
     // cold and the next trigger warms it. Duplicate triggers are harmless.
     private void WarmUp()
     {
-        if (_model.Paths is not { } paths)
+        if (_model.Paths is { } paths)
         {
-            return;
+            WarmEnginesBestEffort(paths);
         }
+    }
 
+    // Slice 173: the child's picked language is warmed by the same rules (WarmEngine / Acquire forWarmUp), so the first read in its pack does not build the model.
+    public Task WarmUpAsync(VoiceModelPaths model) => Task.Run(() => WarmEnginesBestEffort(model));
+
+    private void WarmEnginesBestEffort(VoiceModelPaths paths)
+    {
         try
         {
             WarmEngines(paths);

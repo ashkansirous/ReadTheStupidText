@@ -12,6 +12,8 @@ namespace DinoReader;
 
 public partial class GalleryPage : ContentPage
 {
+	private const double LanguageButtonHeight = 48;
+	private const double LanguageMenuGap = 6;
 	private const uint TileFadeMs = 180;
 	private const double TileShrinkTo = 0.85;
 	private const string TileTitleHeightKey = "TileTitleHeight";
@@ -32,6 +34,7 @@ public partial class GalleryPage : ContentPage
 	private bool _sheetChanged; // a switch was saved while the sheet was open: the tiles are rebuilt when it closes
 	private readonly SemaphoreSlim _sheetSaveLock = new(1, 1);
 	private readonly VoicePreview _preview;
+	private readonly StoryLanguageButton _languageButton; // Slice 173 (mock 79): the child's story-language button, left of the gear, with two or three story languages
 
 	public GalleryPage(IStoryLibrary library, GrownUpGate gate, GrownUpMode mode, StoryActions actions, StarterStories starters, IServiceProvider services)
 	{
@@ -54,6 +57,57 @@ public partial class GalleryPage : ContentPage
 		BookInfo.CastRequested += OpenSheetCastAsync;
 		BookInfo.RecordRequested += OpenSheetRecordAsync;
 		BookInfo.Dismissed += OnBookSheetDismissed;
+		_languageButton = AddLanguageButton();
+	}
+
+	// Added beside the gear in code (the header is a three-column grid): the gear and Done move one column right.
+	private StoryLanguageButton AddLanguageButton()
+	{
+		var header = (Grid)SettingsButton.Parent;
+		header.ColumnDefinitions.Insert(2, new ColumnDefinition(GridLength.Auto));
+		Grid.SetColumn(SettingsButton, 3);
+		Grid.SetColumn(DoneButton, 3);
+		var button = new StoryLanguageButton(LanguageButtonHeight, OpenLanguageMenuAsync) { IsVisible = false, AutomationId = "GalleryLanguage" };
+		header.Add(button, 2, 0);
+		return button;
+	}
+
+	// The same list as the reading page (88): one pick for all books, remembered. The shelf titles stay in the app language.
+	private async Task OpenLanguageMenuAsync()
+	{
+		await _busy.RunAsync(async () =>
+		{
+			StoryLanguageSet set = StoryLanguages.Current();
+			string current = StoryLanguages.Pick();
+			_languageButton.SetOpen(true);
+			string? picked = await StoryLanguageMenu.PickAsync((Grid)_languageButton.Parent.Parent, _languageButton, ChoosableLanguages(set), current, LanguageMenuGap);
+			_languageButton.SetOpen(false);
+			if (picked is null || picked == current)
+			{
+				return;
+			}
+
+			StoryLanguages.SetPick(picked);
+			_services.GetRequiredService<UsageCounter>().RecordGeneral(UsageEventName.StoryLanguageSwitched, picked);
+			ApplyLanguageButton();
+		});
+	}
+
+	// Shown in the kids' shelf only, and only when the parent set two or three story languages.
+	private void ApplyLanguageButton()
+	{
+		StoryLanguageSet set = StoryLanguages.Current();
+		IReadOnlyList<string> choosable = ChoosableLanguages(set);
+		_languageButton.IsVisible = !_mode.IsGrownUp && choosable.Count >= 2;
+		string pick = StoryLanguages.Pick();
+		_languageButton.SetLanguage(choosable.Contains(pick) ? pick : set.Main);
+	}
+
+	// The child can pick only a language whose voice is already on the phone (Slice 173): a download starts from Settings or the intro, behind the gate.
+	private IReadOnlyList<string> ChoosableLanguages(StoryLanguageSet set)
+	{
+		var packs = _services.GetRequiredService<StoryLanguagePacks>();
+		return [.. set.All.Where(language => language == set.Main || packs.StateOf(language) == LanguageVoiceState.Ready)];
 	}
 
 	protected override async void OnAppearing()
@@ -241,6 +295,7 @@ public partial class GalleryPage : ContentPage
 	{
 		bool handover = grownUp && FirstRunState.HandoverPending;
 		SettingsButton.IsVisible = !grownUp;
+		ApplyLanguageButton();
 		DoneButton.IsVisible = grownUp && !handover;
 		HandoverButton.IsVisible = handover;
 		HandoverButton.Text = AppResources.Gallery_ReadyForChild;
@@ -334,7 +389,7 @@ public partial class GalleryPage : ContentPage
 	private async Task OpenBookSheetAsync(Story tapped)
 	{
 		Story story = await _library.GetAsync(tapped.Id) ?? tapped;
-		bool translated = _services.GetRequiredService<StoryTranslator>().Applies(story);
+		bool translated = _services.GetRequiredService<StoryTranslator>().Applies(story, StoryTranslator.MyLanguage);
 		string original = LanguageNames.NativeName(story.Language);
 		string spoken = LanguageNames.NativeName(StoryTranslator.MyLanguage);
 		_sheetStory = story;
@@ -564,6 +619,11 @@ public partial class GalleryPage : ContentPage
 	// Back from grown-up mode lands on the kids' shelf, not out of the app (Slice 172, Decision 169, mock 94).
 	protected override bool OnBackButtonPressed()
 	{
+		if (_languageButton.Parent?.Parent is Grid menuHost && StoryLanguageMenu.DismissOpen(menuHost))
+		{
+			return true; // the open language list closes first
+		}
+
 		if (BookInfo.IsVisible)
 		{
 			BookInfo.Dismiss();

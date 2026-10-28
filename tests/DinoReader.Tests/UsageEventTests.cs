@@ -180,12 +180,46 @@ public class UsageEventTests
     }
 
     [Fact]
-    public void The_intro_has_three_steps_in_order_and_a_saved_index_outside_them_means_it_is_not_running()
+    public void The_intro_has_four_steps_in_order_and_a_saved_index_outside_them_means_it_is_not_running()
     {
-        Assert.Equal(["store", "record", "add"], Enumerable.Range(0, IntroSteps.Count).Select(IntroSteps.NameAt));
+        Assert.Equal(["store", "record", "add", "languages"], Enumerable.Range(0, IntroSteps.Count).Select(IntroSteps.NameAt));
         Assert.False(IntroSteps.IsStep(-1));
         Assert.False(IntroSteps.IsStep(IntroSteps.Count));
         Assert.True(IntroSteps.IsStep(IntroSteps.Count - 1));
+    }
+
+    [Fact]
+    public void A_count_can_name_the_language_it_was_read_in_instead_of_the_books_own()
+    {
+        UsageEvent read = UsageEvent.For(UsageEventName.BookOpened, StoryWith(PackageId, "en"), true, 1, "1.42.0", AppPlatform.Android, Now, language: "fa");
+        UsageEvent plain = UsageEvent.For(UsageEventName.BookOpened, StoryWith(PackageId, "en"), true, 1, "1.42.0", AppPlatform.Android, Now);
+
+        Assert.Equal(("fa", "shelf"), (read.Language, read.Source));
+        Assert.Equal("en", plain.Language);
+    }
+
+    [Fact]
+    public void A_story_languages_count_is_about_no_book_with_the_count_and_where_it_was_set()
+    {
+        string detail = UsageDetail.StoryLanguages(2, UsageDetail.LanguagesFromSettings);
+        UsageEvent set = UsageEvent.ForNoBook(UsageEventName.StoryLanguagesSet, "en", detail, 1, "1.0", AppPlatform.Android, Now);
+
+        Assert.Equal(("story_languages_set", "none", "none", "2:settings"), (set.Name, set.Book, set.Source, set.Detail));
+        Assert.Equal("3:intro", UsageDetail.StoryLanguages(3, UsageDetail.LanguagesFromIntro));
+    }
+
+    [Fact]
+    public void The_Worker_takes_exactly_the_story_language_counts_the_app_can_name()
+    {
+        string source = File.ReadAllText(Path.Combine(RepoRoot(), "worker", "events.ts"));
+
+        foreach (string name in new[] { UsageEventName.StoryLanguagesSet, UsageEventName.StoryLanguageAdded, UsageEventName.StoryLanguageSwitched, UsageEventName.VoicePackDownload })
+        {
+            Assert.Contains($"  {name}: {{", source);
+        }
+
+        Assert.Contains($"PACK_OUTCOMES = [\"{UsageDetail.PackDone}\", \"{UsageDetail.PackFailed}\", \"{UsageDetail.PackCancelled}\"]", source);
+        Assert.Contains($"STORY_LANGUAGE_WHERE = [\"{UsageDetail.LanguagesFromIntro}\", \"{UsageDetail.LanguagesFromSettings}\"]", source);
     }
 
     [Fact]

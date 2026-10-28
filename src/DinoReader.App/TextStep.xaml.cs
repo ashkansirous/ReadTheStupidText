@@ -179,7 +179,7 @@ public partial class TextStep : ContentView
 
 	// The switch works when the story's language to my language can be translated (a table, or an engine that supports the pair) or
 	// there is nothing to translate; otherwise it shows greyed (Slice 107). Re-checked whenever the story language changes.
-	private bool CanTranslate() => _translator!.CanTranslate(Draft.Current);
+	private bool CanTranslate() => _translator!.CanTranslate(Draft.Current, StoryTranslator.MyLanguage); // the grown-up writing a book: the app language
 
 	private void ShowLanguage()
 	{

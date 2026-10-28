@@ -116,6 +116,26 @@ SELECT blob9 AS step_and_action, blob7 AS platform, $Weighted AS taps
 FROM $Dataset WHERE blob1 = 'intro_step' AND $Window
 GROUP BY step_and_action, platform $Enough ORDER BY step_and_action
 "@
+    'Story languages saved (blob9 detail is "count:intro|settings"; blob3 = the app language)' = @"
+SELECT blob9 AS count_and_where, blob3 AS app_language, $Weighted AS saves
+FROM $Dataset WHERE blob1 = 'story_languages_set' AND $Window
+GROUP BY count_and_where, app_language $Enough ORDER BY saves DESC
+"@
+    'Side story languages added (blob3)' = @"
+SELECT blob3 AS language, $Weighted AS added
+FROM $Dataset WHERE blob1 = 'story_language_added' AND $Window
+GROUP BY language $Enough ORDER BY added DESC
+"@
+    'Story language switches by the child (blob3 = the new language; blob2 = shelf book id, own, or none for the shelf button)' = @"
+SELECT blob3 AS language, blob4 AS source, $Weighted AS switches
+FROM $Dataset WHERE blob1 = 'story_language_switched' AND $Window
+GROUP BY language, source $Enough ORDER BY switches DESC
+"@
+    'Voice pack downloads (blob9: done, failed, cancelled)' = @"
+SELECT blob3 AS language, blob9 AS outcome, blob7 AS platform, $Weighted AS downloads
+FROM $Dataset WHERE blob1 = 'voice_pack_download' AND $Window
+GROUP BY language, outcome, platform $Enough ORDER BY downloads DESC
+"@
     'Intro ends (finished vs skipped all)' = @"
 SELECT blob9 AS ended, blob7 AS platform, $Weighted AS ends
 FROM $Dataset WHERE blob1 = 'intro_ended' AND $Window

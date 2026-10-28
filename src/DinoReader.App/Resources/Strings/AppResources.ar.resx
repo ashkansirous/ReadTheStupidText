@@ -343,10 +343,29 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>أصوات الحيوانات</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>الحيوانات تقول أحيانًا «غرغر!» أو «ماع!» في كل كتاب</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>عدد الشخصيات في هذا الكتاب أكبر من عدد الشخصيات الراوية المتاحة وهو {0}، لذا يتشابه صوت بعضها. لا يُمنح الراوي لأي شخصية.</value></data>
-  <data name="TranslationPack_Title" xml:space="preserve"><value>تنزيل حزمة الترجمة إلى {0}؟</value></data>
-  <data name="TranslationPack_Body" xml:space="preserve"><value>لعرض هذا الكتاب وقراءته باللغة {0} يحتاج Dino Reader إلى حزمة ترجمة بحجم 30 ميغابايت تقريباً. تبقى الحزمة على هذا الجهاز. إذا تخطيتها يبقى الكتاب بلغته الأصلية.</value></data>
+  <data name="TranslationPack_TitleNamed" xml:space="preserve"><value>تنزيل حزم الترجمة؟</value></data>
+  <data name="TranslationPack_BodyNamed" xml:space="preserve"><value>لعرض هذا الكتاب وقراءته بـ {0}، يحتاج Dino Reader إلى حزم الترجمة هذه: {1}. تبقى على هذا الجهاز. إذا تخطيتها، يبقى الكتاب بلغته الأصلية.</value></data>
   <data name="TranslationPack_Download" xml:space="preserve"><value>تنزيل</value></data>
   <data name="TranslationPack_Keep" xml:space="preserve"><value>إبقاء الأصل</value></data>
   <data name="TranslationPack_Failed" xml:space="preserve"><value>تعذّر الحصول على حزمة الترجمة. يبقى الكتاب بلغته الأصلية.</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>جارٍ تنزيل حزمة الترجمة إلى {0}…</value></data>
+  <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>بأي لغات تريد أن تكون القصص؟</value></data>
+  <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>اختر لغتين إضافيتين على الأكثر. يمكن لطفلك التبديل أثناء القراءة.</value></data>
+  <data name="StoryLanguages_AppLanguage" xml:space="preserve"><value>لغة التطبيق</value></data>
+  <data name="StoryLanguages_SkipOnly" xml:space="preserve"><value>تخطَّ، {0} فقط</value></data>
+  <data name="StoryLanguages_Getting" xml:space="preserve"><value>جارٍ تجهيز الصوت · {0}%</value></data>
+  <data name="StoryLanguages_Full" xml:space="preserve"><value>تم اختيار ثلاث لغات. ألغِ اختيار لغة لتختار أخرى.</value></data>
+  <data name="StoryLanguages_SettingsTitle" xml:space="preserve"><value>لغات القصص</value></data>
+  <data name="StoryLanguages_SettingsLine" xml:space="preserve"><value>يمكن لطفلك التبديل بينها أثناء القراءة. حتى ثلاث لغات.</value></data>
+  <data name="StoryLanguages_DropTitle" xml:space="preserve"><value>{0} هي الآن لغة التطبيق</value></data>
+  <data name="StoryLanguages_DropBody" xml:space="preserve"><value>يمكن أن تكون القصص بثلاث لغات على الأكثر. أي لغة تريد إزالتها؟</value></data>
+  <data name="StoryLanguages_Remove" xml:space="preserve"><value>إزالة {0}</value></data>
+  <data name="StoryLanguages_WasApp" xml:space="preserve"><value>كانت لغة التطبيق</value></data>
+  <data name="StoryLanguages_ButtonLabel" xml:space="preserve"><value>لغة القصة: {0}</value></data>
+  <data name="StoryLanguages_Failed" xml:space="preserve"><value>تعذّر الحصول على الصوت. اضغط للمحاولة مرة أخرى.</value></data>
+  <data name="StoryLanguages_WifiTitle" xml:space="preserve"><value>التنزيل عبر بيانات الجوال؟</value></data>
+  <data name="StoryLanguages_WifiBody" xml:space="preserve"><value>أنت لست على Wi-Fi. سيتم تنزيل {0} عبر بيانات الجوال.</value></data>
+  <data name="StoryLanguages_WifiNow" xml:space="preserve"><value>نزّل الآن</value></data>
+  <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>انتظر Wi-Fi</value></data>
+  <data name="StoryLanguages_WifiWaiting" xml:space="preserve"><value>في انتظار Wi-Fi</value></data>
 </root>

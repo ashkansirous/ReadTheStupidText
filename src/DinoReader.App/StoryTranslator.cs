@@ -39,40 +39,38 @@ public sealed class StoryTranslator
 	private readonly ConditionalWeakTable<Story, ConcurrentDictionary<string, bool>> _complete = new();
 
 	/// <summary>"My language": the grown-up's stored pick, else the device language when it is one of the fifteen. Not <c>CurrentUICulture</c>,
-	/// which a language pick only changes for the screens opened afterwards and the reading screen can still see the startup culture.</summary>
+	/// which a language pick only changes for the screens opened afterwards and the reading screen can still see the startup culture.
+	/// This is the app language; the grown-up screens and the shelf titles use it. The reading screen passes its own reading language (the child's pick, Slice 173) to every call below.</summary>
 	public static string MyLanguage => LanguageChoice.Current();
 
-	/// <summary>Whether reading <paramref name="story"/> goes through the translator now.</summary>
-	public bool Applies(Story story)
-	{
-		string mine = MyLanguage;
-		return BundledTranslations.Applies(story, mine, _engine is null ? null : [.. _engine.SupportedLanguages])
-			&& (_engine is not null || TableIsComplete(story, mine));
-	}
+	/// <summary>Whether reading <paramref name="story"/> in <paramref name="reading"/> goes through the translator.</summary>
+	public bool Applies(Story story, string reading) =>
+		BundledTranslations.Applies(story, reading, _engine is null ? null : [.. _engine.SupportedLanguages])
+			&& (_engine is not null || TableIsComplete(story, reading));
 
-	/// <summary>Whether the translate switch can do anything for <paramref name="story"/> (a table, a supported engine pair, or nothing to translate).</summary>
-	public bool CanTranslate(Story story) =>
-		BundledTranslations.CanTranslate(story, MyLanguage, _engine is null ? null : [.. _engine.SupportedLanguages]);
+	/// <summary>Whether the translate switch can do anything for <paramref name="story"/> in <paramref name="reading"/> (a table, a supported engine pair, or nothing to translate).</summary>
+	public bool CanTranslate(Story story, string reading) =>
+		BundledTranslations.CanTranslate(story, reading, _engine is null ? null : [.. _engine.SupportedLanguages]);
 
 	/// <summary>With no engine a table with holes is not used (see <see cref="TranslateAsync"/>), so the read stays in the story's language; checked once per story instance.</summary>
 	private bool TableIsComplete(Story story, string language) =>
 		_complete.GetValue(story, _ => new()).GetOrAdd(language, l => BundledTranslations.IsComplete(story, l));
 
 	/// <summary>Whether this read goes through a table the story carries (so it is read in whole sentences).</summary>
-	public bool UsesBundledTable(Story story) => Applies(story) && BundledTranslations.Has(story, MyLanguage);
+	public bool UsesBundledTable(Story story, string reading) => Applies(story, reading) && BundledTranslations.Has(story, reading);
 
-	/// <summary>The language the voice speaks the story in: the grown-up's when translating, the story's own otherwise.</summary>
-	public string SpokenLanguage(Story story) => Applies(story) ? MyLanguage : UiLanguage.Resolve(story.Language);
+	/// <summary>The language the voice speaks the story in: the reading language when translating, the story's own otherwise.</summary>
+	public string SpokenLanguage(Story story, string reading) => Applies(story, reading) ? UiLanguage.Resolve(reading) : UiLanguage.Resolve(story.Language);
 
 	/// <summary>The pieces, and whether their text was translated (false when a missing language model left the story as it was).</summary>
 	public sealed record Outcome(IReadOnlyList<SplitSegment> Pieces, bool Translated);
 
 	/// <summary>The pieces with their text translated; a missing language model leaves the story as it was.</summary>
 	public async Task<Outcome> TranslateAsync(
-		Story story, IReadOnlyList<SplitSegment> pieces, CancellationToken cancellationToken, bool forSpeech = false)
+		Story story, IReadOnlyList<SplitSegment> pieces, string reading, CancellationToken cancellationToken, bool forSpeech = false)
 	{
 		string source = UiLanguage.Resolve(story.Language);
-		string target = MyLanguage;
+		string target = UiLanguage.Resolve(reading);
 		if (_engine is null && BundledTranslations.MissesAny(story, target, pieces.Select(p => p.Segment.Text)))
 		{
 			// A table with holes and nothing to fill them: reading half in one language would be worse than the source.
@@ -113,9 +111,9 @@ public sealed class StoryTranslator
 	}
 
 	/// <summary>The story's title in the grown-up's language for the reading screen (Slice 110): the bundled table's entry, else the engine's, else the title as it is.</summary>
-	public async Task<string> TitleAsync(Story story, CancellationToken cancellationToken)
+	public async Task<string> TitleAsync(Story story, string reading, CancellationToken cancellationToken)
 	{
-		string target = MyLanguage;
+		string target = UiLanguage.Resolve(reading);
 		if (BundledTranslations.Lookup(story, target, story.Title) is { } bundled)
 		{
 			return bundled;
@@ -143,31 +141,89 @@ public sealed class StoryTranslator
 	}
 
 	/// <summary>
-	/// Whether <paramref name="story"/> should be translated on the phone but is not yet: the switch is on, its language differs from mine, the book has no full
-	/// table, and this build has an engine that covers the pair (none on Windows: such a book stays in its own language).
+	/// Whether <paramref name="story"/> should be translated on the phone into any of its story languages (Slice 173) but is not yet: the switch is on, the
+	/// language differs from the book's, the book has no full table for it, and this build has an engine that covers the pair (none on Windows: such a book
+	/// stays in its own language).
 	/// </summary>
-	public bool NeedsOwnTranslation(Story story)
-	{
-		string mine = MyLanguage;
-		string source = UiLanguage.Resolve(story.Language);
-		return _engine is not null && _packs is not null
-			&& TranslationFlow.ShouldTranslate(story.TranslateToMyLanguage, source, mine)
-			&& TranslationFlow.IsPairSupported([.. _engine.SupportedLanguages], source, mine)
-			&& OwnBookTranslation.Missing(story, mine).Count > 0;
-	}
+	public bool NeedsOwnTranslation(Story story, IReadOnlyCollection<string>? only = null) => OwnTargets(story, only).Count > 0;
 
-	/// <summary>The language packs this translation needs that are not on the device yet (none when they all are).</summary>
-	public async Task<IReadOnlyList<string>> MissingPacksAsync(Story story)
+	/// <summary>Whether <paramref name="story"/> still needs its table for <paramref name="language"/> (see <see cref="NeedsOwnTranslation"/>).</summary>
+	public bool NeedsOwnTranslationIn(Story story, string language) => OwnTargets(story).Contains(UiLanguage.Resolve(language));
+
+	// The story languages (the app language first) the book still has to be translated into on this phone; only: just these (the reader asks for its own language).
+	private List<string> OwnTargets(Story story, IReadOnlyCollection<string>? only = null)
 	{
-		if (_packs is null)
+		if (_engine is null || _packs is null)
 		{
 			return [];
 		}
 
-		var missing = new List<string>();
-		foreach (string language in OwnBookTranslation.PackLanguages(UiLanguage.Resolve(story.Language), MyLanguage))
+		string source = UiLanguage.Resolve(story.Language);
+		IReadOnlyCollection<string> supported = [.. _engine.SupportedLanguages];
+		return StoryLanguages.Current().All
+			.Where(language => only is null || only.Contains(language))
+			.Where(language => TranslationFlow.ShouldTranslate(story.TranslateToMyLanguage, source, language)
+				&& TranslationFlow.IsPairSupported(supported, source, language)
+				&& !BundledTranslations.IsComplete(story, language)
+				&& OwnBookTranslation.Missing(story, language).Count > 0)
+			.ToList();
+	}
+
+	/// <summary>Whether the child can read <paramref name="story"/> in <paramref name="language"/> right now, with nothing to download (Slice 173): it is the book's own
+	/// language, or it carries a table for it, or the translation engine and the packs for the pair are on the phone. False when the parent chose "Show original text" or the book does not translate.</summary>
+	public async Task<bool> CanReadInAsync(Story story, string language)
+	{
+		string target = UiLanguage.Resolve(language);
+		string source = UiLanguage.Resolve(story.Language);
+		if (target == source)
 		{
-			if (!await _packs.IsPackReadyAsync(language))
+			return true;
+		}
+
+		if (story.ShowOriginalText || !story.TranslateToMyLanguage)
+		{
+			return false;
+		}
+
+		if (BundledTranslations.Has(story, target) && (_engine is not null || TableIsComplete(story, target)))
+		{
+			return true;
+		}
+
+		if (_engine is null || _packs is null || !TranslationFlow.IsPairSupported([.. _engine.SupportedLanguages], source, target))
+		{
+			return false;
+		}
+
+		return (await MissingPacksForAsync(source, [target])).Count == 0;
+	}
+
+	/// <summary>The language packs the translations still needed need that are not on the device yet (none when they all are).</summary>
+	public async Task<IReadOnlyList<string>> MissingPacksAsync(Story story, IReadOnlyCollection<string>? only = null) =>
+		_packs is null ? [] : await MissingPacksForAsync(UiLanguage.Resolve(story.Language), OwnTargets(story, only));
+
+	/// <summary>The story languages the book still needs a table for whose packs are all on the phone now (so each can be translated, whatever happened to the others).</summary>
+	public async Task<IReadOnlyList<string>> TranslatableTargetsAsync(Story story, IReadOnlyCollection<string>? only = null)
+	{
+		var ready = new List<string>();
+		string source = UiLanguage.Resolve(story.Language);
+		foreach (string target in OwnTargets(story, only))
+		{
+			if ((await MissingPacksForAsync(source, [target])).Count == 0)
+			{
+				ready.Add(target);
+			}
+		}
+
+		return ready;
+	}
+
+	private async Task<IReadOnlyList<string>> MissingPacksForAsync(string source, IEnumerable<string> targets)
+	{
+		var missing = new List<string>();
+		foreach (string language in targets.SelectMany(target => OwnBookTranslation.PackLanguages(source, target)).Distinct())
+		{
+			if (!await _packs!.IsPackReadyAsync(language))
 			{
 				missing.Add(language);
 			}
@@ -176,36 +232,61 @@ public sealed class StoryTranslator
 		return missing;
 	}
 
-	/// <summary>Downloads the given packs one by one; <paramref name="progress"/> gets 0..1 across them. Throws <see cref="TranslationModelUnavailableException"/> on a failure.</summary>
-	public async Task DownloadPacksAsync(IReadOnlyList<string> languages, IProgress<double>? progress, CancellationToken cancellationToken)
+	/// <summary>
+	/// Downloads the given packs one by one; <paramref name="progress"/> gets 0..1 across them. One pack failing does not stop the others (a cancel does); the languages
+	/// whose pack could not be fetched are returned.
+	/// </summary>
+	public async Task<IReadOnlyList<string>> DownloadPacksAsync(IReadOnlyList<string> languages, IProgress<double>? progress, CancellationToken cancellationToken)
 	{
+		var failed = new List<string>();
 		for (int i = 0; i < languages.Count; i++)
 		{
-			await _packs!.DownloadPackAsync(languages[i], null, cancellationToken);
+			try
+			{
+				await _packs!.DownloadPackAsync(languages[i], null, cancellationToken);
+			}
+			catch (TranslationModelUnavailableException ex)
+			{
+				Debug.WriteLine($"Dino Reader could not get the {languages[i]} translation pack: {ex.Message}");
+				failed.Add(languages[i]);
+			}
+
 			progress?.Report((i + 1) / (double)languages.Count);
 		}
+
+		return failed;
 	}
 
 	/// <summary>
-	/// Translates what <paramref name="story"/> misses in my language (text and title) and saves it inside the book, so the shelf and the reader show it offline afterwards.
-	/// False when nothing could be translated (the pack is missing); the book is then left as it was.
+	/// Translates what <paramref name="story"/> misses in each of <paramref name="targets"/> (text and title) and saves it inside the book, so the shelf and the reader show it offline afterwards.
+	/// One language failing does not undo the others. False only when no table could be saved at all (a pack is missing); the book is then left as it was.
 	/// </summary>
-	public async Task<bool> SaveOwnTranslationAsync(Story story, CancellationToken cancellationToken)
+	public async Task<bool> SaveOwnTranslationAsync(Story story, IReadOnlyList<string> targets, CancellationToken cancellationToken)
 	{
-		string mine = MyLanguage;
-		string source = UiLanguage.Resolve(story.Language);
 		IStoryLibrary? library = _services.GetService(typeof(IStoryLibrary)) as IStoryLibrary;
 		if (_engine is null || library is null)
 		{
 			return false;
 		}
 
-		var table = new Dictionary<string, string>(BundledTranslations.TableFor(story, mine) ?? new Dictionary<string, string>(), StringComparer.Ordinal);
+		bool any = false;
+		foreach (string language in targets)
+		{
+			any |= await SaveOwnTranslationAsync(story, language, library, cancellationToken);
+		}
+
+		return any;
+	}
+
+	private async Task<bool> SaveOwnTranslationAsync(Story story, string language, IStoryLibrary library, CancellationToken cancellationToken)
+	{
+		string source = UiLanguage.Resolve(story.Language);
+		var table = new Dictionary<string, string>(BundledTranslations.TableFor(story, language) ?? new Dictionary<string, string>(), StringComparer.Ordinal);
 		try
 		{
-			foreach (string text in OwnBookTranslation.Missing(story, mine))
+			foreach (string text in OwnBookTranslation.Missing(story, language))
 			{
-				string translated = (await PieceAsync(text, source, mine, cancellationToken)).Trim();
+				string translated = (await PieceAsync(text, source, language, cancellationToken)).Trim();
 				table[text] = translated.Length > 0 ? translated : text;
 			}
 		}
@@ -215,7 +296,7 @@ public sealed class StoryTranslator
 			return false;
 		}
 
-		return await StoreTableAsync(library, story.Id, mine, table);
+		return await StoreTableAsync(library, story.Id, language, table);
 	}
 
 	// Applied to the book as it is on disk now, so an edit saved meanwhile is kept; only the language's table changes.

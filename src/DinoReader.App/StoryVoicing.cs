@@ -66,16 +66,16 @@ public sealed class StoryVoicing
 	/// that must not block the UI. The story is translated afterwards when it is set to be (Slice 66).
 	/// </summary>
 	public async Task<IReadOnlyList<VoicedSegment>> VoiceAsync(
-		Story story, int fromPosition = 0, CancellationToken cancellationToken = default, Action? translationSkipped = null)
+		Story story, string reading, int fromPosition = 0, CancellationToken cancellationToken = default, Action? translationSkipped = null)
 	{
-		bool wholePieces = _translator.UsesBundledTable(story);
+		bool wholePieces = _translator.UsesBundledTable(story, reading);
 		Prepared prepared = await Task.Run(() => fromPosition == 0 ? PrepareShared(story, wholePieces) : Prepare(story, fromPosition, wholePieces), cancellationToken);
-		if (!_translator.Applies(story))
+		if (!_translator.Applies(story, reading))
 		{
 			return await Task.Run(() => VoicedInOwnLanguage(story, prepared), cancellationToken);
 		}
 
-		StoryTranslator.Outcome outcome = await _translator.TranslateAsync(story, prepared.Pieces, cancellationToken, forSpeech: true);
+		StoryTranslator.Outcome outcome = await _translator.TranslateAsync(story, prepared.Pieces, reading, cancellationToken, forSpeech: true);
 		if (!outcome.Translated)
 		{
 			// The story is read as written, in its own language and voices, so the spoken pack goes back to its language too.
@@ -83,30 +83,30 @@ public sealed class StoryVoicing
 			return await Task.Run(() => VoicedInOwnLanguage(story, prepared), cancellationToken);
 		}
 
-		return await Task.Run(() => VoicedTranslated(story, prepared, outcome.Pieces), cancellationToken);
+		return await Task.Run(() => VoicedTranslated(story, prepared, outcome.Pieces, reading), cancellationToken);
 	}
 
 	/// <summary>The story's text in the language it is read in, for the reading screen (Slice 110, Decision 112); null when the screen shows the story as it is:
 	/// the story is not translated now, the grown-up chose "Show original text", or a missing language model left it untranslated. <paramref name="sentences"/> are the
 	/// story's sentences, which the result keeps one-to-one.</summary>
-	public async Task<TranslatedStory?> TranslatedDisplayAsync(Story story, IReadOnlyList<SentenceSpan> sentences, CancellationToken cancellationToken = default)
+	public async Task<TranslatedStory?> TranslatedDisplayAsync(Story story, IReadOnlyList<SentenceSpan> sentences, string reading, CancellationToken cancellationToken = default)
 	{
-		if (story.ShowOriginalText || !_translator.Applies(story))
+		if (story.ShowOriginalText || !_translator.Applies(story, reading))
 		{
 			return null;
 		}
 
-		Prepared prepared = await Task.Run(() => PrepareShared(story, _translator.UsesBundledTable(story)), cancellationToken);
+		Prepared prepared = await Task.Run(() => PrepareShared(story, _translator.UsesBundledTable(story, reading)), cancellationToken);
 		// The engine's pieces are shared with a read that speaks them at the same time (StoryTranslator), so each is translated once.
-		StoryTranslator.Outcome outcome = await _translator.TranslateAsync(story, prepared.Pieces, cancellationToken);
+		StoryTranslator.Outcome outcome = await _translator.TranslateAsync(story, prepared.Pieces, reading, cancellationToken);
 		return outcome.Translated ? TranslatedStoryBuilder.Build(story.Pages, sentences, outcome.Pieces, StoryRecordings.PagesShownInOwnLanguage(story)) : null;
 	}
 
 	// A translated read is cast from the spoken language's own cast (Slice 108), narrated by that language's narrator.
 	// The pack scans behind the voices run here, on the worker thread that calls it.
-	private IReadOnlyList<VoicedSegment> VoicedTranslated(Story story, Prepared prepared, IReadOnlyList<SplitSegment> pieces)
+	private IReadOnlyList<VoicedSegment> VoicedTranslated(Story story, Prepared prepared, IReadOnlyList<SplitSegment> pieces, string reading)
 	{
-		string spoken = _translator.SpokenLanguage(story);
+		string spoken = _translator.SpokenLanguage(story, reading);
 		VoiceCast cast = CastIn(story, prepared, spoken);
 		return WithAnimalSounds(story, prepared, cast, pieces, spoken);
 	}
@@ -192,8 +192,8 @@ public sealed class StoryVoicing
 		return string.Join(' ', pieces.Skip(first).Take(last - first + 1).Select(p => p.Segment.Text));
 	}
 
-	/// <summary>The language a read of <paramref name="story"/> is spoken in now, and so the one whose cast the cast screen edits (Slice 108).</summary>
-	public string ReadingLanguage(Story story) => _translator.SpokenLanguage(story);
+	/// <summary>The language a read of <paramref name="story"/> in <paramref name="reading"/> is spoken in, and so the one whose cast the cast screen edits (Slice 108).</summary>
+	public string ReadingLanguage(Story story, string reading) => _translator.SpokenLanguage(story, reading);
 
 	/// <summary>The narrator of every book read in <paramref name="language"/> (Slice 109): the grown-up's pick for it while its pack still has that voice, else <see cref="NarratorFor"/>.</summary>
 	public string NarratorOf(string language) =>
@@ -231,30 +231,26 @@ public sealed class StoryVoicing
 			.ToList();
 	}
 
-	/// <summary>The languages whose narrator Settings summarises: the ones with an installed voice pack, <paramref name="myLanguage"/> first, else just it
-	/// (Slice 172; until story languages exist, Slice 173, these stand in for them).</summary>
-	public IReadOnlyList<string> NarratorLanguages(string myLanguage)
-	{
-		IReadOnlyList<string> installed = InstalledLanguages(myLanguage);
-		return installed.Count > 0 ? installed : [UiLanguage.Resolve(myLanguage)];
-	}
+	/// <summary>The languages whose narrator Settings summarises: the story languages the grown-up saved (Slice 173), the app language first.</summary>
+	public IReadOnlyList<string> NarratorLanguages() => StoryLanguages.Current().All;
 
-	/// <summary>Every UI language, <paramref name="myLanguage"/> first: the Narrator page lists them all, a language with no pack showing how to get it.</summary>
-	public static IReadOnlyList<string> AllLanguages(string myLanguage)
+	/// <summary>Every UI language, the story languages first (the app language, then the sides) and the rest in list order: the Narrator page lists them all,
+	/// a language with no pack showing how to get it.</summary>
+	public static IReadOnlyList<string> AllLanguages(IReadOnlyList<string> storyLanguages)
 	{
-		string mine = UiLanguage.Resolve(myLanguage);
-		return LanguageNames.All.Select(l => UiLanguage.Resolve(l.Code)).Distinct().OrderBy(code => code == mine ? 0 : 1).ToList();
+		IEnumerable<string> all = LanguageNames.All.Select(l => UiLanguage.Resolve(l.Code)).Distinct();
+		return [.. storyLanguages.Concat(all.Where(code => !storyLanguages.Contains(code)))];
 	}
 
 	/// <summary>A cast for the language <paramref name="story"/> is read in now when it has none yet (Slice 108), else null (also null while that
 	/// language has no voices yet or the story no characters, so nothing empty is kept). Seeded by the genders the grown-up corrected in the
 	/// story's own cast; the caller saves it so the voices stay put. On a worker thread.</summary>
-	public Task<NewCast?> NewCastForReadingAsync(Story story) =>
-		story.HasCastIn(ReadingLanguage(story)) ? Task.FromResult<NewCast?>(null) : Task.Run(() => NewCastForReading(story));
+	public Task<NewCast?> NewCastForReadingAsync(Story story, string reading) =>
+		story.HasCastIn(ReadingLanguage(story, reading)) ? Task.FromResult<NewCast?>(null) : Task.Run(() => NewCastForReading(story, reading));
 
-	private NewCast? NewCastForReading(Story story)
+	private NewCast? NewCastForReading(Story story, string reading)
 	{
-		string language = ReadingLanguage(story);
+		string language = ReadingLanguage(story, reading);
 		if (story.HasCastIn(language) || VoicesFor(language).Count == 0)
 		{
 			return null;

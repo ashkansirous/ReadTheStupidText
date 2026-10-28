@@ -166,7 +166,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	// The housekeeping (a missing cast, a clash with the narrator) is only needed when the page opens or the narrator may have changed, not after each edit.
 	private async Task RefreshAsync(bool housekeeping = true)
 	{
-		_castLanguage = _voicing.ReadingLanguage(_story!);
+		_castLanguage = _voicing.ReadingLanguage(_story!, StoryTranslator.MyLanguage); // a grown-up page: the app language, never the child's pick
 		if (housekeeping)
 		{
 			await EnsureCastAsync();
@@ -180,7 +180,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	// The language the book will be read in may have no cast yet (a first look at a book read in another language): make and keep it (Slice 108).
 	private async Task EnsureCastAsync()
 	{
-		StoryVoicing.NewCast? made = await _voicing.NewCastForReadingAsync(_story!);
+		StoryVoicing.NewCast? made = await _voicing.NewCastForReadingAsync(_story!, StoryTranslator.MyLanguage);
 		if (made is null)
 		{
 			return;

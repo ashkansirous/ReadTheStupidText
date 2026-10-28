@@ -342,10 +342,29 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>Dyrelyde</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>Dyrene siger af og til “Øf!” eller “Mæh!”, i alle bøger</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>Der er flere figurer i bogen end de {0} fortællerfigurer, vi har, så nogle lyder ens. Fortælleren gives aldrig til en figur.</value></data>
-  <data name="TranslationPack_Title" xml:space="preserve"><value>Hent oversættelsespakken til {0}?</value></data>
-  <data name="TranslationPack_Body" xml:space="preserve"><value>For at vise og læse bogen på {0} skal Dino Reader bruge en oversættelsespakke på ca. 30 MB. Den bliver på denne enhed. Hvis du springer over, forbliver bogen på sit eget sprog.</value></data>
+  <data name="TranslationPack_TitleNamed" xml:space="preserve"><value>Hent oversættelsespakker?</value></data>
+  <data name="TranslationPack_BodyNamed" xml:space="preserve"><value>For at vise og læse denne bog på {0} har Dino Reader brug for disse oversættelsespakker: {1}. De bliver på denne enhed. Hvis du springer dem over, forbliver bogen på sit eget sprog.</value></data>
   <data name="TranslationPack_Download" xml:space="preserve"><value>Hent</value></data>
   <data name="TranslationPack_Keep" xml:space="preserve"><value>Behold originalen</value></data>
   <data name="TranslationPack_Failed" xml:space="preserve"><value>Oversættelsespakken kunne ikke hentes. Bogen forbliver på sit eget sprog.</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>Henter oversættelsespakken til {0}…</value></data>
+  <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>Hvilke sprog skal historierne være på?</value></data>
+  <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>Vælg op til to mere. Dit barn kan skifte, mens det læser.</value></data>
+  <data name="StoryLanguages_AppLanguage" xml:space="preserve"><value>App-sprog</value></data>
+  <data name="StoryLanguages_SkipOnly" xml:space="preserve"><value>Spring over, kun {0}</value></data>
+  <data name="StoryLanguages_Getting" xml:space="preserve"><value>Gør stemmen klar · {0} %</value></data>
+  <data name="StoryLanguages_Full" xml:space="preserve"><value>Tre valgt. Fjern et flueben for at vælge et andet.</value></data>
+  <data name="StoryLanguages_SettingsTitle" xml:space="preserve"><value>Historiesprog</value></data>
+  <data name="StoryLanguages_SettingsLine" xml:space="preserve"><value>Dit barn kan skifte mellem disse, mens det læser. Op til tre.</value></data>
+  <data name="StoryLanguages_DropTitle" xml:space="preserve"><value>{0} er nu app-sproget</value></data>
+  <data name="StoryLanguages_DropBody" xml:space="preserve"><value>Historier kan højst være på tre sprog. Hvilket skal fjernes?</value></data>
+  <data name="StoryLanguages_Remove" xml:space="preserve"><value>Fjern {0}</value></data>
+  <data name="StoryLanguages_WasApp" xml:space="preserve"><value>Var app-sproget</value></data>
+  <data name="StoryLanguages_ButtonLabel" xml:space="preserve"><value>Historiesprog: {0}</value></data>
+  <data name="StoryLanguages_Failed" xml:space="preserve"><value>Stemmen kunne ikke hentes. Tryk for at prøve igen.</value></data>
+  <data name="StoryLanguages_WifiTitle" xml:space="preserve"><value>Hent via mobildata?</value></data>
+  <data name="StoryLanguages_WifiBody" xml:space="preserve"><value>Du er ikke på Wi-Fi. {0} hentes via mobildata.</value></data>
+  <data name="StoryLanguages_WifiNow" xml:space="preserve"><value>Hent nu</value></data>
+  <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>Vent på Wi-Fi</value></data>
+  <data name="StoryLanguages_WifiWaiting" xml:space="preserve"><value>Venter på Wi-Fi</value></data>
 </root>

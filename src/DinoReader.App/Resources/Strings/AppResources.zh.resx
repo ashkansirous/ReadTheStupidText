@@ -343,10 +343,29 @@
   <data name="Settings_AnimalSounds_Title" xml:space="preserve"><value>动物叫声</value></data>
   <data name="Settings_AnimalSounds_Sub" xml:space="preserve"><value>动物会不时说“哼哼!”或“咩!”,每本书都一样</value></data>
   <data name="Cast_SharedNote" xml:space="preserve"><value>这本书的角色比现有的 {0} 个讲故事角色还多，所以有些角色听起来会一样。旁白不会分给任何角色。</value></data>
-  <data name="TranslationPack_Title" xml:space="preserve"><value>下载{0}翻译包？</value></data>
-  <data name="TranslationPack_Body" xml:space="preserve"><value>要用{0}显示和朗读这本书，Dino Reader 需要一个约 30 MB 的翻译包。它只保存在这台设备上。如果跳过，这本书会保持原来的语言。</value></data>
+  <data name="TranslationPack_TitleNamed" xml:space="preserve"><value>下载翻译包吗？</value></data>
+  <data name="TranslationPack_BodyNamed" xml:space="preserve"><value>要以 {0} 显示并朗读这本书，Dino Reader 需要这些翻译包：{1}。它们会保存在此设备上。如果跳过，这本书将保持原来的语言。</value></data>
   <data name="TranslationPack_Download" xml:space="preserve"><value>下载</value></data>
   <data name="TranslationPack_Keep" xml:space="preserve"><value>保留原文</value></data>
   <data name="TranslationPack_Failed" xml:space="preserve"><value>无法获取翻译包。这本书会保持原来的语言。</value></data>
   <data name="Wait_DownloadingPack" xml:space="preserve"><value>正在获取{0}翻译包…</value></data>
+  <data name="StoryLanguages_IntroTitle" xml:space="preserve"><value>故事要用哪些语言？</value></data>
+  <data name="StoryLanguages_IntroLine" xml:space="preserve"><value>最多再选两种。孩子可以在阅读时切换。</value></data>
+  <data name="StoryLanguages_AppLanguage" xml:space="preserve"><value>应用语言</value></data>
+  <data name="StoryLanguages_SkipOnly" xml:space="preserve"><value>跳过，仅{0}</value></data>
+  <data name="StoryLanguages_Getting" xml:space="preserve"><value>正在准备语音 · {0}%</value></data>
+  <data name="StoryLanguages_Full" xml:space="preserve"><value>已选三种。取消一种后才能再选其他。</value></data>
+  <data name="StoryLanguages_SettingsTitle" xml:space="preserve"><value>故事语言</value></data>
+  <data name="StoryLanguages_SettingsLine" xml:space="preserve"><value>孩子可以在阅读时在这些语言之间切换。最多三种。</value></data>
+  <data name="StoryLanguages_DropTitle" xml:space="preserve"><value>{0}现在是应用语言</value></data>
+  <data name="StoryLanguages_DropBody" xml:space="preserve"><value>故事最多可以有三种语言。要去掉哪一种？</value></data>
+  <data name="StoryLanguages_Remove" xml:space="preserve"><value>移除{0}</value></data>
+  <data name="StoryLanguages_WasApp" xml:space="preserve"><value>原来的应用语言</value></data>
+  <data name="StoryLanguages_ButtonLabel" xml:space="preserve"><value>故事语言：{0}</value></data>
+  <data name="StoryLanguages_Failed" xml:space="preserve"><value>无法获取语音。点按重试。</value></data>
+  <data name="StoryLanguages_WifiTitle" xml:space="preserve"><value>使用移动数据下载吗？</value></data>
+  <data name="StoryLanguages_WifiBody" xml:space="preserve"><value>你没有连接 Wi-Fi。将通过移动数据下载 {0}。</value></data>
+  <data name="StoryLanguages_WifiNow" xml:space="preserve"><value>立即下载</value></data>
+  <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>等待 Wi-Fi</value></data>
+  <data name="StoryLanguages_WifiWaiting" xml:space="preserve"><value>正在等待 Wi-Fi</value></data>
 </root>

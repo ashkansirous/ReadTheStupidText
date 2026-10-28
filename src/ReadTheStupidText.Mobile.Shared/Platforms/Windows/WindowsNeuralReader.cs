@@ -11,7 +11,7 @@ namespace ReadTheStupidText.Mobile.Shared;
 /// adds is turning Infrastructure's "no engine" exception into Mobile.Shared's, which is the one
 /// <see cref="CompositeSpeechReader"/> catches to fall back to the Windows voice.
 /// </summary>
-public sealed class WindowsNeuralReader : ISpeechReader, IDisposable
+public sealed class WindowsNeuralReader : ISpeechReader, IModelScopedSegmentReader, IDisposable
 {
 	private readonly SupertonicSpeechReader _inner;
 
@@ -43,7 +43,13 @@ public sealed class WindowsNeuralReader : ISpeechReader, IDisposable
 	public Task SpeakSegmentsAsync(IReadOnlyList<VoicedSegment> segments, int? activityId = null) =>
 		Translate(() => _inner.SpeakSegmentsAsync(segments, activityId));
 
+	// Slice 173: voiced segments in the pack the caller names, the app-language model untouched.
+	public Task SpeakSegmentsAsync(IReadOnlyList<VoicedSegment> segments, VoiceModelPaths model, int? activityId = null) =>
+		Translate(() => _inner.SpeakSegmentsAsync(segments, model, activityId));
+
 	public Task WarmUpAsync() => _inner.WarmUpAsync();
+
+	public Task WarmUpAsync(VoiceModelPaths model) => _inner.WarmUpAsync(model);
 
 	public void Pause() => _inner.Pause();
 

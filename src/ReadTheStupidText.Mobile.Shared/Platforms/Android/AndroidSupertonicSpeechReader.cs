@@ -26,7 +26,7 @@ namespace ReadTheStupidText.Mobile.Shared;
 /// position-changed event, so read-through progress/timing are driven by a
 /// short poll loop while a chunk plays, rather than an event.
 /// </remarks>
-public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, IModelScopedReader, IDisposable
+public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, IModelScopedReader, IModelScopedSegmentReader, IDisposable
 {
     // Same reasoning as the Windows reader: intra-op ONNX threads per synthesis,
     // scaled to the device but capped so a single Generate doesn't over-claim
@@ -213,6 +213,10 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     // Slice 90: a read in the text's own language names its pack; the app-language model is untouched.
     public Task SpeakAsync(string text, VoiceModelPaths model, int? activityId = null) =>
         StartReadAsync(PlanText(text, model), model);
+
+    // Slice 173: voiced segments in the pack the caller names (the child's story language), the app-language model untouched.
+    public Task SpeakSegmentsAsync(IReadOnlyList<VoicedSegment> segments, VoiceModelPaths model, int? activityId = null) =>
+        StartReadAsync(SpeechChunkPlanner.ForSegments(segments, HeadPolicy), model);
 
     private async Task StartReadAsync(IReadOnlyList<SpeechChunkPlan> chunks, VoiceModelPaths? model = null)
     {
@@ -637,11 +641,17 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     // cold and the next trigger warms it. Duplicate triggers are harmless.
     private void WarmUp()
     {
-        if (_model.Paths is not { } paths)
+        if (_model.Paths is { } paths)
         {
-            return;
+            WarmEnginesBestEffort(paths);
         }
+    }
 
+    // Slice 173: the child's picked language is warmed by the same rules (WarmEngine / Acquire forWarmUp), so the first read in its pack does not build the model.
+    public Task WarmUpAsync(VoiceModelPaths model) => Task.Run(() => WarmEnginesBestEffort(model));
+
+    private void WarmEnginesBestEffort(VoiceModelPaths paths)
+    {
         try
         {
             WarmEngines(paths);
