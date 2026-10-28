@@ -1,13 +1,13 @@
 # Slice 179 — No Play robot, VM or own-machine runs in the usage counts
 
-*Planned.* Both products, every head: Read The Stupid Text (Windows tray, Android, iOS) and Dino Reader (Android, iOS,
+*In progress (wave 2026-10-28), draft PR.* Both products, every head: Read The Stupid Text (Windows tray, Android, iOS) and Dino Reader (Android, iOS,
 Windows). Follow-up to Slice 167, which did not stop all of it. Asked for by the user on 2026-10-28.
 
 **Touches:** `worker/events.ts`, `worker/events.test.mjs`, `src/ReadTheStupidText.Application/Usage/**`,
 `src/ReadTheStupidText.Mobile.Shared/Usage/UsageGate.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/**` (only if a
 platform helper is needed), `src/ReadTheStupidText.Infrastructure/Usage/WindowsUsage.cs`,
 `tests/ReadTheStupidText.Tests/UsageEligibilityTests.cs`, `tools/desktop-vm/**`, `tools/emulator/**`, `tools/phone/**`,
-`.claude/agents/analytics-query.md` (if the repo has one; else the query notes in Slice 166's file),
+`.claude/agents/analytics-query.md` (none in the repo: use the query notes in Slice 166's file),
 `docs/plan/slices/179-no-robot-or-own-machine-counts.md`
 
 ## Why
@@ -28,7 +28,7 @@ Why they get through (checked in code on origin/main, 2026-10-28):
 - Windows passes `isDebug`, the package version and a hard-coded `false` for emulator and Test Lab (`WindowsUsage.cs:25-37`).
   Any Release MSIX with a real version counts, wherever it runs: the host, the Hyper-V test VM, a sideload.
 - No harness can switch counting off: no env var, launch argument or marker file is read.
-- The Worker validates the device fields but never drops a count because of them (`worker/events.ts:48-50`), although
+- The Worker validates the device fields but never drops a count because of them (`worker/events.ts:59-67`), although
   `arch` and `platform` are already sent on every event (Slice 166).
 
 ## Decisions (defaults chosen; the user can overrule)
@@ -60,7 +60,7 @@ The first item alone fixes the robot for every shipped version.
 - [ ] `UsageEligibility`: add the "test install" and "non-store install" inputs; unit tests in `UsageEligibilityTests.cs`.
 - [ ] Android (`UsageGate`): the extra emulator/robot signals in decision 2, fail closed on the Test Lab read.
 - [ ] iOS (`UsageGate`): the `sandboxReceipt` check from decision 3.
-- [ ] Windows (`WindowsUsage` for RTST, `UsageGate` Windows path for Dino): Store signature only; read the off-switch env var.
+- [ ] Windows (`WindowsUsage` for RTST, `UsageGate` Windows path for Dino): Store signature only; read the off-switch env var. Note: `UsageGate` has no Windows branch today (header says Android/iOS only) and Dino Reader has no `Package.Current`/`SignatureKind` use, so this is a new Windows code path in `UsageGate` (or a shared helper in Infrastructure, reused by `WindowsUsage`).
 - [ ] Harnesses: `tools/desktop-vm`, `tools/emulator` and `tools/phone` set the off switch on every run.
 - [ ] Query notes: add the robot signature and the Windows caveat (decision 6).
 
