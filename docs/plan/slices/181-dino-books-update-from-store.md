@@ -17,13 +17,13 @@ What exists (checked on `origin/main` 2026-10-28):
 
 #### Decisions (user, 2026-10-28)
 
-1. **When:** on every app open and on resume, in the background, after the app-config fetch (`DinoApp.CountLaunchAsync` and the `Window.Resumed` handler in `App.xaml.cs`). One check at a time; a resume while one runs joins it.
+1. **When:** only when the app opens (a cold start, `DinoApp.CountLaunchAsync` in `App.xaml.cs`, after the app-config fetch), in the background, and **at most once every 7 days**. The app saves the time of its last finished check (preference `dino.books.lastupdatecheck`); an open less than 7 days after it makes no store call at all. Never on resume or return to the screen. (Corrected 2026-10-28: the first version of this slice added a check on resume, which the user had not asked for.)
 2. **Which books:** every book on the shelf with a store id (starters and downloaded books) whose recorded version is below the store's. Own books (no store id) are never touched. A deleted book is not brought back (Decision 130 rule kept).
 3. **Edited books are left alone:** if the parent changed a book's page text, it is never overwritten (same rule as starters). Unedited copies are replaced in place, keeping cast, voices, translations, recordings and cover photo.
-4. **Any network:** Wi-Fi or mobile data (a book is about 3 MB). No download when offline; the next open tries again.
+4. **Any network:** Wi-Fi or mobile data (a book is about 3 MB). No download when offline; an offline or failed check does not save the time, so the next open tries again.
 5. **Silent:** no notice, no badge. The book just has the new version the next time it is opened.
 
-Decided without asking (obvious): a book that is open on screen is not swapped under the child; it updates on the next check after it is closed. A failed download leaves the old copy as it is and retries on the next check. Books update one after another, not in parallel.
+Decided without asking (my choice, not the user's): a book the child opens while the check runs is not swapped under them. A failed download leaves the old copy as it is. In both cases the time is not saved, so the next app open checks again instead of waiting 7 days. Books update one after another, not in parallel.
 
 #### Design
 
@@ -38,8 +38,8 @@ Decided without asking (obvious): a book that is open on screen is not swapped u
 - [ ] Core: `BookUpdatePlan` + `BookUpdatePlanTests` (version below / equal / above, edited, open, deleted, not in store, no hash record).
 - [ ] Record `dino.book.texthash.<id>` on store install (`StoreClient`) and after every swap (`StarterStories`).
 - [ ] Share the swap: lift `ReplaceUnlessEditedAsync` / `ReplaceAsync` so downloaded books use the same path, with edit detection against the recorded hash for downloaded books.
-- [ ] `BookUpdater`: list, plan, download, swap, record; one run at a time; cancels cleanly when the app goes to the background.
-- [ ] Wire into `CountLaunchAsync` and the resume handler (`App.xaml.cs`), after the config refresh.
+- [ ] `BookUpdater`: list, plan, download, swap, record; one run per app open; cancels cleanly when the app goes to the background.
+- [ ] Wire into `CountLaunchAsync` only (`App.xaml.cs`), after the config refresh; skip unless 7 days have passed since `dino.books.lastupdatecheck`; save the time only after a finished check (pure due-check in Core, with tests: never checked, 6 days, 7 days, clock moved back).
 - [ ] Legacy downloaded books with no hash record: fetch the installed version once and record its hash.
 - [ ] Android and iOS: the code is shared MAUI; both run the same updater (no platform code expected). Windows head runs it too.
 - [ ] Rule into `src/DinoReader.App/CLAUDE.md`: every store install and swap records the text hash; never swap an open book.
