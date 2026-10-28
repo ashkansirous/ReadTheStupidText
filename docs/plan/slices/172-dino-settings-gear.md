@@ -1,0 +1,67 @@
+# Slice 172 — Dino: one gear for all grown-up settings
+
+*Planned 2026-10-28.* Dino Reader only (Android, iOS and the Windows head).
+
+**Batch:** 37 (Dino settings, 2026-10-28; Decision 167)
+**Touches:** `src/DinoReader.App/SettingsPage.cs` (new), `src/DinoReader.App/ReadingSpeedPage.cs` (new), `src/DinoReader.App/AnimalSoundsPage.cs` (new), `src/DinoReader.App/UsageCountsPage.cs` (new), `src/DinoReader.App/AboutPage.cs` (new), `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/LanguagePage.xaml`, `src/DinoReader.App/LanguagePage.xaml.cs`, `src/DinoReader.App/NarratorPage.cs`, `src/DinoReader.App/SettingsRows.cs`, `src/DinoReader.App/UpdatePage.cs` (`VersionCard` host only), `src/DinoReader.App/GrownUpGate.cs`, `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/Resources/Strings/*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `src/DinoReader.App/Resources/Images/**` (gear icon), `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`
+
+## Why
+
+The user, 2026-10-28: the parents' settings are hidden. Today they only show after the shelf is switched
+into grown-up mode, and most of them sit under the **Language** pill: `LanguagePage.xaml.cs:111-129` also
+holds the reading speed, animal sounds, usage counts and version cards, none of which is about language.
+Narrator and Backup are separate shelf buttons (`GalleryPage.xaml:125-165`). Parents should find one
+clear **gear**, and each setting should have its own place. "Free stories" also has to go, because
+in-app payments are coming later.
+
+## Decisions locked with the user (Decision 167)
+
+1. **A gear icon, always visible** in the shelf's top corner, in kids' mode too. Tapping it runs the
+   existing `GrownUpGate` (hold, then a sum) and then opens a new **Settings** page. Grown-up mode stays,
+   but only for adding and editing books.
+2. **Settings is a list of rows, each opening its own sub-page from day 1:** Language, Narrator voice,
+   Reading speed, Animal sounds, Usage counts, Backup, About & updates (the version card and the
+   replay-intro row from Slice 155). Every row that isn't about language leaves `LanguagePage`, which
+   keeps only the language list.
+3. **The store stays outside Settings**: a shelf button, grown-up mode only (so behind the gate, which
+   paid stories will need later).
+4. **"Free stories" becomes "More stories"** (`Store_Title`) in all 14 languages. Also reword
+   `Store_OfflineBody` ("The free stories need the internet") and `Intro_StoreLine` ("The free store
+   has more stories"), dropping "free". `Store_Footer` ("Free, with no account...") stays until payments
+   arrive.
+5. **The narrator page shows only the current language.** Its title names the language, for example
+   "Narrator voice (English)". Saving already works per language (`NarratorChoice.cs:11-19`, key
+   `dino.narrator.<lang>`), so a pick made for another language stays and comes back when the parent
+   switches back. Today `NarratorPage` shows a card per language (`NarratorPage.cs:111-128`); it drops
+   to one.
+
+## Work
+
+- [ ] **First end-to-end piece:** the gear on the shelf, the gate, a `SettingsPage` with the Language and
+      Narrator rows opening the existing pages. Works on Android, iOS and Windows.
+- [ ] Move Reading speed, Animal sounds and Usage counts off `LanguagePage` onto their own sub-pages,
+      reusing `ReadingSpeedCard`, `AnimalSoundsCard` and `UsageCountsCard` as they are.
+- [ ] About & updates sub-page: `VersionCard` plus the replay-intro row (moved from `LanguagePage.ShowVersionCard`,
+      still refreshing on remote-config change).
+- [ ] Backup row opens `BackupPage`. Remove the Narrator and Backup shortcut buttons and the Language pill
+      from the shelf; keep the store button (grown-up mode).
+- [ ] `NarratorPage`: only the current UI language's card, the title with the language name.
+- [ ] Strings: `Settings_Title` and one label per row (14 languages, 13 as drafts for a native read);
+      `Store_Title` -> "More stories", `Store_OfflineBody` and `Intro_StoreLine` without "free".
+- [ ] The shelf's accessibility labels: the gear reads "Settings" (`SemanticProperties.Description`), 48 dp touch target.
+- [ ] Unit test (DinoReader.Tests): the narrator pick for one language survives saving another language's
+      pick (pure part of `NarratorChoice`, if not already covered).
+- [ ] Update `src/DinoReader.App/CLAUDE.md`: settings live under the gear, one sub-page per setting;
+      `LanguagePage` holds only languages; the store is never a settings row.
+
+## Verification
+
+- `dotnet test tests/DinoReader.Tests/DinoReader.Tests.csproj` green.
+- Android (headless emulator, `device-test`): in kids' mode, gear -> gate -> Settings; every row opens its
+  sub-page and Back returns to Settings; the Language page shows only languages; set the narrator for
+  English, switch to Svenska, set a different one, switch back: the English pick is still there; the
+  shelf shows "More stories" in grown-up mode and no Narrator/Backup buttons; failing the gate leaves the shelf.
+- iOS: compile (`-p:IncludeIos=true -p:IncludeWindows=false -p:IncludeAndroid=false`) and the same flow
+  on a simulator or TestFlight build.
+- Windows head: the gear and Settings page on the desktop build.
+- A 13-language native read of the new strings goes to Outstanding work.
