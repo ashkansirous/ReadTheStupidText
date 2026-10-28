@@ -1,12 +1,12 @@
 ### Slice 182 — A pack download that stopped "offline" resumes by itself
 
-*Planned.*
+*In progress (wave 2026-10-28), draft PR.*
 
 **Touches:** `src/ReadTheStupidText.Mobile.Shared/MobileVoicePackService.cs`, `src/ReadTheStupidText.Mobile.Shared/VoicePackInstaller.cs`, `src/ReadTheStupidText.Mobile.Shared/Network/*` (new, one connectivity watcher), `src/ReadTheStupidText.Application/Reading/VoicePackSetup.cs`, `src/ReadTheStupidText.Application/Reading/PackRetryPolicy.cs`, `src/ReadTheStupidText.Application/Translation/TranslationPackInstaller.cs`, `src/ReadTheStupidText.Mobile/OcrPackInstaller.cs`, `src/ReadTheStupidText.Mobile/App.xaml.cs`, `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/StorytellerDefault.cs`, `src/DinoReader.App/StoryLanguages.cs`, `tests/ReadTheStupidText.Tests/*`, `.maestro/*`, `docs/plan/slices/182-pack-download-resumes-by-itself.md`.
 
 #### Why
 
-Found on the user's Pixel 2026-10-28 (PR #537, `reviews/pack-stall-phone.md` run 2): after a stall, if the network is still down when the retry runs, the download ends `Offline` and stays there (partial file kept) until someone taps Retry. A parent who walks back into Wi-Fi expects it to carry on. Today the downloads live in-process with no network or resume hook in RTST; Dino has two separate `Connectivity.ConnectivityChanged` hooks (`StorytellerDefault.cs:405`, `StoryLanguages.cs:280`) for other purposes.
+Found on the user's Pixel 2026-10-28 (PR #537, `reviews/pack-stall-phone.md` run 2, a file in the worktrees' reviews folder, not in the repo): after a stall, if the network is still down when the retry runs, the download ends `Offline` and stays there (partial file kept) until someone taps Retry. A parent who walks back into Wi-Fi expects it to carry on. Today the downloads live in-process with no network or resume hook in RTST; Dino has two separate `Connectivity.ConnectivityChanged` hooks (`StorytellerDefault.cs:405`, `StoryLanguages.cs:280`) for other purposes.
 
 #### Decisions locked with the user (2026-10-28)
 
