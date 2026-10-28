@@ -214,3 +214,5 @@ Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure 
 | 174 | Dino: a cleaner reading screen (waits on the user's Claude Design mock) and a back button that never surprises (after 172) | built | #521 | | [174-dino-reading-screen-and-back-button.md](../slices/174-dino-reading-screen-and-back-button.md) |
 | 175 | Close the test gaps: permanent VM selection+hotkey check, Debug Dino page hook, engine/synthesis markers, ISO cleanup, VM licence check | built | #517 | | [175-test-gaps-permanent-checks.md](../slices/175-test-gaps-permanent-checks.md) |
 | 176 | Reading text that is only spaces must not throw (NullReferenceException found on the phone) | built | #518 | | [176-whitespace-read-crash.md](../slices/176-whitespace-read-crash.md) |
+| 173 | Dino: up to three story languages, switched by the kid (after 172) | built | #525 | | [173-dino-kid-story-languages.md](../slices/173-dino-kid-story-languages.md) |
+| 177 | Dino: slow speech for the first reads after the app starts (measure on Release, then fix; after 175) | built | #522 | | [177-dino-cold-start-synthesis.md](../slices/177-dino-cold-start-synthesis.md) |

@@ -14,13 +14,11 @@ this plan turns it into ordered, shippable vertical slices.
 
 ## Status
 
-Open slices only. Finished slices (155 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
+Open slices only. Finished slices (157 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
 | 154 | Dino: vowel marks in Farsi and Arabic books (Farsi only: Arabic left as is; marks are a hidden "how to read" text, Decision 166) | in progress | #470 | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
-| 173 | Dino: up to three story languages, switched by the kid (after 172) | planned | | | [173-dino-kid-story-languages.md](docs/plan/slices/173-dino-kid-story-languages.md) |
-| 177 | Dino: slow speech for the first reads after the app starts (measure on Release, then fix; after 175) | planned | | | [177-dino-cold-start-synthesis.md](docs/plan/slices/177-dino-cold-start-synthesis.md) |
 | 178 | Dino: count an own book's page count and how it really came in (pdf, docx, txt, photo, scan, typed, mixed) | planned | | | [178-dino-own-book-usage-detail.md](docs/plan/slices/178-dino-own-book-usage-detail.md) |
 | 179 | No Play robot, VM or own-machine runs in the usage counts (Worker drops ARM-less phones, Store-only Windows, harness off switch) | planned | | | [179-no-robot-or-own-machine-counts.md](docs/plan/slices/179-no-robot-or-own-machine-counts.md) |
 | 180 | Faster device tests: only the touched apps, build once per commit, Android and Windows side by side, a second emulator (tooling only; after `feat/vm-update-only`) | planned | | | [180-faster-device-tests.md](docs/plan/slices/180-faster-device-tests.md) |
@@ -75,6 +73,8 @@ Batch 35 (159, built, PR #473, so the batch is done; planned 2026-10-27, the use
 
 Built but not verified (details in each slice file):
 
+- Slice 173 (PR #525): mobile-data "Wait for Wi-Fi / Download now" prompt not seen (emulator has Wi-Fi); a persisted no-pack language (`dino.story.nopack`) after restart (Farsi had a pack); translation-pack size is a fixed "30 MB"; iOS run (no Mac) and the real phone; native read of the new strings in 13 languages; store privacy forms for the new events (user's lane). Windows VM run 2026-10-28 passed (Story languages page behind the gate, offline download fails cleanly, no flag buttons with one language or an own book); Cancel during a download not tried (offline fails within 1 s). Follow-up to consider: a failed download leaves the language ticked for retry ([slice](docs/plan/slices/173-dino-kid-story-languages.md)).
+- Slice 177 (PR #522): Pixel run (`audio-timing.ps1 -App dino -Aot -FreshInstall -SettleSeconds 30`, then an uncached page) to set the cold-start limit; iOS timing (TestFlight); a first read in a non-default voice folder (e.g. Farsi multi-folder pack) still starts cold; a Farsi book warmed on open not proven on the emulator ([slice](docs/plan/slices/177-dino-cold-start-synthesis.md)).
 - Slice 160 (PR #486): TestFlight translate English to Farsi on iOS, model download progress and Cancel, offline translate after download, Dino typed own book into Farsi, VoiceOver switch role/state (iOS below 17 and 17+); CI iOS job links the MLKitTranslate xcframework; simulator builds have no translator by design ([slice](docs/plan/slices/160-ios-translation-parity.md)).
 - Slice 160, user (App Store Connect): add Diagnostics > Other Diagnostic Data (not linked to the user, not tracking, analytics) to the privacy labels of both iOS apps; and confirm Google Data Transport logging is acceptable for Dino (kids category).
 - Slice 161 (PR #485): arm64-vs-x64 launch-and-read timing not compared; a Dino story read on the x64 emulator; version-mismatch guard, bump guard and concurrent-build paths reviewed only, not run. Follow-ups: (device-test now uses `tools/emulator`, ClaudeSkills #59, done); RTST first-run language page: Continue downloads the pack but does not move on (seen on emulator) ([slice](docs/plan/slices/161-warm-headless-x64-emulator.md)). The snapshot warm start was dropped in Slice 162: the emulator cold-boots (~45 s) and is reused while running.
