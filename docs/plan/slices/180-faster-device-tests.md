@@ -1,10 +1,10 @@
 ### Slice 180 — Faster device tests: test only the touched apps, build once, two emulators
 
-*Planned.*
+*In progress* (draft PR, 2026-10-28).
 
 **Touches:** `tools/test-targets.ps1` (new), `.github/scripts/ship-targets.mjs`, `.github/scripts/ship-targets.test.mjs`, `tools/emulator/*`, `tools/desktop-vm/Invoke-DesktopTest.ps1`, `tools/desktop-vm/Build-TestPackage.ps1` (new), `tools/desktop-vm/README.md`, `tools/desktop-vm/CLAUDE.md`, `tools/phone/timing.ps1`, `tools/phone/audio-timing.ps1`, `.maestro/README.md`, `docs/plan/slices/180-faster-device-tests.md`. Outside this repo (one ClaudeSkills PR): `agents/device-test.md`, `skills/run-wave/SKILL.md`, `home/CLAUDE.md`.
 
-Tooling only, no app behaviour change. Starts after `feat/vm-update-only` (worktree `vm-update`, no PR yet) merges: it edits `tools/desktop-vm/README.md`, `CLAUDE.md` and `_common.ps1` too.
+Tooling only, no app behaviour change. Started after `feat/vm-update-only` (PR #532) merged: it edits `tools/desktop-vm/README.md`, `CLAUDE.md` and `_common.ps1` too.
 
 #### Why
 
