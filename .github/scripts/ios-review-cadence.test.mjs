@@ -10,6 +10,9 @@ import {
     ascToken,
     createAscClient,
     decideAppStore,
+    decideNotify,
+    findAutoNotifyTargets,
+    normalizeBuild,
     decideTestFlight,
     isStoreReviewBusy,
     isTransient,
@@ -143,9 +146,12 @@ const buildsReply = {
         data: [{
             id: 'b1',
             attributes: { version: '7', processingState: 'VALID', expired: false },
-            relationships: { preReleaseVersion: { data: { id: 'p1' } }, betaGroups: { data: [] } },
+            relationships: { preReleaseVersion: { data: { id: 'p1' } }, betaGroups: { data: [] }, buildBetaDetail: { data: { id: 'd1' } } },
         }],
-        included: [{ type: 'preReleaseVersions', id: 'p1', attributes: { version: '1.54.1' } }],
+        included: [
+            { type: 'preReleaseVersions', id: 'p1', attributes: { version: '1.54.1' } },
+            { type: 'buildBetaDetails', id: 'd1', attributes: { autoNotifyEnabled: true, externalBuildState: 'READY_FOR_BETA_SUBMISSION' } },
+        ],
     },
 };
 const groupsReply = { json: { data: [{ id: 'g1', attributes: { name: EXTERNAL_GROUP_NAME } }] } };
@@ -315,4 +321,158 @@ test('GETs retry a transient failure and give up on a fatal one', async () => {
     const denied = { ...flaky, get: async () => { fatal++; return { status: 401, ok: false, json: null }; } };
     await assert.rejects(() => runTestFlight(denied, APPS.rtst), /401/);
     assert.equal(fatal, 1);
+});
+
+const detailed = (id, externalState, over = {}) => build(id, { betaDetailId: `d${id}`, autoNotify: false, externalState, ...over });
+
+test('normalizeBuild reads the beta detail', () => {
+    const raw = { id: 'b', attributes: { version: '3' }, relationships: { buildBetaDetail: { data: { id: 'd1' } } } };
+    const index = new Map([['buildBetaDetails:d1', { attributes: { autoNotifyEnabled: true, externalBuildState: 'BETA_APPROVED' } }]]);
+    const normalized = normalizeBuild(raw, index);
+    assert.deepEqual([normalized.betaDetailId, normalized.autoNotify, normalized.externalState], ['d1', true, 'BETA_APPROVED']);
+    assert.equal(normalizeBuild({ id: 'c' }, new Map()).autoNotify, false);
+});
+
+test('decideNotify: only the newest released build, and only when approved but unsent', () => {
+    assert.equal(decideNotify([detailed('a', 'BETA_APPROVED'), detailed('b', 'BETA_APPROVED')]).id, 'a');
+    assert.equal(decideNotify([detailed('a', 'IN_BETA_TESTING'), detailed('b', 'BETA_APPROVED')]), null);
+    assert.equal(decideNotify([detailed('a', 'WAITING_FOR_BETA_REVIEW'), detailed('b', 'BETA_APPROVED')]).id, 'b');
+    assert.equal(decideNotify([detailed('a', 'BETA_APPROVED', { expired: true })]), null);
+});
+
+test('findAutoNotifyTargets: waiting builds with auto-notify off', () => {
+    const builds = [detailed('a', 'WAITING_FOR_BETA_REVIEW'), detailed('b', 'IN_BETA_REVIEW', { autoNotify: true }), detailed('c', 'BETA_APPROVED')];
+    assert.deepEqual(findAutoNotifyTargets(builds).map((found) => found.id), ['a']);
+});
+
+function detailBuildsReply(state, autoNotify) {
+    const reply = structuredClone(buildsReply);
+    reply.json.included.find((item) => item.type === 'buildBetaDetails').attributes = { autoNotifyEnabled: autoNotify, externalBuildState: state };
+    return reply;
+}
+
+test('runApp testflight: switches auto-notify on before submitting', async () => {
+    const { asc, calls } = fakeAsc({
+        'GET /v1/builds': detailBuildsReply('READY_FOR_BETA_SUBMISSION', false),
+        [`GET /v1/apps/${APPS.rtst.id}/betaGroups`]: groupsReply,
+        'GET /v1/betaAppReviewSubmissions': { json: { data: [] } },
+        'PATCH /v1/buildBetaDetails/d1': { json: {} },
+        'POST /v1/betaGroups/g1/relationships/builds': { status: 204 },
+        'POST /v1/betaAppReviewSubmissions': { status: 201 },
+    });
+    assert.equal((await runApp(asc, Mode.TestFlight, 'rtst')).outcome, Outcome.Submitted);
+    const patch = calls.find(([method]) => method === 'PATCH');
+    assert.deepEqual(patch[2], { data: { type: 'buildBetaDetails', id: 'd1', attributes: { autoNotifyEnabled: true } } });
+    const methodsAndPaths = calls.map(([method, path]) => `${method} ${path}`);
+    assert.ok(methodsAndPaths.indexOf('PATCH /v1/buildBetaDetails/d1') < methodsAndPaths.indexOf('POST /v1/betaAppReviewSubmissions'));
+});
+
+test('runApp testflight: notifies an approved build, then still submits; a refused notify fails the app', async () => {
+    const routes = {
+        'GET /v1/builds': detailBuildsReply('BETA_APPROVED', true),
+        [`GET /v1/apps/${APPS.rtst.id}/betaGroups`]: groupsReply,
+        'GET /v1/betaAppReviewSubmissions': { json: { data: [] } },
+        'POST /v1/buildBetaNotifications': { status: 201 },
+        'POST /v1/betaGroups/g1/relationships/builds': { status: 204 },
+        'POST /v1/betaAppReviewSubmissions': { status: 201 },
+    };
+    const ok = fakeAsc(routes);
+    const result = await runApp(ok.asc, Mode.TestFlight, 'rtst');
+    assert.equal(result.outcome, Outcome.Submitted);
+    assert.match(result.message, /notified testers of 1\.54\.1 \(7\).*submitted for Beta App Review/);
+    assert.ok(ok.calls.some(([method, path]) => method === 'POST' && path === '/v1/betaAppReviewSubmissions'));
+    const body = ok.calls.find(([, path]) => path === '/v1/buildBetaNotifications')[2];
+    assert.deepEqual(body.data.relationships.build.data, { type: 'builds', id: 'b1' });
+    routes['POST /v1/buildBetaNotifications'] = { status: 409, json: { errors: [{ detail: 'already sent' }] } };
+    const refused = await runApp(fakeAsc(routes).asc, Mode.TestFlight, 'rtst');
+    assert.equal(refused.outcome, Outcome.Failed);
+    assert.match(refused.message, /already sent/);
+});
+
+test('runApp testflight: a notify-only run is "notified", not "submitted", and keeps the skip reason', async () => {
+    const { asc } = fakeAsc({
+        'GET /v1/builds': detailBuildsReply('BETA_APPROVED', true),
+        [`GET /v1/apps/${APPS.rtst.id}/betaGroups`]: groupsReply,
+        'GET /v1/betaAppReviewSubmissions': { json: { data: [{ attributes: { betaReviewState: 'APPROVED' }, relationships: { build: { data: { id: 'b1' } } } }] } },
+        'POST /v1/buildBetaNotifications': { status: 201 },
+    });
+    const result = await runApp(asc, Mode.TestFlight, 'rtst');
+    assert.equal(result.outcome, Outcome.Notified);
+    assert.match(result.message, /notified testers of 1\.54\.1 \(7\); .*already submitted \(APPROVED\)/);
+});
+
+function missingDetailRoutes(extra) {
+    const reply = structuredClone(buildsReply);
+    delete reply.json.data[0].relationships.buildBetaDetail;
+    return {
+        'GET /v1/builds?': reply,
+        [`GET /v1/apps/${APPS.rtst.id}/betaGroups`]: groupsReply,
+        'GET /v1/betaAppReviewSubmissions': { json: { data: [] } },
+        'POST /v1/betaGroups/g1/relationships/builds': { status: 204 },
+        'POST /v1/betaAppReviewSubmissions': { status: 201 },
+        ...extra,
+    };
+}
+
+test('runApp testflight: a build with no beta detail in the list fetches it, then submits', async () => {
+    const { asc, calls } = fakeAsc(missingDetailRoutes({
+        'GET /v1/builds/b1/buildBetaDetail': { json: { data: { id: 'd9', attributes: { autoNotifyEnabled: false } } } },
+        'PATCH /v1/buildBetaDetails/d9': { json: {} },
+    }));
+    assert.equal((await runApp(asc, Mode.TestFlight, 'rtst')).outcome, Outcome.Submitted);
+    assert.ok(calls.some(([method, path]) => method === 'PATCH' && path === '/v1/buildBetaDetails/d9'));
+});
+
+test('runApp testflight: a build with no beta detail anywhere is not submitted and fails visibly', async () => {
+    const { asc, calls } = fakeAsc(missingDetailRoutes({ 'GET /v1/builds/b1/buildBetaDetail': { json: { data: null } } }));
+    const result = await runApp(asc, Mode.TestFlight, 'rtst');
+    assert.equal(result.outcome, Outcome.Failed);
+    assert.match(result.message, /no beta detail for 1\.54\.1 \(7\)/);
+    assert.ok(!calls.some(([method, path]) => method === 'POST' && path === '/v1/betaAppReviewSubmissions'));
+});
+
+test('runApp testflight: a refused auto-notify PATCH before submitting fails the app and submits nothing', async () => {
+    const { asc, calls } = fakeAsc({
+        'GET /v1/builds': detailBuildsReply('READY_FOR_BETA_SUBMISSION', false),
+        [`GET /v1/apps/${APPS.rtst.id}/betaGroups`]: groupsReply,
+        'GET /v1/betaAppReviewSubmissions': { json: { data: [] } },
+        'PATCH /v1/buildBetaDetails/d1': { status: 403, json: { errors: [{ detail: 'forbidden' }] } },
+    });
+    const result = await runApp(asc, Mode.TestFlight, 'rtst');
+    assert.equal(result.outcome, Outcome.Failed);
+    assert.match(result.message, /forbidden/);
+    assert.ok(!calls.some(([method, path]) => method === 'POST' && path === '/v1/betaAppReviewSubmissions'));
+});
+
+function waitingBuildsReply() {
+    const reply = structuredClone(buildsReply);
+    const ids = ['b1', 'b2', 'b3'];
+    reply.json.data = ids.map((id) => ({
+        id,
+        attributes: { version: id, processingState: 'VALID', expired: false },
+        relationships: { preReleaseVersion: { data: { id: 'p1' } }, betaGroups: { data: [] }, buildBetaDetail: { data: { id: `d${id}` } } },
+    }));
+    reply.json.included = [
+        { type: 'preReleaseVersions', id: 'p1', attributes: { version: '1.60' } },
+        ...ids.map((id) => ({ type: 'buildBetaDetails', id: `d${id}`, attributes: { autoNotifyEnabled: false, externalBuildState: 'WAITING_FOR_BETA_REVIEW' } })),
+    ];
+    return reply;
+}
+
+test('runApp testflight: waiting builds keep getting auto-notify after one PATCH fails, and every failure is reported', async () => {
+    const submissions = ['b1', 'b2', 'b3'].map((id) => ({ attributes: { betaReviewState: 'WAITING_FOR_REVIEW' }, relationships: { build: { data: { id } } } }));
+    const { asc, calls } = fakeAsc({
+        'GET /v1/builds': waitingBuildsReply(),
+        [`GET /v1/apps/${APPS.rtst.id}/betaGroups`]: groupsReply,
+        'GET /v1/betaAppReviewSubmissions': { json: { data: submissions } },
+        'PATCH /v1/buildBetaDetails/db1': { status: 500, json: { errors: [{ detail: 'boom one' }] } },
+        'PATCH /v1/buildBetaDetails/db2': { json: {} },
+        'PATCH /v1/buildBetaDetails/db3': { status: 403, json: { errors: [{ detail: 'boom three' }] } },
+    });
+    const result = await runApp(asc, Mode.TestFlight, 'rtst');
+    assert.equal(calls.filter(([method]) => method === 'PATCH').length, 3);
+    assert.equal(result.outcome, Outcome.Failed);
+    assert.match(result.message, /auto-notify on for 1\.60 \(b2\)/);
+    assert.match(result.message, /boom one/);
+    assert.match(result.message, /boom three/);
 });
