@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using DinoReader.Core;
+using ReadTheStupidText.Application.Reading;
 
 namespace DinoReader;
 
@@ -62,8 +63,8 @@ public sealed class StoreClient(IStoryLibrary library)
 		{
 			using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancel);
 			timeout.CancelAfter(ListTimeout);
-			using HttpResponseMessage response = await Http.GetAsync(Resolve(ListPath), HttpCompletionOption.ResponseHeadersRead, timeout.Token);
-			response.EnsureSuccessStatusCode();
+			using GuardedResponse response = await GetGuardedAsync(ListPath, timeout.Token);
+			response.Message.EnsureSuccessStatusCode();
 			string json = await ReadCappedTextAsync(response, timeout.Token);
 			return new StoreListing(StoreLoadStatus.Ok, StoreCatalog.Readable(StoreCatalog.Parse(json)));
 		}
@@ -188,8 +189,8 @@ public sealed class StoreClient(IStoryLibrary library)
 	{
 		using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancel);
 		timeout.CancelAfter(StallTimeout);
-		using HttpResponseMessage response = await Http.GetAsync(Resolve(url), HttpCompletionOption.ResponseHeadersRead, timeout.Token);
-		response.EnsureSuccessStatusCode();
+		using GuardedResponse response = await GetGuardedAsync(url, timeout.Token);
+		response.Message.EnsureSuccessStatusCode();
 		Directory.CreateDirectory(Path.GetDirectoryName(path)!);
 		string temp = $"{path}.{Guid.NewGuid():N}{PartExtension}";
 		try
@@ -212,24 +213,27 @@ public sealed class StoreClient(IStoryLibrary library)
 	{
 		using var stall = CancellationTokenSource.CreateLinkedTokenSource(cancel);
 		stall.CancelAfter(StallTimeout);
-		using HttpResponseMessage response = await Http.GetAsync(Resolve(url), HttpCompletionOption.ResponseHeadersRead, stall.Token);
-		response.EnsureSuccessStatusCode();
+		using GuardedResponse response = await GetGuardedAsync(url, stall.Token);
+		response.Message.EnsureSuccessStatusCode();
 		Directory.CreateDirectory(Path.GetDirectoryName(part)!);
 		await using FileStream file = CreateLocalFile(part);
 		await CopyCappedAsync(response, file, StoryPackageReader.MaxTotalBytes, progress, stall, stall.Token);
 	}
 
+	private static Task<GuardedResponse> GetGuardedAsync(string path, CancellationToken cancel) =>
+		StallGuardedRead.SendAsync(Http, () => new HttpRequestMessage(HttpMethod.Get, Resolve(path)), StallGuardedRead.HeaderTimeout(StallTimeout), cancel);
+
 	// Copies the body, giving up when it passes the cap or stalls: the stall timer is restarted after every chunk.
 	private static async Task CopyCappedAsync(
-		HttpResponseMessage response, Stream target, long cap, IProgress<double>? progress, CancellationTokenSource stall, CancellationToken cancel)
+		GuardedResponse guarded, Stream target, long cap, IProgress<double>? progress, CancellationTokenSource stall, CancellationToken cancel)
 	{
-		long? total = response.Content.Headers.ContentLength;
+		long? total = guarded.Message.Content.Headers.ContentLength;
 		if (total > cap)
 		{
 			throw new IOException("The download is larger than allowed.");
 		}
 
-		await using Stream body = await response.Content.ReadAsStreamAsync(cancel);
+		await using Stream body = await guarded.OpenBodyAsync(StallTimeout, cancel);
 		byte[] buffer = new byte[BufferBytes];
 		long done = 0;
 		int read;
@@ -247,14 +251,14 @@ public sealed class StoreClient(IStoryLibrary library)
 		}
 	}
 
-	private static async Task<string> ReadCappedTextAsync(HttpResponseMessage response, CancellationToken cancel)
+	private static async Task<string> ReadCappedTextAsync(GuardedResponse guarded, CancellationToken cancel)
 	{
-		if (response.Content.Headers.ContentLength > MaxListBytes)
+		if (guarded.Message.Content.Headers.ContentLength > MaxListBytes)
 		{
 			throw new IOException("The story list is larger than allowed.");
 		}
 
-		await using Stream body = await response.Content.ReadAsStreamAsync(cancel);
+		await using Stream body = await guarded.OpenBodyAsync(StallTimeout, cancel);
 		using var copy = new MemoryStream();
 		byte[] buffer = new byte[BufferBytes];
 		int read;
@@ -326,7 +330,7 @@ public sealed class StoreClient(IStoryLibrary library)
 	}
 
 	private static bool IsNetworkFailure(Exception ex) =>
-		ex is HttpRequestException or IOException or OperationCanceledException or JsonException;
+		ex is HttpRequestException or IOException or OperationCanceledException or TimeoutException or JsonException;
 
 	private static void TryDelete(string path)
 	{

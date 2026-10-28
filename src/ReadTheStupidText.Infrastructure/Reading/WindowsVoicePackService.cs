@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO.Compression;
 using System.Net;
 using System.Net.Http.Headers;
@@ -157,15 +158,31 @@ public sealed class WindowsVoicePackService : IVoicePackService
 
     private async Task<PackDownloadResult> DownloadWithRetriesAsync(PackInfo pack, IProgress<double>? progress, CancellationToken cancellationToken)
     {
+        long started = Stopwatch.GetTimestamp();
         for (int attempt = 1; ; attempt++)
         {
             PackDownloadResult result = await TryDownloadOnceAsync(pack, progress, cancellationToken).ConfigureAwait(false);
             if (!PackRetryPolicy.ShouldRetry(result, attempt))
             {
+                LogOutcome(pack, attempt, result, started);
                 return result;
             }
 
-            await Task.Delay(_backoff(attempt), cancellationToken).ConfigureAwait(false);
+            TimeSpan backoff = _backoff(attempt);
+            PackDownloadLog.Retry(pack.Id, attempt, result, backoff);
+            await Task.Delay(backoff, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private static void LogOutcome(PackInfo pack, int attempt, PackDownloadResult result, long started)
+    {
+        if (result == PackDownloadResult.Ok)
+        {
+            PackDownloadLog.Done(pack.Id, pack.SizeBytes, Stopwatch.GetElapsedTime(started));
+        }
+        else
+        {
+            PackDownloadLog.Failed(pack.Id, attempt, result);
         }
     }
 
@@ -259,16 +276,19 @@ public sealed class WindowsVoicePackService : IVoicePackService
             return; // body already complete; only verification is left
         }
 
-        using HttpResponseMessage response = await OpenBodyAsync(pack, partial, offset, cancellationToken).ConfigureAwait(false);
+        PackDownloadLog.Start(pack.Id, offset);
+
+        using GuardedResponse response = await OpenBodyAsync(pack, partial, offset, cancellationToken).ConfigureAwait(false);
         await StreamBodyAsync(response, pack, partial, offset, progress, cancellationToken).ConfigureAwait(false);
     }
 
     // Asks for the body from the offset. A 206 whose Content-Range does not start at that offset cannot
     // be appended to the partial file, so it is discarded and the whole file requested again.
-    private async Task<HttpResponseMessage> OpenBodyAsync(PackInfo pack, string partial, long offset, CancellationToken cancellationToken)
+    private async Task<GuardedResponse> OpenBodyAsync(PackInfo pack, string partial, long offset, CancellationToken cancellationToken)
     {
-        HttpResponseMessage response = await SendBodyRequestAsync(pack, offset, cancellationToken).ConfigureAwait(false);
-        if (offset == 0 || response.StatusCode != HttpStatusCode.PartialContent || response.Content.Headers.ContentRange?.From == offset)
+        GuardedResponse response = await SendBodyRequestAsync(pack, offset, cancellationToken).ConfigureAwait(false);
+        HttpResponseMessage message = response.Message;
+        if (offset == 0 || message.StatusCode != HttpStatusCode.PartialContent || message.Content.Headers.ContentRange?.From == offset)
         {
             return response;
         }
@@ -278,19 +298,24 @@ public sealed class WindowsVoicePackService : IVoicePackService
         return await SendBodyRequestAsync(pack, 0, cancellationToken).ConfigureAwait(false);
     }
 
-    private Task<HttpResponseMessage> SendBodyRequestAsync(PackInfo pack, long offset, CancellationToken cancellationToken)
+    private Task<GuardedResponse> SendBodyRequestAsync(PackInfo pack, long offset, CancellationToken cancellationToken) =>
+        StallGuardedRead.SendAsync(_http, () => BuildBodyRequest(pack, offset), StallGuardedRead.HeaderTimeout(_stallTimeout), cancellationToken, new DownloadTag(pack.Id, offset));
+
+    private static HttpRequestMessage BuildBodyRequest(PackInfo pack, long offset)
     {
         var request = new HttpRequestMessage(HttpMethod.Get, pack.Url);
         if (offset > 0)
         {
+            PackDownloadLog.Range(pack.Id, offset);
             request.Headers.Range = new RangeHeaderValue(offset, null);
         }
 
-        return _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        return request;
     }
 
-    private async Task StreamBodyAsync(HttpResponseMessage response, PackInfo pack, string partial, long offset, IProgress<double>? progress, CancellationToken cancellationToken)
+    private async Task StreamBodyAsync(GuardedResponse guarded, PackInfo pack, string partial, long offset, IProgress<double>? progress, CancellationToken cancellationToken)
     {
+        HttpResponseMessage response = guarded.Message;
         if (response.StatusCode == HttpStatusCode.RequestedRangeNotSatisfiable)
         {
             File.Delete(partial); // stale partial: the next attempt starts clean
@@ -305,7 +330,7 @@ public sealed class WindowsVoicePackService : IVoicePackService
             progress?.Report(Math.Min(100, written * 100 / Math.Max(1, pack.SizeBytes)) / 100.0); // show where the resume starts
         }
 
-        await using Stream body = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+        await using Stream body = await guarded.OpenBodyAsync(_stallTimeout, cancellationToken, new DownloadTag(pack.Id, written)).ConfigureAwait(false);
         await using var file = new FileStream(partial, resumed ? FileMode.Append : FileMode.Create, FileAccess.Write, FileShare.None, BufferBytes, useAsync: true);
         await CopyWithStallGuardAsync(body, file, pack.SizeBytes, written, progress, cancellationToken).ConfigureAwait(false);
     }
@@ -313,12 +338,10 @@ public sealed class WindowsVoicePackService : IVoicePackService
     private async Task CopyWithStallGuardAsync(Stream source, Stream destination, long totalBytes, long written, IProgress<double>? progress, CancellationToken cancellationToken)
     {
         byte[] buffer = new byte[BufferBytes];
-        using var stall = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         int lastPercent = -1;
         while (true)
         {
-            stall.CancelAfter(_stallTimeout); // re-arms the one stall timer for this read
-            int read = await source.ReadAsync(buffer, stall.Token).ConfigureAwait(false);
+            int read = await source.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
             if (read == 0)
             {
                 return;
