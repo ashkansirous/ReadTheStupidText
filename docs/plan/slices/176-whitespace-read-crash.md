@@ -1,11 +1,12 @@
 # Slice 176 — Reading text that is only spaces must not throw
 
-*Planned.* Batch 37 (test gaps found 2026-10-28), both apps, Android and iOS (and the Windows reader, if it
+*Planned.* Batch 38 (test gaps found 2026-10-28), both apps, Android and iOS (and the Windows reader, if it
 shares the cause).
 
-**Touches:** `src/ReadTheStupidText.Application/**` (the read path and `SpeechTextChunker`, where the empty-text guard
-belongs), `src/ReadTheStupidText.Mobile.Shared/**` (the neural readers, if the throw is there),
-`tests/ReadTheStupidText.Tests/**`, `tests/DinoReader.Tests/**`
+**Touches:** `src/ReadTheStupidText.Application/**` except `Reading/ReadTimingTracker.cs` (the read path and
+`SpeechTextChunker`, where the whitespace guard belongs), `src/ReadTheStupidText.Mobile.Shared/**` except `Testing/**`
+and `Platforms/*/Testing/**` (the neural readers, only if the throw is there), `tests/ReadTheStupidText.Tests/**`,
+`tests/DinoReader.Tests/**` (new test files only, not the shared `*Texts.cs` or locale JSON)
 
 ## Why
 

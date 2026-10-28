@@ -1,6 +1,6 @@
 # Slice 177 — Dino: slow speech for the first reads after the app starts
 
-*Planned.* Batch 37 (test gaps found 2026-10-28), Dino Reader (Android and iOS). After Slice 175 (it needs the
+*Planned.* Batch 38 (test gaps found 2026-10-28), Dino Reader (Android and iOS). After Slice 175 (it needs the
 `ENGINE_READY` and `CHUNK_SYNTH` markers).
 
 **Touches:** `src/DinoReader.App/**` (its reading/speech start-up), `src/ReadTheStupidText.Mobile.Shared/**` (the

@@ -1,7 +1,7 @@
 # Slice 174 — Dino: a cleaner reading screen, and a back button that never surprises
 
-*Planned 2026-10-28.* Dino Reader only (Android, iOS and the Windows head). **Waits on the user's Claude Design mock**
-for the reading screen (portrait and landscape); the back-button part can start before it.
+*Planned 2026-10-28.* Dino Reader only (Android, iOS and the Windows head). The Claude Design mock arrived (Batch 37,
+frames 91-94; see Design).
 
 **Batch:** 37 (Dino settings, 2026-10-28; Decision 169). Builds **after Slice 172** (both edit the shelf page).
 **Touches:** `src/DinoReader.App/ReadingPage.xaml`, `src/DinoReader.App/ReadingPage.xaml.cs`, `src/DinoReader.App/TransportRow.cs`, `src/DinoReader.App/ReadingTheme.cs`, `src/DinoReader.App/PictureTextPages.cs`, `src/DinoReader.App/TextPages.cs`, `src/DinoReader.App/ReadingSurface.cs`, `src/DinoReader.App/ModeSwitch.cs` (placement only), `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/GrownUpMode.cs`, `src/DinoReader.App/SettingsPage.cs` and its sub-pages (back handling, from Slice 172), `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.App/Platforms/Android/MainActivity.cs`, `src/DinoReader.App/Resources/Strings/*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `src/DinoReader.Core/PictureTextBook.cs` (scroll target, if the bug is there), `tests/DinoReader.Tests/**`, `docs/design/dino-reader/**`, `src/DinoReader.App/CLAUDE.md`
@@ -43,6 +43,23 @@ grown-up mode is a state of the shelf page (`GrownUpMode`), and the shelf is the
    in the main language, no grown-up gate; only Close exits. iOS has no back button and Windows closes from the
    window, so nothing changes there.
 
+#### Design (Dino Reader Batch 37 mock, frames 79-94, added 2026-10-28)
+
+Four frames (91-94). The mock agrees on the flat play button, no parents' button and the back dialog; it differs from the plan on landscape. The wait on the mock is cleared. Header glyphs are inline SVG, not Phosphor.
+
+- **Portrait (91):** page dots gone. The picture fills the space between title and controls, cropped to fit from the top (the art keeps its bottom 30% free). The text card sits on that part, holds five whole lines, reaches just above the controls and scrolls itself to keep the spoken sentence in view. Play is an 84 px flat coral circle, no under-edge, no halo. Previous and next are 64 px, same flat family. Header: back, then the flag button (when shown) left of the view switch (three 44x40 segments, radius 12, in a `#F0E8D8` pill with 3 px padding, radius 16; the active one white with glyph `#5B57E8`). No parents' button. Text only follows the sentence the same way.
+- **Back dialog (94):** Android, kids' shelf only. "Close Dino Book Reader?" with "Stay" (big default) and "Close". A second back press or a tap outside counts as Stay. No gate; app language. Elsewhere back steps one page; grown-up mode and Settings pages end on the kids' shelf; reading goes back to the shelf. iOS and Windows unchanged.
+- **Landscape, Picture + text (92):** no top bar, title or dots. The left 40% is the picture, cropped from the top. Controls float over the picture's bottom, side by side: previous 52, play 68, next 52. The text takes the whole right side, full height, 23 px, auto-scrolling. Back (44 px circle) and the view switch (40x38 segments) float over the picture's top-left on a `rgba(255,255,255,.92)` chip with a small shadow; the flag joins them. The left inset clears the notch. Same for photo books (a proposal there: switch to fit-whole).
+- **Landscape, Text only (93):** the card fills the screen, controls below it side by side as in portrait. Back and view switch sit in the card's top corner with the first line starting under them. No view switch for books with no pictures. Text 26 px, auto-scrolls. In Farsi only the text runs RTL.
+
+**Open point: landscape controls.** Plan decision 3: a slim vertical strip on the far right (previous, play, next), for both modes. Mock 92 floats the controls horizontally over the picture's bottom; mock 93 puts them below the card. **Default:** the mock (decision 1 says the mock wins).
+**Open point: play size.** Plan says the new play is "a little bigger" than the current 104 px circle with 72 px skips. Mock shows 84 px play and 64 px previous/next (smaller). **Default:** the mock sizes (84/64 portrait, 68/52 landscape).
+**Open point: back from grown-up mode.** Mock 85 note says Android back goes to Settings; this slice and mock 94 say the kids' shelf. **Default:** kids' shelf.
+
+The mock settles what the plan left open: the five-line card, no page dots, picture cropped from the top, the flag's place in the header.
+
+New strings (14 languages): "Close Dino Book Reader?", "Stay", "Close".
+
 ## Work
 
 - [ ] **First end-to-end piece (no design needed):** back on the kids' shelf asks Stay/Close; back in grown-up mode returns to
@@ -50,7 +67,7 @@ grown-up mode is a state of the shelf page (`GrownUpMode`), and the shelf is the
 - [ ] Remove `LockButton` from the reading page (and its handler, if nothing else uses it).
 - [ ] Auto-scroll: reproduce on the emulator and the user's phone (wireless adb), fix, add a unit test for the pure scroll
       target where possible; make Text only follow the sentence too.
-- [ ] Import the Claude Design mock; `design-to-plan` writes the Design subsection here.
+- [x] Import the Claude Design mock; Design subsection written (2026-10-28).
 - [ ] Transport row restyle (portrait and landscape sizes) from the mock.
 - [ ] Landscape layout from the mock for Picture + text and Text only, on Android and iOS (rotation, safe areas, notch).
 - [ ] Strings (14 languages, 13 drafts): the close question, Stay, Close.

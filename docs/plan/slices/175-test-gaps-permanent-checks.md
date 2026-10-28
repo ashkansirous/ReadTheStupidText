@@ -1,6 +1,6 @@
 # Slice 175 — Close the test gaps: permanent checks, a Dino page hook, finer timing, the VM image
 
-*Planned.* Batch 37 (test gaps found 2026-10-28), tooling for both apps; Debug-only hooks on Android and iOS.
+*Planned.* Batch 38 (test gaps found 2026-10-28), tooling for both apps; Debug-only hooks on Android and iOS.
 After Slices 163 and 165.
 
 **Touches:** `tools/desktop-vm/**`, `tools/phone/**`, `src/ReadTheStupidText.Mobile.Shared/Testing/**`,

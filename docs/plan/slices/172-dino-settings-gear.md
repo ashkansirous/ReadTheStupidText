@@ -35,6 +35,25 @@ in-app payments are coming later.
    switches back. Today `NarratorPage` shows a card per language (`NarratorPage.cs:111-128`); it drops
    to one.
 
+#### Design (Dino Reader Batch 37 mock, frames 79-94, added 2026-10-28)
+
+The mock has 8 frames for this slice (79-85, 87). It mostly agrees with the plan. Icons are inline SVG strokes, not Phosphor. Tokens: ink `#2b2540`, accent `#5B57E8`, muted `#5a5470` / `#8a8399`, divider `#efe9dd`.
+
+- **Gear (79):** 48x48 dp, radius 14, fill `rgba(43,37,64,.07)`, glyph 24 px stroke `#8a8399`. It replaces the add-book icon, top corner, in kids' mode too. Gate, then Settings. Screen reader: "Settings (grown-ups)". Failing the gate leaves the shelf.
+- **Settings (80):** title "Settings". A `Books` row on top ("Add, edit, Store"; opens grown-up mode, 85). Group "Reading": Language, Story languages, Narrator voice, Reading speed, Animal sounds. Group "This phone": Backup, Usage counts, About & updates. White cards radius 18, rows min 52 px, label 15 px, value 14.5 px / 600 `#5a5470` on the right, 14 px chevron. Values shown: "English", "English, فارسی", "Story Granny (EN), Mana (FA)", "0.8x", "On", "New version" (tag only when remote config says an update is ready). Group headings are a proposal. The Story languages row is hidden until Slice 173 ships. The store is never a row. Back lands on the kids' shelf.
+- **Language (81):** title "Language", sub-line "Settings, the store and the shelf" (draft). Only the 14 names, each in its own script, scrolling.
+- **Narrator voice (82a, 82b):** 82a is a middle page, one row per story language ("English | Story Granny", "فارسی | Mana"), intro "Each story language has its own narrator." With one story language, Settings skips 82a and opens 82b. 82b title "Narrator voice (English)", intro "Who reads the parts between the characters, in every English book." Cards: Story Granny "Warm and slow", Story Grandpa "Deep and calm", Bedtime Mum "Soft and gentle", Cheerful Dad "Bright and lively" (placeholder names; use the real roster).
+- **Reading speed (83):** the existing `ReadingSpeedCard` ("Reading speed", "Slower is easier for little ones", "0.8x", 44 px buttons, end label "0.5x · slow"). Animal sounds and Usage counts pages hold their cards the same way. Saves at once, no Save button.
+- **About & updates (84):** `VersionCard` ("Dino Book Reader", "Version 1.44.0", update box "A new version is ready (1.45.0)" with "Update", only when newer) and the row "Show the intro again", which now ends back on this page.
+- **Grown-up mode (85):** header "Grown-ups", sub-line "Add and edit books", "Done". Buttons "Add from your own books" and "Store". Book options use the existing sheet. Done goes to the kids' shelf.
+
+**Open point: store title.** Plan: `Store_Title` becomes "More stories". Mock 85: the page title becomes "Store". **Default:** "Store"; still drop "free" from `Store_OfflineBody` and `Intro_StoreLine`.
+**Open point: back from grown-up mode.** Mock 85 note says Android back goes up to Settings; Slice 174 decision 6 and mock 94 say the kids' shelf. **Default:** kids' shelf (Decision 169).
+**Open point: rows.** Plan lists seven rows and no Books row. Mock has Books plus eight rows in two groups, and the per-language Narrator middle page (82a). **Default:** follow the mock.
+**Open point: language button on the shelf.** Plan removes the Language pill; mock 79 adds a kid's story-language button next to the gear, shown only with two or three story languages (Slice 173). **Default:** follow the mock.
+
+New strings (14 languages): `Settings_Title`, "Books", "Add, edit, Store", group headings "Reading" and "This phone", "New version", "Settings (grown-ups)", the Language sub-line, the 82a and 82b intros, and the row labels.
+
 ## Work
 
 - [ ] **First end-to-end piece:** the gear on the shelf, the gate, a `SettingsPage` with the Language and

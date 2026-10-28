@@ -446,3 +446,54 @@ Also read these files the selection imports:
 
 Implement: `Dino Reader Batch 32.dc.html`
 ```
+
+## Batch 37 mock — `Dino Reader Batch 37.dc.html`
+
+- **Source:** Claude Design project `90615641-f298-4e21-8c50-ca2efbeaaebc`, file `Dino Reader Batch 37.dc.html`
+  (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+37.dc.html>).
+- **Copied:** 2026-10-28, verbatim from `DesignSync get_file`. Its imports (`assets/good-enough/cover.jpg`, `assets/three-little-pigs/3.jpg`, `assets/three-little-pigs/5.jpg`, the dino `icons/ios/AppIcon-1024-light.png`) are already in this folder.
+- **Covers:** Slices 172-174 (gear and settings sub-pages, kid story languages, the calmer reading screen and back button): frames 79-94. Decisions 167-169.
+
+Open it in a text editor (`support.js` is not copied). Each screen is headed by a caption
+`N · Title` with its behaviour in the note underneath.
+
+| # | Screen | Line |
+|---|---|---|
+| 79 | Kids' shelf · the gear | 27 |
+| 80 | Settings · one row per setting | 45 |
+| 81 | Language · only languages | 71 |
+| 82a | Narrator voice · one per story language | 94 |
+| 82b | Narrator voice · one language | 110 |
+| 83 | Reading speed · a sub-page | 128 |
+| 84 | About & updates | 148 |
+| 85 | Grown-up mode · books only | 171 |
+| 86 | Intro · last step · story languages | 193 |
+| 87 | Settings · Story languages · downloading | 217 |
+| 88 | Reading · the language button, open | 237 |
+| 89 | Reading · switched to Farsi | 269 |
+| 90 | Changing the app language · which one goes | 295 |
+| 91 | Portrait · flat controls, a five-line card that follows the reading | 325 |
+| 94 | Kids' shelf · Android back | 351 |
+| 92 | Landscape · Picture + text | 379 |
+| 93 | Landscape · Text only | 401 |
+
+To refresh: fetch the file again with `DesignSync get_file` and overwrite this copy, then
+regenerate this table. Never call `DesignSync` to read visual values; read this copy.
+
+Import prompt (verbatim):
+
+```
+Use the claude_design MCP (https://api.anthropic.com/v1/design/mcp, auth via /design-login) to import this project:
+https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+37.dc.html
+
+Focus on these files (the whole project is readable):
+- `Dino Reader Batch 37.dc.html`
+
+Also read these files the selection imports:
+- `assets/good-enough/cover.jpg`
+- `assets/three-little-pigs/3.jpg`
+- `assets/three-little-pigs/5.jpg`
+- `dino_reader_icons/ios/AppIcon-1024-light.png`
+
+Implement: `Dino Reader Batch 37.dc.html`
+```

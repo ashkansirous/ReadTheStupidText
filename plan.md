@@ -41,7 +41,7 @@ Batch 32 (155, planned 2026-10-26, Dino onboarding): Slice 155 (the first-run in
 
 Batch 36 (161-165, planned 2026-10-27, device tests too slow): 161 first (warm headless x86_64 emulator), then 162 (Maestro flows and hooks, needs 161), then 165 (phone audio/timing, reuses 162's hooks). 163 (Hyper-V VM; waits on the user turning on Hyper-V) and 164 (unit-test push-down, one sub-PR per item) can run beside them. Tooling only, no app behaviour change; Touches don't overlap the open Dino PRs. Decision 165.
 
-Batch 37 (175-177, planned 2026-10-28, gaps found when every unverified 163/165 item was checked on the VM and the phone): 175 and 176 can run side by side (tooling and Debug hooks vs the shared read path; both touch `Mobile.Shared` but different folders); 177 after 175 (needs its markers).
+Batch 38 (175-177, planned 2026-10-28, gaps found when every unverified 163/165 item was checked on the VM and the phone): 175 and 176 can run side by side (tooling and Debug hooks vs the shared read path; both touch `Mobile.Shared` but different folders); 177 after 175 (needs its markers).
 
 Batch 34 (157-158; both built, 157 PR #475, 158 PR #472, so the batch is done; planned 2026-10-27, after all 15 store books fell behind `main`): 158 first (small, CI only: a `publish-store` job in `release.yml` uploads every book behind the live store, Decision 163); it can run beside other work. Then 157 moves book content to `content/dino/<book>/` with a console builder and repoints the job; 157 runs alone between waves, after the open per-book PRs merge, because it moves every book's files. Decisions 162-163.
 
