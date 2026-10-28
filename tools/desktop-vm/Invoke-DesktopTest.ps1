@@ -19,6 +19,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot\_common.ps1"
+$script:ActiveVmRoot = $VmRoot
 
 # One row per product: the package identity name, where a fresh MSIX is usually found and the ordered checks.
 $Apps = @{
@@ -100,10 +101,14 @@ try {
         }
         Write-Host "Running check $check..."
         $r = Invoke-InteractiveScript -Session $session -GuestScript "$($script:GuestWorkDir)\checks\$check.ps1" -ScriptArgs @($AppProfile.Name)
-        $results += [pscustomobject]@{ check = $check; pass = [bool]$r.pass; message = $r.message }
+        $message = if ($r.noResult) { "$($r.message); screen: $(Get-ScreenText (Save-VmScreenshot -Reason "check-$check"))" } else { $r.message }
+        $results += [pscustomobject]@{ check = $check; pass = [bool]$r.pass; message = $message }
     }
 } catch {
-    $results += [pscustomobject]@{ check = 'harness'; pass = $false; message = $_.Exception.Message }
+    $failure = $_.Exception.Message
+    $hasShot = $failure -match 'screen: \S'
+    $shot = if ($hasShot) { $null } else { Save-VmScreenshot -Reason 'harness' }
+    $results += [pscustomobject]@{ check = 'harness'; pass = $false; message = $(if ($hasShot) { $failure } else { "$failure; screen: $(Get-ScreenText $shot)" }) }
 } finally {
     if ($session) { Remove-PSSession $session -ErrorAction SilentlyContinue }
     if (-not $KeepRunning) {
