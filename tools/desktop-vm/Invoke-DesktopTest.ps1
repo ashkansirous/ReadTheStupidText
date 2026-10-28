@@ -19,10 +19,11 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot\_common.ps1"
+$script:ActiveVmRoot = $VmRoot
 
 # One row per product: the package identity name, where a fresh MSIX is usually found and the ordered checks.
 $Apps = @{
-    rtst = @{ Name = 'AshkanSirous.ReadTheStupidText'; Exe = 'ReadTheStupidText.App'; Checks = @('rtst-launch', 'rtst-tray-icon', 'rtst-hotkey-read', 'rtst-panel-speed', 'rtst-startup-task') }
+    rtst = @{ Name = 'AshkanSirous.ReadTheStupidText'; Exe = 'ReadTheStupidText.App'; Checks = @('rtst-launch', 'rtst-tray-icon', 'rtst-hotkey-read', 'rtst-selection-hotkey', 'rtst-panel-speed', 'rtst-startup-task') }
     dino = @{ Name = 'AshkanSirous.DinoReader'; Exe = 'DinoReader.App'; Checks = @('dino-launch', 'dino-open-book', 'dino-page-turn') }
 }
 $AppProfile = $Apps[$App]
@@ -91,6 +92,7 @@ try {
     $session = New-VmSession -Credential $credential
     Copy-ToGuest -Session $session -Msix $msix
     Write-Host 'Installing the package in the VM...'
+    Write-LicenseNote -License (Get-GuestLicense -Session $session)
     $version = Install-InGuest -Session $session -Name $AppProfile.Name
     Write-Host "Installed $($AppProfile.Name) $version in the VM from $msix"
     foreach ($check in $AppProfile.Checks) {
@@ -99,10 +101,14 @@ try {
         }
         Write-Host "Running check $check..."
         $r = Invoke-InteractiveScript -Session $session -GuestScript "$($script:GuestWorkDir)\checks\$check.ps1" -ScriptArgs @($AppProfile.Name)
-        $results += [pscustomobject]@{ check = $check; pass = [bool]$r.pass; message = $r.message }
+        $message = if ($r.noResult) { "$($r.message); screen: $(Get-ScreenText (Save-VmScreenshot -Reason "check-$check"))" } else { $r.message }
+        $results += [pscustomobject]@{ check = $check; pass = [bool]$r.pass; message = $message }
     }
 } catch {
-    $results += [pscustomobject]@{ check = 'harness'; pass = $false; message = $_.Exception.Message }
+    $failure = $_.Exception.Message
+    $hasShot = $failure -match 'screen: \S'
+    $shot = if ($hasShot) { $null } else { Save-VmScreenshot -Reason 'harness' }
+    $results += [pscustomobject]@{ check = 'harness'; pass = $false; message = $(if ($hasShot) { $failure } else { "$failure; screen: $(Get-ScreenText $shot)" }) }
 } finally {
     if ($session) { Remove-PSSession $session -ErrorAction SilentlyContinue }
     if (-not $KeepRunning) {

@@ -1,7 +1,7 @@
 # Desktop acceptance tests in a headless Hyper-V VM (Slice 163)
 
 Windows desktop checks (the RTST tray app, the Dino Reader Windows head) run inside a Windows 11 VM that has no
-window and no network adapter, are reset to a `clean` checkpoint before and after every run, and never touch the host
+window and no network adapter (once built), are reset to a `clean` checkpoint before and after every run, and never touch the host
 desktop, tray, clipboard or installed packages. Decision 165, `docs/plan/slices/163-desktop-tests-in-hyperv-vm.md`.
 
 ## Use
@@ -35,13 +35,13 @@ signed copy sits in `<VmRoot>\sign` and is deleted in a `finally`. Runs take a h
 - `checks/*.ps1` run inside the VM in the signed-in desktop session (a PowerShell Direct session is a separate,
   non-interactive logon, so each check runs as a one-shot scheduled task). Each writes `{pass,message}`; `_lib.ps1` has
   the helpers (UIA lookups, tray icon, mouse and keys, log readers). Order matters: later checks use the running app.
-  RTST: `rtst-launch`, `rtst-tray-icon`, `rtst-hotkey-read`, `rtst-panel-speed`, `rtst-startup-task`.
+  RTST: `rtst-launch`, `rtst-tray-icon`, `rtst-hotkey-read` (clipboard path), `rtst-selection-hotkey` (Notepad selection beats a clipboard decoy), `rtst-panel-speed`, `rtst-startup-task`.
   Dino: `dino-launch`, `dino-open-book`, `dino-page-turn`. Add a check = add the file and its name to `$Apps` in the runner.
 
 ## Where things live
 
-Everything big is under `D:\ReadTheStupidText-worktrees\_desktop-vm\` (`-VmRoot`): `media\` (evaluation ISO, about 8 GB;
-delete it after a build if space is short, the next build downloads it again), `vm\` (VHDX and checkpoint), `pkgs\`
+Everything big is under `D:\ReadTheStupidText-worktrees\_desktop-vm\` (`-VmRoot`): `media\` (evaluation ISO, about 8 GB,
+deleted after a build unless `-KeepIso`; the next build downloads it again), `screens\` (stall and failure screenshots), `vm\` (VHDX and checkpoint), `pkgs\`
 (built MSIX). The VM account is `Administrator` (signed in automatically); its password is generated and stored as
 `DESKTOP_VM_PASSWORD` in `D:\secrets\readthestupidtext\secrets.env` (manage-secrets), or set `RTST_VM_PASSWORD`.
 Needs Hyper-V on and your user in *Hyper-V Administrators*; no elevation, and no `vmconnect` or Manager window is ever opened.
@@ -49,9 +49,33 @@ Needs Hyper-V on and your user in *Hyper-V Administrators*; no elevation, and no
 ## Rebuild: when and how
 
 The VM runs the Windows 11 Enterprise **evaluation** (90 days; the host fetches the current ISO from the Microsoft Evaluation
-Center page). Rebuild with `New-TestVm.ps1 -Force` (15-30 minutes, unattended) when: the evaluation lapses (Windows shows
+Center page). `Invoke-DesktopTest.ps1` prints the days left and warns under 14 days, or when the licence is not counting, with the rebuild command. Rebuild with `New-TestVm.ps1 -Force` (15-30 minutes, unattended) when: the evaluation lapses (Windows shows
 "license expired"; short runs still work, but it begins shutting the VM down hourly), Windows asks for something the
-checks cannot answer, or the VM is damaged. The image is never updated (no network), so UI positions stay stable.
+checks cannot answer, or the VM is damaged.
+
+The build has one online step (a network adapter named `BuildOnly` on `Default Switch`, removed before the checkpoint): it
+activates the evaluation, then installs **every pending Windows update on purpose** with the Windows Update Agent API (run in
+the guest as a SYSTEM task, rebooting and searching again, at most 6 rounds, `-UpdateTimeoutMin` 120 in all; `-SkipUpdates`
+skips it), then **turns Windows Update off for good** (policies, services, scheduled tasks, the "finish setting up your
+device" screen and tips). So the image is current as of its build date and frozen afterwards: UI positions stay stable and no
+"install updates" prompt can appear. Before the checkpoint the build **reads the freeze back** from the rebooted guest (update
+policies set, `wuauserv` disabled, no network adapter; `UsoSvc` still enabled is only a warning; 3 tries, 20 s apart) and
+refuses to checkpoint otherwise. The update search is software only (no drivers; feature updates are included). If
+`-UpdateTimeoutMin` runs out the build warns and carries on to the freeze. The checkpoint and every run stay offline. The script prints the guest's Windows version
+after the updates and in its final "Done." line. A rebuild with updates took about 55 minutes on 2026-10-28 (Setup about
+13, activation and 3 update rounds about 40). After the checkpoint the downloaded ISO is deleted (`-KeepIso` keeps it; an
+`-IsoPath` file is never deleted).
+
+Every reboot during the build is a **Windows restart from inside the guest** (`Restart-Computer`), never `Restart-VM`: a
+cumulative update finishes while Windows shuts down, and a hard reset skipped that, so the update reported "installed" twice
+and the build number never moved. The "Press any key to boot from CD or DVD" prompt is answered with **X**, not Space: late
+keys reach Setup's window, where Space pressed the focused Cancel button and Setup sat on "Are you sure you want to quit?".
+
+**Stalls fail fast with a picture.** Every wait (first-logon provisioning, the rebooted desktop, the update rounds, opening a
+session) watches for progress (power state, heartbeat, the disk growing, the update status, a new boot). No change for
+`-StallMin` minutes (default 10) saves the VM screen as `<VmRoot>\screens\<time>-<reason>.png` from the host (no guest session
+needed) and throws `stalled: <what it waited for>; screen: <png path>`. `Invoke-DesktopTest.ps1` does the same when a check
+returns no result or the harness throws: the screenshot path is printed in the FAIL line, before `clean` is restored.
 
 ## Gotchas found while building it
 
