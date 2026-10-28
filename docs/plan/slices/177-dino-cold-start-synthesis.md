@@ -50,7 +50,7 @@ warming its threads, or the pack still unpacking after `PACK_READY`.
 
 Tests: RTST 1482 + 2 skipped (2 new EngineCache tests), Dino 1651; Android builds, iOS compiles. `tools/phone/audio-timing.ps1` gained `-Emulator`/`-Serial`, `-Aot` (Release-speed proxy; a real Release build strips the hooks), `-Warm`, `-FreshInstall`, `-SettleSeconds`, `-AppLanguage`; the Debug open-book hook reuses only a top ReadingPage for the same story (`LoadedStoryId`).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-28)
 
 - Warm-up state lives on the engine (`RefCountedTts` / `IosRefCountedTts`), never in a once-only reader flag: a flag spent on the Supertonic pack left the later Kokoro story voice cold. `WarmUp` must acquire through the same `AcquireEngine` a read uses; `EngineCache.Acquire(paths, forWarmUp)` must never evict an engine in use. Keep Android and iOS identical. (Slice 177: docs/plan/slices/177-dino-cold-start-synthesis.md) Folder: `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md`.
 

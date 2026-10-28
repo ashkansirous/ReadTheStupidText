@@ -103,7 +103,7 @@ New strings (14 languages): the step title and sub-line, "App language", "Skip, 
 
 *Verified 2026-10-28:* dotnet tests 1485 (+2 skipped) and 1666; worker 87 tests + typecheck; Android, iOS compile and Windows head builds. Emulator: shelf and reading buttons, Farsi read from the pack, pick survives restart, grown-up pages keep the stored language, swipe-back keeps the choice, Settings download with progress/Cancel and re-tick, intro step 4, which-one-goes sheet Cancel, a side without a voice ignored silently, own-book pack offered on tick.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-28)
 
 - Story languages (`src/DinoReader.App/CLAUDE.md`): the child's pick is a reading-session language held by `ReadingSession` and passed explicitly to translation, voicing and the scoped speak call (`IReadScoped` / `IModelScopedSegmentReader`); never write it to the stored story language, and grown-up screens and the store never follow it. The child side lists only languages whose voice (and for own books the translation pack) is installed and never starts or offers a download. (Slice 173: docs/plan/slices/173-dino-kid-story-languages.md)
 
