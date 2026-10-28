@@ -18,14 +18,14 @@ public static class StallGuardedRead
         bodyStallTimeout > MinimumHeaderTimeout ? bodyStallTimeout : MinimumHeaderTimeout;
 
     /// <summary>Wraps a body stream so each read gives up after the stall timeout. Disposing the wrapper after a stall does nothing.</summary>
-    public static Stream Wrap(Stream inner, TimeSpan stallTimeout) => new GuardedStream(inner, null, stallTimeout);
+    public static Stream Wrap(Stream inner, TimeSpan stallTimeout, DownloadTag? tag = null) => new GuardedStream(inner, null, stallTimeout, tag);
 
     /// <summary>
     /// Sends the request built by <paramref name="createRequest"/> and waits for its headers, giving up (and
     /// cancelling) after <paramref name="headerTimeout"/>. Owns the request: it is disposed here, or, if the
     /// send is abandoned, only once the abandoned send has finished.
     /// </summary>
-    public static async Task<GuardedResponse> SendAsync(HttpClient http, Func<HttpRequestMessage> createRequest, TimeSpan headerTimeout, CancellationToken cancellationToken)
+    public static async Task<GuardedResponse> SendAsync(HttpClient http, Func<HttpRequestMessage> createRequest, TimeSpan headerTimeout, CancellationToken cancellationToken, DownloadTag? tag = null)
     {
         HttpRequestMessage request = createRequest();
         var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -39,6 +39,7 @@ public static class StallGuardedRead
         }
         catch (Exception ex) when (IsStall(ex, cancellationToken))
         {
+            LogStall(ex, PackDownloadLog.HeadersPhase, tag?.Offset ?? 0, tag);
             AbandonSend(linked, send, request);
             throw;
         }
@@ -47,6 +48,15 @@ public static class StallGuardedRead
             linked.Dispose();
             request.Dispose();
             throw;
+        }
+    }
+
+    // A user cancel counts as a stall for cleanup, but only a real timeout is logged as one.
+    internal static void LogStall(Exception ex, string phase, long bytes, DownloadTag? tag)
+    {
+        if (ex is TimeoutException)
+        {
+            PackDownloadLog.Stall(phase, bytes, tag?.PackId);
         }
     }
 
@@ -110,10 +120,10 @@ public sealed class GuardedResponse(HttpResponseMessage message) : IDisposable
     public HttpResponseMessage Message { get; } = message;
 
     /// <summary>The body as a stream whose reads give up after the stall timeout.</summary>
-    public async Task<Stream> OpenBodyAsync(TimeSpan stallTimeout, CancellationToken cancellationToken)
+    public async Task<Stream> OpenBodyAsync(TimeSpan stallTimeout, CancellationToken cancellationToken, DownloadTag? tag = null)
     {
         Stream inner = await Message.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-        return new GuardedStream(inner, this, stallTimeout);
+        return new GuardedStream(inner, this, stallTimeout, tag);
     }
 
     internal void Abandon()
@@ -135,10 +145,11 @@ public sealed class GuardedResponse(HttpResponseMessage message) : IDisposable
 
 // Reads go into the stream's own buffer and are copied out, so an abandoned read that later completes
 // writes into a buffer nobody reuses, never into the caller's.
-internal sealed class GuardedStream(Stream inner, GuardedResponse? owner, TimeSpan stallTimeout) : Stream
+internal sealed class GuardedStream(Stream inner, GuardedResponse? owner, TimeSpan stallTimeout, DownloadTag? tag = null) : Stream
 {
     private byte[] _buffer = [];
     private int _abandoned;
+    private long _bytesRead = tag?.Offset ?? 0; // total position in the file, including the resume offset
 
     public override bool CanRead => true;
     public override bool CanSeek => false;
@@ -170,10 +181,12 @@ internal sealed class GuardedStream(Stream inner, GuardedResponse? owner, TimeSp
         {
             int count = await read.WaitAsync(stallTimeout, cancellationToken).ConfigureAwait(false);
             target.AsMemory(0, count).CopyTo(destination);
+            _bytesRead += count;
             return count;
         }
         catch (Exception ex) when (StallGuardedRead.IsStall(ex, cancellationToken))
         {
+            StallGuardedRead.LogStall(ex, PackDownloadLog.BodyPhase, _bytesRead, tag);
             Abandon(linked, read);
             throw;
         }

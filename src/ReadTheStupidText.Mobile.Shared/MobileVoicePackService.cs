@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO.Compression;
 using System.Net;
 using System.Net.Http.Headers;
@@ -216,15 +217,31 @@ public sealed class MobileVoicePackService : IVoicePackService
 
     private static async Task<PackDownloadResult> DownloadWithRetriesAsync(PackInfo pack, IProgress<double>? progress, CancellationToken cancellationToken)
     {
+        long started = Stopwatch.GetTimestamp();
         for (int attempt = 1; ; attempt++)
         {
             PackDownloadResult result = await TryDownloadOnceAsync(pack, progress, cancellationToken).ConfigureAwait(false);
             if (!PackRetryPolicy.ShouldRetry(result, attempt))
             {
+                LogOutcome(pack, attempt, result, started);
                 return result;
             }
 
-            await Task.Delay(PackRetryPolicy.Backoff(attempt), cancellationToken).ConfigureAwait(false);
+            TimeSpan backoff = PackRetryPolicy.Backoff(attempt);
+            PackDownloadLog.Retry(pack.Id, attempt, result, backoff);
+            await Task.Delay(backoff, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private static void LogOutcome(PackInfo pack, int attempt, PackDownloadResult result, long started)
+    {
+        if (result == PackDownloadResult.Ok)
+        {
+            PackDownloadLog.Done(pack.Id, pack.SizeBytes, Stopwatch.GetElapsedTime(started));
+        }
+        else
+        {
+            PackDownloadLog.Failed(pack.Id, attempt, result);
         }
     }
 
@@ -328,7 +345,9 @@ public sealed class MobileVoicePackService : IVoicePackService
             return; // body already complete; only verification is left
         }
 
-        using GuardedResponse response = await StallGuardedRead.SendAsync(Http, () => BuildBodyRequest(pack, offset), StallGuardedRead.HeaderTimeout(StallTimeout), cancellationToken).ConfigureAwait(false);
+        PackDownloadLog.Start(pack.Id, offset);
+
+        using GuardedResponse response = await StallGuardedRead.SendAsync(Http, () => BuildBodyRequest(pack, offset), StallGuardedRead.HeaderTimeout(StallTimeout), cancellationToken, new DownloadTag(pack.Id, offset)).ConfigureAwait(false);
         await StreamBodyAsync(response, pack, partial, offset, progress, cancellationToken).ConfigureAwait(false);
     }
 
@@ -337,6 +356,7 @@ public sealed class MobileVoicePackService : IVoicePackService
         var request = new HttpRequestMessage(HttpMethod.Get, pack.Url);
         if (offset > 0)
         {
+            PackDownloadLog.Range(pack.Id, offset);
             request.Headers.Range = new RangeHeaderValue(offset, null);
         }
 
@@ -355,7 +375,7 @@ public sealed class MobileVoicePackService : IVoicePackService
         response.EnsureSuccessStatusCode();
         bool resumed = response.StatusCode == HttpStatusCode.PartialContent;
         long written = resumed ? offset : 0; // a 200 means the server ignored Range: restart
-        await using Stream body = await guarded.OpenBodyAsync(StallTimeout, cancellationToken).ConfigureAwait(false);
+        await using Stream body = await guarded.OpenBodyAsync(StallTimeout, cancellationToken, new DownloadTag(pack.Id, written)).ConfigureAwait(false);
         await using var file = new FileStream(partial, resumed ? FileMode.Append : FileMode.Create, FileAccess.Write, FileShare.None, FileBufferBytes, useAsync: true);
         await CopyWithStallGuardAsync(body, file, pack.SizeBytes, written, progress, cancellationToken).ConfigureAwait(false);
     }

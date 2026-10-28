@@ -16,6 +16,7 @@ public sealed class TestMarkers
 
 	public TestMarkers(ISpeechReader reader, VoicePackInstaller installer)
 	{
+		PackDownloadLog.Sink = TestHookLog.Write; // download diagnostics reach logcat in Debug builds
 		reader.StateChanged += (_, state) => OnState(state);
 		reader.ChunkChanged += (_, _) => OnChunk();
 		installer.Changed += (_, _) => OnInstaller(installer.State);

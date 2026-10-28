@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO.Compression;
 using System.Net;
 using System.Net.Http.Headers;
@@ -157,15 +158,31 @@ public sealed class WindowsVoicePackService : IVoicePackService
 
     private async Task<PackDownloadResult> DownloadWithRetriesAsync(PackInfo pack, IProgress<double>? progress, CancellationToken cancellationToken)
     {
+        long started = Stopwatch.GetTimestamp();
         for (int attempt = 1; ; attempt++)
         {
             PackDownloadResult result = await TryDownloadOnceAsync(pack, progress, cancellationToken).ConfigureAwait(false);
             if (!PackRetryPolicy.ShouldRetry(result, attempt))
             {
+                LogOutcome(pack, attempt, result, started);
                 return result;
             }
 
-            await Task.Delay(_backoff(attempt), cancellationToken).ConfigureAwait(false);
+            TimeSpan backoff = _backoff(attempt);
+            PackDownloadLog.Retry(pack.Id, attempt, result, backoff);
+            await Task.Delay(backoff, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private static void LogOutcome(PackInfo pack, int attempt, PackDownloadResult result, long started)
+    {
+        if (result == PackDownloadResult.Ok)
+        {
+            PackDownloadLog.Done(pack.Id, pack.SizeBytes, Stopwatch.GetElapsedTime(started));
+        }
+        else
+        {
+            PackDownloadLog.Failed(pack.Id, attempt, result);
         }
     }
 
@@ -259,6 +276,8 @@ public sealed class WindowsVoicePackService : IVoicePackService
             return; // body already complete; only verification is left
         }
 
+        PackDownloadLog.Start(pack.Id, offset);
+
         using GuardedResponse response = await OpenBodyAsync(pack, partial, offset, cancellationToken).ConfigureAwait(false);
         await StreamBodyAsync(response, pack, partial, offset, progress, cancellationToken).ConfigureAwait(false);
     }
@@ -280,13 +299,14 @@ public sealed class WindowsVoicePackService : IVoicePackService
     }
 
     private Task<GuardedResponse> SendBodyRequestAsync(PackInfo pack, long offset, CancellationToken cancellationToken) =>
-        StallGuardedRead.SendAsync(_http, () => BuildBodyRequest(pack, offset), StallGuardedRead.HeaderTimeout(_stallTimeout), cancellationToken);
+        StallGuardedRead.SendAsync(_http, () => BuildBodyRequest(pack, offset), StallGuardedRead.HeaderTimeout(_stallTimeout), cancellationToken, new DownloadTag(pack.Id, offset));
 
     private static HttpRequestMessage BuildBodyRequest(PackInfo pack, long offset)
     {
         var request = new HttpRequestMessage(HttpMethod.Get, pack.Url);
         if (offset > 0)
         {
+            PackDownloadLog.Range(pack.Id, offset);
             request.Headers.Range = new RangeHeaderValue(offset, null);
         }
 
@@ -310,7 +330,7 @@ public sealed class WindowsVoicePackService : IVoicePackService
             progress?.Report(Math.Min(100, written * 100 / Math.Max(1, pack.SizeBytes)) / 100.0); // show where the resume starts
         }
 
-        await using Stream body = await guarded.OpenBodyAsync(_stallTimeout, cancellationToken).ConfigureAwait(false);
+        await using Stream body = await guarded.OpenBodyAsync(_stallTimeout, cancellationToken, new DownloadTag(pack.Id, written)).ConfigureAwait(false);
         await using var file = new FileStream(partial, resumed ? FileMode.Append : FileMode.Create, FileAccess.Write, FileShare.None, BufferBytes, useAsync: true);
         await CopyWithStallGuardAsync(body, file, pack.SizeBytes, written, progress, cancellationToken).ConfigureAwait(false);
     }
