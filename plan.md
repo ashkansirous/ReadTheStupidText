@@ -21,6 +21,7 @@ Open slices only. Finished slices (153 rows) are in [slices-done](docs/plan/note
 | 154 | Dino: vowel marks in Farsi and Arabic books (Farsi only: Arabic left as is; marks are a hidden "how to read" text, Decision 166) | in progress | #470 | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
 | 163 | Fast tests: Windows desktop tests in a headless Hyper-V VM | planned | | | [163-desktop-tests-in-hyperv-vm.md](docs/plan/slices/163-desktop-tests-in-hyperv-vm.md) |
 | 165 | Fast tests: audio and timing on the real phone over wireless adb | planned | | | [165-real-phone-audio-timing-checks.md](docs/plan/slices/165-real-phone-audio-timing-checks.md) |
+| 172 | Dino: one gear for all grown-up settings (sub-page per setting; "Free stories" -> "More stories") | planned | | | [172-dino-settings-gear.md](docs/plan/slices/172-dino-settings-gear.md) |
 
 Batch 25 (119-123; 119, 120, 122, 123 built, 121 built; planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
 
