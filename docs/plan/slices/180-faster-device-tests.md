@@ -74,3 +74,7 @@ Why: on 2026-10-28 a run sat silent about 20 minutes: the phone was on battery a
 - [x] Pack download: poll the `.partial` size; no growth for 120 s fails with "pack download stalled at N bytes"; progress at most every 30 s. *Built (`-PackStallSeconds`; reads `files/packs/*.partial` through `run-as`, Debug build).*
 - [x] Mid-read: no new app log line for 120 s fails the read with the last line seen. *Built (`-ReadSilenceSeconds`, cold and warm reads).*
 - [x] README: the phone may stay locked only while charging or with the keep-awake loop. *Done.*
+
+#### Follow-up: phone builds use the cache
+
+- [x] `audio-timing.ps1` takes its APK from the Slice 180 build cache (`build-cache.ps1`) instead of rebuilding every run: cache name `<app>-android-dbg-<arm64|x64>[-aot]-<input key>`, so the phone's `.dbg` arm64 and AOT builds never mix with `install-debug.ps1`'s x86_64 ones; prints `Reusing cached <app> APK (key ...)` or `Building <app> APK (key ...)`; `-Rebuild` forces a build; the build (BelowNormal priority, per-key and per-checkout locks) runs before the quiet-machine lock. *Built. An arm64 Dino build through the cache: 64.5 s the first time, 1.3 s the second. Not installed on the phone (in use). Also fixed: `Invoke-Adb` used `ProcessStartInfo.ArgumentList`, missing in Windows PowerShell 5.1, which killed a `powershell -File` launch right after "Waiting for a quiet machine" (now works in both); a missing read-hook answer names the broadcast action sent.*
