@@ -6,7 +6,7 @@ namespace ReadTheStupidText.Mobile.Shared.Testing;
 
 /// <summary>
 /// Turns the reader's and the voice pack installer's events into <see cref="TestHookLog"/> lines:
-/// READ_START when playback begins, CHUNK n for every spoken chunk (counted per read; the first can come just before READ_START), READ_END when it goes idle, PACK_READY
+/// ENGINE_READY / CHUNK_SYNTH when the engine is loaded and each chunk's audio is generated (Slice 175), READ_START when playback begins, CHUNK n for every spoken chunk (counted per read; the first can come just before READ_START), READ_END when it goes idle, PACK_READY
 /// when a voice pack finishes installing (Slice 162).
 /// </summary>
 public sealed class TestMarkers
@@ -20,6 +20,15 @@ public sealed class TestMarkers
 		reader.ChunkChanged += (_, _) => OnChunk();
 		installer.Changed += (_, _) => OnInstaller(installer.State);
 		ReadTimingTracker.ChunkAudioRecorded += OnChunkAudio;
+		ReadTimingTracker.ReadStarted += OnReadStarted;
+	}
+
+	// The reader tracks a read right after its engine is loaded, so this is "engine ready", and the first chunk's synthesis begins now (Slice 175).
+	// Later chunks are generated in parallel, so only their end is observable here; chunk 0's end minus the ENGINE_READY moment is the cold synthesis time.
+	private static void OnReadStarted(int chunkCount)
+	{
+		TestHookLog.WriteEngineReady();
+		TestHookLog.WriteChunkSynth(0, TestHookLog.SynthStart);
 	}
 
 	// The first chunk's audio marks a new read, so the numbering restarts even when the previous read never went Idle (a second read while playing).
@@ -30,6 +39,7 @@ public sealed class TestMarkers
 			Interlocked.Exchange(ref _chunks, 0);
 		}
 
+		TestHookLog.WriteChunkSynth(index, TestHookLog.SynthEnd);
 		TestHookLog.Write($"{TestHookLog.ChunkAudioPrefix} {index} {duration.TotalMilliseconds:0}ms");
 	}
 

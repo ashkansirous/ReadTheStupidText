@@ -35,7 +35,7 @@ signed copy sits in `<VmRoot>\sign` and is deleted in a `finally`. Runs take a h
 - `checks/*.ps1` run inside the VM in the signed-in desktop session (a PowerShell Direct session is a separate,
   non-interactive logon, so each check runs as a one-shot scheduled task). Each writes `{pass,message}`; `_lib.ps1` has
   the helpers (UIA lookups, tray icon, mouse and keys, log readers). Order matters: later checks use the running app.
-  RTST: `rtst-launch`, `rtst-tray-icon`, `rtst-hotkey-read`, `rtst-panel-speed`, `rtst-startup-task`.
+  RTST: `rtst-launch`, `rtst-tray-icon`, `rtst-hotkey-read` (clipboard path), `rtst-selection-hotkey` (Notepad selection beats a clipboard decoy), `rtst-panel-speed`, `rtst-startup-task`.
   Dino: `dino-launch`, `dino-open-book`, `dino-page-turn`. Add a check = add the file and its name to `$Apps` in the runner.
 
 ## Where things live
@@ -49,7 +49,7 @@ Needs Hyper-V on and your user in *Hyper-V Administrators*; no elevation, and no
 ## Rebuild: when and how
 
 The VM runs the Windows 11 Enterprise **evaluation** (90 days; the host fetches the current ISO from the Microsoft Evaluation
-Center page). Rebuild with `New-TestVm.ps1 -Force` (15-30 minutes, unattended) when: the evaluation lapses (Windows shows
+Center page). `Invoke-DesktopTest.ps1` prints the days left and warns under 14 days, or when the licence is not counting, with the rebuild command. Rebuild with `New-TestVm.ps1 -Force` (15-30 minutes, unattended) when: the evaluation lapses (Windows shows
 "license expired"; short runs still work, but it begins shutting the VM down hourly), Windows asks for something the
 checks cannot answer, or the VM is damaged. The image is never updated (no network), so UI positions stay stable.
 

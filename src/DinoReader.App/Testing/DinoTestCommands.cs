@@ -1,0 +1,262 @@
+#if DEBUG
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using DinoReader.Core;
+using Microsoft.Extensions.DependencyInjection;
+using ReadTheStupidText.Application.Reading;
+using ReadTheStupidText.Domain.Reading;
+using ReadTheStupidText.Mobile.Shared.Testing;
+
+namespace DinoReader.Testing;
+
+/// <summary>
+/// Dino Reader's own Debug test command (Slice 175): <c>open-book id=&lt;starter&gt; [page=n] [play=1|page] [speed=2]</c> opens that book's reading screen on page n
+/// (1-based, default 1), like a child tapping the tile, and with <c>play=1</c> reads from that page on to the end of the book on the app's own reader (the same session the Play
+/// button uses); <c>play=page</c> stops once the page is read, so a timing run is finite. <c>id</c> is the book's package id, its story id or its title as a slug (<c>three-little-pigs</c>). It registers itself with the
+/// dispatcher, so no app start-up code changes; Release has none of it. Outcome lines: <c>HOOK open-book opened ...</c> or <c>failed ...</c>;
+/// with play, <c>HOOK read start</c> just before the read begins (the line the phone timing script counts from).
+/// </summary>
+internal static class DinoTestCommands
+{
+	private const string Name = "open-book";
+	private const string IdKey = "id";
+	private const string PageKey = "page";
+	private const string PlayKey = "play";
+	private const string PlayOn = "1";
+	private const string PlayPageOnly = "page";
+	private const string SpeedKey = "speed";
+	private const string SessionField = "_session";
+	private const int RetryMilliseconds = 250;
+	private const int WaitMilliseconds = 30000;
+	private const int ImportWaitMilliseconds = 20000;
+
+	// A module initializer on purpose: the command registers itself, so the app's start-up code (outside this slice) stays untouched.
+#pragma warning disable CA2255
+	[ModuleInitializer]
+#pragma warning restore CA2255
+	internal static void Register()
+	{
+		TestHookDispatcher.AppCommands = Run;
+		TestHookDispatcher.AppLaunchKeys = [IdKey, PageKey, PlayKey];
+	}
+
+	private static string? Run(TestHookCommand command)
+	{
+		if (command.Name != Name)
+		{
+			return null;
+		}
+
+		_ = OpenAsync(command);
+		return TestHookDispatcher.Ok;
+	}
+
+	private static async Task OpenAsync(TestHookCommand command)
+	{
+		try
+		{
+			string id = command.Get(IdKey, string.Empty);
+			int page = int.TryParse(command.Get(PageKey, "1"), out int parsed) && parsed >= 1 ? parsed : 1;
+			string play = command.Get(PlayKey, string.Empty);
+			if (!TrySetSpeed(command.Get(SpeedKey, string.Empty)))
+			{
+				Log($"{Name} failed bad speed");
+				return;
+			}
+
+			await OpenBookAsync(id, page, play);
+		}
+		catch (Exception ex)
+		{
+			Log($"{Name} fault {TestHookLog.FaultSummary(ex)}");
+		}
+	}
+
+	// The reader's own speed, as the read hook sets it (nothing is stored); no speed given leaves it alone.
+	private static bool TrySetSpeed(string text)
+	{
+		if (text.Length == 0)
+		{
+			return true;
+		}
+
+		if (!double.TryParse(text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double speed))
+		{
+			return false;
+		}
+
+		IPlatformApplication.Current!.Services.GetRequiredService<ISpeechReader>().SetSpeed(new PlaybackRate(speed));
+		return true;
+	}
+
+	private static async Task OpenBookAsync(string id, int page, string play)
+	{
+		if (id.Trim().Length == 0)
+		{
+			Log($"{Name} failed no book");
+			return;
+		}
+
+		IServiceProvider services = IPlatformApplication.Current!.Services;
+		NavigationPage? root = await WaitForAsync(() => Task.FromResult(GalleryRoot()));
+		if (root is null)
+		{
+			Log($"{Name} failed no gallery");
+			return;
+		}
+
+		string? refusal = Refusal(root, services.GetRequiredService<GrownUpMode>());
+		Story? story = refusal is null ? await FindWhenImportedAsync(services.GetRequiredService<IStoryLibrary>(), id) : null;
+		if (refusal is not null || story is null)
+		{
+			Log($"{Name} failed {refusal ?? "no book " + id}");
+			return;
+		}
+
+		ReadingPage? reading = await MainThread.InvokeOnMainThreadAsync(() => OpenReadingAsync(services, root, story));
+		if (reading is null)
+		{
+			Log($"{Name} failed no reading screen");
+			return;
+		}
+
+		await MainThread.InvokeOnMainThreadAsync(() => GoToPageAsync(reading, story, page, play));
+	}
+
+	// The starter books are imported one after another on a cold start, so "no book" only counts once the import had its time (bounded).
+	private static Task<Story?> FindWhenImportedAsync(IStoryLibrary library, string id)
+	{
+		return WaitForAsync(async () => BookMatch.Find(await library.ListAsync(), id), ImportWaitMilliseconds);
+	}
+
+	// On the UI thread, the same way a tile tap opens it (StoryActions.ReadAsync); the page it pushed is the top of the stack.
+	private static async Task<ReadingPage?> OpenReadingAsync(IServiceProvider services, NavigationPage root, Story story)
+	{
+		await services.GetRequiredService<StoryActions>().ReadAsync(root.Navigation, story);
+		return root.Navigation.NavigationStack.LastOrDefault() as ReadingPage;
+	}
+
+	// The states in which a child cannot open a book from the gallery: grown-up mode (a tap edits), the intro wizard over the gallery, a reading screen already open.
+	private static string? Refusal(NavigationPage root, GrownUpMode mode)
+	{
+		if (mode.IsGrownUp)
+		{
+			return "grown-up";
+		}
+
+		if (root.Navigation.ModalStack.Any(p => p is NavigationPage { RootPage: IntroWizardPage }))
+		{
+			return "intro";
+		}
+
+		return root.Navigation.NavigationStack.Any(p => p is ReadingPage) ? "reading open" : null;
+	}
+
+	// The gallery is the root of the window's navigation once first run is done; before that there is nothing to open a book from.
+	private static NavigationPage? GalleryRoot() =>
+		Microsoft.Maui.Controls.Application.Current?.Windows.FirstOrDefault()?.Page is NavigationPage { RootPage: GalleryPage } nav ? nav : null;
+
+	private static async Task<T?> WaitForAsync<T>(Func<Task<T?>> probe, int limitMilliseconds = WaitMilliseconds) where T : class
+	{
+		for (int waited = 0; waited < limitMilliseconds; waited += RetryMilliseconds)
+		{
+			if (await probe() is { } found)
+			{
+				return found;
+			}
+
+			await Task.Delay(RetryMilliseconds);
+		}
+
+		return null;
+	}
+
+	private static async Task GoToPageAsync(ReadingPage reading, Story story, int page, string play)
+	{
+		(int First, int Last)? range = BookMatch.SentencesOfPage(story, page - 1);
+		FieldInfo? field = typeof(ReadingPage).GetField(SessionField, BindingFlags.Instance | BindingFlags.NonPublic);
+		if (range is not { } sentences || field?.GetValue(reading) is not ReadingSession session)
+		{
+			Log($"{Name} failed page {page} of {story.Pages.Count}");
+			return;
+		}
+
+		Log($"{Name} opened page={page} of={story.Pages.Count} sentence={sentences.First}");
+		if (play != PlayOn && play != PlayPageOnly)
+		{
+			session.MoveTo(sentences.First);
+			return;
+		}
+
+		if (play == PlayPageOnly)
+		{
+			StopAfter(session, sentences.Last);
+		}
+
+		TestHookLog.NoteReadRequested();
+		Log("read start");
+		await session.StartAtAsync(sentences.First);
+	}
+
+	// Stops the read as soon as it moves past the page's last sentence (once), so a one-page timing run ends by itself.
+	private static void StopAfter(ReadingSession session, int lastSentence)
+	{
+		EventHandler<int>? handler = null;
+		handler = (_, sentence) =>
+		{
+			if (sentence > lastSentence)
+			{
+				session.SentenceChanged -= handler;
+				MainThread.BeginInvokeOnMainThread(session.Stop);
+			}
+		};
+		session.SentenceChanged += handler;
+	}
+
+	private static void Log(string text) => TestHookLog.Write($"{TestHookLog.HookPrefix} {text}");
+}
+
+/// <summary>Pure book lookup and page maths of the open-book command.</summary>
+internal static class BookMatch
+{
+	/// <summary>The book whose package id or story id equals <paramref name="id"/>, else the first whose title, as a dashed lower-case slug, contains it.</summary>
+	internal static Story? Find(IEnumerable<Story> stories, string id)
+	{
+		string wanted = id.Trim();
+		if (wanted.Length == 0)
+		{
+			return null;
+		}
+
+		List<Story> all = stories.ToList();
+		return all.FirstOrDefault(s => string.Equals(s.SourceId, wanted, StringComparison.OrdinalIgnoreCase) || string.Equals(s.Id, wanted, StringComparison.OrdinalIgnoreCase))
+			?? all.FirstOrDefault(s => Slug(s.Title).Contains(Slug(wanted), StringComparison.Ordinal));
+	}
+
+	internal static string Slug(string text) => string.Join('-', text.Trim().ToLowerInvariant().Split([' ', '-', '_'], StringSplitOptions.RemoveEmptyEntries));
+
+	/// <summary>The first and last sentence on the zero-based <paramref name="page"/>, or null when the book has no such page or the page holds none.</summary>
+	internal static (int First, int Last)? SentencesOfPage(Story story, int page)
+	{
+		if (page < 0 || page >= story.Pages.Count)
+		{
+			return null;
+		}
+
+		IReadOnlyList<SentenceSpan> sentences = StorySentences.Build(story.Text, LanguageRules.For(story.Language), story.BreakMap());
+		IReadOnlyList<int> starts = StoryRecordings.PageStarts(story.Pages);
+		int first = -1;
+		int last = -1;
+		for (int i = 0; i < sentences.Count; i++)
+		{
+			if (StoryRecordings.PageOfPosition(starts, sentences[i].Start) == page)
+			{
+				first = first < 0 ? i : first;
+				last = i;
+			}
+		}
+
+		return first < 0 ? null : (first, last);
+	}
+}
+#endif

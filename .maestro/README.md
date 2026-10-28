@@ -20,9 +20,9 @@ Maestro (2.12) lives in `<worktrees folder>\.tools\maestro` or `$env:MAESTRO_HOM
 
 ## Hooks (Debug builds only)
 
-Commands: `skip-first-run [lang=en]`, `stop-read`, `state` (logs `STATE language=.. reader=.. speed=..`). They run through `TestHookDispatcher` in `Mobile.Shared/Testing`. Entry points: launch arguments (Android intent extras, iOS user defaults), an Android broadcast, one action per app (`adb shell am broadcast -a uk.sirous.rtst-test.TEST_HOOK --es cmd state`; Dino: `uk.sirous.dino-test.TEST_HOOK`) and the iOS URL scheme (`rtst-test://state`, `dino-test://state`).
+Commands: `skip-first-run [lang=en]`, `stop-read`, `state` (logs `STATE language=.. reader=.. speed=..`), `read text=.. [speed=..]` (Slice 165) and, Dino only, `open-book id=.. [page=n] [play=1|page] [speed=..]` (Slice 175; refuses with `failed no book|grown-up|intro|reading open`). They run through `TestHookDispatcher` in `Mobile.Shared/Testing`. Entry points: launch arguments (Android intent extras, iOS user defaults), an Android broadcast, one action per app (`adb shell am broadcast -a uk.sirous.rtst-test.TEST_HOOK --es cmd state`; Dino: `uk.sirous.dino-test.TEST_HOOK`) and the iOS URL scheme (`rtst-test://state`, `dino-test://state`).
 
-Markers: `PAGE n` (Dino page swiped), `READ_START`, `CHUNK n`, `READ_END`, `PACK_READY`, `HOOK <name> ok|unknown`, `STATE ...`. None of this is compiled into Release.
+Markers: `PAGE n` (Dino page swiped), `READ_START`, `ENGINE_READY ms`, `CHUNK_SYNTH n start|end ms`, `CHUNK n`, `READ_END`, `PACK_READY`, `HOOK <name> ok|unknown`, `STATE ...`. None of this is compiled into Release.
 
 ## Not covered yet
 

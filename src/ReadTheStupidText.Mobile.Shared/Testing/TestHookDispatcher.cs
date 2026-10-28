@@ -8,7 +8,8 @@ namespace ReadTheStupidText.Mobile.Shared.Testing;
 /// <summary>
 /// Runs a <see cref="TestHookCommand"/> against the app's state (Slice 162), so a flow never taps through first-run
 /// screens to reach what it tests. Both platforms' entry points (Android broadcast, iOS URL) call <see cref="Dispatch"/>.
-/// Commands: <c>skip-first-run [lang=en]</c>, <c>stop-read</c>, <c>state</c>, <c>read text=... [speed=1.5]</c> (Slice 165: reads a fixed text on the app's own reader, for the real-phone timing script). Debug builds only.
+/// Commands: <c>skip-first-run [lang=en]</c>, <c>stop-read</c>, <c>state</c>, <c>read text=... [speed=1.5]</c> (Slice 165: reads a fixed text on the app's own reader, for the real-phone timing script).
+/// An app adds its own commands through <see cref="AppCommands"/> (Slice 175: Dino's <c>open-book id=... [page=n] [play=1]</c>). Debug builds only.
 /// </summary>
 public sealed class TestHookDispatcher
 {
@@ -25,6 +26,22 @@ public sealed class TestHookDispatcher
 	public const string Failed = "failed";
 	public const int WindowRetryMilliseconds = 250;
 	public const int WindowWaitMilliseconds = 15000;
+
+	/// <summary>
+	/// Commands only one app has (Slice 175), set once by that app's own Debug code before the first command arrives. Returns the outcome text
+	/// (<see cref="Ok"/>, <see cref="Failed"/>), or null when the name is not its command, which then logs <see cref="Unknown"/>.
+	/// </summary>
+	public static Func<TestHookCommand, string?>? AppCommands { get; set; }
+
+	/// <summary>The launch-argument names the app's own commands take (iOS reads only listed keys), set next to <see cref="AppCommands"/>.</summary>
+	public static IReadOnlyList<string> AppLaunchKeys { get; set; } = [];
+
+	/// <summary>
+	/// Every launch-argument name a hook needs, built in one place and at call time (the app sets <see cref="AppLaunchKeys"/> after startup):
+	/// the command name first, then the keys this dispatcher's own commands read, then the app's. A platform that filters launch arguments reads exactly these.
+	/// </summary>
+	public static IReadOnlyList<string> LaunchKeys =>
+		new[] { TestHookCommand.NameKey, LanguageKey, TextKey, SpeedKey }.Concat(AppLaunchKeys).Distinct().ToList();
 
 	private readonly ISettingsStore _settings;
 	private readonly ISpeechReader _reader;
@@ -90,7 +107,7 @@ public sealed class TestHookDispatcher
 			StopRead => Stop(),
 			State => Report(),
 			Read => StartRead(command),
-			_ => Unknown,
+			_ => AppCommands?.Invoke(command) ?? Unknown,
 		};
 		TestHookLog.Write($"{TestHookLog.HookPrefix} {command.Name} {outcome}");
 	}
@@ -126,12 +143,13 @@ public sealed class TestHookDispatcher
 			_reader.SetSpeed(new PlaybackRate(speed));
 		}
 
+		TestHookLog.NoteReadRequested();
 		TestHookLog.Write($"{TestHookLog.HookPrefix} {Read} start");
 		_ = LogIfFaulted(_reader.SpeakAsync(text));
 		return Ok;
 	}
 
-	// A faulting read is logged (type only, never the text) instead of vanishing with the dropped task.
+	// A faulting read is logged (type and top stack frame, never the text) instead of vanishing with the dropped task.
 	private static async Task LogIfFaulted(Task read)
 	{
 		try
@@ -140,7 +158,7 @@ public sealed class TestHookDispatcher
 		}
 		catch (Exception ex)
 		{
-			TestHookLog.Write($"{TestHookLog.HookPrefix} {Read} fault {ex.GetType().Name}");
+			TestHookLog.Write($"{TestHookLog.HookPrefix} {Read} fault {TestHookLog.FaultSummary(ex)}");
 		}
 	}
 

@@ -11,7 +11,6 @@ namespace ReadTheStupidText.Mobile.Shared.Testing;
 /// </summary>
 public static partial class TestHooks
 {
-	private static readonly string[] LaunchArgumentKeys = [TestHookCommand.NameKey, TestHookDispatcher.LanguageKey];
 	private static bool _launchHookRun;
 
 	// Mid-flow: the test URL (Maestro openLink). At launch: the flow's launchApp arguments, which iOS exposes as user defaults ("-cmd skip-first-run").
@@ -27,10 +26,15 @@ public static partial class TestHooks
 			return;
 		}
 
-		// Only the keys a command uses, never every default in the app's settings domain.
+		// No command name, nothing else is read; with one, only TestHookDispatcher.LaunchKeys, never every default in the app's settings domain.
 		NSUserDefaults defaults = NSUserDefaults.StandardUserDefaults;
 		var args = new List<KeyValuePair<string, string>>();
-		foreach (string key in LaunchArgumentKeys)
+		if (defaults.StringForKey(TestHookCommand.NameKey) is null)
+		{
+			return;
+		}
+
+		foreach (string key in TestHookDispatcher.LaunchKeys)
 		{
 			if (defaults.StringForKey(key) is { } value)
 			{
