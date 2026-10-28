@@ -57,7 +57,28 @@ public sealed class ReadTimingTracker
         {
             _chunkDurations[index] = duration;
         }
+#if DEBUG
+        RaiseChunkAudioRecorded(index, duration);
+#endif
     }
+
+#if DEBUG
+    /// <summary>Debug builds only (Slice 165): raised outside the lock when a chunk's audio length becomes known, for the device test markers.</summary>
+    public static event Action<int, TimeSpan>? ChunkAudioRecorded;
+
+    // A throwing subscriber (a failed log write) must never abort the synthesis it is measuring.
+    private static void RaiseChunkAudioRecorded(int index, TimeSpan duration)
+    {
+        try
+        {
+            ChunkAudioRecorded?.Invoke(index, duration);
+        }
+        catch (Exception)
+        {
+            // Test marker only; swallowed on purpose.
+        }
+    }
+#endif
 
     /// <summary>Folds the chunk at <paramref name="index"/>'s real duration into the
     /// elapsed baseline once it has finished playing to its natural end, so the next

@@ -12,6 +12,7 @@ public static partial class TestHookLog
 	public const string ReadStart = "READ_START";
 	public const string ReadEnd = "READ_END";
 	public const string ChunkPrefix = "CHUNK";
+	public const string ChunkAudioPrefix = "CHUNK_AUDIO";
 	public const string PackReady = "PACK_READY";
 	public const string HookPrefix = "HOOK";
 	public const string PagePrefix = "PAGE";
