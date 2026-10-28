@@ -1,6 +1,6 @@
 ### Slice 185 — Confirm and close three old gaps (fix only what still fails)
 
-*Planned.*
+*In progress (wave 2026-10-28), draft PR.*
 
 **Touches:** `src/DinoReader.App/SpokenLanguage.cs`, `src/ReadTheStupidText.Mobile/LanguagePage.xaml.cs`, `src/ReadTheStupidText.Mobile/ReviewPage.xaml.cs`, `.maestro/*`, `docs/plan/slices/185-close-three-old-gaps.md`.
 
