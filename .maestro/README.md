@@ -8,6 +8,8 @@ tools\emulator\run-flows.ps1 -App rtst         # every flow of the app, pass/fai
 tools\emulator\run-flows.ps1 -App dino -Flow open-book
 ```
 
+`run-flows.ps1 -App auto` runs only the apps the change touches (`tools\test-targets.ps1`); `-Instance 1|2` picks the emulator (Slice 180, `tools/emulator/README.md`).
+
 Maestro (2.12) lives in `<worktrees folder>\.tools\maestro` or `$env:MAESTRO_HOME`; `run-flows.ps1` keeps its state under `<worktrees folder>\.tools\maestro-home` and logs under `maestro-out`. Java 21 is the only other need.
 
 ## Rules for a flow

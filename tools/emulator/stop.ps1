@@ -2,9 +2,14 @@
 .SYNOPSIS
   Stops only the emulator start-warm.ps1 started (pid in <worktrees>\.emulator\state.json).
   No snapshot is saved (start-warm.ps1 boots with -no-snapshot-save).
+  -Instance 2 stops the second emulator (state2.json); the default is instance 1 (Slice 180).
 #>
+param(
+    [ValidateSet(1, 2)][int]$Instance = 1
+)
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'common.ps1')
+Set-EmulatorInstance $Instance
 
 function Stop-RecordedEmulator($state) {
     $ErrorActionPreference = 'Continue'  # adb writes to stderr once the emulator is already gone

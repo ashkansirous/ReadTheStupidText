@@ -1,9 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { CONTENT_MARKDOWN, GROUPS, IGNORED_PATTERNS, PRODUCTS, bumpKind, matchesPattern, newestAppTag, parseCommits, productBump, shipTargets, shipTargetsPerProduct } from './ship-targets.mjs';
+import { CONTENT_MARKDOWN, GROUPS, IGNORED_PATTERNS, PRODUCTS, bumpKind, localChangedFiles, matchesPattern, newestAppTag, parseCommits, parseLocalArgs, productBump, shipTargets, shipTargetsPerProduct } from './ship-targets.mjs';
 
 const M = 'src/ReadTheStupidText.Mobile';
 const S = 'src/ReadTheStupidText.Mobile.Shared';
@@ -362,4 +365,79 @@ test('parseCommits splits messages from their changed files', () => {
     const raw = '\u0001fix: a\n\u0002\n\nsrc/a.cs\nsrc/b.cs\n\u0001fix: b\n\u0002\n\nsrc/c.cs\n';
     const commits = parseCommits(raw);
     assert.deepEqual(commits.map((c) => c.files), [['src/a.cs', 'src/b.cs'], ['src/c.cs']]);
+});
+
+// Local mode (Slice 180).
+test('parseLocalArgs reads --local, --base and --files, defaulting the base to origin/main', () => {
+    const { repoRoot, ...plain } = parseLocalArgs(['--local']);
+    assert.ok(repoRoot);
+    assert.deepEqual(plain, { local: true, files: false, stdin: false, base: 'origin/main' });
+    const { repoRoot: explicit, ...withFlags } = parseLocalArgs(['--local', '--base', 'main', '--files', '--repo-root', 'X']);
+    assert.equal(explicit, 'X');
+    assert.deepEqual(withFlags, { local: true, files: true, stdin: false, base: 'main' });
+    assert.equal(parseLocalArgs([]).local, false);
+});
+
+test('localChangedFiles lists committed, uncommitted and untracked files since the merge base; an unknown base is null', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'ship-local-'));
+    const run = (...args) => execFileSync('git', args, { cwd: dir, stdio: 'ignore' });
+    try {
+        run('init', '-b', 'main');
+        run('config', 'user.email', 't@example.com');
+        run('config', 'user.name', 't');
+        writeFileSync(join(dir, 'a.txt'), 'a');
+        run('add', '.');
+        run('commit', '-m', 'base');
+        run('checkout', '-b', 'topic');
+        writeFileSync(join(dir, 'b.txt'), 'b');
+        run('add', '.');
+        run('commit', '-m', 'topic');
+        writeFileSync(join(dir, 'a.txt'), 'a2');
+        writeFileSync(join(dir, 'c.txt'), 'c');
+        mkdirSync(join(dir, 'sub'));
+        writeFileSync(join(dir, 'sub', 'd.txt'), 'd');
+        // The repo is named explicitly, the caller's own directory (this checkout) is never read; a subfolder gives repo-root paths.
+        assert.deepEqual(localChangedFiles('main', dir).sort(), ['a.txt', 'b.txt', 'c.txt', 'sub/d.txt']);
+        assert.deepEqual(localChangedFiles('main', join(dir, 'sub')).sort(), ['a.txt', 'b.txt', 'c.txt', 'sub/d.txt']);
+        assert.equal(localChangedFiles('no-such-branch', dir), null);
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('localChangedFiles returns non-ASCII paths as they are, not quoted and octal-escaped', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'ship-local-'));
+    const run = (...args) => execFileSync('git', args, { cwd: dir, stdio: 'ignore' });
+    try {
+        run('init', '-b', 'main');
+        run('config', 'user.email', 't@example.com');
+        run('config', 'user.name', 't');
+        run('config', 'core.quotePath', 'true');
+        writeFileSync(join(dir, 'a.txt'), 'a');
+        run('add', '.');
+        run('commit', '-m', 'base');
+        mkdirSync(join(dir, 'content', 'dino', 'caf\u00e9'), { recursive: true });
+        writeFileSync(join(dir, 'content', 'dino', 'caf\u00e9', 'story.md'), 'x');
+        writeFileSync(join(dir, 'caf\u00e9.txt'), 'x');
+        run('add', 'caf\u00e9.txt');
+        assert.deepEqual(localChangedFiles('main', dir).sort(), ['caf\u00e9.txt', 'content/dino/caf\u00e9/story.md']);
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('localChangedFiles returns an empty list for a clean tree', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'ship-local-'));
+    const run = (...args) => execFileSync('git', args, { cwd: dir, stdio: 'ignore' });
+    try {
+        run('init', '-b', 'main');
+        run('config', 'user.email', 't@example.com');
+        run('config', 'user.name', 't');
+        writeFileSync(join(dir, 'a.txt'), 'a');
+        run('add', '.');
+        run('commit', '-m', 'base');
+        assert.deepEqual(localChangedFiles('main', dir), []);
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('local mode: a Dino-only UI change touches the Dino targets and not the RTST ones; unknown changes build everything', () => {
+    const dino = targetsOf(['src/DinoReader.App/Views/ReaderPage.xaml']);
+    assert.deepEqual([dino.dinoapp, dino.dinowin, dino.android, dino.windows], [true, true, false, false]);
+    assert.ok(Object.values(targetsOf(null)).every(Boolean));
 });

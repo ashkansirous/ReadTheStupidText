@@ -7,7 +7,9 @@ desktop, tray, clipboard or installed packages. Decision 165, `docs/plan/slices/
 ## Use
 
 ```powershell
-# 1. Build the unsigned dev MSIX (same commands as CI; output outside the repo)
+# 1. Build the unsigned dev MSIX once per build key (Slice 180). Invoke-DesktopTest.ps1 does this itself when none exists; run it by hand to build ahead:
+tools\desktop-vm\Build-TestPackage.ps1 -App rtst        # or -App dino; prints the MSIX path; a finished build of the same inputs is reused
+#    What it runs (same commands as CI; output goes to <worktrees>\_builds\<app>-windows-<key>\, not the repo):
 msbuild src/ReadTheStupidText.App/ReadTheStupidText.App.csproj -restore -p:Configuration=Release -p:Platform=x64 -p:RuntimeIdentifier=win-x64 `
   -p:GenerateAppxPackageOnBuild=true "-p:AppxPackageDir=D:\ReadTheStupidText-worktrees\_desktop-vm\pkgs\rtst\\" `
   -p:UapAppxPackageBuildMode=SideloadOnly -p:AppxBundle=Never -p:AppxPackageSigningEnabled=false
@@ -16,10 +18,14 @@ dotnet publish src/DinoReader.App -f net10.0-windows10.0.19041.0 -c Release -p:I
 
 # 2. Run (exit code 0 = every check passed; prints one PASS/FAIL line per check)
 tools\desktop-vm\Invoke-DesktopTest.ps1 -App rtst          # or  -App dino   [-Package <msix>]
+tools\desktop-vm\Invoke-DesktopTest.ps1 -App auto          # only the apps the change touches (tools\test-targets.ps1 -Platform windows); skipped ones are listed
 tools\desktop-vm\Invoke-DesktopTest.ps1 -App rtst -Sabotage KillApp   # must FAIL: proves a check can fail
 ```
 
-`Invoke-DesktopTest.ps1` finds the newest MSIX under `<VmRoot>\pkgs\<app>` unless `-Package` is given. It restores
+`Invoke-DesktopTest.ps1` uses the MSIX built for the current **build key** (a hash of `src/` and the root build files as they are on
+disk, committed or not; `tools/emulator/build-cache.ps1`) from `<worktrees folder>\_builds\<app>-windows-<key>\`, running
+`Build-TestPackage.ps1` first (outside the VM lock) when none exists, unless `-Package` is given. It never takes "the newest file", so a stale
+package is not tested by accident; the newest 3 builds per app and worktree are kept. It restores
 `clean`, starts the VM, signs a **copy** of the MSIX with a throw-away certificate (subject = the manifest publisher; the
 CI MSIX is unsigned and a Store publisher is not in the "unsigned namespace", so `-AllowUnsigned` refuses it), trusts
 that certificate inside the VM only, installs the package with its `Dependencies\x64` framework MSIX, runs the checks,
@@ -95,3 +101,7 @@ returns no result or the harness throws: the screenshot path is printed in the F
 - No audio device exists, so the hotkey check asserts that a Hotkey row carrying the sentinel text reaches the input log (and reports the states seen), not that the read ends.
 - First run of each app shows a language page; the launch checks answer it (English, no network, phone/Windows voice).
 - A killed app leaves a ghost tray icon, so each tray check also requires the process to be alive.
+
+## Running next to emulators (Slice 180)
+
+Measured on the 32 GB / 16-thread dev PC: the VM passes next to **one** emulator running flows, but with **two** emulators running flows at once the VM failed 0/3 (the Dino window did not open in 30 s; CPU 100%, RAM 30.7 GB). `Invoke-DesktopTest.ps1` therefore waits, printing why, while two emulators run flows (the activity registry in `tools/emulator/activity.ps1`); a second emulator's flows wait while the VM runs. `Build-TestPackage.ps1` builds at BelowNormal priority so a package build does not starve a VM or flows run.

@@ -5,13 +5,16 @@
 .EXAMPLE
   .\Invoke-DesktopTest.ps1 -App rtst
   .\Invoke-DesktopTest.ps1 -App dino -Package D:\path\DinoReader.App_1.0.0.0_x64.msix
+  .\Invoke-DesktopTest.ps1 -App auto      # only the apps the change touches (tools/test-targets.ps1), skipped ones are listed
 .NOTES
+  Slice 180: without -Package the MSIX is the one built for the current build key (Build-TestPackage.ps1; built first, outside
+  the VM lock, when no build with this key exists), never "the newest file", so a stale package is not tested by accident.
   Exit code 0 when every check passes, 1 otherwise. -Sabotage KillApp stops the app after its launch check, so the
   remaining checks must fail (proof that a check can fail). Checks run in order and share the one running app.
 #>
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory)] [ValidateSet('rtst', 'dino')] [string] $App,
+    [Parameter(Mandatory)] [ValidateSet('rtst', 'dino', 'auto')] [string] $App,
     [string] $Package,
     [string] $VmRoot = 'D:\ReadTheStupidText-worktrees\_desktop-vm',
     [ValidateSet('None', 'KillApp')] [string] $Sabotage = 'None',
@@ -20,6 +23,20 @@ param(
 $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot\_common.ps1"
 $script:ActiveVmRoot = $VmRoot
+. "$PSScriptRoot\..\emulator\build-cache.ps1"
+
+# -App auto: one run per touched app, each through this same script, so a failing app does not hide the next one.
+if ($App -eq 'auto') {
+    if ($Package) { throw '-Package names one MSIX; it cannot be combined with -App auto.' }
+    $touched = @(& "$PSScriptRoot\..\test-targets.ps1" -Platform windows -Raw)
+    if ($touched.Count -eq 0) { Write-Host 'NO WINDOWS APP IS TOUCHED BY THIS CHANGE: no desktop test ran. That is a skip, not a test pass.'; exit 0 }
+    $worst = 0
+    foreach ($name in $touched) {
+        & $PSCommandPath -App $name -VmRoot $VmRoot -Sabotage $Sabotage -KeepRunning:$KeepRunning
+        if ($LASTEXITCODE -ne 0) { $worst = 1 }
+    }
+    exit $worst
+}
 
 # One row per product: the package identity name, where a fresh MSIX is usually found and the ordered checks.
 $Apps = @{
@@ -31,10 +48,12 @@ $AppProfile = $Apps[$App]
 function Find-Package {
     if ($Package) { return (Resolve-Path $Package).Path }
     $pattern = if ($App -eq 'rtst') { 'ReadTheStupidText.App_*.msix' } else { 'DinoReader.App_*.msix' }
-    $found = Get-ChildItem (Join-Path $VmRoot "pkgs\$App") -Recurse -Filter $pattern -ErrorAction SilentlyContinue |
-        Where-Object { $_.FullName -notmatch '\\Dependencies\\' } | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-    if (-not $found) { throw "No $pattern under $VmRoot\pkgs\$App; build the MSIX first (see tools/desktop-vm/README.md) or pass -Package." }
-    return $found.FullName
+    $cached = Find-CachedBuild (Get-BuildDir $App 'windows' (Get-BuildKey)) $pattern
+    if ($cached) { Write-Host "Using the cached $App MSIX for this build key: $($cached.FullName)"; return $cached.FullName }
+    Write-Host "No $App MSIX built for this build key; building it (outside the VM lock)..."
+    $built = @(& "$PSScriptRoot\Build-TestPackage.ps1" -App $App) | Select-Object -Last 1
+    if (-not $built -or -not (Test-Path $built)) { throw "Build-TestPackage.ps1 -App $App did not return a package path." }
+    return $built
 }
 
 function Copy-ToGuest {
@@ -85,7 +104,9 @@ $msix = Find-Package
 $credential = Get-VmCredential
 $results = @()
 $session = $null
-Enter-VmLock
+# Register (and wait for a quiet-machine timing run) before taking the VM lock, so a long wait never holds every other VM run up.
+$activity = Start-Activity "vm-$App"
+try { Enter-VmLock } catch { Stop-Activity $activity; throw }
 try {
     Write-Host "Restoring '$($script:CheckpointName)' and starting the VM..."
     Restore-CleanCheckpoint -Start -Quiet
@@ -115,6 +136,7 @@ try {
         Write-Host "Restoring '$($script:CheckpointName)'..."
         try { Restore-CleanCheckpoint -Quiet } catch { Write-Warning "Reset to clean failed: $($_.Exception.Message)" }
     }
+    Stop-Activity $activity
     Exit-VmLock
 }
 Write-Results -Results $results
