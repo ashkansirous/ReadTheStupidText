@@ -1253,7 +1253,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     // Slice 90: the head start for the text's own language prepares with that language's pack.
     public Task PrepareAsync(string text, VoiceModelPaths? model)
     {
-        if (string.IsNullOrWhiteSpace(text))
+        if (BlankText.IsBlank(text))
         {
             return HeadStartRun.Skipped;
         }
