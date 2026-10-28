@@ -14,13 +14,11 @@ this plan turns it into ordered, shippable vertical slices.
 
 ## Status
 
-Open slices only. Finished slices (153 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
+Open slices only. Finished slices (155 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
 | 154 | Dino: vowel marks in Farsi and Arabic books (Farsi only: Arabic left as is; marks are a hidden "how to read" text, Decision 166) | in progress | #470 | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
-| 163 | Fast tests: Windows desktop tests in a headless Hyper-V VM | planned | | | [163-desktop-tests-in-hyperv-vm.md](docs/plan/slices/163-desktop-tests-in-hyperv-vm.md) |
-| 165 | Fast tests: audio and timing on the real phone over wireless adb | planned | | | [165-real-phone-audio-timing-checks.md](docs/plan/slices/165-real-phone-audio-timing-checks.md) |
 | 172 | Dino: one gear for all grown-up settings (sub-page per setting; "Free stories" -> "More stories") | planned | | | [172-dino-settings-gear.md](docs/plan/slices/172-dino-settings-gear.md) |
 | 173 | Dino: up to three story languages, switched by the kid (after 172) | planned | | | [173-dino-kid-story-languages.md](docs/plan/slices/173-dino-kid-story-languages.md) |
 
@@ -60,7 +58,6 @@ Batch 35 (159, built, PR #473, so the batch is done; planned 2026-10-27, the use
 
 ## Outstanding work
 
-**Turn on Hyper-V (user, admin and a reboot; blocks Slice 163).** A one-time step, guided one step at a time when 163 starts. ([163](docs/plan/slices/163-desktop-tests-in-hyperv-vm.md))
 
 **Store privacy declarations (legal; gates all usage counts, Decision 145).** No `telemetry.enabled` is set to `true` for an app until its rows are ticked. Claude drafts the answers and fills the forms in the user's signed-in Chrome; the user reviews and presses Submit/Publish.
 
@@ -147,6 +144,9 @@ Built but not verified (details in each slice file):
 - Slice 150: a mid-book speed change heard on a real phone; Windows head and iOS readers apply `SetSpeed` on the next sentence; native-speaker read of the `Speed_*` strings (13 drafts) ([slice](docs/plan/slices/150-dino-slower-reading-speed.md)).
 - Slice 151: photo import opening in Picture only (needs a camera); Windows head and iOS; native read of the new strings (13 drafts); night-theme segment colours unchanged ([slice](docs/plan/slices/151-dino-three-view-modes.md)).
 - Slice 155: offline store step; microphone prompt on the Record step; Windows variant (title, Picture badge); iOS modal presentation; large-font layout; native read of the 15 Intro strings (13 drafts); Play Data safety and App Store privacy answers cover the 3 new events ([slice](docs/plan/slices/155-dino-first-run-intro-wizard.md)).
+- Slice 163: selection plus hotkey path in the VM (only the clipboard path is checked); full `New-TestVm -Force` rebuild after the `Wait-Desktop` patch; the eval ISO already reports an expired licence and may shut down hourly, so a newer ISO may be needed; ClaudeSkills `device-test` pointer to `tools/desktop-vm/Invoke-DesktopTest.ps1` and `tools/phone/` (follow-up PR) ([slice](docs/plan/slices/163-desktop-tests-in-hyperv-vm.md))
+- Slice 165: iOS compile of the shared `read` hook and `CHUNK_AUDIO` marker (no Mac); Dino has no page hook (reads a fixed passage); the `read` hook's bad-speed and faulting-read paths unexercised; the user's listening check on the phone ([slice](docs/plan/slices/165-real-phone-audio-timing-checks.md))
+- Dino first 2x read after install: 8.9 s to first audio, 4.9 s chunk gap (cold); warm fine (Slice 165) ([slice](docs/plan/slices/165-real-phone-audio-timing-checks.md))
 - Older unverified items (Slices 43-95 and a flaky-test note), moved verbatim: [outstanding-older](docs/plan/notes/2026-10-25-outstanding-older.md). Still open until verified.
 
 ## Out of Scope

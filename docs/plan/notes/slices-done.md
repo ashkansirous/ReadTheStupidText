@@ -208,3 +208,5 @@ Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure 
 | 169 | German translations for all 15 Dino books | built | #503 | | [169-german-dino-books.md](../slices/169-german-dino-books.md) |
 | 170 | Tray panel: every Controls button fits | built | #505 | | [170-tray-panel-controls-row-fits.md](../slices/170-tray-panel-controls-row-fits.md) |
 | 171 | Dino: the text card scrolls with the reading | built | #506 | | [171-dino-text-card-shows-whole-page.md](../slices/171-dino-text-card-shows-whole-page.md) |
+| 163 | Fast tests: Windows desktop tests in a headless Hyper-V VM | built | #508 | | [163-desktop-tests-in-hyperv-vm.md](../slices/163-desktop-tests-in-hyperv-vm.md) |
+| 165 | Fast tests: audio and timing on the real phone over wireless adb | built | #510 | | [165-real-phone-audio-timing-checks.md](../slices/165-real-phone-audio-timing-checks.md) |
