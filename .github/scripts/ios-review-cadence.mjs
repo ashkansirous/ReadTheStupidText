@@ -3,8 +3,9 @@
  * Sends iOS builds to Apple's reviews on a fixed cadence (Slice 147, Decision 154).
  *
  * Rules, the same for every app: never cancel a waiting review, never expire a
- * build to make room, at most one review waiting per app, always the newest
- * processed build. `testflight` adds that build to the external group and submits
+ * build to make room, always the newest processed build. TestFlight submits the
+ * newest build each morning, even while an older review waits; the App Store path
+ * keeps one review waiting at a time. `testflight` adds that build to the external group and submits
  * it for Beta App Review (run daily); `appstore` attaches it to the editable App
  * Store version and submits that for review (run by hand).
  *
@@ -36,11 +37,6 @@ const BUILD_FILTER_CHUNK = 50;
 const PLATFORM_IOS = 'IOS';
 const RELEASE_AFTER_APPROVAL = 'AFTER_APPROVAL';
 
-const HTTP_CONFLICT = 409;
-/** Apple's error code for "not in the right state for this right now". */
-const STATE_ERROR_CODE = 'STATE_ERROR';
-const NOT_NOW_DETAIL = /in progress|already (submitted|in review|waiting)/i;
-
 const Method = { Get: 'GET', Post: 'POST', Patch: 'PATCH' };
 const Resource = {
     Apps: 'apps',
@@ -63,8 +59,6 @@ export const Mode = { TestFlight: 'testflight', AppStore: 'appstore' };
 export const Outcome = { Submitted: 'submitted', Skipped: 'skipped', Failed: 'failed' };
 
 export const ProcessingState = { Valid: 'VALID' };
-/** A Beta App Review in one of these states holds the app's single review slot. */
-export const BETA_BUSY_STATES = ['WAITING_FOR_REVIEW', 'IN_REVIEW'];
 /** An App Store review in one of these states holds the app's single review slot. */
 export const STORE_BUSY_STATES = ['WAITING_FOR_REVIEW', 'IN_REVIEW', 'UNRESOLVED_ISSUES', 'CANCELING', 'COMPLETING'];
 const STORE_DRAFT_STATE = 'READY_FOR_REVIEW';
@@ -171,10 +165,6 @@ export function pickNewestBuild(builds) {
     return builds.find((build) => build.processingState === ProcessingState.Valid && !build.expired) ?? null;
 }
 
-export function isBetaReviewBusy(submissions) {
-    return submissions.some((submission) => BETA_BUSY_STATES.includes(submission.state));
-}
-
 export function isStoreReviewBusy(submissions) {
     return submissions.some((submission) => STORE_BUSY_STATES.includes(submission.state));
 }
@@ -191,11 +181,10 @@ export function describeBuild(build) {
     return `${build.marketingVersion ?? 'unknown version'} (${build.buildNumber})`;
 }
 
-/** What to do for TestFlight external testers. `submissions` are `{buildId, state}` of recent builds. */
+/** What to do for TestFlight external testers: the newest build is submitted even while an older review waits. `submissions` are `{buildId, state}` of recent builds. */
 export function decideTestFlight({ builds, submissions, groupId }) {
     const build = pickNewestBuild(builds);
     if (!build) return skip('no processed build');
-    if (isBetaReviewBusy(submissions)) return skip('a review is already waiting');
     const own = submissions.find((submission) => submission.buildId === build.id);
     if (own?.state === BETA_REJECTED) {
         return fail(`newest build ${describeBuild(build)} was rejected by Beta App Review; read Apple's reason in App Store Connect`);
@@ -310,12 +299,7 @@ function buildRef(id) {
     return { data: { type: Resource.Builds, id } };
 }
 
-/** Only Apple's "not now" conflicts are a skip; any other 409 (a missing prerequisite) must fail loudly. */
-export function isNotNowConflict(json) {
-    return (json?.errors ?? []).some((error) => String(error.code ?? '').includes(STATE_ERROR_CODE) || NOT_NOW_DETAIL.test(error.detail ?? ''));
-}
-
-/** Adds to the group if needed, then submits. A "not now" 409 comes back as a skip; any other 409 fails with Apple's text. */
+/** Adds to the group if needed, then submits. Any refusal, a 409 included, fails with Apple's text so it is visible. */
 export async function submitToTestFlight(asc, groupId, decision) {
     const { build, addToGroup } = decision;
     if (addToGroup) {
@@ -324,7 +308,6 @@ export async function submitToTestFlight(asc, groupId, decision) {
     const body = { data: { type: Resource.BetaAppReviewSubmissions, relationships: { build: buildRef(build.id) } } };
     const response = await asc.post('/v1/betaAppReviewSubmissions', body);
     if (response.ok) return { outcome: Outcome.Submitted, message: `${describeBuild(build)} submitted for Beta App Review` };
-    if (response.status === HTTP_CONFLICT && isNotNowConflict(response.json)) return { outcome: Outcome.Skipped, message: `Apple refused for now: ${describeErrors(response.json)}` };
     throw failure(Method.Post, '/v1/betaAppReviewSubmissions', response);
 }
 
