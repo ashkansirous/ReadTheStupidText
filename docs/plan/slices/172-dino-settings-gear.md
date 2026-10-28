@@ -1,6 +1,6 @@
 # Slice 172 — Dino: one gear for all grown-up settings
 
-*Planned 2026-10-28.* Dino Reader only (Android, iOS and the Windows head).
+*In progress (wave 2026-10-28b), draft PR (planned 2026-10-28).* Dino Reader only (Android, iOS and the Windows head).
 
 **Batch:** 37 (Dino settings, 2026-10-28; Decision 167)
 **Touches:** `src/DinoReader.App/SettingsPage.cs` (new), `src/DinoReader.App/ReadingSpeedPage.cs` (new), `src/DinoReader.App/AnimalSoundsPage.cs` (new), `src/DinoReader.App/UsageCountsPage.cs` (new), `src/DinoReader.App/AboutPage.cs` (new), `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/LanguagePage.xaml`, `src/DinoReader.App/LanguagePage.xaml.cs`, `src/DinoReader.App/NarratorPage.cs`, `src/DinoReader.App/SettingsRows.cs`, `src/DinoReader.App/UpdatePage.cs` (`VersionCard` host only), `src/DinoReader.App/GrownUpGate.cs`, `src/DinoReader.App/MauiProgram.cs`, `src/DinoReader.App/Resources/Strings/*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `src/DinoReader.App/Resources/Images/**` (gear icon), `tests/DinoReader.Tests/**`, `src/DinoReader.App/CLAUDE.md`
