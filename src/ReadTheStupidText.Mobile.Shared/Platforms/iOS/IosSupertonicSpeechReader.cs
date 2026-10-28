@@ -623,32 +623,23 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
 
     public Task WarmUpAsync() => Task.Run(WarmUp);
 
-    // Slice 173: the child's pick is warmed the same way, so the first read in its pack does not build the model.
-    public Task WarmUpAsync(VoiceModelPaths model) => Task.Run(() => WarmEnginesBestEffort(model));
-
-    private void WarmEnginesBestEffort(VoiceModelPaths paths)
-    {
-        try
-        {
-            WarmEngines(paths);
-        }
-        catch
-        {
-            // Best-effort: the read builds the engine itself.
-        }
-    }
-
     // Slice 177: warms the engine the resolved model's reads would use. The warm state lives on the engine itself (IosRefCountedTts): a warm-up
     // synthesises one short sentence only if nothing has synthesised on that engine yet, under the lock a read takes to acquire it, so a
     // read and a warm-up never use the engine at once and a read that got there first has already warmed it. An evicted engine comes back
     // cold and the next trigger warms it. Duplicate triggers are harmless.
     private void WarmUp()
     {
-        if (_model.Paths is not { } paths)
+        if (_model.Paths is { } paths)
         {
-            return;
+            WarmEnginesBestEffort(paths);
         }
+    }
 
+    // Slice 173: the child's picked language is warmed by the same rules (WarmEngine / Acquire forWarmUp), so the first read in its pack does not build the model.
+    public Task WarmUpAsync(VoiceModelPaths model) => Task.Run(() => WarmEnginesBestEffort(model));
+
+    private void WarmEnginesBestEffort(VoiceModelPaths paths)
+    {
         try
         {
             WarmEngines(paths);

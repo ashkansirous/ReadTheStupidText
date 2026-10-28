@@ -86,3 +86,5 @@ Source: `docs/design/dino-reader/Dino Reader Batch 31.dc.html`, screen 72 (lines
 - p5 تق تق تق, p14 شالاپ/آپچی and p15 چیک replacements await the user's pick.
 - Farsi review of the other 14 books.
 - Arabic diacritizer and its listen test.
+
+- **Gingerbread Man reviewed (v9):** 223 words checked on the review page, 3 spoken replacements (tap, tagh, oum), ezafe per occurrence; `gingerbread-man/translations/fa.marks.json` and `fa.speak.json`. Page 13 "you can catch me" now reads نمی‌تونی on the user's request.
