@@ -1,19 +1,23 @@
 #if DEBUG
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Domain.Reading;
 
 namespace ReadTheStupidText.Mobile.Shared.Testing;
 
 /// <summary>
 /// Runs a <see cref="TestHookCommand"/> against the app's state (Slice 162), so a flow never taps through first-run
 /// screens to reach what it tests. Both platforms' entry points (Android broadcast, iOS URL) call <see cref="Dispatch"/>.
-/// Commands: <c>skip-first-run [lang=en]</c>, <c>stop-read</c>, <c>state</c>. Debug builds only.
+/// Commands: <c>skip-first-run [lang=en]</c>, <c>stop-read</c>, <c>state</c>, <c>read text=... [speed=1.5]</c> (Slice 165: reads a fixed text on the app's own reader, for the real-phone timing script). Debug builds only.
 /// </summary>
 public sealed class TestHookDispatcher
 {
 	public const string SkipFirstRun = "skip-first-run";
 	public const string StopRead = "stop-read";
 	public const string State = "state";
+	public const string Read = "read";
+	public const string TextKey = "text";
+	public const string SpeedKey = "speed";
 	public const string DefaultLanguage = "en";
 	public const string LanguageKey = "lang";
 	public const string Ok = "ok";
@@ -85,6 +89,7 @@ public sealed class TestHookDispatcher
 		{
 			StopRead => Stop(),
 			State => Report(),
+			Read => StartRead(command),
 			_ => Unknown,
 		};
 		TestHookLog.Write($"{TestHookLog.HookPrefix} {command.Name} {outcome}");
@@ -99,6 +104,44 @@ public sealed class TestHookDispatcher
 	{
 		_reader.Stop();
 		return Ok;
+	}
+
+	// Sets the speed when given (the reader's own SetSpeed, not the stored setting), then reads the text; the READ_START / CHUNK / READ_END markers follow.
+	private string StartRead(TestHookCommand command)
+	{
+		string text = command.Get(TextKey, string.Empty);
+		if (text.Length == 0)
+		{
+			return Failed;
+		}
+
+		string speedText = command.Get(SpeedKey, string.Empty);
+		if (speedText.Length > 0)
+		{
+			if (!double.TryParse(speedText, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double speed))
+			{
+				return Failed;
+			}
+
+			_reader.SetSpeed(new PlaybackRate(speed));
+		}
+
+		TestHookLog.Write($"{TestHookLog.HookPrefix} {Read} start");
+		_ = LogIfFaulted(_reader.SpeakAsync(text));
+		return Ok;
+	}
+
+	// A faulting read is logged (type only, never the text) instead of vanishing with the dropped task.
+	private static async Task LogIfFaulted(Task read)
+	{
+		try
+		{
+			await read;
+		}
+		catch (Exception ex)
+		{
+			TestHookLog.Write($"{TestHookLog.HookPrefix} {Read} fault {ex.GetType().Name}");
+		}
 	}
 
 	private string Report()
