@@ -431,6 +431,75 @@ public class ReadAloudServiceGeneratingTests
         Assert.Equal(["Some selected text."], harness.HeadStart.Prepared);
     }
 
+    [Theory]
+    [InlineData("   ")]
+    [InlineData("\t")]
+    [InlineData("\n")]
+    [InlineData("\u200B")]
+    [InlineData("\uFEFF \u00AD")]
+    public async Task A_blank_selection_starts_no_entry_and_reads_nothing(string blank)
+    {
+        var harness = new Harness();
+        harness.Service.LoneSelectSettleMs = 10;
+
+        harness.Monitor.RaiseChanged(blank);
+        await Task.Delay(300, TestContext.Current.CancellationToken);
+
+        Assert.Empty(harness.Log.Entries);
+        Assert.Empty(harness.Reader.Spoken);
+        Assert.Empty(harness.HeadStart.Prepared);
+    }
+
+    [Fact]
+    public async Task A_blank_selection_cancels_the_pending_read_of_the_earlier_selection()
+    {
+        var harness = new Harness();
+        harness.Service.LoneSelectSettleMs = 400;
+
+        harness.Monitor.RaiseChanged("Some selected text.");
+        harness.Monitor.RaiseChanged("   ");
+        await Task.Delay(900, TestContext.Current.CancellationToken);
+
+        Assert.Empty(harness.Reader.Spoken);
+    }
+
+    [Fact]
+    public async Task A_blank_selection_never_stops_an_auto_read_already_generating()
+    {
+        var harness = new Harness();
+        harness.Service.LoneSelectSettleMs = 10;
+        var gate = new TaskCompletionSource();
+        harness.Speak = (_, _) => gate.Task;
+
+        harness.Monitor.RaiseChanged("Some selected text.");
+        await Task.Delay(200, TestContext.Current.CancellationToken);
+        int stops = harness.Reader.Stops;
+        harness.Monitor.RaiseChanged("   ");
+        harness.Monitor.RaiseChanged("\u200B");
+
+        Assert.Equal(stops, harness.Reader.Stops);
+        Assert.Equal(ActivityState.GeneratingAudio, Assert.Single(harness.Log.Entries).State);
+        gate.SetResult();
+    }
+
+    [Fact]
+    public async Task A_blank_selection_never_stops_a_file_read_already_generating()
+    {
+        var harness = new Harness();
+        var gate = new TaskCompletionSource();
+        harness.Speak = (_, _) => gate.Task;
+
+        Task read = harness.Service.ReadFileAsync("a.txt");
+        await Task.Delay(30, TestContext.Current.CancellationToken);
+        int stops = harness.Reader.Stops;
+        harness.Monitor.RaiseChanged("  	 ");
+
+        Assert.Equal(stops, harness.Reader.Stops);
+        Assert.True(harness.Service.IsGeneratingAudio);
+        gate.SetResult();
+        await read;
+    }
+
     [Fact]
     public async Task Deselect_before_the_selection_is_stable_prepares_nothing()
     {

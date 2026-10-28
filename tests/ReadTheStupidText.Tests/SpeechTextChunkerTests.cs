@@ -12,6 +12,59 @@ public class SpeechTextChunkerTests
     // kept short so time-to-first-audio is a fast synthesis.
     private const int FirstChunkMax = 120;
 
+    [Theory]
+    [InlineData("\u200B")]
+    [InlineData("\uFEFF")]
+    [InlineData("\u00AD")]
+    [InlineData("\u200E \u200B\t")]
+    public void Invisible_format_characters_count_as_blank(string text)
+    {
+        Assert.True(BlankText.IsBlank(text));
+        Assert.Empty(SpeechTextChunker.Split(text));
+        Assert.Empty(SpeechChunkPlanner.ForText(text));
+    }
+
+    [Theory]
+    [InlineData("a")]
+    [InlineData("\u200Bhi\u200B")]
+    [InlineData("7")]
+    public void Visible_text_is_not_blank(string text)
+    {
+        Assert.False(BlankText.IsBlank(text));
+    }
+
+    [Fact]
+    public void Null_and_empty_are_blank()
+    {
+        Assert.True(BlankText.IsBlank(null));
+        Assert.True(BlankText.IsBlank(string.Empty));
+    }
+
+    [Fact]
+    public void A_segment_read_of_only_blank_segments_has_an_empty_plan()
+    {
+        var segments = new[] { new VoicedSegment("  ", "v1", 0, 2, 0), new VoicedSegment("\u200B", "v2", 2, 3, 2) };
+
+        Assert.Empty(SpeechChunkPlanner.ForSegments(segments));
+    }
+
+    [Fact]
+    public void Long_text_drops_an_invisible_only_paragraph_and_keeps_ranges_consistent()
+    {
+        string first = string.Join(' ', Enumerable.Repeat("First paragraph words go here.", 8));
+        string second = string.Join(' ', Enumerable.Repeat("Second paragraph words go here.", 8));
+        string text = first + "\n\n\u200B\n\n" + second + ". \u200B";
+
+        IReadOnlyList<string> chunks = SpeechTextChunker.Split(text);
+        IReadOnlyList<SpeechTextChunker.TextChunk> ranged = SpeechTextChunker.SplitWithRanges(text);
+
+        Assert.All(chunks, c => Assert.False(BlankText.IsBlank(c)));
+        Assert.DoesNotContain(chunks, c => c.Contains('​'));
+        Assert.Equal(chunks.Count, ranged.Count);
+        Assert.Equal("First", text.Substring(ranged[0].SourceStart, 5));
+        Assert.Equal("Second", text.Substring(ranged[^1].SourceStart, 6));
+    }
+
     [Fact]
     public void Short_text_stays_a_single_trimmed_chunk()
     {
@@ -21,10 +74,17 @@ public class SpeechTextChunkerTests
         Assert.Equal("Hello there.", chunks[0]);
     }
 
-    [Fact]
-    public void Whitespace_only_returns_a_single_chunk()
+    [Theory]
+    [InlineData("   ")]
+    [InlineData("\t\t")]
+    [InlineData("\n\n")]
+    [InlineData("  ")]
+    [InlineData(" \t\r\n  ")]
+    public void Whitespace_only_text_has_nothing_to_read(string text)
     {
-        Assert.Single(SpeechTextChunker.Split("   \n  "));
+        Assert.Empty(SpeechTextChunker.Split(text));
+        Assert.Empty(SpeechTextChunker.SplitWithRanges(text));
+        Assert.Empty(SpeechChunkPlanner.ForText(text));
     }
 
     [Fact]
@@ -209,15 +269,6 @@ public class SpeechTextChunkerTests
             int sourceWords = sourceSpan.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
             Assert.Equal(chunkWords, sourceWords);
         }
-    }
-
-    [Fact]
-    public void SplitWithRanges_of_whitespace_only_text_is_a_degenerate_empty_span()
-    {
-        IReadOnlyList<SpeechTextChunker.TextChunk> chunks = SpeechTextChunker.SplitWithRanges("   \n  ");
-
-        SpeechTextChunker.TextChunk chunk = Assert.Single(chunks);
-        Assert.Equal(0, chunk.SourceLength);
     }
 
     // Slice 51: Chinese has no spaces, and its sentences end in fullwidth marks with no
