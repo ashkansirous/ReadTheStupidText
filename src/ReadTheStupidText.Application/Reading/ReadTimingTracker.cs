@@ -25,6 +25,12 @@ public sealed class ReadTimingTracker
             _elapsedBeforeCurrentChunk = TimeSpan.Zero;
             _open = false;
         }
+#if DEBUG
+        if (chunkCount > 0)
+        {
+            RaiseReadStarted(chunkCount);
+        }
+#endif
     }
 
     /// <summary>Grows the read to <paramref name="chunkCount"/> chunks when more text is appended to it
@@ -66,12 +72,27 @@ public sealed class ReadTimingTracker
     /// <summary>Debug builds only (Slice 165): raised outside the lock when a chunk's audio length becomes known, for the device test markers.</summary>
     public static event Action<int, TimeSpan>? ChunkAudioRecorded;
 
+    /// <summary>Debug builds only (Slice 175): raised when a read of <c>chunkCount</c> chunks begins tracking, which every reader does right after its engine is built and loaded, just before the first chunk is synthesized; so it marks "engine ready".</summary>
+    public static event Action<int>? ReadStarted;
+
     // A throwing subscriber (a failed log write) must never abort the synthesis it is measuring.
     private static void RaiseChunkAudioRecorded(int index, TimeSpan duration)
     {
         try
         {
             ChunkAudioRecorded?.Invoke(index, duration);
+        }
+        catch (Exception)
+        {
+            // Test marker only; swallowed on purpose.
+        }
+    }
+
+    private static void RaiseReadStarted(int chunkCount)
+    {
+        try
+        {
+            ReadStarted?.Invoke(chunkCount);
         }
         catch (Exception)
         {

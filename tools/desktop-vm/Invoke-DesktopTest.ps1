@@ -22,7 +22,7 @@ $ErrorActionPreference = 'Stop'
 
 # One row per product: the package identity name, where a fresh MSIX is usually found and the ordered checks.
 $Apps = @{
-    rtst = @{ Name = 'AshkanSirous.ReadTheStupidText'; Exe = 'ReadTheStupidText.App'; Checks = @('rtst-launch', 'rtst-tray-icon', 'rtst-hotkey-read', 'rtst-panel-speed', 'rtst-startup-task') }
+    rtst = @{ Name = 'AshkanSirous.ReadTheStupidText'; Exe = 'ReadTheStupidText.App'; Checks = @('rtst-launch', 'rtst-tray-icon', 'rtst-hotkey-read', 'rtst-selection-hotkey', 'rtst-panel-speed', 'rtst-startup-task') }
     dino = @{ Name = 'AshkanSirous.DinoReader'; Exe = 'DinoReader.App'; Checks = @('dino-launch', 'dino-open-book', 'dino-page-turn') }
 }
 $AppProfile = $Apps[$App]
@@ -91,6 +91,7 @@ try {
     $session = New-VmSession -Credential $credential
     Copy-ToGuest -Session $session -Msix $msix
     Write-Host 'Installing the package in the VM...'
+    Write-LicenseNote -License (Get-GuestLicense -Session $session)
     $version = Install-InGuest -Session $session -Name $AppProfile.Name
     Write-Host "Installed $($AppProfile.Name) $version in the VM from $msix"
     foreach ($check in $AppProfile.Checks) {

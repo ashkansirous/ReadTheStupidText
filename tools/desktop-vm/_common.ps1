@@ -12,6 +12,7 @@ $script:SessionTimeoutSec = 600
 # The guest clock can lag the host by up to the evaluation period after a restore; start the certificate that far back.
 $script:CertBackdateDays = 90
 $script:LockName = 'Global\rtst-desktop-test-vm'
+$script:LicenseWarnDays = 14
 
 function Get-VmCredential {
     $password = $env:RTST_VM_PASSWORD
@@ -150,6 +151,35 @@ function Enter-VmLock {
 
 function Exit-VmLock {
     if ($script:VmLock) { try { $script:VmLock.ReleaseMutex() } catch { } $script:VmLock.Dispose(); $script:VmLock = $null }
+}
+
+function Get-GuestLicense {
+    # The Windows evaluation licence as the guest sees it (Slice 175): Days = whole days left (null when none is counting), State = a one-word summary.
+    # SoftwareLicensingProduct.LicenseStatus: 1 licensed, 5 notification (an evaluation that never started, or ran out).
+    param([Parameter(Mandatory)] $Session)
+    try {
+        return Invoke-Command -Session $Session -ErrorAction Stop -ScriptBlock {
+        $product = Get-CimInstance SoftwareLicensingProduct -Filter "PartialProductKey IS NOT NULL AND ApplicationId='55c92734-d682-4d71-983e-d6ec3f16059f'" | Select-Object -First 1
+        if (-not $product) { return [pscustomobject]@{ Status = $null; Days = $null; State = 'unknown' } }
+        $days = if ($product -and $product.LicenseStatus -eq 1 -and $product.GracePeriodRemaining -gt 0) { [int][Math]::Floor($product.GracePeriodRemaining / 1440) } else { $null }
+        $state = switch ($product.LicenseStatus) { 1 { if ($product.GracePeriodRemaining -eq 0) { 'licensed (no expiry)' } else { 'licensed' } } 5 { 'expired or never started (notification mode)' } default { "status $($product.LicenseStatus)" } }
+        [pscustomobject]@{ Status = [int]$product.LicenseStatus; Days = $days; State = $state }
+        }
+    }
+    catch {
+        return [pscustomobject]@{ Status = $null; Days = $null; State = 'unknown' }
+    }
+}
+
+function Write-LicenseNote {
+    # Prints the remaining evaluation days, and a warning with the rebuild command under the limit or when the licence is not counting.
+    param([Parameter(Mandatory)] $License, [int] $WarnDays = $script:LicenseWarnDays)
+    $rebuild = 'tools\desktop-vm\New-TestVm.ps1 -Force'
+    if ($License.State -eq 'unknown') { Write-Host 'VM licence: unknown (could not be read in the guest).'; return }
+    if ($null -eq $License.Days -and $License.State -eq 'licensed (no expiry)') { Write-Host 'VM licence: licensed (no expiry).'; return }
+    if ($null -eq $License.Days) { Write-Warning "VM licence: $($License.State). Short runs still work, but Windows shuts the VM down hourly once it has expired. Rebuild with $rebuild"; return }
+    if ($License.Days -lt $WarnDays) { Write-Warning "VM licence: $($License.Days) day(s) left (warning under $WarnDays). Rebuild with $rebuild"; return }
+    Write-Host "VM licence: $($License.Days) day(s) left."
 }
 
 function Invoke-FreshGuest {

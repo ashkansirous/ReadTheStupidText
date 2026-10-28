@@ -18,6 +18,9 @@ param(
     [double[]]$Rates = @(1.0, 2.0),
     # Gap = how long past a chunk's audio length (at the rate) its successor starts. Fitted from the re-run baseline (see the slice file).
     [int]$GapLimitMs = 1300,
+    # Dino only: the starter book and the page (1-based) the read starts on, through the open-book hook (Slice 175).
+    [string]$Book = 'three-little-pigs',
+    [int]$Page = 1,
     [switch]$SkipInstall,
     [switch]$VoiceChanged,
     [int]$ReadTimeoutSeconds = 240,
@@ -32,7 +35,7 @@ $apps = @{
     rtst = @{ Project = 'src\ReadTheStupidText.Mobile\ReadTheStupidText.Mobile.csproj'; Id = 'uk.sirous.readthestupidtext'; Scheme = 'rtst-test'
         Listen = 'the voice reads the passage smoothly: no clicks, no robotic stretching, no cut-off words, no pause in the middle of a sentence' }
     dino = @{ Project = 'src\DinoReader.App\DinoReader.App.csproj'; Id = 'uk.sirous.dinoreader'; Scheme = 'dino-test'
-        Listen = "the voice (the fixed passage through Dino's reader, not a book page) sounds like a warm storyteller: no clicks, no cut-off words, no pause in the middle of a sentence" }
+        Listen = "the voice (a real starter book page, read per character through Dino's own reader) sounds like a warm storyteller: no clicks, no cut-off words, no pause in the middle of a sentence" }
 }
 $cfg = $apps[$App]
 $package = $cfg.Id + '.dbg'
@@ -105,15 +108,21 @@ function Wait-Marker([string]$Phone, [string]$Pattern, [int]$TimeoutSeconds, [do
     return $null
 }
 
-# Starts the fixed text at this rate through the read hook and waits for the app to accept it; returns the phone time of its `HOOK read start`
+# Starts the read at this rate and waits for the app to accept it; returns the phone time of its `HOOK read start`
 # log line (the app's own start of the read, so adb and `am` start-up latency are not counted). Fails fast if the hook is refused or missing.
+# RTST reads the fixed passage through the `read` hook. Dino opens a real starter book page through `open-book ... play=page speed=...` and reads it
+# on the app's own reading session (per-character voices), the same path as the Play button.
 function Start-Reading([string]$Phone, [double]$Rate) {
     $speed = $Rate.ToString([Globalization.CultureInfo]::InvariantCulture)
     Write-Host '   starting the read on the phone...'
-    $sent = Send-TimedHook $Phone $cfg.Scheme 'read' @{ text = $passage; speed = $speed }
-    $answer = Wait-Marker $Phone 'RTST-TEST\s*:\s*HOOK read (start|failed)' 20 $sent 'waiting for the app to accept the read'
+    $hookName = 'read'; $hookArgs = @{ text = $passage; speed = $speed }
+    if ($App -eq 'dino') { $hookName = 'open-book'; $hookArgs = @{ id = $Book; page = "$Page"; play = 'page'; speed = $speed } }
+    $sent = Send-TimedHook $Phone $cfg.Scheme $hookName $hookArgs
+    $answer = Wait-Marker $Phone 'RTST-TEST\s*:\s*HOOK (read (start|failed)|open-book (failed|fault))' 30 $sent 'waiting for the app to accept the read'
     if (-not $answer) { throw 'The read hook got no answer: is the dev build running and Debug?' }
     if ($answer.Line -match 'HOOK read failed') { throw 'The app refused the read hook (empty text or a bad speed).' }
+    if ($answer.Line -match 'HOOK open-book failed no book') { throw "No such book '$Book': give a starter book's id or title slug. ($($answer.Line))" }
+    if ($answer.Line -match 'HOOK open-book') { throw "The app could not open the book: $($answer.Line)" }
     return $answer.Time
 }
 
@@ -134,7 +143,7 @@ if ($LogFile) {
     $events = @(ConvertFrom-TimingLog (Get-Content $LogFile))
     $hook = $events | Where-Object { $_.Kind -eq 'hook' -and $_.Outcome -eq 'start' } | Select-Object -First 1
     if (-not $hook) { Write-Host "== $App (saved log)"; Write-Host '   incomplete: no HOOK read start line in the log'; exit 0 }
-    Write-TimingTable "$App (saved log, $($Rates[0])x)" (Get-ReadTimings $events $hook.Time $Rates[0] $GapLimitMs) $GapLimitMs
+    Write-TimingTable "$App (saved log, $($Rates[0])x)" (Get-ReadTimings $events $hook.Time $Rates[0] $GapLimitMs ($App -eq 'dino')) $GapLimitMs
     exit 0
 }
 
@@ -149,7 +158,7 @@ try {
     foreach ($rate in $Rates) {
         $read = Invoke-OneRead $phone $rate
         $events = @(ConvertFrom-TimingLog $read.Lines)
-        Write-TimingTable "$App at $($rate)x" (Get-ReadTimings $events $read.Tap $rate $GapLimitMs) $GapLimitMs
+        Write-TimingTable "$App at $($rate)x" (Get-ReadTimings $events $read.Tap $rate $GapLimitMs ($App -eq 'dino')) $GapLimitMs
         Write-Host "   raw log: $($read.File)"
     }
     if ($VoiceChanged) { Write-Host "listen now: $($cfg.Listen)" }
