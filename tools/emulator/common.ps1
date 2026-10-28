@@ -1,4 +1,12 @@
 # Shared helpers for the warm headless emulator scripts (Slice 161). Dot-sourced, not run.
+. (Join-Path $PSScriptRoot 'activity.ps1')
+# Slice 180: two emulator instances. Instance 1 is the original (AVD RTST_Test, port 5554); instance 2 is RTST_Test2 on port 5556.
+# (The chosen number lives in $script:EmuInstance, never $script:Instance: dot-sourced, that name is the caller's own -Instance parameter.)
+# A script calls Set-EmulatorInstance with its -Instance parameter right after dot-sourcing this file; everything below
+# (serial, port, AVD, state file, lock) follows the chosen instance, so two agents never address the same emulator.
+$script:InstanceBasePort = 5554
+$script:InstanceCount = 2
+$script:EmuInstance = 1
 $script:Serial = 'emulator-5554'
 $script:Port = 5554
 $script:AvdName = 'RTST_Test'
@@ -15,8 +23,38 @@ function Get-SharedEmulatorDir {
     return Join-Path $parent ((Split-Path $script:RepoRoot -Leaf) + '-worktrees\.emulator')
 }
 $script:StateDir = Get-SharedEmulatorDir
-$script:StateFile = Join-Path $script:StateDir 'state.json'
-$script:MutexName = 'Global\RTST_WarmEmulator'
+
+function Set-EmulatorInstance([int]$Instance) {
+    if ($Instance -lt 1 -or $Instance -gt $script:InstanceCount) { throw "Instance must be 1 to $($script:InstanceCount), not $Instance." }
+    $script:EmuInstance = $Instance
+    $script:Port = $script:InstanceBasePort + 2 * ($Instance - 1)
+    $script:Serial = "emulator-$($script:Port)"
+    $suffix = if ($Instance -eq 1) { '' } else { "$Instance" }
+    $script:AvdName = "RTST_Test$suffix"
+    $script:StateFile = Join-Path $script:StateDir "state$suffix.json"
+    $script:MutexName = "Global\RTST_WarmEmulator$suffix"
+}
+Set-EmulatorInstance 1
+
+# The build key of the app installed on this instance (written by install-debug.ps1), so a flows run can tell a stale install from the current build.
+function Get-InstalledKeyFile([string]$App) {
+    return Join-Path $script:StateDir "installed-$App-i$($script:EmuInstance).key"
+}
+
+function Save-InstalledKey([string]$App, [string]$Key) {
+    $null = New-Item -ItemType Directory -Force $script:StateDir
+    Set-Content (Get-InstalledKeyFile $App) $Key
+}
+
+function Remove-InstalledKey([string]$App) {
+    Remove-Item (Get-InstalledKeyFile $App) -Force -ErrorAction SilentlyContinue
+}
+
+function Get-InstalledKey([string]$App) {
+    $file = Get-InstalledKeyFile $App
+    if (-not (Test-Path $file)) { return $null }
+    return (Get-Content $file -Raw -ErrorAction SilentlyContinue).Trim()
+}
 
 function Lock-Emulator([int]$TimeoutSeconds) {
     $mutex = New-Object System.Threading.Mutex($false, $script:MutexName)

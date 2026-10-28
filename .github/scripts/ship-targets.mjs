@@ -35,6 +35,11 @@
  * means building more, never less. A product with no tag builds everything (release.yml's version
  * job creates the baseline tags first, so this only happens if that is skipped).
  *
+ * Local mode (Slice 180): `node .github/scripts/ship-targets.mjs --local [--base origin/main] [--files]` prints the same flags for
+ * the working tree (committed and uncommitted changes, untracked files included) against the merge base with `--base`, so a
+ * device test run can skip the apps a change does not touch. `--files` prints the changed files instead; `--stdin` takes the file list from standard input (one per line, `*` = unknown). An unknown base
+ * means every target (fail safe: test more, never less).
+ *
  * Known gap: changes to worker/download-keys.mjs don't map to any target, so they trigger no re-publish.
  *
  * Each platform workflow's own `pull_request.paths` mirrors its rows below (plus a
@@ -43,12 +48,18 @@
  */
 
 import { execFileSync } from 'node:child_process';
-import { appendFileSync } from 'node:fs';
+import { appendFileSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const MOBILE = 'src/ReadTheStupidText.Mobile/';
 const SHARED = 'src/ReadTheStupidText.Mobile.Shared/';
 const MAJOR_BUMP = 'major';
+/** The branch a local run compares against (Slice 180). */
+const DEFAULT_LOCAL_BASE = 'origin/main';
+const LINE_BREAK = String.fromCharCode(10);
+const NUL = String.fromCharCode(0);
+/** The repo this script lives in (.github/scripts/..): local mode reads this tree, not the caller's current directory. */
+const DEFAULT_REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
 /** Dino Reader's GitVersion config (the twin of the core GitVersion.yml): a path of every Dino target. */
 const DINO_VERSION_CONFIG = 'GitVersion.dino.yml';
 
@@ -260,8 +271,13 @@ export function bumpKind(baseTag, newVersion, prefix) {
     return next && Number(next[1]) > Number(base[1]) ? MAJOR_BUMP : 'other';
 }
 
-function git(args) {
-    return execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+function git(args, cwd) {
+    return execFileSync('git', args, { encoding: 'utf8', cwd, stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+}
+
+/** Like `git`, but the output is returned as it is (no trimming), for NUL-separated lists. */
+function gitRaw(args, cwd) {
+    return execFileSync('git', args, { encoding: 'utf8', cwd, stdio: ['ignore', 'pipe', 'ignore'] });
 }
 
 /** The newest published tag of a product merged into HEAD (HEAD's own tag included). */
@@ -351,7 +367,58 @@ function planFor(name, versionEnv) {
     return { changedFiles: changedFilesSince(base), bump };
 }
 
+/**
+ * Files changed in the working tree since the merge base with `base` (committed, uncommitted and untracked), as repo-root paths;
+ * null when unknown. Git runs in the top level of the repo that contains `repoRoot` (default: the repo this script lives in),
+ * never in the caller's current directory, so a run from another checkout or a subfolder still reads the right tree.
+ */
+export function localChangedFiles(base, repoRoot = DEFAULT_REPO_ROOT) {
+    try {
+        const top = git(['rev-parse', '--show-toplevel'], repoRoot);
+        const mergeBase = git(['merge-base', 'HEAD', base], top);
+        // -z: paths come NUL-separated and unquoted, so a non-ASCII name is not octal-escaped (which would match no pattern).
+        const tracked = gitRaw(['diff', '--no-renames', '--name-only', '-z', mergeBase], top);
+        const untracked = gitRaw(['ls-files', '--others', '--exclude-standard', '--full-name', '-z'], top);
+        const files = [...tracked.split(NUL), ...untracked.split(NUL)].filter(Boolean);
+        return [...new Set(files)];
+    } catch {
+        return null;
+    }
+}
+
+/** The changed files given on standard input, one per line (`--stdin`); `*` or nothing means unknown. */
+function readStdinFiles() {
+    const lines = readFileSync(0, 'utf8').split(LINE_BREAK).map((line) => line.trim()).filter(Boolean);
+    return lines.length === 0 || lines.includes('*') ? null : lines;
+}
+
+/** Reads `--local`, `--base <ref>`, `--repo-root <dir>`, `--files` and `--stdin` from an argument list. */
+export function parseLocalArgs(argv) {
+    const baseIndex = argv.indexOf('--base');
+    const rootIndex = argv.indexOf('--repo-root');
+    return {
+        repoRoot: rootIndex >= 0 && argv[rootIndex + 1] ? argv[rootIndex + 1] : DEFAULT_REPO_ROOT,
+        local: argv.includes('--local'),
+        files: argv.includes('--files'),
+        stdin: argv.includes('--stdin'),
+        base: baseIndex >= 0 && argv[baseIndex + 1] ? argv[baseIndex + 1] : DEFAULT_LOCAL_BASE,
+    };
+}
+
+function mainLocal({ base, files, stdin, repoRoot }) {
+    const changedFiles = stdin ? readStdinFiles() : localChangedFiles(base, repoRoot);
+    if (files) {
+        // `*` means unknown (git failed); an empty list prints nothing, so a clean tree is not mistaken for a failure.
+        if (changedFiles === null) console.log('*');
+        else if (changedFiles.length > 0) console.log(changedFiles.join(LINE_BREAK));
+        return;
+    }
+    console.log(Object.entries(shipTargets({ changedFiles, bump: 'other' })).map(([key, value]) => `${key}=${value}`).join(LINE_BREAK));
+}
+
 function main() {
+    const local = parseLocalArgs(process.argv.slice(2));
+    if (local.local) return mainLocal(local);
     const plans = { rtst: planFor('rtst', 'RTST_VERSION'), dino: planFor('dino', 'DINO_VERSION') };
     writeOutputs(shipTargetsPerProduct({ plans, forceAll: process.env.FORCE_ALL === 'true' }));
 }

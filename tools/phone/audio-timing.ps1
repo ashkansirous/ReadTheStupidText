@@ -5,11 +5,13 @@
   Wireless adb only (connect.ps1 explains how to pair). Builds and installs the arm64 Debug build under a second package
   id (<app id>.dbg), so the store install, its data and signature are never touched; nothing is ever uninstalled, and data is cleared only with -FreshInstall (the dev package's own).
   Debug builds send no analytics (UsageGate). The Slice 162 test hooks skip first run and read the fixed text at the given speed
-  (`read` hook; nothing is stored), so no taps are needed and the phone may stay locked. Time zero is the app's own `HOOK read start` log line.
+  (`read` hook; nothing is stored), so no taps are needed and the phone may stay locked while it is charging (a keep-awake loop always runs and wakes the screen every 15 s, no unlock, no taps). Time zero is the app's own `HOOK read start` log line.
   The volume is never changed.
   Per run it prints: time to first audio, per-chunk audio / play / synthesis times, the gap after each chunk, and the
   total read time against the audio length at that rate. A gap (beyond the audio length) over -GapLimitMs is flagged.
   The first run on a phone downloads the voice pack; progress lines show while it does (-PackTimeoutSeconds).
+  Slice 180, never wait in silence: the power state is printed first (a warning on battery); the app must log within -FirstLogSeconds of launch; a voice pack download whose
+  .partial file does not grow for -PackStallSeconds fails as stalled; a read with no new app log line for -ReadSilenceSeconds fails with the last line seen.
   -LogFile parses a saved logcat (adb logcat -d -v epoch) instead of using the phone.
 #>
 param(
@@ -39,6 +41,10 @@ param(
     [switch]$VoiceChanged,
     [int]$ReadTimeoutSeconds = 240,
     [int]$PackTimeoutSeconds = 1200,
+    # Slice 180: fail early instead of waiting out the timeouts above.
+    [int]$FirstLogSeconds = 60,
+    [int]$PackStallSeconds = 120,
+    [int]$ReadSilenceSeconds = 120,
     [string]$LogFile
 )
 $ErrorActionPreference = 'Stop'
@@ -103,9 +109,38 @@ function Test-InstalledMatches([string]$Phone) {
 # The phone's log buffer is small and rolls over on a busy cold start, so every poll's lines are kept (once each) for the whole run.
 $script:Seen = New-Object 'System.Collections.Generic.HashSet[string]'
 $script:SeenLines = New-Object 'System.Collections.Generic.List[string]'
+$script:LastNewAt = Get-Date
+$script:LastNewLine = ''
+function Add-SeenLine([string]$Line) {
+    if ($Line -notmatch '^\s*\d+\.\d+' -or -not $script:Seen.Add($Line)) { return }
+    $script:SeenLines.Add($Line)
+    # Only the app's test markers count as progress: unrelated chatter (GC, system tags) must not hide a stuck read.
+    if ($Line -match 'RTST-TEST') {
+        $script:LastNewAt = Get-Date
+        $script:LastNewLine = $Line
+    }
+}
+
+# The pid is re-read at most every few seconds (it changes only when the app restarts), not on every 400 ms poll.
+$script:PidPollSeconds = 3
+$script:CachedPid = $null
+$script:CachedPidAt = [datetime]::MinValue
+function Get-AppPid([string]$Phone) {
+    if (((Get-Date) - $script:CachedPidAt).TotalSeconds -lt $script:PidPollSeconds) { return $script:CachedPid }
+    $out = "$(Invoke-Adb $Phone @('shell', 'pidof', $package))".Trim()
+    $script:CachedPid = ($out -split '\s+' | Where-Object { $_ -match '^\d+$' } | Select-Object -First 1)
+    $script:CachedPidAt = Get-Date
+    return $script:CachedPid
+}
+
 function Get-AppLog([string]$Phone) {
     foreach ($line in (Invoke-Adb $Phone @('logcat', '-d', '-v', 'epoch', 'RTST-TEST:I', 'DOTNET:I', '*:S'))) {
-        if ($script:Seen.Add("$line")) { $script:SeenLines.Add("$line") }
+        Add-SeenLine "$line"
+    }
+    # Slice 180: the app's own process, every tag (a tag filter alone missed the first lines of a cold start).
+    $appPid = Get-AppPid $Phone
+    if ($appPid) {
+        foreach ($line in (Invoke-Adb $Phone @('logcat', '-d', '-v', 'epoch', "--pid=$appPid"))) { Add-SeenLine "$line" }
     }
     return $script:SeenLines.ToArray()
 }
@@ -122,14 +157,15 @@ function Start-AppWithHook([string]$Phone, [string]$Hook) {
     Invoke-Adb $Phone @('shell', 'am', 'force-stop', $package) | Out-Null
     Start-Sleep -Milliseconds 800
     Invoke-Adb $Phone @('logcat', '-c') | Out-Null
-    $script:Seen.Clear(); $script:SeenLines.Clear()
+    $script:Seen.Clear(); $script:SeenLines.Clear(); $script:LastNewAt = Get-Date; $script:LastNewLine = ''
     Invoke-Adb $Phone @('shell', 'am', 'start', '-n', (Get-LauncherActivity $Phone), '--es', 'cmd', $Hook, '--es', 'lang', $AppLanguage) | Out-Null
 }
 
 # $After: only a marker line stamped at or after this phone time counts (a stopped earlier read can still log READ_END).
 # Returns @{ Time; Line } of the first match, or $null on timeout. $Waiting: printed every 15 s while waiting (no silent waits).
-function Wait-Marker([string]$Phone, [string]$Pattern, [int]$TimeoutSeconds, [double]$After = 0, [string]$Waiting) {
+function Wait-Marker([string]$Phone, [string]$Pattern, [int]$TimeoutSeconds, [double]$After = 0, [string]$Waiting, [int]$MaxSilenceSeconds = 0) {
     $started = Get-Date
+    $script:LastNewAt = $started
     $deadline = $started.AddSeconds($TimeoutSeconds)
     $nextNote = $started.AddSeconds(15)
     do {
@@ -140,6 +176,7 @@ function Wait-Marker([string]$Phone, [string]$Pattern, [int]$TimeoutSeconds, [do
                 if ($time -ge $After) { return @{ Time = $time; Line = "$line" } }
             }
         }
+        if ($MaxSilenceSeconds -gt 0) { Assert-NotSilent $Phone $MaxSilenceSeconds $Waiting }
         if ($Waiting -and (Get-Date) -ge $nextNote) {
             Write-Host ("   {0} ({1:0} s of {2} s)" -f $Waiting, ((Get-Date) - $started).TotalSeconds, $TimeoutSeconds)
             $nextNote = (Get-Date).AddSeconds(15)
@@ -147,6 +184,73 @@ function Wait-Marker([string]$Phone, [string]$Pattern, [int]$TimeoutSeconds, [do
         Start-Sleep -Milliseconds 400
     } while ((Get-Date) -lt $deadline)
     return $null
+}
+
+# Slice 180: fails a wait when the app has logged nothing new for this long, with the last line seen and the phone's state.
+function Assert-NotSilent([string]$Phone, [int]$MaxSilenceSeconds, [string]$Waiting) {
+    $silent = ((Get-Date) - $script:LastNewAt).TotalSeconds
+    if ($silent -lt $MaxSilenceSeconds) { return }
+    $power = Get-PowerState $Phone
+    $last = if ($script:LastNewLine) { $script:LastNewLine } else { '(none)' }
+    throw ("No new RTST-TEST log line for {0:0} s while '{1}'. Last line seen: {2}. Phone: {3}, {4}." -f $silent, $Waiting, $last, $(if ($power.Powered) { 'charging' } else { 'on battery' }), $power.Wakefulness)
+}
+
+# Slice 180: the app must log within this time of launch, else it never started or Android froze it.
+function Assert-AppStarted([string]$Phone) {
+    $started = Get-Date
+    $deadline = $started.AddSeconds($FirstLogSeconds)
+    $nextNote = $started.AddSeconds(15)
+    do {
+        if (@(Get-AppLog $Phone).Count -gt 0) { return }
+        if ((Get-Date) -ge $nextNote) {
+            Write-Host ("   waiting for the app's first log line ({0:0} s of {1} s)" -f ((Get-Date) - $started).TotalSeconds, $FirstLogSeconds)
+            $nextNote = (Get-Date).AddSeconds(15)
+        }
+        Start-Sleep -Milliseconds 500
+    } while ((Get-Date) -lt $deadline)
+    $power = Get-PowerState $Phone
+    $appPid = Get-AppPid $Phone
+    $tail = (Invoke-Adb $Phone @('logcat', '-d', '-t', '5')) -join ' | '
+    throw ("The app logged nothing within {0} s of launch (pid: {1}, phone: {2}, {3}). Last lines on the phone: {4}" -f $FirstLogSeconds, $(if ($appPid) { $appPid } else { 'none, not running' }), $(if ($power.Powered) { 'charging' } else { 'on battery' }), $power.Wakefulness, $tail)
+}
+
+# Total bytes of the voice pack download in progress (the Debug app's files/packs/*.partial), or -1 when there is none.
+function Get-PartialPackBytes([string]$Phone) {
+    $out = @(Invoke-Adb $Phone @('shell', "run-as $package sh -c 'stat -c %s files/packs/*.partial 2>/dev/null'"))
+    # run-as fails with a message (not a debuggable build, unknown package): that is not "no download", so say so.
+    $runAsError = $out | Where-Object { "$_" -match 'run-as:|not debuggable|Unknown package|is not an application|error:' } | Select-Object -First 1
+    if ($runAsError) { throw "Cannot read the pack folder of $package on the phone (run-as said: $runAsError). Is it the Debug dev build?" }
+    $sizes = @($out | ForEach-Object { "$_".Trim() } | Where-Object { $_ -match '^\d+$' } | ForEach-Object { [long]$_ })
+    if ($sizes.Count -eq 0) { return -1 }
+    return ($sizes | Measure-Object -Sum).Sum
+}
+
+# Slice 180: waits for PACK_READY, printing the download size at most every 30 s, and fails as soon as the .partial file stops growing.
+function Wait-PackReady([string]$Phone) {
+    $started = Get-Date
+    $lastSize = -1; $grewAt = $started; $nextNote = $started; $seenPartial = $false
+    while (((Get-Date) - $started).TotalSeconds -lt $PackTimeoutSeconds) {
+        if (Wait-Marker $Phone 'RTST-TEST\s*:\s*PACK_READY' 5) { return }
+        $size = Get-PartialPackBytes $Phone
+        if ($size -ge 0) { $seenPartial = $true }
+        if ($size -ne $lastSize) { $lastSize = $size; $grewAt = Get-Date }
+        if ($lastSize -ge 0 -and ((Get-Date) - $grewAt).TotalSeconds -ge $PackStallSeconds) {
+            $power = Get-PowerState $Phone
+            throw ("pack download stalled at {0} bytes (no growth for {1} s; phone: {2}, {3})." -f $lastSize, $PackStallSeconds, $(if ($power.Powered) { 'charging' } else { 'on battery' }), $power.Wakefulness)
+        }
+        # Never-started only while no .partial file has ever been seen: after the download ends the file is gone while the pack is unzipped and verified.
+        if (-not $seenPartial -and ((Get-Date) - $started).TotalSeconds -ge $PackStallSeconds) {
+            $power = Get-PowerState $Phone
+            $tail = (@(Get-AppLog $Phone) | Select-Object -Last 5) -join ' | '
+            throw ("pack download never started (no .partial file and no PACK_READY within {0} s; phone: {1}, {2}). Last app lines: {3}" -f $PackStallSeconds, $(if ($power.Powered) { 'charging' } else { 'on battery' }), $power.Wakefulness, $tail)
+        }
+        if ((Get-Date) -ge $nextNote) {
+            $shown = if ($lastSize -ge 0) { "$lastSize bytes" } elseif ($seenPartial) { 'download finished, preparing the pack' } else { 'not started' }
+            Write-Host ("   waiting for the voice pack download ({0:0} s of {1} s, {2})" -f ((Get-Date) - $started).TotalSeconds, $PackTimeoutSeconds, $shown)
+            $nextNote = (Get-Date).AddSeconds(30)
+        }
+    }
+    throw "The voice pack did not become ready in $PackTimeoutSeconds s."
 }
 
 # Starts the read at this rate and waits for the app to accept it; returns the phone time of its `HOOK read start`
@@ -170,10 +274,10 @@ function Start-Reading([string]$Phone, [double]$Rate) {
 # Slice 177: a second read in the same process (warm). The log is cleared first so chunk numbers do not mix with the cold read.
 function Invoke-WarmRead([string]$Phone, [double]$Rate) {
     Invoke-Adb $Phone @('logcat', '-c') | Out-Null
-    $script:Seen.Clear(); $script:SeenLines.Clear()
+    $script:Seen.Clear(); $script:SeenLines.Clear(); $script:LastNewAt = Get-Date; $script:LastNewLine = ''
     Start-Sleep -Milliseconds 500
     $tap = Start-Reading $Phone $Rate
-    if (-not (Wait-Marker $Phone 'RTST-TEST\s*:\s*READ_END' $ReadTimeoutSeconds $tap 'reading (warm)')) { Write-Host '   (READ_END not seen in time)' }
+    if (-not (Wait-Marker $Phone 'RTST-TEST\s*:\s*READ_END' $ReadTimeoutSeconds $tap 'reading (warm)' $ReadSilenceSeconds)) { Write-Host '   (READ_END not seen in time)' }
     $log = Get-AppLog $Phone
     $file = Join-Path $script:OutDir ("{0}-{1}x-warm-{2}.log" -f $App, $Rate, (Get-Date -Format 'HHmmss'))
     $log | Set-Content $file
@@ -183,11 +287,12 @@ function Invoke-WarmRead([string]$Phone, [double]$Rate) {
 function Invoke-OneRead([string]$Phone, [double]$Rate) {
     if ($FreshInstall) { Invoke-Adb $Phone @('shell', 'pm', 'clear', $package) | Out-Null }
     Start-AppWithHook $Phone 'skip-first-run'
+    Assert-AppStarted $Phone
     if (-not (Wait-Marker $Phone 'HOOK skip-first-run ok' 60 0 'waiting for the app to skip first run')) { throw 'The skip-first-run hook did not report ok.' }
-    if (-not (Wait-Marker $Phone 'RTST-TEST\s*:\s*PACK_READY' $PackTimeoutSeconds 0 'waiting for the voice pack download')) { throw "The voice pack did not become ready in $PackTimeoutSeconds s." }
+    Wait-PackReady $Phone
     if ($SettleSeconds -gt 0) { Write-Host "   settling $SettleSeconds s after the pack is ready..."; Start-Sleep -Seconds $SettleSeconds }
     $tap = Start-Reading $Phone $Rate
-    $ended = [bool](Wait-Marker $Phone 'RTST-TEST\s*:\s*READ_END' $ReadTimeoutSeconds $tap 'reading')
+    $ended = [bool](Wait-Marker $Phone 'RTST-TEST\s*:\s*READ_END' $ReadTimeoutSeconds $tap 'reading' $ReadSilenceSeconds)
     if (-not $ended) { Write-Host '   (READ_END not seen in time)' }
     $log = Get-AppLog $Phone
     $file = Join-Path $script:OutDir ("{0}-{1}x-{2}.log" -f $App, $Rate, (Get-Date -Format 'HHmmss'))
@@ -209,14 +314,20 @@ if (-not $phone) { Write-PairingAsk; exit 2 }
 # Raw logs go to the shared worktrees folder, not into the repo.
 $script:OutDir = Join-Path (Split-Path $script:RepoRoot -Parent) '.phone'
 $null = New-Item -ItemType Directory -Force $script:OutDir
-$needsInstall = -not $SkipInstall
-if ($SkipInstall -and ($Emulator -or $Aot) -and -not (Test-InstalledMatches $phone)) {
-    Write-Host '   the installed build is not the one this run asks for (ABI or AOT); building and installing it.'
-    $needsInstall = $true
-}
-if ($needsInstall) { Build-AndInstall $phone }
-
+# Slice 180: a timing run needs a quiet machine: wait for builds, flows runs and VM runs to end, and hold new ones off until this run is done.
+. (Join-Path $PSScriptRoot '..\emulator\activity.ps1')
+Write-Host 'Waiting for a quiet machine (no builds, emulator flows or VM runs)...'
+$quiet = Enter-QuietMachine
+$awake = $null
 try {
+    $power = Write-PowerState $phone
+    $awake = Start-KeepAwake $phone  # always on: harmless while charging, and it covers an unplug mid-run
+    $needsInstall = -not $SkipInstall
+    if ($SkipInstall -and ($Emulator -or $Aot) -and -not (Test-InstalledMatches $phone)) {
+        Write-Host '   the installed build is not the one this run asks for (ABI or AOT); building and installing it.'
+        $needsInstall = $true
+    }
+    if ($needsInstall) { Build-AndInstall $phone }
     foreach ($rate in $Rates) {
         $read = Invoke-OneRead $phone $rate
         $events = @(ConvertFrom-TimingLog $read.Lines)
@@ -234,5 +345,7 @@ try {
     if ($VoiceChanged) { Write-Host "listen now: $($cfg.Listen)" }
 }
 finally {
+    Stop-KeepAwake $awake
     Invoke-Adb $phone @('shell', 'am', 'force-stop', $package) | Out-Null
+    Exit-QuietMachine $quiet
 }
