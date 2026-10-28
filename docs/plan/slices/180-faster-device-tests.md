@@ -78,3 +78,7 @@ Why: on 2026-10-28 a run sat silent about 20 minutes: the phone was on battery a
 #### Follow-up: phone builds use the cache
 
 - [x] `audio-timing.ps1` takes its APK from the Slice 180 build cache (`build-cache.ps1`) instead of rebuilding every run: cache name `<app>-android-dbg-<arm64|x64>[-aot]-<input key>`, so the phone's `.dbg` arm64 and AOT builds never mix with `install-debug.ps1`'s x86_64 ones; prints `Reusing cached <app> APK (key ...)` or `Building <app> APK (key ...)`; `-Rebuild` forces a build; the build (BelowNormal priority, per-key and per-checkout locks) runs before the quiet-machine lock. *Built. An arm64 Dino build through the cache: 64.5 s the first time, 1.3 s the second. Not installed on the phone (in use). Also fixed: `Invoke-Adb` used `ProcessStartInfo.ArgumentList`, missing in Windows PowerShell 5.1, which killed a `powershell -File` launch right after "Waiting for a quiet machine" (now works in both); a missing read-hook answer names the broadcast action sent.*
+
+#### For CLAUDE.md (lifted 2026-10-28)
+
+- Device checks start from `run-flows.ps1 -App auto` / `Invoke-DesktopTest.ps1 -App auto` (touched apps only); builds are cached by input hash in `<worktrees>/_builds` and run outside the device locks; the enforced limit is one emulator plus the VM, or two emulators; phone runs need the phone charging and, for network, unlocked once with the `.dbg` app in the foreground. Goes in `tools/CLAUDE.md`.
