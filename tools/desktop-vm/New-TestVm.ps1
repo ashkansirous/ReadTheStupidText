@@ -10,6 +10,11 @@
   The ISO the script downloaded is deleted afterwards (-KeepIso keeps it). Needs Hyper-V Administrators, not elevation.
   A wait with no progress for -StallMin minutes saves a screenshot under <VmRoot>\screens and fails with its path.
   Rebuild with -Force when the evaluation expires (about every 90 days) or the VM is damaged.
+  -UpdateOnly (about 15 minutes) is the monthly refresh instead of a rebuild: it restores the existing 'clean', lifts the
+  Windows Update freeze for one run, installs the pending updates the same way, freezes it again, takes 'clean-new' and only
+  then swaps it in for the old 'clean' (renames first, the slow merge last; any failure or Ctrl+C restores the old one, and it
+  refuses to publish when the guest got no network or the update deadline passed). It downloads no ISO, deletes no VM and does
+  not extend the evaluation; it cannot be combined with -Force, -IsoPath or -SkipUpdates.
 #>
 [CmdletBinding()]
 param(
@@ -20,7 +25,8 @@ param(
     [int] $UpdateTimeoutMin = 120,
     [int] $StallMin = 10,
     [switch] $SkipUpdates,
-    [switch] $KeepIso
+    [switch] $KeepIso,
+    [switch] $UpdateOnly
 )
 $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot\_common.ps1"
@@ -45,6 +51,10 @@ $UpdateSoftServices = 'UsoSvc'        # can be protected and revived by WaaSMedi
 $DeadTaskPolls = 2
 $ReadBackAttempts = 3
 $ReadBackPauseSec = 20
+$NewCheckpointName = 'clean-new'      # -UpdateOnly: the refreshed image, renamed to 'clean' only once it exists
+$OldCheckpointName = 'clean-prev'     # -UpdateOnly: the old 'clean' during the swap (an interrupted swap is repaired by name)
+$UpdateOnlyDesktopTimeoutMin = 15
+$script:UpdateWarnings = @()           # -UpdateOnly: problems that did not stop the run, repeated in the final summary
 
 # Runs in the guest as SYSTEM (one round): search, then download and install each update on its own so the status moves.
 $GuestUpdateScript = @'
@@ -79,7 +89,8 @@ function Install-One($session, $update, [int] $index, [int] $total) {
 # A search can fail right after the network comes up (DNS or NAT not ready, 0x80072EE7 / 0x80072EFD): retry before giving up.
 function Search-Updates($session) {
     for ($attempt = 1; $true; $attempt++) {
-        try { return $session.CreateUpdateSearcher().Search($SearchCriteria).Updates }
+        # The search result, not .Updates: returning a one-item COM collection unrolls it to a bare update with no Count.
+        try { return $session.CreateUpdateSearcher().Search($SearchCriteria) }
         catch { if ($attempt -ge $SearchAttempts) { throw }; Start-Sleep -Seconds $SearchRetryPauseSec }
     }
 }
@@ -93,7 +104,7 @@ $outcomes = New-Object System.Collections.Generic.List[string]
 try {
     $session = New-Object -ComObject Microsoft.Update.Session
     Write-Status 'searching' 0 0 ''
-    $updates = Search-Updates $session
+    $updates = (Search-Updates $session).Updates
     $found = $updates.Count
     for ($i = 0; $i -lt $found; $i++) {
         $update = $updates.Item($i)
@@ -211,6 +222,31 @@ function New-AnswerIso {
         [IsoStreamWriter]::Write($image.CreateResultImage().ImageStream, $IsoFile)
     } finally { Remove-Item $stage -Recurse -Force -ErrorAction SilentlyContinue }
 }
+
+# Runs in the guest (admin session) for -UpdateOnly: undoes the update switches of $GuestFreezeScript so one update run can work.
+$GuestUnfreezeScript = @'
+$ErrorActionPreference = 'Stop'
+$wu = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate'
+foreach ($name in 'DoNotConnectToWindowsUpdateInternetLocations', 'SetDisableUXWUAccess', 'DisableOSUpgrade') {
+    Remove-ItemProperty -Path $wu -Name $name -ErrorAction SilentlyContinue
+}
+foreach ($name in 'NoAutoUpdate', 'AUOptions') { Remove-ItemProperty -Path "$wu\AU" -Name $name -ErrorAction SilentlyContinue }
+function Enable-UpdateService([string] $svc) {
+    # Same registry fallback as the freeze (3 = manual).
+    try { Set-Service -Name $svc -StartupType Manual }
+    catch { Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\$svc" -Name Start -Value 3 -Type DWord }
+}
+foreach ($svc in 'wuauserv', 'UsoSvc') {
+    try { Enable-UpdateService $svc } catch { Write-Warning "enabling service ${svc}: $($_.Exception.Message)" }
+}
+try { Start-Service -Name wuauserv }
+catch {
+    # The service manager can keep the cached start type (disabled) until a reboot; ask it to change the type, then start.
+    Write-Warning "starting wuauserv failed ($($_.Exception.Message)); retrying after sc.exe config."
+    & sc.exe config wuauserv start= demand | Out-Null
+    Start-Service -Name wuauserv
+}
+'@
 
 function Remove-ExistingVm {
     $vm = Get-VM -Name $script:VmName -ErrorAction SilentlyContinue
@@ -471,39 +507,51 @@ function Restart-GuestForUpdates {
     Wait-Desktop -Credential $Credential -BootedBefore $bootedBefore -TimeoutMin $UpdateRebootTimeoutMin -StallLimitMin $UpdateRebootStallMin
 }
 
+function Write-OnlineProblem {
+    # A full build goes on with what it has (nothing better exists); -UpdateOnly keeps the old 'clean' instead of publishing a no-op or half-done refresh.
+    param([string] $Message)
+    if ($UpdateOnly) { throw "$Message The old '$($script:CheckpointName)' is kept." }
+    Write-Warning $Message
+}
+
+function Add-UpdateWarning([string] $message) {
+    Write-Warning $message
+    $script:UpdateWarnings += $message
+}
+
 function Install-AllUpdates {
     # Install, reboot when required, search again; stops when nothing is left, nothing more installs, or after $MaxUpdateRounds.
     param([pscredential] $Credential)
     $deadline = (Get-Date).AddMinutes($UpdateTimeoutMin)
     for ($round = 1; $round -le $MaxUpdateRounds; $round++) {
-        if ((Get-Date) -ge $deadline) { Write-Warning "-UpdateTimeoutMin $UpdateTimeoutMin reached before round $round; continuing with what is installed."; return }
+        if ((Get-Date) -ge $deadline) { Write-OnlineProblem "-UpdateTimeoutMin $UpdateTimeoutMin reached before round $round; continuing with what is installed."; return }
         Start-UpdateRound -Credential $Credential
         $r = Wait-UpdateRound -Credential $Credential -Round $round -Deadline $deadline
         if (-not $r) {
-            Write-Warning "-UpdateTimeoutMin $UpdateTimeoutMin reached during round $round; stopping it and continuing with what is installed."
             Stop-UpdateRound -Credential $Credential
+            Write-OnlineProblem "-UpdateTimeoutMin $UpdateTimeoutMin reached during round $round; stopped it, continuing with what is installed."
             return
         }
         Write-Host ("Updates round {0}: found {1}, installed {2}, failed {3}, reboot required: {4}" -f $round, $r.found, $r.installed, $r.failed, $r.reboot)
         foreach ($o in @($r.outcomes)) { if ($o) { Write-Host "  $o" } }
-        foreach ($f in @($r.failures)) { if ($f) { Write-Warning "update failed: $f" } }
+        foreach ($f in @($r.failures)) { if ($f) { Add-UpdateWarning "update failed: $f" } }
         if ($r.error) { throw "Windows Update failed in the guest: $($r.error)" }
         if ($null -eq $r.found) { Write-Warning "Round $round reported no update count; searching again."; continue }
         if ($r.found -eq 0) { Write-Host '  Windows is up to date.'; return }
-        if ($r.installed -eq 0 -and -not $r.reboot) { Write-Warning "No update could be installed in round $round; stopping."; return }
+        if ($r.installed -eq 0 -and -not $r.reboot) { Add-UpdateWarning "No update could be installed in round $round; stopping."; return }
         if ($r.reboot) { Restart-GuestForUpdates -Credential $Credential }
     }
-    Write-Warning "Updates were still being found after $MaxUpdateRounds rounds; continuing with what is installed."
+    Add-UpdateWarning "Updates were still being found after $MaxUpdateRounds rounds; continuing with what is installed."
 }
 
 function Invoke-OnlineBuild {
     # The one step with a network: activate, then install every pending update. The adapter is removed before the checkpoint.
     param([pscredential] $Credential)
-    if (-not (Get-VMSwitch -Name $OnlineSwitchName -ErrorAction SilentlyContinue)) { Write-Warning "No '$OnlineSwitchName' virtual switch: no activation and no updates."; return }
+    if (-not (Get-VMSwitch -Name $OnlineSwitchName -ErrorAction SilentlyContinue)) { Write-OnlineProblem "No '$OnlineSwitchName' virtual switch: no activation and no updates."; return }
     Write-Host "Attaching a network adapter for activation and updates only ('$OnlineSwitchName')..."
     Add-VMNetworkAdapter -VMName $script:VmName -SwitchName $OnlineSwitchName -Name $OnlineAdapterName
     try {
-        if (-not (Wait-GuestNetwork -Credential $Credential)) { Write-Warning 'The guest got no network address: no activation and no updates.'; return }
+        if (-not (Wait-GuestNetwork -Credential $Credential)) { Write-OnlineProblem 'The guest got no network address: no activation and no updates.'; return }
         Invoke-EvaluationActivation -Credential $Credential
         if ($SkipUpdates) { Write-Host 'Skipping Windows updates (-SkipUpdates).'; return }
         Install-AllUpdates -Credential $Credential
@@ -521,6 +569,15 @@ function Disable-GuestWindowsUpdate {
         foreach ($w in $warnings) { Write-Warning $w }
         Remove-GuestUpdateLeftovers -Session $session
     } finally { Remove-PSSession $session -ErrorAction SilentlyContinue }
+}
+
+function Enable-GuestWindowsUpdate {
+    # -UpdateOnly: lifts the freeze for this one run; Disable-GuestWindowsUpdate puts it back before the checkpoint.
+    param([pscredential] $Credential)
+    Write-Host 'Turning Windows Update on for this run...'
+    $session = New-VmSession -Credential $Credential
+    try { Invoke-Command -Session $session -ScriptBlock ([scriptblock]::Create($GuestUnfreezeScript)) }
+    finally { Remove-PSSession $session -ErrorAction SilentlyContinue }
 }
 
 function Remove-GuestUpdateLeftovers {
@@ -587,8 +644,8 @@ function Assert-WindowsUpdateOff {
 }
 
 function Complete-Build {
-    # Detach the media, reboot once so the desktop is settled, and checkpoint it.
-    param([pscredential] $Credential)
+    # Detach the media, reboot once so the desktop is settled, and checkpoint it (a full build takes 'clean'; -UpdateOnly takes 'clean-new' first).
+    param([pscredential] $Credential, [string] $CheckpointName = $script:CheckpointName)
     Write-Host 'Detaching the media and rebooting once to settle...'
     Get-VMDvdDrive -VMName $script:VmName | Set-VMDvdDrive -Path $null
     Set-VMFirmware -VMName $script:VmName -FirstBootDevice (Get-VMHardDiskDrive -VMName $script:VmName)
@@ -596,11 +653,126 @@ function Complete-Build {
     Restart-GuestGracefully -Credential $Credential
     Wait-Desktop -Credential $Credential -BootedBefore $bootedBefore -TimeoutMin $UpdateRebootTimeoutMin -StallLimitMin $UpdateRebootStallMin
     Assert-WindowsUpdateOff -Credential $Credential
-    Checkpoint-VM -Name $script:VmName -SnapshotName $script:CheckpointName
+    Checkpoint-VM -Name $script:VmName -SnapshotName $CheckpointName
+}
+
+function Test-Checkpoint {
+    param([string] $Name)
+    $found = Get-VMCheckpoint -VMName $script:VmName -Name $Name -ErrorAction SilentlyContinue
+    return [bool]$found
+}
+
+function Remove-StrayCheckpoint {
+    param([string] $Name)
+    if (-not (Test-Checkpoint $Name)) { return }
+    Write-Host "Merging the old checkpoint '$Name' away, this can take a few minutes..."
+    Get-VMCheckpoint -VMName $script:VmName -Name $Name | Remove-VMCheckpoint -Confirm:$false
+}
+
+function Get-SwapState {
+    # Where an interrupted refresh stopped: Published (both renames done), Interrupted (between them, the new image is complete), else NotPublished.
+    $clean = Test-Checkpoint $script:CheckpointName
+    $prev = Test-Checkpoint $OldCheckpointName
+    $new = Test-Checkpoint $NewCheckpointName
+    if ($clean -and $prev -and -not $new) { return 'Published' }
+    if (-not $clean -and $prev -and $new) { return 'Interrupted' }
+    return 'NotPublished'
+}
+
+function Repair-CheckpointNames {
+    # No 'clean' between the two renames: 'clean-new' exists only after its read-back passed, so finish the swap; with only 'clean-prev', rename it back.
+    $clean = $script:CheckpointName
+    if (-not (Test-Checkpoint $clean) -and (Test-Checkpoint $OldCheckpointName)) {
+        if (Test-Checkpoint $NewCheckpointName) {
+            Write-Warning "An interrupted refresh left no '$clean': finishing it ('$NewCheckpointName' becomes '$clean')."
+            Rename-VMCheckpoint -VMName $script:VmName -Name $NewCheckpointName -NewName $clean
+        } else {
+            Write-Warning "An interrupted refresh left no '$clean': renaming '$OldCheckpointName' back."
+            Rename-VMCheckpoint -VMName $script:VmName -Name $OldCheckpointName -NewName $clean
+        }
+    }
+    if (-not (Test-Checkpoint $clean)) { return }
+    foreach ($stray in $NewCheckpointName, $OldCheckpointName) { Remove-StrayCheckpoint $stray }
+}
+
+function Assert-UpdateOnlyReady {
+    # Fails before touching anything; first repairs the checkpoint names an interrupted run left behind.
+    if (-not (Get-VM -Name $script:VmName -ErrorAction SilentlyContinue)) { throw "VM '$($script:VmName)' not found: run without -UpdateOnly." }
+    Repair-CheckpointNames
+    if (-not (Test-Checkpoint $script:CheckpointName)) { throw "Checkpoint '$($script:CheckpointName)' not found: run without -UpdateOnly." }
+}
+
+function Publish-NewCheckpoint {
+    # The names swap first (instant), the slow disk merge of the old image comes last: there is always a usable 'clean'.
+    Stop-VM -Name $script:VmName -TurnOff -Force
+    Rename-VMCheckpoint -VMName $script:VmName -Name $script:CheckpointName -NewName $OldCheckpointName
+    Rename-VMCheckpoint -VMName $script:VmName -Name $NewCheckpointName -NewName $script:CheckpointName
+    try { Remove-StrayCheckpoint $OldCheckpointName }
+    catch { Write-Warning "Could not remove '$OldCheckpointName' (the next -UpdateOnly removes it): $($_.Exception.Message)" }
+}
+
+function Restore-OldClean {
+    # A failure here is only a warning: it must never hide the error (or Ctrl+C) that got us here. The next run repairs the names.
+    try {
+        $state = Get-SwapState
+        Repair-CheckpointNames
+        Restore-CleanCheckpoint -Quiet
+        $name = $script:CheckpointName
+        if ($state -eq 'NotPublished') { Write-Warning "Refresh not published: the VM was restored to the old '$name'." }
+        else { Write-Warning "The refresh was already swapped in: the VM was restored to the NEW '$name' (state: $state); nothing to redo." }
+    } catch { Write-Warning "Could not restore the old '$($script:CheckpointName)': $($_.Exception.Message)" }
+}
+
+function Read-RefreshInfo {
+    # Best effort: the checkpoint is taken, so a guest that will not answer now must not stop the publish.
+    param([pscredential] $Credential)
+    $info = @{ Version = 'unknown'; License = [pscustomobject]@{ Days = $null; State = 'unknown' } }
+    try {
+        $info.Version = Get-GuestWindowsVersion -Credential $Credential
+        $session = New-VmSession -Credential $Credential
+        try { $info.License = Get-GuestLicense -Session $session } finally { Remove-PSSession $session -ErrorAction SilentlyContinue }
+    } catch { Write-Warning "Could not read the Windows version or licence after the refresh: $($_.Exception.Message)" }
+    return $info
+}
+
+function Update-CleanImage {
+    # Monthly refresh: the old image plus this month's updates, frozen again. Anything short of a published 'clean' (error or Ctrl+C) restores the old one.
+    param([pscredential] $Credential)
+    Assert-UpdateOnlyReady
+    $published = $false
+    try {
+        Restore-CleanCheckpoint -Start
+        Wait-Desktop -Credential $Credential -BootedBefore ([datetime]::MinValue) -TimeoutMin $UpdateOnlyDesktopTimeoutMin -StallLimitMin $UpdateRebootStallMin
+        Enable-GuestWindowsUpdate -Credential $Credential
+        Invoke-OnlineBuild -Credential $Credential
+        Disable-GuestWindowsUpdate -Credential $Credential
+        Complete-Build -Credential $Credential -CheckpointName $NewCheckpointName
+        $script:RefreshInfo = Read-RefreshInfo -Credential $Credential
+        Publish-NewCheckpoint
+        $published = $true
+    } finally {
+        if (-not $published) { Restore-OldClean }
+    }
+}
+
+function Invoke-UpdateOnly {
+    param([pscredential] $Credential)
+    $started = Get-Date
+    Update-CleanImage -Credential $Credential
+    foreach ($w in $script:UpdateWarnings) { Write-Warning "Refresh published with a problem: $w" }
+    Write-LicenseNote -License $script:RefreshInfo.License
+    Write-Host ("Done. Checkpoint '{0}' replaced; the VM is stopped. Windows: {1}. Windows Update is off. Took {2:N0} minutes." -f $script:CheckpointName, $script:RefreshInfo.Version, ((Get-Date) - $started).TotalMinutes)
 }
 
 # ---- main ----
 if ($MyInvocation.InvocationName -eq '.') { return }   # dot-sourced for tests: functions only
+if ($UpdateOnly -and ($Force -or $IsoPath -or $SkipUpdates)) { throw '-UpdateOnly cannot be combined with -Force, -IsoPath or -SkipUpdates (it never rebuilds or downloads, and exists to install updates).' }
+if ($UpdateOnly) {
+    $updateCredential = Get-VmCredential
+    Enter-VmLock
+    try { Invoke-UpdateOnly -Credential $updateCredential } finally { Exit-VmLock }
+    return
+}
 $credential = Get-VmCredential
 $iso = if ($IsoPath) { $IsoPath } else { Get-EvalIso -Dir (Join-Path $VmRoot 'media') }
 $answerIso = Join-Path $VmRoot 'media\answer.iso'
