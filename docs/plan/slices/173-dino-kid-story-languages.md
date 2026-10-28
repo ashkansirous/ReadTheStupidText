@@ -51,6 +51,21 @@ there is no in-reader language switch. Usage counts already have `reading_langua
      new field. Note this in the report so older rows (book's own language) aren't compared blindly.
    - Worker allow-list, report script, Dino privacy page and the store privacy answers updated in the same slice.
 
+#### Design (Dino Reader Batch 37 mock, frames 79-94, added 2026-10-28)
+
+Six frames (86-90, plus the shelf button in 79). The mock agrees with the plan except where noted.
+
+- **Intro step (86):** a fourth step after Add (76), so every counter in the Batch 32 mock reads "of 4". "Skip all" top right. Title "Which languages should stories be in?", sub-line "Pick up to two more. Your child can switch while reading." English locked and grey, tagged "App language". Then فارسی, Deutsch, Español, Français "+ 9 more" (the list scrolls). With two ticked, the rest grey out. Buttons "Done" and "Skip, only English". Downloads continue in the background; progress shows in Settings.
+- **Settings > Story languages (87):** title "Story languages", "Your child can switch between these while reading. Up to three." Rows: English "App language", فارسی "Ready", Svenska "Getting the voice ready · 42%" with "Cancel" (inline after 500 ms; Cancel unticks). Footer "Three picked. Untick one to choose another." On mobile data the Wi-Fi question comes first. Unticking keeps the voice on the phone.
+- **Reading button (88):** the current language's country flag; one fixed flag per language (English UK, Farsi Iran, Svenska Sweden) kept in the strings file. Opens a list with 56 px rows, 38 px flag, name in its own script; reading pauses. Sits left of the view switch. Screen reader "Story language: English". Shown only with two or three story languages.
+- **Switched (89):** text, voice and title change (Farsi title "سه بچه‌خوک کوچولو"); the sentence restarts in the new voice. Back arrow, view switch, controls and wait lines stay in the app language; the layout does not mirror (Slice 96); only the card text runs RTL.
+- **Which one goes (90):** bottom sheet, radius 28 top. "Deutsch is now the app language", "Stories can be in three languages at most. Which one should go?" Rows: English "Was the app language", فارسی, Svenska. Buttons "Cancel" and "Remove Svenska" (52 px high, `#5B57E8`, off until a pick). Cancel keeps the old app language. Shown only when the new language is not already a story language and two sides are set. Copy is a draft.
+
+**Open point: button on the shelf.** Plan puts the kid's button only in the reading header; mock 79 also puts it on the shelf (same flag list, one pick for all books, 48 dp). **Default:** follow the mock; shelf titles stay in the main language.
+**Open point: own books without a pack.** Plan hides the button for own books on Windows only; mock 89 also leaves a language's flag out of the list for an own book with no translation pack yet (the book reads in its own language). **Default:** do both.
+
+New strings (14 languages): the step title and sub-line, "App language", "Skip, only English", "Ready", "Getting the voice ready", "Three picked. Untick one to choose another.", the sheet title, body and "Remove {0}", "Story language: {0}", and the flag map.
+
 ## Work
 
 - [ ] **First end-to-end piece:** pure `StoryLanguageSet` (main + up to two sides, the swap/ask rules) with unit tests;
