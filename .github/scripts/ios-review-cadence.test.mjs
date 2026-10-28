@@ -11,7 +11,6 @@ import {
     createAscClient,
     decideAppStore,
     decideTestFlight,
-    isBetaReviewBusy,
     isStoreReviewBusy,
     isTransient,
     listBetaSubmissions,
@@ -31,10 +30,7 @@ test('pickNewestBuild skips unprocessed and expired builds', () => {
     assert.equal(pickNewestBuild([build('x', { processingState: 'FAILED' })]), null);
 });
 
-test('review busy states', () => {
-    assert.equal(isBetaReviewBusy([{ state: 'WAITING_FOR_REVIEW' }]), true);
-    assert.equal(isBetaReviewBusy([{ state: 'IN_REVIEW' }]), true);
-    assert.equal(isBetaReviewBusy([{ state: 'APPROVED' }, { state: 'REJECTED' }]), false);
+test('store review busy states', () => {
     assert.equal(isStoreReviewBusy([{ state: 'UNRESOLVED_ISSUES' }]), true);
     assert.equal(isStoreReviewBusy([{ state: 'READY_FOR_REVIEW' }, { state: 'COMPLETE' }]), false);
 });
@@ -51,10 +47,20 @@ test('testflight: no group add when already in the group', () => {
     assert.equal(decision.addToGroup, false);
 });
 
-test('testflight: skips while a review is waiting, never cancelling it', () => {
-    const submissions = [{ buildId: 'old', state: 'WAITING_FOR_REVIEW' }];
+test('testflight: submits the newer build even while an older review is waiting', () => {
+    for (const state of ['WAITING_FOR_REVIEW', 'IN_REVIEW']) {
+        const submissions = [{ buildId: 'old', state }];
+        const decision = decideTestFlight({ builds: [build('new'), build('old')], submissions, groupId: 'g' });
+        assert.equal(decision.action, 'submit', state);
+        assert.equal(decision.build.id, 'new');
+    }
+});
+
+test('testflight: skips when the newest build itself is already waiting', () => {
+    const submissions = [{ buildId: 'new', state: 'WAITING_FOR_REVIEW' }];
     const decision = decideTestFlight({ builds: [build('new'), build('old')], submissions, groupId: 'g' });
     assert.equal(decision.action, 'skip');
+    assert.match(decision.reason, /already submitted \(WAITING_FOR_REVIEW\)/);
 });
 
 test('testflight: skips when the newest build was already submitted', () => {
@@ -158,7 +164,7 @@ test('runApp testflight: adds to group then submits', async () => {
     assert.ok(calls.some(([method, path]) => method === 'POST' && path === '/v1/betaAppReviewSubmissions'));
 });
 
-test('runApp testflight: a 409 is a skip, a missing group is a failure', async () => {
+test('runApp testflight: a 409 STATE_ERROR fails with Apple text, a missing group is a failure', async () => {
     const groupsPath = `GET /v1/apps/${APPS.dino.id}/betaGroups`;
     const routes = {
         'GET /v1/builds': buildsReply,
@@ -167,7 +173,9 @@ test('runApp testflight: a 409 is a skip, a missing group is a failure', async (
         'POST /v1/betaGroups/g1/relationships/builds': { status: 204 },
         'POST /v1/betaAppReviewSubmissions': { status: 409, json: { errors: [{ code: 'STATE_ERROR', detail: 'busy' }] } },
     };
-    assert.equal((await runApp(fakeAsc(routes).asc, Mode.TestFlight, 'dino')).outcome, Outcome.Skipped);
+    const refused = await runApp(fakeAsc(routes).asc, Mode.TestFlight, 'dino');
+    assert.equal(refused.outcome, Outcome.Failed);
+    assert.match(refused.message, /busy/);
     routes[groupsPath] = { json: { data: [] } };
     const missing = await runApp(fakeAsc(routes).asc, Mode.TestFlight, 'dino');
     assert.equal(missing.outcome, Outcome.Failed);
