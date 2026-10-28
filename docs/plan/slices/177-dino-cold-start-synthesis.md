@@ -24,7 +24,7 @@ warming its threads, or the pack still unpacking after `PACK_READY`.
 - [x] If Release is slow cold: find the phase from the markers (engine creation, first synthesis, every synthesis)
   and fix it by construction, e.g. create the engine once when the pack is ready and keep it, and synthesise the
   next chunk while the current one plays. Android and iOS share the reader, so both get the fix.
-- [ ] (Owed, needs the Pixel) Set the `audio-timing.ps1` cold-start limit from the fixed numbers so a regression is flagged.
+- [x] Set the `audio-timing.ps1` cold-start limit from the fixed numbers so a regression is flagged. *Done 2026-10-28 on the Pixel 10 Pro: cold first audio 3.2-3.3 s; limits set: first audio <= 5 s on a fresh install, chunk gap limit 1.7 s at 2x cold (1.3 s trips).*
 
 ## Verification
 
@@ -42,7 +42,7 @@ warming its threads, or the pack still unpacking after `PACK_READY`.
 - **Cold app start, pack installed:** unchanged, about 1.2 s to engine ready and 1.6-1.8 s to first audio when the sentences are cached (the engine acquire itself is about 2 ms once warmed; the rest is the screen opening the book). An uncached page: 8.8 s before, 9.1 s after.
 - **What is left is the emulator's synthesis speed, not a cold start:** an uncached first chunk (4.4 s of audio) takes about 11 s on the emulator (real-time factor about 2.5) whether the process is fresh or warm, and a chunk already in the sentence cache takes 6-150 ms. The earlier "cold start 1.8-2.7 s" runs were cache hits. The real-time factor on a phone is for the phone run to show.
 - `audio-timing.ps1`: `-Emulator` (`-Serial` picks the device, default emulator-5554), `-Aot` (the way to measure Release speed), `-FreshInstall` (wipes the dev app's data every run), `-Warm`, `-SettleSeconds n` (wait after the pack is ready, as a child would). `-Warm` now works: the `open-book` hook reuses an open reading screen of the same book, and goes back to the shelf to open another book.
-- Owed: Pixel run (`-Aot` build, `-FreshInstall -SettleSeconds 30`, then `-SkipInstall` on an uncached page) to set the cold-start limit; iOS timing on TestFlight.
+- Pixel 10 Pro run 2026-10-28: cold start first audio 3.2-3.3 s. Limits set from it: first audio <= 5 s on a fresh install, gap limit 1.7 s at 2x cold (1.3 s trips). Owed: iOS timing on TestFlight.
 
 *Changed while building:* fresh-install first read measured 19.2 s to first audio (engine ready 6.1 s + first chunk 12.6 s); later cold starts with cached sentences 1.6-2.7 s. Debug JIT and AOT were the same, so it was not a Debug artefact. After the fix, engine ready is 1.16-1.39 s (was 4.9-5.6 s) for a read 30 s after the pack is ready; a read right after pack ready waits inside the first chunk (ReadingSession Loading UI), no overlap. Emulator synthesis runs at a real-time factor of about 2.5 (a 4.4 s chunk takes about 11 s), so absolute speed needs the phone.
 
@@ -56,7 +56,6 @@ Tests: RTST 1482 + 2 skipped (2 new EngineCache tests), Dino 1651; Android build
 
 #### Not yet verified
 
-- Pixel run (`audio-timing.ps1 -App dino -Aot -FreshInstall -SettleSeconds 30`, then an uncached page) to set the cold-start limit.
 - iOS timing (TestFlight).
 - A first read in a non-default voice folder (e.g. Farsi multi-folder pack) still starts cold.
 - A Farsi book warmed on open is not proven on the emulator.

@@ -216,3 +216,4 @@ Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure 
 | 176 | Reading text that is only spaces must not throw (NullReferenceException found on the phone) | built | #518 | | [176-whitespace-read-crash.md](../slices/176-whitespace-read-crash.md) |
 | 173 | Dino: up to three story languages, switched by the kid (after 172) | built | #525 | | [173-dino-kid-story-languages.md](../slices/173-dino-kid-story-languages.md) |
 | 177 | Dino: slow speech for the first reads after the app starts (measure on Release, then fix; after 175) | built | #522 | | [177-dino-cold-start-synthesis.md](../slices/177-dino-cold-start-synthesis.md) |
+| 180 | Faster device tests: only the touched apps, build once per commit, Android and Windows side by side, a second emulator (tooling only) | built | #536, #538 | | [180-faster-device-tests.md](../slices/180-faster-device-tests.md) |
