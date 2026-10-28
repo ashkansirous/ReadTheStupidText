@@ -31,7 +31,7 @@ internal static class SpeechChunkPlanner
         var plan = new List<SpeechChunkPlan>();
         foreach (VoicedSegment segment in segments)
         {
-            if (!string.IsNullOrWhiteSpace(segment.Text))
+            if (!BlankText.IsBlank(segment.Text))
             {
                 // Only the first chunk of the whole read is biased to a short head: later
                 // segments are not what the listener waits on.

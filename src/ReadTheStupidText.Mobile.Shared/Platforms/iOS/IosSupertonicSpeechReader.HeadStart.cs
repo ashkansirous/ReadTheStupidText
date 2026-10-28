@@ -19,7 +19,7 @@ public sealed partial class IosSupertonicSpeechReader
     // prepare, the start of a read, CancelPrepare and Dispose all cancel it; audio already cached stays.
     public Task PrepareAsync(string text)
     {
-        if (string.IsNullOrWhiteSpace(text))
+        if (BlankText.IsBlank(text))
         {
             return HeadStartRun.Skipped;
         }

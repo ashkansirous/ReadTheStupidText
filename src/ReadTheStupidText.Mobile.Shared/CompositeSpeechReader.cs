@@ -69,6 +69,12 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
 
     public async Task SpeakAsync(string text, int? activityId = null)
     {
+        if (IsNothingToRead(text))
+        {
+            FinishNothingToRead();
+            return;
+        }
+
         RestoreAppReadingLanguage();
         if (_model.IsReady && !_useSystemVoice)
         {
@@ -96,6 +102,12 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
     // need this read's language to resume or skip, so it is not reset mid-read).
     public async Task SpeakScopedAsync(string text, ReadVoiceScope scope, int? activityId = null)
     {
+        if (IsNothingToRead(text))
+        {
+            FinishNothingToRead();
+            return;
+        }
+
         if (!scope.PhoneVoice && scope.Model is { } model && _neural is IModelScopedReader scoped)
         {
             _active = _neural;
@@ -115,6 +127,18 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
         await _fallback.SpeakAsync(text, activityId);
     }
 
+    // Slice 176: text with nothing to speak (blank, whitespace, invisible characters) never reaches an engine, which
+    // could fail or never finish on it. Like any new speak it replaces the active read (stopped), then ends at once
+    // with Idle and Completed, so a caller waiting on Completed (Dino's ReadingSession, VoicePreview) is not left reading.
+    private void FinishNothingToRead()
+    {
+        _active.Stop();
+        StateChanged?.Invoke(this, PlaybackState.Idle);
+        Completed?.Invoke(this, EventArgs.Empty);
+    }
+
+    private static bool IsNothingToRead(string text) => BlankText.IsBlank(text);
+
     private void RestoreAppReadingLanguage()
     {
         if (_appReadingLanguage is { } language)
@@ -132,6 +156,12 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IReadingL
     // voice rather than failing, so a child is never left with silence (Slice 60).
     public async Task SpeakSegmentsAsync(IReadOnlyList<VoicedSegment> segments, int? activityId = null)
     {
+        if (IsNothingToRead(VoicedSegment.JoinText(segments)))
+        {
+            FinishNothingToRead();
+            return;
+        }
+
         if (_model.IsReady && !_useSystemVoice && _neural.SupportsSegments)
         {
             _active = _neural;

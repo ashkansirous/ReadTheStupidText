@@ -43,6 +43,12 @@ internal static partial class SpeechTextChunker
         string text, bool biasFirstChunk = true, HeadPolicy? head = null, string? firstChunkHint = null)
     {
         string trimmed = LineReflow.ReflowText(text).Trim();
+        if (BlankText.IsBlank(trimmed))
+        {
+            // Nothing to speak: an empty chunk would reach the engine and fail there (Slice 176).
+            return Array.Empty<string>();
+        }
+
         if (firstChunkHint is not null && AcceptsHint(trimmed, firstChunkHint, head ?? HeadPolicy.Default))
         {
             return SplitAfterFirst(firstChunkHint, trimmed, head);
@@ -159,7 +165,7 @@ internal static partial class SpeechTextChunker
         int end = from;
         foreach (char c in chunk.Where(c => !char.IsWhiteSpace(c)))
         {
-            i = SkipSourceGap(text, i, hyphenDrops);
+            i = SkipDroppedInvisible(text, SkipSourceGap(text, i, hyphenDrops), c);
             if (i >= text.Length)
             {
                 throw new InvalidOperationException("Chunk text runs past the end of the source.");
@@ -191,6 +197,18 @@ internal static partial class SpeechTextChunker
         }
 
         return SkipWhitespace(text, newline);
+    }
+
+    // Invisible-only paragraphs and sentences are dropped from the chunks (Slice 176), so the source still holds them
+    // between chunks: skip them here, but never a character the chunk itself expects.
+    private static int SkipDroppedInvisible(string text, int i, char expected)
+    {
+        while (i < text.Length && text[i] != expected && BlankText.IsInvisible(text[i]))
+        {
+            i++;
+        }
+
+        return i;
     }
 
     private static int SkipWhitespace(string text, int i)
@@ -297,7 +315,7 @@ internal static partial class SpeechTextChunker
         foreach (string block in ParagraphBreak().Split(text))
         {
             string paragraph = block.Trim();
-            if (paragraph.Length > 0)
+            if (!BlankText.IsBlank(paragraph)) // an invisible-only paragraph would be an unspeakable chunk (Slice 176)
             {
                 yield return paragraph;
             }
@@ -342,7 +360,7 @@ internal static partial class SpeechTextChunker
         foreach (string part in SentenceBreak().Split(paragraph))
         {
             string sentence = part.Trim();
-            if (sentence.Length > 0)
+            if (!BlankText.IsBlank(sentence))
             {
                 yield return sentence;
             }

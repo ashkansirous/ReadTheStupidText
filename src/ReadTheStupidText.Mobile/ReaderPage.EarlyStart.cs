@@ -11,7 +11,7 @@ public partial class ReaderPage
     // True only when something was prepared and nothing stopped it (a Play meanwhile sets ReadInProgress).
     private async Task<bool> VoiceEarlyAsync(string text, string language, CancellationToken token)
     {
-        if (_retired || _headStart.ReadInProgress || string.IsNullOrWhiteSpace(text))
+        if (_retired || _headStart.ReadInProgress || BlankText.IsBlank(text))
         {
             return false;
         }
