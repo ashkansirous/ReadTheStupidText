@@ -40,14 +40,14 @@
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>Excluir {0}</value></data>
   <data name="Gallery_ExportStory" xml:space="preserve"><value>Exportar história</value></data>
   <data name="Gallery_CastButton" xml:space="preserve"><value>Elenco</value></data>
-  <data name="Store_Title" xml:space="preserve"><value>Histórias grátis</value></data>
+  <data name="Store_Title" xml:space="preserve"><value>Loja</value></data>
   <data name="Store_Subtitle" xml:space="preserve"><value>Escolhidas e com elenco para o Dino</value></data>
   <data name="Store_Get" xml:space="preserve"><value>Baixar</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>Baixada</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0} páginas · {1} min</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Grátis e sem conta. Nada sobre você ou seu filho é enviado.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Você está offline</value></data>
-  <data name="Store_OfflineBody" xml:space="preserve"><value>As histórias grátis precisam de internet. As que já estão na estante são lidas sem conexão.</value></data>
+  <data name="Store_OfflineBody" xml:space="preserve"><value>A loja precisa de internet. As histórias que já estão na estante são lidas sem conexão.</value></data>
   <data name="Store_TryAgain" xml:space="preserve"><value>Tentar de novo</value></data>
   <data name="Store_EmptyTitle" xml:space="preserve"><value>Ainda não há histórias novas</value></data>
   <data name="Store_EmptyBody" xml:space="preserve"><value>Novas histórias são adicionadas de vez em quando. Volte em breve.</value></data>
@@ -104,7 +104,7 @@
   <data name="Intro_Skip" xml:space="preserve"><value>Pular</value></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} de {1}</value></data>
   <data name="Intro_StoreTitle" xml:space="preserve"><value>Obter mais livros</value></data>
-  <data name="Intro_StoreLine" xml:space="preserve"><value>A loja gratuita tem mais histórias, prontas para baixar.</value></data>
+  <data name="Intro_StoreLine" xml:space="preserve"><value>A loja tem mais histórias, prontas para baixar.</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Leia com a sua voz</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>Grave-se lendo uma história, página por página. Seu filho pode ouvir quando quiser.</value></data>
   <data name="Intro_AddTitle" xml:space="preserve"><value>Adicione o seu próprio livro</value></data>
@@ -117,6 +117,26 @@
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Modo adulto</value></data>
   <data name="Language_Title" xml:space="preserve"><value>Idioma</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>O Dino lê e traduz para este idioma</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>Configurações</value></data>
+  <data name="Settings_Books" xml:space="preserve"><value>Livros</value></data>
+  <data name="Settings_BooksValue" xml:space="preserve"><value>Adicionar, editar, Loja</value></data>
+  <data name="Settings_GroupReading" xml:space="preserve"><value>Leitura</value></data>
+  <data name="Settings_GroupPhone" xml:space="preserve"><value>Este telefone</value></data>
+  <data name="Settings_NewVersion" xml:space="preserve"><value>Nova versão</value></data>
+  <data name="Settings_GearLabel" xml:space="preserve"><value>Configurações (adultos)</value></data>
+  <data name="Settings_About" xml:space="preserve"><value>Sobre e atualizações</value></data>
+  <data name="Settings_NarratorVoice" xml:space="preserve"><value>Voz do narrador</value></data>
+  <data name="Settings_On" xml:space="preserve"><value>Ativado</value></data>
+  <data name="Settings_Off" xml:space="preserve"><value>Desativado</value></data>
+  <data name="Language_PageSub" xml:space="preserve"><value>Configurações, a loja e a estante</value></data>
+  <data name="Narrator_ListIntro" xml:space="preserve"><value>Cada idioma de histórias tem o seu próprio narrador.</value></data>
+  <data name="Narrator_OneIntro" xml:space="preserve"><value>Quem lê as partes entre os personagens, em cada livro em {0}.</value></data>
+  <data name="Narrator_TitleFor" xml:space="preserve"><value>Voz do narrador ({0})</value></data>
+  <data name="Narrator_NoVoiceValue" xml:space="preserve"><value>Não transferida</value></data>
+  <data name="Narrator_NoVoiceHint" xml:space="preserve"><value>As vozes de {0} ainda não estão neste telemóvel. Volte, abra Idioma, escolha {0} e transfira-a, e depois escolha aqui o narrador.</value></data>
+  <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Adultos</value></data>
+  <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Adicionar e editar livros</value></data>
+  <data name="Gallery_AddFromBooks" xml:space="preserve"><value>Adicionar dos seus próprios livros</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>Pronto</value></data>
   <data name="Language_Download" xml:space="preserve"><value>Baixar</value></data>
   <data name="Language_Downloading" xml:space="preserve"><value>Baixando {0}%</value></data>

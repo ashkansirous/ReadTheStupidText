@@ -40,14 +40,14 @@
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>{0}を削除</value></data>
   <data name="Gallery_ExportStory" xml:space="preserve"><value>おはなしを書き出す</value></data>
   <data name="Gallery_CastButton" xml:space="preserve"><value>登場人物</value></data>
-  <data name="Store_Title" xml:space="preserve"><value>むりょうのおはなし</value></data>
+  <data name="Store_Title" xml:space="preserve"><value>ストア</value></data>
   <data name="Store_Subtitle" xml:space="preserve"><value>ディノのために えらんで やくを きめました</value></data>
   <data name="Store_Get" xml:space="preserve"><value>もらう</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>ダウンロードずみ</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0}ページ · {1}分</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>むりょうで、アカウントもいりません。あなたやお子さんの情報は送られません。</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>オフラインです</value></data>
-  <data name="Store_OfflineBody" xml:space="preserve"><value>むりょうのおはなしはインターネットが必要です。本だなにあるおはなしは、つながらなくても読めます。</value></data>
+  <data name="Store_OfflineBody" xml:space="preserve"><value>ストアにはインターネットが必要です。本だなにあるおはなしは、つながらなくても読めます。</value></data>
   <data name="Store_TryAgain" xml:space="preserve"><value>もういちど</value></data>
   <data name="Store_EmptyTitle" xml:space="preserve"><value>新しいおはなしはまだありません</value></data>
   <data name="Store_EmptyBody" xml:space="preserve"><value>ときどき新しいおはなしが追加されます。またのぞいてね。</value></data>
@@ -104,7 +104,7 @@
   <data name="Intro_Skip" xml:space="preserve"><value>スキップ</value></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} / {1}</value></data>
   <data name="Intro_StoreTitle" xml:space="preserve"><value>本をもっと入手</value></data>
-  <data name="Intro_StoreLine" xml:space="preserve"><value>無料ストアには、ダウンロードできる物語がまだあります。</value></data>
+  <data name="Intro_StoreLine" xml:space="preserve"><value>ストアには、ダウンロードできる物語がまだあります。</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>あなたの声で読む</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>物語を1ページずつ読んで録音しましょう。お子さまはいつでも再生できます。</value></data>
   <data name="Intro_AddTitle" xml:space="preserve"><value>自分の本を追加</value></data>
@@ -117,6 +117,26 @@
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>保護者モード</value></data>
   <data name="Language_Title" xml:space="preserve"><value>言語</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>Dino はこの言語で読み上げ、翻訳します</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>設定</value></data>
+  <data name="Settings_Books" xml:space="preserve"><value>本</value></data>
+  <data name="Settings_BooksValue" xml:space="preserve"><value>追加・編集・ストア</value></data>
+  <data name="Settings_GroupReading" xml:space="preserve"><value>読み上げ</value></data>
+  <data name="Settings_GroupPhone" xml:space="preserve"><value>このスマホ</value></data>
+  <data name="Settings_NewVersion" xml:space="preserve"><value>新しいバージョン</value></data>
+  <data name="Settings_GearLabel" xml:space="preserve"><value>設定（おとな用）</value></data>
+  <data name="Settings_About" xml:space="preserve"><value>アプリについて・アップデート</value></data>
+  <data name="Settings_NarratorVoice" xml:space="preserve"><value>ナレーターの声</value></data>
+  <data name="Settings_On" xml:space="preserve"><value>オン</value></data>
+  <data name="Settings_Off" xml:space="preserve"><value>オフ</value></data>
+  <data name="Language_PageSub" xml:space="preserve"><value>設定、ストア、本だな</value></data>
+  <data name="Narrator_ListIntro" xml:space="preserve"><value>おはなしの言語ごとに、それぞれのナレーターがいます。</value></data>
+  <data name="Narrator_OneIntro" xml:space="preserve"><value>{0}の本すべてで、登場人物のあいだの文を読むのはだれか。</value></data>
+  <data name="Narrator_TitleFor" xml:space="preserve"><value>ナレーターの声（{0}）</value></data>
+  <data name="Narrator_NoVoiceValue" xml:space="preserve"><value>未ダウンロード</value></data>
+  <data name="Narrator_NoVoiceHint" xml:space="preserve"><value>{0}の声はまだこのスマホにありません。戻って「言語」を開き、{0}を選んでダウンロードしてから、ここで語り手を選んでください。</value></data>
+  <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>おとな</value></data>
+  <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>本を追加・編集</value></data>
+  <data name="Gallery_AddFromBooks" xml:space="preserve"><value>自分の本から追加</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>準備OK</value></data>
   <data name="Language_Download" xml:space="preserve"><value>ダウンロード</value></data>
   <data name="Language_Downloading" xml:space="preserve"><value>ダウンロード中 {0}%</value></data>

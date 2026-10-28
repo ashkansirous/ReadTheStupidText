@@ -49,6 +49,40 @@ public partial class LocalizedUiTests
         }
     }
 
+    // Slice 172: the Settings strings are translated (not inherited) in every language, and the store no longer calls itself free.
+    [Fact]
+    public void The_settings_strings_are_translated_in_every_language()
+    {
+        Dictionary<string, string> neutral = Load(NeutralFile);
+        string[] keys = ["Settings_Title", "Settings_Books", "Settings_GroupReading", "Settings_GroupPhone", "Settings_NewVersion", "Settings_GearLabel", "Settings_About", "Settings_NarratorVoice", "Narrator_TitleFor", "Gallery_GrownUpsTitle"];
+
+        foreach (string file in LanguageFiles())
+        {
+            Dictionary<string, string> translated = Load(file);
+            foreach (string key in keys)
+            {
+                Assert.True(translated.ContainsKey(key), $"{file}: {key} missing");
+                if (!SameAsEnglishAllowed.Contains($"{file}:{key}"))
+                {
+                    Assert.NotEqual(neutral[key], translated[key]);
+                }
+            }
+        }
+    }
+
+    // A legitimate cognate that reads the same as English ("file:key"); add one here rather than loosening the test.
+    private static readonly HashSet<string> SameAsEnglishAllowed = [];
+
+    [Fact]
+    public void The_store_strings_do_not_say_free_in_english()
+    {
+        Dictionary<string, string> neutral = Load(NeutralFile);
+
+        Assert.Equal("Store", neutral["Store_Title"]);
+        Assert.DoesNotContain("free", neutral["Store_OfflineBody"], StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("free", neutral["Intro_StoreLine"], StringComparison.OrdinalIgnoreCase);
+    }
+
     [Fact]
     public void There_is_a_file_for_each_non_english_language()
     {

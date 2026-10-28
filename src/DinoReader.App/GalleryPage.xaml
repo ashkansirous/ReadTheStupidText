@@ -9,8 +9,8 @@
     NavigationPage.HasNavigationBar="False"
     SafeAreaEdges="Container">
 
-    <!-- Home screen (mock screen 1): the child's stories. Reading needs no gate; the add-book button opens grown-up
-         mode (Slice 80), which is this same grid with an edit overlay on each tile and the Add tile first. -->
+    <!-- Home screen (mock screen 1): the child's stories. Reading needs no gate; the gear (Slice 172) runs the gate and opens Settings, whose
+         Books row opens grown-up mode (Slice 80): this same grid with an edit overlay on each tile and, above it, the Add and Store buttons. -->
     <ContentPage.Resources>
         <!-- Fallback until the probe below has measured two real lines; replaced at runtime (GalleryPage.xaml.cs). -->
         <x:Double x:Key="TileTitleHeight">36</x:Double>
@@ -46,32 +46,7 @@
             </VerticalStackLayout>
         </DataTemplate>
 
-        <DataTemplate x:Key="AddTemplate">
-            <!-- Same shape as a story tile (cover-shaped box + one title row) so the first item, which Windows sizes the
-                 whole grid from, measures like the rest. -->
-            <VerticalStackLayout Spacing="{StaticResource TileSpacing}" HorizontalOptions="Fill">
-                <local:AspectRatioView HorizontalOptions="Fill">
-                    <Border BackgroundColor="White" Stroke="#c9c0f5" StrokeThickness="3" StrokeDashArray="3,3"
-                            SemanticProperties.Description="{x:Static res:AppResources.Story_Add}">
-                        <Border.StrokeShape>
-                            <RoundRectangle CornerRadius="16" />
-                        </Border.StrokeShape>
-                        <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="6">
-                            <local:IconView Kind="Plus" Color="{StaticResource Brand}" Size="28" StrokeWidth="2.6" />
-                            <Label Text="{x:Static res:AppResources.Story_Add}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Brand}" />
-                        </VerticalStackLayout>
-                        <Border.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnAddTapped" />
-                        </Border.GestureRecognizers>
-                    </Border>
-                </local:AspectRatioView>
-                <!-- Placeholder for the title row: the same text style as a story title, hidden from Narrator. -->
-                <Label Style="{StaticResource TileTitle}" Text="&#160;" InputTransparent="True"
-                       AutomationProperties.IsInAccessibleTree="False" />
-            </VerticalStackLayout>
-        </DataTemplate>
-
-        <local:GalleryTemplateSelector x:Key="Selector" AddTemplate="{StaticResource AddTemplate}" StoryTemplate="{StaticResource StoryTemplate}" />
+        <local:GalleryTemplateSelector x:Key="Selector" StoryTemplate="{StaticResource StoryTemplate}" />
     </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,Auto,*,Auto">
@@ -79,7 +54,7 @@
              fixed, so its height depends only on the font (not on the page or tile width) and the update cannot loop. -->
         <Label x:Name="TitleProbe" HorizontalOptions="Start" Style="{StaticResource TileTitleFont}" Text="&#160;&#10;&#160;" Opacity="0" InputTransparent="True"
                VerticalOptions="Start" AutomationProperties.IsInAccessibleTree="False" SizeChanged="OnTitleProbeSizeChanged" />
-        <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="10" Padding="16,10,16,12">
+        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Padding="16,10,12,12">
             <Border WidthRequest="40" HeightRequest="40" StrokeThickness="0">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="11" />
@@ -92,79 +67,55 @@
                         <TapGestureRecognizer Tapped="OnTitleTapped" />
                     </Label.GestureRecognizers>
                 </Label>
-                <Label x:Name="ModeLabel" Text="{x:Static res:AppResources.Gallery_GrownUpMode}" FontSize="12.5" TextColor="{StaticResource Brand}" IsVisible="False" />
+                <Label x:Name="ModeLabel" Text="{x:Static res:AppResources.Gallery_GrownUpsSub}" FontSize="12" TextColor="{StaticResource Muted}" IsVisible="False" />
             </VerticalStackLayout>
-            <!-- Language pill (mock 19): the current language, opens the Language page. Grown-up mode only. -->
-            <Border Grid.Column="2" x:Name="LanguagePill" AutomationId="GalleryLanguage" HeightRequest="44" Padding="12,0,14,0" BackgroundColor="White" Stroke="{StaticResource MergeBorder}"
-                    StrokeThickness="2" IsVisible="False" VerticalOptions="Center" SemanticProperties.Hint="{x:Static res:AppResources.Language_Title}">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="22" />
-                </Border.StrokeShape>
-                <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
-                    <local:IconView Kind="Globe" Color="{StaticResource Brand}" Size="18" StrokeWidth="2.2" VerticalOptions="Center" />
-                    <Label x:Name="LanguagePillLabel" FontSize="14.5" FontAttributes="Bold" TextColor="{StaticResource Brand}" VerticalOptions="Center" />
-                </HorizontalStackLayout>
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnLanguageTapped" />
-                </Border.GestureRecognizers>
-            </Border>
-            <Border Grid.Column="3" x:Name="AddBookButton" AutomationId="GalleryAddBook" WidthRequest="44" HeightRequest="44" BackgroundColor="{StaticResource ControlFill}"
-                    StrokeThickness="0" SemanticProperties.Description="{x:Static res:AppResources.Gallery_AddBook}" ToolTipProperties.Text="{x:Static res:AppResources.Gallery_AddBook}" SemanticProperties.Hint="{x:Static res:AppResources.Gallery_OpensGateHint}">
+            <!-- Slice 172 (mock 79): the gear is the only grown-up way in. Always visible in kids' mode; it runs the gate, then opens Settings. -->
+            <Border Grid.Column="2" x:Name="SettingsButton" AutomationId="GallerySettings" WidthRequest="48" HeightRequest="48" BackgroundColor="{StaticResource ControlFill}"
+                    StrokeThickness="0" SemanticProperties.Description="{x:Static res:AppResources.Settings_GearLabel}" ToolTipProperties.Text="{x:Static res:AppResources.Settings_GearLabel}" SemanticProperties.Hint="{x:Static res:AppResources.Gallery_OpensGateHint}">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="14" />
                 </Border.StrokeShape>
-                <local:IconView Kind="AddBook" Color="{StaticResource Muted}" Size="24" />
+                <Path Data="M15 12a3 3 0 1 0-6 0a3 3 0 1 0 6 0 M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                      Stroke="{StaticResource Muted}" StrokeThickness="2" StrokeLineCap="Round" StrokeLineJoin="Round" Aspect="Uniform" WidthRequest="24" HeightRequest="24"
+                      HorizontalOptions="Center" VerticalOptions="Center" InputTransparent="True" />
                 <Border.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnAddBookTapped" />
+                    <TapGestureRecognizer Tapped="OnSettingsTapped" />
                 </Border.GestureRecognizers>
             </Border>
-            <Button Grid.Column="3" x:Name="DoneButton" IsVisible="False" Text="{x:Static res:AppResources.Common_Done}" HeightRequest="44" CornerRadius="22"
+            <Button Grid.Column="2" x:Name="DoneButton" IsVisible="False" Text="{x:Static res:AppResources.Common_Done}" HeightRequest="44" CornerRadius="22"
                     Padding="18,0" FontSize="14" BackgroundColor="{StaticResource Brand}" TextColor="White" Clicked="OnDoneClicked" />
         </Grid>
 
-        <!-- Grown-up shortcuts (mock 38): Free stories (Slice 92), Narrator (Slice 109) and Backup (Slice 93), three equal buttons with the icon above the label. -->
+        <!-- Grown-up mode (mock 85, Slice 172): only "Add from your own books" and the Store, full width. The store is behind the gate (ready for paid books later). -->
         <VerticalStackLayout Grid.Row="1">
-        <Grid x:Name="GrownUpActions" Padding="14,0,14,12" ColumnDefinitions="*,*,*" ColumnSpacing="8" IsVisible="False">
-            <Border x:Name="StoreButton" HeightRequest="64" BackgroundColor="White" Stroke="{StaticResource MergeBorder}" StrokeThickness="2"
+        <VerticalStackLayout x:Name="GrownUpActions" Padding="14,4,14,14" Spacing="8" IsVisible="False">
+            <Border x:Name="AddBookButton" AutomationId="GalleryAddBook" HeightRequest="52" BackgroundColor="{StaticResource Coral}" StrokeThickness="0"
+                    SemanticProperties.Description="{x:Static res:AppResources.Gallery_AddFromBooks}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="18" />
+                </Border.StrokeShape>
+                <HorizontalStackLayout Spacing="8" HorizontalOptions="Center" VerticalOptions="Center">
+                    <local:IconView Kind="Plus" Color="White" Size="20" StrokeWidth="2.8" VerticalOptions="Center" />
+                    <Label x:Name="AddBookLabel" Text="{x:Static res:AppResources.Gallery_AddFromBooks}" FontSize="15" FontAttributes="Bold" TextColor="White" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnAddTapped" />
+                </Border.GestureRecognizers>
+            </Border>
+            <Border x:Name="StoreButton" AutomationId="GalleryStore" HeightRequest="52" BackgroundColor="{StaticResource BrandTint}" StrokeThickness="0"
                     SemanticProperties.Description="{x:Static res:AppResources.Store_Title}">
                 <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="16" />
+                    <RoundRectangle CornerRadius="18" />
                 </Border.StrokeShape>
-                <VerticalStackLayout Spacing="3" VerticalOptions="Center" HorizontalOptions="Center">
-                    <local:IconView Kind="Book" Color="{StaticResource Brand}" Size="20" StrokeWidth="2.2" HorizontalOptions="Center" />
-                    <Label x:Name="StoreLabel" Text="{x:Static res:AppResources.Store_Title}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Brand}" HorizontalTextAlignment="Center" LineBreakMode="TailTruncation" MaxLines="1" />
-                </VerticalStackLayout>
+                <HorizontalStackLayout Spacing="8" HorizontalOptions="Center" VerticalOptions="Center">
+                    <local:IconView Kind="Book" Color="{StaticResource Brand}" Size="20" StrokeWidth="2.2" VerticalOptions="Center" />
+                    <Label x:Name="StoreLabel" Text="{x:Static res:AppResources.Store_Title}" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource Brand}" VerticalOptions="Center" />
+                </HorizontalStackLayout>
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnStoreTapped" />
                 </Border.GestureRecognizers>
             </Border>
-            <Border Grid.Column="1" x:Name="NarratorButton" HeightRequest="64" BackgroundColor="White" Stroke="{StaticResource MergeBorder}" StrokeThickness="2"
-                    SemanticProperties.Description="{x:Static res:AppResources.Narrator_Title}">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="16" />
-                </Border.StrokeShape>
-                <VerticalStackLayout Spacing="3" VerticalOptions="Center" HorizontalOptions="Center">
-                    <local:IconView Kind="Narrator" Color="{StaticResource Brand}" Size="20" StrokeWidth="2.2" HorizontalOptions="Center" />
-                    <Label x:Name="NarratorLabel" Text="{x:Static res:AppResources.Narrator_Title}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Brand}" HorizontalTextAlignment="Center" LineBreakMode="TailTruncation" MaxLines="1" />
-                </VerticalStackLayout>
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnNarratorTapped" />
-                </Border.GestureRecognizers>
-            </Border>
-            <Border Grid.Column="2" x:Name="BackupButton" HeightRequest="64" BackgroundColor="White" Stroke="{StaticResource MergeBorder}" StrokeThickness="2"
-                    SemanticProperties.Description="{x:Static res:AppResources.Backup_Title}">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="16" />
-                </Border.StrokeShape>
-                <VerticalStackLayout Spacing="3" VerticalOptions="Center" HorizontalOptions="Center">
-                    <local:IconView Kind="File" Color="{StaticResource Brand}" Size="20" StrokeWidth="2.2" HorizontalOptions="Center" />
-                    <Label x:Name="BackupLabel" Text="{x:Static res:AppResources.Backup_Title}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Brand}" HorizontalTextAlignment="Center" LineBreakMode="TailTruncation" MaxLines="1" />
-                </VerticalStackLayout>
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnBackupTapped" />
-                </Border.GestureRecognizers>
-            </Border>
-        </Grid>
+        </VerticalStackLayout>
         <!-- Slice 115 (mock frame 50): the storyteller download's status line, grown-up mode only. -->
         <local:StorytellerStatusLine x:Name="StorytellerLine" />
         </VerticalStackLayout>

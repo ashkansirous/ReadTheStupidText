@@ -102,6 +102,12 @@ public static class MauiProgram
 		services.AddTransient<BackupPage>();
 		services.AddTransient<LanguagePage>();
 		services.AddTransient<NarratorPage>();
+		services.AddTransient<NarratorLanguagesPage>();
+		services.AddTransient<SettingsPage>();
+		services.AddTransient<ReadingSpeedPage>();
+		services.AddTransient<AnimalSoundsPage>();
+		services.AddTransient<UsageCountsPage>();
+		services.AddTransient<AboutPage>();
 		services.AddTransient<FirstRunPage>();
 		services.AddTransient<IntroWizardPage>();
 		services.AddSingleton<GrownUpMode>();
