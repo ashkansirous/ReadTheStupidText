@@ -14,7 +14,7 @@ name: packs
 # Details and the pack format: docs/voice-packs.md.
 #
 # Four voice packs are built into one release and listed in one packs.json:
-#   * supertonic-3  from the LFS model in the repo (en, fr, es, pt, ru, ja, ar, da, fi, sv, nl)
+#   * supertonic-3  from the LFS model in the repo (en, fr, es, pt, ru, ja, ar, da, fi, sv, nl, de)
 #   * piper-fa      four Piper fa_IR voices (ganji_adabi, the default, ganji, mana, gyro),
 #                   each with its own model folder (Slice 89). Three come from the sherpa-onnx
 #                   `tts-models` release, sha256-pinned; mana has no sherpa build, so its
@@ -33,7 +33,7 @@ name: packs
 #                   its English lexicon, the Chinese lexicon, jieba dictionary and rule FSTs, and the GPL-3.0
 #                   espeak-ng data, only inside this pack's zip (Decision 119). Its catalog kind is `storyteller`, so the text reader never picks it and an
 #                   older app skips the entry. A sample wav (the "Hear one" button) rides next to the zip.
-# Twenty-three translation packs (Slice 75, Decision 67; Slice 106, Decision 110) ride in the same release and packs.json:
+# Twenty-five translation packs (Slice 75, Decision 67; Slice 106, Decision 110; Slice 168 adds de-en and en-de) ride in the same release and packs.json:
 #   one Opus-MT (Marian) leg each, `<source>-<target>` with English at one end, so a pair like
 #   fr -> ru pivots through two packs. Pre-converted int8 ONNX encoder/decoder from the Xenova
 #   Hugging Face repos (CC-BY-4.0 Opus-MT weights by Helsinki-NLP), pinned to one revision and
@@ -51,9 +51,9 @@ on:
         required: true
         type: string
       pack_version:
-        description: 'Version stamped into the Supertonic-3 pack (bump when the model files or its licence texts change)'
+        description: 'Version stamped into the Supertonic-3 pack (bump when the model files, its licence texts or its language list change; 4 adds German, Slice 168)'
         required: true
-        default: '3'
+        default: '4'
         type: string
       piper_pack_version:
         description: 'Version stamped into the Persian (Piper) pack'
@@ -75,6 +75,11 @@ on:
         required: true
         default: '2'
         type: string
+      kokoro_carry_over_from:
+        description: 'Release tag (e.g. packs-7) to carry the unchanged Kokoro pack over from, byte for byte, instead of rebuilding it from the upstream archive; leave empty to build. Needs kokoro_pack_version to be that release''s version.'
+        required: false
+        default: ''
+        type: string
       ocr_pack_version:
         description: 'Version stamped into the four PaddleOCR packs (bump when any model or dictionary changes)'
         required: true
@@ -82,7 +87,7 @@ on:
         type: string
 
       translation_pack_version:
-        description: 'Version stamped into the twenty-three Opus-MT translation packs (bump when any model changes)'
+        description: 'Version stamped into the twenty-five Opus-MT translation packs (bump when any model changes)'
         required: true
         default: '1'
         type: string
@@ -92,7 +97,7 @@ permissions:
 
 env:
   SUPERTONIC_ID: supertonic-3
-  SUPERTONIC_LANGUAGES: 'en,fr,es,pt,ru,ja,ar,da,fi,sv,nl'
+  SUPERTONIC_LANGUAGES: 'en,fr,es,pt,ru,ja,ar,da,fi,sv,nl,de'
   SUPERTONIC_LICENSE: 'BigScience OpenRAIL-M (model weights) AND MIT (sample code)'
   MODEL_DIR: src/ReadTheStupidText.App/VoiceModel
   # Keep the ids in sync with src/ReadTheStupidText.Application/Reading/PackConstants.cs.
@@ -153,7 +158,7 @@ env:
   OCR_CJK_DICT_SHA256: d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b
   # Opus-MT ONNX models (Slice 75). The pack ids and folder layout are read by
   # src/ReadTheStupidText.Infrastructure/Translation (TranslationPacks, TranslationPackFiles).
-  TRANSLATION_PAIRS: 'fr-en en-fr es-en en-es pt-en en-pt zh-en en-zh ar-en en-ar ru-en en-ru ja-en da-en en-da fi-en en-fi sv-en en-sv nl-en en-nl nb-en en-nb'
+  TRANSLATION_PAIRS: 'fr-en en-fr es-en en-es pt-en en-pt zh-en en-zh ar-en en-ar ru-en en-ru ja-en da-en en-da fi-en en-fi sv-en en-sv nl-en en-nl nb-en en-nb de-en en-de'
 
 jobs:
   publish-packs:
@@ -166,6 +171,7 @@ jobs:
       NORWEGIAN_VERSION: ${{ inputs.norwegian_pack_version }}
       CHINESE_VERSION: ${{ inputs.melo_pack_version }}
       KOKORO_VERSION: ${{ inputs.kokoro_pack_version }}
+      KOKORO_CARRY_OVER_FROM: ${{ inputs.kokoro_carry_over_from }}
       OCR_VERSION: ${{ inputs.ocr_pack_version }}
       TRANSLATION_VERSION: ${{ inputs.translation_pack_version }}
     steps:
@@ -249,7 +255,9 @@ jobs:
           fetch "$PERSIAN_RELEASE_URL/vits-piper-fa_IR-ganji-medium-int8.tar.bz2" "$GANJI_SHA256" src-models/fa-ganji
           fetch "$PERSIAN_RELEASE_URL/vits-piper-fa_IR-gyro-medium-int8.tar.bz2" "$GYRO_SHA256" src-models/fa-gyro
           fetch "$CHINESE_URL" "$CHINESE_SHA256" src-models/melo-zh-en
-          fetch "$KOKORO_URL" "$KOKORO_SHA256" src-models/kokoro
+          if [ -z "$KOKORO_CARRY_OVER_FROM" ]; then
+            fetch "$KOKORO_URL" "$KOKORO_SHA256" src-models/kokoro
+          fi
 
       # Mana (MahtaFetrat/Mana-Persian-Piper, MIT, CC0 data) has no sherpa-onnx build. Do what sherpa's
       # piper export does (scripts/piper/generate.sh.in): write tokens.txt from the phoneme map and add
@@ -476,6 +484,7 @@ jobs:
       # Spanish and Portuguese need only espeak-ng's es and pt data, which the data folder already has.
       # No voices are listed in pack.json: they live in KokoroVoiceTable.cs with their speaker ids.
       - name: Build the Kokoro (storyteller) pack zip
+        if: inputs.kokoro_carry_over_from == ''
         run: |
           set -euo pipefail
           src="src-models/kokoro"
@@ -539,6 +548,7 @@ jobs:
       # (Heart narrates, Puck speaks; speaker ids from KokoroVoiceTable.cs). It sits next to the zip on the release as
       # <id>-<version>-sample.wav (StorytellerOffer.SampleFileName), is not in the catalog and is not part of the pack.
       - name: Make the Kokoro voice sample
+        if: inputs.kokoro_carry_over_from == ''
         run: |
           set -euo pipefail
           python -m pip install --quiet "sherpa-onnx==1.13.3"
@@ -649,7 +659,7 @@ jobs:
       # sha256 of the encoder, merged decoder (with key/value cache), source.spm, vocab.json, config.json, the target token a
       # multi-target model needs (">>xx<<", or "-"), the repo layout ("-" for Xenova's onnx/*_quantized.onnx, or a directory
       # such as "int8/" holding unsuffixed files) and the licence the model card declares (Xenova's repos declare none and
-      # point at the CC-BY-4.0 Helsinki-NLP base; TigreGotico's cards say apache-2.0). translation.json copies the decoding ids from config.json.
+      # point at the CC-BY-4.0 Helsinki-NLP base; TigreGotico's cards say apache-2.0; Helsinki-NLP/opus-mt-de-en is Apache-2.0 while en-de is CC-BY-4.0, checked on the Hub; the licence is matched case-insensitively). translation.json copies the decoding ids from config.json.
       - name: Build the translation (Opus-MT) pack zips
         run: |
           set -euo pipefail
@@ -683,10 +693,16 @@ jobs:
               '{source: $source, target: $target, targetToken: (if $token == "" then null else $token end),
                 decoderStartTokenId: .decoder_start_token_id, eosTokenId: .eos_token_id,
                 padTokenId: .pad_token_id, maxLength: (.max_length // .max_position_embeddings)}' "tr-src/$pair-config.json" > "$dest/translation.json"
+            case "${license,,}" in
+              cc-by-4.0) license_url="https://creativecommons.org/licenses/by/4.0/" ;;
+              apache-2.0) license_url="https://www.apache.org/licenses/LICENSE-2.0" ;;
+              mit) license_url="https://opensource.org/license/mit" ;;
+              *) echo "::error::$id has an unknown licence $license"; exit 1 ;;
+            esac
             cat > "$dest/LICENSE" <<LICENSE_TEXT
           Opus-MT translation model $source to $target (Marian, ONNX)
             Model weights and SentencePiece data: Copyright the Helsinki-NLP / OPUS-MT authors
-            (upstream licence CC-BY-4.0, https://creativecommons.org/licenses/by/4.0/).
+            (upstream licence $license, $license_url).
             Licence declared by the converted model card: $license. Changes: converted to ONNX
             ($owner, https://huggingface.co/$repo); the encoder and merged decoder files are as
             published there (int8 for the Xenova repos; for TigreGotico the encoder is int8 and
@@ -729,6 +745,8 @@ jobs:
           en-nl Xenova/opus-mt-en-nl c3a0541231a7329b4492809fc2bd7ab7d2ceb0bc 0febb990f8ca8ed9fd3e0017dfcb55ec5293999f20ead81d2bb4370e9e3120ff 5f8034fddc4cdcb6fa6c3b64a06e1cd9b1955c0c6dcd13e0e47610ab99ac4a99 d05781fde84b8793191528a7a176e1b17f96265388f602379ee6ae3139f59141 b1fba91c620564d90848c5f77b03f13d17949790f8e7c7741e4a8ea13b8b0d91 3469caf791a6a038451e418d4254434087c94afc7d9676c03d38b9c64ce258c5 - - CC-BY-4.0
           nb-en TigreGotico/opus-mt-gmq-en-onnx ecd47b4e0a9c9eb4d40a123b322767ee58a4f81d b75ea6a3b2ffdc5edfa0589c73bf85da5e86e1e2c17540e54550d80cf3ea6c00 448c94360727e828321799b6518af9244cd7a112f7cb6a134522240b0c082967 ecb3285be46e1047515fdc47ea65c7343f443cbe9b0b0cc41a9d3e0feb1113c5 94f433c1d9717aa8e147c04eaeff87416bb9732299fdac2ed4303d2eed238cb0 ba8b8dcf80e43c847de5dee82d26f36ec41ad7b694bb4c3a0b75bf0d1fe5e21e - int8/ apache-2.0
           en-nb TigreGotico/opus-mt-en-gmq-onnx e6446f9200d61edc0515700144605072168d46ce 3cb48b3f74e3f24f73be28f03380b94ecffddb95c001a7594747baa78d7e406d 6d284c0dec4296ce399d53fd42f7eca6997fa447d10c70e6b01a8d7b0f63a2b5 f0a2cf42e3ee550c8501bada732d720212ba0156167ca726afb8df552235be0f b50a8d4b5432f030def03ddc8a31a413a6e2dd6f805318ac65c2f42b5e53af6d 154dd7612b71492c4ed9c7b79b78abb13a8d8bef1b9eb69f51c4a85e70ffd23e >>nob<< int8/ apache-2.0
+          de-en Xenova/opus-mt-de-en 399dfd68706739fffd503f876093e455ae268a06 4cedda8f8c89b72a42b3c6cd1e7a27f2de24457093e3bf80cb3e46829641fcd8 4712800584b2d77c2f9e620bf29523e2b20b62f65ade5011ee01780e2b0ea5d3 bbd1f495eea99c8e21ae086d9146e0fa7b096c3dfdd9ba07ab8b631889df5c9b d5acea957b265a78554999144459c5e391e0df525864edc8287bc090290baa44 6754743ec4754957d8552dad869d1314f3af6626b67446ec4cebe5e2fbaa0fc4 - - Apache-2.0
+          en-de Xenova/opus-mt-en-de 1ca130c44c4c5441ef16d48aae521a424ab644f7 15834b45fabd2dfb8c6c029b3ca3e7289aeefd90ece798ce42bcf548d1bd3b8d 8b46a825964cdd182fe47cc780f0fb87d357eae1f47cf20aa63c1c09be5b510c 678f2a1177d8389f67b66299762dcc4fc567e89b07e212ba91b0c56daecf47ce d5acea957b265a78554999144459c5e391e0df525864edc8287bc090290baa44 517955ebf66cd6523f9982851dd41771b74fb2d9c00b4933ba2922ac7a63336f - - CC-BY-4.0
           TABLE
           )
           # TRANSLATION_PAIRS (env) is the one list: the table must have exactly one row per pair in it.
@@ -747,12 +765,45 @@ jobs:
           done
           ls -l out
 
+      # A pack whose upstream source changed but whose content must not (so users keep their install) is carried over
+      # from an earlier packs release instead of being rebuilt: its zip (and sample, when it has one) are downloaded
+      # from that release, checked against the digest GitHub recorded for the asset and against the sha256 and
+      # version in that release's packs.json, and its catalog entry is kept (only the url moves to this release).
+      # Today only Kokoro has an input for it (kokoro_carry_over_from); add another pack by calling carry_over.
+      - name: Carry over unchanged packs from an earlier release
+        run: |
+          set -euo pipefail
+          mkdir -p out carried
+          carry_over() {
+            local id="$1" version="$2" from="$3" sample="$4"
+            local zip="$id-$version.zip" assets name want
+            if ! [[ "$from" =~ ^packs-[0-9]+$ ]]; then echo "::error::carry-over source '$from' must look like packs-<number>"; exit 1; fi
+            assets=$(gh release view "$from" --repo "${{ github.repository }}" --json assets)
+            names=("$zip")
+            if [ "$sample" = sample ]; then names+=("$id-$version-sample.wav"); fi
+            for name in "${names[@]}"; do
+              want=$(jq -r --arg n "$name" '.assets[] | select(.name == $n) | .digest // empty' <<<"$assets")
+              if [ -z "$want" ]; then echo "::error::$from has no asset $name with a recorded digest"; exit 1; fi
+              gh release download "$from" --repo "${{ github.repository }}" --pattern "$name" --dir out --clobber
+              echo "${want#sha256:}  out/$name" | sha256sum -c -
+            done
+            gh release download "$from" --repo "${{ github.repository }}" --pattern packs.json --dir carried --clobber
+            jq -e --arg id "$id" --arg version "$version" --arg sha "$(sha256sum "out/$zip" | cut -d' ' -f1)"                   --argjson size "$(stat -c %s "out/$zip")"               '[.[] | select(.id == $id)] | length == 1 and .[0].version == $version and .[0].sha256 == $sha and .[0].sizeBytes == $size'               carried/packs.json > /dev/null               || { echo "::error::$from packs.json does not describe $zip (id, version, sha256, size)"; exit 1; }
+            jq --arg id "$id" --arg url "https://github.com/${{ github.repository }}/releases/download/$TAG/$zip"               '.[] | select(.id == $id) | .url = $url' carried/packs.json > "carried/$id.json"
+            echo "Carried $zip over from $from"
+          }
+          if [ -n "$KOKORO_CARRY_OVER_FROM" ]; then
+            carry_over "$KOKORO_ID" "$KOKORO_VERSION" "$KOKORO_CARRY_OVER_FROM" sample
+          fi
+          ls -l out
+
       - name: Write packs.json
         run: |
           set -euo pipefail
           entry() {
             local id="$1" language="$2" version="$3" license="$4" kind="${5:-voice}"
             local zip="out/$id-$version.zip"
+            if [ -f "carried/$id.json" ]; then cat "carried/$id.json"; return; fi
             local size sha url
             size=$(stat -c %s "$zip")
             sha=$(sha256sum "$zip" | cut -d' ' -f1)

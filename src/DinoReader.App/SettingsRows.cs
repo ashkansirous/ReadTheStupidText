@@ -58,6 +58,105 @@ public static class SettingsRows
 
 	public static BoxView Divider() => new() { HeightRequest = 1, Color = DinoTokens.Get(DinoTokens.Hairline) };
 
+	private const double NavRowHeight = 52;
+	private const double NavTitleSize = 15;
+	private const double NavValueSize = 14.5;
+	private const double NavValueMaxWidth = 170;
+	private const double NavCardRadius = 18;
+	private const double HeadingSize = 12;
+	private const double HeadingSpacing = 1;
+	private const double TagHeight = 22;
+
+	/// <summary>
+	/// A Settings list row (Slice 172, mock frame 80): a 15 px label, the current value (or a tag) in bold muted text, and a chevron.
+	/// <paramref name="value"/> is null for a row that shows none; <paramref name="tagText"/> shows a pill instead and is announced with the title.
+	/// </summary>
+	public static Grid NavRow(string title, string? value, Func<Task> tapped, BusyGuard busy, string? tagText = null)
+	{
+		var row = new Grid
+		{
+			MinimumHeightRequest = NavRowHeight,
+			Padding = new Thickness(RowPadding, 0),
+			ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Auto)],
+			ColumnSpacing = 8,
+		};
+		row.Add(CastText.InOwnScript(new Label { Text = title, FontSize = NavTitleSize, VerticalOptions = LayoutOptions.Center }), 0);
+		if (tagText is not null)
+		{
+			row.Add(Tag(tagText), 1);
+		}
+		else if (value is not null)
+		{
+			row.Add(NavValue(value), 1);
+		}
+
+		row.Add(Chevron(), 2);
+		string? announced = tagText ?? value;
+		SemanticProperties.SetDescription(row, announced is null ? title : CastText.Pair(title, announced));
+		var tap = new TapGestureRecognizer();
+		tap.Tapped += async (_, _) => await busy.RunAsync(tapped);
+		row.GestureRecognizers.Add(tap);
+		return row;
+	}
+
+	private static Label NavValue(string text) => CastText.InOwnScript(new Label
+	{
+		Text = text,
+		FontSize = NavValueSize,
+		FontAttributes = FontAttributes.Bold,
+		TextColor = DinoTokens.Get(DinoTokens.Body),
+		HorizontalTextAlignment = TextAlignment.End,
+		VerticalOptions = LayoutOptions.Center,
+		MaximumWidthRequest = NavValueMaxWidth,
+		LineBreakMode = LineBreakMode.TailTruncation,
+		MaxLines = 1,
+	});
+
+	/// <summary>The small coral pill on a row ("New version").</summary>
+	public static Border Tag(string text) => new()
+	{
+		HeightRequest = TagHeight,
+		Padding = new Thickness(8, 0),
+		StrokeThickness = 0,
+		BackgroundColor = DinoTokens.Get(DinoTokens.Coral),
+		VerticalOptions = LayoutOptions.Center,
+		StrokeShape = new RoundRectangle { CornerRadius = TagHeight / 2 },
+		Content = new Label { Text = text, FontSize = HeadingSize, FontAttributes = FontAttributes.Bold, TextColor = Colors.White, VerticalOptions = LayoutOptions.Center },
+	};
+
+	/// <summary>A white card of rows with hairlines between them.</summary>
+	public static Border RowsCard(IEnumerable<View> rows)
+	{
+		var stack = new VerticalStackLayout();
+		foreach (View row in rows)
+		{
+			if (stack.Children.Count > 0)
+			{
+				stack.Children.Add(Divider());
+			}
+
+			stack.Children.Add(row);
+		}
+
+		return new Border { BackgroundColor = Colors.White, StrokeThickness = 0, StrokeShape = new RoundRectangle { CornerRadius = NavCardRadius }, Content = stack };
+	}
+
+	/// <summary>An upper-case group heading above a card (mock 80, "Reading", "This phone").</summary>
+	public static Label GroupHeading(string text)
+	{
+		var label = new Label
+		{
+			Text = text.ToUpperInvariant(),
+			FontSize = HeadingSize,
+			FontAttributes = FontAttributes.Bold,
+			CharacterSpacing = HeadingSpacing,
+			TextColor = DinoTokens.Get(DinoTokens.Muted),
+			Margin = new Thickness(4, 6, 4, 0),
+		};
+		SemanticProperties.SetHeadingLevel(label, SemanticHeadingLevel.Level2);
+		return label;
+	}
+
 	/// <summary>
 	/// The "Show the intro again" row (Slice 155, mock frame 77): brand-coloured and bold, it replays the intro's three steps on top of
 	/// <paramref name="navigation"/> and ends back there (never the language page or the voice download). The card that holds the Version

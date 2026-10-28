@@ -30,7 +30,7 @@ public sealed class UsageCounter
 			StoreClient.BaseAddress, EnabledKey, QueueKey, LogName, UsageBatch.MaxEvents,
 			() => (config.Current.Telemetry.Enabled, config.Current.Telemetry.SampleRate),
 			() => config.HasCopy,
-			UsageBatch.ToJson, UsageBatch.ParseQueue, UsageBatch.QueueToJson));
+			events => UsageBatch.ToJson(events, DeviceProbe.Current), UsageBatch.ParseQueue, UsageBatch.QueueToJson));
 		WaitController.Finished -= RecordWait; // guarded: a second counter must not stay subscribed twice
 		WaitController.Finished += RecordWait;
 	}

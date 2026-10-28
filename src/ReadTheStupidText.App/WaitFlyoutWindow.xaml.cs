@@ -100,17 +100,11 @@ public sealed partial class WaitFlyoutWindow : Window
 
     private void OnCancelClick(object sender, RoutedEventArgs e) => CancelRequested?.Invoke(this, EventArgs.Empty);
 
-    // Sized to the content and pinned bottom-right of the work area, where the control panel opens (device pixels).
+    // Sized to the content and pinned bottom-right of the work area, where the control panel opens (the shared placer).
     private void Place()
     {
         RootGrid.Measure(new Size(LogicalWidth, double.PositiveInfinity));
-        double scale = GetDpiForWindow(WindowNative.GetWindowHandle(this)) / 96.0;
-        int width = (int)(LogicalWidth * scale);
-        int height = (int)(RootGrid.DesiredSize.Height * scale);
-        int margin = (int)(LogicalMargin * scale);
-        AppWindow.Resize(new SizeInt32(width, height));
-        RectInt32 work = DisplayArea.GetFromWindowId(AppWindow.Id, DisplayAreaFallback.Nearest).WorkArea;
-        AppWindow.Move(new PointInt32(work.X + work.Width - width - margin, work.Y + work.Height - height - margin));
+        WindowPlacer.Place(AppWindow, LogicalWidth, RootGrid.DesiredSize.Height, LogicalWidth, LogicalMargin, null);
     }
 
     [DllImport("user32.dll")]
@@ -118,7 +112,4 @@ public sealed partial class WaitFlyoutWindow : Window
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern int SetWindowLong(IntPtr hwnd, int index, int value);
-
-    [DllImport("user32.dll")]
-    private static extern uint GetDpiForWindow(IntPtr hwnd);
 }

@@ -18,6 +18,9 @@
   <data name="Common_Back" xml:space="preserve"><value>Takaisin</value></data>
   <data name="Common_Save" xml:space="preserve"><value>Tallenna</value></data>
   <data name="Common_Done" xml:space="preserve"><value>Valmis</value></data>
+  <data name="Close_Question" xml:space="preserve"><value>Suljetaanko Dino Book Reader?</value></data>
+  <data name="Common_Stay" xml:space="preserve"><value>Jää</value></data>
+  <data name="Common_Close" xml:space="preserve"><value>Sulje</value></data>
   <data name="Common_Delete" xml:space="preserve"><value>Poista</value></data>
   <data name="Common_Keep" xml:space="preserve"><value>Säilytä</value></data>
   <data name="Common_Edit" xml:space="preserve"><value>Muokkaa</value></data>
@@ -42,14 +45,14 @@
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>Poista {0}</value></data>
   <data name="Gallery_ExportStory" xml:space="preserve"><value>Vie tarina</value></data>
   <data name="Gallery_CastButton" xml:space="preserve"><value>Hahmot</value></data>
-  <data name="Store_Title" xml:space="preserve"><value>Ilmaiset tarinat</value></data>
+  <data name="Store_Title" xml:space="preserve"><value>Kauppa</value></data>
   <data name="Store_Subtitle" xml:space="preserve"><value>Valittu ja äänetty Dinolle</value></data>
   <data name="Store_Get" xml:space="preserve"><value>Hae</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>Ladattu</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0} sivua · {1} min</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Ilmaiseksi ja ilman tiliä. Mitään sinusta tai lapsestasi ei lähetetä.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Olet offline-tilassa</value></data>
-  <data name="Store_OfflineBody" xml:space="preserve"><value>Ilmaiset tarinat tarvitsevat internetin. Hyllyssä jo olevat tarinat toimivat ilman sitä.</value></data>
+  <data name="Store_OfflineBody" xml:space="preserve"><value>Kauppa tarvitsee internetin. Hyllyssä jo olevat tarinat toimivat ilman sitä.</value></data>
   <data name="Store_TryAgain" xml:space="preserve"><value>Yritä uudelleen</value></data>
   <data name="Store_EmptyTitle" xml:space="preserve"><value>Ei vielä uusia tarinoita</value></data>
   <data name="Store_EmptyBody" xml:space="preserve"><value>Uusia lisätään aina välillä. Käy katsomassa pian uudelleen.</value></data>
@@ -106,7 +109,7 @@
   <data name="Intro_Skip" xml:space="preserve"><value>Ohita</value></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0}/{1}</value></data>
   <data name="Intro_StoreTitle" xml:space="preserve"><value>Hae lisää kirjoja</value></data>
-  <data name="Intro_StoreLine" xml:space="preserve"><value>Ilmaisessa kaupassa on lisää tarinoita, valmiina ladattaviksi.</value></data>
+  <data name="Intro_StoreLine" xml:space="preserve"><value>Kaupassa on lisää tarinoita, valmiina ladattaviksi.</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Lue se omalla äänelläsi</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>Äänitä itsesi lukemassa tarinaa sivu sivulta. Lapsesi voi kuunnella sen milloin tahansa.</value></data>
   <data name="Intro_AddTitle" xml:space="preserve"><value>Lisää oma kirjasi</value></data>
@@ -119,6 +122,26 @@
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Aikuisten tila</value></data>
   <data name="Language_Title" xml:space="preserve"><value>Kieli</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>Dino lukee ja kääntää tälle kielelle</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>Asetukset</value></data>
+  <data name="Settings_Books" xml:space="preserve"><value>Kirjat</value></data>
+  <data name="Settings_BooksValue" xml:space="preserve"><value>Lisää, muokkaa, Kauppa</value></data>
+  <data name="Settings_GroupReading" xml:space="preserve"><value>Lukeminen</value></data>
+  <data name="Settings_GroupPhone" xml:space="preserve"><value>Tämä puhelin</value></data>
+  <data name="Settings_NewVersion" xml:space="preserve"><value>Uusi versio</value></data>
+  <data name="Settings_GearLabel" xml:space="preserve"><value>Asetukset (aikuiset)</value></data>
+  <data name="Settings_About" xml:space="preserve"><value>Tietoja ja päivitykset</value></data>
+  <data name="Settings_NarratorVoice" xml:space="preserve"><value>Kertojan ääni</value></data>
+  <data name="Settings_On" xml:space="preserve"><value>Päällä</value></data>
+  <data name="Settings_Off" xml:space="preserve"><value>Pois</value></data>
+  <data name="Language_PageSub" xml:space="preserve"><value>Asetukset, kauppa ja hylly</value></data>
+  <data name="Narrator_ListIntro" xml:space="preserve"><value>Jokaisella tarinakielellä on oma kertojansa.</value></data>
+  <data name="Narrator_OneIntro" xml:space="preserve"><value>Kuka lukee hahmojen väliset osat jokaisessa kirjassa kielellä {0}.</value></data>
+  <data name="Narrator_TitleFor" xml:space="preserve"><value>Kertojan ääni ({0})</value></data>
+  <data name="Narrator_NoVoiceValue" xml:space="preserve"><value>Ei ladattu</value></data>
+  <data name="Narrator_NoVoiceHint" xml:space="preserve"><value>Kielen {0} äänet eivät ole vielä tässä puhelimessa. Palaa takaisin, avaa Kieli, valitse {0} ja lataa se, ja valitse sitten kertoja tästä.</value></data>
+  <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Aikuiset</value></data>
+  <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Lisää ja muokkaa kirjoja</value></data>
+  <data name="Gallery_AddFromBooks" xml:space="preserve"><value>Lisää omista kirjoistasi</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>Valmis</value></data>
   <data name="Language_Download" xml:space="preserve"><value>Lataa</value></data>
   <data name="Language_Downloading" xml:space="preserve"><value>Ladataan {0} %</value></data>
@@ -200,13 +223,13 @@
   <data name="Version_NewReady" xml:space="preserve"><value>Uusi versio on valmis</value></data>
   <data name="Version_Title" xml:space="preserve"><value>Versio</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Auta tekemään Dinosta parempi</value></data>
-  <data name="Usage_Helper" xml:space="preserve"><value>Lähettää määriä, kuten "kaupan kirja luettiin loppuun". Ei nimiä, ei tunnisteita, ei mitään kirjoittamaasi.</value></data>
+  <data name="Usage_Helper" xml:space="preserve"><value>Lähettää määriä, kuten "kaupan kirja luettiin loppuun". Ei nimiä, ei tunnisteita, ei mitään kirjoittamaasi. Mukana on myös maasi ja likimääräinen laitetyyppi (puhelin tai tabletti, muistin vaihteluväli).</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>Lukunopeus</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>Hitaampi on helpompaa pienille</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · hidas</value></data>
   <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
   <data name="Speed_Play" xml:space="preserve"><value>Kuuntele tämä nopeus</value></data>
-  <data name="FirstRun_Usage" xml:space="preserve"><value>Dino laskee, mitä kirjoja luetaan, ilman nimiä tai tunnisteita. Voit poistaa tämän käytöstä Asetuksissa.</value></data>
+  <data name="FirstRun_Usage" xml:space="preserve"><value>Dino laskee, mitä kirjoja luetaan, ilman nimiä tai tunnisteita. Voit poistaa tämän käytöstä Asetuksissa. Mukana on myös maasi ja likimääräinen laitetyyppi (puhelin tai tabletti, muistin vaihteluväli).</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Kertojasi ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} Mt</value></data>
   <data name="Storyteller_Failed" xml:space="preserve"><value>Tarinankertojan äänien lataus epäonnistui</value></data>

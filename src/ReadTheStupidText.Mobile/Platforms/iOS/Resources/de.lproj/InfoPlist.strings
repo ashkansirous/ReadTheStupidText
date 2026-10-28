@@ -1,0 +1,4 @@
+"NSCameraUsageDescription" = "Die Kamera fotografiert gedruckten Text, damit die App ihn vorlesen kann. Fotos werden auf dem Gerät verarbeitet und nie hochgeladen.";
+"NSPhotoLibraryUsageDescription" = "Die App liest ein Foto, das du aus deiner Fotomediathek auswählst, nur um den Text darin vorzulesen. Fotos werden auf dem Gerät verarbeitet und nie hochgeladen.";
+"NSPhotoLibraryAddUsageDescription" = "Die App speichert nichts in deiner Fotomediathek.";
+"NSMicrophoneUsageDescription" = "Die App nimmt keinen Ton auf. Das wird nur abgefragt, falls jemals eine Videoaufnahme genutzt wird, was diese App nicht tut.";

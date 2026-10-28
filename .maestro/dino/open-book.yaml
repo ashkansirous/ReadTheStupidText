@@ -1,0 +1,41 @@
+# Slice 162, 175: open a starter book on its second page with the open-book hook (no tile tap), turn a page, and come back to the gallery.
+# expect-log: HOOK skip-first-run ok
+# expect-log: HOOK open-book opened page=2
+# expect-log: PAGE 2
+appId: uk.sirous.dinoreader
+name: Open a book and turn a page
+---
+- launchApp:
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: StoryTile
+    timeout: 60000
+- launchApp:
+    arguments:
+      cmd: open-book
+      id: three-little-pigs
+      page: "2"
+- extendedWaitUntil:
+    visible:
+      id: ReadingSurface
+    timeout: 30000
+- assertVisible:
+    id: ReadingTransport
+# MoveTo only moves the followed sentence; let the surface finish laying out and scrolling to page 2 before swiping.
+- waitForAnimationToEnd:
+    timeout: 5000
+- swipe:
+    direction: LEFT
+- assertVisible:
+    id: ReadingSurface
+- tapOn:
+    id: ReadingBack
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: GalleryTitle
+    timeout: 15000

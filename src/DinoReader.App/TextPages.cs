@@ -9,7 +9,7 @@ namespace DinoReader;
 /// measured. The highlight is square-cornered (a MAUI span cannot round).
 /// </summary>
 public sealed class TextPages(string text, IReadOnlyList<SentenceSpan> sentences, ITextMeasurer measurer,
-	string font, ReadingTheme theme, bool rightToLeft) : IPageRenderer
+	string font, ReadingTheme theme, bool rightToLeft, double fontSize = ReadingMetrics.FontSize, double topInset = 0) : IPageRenderer
 {
 	// What a line looks like for the sentence being spoken: all ink, all dim, or split around the
 	// current sentence (its index). A line is rebuilt only when this changes.
@@ -27,6 +27,7 @@ public sealed class TextPages(string text, IReadOnlyList<SentenceSpan> sentences
 		public int LastSentence => SentenceOfWord.Length == 0 ? -1 : SentenceOfWord[^1];
 	}
 
+	private readonly double _lineHeight = fontSize * ReadingMetrics.TextLineSpacing;
 	private ReadingTheme _theme = theme;
 	private IReadOnlyList<FlowPage> _pages = [];
 	private Size _card;
@@ -45,7 +46,7 @@ public sealed class TextPages(string text, IReadOnlyList<SentenceSpan> sentences
 		_lines.Clear();
 		_card = card;
 		_textWidth = card.Width - 2 * ReadingMetrics.TextPadding;
-		int linesPerPage = Math.Max(1, (int)Math.Floor((card.Height - 2 * ReadingMetrics.TextPadding) / ReadingMetrics.TextLineHeight));
+		int linesPerPage = Math.Max(1, (int)Math.Floor((card.Height - 2 * ReadingMetrics.TextPadding - topInset) / _lineHeight));
 		_pages = FlowPager.Paginate(text, sentences, WrapWidth, linesPerPage, measurer);
 	}
 
@@ -74,10 +75,11 @@ public sealed class TextPages(string text, IReadOnlyList<SentenceSpan> sentences
 		IReadOnlyList<TextLine> lines = LinesOf(page);
 		for (int i = 0; i < lines.Count; i++)
 		{
-			Label label = ReadingMetrics.LineLabel(font, ReadingMetrics.TextLineHeight, _textWidth);
+			Label label = ReadingMetrics.LineLabel(font, _lineHeight, _textWidth);
+			label.FontSize = fontSize;
 			AbsoluteLayout.SetLayoutBounds(label, new Rect(
-				ReadingMetrics.TextPadding, ReadingMetrics.TextPadding + i * ReadingMetrics.TextLineHeight,
-				_textWidth, ReadingMetrics.TextLineHeight));
+				ReadingMetrics.TextPadding, ReadingMetrics.TextPadding + topInset + i * _lineHeight,
+				_textWidth, _lineHeight));
 			label.FlowDirection = rightToLeft ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
 			_labels.Add(label);
 			layers.Text.Children.Add(label);
@@ -136,7 +138,7 @@ public sealed class TextPages(string text, IReadOnlyList<SentenceSpan> sentences
 			return -1;
 		}
 
-		int row = (int)Math.Floor((point.Y - ReadingMetrics.TextPadding) / ReadingMetrics.TextLineHeight);
+		int row = (int)Math.Floor((point.Y - ReadingMetrics.TextPadding - topInset) / _lineHeight);
 		IReadOnlyList<TextLine> lines = LinesOf(page);
 		if (row < 0 || row >= lines.Count || lines[row].Words.Count == 0)
 		{
@@ -229,7 +231,7 @@ public sealed class TextPages(string text, IReadOnlyList<SentenceSpan> sentences
 
 	private Span BuildSpan(string words, int state)
 	{
-		var span = new Span { Text = words, TextColor = _theme.Ink, FontFamily = font, FontSize = ReadingMetrics.FontSize };
+		var span = new Span { Text = words, TextColor = _theme.Ink, FontFamily = font, FontSize = fontSize };
 		if (state < 0)
 		{
 			span.TextColor = _theme.ReadText;

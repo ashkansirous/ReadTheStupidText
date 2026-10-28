@@ -56,6 +56,12 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IDisposab
 
     public async Task SpeakAsync(string text, int? activityId = null)
     {
+        if (IsNothingToRead(text))
+        {
+            FinishNothingToRead();
+            return;
+        }
+
         if (UseNeural)
         {
             _active = _neural;
@@ -73,6 +79,18 @@ public sealed class CompositeSpeechReader : ISpeechReader, IHeadStart, IDisposab
         _active = _fallback;
         await _fallback.SpeakAsync(text, activityId);
     }
+
+    // Slice 176: text with nothing to speak (blank, whitespace, invisible characters) never reaches an engine, which
+    // could fail or never finish on it. Like any new speak it replaces the active read (stopped), then ends at once
+    // with Idle and Completed, so a caller waiting on Completed (Dino's ReadingSession, VoicePreview) is not left reading.
+    private void FinishNothingToRead()
+    {
+        _active.Stop();
+        StateChanged?.Invoke(this, PlaybackState.Idle);
+        Completed?.Invoke(this, EventArgs.Empty);
+    }
+
+    private static bool IsNothingToRead(string text) => BlankText.IsBlank(text);
 
     private bool UseNeural => _model.IsReady && !_useSystemVoice;
 

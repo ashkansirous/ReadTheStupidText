@@ -3,9 +3,11 @@
  * Sends iOS builds to Apple's reviews on a fixed cadence (Slice 147, Decision 154).
  *
  * Rules, the same for every app: never cancel a waiting review, never expire a
- * build to make room, at most one review waiting per app, always the newest
- * processed build. `testflight` adds that build to the external group and submits
- * it for Beta App Review (run daily); `appstore` attaches it to the editable App
+ * build to make room, always the newest processed build. TestFlight submits the
+ * newest build each morning, even while an older review waits; the App Store path
+ * keeps one review waiting at a time. `testflight` adds that build to the external group and submits
+ * it for Beta App Review with auto-notify on, and tells testers about the newest approved build
+ * (run daily); `appstore` attaches it to the editable App
  * Store version and submits that for review (run by hand).
  *
  *   node ios-review-cadence.mjs testflight rtst dino
@@ -36,11 +38,6 @@ const BUILD_FILTER_CHUNK = 50;
 const PLATFORM_IOS = 'IOS';
 const RELEASE_AFTER_APPROVAL = 'AFTER_APPROVAL';
 
-const HTTP_CONFLICT = 409;
-/** Apple's error code for "not in the right state for this right now". */
-const STATE_ERROR_CODE = 'STATE_ERROR';
-const NOT_NOW_DETAIL = /in progress|already (submitted|in review|waiting)/i;
-
 const Method = { Get: 'GET', Post: 'POST', Patch: 'PATCH' };
 const Resource = {
     Apps: 'apps',
@@ -49,8 +46,21 @@ const Resource = {
     ReviewSubmissions: 'reviewSubmissions',
     ReviewSubmissionItems: 'reviewSubmissionItems',
     BetaAppReviewSubmissions: 'betaAppReviewSubmissions',
+    BuildBetaDetails: 'buildBetaDetails',
+    BuildBetaNotifications: 'buildBetaNotifications',
 };
 const PRE_RELEASE_TYPE = 'preReleaseVersions';
+/** A build's `externalBuildState` in App Store Connect (what its external testers can see). */
+export const ExternalState = {
+    Approved: 'BETA_APPROVED',
+    InTesting: 'IN_BETA_TESTING',
+    Waiting: 'WAITING_FOR_BETA_REVIEW',
+    InReview: 'IN_BETA_REVIEW',
+};
+/** States in which the build has passed Beta App Review. */
+const RELEASED_STATES = [ExternalState.Approved, ExternalState.InTesting];
+/** States in which a build is queued for Beta App Review. */
+const PENDING_STATES = [ExternalState.Waiting, ExternalState.InReview];
 const Action = { Skip: 'skip', Submit: 'submit', Fail: 'fail' };
 const BETA_REJECTED = 'REJECTED';
 
@@ -60,11 +70,9 @@ const HTTP_TOO_MANY_REQUESTS = 429;
 const HTTP_SERVER_ERROR = 500;
 
 export const Mode = { TestFlight: 'testflight', AppStore: 'appstore' };
-export const Outcome = { Submitted: 'submitted', Skipped: 'skipped', Failed: 'failed' };
+export const Outcome = { Submitted: 'submitted', Notified: 'notified', Skipped: 'skipped', Failed: 'failed' };
 
 export const ProcessingState = { Valid: 'VALID' };
-/** A Beta App Review in one of these states holds the app's single review slot. */
-export const BETA_BUSY_STATES = ['WAITING_FOR_REVIEW', 'IN_REVIEW'];
 /** An App Store review in one of these states holds the app's single review slot. */
 export const STORE_BUSY_STATES = ['WAITING_FOR_REVIEW', 'IN_REVIEW', 'UNRESOLVED_ISSUES', 'CANCELING', 'COMPLETING'];
 const STORE_DRAFT_STATE = 'READY_FOR_REVIEW';
@@ -171,10 +179,6 @@ export function pickNewestBuild(builds) {
     return builds.find((build) => build.processingState === ProcessingState.Valid && !build.expired) ?? null;
 }
 
-export function isBetaReviewBusy(submissions) {
-    return submissions.some((submission) => BETA_BUSY_STATES.includes(submission.state));
-}
-
 export function isStoreReviewBusy(submissions) {
     return submissions.some((submission) => STORE_BUSY_STATES.includes(submission.state));
 }
@@ -191,17 +195,27 @@ export function describeBuild(build) {
     return `${build.marketingVersion ?? 'unknown version'} (${build.buildNumber})`;
 }
 
-/** What to do for TestFlight external testers. `submissions` are `{buildId, state}` of recent builds. */
+/** What to do for TestFlight external testers: the newest build is submitted even while an older review waits. `submissions` are `{buildId, state}` of recent builds. */
 export function decideTestFlight({ builds, submissions, groupId }) {
     const build = pickNewestBuild(builds);
     if (!build) return skip('no processed build');
-    if (isBetaReviewBusy(submissions)) return skip('a review is already waiting');
     const own = submissions.find((submission) => submission.buildId === build.id);
     if (own?.state === BETA_REJECTED) {
         return fail(`newest build ${describeBuild(build)} was rejected by Beta App Review; read Apple's reason in App Store Connect`);
     }
     if (own) return skip(`newest build ${describeBuild(build)} already submitted (${own.state})`);
     return { action: Action.Submit, build, addToGroup: !build.groupIds.includes(groupId) };
+}
+
+/** The newest approved build, only if testers have not been told yet (BETA_APPROVED); older unsent ones are superseded. */
+export function decideNotify(builds) {
+    const newest = builds.find((build) => build.processingState === ProcessingState.Valid && !build.expired && RELEASED_STATES.includes(build.externalState));
+    return newest?.externalState === ExternalState.Approved ? newest : null;
+}
+
+/** Builds queued for Beta App Review whose testers would not be told at approval. */
+export function findAutoNotifyTargets(builds) {
+    return builds.filter((build) => PENDING_STATES.includes(build.externalState) && build.betaDetailId && !build.autoNotify);
 }
 
 /** What to do for the App Store. `versions` are `{id, versionString, state, buildId}`. */
@@ -245,6 +259,18 @@ export function normalizeBuild(build, index) {
         processingState: build.attributes?.processingState,
         expired: Boolean(build.attributes?.expired),
         groupIds: (build.relationships?.betaGroups?.data ?? []).map((group) => group.id),
+        ...normalizeBetaDetail(build, index),
+    };
+}
+
+/** The build's TestFlight detail: its id, whether testers are told on approval, and its external state. */
+function normalizeBetaDetail(build, index) {
+    const detailId = build.relationships?.buildBetaDetail?.data?.id ?? null;
+    const detail = detailId ? index.get(`${Resource.BuildBetaDetails}:${detailId}`) : null;
+    return {
+        betaDetailId: detailId,
+        autoNotify: detail?.attributes?.autoNotifyEnabled === true,
+        externalState: detail?.attributes?.externalBuildState ?? null,
     };
 }
 
@@ -310,21 +336,102 @@ function buildRef(id) {
     return { data: { type: Resource.Builds, id } };
 }
 
-/** Only Apple's "not now" conflicts are a skip; any other 409 (a missing prerequisite) must fail loudly. */
-export function isNotNowConflict(json) {
-    return (json?.errors ?? []).some((error) => String(error.code ?? '').includes(STATE_ERROR_CODE) || NOT_NOW_DETAIL.test(error.detail ?? ''));
+/** Makes Apple send the build to testers when Beta App Review approves it. A build with no detail yet is left alone. */
+export async function ensureAutoNotify(asc, build) {
+    if (build.autoNotify || !build.betaDetailId) return false;
+    const data = { type: Resource.BuildBetaDetails, id: build.betaDetailId, attributes: { autoNotifyEnabled: true } };
+    await writeOrThrow(asc, Method.Patch, `/v1/buildBetaDetails/${build.betaDetailId}`, { data });
+    return true;
 }
 
-/** Adds to the group if needed, then submits. A "not now" 409 comes back as a skip; any other 409 fails with Apple's text. */
+/** Tells the testers about an approved build (the "Notify Testers" button). */
+export async function notifyTesters(asc, build) {
+    const relationships = { build: buildRef(build.id) };
+    await writeOrThrow(asc, Method.Post, '/v1/buildBetaNotifications', { data: { type: Resource.BuildBetaNotifications, relationships } });
+    return { outcome: Outcome.Notified, message: `notified testers of ${describeBuild(build)}` };
+}
+
+/** Releases the newest approved build to testers. */
+async function releaseApproved(asc, builds) {
+    const approved = decideNotify(builds);
+    if (!approved) return null;
+    return notifyTesters(asc, approved);
+}
+
+/** Switches auto-notify on for one waiting build; a refusal is returned, not thrown, so the other builds still get theirs. */
+async function enableOne(asc, target) {
+    try {
+        await ensureAutoNotify(asc, target);
+        return { build: target, error: null };
+    } catch (error) {
+        return { build: target, error: error.message };
+    }
+}
+
+/** Switches auto-notify on for builds still waiting in Beta App Review, reporting every success and every failure. */
+async function enableWaitingAutoNotify(asc, builds) {
+    const targets = findAutoNotifyTargets(builds);
+    if (targets.length === 0) return null;
+    const attempts = [];
+    for (const target of targets) attempts.push(await enableOne(asc, target));
+    const failed = attempts.filter((item) => item.error);
+    const enabled = attempts.filter((item) => !item.error).map((item) => describeBuild(item.build));
+    const parts = [];
+    if (enabled.length > 0) parts.push(`auto-notify on for ${enabled.join(', ')}`);
+    for (const item of failed) parts.push(`auto-notify failed for ${describeBuild(item.build)}: ${item.error}`);
+    return { outcome: failed.length > 0 ? Outcome.Failed : Outcome.Notified, message: parts.join('; ') };
+}
+
+/** Reads the build's TestFlight detail when the build list did not carry it. Null when Apple has none. */
+async function fetchBetaDetail(asc, build) {
+    const json = await getOrThrow(asc, `/v1/builds/${build.id}/buildBetaDetail`);
+    const data = json?.data;
+    if (!data?.id) return null;
+    return { betaDetailId: data.id, autoNotify: data.attributes?.autoNotifyEnabled === true, externalState: data.attributes?.externalBuildState ?? null };
+}
+
+/** The build with its beta detail filled in; throws when Apple has none, so a build is never submitted with testers left unnotified. */
+async function withBetaDetail(asc, build) {
+    if (build.betaDetailId) return build;
+    const detail = await fetchBetaDetail(asc, build);
+    if (!detail) throw new Error(`no beta detail for ${describeBuild(build)}; not submitted because testers would not be told when it is approved`);
+    return { ...build, ...detail };
+}
+
+/** A step that throws becomes a failed result, so the steps after it still run. */
+async function attempt(step) {
+    try {
+        return await step();
+    } catch (error) {
+        return { outcome: Outcome.Failed, message: error.message };
+    }
+}
+
+function overallOutcome(acted) {
+    if (acted.some((result) => result.outcome === Outcome.Failed)) return Outcome.Failed;
+    if (acted.some((result) => result.outcome === Outcome.Submitted)) return Outcome.Submitted;
+    return Outcome.Notified;
+}
+
+/** One result for the app: failed if any step failed, submitted if a submission happened, notified if only testers were told, else skipped. Skip reasons stay in the message when another step acted. */
+export function combineResults(results) {
+    const present = results.filter(Boolean);
+    const acted = present.filter((result) => result.outcome !== Outcome.Skipped);
+    if (acted.length === 0) return present[0] ?? { outcome: Outcome.Skipped, message: 'nothing to do' };
+    const skipped = present.filter((result) => result.outcome === Outcome.Skipped);
+    return { outcome: overallOutcome(acted), message: [...acted, ...skipped].map((result) => result.message).join('; ') };
+}
+
+/** Adds to the group if needed, then submits. Any refusal, a 409 included, fails with Apple's text so it is visible. */
 export async function submitToTestFlight(asc, groupId, decision) {
     const { build, addToGroup } = decision;
+    await ensureAutoNotify(asc, await withBetaDetail(asc, build));
     if (addToGroup) {
         await writeOrThrow(asc, Method.Post, `/v1/betaGroups/${groupId}/relationships/builds`, { data: [{ type: Resource.Builds, id: build.id }] });
     }
     const body = { data: { type: Resource.BetaAppReviewSubmissions, relationships: { build: buildRef(build.id) } } };
     const response = await asc.post('/v1/betaAppReviewSubmissions', body);
     if (response.ok) return { outcome: Outcome.Submitted, message: `${describeBuild(build)} submitted for Beta App Review` };
-    if (response.status === HTTP_CONFLICT && isNotNowConflict(response.json)) return { outcome: Outcome.Skipped, message: `Apple refused for now: ${describeErrors(response.json)}` };
     throw failure(Method.Post, '/v1/betaAppReviewSubmissions', response);
 }
 
@@ -338,9 +445,11 @@ export async function runTestFlight(asc, app) {
     const builds = await listBuilds(asc, app.id);
     const groupId = await findGroupId(asc, app.id, EXTERNAL_GROUP_NAME);
     const submissions = await listBetaSubmissions(asc, builds);
+    const notified = await attempt(() => releaseApproved(asc, builds));
+    const waiting = await attempt(() => enableWaitingAutoNotify(asc, builds));
     const decision = decideTestFlight({ builds, submissions, groupId });
-    if (decision.action !== Action.Submit) return outcomeOfStop(decision);
-    return submitToTestFlight(asc, groupId, decision);
+    const submitted = await attempt(() => (decision.action === Action.Submit ? submitToTestFlight(asc, groupId, decision) : outcomeOfStop(decision)));
+    return combineResults([notified, waiting, submitted]);
 }
 
 async function createVersion(asc, app, build) {

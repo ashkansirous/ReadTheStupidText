@@ -17,10 +17,10 @@
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>应用显示的语言</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>朗读速度</value></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>帮助改进应用</value></data>
-  <data name="Settings_CountsCaption" xml:space="preserve"><value>发送类似“读了一段法语文本”的计数。不含名称、不含标识符，也不含你阅读的任何内容。</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>发送类似“读了一段法语文本”的计数。不含名称、不含标识符，也不含你阅读的任何内容。还会附带你所在的国家和大致的设备类型（手机或平板、内存范围）。</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>开</value></data>
   <data name="Settings_CountsOff" xml:space="preserve"><value>关</value></data>
-  <data name="Language_CountsNote" xml:space="preserve"><value>应用会统计例如读了哪些语言等信息，不含名称或标识符。你可以在设置中关闭。</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>应用会统计例如读了哪些语言等信息，不含名称或标识符。你可以在设置中关闭。还会附带你所在的国家和大致的设备类型（手机或平板、内存范围）。</value></data>
   <data name="Common_Back" xml:space="preserve"><value>返回</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>上一句</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>下一句</value></data>
@@ -35,9 +35,9 @@
   <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>无法启动扫描仪</value></data>
   <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>无法启动扫描仪——请重试。</value></data>
   <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>扫描仪正在准备</value></data>
-  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Google Play 服务仍在准备文档扫描仪，请稍后再试。</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>文档扫描仪仍在准备中，请稍后再试。</value></data>
   <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>扫描仪不可用</value></data>
-  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>文档扫描仪需要 Google Play 服务。请改为拍摄一张照片。</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>此设备无法使用文档扫描仪。请改为拍摄一张照片。</value></data>
   <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>需要相机权限</value></data>
   <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>请在“设置”中授予相机权限以拍摄文字。</value></data>
   <data name="Reader_NoCameraTitle" xml:space="preserve"><value>没有相机</value></data>

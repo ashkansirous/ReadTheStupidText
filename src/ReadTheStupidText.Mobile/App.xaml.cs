@@ -64,6 +64,24 @@ public partial class App : Microsoft.Maui.Controls.Application
 		}
 	}
 
+#if DEBUG
+	/// <summary>Debug test hook (Slice 162): finishes first run for <paramref name="code"/> as the language page's Continue and Start do; false when there is no window to hand over.</summary>
+	public bool CompleteFirstRun(string code)
+	{
+		// Acts only while a first-run page is showing: no window yet means retry, the shell already up means nothing to do.
+		if (Windows.FirstOrDefault()?.Page is null or AppShell)
+		{
+			return false;
+		}
+
+		_settings.Language = code;
+		UiCulture.Apply(UiCulture.Resolve(code, CultureInfo.CurrentUICulture));
+		_ = _installer.StartAsync();
+		ShowMain();
+		return true;
+	}
+#endif
+
 	// Applies the persisted speed/voice immediately (cheap, no model needed), then
 	// lets the installer resume or finish the voice pack for the chosen language
 	// (Slice 50). Until the neural pack is ready the phone voice reads.

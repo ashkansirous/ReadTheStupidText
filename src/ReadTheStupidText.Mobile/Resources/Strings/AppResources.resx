@@ -18,10 +18,10 @@
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>The language of the app’s words</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Reading speed</value></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>Help improve the app</value></data>
-  <data name="Settings_CountsCaption" xml:space="preserve"><value>Sends counts like “a French text was read”. No names, no ids, nothing you read.</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>Sends counts like “a French text was read”. No names, no ids, nothing you read. It also adds your country and a rough device type (phone or tablet, memory range).</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>On</value></data>
   <data name="Settings_CountsOff" xml:space="preserve"><value>Off</value></data>
-  <data name="Language_CountsNote" xml:space="preserve"><value>The app counts things like which languages are read, with no names or ids. You can turn this off in Settings.</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>The app counts things like which languages are read, with no names or ids. You can turn this off in Settings. It also adds your country and a rough device type (phone or tablet, memory range).</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Back</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>Previous sentence</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>Next sentence</value></data>
@@ -36,9 +36,9 @@
   <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>Couldn't start the scanner</value></data>
   <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>Couldn't start the scanner — try again.</value></data>
   <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>Scanner getting ready</value></data>
-  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Google Play services is still preparing the document scanner. Try again in a moment.</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>The document scanner is still getting ready. Try again in a moment.</value></data>
   <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>Scanner unavailable</value></data>
-  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>The document scanner needs Google Play services. Take a single photo instead.</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>The document scanner isn't available on this device. Take a single photo instead.</value></data>
   <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>Camera access needed</value></data>
   <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>Grant camera access in Settings to photograph text.</value></data>
   <data name="Reader_NoCameraTitle" xml:space="preserve"><value>No camera</value></data>

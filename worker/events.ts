@@ -1,7 +1,8 @@
 // Dino Reader's anonymous usage counts (Slice 133, Decisions 140-142). The app batches a session's counts into one
-//   POST /api/events    { "schemaVersion": 1, "events": [ { name, book, language, source, hasRecording, version, platform, day, sampleRate, detail? } ] }
-// and this writes each valid one to the Workers Analytics Engine dataset bound as USAGE (`dino_usage`). Nothing about the
-// caller is read, stored or written: no IP, no user agent, no id; the only fields kept are the ones named below, each checked
+//   POST /api/events    { "schemaVersion": 1, "device"?: { osMajor, formFactor, arch, cores, ram }, "events": [ { name, book, language, source, hasRecording, version, platform, day, sampleRate, detail? } ] }
+// and this writes each valid one to the Workers Analytics Engine dataset bound as DINO_USAGE (`dino_usage`). Nothing about the
+// caller is stored or written except the country (Slice 166: the two-letter code Cloudflare derives from the connection, `request.cf.country`;
+// never the IP, never sent by the app) and the optional `device` object's coarse closed values: no user agent, no id; the only fields kept are the ones named below, each checked
 // against a closed list or a strict pattern, so a changed or hostile client can add no free text. When the remote config
 // (Slice 132) has telemetry off or missing, the request is answered like a success and nothing is written. Only Dino Reader's
 // host and its /dino/ prefix on workers.dev route here (index.ts), which also supplies the telemetry check (it reads the
@@ -32,7 +33,7 @@ const STORE_FILTERS = ["none", "age", "author", "age+author"] as const;
 const OWN_BOOK_KINDS = ["photo", "pdf", "scan", "typed"] as const;
 const PAGE_BUCKETS = ["1", "2-5", "6-10", "11+"] as const;
 // The app's supported reading languages (UiLanguage.Supported in DinoReader.Core); UsageEventTests fails when this list and the app's drift apart.
-const READING_LANGUAGES = ["en", "fa", "fr", "es", "pt", "zh", "ar", "ru", "ja", "da", "fi", "sv", "nb", "nl"] as const;
+const READING_LANGUAGES = ["en", "fa", "fr", "es", "pt", "zh", "ar", "ru", "ja", "da", "fi", "sv", "nb", "nl", "de"] as const;
 const VOICE_CHANGES = ["character_voice", "flavour", "narrator"] as const;
 /** The waits the phone apps' overlay can show (WaitStage in the app, Slice 148); both products count them, and a test keeps this list and the app's `UsageWaitStage` the same. */
 const WAIT_STAGES = ["preparing_voice", "stalled", "downloading_model", "translating", "reading_pictures", "saving", "getting_file"] as const;
@@ -42,6 +43,83 @@ const INTRO_STEPS = ["store", "record", "add"] as const;
 const INTRO_ACTIONS = ["tried", "skipped"] as const;
 const INTRO_STARTS = ["first_run", "replay"] as const;
 const INTRO_ENDS = ["finished", "skipped_all"] as const;
+
+// ---- Device context (Slice 166) ------------------------------------------------------------------------------------------
+// Both apps send the coarse device facts once per batch in an optional `device` object; the Worker checks each field against a closed
+// list, stamps it on every point of the batch, and adds the country. A build without the object, or a field that is missing or not on
+// its list, gives empty fields: it never drops a count. The country is `none` for no value, `XX`, `T1` (Tor) or anything not two capital letters.
+
+const NO_COUNTRY = "none";
+const COUNTRY_PATTERN = /^[A-Z]{2}$/;
+const UNKNOWN_COUNTRIES = ["XX", "T1"] as const;
+const DEVICE_FORM_FACTORS = ["phone", "tablet", "desktop", "other"] as const;
+const DEVICE_ARCHES = ["arm64", "x64", "x86", "arm", "other"] as const;
+const DEVICE_CORES = ["1-4", "5-8", "9+"] as const;
+const CORE_LOWER_BOUNDS = [1, 5, 9] as const;
+const DEVICE_RAM = ["<3", "3-4", "4-6", "6-8", "8+"] as const;
+const RAM_LOWER_BOUNDS = [0, 3, 4, 6, 8] as const;
+/** The double a bucket gets when the build sent none (a real lower bound is never negative), so "no data" never reads as "<3 GB". */
+const NO_BUCKET_BOUND = -1;
+const NO_DEVICE_FIELD = "";
+const MIN_DEVICE_OS_MAJOR = 1;
+const MAX_DEVICE_OS_MAJOR = 99;
+
+/** The checked device facts of a batch; every field is empty when missing or invalid. */
+export interface DeviceContext {
+  readonly osMajor: string;
+  readonly formFactor: string;
+  readonly arch: string;
+  readonly cores: string;
+  readonly ram: string;
+}
+
+/** What a batch adds to each of its points: the country and the checked device facts. */
+export interface BatchContext {
+  readonly country: string;
+  readonly device: DeviceContext;
+}
+
+const EMPTY_DEVICE: DeviceContext = { osMajor: NO_DEVICE_FIELD, formFactor: NO_DEVICE_FIELD, arch: NO_DEVICE_FIELD, cores: NO_DEVICE_FIELD, ram: NO_DEVICE_FIELD };
+
+/** The context of a batch with no country and no device object. */
+export const NO_CONTEXT: BatchContext = { country: NO_COUNTRY, device: EMPTY_DEVICE };
+
+function listedOrEmpty(list: readonly string[], value: unknown): string {
+  return oneOf(list, value) ? value : NO_DEVICE_FIELD;
+}
+
+function osMajorOrEmpty(value: unknown): string {
+  const valid = Number.isInteger(value) && (value as number) >= MIN_DEVICE_OS_MAJOR && (value as number) <= MAX_DEVICE_OS_MAJOR;
+  return valid ? String(value) : NO_DEVICE_FIELD;
+}
+
+/** The checked `device` object of a batch: each field on its list, else empty; a missing or non-object value is all empty. */
+export function parseDevice(raw: unknown): DeviceContext {
+  if (!isRecord(raw)) return EMPTY_DEVICE;
+  return {
+    osMajor: osMajorOrEmpty(raw["osMajor"]),
+    formFactor: listedOrEmpty(DEVICE_FORM_FACTORS, raw["formFactor"]),
+    arch: listedOrEmpty(DEVICE_ARCHES, raw["arch"]),
+    cores: listedOrEmpty(DEVICE_CORES, raw["cores"]),
+    ram: listedOrEmpty(DEVICE_RAM, raw["ram"]),
+  };
+}
+
+/** The country to record: two capital letters other than the "unknown" and Tor codes, else `none`. */
+export function countryOf(raw: unknown): string {
+  return matches(COUNTRY_PATTERN, raw) && !oneOf(UNKNOWN_COUNTRIES, raw) ? raw : NO_COUNTRY;
+}
+
+function lowerBoundOf(list: readonly string[], bounds: readonly number[], value: string): number {
+  const index = list.indexOf(value);
+  return index < 0 ? NO_BUCKET_BOUND : bounds[index]!;
+}
+
+/** The lower bound (1, 5 or 9) of a core bucket, or -1 when empty. */
+export const coreBound = (cores: string): number => lowerBoundOf(DEVICE_CORES, CORE_LOWER_BOUNDS, cores);
+
+/** The lower bound in GB (0, 3, 4, 6 or 8) of a RAM bucket, or -1 when empty. */
+export const ramBound = (ram: string): number => lowerBoundOf(DEVICE_RAM, RAM_LOWER_BOUNDS, ram);
 
 /** What an event name allows: the sources it may come from and the one extra value (`detail`) it carries. */
 interface EventRule {
@@ -84,6 +162,9 @@ const EVENT_RULES: Readonly<Record<string, EventRule>> = {
 };
 const LANGUAGE_PATTERN = /^[a-z]{2,3}(-[A-Za-z]{2,4})?$/;
 const VERSION_PATTERN = /^\d{1,6}(\.\d{1,6}){1,3}$/;
+// Slice 167: the project default version of a build never stamped by CI, i.e. built on a desk. A backstop for the apps' own test-build gate:
+// such a count is dropped, not written, in both datasets.
+const UNSTAMPED_VERSIONS: readonly string[] = ["1.0", "1.0.0", "1.0.0.0", "0.0.0", "0.0.0.0"];
 const MIN_SAMPLE_RATE = 0.001;
 const DAY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 const ErrorCode = {
@@ -108,9 +189,9 @@ export interface UsageEvent {
   readonly detail: string;
 }
 
-/** What this module needs from the Worker's bindings (`USAGE` is declared in wrangler.jsonc). */
+/** What this module needs from the Worker's bindings (`DINO_USAGE` is declared in wrangler.jsonc). */
 export interface EventsEnv {
-  readonly USAGE?: AnalyticsEngineDataset;
+  readonly DINO_USAGE?: AnalyticsEngineDataset;
 }
 
 /** True while the remote config has telemetry on; false when it is off or missing. Rejects when the config cannot be read (answered 503, so the app retries). */
@@ -162,6 +243,7 @@ export function parseEvent(raw: unknown): UsageEvent | null {
     (rule.language === undefined || language === rule.language) &&
     typeof hasRecording === "boolean" &&
     matches(VERSION_PATTERN, version) &&
+    !UNSTAMPED_VERSIONS.includes(version as string) &&
     oneOf(PLATFORMS, platform) &&
     isRealDay(day) &&
     typeof sampleRate === "number" &&
@@ -170,11 +252,15 @@ export function parseEvent(raw: unknown): UsageEvent | null {
   return valid ? { name, book, language, source, hasRecording, version, platform, day, sampleRate, detail } : null;
 }
 
-/** The Analytics Engine data point for a count: the name is the sampling index, every field a blob, and the double is the count's weight (1 / the sample rate the app counted at), so SUM(double) estimates the true total. */
-export function toDataPoint(event: UsageEvent): AnalyticsEngineDataPoint {
+/** The Analytics Engine data point for a count: the name is the sampling index, every field a blob (blob10-blob15 are the batch's country and device facts, Slice 166), and the double is the count's weight (1 / the sample rate the app counted at), so SUM(double) estimates the true total. */
+export function toDataPoint(event: UsageEvent, context: BatchContext = NO_CONTEXT): AnalyticsEngineDataPoint {
+  const { country, device } = context;
   return {
     indexes: [event.name],
-    blobs: [event.name, event.book, event.language, event.source, event.hasRecording ? "yes" : "no", event.version, event.platform, event.day, event.detail],
+    blobs: [
+      event.name, event.book, event.language, event.source, event.hasRecording ? "yes" : "no", event.version, event.platform, event.day, event.detail,
+      country, device.osMajor, device.formFactor, device.arch, device.cores, device.ram,
+    ],
     doubles: [1 / event.sampleRate],
   };
 }
@@ -223,7 +309,12 @@ export function isEventsPath(pathname: string): boolean {
 }
 
 /** Turns one raw count into a data point; null when the count is invalid. */
-type PointMaker = (raw: unknown) => AnalyticsEngineDataPoint | null;
+type PointMaker = (raw: unknown, context: BatchContext) => AnalyticsEngineDataPoint | null;
+
+// The connection's country as Cloudflare saw it (undefined in tests and local dev, where there is no `cf`); nothing else about the connection is read.
+function requestCountry(request: Request): unknown {
+  return (request as { cf?: { country?: unknown } }).cf?.country;
+}
 
 // The shared request handling (method, telemetry switch, binding, size caps, batch limit); the two products differ only in the dataset and in what a valid count is.
 async function handleBatch(request: Request, dataset: AnalyticsEngineDataset | undefined, telemetryEnabled: TelemetryCheck, makePoint: PointMaker): Promise<Response> {
@@ -240,8 +331,9 @@ async function handleBatch(request: Request, dataset: AnalyticsEngineDataset | u
   const events = isRecord(body) ? body["events"] : undefined;
   if (body === "invalid" || !Array.isArray(events)) return reply(400, ErrorCode.BadRequest);
   if (events.length > MAX_EVENTS_PER_REQUEST) return reply(413, ErrorCode.TooMany);
+  const context = { country: countryOf(requestCountry(request)), device: parseDevice(isRecord(body) ? body["device"] : undefined) };
   for (const raw of events) {
-    const point = makePoint(raw);
+    const point = makePoint(raw, context);
     if (point !== null) dataset.writeDataPoint(point);
   }
   return reply(204);
@@ -249,9 +341,9 @@ async function handleBatch(request: Request, dataset: AnalyticsEngineDataset | u
 
 /** Answers POST /api/events: 204 when taken or deliberately dropped, 400/413 for a body that is not a batch of counts. */
 export function handleEvents(request: Request, env: EventsEnv, telemetryEnabled: TelemetryCheck): Promise<Response> {
-  return handleBatch(request, env.USAGE, telemetryEnabled, (raw) => {
+  return handleBatch(request, env.DINO_USAGE, telemetryEnabled, (raw, context) => {
     const event = parseEvent(raw);
-    return event === null ? null : toDataPoint(event);
+    return event === null ? null : toDataPoint(event, context);
   });
 }
 
@@ -260,7 +352,7 @@ export function handleEvents(request: Request, env: EventsEnv, telemetryEnabled:
 // plus closed-list fields; no free text, no id, nothing finer than the day. Each event names the fields it requires and the
 // ones it may carry; any other field, or a value outside its list or pattern, drops the whole count.
 
-/** The Analytics Engine binding for the phone's counts; not in the wrangler configs until Analytics Engine is enabled on the account. */
+/** The Analytics Engine binding for the phone's counts (`rtst_usage`, declared in both wrangler configs). */
 export interface RtstEventsEnv {
   readonly RTST_USAGE?: AnalyticsEngineDataset;
 }
@@ -274,6 +366,7 @@ const RTST_LENGTH_BUCKETS = ["<200", "200-1000", "1000-5000", ">5000"] as const;
 const RTST_STAGES = ["model_download", "translate", "first_audio"] as const;
 const RTST_OUTCOMES = ["done", "cancelled", "failed"] as const;
 const RTST_DURATION_BUCKETS = ["<0.5", "0.5-1", "1-2", "2-5", "5-10", "10-20", ">20"] as const;
+const OS_MAJOR_FIELD = "osMajor";
 const MIN_OS_MAJOR = 1;
 const MAX_OS_MAJOR = 99;
 
@@ -334,6 +427,7 @@ function hasValidEnvelope(raw: Record<string, unknown>): boolean {
   const { version, platform, day, sampleRate } = raw;
   return (
     matches(VERSION_PATTERN, version) &&
+    !UNSTAMPED_VERSIONS.includes(version as string) &&
     oneOf(PLATFORMS, platform) &&
     isRealDay(day) &&
     typeof sampleRate === "number" &&
@@ -368,19 +462,30 @@ function rtstBlob(value: FieldValue | undefined): string {
   return String(value);
 }
 
-/** The data point of a phone count: the name is the sampling index, the envelope and fields are blobs, the double is the count's weight (1 / sampleRate). */
-export function toRtstDataPoint(event: RtstEvent): AnalyticsEngineDataPoint {
+// The device's OS version fills the count's osMajor blob on every event (Slice 166); an old build sends it only on app_opened, as the event's own field.
+function rtstFieldBlob(event: RtstEvent, device: DeviceContext, field: RtstField): string {
+  const own = rtstBlob(event.fields[field]);
+  return field === OS_MAJOR_FIELD && own === "" ? device.osMajor : own;
+}
+
+/**
+ * The data point of a phone count: the name is the sampling index, the envelope and fields are blobs (blob5-blob17), then the batch's country,
+ * form factor and architecture (blob18-blob20, Slice 166). The doubles are the count's weight (1 / sampleRate), the core bucket's lower bound
+ * (1, 5, 9) and the RAM bucket's lower bound in GB (0, 3, 4, 6, 8); -1 when the build sent none.
+ */
+export function toRtstDataPoint(event: RtstEvent, context: BatchContext = NO_CONTEXT): AnalyticsEngineDataPoint {
+  const { country, device } = context;
   return {
     indexes: [event.name],
-    blobs: [event.name, event.version, event.platform, event.day, ...RTST_FIELDS.map((field) => rtstBlob(event.fields[field]))],
-    doubles: [1 / event.sampleRate],
+    blobs: [event.name, event.version, event.platform, event.day, ...RTST_FIELDS.map((field) => rtstFieldBlob(event, device, field)), country, device.formFactor, device.arch],
+    doubles: [1 / event.sampleRate, coreBound(device.cores), ramBound(device.ram)],
   };
 }
 
 /** Answers POST /api/events on Read The Stupid Text's host: the phone's closed event set into the RTST_USAGE dataset. */
 export function handleRtstEvents(request: Request, env: RtstEventsEnv, telemetryEnabled: TelemetryCheck): Promise<Response> {
-  return handleBatch(request, env.RTST_USAGE, telemetryEnabled, (raw) => {
+  return handleBatch(request, env.RTST_USAGE, telemetryEnabled, (raw, context) => {
     const event = parseRtstEvent(raw);
-    return event === null ? null : toRtstDataPoint(event);
+    return event === null ? null : toRtstDataPoint(event, context);
   });
 }

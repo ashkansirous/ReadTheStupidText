@@ -2,7 +2,7 @@
   "kind": "Starter",
   "id": "0fa29ae0d09643a9a16a5e586e8c7119",
   "title": "The Tortoise and the Hare",
-  "version": 9,
+  "version": 10,
   "ageMin": 4,
   "ageMax": 7,
   "author": "Aesop",
@@ -72,5 +72,5 @@
       ]
     }
   ],
-  "contentHash": "5bde4edd65c0d42e61afd1b625d270d7c95214f0b9249911c4b91dc459f3cea2"
+  "contentHash": "d4d39606d264cc49602ee91f8c75fa363b09eada3b4ae27bc6228f7f548447a6"
 }

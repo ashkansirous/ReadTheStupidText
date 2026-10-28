@@ -14,18 +14,15 @@ this plan turns it into ordered, shippable vertical slices.
 
 ## Status
 
-Open slices only. Finished slices (150 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
+Open slices only. Finished slices (155 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
-| 153 | Dino: no robotic-sounding character voices | planned | | | [153-dino-no-robotic-voices.md](docs/plan/slices/153-dino-no-robotic-voices.md) |
-| 154 | Dino: vowel marks in Farsi and Arabic books | in progress | #470 | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
-| 160 | Translation on iOS (Android and iOS parity) | planned | | | [160-ios-translation-parity.md](docs/plan/slices/160-ios-translation-parity.md) |
-| 161 | Fast tests: one warm headless x86_64 emulator, x86_64 Debug build | planned | | | [161-warm-headless-x64-emulator.md](docs/plan/slices/161-warm-headless-x64-emulator.md) |
-| 162 | Fast tests: Maestro flows and Debug-only test hooks (both apps) | planned | | | [162-scripted-device-flows.md](docs/plan/slices/162-scripted-device-flows.md) |
-| 163 | Fast tests: Windows desktop tests in a headless Hyper-V VM | planned | | | [163-desktop-tests-in-hyperv-vm.md](docs/plan/slices/163-desktop-tests-in-hyperv-vm.md) |
-| 164 | Fast tests: move more logic out of UI code into unit tests | planned | | | [164-more-logic-in-unit-tests.md](docs/plan/slices/164-more-logic-in-unit-tests.md) |
-| 165 | Fast tests: audio and timing on the real phone over wireless adb | planned | | | [165-real-phone-audio-timing-checks.md](docs/plan/slices/165-real-phone-audio-timing-checks.md) |
+| 154 | Dino: vowel marks in Farsi and Arabic books (Farsi only: Arabic left as is; marks are a hidden "how to read" text, Decision 166) | in progress | #470 | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
+| 173 | Dino: up to three story languages, switched by the kid (after 172) | planned | | | [173-dino-kid-story-languages.md](docs/plan/slices/173-dino-kid-story-languages.md) |
+| 177 | Dino: slow speech for the first reads after the app starts (measure on Release, then fix; after 175) | planned | | | [177-dino-cold-start-synthesis.md](docs/plan/slices/177-dino-cold-start-synthesis.md) |
+| 178 | Dino: count an own book's page count and how it really came in (pdf, docx, txt, photo, scan, typed, mixed) | planned | | | [178-dino-own-book-usage-detail.md](docs/plan/slices/178-dino-own-book-usage-detail.md) |
+| 179 | No Play robot, VM or own-machine runs in the usage counts (Worker drops ARM-less phones, Store-only Windows, harness off switch) | planned | | | [179-no-robot-or-own-machine-counts.md](docs/plan/slices/179-no-robot-or-own-machine-counts.md) |
 
 Batch 25 (119-123; 119, 120, 122, 123 built, 121 built; planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
 
@@ -41,6 +38,8 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 Batch 32 (155, planned 2026-10-26, Dino onboarding): Slice 155 (the first-run intro wizard, PR #432) is built, so the batch is done. Decision 160.
 
 Batch 36 (161-165, planned 2026-10-27, device tests too slow): 161 first (warm headless x86_64 emulator), then 162 (Maestro flows and hooks, needs 161), then 165 (phone audio/timing, reuses 162's hooks). 163 (Hyper-V VM; waits on the user turning on Hyper-V) and 164 (unit-test push-down, one sub-PR per item) can run beside them. Tooling only, no app behaviour change; Touches don't overlap the open Dino PRs. Decision 165.
+
+Batch 38 (175-177, planned 2026-10-28, gaps found when every unverified 163/165 item was checked on the VM and the phone): 175 and 176 can run side by side (tooling and Debug hooks vs the shared read path; both touch `Mobile.Shared` but different folders); 177 after 175 (needs its markers).
 
 Batch 34 (157-158; both built, 157 PR #475, 158 PR #472, so the batch is done; planned 2026-10-27, after all 15 store books fell behind `main`): 158 first (small, CI only: a `publish-store` job in `release.yml` uploads every book behind the live store, Decision 163); it can run beside other work. Then 157 moves book content to `content/dino/<book>/` with a console builder and repoints the job; 157 runs alone between waves, after the open per-book PRs merge, because it moves every book's files. Decisions 162-163.
 
@@ -63,22 +62,33 @@ Batch 35 (159, built, PR #473, so the batch is done; planned 2026-10-27, the use
 
 ## Outstanding work
 
-**Turn on Hyper-V (user, admin and a reboot; blocks Slice 163).** A one-time step, guided one step at a time when 163 starts. ([163](docs/plan/slices/163-desktop-tests-in-hyperv-vm.md))
 
 **Store privacy declarations (legal; gates all usage counts, Decision 145).** No `telemetry.enabled` is set to `true` for an app until its rows are ticked. Claude drafts the answers and fills the forms in the user's signed-in Chrome; the user reviews and presses Submit/Publish.
 
 - [x] RTST repo texts: `PRIVACY.md`, `site/privacy.html` (deployed), `STORE.md`, iOS `PrivacyInfo.xcprivacy` (Slice 137; Windows sources in Slice 140; checked 2026-10-26: phone and Windows covered). Claude.
-- [ ] RTST Google Play Console: Data safety (app activity and app info/performance, not linked to the user, not shared, optional to turn off). User submits.
-- [ ] RTST Apple App Store Connect: App Privacy (usage data and diagnostics, not linked, no tracking). User publishes.
-- [ ] RTST Microsoft Partner Center: privacy policy URL and the data-collection answers. User submits.
-- [ ] Dino Google Play Data safety and Apple App Privacy for its usage counts (Slices 133-134, still pending). User submits.
-- [ ] Then: enable Analytics Engine, add the bindings, deploy, set `telemetry.enabled` per app.
+- [x] RTST Google Play Console: Data safety (app activity and app info/performance, not linked to the user, not shared, optional to turn off). User submits. Submitted/published 2026-10-27.
+- [x] RTST Apple App Store Connect: App Privacy (usage data and diagnostics, not linked, no tracking). User publishes. Submitted/published 2026-10-27.
+- [x] RTST Microsoft Partner Center: privacy policy URL and the data-collection answers. User submits. Privacy URL already correct.
+- [x] Dino Google Play Data safety and Apple App Privacy for its usage counts (Slices 133-134, still pending). User submits. Submitted/published 2026-10-27.
+- [x] Then: enable Analytics Engine, add the bindings, deploy, set `telemetry.enabled` per app. Done 2026-10-27 (PR #487).
 
 Built but not verified (details in each slice file):
 
-- Slice 137: rows in `rtst_usage` once Analytics Engine is on and the binding is added; iOS compile; emulator pass done 2026-10-26 (unselected speed-button labels low-contrast in dark mode, pre-existing) ([slice](docs/plan/slices/137-rtst-phone-usage-counts.md)).
+- Slice 160 (PR #486): TestFlight translate English to Farsi on iOS, model download progress and Cancel, offline translate after download, Dino typed own book into Farsi, VoiceOver switch role/state (iOS below 17 and 17+); CI iOS job links the MLKitTranslate xcframework; simulator builds have no translator by design ([slice](docs/plan/slices/160-ios-translation-parity.md)).
+- Slice 160, user (App Store Connect): add Diagnostics > Other Diagnostic Data (not linked to the user, not tracking, analytics) to the privacy labels of both iOS apps; and confirm Google Data Transport logging is acceptable for Dino (kids category).
+- Slice 161 (PR #485): arm64-vs-x64 launch-and-read timing not compared; a Dino story read on the x64 emulator; version-mismatch guard, bump guard and concurrent-build paths reviewed only, not run. Follow-ups: (device-test now uses `tools/emulator`, ClaudeSkills #59, done); RTST first-run language page: Continue downloads the pack but does not move on (seen on emulator) ([slice](docs/plan/slices/161-warm-headless-x64-emulator.md)). The snapshot warm start was dropped in Slice 162: the emulator cold-boots (~45 s) and is reused while running.
+- Slice 162 (PR #490): iOS hooks and the `rtst-test://` / `dino-test://` URL scheme have never run (no Mac), compile-checked only; Dino `skip-first-run` leaves out the voice pack start (Debug x86_64 SIGSEGV in Reflection.Emit via `SpokenLanguage.Use`), so check whether a real Dino first run crashes on the x64 emulator, and the grown-up hand-over. (device-test now runs the repo harnesses first, ClaudeSkills #59, done) ([slice](docs/plan/slices/162-scripted-device-flows.md)).
+- Slice 164 (PR #491): pure moves, unit-tested, no device run needed. Follow-ups not done: speed-preset tag parsing and highlight (`ControlPanelWindow`, `SettingsPage`), `ReaderPage.ApplyScanAvailability` and empty-player rules, Dino `ReadingPage`/`PagesStep`/`GalleryPage`/`StoryWizardPage` branching, `MainWindow`/`App.xaml.cs` tray wiring ([slice](docs/plan/slices/164-more-logic-in-unit-tests.md)).
+- Slice 166 (PR #492): Windows heads only compiled (no desktop run of the RTST tray or Dino Windows head); iOS compiled only (no simulator); first live rows from a store build with the new fields (query via the API, `analytics-query`) ([slice](docs/plan/slices/166-usage-device-context.md)).
+- Slice 167 (PR #497): Release build on an emulator (crashed at startup in MAUI before any usage code, x64 only); emulator and Test Lab rules on a device (unit tests only); RTST tray on the desktop; iOS simulator run; first store rollout showing no test rows, via the API ([slice](docs/plan/slices/167-no-test-device-counts.md)).
+- Slice 168 (PR #495): German heard on Android, iOS (TestFlight) and Windows (waits on packs-8); Windows `de-en`/`en-de` translation; Dino German own book with distinct character voices; native German read of all German text (machine-written); Dino German store listing not drafted ([slice](docs/plan/slices/168-german-in-both-apps.md))
+- Slice 168 (packs-8): existing Supertonic users re-download ~145 MB (`pack_version` 4) ([slice](docs/plan/slices/168-german-in-both-apps.md))
+- Slice 169 (PR #503): German sound words and pages heard aloud on a phone; a German book on iOS (TestFlight); end-of-batch check that /api/stories matches main (CI publish-store). German translations show English curly quotes instead of „…“ (fixed in `TranslatedStory.cs`; re-check in the app). ([slice](docs/plan/slices/169-german-dino-books.md))
+- Slice 170 (PR #505): device check at 100% and 150% scale, idle and reading, English and Finnish (all five toggles and the wait flyout fully visible); retake `site/img/control-panel.webp`; the redesign rule at 200% scale with the Translate column hidden. Follow-up: "Controls row fits by design" (fits by layout, never measured on screen). ([slice](docs/plan/slices/170-tray-panel-controls-row-fits.md))
+- Slice 171 (PR #506): iOS line reader (`IosTextLineSource`, TextKit rebuilt to match UILabel) and the card's scroll on a real iPhone: Latin, Farsi (RTL), a CJK page; Windows head pages not checked. ([slice](docs/plan/slices/171-dino-text-card-shows-whole-page.md))
+- Slice 137: telemetry on since 2026-10-27 and rows arrive in `rtst_usage` (so far test devices only); iOS compile; emulator pass done 2026-10-26 (unselected speed-button labels low-contrast in dark mode, pre-existing) ([slice](docs/plan/slices/137-rtst-phone-usage-counts.md)).
 - Slice 138: emulator PASS 2026-10-26; not seen: a sub-500 ms play start, an ML Kit progress %. Native-speaker read of the 4 `Wait_` strings in 14 locales; iOS. Mid-read stall wait and `wait_shown`/`wait_cancelled` events deferred. Pre-existing: a 36 MB text file crashes ReviewPage with OutOfMemoryError ([slice](docs/plan/slices/138-rtst-phone-wait-indicator.md)).
-- Slice 140: queue file under `LocalFolder/usage` not exercised (needs `telemetry.enabled` on); Microsoft Store data-collection answers; rows in `rtst_usage` once Analytics Engine is on ([slice](docs/plan/slices/140-rtst-windows-usage-counts.md)).
+- Slice 140: queue file under `LocalFolder/usage` not exercised (needs `telemetry.enabled` on); no Windows rows in `rtst_usage` yet (telemetry on since 2026-10-27) ([slice](docs/plan/slices/140-rtst-windows-usage-counts.md)).
 - Slice 143: not exercised on emulator: photos, scan, own-book translate; native read of the new strings (14 locales, Claude drafts); Windows head overlay; reduce-motion static dino ([slice](docs/plan/slices/143-shared-wait-overlay-dino-loading.md)).
 - Slice 144: listen to every moved Farsi character and the five new flavours (distinct enough?); Farsi read with `mana` narrating on emulator/phone; RTST Farsi default on phone and Windows ([slice](docs/plan/slices/144-farsi-default-female-voice.md)).
 - Slice 141: the panel ring (Play becomes the ring with Cancel) re-check on the desktop; native-speaker read of the 5 `Wait_` strings in 14 locales; one unconfirmed `CoreMessagingXP` `0xc000027b` crash on a hotkey read 0.7 s after an auto-read ([slice](docs/plan/slices/141-rtst-windows-wait-indicator.md)).
@@ -128,16 +138,22 @@ Built but not verified (details in each slice file):
 - Slice 126: emulator PASS (screen stays on while playing, sleeps after pause and at the end); real Android phone whole book; iPhone Auto-Lock 30 s; Windows head not built or run ([slice](docs/plan/slices/126-dino-keep-screen-awake.md)).
 - Slice 127: Dino Microsoft Store submit with the `DinoReader.App` package (store-submit-dino was skipped in run 40253931851; RTST store-submit, both TestFlight jobs and actionlint passed) ([slice](docs/plan/slices/127-release-safety-fixes.md)).
 - Slice 129: emulator Dino story with flavoured voices (Small, Whisper, animal sounds) sounds the same, by ear; Windows head flavoured character reads; RTST phone read unchanged ([slice](docs/plan/slices/129-dino-voice-features-out-of-shared-engine.md)).
-- Slice 133: human enables Analytics Engine, then emulator read shows rows in `dino_usage` and settings off sends nothing (usage switch present on the emulator 2026-10-26); Play Data safety and App Store privacy answers once the sending release ships; no rate limit or origin check on `/api/events` (accepted); native read of the new strings ([slice](docs/plan/slices/133-dino-anonymous-usage-counts.md)).
+- Slice 133: telemetry on and rows arrive in `dino_usage` since 2026-10-27; settings off sends nothing still to check on a device; no rate limit or origin check on `/api/events` (accepted); native read of the new strings ([slice](docs/plan/slices/133-dino-anonymous-usage-counts.md)).
 - Slice 132: seed R2 `config.json` after merge; emulator: Version card and "A new version is ready" row PASS, and the resume fetch (follow-up #366) PASS with no NetworkOnMainThread in logcat 2026-10-26; forced-update `UpdatePage`, the gate and Play page fallback not run on a device (needs a temporary `minVersion` change in the live config); Windows head and iOS builds; Play in-app update needs a Play-installed build with a higher versionCode; native read of the 5 new strings ([slice](docs/plan/slices/132-dino-remote-config-and-force-update.md)).
 - Slice 131: macOS CI iOS build after merge; emulator launch of both apps PASS 2026-10-26 ([slice](docs/plan/slices/131-mobile-shared-namespace.md)).
-- Slice 134: everything live waits on switching telemetry on (human: enable Analytics Engine, add the binding, set `telemetry.enabled`), then `tools/dino-usage-report.ps1`; emulator smoke of each event; Play Data safety and App Store privacy answers for the new events; `own_book_added` not wired for backup restore or `.dino` import ([slice](docs/plan/slices/134-dino-usage-events-and-report.md)).
+- Slice 134: telemetry on since 2026-10-27, `tools/dino-usage-report.ps1` runs against live data; emulator smoke of each event; `own_book_added` not wired for backup restore or `.dino` import ([slice](docs/plan/slices/134-dino-usage-events-and-report.md)).
 - Slice 136: emulator: cast page PASS in English and Farsi (matches frame 59, no Animal line); sounds (oink, Wolf growls) and recasting Pip to a non-animal going silent need a listen, not verifiable by adb ([slice](docs/plan/slices/136-dino-animal-from-character.md)).
 - Slice 106: Norwegian on a Windows head via `MarianEngine` (third-party conversion, never run); en to da/fi/sv/nl/nb and back on Windows; the Norwegian packs are about 390 MB each ([slice](docs/plan/slices/106-windows-nordic-dutch-translation-packs.md)).
 - Windows has no `en-ja` translation pack (`TranslationPacks.FromEnglish` and `packs.yml` lack it), so English cannot be translated into Japanese offline on Windows; found while planning Slice 106, not yet scheduled.
 - Slice 150: a mid-book speed change heard on a real phone; Windows head and iOS readers apply `SetSpeed` on the next sentence; native-speaker read of the `Speed_*` strings (13 drafts) ([slice](docs/plan/slices/150-dino-slower-reading-speed.md)).
 - Slice 151: photo import opening in Picture only (needs a camera); Windows head and iOS; native read of the new strings (13 drafts); night-theme segment colours unchanged ([slice](docs/plan/slices/151-dino-three-view-modes.md)).
 - Slice 155: offline store step; microphone prompt on the Record step; Windows variant (title, Picture badge); iOS modal presentation; large-font layout; native read of the 15 Intro strings (13 drafts); Play Data safety and App Store privacy answers cover the 3 new events ([slice](docs/plan/slices/155-dino-first-run-intro-wizard.md)).
+- Slice 172 (PR #519): narrator sample Cancel overlay (sample returned under 500 ms on the emulator); cast narrator language on a device; iOS run (no Mac); native read of the 13 draft translations. The Windows Settings flow passed in the VM 2026-10-28 (touch injection and Narrator). Follow-up: make `dino-settings.ps1` a permanent VM check ([slice](docs/plan/slices/172-dino-settings-gear.md)).
+- Slice 174 (PR #521): shelf tile title after Show original text on the emulator (fix made after the run); iOS run (rotation, safe areas, swipe-back); real phone; native read of 3 new strings x 14 languages (13 drafts); the reported auto-scroll bug was never reproduced. The `dino-page-turn` VM check now passes portrait and both landscapes (PR #527) ([slice](docs/plan/slices/174-dino-reading-screen-and-back-button.md)).
+- Slice 175 (PR #517): phone timing with the page hook (phone was disconnected); iOS hooks on a device (no Mac); no unit tests for `LaunchKeys`, `BookMatch` or the timing parser. The VM items (activation, ISO handling, Windows Update off; PR #523) are done and the selection check passes 6/6 ([slice](docs/plan/slices/175-test-gaps-permanent-checks.md)).
+- Slice 176 (PR #518): a whitespace-only read on the user's phone and an iOS run ([slice](docs/plan/slices/176-whitespace-read-crash.md)).
+- Slice 165: the user's listening check on the phone (Slice 163 and the Slice 175/176 gaps are closed) ([slice](docs/plan/slices/165-real-phone-audio-timing-checks.md))
+- Dino cold start: first reads after a fresh install are slow on every chunk (about 5 s each, warm about 1 s), Debug build; Slice 177 ([slice](docs/plan/slices/177-dino-cold-start-synthesis.md))
 - Older unverified items (Slices 43-95 and a flaky-test note), moved verbatim: [outstanding-older](docs/plan/notes/2026-10-25-outstanding-older.md). Still open until verified.
 
 ## Out of Scope

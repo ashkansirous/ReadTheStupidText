@@ -10,8 +10,8 @@ namespace DinoReader;
 /// <summary>
 /// Translates a story's sentences into the grown-up's language after the speakers were worked out in
 /// the story's own language (Slice 66, Decision 74). Each piece is looked up in the story's bundled
-/// <see cref="Story.Translations"/> first, then the on-device engine (<see cref="ITranslator"/>, ML Kit on Android from
-/// Mobile.Shared; none on Windows and iOS), else it is left as it is (Slice 95). A story with a full bundled table therefore
+/// <see cref="Story.Translations"/> first, then the on-device engine (<see cref="ITranslator"/>, ML Kit on Android and iOS from
+/// Mobile.Shared; none on Windows), else it is left as it is (Slice 95). A story with a full bundled table therefore
 /// translates on every platform with no engine. A missing engine model never blocks reading.
 /// </summary>
 public sealed class StoryTranslator
@@ -38,7 +38,7 @@ public sealed class StoryTranslator
 
 	private readonly ConditionalWeakTable<Story, ConcurrentDictionary<string, bool>> _complete = new();
 
-	/// <summary>"My language": the grown-up's stored pick, else the device language when it is one of the fourteen. Not <c>CurrentUICulture</c>,
+	/// <summary>"My language": the grown-up's stored pick, else the device language when it is one of the fifteen. Not <c>CurrentUICulture</c>,
 	/// which a language pick only changes for the screens opened afterwards and the reading screen can still see the startup culture.</summary>
 	public static string MyLanguage => LanguageChoice.Current();
 
@@ -96,13 +96,13 @@ public sealed class StoryTranslator
 
 	/// <summary>
 	/// The title the shelf shows (Slice 159): in the grown-up's language, from the book's own table (which holds the title an own book was
-	/// translated with) or the shipped-titles table, else the title as it is. Synchronous and offline; the switch and the language pair decide, as for the text.
+	/// translated with) or the shipped-titles table, else the title as it is. Synchronous and offline; the switch, the language pair and the grown-up's "Show original text" decide, as for the text.
 	/// </summary>
 	public string ShelfTitle(Story story)
 	{
 		string target = MyLanguage;
 		string source = UiLanguage.Resolve(story.Language);
-		if (!TranslationFlow.ShouldTranslate(story.TranslateToMyLanguage, source, target))
+		if (story.ShowOriginalText || !TranslationFlow.ShouldTranslate(story.TranslateToMyLanguage, source, target))
 		{
 			return story.Title;
 		}
@@ -144,7 +144,7 @@ public sealed class StoryTranslator
 
 	/// <summary>
 	/// Whether <paramref name="story"/> should be translated on the phone but is not yet: the switch is on, its language differs from mine, the book has no full
-	/// table, and this build has an engine that covers the pair (none on iOS and Windows: such a book stays in its own language).
+	/// table, and this build has an engine that covers the pair (none on Windows: such a book stays in its own language).
 	/// </summary>
 	public bool NeedsOwnTranslation(Story story)
 	{

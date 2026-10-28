@@ -17,10 +17,10 @@
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>El idioma de los textos de la app</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Velocidad de lectura</value></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>Ayuda a mejorar la app</value></data>
-  <data name="Settings_CountsCaption" xml:space="preserve"><value>Envía recuentos como «se leyó un texto en francés». Sin nombres, sin identificadores, nada de lo que lees.</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>Envía recuentos como «se leyó un texto en francés». Sin nombres, sin identificadores, nada de lo que lees. También añade tu país y un tipo de dispositivo aproximado (teléfono o tableta, rango de memoria).</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>Activado</value></data>
   <data name="Settings_CountsOff" xml:space="preserve"><value>Desactivado</value></data>
-  <data name="Language_CountsNote" xml:space="preserve"><value>La app cuenta cosas como qué idiomas se leen, sin nombres ni identificadores. Puedes desactivarlo en Ajustes.</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>La app cuenta cosas como qué idiomas se leen, sin nombres ni identificadores. Puedes desactivarlo en Ajustes. También añade tu país y un tipo de dispositivo aproximado (teléfono o tableta, rango de memoria).</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Atrás</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>Frase anterior</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>Frase siguiente</value></data>
@@ -35,9 +35,9 @@
   <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>No se pudo iniciar el escáner</value></data>
   <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>No se pudo iniciar el escáner. Inténtalo de nuevo.</value></data>
   <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>El escáner se está preparando</value></data>
-  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Google Play Services aún está preparando el escáner de documentos. Inténtalo de nuevo en un momento.</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>El escáner de documentos aún se está preparando. Inténtalo de nuevo en un momento.</value></data>
   <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>Escáner no disponible</value></data>
-  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>El escáner de documentos necesita Google Play Services. Haz una sola foto en su lugar.</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>El escáner de documentos no está disponible en este dispositivo. Haz una sola foto en su lugar.</value></data>
   <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>Se necesita acceso a la cámara</value></data>
   <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>Concede acceso a la cámara en Ajustes para fotografiar texto.</value></data>
   <data name="Reader_NoCameraTitle" xml:space="preserve"><value>Sin cámara</value></data>

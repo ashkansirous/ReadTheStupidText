@@ -9,7 +9,7 @@ using Windows.Graphics;
 namespace ReadTheStupidText_App;
 
 /// <summary>
-/// The first-run language window (Slice 56, Decision 68): fourteen languages named in themselves, the same set and
+/// The first-run language window (Slice 56, Decision 68): fifteen languages named in themselves, the same set and
 /// persistence as the mobile apps (<see cref="ISettingsStore.Language"/>). Choosing one starts
 /// <see cref="VoicePackSetup"/>; the window shows its progress and closes once the natural voice is ready.
 /// </summary>

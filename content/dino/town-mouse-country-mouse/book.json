@@ -2,7 +2,7 @@
   "kind": "Store",
   "id": "67dfb7db7c1c418c811cfed88876327f",
   "title": "The Town Mouse and the Country Mouse",
-  "version": 7,
+  "version": 8,
   "ageMin": 4,
   "ageMax": 7,
   "author": "Aesop",
@@ -36,5 +36,5 @@
       ]
     }
   ],
-  "contentHash": "0f2f4e8bac59ff757954b9677e12318624849c088f439d2354a0f5d29774f525"
+  "contentHash": "b1114d9b4e919ed58457720d2870940d9b19592360c5c0cf207e77740956c453"
 }

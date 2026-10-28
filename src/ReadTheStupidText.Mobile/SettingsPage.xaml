@@ -76,7 +76,7 @@
                     <GradientStop Color="{StaticResource BrandEnd}" Offset="1.0" />
                 </LinearGradientBrush>
             </Grid.Background>
-            <Grid x:Name="BackButton" Grid.Column="0" WidthRequest="48" HeightRequest="48">
+            <Grid x:Name="BackButton" AutomationId="SettingsBack" Grid.Column="0" WidthRequest="48" HeightRequest="48">
                 <Grid.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnBackTapped" />
                 </Grid.GestureRecognizers>
@@ -85,7 +85,8 @@
             <Label x:Name="TitleLabel" Grid.Column="1" FontSize="18" FontAttributes="Bold" TextColor="White" VerticalOptions="Center" />
         </Grid>
 
-        <VerticalStackLayout Grid.Row="1" Padding="14,16" Spacing="10" SafeAreaEdges="Container">
+        <ScrollView Grid.Row="1">
+        <VerticalStackLayout Padding="14,16" Spacing="10" SafeAreaEdges="Container">
 
             <Border Style="{StaticResource SettingsCard}">
                 <VerticalStackLayout>
@@ -121,13 +122,13 @@
                         <Path Grid.Column="0" Data="{StaticResource IconGauge}" Style="{StaticResource IconPath}" />
                         <Label Grid.Column="1" x:Name="SpeedTitle" Style="{StaticResource SettingsRowTitle}" />
                     </Grid>
-                    <Grid x:Name="SpeedPresetGrid" ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
-                        <Button Grid.Row="0" Grid.Column="0" Text="0.5×" ClassId="0.5" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedChip}" />
-                        <Button Grid.Row="0" Grid.Column="1" Text="1×" ClassId="1.0" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedChip}" />
-                        <Button Grid.Row="0" Grid.Column="2" Text="1.25×" ClassId="1.25" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedChip}" />
-                        <Button Grid.Row="1" Grid.Column="0" Text="1.5×" ClassId="1.5" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedChip}" />
-                        <Button Grid.Row="1" Grid.Column="1" Text="1.75×" ClassId="1.75" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedChip}" />
-                        <Button Grid.Row="1" Grid.Column="2" Text="2×" ClassId="2.0" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedChip}" />
+                    <Grid x:Name="SpeedPresetGrid" AutomationId="SpeedPresets" ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+                        <Button Grid.Row="0" Grid.Column="0" Text="0.5×" ClassId="0.5" AutomationId="Speed_0.5" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedChip}" />
+                        <Button Grid.Row="0" Grid.Column="1" Text="1×" ClassId="1.0" AutomationId="Speed_1.0" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedChip}" />
+                        <Button Grid.Row="0" Grid.Column="2" Text="1.25×" ClassId="1.25" AutomationId="Speed_1.25" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedChip}" />
+                        <Button Grid.Row="1" Grid.Column="0" Text="1.5×" ClassId="1.5" AutomationId="Speed_1.5" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedChip}" />
+                        <Button Grid.Row="1" Grid.Column="1" Text="1.75×" ClassId="1.75" AutomationId="Speed_1.75" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedChip}" />
+                        <Button Grid.Row="1" Grid.Column="2" Text="2×" ClassId="2.0" AutomationId="Speed_2.0" Clicked="OnSpeedPresetClicked" Style="{StaticResource SpeedChip}" />
                     </Grid>
                 </VerticalStackLayout>
             </Border>
@@ -152,5 +153,6 @@
             </Border>
 
         </VerticalStackLayout>
+        </ScrollView>
     </Grid>
 </ContentPage>

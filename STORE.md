@@ -194,7 +194,7 @@ accordingly.
 - Google Play: Play Console -> Grow -> Store presence -> Main store listing ->
   Manage translations, then fill the short and full description per language.
 
-### Listing texts for Danish, Finnish, Swedish, Norwegian and Dutch (Slice 103, Decision 107)
+### Listing texts for Danish, Finnish, Swedish, Norwegian, Dutch and German (Slice 103, Decision 107; German Slice 168)
 
 Written by Claude from `docs/store-listings/en.md`: the same blocks (7 search terms, short description, long
 description) plus the Google Play download note. **Not pasted into any store yet** (the apps are not public)
@@ -309,6 +309,31 @@ Op Android kun je tekst plakken of typen, een .txt-, .pdf- of .docx-bestand open
 
 Google Play, downloadnotitie (toevoegen aan de volledige beschrijving): De eerste keer dat je de app op Android start, downloadt hij een stempakket van ongeveer 145 MB, dus er is één keer een internetverbinding nodig (wifi aanbevolen). Tot de download klaar is, leest de app voor met de ingebouwde stem van je telefoon. Alleen het stempakket wordt gedownload. Je tekst, bestanden en scans blijven op je apparaat en zodra de stem is geïnstalleerd, gebruikt de app het netwerk niet.
 
+#### German (`de`)
+
+Slice 168. Written by Claude from `docs/store-listings/en.md`, like the other non-English texts: it needs a native read before submission and is **not pasted into any store yet** (the apps are not public).
+
+Search terms: 1. vorlesen, 2. text zu sprache, 3. tts, 4. text laut lesen, 5. markierten text lesen, 6. pdf vorlesen, 7. natürliche stimmen offline
+
+Short description: Liest Text mit natürlichen Offline-Stimmen vor, mit 0,5- bis 2-facher Geschwindigkeit.
+
+Long description:
+
+Read The Stupid Text liest jeden Text laut vor, damit du zuhören kannst, statt auf einen Bildschirm zu starren.
+
+Unter Windows sitzt die App im Infobereich. Markiere Text in fast jeder App oder kopiere ihn, und er wird sofort vorgelesen. Drücke Strg+Win+R, um das Kopierte vorzulesen. (Terminals melden keine Auswahl, kopiere den Text dort also.)
+
+Auf Android kannst du Text einfügen oder tippen, eine .txt-, .pdf- oder .docx-Datei öffnen oder eine Seite mit der Kamera scannen und dann auf Abspielen tippen.
+
+- Natürlich klingende Stimmen, die auf deinem Gerät laufen
+- Lesetempo von 0,5x bis 2x
+- Funktioniert offline (Android lädt seine Stimme beim ersten Start einmal herunter). Dein Text, deine Dateien und deine Scans verlassen dein Gerät nie
+- Kein Konto und keine Analyse
+
+Google Play, Download-Hinweis (zur vollen Beschreibung hinzufügen): Beim ersten Start der App auf Android lädt sie ein Stimmpaket von etwa 145 MB herunter und braucht dafür einmal eine Internetverbindung (WLAN empfohlen). Bis der Download fertig ist, liest die App mit der eingebauten Stimme deines Handys vor. Es wird nur das Stimmpaket heruntergeladen. Dein Text, deine Dateien und deine Scans bleiben auf deinem Gerät, und sobald die Stimme installiert ist, nutzt die App das Netzwerk nicht.
+
+German uses the Supertonic-3 pack (`supertonic-3` lists `de` from pack version 4), so the "natural voices" claims stand once the pinned catalogue (`packs-8`) is published.
+
 ## Runtime deployment (.NET self-contained)
 
 The shipped (**Release**) MSIX is built **.NET self-contained**
@@ -386,15 +411,20 @@ Store forms (Claude drafts and fills them in the signed-in browser; the user rev
 - **App Store privacy (RTST):** **Usage Data > Product Interaction** and **Diagnostics > Performance Data**, **not linked to the user**, **not used
   for tracking**, purpose **Analytics**. `PrivacyInfo.xcprivacy` declares the same (`NSPrivacyCollectedDataTypeProductInteraction` and
   `NSPrivacyCollectedDataTypePerformanceData`, linked false, tracking false).
+- **Slice 166 additions (both apps, same wording for Dino below):** each batch carries a `device` object (`osMajor`, `formFactor` phone/tablet/desktop/other,
+  `arch` arm64/x64/x86/arm/other, `cores` 1-4/5-8/9+, `ram` GB bucket <3/3-4/4-6/6-8/8+ (total rounded up to whole GiB first); never a model, maker, exact chip, exact memory/core number or id) and the
+  Worker adds the **country** from `request.cf.country` (`XX`/`T1`/invalid become `none`; the IP is not stored). Form answers to add **before the Worker change
+  merges**: **Google Play Data safety:** Location > **Approximate location**, collected, not shared, not ephemeral, optional, Analytics (Diagnostics is already declared);
+  **App Store privacy:** **Coarse Location** and **Other Diagnostic Data**, not linked, no tracking, Analytics (`PrivacyInfo.xcprivacy` of both apps declares
+  `NSPrivacyCollectedDataTypeCoarseLocation` and `NSPrivacyCollectedDataTypeOtherDiagnosticData`); **Microsoft Store:** nothing beyond the policy URL. Check Google Play's
+  Families policy wording on approximate location for Dino before submitting. (Slice 166: docs/plan/slices/166-usage-device-context.md)
 - **Microsoft Store (RTST):** no data-collection question beyond the privacy policy URL, which must point at the updated `site/privacy.html`
   (the Windows app sends the same counts once switched on; the switch is the last row of the control panel).
-- Cloudflare Analytics Engine is the processor. The `RTST_USAGE` binding is **not** in the wrangler configs until Analytics Engine is enabled on
-  the account (a deploy fails otherwise); until then `/api/events` on the RTST host answers 204 while telemetry is off. To switch on: enable
-  Analytics Engine, add `"analytics_engine_datasets": [{ "binding": "RTST_USAGE", "dataset": "rtst_usage" }]` to both wrangler configs
-  (next to `r2_buckets`), deploy, then put `{"telemetry": {"enabled": true, "sampleRate": 1}}` in `readthestupidtext/config.json`
+- Cloudflare Analytics Engine is the processor. The `RTST_USAGE` binding (dataset `rtst_usage`) is in both wrangler configs. To switch counting on,
+  put `{"telemetry": {"enabled": true, "sampleRate": 1}}` in `readthestupidtext/config.json`
   (`wrangler r2 object put readthestupidtext-downloads/readthestupidtext/config.json --file config.json --remote`).
 - Each point's double is the count's weight (1 / the sample rate it was counted at), so query with `SUM(double1)`, never `COUNT(*)`; blobs are
-  `name, version, platform, day, language, sourceLanguage, mode, engine, voiceDefault, lengthBucket, osMajor, stage, outcome, durationBucket, source, early` (`source` on Windows reads only; `early` on timing counts only, `yes` when the first sentences were prepared while the person decided, Slice 139).
+  `name, version, platform, day, language, sourceLanguage, mode, engine, voiceDefault, lengthBucket, osMajor, stage, outcome, durationBucket, source, early, waitStage` (`source` on Windows reads only; `early` on timing counts only, `yes` when the first sentences were prepared while the person decided, Slice 139), then blob18 country, blob19 form factor, blob20 CPU architecture (Slice 166); double2 is the core bucket's lower bound (1/5/9) and double3 the RAM bucket's lower bound in GB (0/3/4/6/8), -1 when a build sent none, and blob11 `osMajor` is filled on every count.
   `tools/rtst-usage-report.ps1` hides groups of fewer than 10 events. That floor counts events, not households (there is no install id), so it
   is a noise filter and not an anonymity guarantee: say "no identifiers, counts only", never "cannot be traced".
 
@@ -739,19 +769,13 @@ build cannot ship).
 
 **Batch 9 features on iOS (Slice 55).** The neural voice (sherpa-onnx 1.13.8, Supertonic, Piper
 and Melo packs with the sentence head start), language and OCR packs, PaddleOCR with Apple
-Vision as the fallback, the fourteen localized UI languages (right-to-left for Farsi and Arabic) and
+Vision as the fallback, the fifteen localized UI languages (right-to-left for Farsi and Arabic) and
 localized camera and photo permission prompts (`InfoPlist.strings`) are on iOS. Packs download over
 plain HTTPS from GitHub Releases, so no App Transport Security exception and no entitlement is
 needed (Decision 60); the packs folder is excluded from iCloud backup.
 `ITSAppUsesNonExemptEncryption` is `false` (HTTPS only).
 
-**Known gap, translation (Slice 55).** The iPhone app has no "Translate to my language" yet
-(the card is hidden). Apple's Translation framework (iOS 18+) is Swift-only with no .NET binding
-and needs a SwiftUI view to download a language, and it has no Farsi; ML Kit's iOS translator has
-no .NET binding we could verify without a Mac. The decision: ship iOS without translation and
-revisit with a small Swift wrapper (Apple's framework, gated to iOS 18, Farsi hidden) or a
-verified ML Kit binding. Language identification (`NLLanguageRecognizer`) is already in place.
-The store listing for iOS must not mention translation until then.
+**Translation on iOS (Slice 160).** Translation (ML Kit) now runs on Android and iPhone, on device after a one-time model download. Apple's Translation framework was not used (Swift-only, no Farsi). iOS simulator builds have no translator (the MLKitTranslate xcframework has no simulator slice), so the card hides there.
 
 ## Dino Book Reader on Windows (Slice 67)
 
@@ -814,9 +838,10 @@ without a release. Store forms (the owner or Claude in the signed-in browser, af
 - **App Store privacy (Dino):** data type **Usage Data > Product Interaction**, **not linked to the user**, **not used for tracking**,
   purpose **Analytics**. `PrivacyInfo.xcprivacy` declares the same (`NSPrivacyCollectedDataTypeProductInteraction`, linked false, tracking false).
 - **Microsoft Store (Dino):** no data-collection question beyond the privacy policy URL; it must point at the updated `site/dino/privacy.html`.
-- Cloudflare Analytics Engine is the processor. The `USAGE` binding is not in the wrangler configs until Analytics Engine is enabled on
-  the account (see "Landing site" in `CLAUDE.md` for the switch-on steps); without it `/api/events` answers 204 and writes nothing. Each
+- Cloudflare Analytics Engine is the processor. The `DINO_USAGE` binding (dataset `dino_usage`) is in both wrangler configs;
+  `telemetry.enabled` in `dinoreader/config.json` switches counting (see "Landing site" in `CLAUDE.md`). Each
   point's double is the count's weight (1 / the sample rate it was counted at), so query with
   `SELECT blob1 AS name, blob2 AS book, SUM(double1) FROM dino_usage GROUP BY name, book`.
+- Slice 166 adds blob10 country, blob11 OS major, blob12 form factor, blob13 CPU architecture, blob14 core bucket and blob15 RAM bucket (empty for builds that send no `device` object); the store-form additions are listed under "Slice 166 additions" in the RTST section above.
 - `tools/dino-usage-report.ps1` hides groups of fewer than 10 events. That floor counts events, not households (there is no install id), so it is a noise filter and not an anonymity guarantee: say "no identifiers, counts only", never "cannot be traced".
 - Switch counting on with `telemetry` in `dinoreader/config.json` (`{"enabled": true, "sampleRate": 1}`); it is off until then.

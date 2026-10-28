@@ -12,7 +12,7 @@ Loaded when you edit workflows or scripts. Complements the root `CLAUDE.md`.
 > version (GitVersion + versionCode + `.github/scripts/ship-targets.mjs`) -> test
 > (`tests.yml`) -> release-draft -> `windows.yml` / `android.yml` / `ios.yml` (reusable;
 > they also run on their own PR paths, never signing or uploading on PRs) ->
-> release-publish -> store-submit, play-submit, testflight-submit, publish-downloads.
+> release-publish -> store-submit, play-submit, testflight-submit.
 > **One version and release per product (Slice 130, Decision 137):** Read The Stupid Text is `rtst-v<x.y.z>`
 > (`GitVersion.yml`), Dino Reader `dino-v<x.y.z>` (`GitVersion.dino.yml`; keep the two files identical except
 > `tag-prefix`). `release.yml` runs two GitVersion steps and has a draft, publish and submit chain per product
@@ -92,6 +92,8 @@ msstore CLI) once the Partner Center secrets are set.
 
 A new translation pair in `packs.yml` needs its `TRANSLATION_PAIRS` entry, an 11-column table row (layout and per-pair licence) and a matching `TranslationPacks` leg; a test ties the three together, and `maxLength` must resolve (`max_position_embeddings` fallback) or the job fails. New packs reach users only after a `packs.yml` run and the `PackConstants` pin bump. (Slice 106: docs/plan/slices/106-windows-nordic-dutch-translation-packs.md)
 
+`packs.yml` can carry an unchanged pack over from an earlier release (`kokoro_carry_over_from` input) when an upstream archive is re-uploaded and its pin breaks. Never re-pin a changed upstream file under the same pack version. (Slice 168: docs/plan/slices/168-german-in-both-apps.md)
+
 ## Dino Reader pipeline
 
 Dino Reader has its own path-filter target (`dinoapp` in `ship-targets`, with
@@ -130,17 +132,11 @@ Never pipe a producer into `grep -q` under `pipefail` (`release.yml`, `.github/s
 
 ## iOS review cadence
 
-`ios-review-cadence.mjs` is the only code that sends a build to Apple's reviews: `testflight-external.yml` (daily 06:00 UTC + manual) adds the newest processed build to the external group "Rofagha" and submits it for Beta App Review; `appstore-submit.yml` (manual, `app` = rtst|dino|both) does the App Store. Never add a step that cancels a waiting review or expires a build, and never submit while one is waiting (starvation: each cancel goes to the back of Apple's queue). A new iOS app needs its row in the script's `APPS` table. (Decision 154, Slice 147: docs/plan/slices/147-ios-review-cadence.md)
+`ios-review-cadence.mjs` is the only code that sends a build to Apple's reviews: `testflight-external.yml` (daily 05:17 UTC, backup 07:17, + manual) adds the newest processed build to the external group "Rofagha" and submits it for Beta App Review even while an older build still waits (batching: the newest build each morning; never cancel or expire the older one), turns `autoNotifyEnabled` on for each build it submits or finds waiting, and sends "Notify Testers" for the newest approved build (`buildBetaNotifications`; otherwise approved builds sit at Approved, 2026-10-28 note `docs/plan/notes/2026-10-28-testflight-auto-notify.md`); `appstore-submit.yml` (manual, `app` = rtst|dino|both) does the App Store and still skips while an App Store review is in progress. Never add a step that cancels a waiting review or expires a build (starvation: each cancel goes to the back of Apple's queue). A new iOS app needs its row in the script's `APPS` table. (Decision 154, Slice 147: docs/plan/slices/147-ios-review-cadence.md)
 
 ## Android downloads
 
-The Worker serves `/download`, `/download/android/latest` and
-`/download/android/<x.y.z>` from the private R2 bucket `readthestupidtext-downloads` (binding
-`DOWNLOADS`; `worker/downloads.ts`). The `publish-downloads` job copies each released APK there
-after `release-publish` (no signing secrets; uses `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID`).
-The key layout lives only in `worker/download-keys.mjs`; an already-published version is skipped and
-the manifest is written last. Windows stays Store-only. A deploy needs the bucket to exist (wrangler
-fails on a missing R2 binding). (Slice 69: docs/plan/slices/69-apk-downloads-on-r2.md)
+APKs are not served from the site or R2: `/download` and everything under it (`/download/*`, `/dino/download/*`) on both sites is a 302 to `#platforms` (`worker/downloads.ts`); APKs live on the GitHub Release. Old APKs and manifests still sit in the `DOWNLOADS` bucket (`readthestupidtext-downloads`) but nothing serves them. Windows stays Store-only. Don't re-add APK serving. (Slice 69: docs/plan/slices/69-apk-downloads-on-r2.md)
 - The `piper-nb` pack pins rhasspy/piper-voices revision 5041a7a in `packs.yml`; bump the `PackConstants` pin after each packs run. The espeak guard checks `no_dict` (Norwegian `lang/gmq/nb` uses `dictionary no`; there is no `nb_dict`): don't "fix" it back. `packs.yml` pins Python 3.12. (Slice 104: docs/plan/slices/104-piper-norwegian-pack.md)
 
 - `kokoro-en` is built by `packs.yml` from the sha256-pinned sherpa-onnx `kokoro-int8-multi-lang-v1_0` archive, catalog kind `storyteller`, with its own 150 MB cap (`KOKORO_MAX_BYTES`; the zip is about 126 MB) and a `<id>-<version>-sample.wav` beside the zip (the "Hear one" clip). It carries GPL espeak-ng data inside the zip only (Decision 119, same scope as `piper-fa`/`piper-nb`). The card shows only while the pinned catalog lists it (packs-6 onward). The v2 pack also ships the zh lexicon, dict and rule fsts, and the `packs.yml` self-check synthesizes every sid. The current packs release is packs-7 (`PackConstants.CatalogUrl`). (Slice 114: docs/plan/slices/114-dino-kokoro-english-storyteller-pack.md; Slice 118: docs/plan/slices/118-dino-storyteller-more-languages.md)

@@ -17,10 +17,10 @@
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>Språket som brukes i appen</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Lesehastighet</value></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>Hjelp til å forbedre appen</value></data>
-  <data name="Settings_CountsCaption" xml:space="preserve"><value>Sender tellinger som «en fransk tekst ble lest». Ingen navn, ingen id-er, ingenting av det du leser.</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>Sender tellinger som «en fransk tekst ble lest». Ingen navn, ingen id-er, ingenting av det du leser. Det legger også til landet ditt og en grov enhetstype (telefon eller nettbrett, minneområde).</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>På</value></data>
   <data name="Settings_CountsOff" xml:space="preserve"><value>Av</value></data>
-  <data name="Language_CountsNote" xml:space="preserve"><value>Appen teller ting som hvilke språk som leses, uten navn eller id-er. Du kan slå dette av i Innstillinger.</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>Appen teller ting som hvilke språk som leses, uten navn eller id-er. Du kan slå dette av i Innstillinger. Det legger også til landet ditt og en grov enhetstype (telefon eller nettbrett, minneområde).</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Tilbake</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>Forrige setning</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>Neste setning</value></data>
@@ -35,9 +35,9 @@
   <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>Kunne ikke starte skanneren</value></data>
   <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>Kunne ikke starte skanneren — prøv igjen.</value></data>
   <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>Skanneren gjør seg klar</value></data>
-  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Google Play-tjenester forbereder fortsatt dokumentskanneren. Prøv igjen om litt.</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Dokumentskanneren gjøres fortsatt klar. Prøv igjen om litt.</value></data>
   <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>Skanneren er utilgjengelig</value></data>
-  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>Dokumentskanneren trenger Google Play-tjenester. Ta et enkelt bilde i stedet.</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>Dokumentskanneren er ikke tilgjengelig på denne enheten. Ta et enkelt bilde i stedet.</value></data>
   <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>Kameratilgang trengs</value></data>
   <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>Gi tilgang til kameraet i Innstillinger for å fotografere tekst.</value></data>
   <data name="Reader_NoCameraTitle" xml:space="preserve"><value>Ingen kamera</value></data>

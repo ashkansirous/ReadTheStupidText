@@ -26,7 +26,7 @@ import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-import { BUCKET_NAME, publishedStateFrom, wranglerArgs, wranglerCommand } from './publish-downloads.mjs';
+import { BUCKET_NAME, publishedStateFrom, wranglerArgs, wranglerCommand } from './r2-wrangler.mjs';
 
 export const STORE_API_URL = 'https://dinoreader.sirous.uk/api/stories';
 const KEY_PREFIX = 'dinoreader/stories';

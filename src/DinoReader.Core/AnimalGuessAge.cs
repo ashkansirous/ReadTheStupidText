@@ -27,6 +27,7 @@ internal static class AnimalAgeWords
         AppLanguage.Swedish => "fru, herr, mamma, pappa, mor, far, mormor, morfar, farmor, farfar, stor, stora, gammal",
         AppLanguage.Norwegian => "fru, herr, mor, far, mamma, pappa, bestemor, bestefar, stor, store, gammel",
         AppLanguage.Dutch => "mevrouw, meneer, moeder, mama, vader, papa, oma, opa, grote, groot, oude, oud",
+        AppLanguage.German => "frau, herr, mutter, mama, mutti, vater, papa, vati, oma, opa, großmutter, großvater, groß, große, großer, alt, alte, alter",
         _ => "mrs, mr, mister, mother, mama, mummy, mum, mom, father, papa, daddy, dad, grandma, grandpa, granny, grandmother, grandfather, old, big, great, lady, queen, king",
     };
 

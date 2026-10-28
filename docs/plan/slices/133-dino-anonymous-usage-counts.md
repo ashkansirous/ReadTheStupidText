@@ -75,7 +75,7 @@ Frames 62 (counts switch) and 63 (first-run line), lines 76 and 96 of `docs/desi
 
 #### For CLAUDE.md (lifted 2026-10-26)
 
-- Worker `/api/events` stays inert until switched on: enable Analytics Engine in the dashboard, add the `USAGE` binding to both wrangler configs, deploy, then set `telemetry.enabled` true. Never add the binding before AE is enabled (a failed deploy takes the site down). (Slice 133: docs/plan/slices/133-dino-anonymous-usage-counts.md)
+- Worker `/api/events` stays inert until switched on: Analytics Engine is enabled and the binding is now `DINO_USAGE` in both wrangler configs (2026-10-27); counting is switched by `telemetry.enabled`. Never remove Analytics Engine from the account while a binding is declared (a failed deploy takes the site down). (Slice 133: docs/plan/slices/133-dino-anonymous-usage-counts.md)
 - Usage events carry only closed-list fields, never an id, typed text or own-book title; source is `shelf`+id only for starter/store books, else `own`. Count with `SUM(double1)`, not `COUNT(*)`, because of sampling. (Slice 133: docs/plan/slices/133-dino-anonymous-usage-counts.md)
 
 #### Not yet verified

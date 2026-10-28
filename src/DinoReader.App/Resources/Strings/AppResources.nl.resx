@@ -18,6 +18,9 @@
   <data name="Common_Back" xml:space="preserve"><value>Terug</value></data>
   <data name="Common_Save" xml:space="preserve"><value>Opslaan</value></data>
   <data name="Common_Done" xml:space="preserve"><value>Klaar</value></data>
+  <data name="Close_Question" xml:space="preserve"><value>Dino Book Reader sluiten?</value></data>
+  <data name="Common_Stay" xml:space="preserve"><value>Blijven</value></data>
+  <data name="Common_Close" xml:space="preserve"><value>Sluiten</value></data>
   <data name="Common_Delete" xml:space="preserve"><value>Verwijderen</value></data>
   <data name="Common_Keep" xml:space="preserve"><value>Bewaren</value></data>
   <data name="Common_Edit" xml:space="preserve"><value>Bewerken</value></data>
@@ -42,14 +45,14 @@
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>{0} verwijderen</value></data>
   <data name="Gallery_ExportStory" xml:space="preserve"><value>Verhaal exporteren</value></data>
   <data name="Gallery_CastButton" xml:space="preserve"><value>Rollen</value></data>
-  <data name="Store_Title" xml:space="preserve"><value>Gratis verhalen</value></data>
+  <data name="Store_Title" xml:space="preserve"><value>Winkel</value></data>
   <data name="Store_Subtitle" xml:space="preserve"><value>Uitgezocht en ingesproken voor Dino</value></data>
   <data name="Store_Get" xml:space="preserve"><value>Ophalen</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>Opgehaald</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0} pagina’s · {1} min</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Gratis en zonder account. Er wordt niets over jou of je kind verstuurd.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Je bent offline</value></data>
-  <data name="Store_OfflineBody" xml:space="preserve"><value>De gratis verhalen hebben internet nodig. Verhalen die al op de plank staan, kun je nog steeds zonder internet lezen.</value></data>
+  <data name="Store_OfflineBody" xml:space="preserve"><value>De winkel heeft internet nodig. Verhalen die al op de plank staan, kun je nog steeds zonder internet lezen.</value></data>
   <data name="Store_TryAgain" xml:space="preserve"><value>Opnieuw proberen</value></data>
   <data name="Store_EmptyTitle" xml:space="preserve"><value>Nog geen nieuwe verhalen</value></data>
   <data name="Store_EmptyBody" xml:space="preserve"><value>Er komen af en toe nieuwe bij. Kom later nog eens terug.</value></data>
@@ -106,7 +109,7 @@
   <data name="Intro_Skip" xml:space="preserve"><value>Overslaan</value></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} van {1}</value></data>
   <data name="Intro_StoreTitle" xml:space="preserve"><value>Haal meer boeken</value></data>
-  <data name="Intro_StoreLine" xml:space="preserve"><value>De gratis winkel heeft meer verhalen, klaar om te downloaden.</value></data>
+  <data name="Intro_StoreLine" xml:space="preserve"><value>De winkel heeft meer verhalen, klaar om te downloaden.</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Lees het met je eigen stem</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>Neem jezelf op terwijl je een verhaal voorleest, pagina voor pagina. Je kind kan het altijd afspelen.</value></data>
   <data name="Intro_AddTitle" xml:space="preserve"><value>Voeg je eigen boek toe</value></data>
@@ -119,6 +122,26 @@
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Volwassenenmodus</value></data>
   <data name="Language_Title" xml:space="preserve"><value>Taal</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>Dino leest en vertaalt in deze taal</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>Instellingen</value></data>
+  <data name="Settings_Books" xml:space="preserve"><value>Boeken</value></data>
+  <data name="Settings_BooksValue" xml:space="preserve"><value>Toevoegen, bewerken, Winkel</value></data>
+  <data name="Settings_GroupReading" xml:space="preserve"><value>Lezen</value></data>
+  <data name="Settings_GroupPhone" xml:space="preserve"><value>Deze telefoon</value></data>
+  <data name="Settings_NewVersion" xml:space="preserve"><value>Nieuwe versie</value></data>
+  <data name="Settings_GearLabel" xml:space="preserve"><value>Instellingen (volwassenen)</value></data>
+  <data name="Settings_About" xml:space="preserve"><value>Over en updates</value></data>
+  <data name="Settings_NarratorVoice" xml:space="preserve"><value>Stem van de verteller</value></data>
+  <data name="Settings_On" xml:space="preserve"><value>Aan</value></data>
+  <data name="Settings_Off" xml:space="preserve"><value>Uit</value></data>
+  <data name="Language_PageSub" xml:space="preserve"><value>Instellingen, de winkel en de plank</value></data>
+  <data name="Narrator_ListIntro" xml:space="preserve"><value>Elke verhaaltaal heeft zijn eigen verteller.</value></data>
+  <data name="Narrator_OneIntro" xml:space="preserve"><value>Wie de stukken tussen de personages leest, in elk {0} boek.</value></data>
+  <data name="Narrator_TitleFor" xml:space="preserve"><value>Stem van de verteller ({0})</value></data>
+  <data name="Narrator_NoVoiceValue" xml:space="preserve"><value>Niet gedownload</value></data>
+  <data name="Narrator_NoVoiceHint" xml:space="preserve"><value>De stemmen voor {0} staan nog niet op deze telefoon. Ga terug, open Taal, kies {0} en download de stem, en kies hier de verteller.</value></data>
+  <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Volwassenen</value></data>
+  <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Boeken toevoegen en bewerken</value></data>
+  <data name="Gallery_AddFromBooks" xml:space="preserve"><value>Toevoegen uit je eigen boeken</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>Klaar</value></data>
   <data name="Language_Download" xml:space="preserve"><value>Downloaden</value></data>
   <data name="Language_Downloading" xml:space="preserve"><value>{0}% downloaden</value></data>
@@ -200,13 +223,13 @@
   <data name="Version_NewReady" xml:space="preserve"><value>Er is een nieuwe versie</value></data>
   <data name="Version_Title" xml:space="preserve"><value>Versie</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Help Dino beter te maken</value></data>
-  <data name="Usage_Helper" xml:space="preserve"><value>Verstuurt aantallen zoals "een boek uit de winkel is uitgelezen". Geen namen, geen id's, niets wat je hebt getypt.</value></data>
+  <data name="Usage_Helper" xml:space="preserve"><value>Verstuurt aantallen zoals "een boek uit de winkel is uitgelezen". Geen namen, geen id's, niets wat je hebt getypt. Het voegt ook je land en een globaal apparaattype toe (telefoon of tablet, geheugenbereik).</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>Leessnelheid</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>Langzamer is makkelijker voor kleintjes</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · langzaam</value></data>
   <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
   <data name="Speed_Play" xml:space="preserve"><value>Hoor deze snelheid</value></data>
-  <data name="FirstRun_Usage" xml:space="preserve"><value>Dino telt welke boeken worden gelezen, zonder namen of id's. Je kunt dit uitzetten in Instellingen.</value></data>
+  <data name="FirstRun_Usage" xml:space="preserve"><value>Dino telt welke boeken worden gelezen, zonder namen of id's. Je kunt dit uitzetten in Instellingen. Het voegt ook je land en een globaal apparaattype toe (telefoon of tablet, geheugenbereik).</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Jouw verteller ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} MB</value></data>
   <data name="Storyteller_Failed" xml:space="preserve"><value>De verteller-stemmen konden niet worden opgehaald</value></data>

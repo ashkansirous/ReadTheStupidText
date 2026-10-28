@@ -17,10 +17,10 @@
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>Språket för appens text</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Uppläsningshastighet</value></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>Hjälp till att förbättra appen</value></data>
-  <data name="Settings_CountsCaption" xml:space="preserve"><value>Skickar räkningar som ”en fransk text lästes”. Inga namn, inga id:n, inget av det du läser.</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>Skickar räkningar som ”en fransk text lästes”. Inga namn, inga id:n, inget av det du läser. Det lägger också till ditt land och en grov enhetstyp (telefon eller surfplatta, minnesintervall).</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>På</value></data>
   <data name="Settings_CountsOff" xml:space="preserve"><value>Av</value></data>
-  <data name="Language_CountsNote" xml:space="preserve"><value>Appen räknar saker som vilka språk som läses, utan namn eller id:n. Du kan stänga av detta i Inställningar.</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>Appen räknar saker som vilka språk som läses, utan namn eller id:n. Du kan stänga av detta i Inställningar. Det lägger också till ditt land och en grov enhetstyp (telefon eller surfplatta, minnesintervall).</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Tillbaka</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>Föregående mening</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>Nästa mening</value></data>
@@ -35,9 +35,9 @@
   <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>Det gick inte att starta skannern</value></data>
   <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>Det gick inte att starta skannern — försök igen.</value></data>
   <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>Skannern förbereds</value></data>
-  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Google Play-tjänster förbereder fortfarande dokumentskannern. Försök igen om en stund.</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Dokumentskannern förbereds fortfarande. Försök igen om en stund.</value></data>
   <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>Skannern är inte tillgänglig</value></data>
-  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>Dokumentskannern kräver Google Play-tjänster. Ta ett enstaka foto i stället.</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>Dokumentskannern är inte tillgänglig på den här enheten. Ta ett enstaka foto i stället.</value></data>
   <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>Kameraåtkomst behövs</value></data>
   <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>Ge åtkomst till kameran i Inställningar för att fotografera text.</value></data>
   <data name="Reader_NoCameraTitle" xml:space="preserve"><value>Ingen kamera</value></data>

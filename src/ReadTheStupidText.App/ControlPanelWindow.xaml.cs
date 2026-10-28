@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using ReadTheStupidText.Application.Input;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Application.Startup;
@@ -39,11 +40,11 @@ public sealed partial class ControlPanelWindow : Window
     private const string PlayGlyph = "";
     private const string PauseGlyph = "";
 
-    // Logical (effective-pixel) panel width and a generous fallback height used
-    // until the content's real height is measured; both scaled to device pixels.
-    private const int LogicalWidth = 376;
+    // A generous fallback height (effective pixels) used until the content's real height is
+    // measured; scaled to device pixels. The width comes from RootGrid.Width (XAML), the one source.
     private const int FallbackHeight = 520;
     private const int LogicalMargin = 12;
+    private const double DesignWidth = 376; // RootGrid.Width in the XAML; used if that width is ever not a usable number
 
     private readonly ReadAloudService _readAloud;
     private readonly IStartupService _startup;
@@ -212,40 +213,12 @@ public sealed partial class ControlPanelWindow : Window
         }
     }
 
-    // Sizes the panel to its content (scaled to the monitor's DPI — AppWindow works
-    // in physical device pixels) and places it: at the user's last-dragged position
-    // if they've moved it (clamped to the work area so it can't end up offscreen),
-    // otherwise pinned in the bottom-right corner just inside the work area.
+    // Sizes the panel to its content and places it, on the monitor of its target point, via the one shared routine:
+    // at the user's last-dragged position (clamped to that work area) or pinned bottom-right by the tray.
     private void PositionPanel()
     {
-        double scale = GetDpiForWindow(WindowNative.GetWindowHandle(this)) / 96.0;
-        int width = (int)(LogicalWidth * scale);
-        int height = (int)((_measuredHeight ?? FallbackHeight) * scale);
-        int margin = (int)(LogicalMargin * scale);
-
-        AppWindow.Resize(new SizeInt32(width, height));
-
-        if (_settings.PanelPosition is { } saved)
-        {
-            RectInt32 savedWork = DisplayArea
-                .GetFromPoint(new PointInt32(saved.X, saved.Y), DisplayAreaFallback.Nearest).WorkArea;
-            AppWindow.Move(ClampToWorkArea(saved.X, saved.Y, width, height, savedWork));
-            return;
-        }
-
-        RectInt32 work = DisplayArea.GetFromWindowId(AppWindow.Id, DisplayAreaFallback.Nearest).WorkArea;
-        AppWindow.Move(new PointInt32(
-            work.X + work.Width - width - margin,
-            work.Y + work.Height - height - margin));
-    }
-
-    // Keeps a point within the work area so a window of the given size stays fully
-    // on-screen (e.g. after the panel grew, or a monitor was removed/rearranged).
-    private static PointInt32 ClampToWorkArea(int x, int y, int width, int height, RectInt32 work)
-    {
-        int maxX = Math.Max(work.X, work.X + work.Width - width);
-        int maxY = Math.Max(work.Y, work.Y + work.Height - height);
-        return new PointInt32(Math.Clamp(x, work.X, maxX), Math.Clamp(y, work.Y, maxY));
+        PointInt32? saved = _settings.PanelPosition is { } p ? new PointInt32(p.X, p.Y) : null;
+        WindowPlacer.Place(AppWindow, RootGrid.Width, _measuredHeight ?? FallbackHeight, DesignWidth, LogicalMargin, saved);
     }
 
     // Header pointer-drag (Slice 24, Decision 31): drag the borderless panel by its
@@ -582,11 +555,11 @@ public sealed partial class ControlPanelWindow : Window
     private void SetGenerating(bool generating)
     {
         bool waiting = _wait?.Current is not null; // the wait shows in this same slot, with Cancel (Batch 29 W2)
-        bool ring = generating || waiting;
-        PlayPauseRing.IsActive = ring;
-        PlayPauseRing.Visibility = ring ? Visibility.Visible : Visibility.Collapsed;
-        PlayPauseIcon.Visibility = ring ? Visibility.Collapsed : Visibility.Visible;
-        PlayPauseCancelIcon.Visibility = waiting && _wait!.Current!.CanCancel ? Visibility.Visible : Visibility.Collapsed;
+        var face = PlayButtonFace.For(generating, waiting, _wait?.Current?.CanCancel == true);
+        PlayPauseRing.IsActive = face.ShowSpinner;
+        PlayPauseRing.Visibility = face.ShowSpinner ? Visibility.Visible : Visibility.Collapsed;
+        PlayPauseIcon.Visibility = face.ShowPlayPause ? Visibility.Visible : Visibility.Collapsed;
+        PlayPauseCancelIcon.Visibility = face.ShowCancel ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void OnPlaybackStateChanged(object? sender, PlaybackState state) =>
@@ -612,25 +585,16 @@ public sealed partial class ControlPanelWindow : Window
     // name the foreground app when known.
     private string DescribeStatus(PlaybackState state)
     {
-        if (state == PlaybackState.Paused)
+        var line = ReadStatusLine.For(
+            state, _readAloud.CurrentReadTrigger == ActivityTrigger.Clipboard, _readAloud.CurrentReadWindow?.App);
+        return line.Kind switch
         {
-            return UiStrings.Get("Status_Paused");
-        }
-
-        if (state != PlaybackState.Playing)
-        {
-            return UiStrings.Get("Status_Ready");
-        }
-
-        if (_readAloud.CurrentReadTrigger == ActivityTrigger.Clipboard)
-        {
-            return UiStrings.Get("Status_ReadingClipboard");
-        }
-
-        string? app = _readAloud.CurrentReadWindow?.App;
-        return string.IsNullOrWhiteSpace(app)
-            ? UiStrings.Get("Status_ReadingSelection")
-            : UiStrings.Format("Status_ReadingSelectionFrom", app);
+            ReadStatusKind.Paused => UiStrings.Get("Status_Paused"),
+            ReadStatusKind.ReadingClipboard => UiStrings.Get("Status_ReadingClipboard"),
+            ReadStatusKind.ReadingSelection => UiStrings.Get("Status_ReadingSelection"),
+            ReadStatusKind.ReadingSelectionFrom => UiStrings.Format("Status_ReadingSelectionFrom", line.App!),
+            _ => UiStrings.Get("Status_Ready"),
+        };
     }
 
     private void SetWaveformPlaying(bool playing)
@@ -666,9 +630,6 @@ public sealed partial class ControlPanelWindow : Window
         _dispatcher.TryEnqueue(() => SetTiming(timing));
 
     private void SetTiming(ReadTiming timing) => TimerText.Text = ReadTimingFormatter.Format(timing);
-
-    [DllImport("user32.dll")]
-    private static extern uint GetDpiForWindow(IntPtr hwnd);
 
     // The current cursor position in physical screen pixels — the same space as
     // AppWindow.Position, so drag deltas apply directly without DPI conversion.

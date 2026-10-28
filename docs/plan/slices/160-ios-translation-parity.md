@@ -1,6 +1,6 @@
 # Slice 160 — Translation on iOS (Android and iOS parity)
 
-*Planned.* RTST Mobile and Dino Reader, iOS.
+*Built 2026-10-27, not yet verified on a real iPhone (TestFlight).* RTST Mobile and Dino Reader, iOS.
 
 **Touches:** `src/ReadTheStupidText.Mobile.Shared/ReadTheStupidText.Mobile.Shared.csproj`,
 `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/**` (new `MlKitTranslator.cs`, translation packs),
@@ -47,14 +47,14 @@ Grounding (origin/main 9c4ec2a):
 
 ## Work
 
-- [ ] 1. **Smallest end to end: RTST translate card on iOS.** Add the iOS ML Kit Translate binding to the iOS ItemGroup
+- [x] 1. **Smallest end to end: RTST translate card on iOS.** Add the iOS ML Kit Translate binding to the iOS ItemGroup
   of `Mobile.Shared.csproj`; write `Platforms/iOS/MlKitTranslator.cs` implementing `ITranslator` exactly like the
   Android one (same supported languages, on-demand model download with the 500 ms loading state and Cancel,
   same errors); register it in `MobileSharedServices.iOS.cs`; drop the "no translator" note in `MauiProgram.iOS.cs`.
   Raise `SupportedOSPlatformVersion` for iOS to 15.5 in Mobile.Shared, RTST Mobile and Dino Reader.
-- [ ] 2. **Dino own-book translation on iOS.** Implement `ITranslationPacks` (Slice 159) on iOS so the download prompt
+- [x] 2. **Dino own-book translation on iOS.** Implement `ITranslationPacks` (Slice 159) on iOS so the download prompt
   and pack checks behave as on Android; confirm `StoryTranslator` picks up the engine for own, typed and scanned books.
-- [ ] 3. **Small parity fixes.** iOS twin of the Dino toggle switch accessibility (VoiceOver reads label and on/off state
+- [x] 3. **Small parity fixes.** iOS twin of the Dino toggle switch accessibility (VoiceOver reads label and on/off state
   like TalkBack); make RTST scanner messages platform-neutral or give iOS its own wording.
 - [ ] 4. **Docs.** Mark the translation lines in Slice 55, Slice 159 and Decision 148 as reversed by Slice 160; update
   `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md` (translator on both platforms; never add a one-platform service).
@@ -67,3 +67,35 @@ Grounding (origin/main 9c4ec2a):
 - Real iPhone through TestFlight (no Mac here): RTST shows the translate card for English -> Farsi and back,
   downloads the model with a progress state, translates offline afterwards; Dino translates a typed own book into
   Farsi; VoiceOver reads the toggle switches. Any item not run is reported as not run, never as passed.
+
+## Built
+
+*Changed while building:*
+
+- Binding: `EngageSolutionsGroup.Apple.MLKitTranslate` 8.1.0 (net9-ios package, works on net10-ios, about 50 MB; the xcframework only links on a Mac, so CI's iOS job is the check). `MlKitTranslator` is the iOS twin of the Android class.
+- `PackDownload` class: the wait ends on the exact-model notification, NSProgress done or cancel, or a 30-minute timeout, with one cleanup.
+- iOS minimum 15.0 -> 15.5 in all three csprojs (Mobile.Shared, RTST Mobile, Dino Reader).
+- `ToggleSwitch` gets a VoiceOver role and state.
+- Scanner "Google Play services" messages made neutral; 13 translations not reviewed by native speakers.
+- `PRIVACY.md` and `site/privacy.html` now say translation runs on Android and iPhone. `PrivacyInfo.xcprivacy` (both apps) declares Other Diagnostic Data (Google Data Transport).
+
+*From review:* high pass 12 findings (applied 1-7, 9, 12; skipped 8, 10, 11 as low or refactor). Medium pass 10 (applied 1, 2, 3, 6, 7, 8; skipped 4, 5, 9 as low or refactor; 10 left to CI).
+
+*Checks:* iOS and Android builds of Mobile and Dino green; RTST tests 1357 pass, 2 skip; Dino tests 1550 pass.
+
+*User items:* in App Store Connect add Diagnostics > Other Diagnostic Data (not linked to the user, not tracking, analytics) to the privacy labels of both iOS apps. Dino is in the kids category: confirm Google Data Transport logging is acceptable.
+
+#### For CLAUDE.md (lifted 2026-10-27)
+
+- `src/ReadTheStupidText.Mobile/CLAUDE.md`: the Slice 54/101 bullets saying the review translate checkbox is Android-only are wrong; translation (`MlKitTranslator`) exists on both platforms. (Slice 160: docs/plan/slices/160-ios-translation-parity.md)
+- `STORE.md`: mentions of translation should say both platforms.
+
+#### Not yet verified
+
+- TestFlight: translate card English -> Farsi on iOS.
+- TestFlight: model download progress and Cancel.
+- TestFlight: offline translate after download.
+- TestFlight: Dino typed own book translated into Farsi.
+- TestFlight: VoiceOver switch role/state on iOS below 17 and on 17+.
+- CI iOS job: the MLKitTranslate xcframework links.
+- iOS simulator builds (`iossimulator-*`) have no translator, because the MLKitTranslate xcframework has no simulator slice; the translate card hides there.

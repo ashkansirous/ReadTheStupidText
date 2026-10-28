@@ -17,10 +17,10 @@
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>Sovelluksen kieli</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Lukunopeus</value></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>Auta parantamaan sovellusta</value></data>
-  <data name="Settings_CountsCaption" xml:space="preserve"><value>Lähettää laskureita kuten ”ranskankielinen teksti luettiin”. Ei nimiä, ei tunnisteita, ei mitään lukemastasi.</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>Lähettää laskureita kuten ”ranskankielinen teksti luettiin”. Ei nimiä, ei tunnisteita, ei mitään lukemastasi. Mukana on myös maasi ja likimääräinen laitetyyppi (puhelin tai tabletti, muistin vaihteluväli).</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>Päällä</value></data>
   <data name="Settings_CountsOff" xml:space="preserve"><value>Pois</value></data>
-  <data name="Language_CountsNote" xml:space="preserve"><value>Sovellus laskee asioita, kuten mitä kieliä luetaan, ilman nimiä tai tunnisteita. Voit poistaa tämän käytöstä Asetuksissa.</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>Sovellus laskee asioita, kuten mitä kieliä luetaan, ilman nimiä tai tunnisteita. Voit poistaa tämän käytöstä Asetuksissa. Mukana on myös maasi ja likimääräinen laitetyyppi (puhelin tai tabletti, muistin vaihteluväli).</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Takaisin</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>Edellinen lause</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>Seuraava lause</value></data>
@@ -35,9 +35,9 @@
   <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>Skanneria ei voitu käynnistää</value></data>
   <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>Skanneria ei voitu käynnistää — yritä uudelleen.</value></data>
   <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>Skanneri valmistautuu</value></data>
-  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Google Play -palvelut valmistelee vielä asiakirjaskanneria. Yritä hetken kuluttua uudelleen.</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Asiakirjaskanneri on vielä valmistumassa. Yritä hetken kuluttua uudelleen.</value></data>
   <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>Skanneri ei ole käytettävissä</value></data>
-  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>Asiakirjaskanneri tarvitsee Google Play -palvelut. Ota sen sijaan yksittäinen kuva.</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>Asiakirjaskanneri ei ole käytettävissä tällä laitteella. Ota sen sijaan yksittäinen kuva.</value></data>
   <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>Kameran käyttöoikeus tarvitaan</value></data>
   <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>Salli kameran käyttö Asetuksissa, jotta voit kuvata tekstiä.</value></data>
   <data name="Reader_NoCameraTitle" xml:space="preserve"><value>Ei kameraa</value></data>

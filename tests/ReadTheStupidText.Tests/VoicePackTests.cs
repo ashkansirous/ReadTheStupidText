@@ -192,6 +192,7 @@ public class VoicePackTests
     [InlineData("SV", true, AppLanguage.Swedish)]
     [InlineData("nb", true, AppLanguage.Norwegian)]
     [InlineData("nl", true, AppLanguage.Dutch)]
+    [InlineData("DE", true, AppLanguage.German)]
     [InlineData("da", true, AppLanguage.Danish)]
     [InlineData("fi", true, AppLanguage.Finnish)]
     [InlineData("xx", false, default(AppLanguage))]
@@ -207,7 +208,7 @@ public class VoicePackTests
     {
         string[] codes = Enum.GetValues<AppLanguage>().Select(AppLanguages.Code).ToArray();
 
-        Assert.Equal(14, codes.Length);
+        Assert.Equal(15, codes.Length);
         Assert.Equal(codes.Length, codes.Distinct().Count());
     }
 }

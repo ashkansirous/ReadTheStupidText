@@ -637,9 +637,7 @@ public partial class ReaderPage : ContentPage
         // The dimmed, untouchable player is for an idle page only: a read still playing keeps its controls.
         RenderPlayerForState();
 
-        bool idleAfterReturn = state == PlaybackState.Idle
-            && _pendingReadId != 0 && _pendingReadId == _returnedReadId;
-        if (state == PlaybackState.Playing || idleAfterReturn)
+        if (PendingReadSettle.IsDone(state, _pendingReadId, _returnedReadId))
         {
             // Idle straight after the return means a short text played before the Playing event was handled; a late Playing still counts as done.
             EndFirstAudioClock(UsageOutcome.Done);

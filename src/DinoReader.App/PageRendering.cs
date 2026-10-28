@@ -59,7 +59,8 @@ public static class ReadingMetrics
 	public const double PictureOutset = 6;
 	public const double PictureCorner = 24;
 	public const double TextPadding = 22;
-	public const double TextLineHeight = FontSize * 1.6;
+	public const double TextLineSpacing = 1.6;
+	public const double TextLineHeight = FontSize * TextLineSpacing;
 	public const double TextCorner = 26;
 	public const double BoxCorner = 9;
 	public const double BoxStrokeWidth = 2;
@@ -78,8 +79,12 @@ public static class ReadingMetrics
 	// than it measured still fits instead of being clipped.
 	public const double WrapSlack = 0.96;
 
+	/// <summary>The AutomationId of every label that shows story text, so UI tests find it by identity.</summary>
+	public const string StoryTextId = "StoryText";
+
 	public static Label LineLabel(string font, double height, double width) => new()
 	{
+		AutomationId = StoryTextId,
 		FontFamily = font,
 		FontSize = FontSize,
 		FontAutoScalingEnabled = false,

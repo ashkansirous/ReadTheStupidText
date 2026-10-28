@@ -160,6 +160,9 @@ Rows moved out of `plan.md`'s status table once a slice is `built` or `verified`
 | 156 | Dino: the book chooses each character's voice, not the app | built | #438, #447, #455, #465 | | [156-dino-authored-character-voices.md](../slices/156-dino-authored-character-voices.md) |
 | 158 | Dino: publish store books on every merge | built | #472 | | [158-dino-publish-store-books.md](../slices/158-dino-publish-store-books.md) |
 | 159 | Dino: everything in the chosen language | built | #473 | | [159-dino-everything-in-my-language.md](../slices/159-dino-everything-in-my-language.md) |
+| 153 | Dino: no robotic-sounding character voices | verified | | | [153-dino-no-robotic-voices.md](../slices/153-dino-no-robotic-voices.md) |
+| 160 | Translation on iOS (Android and iOS parity) | built | #486 | | [160-ios-translation-parity.md](../slices/160-ios-translation-parity.md) |
+| 161 | Fast tests: one warm headless x86_64 emulator, x86_64 Debug build | built | #485 | | [161-warm-headless-x64-emulator.md](../slices/161-warm-headless-x64-emulator.md) |
 
 ## Batch ordering notes
 
@@ -197,3 +200,17 @@ Batch 30 (143-146 and 148, planned 2026-10-26, Dino loading, Farsi voice and kid
 
 Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure book's Seagull): each book stores every character's traits and a suggested voice, chosen by the story writer; the app uses the suggestion and falls back to the traits. It follows Slice 152 (shares `Story.cs`/`StoryCast.cs`/`CastCharacters.cs`/`CastRows.cs` and reuses its `Animal` field as the "kind" trait) and Slice 153 (both edit `CharacterRoster*.cs`). The code is built (PR #438); the "Every book" writer pass is still to do. Decision 161.
 | 157 | Dino: book content and the book builder out of the test project | built | #475 | | [157-dino-book-content-out-of-tests.md](../slices/157-dino-book-content-out-of-tests.md) |
+| 162 | Fast tests: Maestro flows and Debug-only test hooks (both apps) | built | #490 | | [162-scripted-device-flows.md](../slices/162-scripted-device-flows.md) |
+| 164 | Fast tests: move more logic out of UI code into unit tests | built | #491 | | [164-more-logic-in-unit-tests.md](../slices/164-more-logic-in-unit-tests.md) |
+| 166 | Usage counts: country, OS version, form factor and hardware buckets (both apps) | built | #492 | | [166-usage-device-context.md](../slices/166-usage-device-context.md) |
+| 167 | Usage counts: don't count test devices (both apps) | built | #497 | | [167-no-test-device-counts.md](../slices/167-no-test-device-counts.md) |
+| 168 | German in both apps (UI, voice, detection, translation, Dino rules) | built | #495 | | [168-german-in-both-apps.md](../slices/168-german-in-both-apps.md) |
+| 169 | German translations for all 15 Dino books | built | #503 | | [169-german-dino-books.md](../slices/169-german-dino-books.md) |
+| 170 | Tray panel: every Controls button fits | built | #505 | | [170-tray-panel-controls-row-fits.md](../slices/170-tray-panel-controls-row-fits.md) |
+| 171 | Dino: the text card scrolls with the reading | built | #506 | | [171-dino-text-card-shows-whole-page.md](../slices/171-dino-text-card-shows-whole-page.md) |
+| 163 | Fast tests: Windows desktop tests in a headless Hyper-V VM | built | #508 | | [163-desktop-tests-in-hyperv-vm.md](../slices/163-desktop-tests-in-hyperv-vm.md) |
+| 165 | Fast tests: audio and timing on the real phone over wireless adb | built | #510 | | [165-real-phone-audio-timing-checks.md](../slices/165-real-phone-audio-timing-checks.md) |
+| 172 | Dino: one gear for all grown-up settings (sub-page per setting; "Free stories" -> "More stories") | built | #519 | | [172-dino-settings-gear.md](../slices/172-dino-settings-gear.md) |
+| 174 | Dino: a cleaner reading screen (waits on the user's Claude Design mock) and a back button that never surprises (after 172) | built | #521 | | [174-dino-reading-screen-and-back-button.md](../slices/174-dino-reading-screen-and-back-button.md) |
+| 175 | Close the test gaps: permanent VM selection+hotkey check, Debug Dino page hook, engine/synthesis markers, ISO cleanup, VM licence check | built | #517 | | [175-test-gaps-permanent-checks.md](../slices/175-test-gaps-permanent-checks.md) |
+| 176 | Reading text that is only spaces must not throw (NullReferenceException found on the phone) | built | #518 | | [176-whitespace-read-crash.md](../slices/176-whitespace-read-crash.md) |

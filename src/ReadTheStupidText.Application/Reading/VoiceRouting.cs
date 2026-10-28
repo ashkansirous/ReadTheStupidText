@@ -3,6 +3,14 @@ using ReadTheStupidText.Application.Translation;
 
 namespace ReadTheStupidText.Application.Reading;
 
+/// <summary>The voice-picker row that is highlighted.</summary>
+public enum PickerSelection
+{
+    None,
+    Phone,
+    Natural,
+}
+
 /// <summary>What Play does about the voice for the text it is about to read (Slice 82).</summary>
 public enum VoiceRoute
 {
@@ -119,6 +127,21 @@ public static class VoiceRouting
     /// </summary>
     public static bool ShouldLeavePhoneVoice(bool phoneVoiceChosen, bool packReady, bool? phoneCanRead) =>
         phoneVoiceChosen && packReady && phoneCanRead == false;
+
+    /// <summary>
+    /// Which row the voice picker highlights (Slice 164): without a pack, the Phone voice row if shown,
+    /// else none; with one, the Phone voice only while it is both shown and the stored choice, else the
+    /// natural voice that reads instead.
+    /// </summary>
+    public static PickerSelection SelectedRow(bool packInstalled, bool phoneRowShown, bool phoneVoiceStored)
+    {
+        if (!packInstalled)
+        {
+            return phoneRowShown ? PickerSelection.Phone : PickerSelection.None;
+        }
+
+        return phoneRowShown && phoneVoiceStored ? PickerSelection.Phone : PickerSelection.Natural;
+    }
 
     /// <summary>Whether the phone voice is the one that would speak.</summary>
     public static bool PhoneReads(bool phoneVoiceChosen, bool packReady) => phoneVoiceChosen || !packReady;

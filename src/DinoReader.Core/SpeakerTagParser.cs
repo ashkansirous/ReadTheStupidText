@@ -67,7 +67,7 @@ internal sealed class SpeakerTagParser
         if (!_verbAtEnd.IsMatch(sentence)) return null;
         foreach (var name in _names.Find(sentence).Where(n => story.Accepts(n.Name))) return new SpeakerTag(name.Name, Gender.Unknown);
         var pronoun = _pronoun.Match(sentence);
-        return pronoun.Success ? PronounTag(pronoun.Value) : null;
+        return pronoun.Success ? PronounTag(pronoun.Value, _verbAtEnd.Match(sentence).Value) : null;
     }
 
     private SpeakerTag? ToTag(Match match, StoryNames story)
@@ -76,19 +76,23 @@ internal sealed class SpeakerTagParser
         var name = match.Groups["n"].Success ? _names.Normalize(match.Groups["n"].Value) : null;
         if (name is not null) return story.Accepts(name) ? new SpeakerTag(name, Gender.Unknown) : null;
         var pronoun = match.Groups["p"].Success ? match.Groups["p"].Value : match.Groups["n"].Value;
-        return PronounTagOrNull(pronoun);
+        return PronounTagOrNull(pronoun, match.Value);
     }
 
-    private SpeakerTag? PronounTagOrNull(string word)
+    private SpeakerTag? PronounTagOrNull(string word, string tagText)
     {
-        var tag = PronounTag(word);
+        var tag = PronounTag(word, tagText);
         return tag.PronounGender == Gender.Unknown ? null : tag;
     }
 
-    private SpeakerTag PronounTag(string word)
+    // A pronoun that means both "she" and "they" (German "sie") is a woman only next to a singular speech verb.
+    private SpeakerTag PronounTag(string word, string tagText)
     {
         if (_rules.MaleSubjectPronouns.Contains(word)) return new SpeakerTag(null, Gender.Male);
-        var female = _rules.FemaleSubjectPronouns.Contains(word);
+        var female = _rules.FemaleSubjectPronouns.Contains(word) && !HasPluralSpeechVerb(tagText);
         return new SpeakerTag(null, female ? Gender.Female : Gender.Unknown);
     }
+
+    private bool HasPluralSpeechVerb(string tagText) =>
+        Regex.Matches(tagText, @"\p{L}+").Any(w => _rules.SpeechVerbs.Contains(w.Value) && _rules.IsPluralVerb(w.Value));
 }

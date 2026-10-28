@@ -93,7 +93,6 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     // The early start's prepared heads (Slice 139): this reader's own, so no other reader or test sees them.
     private readonly FirstChunkHints _hints = new();
     private readonly ConcurrentDictionary<VoiceEngineKind, string> _voiceByKind = new();
-    private int _warmedUp;
     private AndroidMedia.MediaPlayer? _player;
     private string? _currentChunkFile;
     private string? _previousChunkFile;
@@ -129,6 +128,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     // owner leaves, so a Skip-continued playback keeps it alive after the original call returns.
     // A head-start prepare never runs while it is set.
     private ActiveRead? _activeRead;
+    private string? _lastReadVoiceId; // Slice 177: the voice the latest read asked an engine for; its model folder is warmed too
 
     // Set when a read starts and cleared at its first audio, which logs the wait.
     private long _readStartTicks;
@@ -193,10 +193,10 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     }
 
     // On a cold start the model is only resolved after a background scan, so a warm-up asked
-    // for before that found nothing to warm: warm once, the first time the model reports ready.
+    // for before that found nothing to warm: warm each time the resolved model reports ready (a warm engine is left alone, see WarmUp).
     private void OnModelReadyChanged(object? sender, EventArgs e)
     {
-        if (_model.IsReady && Volatile.Read(ref _warmedUp) == 0)
+        if (_model.IsReady)
         {
             _ = WarmUpAsync();
         }
@@ -631,30 +631,52 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
 
     public Task WarmUpAsync() => Task.Run(WarmUp);
 
+    // Slice 177: warms the engine the resolved model's reads would use. The warm state lives on the engine itself (RefCountedTts): a warm-up
+    // synthesises one short sentence only if nothing has synthesised on that engine yet, under the lock a read takes to acquire it, so a
+    // read and a warm-up never use the engine at once and a read that got there first has already warmed it. An evicted engine comes back
+    // cold and the next trigger warms it. Duplicate triggers are harmless.
     private void WarmUp()
     {
+        if (_model.Paths is not { } paths)
+        {
+            return;
+        }
+
         try
         {
-            BuiltEngine? engine = AcquireEngine();
-            if (engine is null)
-            {
-                return;
-            }
-
-            try
-            {
-                Volatile.Write(ref _warmedUp, 1);
-                int speaker = ResolveVoice(engine).SpeakerId;
-                GenerateAudio(engine, WarmUpText, speaker).Dispose();
-            }
-            finally
-            {
-                engine.Release();
-            }
+            WarmEngines(paths);
         }
         catch
         {
-            // Best-effort: AcquireEngine() in SpeakAsync remains the safety net.
+            // Best-effort: AcquireEngine() in the read remains the safety net.
+        }
+    }
+
+    // The default voice's folder and, when the latest read used another folder of the pack (a cast voice, Slice 89), that one too.
+    private void WarmEngines(VoiceModelPaths paths)
+    {
+        WarmEngine(paths, null);
+        if (Volatile.Read(ref _lastReadVoiceId) is { } lastVoice)
+        {
+            WarmEngine(paths, lastVoice);
+        }
+    }
+
+    private void WarmEngine(VoiceModelPaths paths, string? voiceId)
+    {
+        BuiltEngine? engine = AcquireEngine(paths, voiceId, forWarmUp: true);
+        if (engine is null)
+        {
+            return;
+        }
+
+        try
+        {
+            engine.Tts.WarmOnce(() => GenerateAudio(engine, WarmUpText, ResolveVoice(engine).SpeakerId).Dispose());
+        }
+        finally
+        {
+            engine.Release();
         }
     }
 
@@ -794,7 +816,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         {
             try
             {
-                return GenerateAudio(engine, chunk, speakerId, pace);
+                return GenerateTracked(engine, chunk, speakerId, pace);
             }
             finally
             {
@@ -1094,6 +1116,23 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         return engine.Tts.Tts.GenerateWithConfig(text, config, KeepGenerating);
     }
 
+    // Slice 177: a read's synthesis waits for a warm-up in progress and marks the engine warm only once it has completed.
+    private static OfflineTtsGeneratedAudio GenerateTracked(BuiltEngine engine, string text, int speakerId, float pace)
+    {
+        engine.Tts.BeginSynthesis();
+        bool completed = false;
+        try
+        {
+            OfflineTtsGeneratedAudio audio = GenerateAudio(engine, text, speakerId, pace);
+            completed = true;
+            return audio;
+        }
+        finally
+        {
+            engine.Tts.EndSynthesis(completed);
+        }
+    }
+
     // Returning 1 tells sherpa-onnx to keep generating (0 would stop early).
     private static int KeepGenerating(IntPtr samples, int count, float progress, IntPtr arg) => 1;
 
@@ -1102,7 +1141,8 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     // engine (a pack update is a new folder, so it is picked up here); the same folder under
     // another language reuses the model (a Kokoro pack excepted: each language has an engine of its own). An engine nobody asks for any more is disposed once the
     // last read or generation holding it lets go.
-    private BuiltEngine? AcquireEngine(VoiceModelPaths? model = null, string? voiceId = null)
+    // A warm-up (Slice 177) is refused (null) rather than evict an engine that is in use.
+    private BuiltEngine? AcquireEngine(VoiceModelPaths? model = null, string? voiceId = null, bool forWarmUp = false)
     {
         if ((model ?? _model.Paths) is not { } current)
         {
@@ -1111,6 +1151,11 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
 
         // Aimed at the voice that will speak: voices of one pack can each have their own model folder.
         VoiceModelPaths paths = current.ForVoice(PickVoice(current, voiceId));
+        if (!forWarmUp && voiceId is not null)
+        {
+            Volatile.Write(ref _lastReadVoiceId, voiceId);
+        }
+
         if (ModelKey(paths) == Volatile.Read(ref _failedModelKey))
         {
             // This exact model already failed to load: don't retry the multi-hundred-MB build on every
@@ -1120,7 +1165,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
 
         try
         {
-            return AcquireEngineCore(paths);
+            return AcquireEngineCore(paths, forWarmUp);
         }
         catch (Exception ex) when (ex is not NeuralEngineUnavailableException)
         {
@@ -1144,7 +1189,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
             TaskContinuationOptions.OnlyOnFaulted,
             TaskScheduler.Default);
 
-    private BuiltEngine? AcquireEngineCore(VoiceModelPaths paths) => _engines.Acquire(paths);
+    private BuiltEngine? AcquireEngineCore(VoiceModelPaths paths, bool forWarmUp) => _engines.Acquire(paths, forWarmUp);
 
     // The engine for a model folder: the live one of the same folder and pack version re-labelled for the
     // new language (it shares the loaded model), else a freshly built one.
@@ -1253,7 +1298,7 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     // Slice 90: the head start for the text's own language prepares with that language's pack.
     public Task PrepareAsync(string text, VoiceModelPaths? model)
     {
-        if (string.IsNullOrWhiteSpace(text))
+        if (BlankText.IsBlank(text))
         {
             return HeadStartRun.Skipped;
         }
@@ -1603,10 +1648,50 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
     private sealed class RefCountedTts(OfflineTts tts)
     {
         private int _references = 1;
+        private readonly object _warmLock = new();
+        private bool _synthesized;
+        private int _active;
 
         public OfflineTts Tts { get; } = tts;
 
         public bool IsAlive => Volatile.Read(ref _references) > 0;
+
+        /// <summary>Slice 177: a read is about to synthesise here; waits for a warm-up in progress, and keeps a new warm-up off the engine until <see cref="EndSynthesis"/>.</summary>
+        public void BeginSynthesis()
+        {
+            lock (_warmLock)
+            {
+                _active++;
+            }
+        }
+
+        /// <summary>A synthesis begun with <see cref="BeginSynthesis"/> ended; only one that completed makes the engine warm.</summary>
+        public void EndSynthesis(bool completed)
+        {
+            lock (_warmLock)
+            {
+                _active--;
+                _synthesized |= completed;
+            }
+        }
+
+        /// <summary>Runs <paramref name="synthesize"/> only if nothing has synthesised on this engine yet and no read is synthesising on it; the engine counts as warm once it completes.</summary>
+        public void WarmOnce(Action synthesize)
+        {
+            lock (_warmLock)
+            {
+                if (_synthesized || _active > 0)
+                {
+                    return;
+                }
+
+                synthesize();
+                _synthesized = true;
+            }
+        }
+
+        /// <summary>References held right now, the cache's own included.</summary>
+        public int References => Volatile.Read(ref _references);
 
         public bool TryAcquire()
         {
@@ -1656,5 +1741,8 @@ public sealed class AndroidSupertonicSpeechReader : ISpeechReader, IHeadStart, I
         public bool TryAcquire() => Tts.TryAcquire();
 
         public void Release() => Tts.Release();
+
+        // The cache holds one reference; any more is a read or generation.
+        public bool InUse => Tts.References > 1;
     }
 }

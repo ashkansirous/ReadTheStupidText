@@ -18,12 +18,26 @@ public partial class ReadingPage : ContentPage
 {
 	private const double CompactTitleSize = 17;
 	private const double FullTitleSize = 20;
+	private const double BackChipSize = 44;
+	private const float ChipAlpha = 0.92f;
+	private static readonly Thickness OverlayHeaderMargin = new(14, 6, 0, 0);
+	private static readonly Thickness CardHeaderMargin = new(22, 14, 0, 0); // Text only held sideways: the header sits in the card's top corner
+	private const double SidewaysTextSize = 26; // mock frame 93
+	private const double SidewaysTextTopInset = 40; // room under the corner header before the first line
+	private const double OverlayTransportSpan = 172; // 52 + 68 + 52: the three buttons without their gaps
+	private const double OverlayPictureShare = 0.4;
+	private const double OverlayPictureGap = 6; // the card's gap beside the picture (PictureTextPages.SidewaysGap)
+	private const double CompactGapDefault = 20;
+	private const double MinOverlayGap = 6;
+	private const double MaxOverlayGap = 20;
+	private static readonly Thickness SurfaceMargin = new(14, 6, 14, 0);
+	private static readonly Thickness SideSurfaceMargin = new(14, 6, 14, 8);
+	private static readonly Thickness OverlaySurfaceMargin = new(14, 8, 14, 8);
 	private const double WaitCornerRadius = 18; // the picture box's corner (frame 64)
 	private const double TransportWhileWaiting = 0.4; // the player row is dimmed while the wait overlay shows (frame 64)
 
 	private readonly ReadingSession _session;
 	private readonly IStoryLibrary _library;
-	private readonly GrownUpGate _gate;
 	private readonly IServiceProvider _services;
 	private readonly VoicePackInstaller _installer;
 	private readonly IVoiceModelService _model;
@@ -49,19 +63,16 @@ public partial class ReadingPage : ContentPage
 	private bool _visible;
 	private bool _onStack;
 	private Window? _watchedWindow;
-	private bool _stoppedDuringGate;
 	private const double FullHeaderRowSpacing = 2;
-	private bool _compactHeader;
-	private bool _sideControls;
+	private ReadingLayout _layoutKind;
 	private IReadOnlyList<StoryPage> _shownPages = [];
 	private bool _surfaceShown;
 	private bool _translatedDisplay; // the page shows the translation (Slice 110): its offsets are not the story's, so the spoken position is not used
 	private int _displayVersion;
 	private CancellationTokenSource? _displayCancellation; // the screen's translation: stopped when a newer one starts or the page goes away
 	private ReadingMode _mode = ReadingMode.Text; // the mode on screen now, which a translation that arrives late must not undo
-	private (SessionState State, int Sentence)? _sheetResume; // what the story was doing when the book sheet opened
 
-	public ReadingPage(ReadingSession session, IStoryLibrary library, GrownUpGate gate, IServiceProvider services,
+	public ReadingPage(ReadingSession session, IStoryLibrary library, IServiceProvider services,
 		VoicePackInstaller installer, IVoiceModelService model, SpokenLanguage spoken, UsageCounter usage)
 	{
 		InitializeComponent();
@@ -69,7 +80,6 @@ public partial class ReadingPage : ContentPage
 		_usage = usage;
 		_session = session;
 		_library = library;
-		_gate = gate;
 		_services = services;
 		_installer = installer;
 		_model = model;
@@ -78,13 +88,11 @@ public partial class ReadingPage : ContentPage
 		_wait = BuildWait();
 		_session.Failed += OnReadFailed;
 		_session.TranslationSkipped += (_, _) => _spoken.Use(_story?.Language ?? UiLanguage.English);
-		BookInfo.OriginalChanged += SaveShowOriginalAsync;
-		BookInfo.CastRequested += OpenCastAsync;
-		BookInfo.RecordRequested += OpenRecordAsync;
-		BookInfo.VoiceChanged += SaveUseVoiceAsync;
-		BookInfo.Dismissed += OnBookSheetDismissed;
 		ShowPackStatus();
 	}
+
+	/// <summary>The id of the book this page was loaded for (null before Load); the debug test hook compares it.</summary>
+	public string? LoadedStoryId => _story?.Id;
 
 	/// <summary>Opens the page on <paramref name="story"/>. Called once, right after the page is created.</summary>
 	public void Load(Story story)
@@ -289,6 +297,11 @@ public partial class ReadingPage : ContentPage
 	private void ApplyTitle(string title, string language)
 	{
 		TitleLabel.Text = title;
+		if (!TitleLabel.IsVisible)
+		{
+			SemanticProperties.SetDescription(Header, title);
+		}
+
 		TitleLabel.FlowDirection = DinoFonts.IsRightToLeft(language) ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
 	}
 
@@ -325,55 +338,143 @@ public partial class ReadingPage : ContentPage
 	private ScanSource? ScansOf(Story story) =>
 		story.HasPictures ? new ScanSource(story.Pages, file => _library.TryResolveFile(story.Id, file)) : null;
 
-	// Slice 98 (mock screen 35): a picture + text book held sideways has the title on the top bar beside the back button
-	// (one line, ellipsis) and no page dots, to save height.
+	// The four shapes of the reading screen (Slice 98, Slice 174, mock Batch 37 frames 91-93): upright, picture only held sideways (the controls under the
+	// right half), picture + text held sideways (picture 40% left with the controls floating over its bottom, text 60% on the right at full height, the
+	// back button and view switch floating over the picture's corner) and text held sideways (a slim top row, the card, the controls below).
+	private enum ReadingLayout
+	{
+		Upright,
+		PictureSide,
+		PictureOverlay,
+		TextRow,
+	}
+
 	protected override void OnSizeAllocated(double width, double height)
 	{
 		base.OnSizeAllocated(width, height);
 		UpdateHeaderLayout(width, height);
 	}
 
+	private ReadingLayout LayoutFor(double width, double height) => LayoutFor(width, height, Surface.Mode);
+
+	private ReadingLayout LayoutFor(double width, double height, ReadingMode mode)
+	{
+		if (width <= 0 || width <= height)
+		{
+			return ReadingLayout.Upright;
+		}
+
+		if (mode == ReadingMode.Text)
+		{
+			return ReadingLayout.TextRow;
+		}
+
+		if (!PictureTextBook.IsPictureTextBook(_shownPages))
+		{
+			return ReadingLayout.Upright;
+		}
+
+		return mode == ReadingMode.PictureAndText ? ReadingLayout.PictureOverlay : ReadingLayout.PictureSide;
+	}
+
 	private void UpdateHeaderLayout(double width, double height)
 	{
-		bool compact = width > 0 && width > height && PictureTextBook.IsPictureTextBook(_shownPages);
-		bool sideControls = compact && Surface.Mode != ReadingMode.Text;
-		if (compact != _compactHeader || sideControls != _sideControls)
+		ReadingLayout kind = LayoutFor(width, height);
+		if (kind != _layoutKind)
 		{
-			_compactHeader = compact;
-			_sideControls = sideControls;
+			_layoutKind = kind;
+			Root.SizeChanged -= OnRootSizeChanged;
+			Root.SizeChanged += OnRootSizeChanged;
 			ApplyHeaderLayout();
 			ApplyTransportLayout();
 			RenderChrome();
 		}
 	}
 
-	// Mock screen 35: in picture mode the transport row sits under the text half on the right, and the page card runs the
-	// full height (the text card leaves room for the controls). Otherwise the row is centred below the page as usual.
+	private void OnRootSizeChanged(object? sender, EventArgs e) => FitOverlayTransport();
+
+	private bool Floating => _layoutKind == ReadingLayout.PictureOverlay;
+
+	// The back button and the view switch float over the picture (picture + text) or in the card's corner (text only held sideways).
+	private bool FloatingHeader => _layoutKind is ReadingLayout.PictureOverlay or ReadingLayout.TextRow;
+
+	private bool SideControls => _layoutKind is ReadingLayout.PictureSide or ReadingLayout.PictureOverlay;
+
+	// Where the controls and the page card go: the side layouts put the controls in the right half (picture only) or over the picture (picture + text), the card running the full height.
 	private void ApplyTransportLayout()
 	{
-		Root.ColumnDefinitions = _sideControls
-			? [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Star)]
-			: [];
-		Grid.SetColumnSpan(Header, _sideControls ? 2 : 1);
-		Grid.SetColumnSpan(SurfaceHost, _sideControls ? 2 : 1);
-		Grid.SetRowSpan(SurfaceHost, _sideControls ? 4 : 1);
-		Grid.SetColumn(Transport, _sideControls ? 1 : 0);
-		Transport.Compact = _sideControls;
-		SurfaceHost.Margin = _sideControls ? new Thickness(14, 6, 14, 8) : new Thickness(14, 6, 14, 0);
+		Root.ColumnDefinitions = _layoutKind switch
+		{
+			ReadingLayout.PictureSide => [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Star)],
+			ReadingLayout.PictureOverlay => [new ColumnDefinition(new GridLength(2, GridUnitType.Star)), new ColumnDefinition(new GridLength(3, GridUnitType.Star))],
+			_ => [],
+		};
+		Grid.SetColumnSpan(Header, _layoutKind == ReadingLayout.PictureSide ? 2 : 1);
+		Grid.SetColumnSpan(SurfaceHost, SideControls ? 2 : 1);
+		Grid.SetRow(SurfaceHost, FloatingHeader ? 0 : 1);
+		Grid.SetRowSpan(SurfaceHost, Floating ? 5 : _layoutKind == ReadingLayout.TextRow ? 2 : _layoutKind == ReadingLayout.PictureSide ? 4 : 1);
+		Grid.SetColumn(Transport, _layoutKind == ReadingLayout.PictureSide ? 1 : 0);
+		Transport.Compact = _layoutKind != ReadingLayout.Upright;
+		SurfaceHost.Margin = Floating ? OverlaySurfaceMargin : SideControls ? SideSurfaceMargin : SurfaceMargin;
+		bool textRow = _layoutKind == ReadingLayout.TextRow;
+		Surface.SetTextStyle(textRow ? SidewaysTextSize : ReadingMetrics.FontSize, textRow ? SidewaysTextTopInset : 0);
+		FitOverlayTransport();
+	}
+
+	// Picture + text held sideways: the controls are centred on the picture they float over, and their gaps shrink on a narrow phone so the outer buttons stay on it.
+	private void FitOverlayTransport()
+	{
+		if (!Floating)
+		{
+			Transport.Margin = default;
+			Transport.Spacing = Transport.Compact ? CompactGapDefault : Transport.Spacing;
+			return;
+		}
+
+		double inner = (Root.Width > 0 ? Root.Width : Width) - OverlaySurfaceMargin.HorizontalThickness;
+		double picture = inner * OverlayPictureShare - OverlayPictureGap;
+		double column = (Root.Width > 0 ? Root.Width : Width) * OverlayPictureShare;
+		Transport.Margin = new Thickness(OverlaySurfaceMargin.Left, 0, Math.Max(0, column - OverlaySurfaceMargin.Left - picture), 0);
+		Transport.Spacing = Math.Clamp((picture - OverlayTransportSpan) / 2, MinOverlayGap, MaxOverlayGap);
 	}
 
 	private void ApplyHeaderLayout()
 	{
-		Grid.SetRow(TitleLabel, _compactHeader ? 0 : 1);
-		Grid.SetColumn(TitleLabel, _compactHeader ? 1 : 0);
-		Grid.SetColumnSpan(TitleLabel, _compactHeader ? 1 : 4);
-		TitleLabel.FontSize = _compactHeader ? CompactTitleSize : FullTitleSize;
-		TitleLabel.MaxLines = _compactHeader ? 1 : -1;
-		TitleLabel.LineBreakMode = _compactHeader ? LineBreakMode.TailTruncation : LineBreakMode.WordWrap;
-		TitleLabel.VerticalOptions = _compactHeader ? LayoutOptions.Center : LayoutOptions.Fill;
-		// The title shares row 0 when compact, so the second row and the gap before it must not take any height.
-		Header.RowDefinitions[1].Height = _compactHeader ? new GridLength(0) : GridLength.Auto;
-		Header.RowSpacing = _compactHeader ? 0 : FullHeaderRowSpacing;
+		bool floating = FloatingHeader;
+		bool compact = _layoutKind == ReadingLayout.PictureSide;
+		bool noTitle = _layoutKind is ReadingLayout.PictureOverlay or ReadingLayout.TextRow;
+		Grid.SetRow(TitleLabel, compact ? 0 : 1);
+		Grid.SetColumn(TitleLabel, compact ? 1 : 0);
+		Grid.SetColumnSpan(TitleLabel, compact ? 1 : 3);
+		TitleLabel.IsVisible = !noTitle;
+		TitleLabel.FontSize = compact ? CompactTitleSize : FullTitleSize;
+		TitleLabel.MaxLines = compact ? 1 : -1;
+		TitleLabel.LineBreakMode = compact ? LineBreakMode.TailTruncation : LineBreakMode.WordWrap;
+		TitleLabel.VerticalOptions = compact ? LayoutOptions.Center : LayoutOptions.Fill;
+		// The title shares row 0 when compact (and is gone when floating), so the second row and the gap before it must not take any height.
+		Header.RowDefinitions[1].Height = compact || noTitle ? new GridLength(0) : GridLength.Auto;
+		Header.RowSpacing = compact || noTitle ? 0 : FullHeaderRowSpacing;
+		Header.HorizontalOptions = floating ? LayoutOptions.Start : LayoutOptions.Fill;
+		Header.VerticalOptions = floating ? LayoutOptions.Start : LayoutOptions.Fill;
+		Header.Margin = Floating ? OverlayHeaderMargin : _layoutKind == ReadingLayout.TextRow ? CardHeaderMargin : default;
+		ApplyHeaderHeading(noTitle);
+		ApplyBackChip();
+	}
+
+	// With no visible title the header itself is the screen's level-1 heading, so a screen reader still hears which book this is.
+	private void ApplyHeaderHeading(bool noTitle)
+	{
+		SemanticProperties.SetHeadingLevel(Header, noTitle ? SemanticHeadingLevel.Level1 : SemanticHeadingLevel.None);
+		SemanticProperties.SetDescription(Header, noTitle ? TitleLabel.Text : null);
+	}
+
+	// Floating over the picture or in the card's corner the back button is a 44 px white circle (mock 92), and the view switch sits on the same chip, so both read on any picture.
+	private void ApplyBackChip()
+	{
+		Modes.OnPicture = FloatingHeader;
+		BackButton.BackgroundColor = FloatingHeader ? _theme.TextCard.WithAlpha(ChipAlpha) : Colors.Transparent;
+		BackButton.StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = BackChipSize / 2 };
+		BackButton.Shadow = FloatingHeader ? new Shadow { Brush = Brush.Black, Opacity = 0.18f, Radius = 6, Offset = new Point(0, 2) } : null;
 	}
 
 	protected override void OnAppearing()
@@ -449,10 +550,7 @@ public partial class ReadingPage : ContentPage
 
 		TitleLabel.TextColor = _theme.Ink;
 		BackIcon.Color = _theme.BackIcon;
-		LockButton.BackgroundColor = _theme.ControlFill;
-		LockIcon.Color = _theme.ControlIcon;
-		LockIcon.BadgeColor = _theme.SwitchActive;
-		LockIcon.PlusColor = _theme.SwitchActiveIcon;
+		ApplyBackChip();
 		WanderPill.BackgroundColor = _theme.PillFill;
 		PillLabel.TextColor = _theme.PillText;
 		Modes.Set(Modes.Mode, _theme);
@@ -735,20 +833,21 @@ public partial class ReadingPage : ContentPage
 	// After a finished read a swipe also means "from here": Play then starts at the shown page.
 	private void OnPageSwiped(object? sender, int page)
 	{
+#if DEBUG
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write($"{ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.PagePrefix} {page}");
+#endif
 		_session.ClearFinished();
 		_follower.Swiped(page);
 		RenderChrome();
 	}
 
-	// Dots, the wander pill and the transport row all follow the same three facts: the page shown,
+	// The wander pill and the transport row follow the same three facts: the page shown,
 	// whether the child has wandered from the page being read, and whether anything is reading.
 	private void RenderChrome()
 	{
 		SessionState state = _session.State;
 		bool wandering = _follower.IsWandering && state != SessionState.Idle;
-		Dots.Show(Surface.PageCount, Surface.CurrentPage, _theme);
-		Dots.IsVisible = Dots.HasDots && !_compactHeader;
-		Transport.Apply(state, wandering, _theme);
+		Transport.Apply(state, _theme);
 		WanderPill.IsVisible = wandering;
 		PillLabel.Text = ReadingText.ReadingPage(_follower.ReadingPage + 1);
 	}
@@ -756,7 +855,8 @@ public partial class ReadingPage : ContentPage
 	private void OnModeChanged(object? sender, ReadingMode mode)
 	{
 		_mode = mode;
-		Surface.SetMode(mode);
+		bool textRow = LayoutFor(Width, Height, mode) == ReadingLayout.TextRow;
+		Surface.SetMode(mode, textRow ? SidewaysTextSize : ReadingMetrics.FontSize, textRow ? SidewaysTextTopInset : 0);
 		UpdateHeaderLayout(Width, Height);
 		_ = SaveModeAsync(mode);
 	}
@@ -905,238 +1005,7 @@ public partial class ReadingPage : ContentPage
 		return _session.RecordedRangeOf(current) is { } range ? (delta > 0 ? range.Last : range.First) : current;
 	}
 
-	// The "This book" sheet is part of this page, so the system back button closes it first instead of leaving the story.
-	protected override bool OnBackButtonPressed()
-	{
-		if (BookInfo.IsVisible)
-		{
-			BookInfo.Dismiss();
-			return true;
-		}
-
-		return base.OnBackButtonPressed();
-	}
-
 	private async void OnBackTapped(object? sender, TappedEventArgs e) => await _busy.RunAsync(() => Navigation.PopAsync());
-
-	private async void OnLockTapped(object? sender, TappedEventArgs e) => await _busy.RunAsync(OpenGrownUpAsync);
-
-	// The story pauses while the gate is open (a read still loading is stopped, its sentence kept) and
-	// goes on if the grown-up backs out, but only when the child is looking at this page: not when the
-	// gate was closed because the app went to the background, and not when something else is on top.
-	private async Task OpenGrownUpAsync()
-	{
-		SessionState before = _session.State;
-		int sentence = Math.Max(0, _session.CurrentSentence);
-		PauseForGate(before);
-		if (await AskGateAsync())
-		{
-			await OpenBookSheetOrManageAsync(before, sentence);
-			return;
-		}
-
-		if (!_stoppedDuringGate && IsOnTop())
-		{
-			await ResumeAfterGateAsync(before, sentence);
-		}
-	}
-
-	private void PauseForGate(SessionState state)
-	{
-		if (state == SessionState.Loading)
-		{
-			_session.Stop();
-			return;
-		}
-
-		_session.Pause();
-	}
-
-	private async Task<bool> AskGateAsync()
-	{
-		_stoppedDuringGate = false;
-		Window? window = Window;
-		if (window is not null)
-		{
-			window.Stopped += OnWindowStopped;
-		}
-
-		try
-		{
-			return await _gate.RequestAsync(Navigation);
-		}
-		finally
-		{
-			if (window is not null)
-			{
-				window.Stopped -= OnWindowStopped;
-			}
-		}
-	}
-
-	private void OnWindowStopped(object? sender, EventArgs e) => _stoppedDuringGate = true;
-
-	private bool IsOnTop() =>
-		Navigation.ModalStack.Count == 0 && Navigation.NavigationStack.LastOrDefault() == this;
-
-	private async Task ResumeAfterGateAsync(SessionState before, int sentence)
-	{
-		switch (before)
-		{
-			case SessionState.Playing:
-				_session.Resume();
-				break;
-			case SessionState.Loading:
-				await _session.StartAtAsync(sentence);
-				break;
-		}
-	}
-
-	// A book that is being translated, or has a recorded page, opens the "This book" sheet (Slice 110 and 111, mock frame 43); any other book goes straight to
-	// grown-up mode as before. The story stays paused under the sheet and goes on when the sheet is dismissed.
-	private Task OpenBookSheetOrManageAsync(SessionState before, int sentence)
-	{
-		bool translated = _story is { } shown && _services.GetRequiredService<StoryTranslator>().Applies(shown);
-		if (_story is not { } story || !(translated || StoryRecordings.Count(story) > 0))
-		{
-			return GoToManageAsync();
-		}
-
-		if (_sheetResume is not null)
-		{
-			// The sheet is open already: keep the state recorded when it opened, so dismissing it resumes the read.
-			return Task.CompletedTask;
-		}
-
-		string original = LanguageNames.NativeName(story.Language);
-		string spoken = LanguageNames.NativeName(StoryTranslator.MyLanguage);
-		_sheetResume = (before, sentence);
-		BookInfo.Show(story.Title, translated, story.ShowOriginalText, ReadingText.ShowOriginalHint(original, spoken), VoiceOfferOf(story));
-		return Task.CompletedTask;
-	}
-
-	// "Read with my voice" shows only once a page is recorded.
-	private static BookSheet.VoiceOffer? VoiceOfferOf(Story story) =>
-		StoryRecordings.Count(story) is var recorded && recorded > 0 ? new BookSheet.VoiceOffer(recorded, story.Pages.Count, story.UseRecordings) : null;
-
-	private async void OnBookSheetDismissed()
-	{
-		if (_sheetResume is not { } resume)
-		{
-			return;
-		}
-
-		_sheetResume = null;
-		if (!_stoppedDuringGate && IsOnTop())
-		{
-			await ResumeAfterGateAsync(resume.State, resume.Sentence);
-		}
-	}
-
-	// "Show original text" is remembered per story in story.json; the screen follows at once, the audio stays translated.
-	private async Task SaveShowOriginalAsync(bool showOriginal)
-	{
-		if (_story is { } shown)
-		{
-			_story = shown with { ShowOriginalText = showOriginal };
-		}
-
-		await _saveLock.WaitAsync();
-		try
-		{
-			// The latest stored story and the latest switch position, whatever order quick toggles reach the lock in; cast edits saved meanwhile stay.
-			if (_story is { } current)
-			{
-				Story latest = await _library.GetAsync(current.Id) ?? current;
-				await _library.UpdateAsync(latest with { ShowOriginalText = current.ShowOriginalText });
-			}
-		}
-		catch (Exception ex)
-		{
-			Debug.WriteLine($"Dino Reader could not save the original-text switch: {ex}");
-		}
-		finally
-		{
-			_saveLock.Release();
-		}
-
-		await ShowStoryAsync();
-	}
-
-	// "Read with my voice" is remembered per story in story.json; the next read follows it, and the screen shows each page in the right language at once.
-	private async Task SaveUseVoiceAsync(bool useVoice)
-	{
-		if (_story is { } shown)
-		{
-			_story = shown with { UseRecordings = useVoice };
-			_session.SetUseRecordings(useVoice);
-		}
-
-		await _saveLock.WaitAsync();
-		try
-		{
-			if (_story is { } current)
-			{
-				Story latest = await _library.GetAsync(current.Id) ?? current;
-				await _library.UpdateAsync(latest with { UseRecordings = current.UseRecordings });
-			}
-		}
-		catch (Exception ex)
-		{
-			Debug.WriteLine($"Dino Reader could not save the recording switch: {ex}");
-		}
-		finally
-		{
-			_saveLock.Release();
-		}
-
-		await ShowStoryAsync();
-	}
-
-	// Like the cast screen: this page leaves the stack (and stops reading) for the Record screen, in grown-up mode.
-	private async Task OpenRecordAsync()
-	{
-		if (_story is not { } story)
-		{
-			return;
-		}
-
-		INavigation? root = Window?.Page?.Navigation;
-		if (root is null)
-		{
-			return;
-		}
-
-		await root.PopToRootAsync(animated: false);
-		_services.GetRequiredService<GrownUpMode>().Enter();
-		await _services.GetRequiredService<StoryActions>().RecordAsync(root, story);
-	}
-
-	private async Task OpenCastAsync()
-	{
-		if (_story is not { } story)
-		{
-			return;
-		}
-
-		// The window's own navigation outlives this page, which leaves the stack (and stops reading) for the cast screen.
-		INavigation? root = Window?.Page?.Navigation;
-		if (root is null)
-		{
-			return;
-		}
-
-		await root.PopToRootAsync(animated: false);
-		_services.GetRequiredService<GrownUpMode>().Enter();
-		await _services.GetRequiredService<StoryActions>().CastAsync(root, story);
-	}
-
-	// Grown-up mode is the gallery's own state: return to the gallery with it on; leaving this page stops the read.
-	private async Task GoToManageAsync()
-	{
-		await Navigation.PopToRootAsync(animated: false);
-		_services.GetRequiredService<GrownUpMode>().Enter();
-	}
 
 	private async void OnReadFailed(object? sender, EventArgs e) =>
 		await DisplayAlertAsync(ReadingText.CouldntRead, ReadingText.ReadFailed, ReadingText.Ok);

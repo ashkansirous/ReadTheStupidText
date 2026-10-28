@@ -1,5 +1,10 @@
 <Project>
 
+	<PropertyGroup>
+		<!-- The one sherpa-onnx NuGet version for every package below and for the x86_64 tarball pin. -->
+		<SherpaOnnxVersion>1.13.3</SherpaOnnxVersion>
+	</PropertyGroup>
+
 	<!-- The Android sherpa-onnx native packaging, shared by every project that links the engine:
 	     ReadTheStupidText.Mobile.Shared (it compiles against sherpa) AND each app (Read The
 	     Stupid Text Mobile, Dino Reader). It must be imported by the apps too: NuGet's
@@ -25,7 +30,7 @@
 		     satisfy the version constraint but contribute no files) removes
 		     every conflicting candidate, leaving only the real android-arm64
 		     native library. -->
-		<PackageReference Include="org.k2fsa.sherpa.onnx" Version="1.13.3" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx" Version="$(SherpaOnnxVersion)" />
 
 		<!-- Excluded from every implicit NuGet asset flow (see the comment
 		     above) — its .so files are staged explicitly below via
@@ -36,26 +41,117 @@
 		     libonnxruntime.so never appear anywhere in the build output).
 		     GeneratePathProperty exposes $(Pkgorg_k2fsa_sherpa_onnx_runtime_android-arm64)
 		     pointing at the extracted package content, used below. -->
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.android-arm64" Version="1.13.3" ExcludeAssets="all" GeneratePathProperty="true" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.linux-arm64" Version="1.13.3" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.linux-x64" Version="1.13.3" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.osx-arm64" Version="1.13.3" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.osx-x64" Version="1.13.3" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-arm64" Version="1.13.3" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-x64" Version="1.13.3" ExcludeAssets="all" />
-		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-x86" Version="1.13.3" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.android-arm64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" GeneratePathProperty="true" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.linux-arm64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.linux-x64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.osx-arm64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.osx-x64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-arm64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-x64" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" />
+		<PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-x86" Version="$(SherpaOnnxVersion)" ExcludeAssets="all" />
 	</ItemGroup>
 
-	<!-- Only an arm64-v8a native build exists for this package (no android-x64),
-	     so the neural engine is unavailable on an x86_64 emulator — by design,
-	     CompositeSpeechReader-style routing falls back to Android TextToSpeech
-	     (Slice 30) when the neural engine fails to load, matching how the
-	     Windows fallback behaves for a missing/broken model (Decision 14). -->
+	<!-- The NuGet package has only an arm64-v8a native build (no android-x64). Release therefore ships
+	     arm64-v8a only (Slice 72). For emulator tests (Slice 161) a Debug build with
+	     RuntimeIdentifier=android-x64 fetches the x86_64 libs from sherpa-onnx's own GitHub release
+	     below. Without them an x86_64 build falls back to Android TextToSpeech (Slice 30). -->
 	<!-- Staged by the app projects only (AndroidApplication true): a library such as Mobile.Shared would
 	     embed the .so files in its .aar and the APK would then carry them twice. -->
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android' And '$(AndroidApplication)' == 'true' And '$(Pkgorg_k2fsa_sherpa_onnx_runtime_android-arm64)' != ''">
 		<AndroidNativeLibrary Include="$(Pkgorg_k2fsa_sherpa_onnx_runtime_android-arm64)\runtimes\android-arm64\native\libsherpa-onnx-c-api.so" Abi="arm64-v8a" />
 		<AndroidNativeLibrary Include="$(Pkgorg_k2fsa_sherpa_onnx_runtime_android-arm64)\runtimes\android-arm64\native\libonnxruntime.so" Abi="arm64-v8a" />
 	</ItemGroup>
+
+	<!-- x86_64 natives for the emulator (Slice 161): Debug + android-x64 app builds only, never Release. The
+	     release tarball is downloaded once into artifacts/ (gitignored), checked against a pinned SHA-256, and only the two
+	     x86_64 libraries are extracted. Never committed. libonnxruntime.so is the release's own 1.24.3,
+	     the version Microsoft.ML.OnnxRuntime.Managed is pinned to (Mobile CLAUDE.md).
+	     SherpaX64PinnedVersion and SherpaX64Sha256 describe the tarball of ONE release: when SherpaOnnxVersion
+	     (the NuGet version, top of this file) changes, the build fails until both are updated together. -->
+	<!-- One task does the whole fetch under a machine-wide named mutex, so parallel builds (RTST + Dino, a solution
+	     build) never read a half-written archive. It downloads to a unique temp name (10 min timeout, 3 tries),
+	     deletes the file on a hash mismatch, and extracts only when a library is missing. -->
+	<UsingTask TaskName="FetchSherpaX64" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+		<ParameterGroup>
+			<Url Required="true" />
+			<Directory Required="true" />
+			<Sha256 Required="true" />
+		</ParameterGroup>
+		<Task>
+			<Using Namespace="System" />
+			<Using Namespace="System.IO" />
+			<Using Namespace="System.Net.Http" />
+			<Using Namespace="System.Diagnostics" />
+			<Using Namespace="System.Threading" />
+			<Using Namespace="System.Security.Cryptography" />
+			<Code Type="Fragment" Language="cs"><![CDATA[
+				string dir = Path.GetFullPath(Directory);
+				string libs = Path.Combine(dir, "jniLibs", "x86_64");
+				string[] needed = { "libsherpa-onnx-c-api.so", "libonnxruntime.so" };
+				string mutexName = "Global" + (char)92 + "RTST_SherpaX64_" + dir.Replace((char)92, '_').Replace('/', '_').Replace(':', '_');
+				using (var mutex = new Mutex(false, mutexName))
+				{
+					try { mutex.WaitOne(); } catch (AbandonedMutexException) { }
+					try
+					{
+						if (Array.TrueForAll(needed, n => File.Exists(Path.Combine(libs, n)))) return true;
+						System.IO.Directory.CreateDirectory(dir);
+						string tmp = Path.Combine(dir, "android-" + Guid.NewGuid().ToString("N") + ".tar.bz2.part");
+						Log.LogMessage(MessageImportance.High, "Downloading sherpa-onnx x86_64 natives (52 MB, once) from " + Url);
+						Exception last = null;
+						for (int attempt = 1; attempt <= 3; attempt++)
+						{
+							try
+							{
+								using (var http = new HttpClient { Timeout = TimeSpan.FromMinutes(10) })
+								using (var src = http.GetStreamAsync(Url).GetAwaiter().GetResult())
+								using (var dst = File.Create(tmp))
+								{ src.CopyTo(dst); }
+								last = null;
+								break;
+							}
+							catch (Exception ex) { last = ex; Log.LogMessage(MessageImportance.High, "Download attempt " + attempt + " failed: " + ex.Message); }
+						}
+						if (last != null) { Log.LogError("sherpa-onnx x86_64 natives: download failed: " + last.Message); return false; }
+						string actual;
+						using (var sha = SHA256.Create())
+						using (var fs = File.OpenRead(tmp))
+						{ actual = BitConverter.ToString(sha.ComputeHash(fs)).Replace("-", ""); }
+						if (!string.Equals(actual, Sha256, StringComparison.OrdinalIgnoreCase))
+						{
+							File.Delete(tmp);
+							Log.LogError("sherpa-onnx x86_64 natives: SHA-256 mismatch (got " + actual + ", pinned " + Sha256 + "); the download was discarded.");
+							return false;
+						}
+						string winTar = Path.Combine(Environment.GetEnvironmentVariable("SystemRoot") ?? "", "System32", "tar.exe");
+						var psi = new ProcessStartInfo(File.Exists(winTar) ? winTar : "tar", "-xjf \"" + tmp + "\" ./jniLibs/x86_64") { WorkingDirectory = dir, UseShellExecute = false };
+						using (var p = Process.Start(psi))
+						{
+							p.WaitForExit();
+							if (p.ExitCode != 0) { Log.LogError("sherpa-onnx x86_64 natives: tar failed with exit code " + p.ExitCode); return false; }
+						}
+						File.Delete(tmp);
+						return Array.TrueForAll(needed, n => File.Exists(Path.Combine(libs, n)));
+					}
+					finally { mutex.ReleaseMutex(); }
+				}
+			]]></Code>
+		</Task>
+	</UsingTask>
+	<!-- Everything is decided inside the target, at build time, so a RuntimeIdentifier set by a csproj after this
+	     file is imported is still seen. -->
+	<Target Name="FetchSherpaX64Natives" BeforeTargets="BeforeBuild;_ResolveAssemblies" Condition="'$(Configuration)' == 'Debug' And '$(RuntimeIdentifier)' == 'android-x64' And '$(AndroidApplication)' == 'true'">
+		<PropertyGroup>
+			<SherpaX64PinnedVersion>1.13.3</SherpaX64PinnedVersion>
+			<SherpaX64Sha256>04ACACDB5EAA41D814E7792E7906168D147AF6023FAA9E9CAF38B2F321B4CF52</SherpaX64Sha256>
+			<SherpaX64Dir>$(MSBuildThisFileDirectory)..\artifacts\sherpa-x64-$(SherpaOnnxVersion)\</SherpaX64Dir>
+		</PropertyGroup>
+		<Error Condition="'$(SherpaX64PinnedVersion)' != '$(SherpaOnnxVersion)'" Text="AndroidSherpaPackaging.props: SherpaOnnxVersion is $(SherpaOnnxVersion) but SherpaX64PinnedVersion/SherpaX64Sha256 are for $(SherpaX64PinnedVersion). Update the pinned version and its SHA-256 (from the GitHub release asset digest) together." />
+		<FetchSherpaX64 Url="https://github.com/k2-fsa/sherpa-onnx/releases/download/v$(SherpaOnnxVersion)/sherpa-onnx-v$(SherpaOnnxVersion)-android.tar.bz2" Directory="$(SherpaX64Dir)" Sha256="$(SherpaX64Sha256)" />
+		<ItemGroup>
+			<AndroidNativeLibrary Include="$(SherpaX64Dir)jniLibs/x86_64/libsherpa-onnx-c-api.so" Abi="x86_64" />
+			<AndroidNativeLibrary Include="$(SherpaX64Dir)jniLibs/x86_64/libonnxruntime.so" Abi="x86_64" />
+		</ItemGroup>
+	</Target>
 
 </Project>

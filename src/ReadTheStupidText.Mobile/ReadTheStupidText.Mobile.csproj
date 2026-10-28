@@ -43,8 +43,8 @@
 		     devices. Do not lower it. -->
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">28.0</SupportedOSPlatformVersion>
 
-		<!-- iOS 15 is the MAUI 10 minimum for iOS; it covers every iPhone back to the 6s. -->
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
+		<!-- iOS 15.5 is ML Kit Translate's own floor (Slice 160); MAUI 10's is 15.0. It still covers every iPhone back to the 6s. -->
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.5</SupportedOSPlatformVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -82,6 +82,9 @@
 	     packages referenced below are the translation ones (this app's translation flow). -->
 	<Import Project="..\AndroidSherpaPackaging.props" />
 	<Import Project="..\AndroidRelease.props" />
+	<!-- Slice 162: the iOS URL scheme of the Debug-only test hooks (the props adds it in Debug iOS builds only). -->
+	<PropertyGroup><TestHookPlist>TestHooks.Rtst.plist</TestHookPlist></PropertyGroup>
+	<Import Project="..\ReadTheStupidText.Mobile.Shared\Testing\TestHooks.props" />
 
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
 		<!-- The document scanner, ML Kit text recognition and the onnxruntime binding moved to
@@ -109,7 +112,7 @@
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
 		<BundleResource Include="Platforms\iOS\Resources\PrivacyInfo.xcprivacy" LogicalName="PrivacyInfo.xcprivacy" />
 
-		<!-- Slice 55: the permission prompts (camera, photo library) in the fourteen app languages.
+		<!-- Slice 55: the permission prompts (camera, photo library) in the fifteen app languages.
 		     Each language has a folder named like ar.lproj, as iOS expects; Info.plist stays the
 		     English fallback. -->
 		<BundleResource Include="Platforms\iOS\Resources\ar.lproj\InfoPlist.strings" LogicalName="ar.lproj/InfoPlist.strings" />
@@ -119,6 +122,7 @@
 		<BundleResource Include="Platforms\iOS\Resources\sv.lproj\InfoPlist.strings" LogicalName="sv.lproj/InfoPlist.strings" />
 		<BundleResource Include="Platforms\iOS\Resources\nb.lproj\InfoPlist.strings" LogicalName="nb.lproj/InfoPlist.strings" />
 		<BundleResource Include="Platforms\iOS\Resources\nl.lproj\InfoPlist.strings" LogicalName="nl.lproj/InfoPlist.strings" />
+		<BundleResource Include="Platforms\iOS\Resources\de.lproj\InfoPlist.strings" LogicalName="de.lproj/InfoPlist.strings" />
 		<BundleResource Include="Platforms\iOS\Resources\es.lproj\InfoPlist.strings" LogicalName="es.lproj/InfoPlist.strings" />
 		<BundleResource Include="Platforms\iOS\Resources\fa.lproj\InfoPlist.strings" LogicalName="fa.lproj/InfoPlist.strings" />
 		<BundleResource Include="Platforms\iOS\Resources\fr.lproj\InfoPlist.strings" LogicalName="fr.lproj/InfoPlist.strings" />
@@ -136,7 +140,7 @@
 		<ProjectReference Include="..\ReadTheStupidText.Domain\ReadTheStupidText.Domain.csproj" />
 		<ProjectReference Include="..\ReadTheStupidText.Application\ReadTheStupidText.Application.csproj" />
 		<ProjectReference Include="..\ReadTheStupidText.Documents\ReadTheStupidText.Documents.csproj" />
-		<ProjectReference Include="..\ReadTheStupidText.Mobile.Shared\ReadTheStupidText.Mobile.Shared.csproj" />
+		<ProjectReference Include="..\ReadTheStupidText.Mobile.Shared\ReadTheStupidText.Mobile.Shared.csproj" AdditionalProperties="IosSimulatorBuild=$(RuntimeIdentifier.StartsWith('iossimulator'))" /> <!-- a global RuntimeIdentifier does not reach Mobile.Shared; it needs to know about a simulator build (no ML Kit there) -->
 	</ItemGroup>
 
 	<!-- Fail early and clearly instead of restoring a project with no target framework. -->

@@ -16,6 +16,9 @@
   <data name="Common_Back" xml:space="preserve"><value>بازگشت</value></data>
   <data name="Common_Save" xml:space="preserve"><value>ذخیره</value></data>
   <data name="Common_Done" xml:space="preserve"><value>تمام</value></data>
+  <data name="Close_Question" xml:space="preserve"><value>Dino Book Reader بسته شود؟</value></data>
+  <data name="Common_Stay" xml:space="preserve"><value>ماندن</value></data>
+  <data name="Common_Close" xml:space="preserve"><value>بستن</value></data>
   <data name="Common_Delete" xml:space="preserve"><value>حذف</value></data>
   <data name="Common_Keep" xml:space="preserve"><value>نگه دار</value></data>
   <data name="Common_Edit" xml:space="preserve"><value>ویرایش</value></data>
@@ -40,14 +43,14 @@
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>حذف {0}</value></data>
   <data name="Gallery_ExportStory" xml:space="preserve"><value>برون‌بری داستان</value></data>
   <data name="Gallery_CastButton" xml:space="preserve"><value>شخصیت‌ها</value></data>
-  <data name="Store_Title" xml:space="preserve"><value>داستان‌های رایگان</value></data>
+  <data name="Store_Title" xml:space="preserve"><value>فروشگاه</value></data>
   <data name="Store_Subtitle" xml:space="preserve"><value>انتخاب‌شده و نقش‌بندی‌شده برای دینو</value></data>
   <data name="Store_Get" xml:space="preserve"><value>دریافت</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>دریافت شد</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0} صفحه · {1} دقیقه</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>رایگان و بدون حساب کاربری. هیچ اطلاعاتی از شما یا فرزندتان فرستاده نمی‌شود.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>آفلاین هستید</value></data>
-  <data name="Store_OfflineBody" xml:space="preserve"><value>داستان‌های رایگان به اینترنت نیاز دارند. داستان‌هایی که از قبل روی قفسه هستند بدون اینترنت هم خوانده می‌شوند.</value></data>
+  <data name="Store_OfflineBody" xml:space="preserve"><value>فروشگاه به اینترنت نیاز دارد. داستان‌هایی که از قبل روی قفسه هستند بدون اینترنت هم خوانده می‌شوند.</value></data>
   <data name="Store_TryAgain" xml:space="preserve"><value>دوباره تلاش کن</value></data>
   <data name="Store_EmptyTitle" xml:space="preserve"><value>هنوز داستان تازه‌ای نیست</value></data>
   <data name="Store_EmptyBody" xml:space="preserve"><value>هر از گاهی داستان‌های تازه اضافه می‌شود. بعداً سر بزنید.</value></data>
@@ -104,7 +107,7 @@
   <data name="Intro_Skip" xml:space="preserve"><value>رد کردن</value></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} از {1}</value></data>
   <data name="Intro_StoreTitle" xml:space="preserve"><value>کتاب‌های بیشتر بگیرید</value></data>
-  <data name="Intro_StoreLine" xml:space="preserve"><value>فروشگاه رایگان داستان‌های بیشتری دارد که آمادهٔ دانلود هستند.</value></data>
+  <data name="Intro_StoreLine" xml:space="preserve"><value>فروشگاه داستان‌های بیشتری دارد که آمادهٔ دانلود هستند.</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>با صدای خودتان بخوانید</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>خودتان را هنگام خواندن یک داستان، صفحه به صفحه، ضبط کنید. فرزندتان هر وقت بخواهد می‌تواند آن را پخش کند.</value></data>
   <data name="Intro_AddTitle" xml:space="preserve"><value>کتاب خودتان را اضافه کنید</value></data>
@@ -117,6 +120,26 @@
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>حالت بزرگسال</value></data>
   <data name="Language_Title" xml:space="preserve"><value>زبان</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>Dino به این زبان می‌خواند و ترجمه می‌کند</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>تنظیمات</value></data>
+  <data name="Settings_Books" xml:space="preserve"><value>کتاب‌ها</value></data>
+  <data name="Settings_BooksValue" xml:space="preserve"><value>افزودن، ویرایش، فروشگاه</value></data>
+  <data name="Settings_GroupReading" xml:space="preserve"><value>خواندن</value></data>
+  <data name="Settings_GroupPhone" xml:space="preserve"><value>این گوشی</value></data>
+  <data name="Settings_NewVersion" xml:space="preserve"><value>نسخهٔ جدید</value></data>
+  <data name="Settings_GearLabel" xml:space="preserve"><value>تنظیمات (بزرگ‌ترها)</value></data>
+  <data name="Settings_About" xml:space="preserve"><value>دربارهٔ برنامه و به‌روزرسانی‌ها</value></data>
+  <data name="Settings_NarratorVoice" xml:space="preserve"><value>صدای راوی</value></data>
+  <data name="Settings_On" xml:space="preserve"><value>روشن</value></data>
+  <data name="Settings_Off" xml:space="preserve"><value>خاموش</value></data>
+  <data name="Language_PageSub" xml:space="preserve"><value>تنظیمات، فروشگاه و قفسه</value></data>
+  <data name="Narrator_ListIntro" xml:space="preserve"><value>هر زبان داستان راوی خودش را دارد.</value></data>
+  <data name="Narrator_OneIntro" xml:space="preserve"><value>چه کسی بخش‌های میان شخصیت‌ها را در هر کتاب {0} می‌خواند.</value></data>
+  <data name="Narrator_TitleFor" xml:space="preserve"><value>صدای راوی ({0})</value></data>
+  <data name="Narrator_NoVoiceValue" xml:space="preserve"><value>دانلود نشده</value></data>
+  <data name="Narrator_NoVoiceHint" xml:space="preserve"><value>صداهای {0} هنوز روی این گوشی نیست. برگردید، «زبان» را باز کنید، {0} را انتخاب و دانلود کنید، سپس راوی را اینجا انتخاب کنید.</value></data>
+  <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>بزرگ‌ترها</value></data>
+  <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>افزودن و ویرایش کتاب‌ها</value></data>
+  <data name="Gallery_AddFromBooks" xml:space="preserve"><value>افزودن از کتاب‌های خودتان</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>آماده</value></data>
   <data name="Language_Download" xml:space="preserve"><value>دانلود</value></data>
   <data name="Language_Downloading" xml:space="preserve"><value>در حال دانلود {0}%</value></data>
@@ -198,13 +221,13 @@
   <data name="Version_NewReady" xml:space="preserve"><value>نسخهٔ تازه آماده است</value></data>
   <data name="Version_Title" xml:space="preserve"><value>نسخه</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>به بهتر شدن دینو کمک کنید</value></data>
-  <data name="Usage_Helper" xml:space="preserve"><value>شمارش‌هایی مثل «یک کتاب فروشگاه تمام شد» می‌فرستد. بدون نام، بدون شناسه، بدون چیزی که شما نوشته‌اید.</value></data>
+  <data name="Usage_Helper" xml:space="preserve"><value>شمارش‌هایی مثل «یک کتاب فروشگاه تمام شد» می‌فرستد. بدون نام، بدون شناسه، بدون چیزی که شما نوشته‌اید. همچنین کشور شما و نوع تقریبی دستگاه (گوشی یا تبلت، محدودهٔ حافظه) را اضافه می‌کند.</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>سرعت خواندن</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>آهسته‌تر برای کوچولوها آسان‌تر است</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>۰٫۵x · آهسته</value></data>
   <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
   <data name="Speed_Play" xml:space="preserve"><value>شنیدن این سرعت</value></data>
-  <data name="FirstRun_Usage" xml:space="preserve"><value>دینو می‌شمارد کدام کتاب‌ها خوانده می‌شوند، بدون نام و شناسه. می‌توانید این را در تنظیمات خاموش کنید.</value></data>
+  <data name="FirstRun_Usage" xml:space="preserve"><value>دینو می‌شمارد کدام کتاب‌ها خوانده می‌شوند، بدون نام و شناسه. می‌توانید این را در تنظیمات خاموش کنید. همچنین کشور شما و نوع تقریبی دستگاه (گوشی یا تبلت، محدودهٔ حافظه) را اضافه می‌کند.</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>قصه‌گوی شما ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} مگابایت</value></data>
   <data name="Storyteller_Failed" xml:space="preserve"><value>دریافت صداهای قصه‌گو ممکن نشد</value></data>

@@ -2,7 +2,7 @@
   "kind": "Store",
   "id": "67695905c10a46bd81aa498beab9609e",
   "title": "Goldilocks and the Three Bears",
-  "version": 9,
+  "version": 10,
   "ageMin": 3,
   "ageMax": 6,
   "author": "Traditional",
@@ -59,5 +59,5 @@
       ]
     }
   ],
-  "contentHash": "3f14f8257845c2e08a824ea4e24303d64ddfa9180de137fc8a27c7ae4a2ee0d4"
+  "contentHash": "293041a9c1c2bc9d343f3354c0caa3d03362d382d136087eb2058a0e6b6e8e81"
 }

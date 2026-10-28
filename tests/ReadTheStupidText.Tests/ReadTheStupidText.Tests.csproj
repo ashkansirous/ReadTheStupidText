@@ -26,6 +26,8 @@
     <Compile Include="..\..\src\ReadTheStupidText.Mobile\LocalizedPackStatus.cs" Link="Mobile\LocalizedPackStatus.cs" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile\Resources\Strings\AppResources.cs" Link="Mobile\AppResources.cs" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\PackStatusText.cs" Link="Mobile\PackStatusText.cs" />
+    <!-- Debug-only test-hook command parser (Slice 162); its file is empty outside Debug. -->
+    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Testing\TestHookCommand.cs" Link="Mobile\TestHookCommand.cs" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Images\CropRect.cs" Link="Mobile\CropRect.cs" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\VoicePackInstaller.cs" Link="Mobile\VoicePackInstaller.cs" />
     <EmbeddedResource Include="..\..\src\ReadTheStupidText.Mobile\Resources\Strings\AppResources.resx" Link="Mobile\AppResources.resx" LogicalName="ReadTheStupidText.Mobile.Resources.Strings.AppResources.resources" />

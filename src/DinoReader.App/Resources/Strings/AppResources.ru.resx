@@ -16,6 +16,9 @@
   <data name="Common_Back" xml:space="preserve"><value>Назад</value></data>
   <data name="Common_Save" xml:space="preserve"><value>Сохранить</value></data>
   <data name="Common_Done" xml:space="preserve"><value>Готово</value></data>
+  <data name="Close_Question" xml:space="preserve"><value>Закрыть Dino Book Reader?</value></data>
+  <data name="Common_Stay" xml:space="preserve"><value>Остаться</value></data>
+  <data name="Common_Close" xml:space="preserve"><value>Закрыть</value></data>
   <data name="Common_Delete" xml:space="preserve"><value>Удалить</value></data>
   <data name="Common_Keep" xml:space="preserve"><value>Оставить</value></data>
   <data name="Common_Edit" xml:space="preserve"><value>Изменить</value></data>
@@ -40,14 +43,14 @@
   <data name="Gallery_DeleteStoryLabel" xml:space="preserve"><value>Удалить {0}</value></data>
   <data name="Gallery_ExportStory" xml:space="preserve"><value>Экспортировать историю</value></data>
   <data name="Gallery_CastButton" xml:space="preserve"><value>Герои</value></data>
-  <data name="Store_Title" xml:space="preserve"><value>Бесплатные истории</value></data>
+  <data name="Store_Title" xml:space="preserve"><value>Магазин</value></data>
   <data name="Store_Subtitle" xml:space="preserve"><value>Подобраны и распределены по ролям для Дино</value></data>
   <data name="Store_Get" xml:space="preserve"><value>Скачать</value></data>
   <data name="Store_Downloaded" xml:space="preserve"><value>Скачано</value></data>
   <data name="Store_Length" xml:space="preserve"><value>{0} стр. · {1} мин</value></data>
   <data name="Store_Footer" xml:space="preserve"><value>Бесплатно и без аккаунта. Ничего о вас или вашем ребёнке не отправляется.</value></data>
   <data name="Store_OfflineTitle" xml:space="preserve"><value>Нет подключения</value></data>
-  <data name="Store_OfflineBody" xml:space="preserve"><value>Для бесплатных историй нужен интернет. Истории, которые уже на полке, читаются и без него.</value></data>
+  <data name="Store_OfflineBody" xml:space="preserve"><value>Для магазина нужен интернет. Истории, которые уже на полке, читаются и без него.</value></data>
   <data name="Store_TryAgain" xml:space="preserve"><value>Повторить</value></data>
   <data name="Store_EmptyTitle" xml:space="preserve"><value>Новых историй пока нет</value></data>
   <data name="Store_EmptyBody" xml:space="preserve"><value>Новые истории добавляются время от времени. Загляните позже.</value></data>
@@ -104,7 +107,7 @@
   <data name="Intro_Skip" xml:space="preserve"><value>Пропустить</value></data>
   <data name="Intro_Counter" xml:space="preserve"><value>{0} из {1}</value></data>
   <data name="Intro_StoreTitle" xml:space="preserve"><value>Больше книг</value></data>
-  <data name="Intro_StoreLine" xml:space="preserve"><value>В бесплатном магазине есть ещё истории, готовые к загрузке.</value></data>
+  <data name="Intro_StoreLine" xml:space="preserve"><value>В магазине есть ещё истории, готовые к загрузке.</value></data>
   <data name="Intro_RecordTitle" xml:space="preserve"><value>Читайте своим голосом</value></data>
   <data name="Intro_RecordLine" xml:space="preserve"><value>Запишите, как вы читаете историю, страницу за страницей. Ребёнок сможет включить её в любое время.</value></data>
   <data name="Intro_AddTitle" xml:space="preserve"><value>Добавьте свою книгу</value></data>
@@ -117,6 +120,26 @@
   <data name="Gallery_GrownUpMode" xml:space="preserve"><value>Режим для взрослых</value></data>
   <data name="Language_Title" xml:space="preserve"><value>Язык</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>Dino читает и переводит на этот язык</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>Настройки</value></data>
+  <data name="Settings_Books" xml:space="preserve"><value>Книги</value></data>
+  <data name="Settings_BooksValue" xml:space="preserve"><value>Добавить, изменить, Магазин</value></data>
+  <data name="Settings_GroupReading" xml:space="preserve"><value>Чтение</value></data>
+  <data name="Settings_GroupPhone" xml:space="preserve"><value>Этот телефон</value></data>
+  <data name="Settings_NewVersion" xml:space="preserve"><value>Новая версия</value></data>
+  <data name="Settings_GearLabel" xml:space="preserve"><value>Настройки (для взрослых)</value></data>
+  <data name="Settings_About" xml:space="preserve"><value>О приложении и обновления</value></data>
+  <data name="Settings_NarratorVoice" xml:space="preserve"><value>Голос рассказчика</value></data>
+  <data name="Settings_On" xml:space="preserve"><value>Вкл.</value></data>
+  <data name="Settings_Off" xml:space="preserve"><value>Выкл.</value></data>
+  <data name="Language_PageSub" xml:space="preserve"><value>Настройки, магазин и полка</value></data>
+  <data name="Narrator_ListIntro" xml:space="preserve"><value>У каждого языка историй свой рассказчик.</value></data>
+  <data name="Narrator_OneIntro" xml:space="preserve"><value>Кто читает части между героями в каждой книге ({0}).</value></data>
+  <data name="Narrator_TitleFor" xml:space="preserve"><value>Голос рассказчика ({0})</value></data>
+  <data name="Narrator_NoVoiceValue" xml:space="preserve"><value>Не скачано</value></data>
+  <data name="Narrator_NoVoiceHint" xml:space="preserve"><value>Голосов для языка «{0}» на этом телефоне пока нет. Вернитесь, откройте «Язык», выберите «{0}» и скачайте голос, потом выберите рассказчика здесь.</value></data>
+  <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Взрослые</value></data>
+  <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Добавление и изменение книг</value></data>
+  <data name="Gallery_AddFromBooks" xml:space="preserve"><value>Добавить из своих книг</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>Готово</value></data>
   <data name="Language_Download" xml:space="preserve"><value>Скачать</value></data>
   <data name="Language_Downloading" xml:space="preserve"><value>Загрузка {0}%</value></data>
@@ -198,13 +221,13 @@
   <data name="Version_NewReady" xml:space="preserve"><value>Доступна новая версия</value></data>
   <data name="Version_Title" xml:space="preserve"><value>Версия</value></data>
   <data name="Usage_Title" xml:space="preserve"><value>Помогите улучшить Dino</value></data>
-  <data name="Usage_Helper" xml:space="preserve"><value>Отправляет только счётчики, например «книга из магазина дочитана». Никаких имён, идентификаторов и ничего из того, что вы набрали.</value></data>
+  <data name="Usage_Helper" xml:space="preserve"><value>Отправляет только счётчики, например «книга из магазина дочитана». Никаких имён, идентификаторов и ничего из того, что вы набрали. Также добавляются ваша страна и примерный тип устройства (телефон или планшет, диапазон памяти).</value></data>
   <data name="Speed_Title" xml:space="preserve"><value>Скорость чтения</value></data>
   <data name="Speed_Sub" xml:space="preserve"><value>Помедленнее — малышам легче</value></data>
   <data name="Speed_EndSlow" xml:space="preserve"><value>0,5x · медленно</value></data>
   <data name="Speed_Value" xml:space="preserve"><value>{0}x</value></data>
   <data name="Speed_Play" xml:space="preserve"><value>Послушать эту скорость</value></data>
-  <data name="FirstRun_Usage" xml:space="preserve"><value>Dino считает, какие книги читают, без имён и идентификаторов. Это можно отключить в настройках.</value></data>
+  <data name="FirstRun_Usage" xml:space="preserve"><value>Dino считает, какие книги читают, без имён и идентификаторов. Это можно отключить в настройках. Также добавляются ваша страна и примерный тип устройства (телефон или планшет, диапазон памяти).</value></data>
   <data name="Storyteller_YourNarrator" xml:space="preserve"><value>Ваш рассказчик ({0})</value></data>
   <data name="Storyteller_Size" xml:space="preserve"><value>{0} МБ</value></data>
   <data name="Storyteller_Failed" xml:space="preserve"><value>Не удалось загрузить голоса рассказчика</value></data>

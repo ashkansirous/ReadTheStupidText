@@ -49,8 +49,9 @@ public sealed class ReadingSurface : Border
 	private bool _composing;
 	private bool _dirty;
 	private IDispatcherTimer? _resizeTimer;
-	private PlatformTextMeasurer? _measurer;
-	private string? _measurerFont;
+	private readonly Dictionary<(string Font, double Size), PlatformTextMeasurer> _measurers = [];
+	private double _textFontSize = ReadingMetrics.FontSize;
+	private double _textTopInset;
 	private readonly Label _error = new()
 	{
 		Text = ReadingText.LayoutFailed,
@@ -87,6 +88,38 @@ public sealed class ReadingSurface : Border
 	public event EventHandler? LaidOut;
 
 	public ReadingMode Mode => _mode;
+
+	/// <summary>Text mode held sideways (mock Batch 37 frame 93): a larger type and room above the first line for the back button and view switch floating in the card's corner.
+	/// Changing either lays the pages out again.</summary>
+	public void SetTextStyle(double fontSize, double topInset)
+	{
+		if (fontSize == _textFontSize && topInset == _textTopInset)
+		{
+			return;
+		}
+
+		_textFontSize = fontSize;
+		_textTopInset = topInset;
+		if (_mode == ReadingMode.Text)
+		{
+			// Waits for the resize to settle: a rotation changes the size too, and both end in one layout pass.
+			_laidOutFor = default;
+			RestartResizeTimer();
+		}
+	}
+
+	/// <summary>Changes the mode and the text style together, so the pages are laid out once with the new style (not once per change).</summary>
+	public void SetMode(ReadingMode mode, double fontSize, double topInset)
+	{
+		_textFontSize = fontSize;
+		_textTopInset = topInset;
+		if (mode == _mode)
+		{
+			return;
+		}
+
+		SetMode(mode);
+	}
 
 	public void Show(ReadingContent content, ReadingMode mode, ReadingTheme theme)
 	{
@@ -307,11 +340,12 @@ public sealed class ReadingSurface : Border
 
 	private IPageRenderer CreateRenderer(ReadingContent content, ReadingTheme theme)
 	{
-		PlatformTextMeasurer measurer = MeasurerFor(content.Font);
 		if (_mode == ReadingMode.Text)
 		{
-			return new TextPages(content.Text, content.Sentences, measurer, content.Font, theme, content.RightToLeft);
+			return new TextPages(content.Text, content.Sentences, MeasurerFor(content.Font, _textFontSize), content.Font, theme, content.RightToLeft, _textFontSize, _textTopInset);
 		}
+
+		PlatformTextMeasurer measurer = MeasurerFor(content.Font, ReadingMetrics.FontSize);
 
 		if (content.Scans is { } book && PictureTextBook.IsPictureTextBook(book.Pages))
 		{
@@ -325,17 +359,16 @@ public sealed class ReadingSurface : Border
 			: new PicturePages(content.Text, content.Sentences, measurer, content.Font, theme);
 	}
 
-	// One measurer per font and size, kept while the surface lives and let go with it.
-	private PlatformTextMeasurer MeasurerFor(string font)
+	// One measurer per font and size, kept while the surface lives and let go with it (a page still on screen keeps using the one it was laid out with).
+	private PlatformTextMeasurer MeasurerFor(string font, double size)
 	{
-		if (_measurer is null || _measurerFont != font)
+		if (!_measurers.TryGetValue((font, size), out PlatformTextMeasurer? measurer))
 		{
-			_measurer?.Dispose();
-			_measurer = new PlatformTextMeasurer(font, ReadingMetrics.FontSize);
-			_measurerFont = font;
+			measurer = new PlatformTextMeasurer(font, size);
+			_measurers[(font, size)] = measurer;
 		}
 
-		return _measurer;
+		return measurer;
 	}
 
 	protected override void OnHandlerChanging(HandlerChangingEventArgs args)
@@ -343,9 +376,12 @@ public sealed class ReadingSurface : Border
 		base.OnHandlerChanging(args);
 		if (args.NewHandler is null)
 		{
-			_measurer?.Dispose();
-			_measurer = null;
-			_measurerFont = null;
+			foreach (PlatformTextMeasurer measurer in _measurers.Values)
+			{
+				measurer.Dispose();
+			}
+
+			_measurers.Clear();
 		}
 	}
 

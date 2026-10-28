@@ -28,6 +28,9 @@ public partial class GalleryPage : ContentPage
 	private readonly ObservableCollection<object> _items = [];
 	private readonly StorytellerDefault _storyteller;
 	private bool _readySheetOpening;
+	private Story? _sheetStory; // the book the "This book" sheet is open on
+	private bool _sheetChanged; // a switch was saved while the sheet was open: the tiles are rebuilt when it closes
+	private readonly SemaphoreSlim _sheetSaveLock = new(1, 1);
 	private readonly VoicePreview _preview;
 
 	public GalleryPage(IStoryLibrary library, GrownUpGate gate, GrownUpMode mode, StoryActions actions, StarterStories starters, IServiceProvider services)
@@ -46,6 +49,11 @@ public partial class GalleryPage : ContentPage
 		StorytellerLine.Retry = _storyteller.RetryAsync;
 		ReadySheet.Play = PlayNarratorAsync;
 		ReadySheet.Closed = OnReadyClosed;
+		BookInfo.OriginalChanged += SaveShowOriginalAsync;
+		BookInfo.VoiceChanged += SaveUseVoiceAsync;
+		BookInfo.CastRequested += OpenSheetCastAsync;
+		BookInfo.RecordRequested += OpenSheetRecordAsync;
+		BookInfo.Dismissed += OnBookSheetDismissed;
 	}
 
 	protected override async void OnAppearing()
@@ -152,6 +160,11 @@ public partial class GalleryPage : ContentPage
 	private void OnModeChanged(object? sender, PropertyChangedEventArgs e) => MainThread.BeginInvokeOnMainThread(() =>
 	{
 		ApplyMode();
+		if (!_mode.IsGrownUp)
+		{
+			BookInfo.Dismiss(); // also refreshes the tiles when a switch was saved
+		}
+
 		if (_mode.IsGrownUp)
 		{
 			// A grown-up got in (settings gate): the saved intro may be offered again.
@@ -169,18 +182,7 @@ public partial class GalleryPage : ContentPage
 
 		ApplyTexts();
 
-		bool grownUp = _mode.IsGrownUp;
-		bool hasAdd = _items.Count > 0 && _items[0] is AddStoryEntry;
-		if (grownUp && !hasAdd)
-		{
-			_items.Insert(0, AddStoryEntry.Instance);
-		}
-		else if (!grownUp && hasAdd)
-		{
-			_items.RemoveAt(0);
-		}
-
-		ApplyModeChrome(grownUp);
+		ApplyModeChrome(_mode.IsGrownUp);
 	}
 
 	private string? _textLanguage; // the app language the fixed labels were set in
@@ -195,24 +197,16 @@ public partial class GalleryPage : ContentPage
 		}
 
 		_textLanguage = language;
-		TitleLabel.Text = AppResources.Gallery_Title;
-		ModeLabel.Text = AppResources.Gallery_GrownUpMode;
 		AppIcon.SetValue(SemanticProperties.DescriptionProperty, AppResources.App_Name);
-		LanguagePill.SetValue(SemanticProperties.HintProperty, AppResources.Language_Title);
-		AddBookButton.SetValue(SemanticProperties.DescriptionProperty, AppResources.Gallery_AddBook);
-		AddBookButton.SetValue(ToolTipProperties.TextProperty, AppResources.Gallery_AddBook);
-		AddBookButton.SetValue(SemanticProperties.HintProperty, AppResources.Gallery_OpensGateHint);
+		SettingsButton.SetValue(SemanticProperties.DescriptionProperty, AppResources.Settings_GearLabel);
+		SettingsButton.SetValue(ToolTipProperties.TextProperty, AppResources.Settings_GearLabel);
+		SettingsButton.SetValue(SemanticProperties.HintProperty, AppResources.Gallery_OpensGateHint);
 		DoneButton.Text = AppResources.Common_Done;
-		ApplyShortcutText(StoreButton, StoreLabel, AppResources.Store_Title);
-		ApplyShortcutText(NarratorButton, NarratorLabel, AppResources.Narrator_Title);
-		ApplyShortcutText(BackupButton, BackupLabel, AppResources.Backup_Title);
+		AddBookLabel.Text = AppResources.Gallery_AddFromBooks;
+		AddBookButton.SetValue(SemanticProperties.DescriptionProperty, AppResources.Gallery_AddFromBooks);
+		StoreLabel.Text = AppResources.Store_Title;
+		StoreButton.SetValue(SemanticProperties.DescriptionProperty, AppResources.Store_Title);
 		StorytellerLine.Invalidate();
-	}
-
-	private static void ApplyShortcutText(Border button, Label label, string text)
-	{
-		label.Text = text;
-		button.SetValue(SemanticProperties.DescriptionProperty, text);
 	}
 
 	private string? _shelfLanguage; // the app language the shelf titles were built in
@@ -234,7 +228,8 @@ public partial class GalleryPage : ContentPage
 		IReadOnlyList<Story> stories = await _library.ListAsync();
 		_shelfLanguage = LanguageChoice.Current();
 		_items.Clear();
-		foreach (object item in GalleryItems.Build(stories, _library, _mode, _services.GetRequiredService<StoryTranslator>().ShelfTitle))
+		// The Add button above the shelf replaced the Add tile (Slice 172, mock 85).
+		foreach (object item in GalleryItems.Build(stories, _library, _mode, _services.GetRequiredService<StoryTranslator>().ShelfTitle).Where(item => item is not AddStoryEntry))
 		{
 			_items.Add(item);
 		}
@@ -245,13 +240,14 @@ public partial class GalleryPage : ContentPage
 	private void ApplyModeChrome(bool grownUp)
 	{
 		bool handover = grownUp && FirstRunState.HandoverPending;
-		AddBookButton.IsVisible = !grownUp;
+		SettingsButton.IsVisible = !grownUp;
 		DoneButton.IsVisible = grownUp && !handover;
 		HandoverButton.IsVisible = handover;
 		HandoverButton.Text = AppResources.Gallery_ReadyForChild;
+		AppIcon.IsVisible = !grownUp;
+		TitleLabel.Text = grownUp ? AppResources.Gallery_GrownUpsTitle : AppResources.Gallery_Title;
+		ModeLabel.Text = AppResources.Gallery_GrownUpsSub;
 		ModeLabel.IsVisible = grownUp;
-		LanguagePill.IsVisible = grownUp;
-		LanguagePillLabel.Text = LanguageNames.NativeName(LanguageChoice.Current(_services.GetRequiredService<ISettingsStore>()));
 		GrownUpActions.IsVisible = grownUp;
 		ApplyStorytellerChrome(grownUp);
 		BackgroundColor = DinoTokens.Get(grownUp ? DinoTokens.Sand : DinoTokens.Cream);
@@ -329,7 +325,87 @@ public partial class GalleryPage : ContentPage
 	{
 		if (TileOf(sender) is { } tile)
 		{
-			await _busy.RunAsync(() => _mode.IsGrownUp ? _actions.EditAsync(Navigation, tile.Story) : _actions.ReadAsync(Navigation, tile.Story));
+			await _busy.RunAsync(() => _mode.IsGrownUp ? OpenBookSheetAsync(tile.Story) : _actions.ReadAsync(Navigation, tile.Story));
+		}
+	}
+
+	// Grown-up mode: a book's tile opens its "This book" sheet (Slice 110 and 111, Slice 174): Show original text, Read with my voice, Cast and Record.
+	// Editing the book is the tile's own Edit button.
+	private async Task OpenBookSheetAsync(Story tapped)
+	{
+		Story story = await _library.GetAsync(tapped.Id) ?? tapped;
+		bool translated = _services.GetRequiredService<StoryTranslator>().Applies(story);
+		string original = LanguageNames.NativeName(story.Language);
+		string spoken = LanguageNames.NativeName(StoryTranslator.MyLanguage);
+		_sheetStory = story;
+		_sheetChanged = false;
+		BookInfo.Show(story.Title, translated, story.ShowOriginalText, ReadingText.ShowOriginalHint(original, spoken), VoiceOfferOf(story));
+	}
+
+	// "Read with my voice" shows only once a page is recorded.
+	private static BookSheet.VoiceOffer? VoiceOfferOf(Story story) =>
+		StoryRecordings.Count(story) is var recorded && recorded > 0 ? new BookSheet.VoiceOffer(recorded, story.Pages.Count, story.UseRecordings) : null;
+
+	private Task SaveShowOriginalAsync(bool showOriginal) => SaveSheetStoryAsync(story => story with { ShowOriginalText = showOriginal });
+
+	private Task SaveUseVoiceAsync(bool useVoice) => SaveSheetStoryAsync(story => story with { UseRecordings = useVoice });
+
+	// Each switch is remembered per story in story.json, on top of the latest stored copy (cast edits saved meanwhile stay); one save at a time. A failed save only loses the preference.
+	private async Task SaveSheetStoryAsync(Func<Story, Story> change)
+	{
+		await _sheetSaveLock.WaitAsync();
+		try
+		{
+			if (_sheetStory is { } shown)
+			{
+				Story updated = change(await _library.GetAsync(shown.Id) ?? shown);
+				await _library.UpdateAsync(updated);
+				_sheetStory = updated;
+				_sheetChanged = true;
+			}
+		}
+		catch (Exception ex) when (ex is not OperationCanceledException)
+		{
+			Debug.WriteLine($"Dino Reader could not save the book switch: {ex}");
+		}
+		finally
+		{
+			_sheetSaveLock.Release();
+		}
+	}
+
+	private async Task OpenSheetCastAsync()
+	{
+		if (_sheetStory is { } story)
+		{
+			await RunGrownUpAsync(() => _actions.CastAsync(Navigation, story));
+		}
+	}
+
+	private async Task OpenSheetRecordAsync()
+	{
+		if (_sheetStory is { } story)
+		{
+			await RunGrownUpAsync(() => _actions.RecordAsync(Navigation, story));
+		}
+	}
+
+	// Waits for a save still in flight (a quick Back after a switch) so the tiles never keep the old flags; never throws out of async void.
+	private async void OnBookSheetDismissed()
+	{
+		try
+		{
+			await _sheetSaveLock.WaitAsync();
+			_sheetSaveLock.Release();
+			if (_sheetChanged)
+			{
+				_sheetChanged = false;
+				await RefreshShelfAsync();
+			}
+		}
+		catch (Exception ex) when (ex is not OperationCanceledException)
+		{
+			Debug.WriteLine($"Dino Reader could not refresh the shelf after the book sheet: {ex}");
 		}
 	}
 
@@ -344,7 +420,7 @@ public partial class GalleryPage : ContentPage
 	// Every grown-up action re-checks the mode right before it runs: a queued tap must not outlive the mode.
 	private Task RunGrownUpAsync(Func<Task> work) => _busy.RunAsync(() => _mode.IsGrownUp ? work() : Task.CompletedTask);
 
-	// Free stories (Slice 92): a grown-up page, so it is only reachable in grown-up mode and closes with it.
+	// The store (Slice 92, "Store" since Slice 172): a grown-up page, so it is only reachable in grown-up mode and closes with it.
 	private async void OnStoreTapped(object? sender, TappedEventArgs e) => await RunGrownUpAsync(OpenStoreAsync);
 
 	private async Task OpenStoreAsync()
@@ -356,24 +432,15 @@ public partial class GalleryPage : ContentPage
 		}
 	}
 
-	// Backup (Slice 93): a grown-up page, so it is only reachable in grown-up mode and closes with it.
-	private async void OnBackupTapped(object? sender, TappedEventArgs e) => await RunGrownUpAsync(() => OpenGrownUpPageAsync<BackupPage>());
+	private async void OnAddTapped(object? sender, TappedEventArgs e) => await RunGrownUpAsync(() => _actions.EditAsync(Navigation, null));
 
-	// Narrator (Slice 109): the storyteller voice per language, for every book.
-	private async void OnNarratorTapped(object? sender, TappedEventArgs e) => await RunGrownUpAsync(() => OpenGrownUpPageAsync<NarratorPage>());
-
-	private async void OnLanguageTapped(object? sender, TappedEventArgs e) => await RunGrownUpAsync(() => OpenGrownUpPageAsync<LanguagePage>());
-
-	private async Task OpenGrownUpPageAsync<TPage>() where TPage : Page
+	private async void OnOpenRequested(object? sender, EventArgs e)
 	{
-		var page = _services.GetRequiredService<TPage>();
-		if (_mode.IsGrownUp)
+		if (TileOf(sender) is { } tile)
 		{
-			await Navigation.PushAsync(page);
+			await RunGrownUpAsync(() => OpenBookSheetAsync(tile.Story));
 		}
 	}
-
-	private async void OnAddTapped(object? sender, TappedEventArgs e) => await RunGrownUpAsync(() => _actions.EditAsync(Navigation, null));
 
 	private async void OnEditRequested(object? sender, EventArgs e)
 	{
@@ -483,20 +550,68 @@ public partial class GalleryPage : ContentPage
 		root.Scale = 1;
 	}
 
-	private async void OnAddBookTapped(object? sender, TappedEventArgs e) => await _busy.RunAsync(EnterGrownUpAsync);
+	// The gear (Slice 172): the gate first, then Settings. A failed gate leaves the shelf as it was; Settings is pushed on the kids' shelf, so back out of it ends there (Decision 169).
+	private async void OnSettingsTapped(object? sender, TappedEventArgs e) => await _busy.RunAsync(OpenSettingsAsync);
 
-	private async Task EnterGrownUpAsync()
+	private async Task OpenSettingsAsync()
 	{
 		if (await _gate.RequestAsync(Navigation))
 		{
-			_mode.Enter();
+			await Navigation.PushAsync(_services.GetRequiredService<SettingsPage>());
+		}
+	}
+
+	// Back from grown-up mode lands on the kids' shelf, not out of the app (Slice 172, Decision 169, mock 94).
+	protected override bool OnBackButtonPressed()
+	{
+		if (BookInfo.IsVisible)
+		{
+			BookInfo.Dismiss();
+			return true;
+		}
+
+		if (!_mode.IsGrownUp)
+		{
+			return AskToClose();
+		}
+
+		CompleteHandover();
+		return true;
+	}
+
+	// The kids' shelf is home (Slice 174, Decision 169, mock 94): Android back asks "Close Dino Book Reader?" instead of leaving. iOS has no back button and
+	// Windows closes from its window, so nothing changes there.
+	private bool AskToClose()
+	{
+		if (!OperatingSystem.IsAndroid())
+		{
+			return base.OnBackButtonPressed();
+		}
+
+		if (Navigation.ModalStack.Count > 0)
+		{
+			return true; // a modal is open or still closing: this back press is swallowed, never closes the app
+		}
+
+		_ = _busy.RunAsync(CloseIfConfirmedAsync);
+		return true;
+	}
+
+	private async Task CloseIfConfirmedAsync()
+	{
+		if (await CloseQuestionPage.AskAsync(Navigation))
+		{
+			Application.Current?.Quit();
 		}
 	}
 
 	private void OnDoneClicked(object? sender, EventArgs e) => _mode.Leave();
 
 	// The first hand-over (Slice 93): from now on the header shows Done instead.
-	private void OnHandoverClicked(object? sender, EventArgs e)
+	private void OnHandoverClicked(object? sender, EventArgs e) => CompleteHandover();
+
+	// Leaves grown-up mode; Back during the first hand-over counts as "Ready for my child", so the flag never outlives the mode.
+	private void CompleteHandover()
 	{
 		FirstRunState.HandoverPending = false;
 		_mode.Leave();

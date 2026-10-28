@@ -293,7 +293,14 @@ public sealed class UsageService : IUsageRecorder
     private async Task<UsageSendResult> PostAsync(IReadOnlyList<UsageEvent> batch)
     {
         using var timeout = new CancellationTokenSource(SendTimeout);
-        return await _transport.PostEventsAsync(UsageBatch.ToJson(batch), timeout.Token).ConfigureAwait(false);
+        string json = UsageBatch.ToJson(batch, _build.Device);
+        if (_build.NotCounted != UsageSkipReason.None)
+        {
+            Debug.WriteLine($"Usage batch of {batch.Count} not sent: {_build.NotCounted}: {json}"); // dry run (Slice 167): counts hold no id or text
+            return UsageSendResult.Sent;
+        }
+
+        return await _transport.PostEventsAsync(json, timeout.Token).ConfigureAwait(false);
     }
 
     private void BackOff()

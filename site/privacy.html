@@ -54,7 +54,7 @@
       text recognition (Google&rsquo;s ML Kit on Android, Apple&rsquo;s Vision framework on iPhone), which runs entirely on your phone. The photo is processed
       to extract text and is not uploaded, saved permanently, or shared &mdash; it exists only to
       be read aloud.</li>
-    <li><strong>Translation</strong> (Android, off by default): when you turn on &ldquo;Translate to my
+    <li><strong>Translation</strong> (Android and iPhone, off by default): when you turn on &ldquo;Translate to my
       language&rdquo;, the app identifies the language of your text with Google&rsquo;s on-device ML Kit
       language identification and translates it with ML Kit&rsquo;s on-device translation, then reads
       the result. Both run entirely on your phone; your text is never sent to Google or anyone else.
@@ -94,10 +94,10 @@
   such as French to Russian needs two) from the same public GitHub Releases page, as a plain file
   request that carries none of your text. Once installed, translating works fully offline. If a pack
   is missing the app reads the original text.</p>
-  <p><strong>Translation models (Android).</strong> The first time you translate to or from a language,
+  <p><strong>Translation models (Android and iPhone).</strong> The first time you translate to or from a language,
   Google&rsquo;s ML Kit downloads that language&rsquo;s translation model (about 30&nbsp;MB each; English is
   used as a go-between for most pairs) from Google&rsquo;s servers, using ML Kit&rsquo;s own on-device model
-  download (it may use Google Play services). This is a request for a model file, not for your text:
+  download (on Android it may use Google Play services). This is a request for a model file, not for your text:
   none of your text, images or scans is sent. Once a model is on the phone, translating works offline.
   If a model cannot be downloaded the app reads the original text.</p>
   <p>Your text, images, scans and documents are never transmitted anywhere; reading and text
@@ -150,11 +150,19 @@
   contain the text you read, file names, scanned images, names, or any install, device, account or advertising
   identifier, so they cannot be put together into a history of one person. Only a share of launches may count at
   all, as set by the project.</p>
+  <p>Each batch of counts also says a few coarse things about the device, as fixed lists and ranges: the form factor
+  (phone, tablet, desktop or other), the operating system&rsquo;s major version, the processor type (arm64, x64, x86,
+  arm or other), the number of processor cores as a range (1 to 4, 5 to 8, or 9 or more) and the memory as a range in
+  GB (under 3, 3 to 4, 4 to 6, 6 to 8, or 8 or more). Never the device&rsquo;s model or maker, the exact chip, exact
+  memory or core numbers, the full system build, or any identifier. The server also records the <strong>country</strong>
+  of the request as a two-letter code (such as GB), which Cloudflare works out from the connection. It is approximate,
+  not your GPS position: the app never asks for location permission, never sends a location, and the IP address itself
+  is not stored. These are coarse ranges, not exact values, and nothing here is a name, an account, a device model or an identifier. They are not a guarantee of anonymity on their own, though: in a small country a rare combination of ranges could stand out, so they are used only to see the overall picture.</p>
   <p>Counts are sent in small batches to this project&rsquo;s own server (<code>readthestupidtext.sirous.uk</code>)
   and stored in Cloudflare&rsquo;s Workers Analytics Engine (Cloudflare is the processor) for about three months,
   then deleted. As with any web request, the server sees your IP address while the request is handled; it is not
-  stored with the counts and is not used for anything. The project can also switch counting off for everyone from
-  the server. Counts are not shared with anyone else and are not used for advertising or tracking.</p>
+  stored with the counts and is not used for anything (only the country it maps to, as described above). The project can also switch counting off for everyone from
+  the server. Counts are not shared with anyone else and are not used for advertising or tracking. Test and development builds, and the test devices store review tools use, send no counts.</p>
 
   <h2>Third-party components</h2>
   <p>The app uses a small set of open-source, on-device components that never transmit data (the Supertonic voice model is downloaded as a language pack on all platforms rather than bundled):</p>
@@ -167,7 +175,7 @@
     <li><strong>Google ML Kit Text Recognition</strong> (Android only) &mdash; the on-device model
       used to read text out of a scanned photo. It runs locally; nothing is sent to Google or
       anyone else.</li>
-    <li><strong>Google ML Kit Language Identification and Translation</strong> (Android only) &mdash; the
+    <li><strong>Google ML Kit Language Identification and Translation</strong> (Android; on iPhone ML Kit Translation only, with Apple&rsquo;s on-device language recognition) &mdash; the
       on-device models used to detect the language of your text and translate it. They run locally;
       nothing you type, paste or scan is sent to Google or anyone else. Only the translation model
       files are downloaded (see <em>Network use</em>).</li>

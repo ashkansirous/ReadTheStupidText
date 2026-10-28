@@ -231,6 +231,21 @@ public sealed class StoryVoicing
 			.ToList();
 	}
 
+	/// <summary>The languages whose narrator Settings summarises: the ones with an installed voice pack, <paramref name="myLanguage"/> first, else just it
+	/// (Slice 172; until story languages exist, Slice 173, these stand in for them).</summary>
+	public IReadOnlyList<string> NarratorLanguages(string myLanguage)
+	{
+		IReadOnlyList<string> installed = InstalledLanguages(myLanguage);
+		return installed.Count > 0 ? installed : [UiLanguage.Resolve(myLanguage)];
+	}
+
+	/// <summary>Every UI language, <paramref name="myLanguage"/> first: the Narrator page lists them all, a language with no pack showing how to get it.</summary>
+	public static IReadOnlyList<string> AllLanguages(string myLanguage)
+	{
+		string mine = UiLanguage.Resolve(myLanguage);
+		return LanguageNames.All.Select(l => UiLanguage.Resolve(l.Code)).Distinct().OrderBy(code => code == mine ? 0 : 1).ToList();
+	}
+
 	/// <summary>A cast for the language <paramref name="story"/> is read in now when it has none yet (Slice 108), else null (also null while that
 	/// language has no voices yet or the story no characters, so nothing empty is kept). Seeded by the genders the grown-up corrected in the
 	/// story's own cast; the caller saves it so the voices stay put. On a worker thread.</summary>

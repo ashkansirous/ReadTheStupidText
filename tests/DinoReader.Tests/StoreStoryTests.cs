@@ -325,7 +325,7 @@ public sealed class StoreStoryTests : IDisposable
         Assert.Equal(spec.Title, imported.Title);
         Assert.Equal(built.Cast, imported.Cast);
         Assert.True(imported.TranslateToMyLanguage);
-        Assert.Equal(UiLanguage.Supported.Count - 1, imported.Translations!.Count);
+        Assert.Equal(UiLanguage.Supported.Count() - 1, imported.Translations!.Count);
     }
 
     [Fact]

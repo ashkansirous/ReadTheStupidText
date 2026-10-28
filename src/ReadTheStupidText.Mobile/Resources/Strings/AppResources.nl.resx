@@ -17,10 +17,10 @@
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>De taal van de woorden in de app</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Leessnelheid</value></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>Help de app verbeteren</value></data>
-  <data name="Settings_CountsCaption" xml:space="preserve"><value>Stuurt tellingen zoals “er is een Franse tekst gelezen”. Geen namen, geen id’s, niets van wat je leest.</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>Stuurt tellingen zoals “er is een Franse tekst gelezen”. Geen namen, geen id’s, niets van wat je leest. Het voegt ook je land en een globaal apparaattype toe (telefoon of tablet, geheugenbereik).</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>Aan</value></data>
   <data name="Settings_CountsOff" xml:space="preserve"><value>Uit</value></data>
-  <data name="Language_CountsNote" xml:space="preserve"><value>De app telt dingen zoals welke talen worden gelezen, zonder namen of id’s. Je kunt dit uitzetten in Instellingen.</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>De app telt dingen zoals welke talen worden gelezen, zonder namen of id’s. Je kunt dit uitzetten in Instellingen. Het voegt ook je land en een globaal apparaattype toe (telefoon of tablet, geheugenbereik).</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Terug</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>Vorige zin</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>Volgende zin</value></data>
@@ -35,9 +35,9 @@
   <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>De scanner kon niet starten</value></data>
   <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>De scanner kon niet starten — probeer het opnieuw.</value></data>
   <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>Scanner wordt voorbereid</value></data>
-  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Google Play-services is de documentscanner nog aan het voorbereiden. Probeer het over een moment opnieuw.</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>De documentscanner wordt nog voorbereid. Probeer het over een moment opnieuw.</value></data>
   <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>Scanner niet beschikbaar</value></data>
-  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>De documentscanner heeft Google Play-services nodig. Maak in plaats daarvan één foto.</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>De documentscanner is niet beschikbaar op dit apparaat. Maak in plaats daarvan één foto.</value></data>
   <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>Cameratoegang nodig</value></data>
   <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>Geef in Instellingen toegang tot de camera om tekst te fotograferen.</value></data>
   <data name="Reader_NoCameraTitle" xml:space="preserve"><value>Geen camera</value></data>

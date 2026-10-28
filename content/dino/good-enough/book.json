@@ -2,7 +2,7 @@
   "kind": "Starter",
   "id": "61bb25b8f132413c82a4208827c7563b",
   "title": "Good Enough",
-  "version": 4,
+  "version": 5,
   "ageMin": 5,
   "ageMax": 8,
   "author": "Ashkan Sirous",
@@ -22,5 +22,5 @@
       ]
     }
   ],
-  "contentHash": "04ba35404c6f38e1832f5eafd1e4bb602d6917e91409fd8c2b97a54174d88d3c"
+  "contentHash": "5346be1f0f1af0c7cecb28366c2990c63c626c6ca4eff974eb48403ede11f3f8"
 }

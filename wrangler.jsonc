@@ -43,10 +43,15 @@
     ]
   },
 
-  // Slice 69: the Android APKs CI uploads (.github/scripts/publish-downloads.mjs),
-  // served by worker/downloads.ts. The bucket must exist before the deploy that
+  // The downloads bucket: the Dino story store, remote config and usage-count flag
+  // (worker/stories.ts, appconfig.ts, events.ts). APKs are not here; they stay on
+  // GitHub Releases. The bucket must exist before the deploy that
   // adds this binding: see docs/DEPLOYING.md.
   "r2_buckets": [{ "binding": "DOWNLOADS", "bucket_name": "readthestupidtext-downloads" }],
+  "analytics_engine_datasets": [
+    { "binding": "DINO_USAGE", "dataset": "dino_usage" },
+    { "binding": "RTST_USAGE", "dataset": "rtst_usage" }
+  ],
 
   "observability": { "enabled": true }
 }

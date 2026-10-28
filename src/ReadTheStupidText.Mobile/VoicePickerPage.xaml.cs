@@ -170,14 +170,12 @@ public partial class VoicePickerPage : ContentPage
     // natural voice that reads instead is highlighted, or none while the pack is missing.
     private string SelectedVoiceId(VoiceModelPaths? paths, bool phoneRow)
     {
-        if (paths is null)
+        return VoiceRouting.SelectedRow(paths is not null, phoneRow, _settings.VoiceId == SystemVoice.Id) switch
         {
-            return phoneRow ? SystemVoice.Id : string.Empty;
-        }
-
-        return phoneRow && _settings.VoiceId == SystemVoice.Id
-            ? SystemVoice.Id
-            : NeuralVoiceMemory.Resolve(paths, _settings.VoiceId).Id;
+            PickerSelection.Phone => SystemVoice.Id,
+            PickerSelection.Natural => NeuralVoiceMemory.Resolve(paths!, _settings.VoiceId).Id,
+            _ => string.Empty,
+        };
     }
 
     private void AddFallbackReason()

@@ -2,7 +2,7 @@
   "kind": "Store",
   "id": "6eff8d779a9542fcafa76ae58ba1e96b",
   "title": "The Little Red Hen",
-  "version": 8,
+  "version": 9,
   "ageMin": 3,
   "ageMax": 6,
   "author": "Traditional",
@@ -58,5 +58,5 @@
       ]
     }
   ],
-  "contentHash": "891333603c9568ef1bab9acdc87b0cded4ad2fed62be7399ba814f6c88fc9dd3"
+  "contentHash": "47de46ac423bb8a037c3fc34671f4ee0a24cee9601e1ceb047060f7f90233750"
 }

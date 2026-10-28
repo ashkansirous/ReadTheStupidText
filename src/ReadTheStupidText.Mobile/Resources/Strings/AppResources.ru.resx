@@ -17,10 +17,10 @@
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>Язык интерфейса приложения</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>Скорость чтения</value></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>Помогите улучшить приложение</value></data>
-  <data name="Settings_CountsCaption" xml:space="preserve"><value>Отправляет подсчёты вроде «прочитан текст на французском». Без имён, без идентификаторов, ничего из того, что вы читаете.</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>Отправляет подсчёты вроде «прочитан текст на французском». Без имён, без идентификаторов, ничего из того, что вы читаете. Также добавляются ваша страна и примерный тип устройства (телефон или планшет, диапазон памяти).</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>Вкл.</value></data>
   <data name="Settings_CountsOff" xml:space="preserve"><value>Выкл.</value></data>
-  <data name="Language_CountsNote" xml:space="preserve"><value>Приложение считает, например, какие языки читают, без имён и идентификаторов. Это можно отключить в Настройках.</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>Приложение считает, например, какие языки читают, без имён и идентификаторов. Это можно отключить в Настройках. Также добавляются ваша страна и примерный тип устройства (телефон или планшет, диапазон памяти).</value></data>
   <data name="Common_Back" xml:space="preserve"><value>Назад</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>Предыдущее предложение</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>Следующее предложение</value></data>
@@ -35,9 +35,9 @@
   <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>Не удалось запустить сканер</value></data>
   <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>Не удалось запустить сканер — повторите попытку.</value></data>
   <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>Сканер подготавливается</value></data>
-  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Сервисы Google Play ещё готовят сканер документов. Повторите попытку чуть позже.</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Сканер документов ещё готовится. Повторите попытку чуть позже.</value></data>
   <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>Сканер недоступен</value></data>
-  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>Сканеру документов нужны сервисы Google Play. Сделайте одно фото.</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>Сканер документов недоступен на этом устройстве. Сделайте одно фото.</value></data>
   <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>Нужен доступ к камере</value></data>
   <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>Разрешите доступ к камере в настройках, чтобы фотографировать текст.</value></data>
   <data name="Reader_NoCameraTitle" xml:space="preserve"><value>Нет камеры</value></data>

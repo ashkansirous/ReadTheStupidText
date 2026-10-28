@@ -17,10 +17,10 @@
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>زبان متن‌های برنامه</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>سرعت خواندن</value></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>به بهتر شدن برنامه کمک کنید</value></data>
-  <data name="Settings_CountsCaption" xml:space="preserve"><value>شمارش‌هایی مانند «یک متن فرانسوی خوانده شد» ارسال می‌کند. بدون نام، بدون شناسه، و بدون هیچ‌چیز از آنچه می‌خوانید.</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>شمارش‌هایی مانند «یک متن فرانسوی خوانده شد» ارسال می‌کند. بدون نام، بدون شناسه، و بدون هیچ‌چیز از آنچه می‌خوانید. همچنین کشور شما و نوع تقریبی دستگاه (گوشی یا تبلت، محدودهٔ حافظه) را اضافه می‌کند.</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>روشن</value></data>
   <data name="Settings_CountsOff" xml:space="preserve"><value>خاموش</value></data>
-  <data name="Language_CountsNote" xml:space="preserve"><value>برنامه مواردی مانند زبان‌هایی که خوانده می‌شوند را می‌شمارد، بدون نام و شناسه. می‌توانید این را در تنظیمات خاموش کنید.</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>برنامه مواردی مانند زبان‌هایی که خوانده می‌شوند را می‌شمارد، بدون نام و شناسه. می‌توانید این را در تنظیمات خاموش کنید. همچنین کشور شما و نوع تقریبی دستگاه (گوشی یا تبلت، محدودهٔ حافظه) را اضافه می‌کند.</value></data>
   <data name="Common_Back" xml:space="preserve"><value>بازگشت</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>جمله قبلی</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>جمله بعدی</value></data>
@@ -35,9 +35,9 @@
   <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>اسکنر راه‌اندازی نشد</value></data>
   <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>اسکنر راه‌اندازی نشد — دوباره تلاش کنید.</value></data>
   <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>اسکنر در حال آماده‌سازی است</value></data>
-  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>خدمات Google Play هنوز اسکنر سند را آماده می‌کند. چند لحظه دیگر دوباره تلاش کنید.</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>اسکنر سند هنوز در حال آماده‌سازی است. چند لحظه دیگر دوباره تلاش کنید.</value></data>
   <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>اسکنر در دسترس نیست</value></data>
-  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>اسکنر سند به خدمات Google Play نیاز دارد. به‌جای آن یک عکس بگیرید.</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>اسکنر سند در این دستگاه در دسترس نیست. به‌جای آن یک عکس بگیرید.</value></data>
   <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>دسترسی به دوربین لازم است</value></data>
   <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>برای عکس گرفتن از متن، در تنظیمات اجازهٔ دسترسی به دوربین را بدهید.</value></data>
   <data name="Reader_NoCameraTitle" xml:space="preserve"><value>دوربین موجود نیست</value></data>

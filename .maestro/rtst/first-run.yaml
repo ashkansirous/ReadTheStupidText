@@ -1,0 +1,23 @@
+# Slice 162: a fresh install shows the language page; the skip-first-run hook hands over to the reader.
+# expect-log: HOOK skip-first-run ok
+appId: uk.sirous.readthestupidtext
+name: First run and language
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: LanguageList
+    timeout: 20000
+- assertVisible:
+    id: LanguageContinue
+- launchApp:
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: SettingsButton
+    timeout: 20000
+- assertVisible:
+    id: PlayButton

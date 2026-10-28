@@ -8,11 +8,19 @@ using ReadTheStupidText.Application.Usage;
 using ReadTheStupidText.Documents;
 using ReadTheStupidText.Mobile.Shared;
 using ReadTheStupidText.Mobile.Shared.Usage;
+#if DEBUG
+using ReadTheStupidText.Mobile.Shared.Testing;
+#endif
 
 namespace ReadTheStupidText.Mobile;
 
 public static partial class MauiProgram
 {
+#if DEBUG
+	// Slice 162: the iOS URL scheme of the Debug-only scripted-flow hooks (Android listens for a broadcast instead).
+	private const string TestHookScheme = "rtst-test";
+#endif
+
 	public static MauiApp CreateMauiApp()
 	{
 		var builder = MauiApp.CreateBuilder();
@@ -44,10 +52,14 @@ public static partial class MauiProgram
 
 #if DEBUG
 		builder.Logging.AddDebug();
+		builder.AddTestHooks(TestHookScheme);
 #endif
 
 		MauiApp app = builder.Build();
 		StartUsageCounts(app.Services);
+#if DEBUG
+		TestHooks.Install(app.Services, TestHookScheme, code => (Microsoft.Maui.Controls.Application.Current as App)?.CompleteFirstRun(code) ?? false);
+#endif
 		return app;
 	}
 

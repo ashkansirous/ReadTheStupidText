@@ -11,6 +11,9 @@ internal interface IEngineHandle
     bool TryAcquire();
 
     void Release();
+
+    /// <summary>True while a read or generation other than the cache holds the engine (Slice 177: a warm-up must not evict such an engine).</summary>
+    bool InUse => false;
 }
 
 /// <summary>
@@ -65,12 +68,13 @@ internal sealed class EngineCache<TEngine>(Func<TEngine?, VoiceModelPaths, TEngi
     /// The engine for <paramref name="paths"/> with a reference taken for the caller (who must
     /// <c>Release()</c> it), building it on first use; null once the cache is disposed. The same folder and
     /// version under another language re-labels the live engine instead of loading the model again (not for a Kokoro pack: one engine per language, and only the latest stays).
+    /// A <paramref name="forWarmUp"/> call (Slice 177) returns null instead of evicting an engine that is in use; the next trigger tries again.
     /// </summary>
-    public TEngine? Acquire(VoiceModelPaths paths)
+    public TEngine? Acquire(VoiceModelPaths paths, bool forWarmUp = false)
     {
         for (int attempt = 0; attempt < AcquireAttempts; attempt++)
         {
-            if (Touch(paths) is not { } slot)
+            if (Touch(paths, forWarmUp) is not { } slot)
             {
                 return null;
             }
@@ -101,7 +105,7 @@ internal sealed class EngineCache<TEngine>(Func<TEngine?, VoiceModelPaths, TEngi
         ReleaseAll(dropped);
     }
 
-    private Slot? Touch(VoiceModelPaths paths)
+    private Slot? Touch(VoiceModelPaths paths, bool forWarmUp = false)
     {
         bool isKokoro = paths.Kind == VoiceEngineKind.Kokoro;
         var key = new ModelKey(paths.ModelFolder, paths.PackVersion, isKokoro ? paths.Language : string.Empty, isKokoro);
@@ -115,6 +119,11 @@ internal sealed class EngineCache<TEngine>(Func<TEngine?, VoiceModelPaths, TEngi
             }
 
             slot = _slots.Find(s => s.Key == key) ?? new Slot(key);
+            if (forWarmUp && WouldEvictEngineInUse(slot))
+            {
+                return null;
+            }
+
             _slots.Remove(slot);
             _slots.Add(slot);
             dropped.AddRange(EvictOtherKokoro(slot));
@@ -127,6 +136,21 @@ internal sealed class EngineCache<TEngine>(Func<TEngine?, VoiceModelPaths, TEngi
 
         ReleaseAll(dropped);
         return slot;
+    }
+
+    // Called under _lock, before the slot is touched: would making it the most recent evict a slot whose engine a read is using?
+    private bool WouldEvictEngineInUse(Slot slot)
+    {
+        List<Slot> remaining = [.. _slots.Where(s => s != slot)];
+        List<Slot> victims = slot.Key.IsKokoro ? remaining.Where(s => s.Key.IsKokoro && !s.Loading).ToList() : [];
+        remaining.RemoveAll(victims.Contains);
+        while (remaining.Count + 1 > Capacity && remaining.Find(s => !s.Loading) is { } victim)
+        {
+            victims.Add(victim);
+            remaining.Remove(victim);
+        }
+
+        return victims.Any(v => v.Engine?.InUse == true);
     }
 
     // Called under _lock. A Kokoro engine is one 114 MB model per language and a book reads one language, so at most one stays resident (Slice 118):

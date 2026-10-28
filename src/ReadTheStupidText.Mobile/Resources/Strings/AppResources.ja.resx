@@ -17,10 +17,10 @@
   <data name="Settings_LanguageCaption" xml:space="preserve"><value>アプリの表示言語</value></data>
   <data name="Settings_ReadingSpeed" xml:space="preserve"><value>読み上げ速度</value></data>
   <data name="Settings_CountsTitle" xml:space="preserve"><value>アプリの改善にご協力ください</value></data>
-  <data name="Settings_CountsCaption" xml:space="preserve"><value>「フランス語のテキストが読まれた」のような回数を送ります。名前も ID も、読んだ内容も送りません。</value></data>
+  <data name="Settings_CountsCaption" xml:space="preserve"><value>「フランス語のテキストが読まれた」のような回数を送ります。名前も ID も、読んだ内容も送りません。あわせて、お住まいの国と大まかな端末の種類（スマートフォンかタブレットか、メモリの範囲）も送ります。</value></data>
   <data name="Settings_CountsOn" xml:space="preserve"><value>オン</value></data>
   <data name="Settings_CountsOff" xml:space="preserve"><value>オフ</value></data>
-  <data name="Language_CountsNote" xml:space="preserve"><value>アプリは、どの言語が読まれたかなどを、名前や ID なしで数えます。設定でオフにできます。</value></data>
+  <data name="Language_CountsNote" xml:space="preserve"><value>アプリは、どの言語が読まれたかなどを、名前や ID なしで数えます。設定でオフにできます。あわせて、お住まいの国と大まかな端末の種類（スマートフォンかタブレットか、メモリの範囲）も送ります。</value></data>
   <data name="Common_Back" xml:space="preserve"><value>戻る</value></data>
   <data name="Reader_SkipBack" xml:space="preserve"><value>前の文</value></data>
   <data name="Reader_SkipForward" xml:space="preserve"><value>次の文</value></data>
@@ -35,9 +35,9 @@
   <data name="Reader_ScannerStartFailedTitle" xml:space="preserve"><value>スキャナーを起動できませんでした</value></data>
   <data name="Reader_ScannerStartFailedMessage" xml:space="preserve"><value>スキャナーを起動できませんでした。もう一度お試しください。</value></data>
   <data name="Reader_ScannerPreparingTitle" xml:space="preserve"><value>スキャナーを準備中です</value></data>
-  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>Google Play 開発者サービスがドキュメントスキャナーをまだ準備しています。しばらくしてからもう一度お試しください。</value></data>
+  <data name="Reader_ScannerPreparingMessage" xml:space="preserve"><value>ドキュメントスキャナーはまだ準備中です。しばらくしてからもう一度お試しください。</value></data>
   <data name="Reader_ScannerUnavailableTitle" xml:space="preserve"><value>スキャナーを利用できません</value></data>
-  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>ドキュメントスキャナーには Google Play 開発者サービスが必要です。代わりに写真を1枚撮影してください。</value></data>
+  <data name="Reader_ScannerUnavailableMessage" xml:space="preserve"><value>このデバイスではドキュメントスキャナーを利用できません。代わりに写真を1枚撮影してください。</value></data>
   <data name="Reader_CameraAccessTitle" xml:space="preserve"><value>カメラへのアクセスが必要です</value></data>
   <data name="Reader_CameraAccessMessage" xml:space="preserve"><value>テキストを撮影するには、設定でカメラへのアクセスを許可してください。</value></data>
   <data name="Reader_NoCameraTitle" xml:space="preserve"><value>カメラがありません</value></data>

@@ -20,7 +20,7 @@ cancel goes to the back of Apple's queue.
   - **Never cancel** a waiting review and never expire a build to make room. A newer build waits for the next run.
   - **At most one review waiting per app.** If one is waiting or in review, the run does nothing for that app.
   - **Always the newest processed build** (`VALID`, not expired), so whatever passes is the latest at that moment.
-  - **TestFlight external testers: daily, automatic** (`testflight-external.yml`, cron 06:00 UTC, plus manual
+  - **TestFlight external testers: daily, automatic** (`testflight-external.yml`, cron 05:17 UTC + 07:17 backup since 2026-10-28, plus manual
     dispatch). Adds the newest build to the external group and submits it for Beta App Review, unless it is
     already in the group or already submitted.
   - **App Store: manual button** (`appstore-submit.yml`, `workflow_dispatch`, input `app`: `rtst`, `dino` or
@@ -30,6 +30,8 @@ cancel goes to the back of Apple's queue.
     done by the user once in App Store Connect; until then the job reports what Apple says is missing and fails.
   - Internal "Family" testers are unchanged: every merge, no review.
   - Supersedes Decision 70's "adding the build to a tester group stays manual".
+
+**Amendment 2026-10-28:** the TestFlight busy gate was removed at the user's direction. The rule is batching, not one review at a time: each morning the newest build is submitted even while an older review waits (never cancelled, never expired). A TestFlight 409 is now a failure carrying Apple's text. The crons moved off the hour (05:17 UTC, backup 07:17). The App Store button still skips while a review is in progress.
 
 ## Design
 
