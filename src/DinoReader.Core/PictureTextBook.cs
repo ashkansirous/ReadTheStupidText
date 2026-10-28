@@ -115,6 +115,33 @@ public static partial class PictureTextBook
         return fit >= lines.Count ? maxHeight : verticalPadding + lines.TallestRun(fit);
     }
 
+    /// <summary>The frame a picture of <paramref name="pictureAspect"/> (width over height) is drawn in so it covers an area of <paramref name="areaWidth"/> x <paramref name="areaHeight"/> and is cropped from
+    /// the bottom (Slice 174, mock Batch 37): the books' art keeps its lower part free for words, so the top always stays. Centred sideways, flush with the top. An unknown shape fills the area as it is.</summary>
+    public static (double X, double Y, double Width, double Height) CoverFromTop(double areaWidth, double areaHeight, double pictureAspect)
+    {
+        if (areaWidth <= 0 || areaHeight <= 0 || pictureAspect <= 0)
+        {
+            return (0, 0, Math.Max(0, areaWidth), Math.Max(0, areaHeight));
+        }
+
+        bool widthBound = areaWidth / areaHeight >= pictureAspect;
+        double width = widthBound ? areaWidth : areaHeight * pictureAspect;
+        double height = widthBound ? areaWidth / pictureAspect : areaHeight;
+        return ((areaWidth - width) / 2, 0, width, height);
+    }
+
+    /// <summary>The upright card's height for <paramref name="wholeLines"/> lines (Slice 174): <paramref name="verticalPadding"/> above the first line plus that many real lines (the tallest run when the lines are measured, else
+    /// <paramref name="estimatedPitch"/> each); a page of fewer lines is as tall as its text.</summary>
+    public static double CardHeightFor(int wholeLines, TextLines? lines, double estimatedPitch, double verticalPadding)
+    {
+        if (lines is { Count: > 0 })
+        {
+            return verticalPadding + lines.TallestRun(Math.Min(wholeLines, lines.Count));
+        }
+
+        return verticalPadding + wholeLines * estimatedPitch;
+    }
+
     /// <summary>The first line the card shows so that the sentence starting on <paramref name="startLine"/> is in view (Slice 171): that line at the top, but never so far down that the card is left
     /// part empty at the end of the text. A sentence longer than the card keeps its start in view.</summary>
     public static int TopLineFor(int startLine, int totalLines, int visibleLines)

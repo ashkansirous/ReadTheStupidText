@@ -18,6 +18,10 @@ public sealed class ModeSwitch : Border
 	private const double TrackCorner = 16;
 	private const double TrackPadding = 3;
 	private const double TrackGap = 2;
+	private const double ChipCellWidth = 40;
+	private const double ChipCellHeight = 38;
+	private const float ChipAlpha = 0.92f;
+	private const float ChipShadowOpacity = 0.18f;
 	private const float ShadowOpacity = 0.16f;
 	private const float ShadowRadius = 4;
 	private const float ShadowOffsetY = 1;
@@ -30,6 +34,7 @@ public sealed class ModeSwitch : Border
 	private const string TextOnlyPath = "M5 6h14 M5 10.5h14 M5 15h14 M5 19.5h9";
 
 	private ReadingTheme _theme = ReadingTheme.For(false);
+	private bool _onPicture;
 
 	public ModeSwitch()
 	{
@@ -44,6 +49,20 @@ public sealed class ModeSwitch : Border
 	/// <summary>False for a book whose pages the reader draws the same with or without words (scanned pages with line boxes): the picture + text segment is left out, and that mode shows as picture only.</summary>
 	public bool OffersPictureAndText { get; set; } = true;
 
+	/// <summary>Floating over a picture (mock Batch 37 frame 92): the switch sits on the same white chip as the back button, with smaller segments, so it reads on any picture.</summary>
+	public bool OnPicture
+	{
+		get => _onPicture;
+		set
+		{
+			if (value != _onPicture)
+			{
+				_onPicture = value;
+				Render();
+			}
+		}
+	}
+
 	public event EventHandler<ReadingMode>? ModeChanged;
 
 	public void Set(ReadingMode mode, ReadingTheme theme)
@@ -57,7 +76,8 @@ public sealed class ModeSwitch : Border
 
 	private void Render()
 	{
-		BackgroundColor = _theme.ControlFill;
+		BackgroundColor = _onPicture ? _theme.TextCard.WithAlpha(ChipAlpha) : _theme.ControlFill;
+		Shadow = _onPicture ? new Shadow { Brush = Brush.Black, Opacity = ChipShadowOpacity, Radius = ShadowRadius * 1.5f, Offset = new Point(0, ShadowOffsetY * 2) } : null;
 		Content = new HorizontalStackLayout
 		{
 			Spacing = TrackGap,
@@ -81,8 +101,8 @@ public sealed class ModeSwitch : Border
 		bool active = ShownMode == mode;
 		var cell = new Border
 		{
-			WidthRequest = CellWidth,
-			HeightRequest = CellHeight,
+			WidthRequest = _onPicture ? ChipCellWidth : CellWidth,
+			HeightRequest = _onPicture ? ChipCellHeight : CellHeight,
 			StrokeThickness = 0,
 			BackgroundColor = active ? ActiveFill() : Colors.Transparent,
 			StrokeShape = new RoundRectangle { CornerRadius = CellCorner },
@@ -96,9 +116,10 @@ public sealed class ModeSwitch : Border
 	}
 
 	// By day the chosen segment is white with a brand icon; by night the brand fill with its own icon colour.
-	private Color ActiveFill() => _theme.IsBedtime ? _theme.SwitchActive : Colors.White;
+	// On the chip the track is already white, so the chosen segment is the tinted fill instead.
+	private Color ActiveFill() => _onPicture ? _theme.ControlFill : _theme.IsBedtime ? _theme.SwitchActive : Colors.White;
 
-	private Color ActiveIcon() => _theme.IsBedtime ? _theme.SwitchActiveIcon : _theme.SwitchActive;
+	private Color ActiveIcon() => _theme.IsBedtime && !_onPicture ? _theme.SwitchActiveIcon : _theme.SwitchActive;
 
 	private static Microsoft.Maui.Controls.Shapes.Path Glyph(string data, Color colour) => new()
 	{

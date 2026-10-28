@@ -25,6 +25,8 @@ Open slices only. Finished slices (155 rows) are in [slices-done](docs/plan/note
 | 175 | Close the test gaps: permanent VM selection+hotkey check, Debug Dino page hook, engine/synthesis markers, ISO cleanup, VM licence check | planned | | | [175-test-gaps-permanent-checks.md](docs/plan/slices/175-test-gaps-permanent-checks.md) |
 | 176 | Reading text that is only spaces must not throw (NullReferenceException found on the phone) | planned | | | [176-whitespace-read-crash.md](docs/plan/slices/176-whitespace-read-crash.md) |
 | 177 | Dino: slow speech for the first reads after the app starts (measure on Release, then fix; after 175) | planned | | | [177-dino-cold-start-synthesis.md](docs/plan/slices/177-dino-cold-start-synthesis.md) |
+| 178 | Dino: count an own book's page count and how it really came in (pdf, docx, txt, photo, scan, typed, mixed) | planned | | | [178-dino-own-book-usage-detail.md](docs/plan/slices/178-dino-own-book-usage-detail.md) |
+| 179 | No Play robot, VM or own-machine runs in the usage counts (Worker drops ARM-less phones, Store-only Windows, harness off switch) | planned | | | [179-no-robot-or-own-machine-counts.md](docs/plan/slices/179-no-robot-or-own-machine-counts.md) |
 
 Batch 25 (119-123; 119, 120, 122, 123 built, 121 built; planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
 

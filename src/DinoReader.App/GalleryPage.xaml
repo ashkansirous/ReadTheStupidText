@@ -36,7 +36,7 @@
                             <TapGestureRecognizer Tapped="OnStoryTapped" />
                         </local:StoryCover.GestureRecognizers>
                     </local:StoryCover>
-                    <local:TileOverlay EditRequested="OnEditRequested" CastRequested="OnCastRequested" RecordRequested="OnRecordRequested" DeleteRequested="OnDeleteRequested" ExportRequested="OnExportRequested" />
+                    <local:TileOverlay OpenRequested="OnOpenRequested" EditRequested="OnEditRequested" CastRequested="OnCastRequested" RecordRequested="OnRecordRequested" DeleteRequested="OnDeleteRequested" ExportRequested="OnExportRequested" />
                 </Grid>
                 <Label Style="{StaticResource TileTitle}" Text="{Binding Title}" AutomationId="StoryTileTitle">
                     <Label.GestureRecognizers>
@@ -131,5 +131,6 @@
 
         <!-- Slice 115 (mock frame 51): the one-time "Storyteller voices are ready" sheet over the whole page. -->
         <local:StorytellerReadySheet Grid.RowSpan="4" x:Name="ReadySheet" />
+        <local:BookSheet Grid.RowSpan="4" x:Name="BookInfo" />
     </Grid>
 </ContentPage>

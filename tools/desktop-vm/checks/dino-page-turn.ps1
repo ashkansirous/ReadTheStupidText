@@ -5,8 +5,10 @@ Invoke-Check -ResultFile $ResultFile -Body {
     $window = { Get-AppWindows 'DinoReader.App' | Select-Object -First 1 }
     if (-not (& $window)) { throw 'Dino Reader is not running' }
     $pageText = {
-        $names = (& $window).FindAll($script:TreeScope::Descendants, [System.Windows.Automation.Condition]::TrueCondition) |
-            Where-Object { $_.Current.ControlType.ProgrammaticName -eq 'ControlType.Text' -and $_.Current.BoundingRectangle.X -gt 500 -and $_.Current.BoundingRectangle.Y -gt 100 } |
+        $surface = Find-UiaById (& $window) 'ReadingSurface'
+        if (-not $surface) { return '' }
+        $names = $surface.FindAll($script:TreeScope::Descendants, [System.Windows.Automation.Condition]::TrueCondition) |
+            Where-Object { $_.Current.ControlType.ProgrammaticName -eq 'ControlType.Text' } |
             ForEach-Object { $_.Current.Name }
         return ($names -join ' ')
     }
