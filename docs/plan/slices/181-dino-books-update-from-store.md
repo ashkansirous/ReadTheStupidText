@@ -1,6 +1,6 @@
 ### Slice 181 — Dino: books on the device update themselves from the store
 
-*Planned.*
+*In progress (wave 2026-10-28), draft PR.*
 
 **Touches:** `src/DinoReader.App/StoreClient.cs`, `src/DinoReader.App/StarterStories.cs`, `src/DinoReader.App/BookUpdater.cs` (new), `src/DinoReader.App/App.xaml.cs`, `src/DinoReader.Core/StarterUpdate.cs`, `src/DinoReader.Core/BookUpdatePlan.cs` (new), `tests/DinoReader.Tests/BookUpdatePlanTests.cs` (new), `tests/DinoReader.Tests/StarterUpdateTests.cs`, `src/DinoReader.App/CLAUDE.md`, `docs/plan/slices/181-dino-books-update-from-store.md`.
 
