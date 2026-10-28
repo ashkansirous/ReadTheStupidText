@@ -1,6 +1,6 @@
 # Slice 174 — Dino: a cleaner reading screen, and a back button that never surprises
 
-*In progress (wave 2026-10-28c), draft PR (planned 2026-10-28).* Dino Reader only (Android, iOS and the Windows head). The Claude Design mock arrived (Batch 37,
+*Built 2026-10-28 (wave 2026-10-28c), not yet verified on a phone or iOS (planned 2026-10-28).* Dino Reader only (Android, iOS and the Windows head). The Claude Design mock arrived (Batch 37,
 frames 91-94; see Design).
 
 **Batch:** 37 (Dino settings, 2026-10-28; Decision 169). Builds **after Slice 172** (both edit the shelf page).
@@ -62,17 +62,22 @@ New strings (14 languages): "Close Dino Book Reader?", "Stay", "Close".
 
 ## Work
 
-- [ ] **First end-to-end piece (no design needed):** back on the kids' shelf asks Stay/Close; back in grown-up mode returns to
+- [x] **First end-to-end piece (no design needed):** (Android checked on the emulator 2026-10-28: kids' shelf back asks, Stay and a repeat back re-ask; iOS swipe-back not checked.) back on the kids' shelf asks Stay/Close; back in grown-up mode returns to
       the kids' shelf; back out of Settings ends on the kids' shelf. Android, with the iOS swipe-back checked on the pushed pages.
-- [ ] Remove `LockButton` from the reading page (and its handler, if nothing else uses it).
-- [ ] Auto-scroll: reproduce on the emulator and the user's phone (wireless adb), fix, add a unit test for the pure scroll
+- [x] Remove `LockButton` from the reading page (and its handler, if nothing else uses it).
+- [ ] (partly) Auto-scroll: reproduce on the emulator and the user's phone (wireless adb), fix, add a unit test for the pure scroll
       target where possible; make Text only follow the sentence too.
 - [x] Import the Claude Design mock; Design subsection written (2026-10-28).
-- [ ] Transport row restyle (portrait and landscape sizes) from the mock.
-- [ ] Landscape layout from the mock for Picture + text and Text only, on Android and iOS (rotation, safe areas, notch).
-- [ ] Strings (14 languages, 13 drafts): the close question, Stay, Close.
-- [ ] `src/DinoReader.App/CLAUDE.md`: back-button rules (kids' shelf is home; grown-up back always lands there) and the
+- [x] Transport row restyle (portrait and landscape sizes) from the mock.
+- [x] Landscape layout from the mock for Picture + text and Text only (emulator, landscape picture + text and text only; iOS compile only, no simulator run.), on Android and iOS (rotation, safe areas, notch).
+- [x] Strings (14 languages, 13 drafts): the close question, Stay, Close.
+- [x] `src/DinoReader.App/CLAUDE.md`: back-button rules (kids' shelf is home; grown-up back always lands there) and the
       reading-screen layout rule.
+
+## Review-fix record (2026-10-28)
+
+- The "This book" sheet moved to the shelf: a tap on a book's cover in grown-up mode opens it (Show original text, Read with my voice, Cast, Record); Edit is the tile's own button.
+- Auto-scroll: reproduced nothing on the emulator. Portrait, English, default speed, a page longer than the five-line card: the card followed the spoken sentence and the page turned; landscape picture + text followed too (scrollbar visible, highlighted sentence at the top). Not tried: Farsi RTL, 2x, a real phone. No scroll fix was made. Text only is paged (whole pages that turn with the reading), not scrolling: the "scrolls to the sentence" half of decision 5 is not built for Text only.
 
 ## Verification
 
@@ -85,3 +90,35 @@ New strings (14 languages): "Close Dino Book Reader?", "Stay", "Close".
 - iOS: compile, then rotation, safe areas and auto-scroll on a simulator or TestFlight build.
 - Windows head: the reading page builds and lays out wide; nothing changes about closing.
 - Native read of the three new strings (13 drafts) goes to Outstanding work.
+
+## Changed while building
+
+- Built per mock frames 91-94, not plan decision 3: landscape controls float over the picture (Picture + text) or sit below the card (Text only); sizes 84/64 px portrait, 68/52 landscape; white chips for back and the view switch; Text only in landscape per frame 93 (back and switch in the card's corner, 26 px text). A picture-less page keeps its text clear of the controls.
+- Back on the kids' shelf (Android) asks "Close Dino Book Reader?" via the new `CloseQuestionPage.cs`; it pops before setting its result, and back is swallowed while a modal closes. Windows and iOS back never ask.
+- The "This book" sheet opens from a book's tile in grown-up mode (it lost its entry with the parents' button). Text only keeps turning pages as the reading moves (no scrolling card).
+- Touches grew: `StoryTranslator.cs`, `CloseQuestionPage.cs` (new), `tools/desktop-vm/checks/dino-page-turn.ps1`.
+
+## From review
+
+- One layout pass per mode change or rotation (`ReadingSurface.SetMode`).
+- The sheet's close waits for its save and can no longer crash.
+- The shelf tile title honours Show original text (`StoryTranslator.ShelfTitle`).
+- `dino-page-turn.ps1` finds text under the `ReadingSurface` AutomationId instead of a fixed position.
+- Reviews: `reviews/174-review1.md`, `174-review2.md`.
+
+## Verified (2026-10-28)
+
+Dino tests 1651; Android, iOS compile and Windows head build. Emulator: portrait, landscape picture + text and text only, Farsi with the translation pack at 1x and 1.2x (the speed slider tops out at 1.2x), rotation mid-read keeps the sentence, a picture-less own book, back twice on the shelf, the Close question. Windows VM: launch, open book, no parents' button, flat controls, landscape and portrait layouts, Back never asks to close.
+
+#### For CLAUDE.md
+
+Already written into `src/DinoReader.App/CLAUDE.md` ("Back button and reading-screen layout", plus the "This book" sheet and picture + text rules) by the builder; nothing further to lift. (Slice 174: docs/plan/slices/174-dino-reading-screen-and-back-button.md)
+
+#### Not yet verified
+
+- Shelf tile title after Show original text on the emulator (fix made after the run).
+- Updated `dino-page-turn.ps1` VM check (VM being rebuilt).
+- iOS run (no Mac): rotation, safe areas, swipe-back.
+- Real phone (disconnected).
+- Native read of 3 new strings x 14 languages (13 drafts).
+- The reported auto-scroll bug was never reproduced (followed correctly in every run); no fix made.

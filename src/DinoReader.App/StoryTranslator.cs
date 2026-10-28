@@ -96,13 +96,13 @@ public sealed class StoryTranslator
 
 	/// <summary>
 	/// The title the shelf shows (Slice 159): in the grown-up's language, from the book's own table (which holds the title an own book was
-	/// translated with) or the shipped-titles table, else the title as it is. Synchronous and offline; the switch and the language pair decide, as for the text.
+	/// translated with) or the shipped-titles table, else the title as it is. Synchronous and offline; the switch, the language pair and the grown-up's "Show original text" decide, as for the text.
 	/// </summary>
 	public string ShelfTitle(Story story)
 	{
 		string target = MyLanguage;
 		string source = UiLanguage.Resolve(story.Language);
-		if (!TranslationFlow.ShouldTranslate(story.TranslateToMyLanguage, source, target))
+		if (story.ShowOriginalText || !TranslationFlow.ShouldTranslate(story.TranslateToMyLanguage, source, target))
 		{
 			return story.Title;
 		}
