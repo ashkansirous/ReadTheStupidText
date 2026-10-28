@@ -1,6 +1,6 @@
 # Slice 163 — Windows desktop tests in a headless Hyper-V VM
 
-*Planned.* Batch 36 (fast device tests), RTST tray app and the Dino Reader Windows head. Decision 165.
+*In progress (wave 2026-10-28), draft PR.* Batch 36 (fast device tests), RTST tray app and the Dino Reader Windows head. Decision 165.
 
 **Touches:** `tools/desktop-vm/**` (new: `New-TestVm.ps1`, `Reset-TestVm.ps1`, `Invoke-DesktopTest.ps1`,
 `checks/*.ps1`, `README.md`), `src/ReadTheStupidText.App/CLAUDE.md`, `src/DinoReader.App/CLAUDE.md`
