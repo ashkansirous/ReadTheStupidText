@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Vazirmatn:wght@400;600&display=swap" rel="stylesheet">
+<style>html,body{margin:0;padding:0;background:#eceef4;}*{box-sizing:border-box;}a{color:#4A46D6;}a:hover{color:#3833b8;}</style>
+</helmet>
+<section style="padding:48px 56px 80px;font-family:'Segoe UI Variable Display','Segoe UI',system-ui,sans-serif;color:#1f2027">
+ <div style="max-width:1200px">
+  <div style="font-size:12px;font-weight:700;letter-spacing:2px;color:#4A46D6;text-transform:uppercase">Read The Stupid Text + Dino Reader · Phone · Batch 39 (Slices 182–183)</div>
+  <div style="font-size:32px;font-weight:600;margin-top:6px">Big downloads carry on by themselves</div>
+  <div style="font-size:15px;color:rgba(0,0,0,.6);margin-top:10px;line-height:1.55;max-width:980px;text-wrap:pretty">A pack download that loses the network now <b>waits</b> and picks up again by itself, instead of failing (Slice 182). A download also <b>keeps going when the phone is locked</b>, with a progress notification (Slice 183). This covers voice, translation and scan packs in both apps. Slices 178, 179, 181, 184 and 185 have no screens. Frames R12–R13 extend <a href="RTST%20Batch%2029.dc.html">RTST Batch 29</a>, and frames 95–96 extend <a href="Dino%20Reader%20Batch%2037.dc.html">Dino Batch 37</a>.</div>
+ </div>
+
+ <div style="font-size:12px;font-weight:700;letter-spacing:1.6px;color:rgba(0,0,0,.45);text-transform:uppercase;margin-top:36px">Waiting for the internet · Slice 182</div>
+ <div style="display:flex;flex-wrap:wrap;gap:40px;margin-top:14px;align-items:flex-start">
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#33333a">R12 · RTST main page · download waiting</div>
+   <div data-screen-label="R12 RTST waiting for internet" style="width:360px;height:760px;border-radius:26px;overflow:hidden;background:#f4f5f9;box-shadow:0 18px 50px rgba(20,30,60,.22);border:1px solid rgba(0,0,0,.10);display:flex;flex-direction:column">
+    <div style="height:30px;background:#5B57E8;display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:#fff;font-size:11px;font-weight:600;flex-shrink:0"><span>9:41</span><span>100%</span></div>
+    <div style="background:linear-gradient(135deg,#5B57E8,#3B82F6);padding:8px 8px 8px 18px;color:#fff;flex-shrink:0;position:relative;overflow:hidden;display:flex;align-items:center;min-height:64px"><img src="design_handoff_tray_panel/assets/glyph.png" style="position:absolute;right:40px;top:-18px;width:100px;height:100px;filter:brightness(0) invert(1);opacity:.12;transform:rotate(-8deg)"><span style="position:relative;flex:1;font-size:17px;font-weight:600">Read The Stupid Text</span></div>
+    <div style="flex:1;min-height:0;padding:14px 14px 12px;display:flex;flex-direction:column;gap:12px">
+     <div style="flex:1;min-height:0;position:relative;background:#fff;border:1px solid rgba(0,0,0,.11);border-radius:16px;overflow:hidden">
+      <div style="padding:16px;font-size:19px;line-height:1.6;color:rgba(0,0,0,.45);text-wrap:pretty">Madame, Monsieur, la réunion est déplacée à jeudi à dix heures, dans la salle du deuxième étage. Apportez le budget imprimé et la liste des participants.</div>
+      <div style="position:absolute;inset:0;background:rgba(255,255,255,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center">
+       <div style="width:56px;height:56px;border-radius:50%;background:rgba(91,87,232,.10);display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4A46D6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.8a15 15 0 014.2-2.6"></path><path d="M10.7 5.1A15 15 0 0122 8.8"></path><path d="M5 12.6a10 10 0 015.2-2.5"></path><path d="M16.4 11.1A10 10 0 0119 12.6"></path><path d="M8.5 16.4a5 5 0 017 0"></path><circle cx="12" cy="20" r="0.6" fill="#4A46D6"></circle><path d="M3 3l18 18"></path></svg></div>
+       <span style="font-size:18px;font-weight:600">Waiting for the internet</span>
+       <div style="width:200px;height:8px;border-radius:4px;background:rgba(0,0,0,.10);overflow:hidden"><div style="width:40%;height:100%;background:#9a98c9;border-radius:4px"></div></div>
+       <span style="font-size:13.5px;color:rgba(0,0,0,.58);max-width:250px;line-height:1.4;text-wrap:pretty">French is 40% downloaded. It carries on by itself when you’re back online.</span>
+       <div style="display:flex;gap:10px;margin-top:4px">
+        <div style="height:48px;padding:0 22px;border-radius:14px;background:rgba(91,87,232,.10);color:#4A46D6;font-size:16px;font-weight:600;display:flex;align-items:center">Cancel</div>
+        <div style="height:48px;padding:0 22px;border-radius:14px;background:#fff;border:1px solid rgba(0,0,0,.14);color:rgba(0,0,0,.75);font-size:16px;font-weight:600;display:flex;align-items:center">Retry</div>
+       </div>
+      </div>
+     </div>
+     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;flex-shrink:0;opacity:.5">
+      <div style="height:92px;border-radius:16px;background:#fff;border:1px solid rgba(0,0,0,.11);display:flex;align-items:center;justify-content:center;font-size:15.5px;font-weight:600">Text from pictures</div>
+      <div style="height:92px;border-radius:16px;background:#fff;border:1px solid rgba(0,0,0,.11);display:flex;align-items:center;justify-content:center;font-size:15.5px;font-weight:600">Text from a file</div>
+     </div>
+     <div style="height:138px;background:#fff;border:1px solid rgba(0,0,0,.11);border-radius:16px;flex-shrink:0;opacity:.5;display:flex;align-items:center;justify-content:center"><div style="width:72px;height:72px;border-radius:50%;background:#c9cbd6"></div></div>
+    </div>
+   </div>
+   <div style="width:360px;font-size:12.5px;color:rgba(0,0,0,.6);line-height:1.5;text-wrap:pretty">This is the R8 overlay when the network drops. The spinner becomes a <b>no-Wi-Fi icon</b>, the bar <b>stops and goes grey</b> at the downloaded share, and the line says it will carry on. It’s a waiting state, not an error, so it has no red. When the network or the app comes back, it goes straight back to R8 (“Downloading French… 40%”) from the same place. <b>Retry</b> forces a try right away. <b>Cancel</b> stops it, and nothing restarts by itself after that. On mobile data, the title is <b>“Waiting for Wi-Fi”</b> unless the user tapped “Download now”. Scan and voice packs use the same layout in Settings. The copy is a draft.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#33333a">95 · Dino · Story languages · download waiting</div>
+   <div data-screen-label="95 Dino waiting for internet" style="width:360px;height:760px;border-radius:34px;overflow:hidden;background:#F3EFE6;border:6px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;flex-direction:column;font-family:'Fredoka',system-ui,sans-serif;color:#2b2540">
+    <div style="height:28px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-size:12px;font-weight:600"><span>9:41</span><span>100%</span></div>
+    <div style="display:flex;align-items:center;gap:6px;padding:8px 14px 10px 6px;flex-shrink:0"><div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></div><span style="font-size:20px;font-weight:600">Story languages</span></div>
+    <div style="flex:1;min-height:0;padding:0 14px 14px;display:flex;flex-direction:column;gap:10px">
+     <div style="font-size:13.5px;color:#5a5470;line-height:1.45;padding:0 4px;text-wrap:pretty">Your child can switch between these while reading. Up to three.</div>
+     <div style="background:#fff;border-radius:18px;overflow:hidden">
+      <div style="min-height:54px;padding:0 14px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #efe9dd"><div style="width:26px;height:26px;border-radius:8px;background:#C9C3D6;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"></path></svg></div><span style="flex:1;font-size:15px;font-weight:600">English</span><span style="font-size:12.5px;color:#8a8399">App language</span></div>
+      <div style="min-height:54px;padding:0 14px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #efe9dd"><div style="width:26px;height:26px;border-radius:8px;background:#5B57E8;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"></path></svg></div><span style="flex:1;font-size:15px;font-weight:600;font-family:'Vazirmatn',sans-serif">فارسی</span><span style="font-size:12.5px;color:#3E9A4E;font-weight:600">Ready</span></div>
+      <div style="padding:10px 14px 12px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid #efe9dd">
+       <div style="display:flex;align-items:center;gap:12px;min-height:34px"><div style="width:26px;height:26px;border-radius:8px;background:#5B57E8;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"></path></svg></div><span style="flex:1;font-size:15px;font-weight:600">Svenska</span><div style="height:36px;padding:0 14px;border-radius:18px;background:#fff;border:2px solid #e3dccd;color:#5a5470;font-size:13.5px;font-weight:600;display:flex;align-items:center">Cancel</div></div>
+       <div style="padding-left:38px;display:flex;flex-direction:column;gap:5px"><div style="height:8px;border-radius:4px;background:#efe9dd;overflow:hidden"><div style="width:42%;height:100%;background:#C9C3D6;border-radius:4px"></div></div><div style="display:flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8a8399" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M5 12.6a10 10 0 015.2-2.5"></path><path d="M16.4 11.1A10 10 0 0119 12.6"></path><path d="M8.5 16.4a5 5 0 017 0"></path><path d="M3 3l18 18"></path></svg><span style="font-size:12px;color:#5a5470">Waiting for the internet · 42%</span></div><span style="font-size:12px;color:#8a8399;line-height:1.4">Carries on by itself when you’re back online. <span style="color:#5B57E8;font-weight:600">Retry</span></span></div>
+      </div>
+      <div style="min-height:54px;padding:0 14px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #efe9dd;opacity:.45"><div style="width:26px;height:26px;border-radius:8px;border:2px solid #d9d2c4;flex-shrink:0"></div><span style="flex:1;font-size:15px">Deutsch</span></div>
+      <div style="min-height:54px;padding:0 14px;display:flex;align-items:center;gap:12px;opacity:.45"><div style="width:26px;height:26px;border-radius:8px;border:2px solid #d9d2c4;flex-shrink:0"></div><span style="flex:1;font-size:15px">Español</span></div>
+     </div>
+     <div style="font-size:12.5px;color:#8a8399;padding:0 4px;line-height:1.45;text-wrap:pretty">Three picked. Untick one to choose another.</div>
+    </div>
+   </div>
+   <div style="width:360px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">This is frame 87 with Svenska offline. The bar keeps its 42% but goes <b>grey</b>, the line shows the no-Wi-Fi icon and <b>“Waiting for the internet”</b>, and a small <b>Retry</b> link sits under it. Cancel still unticks the language. When Wi-Fi or the app comes back, the row goes back to “Getting the voice ready · 42%” and keeps counting. On mobile data it reads <b>“Waiting for Wi-Fi”</b>, unless the parent chose “Download now” in frame 50. The storyteller pack (frame 50) and own-book translation pack use the same line. The copy is a draft.</div>
+  </div>
+ </div>
+
+ <div style="font-size:12px;font-weight:700;letter-spacing:1.6px;color:rgba(0,0,0,.45);text-transform:uppercase;margin-top:48px">Keeps going when locked · Slice 183</div>
+ <div style="display:flex;flex-wrap:wrap;gap:40px;margin-top:14px;align-items:flex-start">
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#33333a">R13 · RTST · before the notification question</div>
+   <div data-screen-label="R13 RTST notification ask" style="width:360px;height:760px;border-radius:26px;overflow:hidden;background:#f4f5f9;box-shadow:0 18px 50px rgba(20,30,60,.22);border:1px solid rgba(0,0,0,.10);display:flex;flex-direction:column;position:relative">
+    <div style="height:30px;background:#5B57E8;display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:#fff;font-size:11px;font-weight:600;flex-shrink:0"><span>9:41</span><span>100%</span></div>
+    <div style="background:linear-gradient(135deg,#5B57E8,#3B82F6);padding:8px 18px 8px 4px;color:#fff;flex-shrink:0;display:flex;align-items:center;gap:2px;min-height:64px"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></div><span style="font-size:18px;font-weight:600">Voice</span></div>
+    <div style="flex:1;padding:16px 14px;display:flex;flex-direction:column;gap:10px">
+     <div style="background:#fff;border:1px solid rgba(0,0,0,.11);border-radius:16px;height:64px"></div>
+     <div style="background:#fff;border:1px solid rgba(0,0,0,.11);border-radius:16px;height:64px"></div>
+     <div style="background:#fff;border:1px solid rgba(0,0,0,.11);border-radius:16px;height:64px"></div>
+    </div>
+    <div style="position:absolute;inset:0;background:rgba(20,22,40,.45);display:flex;align-items:center;justify-content:center;padding:24px">
+     <div style="width:100%;background:#fff;border-radius:24px;padding:24px 22px 18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 18px 50px rgba(20,30,60,.30)">
+      <div style="width:52px;height:52px;border-radius:50%;background:rgba(91,87,232,.10);display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#4A46D6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0112 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9z"></path><path d="M10 20a2.2 2.2 0 004 0"></path></svg></div>
+      <div style="font-size:20px;font-weight:600;line-height:1.25">Keep downloading when the phone is locked?</div>
+      <div style="font-size:14.5px;color:rgba(0,0,0,.62);line-height:1.45;text-wrap:pretty">The voice is 124 MB. Allow notifications to keep it downloading while the phone is locked or you use other apps. You’ll see the progress there.</div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px">
+       <div style="height:48px;padding:0 18px;border-radius:14px;color:#4A46D6;font-size:16px;font-weight:600;display:flex;align-items:center">Not now</div>
+       <div style="height:48px;padding:0 22px;border-radius:14px;background:#5B57E8;color:#fff;font-size:16px;font-weight:600;display:flex;align-items:center">Continue</div>
+      </div>
+     </div>
+    </div>
+   </div>
+   <div style="width:360px;font-size:12.5px;color:rgba(0,0,0,.6);line-height:1.5;text-wrap:pretty">This is <b>Android 13+ only</b>, shown <b>once</b>, when the first big download starts (voice, translation or scan pack) and only if notifications aren’t allowed yet. It never shows on app launch. <b>Continue</b> opens Android’s own permission prompt. <b>Not now</b> skips it. Either way, the download starts at once and still runs when the phone is locked. Android just hides the notification. iOS doesn’t show this screen, since a background download needs no permission there. The size in the copy is the pack’s real size. The copy is a draft.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#33333a">96 · Dino · Story languages · before the notification question</div>
+   <div data-screen-label="96 Dino notification ask" style="width:360px;height:760px;border-radius:34px;overflow:hidden;background:#F3EFE6;border:6px solid #2b2540;box-shadow:0 20px 50px rgba(43,37,64,.22);display:flex;flex-direction:column;position:relative;font-family:'Fredoka',system-ui,sans-serif;color:#2b2540">
+    <div style="height:28px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-size:12px;font-weight:600"><span>9:41</span><span>100%</span></div>
+    <div style="display:flex;align-items:center;gap:6px;padding:8px 14px 10px 6px;flex-shrink:0"><div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></div><span style="font-size:20px;font-weight:600">Story languages</span></div>
+    <div style="padding:0 14px;display:flex;flex-direction:column;gap:10px">
+     <div style="background:#fff;border-radius:18px;height:270px"></div>
+    </div>
+    <div style="position:absolute;inset:0;background:rgba(43,37,64,.42);display:flex;flex-direction:column;justify-content:flex-end">
+     <div style="background:#fff;border-radius:28px 28px 0 0;padding:12px 18px 26px;display:flex;flex-direction:column;gap:12px">
+      <div style="width:40px;height:5px;border-radius:3px;background:#e3dccd;align-self:center"></div>
+      <div style="width:56px;height:56px;border-radius:50%;background:#ECE7FF;display:flex;align-items:center;justify-content:center;margin-top:6px"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B57E8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0112 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9z"></path><path d="M10 20a2.2 2.2 0 004 0"></path></svg></div>
+      <div style="font-size:20px;font-weight:600;line-height:1.25">Keep downloading when the phone is locked?</div>
+      <div style="font-size:14px;color:#5a5470;line-height:1.45;text-wrap:pretty">The Svenska voice is 124 MB. Allow notifications so it keeps downloading while the phone is locked. You’ll see the progress there.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px">
+       <div style="height:52px;border-radius:26px;background:#fff;border:2px solid #e3dccd;color:#5a5470;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center">Not now</div>
+       <div style="height:52px;border-radius:26px;background:#5B57E8;color:#fff;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center">Continue</div>
+      </div>
+     </div>
+    </div>
+   </div>
+   <div style="width:360px;font-size:12.5px;color:#5a5470;line-height:1.5;text-wrap:pretty">This uses the same rule as R13, in Dino’s sheet style (frame 90). It shows <b>only inside the grown-up area, behind the gate</b>, so a child never sees the system prompt. If the first big download starts outside it (the storyteller pack after first run), the question waits until a parent next opens Settings, and that download still runs. It shows once. The order is: this sheet, then the Wi-Fi question if on mobile data (frame 50), then the download. The copy is a draft.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+   <div style="font-size:14px;font-weight:600;color:#33333a">N1 · Android lock screen · both apps downloading</div>
+   <div data-screen-label="N1 Android notifications" style="width:360px;height:760px;border-radius:26px;overflow:hidden;background:linear-gradient(170deg,#2c2f4a 0%,#1d1f33 55%,#14152a 100%);box-shadow:0 18px 50px rgba(20,30,60,.22);border:1px solid rgba(0,0,0,.10);display:flex;flex-direction:column;color:#fff;font-family:'Google Sans','Roboto',system-ui,sans-serif">
+    <div style="height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-size:11px;font-weight:600;flex-shrink:0;opacity:.85"><span></span><span>100%</span></div>
+    <div style="padding:40px 0 34px;display:flex;flex-direction:column;align-items:center;gap:6px"><span style="font-size:76px;font-weight:300;line-height:1;letter-spacing:-1px">9:41</span><span style="font-size:14px;opacity:.75">Wednesday, 28 October</span></div>
+    <div style="padding:0 12px;display:flex;flex-direction:column;gap:6px">
+     <div style="background:#eef0f8;color:#1f2027;border-radius:24px 24px 8px 8px;padding:14px 16px 10px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(0,0,0,.6)"><img src="assets/app-tile.png" style="width:20px;height:20px;border-radius:50%;display:block"><span>Read The Stupid Text</span><span>·</span><span>now</span></div>
+      <div style="font-size:15px;font-weight:600">Downloading voice… 45%</div>
+      <div style="height:4px;border-radius:2px;background:rgba(0,0,0,.12);overflow:hidden"><div style="width:45%;height:100%;background:#5B57E8;border-radius:2px"></div></div>
+      <div style="display:flex;justify-content:flex-start"><div style="height:40px;padding:0 12px;margin-left:-12px;border-radius:20px;color:#4A46D6;font-size:14px;font-weight:600;display:flex;align-items:center">Cancel</div></div>
+     </div>
+     <div style="background:#eef0f8;color:#1f2027;border-radius:8px 8px 24px 24px;padding:14px 16px 10px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(0,0,0,.6)"><img src="dino_reader_icons/ios/AppIcon-1024-light.png" style="width:20px;height:20px;border-radius:50%;display:block"><span>Dino Reader</span><span>·</span><span>2 min</span></div>
+      <div style="font-size:15px;font-weight:600">Getting the Svenska voice ready · 42%</div>
+      <div style="height:4px;border-radius:2px;background:rgba(0,0,0,.12);overflow:hidden"><div style="width:42%;height:100%;background:#5B57E8;border-radius:2px"></div></div>
+      <div style="display:flex;justify-content:flex-start"><div style="height:40px;padding:0 12px;margin-left:-12px;border-radius:20px;color:#4A46D6;font-size:14px;font-weight:600;display:flex;align-items:center">Cancel</div></div>
+     </div>
+    </div>
+    <div style="margin-top:auto;padding:0 0 28px;display:flex;justify-content:center"><div style="width:56px;height:56px;border-radius:50%;border:1.5px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 018 0v4"></path></svg></div></div>
+   </div>
+   <div style="width:360px;font-size:12.5px;color:rgba(0,0,0,.6);line-height:1.5;text-wrap:pretty">This is a standard Android <b>ongoing</b> notification. It can’t be swiped away while running, and its text is the app’s own status line (RTST’s “Downloading voice…”, Dino’s “Getting the … voice ready”). Its only action is <b>Cancel</b>, which stops the download like the in-app Cancel, with nothing restarting by itself. Tapping the notification opens the page where the download started. In Dino, that is behind the gate. The notification <b>goes away by itself</b> when the pack is ready, fails or is cancelled. No “done” notification is left behind. Each app shows one notification per download. Both are shown here only to compare. iOS has no notification. The download just finishes in the background.</div>
+  </div>
+ </div>
+</section>
+</x-dc>
+</body>
+</html>
