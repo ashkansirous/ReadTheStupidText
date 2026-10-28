@@ -23,6 +23,7 @@ Open slices only. Finished slices (155 rows) are in [slices-done](docs/plan/note
 | 177 | Dino: slow speech for the first reads after the app starts (measure on Release, then fix; after 175) | planned | | | [177-dino-cold-start-synthesis.md](docs/plan/slices/177-dino-cold-start-synthesis.md) |
 | 178 | Dino: count an own book's page count and how it really came in (pdf, docx, txt, photo, scan, typed, mixed) | planned | | | [178-dino-own-book-usage-detail.md](docs/plan/slices/178-dino-own-book-usage-detail.md) |
 | 179 | No Play robot, VM or own-machine runs in the usage counts (Worker drops ARM-less phones, Store-only Windows, harness off switch) | planned | | | [179-no-robot-or-own-machine-counts.md](docs/plan/slices/179-no-robot-or-own-machine-counts.md) |
+| 180 | Faster device tests: only the touched apps, build once per commit, Android and Windows side by side, a second emulator (tooling only; after `feat/vm-update-only`) | planned | | | [180-faster-device-tests.md](docs/plan/slices/180-faster-device-tests.md) |
 
 Batch 25 (119-123; 119, 120, 122, 123 built, 121 built; planned 2026-10-25, the stories have no pictures): Claude illustrates each book by driving the Gemini web app in the user's Chrome. 119 first (the pigs, the pilot; the user checks it), then 120 (the skill), then 121 one book per PR. Touches pictures and the store/starter builders only, so it can run beside Batch 24. Decisions 125-129.
 
