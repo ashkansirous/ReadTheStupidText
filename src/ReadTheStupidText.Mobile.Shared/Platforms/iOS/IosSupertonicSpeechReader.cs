@@ -66,7 +66,6 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
     private string? _failedModelKey;
     private string? _voiceId;
     private readonly ConcurrentDictionary<VoiceEngineKind, string> _voiceByKind = new();
-    private int _warmedUp;
 
     private AVAudioPlayer? _player;
     private string? _currentChunkFile;
@@ -98,6 +97,7 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
     // owner leaves, so a Skip-continued playback keeps it alive after the original call returns.
     // A head-start prepare never runs while it is set.
     private ActiveRead? _activeRead;
+    private string? _lastReadVoiceId; // Slice 177: the voice the latest read asked an engine for; its model folder is warmed too
 
     // Set when a read starts and cleared at its first audio, which logs the wait.
     private long _readStartTicks;
@@ -162,10 +162,10 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
     }
 
     // On a cold start the model is only resolved after a background scan, so a warm-up asked for
-    // before that found nothing to warm: warm once, the first time the model reports ready.
+    // before that found nothing to warm: warm each time the resolved model reports ready (a warm engine is left alone, see WarmUp).
     private void OnModelReadyChanged(object? sender, EventArgs e)
     {
-        if (_model.IsReady && Volatile.Read(ref _warmedUp) == 0)
+        if (_model.IsReady)
         {
             _ = WarmUpAsync();
         }
@@ -618,30 +618,52 @@ public sealed partial class IosSupertonicSpeechReader : ISpeechReader, IHeadStar
 
     public Task WarmUpAsync() => Task.Run(WarmUp);
 
+    // Slice 177: warms the engine the resolved model's reads would use. The warm state lives on the engine itself (IosRefCountedTts): a warm-up
+    // synthesises one short sentence only if nothing has synthesised on that engine yet, under the lock a read takes to acquire it, so a
+    // read and a warm-up never use the engine at once and a read that got there first has already warmed it. An evicted engine comes back
+    // cold and the next trigger warms it. Duplicate triggers are harmless.
     private void WarmUp()
     {
+        if (_model.Paths is not { } paths)
+        {
+            return;
+        }
+
         try
         {
-            IosBuiltEngine? engine = AcquireEngine();
-            if (engine is null)
-            {
-                return;
-            }
-
-            try
-            {
-                Volatile.Write(ref _warmedUp, 1);
-                int speaker = ResolveVoice(engine).SpeakerId;
-                IosTtsEngine.Generate(engine, WarmUpText, speaker).Dispose();
-            }
-            finally
-            {
-                engine.Release();
-            }
+            WarmEngines(paths);
         }
         catch
         {
-            // Best-effort: AcquireEngine() in StartReadAsync remains the safety net.
+            // Best-effort: AcquireEngine() in the read remains the safety net.
+        }
+    }
+
+    // The default voice's folder and, when the latest read used another folder of the pack (a cast voice, Slice 89), that one too.
+    private void WarmEngines(VoiceModelPaths paths)
+    {
+        WarmEngine(paths, null);
+        if (Volatile.Read(ref _lastReadVoiceId) is { } lastVoice)
+        {
+            WarmEngine(paths, lastVoice);
+        }
+    }
+
+    private void WarmEngine(VoiceModelPaths paths, string? voiceId)
+    {
+        IosBuiltEngine? engine = AcquireEngine(voiceId, paths, forWarmUp: true);
+        if (engine is null)
+        {
+            return;
+        }
+
+        try
+        {
+            engine.Tts.WarmOnce(() => IosTtsEngine.Generate(engine, WarmUpText, ResolveVoice(engine).SpeakerId).Dispose());
+        }
+        finally
+        {
+            engine.Release();
         }
     }
 

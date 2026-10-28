@@ -91,6 +91,9 @@ public partial class ReadingPage : ContentPage
 		ShowPackStatus();
 	}
 
+	/// <summary>The id of the book this page was loaded for (null before Load); the debug test hook compares it.</summary>
+	public string? LoadedStoryId => _story?.Id;
+
 	/// <summary>Opens the page on <paramref name="story"/>. Called once, right after the page is created.</summary>
 	public void Load(Story story)
 	{

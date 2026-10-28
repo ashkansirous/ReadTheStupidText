@@ -19,6 +19,8 @@ public class EngineCacheTests
 
         public bool Disposed => _counter.Value == 0;
 
+        public bool InUse => _counter.Value > 1;
+
         public bool TryAcquire() => _counter.TryAcquire();
 
         public void Release() => _counter.Release();
@@ -91,6 +93,35 @@ public class EngineCacheTests
         Assert.Equal(2, loads);
         Assert.Equal(1, cache.Count);
         Assert.Equal(2, spanish.References); // the cache's reference is given back; the two callers' remain
+    }
+
+    [Fact]
+    public void A_warm_up_does_not_evict_a_kokoro_engine_a_read_is_using_but_a_read_does()
+    {
+        using var cache = new EngineCache<Engine>(Create);
+        VoiceModelPaths Kokoro(string language) => new("/k", VoiceEngineKind.Kokoro, language, PackVersion: "2");
+        Engine spanish = cache.Acquire(Kokoro("es"))!; // held by a read
+
+        Engine? warm = cache.Acquire(Kokoro("pt"), forWarmUp: true);
+
+        Assert.Null(warm);
+        Assert.False(spanish.Disposed);
+        Assert.NotNull(cache.Acquire(Kokoro("pt"))); // a read may still switch language
+    }
+
+    [Fact]
+    public void A_warm_up_may_evict_an_idle_engine_and_never_one_in_use_at_capacity()
+    {
+        using var cache = new EngineCache<Engine>(Create);
+        Engine held = cache.Acquire(Model("held"))!; // oldest, in use
+        FillOthers(cache);
+
+        Assert.Null(cache.Acquire(Model("new"), forWarmUp: true));
+        held.Release();
+        Engine? warm = cache.Acquire(Model("new"), forWarmUp: true);
+
+        Assert.NotNull(warm);
+        Assert.Equal(EngineCache<Engine>.Capacity, cache.Count);
     }
 
     [Fact]
