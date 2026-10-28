@@ -132,7 +132,7 @@ Never pipe a producer into `grep -q` under `pipefail` (`release.yml`, `.github/s
 
 ## iOS review cadence
 
-`ios-review-cadence.mjs` is the only code that sends a build to Apple's reviews: `testflight-external.yml` (daily 06:00 UTC + manual) adds the newest processed build to the external group "Rofagha" and submits it for Beta App Review; `appstore-submit.yml` (manual, `app` = rtst|dino|both) does the App Store. Never add a step that cancels a waiting review or expires a build, and never submit while one is waiting (starvation: each cancel goes to the back of Apple's queue). A new iOS app needs its row in the script's `APPS` table. (Decision 154, Slice 147: docs/plan/slices/147-ios-review-cadence.md)
+`ios-review-cadence.mjs` is the only code that sends a build to Apple's reviews: `testflight-external.yml` (daily 05:17 UTC, backup 07:17, + manual) adds the newest processed build to the external group "Rofagha" and submits it for Beta App Review even while an older build still waits (batching: the newest build each morning; never cancel or expire the older one); `appstore-submit.yml` (manual, `app` = rtst|dino|both) does the App Store and still skips while an App Store review is in progress. Never add a step that cancels a waiting review or expires a build (starvation: each cancel goes to the back of Apple's queue). A new iOS app needs its row in the script's `APPS` table. (Decision 154, Slice 147: docs/plan/slices/147-ios-review-cadence.md)
 
 ## Android downloads
 
