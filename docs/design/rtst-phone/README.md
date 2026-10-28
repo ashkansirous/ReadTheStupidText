@@ -108,3 +108,43 @@ Also read these files the selection imports:
 
 Implement: the selected files
 ```
+
+## Batch 39 mock — `Batch 39 Downloads.dc.html` (both apps)
+
+- **Source:** Claude Design project `90615641-f298-4e21-8c50-ca2efbeaaebc`, file `Batch 39 Downloads.dc.html`
+  (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Batch+39+Downloads.dc.html>).
+- **Copied:** 2026-10-28, verbatim from `DesignSync get_file`. Its images are `assets/app-tile.png`,
+  `design_handoff_tray_panel/assets/glyph.png` and `dino_reader_icons/ios/AppIcon-1024-light.png` (a copy of
+  `../dino-reader/icons/ios/AppIcon-1024-light.png`), at the same relative paths.
+- **Covers:** Batch 39, Slices 182-183 (download waits for the network; download keeps going when locked).
+  Covers both Read The Stupid Text and Dino Reader phone screens; it lives here because its images do.
+  R12-R13 extend Batch 29; frames 95-96 extend `../dino-reader/Dino Reader Batch 37.dc.html`.
+
+| # | Screen | Line |
+|---|---|---|
+| — | **Waiting for the internet · Slice 182** (group) | 23 |
+| R12 | RTST main page · download waiting | 28 |
+| 95 | Dino · Story languages · download waiting | 57 |
+| — | **Keeps going when locked · Slice 183** (group) | 79 |
+| R13 | RTST · before the notification question | 84 |
+| 96 | Dino · Story languages · before the notification question | 109 |
+| N1 | Android lock screen · both apps downloading | 133 |
+
+To refresh: fetch the file again with `DesignSync get_file` and overwrite this copy, then regenerate this table.
+
+Import prompt (verbatim):
+
+```
+Use the claude_design MCP (https://api.anthropic.com/v1/design/mcp, auth via /design-login) to import this project:
+https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Batch+39+Downloads.dc.html
+
+Focus on these files (the whole project is readable):
+- `Batch 39 Downloads.dc.html`
+
+Also read these files the selection imports:
+- `assets/app-tile.png`
+- `design_handoff_tray_panel/assets/glyph.png`
+- `dino_reader_icons/ios/AppIcon-1024-light.png`
+
+Implement: `Batch 39 Downloads.dc.html`
+```

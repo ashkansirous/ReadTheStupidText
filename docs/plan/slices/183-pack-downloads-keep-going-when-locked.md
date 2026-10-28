@@ -14,6 +14,25 @@ Found on the user's Pixel 2026-10-28 (`reviews/pack-stall-phone.md` run 1): behi
 - Ask for notification permission (Android 13+) only when a big download starts, in Dino only inside the grown-up area; if refused, the download still runs, Android just hides the notification.
 - Same behaviour on Android and iOS, in the same slice.
 
+#### Design (Batch 39 Downloads mock, frames R13, 96 and N1, added 2026-10-28)
+
+Three frames in `docs/design/rtst-phone/Batch 39 Downloads.dc.html` (README section "Batch 39 mock"), group "Keeps going when locked". The mock agrees with the plan's decisions and adds the exact rules for the ask and the notification. Sizes, colours and tokens are in the file. Copy is a draft. The Android lock-screen frame N1 is a system screen drawn for comparison, not app UI.
+
+- **R13 (RTST, before the notification question).** A sheet over the Voice page: "Keep downloading when the phone is locked?" / "The voice is 124 MB. Allow notifications to keep it downloading while the phone is locked or you use other apps. You'll see the progress there." Buttons Not now and Continue. Android 13+ only, shown once, when the first big download starts (voice, translation or scan pack) and only if notifications are not allowed yet. Never on app launch. Continue opens Android's own permission prompt. Not now skips it. Either way the download starts at once and still runs when locked; Android just hides the notification. The size in the copy is the pack's real size.
+- **96 (Dino, same question in the Story languages sheet style, frame 90 of Dino Batch 37).** Copy: "The Svenska voice is 124 MB. Allow notifications so it keeps downloading while the phone is locked. You'll see the progress there." Only inside the grown-up area, behind the gate, so a child never sees the system prompt. If the first big download starts outside it (the storyteller pack after first run), the question waits until a parent next opens Settings, and that download still runs. Shown once. Order: this sheet, then the Wi-Fi question if on mobile data (frame 50), then the download.
+- **N1 (Android lock screen).** A standard ongoing notification, so it cannot be swiped away while running. Its text is the app's own status line: RTST "Downloading voice... 45%", Dino "Getting the Svenska voice ready · 42%". One action, Cancel, which stops the download like the in-app Cancel (nothing restarts by itself). Tapping it opens the page where the download started (in Dino, behind the gate). It goes away by itself when the pack is ready, fails or is cancelled; no "done" notification is left. One notification per download per app.
+- **iOS:** the mock says iOS shows no ask screen (a background download needs no permission) and no notification; the download just finishes in the background. So the iOS task is the background `URLSession` only: no sheet, no notification, no Cancel-from-lock-screen. This matches the plan, whose permission and notification items are Android items.
+
+**Open point: Dino ask is deferred.** The plan said "Dino only inside the grown-up area". The mock adds that the question waits until a parent next opens Settings when the download starts elsewhere, while the download still runs. **Default:** build it that way; keep a "notification question asked" flag per app.
+
+**Open point: ask only when not already allowed, and a pre-ask for the sheet.** The plan said "the app-language explanation first, then the system prompt"; the mock fixes it as one sheet with Not now and Continue, shown once, skipped when notifications are already allowed. **Default:** as drawn. Not now is final; do not ask again.
+
+**Open point: Cancel action and tap target.** The plan listed Cancel on the notification; the mock adds that tapping it opens the starting page and that no completion notification remains. **Default:** as drawn.
+
+**Open point: RTST asks at the first big download anywhere.** The plan said "when a big download starts"; the mock settles it as the first one only, once. **Default:** once per app install.
+
+New strings (every app language, machine drafts marked for native review): "Keep downloading when the phone is locked?", "The voice is {size} MB. Allow notifications to keep it downloading while the phone is locked or you use other apps. You'll see the progress there.", the Dino variant "The {Language} voice is {size} MB. Allow notifications so it keeps downloading while the phone is locked. You'll see the progress there.", "Not now", "Continue", and the notification texts "Downloading voice... {n}%" and "Getting the {Language} voice ready · {n}%" (reuse the in-app status lines).
+
 #### Work
 
 - [ ] Smallest end-to-end first: Android, RTST voice pack: the existing downloader runs inside a foreground service of type `dataSync` (manifest `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_DATA_SYNC`, `POST_NOTIFICATIONS`) with an ongoing notification "Downloading voice… 45%" and a Cancel action; it stops itself when the pack is ready, failed or cancelled. Confirm the current MAUI/AndroidX APIs and the Android 14 foreground-service-type rules through context7 first (`library-docs`).
