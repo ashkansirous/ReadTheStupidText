@@ -143,7 +143,7 @@ public sealed partial class IosSupertonicSpeechReader
         {
             try
             {
-                return IosTtsEngine.Generate(engine, chunk, speakerId, pace);
+                return IosTtsEngine.GenerateTracked(engine, chunk, speakerId, pace);
             }
             finally
             {
@@ -191,15 +191,21 @@ public sealed partial class IosSupertonicSpeechReader
     // pack update is a new folder, so it is picked up here); the same folder under another
     // language reuses the model (a Kokoro pack excepted: each language has an engine of its own). An engine nobody asks for any more is disposed once the last
     // read or generation holding it lets go.
-    private IosBuiltEngine? AcquireEngine(string? voiceId = null)
+    // A warm-up (Slice 177) is refused (null) rather than evict an engine that is in use.
+    private IosBuiltEngine? AcquireEngine(string? voiceId = null, VoiceModelPaths? model = null, bool forWarmUp = false)
     {
-        if (_model.Paths is not { } current)
+        if ((model ?? _model.Paths) is not { } current)
         {
             return null;
         }
 
         // Aimed at the voice that will speak: voices of one pack can each have their own model folder.
         VoiceModelPaths paths = current.ForVoice(PickVoice(current, voiceId));
+        if (!forWarmUp && voiceId is not null)
+        {
+            Volatile.Write(ref _lastReadVoiceId, voiceId);
+        }
+
         if (ModelKey(paths) == Volatile.Read(ref _failedModelKey))
         {
             // This exact model already failed to load: don't retry the multi-hundred-MB build on every
@@ -209,7 +215,7 @@ public sealed partial class IosSupertonicSpeechReader
 
         try
         {
-            return AcquireEngineCore(paths);
+            return AcquireEngineCore(paths, forWarmUp);
         }
         catch (Exception ex) when (ex is not NeuralEngineUnavailableException)
         {
@@ -233,7 +239,7 @@ public sealed partial class IosSupertonicSpeechReader
             TaskContinuationOptions.OnlyOnFaulted,
             TaskScheduler.Default);
 
-    private IosBuiltEngine? AcquireEngineCore(VoiceModelPaths paths) => _engines.Acquire(paths);
+    private IosBuiltEngine? AcquireEngineCore(VoiceModelPaths paths, bool forWarmUp) => _engines.Acquire(paths, forWarmUp);
 
     private static async Task<string> WriteChunkFileAsync(byte[] wav)
     {
