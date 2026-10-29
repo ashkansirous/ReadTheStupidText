@@ -105,6 +105,8 @@
   <data name="PackStatus_Resolving" xml:space="preserve"><value>Ser etter naturlige stemmer …</value></data>
   <data name="PackStatus_Downloading" xml:space="preserve"><value>Laster ned naturlige stemmer … {0}</value></data>
   <data name="PackStatus_Offline" xml:space="preserve"><value>Ingen tilkobling. Leser med telefonens stemme. Trykk for å prøve stemmenedlastingen på nytt.</value></data>
+  <data name="PackStatus_Waiting" xml:space="preserve"><value>Venter på internett. Det fortsetter av seg selv når du er på nett igjen. Trykk for å prøve nå.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="PackStatus_WaitingWifi" xml:space="preserve"><value>Venter på Wi-Fi. Det fortsetter av seg selv på Wi-Fi. Trykk for å laste ned nå.</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Stemmenedlastingen ble skadet. Leser med telefonens stemme. Trykk for å prøve igjen.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Pakken med naturlige stemmer kan ikke brukes. Leser med telefonens stemme.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Kunne ikke laste ned naturlige stemmer. Leser med telefonens stemme. Trykk for å prøve igjen.</value></data>

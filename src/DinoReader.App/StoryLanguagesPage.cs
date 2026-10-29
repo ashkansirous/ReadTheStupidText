@@ -158,6 +158,10 @@ public sealed class StoryLanguagePicker : ContentView
 			{
 				AddProgress(stack, code);
 			}
+			else if (_shown[code] == LanguageVoiceState.NotInstalled && _packs.IsWaitingForInternet(code))
+			{
+				AddWaiting(stack, code);
+			}
 		}
 
 		return stack;
@@ -176,6 +180,30 @@ public sealed class StoryLanguagePicker : ContentView
 		_live[code] = (bar, status);
 		stack.Children.Add(bar);
 		stack.Children.Add(status);
+	}
+
+	// Mock frame 95: the bar keeps its share but goes grey, the line says what it waits for, a note says it carries on by itself, and Retry tries at once.
+	private void AddWaiting(VerticalStackLayout stack, string code)
+	{
+		double progress = _packs!.ProgressOf(code);
+		int percent = (int)(progress * PercentScale);
+		string template = _packs.WaitingNeedsWifi(code) ? AppResources.StoryLanguages_WaitingWifi : AppResources.StoryLanguages_Waiting;
+		stack.Children.Add(new ProgressBar { Progress = progress, ProgressColor = DinoTokens.Get(DinoTokens.Muted), HeightRequest = BarHeight });
+		bool needsRetry = _packs.NeedsRetry(code); // the automatic retry failed too: no "carries on by itself", only Retry
+		string line = needsRetry ? AppResources.StoryLanguages_Failed : AppResources.Format(template, percent);
+		stack.Children.Add(new Label { Text = line, FontSize = 12, TextColor = DinoTokens.Get(DinoTokens.Muted) });
+		if (!needsRetry)
+		{
+			stack.Children.Add(new Label { Text = AppResources.StoryLanguages_WaitingNote, FontSize = 12, TextColor = DinoTokens.Get(DinoTokens.Muted) });
+		}
+
+		Label retry = Note(AppResources.StoryLanguages_Retry, DinoTokens.Get(DinoTokens.Brand), bold: true);
+		CastViews.AddTap(retry, () =>
+		{
+			DownloadRequested?.Invoke(code);
+			return Task.CompletedTask;
+		});
+		stack.Children.Add(retry);
 	}
 
 	private View? EndView(string code, bool main, bool ticked)
@@ -199,6 +227,7 @@ public sealed class StoryLanguagePicker : ContentView
 		{
 			LanguageVoiceState.Ready => Note(AppResources.Language_Ready, ReadyGreen, bold: true),
 			LanguageVoiceState.Downloading => CancelButton(code),
+			_ when _packs.IsWaitingForInternet(code) => CancelButton(code), // frame 95: Cancel still unticks the language
 			_ => RetryNote(code),
 		};
 	}

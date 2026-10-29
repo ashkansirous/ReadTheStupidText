@@ -105,6 +105,8 @@
   <data name="PackStatus_Resolving" xml:space="preserve"><value>Procurando vozes naturais…</value></data>
   <data name="PackStatus_Downloading" xml:space="preserve"><value>Baixando vozes naturais… {0}</value></data>
   <data name="PackStatus_Offline" xml:space="preserve"><value>Sem conexão. Lendo com a voz do telefone. Toque para tentar baixar a voz novamente.</value></data>
+  <data name="PackStatus_Waiting" xml:space="preserve"><value>Aguardando a internet. Continua sozinho quando você voltar a ficar online. Toque para tentar agora.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="PackStatus_WaitingWifi" xml:space="preserve"><value>Aguardando o Wi-Fi. Continua sozinho no Wi-Fi. Toque para baixar agora.</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>O download da voz foi corrompido. Lendo com a voz do telefone. Toque para tentar novamente.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>O pacote de vozes naturais não pode ser usado. Lendo com a voz do telefone.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Não foi possível baixar as vozes naturais. Lendo com a voz do telefone. Toque para tentar novamente.</value></data>

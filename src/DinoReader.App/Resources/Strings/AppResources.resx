@@ -12,6 +12,12 @@
   <data name="PackStatus_Resolving" xml:space="preserve"><value>Checking for natural voices…</value></data>
   <data name="PackStatus_Downloading" xml:space="preserve"><value>Downloading natural voices… {0}</value></data>
   <data name="PackStatus_Offline" xml:space="preserve"><value>No connection. Reading with the phone voice. Tap to retry the voice download.</value></data>
+  <data name="PackStatus_Waiting" xml:space="preserve"><value>Waiting for the internet. It carries on by itself when you’re back online. Tap to try now.</value></data>
+  <data name="PackStatus_WaitingWifi" xml:space="preserve"><value>Waiting for Wi-Fi. It carries on by itself on Wi-Fi. Tap to download now.</value></data>
+  <data name="StoryLanguages_Waiting" xml:space="preserve"><value>Waiting for the internet · {0}%</value></data>
+  <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>Waiting for Wi-Fi · {0}%</value></data>
+  <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>Carries on by itself when you’re back online.</value></data>
+  <data name="StoryLanguages_Retry" xml:space="preserve"><value>Retry</value></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>The voice download was corrupted. Reading with the phone voice. Tap to retry.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>The natural voices pack is unusable. Reading with the phone voice.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Couldn't download natural voices. Reading with the phone voice. Tap to retry.</value></data>
@@ -215,6 +221,7 @@
   <!-- Slice 115 -->
   <data name="Storyteller_Getting" xml:space="preserve"><value>Getting the storyteller voices…</value></data>
   <data name="Storyteller_WaitWifi" xml:space="preserve"><value>Storyteller voices wait for Wi-Fi</value></data>
+  <data name="Storyteller_WaitInternet" xml:space="preserve"><value>Waiting for the internet</value></data>
   <data name="Storyteller_DownloadNow" xml:space="preserve"><value>Download now</value></data>
   <data name="Storyteller_Ready" xml:space="preserve"><value>Storyteller voices are ready</value></data>
   <data name="Storyteller_ReadyBody" xml:space="preserve"><value>Your stories now use the new storyteller voices.</value></data>

@@ -58,6 +58,7 @@ public static class CastText
 	// The storyteller voices by default (Slice 115).
 	public static string StorytellerGetting => AppResources.Storyteller_Getting;
 	public static string StorytellerWaitWifi => AppResources.Storyteller_WaitWifi;
+	public static string StorytellerWaitInternet => AppResources.Storyteller_WaitInternet;
 	public static string StorytellerDownloadNow => AppResources.Storyteller_DownloadNow;
 	public static string StorytellerFailed => AppResources.Storyteller_Failed;
 	public static string StorytellerTryAgain => AppResources.Storyteller_TryAgain;

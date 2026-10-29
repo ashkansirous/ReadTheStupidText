@@ -42,6 +42,9 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		window.Stopped += (_, _) => FlushUsage();
 		window.Resumed += (_, _) => OnResumed(_navigation!, external);
 		window.Resumed += (_, _) => _ = _config.RefreshAsync();
+		var resume = _services.GetRequiredService<ReadTheStupidText.Mobile.Shared.Network.PackResumeWatcher>(); // Slice 182: created and started with the window, not when a page first asks for it
+		resume.Start();
+		window.Resumed += (_, _) => resume.NotifyForeground();
 		Action ended = () => OnResumed(_navigation!, external);
 		external.Ended += ended;
 		window.Destroying += (_, _) => external.Ended -= ended;

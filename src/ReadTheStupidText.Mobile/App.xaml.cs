@@ -39,6 +39,9 @@ public partial class App : Microsoft.Maui.Controls.Application
 			: new AppShell();
 		var window = new Window(root);
 		window.Resumed += (_, _) => InvalidatePhoneVoices();
+		var resume = _services.GetRequiredService<ReadTheStupidText.Mobile.Shared.Network.PackResumeWatcher>(); // Slice 182: created and started with the window, not when a page first asks for it
+		resume.Start();
+		window.Resumed += (_, _) => resume.NotifyForeground();
 		return window;
 	}
 

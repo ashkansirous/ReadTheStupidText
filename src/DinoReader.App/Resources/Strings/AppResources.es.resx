@@ -9,6 +9,12 @@
   <data name="PackStatus_Resolving" xml:space="preserve"><value>Buscando voces naturales…</value></data>
   <data name="PackStatus_Downloading" xml:space="preserve"><value>Descargando voces naturales… {0}</value></data>
   <data name="PackStatus_Offline" xml:space="preserve"><value>Sin conexión. Se lee con la voz del teléfono. Toca para reintentar la descarga de la voz.</value></data>
+  <data name="PackStatus_Waiting" xml:space="preserve"><value>Esperando a Internet. Continúa solo cuando vuelvas a estar conectado. Toca para intentarlo ahora.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="PackStatus_WaitingWifi" xml:space="preserve"><value>Esperando Wi-Fi. Continúa solo con Wi-Fi. Toca para descargar ahora.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="StoryLanguages_Waiting" xml:space="preserve"><value>Esperando a Internet · {0}%</value><comment>Machine draft: needs native review</comment></data>
+  <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>Esperando Wi-Fi · {0}%</value><comment>Machine draft: needs native review</comment></data>
+  <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>Continúa solo cuando vuelvas a estar conectado.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="StoryLanguages_Retry" xml:space="preserve"><value>Reintentar</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>La descarga de la voz se corrompió. Se lee con la voz del teléfono. Toca para reintentar.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>El paquete de voces naturales no se puede usar. Se lee con la voz del teléfono.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>No se pudieron descargar las voces naturales. Se lee con la voz del teléfono. Toca para reintentar.</value></data>
@@ -212,6 +218,7 @@
   <!-- Slice 115 -->
   <data name="Storyteller_Getting" xml:space="preserve"><value>Descargando las voces narradoras…</value></data>
   <data name="Storyteller_WaitWifi" xml:space="preserve"><value>Las voces narradoras esperan al Wi-Fi</value></data>
+  <data name="Storyteller_WaitInternet" xml:space="preserve"><value>Esperando a Internet</value><comment>Machine draft: needs native review</comment></data>
   <data name="Storyteller_DownloadNow" xml:space="preserve"><value>Descargar ahora</value></data>
   <data name="Storyteller_Ready" xml:space="preserve"><value>Las voces narradoras están listas</value></data>
   <data name="Storyteller_ReadyBody" xml:space="preserve"><value>Tus cuentos ahora usan las nuevas voces narradoras.</value></data>

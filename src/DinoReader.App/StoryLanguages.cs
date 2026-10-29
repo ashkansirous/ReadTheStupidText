@@ -3,6 +3,7 @@ using DinoReader.Core;
 using DinoReader.Resources.Strings;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Mobile.Shared;
+using ReadTheStupidText.Mobile.Shared.Network;
 using ReadTheStupidText.Mobile.Shared.Waiting;
 
 namespace DinoReader;
@@ -110,10 +111,15 @@ public sealed class StoryLanguagePacks
 	private readonly HashSet<string> _failed = [];
 	private readonly HashSet<string> _noPack = [.. StoryLanguages.LoadNoPack()]; // persisted: a language without a pack must stay pickable after a restart
 	private readonly HashSet<string> _waiting = [];
+	private readonly Dictionary<string, PackDownloadResult> _lastResult = []; // Slice 182: how each language's last run ended, for the automatic restart
+	private readonly Dictionary<string, double> _waitingInternet = []; // stopped Offline/Failed and waiting to restart by itself: the share it reached
+	private readonly HashSet<string> _downloadNow = []; // started with "Download now" (or Retry): may restart over mobile data
+	private readonly PackResumeWatcher _resume;
 	private int _watchingNetwork;
 
-	public StoryLanguagePacks(IVoicePackService packs, IPlatformServices platform, UsageCounter usage)
+	public StoryLanguagePacks(IVoicePackService packs, IPlatformServices platform, UsageCounter usage, PackResumeWatcher resume)
 	{
+		_resume = resume;
 		_packs = packs;
 		_platform = platform;
 		_usage = usage;
@@ -148,7 +154,8 @@ public sealed class StoryLanguagePacks
 	{
 		lock (_gate)
 		{
-			return _progress.GetValueOrDefault(UiLanguage.Resolve(language));
+			string code = UiLanguage.Resolve(language);
+			return _progress.TryGetValue(code, out double live) ? live : _waitingInternet.GetValueOrDefault(code);
 		}
 	}
 
@@ -158,6 +165,27 @@ public sealed class StoryLanguagePacks
 		lock (_gate)
 		{
 			return _waiting.Contains(UiLanguage.Resolve(language));
+		}
+	}
+
+	/// <summary>Whether the download of <paramref name="language"/> stopped for want of a connection and carries on by itself (Slice 182, mock frame 95): shown as a grey bar at <see cref="ProgressOf"/>.</summary>
+	public bool IsWaitingForInternet(string language)
+	{
+		lock (_gate)
+		{
+			return _waitingInternet.ContainsKey(UiLanguage.Resolve(language));
+		}
+	}
+
+	/// <summary>Whether the automatic retry of <paramref name="language"/> failed too, so only the grown-up's Retry starts it again (Slice 182): the row shows Retry, not "carries on by itself".</summary>
+	public bool NeedsRetry(string language) => _resume.StateOf(ResumeKey(UiLanguage.Resolve(language))) == PackResumeState.NeedsUserRetry;
+
+	/// <summary>Whether the waiting line should say "Waiting for Wi-Fi": the phone is on mobile data only and the grown-up did not choose "Download now".</summary>
+	public bool WaitingNeedsWifi(string language)
+	{
+		lock (_gate)
+		{
+			return !_downloadNow.Contains(UiLanguage.Resolve(language)) && PackResumeWatcher.CellularOnly();
 		}
 	}
 
@@ -201,7 +229,7 @@ public sealed class StoryLanguagePacks
 			AppResources.StoryLanguages_WifiNow, AppResources.StoryLanguages_WifiWait);
 		if (now)
 		{
-			missing.ForEach(Start);
+			missing.ForEach(code => Start(code, downloadNow: true));
 			return;
 		}
 
@@ -277,7 +305,7 @@ public sealed class StoryLanguagePacks
 
 		if (Interlocked.Exchange(ref _watchingNetwork, 1) == 0)
 		{
-			Connectivity.Current.ConnectivityChanged += (_, _) => StartWaiting();
+			_resume.NetworkChanged += (_, _) => StartWaiting();
 		}
 
 		RaiseChanged();
@@ -303,34 +331,49 @@ public sealed class StoryLanguagePacks
 	}
 
 	/// <summary>Starts the download unless the voice is there or a run is already going.</summary>
-	public void Start(string language)
+	public void Start(string language) => Start(language, downloadNow: false);
+
+	/// <summary>As <see cref="Start(string)"/>; <paramref name="downloadNow"/> lets a stopped download restart by itself over mobile data too (the grown-up chose "Download now").</summary>
+	public void Start(string language, bool downloadNow) => TryStart(language, downloadNow);
+
+	// True when this call began a run; false when the voice is there or a run is already going (that run reports its own end).
+	private bool TryStart(string language, bool downloadNow)
 	{
 		string code = UiLanguage.Resolve(language);
 		lock (_gate)
 		{
 			_waiting.Remove(code);
+			if (downloadNow)
+			{
+				_downloadNow.Add(code);
+			}
 		}
 
 		if (StateOf(code) != LanguageVoiceState.NotInstalled)
 		{
-			return;
+			return false;
 		}
 
 		var cancel = new CancellationTokenSource();
+		long epoch;
 		lock (_gate)
 		{
 			if (!_runs.TryAdd(code, cancel))
 			{
 				cancel.Dispose();
-				return;
+				return false;
 			}
 
+			epoch = _resume.EpochOf(ResumeKey(code));
 			_failed.Remove(code);
-			_progress[code] = 0;
+			_lastResult.Remove(code); // a run that ends in a plain exception must not reuse the previous run's Offline/Failed
+			_progress[code] = _waitingInternet.GetValueOrDefault(code); // a restart keeps counting from the partial file's share
+			_waitingInternet.Remove(code);
 		}
 
 		RaiseChanged();
-		_ = Task.Run(() => RunAsync(code, cancel));
+		_ = Task.Run(() => RunAsync(code, cancel, epoch));
+		return true;
 	}
 
 	/// <summary>
@@ -344,10 +387,15 @@ public sealed class StoryLanguagePacks
 		lock (_gate)
 		{
 			_waiting.Remove(code);
+			_downloadNow.Remove(code);
+			_waitingInternet.Remove(code);
 			if (_runs.Remove(code, out cancel))
 			{
 				_progress.Remove(code);
 			}
+
+			// Cancel is final: the coordinator forgets the key and drops the Offline/Failed end of any run that started before this (under the lock, so no run starts in between with the old count).
+			_resume.Report(ResumeKey(code), PackRunEnd.Cancelled, () => Task.FromResult(false));
 		}
 
 		RaiseChanged();
@@ -362,7 +410,7 @@ public sealed class StoryLanguagePacks
 		}
 	}
 
-	private async Task RunAsync(string code, CancellationTokenSource cancel)
+	private async Task RunAsync(string code, CancellationTokenSource cancel, long epoch)
 	{
 		string? outcome; // null: another run (the first-run installer) fetched the pack while this one waited for it, so this one fetched nothing and counts nothing
 		try
@@ -379,20 +427,13 @@ public sealed class StoryLanguagePacks
 			outcome = UsageDetail.PackFailed;
 		}
 
-		lock (_gate)
+		(bool current, PackDownloadResult last) = SettleRun(code, cancel, outcome);
+		cancel.Dispose();
+		if (current)
 		{
-			if (IsCurrent(code, cancel))
-			{
-				_runs.Remove(code);
-				_progress.Remove(code);
-				if (outcome == UsageDetail.PackFailed)
-				{
-					_failed.Add(code);
-				}
-			}
+			ReportEnd(code, last, epoch); // after the run is out of _runs, so an immediate restart is never swallowed; a cancelled or replaced run reports nothing here
 		}
 
-		cancel.Dispose();
 		if (outcome is not null)
 		{
 			_usage.RecordGeneral(UsageEventName.VoicePackDownload, code, outcome);
@@ -401,12 +442,83 @@ public sealed class StoryLanguagePacks
 		RaiseChanged();
 	}
 
+	// Takes the run out of the books and settles the row's state: waiting (Offline/Failed) or done; false when a newer run or a Cancel already took over.
+	private (bool Current, PackDownloadResult Last) SettleRun(string code, CancellationTokenSource cancel, string? outcome)
+	{
+		PackDownloadResult last = PackDownloadResult.Ok;
+		lock (_gate)
+		{
+			if (!IsCurrent(code, cancel))
+			{
+				return (false, last);
+			}
+
+			_runs.Remove(code);
+			if (outcome == UsageDetail.PackFailed)
+			{
+				_failed.Add(code);
+				last = _lastResult.GetValueOrDefault(code, PackDownloadResult.Ok);
+				if (PackResumePolicy.IsResumableResult(last))
+				{
+					_waitingInternet[code] = _progress.GetValueOrDefault(code);
+				}
+			}
+
+			if (!PackResumePolicy.IsResumableResult(last))
+			{
+				_downloadNow.Remove(code); // "Download now" lasts until the download finishes or the grown-up cancels
+			}
+
+			_progress.Remove(code);
+			return (true, last);
+		}
+	}
+
+	private static string ResumeKey(string code) => $"story-voice:{code}";
+
+	// Slice 182: the run reports its end once; Offline or Failed starts again by itself when the network is back or the app returns (Wi-Fi/Ethernet unless "Download now").
+	private void ReportEnd(string code, PackDownloadResult last, long epoch)
+	{
+		bool now;
+		lock (_gate)
+		{
+			now = _downloadNow.Contains(code);
+		}
+
+		_resume.Report(ResumeKey(code), IPackResume.EndOf(last), () => Task.FromResult(ResumeStart(code, now)), downloadNow: now, epoch: epoch);
+	}
+
+	// The coordinator's restart: false when a run is already going (it reports its own end); a voice that arrived by another route is reported finished.
+	private bool ResumeStart(string code, bool downloadNow)
+	{
+		if (TryStart(code, downloadNow))
+		{
+			return true;
+		}
+
+		if (StateOf(code) == LanguageVoiceState.Ready)
+		{
+			_resume.Report(ResumeKey(code), PackRunEnd.Finished, () => Task.FromResult(false));
+		}
+
+		return false;
+	}
+
+	private void NoteResult(string code, PackDownloadResult result)
+	{
+		lock (_gate)
+		{
+			_lastResult[code] = result;
+		}
+	}
+
 	private bool IsCurrent(string code, CancellationTokenSource run) => _runs.TryGetValue(code, out CancellationTokenSource? current) && ReferenceEquals(current, run);
 
 	private async Task<string?> DownloadAsync(string code, CancellationTokenSource run)
 	{
 		CancellationToken token = run.Token;
 		PackCatalogResult catalog = await _packs.GetCatalogAsync(token);
+		NoteResult(code, catalog.Status);
 		if (catalog.Status != PackDownloadResult.Ok)
 		{
 			return UsageDetail.PackFailed;
@@ -431,6 +543,7 @@ public sealed class StoryLanguagePacks
 
 		var progress = new InlineProgress(value => Report(code, run, value));
 		PackDownloadResult result = await _packs.DownloadAsync(pack.Id, progress, token);
+		NoteResult(code, result);
 		return result == PackDownloadResult.Ok ? UsageDetail.PackDone : UsageDetail.PackFailed;
 	}
 

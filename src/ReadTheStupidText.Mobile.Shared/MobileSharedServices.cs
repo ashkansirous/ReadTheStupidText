@@ -20,6 +20,8 @@ public static partial class MobileSharedServices
 		builder.Services.AddSingleton<IVoicePackService, MobileVoicePackService>();
 		builder.Services.AddSingleton<IVoiceModelService, MobileVoiceModelService>();
 		builder.Services.AddSingleton<IPackUpdateNetwork, MauiPackUpdateNetwork>();
+		builder.Services.AddSingleton<Network.PackResumeWatcher>();
+		builder.Services.AddSingleton<IPackResume>(sp => sp.GetRequiredService<Network.PackResumeWatcher>());
 		builder.Services.AddSingleton<VoicePackInstaller>();
 		builder.Services.AddSingleton<MobilePreferencesSettingsStore>();
 		builder.Services.AddSingleton<ISettingsStore>(sp => sp.GetRequiredService<MobilePreferencesSettingsStore>());

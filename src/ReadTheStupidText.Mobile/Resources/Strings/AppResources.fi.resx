@@ -105,6 +105,8 @@
   <data name="PackStatus_Resolving" xml:space="preserve"><value>Tarkistetaan luonnollisia ääniä…</value></data>
   <data name="PackStatus_Downloading" xml:space="preserve"><value>Ladataan luonnollisia ääniä… {0}</value></data>
   <data name="PackStatus_Offline" xml:space="preserve"><value>Ei yhteyttä. Luetaan puhelimen äänellä. Yritä äänen latausta uudelleen napauttamalla.</value></data>
+  <data name="PackStatus_Waiting" xml:space="preserve"><value>Odotetaan internetiä. Lataus jatkuu itsestään, kun olet taas verkossa. Yritä nyt napauttamalla.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="PackStatus_WaitingWifi" xml:space="preserve"><value>Odotetaan Wi-Fiä. Lataus jatkuu itsestään Wi-Fillä. Lataa nyt napauttamalla.</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Äänen lataus vioittui. Luetaan puhelimen äänellä. Yritä uudelleen napauttamalla.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Luonnollisten äänten pakettia ei voi käyttää. Luetaan puhelimen äänellä.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Luonnollisia ääniä ei voitu ladata. Luetaan puhelimen äänellä. Yritä uudelleen napauttamalla.</value></data>

@@ -105,6 +105,8 @@
   <data name="PackStatus_Resolving" xml:space="preserve"><value>Söker efter naturliga röster…</value></data>
   <data name="PackStatus_Downloading" xml:space="preserve"><value>Laddar ned naturliga röster… {0}</value></data>
   <data name="PackStatus_Offline" xml:space="preserve"><value>Ingen anslutning. Läser med telefonens röst. Tryck för att försöka ladda ned rösten igen.</value></data>
+  <data name="PackStatus_Waiting" xml:space="preserve"><value>Väntar på internet. Det fortsätter av sig självt när du är online igen. Tryck för att försöka nu.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="PackStatus_WaitingWifi" xml:space="preserve"><value>Väntar på Wi-Fi. Det fortsätter av sig självt på Wi-Fi. Tryck för att ladda ned nu.</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Nedladdningen av rösten blev skadad. Läser med telefonens röst. Tryck för att försöka igen.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Paketet med naturliga röster går inte att använda. Läser med telefonens röst.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Det gick inte att ladda ned naturliga röster. Läser med telefonens röst. Tryck för att försöka igen.</value></data>

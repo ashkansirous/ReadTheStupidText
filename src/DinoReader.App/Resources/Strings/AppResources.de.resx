@@ -12,6 +12,12 @@
   <data name="PackStatus_Resolving" xml:space="preserve"><value>Natürliche Stimmen werden gesucht …</value></data>
   <data name="PackStatus_Downloading" xml:space="preserve"><value>Natürliche Stimmen werden heruntergeladen … {0}</value></data>
   <data name="PackStatus_Offline" xml:space="preserve"><value>Keine Verbindung. Es liest die Handy-Stimme. Tippe, um den Download der Stimme zu wiederholen.</value></data>
+  <data name="PackStatus_Waiting" xml:space="preserve"><value>Warte auf das Internet. Der Download geht von selbst weiter, sobald du wieder online bist. Tippe, um es jetzt zu versuchen.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="PackStatus_WaitingWifi" xml:space="preserve"><value>Warte auf WLAN. Der Download geht von selbst weiter, sobald WLAN da ist. Tippe, um jetzt zu laden.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="StoryLanguages_Waiting" xml:space="preserve"><value>Warte auf das Internet · {0}%</value><comment>Machine draft: needs native review</comment></data>
+  <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>Warte auf WLAN · {0}%</value><comment>Machine draft: needs native review</comment></data>
+  <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>Geht von selbst weiter, sobald du wieder online bist.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="StoryLanguages_Retry" xml:space="preserve"><value>Erneut versuchen</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Der Download der Stimme war beschädigt. Es liest die Handy-Stimme. Tippe, um es noch einmal zu versuchen.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Das Paket mit den natürlichen Stimmen ist unbrauchbar. Es liest die Handy-Stimme.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Die natürlichen Stimmen ließen sich nicht herunterladen. Es liest die Handy-Stimme. Tippe, um es noch einmal zu versuchen.</value></data>
@@ -215,6 +221,7 @@
   <!-- Slice 115 -->
   <data name="Storyteller_Getting" xml:space="preserve"><value>Die Erzählerstimmen werden geholt …</value></data>
   <data name="Storyteller_WaitWifi" xml:space="preserve"><value>Die Erzählerstimmen warten auf WLAN</value></data>
+  <data name="Storyteller_WaitInternet" xml:space="preserve"><value>Warte auf das Internet</value><comment>Machine draft: needs native review</comment></data>
   <data name="Storyteller_DownloadNow" xml:space="preserve"><value>Jetzt herunterladen</value></data>
   <data name="Storyteller_Ready" xml:space="preserve"><value>Die Erzählerstimmen sind bereit</value></data>
   <data name="Storyteller_ReadyBody" xml:space="preserve"><value>Deine Geschichten nutzen jetzt die neuen Erzählerstimmen.</value></data>
