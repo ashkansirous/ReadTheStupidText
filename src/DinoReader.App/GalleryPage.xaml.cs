@@ -105,7 +105,7 @@ public partial class GalleryPage : ContentPage
 		IReadOnlyList<string> choosable = ChoosableLanguages(set);
 		_languageButton.IsVisible = !_mode.IsGrownUp && choosable.Count >= 2;
 		string pick = StoryLanguages.Pick();
-		_languageButton.SetLanguage(choosable.Contains(pick) ? pick : set.Main);
+		_languageButton.SetLanguage(LanguagePick.ShelfShown(choosable, pick, set.Main));
 	}
 
 	// The child can pick only a language whose voice is already on the phone (Slice 173): a download starts from Settings or the intro, behind the gate.

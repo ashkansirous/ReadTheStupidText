@@ -807,7 +807,7 @@ public partial class ReaderPage : ContentPage
     // The one definition of "empty player": no text, and nothing playing. Both the text and the state
     // are read here, so every caller agrees.
     private void RenderPlayerForState() =>
-        RenderEmptyPlayer(string.IsNullOrWhiteSpace(TextEditor.Text) && _reader.State != PlaybackState.Playing);
+        RenderEmptyPlayer(EmptyPlayer.Is(TextEditor.Text, _reader.State));
 
     // The empty player is dimmed: a grey Play circle, grey skip buttons, and nothing to tap.
     private void RenderEmptyPlayer(bool empty)

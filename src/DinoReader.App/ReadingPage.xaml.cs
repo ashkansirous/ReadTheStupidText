@@ -162,7 +162,7 @@ public partial class ReadingPage : ContentPage
 
 		StoryLanguageSet set = StoryLanguages.Current();
 		var translator = _services.GetRequiredService<StoryTranslator>();
-		bool switchable = set.HasChoice && !story.ShowOriginalText && StoryRecordings.Count(story) == 0;
+		bool switchable = LanguagePick.BookSwitchable(set.HasChoice, story.ShowOriginalText, StoryRecordings.Count(story));
 		_readable = switchable ? await ReadableLanguagesAsync(story, set, translator) : [];
 		_packStates = PackStates(set);
 		string effective = EffectiveLanguage(set);
@@ -176,18 +176,7 @@ public partial class ReadingPage : ContentPage
 	// never shows a flag that is not in its own list. With no choice to offer the book reads in the app language.
 	private string EffectiveLanguage(StoryLanguageSet set)
 	{
-		if (_readable.Count < 2)
-		{
-			return set.Main;
-		}
-
-		string pick = StoryLanguages.Pick();
-		if (_readable.Contains(pick))
-		{
-			return pick;
-		}
-
-		return _readable.Contains(set.Main) ? set.Main : _readable[0];
+		return LanguagePick.Effective(_readable, set.Main, StoryLanguages.Pick());
 	}
 
 	// The languages the child may switch to (Slice 173, Decision 2): the book can be read in it with nothing to download, and its voice is already on the phone.
@@ -218,7 +207,7 @@ public partial class ReadingPage : ContentPage
 
 		StoryLanguageSet set = StoryLanguages.Current();
 		var translator = _services.GetRequiredService<StoryTranslator>();
-		bool switchable = set.HasChoice && !story.ShowOriginalText && StoryRecordings.Count(story) == 0;
+		bool switchable = LanguagePick.BookSwitchable(set.HasChoice, story.ShowOriginalText, StoryRecordings.Count(story));
 		IReadOnlyList<string> readable = switchable ? await ReadableLanguagesAsync(story, set, translator) : [];
 		if (!readable.SequenceEqual(_readable))
 		{
@@ -227,7 +216,7 @@ public partial class ReadingPage : ContentPage
 
 		_readable = readable;
 		_languageButton.IsVisible = _readable.Count >= 2;
-		string shown = _readable.Count >= 2 && _readable.Contains(_session.ReadingLanguage) ? _session.ReadingLanguage : EffectiveLanguage(set);
+		string shown = LanguagePick.Shown(_readable, _session.ReadingLanguage, set.Main, StoryLanguages.Pick());
 		bool moved = shown != _session.ReadingLanguage;
 		_session.SetReadingLanguage(shown); // the flag and the reads (and usage counts) always name the same language
 		_languageButton.SetLanguage(shown);
@@ -445,11 +434,7 @@ public partial class ReadingPage : ContentPage
 	{
 		bool offers = PictureTextBook.IsPictureTextBook(_shownPages);
 		Modes.OffersPictureAndText = offers;
-		if (!offers && _mode == ReadingMode.PictureAndText)
-		{
-			_mode = ReadingMode.PictureOnly;
-		}
-
+		_mode = ReadingLayoutRules.Offered(_mode, offers);
 		Modes.Set(_mode, _theme);
 	}
 
@@ -501,14 +486,6 @@ public partial class ReadingPage : ContentPage
 	// The four shapes of the reading screen (Slice 98, Slice 174, mock Batch 37 frames 91-93): upright, picture only held sideways (the controls under the
 	// right half), picture + text held sideways (picture 40% left with the controls floating over its bottom, text 60% on the right at full height, the
 	// back button and view switch floating over the picture's corner) and text held sideways (a slim top row, the card, the controls below).
-	private enum ReadingLayout
-	{
-		Upright,
-		PictureSide,
-		PictureOverlay,
-		TextRow,
-	}
-
 	protected override void OnSizeAllocated(double width, double height)
 	{
 		base.OnSizeAllocated(width, height);
@@ -519,22 +496,7 @@ public partial class ReadingPage : ContentPage
 
 	private ReadingLayout LayoutFor(double width, double height, ReadingMode mode)
 	{
-		if (width <= 0 || width <= height)
-		{
-			return ReadingLayout.Upright;
-		}
-
-		if (mode == ReadingMode.Text)
-		{
-			return ReadingLayout.TextRow;
-		}
-
-		if (!PictureTextBook.IsPictureTextBook(_shownPages))
-		{
-			return ReadingLayout.Upright;
-		}
-
-		return mode == ReadingMode.PictureAndText ? ReadingLayout.PictureOverlay : ReadingLayout.PictureSide;
+		return ReadingLayoutRules.For(width, height, mode, PictureTextBook.IsPictureTextBook(_shownPages));
 	}
 
 	private void UpdateHeaderLayout(double width, double height)
