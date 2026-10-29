@@ -17,7 +17,7 @@ public interface ITranslator
 
     /// <summary>
     /// Whether the engine has a model for this pair at all (Slice 75): an engine whose languages are not
-    /// all reachable from each other (Windows has no Persian, and no English to Japanese) overrides it.
+    /// all reachable from each other (Windows has no Persian) overrides it.
     /// </summary>
     bool SupportsPair(string source, string target) =>
         TranslationFlow.IsPairSupported(SupportedLanguages.ToArray(), source, target);

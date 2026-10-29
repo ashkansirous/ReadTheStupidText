@@ -370,7 +370,7 @@ public class TranslationStreamingTests
         Assert.True(empty.IsAvailable);
         Assert.True(new PackTranslator(() => "x", () => "en").IsAvailable);
         Assert.False(new PackTranslator(() => "x", () => "fa").IsAvailable);
-        Assert.False(new PackTranslator(() => "x", () => "ja").IsAvailable);
+        Assert.True(new PackTranslator(() => "x", () => "ja").IsAvailable); // en-ja since Slice 184
     }
 
     [Fact]

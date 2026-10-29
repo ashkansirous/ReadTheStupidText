@@ -35,7 +35,7 @@ panel on Windows, in Settings on the phones); see *Anonymous usage counts* below
   on-device translation, then reads the result. Both run entirely on your
   phone; your text is never sent to Google or anyone else. The translation is
   casual quality.
-  On **Windows** (off by default) translation runs on your PC with offline Opus-MT models from
+  On **Windows** (off by default) translation runs on your PC with offline Opus-MT and ElanMT translation models from
   downloaded translation packs (Persian is not covered); your text is never sent anywhere.
 - **Speech synthesis is performed entirely on your device**, using a neural
   voice model that the app downloads once as a language pack. No text or audio is

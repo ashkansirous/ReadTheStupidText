@@ -22,8 +22,6 @@ public class TranslationPacksTests : IDisposable
     [InlineData("fa", "en")]
     [InlineData("en", "fa")]
     [InlineData("fr", "fa")]
-    [InlineData("en", "ja")]
-    [InlineData("fr", "ja")]
     [InlineData("fr", "fr")]
     public void Pairs_with_no_usable_model_are_unsupported(string source, string target)
     {
@@ -115,9 +113,12 @@ public class TranslationPacksTests : IDisposable
     }
 
     [Fact]
-    public void Japanese_translates_into_english_but_not_out_of_it()
+    public void Japanese_translates_both_into_and_out_of_english()
     {
         Assert.True(TranslationPacks.IsPairSupported("ja", "en"));
+        Assert.True(TranslationPacks.IsPairSupported("en", "ja"));
+        Assert.True(TranslationPacks.IsPairSupported("fr", "ja"));
+        Assert.Equal(["translation-fr-en", "translation-en-ja"], TranslationPacks.RequiredPackIds("fr", "ja"));
         Assert.True(TranslationPacks.IsPairSupported("ja", "fr"));
         Assert.DoesNotContain("fa", TranslationPacks.Languages);
     }

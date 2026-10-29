@@ -75,12 +75,15 @@ Voice packs also update at start-up (Slice 89): see Client behaviour below.
 
 ### Translation packs (`kind: translation`, Slice 75)
 
-Opus-MT (Marian) models for offline translate-before-read on Windows, one standalone pack per
+Opus-MT and ElanMT (Marian) models for offline translate-before-read on Windows, one standalone pack per
 direction with English at one end, so a pair such as French to Russian pivots through two packs
 (`translation-fr-en` then `translation-en-ru`). The catalogue `language` is `<from>-<to>`.
 Source: the pre-converted int8 ONNX in the `Xenova/opus-mt-*` Hugging Face repos, pinned to one
-revision and sha256-checked in `packs.yml`; licence CC-BY-4.0 (Helsinki-NLP / OPUS-MT, with the
-notice in each pack's `LICENSE`). Each pack holds `encoder.onnx`, the merged `decoder.onnx` (key/value
+revision and sha256-checked in `packs.yml`; licence CC-BY-4.0 or Apache-2.0 per pair (Helsinki-NLP / OPUS-MT, with the
+notice in each pack's `LICENSE`). The one exception is `translation-en-ja`: Mitsua's ElanMT (`Mitsua/elan-mt-bt-en-ja`,
+CC-BY-SA-4.0, a downloaded pack only, never in a package; Decision lifted from Slice 184), which has no ONNX build on the Hub, so
+`packs.yml` converts it itself (optimum export, int8 dynamic quantisation, pinned tool versions and pinned, sha256-checked
+inputs; table layout `convert`). Its `LICENSE` credits Mitsua Inc. and states that ShareAlike applies to the model files. Each pack holds `encoder.onnx`, the merged `decoder.onnx` (key/value
 cache), `source.spm`, `vocab.json` and `translation.json` (the decoding ids and, for a multi-target
 model, the leading `>>xx<<` token). Installed ids are `translation-<from>-<to>`.
 
@@ -97,14 +100,15 @@ model, the leading `>>xx<<` token). Installed ids are `translation-<from>-<to>`.
 | `translation-fi-en`, `translation-en-fi` | `opus-mt-fi-en`, `opus-mt-en-fi` | about 110 MB |
 | `translation-sv-en`, `translation-en-sv` | `opus-mt-sv-en`, `opus-mt-en-sv` | about 110 MB |
 | `translation-nl-en`, `translation-en-nl` | `opus-mt-nl-en`, `opus-mt-en-nl` | about 110 MB |
+| `translation-en-ja` | `Mitsua/elan-mt-bt-en-ja`, converted here (CC-BY-SA-4.0) | 66 MB |
 | `translation-nb-en`, `translation-en-nb` | TigreGotico `opus-mt-gmq-en-onnx`, `opus-mt-en-gmq-onnx` (`>>nob<<`; model card says apache-2.0) | about 390 MB |
 
 The `nb` packs (Slice 106) are about four times the others: the "int8" merged decoder in the TigreGotico
 repos holds fp32 weights (~337 MB), and no smaller Norwegian export exists. Sizes in the other rows are
 approximate (the Xenova int8 pairs); the table's repo layout column in `packs.yml` selects the source paths.
 
-No pack exists for Persian (either way) or English to Japanese: no usable Opus-MT model (Slice 75
-research). Installed by `TranslationPackInstaller` through the pack service; the translate toggle
+No pack exists for Persian (either way): no usable model (Slice 75 research). English to Japanese
+is ElanMT since Slice 184 (FuguMT was dropped: JParaCrawl-trained, its terms forbid non-research use). Installed by `TranslationPackInstaller` through the pack service; the translate toggle
 fetches the user's `en` to language pack, and a read whose source needs another leg downloads it in
 the background while the original is read.
 
@@ -138,7 +142,7 @@ the English ones are `KokoroVoiceTable` (ids `kokoro:<name>`, Heart is the narra
 Packs are assets of a dedicated GitHub release tagged `packs-<n>`, separate from the app's
 `v<x.y.z>` releases (Decision 62). Release assets don't count toward the Actions storage
 quota (Decision 52). The app reads the catalog from the **pinned** release named in
-`PackConstants.CatalogUrl` (currently `packs-8`), so publishing `packs-9` changes nothing
+`PackConstants.CatalogUrl` (currently `packs-9`), so publishing `packs-10` changes nothing
 until a new app version points at it. Every `packs-<n>` release carries every pack (voice, OCR and
 translation), because the app pins one catalogue: a run with a pack missing would leave the app
 pointing at a catalogue without it.
@@ -152,7 +156,7 @@ created `--latest=false`, so `releases/latest` stays the app.
 Manual: run the **packs** workflow (`.github/workflows/packs.yml`, `workflow_dispatch`) with
 the release number and the pack versions (`pack_version` for Supertonic,
 `piper_pack_version`, `norwegian_pack_version`, `melo_pack_version`, `kokoro_pack_version` for the Dino storyteller pack (Slice 114), and `ocr_pack_version` for the four OCR packs,
-Slice 52, and `translation_pack_version` for the twenty-five translation packs, Slice 75). One run builds the packs into the one
+Slice 52, and `translation_pack_version` for the twenty-six translation packs, Slice 75). One run builds the packs into the one
 `packs-<n>` release, computes each sha256 and size, and publishes the zips with `packs.json`.
 The voice packs:
 
