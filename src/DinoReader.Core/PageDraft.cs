@@ -38,15 +38,16 @@ public sealed record PageDraft(
     NormalizedRect? Crop = null,
     PageReading? Ocr = null,
     string? EditedText = null,
-    string? TransformedFile = null)
+    string? TransformedFile = null,
+    string? Origin = null)
 {
     private const int FullTurn = 4;
 
     /// <summary>A page for a new picture.</summary>
-    public static PageDraft ForPicture(string sourceFile, PageReading? ocr = null) => new(NewId(), sourceFile, Ocr: ocr);
+    public static PageDraft ForPicture(string sourceFile, PageReading? ocr = null, string? origin = null) => new(NewId(), sourceFile, Ocr: ocr, Origin: origin);
 
     /// <summary>A text-only page. Line endings are made LF, the only kind the story code knows.</summary>
-    public static PageDraft ForText(string text) => new(NewId(), null, EditedText: LineBreaks.ToLf(text));
+    public static PageDraft ForText(string text, string? origin = null) => new(NewId(), null, EditedText: LineBreaks.ToLf(text), Origin: origin);
 
     /// <summary>The page of an existing story. <paramref name="pictureFile"/> is the resolved path of its picture, or null
     /// when it has none (or the file is gone); its recognised lines are kept, so nothing is read again until it changes.</summary>

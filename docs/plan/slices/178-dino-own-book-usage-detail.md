@@ -1,11 +1,12 @@
 # Slice 178 — Dino: count how big an own book is and how it really came in
 
-*In progress (wave 2026-10-28), draft PR.* Dino Reader (Android, iOS and Windows: the code is shared in `DinoReader.App`, so all heads get it in one change).
+*Built 2026-10-29 (PR #547), not yet verified on a device for pdf, docx, photo and scan.* Dino Reader (Android, iOS and Windows: the code is shared in `DinoReader.App`, so all heads get it in one change).
 Asked for by the user on 2026-10-28 after an analytics check.
 
 **Touches:** `src/DinoReader.Core/UsageEvent.cs`, `src/DinoReader.App/PagesStep.xaml.cs`,
 `src/DinoReader.App/StoryWizardPage.xaml.cs`, `src/DinoReader.App/TextStep.xaml.cs`, `worker/events.ts`,
-`worker/events.test.mjs`, `tests/DinoReader.Tests/**`, `docs/plan/slices/178-dino-own-book-usage-detail.md`
+`worker/events.test.mjs`, `tests/DinoReader.Tests/**`, `tools/dino-usage-report.ps1`, `STORE.md`, `src/DinoReader.Core/PageDraft.cs`, `src/DinoReader.App/StoryImport.cs`,
+`src/DinoReader.App/StoryWizardPage.xaml.cs`, `docs/plan/slices/178-dino-own-book-usage-detail.md`
 
 **Sequencing:** #484 has merged; the open Farsi PR #435 also edits `UsageEvent.cs` and `worker/events.ts` (#435 also `TextStep.xaml.cs`).
 Small overlap; build after they merge, or rebase on them.
@@ -34,12 +35,12 @@ The analytics can't answer either question:
 
 ## Work
 
-- [ ] `UsageDetail`: add `KindDocx`, `KindTxt`, `KindMixed` and an `OwnBookAdded(kind, pageCount)` helper that returns `<kind>:<bucket>`.
-- [ ] `WizardSession.NoteKind`: remember every kind noted; report `mixed` when typed pages or a second kind join the first.
-- [ ] `PagesStep`: note `docx` / `txt` on a file import (by extension); keep scan/photo/pdf.
-- [ ] `TextStep.CountNewOwnBook`: send `OwnBookAdded(kind, saved page count)`.
-- [ ] `worker/events.ts`: `own_book_added` detail accepts `kind:bucket` (new kinds included) or an old plain kind; tests in `events.test.mjs`.
-- [ ] Unit tests in `tests/DinoReader.Tests` for the helper (each bucket edge, each kind, mixed).
+- [x] `UsageDetail`: add `KindDocx`, `KindTxt`, `KindMixed` and an `OwnBookAdded(kind, pageCount)` helper that returns `<kind>:<bucket>`.
+- [x] `WizardSession.NoteKind`: remember every kind noted; report `mixed` when typed pages or a second kind join the first. (Replaced by per-page `Origin`, see below.)
+- [x] `PagesStep`: note `docx` / `txt` on a file import (by extension); keep scan/photo/pdf.
+- [x] `TextStep.CountNewOwnBook`: send `OwnBookAdded(kind, saved page count)`.
+- [x] `worker/events.ts`: `own_book_added` detail accepts `kind:bucket` (new kinds included) or an old plain kind; tests in `events.test.mjs`.
+- [x] Unit tests in `tests/DinoReader.Tests` for the helper (each bucket edge, each kind, mixed).
 - [ ] After release: add the new field to the `analytics-query` notes (blob9 for Dino `own_book_added` is `kind:pages`).
 
 ## Verification
@@ -48,3 +49,24 @@ The analytics can't answer either question:
 - Android emulator and iOS simulator Debug runs: add a book from a PDF, a `.docx`, photos and typed text; a debug log line
   (the gate drops the send in Debug, Slice 167) shows the detail each would send, e.g. `pdf:2-5`, `docx:1`, `mixed:6-10`.
 - After the first release with it: an `analytics-query` run shows `own_book_added` rows with the new shape from that version on.
+
+## Built 2026-10-29 (PR #547)
+
+`own_book_added` detail is `kind:bucket` (kinds pdf, docx, txt, photo, scan, typed, mixed; bucket of the saved pages). Each `PageDraft` carries an `Origin` set at creation (null = typed); the kind is the single origin of all saved pages, else `mixed`. A PDF stays `pdf` through the fallback extractor. The Worker accepts `kind:bucket` and the old plain kinds, so older apps keep counting. `tools/dino-usage-report.ps1` splits kind and pages client-side. `STORE.md` line updated.
+
+*Changed while building:* replaced arithmetic source tracking in `WizardSession` with per-page `Origin` (review 1).
+
+*From review:* two passes (`reviews/178-review1.md`, `178-review2.md`). Skipped on purpose: one typed page beside an import counts as `mixed` (intended); a Worker/app kind-list drift test.
+
+*Checks:* Dino 1704 tests, Worker tests, typecheck and Android build pass. Emulator: `typed:2-5`, `txt:1`, `mixed:2-5`; an edit adds no count; no FATAL.
+
+#### For CLAUDE.md
+
+- Root usage paragraph, one line: `own_book_added` blob9 is `kind:bucket`; split it client-side, never with SQL string functions. (Slice 178: docs/plan/slices/178-dino-own-book-usage-detail.md) If the root file has no room, put it in `src/DinoReader.App/CLAUDE.md`.
+
+#### Not yet verified
+
+- The pdf, docx, photo and scan kinds on a device.
+- iOS and Windows runs.
+- `tools/dino-usage-report.ps1` against the live API after release.
+- `analytics-query` notes for the new blob9 shape (Slice 166 file) after release.

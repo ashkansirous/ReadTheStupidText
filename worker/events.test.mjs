@@ -164,6 +164,13 @@ test("a Slice 134 event with a wrong detail, source or book is dropped, and free
     { ...ownEvent, name: "store_download", detail: "none" },
     { ...shelfEvent, name: "own_book_added", detail: "photo" },
     { ...ownEvent, name: "own_book_added", detail: "My diary" },
+    { ...ownEvent, name: "own_book_added", detail: "pdf:7" },
+    { ...ownEvent, name: "own_book_added", detail: "My diary:2-5" },
+    { ...ownEvent, name: "own_book_added", detail: "pdf:2-5:x" },
+    { ...ownEvent, name: "own_book_added", detail: "pdf:" },
+    { ...ownEvent, name: "own_book_added", detail: ":2-5" },
+    { ...ownEvent, name: "own_book_added", detail: "pdf:1-5" },
+    { ...ownEvent, name: "own_book_added", detail: "mixed:" },
     { ...shelfEvent, name: "recording_made", detail: "7" },
     { ...noBook, name: "voice_changed", detail: "Fred's voice" },
     { ...shelfEvent, name: "voice_changed", detail: "narrator" },
@@ -501,4 +508,10 @@ test("the RTST phone batch from x64 is dropped, a batch with no device object st
   const old = rtstRecorder();
   await handleRtstEvents(rtstPost([readStarted]), old, on);
   assert.equal(old.points.length, 1);
+});
+
+test("an own-book count takes a kind alone or kind:pages with the Slice 178 kinds", () => {
+  for (const detail of ["pdf", "typed", "docx:1", "txt:2-5", "mixed:6-10", "photo:11+", "scan:1"]) {
+    assert.equal(parseEvent({ ...ownEvent, name: "own_book_added", detail })?.detail, detail);
+  }
 });

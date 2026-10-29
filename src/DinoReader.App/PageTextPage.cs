@@ -130,7 +130,7 @@ public sealed class PageTextPage : ContentPage, IGrownUpPage
 		{
 			if (!blank)
 			{
-				_draft.AddPageDrafts(PictureTextBook.ImportPages(text).Select(PageDraft.ForText));
+				_draft.AddPageDrafts(PictureTextBook.ImportPages(text).Select(part => PageDraft.ForText(part)));
 			}
 
 			return;

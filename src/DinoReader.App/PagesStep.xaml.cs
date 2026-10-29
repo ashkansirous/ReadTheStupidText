@@ -62,6 +62,7 @@ public partial class PagesStep : ContentView
 	private const string SlotDashColour = "#c9c0f5";
 	private const string SlotMenuGlyph = "•••";
 	private const string TextExtension = ".txt";
+	private const string DocxExtension = ".docx";
 
 	private static readonly FilePickerFileType SupportedFileTypes = new(new Dictionary<DevicePlatform, IEnumerable<string>>
 	{
@@ -492,10 +493,7 @@ public partial class PagesStep : ContentView
 		try
 		{
 			var external = _session.Services.GetRequiredService<ExternalActivityGuard>();
-			if (await AddPicturesAsync(await external.RunAsync(scanner.ScanAsync), scannerOutput: true))
-			{
-				_session.NoteKind(UsageDetail.KindScan);
-			}
+			await AddPicturesAsync(await external.RunAsync(scanner.ScanAsync), scannerOutput: true);
 		}
 		catch (Exception ex) when (ex is DocumentScannerPreparingException or DocumentScannerStartFailedException
 			or DocumentScannerUnavailableException)
@@ -510,10 +508,7 @@ public partial class PagesStep : ContentView
 		{
 			var external = _session!.Services.GetRequiredService<ExternalActivityGuard>();
 			List<FileResult> photos = await external.RunAsync(() => MediaPicker.Default.PickPhotosAsync());
-			if (await AddPicturesAsync(photos.Select(p => p.FullPath).ToList(), scannerOutput: false))
-			{
-				_session.NoteKind(UsageDetail.KindPhoto);
-			}
+			await AddPicturesAsync(photos.Select(p => p.FullPath).ToList(), scannerOutput: false);
 		}
 		catch (Exception ex) when (ex is PermissionException or FeatureNotSupportedException)
 		{
@@ -552,7 +547,7 @@ public partial class PagesStep : ContentView
 		try
 		{
 			string copy = await import.CopyIntoAsync(location, _session!.WorkFolder);
-			Draft.AddPageDraft(PageDraft.ForPicture(copy));
+			Draft.AddPageDraft(PageDraft.ForPicture(copy, origin: scannerOutput ? UsageDetail.KindScan : UsageDetail.KindPhoto));
 			Draft.MarkPicturesAsPages();
 			return true;
 		}
@@ -602,10 +597,17 @@ public partial class PagesStep : ContentView
 			// Only a plain .txt is cut at "---" lines: a PDF or DOCX page may hold one as a rule or a table border.
 			bool plain = file.FileName.EndsWith(TextExtension, StringComparison.OrdinalIgnoreCase);
 			IReadOnlyList<string> parts = plain ? PictureTextBook.ImportPages(text) : [text];
-			Draft.AddPageDrafts(parts.Select(PageDraft.ForText));
+			string origin = FileOrigin(file.FileName);
+			Draft.AddPageDrafts(parts.Select(part => PageDraft.ForText(part, origin)));
 			Refresh();
 		}
 	}
+
+	// How a picked file counts for the own-book usage: by its extension, so a PDF whose text came by the fallback reader is still a pdf (Slice 178).
+	private static string FileOrigin(string fileName) =>
+		fileName.EndsWith(PdfExtension, StringComparison.OrdinalIgnoreCase) ? UsageDetail.KindPdf
+		: fileName.EndsWith(DocxExtension, StringComparison.OrdinalIgnoreCase) ? UsageDetail.KindDocx
+		: UsageDetail.KindTxt;
 
 	private void UseTitleIfBlank(string title)
 	{
@@ -640,7 +642,6 @@ public partial class PagesStep : ContentView
 			_session.FileName = Path.GetFileName(path);
 			Draft.AddPageDrafts(drafts);
 			Draft.MarkPicturesAsPages();
-			_session.NoteKind(UsageDetail.KindPdf);
 			Refresh();
 			return true;
 		}
@@ -688,7 +689,7 @@ public partial class PagesStep : ContentView
 			string? image = pages[i].ImagePath ?? renders.GetValueOrDefault(pages[i].Index);
 			if (image is null)
 			{
-				drafts.Add(PageDraft.ForText(pageTexts?[i] ?? ImportedText.PageText(pages[i].Lines.Select(l => l.Text))));
+				drafts.Add(PageDraft.ForText(pageTexts?[i] ?? ImportedText.PageText(pages[i].Lines.Select(l => l.Text)), UsageDetail.KindPdf));
 				continue;
 			}
 
@@ -698,7 +699,7 @@ public partial class PagesStep : ContentView
 			string copy = await import.CopyIntoAsync(image, _session.WorkFolder);
 			copies.Add(copy);
 			int at = i;
-			drafts.Add(await Task.Run(() => StoryImport.DraftFromPositioned(pages[at], copy, pageTexts?[at])));
+			drafts.Add(await Task.Run(() => StoryImport.DraftFromPositioned(pages[at], copy, pageTexts?[at], UsageDetail.KindPdf)));
 		}
 	}
 

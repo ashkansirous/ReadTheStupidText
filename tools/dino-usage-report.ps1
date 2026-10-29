@@ -77,9 +77,9 @@ FROM $Dataset WHERE blob1 = 'book_opened' AND $Window
 GROUP BY source $Enough
 "@
     'Own books added by kind' = @"
-SELECT blob9 AS kind, $Weighted AS added
+SELECT blob9 AS detail, $Weighted AS added
 FROM $Dataset WHERE blob1 = 'own_book_added' AND $Window
-GROUP BY kind $Enough ORDER BY added DESC
+GROUP BY detail $Enough ORDER BY added DESC
 "@
     'Recordings by book and pages recorded' = @"
 SELECT blob2 AS book, blob9 AS pages_recorded, $Weighted AS recordings
@@ -189,6 +189,18 @@ function Invoke-AnalyticsSql([string]$Sql) {
     Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body ($Sql + ' FORMAT JSON') -ContentType 'text/plain'
 }
 
+# The own-book detail is "kind:pages" (an older app sent the kind alone). It is split here, not in SQL, so the query uses no
+# string functions the Analytics Engine SQL API may not support.
+function Split-OwnBookDetail($Rows) {
+    $Rows | ForEach-Object {
+        $parts = ([string]$_.detail).Split(':', 2)
+        [pscustomobject]@{ kind = $parts[0]; pages = $(if ($parts.Count -gt 1) { $parts[1] } else { 'unknown (older app)' }); added = $_.added }
+    } | Group-Object kind, pages | ForEach-Object {
+        $first = $_.Group[0]
+        [pscustomobject]@{ kind = $first.kind; pages = $first.pages; added = ($_.Group | Measure-Object added -Sum).Sum }
+    } | Sort-Object added -Descending
+}
+
 function Show-Question([string]$Title, [string]$Sql) {
     Write-Host "`n== $Title (last $Days days, groups under $MinEvents events hidden) =="
     if ($DryRun) {
@@ -200,6 +212,10 @@ function Show-Question([string]$Title, [string]$Sql) {
     if (-not $rows) {
         Write-Host '(nothing at or above the minimum)'
         return
+    }
+
+    if ($Title -eq 'Own books added by kind') {
+        $rows = Split-OwnBookDetail $rows
     }
 
     $rows | Format-Table -AutoSize | Out-String | Write-Host
