@@ -1,6 +1,6 @@
 ### Slice 184 — Windows: an English-to-Japanese translation pack
 
-*In progress (reopened 2026-10-29 after the user allowed CC-BY-SA for downloaded packs). First pass closed in PR #548 with no acceptable model.*
+*Built 2026-10-29 (merged PR #562, reopened after the user allowed CC-BY-SA for downloaded packs; first pass closed in PR #548). Not yet verified in the Windows app, see below.*
 
 **Touches:** `src/ReadTheStupidText.Infrastructure/Translation/TranslationPacks.cs`, `.github/workflows/packs.yml`, `tests/ReadTheStupidText.Tests/*TranslationPack*`, `STORE.md`, `docs/plan/slices/184-windows-english-to-japanese-pack.md`.
 

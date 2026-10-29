@@ -186,6 +186,7 @@ so a failing test blocks the release.
   The MIT licence covers the code only: Supertonic-3 weights are BigScience OpenRAIL-M, not
   MIT/Apache-2.0. The `supertonic-3` pack ships `LICENSE-OpenRAIL-M` + `NOTICE` (via `packs.yml`);
   keep both and pass the use restrictions on. Kokoro-82M is Apache-2.0.
+  CC-BY-SA is allowed for downloaded packs only (`translation-en-ja`, ElanMT; Decision 171), and the training data's terms are checked as well as the model's label.
   (Slice 114: docs/plan/slices/114-dino-kokoro-english-storyteller-pack.md)
 - **Every merge to `main` that touches app code ships a version** (Decision 17;
   docs-only merges cut none, and only the changed platforms are rebuilt and
