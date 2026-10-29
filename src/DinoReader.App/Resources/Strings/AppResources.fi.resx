@@ -377,4 +377,9 @@
   <!-- Slice 181: staged book update wait (machine draft, needs native review) -->
   <data name="Gallery_UpdatingBooks" xml:space="preserve"><value>Päivitetään kirjojasi…</value></data>
   <!-- /Slice 181 -->
+  <!-- Slice 183: machine draft, for native review -->
+  <data name="Notify_Title" xml:space="preserve"><value>Jatketaanko lataamista, kun puhelin on lukittu?</value></data>
+  <data name="Notify_Body" xml:space="preserve"><value>Salli ilmoitukset, jotta ääni latautuu edelleen puhelimen ollessa lukittuna tai käyttäessäsi muita sovelluksia. Näet edistymisen siellä.</value></data>
+  <data name="Notify_NotNow" xml:space="preserve"><value>Ei nyt</value></data>
+  <data name="Notify_Continue" xml:space="preserve"><value>Jatka</value></data>
 </root>

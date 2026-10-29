@@ -126,6 +126,11 @@
   <data name="VoicePicker_ReasonNoNeuralEngine" xml:space="preserve"><value>Natural voices aren't available on this device yet, so the phone voice reads.</value></data>
   <data name="Language_Intro" xml:space="preserve"><value>Choose your language. We'll download a natural voice for it; until it arrives, your phone's own voice reads.</value></data>
   <data name="Language_Retry" xml:space="preserve"><value>Retry download</value></data>
+  <!-- Slice 183: machine draft, other languages fall back to English until reviewed -->
+  <data name="Notify_Title" xml:space="preserve"><value>Keep downloading when the phone is locked?</value></data>
+  <data name="Notify_Body" xml:space="preserve"><value>Allow notifications to keep the voice downloading while the phone is locked or you use other apps. You will see the progress there.</value></data>
+  <data name="Notify_NotNow" xml:space="preserve"><value>Not now</value></data>
+  <data name="Notify_Continue" xml:space="preserve"><value>Continue</value></data>
   <data name="Language_Continue" xml:space="preserve"><value>Continue</value></data>
   <data name="Language_StartReading" xml:space="preserve"><value>Start reading</value></data>
   <data name="Voice_NbWoman" xml:space="preserve"><value>Voice {0} (woman)</value></data>

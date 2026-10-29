@@ -47,6 +47,8 @@ public sealed class VoicePackInstaller
     private readonly SemaphoreSlim _updateGate = new(1, 1);
     private string? _failedUpdateKey;
     private bool _running;
+    private bool _userCancelled; // the user tapped Cancel on the notification during this run; reset at the start of each run, guarded by _gate
+    private bool _runReady; // this run ended with the voice installed and published Ready: a late Cancel never overwrites it; guarded by _gate
     private string _runLanguage = SupertonicVoiceTable.EnglishCode;
     private CancellationTokenSource? _runCancel;
     private int _generation;
@@ -62,6 +64,39 @@ public sealed class VoicePackInstaller
         _platform = platform;
         _network = network;
         languages.LanguageChanged += (_, _) => OnLanguageChanged();
+        PackDownloadHost.CancelRequested += OnNotificationCancel;
+    }
+
+    // Slice 183: Cancel on the download notification. Final like the in-app Cancel: the run ends, reports Cancelled (the
+    // coordinator forgets it) and nothing restarts by itself; the partial file stays for a later start.
+    private void OnNotificationCancel(string packId)
+    {
+        CancellationTokenSource? cancel;
+        bool updateCancelled = false;
+        lock (_gate)
+        {
+            if (packId != Volatile.Read(ref _resolvedPackId))
+            {
+                return;
+            }
+
+            if (_running)
+            {
+                _userCancelled = true;
+                cancel = _runCancel;
+            }
+            else
+            {
+                cancel = _updateCancel; // a pack update downloading in the background honours Cancel too
+                updateCancelled = cancel is not null;
+            }
+        }
+
+        CancelQuietly(cancel);
+        if (updateCancelled)
+        {
+            Publish(Volatile.Read(ref _generation), PackInstallState.Ready); // the old pack still reads
+        }
     }
 
     public PackInstallState State { get; private set; } = PackInstallState.Idle;
@@ -176,6 +211,20 @@ public sealed class VoicePackInstaller
     // chosen language can restart; any other end (Ready, a run the user stopped) is reported as finished.
     private void ReportEnd(PackInstallState? failure)
     {
+        bool cancelled;
+        lock (_gate)
+        {
+            cancelled = _userCancelled && !_runReady; // a Cancel that arrives as the run finishes does not undo a finished install
+            _userCancelled = false;
+        }
+
+        if (cancelled)
+        {
+            _resume?.Report(ResumeKey, PackRunEnd.Cancelled, () => Task.FromResult(false));
+            Publish(Volatile.Read(ref _generation), PackInstallState.Idle);
+            return;
+        }
+
         PackRunEnd end = failure switch
         {
             PackInstallState.Offline when _settings.Language is not null => PackRunEnd.Offline,
@@ -231,6 +280,9 @@ public sealed class VoicePackInstaller
         lock (_gate)
         {
             _runCancel = cancel;
+            _userCancelled = false;
+            _runReady = false;
+            Volatile.Write(ref _resolvedPackId, null);
             _runLanguage = CurrentLanguage;
             return (new Run(++_generation, cancel.Token), _runLanguage);
         }
@@ -243,6 +295,12 @@ public sealed class VoicePackInstaller
         lock (_gate)
         {
             _runCancel = null;
+            if (_userCancelled)
+            {
+                _running = false;
+                return true; // final: no restart for a Cancel
+            }
+
             if (cancel.IsCancellationRequested || !SameLanguage(language, CurrentLanguage))
             {
                 return false;
@@ -258,6 +316,15 @@ public sealed class VoicePackInstaller
         try
         {
             return await RunAsync(run);
+        }
+        catch (PackCancelledByNotificationException)
+        {
+            lock (_gate)
+            {
+                _userCancelled = true; // the notification's Cancel reached a run whose pack id was not matched: still final, no error state
+            }
+
+            return null;
         }
         catch (Exception ex)
         {
@@ -326,6 +393,7 @@ public sealed class VoicePackInstaller
 
         Volatile.Write(ref _freshInstall, true);
         await ActivateInstalledAsync(run);
+        MarkRunReady();
         return null;
     }
 
@@ -458,9 +526,18 @@ public sealed class VoicePackInstaller
 
     private async Task<PackDownloadResult> DownloadPackAsync(PackInfo pack, Run run)
     {
+        Volatile.Write(ref _resolvedPackId, pack.Id); // also for an update download, so the notification's Cancel finds it
         Publish(run.Generation, PackInstallState.Downloading, 0);
         var progress = new InlineProgress(value => PublishProgress(run, value));
         return await _packs.DownloadAsync(pack.Id, progress, run.Token);
+    }
+
+    private void MarkRunReady()
+    {
+        lock (_gate)
+        {
+            _runReady = true;
+        }
     }
 
     private async Task ActivateInstalledAsync(Run run)

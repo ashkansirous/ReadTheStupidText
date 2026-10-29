@@ -13,6 +13,7 @@ public static partial class MobileSharedServices
 	private static partial void RegisterPlatformServices(IServiceCollection services)
 	{
 		services.AddSingleton<IPlatformServices, AndroidPlatformServices>();
+		PackDownloadHost.KeepAlive = new AndroidPackKeepAlive(); // Slice 183: big pack downloads keep going behind the lock screen
 		RegisterScanAndOcr(services);
 		// Slice 95: ML Kit translation for both apps (a model is downloaded on first use; Windows and iOS register no engine).
 		services.AddSingleton<ITranslator, MlKitTranslator>();

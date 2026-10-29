@@ -4,6 +4,11 @@
 	<!-- Network is used only to download the language voice pack and, behind the grown-up gate, the free story list and the stories a grown-up picks (Slice 92), and Google's on-device translation model for a language (Slice 95); text never leaves the device. -->
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+	<!-- Slice 183: a big voice, translation or scan pack keeps downloading while the phone is locked. A foreground service of type dataSync
+	     holds the download and shows one ongoing progress notification (shown only if notifications are allowed; local, nothing is sent). -->
+	<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+	<uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+	<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 	<!-- The microphone is used only on the Record screen, behind the grown-up gate, to save a parent's own reading of a page (Slice 111). The recording stays in the story's folder on the device (and in a backup the grown-up makes); it is never uploaded or used for anything else. -->
 	<uses-permission android:name="android.permission.RECORD_AUDIO" />
 </manifest>

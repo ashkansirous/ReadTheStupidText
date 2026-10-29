@@ -65,6 +65,24 @@ public sealed class PackResumeWatcher : IPackResume, IDisposable
         }
     }
 
+    /// <summary>
+    /// Like <see cref="CellularOnly"/>, but a failed connectivity read answers false: whether a download may use mobile data is decided
+    /// only when the phone is known to be on mobile data alone (Slice 183, iOS).
+    /// </summary>
+    public static bool CellularOnlyKnown()
+    {
+        try
+        {
+            NetworkProfile[] profiles = [.. Connectivity.Current.ConnectionProfiles.Select(ToProfile)];
+            return profiles.Length > 0 && !StorytellerNetworkPolicy.AllowsAutomaticDownload(profiles);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Connectivity read failed: {ex.Message}");
+            return false;
+        }
+    }
+
     /// <summary>The app came back to the foreground: stopped downloads get one more try.</summary>
     public void NotifyForeground() => Trigger(PackResumeReason.Foreground);
 

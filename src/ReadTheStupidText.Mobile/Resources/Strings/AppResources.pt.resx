@@ -129,4 +129,9 @@
   <data name="Language_StartReading" xml:space="preserve"><value>Começar a ler</value></data>
   <data name="Voice_NbWoman" xml:space="preserve"><value>Voz {0} (mulher)</value></data>
   <data name="Voice_NbMan" xml:space="preserve"><value>Voz {0} (homem)</value></data>
+  <!-- Slice 183: machine draft, for native review -->
+  <data name="Notify_Title" xml:space="preserve"><value>Continuar a transferir com o telemóvel bloqueado?</value></data>
+  <data name="Notify_Body" xml:space="preserve"><value>Permita as notificações para que a voz continue a ser transferida enquanto o telemóvel está bloqueado ou usa outras aplicações. Verá o progresso aí.</value></data>
+  <data name="Notify_NotNow" xml:space="preserve"><value>Agora não</value></data>
+  <data name="Notify_Continue" xml:space="preserve"><value>Continuar</value></data>
 </root>

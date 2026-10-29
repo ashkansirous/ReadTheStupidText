@@ -130,4 +130,9 @@
   <data name="Language_StartReading" xml:space="preserve"><value>Mit dem Lesen beginnen</value></data>
   <data name="Voice_NbWoman" xml:space="preserve"><value>Stimme {0} (Frau)</value></data>
   <data name="Voice_NbMan" xml:space="preserve"><value>Stimme {0} (Mann)</value></data>
+  <!-- Slice 183: machine draft, for native review -->
+  <data name="Notify_Title" xml:space="preserve"><value>Download fortsetzen, wenn das Telefon gesperrt ist?</value></data>
+  <data name="Notify_Body" xml:space="preserve"><value>Erlaube Benachrichtigungen, damit die Stimme weiter heruntergeladen wird, während das Telefon gesperrt ist oder du andere Apps nutzt. Dort siehst du den Fortschritt.</value></data>
+  <data name="Notify_NotNow" xml:space="preserve"><value>Nicht jetzt</value></data>
+  <data name="Notify_Continue" xml:space="preserve"><value>Weiter</value></data>
 </root>

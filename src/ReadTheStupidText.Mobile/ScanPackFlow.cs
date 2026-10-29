@@ -153,7 +153,16 @@ public sealed class ScanPackFlow
         string name = NativeLanguageName(language);
         for (int attempt = 1; !cancellationToken.IsCancellationRequested && !_ui.IsRetired; attempt++)
         {
-            PackDownloadResult result = await DownloadOnceAsync(language, name, cancellationToken);
+            PackDownloadResult result;
+            try
+            {
+                result = await DownloadOnceAsync(language, name, cancellationToken);
+            }
+            catch (PackCancelledByNotificationException)
+            {
+                return false; // the person cancelled on the notification: no error, no retry
+            }
+
             if (result == PackDownloadResult.Ok)
             {
                 return true;
@@ -175,6 +184,10 @@ public sealed class ScanPackFlow
         try
         {
             return await _packs.EnsureForLanguageAsync(language, progress, cancellationToken);
+        }
+        catch (PackCancelledByNotificationException)
+        {
+            throw; // Cancel on the download notification: the caller gives up without an error
         }
         catch (OperationCanceledException)
         {

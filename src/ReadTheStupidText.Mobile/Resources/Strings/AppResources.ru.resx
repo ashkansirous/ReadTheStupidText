@@ -129,4 +129,9 @@
   <data name="Language_StartReading" xml:space="preserve"><value>Начать чтение</value></data>
   <data name="Voice_NbWoman" xml:space="preserve"><value>Голос {0} (женщина)</value></data>
   <data name="Voice_NbMan" xml:space="preserve"><value>Голос {0} (мужчина)</value></data>
+  <!-- Slice 183: machine draft, for native review -->
+  <data name="Notify_Title" xml:space="preserve"><value>Продолжать загрузку, когда телефон заблокирован?</value></data>
+  <data name="Notify_Body" xml:space="preserve"><value>Разрешите уведомления, чтобы голос продолжал загружаться, пока телефон заблокирован или вы пользуетесь другими приложениями. Ход загрузки будет виден там.</value></data>
+  <data name="Notify_NotNow" xml:space="preserve"><value>Не сейчас</value></data>
+  <data name="Notify_Continue" xml:space="preserve"><value>Продолжить</value></data>
 </root>

@@ -378,4 +378,9 @@
   <!-- Slice 181: staged book update wait (machine draft, needs native review) -->
   <data name="Gallery_UpdatingBooks" xml:space="preserve"><value>Mise à jour de tes livres…</value></data>
   <!-- /Slice 181 -->
+  <!-- Slice 183: machine draft, for native review -->
+  <data name="Notify_Title" xml:space="preserve"><value>Continuer le téléchargement quand le téléphone est verrouillé ?</value></data>
+  <data name="Notify_Body" xml:space="preserve"><value>Autorisez les notifications pour que la voix continue de se télécharger quand le téléphone est verrouillé ou que vous utilisez d'autres applications. Vous y verrez la progression.</value></data>
+  <data name="Notify_NotNow" xml:space="preserve"><value>Pas maintenant</value></data>
+  <data name="Notify_Continue" xml:space="preserve"><value>Continuer</value></data>
 </root>

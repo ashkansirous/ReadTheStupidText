@@ -203,8 +203,10 @@ public partial class FirstRunPage : ContentPage
 
 	private async void OnContinueClicked(object? sender, EventArgs e) => await _busy.RunAsync(StartDownloadAsync);
 
-	private Task StartDownloadAsync()
+	private async Task StartDownloadAsync()
 	{
+		// Slice 183: asked once, just before the first big download (choosing the language starts it).
+		await PackNotificationAsk.AskOnceAsync(() => DisplayAlertAsync(AppResources.Notify_Title, AppResources.Notify_Body, AppResources.Notify_Continue, AppResources.Notify_NotNow));
 		_chosen = _selected;
 		LanguageChoice.Apply(_chosen, _spoken);
 		ApplyTexts();
@@ -214,7 +216,6 @@ public partial class FirstRunPage : ContentPage
 		_installer.Changed += OnInstallerChanged;
 		Refresh();
 		_ = LoadShelfAsync();
-		return Task.CompletedTask;
 	}
 
 	// The texts of the download and ready screens are set here, after the pick, so they speak the language just chosen.
