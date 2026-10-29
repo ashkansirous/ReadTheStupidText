@@ -1,0 +1,37 @@
+# Slice 201: the Norwegian voice pack crashes the app
+
+*In progress.*
+
+**Touches:** `.github/workflows/packs.yml`, `src/ReadTheStupidText.Application/Reading/**`, `src/ReadTheStupidText.Domain/Reading/**`, `src/ReadTheStupidText.Mobile/**` (pack/engine loading), `src/ReadTheStupidText.Mobile.Shared/**` (engine loading), `src/ReadTheStupidText.Infrastructure/**` (Windows sherpa engine), `tests/ReadTheStupidText.Tests/**`, pack release constants.
+
+## Problem (found on a real S21, 2026-10-29)
+
+Picking **Norsk** in Read The Stupid Text on Android downloads `piper-nb` (packs-5) and about 2 s later the process dies:
+`sherpa-onnx piper-phonemize-lexicon.cc:ReadTokens:106 Error when reading tokens at Line aɪ 161. size: 2`, exit 255.
+Because `Language=nb` is saved, every later launch dies too. Logs: `D:\ReadTheStupidText-worktrees\.phone\s21night3-norsk-attempt1.log`, `s21night3-norsk-crashloop.log`.
+
+`files/packs/piper-nb/v1/voices/nvcc/tokens.txt` lines 161-162 are `aɪ 161` and `aʊ 162`: tokens of two code points. sherpa's
+Piper reader needs one code point per token and aborts natively (no managed exception to catch). The file is written by
+sherpa's `add_meta_data.py` from the `phoneme_id_map` of the nvcc `.onnx.json` in the "Build the Norwegian voice" step of `packs.yml`.
+Cause is likely, not yet proven by a fixed pack loading.
+
+## Fix
+
+1. **Pack:** in the Norwegian build step, write a `tokens.txt` sherpa can read. Confirm against sherpa-onnx's source
+   (`piper-phonemize-lexicon.cc` `ReadTokens`, via the `library-docs` agent or the pinned sherpa commit) what it accepts, then drop or
+   map the multi-code-point entries (espeak-ng emits phonemes one code point at a time, so a diphthong key can never be looked up; check
+   that dropping them can't shift other ids, since ids are explicit). Add a build check that fails the packs job when any tokens.txt in
+   any Piper/VITS pack (`piper-nb`, `piper-fa`, and the others built there) has a token that isn't exactly one code point. Raise the
+   Norwegian pack version and point the apps at the new packs release the way earlier pack fixes did (`.github/CLAUDE.md`, packs releases).
+2. **App guard (every platform that loads sherpa engines: Android, iOS, Windows):** before handing a pack to sherpa, validate its
+   `tokens.txt` with a pure, unit-tested check in Application/Domain (each non-empty line = one code point, a space, an integer; exact
+   rule from step 1's source reading). A pack that fails is treated as broken: not loaded, shown as a failed download with the existing
+   retry/redownload path (Slice 182 Failed -> Retry), and the reader falls back the same way it does for a missing pack. Never crash at
+   startup because a saved language's pack is bad.
+3. **Tests:** unit tests for the validator (good file, two-code-point token, missing id, blank lines, BOM). The scripted device check is
+   written but not run by the implementer: switch to Norsk through Settings and read a Norwegian sentence.
+
+## Verification
+
+- Fast checks green; packs workflow change passes actionlint.
+- Device (after review): S21 Norsk switch reads Norwegian with the new pack; with the old pack the app shows the failure state instead of dying.
