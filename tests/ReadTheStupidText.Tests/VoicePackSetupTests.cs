@@ -501,6 +501,26 @@ public class VoicePackSetupTests
     }
 
     [Fact]
+    public async Task Cancel_on_the_download_notification_ends_the_run_for_good_and_nothing_restarts()
+    {
+        var settings = new FakeSettings { Language = "fa" };
+        var packs = new FakePacks { Catalog = new PackCatalogResult(PackDownloadResult.Ok, [FarsiPack]) };
+        var resume = new PackResumeCoordinator();
+        var installer = new VoicePackInstaller(packs, new FakeModel(), new NoopReader(), settings, new NeuralPlatform(), new FakeNetwork(), new FakeNotifier(), resume);
+        Task<bool> cancelled = packs.BlockFirstDownload();
+
+        Task run = installer.StartAsync();
+        await packs.FirstDownloadStarted;
+        PackDownloadHost.RaiseCancelRequested(FarsiPack.Id);
+        await run;
+
+        Assert.True(await cancelled);
+        Assert.Equal(1, packs.DownloadCalls); // no second run
+        Assert.Equal(PackResumeState.None, resume.StateOf("voice")); // the coordinator forgot it: nothing resumes by itself
+        Assert.Equal(PackInstallState.Idle, installer.State);
+    }
+
+    [Fact]
     public async Task Rapid_language_flips_never_throw_and_settle_on_the_last_language()
     {
         var settings = new FakeSettings { Language = "fa" };

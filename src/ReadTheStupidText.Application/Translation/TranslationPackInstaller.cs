@@ -9,6 +9,9 @@ public enum TranslationPackState
     Downloading,
     Ready,
     Failed,
+
+    /// <summary>The user cancelled the download from its notification (Slice 183): not an error, nothing to show.</summary>
+    Idle,
 }
 
 /// <summary>Progress of the packs one pair needs: <see cref="Fraction"/> is 0..1 over all of them.</summary>
@@ -97,6 +100,7 @@ public sealed class TranslationPackInstaller
     private async Task RunAsync(string key, string source, string target)
     {
         PackDownloadResult outcome = PackDownloadResult.Failed;
+        bool cancelled = false;
         try
         {
             Report(source, target, TranslationPackState.Downloading, 0);
@@ -106,6 +110,13 @@ public sealed class TranslationPackInstaller
             Progress?.Invoke(this, result == PackDownloadResult.Ok
                 ? new TranslationPackProgress(source, target, TranslationPackState.Ready, 1)
                 : new TranslationPackProgress(source, target, TranslationPackState.Failed, 0, result));
+        }
+        catch (PackCancelledByNotificationException)
+        {
+            // The user's Cancel on the download notification (Slice 183) is final; any other cancellation falls to the generic catch and stays retryable.
+            cancelled = true;
+            _log.Info($"translation packs {source}>{target}: cancelled");
+            Progress?.Invoke(this, new TranslationPackProgress(source, target, TranslationPackState.Idle, 0));
         }
         catch (Exception ex)
         {
@@ -118,6 +129,12 @@ public sealed class TranslationPackInstaller
             {
                 _running.Remove(key);
             }
+        }
+
+        if (cancelled)
+        {
+            _resume?.Report($"translation:{key}", PackRunEnd.Cancelled, () => Task.FromResult(false));
+            return;
         }
 
         ReportEnd(key, source, target, outcome);

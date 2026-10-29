@@ -129,4 +129,9 @@
   <data name="Language_StartReading" xml:space="preserve"><value>ابدأ القراءة</value></data>
   <data name="Voice_NbWoman" xml:space="preserve"><value>الصوت {0} (امرأة)</value></data>
   <data name="Voice_NbMan" xml:space="preserve"><value>الصوت {0} (رجل)</value></data>
+  <!-- Slice 183: machine draft, for native review -->
+  <data name="Notify_Title" xml:space="preserve"><value>هل تريد متابعة التنزيل عند قفل الهاتف؟</value></data>
+  <data name="Notify_Body" xml:space="preserve"><value>اسمح بالإشعارات لمتابعة تنزيل الصوت أثناء قفل الهاتف أو استخدام تطبيقات أخرى. ستشاهد التقدم هناك.</value></data>
+  <data name="Notify_NotNow" xml:space="preserve"><value>ليس الآن</value></data>
+  <data name="Notify_Continue" xml:space="preserve"><value>متابعة</value></data>
 </root>

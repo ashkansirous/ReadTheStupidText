@@ -2,6 +2,7 @@ using System.Diagnostics;
 using DinoReader.Core;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Domain.Reading;
+using ReadTheStupidText.Mobile.Shared;
 using ReadTheStupidText.Mobile.Shared.Network;
 
 namespace DinoReader;
@@ -127,9 +128,16 @@ public sealed class StorytellerDefault
 			Volatile.Write(ref _downloadNowChosen, 1);
 		}
 
+		bool cancelledFromNotification = false;
 		try
 		{
 			await RunAsync(allowMobileData);
+		}
+		catch (PackCancelledByNotificationException)
+		{
+			// Slice 183: Cancel on the download notification is final; the partial file stays for a later start.
+			cancelledFromNotification = true;
+			SetStatus(StorytellerStatus.None);
 		}
 		catch (Exception ex)
 		{
@@ -143,7 +151,14 @@ public sealed class StorytellerDefault
 			PackDownloadResult? stopped = _stoppedWith;
 			_stoppedWith = null;
 			Interlocked.Exchange(ref _running, 0);
-			ReportEnd(stopped);
+			if (cancelledFromNotification)
+			{
+				_resume.Report(ResumeKey, PackRunEnd.Cancelled, () => Task.FromResult(false));
+			}
+			else
+			{
+				ReportEnd(stopped);
+			}
 		}
 	}
 
@@ -311,7 +326,16 @@ public sealed class StorytellerDefault
 	private async Task DownloadUpdateAsync()
 	{
 		IReadOnlyList<string> before = ServedLanguages();
-		PackDownloadResult result = await _packs.DownloadAsync(PackConstants.StorytellerPackId, null, CancellationToken.None);
+		PackDownloadResult result;
+		try
+		{
+			result = await _packs.DownloadAsync(PackConstants.StorytellerPackId, null, CancellationToken.None);
+		}
+		catch (PackCancelledByNotificationException)
+		{
+			return; // Slice 183: Cancel on the notification; the installed voices keep reading
+		}
+
 		if (result != PackDownloadResult.Ok)
 		{
 			return;

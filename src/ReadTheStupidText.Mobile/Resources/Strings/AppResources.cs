@@ -146,6 +146,10 @@ public static class AppResources
     public static string VoicePicker_ReasonNoNeuralEngine => Get();
     public static string Language_Intro => Get();
     public static string Language_Retry => Get();
+    public static string Notify_Title => Get();
+    public static string Notify_Body => Get();
+    public static string Notify_NotNow => Get();
+    public static string Notify_Continue => Get();
     public static string Language_Continue => Get();
     public static string Language_StartReading => Get();
 }

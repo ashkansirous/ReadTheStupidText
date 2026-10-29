@@ -311,6 +311,39 @@ public class TranslationStreamingTests
     }
 
     [Fact]
+    public async Task Cancel_on_the_download_notification_is_final_and_the_coordinator_never_retries()
+    {
+        var packs = new FakePacks { CancelledByNotification = true };
+        var coordinator = new PackResumeCoordinator();
+        var installer = new TranslationPackInstaller(packs, new BlockTranslator(), new SilentLog(), coordinator);
+        TranslationPackProgress? last = null;
+        installer.Progress += (_, p) => last = p;
+
+        Assert.True(installer.StartInBackground("en", "ru"));
+        await WaitUntil(() => last?.State == TranslationPackState.Idle); // not an error state
+        await Task.Delay(300, TestContext.Current.CancellationToken); // the run reports its end after it unwinds; a wrongly reported Failed would be tracked by now
+        coordinator.Trigger(PackResumeReason.Network, true, [NetworkProfile.WiFi]);
+
+        Assert.Equal(0, coordinator.TrackedCount); // Cancelled leaves; Failed would have stayed for a retry
+        Assert.Equal(PackResumeState.None, coordinator.StateOf("translation:en>ru"));
+    }
+
+    [Fact]
+    public async Task Another_cancellation_is_not_final_and_stays_tracked_for_a_retry()
+    {
+        var packs = new FakePacks { OtherCancellation = true };
+        var coordinator = new PackResumeCoordinator();
+        var installer = new TranslationPackInstaller(packs, new BlockTranslator(), new SilentLog(), coordinator);
+        TranslationPackProgress? last = null;
+        installer.Progress += (_, p) => last = p;
+
+        Assert.True(installer.StartInBackground("en", "ru"));
+        await WaitUntil(() => last?.State == TranslationPackState.Failed && coordinator.TrackedCount == 1);
+
+        Assert.Equal(1, coordinator.TrackedCount);
+    }
+
+    [Fact]
     public async Task A_failed_download_is_reported_and_can_be_retried()
     {
         var packs = new FakePacks { Result = PackDownloadResult.Offline };
@@ -465,6 +498,12 @@ public class TranslationStreamingTests
 
         public PackDownloadResult Result { get; set; } = PackDownloadResult.Ok;
 
+        /// <summary>The pack service stopped the download without the caller's token firing (Cancel on the download notification).</summary>
+        public bool CancelledByNotification { get; set; }
+
+        /// <summary>Some other cancellation (the app shutting down): not final.</summary>
+        public bool OtherCancellation { get; set; }
+
         public Task Downloaded => _downloaded.Task;
 
         public Task<PackCatalogResult> GetCatalogAsync(CancellationToken cancellationToken) => throw new NotSupportedException();
@@ -486,6 +525,16 @@ public class TranslationStreamingTests
 
             progress?.Report(0.5);
             _downloaded.TrySetResult();
+            if (CancelledByNotification)
+            {
+                throw new PackCancelledByNotificationException(packId);
+            }
+
+            if (OtherCancellation)
+            {
+                throw new OperationCanceledException();
+            }
+
             if (Result == PackDownloadResult.Ok)
             {
                 Installed.Add(packId);

@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using ReadTheStupidText.Application.Images;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
+using ReadTheStupidText.Mobile.Resources.Strings;
 using ReadTheStupidText.Mobile.Shared;
 
 namespace ReadTheStupidText.Mobile;
@@ -31,6 +32,7 @@ public sealed class OcrPackInstaller
     private readonly VoicePackInstaller _voice;
     private readonly IPackResume? _resume;
     private int _running;
+    private string? _cancelledLanguage; // the background install the user cancelled from the notification, reported once the guard is clear
     private (string Language, PackDownloadResult Result)? _stopped; // how the background install ended, reported once the guard is clear
     private readonly ConcurrentDictionary<string, DownloadFlight> _flights = new(StringComparer.OrdinalIgnoreCase); // one download per pack id, shared by the background run and a person waiting (Slice 87)
 
@@ -41,7 +43,23 @@ public sealed class OcrPackInstaller
         _settings = settings;
         _voice = voice;
         languages.LanguageChanged += (_, _) => _ = EnsureForCurrentLanguageAsync();
+        UseLocalizedDownloadNotification();
     }
+
+    // Slice 183: this installer is created at every start, so it sets the (localized) text of the download notification once.
+    private static void UseLocalizedDownloadNotification()
+    {
+        PackDownloadHost.NotificationText = fraction => AppResources.Format(AppResources.PackStatus_Downloading, fraction.ToString("P0", System.Globalization.CultureInfo.CurrentUICulture));
+        PackDownloadHost.CancelLabel = () => AppResources.Common_Cancel;
+        PackDownloadHost.AskNotification = () => PackNotificationAsk.AskOnceAsync(ShowNotificationSheetAsync); // a download that did not start from the first-run page (translation, scan)
+    }
+
+    // Throws when no page is up (an automatic resume in the background); the ask then skips and tries again at the next download.
+    private static Task<bool> ShowNotificationSheetAsync() => MainThread.InvokeOnMainThreadAsync(() =>
+    {
+        Page page = Microsoft.Maui.Controls.Application.Current?.Windows.FirstOrDefault()?.Page ?? throw new InvalidOperationException("No page to ask on.");
+        return page.DisplayAlertAsync(AppResources.Notify_Title, AppResources.Notify_Body, AppResources.Notify_Continue, AppResources.Notify_NotNow);
+    });
 
     public async Task EnsureForCurrentLanguageAsync() => await EnsureBackgroundAsync(null).ConfigureAwait(false);
 
@@ -92,6 +110,11 @@ public sealed class OcrPackInstaller
             await WaitForVoiceDownloadsAsync().ConfigureAwait(false);
             await InstallAsync(language).ConfigureAwait(false);
         }
+        catch (PackCancelledByNotificationException)
+        {
+            // Slice 183: Cancel on the download notification is final; reported as Cancelled, never retried.
+            _cancelledLanguage = language;
+        }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"OCR pack install for '{language}' failed: {ex.Message}");
@@ -124,6 +147,12 @@ public sealed class OcrPackInstaller
     // Slice 182: the run reports its end once; Offline or Failed starts again by itself when the network is back or the app returns.
     private void ReportEnd((string Language, PackDownloadResult Result)? stopped)
     {
+        if (Interlocked.Exchange(ref _cancelledLanguage, null) is { } cancelled)
+        {
+            _resume?.Report($"ocr:{cancelled}", PackRunEnd.Cancelled, () => Task.FromResult(false));
+            return;
+        }
+
         if (stopped is { } s)
         {
             _resume?.Report($"ocr:{s.Language}", IPackResume.EndOf(s.Result), () => ResumeAsync(s.Language));
@@ -197,7 +226,7 @@ public sealed class OcrPackInstaller
                     ? await RunFlightAsync(packId, created, cancellationToken).ConfigureAwait(false)
                     : await flight.Result.WaitAsync(cancellationToken).ConfigureAwait(false);
             }
-            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+            catch (OperationCanceledException ex) when (ex is not PackCancelledByNotificationException && !cancellationToken.IsCancellationRequested)
             {
                 // The downloader we joined gave up; loop and take over.
             }

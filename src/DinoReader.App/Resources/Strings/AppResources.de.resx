@@ -379,4 +379,9 @@
   <!-- Slice 181: staged book update wait (machine draft, needs native review) -->
   <data name="Gallery_UpdatingBooks" xml:space="preserve"><value>Deine Bücher werden aktualisiert…</value></data>
   <!-- /Slice 181 -->
+  <!-- Slice 183: machine draft, for native review -->
+  <data name="Notify_Title" xml:space="preserve"><value>Download fortsetzen, wenn das Telefon gesperrt ist?</value></data>
+  <data name="Notify_Body" xml:space="preserve"><value>Erlaube Benachrichtigungen, damit die Stimme weiter heruntergeladen wird, während das Telefon gesperrt ist oder du andere Apps nutzt. Dort siehst du den Fortschritt.</value></data>
+  <data name="Notify_NotNow" xml:space="preserve"><value>Nicht jetzt</value></data>
+  <data name="Notify_Continue" xml:space="preserve"><value>Weiter</value></data>
 </root>

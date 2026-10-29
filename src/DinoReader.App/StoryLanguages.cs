@@ -123,7 +123,67 @@ public sealed class StoryLanguagePacks
 		_packs = packs;
 		_platform = platform;
 		_usage = usage;
+		PackDownloadHost.CancelRequested += OnNotificationCancel;
+		PackDownloadHost.NotificationText = fraction => AppResources.Format(AppResources.StoryLanguages_Getting, (int)(fraction * 100)); // Slice 183: the notification shows the app's own status line
+		PackDownloadHost.CancelLabel = () => AppResources.Common_Cancel;
 		StoryLanguages.SidesSaved += DropWaitingOutside; // a language that left the set (Settings, the app-language swap, the intro) no longer waits for Wi-Fi
+	}
+
+	// Slice 183: Cancel on the download notification stops the run of that pack's language exactly as the in-app Cancel does.
+	// Every language that waits for or downloads a pack, since languages can share one pack: Cancel is final for each of them.
+	private readonly Dictionary<string, HashSet<string>> _packLanguages = new();
+
+	private void OnNotificationCancel(string packId)
+	{
+		string[] codes;
+		lock (_gate)
+		{
+			if (!_packLanguages.TryGetValue(packId, out HashSet<string>? languages))
+			{
+				return;
+			}
+
+			codes = [.. languages];
+		}
+
+		foreach (string code in codes)
+		{
+			Cancel(code);
+		}
+	}
+
+	private void TrackPack(string packId, string code)
+	{
+		lock (_gate)
+		{
+			if (!_packLanguages.TryGetValue(packId, out HashSet<string>? languages))
+			{
+				_packLanguages[packId] = languages = [];
+			}
+
+			languages.Add(code);
+		}
+	}
+
+	// A run that ended no longer waits for a notification Cancel; an emptied pack entry goes too.
+	private void UntrackLanguage(string code)
+	{
+		lock (_gate)
+		{
+			if (_runs.ContainsKey(code))
+			{
+				return; // a newer run of this language started while the old one unwound: it tracks itself
+			}
+
+			foreach ((string packId, HashSet<string> languages) in _packLanguages.ToArray())
+			{
+				languages.Remove(code);
+				if (languages.Count == 0)
+				{
+					_packLanguages.Remove(packId);
+				}
+			}
+		}
 	}
 
 	/// <summary>Raised on the main thread whenever a run starts, moves on or ends.</summary>
@@ -210,6 +270,12 @@ public sealed class StoryLanguagePacks
 		if (missing.Count == 0)
 		{
 			return;
+		}
+
+		if (host is not null)
+		{
+			// Slice 183: the grown-up is asked once about notifications before the first big download; then the Wi-Fi question, then the download.
+			await PackNotificationAsk.AskOnceAsync(() => host.DisplayAlertAsync(AppResources.Notify_Title, AppResources.Notify_Body, AppResources.Notify_Continue, AppResources.Notify_NotNow));
 		}
 
 		if (!OnMobileDataOnly())
@@ -428,6 +494,7 @@ public sealed class StoryLanguagePacks
 		}
 
 		(bool current, PackDownloadResult last) = SettleRun(code, cancel, outcome);
+		UntrackLanguage(code);
 		cancel.Dispose();
 		if (current)
 		{
@@ -536,12 +603,14 @@ public sealed class StoryLanguagePacks
 			return UsageDetail.PackDone;
 		}
 
+		TrackPack(pack.Id, code); // before waiting for the gate: a Cancel on the notification reaches every language sharing the pack
 		if (await FetchedByAnotherRunAsync(pack.Id, code, token))
 		{
 			return null;
 		}
 
 		var progress = new InlineProgress(value => Report(code, run, value));
+
 		PackDownloadResult result = await _packs.DownloadAsync(pack.Id, progress, token);
 		NoteResult(code, result);
 		return result == PackDownloadResult.Ok ? UsageDetail.PackDone : UsageDetail.PackFailed;

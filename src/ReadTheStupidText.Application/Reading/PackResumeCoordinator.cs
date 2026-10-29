@@ -179,6 +179,7 @@ public sealed class PackResumeCoordinator : IPackResume
         bool started = false;
         try
         {
+            PackResumeScope.Enter(); // RunAsync is its own flow (called with discard), so the mark never leaks to a caller
             started = !Cancelled(item) && await Task.Run(item.Entry.Resume).ConfigureAwait(false);
         }
         catch (Exception ex)

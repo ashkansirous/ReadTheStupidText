@@ -389,6 +389,10 @@ public static class AppResources
 	public static string StoryLanguages_WifiTitle => Get();
 	public static string StoryLanguages_WifiBody => Get();
 	public static string StoryLanguages_WifiNow => Get();
+	public static string Notify_Title => Get();
+	public static string Notify_Body => Get();
+	public static string Notify_NotNow => Get();
+	public static string Notify_Continue => Get();
 	public static string StoryLanguages_WifiWait => Get();
 	public static string StoryLanguages_WifiWaiting => Get();
 	public static string StoryLanguages_FlagMap => Get();

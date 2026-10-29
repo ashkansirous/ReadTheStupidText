@@ -13,6 +13,7 @@ public static partial class MobileSharedServices
 	private static partial void RegisterPlatformServices(IServiceCollection services)
 	{
 		services.AddSingleton<IPlatformServices, IOSPlatformServices>();
+		PackDownloadHost.BodyFetcher = IosBackgroundDownloader.Instance; // Slice 183: pack bodies download in a background URLSession
 		RegisterScanAndOcr(services);
 		RegisterNeuralReader(services);
 		// Slice 160: ML Kit translation for both apps, the twin of the Android registration (a model is downloaded on first use).

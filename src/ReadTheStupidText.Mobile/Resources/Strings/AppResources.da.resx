@@ -129,4 +129,9 @@
   <data name="Language_StartReading" xml:space="preserve"><value>Begynd at læse</value></data>
   <data name="Voice_NbWoman" xml:space="preserve"><value>Stemme {0} (kvinde)</value></data>
   <data name="Voice_NbMan" xml:space="preserve"><value>Stemme {0} (mand)</value></data>
+  <!-- Slice 183: machine draft, for native review -->
+  <data name="Notify_Title" xml:space="preserve"><value>Vil du fortsætte med at downloade, når telefonen er låst?</value></data>
+  <data name="Notify_Body" xml:space="preserve"><value>Tillad notifikationer for at holde stemmen ved med at downloade, mens telefonen er låst, eller du bruger andre apps. Du kan se fremgangen der.</value></data>
+  <data name="Notify_NotNow" xml:space="preserve"><value>Ikke nu</value></data>
+  <data name="Notify_Continue" xml:space="preserve"><value>Fortsæt</value></data>
 </root>

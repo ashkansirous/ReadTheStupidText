@@ -377,4 +377,9 @@
   <!-- Slice 181: staged book update wait (machine draft, needs native review) -->
   <data name="Gallery_UpdatingBooks" xml:space="preserve"><value>Opdaterer dine bøger…</value></data>
   <!-- /Slice 181 -->
+  <!-- Slice 183: machine draft, for native review -->
+  <data name="Notify_Title" xml:space="preserve"><value>Vil du fortsætte med at downloade, når telefonen er låst?</value></data>
+  <data name="Notify_Body" xml:space="preserve"><value>Tillad notifikationer for at holde stemmen ved med at downloade, mens telefonen er låst, eller du bruger andre apps. Du kan se fremgangen der.</value></data>
+  <data name="Notify_NotNow" xml:space="preserve"><value>Ikke nu</value></data>
+  <data name="Notify_Continue" xml:space="preserve"><value>Fortsæt</value></data>
 </root>

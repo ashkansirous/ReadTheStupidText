@@ -378,4 +378,9 @@
   <!-- Slice 181: staged book update wait (machine draft, needs native review) -->
   <data name="Gallery_UpdatingBooks" xml:space="preserve"><value>A atualizar os teus livros…</value></data>
   <!-- /Slice 181 -->
+  <!-- Slice 183: machine draft, for native review -->
+  <data name="Notify_Title" xml:space="preserve"><value>Continuar a transferir com o telemóvel bloqueado?</value></data>
+  <data name="Notify_Body" xml:space="preserve"><value>Permita as notificações para que a voz continue a ser transferida enquanto o telemóvel está bloqueado ou usa outras aplicações. Verá o progresso aí.</value></data>
+  <data name="Notify_NotNow" xml:space="preserve"><value>Agora não</value></data>
+  <data name="Notify_Continue" xml:space="preserve"><value>Continuar</value></data>
 </root>

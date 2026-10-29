@@ -91,13 +91,15 @@ public partial class LanguagePage : ContentPage
         }
     }
 
-    private void OnContinueClicked(object? sender, EventArgs e)
+    private async void OnContinueClicked(object? sender, EventArgs e)
     {
         if (!_started && _selected is { } language)
         {
             _started = true;
             _settings.Language = AppLanguages.Code(language);
             ShowProgress();
+            ApplyTexts();
+            await PackNotificationAsk.AskOnceAsync(AskKeepDownloadingAsync); // Slice 183: asked once, before the first big download
             _ = _installer.StartAsync();
             ApplyTexts();
             return;
@@ -109,6 +111,9 @@ public partial class LanguagePage : ContentPage
             ((App)Microsoft.Maui.Controls.Application.Current!).ShowMain();
         }
     }
+
+    private Task<bool> AskKeepDownloadingAsync() =>
+        DisplayAlertAsync(AppResources.Notify_Title, AppResources.Notify_Body, AppResources.Notify_Continue, AppResources.Notify_NotNow);
 
     // The first-run page speaks the device language until a row is picked, then the picked one
     // (strings, direction and Continue/Start label), so the choice shows before leaving the page.

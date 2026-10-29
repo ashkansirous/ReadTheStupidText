@@ -3,6 +3,7 @@ using System.IO.Compression;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
+using ReadTheStupidText.Application;
 using ReadTheStupidText.Application.Reading;
 
 namespace ReadTheStupidText.Mobile.Shared;
@@ -180,8 +181,101 @@ public sealed class MobileVoicePackService : IVoicePackService
             return PackDownloadResult.Ok;
         }
 
+        return await RunWithKeepAliveAsync(packId, progress, cancellationToken).ConfigureAwait(false);
+    }
+
+    // Slice 183: a foreground service (Android) holds the process and the network while the phone is locked. The user's Cancel on its notification
+    // also stops this run; the caller's own token stays what ends a run the caller asked to stop.
+    private async Task<PackDownloadResult> RunWithKeepAliveAsync(string packId, IProgress<double>? progress, CancellationToken cancellationToken)
+    {
+        using var notificationCancel = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        using var cancelListener = new NotificationCancelListener(packId, notificationCancel);
+        if (!PackResumeScope.IsAutomatic)
+        {
+            _ = PackDownloadHost.AskNotification?.Invoke(); // never awaited: the download does not wait for the question; never asked for an automatic restart
+        }
+
+        using IPackKeepAliveScope? keepAlive = BeginKeepAlive(packId);
+        var scoped = new InlineProgress(value =>
+        {
+            keepAlive?.Progress(value);
+            progress?.Report(value);
+        });
+
         // Hash, extract and copy are heavy: keep all of it off the UI thread.
-        return await Task.Run(() => DownloadOffUiThreadAsync(packId, progress, cancellationToken), cancellationToken).ConfigureAwait(false);
+        try
+        {
+            return await Task.Run(() => DownloadOffUiThreadAsync(packId, scoped, notificationCancel.Token), notificationCancel.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (notificationCancel.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+        {
+            throw new PackCancelledByNotificationException(packId); // the caller's token did not fire: it was the notification's Cancel
+        }
+    }
+
+    // Subscribes to the notification's Cancel for one pack; disposing it unsubscribes, whatever way the run ends.
+    private sealed class NotificationCancelListener : IDisposable
+    {
+        private readonly string _packId;
+        private readonly CancellationTokenSource _cancel;
+
+        public NotificationCancelListener(string packId, CancellationTokenSource cancel)
+        {
+            _packId = packId;
+            _cancel = cancel;
+            PackDownloadHost.CancelRequested += OnCancelRequested;
+        }
+
+        public void Dispose() => PackDownloadHost.CancelRequested -= OnCancelRequested;
+
+        private void OnCancelRequested(string id)
+        {
+            if (id != _packId)
+            {
+                return;
+            }
+
+            try
+            {
+                _cancel.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
+                // The run already ended and disposed its source: nothing left to cancel.
+            }
+        }
+    }
+
+    // Null where the platform has no keep-alive. The caller's token also stops when the user taps Cancel on the notification.
+    private static IPackKeepAliveScope? BeginKeepAlive(string packId)
+    {
+        if (PackDownloadHost.KeepAlive is not { } host)
+        {
+            return null;
+        }
+
+        try
+        {
+            IPackKeepAliveScope scope = host.Begin(packId);
+            PackDownloadHost.LogService(PackDownloadHost.StartAction, packId);
+            return new LoggedScope(scope, packId);
+        }
+        catch (Exception ex)
+        {
+            PackDownloadHost.LogService("start-refused", ex.GetType().Name); // best effort: the download runs without a keep-alive
+            return null;
+        }
+    }
+
+    private sealed class LoggedScope(IPackKeepAliveScope inner, string packId) : IPackKeepAliveScope
+    {
+        public void Progress(double fraction) => inner.Progress(fraction);
+
+        public void Dispose()
+        {
+            inner.Dispose();
+            PackDownloadHost.LogService(PackDownloadHost.StopAction, packId);
+        }
     }
 
     // An installed pack is re-downloaded only when the catalog we last fetched lists a newer version
@@ -347,6 +441,12 @@ public sealed class MobileVoicePackService : IVoicePackService
 
         PackDownloadLog.Start(pack.Id, offset);
 
+        if (PackDownloadHost.BodyFetcher is { } fetcher)
+        {
+            await fetcher.FetchAsync(pack, partial, offset, progress, cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
         using GuardedResponse response = await StallGuardedRead.SendAsync(Http, () => BuildBodyRequest(pack, offset), StallGuardedRead.HeaderTimeout(StallTimeout), cancellationToken, new DownloadTag(pack.Id, offset)).ConfigureAwait(false);
         await StreamBodyAsync(response, pack, partial, offset, progress, cancellationToken).ConfigureAwait(false);
     }
@@ -384,6 +484,9 @@ public sealed class MobileVoicePackService : IVoicePackService
     {
         byte[] buffer = new byte[CopyBufferBytes];
         int lastPercent = -1;
+#if DEBUG
+        bool throttled = PackDownloadThrottle.IsOn();
+#endif
         while (true)
         {
             int read = await source.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
@@ -393,6 +496,12 @@ public sealed class MobileVoicePackService : IVoicePackService
             }
 
             await destination.WriteAsync(buffer.AsMemory(0, read), cancellationToken).ConfigureAwait(false);
+#if DEBUG
+            if (throttled)
+            {
+                await PackDownloadThrottle.PauseAsync(read, cancellationToken).ConfigureAwait(false);
+            }
+#endif
             written += read;
             lastPercent = ReportWhenPercentChanges(progress, written, totalBytes, lastPercent);
         }

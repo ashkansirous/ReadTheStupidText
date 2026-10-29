@@ -380,4 +380,9 @@
   <!-- Slice 181: staged book update wait (source text) -->
   <data name="Gallery_UpdatingBooks" xml:space="preserve"><value>Updating your books…</value></data>
   <!-- /Slice 181 -->
+  <!-- Slice 183: machine draft, other languages for native review -->
+  <data name="Notify_Title" xml:space="preserve"><value>Keep downloading when the phone is locked?</value></data>
+  <data name="Notify_Body" xml:space="preserve"><value>Allow notifications so the voice keeps downloading while the phone is locked. You will see the progress there.</value></data>
+  <data name="Notify_NotNow" xml:space="preserve"><value>Not now</value></data>
+  <data name="Notify_Continue" xml:space="preserve"><value>Continue</value></data>
 </root>

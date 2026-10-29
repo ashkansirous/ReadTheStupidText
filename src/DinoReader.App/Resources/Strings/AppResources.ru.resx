@@ -378,4 +378,9 @@
   <!-- Slice 181: staged book update wait (machine draft, needs native review) -->
   <data name="Gallery_UpdatingBooks" xml:space="preserve"><value>Обновляем твои книги…</value></data>
   <!-- /Slice 181 -->
+  <!-- Slice 183: machine draft, for native review -->
+  <data name="Notify_Title" xml:space="preserve"><value>Продолжать загрузку, когда телефон заблокирован?</value></data>
+  <data name="Notify_Body" xml:space="preserve"><value>Разрешите уведомления, чтобы голос продолжал загружаться, пока телефон заблокирован или вы пользуетесь другими приложениями. Ход загрузки будет виден там.</value></data>
+  <data name="Notify_NotNow" xml:space="preserve"><value>Не сейчас</value></data>
+  <data name="Notify_Continue" xml:space="preserve"><value>Продолжить</value></data>
 </root>

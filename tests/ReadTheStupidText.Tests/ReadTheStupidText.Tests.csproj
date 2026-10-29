@@ -30,6 +30,8 @@
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Testing\TestHookCommand.cs" Link="Mobile\TestHookCommand.cs" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Images\CropRect.cs" Link="Mobile\CropRect.cs" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\VoicePackInstaller.cs" Link="Mobile\VoicePackInstaller.cs" />
+    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\PackDownloadHost.cs" Link="Mobile\PackDownloadHost.cs" />
+    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\PackKeepAlivePolicy.cs" Link="Mobile\PackKeepAlivePolicy.cs" />
     <EmbeddedResource Include="..\..\src\ReadTheStupidText.Mobile\Resources\Strings\AppResources.resx" Link="Mobile\AppResources.resx" LogicalName="ReadTheStupidText.Mobile.Resources.Strings.AppResources.resources" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\IPlatformServices.cs" Link="Mobile\IPlatformServices.cs" />
   </ItemGroup>

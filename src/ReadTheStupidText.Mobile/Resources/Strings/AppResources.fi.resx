@@ -129,4 +129,9 @@
   <data name="Language_StartReading" xml:space="preserve"><value>Aloita lukeminen</value></data>
   <data name="Voice_NbWoman" xml:space="preserve"><value>Ääni {0} (nainen)</value></data>
   <data name="Voice_NbMan" xml:space="preserve"><value>Ääni {0} (mies)</value></data>
+  <!-- Slice 183: machine draft, for native review -->
+  <data name="Notify_Title" xml:space="preserve"><value>Jatketaanko lataamista, kun puhelin on lukittu?</value></data>
+  <data name="Notify_Body" xml:space="preserve"><value>Salli ilmoitukset, jotta ääni latautuu edelleen puhelimen ollessa lukittuna tai käyttäessäsi muita sovelluksia. Näet edistymisen siellä.</value></data>
+  <data name="Notify_NotNow" xml:space="preserve"><value>Ei nyt</value></data>
+  <data name="Notify_Continue" xml:space="preserve"><value>Jatka</value></data>
 </root>

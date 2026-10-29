@@ -129,4 +129,9 @@
   <data name="Language_StartReading" xml:space="preserve"><value>Beginnen met lezen</value></data>
   <data name="Voice_NbWoman" xml:space="preserve"><value>Stem {0} (vrouw)</value></data>
   <data name="Voice_NbMan" xml:space="preserve"><value>Stem {0} (man)</value></data>
+  <!-- Slice 183: machine draft, for native review -->
+  <data name="Notify_Title" xml:space="preserve"><value>Blijven downloaden als de telefoon vergrendeld is?</value></data>
+  <data name="Notify_Body" xml:space="preserve"><value>Sta meldingen toe zodat de stem blijft downloaden terwijl de telefoon vergrendeld is of je andere apps gebruikt. Je ziet de voortgang daar.</value></data>
+  <data name="Notify_NotNow" xml:space="preserve"><value>Niet nu</value></data>
+  <data name="Notify_Continue" xml:space="preserve"><value>Doorgaan</value></data>
 </root>
