@@ -36,6 +36,7 @@ public sealed class AndroidDocumentScanner : IDocumentScanner
 
     public async Task<IReadOnlyList<string>> ScanAsync(int maxPages)
     {
+        await StartMlKitAsync();
         Activity activity = Microsoft.Maui.ApplicationModel.Platform.CurrentActivity
             ?? throw new DocumentScannerStartFailedException();
         var request = new PendingScan(
@@ -58,10 +59,24 @@ public sealed class AndroidDocumentScanner : IDocumentScanner
         }
     }
 
+    // Dino Reader removes ML Kit's start-up provider; started off the UI thread, the launch stays on it. A failed start is a failed scanner start like any other.
+    private static async Task StartMlKitAsync()
+    {
+        try
+        {
+            await Task.Run(MlKitInit.EnsureInitialized);
+        }
+        catch (Exception ex)
+        {
+            throw new DocumentScannerStartFailedException(ex);
+        }
+    }
+
     public async Task PrepareAsync()
     {
         try
         {
+            await StartMlKitAsync();
             Context context = Microsoft.Maui.ApplicationModel.Platform.AppContext;
             IOptionalModuleApi scanner = GmsDocumentScanning.GetClient(BuildOptions(MaxPages)).JavaCast<IOptionalModuleApi>();
             GmsModuleInstall.ModuleInstallRequest request = GmsModuleInstall.ModuleInstallRequest.NewBuilder().AddApi(scanner).Build();

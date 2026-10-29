@@ -27,6 +27,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		ApplyRightToLeftFonts();
 		_services = services;
 		_config = config;
+		new TranslationPackStore().NoteInstall(FirstRunState.IsNeeded(services.GetRequiredService<ISettingsStore>())); // before anything can build StoryTranslator: a fresh install gets no pack guess
 		// Contract: AppConfigClient raises Changed only on the main thread, so this handler may touch UI directly.
 		_config.Changed += (_, _) => ShowUpdateIfRequired();
 		PageAppearing += (_, page) => SystemBarIcons.ForPage(page);

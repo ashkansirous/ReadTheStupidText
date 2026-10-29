@@ -368,6 +368,7 @@ public sealed class StoryLanguagesPage : SettingsSubPage
 		_packs.Changed += OnPacksChanged;
 		_opened = StoryLanguages.Current();
 		_picker.Rebuild();
+		_ = _translator.ReconcilePacksAsync(); // a grown-up screen: adds the packs an older install already has to the record (loads ML Kit)
 	}
 
 	protected override void OnDisappearing()

@@ -14,6 +14,28 @@ namespace DinoReader;
 
 public static class MauiProgram
 {
+	// Dino asks before a translation pack downloads (Slice 159, Decision 164): the engine is created with auto-download off, whoever resolves it first.
+	private static void AskBeforePackDownloads(IServiceCollection services)
+	{
+		ServiceDescriptor? original = services.LastOrDefault(d => d.ServiceType == typeof(ReadTheStupidText.Application.Translation.ITranslator));
+		if (original?.ImplementationType is not { } engineType)
+		{
+			return;
+		}
+
+		services.Remove(original);
+		services.AddSingleton<ReadTheStupidText.Application.Translation.ITranslator>(sp =>
+		{
+			var engine = (ReadTheStupidText.Application.Translation.ITranslator)ActivatorUtilities.CreateInstance(sp, engineType);
+			if (engine is ITranslationPacks packs)
+			{
+				packs.AutoDownload = false;
+			}
+
+			return engine;
+		});
+	}
+
 	// Stories live under AppDataDirectory/stories/<id>/ and never leave the device.
 	private const string StoriesFolder = "stories";
 
@@ -42,6 +64,7 @@ public static class MauiProgram
 			});
 
 		builder.AddMobileSharedServices();
+		AskBeforePackDownloads(builder.Services);
 		builder.Services.AddSingleton<SpeechStartup>();
 		builder.Services.AddSingleton<StoryTranslator>();
 		builder.Services.AddSingleton<SpokenLanguage>();
