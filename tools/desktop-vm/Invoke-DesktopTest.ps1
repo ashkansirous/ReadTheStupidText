@@ -85,6 +85,8 @@ function Install-InGuest {
         $install = @{ Path = "$dir\pkg\app.msix"; ErrorAction = 'Stop' }
         if ($deps.Count) { $install.DependencyPath = $deps }
         Add-AppxPackage @install
+        # Slice 179: counting off for every harness run (UsageEligibility.NoUsageVariable); a task started later reads the machine value.
+        [Environment]::SetEnvironmentVariable('READTHESTUPIDTEXT_NO_USAGE', '1', 'Machine')
         $pkg = Get-AppxPackage -Name $name
         if (-not $pkg) { throw "Package $name is not installed after Add-AppxPackage." }
         return $pkg.Version
