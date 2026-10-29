@@ -25,11 +25,13 @@ public sealed class TranslationPackInstaller
     private readonly IVoicePackService _packs;
     private readonly ITranslator _translator;
     private readonly ISystemLog _log;
+    private readonly IPackResume? _resume;
     private readonly object _gate = new();
     private readonly Dictionary<string, Task> _running = new();
 
-    public TranslationPackInstaller(IVoicePackService packs, ITranslator translator, ISystemLog log)
+    public TranslationPackInstaller(IVoicePackService packs, ITranslator translator, ISystemLog log, IPackResume? resume = null)
     {
+        _resume = resume;
         _packs = packs;
         _translator = translator;
         _log = log;
@@ -94,10 +96,12 @@ public sealed class TranslationPackInstaller
 
     private async Task RunAsync(string key, string source, string target)
     {
+        PackDownloadResult outcome = PackDownloadResult.Failed;
         try
         {
             Report(source, target, TranslationPackState.Downloading, 0);
             PackDownloadResult result = await EnsureAsync(source, target, CancellationToken.None).ConfigureAwait(false);
+            outcome = result;
             _log.Info($"translation packs {source}>{target}: {result}");
             Progress?.Invoke(this, result == PackDownloadResult.Ok
                 ? new TranslationPackProgress(source, target, TranslationPackState.Ready, 1)
@@ -115,6 +119,33 @@ public sealed class TranslationPackInstaller
                 _running.Remove(key);
             }
         }
+
+        ReportEnd(key, source, target, outcome);
+    }
+
+    // Slice 182: the run reports its end once; a pair that stopped Offline or Failed starts again by itself when the network is back.
+    private void ReportEnd(string key, string source, string target, PackDownloadResult outcome) =>
+        _resume?.Report($"translation:{key}", IPackResume.EndOf(outcome), () => Task.FromResult(StartedNewRun(source, target)));
+
+    // False when the same pair already runs (that run reports its own end) or nothing is missing (reported Finished, so the entry leaves).
+    private bool StartedNewRun(string source, string target)
+    {
+        string key = $"{source}>{target}";
+        lock (_gate)
+        {
+            if (_running.ContainsKey(key))
+            {
+                return false;
+            }
+        }
+
+        if (MissingPackIds(source, target).Count == 0)
+        {
+            _resume?.Report($"translation:{key}", PackRunEnd.Finished, () => Task.FromResult(false));
+            return false;
+        }
+
+        return StartInBackground(source, target);
     }
 
     private void Report(string source, string target, TranslationPackState state, double fraction) =>

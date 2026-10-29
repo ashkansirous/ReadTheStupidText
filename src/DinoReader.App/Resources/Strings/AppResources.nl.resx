@@ -11,6 +11,12 @@
   <data name="PackStatus_Resolving" xml:space="preserve"><value>Zoeken naar natuurlijke stemmen…</value></data>
   <data name="PackStatus_Downloading" xml:space="preserve"><value>Natuurlijke stemmen worden gedownload… {0}</value></data>
   <data name="PackStatus_Offline" xml:space="preserve"><value>Geen verbinding. Voorlezen met de stem van de telefoon. Tik om de download van de stem opnieuw te proberen.</value></data>
+  <data name="PackStatus_Waiting" xml:space="preserve"><value>Wachten op internet. Het gaat vanzelf verder zodra je weer online bent. Tik om het nu te proberen.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="PackStatus_WaitingWifi" xml:space="preserve"><value>Wachten op wifi. Het gaat vanzelf verder via wifi. Tik om nu te downloaden.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="StoryLanguages_Waiting" xml:space="preserve"><value>Wachten op internet · {0}%</value><comment>Machine draft: needs native review</comment></data>
+  <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>Wachten op wifi · {0}%</value><comment>Machine draft: needs native review</comment></data>
+  <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>Gaat vanzelf verder zodra je weer online bent.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="StoryLanguages_Retry" xml:space="preserve"><value>Opnieuw</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>De download van de stem is beschadigd. Voorlezen met de stem van de telefoon. Tik om het opnieuw te proberen.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Het pakket met natuurlijke stemmen is onbruikbaar. Voorlezen met de stem van de telefoon.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Natuurlijke stemmen konden niet worden gedownload. Voorlezen met de stem van de telefoon. Tik om het opnieuw te proberen.</value></data>
@@ -214,6 +220,7 @@
   <!-- Slice 115 -->
   <data name="Storyteller_Getting" xml:space="preserve"><value>Verteller-stemmen worden opgehaald…</value></data>
   <data name="Storyteller_WaitWifi" xml:space="preserve"><value>Verteller-stemmen wachten op wifi</value></data>
+  <data name="Storyteller_WaitInternet" xml:space="preserve"><value>Wachten op internet</value><comment>Machine draft: needs native review</comment></data>
   <data name="Storyteller_DownloadNow" xml:space="preserve"><value>Nu downloaden</value></data>
   <data name="Storyteller_Ready" xml:space="preserve"><value>De verteller-stemmen zijn klaar</value></data>
   <data name="Storyteller_ReadyBody" xml:space="preserve"><value>Je verhalen gebruiken nu de nieuwe verteller-stemmen.</value></data>

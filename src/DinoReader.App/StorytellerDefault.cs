@@ -2,6 +2,7 @@ using System.Diagnostics;
 using DinoReader.Core;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Domain.Reading;
+using ReadTheStupidText.Mobile.Shared.Network;
 
 namespace DinoReader;
 
@@ -16,6 +17,9 @@ public enum StorytellerPhase
 
 	/// <summary>On mobile data: waiting for Wi-Fi, with "Download now" as the way out.</summary>
 	WaitingForWifi,
+
+	/// <summary>No network at all: the line says it waits for the internet and carries on by itself (Slice 182); the pill tries at once.</summary>
+	WaitingForInternet,
 
 	/// <summary>The download failed: the line says so and offers "Try again".</summary>
 	Failed,
@@ -33,6 +37,7 @@ public sealed record StorytellerStatus(StorytellerPhase Phase, double Progress, 
 /// </summary>
 public sealed class StorytellerDefault
 {
+	private const string ResumeKey = "storyteller";
 	private const string ReadyPendingKey = "dino.storyteller.ready.pending";
 	private const double ProgressStep = 0.01;
 	private static readonly string[] KokoroLanguages = [KokoroVoiceTable.EnglishCode, KokoroVoiceTable.SpanishCode, KokoroVoiceTable.PortugueseCode, KokoroVoiceTable.ChineseCode];
@@ -47,16 +52,21 @@ public sealed class StorytellerDefault
 	private int _running;
 	private int _mobileDataRequested;
 	private int _watchingNetwork;
+	private PackDownloadResult? _stoppedWith; // how the run that is ending stopped; reported only after the guard clears (Slice 182)
+	private int _downloadNowChosen; // "Download now" was tapped: a stopped download may restart over mobile data (Slice 182)
+	private readonly PackResumeWatcher _resume;
 	private volatile bool _awaitingNetwork;
 	private bool _downloadActive;
 	private double _lastReported = -1;
 	private StorytellerStatus _status = StorytellerStatus.None;
 
-	public StorytellerDefault(IVoicePackService packs, IStoryLibrary library, StoryVoicing voicing)
+	public StorytellerDefault(IVoicePackService packs, IStoryLibrary library, StoryVoicing voicing, PackResumeWatcher resume)
 	{
+		_resume = resume;
 		_packs = packs;
 		_library = library;
 		_voicing = voicing;
+		_resume.NetworkChanged += (_, _) => RefreshWaitingPhase();
 	}
 
 	/// <summary>Raised (on any thread) when <see cref="Status"/> or <see cref="ReadyPending"/> changed.</summary>
@@ -112,6 +122,11 @@ public sealed class StorytellerDefault
 			return;
 		}
 
+		if (allowMobileData)
+		{
+			Volatile.Write(ref _downloadNowChosen, 1);
+		}
+
 		try
 		{
 			await RunAsync(allowMobileData);
@@ -125,7 +140,10 @@ public sealed class StorytellerDefault
 		finally
 		{
 			Volatile.Write(ref _mobileDataRequested, 0);
+			PackDownloadResult? stopped = _stoppedWith;
+			_stoppedWith = null;
 			Interlocked.Exchange(ref _running, 0);
+			ReportEnd(stopped);
 		}
 	}
 
@@ -143,6 +161,7 @@ public sealed class StorytellerDefault
 			return StorytellerStatus.None;
 		}
 
+		_stoppedWith = PackDownloadResult.Failed;
 		return new StorytellerStatus(StorytellerPhase.Failed, 0, Status.Megabytes);
 	}
 
@@ -203,14 +222,45 @@ public sealed class StorytellerDefault
 		PackDownloadResult result = await _packs.DownloadAsync(PackConstants.StorytellerPackId, progress, CancellationToken.None);
 		if (result != PackDownloadResult.Ok)
 		{
-			SetStatus(new StorytellerStatus(StorytellerPhase.Failed, 0, megabytes));
+			_stoppedWith = result;
+			// Offline carries on by itself: the same waiting card as for Wi-Fi, not the "Try again" failure card.
+			SetStatus(new StorytellerStatus(StoppedPhase(result), 0, megabytes));
 			return;
 		}
 
+		Volatile.Write(ref _downloadNowChosen, 0);
 		SetStatus(StorytellerStatus.None);
 		Preferences.Default.Set(ReadyPendingKey, true);
 		await RecastQuietlyAsync();
 		Changed?.Invoke(this, EventArgs.Empty);
+	}
+
+
+	// Offline carries on by itself: "Waiting for the internet" with no connection, "Waiting for Wi-Fi" on mobile data only; Failed is the "Try again" card.
+	private static StorytellerPhase StoppedPhase(PackDownloadResult result) => result switch
+	{
+		PackDownloadResult.Offline => PackResumeWatcher.CellularOnly() ? StorytellerPhase.WaitingForWifi : StorytellerPhase.WaitingForInternet,
+		_ => StorytellerPhase.Failed,
+	};
+
+	// Slice 182: every run reports its end once (no stop means it finished); Offline or Failed starts again by itself when the network is back or the app returns (Wi-Fi/Ethernet unless "Download now").
+	private void ReportEnd(PackDownloadResult? result)
+	{
+		bool now = Volatile.Read(ref _downloadNowChosen) == 1;
+		PackRunEnd end = result is { } stopped ? IPackResume.EndOf(stopped) : PackRunEnd.Finished;
+		_resume.Report(ResumeKey, end, () => ResumeAsync(now), PackConstants.StorytellerPackId, now);
+	}
+
+	// False while a run holds the guard; that run reports its own end.
+	private async Task<bool> ResumeAsync(bool downloadNow)
+	{
+		if (Volatile.Read(ref _running) == 1)
+		{
+			return false;
+		}
+
+		await (downloadNow ? DownloadNowAsync() : RetryAsync());
+		return true;
 	}
 
 	private void BeginDownload(int megabytes)
@@ -393,6 +443,16 @@ public sealed class StorytellerDefault
 		_ => NetworkProfile.Other,
 	};
 
+	// The phone came back on mobile data only: a card that says "Waiting for the internet" becomes "Waiting for Wi-Fi", with "Download now".
+	private void RefreshWaitingPhase()
+	{
+		StorytellerStatus current = Status;
+		if (current.Phase == StorytellerPhase.WaitingForInternet && PackResumeWatcher.CellularOnly())
+		{
+			SetStatus(current with { Phase = StorytellerPhase.WaitingForWifi });
+		}
+	}
+
 	// A phone that joins Wi-Fi while the line waits (or that was offline at launch) starts the download without a tap.
 	private void WatchNetwork()
 	{
@@ -402,11 +462,11 @@ public sealed class StorytellerDefault
 			return;
 		}
 
-		Connectivity.Current.ConnectivityChanged += OnConnectivityChanged;
+		_resume.NetworkChanged += OnConnectivityChanged;
 	}
 
 	// One handler for the life of the singleton (registered once, atomically); it acts only while a start is waiting for the network.
-	private void OnConnectivityChanged(object? sender, ConnectivityChangedEventArgs e)
+	private void OnConnectivityChanged(object? sender, EventArgs e)
 	{
 		if (_awaitingNetwork && WifiCapable())
 		{

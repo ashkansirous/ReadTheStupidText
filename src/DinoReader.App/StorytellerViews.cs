@@ -65,6 +65,7 @@ internal sealed class StorytellerStatusLine : ContentView
 		{
 			StorytellerPhase.Downloading => BuildDownloading(status.Progress),
 			StorytellerPhase.WaitingForWifi => BuildWaiting(status.Megabytes),
+			StorytellerPhase.WaitingForInternet => BuildWaitingInternet(status.Megabytes),
 			StorytellerPhase.Failed => BuildFailed(),
 			_ => null,
 		};
@@ -122,6 +123,21 @@ internal sealed class StorytellerStatusLine : ContentView
 			},
 		};
 		return Card(WifiGlyph(), texts, CastText.StorytellerDownloadNow, () => DownloadNow());
+	}
+
+	// No connection at all: it carries on by itself, and the pill tries at once (no "Download now": mobile data is not the issue).
+	private Border BuildWaitingInternet(int megabytes)
+	{
+		var texts = new VerticalStackLayout
+		{
+			VerticalOptions = LayoutOptions.Center,
+			Children =
+			{
+				new Label { Text = CastText.StorytellerWaitInternet, FontSize = 13, FontAttributes = FontAttributes.Bold },
+				new Label { Text = CastText.StorytellerSize(megabytes), FontSize = 12, TextColor = DinoTokens.Get(DinoTokens.Muted) },
+			},
+		};
+		return Card(WifiGlyph(), texts, CastText.StorytellerTryAgain, () => Retry());
 	}
 
 	private Border BuildFailed()

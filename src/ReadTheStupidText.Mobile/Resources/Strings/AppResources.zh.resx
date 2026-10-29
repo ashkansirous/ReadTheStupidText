@@ -105,6 +105,8 @@
   <data name="PackStatus_Resolving" xml:space="preserve"><value>正在检查自然语音…</value></data>
   <data name="PackStatus_Downloading" xml:space="preserve"><value>正在下载自然语音… {0}</value></data>
   <data name="PackStatus_Offline" xml:space="preserve"><value>没有网络连接。正在使用手机语音朗读。点按可重试下载语音。</value></data>
+  <data name="PackStatus_Waiting" xml:space="preserve"><value>正在等待网络。恢复联网后会自动继续。点按可立即重试。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="PackStatus_WaitingWifi" xml:space="preserve"><value>正在等待 Wi-Fi。连上 Wi-Fi 后会自动继续。点按可立即下载。</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>语音下载已损坏。正在使用手机语音朗读。点按可重试。</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>自然语音包无法使用。正在使用手机语音朗读。</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>无法下载自然语音。正在使用手机语音朗读。点按可重试。</value></data>

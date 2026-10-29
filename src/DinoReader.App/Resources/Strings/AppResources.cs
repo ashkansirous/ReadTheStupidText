@@ -47,6 +47,7 @@ public static class AppResources
 	public static string Narrator_Sample => Get();
 	public static string Storyteller_Getting => Get();
 	public static string Storyteller_WaitWifi => Get();
+	public static string Storyteller_WaitInternet => Get();
 	public static string Storyteller_DownloadNow => Get();
 	public static string Storyteller_Ready => Get();
 	public static string Storyteller_ReadyBody => Get();
@@ -96,6 +97,12 @@ public static class AppResources
 	public static string PackStatus_Resolving => Get();
 	public static string PackStatus_Downloading => Get();
 	public static string PackStatus_Offline => Get();
+	public static string PackStatus_Waiting => Get();
+	public static string PackStatus_WaitingWifi => Get();
+	public static string StoryLanguages_Waiting => Get();
+	public static string StoryLanguages_WaitingWifi => Get();
+	public static string StoryLanguages_WaitingNote => Get();
+	public static string StoryLanguages_Retry => Get();
 	public static string PackStatus_HashMismatch => Get();
 	public static string PackStatus_InvalidPack => Get();
 	public static string PackStatus_Failed => Get();

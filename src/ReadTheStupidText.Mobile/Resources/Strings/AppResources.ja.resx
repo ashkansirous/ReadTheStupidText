@@ -105,6 +105,8 @@
   <data name="PackStatus_Resolving" xml:space="preserve"><value>自然な音声を確認中…</value></data>
   <data name="PackStatus_Downloading" xml:space="preserve"><value>自然な音声をダウンロード中… {0}</value></data>
   <data name="PackStatus_Offline" xml:space="preserve"><value>接続されていません。スマートフォンの音声で読み上げます。タップして音声のダウンロードを再試行します。</value></data>
+  <data name="PackStatus_Waiting" xml:space="preserve"><value>インターネットを待っています。オンラインに戻ると自動で再開します。タップで今すぐ再試行します。</value><comment>Machine draft: needs native review</comment></data>
+  <data name="PackStatus_WaitingWifi" xml:space="preserve"><value>Wi-Fiを待っています。Wi-Fiにつながると自動で再開します。タップで今すぐダウンロードします。</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>音声のダウンロードが破損しました。スマートフォンの音声で読み上げます。タップして再試行します。</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>自然な音声パックを使用できません。スマートフォンの音声で読み上げます。</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>自然な音声をダウンロードできませんでした。スマートフォンの音声で読み上げます。タップして再試行します。</value></data>

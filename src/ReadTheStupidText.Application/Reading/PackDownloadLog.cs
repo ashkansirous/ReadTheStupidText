@@ -20,6 +20,7 @@ public static class PackDownloadLog
     public const string RetryEvent = "retry";
     public const string DoneEvent = "done";
     public const string FailedEvent = "failed";
+    public const string ResumeEvent = "resume";
     public const string HeadersPhase = "headers";
     public const string BodyPhase = "body";
 
@@ -41,6 +42,12 @@ public static class PackDownloadLog
 
     public static void Retry(string packId, int attempt, PackDownloadResult result, TimeSpan backoff) =>
         Write($"{RetryEvent} pack={packId} attempt={attempt} result={result} backoffSec={backoff.TotalSeconds.ToString("0.#", CultureInfo.InvariantCulture)}");
+
+    public static void Resume(PackResumeReason reason, string packId, long offset) =>
+        Write($"{ResumeEvent} reason={reason.ToString().ToLowerInvariant()} pack={packId} offset={offset}");
+
+    public static void ResumeSkipped(PackResumeReason reason, bool online, string profiles) =>
+        Write($"{ResumeEvent} reason={reason.ToString().ToLowerInvariant()} skipped online={online} network={profiles}");
 
     public static void Done(string packId, long bytes, TimeSpan elapsed) =>
         Write($"{DoneEvent} pack={packId} bytes={bytes} seconds={elapsed.TotalSeconds.ToString("0.#", CultureInfo.InvariantCulture)}");

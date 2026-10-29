@@ -29,38 +29,52 @@ public sealed class OcrPackInstaller
     private readonly IVoicePackService _packs;
     private readonly ISettingsStore _settings;
     private readonly VoicePackInstaller _voice;
+    private readonly IPackResume? _resume;
     private int _running;
+    private (string Language, PackDownloadResult Result)? _stopped; // how the background install ended, reported once the guard is clear
     private readonly ConcurrentDictionary<string, DownloadFlight> _flights = new(StringComparer.OrdinalIgnoreCase); // one download per pack id, shared by the background run and a person waiting (Slice 87)
 
-    public OcrPackInstaller(IVoicePackService packs, ISettingsStore settings, ILanguageChangeNotifier languages, VoicePackInstaller voice)
+    public OcrPackInstaller(IVoicePackService packs, ISettingsStore settings, ILanguageChangeNotifier languages, VoicePackInstaller voice, IPackResume? resume = null)
     {
+        _resume = resume;
         _packs = packs;
         _settings = settings;
         _voice = voice;
         languages.LanguageChanged += (_, _) => _ = EnsureForCurrentLanguageAsync();
     }
 
-    public async Task EnsureForCurrentLanguageAsync()
+    public async Task EnsureForCurrentLanguageAsync() => await EnsureBackgroundAsync(null).ConfigureAwait(false);
+
+    // forcedLanguage: an automatic restart reruns the language it was registered with, not whatever is set by then (Slice 182).
+    // True when this call took the guard and ran; false when another run holds it.
+    private async Task<bool> EnsureBackgroundAsync(string? forcedLanguage)
     {
         if (Interlocked.Exchange(ref _running, 1) == 1)
         {
-            return;
+            return false;
         }
 
-        string? handled = _settings.Language;
+        string? handled = forcedLanguage ?? _settings.Language;
+        (string Language, PackDownloadResult Result)? stopped;
         try
         {
             await Task.Run(() => RunAsync(handled)).ConfigureAwait(false);
         }
         finally
         {
+            stopped = _stopped;
+            _stopped = null;
             Volatile.Write(ref _running, 0);
         }
+
+        ReportEnd(stopped); // after the guard clears, so an immediate restart is never swallowed
 
         if (LanguageChangedSince(handled))
         {
             await EnsureForCurrentLanguageAsync().ConfigureAwait(false);
         }
+
+        return true;
     }
 
     private bool LanguageChangedSince(string? handled) =>
@@ -81,6 +95,7 @@ public sealed class OcrPackInstaller
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"OCR pack install for '{language}' failed: {ex.Message}");
+            _stopped = (language, PackDownloadResult.Failed);
         }
     }
 
@@ -102,7 +117,22 @@ public sealed class OcrPackInstaller
         {
             System.Diagnostics.Debug.WriteLine($"OCR pack for '{language}': {result}");
         }
+
+        _stopped = (language, result);
     }
+
+    // Slice 182: the run reports its end once; Offline or Failed starts again by itself when the network is back or the app returns.
+    private void ReportEnd((string Language, PackDownloadResult Result)? stopped)
+    {
+        if (stopped is { } s)
+        {
+            _resume?.Report($"ocr:{s.Language}", IPackResume.EndOf(s.Result), () => ResumeAsync(s.Language));
+        }
+    }
+
+    // False while another run (maybe for another language) holds the guard; the entry stays and the next trigger offers it again.
+    // A run that finds the pack already current ends Ok, which reports Finished and clears the entry.
+    private Task<bool> ResumeAsync(string language) => EnsureBackgroundAsync(language);
 
     /// <summary>
     /// Installs the OCR pack of a language the person picked for a scanned page (Slice 87), reporting

@@ -27,6 +27,7 @@ public enum PackInstallState
 /// </summary>
 public sealed class VoicePackInstaller
 {
+    private const string ResumeKey = "voice";
     private static readonly TimeSpan UpdateCatalogTimeout = TimeSpan.FromSeconds(15);
 
     private readonly IVoicePackService _packs;
@@ -35,6 +36,8 @@ public sealed class VoicePackInstaller
     private readonly ISettingsStore _settings;
     private readonly IPlatformServices _platform;
     private readonly IPackUpdateNetwork _network;
+    private readonly IPackResume? _resume;
+    private string? _resolvedPackId;
     private readonly object _gate = new();
     private CancellationTokenSource? _updateCancel;
     private bool _freshInstall; // the last run downloaded its pack, so the update check would only refetch the catalog
@@ -49,8 +52,9 @@ public sealed class VoicePackInstaller
     private int _generation;
     private TaskCompletionSource _settled = new();
 
-    public VoicePackInstaller(IVoicePackService packs, IVoiceModelService model, ISpeechReader reader, ISettingsStore settings, IPlatformServices platform, IPackUpdateNetwork network, ILanguageChangeNotifier languages)
+    public VoicePackInstaller(IVoicePackService packs, IVoiceModelService model, ISpeechReader reader, ISettingsStore settings, IPlatformServices platform, IPackUpdateNetwork network, ILanguageChangeNotifier languages, IPackResume? resume = null)
     {
+        _resume = resume;
         _packs = packs;
         _model = model;
         _reader = reader;
@@ -151,6 +155,7 @@ public sealed class VoicePackInstaller
 
             // Published after _running is cleared, so a Retry tapped the moment a failure shows
             // is never swallowed; a newer run's generation makes this publish a no-op.
+            ReportEnd(failure);
             if (failure is { } state)
             {
                 Publish(generation, state);
@@ -164,6 +169,35 @@ public sealed class VoicePackInstaller
         {
             settled.TrySetResult();
         }
+    }
+
+
+    // Slice 182: every run reports its end once; the coordinator decides what is kept. Only Offline and Failed with a
+    // chosen language can restart; any other end (Ready, a run the user stopped) is reported as finished.
+    private void ReportEnd(PackInstallState? failure)
+    {
+        PackRunEnd end = failure switch
+        {
+            PackInstallState.Offline when _settings.Language is not null => PackRunEnd.Offline,
+            PackInstallState.Failed when _settings.Language is not null => PackRunEnd.Failed,
+            _ => PackRunEnd.Finished,
+        };
+        _resume?.Report(ResumeKey, end, ResumeAsync, Volatile.Read(ref _resolvedPackId));
+    }
+
+    // The restart the coordinator calls: false when a run is in flight (that run reports its own end).
+    private async Task<bool> ResumeAsync()
+    {
+        lock (_gate)
+        {
+            if (_running)
+            {
+                return false;
+            }
+        }
+
+        await StartAsync().ConfigureAwait(false);
+        return true;
     }
 
     // An unset language reads as English, as everywhere else on Mobile.
@@ -283,6 +317,7 @@ public sealed class VoicePackInstaller
             return resolveFailure;
         }
 
+        Volatile.Write(ref _resolvedPackId, pack.Id);
         PackDownloadResult downloaded = await DownloadPackAsync(pack, run);
         if (downloaded != PackDownloadResult.Ok)
         {

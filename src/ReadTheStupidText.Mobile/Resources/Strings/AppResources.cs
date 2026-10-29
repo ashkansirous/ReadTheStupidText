@@ -126,6 +126,8 @@ public static class AppResources
     public static string PackStatus_Resolving => Get();
     public static string PackStatus_Downloading => Get();
     public static string PackStatus_Offline => Get();
+    public static string PackStatus_Waiting => Get();
+    public static string PackStatus_WaitingWifi => Get();
     public static string PackStatus_HashMismatch => Get();
     public static string PackStatus_InvalidPack => Get();
     public static string PackStatus_Failed => Get();

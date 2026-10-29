@@ -294,6 +294,23 @@ public class TranslationStreamingTests
     }
 
     [Fact]
+    public async Task A_resume_that_finds_the_pair_installed_reports_finished_and_leaves_the_coordinator()
+    {
+        var packs = new FakePacks { Result = PackDownloadResult.Offline };
+        var coordinator = new PackResumeCoordinator();
+        var installer = new TranslationPackInstaller(packs, new BlockTranslator(), new SilentLog(), coordinator);
+        TranslationPackProgress? last = null;
+        installer.Progress += (_, p) => last = p;
+        Assert.True(installer.StartInBackground("en", "ru"));
+        await WaitUntil(() => last?.State == TranslationPackState.Failed && coordinator.TrackedCount == 1);
+
+        packs.Installed.Add("translation-en-ru"); // another route fetched it meanwhile
+        coordinator.Trigger(PackResumeReason.Network, true, [NetworkProfile.WiFi]);
+
+        await WaitUntil(() => coordinator.TrackedCount == 0);
+    }
+
+    [Fact]
     public async Task A_failed_download_is_reported_and_can_be_retried()
     {
         var packs = new FakePacks { Result = PackDownloadResult.Offline };

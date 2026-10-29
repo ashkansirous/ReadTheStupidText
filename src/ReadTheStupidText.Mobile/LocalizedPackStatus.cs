@@ -15,7 +15,7 @@ public static class LocalizedPackStatus
     {
         PackInstallState.Resolving => AppResources.PackStatus_Resolving,
         PackInstallState.Downloading => AppResources.Format(AppResources.PackStatus_Downloading, progress.ToString("P0", CultureInfo.CurrentUICulture)),
-        PackInstallState.Offline => AppResources.PackStatus_Offline,
+        PackInstallState.Offline => PackStatusText.CellularOnly() ? AppResources.PackStatus_WaitingWifi : AppResources.PackStatus_Waiting,
         PackInstallState.HashMismatch => AppResources.PackStatus_HashMismatch,
         PackInstallState.InvalidPack => AppResources.PackStatus_InvalidPack,
         PackInstallState.Failed => AppResources.PackStatus_Failed,

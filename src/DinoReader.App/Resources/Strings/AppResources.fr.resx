@@ -9,6 +9,12 @@
   <data name="PackStatus_Resolving" xml:space="preserve"><value>Recherche de voix naturelles…</value></data>
   <data name="PackStatus_Downloading" xml:space="preserve"><value>Téléchargement des voix naturelles… {0}</value></data>
   <data name="PackStatus_Offline" xml:space="preserve"><value>Pas de connexion. Lecture avec la voix du téléphone. Touchez pour réessayer le téléchargement de la voix.</value></data>
+  <data name="PackStatus_Waiting" xml:space="preserve"><value>En attente d’Internet. Le téléchargement reprend tout seul dès que vous êtes de nouveau en ligne. Touchez pour réessayer maintenant.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="PackStatus_WaitingWifi" xml:space="preserve"><value>En attente du Wi-Fi. Le téléchargement reprend tout seul en Wi-Fi. Touchez pour télécharger maintenant.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="StoryLanguages_Waiting" xml:space="preserve"><value>En attente d’Internet · {0}%</value><comment>Machine draft: needs native review</comment></data>
+  <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>En attente du Wi-Fi · {0}%</value><comment>Machine draft: needs native review</comment></data>
+  <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>Reprend tout seul dès que vous êtes de nouveau en ligne.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="StoryLanguages_Retry" xml:space="preserve"><value>Réessayer</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Le téléchargement de la voix est corrompu. Lecture avec la voix du téléphone. Touchez pour réessayer.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Le pack de voix naturelles est inutilisable. Lecture avec la voix du téléphone.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Impossible de télécharger les voix naturelles. Lecture avec la voix du téléphone. Touchez pour réessayer.</value></data>
@@ -212,6 +218,7 @@
   <!-- Slice 115 -->
   <data name="Storyteller_Getting" xml:space="preserve"><value>Téléchargement des voix de conteur…</value></data>
   <data name="Storyteller_WaitWifi" xml:space="preserve"><value>Les voix de conteur attendent le Wi-Fi</value></data>
+  <data name="Storyteller_WaitInternet" xml:space="preserve"><value>En attente d’Internet</value><comment>Machine draft: needs native review</comment></data>
   <data name="Storyteller_DownloadNow" xml:space="preserve"><value>Télécharger maintenant</value></data>
   <data name="Storyteller_Ready" xml:space="preserve"><value>Les voix de conteur sont prêtes</value></data>
   <data name="Storyteller_ReadyBody" xml:space="preserve"><value>Vos histoires utilisent maintenant les nouvelles voix de conteur.</value></data>

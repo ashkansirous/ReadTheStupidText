@@ -105,6 +105,8 @@
   <data name="PackStatus_Resolving" xml:space="preserve"><value>Поиск естественных голосов…</value></data>
   <data name="PackStatus_Downloading" xml:space="preserve"><value>Загрузка естественных голосов… {0}</value></data>
   <data name="PackStatus_Offline" xml:space="preserve"><value>Нет соединения. Читает голос телефона. Нажмите, чтобы повторить загрузку голоса.</value></data>
+  <data name="PackStatus_Waiting" xml:space="preserve"><value>Ждём интернет. Загрузка продолжится сама, когда вы снова будете онлайн. Нажмите, чтобы попробовать сейчас.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="PackStatus_WaitingWifi" xml:space="preserve"><value>Ждём Wi-Fi. Загрузка продолжится сама по Wi-Fi. Нажмите, чтобы скачать сейчас.</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Загрузка голоса повреждена. Читает голос телефона. Нажмите, чтобы повторить.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Пакет естественных голосов непригоден. Читает голос телефона.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Не удалось загрузить естественные голоса. Читает голос телефона. Нажмите, чтобы повторить.</value></data>

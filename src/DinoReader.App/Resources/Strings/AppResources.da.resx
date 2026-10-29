@@ -11,6 +11,12 @@
   <data name="PackStatus_Resolving" xml:space="preserve"><value>Leder efter naturlige stemmer…</value></data>
   <data name="PackStatus_Downloading" xml:space="preserve"><value>Henter naturlige stemmer… {0}</value></data>
   <data name="PackStatus_Offline" xml:space="preserve"><value>Ingen forbindelse. Læser med telefonens stemme. Tryk for at prøve at hente stemmen igen.</value></data>
+  <data name="PackStatus_Waiting" xml:space="preserve"><value>Venter på internettet. Det fortsætter af sig selv, når du er online igen. Tryk for at prøve nu.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="PackStatus_WaitingWifi" xml:space="preserve"><value>Venter på Wi-Fi. Det fortsætter af sig selv på Wi-Fi. Tryk for at hente nu.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="StoryLanguages_Waiting" xml:space="preserve"><value>Venter på internettet · {0}%</value><comment>Machine draft: needs native review</comment></data>
+  <data name="StoryLanguages_WaitingWifi" xml:space="preserve"><value>Venter på Wi-Fi · {0}%</value><comment>Machine draft: needs native review</comment></data>
+  <data name="StoryLanguages_WaitingNote" xml:space="preserve"><value>Fortsætter af sig selv, når du er online igen.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="StoryLanguages_Retry" xml:space="preserve"><value>Prøv igen</value><comment>Machine draft: needs native review</comment></data>
   <data name="PackStatus_HashMismatch" xml:space="preserve"><value>Hentningen af stemmen blev beskadiget. Læser med telefonens stemme. Tryk for at prøve igen.</value></data>
   <data name="PackStatus_InvalidPack" xml:space="preserve"><value>Pakken med naturlige stemmer kan ikke bruges. Læser med telefonens stemme.</value></data>
   <data name="PackStatus_Failed" xml:space="preserve"><value>Kunne ikke hente naturlige stemmer. Læser med telefonens stemme. Tryk for at prøve igen.</value></data>
@@ -214,6 +220,7 @@
   <!-- Slice 115 -->
   <data name="Storyteller_Getting" xml:space="preserve"><value>Henter fortællerstemmerne…</value></data>
   <data name="Storyteller_WaitWifi" xml:space="preserve"><value>Fortællerstemmerne venter på Wi-Fi</value></data>
+  <data name="Storyteller_WaitInternet" xml:space="preserve"><value>Venter på internettet</value><comment>Machine draft: needs native review</comment></data>
   <data name="Storyteller_DownloadNow" xml:space="preserve"><value>Hent nu</value></data>
   <data name="Storyteller_Ready" xml:space="preserve"><value>Fortællerstemmerne er klar</value></data>
   <data name="Storyteller_ReadyBody" xml:space="preserve"><value>Dine historier bruger nu de nye fortællerstemmer.</value></data>
