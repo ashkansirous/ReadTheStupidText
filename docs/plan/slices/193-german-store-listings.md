@@ -8,6 +8,10 @@
 
 Neither app has a German listing on Google Play or the App Store, and Read The Stupid Text has none on the Microsoft Store. Dino's Microsoft Store listing already has German (first submission, 2026-10-29).
 
+#### Agents
+
+The `store-listing` agent (global, Sonnet): **draft** writes both German files and diffs them against the live listings; after the user approves, **apply** pushes them through the Play Developer API and the App Store Connect API (keys in `D:\secrets`) and Partner Center (Chrome up to the final Submit if no API path).
+
 #### Work
 
 - [ ] Write the German listing for Read The Stupid Text from `docs/store-listings/en.md` (title, short and full description, keywords, what's new).

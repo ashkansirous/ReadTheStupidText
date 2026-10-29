@@ -46,6 +46,7 @@ and their GitHub issue numbers. Tick slices off in `plan.md` as they complete. T
 - `src/DinoReader.Core/CLAUDE.md` — the pure dialogue library.
 - `.claude/skills/create-dino-story/SKILL.md` — making or illustrating a Dino book: repo agents `dino-story-writer` (text, Opus), `dino-story-illustrator` (Gemini pictures, Sonnet, up to four in parallel, JS-only input, one `gemini-lock`) and `dino-story-reviewer` (Opus, after each; its pass is required to ship); the main thread only coordinates.
 - `.claude/skills/farsi-review-book/SKILL.md` — the Farsi pronunciation review, one book at a time (Slice 154): run it through the repo agent `farsi-review` (Sonnet); later books prefill the user's earlier answers.
+- `.claude/skills/voice-pick/SKILL.md` — a listening page for any choice made by ear (default voices, narrator and character voices, sound words): repo agent `voice-pick` (Sonnet) renders the candidates, waits for the user's picks and writes them into the slice file. Store listing text goes through the global `store-listing` agent (draft, then apply after the user approves).
 - `tools/CLAUDE.md` — device-test tooling: `-App auto`, the build cache, device limits, phone runs.
 - `tools/desktop-vm/CLAUDE.md` — the headless Hyper-V VM desktop tests: PowerShell script gotchas.
 - `.github/CLAUDE.md` — CI quota rules, `release.yml`/`ship-targets.mjs`, path filters, iOS signing and toolchain, packs releases, APK downloads, actionlint.
