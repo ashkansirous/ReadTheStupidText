@@ -45,4 +45,4 @@ No screens. The Batch 30 mock intro says 146 (books rewritten in everyday spoken
 - Native read of all 13 translations per book.
 - A listen to the new sound-word triples in ar, da, fi, fr, ja, nb, nl, pt, ru, sv.
 - Upload of every rewritten store book to R2 (needs the user's OK; packages are built with `DINO_BUILD_STORE=1`, latest versions in `StoreTexts.cs`), then compare `/api/stories`.
-- Good Enough pages 1-7 keep words printed in the pictures (a redraw is the user's call).
+- Good Enough pages 1-7 keep words printed in the pictures on purpose (the user, 2026-10-29: it shows parents they can use their own pictures; never redraw). The book opens in Picture only (Slice 196).
