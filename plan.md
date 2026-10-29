@@ -19,6 +19,7 @@ Open slices only. Finished slices (158 rows) are in [slices-done](docs/plan/note
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
 | 154 | Dino: vowel marks in Farsi and Arabic books (Farsi only: Arabic left as is; marks are a hidden "how to read" text, Decision 166) | in progress | #470 | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
+| 186 | RTST: no scan pack download after the user cancels the voice pack (follow-up to 183) | planned | | | [186-no-ocr-download-after-voice-cancel.md](docs/plan/slices/186-no-ocr-download-after-voice-cancel.md) |
 
 Batch 39 (182-185, planned 2026-10-28, from the night's phone runs and the unowned gaps): 182 then 183 (both edit the pack downloader); 184 (Windows packs, CI) and 185 (emulator checks) can run beside them.
 
