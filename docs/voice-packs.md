@@ -100,7 +100,7 @@ model, the leading `>>xx<<` token). Installed ids are `translation-<from>-<to>`.
 | `translation-fi-en`, `translation-en-fi` | `opus-mt-fi-en`, `opus-mt-en-fi` | about 110 MB |
 | `translation-sv-en`, `translation-en-sv` | `opus-mt-sv-en`, `opus-mt-en-sv` | about 110 MB |
 | `translation-nl-en`, `translation-en-nl` | `opus-mt-nl-en`, `opus-mt-en-nl` | about 110 MB |
-| `translation-en-ja` | `Mitsua/elan-mt-bt-en-ja`, converted here (CC-BY-SA-4.0) | about 70 MB |
+| `translation-en-ja` | `Mitsua/elan-mt-bt-en-ja`, converted here (CC-BY-SA-4.0) | 66 MB |
 | `translation-nb-en`, `translation-en-nb` | TigreGotico `opus-mt-gmq-en-onnx`, `opus-mt-en-gmq-onnx` (`>>nob<<`; model card says apache-2.0) | about 390 MB |
 
 The `nb` packs (Slice 106) are about four times the others: the "int8" merged decoder in the TigreGotico
@@ -142,7 +142,7 @@ the English ones are `KokoroVoiceTable` (ids `kokoro:<name>`, Heart is the narra
 Packs are assets of a dedicated GitHub release tagged `packs-<n>`, separate from the app's
 `v<x.y.z>` releases (Decision 62). Release assets don't count toward the Actions storage
 quota (Decision 52). The app reads the catalog from the **pinned** release named in
-`PackConstants.CatalogUrl` (currently `packs-8`), so publishing `packs-9` changes nothing
+`PackConstants.CatalogUrl` (currently `packs-9`), so publishing `packs-10` changes nothing
 until a new app version points at it. Every `packs-<n>` release carries every pack (voice, OCR and
 translation), because the app pins one catalogue: a run with a pack missing would leave the app
 pointing at a catalogue without it.

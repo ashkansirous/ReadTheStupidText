@@ -44,6 +44,7 @@ Found while planning Slice 106 and still true on `main` 2026-10-28: `Translation
 - [x] `TranslationPacks.cs`: add `"ja"` to `FromEnglish`, fix the comment; update `TranslationPacksTests` (en->ja and fr->ja now supported) and any pack counts.
 - [x] Check `PackTranslator` decodes fugumt's output correctly (Japanese is in `UnspacedLanguages`; vocab/spm handling as for `en-zh`).
 - [x] `STORE.md` / third-party notices: list the en-ja model and its licence wherever the other translation models are listed.
-- [ ] After merge: publish a new `packs-<n>` release (standing-approved) and point the app at it.
+- [x] Published `packs-9` from this branch (run 40854887119; every pack at its old version, Kokoro carried over from `packs-8`; `translation-en-ja-1.zip` 65.8 MB, CI smoke: "Where is the nearest train station?" -> 最寄りの駅はどこにありますか。) and pointed `PackConstants.CatalogUrl` at it.
+- **Not yet verified:** a real English-to-Japanese translation in the Windows app (download the pack, translate a paragraph in the control panel); the C# tokenizer path has not run against this model.
 - (Superseded) The first quality gate in this pass passed for FuguMT; it was then dropped for the licence reason above. `PackTranslator` needs no change for the Marian layout: decoder start id = pad id 32000 is in `vocab.json`, a leading `▁` becomes a space that `Decode` trims, and `ja` is in `UnspacedLanguages` like `zh`; the ElanMT vocab has the same 32001 entries and ids.
 - Also changed outside Touches: `TranslationStreamingTests` now expects the `ja` translate toggle to be available; docs (`docs/voice-packs.md`, `src/ReadTheStupidText.Infrastructure/CLAUDE.md`, `ITranslator.cs` comment, `PRIVACY.md`, `site/privacy.html`) no longer say there is no English to Japanese.
