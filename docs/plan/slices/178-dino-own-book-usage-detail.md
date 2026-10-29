@@ -1,13 +1,13 @@
 # Slice 178 — Dino: count how big an own book is and how it really came in
 
-*Planned.* Dino Reader (Android, iOS and Windows: the code is shared in `DinoReader.App`, so all heads get it in one change).
+*In progress (wave 2026-10-28), draft PR.* Dino Reader (Android, iOS and Windows: the code is shared in `DinoReader.App`, so all heads get it in one change).
 Asked for by the user on 2026-10-28 after an analytics check.
 
 **Touches:** `src/DinoReader.Core/UsageEvent.cs`, `src/DinoReader.App/PagesStep.xaml.cs`,
 `src/DinoReader.App/StoryWizardPage.xaml.cs`, `src/DinoReader.App/TextStep.xaml.cs`, `worker/events.ts`,
 `worker/events.test.mjs`, `tests/DinoReader.Tests/**`, `docs/plan/slices/178-dino-own-book-usage-detail.md`
 
-**Sequencing:** the open Farsi PRs #484 and #435 also edit `UsageEvent.cs` and `worker/events.ts` (#435 also `TextStep.xaml.cs`).
+**Sequencing:** #484 has merged; the open Farsi PR #435 also edits `UsageEvent.cs` and `worker/events.ts` (#435 also `TextStep.xaml.cs`).
 Small overlap; build after they merge, or rebase on them.
 
 ## Why
