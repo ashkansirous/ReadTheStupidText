@@ -37,7 +37,7 @@ Not yet verified: the Dino first-run pack start on the AOT Release x64 build (on
 
 Still owed (outside Touches): the index pass removes the three lines these gaps covered from *Outstanding work* in `plan.md`.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-29)
 
 - Maestro flows that need a pushed file live under `.maestro/<app>/needs-file/`, so `run-flows.ps1` skips them; run them by hand after `adb push`. Goes in `tools/CLAUDE.md`. (Slice 185: docs/plan/slices/185-close-three-old-gaps.md)
 
