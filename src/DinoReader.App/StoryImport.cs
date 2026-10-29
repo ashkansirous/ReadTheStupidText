@@ -42,10 +42,10 @@ public sealed class StoryImport(IPageImageKeeper keeper)
 
 	/// <summary>A page the PDF path already read (text layer or its own OCR): the picture <paramref name="copy"/> with those lines, and the
 	/// document's own text for the page when it differs from them (<paramref name="pageText"/>).</summary>
-	public static PageDraft DraftFromPositioned(PositionedPage page, string copy, string? pageText)
+	public static PageDraft DraftFromPositioned(PositionedPage page, string copy, string? pageText, string? origin = null)
 	{
 		PageReading reading = ReadingOf(page, copy);
-		PageDraft draft = PageDraft.ForPicture(copy, reading);
+		PageDraft draft = PageDraft.ForPicture(copy, reading, origin);
 		return pageText is not null && pageText != reading.Text ? draft.WithText(pageText) : draft;
 	}
 

@@ -52,6 +52,9 @@ public static class UsageDetail
     public const string KindPdf = "pdf";
     public const string KindScan = "scan";
     public const string KindTyped = "typed";
+    public const string KindDocx = "docx";
+    public const string KindTxt = "txt";
+    public const string KindMixed = "mixed";
 
     public const string PagesOne = "1";
     public const string PagesTwoToFive = "2-5";
@@ -101,6 +104,9 @@ public static class UsageDetail
     /// <summary>The detail of a story-languages count (Slice 173): how many story languages there are now (1 to 3) and where the parent set them (<see cref="LanguagesFromIntro"/> or <see cref="LanguagesFromSettings"/>), like <c>2:settings</c>.</summary>
     public static string StoryLanguages(int count, string where) => string.Concat(count.ToString(CultureInfo.InvariantCulture), WaitSeparator, where);
 
+    /// <summary>The detail of an own-book count (Slice 178): how the book came in (a <c>Kind</c> value) and its page-count bucket, like <c>pdf:6-10</c>.</summary>
+    public static string OwnBookAdded(string kind, int pageCount) => string.Concat(kind, WaitSeparator, PagesBucket(pageCount));
+
     /// <summary>How many pages of a book have a parent recording, as a bucket (never the exact count).</summary>
     public static string PagesBucket(int recordedPages) => recordedPages switch
     {
@@ -109,6 +115,26 @@ public static class UsageDetail
         <= TenPages => PagesSixToTen,
         _ => PagesMore,
     };
+}
+
+/// <summary>
+/// Names an own book's kind from where each of its saved pages came in (Slice 178): all pages from one source give that kind, pages from
+/// more than one source, or pages written in the wizard beside an import, give <see cref="UsageDetail.KindMixed"/>, and a book with
+/// no import at all is <see cref="UsageDetail.KindTyped"/>.
+/// </summary>
+public static class OwnBookKind
+{
+    /// <summary>The kind for pages that came in by <paramref name="origins"/> (a <see cref="UsageDetail"/> kind each; null is a page written by hand).</summary>
+    public static string Of(IEnumerable<string?> origins)
+    {
+        List<string> kinds = origins.Select(o => o ?? UsageDetail.KindTyped).Distinct().ToList();
+        return kinds.Count switch
+        {
+            0 => UsageDetail.KindTyped,
+            1 => kinds[0],
+            _ => UsageDetail.KindMixed,
+        };
+    }
 }
 
 /// <summary>The first-run intro's steps in order (Slice 155, Decision 160): the store, recording a book, adding an own book, and (Slice 173) the story languages. The index is what is saved, so a restart resumes at the same step.</summary>

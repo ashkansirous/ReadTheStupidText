@@ -264,4 +264,45 @@ public class UsageEventTests
 
         return dir?.FullName ?? throw new DirectoryNotFoundException("Repo root (ReadTheStupidText.slnx) not found.");
     }
+
+    [Theory]
+    [InlineData("pdf", 1, "pdf:1")]
+    [InlineData("docx", 5, "docx:2-5")]
+    [InlineData("txt", 10, "txt:6-10")]
+    [InlineData("photo", 11, "photo:11+")]
+    [InlineData("scan", 2, "scan:2-5")]
+    [InlineData("typed", 3, "typed:2-5")]
+    public void OwnBookAddedJoinsKindAndPageBucket(string kind, int pages, string expected)
+    {
+        Assert.Equal(expected, UsageDetail.OwnBookAdded(kind, pages));
+    }
+
+    [Fact]
+    public void OwnBookWithNoPagesOrOnlyHandWrittenPagesIsTyped()
+    {
+        Assert.Equal(UsageDetail.KindTyped, OwnBookKind.Of([]));
+        Assert.Equal(UsageDetail.KindTyped, OwnBookKind.Of([null, null]));
+    }
+
+    [Fact]
+    public void OwnBookFromOneSourceKeepsItsKind()
+    {
+        Assert.Equal(UsageDetail.KindPdf, OwnBookKind.Of([UsageDetail.KindPdf, UsageDetail.KindPdf, UsageDetail.KindPdf]));
+    }
+
+    [Fact]
+    public void OwnBookFromTwoSourcesOrWithHandWrittenPagesBesideAnImportIsMixed()
+    {
+        Assert.Equal(UsageDetail.KindMixed, OwnBookKind.Of([UsageDetail.KindPhoto, UsageDetail.KindDocx]));
+        Assert.Equal(UsageDetail.KindMixed, OwnBookKind.Of([UsageDetail.KindPdf, null, UsageDetail.KindPdf]));
+    }
+
+    [Fact]
+    public void PageKeepsItsOriginThroughEditsAndOnlyDeletedPagesLeaveTheCount()
+    {
+        PageDraft kept = PageDraft.ForPicture("a.jpg", origin: UsageDetail.KindPdf).WithText("x").Rotated(1);
+        Assert.Equal(UsageDetail.KindPdf, kept.Origin);
+        Assert.Equal(UsageDetail.KindPdf, OwnBookKind.Of([kept.Origin]));
+        Assert.Null(PageDraft.ForText("typed").Origin);
+    }
 }
