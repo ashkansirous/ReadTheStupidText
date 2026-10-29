@@ -1,6 +1,6 @@
 ### Slice 183 — Big pack downloads keep going when the phone is locked or the app is in the background
 
-*Planned.* After Slice 182.
+*In progress (wave 2026-10-28), draft PR.* After Slice 182.
 
 **Touches:** `src/ReadTheStupidText.Mobile.Shared/MobileVoicePackService.cs`, `src/ReadTheStupidText.Mobile.Shared/VoicePackInstaller.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/*` (new download service), `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/*` (background URLSession), `src/ReadTheStupidText.Mobile/Platforms/Android/AndroidManifest.xml`, `src/DinoReader.App/Platforms/Android/AndroidManifest.xml`, `src/ReadTheStupidText.Mobile/Platforms/iOS/Info.plist`, `src/DinoReader.App/Platforms/iOS/Info.plist`, `src/ReadTheStupidText.Application/Translation/TranslationPackInstaller.cs`, `src/ReadTheStupidText.Mobile/OcrPackInstaller.cs`, `src/ReadTheStupidText.Mobile/Resources/Strings/*`, `src/DinoReader.App/Resources/Strings/*`, `src/DinoReader.App/StorytellerDefault.cs`, `src/DinoReader.App/StoryLanguages.cs`, `src/ReadTheStupidText.Mobile/LanguagePage.xaml.cs`, `PRIVACY.md`, `site/privacy.html`, `STORE.md`, `tests/ReadTheStupidText.Tests/*`, `.maestro/*`, `docs/plan/slices/183-pack-downloads-keep-going-when-locked.md`.
 
