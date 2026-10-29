@@ -1,0 +1,41 @@
+# Slice 185 (Slice 138/148 gap): a 36 MB text file opened from the file picker must not crash; the review page shows the "text was cut" note.
+# PRECONDITION: a 36 MB text file on the emulator first (run-flows.ps1 does not push it):
+#   fsutil file createnew big36.txt 37748736   (or any 36 MB text)   then   adb -s emulator-5554 push big36.txt /sdcard/Download/big36.txt
+# Kept in needs-file/ so `run-flows.ps1 -App rtst` (which reads only .maestro/rtst/*.yaml) never runs it on a fresh emulator.
+# Run it by hand: maestro --device emulator-5554 test .maestro/rtst/needs-file/open-huge-text-file.yaml
+appId: uk.sirous.readthestupidtext
+name: Open a huge text file
+tags:
+  - needs-file
+---
+- launchApp:
+    clearState: true
+    arguments:
+      cmd: skip-first-run
+      lang: en
+- extendedWaitUntil:
+    visible:
+      id: FileButton
+    timeout: 20000
+- tapOn:
+    id: FileButton
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    text: "Show roots"
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    text: "Downloads"
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      text: "big36.txt"
+    timeout: 15000
+- tapOn:
+    text: "big36.txt"
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: ReviewEditor
+    timeout: 60000
+- assertVisible:
+    text: ".*only the first 300,000 characters.*"
