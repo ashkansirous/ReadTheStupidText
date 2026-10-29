@@ -8,6 +8,10 @@
 
 The default Norwegian voice is `piper:nb-knn`, chosen as a placeholder because it is first in the list. The pack has ten speakers (knn, ksv, mmn, kon, mnn, msv, mon, mnv, kmn, knv; k = woman, m = man) and nobody has listened to them.
 
+#### Agents
+
+The repo agent `voice-pick` builds the listening page from the `piper-nb` pack and writes the user's picks here; `implement-slice` then reorders the ids.
+
 #### Work
 
 - [ ] A listening page (Artifact) with the same two Norwegian sentences in each of the ten voices; the user picks the default (and, for Dino, a woman and a man voice for the narrator and lead characters).
