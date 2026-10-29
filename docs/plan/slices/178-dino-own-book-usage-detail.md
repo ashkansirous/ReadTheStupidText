@@ -60,7 +60,7 @@ The analytics can't answer either question:
 
 *Checks:* Dino 1704 tests, Worker tests, typecheck and Android build pass. Emulator: `typed:2-5`, `txt:1`, `mixed:2-5`; an edit adds no count; no FATAL.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-29)
 
 - Root usage paragraph, one line: `own_book_added` blob9 is `kind:bucket`; split it client-side, never with SQL string functions. (Slice 178: docs/plan/slices/178-dino-own-book-usage-detail.md) If the root file has no room, put it in `src/DinoReader.App/CLAUDE.md`.
 
