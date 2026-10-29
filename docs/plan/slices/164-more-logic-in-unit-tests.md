@@ -62,3 +62,12 @@ Seven moves into pure classes with thin callers: `ReadStatusLine`, `PlayButtonFa
 #### Not yet verified
 
 - None needed (pure moves, unit-tested); no device run.
+
+#### Follow-up built 2026-10-29
+
+Done (pure class plus thin callers, tests in `SpeedPresetEmptyPlayerTests.cs` and `ReadingChoicesTests.cs`, behaviour unchanged):
+
+- [x] Speed-preset tag parsing and highlight: `SpeedPreset` (Application/Reading), used by `ControlPanelWindow` and the phone `SettingsPage`.
+- [x] Phone reader empty-player rule: `EmptyPlayer.Is` (Application/Reading) in `ReaderPage`.
+- [x] Dino `ReadingPage`: `LanguagePick` (switchable, effective and shown language) and `ReadingLayoutRules` (layout shape, mode fold); `GalleryPage`: `LanguagePick.ShelfShown`; `StoryWizardPage`: `WizardSteps` (Back/Next face and enabled rule). All in DinoReader.Core.
+- Skipped: `ReaderPage.ApplyScanAvailability` (one bool driving layout calls, no decision left), `PagesStep` (picker, thumbnail and platform code, no pure rule), Windows `MainWindow`/`App.xaml.cs` tray (single-condition menu wiring; `SpeedPresets.All.Contains` already pure).

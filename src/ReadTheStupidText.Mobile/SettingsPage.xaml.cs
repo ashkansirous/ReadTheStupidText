@@ -121,12 +121,11 @@ public partial class SettingsPage : ContentPage
 
     private void OnSpeedPresetClicked(object? sender, EventArgs e)
     {
-        if (sender is not Button { ClassId: string classId } || !double.TryParse(classId, CultureInfo.InvariantCulture, out double value))
+        if (sender is not Button { ClassId: string classId } || !SpeedPreset.TryParse(classId, out PlaybackRate speed))
         {
             return;
         }
 
-        var speed = new PlaybackRate(value);
         _settings.Speed = speed;
         _reader.SetSpeed(speed);
         UpdateSpeedHighlight();
@@ -139,13 +138,11 @@ public partial class SettingsPage : ContentPage
         var unselectedBackground = (Color)Microsoft.Maui.Controls.Application.Current!.Resources[isDark ? "ChipBackgroundDark" : "ChipBackgroundLight"];
         var unselectedText = ThemeColors.Get(isDark ? ThemeColors.TextPrimaryDarkKey : ThemeColors.TextSecondaryLightKey);
         var selectedBackground = (Color)Microsoft.Maui.Controls.Application.Current!.Resources["Primary"];
-        double current = _settings.Speed.Value;
+        PlaybackRate current = _settings.Speed;
 
         foreach (Button button in SpeedPresetGrid.Children.OfType<Button>())
         {
-            bool selected = button.ClassId is string classId
-                && double.TryParse(classId, CultureInfo.InvariantCulture, out double value)
-                && new PlaybackRate(value).Value == current;
+            bool selected = SpeedPreset.IsCurrent(button.ClassId, current);
 
             button.BackgroundColor = selected ? selectedBackground : unselectedBackground;
             button.TextColor = selected ? Colors.White : unselectedText;

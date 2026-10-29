@@ -61,9 +61,6 @@ public sealed partial class ControlPanelWindow : Window
     private PointInt32 _dragStartCursor;
     private PointInt32 _dragStartWindow;
 
-    // Tolerance for matching the slider's value to a quick-preset chip.
-    private const double PresetMatchTolerance = 0.001;
-
     // Suppresses control events while the panel is being populated from state,
     // so refreshing the UI does not echo back as a user change. Starts true so
     // the slider's initial coercion to its minimum (0.5) during XAML load isn't
@@ -432,10 +429,9 @@ public sealed partial class ControlPanelWindow : Window
     // is a no-op (the value doesn't change).
     private void OnSpeedPresetClick(object sender, RoutedEventArgs e)
     {
-        if (sender is Button { Tag: string tag } &&
-            double.TryParse(tag, NumberStyles.Float, CultureInfo.InvariantCulture, out double value))
+        if (sender is Button { Tag: string tag } && SpeedPreset.TryParse(tag, out PlaybackRate preset))
         {
-            SpeedSlider.Value = new PlaybackRate(value).Value;
+            SpeedSlider.Value = preset.Value;
         }
     }
 
@@ -445,10 +441,9 @@ public sealed partial class ControlPanelWindow : Window
     {
         foreach (var child in SpeedPresetRow.Children)
         {
-            if (child is Button { Tag: string tag } button &&
-                double.TryParse(tag, NumberStyles.Float, CultureInfo.InvariantCulture, out double value))
+            if (child is Button { Tag: string tag } button && SpeedPreset.TryParse(tag, out _))
             {
-                ApplyPresetVisual(button, Math.Abs(value - rate.Value) < PresetMatchTolerance);
+                ApplyPresetVisual(button, SpeedPreset.IsCurrent(tag, rate));
             }
         }
     }

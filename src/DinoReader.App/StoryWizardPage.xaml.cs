@@ -201,9 +201,9 @@ internal sealed class DraftLibrary(IStoryLibrary inner, Func<string, string?> re
 /// </summary>
 public partial class StoryWizardPage : ContentPage, IGrownUpPage
 {
-	private const int PagesStepIndex = 0;
-	private const int CoverStepIndex = 1;
-	private const int TextStepIndex = 2;
+	private const int PagesStepIndex = WizardSteps.Pages;
+	private const int CoverStepIndex = WizardSteps.Cover;
+	private const int TextStepIndex = WizardSteps.Text;
 	private const double PillRadius = 14;
 
 	private readonly IStoryLibrary _library;
@@ -296,10 +296,10 @@ public partial class StoryWizardPage : ContentPage, IGrownUpPage
 		PagesView.IsVisible = step == PagesStepIndex;
 		CoverView.IsVisible = step == CoverStepIndex;
 		TextView.IsVisible = step == TextStepIndex;
-		BackButton.IsVisible = step > PagesStepIndex;
-		Grid.SetColumn(NextButton, step > PagesStepIndex ? 1 : 0);
-		Grid.SetColumnSpan(NextButton, step > PagesStepIndex ? 1 : 2);
-		NextButton.Text = step == TextStepIndex ? AppResources.Add_Save : step == PagesStepIndex ? AppResources.Pictures_NextCover : AppResources.Wizard_Next;
+		BackButton.IsVisible = WizardSteps.ShowsBack(step);
+		Grid.SetColumn(NextButton, WizardSteps.ShowsBack(step) ? 1 : 0);
+		Grid.SetColumnSpan(NextButton, WizardSteps.NextColumnSpan(step));
+		NextButton.Text = NextLabel(WizardSteps.NextActionFor(step));
 		RenderHeader();
 		for (int i = 0; i < _pills.Count; i++)
 		{
@@ -351,10 +351,17 @@ public partial class StoryWizardPage : ContentPage, IGrownUpPage
 	private static string SubtitleOf(string fileName, int pages) =>
 		AppResources.Format(pages == 1 ? AppResources.Pictures_Subtitle_One : AppResources.Pictures_Subtitle_Other, fileName, pages);
 
+	private static string NextLabel(NextAction action) => action switch
+	{
+		NextAction.Save => AppResources.Add_Save,
+		NextAction.GoToCover => AppResources.Pictures_NextCover,
+		_ => AppResources.Wizard_Next,
+	};
+
 	private void RefreshNextState()
 	{
 		RenderHeader();
-		NextButton.IsEnabled = _step != PagesStepIndex || _session?.Draft.PageDrafts.Count > 0;
+		NextButton.IsEnabled = WizardSteps.NextEnabled(_step, _session?.Draft.PageDrafts.Count ?? 0);
 		NextButton.Opacity = NextButton.IsEnabled ? 1 : 0.45;
 	}
 
