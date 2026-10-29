@@ -54,7 +54,7 @@ public partial class LocalizedUiTests
     public void The_settings_strings_are_translated_in_every_language()
     {
         Dictionary<string, string> neutral = Load(NeutralFile);
-        string[] keys = ["Settings_Title", "Settings_Books", "Settings_GroupReading", "Settings_GroupPhone", "Settings_NewVersion", "Settings_GearLabel", "Settings_About", "Settings_NarratorVoice", "Narrator_TitleFor", "Gallery_GrownUpsTitle"];
+        string[] keys = ["Settings_Title", "Settings_GroupReading", "Settings_GroupPhone", "Settings_NewVersion", "Settings_GearLabel", "Settings_About", "Settings_NarratorVoice", "Narrator_TitleFor", "Gallery_GrownUpsTitle"];
 
         foreach (string file in LanguageFiles())
         {
@@ -66,6 +66,28 @@ public partial class LocalizedUiTests
                 {
                     Assert.NotEqual(neutral[key], translated[key]);
                 }
+            }
+        }
+    }
+
+    // Slice 189: the grown-ups button and the book sheet's strings are translated in every language, and the Settings "Books" row is gone from all of them.
+    [Fact]
+    public void The_book_sheet_strings_are_translated_and_the_books_row_is_gone()
+    {
+        Dictionary<string, string> neutral = Load(NeutralFile);
+        string[] keys = ["Gallery_BookOptions", "Book_FromStore", "Book_Starter", "Book_Own", "Book_EditPages", "Book_Remove", "Book_RemoveTitle", "Book_RemoveBodyStore", "Book_RemoveConfirm"];
+
+        Assert.DoesNotContain("Settings_Books", neutral.Keys);
+        Assert.DoesNotContain("Settings_BooksValue", neutral.Keys);
+        foreach (string file in LanguageFiles())
+        {
+            Dictionary<string, string> translated = Load(file);
+            Assert.True(translated.ContainsKey("Gallery_GrownUpsButton"), $"{file}: Gallery_GrownUpsButton missing");
+            Assert.DoesNotContain("Settings_Books", translated.Keys);
+            foreach (string key in keys)
+            {
+                Assert.True(translated.ContainsKey(key), $"{file}: {key} missing");
+                Assert.NotEqual(neutral[key], translated[key]);
             }
         }
     }

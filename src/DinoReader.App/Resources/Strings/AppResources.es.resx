@@ -127,8 +127,6 @@
   <data name="Language_Title" xml:space="preserve"><value>Idioma</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>Dino lee y traduce a este idioma</value></data>
   <data name="Settings_Title" xml:space="preserve"><value>Ajustes</value></data>
-  <data name="Settings_Books" xml:space="preserve"><value>Libros</value></data>
-  <data name="Settings_BooksValue" xml:space="preserve"><value>Añadir, editar, Tienda</value></data>
   <data name="Settings_GroupReading" xml:space="preserve"><value>Lectura</value></data>
   <data name="Settings_GroupPhone" xml:space="preserve"><value>Este teléfono</value></data>
   <data name="Settings_NewVersion" xml:space="preserve"><value>Versión nueva</value></data>
@@ -145,6 +143,16 @@
   <data name="Narrator_NoVoiceHint" xml:space="preserve"><value>Las voces de {0} aún no están en este teléfono. Vuelve, abre Idioma, elige {0} y descárgalo, y luego elige aquí al narrador.</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Adultos</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Añadir y editar libros</value></data>
+  <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>Para adultos</value></data>
+  <data name="Gallery_BookOptions" xml:space="preserve"><value>Opciones de {0}</value></data>
+  <data name="Book_FromStore" xml:space="preserve"><value>De la tienda</value></data>
+  <data name="Book_Starter" xml:space="preserve"><value>Libro de inicio</value></data>
+  <data name="Book_Own" xml:space="preserve"><value>Tu libro</value></data>
+  <data name="Book_EditPages" xml:space="preserve"><value>Editar páginas</value></data>
+  <data name="Book_Remove" xml:space="preserve"><value>Quitar de la estantería</value></data>
+  <data name="Book_RemoveTitle" xml:space="preserve"><value>¿Quitar «{0}» de la estantería?</value></data>
+  <data name="Book_RemoveBodyStore" xml:space="preserve"><value>Sus páginas, imágenes y voces se borran de este teléfono. Puedes volver a añadirlo gratis desde la tienda.</value></data>
+  <data name="Book_RemoveConfirm" xml:space="preserve"><value>Quitar</value></data>
   <data name="Gallery_AddFromBooks" xml:space="preserve"><value>Añadir de tus propios libros</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>Listo</value></data>
   <data name="Language_Download" xml:space="preserve"><value>Descargar</value></data>

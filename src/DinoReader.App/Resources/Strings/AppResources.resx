@@ -130,8 +130,6 @@
   <data name="Language_Title" xml:space="preserve"><value>Language</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>Dino reads and translates into this</value></data>
   <data name="Settings_Title" xml:space="preserve"><value>Settings</value></data>
-  <data name="Settings_Books" xml:space="preserve"><value>Books</value></data>
-  <data name="Settings_BooksValue" xml:space="preserve"><value>Add, edit, Store</value></data>
   <data name="Settings_GroupReading" xml:space="preserve"><value>Reading</value></data>
   <data name="Settings_GroupPhone" xml:space="preserve"><value>This phone</value></data>
   <data name="Settings_NewVersion" xml:space="preserve"><value>New version</value></data>
@@ -148,6 +146,16 @@
   <data name="Narrator_NoVoiceHint" xml:space="preserve"><value>The voices for {0} are not on this phone yet. Go back, open Language, choose {0} and download it, then pick the narrator here.</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Grown-ups</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Add and edit books</value></data>
+  <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>For grown-ups</value></data>
+  <data name="Gallery_BookOptions" xml:space="preserve"><value>Options for {0}</value></data>
+  <data name="Book_FromStore" xml:space="preserve"><value>From the Store</value></data>
+  <data name="Book_Starter" xml:space="preserve"><value>Starter book</value></data>
+  <data name="Book_Own" xml:space="preserve"><value>Your book</value></data>
+  <data name="Book_EditPages" xml:space="preserve"><value>Edit pages</value></data>
+  <data name="Book_Remove" xml:space="preserve"><value>Remove from the shelf</value></data>
+  <data name="Book_RemoveTitle" xml:space="preserve"><value>Remove “{0}” from the shelf?</value></data>
+  <data name="Book_RemoveBodyStore" xml:space="preserve"><value>Its pages, pictures and voices are removed from this phone. You can add it again for free from the Store.</value></data>
+  <data name="Book_RemoveConfirm" xml:space="preserve"><value>Remove</value></data>
   <data name="Gallery_AddFromBooks" xml:space="preserve"><value>Add from your own books</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>Ready</value></data>
   <data name="Language_Download" xml:space="preserve"><value>Download</value></data>

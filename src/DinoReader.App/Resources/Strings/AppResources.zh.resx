@@ -127,8 +127,6 @@
   <data name="Language_Title" xml:space="preserve"><value>语言</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>Dino 会用这种语言朗读和翻译</value></data>
   <data name="Settings_Title" xml:space="preserve"><value>设置</value></data>
-  <data name="Settings_Books" xml:space="preserve"><value>书籍</value></data>
-  <data name="Settings_BooksValue" xml:space="preserve"><value>添加、编辑、商店</value></data>
   <data name="Settings_GroupReading" xml:space="preserve"><value>阅读</value></data>
   <data name="Settings_GroupPhone" xml:space="preserve"><value>这部手机</value></data>
   <data name="Settings_NewVersion" xml:space="preserve"><value>新版本</value></data>
@@ -145,6 +143,16 @@
   <data name="Narrator_NoVoiceHint" xml:space="preserve"><value>这部手机上还没有{0}的声音。请返回，打开“语言”，选择{0}并下载，然后在这里选择旁白。</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>家长</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>添加和编辑书籍</value></data>
+  <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>家长专区</value></data>
+  <data name="Gallery_BookOptions" xml:space="preserve"><value>“{0}”的选项</value></data>
+  <data name="Book_FromStore" xml:space="preserve"><value>来自商店</value></data>
+  <data name="Book_Starter" xml:space="preserve"><value>入门书</value></data>
+  <data name="Book_Own" xml:space="preserve"><value>你的书</value></data>
+  <data name="Book_EditPages" xml:space="preserve"><value>编辑页面</value></data>
+  <data name="Book_Remove" xml:space="preserve"><value>从书架移除</value></data>
+  <data name="Book_RemoveTitle" xml:space="preserve"><value>从书架移除“{0}”？</value></data>
+  <data name="Book_RemoveBodyStore" xml:space="preserve"><value>它的页面、图片和声音将从这部手机中删除。你可以随时从商店免费重新添加。</value></data>
+  <data name="Book_RemoveConfirm" xml:space="preserve"><value>移除</value></data>
   <data name="Gallery_AddFromBooks" xml:space="preserve"><value>从你自己的书中添加</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>就绪</value></data>
   <data name="Language_Download" xml:space="preserve"><value>下载</value></data>

@@ -130,8 +130,6 @@
   <data name="Language_Title" xml:space="preserve"><value>Sprache</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>Dino liest und übersetzt in diese Sprache</value></data>
   <data name="Settings_Title" xml:space="preserve"><value>Einstellungen</value></data>
-  <data name="Settings_Books" xml:space="preserve"><value>Bücher</value></data>
-  <data name="Settings_BooksValue" xml:space="preserve"><value>Hinzufügen, bearbeiten, Laden</value></data>
   <data name="Settings_GroupReading" xml:space="preserve"><value>Lesen</value></data>
   <data name="Settings_GroupPhone" xml:space="preserve"><value>Dieses Telefon</value></data>
   <data name="Settings_NewVersion" xml:space="preserve"><value>Neue Version</value></data>
@@ -148,6 +146,16 @@
   <data name="Narrator_NoVoiceHint" xml:space="preserve"><value>Die Stimmen für {0} sind noch nicht auf diesem Telefon. Geh zurück, öffne Sprache, wähle {0} und lade sie herunter, dann wähle hier den Erzähler.</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Erwachsene</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Bücher hinzufügen und bearbeiten</value></data>
+  <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>Für Erwachsene</value></data>
+  <data name="Gallery_BookOptions" xml:space="preserve"><value>Optionen für {0}</value></data>
+  <data name="Book_FromStore" xml:space="preserve"><value>Aus dem Laden</value></data>
+  <data name="Book_Starter" xml:space="preserve"><value>Startbuch</value></data>
+  <data name="Book_Own" xml:space="preserve"><value>Dein Buch</value></data>
+  <data name="Book_EditPages" xml:space="preserve"><value>Seiten bearbeiten</value></data>
+  <data name="Book_Remove" xml:space="preserve"><value>Aus dem Regal entfernen</value></data>
+  <data name="Book_RemoveTitle" xml:space="preserve"><value>„{0}“ aus dem Regal entfernen?</value></data>
+  <data name="Book_RemoveBodyStore" xml:space="preserve"><value>Seiten, Bilder und Stimmen werden von diesem Handy entfernt. Du kannst es kostenlos wieder aus dem Laden hinzufügen.</value></data>
+  <data name="Book_RemoveConfirm" xml:space="preserve"><value>Entfernen</value></data>
   <data name="Gallery_AddFromBooks" xml:space="preserve"><value>Aus deinen eigenen Büchern hinzufügen</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>Bereit</value></data>
   <data name="Language_Download" xml:space="preserve"><value>Herunterladen</value></data>

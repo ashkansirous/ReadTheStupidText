@@ -7,7 +7,7 @@ namespace DinoReader;
 /// <summary>
 /// Picture mode for a picture + text book (Slice 98, Decision 102; Slice 174, mock Batch 37 frames 91 and 92): each story page is one page of the reader, its picture covering its area and cropped from the top
 /// (the art keeps its bottom free for words). Held sideways the picture is the left 40% and the text card the right 60% at full height; held upright the picture fills the page and the text sits on a 92% white
-/// card over its lower part, five whole lines tall, that scrolls when the text is longer. The spoken sentence has the highlight behind its words and the card scrolls to keep it in view; a tap on a sentence
+/// card over its lower part, never taller than 30% of the picture (Slice 189) and a whole number of lines, that scrolls when the text is longer. The spoken sentence has the highlight behind its words and the card scrolls to keep it in view; a tap on a sentence
 /// reads from it. With the words switched off (<c>wordsOver</c>, Slice 122) only the picture is drawn: upright it fills the page; sideways a tall picture keeps the left half and a wide one spans both halves above the transport row. A page with only a picture shows the picture, a page with only text shows the text card.
 /// </summary>
 public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> storyPages, IReadOnlyList<SentenceSpan> sentences,
@@ -308,12 +308,12 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 			Border panel = TextPanel(UprightPanelCorner, UprightPanelPadding, PanelAlpha, fade: true);
 			panel.VerticalOptions = LayoutOptions.End;
 			panel.Margin = new Thickness(PanelMargin);
-			PlacePanel(panel);
-			// Placed again once the real lines are known (the card then holds five whole lines).
+			PlacePanel(panel, grid, slot.Image is not null);
+			// Placed again once the real lines are known (the card then holds the whole lines that fit its 30%).
 			Action replace = () =>
 			{
 				HoldAppScroll();
-				PlacePanel(panel);
+				PlacePanel(panel, grid, slot.Image is not null);
 				ReleaseAppScroll();
 			};
 			_replace = replace;
@@ -325,12 +325,22 @@ public sealed class PictureTextPages(string text, IReadOnlyList<StoryPage> story
 		return grid;
 	}
 
-	// Mock Batch 37 frame 91: the picture fills the area and is cropped from the top, so the panel sits on its lower part, a margin above the controls, and holds five whole lines.
-	private void PlacePanel(Border panel)
+	// Mock Batch 37 frame 91 (Slice 189): the picture fills the area and is cropped from the top, so the panel sits on its lower part, a margin above the controls, never taller than 30% of the
+	// picture (the margin counted) and holding the whole lines that fit in that. The picture covers the page below its top margin, so that is its height.
+	// A page with no picture has the whole page free, so its card keeps the earlier five whole lines.
+	private void PlacePanel(Border panel, Grid page, bool hasPicture)
 	{
 		double pitch = KnownPitch.TryGetValue(PitchKey, out double known) ? known : PanelFontSize * PanelLineHeight;
+		double pictureHeight = (page.Height > 0 ? page.Height : _card.Height) - UprightPictureTop;
 		panel.Margin = new Thickness(PanelMargin);
-		panel.MaximumHeightRequest = PictureTextBook.CardHeightFor(UprightLines, _lines, pitch, UprightPanelPadding.Top);
+		if (hasPicture && pictureHeight <= 0)
+		{
+			return; // not measured yet: placed on the grid's next SizeChanged, never squeezed to one line
+		}
+
+		panel.MaximumHeightRequest = hasPicture
+			? PictureTextBook.UprightCardHeight(pictureHeight, PanelMargin, _lines, pitch, UprightPanelPadding.Top)
+			: PictureTextBook.CardHeightFor(UprightLines, _lines, pitch, UprightPanelPadding.Top);
 	}
 
 	private View SidewaysPage(Slot slot)

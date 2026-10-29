@@ -129,8 +129,6 @@
   <data name="Language_Title" xml:space="preserve"><value>Språk</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>Dino läser och översätter till det här språket</value></data>
   <data name="Settings_Title" xml:space="preserve"><value>Inställningar</value></data>
-  <data name="Settings_Books" xml:space="preserve"><value>Böcker</value></data>
-  <data name="Settings_BooksValue" xml:space="preserve"><value>Lägg till, redigera, Butik</value></data>
   <data name="Settings_GroupReading" xml:space="preserve"><value>Läsning</value></data>
   <data name="Settings_GroupPhone" xml:space="preserve"><value>Den här telefonen</value></data>
   <data name="Settings_NewVersion" xml:space="preserve"><value>Ny version</value></data>
@@ -147,6 +145,16 @@
   <data name="Narrator_NoVoiceHint" xml:space="preserve"><value>Rösterna för {0} finns inte på den här telefonen än. Gå tillbaka, öppna Språk, välj {0} och ladda ned den, och välj sedan berättare här.</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Vuxna</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Lägg till och redigera böcker</value></data>
+  <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>För vuxna</value></data>
+  <data name="Gallery_BookOptions" xml:space="preserve"><value>Alternativ för {0}</value></data>
+  <data name="Book_FromStore" xml:space="preserve"><value>Från butiken</value></data>
+  <data name="Book_Starter" xml:space="preserve"><value>Startbok</value></data>
+  <data name="Book_Own" xml:space="preserve"><value>Din bok</value></data>
+  <data name="Book_EditPages" xml:space="preserve"><value>Redigera sidor</value></data>
+  <data name="Book_Remove" xml:space="preserve"><value>Ta bort från hyllan</value></data>
+  <data name="Book_RemoveTitle" xml:space="preserve"><value>Ta bort ”{0}” från hyllan?</value></data>
+  <data name="Book_RemoveBodyStore" xml:space="preserve"><value>Dess sidor, bilder och röster tas bort från den här telefonen. Du kan lägga till den igen gratis från butiken.</value></data>
+  <data name="Book_RemoveConfirm" xml:space="preserve"><value>Ta bort</value></data>
   <data name="Gallery_AddFromBooks" xml:space="preserve"><value>Lägg till från dina egna böcker</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>Klart</value></data>
   <data name="Language_Download" xml:space="preserve"><value>Ladda ned</value></data>

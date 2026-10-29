@@ -127,8 +127,6 @@
   <data name="Language_Title" xml:space="preserve"><value>Язык</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>Dino читает и переводит на этот язык</value></data>
   <data name="Settings_Title" xml:space="preserve"><value>Настройки</value></data>
-  <data name="Settings_Books" xml:space="preserve"><value>Книги</value></data>
-  <data name="Settings_BooksValue" xml:space="preserve"><value>Добавить, изменить, Магазин</value></data>
   <data name="Settings_GroupReading" xml:space="preserve"><value>Чтение</value></data>
   <data name="Settings_GroupPhone" xml:space="preserve"><value>Этот телефон</value></data>
   <data name="Settings_NewVersion" xml:space="preserve"><value>Новая версия</value></data>
@@ -145,6 +143,16 @@
   <data name="Narrator_NoVoiceHint" xml:space="preserve"><value>Голосов для языка «{0}» на этом телефоне пока нет. Вернитесь, откройте «Язык», выберите «{0}» и скачайте голос, потом выберите рассказчика здесь.</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Взрослые</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Добавление и изменение книг</value></data>
+  <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>Для взрослых</value></data>
+  <data name="Gallery_BookOptions" xml:space="preserve"><value>Параметры: {0}</value></data>
+  <data name="Book_FromStore" xml:space="preserve"><value>Из магазина</value></data>
+  <data name="Book_Starter" xml:space="preserve"><value>Стартовая книга</value></data>
+  <data name="Book_Own" xml:space="preserve"><value>Ваша книга</value></data>
+  <data name="Book_EditPages" xml:space="preserve"><value>Изменить страницы</value></data>
+  <data name="Book_Remove" xml:space="preserve"><value>Убрать с полки</value></data>
+  <data name="Book_RemoveTitle" xml:space="preserve"><value>Убрать «{0}» с полки?</value></data>
+  <data name="Book_RemoveBodyStore" xml:space="preserve"><value>Его страницы, картинки и голоса будут удалены с этого телефона. Его можно снова добавить бесплатно из магазина.</value></data>
+  <data name="Book_RemoveConfirm" xml:space="preserve"><value>Убрать</value></data>
   <data name="Gallery_AddFromBooks" xml:space="preserve"><value>Добавить из своих книг</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>Готово</value></data>
   <data name="Language_Download" xml:space="preserve"><value>Скачать</value></data>

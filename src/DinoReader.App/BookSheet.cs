@@ -1,11 +1,13 @@
+using DinoReader.Core;
+using DinoReader.Resources.Strings;
 using Microsoft.Maui.Controls.Shapes;
 
 namespace DinoReader;
 
 /// <summary>
-/// The "This book" sheet (Slice 110, mock frame 43): a white bottom sheet over the dimmed shelf, opened from a book's tile in grown-up mode (Slice 174; the reading screen has no
-/// grown-ups button any more). It holds the per-book "Show original text" switch (Decision 112), "Read with my voice" once a page is recorded (Slice 111, Decision 115),
-/// the Record and Cast pills and "Back to the story".
+/// A book's options sheet (Slice 110, mock frame 43; Slice 189, mock frame 85b): a white bottom sheet over the dimmed shelf, opened from the "⋯" on a book's cover in grown-up mode (the reading screen has no
+/// grown-ups button). The header names the book and where it came from. It holds the per-book "Show original text" switch (Decision 112) for a translated book, "Read with my voice" once a page is recorded
+/// (Slice 111, Decision 115), the Record and Cast pills, Edit pages (own books), Export (developer switch), "Remove from the shelf" and Done.
 /// It lives inside the shelf page rather than on the navigation stack, so leaving the app cannot strand it.
 /// </summary>
 internal sealed class BookSheet : Grid
@@ -13,21 +15,43 @@ internal sealed class BookSheet : Grid
 	/// <summary>The "Read with my voice" row: how many pages are recorded, of how many, and the switch.</summary>
 	public sealed record VoiceOffer(int Recorded, int Pages, bool On);
 
+	/// <summary>What the sheet shows for one book: its name, where it came from, its cover, which rows apply and the two switches' states.</summary>
+	public sealed record Content(string Title, string OriginText, string? CoverImagePath, Color CoverFill, BookSheetPlan Plan, bool ShowOriginal, string OriginalHint, VoiceOffer? Voice);
+
 	private const double SheetCorner = 28;
 	private const double RowHeight = 64;
 	private const double RowCorner = 16;
 	private const double PillHeight = 48;
 	private const double PillStroke = 2;
 	private const double BackHeight = 50;
+	private const double ActionHeight = 48;
+	private const double ThumbWidth = 44;
+	private const double ThumbHeight = 58;
+	private const double ThumbCorner = 8;
+	private const double GrabWidth = 40;
+	private const double GrabHeight = 5;
+	private static readonly Color GrabColour = Color.FromArgb("#e3dccd");
+	private static readonly Color RemoveInk = Color.FromArgb("#C8402A");
 	private const double HintSize = 12.5;
 
+	private readonly Label _title = new() { FontSize = 19, FontAttributes = FontAttributes.Bold, LineHeight = 1.2, MaxLines = 2, LineBreakMode = LineBreakMode.TailTruncation };
 	private readonly Label _subtitle = new() { FontSize = 13, TextColor = DinoTokens.Get(DinoTokens.Muted) };
+	private readonly Border _thumb = new();
+	private readonly Border _editRow = new();
+	private readonly Border _exportRow = new();
+	private readonly Label _editLabel = new();
+	private readonly Label _exportLabel = new();
+	private readonly Label _removeLabel = new();
+	private readonly Label _doneLabel = new();
 	private readonly Label _hint = new() { FontSize = HintSize, LineHeight = 1.3, TextColor = DinoTokens.Get(DinoTokens.Body) };
 	private readonly ToggleSwitch _original = new();
 	private readonly Border _row = new();
 	private readonly Label _voiceHint = new() { FontSize = HintSize, LineHeight = 1.3, TextColor = DinoTokens.Get(DinoTokens.Body) };
 	private readonly ToggleSwitch _voice = new();
 	private readonly Border _voiceRow = new();
+	private readonly Border _removeRow = new();
+	private readonly Border _doneRow = new();
+	private readonly ScrollView _scroll = new();
 	private bool _loading;
 
 	public BookSheet()
@@ -40,9 +64,9 @@ internal sealed class BookSheet : Grid
 			VerticalOptions = LayoutOptions.End,
 			BackgroundColor = Colors.White,
 			StrokeThickness = 0,
-			Padding = new Thickness(18, 22, 18, 22),
+			Padding = new Thickness(18, 12, 18, 26),
 			StrokeShape = new RoundRectangle { CornerRadius = new CornerRadius(SheetCorner, SheetCorner, 0, 0) },
-			Content = Content(),
+			Content = ScrolledRows(), // a short screen scrolls the rows instead of cutting them off
 		};
 		CastViews.AddTap(sheet, () => Task.CompletedTask);
 		Children.Add(sheet);
@@ -62,22 +86,62 @@ internal sealed class BookSheet : Grid
 	/// <summary>Raised when the grown-up asks for the Record screen; the sheet closes first.</summary>
 	public event Func<Task>? RecordRequested;
 
+	/// <summary>Raised when the grown-up asks to edit the book's pages (own books); the sheet closes first.</summary>
+	public event Func<Task>? EditRequested;
+
+	/// <summary>Raised for the developer-only Export; the sheet closes first.</summary>
+	public event Func<Task>? ExportRequested;
+
+	/// <summary>Raised for "Remove from the shelf"; the sheet stays open under the question and the page closes it once the book is gone.</summary>
+	public event Func<Task>? RemoveRequested;
+
 	/// <summary>Raised when the grown-up closes the sheet to go on with the story (Back, a tap on the dimmed page or the system back button), not when it closes for the cast screen.</summary>
 	public event Action? Dismissed;
 
-	/// <param name="voice">The "Read with my voice" row; null hides it (no page is recorded yet).</param>
-	public void Show(string bookTitle, bool offerOriginal, bool showOriginal, string hint, VoiceOffer? voice)
+	private ScrollView ScrolledRows()
 	{
-		_subtitle.Text = bookTitle;
-		_hint.Text = hint;
-		_row.IsVisible = offerOriginal;
-		_voiceRow.IsVisible = voice is not null;
+		_scroll.Content = Rows();
+		return _scroll;
+	}
+
+	public void Show(Content content)
+	{
+		_ = _scroll.ScrollToAsync(0, 0, false); // the next book's sheet opens at its header
+		_title.Text = content.Title;
+		_subtitle.Text = content.OriginText;
+		ShowThumb(content);
+		_hint.Text = content.OriginalHint;
+		_row.IsVisible = content.Plan.ShowOriginalText;
+		_voiceRow.IsVisible = content.Plan.ShowVoice && content.Voice is not null;
+		_editRow.IsVisible = content.Plan.ShowEditPages;
+		_exportRow.IsVisible = content.Plan.ShowExport;
 		_loading = true;
-		_original.IsOn = showOriginal;
-		_voice.IsOn = voice?.On ?? false;
+		_original.IsOn = content.ShowOriginal;
+		_voice.IsOn = content.Voice?.On ?? false;
 		_loading = false;
-		_voiceHint.Text = voice is null ? string.Empty : ReadingText.UseMyVoiceHint(voice.Recorded, voice.Pages);
+		_voiceHint.Text = content.Voice is null ? string.Empty : ReadingText.UseMyVoiceHint(content.Voice.Recorded, content.Voice.Pages);
+		ApplyTexts();
 		IsVisible = true;
+	}
+
+	// The labels are set on every show, so a changed app language reaches this cached sheet.
+	private void ApplyTexts()
+	{
+		_editLabel.Text = AppResources.Book_EditPages;
+		_exportLabel.Text = AppResources.Gallery_ExportStory;
+		_removeLabel.Text = AppResources.Book_Remove;
+		_doneLabel.Text = AppResources.Common_Done;
+		SemanticProperties.SetDescription(_editRow, _editLabel.Text);
+		SemanticProperties.SetDescription(_exportRow, _exportLabel.Text);
+		SemanticProperties.SetDescription(_removeRow, _removeLabel.Text);
+		SemanticProperties.SetDescription(_doneRow, _doneLabel.Text);
+	}
+
+	// The cover's picture, or its colour when the book has none.
+	private void ShowThumb(Content content)
+	{
+		_thumb.BackgroundColor = content.CoverFill;
+		_thumb.Content = content.CoverImagePath is { } path ? new Image { Source = ImageSource.FromFile(path), Aspect = Aspect.AspectFill } : null;
 	}
 
 	public void Hide() => IsVisible = false;
@@ -110,12 +174,79 @@ internal sealed class BookSheet : Grid
 		}
 	}
 
-	private VerticalStackLayout Content()
+	private VerticalStackLayout Rows() =>
+		new() { Spacing = 12, Children = { GrabHandle(), Header(), OriginalRow(), VoiceRow(), Pills(), QuietRow(_editRow, _editLabel, () => EditRequested, "BookSheetEdit"), QuietRow(_exportRow, _exportLabel, () => ExportRequested, "BookSheetExport"), RemoveRow(), BackButton() } };
+
+	private static BoxView GrabHandle() => new()
 	{
-		var title = new Label { Text = ReadingText.BookTitle, FontSize = 20, FontAttributes = FontAttributes.Bold };
-		SemanticProperties.SetHeadingLevel(title, SemanticHeadingLevel.Level1);
-		var header = new VerticalStackLayout { Spacing = 2, Children = { title, _subtitle } };
-		return new VerticalStackLayout { Spacing = 12, Children = { header, OriginalRow(), VoiceRow(), Pills(), BackButton() } };
+		WidthRequest = GrabWidth, HeightRequest = GrabHeight, CornerRadius = GrabHeight / 2, Color = GrabColour, HorizontalOptions = LayoutOptions.Center,
+	};
+
+	// The cover thumbnail with the book's name and where it came from (frame 85b).
+	private HorizontalStackLayout Header()
+	{
+		_thumb.WidthRequest = ThumbWidth;
+		_thumb.HeightRequest = ThumbHeight;
+		_thumb.StrokeThickness = 0;
+		_thumb.StrokeShape = new RoundRectangle { CornerRadius = ThumbCorner };
+		SemanticProperties.SetHeadingLevel(_title, SemanticHeadingLevel.Level1);
+		var names = new VerticalStackLayout { Spacing = 2, VerticalOptions = LayoutOptions.Center, Children = { _title, _subtitle } };
+		return new HorizontalStackLayout { Spacing = 12, Children = { _thumb, names } };
+	}
+
+	// Edit pages and Export: quiet full-width rows under the pills; each closes the sheet before its screen opens.
+	private Border QuietRow(Border row, Label label, Func<Func<Task>?> handler, string automationId)
+	{
+		label.FontSize = 15;
+		label.FontAttributes = FontAttributes.Bold;
+		label.TextColor = DinoTokens.Get(DinoTokens.Brand);
+		label.HorizontalOptions = LayoutOptions.Center;
+		label.VerticalOptions = LayoutOptions.Center;
+		row.HeightRequest = ActionHeight;
+		row.StrokeThickness = 0;
+		row.BackgroundColor = DinoTokens.Get(DinoTokens.Sand);
+		row.StrokeShape = new RoundRectangle { CornerRadius = ActionHeight / 2 };
+		row.Content = label;
+		row.IsVisible = false;
+		row.AutomationId = automationId;
+		CastViews.AddTap(row, async () =>
+		{
+			Dismiss(); // tells the page, so a switch saved while the sheet was open refreshes the tiles
+			if (handler() is { } requested)
+			{
+				await requested();
+			}
+		});
+		return row;
+	}
+
+	// Remove from the shelf: red text with a trash icon at the bottom of the rows. The question comes first, so the sheet stays open until the book is gone.
+	private Border RemoveRow()
+	{
+		_removeLabel.FontSize = 15;
+		_removeLabel.FontAttributes = FontAttributes.Bold;
+		_removeLabel.TextColor = RemoveInk;
+		_removeLabel.VerticalOptions = LayoutOptions.Center;
+		var content = new HorizontalStackLayout
+		{
+			Spacing = 8, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center,
+			Children = { new IconView { Kind = IconKind.Trash, Color = RemoveInk, Size = 18, StrokeWidth = 2.2, VerticalOptions = LayoutOptions.Center }, _removeLabel },
+		};
+		Border row = _removeRow;
+		row.HeightRequest = ActionHeight;
+		row.StrokeThickness = 0;
+		row.BackgroundColor = Colors.Transparent;
+		row.Content = content;
+		row.AutomationId = "BookSheetRemove";
+		SemanticProperties.SetDescription(row, AppResources.Book_Remove);
+		CastViews.AddTap(row, async () =>
+		{
+			if (RemoveRequested is { } requested)
+			{
+				await requested();
+			}
+		});
+		return row;
 	}
 
 	// "Read with my voice" (frame 43): the same card as "Show original text", with the count of recorded pages under it.
@@ -234,20 +365,19 @@ internal sealed class BookSheet : Grid
 
 	private Border BackButton()
 	{
-		var back = new Border
-		{
-			HeightRequest = BackHeight,
-			StrokeThickness = 0,
-			BackgroundColor = DinoTokens.Get(DinoTokens.Sand),
-			StrokeShape = new RoundRectangle { CornerRadius = BackHeight / 2 },
-			Content = new Label
-			{
-				Text = ReadingText.BackToStory, FontSize = 15.5, FontAttributes = FontAttributes.Bold,
-				HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center,
-			},
-		};
-		SemanticProperties.SetDescription(back, ReadingText.BackToStory);
-		CastViews.AddTap(back, () => { Dismiss(); return Task.CompletedTask; });
-		return back;
+		_doneLabel.FontSize = 15.5;
+		_doneLabel.FontAttributes = FontAttributes.Bold;
+		_doneLabel.HorizontalOptions = LayoutOptions.Center;
+		_doneLabel.VerticalOptions = LayoutOptions.Center;
+		Border done = _doneRow;
+		done.HeightRequest = BackHeight;
+		done.StrokeThickness = 0;
+		done.BackgroundColor = DinoTokens.Get(DinoTokens.Sand);
+		done.StrokeShape = new RoundRectangle { CornerRadius = BackHeight / 2 };
+		done.Content = _doneLabel;
+		done.AutomationId = "BookSheetDone";
+		SemanticProperties.SetDescription(done, AppResources.Common_Done);
+		CastViews.AddTap(done, () => { Dismiss(); return Task.CompletedTask; });
+		return done;
 	}
 }

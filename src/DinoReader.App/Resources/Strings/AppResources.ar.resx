@@ -127,8 +127,6 @@
   <data name="Language_Title" xml:space="preserve"><value>اللغة</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>يقرأ Dino ويترجم إلى هذه اللغة</value></data>
   <data name="Settings_Title" xml:space="preserve"><value>الإعدادات</value></data>
-  <data name="Settings_Books" xml:space="preserve"><value>الكتب</value></data>
-  <data name="Settings_BooksValue" xml:space="preserve"><value>إضافة وتعديل والمتجر</value></data>
   <data name="Settings_GroupReading" xml:space="preserve"><value>القراءة</value></data>
   <data name="Settings_GroupPhone" xml:space="preserve"><value>هذا الهاتف</value></data>
   <data name="Settings_NewVersion" xml:space="preserve"><value>إصدار جديد</value></data>
@@ -145,6 +143,16 @@
   <data name="Narrator_NoVoiceHint" xml:space="preserve"><value>أصوات {0} غير موجودة على هذا الهاتف بعد. ارجع وافتح «اللغة» واختر {0} ونزّل صوتها، ثم اختر الراوي هنا.</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>الكبار</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>إضافة الكتب وتعديلها</value></data>
+  <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>للكبار</value></data>
+  <data name="Gallery_BookOptions" xml:space="preserve"><value>خيارات «{0}»</value></data>
+  <data name="Book_FromStore" xml:space="preserve"><value>من المتجر</value></data>
+  <data name="Book_Starter" xml:space="preserve"><value>كتاب أساسي</value></data>
+  <data name="Book_Own" xml:space="preserve"><value>كتابك</value></data>
+  <data name="Book_EditPages" xml:space="preserve"><value>تعديل الصفحات</value></data>
+  <data name="Book_Remove" xml:space="preserve"><value>إزالة من الرف</value></data>
+  <data name="Book_RemoveTitle" xml:space="preserve"><value>إزالة «{0}» من الرف؟</value></data>
+  <data name="Book_RemoveBodyStore" xml:space="preserve"><value>ستُحذف صفحاتها وصورها وأصواتها من هذا الهاتف. يمكنك إضافتها من جديد مجانًا من المتجر.</value></data>
+  <data name="Book_RemoveConfirm" xml:space="preserve"><value>إزالة</value></data>
   <data name="Gallery_AddFromBooks" xml:space="preserve"><value>أضف من كتبك</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>جاهز</value></data>
   <data name="Language_Download" xml:space="preserve"><value>تنزيل</value></data>

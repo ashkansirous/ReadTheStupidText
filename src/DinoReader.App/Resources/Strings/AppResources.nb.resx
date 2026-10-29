@@ -129,8 +129,6 @@
   <data name="Language_Title" xml:space="preserve"><value>Språk</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>Dino leser og oversetter til dette</value></data>
   <data name="Settings_Title" xml:space="preserve"><value>Innstillinger</value></data>
-  <data name="Settings_Books" xml:space="preserve"><value>Bøker</value></data>
-  <data name="Settings_BooksValue" xml:space="preserve"><value>Legg til, rediger, Butikk</value></data>
   <data name="Settings_GroupReading" xml:space="preserve"><value>Lesing</value></data>
   <data name="Settings_GroupPhone" xml:space="preserve"><value>Denne telefonen</value></data>
   <data name="Settings_NewVersion" xml:space="preserve"><value>Ny versjon</value></data>
@@ -147,6 +145,16 @@
   <data name="Narrator_NoVoiceHint" xml:space="preserve"><value>Stemmene for {0} er ikke på denne telefonen ennå. Gå tilbake, åpne Språk, velg {0} og last den ned, og velg så forteller her.</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Voksne</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Legg til og rediger bøker</value></data>
+  <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>For voksne</value></data>
+  <data name="Gallery_BookOptions" xml:space="preserve"><value>Valg for {0}</value></data>
+  <data name="Book_FromStore" xml:space="preserve"><value>Fra butikken</value></data>
+  <data name="Book_Starter" xml:space="preserve"><value>Startbok</value></data>
+  <data name="Book_Own" xml:space="preserve"><value>Din bok</value></data>
+  <data name="Book_EditPages" xml:space="preserve"><value>Rediger sider</value></data>
+  <data name="Book_Remove" xml:space="preserve"><value>Fjern fra hyllen</value></data>
+  <data name="Book_RemoveTitle" xml:space="preserve"><value>Fjerne «{0}» fra hyllen?</value></data>
+  <data name="Book_RemoveBodyStore" xml:space="preserve"><value>Sidene, bildene og stemmene fjernes fra denne telefonen. Du kan legge den til igjen gratis fra butikken.</value></data>
+  <data name="Book_RemoveConfirm" xml:space="preserve"><value>Fjern</value></data>
   <data name="Gallery_AddFromBooks" xml:space="preserve"><value>Legg til fra dine egne bøker</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>Klar</value></data>
   <data name="Language_Download" xml:space="preserve"><value>Last ned</value></data>

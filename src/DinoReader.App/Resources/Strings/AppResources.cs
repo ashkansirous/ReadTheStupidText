@@ -214,8 +214,6 @@ public static class AppResources
 	public static string Language_Title => Get();
 	public static string Language_Subtitle => Get();
 	public static string Settings_Title => Get();
-	public static string Settings_Books => Get();
-	public static string Settings_BooksValue => Get();
 	public static string Settings_GroupReading => Get();
 	public static string Settings_GroupPhone => Get();
 	public static string Settings_NewVersion => Get();
@@ -232,6 +230,16 @@ public static class AppResources
 	public static string Narrator_NoVoiceHint => Get();
 	public static string Gallery_GrownUpsTitle => Get();
 	public static string Gallery_GrownUpsSub => Get();
+	public static string Gallery_GrownUpsButton => Get();
+	public static string Gallery_BookOptions => Get();
+	public static string Book_FromStore => Get();
+	public static string Book_Starter => Get();
+	public static string Book_Own => Get();
+	public static string Book_EditPages => Get();
+	public static string Book_Remove => Get();
+	public static string Book_RemoveTitle => Get();
+	public static string Book_RemoveBodyStore => Get();
+	public static string Book_RemoveConfirm => Get();
 	public static string Gallery_AddFromBooks => Get();
 	public static string Language_Ready => Get();
 	public static string Language_Download => Get();

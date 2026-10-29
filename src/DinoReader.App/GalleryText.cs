@@ -15,15 +15,7 @@ public static class GalleryText
 
 	public static string DeleteTitle(string title) => AppResources.Format(AppResources.Gallery_DeleteTitle, title);
 
-	public static string EditStory(string title) => AppResources.Format(AppResources.Gallery_EditStory, title);
-
-	public static string CastStory(string title) => AppResources.Format(AppResources.Gallery_CastStory, title);
-
-	public static string RecordStory(string title) => AppResources.Format(AppResources.Rec_RecordPage, title);
-
-	public static string DeleteStory(string title) => AppResources.Format(AppResources.Gallery_DeleteStoryLabel, title);
-
-	public static string ExportStory(string title) => AppResources.Gallery_ExportStory + SummarySeparator + title;
+	public static string BookOptions(string title) => AppResources.Format(AppResources.Gallery_BookOptions, title);
 
 	public static string PagesRead(int pages) =>
 		AppResources.Format(pages == Singular ? AppResources.Gallery_PagesRead_One : AppResources.Gallery_PagesRead_Other, pages);

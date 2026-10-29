@@ -130,7 +130,7 @@ public static partial class PictureTextBook
         return ((areaWidth - width) / 2, 0, width, height);
     }
 
-    /// <summary>The upright card's height for <paramref name="wholeLines"/> lines (Slice 174): <paramref name="verticalPadding"/> above the first line plus that many real lines (the tallest run when the lines are measured, else
+    /// <summary>The upright card's height for <paramref name="wholeLines"/> lines (Slice 174), used by a page with no picture (Slice 189): <paramref name="verticalPadding"/> above the first line plus that many real lines (the tallest run when the lines are measured, else
     /// <paramref name="estimatedPitch"/> each); a page of fewer lines is as tall as its text.</summary>
     public static double CardHeightFor(int wholeLines, TextLines? lines, double estimatedPitch, double verticalPadding)
     {
@@ -140,6 +140,20 @@ public static partial class PictureTextBook
         }
 
         return verticalPadding + wholeLines * estimatedPitch;
+    }
+
+    /// <summary>The upright card's height (Slice 189, mock Batch 37 frame 91): never more than <see cref="PanelHeightShare"/> of <paramref name="pictureHeight"/> with the <paramref name="bottomInset"/> under the card counted, and a whole
+    /// number of lines of it: <paramref name="verticalPadding"/> above the first line plus the lines that fit (the tallest run when the lines are measured, else <paramref name="estimatedPitch"/> each), at least one. A page whose text is
+    /// shorter than that is as tall as its text.</summary>
+    public static double UprightCardHeight(double pictureHeight, double bottomInset, TextLines? lines, double estimatedPitch, double verticalPadding)
+    {
+        double cap = Math.Max(0, PanelHeightShare * pictureHeight - bottomInset);
+        if (lines is { Count: > 0 })
+        {
+            return verticalPadding + lines.TallestRun(FitLines(lines, cap, verticalPadding));
+        }
+
+        return verticalPadding + Math.Max(1, VisibleLines(cap, estimatedPitch, verticalPadding)) * estimatedPitch;
     }
 
     /// <summary>The first line the card shows so that the sentence starting on <paramref name="startLine"/> is in view (Slice 171): that line at the top, but never so far down that the card is left

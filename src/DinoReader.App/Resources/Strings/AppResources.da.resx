@@ -129,8 +129,6 @@
   <data name="Language_Title" xml:space="preserve"><value>Sprog</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>Dino læser og oversætter til dette sprog</value></data>
   <data name="Settings_Title" xml:space="preserve"><value>Indstillinger</value></data>
-  <data name="Settings_Books" xml:space="preserve"><value>Bøger</value></data>
-  <data name="Settings_BooksValue" xml:space="preserve"><value>Tilføj, rediger, Butik</value></data>
   <data name="Settings_GroupReading" xml:space="preserve"><value>Læsning</value></data>
   <data name="Settings_GroupPhone" xml:space="preserve"><value>Denne telefon</value></data>
   <data name="Settings_NewVersion" xml:space="preserve"><value>Ny version</value></data>
@@ -147,6 +145,16 @@
   <data name="Narrator_NoVoiceHint" xml:space="preserve"><value>Stemmerne til {0} er ikke på denne telefon endnu. Gå tilbage, åbn Sprog, vælg {0} og hent den, og vælg så fortælleren her.</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Voksne</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Tilføj og rediger bøger</value></data>
+  <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>For voksne</value></data>
+  <data name="Gallery_BookOptions" xml:space="preserve"><value>Valgmuligheder for {0}</value></data>
+  <data name="Book_FromStore" xml:space="preserve"><value>Fra butikken</value></data>
+  <data name="Book_Starter" xml:space="preserve"><value>Startbog</value></data>
+  <data name="Book_Own" xml:space="preserve"><value>Din bog</value></data>
+  <data name="Book_EditPages" xml:space="preserve"><value>Rediger sider</value></data>
+  <data name="Book_Remove" xml:space="preserve"><value>Fjern fra hylden</value></data>
+  <data name="Book_RemoveTitle" xml:space="preserve"><value>Fjern “{0}” fra hylden?</value></data>
+  <data name="Book_RemoveBodyStore" xml:space="preserve"><value>Dens sider, billeder og stemmer fjernes fra denne telefon. Du kan lægge den på hylden igen gratis fra butikken.</value></data>
+  <data name="Book_RemoveConfirm" xml:space="preserve"><value>Fjern</value></data>
   <data name="Gallery_AddFromBooks" xml:space="preserve"><value>Tilføj fra dine egne bøger</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>Klar</value></data>
   <data name="Language_Download" xml:space="preserve"><value>Hent</value></data>

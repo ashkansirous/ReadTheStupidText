@@ -22,6 +22,9 @@ Open slices only. Finished slices (158 rows) are in [slices-done](docs/plan/note
 | 186 | RTST: no scan pack download after the user cancels the voice pack (follow-up to 183) | planned | | | [186-no-ocr-download-after-voice-cancel.md](docs/plan/slices/186-no-ocr-download-after-voice-cancel.md) |
 | 187 | Translation downloads wait for the internet (Slice 182 frame R12, both apps, Android and iOS) | planned | | | [187-translation-download-waits-for-internet.md](docs/plan/slices/187-translation-download-waits-for-internet.md) |
 | 188 | Dino Settings behind the grown-up gate as a permanent VM check (Slice 172 follow-up) | planned | | | [188-dino-settings-vm-check.md](docs/plan/slices/188-dino-settings-vm-check.md) |
+| 189 | Dino: one "For grown-ups" button on the shelf, the gear inside grown-up mode, a ⋯ sheet per book, a reading card capped at 30% (Batch 37 mock refresh) | in progress | | | [189-dino-grown-ups-button-and-book-sheet.md](docs/plan/slices/189-dino-grown-ups-button-and-book-sheet.md) |
+
+Slice 189 (planned 2026-10-29, the user's refresh of the Batch 37 mock) runs beside 186 and 187; 188's VM check must use 189's new path to Settings.
 
 Batch 40 (187-188, planned 2026-10-29, the unowned follow-ups): 187 and 188 can run side by side (app code vs VM tooling), and beside 186 (no shared files). The small follow-up bugs (Slices 99, 113, 173) and the Slice 164 unit-test moves are fixed as `fix/`/`chore/` branches without new slices. Slice 139's in-flight race waits on a real-phone check before any work.
 

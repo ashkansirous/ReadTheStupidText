@@ -9,8 +9,8 @@
     NavigationPage.HasNavigationBar="False"
     SafeAreaEdges="Container">
 
-    <!-- Home screen (mock screen 1): the child's stories. Reading needs no gate; the gear (Slice 172) runs the gate and opens Settings, whose
-         Books row opens grown-up mode (Slice 80): this same grid with an edit overlay on each tile and, above it, the Add and Store buttons. -->
+    <!-- Home screen (mock screen 1): the child's stories. Reading needs no gate; the book-and-plus button (Slice 189) runs the gate and opens grown-up mode (Slice 80):
+         this same grid with a "⋯" on each tile and, above it, the Add and Store buttons. Settings is the gear in that mode. -->
     <ContentPage.Resources>
         <!-- Fallback until the probe below has measured two real lines; replaced at runtime (GalleryPage.xaml.cs). -->
         <x:Double x:Key="TileTitleHeight">36</x:Double>
@@ -36,7 +36,7 @@
                             <TapGestureRecognizer Tapped="OnStoryTapped" />
                         </local:StoryCover.GestureRecognizers>
                     </local:StoryCover>
-                    <local:TileOverlay OpenRequested="OnOpenRequested" EditRequested="OnEditRequested" CastRequested="OnCastRequested" RecordRequested="OnRecordRequested" DeleteRequested="OnDeleteRequested" ExportRequested="OnExportRequested" />
+                    <local:TileOverlay OpenRequested="OnOpenRequested" />
                 </Grid>
                 <Label Style="{StaticResource TileTitle}" Text="{Binding Title}" AutomationId="StoryTileTitle">
                     <Label.GestureRecognizers>
@@ -69,20 +69,31 @@
                 </Label>
                 <Label x:Name="ModeLabel" Text="{x:Static res:AppResources.Gallery_GrownUpsSub}" FontSize="12" TextColor="{StaticResource Muted}" IsVisible="False" />
             </VerticalStackLayout>
-            <!-- Slice 172 (mock 79): the gear is the only grown-up way in. Always visible in kids' mode; it runs the gate, then opens Settings. -->
-            <Border Grid.Column="2" x:Name="SettingsButton" AutomationId="GallerySettings" WidthRequest="48" HeightRequest="48" BackgroundColor="{StaticResource ControlFill}"
-                    StrokeThickness="0" SemanticProperties.Description="{x:Static res:AppResources.Settings_GearLabel}" ToolTipProperties.Text="{x:Static res:AppResources.Settings_GearLabel}" SemanticProperties.Hint="{x:Static res:AppResources.Gallery_OpensGateHint}">
+            <!-- Slice 189 (mock 79): the book-and-plus button is the only grown-up way in, always visible in kids' mode; it runs the gate, then opens grown-up mode. -->
+            <Border Grid.Column="2" x:Name="GrownUpsButton" AutomationId="GalleryGrownUps" WidthRequest="48" HeightRequest="48" BackgroundColor="{StaticResource ControlFill}"
+                    StrokeThickness="0" SemanticProperties.Description="{x:Static res:AppResources.Gallery_GrownUpsButton}" ToolTipProperties.Text="{x:Static res:AppResources.Gallery_GrownUpsButton}" SemanticProperties.Hint="{x:Static res:AppResources.Gallery_OpensGateHint}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="14" />
+                </Border.StrokeShape>
+                <local:IconView Kind="BookPlus" Color="{StaticResource Muted}" Size="26" StrokeWidth="2" HorizontalOptions="Center" VerticalOptions="Center" />
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnGrownUpsTapped" />
+                </Border.GestureRecognizers>
+            </Border>
+            <!-- Slice 189 (mock 85): the gear sits in grown-up mode and opens Settings with no second gate (the gate was passed to get here). -->
+            <Border Grid.Column="2" x:Name="SettingsButton" AutomationId="GallerySettings" WidthRequest="44" HeightRequest="44" BackgroundColor="{StaticResource ControlFill}" IsVisible="False"
+                    StrokeThickness="0" SemanticProperties.Description="{x:Static res:AppResources.Settings_GearLabel}" ToolTipProperties.Text="{x:Static res:AppResources.Settings_GearLabel}">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="14" />
                 </Border.StrokeShape>
                 <Path Data="M15 12a3 3 0 1 0-6 0a3 3 0 1 0 6 0 M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
-                      Stroke="{StaticResource Muted}" StrokeThickness="2" StrokeLineCap="Round" StrokeLineJoin="Round" Aspect="Uniform" WidthRequest="24" HeightRequest="24"
+                      Stroke="{StaticResource Body}" StrokeThickness="2" StrokeLineCap="Round" StrokeLineJoin="Round" Aspect="Uniform" WidthRequest="22" HeightRequest="22"
                       HorizontalOptions="Center" VerticalOptions="Center" InputTransparent="True" />
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnSettingsTapped" />
                 </Border.GestureRecognizers>
             </Border>
-            <Button Grid.Column="2" x:Name="DoneButton" IsVisible="False" Text="{x:Static res:AppResources.Common_Done}" HeightRequest="44" CornerRadius="22"
+            <Button Grid.Column="2" x:Name="DoneButton" AutomationId="GalleryDone" IsVisible="False" Text="{x:Static res:AppResources.Common_Done}" HeightRequest="44" CornerRadius="22"
                     Padding="18,0" FontSize="14" BackgroundColor="{StaticResource Brand}" TextColor="White" Clicked="OnDoneClicked" />
         </Grid>
 

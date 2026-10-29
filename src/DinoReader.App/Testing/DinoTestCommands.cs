@@ -15,10 +15,13 @@ namespace DinoReader.Testing;
 /// button uses); <c>play=page</c> stops once the page is read, so a timing run is finite. <c>id</c> is the book's package id, its story id or its title as a slug (<c>three-little-pigs</c>). It registers itself with the
 /// dispatcher, so no app start-up code changes; Release has none of it. Outcome lines: <c>HOOK open-book opened ...</c> or <c>failed ...</c>;
 /// with play, <c>HOOK read start</c> just before the read begins (the line the phone timing script counts from).
+/// Slice 189: <c>enter-grown-up</c> puts the app in grown-up mode as a passed gate does (the gate's hold and sum are not scriptable), so a flow can
+/// start from the grown-up page; the gate itself is tapped through by hand. Outcome: <c>HOOK enter-grown-up ok</c>.
 /// </summary>
 internal static class DinoTestCommands
 {
 	private const string Name = "open-book";
+	private const string EnterGrownUpName = "enter-grown-up";
 	private const string IdKey = "id";
 	private const string PageKey = "page";
 	private const string PlayKey = "play";
@@ -27,6 +30,9 @@ internal static class DinoTestCommands
 	private const string SpeedKey = "speed";
 	private const string SessionField = "_session";
 	private const int RetryMilliseconds = 250;
+	private const int StableChecks = 4;
+	private const int StableCheckMilliseconds = 500;
+	private const int StableLimitMilliseconds = 20000;
 	private const int WaitMilliseconds = 30000;
 	private const int ImportWaitMilliseconds = 20000;
 
@@ -42,6 +48,12 @@ internal static class DinoTestCommands
 
 	private static string? Run(TestHookCommand command)
 	{
+		if (command.Name == EnterGrownUpName)
+		{
+			_ = EnterGrownUpAsync();
+			return TestHookDispatcher.Ok;
+		}
+
 		if (command.Name != Name)
 		{
 			return null;
@@ -49,6 +61,64 @@ internal static class DinoTestCommands
 
 		_ = OpenAsync(command);
 		return TestHookDispatcher.Ok;
+	}
+
+	// Waits for the gallery to be the window's root (a new window starts in kids' mode and would undo an earlier Enter), then enters grown-up mode on the UI thread.
+	// The one-time "Storyteller voices are ready" scrim would cover the gear and the book "..." buttons, so the hook marks it as seen before entering.
+	private static void EnterAcknowledgingReadyNote()
+	{
+		IServiceProvider services = IPlatformApplication.Current!.Services;
+		services.GetRequiredService<StorytellerDefault>().AcknowledgeReady();
+		services.GetRequiredService<GrownUpMode>().Enter();
+	}
+
+	// The window's start-up stop/resume calls can still reset kids' mode: enter, then wait until grown-up mode has stayed on for several checks in a row (entering again when it was reset), within a bound.
+	private static async Task<bool> EnterUntilStableAsync()
+	{
+		GrownUpMode mode = IPlatformApplication.Current!.Services.GetRequiredService<GrownUpMode>();
+		DateTime deadline = DateTime.UtcNow.AddMilliseconds(StableLimitMilliseconds);
+		int stable = 0;
+		while (DateTime.UtcNow < deadline)
+		{
+			if (!await MainThread.InvokeOnMainThreadAsync(() => mode.IsGrownUp))
+			{
+				stable = 0;
+				await MainThread.InvokeOnMainThreadAsync(EnterAcknowledgingReadyNote);
+			}
+			else if (++stable >= StableChecks)
+			{
+				return true;
+			}
+
+			await Task.Delay(StableCheckMilliseconds);
+		}
+
+		return false;
+	}
+
+	private static async Task EnterGrownUpAsync()
+	{
+		try
+		{
+			NavigationPage? root = await WaitForAsync(() => Task.FromResult(GalleryRoot()));
+			if (root is null)
+			{
+				Log($"{EnterGrownUpName} failed no gallery");
+				return;
+			}
+
+			if (!await EnterUntilStableAsync())
+			{
+				Log($"{EnterGrownUpName} failed mode kept resetting");
+				return;
+			}
+
+			Log($"{EnterGrownUpName} entered");
+		}
+		catch (Exception ex)
+		{
+			Log($"{EnterGrownUpName} fault {TestHookLog.FaultSummary(ex)}");
+		}
 	}
 
 	private static async Task OpenAsync(TestHookCommand command)

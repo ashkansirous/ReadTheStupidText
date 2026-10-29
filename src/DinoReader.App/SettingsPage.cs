@@ -62,7 +62,7 @@ public abstract class SettingsSubPage : ContentPage, IGrownUpPage
 		};
 		SemanticProperties.SetDescription(back, AppResources.Common_Back);
 		CastViews.AddTap(back, () => Busy.RunAsync(() => Navigation.PopAsync()));
-		Label heading = _heading = new Label { Text = title, FontSize = TitleSize, FontAttributes = FontAttributes.Bold, VerticalOptions = LayoutOptions.Center };
+		Label heading = _heading = new Label { Text = title, FontSize = TitleSize, FontAttributes = FontAttributes.Bold, VerticalOptions = LayoutOptions.Center, AutomationId = "SettingsTitle" };
 		CastText.InOwnScriptAligned(heading);
 		SemanticProperties.SetHeadingLevel(heading, SemanticHeadingLevel.Level1);
 		var header = new Grid
@@ -78,8 +78,8 @@ public abstract class SettingsSubPage : ContentPage, IGrownUpPage
 }
 
 /// <summary>
-/// The Settings page (Slice 172, mock frames 80 and 87): opened from the gear on the shelf, after the gate. A Books row on top (grown-up mode),
-/// then "Reading" (Language, Narrator voice, Reading speed, Animal sounds) and "This phone" (Backup, Usage counts, About &amp; updates), each row
+/// The Settings page (Slice 172, mock frames 80 and 87): opened from the gear in grown-up mode (Slice 189; the gate was passed to get there), and Back returns
+/// to grown-up mode. "Reading" (Language, Narrator voice, Reading speed, Animal sounds) and "This phone" (Backup, Usage counts, About &amp; updates), each row
 /// showing its current value and opening its own page. The store is never a row (Decision 167). The Story languages row (Slice 173) sits under Language.
 /// </summary>
 public sealed class SettingsPage : SettingsSubPage
@@ -88,17 +88,15 @@ public sealed class SettingsPage : SettingsSubPage
 	private const int SummaryLanguages = 2;
 
 	private readonly IServiceProvider _services;
-	private readonly GrownUpMode _mode;
 	private readonly AppConfigClient _config;
 	private readonly ISettingsStore _settings;
 	private readonly StoryVoicing _voicing;
 	private readonly UsageCounter _usage;
 
-	public SettingsPage(IServiceProvider services, GrownUpMode mode, AppConfigClient config, ISettingsStore settings, StoryVoicing voicing, UsageCounter usage)
+	public SettingsPage(IServiceProvider services, AppConfigClient config, ISettingsStore settings, StoryVoicing voicing, UsageCounter usage)
 		: base(AppResources.Settings_Title)
 	{
 		_services = services;
-		_mode = mode;
 		_config = config;
 		_settings = settings;
 		_voicing = voicing;
@@ -126,20 +124,10 @@ public sealed class SettingsPage : SettingsSubPage
 	private void Rebuild()
 	{
 		Body.Children.Clear();
-		Body.Children.Add(SettingsRows.RowsCard([BooksRow()]));
 		Body.Children.Add(SettingsRows.GroupHeading(AppResources.Settings_GroupReading));
 		Body.Children.Add(SettingsRows.RowsCard([LanguageRow(), StoryLanguagesRow(), NarratorRow(), SpeedRow(), AnimalRow()]));
 		Body.Children.Add(SettingsRows.GroupHeading(AppResources.Settings_GroupPhone));
 		Body.Children.Add(SettingsRows.RowsCard([BackupRow(), UsageRow(), AboutRow()]));
-	}
-
-	private Grid BooksRow() => SettingsRows.NavRow(AppResources.Settings_Books, AppResources.Settings_BooksValue, EnterBooksAsync, Busy);
-
-	// Books opens grown-up mode on the shelf (the gate was passed to get here); Back from there goes to the kids' shelf.
-	private async Task EnterBooksAsync()
-	{
-		_mode.Enter();
-		await Navigation.PopAsync();
 	}
 
 	private Grid LanguageRow() =>

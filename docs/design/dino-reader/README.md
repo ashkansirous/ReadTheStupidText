@@ -451,36 +451,43 @@ Implement: `Dino Reader Batch 32.dc.html`
 
 - **Source:** Claude Design project `90615641-f298-4e21-8c50-ca2efbeaaebc`, file `Dino Reader Batch 37.dc.html`
   (<https://claude.ai/design/p/90615641-f298-4e21-8c50-ca2efbeaaebc?file=Dino+Reader+Batch+37.dc.html>).
-- **Copied:** 2026-10-28, verbatim from `DesignSync get_file`. Its imports (`assets/good-enough/cover.jpg`, `assets/three-little-pigs/3.jpg`, `assets/three-little-pigs/5.jpg`, the dino `icons/ios/AppIcon-1024-light.png`) are already in this folder.
-- **Covers:** Slices 172-174 (gear and settings sub-pages, kid story languages, the calmer reading screen and back button): frames 79-94. Decisions 167-169.
+- **Copied:** 2026-10-28, verbatim from `DesignSync get_file`; **refreshed 2026-10-29** (the grown-ups button
+  replaces the shelf gear, the gear moves to grown-up mode, new frame 85b, the reading card capped at 30%).
+  The refresh is Slice 189. Its imports are in this folder: `assets/good-enough/cover.jpg`,
+  `assets/three-little-pigs/{3,5,cover}.jpg`, `assets/gingerbread-man/cover.jpg`,
+  `assets/tortoise-and-hare/{6,cover}.jpg` (the 2026-10-29 additions were copied from the books in
+  `content/dino/`, which is where the mock's pictures come from) and the dino `icons/ios/AppIcon-1024-light.png`.
+- **Covers:** Slices 172-174 (gear and settings sub-pages, kid story languages, the calmer reading screen and back
+  button): frames 79-94, Decisions 167-169; the 2026-10-29 changes to frames 79, 80, 85, 85b, 91 and 94 are Slice 189.
 
 Open it in a text editor (`support.js` is not copied). Each screen is headed by a caption
 `N · Title` with its behaviour in the note underneath.
 
 | # | Screen | Line |
 |---|---|---|
-| 79 | Kids' shelf · the gear | 27 |
+| 79 | Kids’ shelf · the grown-ups button | 27 |
 | 80 | Settings · one row per setting | 45 |
-| 81 | Language · only languages | 71 |
-| 82a | Narrator voice · one per story language | 94 |
-| 82b | Narrator voice · one language | 110 |
-| 83 | Reading speed · a sub-page | 128 |
-| 84 | About & updates | 148 |
-| 85 | Grown-up mode · books only | 171 |
-| 86 | Intro · last step · story languages | 193 |
-| 87 | Settings · Story languages · downloading | 217 |
-| 88 | Reading · the language button, open | 237 |
-| 89 | Reading · switched to Farsi | 269 |
-| 90 | Changing the app language · which one goes | 295 |
-| 91 | Portrait · flat controls, a five-line card that follows the reading | 325 |
-| 94 | Kids' shelf · Android back | 351 |
-| 92 | Landscape · Picture + text | 379 |
-| 93 | Landscape · Text only | 401 |
+| 81 | Language · only languages | 70 |
+| 82a | Narrator voice · one per story language | 93 |
+| 82b | Narrator voice · one language | 109 |
+| 83 | Reading speed · a sub-page | 127 |
+| 84 | About & updates | 147 |
+| 85 | Grown-up mode · books only | 170 |
+| 85b | Grown-up mode · a book’s ⋯ | 187 |
+| 86 | Intro · last step · story languages | 215 |
+| 87 | Settings · Story languages · downloading | 239 |
+| 88 | Reading · the language button, open | 259 |
+| 89 | Reading · switched to Farsi | 291 |
+| 90 | Changing the app language · which one goes | 317 |
+| 91 | Portrait · flat controls, a card capped at 30% that follows the reading | 347 |
+| 94 | Kids’ shelf · Android back | 373 |
+| 92 | Landscape · Picture + text | 401 |
+| 93 | Landscape · Text only | 423 |
 
 To refresh: fetch the file again with `DesignSync get_file` and overwrite this copy, then
 regenerate this table. Never call `DesignSync` to read visual values; read this copy.
 
-Import prompt (verbatim):
+Import prompt (verbatim, 2026-10-29):
 
 ```
 Use the claude_design MCP (https://api.anthropic.com/v1/design/mcp, auth via /design-login) to import this project:
@@ -490,9 +497,12 @@ Focus on these files (the whole project is readable):
 - `Dino Reader Batch 37.dc.html`
 
 Also read these files the selection imports:
+- `assets/gingerbread-man/cover.jpg`
 - `assets/good-enough/cover.jpg`
-- `assets/three-little-pigs/3.jpg`
 - `assets/three-little-pigs/5.jpg`
+- `assets/three-little-pigs/cover.jpg`
+- `assets/tortoise-and-hare/6.jpg`
+- `assets/tortoise-and-hare/cover.jpg`
 - `dino_reader_icons/ios/AppIcon-1024-light.png`
 
 Implement: `Dino Reader Batch 37.dc.html`
