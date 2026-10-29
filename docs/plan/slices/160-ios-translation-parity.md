@@ -83,7 +83,7 @@ Grounding (origin/main 9c4ec2a):
 
 *Checks:* iOS and Android builds of Mobile and Dino green; RTST tests 1357 pass, 2 skip; Dino tests 1550 pass.
 
-*User items:* in App Store Connect add Diagnostics > Other Diagnostic Data (not linked to the user, not tracking, analytics) to the privacy labels of both iOS apps. Dino is in the kids category: confirm Google Data Transport logging is acceptable.
+*User items (done):* both iOS apps' App Privacy labels declare Other Diagnostic Data, not linked, analytics (checked 2026-10-29). Google Data Transport in Dino: ML Kit stays, loaded only on grown-up paths, so a child never causes a Google call ([note](../notes/2026-10-29-dino-mlkit-only-for-grown-ups.md)).
 
 #### For CLAUDE.md (lifted 2026-10-27)
 

@@ -98,7 +98,7 @@ Three passes (`reviews/183-review1.md` to `183-review3.md`). Two strikes on fore
 
 #### User steps
 
-- Submit the Play Console foreground-service declaration for both apps (draft above; needs a lock-screen video from the phone).
+- [x] Play Console foreground-service declaration: filed for both apps (checked 2026-10-29; demo videos at `/videos/pack-download-foreground-service.mp4` on both sites, PR #561).
 - Native review of the new strings (13 machine drafts per app).
 
 #### For CLAUDE.md (lifted 2026-10-29)
