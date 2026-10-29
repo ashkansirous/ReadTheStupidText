@@ -470,3 +470,35 @@ test("an RTST batch with an invalid device object is still written with empty de
   assert.equal((await handleRtstEvents(request, env, on)).status, 204);
   assert.deepEqual(env.points[0].blobs.slice(17), ["none", "", ""]);
 });
+
+// ---- Robot and emulator drop (Slice 179) -----------------------------------------------------------------------------
+
+test("an Android or iOS Dino batch from an x64 or x86 device is accepted and writes nothing", async () => {
+  for (const arch of ["x64", "x86"]) {
+    for (const platform of ["android", "ios"]) {
+      const env = recorder();
+      const response = await handleEvents(dinoPost({ device: { ...device, arch }, events: [{ ...shelfEvent, platform }] }, "US"), env, on);
+      assert.equal(response.status, 204, `${platform} ${arch}`);
+      assert.equal(env.points.length, 0, `${platform} ${arch}`);
+    }
+  }
+});
+
+test("an arm64 phone batch writes, and so does a Windows desktop on x64", async () => {
+  const arm = recorder();
+  await handleEvents(dinoPost({ device, events: [shelfEvent] }, "US"), arm, on);
+  assert.equal(arm.points.length, 1);
+  const desktop = recorder();
+  await handleEvents(dinoPost({ device: { ...device, arch: "x64", formFactor: "desktop" }, events: [{ ...shelfEvent, platform: "windows" }] }, "US"), desktop, on);
+  assert.equal(desktop.points.length, 1);
+});
+
+test("the RTST phone batch from x64 is dropped, a batch with no device object still writes", async () => {
+  const dropped = rtstRecorder();
+  const request = new Request("https://readthestupidtext.sirous.uk/api/events", { method: "POST", body: JSON.stringify({ device: { ...device, arch: "x64" }, events: [readStarted] }) });
+  assert.equal((await handleRtstEvents(request, dropped, on)).status, 204);
+  assert.equal(dropped.points.length, 0);
+  const old = rtstRecorder();
+  await handleRtstEvents(rtstPost([readStarted]), old, on);
+  assert.equal(old.points.length, 1);
+});

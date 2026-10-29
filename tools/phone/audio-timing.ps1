@@ -124,6 +124,16 @@ function Install-PhoneApk([string]$Phone, $Apk) {
     if ($result -notmatch 'Success') { throw "adb install of $package failed: $result" }
 }
 
+# Slice 179: counting off for every harness run, even a Release build (the marker the app reads, UsageEligibility.NoUsageMarkerFile). Written and
+# checked before every read, so -SkipInstall and a `pm clear` (which wipes the external files folder) never leave a run without it.
+function Set-NoUsageMarker([string]$Phone) {
+    $filesDir = "/sdcard/Android/data/$package/files"
+    $marker = "$filesDir/no-usage"
+    Invoke-Adb $Phone @('shell', "mkdir -p $filesDir && touch $marker") | Out-Null
+    $listed = "$(Invoke-Adb $Phone @('shell', "ls $marker"))"
+    if ($listed -notmatch 'no-usage' -or $listed -match 'No such file|denied') { throw "Could not write the no-usage marker $marker on the phone ($listed): a Release run would send production counts." }
+}
+
 # With -SkipInstall the installed APK must still be the cached build for the current inputs (right ABI, AOT or not): it is pulled and compared with
 # the cached APK; $false when there is no cached build or the installed one differs.
 function Test-InstalledMatches([string]$Phone, $Apk) {
@@ -348,6 +358,7 @@ function Invoke-WarmRead([string]$Phone, [double]$Rate) {
 
 function Invoke-OneRead([string]$Phone, [double]$Rate) {
     if ($FreshInstall) { Invoke-Adb $Phone @('shell', 'pm', 'clear', $package) | Out-Null }
+    Set-NoUsageMarker $Phone
     Start-AppWithHook $Phone 'skip-first-run'
     Assert-AppStarted $Phone
     if (-not (Wait-Marker $Phone 'HOOK skip-first-run ok' 60 0 'waiting for the app to skip first run')) { throw 'The skip-first-run hook did not report ok.' }
