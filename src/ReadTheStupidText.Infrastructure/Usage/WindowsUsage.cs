@@ -26,6 +26,7 @@ public static class WindowsUsage
     }
 
     // Slice 167: a debug build or one whose package version was never stamped by CI counts nothing (a dry run). No emulator or test lab on a desktop.
+    // Slice 179: only a Store-signed install counts, and our harnesses switch counting off with READTHESTUPIDTEXT_NO_USAGE=1.
     internal static UsageFacts Facts(string version)
     {
 #if DEBUG
@@ -33,7 +34,25 @@ public static class WindowsUsage
 #else
         const bool isDebug = false;
 #endif
-        return new UsageFacts(isDebug, version, false, false);
+        bool testInstall = UsageEligibility.IsNoUsageValue(Environment.GetEnvironmentVariable(UsageEligibility.NoUsageVariable));
+        bool nonStore = !IsStoreInstall();
+        System.Diagnostics.Debug.WriteLine($"Usage gate (Windows): testInstall={testInstall} storeInstall={!nonStore}");
+        return new UsageFacts(isDebug, version, false, false, testInstall, nonStore);
+    }
+
+    /// <summary>True for an install signed by the Microsoft Store and not a loose-file development registration (Slice 179). A CI MSIX, a local build, a VM test install or a sideload is not; neither is a process with no package identity.</summary>
+    public static bool IsStoreInstall()
+    {
+        try
+        {
+            Package package = Package.Current;
+            return package.SignatureKind == PackageSignatureKind.Store && !package.IsDevelopmentMode;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Store install unreadable, not counted (fail closed): {ex.Message}");
+            return false;
+        }
     }
 
     // A machine that will not describe itself sends no device object (Slice 166); the counts still go.

@@ -9,6 +9,8 @@ public enum UsageSkipReason
     Emulator,
     TestLab,
     Unreadable,
+    TestInstall,
+    NonStoreInstall,
 }
 
 /// <summary>The facts one head gathers once at start to decide whether it counts.</summary>
@@ -16,7 +18,9 @@ public enum UsageSkipReason
 /// <param name="DisplayVersion">The version the app reports; CI stamps every shipped build, so the project default means a desk build.</param>
 /// <param name="IsVirtual">True on an emulator or simulator.</param>
 /// <param name="IsTestLab">True on Android Firebase Test Lab (Play's pre-launch report).</param>
-public readonly record struct UsageFacts(bool IsDebug, string DisplayVersion, bool IsVirtual, bool IsTestLab);
+/// <param name="IsTestInstall">True when one of our own test harnesses switched counting off (Slice 179, <see cref="UsageEligibility.NoUsageVariable"/>).</param>
+/// <param name="IsNonStoreInstall">True when the install did not come from the store: a Windows MSIX not signed by the Store, an iOS build from TestFlight or App Review (Slice 179).</param>
+public readonly record struct UsageFacts(bool IsDebug, string DisplayVersion, bool IsVirtual, bool IsTestLab, bool IsTestInstall = false, bool IsNonStoreInstall = false);
 
 /// <summary>
 /// Decides whether a build or device may send usage counts (Slice 167): test and development builds never do, so a store dashboard holds
@@ -24,9 +28,36 @@ public readonly record struct UsageFacts(bool IsDebug, string DisplayVersion, bo
 /// </summary>
 public static class UsageEligibility
 {
+    /// <summary>The environment variable our harnesses (desktop VM, emulator, phone, simulator) set to 1 so a Release run counts nothing (Slice 179).</summary>
+    public const string NoUsageVariable = "READTHESTUPIDTEXT_NO_USAGE";
+
+    /// <summary>The marker file name an Android harness drops in the app's external files folder for the same purpose (Slice 179).</summary>
+    public const string NoUsageMarkerFile = "no-usage";
+
+    private const string NoUsageOn = "1";
+
     private static readonly string[] UnstampedVersions = ["1.0", "1.0.0", "1.0.0.0", "0.0.0", "0.0.0.0"];
 
-    /// <summary>The first rule that applies, in the order debug, unstamped, emulator, test lab; <see cref="UsageSkipReason.None"/> when none does.</summary>
+    /// <summary>True when the value of <see cref="NoUsageVariable"/> switches counting off.</summary>
+    public static bool IsNoUsageValue(string? value) => value?.Trim() == NoUsageOn;
+
+    private static readonly string[] EmulatorFingerprintPrefixes = ["generic/", "generic_"];
+    private static readonly string[] EmulatorFingerprintParts = ["robo"];
+    private static readonly string[] EmulatorHardware = ["ranchu", "goldfish", "emu"];
+    private static readonly string[] EmulatorModelParts = ["sdk_gphone", "Emulator", "Android SDK built for"];
+
+    /// <summary>True when the Android build strings (as <c>Build.Fingerprint</c>, <c>Hardware</c>, <c>Model</c>, <c>Product</c>) are an emulator's or a test robot's (Slice 179). Pure, so the patterns are tested; a null string never matches.</summary>
+    public static bool IsEmulatorBuild(string? fingerprint, string? hardware, string? model, string? product) =>
+        (fingerprint is not null && Array.Exists(EmulatorFingerprintPrefixes, p => fingerprint.StartsWith(p, StringComparison.OrdinalIgnoreCase)))
+        || ContainsAny(fingerprint, EmulatorFingerprintParts)
+        || (hardware is not null && Array.Exists(EmulatorHardware, h => string.Equals(h, hardware, StringComparison.OrdinalIgnoreCase)))
+        || ContainsAny(model, EmulatorModelParts)
+        || ContainsAny(product, EmulatorModelParts);
+
+    private static bool ContainsAny(string? text, string[] parts) =>
+        text is not null && Array.Exists(parts, part => text.Contains(part, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>The first rule that applies, in the order debug, unstamped, emulator, test lab, test install, non-store install; <see cref="UsageSkipReason.None"/> when none does.</summary>
     public static UsageSkipReason Check(UsageFacts facts)
     {
         if (facts.IsDebug)
@@ -44,7 +75,17 @@ public static class UsageEligibility
             return UsageSkipReason.Emulator;
         }
 
-        return facts.IsTestLab ? UsageSkipReason.TestLab : UsageSkipReason.None;
+        if (facts.IsTestLab)
+        {
+            return UsageSkipReason.TestLab;
+        }
+
+        if (facts.IsTestInstall)
+        {
+            return UsageSkipReason.TestInstall;
+        }
+
+        return facts.IsNonStoreInstall ? UsageSkipReason.NonStoreInstall : UsageSkipReason.None;
     }
 
     /// <summary>Whether this build and device count.</summary>
