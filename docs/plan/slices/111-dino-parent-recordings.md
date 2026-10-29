@@ -94,7 +94,7 @@ New strings (all 14 locales): "Record", "Read the words on this page aloud, then
 
 #### Not yet verified
 
-- Human: Play Console Data safety needs the "audio recordings, on-device only" answer (text in "Data safety answer" above).
+- Play Console Data safety: nothing to submit (the answer above is "no change"); the user confirmed it 2026-10-29.
 - Device: record and replay a page on Android, iOS and Windows; microphone permission denial; a backup round trip keeps the recordings.
 
 - Emulator (Android): record pages 1 and 3 of a starter, turn on "Read with my voice", read with the app in Farsi: pages 1 and 3 play the recordings with the soft page highlight and the English text, page 2 is the generated Farsi voice; back up, delete, restore: the recordings come back. Also Android 9-11 (MediaRecorder AAC) on a device, and the microphone permission prompt and the "denied" alert.
