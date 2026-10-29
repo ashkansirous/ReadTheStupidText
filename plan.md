@@ -14,12 +14,11 @@ this plan turns it into ordered, shippable vertical slices.
 
 ## Status
 
-Open slices only. Finished slices (157 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
+Open slices only. Finished slices (158 rows) are in [slices-done](docs/plan/notes/slices-done.md); each slice's full record is its own file under `docs/plan/slices/`.
 
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
 | 154 | Dino: vowel marks in Farsi and Arabic books (Farsi only: Arabic left as is; marks are a hidden "how to read" text, Decision 166) | in progress | #470 | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
-| 183 | Big pack downloads keep going when the phone is locked or the app is in the background (Android foreground service with a progress notification, iOS background URLSession; after 182) | planned | | | [183-pack-downloads-keep-going-when-locked.md](docs/plan/slices/183-pack-downloads-keep-going-when-locked.md) |
 
 Batch 39 (182-185, planned 2026-10-28, from the night's phone runs and the unowned gaps): 182 then 183 (both edit the pack downloader); 184 (Windows packs, CI) and 185 (emulator checks) can run beside them.
 
@@ -77,6 +76,8 @@ Built but not verified (details in each slice file):
 - Slice 178 (PR #547): pdf, docx, photo and scan kinds on a device; iOS and Windows runs; `tools/dino-usage-report.ps1` against the live API after release; `analytics-query` notes for the new blob9 shape (Slice 166 file) after release ([slice](docs/plan/slices/178-dino-own-book-usage-detail.md)).
 - Slice 181 (PR #543): a recording carried over a swap; a store-downloaded book with edited text getting an update; a crash during the apply itself (kill mid-swap); iOS simulator and Windows VM runs; apply time on a real phone (1.2-1.5 s on emulator Debug) ([slice](docs/plan/slices/181-dino-books-update-from-store.md)).
 - Slice 182 (PR #544): OCR resume after the final fix round; "Waiting for Wi-Fi" on a real cellular-only phone; a real phone and the iOS runtime; Failed -> Retry state on a device ([slice](docs/plan/slices/182-pack-download-resumes-by-itself.md)).
+- Slice 183 (PR #549): iOS background session on a device (TestFlight); real PIN-locked phone network block; Android 15 six-hour `OnTimeout`; Dino storyteller first-download ask deferral ([slice](docs/plan/slices/183-pack-downloads-keep-going-when-locked.md))
+- User steps, Slice 183: submit the Play Console foreground-service declaration for both apps (draft in the slice file; needs a lock-screen video from the phone); native review of the new strings (13 machine drafts per app)
 - Planned follow-up: 182 design frame R12 (main-page wait overlay for translation downloads) not built; mobile translation uses ML Kit's own download.
 - User decision (Slice 184, closed, PR #548): allow a CC-BY-SA en-ja model (`staka/fugumt-en-ja`, `Mitsua/elan-mt-bt-en-ja`) for a downloaded pack? Changes Decision 16's scope; until then English to Japanese stays unsupported on Windows ([slice](docs/plan/slices/184-windows-english-to-japanese-pack.md)).
 - Slice 179 (PR #542): Windows VM run with a CI MSIX; iOS `sandboxReceipt` on TestFlight; Windows Store-signature check on a Store build; Release build on an emulator without the marker (gate reason); Worker drop live after deploy; iOS simulator harness off switch (`SIMCTL_CHILD_READTHESTUPIDTEXT_NO_USAGE=1`) when a harness is added ([slice](docs/plan/slices/179-no-robot-or-own-machine-counts.md)).

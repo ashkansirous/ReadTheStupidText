@@ -101,7 +101,7 @@ Three passes (`reviews/183-review1.md` to `183-review3.md`). Two strikes on fore
 - Submit the Play Console foreground-service declaration for both apps (draft above; needs a lock-screen video from the phone).
 - Native review of the new strings (13 machine drafts per app).
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-29)
 
 In `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md`:
 
