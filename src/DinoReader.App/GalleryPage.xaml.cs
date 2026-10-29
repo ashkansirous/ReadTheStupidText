@@ -15,8 +15,6 @@ public partial class GalleryPage : ContentPage
 {
 	private const double LanguageButtonHeight = 48;
 	private const double LanguageMenuGap = 6;
-	private const uint TileFadeMs = 180;
-	private const double TileShrinkTo = 0.85;
 	private const string TileTitleHeightKey = "TileTitleHeight";
 
 	private readonly IStoryLibrary _library;
@@ -35,7 +33,7 @@ public partial class GalleryPage : ContentPage
 	private bool _sheetChanged; // a switch was saved while the sheet was open: the tiles are rebuilt when it closes
 	private readonly SemaphoreSlim _sheetSaveLock = new(1, 1);
 	private readonly VoicePreview _preview;
-	private readonly StoryLanguageButton _languageButton; // Slice 173 (mock 79): the child's story-language button, left of the gear, with two or three story languages
+	private readonly StoryLanguageButton _languageButton; // Slice 173 (mock 79): the child's story-language button, left of the grown-ups button, with two or three story languages
 
 	public GalleryPage(IStoryLibrary library, GrownUpGate gate, GrownUpMode mode, StoryActions actions, StarterStories starters, IServiceProvider services)
 	{
@@ -57,6 +55,9 @@ public partial class GalleryPage : ContentPage
 		BookInfo.VoiceChanged += SaveUseVoiceAsync;
 		BookInfo.CastRequested += OpenSheetCastAsync;
 		BookInfo.RecordRequested += OpenSheetRecordAsync;
+		BookInfo.EditRequested += OpenSheetEditAsync;
+		BookInfo.ExportRequested += ExportSheetBookAsync;
+		BookInfo.RemoveRequested += RemoveSheetBookAsync;
 		BookInfo.Dismissed += OnBookSheetDismissed;
 		_languageButton = AddLanguageButton();
 		WaitOverlay overlay = DinoWait.OverPage();
@@ -65,13 +66,16 @@ public partial class GalleryPage : ContentPage
 		_wait = new WaitController(overlay);
 	}
 
-	// Added beside the gear in code (the header is a three-column grid): the gear and Done move one column right.
+	// Added beside the grown-ups button in code (the header is a three-column grid): the language button takes column 2, the gear its own column 3, and the
+	// grown-ups button and Done (never shown together) move to column 4, so no two controls ever share a cell.
 	private StoryLanguageButton AddLanguageButton()
 	{
-		var header = (Grid)SettingsButton.Parent;
+		var header = (Grid)GrownUpsButton.Parent;
 		header.ColumnDefinitions.Insert(2, new ColumnDefinition(GridLength.Auto));
+		header.ColumnDefinitions.Insert(3, new ColumnDefinition(GridLength.Auto));
 		Grid.SetColumn(SettingsButton, 3);
-		Grid.SetColumn(DoneButton, 3);
+		Grid.SetColumn(GrownUpsButton, 4);
+		Grid.SetColumn(DoneButton, 4);
 		var button = new StoryLanguageButton(LanguageButtonHeight, OpenLanguageMenuAsync) { IsVisible = false, AutomationId = "GalleryLanguage" };
 		header.Add(button, 2, 0);
 		return button;
@@ -257,9 +261,11 @@ public partial class GalleryPage : ContentPage
 
 		_textLanguage = language;
 		AppIcon.SetValue(SemanticProperties.DescriptionProperty, AppResources.App_Name);
+		GrownUpsButton.SetValue(SemanticProperties.DescriptionProperty, AppResources.Gallery_GrownUpsButton);
+		GrownUpsButton.SetValue(ToolTipProperties.TextProperty, AppResources.Gallery_GrownUpsButton);
+		GrownUpsButton.SetValue(SemanticProperties.HintProperty, AppResources.Gallery_OpensGateHint);
 		SettingsButton.SetValue(SemanticProperties.DescriptionProperty, AppResources.Settings_GearLabel);
 		SettingsButton.SetValue(ToolTipProperties.TextProperty, AppResources.Settings_GearLabel);
-		SettingsButton.SetValue(SemanticProperties.HintProperty, AppResources.Gallery_OpensGateHint);
 		DoneButton.Text = AppResources.Common_Done;
 		AddBookLabel.Text = AppResources.Gallery_AddFromBooks;
 		AddBookButton.SetValue(SemanticProperties.DescriptionProperty, AppResources.Gallery_AddFromBooks);
@@ -316,7 +322,8 @@ public partial class GalleryPage : ContentPage
 	private void ApplyModeChrome(bool grownUp)
 	{
 		bool handover = grownUp && FirstRunState.HandoverPending;
-		SettingsButton.IsVisible = !grownUp;
+		GrownUpsButton.IsVisible = !grownUp;
+		SettingsButton.IsVisible = grownUp;
 		ApplyLanguageButton();
 		DoneButton.IsVisible = grownUp && !handover;
 		HandoverButton.IsVisible = handover;
@@ -406,17 +413,27 @@ public partial class GalleryPage : ContentPage
 		}
 	}
 
-	// Grown-up mode: a book's tile opens its "This book" sheet (Slice 110 and 111, Slice 174): Show original text, Read with my voice, Cast and Record.
-	// Editing the book is the tile's own Edit button.
+	// Grown-up mode: a book's "⋯" or its bare cover opens its options sheet (Slice 189, mock 85b; it grew out of the "This book" sheet of Slices 110 and 111): Show original text,
+	// Read with my voice, Record, Cast, Edit pages (own books), Export (developer switch) and Remove from the shelf.
 	private async Task OpenBookSheetAsync(Story tapped)
 	{
 		Story story = await _library.GetAsync(tapped.Id) ?? tapped;
-		bool translated = _services.GetRequiredService<StoryTranslator>().Applies(story, StoryTranslator.MyLanguage);
-		string original = LanguageNames.NativeName(story.Language);
-		string spoken = LanguageNames.NativeName(StoryTranslator.MyLanguage);
 		_sheetStory = story;
 		_sheetChanged = false;
-		BookInfo.Show(story.Title, translated, story.ShowOriginalText, ReadingText.ShowOriginalHint(original, spoken), VoiceOfferOf(story));
+		BookInfo.Show(SheetContentOf(story));
+	}
+
+	private BookSheet.Content SheetContentOf(Story story)
+	{
+		bool translated = _services.GetRequiredService<StoryTranslator>().Applies(story, StoryTranslator.MyLanguage);
+		BookOrigin origin = BookOrigins.Of(story);
+		StoryTile tile = StoryTile.From(story, _library, _mode);
+		string original = LanguageNames.NativeName(story.Language);
+		string spoken = LanguageNames.NativeName(StoryTranslator.MyLanguage);
+		string title = _services.GetRequiredService<StoryTranslator>().ShelfTitle(story);
+		var plan = BookSheetPlan.For(origin, translated, StoryRecordings.Count(story) > 0, DeveloperMode.Enabled);
+		return new BookSheet.Content(title, BookOrigins.Label(origin), tile.CoverImagePath, tile.CoverFill, plan, story.ShowOriginalText,
+			ReadingText.ShowOriginalHint(original, spoken), VoiceOfferOf(story));
 	}
 
 	// "Read with my voice" shows only once a page is recorded.
@@ -451,9 +468,17 @@ public partial class GalleryPage : ContentPage
 		}
 	}
 
+	// A switch tapped just before an action (the quiet rows close the sheet first) is saved before the action reads the story, so the editor never saves the pre-switch copy.
+	private async Task<Story?> SettledSheetStoryAsync()
+	{
+		await _sheetSaveLock.WaitAsync();
+		_sheetSaveLock.Release();
+		return _sheetStory;
+	}
+
 	private async Task OpenSheetCastAsync()
 	{
-		if (_sheetStory is { } story)
+		if (await SettledSheetStoryAsync() is { } story)
 		{
 			await RunGrownUpAsync(() => _actions.CastAsync(Navigation, story));
 		}
@@ -461,10 +486,66 @@ public partial class GalleryPage : ContentPage
 
 	private async Task OpenSheetRecordAsync()
 	{
-		if (_sheetStory is { } story)
+		if (await SettledSheetStoryAsync() is { } story)
 		{
 			await RunGrownUpAsync(() => _actions.RecordAsync(Navigation, story));
 		}
+	}
+
+	private async Task OpenSheetEditAsync()
+	{
+		if (await SettledSheetStoryAsync() is { } story)
+		{
+			await RunGrownUpAsync(() => _actions.EditAsync(Navigation, story));
+		}
+	}
+
+	private async Task ExportSheetBookAsync()
+	{
+		if (await SettledSheetStoryAsync() is { } story)
+		{
+			await RunGrownUpAsync(() => _actions.ExportAsync(story));
+		}
+	}
+
+	// Remove from the shelf (Slice 189): asks first, with the sheet still open behind the question; a Store book says it can come back for free. Declined leaves the sheet as it was.
+	private async Task RemoveSheetBookAsync()
+	{
+		if (_sheetStory is { } story)
+		{
+			await RunGrownUpAsync(() => RemoveBookAsync(story));
+		}
+	}
+
+	// Holds the sheet's save lock from the question to the delete, so a pending switch save cannot write the folder back; a save queued behind it finds no sheet story and skips.
+	private async Task RemoveBookAsync(Story story)
+	{
+		await _sheetSaveLock.WaitAsync();
+		try
+		{
+			DeleteOutcome outcome = await _actions.ConfirmDeleteAsync(this, story, RemovePrompt(story, _services.GetRequiredService<StoryTranslator>().ShelfTitle(story)));
+			if (outcome == DeleteOutcome.Declined)
+			{
+				return;
+			}
+
+			BookInfo.Hide();
+			_sheetStory = null;
+			_sheetChanged = false;
+		}
+		finally
+		{
+			_sheetSaveLock.Release();
+		}
+
+		await RefreshShelfAsync(); // also after a failed delete: a half-deleted story no longer lists
+	}
+
+	// The question names the book as the shelf and the sheet do (its translated title).
+	private static DeletePrompt RemovePrompt(Story story, string shelfTitle)
+	{
+		bool fromStore = BookOrigins.Of(story) == BookOrigin.Store;
+		return new DeletePrompt(AppResources.Format(AppResources.Book_RemoveTitle, shelfTitle), fromStore ? AppResources.Book_RemoveBodyStore : AppResources.Delete_Body, AppResources.Book_RemoveConfirm);
 	}
 
 	// Waits for a save still in flight (a quick Back after a switch) so the tiles never keep the old flags; never throws out of async void.
@@ -519,40 +600,7 @@ public partial class GalleryPage : ContentPage
 		}
 	}
 
-	private async void OnEditRequested(object? sender, EventArgs e)
-	{
-		if (TileOf(sender) is { } tile)
-		{
-			await RunGrownUpAsync(() => _actions.EditAsync(Navigation, tile.Story));
-		}
-	}
-
-	private async void OnCastRequested(object? sender, EventArgs e)
-	{
-		if (TileOf(sender) is { } tile)
-		{
-			await RunGrownUpAsync(() => _actions.CastAsync(Navigation, tile.Story));
-		}
-	}
-
-	// Record (Slice 111): the page-by-page recording screen for this book.
-	private async void OnRecordRequested(object? sender, EventArgs e)
-	{
-		if (TileOf(sender) is { } tile)
-		{
-			await RunGrownUpAsync(() => _actions.RecordAsync(Navigation, tile.Story));
-		}
-	}
-
-	private async void OnExportRequested(object? sender, EventArgs e)
-	{
-		if (TileOf(sender) is { } tile)
-		{
-			await RunGrownUpAsync(() => _actions.ExportAsync(tile.Story));
-		}
-	}
-
-	// Seven taps on the title in grown-up mode flip the developer switch (Slice 91); the tiles are rebuilt to show or hide Export.
+	// Seven taps on the title in grown-up mode flip the developer switch (Slice 91); the tiles are rebuilt, and the book sheet shows or hides Export.
 	private async void OnTitleTapped(object? sender, TappedEventArgs e)
 	{
 		if (!_mode.IsGrownUp)
@@ -574,69 +622,21 @@ public partial class GalleryPage : ContentPage
 		}
 	}
 
-	private async void OnDeleteRequested(object? sender, EventArgs e)
-	{
-		if (TileOf(sender) is { } tile && sender is Element source)
-		{
-			await RunGrownUpAsync(() => DeleteAsync(tile, TileRootOf(source)));
-		}
-	}
+	// The book-and-plus button (Slice 189): the gate first, then grown-up mode. A failed gate leaves the shelf as it was.
+	private async void OnGrownUpsTapped(object? sender, TappedEventArgs e) => await _busy.RunAsync(EnterGrownUpModeAsync);
 
-	private async Task DeleteAsync(StoryTile tile, VisualElement? root)
-	{
-		DeleteOutcome outcome = await _actions.ConfirmDeleteAsync(this, tile.Story);
-		if (outcome == DeleteOutcome.Deleted)
-		{
-			await AnimateOutAsync(root);
-			if (!_items.Remove(tile))
-			{
-				// A refresh replaced the list during the fade: re-read so no deleted story lingers.
-				await RefreshAsync();
-			}
-		}
-		else if (outcome == DeleteOutcome.Failed)
-		{
-			// A half-deleted story no longer lists, so re-read after a failure.
-			await RefreshAsync();
-		}
-	}
-
-	// The tile's root is the story template's VerticalStackLayout; a recycled view must come back opaque.
-	private static VisualElement? TileRootOf(Element source)
-	{
-		for (Element? e = source; e is not null; e = e.Parent)
-		{
-			if (e is VerticalStackLayout root)
-			{
-				return root;
-			}
-		}
-
-		return null;
-	}
-
-	private static async Task AnimateOutAsync(VisualElement? root)
-	{
-		if (root is null)
-		{
-			return;
-		}
-
-		await Task.WhenAll(root.FadeToAsync(0, TileFadeMs), root.ScaleToAsync(TileShrinkTo, TileFadeMs));
-		root.Opacity = 1;
-		root.Scale = 1;
-	}
-
-	// The gear (Slice 172): the gate first, then Settings. A failed gate leaves the shelf as it was; Settings is pushed on the kids' shelf, so back out of it ends there (Decision 169).
-	private async void OnSettingsTapped(object? sender, TappedEventArgs e) => await _busy.RunAsync(OpenSettingsAsync);
-
-	private async Task OpenSettingsAsync()
+	private async Task EnterGrownUpModeAsync()
 	{
 		if (await _gate.RequestAsync(Navigation))
 		{
-			await Navigation.PushAsync(_services.GetRequiredService<SettingsPage>());
+			_mode.Enter();
 		}
 	}
+
+	// The gear in grown-up mode: Settings with no second gate. Back from it (and from its sub-pages, one step each) ends here, then on the kids' shelf (Decision 169, mock 94).
+	private async void OnSettingsTapped(object? sender, TappedEventArgs e) => await RunGrownUpAsync(OpenSettingsAsync);
+
+	private async Task OpenSettingsAsync() => await Navigation.PushAsync(_services.GetRequiredService<SettingsPage>());
 
 	// Back from grown-up mode lands on the kids' shelf, not out of the app (Slice 172, Decision 169, mock 94).
 	protected override bool OnBackButtonPressed()

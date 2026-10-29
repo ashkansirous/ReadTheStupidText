@@ -4,12 +4,11 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:DinoReader"
-    xmlns:res="clr-namespace:DinoReader.Resources.Strings"
     x:DataType="local:StoryTile"
     IsVisible="{Binding Mode.IsGrownUp}">
 
-    <!-- Grown-up edit overlay on a gallery cover (Slice 80): a band at the foot with Edit and Cast,
-         and a red trash badge top-right. Every control is at least 44 dp tall and labelled with the title. -->
+    <!-- Grown-up overlay on a gallery cover (Slice 189, mock Batch 37 frame 85b): one white 36 px dot with a soft shadow and a "⋯" at the top-right corner
+         (6 px in), its tap area 48 dp. It opens the book's options sheet; Edit, Cast, Record, Export and Remove live in that sheet. -->
     <Grid>
         <!-- Swallows taps on the bare cover and opens the book's sheet, so they never fall through to the cover's own tap. -->
         <Grid BackgroundColor="Transparent">
@@ -17,61 +16,19 @@
                 <TapGestureRecognizer Tapped="OnBackdropTapped" />
             </Grid.GestureRecognizers>
         </Grid>
-        <Border VerticalOptions="End" BackgroundColor="#d92b2540" StrokeThickness="0" Padding="6">
-            <Border.StrokeShape>
-                <RoundRectangle CornerRadius="0,0,16,16" />
-            </Border.StrokeShape>
-            <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="6">
-                <Button Text="{x:Static res:AppResources.Common_Edit}" HeightRequest="44" CornerRadius="12" Padding="4,0" FontSize="13"
-                        FontAttributes="Bold" BackgroundColor="{StaticResource BrandTint}" TextColor="{StaticResource Brand}"
-                        SemanticProperties.Description="{Binding EditHint}" Clicked="OnEditClicked" />
-                <Button Grid.Column="1" Text="{x:Static res:AppResources.Gallery_CastButton}" HeightRequest="44" CornerRadius="12" Padding="4,0"
-                        FontSize="13" FontAttributes="Bold" BackgroundColor="{StaticResource BrandTint}" TextColor="{StaticResource Brand}"
-                        SemanticProperties.Description="{Binding CastHint}" Clicked="OnCastClicked" />
-                <!-- Record (Slice 111, mock frame 38): the red microphone, 44 square, opens the page-by-page Record screen. -->
-                <Border Grid.Column="2" WidthRequest="44" HeightRequest="44" BackgroundColor="White" StrokeThickness="0"
-                        SemanticProperties.Description="{Binding RecordHint}">
-                    <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="12" />
-                    </Border.StrokeShape>
-                    <local:IconView Kind="Mic" Color="{StaticResource Danger}" Size="20" StrokeWidth="2.2" />
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnRecordTapped" />
-                    </Border.GestureRecognizers>
-                </Border>
-            </Grid>
-        </Border>
-        <!-- Developer-only Export story (Slice 91): the purple mirror of the trash badge, top-left. -->
-        <Grid HorizontalOptions="Start" VerticalOptions="Start" WidthRequest="44" HeightRequest="44"
-              IsVisible="{Binding ShowExport}" SemanticProperties.Description="{Binding ExportHint}">
-            <Border WidthRequest="32" HeightRequest="32" BackgroundColor="{StaticResource Brand}" StrokeThickness="0">
+        <Grid HorizontalOptions="End" VerticalOptions="Start" WidthRequest="48" HeightRequest="48" AutomationId="TileMore"
+              SemanticProperties.Description="{Binding MoreHint}">
+            <Border WidthRequest="36" HeightRequest="36" BackgroundColor="White" StrokeThickness="0">
                 <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="16" />
+                    <RoundRectangle CornerRadius="18" />
                 </Border.StrokeShape>
                 <Border.Shadow>
-                    <Shadow Brush="Black" Opacity="0.2" Offset="0,2" Radius="3" />
+                    <Shadow Brush="#2b2540" Opacity="0.2" Offset="0,2" Radius="3" />
                 </Border.Shadow>
-                <Path Stroke="White" StrokeThickness="2.4" StrokeLineCap="Round" StrokeLineJoin="Round" Aspect="Uniform"
-                      WidthRequest="16" HeightRequest="16" HorizontalOptions="Center" VerticalOptions="Center"
-                      Data="M12 15V4 M8 8l4-4 4 4 M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7" />
+                <local:IconView Kind="MoreDots" Color="{StaticResource Ink}" Size="18" Filled="True" />
             </Border>
             <Grid.GestureRecognizers>
-                <TapGestureRecognizer Tapped="OnExportTapped" />
-            </Grid.GestureRecognizers>
-        </Grid>
-        <Grid HorizontalOptions="End" VerticalOptions="Start" WidthRequest="44" HeightRequest="44"
-              SemanticProperties.Description="{Binding DeleteHint}">
-            <Border WidthRequest="32" HeightRequest="32" BackgroundColor="{StaticResource Danger}" StrokeThickness="0">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="16" />
-                </Border.StrokeShape>
-                <Border.Shadow>
-                    <Shadow Brush="Black" Opacity="0.2" Offset="0,2" Radius="3" />
-                </Border.Shadow>
-                <local:IconView Kind="Trash" Color="White" Size="16" StrokeWidth="2.4" />
-            </Border>
-            <Grid.GestureRecognizers>
-                <TapGestureRecognizer Tapped="OnDeleteTapped" />
+                <TapGestureRecognizer Tapped="OnMoreTapped" />
             </Grid.GestureRecognizers>
         </Grid>
     </Grid>

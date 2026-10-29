@@ -129,8 +129,6 @@
   <data name="Language_Title" xml:space="preserve"><value>Kieli</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>Dino lukee ja kääntää tälle kielelle</value></data>
   <data name="Settings_Title" xml:space="preserve"><value>Asetukset</value></data>
-  <data name="Settings_Books" xml:space="preserve"><value>Kirjat</value></data>
-  <data name="Settings_BooksValue" xml:space="preserve"><value>Lisää, muokkaa, Kauppa</value></data>
   <data name="Settings_GroupReading" xml:space="preserve"><value>Lukeminen</value></data>
   <data name="Settings_GroupPhone" xml:space="preserve"><value>Tämä puhelin</value></data>
   <data name="Settings_NewVersion" xml:space="preserve"><value>Uusi versio</value></data>
@@ -147,6 +145,16 @@
   <data name="Narrator_NoVoiceHint" xml:space="preserve"><value>Kielen {0} äänet eivät ole vielä tässä puhelimessa. Palaa takaisin, avaa Kieli, valitse {0} ja lataa se, ja valitse sitten kertoja tästä.</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Aikuiset</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Lisää ja muokkaa kirjoja</value></data>
+  <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>Aikuisille</value></data>
+  <data name="Gallery_BookOptions" xml:space="preserve"><value>Valinnat: {0}</value></data>
+  <data name="Book_FromStore" xml:space="preserve"><value>Kaupasta</value></data>
+  <data name="Book_Starter" xml:space="preserve"><value>Aloituskirja</value></data>
+  <data name="Book_Own" xml:space="preserve"><value>Oma kirjasi</value></data>
+  <data name="Book_EditPages" xml:space="preserve"><value>Muokkaa sivuja</value></data>
+  <data name="Book_Remove" xml:space="preserve"><value>Poista hyllystä</value></data>
+  <data name="Book_RemoveTitle" xml:space="preserve"><value>Poistetaanko ”{0}” hyllystä?</value></data>
+  <data name="Book_RemoveBodyStore" xml:space="preserve"><value>Sen sivut, kuvat ja äänet poistetaan tästä puhelimesta. Voit lisätä sen uudelleen ilmaiseksi kaupasta.</value></data>
+  <data name="Book_RemoveConfirm" xml:space="preserve"><value>Poista</value></data>
   <data name="Gallery_AddFromBooks" xml:space="preserve"><value>Lisää omista kirjoistasi</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>Valmis</value></data>
   <data name="Language_Download" xml:space="preserve"><value>Lataa</value></data>

@@ -13,6 +13,9 @@ public enum DeleteOutcome
 	Failed,
 }
 
+/// <summary>The words of a delete question: its title, body and the accepting button (Slice 189: a book's "Remove from the shelf" says more than the default).</summary>
+public sealed record DeletePrompt(string Title, string Body, string Accept);
+
 /// <summary>Library actions the gallery's grown-up overlay and the edit screens share.</summary>
 public sealed class StoryActions(IStoryLibrary library, IServiceProvider services, GrownUpMode mode)
 {
@@ -123,15 +126,16 @@ public sealed class StoryActions(IStoryLibrary library, IServiceProvider service
 		return (clean.Length > 0 ? clean : FallbackFileName) + StoryPackageManifest.Extension;
 	}
 
-	/// <summary>Asks for confirmation, then deletes the story's folder. </summary>
-	public async Task<DeleteOutcome> ConfirmDeleteAsync(Page page, Story story)
+	/// <summary>Asks for confirmation, then deletes the story's folder. <paramref name="prompt"/> null asks the plain delete question.</summary>
+	public async Task<DeleteOutcome> ConfirmDeleteAsync(Page page, Story story, DeletePrompt? prompt = null)
 	{
 		if (!mode.IsGrownUp)
 		{
 			return DeleteOutcome.Declined;
 		}
 
-		bool confirmed = await page.DisplayAlertAsync(GalleryText.DeleteTitle(story.Title), AppResources.Delete_Body, AppResources.Common_Delete, AppResources.Common_Keep);
+		prompt ??= new DeletePrompt(GalleryText.DeleteTitle(story.Title), AppResources.Delete_Body, AppResources.Common_Delete);
+		bool confirmed = await page.DisplayAlertAsync(prompt.Title, prompt.Body, prompt.Accept, AppResources.Common_Keep);
 		// The alert can outlive the grown-up mode (app left and returned): a confirm then deletes nothing.
 		return confirmed && mode.IsGrownUp ? await TryDeleteAsync(page, story) : DeleteOutcome.Declined;
 	}
@@ -141,6 +145,7 @@ public sealed class StoryActions(IStoryLibrary library, IServiceProvider service
 		try
 		{
 			await library.DeleteAsync(story.Id);
+			StarterStories.ForgetStoreInstall(story.SourceId);
 			return DeleteOutcome.Deleted;
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)

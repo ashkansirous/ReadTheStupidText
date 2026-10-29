@@ -22,6 +22,7 @@ public sealed class StarterStories(IStoryLibrary library, StoryVoicing voicing)
 
 	// Set for every starter and every store story kept on the shelf (Slice 133): a book with this mark, a starter record or a recorded content version came from the catalogue, not from a grown-up.
 	private const string CatalogueKeyPrefix = "dino.catalogue.";
+	private const string StoreInstalledKeyPrefix = "dino.store.installed.";
 
 	// The content version a starter was installed or refreshed at; none recorded means the first release (StarterUpdate.LegacyInstalledVersion).
 	private const string VersionKeyPrefix = "dino.starter.version.";
@@ -89,6 +90,18 @@ public sealed class StarterStories(IStoryLibrary library, StoryVoicing voicing)
 	/// <summary>Whether <paramref name="packageId"/> is a starter or a story the store gave (Slice 133): only such books are counted by id in the usage counts.</summary>
 	public static bool IsCatalogueId(string packageId) =>
 		Preferences.Default.Get(CatalogueKeyPrefix + packageId, false) || IsRecorded(packageId) || InstalledVersion(packageId) is not null;
+
+	/// <summary>Whether the app itself installed <paramref name="packageId"/> from its bundled starters (Slice 189): a catalogue book that is not one came from the Store.</summary>
+	public static bool IsStarterId(string packageId) => IsRecorded(packageId) && !Preferences.Default.Get(StoreInstalledKeyPrefix + packageId, false);
+
+	/// <summary>Called when the user removes a book from the shelf (Slice 189): the Store-install flag describes the copy on the shelf, so it ends with that copy.</summary>
+	public static void ForgetStoreInstall(string? packageId)
+	{
+		if (!string.IsNullOrEmpty(packageId))
+		{
+			Preferences.Default.Remove(StoreInstalledKeyPrefix + packageId);
+		}
+	}
 
 	private static void MarkCatalogue(string packageId) => Preferences.Default.Set(CatalogueKeyPrefix + packageId, true);
 
@@ -511,6 +524,7 @@ public sealed class StarterStories(IStoryLibrary library, StoryVoicing voicing)
 		await package.CopyToAsync(copy);
 		StoryPackageManifest manifest = await ManifestAsync(copy);
 		MarkCatalogue(manifest.Id);
+		Preferences.Default.Set(StoreInstalledKeyPrefix + manifest.Id, true); // the copy on the shelf came from the Store, even when the bundled starter of that id was installed (and removed) earlier
 		if (manifest.Version is { } version)
 		{
 			RecordVersion(manifest.Id, version);

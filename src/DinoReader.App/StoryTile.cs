@@ -2,7 +2,7 @@ using DinoReader.Core;
 
 namespace DinoReader;
 
-/// <summary>What the gallery grid binds to for one story: its cover, labels and the mode the overlay follows.</summary>
+/// <summary>What the gallery grid binds to for one story: its cover, labels and the mode the "⋯" overlay follows.</summary>
 public sealed record StoryTile(Story Story, Color CoverColour, string? CoverImagePath, GrownUpMode Mode)
 {
 	/// <summary>The title in the app language when the book has one (Slice 159); the story's own otherwise.</summary>
@@ -34,18 +34,8 @@ public sealed record StoryTile(Story Story, Color CoverColour, string? CoverImag
 		colour.Green + (1 - colour.Green) * TintTowardsWhite,
 		colour.Blue + (1 - colour.Blue) * TintTowardsWhite);
 
-	public string EditHint => GalleryText.EditStory(Title);
-
-	public string CastHint => GalleryText.CastStory(Title);
-
-	public string RecordHint => GalleryText.RecordStory(Title);
-
-	public string DeleteHint => GalleryText.DeleteStory(Title);
-
-	/// <summary>The developer-only export badge (Slice 91): shown only with the developer switch on.</summary>
-	public bool ShowExport => DeveloperMode.Enabled;
-
-	public string ExportHint => GalleryText.ExportStory(Title);
+	/// <summary>What a screen reader says on the cover's "⋯" dot (Slice 189).</summary>
+	public string MoreHint => GalleryText.BookOptions(Title);
 
 	public static StoryTile From(Story story, IStoryLibrary library, GrownUpMode mode, string? displayTitle = null)
 	{

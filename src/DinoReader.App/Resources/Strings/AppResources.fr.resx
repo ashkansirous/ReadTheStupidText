@@ -127,8 +127,6 @@
   <data name="Language_Title" xml:space="preserve"><value>Langue</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>Dino lit et traduit dans cette langue</value></data>
   <data name="Settings_Title" xml:space="preserve"><value>Réglages</value></data>
-  <data name="Settings_Books" xml:space="preserve"><value>Livres</value></data>
-  <data name="Settings_BooksValue" xml:space="preserve"><value>Ajouter, modifier, Boutique</value></data>
   <data name="Settings_GroupReading" xml:space="preserve"><value>Lecture</value></data>
   <data name="Settings_GroupPhone" xml:space="preserve"><value>Ce téléphone</value></data>
   <data name="Settings_NewVersion" xml:space="preserve"><value>Nouvelle version</value></data>
@@ -145,6 +143,16 @@
   <data name="Narrator_NoVoiceHint" xml:space="preserve"><value>Les voix pour {0} ne sont pas encore sur ce téléphone. Reviens en arrière, ouvre Langue, choisis {0}, télécharge-la, puis choisis le narrateur ici.</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Adultes</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Ajouter et modifier des livres</value></data>
+  <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>Pour les grands</value></data>
+  <data name="Gallery_BookOptions" xml:space="preserve"><value>Options pour {0}</value></data>
+  <data name="Book_FromStore" xml:space="preserve"><value>Depuis la boutique</value></data>
+  <data name="Book_Starter" xml:space="preserve"><value>Livre de départ</value></data>
+  <data name="Book_Own" xml:space="preserve"><value>Votre livre</value></data>
+  <data name="Book_EditPages" xml:space="preserve"><value>Modifier les pages</value></data>
+  <data name="Book_Remove" xml:space="preserve"><value>Retirer de l'étagère</value></data>
+  <data name="Book_RemoveTitle" xml:space="preserve"><value>Retirer « {0} » de l'étagère ?</value></data>
+  <data name="Book_RemoveBodyStore" xml:space="preserve"><value>Ses pages, images et voix seront supprimées de ce téléphone. Vous pourrez le rajouter gratuitement depuis la boutique.</value></data>
+  <data name="Book_RemoveConfirm" xml:space="preserve"><value>Retirer</value></data>
   <data name="Gallery_AddFromBooks" xml:space="preserve"><value>Ajouter depuis vos propres livres</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>Prêt</value></data>
   <data name="Language_Download" xml:space="preserve"><value>Télécharger</value></data>

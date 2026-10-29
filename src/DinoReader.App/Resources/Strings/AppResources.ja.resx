@@ -127,8 +127,6 @@
   <data name="Language_Title" xml:space="preserve"><value>言語</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>Dino はこの言語で読み上げ、翻訳します</value></data>
   <data name="Settings_Title" xml:space="preserve"><value>設定</value></data>
-  <data name="Settings_Books" xml:space="preserve"><value>本</value></data>
-  <data name="Settings_BooksValue" xml:space="preserve"><value>追加・編集・ストア</value></data>
   <data name="Settings_GroupReading" xml:space="preserve"><value>読み上げ</value></data>
   <data name="Settings_GroupPhone" xml:space="preserve"><value>このスマホ</value></data>
   <data name="Settings_NewVersion" xml:space="preserve"><value>新しいバージョン</value></data>
@@ -145,6 +143,16 @@
   <data name="Narrator_NoVoiceHint" xml:space="preserve"><value>{0}の声はまだこのスマホにありません。戻って「言語」を開き、{0}を選んでダウンロードしてから、ここで語り手を選んでください。</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>おとな</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>本を追加・編集</value></data>
+  <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>おとな向け</value></data>
+  <data name="Gallery_BookOptions" xml:space="preserve"><value>{0}のオプション</value></data>
+  <data name="Book_FromStore" xml:space="preserve"><value>ストアから</value></data>
+  <data name="Book_Starter" xml:space="preserve"><value>はじめの本</value></data>
+  <data name="Book_Own" xml:space="preserve"><value>あなたの本</value></data>
+  <data name="Book_EditPages" xml:space="preserve"><value>ページを編集</value></data>
+  <data name="Book_Remove" xml:space="preserve"><value>本棚から外す</value></data>
+  <data name="Book_RemoveTitle" xml:space="preserve"><value>「{0}」を本棚から外しますか？</value></data>
+  <data name="Book_RemoveBodyStore" xml:space="preserve"><value>ページ、写真、声がこのスマホから削除されます。ストアから無料でもう一度追加できます。</value></data>
+  <data name="Book_RemoveConfirm" xml:space="preserve"><value>外す</value></data>
   <data name="Gallery_AddFromBooks" xml:space="preserve"><value>自分の本から追加</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>準備OK</value></data>
   <data name="Language_Download" xml:space="preserve"><value>ダウンロード</value></data>

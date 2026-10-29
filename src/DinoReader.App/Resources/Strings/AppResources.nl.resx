@@ -129,8 +129,6 @@
   <data name="Language_Title" xml:space="preserve"><value>Taal</value></data>
   <data name="Language_Subtitle" xml:space="preserve"><value>Dino leest en vertaalt in deze taal</value></data>
   <data name="Settings_Title" xml:space="preserve"><value>Instellingen</value></data>
-  <data name="Settings_Books" xml:space="preserve"><value>Boeken</value></data>
-  <data name="Settings_BooksValue" xml:space="preserve"><value>Toevoegen, bewerken, Winkel</value></data>
   <data name="Settings_GroupReading" xml:space="preserve"><value>Lezen</value></data>
   <data name="Settings_GroupPhone" xml:space="preserve"><value>Deze telefoon</value></data>
   <data name="Settings_NewVersion" xml:space="preserve"><value>Nieuwe versie</value></data>
@@ -147,6 +145,16 @@
   <data name="Narrator_NoVoiceHint" xml:space="preserve"><value>De stemmen voor {0} staan nog niet op deze telefoon. Ga terug, open Taal, kies {0} en download de stem, en kies hier de verteller.</value></data>
   <data name="Gallery_GrownUpsTitle" xml:space="preserve"><value>Volwassenen</value></data>
   <data name="Gallery_GrownUpsSub" xml:space="preserve"><value>Boeken toevoegen en bewerken</value></data>
+  <data name="Gallery_GrownUpsButton" xml:space="preserve"><value>Voor volwassenen</value></data>
+  <data name="Gallery_BookOptions" xml:space="preserve"><value>Opties voor {0}</value></data>
+  <data name="Book_FromStore" xml:space="preserve"><value>Uit de winkel</value></data>
+  <data name="Book_Starter" xml:space="preserve"><value>Startboek</value></data>
+  <data name="Book_Own" xml:space="preserve"><value>Jouw boek</value></data>
+  <data name="Book_EditPages" xml:space="preserve"><value>Pagina’s bewerken</value></data>
+  <data name="Book_Remove" xml:space="preserve"><value>Van de plank halen</value></data>
+  <data name="Book_RemoveTitle" xml:space="preserve"><value>“{0}” van de plank halen?</value></data>
+  <data name="Book_RemoveBodyStore" xml:space="preserve"><value>De pagina’s, plaatjes en stemmen worden van deze telefoon verwijderd. Je kunt het gratis opnieuw toevoegen vanuit de winkel.</value></data>
+  <data name="Book_RemoveConfirm" xml:space="preserve"><value>Weghalen</value></data>
   <data name="Gallery_AddFromBooks" xml:space="preserve"><value>Toevoegen uit je eigen boeken</value></data>
   <data name="Language_Ready" xml:space="preserve"><value>Klaar</value></data>
   <data name="Language_Download" xml:space="preserve"><value>Downloaden</value></data>

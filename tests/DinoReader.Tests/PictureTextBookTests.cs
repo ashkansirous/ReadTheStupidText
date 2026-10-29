@@ -305,26 +305,69 @@ public class PictureTextBookTests
         Assert.Equal((0.0, 0.0, 300.0, 200.0), PictureTextBook.CoverFromTop(300, 200, 0));
     }
 
+    // Slice 189: the card is at most 30% of the picture, the 8 below it counted, and holds whole lines only (mock Batch 37 frame 91: four 31.5 lines under a 10 top padding on the 490-tall picture).
     [Fact]
-    public void CardHeightFor_MeasuredLinesGiveFiveWholeLines()
+    public void UprightCardHeight_MockPhoneHoldsFourWholeLines()
     {
-        TextLines lines = Uniform(12, 30);
+        TextLines lines = Uniform(12);
 
-        Assert.Equal(10 + 150, PictureTextBook.CardHeightFor(5, lines, 99, 10), 3);
+        double height = PictureTextBook.UprightCardHeight(490, 8, lines, 31.5, 10);
+
+        Assert.Equal(10 + 4 * 31.5, height, 3);
+        Assert.True(height + 8 <= 0.30 * 490);
     }
 
     [Fact]
-    public void CardHeightFor_ShortTextIsAsTallAsItsLines()
+    public void UprightCardHeight_TallerLinesHoldFewer()
     {
-        TextLines lines = Uniform(2, 30);
+        TextLines lines = Uniform(12, 40);
 
-        Assert.Equal(10 + 60, PictureTextBook.CardHeightFor(5, lines, 99, 10), 3);
+        Assert.Equal(10 + 3 * 40, PictureTextBook.UprightCardHeight(490, 8, lines, 31.5, 10), 3);
+    }
+
+    [Theory]
+    [InlineData(300)]
+    [InlineData(490)]
+    [InlineData(900)]
+    [InlineData(1400)]
+    public void UprightCardHeight_NeverTallerThanThirtyPercentOfThePicture(double pictureHeight)
+    {
+        TextLines lines = Uniform(40);
+
+        double height = PictureTextBook.UprightCardHeight(pictureHeight, 8, lines, 31.5, 10);
+
+        Assert.True(height + 8 <= 0.30 * pictureHeight + 0.01);
+        Assert.Equal(0, (height - 10) % 31.5, 3);
     }
 
     [Fact]
-    public void CardHeightFor_UnmeasuredUsesTheEstimatedPitch()
+    public void UprightCardHeight_ShortTextIsAsTallAsItsLines()
     {
-        Assert.Equal(10 + 5 * 31.5, PictureTextBook.CardHeightFor(5, null, 31.5, 10), 3);
+        TextLines lines = Uniform(2);
+
+        Assert.Equal(10 + 2 * 31.5, PictureTextBook.UprightCardHeight(900, 8, lines, 31.5, 10), 3);
+    }
+
+    [Fact]
+    public void UprightCardHeight_AtLeastOneLineEvenOnATinyPicture()
+    {
+        TextLines lines = Uniform(5);
+
+        Assert.Equal(10 + 31.5, PictureTextBook.UprightCardHeight(60, 8, lines, 31.5, 10), 3);
+    }
+
+    [Fact]
+    public void UprightCardHeight_UnmeasuredUsesTheEstimatedPitch()
+    {
+        Assert.Equal(10 + 4 * 31.5, PictureTextBook.UprightCardHeight(490, 8, null, 31.5, 10), 3);
+    }
+
+    [Fact]
+    public void UprightCardHeight_FarsiLinesTallerThanLatinGiveThree()
+    {
+        TextLines lines = Uniform(10, 41);
+
+        Assert.Equal(10 + 3 * 41, PictureTextBook.UprightCardHeight(490, 8, lines, 31.5, 10), 3);
     }
 
     // Lines as a platform lays them out: a 21 pt font at 1.5 gives 31.5 dp lines; a line with a fallback-font glyph (CJK, Farsi) is taller.

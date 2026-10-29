@@ -1,6 +1,6 @@
 ### Slice 189 — Dino: one "For grown-ups" button on the shelf, the gear inside grown-up mode, a ⋯ sheet per book, a reading card capped at 30%
 
-*In progress (planned 2026-10-29).* Dino Reader only (Android, iOS and the Windows head). From the user's refresh of the Batch 37 Claude
+*Built 2026-10-29, not yet verified on a phone or iOS (planned 2026-10-29).* Dino Reader only (Android, iOS and the Windows head). From the user's refresh of the Batch 37 Claude
 Design mock (2026-10-29, frames 79, 80, 85, 85b, 91, 94). Changes what Slices 172 and 174 built. Decision 170.
 
 **Touches:** `src/DinoReader.App/GalleryPage.xaml`, `src/DinoReader.App/GalleryPage.xaml.cs`, `src/DinoReader.App/TileOverlay.xaml`, `src/DinoReader.App/TileOverlay.xaml.cs`, `src/DinoReader.App/BookSheet.cs`, `src/DinoReader.App/StoryTile.cs`, `src/DinoReader.App/SettingsPage.cs`, `src/DinoReader.App/SettingsRows.cs`, `src/DinoReader.App/IconView.cs`, `src/DinoReader.App/GrownUpMode.cs`, `src/DinoReader.App/App.xaml.cs` (back routing), `src/DinoReader.App/PictureTextPages.cs`, `src/DinoReader.Core/PictureTextBook.cs` (card height), `src/DinoReader.App/Resources/Strings/*.resx`, `src/DinoReader.App/Resources/Strings/AppResources.cs`, `tests/DinoReader.Tests/**`, `tools/flows/**` and `tools/desktop-vm/checks/**` only where a scripted flow taps the old shelf gear, `docs/design/dino-reader/**`, `src/DinoReader.App/CLAUDE.md`, `docs/plan/slices/189-dino-grown-ups-button-and-book-sheet.md`.
@@ -78,3 +78,24 @@ short screens; the mock caps it at 30% of the picture.
 
 Mock: `docs/design/dino-reader/Dino Reader Batch 37.dc.html` (refreshed 2026-10-29), frames 79 (line 27),
 80 (45), 85 (170), 85b (187), 91 (347), 94 (373). Read visual values from that copy; never call `DesignSync`.
+
+#### Built (2026-10-29)
+
+- Shelf gear -> book-and-plus `GalleryGrownUps` ("For grown-ups", gate, grown-up mode); gear in grown-up mode (own header column) opens Settings with no second gate; Settings has no Books row and Back returns to grown-up mode.
+- Each cover in grown-up mode has a 36 px ⋯ (`TileMore`, 48 dp tap) opening the reworked `BookSheet`: cover, title, origin line (`BookOrigins`, Core `BookSheetPlan`), Show original text, Read with my voice, Record/Cast, Edit pages (own books), Export (developer mode only, as before), Remove from the shelf (confirm; Store books say they can be added again for free), Done. The cover overlay buttons are gone.
+- Origin: a Store install sets `dino.store.installed.<id>`; removing a book clears it (`StarterStories.ForgetStoreInstall`), so a removed and re-added book shows where its current copy came from.
+- Remove and Edit/Export/Cast/Record wait for the sheet's pending switch save (`_sheetSaveLock`, `SettledSheetStoryAsync`).
+- Picture + text card: `PictureTextBook.UprightCardHeight`, at most 30% of the picture inset included, whole lines, placed only once the page has a real height; Text only keeps the five-line card (`CardHeightFor`).
+- Debug hook `enter-grown-up` (waits until the mode stays on) and the Maestro flow `.maestro/dino/grown-ups-button.yaml` (shown failing once with the old gear assertion).
+- New strings in all 15 `.resx` (13 machine drafts); `Settings_Books`/`Settings_BooksValue` removed. Unused `Gallery_EditStory`, `Gallery_CastStory`, `Gallery_DeleteStoryLabel`, `Gallery_ExportStory`, `Rec_RecordPage` remain (review findings skipped).
+- Gate order: build -> fast tests -> review high (8 of 12 fixed) -> review medium (6 of 8 fixed) -> emulator and VM runs (no app bugs found).
+
+#### Verified
+
+- Emulator: shelf, grown-up header, gear -> Settings -> back -> grown-up -> shelf; starter and Store sheets; Remove a Store book (gone after restart), re-add shows "From the Store"; card 398/1633 px (24%), three whole lines.
+- Windows VM: shelf button named "For grown-ups", real gate, gear -> Settings (no Books row), back and Done, ⋯ sheet "Starter book", Remove asks first; `dino-launch`, `dino-open-book`, `dino-page-turn` pass.
+
+#### Not yet verified
+
+- Own book sheet ("Your book", Edit pages); a switch flipped just before Remove or Edit pages (no translated or recorded book on the emulator); Settings sub-page -> Settings back step; Stay/Close after the change; the card limit on Windows (only the inner scroll area was measured, 24.7%); iOS run (no Mac, compile only); real phone; native read of the new strings (13 drafts).
+- The permanent Settings VM check (Slice 188) must use the new path: shelf -> grown-ups button -> gate -> gear.
