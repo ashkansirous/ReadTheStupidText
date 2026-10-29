@@ -38,6 +38,7 @@ public sealed class IntroWizardPage : ContentPage
 	private IntroPictures _pictures = IntroPictures.None;
 	private readonly WaitOverlay _waitOverlay = DinoWait.OverPage();
 	private readonly WaitController _wait;
+	private StoryLanguageSet? _openedLanguages; // the saved set when the story-languages step opened: a side missing from the saved set later was unticked by a failed download
 	private StoryLanguagePicker? _languagePicker; // the picks of the story-languages step, kept while it shows
 	private int _step;
 	private bool _replay;
@@ -211,7 +212,15 @@ public sealed class IntroWizardPage : ContentPage
 		var heading = new Label { Text = AppResources.StoryLanguages_IntroTitle, FontSize = TitleSize, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center, Margin = new Thickness(0, 10, 0, 0) };
 		SemanticProperties.SetHeadingLevel(heading, SemanticHeadingLevel.Level1);
 		var line = new Label { Text = AppResources.StoryLanguages_IntroLine, FontSize = LineSize, LineHeight = 1.35, TextColor = DinoTokens.Get(DinoTokens.Body), HorizontalTextAlignment = TextAlignment.Center };
-		_languagePicker ??= new StoryLanguagePicker(StoryLanguages.Current(), null);
+		if (_languagePicker is null)
+		{
+			_openedLanguages = StoryLanguages.Current();
+			_languagePicker = new StoryLanguagePicker(_openedLanguages, null);
+			StoryLanguagePacks packs = _services.GetRequiredService<StoryLanguagePacks>();
+			EventHandler lost = (_, _) => _languagePicker?.Untick(LostSides(StoryLanguages.Current()));
+			packs.Changed += lost;
+			Unloaded += (_, _) => packs.Changed -= lost;
+		}
 		var done = new CoralButton { Text = AppResources.Common_Done };
 		done.Clicked += async (_, _) => await _busy.RunAsync(DoneLanguagesAsync);
 		StoryLanguageSet saved = StoryLanguages.Current();
@@ -225,11 +234,17 @@ public sealed class IntroWizardPage : ContentPage
 		return grid;
 	}
 
+	// A side saved when the step opened but gone from the saved set now was unticked behind the picker's back (a failed download): the picker shows it unticked, and Done must not tick it again.
+	private StoryLanguageSet WithoutLostSides(StoryLanguageSet picked, StoryLanguageSet saved) =>
+		LostSides(saved).Aggregate(picked, (set, side) => set.WithoutSide(side));
+
+	private IEnumerable<string> LostSides(StoryLanguageSet saved) => _openedLanguages?.Sides.Where(side => !saved.Contains(side)) ?? [];
+
 	// Saves the ticked languages, starts the voice of each (they keep downloading behind the next screens; Settings shows their progress) and counts the set.
 	private async Task DoneLanguagesAsync()
 	{
 		StoryLanguageSet before = StoryLanguages.Current();
-		StoryLanguageSet set = _languagePicker?.Set ?? before;
+		StoryLanguageSet set = WithoutLostSides(_languagePicker?.Set ?? before, before);
 		StoryLanguages.SaveSides(set);
 		await _services.GetRequiredService<StoryLanguagePacks>().RequestAsync(this, set.Sides, _wait); // on mobile data the grown-up is asked first
 		if (!set.Sides.SequenceEqual(before.Sides))

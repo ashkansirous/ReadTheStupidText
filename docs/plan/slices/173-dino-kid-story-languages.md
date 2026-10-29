@@ -120,3 +120,5 @@ None.
 - Windows VM check: result pending.
 - Native read of the new strings in 13 languages.
 - Store privacy forms for the new events (user's lane).
+
+*Follow-up fixed 2026-10-29 (`fix/dino-language-failed-download`):* a failed language download no longer stays ticked silently. Offline or a network error with no answer keeps it ticked and waiting (Slice 182); a real failure (server error, bad pack, after the one automatic retry) unticks it and shows "Couldn't get the voice. Tap to try again." (Retry only when fewer than two languages are ticked); Cancel unticks with no failure line; the intro picker shows the untick. Pure decision in `PackFailureDecision` (Application/Reading). Not yet seen on a device: a forced failure, airplane mode mid-download, the intro picker untick.

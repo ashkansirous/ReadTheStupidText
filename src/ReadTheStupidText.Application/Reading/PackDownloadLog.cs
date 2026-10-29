@@ -21,6 +21,7 @@ public static class PackDownloadLog
     public const string DoneEvent = "done";
     public const string FailedEvent = "failed";
     public const string ResumeEvent = "resume";
+    public const string LanguageFailedEvent = "language-failed";
     public const string HeadersPhase = "headers";
     public const string BodyPhase = "body";
 
@@ -54,6 +55,9 @@ public static class PackDownloadLog
 
     public static void Failed(string packId, int attempt, PackDownloadResult result) =>
         Write($"{FailedEvent} pack={packId} attempts={attempt} result={result}");
+
+    public static void LanguageFailure(string language, PackDownloadResult result, PackFailureAction action) =>
+        Write($"{LanguageFailedEvent} language={language} result={result} action={action}");
 
     private static void Write(string line)
     {
