@@ -69,7 +69,7 @@ Decided without asking (my choice, not the user's): a book the child opens while
 
 Dino 1694 tests, RTST suite, Android and iOS builds green. Emulator: not due, stage then swap, cast voice kept, edited text kept, force-stop after stage recovers, overlay shown during the 1.2-1.5 s apply and not on a normal start (5-13 ms), no FATAL.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-29)
 
 - Dino book updates are staged in the background and applied only at the next cold start, before the shelf's first read (`StagedBookUpdates.ApplyOnceAsync`); never swap a book that may be open. Every install and swap records the text+picture hash. (Slice 181: docs/plan/slices/181-dino-books-update-from-store.md)
 

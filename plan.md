@@ -19,11 +19,7 @@ Open slices only. Finished slices (157 rows) are in [slices-done](docs/plan/note
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
 | 154 | Dino: vowel marks in Farsi and Arabic books (Farsi only: Arabic left as is; marks are a hidden "how to read" text, Decision 166) | in progress | #470 | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
-| 178 | Dino: count an own book's page count and how it really came in (pdf, docx, txt, photo, scan, typed, mixed) | planned | | | [178-dino-own-book-usage-detail.md](docs/plan/slices/178-dino-own-book-usage-detail.md) |
-| 181 | Dino: books on the device update themselves from the store on app open, at most every 7 days (unedited copies only, any network, silent) | planned | | | [181-dino-books-update-from-store.md](docs/plan/slices/181-dino-books-update-from-store.md) |
-| 182 | A pack download that stopped "offline" resumes by itself when the network or the app comes back (both apps, all big packs, mobile-data rule kept) | planned | | | [182-pack-download-resumes-by-itself.md](docs/plan/slices/182-pack-download-resumes-by-itself.md) |
 | 183 | Big pack downloads keep going when the phone is locked or the app is in the background (Android foreground service with a progress notification, iOS background URLSession; after 182) | planned | | | [183-pack-downloads-keep-going-when-locked.md](docs/plan/slices/183-pack-downloads-keep-going-when-locked.md) |
-| 184 | Windows: an English-to-Japanese translation pack | planned | | | [184-windows-english-to-japanese-pack.md](docs/plan/slices/184-windows-english-to-japanese-pack.md) |
 
 Batch 39 (182-185, planned 2026-10-28, from the night's phone runs and the unowned gaps): 182 then 183 (both edit the pack downloader); 184 (Windows packs, CI) and 185 (emulator checks) can run beside them.
 
@@ -78,6 +74,11 @@ Batch 35 (159, built, PR #473, so the batch is done; planned 2026-10-27, the use
 
 Built but not verified (details in each slice file):
 
+- Slice 178 (PR #547): pdf, docx, photo and scan kinds on a device; iOS and Windows runs; `tools/dino-usage-report.ps1` against the live API after release; `analytics-query` notes for the new blob9 shape (Slice 166 file) after release ([slice](docs/plan/slices/178-dino-own-book-usage-detail.md)).
+- Slice 181 (PR #543): a recording carried over a swap; a store-downloaded book with edited text getting an update; a crash during the apply itself (kill mid-swap); iOS simulator and Windows VM runs; apply time on a real phone (1.2-1.5 s on emulator Debug) ([slice](docs/plan/slices/181-dino-books-update-from-store.md)).
+- Slice 182 (PR #544): OCR resume after the final fix round; "Waiting for Wi-Fi" on a real cellular-only phone; a real phone and the iOS runtime; Failed -> Retry state on a device ([slice](docs/plan/slices/182-pack-download-resumes-by-itself.md)).
+- Planned follow-up: 182 design frame R12 (main-page wait overlay for translation downloads) not built; mobile translation uses ML Kit's own download.
+- User decision (Slice 184, closed, PR #548): allow a CC-BY-SA en-ja model (`staka/fugumt-en-ja`, `Mitsua/elan-mt-bt-en-ja`) for a downloaded pack? Changes Decision 16's scope; until then English to Japanese stays unsupported on Windows ([slice](docs/plan/slices/184-windows-english-to-japanese-pack.md)).
 - Slice 179 (PR #542): Windows VM run with a CI MSIX; iOS `sandboxReceipt` on TestFlight; Windows Store-signature check on a Store build; Release build on an emulator without the marker (gate reason); Worker drop live after deploy; iOS simulator harness off switch (`SIMCTL_CHILD_READTHESTUPIDTEXT_NO_USAGE=1`) when a harness is added ([slice](docs/plan/slices/179-no-robot-or-own-machine-counts.md)).
 - Slice 185 (PR #545): Dino first-run pack start on the AOT Release x64 build (only Debug was run) ([slice](docs/plan/slices/185-close-three-old-gaps.md)).
 - Slice 173 (PR #525): mobile-data "Wait for Wi-Fi / Download now" prompt not seen (emulator has Wi-Fi); a persisted no-pack language (`dino.story.nopack`) after restart (Farsi had a pack); translation-pack size is a fixed "30 MB"; iOS run (no Mac) and the real phone; native read of the new strings in 13 languages; store privacy forms for the new events (user's lane). Windows VM run 2026-10-28 passed (Story languages page behind the gate, offline download fails cleanly, no flag buttons with one language or an own book); Cancel during a download not tried (offline fails within 1 s). Follow-up to consider: a failed download leaves the language ticked for retry ([slice](docs/plan/slices/173-dino-kid-story-languages.md)).

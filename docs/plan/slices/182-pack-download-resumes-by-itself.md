@@ -84,6 +84,6 @@ New strings (every app language, machine drafts marked for native review): "Wait
 - A real phone and the iOS runtime.
 - Failed -> Retry state on a device.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-29)
 
 - `src/ReadTheStupidText.Mobile.Shared/CLAUDE.md`: Resumable pack installers never track resume state themselves; they `Report` each run's end to `IPackResume`, which alone owns entries. (Slice 182: docs/plan/slices/182-pack-download-resumes-by-itself.md)
