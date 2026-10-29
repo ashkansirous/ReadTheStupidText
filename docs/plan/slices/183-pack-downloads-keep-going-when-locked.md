@@ -87,7 +87,7 @@ Three passes (`reviews/183-review1.md` to `183-review3.md`). Two strikes on fore
 
 - Both unit suites, both Android builds, both iOS compiles: green.
 - Emulator: screen off + HOME continues under the dataSync foreground service with a rising percent; voice then OCR pack back to back with the screen off (service joined, no Offline); service stops 15 s after nothing is left; Cancel from the shade is final (no restart after a Wi-Fi flap); Dino shows the ask and the system prompt, and no sheet when already granted; no FATAL in logcat.
-- Known behaviour: HOME within about 1 s of starting a download makes Android refuse the service; the download stops as Offline and resumes on the next foreground. After cancelling the voice pack the OCR pack still auto-starts (a separate pack).
+- Known behaviour: HOME within about 1 s of starting a download makes Android refuse the service; the download stops as Offline and resumes on the next foreground. After cancelling the voice pack the OCR pack still auto-starts: a bug, fixed by [Slice 186](186-no-ocr-download-after-voice-cancel.md).
 
 #### Not yet verified
 
