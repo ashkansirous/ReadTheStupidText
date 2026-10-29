@@ -375,4 +375,7 @@
   <data name="StoryLanguages_WifiNow" xml:space="preserve"><value>今すぐダウンロード</value></data>
   <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>Wi-Fiを待つ</value></data>
   <data name="StoryLanguages_WifiWaiting" xml:space="preserve"><value>Wi-Fi待ち</value></data>
+  <!-- Slice 181: staged book update wait (machine draft, needs native review) -->
+  <data name="Gallery_UpdatingBooks" xml:space="preserve"><value>本を更新しています…</value></data>
+  <!-- /Slice 181 -->
 </root>

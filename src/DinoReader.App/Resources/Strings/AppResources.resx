@@ -377,4 +377,7 @@
   <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>Wait for Wi-Fi</value></data>
   <data name="StoryLanguages_WifiWaiting" xml:space="preserve"><value>Waiting for Wi-Fi</value></data>
   <data name="StoryLanguages_FlagMap" xml:space="preserve"><value>en:GB,fa:IR,fr:FR,es:ES,pt:PT,zh:CN,ar:SA,ru:RU,ja:JP,da:DK,fi:FI,sv:SE,nb:NO,nl:NL,de:DE</value></data>
+  <!-- Slice 181: staged book update wait (source text) -->
+  <data name="Gallery_UpdatingBooks" xml:space="preserve"><value>Updating your books…</value></data>
+  <!-- /Slice 181 -->
 </root>

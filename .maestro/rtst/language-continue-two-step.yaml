@@ -1,0 +1,29 @@
+# Slice 185 (closes the Slice 161 "Continue does not move on" gap as by design): the first Continue tap picks the language and starts the
+# voice pack, so the button relabels to "Start reading"; the second tap opens the reader.
+appId: uk.sirous.readthestupidtext
+name: Language page two-step Continue
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: LanguageList
+    timeout: 20000
+- tapOn:
+    text: "English"
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: LanguageContinue
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: LanguageContinue
+      text: "Start reading"
+    timeout: 10000
+- tapOn:
+    id: LanguageContinue
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: PlayButton
+    timeout: 20000

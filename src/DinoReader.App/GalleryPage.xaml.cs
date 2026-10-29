@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Application.Settings;
 using ReadTheStupidText.Domain.Reading;
+using ReadTheStupidText.Mobile.Shared.Waiting;
 
 namespace DinoReader;
 
@@ -58,6 +59,10 @@ public partial class GalleryPage : ContentPage
 		BookInfo.RecordRequested += OpenSheetRecordAsync;
 		BookInfo.Dismissed += OnBookSheetDismissed;
 		_languageButton = AddLanguageButton();
+		WaitOverlay overlay = DinoWait.OverPage();
+		Grid.SetRowSpan(overlay, GalleryRoot.RowDefinitions.Count);
+		GalleryRoot.Children.Add(overlay);
+		_wait = new WaitController(overlay);
 	}
 
 	// Added beside the gear in code (the header is a three-column grid): the gear and Done move one column right.
@@ -135,7 +140,7 @@ public partial class GalleryPage : ContentPage
 			await RefreshAsync();
 			await ResumeIntroAsync();
 		}
-		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+		catch (Exception ex)
 		{
 			Debug.WriteLine($"Dino Reader gallery refresh failed: {ex}");
 		}
@@ -263,6 +268,8 @@ public partial class GalleryPage : ContentPage
 		StorytellerLine.Invalidate();
 	}
 
+	private readonly WaitController _wait;
+
 	private string? _shelfLanguage; // the app language the shelf titles were built in
 
 	private async Task RefreshShelfAsync()
@@ -277,8 +284,23 @@ public partial class GalleryPage : ContentPage
 		}
 	}
 
+	// Slice 181: staged store updates are swapped in once per process, and the shelf is never read before that finished, whoever asks (first load, library change, resume).
+	// The wait is logged so the 500 ms loading-state rule can be measured; past 500 ms the "Updating your books" overlay shows (no Cancel: a half swap is journaled), and it ends even on failure.
+	private async Task WaitForStagedUpdatesAsync()
+	{
+		var clock = Stopwatch.StartNew();
+		await _wait.RunAsync(WaitStage.Saving, AppResources.Gallery_UpdatingBooks, canCancel: false, async _ =>
+		{
+			await _starters.InstallOnceAsync();
+			await _services.GetRequiredService<StagedBookUpdates>().ApplyOnceAsync();
+			return true;
+		});
+		Debug.WriteLine($"[BookUpdate] gallery waited {clock.ElapsedMilliseconds} ms for the staged apply");
+	}
+
 	private async Task RefreshAsync()
 	{
+		await WaitForStagedUpdatesAsync();
 		IReadOnlyList<Story> stories = await _library.ListAsync();
 		_shelfLanguage = LanguageChoice.Current();
 		_items.Clear();

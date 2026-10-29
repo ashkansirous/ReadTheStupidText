@@ -32,6 +32,16 @@ public static class StarterUpdate
     public static string PageTextHash(Story story) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join(Story.PageSeparator, story.Pages.Select(p => p.Text)))));
 
+    /// <summary>Marks a recorded hash that covers the page text and every page picture's bytes (Slice 181); an unmarked one is the older text-only form.</summary>
+    public const string ContentHashPrefix = "c2:";
+
+    public static bool IsContentHash(string? hash) => hash is not null && hash.StartsWith(ContentHashPrefix, StringComparison.Ordinal);
+
+    /// <summary>The hash of a book's page text plus the hash of each page's picture (null for a page with none), so a replaced picture counts as an edit.</summary>
+    public static string ContentHash(Story story, IReadOnlyList<string?> pictureHashes) =>
+        ContentHashPrefix + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(
+            PageTextHash(story) + "|" + string.Join(",", pictureHashes.Select(h => h ?? "-")))));
+
     // The colour cover index every earlier version of each starter shipped with (never changed since v1): a stored colour cover with that index is the
     // shipped one, not the grown-up's pick, so a bundled picture cover replaces it.
     private static readonly IReadOnlyDictionary<string, int> ShippedCoverColours = new Dictionary<string, int>
@@ -49,6 +59,10 @@ public static class StarterUpdate
         return hash != PageTextHash(bundled)
             && !(EarlierPageTextHashes.TryGetValue(packageId, out string[]? earlier) && earlier.Contains(hash));
     }
+
+    /// <summary>As <see cref="IsEdited(string, Story, Story)"/>, but a stored copy whose text still equals the hash recorded when it arrived (<paramref name="recordedHash"/>, Slice 181) is never edited.</summary>
+    public static bool IsEdited(string packageId, Story stored, Story bundled, string? recordedHash) =>
+        !(recordedHash is not null && PageTextHash(stored) == recordedHash) && IsEdited(packageId, stored, bundled);
 
     /// <summary>Of several stored copies sharing one starter id (a refresh that stopped halfway), the one to keep: a copy already holding the bundled text, else the first.</summary>
     public static Story CopyToKeep(IReadOnlyList<Story> copies, Story bundled)
@@ -80,6 +94,7 @@ public static class StarterUpdate
             UseRecordings = recordings is not null && stored.UseRecordings,
             Created = stored.Created,
             Title = stored.Title,
+            NarratorVoiceId = stored.NarratorVoiceId,
             Cast = sameCast ? WithBundledAnimals(stored.Cast, bundled.Cast) : bundled.Cast,
             LanguageCasts = sameCast ? KeptLanguageCasts(stored, bundled) : bundled.LanguageCasts,
             PreferredMode = stored.PreferredMode,

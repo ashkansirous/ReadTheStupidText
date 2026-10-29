@@ -58,6 +58,7 @@ public static class MauiProgram
 		builder.Services.AddTransient<IMicRecorder, MicRecorder>();
 		builder.Services.AddTransient<IRecordingPlayer, RecordingPlayer>();
 		builder.Services.AddSingleton<StarterStories>();
+		builder.Services.AddSingleton<StagedBookUpdates>();
 		builder.Services.AddSingleton<StoreClient>();
 		builder.Services.AddSingleton<AppConfigClient>();
 		builder.Services.AddSingleton<UsageCounter>();

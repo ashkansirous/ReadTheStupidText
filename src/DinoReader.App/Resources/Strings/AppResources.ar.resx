@@ -375,4 +375,7 @@
   <data name="StoryLanguages_WifiNow" xml:space="preserve"><value>نزّل الآن</value></data>
   <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>انتظر Wi-Fi</value></data>
   <data name="StoryLanguages_WifiWaiting" xml:space="preserve"><value>في انتظار Wi-Fi</value></data>
+  <!-- Slice 181: staged book update wait (machine draft, needs native review) -->
+  <data name="Gallery_UpdatingBooks" xml:space="preserve"><value>جارٍ تحديث كتبك…</value></data>
+  <!-- /Slice 181 -->
 </root>
