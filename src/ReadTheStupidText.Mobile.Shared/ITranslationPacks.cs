@@ -13,6 +13,9 @@ public interface ITranslationPacks
     /// <summary>Whether the pack for <paramref name="language"/> (a language code) is on the device.</summary>
     Task<bool> IsPackReadyAsync(string language);
 
+    /// <summary>Every pack on the device, as app language codes (one question to the engine, for a grown-up screen to bring Dino's own record up to date).</summary>
+    Task<IReadOnlyCollection<string>> DownloadedPacksAsync();
+
     /// <summary>Fetches the pack for <paramref name="language"/>. <paramref name="progress"/> gets 0..1 when the engine knows it.</summary>
     /// <exception cref="ReadTheStupidText.Application.Translation.TranslationModelUnavailableException">The pack could not be downloaded.</exception>
     Task DownloadPackAsync(string language, IProgress<double>? progress, CancellationToken cancellationToken);

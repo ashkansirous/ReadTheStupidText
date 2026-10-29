@@ -32,7 +32,11 @@ public sealed class MlKitTranslator : AppTranslator, IModelPreparer, ITranslatio
     /// <inheritdoc />
     public bool AutoDownload { get; set; } = true;
 
-    public IReadOnlyList<string> SupportedLanguages { get; } = TranslateLanguage.AllLanguages!.Select(EngineLanguageCodes.FromEngine).ToArray();
+    // Built only when a grown-up path first needs the engine (Dino Reader removes ML Kit's start-up provider), so ML Kit starts here.
+    public MlKitTranslator() => MlKitInit.EnsureInitialized();
+
+    // A plain table, so constructing this class never loads ML Kit (Dino Reader keeps it unloaded until a grown-up asks for a translation).
+    public IReadOnlyList<string> SupportedLanguages => MlKitLanguages.All;
 
     public async Task<bool> IsModelReadyAsync(string source, string target)
     {
@@ -41,6 +45,13 @@ public sealed class MlKitTranslator : AppTranslator, IModelPreparer, ITranslatio
         Java.Lang.Object? downloaded = await RemoteModelManager.Instance.GetDownloadedModels(Java.Lang.Class.FromType(typeof(TranslateRemoteModel)));
         HashSet<string> languages = DownloadedLanguages(downloaded);
         return RequiredModels(source, target).All(languages.Contains);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyCollection<string>> DownloadedPacksAsync()
+    {
+        Java.Lang.Object? downloaded = await RemoteModelManager.Instance.GetDownloadedModels(Java.Lang.Class.FromType(typeof(TranslateRemoteModel)));
+        return DownloadedLanguages(downloaded).Select(EngineLanguageCodes.FromEngine).ToArray();
     }
 
     /// <inheritdoc />

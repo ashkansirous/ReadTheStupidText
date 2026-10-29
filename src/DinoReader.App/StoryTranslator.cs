@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using Microsoft.Extensions.DependencyInjection;
 using DinoReader.Core;
 using ReadTheStupidText.Application.Translation;
 using ReadTheStupidText.Mobile.Shared;
@@ -16,25 +17,73 @@ namespace DinoReader;
 /// </summary>
 public sealed class StoryTranslator
 {
-	private readonly ITranslator? _engine;
-	private readonly ITranslationPacks? _packs;
+	// Google ML Kit (the 2026-10-29 ML Kit-only-for-grown-ups fix) loads only on grown-up paths (Settings, the pack prompt, a save), plus while reading when the
+	// pack record already holds every pack of the pair and a table has gaps. The engine is resolved on first use, never in the constructor, and whether this
+	// build has one (and its languages) is answered without it.
+	private readonly bool _hasEngine;
+	private readonly Lazy<ITranslator?> _engineLazy;
+	private readonly TranslationPackStore _packStore = new();
 	private readonly IServiceProvider _services;
+	private const int ReconcileRetryMilliseconds = 60_000; // after a failed pack listing, ask again no sooner than this
+	private static readonly TimeSpan ForgetCheckTimeout = TimeSpan.FromSeconds(10);
+	private readonly object _reconcileGate = new();
+	private Task? _reconcile;
+	private long _reconcileFailedAt;
 	private readonly ConcurrentDictionary<(string Text, string Source, string Target), string> _cache = new();
 	private readonly SharedWork<(string Text, string Source, string Target), string> _inFlight = new(); // the screen and the voice translate the same pieces (Slice 110)
 
 	public StoryTranslator(IServiceProvider services)
 	{
 		_services = services;
-		_engine = services.GetService(typeof(ITranslator)) as ITranslator;
-		_packs = _engine as ITranslationPacks;
-		if (_packs is not null)
-		{
-			_packs.AutoDownload = false; // Dino asks before a language pack downloads (Slice 159, Decision 164); a missing pack means "not translated"
-		}
+		_hasEngine = (services.GetService(typeof(IServiceProviderIsService)) as IServiceProviderIsService)?.IsService(typeof(ITranslator)) == true;
+		_engineLazy = new Lazy<ITranslator?>(ResolveEngine, LazyThreadSafetyMode.PublicationOnly); // a failed start is not cached: the next use tries again
+		SeedPackRecordOnce();
 	}
 
+	// First run after the record existed: guess the packs an older install has from the story languages (no ML Kit), a grown-up screen's real check corrects it.
+	private void SeedPackRecordOnce()
+	{
+		if (!_hasEngine || _packStore.IsSeeded)
+		{
+			return;
+		}
+
+		// A fresh install was marked seeded at launch (DinoApp), before this runs, so only an upgrade gets here unmarked.
+		if (TranslationPackSeed.ShouldSeed(freshInstall: false, _packStore.IsSeeded, _packStore.IsReconciled))
+		{
+			_packStore.AddRange(TranslationPackSeed.Languages(StoryLanguages.Current().All, OwnBookTranslation.PackLanguages));
+		}
+
+		_packStore.MarkSeeded();
+	}
+
+	private ITranslator? ResolveEngine()
+	{
+		var engine = _services.GetService(typeof(ITranslator)) as ITranslator;
+		if (engine is ITranslationPacks packs)
+		{
+			packs.AutoDownload = false; // also set where the engine is registered (MauiProgram), so whoever resolves it first gets it off
+		}
+
+#if DEBUG && (ANDROID || IOS)
+		ReadTheStupidText.Mobile.Shared.Testing.TestHookLog.Write("MLKIT_ENGINE_RESOLVED"); // proof for a device check: the engine loads only on a grown-up path (the 2026-10-29 ML Kit-only-for-grown-ups fix)
+#endif
+		return engine;
+	}
+
+	// Only a grown-up path (a download, a save, a pack check) or a read of a book whose packs a grown-up downloaded may touch these.
+	private ITranslator Engine => _engineLazy.Value!;
+
+	// Resolving the engine starts ML Kit (component discovery, reflection): done off the UI thread.
+	private async Task<ITranslator> EngineAsync() => (await Task.Run(() => Engine))!;
+
+	private async Task<ITranslationPacks> PacksAsync() => (ITranslationPacks)await EngineAsync();
+
+	// The engine's languages, from a plain table (never the engine itself); null with no engine in this build.
+	private IReadOnlyCollection<string>? EngineLanguages => _hasEngine ? MlKitLanguages.All : null;
+
 	/// <summary>Whether this build has a live translation engine (for a story being typed or scanned; a shipped story brings its own table).</summary>
-	public bool IsAvailable => _engine is not null;
+	public bool IsAvailable => _hasEngine;
 
 	private readonly ConditionalWeakTable<Story, ConcurrentDictionary<string, bool>> _complete = new();
 
@@ -45,12 +94,12 @@ public sealed class StoryTranslator
 
 	/// <summary>Whether reading <paramref name="story"/> in <paramref name="reading"/> goes through the translator.</summary>
 	public bool Applies(Story story, string reading) =>
-		BundledTranslations.Applies(story, reading, _engine is null ? null : [.. _engine.SupportedLanguages])
-			&& (_engine is not null || TableIsComplete(story, reading));
+		BundledTranslations.Applies(story, reading, EngineLanguages)
+			&& (_hasEngine || TableIsComplete(story, reading));
 
 	/// <summary>Whether the translate switch can do anything for <paramref name="story"/> in <paramref name="reading"/> (a table, a supported engine pair, or nothing to translate).</summary>
 	public bool CanTranslate(Story story, string reading) =>
-		BundledTranslations.CanTranslate(story, reading, _engine is null ? null : [.. _engine.SupportedLanguages]);
+		BundledTranslations.CanTranslate(story, reading, EngineLanguages);
 
 	/// <summary>With no engine a table with holes is not used (see <see cref="TranslateAsync"/>), so the read stays in the story's language; checked once per story instance.</summary>
 	private bool TableIsComplete(Story story, string language) =>
@@ -71,7 +120,8 @@ public sealed class StoryTranslator
 	{
 		string source = UiLanguage.Resolve(story.Language);
 		string target = UiLanguage.Resolve(reading);
-		if (_engine is null && BundledTranslations.MissesAny(story, target, pieces.Select(p => p.Segment.Text)))
+		bool live = MayUseEngine(source, target);
+		if (!live && BundledTranslations.MissesAny(story, target, pieces.Select(p => p.Segment.Text)))
 		{
 			// A table with holes and nothing to fill them: reading half in one language would be worse than the source.
 			return new Outcome(pieces, false);
@@ -80,7 +130,7 @@ public sealed class StoryTranslator
 		PieceTranslator engine = (text, token) => PieceAsync(text, source, target, token);
 		try
 		{
-			PieceTranslator? fallback = _engine is null ? null : engine;
+			PieceTranslator? fallback = live ? engine : null;
 			PieceTranslator table = forSpeech ? BundledTranslations.ComposeSpoken(story, target, fallback) : BundledTranslations.Compose(story, target, fallback);
 			var translated = await StoryTranslation.TranslateAsync(pieces, table, cancellationToken);
 			return new Outcome(translated, true);
@@ -88,6 +138,7 @@ public sealed class StoryTranslator
 		catch (TranslationModelUnavailableException ex)
 		{
 			Debug.WriteLine($"Dino Reader translation skipped, language model missing: {ex.Message}");
+			ForgetGonePacksInBackground(source, target); // the record said ready but the engine says a model is gone; the read does not wait for the check
 			return new Outcome(pieces, false);
 		}
 	}
@@ -124,7 +175,7 @@ public sealed class StoryTranslator
 			return shipped;
 		}
 
-		if (_engine is null || !story.Title.Any(char.IsLetter))
+		if (!story.Title.Any(char.IsLetter) || !MayUseEngine(UiLanguage.Resolve(story.Language), target))
 		{
 			return story.Title;
 		}
@@ -136,6 +187,7 @@ public sealed class StoryTranslator
 		}
 		catch (TranslationModelUnavailableException)
 		{
+			ForgetGonePacksInBackground(UiLanguage.Resolve(story.Language), target);
 			return story.Title;
 		}
 	}
@@ -153,13 +205,13 @@ public sealed class StoryTranslator
 	// The story languages (the app language first) the book still has to be translated into on this phone; only: just these (the reader asks for its own language).
 	private List<string> OwnTargets(Story story, IReadOnlyCollection<string>? only = null)
 	{
-		if (_engine is null || _packs is null)
+		if (!_hasEngine)
 		{
 			return [];
 		}
 
 		string source = UiLanguage.Resolve(story.Language);
-		IReadOnlyCollection<string> supported = [.. _engine.SupportedLanguages];
+		IReadOnlyCollection<string> supported = MlKitLanguages.All;
 		return StoryLanguages.Current().All
 			.Where(language => only is null || only.Contains(language))
 			.Where(language => TranslationFlow.ShouldTranslate(story.TranslateToMyLanguage, source, language)
@@ -171,45 +223,36 @@ public sealed class StoryTranslator
 
 	/// <summary>Whether the child can read <paramref name="story"/> in <paramref name="language"/> right now, with nothing to download (Slice 173): it is the book's own
 	/// language, or it carries a table for it, or the translation engine and the packs for the pair are on the phone. False when the parent chose "Show original text" or the book does not translate.</summary>
-	public async Task<bool> CanReadInAsync(Story story, string language)
+	public Task<bool> CanReadInAsync(Story story, string language)
 	{
-		string target = UiLanguage.Resolve(language);
 		string source = UiLanguage.Resolve(story.Language);
-		if (target == source)
-		{
-			return true;
-		}
-
-		if (story.ShowOriginalText || !story.TranslateToMyLanguage)
-		{
-			return false;
-		}
-
-		if (BundledTranslations.Has(story, target) && (_engine is not null || TableIsComplete(story, target)))
-		{
-			return true;
-		}
-
-		if (_engine is null || _packs is null || !TranslationFlow.IsPairSupported([.. _engine.SupportedLanguages], source, target))
-		{
-			return false;
-		}
-
-		return (await MissingPacksForAsync(source, [target])).Count == 0;
+		string target = UiLanguage.Resolve(language);
+		return Task.FromResult(ReadingTranslation.CanRead(
+			story, language, _hasEngine, MlKitLanguages.All, OwnBookTranslation.PackLanguages(source, target), _packStore.Record));
 	}
 
 	/// <summary>The language packs the translations still needed need that are not on the device yet (none when they all are).</summary>
-	public async Task<IReadOnlyList<string>> MissingPacksAsync(Story story, IReadOnlyCollection<string>? only = null) =>
-		_packs is null ? [] : await MissingPacksForAsync(UiLanguage.Resolve(story.Language), OwnTargets(story, only));
+	public async Task<IReadOnlyList<string>> MissingPacksAsync(Story story, IReadOnlyCollection<string>? only = null)
+	{
+		if (!_hasEngine)
+		{
+			return [];
+		}
+
+		await ReconcilePacksAsync(); // a grown-up path (the pack prompt, the book sheet): the first engine use brings the record up to date
+		return await MissingPacksForAsync(UiLanguage.Resolve(story.Language), OwnTargets(story, only));
+	}
 
 	/// <summary>The story languages the book still needs a table for whose packs are all on the phone now (so each can be translated, whatever happened to the others).</summary>
 	public async Task<IReadOnlyList<string>> TranslatableTargetsAsync(Story story, IReadOnlyCollection<string>? only = null)
 	{
 		var ready = new List<string>();
 		string source = UiLanguage.Resolve(story.Language);
+		await ReconcilePacksAsync();
+		HashSet<string> downloaded = await DownloadedSetAsync(CancellationToken.None);
 		foreach (string target in OwnTargets(story, only))
 		{
-			if ((await MissingPacksForAsync(source, [target])).Count == 0)
+			if (MissingPacksFrom(downloaded, source, [target]).Count == 0)
 			{
 				ready.Add(target);
 			}
@@ -220,10 +263,26 @@ public sealed class StoryTranslator
 
 	private async Task<IReadOnlyList<string>> MissingPacksForAsync(string source, IEnumerable<string> targets)
 	{
+		return MissingPacksFrom(await DownloadedSetAsync(CancellationToken.None), source, targets);
+	}
+
+	// One question to the engine for the whole check, not one per pack.
+	private async Task<HashSet<string>> DownloadedSetAsync(CancellationToken cancellationToken)
+	{
+		ITranslationPacks packs = await PacksAsync();
+		IReadOnlyCollection<string> downloaded = await packs.DownloadedPacksAsync().WaitAsync(cancellationToken);
+		return new HashSet<string>(downloaded, StringComparer.OrdinalIgnoreCase);
+	}
+
+	// A grown-up path: the engine's list is the truth, and the record follows what it says.
+	private IReadOnlyList<string> MissingPacksFrom(HashSet<string> downloaded, string source, IEnumerable<string> targets)
+	{
 		var missing = new List<string>();
 		foreach (string language in targets.SelectMany(target => OwnBookTranslation.PackLanguages(source, target)).Distinct())
 		{
-			if (!await _packs!.IsPackReadyAsync(language))
+			bool ready = downloaded.Contains(language);
+			_packStore.Set(language, ready);
+			if (!ready)
 			{
 				missing.Add(language);
 			}
@@ -239,15 +298,19 @@ public sealed class StoryTranslator
 	public async Task<IReadOnlyList<string>> DownloadPacksAsync(IReadOnlyList<string> languages, IProgress<double>? progress, CancellationToken cancellationToken)
 	{
 		var failed = new List<string>();
+		await ReconcilePacksAsync();
+		ITranslationPacks packs = await PacksAsync();
 		for (int i = 0; i < languages.Count; i++)
 		{
 			try
 			{
-				await _packs!.DownloadPackAsync(languages[i], null, cancellationToken);
+				await packs.DownloadPackAsync(languages[i], null, cancellationToken);
+				_packStore.Set(languages[i], true);
 			}
 			catch (TranslationModelUnavailableException ex)
 			{
 				Debug.WriteLine($"Dino Reader could not get the {languages[i]} translation pack: {ex.Message}");
+				_packStore.Set(languages[i], false);
 				failed.Add(languages[i]);
 			}
 
@@ -264,11 +327,12 @@ public sealed class StoryTranslator
 	public async Task<bool> SaveOwnTranslationAsync(Story story, IReadOnlyList<string> targets, CancellationToken cancellationToken)
 	{
 		IStoryLibrary? library = _services.GetService(typeof(IStoryLibrary)) as IStoryLibrary;
-		if (_engine is null || library is null)
+		if (!_hasEngine || library is null)
 		{
 			return false;
 		}
 
+		await ReconcilePacksAsync();
 		bool any = false;
 		foreach (string language in targets)
 		{
@@ -293,6 +357,7 @@ public sealed class StoryTranslator
 		catch (TranslationModelUnavailableException ex)
 		{
 			Debug.WriteLine($"Dino Reader could not save a translation, language model missing: {ex.Message}");
+			await ForgetGonePacksAsync(source, language, CancellationToken.None);
 			return false;
 		}
 
@@ -311,6 +376,84 @@ public sealed class StoryTranslator
 		return true;
 	}
 
+	// The engine may translate on a read only when a grown-up downloaded every pack of the pair (the record says so); otherwise ML Kit stays unloaded.
+	private bool MayUseEngine(string source, string target) =>
+		ReadingTranslation.MayUseEngine(_hasEngine, OwnBookTranslation.PackLanguages(source, target), _packStore.Record);
+
+	// The read falls back to untranslated at once; the check runs behind it, bounded, and never throws.
+	private void ForgetGonePacksInBackground(string source, string target)
+	{
+		_ = Task.Run(async () =>
+		{
+			using var timeout = new CancellationTokenSource(ForgetCheckTimeout);
+			await ForgetGonePacksAsync(source, target, timeout.Token);
+		});
+	}
+
+	// The engine reported a missing model for the pair, which can also be a passing failure: ask the engine once and forget only the packs it says are gone.
+	// If the check itself fails or times out, nothing is forgotten.
+	private async Task ForgetGonePacksAsync(string source, string target, CancellationToken cancellationToken)
+	{
+		try
+		{
+			HashSet<string> downloaded = await DownloadedSetAsync(cancellationToken);
+			foreach (string language in OwnBookTranslation.PackLanguages(source, target).Where(language => !downloaded.Contains(language)))
+			{
+				_packStore.Set(language, false);
+			}
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader could not re-check the translation packs: {ex.Message}");
+		}
+	}
+
+	/// <summary>
+	/// Adds the packs on the phone to the pack record, once, for an install that downloaded packs before the record existed. Only grown-up paths call it (Settings,
+	/// Story languages, the pack prompt, a download or a save), because it loads ML Kit; the child's screens never do. It only adds, so a pack recorded
+	/// meanwhile is never dropped.
+	/// </summary>
+	public Task ReconcilePacksAsync()
+	{
+		if (!_hasEngine || _packStore.IsReconciled)
+		{
+			return Task.CompletedTask;
+		}
+
+		lock (_reconcileGate)
+		{
+			if (_reconcile is { IsCompleted: false })
+			{
+				return _reconcile; // concurrent callers share the one query
+			}
+
+			if (_reconcileFailedAt != 0 && Environment.TickCount64 - _reconcileFailedAt < ReconcileRetryMilliseconds)
+			{
+				return Task.CompletedTask; // it failed a moment ago: not again on every call
+			}
+
+			_reconcile = ReconcileOnceAsync();
+			return _reconcile;
+		}
+	}
+
+	private async Task ReconcileOnceAsync()
+	{
+		try
+		{
+			_packStore.AddRange(await (await PacksAsync()).DownloadedPacksAsync());
+			_packStore.MarkReconciled();
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader could not list the translation packs: {ex.Message}");
+			lock (_reconcileGate)
+			{
+				_reconcileFailedAt = Environment.TickCount64;
+			}
+		}
+	}
+
 	private async Task<string> PieceAsync(string text, string source, string target, CancellationToken cancellationToken)
 	{
 		if (_cache.TryGetValue((text, source, target), out string? known))
@@ -321,7 +464,7 @@ public sealed class StoryTranslator
 		var key = (text, source, target);
 		return await _inFlight.RunAsync(key, async token =>
 		{
-			string translated = await _engine!.TranslateAsync(text, source, target, token);
+			string translated = await (await EngineAsync()).TranslateAsync(text, source, target, token);
 			_cache[key] = translated;
 			return translated;
 		}, cancellationToken);

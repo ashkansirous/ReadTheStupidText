@@ -27,32 +27,8 @@ public sealed class MlKitTranslator : AppTranslator, IModelPreparer, ITranslatio
     /// <inheritdoc />
     public bool AutoDownload { get; set; } = true;
 
-    public IReadOnlyList<string> SupportedLanguages { get; } = EngineLanguages().Select(EngineLanguageCodes.FromEngine).ToArray();
-
-    // The languages of ML Kit's MLKTranslateAllLanguages, which the binding does not expose as a list.
-    private static IEnumerable<string> EngineLanguages() => new NSString?[]
-    {
-        Constants.MLKTranslateLanguageAfrikaans, Constants.MLKTranslateLanguageAlbanian, Constants.MLKTranslateLanguageArabic,
-        Constants.MLKTranslateLanguageBelarusian, Constants.MLKTranslateLanguageBengali, Constants.MLKTranslateLanguageBulgarian,
-        Constants.MLKTranslateLanguageCatalan, Constants.MLKTranslateLanguageChinese, Constants.MLKTranslateLanguageCroatian,
-        Constants.MLKTranslateLanguageCzech, Constants.MLKTranslateLanguageDanish, Constants.MLKTranslateLanguageDutch,
-        Constants.MLKTranslateLanguageEnglish, Constants.MLKTranslateLanguageEsperanto, Constants.MLKTranslateLanguageEstonian,
-        Constants.MLKTranslateLanguageFinnish, Constants.MLKTranslateLanguageFrench, Constants.MLKTranslateLanguageGalician,
-        Constants.MLKTranslateLanguageGeorgian, Constants.MLKTranslateLanguageGerman, Constants.MLKTranslateLanguageGreek,
-        Constants.MLKTranslateLanguageGujarati, Constants.MLKTranslateLanguageHaitianCreole, Constants.MLKTranslateLanguageHebrew,
-        Constants.MLKTranslateLanguageHindi, Constants.MLKTranslateLanguageHungarian, Constants.MLKTranslateLanguageIcelandic,
-        Constants.MLKTranslateLanguageIndonesian, Constants.MLKTranslateLanguageIrish, Constants.MLKTranslateLanguageItalian,
-        Constants.MLKTranslateLanguageJapanese, Constants.MLKTranslateLanguageKannada, Constants.MLKTranslateLanguageKorean,
-        Constants.MLKTranslateLanguageLatvian, Constants.MLKTranslateLanguageLithuanian, Constants.MLKTranslateLanguageMacedonian,
-        Constants.MLKTranslateLanguageMalay, Constants.MLKTranslateLanguageMaltese, Constants.MLKTranslateLanguageMarathi,
-        Constants.MLKTranslateLanguageNorwegian, Constants.MLKTranslateLanguagePersian, Constants.MLKTranslateLanguagePolish,
-        Constants.MLKTranslateLanguagePortuguese, Constants.MLKTranslateLanguageRomanian, Constants.MLKTranslateLanguageRussian,
-        Constants.MLKTranslateLanguageSlovak, Constants.MLKTranslateLanguageSlovenian, Constants.MLKTranslateLanguageSpanish,
-        Constants.MLKTranslateLanguageSwahili, Constants.MLKTranslateLanguageSwedish, Constants.MLKTranslateLanguageTagalog,
-        Constants.MLKTranslateLanguageTamil, Constants.MLKTranslateLanguageTelugu, Constants.MLKTranslateLanguageThai,
-        Constants.MLKTranslateLanguageTurkish, Constants.MLKTranslateLanguageUkrainian, Constants.MLKTranslateLanguageUrdu,
-        Constants.MLKTranslateLanguageVietnamese, Constants.MLKTranslateLanguageWelsh,
-    }.Select(language => language?.ToString()).OfType<string>();
+    // A plain table, so constructing this class never loads ML Kit (Dino Reader keeps it unloaded until a grown-up asks for a translation).
+    public IReadOnlyList<string> SupportedLanguages => MlKitLanguages.All;
 
     public Task<bool> IsModelReadyAsync(string source, string target) =>
         Task.Run(() =>
@@ -60,6 +36,10 @@ public sealed class MlKitTranslator : AppTranslator, IModelPreparer, ITranslatio
             HashSet<string> languages = DownloadedLanguages();
             return RequiredModels(EngineLanguageCodes.ToEngine(source), EngineLanguageCodes.ToEngine(target)).All(languages.Contains);
         });
+
+    /// <inheritdoc />
+    public Task<IReadOnlyCollection<string>> DownloadedPacksAsync() =>
+        Task.Run<IReadOnlyCollection<string>>(() => DownloadedLanguages().Select(EngineLanguageCodes.FromEngine).ToArray());
 
     /// <inheritdoc />
     public Task<bool> IsPackReadyAsync(string language) => IsEnginePackReadyAsync(EngineLanguageCodes.ToEngine(language));

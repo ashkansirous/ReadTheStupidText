@@ -107,6 +107,7 @@ public sealed class SettingsPage : SettingsSubPage
 	protected override void OnAppearing()
 	{
 		base.OnAppearing();
+		_ = _services.GetRequiredService<StoryTranslator>().ReconcilePacksAsync(); // behind the grown-up gate: adds the packs an older install already has to the record
 		_config.Changed += OnConfigChanged;
 		SetTitle(AppResources.Settings_Title); // the page can be built right after a language change (LanguagePage), before the new words apply
 		Rebuild();

@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-	<application android:allowBackup="false" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:supportsRtl="true"></application>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+	<application android:allowBackup="false" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:supportsRtl="true">
+		<!-- Dino Reader is a children's app. ML Kit starts itself at process start through this provider (and reports to Google once used), so it is removed;
+		     MlKitInit.EnsureInitialized() starts ML Kit by hand right before a grown-up's translation, scan or text recognition. -->
+		<provider android:name="com.google.mlkit.common.internal.MlKitInitProvider" android:authorities="${applicationId}.mlkitinitprovider" tools:node="remove" />
+	</application>
 	<!-- Network is used only to download the language voice pack and, behind the grown-up gate, the free story list and the stories a grown-up picks (Slice 92), and Google's on-device translation model for a language (Slice 95); text never leaves the device. -->
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />

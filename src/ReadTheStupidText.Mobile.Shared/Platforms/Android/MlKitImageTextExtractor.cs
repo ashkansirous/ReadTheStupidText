@@ -24,10 +24,24 @@ public sealed class MlKitImageTextExtractor : IBuiltInTextRecognizer
 
     // One recognizer for the process: creating one loads the native model, which is wasteful
     // per page. ML Kit recognizers are safe to share across calls; the extractor is a singleton,
-    // so it is never disposed.
-    private readonly Lazy<ITextRecognizer> _recognizer = new(
-        () => TextRecognition.GetClient(TextRecognizerOptions.DefaultOptions),
-        LazyThreadSafetyMode.ExecutionAndPublication);
+    // so it is never disposed. Created once under a lock (parallel first pages share it); a
+    // failed start is not kept, so the next scan tries again.
+    private readonly object _recognizerGate = new();
+    private ITextRecognizer? _recognizer;
+
+    private ITextRecognizer Recognizer()
+    {
+        lock (_recognizerGate)
+        {
+            if (_recognizer is null)
+            {
+                MlKitInit.EnsureInitialized(); // Dino Reader removes ML Kit's start-up provider
+                _recognizer = TextRecognition.GetClient(TextRecognizerOptions.DefaultOptions);
+            }
+
+            return _recognizer;
+        }
+    }
 
     public MlKitImageTextExtractor(Android.Content.Context context) => _context = context;
 
@@ -49,7 +63,7 @@ public sealed class MlKitImageTextExtractor : IBuiltInTextRecognizer
     {
         using Android.Graphics.Bitmap upright = DecodeUpright(imagePath);
         using InputImage image = InputImage.FromBitmap(upright, 0);
-        Java.Lang.Object result = await _recognizer.Value.Process(image);
+        Java.Lang.Object result = await Recognizer().Process(image);
         Text text = (Text)result;
         List<OcrLine> lines = text.TextBlocks
             .SelectMany(block => block.Lines)
