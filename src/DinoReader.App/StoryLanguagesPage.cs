@@ -306,8 +306,8 @@ public sealed class StoryLanguagePicker : ContentView
 		if (Set.Contains(code))
 		{
 			Set = Set.WithoutSide(code);
+			Toggled?.Invoke(code, false); // save the untick first: Cancel raises Changed, and the page re-syncs from the saved set
 			_packs?.Cancel(code);
-			Toggled?.Invoke(code, false);
 		}
 		else if (Set.CanAdd(code))
 		{
