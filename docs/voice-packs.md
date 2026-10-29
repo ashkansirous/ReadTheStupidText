@@ -81,7 +81,7 @@ direction with English at one end, so a pair such as French to Russian pivots th
 Source: the pre-converted int8 ONNX in the `Xenova/opus-mt-*` Hugging Face repos, pinned to one
 revision and sha256-checked in `packs.yml`; licence CC-BY-4.0 or Apache-2.0 per pair (Helsinki-NLP / OPUS-MT, with the
 notice in each pack's `LICENSE`). The one exception is `translation-en-ja`: Mitsua's ElanMT (`Mitsua/elan-mt-bt-en-ja`,
-CC-BY-SA-4.0, a downloaded pack only, never in a package; Decision lifted from Slice 184), which has no ONNX build on the Hub, so
+CC-BY-SA-4.0, a downloaded pack only, never in a package; Decision 171), which has no ONNX build on the Hub, so
 `packs.yml` converts it itself (optimum export, int8 dynamic quantisation, pinned tool versions and pinned, sha256-checked
 inputs; table layout `convert`). Its `LICENSE` credits Mitsua Inc. and states that ShareAlike applies to the model files. Each pack holds `encoder.onnx`, the merged `decoder.onnx` (key/value
 cache), `source.spm`, `vocab.json` and `translation.json` (the decoding ids and, for a multi-target
