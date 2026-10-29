@@ -96,3 +96,4 @@ New strings (all 14 locales): "Sounds", "Normal", "Small", "Big", "Bouncy", "Sle
 - Not done (review 113 #10): the synthesize/shape/join logic is copied in the Windows `NeuralSentenceSource`, Android and iOS readers; extracting a shared helper is a cross-platform reader refactor left for a later slice. A fix to it must be made in all three.
 
 *Emulator check 2026-10-25 (Android emulator, Debug arm64, main 7846b1c): PASS. Flavours and menu work; pace differs per flavour (pitch not checked by ear). Bug: the first Sounds-row play tap right after changing a flavour is silent; the second tap works.*
+*Fixed 2026-10-29 (`fix/dino-sounds-first-tap`):* the play tap ran inside the page's `BusyGuard`, which drops taps during the flavour save; a tap now waits for the edit, plays the row's current flavour, one sample at a time, with the Dino wait overlay (Cancel) after 500 ms. Not yet heard on a device.

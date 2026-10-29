@@ -1,8 +1,10 @@
 using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using DinoReader.Core;
+using DinoReader.Resources.Strings;
 using ReadTheStupidText.Application.Reading;
 using ReadTheStupidText.Domain.Reading;
+using ReadTheStupidText.Mobile.Shared.Waiting;
 
 namespace DinoReader;
 
@@ -33,6 +35,11 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	private string _castLanguage = string.Empty;
 	private readonly VoicePreview _preview;
 	private bool _returningFromNarrator;
+	private readonly WaitOverlay _waitOverlay = DinoWait.OverPage();
+	private readonly WaitController _wait;
+	private IReadOnlyList<CastRow> _shownRows = [];
+	private CancellationTokenSource _pageCancel = new(); // exists before OnAppearing so an early tap is still cancelled on leaving
+	private CancellationTokenSource? _previewCancel;
 
 	public CastPage(StoryVoicing voicing, ISpeechReader reader, SpokenLanguage spoken, IServiceProvider services)
 	{
@@ -43,12 +50,14 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		_preview = new VoicePreview(reader);
 		_spoken = spoken;
 		_actions = new CastRowActions(
-			row => _busy.RunAsync(() => PreviewAsync(row.Member.VoiceId, row.Flavour)),
+			PreviewRowAsync,
 			row => _busy.RunAsync(() => PickCharacterAsync(row)),
 			row => _busy.RunAsync(() => BackToBookVoiceAsync(row)));
 		NavigationPage.SetHasNavigationBar(this, false);
 		SafeAreaEdges = new SafeAreaEdges(SafeAreaRegions.Container);
 		BackgroundColor = DinoTokens.Get(DinoTokens.Sand);
+		_wait = new WaitController(_waitOverlay);
+		_wait.CancelRequested += OnWaitCancelled;
 		Content = BuildLayout();
 	}
 
@@ -63,6 +72,9 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	protected override async void OnAppearing()
 	{
 		base.OnAppearing();
+		_pageCancel.Cancel();
+		_pageCancel.Dispose();
+		_pageCancel = new CancellationTokenSource();
 		_preview.Attach();
 		_storyteller.LibraryRecast -= OnLibraryRecast;
 		_storyteller.LibraryRecast += OnLibraryRecast;
@@ -90,6 +102,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	protected override void OnDisappearing()
 	{
 		base.OnDisappearing();
+		_pageCancel.Cancel(); // a queued or running sample never plays on the screen the grown-up went back to
 		_preview.Detach();
 		_storyteller.LibraryRecast -= OnLibraryRecast;
 	}
@@ -137,6 +150,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		column.Add(scroll, 0, 1);
 		_root.Add(column);
 		_root.Add(_picker);
+		_root.Add(_waitOverlay); // last, so it covers the picker sheet too
 		return _root;
 	}
 
@@ -198,6 +212,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	private void Render()
 	{
 		CastSheet sheet = Sheet();
+		_shownRows = sheet.Rows;
 		_body.Children.Clear();
 		_languageChip.Content = CastViews.LanguageChip(CastText.VoicesFor(_castLanguage));
 		if (sheet.VoicesAreShort)
@@ -353,7 +368,7 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 	private static string? UsedBy(IReadOnlyList<CastRow> rows, StorytellerCharacter character, CastRow asking) =>
 		rows.FirstOrDefault(r => r.Member.CharacterId != asking.Member.CharacterId && r.Character?.Id == character.Id)?.Member.Name;
 
-	private Task PreviewCharacterAsync(StorytellerCharacter character) => PreviewAsync(character.VoiceId, character.Flavour);
+	private Task PreviewCharacterAsync(StorytellerCharacter character) => PreviewAsync(() => new PreviewTarget(character.VoiceId, character.Flavour), waitForEdit: false);
 
 	// The Narrator page chooses the voice for every book; the grown-up comes back here and the cast is looked at again (Slice 109).
 	private async Task OpenNarratorPageAsync()
@@ -383,17 +398,83 @@ public sealed class CastPage : ContentPage, IGrownUpPage
 		}
 	}
 
-	private async Task PreviewAsync(string voiceId, VoiceFlavour flavour)
+	// A row's play button (Slice 113 follow-up). The sample takes seconds to synthesize and play, so it never holds the busy guard (a second tap
+	// used to be dropped silently); it does wait for an edit in flight (the flavour just picked) and then plays the row as it is now, not as it was drawn.
+	private Task PreviewRowAsync(CastRow tapped) =>
+		PreviewAsync(() => PreviewTarget.Of(CastRowLookup.Current(_shownRows, tapped)), waitForEdit: true);
+
+	private void OnWaitCancelled()
 	{
-		string line = CastText.PreviewLineFor(_voicing.PreviewLanguage(_castLanguage, _spoken.Current));
+		_previewCancel?.Cancel();
+		_preview.Stop();
+	}
+
+	// One sample at a time: a new tap cancels the one before it, and leaving the page cancels both. The overlay (after 500 ms, Cancel) covers the
+	// wait for an edit in flight and the first, slow synthesis of a flavour.
+	private async Task PreviewAsync(Func<PreviewTarget> target, bool waitForEdit)
+	{
+		_previewCancel?.Cancel();
+		using CancellationTokenSource cancel = CancellationTokenSource.CreateLinkedTokenSource(_pageCancel.Token);
+		_previewCancel = cancel;
+		_wait.Begin(WaitStage.PreparingVoice, AppResources.Wait_GettingVoices, canCancel: true);
+		bool failed = false;
 		try
 		{
-			await _preview.PlayAsync(line, voiceId, flavour);
+			if (waitForEdit)
+			{
+				await _busy.WhenFreeAsync(cancel.Token);
+			}
+
+			PreviewTarget now = target();
+			string line = CastText.PreviewLineFor(_voicing.PreviewLanguage(_castLanguage, _spoken.Current));
+			await _preview.PlayAsync(line, now.VoiceId, now.Flavour).WaitAsync(cancel.Token);
+		}
+		catch (OperationCanceledException)
+		{
+			Debug.WriteLine("Dino Reader voice preview cancelled.");
+			StopIfCurrent(cancel);
+		}
+		catch (Exception ex) when (!cancel.IsCancellationRequested)
+		{
+			Debug.WriteLine($"Dino Reader voice preview failed: {ex}");
+			failed = true;
 		}
 		catch (Exception ex)
 		{
-			Debug.WriteLine($"Dino Reader voice preview failed: {ex}");
+			Debug.WriteLine($"Dino Reader voice preview ended after cancel: {ex.Message}");
+		}
+		finally
+		{
+			EndPreview(cancel);
+		}
+
+		if (failed)
+		{
 			await DisplayAlertAsync(CastText.Title, CastText.PreviewFailedBody, CastText.Ok);
 		}
+	}
+
+	// Cancel (or leaving) stops a sample that already started; a sample a newer tap replaced is left to that tap.
+	private void StopIfCurrent(CancellationTokenSource mine)
+	{
+		if (ReferenceEquals(_previewCancel, mine))
+		{
+			_preview.Stop();
+		}
+	}
+
+	// A cancelled older sample must not end the wait a newer tap has begun.
+	private void EndPreview(CancellationTokenSource mine)
+	{
+		if (ReferenceEquals(_previewCancel, mine))
+		{
+			_previewCancel = null;
+			_wait.End();
+		}
+	}
+
+	private readonly record struct PreviewTarget(string VoiceId, VoiceFlavour Flavour)
+	{
+		public static PreviewTarget Of(CastRow row) => new(row.Member.VoiceId, row.Flavour);
 	}
 }
