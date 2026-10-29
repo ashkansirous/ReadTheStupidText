@@ -1,6 +1,6 @@
 ### Slice 184 — Windows: an English-to-Japanese translation pack
 
-*Planned.*
+*In progress (wave 2026-10-28), draft PR.*
 
 **Touches:** `src/ReadTheStupidText.Infrastructure/Translation/TranslationPacks.cs`, `.github/workflows/packs.yml`, `tests/ReadTheStupidText.Tests/*TranslationPack*`, `STORE.md`, `docs/plan/slices/184-windows-english-to-japanese-pack.md`.
 
