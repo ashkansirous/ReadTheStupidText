@@ -1,8 +1,8 @@
-### Slice 186 — Translation downloads wait for the internet (design frame R12)
+### Slice 187 — Translation downloads wait for the internet (design frame R12)
 
 *Planned 2026-10-29.* Follow-up of Slice 182 (its design frame R12 was not built: Slice 182 covered our own pack downloads, and the phone's translation models come from ML Kit's own download).
 
-**Touches:** `src/ReadTheStupidText.Application/Reading/WaitStage.cs`, `src/ReadTheStupidText.Application/Translation/*` (new: the pure wait/resume decision), `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/MlKitTranslator.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/MlKitTranslator.cs`, `src/ReadTheStupidText.Mobile.Shared/Network/PackResumeWatcher.cs`, `src/ReadTheStupidText.Mobile.Shared/Waiting/*`, `src/ReadTheStupidText.Mobile/ReviewPage.xaml.cs`, `src/ReadTheStupidText.Mobile/ReaderPage.Wait.cs`, `src/ReadTheStupidText.Mobile/Resources/Strings/AppResources*`, `src/DinoReader.App/TranslationPackPrompt.cs`, `src/DinoReader.App/StoryTranslator.cs`, `src/DinoReader.App/Resources/Strings/AppResources*`, `tests/ReadTheStupidText.Tests/*`, `.maestro/*`, `docs/plan/slices/186-translation-download-waits-for-internet.md`.
+**Touches:** `src/ReadTheStupidText.Application/Reading/WaitStage.cs`, `src/ReadTheStupidText.Application/Translation/*` (new: the pure wait/resume decision), `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/MlKitTranslator.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/MlKitTranslator.cs`, `src/ReadTheStupidText.Mobile.Shared/Network/PackResumeWatcher.cs`, `src/ReadTheStupidText.Mobile.Shared/Waiting/*`, `src/ReadTheStupidText.Mobile/ReviewPage.xaml.cs`, `src/ReadTheStupidText.Mobile/ReaderPage.Wait.cs`, `src/ReadTheStupidText.Mobile/Resources/Strings/AppResources*`, `src/DinoReader.App/TranslationPackPrompt.cs`, `src/DinoReader.App/StoryTranslator.cs`, `src/DinoReader.App/Resources/Strings/AppResources*`, `tests/ReadTheStupidText.Tests/*`, `.maestro/*`, `docs/plan/slices/187-translation-download-waits-for-internet.md`.
 
 #### Why
 
