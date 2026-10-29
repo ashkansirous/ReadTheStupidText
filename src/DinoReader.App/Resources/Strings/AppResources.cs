@@ -385,4 +385,5 @@ public static class AppResources
 	public static string StoryLanguages_WifiWait => Get();
 	public static string StoryLanguages_WifiWaiting => Get();
 	public static string StoryLanguages_FlagMap => Get();
+	public static string Gallery_UpdatingBooks => Get();
 }

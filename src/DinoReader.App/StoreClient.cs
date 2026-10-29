@@ -168,6 +168,38 @@ public sealed class StoreClient(IStoryLibrary library)
 		}
 	}
 
+	/// <summary>
+	/// Downloads one package (an address from the list, Slice 181) into the cache for the background book update and returns the file; the caller deletes it.
+	/// File is null when the server cannot be reached or the package is not whole; NotFound is true for a 404 (the version is not in the store, so retrying will not help).
+	/// Imports nothing and tells nobody.
+	/// </summary>
+	public async Task<PackageFetch> FetchPackageFileAsync(string downloadUrl, CancellationToken cancel)
+	{
+		string part = Path.Combine(FileSystem.CacheDirectory, DownloadFolder, $"update-{Guid.NewGuid():N}{PartExtension}");
+		try
+		{
+			await FetchPackageAsync(downloadUrl, part, new Progress<double>(), cancel);
+			return new PackageFetch(part, false);
+		}
+		catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound && !cancel.IsCancellationRequested)
+		{
+			Debug.WriteLine($"Dino Reader found no such book version in the store: {downloadUrl}");
+			TryDelete(part);
+			return new PackageFetch(null, true);
+		}
+		catch (Exception ex) when ((IsNetworkFailure(ex) || ex is StoreStorageException) && !cancel.IsCancellationRequested)
+		{
+			Debug.WriteLine($"Dino Reader could not fetch a book update: {ex.Message}");
+			TryDelete(part);
+			return new PackageFetch(null, false);
+		}
+		catch
+		{
+			TryDelete(part);
+			throw;
+		}
+	}
+
 	// A package whose own id is not the store item's would show Get again after a reload and pile up copies, so it is taken off the shelf.
 	private async Task<bool> ImportPackageAsync(string path, string itemId)
 	{
@@ -347,3 +379,6 @@ public sealed class StoreClient(IStoryLibrary library)
 
 /// <summary>A failure writing the store's own temp files, not reaching the server.</summary>
 public sealed class StoreStorageException(Exception inner) : Exception(inner.Message, inner);
+
+/// <summary>Result of a background package download (Slice 181): the cached file, or null with <see cref="NotFound"/> telling a 404 from a network failure.</summary>
+public sealed record PackageFetch(string? File, bool NotFound);

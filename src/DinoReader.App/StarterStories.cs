@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO.Compression;
+using System.Security.Cryptography;
 using DinoReader.Core;
 
 namespace DinoReader;
@@ -25,6 +26,19 @@ public sealed class StarterStories(IStoryLibrary library, StoryVoicing voicing)
 	// The content version a starter was installed or refreshed at; none recorded means the first release (StarterUpdate.LegacyInstalledVersion).
 	private const string VersionKeyPrefix = "dino.starter.version.";
 
+	// The hash of the page text a catalogue book arrived with or was last swapped to (Slice 181): a stored copy whose text still has it was not edited by the grown-up.
+	private const string TextHashKeyPrefix = "dino.book.texthash.";
+
+	// The newest store version found while the stored copy was edited (Slice 181): the package is not fetched again until the store has a newer one.
+	private const string SeenVersionKeyPrefix = "dino.book.seenversion.";
+
+	// The swap in progress, if any (Slice 181, SwapMarker): finished at the next launch if the process died halfway.
+	private const string SwapMarkerKey = "dino.book.swapping";
+
+	// How many launches failed to finish the marked swap, and how many failures are allowed before the marker is dropped (both copies are then kept; nothing is deleted).
+	private const string SwapFailuresKey = "dino.book.swapping.failures";
+	private const int MaxSwapRecoveryFailures = 3;
+
 	// Listed in shelf order: the first is the newest, so it comes first in the gallery.
 	private static readonly string[] AssetNames = ["good-enough.dino", "three-little-pigs.dino", "gingerbread-man.dino", "tortoise-and-hare.dino"];
 
@@ -33,6 +47,9 @@ public sealed class StarterStories(IStoryLibrary library, StoryVoicing voicing)
 
 	private readonly SemaphoreSlim _gate = new(1, 1);
 	private bool _complete;
+
+	/// <summary>True once every bundled starter was dealt with by <see cref="InstallOnceAsync"/>; false after a starter failed (Slice 181 does not trust the shelf then).</summary>
+	public bool InstallComplete => _complete;
 
 	/// <summary>Installs the starters not yet recorded. Safe to call again and from several places (the gallery, the first-run flow):
 	/// calls wait for the one pass. A starter that fails is logged and left unrecorded, so the next call tries it again.</summary>
@@ -43,6 +60,7 @@ public sealed class StarterStories(IStoryLibrary library, StoryVoicing voicing)
 		{
 			if (!_complete)
 			{
+				await FinishInterruptedSwapAsync();
 				_complete = await InstallMissingAsync();
 			}
 		}
@@ -87,6 +105,23 @@ public sealed class StarterStories(IStoryLibrary library, StoryVoicing voicing)
 
 	private static void RecordVersion(string packageId, int version) => Preferences.Default.Set(VersionKeyPrefix + packageId, version);
 
+	/// <summary>The content version recorded for a starter or store book (null when none was), for the background update check (Slice 181).</summary>
+	public static int? RecordedVersion(string packageId) => InstalledVersion(packageId);
+
+	/// <summary>The hash of the page text the book arrived with (null when never recorded), Slice 181.</summary>
+	public static string? RecordedTextHash(string packageId) =>
+		Preferences.Default.ContainsKey(TextHashKeyPrefix + packageId) ? Preferences.Default.Get(TextHashKeyPrefix + packageId, string.Empty) : null;
+
+	/// <summary>The newest store version seen while the copy was edited (null when none), Slice 181.</summary>
+	public static int? RecordedSeenVersion(string packageId) =>
+		Preferences.Default.ContainsKey(SeenVersionKeyPrefix + packageId) ? Preferences.Default.Get(SeenVersionKeyPrefix + packageId, 0) : null;
+
+	/// <summary>Remembers that the edited copy was seen against this store version.</summary>
+	public static void RecordSeenVersion(string packageId, int version) => Preferences.Default.Set(SeenVersionKeyPrefix + packageId, version);
+
+	/// <summary>Records the page-text hash of a book as it arrived (a baseline fetched for a book installed before Slice 181).</summary>
+	public static void RecordTextHash(string packageId, string hash) => Preferences.Default.Set(TextHashKeyPrefix + packageId, hash);
+
 	private async Task<bool> TryInstallOneAsync(string assetName, DateTimeOffset created, Func<Task<HashSet<string>>> presentIds)
 	{
 		try
@@ -102,6 +137,7 @@ public sealed class StarterStories(IStoryLibrary library, StoryVoicing voicing)
 				if (await ImportIfAbsentAsync(copy, packageId, created, await presentIds()) && manifest.Version is { } version)
 				{
 					RecordVersion(packageId, version);
+					await RecordBundledTextHashAsync(copy, packageId);
 				}
 
 				Record(packageId);
@@ -122,6 +158,14 @@ public sealed class StarterStories(IStoryLibrary library, StoryVoicing voicing)
 			Debug.WriteLine($"Dino Reader could not install the starter {assetName}: {ex}");
 			return false;
 		}
+	}
+
+	// A fresh install arrives with the bundled text, so its hash is the baseline and the first update check needs no download for it.
+	private static async Task RecordBundledTextHashAsync(MemoryStream package, string packageId)
+	{
+		package.Position = 0;
+		RecordTextHash(packageId, await StoryPackageReader.ContentHashOfPackageAsync(package));
+		package.Position = 0;
 	}
 
 	// The copy in the library (found by its source id) takes the bundled translations and the switch; its cast, merges, cover and pages stay.
@@ -162,7 +206,7 @@ public sealed class StarterStories(IStoryLibrary library, StoryVoicing voicing)
 		return true;
 	}
 
-	// An installed copy recorded at a lower version than the bundled one is replaced (unless the grown-up edited its text); with no copy (the grown-up deleted it)
+	// An installed copy recorded at a lower version than the bundled one is replaced (unless the grown-up edited it); with no copy (the grown-up deleted it)
 	// only the version is recorded, so it stays deleted. A bundled package with no version never replaces anything.
 	private async Task UpdateIfOlderAsync(MemoryStream package, StoryPackageManifest manifest)
 	{
@@ -172,7 +216,7 @@ public sealed class StarterStories(IStoryLibrary library, StoryVoicing voicing)
 		}
 
 		Story? stored = (await library.ListAsync()).FirstOrDefault(s => s.SourceId == manifest.Id);
-		if (stored is not null && await ReplaceUnlessEditedAsync(package, stored))
+		if (stored is not null && await ReplaceUnlessEditedAsync(package, stored, bundledVersion, strict: false))
 		{
 			RecordTranslationsAdopted(manifest.Id);
 		}
@@ -180,39 +224,179 @@ public sealed class StarterStories(IStoryLibrary library, StoryVoicing voicing)
 		RecordVersion(manifest.Id, bundledVersion);
 	}
 
-	// Whether the copy was replaced: a copy whose page text the grown-up edited is left as it is (equal text is still replaced, the pictures or cover may differ).
-	private async Task<bool> ReplaceUnlessEditedAsync(MemoryStream package, Story stored)
+	// Whether the copy was replaced: a copy the grown-up edited is left as it is (equal text is still replaced, the pictures or cover may differ).
+	// Strict (a store swap): a recorded hash that does not cover the pictures is never trusted, so the copy counts as edited.
+	private async Task<bool> ReplaceUnlessEditedAsync(MemoryStream package, Story stored, int version, bool strict)
 	{
 		package.Position = 0;
 		Story bundled = await StoryPackageReader.ReadStoryOnlyAsync(package);
-		if (StarterUpdate.IsEdited(stored.SourceId!, stored, bundled))
+		if (await IsEditedAsync(package, stored, bundled, strict))
 		{
 			return false;
 		}
 
-		await ReplaceAsync(package, stored);
+		await ReplaceAsync(package, stored, version);
 		return true;
 	}
 
-	// The bundled copy is imported first and the old one removed last, so a failure leaves the old story in place. If the process dies between the two,
-	// two stories share the starter id: RemoveDuplicatesAsync clears the extra one on the next launch.
-	private async Task ReplaceAsync(MemoryStream package, Story stored)
+	private async Task<bool> IsEditedAsync(MemoryStream package, Story stored, Story bundled, bool strict)
 	{
+		string id = stored.SourceId!;
+		string? recorded = RecordedTextHash(id);
+		if (!StarterUpdate.IsContentHash(recorded))
+		{
+			return strict || StarterUpdate.IsEdited(id, stored, bundled, recorded);
+		}
+
+		string current = await ContentHashOfAsync(stored);
+		if (current == recorded)
+		{
+			return false;
+		}
+
+		package.Position = 0;
+		return current != await StoryPackageReader.ContentHashOfPackageAsync(package);
+	}
+
+	/// <summary>The hash of a shelf copy's page text and each page picture's bytes, as recorded when the book arrived (Slice 181). A picture file that is gone hashes as missing.</summary>
+	public async Task<string> ContentHashOfAsync(Story story)
+	{
+		var pictures = new List<string?>();
+		foreach (StoryPage page in story.Pages)
+		{
+			pictures.Add(page.ImageFile is null ? null : await HashPictureAsync(story.Id, page.ImageFile));
+		}
+
+		return StarterUpdate.ContentHash(story, pictures);
+	}
+
+	private async Task<string> HashPictureAsync(string storyId, string name)
+	{
+		string? path = library.TryResolveFile(storyId, name);
+		if (path is null || !File.Exists(path))
+		{
+			return "missing";
+		}
+
+		await using FileStream stream = File.OpenRead(path);
+		return Convert.ToHexString(await SHA256.HashDataAsync(stream));
+	}
+
+	/// <summary>
+	/// Swaps a store book's newer package in for the copy on the shelf (Slice 181), the same way a bundled starter is refreshed: cast, voices, translations, recordings and the
+	/// cover photo stay. False when the copy was edited, text or pictures (it is left as it is). The swap is journaled (<see cref="SwapMarker"/>), so a crash halfway is finished at the next launch.
+	/// </summary>
+	public async Task<bool> SwapFromStoreAsync(MemoryStream package, string id, int version)
+	{
+		if (!string.Equals((await ManifestAsync(package)).Id, id, StringComparison.OrdinalIgnoreCase))
+		{
+			throw new StoryPackageException("The package is not the book it was fetched for.");
+		}
+
+		await RemoveDuplicatesAsync(package, id);
+		// Read again after the duplicates were removed: the copy listed before may be the one that was deleted.
+		Story stored = (await library.ListAsync()).FirstOrDefault(s => string.Equals(s.SourceId, id, StringComparison.OrdinalIgnoreCase))
+			?? throw new InvalidOperationException("The book left the shelf during the swap.");
+		return await ReplaceUnlessEditedAsync(package, stored, version, strict: true);
+	}
+
+	// The new copy is imported first and the old one removed last, so a failure leaves the old story in place. The journal marks the swap before the import and, once the new copy holds
+	// the carried-over choices, names it; only then is the old copy deleted, and the hash and version recorded after (FinishInterruptedSwapAsync does that after a crash).
+	private async Task ReplaceAsync(MemoryStream package, Story stored, int version)
+	{
+		var marker = new SwapMarker(stored.SourceId!, version, stored.Id);
+		Preferences.Default.Set(SwapMarkerKey, marker.Format());
 		package.Position = 0;
 		Story fresh = await StoryPackageReader.ImportAsync(package, library, created: stored.Created);
+		Story refreshed;
 		try
 		{
 			IReadOnlyList<StarterUpdate.RecordingMove> copied = await CopyRecordingsAsync(stored, fresh, StarterUpdate.RecordingMoves(stored, fresh));
-			Story refreshed = await WithAnimalVoicesAsync(stored, StarterUpdate.Refresh(stored, fresh, copied));
+			refreshed = await WithAnimalVoicesAsync(stored, StarterUpdate.Refresh(stored, fresh, copied));
 			await library.UpdateAsync(await WithCoverPhotoAsync(stored, fresh, refreshed));
 		}
 		catch
 		{
 			await library.DeleteAsync(fresh.Id);
+			Preferences.Default.Remove(SwapMarkerKey);
 			throw;
 		}
 
+		Preferences.Default.Set(SwapMarkerKey, (marker with { FreshId = fresh.Id }).Format());
 		await library.DeleteAsync(stored.Id);
+		RecordSwapped(marker.Id, version, await ContentHashOfAsync(refreshed));
+		Preferences.Default.Remove(SwapMarkerKey);
+	}
+
+	private static void RecordSwapped(string id, int version, string contentHash)
+	{
+		RecordTextHash(id, contentHash);
+		RecordVersion(id, version);
+		RecordTranslationsAdopted(id);
+	}
+
+	// Recovery never throws out of InstallOnceAsync (the starters must still install): a failure is logged and the marker kept for the next launch, until it has failed
+	// MaxSwapRecoveryFailures times; then the marker is dropped and both copies stay as they are, so the only copy is never deleted.
+	private async Task FinishInterruptedSwapAsync()
+	{
+		try
+		{
+			await RecoverInterruptedSwapAsync();
+			Preferences.Default.Remove(SwapFailuresKey);
+		}
+		catch (Exception ex) when (ex is not OperationCanceledException)
+		{
+			Debug.WriteLine($"[BookUpdate] finishing the interrupted swap failed: {ex}");
+			CountSwapRecoveryFailure();
+		}
+	}
+
+	private static void CountSwapRecoveryFailure()
+	{
+		int failures = Preferences.Default.Get(SwapFailuresKey, 0) + 1;
+		if (failures >= MaxSwapRecoveryFailures)
+		{
+			Debug.WriteLine("[BookUpdate] giving up on the interrupted swap; both copies are kept");
+			Preferences.Default.Remove(SwapMarkerKey);
+			Preferences.Default.Remove(SwapFailuresKey);
+			return;
+		}
+
+		Preferences.Default.Set(SwapFailuresKey, failures);
+	}
+
+	// A swap the process died in the middle of: before the new copy was complete the old one stays (the half-made copy goes; the staged package is applied again); after, the old copy is
+	// deleted if it is still there and the new one's hash and version are recorded, so the book is neither "edited forever" nor kept twice.
+	private async Task RecoverInterruptedSwapAsync()
+	{
+		if (SwapMarker.TryParse(Preferences.Default.Get(SwapMarkerKey, (string?)null)) is not { } marker)
+		{
+			Preferences.Default.Remove(SwapMarkerKey);
+			return;
+		}
+
+		Debug.WriteLine($"[BookUpdate] finishing the interrupted swap of {marker.Id} to v{marker.Version}");
+		List<Story> copies = (await library.ListAsync()).Where(s => string.Equals(s.SourceId, marker.Id, StringComparison.OrdinalIgnoreCase)).ToList();
+		Story? fresh = marker.FreshId is null ? null : copies.FirstOrDefault(c => c.Id == marker.FreshId);
+		if (marker.FreshId is null)
+		{
+			await DeleteAllAsync(copies.Where(c => c.Id != marker.OldId));
+		}
+		else if (fresh is not null)
+		{
+			await DeleteAllAsync(copies.Where(c => c.Id == marker.OldId));
+			RecordSwapped(marker.Id, marker.Version, await ContentHashOfAsync(fresh));
+		}
+
+		Preferences.Default.Remove(SwapMarkerKey);
+	}
+
+	private async Task DeleteAllAsync(IEnumerable<Story> stories)
+	{
+		foreach (Story story in stories.ToList())
+		{
+			await library.DeleteAsync(story.Id);
+		}
 	}
 
 	// A kept character that just gained an animal gets the animal's voice, the way the cast screen picks it (a voice the grown-up chose by hand stays; a language with no voices yet is left).
@@ -331,6 +515,9 @@ public sealed class StarterStories(IStoryLibrary library, StoryVoicing voicing)
 		{
 			RecordVersion(manifest.Id, version);
 		}
+
+		copy.Position = 0;
+		RecordTextHash(manifest.Id, await StoryPackageReader.ContentHashOfPackageAsync(copy));
 	}
 
 	private static async Task<StoryPackageManifest> ManifestAsync(MemoryStream package)
