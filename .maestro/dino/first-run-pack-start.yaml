@@ -1,0 +1,32 @@
+# Slice 185: a real Dino first run: pick the default language, tap Continue, which starts the voice pack (SpokenLanguage.Use).
+# The app must stay alive on the download panel (Slice 162 saw a Debug x86_64 SIGSEGV here).
+appId: uk.sirous.dinoreader
+name: First run with voice pack start
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: FirstRunLanguage
+    timeout: 25000
+- tapOn:
+    text: "Continue"
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: FirstRunDownload
+    timeout: 25000
+- extendedWaitUntil:
+    notVisible:
+      id: FirstRunLanguage
+    timeout: 5000
+# Real 12 s wait: nothing with this id ever shows, so this times out after 12000 ms; optional: true lets the flow go on.
+# Then the app must still be alive on a first-run page (a crash, Slice 162's SIGSEGV, puts the launcher or a crash dialog on screen).
+# The pack may still download, have finished (Ready) or have failed (the download panel shows the problem): all three are fine.
+- extendedWaitUntil:
+    visible:
+      id: PackStartSettleNeverShown
+    timeout: 12000
+    optional: true
+- assertVisible:
+    id: "FirstRun(Download|Ready)"

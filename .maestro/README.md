@@ -26,6 +26,12 @@ Commands: `skip-first-run [lang=en]`, `stop-read`, `state` (logs `STATE language
 
 Markers: `PAGE n` (Dino page swiped), `READ_START`, `ENGINE_READY ms`, `CHUNK_SYNTH n start|end ms`, `CHUNK n`, `READ_END`, `PACK_READY`, `HOOK <name> ok|unknown`, `STATE ...`. None of this is compiled into Release.
 
+## Slice 185 flows
+
+- `dino/first-run-pack-start`: real first run, Continue starts the voice pack, the app stays on the download panel 12 s later.
+- `rtst/language-continue-two-step`: Continue relabels to "Start reading", the second tap opens the reader.
+- `rtst/needs-file/open-huge-text-file` (tag `needs-file`): a 36 MB text file from the system file picker must not crash and shows the "text was cut" note. **Precondition:** `adb -s emulator-5554 push big36.txt /sdcard/Download/big36.txt` (36 MB text). It sits in a subfolder because `run-flows.ps1` runs only the `*.yaml` files directly in an app folder, so default runs skip it; run it with `maestro --device emulator-5554 test .maestro/rtst/needs-file/open-huge-text-file.yaml`. It drives the picker by English labels, so it is Android-only and en-US only.
+
 ## Not covered yet
 
-A document open (system file picker), Scan's photo fallback (camera), a fake pack-ready hook, Dino's intro wizard and store list. iOS flows are written platform-neutral but run only on a Mac simulator (later step, Actions quota).
+Scan's photo fallback (camera), a fake pack-ready hook, Dino's intro wizard and store list. iOS flows are written platform-neutral but run only on a Mac simulator (later step, Actions quota).
