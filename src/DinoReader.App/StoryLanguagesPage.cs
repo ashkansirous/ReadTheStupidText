@@ -1,5 +1,6 @@
 using DinoReader.Core;
 using DinoReader.Resources.Strings;
+using ReadTheStupidText.Application.Reading;
 using Microsoft.Maui.Controls.Shapes;
 using ReadTheStupidText.Mobile.Shared.Waiting;
 
@@ -63,9 +64,25 @@ public sealed class StoryLanguagePicker : ContentView
 		return true;
 	}
 
+	/// <summary>Unticks the given languages (a failed download unticked them behind this picker's back) and shows it.</summary>
+	public void Untick(IEnumerable<string> languages)
+	{
+		StoryLanguageSet before = Set;
+		Set = languages.Aggregate(Set, (set, code) => set.WithoutSide(code));
+		if (!Set.Sides.SequenceEqual(before.Sides))
+		{
+			Rebuild();
+		}
+	}
+
 	/// <summary>Builds the rows again from the current ticks and download states.</summary>
 	public void Rebuild()
 	{
+		if (_packs is not null)
+		{
+			Set = StoryLanguages.Current(); // Settings saves every tick at once; a failed download may have unticked a language behind the page's back
+		}
+
 		_live.Clear();
 		_shown.Clear();
 		var rows = new VerticalStackLayout();
@@ -213,9 +230,9 @@ public sealed class StoryLanguagePicker : ContentView
 			return Note(AppResources.StoryLanguages_AppLanguage, DinoTokens.Get(DinoTokens.Muted));
 		}
 
-		if (_packs is not null && !ticked && StoryLanguages.IsWanted(code) && _packs.StateOf(code) == LanguageVoiceState.NotInstalled)
+		if (ShowsRetry(code, ticked))
 		{
-			return RetryNote(code); // a book in this language was read with the phone's voice: its pack is missing
+			return RetryNote(code, retick: !StoryLanguages.IsWanted(code));
 		}
 
 		if (_packs is null || !ticked)
@@ -228,7 +245,7 @@ public sealed class StoryLanguagePicker : ContentView
 			LanguageVoiceState.Ready => Note(AppResources.Language_Ready, ReadyGreen, bold: true),
 			LanguageVoiceState.Downloading => CancelButton(code),
 			_ when _packs.IsWaitingForInternet(code) => CancelButton(code), // frame 95: Cancel still unticks the language
-			_ => RetryNote(code),
+			_ => RetryNote(code, retick: false),
 		};
 	}
 
@@ -241,16 +258,29 @@ public sealed class StoryLanguagePicker : ContentView
 		VerticalOptions = LayoutOptions.Center,
 	};
 
-	private Label RetryNote(string code)
+	// A book in this language was read with the phone's voice (its pack is missing), or the last download failed and unticked it. Never on a full set: the tap would have nothing to tick.
+	private bool ShowsRetry(string code, bool ticked)
+	{
+		if (_packs is null || ticked || _packs.StateOf(code) != LanguageVoiceState.NotInstalled)
+		{
+			return false;
+		}
+
+		return StoryLanguages.IsWanted(code) || (_packs.HasFailed(code) && !Set.IsFull);
+	}
+
+	private Label RetryNote(string code, bool retick)
 	{
 		string text = _packs!.HasFailed(code) ? AppResources.StoryLanguages_Failed : _packs.IsWaitingForWifi(code) ? AppResources.StoryLanguages_WifiWaiting : AppResources.Language_Download;
 		Label note = Note(text, DinoTokens.Get(DinoTokens.Brand), bold: true);
-		CastViews.AddTap(note, () =>
-		{
-			DownloadRequested?.Invoke(code);
-			return Task.CompletedTask;
-		});
+		CastViews.AddTap(note, () => retick && !Set.Contains(code) ? ToggleAsync(code) : RequestDownload(code)); // a failed, unticked row's Retry ticks it again; the phone-voice "Download" fetches without ticking
 		return note;
+	}
+
+	private Task RequestDownload(string code)
+	{
+		DownloadRequested?.Invoke(code);
+		return Task.CompletedTask;
 	}
 
 	private Border CancelButton(string code)
@@ -349,9 +379,10 @@ public sealed class StoryLanguagesPage : SettingsSubPage
 
 	private void OnPacksChanged(object? sender, EventArgs e)
 	{
-		if (!_picker.TryUpdateProgress())
+		if (!_picker.Set.Sides.SequenceEqual(StoryLanguages.Current().Sides) || !_picker.TryUpdateProgress())
 		{
 			_picker.Rebuild();
+			ShowFull(); // a background failure may have unticked a language
 		}
 	}
 
@@ -373,11 +404,31 @@ public sealed class StoryLanguagesPage : SettingsSubPage
 		try
 		{
 			await _packs.RequestAsync(Window?.Page ?? this, [language], _wait);
-			await OfferOwnBooksAsync(language);
+		}
+		catch (OperationCanceledException)
+		{
+			return; // the grown-up cancelled or dismissed the mobile-data prompt: not a failure
 		}
 		catch (Exception ex)
 		{
 			System.Diagnostics.Debug.WriteLine($"Dino Reader could not start the {language} voice: {ex}");
+			PackDownloadLog.LanguageFailure(language, PackDownloadResult.Failed, PackFailureAction.UntickAndShowRetry);
+			_packs.GiveUp(language);
+			return;
+		}
+
+		await OfferOwnBooksSafelyAsync(language);
+	}
+
+	private async Task OfferOwnBooksSafelyAsync(string language)
+	{
+		try
+		{
+			await OfferOwnBooksAsync(language);
+		}
+		catch (Exception ex)
+		{
+			System.Diagnostics.Debug.WriteLine($"Dino Reader could not offer the {language} translation: {ex}"); // the voice download is running; this offer is optional
 		}
 	}
 

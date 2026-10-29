@@ -455,6 +455,7 @@ public sealed class StoryLanguagePacks
 			_waiting.Remove(code);
 			_downloadNow.Remove(code);
 			_waitingInternet.Remove(code);
+			_failed.Remove(code); // a deliberate Cancel is not a failure: the unticked row shows no failure line
 			if (_runs.Remove(code, out cancel))
 			{
 				_progress.Remove(code);
@@ -490,6 +491,9 @@ public sealed class StoryLanguagePacks
 		catch (Exception ex)
 		{
 			Debug.WriteLine($"Dino Reader could not get the {code} voice: {ex}");
+			// a dropped connection is offline (keep ticked and wait); anything else is a plain failure
+			NoteResult(code, PackFailureDecision.IsNetworkLoss(ex) ? PackDownloadResult.Offline : PackDownloadResult.Failed);
+
 			outcome = UsageDetail.PackFailed;
 		}
 
@@ -499,6 +503,10 @@ public sealed class StoryLanguagePacks
 		if (current)
 		{
 			ReportEnd(code, last, epoch); // after the run is out of _runs, so an immediate restart is never swallowed; a cancelled or replaced run reports nothing here
+			if (outcome == UsageDetail.PackFailed)
+			{
+				SettleFailure(code, last);
+			}
 		}
 
 		if (outcome is not null)
@@ -541,6 +549,51 @@ public sealed class StoryLanguagePacks
 		}
 	}
 
+	// Offline (or a retry still to come) stays ticked and waiting; a failure nothing will retry unticks the language so the row shows the failure with Retry.
+	// Decided and applied under the lock; a newer run (a restart or Retry in between) is left alone.
+	private void SettleFailure(string code, PackDownloadResult last)
+	{
+		PackFailureAction action;
+		lock (_gate)
+		{
+			if (_runs.ContainsKey(code))
+			{
+				return;
+			}
+
+			action = PackFailureDecision.Decide(last, NeedsRetry(code));
+			if (action == PackFailureAction.UntickAndShowRetry)
+			{
+				Cancel(code); // forgets the coordinator's restart and the waiting state (the lock is re-entrant)
+				_failed.Add(code);
+			}
+		}
+
+		PackDownloadLog.LanguageFailure(code, last, action);
+		if (action == PackFailureAction.UntickAndShowRetry)
+		{
+			UntickAfterFailure(code);
+		}
+	}
+
+	/// <summary>Stops any run of <paramref name="language"/>, marks it failed and unticks it (saved at once); its row then shows the failure with Retry. For a download that could not even start.</summary>
+	public void GiveUp(string language)
+	{
+		string code = UiLanguage.Resolve(language);
+		Cancel(code);
+		lock (_gate)
+		{
+			_failed.Add(code);
+		}
+
+		UntickAfterFailure(code);
+	}
+
+	private void UntickAfterFailure(string code)
+	{
+		MainThread.BeginInvokeOnMainThread(() => StoryLanguages.SaveSides(StoryLanguages.Current().WithoutSide(code)));
+		RaiseChanged();
+	}
 	private static string ResumeKey(string code) => $"story-voice:{code}";
 
 	// Slice 182: the run reports its end once; Offline or Failed starts again by itself when the network is back or the app returns (Wi-Fi/Ethernet unless "Download now").
