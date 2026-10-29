@@ -19,6 +19,10 @@ Open slices only. Finished slices (158 rows) are in [slices-done](docs/plan/note
 | # | Slice | Status | PR | Story | File |
 | --- | --- | --- | --- | --- | --- |
 | 154 | Dino: vowel marks in Farsi and Arabic books (Farsi only: Arabic left as is; marks are a hidden "how to read" text, Decision 166) | in progress | #470 | | [154-dino-farsi-arabic-vowel-marks.md](docs/plan/slices/154-dino-farsi-arabic-vowel-marks.md) |
+| 186 | Translation downloads wait for the internet (Slice 182 frame R12, both apps, Android and iOS) | planned | | | [186-translation-download-waits-for-internet.md](docs/plan/slices/186-translation-download-waits-for-internet.md) |
+| 187 | Dino Settings behind the grown-up gate as a permanent VM check (Slice 172 follow-up) | planned | | | [187-dino-settings-vm-check.md](docs/plan/slices/187-dino-settings-vm-check.md) |
+
+Batch 40 (186-187, planned 2026-10-29, the unowned follow-ups): 186 and 187 can run side by side (app code vs VM tooling). The small follow-up bugs (Slices 99, 113, 173) and the Slice 164 unit-test moves are fixed as `fix/`/`chore/` branches without new slices. Slice 139's in-flight race waits on a real-phone check before any work.
 
 Batch 39 (182-185, planned 2026-10-28, from the night's phone runs and the unowned gaps): 182 then 183 (both edit the pack downloader); 184 (Windows packs, CI) and 185 (emulator checks) can run beside them.
 
