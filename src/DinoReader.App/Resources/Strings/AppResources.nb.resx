@@ -367,4 +367,7 @@
   <data name="StoryLanguages_WifiNow" xml:space="preserve"><value>Last ned nå</value></data>
   <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>Vent på Wi-Fi</value></data>
   <data name="StoryLanguages_WifiWaiting" xml:space="preserve"><value>Venter på Wi-Fi</value></data>
+  <!-- Slice 181: staged book update wait (machine draft, needs native review) -->
+  <data name="Gallery_UpdatingBooks" xml:space="preserve"><value>Oppdaterer bøkene dine…</value></data>
+  <!-- /Slice 181 -->
 </root>

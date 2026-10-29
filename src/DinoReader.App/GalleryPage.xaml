@@ -49,7 +49,7 @@
         <local:GalleryTemplateSelector x:Key="Selector" StoryTemplate="{StaticResource StoryTemplate}" />
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="Auto,Auto,*,Auto">
+    <Grid x:Name="GalleryRoot" RowDefinitions="Auto,Auto,*,Auto">
         <!-- Invisible two-line sample in the tile title font: its measured height sizes every tile title. Its lines are
              fixed, so its height depends only on the font (not on the page or tile width) and the update cannot loop. -->
         <Label x:Name="TitleProbe" HorizontalOptions="Start" Style="{StaticResource TileTitleFont}" Text="&#160;&#10;&#160;" Opacity="0" InputTransparent="True"

@@ -16,6 +16,8 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 	private NavigationPage? _navigation;
 	private bool _rtlFontsApplied;
 	private bool _launchCounted;
+	private readonly CancellationTokenSource _bookUpdateCancel = new();
+	private bool _bookUpdateStarted;
 
 	public DinoApp(IServiceProvider services, SpeechStartup startup, AppConfigClient config)
 	{
@@ -40,6 +42,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		var external = _services.GetRequiredService<ExternalActivityGuard>();
 		window.Stopped += (_, _) => OnStopped(_navigation!, external);
 		window.Stopped += (_, _) => FlushUsage();
+		window.Stopped += (_, _) => _bookUpdateCancel.Cancel();
 		window.Resumed += (_, _) => OnResumed(_navigation!, external);
 		window.Resumed += (_, _) => _ = _config.RefreshAsync();
 		Action ended = () => OnResumed(_navigation!, external);
@@ -57,6 +60,7 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		try
 		{
 			await _config.RefreshAsync();
+			_ = CheckBookUpdatesAsync();
 			if (_launchCounted)
 			{
 				return;
@@ -70,6 +74,30 @@ public partial class DinoApp : Microsoft.Maui.Controls.Application
 		catch (Exception ex)
 		{
 			Debug.WriteLine($"Dino Reader could not count the launch: {ex.Message}");
+		}
+	}
+
+	// Slice 181: on a cold start, after the config fetch, the store's newer versions of the shelf's catalogue books are downloaded and staged, at most once every 7 days (BookUpdater keeps the time); the next cold start applies them (GalleryPage, StagedBookUpdates).
+	// Once per process, never on resume. The token is cancelled when the window stops (the app goes to the background), even before the check starts, so a late start does not run;
+	// it is never disposed (it has no timer), so a stop can never race a dispose. A forced-update screen skips the check.
+	private async Task CheckBookUpdatesAsync()
+	{
+		if (_config.UpdateRequired || _bookUpdateStarted || _bookUpdateCancel.IsCancellationRequested)
+		{
+			return;
+		}
+
+		_bookUpdateStarted = true;
+		try
+		{
+			var updater = new BookUpdater(
+				_services.GetRequiredService<StoreClient>(), _services.GetRequiredService<StarterStories>(), _services.GetRequiredService<StagedBookUpdates>());
+			CancellationToken token = _bookUpdateCancel.Token;
+			await Task.Run(() => updater.RunIfDueAsync(token));
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Dino Reader could not check for book updates: {ex.Message}");
 		}
 	}
 

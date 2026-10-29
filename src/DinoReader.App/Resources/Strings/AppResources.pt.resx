@@ -368,4 +368,7 @@
   <data name="StoryLanguages_WifiNow" xml:space="preserve"><value>Transferir agora</value></data>
   <data name="StoryLanguages_WifiWait" xml:space="preserve"><value>Esperar pelo Wi-Fi</value></data>
   <data name="StoryLanguages_WifiWaiting" xml:space="preserve"><value>A aguardar Wi-Fi</value></data>
+  <!-- Slice 181: staged book update wait (machine draft, needs native review) -->
+  <data name="Gallery_UpdatingBooks" xml:space="preserve"><value>A atualizar os teus livros…</value></data>
+  <!-- /Slice 181 -->
 </root>

@@ -238,6 +238,30 @@ public sealed class StarterUpdateTests : IDisposable
         Assert.Null(refreshed.Recordings);
     }
 
+    [Fact]
+    public void Refresh_CarriesTheGrownUpsPerBookChoicesAcross()
+    {
+        Story stored = Paged("One.") with
+        {
+            NarratorVoiceId = "F3",
+            PreferredMode = ReadingMode.PictureOnly,
+            TranslateToMyLanguage = true,
+            ShowOriginalText = true,
+            AnimalSoundsOn = false,
+            Title = "My title",
+        };
+        Story bundled = Paged("One reworded.") with { NarratorVoiceId = "M1", Title = "Store title", AnimalSoundsOn = true };
+
+        Story refreshed = StarterUpdate.Refresh(stored, bundled);
+
+        Assert.Equal("F3", refreshed.NarratorVoiceId);
+        Assert.Equal(stored.PreferredMode, refreshed.PreferredMode);
+        Assert.True(refreshed.TranslateToMyLanguage);
+        Assert.True(refreshed.ShowOriginalText);
+        Assert.False(refreshed.AnimalSoundsOn);
+        Assert.Equal("My title", refreshed.Title);
+    }
+
     private static Story Paged(params string[] texts) =>
         StoryWith("s") with { Pages = texts.Select(t => new StoryPage(t)).ToArray() };
 
@@ -353,6 +377,18 @@ public sealed class StarterUpdateTests : IDisposable
         Assert.False(StarterUpdate.IsEdited(pigs, Paged("Gentle."), bundled));
         Assert.True(StarterUpdate.IsEdited(pigs, edited, bundled));
         Assert.False(StarterUpdate.IsEdited("unknown", Paged("Gentle."), bundled));
+    }
+
+    [Fact]
+    public void IsEdited_WithARecordedHash_IsFalseWhileTheTextIsStillTheRecordedOne()
+    {
+        Story bundled = Paged("Newer.");
+        Story stored = Paged("Original.");
+        string recorded = StarterUpdate.PageTextHash(stored);
+
+        Assert.False(StarterUpdate.IsEdited("some-store-book", stored, bundled, recorded));
+        Assert.True(StarterUpdate.IsEdited("some-store-book", Paged("My words."), bundled, recorded));
+        Assert.True(StarterUpdate.IsEdited("some-store-book", stored, bundled, null));
     }
 
     [Fact]

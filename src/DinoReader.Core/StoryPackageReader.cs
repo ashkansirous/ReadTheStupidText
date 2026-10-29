@@ -1,4 +1,5 @@
 using System.IO.Compression;
+using System.Security.Cryptography;
 
 namespace DinoReader.Core;
 
@@ -62,6 +63,38 @@ public static class StoryPackageReader
         {
             throw new StoryPackageException(ex.Message, ex);
         }
+    }
+
+    /// <summary>The <see cref="StarterUpdate.ContentHash"/> of the book a package carries (its page text and each page picture's bytes), without storing anything (Slice 181).</summary>
+    public static async Task<string> ContentHashOfPackageAsync(Stream package)
+    {
+        try
+        {
+            using var zip = new ZipArchive(package, ZipArchiveMode.Read, leaveOpen: true);
+            Dictionary<string, ZipArchiveEntry> entries = IndexEntries(zip);
+            Story story = WithoutMissingPictures(await ReadStoryAsync(entries), entries);
+            var pictures = new List<string?>();
+            foreach (StoryPage page in story.Pages)
+            {
+                pictures.Add(page.ImageFile is { } name ? await HashEntryAsync(entries[name]) : null);
+            }
+
+            return StarterUpdate.ContentHash(story, pictures);
+        }
+        catch (InvalidDataException ex)
+        {
+            throw new StoryPackageException("The package is not a valid zip file.", ex);
+        }
+        catch (StoryFormatException ex)
+        {
+            throw new StoryPackageException(ex.Message, ex);
+        }
+    }
+
+    private static async Task<string> HashEntryAsync(ZipArchiveEntry entry)
+    {
+        await using Stream stream = new CappedStream(entry.Open(), MaxPictureBytes);
+        return Convert.ToHexString(await SHA256.HashDataAsync(stream));
     }
 
     // The writer keeps the package id only in the manifest, so a kept-id restore gets its source back from there.
