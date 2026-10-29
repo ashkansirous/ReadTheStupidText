@@ -677,7 +677,8 @@ jobs:
           # The decoder branches are quantised before they are merged, because the quantiser skips merged subgraphs.
           convert_marian() {
             local repo="$1" rev="$2" safetensors_sha="$3" cfg_file="$4" dest="$5"
-            local work="$RUNNER_TEMP/convert-$(basename "$dest")"
+            local work
+            work="$RUNNER_TEMP/convert-$(basename "$dest")"
             mkdir -p "$work/model" "$work/onnx"
             fetch "$repo" "$rev" model.safetensors "$safetensors_sha" "$work/model/model.safetensors"
             cp "$cfg_file" "$work/model/config.json"
@@ -700,7 +701,8 @@ jobs:
           # Guards the converted pair (Slice 184): sane int8 sizes, then a greedy translation of one sentence that must
           # contain Japanese. Needs source.spm, vocab.json and the config beside the ONNX files; removes the convert dir.
           check_converted() {
-            local dest="$1" cfg="$2" work="$RUNNER_TEMP/convert-$(basename "$1")"
+            local dest="$1" cfg="$2" work
+            work="$RUNNER_TEMP/convert-$(basename "$1")"
             local enc_mb=$(( $(stat -c %s "$dest/encoder.onnx") / 1048576 )) dec_mb=$(( $(stat -c %s "$dest/decoder.onnx") / 1048576 ))
             { [ "$enc_mb" -ge 25 ] && [ "$enc_mb" -le 50 ] && [ "$dec_mb" -ge 40 ] && [ "$dec_mb" -le 80 ]; } \
               || { echo "::error::converted $dest sizes out of range: encoder ${enc_mb} MB (25-50), decoder ${dec_mb} MB (40-80)"; exit 1; }
