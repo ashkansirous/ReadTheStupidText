@@ -12,6 +12,7 @@ internal sealed class VoicePreview(ISpeechReader reader)
 {
 	private bool _previewing;
 	private bool _previewHeard;
+	private int _generation;
 
 	public void Attach()
 	{
@@ -31,6 +32,7 @@ internal sealed class VoicePreview(ISpeechReader reader)
 	{
 		Stop();
 		var segment = new VoicedSegment(line, voiceId, 0, line.Length, 0, FlavourTransform.For(flavour));
+		int generation = ++_generation;
 		try
 		{
 			_previewing = true;
@@ -39,7 +41,10 @@ internal sealed class VoicePreview(ISpeechReader reader)
 		}
 		catch
 		{
-			_previewing = false;
+			if (generation == _generation) // a superseded sample failing must not clear the newer one's flag
+			{
+				_previewing = false;
+			}
 			throw;
 		}
 	}
