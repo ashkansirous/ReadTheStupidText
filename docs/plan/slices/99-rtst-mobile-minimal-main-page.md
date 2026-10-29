@@ -99,4 +99,4 @@ New strings (nine locales): "Settings", "Edit", "Text from pictures", "Text from
 
 - Emulator result pending (the user will pass it separately).
 - iOS device run.
-- The voice name in Settings does not refresh after a voice pack installs.
+- The voice name in Settings does not refresh after a voice pack installs. Fixed 2026-10-29 (`fix/rtst-settings-voice-name`: Settings listens to `ReadyChanged` while visible); not yet seen on a device.

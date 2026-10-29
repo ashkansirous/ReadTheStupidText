@@ -44,12 +44,21 @@ public partial class SettingsPage : ContentPage
         UpdateSpeedHighlight();
         RenderCountsSwitch();
         Microsoft.Maui.Controls.Application.Current!.RequestedThemeChanged += OnThemeChanged;
+        _model.ReadyChanged -= OnVoiceModelReadyChanged; // never double-subscribe
+        _model.ReadyChanged += OnVoiceModelReadyChanged;
     }
 
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
         Microsoft.Maui.Controls.Application.Current!.RequestedThemeChanged -= OnThemeChanged;
+        _model.ReadyChanged -= OnVoiceModelReadyChanged;
+    }
+
+    // A voice pack finished installing (or went away) while Settings is open: the voice name follows it.
+    private void OnVoiceModelReadyChanged(object? sender, EventArgs e)
+    {
+        MainThread.BeginInvokeOnMainThread(RenderValues);
     }
 
     // The off track is coloured in code, so it follows a theme change made while this page is open.
