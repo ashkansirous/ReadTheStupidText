@@ -27,9 +27,12 @@ Neural reader (Slices 17, 18, 22, 23; docs/plan/slices/17-warm-the-neural-engine
 - Windows translation is Opus-MT ONNX in `translation-<from>-<to>` packs, pivoting through English. `PackTranslator`
   loads legs lazily and must dispose under its gate. Translated reads stream: the head of 1-2 sentences speaks while later
   blocks are appended through `ISpeechReader.AppendText`; extend `ReadTimingTracker` inside `ChunkFeed`'s lock. Each block
-  has a 20 s budget, and failure falls back to the original from that block on. fa and ja targets are unsupported, so the
+  has a 20 s budget, and failure falls back to the original from that block on. The fa target is unsupported, so the
   toggle stays hidden. `PackConstants.CatalogUrl` is shared by every platform: a new `packs-N` release must re-ship every
   existing pack at the same versions. (Slice 75: docs/plan/slices/75-windows-translation-engine.md)
+- **English to Japanese (Slice 184).** `en-ja` is ElanMT (CC-BY-SA-4.0), converted to ONNX by `packs.yml` itself (layout
+  `convert`; no ONNX build exists on the Hub); a downloaded pack only. The step checks the int8 file sizes and runs a smoke
+  translation that must contain Japanese.
 - **Norwegian translation packs (Slice 106).** The pack code is `nb`; `TranslationFlow.NormalizeTag` maps `no`/`no-NO` to it. Both legs come from TigreGotico's
   gmq exports (no Xenova conversion exists); `en-nb` needs `targetToken` `>>nob<<`; the `nb` merged decoders are
   ~337 MB (fp32 despite the `int8/` folder). `packs.yml` falls back to `max_position_embeddings` when `max_length`

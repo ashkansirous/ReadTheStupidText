@@ -33,11 +33,13 @@ name: packs
 #                   its English lexicon, the Chinese lexicon, jieba dictionary and rule FSTs, and the GPL-3.0
 #                   espeak-ng data, only inside this pack's zip (Decision 119). Its catalog kind is `storyteller`, so the text reader never picks it and an
 #                   older app skips the entry. A sample wav (the "Hear one" button) rides next to the zip.
-# Twenty-five translation packs (Slice 75, Decision 67; Slice 106, Decision 110; Slice 168 adds de-en and en-de) ride in the same release and packs.json:
+# Twenty-six translation packs (Slice 75, Decision 67; Slice 106, Decision 110; Slice 168 adds de-en and en-de; Slice 184 adds en-ja) ride in the same release and packs.json:
 #   one Opus-MT (Marian) leg each, `<source>-<target>` with English at one end, so a pair like
 #   fr -> ru pivots through two packs. Pre-converted int8 ONNX encoder/decoder from the Xenova
 #   Hugging Face repos (CC-BY-4.0 Opus-MT weights by Helsinki-NLP), pinned to one revision and
-#   sha256-checked. Persian (both ways) and English -> Japanese have no usable Opus-MT leg.
+#   sha256-checked. en-ja is the exception: Mitsua's ElanMT (CC-BY-SA-4.0) has no ONNX build on the Hub, so this
+#   workflow converts it (optimum export, int8 dynamic quantisation, tool versions pinned; the Hub files that go in are
+#   pinned by revision and sha256), allowed as a downloaded pack only (Slice 184). Persian (both ways) has no usable leg.
 # Four OCR packs (Slice 52, Decision 65) ride in the same release and the same packs.json:
 #   ocr-latin (en, fr, es, pt), ocr-cyrillic (ru), ocr-arabic (ar, fa), ocr-cjk (zh, ja).
 #   Each is PaddleOCR det + rec ONNX models and a dictionary (Apache-2.0), fetched from a
@@ -87,7 +89,7 @@ on:
         type: string
 
       translation_pack_version:
-        description: 'Version stamped into the twenty-five Opus-MT translation packs (bump when any model changes)'
+        description: 'Version stamped into the twenty-six translation packs (bump when any model changes)'
         required: true
         default: '1'
         type: string
@@ -158,7 +160,7 @@ env:
   OCR_CJK_DICT_SHA256: d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b
   # Opus-MT ONNX models (Slice 75). The pack ids and folder layout are read by
   # src/ReadTheStupidText.Infrastructure/Translation (TranslationPacks, TranslationPackFiles).
-  TRANSLATION_PAIRS: 'fr-en en-fr es-en en-es pt-en en-pt zh-en en-zh ar-en en-ar ru-en en-ru ja-en da-en en-da fi-en en-fi sv-en en-sv nl-en en-nl nb-en en-nb de-en en-de'
+  TRANSLATION_PAIRS: 'fr-en en-fr es-en en-es pt-en en-pt zh-en en-zh ar-en en-ar ru-en en-ru ja-en en-ja da-en en-da fi-en en-fi sv-en en-sv nl-en en-nl nb-en en-nb de-en en-de'
 
 jobs:
   publish-packs:
@@ -659,7 +661,7 @@ jobs:
       # sha256 of the encoder, merged decoder (with key/value cache), source.spm, vocab.json, config.json, the target token a
       # multi-target model needs (">>xx<<", or "-"), the repo layout ("-" for Xenova's onnx/*_quantized.onnx, or a directory
       # such as "int8/" holding unsuffixed files) and the licence the model card declares (Xenova's repos declare none and
-      # point at the CC-BY-4.0 Helsinki-NLP base; TigreGotico's cards say apache-2.0; Helsinki-NLP/opus-mt-de-en is Apache-2.0 while en-de is CC-BY-4.0, checked on the Hub; the licence is matched case-insensitively). translation.json copies the decoding ids from config.json.
+      # point at the CC-BY-4.0 Helsinki-NLP base; Mitsua's en-ja card says cc-by-sa-4.0 (ElanMT, Slice 184); layout "convert" means the pack's ONNX files are built here from model.safetensors (the enc column holds its sha256, the dec column is "-"); TigreGotico's cards say apache-2.0; Helsinki-NLP/opus-mt-de-en is Apache-2.0 while en-de is CC-BY-4.0, checked on the Hub; the licence is matched case-insensitively). translation.json copies the decoding ids from config.json.
       - name: Build the translation (Opus-MT) pack zips
         run: |
           set -euo pipefail
@@ -669,6 +671,74 @@ jobs:
             curl -fsSL --retry 3 -o "$dest" "https://huggingface.co/$repo/resolve/$rev/$path"
             echo "$sha  $dest" | sha256sum -c -
           }
+          # Mitsua's ElanMT has no ONNX build: export it here exactly as the Xenova files are made (encoder plus a
+          # merged decoder with key/value cache, dynamic int8). The Hub inputs are pinned by sha256 and the tools by
+          # version; the converted files differ byte to byte between runs, so only the size check guards the output.
+          # The decoder branches are quantised before they are merged, because the quantiser skips merged subgraphs.
+          convert_marian() {
+            local repo="$1" rev="$2" safetensors_sha="$3" cfg_file="$4" dest="$5"
+            local work="$RUNNER_TEMP/convert-$(basename "$dest")"
+            mkdir -p "$work/model" "$work/onnx"
+            fetch "$repo" "$rev" model.safetensors "$safetensors_sha" "$work/model/model.safetensors"
+            cp "$cfg_file" "$work/model/config.json"
+            python3 -m venv "$work/venv"
+            "$work/venv/bin/pip" install --quiet --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple               torch==2.8.0 "optimum[onnxruntime]==1.27.0" transformers==4.53.3 onnx==1.18.0 onnxruntime==1.22.0               numpy==2.5.4 huggingface-hub==0.36.2 sentencepiece==0.2.0 safetensors==0.8.0 tokenizers==0.21.4
+            "$work/venv/bin/optimum-cli" export onnx --model "$work/model" --task text2text-generation-with-past --opset 17 "$work/onnx"
+            cat > "$work/quantize.py" <<'QUANTIZE_PY'
+          import sys
+          from onnxruntime.quantization import QuantType, quantize_dynamic
+          from optimum.onnx import merge_decoders
+          onnx_dir = sys.argv[1]
+          for name in ("encoder_model", "decoder_model", "decoder_with_past_model"):
+              quantize_dynamic(model_input=f"{onnx_dir}/{name}.onnx", model_output=f"{onnx_dir}/{name}_q.onnx", weight_type=QuantType.QUInt8)
+          merge_decoders(f"{onnx_dir}/decoder_model_q.onnx", f"{onnx_dir}/decoder_with_past_model_q.onnx", save_path=f"{onnx_dir}/decoder_merged_q.onnx", strict=False)
+          QUANTIZE_PY
+            "$work/venv/bin/python" -I "$work/quantize.py" "$work/onnx"
+            cp "$work/onnx/encoder_model_q.onnx" "$dest/encoder.onnx"
+            cp "$work/onnx/decoder_merged_q.onnx" "$dest/decoder.onnx"
+          }
+          # Guards the converted pair (Slice 184): sane int8 sizes, then a greedy translation of one sentence that must
+          # contain Japanese. Needs source.spm, vocab.json and the config beside the ONNX files; removes the convert dir.
+          check_converted() {
+            local dest="$1" cfg="$2" work="$RUNNER_TEMP/convert-$(basename "$1")"
+            local enc_mb=$(( $(stat -c %s "$dest/encoder.onnx") / 1048576 )) dec_mb=$(( $(stat -c %s "$dest/decoder.onnx") / 1048576 ))
+            { [ "$enc_mb" -ge 25 ] && [ "$enc_mb" -le 50 ] && [ "$dec_mb" -ge 40 ] && [ "$dec_mb" -le 80 ]; } \
+              || { echo "::error::converted $dest sizes out of range: encoder ${enc_mb} MB (25-50), decoder ${dec_mb} MB (40-80)"; exit 1; }
+            cat > "$work/smoke.py" <<'SMOKE_PY'
+          import json, re, sys
+          import numpy as np, onnxruntime as ort, sentencepiece as spm
+          dest, cfg_path = sys.argv[1], sys.argv[2]
+          cfg = json.load(open(cfg_path))
+          vocab = json.load(open(f"{dest}/vocab.json"))
+          inverse = {i: p for p, i in vocab.items()}
+          sp = spm.SentencePieceProcessor(model_file=f"{dest}/source.spm")
+          ids = [vocab.get(p, vocab["<unk>"]) for p in sp.encode("Where is the nearest train station?", out_type=str)] + [cfg["eos_token_id"]]
+          enc = ort.InferenceSession(f"{dest}/encoder.onnx")
+          dec = ort.InferenceSession(f"{dest}/decoder.onnx")
+          mask = np.ones((1, len(ids)), dtype=np.int64)
+          hidden = enc.run(None, {"input_ids": np.array([ids], dtype=np.int64), "attention_mask": mask})[0]
+          heads, head_dim = cfg["decoder_attention_heads"], cfg["d_model"] // cfg["decoder_attention_heads"]
+          out = [cfg["decoder_start_token_id"]]
+          for _ in range(40):
+              feed = {"input_ids": np.array([out], dtype=np.int64), "encoder_attention_mask": mask, "encoder_hidden_states": hidden,
+                      "use_cache_branch": np.array([False])}
+              for i in dec.get_inputs():
+                  if i.name.startswith("past_key_values"):
+                      feed[i.name] = np.zeros((1, heads, 0, head_dim), dtype=np.float32)
+              logits = dec.run(["logits"], feed)[0][0, -1].copy()
+              logits[cfg["pad_token_id"]] = -np.inf
+              nxt = int(logits.argmax())
+              if nxt == cfg["eos_token_id"]:
+                  break
+              out.append(nxt)
+          text = "".join(inverse.get(i, "") for i in out[1:]).replace("▁", " ")
+          print("smoke output:", text)
+          sys.exit(0 if re.search(r"[぀-ヿ一-鿿]", text) else 1)
+          SMOKE_PY
+            "$work/venv/bin/python" -I "$work/smoke.py" "$dest" "$cfg" \
+              || { echo "::error::converted $dest produced no Japanese for the smoke sentence"; exit 1; }
+            rm -rf "$work"
+          }
           build_translation() {
             local pair="$1" repo="$2" rev="$3" enc="$4" dec="$5" spm="$6" vocab="$7" cfg="$8" token="$9" layout="${10}" license="${11}"
             local id="translation-$pair" source="${pair%-*}" target="${pair#*-}"
@@ -676,15 +746,23 @@ jobs:
             # The Norwegian pair has no Xenova conversion: TigreGotico's export of the multi-language
             # Helsinki-NLP gmq models keeps everything under int8/ with unsuffixed file names. Its "int8"
             # merged decoder is really fp32 (no quantized ops, ~337 MB), so the zip is ~390 MB (Slice 106).
-            if [ "$layout" != "-" ]; then
+            if [ "$layout" != "-" ] && [ "$layout" != convert ]; then
               dir="$layout"; enc_file="${dir}encoder_model.onnx"; dec_file="${dir}decoder_model_merged.onnx"
             fi
+            # A convert row has no decoder hash (the dec column is "-"); every other row needs a real sha.
+            if [ "$layout" = convert ] && [ "$dec" != "-" ]; then echo "::error::$id is a convert row but has a decoder sha"; exit 1; fi
+            if [ "$layout" != convert ] && ! [[ "$dec" =~ ^[0-9a-f]{64}$ ]]; then echo "::error::$id needs a 64-hex decoder sha"; exit 1; fi
             mkdir -p "$dest"
-            fetch "$repo" "$rev" "$enc_file" "$enc" "$dest/encoder.onnx"
-            fetch "$repo" "$rev" "$dec_file" "$dec" "$dest/decoder.onnx"
+            fetch "$repo" "$rev" "${dir}config.json" "$cfg" "tr-src/$pair-config.json"
+            if [ "$layout" = convert ]; then
+              convert_marian "$repo" "$rev" "$enc" "tr-src/$pair-config.json" "$dest"
+            else
+              fetch "$repo" "$rev" "$enc_file" "$enc" "$dest/encoder.onnx"
+              fetch "$repo" "$rev" "$dec_file" "$dec" "$dest/decoder.onnx"
+            fi
             fetch "$repo" "$rev" "${dir}source.spm" "$spm" "$dest/source.spm"
             fetch "$repo" "$rev" "${dir}vocab.json" "$vocab" "$dest/vocab.json"
-            fetch "$repo" "$rev" "${dir}config.json" "$cfg" "tr-src/$pair-config.json"
+            if [ "$layout" = convert ]; then check_converted "$dest" "tr-src/$pair-config.json"; fi
             if [ "$token" = "-" ]; then token=""; fi
             printf '%s' "$license" > "tr-src/$pair.license"
             jq -e '(.max_length // .max_position_embeddings) != null' "tr-src/$pair-config.json" > /dev/null \
@@ -697,9 +775,22 @@ jobs:
               cc-by-4.0) license_url="https://creativecommons.org/licenses/by/4.0/" ;;
               apache-2.0) license_url="https://www.apache.org/licenses/LICENSE-2.0" ;;
               mit) license_url="https://opensource.org/license/mit" ;;
+              cc-by-sa-4.0) license_url="https://creativecommons.org/licenses/by-sa/4.0/" ;;
               *) echo "::error::$id has an unknown licence $license"; exit 1 ;;
             esac
-            cat > "$dest/LICENSE" <<LICENSE_TEXT
+            if [ "${license,,}" = "cc-by-sa-4.0" ]; then
+              # ElanMT (Slice 184): not an Opus-MT model, and ShareAlike applies to the model files, so the text says so.
+              cat > "$dest/LICENSE" <<LICENSE_TEXT
+          ElanMT translation model $source to $target (Marian, ONNX)
+            Credit: Mitsua Inc. / ElanMT (https://huggingface.co/$repo),
+            licensed under $license ($license_url).
+            Changes: converted to ONNX and int8-quantised by this project's packs workflow.
+            ShareAlike: the model files in this pack, and any adaptation of them, stay under $license.
+            This licence covers the model only; the app that downloads it keeps its own licence.
+            Pinned source files: https://huggingface.co/$repo/tree/$rev
+          LICENSE_TEXT
+            else
+              cat > "$dest/LICENSE" <<LICENSE_TEXT
           Opus-MT translation model $source to $target (Marian, ONNX)
             Model weights and SentencePiece data: Copyright the Helsinki-NLP / OPUS-MT authors
             (upstream licence $license, $license_url).
@@ -710,6 +801,7 @@ jobs:
             Upstream: https://github.com/Helsinki-NLP/Opus-MT
             Pinned files: https://huggingface.co/$repo/tree/$rev
           LICENSE_TEXT
+            fi
             printf 'Model: https://huggingface.co/%s (revision %s)\n' "$repo" "$rev" > "$dest/SOURCE"
             if [ "$(stat -c %s "$dest/encoder.onnx")" -lt 1048576 ] || [ "$(stat -c %s "$dest/decoder.onnx")" -lt 1048576 ]; then
               echo "::error::$id model files are not real models"; exit 1
@@ -733,6 +825,7 @@ jobs:
           ru-en Xenova/opus-mt-ru-en afe8c6c738ec81b6d033fd8f44f9678a639a7c67 c10df0466540534bb70c4402d539c349b8bfa9968184cad89f51408cf13e7eb7 25e7ff97b201bce64ab9c39749761d657b70b8602bcbc1ce01c67f713e90ffdf 745998e51ba5b058e38b7ac7765c25c43ed5c1c39cc92b27163b9b2e323c9d7c 5cf0d95d930d8d3e783c9e2f46a72f08b43a18060dab4ddefbcb66a733efedcb 60dc7d0906dbe42a1d740cdd7e84ce1534685b81fbe16005a0301adac69086ce - - CC-BY-4.0
           en-ru Xenova/opus-mt-en-ru e050376e960175e8ddc5cff85025dc8436cddd68 97f28d8295d231b7da721ded06fa8c034787df2122cd8f85b904abdc4d15bd53 7efefcd793a5663bc204224a92a123524f3dfe2ffad59e5f73d6734d1b11ad04 16bebef1389a0b8ab452772c4e35b9e605e5713f8ac7baa71ca701394eaa086d 5cf0d95d930d8d3e783c9e2f46a72f08b43a18060dab4ddefbcb66a733efedcb db16bf0ea7bac239273214c3b9ab44577884227371a9a25e0191b7baf8d6f167 - - CC-BY-4.0
           ja-en Xenova/opus-mt-ja-en 1a906cfaaf7c8f4193f67f5885c082aa6dbd9d16 345262b16bcdda1468b0f3380c112b7ce79f731176b4b1d21f6edd5b2ae0d25c b304d0014e4e1575437b6af95467b6cb54405d923732d8359113bd6dbbee93c0 d0b5c3b10b5959f056ff2c86e2f2356129242ff1fc72d3a4a34d6a8c0eee4e57 a1667b43d021e09c76f385101bd473f20b5691a12cdca7dda43e4a8daff20021 d35476f1d3858883feec67e5a63ddc387452a70fda9c8e26db99c71aa2ad6a34 - - CC-BY-4.0
+          en-ja Mitsua/elan-mt-bt-en-ja 02c48e7031386cd2d41974b0ff1aaf52f010c5fa d36a6549863d02a42ad0085ed7eb58d3a81c537e455173bb1e6ce434ecb2eeb8 - a6824c2996a4877cae8a0240f11a112ab0e4ea1f22e54cd42179376fe558f4ff f508b75734ee21cf16b3816b7b29dea400f1f5998f47b7695cef1979ca49e106 78298efb7b70a119900886b41de089e2543c1234bb7d767defa09ea494cb7ab7 - convert cc-by-sa-4.0
           pt-en Xenova/opus-mt-ROMANCE-en f60feaabe8bb435a5871e7702b25f53a01e770f8 13750ba31ee80c88f6bbb28aa03320674c50394efb95f791d5c4f5c8894232bf 5c0d95a8072a463c747343cf25ac9b4a17e9a90e08131e7efab12691ca13c979 baeab21ec00d0b490382b82499ef0348235c5a8e75de28aec8290adf62b007c4 32c8eeec099b448425a7da4e09ec10acbe424a733780c9bcec2062846f03e706 df1876a346b1852ef4590bc74c6e180eb2ba10193cf2bded24c31876f357d83c - - CC-BY-4.0
           en-pt Xenova/opus-mt-en-ROMANCE 9d2ba69ac80c8e8453c3d9a1e2323a0e7b8ca3cd b4ddfd9338ba3d7c6b9c2d1410ed94fb7e06741226918cef6148031101bbd019 b5f6d442da7fa69f9d500df90373d2fdca4f799c43696b41888353b5c3c8eb13 b1f89e7b05828846baf19109a61029a36838f1c4f3defc218e6aee0ee2787864 d9c3b6b01d3a9c9403befa60fd17e4a50dc4929698e3d6b9c2e7f066a9d1f041 dc4f6f9ffbbf1196ff9e8329e5666fe190aef1b1c6806649d86b962b9bde292c >>pt<< - CC-BY-4.0
           da-en Xenova/opus-mt-da-en 6496d5e47a016552357be8f06294096609256ac4 0c4522c24f540c82a3e5ae58a079a9919448adf23798142a1821f189646715d7 871e5ed856e41b95f1a7b32ff4cdb683e1092963bf2300d502298a1fcb4fb0ed c97d12d35fe411947392d927f0be14985e2ea0e5cf258164db7f37780563ca15 c329aacdc29f1f83df0a4d32ded5858405cccb3ff45558fb2dd0f07d04ad558b ae9bd343d197231b82cb92382199f820665e75d0d26ee9b51c9881782d4e3640 - - CC-BY-4.0
