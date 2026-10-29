@@ -30,7 +30,8 @@ const NO_DETAIL = "";
 // A wait count says nothing about a language (Slice 148): the app sends this "undetermined" code, the only one the Worker takes for it.
 const NO_LANGUAGE = "und";
 const STORE_FILTERS = ["none", "age", "author", "age+author"] as const;
-const OWN_BOOK_KINDS = ["photo", "pdf", "scan", "typed"] as const;
+// Slice 178: file imports and mixed books; older apps send the plain first four, newer ones "<kind>:<page bucket>".
+const OWN_BOOK_KINDS = ["photo", "pdf", "scan", "typed", "docx", "txt", "mixed"] as const;
 const PAGE_BUCKETS = ["1", "2-5", "6-10", "11+"] as const;
 // The app's supported reading languages (UiLanguage.Supported in DinoReader.Core); UsageEventTests fails when this list and the app's drift apart.
 const READING_LANGUAGES = ["en", "fa", "fr", "es", "pt", "zh", "ar", "ru", "ja", "da", "fi", "sv", "nb", "nl", "de"] as const;
@@ -150,6 +151,13 @@ const waitDetail = (value: unknown): boolean => {
   return parts.length === 2 && oneOf(WAIT_STAGES, parts[0]) && oneOf(RTST_DURATION_BUCKETS, parts[1]);
 };
 
+// An own-book count's detail is a kind alone (older apps) or "<kind>:<page bucket>", like "pdf:6-10" (Slice 178): both halves come from closed lists.
+const ownBookDetail = (value: unknown): boolean => {
+  const parts = typeof value === "string" ? value.split(WAIT_DETAIL_SEPARATOR) : [];
+  if (parts.length === 1) return oneOf(OWN_BOOK_KINDS, parts[0]);
+  return parts.length === 2 && oneOf(OWN_BOOK_KINDS, parts[0]) && oneOf(PAGE_BUCKETS, parts[1]);
+};
+
 // An intro step count's detail is "<step>:<action>", like "store:tried" (Slice 155): both halves come from closed lists.
 const introStepDetail = (value: unknown): boolean => {
   const parts = typeof value === "string" ? value.split(WAIT_DETAIL_SEPARATOR) : [];
@@ -167,7 +175,7 @@ const EVENT_RULES: Readonly<Record<string, EventRule>> = {
   book_opened: { sources: BOOK_SOURCES, detail: emptyDetail },
   book_finished: { sources: BOOK_SOURCES, detail: emptyDetail },
   store_download: { sources: [SHELF_SOURCE], detail: detailIn(STORE_FILTERS) },
-  own_book_added: { sources: [OWN_BOOK], detail: detailIn(OWN_BOOK_KINDS) },
+  own_book_added: { sources: [OWN_BOOK], detail: ownBookDetail },
   recording_made: { sources: BOOK_SOURCES, detail: detailIn(PAGE_BUCKETS) },
   voice_changed: { sources: [NO_BOOK], detail: detailIn(VOICE_CHANGES) },
   reading_language_changed: { sources: [NO_BOOK], detail: detailIn(READING_LANGUAGES) },

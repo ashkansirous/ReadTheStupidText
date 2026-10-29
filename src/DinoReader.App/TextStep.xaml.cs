@@ -304,7 +304,7 @@ public partial class TextStep : ContentView
 	private string TitleOrSuggestion() =>
 		string.IsNullOrWhiteSpace(TitleEntry.Text) ? SuggestTitle(Draft) : TitleEntry.Text.Trim();
 
-	// A new book is counted once, after it is saved: how it came in (photo, pdf, scan, else typed) and its language, nothing the grown-up wrote (Slice 134).
+	// A new book is counted once, after it is saved: how it came in (photo, pdf, scan, docx, txt, mixed, else typed), its page-count bucket and its language, nothing the grown-up wrote (Slice 134).
 	// Counting never decides whether the save worked: it has its own catch and runs after the save's.
 	private void CountNewOwnBook(WizardSession session)
 	{
@@ -313,7 +313,8 @@ public partial class TextStep : ContentView
 			if (session.IsNew && session.TryMarkCounted())
 			{
 				Story own = Draft.Original with { Language = Draft.Language, SourceId = null };
-				session.Services.GetRequiredService<UsageCounter>().Record(UsageEventName.OwnBookAdded, own, session.OwnBookKind ?? UsageDetail.KindTyped);
+				string detail = UsageDetail.OwnBookAdded(OwnBookKind.Of(Draft.PageDrafts.Select(p => p.Origin)), Draft.PageDrafts.Count);
+				session.Services.GetRequiredService<UsageCounter>().Record(UsageEventName.OwnBookAdded, own, detail);
 			}
 		}
 		catch (Exception ex)
