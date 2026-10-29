@@ -85,7 +85,7 @@ The first item alone fixes the robot for every shipped version.
 
 *Checks:* worker 90 tests, RTST and Dino suites, typecheck and App build green. Emulator: marker written and verified, gate detects the emulator with and without the marker, first run OK.
 
-#### For CLAUDE.md
+#### For CLAUDE.md (lifted 2026-10-29)
 
 Root, usage paragraph: Robot and own-machine exclusion lives in `UsageEligibility.IsEmulatorBuild`, `UsageGate` and the `worker/events.ts` arch drop (Android/iOS `x64`/`x86`); every test harness must set the off switch (env `READTHESTUPIDTEXT_NO_USAGE=1`, or the Android `no-usage` marker file). (Slice 179: docs/plan/slices/179-no-robot-or-own-machine-counts.md)
 
