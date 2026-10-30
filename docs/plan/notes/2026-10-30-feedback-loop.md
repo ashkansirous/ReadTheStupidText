@@ -9,7 +9,7 @@ of the slices in this thread. It'll be a separate work", so product work found h
 fixes were done during the loop.
 
 **Passes:** pass 1 found 8 items not properly tracked. Pass 2 found 2 new ones (plus the pass 1 items still on
-unmerged branches). Pass 3 found 5 more (below, after the first table). Pass 4 was the last allowed pass; its result is in the user report.
+unmerged branches). Pass 3 found 5 more (below, after the first table). Pass 4 was the last allowed pass: 3 low items (below). It did not reread the middle of the session because the brief asked only for items beyond the ledger; the skill now says no brief narrows the reading (ClaudeSkills #86).
 
 ## Findings and where they went
 
@@ -38,3 +38,11 @@ unmerged branches). Pass 3 found 5 more (below, after the first table). Pass 4 w
 | 2902 | The user was told "it wasn't a bug in the app" about Slice 191's missing book, but that is only likely | Corrected to the user; Slice 191's device re-check stays in *Outstanding work* |
 | ledger | The wave ledger's *Next* still said ClaudeSkills fixes were tracked as #79 | Ledger updated (#79 done via #82) |
 | 4987, 4998 | Turns ended on "Do you want me to build these?" and "Should I build that hook?" | Same class as before; the #83 rule covers it |
+
+## Pass 4
+
+| Entry | Finding | Where it went |
+| --- | --- | --- |
+| 2438 | PR #435 must be re-stamped after Slice 192's bump of all 15 books; nothing tracked it | *Outstanding work* line |
+| (slice 186) | Slice 186's work item and status line still said the flow was not run | Ticked, status line updated |
+| 2902 | This note said the Slice 191 claim was "corrected to the user" before the final reply | Said in the final reply of the loop |

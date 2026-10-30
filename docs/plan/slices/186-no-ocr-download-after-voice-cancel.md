@@ -29,7 +29,7 @@ A user cancel of the voice pack for a language also holds the automatic scan-pac
 - [x] Opening Scan still offers the pack download (no change to `ScanPackFlow`), and starting it clears nothing on the voice side.
 - [x] Unit tests for the hold rule (pure: cancel sets, Ready clears, language change clears, Offline/Failed do not set).
 - [x] Android and iOS: same shared code; compile both targets.
-- [ ] (flow written, not run end to end; see *Not yet verified*) Maestro flow `.maestro/rtst/`: start the voice download, Cancel, assert the hold marker `OCRPACK held-voice-cancelled` appears (run-flows has no negative log check; the restart case is covered by unit tests); shown failing once on the current `main` build.
+- [x] (passed end to end on the emulator in Slice 212's run, 2026-10-30) Maestro flow `.maestro/rtst/`: start the voice download, Cancel, assert the hold marker `OCRPACK held-voice-cancelled` appears (run-flows has no negative log check; the restart case is covered by unit tests); shown failing once on the current `main` build.
 - [x] Debug hook `cancel-pack-downloads` (`TestHookDispatcher` -> `PackDownloadHost.CancelAllActive` -> `AndroidPackKeepAlive.CancelAll`) so scripted runs can do the notification Cancel.
 
 #### Verification
@@ -38,7 +38,7 @@ A user cancel of the voice pack for a language also holds the automatic scan-pac
 - Emulator (headless, by serial): the Maestro flow above, plus in-app Cancel and the notification Cancel; then Retry the voice pack and see the scan pack follow once the voice pack is Ready.
 - iOS: compile only here (no Mac); TestFlight check of the in-app Cancel goes to *Not yet verified*.
 
-*Built 2026-10-30, verified on the S21 phone by script; Maestro flow and iOS not yet verified.*
+*Built 2026-10-30, verified on the S21 phone by script; the Maestro flow passed on the emulator in Slice 212's run; iOS not yet verified.*
 
 *Changed while building:* the notification Cancel is the only voice-pack cancel (there is no in-app voice Cancel; `CapturePage`'s Cancel is the scan pack's), so `CapturePage` is unchanged. `VoicePackInstaller` owns the hold (`VoiceCancelHold` in Mobile.Shared, saved in Preferences). It is set on notification cancel / the `PackCancelledByNotificationException` path, only while the run is not Ready and its language is current. It is lifted on any Ready and on a language change. `OcrPackInstaller` checks it after the voice wait, logs `OCRPACK held-voice-cancelled <lang>`, reports Finished, and starts the scan pack when that language's voice pack becomes Ready. Added the Debug hook `cancel-pack-downloads`.
 
