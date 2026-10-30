@@ -81,7 +81,6 @@ M3 starts with a listening page and waits on the user's listening verdicts. 154 
 - Slice 202 merged on an incomplete second review pass (the forked review never finished); rerun `/code-review` medium on `ReaderPage` as merged. Slice 213's unreviewed half is Slice 216 item 9.
 - Slice 202: iOS device not run (same shared MAUI page fix); the `InitWait`-before-text order is kept only by a comment, with no test ([slice](docs/plan/slices/202-reader-language-change-crash.md)).
 - Untried: reading the iPhone 8's crash logs from this PC (e.g. libimobiledevice `idevicecrashreport` over USB); would let iOS crashes be checked without the user. Not tried yet.
-- **User:** put the S21's screen lock back to a PIN (set to None for the 2026-10-29/30 unattended runs), and turn Samsung Auto Blocker back on (turned off to pair wireless debugging).
 - S21 RTST dev install may still hold `files/packs/zz-supertonic-3.bak` (~124 MB) from the 2026-10-29 night; harmless, gone on the next `reset-dev-app.ps1 -Level clear`. Nobody has checked.
 
 
