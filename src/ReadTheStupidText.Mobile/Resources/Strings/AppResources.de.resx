@@ -73,6 +73,11 @@
   <data name="Review_Read" xml:space="preserve"><value>Vorlesen</value></data>
   <data name="Wait_DownloadingModel" xml:space="preserve"><value>{0} wird heruntergeladen …</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>Wird übersetzt …</value></data>
+  <data name="Wait_WaitingInternet" xml:space="preserve"><value>Warte auf das Internet</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingWifi" xml:space="preserve"><value>Warte auf WLAN</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_Retry" xml:space="preserve"><value>Erneut versuchen</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingPercent" xml:space="preserve"><value>{0} ist zu {1} % heruntergeladen. Der Download geht von selbst weiter, sobald du wieder online bist.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingNoPercent" xml:space="preserve"><value>{0} wird heruntergeladen. Der Download geht von selbst weiter, sobald du wieder online bist.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Wait_PreparingVoice" xml:space="preserve"><value>Die Stimme wird vorbereitet …</value></data>
   <data name="Wait_Stalled" xml:space="preserve"><value>Die Stimme wird noch vorbereitet …</value></data>
   <data name="Wait_ReadingFile" xml:space="preserve"><value>Die Datei wird gelesen …</value></data>

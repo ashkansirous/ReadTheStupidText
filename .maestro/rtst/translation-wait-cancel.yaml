@@ -1,0 +1,49 @@
+# Slice 187: Cancel while the translation download waits for the internet stops it for good; nothing restarts when the network returns.
+# No clearState (the voice pack must stay; precondition and reasoning in translation-waits-for-internet.yaml). The delete hook removes only the Italian ML Kit model.
+# expect-log: PACKDL waiting pack=mlkit-it
+# The Translate row is already ticked by default (Italian is not the app language, English), so the flow does not tap it (that would untick it and Read would hit the no-voice alert). Needs AutomationId "ReviewTranslateRow" on ReviewPage.xaml's TranslateRow (owed, outside Slice 187's Touches).
+appId: uk.sirous.readthestupidtext
+name: Translation download wait Cancel
+---
+# Online here: the hook deletes only the Italian model.
+- launchApp:
+    arguments:
+      cmd: delete-translation-model
+      from: it
+# Offline from here, before the text is typed: the early download is skipped (not unmetered), so only the tap on Translate and read starts the ML Kit download and it waits.
+- toggleAirplaneMode
+- extendedWaitUntil:
+    visible:
+      id: EditLink
+    timeout: 20000
+- tapOn:
+    id: EditLink
+    waitToSettleTimeoutMs: 300
+- tapOn:
+    id: ReviewEditor
+    waitToSettleTimeoutMs: 300
+- inputText: "Ciao a tutti, questa sera leggeremo insieme una lunga storia molto interessante."
+- hideKeyboard
+- extendedWaitUntil:
+    visible:
+      id: ReviewTranslateRow
+    timeout: 10000
+- tapOn:
+    id: ReviewRead
+    waitToSettleTimeoutMs: 300
+- extendedWaitUntil:
+    visible:
+      id: WaitRetry
+    timeout: 60000
+- tapOn:
+    id: WaitCancel
+    waitToSettleTimeoutMs: 300
+- toggleAirplaneMode
+- extendedWaitUntil:
+    notVisible:
+      id: WaitLine
+    timeout: 10000
+- extendedWaitUntil:
+    visible:
+      id: ReviewEditor
+    timeout: 10000

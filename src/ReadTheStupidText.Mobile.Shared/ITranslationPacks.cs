@@ -19,4 +19,7 @@ public interface ITranslationPacks
     /// <summary>Fetches the pack for <paramref name="language"/>. <paramref name="progress"/> gets 0..1 when the engine knows it.</summary>
     /// <exception cref="ReadTheStupidText.Application.Translation.TranslationModelUnavailableException">The pack could not be downloaded.</exception>
     Task DownloadPackAsync(string language, IProgress<double>? progress, CancellationToken cancellationToken);
+
+    /// <summary>Removes the pack for <paramref name="language"/> from the device (Slice 187: the Debug test hook <c>delete-translation-model</c>); a pack that is not there is not an error.</summary>
+    Task DeletePackAsync(string language);
 }

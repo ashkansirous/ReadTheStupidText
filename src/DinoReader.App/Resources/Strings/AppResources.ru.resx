@@ -291,6 +291,11 @@
   <data name="Wait_ReadingPictures" xml:space="preserve"><value>Читаем картинки…</value></data>
   <data name="Wait_PageOf" xml:space="preserve"><value>Страница {0} из {1}</value></data>
   <data name="Wait_Translating" xml:space="preserve"><value>Переводим…</value></data>
+  <data name="Wait_WaitingInternet" xml:space="preserve"><value>Ждём интернет</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingWifi" xml:space="preserve"><value>Ожидание Wi-Fi</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_Retry" xml:space="preserve"><value>Повторить</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingPercent" xml:space="preserve"><value>{0}: загружено {1}%. Загрузка продолжится сама, когда вы снова будете онлайн.</value><comment>Machine draft: needs native review</comment></data>
+  <data name="Wait_WaitingNoPercent" xml:space="preserve"><value>Загрузка: {0}. Загрузка продолжится сама, когда вы снова будете онлайн.</value><comment>Machine draft: needs native review</comment></data>
   <data name="Wait_Saving" xml:space="preserve"><value>Сохраняем…</value></data>
   <data name="Wait_GettingBook" xml:space="preserve"><value>Готовим книгу…</value></data>
   <data name="Wait_BackingUp" xml:space="preserve"><value>Сохраняем книги в резервную копию…</value></data>
