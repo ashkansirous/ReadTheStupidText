@@ -1,6 +1,6 @@
 ### Slice 219 — Usage counts drop dev builds below version 1.0
 
-*Planned 2026-10-30.* From a read-only check of `rtst_usage` (2026-10-30).
+*In progress (wave 2026-10-30), draft PR.* Planned 2026-10-30. From a read-only check of `rtst_usage` (2026-10-30).
 
 **Touches:** `worker/events.ts`, `worker/events.test.mjs`, `src/ReadTheStupidText.Application/Usage/UsageEligibility.cs` (if the client rule should match), `tests/ReadTheStupidText.Tests/**`, `docs/plan/slices/219-usage-drops-dev-versions.md`
 
