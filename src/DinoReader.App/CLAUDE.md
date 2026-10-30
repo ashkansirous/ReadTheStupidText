@@ -105,3 +105,4 @@ are in `src/ReadTheStupidText.Mobile/CLAUDE.md`; its CI target is in `.github/CL
 - `book_opened`/`book_finished` carry the language the book was read in, not the book's own. (Slice 173: docs/plan/slices/173-dino-kid-story-languages.md)
 - `own_book_added` blob9 is `kind:bucket`; split it client-side, never with SQL string functions. (Slice 178: docs/plan/slices/178-dino-own-book-usage-detail.md)
 - Dino book updates are staged in the background and applied only at the next cold start, before the shelf's first read (`StagedBookUpdates.ApplyOnceAsync`); never swap a book that may be open. Every install and swap records the text+picture hash. (Slice 181: docs/plan/slices/181-dino-books-update-from-store.md)
+- Segmented controls (`ModeSwitch.cs`) expose the selected state in the control's description ("<label>, Selected"), not only in a hint, because Android drops hints from content-desc. (Slice 196: docs/plan/slices/196-dino-default-view-per-book.md)
