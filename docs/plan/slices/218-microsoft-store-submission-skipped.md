@@ -19,6 +19,8 @@
 
 *Built 2026-10-30, not yet merged. The force_all submission above is still to do after the merge.*
 
+*Update 2026-10-30 (checked with `gh`):* the user approved the `force_all` run at the start of the run (the night's parked note is superseded). The interactive session started it at 22:10 UTC ([run 41136299215](https://github.com/ashkansirous/ReadTheStupidText/actions/runs/41136299215)); it ended `cancelled` with no jobs, because the push of the index PR #634 merge at 22:12 started release run 41136558112 in the same concurrency group. So the Store submission has not happened yet. Remaining: rerun `release.yml` with `force_all` when no merge is about to land, then confirm the first `rtst-store-v` marker tag and Partner Center showing the new version. Not waiting on a user decision.
+
 **Cause found (from release run logs):** releases rtst-v1.74.0 to rtst-v1.76.1 were core-only diffs, so `windowsstore=false` by design. #571 shipped in rtst-v1.73.2 (run 40981417896) and `store-submit` printed "Submission commit success". Why Windows users stay on 1.67.1 is **not proven**: certification may have stalled or failed after the commit, or commit does not mean published. Partner Center has not been read yet.
 
 **Latent bug fixed:** the Store flag was measured from the last release tag, so a Windows change in a cancelled or failed release was never submitted later.

@@ -247,6 +247,10 @@ Batch 33 (156, planned 2026-10-26, the app picked bad voices, e.g. the Treasure 
 | 207 | Guards for emulator, VM and flow mistakes | built | #596 | | [207-device-test-guards.md](../slices/207-device-test-guards.md) |
 | 212 | Flow hooks reach the running app; tool self-tests in CI | built | #600 | | [212-flow-hooks-and-tools-ci.md](../slices/212-flow-hooks-and-tools-ci.md) |
 | 213 | One phone check runner (`tools/phone/run-checks.ps1`) with a fixed 10-minute budget, no hidden builds, named checks | built | #610 | | [213-phone-check-runner.md](../slices/213-phone-check-runner.md) |
+| 210 | A short Kokoro line is dropped ("gave up"): log, reproduce, then fix by the evidence | built | #631 | | [210-kokoro-short-line-dropped.md](../slices/210-kokoro-short-line-dropped.md) |
+| 211 | Play right after typing waits for language detection, so it translates and picks the voice like a later Play (Slice 139 follow-up) | built | #633 | | [211-play-before-detection-waits-for-it.md](../slices/211-play-before-detection-waits-for-it.md) |
+| 218 | RTST Microsoft Store submission skipped Windows code changes (no Store build since before 1.74.0) | built | #630 | | [218-microsoft-store-submission-skipped.md](../slices/218-microsoft-store-submission-skipped.md) |
+| 219 | Usage counts drop dev builds below version 1.0 (worker and client) | built | #632 | | [219-usage-drops-dev-versions.md](../slices/219-usage-drops-dev-versions.md) |
 
 
 ## Batch lane-order paragraphs moved from plan.md (2026-10-30)
@@ -274,3 +278,5 @@ Batch 38 (175-177, planned 2026-10-28, gaps found when every unverified 163/165 
 Batch 34 (157-158; both built, 157 PR #475, 158 PR #472, so the batch is done; planned 2026-10-27, after all 15 store books fell behind `main`): 158 first (small, CI only: a `publish-store` job in `release.yml` uploads every book behind the live store, Decision 163); it can run beside other work. Then 157 moves book content to `content/dino/<book>/` with a console builder and repoints the job; 157 runs alone between waves, after the open per-book PRs merge, because it moves every book's files. Decisions 162-163.
 
 Batch 35 (159, built, PR #473, so the batch is done; planned 2026-10-27, the user found English all over Dino in Farsi): one slice in four parts: A (strings follow the stored language pick; fixes the intro wizard flipping to English after the store) ships first, then B (shipped titles on the shelf and store), C (own books translate on the phone, pack downloaded only when a parent asks) and D (guards). Decision 164.
+
+Batch 41 (190-195, planned 2026-10-29, the code gaps left in *Outstanding work*): all six can run side by side (RTST phone reader, Dino usage, Dino store content and Worker, store text, VM tooling, voice order); 191 and 192 both touch `worker/` (different files). 195 starts with the user's listening pick. The two gaps it left without slices (Slices 115 and 139) are now Slices 197 and 198.
