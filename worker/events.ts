@@ -195,7 +195,14 @@ const VERSION_PATTERN = /^\d{1,6}(\.\d{1,6}){1,3}$/;
 // Slice 167: the project default version of a build never stamped by CI, i.e. built on a desk. A backstop for the apps' own test-build gate:
 // such a count is dropped, not written, in both datasets.
 const UNSTAMPED_VERSIONS: readonly string[] = ["1.0", "1.0.0", "1.0.0.0", "0.0.0", "0.0.0.0"];
+// Slice 219: any version whose major part is 0 is a pre-1.0 dev build, never a store release.
+const PRE_RELEASE_MAJOR = 0;
 const MIN_SAMPLE_RATE = 0.001;
+
+function isUnstampedVersion(version: string): boolean {
+  const majorPart = version.split(".")[0] ?? "";
+  return UNSTAMPED_VERSIONS.includes(version) || Number.parseInt(majorPart, 10) === PRE_RELEASE_MAJOR;
+}
 const DAY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 const ErrorCode = {
   BadRequest: "bad-request",
@@ -273,7 +280,7 @@ export function parseEvent(raw: unknown): UsageEvent | null {
     (rule.language === undefined || language === rule.language) &&
     typeof hasRecording === "boolean" &&
     matches(VERSION_PATTERN, version) &&
-    !UNSTAMPED_VERSIONS.includes(version as string) &&
+    !isUnstampedVersion(version as string) &&
     oneOf(PLATFORMS, platform) &&
     isRealDay(day) &&
     typeof sampleRate === "number" &&
@@ -458,7 +465,7 @@ function hasValidEnvelope(raw: Record<string, unknown>): boolean {
   const { version, platform, day, sampleRate } = raw;
   return (
     matches(VERSION_PATTERN, version) &&
-    !UNSTAMPED_VERSIONS.includes(version as string) &&
+    !isUnstampedVersion(version as string) &&
     oneOf(PLATFORMS, platform) &&
     isRealDay(day) &&
     typeof sampleRate === "number" &&
