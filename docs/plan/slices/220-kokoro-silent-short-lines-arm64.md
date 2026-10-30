@@ -1,6 +1,6 @@
 ### Slice 220 — Kokoro returns silent audio for short lines on arm64
 
-*Planned 2026-10-30.* Follow-up to Slice 210 (docs/plan/slices/210-kokoro-short-line-dropped.md).
+*In progress (wave 2026-10-30), draft PR.* Follow-up to Slice 210 (docs/plan/slices/210-kokoro-short-line-dropped.md).
 
 **Touches:** `src/ReadTheStupidText.Application/Reading/SilentOutputGuard.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/Android/AndroidSupertonicSpeechReader.cs`, `src/ReadTheStupidText.Mobile.Shared/Platforms/iOS/IosSupertonicSpeechReader*.cs`, `src/ReadTheStupidText.Infrastructure/Reading/NeuralSentenceSource.cs`, `tests/ReadTheStupidText.Tests/**`, `tools/phone/**`, `docs/plan/slices/220-kokoro-silent-short-lines-arm64.md`
 
