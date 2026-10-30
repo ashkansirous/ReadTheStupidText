@@ -35,7 +35,7 @@ The saved voice-cancel hold from Slice 186 (`VoiceCancelHold`, one owner: `Voice
 - Dino on device; iOS TestFlight; native read of the Stopped strings (machine drafts).
 - The Maestro flow end to end (the phone was driven by script instead).
 
-- The scripted Maestro flow `.maestro/rtst/cancelled-voice-pack-stays-cancelled.yaml` has not run on a device. It cannot assert "no `PACKDL start` for 30 s": the device stage reads the log after the run.
+- ~~The scripted Maestro flow `.maestro/rtst/cancelled-voice-pack-stays-cancelled.yaml` has not run on a device.~~ It passes on the emulator since Slice 212 (PR #600), with `VOICEPACK held-user-cancelled fa` in the log; it was broken before (a restarting `launchApp` swallowed the hook, English text on a Farsi screen). It cannot assert "no `PACKDL start` for 30 s": the device stage reads the log after the run.
 - Dino has no `VoicePackInstaller.DebugMarker` wiring, so `VOICEPACK held-user-cancelled` appears in RTST's log only; a Dino device check would need it.
 
 #### Run design (coordinator, 2026-10-30, after two review rounds found races in the run end)
