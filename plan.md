@@ -27,6 +27,7 @@ Open slices only. Finished slices (161 rows) are in [slices-done](docs/plan/note
 | 211 | Play right after typing waits for language detection, so it translates and picks the voice like a later Play (Slice 139 follow-up) | planned | | | [211-play-before-detection-waits-for-it.md](docs/plan/slices/211-play-before-detection-waits-for-it.md) |
 | 214 | RTST phone: the first read after a cold start takes 7 s (S21 AOT; first synthesis 5.9 s): find warm-up vs length, then fix to under 2 s | planned | | | [214-rtst-phone-cold-first-audio.md](docs/plan/slices/214-rtst-phone-cold-first-audio.md) |
 | 213 | One phone check runner (`tools/phone/run-checks.ps1`) with a fixed 10-minute budget, no hidden builds, named checks | planned | | | [213-phone-check-runner.md](docs/plan/slices/213-phone-check-runner.md) |
+| 215 | Close the gaps left by Slices 207 and 212: status label id, emulator health check and restart, test the one-emulator limit, lint gaps | planned | | | [215-device-guard-gaps.md](docs/plan/slices/215-device-guard-gaps.md) |
 
 Batch 42 (197-200, planned 2026-10-29, the small fixes and live-data checks that had no slice): all four can run side by side and beside Batch 41 (Dino storyteller, RTST read path, test tooling, read-only analytics). 198 starts with a real-phone run and may close with no code. 200 changes nothing live.
 
