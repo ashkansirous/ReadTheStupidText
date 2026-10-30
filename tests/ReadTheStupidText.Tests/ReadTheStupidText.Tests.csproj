@@ -28,6 +28,7 @@
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\PackStatusText.cs" Link="Mobile\PackStatusText.cs" />
     <!-- Debug-only test-hook command parser (Slice 162); its file is empty outside Debug. -->
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Testing\TestHookCommand.cs" Link="Mobile\TestHookCommand.cs" />
+    <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Testing\TestHookLaunchKeys.cs" Link="Mobile\TestHookLaunchKeys.cs" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\Images\CropRect.cs" Link="Mobile\CropRect.cs" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\VoicePackInstaller.cs" Link="Mobile\VoicePackInstaller.cs" />
     <Compile Include="..\..\src\ReadTheStupidText.Mobile.Shared\VoiceCancelHold.cs" Link="Mobile\VoiceCancelHold.cs" />
